@@ -56,6 +56,16 @@ turndownService.addRule('unOrderedList', {
   },
 })
 
+// convert mention tags to links
+turndownService.addRule('mention', {
+  filter: function (node) {
+    return node.classList.contains('mention') && node.getAttribute('data-value')
+  },
+  replacement: function (content, node) {
+    return `[${content}](${node.getAttribute('data-value')})`
+  },
+})
+
 // replace <p> with <br> for line breaks
 const replaceLineBreaks = (html) => {
   return html.replaceAll('<p>', '').replaceAll('</p>', '\n').replaceAll('```', '')
@@ -78,6 +88,32 @@ const parseCodeBlocks = (value) => {
   return value
 }
 
+export const getTextRefs = (text = '') => {
+  // inside the markdown, find characters inside ()
+  const regex2 = /\((.*?)\)/g
+  const links = text.match(regex2) || []
+  const entities = links.flatMap((link) => {
+    // if https, then it is a link and not an entity
+    if (link.includes('http')) {
+      return []
+    } else {
+      // remove the ()
+      const match = link.match(/\(([^)]+)\)/)
+      let parts = []
+      if (match) {
+        // split by :
+        parts = match[1].split(':')
+      }
+      return {
+        type: parts[0],
+        id: parts[1],
+      }
+    }
+  })
+
+  return entities
+}
+
 export const convertToMarkdown = (value) => {
   const codeBlocksParsed = parseCodeBlocks(value)
 
@@ -97,5 +133,9 @@ export const convertToMarkdown = (value) => {
     })
   }
 
-  return body
+  const entities = getTextRefs(markdown)
+
+  return [body, entities]
 }
+
+// "8061b1801dab11ef95ad0242ac180005"

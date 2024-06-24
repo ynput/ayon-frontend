@@ -1,23 +1,24 @@
 import { useEffect, useRef } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Spacer, InputSwitch } from '@ynput/ayon-react-components'
-import UserImage from '/src/components/UserImage'
+import UserImage from '@components/UserImage'
 
 import Breadcrumbs from '../Breadcrumbs/Breadcrumbs'
 import HeaderButton from './HeaderButton'
-import AppMenu from '../../components/Menu/Menus/AppMenu'
+import AppMenu from '@components/Menu/Menus/AppMenu'
 import ProjectMenu from '../ProjectMenu/projectMenu'
 import { useDispatch, useSelector } from 'react-redux'
-import InstallerDownloadPrompt from '../../components/InstallerDownload/InstallerDownloadPrompt'
-import { toggleMenuOpen, setMenuOpen } from '/src/features/context'
-import { HelpMenu, UserMenu } from '/src/components/Menu'
-import MenuContainer from '/src/components/Menu/MenuComponents/MenuContainer'
-import { useUpdateUserMutation } from '/src/services/user/updateUser'
+import InstallerDownloadPrompt from '@components/InstallerDownload/InstallerDownloadPrompt'
+import { toggleMenuOpen, setMenuOpen } from '@state/context'
+import { HelpMenu, UserMenu } from '@components/Menu'
+import MenuContainer from '@components/Menu/MenuComponents/MenuContainer'
+import { useUpdateUserMutation } from '@queries/user/updateUser'
 import { toast } from 'react-toastify'
-import { toggleDevMode } from '/src/features/user'
+import { toggleDevMode } from '@state/user'
 import styled from 'styled-components'
-import { useRestart } from '/src/context/restartContext'
+import { useRestart } from '@context/restartContext'
 import { classNames } from 'primereact/utils'
+import InboxNotificationIcon from './InboxNotification'
 
 const DeveloperSwitch = styled.div`
   display: flex;
@@ -176,19 +177,22 @@ const Header = () => {
         ref={helpButtonRef}
         onClick={() => handleToggleMenu('help')}
         className={classNames({ active: menuOpen === 'help' })}
-        variant="text"
+        variant="nav"
       />
       <MenuContainer id="help" target={helpButtonRef.current}>
         <HelpMenu user={user} />
       </MenuContainer>
       {/* help icon and menu ^^^ */}
 
+      {/* Inbox icon */}
+      <InboxNotificationIcon />
+
       {/* App icon and menu vvv */}
       <HeaderButton
         icon="apps"
         onClick={() => handleToggleMenu('app')}
         ref={appButtonRef}
-        variant="text"
+        variant="nav"
         className={classNames({ active: menuOpen === 'app', notification: isSnoozing })}
       />
       <MenuContainer id="app" target={appButtonRef.current}>
@@ -201,7 +205,7 @@ const Header = () => {
         className={classNames({ active: menuOpen === 'user' })}
         onClick={() => handleToggleMenu('user')}
         ref={userButtonRef}
-        variant="text"
+        variant="nav"
         style={{ padding: 6 }}
       >
         <UserImage size={26} name={user?.name} />

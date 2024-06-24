@@ -1,12 +1,12 @@
 import { useEffect, useState, createContext } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
-import PubSub from '/src/pubsub'
-import arrayEquals from '../helpers/arrayEquals'
+import PubSub from '@/pubsub'
+import arrayEquals from '@helpers/arrayEquals'
 import useWebSocket, { ReadyState } from 'react-use-websocket'
 import { debounce } from 'lodash'
-import { ayonApi } from '../services/ayon'
-import RefreshToast from '../components/RefreshToast'
+import { ayonApi } from '@queries/ayon'
+import RefreshToast from '@components/RefreshToast'
 
 export const SocketContext = createContext()
 

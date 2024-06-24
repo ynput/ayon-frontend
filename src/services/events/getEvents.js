@@ -1,5 +1,5 @@
 import { ayonApi } from '../ayon'
-import PubSub from '/src/pubsub'
+import PubSub from '@/pubsub'
 
 const EVENT_FRAGMENT = `
 fragment EventFragment on EventNode {
@@ -134,7 +134,7 @@ const getEvents = ayonApi.injectEndpoints({
           await cacheDataLoaded
 
           const handlePubSub = (topic, message) => {
-            if (topic === 'client.connected') {
+            if (topic === 'client.connected' || topic === 'inbox.message') {
               return
             }
 

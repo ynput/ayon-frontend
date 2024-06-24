@@ -1,16 +1,16 @@
 import React, { useEffect, useState } from 'react'
-import { useGetProjectQuery } from '/src/services/project/getProject'
+import { useGetProjectQuery } from '@queries/project/getProject'
 import DashboardPanelWrapper from '../DashboardPanelWrapper'
-import Thumbnail from '/src/containers/thumbnail'
-import AttributeTable from '/src/containers/attributeTable'
+import Thumbnail from '@containers/thumbnail'
+import AttributeTable from '@containers/attributeTable'
 import { format } from 'date-fns'
 import { Button, SaveButton, Toolbar } from '@ynput/ayon-react-components'
 import * as Styled from './ProjectDetails.styled'
-import AttribForm from '/src/components/AttribForm/AttribForm'
-import { useGetAnatomySchemaQuery } from '/src/services/anatomy/getAnatomy'
+import AttribForm from '@components/AttribForm/AttribForm'
+import { useGetAnatomySchemaQuery } from '@queries/anatomy/getAnatomy'
 import { isEmpty, isEqual } from 'lodash'
 import { useSelector } from 'react-redux'
-import { useUpdateProjectMutation } from '/src/services/project/updateProject'
+import { useUpdateProjectMutation } from '@queries/project/updateProject'
 import { toast } from 'react-toastify'
 
 const ProjectDetails = ({ projectName }) => {
@@ -18,7 +18,7 @@ const ProjectDetails = ({ projectName }) => {
 
   // GET DATA
   const { data = {}, isFetching, isError } = useGetProjectQuery({ projectName })
-  const { data: schema } = useGetAnatomySchemaQuery()
+  const { data: schema = {} } = useGetAnatomySchemaQuery()
   const fields = schema?.definitions?.ProjectAttribModel?.properties
 
   // UPDATE DATA

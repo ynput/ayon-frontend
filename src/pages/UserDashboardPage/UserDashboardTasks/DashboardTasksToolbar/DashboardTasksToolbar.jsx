@@ -6,12 +6,12 @@ import {
   onTasksFilterChanged,
   onTasksGroupByChanged,
   onTasksSortByChanged,
-} from '/src/features/dashboard'
-import MeOrUserSwitch from '/src/components/MeOrUserSwitch/MeOrUserSwitch'
+} from '@state/dashboard'
+import MeOrUserSwitch from '@components/MeOrUserSwitch/MeOrUserSwitch'
 import * as Styled from './DashboardTasksToolbar.styled'
 import sortByOptions from './KanBanSortByOptions'
 
-const DashboardTasksToolbar = ({ allUsers = [], isLoadingAllUsers, view, setView }) => {
+const DashboardTasksToolbar = ({ allUsers = [], isLoading, view, setView }) => {
   const dispatch = useDispatch()
 
   const user = useSelector((state) => state.user)
@@ -19,7 +19,7 @@ const DashboardTasksToolbar = ({ allUsers = [], isLoadingAllUsers, view, setView
 
   // ASSIGNEES SELECT
   const assignees = useSelector((state) => state.dashboard.tasks.assignees)
-  const assigneesIsMe = useSelector((state) => state.dashboard.tasks.assigneesIsMe)
+  const assigneesFilter = useSelector((state) => state.dashboard.tasks.assigneesFilter)
 
   const setAssignees = (payload) => dispatch(onAssigneesChanged(payload))
 
@@ -35,7 +35,7 @@ const DashboardTasksToolbar = ({ allUsers = [], isLoadingAllUsers, view, setView
   ]
 
   const assigneesGroupBy = { id: 'assignees', label: 'Assignee', sortOrder: true }
-  if (!assigneesIsMe) {
+  if (assigneesFilter !== 'me') {
     groupByOptions.push(assigneesGroupBy)
   }
 
@@ -47,41 +47,14 @@ const DashboardTasksToolbar = ({ allUsers = [], isLoadingAllUsers, view, setView
   const filterValue = useSelector((state) => state.dashboard.tasks.filter)
   const setFilterValue = (value) => dispatch(onTasksFilterChanged(value))
 
-  const handleAssigneesChange = (isMe, newAssignees = []) => {
-    if (isMe) {
-      // setting back to me
-      const payload = {
-        assigneesIsMe: true,
-        assignees: assignees,
-      }
-
-      // update assignees to me
-      setAssignees(payload)
-
-      return
-    } else if (!newAssignees.length) {
-      // assignees cleared so set back to me
-      const payload = {
-        assigneesIsMe: true,
-        assignees: [],
-      }
-
-      // update assignees to me
-      setAssignees(payload)
-
-      return
-    } else {
-      // assignees changed, set to new assignees
-      const payload = {
-        assigneesIsMe: false,
-        assignees: newAssignees,
-      }
-
-      // update assignees to new assignees and remove isMe
-      setAssignees(payload)
-
-      return
+  const handleAssigneesChange = (filter, newAssignees) => {
+    const payload = {
+      filter: filter, // me, all, users
+      assignees: newAssignees || assignees,
     }
+
+    // update state
+    setAssignees(payload)
   }
 
   return (
@@ -104,13 +77,12 @@ const DashboardTasksToolbar = ({ allUsers = [], isLoadingAllUsers, view, setView
         value={filterValue}
         onChange={(e) => setFilterValue(e.target.value)}
       />
-      {isManager && !isLoadingAllUsers && (
+      {isManager && !isLoading && (
         <MeOrUserSwitch
           value={assignees}
-          onAssignee={(a) => handleAssigneesChange(false, a)}
-          isMe={assigneesIsMe}
-          onMe={() => handleAssigneesChange(true)}
+          onChange={(state, v) => handleAssigneesChange(state, v)}
           options={allUsers}
+          filter={assigneesFilter}
           align={'right'}
           placeholder="Assignees"
           editor

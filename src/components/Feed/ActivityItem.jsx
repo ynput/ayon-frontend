@@ -13,9 +13,12 @@ const FeedEnd = styled.div`
   color: var(--md-sys-color-outline);
   font-size: 12px;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--base-gap-small);
   user-select: none;
+  overflow: hidden;
+  white-space: nowrap;
 `
 
 const ActivityItem = ({

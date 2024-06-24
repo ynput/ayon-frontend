@@ -1,8 +1,9 @@
 import React, { useMemo } from 'react'
 import DashboardPanelWrapper from './DashboardPanelWrapper'
 import ListStatsTile from './ListStatsTile'
-import copyToClipboard from '/src/helpers/copyToClipboard'
-import { useGetProjectDashboardQuery } from '/src/services/getProjectDashboard'
+import copyToClipboard from '@helpers/copyToClipboard'
+import { useGetProjectDashboardQuery } from '@queries/getProjectDashboard'
+import getEntityTypeIcon from '@helpers/getEntityTypeIcon'
 
 const ProjectStats = ({ projectName, share, position }) => {
   const {
@@ -14,12 +15,16 @@ const ProjectStats = ({ projectName, share, position }) => {
   const { folders, products, tasks, versions, representations, workfiles } = data
 
   const stats = {
-    folders: { label: 'Folders', icon: 'folder', stat: folders },
-    products: { label: 'Products', icon: 'inventory_2', stat: products },
-    versions: { label: 'Versions', icon: 'layers', stat: versions },
-    representations: { label: 'Representations', icon: 'view_in_ar', stat: representations },
-    tasks: { label: 'Tasks', icon: 'check_circle', stat: tasks },
-    workfiles: { label: 'Workfiles', icon: 'home_repair_service', stat: workfiles },
+    folders: { label: 'Folders', icon: getEntityTypeIcon('folder'), stat: folders },
+    products: { label: 'Products', icon: getEntityTypeIcon('product'), stat: products },
+    versions: { label: 'Versions', icon: getEntityTypeIcon('version'), stat: versions },
+    representations: {
+      label: 'Representations',
+      icon: getEntityTypeIcon('representation'),
+      stat: representations,
+    },
+    tasks: { label: 'Tasks', icon: getEntityTypeIcon('task'), stat: tasks },
+    workfiles: { label: 'Workfiles', icon: getEntityTypeIcon('workfile'), stat: workfiles },
   }
 
   const statsOrder = ['folders', 'products', 'versions', 'representations', 'tasks', 'workfiles']

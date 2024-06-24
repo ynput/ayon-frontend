@@ -1,11 +1,11 @@
 import React, { useRef } from 'react'
 import * as Styled from './ActivityHeader.styled'
-import UserImage from '/src/components/UserImage'
+import UserImage from '@components/UserImage'
 import ActivityReference from '../ActivityReference/ActivityReference'
 import ActivityDate from '../ActivityDate'
-import MenuContainer from '/src/components/Menu/MenuComponents/MenuContainer'
+import MenuContainer from '@components/Menu/MenuComponents/MenuContainer'
 import ActivityCommentMenu from '../ActivityCommentMenu/ActivityCommentMenu'
-import { toggleMenuOpen } from '/src/features/context'
+import { toggleMenuOpen } from '@state/context'
 import { useDispatch } from 'react-redux'
 import { Icon } from '@ynput/ayon-react-components'
 
@@ -19,12 +19,12 @@ const ActivityHeader = ({
   onEdit,
   children,
   id,
-  projectInfo,
   projectName,
   entityType,
   onReferenceClick,
+  onReferenceTooltip,
 }) => {
-  const { referenceType, origin = {}, isOwner, activityType, versions = [] } = activity
+  const { referenceType, origin = {}, isOwner, activityType, versions = [], activityId } = activity
   const isMention = referenceType === 'mention'
 
   const isPublish = activityType === 'version.publish'
@@ -57,11 +57,23 @@ const ActivityHeader = ({
             <ActivityReference
               id={origin?.id}
               type={origin?.type}
-              projectName={projectName}
               variant="text"
-              projectInfo={projectInfo}
               onClick={() =>
-                onReferenceClick({ entityId: origin?.id, entityType: origin?.type, projectName })
+                onReferenceClick({
+                  entityId: origin?.id,
+                  entityType: origin?.type,
+                  projectName,
+                  activityId,
+                })
+              }
+              onMouseEnter={(e, pos) =>
+                onReferenceTooltip({
+                  type: origin?.type,
+                  id: origin?.id,
+                  label: origin?.label,
+                  name: origin?.id,
+                  pos,
+                })
               }
             >
               {origin?.label || origin?.name}

@@ -1,12 +1,12 @@
 import React, { useContext, useEffect, useMemo } from 'react'
-import { useGetAddonListQuery } from '../../../services/addons/getAddons'
+import { useGetAddonListQuery } from '@queries/addons/getAddons'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
-import { SocketContext } from '/src/context/websocketContext'
+import { SocketContext } from '@context/websocketContext'
 import { rcompare, coerce } from 'semver'
 import { InputSwitch, InputText, VersionSelect } from '@ynput/ayon-react-components'
 import { FilePath, LatestIcon } from './Bundles.styled'
-import useCreateContext from '/src/hooks/useCreateContext'
+import useCreateContext from '@hooks/useCreateContext'
 import { useNavigate } from 'react-router'
 
 const AddonListItem = ({ version, setVersion, selection, addons = [], versions }) => {
@@ -173,9 +173,13 @@ const BundlesAddonList = React.forwardRef(
             const isPipeline = addon.addonType === 'pipeline'
             const currentVersion = addon.version
             const allVersions = addon.versions
-            const sortedVersions = Object.keys(allVersions).sort((a, b) =>
-              rcompare(coerce(a), coerce(b)),
-            )
+            const sortedVersions = Object.keys(allVersions).sort((a, b) => {
+              const comparison = rcompare(coerce(a), coerce(b))
+              if (comparison === 0) {
+                return b.localeCompare(a)
+              }
+              return comparison
+            })
             const latestVersion = sortedVersions[0]
 
             if (readOnly && isPipeline)

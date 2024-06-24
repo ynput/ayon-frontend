@@ -1,23 +1,48 @@
 import styled from 'styled-components'
-import StatusSelect from '/src/components/status/statusSelect'
+import StatusSelectComponent from '@components/status/statusSelect'
 import {
   Button,
   OverflowField,
-  Section as SectionARC,
   getShimmerStyles,
+  AssigneeSelect as AssigneeSelectComponent,
+  TagsSelect as TagsSelectComponent,
 } from '@ynput/ayon-react-components'
 
 export const Container = styled.div`
   position: relative;
 `
 
-export const SectionWrapper = styled(SectionARC)`
+export const Grid = styled.div`
   padding: 8px;
-  align-items: flex-start;
-  gap: var(--base-gap-large);
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
   flex: none;
   overflow: hidden;
+
+  display: grid;
+  /* two columns */
+  grid-template-columns: 1fr 1fr;
+  gap: var(--base-gap-large);
+
+  /* set full widths for different elements */
+  .path,
+  .titles,
+  .filters {
+    grid-column: span 2;
+  }
+
+  &.isCompact {
+    /* hide fields when compact */
+    .assignee-select,
+    .tags-select,
+    .actions,
+    .filters {
+      display: none;
+    }
+    /* right column auto size */
+    grid-template-columns: 1fr auto;
+    /* align center */
+    align-items: center;
+  }
 `
 
 export const CloseButton = styled(Button)`
@@ -37,6 +62,11 @@ export const Header = styled.header`
   .thumbnail {
     width: 48px;
   }
+
+  &.isCompact {
+    /* only take up one column */
+    grid-column: span 1;
+  }
 `
 
 export const Path = styled(OverflowField)`
@@ -51,7 +81,7 @@ export const Path = styled(OverflowField)`
   }
 
   & > span {
-    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
   }
 
   &.isLoading {
@@ -91,15 +121,17 @@ export const Content = styled.div`
     width: 70%;
     ${getShimmerStyles()}
 
-    h2, h3 {
+    h2, h3, .sub-title {
       opacity: 0;
+      white-space: nowrap;
     }
   }
-`
 
-export const Section = styled.div`
-  display: flex;
-  flex-direction: column;
+  .sub-title {
+    display: flex;
+    align-items: center;
+    gap: var(--base-gap-medium);
+  }
 `
 
 export const ContentRow = styled.div`
@@ -118,7 +150,8 @@ export const LabelWrapper = styled.div`
   flex-direction: column;
 `
 
-export const TaskStatusSelect = styled(StatusSelect)`
+export const StatusSelect = styled(StatusSelectComponent)`
+  width: fit-content;
   .status-field.value {
     position: relative;
     left: 1px;
@@ -136,6 +169,17 @@ export const TaskStatusSelect = styled(StatusSelect)`
       opacity: 0;
     }
   }
+`
+
+export const AssigneeSelect = styled(AssigneeSelectComponent)`
+  width: fit-content;
+  justify-self: end;
+  max-width: 100%;
+`
+export const TagsSelect = styled(TagsSelectComponent)`
+  width: fit-content;
+  justify-self: end;
+  max-width: 100%;
 `
 
 export const Footer = styled.footer`

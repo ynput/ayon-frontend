@@ -1,25 +1,26 @@
 import React, { useMemo, useRef, useState } from 'react'
-import ActivityItem from '../../components/Feed/ActivityItem'
-import CommentInput from '/src/components/CommentInput/CommentInput'
+import ActivityItem from '@components/Feed/ActivityItem'
+import CommentInput from '@components/CommentInput/CommentInput'
 import * as Styled from './Feed.styled'
-import {
-  allowedVersionsQueryTypes,
-  useGetActivitiesQuery,
-  useGetVersionsQuery,
-} from '/src/services/activities/getActivities'
+import { useGetActivitiesQuery, useLazyGetActivitiesQuery } from '@queries/activities/getActivities'
 import useCommentMutations from './hooks/useCommentMutations'
 import useTransformActivities from './hooks/useTransformActivities'
 import { InView } from 'react-intersection-observer'
 import { useDispatch, useSelector } from 'react-redux'
-import { openSlideOut } from '/src/features/details'
+import { openSlideOut } from '@state/details'
 import useSaveScrollPos from './hooks/useSaveScrollPos'
 import useScrollOnInputOpen from './hooks/useScrollOnInputOpen'
-import { getLoadingPlaceholders, getNextPage } from './feedHelpers'
-import { onCommentImageOpen } from '/src/features/context'
+import { getLoadingPlaceholders } from './feedHelpers'
+import { onCommentImageOpen } from '@state/context'
 import { Icon } from '@ynput/ayon-react-components'
 import { classNames } from 'primereact/utils'
-import { useEffect } from 'react'
 import { isEqual, union } from 'lodash'
+import useScrollToHighlighted from './hooks/useScrollToHighlighted'
+import { toast } from 'react-toastify'
+import ActivityReferenceTooltip from '@components/Feed/ActivityReferenceTooltip/ActivityReferenceTooltip'
+
+// number of activities to get
+export const activitiesLast = 30
 
 const Feed = ({
   entities = [],
@@ -36,10 +37,10 @@ const Feed = ({
   const path = isSlideOut ? 'slideOut' : 'pinned'
   const activityTypes = useSelector((state) => state.details[path].activityTypes)
   const filter = useSelector((state) => state.details[path].filter)
+  const highlighted = useSelector((state) => state.details[path].highlighted)
 
   // STATES
   const [isCommentInputOpen, setIsCommentInputOpen] = useState(false)
-  const [currentCursors, setCurrentCursors] = useState({})
 
   const entitiesToQuery = useMemo(
     () =>
@@ -50,23 +51,49 @@ const Feed = ({
 
   const skip = !entities.length || !filter || !activityTypes || !projectName
   // QUERY MADE TO GET ACTIVITIES
+
+  const queryArgs = {
+    entityIds: entityIds,
+    projectName: projectName,
+    last: activitiesLast,
+    currentUser: userName,
+    referenceTypes: ['origin', 'mention', 'relation'],
+    activityTypes: activityTypes,
+    filter,
+    cursor: null,
+  }
+
   let {
-    data: activitiesData = [],
+    data: { activities: activitiesData = [], pageInfo = {} } = {},
     isFetching: isFetchingActivities,
     currentData,
-  } = useGetActivitiesQuery(
-    {
-      entityIds: entityIds,
-      projectName: projectName,
-      cursor: currentCursors[filter],
-      last: 30,
-      currentUser: userName,
-      referenceTypes: ['origin', 'mention', 'relation'],
-      activityTypes: activityTypes,
-      filter,
-    },
-    { skip: skip },
-  )
+  } = useGetActivitiesQuery(queryArgs, { skip: skip })
+
+  const [getActivitiesData, { isFetching: isFetchingMore }] = useLazyGetActivitiesQuery()
+
+  const { hasPreviousPage, endCursor } = pageInfo
+  // when we scroll to the top of the feed, fetch more activities
+  const handleLoadMore = async (info) => {
+    const endCursorValue = info?.endCursor || endCursor
+    const hasPreviousPageValue = info ? info.hasPreviousPage : hasPreviousPage
+
+    // get cursor of last activity and if there is a next page
+    if (!hasPreviousPageValue) return console.log('No more activities to load')
+    if (!endCursorValue) return console.log('No cursor found')
+    console.log('fetching more activities...', endCursorValue)
+
+    try {
+      const res = await getActivitiesData({
+        ...queryArgs,
+        cursor: endCursorValue,
+      }).unwrap()
+      // return if there is next page to get
+      return res?.pageInfo
+    } catch (error) {
+      console.error(error)
+      toast.error('Failed to load more activities')
+    }
+  }
 
   // check if currentData matches all the entityIds
   // if not, this means we are loading new entity
@@ -74,7 +101,7 @@ const Feed = ({
     if (!isFetchingActivities) return false
 
     const currentEntityIds = union(
-      currentData?.flatMap((activity) => (activity.entityId ? activity.entityId : [])),
+      currentData?.activities?.flatMap((activity) => (activity.entityId ? activity.entityId : [])),
     )
 
     return !isEqual(currentEntityIds, entityIds)
@@ -85,42 +112,10 @@ const Feed = ({
     isFetchingActivities = true
   }
 
-  let tasksOrProductsToQuery = []
-
-  if (allowedVersionsQueryTypes.includes(entityType)) {
-    // great, we can just use entitiesToQuery already
-    tasksOrProductsToQuery = entitiesToQuery
-  } else {
-    // we need to either use the productId
-    tasksOrProductsToQuery = entities.flatMap((entity) =>
-      entity.productId
-        ? {
-            projectName: entity.projectName,
-            id: entity.productId,
-            entityType: 'product',
-          }
-        : [],
-    )
-  }
-
-  // get all versions for the entity
-  // used for version mentions (@@)
-  const { data: versionsData = [] } = useGetVersionsQuery({
-    entities: tasksOrProductsToQuery,
-  })
-
-  // TODO: transform versions data into activity data
-  const versionActivities = []
-
   // do any transformation on activities data
   // 1. status change activities, attach status data based on projectName
   // 2. reverse the order
   const transformedActivitiesData = useTransformActivities(activitiesData, projectInfo, entityType)
-
-  // TODO: merge in the versions data with the activities data
-
-  // if filter is versions, show only version activities
-  const activitiesToShow = filter === 'versions' ? versionActivities : transformedActivitiesData
 
   // REFS
   const feedRef = useRef(null)
@@ -130,30 +125,16 @@ const Feed = ({
   useScrollOnInputOpen({ feedRef, isCommentInputOpen, height: 93 })
 
   // save scroll position of a feed
-  useSaveScrollPos({ entities, feedRef, filter })
+  useSaveScrollPos({ entities, feedRef, filter, disabled: highlighted.length })
 
-  // we don't use transformedActivitiesData here because we could get new data from the query
-  // but all the activities are merged so transformedActivitiesData doesn't change
-  const { cursor, hasPreviousPage } = useMemo(
-    () => getNextPage({ activities: activitiesToShow }),
-    [activitiesData],
-  )
-
-  // if there are more activities to fetch but the feed isn't scrollable, fetch more
-  useEffect(() => {
-    if (!feedRef.current) return
-    if (!hasPreviousPage) return
-    if (isFetchingActivities) return
-
-    // check if the feed is scrollable
-    const isScrollable = feedRef.current.scrollHeight > feedRef.current.clientHeight
-    if (isScrollable) return
-
-    console.log('auto fetch more activities...')
-
-    // fetch more activities
-    setCurrentCursors({ ...currentCursors, [filter]: cursor })
-  }, [feedRef, hasPreviousPage, cursor, filter, currentCursors, isFetchingActivities])
+  // try and scroll to highlighted activity
+  useScrollToHighlighted({
+    feedRef,
+    highlighted,
+    isLoading: isLoadingNew,
+    loadMore: handleLoadMore,
+    pageInfo,
+  })
 
   // comment mutations here!
   const { submitComment, updateComment, deleteComment } = useCommentMutations({
@@ -162,6 +143,7 @@ const Feed = ({
     entities,
     activityTypes,
     filter,
+    dispatch,
   })
 
   // When a checkbox is clicked, update the body to add/remove "x" in [ ] markdown
@@ -211,27 +193,16 @@ const Feed = ({
     updateComment(activity, newBody, activity.files)
   }
 
-  // when we scroll to the top of the feed, fetch more activities
-  const handleGetMoreActivities = () => {
-    // get cursor of last activity and if there is a next page
-    if (!hasPreviousPage) return console.log('No more activities to load')
-    if (!cursor) return console.log('No cursor found')
-    console.log('fetching more activities...')
-
-    // get more activities
-    setCurrentCursors({ ...currentCursors, [filter]: cursor })
-  }
-
   const handleRefClick = (ref = {}) => {
-    const { entityId, entityType, projectName } = ref
-    const supportedTypes = ['version', 'task']
+    const { entityId, entityType, activityId } = ref
+    const supportedTypes = ['version', 'task', 'folder']
 
     if (!supportedTypes.includes(entityType)) return console.log('Entity type not supported yet')
 
     if (!entityId || !entityType || !projectName) return console.log('No entity id or type found')
 
     // open slide out panel
-    dispatch(openSlideOut({ entityId, entityType, projectName, scope }))
+    dispatch(openSlideOut({ entityId, entityType, projectName, scope, activityId }))
   }
 
   const handleFileExpand = (file) => {
@@ -247,62 +218,73 @@ const Feed = ({
     warningMessage = `You are only viewing activities from one project: ${projectName}.`
 
   return (
-    <Styled.FeedContainer className="feed">
-      {warningMessage && (
-        <Styled.Warning>
-          <Icon icon="info" />
-          {warningMessage}
-        </Styled.Warning>
-      )}
-      <Styled.FeedContent ref={feedRef} className={classNames({ isLoading: isLoadingNew })}>
-        {isLoadingNew
-          ? loadingPlaceholders
-          : activitiesToShow.map((activity) => (
-              <ActivityItem
-                key={activity.activityId}
-                activity={activity}
-                onCheckChange={handleCommentChecked}
-                onDelete={deleteComment}
-                onUpdate={(value, files) => updateComment(activity, value, files)}
-                projectInfo={projectInfo}
-                projectName={projectName}
-                entityType={entityType}
-                onReferenceClick={handleRefClick}
-                isSlideOut={isSlideOut}
-                createdAts={entities.map((e) => e.createdAt)}
-                onFileExpand={handleFileExpand}
-                showOrigin={entities.length > 1}
-                filter={filter}
-                editProps={{
-                  activeUsers,
-                  projectName,
-                  entities: entities,
-                  versions: versionsData,
-                }}
-              />
-            ))}
-        <InView onChange={(inView) => inView && handleGetMoreActivities()} threshold={1}>
-          <Styled.LoadMore style={{ height: 0 }}>
-            {hasPreviousPage ? 'Loading more...' : ''}
-          </Styled.LoadMore>
-        </InView>
-      </Styled.FeedContent>
-      <CommentInput
-        initValue={null}
-        onSubmit={submitComment}
-        isOpen={isCommentInputOpen}
-        onClose={() => setIsCommentInputOpen(false)}
-        onOpen={() => setIsCommentInputOpen(true)}
-        activeUsers={activeUsers}
-        projectName={projectName}
-        versions={versionsData}
-        entities={entities}
-        projectInfo={projectInfo}
-        filter={filter}
-        disabled={isMultiProjects}
-        isLoading={isLoadingNew || !entities.length}
-      />
-    </Styled.FeedContainer>
+    <>
+      <Styled.FeedContainer className="feed">
+        {warningMessage && (
+          <Styled.Warning>
+            <Icon icon="info" />
+            {warningMessage}
+          </Styled.Warning>
+        )}
+        <Styled.FeedContent ref={feedRef} className={classNames({ isLoading: isLoadingNew })}>
+          {isLoadingNew
+            ? loadingPlaceholders
+            : transformedActivitiesData.map((activity) => (
+                <ActivityItem
+                  key={activity.activityId}
+                  activity={activity}
+                  onCheckChange={handleCommentChecked}
+                  onDelete={deleteComment}
+                  onUpdate={(value, files, refs) => updateComment(activity, value, files, refs)}
+                  projectInfo={projectInfo}
+                  projectName={projectName}
+                  entityType={entityType}
+                  onReferenceClick={handleRefClick}
+                  isSlideOut={isSlideOut}
+                  createdAts={entities.map((e) => e.createdAt)}
+                  onFileExpand={handleFileExpand}
+                  showOrigin={entities.length > 1}
+                  filter={filter}
+                  editProps={{
+                    activeUsers,
+                    projectName,
+                    entities: entities,
+                    entityType,
+                  }}
+                  isHighlighted={highlighted.includes(activity.activityId)}
+                  dispatch={dispatch}
+                />
+              ))}
+          {hasPreviousPage && (
+            <InView
+              root={feedRef.current}
+              onChange={(inView) => inView && handleLoadMore()}
+              rootMargin={'400px 0px 0px 0px'}
+            >
+              <Styled.LoadMore style={{ height: 0 }} onClick={handleLoadMore}>
+                {isFetchingMore ? 'Loading more...' : 'Click to load more'}
+              </Styled.LoadMore>
+            </InView>
+          )}
+        </Styled.FeedContent>
+        <CommentInput
+          initValue={null}
+          onSubmit={submitComment}
+          isOpen={isCommentInputOpen}
+          onClose={() => setIsCommentInputOpen(false)}
+          onOpen={() => setIsCommentInputOpen(true)}
+          projectName={projectName}
+          entities={entities}
+          entityType={entityType}
+          projectInfo={projectInfo}
+          filter={filter}
+          disabled={isMultiProjects}
+          isLoading={isLoadingNew || !entities.length}
+          scope={scope}
+        />
+      </Styled.FeedContainer>
+      <ActivityReferenceTooltip {...{ dispatch, projectName, projectInfo }} />
+    </>
   )
 }
 

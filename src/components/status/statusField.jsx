@@ -38,7 +38,7 @@ const StatusStyled = styled.div`
   /* STATUS ICON */
   .status-icon {
     font-variation-settings: 'FILL' 1, 'wght' 300, 'GRAD' 300, 'opsz' 20;
-    /* always taks parents color */
+    /* always takes parents color */
     color: inherit;
   }
 
@@ -127,18 +127,7 @@ const StatusStyled = styled.div`
       }
     `}
 
-  /* ALIGNMENT */
-  ${({ $align }) =>
-    $align === 'right' &&
-    css`
-      justify-content: end;
-
-      span {
-        order: 2;
-      }
-    `}
-
-    /* ICON ONLY STYLES */
+  /* ICON ONLY STYLES */
       ${({ $size }) =>
     $size === 'icon' &&
     css`
@@ -157,7 +146,6 @@ const StatusField = ({
   isChanging,
   isSelecting,
   size = 'full',
-  align = 'left',
   style,
   height,
   placeholder,
@@ -184,7 +172,6 @@ const StatusField = ({
       $color={color}
       $isActive={isActive}
       $isSelecting={isSelecting}
-      $align={align}
       $isChanging={isChanging}
       $size={size}
       $invert={invert}
@@ -209,7 +196,6 @@ StatusField.propTypes = {
   isChanging: PropTypes.bool,
   isSelecting: PropTypes.bool,
   size: PropTypes.oneOf(['full', 'short', 'icon']),
-  align: PropTypes.oneOf(['left', 'right']),
   onClick: PropTypes.func,
   style: PropTypes.object,
   anatomy: PropTypes.object,

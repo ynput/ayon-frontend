@@ -1,9 +1,10 @@
 import { Icon } from '@ynput/ayon-react-components'
 import ActivityHeader from '../ActivityHeader/ActivityHeader'
 import * as Styled from './ActivityVersions.styled'
-import { productTypes } from '/src/features/project'
+import { productTypes } from '@state/project'
 import { useState } from 'react'
 import { More } from '../ActivityGroup/ActivityGroup.styled'
+import ActivityDate from '../ActivityDate'
 
 const ActivityVersions = ({
   activity,
@@ -33,14 +34,17 @@ const ActivityVersions = ({
         onReferenceClick={onReferenceClick}
       />
       {versions.flatMap(
-        ({ name, id, productName, productType, updatedAt }, index) =>
+        ({ name, id, productName, productType, updatedAt, createdAt }, index) =>
           (index < limit || showAll) && (
             <Styled.Card
               key={id}
               onClick={() => onReferenceClick({ entityType: 'version', entityId: id, projectName })}
             >
               <Styled.Content>
-                <Styled.Title>{productName}</Styled.Title>
+                <Styled.Title>
+                  <span>{productName}</span>
+                  <ActivityDate date={createdAt} isExact />
+                </Styled.Title>
                 <span className="version">{name}</span>
               </Styled.Content>
               <Styled.Thumbnail

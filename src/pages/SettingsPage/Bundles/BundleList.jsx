@@ -1,15 +1,12 @@
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 
-import { Badge, BadgeWrapper } from '/src/components/Badge'
+import { Badge, BadgeWrapper } from '@components/Badge'
 import { TablePanel } from '@ynput/ayon-react-components'
-import useCreateContext from '/src/hooks/useCreateContext'
-import {
-  useDeleteBundleMutation,
-  useUpdateBundleMutation,
-} from '/src/services/bundles/updateBundles'
+import useCreateContext from '@hooks/useCreateContext'
+import { useDeleteBundleMutation, useUpdateBundleMutation } from '@queries/bundles/updateBundles'
 import { useMemo } from 'react'
-import confirmDelete from '/src/helpers/confirmDelete'
+import confirmDelete from '@helpers/confirmDelete'
 import { toast } from 'react-toastify'
 
 const BundleList = ({
@@ -75,9 +72,11 @@ const BundleList = ({
     const isStatus = bundle[key]
     const label = isStatus ? unsetLabel : setLabel
     const icon = isStatus ? 'remove' : 'add'
+    let shortcut = `Shift+${status.charAt(0).toUpperCase()}`
+    if (status === 'dev') shortcut = null
     const command = () => toggleBundleStatus(status, bundle.name)
     const disabled = selectedBundles.length > 1 || disabledExtra
-    return { label, icon, command, disabled }
+    return { label, icon, shortcut, command, disabled }
   }
 
   const [ctxMenuShow] = useCreateContext([])
@@ -116,6 +115,7 @@ const BundleList = ({
     ctxMenuItems.push({
       label: 'Duplicate and Edit',
       icon: 'edit_document',
+      shortcut: 'Shift+D',
       command: () => onDuplicate(activeBundleName),
       disabled: selectedBundles.length > 1,
     })

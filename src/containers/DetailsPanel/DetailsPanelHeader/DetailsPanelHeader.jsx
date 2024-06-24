@@ -1,15 +1,38 @@
-import { AssigneeSelect, TagsSelect } from '@ynput/ayon-react-components'
-import React, { useMemo } from 'react'
+import { useMemo } from 'react'
 import * as Styled from './DetailsPanelHeader.styled'
-import copyToClipboard from '/src/helpers/copyToClipboard'
-import StackedThumbnails from '/src/pages/EditorPage/StackedThumbnails'
+import copyToClipboard from '@helpers/copyToClipboard'
+import StackedThumbnails from '@pages/EditorPage/StackedThumbnails'
 import { classNames } from 'primereact/utils'
-import { isEqual, union } from 'lodash'
-import { useUpdateEntitiesMutation } from '/src/services/entity/updateEntity'
+import { isEqual, union, upperFirst } from 'lodash'
+import { useUpdateEntitiesMutation } from '@queries/entity/updateEntity'
 import { toast } from 'react-toastify'
-import Actions from '/src/components/Actions/Actions'
+import Actions from '@components/Actions/Actions'
 import FeedFilters from '../FeedFilters/FeedFilters'
-import usePatchProductsListWithVersions from '/src/hooks/usePatchProductsListWithVersions'
+import usePatchProductsListWithVersions from '@hooks/usePatchProductsListWithVersions'
+
+// DUMMY ACTIONS DATA
+const actions = [
+  { id: 'nuke', icon: 'nuke.png', pinned: 'actions2D' },
+  { id: 'afterEffects', icon: 'after-effects.png', pinned: 'actions2D' },
+  { id: 'maya', icon: 'maya.png', pinned: 'actions3D' },
+  { id: 'houdini', icon: 'houdini.png', pinned: 'actions3D' },
+  { id: 'photoshop', icon: 'photoshop.png' },
+]
+
+const actionTaskTypes = {
+  actions2D: ['compositing', 'roto', 'matchmove', 'edit', 'paint'],
+  actions3D: [
+    'modeling',
+    'texture',
+    'lookdev',
+    'rigging',
+    'layout',
+    'setdress',
+    'animation',
+    'fx',
+    'lighting',
+  ],
+}
 
 const DetailsPanelHeader = ({
   entityType,
@@ -22,6 +45,7 @@ const DetailsPanelHeader = ({
   onClose,
   isSlideOut,
   isFetching,
+  isCompact = false,
 }) => {
   // for selected entities, get flat list of assignees
   const entityAssignees = useMemo(
@@ -34,34 +58,28 @@ const DetailsPanelHeader = ({
   const isLoading = entities.length === 0 || !firstEntity || isFetching
   // placeholder entity
   if (!firstEntity) {
-    entities = [
-      {
-        id: 'placeholder',
-        entityType,
-        icon: 'sync',
-        title: 'loading...',
-        subTitle: 'loading...',
-      },
-    ]
-    firstEntity = entities[0]
+    firstEntity = {
+      id: 'placeholder',
+      entityType,
+      icon: 'sync',
+      title: 'loading...',
+      subTitle: 'loading...',
+    }
   }
   const projectName = entities.length > 1 ? null : firstEntity?.projectName
 
-  const thumbnails = useMemo(
-    () =>
-      entityType !== 'representation'
-        ? entities
-            .filter((entity, i) => i <= 5)
-            .map((entity) => ({
-              src: entity.thumbnailUrl,
-              icon: entity.icon,
-              id: entity.id,
-              type: entityType,
-              updatedAt: entity.updatedAt,
-            }))
-        : [{ icon: 'view_in_ar' }],
-    [entities],
-  )
+  const thumbnails = useMemo(() => {
+    if (!entities[0]) return []
+
+    if (entityType === 'representation') return [{ icon: 'view_in_ar' }]
+
+    return entities.slice(0, 6).map((entity) => ({
+      icon: entity.icon,
+      id: entity.id,
+      type: entityType,
+      updatedAt: entity.updatedAt,
+    }))
+  }, [entities, entityType])
 
   // we need to get the intersection of all the statuses of the projects for the selected entities
   // this means that if we have 2 entities from 2 different projects, we need to get the intersection of the statuses of those 2 projects
@@ -117,6 +135,7 @@ const DetailsPanelHeader = ({
         data: {
           [field]: value,
         },
+        currentAssignees: entity.users,
       }))
 
       await updateEntities({ operations, entityType })
@@ -126,34 +145,35 @@ const DetailsPanelHeader = ({
     }
   }
 
+  const handleThumbnailUpload = ({ id, thumbnailId }) => {
+    // patching the updatedAt will force a refresh of the thumbnail url
+    const newUpdatedAt = new Date().toISOString()
+    const entity = entities.find((entity) => entity.id === id)
+    const currentAssignees = entity?.users || []
+    const operations = [
+      { id, projectName, data: { updatedAt: newUpdatedAt, thumbnailId }, currentAssignees },
+    ]
+
+    const versionPatch = {
+      productId: entity.productId,
+      versionUpdatedAt: newUpdatedAt,
+      versionThumbnailId: thumbnailId,
+    }
+
+    // update productsList cache with new status
+    let productsPatch = patchProductsListWithVersions([versionPatch])
+    try {
+      updateEntities({ operations, entityType })
+    } catch (error) {
+      productsPatch?.undo()
+      productsPatch?.undo()
+    }
+  }
+
   const fullPath = firstEntity?.path || ''
   const pathArray = fullPath.split('/')
   const handleCopyPath = () => {
     copyToClipboard(fullPath)
-  }
-
-  // DUMMY ACTIONS DATA
-  const actions = [
-    { id: 'nuke', icon: 'nuke.png', pinned: 'actions2D' },
-    { id: 'afterEffects', icon: 'after-effects.png', pinned: 'actions2D' },
-    { id: 'maya', icon: 'maya.png', pinned: 'actions3D' },
-    { id: 'houdini', icon: 'houdini.png', pinned: 'actions3D' },
-    { id: 'photoshop', icon: 'photoshop.png' },
-  ]
-
-  const actionTaskTypes = {
-    actions2D: ['compositing', 'roto', 'matchmove', 'edit', 'paint'],
-    actions3D: [
-      'modeling',
-      'texture',
-      'lookdev',
-      'rigging',
-      'layout',
-      'setdress',
-      'animation',
-      'fx',
-      'lighting',
-    ],
   }
 
   const pinned = actions
@@ -183,15 +203,7 @@ const DetailsPanelHeader = ({
   }
 
   return (
-    <Styled.SectionWrapper id={portalId} className="details-panel-header">
-      <Styled.Path
-        value={pathArray.join(' / ')}
-        align="left"
-        onClick={handleCopyPath}
-        isCopy
-        icon="content_copy"
-        className={classNames({ onClose, isLoading })}
-      />
+    <Styled.Grid id={portalId} className={classNames('details-panel-header', { isCompact })}>
       {onClose && (
         <Styled.CloseButton
           onClick={onClose}
@@ -201,82 +213,80 @@ const DetailsPanelHeader = ({
           data-tooltip-delay={0}
         />
       )}
-      <Styled.Header>
+      <Styled.Path
+        value={pathArray.join(' / ')}
+        align="left"
+        onClick={handleCopyPath}
+        isCopy
+        icon="content_copy"
+        className={classNames('path', { onClose, isLoading })}
+      />
+      <Styled.Header className={classNames('titles', { isCompact })}>
         <StackedThumbnails
           isLoading={isLoading}
           shimmer={isLoading}
-          style={{ aspectRatio: '1/1' }}
+          style={{ aspectRatio: '1' }}
           thumbnails={thumbnails}
           projectName={projectName}
           portalId={portalId}
-          onUpload={({ thumbnailId }) => handleUpdate('thumbnailId', thumbnailId)}
+          onUpload={handleThumbnailUpload}
         />
         <Styled.Content className={classNames({ isLoading })}>
           <h2>{!isMultiple ? firstEntity?.title : `${entities.length} ${entityType}s selected`}</h2>
-          <h3>{!isMultiple ? firstEntity?.subTitle : entities.map((t) => t.title).join(', ')}</h3>
+          <div className="sub-title">
+            <span>{upperFirst(entityType)} - </span>
+            <h3>{!isMultiple ? firstEntity?.subTitle : entities.map((t) => t.title).join(', ')}</h3>
+          </div>
         </Styled.Content>
       </Styled.Header>
-      <Styled.Section>
-        <Styled.ContentRow>
-          <Styled.TaskStatusSelect
-            value={statusesValue}
-            options={statusesOptions}
-            disabledValues={disabledStatuses}
-            invert
-            style={{ maxWidth: 'unset' }}
-            onChange={(value) => handleUpdate('status', value)}
-            className={classNames({ isLoading })}
-          />
-          {hasUser && !isLoading && (
-            <AssigneeSelect
-              value={entityAssignees}
-              options={usersOptions}
-              disabledValues={disabledAssignees.map((u) => u.name)}
-              isMultiple={isMultiple && entityAssignees.length > 1 && entityType === 'task'}
-              editor={entityType === 'task'}
-              align="right"
-              onChange={(value) => handleUpdate('assignees', value)}
-            />
-          )}
-        </Styled.ContentRow>
-      </Styled.Section>
-      <Styled.Section>
-        <Styled.ContentRow>
-          <Actions options={actions} pinned={pinned} isLoading={isLoading} />
-          <TagsSelect
-            value={union(...tagsValues)}
-            isMultiple={tagsValues.some((v) => !isEqual(v, tagsValues[0]))}
-            tags={tagsOptionsObject}
-            editable
-            onChange={(value) => handleUpdate('tags', value)}
+      <Styled.StatusSelect
+        value={statusesValue}
+        options={statusesOptions}
+        disabledValues={disabledStatuses}
+        invert
+        style={{ maxWidth: 'unset' }}
+        onChange={(value) => handleUpdate('status', value)}
+        className={classNames('status-select', { isLoading })}
+        align={isCompact ? 'right' : 'left'}
+      />
+      {!isCompact &&
+        (!hasUser || isLoading ? (
+          <div></div>
+        ) : (
+          <Styled.AssigneeSelect
+            value={entityAssignees}
+            options={usersOptions}
+            disabledValues={disabledAssignees.map((u) => u.name)}
+            isMultiple={isMultiple && entityAssignees.length > 1 && entityType === 'task'}
+            readOnly={entityType !== 'task'}
+            emptyMessage={entityType === 'task' ? 'Assign user' : ''}
             align="right"
-            styleDropdown={{ display: isLoading && 'none' }}
+            onChange={(value) => handleUpdate('assignees', value)}
+            className="assignee-select"
+            data-tooltip={
+              entityAssignees.length ? (entityType === 'task' ? 'Assigned users' : 'Author') : ''
+            }
           />
-        </Styled.ContentRow>
-      </Styled.Section>
-      <FeedFilters isSlideOut={isSlideOut} isLoading={isLoading} entityType={entityType} />
-    </Styled.SectionWrapper>
+        ))}
+      <Actions options={actions} pinned={pinned} isLoading={isLoading} />
+      <Styled.TagsSelect
+        value={union(...tagsValues)}
+        isMultiple={tagsValues.some((v) => !isEqual(v, tagsValues[0]))}
+        tags={tagsOptionsObject}
+        editable
+        onChange={(value) => handleUpdate('tags', value)}
+        align="right"
+        styleDropdown={{ display: isLoading && 'none' }}
+        className="tags-select"
+      />
+      <FeedFilters
+        isSlideOut={isSlideOut}
+        isLoading={isLoading}
+        entityType={entityType}
+        className="filters"
+      />
+    </Styled.Grid>
   )
 }
 
 export default DetailsPanelHeader
-
-// {
-//   "id": "739af4b83da311eeac5d0242ac120004",
-//   "name": "modeling",
-//   "status": "In progress",
-//   "taskType": "Modeling",
-//   "assignees": [
-//       "userName"
-//   ],
-//   "updatedAt": "2023-08-30T15:14:45.427705+00:00",
-//   "folderName": "00_kloecksiouys_mccrietsoiwn",
-//   "folderId": "739a748e3da311eeac5d0242ac120004",
-//   "path": "assets/characters/00_kloecksiouys_mccrietsoiwn",
-//   "projectName": "demo_Commercial",
-//   "latestVersionThumbnailId": "08b9986c474811eea5d60242ac120004",
-//   "thumbnailUrl": "/api/projects/demo_Commercial/thumbnails/08b9986c474811eea5d60242ac120004?updatedAt=2023-08-30T15:14:45.427705+00:00&token=0848587a83cd065914bf9e6c0792bdd246910cbd2ea520115f802d6adbc9e396",
-//   "statusIcon": "play_arrow",
-//   "statusColor": "#3498db",
-//   "taskIcon": "language"
-// }

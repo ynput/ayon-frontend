@@ -11,23 +11,16 @@
 import { useEffect, useState } from 'react'
 import { useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
-import {
-  useGetAnatomyPresetQuery,
-  useGetAnatomySchemaQuery,
-} from '/src/services/anatomy/getAnatomy'
+import { useGetAnatomyPresetQuery, useGetAnatomySchemaQuery } from '@queries/anatomy/getAnatomy'
 
-import { useGetProjectAnatomyQuery } from '/src/services/project/getProject'
+import { useGetProjectAnatomyQuery } from '@queries/project/getProject'
 import { isEqual } from 'lodash'
 
-import { setUri } from '/src/features/context'
-import SettingsEditor from '/src/containers/SettingsEditor'
-import {
-  getValueByPath,
-  setValueByPath,
-  sameKeysStructure,
-} from '/src/containers/AddonSettings/utils'
+import { setUri } from '@state/context'
+import SettingsEditor from '@containers/SettingsEditor'
+import { getValueByPath, setValueByPath, sameKeysStructure } from '@containers/AddonSettings/utils'
 import { cloneDeep } from 'lodash'
-import { usePaste } from '/src/context/pasteContext'
+import { usePaste } from '@context/pasteContext'
 
 const AnatomyEditor = ({
   preset,

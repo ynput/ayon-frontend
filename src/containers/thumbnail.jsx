@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import styled, { keyframes } from 'styled-components'
 import getShimmerStyles from '../styles/getShimmerStyles'
 import { Icon } from '@ynput/ayon-react-components'
-import ThumbnailUploader from '../components/ThumbnailUploader/ThumbnailUploader'
+import ThumbnailUploader from '@components/ThumbnailUploader/ThumbnailUploader'
 import { createPortal } from 'react-dom'
 import { classNames } from 'primereact/utils'
 
@@ -101,6 +101,7 @@ const Thumbnail = ({
     const handleDragOver = (e) => {
       e.preventDefault()
       e.stopPropagation()
+
       setShowPortal(true)
     }
     const handleDragLeave = (e) => {
@@ -164,6 +165,7 @@ const Thumbnail = ({
                   }, 800)
                 }}
                 onUploading={() => setIsUploading(true)}
+                onCancel={() => setShowPortal(false)}
               />,
               portalEl,
             )}

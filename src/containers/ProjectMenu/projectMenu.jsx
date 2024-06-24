@@ -1,20 +1,21 @@
 import { useNavigate } from 'react-router-dom'
 import * as Styled from './projectMenu.styled'
 import { useDispatch, useSelector } from 'react-redux'
-import { selectProject } from '/src/features/project'
-import { selectProject as selectProjectContext, setUri } from '/src/features/context'
-import { onProjectChange } from '/src/features/editor'
-import { ayonApi } from '/src/services/ayon'
-import MenuList from '/src/components/Menu/MenuComponents/MenuList'
-import { useGetAllProjectsQuery } from '/src/services/project/getProject'
+import { selectProject } from '@state/project'
+import { selectProject as selectProjectContext, setUri } from '@state/context'
+import { onProjectChange } from '@state/editor'
+import { ayonApi } from '@queries/ayon'
+import MenuList from '@components/Menu/MenuComponents/MenuList'
+import { useListProjectsQuery } from '@queries/project/getProject'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { InputText, Section } from '@ynput/ayon-react-components'
-import useCreateContext from '/src/hooks/useCreateContext'
-import useLocalStorage from '/src/hooks/useLocalStorage'
-import ProjectButton from '/src/components/ProjectButton/ProjectButton'
+import useCreateContext from '@hooks/useCreateContext'
+import useLocalStorage from '@hooks/useLocalStorage'
+import ProjectButton from '@components/ProjectButton/ProjectButton'
 import { createPortal } from 'react-dom'
-import { useShortcutsContext } from '/src/context/shortcutsContext'
+import { useShortcutsContext } from '@context/shortcutsContext'
 import { classNames } from 'primereact/utils'
+import { onProjectOpened } from '/src/features/dashboard'
 
 const ProjectMenu = ({ isOpen, onHide }) => {
   const navigate = useNavigate()
@@ -52,7 +53,7 @@ const ProjectMenu = ({ isOpen, onHide }) => {
   const user = useSelector((state) => state.user)
   const isUser = user?.data?.isUser
 
-  const { data: projects = [] } = useGetAllProjectsQuery({ showInactive: false })
+  const { data: projects = [] } = useListProjectsQuery({ active: true })
 
   const [showContext] = useCreateContext([])
 
@@ -177,6 +178,8 @@ const ProjectMenu = ({ isOpen, onHide }) => {
     dispatch(ayonApi.util.invalidateTags(['branch', 'workfile', 'hierarchy', 'project', 'product']))
     // reset uri
     dispatch(setUri(`ayon+entity://${projectName}`))
+    // set dashboard projects
+    dispatch(onProjectOpened(projectName))
 
     // close search if it was open
     setSearchOpen(false)

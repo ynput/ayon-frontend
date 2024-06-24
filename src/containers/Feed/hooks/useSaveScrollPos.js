@@ -3,13 +3,13 @@ import { useEffect, useRef } from 'react'
 const getCacheKey = (entities, filter) =>
   JSON.stringify({ entities: entities.map((e) => e.id), filter })
 
-const useSaveScrollPos = ({ entities = [], feedRef, filter }) => {
+const useSaveScrollPos = ({ entities = [], feedRef, filter, disabled }) => {
   const scrollPositions = useRef({})
 
   // scroll to the bottom or saved position every time entityIds changes
   useEffect(() => {
     const cacheKey = getCacheKey(entities, filter)
-    if (!feedRef.current) return
+    if (!feedRef.current || disabled) return
     // get saved scroll position or scroll to the bottom
     feedRef.current.scrollTop = scrollPositions.current[cacheKey] || 0
   }, [entities, filter, feedRef.current])
@@ -17,7 +17,7 @@ const useSaveScrollPos = ({ entities = [], feedRef, filter }) => {
   useEffect(() => {
     let timeoutId = null
 
-    if (!feedRef.current) return
+    if (!feedRef.current || disabled) return
 
     // Wrap the event listener function in a throttled function
     const throttledHandleScrollEvent = (e) => {
@@ -42,7 +42,7 @@ const useSaveScrollPos = ({ entities = [], feedRef, filter }) => {
       // remove scroll event listener
       feedRef.current?.removeEventListener('scroll', throttledHandleScrollEvent)
     }
-  }, [feedRef.current, filter, entities])
+  }, [feedRef.current, filter, entities, disabled])
 }
 
 export default useSaveScrollPos

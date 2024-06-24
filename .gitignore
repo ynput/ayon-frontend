@@ -4,6 +4,7 @@ dist/
 yarn.lock
 yarn-error.log
 .env.local
+.env
 /test-results/
 /playwright-report/
 /blob-report/

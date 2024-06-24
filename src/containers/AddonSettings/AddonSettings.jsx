@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react'
 import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 
-import useCreateContext from '/src/hooks/useCreateContext'
+import useCreateContext from '@hooks/useCreateContext'
 
 import {
   Button,
@@ -15,28 +15,28 @@ import {
 } from '@ynput/ayon-react-components'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 
-import AddonList from '/src/containers/AddonList'
-import SiteList from '/src/containers/SiteList'
+import AddonList from '@containers/AddonList'
+import SiteList from '@containers/SiteList'
 import AddonSettingsPanel from './AddonSettingsPanel'
 import SettingsChangesTable from './SettingsChangesTable'
 import CopyBundleSettingsButton from './CopyBundleSettingsButton'
 import VariantSelector from './VariantSelector'
-import CopySettingsDialog from '/src/containers/CopySettings/CopySettingsDialog'
-import RawSettingsDialog from '/src/containers/RawSettingsDialog'
+import CopySettingsDialog from '@containers/CopySettings/CopySettingsDialog'
+import RawSettingsDialog from '@containers/RawSettingsDialog'
 
 import {
   useSetAddonSettingsMutation,
   useDeleteAddonSettingsMutation,
   useModifyAddonOverrideMutation,
-} from '/src/services/addonSettings'
+} from '@queries/addonSettings'
 
-import { usePromoteBundleMutation } from '/src/services/bundles/updateBundles'
+import { usePromoteBundleMutation } from '@queries/bundles/updateBundles'
 import { confirmDialog } from 'primereact/confirmdialog'
 
 import { getValueByPath, setValueByPath, sameKeysStructure, compareObjects } from './utils'
-import arrayEquals from '/src/helpers/arrayEquals'
+import arrayEquals from '@helpers/arrayEquals'
 import { cloneDeep } from 'lodash'
-import { usePaste } from '/src/context/pasteContext'
+import { usePaste } from '@context/pasteContext'
 
 /*
  * key is {addonName}|{addonVersion}|{variant}|{siteId}|{projectKey}
@@ -58,6 +58,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   const [originalData, setOriginalData] = useState({})
   const [localData, setLocalData] = useState({})
   const [changedKeys, setChangedKeys] = useState({})
+  const [unpinnedKeys, setUnpinnedKeys] = useState({})
   const [currentSelection, setCurrentSelection] = useState(null)
   const [selectedSites, setSelectedSites] = useState([])
   const [variant, setVariant] = useState('production')
@@ -166,6 +167,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
       const payloadData = {
         ...localData[key],
         __pinned_fields__: changedKeys[key],
+        __unpinned_fields__: unpinnedKeys[key] || [],
       }
 
       try {
@@ -213,6 +215,8 @@ const AddonSettings = ({ projectName, showSites = false }) => {
       return newOverrides
     })
 
+    setUnpinnedKeys({})
+
     reloadAddons(updatedKeys)
 
     if (allOk) {
@@ -223,6 +227,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   const onRevertAllChanges = () => {
     const keys = Object.keys(changedKeys)
     setChangedKeys({})
+    setUnpinnedKeys({})
     reloadAddons(keys)
   } // end of onDismissChanges
 
@@ -258,6 +263,26 @@ const AddonSettings = ({ projectName, showSites = false }) => {
 
           return { ...changedKeys, [addonKey]: addonChanges }
         }) // setChangedKeys
+
+        setUnpinnedKeys((unpinnedKeys) => {
+          const addonChanges = unpinnedKeys[addonKey] || []
+          // delete the path from the list of changed keys
+          // also delete all children of this path
+
+          for (const index in addonChanges) {
+            if (isChildPath(addonChanges[index], path)) {
+              addonChanges.splice(index, 1)
+            }
+          }
+
+          if (!addonChanges.length) {
+            delete unpinnedKeys[addonKey]
+            return { ...unpinnedKeys }
+          }
+
+          return { ...unpinnedKeys, [addonKey]: addonChanges }
+        })  // setUnpinnedKeys
+
       }
     }
   }
@@ -269,6 +294,34 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   const onRemoveOverride = async (addon, siteId, path) => {
     // Remove a single override for this addon (within current project and variant)
     // path is an array of strings
+    
+    // TODO: Use this to staged unpin. 
+    // It is not used now because we don't have an information about the original value
+    //
+    // const key = `${addon.name}|${addon.version}|${addon.variant}|${siteId || '_'}|${projectKey}`
+    //
+    // setChangedKeys((changedKeys) => {
+    //   const keyData = changedKeys[key] || []
+    //   
+    //   const index = keyData.findIndex((keyItem) => arrayEquals(keyItem, path))
+    //   if (index === -1) {
+    //     keyData.push(path)
+    //   }
+    //   return { ...changedKeys, [key]: keyData }
+    // })
+    //
+    // setUnpinnedKeys((unpinnedKeys) => {
+    //   const keyData = unpinnedKeys[key] || []
+    //
+    //   const index = keyData.findIndex((keyItem) => arrayEquals(keyItem, path))
+    //   if (index === -1) {
+    //     keyData.push(path)
+    //   }
+    //
+    //   return { ...unpinnedKeys, [key]: keyData }
+    // })
+    //
+
     const message = (
       <>
         <p>This action will instanlty remove the selected override.</p>
@@ -507,8 +560,10 @@ const AddonSettings = ({ projectName, showSites = false }) => {
         disabled={canCommit}
         localData={localData}
         changedKeys={changedKeys}
+        unpinnedKeys={unpinnedKeys}
         setLocalData={setLocalData}
         setChangedKeys={setChangedKeys}
+        setUnpinnedKeys={setUnpinnedKeys}
         setSelectedAddons={setSelectedAddons}
         originalData={originalData}
         setOriginalData={setOriginalData}
@@ -598,7 +653,9 @@ const AddonSettings = ({ projectName, showSites = false }) => {
               localData={localData}
               setLocalData={setLocalData}
               changedKeys={changedKeys}
+              unpinnedKeys={unpinnedKeys}
               setChangedKeys={setChangedKeys}
+              setUnpinnedKeys={setUnpinnedKeys}
               projectName={projectName}
               onClose={() => setShowCopySettings(false)}
             />
@@ -702,7 +759,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
       <SplitterPanel size={20}>
         <Section wrap style={{ minWidth: 300 }}>
           <Toolbar>{commitToolbar}</Toolbar>
-          <SettingsChangesTable changes={changedKeys} onRevert={onRevertChange} />
+          <SettingsChangesTable changes={changedKeys} unpins={unpinnedKeys} onRevert={onRevertChange} />
           {/*}
           <ScrollPanel className="transparent nopad" style={{ flexGrow: 1 }}>
             <pre style={{ whiteSpace: 'pre-wrap' }}>{JSON.stringify(localData, null, 2)}</pre>

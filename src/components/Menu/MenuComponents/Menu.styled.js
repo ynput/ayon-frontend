@@ -8,7 +8,7 @@ export const Dialog = styled.dialog`
   top: 42px;
   width: auto;
   height: auto;
-  z-index: 100;
+  z-index: 600;
   border: none;
   background-color: unset;
   padding: 0;
@@ -224,12 +224,4 @@ export const Footer = styled.footer`
       display: flex;
     }
   }
-`
-
-export const Shortcut = styled.span`
-  background-color: var(--md-sys-color-surface-container);
-  padding: 2px 4px;
-  border-radius: var(--border-radius-m);
-  font-size: 90%;
-  margin-left: auto;
 `

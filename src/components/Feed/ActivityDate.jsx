@@ -8,7 +8,7 @@ import {
   isSameWeek,
   isSameMinute,
 } from 'date-fns'
-import Typography from '/src/theme/typography.module.css'
+import Typography from '@/theme/typography.module.css'
 import { classNames } from 'primereact/utils'
 import styled from 'styled-components'
 
@@ -21,7 +21,7 @@ const DateStyled = styled.span`
   align-items: center;
 `
 
-const getFuzzyDate = (date) => {
+export const getFuzzyDate = (date) => {
   let fuzzyDate = formatDistanceToNow(new Date(date), { addSuffix: true })
 
   // remove 'about' from the string
@@ -32,10 +32,13 @@ const getFuzzyDate = (date) => {
   // remove the word ' ago'
   fuzzyDate = fuzzyDate.replace(' ago', '')
 
+  // if date is less than a minute ago, return 'Just now'
+  if (isSameMinute(new Date(date), new Date())) fuzzyDate = 'Just now'
+
   return fuzzyDate
 }
 
-const ActivityDate = ({ date, ...props }) => {
+const ActivityDate = ({ date, isExact, ...props }) => {
   const dateObj = new Date(date)
   if (!isValid(dateObj)) return null
 
@@ -49,7 +52,8 @@ const ActivityDate = ({ date, ...props }) => {
   const dateFormat = yesterday ? '' : sameYear ? (sameWeek ? 'E' : 'MMM d') : 'MMM d yyyy'
   const timeFormat = 'h:mm a'
 
-  let dateString = today ? getFuzzyDate(dateObj) : format(dateObj, `${dateFormat}, ${timeFormat}`)
+  let dateString =
+    today && !isExact ? getFuzzyDate(dateObj) : format(dateObj, `${dateFormat}, ${timeFormat}`)
 
   if (yesterday) dateString = `Yesterday${dateString}`
 

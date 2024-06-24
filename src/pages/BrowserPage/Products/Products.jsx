@@ -1,13 +1,12 @@
 import { useState, useMemo, useCallback } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { InputText, TablePanel, Section, Toolbar, Spacer } from '@ynput/ayon-react-components'
-import EntityDetail from '/src/containers/DetailsDialog'
-import { CellWithIcon } from '/src/components/icons'
-import { TimestampField } from '/src/containers/fieldFormat'
-import usePubSub from '/src/hooks/usePubSub'
-
-import groupResult from '/src/helpers/groupResult'
-import useLocalStorage from '/src/hooks/useLocalStorage'
+import EntityDetail from '@containers/DetailsDialog'
+import { CellWithIcon } from '@components/icons'
+import { TimestampField } from '@containers/fieldFormat'
+import usePubSub from '@hooks/usePubSub'
+import groupResult from '@helpers/groupResult'
+import useLocalStorage from '@hooks/useLocalStorage'
 import {
   setFocusedVersions,
   setFocusedProducts,
@@ -16,27 +15,25 @@ import {
   productSelected,
   onFocusChanged,
   updateBrowserFilters,
-} from '/src/features/context'
+} from '@state/context'
 import VersionList from './VersionList'
-import StatusSelect from '/src/components/status/statusSelect'
-
+import StatusSelect from '@components/status/statusSelect'
 import {
   useGetProductListQuery,
   useLazyGetProductsVersionsQuery,
-} from '/src/services/product/getProduct'
-import usePatchProductsListWithVersions from '/src/hooks/usePatchProductsListWithVersions'
-import { MultiSelect } from 'primereact/multiselect'
-import useSearchFilter, { filterByFieldsAndValues } from '/src/hooks/useSearchFilter'
-import useColumnResize from '/src/hooks/useColumnResize'
-import { useUpdateEntitiesMutation } from '/src/services/entity/updateEntity'
-import { ayonApi } from '/src/services/ayon'
-import useCreateContext from '/src/hooks/useCreateContext'
+} from '@queries/product/getProduct'
+import usePatchProductsListWithVersions from '@hooks/usePatchProductsListWithVersions'
+import useSearchFilter, { filterByFieldsAndValues } from '@hooks/useSearchFilter'
+import useColumnResize from '@hooks/useColumnResize'
+import { useUpdateEntitiesMutation } from '@queries/entity/updateEntity'
+import { ayonApi } from '@queries/ayon'
+import useCreateContext from '@hooks/useCreateContext'
 import ViewModeToggle from './ViewModeToggle'
 import ProductsList from './ProductsList'
 import ProductsGrid from './ProductsGrid'
 import NoProducts from './NoProducts'
 import { toast } from 'react-toastify'
-import { productTypes } from '/src/features/project'
+import { productTypes } from '@state/project'
 import * as Styled from './Products.styled'
 
 const Products = () => {
@@ -91,6 +88,7 @@ const Products = () => {
     isLoading,
     refetch,
     isFetching,
+    error,
   } = useGetProductListQuery(
     {
       folderIds: focusedFolders,
@@ -210,6 +208,30 @@ const Products = () => {
     }
   }
 
+  const onSelectVersion = async (
+    { versionId, productId, folderId, versionName, currentSelected },
+    data,
+  ) => {
+    // load data here and patch into cache
+    const res = await handleVersionChange([[versionId, productId]])
+    if (res) {
+      // copy current selection
+      let newSelection = { ...currentSelected }
+      // update selection
+      newSelection[productId] = { versionId, folderId }
+
+      dispatch(setSelectedVersions(newSelection))
+      // set selected product
+      dispatch(productSelected({ products: [productId], versions: [versionId] }))
+      // update breadcrumbs
+      let uri = `ayon+entity://${projectName}/`
+      uri += `${data.parents.join('/')}/${data.folder}`
+      uri += `?product=${data.name}`
+      uri += `&version=${versionName}`
+      dispatch(setUri(uri))
+    }
+  }
+
   let columns = useMemo(
     () => [
       {
@@ -287,31 +309,13 @@ const Products = () => {
         field: 'versionList',
         header: 'Version',
         width: 70,
-        body: (node) =>
-          VersionList(
-            { ...node.data },
-            async ({ versionId, productId, folderId, versionName, currentSelected }) => {
-              // load data here and patch into cache
-              const res = await handleVersionChange([[versionId, productId]])
-              if (res) {
-                // copy current selection
-                let newSelection = { ...currentSelected }
-                // update selection
-                newSelection[productId] = { versionId, folderId }
-
-                dispatch(setSelectedVersions(newSelection))
-                // set selected product
-                dispatch(productSelected({ products: [productId], versions: [versionId] }))
-                // update breadcrumbs
-                let uri = `ayon+entity://${projectName}/`
-                uri += `${node.data.parents.join('/')}/${node.data.folder}`
-                uri += `?product=${node.data.name}`
-                uri += `&version=${versionName}`
-                dispatch(setUri(uri))
-              }
-            },
-            selectedVersions,
-          ), // end VersionList
+        body: (node) => (
+          <VersionList
+            row={node.data}
+            selectedVersions={selectedVersions}
+            onSelectVersion={(version) => onSelectVersion(version, node.data)}
+          />
+        ),
       },
       {
         field: 'createdAt',
@@ -358,16 +362,9 @@ const Products = () => {
     allColumnsNames,
   )
 
-  const handleColumnsFilter = (e) => {
-    e.preventDefault()
-    const newArray = e.target.value || []
-
-    if (newArray.length) {
-      // make sure there's always at least one column
-      isMultiSelected
-        ? setShownColumnsMultiFocused(newArray)
-        : setShownColumnsSingleFocused(newArray)
-    }
+  const handleColumnsFilter = (value = []) => {
+    // if multiple folders are selected, we need to save the columns in a different local storage
+    isMultiSelected ? setShownColumnsMultiFocused(value) : setShownColumnsSingleFocused(value)
   }
 
   // sort columns if localstorage set
@@ -385,8 +382,8 @@ const Products = () => {
 
   const shownColumns = isMultiSelected ? shownColumnsMultiFocused : shownColumnsSingleFocused
 
-  // only filter columns if required
-  if (shownColumns.length < columns.length) {
+  // only filter if above zero otherwise show all columns
+  if (shownColumns.length) {
     columns = columns.filter(({ field }) => shownColumns.includes(field))
   }
 
@@ -412,31 +409,27 @@ const Products = () => {
   // Transform the product data into a TreeTable compatible format
   // by grouping the data by the product name
 
-  let tableData = useMemo(() => {
-    return groupResult(listData, 'name')
-  }, [listData])
-
   // filter by task types
   const filteredByFieldsData = selectedTaskTypes.length
     ? filterByFieldsAndValues({
         filters: selectedTaskTypes,
-        data: tableData,
-        fields: ['data.taskType'],
+        data: listData,
+        fields: ['taskType'],
       })
-    : tableData
+    : listData
 
   const searchableFields = [
-    'data.versionAuthor',
-    'data.productType',
-    'data.folder',
-    'data.fps',
-    'data.frames',
-    'data.name',
-    'data.resolution',
-    'data.versionStatus',
-    'data.versionName',
-    'data.taskType',
-    'data.taskName',
+    'versionAuthor',
+    'productType',
+    'folder',
+    'fps',
+    'frames',
+    'name',
+    'resolution',
+    'versionStatus',
+    'versionName',
+    'taskType',
+    'taskName',
   ]
 
   let [search, setSearch, filteredBySearchData] = useSearchFilter(
@@ -444,6 +437,10 @@ const Products = () => {
     filteredByFieldsData,
     'products',
   )
+
+  const tableData = useMemo(() => {
+    return groupResult(filteredBySearchData, 'name')
+  }, [filteredBySearchData])
 
   //
   // Handlers
@@ -553,19 +550,8 @@ const Products = () => {
   //
   // Render
   //
-  const getOutOfString = (value, total) => {
-    if (value.length === total.length) return ''
 
-    return `${value.length}/${total.length}`
-  }
-
-  const placeholder = `Show Columns  ${
-    isMultiSelected
-      ? `${getOutOfString(shownColumnsMultiFocused, filterOptions)} (Multiple)`
-      : `${getOutOfString(shownColumnsSingleFocused, filterOptions)} (Single)`
-  }`
-
-  const isNone = filteredBySearchData.length === 0
+  const isNone = tableData.length === 0
 
   return (
     <Section wrap>
@@ -576,6 +562,7 @@ const Products = () => {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           autocomplete="off"
+          data-tooltip="Use '!' to exclude and ',' to separate multiple filters. Example: '!image, render, compositing'"
         />
         <Styled.TaskFilterDropdown
           value={selectedTaskTypes}
@@ -586,12 +573,12 @@ const Products = () => {
           placeholder="Task types..."
           multiSelect
         />
-        <MultiSelect
+        <Styled.ColumnsFilterSelect
           options={filterOptions}
           value={shownColumns}
           onChange={handleColumnsFilter}
-          placeholder={placeholder}
-          fixedPlaceholder
+          onClear={!!shownColumns.length && handleColumnsFilter}
+          multiSelect
         />
         <Spacer />
         <ViewModeToggle
@@ -613,7 +600,7 @@ const Products = () => {
         {viewMode !== 'list' && (
           <ProductsGrid
             isLoading={isLoading || isFetching}
-            data={filteredBySearchData}
+            data={tableData}
             onItemClick={onRowClick}
             onSelectionChange={onSelectionChange}
             onContext={ctxMenuShow}
@@ -629,7 +616,7 @@ const Products = () => {
         )}
         {viewMode === 'list' && (
           <ProductsList
-            data={filteredBySearchData}
+            data={tableData}
             selectedRows={selectedRows}
             onSelectionChange={onSelectionChange}
             onRowClick={onRowClick}
@@ -642,7 +629,7 @@ const Products = () => {
             loadingProducts={loadingProducts}
           />
         )}
-        {isNone && !isLoading && !isFetching && <NoProducts />}
+        {isNone && !isLoading && !isFetching && <NoProducts error={error} />}
       </TablePanel>
     </Section>
   )

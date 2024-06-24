@@ -1,8 +1,8 @@
 import React from 'react'
 import * as Styled from './YnputCloud.styled'
 import { Icon, Spacer } from '@ynput/ayon-react-components'
-import Type from '/src/theme/typography.module.css'
-import CloudLogo from '/src/svg/CloudLogo'
+import Type from '@/theme/typography.module.css'
+import CloudLogo from '@/svg/CloudLogo'
 
 const YnputCloudButton = React.forwardRef(
   (

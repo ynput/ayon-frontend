@@ -158,6 +158,7 @@ export const GroupHeader = styled.span`
   overflow: hidden;
   word-break: break-all;
   padding: 0 4px;
+  min-height: 20px;
 `
 
 export const MenuButton = styled(Button)`

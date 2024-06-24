@@ -14,7 +14,7 @@ export const getFilteredTasks = (tasks = [], filter = '', projects = []) => {
     const taskFolder = task.folderName
     const taskStatus = task.status
     const taskType = task.taskType
-    const taskPath = task.path
+    const taskPath = task.folderPath
     const matchingStrings = [taskName, taskFolder, taskStatus, taskType, taskPath]
     // filter by filter string
     const isFilterMatch = matchingStrings.some((string) => {

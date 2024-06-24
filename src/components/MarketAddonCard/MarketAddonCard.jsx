@@ -1,6 +1,6 @@
 import { classNames } from 'primereact/utils'
 import * as Styled from './MarketAddonCard.styled'
-import Type from '/src/theme/typography.module.css'
+import Type from '@/theme/typography.module.css'
 import AddonIcon from '../AddonIcon/AddonIcon'
 import { Icon } from '@ynput/ayon-react-components'
 import { upperFirst } from 'lodash'

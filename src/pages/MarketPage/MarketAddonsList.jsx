@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import MarketAddonCard from '/src/components/MarketAddonCard/MarketAddonCard'
+import MarketAddonCard from '@components/MarketAddonCard/MarketAddonCard'
 import styled from 'styled-components'
 import PerfectScrollbar from 'react-perfect-scrollbar'
 import { InputText } from '@ynput/ayon-react-components'
-import { Tag } from '/src/components/MarketAddonCard/MarketAddonCard.styled'
+import { Tag } from '@components/MarketAddonCard/MarketAddonCard.styled'
 
 const StyledAddonList = styled.div`
   display: flex;

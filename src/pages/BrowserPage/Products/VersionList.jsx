@@ -1,45 +1,71 @@
-import { useRef, useMemo, useState } from 'react'
-import { Button } from '@ynput/ayon-react-components'
-import { Menu } from 'primereact/menu'
+import { Dropdown } from '@ynput/ayon-react-components'
+import { useMemo, useState } from 'react'
+import styled from 'styled-components'
 
-const VersionList = (row, onSelectVersion, selectedVersions) => {
-  const menu = useRef(null)
+const StyledDropdown = styled(Dropdown)`
+  button {
+    background-color: unset;
+    &:hover {
+      background-color: var(--md-sys-color-surface-container-low-hover);
+    }
+    & > div {
+      border: none;
+      padding: 0px 18px;
+    }
+  }
+
+  .options {
+    width: 110px;
+  }
+`
+
+const VersionList = ({ row, onSelectVersion, selectedVersions }) => {
   const [currentVersion, setCurrentVersion] = useState(null)
 
-  const versions = useMemo(() => {
+  const options = useMemo(() => {
     if (!row.versionList) return []
     const versions = row.versionList.map((version) => {
-      if (version.id === row.versionId) setCurrentVersion(version.name)
+      if (version.id === row.versionId) setCurrentVersion(version.id)
       return {
-        id: version.id,
+        value: version.id,
         label: version.name,
-        command: () =>
-          onSelectVersion({
-            productId: row.id,
-            versionId: version.id,
-            folderId: row.folderId,
-            versionName: version.name,
-            currentSelected: selectedVersions,
-          }),
       }
     })
 
-    // sort versions by name
-    versions.sort((a, b) => {
-      if (b.label < a.label) return -1
-      if (b.label > a.label) return 1
-      return 0
-    })
+    // sort alphabetically desc
+    const sortedVersions = [...versions].sort((a, b) => b.label.localeCompare(a.label))
 
-    return versions
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [row.versionList, row.versionId, row.id, menu, selectedVersions])
+    return sortedVersions
+  }, [row, selectedVersions])
+
+  // no selected versions? Then select the first one
+  const value = currentVersion || options[0]?.value
+
+  const handleOnChange = (v) => {
+    const v1 = v[0]
+    const selected = options.find((v) => v.value === v1)
+
+    if (!selected) return
+
+    onSelectVersion({
+      productId: row.id,
+      versionId: selected.value,
+      folderId: row.folderId,
+      versionName: selected.label,
+      currentSelected: selectedVersions,
+    })
+  }
 
   return (
-    <>
-      <Menu model={versions} popup ref={menu} />
-      <Button variant="text" label={currentVersion} onClick={(e) => menu.current.toggle(e)} />
-    </>
+    <StyledDropdown
+      value={[value]}
+      options={options}
+      onChange={handleOnChange}
+      searchFields={['label']}
+      search={options.length > 15}
+      dropIcon={null}
+      listStyle={{ width: 110 }}
+    />
   )
 }
 

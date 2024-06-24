@@ -1,11 +1,11 @@
 import * as Styled from './FeedFilters.styled'
 import { useDispatch, useSelector } from 'react-redux'
-import { updateDetailsPanelTab, updateFeedFilter } from '/src/features/details'
+import { updateDetailsPanelTab, updateFeedFilter } from '@state/details'
 import { Spacer } from '@ynput/ayon-react-components'
 import { classNames } from 'primereact/utils'
 import { entitiesWithoutFeed } from '../DetailsPanel'
 
-const FeedFilters = ({ isSlideOut, isLoading, entityType }) => {
+const FeedFilters = ({ isSlideOut, isLoading, entityType, className, ...props }) => {
   const dispatch = useDispatch()
   const setFeedFilter = (value) => dispatch(updateFeedFilter({ value, isSlideOut }))
   const setTab = (tab) => dispatch(updateDetailsPanelTab({ isSlideOut, tab }))
@@ -41,7 +41,7 @@ const FeedFilters = ({ isSlideOut, isLoading, entityType }) => {
   const hideActivityFilters = entitiesWithoutFeed.includes(entityType)
 
   return (
-    <Styled.FiltersToolbar className={classNames({ isLoading })}>
+    <Styled.FiltersToolbar {...props} className={classNames(className, { isLoading })}>
       {!hideActivityFilters &&
         filtersLeft.map((filter) => (
           <Styled.FilterButton

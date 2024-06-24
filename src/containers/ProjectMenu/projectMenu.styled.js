@@ -17,8 +17,8 @@ export const ProjectSidebar = styled(Sidebar)`
 
   h3 {
     border: none;
-    color: var(--md-sys-color-outline);
     padding-left: var(--padding-m);
+    font-weight: 700;
   }
 
   .p-sidebar-content {

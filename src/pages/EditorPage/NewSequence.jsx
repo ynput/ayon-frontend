@@ -2,11 +2,14 @@ import React, { useRef } from 'react'
 import { useState } from 'react'
 import { useEffect } from 'react'
 import { Toolbar, Spacer, SaveButton, Button, Dialog } from '@ynput/ayon-react-components'
-import FolderSequence from '/src/components/FolderSequence/FolderSequence'
-import getSequence from '/src/helpers/getSequence'
+import FolderSequence from '@components/FolderSequence/FolderSequence'
+import getSequence from '@helpers/getSequence'
 import { isEmpty } from 'lodash'
+import { useSelector } from 'react-redux'
 
 const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
+  const foldersOrder = useSelector((state) => state.project.foldersOrder)
+
   const isRoot = isEmpty(currentSelection)
   const multipleSelection = Object.keys(currentSelection).length > 1
   const examplePrefix = isRoot
@@ -22,7 +25,7 @@ const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
       base: 'Folder010',
       increment: 'Folder020',
       length: 10,
-      type: 'Folder',
+      type: foldersOrder[0],
       prefix: multipleSelection,
       prefixDepth: !isRoot ? 1 : 0,
       entityType: 'folder',
@@ -119,7 +122,6 @@ const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
         onChange={handleSeqChange}
         isRoot={isRoot}
         prefixExample={createSeq.prefix ? examplePrefix : ''}
-        prefixDisabled={multipleSelection}
         typeSelectRef={typeSelectRef}
         onLastInputKeydown={(e) => handleKeyDown(e, true)}
       />

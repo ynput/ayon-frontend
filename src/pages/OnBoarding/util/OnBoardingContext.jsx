@@ -3,18 +3,18 @@
 // get server info
 import React, { createContext, useEffect, useMemo, useState } from 'react'
 import { toast } from 'react-toastify'
-import { useGetYnputConnectionsQuery } from '/src/services/ynputConnect'
+import { useGetYnputConnectionsQuery } from '@queries/ynputConnect'
 import {
   useAbortOnBoardingMutation,
   useGetInstallEventsQuery,
   useGetReleaseQuery,
   useInstallPresetMutation,
   useLazyGetReleaseQuery,
-} from '/src/services/onBoarding/onBoarding'
-import { useGetReleasesQuery } from '/src/services/getRelease'
-import useLocalStorage from '/src/hooks/useLocalStorage'
-import { useLazyGetBundleListQuery } from '/src/services/bundles/getBundles'
-import { useCreateBundleMutation } from '/src/services/bundles/updateBundles'
+} from '@queries/onBoarding/onBoarding'
+import { useGetReleasesQuery } from '@queries/getRelease'
+import useLocalStorage from '@hooks/useLocalStorage'
+import { useLazyGetBundleListQuery } from '@queries/bundles/getBundles'
+import { useCreateBundleMutation } from '@queries/bundles/updateBundles'
 import getNewBundleName from '../../SettingsPage/Bundles/getNewBundleName'
 
 const userFormFields = [
@@ -118,9 +118,9 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
   const [selectedAddons, setSelectedAddons] = useState([])
 
   // get selected release data
-  const { data: release = {} } = useGetReleaseQuery(
+  const { data: release = {}, isFetching: isLoadingAddons } = useGetReleaseQuery(
     { name: selectedPreset },
-    { skip: !selectedPreset || stepIndex !== 7 },
+    { skip: !selectedPreset || stepIndex < 5 },
   )
 
   // // once releases are loaded, set selectedPreset to the first one and pre-cache each release
@@ -187,7 +187,7 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
         .filter((addon) => selectedAddons.includes(addon.name) && !!addon.url)
         .map((addon) => ({ url: addon.url }))
 
-      // sources = [{type: url, url: 'https://...'}, {type: file, url: 'filename.exe'}}]
+      // sources = [{type: url, url: 'https://...'}, {type: file, url: 'filename.exe'}]
       // for every installer, get all the sources urls and filter out the ones that are not urls
       const installers = release.installers.reduce((acc, installer) => {
         const sources = installer.sources.filter(({ type, url }) => type === 'http' && !!url)
@@ -265,6 +265,7 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
     setIsConnecting,
     isConnecting,
     isLoadingRelease,
+    isLoadingAddons,
   }
 
   return <OnBoardingContext.Provider value={contextValue}>{children}</OnBoardingContext.Provider>

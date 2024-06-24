@@ -1,30 +1,36 @@
 import { useDispatch, useSelector } from 'react-redux'
 import {
-  useGetKanBanQuery,
-  useGetKanBanUsersQuery,
-} from '/src/services/userDashboard/getUserDashboard'
+  useGetKanbanProjectUsersQuery,
+  useGetKanbanQuery,
+} from '@queries/userDashboard/getUserDashboard'
 
 import UserDashboardKanBan from './UserDashboardKanBan'
 import { useEffect, useMemo } from 'react'
-import { onAssigneesChanged } from '/src/features/dashboard'
+import { onAssigneesChanged } from '@state/dashboard'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
-import DetailsPanel from '../../../containers/DetailsPanel/DetailsPanel'
+import DetailsPanel from '@containers/DetailsPanel/DetailsPanel'
 import { getIntersectionFields, getMergedFields } from '../util'
-import { Section } from '@ynput/ayon-react-components'
-import { setUri } from '/src/features/context'
-import DetailsPanelSlideOut from '../../../containers/DetailsPanel/DetailsPanelSlideOut/DetailsPanelSlideOut'
+import { setUri } from '@state/context'
+import DetailsPanelSlideOut from '@containers/DetailsPanel/DetailsPanelSlideOut/DetailsPanelSlideOut'
+import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
+import transformKanbanTasks from './transformKanbanTasks'
 
 export const getThumbnailUrl = ({ entityId, entityType, thumbnailId, updatedAt, projectName }) => {
-  if (!projectName || (!thumbnailId && !entityId)) return null
+  // If projectName is not provided or neither thumbnailId nor entityId and entityType are provided, return null
+  if (!projectName || (!thumbnailId && (!entityId || !entityType))) return null
 
-  // fallback on arbitrary thumbnailId if entityId is not available
-  // this should never happen, but just in case
-  // only admins and managers can see the second endpoint though
-  const thumbnailUrl = thumbnailId
-    ? `/api/projects/${projectName}/thumbnails/${thumbnailId}?updatedAt=${updatedAt}`
-    : `/api/projects/${projectName}/${entityType}s/${entityId}/thumbnail?updatedAt=${updatedAt}`
+  // Construct the updatedAt query parameter if updatedAt is provided
+  const updatedAtQueryParam = updatedAt ? `?updatedAt=${updatedAt}` : ''
 
-  return thumbnailUrl
+  // If entityId and entityType are provided, construct the URL using them
+  if (entityId && entityType) {
+    const entityUrl = `/api/projects/${projectName}/${entityType}s/${entityId}/thumbnail`
+    return `${entityUrl}${updatedAtQueryParam}&placeholder=none`
+  }
+
+  // If entityId and entityType are not provided, fallback on thumbnailId
+  const thumbnailUrl = `/api/projects/${projectName}/thumbnails/${thumbnailId}`
+  return `${thumbnailUrl}${updatedAtQueryParam}&placeholder=none`
 }
 
 const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
@@ -32,9 +38,24 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
   const selectedProjects = useSelector((state) => state.dashboard.selectedProjects)
   const user = useSelector((state) => state.user)
   const assigneesState = useSelector((state) => state.dashboard.tasks.assignees)
-  const assigneesIsMe = useSelector((state) => state.dashboard.tasks.assigneesIsMe)
+  const assigneesFilter = useSelector((state) => state.dashboard.tasks.assigneesFilter)
   // Only admins and managers can see task of other users
-  const assignees = assigneesIsMe || user?.data?.isUser ? [user?.name] : assigneesState || []
+
+  let assignees = []
+  switch (assigneesFilter) {
+    case 'me':
+      assignees = [user.name]
+      break
+    case 'all':
+      assignees = []
+      break
+    case 'users':
+      assignees = assigneesState
+      break
+    default:
+      break
+  }
+
   const selectedTasks = useSelector((state) => state.dashboard.tasks.selected) || []
 
   // once user is loaded, set assignees to user
@@ -56,7 +77,7 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
     isFetching: isLoadingTasks,
     isError,
     error,
-  } = useGetKanBanQuery(
+  } = useGetKanbanQuery(
     { assignees: assignees, projects: selectedProjects },
     { skip: !assignees.length || !selectedProjects?.length },
   )
@@ -68,7 +89,7 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
       const task = tasks.find((t) => t.id === selectedTasks[0])
       if (!task) return
       // updates the breadcrumbs
-      let uri = `ayon+entity://${task.path}?task=${task.name}`
+      let uri = `ayon+entity://${task.projectName}/${task.folderPath}?task=${task.name}`
 
       dispatch(setUri(uri))
     } else {
@@ -76,43 +97,15 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
     }
   }, [selectedTasks, isLoadingTasks, tasks])
 
-  // filter out tasks that don't have a assignees
-  tasks = tasks.filter((task) => task.assignees?.some((assignee) => assignees.includes(assignee)))
-
-  // add icons to tasks and also add thumbnailUrl
-  const tasksWithIcons = tasks.map((task) => {
-    const thumbnailId = task?.thumbnailId ? task?.thumbnailId : task.latestVersionThumbnailId
-    const updatedAt = task?.thumbnailId
-      ? task.updatedAt
-      : task.latestVersionUpdatedAt ?? task.updatedAt
-
-    const thumbnailUrl = getThumbnailUrl({
-      entityId: task.id,
-      entityType: 'task',
-      thumbnailId,
-      updatedAt,
-      projectName: task.projectName,
-    })
-
-    const updatedTask = { ...task, thumbnailUrl }
-
-    const projectInfo = projectsInfo[task.projectName]
-    if (!projectInfo?.statuses) return updatedTask
-    const findStatus = projectInfo.statuses?.find((status) => status.name === task.status)
-    if (!findStatus) return updatedTask
-    const findTaskIcon = projectInfo.task_types?.find((type) => type.name === task.taskType)
-    if (!findTaskIcon) return updatedTask
-    return {
-      ...updatedTask,
-      statusIcon: findStatus?.icon,
-      statusColor: findStatus?.color,
-      taskIcon: findTaskIcon?.icon,
-    }
-  })
+  // add extra fields to tasks like: icons, thumbnailUrl, shortPath
+  const transformedTasks = useMemo(
+    () => transformKanbanTasks(tasks, projectsInfo, isLoadingTasks),
+    [tasks, projectsInfo, isLoadingTasks],
+  )
 
   const selectedTasksData = useMemo(
-    () => tasksWithIcons.filter((task) => selectedTasks.includes(task.id)),
-    [selectedTasks, tasks],
+    () => transformedTasks.filter((task) => selectedTasks.includes(task.id)),
+    [selectedTasks, transformedTasks],
   )
 
   // for selected tasks, get flat list of projects
@@ -148,17 +141,18 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
     [projectsInfo, selectedTasksProjects],
   )
 
-  const { data: projectUsers = [] } = useGetKanBanUsersQuery(
-    { projects: selectedProjects },
-    { skip: !selectedProjects?.length },
-  )
+  const { data: projectUsers = [], isLoading: isLoadingProjectUsers } =
+    useGetKanbanProjectUsersQuery(
+      { projects: selectedProjects },
+      { skip: !selectedProjects?.length },
+    )
 
   // for selected projects, make sure user is on all
   const [activeProjectUsers, disabledProjectUsers] = useMemo(() => {
     if (!selectedTasksProjects?.length) return [projectUsers, []]
     return projectUsers.reduce(
       (acc, user) => {
-        if (selectedTasksProjects.every((p) => user.projects.includes(p))) {
+        if (selectedTasksProjects.every((p) => user.projects?.includes(p))) {
           acc[0].push(user)
         } else {
           acc[1].push(user)
@@ -174,18 +168,7 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
   const detailsMaxWidth = '40vw'
   const detailsMaxMaxWidth = 700
 
-  if (isError)
-    return (
-      <Section style={{ textAlign: 'center' }}>
-        <h2>Error: Something went wrong loading your tasks. Try refreshing the page.</h2>
-        <span>assignees: {JSON.stringify(assigneesState)}</span>
-        <span>assigneesIsMe: {JSON.stringify(assigneesIsMe)}</span>
-        <span>selectedProjects: {JSON.stringify(selectedProjects)}</span>
-        <span>selectedTasks: {JSON.stringify(selectedTasks)}</span>
-        <span>userName: {JSON.stringify(user?.name)}</span>
-        <span>error: {JSON.stringify(error)}</span>
-      </Section>
-    )
+  if (isError) return <EmptyPlaceholder error={error} />
 
   return (
     <Splitter
@@ -207,13 +190,15 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
         size={4}
       >
         <UserDashboardKanBan
-          tasks={tasksWithIcons}
+          tasks={transformedTasks}
           isLoading={isLoadingAll}
           projectsInfo={projectsInfo}
           taskFields={taskFields}
           statusesOptions={statusesOptions}
           disabledStatuses={disabledStatuses}
           disabledProjectUsers={disabledProjectUsers}
+          projectUsers={projectUsers}
+          isLoadingProjectUsers={isLoadingProjectUsers}
         />
       </SplitterPanel>
       {selectedTasksData.length ? (

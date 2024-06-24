@@ -30,15 +30,14 @@ function remapNestedProperties(object, remappingItems) {
 export const transformActivityData = (data = {}, currentUser) => {
   const activities = []
   const activitiesData = data?.project?.activities
-  const hasPreviousPage = activitiesData?.pageInfo?.hasPreviousPage
+  const pageInfo = activitiesData?.pageInfo || {}
 
   const edges = activitiesData?.edges || []
   // loop over each activity and remap the nested properties
-  edges.forEach((edge, index) => {
+  edges.forEach((edge) => {
     // remapping keys are the fields path in the object
     // and the values are the new keys to assign the values to
     const data = edge.node
-    const cursor = edge.cursor
 
     if (!data) {
       return
@@ -77,13 +76,6 @@ export const transformActivityData = (data = {}, currentUser) => {
     const isOwner = currentUser === transformedActivity.authorName
     transformedActivity.isOwner = isOwner
 
-    // add cursor
-    transformedActivity.cursor = cursor
-    // if last item, add hasPreviousPage
-    if (index === edges.length - 1) {
-      transformedActivity.hasPreviousPage = hasPreviousPage
-    }
-
     // parse fields that are JSON strings
     const jsonFields = ['activityData']
 
@@ -101,37 +93,11 @@ export const transformActivityData = (data = {}, currentUser) => {
   }) || []
 
   // when there are no activities and hasPreviousPage is false, add an "createdAt" activity as the last activity
-  if (hasPreviousPage === false) {
+  if (pageInfo.hasPreviousPage === false) {
     activities.push({ hasPreviousPage: false, activityType: 'end', activityId: 'end' })
   }
 
-  return activities
-}
-// we flatten the version object a little bit
-export const transformVersionsData = (data = {}, currentUser) => {
-  const versions = []
-  // loop over each activity and remap the nested properties
-  data?.project?.versions?.edges?.forEach((edge) => {
-    // remapping keys are the fields path in the object
-    // and the values are the new keys to assign the values to
-    const data = edge.node
-
-    if (!data) {
-      return
-    }
-
-    const versionNode = data
-
-    // add isOwner
-    const isOwner = currentUser === versionNode.author?.name
-
-    const transformedVersion = { ...versionNode, isOwner }
-    transformedVersion.isOwner = isOwner
-
-    versions.push(transformedVersion)
-  }) || []
-
-  return versions
+  return { activities, pageInfo }
 }
 
 const transformTaskTooltip = (data = {}) => {

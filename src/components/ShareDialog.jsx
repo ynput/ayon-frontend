@@ -1,9 +1,9 @@
 import React from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import styled from 'styled-components'
-import { closeShare } from '../features/context'
+import { closeShare } from '@state/context'
 import { Button, Dialog } from '@ynput/ayon-react-components'
-import copyToClipboard from '../helpers/copyToClipboard'
+import copyToClipboard from '@helpers/copyToClipboard'
 import { TabView, TabPanel } from 'primereact/tabview'
 
 const ShareStyled = styled.div`
@@ -76,7 +76,7 @@ const ShareDialog = () => {
 
   const string = JSON.stringify(data, null, 2).replace(/"/g, '').replace(/{|}/g, '').slice(1, -1)
   return (
-    <Dialog header={`Share: ${name}`} size='lg' isOpen onClose={() => dispatch(closeShare())}>
+    <Dialog header={`Share: ${name}`} size="lg" isOpen onClose={() => dispatch(closeShare())}>
       <ShareStyled>
         <span>{link}</span>
         <Button icon="content_copy" onClick={() => copyToClipboard(link)} />

@@ -1,14 +1,30 @@
 // NOTE: THIS DOES NOT RUN WHEN PATCHING THE TASKS
 
 import { upperCase, upperFirst } from 'lodash'
-import { productTypes } from '/src/features/project'
+import { productTypes } from '@state/project'
+import getEntityTypeIcon from '@helpers/getEntityTypeIcon'
 
 export const transformTasksData = ({ projectName, tasks = [], code }) =>
   tasks?.map((task) => {
-    const latestVersion = task.versions?.edges[0]?.node
+    const versions = task.versions?.edges?.map((edge) => edge.node) || []
+    // get latest version with thumbnail
+    // if there is a version named 'HERO' with a thumbnail, use that always
+    const latestVersionWithThumbnail =
+      versions.find((version) => version.name === 'HERO' && version.thumbnailId) ||
+      [...versions]
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .reverse()
+        .find((version) => version.thumbnailId)
 
     // use task thumbnail if it exists, otherwise use latest version thumbnail
-    const thumbnailId = task?.thumbnailId || latestVersion?.thumbnailId
+    const thumbnailId = task?.thumbnailId || latestVersionWithThumbnail?.thumbnailId
+    // we prefer using the entity id and entity type for the thumbnail endpoint
+    // normal users can not see thumbnails from thumbnailId
+    const thumbnailEntityId = task?.thumbnailId ? task.id : latestVersionWithThumbnail?.id
+    const thumbnailEntityType = task?.thumbnailId ? 'task' : 'version'
+    const thumbnailUpdatedAt = task?.thumbnailId
+      ? task.updatedAt
+      : latestVersionWithThumbnail?.updatedAt
 
     // create a short path [code][.../][end of path by depth joined by /][taskName]
     const depth = 2
@@ -32,6 +48,9 @@ export const transformTasksData = ({ projectName, tasks = [], code }) =>
       path: `${projectName}${task.folder?.path}`,
       shortPath,
       thumbnailId,
+      thumbnailEntityId,
+      thumbnailEntityType,
+      thumbnailUpdatedAt,
       projectName: projectName,
       projectCode: code,
       folder: task.folder,
@@ -65,7 +84,7 @@ export const transformEntityData = ({ entity = {}, entityType, projectName, proj
         users: entity.assignees,
         path: path,
         folderId: entity.folderId,
-        icon: icon,
+        icon: icon || getEntityTypeIcon('task'),
         entitySubType: entitySubType,
       }
     }
@@ -83,7 +102,7 @@ export const transformEntityData = ({ entity = {}, entityType, projectName, proj
         path: path,
         folderId: entity.product?.folder?.id,
         productId: entity.product?.id,
-        icon: icon || 'layers',
+        icon: icon || getEntityTypeIcon('version'),
         entitySubType: entitySubType,
         representations: entity.representations?.edges?.map((edge) => edge.node) || [],
         folder: entity.product?.folder,
@@ -103,7 +122,7 @@ export const transformEntityData = ({ entity = {}, entityType, projectName, proj
         users: [],
         path: path,
         folderId: entity.id,
-        icon: icon || 'folder',
+        icon: icon || getEntityTypeIcon('folder'),
         entitySubType: entitySubType,
       }
     }
@@ -129,7 +148,7 @@ export const transformEntityData = ({ entity = {}, entityType, projectName, proj
         path: path,
         folderId: entity.product?.folder?.id,
         productId: entity.product?.id,
-        icon: 'database',
+        icon: getEntityTypeIcon('representation'),
         entitySubType: 'representation',
         folder: entity.product?.folder,
         product: entity.product,

@@ -6,16 +6,15 @@ import styled from 'styled-components'
 
 import { ScrollPanel, Button, Spacer, Toolbar, Dialog } from '@ynput/ayon-react-components'
 
-import BundleDropdown from '/src/containers/BundleDropdown'
-import ProjectDropdown from '/src/containers/ProjectDropdown'
-import VariantSelector from '/src/containers/AddonSettings/VariantSelector'
+import BundleDropdown from '@containers/BundleDropdown'
+import ProjectDropdown from '@containers/ProjectDropdown'
+import VariantSelector from '@containers/AddonSettings/VariantSelector'
 
 import CopySettingsNode from './CopySettingsNode'
 
 import { setValueByPath } from '../AddonSettings/utils'
-import { useGetBundleListQuery } from '/src/services/bundles/getBundles'
+import { useGetBundleListQuery } from '@queries/bundles/getBundles'
 import { cloneDeep } from 'lodash'
-
 
 const StateShade = styled.div`
   position: absolute;
@@ -32,7 +31,6 @@ const StateShade = styled.div`
   color: #666;
 `
 
-
 const CopySettingsDialog = ({
   selectedAddons,
   variant,
@@ -41,7 +39,9 @@ const CopySettingsDialog = ({
   localData,
   setLocalData,
   changedKeys,
+  unpinnedKeys,
   setChangedKeys,
+  setUnpinnedKeys,
   projectName,
   onClose,
   pickByBundle = false,
@@ -73,6 +73,7 @@ const CopySettingsDialog = ({
   const doTheMagic = () => {
     const newLocalData = cloneDeep(localData)
     const newChangedKeys = { ...changedKeys }
+    const newUnpinnedKeys = { ...setUnpinnedKeys }
     const newOriginalData = { ...originalData }
     const newSelectedAddons = []
 
@@ -94,6 +95,7 @@ const CopySettingsDialog = ({
       }
 
       const addonOverrides = []
+      const addonUnpins = []
       let addonSettings = cloneDeep(node.targetSettings.data)
       newOriginalData[key] = cloneDeep(node.targetSettings.data)
 
@@ -101,19 +103,30 @@ const CopySettingsDialog = ({
 
       for (const change of node.changes) {
         if (!change.enabled) continue
-        const value = cloneDeep(change.sourceValue)
+        const value = cloneDeep(change.copyValue)
         addonSettings = setValueByPath(addonSettings, change.path, value)
         addonOverrides.push(change.path)
+
+        if (change.targetLevel === 'studio' && change.sourceLevel === 'default'){
+          addonUnpins.push(change.path)
+        }
+        if (change.targetLevel === 'project' && ['studio', 'default'].includes(change.sourceLevel)){
+          addonUnpins.push(change.path)
+        }
+
+
       } // for change of node.children
 
       newLocalData[key] = addonSettings
       newChangedKeys[key] = addonOverrides
+      newUnpinnedKeys[key] = addonUnpins
       newSelectedAddons.push(addon)
     } // for node of nodes
 
     setOriginalData(newOriginalData)
     setLocalData(newLocalData)
     setChangedKeys(newChangedKeys)
+    setUnpinnedKeys(newUnpinnedKeys)
     //setSelectedAddons(newSelectedAddons)
     toast.success('Settings copied')
     onClose(false)
@@ -130,7 +143,6 @@ const CopySettingsDialog = ({
     }
     return false
   }, [nodes])
-
 
   const overalState = useMemo(() => {
     // get all values from nodeState and return 'loading' if any of them is 'loading'
@@ -164,7 +176,7 @@ const CopySettingsDialog = ({
   const dropStyle = { maxWidth: dropSize, minWidth: dropSize, marginRight: 8 }
 
   const toolbar = (
-    <Toolbar style={{marginBottom: 15}}>
+    <Toolbar style={{ marginBottom: 15 }}>
       {pickByBundle && (
         <>
           Source bundle:
@@ -197,6 +209,8 @@ const CopySettingsDialog = ({
       )}
     </Toolbar>
   )
+  
+  const dialogHeader = `Copy ${projectName? `${projectName} `:''}${variant} settings from...`
 
   return (
     <Dialog
@@ -205,7 +219,7 @@ const CopySettingsDialog = ({
       variant="dialog"
       size="full"
       style={{ width: '80vw', height: '80vh', zIndex: 999 }}
-      header={`Copy ${variant} settings ${pickByBundle ? 'by bundle' : ''}`}
+      header={dialogHeader}
       footer={footer}
     >
       <div
@@ -220,11 +234,11 @@ const CopySettingsDialog = ({
         {toolbar}
         <ScrollPanel style={{ flexGrow: 1, background: 'transparent' }}>
           <div
-            style={{ 
-              display: (overalState==='loading') ? 'none' : 'flex',
-              flexDirection: 'column', 
-              gap: '8px', 
-              marginBottom: '8px' 
+            style={{
+              display: overalState === 'loading' ? 'none' : 'flex',
+              flexDirection: 'column',
+              gap: '8px',
+              marginBottom: '8px',
             }}
           >
             {selectedAddons
@@ -243,7 +257,9 @@ const CopySettingsDialog = ({
                       [addon.name]: data,
                     }))
                   }}
-                  setNodeState={(state) => {setNodeState(o => ({...o, [addon.name]: state}))}}
+                  setNodeState={(state) => {
+                    setNodeState((o) => ({ ...o, [addon.name]: state }))
+                  }}
                   forcedSourceVariant={sourceVariant}
                   forcedSourceVersion={pickByBundle ? sourceVersions[addon.name] : null}
                   forcedSourceProjectName={sourceProjectName || null}
@@ -251,14 +267,8 @@ const CopySettingsDialog = ({
               ))}
           </div>
 
-        {overalState === 'loading' && (
-          <StateShade>
-            LOADING...
-          </StateShade>
-        )}
-
+          {overalState === 'loading' && <StateShade>LOADING...</StateShade>}
         </ScrollPanel>
-
       </div>
     </Dialog>
   )

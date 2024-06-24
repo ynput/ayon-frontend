@@ -73,14 +73,14 @@ const EnumEditor = ({ values = [], onChange }) => {
     <ContainerStyled>
       {[...values, newItem].map(({ value, label }, index) => (
         <RowStyled key={index}>
-          <label htmlFor="label">label</label>
+          <label htmlFor="label">Label</label>
           <InputText
             id="label"
             onChange={(e) => handleLabelChange(e.target.value, index)}
             error={valuesValues.includes(label)}
             value={label}
           />
-          <label htmlFor="label">value</label>
+          <label htmlFor="label">Value</label>
           <LockedInput
             id="value"
             value={value}

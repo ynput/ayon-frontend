@@ -2,12 +2,12 @@ import * as Styled from './UserDashboardList.styled'
 import ListGroup from '../ListGroup/ListGroup'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { onCollapsedColumnsChanged, onTaskSelected } from '/src/features/dashboard'
-import { getFakeTasks, usePrefetchTask, useTaskClick } from '../../util'
-import { useUpdateEntitiesMutation } from '/src/services/entity/updateEntity'
+import { onCollapsedColumnsChanged, onTaskSelected } from '@state/dashboard'
+import { getFakeTasks, usePrefetchEntity, useTaskClick } from '../../util'
+import { useUpdateEntitiesMutation } from '@queries/entity/updateEntity'
 import { toast } from 'react-toastify'
-import getPreviousTagElement from '/src/helpers/getPreviousTagElement'
-import Shortcuts from '/src/containers/Shortcuts'
+import getPreviousTagElement from '@helpers/getPreviousTagElement'
+import Shortcuts from '@containers/Shortcuts'
 
 const UserDashboardList = ({
   groupedTasks = {},
@@ -91,9 +91,6 @@ const UserDashboardList = ({
   const selectedTasks = useSelector((state) => state.dashboard.tasks.selected)
   const setSelectedTasks = (tasks) => dispatch(onTaskSelected(tasks))
 
-  // Assignees
-  const assigneesIsMe = useSelector((state) => state.dashboard.tasks.assigneesIsMe)
-
   const selectedTasksData = useMemo(
     () => tasks.filter((task) => selectedTasks.includes(task.id)),
     [tasks, selectedTasks],
@@ -101,7 +98,7 @@ const UserDashboardList = ({
 
   // PREFETCH TASK WHEN HOVERING
   // we keep track of the ids that have been pre-fetched to avoid fetching them again
-  const handlePrefetch = usePrefetchTask(dispatch, projectsInfo, 300)
+  const handlePrefetch = usePrefetchEntity(dispatch, projectsInfo, 300)
 
   // HANDLE TASK CLICK
   const taskClick = useTaskClick(dispatch)
@@ -254,6 +251,7 @@ const UserDashboardList = ({
         data: {
           [field]: value,
         },
+        currentAssignees: task.users,
       }))
 
       await updateEntities({ operations: tasksOperations, entityType: 'task' })
@@ -314,10 +312,10 @@ const UserDashboardList = ({
                     disabledStatuses={disabledStatuses}
                     disabledProjectUsers={disabledProjectUsers}
                     onUpdate={handleUpdate}
-                    assigneesIsMe={assigneesIsMe}
                     isCollapsed={collapsedGroups.includes(id)}
                     onCollapseChange={handleCollapseToggle}
                     minWidths={minWidths}
+                    containerRef={containerRef}
                   />
                 )
               })}

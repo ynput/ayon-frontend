@@ -1,9 +1,9 @@
 import { Button, Section } from '@ynput/ayon-react-components'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
-import { useGetAddonListQuery } from '/src/services/addons/getAddons'
-import { useGetBundleListQuery } from '/src/services/bundles/getBundles'
-import { useUpdateBundleMutation } from '/src/services/bundles/updateBundles'
-import { useMemo } from 'react'
+import { useGetAddonListQuery } from '@queries/addons/getAddons'
+import { useGetBundleListQuery } from '@queries/bundles/getBundles'
+import { useUpdateBundleMutation } from '@queries/bundles/updateBundles'
+import { useMemo, useState } from 'react'
 import { transformAddonsWithBundles } from './helpers'
 import AddonsManagerTable from './AddonsManagerTable'
 import useGetTableData from './useGetTableData'
@@ -13,18 +13,22 @@ import {
   onSelectedAddons,
   onSelectedBundles,
   onSelectedVersions,
-} from '/src/features/addonsManager'
+} from '@state/addonsManager'
 import { useNavigate } from 'react-router'
-import { useDeleteAddonVersionsMutation } from '/src/services/addons/updateAddons'
-import { useRestart } from '/src/context/restartContext'
+import { useDeleteAddonVersionsMutation } from '@queries/addons/updateAddons'
+import { useRestart } from '@context/restartContext'
 import { Link } from 'react-router-dom'
-// import AddonUpload from '../AddonInstall/AddonUpload'
+import AddonDialog from '@components/AddonDialog/AddonDialog'
+import Shortcuts from '@containers/Shortcuts'
 
 const AddonsManager = () => {
   const navigate = useNavigate()
   // QUERIES
   const { data: addons = [] } = useGetAddonListQuery()
   const { data: bundles = [] } = useGetBundleListQuery({ archived: false })
+
+  // addon upload dialog
+  const [uploadOpen, setUploadOpen] = useState('')
 
   // addonsVersionsBundles = Map<addon, Map<version, Map<bundle, bundle>>>
   const addonsVersionsBundles = useMemo(
@@ -135,10 +139,19 @@ const AddonsManager = () => {
     },
   ]
 
+  const shortcuts = [
+    {
+      key: 'a',
+      action: () => setUploadOpen('addon'),
+    },
+  ]
+
   return (
     <Section style={{ overflow: 'hidden' }}>
+      <Shortcuts shortcuts={shortcuts} />
       <Splitter style={{ height: '100%', padding: 8 }}>
         <SplitterPanel>
+          <AddonDialog uploadOpen={uploadOpen} setUploadOpen={setUploadOpen} />
           {/* ADDONS TABLE */}
           <AddonsManagerTable
             title="Addons"
@@ -147,9 +160,19 @@ const AddonsManager = () => {
             onChange={handleAddonsSelect}
             field={'name'}
             header={
-              <Link to="/market">
-                <Button label="Addon Market" icon="store" style={{ width: '100%' }} />
-              </Link>
+              <div style={{ display: 'flex', gap: '4px' }}>
+                <Button
+                  onClick={() => setUploadOpen('addon')}
+                  data-shortcut="A"
+                  data-tooltip="Upload addon zip files"
+                  label="Upload Addons"
+                  icon="upload"
+                  style={{ width: '100%' }}
+                />
+                <Link to="/market" style={{ width: '100%' }}>
+                  <Button label="Addon Market" icon="store" style={{ width: '100%' }} />
+                </Link>
+              </div>
             }
             extraContext={viewInMarket}
           />

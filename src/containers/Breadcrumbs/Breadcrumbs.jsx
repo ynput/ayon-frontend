@@ -5,8 +5,8 @@ import { Button, InputText } from '@ynput/ayon-react-components'
 import * as Styled from './Breadcrumbs.styled'
 
 import { upperFirst } from 'lodash'
-import useUriNavigate from '/src/hooks/useUriNavigate'
-import copyToClipboard from '/src/helpers/copyToClipboard'
+import copyToClipboard from '@helpers/copyToClipboard'
+import { useURIContext } from '@context/uriContext'
 
 const uri2crumbs = (uri = '', pathname) => {
   // parse uri to path and query params
@@ -34,8 +34,13 @@ const uri2crumbs = (uri = '', pathname) => {
 
     if (pageTitle.includes('settings')) pageTitle = 'Studio Settings'
     else if (pageTitle.includes('manageProjects')) pageTitle = 'Projects Manager'
-    // just a regular url
-    crumbs.unshift(upperFirst(pageTitle))
+    // just a regular url (use last part of pathname)
+    crumbs.unshift(
+      ...pathname
+        .slice(1)
+        .split('/')
+        .map((p) => upperFirst(p)),
+    )
   }
 
   const qp = {}
@@ -63,6 +68,7 @@ const Breadcrumbs = () => {
   const [localUri, setLocalUri] = useState('')
   const [editMode, setEditMode] = useState(false)
   const ctxUri = useSelector((state) => state.context.uri) || ''
+  const { navigate } = useURIContext()
 
   const inputRef = useRef(null)
 
@@ -87,9 +93,6 @@ const Breadcrumbs = () => {
     }
   }, [editMode])
 
-  // NAVIGATE TO URI HOOK
-  const navigateToUri = useUriNavigate()
-
   const goThere = async (e) => {
     e?.preventDefault()
     setEditMode(false)
@@ -97,7 +100,7 @@ const Breadcrumbs = () => {
     inputRef.current.blur()
 
     try {
-      await navigateToUri(localUri)
+      await navigate(localUri)
     } catch (error) {
       console.error(error)
       setLocalUri(ctxUri)

@@ -1,5 +1,5 @@
 import React from 'react'
-import ReleasePackage from '../../../components/Release/ReleasePreset'
+import ReleasePackage from '@components/Release/ReleasePreset'
 import * as Styled from '../util/OnBoardingStep.styled'
 
 export const ReleaseSelect = ({

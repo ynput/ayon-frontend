@@ -1,5 +1,14 @@
 import styled from 'styled-components'
 
+export const Title = styled.li`
+  padding: 6px 8px;
+  background-color: var(--md-sys-color-surface-container-lowest);
+  color: var(--md-sys-color-outline);
+  border-radius: var(--border-radius-m) var(--border-radius-m) 0 0;
+  /* text-align: right; */
+  width: 100%;
+`
+
 export const MentionSelect = styled.ul`
   margin: 0;
   translate: 0 -100%;
@@ -44,4 +53,13 @@ export const MentionItem = styled.li`
 
 export const MentionName = styled.span`
   font-weight: 500;
+`
+
+export const MentionPrefix = styled.span`
+  margin-right: -4px;
+`
+
+export const MentionSuffix = styled.span`
+  color: var(--md-sys-color-outline);
+  margin-left: auto;
 `

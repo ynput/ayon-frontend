@@ -1,5 +1,5 @@
 import { ayonApi } from '../ayon'
-import ayonClient from '/src/ayon'
+import ayonClient from '@/ayon'
 
 const USER_BY_NAME_QUERY = `
   query UserList($name:String!) {
@@ -123,7 +123,7 @@ const getUsers = ayonApi.injectEndpoints({
       providesTags: (users) =>
         users
           ? [...users.map((e) => ({ type: 'user', id: e.name })), { type: 'user', id: 'LIST' }]
-          : ['user', { type: 'user', id: 'LIST' }],
+          : [{ type: 'user', id: 'LIST' }],
     }),
     getUser: build.query({
       query: ({ name }) => ({
