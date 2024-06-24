@@ -30,7 +30,7 @@ const ContainerStyled = styled.div`
 // { userId: { project: [accessGroup] }
 
 const UserAccessGroupsForm = ({ value = {}, options = [], onChange, disableNewGroup }) => {
-  const { data: projectsList = [] } = useListProjectsQuery({ active: true })
+  const { data: projectsList = [] } = useListProjectsQuery({})
 
   // merge all accessGroups for all users together into one object
   const mergedAccessGroupsProjects = mergeAccessGroups(value)

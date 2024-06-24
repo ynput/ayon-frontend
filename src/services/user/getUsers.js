@@ -123,7 +123,7 @@ const getUsers = ayonApi.injectEndpoints({
       providesTags: (users) =>
         users
           ? [...users.map((e) => ({ type: 'user', id: e.name })), { type: 'user', id: 'LIST' }]
-          : ['user', { type: 'user', id: 'LIST' }],
+          : [{ type: 'user', id: 'LIST' }],
     }),
     getUser: build.query({
       query: ({ name }) => ({
