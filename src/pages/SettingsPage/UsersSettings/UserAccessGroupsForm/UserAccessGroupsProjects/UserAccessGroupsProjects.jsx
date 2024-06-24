@@ -29,9 +29,17 @@ const UserAccessGroupsProjects = ({
         const aActive = values.includes(a.name)
         const bActive = values.includes(b.name)
 
-        // If both options have the same active status, sort them alphabetically
+        // If both options have the same active status, sort them by deleted then active (archived) then alphabetically
         if (aActive === bActive || !sortByActive) {
-          return a.deleted === b.deleted ? a.name.localeCompare(b.name) : a.deleted ? 1 : -1
+          // Comparator function to sort objects based on their status and names
+          return (
+            // Active projects come first
+            b.active - a.active ||
+            // Among inactive projects, not deleted (archived) come before deleted
+            !!a.deleted - !!b.deleted ||
+            // If both have the same 'active' and 'deleted' status, sort alphabetically by name
+            a.name.localeCompare(b.name)
+          )
         }
         // Otherwise, sort them by active status (put active options first)
         return bActive ? 1 : -1
