@@ -13,8 +13,8 @@ export default ({ mode }) => {
   }
 
   // use testing server if in test mode
-  if (process?.env?.SERVER_URL_TEST) {
-    SERVER_URL = process.env.SERVER_URL_TEST
+  if (process?.env?.TEST_SERVER_URL) {
+    SERVER_URL = process.env.TEST_SERVER_URL
   }
 
   // https://vitejs.dev/config/

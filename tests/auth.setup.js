@@ -3,9 +3,9 @@ import { test as setup } from '@playwright/test'
 const authFile = 'playwright/.auth/user.json'
 
 setup('authenticate', async ({ page }) => {
-  console.log('USERNAME:', process.env.USER_NAME)
+  console.log('USERNAME:', process.env.NAME)
   // Perform authentication steps. Replace these actions with your own.
-  await page.getByLabel('Username').fill(process.env.USER_NAME)
+  await page.getByLabel('Username').fill(process.env.NAME)
   await page.getByLabel('Password').fill(process.env.PASSWORD)
   await page.getByRole('button', { name: 'Login', exact: true }).click()
   // Wait until the page receives the cookies.
