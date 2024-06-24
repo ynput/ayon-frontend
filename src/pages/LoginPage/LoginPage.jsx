@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
 import { InputText, InputPassword, Button, Panel } from '@ynput/ayon-react-components'
@@ -24,6 +24,9 @@ const LoginPage = ({ isFirstTime }) => {
   const [password, setPassword] = useState('')
 
   const [isLoading, setIsLoading] = useState(false)
+
+  const usernameInput = useRef(null);
+  const passwordInput = useRef(null);
 
   const { data: info = {}, isLoading: isLoadingInfo } = useGetInfoQuery()
   const { motd, loginPageBrand = '', loginPageBackground = '' } = info
@@ -112,7 +115,15 @@ const LoginPage = ({ isFirstTime }) => {
   const handleSubmit = (e) => {
     e.preventDefault()
 
-    doLogin()
+    if (!usernameInput?.current?.value) {
+      usernameInput?.current?.focus();
+      toast.error('Please enter username')
+    } else if (!passwordInput?.current?.value) {
+      passwordInput?.current?.focus();
+      toast.error('Please enter password')
+    } else {
+      doLogin()
+    }
   }
 
   if (isLoading || isLoadingInfo) return isFirstTime ? null : <LoadingPage />
@@ -141,6 +152,7 @@ const LoginPage = ({ isFirstTime }) => {
                 aria-label="Username"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                ref={usernameInput}
               />
               <label id="password">Password</label>
               <InputPassword
@@ -149,6 +161,7 @@ const LoginPage = ({ isFirstTime }) => {
                 aria-label="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                ref={passwordInput}
               />
               <Button label={<strong>Login</strong>} type="submit" />
             </form>
@@ -156,26 +169,26 @@ const LoginPage = ({ isFirstTime }) => {
             {
               info.ssoOptions?.length
                 ? info.ssoOptions.map(
-                    ({ name, title, url, args, redirectKey, icon, color, textColor }) => {
-                      const queryDict = { ...args }
-                      const redirect_uri = `${window.location.origin}/login/${name}`
-                      queryDict[redirectKey] = redirect_uri
+                  ({ name, title, url, args, redirectKey, icon, color, textColor }) => {
+                    const queryDict = { ...args }
+                    const redirect_uri = `${window.location.origin}/login/${name}`
+                    queryDict[redirectKey] = redirect_uri
 
-                      const query = new URLSearchParams(queryDict)
-                      const fullUrl = `${url}?${query}`
+                    const query = new URLSearchParams(queryDict)
+                    const fullUrl = `${url}?${query}`
 
-                      return (
-                        <AuthLink
-                          key={name}
-                          name={title || name}
-                          url={fullUrl}
-                          icon={icon}
-                          color={color}
-                          textColor={textColor}
-                        />
-                      )
-                    },
-                  )
+                    return (
+                      <AuthLink
+                        key={name}
+                        name={title || name}
+                        url={fullUrl}
+                        icon={icon}
+                        color={color}
+                        textColor={textColor}
+                      />
+                    )
+                  },
+                )
                 : null // ssoOptions.map
             }
           </Styled.Methods>
