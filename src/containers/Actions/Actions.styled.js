@@ -28,8 +28,6 @@ export const PinnedAction = styled(Button)`
     height: 20px;
     object-fit: contain;
   }
-
-  opacity: 0.2;
 `
 
 export const More = styled(Dropdown)`
