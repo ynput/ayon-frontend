@@ -65,6 +65,11 @@ export const groupByAccessGroups = (accessGroups = {}, projects = []) =>
       if (!acc[ag]) acc[ag] = []
       // check project is in projectsList
       if (projects.find(({ name }) => name === project)) acc[ag].push(project)
+      else {
+        // project not found, it must have been deleted
+        // we add it anyway so we can remove it from the user
+        acc[ag].push(project)
+      }
     })
     return acc
   }, {})
