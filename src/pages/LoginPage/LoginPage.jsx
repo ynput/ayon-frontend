@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import { useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
 import { InputText, InputPassword, Button, Panel } from '@ynput/ayon-react-components'
@@ -24,9 +24,6 @@ const LoginPage = ({ isFirstTime }) => {
   const [password, setPassword] = useState('')
 
   const [isLoading, setIsLoading] = useState(false)
-
-  const usernameInput = useRef(null);
-  const passwordInput = useRef(null);
 
   const { data: info = {}, isLoading: isLoadingInfo } = useGetInfoQuery()
   const { motd, loginPageBrand = '', loginPageBackground = '' } = info
@@ -115,12 +112,8 @@ const LoginPage = ({ isFirstTime }) => {
   const handleSubmit = (e) => {
     e.preventDefault()
 
-    if (!usernameInput?.current?.value) {
-      usernameInput?.current?.focus();
-      toast.error('Please enter username')
-    } else if (!passwordInput?.current?.value) {
-      passwordInput?.current?.focus();
-      toast.error('Please enter password')
+    if (!(name && password)) {
+      toast.error('Please enter user name and password to login')
     } else {
       doLogin()
     }
@@ -152,7 +145,6 @@ const LoginPage = ({ isFirstTime }) => {
                 aria-label="Username"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                ref={usernameInput}
               />
               <label id="password">Password</label>
               <InputPassword
@@ -161,7 +153,6 @@ const LoginPage = ({ isFirstTime }) => {
                 aria-label="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                ref={passwordInput}
               />
               <Button label={<strong>Login</strong>} type="submit" />
             </form>
