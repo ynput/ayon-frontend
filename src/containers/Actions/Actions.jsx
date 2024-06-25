@@ -1,6 +1,5 @@
 import React from 'react'
 import * as Styled from './Actions.styled'
-import { Button } from '@ynput/ayon-react-components'
 import { classNames } from 'primereact/utils'
 import { toast } from 'react-toastify'
 
@@ -10,7 +9,6 @@ import axios from 'axios'
 
 const Actions = ({ entities }) => {
   const [isLoading, setIsLoading] = useState(true)
-  const [bundleVariant, setBundleVariant] = useState("production")
   const [options, setOptions] = useState([])
   
   const context = useMemo(() => {
@@ -43,7 +41,6 @@ const Actions = ({ entities }) => {
       .post('/api/actions/list', context)
       .then((response) => {
         setOptions(response.data.actions)
-        setBundleVariant(response.data.bundleVariant)
       })
       .catch((error) => {
         console.warn("Error fetching actions", error)
@@ -63,7 +60,7 @@ const Actions = ({ entities }) => {
     const params = {
       addonName: action.addonName,
       addonVersion: action.addonVersion,
-      variant: bundleVariant,
+      variant: action.variant,
       identifier: action.identifier,
     }
 
@@ -79,7 +76,6 @@ const Actions = ({ entities }) => {
       .catch((error) => {
         console.warn("Error executing action", error)
         toast.error(error?.response?.data?.message || "Error executing action")
-      
       })
 
   }
