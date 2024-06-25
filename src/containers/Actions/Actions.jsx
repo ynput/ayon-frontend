@@ -87,7 +87,7 @@ const Actions = ({ entities }) => {
       {options.map((option) => (
         <Styled.PinnedAction key={option.identifier}>
           <img 
-            src={`/logos/${option.icon}.png`} 
+            src={option.icon} 
             title={option.label}
             onClick={() => onExecuteAction(option.identifier)} 
           />
