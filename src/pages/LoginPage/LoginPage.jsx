@@ -113,7 +113,7 @@ const LoginPage = ({ isFirstTime }) => {
     e.preventDefault()
 
     if (!(name && password)) {
-      toast.error('Please enter user name and password to login')
+      toast.error('Please enter username and password to login')
     } else {
       doLogin()
     }
