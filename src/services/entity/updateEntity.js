@@ -181,7 +181,7 @@ const updateEntity = ayonApi.injectEndpoints({
         // patch any entity details panels in dashboard
         let entityDetailsResult = dispatch(
           ayonApi.util.updateQueryData(
-            'getDashboardEntityDetails',
+            'getEntityDetailsPanel',
             { entityId, entityType, projectName },
             (draft) => {
               // convert assignees to users
@@ -244,7 +244,7 @@ const updateEntity = ayonApi.injectEndpoints({
           }))
           dispatch(
             ayonApi.util.updateQueryData(
-              'getDashboardEntitiesDetails',
+              'getEntitiesDetailsPanel',
               { entities: entitiesArg, entityType },
               (draft) => {
                 operations.forEach((operation) => {

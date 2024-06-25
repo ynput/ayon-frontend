@@ -2,10 +2,10 @@ import { ayonApi } from '@queries/ayon'
 import { transformEntityData } from '../userDashboard/userDashboardHelpers'
 import { buildDetailsQuery } from '../userDashboard/userDashboardQueries'
 
-const getUserDashboard = ayonApi.injectEndpoints({
+const getEntityPanel = ayonApi.injectEndpoints({
   endpoints: (build) => ({
     // TODO, move to separate file getEntityPanel
-    getDashboardEntityDetails: build.query({
+    getEntityDetailsPanel: build.query({
       query: ({ projectName, entityId, entityType }) => ({
         url: '/graphql',
         method: 'POST',
@@ -34,12 +34,12 @@ const getUserDashboard = ayonApi.injectEndpoints({
             ]
           : [{ type: entityType, id: 'LIST' }],
     }),
-    getDashboardEntitiesDetails: build.query({
+    getEntitiesDetailsPanel: build.query({
       async queryFn({ entities = [], entityType, projectsInfo = {} }, { dispatch }) {
         try {
           const promises = entities.map((entity) =>
             dispatch(
-              ayonApi.endpoints.getDashboardEntityDetails.initiate(
+              ayonApi.endpoints.getEntityDetailsPanel.initiate(
                 {
                   projectName: entity.projectName,
                   entityId: entity.id,
@@ -79,5 +79,5 @@ const getUserDashboard = ayonApi.injectEndpoints({
   }),
 })
 
-export const { useGetDashboardEntitiesDetailsQuery, useLazyGetDashboardEntitiesDetailsQuery } =
-  getUserDashboard
+export const { useGetEntitiesDetailsPanelQuery, useLazyGetEntitiesDetailsPanelQuery } =
+  getEntityPanel
