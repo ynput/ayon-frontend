@@ -160,26 +160,26 @@ const LoginPage = ({ isFirstTime }) => {
             {
               info.ssoOptions?.length
                 ? info.ssoOptions.map(
-                  ({ name, title, url, args, redirectKey, icon, color, textColor }) => {
-                    const queryDict = { ...args }
-                    const redirect_uri = `${window.location.origin}/login/${name}`
-                    queryDict[redirectKey] = redirect_uri
+                    ({ name, title, url, args, redirectKey, icon, color, textColor }) => {
+                      const queryDict = { ...args }
+                      const redirect_uri = `${window.location.origin}/login/${name}`
+                      queryDict[redirectKey] = redirect_uri
 
-                    const query = new URLSearchParams(queryDict)
-                    const fullUrl = `${url}?${query}`
+                      const query = new URLSearchParams(queryDict)
+                      const fullUrl = `${url}?${query}`
 
-                    return (
-                      <AuthLink
-                        key={name}
-                        name={title || name}
-                        url={fullUrl}
-                        icon={icon}
-                        color={color}
-                        textColor={textColor}
-                      />
-                    )
-                  },
-                )
+                      return (
+                        <AuthLink
+                          key={name}
+                          name={title || name}
+                          url={fullUrl}
+                          icon={icon}
+                          color={color}
+                          textColor={textColor}
+                        />
+                      )
+                    },
+                  )
                 : null // ssoOptions.map
             }
           </Styled.Methods>
