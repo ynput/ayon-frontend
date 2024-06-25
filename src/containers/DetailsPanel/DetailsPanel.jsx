@@ -3,7 +3,7 @@ import React, { useEffect } from 'react'
 import DetailsPanelHeader from './DetailsPanelHeader/DetailsPanelHeader'
 import { useDispatch, useSelector } from 'react-redux'
 import Feed from '@containers/Feed/Feed'
-import { useGetDashboardEntitiesDetailsQuery } from '@queries/entity/getEntityPanel'
+import { useGetEntitiesDetailsPanelQuery } from '@queries/entity/getEntityPanel'
 import TaskAttributes from '@pages/UserDashboardPage/UserDashboardTasks/TaskAttributes/TaskAttributes'
 import { transformEntityData } from '@queries/userDashboard/userDashboardHelpers'
 import RepresentationsList from '../RepresentationsList/RepresentationsList'
@@ -62,7 +62,7 @@ const DetailsPanel = ({
     isSuccess,
     isError,
     originalArgs,
-  } = useGetDashboardEntitiesDetailsQuery(
+  } = useGetEntitiesDetailsPanelQuery(
     { entityType, entities: entitiesToQuery, projectsInfo },
     { skip: !entitiesData.length && !entities.length },
   )

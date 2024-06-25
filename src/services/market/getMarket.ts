@@ -25,14 +25,13 @@ type UpdatedDefinitions = Omit<Definitions, 'marketAddonList'> & {
 export const enhancedMarketRest = api.rest.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
   endpoints: {
     marketAddonList: {
-      providesTags: (addons: $Any) =>
-        [
-          ...(addons?.map(({ id }: $Any) => ({ type: 'marketAddon', id })) || []),
-          {
-            type: 'marketAddon',
-            id: 'LIST',
-          },
-        ] || [],
+      providesTags: (addons: $Any) => [
+        ...(addons?.map(({ id }: $Any) => ({ type: 'marketAddon', id })) || []),
+        {
+          type: 'marketAddon',
+          id: 'LIST',
+        },
+      ],
       transformResponse: (response: MarketAddonListApiResponse) =>
         (response?.addons || []).map((addon: $Any) => {
           const isInstalled = !!addon.currentLatestVersion
