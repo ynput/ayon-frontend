@@ -1,3 +1,4 @@
+import { updateUserPreferences } from '@/features/user'
 import { ayonApi } from '../ayon'
 
 const updateUser = ayonApi.injectEndpoints({
@@ -60,6 +61,19 @@ const updateUser = ayonApi.injectEndpoints({
         { type: 'user', id: 'LIST' },
         ['info'],
       ],
+      async onQueryStarted({ preferences }, { dispatch, queryFulfilled, getState }) {
+        // get current preferences
+        const currentPreferences = getState().user?.data?.frontendPreferences || {}
+
+        // update redux store with new preferences
+        dispatch(updateUserPreferences(preferences))
+        try {
+          await queryFulfilled
+        } catch {
+          // revert to previous preferences
+          dispatch(updateUserPreferences(currentPreferences))
+        }
+      }, // onQueryStarted
     }),
     addUser: build.mutation({
       query: ({ name, user }) => ({
