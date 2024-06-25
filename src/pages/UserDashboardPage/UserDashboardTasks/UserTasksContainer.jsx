@@ -39,6 +39,8 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
   const user = useSelector((state) => state.user)
   const assigneesState = useSelector((state) => state.dashboard.tasks.assignees)
   const assigneesFilter = useSelector((state) => state.dashboard.tasks.assigneesFilter)
+  const draggingIds = useSelector((state) => state.dashboard.tasks.draggingIds)
+  const isDragging = draggingIds.length > 0
   // Only admins and managers can see task of other users
 
   let assignees = []
@@ -201,7 +203,7 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
           isLoadingProjectUsers={isLoadingProjectUsers}
         />
       </SplitterPanel>
-      {selectedTasksData.length ? (
+      {selectedTasksData.length && !isDragging ? (
         <SplitterPanel
           size={1}
           style={{
