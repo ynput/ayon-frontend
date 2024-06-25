@@ -10,19 +10,20 @@ import { useListProjectsQuery } from '@queries/project/getProject'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { InputText, Section } from '@ynput/ayon-react-components'
 import useCreateContext from '@hooks/useCreateContext'
-import useLocalStorage from '@hooks/useLocalStorage'
+import useLocalStorage from '@/hooks/useLocalStorage'
 import ProjectButton from '@components/ProjectButton/ProjectButton'
 import { createPortal } from 'react-dom'
 import { useShortcutsContext } from '@context/shortcutsContext'
 import { classNames } from 'primereact/utils'
 import { onProjectOpened } from '/src/features/dashboard'
+import { useUpdateUserPreferencesMutation } from '@/services/user/updateUser'
 
 const ProjectMenu = ({ isOpen, onHide }) => {
   const navigate = useNavigate()
   const dispatch = useDispatch()
   const menuRef = useRef(null)
   const searchRef = useRef(null)
-  const [pinned, setPinned] = useLocalStorage('projectMenu-pinned', [])
+  const [oldPinned, setOldPinned] = useLocalStorage('projectMenu-pinned', [])
   const [searchOpen, setSearchOpen] = useState(false)
   const [search, setSearch] = useState('')
 
@@ -50,23 +51,50 @@ const ProjectMenu = ({ isOpen, onHide }) => {
   }, [menuRef.current, isOpen])
 
   const projectSelected = useSelector((state) => state.project.name)
-  const user = useSelector((state) => state.user)
-  const isUser = user?.data?.isUser
+  const username = useSelector((state) => state.user?.name)
+  const isUser = useSelector((state) => state.user?.data?.isUser)
+  const pinnedState = useSelector((state) => state.user?.data?.frontendPreferences?.pinned) || []
+  // merge pinned from user and local storage
+  const pinned = [...new Set([...pinnedState, ...oldPinned])]
 
   const { data: projects = [] } = useListProjectsQuery({ active: true })
 
   const [showContext] = useCreateContext([])
 
+  const [updateUserPreferences] = useUpdateUserPreferencesMutation()
+
+  const updatePinned = async (pinnedData) => {
+    try {
+      // update user preferences
+      await updateUserPreferences({ name: username, preferences: { pinned: pinnedData } }).unwrap()
+
+      // if local storage had pinned, remove it
+      if (oldPinned.length > 0) {
+        setOldPinned([])
+        // remove local storage
+        localStorage.removeItem('projectMenu-pinned')
+      }
+
+      return true
+    } catch (error) {
+      console.error('Error updating user preferences', error)
+      return false
+    }
+  }
+
   const handlePinChange = (projectName, e) => {
     e.stopPropagation()
-    // e.originalEvent.preventDefault()
+    const newPinned = [...pinned]
     if (pinned.includes(projectName)) {
       // remove from pinned
-      setPinned(pinned.filter((p) => p !== projectName))
+      newPinned.splice(newPinned.indexOf(projectName), 1)
     } else {
       // add to pinned
-      setPinned([...pinned, projectName])
+      newPinned.push(projectName)
     }
+
+    // update user preferences
+    updatePinned(newPinned)
   }
 
   const buildContextMenu = (projectName) => {
