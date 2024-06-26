@@ -12,6 +12,7 @@ import usePatchProductsListWithVersions from '@hooks/usePatchProductsListWithVer
 
 const DetailsPanelHeader = ({
   entityType,
+  entitySubTypes,
   entities = [],
   disabledAssignees = [],
   users = [],
@@ -234,7 +235,7 @@ const DetailsPanelHeader = ({
             }
           />
         ))}
-      <Actions entities={entities} entityType={entityType} />
+      <Actions entities={entities} entityType={entityType} entitySubTypes={entitySubTypes} />
       <Styled.TagsSelect
         value={union(...tagsValues)}
         isMultiple={tagsValues.some((v) => !isEqual(v, tagsValues[0]))}

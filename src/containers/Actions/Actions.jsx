@@ -5,24 +5,31 @@ import { toast } from 'react-toastify'
 import { useMemo } from 'react'
 import { useExecuteActionMutation, useGetActionsFromContextQuery } from '@/services/actions/actions'
 
-const Actions = ({ entities }) => {
+const Actions = ({ entities, entityType, entitySubTypes }) => {
+  // console.log(entities)
+
   const context = useMemo(() => {
     if (!entities.length) return null
     if (!entities[0].projectName) return null
-    if (!entities[0].entityType) return null
 
-    // get a list of unique entity subtypes
-    const entitySubtypes = entities
+    // get a list of unique entity subtypes from loaded data
+    const entitySubtypesLoaded = entities
       .map((entity) => entity.entitySubType)
       .filter((value, index, self) => self.indexOf(value) === index)
 
+    // try and use the passed in entitySubTypes, if not use the loaded ones
+    const entitySubtypes = entitySubTypes || entitySubtypesLoaded || []
+
+    // all types except version should have subtypes
+    if (!entitySubTypes?.length && entityType !== 'version') return
+
     return {
       projectName: entities[0].projectName,
-      entityType: entities[0].entityType,
+      entityType: entityType,
       entityIds: entities.map((entity) => entity.id),
-      entitySubtypes,
+      entitySubtypes: entitySubtypes,
     }
-  }, [entities])
+  }, [entities, entityType])
 
   const { data, isFetching: isFetchingActions } = useGetActionsFromContextQuery(
     { mode: 'simple', actionContext: context },

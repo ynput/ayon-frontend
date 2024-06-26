@@ -13,6 +13,7 @@ export const entitiesWithoutFeed = ['product', 'representation']
 
 const DetailsPanel = ({
   entityType,
+  entitySubTypes,
   // entities is data we already have from kanban
   entitiesData = [],
   // entityIds are used to get the full details data for the entities
@@ -108,6 +109,7 @@ const DetailsPanel = ({
       >
         <DetailsPanelHeader
           entityType={entityType}
+          entitySubTypes={entitySubTypes}
           entities={isFetchingEntitiesDetails ? entitiesToQuery : entityDetailsData}
           users={projectUsers}
           disabledAssignees={disabledProjectUsers}
