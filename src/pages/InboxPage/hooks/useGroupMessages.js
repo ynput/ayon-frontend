@@ -93,6 +93,7 @@ const transformGroups = (groups = []) => {
       author = {},
       entityId,
       entityType,
+      origin,
     } = firstMessage
 
     return {
@@ -102,6 +103,7 @@ const transformGroups = (groups = []) => {
       projectName: projectName,
       entityId: entityId,
       entityType: entityType,
+      entitySubType: origin?.subtype,
       userName: author?.name,
       changes: getChangedValues(group),
       read: read,

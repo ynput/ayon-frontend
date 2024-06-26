@@ -42,6 +42,7 @@ fragment MessageFragment on ActivityNode {
     name
     label
     type
+    subtype
   }
   parents {
     type
