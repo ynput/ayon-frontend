@@ -235,7 +235,12 @@ const DetailsPanelHeader = ({
             }
           />
         ))}
-      <Actions entities={entities} entityType={entityType} entitySubTypes={entitySubTypes} />
+      <Actions
+        entities={entities}
+        entityType={entityType}
+        entitySubTypes={entitySubTypes}
+        isLoadingEntity={isFetching}
+      />
       <Styled.TagsSelect
         value={union(...tagsValues)}
         isMultiple={tagsValues.some((v) => !isEqual(v, tagsValues[0]))}

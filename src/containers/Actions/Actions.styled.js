@@ -5,28 +5,28 @@ export const Actions = styled.div`
   display: flex;
   gap: var(--base-gap-small);
   position: relative;
-
-  &.isLoading {
-    .icon {
-      opacity: 0;
-    }
-
-    button {
-      background-color: unset;
-    }
-    border-radius: var(--border-radius-m);
-    overflow: hidden;
-
-    ${getShimmerStyles()}
-  }
 `
 
-export const PinnedAction = styled(Button)`
+export const FeaturedAction = styled(Button)`
   padding: 6px;
+  user-select: none;
+  position: relative;
   img {
     width: 20px;
     height: 20px;
     object-fit: contain;
+  }
+
+  &.isLoading {
+    .icon,
+    img {
+      opacity: 0;
+    }
+    overflow: hidden;
+
+    background-color: unset;
+
+    ${getShimmerStyles()}
   }
 `
 
@@ -51,6 +51,21 @@ export const More = styled(Dropdown)`
 
     &:hover {
       background-color: var(--md-sys-color-surface-container-highest);
+    }
+  }
+
+  &.isLoading {
+    button {
+      position: relative;
+      background-color: unset;
+    }
+    ${getShimmerStyles()}
+    opacity: 0.5;
+    overflow: hidden;
+    border-radius: var(--border-radius-m);
+
+    .icon {
+      opacity: 0;
     }
   }
 `

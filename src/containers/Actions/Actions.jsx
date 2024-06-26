@@ -4,10 +4,9 @@ import { classNames } from 'primereact/utils'
 import { toast } from 'react-toastify'
 import { useMemo } from 'react'
 import { useExecuteActionMutation, useGetActionsFromContextQuery } from '@/services/actions/actions'
+import { Icon } from '@ynput/ayon-react-components'
 
-const Actions = ({ entities, entityType, entitySubTypes }) => {
-  // console.log(entities)
-
+const Actions = ({ entities, entityType, entitySubTypes, isLoadingEntity }) => {
   const context = useMemo(() => {
     if (!entities.length) return null
     if (!entities[0].projectName) return null
@@ -64,19 +63,49 @@ const Actions = ({ entities, entityType, entitySubTypes }) => {
     }
   }
 
+  const placeholderActions = [
+    {
+      identifier: 'placeholder-1',
+    },
+    {
+      identifier: 'placeholder-2',
+    },
+    {
+      identifier: 'placeholder-3',
+    },
+  ]
+
+  const isLoading = isFetchingActions || isLoadingEntity
+  const actionsToDisplay = isLoading ? placeholderActions : actions
+
   return (
-    <Styled.Actions className={classNames('actions', { isLoading: isFetchingActions })}>
-      {actions.map((option) => (
-        <Styled.PinnedAction key={option.identifier}>
-          <img
-            src={option.icon}
-            title={option.label}
-            onClick={() => handleExecuteAction(option.identifier)}
-          />
-        </Styled.PinnedAction>
+    <Styled.Actions className="actions">
+      {actionsToDisplay.map((option) => (
+        <Styled.FeaturedAction
+          key={option.identifier}
+          className={classNames('action', { isLoading: isLoading })}
+          disabled={isLoading}
+        >
+          {option.icon ? (
+            <img
+              src={option.icon}
+              title={option.label}
+              data-tooltip={option.label}
+              onClick={() => handleExecuteAction(option.identifier)}
+            />
+          ) : (
+            <Icon icon="manufacturing" />
+          )}
+        </Styled.FeaturedAction>
       ))}
 
-      <Styled.More options={actions} placeholder="" value={[]} />
+      <Styled.More
+        disabled={isLoading}
+        className={classNames('more', { isLoading: isLoading })}
+        options={actions}
+        placeholder=""
+        value={[]}
+      />
     </Styled.Actions>
   )
 }
