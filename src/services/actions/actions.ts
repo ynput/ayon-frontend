@@ -33,4 +33,4 @@ const injectedActionsRest = api.rest.injectEndpoints({
   }),
 })
 
-export const { useGetActionsFromContextQuery } = injectedActionsRest
+export const { useGetActionsFromContextQuery, useExecuteActionMutation } = injectedActionsRest

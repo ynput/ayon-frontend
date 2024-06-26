@@ -2,22 +2,18 @@ import React from 'react'
 import * as Styled from './Actions.styled'
 import { classNames } from 'primereact/utils'
 import { toast } from 'react-toastify'
-
-import {useState, useEffect, useMemo} from 'react'
-import axios from 'axios'
-
+import { useMemo } from 'react'
+import { useExecuteActionMutation, useGetActionsFromContextQuery } from '@/services/actions/actions'
 
 const Actions = ({ entities }) => {
-  const [isLoading, setIsLoading] = useState(true)
-  const [options, setOptions] = useState([])
-  
   const context = useMemo(() => {
     if (!entities.length) return null
     if (!entities[0].projectName) return null
     if (!entities[0].entityType) return null
 
     // get a list of unique entity subtypes
-    const entitySubtypes = entities.map((entity) => entity.entitySubType)
+    const entitySubtypes = entities
+      .map((entity) => entity.entitySubType)
       .filter((value, index, self) => self.indexOf(value) === index)
 
     return {
@@ -28,34 +24,16 @@ const Actions = ({ entities }) => {
     }
   }, [entities])
 
+  const { data, isFetching: isFetchingActions } = useGetActionsFromContextQuery(
+    { mode: 'simple', actionContext: context },
+    { skip: !context },
+  )
+  const actions = data?.actions || []
 
-  useEffect(() => {
-    if (!context) {
-      setIsLoading(false)
-      setOptions([])
-      return
-    }
-    setIsLoading(true)
-      
-    axios
-      .post('/api/actions/list', context)
-      .then((response) => {
-        setOptions(response.data.actions)
-      })
-      .catch((error) => {
-        console.warn("Error fetching actions", error)
-        setOptions([])
-      })
-      .finally(() => {
-        setIsLoading(false)
-      })
+  const [executeAction] = useExecuteActionMutation()
 
-  }, [context])
-
-
-  const onExecuteAction = (identifier) => {
-    const action = options.find((option) => option.identifier === identifier)
-    console.log("Executing action", action)
+  const handleExecuteAction = async (identifier) => {
+    const action = actions.find((option) => option.identifier === identifier)
 
     const params = {
       addonName: action.addonName,
@@ -64,41 +42,36 @@ const Actions = ({ entities }) => {
       identifier: action.identifier,
     }
 
-    axios
-      .post( '/api/actions/execute', context, { params })
-      .then((response) => {
-        console.log("Action executed", response)
-        toast.success(response?.data?.message || "Action executed successfully")
-        if (response?.data?.uri) {
-          window.location.href = response.data.uri
-        }
-      })
-      .catch((error) => {
-        console.warn("Error executing action", error)
-        toast.error(error?.response?.data?.message || "Error executing action")
-      })
+    try {
+      const response = await executeAction({ actionContext: context, ...params }).unwrap()
 
+      if (!response.success) throw new Error('Error executing action')
+
+      toast.success(response?.message || 'Action executed successfully')
+      if (response?.uri) {
+        window.location.href = response.uri
+      }
+    } catch (error) {
+      console.warn('Error executing action', error)
+      toast.error(error || 'Error executing action')
+    }
   }
 
-
-
   return (
-    <Styled.Actions className={classNames('actions', { isLoading })}>
-      {options.map((option) => (
+    <Styled.Actions className={classNames('actions', { isLoading: isFetchingActions })}>
+      {actions.map((option) => (
         <Styled.PinnedAction key={option.identifier}>
-          <img 
-            src={option.icon} 
+          <img
+            src={option.icon}
             title={option.label}
-            onClick={() => onExecuteAction(option.identifier)} 
+            onClick={() => handleExecuteAction(option.identifier)}
           />
         </Styled.PinnedAction>
       ))}
 
-      <Styled.More options={options} placeholder="" value={[]} />
+      <Styled.More options={actions} placeholder="" value={[]} />
     </Styled.Actions>
   )
-
-
 }
 
 export default Actions
