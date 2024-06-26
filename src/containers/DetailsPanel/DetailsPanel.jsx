@@ -108,7 +108,7 @@ const DetailsPanel = ({
       >
         <DetailsPanelHeader
           entityType={entityType}
-          entities={entityDetailsData}
+          entities={isFetchingEntitiesDetails ? entitiesToQuery : entityDetailsData}
           users={projectUsers}
           disabledAssignees={disabledProjectUsers}
           statusesOptions={statusesOptions}
@@ -116,6 +116,7 @@ const DetailsPanel = ({
           tagsOptions={tagsOptions}
           onClose={onClose}
           isSlideOut={isSlideOut}
+          isMultipleProjects={projectNames.length > 1}
           isFetching={isFetchingEntitiesDetails}
           isCompact={isCompact}
         />

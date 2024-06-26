@@ -10,7 +10,6 @@ import Actions from '@containers/Actions/Actions'
 import FeedFilters from '../FeedFilters/FeedFilters'
 import usePatchProductsListWithVersions from '@hooks/usePatchProductsListWithVersions'
 
-
 const DetailsPanelHeader = ({
   entityType,
   entities = [],
@@ -153,7 +152,6 @@ const DetailsPanelHeader = ({
     copyToClipboard(fullPath)
   }
 
-
   const portalId = 'dashboard-details-header'
 
   const hasUser =
@@ -236,7 +234,7 @@ const DetailsPanelHeader = ({
             }
           />
         ))}
-      <Actions entities={entities}/>
+      <Actions entities={entities} entityType={entityType} />
       <Styled.TagsSelect
         value={union(...tagsValues)}
         isMultiple={tagsValues.some((v) => !isEqual(v, tagsValues[0]))}

@@ -1,9 +1,9 @@
 import { useSelector } from 'react-redux'
 import { onTaskSelected } from '@state/dashboard'
 
-export const useTaskClick = (dispatch) => {
+export const useTaskClick = (dispatch, tasks = []) => {
   const selectedTasks = useSelector((state) => state.dashboard.tasks.selected)
-  const setSelectedTasks = (tasks) => dispatch(onTaskSelected(tasks))
+  const setSelectedTasks = (ids, types) => dispatch(onTaskSelected({ ids, types }))
   // HANDLE TASK CLICK
   const handleTaskClick = (e, id, taskIds) => {
     e?.preventDefault()
@@ -43,7 +43,12 @@ export const useTaskClick = (dispatch) => {
       newSelection = []
     }
 
-    setSelectedTasks(newSelection)
+    const newTasks = tasks.filter((task) => newSelection.includes(task.id))
+    const taskTypes = [...new Set(newTasks.map((task) => task.taskType))]
+
+    console.log(tasks)
+
+    setSelectedTasks(newSelection, taskTypes)
   }
 
   return handleTaskClick
