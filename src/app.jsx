@@ -118,22 +118,14 @@ const App = () => {
   const [handleMouse, tooltipComponent] = useTooltip()
 
   useEffect(() => {
-    const root = document.getElementById('root')
-    const portal = document.body.lastElementChild
+    const body = document.body
 
-    // attach mouseOver event listener to root element
-    root.addEventListener('mouseover', handleMouse)
-
-    if (portal) {
-      portal.addEventListener('mouseover', handleMouse)
-    }
+    // attach mouseOver event listener to body element
+    body.addEventListener('mouseover', handleMouse)
 
     // cleanup
     return () => {
-      root.removeEventListener('mouseover', handleMouse)
-      if (portal) {
-        portal.removeEventListener('mouseover', handleMouse)
-      }
+      body.removeEventListener('mouseover', handleMouse)
     }
   }, [])
 

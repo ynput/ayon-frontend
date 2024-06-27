@@ -26,7 +26,7 @@ const ActionsDropdown = ({ options, isLoading, onAction }) => {
       itemTemplate={(option) => <ActionsDropdownItem {...option} />}
       valueTemplate={() => <DefaultValueTemplate placeholder="" />}
       onChange={(v) => onAction(v[0])}
-      data-tooltip="All actions"
+      buttonProps={{ ['data-tooltip']: 'All actions' }}
     />
   )
 }
