@@ -1,3 +1,4 @@
+import { Button } from '@ynput/ayon-react-components'
 import styled, { css } from 'styled-components'
 
 export const CommentWrapper = styled.div`
@@ -37,11 +38,6 @@ export const Comment = styled.li`
       &.isMenuOpen {
         .tools {
           opacity: 1;
-        }
-
-        .date {
-          opacity: 0;
-          visibility: hidden;
         }
       }
     }
@@ -188,4 +184,22 @@ export const BlockCode = styled.pre`
   line-break: anywhere;
   word-break: break-word;
   overflow: hidden;
+`
+
+export const Tools = styled.div`
+  display: flex;
+  position: absolute;
+  right: 4px;
+  top: 4px;
+  background-color: var(--md-sys-color-surface-container-highest);
+  border-radius: var(--border-radius-m);
+`
+
+export const ToolButton = styled(Button)`
+  padding: 4px;
+
+  [icon='edit_square'] {
+    position: relative;
+    top: -1px;
+  }
 `
