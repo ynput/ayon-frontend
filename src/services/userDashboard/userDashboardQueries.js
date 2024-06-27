@@ -173,6 +173,7 @@ export const REP_QUERY = (attribs) => `
     }
 `
 
+export const entityDetailsTypesSupported = ['task', 'version', 'folder', 'representation']
 // this is used for getting the correct query for the details panel
 export const buildDetailsQuery = (entityType) => {
   // first get all attribs for the entity

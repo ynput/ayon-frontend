@@ -1,6 +1,9 @@
 import { ayonApi } from '@queries/ayon'
 import { transformEntityData } from '../userDashboard/userDashboardHelpers'
-import { buildDetailsQuery } from '../userDashboard/userDashboardQueries'
+import {
+  buildDetailsQuery,
+  entityDetailsTypesSupported,
+} from '../userDashboard/userDashboardQueries'
 import PubSub from '@/pubsub'
 
 const getEntityPanel = ayonApi.injectEndpoints({
@@ -37,6 +40,9 @@ const getEntityPanel = ayonApi.injectEndpoints({
     }),
     getEntitiesDetailsPanel: build.query({
       async queryFn({ entities = [], entityType, projectsInfo = {} }, { dispatch }) {
+        if (!entityDetailsTypesSupported.includes(entityType))
+          return { error: 'Entity type not supported' }
+
         try {
           const promises = entities.map((entity) =>
             dispatch(
