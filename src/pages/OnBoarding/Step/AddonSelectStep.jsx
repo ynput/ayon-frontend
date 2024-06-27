@@ -59,7 +59,7 @@ export const AddonSelectStep = ({
       <Footer
         next="Confirm"
         onNext={onSubmit}
-        nextProps={{ saving: isLoadingRelease }}
+        nextProps={{ saving: isLoadingRelease, disabled: isLoadingRelease }}
         showIcon={isLoadingRelease}
       />
     </Styled.Section>

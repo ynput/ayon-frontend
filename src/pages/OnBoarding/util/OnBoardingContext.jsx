@@ -66,12 +66,15 @@ const createBundleFromRelease = (release, selectedAddons, bundleList) => {
 
   const name = getNewBundleName(release.name, bundleList)
 
+  // check if there is already a production bundles
+  const hasProduction = bundleList.some((bundle) => bundle?.isProduction)
+
   return {
     name,
     addons,
     installerVersion,
     dependencyPackages,
-    isProduction: true,
+    isProduction: !hasProduction,
   }
 }
 
