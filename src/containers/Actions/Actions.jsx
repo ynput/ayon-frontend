@@ -97,6 +97,16 @@ const Actions = ({ entities, entityType, entitySubTypes, isLoadingEntity }) => {
       options.push(...groupOptions)
     })
 
+    // if no actions, add placeholder
+    if (!options.length) {
+      options.push({
+        label: 'No actions available',
+        value: 'no-actions',
+        disabled: true,
+        header: true,
+      })
+    }
+
     return options
   }, [groupedActions, unorderedCategories, categoryOrder])
 
@@ -119,7 +129,6 @@ const Actions = ({ entities, entityType, entitySubTypes, isLoadingEntity }) => {
         for (let i = tempFeaturedActions.length; i < featuredNumber; i++) {
           const action = actions[i]
           if (!action) break
-          console.log(action)
           if (!action.icon) continue
           tempFeaturedActions.push(action)
         }
