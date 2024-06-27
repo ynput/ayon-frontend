@@ -46,8 +46,6 @@ export const useTaskClick = (dispatch, tasks = []) => {
     const newTasks = tasks.filter((task) => newSelection.includes(task.id))
     const taskTypes = [...new Set(newTasks.map((task) => task.taskType))]
 
-    console.log(tasks)
-
     setSelectedTasks(newSelection, taskTypes)
   }
 

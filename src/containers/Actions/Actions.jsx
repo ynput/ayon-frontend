@@ -5,6 +5,13 @@ import { toast } from 'react-toastify'
 import { useMemo } from 'react'
 import { useExecuteActionMutation, useGetActionsFromContextQuery } from '@/services/actions/actions'
 import { Icon } from '@ynput/ayon-react-components'
+import ActionsDropdown from '@/components/ActionsDropdown/ActionsDropdown'
+
+const placeholder = {
+  identifier: 'placeholder',
+  label: 'Featured action slot',
+  isPlaceholder: true,
+}
 
 const Actions = ({ entities, entityType, entitySubTypes, isLoadingEntity }) => {
   const context = useMemo(() => {
@@ -36,6 +43,86 @@ const Actions = ({ entities, entityType, entitySubTypes, isLoadingEntity }) => {
   )
   const actions = data?.actions || []
 
+  const categoryOrder = ['application', 'admin', 'workflow']
+  // group actions by category
+  // sort by hardcoded category, this will changing the future
+  const groupedActions = useMemo(() => {
+    // Step 1: Group actions by category
+    const grouped = actions.reduce((acc, action) => {
+      if (!acc[action.category]) {
+        acc[action.category] = []
+      }
+      acc[action.category].push(action)
+      return acc
+    }, {})
+
+    // Step 5: Return the ordered groups
+    return grouped
+  }, [actions])
+
+  // get categories that don't have a specific order (not in categoryOrder)
+  // then sort them alphabetically
+  const unorderedCategories = useMemo(() => [
+    ...new Set(
+      Object.keys(groupedActions)
+        .filter((category) => !categoryOrder.includes(category))
+        .sort((a, b) => a.localeCompare(b)),
+    ),
+  ])
+
+  const categories = [...categoryOrder, ...unorderedCategories]
+
+  // create the options for the dropdown, each category is separated by a divider and a title
+  // for the divider we will use a custom dropdown item template
+  const dropdownOptions = useMemo(() => {
+    const options = []
+
+    categories.forEach((category) => {
+      if (!groupedActions[category] || !groupedActions[category].length) return
+
+      options.push({
+        label: category,
+        header: true,
+        value: category,
+        disabled: true,
+      })
+
+      const groupOptions = groupedActions[category].map((action) => ({
+        value: action.identifier,
+        label: action.label,
+        icon: action.icon,
+        img: action.icon,
+      }))
+
+      options.push(...groupOptions)
+    })
+
+    return options
+  }, [groupedActions, unorderedCategories, categoryOrder])
+
+  const featuredNumber = 2
+
+  const featuredActions = useMemo(() => {
+    // Filter and sort to get initial featured actions
+    let tempFeaturedActions = actions
+      .filter((action) => action.featured)
+      .sort((a, b) => a.order - b.order)
+      .slice(0, featuredNumber)
+
+    // Check if we need to add more actions to reach featuredNumber
+    if (tempFeaturedActions.length < featuredNumber) {
+      // Get the first group of actions or an empty array
+      const firstGroup = Object.values(groupedActions)[0] || []
+      // Fill the remaining slots with actions from the first group or a placeholder
+      for (let i = tempFeaturedActions.length; i < featuredNumber; i++) {
+        if (!firstGroup[i]) break
+        tempFeaturedActions.push(firstGroup[i])
+      }
+    }
+
+    return tempFeaturedActions
+  }, [actions, groupedActions, placeholder])
+
   const [executeAction] = useExecuteActionMutation()
 
   const handleExecuteAction = async (identifier) => {
@@ -63,48 +150,38 @@ const Actions = ({ entities, entityType, entitySubTypes, isLoadingEntity }) => {
     }
   }
 
-  const placeholderActions = [
-    {
-      identifier: 'placeholder-1',
-    },
-    {
-      identifier: 'placeholder-2',
-    },
-    {
-      identifier: 'placeholder-3',
-    },
-  ]
+  const loadingActions = [placeholder, placeholder, placeholder]
 
   const isLoading = isFetchingActions || isLoadingEntity
-  const actionsToDisplay = isLoading ? placeholderActions : actions
+  const featuredActionsToDisplay = isLoading ? loadingActions : featuredActions
 
   return (
     <Styled.Actions className="actions">
-      {actionsToDisplay.map((option) => (
+      {featuredActionsToDisplay.map((action, i) => (
         <Styled.FeaturedAction
-          key={option.identifier}
-          className={classNames('action', { isLoading: isLoading })}
-          disabled={isLoading}
+          key={action.identifier + '-' + i}
+          className={classNames('action', {
+            isLoading: isLoading,
+            isPlaceholder: action.isPlaceholder,
+          })}
+          data-tooltip={action.label}
+          disabled={action.isPlaceholder}
         >
-          {option.icon ? (
+          {action.icon ? (
             <img
-              src={option.icon}
-              title={option.label}
-              data-tooltip={option.label}
-              onClick={() => handleExecuteAction(option.identifier)}
+              src={action.icon}
+              title={action.label}
+              onClick={() => handleExecuteAction(action.identifier)}
             />
           ) : (
             <Icon icon="manufacturing" />
           )}
         </Styled.FeaturedAction>
       ))}
-
-      <Styled.More
-        disabled={isLoading}
-        className={classNames('more', { isLoading: isLoading })}
-        options={actions}
-        placeholder=""
-        value={[]}
+      <ActionsDropdown
+        options={dropdownOptions}
+        isLoading={isLoading}
+        onAction={handleExecuteAction}
       />
     </Styled.Actions>
   )
