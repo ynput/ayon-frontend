@@ -2437,6 +2437,15 @@ export type Permissions = {
   /** Whitelist REST endpoints a user can access */
   endpoints?: EndpointsAccessList
 }
+export type IconModel = {
+  type?: 'material-symbols' | 'url'
+  /** The name of the icon (for material-symbols) */
+  name?: string
+  /** The color of the icon (for material-symbols) */
+  color?: string
+  /** The URL of the icon (for url) */
+  url?: string
+}
 export type BaseActionManifest = {
   /** The identifier of the action */
   identifier: string
@@ -2447,7 +2456,7 @@ export type BaseActionManifest = {
   /** The order of the action */
   order?: number
   /** Path to the action icon */
-  icon?: string
+  icon?: IconModel
   featured?: boolean
   /** The name of the addon providing the action */
   addonName?: string

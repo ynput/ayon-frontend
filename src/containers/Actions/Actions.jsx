@@ -4,8 +4,8 @@ import { classNames } from 'primereact/utils'
 import { toast } from 'react-toastify'
 import { useMemo } from 'react'
 import { useExecuteActionMutation, useGetActionsFromContextQuery } from '@/services/actions/actions'
-import { Icon } from '@ynput/ayon-react-components'
 import ActionsDropdown from '@/components/ActionsDropdown/ActionsDropdown'
+import ActionIcon from './ActionIcon'
 
 const placeholder = {
   identifier: 'placeholder',
@@ -91,7 +91,6 @@ const Actions = ({ entities, entityType, entitySubTypes, isLoadingEntity }) => {
         value: action.identifier,
         label: action.label,
         icon: action.icon,
-        img: action.icon,
       }))
 
       options.push(...groupOptions)
@@ -182,15 +181,7 @@ const Actions = ({ entities, entityType, entitySubTypes, isLoadingEntity }) => {
           data-tooltip={action.label}
           disabled={action.isPlaceholder}
         >
-          {action.icon ? (
-            <img
-              src={action.icon}
-              title={action.label}
-              onClick={() => handleExecuteAction(action.identifier)}
-            />
-          ) : (
-            <Icon icon="manufacturing" />
-          )}
+          <ActionIcon icon={action.icon} />
         </Styled.FeaturedAction>
       ))}
       <ActionsDropdown
