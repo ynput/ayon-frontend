@@ -8,6 +8,7 @@ import TaskAttributes from '@pages/UserDashboardPage/UserDashboardTasks/TaskAttr
 import { transformEntityData } from '@queries/userDashboard/userDashboardHelpers'
 import RepresentationsList from '../RepresentationsList/RepresentationsList'
 import { closeSlideOut, updateDetailsPanelTab } from '@state/details'
+import { entityDetailsTypesSupported } from '@/services/userDashboard/userDashboardQueries'
 
 export const entitiesWithoutFeed = ['product', 'representation']
 
@@ -64,7 +65,12 @@ const DetailsPanel = ({
     originalArgs,
   } = useGetEntitiesDetailsPanelQuery(
     { entityType, entities: entitiesToQuery, projectsInfo },
-    { skip: !entitiesData.length && !entities.length },
+    {
+      skip:
+        !entitiesData.length &&
+        !entities.length &&
+        !entityDetailsTypesSupported.includes(entityType),
+    },
   )
 
   // the entity changes then we close the slide out

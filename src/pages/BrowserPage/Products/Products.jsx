@@ -199,12 +199,11 @@ const Products = () => {
     }
   }
 
-  const handleStatusOpen = (id) => {
+  const handleStatusOpen = (productId, versionId) => {
     // handles the edge case where the use foccusess multiple products but then changes a different status
-    if (!focusedProducts.includes(id)) {
+    if (!focusedProducts.includes(productId)) {
       // not in focused selection
-      // reset selection to status id
-      dispatch(setFocusedProducts([id]))
+      dispatch(productSelected({ products: [productId], versions: [versionId] }))
     }
   }
 
@@ -284,7 +283,7 @@ const Products = () => {
               size={resolveWidth(versionStatusWidth)}
               onChange={(v) => handleStatusChange(v, node.data.id)}
               multipleSelected={focusedProducts.length}
-              onOpen={() => handleStatusOpen(node.data.id)}
+              onOpen={() => handleStatusOpen(node.data.id, node.data.versionId)}
               style={{ maxWidth: '100%' }}
             />
           )
