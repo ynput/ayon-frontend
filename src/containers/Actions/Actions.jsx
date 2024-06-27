@@ -111,13 +111,19 @@ const Actions = ({ entities, entityType, entitySubTypes, isLoadingEntity }) => {
 
     // Check if we need to add more actions to reach featuredNumber
     if (tempFeaturedActions.length < featuredNumber) {
-      // Get the first group of actions or an empty array
-      const firstGroup = Object.values(groupedActions)[0] || []
-      // Fill the remaining slots with actions from the first group or a placeholder
-      for (let i = tempFeaturedActions.length; i < featuredNumber; i++) {
-        if (!firstGroup[i]) break
-        tempFeaturedActions.push(firstGroup[i])
-      }
+      categories.forEach((category) => {
+        if (tempFeaturedActions.length >= featuredNumber) return
+        const actions = groupedActions[category]
+        if (!actions || !actions.length) return
+
+        for (let i = tempFeaturedActions.length; i < featuredNumber; i++) {
+          const action = actions[i]
+          if (!action) break
+          console.log(action)
+          if (!action.icon) continue
+          tempFeaturedActions.push(action)
+        }
+      })
     }
 
     return tempFeaturedActions

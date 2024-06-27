@@ -1,14 +1,15 @@
 import { DefaultValueTemplate, Icon } from '@ynput/ayon-react-components'
 import { DropdownHeader, DropdownItem, StyledDropdown } from './ActionsDropdown.styled'
 import { classNames } from 'primereact/utils'
+import { upperFirst } from 'lodash'
 
 export const ActionsDropdownItem = ({ label, img, icon = 'manufacturing', header }) => {
-  if (header) return <DropdownHeader>{label}</DropdownHeader>
+  if (header) return <DropdownHeader>{upperFirst(label)}</DropdownHeader>
 
   return (
     <DropdownItem>
       {img && <img src={img} alt={label} />}
-      {!img && <Icon className="icon" name={icon || 'manufacturing'} />}
+      {!img && <Icon className="icon" icon={icon || 'manufacturing'} />}
       <span>{label}</span>
     </DropdownItem>
   )
@@ -25,6 +26,7 @@ const ActionsDropdown = ({ options, isLoading, onAction }) => {
       itemTemplate={(option) => <ActionsDropdownItem {...option} />}
       valueTemplate={() => <DefaultValueTemplate placeholder="" />}
       onChange={(v) => onAction(v[0])}
+      data-tooltip="All actions"
     />
   )
 }

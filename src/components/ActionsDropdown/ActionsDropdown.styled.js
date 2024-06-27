@@ -35,7 +35,7 @@ export const StyledDropdown = styled(Dropdown)`
     border-radius: var(--border-radius-m);
 
     .icon {
-      opacity: 0;
+      opacity: 0 !important;
     }
   }
 `
@@ -45,6 +45,7 @@ export const DropdownItem = styled.div`
   gap: var(--base-gap-large);
 
   padding: 6px;
+  padding-right: 12px;
 
   img {
     width: 20px;
