@@ -180,6 +180,7 @@ const Actions = ({ entities, entityType, entitySubTypes, isLoadingEntity }) => {
           })}
           data-tooltip={action.label}
           disabled={action.isPlaceholder}
+          onClick={() => handleExecuteAction(action.identifier)}
         >
           <ActionIcon icon={action.icon} />
         </Styled.FeaturedAction>
