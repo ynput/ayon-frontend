@@ -10,7 +10,6 @@ export const AddonSelectStep = ({
   releases = [],
   release = {},
   setSelectedAddons,
-  onSubmit,
   isLoadingRelease,
   isLoadingAddons,
 }) => {
@@ -57,8 +56,6 @@ export const AddonSelectStep = ({
             ))}
       </Styled.AddonsContainer>
       <Footer
-        next="Confirm"
-        onNext={onSubmit}
         nextProps={{ saving: isLoadingRelease, disabled: isLoadingRelease }}
         showIcon={isLoadingRelease}
       />

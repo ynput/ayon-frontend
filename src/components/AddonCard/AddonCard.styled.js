@@ -74,5 +74,11 @@ export const AddonCard = styled.button`
 
   .version {
     margin-left: auto;
+
+    /* for OS logos */
+    svg {
+      height: 20px;
+      fill: var(--md-sys-color-on-surface);
+    }
   }
 `

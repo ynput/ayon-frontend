@@ -7,7 +7,7 @@ import WindowsLogo from '@/svg/WindowsLogo'
 import AppleLogo from '@/svg/AppleLogo'
 import LinuxLogo from '@/svg/LinuxLogo'
 
-const getPlatformIcon = (platform) => {
+export const getPlatformIcon = (platform) => {
   switch (platform) {
     case 'windows':
       return <WindowsLogo />
