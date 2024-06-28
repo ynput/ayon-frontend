@@ -1,6 +1,7 @@
 // @ts-ignore
 import PubSub from '@/pubsub'
 import API from '@api'
+import { ayonApi } from '../ayon'
 import { $Any } from '@types'
 import {
   GetInboxHasUnreadQuery,
@@ -66,6 +67,42 @@ export const enhancedInboxGraphql = API.graphql.enhanceEndpoints<TagTypes, Updat
         { type: 'inbox', id: `important=${important}` },
         { type: 'inbox', id: `active=${active}/important=${important}` },
       ],
+      async onQueryStarted(arg, { queryFulfilled, getCacheEntry, dispatch }) {
+        try {
+          const oldCache = getCacheEntry()
+
+          // if it's the first query, do nothing
+          if (!oldCache?.data?.messages) return
+          // wait for the initial query to resolve before proceeding
+          const newCache = await queryFulfilled
+
+          const oldMessages = oldCache?.data?.messages || []
+          const newCacheMessages = newCache.data.messages || []
+
+          // find the new messages
+          const newMessages = newCacheMessages.filter(
+            (m) => !oldMessages.some((lm) => lm.referenceId === m.referenceId),
+          )
+
+          // find new message entityIds
+          const entityIds = [...new Set(newMessages.map((m) => m.entityId))].filter(
+            (id) => !!id,
+          ) as string[]
+
+          // invalidate the activity feed for all those entities
+          dispatch(
+            ayonApi.util.invalidateTags(
+              entityIds.map((entityId) => ({ type: 'entityActivities', id: entityId })),
+            ),
+          )
+
+          console.log(entityIds)
+        } catch (error) {
+          // no-op in case `cacheEntryRemoved` resolves before `cacheDataLoaded`,
+          // in which case `cacheDataLoaded` will throw
+          console.error(error)
+        }
+      },
     },
     GetInboxHasUnread: {
       transformResponse: (res: GetInboxHasUnreadQuery) => !!res.inbox.edges.length,
