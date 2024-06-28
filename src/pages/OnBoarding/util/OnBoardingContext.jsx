@@ -48,7 +48,7 @@ const userFormFields = [
   },
 ]
 
-const createBundleFromRelease = (release, selectedAddons, bundleList) => {
+const createBundleFromRelease = ({ release, selectedAddons, selectedPlatforms, bundleList }) => {
   const addons = {}
   for (const name of selectedAddons) {
     // find addon in release
@@ -61,6 +61,8 @@ const createBundleFromRelease = (release, selectedAddons, bundleList) => {
   const installerVersion = release.installers[0]?.version
   const dependencyPackages = {}
   for (const depPackage of release.dependencyPackages) {
+    // skip if platform is not selected
+    if (!selectedPlatforms.includes(depPackage.platform)) continue
     dependencyPackages[depPackage.platform] = depPackage.filename
   }
 
@@ -253,7 +255,12 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
         // get bundle list
         const bundleList = (await getBundleList({ archived: true }).unwrap()) || []
         // first create the bundle from the release
-        const bundle = createBundleFromRelease(release, selectedAddons, bundleList)
+        const bundle = createBundleFromRelease({
+          release,
+          selectedAddons,
+          selectedPlatforms,
+          bundleList,
+        })
 
         await createBundle({ data: bundle, force: true }).unwrap()
       }
