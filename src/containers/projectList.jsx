@@ -11,6 +11,7 @@ import useCreateContext from '@hooks/useCreateContext'
 import useLocalStorage from '@hooks/useLocalStorage'
 import CollapseButton from '@components/CollapseButton'
 import styled, { css } from 'styled-components'
+import { classNames } from 'primereact/utils'
 
 const formatName = (rowData, defaultTitle, field = 'name') => {
   if (rowData[field] === '_') return defaultTitle
@@ -114,18 +115,20 @@ const ProjectList = ({
   const navigate = useNavigate()
   const tableRef = useRef(null)
   const user = useSelector((state) => state.user)
+  const pinnedProjects = useSelector((state) => state.user?.data?.frontendPreferences?.pinned) || []
 
   // by default only show active projects
   const params = { active: true }
 
-  const showInactiveAsWell = isProjectManager && (user?.data?.isAdmin || user?.data?.isManager)
+  const showInactiveAsWell =
+    isProjectManager && (user?.projects?.isAdmin || user?.projects?.isManager)
   if (showInactiveAsWell) {
     // remove active from params
     delete params.active
   }
 
   const {
-    data = [],
+    data: projects = [],
     isLoading,
     isFetching,
     isError,
@@ -140,9 +143,9 @@ const ProjectList = ({
   let [collapsed, setCollapsed] = useLocalStorage(collapsedId + '-projectListCollapsed', false)
   // always set to false if not collapsible
   if (!isCollapsible) collapsed = false
-  const projectNames = data.map((project) => project.name)
+  const projectNames = projects.map((project) => project.name)
 
-  // if selection does not exist in data, set selection to null
+  // if selection does not exist in projects, set selection to null
   useEffect(() => {
     if (isLoading || isFetching) return
 
@@ -154,12 +157,30 @@ const ProjectList = ({
     }
 
     if (onNoProject && !foundProject) {
-      const defaultProject = autoSelect ? data[0]?.name : null
+      const defaultProject = autoSelect ? projects[0]?.name : null
       onNoProject(defaultProject)
     } else if (isSuccess && onSuccess) onSuccess()
-  }, [selection, data, onNoProject, isLoading])
+  }, [selection, projects, onNoProject, isLoading])
 
-  let projectList = [...data]
+  const projectListWithPinned = projects
+    .map((project) => ({
+      ...project,
+      // Add a pinned property based on whether the project name is in pinnedProjects
+      pinned: pinnedProjects.includes(project.name),
+    }))
+    .sort((a, b) => {
+      // Use the pinned property for sorting
+      if (a.pinned && !b.pinned) {
+        return -1 // a comes before b
+      } else if (!a.pinned && b.pinned) {
+        return 1 // b comes before a
+      } else {
+        // If both have the same pinned status, sort alphabetically by name
+        return a.name.localeCompare(b.name)
+      }
+    })
+
+  const projectList = projectListWithPinned
 
   if (showNull) projectList.unshift({ name: '_' })
 
@@ -233,7 +254,7 @@ const ProjectList = ({
         },
       ]
 
-      const selObject = data.find((project) => project?.name === sel[0])
+      const selObject = projects.find((project) => project?.name === sel[0])
       const active = selObject?.active
 
       // show deactivate button on active projects and activate on inactive projects
@@ -260,7 +281,7 @@ const ProjectList = ({
 
       return menuItems
     },
-    [data, onNewProject, onDeleteProject, onRowClick, isProjectManager],
+    [projects, onNewProject, onDeleteProject, onRowClick, isProjectManager],
   )
 
   // create the ref and model
@@ -271,17 +292,17 @@ const ProjectList = ({
     let newSelection = selection
 
     if (multiselect) {
-      if (event?.data?.name && !selection?.includes(event.data.name)) {
+      if (event?.projects?.name && !selection?.includes(event.projects.name)) {
         // if the selection does not include the clicked node, new selection is the clicked node
-        newSelection = [event.data.name]
+        newSelection = [event.projects.name]
         // update selection state
         onSelect(newSelection)
       }
     } else {
       // single select gets converted to array
-      newSelection = [event.data.name]
+      newSelection = [event.projects.name]
       // update selection state
-      onSelect(event.data.name)
+      onSelect(event.projects.name)
     }
 
     tableContextMenuShow(event.originalEvent, getContextItems(newSelection))
@@ -291,13 +312,9 @@ const ProjectList = ({
   const loadingData = useMemo(() => {
     return Array.from({ length: 10 }, (_, i) => ({
       key: i,
-      data: {},
+      projects: {},
     }))
   }, [])
-
-  if (isLoading) {
-    projectList = loadingData
-  }
 
   const sectionStyle = {
     ...styleSection,
@@ -307,7 +324,11 @@ const ProjectList = ({
   }
 
   return (
-    <Section style={sectionStyle} className={className} wrap={wrap}>
+    <Section
+      style={sectionStyle}
+      className={classNames('project-list-section', className, { collapsed })}
+      wrap={wrap}
+    >
       {onSelectAll && (
         <Button
           label={!collapsed && 'Select all projects'}
@@ -327,8 +348,15 @@ const ProjectList = ({
         </StyledAddButton>
       )}
       <TablePanel>
+        {isCollapsible && (
+          <CollapseButton
+            onClick={() => setCollapsed(!collapsed)}
+            isOpen={!collapsed}
+            side="left"
+          />
+        )}
         <DataTable
-          value={projectList}
+          value={isLoading ? loadingData : projectList}
           scrollable="true"
           scrollHeight="flex"
           selectionMode={multiselect ? 'multiple' : 'single'}
@@ -338,13 +366,13 @@ const ProjectList = ({
           selection={selectionObj}
           onSelectionChange={onSelect && onSelectionChange}
           onRowClick={onRowClick}
-          onRowDoubleClick={(e) => navigate(`/projects/${e.data.name}/browser`)}
+          onRowDoubleClick={(e) => navigate(`/projects/${e.projects.name}/browser`)}
           onContextMenu={onContextMenu}
-          className={`${isLoading ? 'table-loading ' : ''}project-list${
-            collapsed ? ' collapsed' : ''
-          }
-          ${isCollapsible ? ' collapsible' : ''}
-          `}
+          className={classNames('project-list', {
+            'table-loading': isLoading,
+            collapsed: collapsed,
+            collapsible: isCollapsible,
+          })}
           style={{
             maxWidth: 'unset',
           }}
@@ -352,19 +380,7 @@ const ProjectList = ({
         >
           <Column
             field="name"
-            header={
-              <>
-                <span className="title">Project</span>
-                {isCollapsible && (
-                  <CollapseButton
-                    onClick={() => setCollapsed(!collapsed)}
-                    isOpen={!collapsed}
-                    side="left"
-                    // style={{ position: 'absolute', right: 4, top: 4 }}
-                  />
-                )}
-              </>
-            }
+            header="Projects"
             body={(rowData) => (
               <StyledProjectName
                 $isOpen={!collapsed}
