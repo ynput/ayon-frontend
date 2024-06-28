@@ -114,11 +114,30 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
   // console.log({ ynputConnect })
   // step 2
   const [userForm, setUserForm] = useState(initUserForm)
-  // step 3
+  // step 5
   const [selectedPreset, setSelectedPreset] = useState(null)
 
-  // step 4
+  // step 6
   const [selectedAddons, setSelectedAddons] = useState([])
+
+  // step 7
+  // guess the users operating system
+  const guessedPlatform = useMemo(() => {
+    let platform
+
+    if (navigator.userAgentData && navigator.userAgentData.platform) {
+      platform = navigator.userAgentData.platform?.toLowerCase()
+    }
+
+    if (!platform) return []
+
+    if (platform.includes('win')) return ['windows']
+    if (platform.includes('mac')) return ['darwin']
+    if (platform.includes('linux')) return ['linux']
+    return []
+  }, [])
+
+  const [selectedPlatforms, setSelectedPlatforms] = useState(guessedPlatform)
 
   // get selected release data
   const { data: release = {}, isFetching: isLoadingAddons } = useGetReleaseQuery(
@@ -192,18 +211,22 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
 
       // sources = [{type: url, url: 'https://...'}, {type: file, url: 'filename.exe'}]
       // for every installer, get all the sources urls and filter out the ones that are not urls
-      const installers = release.installers.reduce((acc, installer) => {
-        const sources = installer.sources.filter(({ type, url }) => type === 'http' && !!url)
-        return [...acc, ...sources.map(({ url }) => ({ url, data: installer }))]
-      }, [])
+      const installers = release.installers
+        .filter((installer) => selectedPlatforms.includes(installer.platform)) // Filter installers by selected platforms
+        .reduce((acc, installer) => {
+          const sources = installer.sources.filter(({ type, url }) => type === 'http' && !!url)
+          return [...acc, ...sources.map(({ url }) => ({ url, data: installer }))]
+        }, [])
 
       // same as above but for dep packages
-      const depPackages = release.dependencyPackages.reduce((acc, depPackage) => {
-        const sources = depPackage.sources.filter(({ type, url }) => type === 'http' && !!url)
-        return [...acc, ...sources.map(({ url }) => ({ url, data: depPackage }))]
-      }, [])
+      const depPackages = release.dependencyPackages
+        .filter((depPackage) => selectedPlatforms.includes(depPackage.platform))
+        .reduce((acc, depPackage) => {
+          const sources = depPackage.sources.filter(({ type, url }) => type === 'http' && !!url)
+          return [...acc, ...sources.map(({ url }) => ({ url, data: depPackage }))]
+        }, [])
 
-      // got to next step
+      // go to next step
       nextStep()
 
       // create bundle we release
@@ -253,6 +276,8 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
     setSelectedPreset,
     selectedAddons,
     setSelectedAddons,
+    selectedPlatforms,
+    setSelectedPlatforms,
     onSubmit: handleSubmit,
     setUserForm,
     userForm,
