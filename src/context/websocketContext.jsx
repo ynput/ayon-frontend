@@ -96,7 +96,7 @@ export const SocketProvider = (props) => {
 
       if (topic === 'server.restart_requested') setServerRestartingVisible(true)
 
-      if (sender === window.senderId) {
+      if (sender === window.senderId || !sender) {
         return // my own message. ignore
       }
 
