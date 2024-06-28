@@ -565,6 +565,10 @@ a {
     z-index: 10;
   }
 
+  .p-datatable-thead {
+    transition: opacity 0.2s;
+  }
+
   &.collapsed {
     .collapse-button {
       right: 50%;
@@ -576,6 +580,11 @@ a {
       user-select: none;
       pointer-events: none;
     }
+  }
+
+  // remove column header border
+  .p-datatable .p-datatable-thead > tr > th {
+    border: none;
   }
 }
 

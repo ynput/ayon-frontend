@@ -89,6 +89,13 @@ const StyledAddButton = styled(Button)`
     `}
 `
 
+const StyledPin = styled(Icon)`
+  font-variation-settings: 'FILL' 1, 'wght' 200, 'GRAD' 200, 'opsz' 20;
+  margin-left: auto;
+  margin-right: 6px;
+  font-size: 18px;
+`
+
 const ProjectList = ({
   selection,
   onSelect,
@@ -392,7 +399,15 @@ const ProjectList = ({
             )}
             style={{ minWidth: 150, ...style }}
           />
-          {!hideCode && <Column field="code" header="Code" style={{ maxWidth: 80 }} />}
+          {!hideCode && !collapsed && (
+            <Column field="code" header="Code" style={{ maxWidth: 80 }} />
+          )}
+          {!collapsed && (
+            <Column
+              field="pinned"
+              body={(rowData) => (rowData.pinned ? <StyledPin icon="push_pin" /> : null)}
+            />
+          )}
         </DataTable>
       </TablePanel>
     </Section>
