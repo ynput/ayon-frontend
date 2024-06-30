@@ -1,5 +1,5 @@
 import { Button, Icon, SaveButton } from '@ynput/ayon-react-components'
-import React, { useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import * as Styled from './AddonDetails.styled'
 import Type from '@/theme/typography.module.css'
 import { classNames } from 'primereact/utils'
@@ -40,7 +40,7 @@ const AddonDetails = ({ addon = {}, isLoading, onDownload, isUpdatingAll }) => {
     error,
     isOutdated,
     isProductionOutdated,
-    // versions = [],
+    versions = [],
     downloadedVersions = {},
     latestVersion,
     currentLatestVersion,
@@ -51,10 +51,21 @@ const AddonDetails = ({ addon = {}, isLoading, onDownload, isUpdatingAll }) => {
     warning,
   } = addon
 
+  const versionKeys = isEmpty(downloadedVersions) ? [] : Object.keys(downloadedVersions)
+  // keep track of downloaded versions
+  const [downloadedByAddon, setDownloadedByAddon] = useState({})
+  const downloaded = downloadedByAddon[name] || []
+
+  useEffect(() => {
+    setDownloadedByAddon((v) => ({
+      ...v,
+      [name]: [...new Set([...(v[name] || []), ...versionKeys])],
+    }))
+  }, [name, setDownloadedByAddon])
+
   const [showAllVersions, setShowAllVersions] = useState(false)
 
-  const versionKeys = isEmpty(downloadedVersions) ? [] : Object.keys(downloadedVersions)
-  const versionKeysSorted = versionKeys.sort((a, b) => rcompare(a, b))
+  const versionKeysSorted = downloaded.sort((a, b) => rcompare(a, b))
   const versionsToShow = versionKeysSorted.length
     ? showAllVersions
       ? versionKeysSorted
@@ -75,8 +86,12 @@ const AddonDetails = ({ addon = {}, isLoading, onDownload, isUpdatingAll }) => {
 
   // All the download logic is handled in the parent component (MarketPage.jsx)
   // Okay it's actually handled in the hook useDownload.js
-  const handleDownload = () => {
-    onDownload && onDownload(name, latestVersion)
+  const handleDownload = (version) => {
+    onDownload && onDownload(name, version)
+    // update downloaded versions
+    if (!downloaded.includes(version)) {
+      setDownloadedByAddon((v) => ({ ...v, [name]: [...(v[name] || []), version] }))
+    }
   }
 
   let actionButton = null
@@ -107,16 +122,26 @@ const AddonDetails = ({ addon = {}, isLoading, onDownload, isUpdatingAll }) => {
       <Button
         variant="filled"
         icon={'download'}
-        onClick={handleDownload}
+        onClick={() => handleDownload(latestVersion)}
       >{`Download v${latestVersion}`}</Button>
     )
   } else if (latestVersion) {
     actionButton = (
-      <Button variant="filled" icon={'download'} onClick={handleDownload}>
+      <Button variant="filled" icon={'download'} onClick={() => handleDownload(latestVersion)}>
         {`Download v${latestVersion}`}
       </Button>
     )
   }
+
+  const versionsOptions = useMemo(
+    () =>
+      versions.map((v) => ({
+        value: v.version,
+        label: `v${v.version}`,
+        isDownloaded: downloaded.includes(v.version),
+      })),
+    [versions, downloaded],
+  )
 
   // query string used for duplicating bundles with new version
   const addonVersionObject = { [name]: currentLatestVersion }
@@ -156,7 +181,26 @@ const AddonDetails = ({ addon = {}, isLoading, onDownload, isUpdatingAll }) => {
           </Styled.Left>
           {/* RIGHT PANEL */}
           <Styled.Right className={classNames(Type.bodyMedium, { isLoading })}>
-            {actionButton}
+            <Styled.Download>
+              {actionButton}
+
+              <Styled.VersionDropdown
+                options={versionsOptions}
+                align="right"
+                value={[]}
+                widthExpand
+                onChange={(v) => handleDownload(v[0])}
+                itemStyle={{ justifyContent: 'space-between' }}
+                buttonProps={{ 'data-tooltip': 'Download a specific version' }}
+                search={versions.length > 10}
+                itemTemplate={(option) => (
+                  <Styled.VersionDropdownItem>
+                    <Icon icon={option.isDownloaded ? 'check' : 'download'} />
+                    {option.label}
+                  </Styled.VersionDropdownItem>
+                )}
+              />
+            </Styled.Download>
             <Styled.MetaPanel className={classNames({ isPlaceholder: isLoading })}>
               <MetaPanelRow label="Downloaded Versions">
                 {versionsToShow.length
