@@ -14,7 +14,7 @@ import MarketAddonsList from './MarketAddonsList'
 import 'react-perfect-scrollbar/dist/css/styles.css'
 import AddonDetails from './AddonDetails/AddonDetails'
 import { useGetAddonListQuery } from '@queries/addons/getAddons'
-import { mergeAddonWithInstalled } from './mergeAddonsData'
+import { mergeAddonWithDownloaded } from './mergeAddonsData'
 import { throttle } from 'lodash'
 import styled from 'styled-components'
 import useDownload from './AddonDetails/useDownload'
@@ -51,7 +51,7 @@ const MarketPage = () => {
     error,
   } = useMarketAddonListQuery()
   // GET ALL INSTALLED ADDONS for addon details
-  const { data: installedAddons = [], isLoading: isLoadingInstalled } = useGetAddonListQuery()
+  const { data: downloadedAddons = [], isLoading: isLoadingDownloaded } = useGetAddonListQuery()
 
   // keep track of which addons are being downloaded
   const [downloadingAddons, setDownloadingAddons] = useState([])
@@ -66,7 +66,7 @@ const MarketPage = () => {
   const [showConnectDialog, setShowConnectDialog] = useState(false)
 
   // subscribe to download events
-  const { data: downloadProgress = [] } = useGetMarketDownloadEventsQuery()
+  const { data: downloadProgress = [] } = useGetMarketInstallEventsQuery()
 
   // QUERY PARAMS STATE
   const [selectedAddonId, setSelectedAddonId] = useQueryParam(
@@ -102,7 +102,7 @@ const MarketPage = () => {
       return newDownloading
     })
 
-    setFinishedInstalling((f) => [...new Set([...f, ...finished])])
+    setFinishedDownloading((f) => [...new Set([...f, ...finished])])
 
     setFailedDownloading((f) => {
       // check if for duplicates

@@ -1,12 +1,12 @@
 import { useState } from 'react'
-import { useInstallAddonsMutation } from '@queries/addons/updateAddons'
+import { useDownloadAddonsMutation } from '@queries/addons/updateAddons'
 import { useLazyMarketAddonVersionDetailQuery } from '@queries/market/getMarket'
 import { toast } from 'react-toastify'
 
 const useDownload = (onDownload) => {
   const [error, setError] = useState(null)
 
-  const [installAddons] = useInstallAddonsMutation()
+  const [downloadAddons] = useDownloadAddonsMutation()
   const [getAddonVersion] = useLazyMarketAddonVersionDetailQuery()
 
   const downloadAddon = async (name, version) => {
