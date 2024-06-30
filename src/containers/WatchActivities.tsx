@@ -31,9 +31,6 @@ const WatchActivities: FC<WatchActivitiesProps> = ({}) => {
   usePubSub(
     'activity',
     (topic: string, message: ActivityMessage) => {
-      const references = message.summary?.references
-      const entityIds = references?.map((reference) => reference.entity_id) || []
-
       if (topic === 'activity.deleted') {
         // because invalidation merges changes into the feed on top of the current cache, it can't remove messages.
         // we need to remove the messages from the cache manually
@@ -65,6 +62,8 @@ const WatchActivities: FC<WatchActivitiesProps> = ({}) => {
           )
         }
       } else {
+        const references = message.summary?.references
+        const entityIds = references?.map((reference) => reference.entity_id) || []
         // invalidate the activity feed for all those entities
         dispatch(
           ayonApi.util.invalidateTags(
