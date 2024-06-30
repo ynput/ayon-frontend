@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef } from 'react'
+import { useMemo, useRef } from 'react'
 import { useSelector } from 'react-redux'
 import { TablePanel, Section, Button, Icon } from '@ynput/ayon-react-components'
 
@@ -12,6 +12,8 @@ import useLocalStorage from '@hooks/useLocalStorage'
 import CollapseButton from '@components/CollapseButton'
 import styled, { css } from 'styled-components'
 import { classNames } from 'primereact/utils'
+import { toast } from 'react-toastify'
+import { useUpdateUserPreferencesMutation } from '@/services/user/updateUser'
 
 const formatName = (rowData, defaultTitle, field = 'name') => {
   if (rowData[field] === '_') return defaultTitle
@@ -94,6 +96,7 @@ const StyledPin = styled(Icon)`
   margin-left: auto;
   margin-right: 6px;
   font-size: 18px;
+  color: var(--md-sys-color-outline);
 `
 
 const ProjectList = ({
@@ -212,6 +215,36 @@ const ProjectList = ({
     } // single select
   }, [selection, projectList, isFetching])
 
+  const [updateUserPreferences] = useUpdateUserPreferencesMutation()
+
+  const handlePinProjects = async (sel, isPinning) => {
+    try {
+      const newPinnedProjects = [...pinnedProjects]
+      for (const project of sel) {
+        if (isPinning) {
+          // check if project is already pinned
+          if (!newPinnedProjects.includes(project)) {
+            // add to pinned projects
+            newPinnedProjects.push(project)
+          }
+        } else {
+          // remove from pinned projects
+          const index = newPinnedProjects.indexOf(project)
+          newPinnedProjects.splice(index, 1)
+        }
+      }
+
+      // update user preferences
+      await updateUserPreferences({
+        name: user.name,
+        preferences: { pinned: newPinnedProjects },
+      }).unwrap()
+    } catch (error) {
+      console.error(error)
+      toast.error('Failed to pin/unpin projects')
+    }
+  }
+
   const onSelectionChange = (e) => {
     if (multiselect) {
       let result = []
@@ -231,65 +264,73 @@ const ProjectList = ({
   } // onSelectionChange
 
   // TABLE CONTEXT MENU
-  const getContextItems = useCallback(
-    (sel) => {
-      const menuItems = [
-        {
-          label: 'Open Project',
-          icon: 'event_list',
-          command: () => navigate(`/projects/${sel[0]}/browser`),
+  const getContextItems = (sel) => {
+    const menuItems = [
+      {
+        label: 'Open Project',
+        icon: 'event_list',
+        command: () => navigate(`/projects/${sel[0]}/browser`),
+      },
+    ]
+
+    // toggle pinned status
+    // first get if whole selection is pinned or not
+    const allPinned = sel.every((project) => pinnedProjects.includes(project))
+    let pinnedLabel = allPinned ? 'Unpin Project' : 'Pin Project'
+    if (sel.length > 1) pinnedLabel = pinnedLabel + 's'
+    menuItems.push({
+      label: pinnedLabel,
+      icon: 'push_pin',
+      command: () => handlePinProjects(sel, !allPinned),
+    })
+
+    // if not on project manager page
+    if (!isProjectManager) {
+      menuItems.push({
+        label: 'Manage Project',
+        icon: 'settings_applications',
+        command: () => {
+          closeContextMenu()
+          navigate(`/manageProjects?project=${sel[0]}`)
         },
-      ]
-
-      // if not on project manager page
-      if (!isProjectManager) {
-        menuItems.push({
-          label: 'Manage Project',
-          icon: 'settings_applications',
-          command: () => {
-            closeContextMenu()
-            navigate(`/manageProjects?project=${sel[0]}`)
-          },
-        })
-      }
-
-      const managerMenuItems = [
-        {
-          label: 'Create Project',
-          icon: 'create_new_folder',
-          command: onNewProject,
-        },
-      ]
-
-      const selObject = projects.find((project) => project?.name === sel[0])
-      const active = selObject?.active
-
-      // show deactivate button on active projects and activate on inactive projects
-      if (onActivateProject) {
-        managerMenuItems.push({
-          label: active ? 'Deactivate Project' : 'Activate Project',
-          icon: active ? 'archive' : 'unarchive',
-          command: () => onActivateProject(sel[0], !active),
-        })
-      }
-
-      // only show delete button on non-active projects
-      const disableDelete = active || !onDeleteProject || !selObject
-
-      managerMenuItems.push({
-        label: disableDelete ? 'Deactivate to Delete' : 'Delete Project',
-        icon: 'delete',
-        command: () => onDeleteProject(sel[0]),
-        danger: true,
-        disabled: disableDelete,
       })
+    }
 
-      if (isProjectManager) menuItems.push(...managerMenuItems)
+    const managerMenuItems = [
+      {
+        label: 'Create Project',
+        icon: 'create_new_folder',
+        command: onNewProject,
+      },
+    ]
 
-      return menuItems
-    },
-    [projects, onNewProject, onDeleteProject, onRowClick, isProjectManager],
-  )
+    const selObject = projects.find((project) => project?.name === sel[0])
+    const active = selObject?.active
+
+    // show deactivate button on active projects and activate on inactive projects
+    if (onActivateProject) {
+      managerMenuItems.push({
+        label: active ? 'Deactivate Project' : 'Activate Project',
+        icon: active ? 'archive' : 'unarchive',
+        command: () => onActivateProject(sel[0], !active),
+      })
+    }
+
+    // only show delete button on non-active projects
+    const disableDelete = active || !onDeleteProject || !selObject
+
+    managerMenuItems.push({
+      label: disableDelete ? 'Deactivate to Delete' : 'Delete Project',
+      icon: 'delete',
+      command: () => onDeleteProject(sel[0]),
+      danger: true,
+      disabled: disableDelete,
+    })
+
+    if (isProjectManager) menuItems.push(...managerMenuItems)
+
+    return menuItems
+  }
 
   // create the ref and model
   const [tableContextMenuShow, closeContextMenu] = useCreateContext([])
@@ -299,17 +340,17 @@ const ProjectList = ({
     let newSelection = selection
 
     if (multiselect) {
-      if (event?.projects?.name && !selection?.includes(event.projects.name)) {
+      if (event?.data?.name && !selection?.includes(event.data.name)) {
         // if the selection does not include the clicked node, new selection is the clicked node
-        newSelection = [event.projects.name]
+        newSelection = [event.data.name]
         // update selection state
         onSelect(newSelection)
       }
     } else {
       // single select gets converted to array
-      newSelection = [event.projects.name]
+      newSelection = [event.data.name]
       // update selection state
-      onSelect(event.projects.name)
+      onSelect(event.data.name)
     }
 
     tableContextMenuShow(event.originalEvent, getContextItems(newSelection))
