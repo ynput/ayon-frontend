@@ -1,6 +1,6 @@
 // data for entity kanban card and details panel
 
-import ayonClient from '/src/ayon'
+import ayonClient from '@/ayon'
 
 // the extra attribs are for the entity details panel only
 const TASK_FRAGMENT = () => `
@@ -21,6 +21,16 @@ const TASK_FRAGMENT = () => `
       label
       path
     }
+    versions {
+      edges {
+        node {
+          id
+          thumbnailId
+          name
+          updatedAt
+        }
+      }
+  }
   }
 `
 
@@ -62,52 +72,17 @@ ${TASK_FRAGMENT()}
 export const KAN_BAN_ASSIGNEES_QUERY = `
 query KanbanProjectAssignees($projectName: String) {
   users(last: 2000 projectName: $projectName) {
-  edges {
-    node {
-      name
-      accessGroups
-      attrib {
-        fullName
-      }
-    }
-  }
-}
-}`
-
-export const TASK_MENTION_TASKS = `
-query FoldersTasksForMentions($projectName: String!, $folderIds: [String!]!) {
-  project(name: $projectName) {
-    folders(ids: $folderIds) {
-      edges {
-        node {
-          id
-          name
-          label
-          tasks {
-            edges {
-              node {
-                id
-                name
-                label
-                taskType
-                thumbnailId
-                versions(latestOnly: true) {
-                  edges {
-                    node {
-                      id
-                      thumbnailId
-                    }
-                  }
-                }
-              }
-            }
-          }
+    edges {
+      node {
+        name
+        accessGroups
+        attrib {
+          fullName
         }
       }
     }
   }
-}
-`
+}`
 
 export const VERSION_DETAILS_QUERY = (attribs = []) => `
     query VersionsDetails($projectName: String!, $entityId: String!) {
@@ -198,6 +173,7 @@ export const REP_QUERY = (attribs) => `
     }
 `
 
+export const entityDetailsTypesSupported = ['task', 'version', 'folder', 'representation']
 // this is used for getting the correct query for the details panel
 export const buildDetailsQuery = (entityType) => {
   // first get all attribs for the entity

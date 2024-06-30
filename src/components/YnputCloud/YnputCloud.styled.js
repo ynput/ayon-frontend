@@ -1,6 +1,6 @@
 import { Button as ayonButton } from '@ynput/ayon-react-components'
 import styled, { css } from 'styled-components'
-import getShimmerStyles from '/src/styles/getShimmerStyles'
+import getShimmerStyles from '@/styles/getShimmerStyles'
 
 const buttonStyles = css`
   background-color: var(--md-sys-color-tertiary);

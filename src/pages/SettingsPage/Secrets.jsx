@@ -1,9 +1,5 @@
 import { useState, useEffect } from 'react'
-import {
-  useGetSecretsQuery,
-  useSetSecretMutation,
-  useDeleteSecretMutation,
-} from '/src/services/secrets'
+import { useGetSecretsQuery, useSetSecretMutation, useDeleteSecretMutation } from '@queries/secrets'
 import styled from 'styled-components'
 import {
   InputText,
@@ -14,8 +10,8 @@ import {
   SaveButton,
 } from '@ynput/ayon-react-components'
 import { toast } from 'react-toastify'
-import confirmDelete from '/src/helpers/confirmDelete'
-import copyToClipboard from '/src/helpers/copyToClipboard'
+import confirmDelete from '@helpers/confirmDelete'
+import copyToClipboard from '@helpers/copyToClipboard'
 
 const SecretList = styled.div`
   display: flex;

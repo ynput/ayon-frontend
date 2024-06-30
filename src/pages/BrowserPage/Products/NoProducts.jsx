@@ -1,3 +1,4 @@
+import { Icon } from '@ynput/ayon-react-components'
 import React from 'react'
 import styled from 'styled-components'
 
@@ -6,6 +7,12 @@ const NoneFound = styled.div`
   top: 40%;
   left: 50%;
   transform: translate(-50%, -50%);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--base-gap-large);
 `
 
 const GridTile = styled.div`
@@ -52,7 +59,25 @@ const StackedGridTiles = styled.div`
   }
 `
 
-const NoProducts = ({ label }) => {
+const Message = styled.span`
+  color: var(--md-sys-color-outline);
+`
+
+const Error = styled.span`
+  &,
+  .icon {
+    color: var(--md-sys-color-error-container);
+  }
+  background-color: var(--md-sys-color-on-error-container);
+  padding: var(--padding-m) var(--padding-m);
+  border-radius: var(--border-radius-m);
+
+  display: flex;
+  align-items: center;
+  gap: var(--base-gap-large);
+`
+
+const NoProducts = ({ label, error }) => {
   return (
     <NoneFound className="no-products">
       <StackedGridTiles>
@@ -63,7 +88,13 @@ const NoProducts = ({ label }) => {
           <span />
         </GridTile>
       </StackedGridTiles>
-      <span style={{ opacity: 0.5 }}>{label || 'No products found'}</span>
+      <Message>{label || 'No products found'}</Message>
+      {error && (
+        <Error>
+          <Icon icon="error" />
+          Error: {error || 'Unknown'}
+        </Error>
+      )}
     </NoneFound>
   )
 }

@@ -35,9 +35,10 @@ export const Warning = styled.div`
   }
 `
 
-export const FeedContent = styled.div`
+export const FeedContent = styled.ul`
   gap: var(--base-gap-large);
   overflow-y: auto;
+  padding: 0;
   padding-bottom: 40px;
   scrollbar-gutter: stable;
 

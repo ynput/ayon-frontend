@@ -1,13 +1,13 @@
-import useGetInstallerDownload from '/src/components/InstallerDownload/useGetInstallerDownload'
+import useGetInstallerDownload from '@components/InstallerDownload/useGetInstallerDownload'
 import * as Styled from './DownloadsPage.styled'
 import { Button, Panel, Section } from '@ynput/ayon-react-components'
-import InstallerProdCard from '/src/components/InstallerDownload/InstallerProdCard/InstallerProdCard'
+import InstallerProdCard from '@components/InstallerDownload/InstallerProdCard/InstallerProdCard'
 
-import WindowsLogo from '/src/svg/WindowsLogo'
-import AppleLogo from '/src/svg/AppleLogo'
-import LinuxLogo from '/src/svg/LinuxLogo'
+import WindowsLogo from '@/svg/WindowsLogo'
+import AppleLogo from '@/svg/AppleLogo'
+import LinuxLogo from '@/svg/LinuxLogo'
 
-const getPlatformIcon = (platform) => {
+export const getPlatformIcon = (platform) => {
   switch (platform) {
     case 'windows':
       return <WindowsLogo />

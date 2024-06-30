@@ -1,5 +1,5 @@
 import { toast } from 'react-toastify'
-import { useGetEntityQuery } from '../services/entity/getEntity'
+import { useGetEntityQuery } from '@queries/entity/getEntity'
 import { Dialog } from '@ynput/ayon-react-components'
 
 const DetailsDialog = ({ projectName, entityType, entityIds, visible, onHide }) => {

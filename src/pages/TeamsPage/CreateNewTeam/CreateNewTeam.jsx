@@ -9,9 +9,9 @@ import {
   SaveButton,
   Spacer,
 } from '@ynput/ayon-react-components'
-import checkName from '/src/helpers/checkName'
+import checkName from '@helpers/checkName'
 import UserListTeams from '../UserListTeams'
-import useSearchFilter from '/src/hooks/useSearchFilter'
+import useSearchFilter from '@hooks/useSearchFilter'
 import * as Styled from './CreateNewTeam.styled'
 
 const CreateNewTeam = ({
@@ -204,7 +204,6 @@ const CreateNewTeam = ({
                 search
                 searchFields={['name']}
                 multiSelect
-                editor
                 emptyIcon={false}
                 emptyMessage="Add Team Members..."
               />

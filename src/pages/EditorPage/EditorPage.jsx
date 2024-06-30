@@ -14,21 +14,21 @@ import {
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 
-import sortByKey from '/src/helpers/sortByKey'
+import sortByKey from '@helpers/sortByKey'
 
-import { editorSelectionChanged, setUri, setExpandedFolders } from '/src/features/context'
+import { editorSelectionChanged, setUri, setExpandedFolders } from '@state/context'
 
 import { getColumns, formatType, formatAttribute, formatAssignees, formatStatus } from './utils'
 import { MultiSelect } from 'primereact/multiselect'
-import useLocalStorage from '/src/hooks/useLocalStorage'
-import { useGetHierarchyQuery } from '/src/services/getHierarchy'
-import SearchDropdown from '/src/components/SearchDropdown'
-import useColumnResize from '/src/hooks/useColumnResize'
+import useLocalStorage from '@hooks/useLocalStorage'
+import { useGetHierarchyQuery } from '@queries/getHierarchy'
+import SearchDropdown from '@components/SearchDropdown'
+import useColumnResize from '@hooks/useColumnResize'
 import { capitalize, debounce, isEmpty } from 'lodash'
-import { useLazyGetExpandedBranchQuery } from '/src/services/editor/getEditor'
-import { useUpdateEditorMutation } from '/src/services/editor/updateEditor'
-import usePubSub from '/src/hooks/usePubSub'
-import { useLazyGetEntityQuery } from '/src/services/entity/getEntity'
+import { useLazyGetExpandedBranchQuery } from '@queries/editor/getEditor'
+import { useUpdateEditorMutation } from '@queries/editor/updateEditor'
+import usePubSub from '@hooks/usePubSub'
+import { useLazyGetEntityQuery } from '@queries/entity/getEntity'
 import {
   newNodesAdded,
   newProject,
@@ -36,22 +36,23 @@ import {
   onForceChange,
   onNewChanges,
   onRevert,
-} from '/src/features/editor'
+  updateNodes,
+} from '@state/editor'
 import EditorPanel from './EditorPanel'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import NameField from './fields/NameField'
-import { useGetAttributesQuery } from '/src/services/attributes/getAttributes'
+import { useGetAttributesQuery } from '@queries/attributes/getAttributes'
 import NewEntity from './NewEntity'
-import checkName from '/src/helpers/checkName'
-import useCreateContext from '/src/hooks/useCreateContext'
-import { ayonApi } from '/src/services/ayon'
+import checkName from '@helpers/checkName'
+import useCreateContext from '@hooks/useCreateContext'
+import { ayonApi } from '@queries/ayon'
 import { confirmDialog } from 'primereact/confirmdialog'
-import BuildHierarchyButton from '/src/containers/HierarchyBuilder'
+import BuildHierarchyButton from '@containers/HierarchyBuilder'
 import NewSequence from './NewSequence'
-import { useGetUsersAssigneeQuery } from '/src/services/user/getUsers'
-import confirmDelete from '/src/helpers/confirmDelete'
-import { useGetProjectAnatomyQuery } from '/src/services/project/getProject'
-import Shortcuts from '/src/containers/Shortcuts'
+import { useGetUsersAssigneeQuery } from '@queries/user/getUsers'
+import confirmDelete from '@helpers/confirmDelete'
+import { useGetProjectAnatomyQuery } from '@queries/project/getProject'
+import Shortcuts from '@containers/Shortcuts'
 
 const EditorPage = () => {
   const project = useSelector((state) => state.project)
@@ -74,7 +75,8 @@ const EditorPage = () => {
   const editorProjectName = useSelector((state) => state.editor.projectName)
 
   // get attrib fields
-  let { data: attribsData = [] } = useGetAttributesQuery()
+  // pass editor: true so that it uses different cache.
+  let { data: attribsData = [] } = useGetAttributesQuery({}, { refetchOnMountOrArgChange: true })
 
   // get project attribs values (for root inherited attribs)
   const { data: projectAnatomyData } = useGetProjectAnatomyQuery(
@@ -208,7 +210,7 @@ const EditorPage = () => {
       }
 
       // Function to update the attributes of the children
-      const updateChildren = (updateId) => {
+      const updateChildren = (updateId, parent, skipAttribs = []) => {
         // Get the children of the entity being updated from the lookup table
         const children = childrenLookup[updateId]
 
@@ -225,35 +227,67 @@ const EditorPage = () => {
             // Get the current attributes of the child
             const currentAttrib = childData?.attrib || {}
 
+            const childSkipAttribs = []
+            const parentData = parent || update?.patch?.data
+            const childChanges = changes[id]
+            let newChildData = { ...childData }
+
             // Loop through each attribute in the update
-            for (const key in update?.patch?.data?.attrib) {
+            for (const key in parentData.attrib) {
               // If the attribute is not inheritable, skip it
               if (!inheritableAttribs.includes(key)) continue
+
+              // check that child doesn't have it's own changes for this attrib
+              // if it does, then we don't need to update it
+              if (childChanges && childChanges[key]) {
+                // now any children of this child should use this value
+                newChildData = {
+                  ...childData,
+                  ownAttrib: [...childData.ownAttrib, key],
+                  attrib: { ...childData.attrib, [key]: childChanges[key] },
+                }
+
+                continue
+              }
 
               // If the child doesn't have its own value for the attribute and the attribute has changed
               if (
                 !childData?.ownAttrib?.includes(key) &&
-                currentAttrib[key] !== update?.patch?.data?.attrib[key]
+                currentAttrib[key] !== parentData.attrib[key]
               ) {
+                if (parent) {
+                  // check if parent of this (not parent we just edited) has the same attribute in ownAttrib
+                  if (parent?.ownAttrib?.includes(key) || skipAttribs.includes(key)) {
+                    // it's parent has the attrib, so we don't need to update this child
+                    // we can also skip this child's children
+                    childSkipAttribs.push(key)
+
+                    // break out of the loop so that we don't update the attribute
+                    continue
+                  }
+                }
                 // Add the new attribute value to the new attributes object
-                newAttrib[key] = update?.patch?.data?.attrib[key]
+                newAttrib[key] = parentData?.attrib[key]
               }
             }
 
             // If there are new attributes
-            if (!isEmpty(newAttrib)) {
+            if (!isEmpty(newAttrib) || !isEmpty(childChanges || {})) {
+              // Update the child's attributes
+              newChildData = {
+                ...newChildData,
+                attrib: { ...newChildData.attrib, ...(newAttrib || {}) },
+              }
+
               // Add the updated child to the list of updated children
               childrenUpdated.push({
                 ...rootData[id],
-                data: {
-                  ...childData,
-                  attrib: { ...currentAttrib, ...newAttrib },
-                },
+                data: newChildData,
               })
             }
 
             // Recursively update the attributes of the child's children
-            updateChildren(id)
+            updateChildren(id, newChildData, childSkipAttribs)
           }
         }
       }
@@ -423,7 +457,7 @@ const EditorPage = () => {
   // Build hierarchical data for the TreeTable component
   // Trigger the rebuild when parents are updated (which are
   // updated after rootData update. Both rootData and parents
-  // are needed for the hierarchy, so thi cascading makes
+  // are needed for the hierarchy, so this cascading makes
   // it possible)
 
   let treeData = useMemo(() => {
@@ -810,6 +844,14 @@ const EditorPage = () => {
         // remove any non-inherited attribs
         for (const key of attribsNotInherited) {
           delete parentAttrib[key]
+        }
+
+        // add attribsNotInherited to patchAttrib (if not already in patch)
+        for (const key of attribsNotInherited) {
+          const nodeAttribs = rootData[entityId]?.data?.attrib || {}
+          if (!patchAttrib[key] && nodeAttribs[key]) {
+            patchAttrib[key] = nodeAttribs[key]
+          }
         }
 
         // patch is original data with updated data
@@ -1253,11 +1295,13 @@ const EditorPage = () => {
       {
         label: 'Add Folders',
         icon: 'create_new_folder',
+        shortcut: 'N',
         command: () => setNewEntity('folder'),
       },
       {
         label: 'Add Tasks',
         icon: 'add_task',
+        shortcut: 'T',
         command: () => setNewEntity('task'),
       },
       {
@@ -1499,17 +1543,17 @@ const EditorPage = () => {
     }
   }
 
-  const filterOptions = [
-    { name: 'name' },
-    { name: 'type' },
-    { name: 'status' },
-    { name: 'assignees' },
+  const columnFilterOptions = [
+    { name: 'name', title: 'Name' },
+    { name: 'type', title: 'Type' },
+    { name: 'status', title: 'Status' },
+    { name: 'assignees', title: 'Assignees' },
     ...columns,
-  ].map(({ name }) => ({
+  ].map(({ name, title }) => ({
     value: name,
-    label: name,
+    label: title || name,
   }))
-  const allColumnsNames = filterOptions.map(({ value }) => value)
+  const allColumnsNames = columnFilterOptions.map(({ value }) => value)
 
   const [shownColumns, setShownColumns] = useLocalStorage(
     'editor-columns-filter-single',
@@ -1549,16 +1593,11 @@ const EditorPage = () => {
 
     if (!id || !type) return
 
-    // refetch data for that entity
-    if (type === 'folder') {
-      loadNewBranches([id], true)
-    } else {
-      // it's a task so we need to find it in data and then refetch it's parent
-      const parent = rootData[id]?.data?.folderId
-      if (parent) {
-        loadNewBranches([parent], true)
-      }
-    }
+    // patch new updatedAt value to node
+    const newDate = new Date().toISOString()
+    const newData = { id, updatedAt: newDate }
+
+    dispatch(updateNodes({ updated: [newData] }))
   }
 
   const tableRef = useRef(null)
@@ -1831,11 +1870,11 @@ const EditorPage = () => {
           />
           <BuildHierarchyButton disabled={!focusedFolders.length && focusedTasks.length} />
           <MultiSelect
-            options={filterOptions}
+            options={columnFilterOptions}
             value={shownColumns}
             onChange={handleColumnsFilter}
             placeholder={`Show Columns`}
-            fixedPlaceholder={shownColumns.length >= filterOptions.length}
+            fixedPlaceholder={shownColumns.length >= columnFilterOptions.length}
             style={{ maxWidth: 200 }}
           />
           <SearchDropdown

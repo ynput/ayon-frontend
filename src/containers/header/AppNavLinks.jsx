@@ -3,7 +3,7 @@ import React, { useEffect } from 'react'
 import { useSelector } from 'react-redux'
 import { NavLink, useNavigate, useParams } from 'react-router-dom'
 import * as Styled from './AppNavLinks.styled'
-import Typography from '/src/theme/typography.module.css'
+import Typography from '@/theme/typography.module.css'
 
 const AppNavLinks = ({ links = [] }) => {
   // item = { name: 'name', path: 'path', node: node | 'spacer', accessLevel: [] }
@@ -53,10 +53,17 @@ const AppNavLinks = ({ links = [] }) => {
           }
 
           return (
-            <Styled.NavItem key={idx} data-shortcut={item.shortcut}>
+            <Styled.NavItem
+              key={idx}
+              data-shortcut={item.shortcut}
+              data-tooltip={item.tooltip}
+              {...item}
+            >
               <NavLink to={item.path}>
                 <Button variant="nav" className={Typography.titleSmall} tabIndex={-1}>
+                  {item.startContent && item.startContent}
                   {item.name}
+                  {item.endContent && item.endContent}
                 </Button>
               </NavLink>
             </Styled.NavItem>

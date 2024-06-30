@@ -1,7 +1,7 @@
 import { Icon } from '@ynput/ayon-react-components'
 import * as Styled from './BundleChecks.styled'
 import { classNames } from 'primereact/utils'
-import Typography from '/src/theme/typography.module.css'
+import Typography from '@/theme/typography.module.css'
 
 const BundleChecks = ({ check = {}, isLoading = true, isCheckError = false, onIssueClick }) => {
   const { issues = [], success = false } = check

@@ -1,10 +1,10 @@
 import React, { createContext, useContext, useState } from 'react'
-import { useGetRestartQuery, useRestartServerMutation } from '../services/restartServer'
-import RestartBanner from '../components/RestartBanner/RestartBanner'
+import { useGetRestartQuery, useRestartServerMutation } from '@queries/restartServer'
+import RestartBanner from '@components/RestartBanner/RestartBanner'
 import { confirmDialog } from 'primereact/confirmdialog'
-import ServerRestartingPage from '../components/ServerRestartingPage'
+import ServerRestartingPage from '@components/ServerRestartingPage'
 import { useSelector } from 'react-redux'
-import useLocalStorage from '../hooks/useLocalStorage'
+import useLocalStorage from '@hooks/useLocalStorage'
 
 const RestartContext = createContext()
 

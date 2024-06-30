@@ -1,12 +1,12 @@
 import * as Styled from './MeOrUserSwitch.styled'
 import { AssigneeSelect, Button } from '@ynput/ayon-react-components'
 
-const MeOrUserSwitch = ({ value = [], onAssignee, onMe, options = [], isMe, ...props }) => {
+const MeOrUserSwitch = ({ value = [], onChange, options = [], filter, ...props }) => {
   // this is so that the first click on the dropdown will set isMe false but not open the dropdown
   // a second click will open the dropdown
   // or if the there are no assignees selected already
   const handleDropdownClick = () => {
-    onAssignee(value)
+    onChange('users')
   }
 
   return (
@@ -14,25 +14,35 @@ const MeOrUserSwitch = ({ value = [], onAssignee, onMe, options = [], isMe, ...p
       <Button
         label="Me"
         icon="person"
-        className="me"
+        className="switch-button me"
         variant="surface"
-        selected={isMe}
-        onClick={onMe}
+        selected={filter === 'me'}
+        onClick={() => onChange('me')}
         data-tooltip="View my tasks"
       />
 
+      {/* <Button
+        label="All"
+        className="switch-button all"
+        icon={'checklist'}
+        data-tooltip="View all tasks"
+        selected={filter === 'all'}
+        onClick={() => onChange('all')} // empty array means all users
+      /> */}
+
       <AssigneeSelect
         value={value}
-        onChange={onAssignee}
+        onChange={(v) => onChange('users', v)}
         options={options}
         {...props}
-        className={!isMe && 'selected'}
+        className={filter === 'users' && 'selected'}
         onClick={handleDropdownClick}
-        disableOpen={isMe && !!value.length}
+        disableOpen={filter !== 'users' && !!value.length}
         emptyIcon="groups"
         emptyMessage="Assignees"
         style={{ zIndex: 'none' }}
         data-tooltip="View other users tasks"
+        onSelectAll
       />
     </Styled.MeOrUserSwitchContainer>
   )

@@ -8,18 +8,18 @@ import {
   ScrollPanel,
   SaveButton,
 } from '@ynput/ayon-react-components'
-import SettingsEditor from '/src/containers/SettingsEditor'
-import { useGetAccessGroupsQuery } from '/src/services/accessGroups/getAccessGroups'
+import SettingsEditor from '@containers/SettingsEditor'
+import { useGetAccessGroupsQuery } from '@queries/accessGroups/getAccessGroups'
 import { isEqual } from 'lodash'
 import {
   useGetAccessGroupQuery,
   useGetAccessGroupSchemaQuery,
-} from '/src/services/accessGroups/getAccessGroups'
+} from '@queries/accessGroups/getAccessGroups'
 import {
   useDeleteAccessGroupMutation,
   useUpdateAccessGroupMutation,
-} from '/src/services/accessGroups/updateAccessGroups'
-import confirmDelete from '/src/helpers/confirmDelete'
+} from '@queries/accessGroups/updateAccessGroups'
+import confirmDelete from '@helpers/confirmDelete'
 
 const PROJECT_GROUP_MSG = 'Clear project overrides'
 

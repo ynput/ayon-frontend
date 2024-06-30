@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { toast } from 'react-toastify'
 import { Button, Divider, SaveButton, Section, Dialog } from '@ynput/ayon-react-components'
-import { useAddUserMutation } from '/src/services/user/updateUser'
-import ayonClient from '/src/ayon'
+import { useAddUserMutation } from '@queries/user/updateUser'
+import ayonClient from '@/ayon'
 import UserAttribForm from './UserAttribForm'
 import UserAccessForm from './UserAccessForm'
 
@@ -11,11 +11,6 @@ import UserAccessGroupsForm from './UserAccessGroupsForm/UserAccessGroupsForm'
 
 const DividerSmallStyled = styled(Divider)`
   margin: 8px 0;
-`
-
-const FooterButtons = styled.div`
-  display: flex;
-  justify-content: flex-end;
 `
 
 const SubTitleStyled = styled.span`
@@ -91,7 +86,7 @@ const NewUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
       toast.success('User created')
       // set added users to be used for auto selection onHide
       setAddedUsers([...addedUsers, formData.Username])
-      // keep re-usable data in the form
+      // keep reusable data in the form
       setPassword('')
       setPasswordConfirm('')
       setFormData((fd) => {
@@ -145,7 +140,7 @@ const NewUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
       header={'Create New User'}
       onClose={handleClose}
       footer={
-        <FooterButtons>
+        <>
           <Button
             label="Create user"
             onClick={() => handleSubmit(false)}
@@ -159,7 +154,7 @@ const NewUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
             saving={isCreatingUser}
             data-shortcut="Ctrl/Cmd+Enter"
           />
-        </FooterButtons>
+        </>
       }
     >
       <Section>
@@ -184,18 +179,20 @@ const NewUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
           onChange={(key, value) => setFormData({ ...formData, [key]: value })}
           accessGroupsData={accessGroupsData}
         />
-        <SubTitleStyled>
-          Give this new user access to projects by adding access groups per project
-        </SubTitleStyled>
         {formData?.userLevel === 'user' && (
-          <UserAccessGroupsForm
-            // value expects multiple users, so we need to pass an object with the username "_" as the key
-            value={{ _: formData.accessGroups }}
-            options={accessGroupsData}
-            // onChange provides all "users", in this case just the one "_" user
-            onChange={(value) => setFormData({ ...formData, accessGroups: value['_'] })}
-            disableNewGroup
-          />
+          <>
+            <SubTitleStyled>
+              Give this new user access to projects by adding access groups per project
+            </SubTitleStyled>
+            <UserAccessGroupsForm
+              // value expects multiple users, so we need to pass an object with the username "_" as the key
+              value={{ _: formData.accessGroups }}
+              options={accessGroupsData}
+              // onChange provides all "users", in this case just the one "_" user
+              onChange={(value) => setFormData({ ...formData, accessGroups: value['_'] })}
+              disableNewGroup
+            />
+          </>
         )}
       </Section>
     </Dialog>

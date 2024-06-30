@@ -1,0 +1,11 @@
+#import "./KanbanFragment.graphql"
+
+query GetKanban($projects: [String!], $assignees: [String!]) {
+  kanban(projects: $projects, assigneesAny: $assignees, last: 2000) {
+    edges {
+      node {
+        ...KanbanFragment
+      }
+    }
+  }
+}

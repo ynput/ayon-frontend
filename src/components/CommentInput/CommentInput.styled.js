@@ -58,6 +58,30 @@ export const Comment = styled.div`
     }
   }
 
+  /* custom mention styles */
+  .ql-editor {
+    .mention {
+      border-radius: var(--border-radius-m);
+      user-select: none;
+      padding: 0 4px;
+      /* remove underline */
+      text-decoration: none;
+
+      white-space: nowrap;
+      cursor: pointer;
+
+      color: var(--md-sys-color-primary);
+      background-color: var(--md-sys-color-surface-container-high);
+
+      &:hover {
+        background-color: var(--md-sys-color-surface-container-high-hover);
+      }
+      &:active {
+        background-color: var(--md-sys-color-surface-container-high-active);
+      }
+    }
+  }
+
   /* list and check box styles */
   .ql-editor ol {
     li {
@@ -116,8 +140,6 @@ export const Comment = styled.div`
     height: calc(100% - 41px);
 
     .ql-editor {
-      padding-bottom: 0;
-
       /* code block */
       .ql-code-block-container {
         background-color: var(--md-sys-color-surface-container-lowest);

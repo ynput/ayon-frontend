@@ -1,6 +1,6 @@
 import * as Styled from './KanBanColumn.styled'
 import React, { Fragment, forwardRef, useEffect, useMemo, useRef, useState } from 'react'
-import { getFakeTasks, getGroupedTasks, usePrefetchTask, useTaskClick } from '../../util'
+import { getFakeTasks, getGroupedTasks, usePrefetchEntity, useTaskClick } from '../../util'
 import { useDispatch, useSelector } from 'react-redux'
 import KanBanCardDraggable from '../KanBanCard/KanBanCardDraggable'
 import KanBanCard from '../KanBanCard/KanBanCard'
@@ -30,7 +30,6 @@ const KanBanColumn = forwardRef(
     },
     ref,
   ) => {
-    const assigneesIsMe = useSelector((state) => state.dashboard.tasks.assigneesIsMe)
     const dispatch = useDispatch()
 
     const tasksCount = tasks.length
@@ -70,7 +69,7 @@ const KanBanColumn = forwardRef(
 
     // PREFETCH TASK WHEN HOVERING
     // we keep track of the ids that have been pre-fetched to avoid fetching them again
-    const handlePrefetch = usePrefetchTask(dispatch, projectsInfo, 500)
+    const handlePrefetch = usePrefetchEntity(dispatch, projectsInfo, 500)
 
     // CONTEXT MENU
     const { handleContextMenu, closeContext } = useGetTaskContextMenu(tasks, dispatch)
@@ -119,7 +118,6 @@ const KanBanColumn = forwardRef(
                           isActive={selectedTasks.includes(task.id)}
                           isDraggingActive={active}
                           className="card"
-                          assigneesIsMe={assigneesIsMe}
                           onContextMenu={handleContextMenu}
                           inView={inView || i <= numberCardsFit}
                         />
@@ -131,15 +129,7 @@ const KanBanColumn = forwardRef(
             </Fragment>
           ),
         ),
-      [
-        groupedTasks,
-        handleTaskClick,
-        handlePrefetch,
-        selectedTasks,
-        active,
-        assigneesIsMe,
-        handleContextMenu,
-      ],
+      [groupedTasks, handleTaskClick, handlePrefetch, selectedTasks, active, handleContextMenu],
     )
 
     // used to load more tasks when scrolling

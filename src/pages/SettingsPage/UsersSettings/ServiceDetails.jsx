@@ -1,7 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import { LockedInput, Panel } from '@ynput/ayon-react-components'
-import ApiKeyManager from '/src/components/ApiKeyManager'
+import ApiKeyManager from '@components/ApiKeyManager'
 
 const ServiceDetails = ({ user, editName }) => {
   return (

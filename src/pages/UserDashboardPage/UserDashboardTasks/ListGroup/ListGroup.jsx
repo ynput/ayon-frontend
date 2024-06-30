@@ -1,10 +1,10 @@
 import React from 'react'
 import { useDispatch } from 'react-redux'
 
-import { useGetTaskContextMenu } from '/src/pages/UserDashboardPage/util'
+import { useGetTaskContextMenu } from '@pages/UserDashboardPage/util'
 import * as Styled from './ListGroup.styled'
 import { Button } from '@ynput/ayon-react-components'
-import ListItem from '/src/components/ListItem/ListItem'
+import ListItem from '@components/ListItem/ListItem'
 import { InView } from 'react-intersection-observer'
 
 const ListGroup = ({
@@ -18,12 +18,12 @@ const ListGroup = ({
   disabledStatuses = [],
   disabledProjectUsers = [],
   onUpdate,
-  assigneesIsMe,
   allUsers = [],
   onCollapseChange,
   isCollapsed,
   isLoading,
   minWidths,
+  containerRef,
 }) => {
   const dispatch = useDispatch()
   const column = groups[id] || {}
@@ -63,7 +63,7 @@ const ListGroup = ({
       {!isCollapsed && (
         <>
           {column?.tasks?.map((task, i, a) => (
-            <InView key={task.id} rootMargin={'50% 0px 50% 0px'}>
+            <InView key={task.id} root={containerRef?.current} rootMargin={'50% 0px 50% 0px'}>
               {({ inView, ref }) => (
                 <ListItem
                   ref={ref}
@@ -82,7 +82,7 @@ const ListGroup = ({
                   disabledStatuses={disabledStatuses}
                   disabledProjectUsers={disabledProjectUsers}
                   onUpdate={onUpdate}
-                  allUsers={assigneesIsMe ? [] : allUsers}
+                  allUsers={allUsers}
                   className={'card'}
                   minWidths={minWidths}
                   inView={inView}

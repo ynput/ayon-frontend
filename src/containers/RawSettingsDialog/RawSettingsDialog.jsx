@@ -9,8 +9,8 @@ import styled from 'styled-components'
 import {
   useSetRawAddonSettingsOverridesMutation,
   useLazyGetRawAddonSettingsOverridesQuery,
-} from '/src/services/addonSettings'
-import copyToClipboard from '/src/helpers/copyToClipboard'
+} from '@queries/addonSettings'
+import copyToClipboard from '@helpers/copyToClipboard'
 
 const EditorWrapper = styled.div`
   position: relative;
@@ -125,7 +125,13 @@ const RawSettingsDialog = ({
   const footer = (
     <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'flex-end' }}>
       <Button label="Copy" icon="content_copy" onClick={() => copyToClipboard(code)} />
-      <SaveButton  style={{ marginLeft: '8px' }} label="Save" icon="save" active={!warn} onClick={onSave} />
+      <SaveButton
+        style={{ marginLeft: '8px' }}
+        label="Save"
+        icon="save"
+        active={!warn}
+        onClick={onSave}
+      />
     </div>
   )
 
@@ -136,7 +142,7 @@ const RawSettingsDialog = ({
       isOpen={true}
       style={{ width: '800px', maxWidth: '1000px' }}
       onClose={() => onClose()}
-      size='lg'
+      size="lg"
     >
       {warn && (
         <Warning onClick={() => setWarn(false)}>

@@ -1,4 +1,4 @@
-import { Icon } from '@ynput/ayon-react-components'
+import { Icon, ShortcutTag } from '@ynput/ayon-react-components'
 import React, { forwardRef } from 'react'
 import * as Styled from './Menu.styled'
 import { isArray } from 'lodash'
@@ -45,7 +45,7 @@ const MenuItem = forwardRef(
         {labelsArray.map((label, index) => (
           <span key={index}>{label}</span>
         ))}
-        {shortcut && <Styled.Shortcut>{shortcut}</Styled.Shortcut>}
+        {shortcut && <ShortcutTag align={'right'}>{shortcut}</ShortcutTag>}
         {!!items.length && <Icon icon="arrow_right" className="more" />}
       </Styled.Item>
     )

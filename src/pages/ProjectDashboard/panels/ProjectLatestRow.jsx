@@ -1,9 +1,9 @@
 import React from 'react'
 import { useSelector } from 'react-redux'
 import styled from 'styled-components'
-import { useGetProjectDashboardActivityQuery } from '/src/services/getProjectDashboard'
+import { useGetProjectDashboardActivityQuery } from '@queries/getProjectDashboard'
 import { EntityCard } from '@ynput/ayon-react-components'
-import { productTypes } from '/src/features/project'
+import { productTypes } from '@state/project'
 
 const GridStyled = styled.div`
   /* 1 row, 3 columns */
@@ -134,7 +134,8 @@ const ProjectLatestRow = ({
               imageUrl={
                 !isLoadingData &&
                 projectName &&
-                `/api/projects/${projectName}/${entity.thumbnailEntityType}s/${entity.thumbnailEntityId}/thumbnail?updatedAt=${entity.updatedAt}`
+                entity.thumbnailId &&
+                `/api/projects/${projectName}/${entity.thumbnailEntityType}s/${entity.thumbnailEntityId}/thumbnail?updatedAt=${entity.updatedAt}&placeholder=none`
               }
               style={{
                 minWidth: 'unset',

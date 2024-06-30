@@ -38,8 +38,8 @@ const HeaderButton = styled(Button)`
   &::after {
     content: '';
     position: absolute;
-    right: -4px;
-    top: -4px;
+    right: -2px;
+    top: -2px;
     width: 8px;
     height: 8px;
     border-radius: 50%;

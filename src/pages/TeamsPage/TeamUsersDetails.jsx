@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import PropTypes from 'prop-types'
-import UserDetailsHeader from '/src/components/User/UserDetailsHeader'
+import UserDetailsHeader from '@components/User/UserDetailsHeader'
 import {
   Divider,
   Dropdown,

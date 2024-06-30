@@ -1,13 +1,13 @@
 import { InputText } from '@ynput/ayon-react-components'
 import React, { useState } from 'react'
 import * as Styled from './CreateUser.styled'
-import { useInitializeUserMutation } from '/src/services/onBoarding/onBoarding'
+import { useInitializeUserMutation } from '@queries/onBoarding/onBoarding'
 import { useNavigate } from 'react-router'
 import { useDispatch } from 'react-redux'
-import { login } from '/src/features/user'
-import { ayonApi } from '/src/services/ayon'
+import { login } from '@state/user'
+import { ayonApi } from '@queries/ayon'
 import { upperFirst } from 'lodash'
-import Type from '/src/theme/typography.module.css'
+import Type from '@/theme/typography.module.css'
 
 export const CreateUser = ({ Header, Footer, userForm, setUserForm, userFormFields }) => {
   const navigate = useNavigate()

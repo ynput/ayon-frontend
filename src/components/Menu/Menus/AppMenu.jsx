@@ -1,9 +1,9 @@
 import Menu from '../MenuComponents/Menu'
-import YnputConnector from '/src/components/YnputCloud/YnputConnector'
-import { useRestartOnBoardingMutation } from '/src/services/onBoarding/onBoarding'
+import YnputConnector from '@components/YnputCloud/YnputConnector'
+import { useRestartOnBoardingMutation } from '@queries/onBoarding/onBoarding'
 import { toast } from 'react-toastify'
-import ayonClient from '/src/ayon'
-import { useRestart } from '/src/context/restartContext'
+import ayonClient from '@/ayon'
+import { useRestart } from '@context/restartContext'
 
 export const AppMenu = ({ user, ...props }) => {
   // check if user is logged in and is manager or admin
@@ -29,7 +29,7 @@ export const AppMenu = ({ user, ...props }) => {
   const items = [
     {
       id: 'projectsManager',
-      link: '/manageProjects/anatomy',
+      link: '/manageProjects/projectSettings',
       label: 'Projects Settings',
       icon: 'settings_applications',
       shortcut: 'P+P',
@@ -39,7 +39,7 @@ export const AppMenu = ({ user, ...props }) => {
   if (!isUser)
     items.unshift({
       id: 'settings',
-      link: '/settings/bundles',
+      link: '/settings/studio',
       label: 'Studio Settings',
       icon: 'settings',
       shortcut: 'S+S',
@@ -51,6 +51,7 @@ export const AppMenu = ({ user, ...props }) => {
       link: '/market',
       label: 'Addon Market',
       icon: 'store',
+      shortcut: 'M+M',
     },
     {
       id: 'events',
@@ -64,6 +65,7 @@ export const AppMenu = ({ user, ...props }) => {
       link: '/services',
       label: 'Services',
       icon: 'home_repair_service',
+      shortcut: 'V+V',
     },
   ]
 

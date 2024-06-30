@@ -1,14 +1,14 @@
 import * as Styled from './DetailsPanelSlideOut.styled'
 import { useDispatch, useSelector } from 'react-redux'
-import { closeSlideOut } from '/src/features/details'
+import { closeSlideOut } from '@state/details'
 import DetailsPanel from '../DetailsPanel'
-import { useGetUsersAssigneeQuery } from '/src/services/user/getUsers'
-import Shortcuts from '/src/containers/Shortcuts'
+import { useGetUsersAssigneeQuery } from '@queries/user/getUsers'
+import Shortcuts from '@containers/Shortcuts'
 
 const DetailsPanelSlideOut = ({ projectsInfo, scope }) => {
   const dispatch = useDispatch()
   const slideOut = useSelector((state) => state.details.slideOut[scope])
-  const { entityType, entityId, projectName } = slideOut
+  const { entityType, entityId, projectName } = slideOut || {}
   const isSlideOutOpen = entityType && entityId && projectName
 
   const { data: users } = useGetUsersAssigneeQuery({ projectName }, { skip: !projectName })

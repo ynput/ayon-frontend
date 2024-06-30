@@ -2,7 +2,7 @@ import React from 'react'
 import * as Styled from './ReleasePreset.styled'
 import { Icon } from '@ynput/ayon-react-components'
 import { format, formatDistanceToNow } from 'date-fns'
-import Type from '/src/theme/typography.module.css'
+import Type from '@/theme/typography.module.css'
 
 const ReleasePreset = ({
   label,

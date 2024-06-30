@@ -76,7 +76,7 @@ const PasteModal = () => {
       <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
         <InputTextarea
           value={pastedData}
-          placeholder="Clipboard API is not supported by your borwser. Please paste the data here."
+          placeholder="Clipboard API is not supported by your browser. Please paste the data here."
           onChange={(e) => setPastedData(e.target.value)}
           style={{ width: '100%', flexGrow: 1 }}
         />

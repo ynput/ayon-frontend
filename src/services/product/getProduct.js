@@ -62,6 +62,7 @@ const parseProductData = (data) => {
       versionStatus: vers.status || null,
       versionUpdatedAt: vers.updatedAt || null,
       versionAuthor: vers ? vers.author : null,
+      versionThumbnailId: vers ? vers.thumbnailId : null,
       taskId: vers && vers.taskId ? vers.taskId : null,
       taskName: vers && vers.task ? vers.task.name : null,
       taskType: vers && vers.task ? vers.task.taskType : null,
@@ -100,6 +101,7 @@ fragment ProductVersionFragment on VersionNode {
   author
   createdAt
   updatedAt
+  thumbnailId
   taskId
   task {
     name
@@ -181,7 +183,9 @@ const getProduct = ayonApi.injectEndpoints({
           query: PRODUCTS_LIST_QUERY,
           variables: { projectName, ids: folderIds },
         },
+        validateStatus: (response, result) => response.status === 200 && !result?.errors?.length,
       }),
+      transformErrorResponse: (error) => error?.data?.errors?.[0]?.message,
       transformResponse: (response) => parseProductData(response.data),
       providesTags: (result) =>
         result

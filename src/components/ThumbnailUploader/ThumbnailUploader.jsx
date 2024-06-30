@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import * as Styled from './ThumbnailUploader.styled'
 import { Icon } from '@ynput/ayon-react-components'
 import axios from 'axios'
+import { classNames } from 'primereact/utils'
 
 const ThumbnailUploader = ({
   entityType,
@@ -11,6 +12,7 @@ const ThumbnailUploader = ({
   onUpload,
   onUploading,
   isPortal,
+  onCancel,
   entities,
   isButton,
 }) => {
@@ -123,7 +125,9 @@ const ThumbnailUploader = ({
 
   const handleInputChange = (e) => {
     e.preventDefault()
-    if (!e.target.files || !e.target.files[0]) return
+    if (!e.target.files || !e.target.files[0]) {
+      return
+    }
 
     handleFileUpload(e.target.files)
   }
@@ -131,19 +135,24 @@ const ThumbnailUploader = ({
   const handleInputDrop = (e) => {
     e.preventDefault()
     setDragHover(false)
-    if (!e.dataTransfer.files || !e.dataTransfer.files[0]) return
+    if (!e.dataTransfer.files || !e.dataTransfer.files[0]) {
+      onCancel && onCancel()
+      return
+    }
 
     handleFileUpload(e.dataTransfer.files)
   }
 
   return (
     <Styled.ThumbnailUploaderWrapper
-      $dragHover={dragHover}
-      $uploading={!!selectedFiles.length}
-      $existingImage={existingImage}
-      $success={uploadSuccess}
-      $isPortal={isPortal}
-      $isButton={isButton}
+      className={classNames({
+        isDragging: dragHover,
+        isUploading: !!selectedFiles.length,
+        isSuccess: uploadSuccess,
+        isPortal,
+        isButton,
+        hasExistingImage: existingImage,
+      })}
     >
       {isButton ? (
         <Styled.UploadButton
@@ -171,7 +180,10 @@ const ThumbnailUploader = ({
       )}
 
       {!!selectedFiles.length && imagePreviews.length && (
-        <Styled.ThumbnailUploading $success={uploadSuccess} $isPortal={isPortal}>
+        <Styled.ThumbnailUploading
+          className={classNames({ isSuccess: uploadSuccess })}
+          $isPortal={isPortal}
+        >
           {imagePreviews.map((preview, i) => (
             <Styled.UploadPreview
               src={preview}

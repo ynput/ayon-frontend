@@ -8,9 +8,10 @@ import {
   isSameWeek,
   isSameMinute,
 } from 'date-fns'
-import Typography from '/src/theme/typography.module.css'
+import Typography from '@/theme/typography.module.css'
 import { classNames } from 'primereact/utils'
 import styled from 'styled-components'
+import { useState } from 'react'
 
 const DateStyled = styled.span`
   margin-left: auto;
@@ -21,7 +22,7 @@ const DateStyled = styled.span`
   align-items: center;
 `
 
-const getFuzzyDate = (date) => {
+export const getFuzzyDate = (date) => {
   let fuzzyDate = formatDistanceToNow(new Date(date), { addSuffix: true })
 
   // remove 'about' from the string
@@ -32,10 +33,14 @@ const getFuzzyDate = (date) => {
   // remove the word ' ago'
   fuzzyDate = fuzzyDate.replace(' ago', '')
 
+  // if date is less than a minute ago, return 'Just now'
+  if (isSameMinute(new Date(date), new Date())) fuzzyDate = 'Just now'
+
   return fuzzyDate
 }
 
-const ActivityDate = ({ date, ...props }) => {
+const ActivityDate = ({ date, isExact, ...props }) => {
+  const [isFuzzy, setIsFuzzy] = useState(true)
   const dateObj = new Date(date)
   if (!isValid(dateObj)) return null
 
@@ -49,15 +54,29 @@ const ActivityDate = ({ date, ...props }) => {
   const dateFormat = yesterday ? '' : sameYear ? (sameWeek ? 'E' : 'MMM d') : 'MMM d yyyy'
   const timeFormat = 'h:mm a'
 
-  let dateString = today ? getFuzzyDate(dateObj) : format(dateObj, `${dateFormat}, ${timeFormat}`)
+  let dateString = isFuzzy
+    ? today && !isExact
+      ? getFuzzyDate(dateObj)
+      : format(dateObj, `${dateFormat}, ${timeFormat}`)
+    : format(dateObj, 'EEEE, dd MMM yyyy HH:mm')
 
   if (yesterday) dateString = `Yesterday${dateString}`
 
   // if less than a minute ago overwrite the date string
   if (sameMin) dateString = 'Just now'
 
+  const toggleFuzzy = () => {
+    setIsFuzzy(!isFuzzy)
+  }
+
   return (
-    <DateStyled className={classNames(Typography.bodySmall, 'date')} {...props}>
+    <DateStyled
+      className={classNames(Typography.bodySmall, 'date')}
+      {...props}
+      onClick={toggleFuzzy}
+      onMouseOver={() => setIsFuzzy(false)}
+      onMouseOut={() => setIsFuzzy(true)}
+    >
       {dateString}
     </DateStyled>
   )

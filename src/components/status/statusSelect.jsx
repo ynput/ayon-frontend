@@ -86,7 +86,6 @@ const StatusSelect = ({
       valueTemplate={() => (
         <StatusField
           value={isMixed ? `Mixed Statuses` : dropdownValue[0]}
-          align={align}
           size={size}
           style={{ maxWidth, ...style }}
           height={height}
@@ -106,7 +105,6 @@ const StatusSelect = ({
             value={status.name}
             isSelecting
             isActive={isActive}
-            align={align}
             height={height}
             statuses={statusesObject}
             showChevron={resolveChevronVisibility(isChevron, isActive)}
