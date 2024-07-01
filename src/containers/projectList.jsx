@@ -415,7 +415,7 @@ const ProjectList = ({
           selection={selectionObj}
           onSelectionChange={onSelect && onSelectionChange}
           onRowClick={onRowClick}
-          onRowDoubleClick={(e) => navigate(`/projects/${e.projects.name}/browser`)}
+          onRowDoubleClick={(e) => navigate(`/projects/${e.data.name}/browser`)}
           onContextMenu={onContextMenu}
           className={classNames('project-list', {
             'table-loading': isLoading,
