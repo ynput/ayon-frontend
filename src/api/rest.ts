@@ -1,7 +1,6 @@
-// import { RestAPI as api } from '../services/ayon'
-import { RestAPI } from '@/services/ayon'
+import { RestAPI as api } from '../services/ayon'
 
-const injectedRtkApi = RestAPI.injectEndpoints({
+const injectedRtkApi = api.injectEndpoints({
   endpoints: (build) => ({
     getAccessGroupSchema: build.query<GetAccessGroupSchemaApiResponse, GetAccessGroupSchemaApiArg>({
       query: () => ({ url: `/api/accessGroups/_schema` }),
