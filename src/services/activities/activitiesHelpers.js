@@ -27,7 +27,7 @@ function remapNestedProperties(object, remappingItems) {
 }
 
 // we flatten the activity object a little bit
-export const transformActivityData = (data = {}, currentUser) => {
+export const transformActivityData = (data = {}, currentUser, deduplicate = true) => {
   const activities = []
   const activitiesData = data?.project?.activities
   const pageInfo = activitiesData?.pageInfo || {}
@@ -46,7 +46,10 @@ export const transformActivityData = (data = {}, currentUser) => {
     const activityNode = data
 
     // check that the activity hasn't already been added.
-    if (activities.some(({ activityId }) => activityId === activityNode.activityId)) {
+    if (
+      activities.some(({ activityId }) => activityId === activityNode.activityId) &&
+      deduplicate
+    ) {
       // oh no this shouldn't happen!
       // referenceType priorities in order: origin, mention, relation
 

@@ -57,15 +57,16 @@ export const Body = styled.div`
   background-color: var(--md-sys-color-surface-container);
   border-radius: var(--border-radius-m);
   padding: var(--padding-m);
-  padding-bottom: 12px;
+  padding: 12px 10px;
   position: relative;
 
   /* remove first and last margins */
-  & > *:first-child {
+  /* + * because tools is actual first */
+  & > *:first-child + * {
     margin-top: 0;
   }
 
-  & > *:last-child {
+  & > *:not(.tools) {
     margin-bottom: 0;
   }
 

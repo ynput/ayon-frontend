@@ -107,6 +107,18 @@ const ActivityComment = ({
           onReferenceTooltip={setRefTooltip}
         />
         <Styled.Body className={classNames('comment-body', { isEditing })}>
+          <Styled.Tools className={'tools'} ref={moreRef}>
+            {isOwner && handleEditComment && (
+              <Styled.ToolButton icon="edit_square" onClick={handleEditComment} />
+            )}
+            {isOwner && (
+              <Styled.ToolButton
+                icon="more_horiz"
+                className="more"
+                onClick={() => handleToggleMenu(menuId)}
+              />
+            )}
+          </Styled.Tools>
           {isEditing ? (
             <CommentInput
               isOpen={true}
@@ -154,19 +166,6 @@ const ActivityComment = ({
               />
             </>
           )}
-
-          <Styled.Tools className={'tools'} ref={moreRef}>
-            {isOwner && handleEditComment && (
-              <Styled.ToolButton icon="edit_square" onClick={handleEditComment} />
-            )}
-            {isOwner && (
-              <Styled.ToolButton
-                icon="more_horiz"
-                className="more"
-                onClick={() => handleToggleMenu(menuId)}
-              />
-            )}
-          </Styled.Tools>
 
           <MenuContainer id={menuId} target={moreRef.current}>
             <ActivityCommentMenu onDelete={() => isOwner && handleDelete()} />
