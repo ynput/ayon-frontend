@@ -131,8 +131,7 @@ const ProjectList = ({
   // by default only show active projects
   const params = { active: true }
 
-  const showInactiveAsWell =
-    isProjectManager && (user?.projects?.isAdmin || user?.projects?.isManager)
+  const showInactiveAsWell = isProjectManager && (user?.data?.isAdmin || user?.data?.isManager)
   if (showInactiveAsWell) {
     // remove active from params
     delete params.active
