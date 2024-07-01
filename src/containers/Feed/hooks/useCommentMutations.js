@@ -9,6 +9,12 @@ import { useSelector } from 'react-redux'
 import { ayonApi } from '@queries/ayon'
 import { filterActivityTypes } from '@state/details'
 
+// does the body have a checklist anywhere in it
+// * [ ] or * [x]
+export const bodyHasChecklist = (body) => {
+  return body.includes('* [ ]') || body.includes('* [x]')
+}
+
 const useCommentMutations = ({
   projectName,
   entityType,
@@ -60,12 +66,6 @@ const useCommentMutations = ({
   }
 
   const getActivityId = () => uuid1().replace(/-/g, '')
-
-  // does the body have a checklist anywhere in it
-  // * [ ] or * [x]
-  const bodyHasChecklist = (body) => {
-    return body.includes('* [ ]') || body.includes('* [x]')
-  }
 
   const patchAllRefs = ({ refs = [], value = '', files = [], isDelete = false, id }) => {
     const hasChecklist = bodyHasChecklist(value)
