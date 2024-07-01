@@ -7,7 +7,7 @@ import { GetMarketInstallEventsQuery } from '@/api/graphql'
 
 type MarketAddonItemRes = MarketAddonListApiResponse['addons'][0]
 export interface MarketAddonItem extends MarketAddonItemRes {
-  isInstalled: boolean
+  isDownloaded: boolean
   isOfficial: boolean
   isProductionOutdated: boolean
   isVerified: boolean
@@ -34,14 +34,14 @@ export const enhancedMarketRest = api.rest.enhanceEndpoints<TagTypes, UpdatedDef
       ],
       transformResponse: (response: MarketAddonListApiResponse) =>
         (response?.addons || []).map((addon: $Any) => {
-          const isInstalled = !!addon.currentLatestVersion
+          const isDownloaded = !!addon.currentLatestVersion
           const isOfficial = addon.orgName === 'ynput-official'
           const isProductionOutdated = addon.currentLatestVersion !== addon.currentProductionVersion
 
           return {
             ...addon,
             isOfficial,
-            isInstalled,
+            isDownloaded,
             isProductionOutdated,
             isVerified: false,
           }

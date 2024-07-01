@@ -44,7 +44,7 @@ const updateAddons = ayonApi.injectEndpoints({
       },
       invalidatesTags: ['addonList'],
     }),
-    installAddons: build.mutation({
+    downloadAddons: build.mutation({
       queryFn: async (arg, api) => {
         const { addons = [] } = arg || {}
 
@@ -62,7 +62,7 @@ const updateAddons = ayonApi.injectEndpoints({
           return { data: eventIds, error: addonsRes.error }
         } catch (error) {
           console.error(error)
-          return { error: error?.response?.data?.detail || 'Install addon errors' }
+          return { error: error?.response?.data?.detail || 'Download addon errors' }
         }
       },
       invalidatesTags: [
@@ -81,5 +81,5 @@ export const {
   useUploadAddonsMutation,
   useDeleteAddonsMutation,
   useDeleteAddonVersionsMutation,
-  useInstallAddonsMutation,
+  useDownloadAddonsMutation,
 } = updateAddons

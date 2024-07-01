@@ -1,5 +1,5 @@
 import { Button, Icon, SaveButton } from '@ynput/ayon-react-components'
-import React, { useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import * as Styled from './AddonDetails.styled'
 import Type from '@/theme/typography.module.css'
 import { classNames } from 'primereact/utils'
@@ -25,23 +25,23 @@ const MetaPanelRow = ({ label, children, valueDirection = 'column', ...props }) 
   </Styled.MetaPanelRow>
 )
 
-const AddonDetails = ({ addon = {}, isLoading, onInstall, isUpdatingAll }) => {
+const AddonDetails = ({ addon = {}, isLoading, onDownload, isUpdatingAll }) => {
   // latestVersion: is the latest version of the addon
-  // versions: is an array of all versions INSTALLED of the addon
+  // versions: is an array of all versions DOWNLOADED of the addon
   const {
     name,
     title,
     description,
     icon,
-    isInstalled,
-    isInstalling,
+    isDownloaded,
+    isDownloading,
     isFinished,
     isFailed,
     error,
     isOutdated,
     isProductionOutdated,
-    // versions = [],
-    installedVersions = {},
+    versions = [],
+    downloadedVersions = {},
     latestVersion,
     currentLatestVersion,
     currentProductionVersion,
@@ -51,10 +51,21 @@ const AddonDetails = ({ addon = {}, isLoading, onInstall, isUpdatingAll }) => {
     warning,
   } = addon
 
+  const versionKeys = isEmpty(downloadedVersions) ? [] : Object.keys(downloadedVersions)
+  // keep track of downloaded versions
+  const [downloadedByAddon, setDownloadedByAddon] = useState({})
+  const downloaded = downloadedByAddon[name] || []
+
+  useEffect(() => {
+    setDownloadedByAddon((v) => ({
+      ...v,
+      [name]: [...new Set([...(v[name] || []), ...versionKeys])],
+    }))
+  }, [name, setDownloadedByAddon])
+
   const [showAllVersions, setShowAllVersions] = useState(false)
 
-  const versionKeys = isEmpty(installedVersions) ? [] : Object.keys(installedVersions)
-  const versionKeysSorted = versionKeys.sort((a, b) => rcompare(a, b))
+  const versionKeysSorted = downloaded.sort((a, b) => rcompare(a, b))
   const versionsToShow = versionKeysSorted.length
     ? showAllVersions
       ? versionKeysSorted
@@ -73,16 +84,20 @@ const AddonDetails = ({ addon = {}, isLoading, onInstall, isUpdatingAll }) => {
   // sets selected addon and redirects to addons
   const { onUninstall } = useUninstall(name)
 
-  // All the install logic is handled in the parent component (MarketPage.jsx)
-  // Okay it's actually handled in the hook useInstall.js
-  const handleInstall = () => {
-    onInstall && onInstall(name, latestVersion)
+  // All the download logic is handled in the parent component (MarketPage.jsx)
+  // Okay it's actually handled in the hook useDownload.js
+  const handleDownload = (version) => {
+    onDownload && onDownload(name, version)
+    // update downloaded versions
+    if (!downloaded.includes(version)) {
+      setDownloadedByAddon((v) => ({ ...v, [name]: [...(v[name] || []), version] }))
+    }
   }
 
   let actionButton = null
 
-  // Install button (top right)
-  if (isInstalling) {
+  // Download button (top right)
+  if (isDownloading) {
     actionButton = (
       <SaveButton active saving disabled>
         Downloading...
@@ -100,23 +115,33 @@ const AddonDetails = ({ addon = {}, isLoading, onInstall, isUpdatingAll }) => {
         Pending...
       </Button>
     )
-  } else if (isInstalled && !isOutdated) {
+  } else if (isDownloaded && !isOutdated) {
     actionButton = <Button onClick={onUninstall}>Uninstall</Button>
-  } else if (isInstalled && isOutdated && latestVersion) {
+  } else if (isDownloaded && isOutdated && latestVersion) {
     actionButton = (
       <Button
         variant="filled"
         icon={'download'}
-        onClick={handleInstall}
+        onClick={() => handleDownload(latestVersion)}
       >{`Download v${latestVersion}`}</Button>
     )
   } else if (latestVersion) {
     actionButton = (
-      <Button variant="filled" icon={'download'} onClick={handleInstall}>
+      <Button variant="filled" icon={'download'} onClick={() => handleDownload(latestVersion)}>
         {`Download v${latestVersion}`}
       </Button>
     )
   }
+
+  const versionsOptions = useMemo(
+    () =>
+      versions.map((v) => ({
+        value: v.version,
+        label: `v${v.version}`,
+        isDownloaded: downloaded.includes(v.version),
+      })),
+    [versions, downloaded],
+  )
 
   // query string used for duplicating bundles with new version
   const addonVersionObject = { [name]: currentLatestVersion }
@@ -156,7 +181,26 @@ const AddonDetails = ({ addon = {}, isLoading, onInstall, isUpdatingAll }) => {
           </Styled.Left>
           {/* RIGHT PANEL */}
           <Styled.Right className={classNames(Type.bodyMedium, { isLoading })}>
-            {actionButton}
+            <Styled.Download>
+              {actionButton}
+
+              <Styled.VersionDropdown
+                options={versionsOptions}
+                align="right"
+                value={[]}
+                widthExpand
+                onChange={(v) => handleDownload(v[0])}
+                itemStyle={{ justifyContent: 'space-between' }}
+                buttonProps={{ 'data-tooltip': 'Download a specific version' }}
+                search={versions.length > 10}
+                itemTemplate={(option) => (
+                  <Styled.VersionDropdownItem>
+                    <Icon icon={option.isDownloaded ? 'check' : 'download'} />
+                    {option.label}
+                  </Styled.VersionDropdownItem>
+                )}
+              />
+            </Styled.Download>
             <Styled.MetaPanel className={classNames({ isPlaceholder: isLoading })}>
               <MetaPanelRow label="Downloaded Versions">
                 {versionsToShow.length
