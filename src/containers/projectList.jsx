@@ -35,24 +35,21 @@ const StyledProjectName = styled.div`
     opacity: 0;
   }
 
-  ${({ $isActive }) =>
-    !$isActive &&
-    css`
-      font-style: italic;
-      color: var(--md-ref-palette-secondary50);
-    `}
+  ${({ $isActive }) => !$isActive && css``}
 
-  /* when closed show code and hide title */
-  ${({ $isOpen }) =>
-    !$isOpen &&
-    css`
-      span:first-child {
-        opacity: 0;
-      }
-      span:last-child {
-        opacity: 1;
-      }
-    `}
+  &:not(.isActive) {
+    font-style: italic;
+    color: var(--md-ref-palette-secondary50);
+  }
+
+  &:not(.isOpen) {
+    span:first-child {
+      opacity: 0;
+    }
+    span:last-child {
+      opacity: 1;
+    }
+  }
 `
 
 const StyledAddButton = styled(Button)`
@@ -175,12 +172,14 @@ const ProjectList = ({
   const projectListWithPinned = projects
     .map((project) => ({
       ...project,
-      // Add a pinned property based on whether the project name is in pinnedProjects
-      pinned: pinnedProjects.includes(project.name),
+      pinned: project.active ? pinnedProjects.includes(project.name) : false,
     }))
     .sort((a, b) => {
-      // Use the pinned property for sorting
-      if (a.pinned && !b.pinned) {
+      if (!a.active && b.active) {
+        return 1 // a goes to the bottom
+      } else if (a.active && !b.active) {
+        return -1 // b goes to the bottom
+      } else if (a.pinned && !b.pinned) {
         return -1 // a comes before b
       } else if (!a.pinned && b.pinned) {
         return 1 // b comes before a
@@ -431,8 +430,10 @@ const ProjectList = ({
             header="Projects"
             body={(rowData) => (
               <StyledProjectName
-                $isOpen={!collapsed}
-                $isActive={rowData.name === '_' || rowData.active}
+                className={classNames({
+                  isActive: rowData.name === '_' || rowData.active,
+                  isOpen: !collapsed,
+                })}
               >
                 <span>{formatName(rowData, showNull)}</span>
                 <span>{formatName(rowData, showNull, 'code')}</span>
@@ -441,7 +442,20 @@ const ProjectList = ({
             style={{ minWidth: 150, ...style }}
           />
           {!hideCode && !collapsed && (
-            <Column field="code" header="Code" style={{ maxWidth: 80 }} />
+            <Column
+              field="code"
+              header="Code"
+              style={{ maxWidth: 80 }}
+              body={(rowData) => (
+                <StyledProjectName
+                  className={classNames({
+                    isActive: rowData.name === '_' || rowData.active,
+                  })}
+                >
+                  <span>{rowData.code}</span>
+                </StyledProjectName>
+              )}
+            />
           )}
           {!collapsed && (
             <Column
