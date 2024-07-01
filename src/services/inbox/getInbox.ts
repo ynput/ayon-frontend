@@ -28,8 +28,6 @@ export const enhancedInboxGraphql = api.enhanceEndpoints<TagTypes, UpdatedDefini
     GetInboxMessages: {
       transformResponse: (res: GetInboxMessagesQuery, _meta, args) =>
         transformInboxMessages(res.inbox, args),
-      transformErrorResponse: (error) => error.message,
-
       // only use active and isActive as cache keys
       serializeQueryArgs: ({ queryArgs: { active, important } = {} }) => ({
         active,

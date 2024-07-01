@@ -3,12 +3,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 import { graphqlRequestBaseQuery } from '@rtk-query/graphql-request-base-query'
 import type { BaseQueryApi, BaseQueryFn } from '@reduxjs/toolkit/query'
 import { GraphQLClient } from 'graphql-request'
-import {
-  BaseQueryArg,
-  BaseQueryError,
-  BaseQueryExtraOptions,
-  BaseQueryResult,
-} from '@reduxjs/toolkit/query'
+import type { BaseQueryArg, BaseQueryError, BaseQueryExtraOptions, BaseQueryResult } from '@types'
 
 // https://github.com/reduxjs/redux-toolkit/discussions/3161
 const combineBaseQueries =
