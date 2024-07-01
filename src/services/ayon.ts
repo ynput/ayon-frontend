@@ -98,17 +98,9 @@ const wrappedBaseQuery = (baseUrl: string) => {
 }
 
 // legacy api that covers REST and GraphQL
-export const ayonApi = createApi({
-  reducerPath: 'ayonApi',
-  baseQuery: wrappedBaseQuery('/'),
-  endpoints: () => ({}),
-  tagTypes,
-})
-
-// Define the REST API
 export const RestAPI = createApi({
   reducerPath: 'restApi',
-  baseQuery: wrappedBaseQuery(''),
+  baseQuery: wrappedBaseQuery('/'),
   endpoints: () => ({}),
   tagTypes,
 })

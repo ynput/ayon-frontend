@@ -1,6 +1,6 @@
-import { ayonApi } from '../ayon'
+import api from '@api'
 
-const getBundles = ayonApi.injectEndpoints({
+const getBundles = api.rest.injectEndpoints({
   endpoints: (build) => ({
     getBundleList: build.query({
       query: ({ archived }) => ({
@@ -20,6 +20,7 @@ const getBundles = ayonApi.injectEndpoints({
       transformResponse: (res) => res,
     }),
   }), // endpoints
+  overrideExisting: true,
 })
 
 export const { useGetBundleListQuery, useLazyGetBundleListQuery, useCheckBundleQuery } = getBundles

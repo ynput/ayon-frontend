@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { selectProject } from '@state/project'
 import { selectProject as selectProjectContext, setUri } from '@state/context'
 import { onProjectChange } from '@state/editor'
-import { ayonApi } from '@queries/ayon'
+import api from '@api'
 import MenuList from '@components/Menu/MenuComponents/MenuList'
 import { useListProjectsQuery } from '@queries/project/getProject'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -207,7 +207,9 @@ const ProjectMenu = ({ isOpen, onHide }) => {
     // reset editor
     dispatch(onProjectChange(projectName))
     // remove editor query caches
-    dispatch(ayonApi.util.invalidateTags(['branch', 'workfile', 'hierarchy', 'project', 'product']))
+    dispatch(
+      api.rest.util.invalidateTags(['branch', 'workfile', 'hierarchy', 'project', 'product']),
+    )
     // reset uri
     dispatch(setUri(`ayon+entity://${projectName}`))
     // set dashboard projects

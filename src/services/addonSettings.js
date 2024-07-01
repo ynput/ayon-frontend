@@ -1,4 +1,4 @@
-import { ayonApi } from './ayon'
+import api from '@api'
 
 const apiSuffix = (projectName, siteId, variant, asVersion) => {
   const params = new URLSearchParams()
@@ -19,22 +19,21 @@ const apiSuffix = (projectName, siteId, variant, asVersion) => {
   return qs ? `${suffix}?${qs}` : suffix
 }
 
-const addonSettings = ayonApi.injectEndpoints({
+const addonSettings = api.rest.injectEndpoints({
   endpoints: (build) => ({
     getAddonSettingsList: build.query({
       query: ({ variant, projectName, siteId }) => {
-
         // this should prevent passing null/undefined values to the query
         // params once and for all (until we have typescript)
         const params = {}
         if (variant) params.variant = variant
         if (projectName) params.project_name = projectName
         if (siteId) params.site_id = siteId
-        
+
         return {
           url: `/api/settings`,
           method: 'GET',
-          params
+          params,
         }
       },
 
@@ -264,6 +263,7 @@ const addonSettings = ayonApi.injectEndpoints({
       transformErrorResponse: (error) => error.data.detail || `Error ${error.status}`,
     }), // setAddonSettings
   }), // endpoints
+  overrideExisting: true,
 }) // addonSettings
 
 export const {

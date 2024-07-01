@@ -1,4 +1,4 @@
-import { ayonApi } from '../ayon'
+import api from '@api'
 import queryUpload from '../queryUpload'
 import PubSub from '@/pubsub'
 
@@ -16,7 +16,7 @@ query InstallEvents($ids: [String!]!) {
 }
 `
 
-const onBoarding = ayonApi.injectEndpoints({
+const onBoarding = api.rest.injectEndpoints({
   endpoints: (build) => ({
     initializeUser: build.mutation({
       query: (body) => ({
@@ -163,6 +163,7 @@ const onBoarding = ayonApi.injectEndpoints({
       },
     }),
   }),
+  overrideExisting: true,
 })
 
 export const {

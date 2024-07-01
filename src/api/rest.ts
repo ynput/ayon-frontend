@@ -1,5 +1,7 @@
-import { RestAPI as api } from '../services/ayon'
-const injectedRtkApi = api.injectEndpoints({
+// import { RestAPI as api } from '../services/ayon'
+import { RestAPI } from '@/services/ayon'
+
+const injectedRtkApi = RestAPI.injectEndpoints({
   endpoints: (build) => ({
     getAccessGroupSchema: build.query<GetAccessGroupSchemaApiResponse, GetAccessGroupSchemaApiArg>({
       query: () => ({ url: `/api/accessGroups/_schema` }),
@@ -772,14 +774,14 @@ const injectedRtkApi = api.injectEndpoints({
     deleteProject: build.mutation<DeleteProjectApiResponse, DeleteProjectApiArg>({
       query: (queryArg) => ({ url: `/api/projects/${queryArg.projectName}`, method: 'DELETE' }),
     }),
-    updateProject: build.mutation<UpdateProjectApiResponse, UpdateProjectApiArg>({
-      query: (queryArg) => ({
-        url: `/api/projects/${queryArg.projectName}`,
-        method: 'PATCH',
-        body: queryArg.projectPatchModel,
-        headers: { 'x-sender': queryArg['x-sender'] },
-      }),
-    }),
+    // updateProject: build.mutation<UpdateProjectApiResponse, UpdateProjectApiArg>({
+    //   query: (queryArg) => ({
+    //     url: `/api/projects/${queryArg.projectName}`,
+    //     method: 'PATCH',
+    //     body: queryArg.projectPatchModel,
+    //     headers: { 'x-sender': queryArg['x-sender'] },
+    //   }),
+    // }),
     getProjectStats: build.query<GetProjectStatsApiResponse, GetProjectStatsApiArg>({
       query: (queryArg) => ({ url: `/api/projects/${queryArg.projectName}/stats` }),
     }),
@@ -2239,7 +2241,8 @@ export type PasswordResetApiArg = {
 }
 export type GetCurrentUserApiResponse = /** status 200 Successful Response */ UserModel
 export type GetCurrentUserApiArg = void
-export type GetUserApiResponse = /** status 200 Successful Response */
+export type GetUserApiResponse =
+  /** status 200 Successful Response */
   | UserModel
   | {
       [key: string]: string

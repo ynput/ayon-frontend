@@ -1,6 +1,6 @@
-import { ayonApi } from '../ayon'
+import api from '@api'
 
-const updateServices = ayonApi.injectEndpoints({
+const updateServices = api.rest.injectEndpoints({
   endpoints: (build) => ({
     createService: build.mutation({
       query: ({ serviceName, data }) => ({
@@ -29,6 +29,7 @@ const updateServices = ayonApi.injectEndpoints({
       transformErrorResponse: (response) => response.data,
     }),
   }),
+  overrideExisting: true,
 })
 
 export const { useCreateServiceMutation, useUpdateServiceMutation, useDeleteServiceMutation } =

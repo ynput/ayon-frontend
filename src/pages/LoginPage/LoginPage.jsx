@@ -4,7 +4,7 @@ import { useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
 import { InputText, InputPassword, Button, Panel } from '@ynput/ayon-react-components'
 import { login } from '@state/user'
-import { ayonApi } from '@queries/ayon'
+import api from '@api'
 import AuthLink from './AuthLink'
 import { useGetInfoQuery } from '@queries/auth/getAuth'
 import ReactMarkdown from 'react-markdown'
@@ -62,7 +62,7 @@ const LoginPage = ({ isFirstTime }) => {
             toast.info(data.detail)
             dispatch(login({ user: data.user, accessToken: data.token }))
             // invalidate all rtk queries cache
-            dispatch(ayonApi.util.resetApiState())
+            dispatch(api.rest.util.resetApiState())
           } else {
             toast.error('Unable to login using SSO')
           }
@@ -101,7 +101,7 @@ const LoginPage = ({ isFirstTime }) => {
             }),
           )
           // invalidate all rtk queries cache
-          dispatch(ayonApi.util.resetApiState())
+          dispatch(api.rest.util.resetApiState())
         }
       })
       .catch((err) => {

@@ -1,7 +1,7 @@
 import { updateUserPreferences } from '@/features/user'
-import { ayonApi } from '../ayon'
+import api from '@api'
 
-const updateUser = ayonApi.injectEndpoints({
+const updateUser = api.rest.injectEndpoints({
   endpoints: (build) => ({
     updateUser: build.mutation({
       query: ({ name, patch }) => ({
@@ -21,7 +21,7 @@ const updateUser = ayonApi.injectEndpoints({
       queryFn: async (updates, { dispatch }) => {
         const results = await Promise.all(
           updates.map(({ name, patch }) => {
-            return dispatch(ayonApi.endpoints.updateUser.initiate({ name, patch }))
+            return dispatch(api.rest.endpoints.updateUser.initiate({ name, patch }))
           }),
         )
         console.log(results)
@@ -109,6 +109,7 @@ const updateUser = ayonApi.injectEndpoints({
       invalidatesTags: (res, err, { token }) => [{ type: 'session', id: token }],
     }),
   }),
+  overrideExisting: true,
 })
 
 export const {

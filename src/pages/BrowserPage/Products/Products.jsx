@@ -26,7 +26,7 @@ import usePatchProductsListWithVersions from '@hooks/usePatchProductsListWithVer
 import useSearchFilter, { filterByFieldsAndValues } from '@hooks/useSearchFilter'
 import useColumnResize from '@hooks/useColumnResize'
 import { useUpdateEntitiesMutation } from '@queries/entity/updateEntity'
-import { ayonApi } from '@queries/ayon'
+import api from '@api'
 import useCreateContext from '@hooks/useCreateContext'
 import ViewModeToggle from './ViewModeToggle'
 import ProductsList from './ProductsList'
@@ -187,10 +187,10 @@ const Products = () => {
 
       // invalidate 'version' query (specific version query)
       // we do this so that when we select this version again, it doesn't use stale version query
-      dispatch(ayonApi.util.invalidateTags(ids.map((id) => ({ type: 'version', id }))))
+      dispatch(api.rest.util.invalidateTags(ids.map((id) => ({ type: 'version', id }))))
 
       // invalidate 'detail' query (details panel)
-      // dispatch(ayonApi.util.invalidateTags(ids.map((id) => ({ type: 'detail', id }))))
+      // dispatch(api.rest.util.invalidateTags(ids.map((id) => ({ type: 'detail', id }))))
     } catch (error) {
       console.error(error)
 

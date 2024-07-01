@@ -5,7 +5,7 @@ import { useInitializeUserMutation } from '@queries/onBoarding/onBoarding'
 import { useNavigate } from 'react-router'
 import { useDispatch } from 'react-redux'
 import { login } from '@state/user'
-import { ayonApi } from '@queries/ayon'
+import api from '@api'
 import { upperFirst } from 'lodash'
 import Type from '@/theme/typography.module.css'
 
@@ -89,7 +89,7 @@ export const CreateUser = ({ Header, Footer, userForm, setUserForm, userFormFiel
         }),
       )
       // invalidate all rtk queries cache
-      dispatch(ayonApi.util.resetApiState())
+      dispatch(api.rest.util.resetApiState())
     } catch (error) {
       console.log(error)
       setErrorMessage(error.data?.detail || 'Unable to create admin')

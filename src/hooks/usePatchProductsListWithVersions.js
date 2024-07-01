@@ -1,5 +1,5 @@
 import { useDispatch, useSelector } from 'react-redux'
-import { ayonApi } from '@queries/ayon'
+import api from '@api'
 
 const usePatchProductsListWithVersions = ({ projectName }) => {
   const dispatch = useDispatch()
@@ -8,7 +8,7 @@ const usePatchProductsListWithVersions = ({ projectName }) => {
   const patchProductsListWithVersions = (versions) => {
     try {
       return dispatch(
-        ayonApi.util.updateQueryData('getProductList', { projectName, folderIds }, (draft) => {
+        api.rest.util.updateQueryData('getProductList', { projectName, folderIds }, (draft) => {
           console.log('patching getProductList:', versions)
           versions.forEach((version) => {
             // find product in product list

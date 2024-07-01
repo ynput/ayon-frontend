@@ -1,4 +1,4 @@
-import { ayonApi } from '../ayon'
+import api from '@api'
 
 const parseProductFps = (product) => {
   const folderFps = product.folder.attrib.fps || ''
@@ -173,7 +173,7 @@ query GetProductsVersions($projectName: String!, $ids: [String!]!) {
 ${PRODUCT_VERSION_FRAGMENT}
 `
 
-const getProduct = ayonApi.injectEndpoints({
+const getProduct = api.rest.injectEndpoints({
   endpoints: (build) => ({
     getProductList: build.query({
       query: ({ projectName, folderIds }) => ({
@@ -211,6 +211,7 @@ const getProduct = ayonApi.injectEndpoints({
           : [{ type: 'version', id: 'LIST' }],
     }),
   }),
+  overrideExisting: true,
 })
 
 export const {

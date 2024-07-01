@@ -1,4 +1,4 @@
-import { ayonApi } from '../ayon'
+import api from '@api'
 import { branchesLoaded } from '@state/editor'
 import { buildQuery } from '@pages/EditorPage/queries'
 
@@ -36,7 +36,7 @@ const transformEditorData = (project) => {
   return nodes
 }
 
-const getEditor = ayonApi.injectEndpoints({
+const getEditor = api.rest.injectEndpoints({
   endpoints: (build) => ({
     getExpandedBranch: build.query({
       query: ({ projectName, parentId }) => ({
@@ -69,6 +69,7 @@ const getEditor = ayonApi.injectEndpoints({
       },
     }),
   }),
+  overrideExisting: true,
 })
 
 export const { useGetExpandedBranchQuery, useLazyGetExpandedBranchQuery } = getEditor

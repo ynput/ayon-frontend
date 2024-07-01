@@ -1,6 +1,6 @@
-import { ayonApi } from './ayon'
+import api from '@api'
 
-const getReleases = ayonApi.injectEndpoints({
+const getReleases = api.rest.injectEndpoints({
   endpoints: (build) => ({
     getReleases: build.query({
       query: () => ({
@@ -9,6 +9,7 @@ const getReleases = ayonApi.injectEndpoints({
       transformResponse: (res) => res.map((r) => r.name),
     }),
   }),
+  overrideExisting: true,
 })
 
 export const { useGetReleasesQuery } = getReleases

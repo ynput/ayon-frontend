@@ -1,4 +1,4 @@
-import { ayonApi } from '../ayon'
+import api from '@api'
 import PubSub from '@/pubsub'
 
 const EVENT_FRAGMENT = `
@@ -100,7 +100,7 @@ const patchNewEvents = (type, events, draft) => {
   }
 }
 
-const getEvents = ayonApi.injectEndpoints({
+const getEvents = api.rest.injectEndpoints({
   endpoints: (build) => ({
     getEvents: build.query({
       query: ({ last = 100, includeLogs = true, filter = '' }) => ({
@@ -179,6 +179,7 @@ const getEvents = ayonApi.injectEndpoints({
       transformResponse: (response) => transformEvents(response?.data?.events),
     }),
   }),
+  overrideExisting: true,
 })
 
 export const {

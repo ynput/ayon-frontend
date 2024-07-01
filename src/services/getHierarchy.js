@@ -1,6 +1,6 @@
-import { ayonApi } from './ayon'
+import api from '@api'
 
-const getHierarchy = ayonApi.injectEndpoints({
+const getHierarchy = api.rest.injectEndpoints({
   endpoints: (build) => ({
     getHierarchy: build.query({
       query: ({ projectName }) => ({
@@ -11,6 +11,7 @@ const getHierarchy = ayonApi.injectEndpoints({
       providesTags: ['hierarchy'],
     }),
   }),
+  overrideExisting: true,
 })
 
 export const { useGetHierarchyQuery } = getHierarchy

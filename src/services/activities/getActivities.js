@@ -1,11 +1,11 @@
 import { isEqual } from 'lodash'
-import { ayonApi } from '../ayon'
+import api from '@api'
 import { taskProvideTags } from '../userDashboard/userDashboardHelpers'
 import { transformActivityData, transformTooltipData } from './activitiesHelpers'
 // import PubSub from '@/pubsub'
 import { ACTIVITIES, ACTIVITIES_BY_ACTIVITY, ENTITY_TOOLTIP } from './activityQueries'
 
-const getActivities = ayonApi.injectEndpoints({
+const getActivities = api.rest.injectEndpoints({
   endpoints: (build) => ({
     // get multiple entities activities
     getActivities: build.query({
@@ -92,6 +92,7 @@ const getActivities = ayonApi.injectEndpoints({
       providesTags: (res, error, { entityType }) => taskProvideTags([res], 'task', entityType),
     }),
   }),
+  overrideExisting: true,
 })
 
 //

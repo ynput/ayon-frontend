@@ -1,4 +1,4 @@
-import { ayonApi } from '../ayon'
+import api from '@api'
 import ayonClient from '@/ayon'
 
 const USER_BY_NAME_QUERY = `
@@ -89,7 +89,7 @@ const buildUsersQuery = (QUERY) => {
   return QUERY.replace('#ATTRS#', f_attribs)
 }
 
-const getUsers = ayonApi.injectEndpoints({
+const getUsers = api.rest.injectEndpoints({
   endpoints: (build) => ({
     getUsersList: build.query({
       query: () => ({
@@ -196,6 +196,7 @@ const getUsers = ayonApi.injectEndpoints({
       providesTags: (res, g, { token }) => [{ type: 'session', id: token }],
     }),
   }),
+  overrideExisting: true,
 })
 
 export const {

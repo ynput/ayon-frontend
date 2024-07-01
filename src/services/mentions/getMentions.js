@@ -1,6 +1,6 @@
-import { ayonApi } from '../ayon'
+import api from '@api'
 
-const getMentions = ayonApi.injectEndpoints({
+const getMentions = api.rest.injectEndpoints({
   endpoints: (build) => ({
     getMentionSuggestions: build.query({
       query: ({ projectName, entityIds, entityType }) => ({
@@ -12,6 +12,7 @@ const getMentions = ayonApi.injectEndpoints({
         },
       }),
     }),
+    overrideExisting: true,
   }),
 })
 

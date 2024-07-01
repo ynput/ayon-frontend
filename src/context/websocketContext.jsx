@@ -5,7 +5,7 @@ import PubSub from '@/pubsub'
 import arrayEquals from '@helpers/arrayEquals'
 import useWebSocket, { ReadyState } from 'react-use-websocket'
 import { debounce } from 'lodash'
-import { ayonApi } from '@queries/ayon'
+import api from '@api'
 import RefreshToast from '@components/RefreshToast'
 
 export const SocketContext = createContext()
@@ -121,7 +121,7 @@ export const SocketProvider = (props) => {
       if (serverRestartingVisible) {
         setServerRestartingVisible(false)
         // clear ayonApi
-        dispatch(ayonApi.util.resetApiState())
+        dispatch(api.rest.util.resetApiState())
       }
       getWebSocket().onmessage = onMessage
       subscribe()

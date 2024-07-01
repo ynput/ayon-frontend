@@ -1,4 +1,4 @@
-import { ayonApi } from './ayon'
+import api from '@api'
 
 const getSiteRootsQuery = (siteId, platform) => {
   const query = new URLSearchParams()
@@ -7,7 +7,7 @@ const getSiteRootsQuery = (siteId, platform) => {
   return query.toString() ? `?${query.toString()}` : ''
 }
 
-const customRoots = ayonApi.injectEndpoints({
+const customRoots = api.rest.injectEndpoints({
   endpoints: (build) => ({
     getSiteRoots: build.query({
       query: ({ projectName, siteId, platform }) => ({
@@ -41,9 +41,13 @@ const customRoots = ayonApi.injectEndpoints({
 
       async onQueryStarted({ projectName, siteId, data }, { dispatch, queryFulfilled }) {
         const putResult = dispatch(
-          ayonApi.util.updateQueryData('getCustomRoots', { projectName, siteId, data }, (draft) => {
-            Object.assign(draft, { ...data, [siteId]: data })
-          }),
+          api.rest.util.updateQueryData(
+            'getCustomRoots',
+            { projectName, siteId, data },
+            (draft) => {
+              Object.assign(draft, { ...data, [siteId]: data })
+            },
+          ),
         )
         try {
           await queryFulfilled
@@ -53,6 +57,7 @@ const customRoots = ayonApi.injectEndpoints({
       }, // onQueryStarted
     }), // setCustomRoots
   }),
+  overrideExisting: true,
 })
 
 export const { useGetCustomRootsQuery, useSetCustomRootsMutation, useGetSiteRootsQuery } =

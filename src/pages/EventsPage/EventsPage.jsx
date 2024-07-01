@@ -2,7 +2,7 @@ import { Section, Toolbar, InputText, InputSwitch } from '@ynput/ayon-react-comp
 import { useGetEventsWithLogsQuery, useLazyGetEventsWithLogsQuery } from '@queries/events/getEvents'
 import EventDetail from './EventDetail'
 import { useDispatch } from 'react-redux'
-import { ayonApi } from '@queries/ayon'
+import api from '@api'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import EventList from './EventList'
 import useSearchFilter from '@hooks/useSearchFilter'
@@ -129,7 +129,7 @@ const EventsPage = () => {
       }
 
       dispatch(
-        ayonApi.util.updateQueryData('getEventsWithLogs', {}, (draft) => {
+        api.rest.util.updateQueryData('getEventsWithLogs', {}, (draft) => {
           patchOldEvents('events', data.events, draft, false)
           patchOldEvents('logs', data.logs, draft, false)
           draft.hasPreviousPage = data.hasPreviousPage
@@ -158,7 +158,7 @@ const EventsPage = () => {
       })
 
       dispatch(
-        ayonApi.util.updateQueryData('getEventsWithLogs', {}, (draft) => {
+        api.rest.util.updateQueryData('getEventsWithLogs', {}, (draft) => {
           patchOldEvents('events', data.events, draft, true)
           patchOldEvents('logs', data.logs, draft, true)
           draft.hasPreviousPage = data.hasPreviousPage

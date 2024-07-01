@@ -1,6 +1,6 @@
-import { ayonApi } from '../ayon'
+import api from '@api'
 
-const getServices = ayonApi.injectEndpoints({
+const getServices = api.rest.injectEndpoints({
   endpoints: (build) => ({
     getServices: build.query({
       query: () => ({
@@ -31,6 +31,7 @@ const getServices = ayonApi.injectEndpoints({
       transformResponse: (result) => result?.hosts,
     }),
   }),
+  overrideExisting: true,
 })
 
 export const { useGetServicesQuery, useGetServiceAddonsQuery, useGetServiceHostsQuery } =

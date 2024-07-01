@@ -1,6 +1,6 @@
-import { ayonApi } from '../ayon'
+import api from '@api'
 
-const updateAttributes = ayonApi.injectEndpoints({
+const updateAttributes = api.rest.injectEndpoints({
   endpoints: (build) => ({
     updateAttributes: build.mutation({
       query: ({ attributes, deleteMissing }) => ({
@@ -14,6 +14,7 @@ const updateAttributes = ayonApi.injectEndpoints({
       invalidatesTags: () => ['attribute'],
     }),
   }),
+  overrideExisting: true,
 })
 
 export const { useUpdateAttributesMutation } = updateAttributes

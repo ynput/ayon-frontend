@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Button, FileUpload, SaveButton } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
-import { ayonApi } from '@queries/ayon'
+import api from '@api'
 import { useDispatch, useSelector } from 'react-redux'
 import { useCreateInstallerMutation, useUploadInstallersMutation } from '@queries/installers'
 import { useUploadDependencyPackagesMutation } from '@queries/dependencyPackages'
@@ -211,7 +211,7 @@ const AddonUpload = ({ onClose, type = 'addon', onInstall, dropOnly, ...props })
       onInstall(type)
 
       // update addon list
-      dispatch(ayonApi.util.invalidateTags(['bundleList', 'addonList']))
+      dispatch(api.rest.util.invalidateTags(['bundleList', 'addonList']))
     } catch (error) {
       console.log(error)
       setIsUploading(false)
