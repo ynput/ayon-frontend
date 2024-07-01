@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef } from 'react'
+import { useMemo, useRef } from 'react'
 import { useSelector } from 'react-redux'
 import { TablePanel, Section, Button, Icon } from '@ynput/ayon-react-components'
 
@@ -11,6 +11,9 @@ import useCreateContext from '@hooks/useCreateContext'
 import useLocalStorage from '@hooks/useLocalStorage'
 import CollapseButton from '@components/CollapseButton'
 import styled, { css } from 'styled-components'
+import { classNames } from 'primereact/utils'
+import { toast } from 'react-toastify'
+import { useUpdateUserPreferencesMutation } from '@/services/user/updateUser'
 
 const formatName = (rowData, defaultTitle, field = 'name') => {
   if (rowData[field] === '_') return defaultTitle
@@ -88,6 +91,14 @@ const StyledAddButton = styled(Button)`
     `}
 `
 
+const StyledPin = styled(Icon)`
+  font-variation-settings: 'FILL' 1, 'wght' 200, 'GRAD' 200, 'opsz' 20;
+  margin-left: auto;
+  margin-right: 6px;
+  font-size: 18px;
+  color: var(--md-sys-color-outline);
+`
+
 const ProjectList = ({
   selection,
   onSelect,
@@ -114,18 +125,21 @@ const ProjectList = ({
   const navigate = useNavigate()
   const tableRef = useRef(null)
   const user = useSelector((state) => state.user)
+  const pinnedProjects =
+    useSelector((state) => state.user?.data?.frontendPreferences?.pinnedProjects) || []
 
   // by default only show active projects
   const params = { active: true }
 
-  const showInactiveAsWell = isProjectManager && (user?.data?.isAdmin || user?.data?.isManager)
+  const showInactiveAsWell =
+    isProjectManager && (user?.projects?.isAdmin || user?.projects?.isManager)
   if (showInactiveAsWell) {
     // remove active from params
     delete params.active
   }
 
   const {
-    data = [],
+    data: projects = [],
     isLoading,
     isFetching,
     isError,
@@ -140,9 +154,9 @@ const ProjectList = ({
   let [collapsed, setCollapsed] = useLocalStorage(collapsedId + '-projectListCollapsed', false)
   // always set to false if not collapsible
   if (!isCollapsible) collapsed = false
-  const projectNames = data.map((project) => project.name)
+  const projectNames = projects.map((project) => project.name)
 
-  // if selection does not exist in data, set selection to null
+  // if selection does not exist in projects, set selection to null
   useEffect(() => {
     if (isLoading || isFetching) return
 
@@ -154,12 +168,30 @@ const ProjectList = ({
     }
 
     if (onNoProject && !foundProject) {
-      const defaultProject = autoSelect ? data[0]?.name : null
+      const defaultProject = autoSelect ? projects[0]?.name : null
       onNoProject(defaultProject)
     } else if (isSuccess && onSuccess) onSuccess()
-  }, [selection, data, onNoProject, isLoading])
+  }, [selection, projects, onNoProject, isLoading])
 
-  let projectList = [...data]
+  const projectListWithPinned = projects
+    .map((project) => ({
+      ...project,
+      // Add a pinned property based on whether the project name is in pinnedProjects
+      pinned: pinnedProjects.includes(project.name),
+    }))
+    .sort((a, b) => {
+      // Use the pinned property for sorting
+      if (a.pinned && !b.pinned) {
+        return -1 // a comes before b
+      } else if (!a.pinned && b.pinned) {
+        return 1 // b comes before a
+      } else {
+        // If both have the same pinned status, sort alphabetically by name
+        return a.name.localeCompare(b.name)
+      }
+    })
+
+  const projectList = projectListWithPinned
 
   if (showNull) projectList.unshift({ name: '_' })
 
@@ -184,6 +216,36 @@ const ProjectList = ({
     } // single select
   }, [selection, projectList, isFetching])
 
+  const [updateUserPreferences] = useUpdateUserPreferencesMutation()
+
+  const handlePinProjects = async (sel, isPinning) => {
+    try {
+      const newPinnedProjects = [...pinnedProjects]
+      for (const project of sel) {
+        if (isPinning) {
+          // check if project is already pinned
+          if (!newPinnedProjects.includes(project)) {
+            // add to pinned projects
+            newPinnedProjects.push(project)
+          }
+        } else {
+          // remove from pinned projects
+          const index = newPinnedProjects.indexOf(project)
+          newPinnedProjects.splice(index, 1)
+        }
+      }
+
+      // update user preferences
+      await updateUserPreferences({
+        name: user.name,
+        preferences: { pinnedProjects: newPinnedProjects },
+      }).unwrap()
+    } catch (error) {
+      console.error(error)
+      toast.error('Failed to pin/unpin projects')
+    }
+  }
+
   const onSelectionChange = (e) => {
     if (multiselect) {
       let result = []
@@ -203,65 +265,73 @@ const ProjectList = ({
   } // onSelectionChange
 
   // TABLE CONTEXT MENU
-  const getContextItems = useCallback(
-    (sel) => {
-      const menuItems = [
-        {
-          label: 'Open Project',
-          icon: 'event_list',
-          command: () => navigate(`/projects/${sel[0]}/browser`),
+  const getContextItems = (sel) => {
+    const menuItems = [
+      {
+        label: 'Open Project',
+        icon: 'event_list',
+        command: () => navigate(`/projects/${sel[0]}/browser`),
+      },
+    ]
+
+    // toggle pinned status
+    // first get if whole selection is pinned or not
+    const allPinned = sel.every((project) => pinnedProjects.includes(project))
+    let pinnedLabel = allPinned ? 'Unpin Project' : 'Pin Project'
+    if (sel.length > 1) pinnedLabel = pinnedLabel + 's'
+    menuItems.push({
+      label: pinnedLabel,
+      icon: 'push_pin',
+      command: () => handlePinProjects(sel, !allPinned),
+    })
+
+    // if not on project manager page
+    if (!isProjectManager) {
+      menuItems.push({
+        label: 'Manage Project',
+        icon: 'settings_applications',
+        command: () => {
+          closeContextMenu()
+          navigate(`/manageProjects?project=${sel[0]}`)
         },
-      ]
-
-      // if not on project manager page
-      if (!isProjectManager) {
-        menuItems.push({
-          label: 'Manage Project',
-          icon: 'settings_applications',
-          command: () => {
-            closeContextMenu()
-            navigate(`/manageProjects?project=${sel[0]}`)
-          },
-        })
-      }
-
-      const managerMenuItems = [
-        {
-          label: 'Create Project',
-          icon: 'create_new_folder',
-          command: onNewProject,
-        },
-      ]
-
-      const selObject = data.find((project) => project?.name === sel[0])
-      const active = selObject?.active
-
-      // show deactivate button on active projects and activate on inactive projects
-      if (onActivateProject) {
-        managerMenuItems.push({
-          label: active ? 'Deactivate Project' : 'Activate Project',
-          icon: active ? 'archive' : 'unarchive',
-          command: () => onActivateProject(sel[0], !active),
-        })
-      }
-
-      // only show delete button on non-active projects
-      const disableDelete = active || !onDeleteProject || !selObject
-
-      managerMenuItems.push({
-        label: disableDelete ? 'Deactivate to Delete' : 'Delete Project',
-        icon: 'delete',
-        command: () => onDeleteProject(sel[0]),
-        danger: true,
-        disabled: disableDelete,
       })
+    }
 
-      if (isProjectManager) menuItems.push(...managerMenuItems)
+    const managerMenuItems = [
+      {
+        label: 'Create Project',
+        icon: 'create_new_folder',
+        command: onNewProject,
+      },
+    ]
 
-      return menuItems
-    },
-    [data, onNewProject, onDeleteProject, onRowClick, isProjectManager],
-  )
+    const selObject = projects.find((project) => project?.name === sel[0])
+    const active = selObject?.active
+
+    // show deactivate button on active projects and activate on inactive projects
+    if (onActivateProject) {
+      managerMenuItems.push({
+        label: active ? 'Deactivate Project' : 'Activate Project',
+        icon: active ? 'archive' : 'unarchive',
+        command: () => onActivateProject(sel[0], !active),
+      })
+    }
+
+    // only show delete button on non-active projects
+    const disableDelete = active || !onDeleteProject || !selObject
+
+    managerMenuItems.push({
+      label: disableDelete ? 'Deactivate to Delete' : 'Delete Project',
+      icon: 'delete',
+      command: () => onDeleteProject(sel[0]),
+      danger: true,
+      disabled: disableDelete,
+    })
+
+    if (isProjectManager) menuItems.push(...managerMenuItems)
+
+    return menuItems
+  }
 
   // create the ref and model
   const [tableContextMenuShow, closeContextMenu] = useCreateContext([])
@@ -291,13 +361,9 @@ const ProjectList = ({
   const loadingData = useMemo(() => {
     return Array.from({ length: 10 }, (_, i) => ({
       key: i,
-      data: {},
+      projects: {},
     }))
   }, [])
-
-  if (isLoading) {
-    projectList = loadingData
-  }
 
   const sectionStyle = {
     ...styleSection,
@@ -307,7 +373,11 @@ const ProjectList = ({
   }
 
   return (
-    <Section style={sectionStyle} className={className} wrap={wrap}>
+    <Section
+      style={sectionStyle}
+      className={classNames('project-list-section', className, { collapsed })}
+      wrap={wrap}
+    >
       {onSelectAll && (
         <Button
           label={!collapsed && 'Select all projects'}
@@ -327,8 +397,15 @@ const ProjectList = ({
         </StyledAddButton>
       )}
       <TablePanel>
+        {isCollapsible && (
+          <CollapseButton
+            onClick={() => setCollapsed(!collapsed)}
+            isOpen={!collapsed}
+            side="left"
+          />
+        )}
         <DataTable
-          value={projectList}
+          value={isLoading ? loadingData : projectList}
           scrollable="true"
           scrollHeight="flex"
           selectionMode={multiselect ? 'multiple' : 'single'}
@@ -338,13 +415,13 @@ const ProjectList = ({
           selection={selectionObj}
           onSelectionChange={onSelect && onSelectionChange}
           onRowClick={onRowClick}
-          onRowDoubleClick={(e) => navigate(`/projects/${e.data.name}/browser`)}
+          onRowDoubleClick={(e) => navigate(`/projects/${e.projects.name}/browser`)}
           onContextMenu={onContextMenu}
-          className={`${isLoading ? 'table-loading ' : ''}project-list${
-            collapsed ? ' collapsed' : ''
-          }
-          ${isCollapsible ? ' collapsible' : ''}
-          `}
+          className={classNames('project-list', {
+            'table-loading': isLoading,
+            collapsed: collapsed,
+            collapsible: isCollapsible,
+          })}
           style={{
             maxWidth: 'unset',
           }}
@@ -352,19 +429,7 @@ const ProjectList = ({
         >
           <Column
             field="name"
-            header={
-              <>
-                <span className="title">Project</span>
-                {isCollapsible && (
-                  <CollapseButton
-                    onClick={() => setCollapsed(!collapsed)}
-                    isOpen={!collapsed}
-                    side="left"
-                    // style={{ position: 'absolute', right: 4, top: 4 }}
-                  />
-                )}
-              </>
-            }
+            header="Projects"
             body={(rowData) => (
               <StyledProjectName
                 $isOpen={!collapsed}
@@ -376,7 +441,15 @@ const ProjectList = ({
             )}
             style={{ minWidth: 150, ...style }}
           />
-          {!hideCode && <Column field="code" header="Code" style={{ maxWidth: 80 }} />}
+          {!hideCode && !collapsed && (
+            <Column field="code" header="Code" style={{ maxWidth: 80 }} />
+          )}
+          {!collapsed && (
+            <Column
+              field="pinned"
+              body={(rowData) => (rowData.pinned ? <StyledPin icon="push_pin" /> : null)}
+            />
+          )}
         </DataTable>
       </TablePanel>
     </Section>
