@@ -55,9 +55,9 @@ const useTransformActivities = (activities = [], projectInfo = {}, entityType) =
       if (!validA && !validB) {
         return 0 // Both dates are invalid, keep original order
       } else if (!validA) {
-        return -1 // Only dateA is invalid, it comes first
+        return 1 // Only dateA is invalid, it comes first
       } else if (!validB) {
-        return 1 // Only dateB is invalid, dateA comes first
+        return -1 // Only dateB is invalid, dateA comes first
       }
 
       // If both dates are valid, compare them normally
