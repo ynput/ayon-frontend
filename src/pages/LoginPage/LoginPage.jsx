@@ -112,7 +112,11 @@ const LoginPage = ({ isFirstTime }) => {
   const handleSubmit = (e) => {
     e.preventDefault()
 
-    doLogin()
+    if (!(name && password)) {
+      toast.error('Please enter username and password to login')
+    } else {
+      doLogin()
+    }
   }
 
   if (isLoading || isLoadingInfo) return isFirstTime ? null : <LoadingPage />
