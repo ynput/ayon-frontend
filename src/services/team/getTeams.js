@@ -1,6 +1,6 @@
 import api from '@api'
 
-const getTeams = api.rest.injectEndpoints({
+const getTeams = api.injectEndpoints({
   endpoints: (build) => ({
     getTeams: build.query({
       query: ({ projectName, showMembers = true }) => ({

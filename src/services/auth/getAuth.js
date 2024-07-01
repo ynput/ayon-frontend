@@ -2,7 +2,7 @@ import api from '@api'
 import { onClearDashboard } from '@state/dashboard'
 import { logout } from '@state/user'
 
-const getAuth = api.rest.injectEndpoints({
+const getAuth = api.injectEndpoints({
   endpoints: (build) => ({
     getInfo: build.query({
       query: () => ({
@@ -19,7 +19,7 @@ const getAuth = api.rest.injectEndpoints({
       onCacheEntryAdded: async (arg, { dispatch }) => {
         dispatch(logout())
         // reset global state
-        dispatch(api.rest.util.resetApiState())
+        dispatch(api.util.resetApiState())
         // remove some local storage items
         localStorage.removeItem('projectMenu-pinned')
         localStorage.removeItem('dashboard-tasks-filter')

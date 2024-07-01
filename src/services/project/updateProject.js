@@ -1,6 +1,6 @@
 import api from '@api'
 
-const updateProject = api.rest.injectEndpoints({
+const updateProject = api.injectEndpoints({
   endpoints: (build) => ({
     createProject: build.mutation({
       query: ({ name, code, anatomy, library }) => ({

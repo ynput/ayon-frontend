@@ -44,7 +44,7 @@ const buildActivityQuery = (entities = [], args, name) => {
   return query
 }
 
-const getProjectDashboard = api.rest.injectEndpoints({
+const getProjectDashboard = api.injectEndpoints({
   endpoints: (build) => ({
     getProjectDashboard: build.query({
       query: ({ projectName, panel }) => ({

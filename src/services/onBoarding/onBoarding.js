@@ -16,7 +16,7 @@ query InstallEvents($ids: [String!]!) {
 }
 `
 
-const onBoarding = api.rest.injectEndpoints({
+const onBoarding = api.injectEndpoints({
   endpoints: (build) => ({
     initializeUser: build.mutation({
       query: (body) => ({

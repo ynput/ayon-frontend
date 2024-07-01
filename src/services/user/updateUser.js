@@ -1,7 +1,7 @@
 import { updateUserPreferences } from '@/features/user'
 import api from '@api'
 
-const updateUser = api.rest.injectEndpoints({
+const updateUser = api.injectEndpoints({
   endpoints: (build) => ({
     updateUser: build.mutation({
       query: ({ name, patch }) => ({
@@ -21,7 +21,7 @@ const updateUser = api.rest.injectEndpoints({
       queryFn: async (updates, { dispatch }) => {
         const results = await Promise.all(
           updates.map(({ name, patch }) => {
-            return dispatch(api.rest.endpoints.updateUser.initiate({ name, patch }))
+            return dispatch(api.endpoints.updateUser.initiate({ name, patch }))
           }),
         )
         console.log(results)

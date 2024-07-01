@@ -121,7 +121,7 @@ export const SocketProvider = (props) => {
       if (serverRestartingVisible) {
         setServerRestartingVisible(false)
         // clear ayonApi
-        dispatch(api.rest.util.resetApiState())
+        dispatch(api.util.resetApiState())
       }
       getWebSocket().onmessage = onMessage
       subscribe()

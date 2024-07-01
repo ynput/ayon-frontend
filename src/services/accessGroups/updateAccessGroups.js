@@ -1,6 +1,6 @@
 import api from '@api'
 
-const setAccessGroups = api.rest.injectEndpoints({
+const setAccessGroups = api.injectEndpoints({
   endpoints: (build) => ({
     createAccessGroup: build.mutation({
       query: ({ name }) => ({

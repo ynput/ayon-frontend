@@ -62,7 +62,7 @@ const LoginPage = ({ isFirstTime }) => {
             toast.info(data.detail)
             dispatch(login({ user: data.user, accessToken: data.token }))
             // invalidate all rtk queries cache
-            dispatch(api.rest.util.resetApiState())
+            dispatch(api.util.resetApiState())
           } else {
             toast.error('Unable to login using SSO')
           }
@@ -101,7 +101,7 @@ const LoginPage = ({ isFirstTime }) => {
             }),
           )
           // invalidate all rtk queries cache
-          dispatch(api.rest.util.resetApiState())
+          dispatch(api.util.resetApiState())
         }
       })
       .catch((err) => {

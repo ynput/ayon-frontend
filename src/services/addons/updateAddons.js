@@ -1,7 +1,7 @@
 import api from '@api'
 import queryUpload from '../queryUpload'
 
-const updateAddons = api.rest.injectEndpoints({
+const updateAddons = api.injectEndpoints({
   endpoints: (build) => ({
     uploadAddons: build.mutation({
       queryFn: (arg, api) =>

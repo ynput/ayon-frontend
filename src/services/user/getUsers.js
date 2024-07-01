@@ -89,7 +89,7 @@ const buildUsersQuery = (QUERY) => {
   return QUERY.replace('#ATTRS#', f_attribs)
 }
 
-const getUsers = api.rest.injectEndpoints({
+const getUsers = api.injectEndpoints({
   endpoints: (build) => ({
     getUsersList: build.query({
       query: () => ({

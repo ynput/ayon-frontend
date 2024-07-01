@@ -26,7 +26,7 @@ query TasksByFolder($projectName: String!, $folderIds: [String!]!) {
 }
 `
 
-const getTasks = api.rest.injectEndpoints({
+const getTasks = api.injectEndpoints({
   endpoints: (build) => ({
     getTasks: build.query({
       query: ({ projectName, folderIds }) => ({

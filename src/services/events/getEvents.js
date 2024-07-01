@@ -100,7 +100,7 @@ const patchNewEvents = (type, events, draft) => {
   }
 }
 
-const getEvents = api.rest.injectEndpoints({
+const getEvents = api.injectEndpoints({
   endpoints: (build) => ({
     getEvents: build.query({
       query: ({ last = 100, includeLogs = true, filter = '' }) => ({

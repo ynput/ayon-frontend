@@ -1,6 +1,6 @@
 import api from '@api'
 
-const getAddons = api.rest.injectEndpoints({
+const getAddons = api.injectEndpoints({
   endpoints: (build) => ({
     //  Return a list of all addons installed on the server
 

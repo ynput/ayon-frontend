@@ -1,6 +1,6 @@
 import api from '@api'
 
-const getAttributes = api.rest.injectEndpoints({
+const getAttributes = api.injectEndpoints({
   endpoints: (build) => ({
     getAttributes: build.query({
       query: () => ({

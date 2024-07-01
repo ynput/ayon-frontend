@@ -211,7 +211,7 @@ const AddonUpload = ({ onClose, type = 'addon', onInstall, dropOnly, ...props })
       onInstall(type)
 
       // update addon list
-      dispatch(api.rest.util.invalidateTags(['bundleList', 'addonList']))
+      dispatch(api.util.invalidateTags(['bundleList', 'addonList']))
     } catch (error) {
       console.log(error)
       setIsUploading(false)

@@ -187,10 +187,10 @@ const Products = () => {
 
       // invalidate 'version' query (specific version query)
       // we do this so that when we select this version again, it doesn't use stale version query
-      dispatch(api.rest.util.invalidateTags(ids.map((id) => ({ type: 'version', id }))))
+      dispatch(api.util.invalidateTags(ids.map((id) => ({ type: 'version', id }))))
 
       // invalidate 'detail' query (details panel)
-      // dispatch(api.rest.util.invalidateTags(ids.map((id) => ({ type: 'detail', id }))))
+      // dispatch(api.util.invalidateTags(ids.map((id) => ({ type: 'detail', id }))))
     } catch (error) {
       console.error(error)
 

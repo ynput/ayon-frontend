@@ -1,6 +1,6 @@
 import api from '@api'
 
-const getMentions = api.rest.injectEndpoints({
+const getMentions = api.injectEndpoints({
   endpoints: (build) => ({
     getMentionSuggestions: build.query({
       query: ({ projectName, entityIds, entityType }) => ({

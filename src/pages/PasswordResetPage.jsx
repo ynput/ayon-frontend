@@ -94,7 +94,7 @@ const ResetPage = ({ token }) => {
       .then((response) => {
         const data = response.data
         dispatch(login({ user: data.user, accessToken: data.token }))
-        dispatch(api.rest.util.resetApiState())
+        dispatch(api.util.resetApiState())
         toast.success('Password reset successfully')
         window.history.replaceState({}, '', '/')
       })

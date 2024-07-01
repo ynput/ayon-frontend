@@ -7,7 +7,7 @@ const getSiteRootsQuery = (siteId, platform) => {
   return query.toString() ? `?${query.toString()}` : ''
 }
 
-const customRoots = api.rest.injectEndpoints({
+const customRoots = api.injectEndpoints({
   endpoints: (build) => ({
     getSiteRoots: build.query({
       query: ({ projectName, siteId, platform }) => ({
@@ -41,13 +41,9 @@ const customRoots = api.rest.injectEndpoints({
 
       async onQueryStarted({ projectName, siteId, data }, { dispatch, queryFulfilled }) {
         const putResult = dispatch(
-          api.rest.util.updateQueryData(
-            'getCustomRoots',
-            { projectName, siteId, data },
-            (draft) => {
-              Object.assign(draft, { ...data, [siteId]: data })
-            },
-          ),
+          api.util.updateQueryData('getCustomRoots', { projectName, siteId, data }, (draft) => {
+            Object.assign(draft, { ...data, [siteId]: data })
+          }),
         )
         try {
           await queryFulfilled

@@ -173,7 +173,7 @@ query GetProductsVersions($projectName: String!, $ids: [String!]!) {
 ${PRODUCT_VERSION_FRAGMENT}
 `
 
-const getProduct = api.rest.injectEndpoints({
+const getProduct = api.injectEndpoints({
   endpoints: (build) => ({
     getProductList: build.query({
       query: ({ projectName, folderIds }) => ({

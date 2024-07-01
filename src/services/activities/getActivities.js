@@ -5,7 +5,7 @@ import { transformActivityData, transformTooltipData } from './activitiesHelpers
 // import PubSub from '@/pubsub'
 import { ACTIVITIES, ACTIVITIES_BY_ACTIVITY, ENTITY_TOOLTIP } from './activityQueries'
 
-const getActivities = api.rest.injectEndpoints({
+const getActivities = api.injectEndpoints({
   endpoints: (build) => ({
     // get multiple entities activities
     getActivities: build.query({

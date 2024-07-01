@@ -1,6 +1,6 @@
 import api from '@api'
 
-const getBundles = api.rest.injectEndpoints({
+const getBundles = api.injectEndpoints({
   endpoints: (build) => ({
     getBundleList: build.query({
       query: ({ archived }) => ({

@@ -1,6 +1,6 @@
 import api from '@api'
 
-const secrets = api.rest.injectEndpoints({
+const secrets = api.injectEndpoints({
   endpoints: (build) => ({
     getSecrets: build.query({
       query: () => ({
@@ -23,7 +23,7 @@ const secrets = api.rest.injectEndpoints({
 
       async onQueryStarted({ name, value }, { dispatch, queryFulfilled }) {
         const putResult = dispatch(
-          api.rest.util.updateQueryData('getSecrets', {}, (draft) => {
+          api.util.updateQueryData('getSecrets', {}, (draft) => {
             Object.assign(draft, { [name]: value })
           }),
         )

@@ -36,7 +36,7 @@ const transformEditorData = (project) => {
   return nodes
 }
 
-const getEditor = api.rest.injectEndpoints({
+const getEditor = api.injectEndpoints({
   endpoints: (build) => ({
     getExpandedBranch: build.query({
       query: ({ projectName, parentId }) => ({

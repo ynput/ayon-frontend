@@ -36,7 +36,7 @@ const useCommentMutations = ({
     const uniqueEntityIds = [...new Set(entityIds)]
     const tags = uniqueEntityIds.map((id) => ({ type: 'entityActivities', id }))
 
-    dispatch(api.rest.util.invalidateTags(tags))
+    dispatch(api.util.invalidateTags(tags))
   }
 
   const createPatch = ({ entityId, newId, subTitle, value, files = [] }) => {
@@ -91,7 +91,7 @@ const useCommentMutations = ({
 
         const argsForCachingMatching = { entityIds: [ref.id], activityTypes, projectName, filter }
         dispatch(
-          api.rest.util.updateQueryData('getActivities', argsForCachingMatching, (draft) => {
+          api.util.updateQueryData('getActivities', argsForCachingMatching, (draft) => {
             if (isDelete) {
               // delete the comment from the list
               draft.activities = draft.activities.filter((activity) => activity.body !== value)

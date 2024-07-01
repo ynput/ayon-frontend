@@ -1,7 +1,7 @@
 import PubSub from '../pubsub'
 import api from '@api'
 
-const restartServer = api.rest.injectEndpoints({
+const restartServer = api.injectEndpoints({
   endpoints: (build) => ({
     restartServer: build.mutation({
       query: () => ({
@@ -52,7 +52,7 @@ const restartServer = api.rest.injectEndpoints({
       }),
       async onQueryStarted({ required, reason }, { dispatch, queryFulfilled }) {
         const putResult = dispatch(
-          api.rest.util.updateQueryData('getRestart', {}, (draft) => {
+          api.util.updateQueryData('getRestart', {}, (draft) => {
             Object.assign(draft, { required, reason })
           }),
         )

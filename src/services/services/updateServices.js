@@ -1,6 +1,6 @@
 import api from '@api'
 
-const updateServices = api.rest.injectEndpoints({
+const updateServices = api.injectEndpoints({
   endpoints: (build) => ({
     createService: build.mutation({
       query: ({ serviceName, data }) => ({

@@ -123,7 +123,7 @@ export const formatEntityTiles = (project, entities) => {
   return allEntities
 }
 
-const getEntity = api.rest.injectEndpoints({
+const getEntity = api.injectEndpoints({
   endpoints: (build) => ({
     getEventTile: build.query({
       query: ({ projectName, id, type }) => ({

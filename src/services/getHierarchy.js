@@ -1,6 +1,6 @@
 import api from '@api'
 
-const getHierarchy = api.rest.injectEndpoints({
+const getHierarchy = api.injectEndpoints({
   endpoints: (build) => ({
     getHierarchy: build.query({
       query: ({ projectName }) => ({

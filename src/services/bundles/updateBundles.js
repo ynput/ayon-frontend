@@ -1,6 +1,6 @@
 import api from '@api'
 
-const updateBundles = api.rest.injectEndpoints({
+const updateBundles = api.injectEndpoints({
   endpoints: (build) => ({
     deleteBundle: build.mutation({
       query: ({ name }) => ({
@@ -11,7 +11,7 @@ const updateBundles = api.rest.injectEndpoints({
       // eslint-disable-next-line no-unused-vars
       onQueryStarted: async ({ name, archived = true }, { dispatch, queryFulfilled }) => {
         const patchResult = dispatch(
-          api.rest.util.updateQueryData('getBundleList', { archived }, (draft) => {
+          api.util.updateQueryData('getBundleList', { archived }, (draft) => {
             const bundleIndex = draft.findIndex((bundle) => bundle.name === name)
             draft.splice(bundleIndex, 1)
           }),
@@ -58,7 +58,7 @@ const updateBundles = api.rest.injectEndpoints({
       // TURNED OFF: having the lag is good user feedback
       // onQueryStarted: async ({ archived = false, data }, { dispatch, queryFulfilled }) => {
       //   const patchResult = dispatch(
-      //     api.rest.util.updateQueryData('getBundleList', { archived }, (draft) => {
+      //     api.util.updateQueryData('getBundleList', { archived }, (draft) => {
       //       draft.push(data)
       //     }),
       //   )
@@ -86,7 +86,7 @@ const updateBundles = api.rest.injectEndpoints({
       // eslint-disable-next-line no-unused-vars
       onQueryStarted: async ({ name, archived = true, patch }, { dispatch, queryFulfilled }) => {
         const patchResult = dispatch(
-          api.rest.util.updateQueryData('getBundleList', { archived }, (draft) => {
+          api.util.updateQueryData('getBundleList', { archived }, (draft) => {
             if (!patch) return
             const bundleIndex = draft.findIndex((bundle) => bundle.name === name)
             if (bundleIndex === -1) throw new Error('bundle not found')

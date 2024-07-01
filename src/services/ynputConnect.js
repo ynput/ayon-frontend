@@ -1,6 +1,6 @@
 import api from '@api'
 
-const ynputConnect = api.rest.injectEndpoints({
+const ynputConnect = api.injectEndpoints({
   endpoints: (build) => ({
     getYnputConnections: build.query({
       query: () => ({

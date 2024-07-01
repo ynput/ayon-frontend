@@ -8,7 +8,7 @@ const usePatchProductsListWithVersions = ({ projectName }) => {
   const patchProductsListWithVersions = (versions) => {
     try {
       return dispatch(
-        api.rest.util.updateQueryData('getProductList', { projectName, folderIds }, (draft) => {
+        api.util.updateQueryData('getProductList', { projectName, folderIds }, (draft) => {
           console.log('patching getProductList:', versions)
           versions.forEach((version) => {
             // find product in product list

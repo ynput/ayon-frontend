@@ -19,7 +19,7 @@ const apiSuffix = (projectName, siteId, variant, asVersion) => {
   return qs ? `${suffix}?${qs}` : suffix
 }
 
-const addonSettings = api.rest.injectEndpoints({
+const addonSettings = api.injectEndpoints({
   endpoints: (build) => ({
     getAddonSettingsList: build.query({
       query: ({ variant, projectName, siteId }) => {

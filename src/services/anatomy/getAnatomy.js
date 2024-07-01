@@ -17,7 +17,7 @@ const transformAnatomyPresets = (data) => {
   return [primaryPreset, ...presets]
 }
 
-const getAnatomy = api.rest.injectEndpoints({
+const getAnatomy = api.injectEndpoints({
   endpoints: (build) => ({
     getAnatomySchema: build.query({
       query: () => ({

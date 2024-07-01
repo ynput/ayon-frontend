@@ -34,7 +34,7 @@ const createProjectQuery = (attribs: $Any, fields: $Any) => {
   `
 }
 
-const getProject = api.rest.injectEndpoints({
+const getProject = api.injectEndpoints({
   endpoints: (build) => ({
     getProjectAttribs: build.query({
       query: ({ projectName, attribs = [], fields = [] }) => ({
@@ -55,7 +55,7 @@ const getProject = api.rest.injectEndpoints({
 import { $Any } from '@/types'
 
 // TODO: sort out the types
-const enhancedRest = api.rest.enhanceEndpoints({
+const enhancedRest = api.enhanceEndpoints({
   endpoints: {
     getProject: {
       transformErrorResponse: (error: $Any) => error.data.detail || `Error ${error.status}`,

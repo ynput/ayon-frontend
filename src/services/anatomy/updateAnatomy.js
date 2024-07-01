@@ -1,6 +1,6 @@
 import api from '@api'
 
-const getAnatomy = api.rest.injectEndpoints({
+const getAnatomy = api.injectEndpoints({
   endpoints: (build) => ({
     updatePreset: build.mutation({
       query: ({ name, data }) => ({

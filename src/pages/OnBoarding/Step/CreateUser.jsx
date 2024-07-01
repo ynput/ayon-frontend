@@ -89,7 +89,7 @@ export const CreateUser = ({ Header, Footer, userForm, setUserForm, userFormFiel
         }),
       )
       // invalidate all rtk queries cache
-      dispatch(api.rest.util.resetApiState())
+      dispatch(api.util.resetApiState())
     } catch (error) {
       console.log(error)
       setErrorMessage(error.data?.detail || 'Unable to create admin')

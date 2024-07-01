@@ -46,7 +46,7 @@ const patchKanban = (
   return [patchResult, kanbanPatched]
 }
 
-const updateEntity = api.rest.injectEndpoints({
+const updateEntity = api.injectEndpoints({
   endpoints: (build) => ({
     updateEntity: build.mutation({
       query: ({ projectName, entityId, data, entityType }) => ({
@@ -180,7 +180,7 @@ const updateEntity = api.rest.injectEndpoints({
 
         // patch any entity details panels in dashboard
         let entityDetailsResult = dispatch(
-          api.rest.util.updateQueryData(
+          api.util.updateQueryData(
             'getEntityDetailsPanel',
             { entityId, entityType, projectName },
             (draft) => {
@@ -218,7 +218,7 @@ const updateEntity = api.rest.injectEndpoints({
           const promises = []
           for (const { projectName, data, id, currentAssignees = [] } of operations) {
             const promise = dispatch(
-              api.rest.endpoints.updateEntity.initiate({
+              api.endpoints.updateEntity.initiate({
                 projectName: projectName,
                 entityId: id,
                 data,
@@ -231,9 +231,7 @@ const updateEntity = api.rest.injectEndpoints({
 
           // invalidate any entities queries (multi entity selection) to force refetch
           // but because we just updated the getEntityDetails cache it should be instant
-          dispatch(
-            api.rest.util.invalidateTags(operations.map((o) => ({ type: 'entities', id: o.id }))),
-          )
+          dispatch(api.util.invalidateTags(operations.map((o) => ({ type: 'entities', id: o.id }))))
 
           // update the getEntitiesDetails query with new data
           // this is the current details panel we are looking at right now
@@ -243,7 +241,7 @@ const updateEntity = api.rest.injectEndpoints({
             projectName: o.projectName,
           }))
           dispatch(
-            api.rest.util.updateQueryData(
+            api.util.updateQueryData(
               'getEntitiesDetailsPanel',
               { entities: entitiesArg, entityType },
               (draft) => {
@@ -271,9 +269,7 @@ const updateEntity = api.rest.injectEndpoints({
           const results = await Promise.allSettled(promises)
           if (results.some((result) => result.value?.error)) {
             dispatch(
-              api.rest.util.invalidateTags(
-                operations.map((o) => ({ type: 'kanBanTask', id: o.id })),
-              ),
+              api.util.invalidateTags(operations.map((o) => ({ type: 'kanBanTask', id: o.id }))),
             )
           }
 
@@ -296,7 +292,7 @@ const updateEntity = api.rest.injectEndpoints({
           // })
 
           if (activityTags.length) {
-            dispatch(api.rest.util.invalidateTags(activityTags))
+            dispatch(api.util.invalidateTags(activityTags))
           }
 
           return { data: operations }

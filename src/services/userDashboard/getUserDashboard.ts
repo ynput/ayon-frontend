@@ -18,8 +18,8 @@ export type GetKanbanProjectUsersResponse = KanbanProjectUserNode[]
 import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
 import getUserProjectsAccess from './getUserProjectsAccess'
 import { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
-type Definitions = DefinitionsFromApi<typeof api.graphql>
-type TagTypes = TagTypesFromApi<typeof api.graphql>
+type Definitions = DefinitionsFromApi<typeof api>
+type TagTypes = TagTypesFromApi<typeof api>
 // update the definitions to include the new types
 type UpdatedDefinitions = Omit<
   Definitions,
@@ -79,10 +79,7 @@ export const getKanbanTasks = async (
   return response.data
 }
 
-export const enhancedDashboardGraphqlApi = api.graphql.enhanceEndpoints<
-  TagTypes,
-  UpdatedDefinitions
->({
+export const enhancedDashboardGraphqlApi = api.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
   endpoints: {
     GetKanban: {
       transformResponse: transformKanban,
@@ -221,7 +218,7 @@ type GetProjectsInfoParams = {
 
 type GetProjectsInfoResponse = $Any
 
-const injectedDashboardRestApi = api.rest.injectEndpoints({
+const injectedDashboardRestApi = api.injectEndpoints({
   endpoints: (build) => ({
     getProjectsInfo: build.query<GetProjectsInfoResponse, GetProjectsInfoParams>({
       async queryFn({ projects = [] }, { dispatch }) {
@@ -232,7 +229,7 @@ const injectedDashboardRestApi = api.rest.injectEndpoints({
             // hopefully this will be cached
             // it also allows for different combination of projects but still use the cache
             const response = await dispatch(
-              api.rest.endpoints.getProjectAnatomy.initiate(
+              api.endpoints.getProjectAnatomy.initiate(
                 { projectName: project },
                 { forceRefetch: false },
               ),

@@ -1,6 +1,6 @@
 import api from '@api'
 
-const updateTeams = api.rest.injectEndpoints({
+const updateTeams = api.injectEndpoints({
   endpoints: (build) => ({
     updateTeam: build.mutation({
       query: ({ projectName, teamName, team }) => ({
@@ -17,7 +17,7 @@ const updateTeams = api.rest.injectEndpoints({
         if (!optimisticUpdate) return
 
         const patchResult = dispatch(
-          api.rest.util.updateQueryData('getTeams', { projectName, showMembers: true }, (draft) => {
+          api.util.updateQueryData('getTeams', { projectName, showMembers: true }, (draft) => {
             const notInDraft = draft.every((t) => t.name !== teamName)
 
             if (notInDraft) {
@@ -44,7 +44,7 @@ const updateTeams = api.rest.injectEndpoints({
            */
 
           // trigger invalidate
-          dispatch(api.rest.util.invalidateTags(['teams']))
+          dispatch(api.util.invalidateTags(['teams']))
         }
       },
     }),
@@ -56,7 +56,7 @@ const updateTeams = api.rest.injectEndpoints({
       invalidatesTags: () => ['teams'],
       async onQueryStarted({ projectName, teamName }, { dispatch, queryFulfilled }) {
         const patchResult = dispatch(
-          api.rest.util.updateQueryData('getTeams', { projectName, showMembers: true }, (draft) => {
+          api.util.updateQueryData('getTeams', { projectName, showMembers: true }, (draft) => {
             const index = draft.findIndex((t) => t.name === teamName)
             if (index > -1) {
               draft.splice(index, 1)
@@ -74,7 +74,7 @@ const updateTeams = api.rest.injectEndpoints({
            */
 
           // trigger invalidate
-          dispatch(api.rest.util.invalidateTags(['teams']))
+          dispatch(api.util.invalidateTags(['teams']))
         }
       },
     }),
@@ -104,7 +104,7 @@ const updateTeams = api.rest.injectEndpoints({
         if (noOpt) return
 
         const patchResult = dispatch(
-          api.rest.util.updateQueryData('getTeams', { projectName, showMembers: true }, (draft) => {
+          api.util.updateQueryData('getTeams', { projectName, showMembers: true }, (draft) => {
             teams.forEach((team) => {
               const notInDraft = draft.every((t) => t.name !== team.name)
 
@@ -141,7 +141,7 @@ const updateTeams = api.rest.injectEndpoints({
            */
 
           // trigger invalidate
-          dispatch(api.rest.util.invalidateTags(['teams']))
+          dispatch(api.util.invalidateTags(['teams']))
         }
       },
     }),

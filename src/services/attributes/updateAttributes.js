@@ -1,6 +1,6 @@
 import api from '@api'
 
-const updateAttributes = api.rest.injectEndpoints({
+const updateAttributes = api.injectEndpoints({
   endpoints: (build) => ({
     updateAttributes: build.mutation({
       query: ({ attributes, deleteMissing }) => ({

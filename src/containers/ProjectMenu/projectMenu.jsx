@@ -207,9 +207,7 @@ const ProjectMenu = ({ isOpen, onHide }) => {
     // reset editor
     dispatch(onProjectChange(projectName))
     // remove editor query caches
-    dispatch(
-      api.rest.util.invalidateTags(['branch', 'workfile', 'hierarchy', 'project', 'product']),
-    )
+    dispatch(api.util.invalidateTags(['branch', 'workfile', 'hierarchy', 'project', 'product']))
     // reset uri
     dispatch(setUri(`ayon+entity://${projectName}`))
     // set dashboard projects

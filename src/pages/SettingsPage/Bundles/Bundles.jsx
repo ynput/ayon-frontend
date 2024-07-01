@@ -252,7 +252,7 @@ const Bundles = () => {
         try {
           const patch = { ...oldBundle, [statusKey]: false }
           patchResult = dispatch(
-            api.rest.util.updateQueryData('getBundleList', { archived: true }, (draft) => {
+            api.util.updateQueryData('getBundleList', { archived: true }, (draft) => {
               const bundleIndex = draft.findIndex((bundle) => bundle.name === oldBundle.name)
               draft[bundleIndex] = patch
             }),

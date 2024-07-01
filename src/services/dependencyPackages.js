@@ -1,7 +1,7 @@
 import api from '@api'
 import queryUpload from './queryUpload'
 
-const getDependencyPackages = api.rest.injectEndpoints({
+const getDependencyPackages = api.injectEndpoints({
   endpoints: (build) => ({
     getDependencyPackageList: build.query({
       query: () => ({

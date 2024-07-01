@@ -6,7 +6,7 @@ import {
 } from '../userDashboard/userDashboardQueries'
 import PubSub from '@/pubsub'
 
-const getEntityPanel = api.rest.injectEndpoints({
+const getEntityPanel = api.injectEndpoints({
   endpoints: (build) => ({
     // TODO, move to separate file getEntityPanel
     getEntityDetailsPanel: build.query({
@@ -46,7 +46,7 @@ const getEntityPanel = api.rest.injectEndpoints({
         try {
           const promises = entities.map((entity) =>
             dispatch(
-              api.rest.endpoints.getEntityDetailsPanel.initiate(
+              api.endpoints.getEntityDetailsPanel.initiate(
                 {
                   projectName: entity.projectName,
                   entityId: entity.id,
@@ -94,7 +94,7 @@ const getEntityPanel = api.rest.injectEndpoints({
             try {
               // get the new data for the entity
               const res = await dispatch(
-                api.rest.endpoints.getEntityDetailsPanel.initiate(
+                api.endpoints.getEntityDetailsPanel.initiate(
                   {
                     projectName: matchedEntity.projectName,
                     entityId: matchedEntity.id,

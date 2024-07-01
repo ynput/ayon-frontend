@@ -129,7 +129,7 @@ const EventsPage = () => {
       }
 
       dispatch(
-        api.rest.util.updateQueryData('getEventsWithLogs', {}, (draft) => {
+        api.util.updateQueryData('getEventsWithLogs', {}, (draft) => {
           patchOldEvents('events', data.events, draft, false)
           patchOldEvents('logs', data.logs, draft, false)
           draft.hasPreviousPage = data.hasPreviousPage
@@ -158,7 +158,7 @@ const EventsPage = () => {
       })
 
       dispatch(
-        api.rest.util.updateQueryData('getEventsWithLogs', {}, (draft) => {
+        api.util.updateQueryData('getEventsWithLogs', {}, (draft) => {
           patchOldEvents('events', data.events, draft, true)
           patchOldEvents('logs', data.logs, draft, true)
           draft.hasPreviousPage = data.hasPreviousPage

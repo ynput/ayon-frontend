@@ -1,6 +1,6 @@
 import api from '@api'
 
-const siteSettings = api.rest.injectEndpoints({
+const siteSettings = api.injectEndpoints({
   endpoints: (build) => ({
     getSiteSettingsSchema: build.query({
       query: ({ addonName, addonVersion }) => ({
@@ -35,7 +35,7 @@ const siteSettings = api.rest.injectEndpoints({
         { dispatch, queryFulfilled },
       ) {
         const putResult = dispatch(
-          api.rest.util.updateQueryData(
+          api.util.updateQueryData(
             'getSiteSettings',
             { addonName, addonVersion, siteId, data },
             (draft) => {

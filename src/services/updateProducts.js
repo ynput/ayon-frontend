@@ -1,7 +1,7 @@
 import api from '@api'
 import { buildOperations } from './ayon'
 
-const updateProducts = api.rest.injectEndpoints({
+const updateProducts = api.injectEndpoints({
   endpoints: (build) => ({
     updateProducts: build.mutation({
       query: ({ projectName, data, ids }) => ({
@@ -18,7 +18,7 @@ const updateProducts = api.rest.injectEndpoints({
         if (!patches) return
 
         const patchResult = dispatch(
-          api.rest.util.updateQueryData(
+          api.util.updateQueryData(
             'getProductList',
             { projectName, ids: focusedFolders, versionOverrides },
             (draft) => {

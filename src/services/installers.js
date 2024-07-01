@@ -2,7 +2,7 @@ import api from '@api'
 import queryUpload from './queryUpload'
 import { coerce, rcompare } from 'semver'
 
-const getInstallers = api.rest.injectEndpoints({
+const getInstallers = api.injectEndpoints({
   endpoints: (build) => ({
     getInstallerList: build.query({
       query: () => ({

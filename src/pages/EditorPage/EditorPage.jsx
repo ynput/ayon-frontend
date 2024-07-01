@@ -750,7 +750,7 @@ const EditorPage = () => {
     // invalidate these tags ['hierarchy', 'folder', 'task']
     // so that the query will be executed again
     // and the new data will be fetched
-    dispatch(api.rest.util.invalidateTags(['hierarchy', 'folder', 'task']))
+    dispatch(api.util.invalidateTags(['hierarchy', 'folder', 'task']))
 
     // add new branches to redux editor slice
     dispatch(nodesUpdated({ updated: updated, deleted, forcedSave }))

@@ -1,6 +1,6 @@
 import api from '@api'
 
-const updateEditor = api.rest.injectEndpoints({
+const updateEditor = api.injectEndpoints({
   endpoints: (build) => ({
     updateEditor: build.mutation({
       query: ({ projectName, updates = [] }) => ({

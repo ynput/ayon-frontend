@@ -21,7 +21,7 @@ query WorkfilesByTask($projectName: String!, $taskIds: [String!]!) {
 // get workfile by id api
 // `/api/projects/${projectName}/workfiles/${workfileId}`
 
-const getWorkfiles = api.rest.injectEndpoints({
+const getWorkfiles = api.injectEndpoints({
   endpoints: (build) => ({
     getWorkfileList: build.query({
       query: ({ projectName, taskIds }) => ({
