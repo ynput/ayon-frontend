@@ -125,7 +125,8 @@ const ProjectList = ({
   const navigate = useNavigate()
   const tableRef = useRef(null)
   const user = useSelector((state) => state.user)
-  const pinnedProjects = useSelector((state) => state.user?.data?.frontendPreferences?.pinned) || []
+  const pinnedProjects =
+    useSelector((state) => state.user?.data?.frontendPreferences?.pinnedProjects) || []
 
   // by default only show active projects
   const params = { active: true }
@@ -237,7 +238,7 @@ const ProjectList = ({
       // update user preferences
       await updateUserPreferences({
         name: user.name,
-        preferences: { pinned: newPinnedProjects },
+        preferences: { pinnedProjects: newPinnedProjects },
       }).unwrap()
     } catch (error) {
       console.error(error)

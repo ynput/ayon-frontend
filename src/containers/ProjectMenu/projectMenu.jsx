@@ -53,7 +53,8 @@ const ProjectMenu = ({ isOpen, onHide }) => {
   const projectSelected = useSelector((state) => state.project.name)
   const username = useSelector((state) => state.user?.name)
   const isUser = useSelector((state) => state.user?.data?.isUser)
-  const pinnedState = useSelector((state) => state.user?.data?.frontendPreferences?.pinned) || []
+  const pinnedState =
+    useSelector((state) => state.user?.data?.frontendPreferences?.pinnedProjects) || []
   // merge pinned from user and local storage
   const pinned = [...new Set([...pinnedState, ...oldPinned])]
 
@@ -63,10 +64,13 @@ const ProjectMenu = ({ isOpen, onHide }) => {
 
   const [updateUserPreferences] = useUpdateUserPreferencesMutation()
 
-  const updatePinned = async (pinnedData) => {
+  const updatePinned = async (pinnedProjects) => {
     try {
       // update user preferences
-      await updateUserPreferences({ name: username, preferences: { pinned: pinnedData } }).unwrap()
+      await updateUserPreferences({
+        name: username,
+        preferences: { pinnedProjects: pinnedProjects },
+      }).unwrap()
 
       // if local storage had pinned, remove it
       if (oldPinned.length > 0) {
