@@ -112,7 +112,7 @@ const baseGraphqlQuery = graphqlRequestBaseQuery({
 })
 
 // check for 401 and redirect to login
-const baseQuery = fetchBaseQuery({ baseUrl: '/' })
+const baseQuery = fetchBaseQuery({ baseUrl: '/', prepareHeaders: prepareHeaders })
 
 const polymorphBaseQuery = combineBaseQueries(baseQuery, {
   baseQuery: baseGraphqlQuery,
