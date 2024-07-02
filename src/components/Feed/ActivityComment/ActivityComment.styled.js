@@ -115,6 +115,23 @@ export const Body = styled.div`
     }
   }
 
+  blockquote {
+    margin: 0;
+    padding-left: 16px;
+    position: relative;
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background-color: var(--md-sys-color-outline-variant);
+      border-radius: 2px;
+    }
+  }
+
   &.isEditing {
     padding: 0;
     border-radius: var(--border-radius-l);
