@@ -96,7 +96,7 @@ export const Comment = styled.div`
       &[data-list='checked'] {
         margin-left: 8px;
 
-        height: 25px;
+        min-height: 25px;
         .ql-ui {
           /* tick circle */
           margin-right: 12px;

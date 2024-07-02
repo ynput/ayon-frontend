@@ -106,8 +106,7 @@ export const Body = styled.div`
 
     p {
       margin: 0;
-      display: flex;
-      align-items: flex-start;
+      padding-left: 1.5rem;
 
       .reference {
         top: 0px;
