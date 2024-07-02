@@ -28,6 +28,10 @@ export const aTag = (
 ) => {
   const { url, type, id } = sanitizeURL(href)
 
+  // link is broken in some way
+  if (!url && !type && !id) {
+    return children
+  }
   // return regular url
   // if no reference type, return regular link with no href
   if (url || !type || !id) {
