@@ -107,11 +107,6 @@ export const Comment = styled.div`
             position: relative;
           }
         }
-        /* fix cursor too high */
-        br {
-          position: relative;
-          top: 15px;
-        }
       }
 
       &[data-list='checked'] {
