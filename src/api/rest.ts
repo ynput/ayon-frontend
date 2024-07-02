@@ -773,14 +773,14 @@ const injectedRtkApi = api.injectEndpoints({
     deleteProject: build.mutation<DeleteProjectApiResponse, DeleteProjectApiArg>({
       query: (queryArg) => ({ url: `/api/projects/${queryArg.projectName}`, method: 'DELETE' }),
     }),
-    // updateProject: build.mutation<UpdateProjectApiResponse, UpdateProjectApiArg>({
-    //   query: (queryArg) => ({
-    //     url: `/api/projects/${queryArg.projectName}`,
-    //     method: 'PATCH',
-    //     body: queryArg.projectPatchModel,
-    //     headers: { 'x-sender': queryArg['x-sender'] },
-    //   }),
-    // }),
+    updateProject: build.mutation<UpdateProjectApiResponse, UpdateProjectApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}`,
+        method: 'PATCH',
+        body: queryArg.projectPatchModel,
+        headers: { 'x-sender': queryArg['x-sender'] },
+      }),
+    }),
     getProjectStats: build.query<GetProjectStatsApiResponse, GetProjectStatsApiArg>({
       query: (queryArg) => ({ url: `/api/projects/${queryArg.projectName}/stats` }),
     }),
