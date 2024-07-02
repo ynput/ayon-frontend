@@ -30,6 +30,8 @@ const getAuth = api.injectEndpoints({
         localStorage.removeItem('dashboard-tasks-selected')
         // clear dashboard state
         dispatch(onClearDashboard())
+        // redirect to login
+        window.location.href = '/login'
       },
     }),
   }),
