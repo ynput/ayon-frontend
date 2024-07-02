@@ -210,8 +210,9 @@ const Hierarchy = (props) => {
 
   const onSelectionChange = (event) => {
     const selection = Object.keys(event.value)
+    const subTypes = selection.map((id) => hierarchyObjectData[id].folderType)
     // set focused folders and remove any focused tasks
-    dispatch(setFocusedFolders(selection))
+    dispatch(setFocusedFolders({ ids: selection, subTypes: subTypes }))
 
     // for each selected folder, if isLeaf then set expandedFolders
     const newExpandedFolders = {}
@@ -238,7 +239,8 @@ const Hierarchy = (props) => {
 
   const onContextMenuSelectionChange = (event) => {
     if (focusedFolders.includes(event.value)) return
-    dispatch(setFocusedFolders([event.value]))
+    const subType = hierarchyObjectData[event.value].folderType
+    dispatch(setFocusedFolders({ ids: [event.value], subTypes: [subType] }))
   }
 
   const onToggle = (event) => {

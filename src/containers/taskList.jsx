@@ -54,8 +54,15 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
 
       const matchedTasksIds = matchedTasks.map((task) => task.data.id)
       const matchedTasksNames = matchedTasks.map((task) => task.data.name)
+      const matchedTasksSubTypes = matchedTasks.map((task) => task.data.taskType)
 
-      dispatch(setFocusedTasks({ ids: matchedTasksIds, names: matchedTasksNames }))
+      dispatch(
+        setFocusedTasks({
+          ids: matchedTasksIds,
+          names: matchedTasksNames,
+          subTypes: matchedTasksSubTypes,
+        }),
+      )
       // set pairing
       setPairs(matchedTasksIds)
     }
@@ -80,18 +87,17 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
 
     setPairs(taskIds)
 
-    const names = []
+    const names = [],
+      subTypes = []
     for (const tid of taskIds) {
       const task = tasksData.find((t) => t.data?.id === tid)
-      if (task) names.push(task.data?.name)
+      if (task) {
+        names.push(task.data?.name)
+        subTypes.push(task.data?.taskType)
+      }
     }
 
-    dispatch(setFocusedTasks({ ids: taskIds, names }))
-  }
-
-  const dispatchFocusedTasks = (taskId) => {
-    dispatch(setPairing([{ taskId: taskId }]))
-    dispatch(setFocusedTasks({ ids: [taskId] }))
+    dispatch(setFocusedTasks({ ids: taskIds, names, subTypes }))
   }
 
   const handleFilterProductsBySelected = (selected = []) => {
@@ -125,9 +131,11 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
     const itemId = event.node.data.id
     if (itemId && !focusedTasks?.includes(itemId)) {
       // if the selection does not include the clicked node, new selection is the clicked node
-      newFocused = [itemId]
+      const subType = event.node.data.taskType
+      const name = event.node.data.name
       // update selection state
-      dispatchFocusedTasks(itemId)
+      dispatch(setPairing([{ taskId: itemId }]))
+      dispatch(setFocusedTasks({ ids: [itemId], subTypes: [subType], names: [name] }))
     }
 
     ctxMenuShow(event.originalEvent, ctxMenuItems(newFocused))
@@ -215,7 +223,7 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
     if (tableHeader?.contains(e.target) || table?.contains(e.target)) return
 
     // deselect all
-    dispatch(setFocusedTasks({ ids: [], names: [] }))
+    dispatch(setFocusedTasks({ ids: [], names: [], subTypes: [] }))
     // remove paring
     dispatch(setPairing([]))
   }

@@ -57,6 +57,7 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
   }
 
   const selectedTasks = useSelector((state) => state.dashboard.tasks.selected) || []
+  const taskTypes = useSelector((state) => state.dashboard.tasks.types) || []
 
   // once user is loaded, set assignees to user
   useEffect(() => {
@@ -221,6 +222,7 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
             projectsInfo={projectsInfo}
             projectNames={selectedTasksProjects}
             entityType="task"
+            entitySubTypes={taskTypes}
             scope="dashboard"
           />
           <DetailsPanelSlideOut projectsInfo={projectsInfo} scope="dashboard" />

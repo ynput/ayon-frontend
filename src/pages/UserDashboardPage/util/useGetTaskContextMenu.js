@@ -46,7 +46,7 @@ export const useGetTaskContextMenu = (tasks, dispatch) => {
 
     // if task not already selected, select it and remove all other selections
     if (!selectedTasks.includes(card.id)) {
-      dispatch(onTaskSelected([card.id]))
+      dispatch(onTaskSelected({ ids: [card.id], types: [card.taskType] }))
     }
 
     // get context model

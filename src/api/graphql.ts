@@ -1299,9 +1299,9 @@ export type GetInboxMessagesQueryVariables = Exact<{
 }>;
 
 
-export type GetInboxMessagesQuery = { __typename?: 'Query', inbox: { __typename?: 'InboxConnection', pageInfo: { __typename?: 'PageInfo', hasPreviousPage: boolean, startCursor?: string | null, endCursor?: string | null }, edges: Array<{ __typename?: 'InboxEdge', cursor?: string | null, node: { __typename?: 'ActivityNode', projectName: string, activityId: string, activityType: string, activityData: string, referenceType: string, referenceId: string, body: string, createdAt: any, updatedAt: any, active: boolean, read: boolean, author?: { __typename?: 'UserNode', name: string, attrib: { __typename?: 'UserAttribType', fullName?: string | null } } | null, origin?: { __typename?: 'ActivityOriginNode', id: string, name: string, label?: string | null, type: string } | null, parents: Array<{ __typename?: 'ActivityOriginNode', type: string, name: string, label?: string | null }> } }> } };
+export type GetInboxMessagesQuery = { __typename?: 'Query', inbox: { __typename?: 'InboxConnection', pageInfo: { __typename?: 'PageInfo', hasPreviousPage: boolean, startCursor?: string | null, endCursor?: string | null }, edges: Array<{ __typename?: 'InboxEdge', cursor?: string | null, node: { __typename?: 'ActivityNode', projectName: string, activityId: string, activityType: string, activityData: string, referenceType: string, referenceId: string, body: string, createdAt: any, updatedAt: any, active: boolean, read: boolean, author?: { __typename?: 'UserNode', name: string, attrib: { __typename?: 'UserAttribType', fullName?: string | null } } | null, origin?: { __typename?: 'ActivityOriginNode', id: string, name: string, label?: string | null, type: string, subtype?: string | null } | null, parents: Array<{ __typename?: 'ActivityOriginNode', type: string, name: string, label?: string | null }> } }> } };
 
-export type MessageFragmentFragment = { __typename?: 'ActivityNode', projectName: string, activityId: string, activityType: string, activityData: string, referenceType: string, referenceId: string, body: string, createdAt: any, updatedAt: any, active: boolean, read: boolean, author?: { __typename?: 'UserNode', name: string, attrib: { __typename?: 'UserAttribType', fullName?: string | null } } | null, origin?: { __typename?: 'ActivityOriginNode', id: string, name: string, label?: string | null, type: string } | null, parents: Array<{ __typename?: 'ActivityOriginNode', type: string, name: string, label?: string | null }> };
+export type MessageFragmentFragment = { __typename?: 'ActivityNode', projectName: string, activityId: string, activityType: string, activityData: string, referenceType: string, referenceId: string, body: string, createdAt: any, updatedAt: any, active: boolean, read: boolean, author?: { __typename?: 'UserNode', name: string, attrib: { __typename?: 'UserAttribType', fullName?: string | null } } | null, origin?: { __typename?: 'ActivityOriginNode', id: string, name: string, label?: string | null, type: string, subtype?: string | null } | null, parents: Array<{ __typename?: 'ActivityOriginNode', type: string, name: string, label?: string | null }> };
 
 export type GetInboxUnreadCountQueryVariables = Exact<{
   important?: InputMaybe<Scalars['Boolean']['input']>;
@@ -1325,7 +1325,6 @@ export type GetProjectLatestQuery = { __typename?: 'Query', project: { __typenam
 export type GetKanbanQueryVariables = Exact<{
   projects?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
   assignees?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
 }>;
 
 
@@ -1373,6 +1372,7 @@ export const MessageFragmentFragmentDoc = `
     name
     label
     type
+    subtype
   }
   parents {
     type
@@ -1482,8 +1482,8 @@ export const GetProjectLatestDocument = `
 }
     `;
 export const GetKanbanDocument = `
-    query GetKanban($projects: [String!], $assignees: [String!], $last: Int) {
-  kanban(projects: $projects, assigneesAny: $assignees, last: $last) {
+    query GetKanban($projects: [String!], $assignees: [String!]) {
+  kanban(projects: $projects, assigneesAny: $assignees, last: 2000) {
     edges {
       node {
         ...KanbanFragment

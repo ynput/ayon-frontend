@@ -14,6 +14,7 @@ export const entitiesWithoutFeed = ['product', 'representation']
 
 const DetailsPanel = ({
   entityType,
+  entitySubTypes,
   // entities is data we already have from kanban
   entitiesData = [],
   // entityIds are used to get the full details data for the entities
@@ -114,7 +115,8 @@ const DetailsPanel = ({
       >
         <DetailsPanelHeader
           entityType={entityType}
-          entities={entityDetailsData}
+          entitySubTypes={entitySubTypes}
+          entities={isFetchingEntitiesDetails ? entitiesToQuery : entityDetailsData}
           users={projectUsers}
           disabledAssignees={disabledProjectUsers}
           statusesOptions={statusesOptions}
@@ -122,6 +124,7 @@ const DetailsPanel = ({
           tagsOptions={tagsOptions}
           onClose={onClose}
           isSlideOut={isSlideOut}
+          isMultipleProjects={projectNames.length > 1}
           isFetching={isFetchingEntitiesDetails}
           isCompact={isCompact}
         />

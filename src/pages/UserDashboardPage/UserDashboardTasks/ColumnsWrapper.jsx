@@ -15,6 +15,7 @@ const StyledWrapper = styled(Section)`
 `
 
 const ColumnsWrapper = ({
+  allTasks = [],
   fieldsColumns,
   tasksColumns,
   groupByValue,
@@ -135,6 +136,7 @@ const ColumnsWrapper = ({
             <KanBanColumn
               key={id}
               column={column}
+              allTasks={allTasks}
               tasks={tasks}
               groupItems={items}
               isLoading={isLoading}
