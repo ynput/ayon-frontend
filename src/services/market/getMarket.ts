@@ -15,11 +15,19 @@ export interface MarketAddonItem extends MarketAddonItemRes {
 
 export type MarketAddonList = MarketAddonItem[]
 
+type MarketAddonInstallEvent = GetMarketInstallEventsQuery['events']['edges'][0]['node']
+
+export type MarketAddonInstallEventList = MarketAddonInstallEvent[]
+
 type Definitions = DefinitionsFromApi<typeof api>
 type TagTypes = TagTypesFromApi<typeof api>
 
 type UpdatedDefinitions = Omit<Definitions, 'marketAddonList'> & {
   marketAddonList: OverrideResultType<Definitions['marketAddonList'], MarketAddonList>
+  GetMarketInstallEvents: OverrideResultType<
+    Definitions['GetMarketInstallEvents'],
+    MarketAddonInstallEventList
+  >
 }
 
 export const enhancedMarketRest = api.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
@@ -59,32 +67,6 @@ export const enhancedMarketRest = api.enhanceEndpoints<TagTypes, UpdatedDefiniti
         { type: 'marketAddon', id: 'LIST' },
       ],
     },
-  },
-})
-
-export const {
-  useMarketAddonListQuery,
-  useMarketAddonDetailQuery,
-  useLazyMarketAddonDetailQuery,
-  useLazyMarketAddonVersionDetailQuery,
-} = enhancedMarketRest
-
-type DefinitionsGQL = DefinitionsFromApi<typeof api>
-type TagTypesGQL = TagTypesFromApi<typeof api>
-
-type MarketAddonInstallEvent = GetMarketInstallEventsQuery['events']['edges'][0]['node']
-
-export type MarketAddonInstallEventList = MarketAddonInstallEvent[]
-
-type UpdatedDefinitionsGQL = Omit<DefinitionsGQL, 'GetMarketInstallEvents'> & {
-  GetMarketInstallEvents: OverrideResultType<
-    DefinitionsGQL['GetMarketInstallEvents'],
-    MarketAddonInstallEventList
-  >
-}
-
-export const enhanceMarketGraphql = api.enhanceEndpoints<TagTypesGQL, UpdatedDefinitionsGQL>({
-  endpoints: {
     GetMarketInstallEvents: {
       transformResponse: (response: GetMarketInstallEventsQuery) =>
         response.events.edges.map(({ node }) => node).filter((e) => e.status !== 'finished'),
@@ -126,4 +108,10 @@ export const enhanceMarketGraphql = api.enhanceEndpoints<TagTypesGQL, UpdatedDef
   },
 })
 
-export const { useGetMarketInstallEventsQuery } = enhanceMarketGraphql
+export const {
+  useMarketAddonListQuery,
+  useMarketAddonDetailQuery,
+  useLazyMarketAddonDetailQuery,
+  useLazyMarketAddonVersionDetailQuery,
+  useGetMarketInstallEventsQuery,
+} = enhancedMarketRest
