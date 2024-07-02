@@ -14,7 +14,7 @@ import { toast } from 'react-toastify'
 import AddonDialog from '@components/AddonDialog/AddonDialog'
 import { useGetAddonSettingsQuery } from '@queries/addonSettings'
 import getLatestSemver from './getLatestSemver'
-import { ayonApi } from '@queries/ayon'
+import api from '@api'
 import { useDispatch, useSelector } from 'react-redux'
 import useLocalStorage from '@hooks/useLocalStorage'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
@@ -252,7 +252,7 @@ const Bundles = () => {
         try {
           const patch = { ...oldBundle, [statusKey]: false }
           patchResult = dispatch(
-            ayonApi.util.updateQueryData('getBundleList', { archived: true }, (draft) => {
+            api.util.updateQueryData('getBundleList', { archived: true }, (draft) => {
               const bundleIndex = draft.findIndex((bundle) => bundle.name === oldBundle.name)
               draft[bundleIndex] = patch
             }),

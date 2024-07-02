@@ -24,10 +24,9 @@ export const usePrefetchEntity = (dispatch, projectsInfo, throttleTime) => {
 
     const entities = [{ id: id, projectName: projectName }]
     const entityIds = [id]
-    const projectInfo = projectsInfo[projectName]
 
     // pre-fetch the entity details
-    getEntitiesDetails({ entities: entities, entityType, projectInfo })
+    getEntitiesDetails({ entities: entities, entityType, projectsInfo })
     // pre-fetch the activities based on current filter
     getEntitiesActivities({
       entityIds: entityIds,

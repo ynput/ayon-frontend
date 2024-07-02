@@ -1,4 +1,4 @@
-import { ayonApi } from '../ayon'
+import api from '@api'
 
 const transformAnatomyPresets = (data) => {
   const defaultPreset = { name: '_', title: '<default (built-in)>' }
@@ -17,7 +17,7 @@ const transformAnatomyPresets = (data) => {
   return [primaryPreset, ...presets]
 }
 
-const getAnatomy = ayonApi.injectEndpoints({
+const getAnatomy = api.injectEndpoints({
   endpoints: (build) => ({
     getAnatomySchema: build.query({
       query: () => ({
@@ -41,6 +41,7 @@ const getAnatomy = ayonApi.injectEndpoints({
       ],
     }),
   }),
+  overrideExisting: true,
 })
 
 //

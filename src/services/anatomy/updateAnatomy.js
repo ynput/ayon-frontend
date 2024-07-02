@@ -1,6 +1,6 @@
-import { ayonApi } from '../ayon'
+import api from '@api'
 
-const getAnatomy = ayonApi.injectEndpoints({
+const getAnatomy = api.injectEndpoints({
   endpoints: (build) => ({
     updatePreset: build.mutation({
       query: ({ name, data }) => ({
@@ -44,6 +44,7 @@ const getAnatomy = ayonApi.injectEndpoints({
       ],
     }),
   }),
+  overrideExisting: true,
 })
 
 export const {

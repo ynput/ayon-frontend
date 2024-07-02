@@ -66,7 +66,7 @@ const MarketPage = () => {
   const [showConnectDialog, setShowConnectDialog] = useState(false)
 
   // subscribe to download events
-  const { data: downloadProgress = [] } = useGetMarketInstallEventsQuery()
+  const { data: downloadProgress = [] } = useGetMarketInstallEventsQuery({})
 
   // QUERY PARAMS STATE
   const [selectedAddonId, setSelectedAddonId] = useQueryParam(

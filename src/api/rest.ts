@@ -1,4 +1,5 @@
 import { RestAPI as api } from '../services/ayon'
+
 const injectedRtkApi = api.injectEndpoints({
   endpoints: (build) => ({
     getAccessGroupSchema: build.query<GetAccessGroupSchemaApiResponse, GetAccessGroupSchemaApiArg>({
@@ -2239,7 +2240,8 @@ export type PasswordResetApiArg = {
 }
 export type GetCurrentUserApiResponse = /** status 200 Successful Response */ UserModel
 export type GetCurrentUserApiArg = void
-export type GetUserApiResponse = /** status 200 Successful Response */
+export type GetUserApiResponse =
+  /** status 200 Successful Response */
   | UserModel
   | {
       [key: string]: string

@@ -1,7 +1,7 @@
-import { ayonApi } from '../ayon'
+import api from '@api'
 import queryUpload from '../queryUpload'
 
-const updateAddons = ayonApi.injectEndpoints({
+const updateAddons = api.injectEndpoints({
   endpoints: (build) => ({
     uploadAddons: build.mutation({
       queryFn: (arg, api) =>
@@ -75,6 +75,7 @@ const updateAddons = ayonApi.injectEndpoints({
       ],
     }),
   }), // endpoints
+  overrideExisting: true,
 })
 
 export const {

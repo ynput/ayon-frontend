@@ -45,7 +45,7 @@ import { useGetAttributesQuery } from '@queries/attributes/getAttributes'
 import NewEntity from './NewEntity'
 import checkName from '@helpers/checkName'
 import useCreateContext from '@hooks/useCreateContext'
-import { ayonApi } from '@queries/ayon'
+import api from '@api'
 import { confirmDialog } from 'primereact/confirmdialog'
 import BuildHierarchyButton from '@containers/HierarchyBuilder'
 import NewSequence from './NewSequence'
@@ -750,7 +750,7 @@ const EditorPage = () => {
     // invalidate these tags ['hierarchy', 'folder', 'task']
     // so that the query will be executed again
     // and the new data will be fetched
-    dispatch(ayonApi.util.invalidateTags(['hierarchy', 'folder', 'task']))
+    dispatch(api.util.invalidateTags(['hierarchy', 'folder', 'task']))
 
     // add new branches to redux editor slice
     dispatch(nodesUpdated({ updated: updated, deleted, forcedSave }))

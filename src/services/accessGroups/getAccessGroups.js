@@ -1,6 +1,6 @@
-import { ayonApi } from '../ayon'
+import api from '@api'
 
-const getAccessGroups = ayonApi.injectEndpoints({
+const getAccessGroups = api.injectEndpoints({
   endpoints: (build) => ({
     getAccessGroups: build.query({
       query: (args) => ({
@@ -32,6 +32,7 @@ const getAccessGroups = ayonApi.injectEndpoints({
       }),
     }),
   }),
+  overrideExisting: true,
 })
 
 export const { useGetAccessGroupsQuery, useGetAccessGroupQuery, useGetAccessGroupSchemaQuery } =

@@ -1,6 +1,6 @@
-import { ayonApi } from '../ayon'
+import api from '@api'
 
-const getAttributes = ayonApi.injectEndpoints({
+const getAttributes = api.injectEndpoints({
   endpoints: (build) => ({
     getAttributes: build.query({
       query: () => ({
@@ -13,6 +13,7 @@ const getAttributes = ayonApi.injectEndpoints({
           : ['attribute'],
     }),
   }),
+  overrideExisting: true,
 })
 
 export const { useGetAttributesQuery } = getAttributes

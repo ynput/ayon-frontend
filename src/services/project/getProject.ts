@@ -1,4 +1,4 @@
-import { ayonApi } from '@queries/ayon'
+import api from '@api'
 // @ts-ignore
 import { selectProject, setProjectData } from '@state/project'
 
@@ -34,7 +34,7 @@ const createProjectQuery = (attribs: $Any, fields: $Any) => {
   `
 }
 
-const getProject = ayonApi.injectEndpoints({
+const getProject = api.injectEndpoints({
   endpoints: (build) => ({
     getProjectAttribs: build.query({
       query: ({ projectName, attribs = [], fields = [] }) => ({
@@ -49,13 +49,13 @@ const getProject = ayonApi.injectEndpoints({
       providesTags: (_res, _error, { projectName }) => [{ type: 'project', id: projectName }],
     }),
   }),
+  overrideExisting: true,
 })
 
-import API from '@api'
 import { $Any } from '@/types'
 
 // TODO: sort out the types
-const enhancedRest = API.rest.enhanceEndpoints({
+const enhancedRest = api.enhanceEndpoints({
   endpoints: {
     getProject: {
       transformErrorResponse: (error: $Any) => error.data.detail || `Error ${error.status}`,
@@ -116,6 +116,7 @@ const enhancedRest = API.rest.enhanceEndpoints({
       providesTags: (_res, _error, { active }) => [
         { type: 'project' },
         { type: 'projects', id: active },
+        { type: 'projects', id: 'LIST' },
       ],
     },
     getProjectAnatomy: {

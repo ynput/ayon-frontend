@@ -1,8 +1,8 @@
-import { ayonApi } from '../ayon'
+import api from '@api'
 import { onClearDashboard } from '@state/dashboard'
 import { logout } from '@state/user'
 
-const getAuth = ayonApi.injectEndpoints({
+const getAuth = api.injectEndpoints({
   endpoints: (build) => ({
     getInfo: build.query({
       query: () => ({
@@ -19,7 +19,7 @@ const getAuth = ayonApi.injectEndpoints({
       onCacheEntryAdded: async (arg, { dispatch }) => {
         dispatch(logout())
         // reset global state
-        dispatch(ayonApi.util.resetApiState())
+        dispatch(api.util.resetApiState())
         // remove some local storage items
         localStorage.removeItem('projectMenu-pinned')
         localStorage.removeItem('dashboard-tasks-filter')
@@ -30,9 +30,12 @@ const getAuth = ayonApi.injectEndpoints({
         localStorage.removeItem('dashboard-tasks-selected')
         // clear dashboard state
         dispatch(onClearDashboard())
+        // redirect to login
+        window.location.href = '/login'
       },
     }),
   }),
+  overrideExisting: true,
 })
 
 //

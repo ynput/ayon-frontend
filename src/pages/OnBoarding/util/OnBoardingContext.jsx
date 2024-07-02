@@ -10,8 +10,8 @@ import {
   useGetReleaseQuery,
   useInstallPresetMutation,
   useLazyGetReleaseQuery,
+  useGetReleasesQuery,
 } from '@queries/onBoarding/onBoarding'
-import { useGetReleasesQuery } from '@queries/getRelease'
 import useLocalStorage from '@hooks/useLocalStorage'
 import { useLazyGetBundleListQuery } from '@queries/bundles/getBundles'
 import { useCreateBundleMutation } from '@queries/bundles/updateBundles'

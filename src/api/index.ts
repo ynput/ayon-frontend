@@ -1,7 +1,4 @@
 import { api } from './graphql'
-import { restApi } from './rest'
 
-export default {
-  graphql: api,
-  rest: restApi,
-}
+// exports the rest queries with the graphql queries injected in one big api slice
+export default api

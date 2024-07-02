@@ -1,4 +1,4 @@
-import { ayonApi } from '../ayon'
+import api from '@api'
 import {
   PRODUCT_TILE_FRAGMENT,
   FOLDER_TILE_FRAGMENT,
@@ -123,7 +123,7 @@ export const formatEntityTiles = (project, entities) => {
   return allEntities
 }
 
-const getEntity = ayonApi.injectEndpoints({
+const getEntity = api.injectEndpoints({
   endpoints: (build) => ({
     getEventTile: build.query({
       query: ({ projectName, id, type }) => ({
@@ -155,6 +155,7 @@ const getEntity = ayonApi.injectEndpoints({
       providesTags: (res, error, { entityId }) => [{ type: 'entity', id: entityId }],
     }),
   }),
+  overrideExisting: true,
 })
 
 export const {
