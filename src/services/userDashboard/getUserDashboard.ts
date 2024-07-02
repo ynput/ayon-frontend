@@ -62,21 +62,27 @@ export const getKanbanTasks = async (
   },
   dispatch: ThunkDispatch<any, any, UnknownAction>,
 ) => {
-  // get the task
-  const response = await dispatch(
-    enhancedDashboardGraphqlApi.endpoints.GetKanbanTasks.initiate(
-      { projects, taskIds },
-      { forceRefetch: true },
-    ),
-  )
+  try {
+    // get the task
+    const response = await dispatch(
+      enhancedDashboardGraphqlApi.endpoints.GetKanbanTasks.initiate(
+        { projects, taskIds },
+        { forceRefetch: true },
+      ),
+    )
 
-  if (response.status === 'rejected' || !response.data) {
-    console.error('No tasks found', taskIds)
-    throw new Error(`No tasks found ${taskIds.join(', ')}`)
+    if (response.status === 'rejected' || !response.data) {
+      console.error('No tasks found', taskIds)
+      throw new Error(`No tasks found ${taskIds.join(', ')}`)
+    }
+
+    if (response.status !== 'fulfilled') return []
+    // get tasks from response (usually only one task)
+    return response.data
+  } catch (error) {
+    console.error(error)
+    return []
   }
-
-  // get tasks from response (usually only one task)
-  return response.data
 }
 
 export const enhancedDashboardGraphqlApi = api.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
