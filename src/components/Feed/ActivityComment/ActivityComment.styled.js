@@ -138,6 +138,18 @@ export const Body = styled.div`
   }
 `
 
+export const QuoteLine = styled.p`
+  margin: 0;
+
+  &:first-child {
+    margin-top: 14px;
+  }
+
+  &:last-child {
+    margin-bottom: 14px;
+  }
+`
+
 export const Attachments = styled.div`
   display: flex;
   flex-wrap: wrap;

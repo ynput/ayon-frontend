@@ -88,6 +88,21 @@ const parseCodeBlocks = (value) => {
   return value
 }
 
+// replace any multi line quotes \n\n with a single \n
+// matching \n\n>
+const parseQuotes = (value) => {
+  const regex = /\n\n>/g
+  const matches = value.match(regex)
+
+  if (matches) {
+    matches.forEach((match) => {
+      value = value.replace(match, '\n>')
+    })
+  }
+
+  return value
+}
+
 export const getTextRefs = (text = '') => {
   // inside the markdown, find characters inside ()
   const regex2 = /\((.*?)\)/g
@@ -120,7 +135,9 @@ export const convertToMarkdown = (value) => {
   // convert to markdown
   let markdown = turndownService.turndown(codeBlocksParsed)
 
-  let body = markdown
+  const quotesParsedMarkdown = parseQuotes(markdown)
+
+  let body = quotesParsedMarkdown
 
   // inside the markdown, find characters inside () or [] and replace @ with nothing
   const regex = /\((.*?)\)|\[(.*?)\]/g

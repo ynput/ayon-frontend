@@ -14,6 +14,15 @@ const urlToMention = (href, options) => {
   return { href: newHref, type: typeSymbol }
 }
 
+function convertStringToBlockquotes(text) {
+  return text.split('\n').map((line, index) => (
+    <p key={index}>
+      {`> `}
+      {line}
+    </p>
+  ))
+}
+
 const InputMarkdownConvert = ({ typeOptions, initValue }) => {
   return (
     <ReactMarkdown
@@ -57,11 +66,17 @@ const InputMarkdownConvert = ({ typeOptions, initValue }) => {
           const propsChildren = quoteChild.props.children
           if (!propsChildren) return children
 
+          let normalizedChildren = Array.isArray(propsChildren) ? propsChildren : [propsChildren]
+
+          const newPropsChildren = normalizedChildren.flatMap((child) => {
+            return typeof child === 'string' ? convertStringToBlockquotes(child) : child
+          })
+
           const newQuoteChild = {
             ...quoteChild,
             props: {
               ...quoteChild.props,
-              children: ['> ', ...propsChildren],
+              children: newPropsChildren,
             },
           }
 
