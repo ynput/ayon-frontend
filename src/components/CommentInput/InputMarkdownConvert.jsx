@@ -49,6 +49,24 @@ const InputMarkdownConvert = ({ typeOptions, initValue }) => {
         code: ({ children, ...props }) => {
           return <pre {...props}>{children}</pre>
         },
+        blockquote: ({ children }) => {
+          // insert `>` in front of first child
+          const quoteChild = children.find((item) => !!item?.props)
+
+          if (!quoteChild) return children
+          const propsChildren = quoteChild.props.children
+          if (!propsChildren) return children
+
+          const newQuoteChild = {
+            ...quoteChild,
+            props: {
+              ...quoteChild.props,
+              children: ['> ', ...propsChildren],
+            },
+          }
+
+          return newQuoteChild
+        },
       }}
     >
       {initValue}
