@@ -101,7 +101,10 @@ const getActivities = ayonApi.injectEndpoints({
         },
       }),
       transformResponse: (res) => countChecklists(res?.data),
-      providesTags: [{ type: 'activity', id: 'LIST' }],
+      providesTags: (res) => [
+        { type: 'activity', id: 'LIST' },
+        ...res.ids.map((id) => ({ type: 'activity', id: 'checklist-' + id })),
+      ],
     }),
   }),
 })

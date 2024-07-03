@@ -62,6 +62,7 @@ query getEntitiesChecklists($projectName: String!, $entityIds: [String!]!) {
       edges {
         cursor
         node {
+          activityId
           body
         }
       }
