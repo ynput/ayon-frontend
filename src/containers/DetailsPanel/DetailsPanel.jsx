@@ -2,12 +2,13 @@ import { Panel } from '@ynput/ayon-react-components'
 import React, { useEffect } from 'react'
 import DetailsPanelHeader from './DetailsPanelHeader/DetailsPanelHeader'
 import { useDispatch, useSelector } from 'react-redux'
-import Feed from '/src/containers/Feed/Feed'
-import { useGetDashboardEntitiesDetailsQuery } from '/src/services/userDashboard/getUserDashboard'
-import TaskAttributes from '../../pages/UserDashboardPage/UserDashboardTasks/TaskAttributes/TaskAttributes'
-import { transformEntityData } from '/src/services/userDashboard/userDashboardHelpers'
+import Feed from '@containers/Feed/Feed'
+import { useGetEntitiesDetailsPanelQuery } from '@queries/entity/getEntityPanel'
+import TaskAttributes from '@pages/UserDashboardPage/UserDashboardTasks/TaskAttributes/TaskAttributes'
+import { transformEntityData } from '@queries/userDashboard/userDashboardHelpers'
 import RepresentationsList from '../RepresentationsList/RepresentationsList'
-import { closeSlideOut, updateDetailsPanelTab } from '/src/features/details'
+import { closeSlideOut, updateDetailsPanelTab } from '@state/details'
+import { entityDetailsTypesSupported } from '@/services/userDashboard/userDashboardQueries'
 
 export const entitiesWithoutFeed = ['product', 'representation']
 
@@ -56,20 +57,28 @@ const DetailsPanel = ({
     ? entities.map((entity) => ({ id: entity.id, projectName: entity.projectName }))
     : entitiesData.map((entity) => ({ id: entity.id, projectName: entity.projectName }))
 
-  // when entities changes, close the slideOutPanel
-  useEffect(() => {
-    if (!isSlideOut) dispatch(closeSlideOut())
-  }, [entitiesToQuery, isSlideOut])
-
   const {
-    data: detailsData = {},
+    data: detailsData = [],
     isFetching: isFetchingEntitiesDetails,
     isSuccess,
     isError,
-  } = useGetDashboardEntitiesDetailsQuery(
+    originalArgs,
+  } = useGetEntitiesDetailsPanelQuery(
     { entityType, entities: entitiesToQuery, projectsInfo },
-    { skip: !entitiesData.length && !entities.length },
+    {
+      skip:
+        !entitiesData.length &&
+        !entities.length &&
+        !entityDetailsTypesSupported.includes(entityType),
+    },
   )
+
+  // the entity changes then we close the slide out
+  useEffect(() => {
+    if (!isSlideOut) {
+      dispatch(closeSlideOut())
+    }
+  }, [originalArgs])
 
   let entityDetailsData = []
   // merge current entities data with fresh details data

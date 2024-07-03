@@ -1,12 +1,12 @@
 import { useState, useMemo, useCallback } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { InputText, TablePanel, Section, Toolbar, Spacer } from '@ynput/ayon-react-components'
-import EntityDetail from '/src/containers/DetailsDialog'
-import { CellWithIcon } from '/src/components/icons'
-import { TimestampField } from '/src/containers/fieldFormat'
-import usePubSub from '/src/hooks/usePubSub'
-import groupResult from '/src/helpers/groupResult'
-import useLocalStorage from '/src/hooks/useLocalStorage'
+import EntityDetail from '@containers/DetailsDialog'
+import { CellWithIcon } from '@components/icons'
+import { TimestampField } from '@containers/fieldFormat'
+import usePubSub from '@hooks/usePubSub'
+import groupResult from '@helpers/groupResult'
+import useLocalStorage from '@hooks/useLocalStorage'
 import {
   setFocusedVersions,
   setFocusedProducts,
@@ -15,25 +15,25 @@ import {
   productSelected,
   onFocusChanged,
   updateBrowserFilters,
-} from '/src/features/context'
+} from '@state/context'
 import VersionList from './VersionList'
-import StatusSelect from '/src/components/status/statusSelect'
+import StatusSelect from '@components/status/statusSelect'
 import {
   useGetProductListQuery,
   useLazyGetProductsVersionsQuery,
-} from '/src/services/product/getProduct'
-import usePatchProductsListWithVersions from '/src/hooks/usePatchProductsListWithVersions'
-import useSearchFilter, { filterByFieldsAndValues } from '/src/hooks/useSearchFilter'
-import useColumnResize from '/src/hooks/useColumnResize'
-import { useUpdateEntitiesMutation } from '/src/services/entity/updateEntity'
-import { ayonApi } from '/src/services/ayon'
-import useCreateContext from '/src/hooks/useCreateContext'
+} from '@queries/product/getProduct'
+import usePatchProductsListWithVersions from '@hooks/usePatchProductsListWithVersions'
+import useSearchFilter, { filterByFieldsAndValues } from '@hooks/useSearchFilter'
+import useColumnResize from '@hooks/useColumnResize'
+import { useUpdateEntitiesMutation } from '@queries/entity/updateEntity'
+import { ayonApi } from '@queries/ayon'
+import useCreateContext from '@hooks/useCreateContext'
 import ViewModeToggle from './ViewModeToggle'
 import ProductsList from './ProductsList'
 import ProductsGrid from './ProductsGrid'
 import NoProducts from './NoProducts'
 import { toast } from 'react-toastify'
-import { productTypes } from '/src/features/project'
+import { productTypes } from '@state/project'
 import * as Styled from './Products.styled'
 import { openPreview } from '/src/features/preview'
 
@@ -200,12 +200,11 @@ const Products = () => {
     }
   }
 
-  const handleStatusOpen = (id) => {
+  const handleStatusOpen = (productId, versionId) => {
     // handles the edge case where the use foccusess multiple products but then changes a different status
-    if (!focusedProducts.includes(id)) {
+    if (!focusedProducts.includes(productId)) {
       // not in focused selection
-      // reset selection to status id
-      dispatch(setFocusedProducts([id]))
+      dispatch(productSelected({ products: [productId], versions: [versionId] }))
     }
   }
 
@@ -285,7 +284,7 @@ const Products = () => {
               size={resolveWidth(versionStatusWidth)}
               onChange={(v) => handleStatusChange(v, node.data.id)}
               multipleSelected={focusedProducts.length}
-              onOpen={() => handleStatusOpen(node.data.id)}
+              onOpen={() => handleStatusOpen(node.data.id, node.data.versionId)}
               style={{ maxWidth: '100%' }}
             />
           )
@@ -410,31 +409,27 @@ const Products = () => {
   // Transform the product data into a TreeTable compatible format
   // by grouping the data by the product name
 
-  let tableData = useMemo(() => {
-    return groupResult(listData, 'name')
-  }, [listData])
-
   // filter by task types
   const filteredByFieldsData = selectedTaskTypes.length
     ? filterByFieldsAndValues({
         filters: selectedTaskTypes,
-        data: tableData,
-        fields: ['data.taskType'],
+        data: listData,
+        fields: ['taskType'],
       })
-    : tableData
+    : listData
 
   const searchableFields = [
-    'data.versionAuthor',
-    'data.productType',
-    'data.folder',
-    'data.fps',
-    'data.frames',
-    'data.name',
-    'data.resolution',
-    'data.versionStatus',
-    'data.versionName',
-    'data.taskType',
-    'data.taskName',
+    'versionAuthor',
+    'productType',
+    'folder',
+    'fps',
+    'frames',
+    'name',
+    'resolution',
+    'versionStatus',
+    'versionName',
+    'taskType',
+    'taskName',
   ]
 
   let [search, setSearch, filteredBySearchData] = useSearchFilter(
@@ -442,6 +437,10 @@ const Products = () => {
     filteredByFieldsData,
     'products',
   )
+
+  const tableData = useMemo(() => {
+    return groupResult(filteredBySearchData, 'name')
+  }, [filteredBySearchData])
 
   //
   // Handlers
@@ -570,7 +569,7 @@ const Products = () => {
   // Render
   //
 
-  const isNone = filteredBySearchData.length === 0
+  const isNone = tableData.length === 0
 
   return (
     <Section wrap>
@@ -619,7 +618,7 @@ const Products = () => {
         {viewMode !== 'list' && (
           <ProductsGrid
             isLoading={isLoading || isFetching}
-            data={filteredBySearchData}
+            data={tableData}
             onItemClick={onRowClick}
             onSelectionChange={onSelectionChange}
             onContext={handleContextMenu}
@@ -635,7 +634,7 @@ const Products = () => {
         )}
         {viewMode === 'list' && (
           <ProductsList
-            data={filteredBySearchData}
+            data={tableData}
             selectedRows={selectedRows}
             onSelectionChange={onSelectionChange}
             onRowClick={onRowClick}

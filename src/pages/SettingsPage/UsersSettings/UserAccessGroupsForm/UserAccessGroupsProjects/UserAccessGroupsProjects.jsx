@@ -15,17 +15,31 @@ const UserAccessGroupsProjects = ({
 }) => {
   const [sortByActive, setSortByActive] = useState(false)
 
+  // find deleted projects (values that are not in options)
+  // in theory, this should never happen, but it's a safety measure
+  const deletedProjects = values
+    .filter((value) => !options.find(({ name }) => name === value))
+    .map((value) => ({ name: value, active: false, deleted: true }))
+
   // sort options by active first, then alphabetically
   const sortedOptions = useMemo(
     () =>
-      [...options].sort((a, b) => {
+      [...options, ...deletedProjects].sort((a, b) => {
         // Check if the options are in the values array
         const aActive = values.includes(a.name)
         const bActive = values.includes(b.name)
 
-        // If both options have the same active status, sort them alphabetically
+        // If both options have the same active status, sort them by deleted then active (archived) then alphabetically
         if (aActive === bActive || !sortByActive) {
-          return a.name.localeCompare(b.name)
+          // Comparator function to sort objects based on their status and names
+          return (
+            // Active projects come first
+            b.active - a.active ||
+            // Among inactive projects, not deleted (archived) come before deleted
+            !!a.deleted - !!b.deleted ||
+            // If both have the same 'active' and 'deleted' status, sort alphabetically by name
+            a.name.localeCompare(b.name)
+          )
         }
         // Otherwise, sort them by active status (put active options first)
         return bActive ? 1 : -1
@@ -192,7 +206,7 @@ const UserAccessGroupsProjects = ({
         )}
       </Styled.Header>
       <Styled.List>
-        {projectOptions.map(({ name }) => (
+        {projectOptions.map(({ name, active, deleted }) => (
           <Styled.ProjectItem
             key={name}
             className={classNames('project-item', {
@@ -206,6 +220,7 @@ const UserAccessGroupsProjects = ({
             tabIndex={0}
           >
             <span className="name">{name}</span>
+            {!active && <span>{deleted ? '(deleted)' : '(archived)'}</span>}
             <Icon
               icon={
                 values.includes(name) ? (activeValues.includes(name) ? 'check' : 'remove') : 'add'

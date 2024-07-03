@@ -1,25 +1,27 @@
 import InboxMessage from '../InboxMessage/InboxMessage'
 import * as Styled from './Inbox.styled'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import useKeydown from '../hooks/useKeydown'
 import { classNames } from 'primereact/utils'
 import InboxDetailsPanel from '../InboxDetailsPanel'
 import { useDispatch } from 'react-redux'
-import { useGetInboxQuery, useLazyGetInboxQuery } from '/src/services/inbox/getInbox'
-import { useGetProjectsInfoQuery } from '/src/services/userDashboard/getUserDashboard'
-import Shortcuts from '/src/containers/Shortcuts'
-import { clearHighlights, highlightActivity } from '/src/features/details'
-import useGroupMessages from '../hooks/useGroupMessages'
-import { Spacer } from '@ynput/ayon-react-components'
-import useUpdateInboxMessage from '../hooks/useUpdateInboxMessage'
-import useCreateContext from '/src/hooks/useCreateContext'
+import Shortcuts from '@containers/Shortcuts'
+import { clearHighlights, highlightActivity } from '@state/details'
 import { InView } from 'react-intersection-observer'
-import useInboxRefresh from '../hooks/useInboxRefresh'
 import { toast } from 'react-toastify'
 import { compareAsc } from 'date-fns'
-import ShortcutWidget from '/src/components/ShortcutWidget/ShortcutWidget'
-import EmptyPlaceholder from '/src/components/EmptyPlaceholder/EmptyPlaceholder'
-import EnableNotifications from '/src/components/EnableNotifications'
+import Typography from '@/theme/typography.module.css'
+// Queries
+import { useGetInboxMessagesQuery, useLazyGetInboxMessagesQuery } from '@queries/inbox/getInbox'
+import { useGetProjectsInfoQuery } from '@queries/userDashboard/getUserDashboard'
+// Components
+import { Button, Icon, Spacer } from '@ynput/ayon-react-components'
+import EnableNotifications from '@components/EnableNotifications'
+// Hooks
+import useCreateContext from '@hooks/useCreateContext'
+import useGroupMessages from '../hooks/useGroupMessages'
+import useKeydown from '../hooks/useKeydown'
+import useUpdateInboxMessage from '../hooks/useUpdateInboxMessage'
+import useInboxRefresh from '../hooks/useInboxRefresh'
 
 const placeholderMessages = Array.from({ length: 100 }, (_, i) => ({
   activityId: `placeholder-${i}`,
@@ -49,7 +51,7 @@ const Inbox = ({ filter }) => {
     isFetching: isFetchingInbox,
     error: errorInbox,
     refetch,
-  } = useGetInboxQuery({
+  } = useGetInboxMessagesQuery({
     last: last,
     active: isActive,
     important: isImportant,
@@ -57,7 +59,7 @@ const Inbox = ({ filter }) => {
 
   const { hasPreviousPage, endCursor: lastCursor } = pageInfo || {}
 
-  const [getInboxMessages] = useLazyGetInboxQuery()
+  const [getInboxMessages] = useLazyGetInboxMessagesQuery()
   // load more messages
   const handleLoadMore = () => {
     if (!hasPreviousPage || isFetchingInbox) return
@@ -342,18 +344,18 @@ const Inbox = ({ filter }) => {
         <Spacer />
         <EnableNotifications />
         {isActive && (
-          <Styled.ShortcutButton
-            label="Clear all"
+          <Button
             icon="done_all"
             onClick={handleClearAll}
             disabled={!messages.length}
+            shortcut={{ children: 'Shift+C' }}
           >
-            <ShortcutWidget>Shift+C</ShortcutWidget>
-          </Styled.ShortcutButton>
+            Clear all
+          </Button>
         )}
-        <Styled.ShortcutButton label="Refresh" icon="refresh" onClick={refreshInbox}>
-          <ShortcutWidget>R</ShortcutWidget>
-        </Styled.ShortcutButton>
+        <Button icon="refresh" onClick={refreshInbox} shortcut={{ children: 'R' }}>
+          Refresh
+        </Button>
       </Styled.Tools>
       <Styled.InboxSection direction="row">
         <Styled.MessagesList

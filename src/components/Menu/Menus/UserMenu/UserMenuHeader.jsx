@@ -1,6 +1,6 @@
 import * as Styled from './UserMenu.styled'
-import UserImage from '/src/components/UserImage'
-import Font from '/src/theme/typography.module.css'
+import UserImage from '@components/UserImage'
+import Font from '@/theme/typography.module.css'
 import { NavLink } from 'react-router-dom'
 
 const UserMenuHeader = ({ user, fullName }) => {

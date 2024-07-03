@@ -1,14 +1,38 @@
 import { useMemo } from 'react'
 import * as Styled from './DetailsPanelHeader.styled'
-import copyToClipboard from '/src/helpers/copyToClipboard'
-import StackedThumbnails from '/src/pages/EditorPage/StackedThumbnails'
+import copyToClipboard from '@helpers/copyToClipboard'
+import StackedThumbnails from '@pages/EditorPage/StackedThumbnails'
 import { classNames } from 'primereact/utils'
 import { isEqual, union, upperFirst } from 'lodash'
-import { useUpdateEntitiesMutation } from '/src/services/entity/updateEntity'
+import { useUpdateEntitiesMutation } from '@queries/entity/updateEntity'
 import { toast } from 'react-toastify'
-import Actions from '/src/components/Actions/Actions'
+import Actions from '@components/Actions/Actions'
 import FeedFilters from '../FeedFilters/FeedFilters'
-import usePatchProductsListWithVersions from '/src/hooks/usePatchProductsListWithVersions'
+import usePatchProductsListWithVersions from '@hooks/usePatchProductsListWithVersions'
+
+// DUMMY ACTIONS DATA
+const actions = [
+  { id: 'nuke', icon: 'nuke.png', pinned: 'actions2D' },
+  { id: 'afterEffects', icon: 'after-effects.png', pinned: 'actions2D' },
+  { id: 'maya', icon: 'maya.png', pinned: 'actions3D' },
+  { id: 'houdini', icon: 'houdini.png', pinned: 'actions3D' },
+  { id: 'photoshop', icon: 'photoshop.png' },
+]
+
+const actionTaskTypes = {
+  actions2D: ['compositing', 'roto', 'matchmove', 'edit', 'paint'],
+  actions3D: [
+    'modeling',
+    'texture',
+    'lookdev',
+    'rigging',
+    'layout',
+    'setdress',
+    'animation',
+    'fx',
+    'lighting',
+  ],
+}
 
 const DetailsPanelHeader = ({
   entityType,
@@ -34,34 +58,28 @@ const DetailsPanelHeader = ({
   const isLoading = entities.length === 0 || !firstEntity || isFetching
   // placeholder entity
   if (!firstEntity) {
-    entities = [
-      {
-        id: 'placeholder',
-        entityType,
-        icon: 'sync',
-        title: 'loading...',
-        subTitle: 'loading...',
-      },
-    ]
-    firstEntity = entities[0]
+    firstEntity = {
+      id: 'placeholder',
+      entityType,
+      icon: 'sync',
+      title: 'loading...',
+      subTitle: 'loading...',
+    }
   }
   const projectName = entities.length > 1 ? null : firstEntity?.projectName
 
-  const thumbnails = useMemo(
-    () =>
-      entityType !== 'representation'
-        ? entities
-            .filter((entity, i) => i <= 5)
-            .map((entity) => ({
-              src: entity.thumbnailUrl,
-              icon: entity.icon,
-              id: entity.id,
-              type: entityType,
-              updatedAt: entity.updatedAt,
-            }))
-        : [{ icon: 'view_in_ar' }],
-    [entities],
-  )
+  const thumbnails = useMemo(() => {
+    if (!entities[0]) return []
+
+    if (entityType === 'representation') return [{ icon: 'view_in_ar' }]
+
+    return entities.slice(0, 6).map((entity) => ({
+      icon: entity.icon,
+      id: entity.id,
+      type: entityType,
+      updatedAt: entity.updatedAt,
+    }))
+  }, [entities, entityType])
 
   // we need to get the intersection of all the statuses of the projects for the selected entities
   // this means that if we have 2 entities from 2 different projects, we need to get the intersection of the statuses of those 2 projects
@@ -117,6 +135,7 @@ const DetailsPanelHeader = ({
         data: {
           [field]: value,
         },
+        currentAssignees: entity.users,
       }))
 
       await updateEntities({ operations, entityType })
@@ -126,34 +145,35 @@ const DetailsPanelHeader = ({
     }
   }
 
+  const handleThumbnailUpload = ({ id, thumbnailId }) => {
+    // patching the updatedAt will force a refresh of the thumbnail url
+    const newUpdatedAt = new Date().toISOString()
+    const entity = entities.find((entity) => entity.id === id)
+    const currentAssignees = entity?.users || []
+    const operations = [
+      { id, projectName, data: { updatedAt: newUpdatedAt, thumbnailId }, currentAssignees },
+    ]
+
+    const versionPatch = {
+      productId: entity.productId,
+      versionUpdatedAt: newUpdatedAt,
+      versionThumbnailId: thumbnailId,
+    }
+
+    // update productsList cache with new status
+    let productsPatch = patchProductsListWithVersions([versionPatch])
+    try {
+      updateEntities({ operations, entityType })
+    } catch (error) {
+      productsPatch?.undo()
+      productsPatch?.undo()
+    }
+  }
+
   const fullPath = firstEntity?.path || ''
   const pathArray = fullPath.split('/')
   const handleCopyPath = () => {
     copyToClipboard(fullPath)
-  }
-
-  // DUMMY ACTIONS DATA
-  const actions = [
-    { id: 'nuke', icon: 'nuke.png', pinned: 'actions2D' },
-    { id: 'afterEffects', icon: 'after-effects.png', pinned: 'actions2D' },
-    { id: 'maya', icon: 'maya.png', pinned: 'actions3D' },
-    { id: 'houdini', icon: 'houdini.png', pinned: 'actions3D' },
-    { id: 'photoshop', icon: 'photoshop.png' },
-  ]
-
-  const actionTaskTypes = {
-    actions2D: ['compositing', 'roto', 'matchmove', 'edit', 'paint'],
-    actions3D: [
-      'modeling',
-      'texture',
-      'lookdev',
-      'rigging',
-      'layout',
-      'setdress',
-      'animation',
-      'fx',
-      'lighting',
-    ],
   }
 
   const pinned = actions
@@ -209,7 +229,7 @@ const DetailsPanelHeader = ({
           thumbnails={thumbnails}
           projectName={projectName}
           portalId={portalId}
-          onUpload={({ thumbnailId }) => handleUpdate('thumbnailId', thumbnailId)}
+          onUpload={handleThumbnailUpload}
         />
         <Styled.Content className={classNames({ isLoading })}>
           <h2>{!isMultiple ? firstEntity?.title : `${entities.length} ${entityType}s selected`}</h2>

@@ -5,6 +5,7 @@ fragment taskTileFragment on TaskNode {
   status
   icon: taskType
   thumbnailEntityId: id
+  thumbnailId
   profile: assignees
   footer: folder {
     folderType
@@ -26,6 +27,7 @@ fragment versionTileFragment on VersionNode {
     productType
   }
   thumbnailEntityId: id
+  thumbnailId
   profile: author
   footer: product {
     productType
@@ -46,8 +48,9 @@ fragment productTileFragment on ProductNode {
   name
   status
   icon: productType
-  thumbnailEntityId: latestVersion {
+  latestVersion {
     id
+    thumbnailId
   }
   footer: productType
   updatedAt
@@ -64,6 +67,7 @@ fragment folderTileFragment on FolderNode {
   status
   icon: folderType
   thumbnailEntityId: id
+  thumbnailId
   footer: folderType
   updatedAt
   path: parent {

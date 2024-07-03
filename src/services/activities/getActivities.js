@@ -2,8 +2,8 @@ import { isEqual } from 'lodash'
 import { ayonApi } from '../ayon'
 import { taskProvideTags } from '../userDashboard/userDashboardHelpers'
 import { transformActivityData, transformTooltipData } from './activitiesHelpers'
-// import PubSub from '/src/pubsub'
-import { ACTIVITIES, ENTITY_TOOLTIP } from './activityQueries'
+// import PubSub from '@/pubsub'
+import { ACTIVITIES, ACTIVITIES_BY_ACTIVITY, ENTITY_TOOLTIP } from './activityQueries'
 
 const getActivities = ayonApi.injectEndpoints({
   endpoints: (build) => ({
@@ -64,6 +64,19 @@ const getActivities = ayonApi.injectEndpoints({
         return !isEqual(currentArg, previousArg)
       },
     }),
+    // get a single activity
+    getActivityForEntities: build.query({
+      query: ({ projectName, entityIds, activityIds }) => ({
+        url: '/graphql',
+        method: 'POST',
+        body: {
+          query: ACTIVITIES_BY_ACTIVITY,
+          variables: { projectName, entityIds, activityIds },
+        },
+      }),
+      transformResponse: (res, meta, { currentUser }) =>
+        transformActivityData(res?.data, currentUser, false),
+    }),
     // get data for a reference tooltip based on type,id and projectName
     getEntityTooltip: build.query({
       query: ({ projectName, entityId, entityType }) => ({
@@ -83,5 +96,9 @@ const getActivities = ayonApi.injectEndpoints({
 
 //
 
-export const { useGetActivitiesQuery, useLazyGetActivitiesQuery, useGetEntityTooltipQuery } =
-  getActivities
+export const {
+  useGetActivitiesQuery,
+  useLazyGetActivitiesQuery,
+  useGetEntityTooltipQuery,
+  useLazyGetActivityForEntitiesQuery,
+} = getActivities

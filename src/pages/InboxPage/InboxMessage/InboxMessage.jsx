@@ -4,14 +4,13 @@ import { Icon } from '@ynput/ayon-react-components'
 import { isValid } from 'date-fns'
 import { isToday } from 'date-fns'
 import { format } from 'date-fns'
-import UserImage from '/src/components/UserImage'
+import UserImage from '@components/UserImage'
 import InboxMessageStatus from './InboxMessageStatus/InboxMessageStatus'
-import { getFuzzyDate } from '/src/components/Feed/ActivityDate'
+import { getFuzzyDate } from '@components/Feed/ActivityDate'
 import { useMemo } from 'react'
 import RemoveMarkdown from 'remove-markdown'
-import Typography from '/src/theme/typography.module.css'
-import getEntityTypeIcon from '/src/helpers/getEntityTypeIcon'
-import ShortcutWidget from '/src/components/ShortcutWidget/ShortcutWidget'
+import Typography from '@/theme/typography.module.css'
+import getEntityTypeIcon from '@helpers/getEntityTypeIcon'
 
 const getMessageBody = (messages = []) => {
   const unreadMessages = messages.filter((m) => !m.isRead)
@@ -157,8 +156,9 @@ const InboxMessage = ({
             className="clear"
             variant="filled"
             onClick={onClear && onClear}
+            shortcut={{ children: 'C' }}
           >
-            {clearLabel} <ShortcutWidget>C</ShortcutWidget>
+            {clearLabel}
           </Styled.ClearButton>
         )}
         <UserImage name={userName} size={20} />

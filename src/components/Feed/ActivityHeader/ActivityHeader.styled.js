@@ -1,5 +1,4 @@
 import styled from 'styled-components'
-import { Button } from '@ynput/ayon-react-components'
 
 export const Header = styled.header`
   display: flex;
@@ -20,23 +19,6 @@ export const Body = styled.div`
   gap: var(--base-gap-small);
   align-items: center;
   flex-wrap: wrap;
-`
-
-export const Tools = styled.div`
-  display: flex;
-  gap: var(--base-gap-small);
-  position: absolute;
-  right: 0;
-  bottom: 0;
-`
-
-export const ToolButton = styled(Button)`
-  padding: 4px;
-
-  [icon='edit_square'] {
-    position: relative;
-    top: -1px;
-  }
 `
 
 export const Reference = styled.li`

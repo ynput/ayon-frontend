@@ -558,60 +558,33 @@ a {
 }
 
 // project list styles for collapsed
-.project-list.collapsible {
-  .p-datatable-table {
-    width: fit-content;
-  }
-  // project list project header column
-  thead {
-    .p-column-header-content {
-      width: 100%;
-    }
-
-    // header container
-    .p-column-title {
-      width: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-
-      transition: grid-template-columns 0.15s, padding 0.15s;
-      padding: 4px;
-      padding-left: 8px;
-    }
+.project-list-section {
+  .collapse-button {
+    position: absolute;
+    right: 3px;
+    z-index: 10;
   }
 
-  // title
-  .title {
-    width: 0;
-    flex: 1;
-
-    transition: flex 0.15s, opacity 0.075s;
-  }
-
-  .p-datatable-thead > tr > th {
-    padding: 0;
+  .p-datatable-thead {
+    transition: opacity 0.2s;
   }
 
   &.collapsed {
-    th {
-      min-width: 0 !important;
-      transition: min-width 0.15s !important;
+    .collapse-button {
+      right: 50%;
+      translate: 50% 0px;
     }
 
-    .p-column-title {
-      padding: 4px;
-    }
-
-    .p-datatable-wrapper {
-      overflow: hidden;
-    }
-
-    // hide title
-    .title {
+    .p-datatable-thead {
       opacity: 0;
-      flex: 0;
+      user-select: none;
+      pointer-events: none;
     }
+  }
+
+  // remove column header border
+  .p-datatable .p-datatable-thead > tr > th {
+    border: none;
   }
 }
 

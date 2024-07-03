@@ -4,7 +4,7 @@ import { TablePanel, Section } from '@ynput/ayon-react-components'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { useEffect } from 'react'
-import useCreateContext from '../hooks/useCreateContext'
+import useCreateContext from '@hooks/useCreateContext'
 
 const TeamList = ({
   teams,

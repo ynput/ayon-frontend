@@ -9,14 +9,14 @@ import {
   LockedInput,
   SaveButton,
 } from '@ynput/ayon-react-components'
-import { useUpdateUsersMutation } from '/src/services/user/updateUser'
-import { updateUserData, updateUserAttribs } from '/src/features/user'
+import { useUpdateUsersMutation } from '@queries/user/updateUser'
+import { updateUserData, updateUserAttribs } from '@state/user'
 import styled from 'styled-components'
-import ayonClient from '/src/ayon'
+import ayonClient from '@/ayon'
 import UserAttribForm from './UserAttribForm'
 import UserAccessForm from './UserAccessForm'
 import ServiceDetails from './ServiceDetails'
-import UserDetailsHeader from '/src/components/User/UserDetailsHeader'
+import UserDetailsHeader from '@components/User/UserDetailsHeader'
 import { cloneDeep, isEqual } from 'lodash'
 import UserAccessGroupsForm from './UserAccessGroupsForm/UserAccessGroupsForm'
 

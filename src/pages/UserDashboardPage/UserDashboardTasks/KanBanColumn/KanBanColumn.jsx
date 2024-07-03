@@ -30,7 +30,6 @@ const KanBanColumn = forwardRef(
     },
     ref,
   ) => {
-    const assigneesIsMe = useSelector((state) => state.dashboard.tasks.assigneesIsMe)
     const dispatch = useDispatch()
 
     const tasksCount = tasks.length
@@ -119,7 +118,6 @@ const KanBanColumn = forwardRef(
                           isActive={selectedTasks.includes(task.id)}
                           isDraggingActive={active}
                           className="card"
-                          assigneesIsMe={assigneesIsMe}
                           onContextMenu={handleContextMenu}
                           inView={inView || i <= numberCardsFit}
                         />
@@ -131,15 +129,7 @@ const KanBanColumn = forwardRef(
             </Fragment>
           ),
         ),
-      [
-        groupedTasks,
-        handleTaskClick,
-        handlePrefetch,
-        selectedTasks,
-        active,
-        assigneesIsMe,
-        handleContextMenu,
-      ],
+      [groupedTasks, handleTaskClick, handlePrefetch, selectedTasks, active, handleContextMenu],
     )
 
     // used to load more tasks when scrolling

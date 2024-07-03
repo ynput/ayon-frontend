@@ -1,6 +1,6 @@
 import { Button } from '@ynput/ayon-react-components'
 import * as Styled from './Preview.styled'
-import VersionSelectorTool from '/src/components/VersionSelectorTool/VersionSelectorTool'
+import VersionSelectorTool from '@components/VersionSelectorTool/VersionSelectorTool'
 import { useGetPreviewQuery, useGetPreviewVersionsQuery } from '/src/services/preview/getPreview'
 import { useDispatch } from 'react-redux'
 import { updateSelection } from '/src/features/preview'

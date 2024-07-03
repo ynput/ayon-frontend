@@ -1,12 +1,8 @@
-import { Button, Section, Toolbar } from '@ynput/ayon-react-components'
+import { Section, Toolbar } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
 export const Tools = styled(Toolbar)`
   padding: var(--padding-s) var(--padding-m);
-`
-
-export const ShortcutButton = styled(Button)`
-  padding: 4px 6px;
 `
 
 export const InboxSection = styled(Section)`

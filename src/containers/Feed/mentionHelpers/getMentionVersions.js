@@ -1,6 +1,6 @@
-import { getFuzzyDate } from '/src/components/Feed/ActivityDate'
-import { productTypes } from '/src/features/project'
-import getEntityTypeIcon from '/src/helpers/getEntityTypeIcon'
+import { getFuzzyDate } from '@components/Feed/ActivityDate'
+import { productTypes } from '@state/project'
+import getEntityTypeIcon from '@helpers/getEntityTypeIcon'
 
 const getMentionVersions = (versions) => {
   return versions.map((v) => {

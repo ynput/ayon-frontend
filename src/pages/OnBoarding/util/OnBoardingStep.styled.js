@@ -1,6 +1,11 @@
-import { Panel, SaveButton, getShimmerStyles, Section as SectionComp } from '@ynput/ayon-react-components'
+import {
+  Panel,
+  SaveButton,
+  getShimmerStyles,
+  Section as SectionComp,
+} from '@ynput/ayon-react-components'
 import styled, { css, keyframes } from 'styled-components'
-import AddonCard from '/src/components/AddonCard/AddonCard'
+import AddonCard from '@components/AddonCard/AddonCard'
 
 export const Logo = styled.img`
   width: 100px;

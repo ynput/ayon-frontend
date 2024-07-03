@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react'
 import * as Styled from '../util/OnBoardingStep.styled'
-import AddonCard from '/src/components/AddonCard/AddonCard'
+import AddonCard from '@components/AddonCard/AddonCard'
 
 export const AddonSelectStep = ({
   Header,
@@ -10,7 +10,6 @@ export const AddonSelectStep = ({
   releases = [],
   release = {},
   setSelectedAddons,
-  onSubmit,
   isLoadingRelease,
   isLoadingAddons,
 }) => {
@@ -57,9 +56,7 @@ export const AddonSelectStep = ({
             ))}
       </Styled.AddonsContainer>
       <Footer
-        next="Confirm"
-        onNext={onSubmit}
-        nextProps={{ saving: isLoadingRelease }}
+        nextProps={{ saving: isLoadingRelease, disabled: isLoadingRelease }}
         showIcon={isLoadingRelease}
       />
     </Styled.Section>

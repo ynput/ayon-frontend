@@ -1,5 +1,5 @@
 import styled, { css } from 'styled-components'
-import getShimmerStyles from '/src/styles/getShimmerStyles'
+import getShimmerStyles from '@/styles/getShimmerStyles'
 
 export const Preset = styled.li`
   display: flex;

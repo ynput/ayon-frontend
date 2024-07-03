@@ -5,10 +5,10 @@ import {
   useGetAddonSettingsSchemaQuery,
   useGetAddonSettingsQuery,
   useGetAddonSettingsOverridesQuery,
-} from '/src/services/addonSettings'
+} from '@queries/addonSettings'
 
-import { setUri } from '/src/features/context'
-import SettingsEditor from '/src/containers/SettingsEditor'
+import { setUri } from '@state/context'
+import SettingsEditor from '@containers/SettingsEditor'
 
 const AddonSettingsPanel = ({
   addon,

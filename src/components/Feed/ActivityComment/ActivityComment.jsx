@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
 import * as Styled from './ActivityComment.styled'
 import ActivityHeader from '../ActivityHeader/ActivityHeader'
 import ReactMarkdown from 'react-markdown'
@@ -7,11 +7,14 @@ import remarkGfm from 'remark-gfm'
 import emoji from 'remark-emoji'
 import { classNames } from 'primereact/utils'
 import { useSelector } from 'react-redux'
-import CommentInput from '/src/components/CommentInput/CommentInput'
+import CommentInput from '@components/CommentInput/CommentInput'
 import { aTag, codeTag, inputTag } from './activityMarkdownComponents'
-import FilesGrid from '/src/containers/FilesGrid/FilesGrid'
-import useReferenceTooltip from '/src/containers/Feed/hooks/useReferenceTooltip'
+import FilesGrid from '@containers/FilesGrid/FilesGrid'
+import useReferenceTooltip from '@containers/Feed/hooks/useReferenceTooltip'
 import { getTextRefs } from '../../CommentInput/quillToMarkdown'
+import MenuContainer from '@/components/Menu/MenuComponents/MenuContainer'
+import ActivityCommentMenu from '../ActivityCommentMenu/ActivityCommentMenu'
+import { toggleMenuOpen } from '@/features/context'
 
 const ActivityComment = ({
   activity = {},
@@ -81,6 +84,9 @@ const ActivityComment = ({
     onDelete && onDelete(activityId, entityId, refs, body)
   }
 
+  const handleToggleMenu = (menu) => dispatch(toggleMenuOpen(menu))
+  const moreRef = useRef()
+
   const [, setRefTooltip] = useReferenceTooltip({ dispatch })
 
   return (
@@ -89,14 +95,11 @@ const ActivityComment = ({
         className={classNames('comment', { isOwner, isMenuOpen, isEditing, isHighlighted })}
       >
         <ActivityHeader
-          id={menuId}
           name={authorName}
           fullName={authorFullName}
           date={createdAt}
           isRef={isRef}
           activity={activity}
-          onDelete={handleDelete}
-          onEdit={handleEditComment}
           projectInfo={projectInfo}
           projectName={projectName}
           entityType={entityType}
@@ -104,6 +107,18 @@ const ActivityComment = ({
           onReferenceTooltip={setRefTooltip}
         />
         <Styled.Body className={classNames('comment-body', { isEditing })}>
+          <Styled.Tools className={'tools'} ref={moreRef}>
+            {isOwner && handleEditComment && (
+              <Styled.ToolButton icon="edit_square" onClick={handleEditComment} />
+            )}
+            {isOwner && (
+              <Styled.ToolButton
+                icon="more_horiz"
+                className="more"
+                onClick={() => handleToggleMenu(menuId)}
+              />
+            )}
+          </Styled.Tools>
           {isEditing ? (
             <CommentInput
               isOpen={true}
@@ -151,6 +166,10 @@ const ActivityComment = ({
               />
             </>
           )}
+
+          <MenuContainer id={menuId} target={moreRef.current}>
+            <ActivityCommentMenu onDelete={() => isOwner && handleDelete()} />
+          </MenuContainer>
         </Styled.Body>
       </Styled.Comment>
     </>

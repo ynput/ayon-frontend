@@ -2,7 +2,7 @@ import { Button, Icon } from '@ynput/ayon-react-components'
 import * as Styled from './FileUploadCard.styled'
 import { classNames } from 'primereact/utils'
 import { useState } from 'react'
-import { isFilePreviewable } from '/src/containers/FileUploadPreview/FileUploadPreview'
+import { isFilePreviewable } from '@containers/FileUploadPreview/FileUploadPreview'
 
 const fileIcons = {
   // special cases

@@ -1,9 +1,9 @@
 import React, { useRef, useEffect } from 'react'
 import { Section, TablePanel } from '@ynput/ayon-react-components'
-import { TimestampField } from '/src/containers/fieldFormat'
+import { TimestampField } from '@containers/fieldFormat'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
-import { CellWithIcon } from '/src/components/icons'
+import { CellWithIcon } from '@components/icons'
 
 import styled, { keyframes } from 'styled-components'
 

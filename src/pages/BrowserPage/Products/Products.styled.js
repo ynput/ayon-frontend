@@ -1,6 +1,6 @@
 import styled from 'styled-components'
-import CategorySelect from '/src/components/CategorySelect/CategorySelect'
-import ColumnsSelect from '/src/components/ColumnsSelect/ColumnsSelect'
+import CategorySelect from '@components/CategorySelect/CategorySelect'
+import ColumnsSelect from '@components/ColumnsSelect/ColumnsSelect'
 
 export const TaskFilterDropdown = styled(CategorySelect)`
   min-width: 160px;

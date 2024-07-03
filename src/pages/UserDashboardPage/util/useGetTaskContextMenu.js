@@ -1,8 +1,8 @@
-import useCreateContext from '/src/hooks/useCreateContext'
-import copyToClipboard from '/src/helpers/copyToClipboard'
-import { onTaskSelected } from '/src/features/dashboard'
+import useCreateContext from '@hooks/useCreateContext'
+import copyToClipboard from '@helpers/copyToClipboard'
+import { onTaskSelected } from '@state/dashboard'
 import { useSelector } from 'react-redux'
-import { useURIContext } from '/src/context/uriContext'
+import { useURIContext } from '@context/uriContext'
 
 export const useGetTaskContextMenu = (tasks, dispatch) => {
   // URI NAVIGATE ON RIGHT CLICK

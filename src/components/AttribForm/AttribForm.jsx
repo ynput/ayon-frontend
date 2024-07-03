@@ -4,7 +4,7 @@ import AttribFormType from './AttribFormType'
 
 const AttribForm = ({ form = {}, onChange, fields, isLoading }) => {
   //   we build the attrib form data based on the schema, trying to match the data types
-  // we do this incase form.attrib is missing any fields
+  // we do this in case form.attrib is missing any fields
   // and so that formData is always in the same format (we don't get uncontrolled inputs)
   useEffect(() => {
     if (!isLoading) return

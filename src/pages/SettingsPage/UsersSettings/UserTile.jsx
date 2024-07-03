@@ -1,14 +1,14 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import { Panel } from '@ynput/ayon-react-components'
-import UserImage from '/src/components/UserImage'
+import UserImage from '@components/UserImage'
 
 import styled, { css } from 'styled-components'
-import { useGetUserByNameQuery } from '/src/services/user/getUsers'
+import { useGetUserByNameQuery } from '@queries/user/getUsers'
 import { useSelector } from 'react-redux'
 import { formatDistance } from 'date-fns'
 import { isObject } from 'lodash'
-import getShimmerStyles from '/src/styles/getShimmerStyles'
+import getShimmerStyles from '@/styles/getShimmerStyles'
 
 const StyledUserImage = styled(UserImage)`
   /* isLoading */

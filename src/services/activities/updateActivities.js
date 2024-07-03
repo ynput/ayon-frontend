@@ -1,6 +1,6 @@
 import { ayonApi } from '../ayon'
 import { toast } from 'react-toastify'
-import { filterActivityTypes } from '/src/features/dashboard'
+import { filterActivityTypes } from '@state/dashboard'
 
 const updateCache = (activitiesDraft, patch = {}, isDelete) => {
   // find the index of the activity to update
@@ -18,15 +18,27 @@ const updateCache = (activitiesDraft, patch = {}, isDelete) => {
 
 const patchActivities = async (
   { projectName, patch, entityIds, activityTypes = [], filter },
-  { dispatch, queryFulfilled },
+  { dispatch, queryFulfilled, getState },
   method,
 ) => {
-  // patch new data into the cache of a single entities activities
-  const patchResult = dispatch(
-    ayonApi.util.updateQueryData(
-      'getActivities',
-      { projectName, entityIds, activityTypes, filter },
-      (draft) => updateCache(draft.activities, patch, method === 'delete'),
+  // build tags that would be affected by this activity
+  const invalidatingTags = entityIds.map((id) => ({
+    type: 'entityActivities',
+    id: id + '-' + filter,
+  }))
+
+  const state = getState()
+  // get caches that would be affected by this activity
+  const entries = ayonApi.util.selectInvalidatedBy(state, invalidatingTags)
+
+  // now patch all the caches with the update
+  const patches = entries.forEach(({ originalArgs }) =>
+    dispatch(
+      ayonApi.util.updateQueryData(
+        'getActivities',
+        { projectName, entityIds: originalArgs.entityIds, activityTypes, filter },
+        (draft) => updateCache(draft.activities, patch, method === 'delete'),
+      ),
     ),
   )
 
@@ -36,10 +48,13 @@ const patchActivities = async (
     const message = `Error: ${error?.error?.data?.detail || `Failed to ${method} activity`}`
     console.error(message, error)
     toast.error(message)
-    patchResult.undo()
+    for (const patchResult of patches) {
+      patchResult?.undo()
+    }
   }
 }
 
+// get tags for other filter types
 const getTags = ({ entityId, filter }) => {
   const invalidateFilters = Object.keys(filterActivityTypes).filter((key) => key !== filter)
 

@@ -64,7 +64,7 @@ query getInboxHasUnread {
 `
 
 export const INBOX_UNREAD_COUNT = `
-query getInboxHasUnread($important: Boolean) {
+query getInboxUnreadCount($important: Boolean) {
   inbox(last: 500, showActiveMessages: true, showImportantMessages: $important, showUnreadMessages: true){
     edges {
       node {

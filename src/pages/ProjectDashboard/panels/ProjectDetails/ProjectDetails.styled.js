@@ -1,5 +1,5 @@
 import styled, { css } from 'styled-components'
-import getShimmerStyles from '/src/styles/getShimmerStyles'
+import getShimmerStyles from '@/styles/getShimmerStyles'
 import { Toolbar } from '@ynput/ayon-react-components'
 
 export const Thumbnail = styled.div`

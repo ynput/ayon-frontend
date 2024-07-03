@@ -1,7 +1,7 @@
 import { Icon } from '@ynput/ayon-react-components'
 import ActivityHeader from '../ActivityHeader/ActivityHeader'
 import * as Styled from './ActivityVersions.styled'
-import { productTypes } from '/src/features/project'
+import { productTypes } from '@state/project'
 import { useState } from 'react'
 import { More } from '../ActivityGroup/ActivityGroup.styled'
 import ActivityDate from '../ActivityDate'

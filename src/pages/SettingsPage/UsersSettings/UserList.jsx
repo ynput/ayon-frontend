@@ -1,13 +1,13 @@
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { TablePanel, Section } from '@ynput/ayon-react-components'
-import UserImage from '/src/components/UserImage'
+import UserImage from '@components/UserImage'
 
 import './users.scss'
 
 import { useMemo } from 'react'
 import styled from 'styled-components'
-import useCreateContext from '/src/hooks/useCreateContext'
+import useCreateContext from '@hooks/useCreateContext'
 
 const StyledProfileRow = styled.div`
   display: flex;
@@ -40,7 +40,7 @@ const UserList = ({
     onSelectUsers(result)
   }
 
-  // IDEA: Can these go into the details panel aswell?
+  // IDEA: Can these go into the details panel as well?
   const ctxMenuTableItems = useMemo(
     () => [
       {

@@ -1,5 +1,5 @@
 import { ayonApi } from '../ayon'
-import PubSub from '/src/pubsub'
+import PubSub from '@/pubsub'
 
 const EVENT_FRAGMENT = `
 fragment EventFragment on EventNode {

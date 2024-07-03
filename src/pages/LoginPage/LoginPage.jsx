@@ -3,10 +3,10 @@ import { useEffect, useState } from 'react'
 import { useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
 import { InputText, InputPassword, Button, Panel } from '@ynput/ayon-react-components'
-import { login } from '/src/features/user'
-import { ayonApi } from '../../services/ayon'
+import { login } from '@state/user'
+import { ayonApi } from '@queries/ayon'
 import AuthLink from './AuthLink'
-import { useGetInfoQuery } from '/src/services/auth/getAuth'
+import { useGetInfoQuery } from '@queries/auth/getAuth'
 import ReactMarkdown from 'react-markdown'
 import LoadingPage from '../LoadingPage'
 import * as Styled from './LoginPage.styled'
@@ -112,7 +112,11 @@ const LoginPage = ({ isFirstTime }) => {
   const handleSubmit = (e) => {
     e.preventDefault()
 
-    doLogin()
+    if (!(name && password)) {
+      toast.error('Please enter username and password to login')
+    } else {
+      doLogin()
+    }
   }
 
   if (isLoading || isLoadingInfo) return isFirstTime ? null : <LoadingPage />

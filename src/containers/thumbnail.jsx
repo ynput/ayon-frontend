@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import styled, { keyframes } from 'styled-components'
 import getShimmerStyles from '../styles/getShimmerStyles'
 import { Icon } from '@ynput/ayon-react-components'
-import ThumbnailUploader from '../components/ThumbnailUploader/ThumbnailUploader'
+import ThumbnailUploader from '@components/ThumbnailUploader/ThumbnailUploader'
 import { createPortal } from 'react-dom'
 import { classNames } from 'primereact/utils'
 

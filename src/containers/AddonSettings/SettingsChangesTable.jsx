@@ -3,10 +3,10 @@ import { useEffect, useMemo, useState } from 'react'
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 import { Section, TablePanel, Button } from '@ynput/ayon-react-components'
-import useCreateContext from '/src/hooks/useCreateContext'
-import { Badge, BadgeWrapper } from '/src/components/Badge'
+import useCreateContext from '@hooks/useCreateContext'
+import { Badge, BadgeWrapper } from '@components/Badge'
 
-const SettingsChangesTable = ({ changes, onRevert }) => {
+const SettingsChangesTable = ({ changes, unpins, onRevert }) => {
   const [expandedKeys, setExpandedKeys] = useState({})
   const [selectedKeys, setSelectedKeys] = useState({})
   const [knownAddonKeys, setKnownAddonKeys] = useState({})
@@ -37,6 +37,8 @@ const SettingsChangesTable = ({ changes, onRevert }) => {
       const addonChanges = changes[addonKey]
       if (!addonChanges?.length) continue
 
+      const addonUnpins = unpins[addonKey] || []
+
       const children = addonChanges.map((change) => ({
         key: `${addonKey}|${change.join('|')}`,
         expanded: true,
@@ -45,6 +47,7 @@ const SettingsChangesTable = ({ changes, onRevert }) => {
           path: change,
           addonKey: addonKey,
           isKey: true,
+          isUnpin: addonUnpins.includes(change),
         },
       }))
 
@@ -64,7 +67,7 @@ const SettingsChangesTable = ({ changes, onRevert }) => {
     }
 
     return result
-  }, [changes])
+  }, [changes, unpins])
 
   const changeNameRenderer = (rowData) => {
     if (rowData.children) {
@@ -88,7 +91,7 @@ const SettingsChangesTable = ({ changes, onRevert }) => {
       )
     }
 
-    return rowData.data.path.join(' / ')
+    return rowData.data.path.join(' / ') + (rowData.data.isUnpin ? ' (unpin)' : '')
   }
 
   const ctxMenuItems = useMemo(() => {

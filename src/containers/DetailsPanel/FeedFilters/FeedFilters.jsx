@@ -1,6 +1,6 @@
 import * as Styled from './FeedFilters.styled'
 import { useDispatch, useSelector } from 'react-redux'
-import { updateDetailsPanelTab, updateFeedFilter } from '/src/features/details'
+import { updateDetailsPanelTab, updateFeedFilter } from '@state/details'
 import { Spacer } from '@ynput/ayon-react-components'
 import { classNames } from 'primereact/utils'
 import { entitiesWithoutFeed } from '../DetailsPanel'

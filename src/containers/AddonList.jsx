@@ -5,7 +5,7 @@ import { Section, TablePanel } from '@ynput/ayon-react-components'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 
-import { useGetAddonSettingsListQuery } from '/src/services/addonSettings'
+import { useGetAddonSettingsListQuery } from '@queries/addonSettings'
 
 const AddonList = ({
   selectedAddons,
@@ -15,8 +15,8 @@ const AddonList = ({
   siteSettings = false, // 'settings' or 'site' - show addons with settings or site settings
   onAddonFocus = () => {}, // Triggered when selection is changed by ayon+settings:// uri change
   changedAddonKeys = null, // List of addon keys that have changed
-  projectName, // used for chaged addons
-  siteId, // used for chaged addons
+  projectName, // used for changed addons
+  siteId, // used for changed addons
   setBundleName,
 }) => {
   const { data, loading, isError } = useGetAddonSettingsListQuery({

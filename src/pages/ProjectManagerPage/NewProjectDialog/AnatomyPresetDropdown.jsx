@@ -1,6 +1,6 @@
 import { Dropdown } from 'primereact/dropdown'
 import { useEffect } from 'react'
-import { useGetAnatomyPresetsQuery } from '../../../services/anatomy/getAnatomy'
+import { useGetAnatomyPresetsQuery } from '@queries/anatomy/getAnatomy'
 
 const AnatomyPresetDropdown = ({ selectedPreset, setSelectedPreset }) => {
   // get presets lists data

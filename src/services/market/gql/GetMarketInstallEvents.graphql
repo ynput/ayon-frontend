@@ -1,0 +1,12 @@
+query GetMarketInstallEvents {
+  events(last: 100, topics: ["addon.install_from_url"]) {
+    edges {
+      node {
+        id
+        status
+        description
+        summary
+      }
+    }
+  }
+}

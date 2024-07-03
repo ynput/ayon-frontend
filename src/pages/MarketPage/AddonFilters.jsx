@@ -1,9 +1,9 @@
 import { Panel, Section } from '@ynput/ayon-react-components'
 import React, { useState } from 'react'
 import styled from 'styled-components'
-import Type from '/src/theme/typography.module.css'
+import Type from '@/theme/typography.module.css'
 import { classNames } from 'primereact/utils'
-import YnputConnector from '/src/components/YnputCloud/YnputConnector'
+import YnputConnector from '@components/YnputCloud/YnputConnector'
 
 const StyledSection = styled(Section)`
   height: 100%;
@@ -37,7 +37,7 @@ const StyledList = styled(Panel)`
 `
 
 const AddonFilters = ({ onSelect, onConnection }) => {
-  const installFilters = [
+  const downloadFilters = [
     {
       id: 'all',
       name: 'All',
@@ -47,20 +47,20 @@ const AddonFilters = ({ onSelect, onConnection }) => {
     {
       id: 'updates',
       name: 'Updates Available',
-      filter: [{ isOutdated: true }, { isInstalled: true }],
+      filter: [{ isOutdated: true }, { isDownloaded: true }],
       tooltip: 'Addons with updates available',
     },
     {
       id: 'production',
       name: 'In Production',
-      filter: [{ currentProductionVersion: (v) => v }, { isInstalled: true }],
+      filter: [{ currentProductionVersion: (v) => v }, { isDownloaded: true }],
       tooltip: 'Addons used in the production bundle',
     },
     {
       id: 'production-outdated',
       name: 'Production Outdated',
       filter: [
-        { isProductionOutdated: true, isInstalled: true, currentProductionVersion: (v) => v },
+        { isProductionOutdated: true, isDownloaded: true, currentProductionVersion: (v) => v },
       ],
       tooltip: 'Addons using an outdated version in the production bundle',
     },
@@ -68,7 +68,7 @@ const AddonFilters = ({ onSelect, onConnection }) => {
     {
       id: 'uninstalled',
       name: 'Downloads Available',
-      filter: [{ isInstalled: false }],
+      filter: [{ isDownloaded: false }],
       tooltip: 'Addons available to download',
     },
   ]
@@ -83,8 +83,8 @@ const AddonFilters = ({ onSelect, onConnection }) => {
   return (
     <StyledSection>
       <StyledList>
-        <div className={classNames('title', Type.titleMedium)}>Installed</div>
-        {installFilters.map((filter) => (
+        <div className={classNames('title', Type.titleMedium)}>Downloaded</div>
+        {downloadFilters.map((filter) => (
           <div
             key={filter.id}
             className={classNames('item', { isSelected: selected === filter.id })}

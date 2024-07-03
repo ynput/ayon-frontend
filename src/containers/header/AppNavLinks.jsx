@@ -3,7 +3,7 @@ import React, { useEffect } from 'react'
 import { useSelector } from 'react-redux'
 import { NavLink, useNavigate, useParams } from 'react-router-dom'
 import * as Styled from './AppNavLinks.styled'
-import Typography from '/src/theme/typography.module.css'
+import Typography from '@/theme/typography.module.css'
 
 const AppNavLinks = ({ links = [] }) => {
   // item = { name: 'name', path: 'path', node: node | 'spacer', accessLevel: [] }

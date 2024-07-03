@@ -1,6 +1,6 @@
 import { classNames } from 'primereact/utils'
 import * as Styled from './MarketAddonCard.styled'
-import Type from '/src/theme/typography.module.css'
+import Type from '@/theme/typography.module.css'
 import AddonIcon from '../AddonIcon/AddonIcon'
 import { Icon } from '@ynput/ayon-react-components'
 import { upperFirst } from 'lodash'
@@ -14,37 +14,37 @@ const MarketAddonCard = ({
   isSelected,
   isOfficial,
   isVerified,
-  isInstalled,
+  isDownloaded,
   isOutdated,
   isPlaceholder,
-  isWaiting, // waiting to be installed/updated by update all
-  isInstalling,
+  isWaiting, // waiting to be downloaded/updated by update all
+  isDownloading,
   isFailed,
   isFinished,
-  onInstall,
+  onDownload,
   ...props
 }) => {
   let state = 'download'
-  if (isInstalled && !isOutdated) state = 'downloaded'
-  if (isInstalled && isOutdated) state = 'update'
+  if (isDownloaded && !isOutdated) state = 'downloaded'
+  if (isDownloaded && isOutdated) state = 'update'
   if (isWaiting) state = 'pending'
-  if (isInstalling) state = isInstalled && isOutdated ? 'updating' : 'downloading'
+  if (isDownloading) state = isDownloaded && isOutdated ? 'updating' : 'downloading'
   if (isFailed) state = 'failed'
   if (isFinished) state = 'finished'
 
   let stateIcon = null
-  if (isInstalling) stateIcon = 'sync'
+  if (isDownloading) stateIcon = 'sync'
   if (isFailed) stateIcon = 'error'
   if (isFinished) stateIcon = 'check_circle'
 
   let stateVariant = 'light'
-  if (state === 'install') stateVariant = 'surface'
+  if (state === 'download') stateVariant = 'surface'
   if (state === 'failed') stateVariant = 'danger'
   if (state === 'update') stateVariant = 'filled'
 
   const handleActionClick = () => {
     if (['download', 'update'].includes(state)) {
-      onInstall(name, latestVersion)
+      onDownload(name, latestVersion)
     }
   }
 

@@ -1,8 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { Icon } from '@ynput/ayon-react-components'
+import { Icon, ShortcutTag } from '@ynput/ayon-react-components'
 import './ContextMenu.scss'
-import ShortcutWidget from '../ShortcutWidget/ShortcutWidget'
 
 const ContextMenuItem = ({
   icon,
@@ -60,7 +59,7 @@ const ContextMenuItem = ({
       {children}
       {shortcut && (
         <div className="p-menuitem-shortcut">
-          <ShortcutWidget>{shortcut}</ShortcutWidget>
+          <ShortcutTag>{shortcut}</ShortcutTag>
         </div>
       )}
       {!!items?.length && (

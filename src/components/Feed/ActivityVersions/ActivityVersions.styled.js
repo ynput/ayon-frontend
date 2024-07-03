@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import ThumbnailSimple from '/src/containers/ThumbnailSimple'
+import ThumbnailSimple from '@containers/ThumbnailSimple'
 
 export const Container = styled.li`
   /* reset default */

@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import { Button } from '@ynput/ayon-react-components'
-import CopySettingsDialog from '/src/containers/CopySettings'
-import { useGetAddonSettingsListQuery } from '/src/services/addonSettings'
+import CopySettingsDialog from '@containers/CopySettings'
+import { useGetAddonSettingsListQuery } from '@queries/addonSettings'
 
 const CopyBundleSettingsButton = ({
   bundleName,
@@ -11,6 +11,7 @@ const CopyBundleSettingsButton = ({
   setLocalData,
   changedKeys,
   setChangedKeys,
+  setUnpinnedKeys,
   originalData,
   setOriginalData,
   projectName,
@@ -71,6 +72,7 @@ const CopyBundleSettingsButton = ({
           setLocalData={setLocalData}
           changedKeys={changedKeys}
           setChangedKeys={setChangedKeys}
+          setUnpinnedKeys={setUnpinnedKeys}
           projectName={projectName}
           onClose={() => setDialogVisible(false)}
           pickByBundle={true}

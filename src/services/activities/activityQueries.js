@@ -54,6 +54,23 @@ query getEntitiesActivities($projectName: String!, $entityIds: [String!]!, $curs
 ${ACTIVITY_FRAGMENT}
 `
 
+export const ACTIVITIES_BY_ACTIVITY = `
+query getEntitiesActivities($projectName: String!, $entityIds: [String!]!, $activityIds: [String!]) {
+  project(name: $projectName) {
+    name
+    activities(entityIds: $entityIds, activityIds: $activityIds) {
+      edges {
+        cursor
+        node {
+          ...ActivityFragment
+        }
+      }
+    }
+  }
+}
+${ACTIVITY_FRAGMENT}
+`
+
 export const getTypeFields = (type) => {
   switch (type) {
     case 'task':

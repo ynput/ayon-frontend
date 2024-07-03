@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { toast } from 'react-toastify'
 import { Button, Divider, SaveButton, Section, Dialog } from '@ynput/ayon-react-components'
-import { useAddUserMutation } from '/src/services/user/updateUser'
-import ayonClient from '/src/ayon'
+import { useAddUserMutation } from '@queries/user/updateUser'
+import ayonClient from '@/ayon'
 import UserAttribForm from './UserAttribForm'
 import UserAccessForm from './UserAccessForm'
 
@@ -86,7 +86,7 @@ const NewUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
       toast.success('User created')
       // set added users to be used for auto selection onHide
       setAddedUsers([...addedUsers, formData.Username])
-      // keep re-usable data in the form
+      // keep reusable data in the form
       setPassword('')
       setPasswordConfirm('')
       setFormData((fd) => {
