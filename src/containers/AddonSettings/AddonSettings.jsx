@@ -324,7 +324,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
 
     const message = (
       <>
-        <p>This action will instanlty remove the selected override.</p>
+        <p>This action will instantly remove the selected override.</p>
         <p>Are you sure you want to continue?</p>
       </>
     )
@@ -364,7 +364,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
     // Remove all overrides for this addon (within current project and variant)
     const message = (
       <>
-        <p>This action will instanlty remove all overrides for this addon.</p>
+        <p>This action will instantly remove all overrides for this addon.</p>
         <p>Are you sure you want to proceed?</p>
       </>
     )
@@ -400,7 +400,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   const onPinOverride = async (addon, siteId, path) => {
     const message = (
       <>
-        <p>This action will instanlty pin the current value as an override. </p>
+        <p>This action will instantly pin the current value as an override. </p>
         <p>Are you sure you want to proceed?</p>
       </>
     )
