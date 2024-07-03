@@ -69,14 +69,17 @@ const DetailsPanelHeader = ({
   }
   const projectName = entities.length > 1 ? null : firstEntity?.projectName
 
-  const entityIds = entities.map((entity) => entity.id)
+  const entityIds = entities
+    .filter((e) => e.projectName === firstEntity?.projectName)
+    .map((entity) => entity.id)
+
   // get checklists count
   const { data: checklistCount = {} } = useGetChecklistsCountQuery(
     {
-      projectName,
+      projectName: firstEntity?.projectName,
       entityIds,
     },
-    { skip: !projectName || !entityIds.length },
+    { skip: !firstEntity?.projectName || !entityIds.length },
   )
   let checklistsLabel
   if (checklistCount.total > 0) {
