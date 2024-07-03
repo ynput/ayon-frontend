@@ -1,4 +1,4 @@
-import { ayonApi } from '@queries/ayon'
+import api from '@api'
 import { transformEntityData } from '../userDashboard/userDashboardHelpers'
 import {
   buildDetailsQuery,
@@ -6,7 +6,7 @@ import {
 } from '../userDashboard/userDashboardQueries'
 import PubSub from '@/pubsub'
 
-const getEntityPanel = ayonApi.injectEndpoints({
+const getEntityPanel = api.injectEndpoints({
   endpoints: (build) => ({
     // TODO, move to separate file getEntityPanel
     getEntityDetailsPanel: build.query({
@@ -46,7 +46,7 @@ const getEntityPanel = ayonApi.injectEndpoints({
         try {
           const promises = entities.map((entity) =>
             dispatch(
-              ayonApi.endpoints.getEntityDetailsPanel.initiate(
+              api.endpoints.getEntityDetailsPanel.initiate(
                 {
                   projectName: entity.projectName,
                   entityId: entity.id,
@@ -94,7 +94,7 @@ const getEntityPanel = ayonApi.injectEndpoints({
             try {
               // get the new data for the entity
               const res = await dispatch(
-                ayonApi.endpoints.getEntityDetailsPanel.initiate(
+                api.endpoints.getEntityDetailsPanel.initiate(
                   {
                     projectName: matchedEntity.projectName,
                     entityId: matchedEntity.id,
@@ -151,6 +151,7 @@ const getEntityPanel = ayonApi.injectEndpoints({
         entities.map(({ id }) => ({ id, type: 'entities' })),
     }),
   }),
+  overrideExisting: true,
 })
 
 export const { useGetEntitiesDetailsPanelQuery, useLazyGetEntitiesDetailsPanelQuery } =

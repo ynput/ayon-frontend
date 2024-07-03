@@ -110,7 +110,7 @@ const FileUploadCard = ({
         {isImage && src && (
           <Styled.ImageWrapper className={classNames({ isDownloadable })}>
             <img
-              src={src + '?preview=true'}
+              src={src + '/thumbnail'}
               onError={() => setImageError(true)}
               style={{
                 display: imageError ? 'none' : 'block',

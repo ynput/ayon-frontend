@@ -13,7 +13,7 @@ const ActivityReferenceTooltip = ({ dispatch, ...props }) => {
     if (id) {
       const handleMouseOver = (event) => {
         const target = event.target
-        const closestRef = target?.closest(`#ref-${id}`)
+        const closestRef = target?.closest(`#ref-${id.replace('.', '-')}`)
         if (!closestRef) {
           // close
           setRefTooltip(null)

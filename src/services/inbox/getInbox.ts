@@ -1,6 +1,6 @@
 // @ts-ignore
 import PubSub from '@/pubsub'
-import API from '@api'
+import api from '@api'
 import { $Any } from '@types'
 import {
   GetInboxHasUnreadQuery,
@@ -11,8 +11,8 @@ import { TagTypesFromApi } from '@reduxjs/toolkit/query'
 import { TransformedInboxMessages, transformInboxMessages } from './inboxTransform'
 import { DefinitionsFromApi, OverrideResultType } from '@reduxjs/toolkit/query'
 
-type Definitions = DefinitionsFromApi<typeof API.graphql>
-type TagTypes = TagTypesFromApi<typeof API.graphql>
+type Definitions = DefinitionsFromApi<typeof api>
+type TagTypes = TagTypesFromApi<typeof api>
 
 type UpdatedDefinitions = Omit<
   Definitions,
@@ -23,13 +23,11 @@ type UpdatedDefinitions = Omit<
   GetInboxHasUnread: OverrideResultType<Definitions['GetInboxHasUnread'], boolean>
 }
 
-export const enhancedInboxGraphql = API.graphql.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
+export const enhancedInboxGraphql = api.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
   endpoints: {
     GetInboxMessages: {
       transformResponse: (res: GetInboxMessagesQuery, _meta, args) =>
         transformInboxMessages(res.inbox, args),
-      transformErrorResponse: (error) => error.message,
-
       // only use active and isActive as cache keys
       serializeQueryArgs: ({ queryArgs: { active, important } = {} }) => ({
         active,
@@ -91,13 +89,13 @@ export const enhancedInboxGraphql = API.graphql.enhanceEndpoints<TagTypes, Updat
             // invalidate the getInbox cache
             // invalidate the getInboxUnreadCount cache
             dispatch(
-              API.graphql.util.invalidateTags([
+              api.util.invalidateTags([
                 { type: 'inbox', id: `important=${isImportant}` },
                 { type: 'inbox', id: `count-${isImportant}` },
               ]),
             )
             dispatch(
-              API.rest.util.invalidateTags([
+              api.util.invalidateTags([
                 { type: 'inbox', id: `important=${isImportant}` },
                 { type: 'inbox', id: `count-${isImportant}` },
               ]),

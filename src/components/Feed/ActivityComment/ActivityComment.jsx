@@ -8,7 +8,7 @@ import emoji from 'remark-emoji'
 import { classNames } from 'primereact/utils'
 import { useSelector } from 'react-redux'
 import CommentInput from '@components/CommentInput/CommentInput'
-import { aTag, codeTag, inputTag } from './activityMarkdownComponents'
+import { aTag, blockquoteTag, codeTag, inputTag } from './activityMarkdownComponents'
 import FilesGrid from '@containers/FilesGrid/FilesGrid'
 import useReferenceTooltip from '@containers/Feed/hooks/useReferenceTooltip'
 import { getTextRefs } from '../../CommentInput/quillToMarkdown'
@@ -151,6 +151,7 @@ const ActivityComment = ({
                     input: (props) => inputTag(props, { activity, onCheckChange }),
                     // code syntax highlighting
                     code: (props) => codeTag(props),
+                    blockquote: (props) => blockquoteTag(props),
                   }}
                 >
                   {body}
