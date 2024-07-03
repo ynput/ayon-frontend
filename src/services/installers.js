@@ -1,8 +1,8 @@
-import { ayonApi } from './ayon'
+import api from '@api'
 import queryUpload from './queryUpload'
 import { coerce, rcompare } from 'semver'
 
-const getInstallers = ayonApi.injectEndpoints({
+const getInstallers = api.injectEndpoints({
   endpoints: (build) => ({
     getInstallerList: build.query({
       query: () => ({
@@ -48,6 +48,7 @@ const getInstallers = ayonApi.injectEndpoints({
       queryFn: (arg, api) => queryUpload(arg, api, { endpoint: '/api/desktop/installers' }),
     }),
   }), // endpoints
+  overrideExisting: true,
 })
 
 export const { useGetInstallerListQuery, useCreateInstallerMutation, useUploadInstallersMutation } =

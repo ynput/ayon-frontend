@@ -106,8 +106,7 @@ export const Body = styled.div`
 
     p {
       margin: 0;
-      display: flex;
-      align-items: flex-start;
+      padding-left: 1.5rem;
 
       .reference {
         top: 0px;
@@ -116,9 +115,38 @@ export const Body = styled.div`
     }
   }
 
+  blockquote {
+    margin: 0;
+    padding-left: 16px;
+    position: relative;
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background-color: var(--md-sys-color-outline-variant);
+      border-radius: 2px;
+    }
+  }
+
   &.isEditing {
     padding: 0;
     border-radius: var(--border-radius-l);
+  }
+`
+
+export const QuoteLine = styled.p`
+  margin: 0;
+
+  &:first-child {
+    margin-top: 14px;
+  }
+
+  &:last-child {
+    margin-bottom: 14px;
   }
 `
 

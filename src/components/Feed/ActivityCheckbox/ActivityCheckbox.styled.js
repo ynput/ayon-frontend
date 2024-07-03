@@ -2,10 +2,8 @@ import styled from 'styled-components'
 
 export const Checkbox = styled.label`
   cursor: pointer;
-  height: 14px;
-  width: 28px;
   position: relative;
-  display: inline-block;
+  right: 2rem;
 
   input {
     opacity: 0;
