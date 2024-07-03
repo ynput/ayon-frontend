@@ -1,6 +1,6 @@
-import { ayonApi } from '../ayon'
+import api from '@api'
 
-const getAddons = ayonApi.injectEndpoints({
+const getAddons = api.injectEndpoints({
   endpoints: (build) => ({
     //  Return a list of all addons installed on the server
 
@@ -124,6 +124,7 @@ const getAddons = ayonApi.injectEndpoints({
       }),
     }),
   }), // endpoints
+  overrideExisting: true,
 })
 
 export const {

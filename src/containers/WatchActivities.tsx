@@ -1,5 +1,5 @@
 import usePubSub from '@hooks/usePubSub'
-import { ayonApi } from '@/services/ayon'
+import api from '@api'
 import { FC } from 'react'
 import { useDispatch, useSelector, useStore } from 'react-redux'
 import { $Any } from '@/types'
@@ -51,14 +51,14 @@ const WatchActivities: FC<WatchActivitiesProps> = ({}) => {
 
       // get all caches that this activity is referenced by
       const tags = entityIds.map((entityId) => ({ type: 'entityActivities', id: entityId }))
-      const entries = ayonApi.util.selectInvalidatedBy(state, tags)
+      const entries = api.util.selectInvalidatedBy(state, tags)
 
       if (topic === 'activity.deleted') {
         for (const entry of entries) {
           // remove the activity from the cache using originalArguments
           dispatch(
             // @ts-ignore
-            ayonApi.util.updateQueryData('getActivities', entry.originalArgs, (draft: $Any) => {
+            api.util.updateQueryData('getActivities', entry.originalArgs, (draft: $Any) => {
               //   find the activity and remove it
               const index = draft?.activities?.findIndex(
                 (activity: $Any) => activity.activityId === activityId,
@@ -111,7 +111,7 @@ const WatchActivities: FC<WatchActivitiesProps> = ({}) => {
           for (const entry of entriesToPatch) {
             dispatch(
               // @ts-ignore
-              ayonApi.util.updateQueryData('getActivities', entry.originalArgs, (draft: $Any) => {
+              api.util.updateQueryData('getActivities', entry.originalArgs, (draft: $Any) => {
                 const activitiesToPatchIn = newActivities.filter((activity: $Any) =>
                   entry.originalArgs.entityIds?.includes(activity.entityId),
                 )
@@ -137,7 +137,7 @@ const WatchActivities: FC<WatchActivitiesProps> = ({}) => {
         } catch (error) {
           // invalidate the activity feed for all those entities
           dispatch(
-            ayonApi.util.invalidateTags(
+            api.util.invalidateTags(
               entityIds.map((entityId) => ({ type: 'entityActivities', id: entityId })),
             ),
           )
