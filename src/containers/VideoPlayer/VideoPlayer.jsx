@@ -350,7 +350,7 @@ const VideoPlayer = ({ src, frameRate, aspectRatio }) => {
       {loadError && (
         <EmptyPlaceholder
           icon="hide_image"
-          message={'This version has no previewable content.'}
+          message={'Unable to load video.'}
           error={loadError?.code !== 4 && loadError?.message}
         />
       )}

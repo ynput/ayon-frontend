@@ -3,7 +3,17 @@ import { PREVIEW_VERSIONS_QUERY, PREVIEW_QUERY } from './previewQueries'
 
 const getInbox = api.injectEndpoints({
   endpoints: (build) => ({
+
+    getReviewables: build.query({
+      query: ({projectName, productId}) => ({
+        url: `/api/projects/${projectName}/reviewables?product=${productId}`,
+        method: 'GET',
+      }),
+      // TODO: tags
+    }),
+
     // get all versions for a specific version id
+    // TODO: obsolete, remove
     getPreview: build.query({
       query: ({ versionIds = [], projectName }) => ({
         url: '/graphql',
@@ -18,7 +28,9 @@ const getInbox = api.injectEndpoints({
       transformResponse: (response) =>
         response?.data?.project?.versions?.edges?.map(({ node }) => node),
     }),
+
     // get all versions for a specific version id
+    // TODO: obsolete, remove
     getPreviewVersions: build.query({
       query: ({ productIds = [], projectName }) => ({
         url: '/graphql',
@@ -41,4 +53,4 @@ const getInbox = api.injectEndpoints({
   }),
 })
 
-export const { useGetPreviewQuery, useGetPreviewVersionsQuery } = getInbox
+export const { useGetPreviewQuery, useGetPreviewVersionsQuery, useGetReviewablesQuery } = getInbox
