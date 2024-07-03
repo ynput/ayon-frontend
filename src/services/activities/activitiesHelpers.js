@@ -151,3 +151,26 @@ export const transformTooltipData = (data = {}, type) => {
       return {}
   }
 }
+
+export const countChecklists = (data = {}) => {
+  // get all bodies from each activity
+  const bodies = data?.project?.activities?.edges?.map((edge) => edge?.node?.body)
+
+  // count how many checklists are in each body
+
+  // count unchecked * [ ] items
+  const unChecked = bodies.reduce((acc, body) => {
+    if (!body) return acc
+    const matches = body.match(/\*\s\[\s\]/g)
+    return acc + (matches ? matches.length : 0)
+  }, 0)
+
+  // count checked * [x] items
+  const checked = bodies.reduce((acc, body) => {
+    if (!body) return acc
+    const matches = body.match(/\*\s\[x\]/g)
+    return acc + (matches ? matches.length : 0)
+  }, 0)
+
+  return { total: unChecked + checked, checked, unChecked }
+}

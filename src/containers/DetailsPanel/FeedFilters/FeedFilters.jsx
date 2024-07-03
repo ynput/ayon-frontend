@@ -5,7 +5,14 @@ import { Spacer } from '@ynput/ayon-react-components'
 import { classNames } from 'primereact/utils'
 import { entitiesWithoutFeed } from '../DetailsPanel'
 
-const FeedFilters = ({ isSlideOut, isLoading, entityType, className, ...props }) => {
+const FeedFilters = ({
+  isSlideOut,
+  isLoading,
+  entityType,
+  className,
+  overrides = {},
+  ...props
+}) => {
   const dispatch = useDispatch()
   const setFeedFilter = (value) => dispatch(updateFeedFilter({ value, isSlideOut }))
   const setTab = (tab) => dispatch(updateDetailsPanelTab({ isSlideOut, tab }))
@@ -18,25 +25,33 @@ const FeedFilters = ({ isSlideOut, isLoading, entityType, className, ...props })
   const filtersLeft = [
     {
       id: 'activity',
-      label: 'All activity',
+      tooltip: 'All activity',
       icon: 'forum',
     },
     {
       id: 'comments',
-      label: 'Comments',
+      tooltip: 'Comments',
       icon: 'chat',
     },
     {
-      id: 'checklists',
-      label: 'Checklists',
-      icon: 'checklist',
-    },
-    {
       id: 'publishes',
-      label: 'Published versions',
+      tooltip: 'Published versions',
       icon: 'layers',
     },
+    {
+      id: 'checklists',
+      tooltip: 'Checklists',
+      icon: 'checklist',
+    },
   ]
+
+  // for each override, find the filter and update it
+  Object.entries(overrides).forEach(([id, override]) => {
+    const index = filtersLeft.findIndex((filter) => filter.id === id)
+    if (index !== -1) {
+      filtersLeft[index] = { ...filtersLeft[index], ...override }
+    }
+  })
 
   const hideActivityFilters = entitiesWithoutFeed.includes(entityType)
 
@@ -48,9 +63,9 @@ const FeedFilters = ({ isSlideOut, isLoading, entityType, className, ...props })
             key={filter.id}
             selected={filter.id === selectedFilter && selectedTab === 'feed'}
             onClick={() => setFeedFilter(filter.id)}
-            // label={filter.label}
+            label={filter.label}
             icon={filter.icon}
-            data-tooltip={filter.label}
+            data-tooltip={filter.tooltip}
             data-tooltip-delay={0}
           />
         ))}
