@@ -101,9 +101,10 @@ const getActivities = api.injectEndpoints({
         },
       }),
       transformResponse: (res) => countChecklists(res?.data),
-      providesTags: (res) => [
+      providesTags: (res, _error, { entityIds }) => [
         { type: 'activity', id: 'LIST' },
         ...res.ids.map((id) => ({ type: 'activity', id: 'checklist-' + id })),
+        ...entityIds.map((id) => ({ type: 'entityActivities', id: 'checklist-' + id })),
       ],
     }),
   }),
