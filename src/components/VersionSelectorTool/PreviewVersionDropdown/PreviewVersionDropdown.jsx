@@ -1,6 +1,6 @@
 import { Dropdown } from '@ynput/ayon-react-components'
 import * as Styled from './PreviewVersionDropdown.styled'
-import ShortcutWidget from '../../ShortcutWidget/ShortcutWidget'
+import ShortcutWidget from '../../ShortcutWidget'
 
 const PreviewVersionDropdown = ({ versions, selected, onChange, selectRef, ...props }) => {
   const options = versions.map(({ id, name }) => ({

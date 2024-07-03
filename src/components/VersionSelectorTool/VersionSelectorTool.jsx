@@ -1,10 +1,11 @@
 import { Icon } from '@ynput/ayon-react-components'
 import * as Styled from './VersionSelectorTool.styled'
-import ShortcutWidget from '../ShortcutWidget/ShortcutWidget'
+import ShortcutWidget from '../ShortcutWidget'
 import { useRef } from 'react'
 import usePreviewShortcuts from './hooks/usePreviewShortcuts'
 import PreviewVersionDropdown from './PreviewVersionDropdown/PreviewVersionDropdown'
 import { useSelector } from 'react-redux'
+import styled from 'styled-components'
 
 const NavButton = ({
   version: { id = 'none', name = 'None' } = {},
@@ -30,6 +31,8 @@ const NavButton = ({
     {afterContent}
   </Styled.NavButton>
 )
+
+
 
 const VersionSelectorTool = ({ versions, selected, onChange }) => {
   const statuses = useSelector((state) => state.project.statuses) || {}
