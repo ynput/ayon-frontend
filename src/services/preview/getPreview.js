@@ -1,7 +1,7 @@
-import { ayonApi } from '../ayon'
+import api from '@api'
 import { PREVIEW_VERSIONS_QUERY, PREVIEW_QUERY } from './previewQueries'
 
-const getInbox = ayonApi.injectEndpoints({
+const getInbox = api.injectEndpoints({
   endpoints: (build) => ({
     // get all versions for a specific version id
     getPreview: build.query({
