@@ -12,7 +12,7 @@ import editorReducer from '@state/editor'
 import dashboardReducer, { dashboardLocalItems } from '@state/dashboard'
 import detailsReducer, { detailsLocalItems } from '@state/details'
 import addonsManagerReducer from '@state/addonsManager'
-import previewReducer from '@state/preview'
+import reviewReducer from '@state/review'
 
 import App from './app'
 
@@ -40,7 +40,7 @@ const store = configureStore({
     dashboard: dashboardReducer,
     details: detailsReducer,
     addonsManager: addonsManagerReducer,
-    preview: previewReducer,
+    review: reviewReducer,
     [RestAPI.reducerPath]: RestAPI.reducer,
     // [GraphQL.reducerPath]: GraphQL.reducer,
   },

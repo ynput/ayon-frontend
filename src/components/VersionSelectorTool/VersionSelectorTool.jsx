@@ -1,8 +1,8 @@
 import { Icon } from '@ynput/ayon-react-components'
 import * as Styled from './VersionSelectorTool.styled'
 import { useRef } from 'react'
-import usePreviewShortcuts from './hooks/usePreviewShortcuts'
-import PreviewVersionDropdown from './PreviewVersionDropdown/PreviewVersionDropdown'
+import useReviewShortcuts from './hooks/useReviewShortcuts'
+import ReviewVersionDropdown from './ReviewVersionDropdown/ReviewVersionDropdown'
 import { useSelector } from 'react-redux'
 
 const NavButton = ({
@@ -60,7 +60,7 @@ const VersionSelectorTool = ({ versions, selected, onChange }) => {
 
   const toolsRef = useRef(null)
 
-  usePreviewShortcuts({ allVersions, onChange, toolsRef, selectRef })
+  useReviewShortcuts({ allVersions, onChange, toolsRef, selectRef })
 
   if (selectedIndex === -1) return
 
@@ -74,7 +74,7 @@ const VersionSelectorTool = ({ versions, selected, onChange }) => {
         beforeContent={<Icon icon="chevron_left" />}
         shortcut={{ children: 'Z' }}
       />
-      <PreviewVersionDropdown
+      <ReviewVersionDropdown
         versions={versions}
         selected={selected}
         onChange={onChange}

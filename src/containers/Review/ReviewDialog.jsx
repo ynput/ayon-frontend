@@ -1,9 +1,9 @@
 import { Dialog } from '@ynput/ayon-react-components'
 import { useDispatch, useSelector } from 'react-redux'
-import { closePreview, openPreview } from '@state/preview'
+import { closeReview, openReview } from '@state/review'
 import { useSearchParams } from 'react-router-dom'
 import { useEffect } from 'react'
-import Preview from './Preview'
+import Review from './Review'
 import { isEqual } from 'lodash'
 import styled from 'styled-components'
 
@@ -26,19 +26,19 @@ const StyledDialog = styled(Dialog)`
   }
 `
 
-const PreviewDialog = () => {
+const ReviewDialog = () => {
   const dispatch = useDispatch()
   // check if dialog is open or not
-  const { productId, versionIds, projectName } = useSelector((state) => state.preview)
+  const { productId, versionIds, projectName } = useSelector((state) => state.review)
 
   const [searchParams, setUrlSearchParams] = useSearchParams()
   //   we need a project name
-  const queryProductId = searchParams.get('preview_product') || undefined
+  const queryProductId = searchParams.get('review_product') || undefined
   //   usually just one id is passed, but multiple ids can be passed
-  const queryVersionIds = searchParams.getAll('preview_version') || []
+  const queryVersionIds = searchParams.getAll('review_version') || []
   //   we need a project name
   const queryProjectName = searchParams.get('project_name') || undefined
-  // when url has preview_product and preview_type, open the dialog if not already open
+  // when url has review_product and review_type, open the dialog if not already open
 
   useEffect(() => {
     // we must have both productId and projectName
@@ -48,7 +48,7 @@ const PreviewDialog = () => {
 
     // open the dialog
     dispatch(
-      openPreview({
+      openReview({
         productId: queryProductId,
         versionIds: queryVersionIds,
         projectName: queryProjectName,
@@ -57,13 +57,13 @@ const PreviewDialog = () => {
   }, [queryProductId, queryVersionIds, queryProjectName])
 
   const handleClose = () => {
-    // remove query params preview_product and preview_type from url
-    searchParams.delete('preview_product')
-    searchParams.delete('preview_version')
+    // remove query params review and review_type from url
+    searchParams.delete('review_product')
+    searchParams.delete('review_version')
     searchParams.delete('project_name')
     setUrlSearchParams(searchParams)
     // close the dialog
-    dispatch(closePreview())
+    dispatch(closeReview())
   }
 
   // when pressing escape key, close the dialog
@@ -88,10 +88,10 @@ const PreviewDialog = () => {
   return (
     <>
       <StyledDialog isOpen hideCancelButton size="full">
-        <Preview {...{ productId, versionIds, projectName }} onClose={handleClose} />
+        <Review {...{ productId, versionIds, projectName }} onClose={handleClose} />
       </StyledDialog>
     </>
   )
 }
 
-export default PreviewDialog
+export default ReviewDialog

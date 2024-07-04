@@ -1,19 +1,19 @@
 import { useMemo } from 'react'
 import { Button } from '@ynput/ayon-react-components'
-import * as Styled from './Preview.styled'
+import * as Styled from './Review.styled'
 import VersionSelectorTool from '@components/VersionSelectorTool/VersionSelectorTool'
-import { useGetReviewablesQuery } from '/src/services/preview/getPreview'
+import { useListReviewablesQuery } from '@queries/review/getReview'
 import { useDispatch } from 'react-redux'
-import { updateSelection } from '/src/features/preview'
-import PreviewDetailsPanel from './PreviewDetailsPanel'
-import PreviewPlayer from './PreviewPlayer'
+import { updateSelection } from '@state/review'
+import ReviewDetailsPanel from './ReviewDetailsPanel'
+import ReviewPlayer from './ReviewPlayer'
 
-const Preview = ({ projectName, productId, versionIds = [], onClose }) => {
+const Review = ({ projectName, productId, versionIds = [], onClose }) => {
   const dispatch = useDispatch()
 
   // new query: returns all reviewables for a product
-  const { data: allReviewables, isFetching: isFetchingReviewables } = useGetReviewablesQuery(
-    { projectName, productId },
+  const { data: allReviewables, isFetching: isFetchingReviewables } = useListReviewablesQuery(
+    { projectName, product: productId },
     { skip: !productId },
   )
 
@@ -61,11 +61,11 @@ const Preview = ({ projectName, productId, versionIds = [], onClose }) => {
         <Button onClick={onClose} icon={'close'} />
       </Styled.Header>
       <Styled.Content>
-        <PreviewPlayer projectName={projectName} reviewable={selectedReviewable} />
-        <PreviewDetailsPanel versionIds={versionIds} projectName={projectName} />
+        <ReviewPlayer projectName={projectName} reviewable={selectedReviewable} />
+        <ReviewDetailsPanel versionIds={versionIds} projectName={projectName} />
       </Styled.Content>
     </Styled.Container>
   )
 }
 
-export default Preview
+export default Review

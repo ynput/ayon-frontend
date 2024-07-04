@@ -40,7 +40,7 @@ const ActivityVersions = ({
           (index < limit || showAll) && (
             <Link
               key={id}
-              to={`${window.location.pathname}?project_name=${projectName}&preview_product=${productId}&preview_version=${identity}`}
+              to={`${window.location.pathname}?project_name=${projectName}&review_product=${productId}&review_version=${identity}`}
             >
               <Styled.Card>
                 <Styled.Content>

@@ -1,14 +1,14 @@
 import { createSlice } from '@reduxjs/toolkit'
 
-const previewSlice = createSlice({
-  name: 'preview',
+const reviewSlice = createSlice({
+  name: 'review',
   initialState: {
     productId: null,
     versionIds: [],
     projectName: null,
   },
   reducers: {
-    openPreview: (state, { payload: { versionIds, projectName, productId } = {} } = {}) => {
+    openReview: (state, { payload: { versionIds, projectName, productId } = {} } = {}) => {
       state.productId = productId
       state.versionIds = versionIds
       state.projectName = projectName
@@ -16,12 +16,12 @@ const previewSlice = createSlice({
     updateSelection: (state, { payload: { versionIds } }) => {
       state.versionIds = versionIds
     },
-    closePreview: (state) => {
+    closeReview: (state) => {
       state.versionIds = []
       state.projectName = null
     },
   },
 })
 
-export const { openPreview, updateSelection, closePreview } = previewSlice.actions
-export default previewSlice.reducer
+export const { openReview, updateSelection, closeReview } = reviewSlice.actions
+export default reviewSlice.reducer

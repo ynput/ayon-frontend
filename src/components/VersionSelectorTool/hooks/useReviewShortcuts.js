@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 
-const usePreviewShortcuts = ({ allVersions = {}, onChange, toolsRef, selectRef }) => {
+const useReviewShortcuts = ({ allVersions = {}, onChange, toolsRef, selectRef }) => {
   const handleShortcut = (action) => {
     const version = allVersions[action]
 
@@ -83,4 +83,4 @@ const usePreviewShortcuts = ({ allVersions = {}, onChange, toolsRef, selectRef }
   }, [shortcuts])
 }
 
-export default usePreviewShortcuts
+export default useReviewShortcuts

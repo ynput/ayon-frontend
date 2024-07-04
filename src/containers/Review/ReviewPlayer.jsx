@@ -1,17 +1,17 @@
 import { useState } from 'react'
-import { PreviewPlayerWrapper } from './Preview.styled'
+import { ReviewPlayerWrapper } from './Review.styled'
 import VideoPlayer from '/src/containers/VideoPlayer'
 import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
 
-const PreviewPlayer = ({ projectName, reviewable }) => {
+const ReviewPlayer = ({ projectName, reviewable }) => {
   const [frameRate, setFrameRate] = useState(25)
   const [aspectRatio, setAspectRatio] = useState(1.7777777777777777)
 
   if (!reviewable)
     return (
-      <PreviewPlayerWrapper>
-        <EmptyPlaceholder icon="hide_image" message={'This version has no previewable content.'} />
-      </PreviewPlayerWrapper>
+      <ReviewPlayerWrapper>
+        <EmptyPlaceholder icon="hide_image" message={'This version has no reviewable content.'} />
+      </ReviewPlayerWrapper>
     )
 
   // TODO: load from reviewable.attrib
@@ -26,10 +26,10 @@ const PreviewPlayer = ({ projectName, reviewable }) => {
   const videoSrc = `/api/projects/${projectName}/files/${reviewable.fileId}`
 
   return (
-    <PreviewPlayerWrapper>
+    <ReviewPlayerWrapper>
       <VideoPlayer src={videoSrc} frameRate={frameRate} aspectRatio={aspectRatio} />
-    </PreviewPlayerWrapper>
+    </ReviewPlayerWrapper>
   )
 }
 
-export default PreviewPlayer
+export default ReviewPlayer

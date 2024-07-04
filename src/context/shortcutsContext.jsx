@@ -12,8 +12,8 @@ function ShortcutsProvider(props) {
   const [searchParams] = useSearchParams()
   const dispatch = useDispatch()
 
-  // preview open
-  const previewOpen = useSelector((state) => state.preview.productId)
+  // review open
+  const reviewOpen = useSelector((state) => state.review.productId)
 
   // logout
   const [logout] = useLogOutMutation()
@@ -93,8 +93,8 @@ function ShortcutsProvider(props) {
       if (e.target.classList.contains('block-shortcuts')) return
       // or any of its parents
       if (e.target.closest('.block-shortcuts')) return
-      // if preview is open, don't allow shortcuts
-      if (previewOpen) return
+      // if review is open, don't allow shortcuts
+      if (reviewOpen) return
 
       let singleKey = e.key
       const isMeta = e.metaKey || e.ctrlKey

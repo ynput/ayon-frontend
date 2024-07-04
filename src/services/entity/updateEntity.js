@@ -302,7 +302,7 @@ const updateEntity = api.injectEndpoints({
         }
       },
       invalidatesTags: (result, error, { operations }) =>
-        operations.map((o) => ({ id: o.id, type: 'preview' })),
+        operations.map((o) => ({ id: o.id, type: 'review' })),
     }),
   }),
   overrideExisting: true,

@@ -1,5 +1,4 @@
 import { RestAPI as api } from '../services/ayon'
-
 const injectedRtkApi = api.injectEndpoints({
   endpoints: (build) => ({
     getAccessGroupSchema: build.query<GetAccessGroupSchemaApiResponse, GetAccessGroupSchemaApiArg>({
@@ -31,6 +30,7 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/${queryArg.entityType}/${queryArg.entityId}/activities`,
         method: 'POST',
         body: queryArg.projectActivityPostModel,
+        headers: { 'x-sender': queryArg['x-sender'] },
       }),
     }),
     deleteProjectActivity: build.mutation<
@@ -40,6 +40,7 @@ const injectedRtkApi = api.injectEndpoints({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/activities/${queryArg.activityId}`,
         method: 'DELETE',
+        headers: { 'x-sender': queryArg['x-sender'] },
       }),
     }),
     patchProjectActivity: build.mutation<
@@ -50,6 +51,7 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/activities/${queryArg.activityId}`,
         method: 'PATCH',
         body: queryArg.activityPatchModel,
+        headers: { 'x-sender': queryArg['x-sender'] },
       }),
     }),
     suggestEntityMention: build.mutation<
@@ -546,10 +548,9 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
-    downloadProjectFile: build.query<DownloadProjectFileApiResponse, DownloadProjectFileApiArg>({
+    getProjectFile: build.query<GetProjectFileApiResponse, GetProjectFileApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/files/${queryArg.fileId}`,
-        params: { preview: queryArg.preview },
       }),
     }),
     deleteProjectFile: build.mutation<DeleteProjectFileApiResponse, DeleteProjectFileApiArg>({
@@ -562,6 +563,14 @@ const injectedRtkApi = api.injectEndpoints({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/files/${queryArg.fileId}`,
         method: 'HEAD',
+      }),
+    }),
+    getProjectFileThumbnail: build.query<
+      GetProjectFileThumbnailApiResponse,
+      GetProjectFileThumbnailApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/files/${queryArg.fileId}/thumbnail`,
       }),
     }),
     getFolder: build.query<GetFolderApiResponse, GetFolderApiArg>({
@@ -870,6 +879,12 @@ const injectedRtkApi = api.injectEndpoints({
         params: { pathOnly: queryArg.pathOnly },
       }),
     }),
+    listReviewables: build.query<ListReviewablesApiResponse, ListReviewablesApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/reviewables`,
+        params: { product: queryArg.product },
+      }),
+    }),
     listServices: build.query<ListServicesApiResponse, ListServicesApiArg>({
       query: () => ({ url: `/api/services` }),
     }),
@@ -934,7 +949,10 @@ const injectedRtkApi = api.injectEndpoints({
       query: () => ({ url: `/api/info` }),
     }),
     getProductionMetrics: build.query<GetProductionMetricsApiResponse, GetProductionMetricsApiArg>({
-      query: (queryArg) => ({ url: `/api/metrics`, params: { saturated: queryArg.saturated } }),
+      query: (queryArg) => ({
+        url: `/api/metrics`,
+        params: { system: queryArg.system, saturated: queryArg.saturated },
+      }),
     }),
     getSystemMetrics: build.query<GetSystemMetricsApiResponse, GetSystemMetricsApiArg>({
       query: () => ({ url: `/api/metrics/system` }),
@@ -1320,17 +1338,20 @@ export type PostProjectActivityApiArg = {
   projectName: string
   entityType: string
   entityId: string
+  'x-sender'?: string
   projectActivityPostModel: ProjectActivityPostModel
 }
 export type DeleteProjectActivityApiResponse = /** status 200 Successful Response */ any
 export type DeleteProjectActivityApiArg = {
   activityId: string
   projectName: string
+  'x-sender'?: string
 }
 export type PatchProjectActivityApiResponse = /** status 200 Successful Response */ any
 export type PatchProjectActivityApiArg = {
   activityId: string
   projectName: string
+  'x-sender'?: string
   activityPatchModel: ActivityPatchModel
 }
 export type SuggestEntityMentionApiResponse = /** status 200 Successful Response */ SuggestResponse
@@ -1713,12 +1734,10 @@ export type UploadProjectFileApiArg = {
   'x-activity-id'?: string
   'content-type': string
 }
-export type DownloadProjectFileApiResponse = /** status 200 Successful Response */ any
-export type DownloadProjectFileApiArg = {
+export type GetProjectFileApiResponse = /** status 200 Successful Response */ any
+export type GetProjectFileApiArg = {
   fileId: string
   projectName: string
-  /** Preview mode */
-  preview?: boolean
 }
 export type DeleteProjectFileApiResponse = /** status 200 Successful Response */ any
 export type DeleteProjectFileApiArg = {
@@ -1727,6 +1746,11 @@ export type DeleteProjectFileApiArg = {
 }
 export type GetProjectFileHeadApiResponse = /** status 200 Successful Response */ any
 export type GetProjectFileHeadApiArg = {
+  fileId: string
+  projectName: string
+}
+export type GetProjectFileThumbnailApiResponse = /** status 200 Successful Response */ any
+export type GetProjectFileThumbnailApiArg = {
   fileId: string
   projectName: string
 }
@@ -1993,6 +2017,12 @@ export type ResolveUrisApiArg = {
   'x-ayon-site-id'?: string
   resolveRequestModel: ResolveRequestModel
 }
+export type ListReviewablesApiResponse = /** status 200 Successful Response */ ReviewableModel[]
+export type ListReviewablesApiArg = {
+  projectName: string
+  /** Product ID */
+  product: string
+}
 export type ListServicesApiResponse = /** status 200 Successful Response */ ServiceListModel
 export type ListServicesApiArg = void
 export type SpawnServiceApiResponse = /** status 204 Successful Response */ void
@@ -2050,6 +2080,8 @@ export type GetSiteInfoApiResponse = /** status 200 Successful Response */ InfoR
 export type GetSiteInfoApiArg = void
 export type GetProductionMetricsApiResponse = /** status 200 Successful Response */ Metrics
 export type GetProductionMetricsApiArg = {
+  /** Collect system metrics */
+  system?: boolean
   /** Collect saturated (more granular) metrics */
   saturated?: boolean
 }
@@ -2240,8 +2272,7 @@ export type PasswordResetApiArg = {
 }
 export type GetCurrentUserApiResponse = /** status 200 Successful Response */ UserModel
 export type GetCurrentUserApiArg = void
-export type GetUserApiResponse =
-  /** status 200 Successful Response */
+export type GetUserApiResponse = /** status 200 Successful Response */
   | UserModel
   | {
       [key: string]: string
@@ -2395,10 +2426,18 @@ export type CreateActivityResponseModel = {
 export type ProjectActivityPostModel = {
   /** Explicitly set the ID of the activity */
   id?: string
-  activityType: 'comment' | 'status.change' | 'assignee.add' | 'assignee.remove' | 'version.publish'
+  activityType:
+    | 'comment'
+    | 'reviewable'
+    | 'status.change'
+    | 'assignee.add'
+    | 'assignee.remove'
+    | 'version.publish'
   body?: string
   files?: string[]
   timestamp?: string
+  /** Additional data */
+  data?: object
 }
 export type ActivityPatchModel = {
   body: string
@@ -2635,16 +2674,18 @@ export type ProjectAttribModel = {
   endDate?: string
   /** Textual description of the entity */
   description?: string
-  ftrackId?: string
-  ftrackPath?: string
   applications?: string[]
   tools?: string[]
+  ftrackId?: string
+  ftrackPath?: string
   /** The Shotgrid ID of this entity. */
   shotgridId?: string
   /** The Shotgrid Type of this entity. */
   shotgridType?: string
-  /** Push changes done to this project to Shotgrid. Requires the transmitter service. */
+  /** Push changes done to this project to Shotgird. Requires the transmitter service. */
   shotgridPush?: boolean
+  sokoId?: string
+  sokoPath?: string
 }
 export type FolderType = {
   name: string
@@ -3120,14 +3161,20 @@ export type FolderAttribModel = {
   endDate?: string
   /** Textual description of the entity */
   description?: string
+  tools?: string[]
   ftrackId?: string
   ftrackPath?: string
-  tools?: string[]
   /** The Shotgrid ID of this entity. */
   shotgridId?: string
-  car?: string
   /** The Shotgrid Type of this entity. */
   shotgridType?: string
+  hairColor?: string
+  sokoId?: string
+  sokoPath?: string
+  goldCoins?: number
+  /** How much of the pizza do I get to have? */
+  pizzaShare?: number
+  testy?: string
 }
 export type FolderModel = {
   /** Unique identifier of the {entity_name} */
@@ -3570,16 +3617,18 @@ export type ProjectAttribModel2 = {
   endDate?: string
   /** Textual description of the entity */
   description?: string
-  ftrackId?: string
-  ftrackPath?: string
   applications?: string[]
   tools?: string[]
+  ftrackId?: string
+  ftrackPath?: string
   /** The Shotgrid ID of this entity. */
   shotgridId?: string
   /** The Shotgrid Type of this entity. */
   shotgridType?: string
-  /** Push changes done to this project to Shotgrid. Requires the transmitter service. */
+  /** Push changes done to this project to Shotgird. Requires the transmitter service. */
   shotgridPush?: boolean
+  sokoId?: string
+  sokoPath?: string
 }
 export type ProjectModel = {
   /** Name is an unique id of the {entity_name} */
@@ -3777,6 +3826,17 @@ export type ResolveRequestModel = {
   /** List of uris to resolve */
   uris: string[]
 }
+export type ReviewableModel = {
+  fileId: string
+  activityId: string
+  filename: string
+  label?: string
+  mimetype: string
+  versionId: string
+  version: number
+  versionName: string
+  previewable?: boolean
+}
 export type ServiceDataModel = {
   volumes?: string[]
   ports?: string[]
@@ -3924,6 +3984,17 @@ export type InfoResponseModel = {
   sites?: SiteInfo[]
   ssoOptions?: SsoOption[]
 }
+export type SystemMetricsData = {
+  cpuUsage?: number
+  memoryUsage?: number
+  swapUsage?: number
+  uptimeSeconds?: number
+  runtimeSeconds?: number
+  dbSizeShared?: number
+  dbSizeTotal?: number
+  redisSizeTotal?: number
+  storageUtilizationTotal?: number
+}
 export type UserCounts = {
   total?: number
   active?: number
@@ -3935,6 +4006,7 @@ export type ProjectCounts = {
   active?: number
 }
 export type ProjectMetrics = {
+  nickname: string
   folderCount?: number
   productCount?: number
   versionCount?: number
@@ -3945,6 +4017,8 @@ export type ProjectMetrics = {
   teamCount?: number
   /** Duration in days */
   duration?: number
+  dbSize?: number
+  storageUtilization?: number
   /** List of folder types in the project. Collected only in the 'saturated' mode. */
   folderTypes?: string[]
   /** List of task types in the project. Collected only in the 'saturated' mode. */
@@ -3975,6 +4049,11 @@ export type Metrics = {
   releaseInfo?: ReleaseInfo
   /** Time (seconds) since the server was (re)started */
   uptime?: number
+  /** System metrics data
+    Contains information about machine utilization,
+    and database sizes.
+     */
+  system?: SystemMetricsData
   /** Number of total and active users, admins and managers */
   userCounts?: UserCounts
   /** Number of total and active projects */
@@ -4054,14 +4133,20 @@ export type TaskAttribModel = {
   endDate?: string
   /** Textual description of the entity */
   description?: string
+  tools?: string[]
   ftrackId?: string
   ftrackPath?: string
-  tools?: string[]
   /** The Shotgrid ID of this entity. */
   shotgridId?: string
-  car?: string
   /** The Shotgrid Type of this entity. */
   shotgridType?: string
+  hairColor?: string
+  sokoId?: string
+  sokoPath?: string
+  goldCoins?: number
+  /** How much of the pizza do I get to have? */
+  pizzaShare?: number
+  testy?: string
 }
 export type TaskModel = {
   /** Unique identifier of the {entity_name} */
@@ -4248,6 +4333,9 @@ export type VersionAttribModel = {
   /** Textual description of the entity */
   description?: string
   ftrackId?: string
+  sokoId?: string
+  /** The version that is currently the one to use. */
+  blessed?: boolean
 }
 export type VersionModel = {
   /** Unique identifier of the {entity_name} */

@@ -89,6 +89,7 @@ const tagTypes = [
   'marketAddon',
   'inbox',
   'service',
+  'review',
 ]
 
 const prepareHeaders = (headers: any) => {

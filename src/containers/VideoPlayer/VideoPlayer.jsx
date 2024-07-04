@@ -284,7 +284,7 @@ const VideoPlayer = ({ src, frameRate, aspectRatio }) => {
     // check if the video is 404
     const code = e.target.error.code
     if (code === 4) {
-      setLoadError({ code, message: 'No preview for this version' })
+      setLoadError({ code, message: 'No review for this version' })
     } else {
       setLoadError({ code, message: 'Error loading video' })
     }

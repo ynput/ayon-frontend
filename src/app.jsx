@@ -45,7 +45,7 @@ import { NotificationsProvider } from '@context/notificationsContext'
 import Header from '@containers/header'
 import ProtectedRoute from '@containers/ProtectedRoute'
 import FileUploadPreview from '@containers/FileUploadPreview/FileUploadPreview'
-import PreviewDialog from '@containers/Preview/PreviewDialog'
+import ReviewDialog from '@/containers/Review/ReviewDialog'
 
 // state
 import { login } from '@state/user'
@@ -164,7 +164,7 @@ const App = () => {
                         >
                           <Header />
                           <ShareDialog />
-                          <PreviewDialog />
+                          <ReviewDialog />
                           <ConfirmDialog />
                           <FileUploadPreview />
                           <Routes>

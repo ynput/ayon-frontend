@@ -35,7 +35,7 @@ import NoProducts from './NoProducts'
 import { toast } from 'react-toastify'
 import { productTypes } from '@state/project'
 import * as Styled from './Products.styled'
-import { openPreview } from '@state/preview'
+import { openReview } from '@state/review'
 
 const Products = () => {
   const dispatch = useDispatch()
@@ -532,19 +532,19 @@ const Products = () => {
     dispatch(setFocusedVersions([versionId]))
   }
 
-  const handleOpenPreview = (productId) => {
+  const handleopenReview = (productId) => {
     // find the version id of the product
     const versionId = listData.find((s) => s.id === productId).versionId
 
     if (!versionId) return toast.error('No version found for this product')
 
-    dispatch(openPreview({ productId, versionIds: [versionId], projectName }))
+    dispatch(openReview({ productId, versionIds: [versionId], projectName }))
   }
 
   const ctxMenuItems = (id) => [
     {
-      label: 'Preview version',
-      command: () => handleOpenPreview(id),
+      label: 'Review version',
+      command: () => handleopenReview(id),
       icon: 'play_circle',
     },
     {

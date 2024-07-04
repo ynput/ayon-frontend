@@ -20,13 +20,13 @@ export const Content = styled.div`
   gap: var(--base-gap-large);
 `
 
-export const PreviewPlayerWrapper = styled.div`
+export const ReviewPlayerWrapper = styled.div`
   position: relative;
   width: 100%;
   height: 100%;
 `
 
-export const PreviewDetailsPanelWrapper = styled.div`
+export const ReviewDetailsPanelWrapper = styled.div`
   height: 100%;
   max-height: 100%;
   overflow: hidden;

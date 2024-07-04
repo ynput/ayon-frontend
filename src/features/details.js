@@ -23,7 +23,7 @@ const initialTooltip = {
   pos: {},
 }
 
-const scopes = ['dashboard', 'project', 'inbox', 'preview']
+const scopes = ['dashboard', 'project', 'inbox', 'review']
 
 const detailsSlice = createSlice({
   name: 'details',
