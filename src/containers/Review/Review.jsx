@@ -12,34 +12,15 @@ const Review = ({ projectName, productId, versionIds = [], onClose }) => {
   const dispatch = useDispatch()
 
   // new query: returns all reviewables for a product
-  const { data: allReviewables, isFetching: isFetchingReviewables } =
+  const { data: versionsAndReviewables = [], isFetching: isFetchingReviewables } =
     useGetReviewablesForProductQuery({ projectName, productId: productId }, { skip: !productId })
-
-  const versions = useMemo(() => {
-    // Get a list of all versions that have reviewables
-    if (!allReviewables?.length) return []
-    const result = []
-    const ids = []
-    for (const reviewable of allReviewables || []) {
-      if (ids.includes(reviewable.versionId)) continue
-      ids.push(reviewable.versionId)
-      result.push({
-        id: reviewable.versionId,
-        name: reviewable.versionName,
-        status: reviewable.status,
-      })
-    }
-    return result
-  }, [allReviewables])
 
   // This should not return the first reviewable, but there should be reviewable
   // selector in the UI
-  const selectedReviewable = useMemo(() => {
-    if (!versionIds.length) return null
-    if (!allReviewables?.length) return null
-    const res = allReviewables.find(({ versionId }) => versionId === versionIds[0])
-    return res
-  }, [versionIds, allReviewables])
+  const selectedVersion = useMemo(
+    () => versionsAndReviewables.find((v) => v.id === versionIds[0]),
+    [versionIds, versionsAndReviewables],
+  )
 
   const handleVersionChange = (id) => {
     dispatch(updateSelection({ versionIds: [id] }))
@@ -51,7 +32,7 @@ const Review = ({ projectName, productId, versionIds = [], onClose }) => {
     <Styled.Container>
       <Styled.Header>
         <VersionSelectorTool
-          versions={versions}
+          versions={versionsAndReviewables}
           selected={versionIds[0]}
           isLoading={isLoadingAll}
           onChange={handleVersionChange}
@@ -59,7 +40,7 @@ const Review = ({ projectName, productId, versionIds = [], onClose }) => {
         <Button onClick={onClose} icon={'close'} />
       </Styled.Header>
       <Styled.Content>
-        <ReviewPlayer projectName={projectName} reviewable={selectedReviewable} />
+        <ReviewPlayer projectName={projectName} reviewable={selectedVersion.reviewables[0]} />
         <ReviewDetailsPanel versionIds={versionIds} projectName={projectName} />
       </Styled.Content>
     </Styled.Container>
