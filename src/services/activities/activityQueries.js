@@ -54,6 +54,23 @@ query getEntitiesActivities($projectName: String!, $entityIds: [String!]!, $curs
 ${ACTIVITY_FRAGMENT}
 `
 
+export const CHECKLISTS = `
+query getEntitiesChecklists($projectName: String!, $entityIds: [String!]!) {
+  project(name: $projectName) {
+    name
+    activities(entityIds: $entityIds, last: 1000, activityTypes: ["checklist"], referenceTypes: ["origin", "mention", "relation"]) {
+      edges {
+        cursor
+        node {
+          activityId
+          body
+        }
+      }
+    }
+  }
+}
+`
+
 export const ACTIVITIES_BY_ACTIVITY = `
 query getEntitiesActivities($projectName: String!, $entityIds: [String!]!, $activityIds: [String!]) {
   project(name: $projectName) {

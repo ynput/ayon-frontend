@@ -58,10 +58,14 @@ const patchActivities = async (
 const getTags = ({ entityId, filter }) => {
   const invalidateFilters = Object.keys(filterActivityTypes).filter((key) => key !== filter)
 
-  return invalidateFilters.map((filter) => ({
+  const tags = invalidateFilters.map((filter) => ({
     type: 'entityActivities',
     id: entityId + '-' + filter,
   }))
+
+  tags.push({ type: 'activity', id: 'LIST' })
+
+  return tags
 }
 
 const updateActivities = api.injectEndpoints({

@@ -104,9 +104,12 @@ export const Body = styled.div`
       align-items: center;
     }
 
+    & > * {
+      padding-left: 1.5rem;
+    }
+
     p {
       margin: 0;
-      padding-left: 1.5rem;
 
       .reference {
         top: 0px;
