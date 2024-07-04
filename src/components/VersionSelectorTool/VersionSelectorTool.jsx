@@ -1,6 +1,5 @@
 import { Icon } from '@ynput/ayon-react-components'
 import * as Styled from './VersionSelectorTool.styled'
-import ShortcutWidget from '../ShortcutWidget'
 import { useRef } from 'react'
 import usePreviewShortcuts from './hooks/usePreviewShortcuts'
 import PreviewVersionDropdown from './PreviewVersionDropdown/PreviewVersionDropdown'
@@ -17,13 +16,14 @@ const NavButton = ({
   ...props
 }) => (
   <Styled.NavButton
-    {...props}
     disabled={disabled}
     className={className}
     id={`${className}-${id}`}
     onClick={() => onClick(id)}
     data-tooltip={`Select ${className} version`}
-    data-shortcut={shortcut}
+    data-shortcut={shortcut?.children}
+    shortcut={shortcut}
+    {...props}
   >
     {beforeContent}
     {name}
@@ -72,8 +72,7 @@ const VersionSelectorTool = ({ versions, selected, onChange }) => {
         onClick={onChange}
         disabled={!previousVersion}
         beforeContent={<Icon icon="chevron_left" />}
-        afterContent={<ShortcutWidget>Z</ShortcutWidget>}
-        shortcut={'Z'}
+        shortcut={{ children: 'Z' }}
       />
       <PreviewVersionDropdown
         versions={versions}
@@ -87,8 +86,7 @@ const VersionSelectorTool = ({ versions, selected, onChange }) => {
         onClick={onChange}
         disabled={!nextVersion}
         afterContent={<Icon icon="chevron_right" />}
-        beforeContent={<ShortcutWidget>C</ShortcutWidget>}
-        shortcut={'C'}
+        shortcut={{ children: 'C', side: 'left' }}
       />
       <NavButton
         version={allVersions.latest}
@@ -96,9 +94,8 @@ const VersionSelectorTool = ({ versions, selected, onChange }) => {
         onClick={onChange}
         disabled={!latestVersion}
         beforeContent={'Latest - '}
-        shortcut={'Shift+C'}
+        data-shortcut={'Shift+C'}
         selected={selected === latestVersion?.id}
-        afterContent={latestVersion && <ShortcutWidget>Shift+C</ShortcutWidget>}
       />
       <NavButton
         version={allVersions.approved}
@@ -106,18 +103,16 @@ const VersionSelectorTool = ({ versions, selected, onChange }) => {
         onClick={onChange}
         disabled={!approvedVersion}
         beforeContent={'Approved - '}
-        shortcut={'Shift+X'}
+        data-shortcut={'Shift+X'}
         selected={selected === approvedVersion?.id}
-        afterContent={approvedVersion && <ShortcutWidget>Shift+X</ShortcutWidget>}
       />
       {heroVersion && (
         <NavButton
           version={allVersions.hero}
           className="hero"
           onClick={onChange}
-          shortcut={'SHift+H'}
+          data-shortcut={'SHift+H'}
           selected={selected === heroVersion?.id}
-          afterContent={heroVersion && <ShortcutWidget>Shift+H</ShortcutWidget>}
         />
       )}
     </Styled.Tools>
