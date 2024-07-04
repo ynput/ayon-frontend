@@ -35,7 +35,7 @@ import NoProducts from './NoProducts'
 import { toast } from 'react-toastify'
 import { productTypes } from '@state/project'
 import * as Styled from './Products.styled'
-import { openPreview } from '/src/features/preview'
+import { openPreview } from '@state/preview'
 
 const Products = () => {
   const dispatch = useDispatch()

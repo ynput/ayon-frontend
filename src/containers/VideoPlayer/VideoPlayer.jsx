@@ -4,7 +4,7 @@ import styled from 'styled-components'
 import VideoOverlay from './VideoOverlay'
 import Trackbar from './Trackbar'
 import VideoPlayerControls from './VideoPlayerControls'
-import EmptyPlaceholder from '/src/components/EmptyPlaceholder/EmptyPlaceholder'
+import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
 import { classNames } from 'primereact/utils'
 
 const VideoPlayerContainer = styled.div`
