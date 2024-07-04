@@ -40,7 +40,7 @@ const Review = ({ projectName, productId, versionIds = [], onClose }) => {
         <Button onClick={onClose} icon={'close'} />
       </Styled.Header>
       <Styled.Content>
-        <ReviewPlayer projectName={projectName} reviewable={selectedVersion.reviewables[0]} />
+        <ReviewPlayer projectName={projectName} reviewable={selectedVersion?.reviewables[0]} />
         <ReviewDetailsPanel versionIds={versionIds} projectName={projectName} />
       </Styled.Content>
     </Styled.Container>

@@ -902,6 +902,7 @@ const injectedRtkApi = api.injectEndpoints({
         headers: {
           'content-type': queryArg['content-type'],
           'x-file-name': queryArg['x-file-name'],
+          'x-sender': queryArg['x-sender'],
         },
         params: { label: queryArg.label },
       }),
@@ -2058,6 +2059,7 @@ export type UploadReviewableApiArg = {
   label?: string
   'content-type': string
   'x-file-name'?: string
+  'x-sender'?: string
 }
 export type ListServicesApiResponse = /** status 200 Successful Response */ ServiceListModel
 export type ListServicesApiArg = void
@@ -3862,19 +3864,29 @@ export type ResolveRequestModel = {
   /** List of uris to resolve */
   uris: string[]
 }
+export type ReviewableProcessingStatus = {
+  eventId: string
+  status: string
+  description: string
+}
 export type ReviewableModel = {
   fileId: string
   activityId: string
   filename: string
   label?: string
   mimetype: string
-  status?: string
+  availability?: 'unknown' | 'needs_conversion' | 'ready'
+  mediaInfo?: object
+  createdFrom?: string
+  /** Information about the processing status */
+  processing?: ReviewableProcessingStatus
 }
 export type VersionReviewablesModel = {
   id: string
   name: string
   version: string
   status: string
+  /** List of available reviewables */
   reviewables?: ReviewableModel[]
 }
 export type ServiceDataModel = {
