@@ -53,9 +53,11 @@ const DetailsPanel = ({
   }, [entityType, selectedTab])
 
   // now we get the full details data for selected entities
-  const entitiesToQuery = entities.length
+  let entitiesToQuery = entities.length
     ? entities.map((entity) => ({ id: entity.id, projectName: entity.projectName }))
     : entitiesData.map((entity) => ({ id: entity.id, projectName: entity.projectName }))
+
+  entitiesToQuery = entitiesToQuery.filter((entity) => entity.id)
 
   const {
     data: detailsData = [],
@@ -66,10 +68,7 @@ const DetailsPanel = ({
   } = useGetEntitiesDetailsPanelQuery(
     { entityType, entities: entitiesToQuery, projectsInfo },
     {
-      skip:
-        !entitiesData.length &&
-        !entities.length &&
-        !entityDetailsTypesSupported.includes(entityType),
+      skip: !entitiesToQuery.length || !entityDetailsTypesSupported.includes(entityType),
     },
   )
 
