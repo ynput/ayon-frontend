@@ -879,10 +879,31 @@ const injectedRtkApi = api.injectEndpoints({
         params: { pathOnly: queryArg.pathOnly },
       }),
     }),
-    listReviewables: build.query<ListReviewablesApiResponse, ListReviewablesApiArg>({
+    getReviewablesForProduct: build.query<
+      GetReviewablesForProductApiResponse,
+      GetReviewablesForProductApiArg
+    >({
       query: (queryArg) => ({
-        url: `/api/projects/${queryArg.projectName}/reviewables`,
-        params: { product: queryArg.product },
+        url: `/api/projects/${queryArg.projectName}/products/${queryArg.productId}/reviewables`,
+      }),
+    }),
+    getReviewablesForVersion: build.query<
+      GetReviewablesForVersionApiResponse,
+      GetReviewablesForVersionApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/versions/${queryArg.versionId}/reviewables`,
+      }),
+    }),
+    uploadReviewable: build.mutation<UploadReviewableApiResponse, UploadReviewableApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/versions/${queryArg.versionId}/reviewables`,
+        method: 'POST',
+        headers: {
+          'content-type': queryArg['content-type'],
+          'x-file-name': queryArg['x-file-name'],
+        },
+        params: { label: queryArg.label },
       }),
     }),
     listServices: build.query<ListServicesApiResponse, ListServicesApiArg>({
@@ -2017,11 +2038,26 @@ export type ResolveUrisApiArg = {
   'x-ayon-site-id'?: string
   resolveRequestModel: ResolveRequestModel
 }
-export type ListReviewablesApiResponse = /** status 200 Successful Response */ ReviewableModel[]
-export type ListReviewablesApiArg = {
+export type GetReviewablesForProductApiResponse =
+  /** status 200 Successful Response */ VersionReviewablesModel[]
+export type GetReviewablesForProductApiArg = {
   projectName: string
-  /** Product ID */
-  product: string
+  productId: string
+}
+export type GetReviewablesForVersionApiResponse =
+  /** status 200 Successful Response */ VersionReviewablesModel
+export type GetReviewablesForVersionApiArg = {
+  projectName: string
+  versionId: string
+}
+export type UploadReviewableApiResponse = /** status 200 Successful Response */ any
+export type UploadReviewableApiArg = {
+  projectName: string
+  versionId: string
+  /** Label */
+  label?: string
+  'content-type': string
+  'x-file-name'?: string
 }
 export type ListServicesApiResponse = /** status 200 Successful Response */ ServiceListModel
 export type ListServicesApiArg = void
@@ -3832,10 +3868,14 @@ export type ReviewableModel = {
   filename: string
   label?: string
   mimetype: string
-  versionId: string
-  version: number
-  versionName: string
-  previewable?: boolean
+  status?: string
+}
+export type VersionReviewablesModel = {
+  id: string
+  name: string
+  version: string
+  status: string
+  reviewables?: ReviewableModel[]
 }
 export type ServiceDataModel = {
   volumes?: string[]

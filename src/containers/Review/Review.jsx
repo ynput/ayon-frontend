@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { Button } from '@ynput/ayon-react-components'
 import * as Styled from './Review.styled'
 import VersionSelectorTool from '@components/VersionSelectorTool/VersionSelectorTool'
-import { useListReviewablesQuery } from '@queries/review/getReview'
+import { useGetReviewablesForProductQuery } from '@queries/review/getReview'
 import { useDispatch } from 'react-redux'
 import { updateSelection } from '@state/review'
 import ReviewDetailsPanel from './ReviewDetailsPanel'
@@ -12,10 +12,8 @@ const Review = ({ projectName, productId, versionIds = [], onClose }) => {
   const dispatch = useDispatch()
 
   // new query: returns all reviewables for a product
-  const { data: allReviewables, isFetching: isFetchingReviewables } = useListReviewablesQuery(
-    { projectName, product: productId },
-    { skip: !productId },
-  )
+  const { data: allReviewables, isFetching: isFetchingReviewables } =
+    useGetReviewablesForProductQuery({ projectName, productId: productId }, { skip: !productId })
 
   const versions = useMemo(() => {
     // Get a list of all versions that have reviewables
