@@ -53,6 +53,9 @@ const WatchActivities: FC<WatchActivitiesProps> = ({}) => {
       const tags = entityIds.map((entityId) => ({ type: 'entityActivities', id: entityId }))
       const entries = api.util.selectInvalidatedBy(state, tags)
 
+      // add to the invalidateTags as we go and then invalidate all at the end
+      const invalidateTags = []
+
       if (topic === 'activity.deleted') {
         for (const entry of entries) {
           // remove the activity from the cache using originalArguments
@@ -143,6 +146,19 @@ const WatchActivities: FC<WatchActivitiesProps> = ({}) => {
           )
         }
       }
+
+      // invalidate any checklist counts
+      if (activityType === 'comment') {
+        invalidateTags.push(
+          ...entityIds.map((entityId) => ({
+            type: 'entityActivities',
+            id: 'checklist-' + entityId,
+          })),
+        )
+      }
+
+      //   invalidate the tags
+      if (invalidateTags.length > 0) dispatch(api.util.invalidateTags(invalidateTags))
     },
     null,
     {

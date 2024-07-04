@@ -1,9 +1,9 @@
 import { isEqual } from 'lodash'
 import api from '@api'
 import { taskProvideTags } from '../userDashboard/userDashboardHelpers'
-import { transformActivityData, transformTooltipData } from './activitiesHelpers'
+import { countChecklists, transformActivityData, transformTooltipData } from './activitiesHelpers'
 // import PubSub from '@/pubsub'
-import { ACTIVITIES, ACTIVITIES_BY_ACTIVITY, ENTITY_TOOLTIP } from './activityQueries'
+import { ACTIVITIES, ACTIVITIES_BY_ACTIVITY, CHECKLISTS, ENTITY_TOOLTIP } from './activityQueries'
 
 const getActivities = api.injectEndpoints({
   endpoints: (build) => ({
@@ -91,6 +91,22 @@ const getActivities = api.injectEndpoints({
         transformTooltipData(res?.data?.project, entityType),
       providesTags: (res, error, { entityType }) => taskProvideTags([res], 'task', entityType),
     }),
+    getChecklistsCount: build.query({
+      query: ({ projectName, entityIds }) => ({
+        url: '/graphql',
+        method: 'POST',
+        body: {
+          query: CHECKLISTS,
+          variables: { projectName, entityIds },
+        },
+      }),
+      transformResponse: (res) => countChecklists(res?.data),
+      providesTags: (res, _error, { entityIds }) => [
+        { type: 'activity', id: 'LIST' },
+        ...res.ids.map((id) => ({ type: 'activity', id: 'checklist-' + id })),
+        ...entityIds.map((id) => ({ type: 'entityActivities', id: 'checklist-' + id })),
+      ],
+    }),
   }),
   overrideExisting: true,
 })
@@ -102,4 +118,5 @@ export const {
   useLazyGetActivitiesQuery,
   useGetEntityTooltipQuery,
   useLazyGetActivityForEntitiesQuery,
+  useGetChecklistsCountQuery,
 } = getActivities
