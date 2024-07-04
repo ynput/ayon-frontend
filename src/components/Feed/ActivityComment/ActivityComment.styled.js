@@ -225,6 +225,7 @@ export const Tools = styled.div`
   top: 4px;
   background-color: var(--md-sys-color-surface-container-highest);
   border-radius: var(--border-radius-m);
+  z-index: 50;
 `
 
 export const ToolButton = styled(Button)`
