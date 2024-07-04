@@ -6,7 +6,7 @@ import DetailsPanelSlideOut from '/src/containers/DetailsPanel/DetailsPanelSlide
 import { useGetProjectsInfoQuery } from '/src/services/userDashboard/getUserDashboard'
 import { PreviewDetailsPanelWrapper } from './Preview.styled'
 
-const PreviewDetailsPanel = ({ selected = [], projectName }) => {
+const PreviewDetailsPanel = ({ versionIds = [], projectName }) => {
   const { data: projectsInfo = {} } = useGetProjectsInfoQuery(
     { projects: [projectName] },
     { skip: !projectName },
@@ -16,9 +16,9 @@ const PreviewDetailsPanel = ({ selected = [], projectName }) => {
 
   const projectInfo = projectsInfo[projectName] || {}
 
-  const entities = selected.map((id) => ({ id, projectName, entityType: 'version' }))
+  const entities = versionIds.map((id) => ({ id, projectName, entityType: 'version' }))
 
-  if (!selected.length) return null
+  if (!versionIds.length) return null
 
   return (
     <PreviewDetailsPanelWrapper>

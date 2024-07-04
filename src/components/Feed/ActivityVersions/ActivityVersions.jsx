@@ -6,6 +6,7 @@ import { useState } from 'react'
 import { More } from '../ActivityGroup/ActivityGroup.styled'
 import ActivityDate from '../ActivityDate'
 import { Link } from 'react-router-dom'
+import { identity } from 'lodash'
 
 const ActivityVersions = ({
   activity,
@@ -35,11 +36,11 @@ const ActivityVersions = ({
         onReferenceClick={onReferenceClick}
       />
       {versions.flatMap(
-        ({ name, id, productName, productType, updatedAt, createdAt }, index) =>
+        ({ name, id, productId, productName, productType, updatedAt, createdAt }, index) =>
           (index < limit || showAll) && (
             <Link
               key={id}
-              to={`${window.location.pathname}?preview_id=${id}&project_name=${projectName}`}
+              to={`${window.location.pathname}?project_name=${projectName}&preview_product=${productId}&preview_version=${identity}`}
             >
               <Styled.Card>
                 <Styled.Content>

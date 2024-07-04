@@ -538,7 +538,7 @@ const Products = () => {
 
     if (!versionId) return toast.error('No version found for this product')
 
-    dispatch(openPreview({ selected: [versionId], projectName }))
+    dispatch(openPreview({ productId, versionIds: [versionId], projectName }))
   }
 
   const ctxMenuItems = (id) => [

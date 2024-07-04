@@ -13,7 +13,7 @@ function ShortcutsProvider(props) {
   const dispatch = useDispatch()
 
   // preview open
-  const previewOpen = useSelector((state) => state.preview.selected)?.length > 0
+  const previewOpen = useSelector((state) => state.preview.productId)
 
   // logout
   const [logout] = useLogOutMutation()

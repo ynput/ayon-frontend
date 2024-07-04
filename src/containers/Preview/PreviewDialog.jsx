@@ -29,26 +29,37 @@ const StyledDialog = styled(Dialog)`
 const PreviewDialog = () => {
   const dispatch = useDispatch()
   // check if dialog is open or not
-  const { selected, projectName } = useSelector((state) => state.preview)
+  const { productId, versionIds, projectName } = useSelector((state) => state.preview)
 
   const [searchParams, setUrlSearchParams] = useSearchParams()
+  //   we need a project name
+  const queryProductId = searchParams.get('preview_product') || undefined
   //   usually just one id is passed, but multiple ids can be passed
-  const queryIds = searchParams.getAll('preview_id') || []
+  const queryVersionIds = searchParams.getAll('preview_version') || []
   //   we need a project name
   const queryProjectName = searchParams.get('project_name') || undefined
-  // when url has preview_id and preview_type, open the dialog if not already open
+  // when url has preview_product and preview_type, open the dialog if not already open
 
   useEffect(() => {
-    if (!queryIds.length || !queryProjectName) return
-    // check if dialog is already open with same ids
-    if (isEqual(selected, queryIds)) return
+    // we must have both productId and projectName
+    if (!queryProductId || !queryProjectName) return
+    // check if dialog is already open with same productId and version
+    if (productId === queryProductId && isEqual(versionIds, queryVersionIds)) return
+
     // open the dialog
-    dispatch(openPreview({ selected: queryIds, projectName: queryProjectName }))
-  }, [queryProjectName])
+    dispatch(
+      openPreview({
+        productId: queryProductId,
+        versionIds: queryVersionIds,
+        projectName: queryProjectName,
+      }),
+    )
+  }, [queryProductId, queryVersionIds, queryProjectName])
 
   const handleClose = () => {
-    // remove query params preview_id and preview_type from url
-    searchParams.delete('preview_id')
+    // remove query params preview_product and preview_type from url
+    searchParams.delete('preview_product')
+    searchParams.delete('preview_version')
     searchParams.delete('project_name')
     setUrlSearchParams(searchParams)
     // close the dialog
@@ -70,14 +81,14 @@ const PreviewDialog = () => {
     }
     document.addEventListener('keydown', handleEscape)
     return () => document.removeEventListener('keydown', handleEscape)
-  }, [selected])
+  }, [versionIds])
 
-  if (!selected.length) return null
+  if (!productId || !projectName) return null
 
   return (
     <>
-      <StyledDialog isOpen={selected.length && projectName} hideCancelButton size="full">
-        <Preview {...{ selected, projectName }} onClose={handleClose} />
+      <StyledDialog isOpen hideCancelButton size="full">
+        <Preview {...{ productId, versionIds, projectName }} onClose={handleClose} />
       </StyledDialog>
     </>
   )
