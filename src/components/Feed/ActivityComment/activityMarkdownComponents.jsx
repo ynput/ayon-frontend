@@ -49,7 +49,7 @@ export const aTag = (
 
   return (
     <ActivityReference
-      {...{ type, id: id.replace('.', '-') }}
+      {...{ type, id: id.replaceAll('.', '-') }}
       variant={isEntity ? 'filled' : 'primary'}
       onClick={() =>
         type !== 'user' &&
