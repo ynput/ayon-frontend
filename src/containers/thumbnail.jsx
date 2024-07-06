@@ -124,7 +124,6 @@ const Thumbnail = ({
     entityType,
     entityId,
     projectName,
-    key: entityId,
     existingImage: thumbLoaded,
     onUpload: onUpload,
     portalId,
@@ -148,12 +147,13 @@ const Thumbnail = ({
       )}
       {entityType && entityId && !isStacked && projectName && !disableUpload && !isLoading && (
         <>
-          <ThumbnailUploader {...thumbnailProps} isButton={isUploadButton} />
+          <ThumbnailUploader {...thumbnailProps} key={entityId} isButton={isUploadButton} />
           {portalEl &&
             (showPortal || isUploading) &&
             createPortal(
               <ThumbnailUploader
                 {...thumbnailProps}
+                key={entityId}
                 isPortal={true}
                 onUpload={(v) => {
                   setIsUploading(false)
