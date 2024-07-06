@@ -92,8 +92,8 @@ const VideoPlayer = ({ src, frameRate, aspectRatio }) => {
       //
       // For some reason, this seems to be the sweetspot
       // Going under 2 px behaves weird
-      const clientWidth = videoRowRef.current.clientWidth - 2
-      const clientHeight = videoRowRef.current.clientHeight - 2
+      const clientWidth = videoRowRef.current?.clientWidth - 2
+      const clientHeight = videoRowRef.current?.clientHeight - 2
 
       if (clientWidth / clientHeight > aspectRatio) {
         const width = clientHeight * aspectRatio
@@ -124,11 +124,11 @@ const VideoPlayer = ({ src, frameRate, aspectRatio }) => {
 
     const handleLoadedMetadata = () => {
       console.debug('VideoPlayer: Metadata loaded. Duration: ', videoElement.duration)
-      setDuration(videoRef.current.duration)
-      const width = videoRef.current.clientWidth
-      const height = videoRef.current.clientHeight
+      setDuration(videoRef.current?.duration)
+      const width = videoRef.current?.clientWidth
+      const height = videoRef.current?.clientHeight
       setVideoDimensions({ width, height })
-      setIsPlaying(!videoRef.current.paused)
+      setIsPlaying(!videoRef.current?.paused)
       setBufferedRanges([])
     }
 
@@ -191,7 +191,7 @@ const VideoPlayer = ({ src, frameRate, aspectRatio }) => {
     if (!videoRef.current) return
     const frameLength = frameRate ? 1 / frameRate : 0.04
     const updateTime = () => {
-      const actualDuration = videoRef.current.duration
+      const actualDuration = videoRef.current?.duration
       if (actualDuration !== duration) {
         setDuration(actualDuration)
       }
@@ -214,14 +214,14 @@ const VideoPlayer = ({ src, frameRate, aspectRatio }) => {
     if (seekedToInitialPosition.current) return
     const newTime = initialPosition.current
 
-    if (newTime >= videoRef.current.duration) return
+    if (newTime >= videoRef.current?.duration) return
     if (isNaN(newTime)) return
 
-    if (videoRef.current.currentTime > 0 || newTime === 0) {
+    if (videoRef.current?.currentTime > 0 || newTime === 0) {
       seekedToInitialPosition.current = true
       return
     }
-    if (videoRef.current.currentTime === newTime) {
+    if (videoRef.current?.currentTime === newTime) {
       seekedToInitialPosition.current = true
       return
     }
@@ -230,7 +230,7 @@ const VideoPlayer = ({ src, frameRate, aspectRatio }) => {
       'VideoPlayer: Setting initial position',
       newTime,
       'from',
-      videoRef.current.currentTime,
+      videoRef.current?.currentTime,
     )
     seekToTime(newTime)
     seekedToInitialPosition.current = true
@@ -254,15 +254,15 @@ const VideoPlayer = ({ src, frameRate, aspectRatio }) => {
   }
 
   const handleScrub = (newTime) => {
-    videoRef.current.pause()
+    videoRef.current?.pause()
     seekToTime(newTime)
     initialPosition.current = newTime
   }
 
   const handlePause = () => {
-    initialPosition.current = videoRef.current.currentTime
+    initialPosition.current = videoRef.current?.currentTime
     setTimeout(() => {
-      if (videoRef.current.paused) {
+      if (videoRef.current?.paused) {
         console.debug('VideoPlayer: Paused')
         setIsPlaying(false)
       }

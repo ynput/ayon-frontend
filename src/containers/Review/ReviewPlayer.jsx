@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { ReviewPlayerWrapper } from './Review.styled'
-import VideoPlayer from '/src/containers/VideoPlayer'
+import VideoPlayer from '@containers/VideoPlayer'
 import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
 
 const ReviewPlayer = ({ projectName, reviewable }) => {
