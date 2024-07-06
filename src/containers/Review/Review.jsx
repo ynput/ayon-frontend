@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import { Button } from '@ynput/ayon-react-components'
 import * as Styled from './Review.styled'
 import VersionSelectorTool from '@components/VersionSelectorTool/VersionSelectorTool'
@@ -29,14 +29,44 @@ const Review = ({ onClose }) => {
     [versionIds, versionsAndReviewables],
   )
 
+  const versionReviewableIds = selectedVersion?.reviewables.map((r) => r.activityId) || []
+
+  // if no reviewableIds are provided, select the first reviewable
+  useEffect(() => {
+    if (
+      (!reviewableIds.length || !reviewableIds.every((id) => versionReviewableIds.includes(id))) &&
+      !isFetchingReviewables &&
+      selectedVersion
+    ) {
+      const firstReviewableId = selectedVersion.reviewables[0]?.activityId
+      if (firstReviewableId) {
+        dispatch(updateSelection({ reviewableIds: [firstReviewableId] }))
+      }
+    }
+  }, [reviewableIds, versionReviewableIds, isFetchingReviewables, selectedVersion, dispatch])
+
   const selectedReviewable = useMemo(
     // for now we only support one reviewable
-    () => selectedVersion?.reviewables.find((r) => r.id === reviewableIds[0]),
+    () => selectedVersion?.reviewables.find((r) => r.activityId === reviewableIds[0]),
     [reviewableIds, selectedVersion],
   )
 
-  const handleVersionChange = (id) => {
-    dispatch(updateSelection({ versionIds: [id] }))
+  const handleVersionChange = (versionId) => {
+    // try and find a matching reviewable in the new version with the same label as the current reviewable
+    const currentLabel = selectedReviewable?.label?.toLowerCase()
+
+    const newVersion = versionsAndReviewables.find((v) => v.id === versionId)
+
+    // no version? that's weird
+    if (!newVersion) return console.error('No version found for id', versionId)
+
+    let newReviewableId = newVersion.reviewables.find(
+      (r) => r.label.toLowerCase() === currentLabel,
+    )?.activityId
+    // no matching reviewable? just pick the first one
+    if (!newReviewableId) newReviewableId = newVersion.reviewables[0]?.activityId
+
+    dispatch(updateSelection({ versionIds: [versionId], reviewableIds: [newReviewableId] }))
   }
 
   const isLoadingAll = isFetchingReviewables
