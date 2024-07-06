@@ -12,7 +12,7 @@ import editorReducer from '@state/editor'
 import dashboardReducer, { dashboardLocalItems } from '@state/dashboard'
 import detailsReducer, { detailsLocalItems } from '@state/details'
 import addonsManagerReducer from '@state/addonsManager'
-import reviewReducer from '@state/review'
+import reviewReducer, { reviewSearchParams } from '@state/review'
 
 import App from './app'
 
@@ -27,6 +27,7 @@ import { setupListeners } from '@reduxjs/toolkit/query'
 import short from 'short-uuid'
 import { SocketProvider } from '@context/websocketContext'
 import localStorageMiddleware from '@state/middleware/localStorageMiddleware'
+import searchParamsMiddleware from './features/middleware/searchParamsMiddleware'
 
 // generate unique session id
 window.senderId = short.generate()
@@ -42,19 +43,18 @@ const store = configureStore({
     addonsManager: addonsManagerReducer,
     review: reviewReducer,
     [RestAPI.reducerPath]: RestAPI.reducer,
-    // [GraphQL.reducerPath]: GraphQL.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
       .concat(RestAPI.middleware)
-      // .concat(GraphQL.middleware)
       .concat(
         localStorageMiddleware({
           ...dashboardLocalItems,
           ...contextLocalItems,
           ...detailsLocalItems,
         }),
-      ),
+      )
+      .concat(searchParamsMiddleware({ ...reviewSearchParams })),
 })
 
 setupListeners(store.dispatch)

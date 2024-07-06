@@ -3,12 +3,19 @@ import { Button } from '@ynput/ayon-react-components'
 import * as Styled from './Review.styled'
 import VersionSelectorTool from '@components/VersionSelectorTool/VersionSelectorTool'
 import { useGetReviewablesForProductQuery } from '@queries/review/getReview'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { updateSelection } from '@state/review'
 import ReviewDetailsPanel from './ReviewDetailsPanel'
 import ReviewPlayer from './ReviewPlayer'
 
-const Review = ({ projectName, productId, versionIds = [], onClose }) => {
+const Review = ({ onClose }) => {
+  const {
+    productId,
+    projectName,
+    versionIds = [],
+    reviewableIds = [],
+  } = useSelector((state) => state.review)
+
   const dispatch = useDispatch()
 
   // new query: returns all reviewables for a product
@@ -20,6 +27,12 @@ const Review = ({ projectName, productId, versionIds = [], onClose }) => {
   const selectedVersion = useMemo(
     () => versionsAndReviewables.find((v) => v.id === versionIds[0]),
     [versionIds, versionsAndReviewables],
+  )
+
+  const selectedReviewable = useMemo(
+    // for now we only support one reviewable
+    () => selectedVersion?.reviewables.find((r) => r.id === reviewableIds[0]),
+    [reviewableIds, selectedVersion],
   )
 
   const handleVersionChange = (id) => {
@@ -37,10 +50,10 @@ const Review = ({ projectName, productId, versionIds = [], onClose }) => {
           isLoading={isLoadingAll}
           onChange={handleVersionChange}
         />
-        <Button onClick={onClose} icon={'close'} />
+        {onClose && <Button onClick={onClose} icon={'close'} />}
       </Styled.Header>
       <Styled.Content>
-        <ReviewPlayer projectName={projectName} reviewable={selectedVersion?.reviewables[0]} />
+        <ReviewPlayer projectName={projectName} reviewable={selectedReviewable} />
         <ReviewDetailsPanel versionIds={versionIds} projectName={projectName} />
       </Styled.Content>
     </Styled.Container>

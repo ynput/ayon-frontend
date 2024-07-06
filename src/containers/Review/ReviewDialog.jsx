@@ -1,17 +1,15 @@
 import { Dialog } from '@ynput/ayon-react-components'
 import { useDispatch, useSelector } from 'react-redux'
-import { closeReview, openReview } from '@state/review'
-import { useSearchParams } from 'react-router-dom'
+import { closeReview } from '@state/review'
 import { useEffect } from 'react'
 import Review from './Review'
-import { isEqual } from 'lodash'
 import styled from 'styled-components'
 
 const StyledDialog = styled(Dialog)`
-  width: calc(100% - 64px);
-  height: calc(100% - 64px);
-  max-height: 1300px;
-  max-width: 2000px;
+  width: calc(100% - 3vw);
+  height: calc(100% - 7vh);
+  max-height: unset;
+  max-width: unset;
 
   .body {
     overflow: hidden;
@@ -29,39 +27,10 @@ const StyledDialog = styled(Dialog)`
 const ReviewDialog = () => {
   const dispatch = useDispatch()
   // check if dialog is open or not
-  const { productId, versionIds, projectName } = useSelector((state) => state.review)
-
-  const [searchParams, setUrlSearchParams] = useSearchParams()
-  //   we need a project name
-  const queryProductId = searchParams.get('review_product') || undefined
-  //   usually just one id is passed, but multiple ids can be passed
-  const queryVersionIds = searchParams.getAll('review_version') || []
-  //   we need a project name
-  const queryProjectName = searchParams.get('project_name') || undefined
-  // when url has review_product and review_type, open the dialog if not already open
-
-  useEffect(() => {
-    // we must have both productId and projectName
-    if (!queryProductId || !queryProjectName) return
-    // check if dialog is already open with same productId and version
-    if (productId === queryProductId && isEqual(versionIds, queryVersionIds)) return
-
-    // open the dialog
-    dispatch(
-      openReview({
-        productId: queryProductId,
-        versionIds: queryVersionIds,
-        projectName: queryProjectName,
-      }),
-    )
-  }, [queryProductId, queryVersionIds, queryProjectName])
+  const productId = useSelector((state) => state.review.productId)
+  const projectName = useSelector((state) => state.review.projectName)
 
   const handleClose = () => {
-    // remove query params review and review_type from url
-    searchParams.delete('review_product')
-    searchParams.delete('review_version')
-    searchParams.delete('project_name')
-    setUrlSearchParams(searchParams)
     // close the dialog
     dispatch(closeReview())
   }
@@ -81,14 +50,14 @@ const ReviewDialog = () => {
     }
     document.addEventListener('keydown', handleEscape)
     return () => document.removeEventListener('keydown', handleEscape)
-  }, [versionIds])
+  }, [productId])
 
   if (!productId || !projectName) return null
 
   return (
     <>
       <StyledDialog isOpen hideCancelButton size="full">
-        <Review {...{ productId, versionIds, projectName }} onClose={handleClose} />
+        <Review onClose={handleClose} />
       </StyledDialog>
     </>
   )
