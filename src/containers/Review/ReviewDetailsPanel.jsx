@@ -32,7 +32,6 @@ const ReviewDetailsPanel = ({ versionIds = [], projectName }) => {
         projectsInfo={projectsInfo}
         projectNames={[projectName]}
         entityType={'version'}
-        isCompact
         scope="review"
         style={{ boxShadow: 'none', borderRadius: 4, overflow: 'hidden' }}
       />

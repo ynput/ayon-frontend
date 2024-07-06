@@ -47,6 +47,7 @@ const DetailsPanelHeader = ({
   isSlideOut,
   isFetching,
   isCompact = false,
+  scope,
 }) => {
   // for selected entities, get flat list of assignees
   const entityAssignees = useMemo(
@@ -307,6 +308,7 @@ const DetailsPanelHeader = ({
             label: checklistsLabel,
           },
         }}
+        scope={scope}
       />
     </Styled.Grid>
   )

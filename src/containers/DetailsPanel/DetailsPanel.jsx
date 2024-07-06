@@ -34,7 +34,7 @@ const DetailsPanel = ({
   isCompact = false,
 }) => {
   const path = isSlideOut ? 'slideOut' : 'pinned'
-  let selectedTab = useSelector((state) => state.details[path].tab)
+  let selectedTab = useSelector((state) => state.details[path][scope].tab)
   const dispatch = useDispatch()
 
   // if the entity type is product or representation, we show the attribs tab only
@@ -47,7 +47,7 @@ const DetailsPanel = ({
     if (selectedTab === 'files') {
       // check entity type is still version
       if (entityType !== 'version') {
-        dispatch(updateDetailsPanelTab({ isSlideOut, tab: 'feed' }))
+        dispatch(updateDetailsPanelTab({ isSlideOut, tab: 'feed', scope }))
       }
     }
   }, [entityType, selectedTab])
@@ -123,6 +123,7 @@ const DetailsPanel = ({
           isSlideOut={isSlideOut}
           isFetching={isFetchingEntitiesDetails}
           isCompact={isCompact}
+          scope={scope}
         />
         {selectedTab === 'feed' && !isError && (
           <Feed

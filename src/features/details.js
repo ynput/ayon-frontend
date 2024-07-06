@@ -13,6 +13,16 @@ const initialStateSlideOut = {
   entityType: '',
   entityId: '',
   projectName: '',
+  filter: 'activity',
+  activityTypes: filterActivityTypes.activity,
+  tab: 'feed', // feed | attribs | files,
+}
+
+const initialStatePinned = {
+  filter: getInitialStateLocalStorage('details/filter', 'activity'), // activity | comments | publishes | checklists
+  activityTypes:
+    filterActivityTypes[getInitialStateLocalStorage('details/filter', 'activity')] || [],
+  tab: 'feed', // feed | attribs | files,
 }
 
 const initialTooltip = {
@@ -29,38 +39,39 @@ const detailsSlice = createSlice({
   name: 'details',
   initialState: {
     pinned: {
-      filter: getInitialStateLocalStorage('details/filter', 'activity'),
-      activityTypes:
-        filterActivityTypes[getInitialStateLocalStorage('details/filter', 'activity')] || [],
-      tab: 'feed', // feed | attribs | files,
       highlighted: getInitialStateQueryParam('highlighted', []),
+      // scoped
+      ...scopes.reduce((acc, scope) => {
+        acc[scope] = initialStatePinned
+        return acc
+      }, {}),
     },
     slideOut: {
-      dashboard: initialStateSlideOut,
-      project: initialStateSlideOut,
-      inbox: initialStateSlideOut,
-      review: initialStateSlideOut,
-      filter: 'activity',
-      activityTypes: filterActivityTypes.activity,
-      tab: 'feed', // feed | attribs | files,
       highlighted: [],
+      // scoped
+      ...scopes.reduce((acc, scope) => {
+        acc[scope] = initialStateSlideOut
+        return acc
+      }, {}),
     },
     refTooltip: initialTooltip,
   },
   reducers: {
     updateDetailsPanelTab: (state, { payload }) => {
+      const scope = payload.scope
       const location = payload.isSlideOut ? 'slideOut' : 'pinned'
 
       // toggle the details open
-      state[location].tab = payload.tab
+      state[location][scope].tab = payload.tab
     },
     updateFeedFilter: (state, { payload }) => {
+      const scope = payload.scope
       const location = payload.isSlideOut ? 'slideOut' : 'pinned'
-      state[location].filter = payload.value
-      state[location].activityTypes =
+      state[location][scope].filter = payload.value
+      state[location][scope].activityTypes =
         filterActivityTypes[payload.value] || filterActivityTypes.activity
       // switch back to feed tab
-      state[location].tab = 'feed'
+      state[location][scope].tab = 'feed'
     },
     openSlideOut: (state, { payload }) => {
       const scope = payload.scope
@@ -76,7 +87,7 @@ const detailsSlice = createSlice({
         }
       }
 
-      state.slideOut.tab = payload.tab || state.slideOut.tab
+      state.slideOut[scope].tab = payload.tab || state.slideOut[scope].tab
 
       if (payload.activityId) {
         // set highlighted activity

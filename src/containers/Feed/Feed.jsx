@@ -35,8 +35,8 @@ const Feed = ({
   const dispatch = useDispatch()
   const userName = useSelector((state) => state.user.name)
   const path = isSlideOut ? 'slideOut' : 'pinned'
-  const activityTypes = useSelector((state) => state.details[path].activityTypes)
-  const filter = useSelector((state) => state.details[path].filter)
+  const activityTypes = useSelector((state) => state.details[path][scope].activityTypes)
+  const filter = useSelector((state) => state.details[path][scope].filter)
   const highlighted = useSelector((state) => state.details[path].highlighted)
 
   // STATES

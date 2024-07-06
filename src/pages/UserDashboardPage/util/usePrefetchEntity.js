@@ -6,12 +6,12 @@ import { throttle } from 'lodash'
 import { activitiesLast } from '@containers/Feed/Feed'
 
 // prefetch the entity details and activities
-export const usePrefetchEntity = (dispatch, projectsInfo, throttleTime) => {
+export const usePrefetchEntity = (dispatch, projectsInfo, throttleTime, scope) => {
   // keep track of the ids that have been pre-fetched to avoid fetching them again
   const prefetchedIds = useSelector((state) => state.dashboard.prefetchedIds)
   const userName = useSelector((state) => state.user.name)
-  const activityTypes = useSelector((state) => state.details.pinned.activityTypes)
-  const filter = useSelector((state) => state.details.pinned.filter)
+  const activityTypes = useSelector((state) => state.details.pinned[scope].activityTypes)
+  const filter = useSelector((state) => state.details.pinned[scope].filter)
 
   const setPrefetchedIds = (ids) => dispatch(onPrefetchIds(ids))
   const [getEntitiesDetails] = useLazyGetEntitiesDetailsPanelQuery()

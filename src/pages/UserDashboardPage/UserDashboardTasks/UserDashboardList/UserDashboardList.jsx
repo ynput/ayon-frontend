@@ -98,7 +98,7 @@ const UserDashboardList = ({
 
   // PREFETCH TASK WHEN HOVERING
   // we keep track of the ids that have been pre-fetched to avoid fetching them again
-  const handlePrefetch = usePrefetchEntity(dispatch, projectsInfo, 300)
+  const handlePrefetch = usePrefetchEntity(dispatch, projectsInfo, 300, 'dashboard')
 
   // HANDLE TASK CLICK
   const taskClick = useTaskClick(dispatch)

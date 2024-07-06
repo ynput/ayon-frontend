@@ -69,7 +69,7 @@ const KanBanColumn = forwardRef(
 
     // PREFETCH TASK WHEN HOVERING
     // we keep track of the ids that have been pre-fetched to avoid fetching them again
-    const handlePrefetch = usePrefetchEntity(dispatch, projectsInfo, 500)
+    const handlePrefetch = usePrefetchEntity(dispatch, projectsInfo, 500, 'dashboard')
 
     // CONTEXT MENU
     const { handleContextMenu, closeContext } = useGetTaskContextMenu(tasks, dispatch)
