@@ -3,7 +3,8 @@ import api from '@api'
 const enhancedReview = api.enhanceEndpoints({
   endpoints: {
     getReviewablesForProduct: {},
+    getReviewablesForVersion: {},
   },
 })
 
-export const { useGetReviewablesForProductQuery } = enhancedReview
+export const { useGetReviewablesForProductQuery, useGetReviewablesForVersionQuery } = enhancedReview

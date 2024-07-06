@@ -72,10 +72,10 @@ const FeedFilters = ({
       <Spacer />
       {entityType === 'version' && (
         <Styled.FilterButton
-          icon="view_in_ar"
-          onClick={() => setTab('representations')}
-          selected={selectedTab === 'representations'}
-          data-tooltip="Representations"
+          icon="order_play"
+          onClick={() => setTab('files')}
+          selected={selectedTab === 'files'}
+          data-tooltip="Reviewables and Representations"
           data-tooltip-delay={0}
         />
       )}

@@ -6,7 +6,7 @@ import Feed from '@containers/Feed/Feed'
 import { useGetEntitiesDetailsPanelQuery } from '@queries/entity/getEntityPanel'
 import TaskAttributes from '@pages/UserDashboardPage/UserDashboardTasks/TaskAttributes/TaskAttributes'
 import { transformEntityData } from '@queries/userDashboard/userDashboardHelpers'
-import RepresentationsList from '../RepresentationsList/RepresentationsList'
+import DetailsPanelFiles from './DetailsPanelFiles'
 import { closeSlideOut, updateDetailsPanelTab } from '@state/details'
 import { entityDetailsTypesSupported } from '@/services/userDashboard/userDashboardQueries'
 
@@ -44,7 +44,7 @@ const DetailsPanel = ({
   // for example when switching from version to task, task doesn't have reps tab
   // if reps tab was selected, set default to feed
   useEffect(() => {
-    if (selectedTab === 'representations') {
+    if (selectedTab === 'files') {
       // check entity type is still version
       if (entityType !== 'version') {
         dispatch(updateDetailsPanelTab({ isSlideOut, tab: 'feed' }))
@@ -137,8 +137,12 @@ const DetailsPanel = ({
             scope={scope}
           />
         )}
-        {selectedTab === 'representations' && (
-          <RepresentationsList entities={entityDetailsData} scope={scope} />
+        {selectedTab === 'files' && (
+          <DetailsPanelFiles
+            entities={entityDetailsData}
+            scope={scope}
+            isLoadingVersion={isFetchingEntitiesDetails}
+          />
         )}
         {selectedTab === 'attribs' && (
           <TaskAttributes

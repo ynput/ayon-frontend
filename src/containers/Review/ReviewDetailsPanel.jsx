@@ -1,9 +1,9 @@
 // mainly just a wrapper for data fetching
 
-import DetailsPanel from '/src/containers/DetailsPanel/DetailsPanel'
-import { useGetUsersAssigneeQuery } from '/src/services/user/getUsers'
-import DetailsPanelSlideOut from '/src/containers/DetailsPanel/DetailsPanelSlideOut/DetailsPanelSlideOut'
-import { useGetProjectsInfoQuery } from '/src/services/userDashboard/getUserDashboard'
+import DetailsPanel from '@containers/DetailsPanel/DetailsPanel'
+import { useGetUsersAssigneeQuery } from '@queries/user/getUsers'
+import DetailsPanelSlideOut from '@containers/DetailsPanel/DetailsPanelSlideOut/DetailsPanelSlideOut'
+import { useGetProjectsInfoQuery } from '@queries/userDashboard/getUserDashboard'
 import { ReviewDetailsPanelWrapper } from './Review.styled'
 
 const ReviewDetailsPanel = ({ versionIds = [], projectName }) => {
