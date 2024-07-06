@@ -22,7 +22,7 @@ const reviewSlice = createSlice({
       state.productId = productId
       state.versionIds = versionIds
       state.projectName = projectName
-      state.reviewableIds = reviewableIds
+      state.reviewableIds = reviewableIds || []
     },
     updateSelection: (state, { payload: { versionIds, reviewableIds } }) => {
       if (versionIds !== undefined) {

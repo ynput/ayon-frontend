@@ -17,7 +17,7 @@ export const Content = styled.div`
   align-items: center;
   overflow: hidden;
 
-  gap: var(--base-gap-large);
+  gap: var(--base-gap-small);
 `
 
 export const ReviewPlayerWrapper = styled.div`
@@ -30,7 +30,7 @@ export const ReviewDetailsPanelWrapper = styled.div`
   height: 100%;
   max-height: 100%;
   overflow: hidden;
-  max-width: clamp(460px, 28vw, 600px);
-  min-width: clamp(460px, 28vw, 600px);
+  max-width: clamp(460px, 25vw, 600px);
+  min-width: clamp(460px, 25vw, 600px);
   position: relative;
 `

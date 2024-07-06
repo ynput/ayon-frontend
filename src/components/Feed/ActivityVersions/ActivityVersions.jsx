@@ -5,8 +5,8 @@ import { productTypes } from '@state/project'
 import { useState } from 'react'
 import { More } from '../ActivityGroup/ActivityGroup.styled'
 import ActivityDate from '../ActivityDate'
-import { Link } from 'react-router-dom'
-import { identity } from 'lodash'
+import { useDispatch } from 'react-redux'
+import { openReview } from '@/features/review'
 
 const ActivityVersions = ({
   activity,
@@ -23,6 +23,10 @@ const ActivityVersions = ({
 
   const [thumbnailError, setThumbnailError] = useState(false)
 
+  const dispatch = useDispatch()
+  const handleClick = (versionId, productId) =>
+    dispatch(openReview({ versionIds: [versionId], productId, projectName }))
+
   return (
     <Styled.Container>
       <ActivityHeader
@@ -38,29 +42,24 @@ const ActivityVersions = ({
       {versions.flatMap(
         ({ name, id, productId, productName, productType, updatedAt, createdAt }, index) =>
           (index < limit || showAll) && (
-            <Link
-              key={id}
-              to={`${window.location.pathname}?project_name=${projectName}&review_product=${productId}&review_version=${identity}`}
-            >
-              <Styled.Card>
-                <Styled.Content>
-                  <Styled.Title>
-                    <span>{productName}</span>
-                    <ActivityDate date={createdAt} isExact />
-                  </Styled.Title>
-                  <span className="version">{name}</span>
-                </Styled.Content>
-                <Styled.Thumbnail
-                  {...{ projectName }}
-                  entityId={id}
-                  entityType="version"
-                  onError={() => setThumbnailError(true)}
-                  iconOnly={thumbnailError}
-                  entityUpdatedAt={updatedAt}
-                  icon={productTypes[productType]?.icon || 'home_repair_service'}
-                />
-              </Styled.Card>
-            </Link>
+            <Styled.Card onClick={() => handleClick(id, productId)}>
+              <Styled.Content>
+                <Styled.Title>
+                  <span>{productName}</span>
+                  <ActivityDate date={createdAt} isExact />
+                </Styled.Title>
+                <span className="version">{name}</span>
+              </Styled.Content>
+              <Styled.Thumbnail
+                {...{ projectName }}
+                entityId={id}
+                entityType="version"
+                onError={() => setThumbnailError(true)}
+                iconOnly={thumbnailError}
+                entityUpdatedAt={updatedAt}
+                icon={productTypes[productType]?.icon || 'home_repair_service'}
+              />
+            </Styled.Card>
           ),
       )}
       {filter !== 'publishes' && versions.length > limit && (

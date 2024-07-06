@@ -7,6 +7,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { updateSelection } from '@state/review'
 import ReviewDetailsPanel from './ReviewDetailsPanel'
 import ReviewPlayer from './ReviewPlayer'
+import ReviewablesSelector from '@/components/ReviewablesSelector'
 
 const Review = ({ onClose }) => {
   const {
@@ -61,12 +62,16 @@ const Review = ({ onClose }) => {
     if (!newVersion) return console.error('No version found for id', versionId)
 
     let newReviewableId = newVersion.reviewables.find(
-      (r) => r.label.toLowerCase() === currentLabel,
+      (r) => r.label?.toLowerCase() === currentLabel,
     )?.activityId
     // no matching reviewable? just pick the first one
     if (!newReviewableId) newReviewableId = newVersion.reviewables[0]?.activityId
 
     dispatch(updateSelection({ versionIds: [versionId], reviewableIds: [newReviewableId] }))
+  }
+
+  const handleReviewableChange = (reviewableId) => {
+    dispatch(updateSelection({ reviewableIds: [reviewableId] }))
   }
 
   const isLoadingAll = isFetchingReviewables
@@ -84,6 +89,11 @@ const Review = ({ onClose }) => {
       </Styled.Header>
       <Styled.Content>
         <ReviewPlayer projectName={projectName} reviewable={selectedReviewable} />
+        <ReviewablesSelector
+          reviewables={selectedVersion?.reviewables}
+          selected={reviewableIds}
+          onChange={handleReviewableChange}
+        />
         <ReviewDetailsPanel versionIds={versionIds} projectName={projectName} />
       </Styled.Content>
     </Styled.Container>
