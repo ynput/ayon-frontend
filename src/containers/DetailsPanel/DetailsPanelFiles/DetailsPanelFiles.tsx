@@ -13,6 +13,7 @@ const StyledContainer = styled.div`
 `
 
 const StyledSection = styled.div`
+  position: relative;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -20,6 +21,7 @@ const StyledSection = styled.div`
   overflow: hidden;
 
   padding: var(--padding-m);
+  overflow: auto;
 
   :first-child {
     border-bottom: 1px solid var(--md-sys-color-outline-variant);

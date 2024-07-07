@@ -45,7 +45,7 @@ const ReviewableCard = forwardRef<HTMLDivElement, ReviewableCardProps>(
         <Styled.Image src={`https://via.placeholder.com/160x90`} />
         <Styled.Content>
           <h4 className={Typography.titleSmall}>{label}</h4>
-          <span>{filename}</span>
+          <span className="name">{filename}</span>
         </Styled.Content>
         {(dragProps || isDragOverlay) && (
           <Styled.DragHandle className="handle" {...dragProps} icon="drag_indicator" />

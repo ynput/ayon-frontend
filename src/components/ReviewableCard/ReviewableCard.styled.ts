@@ -9,6 +9,7 @@ export const Card = styled.div`
   padding: var(--padding-s);
   border-radius: var(--border-radius-m);
   gap: var(--base-gap-large);
+  user-select: none;
 
   cursor: pointer;
 
@@ -49,6 +50,10 @@ export const Content = styled.div`
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .name {
+    color: var(--md-sys-color-outline);
   }
 `
 

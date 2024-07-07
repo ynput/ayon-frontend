@@ -58,9 +58,10 @@ const ReviewablesSelector: FC<ReviewablesSelectorProps> = ({
           key={activityId}
           onClick={() => onChange && onChange(activityId)}
           className={classNames({ selected: selected.includes(activityId) })}
+          data-tooltip={label}
         >
           <img src={'https://placehold.co/160x90'} />
-          <span className={Typography.labelSmall}>{label}</span>
+          {/* <span className={Typography.labelSmall}>{label}</span> */}
         </Styled.ReviewableCard>
       ))}
     </Styled.ReviewablesSelector>
