@@ -75,8 +75,8 @@ const VideoPlayer = ({ src, frameRate, aspectRatio }) => {
   const [loop, setLoop] = useState(true)
 
   const [videoDimensions, setVideoDimensions] = useState({
-    width: 600,
-    height: 400,
+    width: null,
+    height: null,
   })
 
   //
@@ -84,7 +84,7 @@ const VideoPlayer = ({ src, frameRate, aspectRatio }) => {
   //
 
   useEffect(() => {
-    if (!videoRowRef.current) return
+    if (!videoRowRef.current || showStill) return
 
     const updateVideoDimensions = () => {
       // DO NOT TOUCH THAT *0.95 ! IT'S AN IMPORTANT MAGIC!
@@ -106,13 +106,15 @@ const VideoPlayer = ({ src, frameRate, aspectRatio }) => {
       }
     }
 
+    updateVideoDimensions()
+
     const resizeObserver = new ResizeObserver(updateVideoDimensions)
     resizeObserver.observe(videoRowRef.current)
     return () => {
       if (!videoRowRef.current) return
       resizeObserver.unobserve(videoRowRef.current)
     }
-  }, [videoRowRef])
+  }, [videoRowRef, aspectRatio, showStill])
 
   //
   // Player initialization / video loading

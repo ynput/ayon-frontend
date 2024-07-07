@@ -1,11 +1,11 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ReviewPlayerWrapper } from './Review.styled'
 import VideoPlayer from '@containers/VideoPlayer'
 import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
 
 const ReviewPlayer = ({ projectName, reviewable }) => {
-  const [frameRate, setFrameRate] = useState(25)
-  const [aspectRatio, setAspectRatio] = useState(1.7777777777777777)
+  const [frameRate, setFrameRate] = useState(null)
+  const [aspectRatio, setAspectRatio] = useState(null)
 
   if (!reviewable)
     return (
@@ -14,20 +14,21 @@ const ReviewPlayer = ({ projectName, reviewable }) => {
       </ReviewPlayerWrapper>
     )
 
-  // TODO: load from reviewable.attrib
+  const mediaInfo = reviewable.mediaInfo
 
-  // useEffect(() => {
-  //   if (!attrib?.length) return
-  //   const { fps, resolutionWidth, resolutionHeight } = attrib
-  //   setFrameRate(fps)
-  //   setAspectRatio(resolutionWidth / resolutionHeight)
-  // }, [attrib])
+  useEffect(() => {
+    const { frameRate, width, height } = mediaInfo
+    setFrameRate(frameRate)
+    setAspectRatio(width / height)
+  }, [reviewable])
 
   const videoSrc = `/api/projects/${projectName}/files/${reviewable.fileId}`
 
   return (
     <ReviewPlayerWrapper>
-      <VideoPlayer src={videoSrc} frameRate={frameRate} aspectRatio={aspectRatio} />
+      {frameRate && aspectRatio && (
+        <VideoPlayer src={videoSrc} frameRate={frameRate} aspectRatio={aspectRatio} />
+      )}
     </ReviewPlayerWrapper>
   )
 }
