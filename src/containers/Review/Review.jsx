@@ -106,6 +106,7 @@ const Review = ({ onClose }) => {
           selected={reviewableIds}
           onChange={handleReviewableChange}
           onUpload={handleUploadButton}
+          projectName={projectName}
         />
         <ReviewDetailsPanel versionIds={versionIds} projectName={projectName} />
       </Styled.Content>

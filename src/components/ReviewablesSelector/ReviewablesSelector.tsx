@@ -12,6 +12,7 @@ type ReviewableCard = {
 interface ReviewablesSelectorProps {
   reviewables: ReviewableCard[]
   selected: string[]
+  projectName: string
   onChange?: (activityId: string) => void
   onUpload: () => void
 }
@@ -19,6 +20,7 @@ interface ReviewablesSelectorProps {
 const ReviewablesSelector: FC<ReviewablesSelectorProps> = ({
   reviewables = [],
   selected = [],
+  projectName,
   onChange,
   onUpload,
 }) => {
@@ -97,7 +99,7 @@ const ReviewablesSelector: FC<ReviewablesSelectorProps> = ({
   return (
     <Styled.ReviewablesSelector>
       <Styled.Scrollable className="reviewables">
-        {reviewables.map(({ activityId, label }) => (
+        {reviewables.map(({ activityId, label, fileId }) => (
           <Styled.ReviewableCard
             key={activityId}
             id={'preview-' + activityId}
@@ -105,7 +107,7 @@ const ReviewablesSelector: FC<ReviewablesSelectorProps> = ({
             className={classNames('reviewable-card', { selected: selected.includes(activityId) })}
             onMouseOver={(e) => handleMouseOver(e, { label })}
           >
-            <img src={'https://placehold.co/160x90'} />
+            <img src={`/api/projects/${projectName}/files/${fileId}/thumbnail`} />
           </Styled.ReviewableCard>
         ))}
         <Styled.AddButton

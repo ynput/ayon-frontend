@@ -12,6 +12,7 @@ export interface ReviewableCardProps
     >,
     Omit<HTMLProps<HTMLDivElement>, 'ref' | 'as' | 'children'> {
   // Extends div element props
+  projectName: string
   isDragOverlay?: boolean
   isDropPlaceholder?: boolean
   isSelected?: boolean
@@ -22,6 +23,7 @@ export interface ReviewableCardProps
 const ReviewableCard = forwardRef<HTMLDivElement, ReviewableCardProps>(
   (
     {
+      projectName,
       activityId,
       fileId,
       filename,
@@ -51,7 +53,7 @@ const ReviewableCard = forwardRef<HTMLDivElement, ReviewableCardProps>(
         })}
         {...props}
       >
-        <Styled.Image src={`https://via.placeholder.com/160x90`} />
+        <Styled.Image src={`/api/projects/${projectName}/files/${fileId}/thumbnail`} />
         <Styled.Content>
           <h4 className={Typography.titleSmall}>{label}</h4>
           <span className="name">{filename}</span>

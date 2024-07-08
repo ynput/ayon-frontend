@@ -267,6 +267,7 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
               {reviewables.map((reviewable) => (
                 <SortableReviewableCard
                   key={reviewable.activityId}
+                  projectName={projectName}
                   onClick={handleReviewableClick}
                   isSelected={reviewableIds.includes(reviewable.activityId)}
                   isUploaded={completeUploads.includes(reviewable.activityId)}
@@ -297,6 +298,7 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
               {draggingReview ? (
                 <ReviewableCard
                   {...draggingReview}
+                  projectName={projectName}
                   isDragOverlay
                   isSelected={reviewableIds.includes(draggingReview.activityId)}
                 />
