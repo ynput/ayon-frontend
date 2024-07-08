@@ -4,7 +4,7 @@ import * as Styled from './Review.styled'
 import VersionSelectorTool from '@components/VersionSelectorTool/VersionSelectorTool'
 import { useGetReviewablesForProductQuery } from '@queries/review/getReview'
 import { useDispatch, useSelector } from 'react-redux'
-import { toggleUpload, updateSelection } from '@state/review'
+import { toggleFullscreen, toggleUpload, updateSelection } from '@state/review'
 import ReviewDetailsPanel from './ReviewDetailsPanel'
 import ReviewPlayer from './ReviewPlayer'
 import ReviewablesSelector from '@/components/ReviewablesSelector'
@@ -12,6 +12,7 @@ import { updateDetailsPanelTab } from '@/features/details'
 import EmptyPlaceholder from '@/components/EmptyPlaceholder/EmptyPlaceholder'
 import { $Any } from '@/types'
 import { Link } from 'react-router-dom'
+import { useFullScreenHandle } from 'react-full-screen'
 
 interface ReviewProps {
   onClose?: () => void
@@ -24,6 +25,7 @@ const Review = ({ onClose, canOpenInNew }: ReviewProps) => {
     projectName,
     versionIds = [],
     reviewableIds = [],
+    fullscreen,
   } = useSelector((state: $Any) => state.review)
 
   const dispatch = useDispatch()
@@ -125,6 +127,24 @@ const Review = ({ onClose, canOpenInNew }: ReviewProps) => {
     )
   }
 
+  const handle = useFullScreenHandle()
+
+  useEffect(() => {
+    if (fullscreen) {
+      // check if it's already open
+      if (!handle.active) handle.enter()
+    } else {
+      if (handle.active) handle.exit()
+    }
+  }, [handle, fullscreen])
+
+  const fullScreenChange = (state: boolean) => {
+    // when closing, ensure the state is updated
+    if (!state) {
+      dispatch(toggleFullscreen({ fullscreen: false }))
+    }
+  }
+
   // build new window url for review
   const baseUrl = '/review'
   const searchParams = new URLSearchParams()
@@ -150,7 +170,9 @@ const Review = ({ onClose, canOpenInNew }: ReviewProps) => {
         {onClose && <Button onClick={onClose} icon={'close'} />}
       </Styled.Header>
       <Styled.Content>
-        <Styled.ViewerWrapper>{viewerComponent}</Styled.ViewerWrapper>
+        <Styled.FullScreenWrapper handle={handle} onChange={fullScreenChange}>
+          {viewerComponent}
+        </Styled.FullScreenWrapper>
         <ReviewablesSelector
           reviewables={selectedVersion?.reviewables || []}
           selected={reviewableIds}

@@ -1,7 +1,8 @@
 import { useEffect } from 'react'
-
 import { Button, Spacer } from '@ynput/ayon-react-components'
 import Timecode from './Timecode'
+import { useDispatch, useSelector } from 'react-redux'
+import { toggleFullscreen } from '@/features/review'
 
 const VideoPlayerControls = ({
   videoRef,
@@ -15,6 +16,8 @@ const VideoPlayerControls = ({
   loop,
   setLoop,
 }) => {
+  const dispatch = useDispatch()
+  const fullscreen = useSelector((state) => state.review.fullscreen)
   const frameLength = 0.04 // TODO
 
   const handlePlayPause = () => {
@@ -89,6 +92,7 @@ const VideoPlayerControls = ({
         { keys: ['ArrowRight', '4'], action: handleGoForward1 },
         { keys: ['l', '2'], shiftKeys: ['ArrowRight'], action: handleGoForward5 },
         { shiftKeys: ['D'], action: handleGoToEnd },
+        { keys: ['f'], action: () => dispatch(toggleFullscreen()) },
       ]
 
       const keyHandler = keyHandlers.find((handler) => {
@@ -112,6 +116,10 @@ const VideoPlayerControls = ({
       window.removeEventListener('keydown', handleKeyDown)
     }
   }, [loop])
+
+  const handleFullscreen = () => {
+    dispatch(toggleFullscreen())
+  }
 
   return (
     <>
@@ -189,6 +197,11 @@ const VideoPlayerControls = ({
         onClick={() => setLoop(!loop)}
         icon="repeat"
         data-tooltip="Loop playback"
+      />
+      <Button
+        onClick={handleFullscreen}
+        icon={fullscreen ? 'fullscreen_exit' : 'fullscreen'}
+        data-tooltip="Fullscreen"
       />
 
       <Timecode value={duration} frameRate={frameRate} disabled tooltip={'Total frames'} />

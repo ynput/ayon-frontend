@@ -32,6 +32,7 @@ const ReviewDialog = () => {
   // check if dialog is open or not
   const productId = useSelector((state) => state.review.productId)
   const projectName = useSelector((state) => state.review.projectName)
+  const fullscreen = useSelector((state) => state.review.fullscreen)
 
   const handleClose = () => {
     // close the dialog
@@ -47,13 +48,13 @@ const ReviewDialog = () => {
       // check shortcut isn't inside a contenteditable element
       if (e.target.isContentEditable) return
 
-      if (e.key === 'Escape') {
+      if (e.key === 'Escape' && !fullscreen) {
         handleClose()
       }
     }
     document.addEventListener('keydown', handleEscape)
     return () => document.removeEventListener('keydown', handleEscape)
-  }, [productId])
+  }, [productId, fullscreen])
 
   if (!productId || !projectName) return null
 

@@ -16,8 +16,6 @@ const VideoPlayerContainer = styled.div`
   display: flex;
   flex-direction: column;
 
-  gap: 6px;
-
   video {
     object-fit: fill !important;
     padding: 0;
@@ -50,8 +48,8 @@ const VideoPlayerContainer = styled.div`
     justify-content: center;
     align-items: center;
     width: 100%;
-    gap: 6px;
-    padding-bottom: 6px;
+    gap: 4px;
+    padding: 4px;
   }
 `
 

@@ -20,6 +20,7 @@ const reviewSlice = createSlice({
   initialState: {
     ...initialStateFromQueryParams,
     upload: false, // used to open upload file picker
+    fullscreen: false,
   },
   reducers: {
     openReview: (
@@ -48,10 +49,14 @@ const reviewSlice = createSlice({
     toggleUpload: (state, { payload }) => {
       state.upload = payload
     },
+    toggleFullscreen: (state, { payload }) => {
+      state.fullscreen = payload ? payload.fullscreen : !state.fullscreen
+    },
   },
 })
 
-export const { openReview, updateSelection, closeReview, toggleUpload } = reviewSlice.actions
+export const { openReview, updateSelection, closeReview, toggleUpload, toggleFullscreen } =
+  reviewSlice.actions
 export default reviewSlice.reducer
 
 // create an object for each reducer to define which state fields it will update

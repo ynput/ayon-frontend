@@ -3,9 +3,15 @@ import VideoPlayer from '@containers/VideoPlayer'
 import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
 import { Button } from '@ynput/ayon-react-components'
 
-const ReviewPlayer = ({ projectName, reviewable, onUpload }) => {
-  const [frameRate, setFrameRate] = useState(null)
-  const [aspectRatio, setAspectRatio] = useState(null)
+interface ReviewPlayerProps {
+  projectName: string
+  reviewable: any
+  onUpload: () => void
+}
+
+const ReviewPlayer = ({ projectName, reviewable, onUpload }: ReviewPlayerProps) => {
+  const [frameRate, setFrameRate] = useState<null | number>(null)
+  const [aspectRatio, setAspectRatio] = useState<null | number>(null)
 
   useEffect(() => {
     const mediaInfo = reviewable?.mediaInfo

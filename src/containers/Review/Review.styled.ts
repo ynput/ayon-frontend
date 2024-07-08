@@ -1,4 +1,5 @@
 import { Toolbar } from '@ynput/ayon-react-components'
+import { FullScreen } from 'react-full-screen'
 import styled from 'styled-components'
 
 export const Container = styled.div`
@@ -23,13 +24,15 @@ export const Content = styled.div`
   gap: var(--base-gap-small);
 `
 
-export const ViewerWrapper = styled.div`
+export const FullScreenWrapper = styled(FullScreen)`
   position: relative;
   width: 100%;
   height: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
+  background-color: var(--md-sys-color-surface-container);
+  z-index: 1000;
 `
 
 export const Image = styled.img`
