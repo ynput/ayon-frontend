@@ -124,6 +124,7 @@ const VideoPlayerControls = ({
           console.debug('VideoPlayerControls: TC Input Change time to', value)
           videoRef.current.currentTime = value
         }}
+        tooltip={'Current frame'}
       />
 
       <Spacer />
@@ -191,7 +192,7 @@ const VideoPlayerControls = ({
         data-tooltip="Loop playback"
       />
 
-      <Timecode value={duration} frameRate={frameRate} />
+      <Timecode value={duration} frameRate={frameRate} disabled tooltip={'Total frames'} />
     </>
   )
 }

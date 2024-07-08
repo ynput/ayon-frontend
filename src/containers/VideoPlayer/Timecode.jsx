@@ -1,7 +1,16 @@
-import {useState, useEffect, useRef} from 'react'
-import {InputText} from '@ynput/ayon-react-components'
+import { useState, useEffect, useRef } from 'react'
+import { InputText } from '@ynput/ayon-react-components'
+import styled from 'styled-components'
 
-const Timecode = ({ value, frameRate, onChange, maximum}) => {
+const Timescode = styled(InputText)`
+  &:disabled {
+    opacity: 1;
+    cursor: default;
+    border-color: var(--md-sys-color-surface-container-low);
+  }
+`
+
+const Timecode = ({ value, frameRate, onChange, maximum, disabled, tooltip }) => {
   const [frames, setFrames] = useState(0)
   const inputRef = useRef()
 
@@ -23,10 +32,10 @@ const Timecode = ({ value, frameRate, onChange, maximum}) => {
   }
 
   return (
-    <InputText
+    <Timescode
       ref={inputRef}
       value={frames}
-      style={{width: '100px', fontFamily: 'monospace'}}
+      style={{ width: '100px', fontFamily: 'monospace' }}
       onChange={(e) => setFrames(e.target.value)}
       onBlur={submit}
       onKeyDown={(e) => {
@@ -36,6 +45,8 @@ const Timecode = ({ value, frameRate, onChange, maximum}) => {
         e.stopPropagation()
       }}
       readOnly={!onChange}
+      disabled={disabled}
+      data-tooltip={tooltip}
     />
   )
 }
