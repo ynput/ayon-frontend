@@ -33,20 +33,22 @@ const VideoPlayerControls = ({
   }
   const handleGoToEnd = () => {
     console.debug('VideoPlayerControls: Go to end')
-    const newFrame = videoRef.current.duration
+    const newFrame = duration
     videoRef.current.currentTime = newFrame
     onFrameChange(newFrame)
   }
 
   const handleGoBack1 = () => {
     console.debug('VideoPlayerControls: Go back 1')
-    const newFrame = Math.max(0, videoRef.current.currentTime - frameLength)
+    const nextFrame = videoRef.current.currentTime - frameLength
+    const newFrame = nextFrame < 0 ? (loop ? duration : 0) : nextFrame
     videoRef.current.currentTime = newFrame
     onFrameChange(newFrame)
   }
   const handleGoForward1 = () => {
     console.debug('VideoPlayerControls: Go forward 1')
-    const newFrame = Math.min(videoRef.current.duration, videoRef.current.currentTime + frameLength)
+    const nextFrame = videoRef.current.currentTime + frameLength
+    const newFrame = nextFrame > duration ? (loop ? 0 : duration) : nextFrame
     videoRef.current.currentTime = newFrame
     onFrameChange(newFrame)
   }
@@ -59,10 +61,7 @@ const VideoPlayerControls = ({
   }
   const handleGoForward5 = () => {
     console.debug('VideoPlayerControls: Go forward 5')
-    const newFrame = Math.min(
-      videoRef.current.duration,
-      videoRef.current.currentTime + 5 * frameLength,
-    )
+    const newFrame = Math.min(duration, videoRef.current.currentTime + 5 * frameLength)
     videoRef.current.currentTime = newFrame
     onFrameChange(newFrame)
   }
@@ -112,7 +111,7 @@ const VideoPlayerControls = ({
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [])
+  }, [loop])
 
   return (
     <>
