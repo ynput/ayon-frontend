@@ -84,6 +84,25 @@ const Review = ({ onClose }) => {
 
   const isLoadingAll = isFetchingReviewables
 
+  let viewerComponent
+
+  if (selectedReviewable?.mimetype.includes('video')) {
+    viewerComponent = (
+      <ReviewPlayer
+        projectName={projectName}
+        reviewable={selectedReviewable}
+        onUpload={handleUploadButton}
+      />
+    )
+  } else if (selectedReviewable?.mimetype.includes('image')) {
+    viewerComponent = (
+      <Styled.Image
+        src={`/api/projects/${projectName}/files/${selectedReviewable.fileId}`}
+        alt={selectedReviewable.label || selectedReviewable.name}
+      />
+    )
+  }
+
   return (
     <Styled.Container>
       <Styled.Header>
@@ -96,11 +115,7 @@ const Review = ({ onClose }) => {
         {onClose && <Button onClick={onClose} icon={'close'} />}
       </Styled.Header>
       <Styled.Content>
-        <ReviewPlayer
-          projectName={projectName}
-          reviewable={selectedReviewable}
-          onUpload={handleUploadButton}
-        />
+        <Styled.ViewerWrapper>{viewerComponent}</Styled.ViewerWrapper>
         <ReviewablesSelector
           reviewables={selectedVersion?.reviewables}
           selected={reviewableIds}

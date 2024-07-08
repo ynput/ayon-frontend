@@ -20,10 +20,23 @@ export const Content = styled.div`
   gap: var(--base-gap-small);
 `
 
-export const ReviewPlayerWrapper = styled.div`
+export const ViewerWrapper = styled.div`
   position: relative;
   width: 100%;
   height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+`
+
+export const Image = styled.img`
+  min-width: 300px;
+  min-height: 300px;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
 `
 
 export const ReviewDetailsPanelWrapper = styled.div`
