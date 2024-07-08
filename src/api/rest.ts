@@ -2051,7 +2051,7 @@ export type GetReviewablesForVersionApiArg = {
   projectName: string
   versionId: string
 }
-export type UploadReviewableApiResponse = /** status 200 Successful Response */ any
+export type UploadReviewableApiResponse = /** status 200 Successful Response */ ReviewableModel
 export type UploadReviewableApiArg = {
   projectName: string
   versionId: string
@@ -3869,6 +3869,10 @@ export type ReviewableProcessingStatus = {
   status: string
   description: string
 }
+export type ReviewableAuthor = {
+  name: string
+  fullName?: string
+}
 export type ReviewableModel = {
   fileId: string
   activityId: string
@@ -3880,6 +3884,9 @@ export type ReviewableModel = {
   createdFrom?: string
   /** Information about the processing status */
   processing?: ReviewableProcessingStatus
+  createdAt?: string
+  updatedAt?: string
+  author: ReviewableAuthor
 }
 export type VersionReviewablesModel = {
   id: string

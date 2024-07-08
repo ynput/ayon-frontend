@@ -29,6 +29,7 @@ import { toast } from 'react-toastify'
 import ReviewableUploadCard, { ReviewableUploadFile } from '@components/ReviewableUploadCard'
 import api from '@/api'
 import { $Any } from '@/types'
+import { UploadReviewableApiResponse } from '@/api/rest'
 
 interface ReviewablesListProps {
   projectName: string
@@ -125,6 +126,7 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
   }
 
   const [uploading, setUploads] = useState<ReviewableUploadFile[]>([])
+  const [completeUploads, setCompleteUploads] = useState<string[]>([])
 
   const handleFileUpload = async (files: FileList) => {
     const uploadingFiles = Array.from(files).map((file) => ({
@@ -135,12 +137,11 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
     setUploads([...uploading, ...uploadingFiles])
 
     try {
-      let promises: Promise<any>[] = []
       // upload the files
       for (const file of files) {
         const autoLabel = file.name.split('.').slice(0, -1).join('.')
 
-        const promise = axios
+        axios
           .post(
             `/api/projects/${projectName}/versions/${versionId}/reviewables?label=${autoLabel}`,
             file,
@@ -166,50 +167,58 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
           .then((response) => {
             // Handle successful upload
             console.log(`Upload successful for ${file.name}`)
-            // /update the file with with progress 100
+            // patch the new data into the reviewables cache
+            const data = response.data as UploadReviewableApiResponse
+            dispatch(
+              // @ts-ignore
+              api.util.updateQueryData(
+                'getReviewablesForVersion',
+                { projectName, versionId },
+                (draft) => {
+                  if (!draft.reviewables) {
+                    draft.reviewables = []
+                  }
+                  draft.reviewables.push(data)
+                },
+              ),
+            )
+            // also patch in the reviewables cache from product level (review player)
+            dispatch(
+              // @ts-ignore
+              api.util.updateQueryData(
+                'getReviewablesForProduct',
+                { projectName, productId },
+                (draft) => {
+                  // for the version id
+                  draft.forEach((version) => {
+                    if (version.id === versionId) {
+                      if (!version.reviewables) {
+                        version.reviewables = []
+                      }
+                      version.reviewables.push(data)
+                    }
+                  })
+                },
+              ),
+            )
+            // remove the file from the list
+            setUploads((uploads) => uploads.filter((upload) => upload.name !== file.name))
+
+            // add to complete uploads
+            setCompleteUploads((uploads) => [...uploads, data.activityId])
+          })
+          .catch((error) => {
+            console.error(`Upload failed for ${file.name}: ${error}`)
+            toast.error(`Failed to upload file: ${file.name}`)
+            // add error to the file
             setUploads((uploads) =>
               uploads.map((upload) => {
                 if (upload.name !== file.name) return upload
-                return { ...upload, progress: 100 }
+                return { ...upload, error: 'Failed to upload' }
               }),
             )
-            // invalidate the reviewables query for the version
-            // dispatch(
-            //   api.util.updateQueryData(
-            //     'getReviewablesForVersion',
-            //     { projectName, versionId },
-            //     (draft) => {},
-            //   )
-            // )
           })
-
-        promises.push(promise)
       }
-
-      // once all files are uploaded
-      const result = await Promise.allSettled(promises)
-
-      result.forEach((promise, index) => {
-        if (promise.status === 'fulfilled') {
-          setUploads((uploads) =>
-            uploads.filter((upload) => upload.name !== uploadingFiles[index].name),
-          )
-        } else {
-          // Handle upload error
-          // console.error(`Upload failed for ${file.name}: ${error}`)
-          // toast.error(`Failed to upload file: ${file.name}`)
-          // // add error to the file
-          // setUploads((uploads) =>
-          //   uploads.map((upload) => {
-          //     if (upload.name !== file.name) return upload
-          //     return { ...upload, error: 'Failed to upload' }
-          //   }),
-          // )
-        }
-      })
-
-      // invalidate the reviewables query for the version
-      dispatch(api.util.invalidateTags([{ type: 'review', id: versionId }]))
     } catch (error) {
       // something went wrong with everything, EEEEK!
       console.error(error)
@@ -260,6 +269,7 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
                   key={reviewable.activityId}
                   onClick={handleReviewableClick}
                   isSelected={reviewableIds.includes(reviewable.activityId)}
+                  isUploaded={completeUploads.includes(reviewable.activityId)}
                   {...reviewable}
                 />
               ))}

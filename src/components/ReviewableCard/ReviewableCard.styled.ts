@@ -23,6 +23,12 @@ export const Card = styled.div`
     .handle {
       opacity: 1;
     }
+
+    &.draggable {
+      .uploaded {
+        display: none;
+      }
+    }
   }
 
   &.selected {
@@ -40,6 +46,16 @@ export const Card = styled.div`
       cursor: grabbing;
       /* override the default hidden until hover */
       opacity: 1;
+    }
+  }
+
+  /* uploaded icon */
+  .uploaded {
+    display: flex;
+    gap: var(--base-gap-small);
+    align-items: center;
+    .icon {
+      font-variation-settings: 'FILL' 1, 'wght' 200, 'GRAD' 200, 'opsz' 20;
     }
   }
 `
