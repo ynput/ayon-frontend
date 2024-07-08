@@ -202,6 +202,7 @@ const VideoPlayerControls = ({
         onClick={handleFullscreen}
         icon={fullscreen ? 'fullscreen_exit' : 'fullscreen'}
         data-tooltip="Fullscreen"
+        data-shortcut="F"
       />
 
       <Timecode value={duration} frameRate={frameRate} disabled tooltip={'Total frames'} />
