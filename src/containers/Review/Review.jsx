@@ -111,7 +111,7 @@ const Review = ({ onClose }) => {
         icon="hide_image"
         message={
           availability === 'needs_conversion'
-            ? 'File not support and needs conversion'
+            ? 'File not supported and needs conversion'
             : 'No preview available'
         }
       />
