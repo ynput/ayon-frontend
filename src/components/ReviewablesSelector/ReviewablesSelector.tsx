@@ -1,6 +1,7 @@
 import { FC, useEffect, useState } from 'react'
 import * as Styled from './ReviewablesSelector.styled'
 import { classNames } from 'primereact/utils'
+import FileThumbnail from '../FileThumbnail'
 
 type ReviewableCard = {
   activityId: string
@@ -107,7 +108,7 @@ const ReviewablesSelector: FC<ReviewablesSelectorProps> = ({
             className={classNames('reviewable-card', { selected: selected.includes(activityId) })}
             onMouseOver={(e) => handleMouseOver(e, { label })}
           >
-            <img src={`/api/projects/${projectName}/files/${fileId}/thumbnail`} />
+            <FileThumbnail src={`/api/projects/${projectName}/files/${fileId}/thumbnail`} />
           </Styled.ReviewableCard>
         ))}
         <Styled.AddButton

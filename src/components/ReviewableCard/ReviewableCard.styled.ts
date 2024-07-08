@@ -1,5 +1,6 @@
 import { Icon } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
+import FileThumbnail from '../FileThumbnail'
 
 export const Card = styled.div`
   display: flex;
@@ -81,7 +82,7 @@ export const Content = styled.div`
   }
 `
 
-export const Image = styled.img`
+export const StyledFileThumbnail = styled(FileThumbnail)`
   width: 71px;
   height: 40px;
 

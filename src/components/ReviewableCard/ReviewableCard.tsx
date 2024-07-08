@@ -53,7 +53,10 @@ const ReviewableCard = forwardRef<HTMLDivElement, ReviewableCardProps>(
         })}
         {...props}
       >
-        <Styled.Image src={`/api/projects/${projectName}/files/${fileId}/thumbnail`} />
+        <Styled.StyledFileThumbnail
+          src={`/api/projects/${projectName}/files/${fileId}/thumbnail`}
+          mimetype={mimetype}
+        />
         <Styled.Content>
           <h4 className={Typography.titleSmall}>{label}</h4>
           <span className="name">{filename}</span>

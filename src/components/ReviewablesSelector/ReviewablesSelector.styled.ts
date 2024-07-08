@@ -42,7 +42,7 @@ export const ReviewableCard = styled.div`
     }
   }
 
-  img {
+  .file-thumbnail {
     width: 100%;
     height: 48px;
     object-fit: cover;
