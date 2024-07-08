@@ -9,7 +9,7 @@ export const VersionValueTemplate = styled(DefaultValueTemplate)`
   }
 
   color: var(--md-sys-color-on-primary-container);
-  width: 120px;
+  width: 150px;
   border: none;
   padding-left: 16px;
 

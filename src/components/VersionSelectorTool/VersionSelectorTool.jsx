@@ -4,6 +4,7 @@ import { useRef } from 'react'
 import useReviewShortcuts from './hooks/useReviewShortcuts'
 import ReviewVersionDropdown from './ReviewVersionDropdown/ReviewVersionDropdown'
 import { useSelector } from 'react-redux'
+import { upperFirst } from 'lodash'
 
 const NavButton = ({
   version: { id = 'none', name = 'None' } = {},
@@ -20,7 +21,7 @@ const NavButton = ({
     className={className}
     id={`${className}-${id}`}
     onClick={() => onClick(id)}
-    data-tooltip={`Select ${className} version`}
+    data-tooltip={`${upperFirst(className)} version`}
     data-shortcut={shortcut?.children}
     shortcut={shortcut}
     {...props}
@@ -72,7 +73,7 @@ const VersionSelectorTool = ({ versions, selected, onChange }) => {
         onClick={onChange}
         disabled={!previousVersion}
         beforeContent={<Icon icon="chevron_left" />}
-        shortcut={{ children: 'Z' }}
+        shortcut={{ children: 'A' }}
       />
       <ReviewVersionDropdown
         versions={versions}
@@ -86,7 +87,7 @@ const VersionSelectorTool = ({ versions, selected, onChange }) => {
         onClick={onChange}
         disabled={!nextVersion}
         afterContent={<Icon icon="chevron_right" />}
-        shortcut={{ children: 'C', side: 'left' }}
+        shortcut={{ children: 'D', side: 'left' }}
       />
       <NavButton
         version={allVersions.latest}
@@ -94,7 +95,7 @@ const VersionSelectorTool = ({ versions, selected, onChange }) => {
         onClick={onChange}
         disabled={!latestVersion}
         beforeContent={'Latest - '}
-        data-shortcut={'Shift+C'}
+        data-shortcut={'F'}
         selected={selected === latestVersion?.id}
       />
       <NavButton
@@ -103,7 +104,7 @@ const VersionSelectorTool = ({ versions, selected, onChange }) => {
         onClick={onChange}
         disabled={!approvedVersion}
         beforeContent={'Approved - '}
-        data-shortcut={'Shift+X'}
+        data-shortcut={'E'}
         selected={selected === approvedVersion?.id}
       />
       {heroVersion && (
@@ -111,7 +112,7 @@ const VersionSelectorTool = ({ versions, selected, onChange }) => {
           version={allVersions.hero}
           className="hero"
           onClick={onChange}
-          data-shortcut={'SHift+H'}
+          data-shortcut={'H'}
           selected={selected === heroVersion?.id}
         />
       )}

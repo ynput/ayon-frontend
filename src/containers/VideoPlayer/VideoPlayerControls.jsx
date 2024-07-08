@@ -83,20 +83,20 @@ const VideoPlayerControls = ({
       if (e.target.isContentEditable) return
 
       const keyHandlers = [
-        { keys: [' ', 'k'], action: handlePlayPause },
-        { keys: ['ArrowLeft', '3'], action: handleGoBack1 },
-        { keys: ['ArrowRight', '4'], action: handleGoForward1 },
-        { keys: ['a'], action: handleGoToStart },
-        { keys: ['s'], action: handleGoToEnd },
+        { shiftKeys: ['A'], action: handleGoToStart },
         { keys: ['j', '1'], shiftKeys: ['ArrowLeft'], action: handleGoBack5 },
+        { keys: ['ArrowLeft', '3'], action: handleGoBack1 },
+        { keys: [' ', 'k'], action: handlePlayPause },
+        { keys: ['ArrowRight', '4'], action: handleGoForward1 },
         { keys: ['l', '2'], shiftKeys: ['ArrowRight'], action: handleGoForward5 },
+        { shiftKeys: ['D'], action: handleGoToEnd },
       ]
 
       const keyHandler = keyHandlers.find((handler) => {
         if (e.shiftKey) {
           return handler.shiftKeys?.includes(e.key)
         } else {
-          return handler.keys.includes(e.key)
+          return handler.keys?.includes(e.key)
         }
       })
 
@@ -128,31 +128,54 @@ const VideoPlayerControls = ({
 
       <Spacer />
 
-      <Button icon="skip_previous" tooltip="Go to Start" onClick={handleGoToStart} />
+      <Button
+        icon="skip_previous"
+        data-tooltip="Go to Start"
+        data-shortcut="Shift + A"
+        onClick={handleGoToStart}
+      />
 
       <Button
         icon="keyboard_double_arrow_left"
-        tooltip="Go back 5 frames"
+        data-tooltip="Back 5 frames"
+        data-shortcut="Shift + ←"
         onClick={handleGoBack5}
       />
 
-      <Button icon="chevron_left" tooltip="Go back 1 frame" onClick={handleGoBack1} />
+      <Button
+        icon="chevron_left"
+        data-tooltip="Back 1 frame"
+        data-shortcut="←"
+        onClick={handleGoBack1}
+      />
 
       <Button
         icon={isPlaying ? 'pause' : 'play_arrow'}
-        tooltip={isPlaying ? 'Pause' : 'Play'}
+        data-tooltip={isPlaying ? 'Pause' : 'Play'}
+        data-shortcut="Space or K"
         onClick={handlePlayPause}
       />
 
-      <Button icon="chevron_right" tooltip="Go forward 1 frame" onClick={handleGoForward1} />
+      <Button
+        icon="chevron_right"
+        data-tooltip="Forward 1 frame"
+        data-shortcut="→"
+        onClick={handleGoForward1}
+      />
 
       <Button
         icon="keyboard_double_arrow_right"
-        tooltip="Go forward 5 frames"
+        data-tooltip="Forward 5 frames"
+        data-shortcut="Shift + →"
         onClick={handleGoForward5}
       />
 
-      <Button icon="skip_next" tooltip="Go to End" onClick={handleGoToEnd} />
+      <Button
+        icon="skip_next"
+        data-tooltip="Go to End"
+        data-shortcut="Shift + D"
+        onClick={handleGoToEnd}
+      />
 
       <Spacer />
       <Button

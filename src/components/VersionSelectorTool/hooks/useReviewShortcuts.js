@@ -32,27 +32,27 @@ const useReviewShortcuts = ({ allVersions = {}, onChange, toolsRef, selectRef })
 
   const shortcuts = [
     {
-      key: 'z', //select previous version
+      key: 'a', //select previous version
       action: () => handleShortcut('previous'),
     },
     {
-      key: 'x', //select any version (dropdown)
+      key: 'q', //select any version (dropdown)
       action: () => openSelectDropdown(),
     },
     {
-      key: 'c', //select next version
+      key: 'd', //select next version
       action: () => handleShortcut('next'),
     },
     {
-      key: 'C', //select latest version
+      key: 'f', //select latest version
       action: () => handleShortcut('latest'),
     },
     {
-      key: 'X', //select approved version
+      key: 'e', //select approved version
       action: () => handleShortcut('approved'),
     },
     {
-      key: 'H', //select hero version
+      key: 'h', //select hero version
       action: () => handleShortcut('hero'),
     },
   ]

@@ -34,11 +34,11 @@ const ReviewablesSelector: FC<ReviewablesSelectorProps> = ({
     if (reviewables.length === 1) return
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      if (['w', 's', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
         const currentIndex = reviewables.findIndex(({ activityId }) =>
           selected.includes(activityId),
         )
-        const nextIndex = e.key === 'ArrowUp' ? currentIndex - 1 : currentIndex + 1
+        const nextIndex = e.key === 'w' || e.key === 'ArrowUp' ? currentIndex - 1 : currentIndex + 1
         const nextReviewable =
           reviewables[nextIndex < 0 ? reviewables.length - 1 : nextIndex % reviewables.length]
         const nextActivityId = nextReviewable.activityId
@@ -50,7 +50,6 @@ const ReviewablesSelector: FC<ReviewablesSelectorProps> = ({
         const el = document.getElementById('preview-' + nextActivityId)
 
         if (el) {
-          console.log(el)
           const top = el.offsetTop + el.offsetHeight / 2
           setLabelTooltipYPos(top)
         }

@@ -1,4 +1,4 @@
-import { Dropdown, ShortcutTag } from '@ynput/ayon-react-components'
+import { Dropdown } from '@ynput/ayon-react-components'
 import * as Styled from './ReviewVersionDropdown.styled'
 
 const ReviewVersionDropdown = ({ versions, selected, onChange, selectRef, ...props }) => {
@@ -15,13 +15,10 @@ const ReviewVersionDropdown = ({ versions, selected, onChange, selectRef, ...pro
       ref={selectRef}
       {...props}
       valueTemplate={(value, selected, isOpen) => (
-        <div data-tooltip={'Select a version'} data-shortcut={'X'} style={{ height: '100%' }}>
-          <Styled.VersionValueTemplate
-            value={selected || value}
-            childrenCustom={<ShortcutTag>X</ShortcutTag>}
-            isOpen={isOpen}
-          >
-            {options.find((option) => option.value === (selected || value)[0])?.label ||
+        <div data-tooltip={'Viewing version'} data-shortcut={'Q'} style={{ height: '100%' }}>
+          <Styled.VersionValueTemplate value={selected || value} isOpen={isOpen}>
+            {'Viewing: ' +
+              options.find((option) => option.value === (selected || value)[0])?.label ||
               'Select a version'}
           </Styled.VersionValueTemplate>
         </div>
