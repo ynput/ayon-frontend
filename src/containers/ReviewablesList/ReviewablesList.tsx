@@ -21,13 +21,14 @@ import {
 import SortableReviewableCard from './SortableReviewableCard'
 import ReviewableCard from '@/components/ReviewableCard'
 import * as Styled from './ReviewablesList.styled'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { openReview } from '@/features/review'
 import { Icon } from '@ynput/ayon-react-components'
 import axios from 'axios'
 import { toast } from 'react-toastify'
 import ReviewableUploadCard, { ReviewableUploadFile } from '@components/ReviewableUploadCard'
 import api from '@/api'
+import { $Any } from '@/types'
 
 interface ReviewablesListProps {
   projectName: string
@@ -49,6 +50,9 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
       { projectName, versionId: versionId },
       { skip: !versionId || !projectName },
     )
+
+  // are we currently looking at review?
+  const reviewableIds = useSelector((state: $Any) => state.review.reviewableIds) || []
 
   // are we dragging a file over?
   const [isDraggingFile, setIsDraggingFile] = useState(false)
@@ -244,6 +248,7 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
                 <SortableReviewableCard
                   key={reviewable.activityId}
                   onClick={handleReviewableClick}
+                  isSelected={reviewableIds.includes(reviewable.activityId)}
                   {...reviewable}
                 />
               ))}
@@ -268,7 +273,13 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
 
             {/* drag overlay */}
             <DragOverlay>
-              {draggingReview ? <ReviewableCard {...draggingReview} isDragOverlay /> : null}
+              {draggingReview ? (
+                <ReviewableCard
+                  {...draggingReview}
+                  isDragOverlay
+                  isSelected={reviewableIds.includes(draggingReview.activityId)}
+                />
+              ) : null}
             </DragOverlay>
           </DndContext>
         )}

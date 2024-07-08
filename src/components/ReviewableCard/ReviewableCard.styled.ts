@@ -15,12 +15,20 @@ export const Card = styled.div`
 
   background-color: var(--md-sys-color-surface-container);
 
+  border: 1px solid var(--md-sys-color-surface-container);
+
   &:hover {
     background-color: var(--md-sys-color-surface-container-hover);
 
     .handle {
       opacity: 1;
     }
+  }
+
+  &.selected {
+    background-color: var(--md-sys-color-primary-container);
+    color: var(--md-sys-color-on-primary-container);
+    border-color: var(--md-sys-color-primary);
   }
 
   &.drop-placeholder {

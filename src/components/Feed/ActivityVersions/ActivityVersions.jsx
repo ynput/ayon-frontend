@@ -42,7 +42,7 @@ const ActivityVersions = ({
       {versions.flatMap(
         ({ name, id, productId, productName, productType, updatedAt, createdAt }, index) =>
           (index < limit || showAll) && (
-            <Styled.Card onClick={() => handleClick(id, productId)}>
+            <Styled.Card onClick={() => handleClick(id, productId)} key={id}>
               <Styled.Content>
                 <Styled.Title>
                   <span>{productName}</span>

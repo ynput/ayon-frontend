@@ -13,6 +13,7 @@ export interface ReviewableCardProps
   // Extends div element props
   isDragOverlay?: boolean
   isDropPlaceholder?: boolean
+  isSelected?: boolean
   dragProps?: any
 }
 
@@ -27,6 +28,7 @@ const ReviewableCard = forwardRef<HTMLDivElement, ReviewableCardProps>(
       mimetype,
       isDragOverlay,
       isDropPlaceholder,
+      isSelected,
       dragProps = {},
       ...props
     },
@@ -39,6 +41,7 @@ const ReviewableCard = forwardRef<HTMLDivElement, ReviewableCardProps>(
         className={classNames({
           'drop-placeholder': isDropPlaceholder,
           'drag-overlay': isDragOverlay,
+          selected: isSelected,
         })}
         {...props}
       >
