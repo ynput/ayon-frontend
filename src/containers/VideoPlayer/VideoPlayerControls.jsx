@@ -182,8 +182,14 @@ const VideoPlayerControls = ({
         selected={showOverlay}
         onClick={() => setShowOverlay(!showOverlay)}
         icon="grid_guides"
+        data-tooltip="Show/hide grid overlay"
       />
-      <Button selected={loop} onClick={() => setLoop(!loop)} icon="repeat" />
+      <Button
+        selected={loop}
+        onClick={() => setLoop(!loop)}
+        icon="repeat"
+        data-tooltip="Loop playback"
+      />
 
       <Timecode value={duration} frameRate={frameRate} />
     </>
