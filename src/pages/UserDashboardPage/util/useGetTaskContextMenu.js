@@ -13,7 +13,8 @@ export const useGetTaskContextMenu = (tasks, dispatch) => {
     return [
       {
         label: 'Open in Browser',
-        command: () => navigateToUri(`ayon+entity://${card.path}?task=${card.name}`),
+        command: () =>
+          navigateToUri(`ayon+entity://${card.projectName}/${card.folderPath}?task=${card.name}`),
         icon: 'open_in_new',
         disabled: selectedTasks.includes(card.id) && selectedTasks.length > 1,
       },
