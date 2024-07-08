@@ -20,7 +20,7 @@ export const Placeholder = styled.div`
     text-align: center;
   }
 
-  .icon {
+  .placeholder-icon {
     font-size: 64px;
     padding: 8px;
     background-color: var(--md-sys-color-secondary-container);
@@ -29,7 +29,7 @@ export const Placeholder = styled.div`
   }
 
   &.isError {
-    .icon {
+    .placeholder-icon {
       color: var(--md-sys-color-error-container);
       background-color: var(--md-sys-color-on-error-container);
     }
@@ -47,22 +47,24 @@ export const Placeholder = styled.div`
   }
 `
 
-const EmptyPlaceholder = ({ icon, message, error }) => {
+const EmptyPlaceholder = ({ icon, message, error, children }) => {
   if (error) {
     return (
       <Placeholder className={'isError'}>
-        <Icon icon="error" />
+        <Icon icon="error" className="placeholder-icon" />
         <h3 className={Typography.titleLarge}>Something went wrong.</h3>
         <span className="error-message">ERROR: {error}</span>
         <span>This should not happen. Please send a screenshot to the Ynput team!</span>
+        {children}
       </Placeholder>
     )
   }
 
   return (
     <Placeholder>
-      <Icon icon={icon} />
+      <Icon icon={icon} className="placeholder-icon" />
       <h3 className={Typography.titleLarge}>{message}</h3>
+      {children}
     </Placeholder>
   )
 }

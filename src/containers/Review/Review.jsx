@@ -98,7 +98,11 @@ const Review = ({ onClose }) => {
         {onClose && <Button onClick={onClose} icon={'close'} />}
       </Styled.Header>
       <Styled.Content>
-        <ReviewPlayer projectName={projectName} reviewable={selectedReviewable} />
+        <ReviewPlayer
+          projectName={projectName}
+          reviewable={selectedReviewable}
+          onUpload={handleUploadButton}
+        />
         <ReviewablesSelector
           reviewables={selectedVersion?.reviewables}
           selected={reviewableIds}

@@ -91,6 +91,9 @@ const ReviewablesSelector: FC<ReviewablesSelectorProps> = ({
     setLabelTooltipYPos(top)
   }
 
+  // if no reviewables, return null
+  if (!reviewables.length) return null
+
   return (
     <Styled.ReviewablesSelector>
       <Styled.Scrollable className="reviewables">
