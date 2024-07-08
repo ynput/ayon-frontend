@@ -9,6 +9,7 @@ import ReviewDetailsPanel from './ReviewDetailsPanel'
 import ReviewPlayer from './ReviewPlayer'
 import ReviewablesSelector from '@/components/ReviewablesSelector'
 import { updateDetailsPanelTab } from '@/features/details'
+import EmptyPlaceholder from '@/components/EmptyPlaceholder/EmptyPlaceholder'
 
 const Review = ({ onClose }) => {
   const {
@@ -101,6 +102,8 @@ const Review = ({ onClose }) => {
         alt={selectedReviewable.label || selectedReviewable.name}
       />
     )
+  } else {
+    viewerComponent = <EmptyPlaceholder icon="hide_image" message={'No preview available'} />
   }
 
   return (
