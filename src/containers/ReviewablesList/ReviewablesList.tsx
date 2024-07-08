@@ -78,10 +78,10 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
   // when upload is true, open the file dialog programmatically
   useEffect(() => {
     if (openUpload) {
-      inputRef.current?.click()
       dispatch(toggleUpload(false))
+      inputRef.current?.click()
     }
-  }, [openUpload])
+  }, [openUpload, dispatch, toggleUpload])
 
   const handleReviewableClick = (event: MouseEvent<HTMLDivElement>) => {
     // check are not dragging

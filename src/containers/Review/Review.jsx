@@ -79,9 +79,7 @@ const Review = ({ onClose }) => {
     // switch to files tab
     dispatch(updateDetailsPanelTab({ scope: 'review', tab: 'files' }))
     // open the file dialog
-    setTimeout(() => {
-      dispatch(toggleUpload(true))
-    }, 250)
+    dispatch(toggleUpload(true))
   }
 
   const isLoadingAll = isFetchingReviewables
