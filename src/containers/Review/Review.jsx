@@ -86,8 +86,11 @@ const Review = ({ onClose }) => {
   const isLoadingAll = isFetchingReviewables
 
   let viewerComponent
+  const availability = selectedReviewable?.availability
+  const isReady = availability === 'ready'
 
-  if (selectedReviewable?.mimetype.includes('video')) {
+  if (selectedReviewable?.mimetype.includes('video') && isReady) {
+    console.log(selectedReviewable)
     viewerComponent = (
       <ReviewPlayer
         projectName={projectName}
@@ -95,7 +98,7 @@ const Review = ({ onClose }) => {
         onUpload={handleUploadButton}
       />
     )
-  } else if (selectedReviewable?.mimetype.includes('image')) {
+  } else if (selectedReviewable?.mimetype.includes('image') && isReady) {
     viewerComponent = (
       <Styled.Image
         src={`/api/projects/${projectName}/files/${selectedReviewable.fileId}`}
@@ -103,7 +106,16 @@ const Review = ({ onClose }) => {
       />
     )
   } else {
-    viewerComponent = <EmptyPlaceholder icon="hide_image" message={'No preview available'} />
+    viewerComponent = (
+      <EmptyPlaceholder
+        icon="hide_image"
+        message={
+          availability === 'needs_conversion'
+            ? 'File not support and needs conversion'
+            : 'No preview available'
+        }
+      />
+    )
   }
 
   return (
