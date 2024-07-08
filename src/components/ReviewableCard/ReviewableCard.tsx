@@ -17,6 +17,7 @@ export interface ReviewableCardProps
   isDropPlaceholder?: boolean
   isSelected?: boolean
   isUploaded?: boolean // has just been uploaded?
+  isDragging?: boolean //is something being dragged?
   dragProps?: any
 }
 
@@ -34,6 +35,7 @@ const ReviewableCard = forwardRef<HTMLDivElement, ReviewableCardProps>(
       isDropPlaceholder,
       isSelected,
       isUploaded,
+      isDragging,
       dragProps = {},
       ...props
     },
@@ -49,6 +51,7 @@ const ReviewableCard = forwardRef<HTMLDivElement, ReviewableCardProps>(
           draggable: isDraggable,
           'drop-placeholder': isDropPlaceholder,
           'drag-overlay': isDragOverlay,
+          dragging: isDragging, // is anything dragging
           selected: isSelected,
         })}
         {...props}

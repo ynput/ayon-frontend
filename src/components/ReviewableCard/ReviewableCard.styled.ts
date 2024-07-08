@@ -18,7 +18,7 @@ export const Card = styled.div`
 
   border: 1px solid var(--md-sys-color-surface-container);
 
-  &:hover {
+  &:not(.dragging):hover {
     background-color: var(--md-sys-color-surface-container-hover);
 
     .handle {
@@ -36,6 +36,10 @@ export const Card = styled.div`
     background-color: var(--md-sys-color-primary-container);
     color: var(--md-sys-color-on-primary-container);
     border-color: var(--md-sys-color-primary);
+
+    &:hover {
+      background-color: var(--md-sys-color-primary-container);
+    }
   }
 
   &.drop-placeholder {
@@ -47,6 +51,10 @@ export const Card = styled.div`
       cursor: grabbing;
       /* override the default hidden until hover */
       opacity: 1;
+    }
+    background-color: var(--md-sys-color-surface-container-hover);
+    &.selected {
+      background-color: var(--md-sys-color-primary-container);
     }
   }
 

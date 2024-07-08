@@ -6,8 +6,9 @@ import Review from './Review'
 import styled from 'styled-components'
 
 const StyledDialog = styled(Dialog)`
-  width: calc(100% - 3vw);
-  height: calc(100% - 7vh);
+  /* dnd overlay must offset this 64px by 32px */
+  width: calc(100% - 64px);
+  height: calc(100% - 64px);
   max-height: unset;
   max-width: unset;
 

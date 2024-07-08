@@ -36,6 +36,7 @@ interface ReviewablesListProps {
   versionId: string
   productId: string
   isLoadingVersion: boolean
+  scope: string
 }
 
 const ReviewablesList: FC<ReviewablesListProps> = ({
@@ -43,6 +44,7 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
   versionId,
   productId,
   isLoadingVersion,
+  scope,
 }) => {
   const dispatch = useDispatch()
   // returns all reviewables for a product
@@ -247,6 +249,16 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
     handleFileUpload(files)
   }
 
+  const overlayModifiers = []
+  // hack to make the dnd overlay pos work inside dialog
+  if (scope === 'review') {
+    overlayModifiers.push((args: any) => ({
+      ...args.transform,
+      x: args.transform.x - 32,
+      y: args.transform.y - 32,
+    }))
+  }
+
   return (
     <>
       <Styled.ReviewablesList onDragEnter={() => setIsDraggingFile(true)}>
@@ -271,6 +283,7 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
                   onClick={handleReviewableClick}
                   isSelected={reviewableIds.includes(reviewable.activityId)}
                   isUploaded={completeUploads.includes(reviewable.activityId)}
+                  isDragging={!!activeId}
                   {...reviewable}
                 />
               ))}
@@ -294,12 +307,13 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
             </Styled.Upload>
 
             {/* drag overlay */}
-            <DragOverlay>
+            <DragOverlay modifiers={overlayModifiers}>
               {draggingReview ? (
                 <ReviewableCard
                   {...draggingReview}
                   projectName={projectName}
                   isDragOverlay
+                  isDragging
                   isSelected={reviewableIds.includes(draggingReview.activityId)}
                 />
               ) : null}

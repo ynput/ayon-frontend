@@ -55,6 +55,7 @@ const DetailsPanelFiles: FC<DetailsPanelFilesProps> = ({
           productId={firstVersion.productId}
           versionId={firstVersion.id}
           isLoadingVersion={isLoadingVersion}
+          scope={scope}
         />
       </StyledSection>
       <StyledSection>
