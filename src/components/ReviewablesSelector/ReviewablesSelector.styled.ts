@@ -1,3 +1,4 @@
+import { Button } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
 export const ReviewablesSelector = styled.div`
@@ -70,4 +71,14 @@ export const Label = styled.span`
   position: absolute;
   left: -8px;
   transform: translateX(-100%) translateY(-50%);
+`
+
+export const AddButton = styled(Button)`
+  width: 81px;
+  height: 48px;
+  background-color: var(--md-sys-color-surface-container-high);
+
+  &:hover {
+    background-color: var(--md-sys-color-surface-container-high-hover);
+  }
 `

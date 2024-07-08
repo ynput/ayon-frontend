@@ -1,19 +1,26 @@
 import { createSlice } from '@reduxjs/toolkit'
 import getInitialStateQueryParam from './middleware/getInitialStateQueryParam'
 
-export const initialState = {
+export const initialStateQueryParams = {
   projectName: { key: 'project_name', initial: null },
   productId: { key: 'review_product', initial: null },
   versionIds: { key: 'review_version', initial: [] },
   reviewableIds: { key: 'reviewable_id', initial: [] },
 }
+const initialStateFromQueryParams = Object.entries(initialStateQueryParams).reduce(
+  (acc, [key, value]) => {
+    acc[key] = getInitialStateQueryParam(value.key, value.initial)
+    return acc
+  },
+  {},
+)
 
 const reviewSlice = createSlice({
   name: 'review',
-  initialState: Object.entries(initialState).reduce((acc, [key, value]) => {
-    acc[key] = getInitialStateQueryParam(value.key, value.initial)
-    return acc
-  }, {}),
+  initialState: {
+    ...initialStateFromQueryParams,
+    upload: false, // used to open upload file picker
+  },
   reducers: {
     openReview: (
       state,
@@ -38,10 +45,13 @@ const reviewSlice = createSlice({
       state.productId = null
       state.reviewableIds = null
     },
+    toggleUpload: (state, { payload }) => {
+      state.upload = payload
+    },
   },
 })
 
-export const { openReview, updateSelection, closeReview } = reviewSlice.actions
+export const { openReview, updateSelection, closeReview, toggleUpload } = reviewSlice.actions
 export default reviewSlice.reducer
 
 // create an object for each reducer to define which state fields it will update
@@ -69,8 +79,8 @@ export const reviewSearchParams = Object.fromEntries(
 
         return {
           ...itemObject,
-          key: initialState[itemObject.state].key,
-          initial: initialState[itemObject.state].initial,
+          key: initialStateQueryParams[itemObject.state].key,
+          initial: initialStateQueryParams[itemObject.state].initial,
         }
       }),
     ]

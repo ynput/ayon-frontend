@@ -4,10 +4,11 @@ import * as Styled from './Review.styled'
 import VersionSelectorTool from '@components/VersionSelectorTool/VersionSelectorTool'
 import { useGetReviewablesForProductQuery } from '@queries/review/getReview'
 import { useDispatch, useSelector } from 'react-redux'
-import { updateSelection } from '@state/review'
+import { toggleUpload, updateSelection } from '@state/review'
 import ReviewDetailsPanel from './ReviewDetailsPanel'
 import ReviewPlayer from './ReviewPlayer'
 import ReviewablesSelector from '@/components/ReviewablesSelector'
+import { updateDetailsPanelTab } from '@/features/details'
 
 const Review = ({ onClose }) => {
   const {
@@ -74,6 +75,15 @@ const Review = ({ onClose }) => {
     dispatch(updateSelection({ reviewableIds: [reviewableId] }))
   }
 
+  const handleUploadButton = () => {
+    // switch to files tab
+    dispatch(updateDetailsPanelTab({ scope: 'review', tab: 'files' }))
+    // open the file dialog
+    setTimeout(() => {
+      dispatch(toggleUpload(true))
+    }, 250)
+  }
+
   const isLoadingAll = isFetchingReviewables
 
   return (
@@ -93,6 +103,7 @@ const Review = ({ onClose }) => {
           reviewables={selectedVersion?.reviewables}
           selected={reviewableIds}
           onChange={handleReviewableChange}
+          onUpload={handleUploadButton}
         />
         <ReviewDetailsPanel versionIds={versionIds} projectName={projectName} />
       </Styled.Content>

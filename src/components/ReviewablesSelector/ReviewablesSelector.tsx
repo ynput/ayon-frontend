@@ -13,12 +13,14 @@ interface ReviewablesSelectorProps {
   reviewables: ReviewableCard[]
   selected: string[]
   onChange?: (activityId: string) => void
+  onUpload: () => void
 }
 
 const ReviewablesSelector: FC<ReviewablesSelectorProps> = ({
   reviewables = [],
   selected = [],
   onChange,
+  onUpload,
 }) => {
   const [labelTooltip, setLabelTooltip] = useState<null | string>(null)
   const [labelTooltipYPos, setLabelTooltipYPos] = useState<null | number>(null)
@@ -103,6 +105,11 @@ const ReviewablesSelector: FC<ReviewablesSelectorProps> = ({
             <img src={'https://placehold.co/160x90'} />
           </Styled.ReviewableCard>
         ))}
+        <Styled.AddButton
+          icon="add"
+          onClick={onUpload}
+          onMouseEnter={() => setLabelTooltip(null)}
+        />
       </Styled.Scrollable>
       {labelTooltip && labelTooltipYPos && (
         <Styled.Label style={{ top: labelTooltipYPos }}>{labelTooltip}</Styled.Label>

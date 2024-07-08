@@ -1,4 +1,4 @@
-import { FC, MouseEvent, useState, DragEvent, ChangeEvent } from 'react'
+import { FC, MouseEvent, useState, DragEvent, ChangeEvent, useRef, useEffect } from 'react'
 import { useGetReviewablesForVersionQuery } from '@/services/review/getReview'
 import {
   DndContext,
@@ -22,7 +22,7 @@ import SortableReviewableCard from './SortableReviewableCard'
 import ReviewableCard from '@/components/ReviewableCard'
 import * as Styled from './ReviewablesList.styled'
 import { useDispatch, useSelector } from 'react-redux'
-import { openReview } from '@/features/review'
+import { openReview, toggleUpload } from '@/features/review'
 import { Icon } from '@ynput/ayon-react-components'
 import axios from 'axios'
 import { toast } from 'react-toastify'
@@ -70,6 +70,17 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
   const reviewables = versionReviewables?.reviewables || []
   const draggingReview = reviewables.find((reviewable) => reviewable.activityId === activeId)
   const isLoading = isFetchingReviewables || isLoadingVersion
+
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  const openUpload = useSelector((state: $Any) => state.review.upload)
+  // when upload is true, open the file dialog programmatically
+  useEffect(() => {
+    if (openUpload) {
+      inputRef.current?.click()
+      dispatch(toggleUpload(false))
+    }
+  }, [openUpload])
 
   const handleReviewableClick = (event: MouseEvent<HTMLDivElement>) => {
     // check are not dragging
@@ -268,7 +279,7 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
             {/* upload button */}
             <Styled.Upload className="upload">
               <span>Drop or click to upload</span>
-              <input type="file" multiple onChange={handleInputChange} />
+              <input type="file" multiple onChange={handleInputChange} ref={inputRef} />
             </Styled.Upload>
 
             {/* drag overlay */}
