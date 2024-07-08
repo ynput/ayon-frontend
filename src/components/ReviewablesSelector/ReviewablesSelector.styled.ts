@@ -15,7 +15,6 @@ export const Scrollable = styled.div`
   align-items: center;
   overflow-y: auto;
   min-width: fit-content;
-  gap: var(--base-gap-small);
 `
 
 export const ReviewableCard = styled.div`
@@ -27,7 +26,7 @@ export const ReviewableCard = styled.div`
 
   border-radius: var(--border-radius-l);
   background-color: var(--md-sys-color-surface-container-high);
-  border: solid 2px var(--md-sys-color-surface-container-high);
+  border: solid 2px var(--md-sys-color-surface-container);
   padding: 2px;
 
   cursor: pointer;
@@ -35,7 +34,6 @@ export const ReviewableCard = styled.div`
 
   &:hover {
     background-color: var(--md-sys-color-surface-container-high-hover);
-    border-color: var(--md-sys-color-surface-container-high-hover);
 
     img {
       filter: brightness(1.1);
