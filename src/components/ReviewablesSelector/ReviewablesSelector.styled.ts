@@ -15,6 +15,7 @@ export const Scrollable = styled.div`
   align-items: center;
   overflow-y: auto;
   min-width: fit-content;
+  gap: var(--base-gap-medium);
 `
 
 export const ReviewableCard = styled.div`

@@ -24,6 +24,7 @@ const EventsPage = lazy(() => import('@pages/EventsPage'))
 const ServicesPage = lazy(() => import('@pages/ServicesPage'))
 const UserDashboardPage = lazy(() => import('@pages/UserDashboardPage'))
 const PasswordResetPage = lazy(() => import('@pages/PasswordResetPage'))
+const ReviewPage = lazy(() => import('@pages/ReviewPage'))
 
 // components
 import ShareDialog from '@components/ShareDialog'
@@ -245,6 +246,7 @@ const App = () => {
                             />
                             <Route path="/account/:module" exact element={<AccountPage />} />
                             <Route path="/events" element={<EventsPage />} />
+                            <Route path="/review" element={<ReviewPage />} />
                             <Route element={<ErrorPage code="404" />} />
                           </Routes>
                         </QueryParamProvider>

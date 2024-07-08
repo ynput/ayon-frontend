@@ -4,6 +4,7 @@ import { closeReview } from '@state/review'
 import { useEffect } from 'react'
 import Review from './Review'
 import styled from 'styled-components'
+import { useLocation } from 'react-router'
 
 const StyledDialog = styled(Dialog)`
   /* dnd overlay must offset this 64px by 32px */
@@ -26,6 +27,7 @@ const StyledDialog = styled(Dialog)`
 `
 
 const ReviewDialog = () => {
+  const location = useLocation()
   const dispatch = useDispatch()
   // check if dialog is open or not
   const productId = useSelector((state) => state.review.productId)
@@ -57,8 +59,8 @@ const ReviewDialog = () => {
 
   return (
     <>
-      <StyledDialog isOpen hideCancelButton size="full">
-        <Review onClose={handleClose} />
+      <StyledDialog isOpen={location.pathname !== '/review'} hideCancelButton size="full">
+        <Review onClose={handleClose} canOpenInNew />
       </StyledDialog>
     </>
   )

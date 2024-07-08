@@ -10,14 +10,21 @@ import ReviewPlayer from './ReviewPlayer'
 import ReviewablesSelector from '@/components/ReviewablesSelector'
 import { updateDetailsPanelTab } from '@/features/details'
 import EmptyPlaceholder from '@/components/EmptyPlaceholder/EmptyPlaceholder'
+import { $Any } from '@/types'
+import { Link } from 'react-router-dom'
 
-const Review = ({ onClose }) => {
+interface ReviewProps {
+  onClose?: () => void
+  canOpenInNew?: boolean
+}
+
+const Review = ({ onClose, canOpenInNew }: ReviewProps) => {
   const {
     productId,
     projectName,
     versionIds = [],
     reviewableIds = [],
-  } = useSelector((state) => state.review)
+  } = useSelector((state: $Any) => state.review)
 
   const dispatch = useDispatch()
 
@@ -32,16 +39,18 @@ const Review = ({ onClose }) => {
     [versionIds, versionsAndReviewables],
   )
 
-  const versionReviewableIds = selectedVersion?.reviewables.map((r) => r.activityId) || []
+  const versionReviewableIds = selectedVersion?.reviewables?.map((r) => r.activityId) || []
 
   // if no reviewableIds are provided, select the first reviewable
   useEffect(() => {
     if (
-      (!reviewableIds.length || !reviewableIds.every((id) => versionReviewableIds.includes(id))) &&
+      (!reviewableIds.length ||
+        !reviewableIds.every((id: string) => versionReviewableIds.includes(id))) &&
       !isFetchingReviewables &&
       selectedVersion
     ) {
-      const firstReviewableId = selectedVersion.reviewables[0]?.activityId
+      const firstReviewableId =
+        selectedVersion.reviewables && selectedVersion.reviewables[0]?.activityId
       if (firstReviewableId) {
         dispatch(updateSelection({ reviewableIds: [firstReviewableId] }))
       }
@@ -50,11 +59,11 @@ const Review = ({ onClose }) => {
 
   const selectedReviewable = useMemo(
     // for now we only support one reviewable
-    () => selectedVersion?.reviewables.find((r) => r.activityId === reviewableIds[0]),
+    () => selectedVersion?.reviewables?.find((r) => r.activityId === reviewableIds[0]),
     [reviewableIds, selectedVersion],
   )
 
-  const handleVersionChange = (versionId) => {
+  const handleVersionChange = (versionId: string) => {
     // try and find a matching reviewable in the new version with the same label as the current reviewable
     const currentLabel = selectedReviewable?.label?.toLowerCase()
 
@@ -63,16 +72,17 @@ const Review = ({ onClose }) => {
     // no version? that's weird
     if (!newVersion) return console.error('No version found for id', versionId)
 
-    let newReviewableId = newVersion.reviewables.find(
+    let newReviewableId = newVersion.reviewables?.find(
       (r) => r.label?.toLowerCase() === currentLabel,
     )?.activityId
     // no matching reviewable? just pick the first one
-    if (!newReviewableId) newReviewableId = newVersion.reviewables[0]?.activityId
+    if (!newReviewableId)
+      newReviewableId = newVersion.reviewables && newVersion.reviewables[0]?.activityId
 
     dispatch(updateSelection({ versionIds: [versionId], reviewableIds: [newReviewableId] }))
   }
 
-  const handleReviewableChange = (reviewableId) => {
+  const handleReviewableChange = (reviewableId: string) => {
     dispatch(updateSelection({ reviewableIds: [reviewableId] }))
   }
 
@@ -83,14 +93,11 @@ const Review = ({ onClose }) => {
     dispatch(toggleUpload(true))
   }
 
-  const isLoadingAll = isFetchingReviewables
-
   let viewerComponent
   const availability = selectedReviewable?.availability
   const isReady = availability === 'ready'
 
   if (selectedReviewable?.mimetype.includes('video') && isReady) {
-    console.log(selectedReviewable)
     viewerComponent = (
       <ReviewPlayer
         projectName={projectName}
@@ -102,7 +109,7 @@ const Review = ({ onClose }) => {
     viewerComponent = (
       <Styled.Image
         src={`/api/projects/${projectName}/files/${selectedReviewable.fileId}`}
-        alt={selectedReviewable.label || selectedReviewable.name}
+        alt={selectedReviewable.label || selectedReviewable.filename}
       />
     )
   } else {
@@ -118,21 +125,34 @@ const Review = ({ onClose }) => {
     )
   }
 
+  // build new window url for review
+  const baseUrl = '/review'
+  const searchParams = new URLSearchParams()
+  searchParams.set('project_name', projectName)
+  searchParams.set('review_product', productId)
+  versionIds.forEach((id: string) => searchParams.append('review_version', id))
+  reviewableIds.forEach((id: string) => searchParams.append('review_reviewable', id))
+  const newWindowUrl = `${baseUrl}?${searchParams.toString()}`
+
   return (
     <Styled.Container>
       <Styled.Header>
         <VersionSelectorTool
           versions={versionsAndReviewables}
           selected={versionIds[0]}
-          isLoading={isLoadingAll}
           onChange={handleVersionChange}
         />
+        {canOpenInNew && (
+          <Link to={newWindowUrl} target="_blank" rel="noopener noreferrer">
+            <Button icon={'open_in_new'} />
+          </Link>
+        )}
         {onClose && <Button onClick={onClose} icon={'close'} />}
       </Styled.Header>
       <Styled.Content>
         <Styled.ViewerWrapper>{viewerComponent}</Styled.ViewerWrapper>
         <ReviewablesSelector
-          reviewables={selectedVersion?.reviewables}
+          reviewables={selectedVersion?.reviewables || []}
           selected={reviewableIds}
           onChange={handleReviewableChange}
           onUpload={handleUploadButton}

@@ -136,6 +136,10 @@ const Header = () => {
     }
   }
 
+  // if on certain page, hide
+  const hiddenOnPages = ['/review']
+  if (hiddenOnPages.includes(location.pathname)) return null
+
   return (
     <nav className="primary" onClick={handleNavClick}>
       <Link to={'/dashboard/tasks'}>

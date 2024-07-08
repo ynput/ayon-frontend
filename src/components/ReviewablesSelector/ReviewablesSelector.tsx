@@ -2,13 +2,9 @@ import { FC, useEffect, useState } from 'react'
 import * as Styled from './ReviewablesSelector.styled'
 import { classNames } from 'primereact/utils'
 import FileThumbnail from '../FileThumbnail'
+import { ReviewableModel } from '@/api/rest'
 
-type ReviewableCard = {
-  activityId: string
-  fileId: string
-  updatedAt: string
-  label: string
-}
+type ReviewableCard = Pick<ReviewableModel, 'activityId' | 'label' | 'fileId'>
 
 interface ReviewablesSelectorProps {
   reviewables: ReviewableCard[]
@@ -45,7 +41,7 @@ const ReviewablesSelector: FC<ReviewablesSelectorProps> = ({
 
         onChange && onChange(nextActivityId)
         // also set new label for the tooltip
-        setLabelTooltip(nextReviewable.label)
+        setLabelTooltip(nextReviewable.label ?? null)
         // set label tooltip position
         const el = document.getElementById('preview-' + nextActivityId)
 
@@ -87,7 +83,7 @@ const ReviewablesSelector: FC<ReviewablesSelectorProps> = ({
     // check event is coming from a reviewable card
     const closest = (event.target as HTMLElement).closest('.reviewable-card') as HTMLElement
     if (!closest) return
-    setLabelTooltip(label)
+    setLabelTooltip(label ?? null)
     // set label tooltip position
     const top = closest.offsetTop + closest.offsetHeight / 2
     setLabelTooltipYPos(top)

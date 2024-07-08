@@ -47,7 +47,14 @@ export const Placeholder = styled.div`
   }
 `
 
-const EmptyPlaceholder = ({ icon, message, error, children }) => {
+interface EmptyPlaceholderProps {
+  icon: string
+  message: string
+  error?: string
+  children?: React.ReactNode
+}
+
+const EmptyPlaceholder = ({ icon, message, error, children }: EmptyPlaceholderProps) => {
   if (error) {
     return (
       <Placeholder className={'isError'}>
