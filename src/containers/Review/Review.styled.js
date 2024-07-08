@@ -16,6 +16,8 @@ export const Content = styled.div`
   justify-content: center;
   align-items: center;
   overflow: hidden;
+  padding: 1px;
+  margin: -1px;
 
   gap: var(--base-gap-small);
 `
