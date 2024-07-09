@@ -1,4 +1,4 @@
-import { ayonApi } from '../ayon'
+import api from '@api'
 import { toast } from 'react-toastify'
 import { enhancedDashboardGraphqlApi, getKanbanTasks } from '../userDashboard/getUserDashboard'
 import { isEqual } from 'lodash'
@@ -46,7 +46,7 @@ const patchKanban = (
   return [patchResult, kanbanPatched]
 }
 
-const updateEntity = ayonApi.injectEndpoints({
+const updateEntity = api.injectEndpoints({
   endpoints: (build) => ({
     updateEntity: build.mutation({
       query: ({ projectName, entityId, data, entityType }) => ({
@@ -180,8 +180,8 @@ const updateEntity = ayonApi.injectEndpoints({
 
         // patch any entity details panels in dashboard
         let entityDetailsResult = dispatch(
-          ayonApi.util.updateQueryData(
-            'getDashboardEntityDetails',
+          api.util.updateQueryData(
+            'getEntityDetailsPanel',
             { entityId, entityType, projectName },
             (draft) => {
               // convert assignees to users
@@ -218,7 +218,7 @@ const updateEntity = ayonApi.injectEndpoints({
           const promises = []
           for (const { projectName, data, id, currentAssignees = [] } of operations) {
             const promise = dispatch(
-              ayonApi.endpoints.updateEntity.initiate({
+              api.endpoints.updateEntity.initiate({
                 projectName: projectName,
                 entityId: id,
                 data,
@@ -231,9 +231,7 @@ const updateEntity = ayonApi.injectEndpoints({
 
           // invalidate any entities queries (multi entity selection) to force refetch
           // but because we just updated the getEntityDetails cache it should be instant
-          dispatch(
-            ayonApi.util.invalidateTags(operations.map((o) => ({ type: 'entities', id: o.id }))),
-          )
+          dispatch(api.util.invalidateTags(operations.map((o) => ({ type: 'entities', id: o.id }))))
 
           // update the getEntitiesDetails query with new data
           // this is the current details panel we are looking at right now
@@ -243,8 +241,8 @@ const updateEntity = ayonApi.injectEndpoints({
             projectName: o.projectName,
           }))
           dispatch(
-            ayonApi.util.updateQueryData(
-              'getDashboardEntitiesDetails',
+            api.util.updateQueryData(
+              'getEntitiesDetailsPanel',
               { entities: entitiesArg, entityType },
               (draft) => {
                 operations.forEach((operation) => {
@@ -271,9 +269,7 @@ const updateEntity = ayonApi.injectEndpoints({
           const results = await Promise.allSettled(promises)
           if (results.some((result) => result.value?.error)) {
             dispatch(
-              ayonApi.util.invalidateTags(
-                operations.map((o) => ({ type: 'kanBanTask', id: o.id })),
-              ),
+              api.util.invalidateTags(operations.map((o) => ({ type: 'kanBanTask', id: o.id }))),
             )
           }
 
@@ -296,7 +292,7 @@ const updateEntity = ayonApi.injectEndpoints({
           // })
 
           if (activityTags.length) {
-            dispatch(ayonApi.util.invalidateTags(activityTags))
+            dispatch(api.util.invalidateTags(activityTags))
           }
 
           return { data: operations }
@@ -309,6 +305,7 @@ const updateEntity = ayonApi.injectEndpoints({
       //   operations.map((o) => ({ id: o.id, type: 'entities' })),
     }),
   }),
+  overrideExisting: true,
 })
 
 export const { useUpdateEntitiesMutation } = updateEntity

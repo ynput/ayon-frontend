@@ -1,7 +1,7 @@
-import { ayonApi } from '../ayon'
+import api from '@api'
 import queryUpload from '../queryUpload'
 
-const updateAddons = ayonApi.injectEndpoints({
+const updateAddons = api.injectEndpoints({
   endpoints: (build) => ({
     uploadAddons: build.mutation({
       queryFn: (arg, api) =>
@@ -44,7 +44,7 @@ const updateAddons = ayonApi.injectEndpoints({
       },
       invalidatesTags: ['addonList'],
     }),
-    installAddons: build.mutation({
+    downloadAddons: build.mutation({
       queryFn: async (arg, api) => {
         const { addons = [] } = arg || {}
 
@@ -62,7 +62,7 @@ const updateAddons = ayonApi.injectEndpoints({
           return { data: eventIds, error: addonsRes.error }
         } catch (error) {
           console.error(error)
-          return { error: error?.response?.data?.detail || 'Install addon errors' }
+          return { error: error?.response?.data?.detail || 'Download addon errors' }
         }
       },
       invalidatesTags: [
@@ -75,11 +75,12 @@ const updateAddons = ayonApi.injectEndpoints({
       ],
     }),
   }), // endpoints
+  overrideExisting: true,
 })
 
 export const {
   useUploadAddonsMutation,
   useDeleteAddonsMutation,
   useDeleteAddonVersionsMutation,
-  useInstallAddonsMutation,
+  useDownloadAddonsMutation,
 } = updateAddons

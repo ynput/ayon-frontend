@@ -9,6 +9,7 @@ import { toast } from 'react-toastify'
 import Actions from '@containers/Actions/Actions'
 import FeedFilters from '../FeedFilters/FeedFilters'
 import usePatchProductsListWithVersions from '@hooks/usePatchProductsListWithVersions'
+import { useGetChecklistsCountQuery } from '@/services/activities/getActivities'
 
 const DetailsPanelHeader = ({
   entityType,
@@ -44,6 +45,23 @@ const DetailsPanelHeader = ({
     }
   }
   const projectName = entities.length > 1 ? null : firstEntity?.projectName
+
+  const entityIds = entities
+    .filter((e) => e.projectName === firstEntity?.projectName && entityType.id)
+    .map((entity) => entity.id)
+
+  // get checklists count
+  const { data: checklistCount = {} } = useGetChecklistsCountQuery(
+    {
+      projectName: firstEntity?.projectName,
+      entityIds,
+    },
+    { skip: !firstEntity?.projectName || !entityIds.length },
+  )
+  let checklistsLabel
+  if (checklistCount.total > 0) {
+    checklistsLabel = `${checklistCount.checked}/${checklistCount.total}`
+  }
 
   const thumbnails = useMemo(() => {
     if (!entities[0]) return []
@@ -256,6 +274,11 @@ const DetailsPanelHeader = ({
         isLoading={isLoading}
         entityType={entityType}
         className="filters"
+        overrides={{
+          checklists: {
+            label: checklistsLabel,
+          },
+        }}
       />
     </Styled.Grid>
   )

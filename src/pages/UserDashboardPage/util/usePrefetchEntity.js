@@ -1,6 +1,6 @@
 import { useSelector } from 'react-redux'
 import { onPrefetchIds } from '@state/dashboard'
-import { useLazyGetDashboardEntitiesDetailsQuery } from '@queries/entity/getEntityPanel'
+import { useLazyGetEntitiesDetailsPanelQuery } from '@queries/entity/getEntityPanel'
 import { useLazyGetActivitiesQuery } from '@queries/activities/getActivities'
 import { throttle } from 'lodash'
 import { activitiesLast } from '@containers/Feed/Feed'
@@ -14,7 +14,7 @@ export const usePrefetchEntity = (dispatch, projectsInfo, throttleTime) => {
   const filter = useSelector((state) => state.details.pinned.filter)
 
   const setPrefetchedIds = (ids) => dispatch(onPrefetchIds(ids))
-  const [getEntitiesDetails] = useLazyGetDashboardEntitiesDetailsQuery()
+  const [getEntitiesDetails] = useLazyGetEntitiesDetailsPanelQuery()
   const [getEntitiesActivities] = useLazyGetActivitiesQuery()
 
   const handlePrefetch = ({ id, projectName, entityType = 'task' }) => {
@@ -24,10 +24,9 @@ export const usePrefetchEntity = (dispatch, projectsInfo, throttleTime) => {
 
     const entities = [{ id: id, projectName: projectName }]
     const entityIds = [id]
-    const projectInfo = projectsInfo[projectName]
 
     // pre-fetch the entity details
-    getEntitiesDetails({ entities: entities, entityType, projectInfo })
+    getEntitiesDetails({ entities: entities, entityType, projectsInfo })
     // pre-fetch the activities based on current filter
     getEntitiesActivities({
       entityIds: entityIds,

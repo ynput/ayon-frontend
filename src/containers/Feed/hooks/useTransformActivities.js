@@ -1,4 +1,4 @@
-import { compareAsc } from 'date-fns'
+import { compareAsc, isValid } from 'date-fns'
 import { useMemo } from 'react'
 import groupActivityVersions from '../helpers/groupActivityVersions'
 import groupMinorActivities from '../helpers/groupMinorActivities'
@@ -45,13 +45,27 @@ const useTransformActivities = (activities = [], projectInfo = {}, entityType) =
   )
 
   // 3. sort createdAt oldest first (because we are using flex: column-reverse)
-  const reversedActivitiesData = useMemo(
-    () =>
-      activitiesWithoutRelations.sort((a, b) =>
-        compareAsc(new Date(b.createdAt), new Date(a.createdAt)),
-      ),
-    [activitiesWithoutRelations],
-  )
+  const reversedActivitiesData = useMemo(() => {
+    const sortedActivities = [...activitiesWithoutRelations].sort((a, b) => {
+      const dateA = new Date(a.createdAt)
+      const dateB = new Date(b.createdAt)
+      const validA = isValid(dateA)
+      const validB = isValid(dateB)
+
+      if (!validA && !validB) {
+        return 0 // Both dates are invalid, keep original order
+      } else if (!validA) {
+        return 1 // Only dateA is invalid, it comes first
+      } else if (!validB) {
+        return -1 // Only dateB is invalid, dateA comes first
+      }
+
+      // If both dates are valid, compare them normally
+      return compareAsc(dateB, dateA)
+    })
+
+    return sortedActivities
+  }, [activitiesWithoutRelations])
 
   // 4. for status change activities that are together, merge them into one activity
   const mergedActivitiesData = useMemo(

@@ -38,7 +38,7 @@ const StyledChevron = styled(Button)`
   }
 `
 
-const CollapseButton = ({ onClick, side = 'left', isOpen, style, ...props }) => {
+const CollapseButton = ({ onClick, side = 'left', isOpen, style, className, ...props }) => {
   return (
     <StyledChevron
       onClick={onClick}
@@ -46,6 +46,7 @@ const CollapseButton = ({ onClick, side = 'left', isOpen, style, ...props }) => 
       $side={side}
       $isOpen={isOpen}
       style={style}
+      className={'collapse-button ' + className}
       {...props}
     />
   )

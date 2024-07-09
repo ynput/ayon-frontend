@@ -1,3 +1,4 @@
+import { isArray } from 'lodash'
 import ActivityCheckbox from '../ActivityCheckbox/ActivityCheckbox'
 import ActivityReference from '../ActivityReference/ActivityReference'
 
@@ -28,6 +29,10 @@ export const aTag = (
 ) => {
   const { url, type, id } = sanitizeURL(href)
 
+  // link is broken in some way
+  if (!url && !type && !id) {
+    return children
+  }
   // return regular url
   // if no reference type, return regular link with no href
   if (url || !type || !id) {
@@ -44,7 +49,7 @@ export const aTag = (
 
   return (
     <ActivityReference
-      {...{ type, id }}
+      {...{ type, id: id.replaceAll('.', '-') }}
       variant={isEntity ? 'filled' : 'primary'}
       onClick={() =>
         type !== 'user' &&
@@ -70,8 +75,54 @@ export const inputTag = ({ type, checked, ...props }, { activity, onCheckChange 
   }
 }
 
-import { BlockCode } from './ActivityComment.styled'
+import { BlockCode, QuoteLine } from './ActivityComment.styled'
 // eslint-disable-next-line
 export const codeTag = ({ node, className, children }) => {
   return <BlockCode>{children}</BlockCode>
+}
+
+export const blockquoteTag = ({ children }) => {
+  // get children string
+  const child = children.find((item) => !!item?.props)?.props?.children
+
+  if (!child) return <blockquote>{children}</blockquote>
+
+  // now split by new lines
+  const lines = []
+  if (typeof child === 'string') {
+    // split by new lines
+    const stringLines = child.split('\n')
+    stringLines.forEach((line, i) => {
+      lines.push(<QuoteLine key={i}>{line}</QuoteLine>)
+    })
+  } else if (isArray(child)) {
+    const splitLines = []
+    let index = 0
+    child.forEach((line) => {
+      // check index exists on lines otherwise make a new empty array
+      if (!splitLines[index]) splitLines[index] = []
+
+      if (typeof line === 'string') {
+        // check for \n
+        const stringLines = line.split(/(\n)/)
+
+        stringLines.forEach((split) => {
+          if (split === '\n') {
+            index++
+            // create new array
+            splitLines[index] = []
+          } else splitLines[index].push(split)
+        })
+      } else {
+        // now add line
+        splitLines[index].push(line)
+      }
+    })
+
+    splitLines.forEach((line, i) => {
+      lines.push(<QuoteLine key={i}>{line}</QuoteLine>)
+    })
+  }
+
+  return <blockquote>{lines}</blockquote>
 }

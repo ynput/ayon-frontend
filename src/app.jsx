@@ -55,6 +55,7 @@ import { useLazyGetInfoQuery } from '@queries/auth/getAuth'
 
 // hooks
 import useTooltip from '@hooks/Tooltip/useTooltip'
+import WatchActivities from './containers/WatchActivities'
 
 const App = () => {
   const user = useSelector((state) => state.user)
@@ -136,6 +137,7 @@ const App = () => {
     () => (
       <ErrorBoundary FallbackComponent={ErrorFallback}>
         <Favicon />
+        <WatchActivities />
         <Suspense fallback={<LoadingPage />}>
           <RestartProvider>
             <ContextMenuProvider>

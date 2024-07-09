@@ -65,7 +65,6 @@ const dashboardSlice = createSlice({
       state.tasks.filter = ''
       state.tasks.assignees = []
       state.tasks.assigneesFilter = 'me'
-      state.details.filter = 'activity'
       state.tasks.collapsedColumns = []
     },
   },

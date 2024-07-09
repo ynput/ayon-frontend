@@ -6,8 +6,14 @@ import {
   useUpdateActivityMutation,
 } from '@queries/activities/updateActivities'
 import { useSelector } from 'react-redux'
-import { ayonApi } from '@queries/ayon'
+import api from '@api'
 import { filterActivityTypes } from '@state/details'
+
+// does the body have a checklist anywhere in it
+// * [ ] or * [x]
+export const bodyHasChecklist = (body) => {
+  return body.includes('* [ ]') || body.includes('* [x]')
+}
 
 const useCommentMutations = ({
   projectName,
@@ -30,7 +36,7 @@ const useCommentMutations = ({
     const uniqueEntityIds = [...new Set(entityIds)]
     const tags = uniqueEntityIds.map((id) => ({ type: 'entityActivities', id }))
 
-    dispatch(ayonApi.util.invalidateTags(tags))
+    dispatch(api.util.invalidateTags(tags))
   }
 
   const createPatch = ({ entityId, newId, subTitle, value, files = [] }) => {
@@ -61,12 +67,6 @@ const useCommentMutations = ({
 
   const getActivityId = () => uuid1().replace(/-/g, '')
 
-  // does the body have a checklist anywhere in it
-  // * [ ] or * [x]
-  const bodyHasChecklist = (body) => {
-    return body.includes('* [ ]') || body.includes('* [x]')
-  }
-
   const patchAllRefs = ({ refs = [], value = '', files = [], isDelete = false, id }) => {
     const hasChecklist = bodyHasChecklist(value)
     // We need to try and update the cache for all the refs
@@ -91,7 +91,7 @@ const useCommentMutations = ({
 
         const argsForCachingMatching = { entityIds: [ref.id], activityTypes, projectName, filter }
         dispatch(
-          ayonApi.util.updateQueryData('getActivities', argsForCachingMatching, (draft) => {
+          api.util.updateQueryData('getActivities', argsForCachingMatching, (draft) => {
             if (isDelete) {
               // delete the comment from the list
               draft.activities = draft.activities.filter((activity) => activity.body !== value)

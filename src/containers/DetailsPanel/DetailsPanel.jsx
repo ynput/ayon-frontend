@@ -3,11 +3,12 @@ import React, { useEffect } from 'react'
 import DetailsPanelHeader from './DetailsPanelHeader/DetailsPanelHeader'
 import { useDispatch, useSelector } from 'react-redux'
 import Feed from '@containers/Feed/Feed'
-import { useGetDashboardEntitiesDetailsQuery } from '@queries/entity/getEntityPanel'
+import { useGetEntitiesDetailsPanelQuery } from '@queries/entity/getEntityPanel'
 import TaskAttributes from '@pages/UserDashboardPage/UserDashboardTasks/TaskAttributes/TaskAttributes'
 import { transformEntityData } from '@queries/userDashboard/userDashboardHelpers'
 import RepresentationsList from '../RepresentationsList/RepresentationsList'
 import { closeSlideOut, updateDetailsPanelTab } from '@state/details'
+import { entityDetailsTypesSupported } from '@/services/userDashboard/userDashboardQueries'
 
 export const entitiesWithoutFeed = ['product', 'representation']
 
@@ -53,9 +54,11 @@ const DetailsPanel = ({
   }, [entityType, selectedTab])
 
   // now we get the full details data for selected entities
-  const entitiesToQuery = entities.length
+  let entitiesToQuery = entities.length
     ? entities.map((entity) => ({ id: entity.id, projectName: entity.projectName }))
     : entitiesData.map((entity) => ({ id: entity.id, projectName: entity.projectName }))
+
+  entitiesToQuery = entitiesToQuery.filter((entity) => entity.id)
 
   const {
     data: detailsData = [],
@@ -63,9 +66,11 @@ const DetailsPanel = ({
     isSuccess,
     isError,
     originalArgs,
-  } = useGetDashboardEntitiesDetailsQuery(
+  } = useGetEntitiesDetailsPanelQuery(
     { entityType, entities: entitiesToQuery, projectsInfo },
-    { skip: !entitiesData.length && !entities.length },
+    {
+      skip: !entitiesToQuery.length || !entityDetailsTypesSupported.includes(entityType),
+    },
   )
 
   // the entity changes then we close the slide out

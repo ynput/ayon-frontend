@@ -26,7 +26,7 @@ import usePatchProductsListWithVersions from '@hooks/usePatchProductsListWithVer
 import useSearchFilter, { filterByFieldsAndValues } from '@hooks/useSearchFilter'
 import useColumnResize from '@hooks/useColumnResize'
 import { useUpdateEntitiesMutation } from '@queries/entity/updateEntity'
-import { ayonApi } from '@queries/ayon'
+import api from '@api'
 import useCreateContext from '@hooks/useCreateContext'
 import ViewModeToggle from './ViewModeToggle'
 import ProductsList from './ProductsList'
@@ -187,10 +187,10 @@ const Products = () => {
 
       // invalidate 'version' query (specific version query)
       // we do this so that when we select this version again, it doesn't use stale version query
-      dispatch(ayonApi.util.invalidateTags(ids.map((id) => ({ type: 'version', id }))))
+      dispatch(api.util.invalidateTags(ids.map((id) => ({ type: 'version', id }))))
 
       // invalidate 'detail' query (details panel)
-      // dispatch(ayonApi.util.invalidateTags(ids.map((id) => ({ type: 'detail', id }))))
+      // dispatch(api.util.invalidateTags(ids.map((id) => ({ type: 'detail', id }))))
     } catch (error) {
       console.error(error)
 
@@ -199,12 +199,11 @@ const Products = () => {
     }
   }
 
-  const handleStatusOpen = (id) => {
+  const handleStatusOpen = (productId, versionId) => {
     // handles the edge case where the use foccusess multiple products but then changes a different status
-    if (!focusedProducts.includes(id)) {
+    if (!focusedProducts.includes(productId)) {
       // not in focused selection
-      // reset selection to status id
-      dispatch(setFocusedProducts([id]))
+      dispatch(productSelected({ products: [productId], versions: [versionId] }))
     }
   }
 
@@ -284,7 +283,7 @@ const Products = () => {
               size={resolveWidth(versionStatusWidth)}
               onChange={(v) => handleStatusChange(v, node.data.id)}
               multipleSelected={focusedProducts.length}
-              onOpen={() => handleStatusOpen(node.data.id)}
+              onOpen={() => handleStatusOpen(node.data.id, node.data.versionId)}
               style={{ maxWidth: '100%' }}
             />
           )

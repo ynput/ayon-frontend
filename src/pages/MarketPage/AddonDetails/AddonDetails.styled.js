@@ -1,4 +1,4 @@
-import { Button, Panel, getShimmerStyles } from '@ynput/ayon-react-components'
+import { Button, Dropdown, Panel, getShimmerStyles } from '@ynput/ayon-react-components'
 import ReactMarkdown from 'react-markdown'
 import styled from 'styled-components'
 
@@ -47,6 +47,43 @@ export const Right = styled.div`
     background-color: unset;
     ${getShimmerStyles(undefined, undefined, { opacity: 1 })}
   }
+`
+
+export const Download = styled.div`
+  display: flex;
+  gap: var(--base-gap-small);
+  width: 100%;
+
+  button {
+    flex: 1;
+  }
+`
+
+export const VersionDropdown = styled(Dropdown)`
+  button {
+    background-color: var(--md-sys-color-surface-container-highest);
+    &:hover {
+      background-color: var(--md-sys-color-surface-container-highest-hover);
+    }
+
+    & > div {
+      padding: 0 6px;
+      border: none;
+      & > div {
+        display: none;
+      }
+    }
+  }
+`
+
+export const VersionDropdownItem = styled.div`
+  display: flex;
+  gap: var(--base-gap-large);
+  align-items: center;
+  justify-content: space-between;
+  height: 32px;
+  padding: 0px 8px;
+  padding-right: 16px;
 `
 
 // header is in the left column and contains icon, title and verification status
