@@ -5,7 +5,7 @@ import {
 } from '@/api/rest'
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 
-const injectedActionsRest = api.rest.injectEndpoints({
+const injectedActionsRest = api.injectEndpoints({
   endpoints: (build) => ({
     getActionsFromContext: build.query<
       ListAvailableActionsForContextApiResponse,
@@ -13,7 +13,7 @@ const injectedActionsRest = api.rest.injectEndpoints({
     >({
       queryFn: async (args, { dispatch }) => {
         // get the data from the rest api
-        const res = await dispatch(api.rest.endpoints.listAvailableActionsForContext.initiate(args))
+        const res = await dispatch(api.endpoints.listAvailableActionsForContext.initiate(args))
 
         if (res.error) {
           return { error: res.error as FetchBaseQueryError }
