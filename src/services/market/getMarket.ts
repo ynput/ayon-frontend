@@ -41,19 +41,22 @@ export const enhancedMarketRest = api.enhanceEndpoints<TagTypes, UpdatedDefiniti
         },
       ],
       transformResponse: (response: MarketAddonListApiResponse) =>
-        (response?.addons || []).map((addon: $Any) => {
-          const isDownloaded = !!addon.currentLatestVersion
-          const isOfficial = addon.orgName === 'ynput-official'
-          const isProductionOutdated = addon.currentLatestVersion !== addon.currentProductionVersion
+        [...(response?.addons || [])]
+          .map((addon: $Any) => {
+            const isDownloaded = !!addon.currentLatestVersion
+            const isOfficial = addon.orgName === 'ynput-official'
+            const isProductionOutdated =
+              addon.currentLatestVersion !== addon.currentProductionVersion
 
-          return {
-            ...addon,
-            isOfficial,
-            isDownloaded,
-            isProductionOutdated,
-            isVerified: false,
-          }
-        }),
+            return {
+              ...addon,
+              isOfficial,
+              isDownloaded,
+              isProductionOutdated,
+              isVerified: false,
+            }
+          })
+          .sort((a, b) => a.title.localeCompare(b.title)),
     },
     marketAddonDetail: {
       providesTags: (_r, _e, { addonName }) => [
