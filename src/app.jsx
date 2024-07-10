@@ -24,7 +24,6 @@ const EventsPage = lazy(() => import('@pages/EventsPage'))
 const ServicesPage = lazy(() => import('@pages/ServicesPage'))
 const UserDashboardPage = lazy(() => import('@pages/UserDashboardPage'))
 const PasswordResetPage = lazy(() => import('@pages/PasswordResetPage'))
-const ReviewPage = lazy(() => import('@pages/ReviewPage'))
 
 // components
 import ShareDialog from '@components/ShareDialog'
@@ -46,7 +45,7 @@ import { NotificationsProvider } from '@context/notificationsContext'
 import Header from '@containers/header'
 import ProtectedRoute from '@containers/ProtectedRoute'
 import FileUploadPreview from '@containers/FileUploadPreview/FileUploadPreview'
-import ReviewDialog from '@/containers/Review/ReviewDialog'
+import { ViewerDialog } from '@containers/Viewer'
 
 // state
 import { login } from '@state/user'
@@ -157,7 +156,7 @@ const App = () => {
                         >
                           <Header />
                           <ShareDialog />
-                          <ReviewDialog />
+                          <ViewerDialog />
                           <ConfirmDialog />
                           <FileUploadPreview />
                           <Routes>
@@ -238,7 +237,6 @@ const App = () => {
                             />
                             <Route path="/account/:module" exact element={<AccountPage />} />
                             <Route path="/events" element={<EventsPage />} />
-                            <Route path="/review" element={<ReviewPage />} />
                             <Route element={<ErrorPage code="404" />} />
                           </Routes>
                         </QueryParamProvider>

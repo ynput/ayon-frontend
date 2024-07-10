@@ -45,7 +45,7 @@ export const Image = styled.img`
   object-fit: contain;
 `
 
-export const ReviewDetailsPanelWrapper = styled.div`
+export const ViewerDetailsPanelWrapper = styled.div`
   height: 100%;
   max-height: 100%;
   overflow: hidden;

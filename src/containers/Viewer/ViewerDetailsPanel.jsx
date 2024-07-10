@@ -4,9 +4,9 @@ import DetailsPanel from '@containers/DetailsPanel/DetailsPanel'
 import { useGetUsersAssigneeQuery } from '@queries/user/getUsers'
 import DetailsPanelSlideOut from '@containers/DetailsPanel/DetailsPanelSlideOut/DetailsPanelSlideOut'
 import { useGetProjectsInfoQuery } from '@queries/userDashboard/getUserDashboard'
-import { ReviewDetailsPanelWrapper } from './Review.styled'
+import { ViewerDetailsPanelWrapper } from './Review.styled'
 
-const ReviewDetailsPanel = ({ versionIds = [], projectName }) => {
+const ViewerDetailsPanel = ({ versionIds = [], projectName }) => {
   const { data: projectsInfo = {} } = useGetProjectsInfoQuery(
     { projects: [projectName] },
     { skip: !projectName },
@@ -21,7 +21,7 @@ const ReviewDetailsPanel = ({ versionIds = [], projectName }) => {
   if (!versionIds.length) return null
 
   return (
-    <ReviewDetailsPanelWrapper>
+    <ViewerDetailsPanelWrapper>
       <DetailsPanel
         entities={entities}
         statusesOptions={projectInfo.statuses || []}
@@ -36,8 +36,8 @@ const ReviewDetailsPanel = ({ versionIds = [], projectName }) => {
         style={{ boxShadow: 'none', borderRadius: 4, overflow: 'hidden' }}
       />
       <DetailsPanelSlideOut projectsInfo={projectsInfo} scope="review" />
-    </ReviewDetailsPanelWrapper>
+    </ViewerDetailsPanelWrapper>
   )
 }
 
-export default ReviewDetailsPanel
+export default ViewerDetailsPanel

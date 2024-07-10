@@ -3,13 +3,13 @@ import VideoPlayer from '@containers/VideoPlayer'
 import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
 import { Button } from '@ynput/ayon-react-components'
 
-interface ReviewPlayerProps {
+interface ViewerPlayerProps {
   projectName: string
   reviewable: any
   onUpload: () => void
 }
 
-const ReviewPlayer = ({ projectName, reviewable, onUpload }: ReviewPlayerProps) => {
+const ViewerPlayer = ({ projectName, reviewable, onUpload }: ViewerPlayerProps) => {
   const [frameRate, setFrameRate] = useState<null | number>(null)
   const [aspectRatio, setAspectRatio] = useState<null | number>(null)
 
@@ -38,4 +38,4 @@ const ReviewPlayer = ({ projectName, reviewable, onUpload }: ReviewPlayerProps) 
   )
 }
 
-export default ReviewPlayer
+export default ViewerPlayer

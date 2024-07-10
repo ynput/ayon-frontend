@@ -5,8 +5,8 @@ import VersionSelectorTool from '@components/VersionSelectorTool/VersionSelector
 import { useGetReviewablesForProductQuery } from '@queries/review/getReview'
 import { useDispatch, useSelector } from 'react-redux'
 import { toggleFullscreen, toggleUpload, updateSelection } from '@state/review'
-import ReviewDetailsPanel from './ReviewDetailsPanel'
-import ReviewPlayer from './ReviewPlayer'
+import ViewerDetailsPanel from './ViewerDetailsPanel'
+import ViewerPlayer from './ViewerPlayer'
 import ReviewablesSelector from '@/components/ReviewablesSelector'
 import { updateDetailsPanelTab } from '@/features/details'
 import EmptyPlaceholder from '@/components/EmptyPlaceholder/EmptyPlaceholder'
@@ -14,12 +14,12 @@ import { $Any } from '@/types'
 import { Link } from 'react-router-dom'
 import { useFullScreenHandle } from 'react-full-screen'
 
-interface ReviewProps {
+interface ViewerProps {
   onClose?: () => void
   canOpenInNew?: boolean
 }
 
-const Review = ({ onClose, canOpenInNew }: ReviewProps) => {
+const Viewer = ({ onClose, canOpenInNew }: ViewerProps) => {
   const {
     productId,
     projectName,
@@ -101,7 +101,7 @@ const Review = ({ onClose, canOpenInNew }: ReviewProps) => {
 
   if (selectedReviewable?.mimetype.includes('video') && isReady) {
     viewerComponent = (
-      <ReviewPlayer
+      <ViewerPlayer
         projectName={projectName}
         reviewable={selectedReviewable}
         onUpload={handleUploadButton}
@@ -180,10 +180,10 @@ const Review = ({ onClose, canOpenInNew }: ReviewProps) => {
           onUpload={handleUploadButton}
           projectName={projectName}
         />
-        <ReviewDetailsPanel versionIds={versionIds} projectName={projectName} />
+        <ViewerDetailsPanel versionIds={versionIds} projectName={projectName} />
       </Styled.Content>
     </Styled.Container>
   )
 }
 
-export default Review
+export default Viewer
