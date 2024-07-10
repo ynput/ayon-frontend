@@ -15,7 +15,7 @@ export const Scrollable = styled.div`
   align-items: center;
   overflow-y: auto;
   min-width: fit-content;
-  gap: var(--base-gap-medium);
+  gap: var(--base-gap-small);
 `
 
 export const ReviewableCard = styled.div`
@@ -23,7 +23,6 @@ export const ReviewableCard = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 89px;
 
   border-radius: var(--border-radius-l);
   background-color: var(--md-sys-color-surface-container-high);
@@ -44,6 +43,7 @@ export const ReviewableCard = styled.div`
   .file-thumbnail {
     width: 100%;
     height: 48px;
+    width: 48px;
     object-fit: cover;
     border-radius: var(--border-radius-m);
   }
@@ -70,10 +70,11 @@ export const Label = styled.span`
   position: absolute;
   left: -8px;
   transform: translateX(-100%) translateY(-50%);
+  z-index: 1000;
 `
 
 export const AddButton = styled(Button)`
-  width: 81px;
+  width: 48px;
   height: 48px;
   background-color: var(--md-sys-color-surface-container-high);
 
