@@ -42,18 +42,22 @@ const ViewerDialog = () => {
 
   // when pressing escape key, close the dialog
   useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      console.log(e.target)
-      // check shortcut isn't inside an input field
-      if (e.target?.tagName === 'INPUT' || e.target?.tagName === 'TEXTAREA') return
+    const isHTMLElement = (target: EventTarget | null): target is HTMLElement => {
+      return target instanceof HTMLElement
+    }
 
-      // check shortcut isn't inside a contenteditable element
-      if (e.target?.isContentEditable) return
+    const handleEscape = (e: KeyboardEvent) => {
+      // Check if e.target is an HTMLElement before accessing tagName or isContentEditable
+      if (isHTMLElement(e.target)) {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
+        if (e.target.isContentEditable) return
+      }
 
       if (e.key === 'Escape' && !fullscreen) {
         handleClose()
       }
     }
+
     document.addEventListener('keydown', handleEscape)
     return () => document.removeEventListener('keydown', handleEscape)
   }, [productId, fullscreen])
