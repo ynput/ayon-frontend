@@ -1535,6 +1535,7 @@ export const MessageFragmentFragmentDoc = `
     name
     label
     type
+    subtype
   }
   parents {
     type
@@ -1644,8 +1645,8 @@ export const GetProjectLatestDocument = `
 }
     `
 export const GetKanbanDocument = `
-    query GetKanban($projects: [String!], $assignees: [String!], $last: Int) {
-  kanban(projects: $projects, assigneesAny: $assignees, last: $last) {
+    query GetKanban($projects: [String!], $assignees: [String!]) {
+  kanban(projects: $projects, assigneesAny: $assignees, last: 2000) {
     edges {
       node {
         ...KanbanFragment

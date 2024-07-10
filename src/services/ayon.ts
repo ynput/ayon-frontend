@@ -89,6 +89,7 @@ const tagTypes = [
   'marketAddon',
   'inbox',
   'service',
+  'actions',
   'review',
 ]
 

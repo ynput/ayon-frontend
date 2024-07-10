@@ -25,6 +25,36 @@ const injectedRtkApi = api.injectEndpoints({
         method: 'DELETE',
       }),
     }),
+    listAvailableActionsForContext: build.mutation<
+      ListAvailableActionsForContextApiResponse,
+      ListAvailableActionsForContextApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/actions/list`,
+        method: 'POST',
+        body: queryArg.actionContext,
+        params: { mode: queryArg.mode },
+      }),
+    }),
+    listAllActions: build.query<ListAllActionsApiResponse, ListAllActionsApiArg>({
+      query: () => ({ url: `/api/actions/manage` }),
+    }),
+    executeAction: build.mutation<ExecuteActionApiResponse, ExecuteActionApiArg>({
+      query: (queryArg) => ({
+        url: `/api/actions/execute`,
+        method: 'POST',
+        body: queryArg.actionContext,
+        params: {
+          addonName: queryArg.addonName,
+          addonVersion: queryArg.addonVersion,
+          variant: queryArg.variant,
+          identifier: queryArg.identifier,
+        },
+      }),
+    }),
+    takeAction: build.query<TakeActionApiResponse, TakeActionApiArg>({
+      query: (queryArg) => ({ url: `/api/actions/take/${queryArg.token}` }),
+    }),
     postProjectActivity: build.mutation<PostProjectActivityApiResponse, PostProjectActivityApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/${queryArg.entityType}/${queryArg.entityId}/activities`,
@@ -1354,6 +1384,26 @@ export type DeleteAccessGroupApiArg = {
   accessGroupName: string
   projectName: string
 }
+export type ListAvailableActionsForContextApiResponse =
+  /** status 200 Successful Response */ AvailableActionsListModel
+export type ListAvailableActionsForContextApiArg = {
+  mode?: 'simple' | 'dynamic' | 'all'
+  actionContext: ActionContext
+}
+export type ListAllActionsApiResponse = /** status 200 Successful Response */ BaseActionManifest[]
+export type ListAllActionsApiArg = void
+export type ExecuteActionApiResponse = /** status 200 Successful Response */ ExecuteResponseModel
+export type ExecuteActionApiArg = {
+  addonName: string
+  addonVersion: string
+  variant?: string
+  identifier: string
+  actionContext: ActionContext
+}
+export type TakeActionApiResponse = /** status 200 Successful Response */ TakeResponseModel
+export type TakeActionApiArg = {
+  token: string
+}
 export type PostProjectActivityApiResponse =
   /** status 201 Successful Response */ CreateActivityResponseModel
 export type PostProjectActivityApiArg = {
@@ -2310,7 +2360,8 @@ export type PasswordResetApiArg = {
 }
 export type GetCurrentUserApiResponse = /** status 200 Successful Response */ UserModel
 export type GetCurrentUserApiArg = void
-export type GetUserApiResponse = /** status 200 Successful Response */
+export type GetUserApiResponse =
+  /** status 200 Successful Response */
   | UserModel
   | {
       [key: string]: string
@@ -2457,6 +2508,67 @@ export type Permissions = {
   attrib_write?: AttributeAccessList
   /** Whitelist REST endpoints a user can access */
   endpoints?: EndpointsAccessList
+}
+export type IconModel = {
+  type?: 'material-symbols' | 'url'
+  /** The name of the icon (for material-symbols) */
+  name?: string
+  /** The color of the icon (for material-symbols) */
+  color?: string
+  /** The URL of the icon (for url) */
+  url?: string
+}
+export type BaseActionManifest = {
+  /** The identifier of the action */
+  identifier: string
+  /** Human-friendly name of the action */
+  label: string
+  /** Action category */
+  category?: string
+  /** The order of the action */
+  order?: number
+  /** Path to the action icon */
+  icon?: IconModel
+  featured?: boolean
+  /** The name of the addon providing the action */
+  addonName?: string
+  /** The version of the addon providing the action */
+  addonVersion?: string
+  /** The settings variant of the addon */
+  variant?: string
+}
+export type AvailableActionsListModel = {
+  /** The list of available actions */
+  actions?: BaseActionManifest[]
+}
+export type ActionContext = {
+  /** The name of the project */
+  projectName: string
+  /** The type of the entity */
+  entityType: 'folder' | 'product' | 'version' | 'representation' | 'task' | 'workfile'
+  /** List of subtypes present in the entity list */
+  entitySubtypes?: string[]
+  /** The IDs of the entities */
+  entityIds: string[]
+}
+export type ExecuteResponseModel = {
+  /** The type of response */
+  type: 'launcher' | 'server'
+  /** Whether the action was successful */
+  success?: boolean
+  /** The message to display */
+  message?: string
+  /** The uri to call from the browser */
+  uri?: string
+}
+export type TakeResponseModel = {
+  eventId: string
+  actionIdentifier: string
+  args?: string[]
+  context: ActionContext
+  addonName: string
+  addonVersion: string
+  variant: string
 }
 export type CreateActivityResponseModel = {
   id: string
@@ -3206,6 +3318,7 @@ export type FolderAttribModel = {
   shotgridId?: string
   /** The Shotgrid Type of this entity. */
   shotgridType?: string
+  car?: string
   hairColor?: string
   sokoId?: string
   sokoPath?: string
@@ -4199,6 +4312,7 @@ export type TaskAttribModel = {
   shotgridId?: string
   /** The Shotgrid Type of this entity. */
   shotgridType?: string
+  car?: string
   hairColor?: string
   sokoId?: string
   sokoPath?: string

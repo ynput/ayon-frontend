@@ -6,37 +6,14 @@ import { classNames } from 'primereact/utils'
 import { isEqual, union, upperFirst } from 'lodash'
 import { useUpdateEntitiesMutation } from '@queries/entity/updateEntity'
 import { toast } from 'react-toastify'
-import Actions from '@components/Actions/Actions'
+import Actions from '@containers/Actions/Actions'
 import FeedFilters from '../FeedFilters/FeedFilters'
 import usePatchProductsListWithVersions from '@hooks/usePatchProductsListWithVersions'
 import { useGetChecklistsCountQuery } from '@/services/activities/getActivities'
 
-// DUMMY ACTIONS DATA
-const actions = [
-  { id: 'nuke', icon: 'nuke.png', pinned: 'actions2D' },
-  { id: 'afterEffects', icon: 'after-effects.png', pinned: 'actions2D' },
-  { id: 'maya', icon: 'maya.png', pinned: 'actions3D' },
-  { id: 'houdini', icon: 'houdini.png', pinned: 'actions3D' },
-  { id: 'photoshop', icon: 'photoshop.png' },
-]
-
-const actionTaskTypes = {
-  actions2D: ['compositing', 'roto', 'matchmove', 'edit', 'paint'],
-  actions3D: [
-    'modeling',
-    'texture',
-    'lookdev',
-    'rigging',
-    'layout',
-    'setdress',
-    'animation',
-    'fx',
-    'lighting',
-  ],
-}
-
 const DetailsPanelHeader = ({
   entityType,
+  entitySubTypes,
   entities = [],
   disabledAssignees = [],
   users = [],
@@ -195,16 +172,6 @@ const DetailsPanelHeader = ({
     copyToClipboard(fullPath)
   }
 
-  const pinned = actions
-    .filter((action) => {
-      const actions = actionTaskTypes[action.pinned]
-      if (!actions) return false
-      return actions.some(
-        (action) => action.toLowerCase() === firstEntity?.entitySubType?.toLowerCase(),
-      )
-    })
-    .map((action) => action.id)
-
   const portalId = 'dashboard-details-header'
 
   const hasUser =
@@ -287,7 +254,12 @@ const DetailsPanelHeader = ({
             }
           />
         ))}
-      <Actions options={actions} pinned={pinned} isLoading={isLoading} />
+      <Actions
+        entities={entities}
+        entityType={entityType}
+        entitySubTypes={entitySubTypes}
+        isLoadingEntity={isFetching}
+      />
       <Styled.TagsSelect
         value={union(...tagsValues)}
         isMultiple={tagsValues.some((v) => !isEqual(v, tagsValues[0]))}

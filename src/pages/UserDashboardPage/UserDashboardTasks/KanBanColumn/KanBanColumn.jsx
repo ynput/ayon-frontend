@@ -13,6 +13,7 @@ import KanBanColumnDropzone from './KanBanColumnDropzone'
 const KanBanColumn = forwardRef(
   (
     {
+      allTasks = [],
       tasks = [],
       id,
       groupByValue = {},
@@ -75,7 +76,7 @@ const KanBanColumn = forwardRef(
     const { handleContextMenu, closeContext } = useGetTaskContextMenu(tasks, dispatch)
 
     // HANDLE TASK CLICK
-    const handleTaskClick = useTaskClick(dispatch)
+    const handleTaskClick = useTaskClick(dispatch, allTasks)
 
     // return 5 fake loading events if loading
     const loadingTasks = useMemo(() => getFakeTasks(), [])
