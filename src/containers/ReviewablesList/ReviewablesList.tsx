@@ -93,6 +93,10 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
     const id = event.currentTarget.id
     if (!id || !productId) return console.error('No reviewable id or product id')
 
+    const reviewable = reviewables.find((reviewable) => reviewable.fileId === id)
+    console.debug(reviewable)
+    console.debug(reviewable?.mediaInfo)
+
     // open the reviewable dialog
     dispatch(
       openReview({
@@ -289,23 +293,6 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
               ))}
             </SortableContext>
 
-            {/* uploading items */}
-            {uploading.map((file) => (
-              <ReviewableUploadCard
-                key={file.name}
-                {...file}
-                onRemove={() =>
-                  setUploads((uploads) => uploads.filter((upload) => upload.name !== file.name))
-                }
-              />
-            ))}
-
-            {/* upload button */}
-            <Styled.Upload className="upload">
-              <span>Drop or click to upload</span>
-              <input type="file" multiple onChange={handleInputChange} ref={inputRef} />
-            </Styled.Upload>
-
             {/* drag overlay */}
             <DragOverlay modifiers={overlayModifiers}>
               {draggingReview ? (
@@ -320,6 +307,23 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
             </DragOverlay>
           </DndContext>
         )}
+
+        {/* uploading items */}
+        {uploading.map((file) => (
+          <ReviewableUploadCard
+            key={file.name}
+            {...file}
+            onRemove={() =>
+              setUploads((uploads) => uploads.filter((upload) => upload.name !== file.name))
+            }
+          />
+        ))}
+
+        {/* upload button */}
+        <Styled.Upload className="upload">
+          <span>Drop or click to upload</span>
+          <input type="file" multiple onChange={handleInputChange} ref={inputRef} />
+        </Styled.Upload>
       </Styled.ReviewablesList>
 
       {isDraggingFile && (
