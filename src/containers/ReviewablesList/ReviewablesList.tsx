@@ -71,7 +71,7 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
   )
 
   const reviewables = versionReviewables?.reviewables || []
-  const draggingReview = reviewables.find((reviewable) => reviewable.activityId === activeId)
+  const draggingReview = reviewables.find((reviewable) => reviewable.fileId === activeId)
   const isLoading = isFetchingReviewables || isLoadingVersion
 
   const inputRef = useRef<HTMLInputElement>(null)
@@ -116,8 +116,8 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
     if (over?.id && active.id !== over.id) {
       console.log('update review position')
 
-      const oldIndex = reviewables.findIndex((reviewable) => reviewable.activityId === active.id)
-      const newIndex = reviewables.findIndex((reviewable) => reviewable.activityId === over.id)
+      const oldIndex = reviewables.findIndex((reviewable) => reviewable.fileId === active.id)
+      const newIndex = reviewables.findIndex((reviewable) => reviewable.fileId === over.id)
 
       //   resort the reviewables
       const newReviewables = arrayMove(reviewables, oldIndex, newIndex)
@@ -207,7 +207,7 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
             setUploads((uploads) => uploads.filter((upload) => upload.name !== file.name))
 
             // add to complete uploads
-            setCompleteUploads((uploads) => [...uploads, data.activityId])
+            setCompleteUploads((uploads) => [...uploads, data.fileId])
           })
           .catch((error) => {
             console.error(`Upload failed for ${file.name}: ${error}`)
@@ -273,16 +273,16 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
             onDragCancel={() => setActiveId(null)}
           >
             <SortableContext
-              items={reviewables.map(({ activityId }) => activityId as UniqueIdentifier)}
+              items={reviewables.map(({ fileId }) => fileId as UniqueIdentifier)}
               strategy={verticalListSortingStrategy}
             >
               {reviewables.map((reviewable) => (
                 <SortableReviewableCard
-                  key={reviewable.activityId}
+                  key={reviewable.fileId}
                   projectName={projectName}
                   onClick={handleReviewableClick}
-                  isSelected={reviewableIds.includes(reviewable.activityId)}
-                  isUploaded={completeUploads.includes(reviewable.activityId)}
+                  isSelected={reviewableIds.includes(reviewable.fileId)}
+                  isUploaded={completeUploads.includes(reviewable.fileId)}
                   isDragging={!!activeId}
                   {...reviewable}
                 />
@@ -314,7 +314,7 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
                   projectName={projectName}
                   isDragOverlay
                   isDragging
-                  isSelected={reviewableIds.includes(draggingReview.activityId)}
+                  isSelected={reviewableIds.includes(draggingReview.fileId)}
                 />
               ) : null}
             </DragOverlay>

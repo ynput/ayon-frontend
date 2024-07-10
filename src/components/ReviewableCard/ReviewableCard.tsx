@@ -25,7 +25,6 @@ const ReviewableCard = forwardRef<HTMLDivElement, ReviewableCardProps>(
   (
     {
       projectName,
-      activityId,
       fileId,
       filename,
       label,
@@ -45,7 +44,7 @@ const ReviewableCard = forwardRef<HTMLDivElement, ReviewableCardProps>(
 
     return (
       <Styled.Card
-        id={activityId}
+        id={fileId}
         ref={ref}
         className={classNames({
           draggable: isDraggable,

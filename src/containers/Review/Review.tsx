@@ -41,7 +41,7 @@ const Review = ({ onClose, canOpenInNew }: ReviewProps) => {
     [versionIds, versionsAndReviewables],
   )
 
-  const versionReviewableIds = selectedVersion?.reviewables?.map((r) => r.activityId) || []
+  const versionReviewableIds = selectedVersion?.reviewables?.map((r) => r.fileId) || []
 
   // if no reviewableIds are provided, select the first reviewable
   useEffect(() => {
@@ -52,7 +52,7 @@ const Review = ({ onClose, canOpenInNew }: ReviewProps) => {
       selectedVersion
     ) {
       const firstReviewableId =
-        selectedVersion.reviewables && selectedVersion.reviewables[0]?.activityId
+        selectedVersion.reviewables && selectedVersion.reviewables[0]?.fileId
       if (firstReviewableId) {
         dispatch(updateSelection({ reviewableIds: [firstReviewableId] }))
       }
@@ -61,7 +61,7 @@ const Review = ({ onClose, canOpenInNew }: ReviewProps) => {
 
   const selectedReviewable = useMemo(
     // for now we only support one reviewable
-    () => selectedVersion?.reviewables?.find((r) => r.activityId === reviewableIds[0]),
+    () => selectedVersion?.reviewables?.find((r) => r.fileId === reviewableIds[0]),
     [reviewableIds, selectedVersion],
   )
 
@@ -76,10 +76,10 @@ const Review = ({ onClose, canOpenInNew }: ReviewProps) => {
 
     let newReviewableId = newVersion.reviewables?.find(
       (r) => r.label?.toLowerCase() === currentLabel,
-    )?.activityId
+    )?.fileId
     // no matching reviewable? just pick the first one
     if (!newReviewableId)
-      newReviewableId = newVersion.reviewables && newVersion.reviewables[0]?.activityId
+      newReviewableId = newVersion.reviewables && newVersion.reviewables[0]?.fileId
 
     dispatch(updateSelection({ versionIds: [versionId], reviewableIds: [newReviewableId] }))
   }

@@ -4,13 +4,13 @@ import { classNames } from 'primereact/utils'
 import FileThumbnail from '../FileThumbnail'
 import { ReviewableModel } from '@/api/rest'
 
-type ReviewableCard = Pick<ReviewableModel, 'activityId' | 'label' | 'fileId'>
+type ReviewableCard = Pick<ReviewableModel, 'fileId' | 'label' | 'fileId'>
 
 interface ReviewablesSelectorProps {
   reviewables: ReviewableCard[]
   selected: string[]
   projectName: string
-  onChange?: (activityId: string) => void
+  onChange?: (fileId: string) => void
   onUpload: () => void
 }
 
@@ -31,19 +31,17 @@ const ReviewablesSelector: FC<ReviewablesSelectorProps> = ({
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (['w', 's', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
-        const currentIndex = reviewables.findIndex(({ activityId }) =>
-          selected.includes(activityId),
-        )
+        const currentIndex = reviewables.findIndex(({ fileId }) => selected.includes(fileId))
         const nextIndex = e.key === 'w' || e.key === 'ArrowUp' ? currentIndex - 1 : currentIndex + 1
         const nextReviewable =
           reviewables[nextIndex < 0 ? reviewables.length - 1 : nextIndex % reviewables.length]
-        const nextActivityId = nextReviewable.activityId
+        const nextFileId = nextReviewable.fileId
 
-        onChange && onChange(nextActivityId)
+        onChange && onChange(nextFileId)
         // also set new label for the tooltip
         setLabelTooltip(nextReviewable.label ?? null)
         // set label tooltip position
-        const el = document.getElementById('preview-' + nextActivityId)
+        const el = document.getElementById('preview-' + nextFileId)
 
         if (el) {
           const top = el.offsetTop + el.offsetHeight / 2
@@ -95,12 +93,12 @@ const ReviewablesSelector: FC<ReviewablesSelectorProps> = ({
   return (
     <Styled.ReviewablesSelector>
       <Styled.Scrollable className="reviewables">
-        {reviewables.map(({ activityId, label, fileId }) => (
+        {reviewables.map(({ fileId, label }) => (
           <Styled.ReviewableCard
-            key={activityId}
-            id={'preview-' + activityId}
-            onClick={() => onChange && onChange(activityId)}
-            className={classNames('reviewable-card', { selected: selected.includes(activityId) })}
+            key={fileId}
+            id={'preview-' + fileId}
+            onClick={() => onChange && onChange(fileId)}
+            className={classNames('reviewable-card', { selected: selected.includes(fileId) })}
             onMouseOver={(e) => handleMouseOver(e, { label })}
           >
             <FileThumbnail src={`/api/projects/${projectName}/files/${fileId}/thumbnail`} />
