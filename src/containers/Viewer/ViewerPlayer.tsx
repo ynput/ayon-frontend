@@ -8,9 +8,16 @@ interface ViewerPlayerProps {
   reviewable: any
   onUpload: () => void
   autoplay: boolean
+  onPlay: () => void
 }
 
-const ViewerPlayer = ({ projectName, reviewable, onUpload, autoplay }: ViewerPlayerProps) => {
+const ViewerPlayer = ({
+  projectName,
+  reviewable,
+  onUpload,
+  autoplay,
+  onPlay,
+}: ViewerPlayerProps) => {
   const [frameRate, setFrameRate] = useState<null | number>(null)
   const [aspectRatio, setAspectRatio] = useState<null | number>(null)
 
@@ -41,6 +48,7 @@ const ViewerPlayer = ({ projectName, reviewable, onUpload, autoplay }: ViewerPla
         frameRate={frameRate}
         aspectRatio={aspectRatio}
         autoplay={autoplay}
+        onPlay={onPlay}
       />
     )
   )

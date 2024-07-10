@@ -53,7 +53,7 @@ const VideoPlayerContainer = styled.div`
   }
 `
 
-const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay }) => {
+const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay }) => {
   const videoRef = useRef(null)
   const videoRowRef = useRef(null)
 
@@ -160,13 +160,19 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay }) => {
     setTimeout(() => setActualSource(src), 20)
   }, [src, videoRef])
 
+  const handleOnPlay = () => {
+    onPlay && onPlay()
+    setIsPlaying(true)
+  }
+
   const handleLoad = () => {
     console.debug('VideoPlayer: handleLoad')
 
     if (autoplay) {
       videoRef.current.play()
+    } else {
+      setIsPlaying(false)
     }
-    setIsPlaying(autoplay)
     setCurrentTime(0)
     setBufferedRanges([])
     setLoadError(null)
@@ -318,7 +324,7 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay }) => {
             src={actualSource}
             onProgress={handleProgress}
             onEnded={handleEnded}
-            onPlay={() => setIsPlaying(true)}
+            onPlay={handleOnPlay}
             onPause={handlePause}
             onLoadedData={handleLoad}
             onError={handleLoadError}

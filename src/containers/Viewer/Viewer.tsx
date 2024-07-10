@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Button } from '@ynput/ayon-react-components'
 import * as Styled from './Viewer.styled'
 import VersionSelectorTool from '@components/VersionSelectorTool/VersionSelectorTool'
@@ -27,6 +27,8 @@ const Viewer = ({ onClose }: ViewerProps) => {
     fullscreen,
     quickView,
   } = useSelector((state: $Any) => state.viewer)
+
+  const [autoPlay, setAutoPlay] = useState(quickView)
 
   const dispatch = useDispatch()
 
@@ -58,6 +60,14 @@ const Viewer = ({ onClose }: ViewerProps) => {
       }
     }
   }, [reviewableIds, versionReviewableIds, isFetchingReviewables, selectedVersion, dispatch])
+
+  // disable quickView straight away (if it was enabled)
+  // NOTE: this will change with Quick View task
+  useEffect(() => {
+    if (quickView) {
+      dispatch(updateSelection({ quickView: false }))
+    }
+  }, [quickView, dispatch])
 
   const selectedReviewable = useMemo(
     // for now we only support one reviewable
@@ -95,6 +105,12 @@ const Viewer = ({ onClose }: ViewerProps) => {
     dispatch(toggleUpload(true))
   }
 
+  const handlePlayReviewable = () => {
+    // reset auto play
+    // auto play should only be enabled on first video load
+    setAutoPlay(false)
+  }
+
   let viewerComponent
   const availability = selectedReviewable?.availability
   const isReady = availability === 'ready'
@@ -105,7 +121,8 @@ const Viewer = ({ onClose }: ViewerProps) => {
         projectName={projectName}
         reviewable={selectedReviewable}
         onUpload={handleUploadButton}
-        autoplay={quickView}
+        autoplay={autoPlay}
+        onPlay={handlePlayReviewable}
       />
     )
   } else if (selectedReviewable?.mimetype.includes('image') && isReady) {
