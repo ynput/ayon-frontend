@@ -21,23 +21,28 @@ const viewerSlice = createSlice({
     ...initialStateFromQueryParams,
     upload: false, // used to open upload file picker
     fullscreen: false,
+    quickView: false, // used to open quick view mode (reduced UI for quick view)
   },
   reducers: {
     openReview: (
       state,
-      { payload: { versionIds, projectName, productId, reviewableIds } = {} } = {},
+      { payload: { versionIds, projectName, productId, reviewableIds, quickView } = {} } = {},
     ) => {
       state.productId = productId
       state.versionIds = versionIds
       state.projectName = projectName
       state.reviewableIds = reviewableIds || []
+      state.quickView = !!quickView
     },
-    updateSelection: (state, { payload: { versionIds, reviewableIds } }) => {
+    updateSelection: (state, { payload: { versionIds, reviewableIds, quickView } }) => {
       if (versionIds !== undefined) {
         state.versionIds = versionIds
       }
       if (reviewableIds !== undefined) {
         state.reviewableIds = reviewableIds
+      }
+      if (quickView !== undefined) {
+        state.quickView = quickView
       }
     },
     closeReview: (state) => {

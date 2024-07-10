@@ -15,6 +15,8 @@ const VideoPlayerControls = ({
   setShowOverlay,
   loop,
   setLoop,
+  muted,
+  setMuted,
 }) => {
   const dispatch = useDispatch()
   const fullscreen = useSelector((state) => state.viewer.fullscreen)
@@ -93,6 +95,7 @@ const VideoPlayerControls = ({
         { keys: ['l', '2'], shiftKeys: ['ArrowRight'], action: handleGoForward5 },
         { shiftKeys: ['D'], action: handleGoToEnd },
         { keys: ['f'], action: () => dispatch(toggleFullscreen()) },
+        { keys: ['m'], action: () => setMuted(!muted) },
       ]
 
       const keyHandler = keyHandlers.find((handler) => {
@@ -115,7 +118,7 @@ const VideoPlayerControls = ({
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [loop])
+  }, [loop, muted])
 
   const handleFullscreen = () => {
     dispatch(toggleFullscreen())
@@ -132,6 +135,21 @@ const VideoPlayerControls = ({
           videoRef.current.currentTime = value
         }}
         tooltip={'Current frame'}
+      />
+      <Button
+        value={!muted}
+        onClick={() => setMuted(!muted)}
+        icon={'volume_up'}
+        selected={!muted}
+        data-tooltip="Mute/Unmute"
+        data-shortcut="M"
+      />
+
+      <Button
+        selected={loop}
+        onClick={() => setLoop(!loop)}
+        icon="repeat"
+        data-tooltip="Loop playback"
       />
 
       <Spacer />
@@ -191,12 +209,6 @@ const VideoPlayerControls = ({
         onClick={() => setShowOverlay(!showOverlay)}
         icon="grid_guides"
         data-tooltip="Show/hide grid overlay"
-      />
-      <Button
-        selected={loop}
-        onClick={() => setLoop(!loop)}
-        icon="repeat"
-        data-tooltip="Loop playback"
       />
       <Button
         onClick={handleFullscreen}

@@ -76,7 +76,7 @@ const FeedFilters = ({
           icon="order_play"
           onClick={() => setTab('files')}
           selected={selectedTab === 'files'}
-          data-tooltip="Files (reviewables and representations)"
+          data-tooltip="Version files"
           data-tooltip-delay={0}
         />
       )}

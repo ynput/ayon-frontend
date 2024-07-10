@@ -25,6 +25,7 @@ const Viewer = ({ onClose }: ViewerProps) => {
     versionIds = [],
     reviewableIds = [],
     fullscreen,
+    quickView,
   } = useSelector((state: $Any) => state.viewer)
 
   const dispatch = useDispatch()
@@ -104,6 +105,7 @@ const Viewer = ({ onClose }: ViewerProps) => {
         projectName={projectName}
         reviewable={selectedReviewable}
         onUpload={handleUploadButton}
+        autoplay={quickView}
       />
     )
   } else if (selectedReviewable?.mimetype.includes('image') && isReady) {

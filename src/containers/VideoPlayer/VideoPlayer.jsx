@@ -53,7 +53,7 @@ const VideoPlayerContainer = styled.div`
   }
 `
 
-const VideoPlayer = ({ src, frameRate, aspectRatio }) => {
+const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay }) => {
   const videoRef = useRef(null)
   const videoRowRef = useRef(null)
 
@@ -71,6 +71,7 @@ const VideoPlayer = ({ src, frameRate, aspectRatio }) => {
   // user preferences (persist somewhere?)
   const [showOverlay, setShowOverlay] = useState(false)
   const [loop, setLoop] = useState(true)
+  const [muted, setMuted] = useState(true)
 
   const [videoDimensions, setVideoDimensions] = useState({
     width: null,
@@ -161,7 +162,11 @@ const VideoPlayer = ({ src, frameRate, aspectRatio }) => {
 
   const handleLoad = () => {
     console.debug('VideoPlayer: handleLoad')
-    setIsPlaying(false)
+
+    if (autoplay) {
+      videoRef.current.play()
+    }
+    setIsPlaying(autoplay)
     setCurrentTime(0)
     setBufferedRanges([])
     setLoadError(null)
@@ -291,6 +296,11 @@ const VideoPlayer = ({ src, frameRate, aspectRatio }) => {
     setShowStill(false)
   }
 
+  const handleMuteToggle = (value) => {
+    setMuted(value)
+    videoRef.current.muted = value
+  }
+
   return (
     <VideoPlayerContainer>
       <div
@@ -312,6 +322,7 @@ const VideoPlayer = ({ src, frameRate, aspectRatio }) => {
             onPause={handlePause}
             onLoadedData={handleLoad}
             onError={handleLoadError}
+            muted={muted}
           />
           <VideoOverlay
             videoWidth={videoDimensions.width}
@@ -344,7 +355,8 @@ const VideoPlayer = ({ src, frameRate, aspectRatio }) => {
           currentTime={currentTime}
           duration={duration}
           frameRate={frameRate}
-          {...{ showOverlay, setShowOverlay, loop, setLoop }}
+          setMuted={handleMuteToggle}
+          {...{ showOverlay, setShowOverlay, loop, setLoop, muted }}
         />
       </div>
       {loadError && (

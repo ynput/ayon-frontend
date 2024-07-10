@@ -78,6 +78,12 @@ const KanBanColumn = forwardRef(
     // HANDLE TASK CLICK
     const handleTaskClick = useTaskClick(dispatch, allTasks)
 
+    // HANDLE TASK SPACEBAR
+    const handleTaskSpaceBar = () => {
+      // for now do nothing
+      // in the future it will open the viewer
+    }
+
     // return 5 fake loading events if loading
     const loadingTasks = useMemo(() => getFakeTasks(), [])
 
@@ -116,6 +122,7 @@ const KanBanColumn = forwardRef(
                             handleTaskClick(e, task.id)
                           }}
                           onMouseOver={() => handlePrefetch(task)}
+                          onSpaceBar={handleTaskSpaceBar}
                           isActive={selectedTasks.includes(task.id)}
                           isDraggingActive={active}
                           className="card"

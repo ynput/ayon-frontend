@@ -534,7 +534,7 @@ const Products = () => {
     dispatch(setFocusedVersions([versionId]))
   }
 
-  const handleOpenViewer = (productId) => {
+  const handleOpenViewer = (productId, quickView) => {
     // find the version id of the product
     const versionId = listData.find((s) => s.id === productId)?.versionId
 
@@ -543,7 +543,7 @@ const Products = () => {
     // check review isn't already open
 
     if (!viewerProductId) {
-      dispatch(openReview({ productId, versionIds: [versionId], projectName }))
+      dispatch(openReview({ productId, versionIds: [versionId], projectName, quickView }))
     }
   }
 
@@ -572,13 +572,13 @@ const Products = () => {
     ctxMenuShow(e, ctxMenuItems(id))
   }
 
-  const handleKeyDown = () => {
-    const focusedElement = document.activeElement
-
-    if (focusedElement.tagName === 'TR') {
-      console.log(selectedRows)
-      handleOpenViewer(Object.keys(selectedRows)[0])
-    } else return
+  const handleKeyDown = (e) => {
+    if (e.key === ' ') {
+      const firstSelected = Object.keys(selectedRows)[0]
+      if (firstSelected) {
+        handleOpenViewer(firstSelected, true)
+      }
+    }
   }
 
   //

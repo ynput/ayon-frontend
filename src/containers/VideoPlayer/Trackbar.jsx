@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState, useCallback } from 'react'
-import Canvas from '/src/components/Canvas'
+import Canvas from '@components/Canvas'
 
 const Trackbar = ({
   duration,
@@ -8,7 +8,7 @@ const Trackbar = ({
   markIn,
   markOut,
   bufferedRanges,
-  frameRate
+  frameRate,
 }) => {
   const canvasRef = useRef(null)
   const [isDragging, setIsDragging] = useState(false)
@@ -89,7 +89,7 @@ const Trackbar = ({
     const x = e.clientX - rect.left
     let newTime = (x / rect.width) * duration
     if (newTime < 0) newTime = 0
-    if (newTime >= duration) newTime = duration - (1 / frameRate)
+    if (newTime >= duration) newTime = duration - 1 / frameRate
     onScrub(newTime)
   }
 
@@ -127,10 +127,10 @@ const Trackbar = ({
   return (
     <Canvas
       ref={canvasRef}
-      style={{ 
-        minHeight: 42, 
-        maxHeight: 42, 
-        cursor: 'pointer', 
+      style={{
+        minHeight: 42,
+        maxHeight: 42,
+        cursor: 'pointer',
         flexGrow: 1,
       }}
       onMouseDown={handleMouseDown}
@@ -141,4 +141,3 @@ const Trackbar = ({
 }
 
 export default Trackbar
-

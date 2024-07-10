@@ -229,6 +229,7 @@ const ProductsGrid = ({
         zIndex: 1,
       }}
       onClick={() => onSelectionChange({ value: {} })}
+      onKeyDown={(e) => e.key === ' ' && e.preventDefault()}
     >
       <Shortcuts shortcuts={shortcuts} deps={[collapsedGroups]} />
       {Object.entries(groupedData).map(([groupName, groupData], index) => (
