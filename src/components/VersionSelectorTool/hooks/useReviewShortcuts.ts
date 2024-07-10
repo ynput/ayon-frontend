@@ -1,7 +1,25 @@
 import { useEffect } from 'react'
+import isHTMLElement from '@helpers/isHTMLElement'
+import { VersionReviewablesModel } from '@/api/rest'
 
-const useReviewShortcuts = ({ allVersions = {}, onChange, toolsRef, selectRef }) => {
-  const handleShortcut = (action) => {
+type VersionButtonKey = 'selected' | 'previous' | 'next' | 'latest' | 'approved' | 'hero'
+
+interface isReviewShortcutsProps {
+  allVersions: {
+    [key in VersionButtonKey]: VersionReviewablesModel
+  }
+  onChange: (id: string) => void
+  toolsRef: any
+  selectRef: any
+}
+
+const useReviewShortcuts = ({
+  allVersions,
+  onChange,
+  toolsRef,
+  selectRef,
+}: isReviewShortcutsProps) => {
+  const handleShortcut = (action: VersionButtonKey) => {
     const version = allVersions[action]
 
     if (!version) return
@@ -58,15 +76,15 @@ const useReviewShortcuts = ({ allVersions = {}, onChange, toolsRef, selectRef })
   ]
 
   useEffect(() => {
-    const handleKeyDown = (e) => {
+    const handleKeyDown = (e: KeyboardEvent) => {
       // abort if modifier keys are pressed
       if (e.ctrlKey || e.altKey || e.metaKey) return
 
-      // check shortcut isn't inside an input field
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
-
-      // check shortcut isn't inside a contenteditable element
-      if (e.target.isContentEditable) return
+      // Check if e.target is an HTMLElement before accessing tagName or isContentEditable
+      if (isHTMLElement(e.target)) {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
+        if (e.target.isContentEditable) return
+      }
 
       const shortcut = shortcuts.find((s) => s.key === e.key)
       if (shortcut) {

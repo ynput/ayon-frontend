@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react'
 import { Button } from '@ynput/ayon-react-components'
-import * as Styled from './Review.styled'
+import * as Styled from './Viewer.styled'
 import VersionSelectorTool from '@components/VersionSelectorTool/VersionSelectorTool'
 import { useGetReviewablesForProductQuery } from '@queries/review/getReview'
 import { useDispatch, useSelector } from 'react-redux'

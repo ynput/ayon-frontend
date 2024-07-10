@@ -3,6 +3,7 @@ import * as Styled from './ReviewablesSelector.styled'
 import { classNames } from 'primereact/utils'
 import FileThumbnail from '../FileThumbnail'
 import { ReviewableModel } from '@/api/rest'
+import isHTMLElement from '@helpers/isHTMLElement'
 
 type ReviewableCard = Pick<ReviewableModel, 'fileId' | 'label' | 'fileId'>
 
@@ -31,6 +32,12 @@ const ReviewablesSelector: FC<ReviewablesSelectorProps> = ({
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (['w', 's', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+        // Check if e.target is an HTMLElement before accessing tagName or isContentEditable
+        if (isHTMLElement(e.target)) {
+          if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
+          if (e.target.isContentEditable) return
+        }
+
         const currentIndex = reviewables.findIndex(({ fileId }) => selected.includes(fileId))
         const nextIndex = e.key === 'w' || e.key === 'ArrowUp' ? currentIndex - 1 : currentIndex + 1
         const nextReviewable =

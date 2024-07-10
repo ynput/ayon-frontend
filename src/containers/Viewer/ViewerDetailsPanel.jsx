@@ -4,7 +4,7 @@ import DetailsPanel from '@containers/DetailsPanel/DetailsPanel'
 import { useGetUsersAssigneeQuery } from '@queries/user/getUsers'
 import DetailsPanelSlideOut from '@containers/DetailsPanel/DetailsPanelSlideOut/DetailsPanelSlideOut'
 import { useGetProjectsInfoQuery } from '@queries/userDashboard/getUserDashboard'
-import { ViewerDetailsPanelWrapper } from './Review.styled'
+import { ViewerDetailsPanelWrapper } from './Viewer.styled'
 
 const ViewerDetailsPanel = ({ versionIds = [], projectName }) => {
   const { data: projectsInfo = {} } = useGetProjectsInfoQuery(

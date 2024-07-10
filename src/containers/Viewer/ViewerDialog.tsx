@@ -6,6 +6,7 @@ import Viewer from './Viewer'
 import styled from 'styled-components'
 import { useLocation } from 'react-router'
 import { $Any } from '@/types'
+import isHTMLElement from '@helpers/isHTMLElement'
 
 const StyledDialog = styled(Dialog)`
   /* dnd overlay must offset this 64px by 32px */
@@ -42,10 +43,6 @@ const ViewerDialog = () => {
 
   // when pressing escape key, close the dialog
   useEffect(() => {
-    const isHTMLElement = (target: EventTarget | null): target is HTMLElement => {
-      return target instanceof HTMLElement
-    }
-
     const handleEscape = (e: KeyboardEvent) => {
       // Check if e.target is an HTMLElement before accessing tagName or isContentEditable
       if (isHTMLElement(e.target)) {
