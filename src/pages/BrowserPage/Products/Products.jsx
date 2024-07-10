@@ -35,7 +35,7 @@ import NoProducts from './NoProducts'
 import { toast } from 'react-toastify'
 import { productTypes } from '@state/project'
 import * as Styled from './Products.styled'
-import { openReview } from '@state/review'
+import { openReview } from '@state/viewer'
 
 const Products = () => {
   const dispatch = useDispatch()
@@ -58,6 +58,8 @@ const Products = () => {
   // context redux
   const selectedVersions = useSelector((state) => state.context.selectedVersions)
   const pairing = useSelector((state) => state.context.pairing)
+  // viewer open
+  const viewerProductId = useSelector((state) => state.viewer.productId)
 
   const selectedTaskTypes = useSelector((state) => state.context.filters.browser.productTaskTypes)
   // create an array of options for the tasks dropdown using tasksOrder and tasks
@@ -532,20 +534,25 @@ const Products = () => {
     dispatch(setFocusedVersions([versionId]))
   }
 
-  const handleopenReview = (productId) => {
+  const handleOpenViewer = (productId) => {
     // find the version id of the product
-    const versionId = listData.find((s) => s.id === productId).versionId
+    const versionId = listData.find((s) => s.id === productId)?.versionId
 
     if (!versionId) return toast.error('No version found for this product')
 
-    dispatch(openReview({ productId, versionIds: [versionId], projectName }))
+    // check review isn't already open
+
+    if (!viewerProductId) {
+      dispatch(openReview({ productId, versionIds: [versionId], projectName }))
+    }
   }
 
   const ctxMenuItems = (id) => [
     {
-      label: 'Review version',
-      command: () => handleopenReview(id),
+      label: 'Viewer',
+      command: () => handleOpenViewer(id),
       icon: 'play_circle',
+      shortcut: 'Spacebar',
     },
     {
       label: 'Product detail',
@@ -563,6 +570,15 @@ const Products = () => {
 
   const handleContextMenu = (e, id) => {
     ctxMenuShow(e, ctxMenuItems(id))
+  }
+
+  const handleKeyDown = () => {
+    const focusedElement = document.activeElement
+
+    if (focusedElement.tagName === 'TR') {
+      console.log(selectedRows)
+      handleOpenViewer(Object.keys(selectedRows)[0])
+    } else return
   }
 
   //
@@ -607,7 +623,11 @@ const Products = () => {
           disabled={focusedFolders.length > 1 ? ['grid'] : []}
         />
       </Toolbar>
-      <TablePanel style={{ overflow: 'hidden' }} onContextMenu={handleTablePanelContext}>
+      <TablePanel
+        style={{ overflow: 'hidden' }}
+        onContextMenu={handleTablePanelContext}
+        onKeyDown={handleKeyDown}
+      >
         <EntityDetail
           projectName={projectName}
           entityType={showDetail || 'product'}

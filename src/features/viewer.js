@@ -3,8 +3,8 @@ import getInitialStateQueryParam from './middleware/getInitialStateQueryParam'
 
 export const initialStateQueryParams = {
   projectName: { key: 'project_name', initial: null },
-  productId: { key: 'review_product', initial: null },
-  versionIds: { key: 'review_version', initial: [] },
+  productId: { key: 'viewer_product', initial: null },
+  versionIds: { key: 'viewer_version', initial: [] },
   reviewableIds: { key: 'reviewable_id', initial: [] },
 }
 const initialStateFromQueryParams = Object.entries(initialStateQueryParams).reduce(
@@ -15,8 +15,8 @@ const initialStateFromQueryParams = Object.entries(initialStateQueryParams).redu
   {},
 )
 
-const reviewSlice = createSlice({
-  name: 'review',
+const viewerSlice = createSlice({
+  name: 'viewer',
   initialState: {
     ...initialStateFromQueryParams,
     upload: false, // used to open upload file picker
@@ -56,11 +56,11 @@ const reviewSlice = createSlice({
 })
 
 export const { openReview, updateSelection, closeReview, toggleUpload, toggleFullscreen } =
-  reviewSlice.actions
-export default reviewSlice.reducer
+  viewerSlice.actions
+export default viewerSlice.reducer
 
 // create an object for each reducer to define which state fields it will update
-const reviewReducerSearchParams = {
+const viewerReducerSearchParams = {
   openReview: ['productId', 'versionIds', 'projectName', 'reviewableIds'],
   updateSelection: ['versionIds', 'reviewableIds'],
   closeReview: [
@@ -74,10 +74,10 @@ const reviewReducerSearchParams = {
 // attach the keys for each state
 // updateSelection: [{state: 'versionIds', key: 'version_id', value=[]}, {state: 'reviewableIds', key:'reviewable_id'}],
 
-export const reviewSearchParams = Object.fromEntries(
-  Object.entries(reviewReducerSearchParams).map(([key, value]) => {
+export const viewerSearchParams = Object.fromEntries(
+  Object.entries(viewerReducerSearchParams).map(([key, value]) => {
     return [
-      'review/' + key,
+      'viewer/' + key,
       value.map((item) => {
         // convert string items to objects
         let itemObject = typeof item === 'string' ? { state: item } : item

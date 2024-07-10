@@ -13,7 +13,7 @@ function ShortcutsProvider(props) {
   const dispatch = useDispatch()
 
   // review open
-  const reviewOpen = useSelector((state) => state.review.productId)
+  const reviewOpen = useSelector((state) => state.viewer.productId)
 
   // logout
   const [logout] = useLogOutMutation()

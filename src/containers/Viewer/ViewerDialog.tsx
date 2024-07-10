@@ -1,6 +1,6 @@
 import { Dialog } from '@ynput/ayon-react-components'
 import { useDispatch, useSelector } from 'react-redux'
-import { closeReview } from '@state/review'
+import { closeReview } from '@state/viewer'
 import { useEffect } from 'react'
 import Viewer from './Viewer'
 import styled from 'styled-components'
@@ -32,9 +32,9 @@ const ViewerDialog = () => {
   const location = useLocation()
   const dispatch = useDispatch()
   // check if dialog is open or not
-  const productId = useSelector((state: $Any) => state.review.productId)
-  const projectName = useSelector((state: $Any) => state.review.projectName)
-  const fullscreen = useSelector((state: $Any) => state.review.fullscreen)
+  const productId = useSelector((state: $Any) => state.viewer.productId)
+  const projectName = useSelector((state: $Any) => state.viewer.projectName)
+  const fullscreen = useSelector((state: $Any) => state.viewer.fullscreen)
 
   const handleClose = () => {
     // close the dialog
@@ -69,7 +69,7 @@ const ViewerDialog = () => {
         size="full"
         onClose={() => {}}
       >
-        <Viewer onClose={handleClose} canOpenInNew />
+        <Viewer onClose={handleClose} />
       </StyledDialog>
     </>
   )

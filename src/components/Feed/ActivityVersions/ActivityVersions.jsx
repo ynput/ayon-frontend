@@ -6,7 +6,7 @@ import { useState } from 'react'
 import { More } from '../ActivityGroup/ActivityGroup.styled'
 import ActivityDate from '../ActivityDate'
 import { useDispatch } from 'react-redux'
-import { openReview } from '@/features/review'
+import { openReview } from '@state/viewer'
 
 const ActivityVersions = ({
   activity,

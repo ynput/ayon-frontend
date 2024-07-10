@@ -22,7 +22,7 @@ import SortableReviewableCard from './SortableReviewableCard'
 import ReviewableCard from '@/components/ReviewableCard'
 import * as Styled from './ReviewablesList.styled'
 import { useDispatch, useSelector } from 'react-redux'
-import { openReview, toggleUpload } from '@/features/review'
+import { openReview, toggleUpload } from '@state/viewer'
 import { Icon } from '@ynput/ayon-react-components'
 import axios from 'axios'
 import { toast } from 'react-toastify'
@@ -55,7 +55,7 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
     )
 
   // are we currently looking at review?
-  const reviewableIds = useSelector((state: $Any) => state.review.reviewableIds) || []
+  const reviewableIds = useSelector((state: $Any) => state.viewer.reviewableIds) || []
 
   // are we dragging a file over?
   const [isDraggingFile, setIsDraggingFile] = useState(false)
@@ -76,7 +76,7 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
 
   const inputRef = useRef<HTMLInputElement>(null)
 
-  const openUpload = useSelector((state: $Any) => state.review.upload)
+  const openUpload = useSelector((state: $Any) => state.viewer.upload)
   // when upload is true, open the file dialog programmatically
   useEffect(() => {
     if (openUpload) {

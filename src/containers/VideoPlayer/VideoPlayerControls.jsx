@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { Button, Spacer } from '@ynput/ayon-react-components'
 import Timecode from './Timecode'
 import { useDispatch, useSelector } from 'react-redux'
-import { toggleFullscreen } from '@/features/review'
+import { toggleFullscreen } from '@state/viewer'
 
 const VideoPlayerControls = ({
   videoRef,
@@ -17,7 +17,7 @@ const VideoPlayerControls = ({
   setLoop,
 }) => {
   const dispatch = useDispatch()
-  const fullscreen = useSelector((state) => state.review.fullscreen)
+  const fullscreen = useSelector((state) => state.viewer.fullscreen)
   const frameLength = 0.04 // TODO
 
   const handlePlayPause = () => {

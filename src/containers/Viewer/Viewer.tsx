@@ -4,14 +4,13 @@ import * as Styled from './Viewer.styled'
 import VersionSelectorTool from '@components/VersionSelectorTool/VersionSelectorTool'
 import { useGetReviewablesForProductQuery } from '@queries/review/getReview'
 import { useDispatch, useSelector } from 'react-redux'
-import { toggleFullscreen, toggleUpload, updateSelection } from '@state/review'
+import { toggleFullscreen, toggleUpload, updateSelection } from '@state/viewer'
 import ViewerDetailsPanel from './ViewerDetailsPanel'
 import ViewerPlayer from './ViewerPlayer'
 import ReviewablesSelector from '@/components/ReviewablesSelector'
 import { updateDetailsPanelTab } from '@/features/details'
 import EmptyPlaceholder from '@/components/EmptyPlaceholder/EmptyPlaceholder'
 import { $Any } from '@/types'
-import { Link } from 'react-router-dom'
 import { useFullScreenHandle } from 'react-full-screen'
 
 interface ViewerProps {
@@ -19,14 +18,14 @@ interface ViewerProps {
   canOpenInNew?: boolean
 }
 
-const Viewer = ({ onClose, canOpenInNew }: ViewerProps) => {
+const Viewer = ({ onClose }: ViewerProps) => {
   const {
     productId,
     projectName,
     versionIds = [],
     reviewableIds = [],
     fullscreen,
-  } = useSelector((state: $Any) => state.review)
+  } = useSelector((state: $Any) => state.viewer)
 
   const dispatch = useDispatch()
 
@@ -145,15 +144,6 @@ const Viewer = ({ onClose, canOpenInNew }: ViewerProps) => {
     }
   }
 
-  // build new window url for review
-  const baseUrl = '/review'
-  const searchParams = new URLSearchParams()
-  searchParams.set('project_name', projectName)
-  searchParams.set('review_product', productId)
-  versionIds.forEach((id: string) => searchParams.append('review_version', id))
-  reviewableIds.forEach((id: string) => searchParams.append('review_reviewable', id))
-  const newWindowUrl = `${baseUrl}?${searchParams.toString()}`
-
   return (
     <Styled.Container>
       <Styled.Header>
@@ -162,11 +152,6 @@ const Viewer = ({ onClose, canOpenInNew }: ViewerProps) => {
           selected={versionIds[0]}
           onChange={handleVersionChange}
         />
-        {canOpenInNew && (
-          <Link to={newWindowUrl} target="_blank" rel="noopener noreferrer">
-            <Button icon={'open_in_new'} />
-          </Link>
-        )}
         {onClose && <Button onClick={onClose} icon={'close'} />}
       </Styled.Header>
       <Styled.Content>

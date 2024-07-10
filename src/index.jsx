@@ -12,7 +12,7 @@ import editorReducer from '@state/editor'
 import dashboardReducer, { dashboardLocalItems } from '@state/dashboard'
 import detailsReducer, { detailsLocalItems } from '@state/details'
 import addonsManagerReducer from '@state/addonsManager'
-import reviewReducer, { reviewSearchParams } from '@state/review'
+import viewerReducer, { viewerSearchParams } from '@state/viewer'
 
 import App from './app'
 
@@ -41,7 +41,7 @@ const store = configureStore({
     dashboard: dashboardReducer,
     details: detailsReducer,
     addonsManager: addonsManagerReducer,
-    review: reviewReducer,
+    viewer: viewerReducer,
     [RestAPI.reducerPath]: RestAPI.reducer,
   },
   middleware: (getDefaultMiddleware) =>
@@ -54,7 +54,7 @@ const store = configureStore({
           ...detailsLocalItems,
         }),
       )
-      .concat(searchParamsMiddleware({ ...reviewSearchParams })),
+      .concat(searchParamsMiddleware({ ...viewerSearchParams })),
 })
 
 setupListeners(store.dispatch)
