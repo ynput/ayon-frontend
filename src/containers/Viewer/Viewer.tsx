@@ -46,7 +46,7 @@ const Viewer = ({ onClose }: ViewerProps) => {
 
   const versionReviewableIds = selectedVersion?.reviewables?.map((r) => r.fileId) || []
 
-  // if no reviewableIds are provided, select the first reviewable
+  // if no reviewableIds are provided, select the first playable reviewable
   useEffect(() => {
     if (
       (!reviewableIds.length ||
@@ -54,8 +54,9 @@ const Viewer = ({ onClose }: ViewerProps) => {
       !isFetchingReviewables &&
       selectedVersion
     ) {
-      const firstReviewableId =
-        selectedVersion.reviewables && selectedVersion.reviewables[0]?.fileId
+      const firstReviewableId = selectedVersion.reviewables?.find(
+        (r) => r.availability === 'ready',
+      )?.fileId
       if (firstReviewableId) {
         dispatch(updateSelection({ reviewableIds: [firstReviewableId] }))
       }
@@ -112,40 +113,6 @@ const Viewer = ({ onClose }: ViewerProps) => {
     setAutoPlay(false)
   }
 
-  let viewerComponent
-  const availability = selectedReviewable?.availability
-  const isPlayable = availability !== 'conversionRequired'
-
-  if (selectedReviewable?.mimetype.includes('video') && isPlayable) {
-    viewerComponent = (
-      <ViewerPlayer
-        projectName={projectName}
-        reviewable={selectedReviewable}
-        onUpload={handleUploadButton}
-        autoplay={autoPlay}
-        onPlay={handlePlayReviewable}
-      />
-    )
-  } else if (selectedReviewable?.mimetype.includes('image') && isPlayable) {
-    viewerComponent = (
-      <Styled.Image
-        src={`/api/projects/${projectName}/files/${selectedReviewable.fileId}`}
-        alt={selectedReviewable.label || selectedReviewable.filename}
-      />
-    )
-  } else {
-    viewerComponent = (
-      <EmptyPlaceholder
-        icon="hide_image"
-        message={
-          availability === 'conversionRequired'
-            ? 'File not supported and needs conversion'
-            : 'No preview available'
-        }
-      />
-    )
-  }
-
   const handle = useFullScreenHandle()
 
   useEffect(() => {
@@ -172,6 +139,48 @@ const Viewer = ({ onClose }: ViewerProps) => {
   )
 
   const shownOptions = [...optimized, ...unoptimized]
+
+  let viewerComponent
+  const availability = selectedReviewable?.availability
+  const isPlayable = availability !== 'conversionRequired'
+
+  if (selectedReviewable?.mimetype.includes('video') && isPlayable) {
+    viewerComponent = (
+      <ViewerPlayer
+        projectName={projectName}
+        reviewable={selectedReviewable}
+        onUpload={handleUploadButton}
+        autoplay={autoPlay}
+        onPlay={handlePlayReviewable}
+      />
+    )
+  } else if (selectedReviewable?.mimetype.includes('image') && isPlayable) {
+    viewerComponent = (
+      <Styled.Image
+        src={`/api/projects/${projectName}/files/${selectedReviewable.fileId}`}
+        alt={selectedReviewable.label || selectedReviewable.filename}
+      />
+    )
+  } else if (selectedReviewable) {
+    viewerComponent = (
+      <EmptyPlaceholder
+        icon="hide_image"
+        message={
+          availability === 'conversionRequired'
+            ? 'File not supported and needs conversion'
+            : 'No preview available'
+        }
+      />
+    )
+  } else if (!reviewables.length) {
+    viewerComponent = (
+      <EmptyPlaceholder icon="hide_image" message="No reviewables available">
+        <Button onClick={handleUploadButton} icon="upload" variant="filled">
+          Upload a file
+        </Button>
+      </EmptyPlaceholder>
+    )
+  }
 
   return (
     <Styled.Container>
