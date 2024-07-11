@@ -2,7 +2,7 @@ import styled from 'styled-components'
 
 export const ThumbnailUploaderWrapper = styled.div`
   position: absolute;
-  inset: 0;
+  inset: var(--padding-s);
   z-index: 900;
 
   display: flex;
@@ -47,6 +47,7 @@ export const Message = styled.div`
   align-items: center;
   z-index: 10;
   pointer-events: none;
+  gap: var(--base-gap-large);
 
   .icon {
     user-select: none;

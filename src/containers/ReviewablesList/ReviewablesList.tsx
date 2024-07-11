@@ -363,107 +363,109 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
 
   return (
     <>
-      <Styled.ReviewablesList onDragEnter={() => setIsDraggingFile(true)}>
-        {isLoading ? (
-          Array.from({ length: 3 }).map((_, index) => <Styled.LoadingCard key={index} />)
-        ) : (
-          <>
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragStart={handleDragStart}
-              onDragEnd={handleDragEnd}
-              onDragCancel={() => setActiveId(null)}
-            >
-              <SortableContext
-                items={reviewables.map(({ fileId }) => fileId as UniqueIdentifier)}
-                strategy={verticalListSortingStrategy}
+      {!isDraggingFile && (
+        <Styled.ReviewablesList onDragEnter={() => setIsDraggingFile(true)}>
+          {isLoading ? (
+            Array.from({ length: 3 }).map((_, index) => <Styled.LoadingCard key={index} />)
+          ) : (
+            <>
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragStart={handleDragStart}
+                onDragEnd={handleDragEnd}
+                onDragCancel={() => setActiveId(null)}
               >
-                {optimized.map((reviewable) => (
-                  <SortableReviewableCard
+                <SortableContext
+                  items={reviewables.map(({ fileId }) => fileId as UniqueIdentifier)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  {optimized.map((reviewable) => (
+                    <SortableReviewableCard
+                      key={reviewable.fileId}
+                      projectName={projectName}
+                      onClick={handleReviewableClick}
+                      isSelected={reviewableIds.includes(reviewable.fileId)}
+                      isDragging={!!activeId}
+                      onContextMenu={handleContextMenu}
+                      {...reviewable}
+                    />
+                  ))}
+                </SortableContext>
+
+                {unoptimized.map((reviewable) => (
+                  <ReviewableCard
                     key={reviewable.fileId}
                     projectName={projectName}
                     onClick={handleReviewableClick}
-                    isSelected={reviewableIds.includes(reviewable.fileId)}
-                    isDragging={!!activeId}
-                    onContextMenu={handleContextMenu}
                     {...reviewable}
+                    onContextMenu={handleContextMenu}
                   />
                 ))}
-              </SortableContext>
 
-              {unoptimized.map((reviewable) => (
-                <ReviewableCard
+                {/* drag overlay */}
+                <DragOverlay modifiers={overlayModifiers}>
+                  {draggingReview ? (
+                    <ReviewableCard
+                      {...draggingReview}
+                      projectName={projectName}
+                      isDragOverlay
+                      isDragging
+                      isSelected={reviewableIds.includes(draggingReview.fileId)}
+                    />
+                  ) : null}
+                </DragOverlay>
+              </DndContext>
+              {processing.map((reviewable) => (
+                <ReviewableProgressCard
                   key={reviewable.fileId}
-                  projectName={projectName}
-                  onClick={handleReviewableClick}
-                  {...reviewable}
-                  onContextMenu={handleContextMenu}
+                  name={reviewable.filename}
+                  type={'processing'}
+                  progress={reviewable.processing?.progress}
+                  fileId={reviewable.fileId}
                 />
               ))}
 
-              {/* drag overlay */}
-              <DragOverlay modifiers={overlayModifiers}>
-                {draggingReview ? (
-                  <ReviewableCard
-                    {...draggingReview}
-                    projectName={projectName}
-                    isDragOverlay
-                    isDragging
-                    isSelected={reviewableIds.includes(draggingReview.fileId)}
-                  />
-                ) : null}
-              </DragOverlay>
-            </DndContext>
-            {processing.map((reviewable) => (
-              <ReviewableProgressCard
-                key={reviewable.fileId}
-                name={reviewable.filename}
-                type={'processing'}
-                progress={reviewable.processing?.progress}
-                fileId={reviewable.fileId}
-              />
-            ))}
+              {queued.map((reviewable) => (
+                <ReviewableProgressCard
+                  key={reviewable.fileId}
+                  name={reviewable.filename}
+                  type={'queued'}
+                  fileId={reviewable.fileId}
+                />
+              ))}
 
-            {queued.map((reviewable) => (
-              <ReviewableProgressCard
-                key={reviewable.fileId}
-                name={reviewable.filename}
-                type={'queued'}
-                fileId={reviewable.fileId}
-              />
-            ))}
+              {incompatible.map((reviewable) => (
+                <ReviewableProgressCard
+                  key={reviewable.fileId}
+                  name={reviewable.filename}
+                  type={'unsupported'}
+                  tooltip={incompatibleMessage}
+                  src={`/api/projects/${projectName}/files/${reviewable.fileId}/thumbnail`}
+                  onContextMenu={handleContextMenu}
+                  fileId={reviewable.fileId}
+                />
+              ))}
 
-            {incompatible.map((reviewable) => (
-              <ReviewableProgressCard
-                key={reviewable.fileId}
-                name={reviewable.filename}
-                type={'unsupported'}
-                tooltip={incompatibleMessage}
-                src={`/api/projects/${projectName}/files/${reviewable.fileId}/thumbnail`}
-                onContextMenu={handleContextMenu}
-                fileId={reviewable.fileId}
-              />
-            ))}
+              {/* uploading items */}
+              {uploading[versionId]?.map((file) => (
+                <ReviewableProgressCard
+                  key={file.name}
+                  {...file}
+                  type={'upload'}
+                  onRemove={() => handleRemoveUpload(file.name)}
+                />
+              ))}
 
-            {/* uploading items */}
-            {uploading[versionId]?.map((file) => (
-              <ReviewableProgressCard
-                key={file.name}
-                {...file}
-                type={'upload'}
-                onRemove={() => handleRemoveUpload(file.name)}
-              />
-            ))}
-
-            {/* upload button */}
-            <Styled.Upload className="upload">
-              <span>Drop or click to upload</span>
-              <input type="file" multiple onChange={handleInputChange} ref={inputRef} />
-            </Styled.Upload>
-          </>
-        )}
-      </Styled.ReviewablesList>
+              {/* upload button */}
+              <Styled.Upload className="upload">
+                <span>Drop or click to upload</span>
+                <input type="file" multiple onChange={handleInputChange} ref={inputRef} />
+              </Styled.Upload>
+            </>
+          )}
+        </Styled.ReviewablesList>
+      )}
 
       {isDraggingFile && (
         <Styled.Dropzone

@@ -110,7 +110,7 @@ const ThumbnailUploader = ({ onFinish, entities, ...props }: ThumbnailUploaderPr
         </Styled.Uploading>
       ) : (
         <Styled.Message>
-          <Icon icon="cloud_upload" className="upload" />
+          <Icon icon="add_photo_alternate" className="upload" />
           <span>Upload thumbnail</span>
         </Styled.Message>
       )}
