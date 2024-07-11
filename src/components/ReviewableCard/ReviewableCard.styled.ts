@@ -20,6 +20,7 @@ export const Card = styled.div`
 
   &:not(.dragging):hover {
     background-color: var(--md-sys-color-surface-container-hover);
+    border: 1px solid var(--md-sys-color-surface-container-hover);
 
     .handle {
       opacity: 1;
@@ -55,16 +56,6 @@ export const Card = styled.div`
     background-color: var(--md-sys-color-surface-container-hover);
     &.selected {
       background-color: var(--md-sys-color-primary-container);
-    }
-  }
-
-  /* uploaded icon */
-  .uploaded {
-    display: flex;
-    gap: var(--base-gap-small);
-    align-items: center;
-    .icon {
-      font-variation-settings: 'FILL' 1, 'wght' 200, 'GRAD' 200, 'opsz' 20;
     }
   }
 `

@@ -2108,7 +2108,7 @@ export type UploadReviewableApiArg = {
   /** Label */
   label?: string
   'content-type': string
-  'x-file-name'?: string
+  'x-file-name': string
   'x-sender'?: string
 }
 export type ListServicesApiResponse = /** status 200 Successful Response */ ServiceListModel
@@ -2360,8 +2360,7 @@ export type PasswordResetApiArg = {
 }
 export type GetCurrentUserApiResponse = /** status 200 Successful Response */ UserModel
 export type GetCurrentUserApiArg = void
-export type GetUserApiResponse =
-  /** status 200 Successful Response */
+export type GetUserApiResponse = /** status 200 Successful Response */
   | UserModel
   | {
       [key: string]: string
@@ -3318,7 +3317,6 @@ export type FolderAttribModel = {
   shotgridId?: string
   /** The Shotgrid Type of this entity. */
   shotgridType?: string
-  car?: string
   hairColor?: string
   sokoId?: string
   sokoPath?: string
@@ -3992,7 +3990,7 @@ export type ReviewableModel = {
   filename: string
   label?: string
   mimetype: string
-  availability?: 'unknown' | 'needs_conversion' | 'ready'
+  availability?: 'unknown' | 'conversionRequired' | 'conversionRecommended' | 'ready'
   mediaInfo?: object
   createdFrom?: string
   /** Information about the processing status */
@@ -4312,7 +4310,6 @@ export type TaskAttribModel = {
   shotgridId?: string
   /** The Shotgrid Type of this entity. */
   shotgridType?: string
-  car?: string
   hairColor?: string
   sokoId?: string
   sokoPath?: string

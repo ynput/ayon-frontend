@@ -137,7 +137,7 @@ const Viewer = ({ onClose }: ViewerProps) => {
       <EmptyPlaceholder
         icon="hide_image"
         message={
-          availability === 'needs_conversion'
+          availability === 'conversionRequired'
             ? 'File not supported and needs conversion'
             : 'No preview available'
         }
@@ -163,6 +163,9 @@ const Viewer = ({ onClose }: ViewerProps) => {
     }
   }
 
+  const readyReviewables =
+    selectedVersion?.reviewables?.filter((r) => r.availability === 'ready') || []
+
   return (
     <Styled.Container>
       <Styled.Header>
@@ -178,7 +181,7 @@ const Viewer = ({ onClose }: ViewerProps) => {
           {viewerComponent}
         </Styled.FullScreenWrapper>
         <ReviewablesSelector
-          reviewables={selectedVersion?.reviewables || []}
+          reviewables={readyReviewables}
           selected={reviewableIds}
           onChange={handleReviewableChange}
           onUpload={handleUploadButton}

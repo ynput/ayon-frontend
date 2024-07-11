@@ -48,11 +48,14 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
 }) => {
   const dispatch = useDispatch()
   // returns all reviewables for a product
-  const { data: versionReviewables, isFetching: isFetchingReviewables } =
-    useGetReviewablesForVersionQuery(
-      { projectName, versionId: versionId },
-      { skip: !versionId || !projectName },
-    )
+  const {
+    data: versionReviewables,
+    isFetching: isFetchingReviewables,
+    currentData,
+  } = useGetReviewablesForVersionQuery(
+    { projectName, versionId: versionId },
+    { skip: !versionId || !projectName },
+  )
 
   // are we currently looking at review?
   const reviewableIds = useSelector((state: $Any) => state.viewer.reviewableIds) || []
@@ -72,7 +75,11 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
 
   const reviewables = versionReviewables?.reviewables || []
   const draggingReview = reviewables.find((reviewable) => reviewable.fileId === activeId)
-  const isLoading = isFetchingReviewables || isLoadingVersion
+
+  const currentVersionId = currentData?.id
+  const queryingNewVersion = versionId !== currentVersionId
+
+  const isLoading = (isFetchingReviewables && queryingNewVersion) || isLoadingVersion
 
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -131,8 +138,7 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
     setActiveId(null)
   }
 
-  const [uploading, setUploads] = useState<ReviewableUploadFile[]>([])
-  const [completeUploads, setCompleteUploads] = useState<string[]>([])
+  const [uploading, setUploads] = useState<Omit<ReviewableUploadFile, 'type'>[]>([])
 
   const handleFileUpload = async (files: FileList) => {
     const uploadingFiles = Array.from(files).map((file) => ({
@@ -175,6 +181,7 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
             console.log(`Upload successful for ${file.name}`)
             // patch the new data into the reviewables cache
             const data = response.data as UploadReviewableApiResponse
+            console.log(data)
             dispatch(
               // @ts-ignore
               api.util.updateQueryData(
@@ -209,9 +216,6 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
             )
             // remove the file from the list
             setUploads((uploads) => uploads.filter((upload) => upload.name !== file.name))
-
-            // add to complete uploads
-            setCompleteUploads((uploads) => [...uploads, data.fileId])
           })
           .catch((error) => {
             console.error(`Upload failed for ${file.name}: ${error}`)
@@ -263,6 +267,23 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
     }))
   }
 
+  // create a list of reviewables that are actually viewable
+  const readyReviewables = reviewables.filter(
+    (reviewable) => reviewable.availability === 'ready' && !reviewable.processing,
+  )
+  // files that are not compatible and are not being converted
+  const notReadyReviewables = reviewables.filter(
+    (reviewable) => reviewable.availability === 'conversionRequired' && !reviewable.processing,
+  )
+  // check if notReadyReviewables have any converted files
+  const nonConvertedReviewables = notReadyReviewables.filter(
+    (reviewable) => !readyReviewables.find((r) => r.activityId === reviewable.activityId),
+  )
+
+  // find any reviewables that are currently being processed
+  // then also match them
+  const processingReviewables = reviewables.filter((reviewable) => reviewable.processing)
+  // TODO: only show loading if the versionId has changed and isFetching.
   return (
     <>
       <Styled.ReviewablesList onDragEnter={() => setIsDraggingFile(true)}>
@@ -280,13 +301,12 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
               items={reviewables.map(({ fileId }) => fileId as UniqueIdentifier)}
               strategy={verticalListSortingStrategy}
             >
-              {reviewables.map((reviewable) => (
+              {readyReviewables.map((reviewable) => (
                 <SortableReviewableCard
                   key={reviewable.fileId}
                   projectName={projectName}
                   onClick={handleReviewableClick}
                   isSelected={reviewableIds.includes(reviewable.fileId)}
-                  isUploaded={completeUploads.includes(reviewable.fileId)}
                   isDragging={!!activeId}
                   {...reviewable}
                 />
@@ -308,11 +328,29 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
           </DndContext>
         )}
 
+        {processingReviewables.map((reviewable) => (
+          <ReviewableUploadCard
+            key={reviewable.fileId}
+            name={reviewable.filename}
+            type={'processing'}
+            progress={reviewable.processing?.progress}
+          />
+        ))}
+
+        {nonConvertedReviewables.map((reviewable) => (
+          <ReviewableUploadCard
+            key={reviewable.fileId}
+            name={reviewable.filename}
+            type={'unsupported'}
+          />
+        ))}
+
         {/* uploading items */}
         {uploading.map((file) => (
           <ReviewableUploadCard
             key={file.name}
             {...file}
+            type={'upload'}
             onRemove={() =>
               setUploads((uploads) => uploads.filter((upload) => upload.name !== file.name))
             }

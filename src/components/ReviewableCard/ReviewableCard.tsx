@@ -3,12 +3,11 @@ import type { ReviewableModel } from '@api/rest'
 import * as Styled from './ReviewableCard.styled'
 import Typography from '@/theme/typography.module.css'
 import { classNames } from 'primereact/utils'
-import { Icon } from '@ynput/ayon-react-components'
 
 export interface ReviewableCardProps
   extends Pick<
       ReviewableModel,
-      'activityId' | 'fileId' | 'filename' | 'label' | 'processing' | 'mimetype'
+      'fileId' | 'filename' | 'label' | 'processing' | 'mimetype' | 'availability'
     >,
     Omit<HTMLProps<HTMLDivElement>, 'ref' | 'as' | 'children'> {
   // Extends div element props
@@ -16,7 +15,6 @@ export interface ReviewableCardProps
   isDragOverlay?: boolean
   isDropPlaceholder?: boolean
   isSelected?: boolean
-  isUploaded?: boolean // has just been uploaded?
   isDragging?: boolean //is something being dragged?
   dragProps?: any
 }
@@ -33,7 +31,6 @@ const ReviewableCard = forwardRef<HTMLDivElement, ReviewableCardProps>(
       isDragOverlay,
       isDropPlaceholder,
       isSelected,
-      isUploaded,
       isDragging,
       dragProps = {},
       ...props
@@ -65,12 +62,6 @@ const ReviewableCard = forwardRef<HTMLDivElement, ReviewableCardProps>(
         </Styled.Content>
         {isDraggable && (
           <Styled.DragHandle className="handle" {...dragProps} icon="drag_indicator" />
-        )}
-        {isUploaded && (
-          <div className="uploaded">
-            Uploaded
-            <Icon icon="check_circle" />
-          </div>
         )}
       </Styled.Card>
     )

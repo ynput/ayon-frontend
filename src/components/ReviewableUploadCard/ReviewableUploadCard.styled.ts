@@ -15,7 +15,7 @@ const spinAnimation = keyframes`
 export const UploadCard = styled.div`
   position: relative;
   width: 100%;
-  height: 48px;
+  height: 50px;
   display: flex;
   align-items: center;
   user-select: none;
@@ -24,7 +24,8 @@ export const UploadCard = styled.div`
   gap: var(--base-gap-large);
   border-radius: var(--border-radius-m);
   background-color: var(--md-sys-color-surface-container);
-  padding: 0 var(--padding-m);
+  padding: 0 var(--padding-s);
+  border: 1px solid var(--md-sys-color-surface-container);
 
   .content {
     flex: 1;
@@ -40,13 +41,6 @@ export const UploadCard = styled.div`
 
   .size {
     color: var(--md-sys-color-outline);
-  }
-
-  .icon {
-    font-size: 24px;
-
-    /* spin animation */
-    animation: ${spinAnimation} 1s infinite linear;
   }
 
   &.finished {
@@ -80,4 +74,25 @@ export const ProgressBar = styled.div`
   background-color: var(--md-sys-color-primary-container);
   z-index: 0;
   transition: right 0.2s;
+`
+
+export const Type = styled.div`
+  width: 71px;
+  height: 40px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background-color: var(--md-sys-color-surface-container-low);
+  border-radius: var(--border-radius-m);
+
+  .icon {
+    font-size: 24px;
+
+    &.spinning {
+      /* spin animation */
+      animation: ${spinAnimation} 1s infinite linear;
+    }
+  }
 `
