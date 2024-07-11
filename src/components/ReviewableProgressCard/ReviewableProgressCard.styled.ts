@@ -81,6 +81,7 @@ export const ProgressBar = styled.div`
 `
 
 export const Type = styled.div`
+  position: relative;
   width: 71px;
   height: 40px;
 
@@ -90,13 +91,24 @@ export const Type = styled.div`
 
   background-color: var(--md-sys-color-surface-container-low);
   border-radius: var(--border-radius-m);
+  overflow: hidden;
 
   .icon {
     font-size: 24px;
+    z-index: 10;
 
     &.spinning {
       /* spin animation */
       animation: ${spinAnimation} 1s infinite linear;
     }
+  }
+
+  img {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    inset: 0;
+    object-fit: cover;
+    opacity: 0.5;
   }
 `

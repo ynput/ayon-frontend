@@ -8,6 +8,7 @@ export interface ReviewableProgress {
   size?: number
   progress?: number // 0 - 100
   error?: string
+  src?: string
 }
 
 interface ReviewableProgressCardProps extends ReviewableProgress {
@@ -21,6 +22,7 @@ const ReviewableProgressCard: FC<ReviewableProgressCardProps> = ({
   progress,
   size,
   type,
+  src,
   error,
   tooltip,
   onRemove,
@@ -61,6 +63,7 @@ const ReviewableProgressCard: FC<ReviewableProgressCardProps> = ({
   return (
     <Styled.UploadCard key={name} className={classNames({ finished, error: !!error })}>
       <Styled.Type>
+        {src && <img src={src} />}
         {icon && <Icon icon={icon} className={classNames({ spinning: isSpinning })} />}
       </Styled.Type>
 

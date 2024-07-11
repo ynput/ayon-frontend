@@ -307,8 +307,10 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
     incompatibleMessage = 'The file is not supported by the transcoder'
   }
 
-  const { optimized, unoptimized, incompatible, processing, queued } =
-    getGroupedReviewables(reviewables)
+  const { optimized, unoptimized, incompatible, processing, queued } = getGroupedReviewables(
+    reviewables,
+    hasTranscoder,
+  )
 
   return (
     <>
@@ -385,6 +387,7 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
                 name={reviewable.filename}
                 type={'unsupported'}
                 tooltip={incompatibleMessage}
+                src={`/api/projects/${projectName}/files/${reviewable.fileId}/thumbnail`}
               />
             ))}
 

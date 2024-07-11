@@ -1,6 +1,9 @@
 import { ReviewableResponse } from '@queries/review/types'
 
-export const getGroupedReviewables = (reviewables: ReviewableResponse[]) => {
+export const getGroupedReviewables = (
+  reviewables: ReviewableResponse[],
+  hasTranscoder: boolean | undefined,
+) => {
   // create a list of reviewables that are actually viewable
   const readyReviewables = reviewables.filter(
     (reviewable) => reviewable.availability === 'ready' && !reviewable.processing,
@@ -15,7 +18,7 @@ export const getGroupedReviewables = (reviewables: ReviewableResponse[]) => {
   const neverConvertedReviewables = notReadyReviewables.filter(
     (reviewable) =>
       !readyReviewables.find((r) => r.activityId === reviewable.activityId) &&
-      !reviewable.processing,
+      (!reviewable.processing || !hasTranscoder),
   )
 
   // reviewables that cannot be played and will never be converted
@@ -32,7 +35,8 @@ export const getGroupedReviewables = (reviewables: ReviewableResponse[]) => {
   const convertingReviewables = notReadyReviewables.filter(
     (reviewable) =>
       reviewable.processing &&
-      !readyReviewables.find((r) => r.activityId === reviewable.activityId),
+      !readyReviewables.find((r) => r.activityId === reviewable.activityId) &&
+      hasTranscoder,
   )
   // find any reviewables that are currently being converted
   const processingReviewables = convertingReviewables.filter(
