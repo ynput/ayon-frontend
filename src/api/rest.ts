@@ -3976,7 +3976,7 @@ export type ResolveRequestModel = {
   uris: string[]
 }
 export type ReviewableProcessingStatus = {
-  eventId: string
+  eventId?: string
   status: string
   description: string
 }

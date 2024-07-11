@@ -6,6 +6,7 @@ export const Card = styled.div`
   display: flex;
   align-items: center;
   overflow: hidden;
+  min-height: 50px;
 
   padding: var(--padding-s);
   border-radius: var(--border-radius-m);
@@ -91,7 +92,6 @@ export const StyledFileThumbnail = styled(FileThumbnail)`
 `
 
 export const DragHandle = styled(Icon)`
-  height: 100%;
   font-size: 25px;
 
   cursor: grab;

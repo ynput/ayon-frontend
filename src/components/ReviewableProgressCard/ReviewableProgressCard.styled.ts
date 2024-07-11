@@ -15,7 +15,7 @@ const spinAnimation = keyframes`
 export const UploadCard = styled.div`
   position: relative;
   width: 100%;
-  height: 50px;
+  min-height: 50px;
   display: flex;
   align-items: center;
   user-select: none;
@@ -61,6 +61,10 @@ export const UploadCard = styled.div`
     .message {
       color: var(--md-sys-color-on-error-container);
     }
+  }
+
+  .info {
+    margin-right: var(--padding-s);
   }
 
   & > * {

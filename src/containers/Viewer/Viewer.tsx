@@ -12,6 +12,7 @@ import { updateDetailsPanelTab } from '@/features/details'
 import EmptyPlaceholder from '@/components/EmptyPlaceholder/EmptyPlaceholder'
 import { $Any } from '@/types'
 import { useFullScreenHandle } from 'react-full-screen'
+import { getGroupedReviewables } from '../ReviewablesList/getGroupedReviewables'
 
 interface ViewerProps {
   onClose?: () => void
@@ -113,9 +114,9 @@ const Viewer = ({ onClose }: ViewerProps) => {
 
   let viewerComponent
   const availability = selectedReviewable?.availability
-  const isReady = availability === 'ready'
+  const isPlayable = availability !== 'conversionRequired'
 
-  if (selectedReviewable?.mimetype.includes('video') && isReady) {
+  if (selectedReviewable?.mimetype.includes('video') && isPlayable) {
     viewerComponent = (
       <ViewerPlayer
         projectName={projectName}
@@ -125,7 +126,7 @@ const Viewer = ({ onClose }: ViewerProps) => {
         onPlay={handlePlayReviewable}
       />
     )
-  } else if (selectedReviewable?.mimetype.includes('image') && isReady) {
+  } else if (selectedReviewable?.mimetype.includes('image') && isPlayable) {
     viewerComponent = (
       <Styled.Image
         src={`/api/projects/${projectName}/files/${selectedReviewable.fileId}`}
@@ -163,8 +164,14 @@ const Viewer = ({ onClose }: ViewerProps) => {
     }
   }
 
-  const readyReviewables =
-    selectedVersion?.reviewables?.filter((r) => r.availability === 'ready') || []
+  const reviewables = selectedVersion?.reviewables || []
+
+  const { optimized, unoptimized } = useMemo(
+    () => getGroupedReviewables(reviewables as any),
+    [reviewables],
+  )
+
+  const shownOptions = [...optimized, ...unoptimized]
 
   return (
     <Styled.Container>
@@ -181,7 +188,7 @@ const Viewer = ({ onClose }: ViewerProps) => {
           {viewerComponent}
         </Styled.FullScreenWrapper>
         <ReviewablesSelector
-          reviewables={readyReviewables}
+          reviewables={shownOptions}
           selected={reviewableIds}
           onChange={handleReviewableChange}
           onUpload={handleUploadButton}

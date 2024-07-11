@@ -7,6 +7,7 @@ const enhancedReview = api.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
   endpoints: {
     getReviewablesForProduct: {},
     getReviewablesForVersion: {
+      keepUnusedDataFor: 10,
       providesTags: (result, _error, { versionId }) =>
         result
           ? [
@@ -18,7 +19,7 @@ const enhancedReview = api.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
             ]
           : [{ type: 'review', id: versionId }],
       async onCacheEntryAdded(
-        _args,
+        { versionId },
         { updateCachedData, cacheDataLoaded, cacheEntryRemoved, dispatch, getCacheEntry },
       ) {
         let token
@@ -30,6 +31,9 @@ const enhancedReview = api.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
             if (topic !== 'reviewable.process') return
 
             const summary = (message?.summary as Summary) || {}
+
+            // check it's for the right version
+            if (summary.versionId !== versionId) return
 
             const cache = getCacheEntry()
 
@@ -57,11 +61,16 @@ const enhancedReview = api.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
                   processing: {
                     ...processing,
                     progress,
+                    eventId: message.id,
                   },
                 }
               })
             } else {
-              console.log('New reviewable found:', summary.sourceFileId, summary.versionId)
+              console.log(
+                'Reviewable not found in cache, refreshing to get data:',
+                summary.sourceFileId,
+                summary.versionId,
+              )
               // get data for this new reviewable
               dispatch(api.util.invalidateTags([{ type: 'review', id: summary.versionId }]))
             }
@@ -102,4 +111,8 @@ const injectedReview = enhancedReview.injectEndpoints({
   }),
 })
 
-export const { useGetReviewablesForProductQuery, useGetReviewablesForVersionQuery } = injectedReview
+export const {
+  useGetReviewablesForProductQuery,
+  useGetReviewablesForVersionQuery,
+  useHasTranscoderQuery,
+} = injectedReview

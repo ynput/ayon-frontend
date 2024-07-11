@@ -7,12 +7,13 @@ export interface ReviewableProgress {
   name: string
   size?: number
   progress?: number // 0 - 100
-  type: 'upload' | 'processing' | 'unsupported'
   error?: string
 }
 
 interface ReviewableProgressCardProps extends ReviewableProgress {
   onRemove?: () => void
+  tooltip?: string
+  type: 'upload' | 'processing' | 'unsupported' | 'queued'
 }
 
 const ReviewableProgressCard: FC<ReviewableProgressCardProps> = ({
@@ -21,6 +22,7 @@ const ReviewableProgressCard: FC<ReviewableProgressCardProps> = ({
   size,
   type,
   error,
+  tooltip,
   onRemove,
 }) => {
   let message = '',
@@ -33,7 +35,7 @@ const ReviewableProgressCard: FC<ReviewableProgressCardProps> = ({
       icon = 'settings'
       break
     case 'unsupported':
-      message = 'Unsupported file - conversion required'
+      message = 'Unsupported - conversion required'
       icon = 'visibility_off'
       break
     case 'upload':
@@ -41,8 +43,17 @@ const ReviewableProgressCard: FC<ReviewableProgressCardProps> = ({
       isSpinning = true
       icon = 'sync'
       break
+    case 'queued':
+      message = 'Queued - waiting to be transcoded'
+      icon = 'hourglass'
+      break
     default:
       break
+  }
+
+  if (error) {
+    isSpinning = false
+    icon = 'error'
   }
 
   const progressString = progress !== undefined ? `- ${progress}%` : ''
@@ -50,9 +61,7 @@ const ReviewableProgressCard: FC<ReviewableProgressCardProps> = ({
   return (
     <Styled.UploadCard key={name} className={classNames({ finished, error: !!error })}>
       <Styled.Type>
-        {icon && (
-          <Icon icon={error ? 'error' : icon} className={classNames({ spinning: isSpinning })} />
-        )}
+        {icon && <Icon icon={icon} className={classNames({ spinning: isSpinning })} />}
       </Styled.Type>
 
       <span className="content">
@@ -60,6 +69,9 @@ const ReviewableProgressCard: FC<ReviewableProgressCardProps> = ({
         <span className="message">{error ? error : `${message} ${progressString}`}</span>
       </span>
       {size && <span className="size">{getFileSizeString(size)}</span>}
+      {tooltip && (
+        <Icon icon="info" className="info" data-tooltip={tooltip} data-tooltip-as="markdown" />
+      )}
       {error && <Button icon="close" variant="danger" onClick={onRemove} />}
       <Styled.ProgressBar className="progress" style={{ right: `${100 - (progress ?? 0)}%` }} />
     </Styled.UploadCard>

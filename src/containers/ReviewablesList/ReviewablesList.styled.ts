@@ -5,6 +5,8 @@ export const ReviewablesList = styled.div`
   display: flex;
   flex-direction: column;
   gap: var(--base-gap-small);
+  min-height: 100%;
+  padding-bottom: var(--padding-m);
 `
 
 export const LoadingCard = styled.div`
@@ -12,7 +14,7 @@ export const LoadingCard = styled.div`
   overflow: hidden;
   border-radius: var(--border-radius-m);
   width: 100%;
-  min-height: 48px;
+  min-height: 50px;
 
   ${getShimmerStyles()}
 `
@@ -20,7 +22,7 @@ export const LoadingCard = styled.div`
 export const Upload = styled.div`
   position: relative;
   width: 100%;
-  height: 48px;
+  min-height: 50px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -59,6 +61,7 @@ export const Dropzone = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  z-index: 100;
 
   & > * {
     user-select: none;

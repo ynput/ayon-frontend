@@ -22,6 +22,7 @@ export interface ReviewableCardProps
 const ReviewableCard = forwardRef<HTMLDivElement, ReviewableCardProps>(
   (
     {
+      availability,
       projectName,
       fileId,
       filename,
@@ -38,6 +39,16 @@ const ReviewableCard = forwardRef<HTMLDivElement, ReviewableCardProps>(
     ref,
   ) => {
     const isDraggable = dragProps || isDragOverlay
+
+    const unoptimized = availability === 'conversionRecommended'
+    const isQueued = unoptimized && !!processing
+
+    let subTitle = filename
+    if (unoptimized) subTitle = 'Unoptimized - conversion recommended'
+    if (isQueued) subTitle = 'Unoptimized - queued for conversion'
+
+    let title = label
+    if (unoptimized) title = filename
 
     return (
       <Styled.Card
@@ -57,8 +68,8 @@ const ReviewableCard = forwardRef<HTMLDivElement, ReviewableCardProps>(
           mimetype={mimetype}
         />
         <Styled.Content>
-          <h4 className={Typography.titleSmall}>{label}</h4>
-          <span className="name">{filename}</span>
+          <h4 className={Typography.titleSmall}>{title}</h4>
+          <span className="name">{subTitle}</span>
         </Styled.Content>
         {isDraggable && (
           <Styled.DragHandle className="handle" {...dragProps} icon="drag_indicator" />

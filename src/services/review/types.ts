@@ -20,14 +20,14 @@ interface Processing extends ReviewableProcessingStatus {
 }
 
 // Extend UpdatedReviewable with the new Processing type
-interface UpdatedReviewable extends Omit<ReviewableModel, 'processing'> {
+export interface ReviewableResponse extends Omit<ReviewableModel, 'processing'> {
   processing: Processing // Use the new Processing type here
 }
 
 // Extend the main response interface
 interface UpdatedGetReviewablesForVersionApiResponse
   extends Omit<GetReviewablesForVersionApiResponse, 'reviewables'> {
-  reviewables?: UpdatedReviewable[] // Use the updated reviewable type
+  reviewables?: ReviewableResponse[] // Use the updated reviewable type
 }
 
 //   Update the definitions and tag types
