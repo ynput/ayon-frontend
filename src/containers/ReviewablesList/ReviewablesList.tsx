@@ -31,6 +31,7 @@ import api from '@api'
 import { $Any } from '@types'
 import { UploadReviewableApiResponse } from '@api/rest'
 import { getGroupedReviewables } from './getGroupedReviewables'
+import useCreateContext from '@/hooks/useCreateContext'
 
 interface ReviewablesListProps {
   projectName: string
@@ -307,6 +308,48 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
     incompatibleMessage = 'The file is not supported by the transcoder'
   }
 
+  const handleDownloadFile = (fileId: string) => {
+    const url = `/api/projects/${projectName}/files/${fileId}`
+
+    // Create an invisible anchor element
+    const a = document.createElement('a')
+    a.href = url
+    a.download = '' // Leave the download attribute empty to use the original filename
+    document.body.appendChild(a)
+
+    // Trigger a click event on the anchor element
+    a.click()
+
+    // Remove the anchor element from the document
+    document.body.removeChild(a)
+  }
+
+  // create the ref and model
+  const [ctxMenuShow] = useCreateContext()
+
+  const handleContextMenu = (event: MouseEvent<HTMLDivElement>) => {
+    // get the reviewable by id
+    const id = event.currentTarget.id
+
+    if (!id) return
+
+    const reviewable = reviewables.find((reviewable) => reviewable.fileId === id)
+
+    if (!reviewable) return
+
+    const originalFileId = reviewable.createdFrom || reviewable.fileId
+
+    const items = [
+      {
+        label: 'Download',
+        icon: 'download',
+        onClick: () => handleDownloadFile(originalFileId),
+      },
+    ]
+
+    ctxMenuShow(event, items)
+  }
+
   const { optimized, unoptimized, incompatible, processing, queued } = getGroupedReviewables(
     reviewables,
     hasTranscoder,
@@ -337,6 +380,7 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
                     onClick={handleReviewableClick}
                     isSelected={reviewableIds.includes(reviewable.fileId)}
                     isDragging={!!activeId}
+                    onContextMenu={handleContextMenu}
                     {...reviewable}
                   />
                 ))}
@@ -348,6 +392,7 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
                   projectName={projectName}
                   onClick={handleReviewableClick}
                   {...reviewable}
+                  onContextMenu={handleContextMenu}
                 />
               ))}
 
@@ -370,6 +415,7 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
                 name={reviewable.filename}
                 type={'processing'}
                 progress={reviewable.processing?.progress}
+                fileId={reviewable.fileId}
               />
             ))}
 
@@ -378,6 +424,7 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
                 key={reviewable.fileId}
                 name={reviewable.filename}
                 type={'queued'}
+                fileId={reviewable.fileId}
               />
             ))}
 
@@ -388,6 +435,8 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
                 type={'unsupported'}
                 tooltip={incompatibleMessage}
                 src={`/api/projects/${projectName}/files/${reviewable.fileId}/thumbnail`}
+                onContextMenu={handleContextMenu}
+                fileId={reviewable.fileId}
               />
             ))}
 

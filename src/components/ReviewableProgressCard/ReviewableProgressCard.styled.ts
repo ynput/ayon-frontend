@@ -23,9 +23,17 @@ export const UploadCard = styled.div`
 
   gap: var(--base-gap-large);
   border-radius: var(--border-radius-m);
-  background-color: var(--md-sys-color-surface-container);
   padding: 0 var(--padding-s);
+  background-color: var(--md-sys-color-surface-container);
   border: 1px solid var(--md-sys-color-surface-container);
+
+  /* only show affect for unsupported */
+  &.unsupported {
+    &:hover {
+      background-color: var(--md-sys-color-surface-container-hover);
+      border: 1px solid var(--md-sys-color-surface-container-hover);
+    }
+  }
 
   .content {
     flex: 1;

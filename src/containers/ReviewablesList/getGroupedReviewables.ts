@@ -2,7 +2,7 @@ import { ReviewableResponse } from '@queries/review/types'
 
 export const getGroupedReviewables = (
   reviewables: ReviewableResponse[],
-  hasTranscoder: boolean | undefined,
+  hasTranscoder?: boolean | undefined,
 ) => {
   // create a list of reviewables that are actually viewable
   const readyReviewables = reviewables.filter(

@@ -1,4 +1,4 @@
-import { FC } from 'react'
+import { FC, HTMLProps } from 'react'
 import * as Styled from './ReviewableProgressCard.styled'
 import { Button, getFileSizeString, Icon } from '@ynput/ayon-react-components'
 import { classNames } from 'primereact/utils'
@@ -6,12 +6,15 @@ import { classNames } from 'primereact/utils'
 export interface ReviewableProgress {
   name: string
   size?: number
+  fileId?: string
   progress?: number // 0 - 100
   error?: string
   src?: string
 }
 
-interface ReviewableProgressCardProps extends ReviewableProgress {
+interface ReviewableProgressCardProps
+  extends ReviewableProgress,
+    Omit<HTMLProps<HTMLDivElement>, 'name' | 'children' | 'as' | 'ref'> {
   onRemove?: () => void
   tooltip?: string
   type: 'upload' | 'processing' | 'unsupported' | 'queued'
@@ -22,10 +25,12 @@ const ReviewableProgressCard: FC<ReviewableProgressCardProps> = ({
   progress,
   size,
   type,
+  fileId,
   src,
   error,
   tooltip,
   onRemove,
+  ...props
 }) => {
   let message = '',
     isSpinning = false,
@@ -61,7 +66,12 @@ const ReviewableProgressCard: FC<ReviewableProgressCardProps> = ({
   const progressString = progress !== undefined ? `- ${progress}%` : ''
   const finished = progress === 100
   return (
-    <Styled.UploadCard key={name} className={classNames({ finished, error: !!error })}>
+    <Styled.UploadCard
+      key={name}
+      className={classNames({ finished, error: !!error, [type]: true })}
+      id={fileId}
+      {...props}
+    >
       <Styled.Type>
         {src && <img src={src} />}
         {icon && <Icon icon={icon} className={classNames({ spinning: isSpinning })} />}
