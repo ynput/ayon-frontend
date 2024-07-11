@@ -5,7 +5,28 @@ import { TagTypes, UpdatedDefinitions, Summary } from './types'
 
 const enhancedReview = api.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
   endpoints: {
-    getReviewablesForProduct: {},
+    getReviewablesForProduct: {
+      providesTags: (result, _error, { productId }) =>
+        result
+          ? [
+              // product id
+              { type: 'review', id: productId },
+              // version ids
+              ...(result?.map((version) => ({
+                type: 'review',
+                id: version.id,
+              })) || []),
+              // reviewable file ids
+              ...(result?.flatMap(
+                (version) =>
+                  version.reviewables?.map((reviewable) => ({
+                    type: 'review',
+                    id: reviewable.fileId,
+                  })) || [],
+              ) || []),
+            ]
+          : [{ type: 'review', id: productId }],
+    },
     getReviewablesForVersion: {
       keepUnusedDataFor: 10,
       providesTags: (result, _error, { versionId }) =>
@@ -14,7 +35,7 @@ const enhancedReview = api.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
               { type: 'review', id: versionId },
               ...(result.reviewables?.map((reviewable) => ({
                 type: 'review',
-                id: reviewable.activityId,
+                id: reviewable.fileId,
               })) || []),
             ]
           : [{ type: 'review', id: versionId }],
@@ -45,7 +66,6 @@ const enhancedReview = api.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
             if (index && index !== -1 && message.status !== 'finished') {
               // update the progress of the reviewable
               const progress = message?.progress || 0
-
               // update the cache reviewable
 
               updateCachedData((data) => {
@@ -73,6 +93,8 @@ const enhancedReview = api.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
               )
               // get data for this new reviewable
               dispatch(api.util.invalidateTags([{ type: 'review', id: summary.versionId }]))
+
+              // if it's finished, also invalidate
             }
           }
 
