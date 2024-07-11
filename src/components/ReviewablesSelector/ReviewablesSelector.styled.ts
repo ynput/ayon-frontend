@@ -5,7 +5,7 @@ export const ReviewablesSelector = styled.div`
   position: relative;
   height: 100%;
 
-  z-index: 200;
+  z-index: 1000;
 `
 
 export const Scrollable = styled.div`

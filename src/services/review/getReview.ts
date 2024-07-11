@@ -67,7 +67,7 @@ const enhancedReview = api.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
       },
     },
     getReviewablesForVersion: {
-      keepUnusedDataFor: 0.1,
+      keepUnusedDataFor: 1,
       providesTags: (result, _error, { versionId }) =>
         result
           ? [

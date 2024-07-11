@@ -87,11 +87,12 @@ const Viewer = ({ onClose }: ViewerProps) => {
     if (!newVersion) return console.error('No version found for id', versionId)
 
     let newReviewableId = newVersion.reviewables?.find(
-      (r) => r.label?.toLowerCase() === currentLabel,
+      (r) => r.label?.toLowerCase() === currentLabel && r.availability === 'ready',
     )?.fileId
-    // no matching reviewable? just pick the first one
+
+    // no matching reviewable? just pick the first ready one
     if (!newReviewableId)
-      newReviewableId = newVersion.reviewables && newVersion.reviewables[0]?.fileId
+      newReviewableId = newVersion.reviewables?.find((r) => r.availability === 'ready')?.fileId
 
     dispatch(updateSelection({ versionIds: [versionId], reviewableIds: [newReviewableId] }))
   }

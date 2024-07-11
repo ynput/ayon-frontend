@@ -19,9 +19,10 @@ const VideoOverlay = ({ videoWidth, videoHeight, showOverlay, showStill, videoRe
         ctx.drawImage(videoRef.current, 0, 0, width, height)
 
         // please let this here for now (debugging)
-        ctx.fillStyle = 'red'
-        ctx.rect(100, 100, 20, 20)
-        ctx.fill()
+        // What is "let"? Removing red dot for now.
+        // ctx.fillStyle = 'red'
+        // ctx.rect(100, 100, 20, 20)
+        // ctx.fill()
       }
 
       if (!showOverlay) return

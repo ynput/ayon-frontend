@@ -48,8 +48,8 @@ export const Image = styled.img`
 export const ViewerDetailsPanelWrapper = styled.div`
   height: 100%;
   max-height: 100%;
-  overflow: hidden;
   max-width: clamp(460px, 25vw, 600px);
   min-width: clamp(460px, 25vw, 600px);
   position: relative;
+  z-index: 1000;
 `

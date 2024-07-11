@@ -139,7 +139,7 @@ function ShortcutsProvider(props) {
       // and run the action
       shortcut.action(hovered, isMeta, e)
     },
-    [lastPressed, shortcuts, hovered, disabled, allowed],
+    [lastPressed, shortcuts, hovered, disabled, allowed, reviewOpen],
   )
 
   // Add event listeners

@@ -41,6 +41,7 @@ export const Card = styled.div`
 
     &:hover {
       background-color: var(--md-sys-color-primary-container);
+      border-color: var(--md-sys-color-primary);
     }
   }
 
