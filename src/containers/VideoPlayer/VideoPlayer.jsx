@@ -71,7 +71,7 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay }) => {
   // user preferences (persist somewhere?)
   const [showOverlay, setShowOverlay] = useState(false)
   const [loop, setLoop] = useState(true)
-  const [muted, setMuted] = useState(true)
+  const [muted, setMuted] = useState(false)
 
   const [videoDimensions, setVideoDimensions] = useState({
     width: null,
@@ -169,8 +169,14 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay }) => {
     console.debug('VideoPlayer: handleLoad')
 
     if (autoplay) {
+      setMuted(true)
+      // mute the video
+      videoRef.current.muted = true
       videoRef.current.play()
     } else {
+      setMuted(false)
+      // mute the video
+      videoRef.current.muted = false
       setIsPlaying(false)
     }
     setCurrentTime(0)
