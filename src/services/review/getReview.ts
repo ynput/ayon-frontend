@@ -26,9 +26,48 @@ const enhancedReview = api.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
               ) || []),
             ]
           : [{ type: 'review', id: productId }],
+      async onCacheEntryAdded(
+        { productId },
+        { cacheDataLoaded, cacheEntryRemoved, dispatch, getCacheEntry },
+      ) {
+        let token
+        try {
+          // wait for the initial query to resolve before proceeding
+          await cacheDataLoaded
+
+          const handlePubSub = (topic: string, message: $Any) => {
+            if (topic !== 'reviewable.process') return
+
+            const summary = (message?.summary as Summary) || {}
+
+            const versionIds = getCacheEntry().data?.map((version) => version.id)
+
+            // check that one of the versions is the right one
+            if (!versionIds?.includes(summary.versionId || '')) return
+
+            // check it's for the right version
+            // if (summary.productId !== productId) return
+
+            if (message.status === 'finished') {
+              // get data for this new reviewable
+              dispatch(api.util.invalidateTags([{ type: 'review', id: productId }]))
+            }
+          }
+
+          // sub to websocket topic
+          token = PubSub.subscribe('reviewable.process', handlePubSub)
+        } catch {
+          // no-op in case `cacheEntryRemoved` resolves before `cacheDataLoaded`,
+          // in which case `cacheDataLoaded` will throw
+        }
+        // cacheEntryRemoved will resolve when the cache subscription is no longer active
+        await cacheEntryRemoved
+        // perform cleanup steps once the `cacheEntryRemoved` promise resolves
+        PubSub.unsubscribe(token)
+      },
     },
     getReviewablesForVersion: {
-      keepUnusedDataFor: 10,
+      keepUnusedDataFor: 0.1,
       providesTags: (result, _error, { versionId }) =>
         result
           ? [
