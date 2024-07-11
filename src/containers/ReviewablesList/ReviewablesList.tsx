@@ -308,13 +308,15 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
     incompatibleMessage = 'The file is not supported by the transcoder'
   }
 
-  const handleDownloadFile = (fileId: string) => {
-    const url = `/api/projects/${projectName}/files/${fileId}`
+  const handleDownloadFile = (fileId: string, fileName: string = '') => {
+    let url = `/api/projects/${projectName}/files/${fileId}`
+
+    // if (codec) url += `.${codec}`
 
     // Create an invisible anchor element
     const a = document.createElement('a')
     a.href = url
-    a.download = '' // Leave the download attribute empty to use the original filename
+    a.download = fileName
     document.body.appendChild(a)
 
     // Trigger a click event on the anchor element
@@ -338,12 +340,16 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
     if (!reviewable) return
 
     const originalFileId = reviewable.createdFrom || reviewable.fileId
+    const originalReviewable = reviewables.find(
+      (reviewable) => reviewable.fileId === originalFileId,
+    )
 
     const items = [
       {
-        label: 'Download',
+        label: 'Download original',
         icon: 'download',
-        onClick: () => handleDownloadFile(originalFileId),
+        onClick: () => handleDownloadFile(originalFileId, originalReviewable?.filename),
+        disabled: !originalReviewable,
       },
     ]
 
