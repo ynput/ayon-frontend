@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import * as Styled from './DetailsPanelHeader.styled'
 import copyToClipboard from '@helpers/copyToClipboard'
 import StackedThumbnails from '@pages/EditorPage/StackedThumbnails'
@@ -10,6 +10,7 @@ import Actions from '@containers/Actions/Actions'
 import FeedFilters from '../FeedFilters/FeedFilters'
 import usePatchProductsListWithVersions from '@hooks/usePatchProductsListWithVersions'
 import { useGetChecklistsCountQuery } from '@/services/activities/getActivities'
+import ThumbnailUploader from '@/components/ThumbnailUploader/ThumbnailUploader'
 
 const DetailsPanelHeader = ({
   entityType,
@@ -141,38 +142,58 @@ const DetailsPanelHeader = ({
     }
   }
 
-  const handleThumbnailUpload = ({ id, thumbnailId }) => {
+  const [isDraggingFile, setIsDraggingFile] = useState(false)
+  const handleThumbnailUpload = (thumbnails = []) => {
+    // always set isDraggingFile to false
+    // hides the thumbnail uploader
+    setIsDraggingFile(false)
+
+    // check something was actually uploaded
+    if (!entities.length) return
     // patching the updatedAt will force a refresh of the thumbnail url
     const newUpdatedAt = new Date().toISOString()
-    const entity = entities.find((entity) => entity.id === id)
-    const currentAssignees = entity?.users || []
-    const operations = [
-      { id, projectName, data: { updatedAt: newUpdatedAt, thumbnailId }, currentAssignees },
-    ]
 
-    const versionPatch = {
-      productId: entity.productId,
-      versionUpdatedAt: newUpdatedAt,
-      versionThumbnailId: thumbnailId,
+    let operations = [],
+      versionPatches = []
+
+    for (const entity of thumbnails) {
+      const entityToPatch = entities.find((e) => e.id === entity.id)
+      if (!entityToPatch) continue
+      const thumbnailId = entity.thumbnailId
+      const currentAssignees = entity.users || []
+
+      operations.push({
+        id: entityToPatch.id,
+        projectName: entityToPatch.projectName,
+        data: { updatedAt: newUpdatedAt },
+        currentAssignees,
+      })
+
+      const versionPatch = {
+        productId: entityToPatch.productId,
+        versionUpdatedAt: newUpdatedAt,
+        versionThumbnailId: thumbnailId,
+      }
+
+      versionPatches.push(versionPatch)
     }
 
     // update productsList cache with new status
-    let productsPatch = patchProductsListWithVersions([versionPatch])
+    let productsPatch = patchProductsListWithVersions(versionPatches)
     try {
       updateEntities({ operations, entityType })
     } catch (error) {
       productsPatch?.undo()
-      productsPatch?.undo()
     }
   }
+
+  const handleThumbnailClick = () => {}
 
   const fullPath = firstEntity?.path || ''
   const pathArray = fullPath.split('/')
   const handleCopyPath = () => {
     copyToClipboard(fullPath)
   }
-
-  const portalId = 'dashboard-details-header'
 
   const hasUser =
     ['task', 'version', 'representation'].includes(entityType) &&
@@ -189,7 +210,10 @@ const DetailsPanelHeader = ({
   }
 
   return (
-    <Styled.Grid id={portalId} className={classNames('details-panel-header', { isCompact })}>
+    <Styled.Grid
+      className={classNames('details-panel-header', { isCompact })}
+      onDragEnter={() => setIsDraggingFile(true)}
+    >
       {onClose && (
         <Styled.CloseButton
           onClick={onClose}
@@ -211,11 +235,9 @@ const DetailsPanelHeader = ({
         <StackedThumbnails
           isLoading={isLoading}
           shimmer={isLoading}
-          style={{ aspectRatio: '1' }}
           thumbnails={thumbnails}
           projectName={projectName}
-          portalId={portalId}
-          onUpload={handleThumbnailUpload}
+          onClick={thumbnails.length === 1 && handleThumbnailClick}
         />
         <Styled.Content className={classNames({ isLoading })}>
           <h2>{!isMultiple ? firstEntity?.title : `${entities.length} ${entityType}s selected`}</h2>
@@ -282,6 +304,20 @@ const DetailsPanelHeader = ({
         }}
         scope={scope}
       />
+
+      {isDraggingFile && (
+        <ThumbnailUploader
+          isPortal
+          onFinish={handleThumbnailUpload}
+          onDragLeave={() => setIsDraggingFile(false)}
+          onDragOver={(e) => e.preventDefault()}
+          className="thumbnail-uploader"
+          entities={entities}
+          entityType={entityType}
+          entityId={firstEntity?.id}
+          entityUpdatedAt={firstEntity?.updatedAt}
+        />
+      )}
     </Styled.Grid>
   )
 }

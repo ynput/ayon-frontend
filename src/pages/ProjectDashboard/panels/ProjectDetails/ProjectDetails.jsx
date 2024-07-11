@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useGetProjectQuery } from '@queries/project/getProject'
 import DashboardPanelWrapper from '../DashboardPanelWrapper'
-import Thumbnail from '@containers/thumbnail'
+import Thumbnail from '@components/Thumbnail'
 import AttributeTable from '@containers/attributeTable'
 import { format } from 'date-fns'
 import { Button, SaveButton, Toolbar } from '@ynput/ayon-react-components'
