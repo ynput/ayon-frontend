@@ -82,4 +82,24 @@ const enhancedReview = api.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
   },
 })
 
-export const { useGetReviewablesForProductQuery, useGetReviewablesForVersionQuery } = enhancedReview
+const injectedReview = enhancedReview.injectEndpoints({
+  endpoints: (build) => ({
+    hasTranscoder: build.query<boolean, undefined>({
+      queryFn: async (_arg, { dispatch }) => {
+        // get list of installed addons
+        const res = await dispatch(enhancedReview.endpoints.getInstalledAddonsList.initiate())
+
+        if (res.data) {
+          const hasTranscoder = res.data.items.some((addon) => addon.addonName === 'transcoder')
+
+          return { data: hasTranscoder }
+        } else if (res.error) {
+          console.error(res.error)
+          return { data: false }
+        } else return { data: false }
+      },
+    }),
+  }),
+})
+
+export const { useGetReviewablesForProductQuery, useGetReviewablesForVersionQuery } = injectedReview

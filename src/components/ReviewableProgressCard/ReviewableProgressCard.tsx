@@ -1,9 +1,9 @@
 import { FC } from 'react'
-import * as Styled from './ReviewableUploadCard.styled'
+import * as Styled from './ReviewableProgressCard.styled'
 import { Button, getFileSizeString, Icon } from '@ynput/ayon-react-components'
 import { classNames } from 'primereact/utils'
 
-export interface ReviewableUploadFile {
+export interface ReviewableProgress {
   name: string
   size?: number
   progress?: number // 0 - 100
@@ -11,11 +11,11 @@ export interface ReviewableUploadFile {
   error?: string
 }
 
-interface ReviewableUploadCardProps extends ReviewableUploadFile {
+interface ReviewableProgressCardProps extends ReviewableProgress {
   onRemove?: () => void
 }
 
-const ReviewableUploadCard: FC<ReviewableUploadCardProps> = ({
+const ReviewableProgressCard: FC<ReviewableProgressCardProps> = ({
   name,
   progress,
   size,
@@ -66,4 +66,4 @@ const ReviewableUploadCard: FC<ReviewableUploadCardProps> = ({
   )
 }
 
-export default ReviewableUploadCard
+export default ReviewableProgressCard

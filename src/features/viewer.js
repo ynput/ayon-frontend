@@ -22,7 +22,6 @@ const viewerSlice = createSlice({
     upload: false, // used to open upload file picker
     fullscreen: false,
     quickView: false, // used to open quick view mode (reduced UI for quick view)
-    progress: {}, // keep track of progress of transcoding
   },
   reducers: {
     openReview: (
@@ -58,25 +57,11 @@ const viewerSlice = createSlice({
     toggleFullscreen: (state, { payload }) => {
       state.fullscreen = payload ? payload.fullscreen : !state.fullscreen
     },
-    updateProgress: (state, { payload: { progress, fileId } }) => {
-      // if progress is 100, remove the fileId from the progress object
-      if (progress >= 100 || progress < 0) {
-        delete state.progress[fileId]
-      } else {
-        state.progress[fileId] = progress
-      }
-    },
   },
 })
 
-export const {
-  openReview,
-  updateSelection,
-  closeReview,
-  toggleUpload,
-  toggleFullscreen,
-  updateProgress,
-} = viewerSlice.actions
+export const { openReview, updateSelection, closeReview, toggleUpload, toggleFullscreen } =
+  viewerSlice.actions
 export default viewerSlice.reducer
 
 // create an object for each reducer to define which state fields it will update

@@ -26,8 +26,8 @@ import { openReview, toggleUpload } from '@state/viewer'
 import { Icon } from '@ynput/ayon-react-components'
 import axios from 'axios'
 import { toast } from 'react-toastify'
-import ReviewableUploadCard, { ReviewableUploadFile } from '@components/ReviewableUploadCard'
-import api from '@/api'
+import ReviewableProgressCard, { ReviewableProgress } from '@components/ReviewableProgressCard'
+import api from '@api'
 import { $Any } from '@/types'
 import { UploadReviewableApiResponse } from '@/api/rest'
 
@@ -138,7 +138,7 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
     setActiveId(null)
   }
 
-  const [uploading, setUploads] = useState<Omit<ReviewableUploadFile, 'type'>[]>([])
+  const [uploading, setUploads] = useState<Omit<ReviewableProgress, 'type'>[]>([])
 
   const handleFileUpload = async (files: FileList) => {
     const uploadingFiles = Array.from(files).map((file) => ({
@@ -329,7 +329,7 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
         )}
 
         {processingReviewables.map((reviewable) => (
-          <ReviewableUploadCard
+          <ReviewableProgressCard
             key={reviewable.fileId}
             name={reviewable.filename}
             type={'processing'}
@@ -338,7 +338,7 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
         ))}
 
         {nonConvertedReviewables.map((reviewable) => (
-          <ReviewableUploadCard
+          <ReviewableProgressCard
             key={reviewable.fileId}
             name={reviewable.filename}
             type={'unsupported'}
@@ -347,7 +347,7 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
 
         {/* uploading items */}
         {uploading.map((file) => (
-          <ReviewableUploadCard
+          <ReviewableProgressCard
             key={file.name}
             {...file}
             type={'upload'}
