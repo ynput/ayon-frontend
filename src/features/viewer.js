@@ -4,6 +4,8 @@ import getInitialStateQueryParam from './middleware/getInitialStateQueryParam'
 export const initialStateQueryParams = {
   projectName: { key: 'project_name', initial: null },
   productId: { key: 'viewer_product', initial: null },
+  taskId: { key: 'viewer_task', initial: null },
+  folderId: { key: 'viewer_folder', initial: null },
   versionIds: { key: 'viewer_version', initial: [] },
   reviewableIds: { key: 'reviewable_id', initial: [] },
 }
@@ -26,13 +28,27 @@ const viewerSlice = createSlice({
   reducers: {
     openViewer: (
       state,
-      { payload: { versionIds, projectName, productId, reviewableIds, quickView } = {} } = {},
+      {
+        payload: {
+          versionIds,
+          projectName,
+          productId,
+          taskId,
+          folderId,
+          reviewableIds,
+          quickView,
+        } = {},
+      } = {},
     ) => {
-      state.productId = productId
-      state.versionIds = versionIds
       state.projectName = projectName
-      state.reviewableIds = reviewableIds || []
       state.quickView = !!quickView
+
+      if (productId) state.productId = productId
+      if (taskId) state.taskId = taskId
+      if (folderId) state.folderId = folderId
+
+      if (versionIds) state.versionIds = versionIds
+      if (reviewableIds) state.reviewableIds = reviewableIds || []
     },
     updateSelection: (state, { payload: { versionIds, reviewableIds, quickView } }) => {
       if (versionIds !== undefined) {
@@ -49,7 +65,9 @@ const viewerSlice = createSlice({
       state.versionIds = []
       state.projectName = null
       state.productId = null
-      state.reviewableIds = null
+      state.taskId = null
+      state.folderId = null
+      state.reviewableIds = []
     },
     toggleUpload: (state, { payload }) => {
       state.upload = payload
@@ -66,12 +84,14 @@ export default viewerSlice.reducer
 
 // create an object for each reducer to define which state fields it will update
 const viewerReducerSearchParams = {
-  openViewer: ['productId', 'versionIds', 'projectName', 'reviewableIds'],
+  openViewer: ['productId', 'taskId', 'folderId', 'versionIds', 'projectName', 'reviewableIds'],
   updateSelection: ['versionIds', 'reviewableIds'],
   closeViewer: [
     { state: 'versionIds', value: [] },
     { state: 'projectName', value: null },
     { state: 'productId', value: null },
+    { state: 'taskId', value: null },
+    { state: 'folderId', value: null },
     { state: 'reviewableIds', value: [] },
   ],
 }

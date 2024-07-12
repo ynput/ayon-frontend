@@ -33,6 +33,8 @@ const ViewerDialog = () => {
   const dispatch = useDispatch()
   // check if dialog is open or not
   const productId = useSelector((state: $Any) => state.viewer.productId)
+  const taskId = useSelector((state: $Any) => state.viewer.taskId)
+  const folderId = useSelector((state: $Any) => state.viewer.folderId)
   const projectName = useSelector((state: $Any) => state.viewer.projectName)
   const fullscreen = useSelector((state: $Any) => state.viewer.fullscreen)
 
@@ -59,7 +61,7 @@ const ViewerDialog = () => {
     return () => document.removeEventListener('keydown', handleEscape)
   }, [productId, fullscreen])
 
-  if (!productId || !projectName) return null
+  if ((!productId && !taskId && !folderId) || !projectName) return null
 
   return (
     <>

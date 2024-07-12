@@ -298,7 +298,7 @@ const UserDashboardList = ({
   )
 
   // HANDLE SPACEBAR VIEWER OPEN SHORTCUT
-  const spacebarShortcut = useTaskSpacebarViewer({ tasks, className: '.card' })
+  const spacebarShortcut = useTaskSpacebarViewer({ tasks })
 
   return (
     <>

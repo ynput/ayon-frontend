@@ -937,6 +937,22 @@ const injectedRtkApi = api.injectEndpoints({
         params: { label: queryArg.label },
       }),
     }),
+    getReviewablesForTask: build.query<
+      GetReviewablesForTaskApiResponse,
+      GetReviewablesForTaskApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/tasks/${queryArg.taskId}/reviewables`,
+      }),
+    }),
+    getReviewablesForFolder: build.query<
+      GetReviewablesForFolderApiResponse,
+      GetReviewablesForFolderApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/folders/${queryArg.folderId}/reviewables`,
+      }),
+    }),
     listServices: build.query<ListServicesApiResponse, ListServicesApiArg>({
       query: () => ({ url: `/api/services` }),
     }),
@@ -2110,6 +2126,18 @@ export type UploadReviewableApiArg = {
   'content-type': string
   'x-file-name': string
   'x-sender'?: string
+}
+export type GetReviewablesForTaskApiResponse =
+  /** status 200 Successful Response */ VersionReviewablesModel[]
+export type GetReviewablesForTaskApiArg = {
+  projectName: string
+  taskId: string
+}
+export type GetReviewablesForFolderApiResponse =
+  /** status 200 Successful Response */ VersionReviewablesModel[]
+export type GetReviewablesForFolderApiArg = {
+  projectName: string
+  folderId: string
 }
 export type ListServicesApiResponse = /** status 200 Successful Response */ ServiceListModel
 export type ListServicesApiArg = void
@@ -4004,6 +4032,9 @@ export type VersionReviewablesModel = {
   name: string
   version: string
   status: string
+  productId: string
+  productName: string
+  productType: string
   /** List of available reviewables */
   reviewables?: ReviewableModel[]
 }

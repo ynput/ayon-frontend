@@ -22,19 +22,21 @@ const ViewerDetailsPanel = ({ versionIds = [], projectName }) => {
 
   return (
     <ViewerDetailsPanelWrapper>
-      <DetailsPanel
-        entities={entities}
-        statusesOptions={projectInfo.statuses || []}
-        tagsOptions={projectInfo.tags || []}
-        projectUsers={users}
-        activeProjectUsers={users}
-        disabledProjectUsers={[]}
-        projectsInfo={projectsInfo}
-        projectNames={[projectName]}
-        entityType={'version'}
-        scope="review"
-        style={{ boxShadow: 'none', borderRadius: 4, overflow: 'hidden' }}
-      />
+      {versionIds.length && (
+        <DetailsPanel
+          entities={entities}
+          statusesOptions={projectInfo.statuses || []}
+          tagsOptions={projectInfo.tags || []}
+          projectUsers={users}
+          activeProjectUsers={users}
+          disabledProjectUsers={[]}
+          projectsInfo={projectsInfo}
+          projectNames={[projectName]}
+          entityType={'version'}
+          scope="review"
+          style={{ boxShadow: 'none', borderRadius: 4, overflow: 'hidden' }}
+        />
+      )}
       <DetailsPanelSlideOut projectsInfo={projectsInfo} scope="review" />
     </ViewerDetailsPanelWrapper>
   )

@@ -7,14 +7,10 @@ export const useOpenTaskInViewer = () => {
   const dispatch = useDispatch()
 
   return (task: $Any) => {
-    const {
-      lastVersionWithReviewableVersionId: versionId,
-      lastVersionWithReviewableProductId: productId,
-      projectName,
-    } = task
+    const { id, projectName } = task
 
-    if (versionId && productId && projectName) {
-      dispatch(openViewer({ versionIds: [versionId], productId, projectName, quickView: true }))
+    if (id && projectName) {
+      dispatch(openViewer({ taskId: id, projectName, quickView: true }))
     } else {
       toast.info('Task has no versions to view.')
     }

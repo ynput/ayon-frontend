@@ -541,7 +541,6 @@ const Products = () => {
     if (!versionId) return toast.error('No version found for this product')
 
     // check review isn't already open
-
     if (!viewerProductId) {
       dispatch(openViewer({ productId, versionIds: [versionId], projectName, quickView }))
     }

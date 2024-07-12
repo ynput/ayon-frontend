@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Button } from '@ynput/ayon-react-components'
 import * as Styled from './Viewer.styled'
 import VersionSelectorTool from '@components/VersionSelectorTool/VersionSelectorTool'
-import { useGetReviewablesForProductQuery } from '@queries/review/getReview'
+import { useGetViewerReviewablesQuery } from '@queries/review/getReview'
 import { useDispatch, useSelector } from 'react-redux'
 import { toggleFullscreen, toggleUpload, updateSelection } from '@state/viewer'
 import ViewerDetailsPanel from './ViewerDetailsPanel'
@@ -22,6 +22,8 @@ interface ViewerProps {
 const Viewer = ({ onClose }: ViewerProps) => {
   const {
     productId,
+    taskId,
+    folderId,
     projectName,
     versionIds = [],
     reviewableIds = [],
@@ -35,7 +37,10 @@ const Viewer = ({ onClose }: ViewerProps) => {
 
   // new query: returns all reviewables for a product
   const { data: versionsAndReviewables = [], isFetching: isFetchingReviewables } =
-    useGetReviewablesForProductQuery({ projectName, productId: productId }, { skip: !productId })
+    useGetViewerReviewablesQuery(
+      { projectName, productId, taskId, folderId },
+      { skip: !projectName || (!productId && !taskId && !folderId) },
+    )
 
   // This should not return the first reviewable, but there should be reviewable
   // selector in the UI
@@ -170,23 +175,26 @@ const Viewer = ({ onClose }: ViewerProps) => {
         alt={selectedReviewable.label || selectedReviewable.filename}
       />
     )
-  } else if (selectedReviewable) {
-    viewerComponent = (
-      <EmptyPlaceholder
-        icon="hide_image"
-        message={
-          availability === 'conversionRequired'
-            ? 'File not supported and needs conversion'
-            : 'No preview available'
-        }
-      />
-    )
-  } else if (!selectedReviewable || !reviewables.length) {
-    viewerComponent = (
-      <EmptyPlaceholder icon="hide_image" message="No reviewables available">
+  } else {
+    let message = 'No preview available'
+    let children = null
+
+    if (!versionsAndReviewables.length) {
+      message = 'No versions available'
+    } else if (!reviewables.length) {
+      message = 'No reviewables available'
+      children = (
         <Button onClick={handleUploadButton} icon="upload" variant="filled">
           Upload a file
         </Button>
+      )
+    } else if (availability === 'conversionRequired') {
+      message = 'File not supported and needs conversion'
+    }
+
+    viewerComponent = (
+      <EmptyPlaceholder icon="hide_image" message={message}>
+        {children}
       </EmptyPlaceholder>
     )
   }

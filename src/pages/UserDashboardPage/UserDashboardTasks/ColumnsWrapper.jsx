@@ -111,7 +111,6 @@ const ColumnsWrapper = ({
 
   const shortcuts = useTaskSpacebarViewer({
     tasks: allTasks,
-    className: '.entity-card',
   })
 
   return (

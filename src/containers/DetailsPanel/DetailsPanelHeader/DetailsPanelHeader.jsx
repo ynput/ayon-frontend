@@ -192,29 +192,24 @@ const DetailsPanelHeader = ({
   }
 
   const handleThumbnailClick = () => {
-    let versionId, productId
+    let versionIds,
+      id = firstEntity.id,
+      entityTypeKey = entityType + 'Id'
+
     if (entityType === 'version') {
-      // easy way to open the viewer
-      productId = firstEntity.productId
-      versionId = firstEntity.id
+      versionIds = [firstEntity.id]
+      id = firstEntity.productId
+      entityTypeKey = 'productId'
     }
 
-    if (entityType === 'task') {
-      // we need to find task productId and versionId (if it has one linked)
-      productId = firstEntity.folderId
-      versionId = firstEntity.versionId
-    }
+    console.log(entityTypeKey)
 
-    if (entityType === 'folder') {
-      // open the last published version
-    }
-
-    if ((versionId, productId)) {
+    if (id) {
       dispatch(
         openViewer({
-          productId,
+          [entityTypeKey]: id,
           projectName,
-          versionIds: [versionId],
+          versionIds,
         }),
       )
     }
