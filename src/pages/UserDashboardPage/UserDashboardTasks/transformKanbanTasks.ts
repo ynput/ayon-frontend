@@ -96,7 +96,7 @@ const transformKanbanTasks = (
       ...task,
       projectCode: code,
       shortPath,
-      thumbnailUrl: `/api/projects/${task.projectName}/tasks/${task.id}/thumbnail?updatedAt=${task.updatedAt}&placeholder=none`,
+      thumbnailUrl: `/api/projects/${task.projectName}/tasks/${task.id}/thumbnail?updatedAt=${task.updatedAt}`,
       ...icons,
     }
   })

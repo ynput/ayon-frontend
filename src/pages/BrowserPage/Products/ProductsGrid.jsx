@@ -276,9 +276,7 @@ const ProductsGrid = ({
                   ))
                 : groupData.map(({ data: product }, index) => {
                     if (!product) return null
-                    const thumbnailUrl = product.versionThumbnailId
-                      ? `/api/projects/${projectName}/versions/${product.versionId}/thumbnail?updatedAt=${product.versionUpdatedAt}&placeholder=none`
-                      : null
+                    const thumbnailUrl = `/api/projects/${projectName}/versions/${product.versionId}/thumbnail?updatedAt=${product.versionUpdatedAt}`
 
                     return (
                       <EntityCard

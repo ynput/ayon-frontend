@@ -25,12 +25,12 @@ export const getThumbnailUrl = ({ entityId, entityType, thumbnailId, updatedAt, 
   // If entityId and entityType are provided, construct the URL using them
   if (entityId && entityType) {
     const entityUrl = `/api/projects/${projectName}/${entityType}s/${entityId}/thumbnail`
-    return `${entityUrl}${updatedAtQueryParam}&placeholder=none`
+    return `${entityUrl}${updatedAtQueryParam}`
   }
 
   // If entityId and entityType are not provided, fallback on thumbnailId
   const thumbnailUrl = `/api/projects/${projectName}/thumbnails/${thumbnailId}`
-  return `${thumbnailUrl}${updatedAtQueryParam}&placeholder=none`
+  return `${thumbnailUrl}${updatedAtQueryParam}`
 }
 
 const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
