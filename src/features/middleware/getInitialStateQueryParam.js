@@ -1,6 +1,6 @@
 import { isArray } from 'lodash'
 
-const getInitialStateQueryParam = (key, initial, types) => {
+const getInitialStateQueryParam = (key, initial, types = []) => {
   const urlParams = new URLSearchParams(window.location.search)
 
   const isValueArray = isArray(initial) || types.some((type) => isArray(type))

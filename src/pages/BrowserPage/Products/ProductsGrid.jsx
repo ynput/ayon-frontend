@@ -84,7 +84,7 @@ const ProductsGrid = ({
 
   const handleContext = (e, id) => {
     onContextMenuSelectionChange({ value: id })
-    onContext(e)
+    onContext(e, id)
   }
 
   data = useMemo(() => {
@@ -229,6 +229,7 @@ const ProductsGrid = ({
         zIndex: 1,
       }}
       onClick={() => onSelectionChange({ value: {} })}
+      onKeyDown={(e) => e.key === ' ' && e.preventDefault()}
     >
       <Shortcuts shortcuts={shortcuts} deps={[collapsedGroups]} />
       {Object.entries(groupedData).map(([groupName, groupData], index) => (
@@ -275,9 +276,7 @@ const ProductsGrid = ({
                   ))
                 : groupData.map(({ data: product }, index) => {
                     if (!product) return null
-                    const thumbnailUrl = product.versionThumbnailId
-                      ? `/api/projects/${projectName}/versions/${product.versionId}/thumbnail?updatedAt=${product.versionUpdatedAt}&placeholder=none`
-                      : null
+                    const thumbnailUrl = `/api/projects/${projectName}/versions/${product.versionId}/thumbnail?updatedAt=${product.versionUpdatedAt}`
 
                     return (
                       <EntityCard

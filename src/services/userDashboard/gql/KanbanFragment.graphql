@@ -17,5 +17,4 @@ fragment KanbanFragment on KanbanNode {
   folderLabel
   folderName
   folderPath
-  lastVersionWithThumbnailId
 }

@@ -37,6 +37,7 @@ const activityTypeIcons = {
   'version.publish': 'layers',
   'assignee.add': 'person_add',
   'assignee.remove': 'person_remove',
+  reviewable: 'file_present',
 }
 const activityTypeIconsMultiple = {
   comment: 'forum',

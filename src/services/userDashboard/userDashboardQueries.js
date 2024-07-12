@@ -21,13 +21,15 @@ const TASK_FRAGMENT = () => `
       label
       path
     }
-    versions {
+    versions(last: 1) {
       edges {
         node {
           id
           thumbnailId
           name
           updatedAt
+          createdAt
+          productId
         }
       }
   }
@@ -55,7 +57,7 @@ ${TASK_FRAGMENT()}
 `
 
 export const TASK_DETAILS = (attribs = []) => `
-query KanBanTask($projectName: String!, $entityId: String!) {
+query GetTaskDetails($projectName: String!, $entityId: String!) {
   project(name: $projectName) {
     projectName
     code

@@ -11,16 +11,17 @@ const FeedFilters = ({
   entityType,
   className,
   overrides = {},
+  scope,
   ...props
 }) => {
   const dispatch = useDispatch()
-  const setFeedFilter = (value) => dispatch(updateFeedFilter({ value, isSlideOut }))
-  const setTab = (tab) => dispatch(updateDetailsPanelTab({ isSlideOut, tab }))
+  const setFeedFilter = (value) => dispatch(updateFeedFilter({ value, isSlideOut, scope }))
+  const setTab = (tab) => dispatch(updateDetailsPanelTab({ isSlideOut, tab, scope }))
 
   const filtersStateLocation = isSlideOut ? 'slideOut' : 'pinned'
 
-  const selectedFilter = useSelector((state) => state.details[filtersStateLocation].filter)
-  const selectedTab = useSelector((state) => state.details[filtersStateLocation].tab)
+  const selectedFilter = useSelector((state) => state.details[filtersStateLocation][scope].filter)
+  const selectedTab = useSelector((state) => state.details[filtersStateLocation][scope].tab)
 
   const filtersLeft = [
     {
@@ -72,10 +73,10 @@ const FeedFilters = ({
       <Spacer />
       {entityType === 'version' && (
         <Styled.FilterButton
-          icon="view_in_ar"
-          onClick={() => setTab('representations')}
-          selected={selectedTab === 'representations'}
-          data-tooltip="Representations"
+          icon="order_play"
+          onClick={() => setTab('files')}
+          selected={selectedTab === 'files'}
+          data-tooltip="Version files"
           data-tooltip-delay={0}
         />
       )}

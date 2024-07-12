@@ -1,0 +1,80 @@
+import { Dialog } from '@ynput/ayon-react-components'
+import { useDispatch, useSelector } from 'react-redux'
+import { closeViewer } from '@state/viewer'
+import { useEffect } from 'react'
+import Viewer from './Viewer'
+import styled from 'styled-components'
+import { useLocation } from 'react-router'
+import { $Any } from '@/types'
+import isHTMLElement from '@helpers/isHTMLElement'
+
+const StyledDialog = styled(Dialog)`
+  /* dnd overlay must offset this 64px by 32px */
+  width: calc(100% - 64px);
+  height: calc(100% - 64px);
+  max-height: unset;
+  max-width: unset;
+
+  .body {
+    overflow: hidden;
+  }
+  &:focus-visible {
+    outline: none;
+  }
+  /* hide header and footer */
+  .header,
+  .footer {
+    display: none;
+  }
+`
+
+const ViewerDialog = () => {
+  const location = useLocation()
+  const dispatch = useDispatch()
+  // check if dialog is open or not
+  const productId = useSelector((state: $Any) => state.viewer.productId)
+  const taskId = useSelector((state: $Any) => state.viewer.taskId)
+  const folderId = useSelector((state: $Any) => state.viewer.folderId)
+  const projectName = useSelector((state: $Any) => state.viewer.projectName)
+  const fullscreen = useSelector((state: $Any) => state.viewer.fullscreen)
+
+  const handleClose = () => {
+    // close the dialog
+    dispatch(closeViewer())
+  }
+
+  // when pressing escape key, close the dialog
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      // Check if e.target is an HTMLElement before accessing tagName or isContentEditable
+      if (isHTMLElement(e.target)) {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
+        if (e.target.isContentEditable) return
+      }
+
+      if (e.key === 'Escape' && !fullscreen) {
+        handleClose()
+      }
+    }
+
+    document.addEventListener('keydown', handleEscape)
+    return () => document.removeEventListener('keydown', handleEscape)
+  }, [productId, fullscreen])
+
+  if ((!productId && !taskId && !folderId) || !projectName) return null
+
+  return (
+    <>
+      <StyledDialog
+        isOpen={location.pathname !== '/review'}
+        hideCancelButton
+        size="full"
+        onClose={() => {}}
+      >
+        <Viewer onClose={handleClose} />
+      </StyledDialog>
+    </>
+  )
+}
+
+export default ViewerDialog

@@ -357,7 +357,7 @@ const Bundles = () => {
                   data-tooltip="Upload addon zip files"
                   data-shortcut="A"
                 >
-                  <span className="large">Upload addons</span>
+                  <span className="large">Upload Addons</span>
                   <span className="small">Addons</span>
                 </Button>
                 <Button

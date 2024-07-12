@@ -15,11 +15,9 @@ export const SlideOut = styled.div`
   left: 0;
   top: 0;
   bottom: 0;
-  z-index: 500;
+  z-index: 200;
   width: 100%;
   max-width: 533px;
-
-  z-index: 200;
 
   animation: ${slideOutFromRight} 0.2s ease forwards;
 `

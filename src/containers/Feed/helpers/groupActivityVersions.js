@@ -2,17 +2,19 @@ import { differenceInMinutes } from 'date-fns'
 import { cloneDeep } from 'lodash'
 
 // transforms a full activity to a version item
+// context.product
 const activityToVersionItem = (activity = {}) => {
   const {
     updatedAt,
     createdAt,
     origin: { name, id } = {},
-    activityData: { context: { productName, productType } = {} } = {},
+    activityData: { context: { productName, productType, productId } = {} } = {},
   } = activity
 
   return {
     name,
     id,
+    productId,
     productName,
     productType,
     updatedAt,

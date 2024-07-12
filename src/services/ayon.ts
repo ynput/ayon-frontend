@@ -90,6 +90,7 @@ const tagTypes = [
   'inbox',
   'service',
   'actions',
+  'review',
 ]
 
 const prepareHeaders = (headers: any) => {

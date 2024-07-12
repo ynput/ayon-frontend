@@ -4,6 +4,7 @@ import KanBanColumn from './KanBanColumn/KanBanColumn'
 import { useDndContext } from '@dnd-kit/core'
 import styled from 'styled-components'
 import CollapsedColumn from './KanBanColumn/CollapsedColumn'
+import { useTaskSpacebarViewer } from '../hooks'
 
 const StyledWrapper = styled(Section)`
   height: 100%;
@@ -108,8 +109,13 @@ const ColumnsWrapper = ({
     }
   }, [active, sectionRef.current])
 
+  const shortcuts = useTaskSpacebarViewer({
+    tasks: allTasks,
+  })
+
   return (
     <>
+      {shortcuts}
       <StyledWrapper
         style={{
           cursor: active && 'grabbing',

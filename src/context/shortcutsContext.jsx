@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { toggleMenuOpen } from '@state/context'
 import { useLogOutMutation } from '@queries/auth/getAuth'
 import { useSearchParams } from 'react-router-dom'
@@ -11,6 +11,9 @@ function ShortcutsProvider(props) {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const dispatch = useDispatch()
+
+  // review open
+  const reviewOpen = useSelector((state) => state.viewer.productId)
 
   // logout
   const [logout] = useLogOutMutation()
@@ -90,6 +93,8 @@ function ShortcutsProvider(props) {
       if (e.target.classList.contains('block-shortcuts')) return
       // or any of its parents
       if (e.target.closest('.block-shortcuts')) return
+      // if review is open, don't allow shortcuts
+      if (reviewOpen) return
 
       let singleKey = e.key
       const isMeta = e.metaKey || e.ctrlKey
@@ -132,9 +137,9 @@ function ShortcutsProvider(props) {
       }
 
       // and run the action
-      shortcut.action(hovered, isMeta)
+      shortcut.action(hovered, isMeta, e)
     },
-    [lastPressed, shortcuts, hovered, disabled, allowed],
+    [lastPressed, shortcuts, hovered, disabled, allowed, reviewOpen],
   )
 
   // Add event listeners

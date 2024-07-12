@@ -82,7 +82,7 @@ export const SocketProvider = (props) => {
 
     return (message) => {
       // If the function is called more than 100 times per second, return early.
-      const threshold = 100
+      const threshold = 1000
       if (callCount > threshold) {
         setOverloaded(true)
         return console.log(
