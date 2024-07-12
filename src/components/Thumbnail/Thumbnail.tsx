@@ -14,6 +14,7 @@ interface ThumbnailProps extends HTMLAttributes<HTMLDivElement> {
   className?: string
   disabled?: boolean
   src?: string
+  hoverIcon?: string
 }
 
 const Thumbnail = ({
@@ -27,6 +28,7 @@ const Thumbnail = ({
   className,
   disabled,
   src,
+  hoverIcon,
   ...props
 }: ThumbnailProps) => {
   let url =
@@ -73,10 +75,13 @@ const Thumbnail = ({
       })}
       {...props}
     >
-      {(!isLoading || !loaded) && !disabled && <Icon icon={icon || 'image'} />}
+      {(!isLoading || !loaded) && !disabled && (
+        <Icon icon={icon || 'image'} className="type-icon" />
+      )}
       {((entityType && projectName && !(isWrongEntity || !entityId)) || url) && (
         <Styled.Image alt={`Entity thumbnail ${entityId}`} src={url} />
       )}
+      {hoverIcon && <Icon icon={hoverIcon} className="hover-icon" />}
     </Styled.Card>
   )
 }

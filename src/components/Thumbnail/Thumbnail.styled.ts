@@ -22,8 +22,24 @@ export const Card = styled.div`
     justify-content: center;
     align-items: center;
     inset: 0;
-    color: var(--md-sys-color-outline);
+
     transition: opacity 0.2s;
+  }
+
+  .type-icon {
+    color: var(--md-sys-color-outline);
+  }
+
+  .hover-icon {
+    inset: unset;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 30px;
+
+    border-radius: 50%;
+
+    background-color: rgba(0, 0, 0, 0.7);
   }
 
   /* hide the image until it has been loaded */
@@ -42,7 +58,7 @@ export const Card = styled.div`
 
     /* show icon if error */
     &.error {
-      .icon {
+      .type-icon {
         opacity: 1;
       }
     }
@@ -52,16 +68,23 @@ export const Card = styled.div`
     cursor: pointer;
 
     &:hover {
-      border-color: var(--md-sys-color-outline);
-
-      background-color: var(--md-sys-color-surface-container-hover);
       &.loaded:not(.error) {
         background-color: var(--md-sys-color-on-surface);
       }
 
       img {
-        scale: 1.1;
         opacity: 0.9;
+        scale: 1.1;
+      }
+
+      /* show play icon */
+      .hover-icon {
+        opacity: 1;
+      }
+
+      /* if :has a hover-icon hide the type-cion */
+      .type-icon {
+        opacity: 0;
       }
     }
   }

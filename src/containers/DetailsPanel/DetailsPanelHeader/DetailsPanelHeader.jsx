@@ -264,6 +264,7 @@ const DetailsPanelHeader = ({
           thumbnails={thumbnails}
           projectName={projectName}
           onClick={thumbnails.length === 1 && handleThumbnailClick}
+          hoverIcon={'play_circle'}
         />
         <Styled.Content className={classNames({ isLoading })}>
           <h2>{!isMultiple ? firstEntity?.title : `${entities.length} ${entityType}s selected`}</h2>
