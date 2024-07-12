@@ -21,6 +21,7 @@ const viewerSlice = createSlice({
   name: 'viewer',
   initialState: {
     ...initialStateFromQueryParams,
+    isOpen: false,
     upload: false, // used to open upload file picker
     fullscreen: false,
     quickView: false, // used to open quick view mode (reduced UI for quick view)
@@ -47,6 +48,8 @@ const viewerSlice = createSlice({
       if (taskId) state.taskId = taskId
       if (folderId) state.folderId = folderId
 
+      if (productId || taskId || folderId) state.isOpen = true
+
       if (versionIds) state.versionIds = versionIds
       if (reviewableIds) state.reviewableIds = reviewableIds || []
     },
@@ -69,6 +72,7 @@ const viewerSlice = createSlice({
       state.taskId = null
       state.folderId = null
       state.reviewableIds = []
+      state.isOpen = false
     },
     toggleUpload: (state, { payload }) => {
       state.upload = payload

@@ -58,8 +58,6 @@ const Products = () => {
   // context redux
   const selectedVersions = useSelector((state) => state.context.selectedVersions)
   const pairing = useSelector((state) => state.context.pairing)
-  // viewer open
-  const viewerProductId = useSelector((state) => state.viewer.productId)
 
   const selectedTaskTypes = useSelector((state) => state.context.filters.browser.productTaskTypes)
   // create an array of options for the tasks dropdown using tasksOrder and tasks
@@ -534,6 +532,9 @@ const Products = () => {
     dispatch(setFocusedVersions([versionId]))
   }
 
+  // viewer open
+  const viewerIsOpen = useSelector((state) => state.viewer.isOpen)
+
   const handleOpenViewer = (productId, quickView) => {
     // find the version id of the product
     const versionId = listData.find((s) => s.id === productId)?.versionId
@@ -541,7 +542,7 @@ const Products = () => {
     if (!versionId) return toast.error('No version found for this product')
 
     // check review isn't already open
-    if (!viewerProductId) {
+    if (!viewerIsOpen) {
       dispatch(openViewer({ productId, versionIds: [versionId], projectName, quickView }))
     }
   }

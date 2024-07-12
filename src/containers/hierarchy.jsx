@@ -278,12 +278,13 @@ const Hierarchy = (props) => {
     dispatch(setExpandedFolders(event.value))
   }
 
-  const viewerProductId = useSelector((state) => state.viewer.productId)
+  // viewer open
+  const viewerIsOpen = useSelector((state) => state.viewer.isOpen)
   const handleTableKeyDown = (e) => {
     if (e.key === ' ') {
       e.preventDefault()
       const firstSelected = Object.keys(selectedFolders)[0]
-      if (firstSelected && !viewerProductId) {
+      if (firstSelected && !viewerIsOpen) {
         dispatch(openViewer({ folderId: firstSelected, projectName: projectName }))
       }
     }

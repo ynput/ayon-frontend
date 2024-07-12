@@ -54,9 +54,7 @@ const Viewer = ({ onClose }: ViewerProps) => {
     if (!versionIds.length && !isFetchingReviewables && versionsAndReviewables.length) {
       const lastVersion = versionsAndReviewables[versionsAndReviewables.length - 1]
       if (lastVersion) {
-        dispatch(
-          updateSelection({ versionIds: [lastVersion.id], productId: lastVersion.productId }),
-        )
+        dispatch(updateSelection({ versionIds: [lastVersion.id] }))
       }
     }
   }, [versionIds, isFetchingReviewables, versionsAndReviewables, dispatch])
