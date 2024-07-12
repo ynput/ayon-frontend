@@ -238,12 +238,6 @@ const Hierarchy = (props) => {
     dispatch(setExpandedFolders(mergedExpandedFolders))
   }
 
-  const onContextMenuSelectionChange = (event) => {
-    if (focusedFolders.includes(event.value)) return
-    const subType = hierarchyObjectData[event.value].folderType
-    dispatch(setFocusedFolders({ ids: [event.value], subTypes: [subType] }))
-  }
-
   const onToggle = (event) => {
     const isMetaKey = event.originalEvent.metaKey || event.originalEvent.ctrlKey
     const newExpandedFolders = event.value
@@ -280,33 +274,58 @@ const Hierarchy = (props) => {
 
   // viewer open
   const viewerIsOpen = useSelector((state) => state.viewer.isOpen)
+
+  const openInViewer = (id, quickView) => {
+    if (id && !viewerIsOpen) {
+      dispatch(openViewer({ folderId: id, projectName: projectName, quickView }))
+    }
+  }
+
   const handleTableKeyDown = (e) => {
     if (e.key === ' ') {
       e.preventDefault()
       const firstSelected = Object.keys(selectedFolders)[0]
-      if (firstSelected && !viewerIsOpen) {
-        dispatch(openViewer({ folderId: firstSelected, projectName: projectName }))
-      }
+      openInViewer(firstSelected, true)
     }
   }
 
   // Context Menu
   // const {openContext, useCreateContext} = useContextMenu()
   // context items
-  const contextItems = [
+  const ctxMenuItems = (selected = []) => [
+    {
+      label: 'Open in viewer',
+      icon: 'play_circle',
+      shortcut: 'Spacebar',
+      command: () => openInViewer(selected[0], false),
+    },
     {
       label: 'Detail',
       command: () => setShowDetail(true),
       icon: 'database',
     },
     {
-      label: 'View latest versions',
+      label: 'View all versions as latest',
       command: () => dispatch(setSelectedVersions({})),
       icon: 'upgrade',
     },
   ]
   // create the ref and model
-  const [ctxMenuShow] = useCreateContext(contextItems)
+  const [ctxMenuShow] = useCreateContext()
+
+  const onContextMenu = (event) => {
+    let newFocused = [...focusedFolders]
+    const itemId = event.node.key
+    if (itemId && !focusedFolders?.includes(itemId)) {
+      newFocused = [itemId]
+      // if the selection does not include the clicked node, new selection is the clicked node
+      const subTypes = [itemId].map((id) => hierarchyObjectData[id].folderType)
+      // set focused folders and remove any focused tasks
+      dispatch(setFocusedFolders({ ids: newFocused, subTypes: subTypes }))
+    }
+
+    ctxMenuShow(event.originalEvent, ctxMenuItems(newFocused))
+  }
 
   // create 10 dummy rows
   const loadingData = useMemo(() => {
@@ -338,8 +357,7 @@ const Hierarchy = (props) => {
         onSelectionChange={onSelectionChange}
         onToggle={onToggle}
         onRowClick={onRowClick}
-        onContextMenu={(e) => ctxMenuShow(e.originalEvent)}
-        onContextMenuSelectionChange={onContextMenuSelectionChange}
+        onContextMenu={onContextMenu}
         className={isFetching ? 'table-loading' : undefined}
         onKeyDown={handleTableKeyDown}
       >

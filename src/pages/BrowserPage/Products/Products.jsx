@@ -549,7 +549,7 @@ const Products = () => {
 
   const ctxMenuItems = (id) => [
     {
-      label: 'Viewer',
+      label: 'Open in viewer',
       command: () => handleOpenViewer(id),
       icon: 'play_circle',
       shortcut: 'Spacebar',

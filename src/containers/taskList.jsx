@@ -115,18 +115,29 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
 
   // viewer open
   const viewerIsOpen = useSelector((state) => state.viewer.isOpen)
+
+  const openInViewer = (id, quickView) => {
+    if (id && !viewerIsOpen) {
+      dispatch(openViewer({ taskId: id, projectName: projectName, quickView }))
+    }
+  }
+
   const handleTableKeyDown = (e) => {
     if (e.key === ' ') {
       e.preventDefault()
       const firstSelected = Object.keys(selectedTasks)[0]
-      if (firstSelected && !viewerIsOpen) {
-        dispatch(openViewer({ taskId: firstSelected, projectName: projectName }))
-      }
+      openInViewer(firstSelected, true)
     }
   }
 
   // CONTEXT MENU
   const ctxMenuItems = (selected = []) => [
+    {
+      label: 'Open in viewer',
+      icon: 'play_circle',
+      shortcut: 'Spacebar',
+      command: () => openInViewer(selected[0], false),
+    },
     {
       label: `Filter products by task${selected.length > 1 ? 's' : ''}`,
       icon: 'filter_list',
@@ -138,6 +149,8 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
       icon: 'database',
     },
   ]
+
+  const [ctxMenuShow] = useCreateContext()
 
   const onContextMenu = (event) => {
     let newFocused = [...focusedTasks]
@@ -153,8 +166,6 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
 
     ctxMenuShow(event.originalEvent, ctxMenuItems(newFocused))
   }
-
-  const [ctxMenuShow] = useCreateContext([])
 
   // create 10 dummy rows
   const loadingData = useMemo(() => {
@@ -267,8 +278,8 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
             emptyMessage=" "
             selectionMode="multiple"
             selectionKeys={selectedTasks}
-            onSelectionChange={(e) => onSelectionChange(e)}
-            onContextMenu={(e) => onContextMenu(e)}
+            onSelectionChange={onSelectionChange}
+            onContextMenu={onContextMenu}
             onRowClick={onRowClick}
             className={isFetching ? 'table-loading' : undefined}
             onClick={handleDeselect}
