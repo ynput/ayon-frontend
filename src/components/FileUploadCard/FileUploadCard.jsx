@@ -39,7 +39,7 @@ const fileIcons = {
   picture_as_pdf: ['pdf', '.pdf'],
   // default
   image: ['image', '.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp'],
-  videocam: ['video', '.mp4', '.mov', '.avi', '.mkv', '.webm'],
+  videocam: ['video', '.mp4', '.mov', '.avi', '.mkv', '.webm', '.mxf'],
   business_center: ['application'],
   audio_file: ['audio'],
   text_snippet: ['text'],
