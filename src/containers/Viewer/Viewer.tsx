@@ -162,7 +162,7 @@ const Viewer = ({ onClose }: ViewerProps) => {
   const availability = selectedReviewable?.availability
   const isPlayable = availability !== 'conversionRequired'
 
-  const noVersions = !versionsAndReviewables.length
+  const noVersions = !versionsAndReviewables.length && !isFetchingReviewables
 
   if (selectedReviewable?.mimetype.includes('video') && isPlayable) {
     viewerComponent = (
@@ -181,7 +181,7 @@ const Viewer = ({ onClose }: ViewerProps) => {
         alt={selectedReviewable.label || selectedReviewable.filename}
       />
     )
-  } else {
+  } else if (!isFetchingReviewables) {
     let message = 'No preview available'
     let children = null
 
