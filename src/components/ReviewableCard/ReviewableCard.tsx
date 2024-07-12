@@ -17,6 +17,7 @@ export interface ReviewableCardProps
   isSelected?: boolean
   isDragging?: boolean //is something being dragged?
   dragProps?: any
+  sortingDisabled?: boolean
 }
 
 const ReviewableCard = forwardRef<HTMLDivElement, ReviewableCardProps>(
@@ -34,11 +35,12 @@ const ReviewableCard = forwardRef<HTMLDivElement, ReviewableCardProps>(
       isSelected,
       isDragging,
       dragProps = {},
+      sortingDisabled,
       ...props
     },
     ref,
   ) => {
-    const isDraggable = dragProps || isDragOverlay
+    const isDraggable = (dragProps || isDragOverlay) && !sortingDisabled
 
     const unoptimized = availability === 'conversionRecommended'
     const isQueued = unoptimized && !!processing

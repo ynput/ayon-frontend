@@ -379,6 +379,7 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
                 <SortableContext
                   items={reviewables.map(({ fileId }) => fileId as UniqueIdentifier)}
                   strategy={verticalListSortingStrategy}
+                  disabled
                 >
                   {optimized.map((reviewable) => (
                     <SortableReviewableCard
@@ -388,6 +389,7 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
                       isSelected={reviewableIds.includes(reviewable.fileId)}
                       isDragging={!!activeId}
                       onContextMenu={handleContextMenu}
+                      sortingDisabled
                       {...reviewable}
                     />
                   ))}

@@ -20,6 +20,7 @@ const SortableReviewableCard: FC<SortableReviewableCardProps> = ({ ...props }) =
       <ReviewableCard
         isDropPlaceholder={isDragging}
         dragProps={{ ...attributes, ...listeners }}
+        disabled={props.sortingDisabled}
         {...props}
       />
     </div>
