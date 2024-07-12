@@ -11,6 +11,7 @@ import { setFocusedFolders, setUri, setExpandedFolders, setSelectedVersions } fr
 import { useGetHierarchyQuery } from '@queries/getHierarchy'
 import useCreateContext from '@hooks/useCreateContext'
 import HierarchyExpandFolders from './HierarchyExpandFolders'
+import { openViewer } from '@/features/viewer'
 
 const filterHierarchy = (text, folder, folders) => {
   let result = []
@@ -277,6 +278,17 @@ const Hierarchy = (props) => {
     dispatch(setExpandedFolders(event.value))
   }
 
+  const viewerProductId = useSelector((state) => state.viewer.productId)
+  const handleTableKeyDown = (e) => {
+    if (e.key === ' ') {
+      e.preventDefault()
+      const firstSelected = Object.keys(selectedFolders)[0]
+      if (firstSelected && !viewerProductId) {
+        dispatch(openViewer({ folderId: firstSelected, projectName: projectName }))
+      }
+    }
+  }
+
   // Context Menu
   // const {openContext, useCreateContext} = useContextMenu()
   // context items
@@ -328,6 +340,7 @@ const Hierarchy = (props) => {
         onContextMenu={(e) => ctxMenuShow(e.originalEvent)}
         onContextMenuSelectionChange={onContextMenuSelectionChange}
         className={isFetching ? 'table-loading' : undefined}
+        onKeyDown={handleTableKeyDown}
       >
         <Column header="Hierarchy" field="body" expander={true} style={{ width: '100%' }} />
       </TreeTable>

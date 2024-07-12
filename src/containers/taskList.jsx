@@ -12,6 +12,7 @@ import { toast } from 'react-toastify'
 import { useGetTasksQuery } from '@queries/getTasks'
 import useCreateContext from '@hooks/useCreateContext'
 import NoEntityFound from '@components/NoEntityFound'
+import { openViewer } from '@/features/viewer'
 
 const TaskList = ({ style = {}, autoSelect = false }) => {
   const tasksTypes = useSelector((state) => state.project.tasks)
@@ -110,6 +111,17 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
     const uniqueTaskTypes = [...new Set(taskTypes)]
 
     dispatch(updateBrowserFilters({ productTaskTypes: uniqueTaskTypes }))
+  }
+
+  const viewerProductId = useSelector((state) => state.viewer.productId)
+  const handleTableKeyDown = (e) => {
+    if (e.key === ' ') {
+      e.preventDefault()
+      const firstSelected = Object.keys(selectedTasks)[0]
+      if (firstSelected && !viewerProductId) {
+        dispatch(openViewer({ taskId: firstSelected, projectName: projectName }))
+      }
+    }
   }
 
   // CONTEXT MENU
@@ -260,6 +272,7 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
             className={isFetching ? 'table-loading' : undefined}
             onClick={handleDeselect}
             ref={tableRef}
+            onKeyDown={handleTableKeyDown}
           >
             <Column field="name" header="Task" expander="true" body={nameRenderer} />
             {folderIds.length > 1 && <Column field="folderName" header="Folder" />}
