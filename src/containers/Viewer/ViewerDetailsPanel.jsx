@@ -18,11 +18,9 @@ const ViewerDetailsPanel = ({ versionIds = [], projectName }) => {
 
   const entities = versionIds.map((id) => ({ id, projectName, entityType: 'version' }))
 
-  if (!versionIds.length) return null
-
   return (
     <ViewerDetailsPanelWrapper>
-      {versionIds.length && (
+      {!!versionIds.length && (
         <DetailsPanel
           entities={entities}
           statusesOptions={projectInfo.statuses || []}

@@ -52,8 +52,12 @@ const Viewer = ({ onClose }: ViewerProps) => {
   // if no versionIds are provided, select the last version and update the state
   useEffect(() => {
     if (!versionIds.length && !isFetchingReviewables && versionsAndReviewables.length) {
-      const lastVersionId = versionsAndReviewables[versionsAndReviewables.length - 1].id
-      dispatch(updateSelection({ versionIds: [lastVersionId] }))
+      const lastVersion = versionsAndReviewables[versionsAndReviewables.length - 1]
+      if (lastVersion) {
+        dispatch(
+          updateSelection({ versionIds: [lastVersion.id], productId: lastVersion.productId }),
+        )
+      }
     }
   }, [versionIds, isFetchingReviewables, versionsAndReviewables, dispatch])
 
@@ -158,6 +162,8 @@ const Viewer = ({ onClose }: ViewerProps) => {
   const availability = selectedReviewable?.availability
   const isPlayable = availability !== 'conversionRequired'
 
+  const noVersions = !versionsAndReviewables.length
+
   if (selectedReviewable?.mimetype.includes('video') && isPlayable) {
     viewerComponent = (
       <ViewerPlayer
@@ -179,7 +185,7 @@ const Viewer = ({ onClose }: ViewerProps) => {
     let message = 'No preview available'
     let children = null
 
-    if (!versionsAndReviewables.length) {
+    if (noVersions) {
       message = 'No versions available'
     } else if (!reviewables.length) {
       message = 'No reviewables available'
@@ -207,7 +213,7 @@ const Viewer = ({ onClose }: ViewerProps) => {
           selected={versionIds[0]}
           onChange={handleVersionChange}
         />
-        {onClose && <Button onClick={onClose} icon={'close'} />}
+        {onClose && <Button onClick={onClose} icon={'close'} className="close" />}
       </Styled.Header>
       <Styled.Content>
         <Styled.FullScreenWrapper handle={handle} onChange={fullScreenChange}>
@@ -220,7 +226,7 @@ const Viewer = ({ onClose }: ViewerProps) => {
           onUpload={handleUploadButton}
           projectName={projectName}
         />
-        <ViewerDetailsPanel versionIds={versionIds} projectName={projectName} />
+        {!noVersions && <ViewerDetailsPanel versionIds={versionIds} projectName={projectName} />}
       </Styled.Content>
     </Styled.Container>
   )

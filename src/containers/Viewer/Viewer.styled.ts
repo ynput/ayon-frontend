@@ -8,6 +8,10 @@ export const Container = styled.div`
   height: 100%;
   width: 100%;
   gap: var(--base-gap-large);
+
+  .close {
+    margin-left: auto;
+  }
 `
 
 export const Header = styled(Toolbar)``

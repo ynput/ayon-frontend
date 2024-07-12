@@ -50,7 +50,8 @@ const viewerSlice = createSlice({
       if (versionIds) state.versionIds = versionIds
       if (reviewableIds) state.reviewableIds = reviewableIds || []
     },
-    updateSelection: (state, { payload: { versionIds, reviewableIds, quickView } }) => {
+    updateSelection: (state, { payload: { versionIds, reviewableIds, productId, quickView } }) => {
+      if (productId !== undefined) state.productId = productId
       if (versionIds !== undefined) {
         state.versionIds = versionIds
       }

@@ -5,7 +5,14 @@ export type Summary = {
   versionId?: string
 }
 
-import { ReviewableModel, ReviewableProcessingStatus, VersionReviewablesModel } from '@/api/rest'
+import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
+import api from '@/api'
+import {
+  ReviewableModel,
+  ReviewableProcessingStatus,
+  GetReviewablesForVersionApiResponse,
+  VersionReviewablesModel,
+} from '@/api/rest'
 
 // UPDATE GetReviewablesForVersionApiResponse to include the new processing type
 // Define a type alias for Processing to extend it correctly
@@ -31,4 +38,21 @@ export type GetViewerReviewablesParams = AtLeastOne<{
   folderId: string
 }> & {
   projectName: string
+}
+
+// Extend the main response interface
+interface UpdatedGetReviewablesForVersionApiResponse
+  extends Omit<GetReviewablesForVersionApiResponse, 'reviewables'> {
+  reviewables?: ReviewableResponse[] // Use the updated reviewable type
+}
+
+//   Update the definitions and tag types
+type Definitions = DefinitionsFromApi<typeof api>
+export type TagTypes = TagTypesFromApi<typeof api>
+// update the definitions to include the new types
+export type UpdatedDefinitions = Omit<Definitions, 'getReviewablesForVersion'> & {
+  getReviewablesForVersion: OverrideResultType<
+    Definitions['getReviewablesForVersion'],
+    UpdatedGetReviewablesForVersionApiResponse
+  >
 }
