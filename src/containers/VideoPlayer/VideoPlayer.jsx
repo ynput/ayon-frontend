@@ -95,12 +95,12 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay }) => {
       const clientHeight = videoRowRef.current?.clientHeight - 2
 
       if (clientWidth / clientHeight > aspectRatio) {
-        const width = clientHeight * aspectRatio
+        const width = Math.round(clientHeight * aspectRatio)
         const height = clientHeight
         setVideoDimensions({ width, height })
       } else {
         const width = clientWidth
-        const height = clientWidth / aspectRatio
+        const height = Math.round(clientWidth / aspectRatio)
         setVideoDimensions({ width, height })
       }
     }
