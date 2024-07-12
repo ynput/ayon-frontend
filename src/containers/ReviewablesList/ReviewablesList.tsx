@@ -1,5 +1,14 @@
 import { FC, MouseEvent, useState, DragEvent, ChangeEvent, useRef, useEffect } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import { $Any } from '@types'
+import axios from 'axios'
+// queries
+import api from '@api'
 import { useGetReviewablesForVersionQuery, useHasTranscoderQuery } from '@queries/review/getReview'
+import { useDeleteReviewableMutation } from '@queries/review/updateReview'
+import { UploadReviewableApiResponse } from '@api/rest'
+
+// DND
 import {
   DndContext,
   closestCenter,
@@ -18,20 +27,21 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
-import SortableReviewableCard from './SortableReviewableCard'
+
+// components
 import ReviewableCard from '@components/ReviewableCard'
-import * as Styled from './ReviewablesList.styled'
-import { useDispatch, useSelector } from 'react-redux'
-import { openViewer, toggleUpload } from '@state/viewer'
-import { Icon } from '@ynput/ayon-react-components'
-import axios from 'axios'
-import { toast } from 'react-toastify'
 import ReviewableProgressCard, { ReviewableProgress } from '@components/ReviewableProgressCard'
-import api from '@api'
-import { $Any } from '@types'
-import { UploadReviewableApiResponse } from '@api/rest'
+import SortableReviewableCard from './SortableReviewableCard'
+import * as Styled from './ReviewablesList.styled'
+import { Icon } from '@ynput/ayon-react-components'
+import { toast } from 'react-toastify'
+
+import { openViewer, toggleUpload } from '@state/viewer'
+
+// utils
 import { getGroupedReviewables } from './getGroupedReviewables'
-import useCreateContext from '@/hooks/useCreateContext'
+import useCreateContext from '@hooks/useCreateContext'
+import confirmDelete from '@helpers/confirmDelete'
 
 interface ReviewablesListProps {
   projectName: string
@@ -64,6 +74,7 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
 
   // are we currently looking at review?
   const reviewableIds = useSelector((state: $Any) => state.viewer.reviewableIds) || []
+  const username = useSelector((state: $Any) => state.user?.name)
 
   // are we dragging a file over?
   const [isDraggingFile, setIsDraggingFile] = useState(false)
@@ -326,6 +337,23 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
     document.body.removeChild(a)
   }
 
+  const [deleteReviewable] = useDeleteReviewableMutation()
+
+  const handleDelete = async (activityId: string, label: string) => {
+    // @ts-ignore
+    confirmDelete({
+      header: 'Delete ' + label,
+      message: 'Are you sure you want to delete this reviewable?',
+      accept: async () => {
+        try {
+          await deleteReviewable({ activityId, projectName }).unwrap()
+        } catch (error) {
+          toast.error('Failed to delete reviewable')
+        }
+      },
+    })
+  }
+
   // create the ref and model
   const [ctxMenuShow] = useCreateContext()
 
@@ -344,7 +372,13 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
       (reviewable) => reviewable.fileId === originalFileId,
     )
 
-    const items = [
+    const items: {
+      label: string
+      icon: string
+      onClick: () => void
+      disabled?: boolean
+      danger?: boolean
+    }[] = [
       {
         label: 'Download original',
         icon: 'download',
@@ -352,6 +386,15 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
         disabled: !originalReviewable,
       },
     ]
+
+    if (username === reviewable.author.name) {
+      items.push({
+        label: 'Delete',
+        icon: 'delete',
+        onClick: () => handleDelete(reviewable.activityId, reviewable.label || reviewable.filename),
+        danger: true,
+      })
+    }
 
     ctxMenuShow(event, items)
   }

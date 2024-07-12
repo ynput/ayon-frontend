@@ -11,15 +11,17 @@ import {
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 
 const getViewerReviewablesTags = (
-  result: GetReviewablesResponse[] | undefined,
+  result: (GetReviewablesResponse | undefined)[] | undefined,
   {
     productId,
     taskId,
     folderId,
+    versionId,
   }: {
     productId?: string
     taskId?: string
     folderId?: string
+    versionId?: string
   },
 ) => {
   const tags = []
@@ -27,22 +29,34 @@ const getViewerReviewablesTags = (
   if (productId) tags.push({ type: 'review', id: productId })
   if (taskId) tags.push({ type: 'review', id: taskId })
   if (folderId) tags.push({ type: 'review', id: folderId })
+  if (versionId) tags.push({ type: 'review', id: versionId })
 
   if (result) {
-    const versionTags = result.map((version) => ({
-      type: 'review',
-      id: version.id,
-    }))
+    const versionTags = result.flatMap((version) =>
+      version
+        ? {
+            type: 'review',
+            id: version.id,
+          }
+        : [],
+    )
 
     tags.push(...versionTags)
 
-    const reviewableTags = result.flatMap(
-      (version) =>
-        version.reviewables?.map((reviewable) => ({
-          type: 'review',
-          id: reviewable.fileId,
-        })) || [],
-    )
+    const reviewableTags = result.flatMap((version) =>
+      version
+        ? version.reviewables?.flatMap((reviewable) => [
+            {
+              type: 'review',
+              id: reviewable.fileId,
+            },
+            {
+              type: 'review',
+              id: reviewable.activityId,
+            },
+          ])
+        : [],
+    ) as { type: 'review'; id: string }[]
 
     tags.push(...reviewableTags)
   }
@@ -55,15 +69,8 @@ const enhancedApi = api.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
     getReviewablesForVersion: {
       keepUnusedDataFor: 1,
       providesTags: (result, _error, { versionId }) =>
-        result
-          ? [
-              { type: 'review', id: versionId },
-              ...(result.reviewables?.map((reviewable) => ({
-                type: 'review',
-                id: reviewable.fileId,
-              })) || []),
-            ]
-          : [{ type: 'review', id: versionId }],
+        getViewerReviewablesTags([result], { versionId, productId: result?.productId }),
+
       async onCacheEntryAdded(
         { versionId },
         { updateCachedData, cacheDataLoaded, cacheEntryRemoved, dispatch, getCacheEntry },
