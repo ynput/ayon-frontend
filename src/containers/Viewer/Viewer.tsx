@@ -186,9 +186,9 @@ const Viewer = ({ onClose }: ViewerProps) => {
     let children = null
 
     if (noVersions) {
-      message = 'No versions available'
+      message = 'This task has published no versions.'
     } else if (!reviewables.length) {
-      message = 'No reviewables available'
+      message = 'This version has no online reviewables.'
       children = (
         <Button onClick={handleUploadButton} icon="upload" variant="filled">
           Upload a file
@@ -205,6 +205,7 @@ const Viewer = ({ onClose }: ViewerProps) => {
     )
   }
 
+  // todo: noVersions modal smaller
   return (
     <Styled.Container>
       <Styled.Header>
