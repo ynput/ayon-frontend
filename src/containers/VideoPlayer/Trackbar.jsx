@@ -85,6 +85,7 @@ const Trackbar = ({
 
   const handleMouseMove = (e) => {
     if (!isDragging) return
+    e.preventDefault()
     const rect = canvasRef.current.getBoundingClientRect()
     const x = e.clientX - rect.left
     let newTime = (x / rect.width) * duration
@@ -113,6 +114,7 @@ const Trackbar = ({
   }, [isDragging])
 
   const handleMouseDown = (e) => {
+    e.preventDefault()
     setIsDragging(true)
     handleMouseMove(e)
   }
