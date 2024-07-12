@@ -1,12 +1,12 @@
 import * as Styled from './KanBanColumn.styled'
 import React, { Fragment, forwardRef, useEffect, useMemo, useRef, useState } from 'react'
-import { getFakeTasks, getGroupedTasks, usePrefetchEntity, useTaskClick } from '../../util'
+import { getFakeTasks, getGroupedTasks } from '../../util'
+import { useGetTaskContextMenu, useTaskClick, usePrefetchEntity } from '../../hooks'
 import { useDispatch, useSelector } from 'react-redux'
 import KanBanCardDraggable from '../KanBanCard/KanBanCardDraggable'
 import KanBanCard from '../KanBanCard/KanBanCard'
 import { Button, Toolbar } from '@ynput/ayon-react-components'
 import { InView, useInView } from 'react-intersection-observer'
-import { useGetTaskContextMenu } from '../../util'
 import 'react-perfect-scrollbar/dist/css/styles.css'
 import KanBanColumnDropzone from './KanBanColumnDropzone'
 
@@ -78,12 +78,6 @@ const KanBanColumn = forwardRef(
     // HANDLE TASK CLICK
     const handleTaskClick = useTaskClick(dispatch, allTasks)
 
-    // HANDLE TASK SPACEBAR
-    const handleTaskSpaceBar = () => {
-      // for now do nothing
-      // in the future it will open the viewer
-    }
-
     // return 5 fake loading events if loading
     const loadingTasks = useMemo(() => getFakeTasks(), [])
 
@@ -122,7 +116,6 @@ const KanBanColumn = forwardRef(
                             handleTaskClick(e, task.id)
                           }}
                           onMouseOver={() => handlePrefetch(task)}
-                          onSpaceBar={handleTaskSpaceBar}
                           isActive={selectedTasks.includes(task.id)}
                           isDraggingActive={active}
                           className="card"

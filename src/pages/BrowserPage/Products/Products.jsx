@@ -35,7 +35,7 @@ import NoProducts from './NoProducts'
 import { toast } from 'react-toastify'
 import { productTypes } from '@state/project'
 import * as Styled from './Products.styled'
-import { openReview } from '@state/viewer'
+import { openViewer } from '@state/viewer'
 
 const Products = () => {
   const dispatch = useDispatch()
@@ -543,7 +543,7 @@ const Products = () => {
     // check review isn't already open
 
     if (!viewerProductId) {
-      dispatch(openReview({ productId, versionIds: [versionId], projectName, quickView }))
+      dispatch(openViewer({ productId, versionIds: [versionId], projectName, quickView }))
     }
   }
 

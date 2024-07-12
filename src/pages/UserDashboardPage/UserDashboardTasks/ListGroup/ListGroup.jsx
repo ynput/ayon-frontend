@@ -1,7 +1,7 @@
 import React from 'react'
 import { useDispatch } from 'react-redux'
 
-import { useGetTaskContextMenu } from '@pages/UserDashboardPage/util'
+import { useGetTaskContextMenu } from '@pages/UserDashboardPage/hooks'
 import * as Styled from './ListGroup.styled'
 import { Button } from '@ynput/ayon-react-components'
 import ListItem from '@components/ListItem/ListItem'

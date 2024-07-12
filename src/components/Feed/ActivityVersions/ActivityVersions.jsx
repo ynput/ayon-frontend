@@ -6,7 +6,7 @@ import { useState } from 'react'
 import { More } from '../ActivityGroup/ActivityGroup.styled'
 import ActivityDate from '../ActivityDate'
 import { useDispatch } from 'react-redux'
-import { openReview } from '@state/viewer'
+import { openViewer } from '@state/viewer'
 
 const ActivityVersions = ({
   activity,
@@ -25,7 +25,7 @@ const ActivityVersions = ({
 
   const dispatch = useDispatch()
   const handleClick = (versionId, productId) =>
-    dispatch(openReview({ versionIds: [versionId], productId, projectName }))
+    dispatch(openViewer({ versionIds: [versionId], productId, projectName }))
 
   return (
     <Styled.Container>

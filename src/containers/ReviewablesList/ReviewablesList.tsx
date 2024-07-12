@@ -22,7 +22,7 @@ import SortableReviewableCard from './SortableReviewableCard'
 import ReviewableCard from '@components/ReviewableCard'
 import * as Styled from './ReviewablesList.styled'
 import { useDispatch, useSelector } from 'react-redux'
-import { openReview, toggleUpload } from '@state/viewer'
+import { openViewer, toggleUpload } from '@state/viewer'
 import { Icon } from '@ynput/ayon-react-components'
 import axios from 'axios'
 import { toast } from 'react-toastify'
@@ -111,7 +111,7 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
 
     // open the reviewable dialog
     dispatch(
-      openReview({
+      openViewer({
         projectName: projectName,
         productId: productId,
         versionIds: [versionId],

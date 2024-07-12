@@ -9,8 +9,10 @@ import { toast } from 'react-toastify'
 import Actions from '@containers/Actions/Actions'
 import FeedFilters from '../FeedFilters/FeedFilters'
 import usePatchProductsListWithVersions from '@hooks/usePatchProductsListWithVersions'
-import { useGetChecklistsCountQuery } from '@/services/activities/getActivities'
-import ThumbnailUploader from '@/components/ThumbnailUploader/ThumbnailUploader'
+import { useGetChecklistsCountQuery } from '@queries/activities/getActivities'
+import ThumbnailUploader from '@components/ThumbnailUploader/ThumbnailUploader'
+import { useDispatch } from 'react-redux'
+import { openViewer } from '@state/viewer'
 
 const DetailsPanelHeader = ({
   entityType,
@@ -27,6 +29,8 @@ const DetailsPanelHeader = ({
   isCompact = false,
   scope,
 }) => {
+  const dispatch = useDispatch()
+
   // for selected entities, get flat list of assignees
   const entityAssignees = useMemo(
     () => union(...entities.map((entity) => entity.users)),
@@ -187,7 +191,34 @@ const DetailsPanelHeader = ({
     }
   }
 
-  const handleThumbnailClick = () => {}
+  const handleThumbnailClick = () => {
+    let versionId, productId
+    if (entityType === 'version') {
+      // easy way to open the viewer
+      productId = firstEntity.productId
+      versionId = firstEntity.id
+    }
+
+    if (entityType === 'task') {
+      // we need to find task productId and versionId (if it has one linked)
+      productId = firstEntity.folderId
+      versionId = firstEntity.versionId
+    }
+
+    if (entityType === 'folder') {
+      // open the last published version
+    }
+
+    if ((versionId, productId)) {
+      dispatch(
+        openViewer({
+          productId,
+          projectName,
+          versionIds: [versionId],
+        }),
+      )
+    }
+  }
 
   const fullPath = firstEntity?.path || ''
   const pathArray = fullPath.split('/')

@@ -24,7 +24,7 @@ const viewerSlice = createSlice({
     quickView: false, // used to open quick view mode (reduced UI for quick view)
   },
   reducers: {
-    openReview: (
+    openViewer: (
       state,
       { payload: { versionIds, projectName, productId, reviewableIds, quickView } = {} } = {},
     ) => {
@@ -45,7 +45,7 @@ const viewerSlice = createSlice({
         state.quickView = quickView
       }
     },
-    closeReview: (state) => {
+    closeViewer: (state) => {
       state.versionIds = []
       state.projectName = null
       state.productId = null
@@ -60,15 +60,15 @@ const viewerSlice = createSlice({
   },
 })
 
-export const { openReview, updateSelection, closeReview, toggleUpload, toggleFullscreen } =
+export const { openViewer, updateSelection, closeViewer, toggleUpload, toggleFullscreen } =
   viewerSlice.actions
 export default viewerSlice.reducer
 
 // create an object for each reducer to define which state fields it will update
 const viewerReducerSearchParams = {
-  openReview: ['productId', 'versionIds', 'projectName', 'reviewableIds'],
+  openViewer: ['productId', 'versionIds', 'projectName', 'reviewableIds'],
   updateSelection: ['versionIds', 'reviewableIds'],
-  closeReview: [
+  closeViewer: [
     { state: 'versionIds', value: [] },
     { state: 'projectName', value: null },
     { state: 'productId', value: null },

@@ -1,6 +1,6 @@
 import { Dialog } from '@ynput/ayon-react-components'
 import { useDispatch, useSelector } from 'react-redux'
-import { closeReview } from '@state/viewer'
+import { closeViewer } from '@state/viewer'
 import { useEffect } from 'react'
 import Viewer from './Viewer'
 import styled from 'styled-components'
@@ -38,7 +38,7 @@ const ViewerDialog = () => {
 
   const handleClose = () => {
     // close the dialog
-    dispatch(closeReview())
+    dispatch(closeViewer())
   }
 
   // when pressing escape key, close the dialog

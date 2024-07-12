@@ -18,4 +18,6 @@ fragment KanbanFragment on KanbanNode {
   folderName
   folderPath
   lastVersionWithThumbnailId
+  lastVersionWithReviewableVersionId
+  lastVersionWithReviewableProductId
 }

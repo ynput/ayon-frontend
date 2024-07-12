@@ -3,7 +3,7 @@
 // add thumbnailUrl
 
 import { KanbanNode } from '@/api/graphql'
-import { GetKanbanResponse } from '@/services/userDashboard/getUserDashboardTest'
+import { GetKanbanResponse } from '@queries/userDashboard/getUserDashboard'
 import { $Any } from '@/types'
 
 const getDescriptionPath = ({

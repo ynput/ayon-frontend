@@ -3,7 +3,8 @@ import ListGroup from '../ListGroup/ListGroup'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { onCollapsedColumnsChanged, onTaskSelected } from '@state/dashboard'
-import { getFakeTasks, usePrefetchEntity, useTaskClick } from '../../util'
+import { getFakeTasks } from '../../util'
+import { useTaskSpacebarViewer, usePrefetchEntity, useTaskClick } from '../../hooks'
 import { useUpdateEntitiesMutation } from '@queries/entity/updateEntity'
 import { toast } from 'react-toastify'
 import getPreviousTagElement from '@helpers/getPreviousTagElement'
@@ -296,8 +297,12 @@ const UserDashboardList = ({
     [collapsedGroups],
   )
 
+  // HANDLE SPACEBAR VIEWER OPEN SHORTCUT
+  const spacebarShortcut = useTaskSpacebarViewer({ tasks, className: '.card' })
+
   return (
     <>
+      {spacebarShortcut}
       <Shortcuts shortcuts={shortcuts} deps={[collapsedGroups]} />
       <Styled.ListContainer onKeyDown={handleKeyDown} className="tasks-list">
         <Styled.Inner ref={containerRef}>

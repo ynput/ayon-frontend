@@ -44,6 +44,14 @@ const Viewer = ({ onClose }: ViewerProps) => {
     [versionIds, versionsAndReviewables],
   )
 
+  // if no versionIds are provided, select the last version and update the state
+  useEffect(() => {
+    if (!versionIds.length && !isFetchingReviewables && versionsAndReviewables.length) {
+      const lastVersionId = versionsAndReviewables[versionsAndReviewables.length - 1].id
+      dispatch(updateSelection({ versionIds: [lastVersionId] }))
+    }
+  }, [versionIds, isFetchingReviewables, versionsAndReviewables, dispatch])
+
   const versionReviewableIds = selectedVersion?.reviewables?.map((r) => r.fileId) || []
 
   // if no reviewableIds are provided, select the first playable reviewable
@@ -173,7 +181,7 @@ const Viewer = ({ onClose }: ViewerProps) => {
         }
       />
     )
-  } else if (!reviewables.length) {
+  } else if (!selectedReviewable || !reviewables.length) {
     viewerComponent = (
       <EmptyPlaceholder icon="hide_image" message="No reviewables available">
         <Button onClick={handleUploadButton} icon="upload" variant="filled">

@@ -10,7 +10,6 @@ const KanBanCardDraggable = ({
   style,
   isDraggingActive,
   isColumnActive,
-  onSpaceBar,
   ...props
 }) => {
   const { attributes, listeners, setNodeRef, isDragging, active } = useDraggable({
@@ -29,10 +28,8 @@ const KanBanCardDraggable = ({
         {...listeners}
         onKeyDown={(e) => {
           // we block space to use for viewer
-          if (e.key === ' ' && onSpaceBar) {
+          if (e.key === ' ') {
             e.preventDefault()
-            console.log(task)
-            onSpaceBar()
           } else {
             console.log(task)
             listeners?.onKeyDown(e, task.id)
