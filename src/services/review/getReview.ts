@@ -9,9 +9,10 @@ import {
   UpdatedDefinitions,
 } from './types'
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
+import { VersionReviewablesModel } from '@/api/rest'
 
 const getViewerReviewablesTags = (
-  result: (GetReviewablesResponse | undefined)[] | undefined,
+  result: (GetReviewablesResponse | VersionReviewablesModel | undefined)[] | undefined,
   {
     productId,
     taskId,
@@ -23,15 +24,42 @@ const getViewerReviewablesTags = (
     folderId?: string
     versionId?: string
   },
+  viewer?: boolean,
 ) => {
-  const tags = []
+  const tags: { type: string; id: string }[] = []
 
+  // different ways to open the viewer
   if (productId) tags.push({ type: 'review', id: productId })
+
   if (taskId) tags.push({ type: 'review', id: taskId })
   if (folderId) tags.push({ type: 'review', id: folderId })
+
+  if (viewer) {
+    // viewer specific tags for invalidating just the viewer
+    if (productId) tags.push({ type: 'viewer', id: productId })
+
+    if (taskId) tags.push({ type: 'viewer', id: taskId })
+    if (folderId) tags.push({ type: 'viewer', id: folderId })
+
+    tags.push({ type: 'viewer', id: 'LIST' })
+  }
+
+  // reviewables list caches
   if (versionId) tags.push({ type: 'review', id: versionId })
 
   if (result) {
+    // create a unique list of productIds
+    const productIds: string[] = [...new Set(result.flatMap((version) => version?.productId || []))]
+
+    // if no productId was provided in the args, use the one from the result
+    productIds.forEach((productId) => {
+      if (!tags.find((tag) => tag.id === productId && tag.type === 'review'))
+        tags.push({ type: 'review', id: productId })
+      // if opening the viewer, add the viewer tag
+      if (viewer && !tags.find((tag) => tag.id === productId && tag.type === 'viewer'))
+        tags.push({ type: 'viewer', id: productId })
+    })
+
     const versionTags = result.flatMap((version) =>
       version
         ? {
@@ -126,7 +154,13 @@ const enhancedApi = api.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
               // get data for this new reviewable
               dispatch(api.util.invalidateTags([{ type: 'review', id: summary.versionId }]))
 
-              // if it's finished, also invalidate
+              // if it's finished, also invalidate viewer
+              if (message.status === 'finished') {
+                // also invalidate the viewer cache
+                if (cache.data?.productId) {
+                  dispatch(api.util.invalidateTags([{ type: 'viewer', id: cache.data?.productId }]))
+                }
+              }
             }
           }
 
@@ -142,6 +176,15 @@ const enhancedApi = api.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
         PubSub.unsubscribe(token)
       },
     },
+    // getReviewablesForProduct: {
+    //   providesTags: (result, _error, args) => getViewerReviewablesTags(result, args, false),
+    // },
+    // getReviewablesForTask: {
+    //   providesTags: (result, _error, args) => getViewerReviewablesTags(result, args, false),
+    // },
+    // getReviewablesForFolder: {
+    //   providesTags: (result, _error, args) => getViewerReviewablesTags(result, args, false),
+    // },
   },
 })
 
@@ -150,31 +193,35 @@ const injectedReview = enhancedApi.injectEndpoints({
     // custom endpoint to get reviewables from product/task/folder
     // utilizes getReviewablesForProduct, getReviewablesForTask, getReviewablesForFolder
     getViewerReviewables: build.query<GetReviewablesResponse[], GetViewerReviewablesParams>({
-      queryFn: async ({ productId, taskId, folderId, projectName }, { dispatch, forced }) => {
+      queryFn: async ({ productId, taskId, folderId, projectName }, { dispatch }) => {
         let query: any
+
         if (productId) {
           query = api.endpoints.getReviewablesForProduct.initiate(
             {
               productId,
               projectName,
             },
-            { forceRefetch: forced },
+            { forceRefetch: true },
           )
         } else if (taskId) {
           query = api.endpoints.getReviewablesForTask.initiate(
             { taskId, projectName },
-            { forceRefetch: forced },
+            { forceRefetch: true },
           )
         } else if (folderId) {
-          query = api.endpoints.getReviewablesForFolder.initiate({
-            folderId,
-            projectName,
-          })
+          query = api.endpoints.getReviewablesForFolder.initiate(
+            {
+              folderId,
+              projectName,
+            },
+            { forceRefetch: true },
+          )
 
           const result = await dispatch(
             api.endpoints.getReviewablesForFolder.initiate(
               { folderId, projectName },
-              { forceRefetch: forced },
+              { forceRefetch: true },
             ),
           )
           result.error
@@ -197,7 +244,7 @@ const injectedReview = enhancedApi.injectEndpoints({
           return { data }
         }
       },
-      providesTags: (result, _error, args) => getViewerReviewablesTags(result, args),
+      providesTags: (result, _error, args) => getViewerReviewablesTags(result, args, true),
       async onCacheEntryAdded(
         { productId, taskId, folderId },
         { cacheDataLoaded, cacheEntryRemoved, dispatch, getCacheEntry },

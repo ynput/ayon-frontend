@@ -229,25 +229,9 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
                 },
               ),
             )
-            // also patch in the reviewables cache from product level (review player)
-            dispatch(
-              // @ts-ignore
-              api.util.updateQueryData(
-                'getReviewablesForProduct',
-                { projectName, productId },
-                (draft) => {
-                  // for the version id
-                  draft.forEach((version) => {
-                    if (version.id === versionId) {
-                      if (!version.reviewables) {
-                        version.reviewables = []
-                      }
-                      version.reviewables.push(data)
-                    }
-                  })
-                },
-              ),
-            )
+
+            // also invalidate the viewer cache
+            dispatch(api.util.invalidateTags([{ type: 'viewer', id: productId }]))
             // remove the file from the list
             handleRemoveUpload(file.name)
           })

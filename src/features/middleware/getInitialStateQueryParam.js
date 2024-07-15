@@ -7,7 +7,7 @@ const getInitialStateQueryParam = (key, initial, types = []) => {
   let value = isValueArray ? urlParams.getAll(key) : urlParams.get(key)
 
   if (!value || value === 'null' || value === 'undefined') {
-    return initial || (types && types[0]) || ''
+    return initial !== undefined ? initial : (types && types[0]) || ''
   } else {
     try {
       if (initial) {

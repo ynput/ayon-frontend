@@ -91,6 +91,7 @@ const tagTypes = [
   'service',
   'actions',
   'review',
+  'viewer',
 ]
 
 const prepareHeaders = (headers: any) => {
