@@ -10,8 +10,8 @@ const Timescode = styled(InputText)`
   }
 `
 
-const Timecode = ({ value, frameRate, onChange, maximum, disabled, tooltip }) => {
-  const [frames, setFrames] = useState(0)
+const Timecode = ({ value, frameRate, onChange, maximum, disabled, tooltip, offset=0 }) => {
+  const [frames, setFrames] = useState(offset)
   const inputRef = useRef()
 
   useEffect(() => {
@@ -34,9 +34,9 @@ const Timecode = ({ value, frameRate, onChange, maximum, disabled, tooltip }) =>
   return (
     <Timescode
       ref={inputRef}
-      value={frames}
+      value={frames + offset}
       style={{ width: '100px', fontFamily: 'monospace' }}
-      onChange={(e) => setFrames(e.target.value)}
+      onChange={(e) => setFrames(e.target.value - offset)}
       onBlur={submit}
       onKeyDown={(e) => {
         if (e.key === 'Enter') {

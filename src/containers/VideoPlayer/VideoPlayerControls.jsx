@@ -135,6 +135,7 @@ const VideoPlayerControls = ({
           videoRef.current.currentTime = value
         }}
         tooltip={'Current frame'}
+        offset={1}
       />
       <Button
         value={!muted}
