@@ -4,15 +4,17 @@ import * as Styled from './Viewer.styled'
 import VersionSelectorTool from '@components/VersionSelectorTool/VersionSelectorTool'
 import { useGetViewerReviewablesQuery } from '@queries/review/getReview'
 import { useDispatch, useSelector } from 'react-redux'
-import { toggleFullscreen, toggleUpload, updateSelection } from '@state/viewer'
+import { toggleFullscreen, toggleUpload, updateSelection, updateProduct } from '@state/viewer'
 import ViewerDetailsPanel from './ViewerDetailsPanel'
 import ViewerPlayer from './ViewerPlayer'
-import ReviewablesSelector from '@/components/ReviewablesSelector'
-import { updateDetailsPanelTab } from '@/features/details'
-import EmptyPlaceholder from '@/components/EmptyPlaceholder/EmptyPlaceholder'
-import { $Any } from '@/types'
+import ReviewablesSelector from '@components/ReviewablesSelector'
+import { updateDetailsPanelTab } from '@state/details'
+import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
+import { $Any } from '@types'
 import { useFullScreenHandle } from 'react-full-screen'
 import { getGroupedReviewables } from '../ReviewablesList/getGroupedReviewables'
+import { GetReviewablesResponse } from '@queries/review/types'
+import { compareDesc } from 'date-fns'
 
 interface ViewerProps {
   onClose?: () => void
@@ -29,6 +31,7 @@ const Viewer = ({ onClose }: ViewerProps) => {
     reviewableIds = [],
     fullscreen,
     quickView,
+    selectedProductId,
   } = useSelector((state: $Any) => state.viewer)
 
   const [autoPlay, setAutoPlay] = useState(quickView)
@@ -36,28 +39,96 @@ const Viewer = ({ onClose }: ViewerProps) => {
   const dispatch = useDispatch()
 
   // new query: returns all reviewables for a product
-  const { data: versionsAndReviewables = [], isFetching: isFetchingReviewables } =
+  const { data: allVersionsAndReviewables = [], isFetching: isFetchingReviewables } =
     useGetViewerReviewablesQuery(
       { projectName, productId, taskId, folderId },
       { skip: !projectName || (!productId && !taskId && !folderId) },
     )
 
-  // This should not return the first reviewable, but there should be reviewable
-  // selector in the UI
+  // check if there are multiple products in the reviewables. At least one productId is different
+  const hasMultipleProducts = useMemo(() => {
+    const uniqueProductIds = new Set(allVersionsAndReviewables.map((v) => v.productId))
+    return uniqueProductIds.size > 1
+  }, [allVersionsAndReviewables])
+
+  // sort all versions and reviewables by the latest reviewable createdAt date
+  const sortedVersionsReviewableDates = useMemo(
+    () =>
+      hasMultipleProducts
+        ? [...allVersionsAndReviewables].sort((a, b) => {
+            // Find the reviewable with the latest createdAt date in a
+            const aLatestReviewable = a.reviewables?.reduce((latest, current) => {
+              return compareDesc(
+                new Date(latest.createdAt || 0),
+                new Date(current.createdAt || 0),
+              ) === 1
+                ? latest
+                : current
+            }, a.reviewables[0])
+
+            // Find the reviewable with the latest createdAt date in b
+            const bLatestReviewable = b.reviewables?.reduce((latest, current) => {
+              return compareDesc(
+                new Date(latest.createdAt || 0),
+                new Date(current.createdAt || 0),
+              ) === 1
+                ? latest
+                : current
+            }, b.reviewables[0])
+
+            // Use compareDesc to compare the latest reviewables' createdAt dates
+            return compareDesc(
+              new Date(aLatestReviewable?.createdAt || 0),
+              new Date(bLatestReviewable?.createdAt || 0),
+            )
+          })
+        : allVersionsAndReviewables,
+    [allVersionsAndReviewables, hasMultipleProducts],
+  )
+
+  // check if a specific product is selected
+  const versionsAndReviewables: GetReviewablesResponse[] = useMemo(() => {
+    if (!hasMultipleProducts) return allVersionsAndReviewables
+    else if (selectedProductId) {
+      // filter out the versions for the selected product
+      return allVersionsAndReviewables.filter((v) => v.productId === selectedProductId)
+    } else {
+      // find the version (and therefor product) with the reviewable that was last createdAt
+      const latestProductId = sortedVersionsReviewableDates[0].productId
+      if (latestProductId) {
+        return allVersionsAndReviewables.filter((v) => v.productId === latestProductId)
+      } else {
+        // return first product
+        const firstProduct = allVersionsAndReviewables[0]
+        return allVersionsAndReviewables.filter((v) => v.productId === firstProduct.productId)
+      }
+    }
+  }, [allVersionsAndReviewables])
+
+  const validData = !isFetchingReviewables && versionsAndReviewables.length
+
+  // if hasMultipleProducts and no selectedProductId, select the first product
+  useEffect(() => {
+    if (hasMultipleProducts && !selectedProductId && validData) {
+      const firstProduct = versionsAndReviewables[0]
+      dispatch(updateProduct({ selectedProductId: firstProduct.productId }))
+    }
+  }, [hasMultipleProducts, selectedProductId, validData, versionsAndReviewables, dispatch])
+
+  // v003 or v004, etc
   const selectedVersion = useMemo(
     () => versionsAndReviewables.find((v) => v.id === versionIds[0]),
     [versionIds, versionsAndReviewables],
   )
-
   // if no versionIds are provided, select the last version and update the state
   useEffect(() => {
-    if (!versionIds.length && !isFetchingReviewables && versionsAndReviewables.length) {
+    if ((!versionIds.length || !selectedVersion) && validData) {
       const lastVersion = versionsAndReviewables[versionsAndReviewables.length - 1]
       if (lastVersion) {
         dispatch(updateSelection({ versionIds: [lastVersion.id] }))
       }
     }
-  }, [versionIds, isFetchingReviewables, versionsAndReviewables, dispatch])
+  }, [versionIds, selectedVersion, validData, versionsAndReviewables, dispatch])
 
   const versionReviewableIds = selectedVersion?.reviewables?.map((r) => r.fileId) || []
 
