@@ -58,12 +58,10 @@ const DetailsPanelFiles: FC<DetailsPanelFilesProps> = ({
           scope={scope}
         />
       </StyledSection>
-      {scope !== 'review' && (
-        <StyledSection>
-          <h4>Representations</h4>
-          <RepresentationsList entities={entities} scope={scope} />
-        </StyledSection>
-      )}
+      <StyledSection>
+        <h4>Representations</h4>
+        <RepresentationsList entities={entities} scope={scope} />
+      </StyledSection>
     </StyledContainer>
   )
 }
