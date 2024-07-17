@@ -574,6 +574,7 @@ const Products = () => {
 
   const handleKeyDown = (e) => {
     if (e.key === ' ') {
+      e.preventDefault()
       const firstSelected = Object.keys(selectedRows)[0]
       if (firstSelected) {
         handleOpenViewer(firstSelected, true)
