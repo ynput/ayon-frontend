@@ -12,6 +12,22 @@ export const Tools = styled.div`
   .shortcut {
     padding: 0px 4px;
   }
+
+  @media (max-width: 1550px) {
+    .hero {
+      display: none;
+    }
+  }
+  @media (max-width: 1460px) {
+    .approved {
+      display: none;
+    }
+  }
+  @media (max-width: 1330px) {
+    .latest {
+      display: none;
+    }
+  }
 `
 
 export const NavButton = styled(Button)`

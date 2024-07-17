@@ -22,6 +22,7 @@ export const PlayerToolbar = styled.div`
   justify-content: space-between;
   align-items: center;
   grid-column: span 2;
+  gap: var(--base-gap-small);
 
   .product-dropdown {
     width: unset;
