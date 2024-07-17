@@ -5,6 +5,7 @@ export const Container = styled.div`
   display: grid;
   grid-template-columns: 1fr auto auto;
   grid-template-rows: auto 1fr;
+  overflow: hidden;
 
   height: 100%;
   width: 100%;
@@ -60,4 +61,5 @@ export const ViewerDetailsPanelWrapper = styled.div`
   min-width: clamp(460px, 25vw, 600px);
   position: relative;
   z-index: 1000;
+  overflow: hidden;
 `
