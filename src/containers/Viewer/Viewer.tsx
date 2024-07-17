@@ -335,7 +335,6 @@ const Viewer = ({ onClose }: ViewerProps) => {
           />
         )}
       </Styled.PlayerToolbar>
-      <br />
       {onClose && <Button onClick={onClose} icon={'close'} className="close" />}
       <Styled.FullScreenWrapper handle={handle} onChange={fullScreenChange}>
         {viewerComponent}
