@@ -1,31 +1,36 @@
-import { Toolbar } from '@ynput/ayon-react-components'
+import { Dropdown } from '@ynput/ayon-react-components'
 import { FullScreen } from 'react-full-screen'
 import styled from 'styled-components'
 
 export const Container = styled.div`
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  grid-template-rows: auto 1fr;
+
   height: 100%;
   width: 100%;
-  gap: var(--base-gap-large);
+  gap: var(--base-gap-small);
 
   .close {
-    margin-left: auto;
+    width: fit-content;
+    justify-self: end;
   }
 `
 
-export const Header = styled(Toolbar)``
-export const Content = styled.div`
-  flex: 1;
+export const PlayerToolbar = styled.div`
   display: flex;
-  flex-direction: row;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
-  overflow: hidden;
-  padding: 1px;
-  margin: -1px;
 
-  gap: var(--base-gap-small);
+  .product-dropdown {
+    width: unset;
+
+    background-color: var(--md-sys-color-surface-container-highest);
+
+    &:hover {
+      background-color: var(--md-sys-color-surface-container-highest-hover);
+    }
+  }
 `
 
 export const FullScreenWrapper = styled(FullScreen)`

@@ -15,6 +15,7 @@ import { useFullScreenHandle } from 'react-full-screen'
 import { getGroupedReviewables } from '../ReviewablesList/getGroupedReviewables'
 import { GetReviewablesResponse } from '@queries/review/types'
 import { compareDesc } from 'date-fns'
+import ReviewVersionDropdown from '@/components/VersionSelectorTool/ReviewVersionDropdown/ReviewVersionDropdown'
 
 interface ViewerProps {
   onClose?: () => void
@@ -50,6 +51,22 @@ const Viewer = ({ onClose }: ViewerProps) => {
     const uniqueProductIds = new Set(allVersionsAndReviewables.map((v) => v.productId))
     return uniqueProductIds.size > 1
   }, [allVersionsAndReviewables])
+
+  // create a unique list of productIds
+  const uniqueProducts = useMemo(() => {
+    const uniqueProductIds = new Set(allVersionsAndReviewables.map((v) => v.productId))
+    return Array.from(uniqueProductIds)
+  }, [allVersionsAndReviewables])
+
+  const productOptions = useMemo(() => {
+    return uniqueProducts.map((id) => {
+      const product = allVersionsAndReviewables.find((v) => v.productId === id)
+      return {
+        value: id,
+        label: product?.productName || 'Unknown product',
+      }
+    })
+  }, [uniqueProducts, allVersionsAndReviewables])
 
   // sort all versions and reviewables by the latest reviewable createdAt date
   const sortedVersionsReviewableDates = useMemo(
@@ -103,17 +120,23 @@ const Viewer = ({ onClose }: ViewerProps) => {
         return allVersionsAndReviewables.filter((v) => v.productId === firstProduct.productId)
       }
     }
-  }, [allVersionsAndReviewables])
+  }, [allVersionsAndReviewables, selectedProductId])
 
   const validData = !isFetchingReviewables && versionsAndReviewables.length
 
   // if hasMultipleProducts and no selectedProductId, select the first product
   useEffect(() => {
-    if (hasMultipleProducts && !selectedProductId && validData) {
+    if (hasMultipleProducts && !selectedProductId && !isFetchingReviewables) {
       const firstProduct = versionsAndReviewables[0]
       dispatch(updateProduct({ selectedProductId: firstProduct.productId }))
     }
-  }, [hasMultipleProducts, selectedProductId, validData, versionsAndReviewables, dispatch])
+  }, [
+    hasMultipleProducts,
+    selectedProductId,
+    isFetchingReviewables,
+    versionsAndReviewables,
+    dispatch,
+  ])
 
   // v003 or v004, etc
   const selectedVersion = useMemo(
@@ -162,6 +185,10 @@ const Viewer = ({ onClose }: ViewerProps) => {
     () => selectedVersion?.reviewables?.find((r) => r.fileId === reviewableIds[0]),
     [reviewableIds, selectedVersion],
   )
+
+  const handleProductChange = (productId: string) => {
+    dispatch(updateProduct({ selectedProductId: productId }))
+  }
 
   const handleVersionChange = (versionId: string) => {
     // try and find a matching reviewable in the new version with the same label as the current reviewable
@@ -277,27 +304,38 @@ const Viewer = ({ onClose }: ViewerProps) => {
   // todo: noVersions modal smaller
   return (
     <Styled.Container>
-      <Styled.Header>
+      <Styled.PlayerToolbar>
         <VersionSelectorTool
           versions={versionsAndReviewables}
           selected={versionIds[0]}
           onChange={handleVersionChange}
         />
-        {onClose && <Button onClick={onClose} icon={'close'} className="close" />}
-      </Styled.Header>
-      <Styled.Content>
-        <Styled.FullScreenWrapper handle={handle} onChange={fullScreenChange}>
-          {viewerComponent}
-        </Styled.FullScreenWrapper>
-        <ReviewablesSelector
-          reviewables={shownOptions}
-          selected={reviewableIds}
-          onChange={handleReviewableChange}
-          onUpload={handleUploadButton}
-          projectName={projectName}
-        />
-        {!noVersions && <ViewerDetailsPanel versionIds={versionIds} projectName={projectName} />}
-      </Styled.Content>
+        {hasMultipleProducts && (
+          <ReviewVersionDropdown
+            options={productOptions}
+            placeholder="Select a product"
+            prefix="Product: "
+            value={selectedProductId}
+            onChange={handleProductChange}
+            valueProps={{ className: 'product-dropdown' }}
+            tooltip="Select a product to view its versions reviewables"
+            shortcut={''}
+          />
+        )}
+      </Styled.PlayerToolbar>
+      <br />
+      {onClose && <Button onClick={onClose} icon={'close'} className="close" />}
+      <Styled.FullScreenWrapper handle={handle} onChange={fullScreenChange}>
+        {viewerComponent}
+      </Styled.FullScreenWrapper>
+      <ReviewablesSelector
+        reviewables={shownOptions}
+        selected={reviewableIds}
+        onChange={handleReviewableChange}
+        onUpload={handleUploadButton}
+        projectName={projectName}
+      />
+      {!noVersions && <ViewerDetailsPanel versionIds={versionIds} projectName={projectName} />}
     </Styled.Container>
   )
 }
