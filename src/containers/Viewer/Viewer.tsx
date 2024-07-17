@@ -70,7 +70,7 @@ const Viewer = ({ onClose }: ViewerProps) => {
           label: product?.productName || 'Unknown product',
           icon:
             (product?.productType && productTypes[product.productType as ProductTypeKey]?.icon) ||
-            'layers',
+            'inventory_2',
         }
       })
       .sort((a, b) => a.label.localeCompare(b.label))

@@ -39,6 +39,7 @@ const viewerSlice = createSlice({
           folderId,
           reviewableIds,
           quickView,
+          selectedProductId,
         } = {},
       } = {},
     ) => {
@@ -46,6 +47,7 @@ const viewerSlice = createSlice({
       state.quickView = !!quickView
 
       if (productId) state.productId = productId
+      if (selectedProductId) state.selectedProductId = selectedProductId
       if (taskId) state.taskId = taskId
       if (folderId) state.folderId = folderId
 
@@ -100,7 +102,15 @@ export default viewerSlice.reducer
 
 // create an object for each reducer to define which state fields it will update
 const viewerReducerSearchParams = {
-  openViewer: ['productId', 'taskId', 'folderId', 'versionIds', 'projectName', 'reviewableIds'],
+  openViewer: [
+    'productId',
+    'selectedProductId',
+    'taskId',
+    'folderId',
+    'versionIds',
+    'projectName',
+    'reviewableIds',
+  ],
   updateProduct: ['selectedProductId'],
   updateSelection: ['versionIds', 'reviewableIds'],
   closeViewer: [
