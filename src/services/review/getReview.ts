@@ -294,10 +294,10 @@ const injectedReview = enhancedApi.injectEndpoints({
     hasTranscoder: build.query<boolean, undefined>({
       queryFn: async (_arg, { dispatch }) => {
         // get list of installed addons
-        const res = await dispatch(api.endpoints.getInstalledAddonsList.initiate())
+        const res = await dispatch(api.endpoints.listAddons.initiate({ details: false }))
 
         if (res.data) {
-          const hasTranscoder = res.data.items.some((addon) => addon.addonName === 'transcoder')
+          const hasTranscoder = res.data.addons.some((addon) => addon.name === 'transcoder')
 
           return { data: hasTranscoder }
         } else if (res.error) {
