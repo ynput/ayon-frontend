@@ -31,6 +31,7 @@ const ActivityComment = ({
   showOrigin,
   isHighlighted,
   dispatch,
+  scope,
 }) => {
   let {
     body,
@@ -47,7 +48,7 @@ const ActivityComment = ({
   } = activity
   if (!authorName) authorName = author?.name || ''
   if (!authorFullName) authorFullName = author?.fullName || authorName
-  let menuId = 'comment-' + activity.activityId
+  let menuId = `comment-${scope}-${activity.activityId}`
   if (isSlideOut) menuId += '-slideout'
   const isMenuOpen = useSelector((state) => state.context.menuOpen) === menuId
 

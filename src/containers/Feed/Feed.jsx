@@ -253,6 +253,7 @@ const Feed = ({
                   }}
                   isHighlighted={highlighted.includes(activity.activityId)}
                   dispatch={dispatch}
+                  scope={scope}
                 />
               ))}
           {hasPreviousPage && (
