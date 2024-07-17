@@ -11,12 +11,13 @@ import isHTMLElement from '@helpers/isHTMLElement'
 const StyledDialog = styled(Dialog)`
   /* dnd overlay must offset this 64px by 32px */
   width: calc(100% - 64px);
-  height: calc(100% - 64px);
+  height: calc(99% - 64px);
   max-height: unset;
   max-width: unset;
 
   .body {
     overflow: hidden;
+    padding: var(--padding-m);
   }
   &:focus-visible {
     outline: none;

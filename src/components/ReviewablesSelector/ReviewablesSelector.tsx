@@ -95,7 +95,7 @@ const ReviewablesSelector: FC<ReviewablesSelectorProps> = ({
   }
 
   // if no reviewables, return null
-  if (!reviewables.length) return null
+  if (!reviewables.length) return <div />
 
   return (
     <Styled.ReviewablesSelector>

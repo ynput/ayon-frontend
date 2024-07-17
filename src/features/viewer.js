@@ -4,6 +4,7 @@ import getInitialStateQueryParam from './middleware/getInitialStateQueryParam'
 export const initialStateQueryParams = {
   projectName: { key: 'project_name', initial: null },
   productId: { key: 'viewer_product', initial: null },
+  selectedProductId: { key: 'selected_product', initial: null }, // used when there are reviewables from multiple products
   taskId: { key: 'viewer_task', initial: null },
   folderId: { key: 'viewer_folder', initial: null },
   versionIds: { key: 'viewer_version', initial: [] },
@@ -38,6 +39,7 @@ const viewerSlice = createSlice({
           folderId,
           reviewableIds,
           quickView,
+          selectedProductId,
         } = {},
       } = {},
     ) => {
@@ -45,6 +47,7 @@ const viewerSlice = createSlice({
       state.quickView = !!quickView
 
       if (productId) state.productId = productId
+      if (selectedProductId) state.selectedProductId = selectedProductId
       if (taskId) state.taskId = taskId
       if (folderId) state.folderId = folderId
 
@@ -52,6 +55,9 @@ const viewerSlice = createSlice({
 
       if (versionIds) state.versionIds = versionIds
       if (reviewableIds) state.reviewableIds = reviewableIds || []
+    },
+    updateProduct: (state, { payload: { selectedProductId } }) => {
+      state.selectedProductId = selectedProductId
     },
     updateSelection: (state, { payload: { versionIds, reviewableIds, productId, quickView } }) => {
       if (productId !== undefined) state.productId = productId
@@ -73,6 +79,7 @@ const viewerSlice = createSlice({
       state.folderId = null
       state.reviewableIds = []
       state.isOpen = false
+      state.selectedProductId = null
     },
     toggleUpload: (state, { payload }) => {
       state.upload = payload
@@ -83,13 +90,28 @@ const viewerSlice = createSlice({
   },
 })
 
-export const { openViewer, updateSelection, closeViewer, toggleUpload, toggleFullscreen } =
-  viewerSlice.actions
+export const {
+  openViewer,
+  updateProduct,
+  updateSelection,
+  closeViewer,
+  toggleUpload,
+  toggleFullscreen,
+} = viewerSlice.actions
 export default viewerSlice.reducer
 
 // create an object for each reducer to define which state fields it will update
 const viewerReducerSearchParams = {
-  openViewer: ['productId', 'taskId', 'folderId', 'versionIds', 'projectName', 'reviewableIds'],
+  openViewer: [
+    'productId',
+    'selectedProductId',
+    'taskId',
+    'folderId',
+    'versionIds',
+    'projectName',
+    'reviewableIds',
+  ],
+  updateProduct: ['selectedProductId'],
   updateSelection: ['versionIds', 'reviewableIds'],
   closeViewer: [
     { state: 'versionIds', value: [] },
@@ -98,6 +120,7 @@ const viewerReducerSearchParams = {
     { state: 'taskId', value: null },
     { state: 'folderId', value: null },
     { state: 'reviewableIds', value: [] },
+    { state: 'selectedProductId', value: null },
   ],
 }
 

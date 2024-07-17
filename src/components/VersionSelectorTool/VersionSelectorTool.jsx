@@ -65,6 +65,11 @@ const VersionSelectorTool = ({ versions, selected, onChange }) => {
 
   if (selectedIndex === -1) return
 
+  const options = versions.map(({ id, name }) => ({
+    value: id,
+    label: name,
+  }))
+
   return (
     <Styled.Tools ref={toolsRef}>
       <NavButton
@@ -76,8 +81,8 @@ const VersionSelectorTool = ({ versions, selected, onChange }) => {
         shortcut={{ children: 'A' }}
       />
       <ReviewVersionDropdown
-        versions={versions}
-        selected={selected}
+        options={options}
+        value={selected}
         onChange={onChange}
         selectRef={selectRef}
       />

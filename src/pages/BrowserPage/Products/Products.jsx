@@ -537,13 +537,21 @@ const Products = () => {
 
   const handleOpenViewer = (productId, quickView) => {
     // find the version id of the product
-    const versionId = listData.find((s) => s.id === productId)?.versionId
-
-    if (!versionId) return toast.error('No version found for this product')
+    const product = listData.find((s) => s.id === productId) || {}
+    if (!product) return toast.error('No product found')
+    const { versionId, folderId } = product
 
     // check review isn't already open
     if (!viewerIsOpen) {
-      dispatch(openViewer({ productId, versionIds: [versionId], projectName, quickView }))
+      dispatch(
+        openViewer({
+          folderId,
+          selectedProductId: productId,
+          versionIds: [versionId],
+          projectName,
+          quickView,
+        }),
+      )
     }
   }
 
@@ -574,6 +582,7 @@ const Products = () => {
 
   const handleKeyDown = (e) => {
     if (e.key === ' ') {
+      e.preventDefault()
       const firstSelected = Object.keys(selectedRows)[0]
       if (firstSelected) {
         handleOpenViewer(firstSelected, true)
