@@ -19,6 +19,7 @@ const ReviewVersionDropdown = ({
       value={[value]}
       onChange={(v) => onChange(v[0])}
       ref={selectRef}
+      search={options.length > 20}
       {...props}
       valueTemplate={(value, selected, isOpen) => (
         <div data-tooltip={tooltip} data-shortcut={shortcut} style={{ height: '100%' }}>
