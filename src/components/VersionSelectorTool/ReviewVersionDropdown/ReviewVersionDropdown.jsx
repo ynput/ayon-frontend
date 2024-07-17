@@ -1,9 +1,10 @@
-import { Dropdown } from '@ynput/ayon-react-components'
+import { Dropdown, Icon } from '@ynput/ayon-react-components'
 import * as Styled from './ReviewVersionDropdown.styled'
 
 const ReviewVersionDropdown = ({
   options,
   value,
+  valueIcon = '',
   onChange,
   selectRef = null,
   prefix = 'Viewing: ',
@@ -29,7 +30,9 @@ const ReviewVersionDropdown = ({
             placeholder={placeholder}
             {...valueProps}
           >
-            {prefix + options.find((option) => option.value === (selected || value)[0])?.label}
+            {prefix}
+            {valueIcon && <Icon icon={valueIcon} />}
+            {options.find((option) => option.value === (selected || value)[0])?.label}
           </Styled.VersionValueTemplate>
         </div>
       )}

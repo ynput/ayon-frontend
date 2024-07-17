@@ -77,6 +77,7 @@ const viewerSlice = createSlice({
       state.folderId = null
       state.reviewableIds = []
       state.isOpen = false
+      state.selectedProductId = null
     },
     toggleUpload: (state, { payload }) => {
       state.upload = payload

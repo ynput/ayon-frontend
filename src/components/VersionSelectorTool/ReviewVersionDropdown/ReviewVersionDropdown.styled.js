@@ -18,5 +18,11 @@ export const VersionValueTemplate = styled(DefaultValueTemplate)`
     div {
       flex: none;
     }
+
+    span {
+      display: flex;
+      align-items: center;
+      gap: var(--base-gap-small);
+    }
   }
 `

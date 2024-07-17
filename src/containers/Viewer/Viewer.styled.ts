@@ -1,4 +1,3 @@
-import { Dropdown } from '@ynput/ayon-react-components'
 import { FullScreen } from 'react-full-screen'
 import styled from 'styled-components'
 

@@ -16,6 +16,7 @@ import { getGroupedReviewables } from '../ReviewablesList/getGroupedReviewables'
 import { GetReviewablesResponse } from '@queries/review/types'
 import { compareDesc } from 'date-fns'
 import ReviewVersionDropdown from '@/components/VersionSelectorTool/ReviewVersionDropdown/ReviewVersionDropdown'
+import { productTypes } from '@state/project'
 
 interface ViewerProps {
   onClose?: () => void
@@ -58,15 +59,27 @@ const Viewer = ({ onClose }: ViewerProps) => {
     return Array.from(uniqueProductIds)
   }, [allVersionsAndReviewables])
 
+  type ProductTypeKey = keyof typeof productTypes
+
   const productOptions = useMemo(() => {
-    return uniqueProducts.map((id) => {
-      const product = allVersionsAndReviewables.find((v) => v.productId === id)
-      return {
-        value: id,
-        label: product?.productName || 'Unknown product',
-      }
-    })
+    return [...uniqueProducts]
+      .map((id) => {
+        const product = allVersionsAndReviewables.find((v) => v.productId === id)
+        return {
+          value: id,
+          label: product?.productName || 'Unknown product',
+          icon:
+            (product?.productType && productTypes[product.productType as ProductTypeKey]?.icon) ||
+            'layers',
+        }
+      })
+      .sort((a, b) => a.label.localeCompare(b.label))
   }, [uniqueProducts, allVersionsAndReviewables])
+
+  const selectedProduct = useMemo(
+    () => productOptions.find((p) => p.value === selectedProductId),
+    [uniqueProducts, selectedProductId],
+  )
 
   // sort all versions and reviewables by the latest reviewable createdAt date
   const sortedVersionsReviewableDates = useMemo(
@@ -122,8 +135,6 @@ const Viewer = ({ onClose }: ViewerProps) => {
     }
   }, [allVersionsAndReviewables, selectedProductId])
 
-  const validData = !isFetchingReviewables && versionsAndReviewables.length
-
   // if hasMultipleProducts and no selectedProductId, select the first product
   useEffect(() => {
     if (hasMultipleProducts && !selectedProductId && !isFetchingReviewables) {
@@ -145,13 +156,13 @@ const Viewer = ({ onClose }: ViewerProps) => {
   )
   // if no versionIds are provided, select the last version and update the state
   useEffect(() => {
-    if ((!versionIds.length || !selectedVersion) && validData) {
+    if ((!versionIds.length || !selectedVersion) && !isFetchingReviewables) {
       const lastVersion = versionsAndReviewables[versionsAndReviewables.length - 1]
       if (lastVersion) {
         dispatch(updateSelection({ versionIds: [lastVersion.id] }))
       }
     }
-  }, [versionIds, selectedVersion, validData, versionsAndReviewables, dispatch])
+  }, [versionIds, selectedVersion, isFetchingReviewables, versionsAndReviewables, dispatch])
 
   const versionReviewableIds = selectedVersion?.reviewables?.map((r) => r.fileId) || []
 
@@ -240,7 +251,7 @@ const Viewer = ({ onClose }: ViewerProps) => {
 
   const fullScreenChange = (state: boolean) => {
     // when closing, ensure the state is updated
-    if (!state) {
+    if (!state && fullscreen) {
       dispatch(toggleFullscreen({ fullscreen: false }))
     }
   }
@@ -320,6 +331,7 @@ const Viewer = ({ onClose }: ViewerProps) => {
             valueProps={{ className: 'product-dropdown' }}
             tooltip="Select a product to view its versions reviewables"
             shortcut={''}
+            valueIcon={selectedProduct?.icon || ''}
           />
         )}
       </Styled.PlayerToolbar>
