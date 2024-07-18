@@ -1,7 +1,8 @@
 import { Button } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
+import PerfectScrollbar from 'react-perfect-scrollbar'
 
-export const ReviewablesSelector = styled.div`
+export const ReviewablesSelector = styled(PerfectScrollbar)`
   position: relative;
   height: 100%;
 
