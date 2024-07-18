@@ -1,9 +1,10 @@
-import { FC, useEffect, useState } from 'react'
+import { FC, useEffect, useRef, useState } from 'react'
 import * as Styled from './ReviewablesSelector.styled'
 import { classNames } from 'primereact/utils'
 import FileThumbnail from '../FileThumbnail'
 import { ReviewableModel } from '@/api/rest'
 import isHTMLElement from '@helpers/isHTMLElement'
+import ScrollBar from 'react-perfect-scrollbar'
 
 type ReviewableCard = Pick<ReviewableModel, 'fileId' | 'label' | 'fileId'>
 
@@ -22,8 +23,19 @@ const ReviewablesSelector: FC<ReviewablesSelectorProps> = ({
   onChange,
   onUpload,
 }) => {
+  const scrollRef = useRef<ScrollBar>(null)
   const [labelTooltip, setLabelTooltip] = useState<null | string>(null)
   const [labelTooltipYPos, setLabelTooltipYPos] = useState<null | number>(null)
+
+  const getScrollTop = (): number => {
+    let scrollTop = 0
+    if (scrollRef.current) {
+      // @ts-ignore
+      scrollTop = scrollRef.current._container.scrollTop
+    }
+    return scrollTop
+  }
+
   // add keyboard support
   // use up and down arrow keys to navigate through the reviewables
   // if at top and press up, go to bottom, if at bottom and press down, go to top
@@ -51,7 +63,7 @@ const ReviewablesSelector: FC<ReviewablesSelectorProps> = ({
         const el = document.getElementById('preview-' + nextFileId)
 
         if (el) {
-          const top = el.offsetTop + el.offsetHeight / 2
+          const top = el.offsetTop + el.offsetHeight / 2 - getScrollTop()
           setLabelTooltipYPos(top)
         }
       }
@@ -90,7 +102,7 @@ const ReviewablesSelector: FC<ReviewablesSelectorProps> = ({
     if (!closest) return
     setLabelTooltip(label ?? null)
     // set label tooltip position
-    const top = closest.offsetTop + closest.offsetHeight / 2
+    const top = closest.offsetTop + closest.offsetHeight / 2 - getScrollTop()
     setLabelTooltipYPos(top)
   }
 
@@ -99,7 +111,7 @@ const ReviewablesSelector: FC<ReviewablesSelectorProps> = ({
 
   return (
     <Styled.ReviewablesSelector>
-      <Styled.Scrollable className="reviewables">
+      <Styled.Scrollable className="reviewables" ref={scrollRef}>
         {reviewables.map(({ fileId, label }) => (
           <Styled.ReviewableCard
             key={fileId}

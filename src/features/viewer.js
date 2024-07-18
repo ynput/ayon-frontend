@@ -58,6 +58,7 @@ const viewerSlice = createSlice({
     },
     updateProduct: (state, { payload: { selectedProductId } }) => {
       state.selectedProductId = selectedProductId
+      if (state.isOpen === false) state.isOpen = true
     },
     updateSelection: (state, { payload: { versionIds, reviewableIds, productId, quickView } }) => {
       if (productId !== undefined) state.productId = productId
@@ -70,6 +71,7 @@ const viewerSlice = createSlice({
       if (quickView !== undefined) {
         state.quickView = quickView
       }
+      if (state.isOpen === false) state.isOpen = true
     },
     closeViewer: (state) => {
       state.versionIds = []

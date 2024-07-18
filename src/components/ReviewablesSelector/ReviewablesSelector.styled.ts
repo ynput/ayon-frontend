@@ -2,19 +2,17 @@ import { Button } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 import PerfectScrollbar from 'react-perfect-scrollbar'
 
-export const ReviewablesSelector = styled(PerfectScrollbar)`
+export const ReviewablesSelector = styled.div`
   position: relative;
   height: 100%;
-
   z-index: 1000;
 `
 
-export const Scrollable = styled.div`
+export const Scrollable = styled(PerfectScrollbar)`
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
   align-items: center;
-  overflow-y: auto;
   min-width: fit-content;
   gap: var(--base-gap-small);
 `
