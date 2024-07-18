@@ -51,14 +51,9 @@ const RepresentationList = ({ entities = [], scope }) => {
     return groupResult(representations, 'name')
   }, [representations])
 
-  const onRepSelectionChange = (entityId, projectName) => {
+  const onRepSelectionChange = (entityId) => {
     // set focused state
     dispatch(setFocusedRepresentations([entityId]))
-
-    // open slide out panel
-    dispatch(
-      openSlideOut({ entityId, entityType: 'representation', projectName, tab: 'attribs', scope }),
-    )
   }
 
   const onRowClick = (e) => {
@@ -72,6 +67,17 @@ const RepresentationList = ({ entities = [], scope }) => {
     dispatch(setUri(uri))
 
     onRepSelectionChange(e.node.data.id, projectName)
+
+    // open slide out panel
+    dispatch(
+      openSlideOut({
+        entityId: e.node.data.id,
+        entityType: 'representation',
+        projectName,
+        tab: 'attribs',
+        scope,
+      }),
+    )
   }
 
   const ctxMenuItems = (id) => [
