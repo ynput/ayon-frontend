@@ -86,6 +86,7 @@ const UsersSettings = () => {
   // USE STATE
   const [selectedProjects, setSelectedProjects] = useState(null)
   const [showNewUser, setShowNewUser] = useState(false)
+  const [showNewServiceUser, setShowNewServiceUser] = useState(false)
   const [showRenameUser, setShowRenameUser] = useState(false)
   const [showSetPassword, setShowSetPassword] = useState(false)
   // show users for selected projects
@@ -170,6 +171,9 @@ const UsersSettings = () => {
   const openNewUser = () => {
     setShowNewUser(true)
   }
+  const openNewServiceUser = () => {
+    setShowNewServiceUser(true)
+  }
 
   // use filteredUserList if projectAccessOnly
   // else use userList
@@ -238,6 +242,15 @@ const UsersSettings = () => {
         accessGroupsData={accessGroupsData}
       />
 
+      <NewUser
+        onHide={(newUsers = []) => {
+          setShowNewServiceUser(false)
+          if (newUsers.length) setSelectedUsers(newUsers)
+        }}
+        open={showNewServiceUser}
+        serviceUser={true}
+      />
+
       <main>
         <Section>
           <Toolbar>
@@ -262,6 +275,11 @@ const UsersSettings = () => {
               label="Add New User"
               icon="person_add"
               data-shortcut="n"
+            />
+            <Button
+              onClick={openNewServiceUser}
+              label="Add Service User"
+              icon="person_add"
             />
           </Toolbar>
           <Splitter

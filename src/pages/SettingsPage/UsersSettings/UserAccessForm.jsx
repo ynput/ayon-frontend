@@ -33,7 +33,6 @@ const UserAccessForm = ({ accessGroupsData, formData, onChange, disabled, select
   // only admins can
   if (authenticatedUser.isAdmin) {
     userLevels.push({ label: 'Admin', value: 'admin' })
-    userLevels.push({ label: 'Service', value: 'service' })
   }
 
   const activeOptions = [

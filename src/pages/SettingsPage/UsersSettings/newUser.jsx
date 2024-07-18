@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { toast } from 'react-toastify'
-import { Button, Divider, SaveButton, Section, Dialog } from '@ynput/ayon-react-components'
+import { Button, Divider, SaveButton, Section, Dialog, FormRow } from '@ynput/ayon-react-components'
+import { SelectButton } from 'primereact/selectbutton'
 import { useAddUserMutation } from '@queries/user/updateUser'
 import ayonClient from '@/ayon'
 import UserAttribForm from './UserAttribForm'
@@ -8,7 +9,13 @@ import UserAccessForm from './UserAccessForm'
 
 import styled from 'styled-components'
 import UserAccessGroupsForm from './UserAccessGroupsForm/UserAccessGroupsForm'
+import ApiKeyManager from '@/components/ApiKeyManager'
 
+const FormRowStyled = styled(FormRow)`
+  .label {
+    min-width: 160px;
+  }
+`
 const DividerSmallStyled = styled(Divider)`
   margin: 8px 0;
 `
@@ -18,7 +25,7 @@ const SubTitleStyled = styled.span`
   margin-bottom: 0;
 `
 
-const NewUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
+const NewUser = ({ onHide, open, onSuccess, accessGroupsData, isServiceUser = false }) => {
   const usernameRef = useRef()
 
   const [addedUsers, setAddedUsers] = useState([])
@@ -56,7 +63,7 @@ const NewUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
     }
 
     // check passwords are the same
-    if (password !== passwordConfirm) {
+    if (!isServiceUser && password !== passwordConfirm) {
       toast.error('Passwords do not match')
       return
     }
@@ -72,7 +79,7 @@ const NewUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
 
     if (formData.userLevel === 'admin') payload.data.isAdmin = true
     else if (formData.userLevel === 'manager') payload.data.isManager = true
-    else if (formData.userLevel === 'service') payload.data.isService = true
+    else if (formData.userLevel === 'service' || isServiceUser) payload.data.isService = true
     else {
       payload.data.defaultAccessGroups = formData.defaultAccessGroups || []
       payload.data.accessGroups = formData.accessGroups || {}
@@ -117,6 +124,10 @@ const NewUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
     onHide(addedUsers)
   }
 
+  const handleServiceUserSetPassword = (pass) => {
+    setPassword(pass + 'Rand.123');
+  }
+
   const handleKeyDown = (e) => {
     // if enter then submit
     if (e.key === 'Enter' && (e.ctrlKey || e.metaKey || e.shiftKey) && formData.Username) {
@@ -128,6 +139,29 @@ const NewUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
 
   if (!open) return null
 
+  const getUserAttributes = () => {
+    if (!isServiceUser) {
+      return [
+        {
+          name: 'Username',
+          data: { title: 'Username' },
+          input: { placeholder: 'No spaces allowed', autoFocus: true, ref: usernameRef },
+        },
+        { name: 'password', data: { title: 'Password' } },
+        { name: 'passwordConfirm', data: { title: 'Password Confirm' } },
+        ...attributes,
+      ]
+    }
+
+    return [
+      {
+        name: 'Username',
+        data: { title: 'Username' },
+        input: { placeholder: 'No spaces allowed', autoFocus: true, ref: usernameRef },
+      },
+    ]
+  }
+
   return (
     <Dialog
       onKeyDown={handleKeyDown}
@@ -137,20 +171,20 @@ const NewUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
         width: '90vw',
         maxWidth: 700,
       }}
-      header={'Create New User'}
+      header={isServiceUser ? 'Create Service User' : 'Create New User'}
       onClose={handleClose}
       footer={
         <>
           <Button
             label="Create user"
             onClick={() => handleSubmit(false)}
-            disabled={!formData.Username}
+            disabled={!formData.Username || (isServiceUser && !password)}
             data-shortcut="Shift+Enter"
           ></Button>
           <SaveButton
             onClick={() => handleSubmit(true)}
             label="Create and close"
-            active={formData.Username}
+            disabled={!formData.Username || (isServiceUser && !password)}
             saving={isCreatingUser}
             data-shortcut="Ctrl/Cmd+Enter"
           />
@@ -161,25 +195,30 @@ const NewUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
         <UserAttribForm
           formData={formData}
           setFormData={setFormData}
-          attributes={[
-            {
-              name: 'Username',
-              data: { title: 'Username' },
-              input: { placeholder: 'No spaces allowed', autoFocus: true, ref: usernameRef },
-            },
-            { name: 'password', data: { title: 'Password' } },
-            { name: 'passwordConfirm', data: { title: 'Password Confirm' } },
-            ...attributes,
-          ]}
+          attributes={getUserAttributes()}
           {...{ password, setPassword, passwordConfirm, setPasswordConfirm }}
         />
-        <DividerSmallStyled />
-        <UserAccessForm
-          formData={formData}
-          onChange={(key, value) => setFormData({ ...formData, [key]: value })}
-          accessGroupsData={accessGroupsData}
-        />
-        {formData?.userLevel === 'user' && (
+
+        {!isServiceUser && <DividerSmallStyled /> }
+
+        <ApiKeyManager autosave={false} onGenerate={handleServiceUserSetPassword}/>
+
+        {!isServiceUser ?
+          <UserAccessForm
+            formData={formData}
+            onChange={(key, value) => setFormData({ ...formData, [key]: value })}
+            accessGroupsData={accessGroupsData}
+            serviceUser={isServiceUser}
+          /> :
+          <FormRowStyled label="User active">
+            <SelectButton
+              unselectable={false}
+              value={formData?.userActive}
+              onChange={(event) => setFormData({...formData, 'userActive': event.value })}
+              options={[ { label: 'Active', value: true }, { label: 'Inactive', value: false } ]} />
+          </FormRowStyled>
+        }
+        {!isServiceUser && formData?.userLevel === 'user' && (
           <>
             <SubTitleStyled>
               Give this new user access to projects by adding access groups per project

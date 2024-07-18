@@ -20,7 +20,7 @@ const PanelStyled = styled(Panel)`
   }
 `
 
-const ApiKeyManager = ({ preview, name }) => {
+const ApiKeyManager = ({ preview, name, autosave = true, onGenerate }) => {
   // temp hold new key
   const [newKey, setNewKey] = useState(null)
   // loading state
@@ -38,6 +38,12 @@ const ApiKeyManager = ({ preview, name }) => {
   const createNewKey = async () => {
     setLoading(true)
     const key = uuidv4().replace(/-/g, '')
+    if (!autosave) {
+      setNewKey({ key, preview: true })
+      setLoading(false)
+      onGenerate && onGenerate(key);
+      return;
+    }
 
     // try catch to update api key using unwrap and toaste results
     try {
@@ -47,6 +53,8 @@ const ApiKeyManager = ({ preview, name }) => {
       }).unwrap()
 
       setNewKey({ key, preview: true })
+
+      onGenerate && onGenerate(key);
 
       toast.success('API Key Created')
     } catch (error) {
@@ -62,6 +70,11 @@ const ApiKeyManager = ({ preview, name }) => {
 
     // check if target is an input and do nothing
     if (e.target.tagName === 'INPUT') return
+
+    if (!autosave) {
+      setNewKey(null)
+      return
+    }
 
     confirmDelete({
       label: 'Service Key',
