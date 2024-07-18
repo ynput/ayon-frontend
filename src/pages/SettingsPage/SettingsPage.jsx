@@ -4,6 +4,7 @@ import { useGetSettingsAddonsQuery } from '@queries/addons/getAddons'
 
 import SettingsAddon from './SettingsAddon'
 import AppNavLinks from '@containers/header/AppNavLinks'
+import { useSelector } from 'react-redux'
 
 const AnatomyPresets = lazy(() => import('./AnatomyPresets/AnatomyPresets'))
 const Bundles = lazy(() => import('./Bundles'))
@@ -17,6 +18,7 @@ const AddonsManager = lazy(() => import('./AddonsManager'))
 
 const SettingsPage = () => {
   const { module, addonName } = useParams()
+  const isManager = useSelector((state) => state.user.data.isManager)
 
   const {
     data: addonsData,
@@ -46,10 +48,13 @@ const SettingsPage = () => {
       }
     }
 
+    // Managers don't have access to addons nor bundles, redirecting to root if attempting to access the routes directly
     switch (module) {
       case 'addons':
+        if (isManager) return <Navigate to="/" />
         return <AddonsManager />
       case 'bundles':
+        if (isManager) return <Navigate to="/" />
         return <Bundles />
       case 'anatomyPresets':
         return <AnatomyPresets />
@@ -68,11 +73,11 @@ const SettingsPage = () => {
       default:
         return <Navigate to="/settings" />
     }
-  }, [module, addonName, addonsData])
+  }, [module, addonName, addonsData, isManager])
 
   const links = useMemo(() => {
-    let result = [
-      {
+      const adminExtras = [
+        {
         name: 'Addons',
         path: '/settings/addons',
         module: 'addons',
@@ -86,6 +91,9 @@ const SettingsPage = () => {
         accessLevels: ['manager'],
         shortcut: 'B+B',
       },
+    ]
+
+    let result = [
       {
         name: 'Studio settings',
         path: '/settings/studio',
@@ -131,6 +139,9 @@ const SettingsPage = () => {
         accessLevels: ['manager'],
       },
     ]
+    if (!isManager) {
+      result = [...adminExtras, ...result];
+    }
 
     if (!addonsData) return result
 
@@ -144,7 +155,7 @@ const SettingsPage = () => {
     }
 
     return result
-  }, [addonsData])
+  }, [addonsData, isManager])
 
   return (
     <>
