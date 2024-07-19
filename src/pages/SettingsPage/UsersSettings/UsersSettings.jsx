@@ -18,6 +18,7 @@ import UsersOverview from './UsersOverview'
 import { useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import NewUser from './newUser'
+import NewServiceUser from './newServiceUser'
 import confirmDelete from '@helpers/confirmDelete'
 import { useGetAccessGroupsQuery } from '@queries/accessGroups/getAccessGroups'
 import Shortcuts from '@containers/Shortcuts'
@@ -242,13 +243,12 @@ const UsersSettings = () => {
         accessGroupsData={accessGroupsData}
       />
 
-      <NewUser
+      <NewServiceUser
         onHide={(newUsers = []) => {
           setShowNewServiceUser(false)
           if (newUsers.length) setSelectedUsers(newUsers)
         }}
         open={showNewServiceUser}
-        serviceUser={true}
       />
 
       <main>

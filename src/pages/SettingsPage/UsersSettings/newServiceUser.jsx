@@ -1,15 +1,18 @@
 import { useEffect, useRef, useState } from 'react'
 import { toast } from 'react-toastify'
-import { Button, Divider, SaveButton, Section, Dialog, FormRow } from '@ynput/ayon-react-components'
+import styled from 'styled-components'
 import { SelectButton } from 'primereact/selectbutton'
-import { useAddUserMutation } from '@queries/user/updateUser'
+
+import { Button, Divider, SaveButton, Section, Dialog, FormRow } from '@ynput/ayon-react-components'
 import ayonClient from '@/ayon'
+import ApiKeyManager from '@/components/ApiKeyManager'
+import { useAddUserMutation } from '@queries/user/updateUser'
+import copyToClipboard from '@/helpers/copyToClipboard'
+import callbackOnKeyDown from '@/helpers/callbackOnKeyDown'
+
+import UserAccessGroupsForm from './UserAccessGroupsForm/UserAccessGroupsForm'
 import UserAttribForm from './UserAttribForm'
 import UserAccessForm from './UserAccessForm'
-
-import styled from 'styled-components'
-import UserAccessGroupsForm from './UserAccessGroupsForm/UserAccessGroupsForm'
-import ApiKeyManager from '@/components/ApiKeyManager'
 
 const FormRowStyled = styled(FormRow)`
   .label {
@@ -19,18 +22,16 @@ const FormRowStyled = styled(FormRow)`
 const DividerSmallStyled = styled(Divider)`
   margin: 8px 0;
 `
-
 const SubTitleStyled = styled.span`
   margin-top: 16px;
   margin-bottom: 0;
 `
 
-const NewUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
+const NewServiceUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
   const usernameRef = useRef()
 
   const [addedUsers, setAddedUsers] = useState([])
   const [password, setPassword] = useState('')
-  const [passwordConfirm, setPasswordConfirm] = useState('')
 
   const initFormData = {
     userLevel: 'user',
@@ -62,39 +63,25 @@ const NewUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
       return
     }
 
-    // check passwords are the same
-    if (password !== passwordConfirm) {
-      toast.error('Passwords do not match')
-      return
-    }
-
     if (password) payload.password = password
 
     payload.attrib = {}
     payload.data = {}
-    if (formData.isGuest) payload.data.isGuest = true
     attributes.forEach(({ name }) => {
       if (formData[name]) payload.attrib[name] = formData[name]
     })
 
-    if (formData.userLevel === 'admin') payload.data.isAdmin = true
-    else if (formData.userLevel === 'manager') payload.data.isManager = true
-    else {
-      payload.data.defaultAccessGroups = formData.defaultAccessGroups || []
-      payload.data.accessGroups = formData.accessGroups || {}
-    }
-
     payload.name = formData.Username
+    payload.data.isService = true
 
     try {
       await addUser({ name: formData.Username, user: payload }).unwrap()
 
-      toast.success('User created')
+      toast.success('Service User created')
       // set added users to be used for auto selection onHide
       setAddedUsers([...addedUsers, formData.Username])
       // keep reusable data in the form
       setPassword('')
-      setPasswordConfirm('')
       setFormData((fd) => {
         return { accessGroups: fd.accessGroups, userLevel: fd.userLevel }
       })
@@ -116,38 +103,45 @@ const NewUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
     // clear all forms
     setFormData(initialFormData())
     setPassword('')
-    setPasswordConfirm('')
     // reset added users
     setAddedUsers([])
     // close the dialog
     onHide(addedUsers)
   }
 
+  const handleApiKeyGeneration = (key) => {
+    copyToClipboard(key);
+    setPassword(key + 'Rand.123');
+  }
+
   if (!open) return null
 
   return (
     <Dialog
-      onKeyDown={(e) => callbackOnKeyDown(e, {validationPassed: formData.Username, callback: handleSubmit}) }
+      onKeyDown={(e) => callbackOnKeyDown(e, {
+        validationPassed: formData.Username && password,
+        callback: handleSubmit,
+      })}
       isOpen
       size="full"
       style={{
         width: '90vw',
         maxWidth: 700,
       }}
-      header={'Create New User'}
+      header={'Create Service User'}
       onClose={handleClose}
       footer={
         <>
           <Button
             label="Create user"
             onClick={() => handleSubmit(false)}
-            disabled={!formData.Username}
+            disabled={!formData.Username || !password}
             data-shortcut="Shift+Enter"
-          ></Button>
+          />
           <SaveButton
             onClick={() => handleSubmit(true)}
             label="Create and close"
-            disabled={!formData.Username}
+            disabled={!formData.Username || !password}
             saving={isCreatingUser}
             data-shortcut="Ctrl/Cmd+Enter"
           />
@@ -158,44 +152,29 @@ const NewUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
         <UserAttribForm
           formData={formData}
           setFormData={setFormData}
-          attributes={[
-            {
-              name: 'Username',
-              data: { title: 'Username' },
-              input: { placeholder: 'No spaces allowed', autoFocus: true, ref: usernameRef },
-            },
-            { name: 'password', data: { title: 'Password' } },
-            { name: 'passwordConfirm', data: { title: 'Password Confirm' } },
-            ...attributes,
-          ]}
-          {...{ password, setPassword, passwordConfirm, setPasswordConfirm }}
+          attributes={[{
+            name: 'Username',
+            data: { title: 'Username' },
+            input: { placeholder: 'No spaces allowed', autoFocus: true, ref: usernameRef },
+          }]}
+          customFormRow={FormRowStyled}
+          {...{ password, setPassword }}
         />
 
-        <DividerSmallStyled />
+        <FormRowStyled label="User active">
+          <SelectButton
+            unselectable={false}
+            value={formData?.userActive}
+            onChange={(event) => setFormData({ ...formData, 'userActive': event.value })}
+            options={[{ label: 'Active', value: true }, { label: 'Inactive', value: false }]} />
+        </FormRowStyled>
 
-        <UserAccessForm
-          formData={formData}
-          onChange={(key, value) => setFormData({ ...formData, [key]: value })}
-          accessGroupsData={accessGroupsData}
-        />
-        {formData?.userLevel === 'user' && (
-          <>
-            <SubTitleStyled>
-              Give this new user access to projects by adding access groups per project
-            </SubTitleStyled>
-            <UserAccessGroupsForm
-              // value expects multiple users, so we need to pass an object with the username "_" as the key
-              value={{ _: formData.accessGroups }}
-              options={accessGroupsData}
-              // onChange provides all "users", in this case just the one "_" user
-              onChange={(value) => setFormData({ ...formData, accessGroups: value['_'] })}
-              disableNewGroup
-            />
-          </>
-        )}
+        <FormRowStyled label="Service user key" />
+
+        <ApiKeyManager name='new user' autosave={false} onGenerate={handleApiKeyGeneration} repeatGenerate={false} lightBackground={true} />
       </Section>
     </Dialog>
   )
 }
 
-export default NewUser
+export default NewServiceUser

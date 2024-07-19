@@ -19,8 +19,17 @@ const PanelStyled = styled(Panel)`
     margin-left: auto;
   }
 `
+const PanelStyledLightBackground = styled(PanelStyled)`
+  background-color: var(--md-sys-color-surface-container-high);
+`
 
-const ApiKeyManager = ({ preview, name, autosave = true, onGenerate }) => {
+const ApiKeyManager = ({ preview,
+  name,
+  autosave = true,
+  onGenerate,
+  repeatGenerate = true,
+  lightBackground = false,
+}) => {
   // temp hold new key
   const [newKey, setNewKey] = useState(null)
   // loading state
@@ -92,18 +101,21 @@ const ApiKeyManager = ({ preview, name, autosave = true, onGenerate }) => {
   const handleCopyKey = () => {
     copyToClipboard(newKey.key)
   }
+  const Panel = lightBackground ? PanelStyledLightBackground : PanelStyled;
 
   if (preview || newKey?.key)
     return (
       <>
-        <LockedInput
-          value={preview || newKey?.preview}
-          onEdit={handleDelete}
-          editIcon={'delete'}
-          label={'Api Key'}
-        />
+        {repeatGenerate &&
+          <LockedInput
+            value={preview || newKey?.preview}
+            onEdit={handleDelete}
+            editIcon={'delete'}
+            label={'Api Key'}
+          />
+        }
         {newKey && (
-          <PanelStyled>
+          <Panel>
             <div>
               <strong>{newKey.key}</strong>
               <br />
@@ -112,7 +124,7 @@ const ApiKeyManager = ({ preview, name, autosave = true, onGenerate }) => {
               </div>
             </div>
             <Icon onClick={handleCopyKey} icon="content_copy" />
-          </PanelStyled>
+          </Panel>
         )}
       </>
     )
