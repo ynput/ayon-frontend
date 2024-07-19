@@ -197,7 +197,7 @@ const NewProjectDialog = ({ onHide }) => {
             tooltip="Project anatomy preset"
           />
         </Toolbar>
-        {isSchemaLoading || isOriginalAnatomyLoading ? (
+        {isSchemaLoading || isOriginalAnatomyLoading || !formData ? (
           'Loading editor...'
         ) : (
           <SettingsEditor schema={schema} formData={formData} onChange={setFormData} />
