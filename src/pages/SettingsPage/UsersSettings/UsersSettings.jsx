@@ -270,16 +270,12 @@ const UsersSettings = () => {
               icon="person_remove"
               disabled={!selectedUsers.length || isSelfSelected || managerDisabled}
             />
+            <Button onClick={openNewServiceUser} label="Add Service User" icon="person_add" />
             <Button
               onClick={openNewUser}
               label="Add New User"
               icon="person_add"
               data-shortcut="n"
-            />
-            <Button
-              onClick={openNewServiceUser}
-              label="Add Service User"
-              icon="person_add"
             />
           </Toolbar>
           <Splitter
