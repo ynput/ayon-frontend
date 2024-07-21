@@ -6,6 +6,7 @@ import { SelectButton } from 'primereact/selectbutton'
 import { Button, Divider, SaveButton, Section, Dialog, FormRow } from '@ynput/ayon-react-components'
 import ayonClient from '@/ayon'
 import ApiKeyManager from '@/components/ApiKeyManager'
+import useUserMutations from '@/containers/Feed/hooks/useUserMutations'
 import { useAddUserMutation } from '@queries/user/updateUser'
 import copyToClipboard from '@/helpers/copyToClipboard'
 import callbackOnKeyDown from '@/helpers/callbackOnKeyDown'
@@ -28,63 +29,63 @@ const SubTitleStyled = styled.span`
 `
 
 const NewServiceUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
-  const usernameRef = useRef()
-
-  const [addedUsers, setAddedUsers] = useState([])
-  const [password, setPassword] = useState('')
-
-  const initFormData = {
-    userLevel: 'user',
-    userActive: true,
-    UserImage: '',
-    isGuest: false,
-    accessGroups: {},
-    defaultAccessGroups: [],
-  }
-
-  const [formData, setFormData] = useState(initFormData)
-
-  const initialFormData = () => {
-    return initFormData
-  }
-  useEffect(() => {
-    // set initial form data
-    setFormData(initialFormData())
-  }, [])
-
+  const {
+    password, setPassword,
+    passwordConfirm, setPasswordConfirm,
+    formData, setFormData,
+    addedUsers,
+    resetFormData,
+  } = useUserMutations({})
   const [addUser, { isLoading: isCreatingUser }] = useAddUserMutation()
+  const usernameRef = useRef()
 
   const attributes = ayonClient.getAttribsByScope('user')
 
-  const handleSubmit = async (close) => {
-    const payload = {}
+  const validateFormData = (formData) => {
     if (!formData.Username) {
-      toast.error('Login name must be provided')
-      return
+      return 'Login name must be provided';
     }
 
-    if (password) payload.password = password
+    return null;
+  }
 
-    payload.attrib = {}
-    payload.data = {}
+  const preparePayload = (formData, attributes, password) => {
+    const payload = {
+      data: {
+        isService: true,
+        defaultAccessGroups: formData.defaultAccessGroups || [],
+        accessGroups: formData.accessGroups || {},
+      },
+      attrib: {},
+      name: formData.Username,
+      password: password ? password : undefined,
+      isGuest: formData.isGuest ? true : undefined,
+    }
+
     attributes.forEach(({ name }) => {
       if (formData[name]) payload.attrib[name] = formData[name]
     })
 
-    payload.name = formData.Username
-    payload.data.isService = true
+    return payload;
+  }
+
+  const handleSubmit = async (close) => {
+    const validationResult = validateFormData(formData);
+    if (validationResult !== null) {
+      toast.error(validationResult)
+      return
+    }
 
     try {
-      await addUser({ name: formData.Username, user: payload }).unwrap()
-
+      await addUser({ name: formData.Username, user: preparePayload(formData, attributes, password) }).unwrap()
       toast.success('Service User created')
-      // set added users to be used for auto selection onHide
-      setAddedUsers([...addedUsers, formData.Username])
-      // keep reusable data in the form
-      setPassword('')
-      setFormData((fd) => {
-        return { accessGroups: fd.accessGroups, userLevel: fd.userLevel }
-      })
+
+      resetFormData({
+        password: '',
+        passwordConfirm: '',
+        formData: (fd) => { return { accessGroups: fd.accessGroups, userLevel: fd.userLevel } },
+        addedUsers: [...addedUsers, formData.Username]
+      });
 
       onSuccess && onSuccess(formData.Username)
 
@@ -100,12 +101,11 @@ const NewServiceUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
   }
 
   const handleClose = () => {
-    // clear all forms
-    setFormData(initialFormData())
-    setPassword('')
-    // reset added users
-    setAddedUsers([])
-    // close the dialog
+    resetFormData({
+      password: '',
+      passwordConfirm: '',
+      addedUsers: [],
+    })
     onHide(addedUsers)
   }
 
