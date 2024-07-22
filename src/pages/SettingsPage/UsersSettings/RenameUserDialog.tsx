@@ -3,7 +3,13 @@ import { toast } from 'react-toastify'
 import { InputText, FormLayout, FormRow, Dialog, SaveButton } from '@ynput/ayon-react-components'
 import { useUpdateUserNameMutation } from '@queries/user/updateUser'
 
-const RenameUserDialog = ({ onHide, selectedUsers, onSuccess }) => {
+type RenameUserDialogProps = {
+  onHide: () => void
+  selectedUsers: string[]
+  onSuccess: (newName: string) => void
+}
+
+const RenameUserDialog = ({ onHide, selectedUsers, onSuccess }: RenameUserDialogProps) => {
   const [newName, setNewName] = useState('')
 
   // mutation hook
