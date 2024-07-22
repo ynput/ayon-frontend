@@ -2,8 +2,15 @@ import { useState } from 'react'
 import { toast } from 'react-toastify'
 import { InputText, FormLayout, FormRow, Dialog, SaveButton } from '@ynput/ayon-react-components'
 import { useUpdateUserNameMutation } from '@queries/user/updateUser'
+import InfoMessage from '@components/InfoMessage'
 
-const RenameUserDialog = ({ onHide, selectedUsers, onSuccess }) => {
+type RenameUserDialogProps = {
+  onHide: () => void
+  selectedUsers: string[]
+  onSuccess: (newName: string) => void
+}
+
+const RenameUserDialog = ({ onHide, selectedUsers, onSuccess }: RenameUserDialogProps) => {
   const [newName, setNewName] = useState('')
 
   // mutation hook
@@ -44,6 +51,10 @@ const RenameUserDialog = ({ onHide, selectedUsers, onSuccess }) => {
         <FormRow label="New name">
           <InputText value={newName} onChange={(e) => setNewName(e.target.value)} />
         </FormRow>
+        <InfoMessage
+          variant="warning"
+          message="Renaming users can have unintended consequences. Use with extreme caution and as a last resort"
+        />
       </FormLayout>
     </Dialog>
   )
