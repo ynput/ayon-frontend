@@ -35,6 +35,7 @@ const ReviewVersionDropdown = ({
       onChange={(v) => onChange(String(v[0]))}
       ref={selectRef}
       search={options.length > 20}
+      searchFields={['label', 'value']}
       activateKeys={['Enter']}
       {...props}
       valueTemplate={(value, selected, isOpen) => (
