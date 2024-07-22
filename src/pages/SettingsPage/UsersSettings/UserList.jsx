@@ -29,9 +29,20 @@ const UserList = ({
 }) => {
   // Selection
   const selection = useMemo(
-    () => userList.filter((user) => selectedUsers.includes(user.name)),
+    () => {
+      return userList.filter((user) => selectedUsers.includes(user.name))
+    },
     [selectedUsers, selectedProjects, userList],
   )
+
+  const onContextMenu = (e) => {
+    if (selectedUsers.includes(e.data.name)) {
+      onSelectUsers([e.data.name, ...selectedUsers])
+    } else {
+      onSelectUsers([e.data.name])
+    }
+    ctxMenuShow(e.originalEvent, ctxMenuItems(selectedUsers))
+  }
 
   const onSelectionChange = (e) => {
     if (!onSelectUsers) return
@@ -41,8 +52,8 @@ const UserList = ({
   }
 
   // IDEA: Can these go into the details panel as well?
-  const ctxMenuTableItems = useMemo(
-    () => [
+  const ctxMenuItems = () => {
+    return [
       {
         label: 'Set username',
         disabled: selection.length !== 1,
@@ -62,11 +73,10 @@ const UserList = ({
         icon: 'delete',
         danger: true,
       },
-    ],
-    [selection, isSelfSelected, setShowRenameUser, setShowSetPassword, onDelete],
-  )
+    ]
+  }
 
-  const [ctxMenuTableShow] = useCreateContext(ctxMenuTableItems)
+  const [ctxMenuShow] = useCreateContext()
 
   const ProfileRow = ({ rowData }) => {
     const { name, self } = rowData
@@ -107,12 +117,7 @@ const UserList = ({
           selectionMode="multiple"
           className={`user-list-table ${isLoading ? 'table-loading' : ''}`}
           onSelectionChange={onSelectionChange}
-          onContextMenu={(e) => ctxMenuTableShow(e.originalEvent)}
-          onContextMenuSelectionChange={(e) => {
-            if (!selectedUsers.includes(e.value.name)) {
-              onSelectUsers([...selection, e.value.name])
-            }
-          }}
+          onContextMenu={onContextMenu}
           selection={selection}
           columnResizeMode="expand"
           resizableColumns
