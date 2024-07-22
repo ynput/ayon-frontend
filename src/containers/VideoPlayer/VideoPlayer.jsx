@@ -215,7 +215,7 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay }) => {
       const actualTime = Math.min(videoRef.current?.currentTime || 0, actualDuration - frameLength)
       if (isPlaying) {
         setCurrentTime(actualTime)
-        setTimeout(() => requestAnimationFrame(updateTime), 40)
+        setTimeout(() => requestAnimationFrame(updateTime), 10)
       } else {
         setCurrentTime(actualTime)
       }
@@ -271,6 +271,8 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay }) => {
   }
 
   const handleScrub = (newTime) => {
+    if (newTime === videoRef.current?.currentTime) 
+      return
     videoRef.current?.pause()
     seekToTime(newTime)
     initialPosition.current = newTime
@@ -278,18 +280,24 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay }) => {
 
   const handlePause = () => {
     initialPosition.current = videoRef.current?.currentTime
+    seekToTime(initialPosition.current)
     setTimeout(() => {
       if (videoRef.current?.paused) {
         seekToTime(initialPosition.current)
         console.debug('VideoPlayer: Paused')
         setIsPlaying(false)
       }
-    }, 50)
+    }, 10)
   }
 
   const handleEnded = () => {
-    if (loop && isPlaying) {
-      console.debug('VideoPlayer: Ended, looping')
+    if (!isPlaying) {
+      console.debug('ended, but not playing')
+      console.debug("position: ", videoRef.current.currentTime)
+      return
+    }
+    if (loop) {
+      console.debug('VideoPlayer: Ended, looping', videoRef.current.currentTime)
       videoRef.current.currentTime = 0
       videoRef.current.play()
     } else {
@@ -366,8 +374,6 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay }) => {
             setCurrentTime(newFrame)
             initialPosition.current = newFrame
           }}
-          currentTime={currentTime}
-          duration={duration}
           frameRate={frameRate}
           setMuted={handleMuteToggle}
           {...{ showOverlay, setShowOverlay, loop, setLoop, muted }}
