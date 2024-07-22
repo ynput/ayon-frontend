@@ -2,7 +2,7 @@ import { Icon } from '@ynput/ayon-react-components'
 import * as Styled from './VersionSelectorTool.styled'
 import { useRef } from 'react'
 import useReviewShortcuts from './hooks/useReviewShortcuts'
-import ReviewVersionDropdown from './ReviewVersionDropdown/ReviewVersionDropdown'
+import ReviewVersionDropdown from '@components/ReviewVersionDropdown'
 import { useSelector } from 'react-redux'
 import { upperFirst } from 'lodash'
 
