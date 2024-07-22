@@ -15,7 +15,7 @@ import { useFullScreenHandle } from 'react-full-screen'
 import { getGroupedReviewables } from '../ReviewablesList/getGroupedReviewables'
 import { GetReviewablesResponse } from '@queries/review/types'
 import { compareDesc } from 'date-fns'
-import ReviewVersionDropdown from '@/components/VersionSelectorTool/ReviewVersionDropdown/ReviewVersionDropdown'
+import ReviewVersionDropdown from '@/components/ReviewVersionDropdown'
 import { productTypes } from '@state/project'
 
 interface ViewerProps {
