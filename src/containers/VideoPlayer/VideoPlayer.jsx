@@ -280,10 +280,11 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay }) => {
     initialPosition.current = videoRef.current?.currentTime
     setTimeout(() => {
       if (videoRef.current?.paused) {
+        seekToTime(initialPosition.current)
         console.debug('VideoPlayer: Paused')
         setIsPlaying(false)
       }
-    }, 100)
+    }, 50)
   }
 
   const handleEnded = () => {
@@ -353,6 +354,7 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay }) => {
           bufferedRanges={bufferedRanges}
           onScrub={handleScrub}
           frameRate={frameRate}
+          isPlaying={isPlaying}
         />
       </div>
 
