@@ -49,10 +49,10 @@ const UserAccessForm = ({ accessGroupsData, formData, onChange, disabled, select
   const isManager = formData?.userLevel === 'manager'
   const isAdmin = formData?.userLevel === 'admin'
 
-  const defaultAccessGroups = formData?.defaultAccessGroups
+  const defaultAccessGroups = formData?.defaultAccessGroups || []
 
   // {user1: {project1: [accessGroup1, accessGroup2], project2: [accessGroup1, accessGroup2]}}
-  const usersAccessGroups = formData?.accessGroups
+  const usersAccessGroups = formData?.accessGroups || []
 
   // merge accessGroups into one array based on the selectedProjects, check if there are mixed fields (one AG on one project, another AG on another project)
   const mergedAccessGroups = []
@@ -158,11 +158,7 @@ const UserAccessForm = ({ accessGroupsData, formData, onChange, disabled, select
         </FormRowStyled>
 
         <FormRowStyled label="Developer">
-          <div
-            data-tooltip={getTooltip()}
-            data-tooltip-delay={0}
-            style={{ width: 'fit-content' }}
-          >
+          <div data-tooltip={getTooltip()} data-tooltip-delay={0} style={{ width: 'fit-content' }}>
             <InputSwitch
               checked={formData?.isDeveloper}
               onChange={(e) => updateFormData('isDeveloper', e.target.checked)}
