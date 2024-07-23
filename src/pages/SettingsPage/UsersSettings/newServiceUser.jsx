@@ -1,7 +1,6 @@
 import { useRef, useState } from 'react'
 import { toast } from 'react-toastify'
 import styled from 'styled-components'
-import { SelectButton } from 'primereact/selectbutton'
 
 import { Button, SaveButton, Section, Dialog, FormRow } from '@ynput/ayon-react-components'
 import ApiKeyManager from '@components/ApiKeyManager'
@@ -43,7 +42,6 @@ const NewServiceUser = ({ onHide, open, onSuccess }) => {
   const resetFormData = ({ addedUsers }) => {
     setFormData({
       Username: '',
-      userActive: true,
     })
     // reset the api key
     setKeyName(uniqueId())
@@ -54,7 +52,7 @@ const NewServiceUser = ({ onHide, open, onSuccess }) => {
   const preparePayload = (formData, apiKey) => {
     const payload = {
       data: { isService: true },
-      active: formData.userActive,
+      active: true,
       name: formData.Username,
       apiKey: apiKey,
     }
@@ -151,18 +149,6 @@ const NewServiceUser = ({ onHide, open, onSuccess }) => {
           ]}
           customFormRow={FormRowStyled}
         />
-
-        <FormRowStyled label="User active">
-          <SelectButton
-            unselectable={false}
-            value={formData?.userActive}
-            onChange={(event) => setFormData({ ...formData, userActive: event.value })}
-            options={[
-              { label: 'Active', value: true },
-              { label: 'Inactive', value: false },
-            ]}
-          />
-        </FormRowStyled>
 
         <FormRowStyled label="Service user key" />
 
