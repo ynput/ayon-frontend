@@ -48,6 +48,8 @@ const enhancedEndpoints = injectedEndpoints.enhanceEndpoints({
               // Create a new array to store the reordered reviewables
               const newReviewables: ReviewableModel[] = []
 
+              // Create a Set to track activityIds that are in the sortingOrder
+              const orderedIds = new Set(sortingOrder)
               // Loop through each id in the sortingOrder array
               sortingOrder?.forEach((id) => {
                 // Filter the reviewables that match the current activityId and push them to newReviewables
@@ -55,6 +57,14 @@ const enhancedEndpoints = injectedEndpoints.enhanceEndpoints({
                   ?.filter((r) => r.activityId === id)
                   .forEach((r) => newReviewables.push(r))
               })
+
+              // Add remaining reviewables that were not in the sortingOrder to the end
+              draft.reviewables?.forEach((r) => {
+                if (!orderedIds.has(r.activityId)) {
+                  newReviewables.push(r)
+                }
+              })
+
               // update draft
               draft.reviewables = newReviewables
             },
@@ -69,7 +79,14 @@ const enhancedEndpoints = injectedEndpoints.enhanceEndpoints({
       // viewer list is updated through invalidation
       invalidatesTags: (_result, _error, args) => [{ type: 'viewer', id: args.versionId }],
     },
+    updateReviewable: {
+      invalidatesTags: (_result, _error, args) => [{ type: 'review', id: args.activityId }],
+    },
   },
 })
 
-export const { useDeleteReviewableMutation, useSortVersionReviewablesMutation } = enhancedEndpoints
+export const {
+  useDeleteReviewableMutation,
+  useSortVersionReviewablesMutation,
+  useUpdateReviewableMutation,
+} = enhancedEndpoints
