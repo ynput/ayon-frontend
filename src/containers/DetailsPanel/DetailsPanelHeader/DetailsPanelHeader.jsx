@@ -53,7 +53,7 @@ const DetailsPanelHeader = ({
   const projectName = entities.length > 1 ? null : firstEntity?.projectName
 
   const entityIds = entities
-    .filter((e) => e.projectName === firstEntity?.projectName && entityType.id)
+    .filter((e) => e.projectName === firstEntity?.projectName && e.id)
     .map((entity) => entity.id)
 
   // get checklists count
