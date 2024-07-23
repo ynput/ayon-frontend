@@ -1,5 +1,57 @@
-import { useRef, useEffect, useState, useCallback } from 'react'
+import { useRef, useEffect, useState, useCallback, useMemo } from 'react'
 import Canvas from '@components/Canvas'
+
+// Function to draw a rounded rectangle
+function drawRoundedRect(ctx, { x, y, width, height, radius }) {
+  ctx.beginPath()
+  ctx.moveTo(x + radius, y)
+  ctx.lineTo(x + width - radius, y)
+  ctx.quadraticCurveTo(x + width, y, x + width, y + radius)
+  ctx.lineTo(x + width, y + height - radius)
+  ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height)
+  ctx.lineTo(x + radius, y + height)
+  ctx.quadraticCurveTo(x, y + height, x, y + height - radius)
+  ctx.lineTo(x, y + radius)
+  ctx.quadraticCurveTo(x, y, x + radius, y)
+  ctx.closePath()
+  ctx.fill()
+}
+
+const drawFrameNumber = (ctx, { color, bg, currentFrame, progressX, handleWidth, isLastFrame }) => {
+  const text = currentFrame + 1
+  ctx.font = '10px monospace'
+  ctx.textAlign = 'left'
+
+  // Calculate the width and height of the text
+  const textMetrics = ctx.measureText(text)
+  const textWidth = textMetrics.width
+  const textHeight = 10 // Since we know the font size is 10px
+  const textY = textHeight
+  let textX = progressX + handleWidth / 2 - textWidth / 2
+
+  const paddingX = 4
+  const paddingY = 1
+  const borderRadius = 4
+  // Define the background rectangle's dimensions
+  const bgWidth = textWidth + 2 * paddingX
+  const bgHeight = textHeight + 2 * paddingY
+  let bgX = textX - paddingX
+  const bgY = textY - textHeight
+
+  // move frame number to the left so it's not cut off
+  if (bgHeight > handleWidth && isLastFrame) {
+    textX = progressX - textWidth + handleWidth - paddingX
+    bgX = progressX - textWidth + handleWidth - paddingX * 2
+  }
+
+  // Draw the background rectangle
+  ctx.fillStyle = bg // Replace with your desired background color
+  drawRoundedRect(ctx, { x: bgX, y: bgY, width: bgWidth, height: bgHeight, radius: borderRadius })
+
+  // Draw the text on top of the background
+  ctx.fillStyle = color
+  ctx.fillText(text, textX, textY)
+}
 
 const Trackbar = ({
   duration,
@@ -9,9 +61,19 @@ const Trackbar = ({
   markOut,
   bufferedRanges,
   frameRate,
+  isPlaying,
 }) => {
   const canvasRef = useRef(null)
   const [isDragging, setIsDragging] = useState(false)
+
+  const numFrames = useMemo(() => Math.floor(duration * frameRate), [frameRate, duration])
+
+  const height = 32
+  const primaryColor = '#8fceff'
+  const primaryContainer = '#1c4154',
+    onPrimaryContainer = '#ebf5ff'
+  const containerLow = '#1c2026'
+  const containerLowest = '#16191d'
 
   // DRAW
 
@@ -27,59 +89,113 @@ const Trackbar = ({
     ctx.clearRect(0, 0, width, height)
 
     // Draw the background of the slider
-    ctx.fillStyle = '#1C2026'
+    ctx.fillStyle = containerLow
     ctx.fillRect(0, 0, width, height)
 
     // Draw the buffered ranges
     for (const range of bufferedRanges) {
       const start = (range.start / duration) * width
       const end = (range.end / duration) * width
-      ctx.strokeStyle = '#885bff'
+      ctx.strokeStyle = primaryColor
       ctx.beginPath()
-      ctx.moveTo(start, 0)
-      ctx.lineTo(end, 0)
+      ctx.moveTo(start, height)
+      ctx.lineTo(end, height)
       ctx.stroke()
     }
 
-    let markInX = 0
-    if (markIn) {
-      markInX = (markIn / duration) * width
-      ctx.strokeStyle = 'green'
-      ctx.beginPath()
-      ctx.moveTo(markInX, 0)
-      ctx.lineTo(markInX, height)
-      ctx.stroke()
+    const frameWidth = numFrames >= width ? 2 : width / numFrames
+    const handleWidth = Math.max(frameWidth, 2)
+
+    //
+    // Draw frame boundaries
+    //
+
+    if (numFrames < width) {
+      for (let i = 1; i < numFrames; i++) {
+        const x = (i / numFrames) * width
+        ctx.strokeStyle = containerLowest
+        ctx.beginPath()
+        ctx.moveTo(x, 0)
+        ctx.lineTo(x, height)
+        ctx.stroke()
+      }
     }
 
-    let markOutX = width
-    if (markOut) {
-      markOutX = (markOut / duration) * width
-      ctx.strokeStyle = 'red'
-      ctx.beginPath()
-      ctx.moveTo(markOutX, 0)
-      ctx.lineTo(markOutX, height)
-      ctx.stroke()
-    }
-
-    ctx.strokeStyle = markOutX > markInX ? '#0ed3fe' : 'red'
-    ctx.beginPath()
-    ctx.moveTo(markInX, height - 1)
-    ctx.lineTo(markOutX, height - 1)
-    ctx.stroke()
-
+    //
     // Draw the handle
-    const progressWidth = (currentTime / duration) * width
-    ctx.fillStyle = '#0ed3fe'
+    //
+
+    let currentFrame
+    if (isPlaying) {
+      // due to a slight delay, the currentFrame is rounded to the nearest frame
+      // so it WILL show the last frame during playback
+      currentFrame = Math.floor(currentTime * frameRate)
+      if (currentFrame >= numFrames) {
+        currentFrame = numFrames - 1
+      }
+    } else {
+      currentFrame = Math.floor(currentTime * frameRate)
+    }
+
+    let progressX = 0
+    // if (isPlaying) {
+    //   // during playback, use the currentTime to have a smooth animation
+    //   progressX = (currentTime / duration) * width
+    // } else {
+    progressX = currentFrame >= numFrames ? width : (currentFrame / numFrames) * width
+    //}
+
+    // Current frame handle
+    ctx.fillStyle = primaryContainer
     ctx.beginPath()
-    ctx.fillRect(progressWidth - 1, 0, 2, height)
+    ctx.fillRect(progressX - 1, 0, handleWidth, height)
     ctx.fill()
-  }, [currentTime, duration, markIn, markOut])
+
+    drawFrameNumber(ctx, {
+      color: onPrimaryContainer,
+      bg: primaryContainer,
+      currentFrame,
+      progressX,
+      handleWidth,
+      isLastFrame: currentFrame === numFrames - 1,
+    })
+
+    //
+    // Draw selection range
+    //
+
+    // let markInX = 0
+    // if (markIn) {
+    //   markInX = (markIn / duration) * width
+    //   ctx.strokeStyle = 'green'
+    //   ctx.beginPath()
+    //   ctx.moveTo(markInX, 0)
+    //   ctx.lineTo(markInX, height)
+    //   ctx.stroke()
+    // }
+
+    // let markOutX = width
+    // if (markOut) {
+    //   markOutX = (markOut / duration) * width
+    //   ctx.strokeStyle = 'red'
+    //   ctx.beginPath()
+    //   ctx.moveTo(markOutX, 0)
+    //   ctx.lineTo(markOutX, height)
+    //   ctx.stroke()
+    // }
+
+    // ctx.strokeStyle = markOutX > markInX ? '#0ed3fe' : 'red'
+    // ctx.beginPath()
+    // ctx.moveTo(markInX, height - 1)
+    // ctx.lineTo(markOutX, height - 1)
+    // ctx.stroke()
+  }, [currentTime, duration, markIn, markOut, isPlaying])
 
   // Events
 
   useEffect(() => {
     drawSlider()
-  }, [currentTime, duration, markIn, markOut])
+  }, [currentTime, duration, markIn, markOut, isPlaying])
 
   // Dragging
 
@@ -130,8 +246,8 @@ const Trackbar = ({
     <Canvas
       ref={canvasRef}
       style={{
-        minHeight: 42,
-        maxHeight: 42,
+        minHeight: height,
+        maxHeight: height,
         cursor: 'pointer',
         flexGrow: 1,
       }}
