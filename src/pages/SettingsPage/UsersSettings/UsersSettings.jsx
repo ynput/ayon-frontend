@@ -18,6 +18,7 @@ import UsersOverview from './UsersOverview'
 import { useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import NewUser from './newUser'
+import NewServiceUser from './newServiceUser'
 import confirmDelete from '@helpers/confirmDelete'
 import { useGetAccessGroupsQuery } from '@queries/accessGroups/getAccessGroups'
 import Shortcuts from '@containers/Shortcuts'
@@ -86,6 +87,7 @@ const UsersSettings = () => {
   // USE STATE
   const [selectedProjects, setSelectedProjects] = useState(null)
   const [showNewUser, setShowNewUser] = useState(false)
+  const [showNewServiceUser, setShowNewServiceUser] = useState(false)
   const [showRenameUser, setShowRenameUser] = useState(false)
   const [showSetPassword, setShowSetPassword] = useState(false)
   // show users for selected projects
@@ -170,6 +172,9 @@ const UsersSettings = () => {
   const openNewUser = () => {
     setShowNewUser(true)
   }
+  const openNewServiceUser = () => {
+    setShowNewServiceUser(true)
+  }
 
   // use filteredUserList if projectAccessOnly
   // else use userList
@@ -238,6 +243,14 @@ const UsersSettings = () => {
         accessGroupsData={accessGroupsData}
       />
 
+      <NewServiceUser
+        onHide={(newUsers = []) => {
+          setShowNewServiceUser(false)
+          if (newUsers.length) setSelectedUsers(newUsers)
+        }}
+        open={showNewServiceUser}
+      />
+
       <main>
         <Section>
           <Toolbar>
@@ -257,6 +270,7 @@ const UsersSettings = () => {
               icon="person_remove"
               disabled={!selectedUsers.length || isSelfSelected || managerDisabled}
             />
+            <Button onClick={openNewServiceUser} label="Add Service User" icon="person_add" />
             <Button
               onClick={openNewUser}
               label="Add New User"

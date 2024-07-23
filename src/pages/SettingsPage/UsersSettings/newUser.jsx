@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef } from 'react'
 import { toast } from 'react-toastify'
 import { Button, Divider, SaveButton, Section, Dialog } from '@ynput/ayon-react-components'
 import { useAddUserMutation } from '@queries/user/updateUser'
@@ -8,6 +8,8 @@ import UserAccessForm from './UserAccessForm'
 
 import styled from 'styled-components'
 import UserAccessGroupsForm from './UserAccessGroupsForm/UserAccessGroupsForm'
+import useUserMutations from '@containers/Feed/hooks/useUserMutations'
+import callbackOnKeyDown from '@helpers/callbackOnKeyDown'
 
 const DividerSmallStyled = styled(Divider)`
   margin: 8px 0;
@@ -19,78 +21,85 @@ const SubTitleStyled = styled.span`
 `
 
 const NewUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
-  const usernameRef = useRef()
-
-  const [addedUsers, setAddedUsers] = useState([])
-  const [password, setPassword] = useState('')
-  const [passwordConfirm, setPasswordConfirm] = useState('')
-
-  const initFormData = {
-    userLevel: 'user',
-    userActive: true,
-    UserImage: '',
-    isGuest: false,
-    accessGroups: {},
-    defaultAccessGroups: [],
-  }
-
-  const [formData, setFormData] = useState(initFormData)
-
-  const initialFormData = () => {
-    return initFormData
-  }
-  useEffect(() => {
-    // set initial form data
-    setFormData(initialFormData())
-  }, [])
-
+  const {
+    password,
+    setPassword,
+    passwordConfirm,
+    setPasswordConfirm,
+    initFormData,
+    formData,
+    setFormData,
+    addedUsers,
+    setAddedUsers,
+  } = useUserMutations({})
   const [addUser, { isLoading: isCreatingUser }] = useAddUserMutation()
+  const usernameRef = useRef()
 
   const attributes = ayonClient.getAttribsByScope('user')
 
-  const handleSubmit = async (close) => {
-    const payload = {}
+  const resetFormData = ({ password, passwordConfirm, formData, addedUsers }) => {
+    setPassword(password)
+    setPasswordConfirm(passwordConfirm)
+    setFormData(formData != undefined ? formData : initFormData)
+    setAddedUsers(addedUsers)
+  }
+
+  const validateFormData = (formData) => {
     if (!formData.Username) {
-      toast.error('Login name must be provided')
-      return
+      return 'Login name must be provided'
     }
 
-    // check passwords are the same
     if (password !== passwordConfirm) {
-      toast.error('Passwords do not match')
-      return
+      return 'Passwords do not match'
     }
 
-    if (password) payload.password = password
+    return null
+  }
 
-    payload.attrib = {}
-    payload.data = {}
-    if (formData.isGuest) payload.data.isGuest = true
+  const preparePayload = (formData, attributes, password) => {
+    const payload = {
+      data: {},
+      attrib: {},
+      name: formData.Username,
+      password: password ? password : undefined,
+      isGuest: formData.isGuest ? true : undefined,
+    }
+
     attributes.forEach(({ name }) => {
       if (formData[name]) payload.attrib[name] = formData[name]
     })
 
     if (formData.userLevel === 'admin') payload.data.isAdmin = true
     else if (formData.userLevel === 'manager') payload.data.isManager = true
-    else if (formData.userLevel === 'service') payload.data.isService = true
     else {
       payload.data.defaultAccessGroups = formData.defaultAccessGroups || []
       payload.data.accessGroups = formData.accessGroups || {}
     }
 
-    payload.name = formData.Username
+    return payload
+  }
+
+  const handleSubmit = async (close) => {
+    const validationResult = validateFormData(formData)
+    if (validationResult !== null) {
+      toast.error(validationResult)
+      return
+    }
 
     try {
-      await addUser({ name: formData.Username, user: payload }).unwrap()
-
+      await addUser({
+        name: formData.Username,
+        user: preparePayload(formData, attributes, password),
+      }).unwrap()
       toast.success('User created')
-      // set added users to be used for auto selection onHide
-      setAddedUsers([...addedUsers, formData.Username])
-      // keep reusable data in the form
-      setPassword('')
-      setPasswordConfirm('')
-      setFormData((fd) => {
-        return { accessGroups: fd.accessGroups, userLevel: fd.userLevel }
+
+      resetFormData({
+        password: '',
+        passwordConfirm: '',
+        formData: (fd) => {
+          return { accessGroups: fd.accessGroups, userLevel: fd.userLevel }
+        },
+        addedUsers: [...addedUsers, formData.Username],
       })
 
       onSuccess && onSuccess(formData.Username)
@@ -107,30 +116,21 @@ const NewUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
   }
 
   const handleClose = () => {
-    // clear all forms
-    setFormData(initialFormData())
-    setPassword('')
-    setPasswordConfirm('')
-    // reset added users
-    setAddedUsers([])
-    // close the dialog
+    resetFormData({
+      password: '',
+      passwordConfirm: '',
+      addedUsers: [],
+    })
     onHide(addedUsers)
-  }
-
-  const handleKeyDown = (e) => {
-    // if enter then submit
-    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey || e.shiftKey) && formData.Username) {
-      e.preventDefault()
-      const closeOnSubmit = e.ctrlKey || e.metaKey
-      handleSubmit(closeOnSubmit)
-    }
   }
 
   if (!open) return null
 
   return (
     <Dialog
-      onKeyDown={handleKeyDown}
+      onKeyDown={(e) =>
+        callbackOnKeyDown(e, { validationPassed: formData.Username, callback: handleSubmit })
+      }
       isOpen
       size="full"
       style={{
@@ -150,7 +150,7 @@ const NewUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
           <SaveButton
             onClick={() => handleSubmit(true)}
             label="Create and close"
-            active={formData.Username}
+            disabled={!formData.Username}
             saving={isCreatingUser}
             data-shortcut="Ctrl/Cmd+Enter"
           />
@@ -173,7 +173,9 @@ const NewUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
           ]}
           {...{ password, setPassword, passwordConfirm, setPasswordConfirm }}
         />
+
         <DividerSmallStyled />
+
         <UserAccessForm
           formData={formData}
           onChange={(key, value) => setFormData({ ...formData, [key]: value })}
