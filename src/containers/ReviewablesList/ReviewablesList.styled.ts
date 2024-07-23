@@ -71,3 +71,7 @@ export const Dropzone = styled.div`
     font-size: 32px;
   }
 `
+
+export const RenameTitle = styled.div`
+  word-break: break-all;
+`

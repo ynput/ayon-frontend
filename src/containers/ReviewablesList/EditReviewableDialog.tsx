@@ -9,6 +9,7 @@ import {
 } from '@ynput/ayon-react-components'
 import { FC, FormEvent, useState } from 'react'
 import { toast } from 'react-toastify'
+import { RenameTitle } from './ReviewablesList.styled'
 
 interface EditReviewableDialogProps extends DialogProps {
   label: string
@@ -69,7 +70,7 @@ const EditReviewableDialog: FC<EditReviewableDialogProps> = ({
   return (
     <Dialog
       onClose={onClose}
-      header={`Editing: ${label}`}
+      header={<RenameTitle>{`Editing: ${label}`}</RenameTitle>}
       footer={
         <Toolbar>
           <Button label="Cancel" onClick={handleCancel} variant="text" />

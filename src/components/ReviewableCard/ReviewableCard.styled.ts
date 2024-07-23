@@ -84,6 +84,7 @@ export const Content = styled.div`
   h4 {
     padding: 0;
     overflow: hidden;
+    white-space: nowrap;
   }
 
   span {
