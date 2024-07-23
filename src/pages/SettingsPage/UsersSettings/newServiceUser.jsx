@@ -39,6 +39,7 @@ const NewServiceUser = ({ onHide, open, onSuccess }) => {
     if (!formData.Username) {
       return 'Login name must be provided'
     }
+
     if (apiKey == '') {
       return 'Api key needs to be generated'
     }
@@ -51,6 +52,9 @@ const NewServiceUser = ({ onHide, open, onSuccess }) => {
       Username: '',
       userActive: true,
     })
+    // reset the api key
+    setKeyName(uniqueId())
+    setApiKey('')
     setAddedUsers(addedUsers)
   }
 
@@ -79,10 +83,6 @@ const NewServiceUser = ({ onHide, open, onSuccess }) => {
       resetFormData({
         addedUsers: [...addedUsers, formData.Username],
       })
-
-      // reset the api key
-      setKeyName(uniqueId())
-      setApiKey('')
 
       onSuccess && onSuccess(formData.Username)
 
@@ -113,12 +113,10 @@ const NewServiceUser = ({ onHide, open, onSuccess }) => {
 
   return (
     <Dialog
-      onKeyDown={(e) =>
-        callbackOnKeyDown(e, {
-          validationPassed: formData.Username && password,
-          callback: handleSubmit,
-        })
-      }
+      onKeyDown={(e) => callbackOnKeyDown(e, {
+        validationPassed: validateFormData(formData) == null,
+        callback: handleSubmit,
+      })}
       isOpen
       size="full"
       style={{
@@ -157,7 +155,6 @@ const NewServiceUser = ({ onHide, open, onSuccess }) => {
             },
           ]}
           customFormRow={FormRowStyled}
-          {...{ password, setPassword }}
         />
 
         <FormRowStyled label="User active">
