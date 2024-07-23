@@ -129,7 +129,7 @@ const UsersSettings = () => {
 
   const onDelete = async () => {
     confirmDelete({
-      label: `${selectedUsers.length} Users`,
+      label: `${selectedUsers.join(', ')} Users`,
       showToasts: false,
       accept: async () => {
         toastId.current = toast.info('Deleting users...')
