@@ -10,34 +10,24 @@ const useUserMutations = () => {
     defaultAccessGroups: [],
   }
 
-  const initialFormDataCallback = () => initFormData
-
   const [addedUsers, setAddedUsers] = useState([])
   const [password, setPassword] = useState('')
   const [apiKey, setApiKey] = useState('')
   const [passwordConfirm, setPasswordConfirm] = useState('')
-  const [formData, setFormData] = useState(initialFormDataCallback)
+  const [formData, setFormData] = useState(initFormData)
 
   useEffect(() => {
     // set initial form data
-    setFormData(initialFormDataCallback())
+    setFormData(initFormData)
   }, [])
 
-  const resetFormData = ({ password, passwordConfirm, formData, addedUsers }) => {
-    // keep reusable data in the form
-    setPassword(password)
-    setPasswordConfirm(passwordConfirm)
-    setFormData(formData != undefined ? formData : initialFormDataCallback)
-    setAddedUsers(addedUsers)
-  }
 
   return {
     password, setPassword,
     passwordConfirm, setPasswordConfirm,
     apiKey, setApiKey,
-    formData, setFormData,
-    addedUsers,
-    resetFormData,
+    initFormData, formData, setFormData,
+    addedUsers, setAddedUsers,
   }
 }
 

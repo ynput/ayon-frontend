@@ -4,7 +4,6 @@ import styled from 'styled-components'
 import { SelectButton } from 'primereact/selectbutton'
 
 import { Button, SaveButton, Section, Dialog, FormRow } from '@ynput/ayon-react-components'
-import ayonClient from '@/ayon'
 import ApiKeyManager from '@/components/ApiKeyManager'
 import useUserMutations from '@/containers/Feed/hooks/useUserMutations'
 import { useAddUserMutation } from '@queries/user/updateUser'
@@ -12,6 +11,7 @@ import copyToClipboard from '@/helpers/copyToClipboard'
 import callbackOnKeyDown from '@/helpers/callbackOnKeyDown'
 
 import UserAttribForm from './UserAttribForm'
+import { uniqueId } from 'lodash'
 
 const FormRowStyled = styled(FormRow)`
   .label {
@@ -24,14 +24,13 @@ const NewServiceUser = ({ onHide, open, onSuccess }) => {
     password, setPassword,
     formData, setFormData,
     apiKey, setApiKey,
-    addedUsers,
-    resetFormData,
+    addedUsers, setAddedUsers,
   } = useUserMutations({})
+
+
   const [addUser, { isLoading: isCreatingUser }] = useAddUserMutation()
   const usernameRef = useRef()
   const [keyName, setKeyName] = useState('');
-
-  const attributes = ayonClient.getAttribsByScope('user')
 
   const validateFormData = (formData) => {
     if (!formData.Username) {
@@ -44,10 +43,20 @@ const NewServiceUser = ({ onHide, open, onSuccess }) => {
     return null;
   }
 
-  const preparePayload = (formData) => {
+  const resetFormData = ({ addedUsers }) => {
+    setFormData({
+      Username: '',
+      userActive: true
+    })
+    setAddedUsers(addedUsers)
+  }
+
+  const preparePayload = (formData, apiKey) => {
     const payload = {
       data: { isService: true },
+      active: formData.userActive,
       name: formData.Username,
+      apiKey: apiKey
     }
 
     return payload;
@@ -61,16 +70,14 @@ const NewServiceUser = ({ onHide, open, onSuccess }) => {
     }
 
     try {
-      await addUser({ name: formData.Username, user: preparePayload(formData, attributes, password) }).unwrap()
+      await addUser({ name: formData.Username, user: preparePayload(formData, apiKey) }).unwrap()
       toast.success('Service User created')
 
       resetFormData({
-        password: '',
-        passwordConfirm: '',
-        formData: (fd) => { return { accessGroups: fd.accessGroups, userLevel: fd.userLevel } },
         addedUsers: [...addedUsers, formData.Username]
       });
-      setKeyName(new String(''))
+
+      setKeyName(uniqueId())
 
       onSuccess && onSuccess(formData.Username)
 
@@ -87,8 +94,6 @@ const NewServiceUser = ({ onHide, open, onSuccess }) => {
 
   const handleClose = () => {
     resetFormData({
-      password: '',
-      passwordConfirm: '',
       addedUsers: [],
     })
     onHide(addedUsers)

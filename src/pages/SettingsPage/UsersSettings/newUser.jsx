@@ -23,14 +23,20 @@ const NewUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
   const {
     password, setPassword,
     passwordConfirm, setPasswordConfirm,
-    formData, setFormData,
-    addedUsers,
-    resetFormData,
+    initFormData, formData, setFormData,
+    addedUsers, setAddedUsers,
   } = useUserMutations({})
   const [addUser, { isLoading: isCreatingUser }] = useAddUserMutation()
   const usernameRef = useRef()
 
   const attributes = ayonClient.getAttribsByScope('user')
+
+  const resetFormData = ({ password, passwordConfirm, formData, addedUsers }) => {
+    setPassword(password)
+    setPasswordConfirm(passwordConfirm)
+    setFormData(formData != undefined ? formData : initFormData)
+    setAddedUsers(addedUsers)
+  }
 
   const validateFormData = (formData) => {
     if (!formData.Username) {
