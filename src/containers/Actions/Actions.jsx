@@ -21,7 +21,7 @@ const Actions = ({ entities, entityType, entitySubTypes, isLoadingEntity }) => {
     // get a list of unique entity subtypes from loaded data
     const entitySubtypesLoaded = entities
       .map((entity) => entity.entitySubType)
-      .filter((value, index, self) => self.indexOf(value) === index)
+      .filter((value, index, self) => self.indexOf(value) === index && value)
 
     // try and use the passed in entitySubTypes, if not use the loaded ones
     const entitySubtypes = entitySubTypes || entitySubtypesLoaded || []
