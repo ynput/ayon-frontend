@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState, useCallback } from 'react'
+import { useRef, useEffect, useState, useCallback, useMemo } from 'react'
 import Canvas from '@components/Canvas'
 
 const Trackbar = ({
@@ -9,9 +9,12 @@ const Trackbar = ({
   markOut,
   bufferedRanges,
   frameRate,
+  isPlaying,
 }) => {
   const canvasRef = useRef(null)
   const [isDragging, setIsDragging] = useState(false)
+
+  const numFrames = useMemo(() => Math.floor(duration * frameRate), [frameRate, duration])
 
   // DRAW
 
@@ -41,6 +44,68 @@ const Trackbar = ({
       ctx.stroke()
     }
 
+    const frameWidth = numFrames >= width ? 2 : width / numFrames
+    const handleWidth = Math.max(frameWidth, 2)
+
+    //
+    // Draw frame boundaries
+    //
+
+    if (numFrames < width) {
+      for (let i = 1; i < numFrames; i++) {
+        const x = (i / numFrames) * width
+        ctx.strokeStyle = '#161616'
+        ctx.beginPath()
+        ctx.moveTo(x, 0)
+        ctx.lineTo(x, height)
+        ctx.stroke()
+      }
+    }
+
+ 
+    //
+    // Draw the handle
+    //
+
+    let currentFrame
+    if (isPlaying) {
+      // due to a slight delay, the currentFrame is rounded to the nearest frame
+      // so it WILL show the last frame during playback
+      currentFrame = Math.floor(currentTime * frameRate)
+      if (currentFrame >= numFrames) {
+        currentFrame = numFrames - 1
+      }
+    }
+    else {
+      currentFrame = Math.floor(currentTime * frameRate)
+    }
+
+    let progressX = 0
+    // if (isPlaying) {
+    //   // during playback, use the currentTime to have a smooth animation
+    //   progressX = (currentTime / duration) * width
+    // } else {
+      progressX = currentFrame >= numFrames ? width : (currentFrame / numFrames) * width
+    //}
+
+    // ctx.fillStyle = '#0ed3fe'
+    ctx.fillStyle = '#384956'
+    ctx.beginPath()
+    ctx.fillRect(progressX - 1, 0, handleWidth, height)
+    ctx.fill()
+
+    if (handleWidth > 15) {
+      // if the handle is wide enough, write the current frame number
+      ctx.fillStyle = 'white'
+      ctx.font = '10px monospace'
+      ctx.textAlign = 'left'
+      ctx.fillText(currentFrame + 1, progressX + 3, 16)
+    }
+
+    //
+    // Draw selction range
+    //
+
     let markInX = 0
     if (markIn) {
       markInX = (markIn / duration) * width
@@ -67,19 +132,15 @@ const Trackbar = ({
     ctx.lineTo(markOutX, height - 1)
     ctx.stroke()
 
-    // Draw the handle
-    const progressWidth = (currentTime / duration) * width
-    ctx.fillStyle = '#0ed3fe'
-    ctx.beginPath()
-    ctx.fillRect(progressWidth - 1, 0, 2, height)
-    ctx.fill()
-  }, [currentTime, duration, markIn, markOut])
+
+
+  }, [currentTime, duration, markIn, markOut, isPlaying])
 
   // Events
 
   useEffect(() => {
     drawSlider()
-  }, [currentTime, duration, markIn, markOut])
+  }, [currentTime, duration, markIn, markOut, isPlaying])
 
   // Dragging
 

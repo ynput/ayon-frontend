@@ -8,8 +8,6 @@ const VideoPlayerControls = ({
   videoRef,
   isPlaying,
   onFrameChange,
-  currentTime,
-  duration,
   frameRate,
   showOverlay,
   setShowOverlay,
@@ -20,7 +18,8 @@ const VideoPlayerControls = ({
 }) => {
   const dispatch = useDispatch()
   const fullscreen = useSelector((state) => state.viewer.fullscreen)
-  const frameLength = 0.04 // TODO
+  const frameLength = 1 / frameRate
+
 
   const handlePlayPause = () => {
     if (videoRef.current.paused) {
@@ -38,6 +37,7 @@ const VideoPlayerControls = ({
   }
   const handleGoToEnd = () => {
     console.debug('VideoPlayerControls: Go to end')
+    const duration = videoRef.current?.duration || 0
     const newFrame = duration
     videoRef.current.currentTime = newFrame
     onFrameChange(newFrame)
@@ -45,13 +45,15 @@ const VideoPlayerControls = ({
 
   const handleGoBack1 = () => {
     console.debug('VideoPlayerControls: Go back 1')
+    const duration = videoRef.current?.duration || 0
     const nextFrame = videoRef.current.currentTime - frameLength
-    const newFrame = nextFrame < 0 ? (loop ? duration : 0) : nextFrame
+    const newFrame = nextFrame < 0 ? (loop ? (duration - 0.001) : 0) : nextFrame
     videoRef.current.currentTime = newFrame
     onFrameChange(newFrame)
   }
   const handleGoForward1 = () => {
     console.debug('VideoPlayerControls: Go forward 1')
+    const duration = videoRef.current?.duration || 0
     const nextFrame = videoRef.current.currentTime + frameLength
     const newFrame = nextFrame > duration ? (loop ? 0 : duration) : nextFrame
     videoRef.current.currentTime = newFrame
@@ -66,6 +68,7 @@ const VideoPlayerControls = ({
   }
   const handleGoForward5 = () => {
     console.debug('VideoPlayerControls: Go forward 5')
+    const duration = videoRef.current?.duration || 0
     const newFrame = Math.min(duration, videoRef.current.currentTime + 5 * frameLength)
     videoRef.current.currentTime = newFrame
     onFrameChange(newFrame)
@@ -127,9 +130,9 @@ const VideoPlayerControls = ({
   return (
     <>
       <Timecode
-        value={currentTime}
+        value={videoRef.current?.currentTime || 0}
         frameRate={frameRate}
-        maximum={duration}
+        maximum={videoRef.current?.duration || 0}
         onChange={(value) => {
           console.debug('VideoPlayerControls: TC Input Change time to', value)
           videoRef.current.currentTime = value
@@ -218,7 +221,7 @@ const VideoPlayerControls = ({
         data-shortcut="F"
       />
 
-      <Timecode value={duration} frameRate={frameRate} disabled tooltip={'Total frames'} />
+      <Timecode value={videoRef.current?.duration} frameRate={frameRate} disabled tooltip={'Total frames'} />
     </>
   )
 }
