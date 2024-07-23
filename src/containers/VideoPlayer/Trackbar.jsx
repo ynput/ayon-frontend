@@ -17,7 +17,7 @@ function drawRoundedRect(ctx, { x, y, width, height, radius }) {
   ctx.fill()
 }
 
-const drawFrameNumber = (ctx, { color, bg, currentFrame, progressX, handleWidth, isLastFrame }) => {
+const drawFrameNumber = (ctx, { color, bg, currentFrame, progressX, handleWidth }) => {
   const text = currentFrame + 1
   ctx.font = '10px monospace'
   ctx.textAlign = 'left'
@@ -38,10 +38,14 @@ const drawFrameNumber = (ctx, { color, bg, currentFrame, progressX, handleWidth,
   let bgX = textX - paddingX
   const bgY = textY - textHeight
 
+  const ctxWidth = ctx.canvas.width
   // move frame number to the left so it's not cut off
-  if (bgHeight > handleWidth && isLastFrame) {
-    textX = progressX - textWidth + handleWidth - paddingX
-    bgX = progressX - textWidth + handleWidth - paddingX * 2
+  if (bgWidth + bgX > ctxWidth) {
+    textX = ctxWidth - textWidth - paddingX
+    bgX = textX - paddingX
+  } else if (bgX < 0) {
+    textX = 0 + paddingX
+    bgX = textX - paddingX
   }
 
   // Draw the background rectangle
@@ -157,7 +161,6 @@ const Trackbar = ({
       currentFrame,
       progressX,
       handleWidth,
-      isLastFrame: currentFrame === numFrames - 1,
     })
 
     //
