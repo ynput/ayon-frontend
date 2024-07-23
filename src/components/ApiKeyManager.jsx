@@ -23,7 +23,8 @@ const PanelStyledLightBackground = styled(PanelStyled)`
   background-color: var(--md-sys-color-surface-container-high);
 `
 
-const ApiKeyManager = ({ preview,
+const ApiKeyManager = ({
+  preview,
   name,
   autosave = true,
   onGenerate,

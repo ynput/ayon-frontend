@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { toast } from 'react-toastify'
 import styled from 'styled-components'
 import { SelectButton } from 'primereact/selectbutton'
 
-import { Button, Divider, SaveButton, Section, Dialog, FormRow } from '@ynput/ayon-react-components'
+import { Button, SaveButton, Section, Dialog, FormRow } from '@ynput/ayon-react-components'
 import ayonClient from '@/ayon'
 import ApiKeyManager from '@/components/ApiKeyManager'
 import useUserMutations from '@/containers/Feed/hooks/useUserMutations'
@@ -11,33 +11,25 @@ import { useAddUserMutation } from '@queries/user/updateUser'
 import copyToClipboard from '@/helpers/copyToClipboard'
 import callbackOnKeyDown from '@/helpers/callbackOnKeyDown'
 
-import UserAccessGroupsForm from './UserAccessGroupsForm/UserAccessGroupsForm'
 import UserAttribForm from './UserAttribForm'
-import UserAccessForm from './UserAccessForm'
 
 const FormRowStyled = styled(FormRow)`
   .label {
     min-width: 160px;
   }
 `
-const DividerSmallStyled = styled(Divider)`
-  margin: 8px 0;
-`
-const SubTitleStyled = styled.span`
-  margin-top: 16px;
-  margin-bottom: 0;
-`
 
-const NewServiceUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
+const NewServiceUser = ({ onHide, open, onSuccess }) => {
   const {
     password, setPassword,
-    passwordConfirm, setPasswordConfirm,
     formData, setFormData,
+    apiKey, setApiKey,
     addedUsers,
     resetFormData,
   } = useUserMutations({})
   const [addUser, { isLoading: isCreatingUser }] = useAddUserMutation()
   const usernameRef = useRef()
+  const [keyName, setKeyName] = useState('');
 
   const attributes = ayonClient.getAttribsByScope('user')
 
@@ -45,26 +37,18 @@ const NewServiceUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
     if (!formData.Username) {
       return 'Login name must be provided';
     }
+    if (apiKey == '') {
+      return 'Api key needs to be generated'
+    }
 
     return null;
   }
 
-  const preparePayload = (formData, attributes, password) => {
+  const preparePayload = (formData) => {
     const payload = {
-      data: {
-        isService: true,
-        defaultAccessGroups: formData.defaultAccessGroups || [],
-        accessGroups: formData.accessGroups || {},
-      },
-      attrib: {},
+      data: { isService: true },
       name: formData.Username,
-      password: password ? password : undefined,
-      isGuest: formData.isGuest ? true : undefined,
     }
-
-    attributes.forEach(({ name }) => {
-      if (formData[name]) payload.attrib[name] = formData[name]
-    })
 
     return payload;
   }
@@ -86,6 +70,7 @@ const NewServiceUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
         formData: (fd) => { return { accessGroups: fd.accessGroups, userLevel: fd.userLevel } },
         addedUsers: [...addedUsers, formData.Username]
       });
+      setKeyName(new String(''))
 
       onSuccess && onSuccess(formData.Username)
 
@@ -111,7 +96,7 @@ const NewServiceUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
 
   const handleApiKeyGeneration = (key) => {
     copyToClipboard(key);
-    setPassword(key + 'Rand.123');
+    setApiKey(key);
   }
 
   if (!open) return null
@@ -135,13 +120,13 @@ const NewServiceUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
           <Button
             label="Create user"
             onClick={() => handleSubmit(false)}
-            disabled={!formData.Username || !password}
+            disabled={validateFormData(formData) != null}
             data-shortcut="Shift+Enter"
           />
           <SaveButton
             onClick={() => handleSubmit(true)}
             label="Create and close"
-            disabled={!formData.Username || !password}
+            disabled={validateFormData(formData) != null}
             saving={isCreatingUser}
             data-shortcut="Ctrl/Cmd+Enter"
           />
@@ -171,7 +156,13 @@ const NewServiceUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
 
         <FormRowStyled label="Service user key" />
 
-        <ApiKeyManager name='new user' autosave={false} onGenerate={handleApiKeyGeneration} repeatGenerate={false} lightBackground={true} />
+        <ApiKeyManager
+          name={keyName}
+          autosave={false}
+          onGenerate={handleApiKeyGeneration}
+          repeatGenerate={false}
+          lightBackground={true}
+        />
       </Section>
     </Dialog>
   )

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 
-const useUserMutations = ({}) => {
+const useUserMutations = () => {
   const initFormData = {
     userLevel: 'user',
     userActive: true,
@@ -14,6 +14,7 @@ const useUserMutations = ({}) => {
 
   const [addedUsers, setAddedUsers] = useState([])
   const [password, setPassword] = useState('')
+  const [apiKey, setApiKey] = useState('')
   const [passwordConfirm, setPasswordConfirm] = useState('')
   const [formData, setFormData] = useState(initialFormDataCallback)
 
@@ -33,6 +34,7 @@ const useUserMutations = ({}) => {
   return {
     password, setPassword,
     passwordConfirm, setPasswordConfirm,
+    apiKey, setApiKey,
     formData, setFormData,
     addedUsers,
     resetFormData,

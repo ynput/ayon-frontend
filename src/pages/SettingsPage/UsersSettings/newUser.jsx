@@ -1,7 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef } from 'react'
 import { toast } from 'react-toastify'
-import { Button, Divider, SaveButton, Section, Dialog, FormRow } from '@ynput/ayon-react-components'
-import { SelectButton } from 'primereact/selectbutton'
+import { Button, Divider, SaveButton, Section, Dialog } from '@ynput/ayon-react-components'
 import { useAddUserMutation } from '@queries/user/updateUser'
 import ayonClient from '@/ayon'
 import UserAttribForm from './UserAttribForm'
@@ -9,14 +8,8 @@ import UserAccessForm from './UserAccessForm'
 
 import styled from 'styled-components'
 import UserAccessGroupsForm from './UserAccessGroupsForm/UserAccessGroupsForm'
-import ApiKeyManager from '@/components/ApiKeyManager'
 import useUserMutations from '@/containers/Feed/hooks/useUserMutations'
 
-const FormRowStyled = styled(FormRow)`
-  .label {
-    min-width: 160px;
-  }
-`
 const DividerSmallStyled = styled(Divider)`
   margin: 8px 0;
 `
