@@ -5,7 +5,10 @@ import axios from 'axios'
 // queries
 import api from '@api'
 import { useGetReviewablesForVersionQuery, useHasTranscoderQuery } from '@queries/review/getReview'
-import { useDeleteReviewableMutation } from '@queries/review/updateReview'
+import {
+  useDeleteReviewableMutation,
+  useSortVersionReviewablesMutation,
+} from '@queries/review/updateReview'
 import { UploadReviewableApiResponse } from '@api/rest'
 
 // DND
@@ -42,6 +45,7 @@ import { openViewer, toggleUpload } from '@state/viewer'
 import { getGroupedReviewables } from './getGroupedReviewables'
 import useCreateContext from '@hooks/useCreateContext'
 import confirmDelete from '@helpers/confirmDelete'
+import EditReviewableDialog from './EditReviewableDialog'
 
 interface ReviewablesListProps {
   projectName: string
@@ -75,6 +79,9 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
   // are we currently looking at review?
   const reviewableIds = useSelector((state: $Any) => state.viewer.reviewableIds) || []
   const username = useSelector((state: $Any) => state.user?.name)
+
+  // either null or the reviewable id we are editing
+  const [editActivityId, setEditActivityId] = useState<null | string>(null)
 
   // are we dragging a file over?
   const [isDraggingFile, setIsDraggingFile] = useState(false)
@@ -131,25 +138,47 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
     )
   }
 
+  const { optimized, unoptimized, incompatible, processing, queued } = getGroupedReviewables(
+    reviewables,
+    hasTranscoder,
+  )
+
+  const sortableReviewables = [...optimized, ...unoptimized]
+
   function handleDragStart(event: DragStartEvent) {
     const { active } = event
 
     setActiveId(active.id as string)
   }
 
-  function handleDragEnd(event: DragEndEvent) {
+  const [sortVersionReviewables] = useSortVersionReviewablesMutation()
+
+  const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event
 
     if (over?.id && active.id !== over.id) {
       console.log('update review position')
 
-      const oldIndex = reviewables.findIndex((reviewable) => reviewable.fileId === active.id)
-      const newIndex = reviewables.findIndex((reviewable) => reviewable.fileId === over.id)
+      const oldIndex = sortableReviewables.findIndex(
+        (reviewable) => reviewable.fileId === active.id,
+      )
+      const newIndex = sortableReviewables.findIndex((reviewable) => reviewable.fileId === over.id)
 
       //   resort the reviewables
-      const newReviewables = arrayMove(reviewables, oldIndex, newIndex)
+      const newReviewables = arrayMove(sortableReviewables, oldIndex, newIndex)
 
-      console.log(newReviewables)
+      const newOrder = newReviewables.map((reviewable) => reviewable.activityId)
+
+      try {
+        // update the reviewables
+        sortVersionReviewables({
+          projectName,
+          versionId,
+          sortReviewablesRequest: { sort: newOrder },
+        }).unwrap()
+      } catch (error) {
+        toast.error('Error sorting reviewables')
+      }
     }
     setActiveId(null)
   }
@@ -383,11 +412,6 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
     ctxMenuShow(event, items)
   }
 
-  const { optimized, unoptimized, incompatible, processing, queued } = getGroupedReviewables(
-    reviewables,
-    hasTranscoder,
-  )
-
   return (
     <>
       {!isDraggingFile && (
@@ -406,9 +430,8 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
                 <SortableContext
                   items={reviewables.map(({ fileId }) => fileId as UniqueIdentifier)}
                   strategy={verticalListSortingStrategy}
-                  disabled
                 >
-                  {optimized.map((reviewable) => (
+                  {sortableReviewables.map((reviewable) => (
                     <SortableReviewableCard
                       key={reviewable.fileId}
                       projectName={projectName}
@@ -416,21 +439,14 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
                       isSelected={reviewableIds.includes(reviewable.fileId)}
                       isDragging={!!activeId}
                       onContextMenu={handleContextMenu}
-                      sortingDisabled
+                      onEdit={(e) => {
+                        e.stopPropagation()
+                        setEditActivityId(reviewable.activityId)
+                      }}
                       {...reviewable}
                     />
                   ))}
                 </SortableContext>
-
-                {unoptimized.map((reviewable) => (
-                  <ReviewableCard
-                    key={reviewable.fileId}
-                    projectName={projectName}
-                    onClick={handleReviewableClick}
-                    {...reviewable}
-                    onContextMenu={handleContextMenu}
-                  />
-                ))}
 
                 {/* drag overlay */}
                 <DragOverlay modifiers={overlayModifiers}>
@@ -505,6 +521,19 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
           <Icon icon="upload" />
           <span>Upload reviewable</span>
         </Styled.Dropzone>
+      )}
+
+      {editActivityId && (
+        <EditReviewableDialog
+          isOpen
+          onClose={() => setEditActivityId(null)}
+          label={
+            reviewables.find((reviewable) => reviewable.activityId === editActivityId)?.label || ''
+          }
+          projectName={projectName}
+          versionId={versionId}
+          activityId={editActivityId}
+        />
       )}
     </>
   )

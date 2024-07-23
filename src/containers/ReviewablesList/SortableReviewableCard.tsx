@@ -8,6 +8,7 @@ type SortableReviewableCardProps = ReviewableCardProps
 const SortableReviewableCard: FC<SortableReviewableCardProps> = ({ ...props }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: props.fileId,
+    animateLayoutChanges: () => false,
   })
 
   const style = {

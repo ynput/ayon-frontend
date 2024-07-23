@@ -1,4 +1,4 @@
-import { Icon } from '@ynput/ayon-react-components'
+import { Button, Icon } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 import FileThumbnail from '../FileThumbnail'
 
@@ -22,7 +22,11 @@ export const Card = styled.div`
   &:not(.dragging):hover {
     background-color: var(--md-sys-color-surface-container-hover);
     border: 1px solid var(--md-sys-color-surface-container-hover);
+  }
 
+  /* show edit controls */
+  &:not(.dragging):hover,
+  &.selected {
     .handle {
       opacity: 1;
     }
@@ -31,6 +35,11 @@ export const Card = styled.div`
       .uploaded {
         display: none;
       }
+    }
+
+    /* show edit button */
+    .edit {
+      display: flex;
     }
   }
 
@@ -68,8 +77,14 @@ export const Content = styled.div`
   flex: 1;
   overflow: hidden;
 
+  /* prevent edit button being cutoff */
+  padding: 2px;
+  margin: -2px;
+
   h4 {
     padding: 0;
+    overflow: hidden;
+    white-space: nowrap;
   }
 
   span {
@@ -81,6 +96,26 @@ export const Content = styled.div`
   .name {
     color: var(--md-sys-color-outline);
   }
+`
+
+export const Title = styled.div`
+  display: flex;
+  align-items: center;
+  gap: var(--base-gap-small);
+`
+
+export const EditButton = styled(Button)`
+  /* hidden by default and show on card hover */
+  display: none;
+  .icon {
+    font-size: 18px;
+  }
+
+  &.hasIcon {
+    padding: 3px;
+  }
+
+  margin: -2px;
 `
 
 export const StyledFileThumbnail = styled(FileThumbnail)`

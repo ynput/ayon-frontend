@@ -1,4 +1,4 @@
-import { forwardRef, HTMLProps } from 'react'
+import { forwardRef, HTMLProps, MouseEvent } from 'react'
 import type { ReviewableModel } from '@api/rest'
 import * as Styled from './ReviewableCard.styled'
 import Typography from '@/theme/typography.module.css'
@@ -18,6 +18,7 @@ export interface ReviewableCardProps
   isDragging?: boolean //is something being dragged?
   dragProps?: any
   sortingDisabled?: boolean
+  onEdit?: (e: MouseEvent<HTMLButtonElement>) => void
 }
 
 const ReviewableCard = forwardRef<HTMLDivElement, ReviewableCardProps>(
@@ -36,6 +37,7 @@ const ReviewableCard = forwardRef<HTMLDivElement, ReviewableCardProps>(
       isDragging,
       dragProps = {},
       sortingDisabled,
+      onEdit,
       ...props
     },
     ref,
@@ -62,6 +64,7 @@ const ReviewableCard = forwardRef<HTMLDivElement, ReviewableCardProps>(
           'drag-overlay': isDragOverlay,
           dragging: isDragging, // is anything dragging
           selected: isSelected,
+          editable: !!onEdit,
         })}
         {...props}
       >
@@ -70,7 +73,12 @@ const ReviewableCard = forwardRef<HTMLDivElement, ReviewableCardProps>(
           mimetype={mimetype}
         />
         <Styled.Content>
-          <h4 className={Typography.titleSmall}>{title}</h4>
+          <Styled.Title>
+            <h4 className={Typography.titleSmall}>{title}</h4>
+            {!!onEdit && (
+              <Styled.EditButton icon="edit" variant="text" className="edit" onClick={onEdit} />
+            )}
+          </Styled.Title>
           <span className="name">{subTitle}</span>
         </Styled.Content>
         {isDraggable && (

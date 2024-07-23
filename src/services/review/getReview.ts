@@ -40,6 +40,7 @@ const getViewerReviewablesTags = (
 
     if (taskId) tags.push({ type: 'viewer', id: taskId })
     if (folderId) tags.push({ type: 'viewer', id: folderId })
+    if (versionId) tags.push({ type: 'viewer', id: versionId })
 
     tags.push({ type: 'viewer', id: 'LIST' })
   }
@@ -70,6 +71,15 @@ const getViewerReviewablesTags = (
     )
 
     tags.push(...versionTags)
+
+    // also add viewer tags for viewer
+    if (viewer) {
+      versionTags.forEach((tag) => {
+        if (!tags.find((t) => t.id === tag.id && t.type === 'viewer')) {
+          tags.push({ type: 'viewer', id: tag.id })
+        }
+      })
+    }
 
     const reviewableTags = result.flatMap((version) =>
       version
