@@ -5,7 +5,10 @@ import axios from 'axios'
 // queries
 import api from '@api'
 import { useGetReviewablesForVersionQuery, useHasTranscoderQuery } from '@queries/review/getReview'
-import { useDeleteReviewableMutation } from '@queries/review/updateReview'
+import {
+  useDeleteReviewableMutation,
+  useSortVersionReviewablesMutation,
+} from '@queries/review/updateReview'
 import { UploadReviewableApiResponse } from '@api/rest'
 
 // DND
@@ -131,25 +134,43 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
     )
   }
 
+  const { optimized, unoptimized, incompatible, processing, queued } = getGroupedReviewables(
+    reviewables,
+    hasTranscoder,
+  )
+
   function handleDragStart(event: DragStartEvent) {
     const { active } = event
 
     setActiveId(active.id as string)
   }
 
-  function handleDragEnd(event: DragEndEvent) {
+  const [sortVersionReviewables] = useSortVersionReviewablesMutation()
+
+  const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event
 
     if (over?.id && active.id !== over.id) {
       console.log('update review position')
 
-      const oldIndex = reviewables.findIndex((reviewable) => reviewable.fileId === active.id)
-      const newIndex = reviewables.findIndex((reviewable) => reviewable.fileId === over.id)
+      const oldIndex = optimized.findIndex((reviewable) => reviewable.fileId === active.id)
+      const newIndex = optimized.findIndex((reviewable) => reviewable.fileId === over.id)
 
       //   resort the reviewables
-      const newReviewables = arrayMove(reviewables, oldIndex, newIndex)
+      const newReviewables = arrayMove(optimized, oldIndex, newIndex)
 
-      console.log(newReviewables)
+      const newOrder = newReviewables.map((reviewable) => reviewable.activityId)
+
+      try {
+        // update the reviewables
+        sortVersionReviewables({
+          projectName,
+          versionId,
+          sortReviewablesRequest: { sort: newOrder },
+        }).unwrap()
+      } catch (error) {
+        toast.error('Error sorting reviewables')
+      }
     }
     setActiveId(null)
   }
@@ -383,11 +404,6 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
     ctxMenuShow(event, items)
   }
 
-  const { optimized, unoptimized, incompatible, processing, queued } = getGroupedReviewables(
-    reviewables,
-    hasTranscoder,
-  )
-
   return (
     <>
       {!isDraggingFile && (
@@ -406,7 +422,6 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
                 <SortableContext
                   items={reviewables.map(({ fileId }) => fileId as UniqueIdentifier)}
                   strategy={verticalListSortingStrategy}
-                  disabled
                 >
                   {optimized.map((reviewable) => (
                     <SortableReviewableCard
@@ -416,7 +431,6 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
                       isSelected={reviewableIds.includes(reviewable.fileId)}
                       isDragging={!!activeId}
                       onContextMenu={handleContextMenu}
-                      sortingDisabled
                       {...reviewable}
                     />
                   ))}

@@ -937,6 +937,16 @@ const injectedRtkApi = api.injectEndpoints({
         params: { label: queryArg.label },
       }),
     }),
+    sortVersionReviewables: build.mutation<
+      SortVersionReviewablesApiResponse,
+      SortVersionReviewablesApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/versions/${queryArg.versionId}/reviewables`,
+        method: 'PATCH',
+        body: queryArg.sortReviewablesRequest,
+      }),
+    }),
     getReviewablesForTask: build.query<
       GetReviewablesForTaskApiResponse,
       GetReviewablesForTaskApiArg
@@ -2127,6 +2137,12 @@ export type UploadReviewableApiArg = {
   'x-file-name': string
   'x-sender'?: string
 }
+export type SortVersionReviewablesApiResponse = /** status 200 Successful Response */ any
+export type SortVersionReviewablesApiArg = {
+  projectName: string
+  versionId: string
+  sortReviewablesRequest: SortReviewablesRequest
+}
 export type GetReviewablesForTaskApiResponse =
   /** status 200 Successful Response */ VersionReviewablesModel[]
 export type GetReviewablesForTaskApiArg = {
@@ -2596,6 +2612,8 @@ export type TakeResponseModel = {
   addonName: string
   addonVersion: string
   variant: string
+  /** The user who initiated the action */
+  userName: string
 }
 export type CreateActivityResponseModel = {
   id: string
@@ -3272,7 +3290,7 @@ export type DispatchEventRequestModel = {
   payload?: object
   /** Is event finished (one shot event) */
   finished?: boolean
-  /** Set to False to not store one-shot event in database. */
+  /** Set to False for fire-and-forget events */
   store?: boolean
 }
 export type EventModel = {
@@ -4038,6 +4056,10 @@ export type VersionReviewablesModel = {
   /** List of available reviewables */
   reviewables?: ReviewableModel[]
 }
+export type SortReviewablesRequest = {
+  /** List of reviewable (activity) ids in the order you want them to appear in the UI. */
+  sort?: string[]
+}
 export type ServiceDataModel = {
   volumes?: string[]
   ports?: string[]
@@ -4471,6 +4493,8 @@ export type NewUserModel = {
   active?: boolean
   /** Password for the new user */
   password?: string
+  /** API Key for the new service user */
+  apiKey?: string
 }
 export type UserPatchModel = {
   attrib?: UserAttribModel

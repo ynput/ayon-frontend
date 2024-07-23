@@ -1,4 +1,8 @@
-import { DeleteProjectActivityApiResponse, DeleteProjectActivityApiArg } from '@/api/rest'
+import {
+  DeleteProjectActivityApiResponse,
+  DeleteProjectActivityApiArg,
+  ReviewableModel,
+} from '@/api/rest'
 import api from '@api'
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 
@@ -27,4 +31,45 @@ const injectedEndpoints = api.injectEndpoints({
   }),
 })
 
-export const { useDeleteReviewableMutation } = injectedEndpoints
+const enhancedEndpoints = injectedEndpoints.enhanceEndpoints({
+  endpoints: {
+    // reviewables list is updated optimistically
+    sortVersionReviewables: {
+      async onQueryStarted(
+        { projectName, versionId, sortReviewablesRequest },
+        { dispatch, queryFulfilled },
+      ) {
+        const patchResult = dispatch(
+          api.util.updateQueryData(
+            'getReviewablesForVersion',
+            { projectName, versionId },
+            (draft) => {
+              const sortingOrder = sortReviewablesRequest.sort
+              // Create a new array to store the reordered reviewables
+              const newReviewables: ReviewableModel[] = []
+
+              // Loop through each id in the sortingOrder array
+              sortingOrder?.forEach((id) => {
+                // Filter the reviewables that match the current activityId and push them to newReviewables
+                draft.reviewables
+                  ?.filter((r) => r.activityId === id)
+                  .forEach((r) => newReviewables.push(r))
+              })
+              // update draft
+              draft.reviewables = newReviewables
+            },
+          ),
+        )
+        try {
+          await queryFulfilled
+        } catch {
+          patchResult.undo()
+        }
+      },
+      // viewer list is updated through invalidation
+      invalidatesTags: (_result, _error, args) => [{ type: 'viewer', id: args.versionId }],
+    },
+  },
+})
+
+export const { useDeleteReviewableMutation, useSortVersionReviewablesMutation } = enhancedEndpoints
