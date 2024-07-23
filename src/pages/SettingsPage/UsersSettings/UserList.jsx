@@ -36,12 +36,12 @@ const UserList = ({
   )
 
   const onContextMenu = (e) => {
-    if (selectedUsers.includes(e.data.name)) {
-      onSelectUsers([e.data.name, ...selectedUsers])
-    } else {
-      onSelectUsers([e.data.name])
+    let newSelectedUsers = [...selectedUsers];
+    if (!selectedUsers.includes(e.data.name)) {
+      newSelectedUsers = [e.data.name]
     }
-    ctxMenuShow(e.originalEvent, ctxMenuItems(selectedUsers))
+    onSelectUsers(newSelectedUsers)
+    ctxMenuShow(e.originalEvent, ctxMenuItems(newSelectedUsers))
   }
 
   const onSelectionChange = (e) => {
@@ -52,7 +52,7 @@ const UserList = ({
   }
 
   // IDEA: Can these go into the details panel as well?
-  const ctxMenuItems = () => {
+  const ctxMenuItems = (newSelectedUsers) => {
     return [
       {
         label: 'Set username',
@@ -69,7 +69,7 @@ const UserList = ({
       {
         label: 'Delete selected',
         disabled: !selection.length || isSelfSelected,
-        command: () => onDelete(),
+        command: () => onDelete(newSelectedUsers),
         icon: 'delete',
         danger: true,
       },
