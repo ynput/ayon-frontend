@@ -7,7 +7,7 @@ import {
   SaveButton,
   Toolbar,
 } from '@ynput/ayon-react-components'
-import { FC, FormEvent, useState } from 'react'
+import { FC, FormEvent, useEffect, useRef, useState } from 'react'
 import { toast } from 'react-toastify'
 import { RenameTitle } from './ReviewablesList.styled'
 
@@ -27,7 +27,20 @@ const EditReviewableDialog: FC<EditReviewableDialogProps> = ({
   activityId,
   ...props
 }) => {
+  const labelRef = useRef<HTMLInputElement>(null)
   const [labelForm, setLabelForm] = useState('')
+
+  // prefill the label form with current label
+  useEffect(() => {
+    if (!labelRef.current) return
+    setLabelForm(label)
+    // highlight the text
+    labelRef.current?.select()
+
+    return () => {
+      setLabelForm('')
+    }
+  }, [label, labelRef.current])
 
   const [updateReviewable, { isLoading }] = useUpdateReviewableMutation()
 
@@ -70,7 +83,7 @@ const EditReviewableDialog: FC<EditReviewableDialogProps> = ({
   return (
     <Dialog
       onClose={onClose}
-      header={<RenameTitle>{`Editing: ${label}`}</RenameTitle>}
+      header={<RenameTitle>{`Editing label: ${label}`}</RenameTitle>}
       footer={
         <Toolbar>
           <Button label="Cancel" onClick={handleCancel} variant="text" />
@@ -96,6 +109,7 @@ const EditReviewableDialog: FC<EditReviewableDialogProps> = ({
           onKeyDown={(e) =>
             e.key === 'Enter' && (e.ctrlKey || e.metaKey) && handleUpdateReviewable()
           }
+          ref={labelRef}
         />
       </form>
     </Dialog>
