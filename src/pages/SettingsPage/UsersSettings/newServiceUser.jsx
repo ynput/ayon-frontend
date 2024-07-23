@@ -20,16 +20,9 @@ const FormRowStyled = styled(FormRow)`
 `
 
 const NewServiceUser = ({ onHide, open, onSuccess }) => {
-  const {
-    password,
-    setPassword,
-    formData,
-    setFormData,
-    apiKey,
-    setApiKey,
-    addedUsers,
-    setAddedUsers,
-  } = useUserMutations({})
+  const { formData, setFormData, apiKey, setApiKey, addedUsers, setAddedUsers } = useUserMutations(
+    {},
+  )
 
   const [addUser, { isLoading: isCreatingUser }] = useAddUserMutation()
   const usernameRef = useRef()
@@ -113,10 +106,12 @@ const NewServiceUser = ({ onHide, open, onSuccess }) => {
 
   return (
     <Dialog
-      onKeyDown={(e) => callbackOnKeyDown(e, {
-        validationPassed: validateFormData(formData) == null,
-        callback: handleSubmit,
-      })}
+      onKeyDown={(e) =>
+        callbackOnKeyDown(e, {
+          validationPassed: validateFormData(formData) == null,
+          callback: handleSubmit,
+        })
+      }
       isOpen
       size="full"
       style={{
