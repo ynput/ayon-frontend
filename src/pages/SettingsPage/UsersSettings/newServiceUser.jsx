@@ -4,11 +4,11 @@ import styled from 'styled-components'
 import { SelectButton } from 'primereact/selectbutton'
 
 import { Button, SaveButton, Section, Dialog, FormRow } from '@ynput/ayon-react-components'
-import ApiKeyManager from '@/components/ApiKeyManager'
-import useUserMutations from '@/containers/Feed/hooks/useUserMutations'
+import ApiKeyManager from '@components/ApiKeyManager'
+import useUserMutations from '@containers/Feed/hooks/useUserMutations'
 import { useAddUserMutation } from '@queries/user/updateUser'
-import copyToClipboard from '@/helpers/copyToClipboard'
-import callbackOnKeyDown from '@/helpers/callbackOnKeyDown'
+import copyToClipboard from '@helpers/copyToClipboard'
+import callbackOnKeyDown from '@helpers/callbackOnKeyDown'
 
 import UserAttribForm from './UserAttribForm'
 import { uniqueId } from 'lodash'
@@ -21,32 +21,35 @@ const FormRowStyled = styled(FormRow)`
 
 const NewServiceUser = ({ onHide, open, onSuccess }) => {
   const {
-    password, setPassword,
-    formData, setFormData,
-    apiKey, setApiKey,
-    addedUsers, setAddedUsers,
+    password,
+    setPassword,
+    formData,
+    setFormData,
+    apiKey,
+    setApiKey,
+    addedUsers,
+    setAddedUsers,
   } = useUserMutations({})
-
 
   const [addUser, { isLoading: isCreatingUser }] = useAddUserMutation()
   const usernameRef = useRef()
-  const [keyName, setKeyName] = useState('');
+  const [keyName, setKeyName] = useState('')
 
   const validateFormData = (formData) => {
     if (!formData.Username) {
-      return 'Login name must be provided';
+      return 'Login name must be provided'
     }
     if (apiKey == '') {
       return 'Api key needs to be generated'
     }
 
-    return null;
+    return null
   }
 
   const resetFormData = ({ addedUsers }) => {
     setFormData({
       Username: '',
-      userActive: true
+      userActive: true,
     })
     setAddedUsers(addedUsers)
   }
@@ -56,14 +59,14 @@ const NewServiceUser = ({ onHide, open, onSuccess }) => {
       data: { isService: true },
       active: formData.userActive,
       name: formData.Username,
-      apiKey: apiKey
+      apiKey: apiKey,
     }
 
-    return payload;
+    return payload
   }
 
   const handleSubmit = async (close) => {
-    const validationResult = validateFormData(formData);
+    const validationResult = validateFormData(formData)
     if (validationResult !== null) {
       toast.error(validationResult)
       return
@@ -74,8 +77,8 @@ const NewServiceUser = ({ onHide, open, onSuccess }) => {
       toast.success('Service User created')
 
       resetFormData({
-        addedUsers: [...addedUsers, formData.Username]
-      });
+        addedUsers: [...addedUsers, formData.Username],
+      })
 
       setKeyName(uniqueId())
 
@@ -100,18 +103,20 @@ const NewServiceUser = ({ onHide, open, onSuccess }) => {
   }
 
   const handleApiKeyGeneration = (key) => {
-    copyToClipboard(key);
-    setApiKey(key);
+    copyToClipboard(key)
+    setApiKey(key)
   }
 
   if (!open) return null
 
   return (
     <Dialog
-      onKeyDown={(e) => callbackOnKeyDown(e, {
-        validationPassed: formData.Username && password,
-        callback: handleSubmit,
-      })}
+      onKeyDown={(e) =>
+        callbackOnKeyDown(e, {
+          validationPassed: formData.Username && password,
+          callback: handleSubmit,
+        })
+      }
       isOpen
       size="full"
       style={{
@@ -142,11 +147,13 @@ const NewServiceUser = ({ onHide, open, onSuccess }) => {
         <UserAttribForm
           formData={formData}
           setFormData={setFormData}
-          attributes={[{
-            name: 'Username',
-            data: { title: 'Username' },
-            input: { placeholder: 'No spaces allowed', autoFocus: true, ref: usernameRef },
-          }]}
+          attributes={[
+            {
+              name: 'Username',
+              data: { title: 'Username' },
+              input: { placeholder: 'No spaces allowed', autoFocus: true, ref: usernameRef },
+            },
+          ]}
           customFormRow={FormRowStyled}
           {...{ password, setPassword }}
         />
@@ -155,8 +162,12 @@ const NewServiceUser = ({ onHide, open, onSuccess }) => {
           <SelectButton
             unselectable={false}
             value={formData?.userActive}
-            onChange={(event) => setFormData({ ...formData, 'userActive': event.value })}
-            options={[{ label: 'Active', value: true }, { label: 'Inactive', value: false }]} />
+            onChange={(event) => setFormData({ ...formData, userActive: event.value })}
+            options={[
+              { label: 'Active', value: true },
+              { label: 'Inactive', value: false },
+            ]}
+          />
         </FormRowStyled>
 
         <FormRowStyled label="Service user key" />

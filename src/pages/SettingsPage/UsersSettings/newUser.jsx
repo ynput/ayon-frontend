@@ -8,7 +8,8 @@ import UserAccessForm from './UserAccessForm'
 
 import styled from 'styled-components'
 import UserAccessGroupsForm from './UserAccessGroupsForm/UserAccessGroupsForm'
-import useUserMutations from '@/containers/Feed/hooks/useUserMutations'
+import useUserMutations from '@containers/Feed/hooks/useUserMutations'
+import callbackOnKeyDown from '@helpers/callbackOnKeyDown'
 
 const DividerSmallStyled = styled(Divider)`
   margin: 8px 0;
@@ -21,10 +22,15 @@ const SubTitleStyled = styled.span`
 
 const NewUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
   const {
-    password, setPassword,
-    passwordConfirm, setPasswordConfirm,
-    initFormData, formData, setFormData,
-    addedUsers, setAddedUsers,
+    password,
+    setPassword,
+    passwordConfirm,
+    setPasswordConfirm,
+    initFormData,
+    formData,
+    setFormData,
+    addedUsers,
+    setAddedUsers,
   } = useUserMutations({})
   const [addUser, { isLoading: isCreatingUser }] = useAddUserMutation()
   const usernameRef = useRef()
@@ -40,14 +46,14 @@ const NewUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
 
   const validateFormData = (formData) => {
     if (!formData.Username) {
-      return 'Login name must be provided';
+      return 'Login name must be provided'
     }
 
     if (password !== passwordConfirm) {
-      return 'Passwords do not match';
+      return 'Passwords do not match'
     }
 
-    return null;
+    return null
   }
 
   const preparePayload = (formData, attributes, password) => {
@@ -70,26 +76,31 @@ const NewUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
       payload.data.accessGroups = formData.accessGroups || {}
     }
 
-    return payload;
+    return payload
   }
 
   const handleSubmit = async (close) => {
-    const validationResult = validateFormData(formData);
+    const validationResult = validateFormData(formData)
     if (validationResult !== null) {
       toast.error(validationResult)
       return
     }
 
     try {
-      await addUser({ name: formData.Username, user: preparePayload(formData, attributes, password) }).unwrap()
+      await addUser({
+        name: formData.Username,
+        user: preparePayload(formData, attributes, password),
+      }).unwrap()
       toast.success('User created')
 
       resetFormData({
         password: '',
         passwordConfirm: '',
-        formData: (fd) => { return { accessGroups: fd.accessGroups, userLevel: fd.userLevel } },
-        addedUsers: [...addedUsers, formData.Username]
-      });
+        formData: (fd) => {
+          return { accessGroups: fd.accessGroups, userLevel: fd.userLevel }
+        },
+        addedUsers: [...addedUsers, formData.Username],
+      })
 
       onSuccess && onSuccess(formData.Username)
 
@@ -117,7 +128,9 @@ const NewUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
 
   return (
     <Dialog
-      onKeyDown={(e) => callbackOnKeyDown(e, {validationPassed: formData.Username, callback: handleSubmit}) }
+      onKeyDown={(e) =>
+        callbackOnKeyDown(e, { validationPassed: formData.Username, callback: handleSubmit })
+      }
       isOpen
       size="full"
       style={{
