@@ -33,7 +33,7 @@ const NewServiceUser = ({ onHide, open, onSuccess }) => {
 
   const [addUser, { isLoading: isCreatingUser }] = useAddUserMutation()
   const usernameRef = useRef()
-  const [keyName, setKeyName] = useState('')
+  const [keyName, setKeyName] = useState(uniqueId())
 
   const validateFormData = (formData) => {
     if (!formData.Username) {
@@ -80,7 +80,9 @@ const NewServiceUser = ({ onHide, open, onSuccess }) => {
         addedUsers: [...addedUsers, formData.Username],
       })
 
+      // reset the api key
       setKeyName(uniqueId())
+      setApiKey('')
 
       onSuccess && onSuccess(formData.Username)
 
