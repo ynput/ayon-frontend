@@ -1,6 +1,58 @@
 import { useRef, useEffect, useState, useCallback, useMemo } from 'react'
 import Canvas from '@components/Canvas'
 
+// Function to draw a rounded rectangle
+function drawRoundedRect(ctx, { x, y, width, height, radius }) {
+  ctx.beginPath()
+  ctx.moveTo(x + radius, y)
+  ctx.lineTo(x + width - radius, y)
+  ctx.quadraticCurveTo(x + width, y, x + width, y + radius)
+  ctx.lineTo(x + width, y + height - radius)
+  ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height)
+  ctx.lineTo(x + radius, y + height)
+  ctx.quadraticCurveTo(x, y + height, x, y + height - radius)
+  ctx.lineTo(x, y + radius)
+  ctx.quadraticCurveTo(x, y, x + radius, y)
+  ctx.closePath()
+  ctx.fill()
+}
+
+const drawFrameNumber = (ctx, { color, bg, currentFrame, progressX, handleWidth, isLastFrame }) => {
+  const text = currentFrame + 1
+  ctx.font = '10px monospace'
+  ctx.textAlign = 'left'
+
+  // Calculate the width and height of the text
+  const textMetrics = ctx.measureText(text)
+  const textWidth = textMetrics.width
+  const textHeight = 10 // Since we know the font size is 10px
+  const textY = textHeight
+  let textX = progressX + handleWidth / 2 - textWidth / 2
+
+  const paddingX = 4
+  const paddingY = 1
+  const borderRadius = 4
+  // Define the background rectangle's dimensions
+  const bgWidth = textWidth + 2 * paddingX
+  const bgHeight = textHeight + 2 * paddingY
+  let bgX = textX - paddingX
+  const bgY = textY - textHeight
+
+  // move frame number to the left so it's not cut off
+  if (bgHeight > handleWidth && isLastFrame) {
+    textX = progressX - textWidth + handleWidth - paddingX
+    bgX = progressX - textWidth + handleWidth - paddingX * 2
+  }
+
+  // Draw the background rectangle
+  ctx.fillStyle = bg // Replace with your desired background color
+  drawRoundedRect(ctx, { x: bgX, y: bgY, width: bgWidth, height: bgHeight, radius: borderRadius })
+
+  // Draw the text on top of the background
+  ctx.fillStyle = color
+  ctx.fillText(text, textX, textY)
+}
+
 const Trackbar = ({
   duration,
   currentTime,
@@ -93,18 +145,20 @@ const Trackbar = ({
     progressX = currentFrame >= numFrames ? width : (currentFrame / numFrames) * width
     //}
 
+    // Current frame handle
     ctx.fillStyle = primaryContainer
     ctx.beginPath()
     ctx.fillRect(progressX - 1, 0, handleWidth, height)
     ctx.fill()
 
-    if (handleWidth > 15) {
-      // if the handle is wide enough, write the current frame number
-      ctx.fillStyle = onPrimaryContainer
-      ctx.font = '10px monospace'
-      ctx.textAlign = 'left'
-      ctx.fillText(currentFrame + 1, progressX + 3, 16)
-    }
+    drawFrameNumber(ctx, {
+      color: onPrimaryContainer,
+      bg: primaryContainer,
+      currentFrame,
+      progressX,
+      handleWidth,
+      isLastFrame: currentFrame === numFrames - 1,
+    })
 
     //
     // Draw selection range
