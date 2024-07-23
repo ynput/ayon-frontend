@@ -16,6 +16,13 @@ const Trackbar = ({
 
   const numFrames = useMemo(() => Math.floor(duration * frameRate), [frameRate, duration])
 
+  const height = 32
+  const primaryColor = '#8fceff'
+  const primaryContainer = '#1c4154',
+    onPrimaryContainer = '#ebf5ff'
+  const containerLow = '#1c2026'
+  const containerLowest = '#16191d'
+
   // DRAW
 
   const drawSlider = useCallback(() => {
@@ -30,17 +37,17 @@ const Trackbar = ({
     ctx.clearRect(0, 0, width, height)
 
     // Draw the background of the slider
-    ctx.fillStyle = '#1C2026'
+    ctx.fillStyle = containerLow
     ctx.fillRect(0, 0, width, height)
 
     // Draw the buffered ranges
     for (const range of bufferedRanges) {
       const start = (range.start / duration) * width
       const end = (range.end / duration) * width
-      ctx.strokeStyle = '#885bff'
+      ctx.strokeStyle = primaryColor
       ctx.beginPath()
-      ctx.moveTo(start, 0)
-      ctx.lineTo(end, 0)
+      ctx.moveTo(start, height)
+      ctx.lineTo(end, height)
       ctx.stroke()
     }
 
@@ -54,7 +61,7 @@ const Trackbar = ({
     if (numFrames < width) {
       for (let i = 1; i < numFrames; i++) {
         const x = (i / numFrames) * width
-        ctx.strokeStyle = '#161616'
+        ctx.strokeStyle = containerLowest
         ctx.beginPath()
         ctx.moveTo(x, 0)
         ctx.lineTo(x, height)
@@ -62,7 +69,6 @@ const Trackbar = ({
       }
     }
 
- 
     //
     // Draw the handle
     //
@@ -75,8 +81,7 @@ const Trackbar = ({
       if (currentFrame >= numFrames) {
         currentFrame = numFrames - 1
       }
-    }
-    else {
+    } else {
       currentFrame = Math.floor(currentTime * frameRate)
     }
 
@@ -85,55 +90,51 @@ const Trackbar = ({
     //   // during playback, use the currentTime to have a smooth animation
     //   progressX = (currentTime / duration) * width
     // } else {
-      progressX = currentFrame >= numFrames ? width : (currentFrame / numFrames) * width
+    progressX = currentFrame >= numFrames ? width : (currentFrame / numFrames) * width
     //}
 
-    // ctx.fillStyle = '#0ed3fe'
-    ctx.fillStyle = '#384956'
+    ctx.fillStyle = primaryContainer
     ctx.beginPath()
     ctx.fillRect(progressX - 1, 0, handleWidth, height)
     ctx.fill()
 
     if (handleWidth > 15) {
       // if the handle is wide enough, write the current frame number
-      ctx.fillStyle = 'white'
+      ctx.fillStyle = onPrimaryContainer
       ctx.font = '10px monospace'
       ctx.textAlign = 'left'
       ctx.fillText(currentFrame + 1, progressX + 3, 16)
     }
 
     //
-    // Draw selction range
+    // Draw selection range
     //
 
-    let markInX = 0
-    if (markIn) {
-      markInX = (markIn / duration) * width
-      ctx.strokeStyle = 'green'
-      ctx.beginPath()
-      ctx.moveTo(markInX, 0)
-      ctx.lineTo(markInX, height)
-      ctx.stroke()
-    }
+    // let markInX = 0
+    // if (markIn) {
+    //   markInX = (markIn / duration) * width
+    //   ctx.strokeStyle = 'green'
+    //   ctx.beginPath()
+    //   ctx.moveTo(markInX, 0)
+    //   ctx.lineTo(markInX, height)
+    //   ctx.stroke()
+    // }
 
-    let markOutX = width
-    if (markOut) {
-      markOutX = (markOut / duration) * width
-      ctx.strokeStyle = 'red'
-      ctx.beginPath()
-      ctx.moveTo(markOutX, 0)
-      ctx.lineTo(markOutX, height)
-      ctx.stroke()
-    }
+    // let markOutX = width
+    // if (markOut) {
+    //   markOutX = (markOut / duration) * width
+    //   ctx.strokeStyle = 'red'
+    //   ctx.beginPath()
+    //   ctx.moveTo(markOutX, 0)
+    //   ctx.lineTo(markOutX, height)
+    //   ctx.stroke()
+    // }
 
-    ctx.strokeStyle = markOutX > markInX ? '#0ed3fe' : 'red'
-    ctx.beginPath()
-    ctx.moveTo(markInX, height - 1)
-    ctx.lineTo(markOutX, height - 1)
-    ctx.stroke()
-
-
-
+    // ctx.strokeStyle = markOutX > markInX ? '#0ed3fe' : 'red'
+    // ctx.beginPath()
+    // ctx.moveTo(markInX, height - 1)
+    // ctx.lineTo(markOutX, height - 1)
+    // ctx.stroke()
   }, [currentTime, duration, markIn, markOut, isPlaying])
 
   // Events
@@ -191,8 +192,8 @@ const Trackbar = ({
     <Canvas
       ref={canvasRef}
       style={{
-        minHeight: 42,
-        maxHeight: 42,
+        minHeight: height,
+        maxHeight: height,
         cursor: 'pointer',
         flexGrow: 1,
       }}
