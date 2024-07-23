@@ -3,6 +3,7 @@ import copyToClipboard from '@helpers/copyToClipboard'
 import { onTaskSelected } from '@state/dashboard'
 import { useSelector } from 'react-redux'
 import { useURIContext } from '@context/uriContext'
+import { getTaskRoute } from '@/helpers/routes'
 
 export const useGetTaskContextMenu = (tasks, dispatch) => {
   // URI NAVIGATE ON RIGHT CLICK
@@ -13,8 +14,7 @@ export const useGetTaskContextMenu = (tasks, dispatch) => {
     return [
       {
         label: 'Open in Browser',
-        command: () =>
-          navigateToUri(`ayon+entity://${card.projectName}/${card.folderPath}?task=${card.name}`),
+        command: () => navigateToUri(getTaskRoute(card)),
         icon: 'open_in_new',
         disabled: selectedTasks.includes(card.id) && selectedTasks.length > 1,
       },
