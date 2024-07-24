@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
 import { Section, Toolbar, InputText, TablePanel } from '@ynput/ayon-react-components'
@@ -12,6 +12,7 @@ import { useGetHierarchyQuery } from '@queries/getHierarchy'
 import useCreateContext from '@hooks/useCreateContext'
 import HierarchyExpandFolders from './HierarchyExpandFolders'
 import { openViewer } from '@/features/viewer'
+import useTableKeyboardNavigation from './Feed/hooks/useTableKeyboardNavigation'
 
 const filterHierarchy = (text, folder, folders) => {
   let result = []
@@ -281,12 +282,28 @@ const Hierarchy = (props) => {
     }
   }
 
-  const handleTableKeyDown = (e) => {
-    if (e.key === ' ') {
-      e.preventDefault()
+  const tableRef = useRef(null)
+
+  const handleTableKeyDown = useTableKeyboardNavigation({
+    tableRef,
+    treeData,
+    selection: selectedFolders,
+    onSelectionChange: ({ object }) => onSelectionChange({ value: object }),
+  })
+
+  // Separate handler for non-arrow key events
+  const handleKeyDown = (event) => {
+    const { key } = event
+
+    if (key === ' ') {
+      event.preventDefault()
       const firstSelected = Object.keys(selectedFolders)[0]
       openInViewer(firstSelected, true)
+      return
     }
+
+    // if using arrow keys change selection
+    handleTableKeyDown(event)
   }
 
   // Context Menu
@@ -346,6 +363,7 @@ const Hierarchy = (props) => {
   const table = useMemo(() => {
     return (
       <TreeTable
+        ref={tableRef}
         value={treeData}
         responsive="true"
         scrollable
@@ -359,7 +377,10 @@ const Hierarchy = (props) => {
         onRowClick={onRowClick}
         onContextMenu={onContextMenu}
         className={isFetching ? 'table-loading' : undefined}
-        onKeyDown={handleTableKeyDown}
+        onKeyDown={handleKeyDown}
+        rowClassName={(rowData) => ({
+          ['id-' + rowData.key]: true,
+        })}
       >
         <Column header="Hierarchy" field="body" expander={true} style={{ width: '100%' }} />
       </TreeTable>
