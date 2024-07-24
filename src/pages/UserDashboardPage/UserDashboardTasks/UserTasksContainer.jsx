@@ -14,6 +14,18 @@ import { setUri } from '@state/context'
 import DetailsPanelSlideOut from '@containers/DetailsPanel/DetailsPanelSlideOut/DetailsPanelSlideOut'
 import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
 import transformKanbanTasks from './transformKanbanTasks'
+import styled from 'styled-components'
+import { classNames } from 'primereact/utils'
+
+const StyledSplitter = styled(Splitter)`
+  .details-panel-splitter {
+    /* This is a crazy hack to prevent the cursor being out of line with the dragging card */
+    &.dragging {
+      transition: max-width 0s, min-width 0s;
+      transition-delay: 0.1s;
+    }
+  }
+`
 
 export const getThumbnailUrl = ({ entityId, entityType, thumbnailId, updatedAt, projectName }) => {
   // If projectName is not provided or neither thumbnailId nor entityId and entityType are provided, return null
@@ -174,7 +186,7 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
   if (isError) return <EmptyPlaceholder error={error} />
 
   return (
-    <Splitter
+    <StyledSplitter
       layout="horizontal"
       style={{
         height: '100%',
@@ -207,13 +219,12 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
       {selectedTasksData.length ? (
         <SplitterPanel
           size={1}
+          className={classNames('details-panel-splitter', { dragging: isDragging })}
           style={{
             maxWidth: isDragging
               ? 0
               : `clamp(${detailsMinWidth}px, ${detailsMaxWidth}, ${detailsMaxMaxWidth}px)`,
             minWidth: isDragging ? 0 : detailsMinWidth,
-            transition: 'min-width 0',
-            transitionDelay: '0.1s',
           }}
         >
           <DetailsPanel
@@ -236,7 +247,7 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
       ) : (
         <SplitterPanel style={{ maxWidth: 0 }}></SplitterPanel>
       )}
-    </Splitter>
+    </StyledSplitter>
   )
 }
 

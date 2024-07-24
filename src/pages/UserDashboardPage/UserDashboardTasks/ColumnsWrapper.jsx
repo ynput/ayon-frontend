@@ -137,18 +137,16 @@ const ColumnsWrapper = ({
     // check if outside of the scroll horizontally
     const rect = columnEl.getBoundingClientRect()
     const sectionRect = sectionRef.current.getBoundingClientRect()
-    const columnLeft = rect.left
-    const columnWidth = rect.width
+    const columnRight = rect.right
     const containerWidth = sectionRect.right
 
-    console.log({ columnLeft, containerWidth })
-
-    if (columnLeft > containerWidth) {
-      console.log('OUTSIDE')
+    if (columnRight > containerWidth) {
+      const containerWidth = sectionRef.current.clientWidth
+      const elementWidth = columnEl.clientWidth
       const offsetLeft = columnEl.offsetLeft
       const padding = 8
 
-      sectionRef.current.scrollLeft = offsetLeft - containerWidth + columnWidth + padding
+      sectionRef.current.scrollLeft = offsetLeft - containerWidth + elementWidth + padding
     }
   }, [active, selectedTasks, wasDragging])
 
