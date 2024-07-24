@@ -4,6 +4,7 @@ import KanBanColumn from './KanBanColumn/KanBanColumn'
 import { useDndContext } from '@dnd-kit/core'
 import styled from 'styled-components'
 import CollapsedColumn from './KanBanColumn/CollapsedColumn'
+import { useSelector } from 'react-redux'
 
 const StyledWrapper = styled(Section)`
   height: 100%;
@@ -109,6 +110,45 @@ const ColumnsWrapper = ({
       scrollDirection.current = null
     }
   }, [active, sectionRef.current])
+
+  const wasDragging = useRef(false)
+  useEffect(() => {
+    if (active) {
+      wasDragging.current = true
+    }
+  }, [active])
+
+  const selectedTasks = useSelector((state) => state.dashboard.tasks.selected)
+  // after dragging (active) has ended or selection changes, ensure selected task is in view
+  useEffect(() => {
+    if (active) return
+
+    // find the column that the selected task is in
+    const columnId = Object.entries(tasksColumns).find(([, column]) =>
+      column.tasks.find((t) => t.id === selectedTasks[0]),
+    )?.[0]
+
+    if (!columnId) return
+    const columnEl = columnsRefs.current[columnId]
+    if (!columnEl) return
+
+    // check if outside of the scroll horizontally
+    const rect = columnEl.getBoundingClientRect()
+    const sectionRect = sectionRef.current.getBoundingClientRect()
+    const columnLeft = rect.left
+    const columnWidth = rect.width
+    const containerWidth = sectionRect.right
+
+    console.log({ columnLeft, containerWidth })
+
+    if (columnLeft > containerWidth) {
+      console.log('OUTSIDE')
+      const offsetLeft = columnEl.offsetLeft
+      const padding = 8
+
+      sectionRef.current.scrollLeft = offsetLeft - containerWidth + columnWidth + padding
+    }
+  }, [active, selectedTasks, wasDragging])
 
   return (
     <>

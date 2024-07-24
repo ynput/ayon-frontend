@@ -212,7 +212,7 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
               : `clamp(${detailsMinWidth}px, ${detailsMaxWidth}, ${detailsMaxMaxWidth}px)`,
             minWidth: isDragging ? 0 : detailsMinWidth,
             transition: 'min-width 0',
-            transitionDelay: '0.05s',
+            transitionDelay: '0.1s',
           }}
         >
           <DetailsPanel
