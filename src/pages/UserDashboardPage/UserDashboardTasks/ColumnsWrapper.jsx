@@ -5,6 +5,7 @@ import { useDndContext } from '@dnd-kit/core'
 import styled from 'styled-components'
 import CollapsedColumn from './KanBanColumn/CollapsedColumn'
 import { useSelector } from 'react-redux'
+import { useTaskSpacebarViewer } from '../hooks'
 
 const StyledWrapper = styled(Section)`
   height: 100%;
@@ -16,6 +17,7 @@ const StyledWrapper = styled(Section)`
 `
 
 const ColumnsWrapper = ({
+  allTasks = [],
   fieldsColumns,
   tasksColumns,
   groupByValue,
@@ -150,8 +152,13 @@ const ColumnsWrapper = ({
     }
   }, [active, selectedTasks, wasDragging])
 
+  const shortcuts = useTaskSpacebarViewer({
+    tasks: allTasks,
+  })
+
   return (
     <>
+      {shortcuts}
       <StyledWrapper
         style={{
           cursor: active && 'grabbing',
@@ -178,6 +185,7 @@ const ColumnsWrapper = ({
             <KanBanColumn
               key={id}
               column={column}
+              allTasks={allTasks}
               tasks={tasks}
               groupItems={items}
               isLoading={isLoading}

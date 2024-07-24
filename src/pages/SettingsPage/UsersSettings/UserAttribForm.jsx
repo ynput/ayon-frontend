@@ -23,6 +23,7 @@ const UserAttribForm = ({
   setPassword,
   disabled,
   showAvatarUrl = true,
+  customFormRow,
 }) => {
   // separate custom attrib
   const [builtin, custom] = attributes.reduce(
@@ -43,6 +44,8 @@ const UserAttribForm = ({
     },
     [[], []],
   )
+
+  const CustomFormRow = customFormRow !== undefined ? customFormRow : FormRow;
 
   const buildForms = (attribs) =>
     attribs.map(({ name, data, input }) => {
@@ -112,9 +115,9 @@ const UserAttribForm = ({
         )
       }
       return (
-        <FormRow label={data.title} key={name}>
+        <CustomFormRow label={data.title} key={name}>
           {widget}
-        </FormRow>
+        </CustomFormRow>
       )
     })
 

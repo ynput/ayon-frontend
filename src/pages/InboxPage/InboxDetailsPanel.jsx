@@ -10,7 +10,7 @@ const InboxDetailsPanel = ({ messages = [], selected = [], projectsInfo = {} }) 
     return messages.find((m) => m.activityId === selected[0]) || {}
   }, [messages, selected])
 
-  const { projectName, entityType, entityId } = selectedMessage
+  const { projectName, entityType, entityId, entitySubType } = selectedMessage
 
   const { data: users = [] } = useGetUsersAssigneeQuery({ projectName }, { skip: !projectName })
 
@@ -30,6 +30,7 @@ const InboxDetailsPanel = ({ messages = [], selected = [], projectsInfo = {} }) 
         projectsInfo={projectsInfo}
         projectNames={[projectName]}
         entityType={entityType}
+        entitySubTypes={entitySubType ? [entitySubType] : null}
         scope="inbox"
         style={{ boxShadow: 'none', borderRadius: 4, overflow: 'hidden' }}
       />

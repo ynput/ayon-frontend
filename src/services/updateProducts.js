@@ -1,6 +1,7 @@
-import { ayonApi, buildOperations } from './ayon'
+import api from '@api'
+import { buildOperations } from './ayon'
 
-const updateProducts = ayonApi.injectEndpoints({
+const updateProducts = api.injectEndpoints({
   endpoints: (build) => ({
     updateProducts: build.mutation({
       query: ({ projectName, data, ids }) => ({
@@ -17,7 +18,7 @@ const updateProducts = ayonApi.injectEndpoints({
         if (!patches) return
 
         const patchResult = dispatch(
-          ayonApi.util.updateQueryData(
+          api.util.updateQueryData(
             'getProductList',
             { projectName, ids: focusedFolders, versionOverrides },
             (draft) => {
@@ -37,6 +38,7 @@ const updateProducts = ayonApi.injectEndpoints({
       },
     }),
   }),
+  overrideExisting: true,
 })
 
 export const { useUpdateProductsMutation } = updateProducts

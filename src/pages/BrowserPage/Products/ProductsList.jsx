@@ -72,7 +72,7 @@ const ProductsList = ({
           ...className,
         }
       }}
-      onContextMenu={(e) => ctxMenuShow(e.originalEvent)}
+      onContextMenu={(e) => ctxMenuShow(e.originalEvent, e.node.data.id)}
       onContextMenuSelectionChange={onContextMenuSelectionChange}
       onColumnResizeEnd={setColumnWidths}
       reorderableColumns

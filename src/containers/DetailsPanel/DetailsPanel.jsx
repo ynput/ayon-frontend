@@ -6,13 +6,15 @@ import Feed from '@containers/Feed/Feed'
 import { useGetEntitiesDetailsPanelQuery } from '@queries/entity/getEntityPanel'
 import TaskAttributes from '@pages/UserDashboardPage/UserDashboardTasks/TaskAttributes/TaskAttributes'
 import { transformEntityData } from '@queries/userDashboard/userDashboardHelpers'
-import RepresentationsList from '../RepresentationsList/RepresentationsList'
+import DetailsPanelFiles from './DetailsPanelFiles'
 import { closeSlideOut, updateDetailsPanelTab } from '@state/details'
+import { entityDetailsTypesSupported } from '@/services/userDashboard/userDashboardQueries'
 
 export const entitiesWithoutFeed = ['product', 'representation']
 
 const DetailsPanel = ({
   entityType,
+  entitySubTypes,
   // entities is data we already have from kanban
   entitiesData = [],
   // entityIds are used to get the full details data for the entities
@@ -33,7 +35,7 @@ const DetailsPanel = ({
   isCompact = false,
 }) => {
   const path = isSlideOut ? 'slideOut' : 'pinned'
-  let selectedTab = useSelector((state) => state.details[path].tab)
+  let selectedTab = useSelector((state) => state.details[path][scope].tab)
   const dispatch = useDispatch()
 
   // if the entity type is product or representation, we show the attribs tab only
@@ -43,18 +45,20 @@ const DetailsPanel = ({
   // for example when switching from version to task, task doesn't have reps tab
   // if reps tab was selected, set default to feed
   useEffect(() => {
-    if (selectedTab === 'representations') {
+    if (selectedTab === 'files') {
       // check entity type is still version
       if (entityType !== 'version') {
-        dispatch(updateDetailsPanelTab({ isSlideOut, tab: 'feed' }))
+        dispatch(updateDetailsPanelTab({ isSlideOut, tab: 'feed', scope }))
       }
     }
   }, [entityType, selectedTab])
 
   // now we get the full details data for selected entities
-  const entitiesToQuery = entities.length
+  let entitiesToQuery = entities.length
     ? entities.map((entity) => ({ id: entity.id, projectName: entity.projectName }))
     : entitiesData.map((entity) => ({ id: entity.id, projectName: entity.projectName }))
+
+  entitiesToQuery = entitiesToQuery.filter((entity) => entity.id)
 
   const {
     data: detailsData = [],
@@ -64,7 +68,9 @@ const DetailsPanel = ({
     originalArgs,
   } = useGetEntitiesDetailsPanelQuery(
     { entityType, entities: entitiesToQuery, projectsInfo },
-    { skip: !entitiesData.length && !entities.length },
+    {
+      skip: !entitiesToQuery.length || !entityDetailsTypesSupported.includes(entityType),
+    },
   )
 
   // the entity changes then we close the slide out
@@ -108,7 +114,8 @@ const DetailsPanel = ({
       >
         <DetailsPanelHeader
           entityType={entityType}
-          entities={entityDetailsData}
+          entitySubTypes={entitySubTypes}
+          entities={isFetchingEntitiesDetails ? entitiesToQuery : entityDetailsData}
           users={projectUsers}
           disabledAssignees={disabledProjectUsers}
           statusesOptions={statusesOptions}
@@ -116,8 +123,10 @@ const DetailsPanel = ({
           tagsOptions={tagsOptions}
           onClose={onClose}
           isSlideOut={isSlideOut}
+          isMultipleProjects={projectNames.length > 1}
           isFetching={isFetchingEntitiesDetails}
           isCompact={isCompact}
+          scope={scope}
         />
         {selectedTab === 'feed' && !isError && (
           <Feed
@@ -132,8 +141,12 @@ const DetailsPanel = ({
             scope={scope}
           />
         )}
-        {selectedTab === 'representations' && (
-          <RepresentationsList entities={entityDetailsData} scope={scope} />
+        {selectedTab === 'files' && (
+          <DetailsPanelFiles
+            entities={entityDetailsData}
+            scope={scope}
+            isLoadingVersion={isFetchingEntitiesDetails}
+          />
         )}
         {selectedTab === 'attribs' && (
           <TaskAttributes

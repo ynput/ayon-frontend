@@ -16,7 +16,7 @@ const addTemplateToItems = (items, ref) => {
   })
 }
 
-const useCreateContext = (menuList) => {
+const useCreateContext = (menuList = []) => {
   const { openContext, ref, isContextOpen, closeContext } = useContextMenu()
 
   const getModel = useCallback(

@@ -1,6 +1,6 @@
-import { ayonApi } from '../ayon'
+import api from '@api'
 
-const updateEditor = ayonApi.injectEndpoints({
+const updateEditor = api.injectEndpoints({
   endpoints: (build) => ({
     updateEditor: build.mutation({
       query: ({ projectName, updates = [] }) => ({
@@ -18,6 +18,7 @@ const updateEditor = ayonApi.injectEndpoints({
         },
       }),
     }),
+    overrideExisting: true,
   }),
 })
 

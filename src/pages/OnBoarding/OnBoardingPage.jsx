@@ -58,7 +58,8 @@ const OnBoardingPage = ({ noAdminUser, onFinish, isOnboarding }) => {
           <Step.ConnectionDetails step={4} />
           <Step.ReleaseSelect step={5} />
           <Step.AddonSelectStep step={6} />
-          <Step.ProgressInstall step={7} />
+          <Step.PlatformSelectStep step={7} />
+          <Step.ProgressInstall step={8} />
         </StepWrapper>
         {isFinishing && (
           <ServerRestartingPage

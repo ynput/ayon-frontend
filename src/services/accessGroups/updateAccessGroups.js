@@ -1,6 +1,6 @@
-import { ayonApi } from '../ayon'
+import api from '@api'
 
-const setAccessGroups = ayonApi.injectEndpoints({
+const setAccessGroups = api.injectEndpoints({
   endpoints: (build) => ({
     createAccessGroup: build.mutation({
       query: ({ name }) => ({
@@ -26,6 +26,7 @@ const setAccessGroups = ayonApi.injectEndpoints({
       invalidatesTags: [{ type: 'accessGroup', id: 'LIST' }],
     }),
   }),
+  overrideExisting: true,
 })
 
 export const {

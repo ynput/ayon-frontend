@@ -160,7 +160,7 @@ const NewProjectDialog = ({ onHide }) => {
       header="Create a new project"
       footer={footer}
       isOpen={true}
-      onClose={onHide}
+      onClose={() => onHide()}
       size="full"
       style={{ height: '80%', maxHeight: 1000, zIndex: 999, maxWidth: 2000 }}
       onKeyDown={handleKeyDown}
@@ -197,7 +197,7 @@ const NewProjectDialog = ({ onHide }) => {
             tooltip="Project anatomy preset"
           />
         </Toolbar>
-        {isSchemaLoading || isOriginalAnatomyLoading ? (
+        {isSchemaLoading || isOriginalAnatomyLoading || !formData ? (
           'Loading editor...'
         ) : (
           <SettingsEditor schema={schema} formData={formData} onChange={setFormData} />

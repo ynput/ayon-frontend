@@ -9,13 +9,13 @@ import { clearHighlights, highlightActivity } from '@state/details'
 import { InView } from 'react-intersection-observer'
 import { toast } from 'react-toastify'
 import { compareAsc } from 'date-fns'
-import Typography from '@/theme/typography.module.css'
 // Queries
 import { useGetInboxMessagesQuery, useLazyGetInboxMessagesQuery } from '@queries/inbox/getInbox'
 import { useGetProjectsInfoQuery } from '@queries/userDashboard/getUserDashboard'
 // Components
-import { Button, Icon, Spacer } from '@ynput/ayon-react-components'
+import { Button, Spacer } from '@ynput/ayon-react-components'
 import EnableNotifications from '@components/EnableNotifications'
+import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
 // Hooks
 import useCreateContext from '@hooks/useCreateContext'
 import useGroupMessages from '../hooks/useGroupMessages'
@@ -413,18 +413,12 @@ const Inbox = ({ filter }) => {
           selected={selected}
           projectsInfo={projectsInfo}
         />
-        {!messagesData.length && !isLoadingAny && !errorInbox && (
-          <Styled.NoMessages>
-            <Icon icon="done_all" />
-            <h3 className={Typography.titleLarge}>All caught up! No messages to show.</h3>
-          </Styled.NoMessages>
-        )}
-        {errorInbox && !isLoadingAny && (
-          <Styled.NoMessages className={'isError'}>
-            <Icon icon="error" />
-            <h3 className={Typography.titleLarge}>Something went wrong getting the inbox.</h3>
-            <span className="error-message">{errorInbox}</span>
-          </Styled.NoMessages>
+        {!isLoadingAny && (errorInbox || !messagesData.length) && (
+          <EmptyPlaceholder
+            icon="done_all"
+            message="All caught up! No messages to show."
+            error={errorInbox}
+          />
         )}
       </Styled.InboxSection>
     </>

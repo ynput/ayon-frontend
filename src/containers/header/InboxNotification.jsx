@@ -4,7 +4,7 @@ import { classNames } from 'primereact/utils'
 import { useGetInboxHasUnreadQuery } from '@queries/inbox/getInbox'
 
 const InboxNotificationIcon = () => {
-  const { data: hasUnread } = useGetInboxHasUnreadQuery()
+  const { data: hasUnread } = useGetInboxHasUnreadQuery({})
 
   return (
     <Link to="/inbox/important">

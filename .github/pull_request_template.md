@@ -1,19 +1,17 @@
-## PR Checklist
+<!-- PR TODO: -->
+<!-- 1: Set assignee to you -->
+<!-- 2: Set reviewer to: Luke Inderwick or Martin Wacker -->
+<!-- 3: Set label -->
+<!-- 4: Automations will set any required projects -->
 
-<!-- Please fill in the appropriate checklist below (delete whatever is not relevant) -->
+## Description of changes 
 
--   [ ] This comment contains a description of changes
--   [ ] Referenced issue is linked
 
-## Description of changes
 
-<!-- Please state what you've changed and how it might affect the user. -->
-
-### Technical details
-
+## Technical details
 <!-- Please state any technical details such as limitations -->
-<!-- reasons for additional dependencies, benchmarks etc. here. -->
 
-### Additional context
 
+## Additional context
 <!-- Add any other context or screenshots here. -->
+

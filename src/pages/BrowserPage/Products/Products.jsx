@@ -26,7 +26,7 @@ import usePatchProductsListWithVersions from '@hooks/usePatchProductsListWithVer
 import useSearchFilter, { filterByFieldsAndValues } from '@hooks/useSearchFilter'
 import useColumnResize from '@hooks/useColumnResize'
 import { useUpdateEntitiesMutation } from '@queries/entity/updateEntity'
-import { ayonApi } from '@queries/ayon'
+import api from '@api'
 import useCreateContext from '@hooks/useCreateContext'
 import ViewModeToggle from './ViewModeToggle'
 import ProductsList from './ProductsList'
@@ -35,6 +35,7 @@ import NoProducts from './NoProducts'
 import { toast } from 'react-toastify'
 import { productTypes } from '@state/project'
 import * as Styled from './Products.styled'
+import { openViewer } from '@state/viewer'
 
 const Products = () => {
   const dispatch = useDispatch()
@@ -187,10 +188,10 @@ const Products = () => {
 
       // invalidate 'version' query (specific version query)
       // we do this so that when we select this version again, it doesn't use stale version query
-      dispatch(ayonApi.util.invalidateTags(ids.map((id) => ({ type: 'version', id }))))
+      dispatch(api.util.invalidateTags(ids.map((id) => ({ type: 'version', id }))))
 
       // invalidate 'detail' query (details panel)
-      // dispatch(ayonApi.util.invalidateTags(ids.map((id) => ({ type: 'detail', id }))))
+      // dispatch(api.util.invalidateTags(ids.map((id) => ({ type: 'detail', id }))))
     } catch (error) {
       console.error(error)
 
@@ -199,12 +200,11 @@ const Products = () => {
     }
   }
 
-  const handleStatusOpen = (id) => {
+  const handleStatusOpen = (productId, versionId) => {
     // handles the edge case where the use foccusess multiple products but then changes a different status
-    if (!focusedProducts.includes(id)) {
+    if (!focusedProducts.includes(productId)) {
       // not in focused selection
-      // reset selection to status id
-      dispatch(setFocusedProducts([id]))
+      dispatch(productSelected({ products: [productId], versions: [versionId] }))
     }
   }
 
@@ -284,7 +284,7 @@ const Products = () => {
               size={resolveWidth(versionStatusWidth)}
               onChange={(v) => handleStatusChange(v, node.data.id)}
               multipleSelected={focusedProducts.length}
-              onOpen={() => handleStatusOpen(node.data.id)}
+              onOpen={() => handleStatusOpen(node.data.id, node.data.versionId)}
               style={{ maxWidth: '100%' }}
             />
           )
@@ -532,7 +532,36 @@ const Products = () => {
     dispatch(setFocusedVersions([versionId]))
   }
 
-  const ctxMenuItems = [
+  // viewer open
+  const viewerIsOpen = useSelector((state) => state.viewer.isOpen)
+
+  const handleOpenViewer = (productId, quickView) => {
+    // find the version id of the product
+    const product = listData.find((s) => s.id === productId) || {}
+    if (!product) return toast.error('No product found')
+    const { versionId, folderId } = product
+
+    // check review isn't already open
+    if (!viewerIsOpen) {
+      dispatch(
+        openViewer({
+          folderId,
+          selectedProductId: productId,
+          versionIds: [versionId],
+          projectName,
+          quickView,
+        }),
+      )
+    }
+  }
+
+  const ctxMenuItems = (id) => [
+    {
+      label: 'Open in viewer',
+      command: () => handleOpenViewer(id),
+      icon: 'play_circle',
+      shortcut: 'Spacebar',
+    },
     {
       label: 'Product detail',
       command: () => setShowDetail('product'),
@@ -545,7 +574,21 @@ const Products = () => {
     },
   ]
 
-  const [ctxMenuShow] = useCreateContext(ctxMenuItems)
+  const [ctxMenuShow] = useCreateContext([])
+
+  const handleContextMenu = (e, id) => {
+    ctxMenuShow(e, ctxMenuItems(id))
+  }
+
+  const handleKeyDown = (e) => {
+    if (e.key === ' ') {
+      e.preventDefault()
+      const firstSelected = Object.keys(selectedRows)[0]
+      if (firstSelected) {
+        handleOpenViewer(firstSelected, true)
+      }
+    }
+  }
 
   //
   // Render
@@ -589,7 +632,11 @@ const Products = () => {
           disabled={focusedFolders.length > 1 ? ['grid'] : []}
         />
       </Toolbar>
-      <TablePanel style={{ overflow: 'hidden' }} onContextMenu={handleTablePanelContext}>
+      <TablePanel
+        style={{ overflow: 'hidden' }}
+        onContextMenu={handleTablePanelContext}
+        onKeyDown={handleKeyDown}
+      >
         <EntityDetail
           projectName={projectName}
           entityType={showDetail || 'product'}
@@ -603,7 +650,7 @@ const Products = () => {
             data={tableData}
             onItemClick={onRowClick}
             onSelectionChange={onSelectionChange}
-            onContext={ctxMenuShow}
+            onContext={handleContextMenu}
             onContextMenuSelectionChange={onContextMenuSelectionChange}
             selection={selectedRows}
             productTypes={productTypes}
@@ -620,7 +667,7 @@ const Products = () => {
             selectedRows={selectedRows}
             onSelectionChange={onSelectionChange}
             onRowClick={onRowClick}
-            ctxMenuShow={ctxMenuShow}
+            ctxMenuShow={handleContextMenu}
             onContextMenuSelectionChange={onContextMenuSelectionChange}
             setColumnWidths={setColumnWidths}
             columns={columns}

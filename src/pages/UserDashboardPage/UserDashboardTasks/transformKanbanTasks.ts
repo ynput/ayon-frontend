@@ -3,7 +3,7 @@
 // add thumbnailUrl
 
 import { KanbanNode } from '@/api/graphql'
-import { GetKanbanResponse } from '@/services/userDashboard/getUserDashboardTest'
+import { GetKanbanResponse } from '@queries/userDashboard/getUserDashboard'
 import { $Any } from '@/types'
 
 const getDescriptionPath = ({
@@ -21,27 +21,6 @@ const getDescriptionPath = ({
   const pathPrefix = path?.length > depth ? '/.../' : '/'
   const shortPath = `${projectCode}${pathPrefix}${pathLastItems?.join('/')}/${name}`
   return shortPath
-}
-
-type ThumbnailUrlParams = Pick<
-  KanbanNode,
-  'id' | 'updatedAt' | 'lastVersionWithThumbnailId' | 'projectName'
->
-
-// get the thumbnail url for a task
-const getTaskThumbnailUrl = (
-  { id, updatedAt, lastVersionWithThumbnailId, projectName }: ThumbnailUrlParams,
-  taskHasThumbnail: boolean,
-) => {
-  //    are we using task thumbnail or last version with thumbnail
-  const entityType = taskHasThumbnail ? 'tasks' : 'versions'
-  const entityId = taskHasThumbnail ? id : lastVersionWithThumbnailId
-
-  if (!entityId) return null
-
-  const baseUrl = `/api/projects/${projectName}/${entityType}/${entityId}/thumbnail`
-  // add updatedAt as a query parameter to force refresh the thumbnail
-  return `${baseUrl}?updatedAt=${updatedAt}`
 }
 
 type TaskIconsParams = Pick<KanbanNode, 'status' | 'taskType'>
@@ -105,16 +84,6 @@ const transformKanbanTasks = (
       projectCode: task.projectCode,
     })
 
-    const thumbnailUrl = getTaskThumbnailUrl(
-      {
-        id: task.id,
-        updatedAt: task.updatedAt,
-        lastVersionWithThumbnailId: task.lastVersionWithThumbnailId,
-        projectName: task.projectName,
-      },
-      !!task.thumbnailId,
-    )
-
     const icons = getTaskIcons(
       {
         status: task.status,
@@ -127,7 +96,7 @@ const transformKanbanTasks = (
       ...task,
       projectCode: code,
       shortPath,
-      thumbnailUrl,
+      thumbnailUrl: `/api/projects/${task.projectName}/tasks/${task.id}/thumbnail?updatedAt=${task.updatedAt}`,
       ...icons,
     }
   })

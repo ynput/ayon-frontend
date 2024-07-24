@@ -45,7 +45,7 @@ const UserDashboardKanBan = ({
   const [view, setView] = useQueryParam('view', withDefault(StringParam, 'kanban'))
 
   const selectedTasks = useSelector((state) => state.dashboard.tasks.selected)
-  const setSelectedTasks = (tasks) => dispatch(onTaskSelected(tasks))
+  const setSelectedTasks = (ids, types) => dispatch(onTaskSelected({ ids, types }))
 
   const selectedProjects = useSelector((state) => state.dashboard.selectedProjects)
 
@@ -203,7 +203,9 @@ const UserDashboardKanBan = ({
     setActiveDraggingId(event.active.id)
     // select card
     if (!selectedTasks.includes(event.active.id)) {
-      setSelectedTasks([event.active.id])
+      // get the task
+      const task = tasks.find((t) => t.id === event.active.id)
+      setSelectedTasks([event.active.id], [task.taskType])
     }
   }
 
@@ -271,6 +273,7 @@ const UserDashboardKanBan = ({
             autoScroll={false}
           >
             <ColumnsWrapper
+              allTasks={tasks}
               tasksColumns={tasksColumns}
               fieldsColumns={groupedOpenFieldColumns}
               groupByValue={groupByValue}

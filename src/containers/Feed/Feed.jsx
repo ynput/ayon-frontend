@@ -35,8 +35,8 @@ const Feed = ({
   const dispatch = useDispatch()
   const userName = useSelector((state) => state.user.name)
   const path = isSlideOut ? 'slideOut' : 'pinned'
-  const activityTypes = useSelector((state) => state.details[path].activityTypes)
-  const filter = useSelector((state) => state.details[path].filter)
+  const activityTypes = useSelector((state) => state.details[path][scope].activityTypes)
+  const filter = useSelector((state) => state.details[path][scope].filter)
   const highlighted = useSelector((state) => state.details[path].highlighted)
 
   // STATES
@@ -76,6 +76,8 @@ const Feed = ({
   const handleLoadMore = async (info) => {
     const endCursorValue = info?.endCursor || endCursor
     const hasPreviousPageValue = info ? info.hasPreviousPage : hasPreviousPage
+
+    console.log(info)
 
     // get cursor of last activity and if there is a next page
     if (!hasPreviousPageValue) return console.log('No more activities to load')
@@ -253,6 +255,7 @@ const Feed = ({
                   }}
                   isHighlighted={highlighted.includes(activity.activityId)}
                   dispatch={dispatch}
+                  scope={scope}
                 />
               ))}
           {hasPreviousPage && (
@@ -261,7 +264,7 @@ const Feed = ({
               onChange={(inView) => inView && handleLoadMore()}
               rootMargin={'400px 0px 0px 0px'}
             >
-              <Styled.LoadMore style={{ height: 0 }} onClick={handleLoadMore}>
+              <Styled.LoadMore style={{ height: 0 }} onClick={() => handleLoadMore()}>
                 {isFetchingMore ? 'Loading more...' : 'Click to load more'}
               </Styled.LoadMore>
             </InView>

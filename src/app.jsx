@@ -45,7 +45,7 @@ import { NotificationsProvider } from '@context/notificationsContext'
 import Header from '@containers/header'
 import ProtectedRoute from '@containers/ProtectedRoute'
 import FileUploadPreview from '@containers/FileUploadPreview/FileUploadPreview'
-import PreviewDialog from '@containers/Preview/PreviewDialog'
+import { ViewerDialog } from '@containers/Viewer'
 
 // state
 import { login } from '@state/user'
@@ -55,6 +55,7 @@ import { useLazyGetInfoQuery } from '@queries/auth/getAuth'
 
 // hooks
 import useTooltip from '@hooks/Tooltip/useTooltip'
+import WatchActivities from './containers/WatchActivities'
 
 const App = () => {
   const user = useSelector((state) => state.user)
@@ -118,22 +119,14 @@ const App = () => {
   const [handleMouse, tooltipComponent] = useTooltip()
 
   useEffect(() => {
-    const root = document.getElementById('root')
-    const portal = document.body.lastElementChild
+    const body = document.body
 
-    // attach mouseOver event listener to root element
-    root.addEventListener('mouseover', handleMouse)
-
-    if (portal) {
-      portal.addEventListener('mouseover', handleMouse)
-    }
+    // attach mouseOver event listener to body element
+    body.addEventListener('mouseover', handleMouse)
 
     // cleanup
     return () => {
-      root.removeEventListener('mouseover', handleMouse)
-      if (portal) {
-        portal.removeEventListener('mouseover', handleMouse)
-      }
+      body.removeEventListener('mouseover', handleMouse)
     }
   }, [])
 
@@ -144,6 +137,7 @@ const App = () => {
     () => (
       <ErrorBoundary FallbackComponent={ErrorFallback}>
         <Favicon />
+        <WatchActivities />
         <Suspense fallback={<LoadingPage />}>
           <RestartProvider>
             <ContextMenuProvider>
@@ -162,7 +156,7 @@ const App = () => {
                         >
                           <Header />
                           <ShareDialog />
-                          <PreviewDialog />
+                          <ViewerDialog />
                           <ConfirmDialog />
                           <FileUploadPreview />
                           <Routes>

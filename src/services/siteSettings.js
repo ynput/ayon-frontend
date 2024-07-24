@@ -1,6 +1,6 @@
-import { ayonApi } from './ayon'
+import api from '@api'
 
-const siteSettings = ayonApi.injectEndpoints({
+const siteSettings = api.injectEndpoints({
   endpoints: (build) => ({
     getSiteSettingsSchema: build.query({
       query: ({ addonName, addonVersion }) => ({
@@ -35,7 +35,7 @@ const siteSettings = ayonApi.injectEndpoints({
         { dispatch, queryFulfilled },
       ) {
         const putResult = dispatch(
-          ayonApi.util.updateQueryData(
+          api.util.updateQueryData(
             'getSiteSettings',
             { addonName, addonVersion, siteId, data },
             (draft) => {
@@ -51,6 +51,7 @@ const siteSettings = ayonApi.injectEndpoints({
       }, // onQueryStarted
     }), // setSiteSettings
   }), // endpoints
+  overrideExisting: true,
 })
 export const {
   useGetSiteSettingsSchemaQuery,

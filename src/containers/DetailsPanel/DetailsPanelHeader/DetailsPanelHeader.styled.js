@@ -13,6 +13,7 @@ export const Container = styled.div`
 `
 
 export const Grid = styled.div`
+  position: relative;
   padding: 8px;
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
   flex: none;
@@ -58,10 +59,6 @@ export const Header = styled.header`
   align-items: flex-start;
   gap: var(--base-gap-large);
   z-index: 50;
-
-  .thumbnail {
-    width: 48px;
-  }
 
   &.isCompact {
     /* only take up one column */

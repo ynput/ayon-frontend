@@ -1,4 +1,4 @@
-import { ayonApi } from './ayon'
+import api from '@api'
 
 const WORKFILES_QUERY = `
 query WorkfilesByTask($projectName: String!, $taskIds: [String!]!) {
@@ -21,7 +21,7 @@ query WorkfilesByTask($projectName: String!, $taskIds: [String!]!) {
 // get workfile by id api
 // `/api/projects/${projectName}/workfiles/${workfileId}`
 
-const getWorkfiles = ayonApi.injectEndpoints({
+const getWorkfiles = api.injectEndpoints({
   endpoints: (build) => ({
     getWorkfileList: build.query({
       query: ({ projectName, taskIds }) => ({
@@ -50,6 +50,7 @@ const getWorkfiles = ayonApi.injectEndpoints({
       providesTags: (result, error, { id }) => [{ type: 'workfile', id }],
     }),
   }),
+  overrideExisting: true,
 })
 
 export const { useGetWorkfileListQuery, useGetWorkfileByIdQuery } = getWorkfiles

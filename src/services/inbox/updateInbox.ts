@@ -1,5 +1,5 @@
 import { toast } from 'react-toastify'
-import API from '@api'
+import api from '@api'
 import { $Any } from '@types'
 import { ManageInboxItemApiArg } from '@api/rest'
 import { current } from '@reduxjs/toolkit'
@@ -24,7 +24,7 @@ const patchUnreadCount = (dispatch: $Any, count: number, important: boolean) => 
   )
 }
 
-const enhancedRest = API.rest.enhanceEndpoints({
+const enhancedRest = api.enhanceEndpoints({
   endpoints: {
     manageInboxItem: {
       async onQueryStarted(
@@ -149,8 +149,8 @@ const enhancedRest = API.rest.enhanceEndpoints({
 
           // invalidate tags AFTER the query is fulfilled and for ALL apis
           if (tagsToInvalidate.length) {
-            dispatch(API.graphql.util.invalidateTags(tagsToInvalidate))
-            dispatch(API.rest.util.invalidateTags(tagsToInvalidate))
+            dispatch(api.util.invalidateTags(tagsToInvalidate))
+            dispatch(api.util.invalidateTags(tagsToInvalidate))
           }
         } catch (error: $Any) {
           const message = `Error: ${error?.error?.data?.detail}`

@@ -21,13 +21,15 @@ const TASK_FRAGMENT = () => `
       label
       path
     }
-    versions {
+    versions(last: 1) {
       edges {
         node {
           id
           thumbnailId
           name
           updatedAt
+          createdAt
+          productId
         }
       }
   }
@@ -55,7 +57,7 @@ ${TASK_FRAGMENT()}
 `
 
 export const TASK_DETAILS = (attribs = []) => `
-query KanBanTask($projectName: String!, $entityId: String!) {
+query GetTaskDetails($projectName: String!, $entityId: String!) {
   project(name: $projectName) {
     projectName
     code
@@ -173,6 +175,7 @@ export const REP_QUERY = (attribs) => `
     }
 `
 
+export const entityDetailsTypesSupported = ['task', 'version', 'folder', 'representation']
 // this is used for getting the correct query for the details panel
 export const buildDetailsQuery = (entityType) => {
   // first get all attribs for the entity

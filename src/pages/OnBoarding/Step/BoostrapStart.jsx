@@ -20,8 +20,8 @@ export const BootstrapStart = ({
         <Header>Configure your server</Header>
         <Body>{message1}</Body>
         <Body>
-          If you are in offline environment or you would rather download and install all the addons,
-          desktop distribution and dependencies manually, you can skip this step.
+          If you are in an offline environment or you would rather download and install all the
+          addons, desktop distribution and dependencies manually, you can skip this step.
         </Body>
         <Styled.Connect>
           <Body>Fast and Automated setup with</Body>

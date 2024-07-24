@@ -76,6 +76,10 @@ export const transformEntityData = ({ entity = {}, entityType, projectName, proj
       const tasks = projectInfo.task_types || []
       const entitySubType = entity.taskType
       const icon = tasks.find((task) => task.name === entitySubType)?.icon
+      const latestVersion = entity.versions?.edges?.map((edge) => edge.node)?.[0]
+      const versionId = latestVersion?.id
+      const productId = latestVersion?.productId
+
       return {
         ...baseDetailsData,
         name: entity.name,
@@ -86,6 +90,8 @@ export const transformEntityData = ({ entity = {}, entityType, projectName, proj
         folderId: entity.folderId,
         icon: icon || getEntityTypeIcon('task'),
         entitySubType: entitySubType,
+        versionId: versionId,
+        productId: productId,
       }
     }
     case 'version': {

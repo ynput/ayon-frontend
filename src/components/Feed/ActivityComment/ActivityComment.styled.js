@@ -1,3 +1,4 @@
+import { Button } from '@ynput/ayon-react-components'
 import styled, { css } from 'styled-components'
 
 export const CommentWrapper = styled.div`
@@ -38,11 +39,6 @@ export const Comment = styled.li`
         .tools {
           opacity: 1;
         }
-
-        .date {
-          opacity: 0;
-          visibility: hidden;
-        }
       }
     }
 
@@ -61,15 +57,16 @@ export const Body = styled.div`
   background-color: var(--md-sys-color-surface-container);
   border-radius: var(--border-radius-m);
   padding: var(--padding-m);
-  padding-bottom: 12px;
+  padding: 12px 10px;
   position: relative;
 
   /* remove first and last margins */
-  & > *:first-child {
+  /* + * because tools is actual first */
+  & > *:first-child + * {
     margin-top: 0;
   }
 
-  & > *:last-child {
+  & > *:not(.tools) {
     margin-bottom: 0;
   }
 
@@ -107,10 +104,12 @@ export const Body = styled.div`
       align-items: center;
     }
 
+    & > * {
+      padding-left: 1.5rem;
+    }
+
     p {
       margin: 0;
-      display: flex;
-      align-items: flex-start;
 
       .reference {
         top: 0px;
@@ -119,9 +118,38 @@ export const Body = styled.div`
     }
   }
 
+  blockquote {
+    margin: 0;
+    padding-left: 16px;
+    position: relative;
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background-color: var(--md-sys-color-outline-variant);
+      border-radius: 2px;
+    }
+  }
+
   &.isEditing {
     padding: 0;
     border-radius: var(--border-radius-l);
+  }
+`
+
+export const QuoteLine = styled.p`
+  margin: 0;
+
+  &:first-child {
+    margin-top: 14px;
+  }
+
+  &:last-child {
+    margin-bottom: 14px;
   }
 `
 
@@ -188,4 +216,23 @@ export const BlockCode = styled.pre`
   line-break: anywhere;
   word-break: break-word;
   overflow: hidden;
+`
+
+export const Tools = styled.div`
+  display: flex;
+  position: absolute;
+  right: 4px;
+  top: 4px;
+  background-color: var(--md-sys-color-surface-container-highest);
+  border-radius: var(--border-radius-m);
+  z-index: 50;
+`
+
+export const ToolButton = styled(Button)`
+  padding: 4px;
+
+  [icon='edit_square'] {
+    position: relative;
+    top: -1px;
+  }
 `

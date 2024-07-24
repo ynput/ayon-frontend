@@ -15,6 +15,7 @@ const dashboardSlice = createSlice({
     prefetchedIds: [],
     tasks: {
       selected: getInitialStateLocalStorage('dashboard-tasks-selected', []),
+      types: getInitialStateLocalStorage('dashboard-tasks-types', []),
       sortBy: getInitialStateLocalStorage('dashboard-tasks-sortBy', []),
       groupBy: getInitialStateLocalStorage('dashboard-tasks-groupBy', []),
       filter: getInitialStateLocalStorage('dashboard-tasks-filter', ''),
@@ -34,7 +35,8 @@ const dashboardSlice = createSlice({
       state.selectedProjects = [payload]
     },
     onTaskSelected: (state, { payload = [] }) => {
-      state.tasks.selected = payload
+      state.tasks.selected = payload.ids
+      state.tasks.types = payload.types
     },
     onTasksSortByChanged: (state, { payload = [] }) => {
       state.tasks.sortBy = payload
@@ -64,7 +66,6 @@ const dashboardSlice = createSlice({
       state.tasks.filter = ''
       state.tasks.assignees = []
       state.tasks.assigneesFilter = 'me'
-      state.details.filter = 'activity'
       state.tasks.collapsedColumns = []
     },
     onDraggingStart: (state, { payload }) => {
@@ -98,7 +99,10 @@ export const dashboardLocalItems = {
   'dashboard/onTasksSortByChanged': [{ key: 'dashboard-tasks-sortBy' }],
   'dashboard/onTasksGroupByChanged': [{ key: 'dashboard-tasks-groupBy' }],
   'dashboard/onTasksFilterChanged': [{ key: 'dashboard-tasks-filter' }],
-  'dashboard/onTaskSelected': [{ key: 'dashboard-tasks-selected' }],
+  'dashboard/onTaskSelected': [
+    { key: 'dashboard-tasks-selected', payload: 'ids' },
+    { key: 'dashboard-tasks-types', payload: 'types' },
+  ],
   'dashboard/onAssigneesChanged': [
     { key: 'dashboard-tasks-assignees', payload: 'assignees' },
     { key: 'dashboard-tasks-assigneesFilter', payload: 'filter' },

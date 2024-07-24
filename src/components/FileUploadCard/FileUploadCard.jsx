@@ -39,7 +39,7 @@ const fileIcons = {
   picture_as_pdf: ['pdf', '.pdf'],
   // default
   image: ['image', '.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp'],
-  videocam: ['video', '.mp4', '.mov', '.avi', '.mkv', '.webm'],
+  videocam: ['video', '.mp4', '.mov', '.avi', '.mkv', '.webm', '.mxf'],
   business_center: ['application'],
   audio_file: ['audio'],
   text_snippet: ['text'],
@@ -110,7 +110,7 @@ const FileUploadCard = ({
         {isImage && src && (
           <Styled.ImageWrapper className={classNames({ isDownloadable })}>
             <img
-              src={src + '?preview=true'}
+              src={src + '/thumbnail'}
               onError={() => setImageError(true)}
               style={{
                 display: imageError ? 'none' : 'block',

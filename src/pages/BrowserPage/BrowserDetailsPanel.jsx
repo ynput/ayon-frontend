@@ -28,7 +28,7 @@ const BrowserDetailsPanel = () => {
     },
   )
 
-  let { type: entityType } = focused
+  let { type: entityType, subTypes } = focused
   // if entityType is representation, entityType stays as versions because we use a slide out
   if (entityType === 'representation') entityType = 'version'
   const entityIds = focused[entityType + 's'] || []
@@ -41,6 +41,7 @@ const BrowserDetailsPanel = () => {
   return (
     <>
       <DetailsPanel
+        entitySubTypes={subTypes}
         entityType={entityType}
         entities={entities}
         projectsInfo={projectsInfo}

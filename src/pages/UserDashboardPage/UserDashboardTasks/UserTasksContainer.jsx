@@ -25,12 +25,12 @@ export const getThumbnailUrl = ({ entityId, entityType, thumbnailId, updatedAt, 
   // If entityId and entityType are provided, construct the URL using them
   if (entityId && entityType) {
     const entityUrl = `/api/projects/${projectName}/${entityType}s/${entityId}/thumbnail`
-    return `${entityUrl}${updatedAtQueryParam}&placeholder=none`
+    return `${entityUrl}${updatedAtQueryParam}`
   }
 
   // If entityId and entityType are not provided, fallback on thumbnailId
   const thumbnailUrl = `/api/projects/${projectName}/thumbnails/${thumbnailId}`
-  return `${thumbnailUrl}${updatedAtQueryParam}&placeholder=none`
+  return `${thumbnailUrl}${updatedAtQueryParam}`
 }
 
 const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
@@ -59,6 +59,7 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
   }
 
   const selectedTasks = useSelector((state) => state.dashboard.tasks.selected) || []
+  const taskTypes = useSelector((state) => state.dashboard.tasks.types) || []
 
   // once user is loaded, set assignees to user
   useEffect(() => {
@@ -227,6 +228,7 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
             projectsInfo={projectsInfo}
             projectNames={selectedTasksProjects}
             entityType="task"
+            entitySubTypes={taskTypes}
             scope="dashboard"
           />
           <DetailsPanelSlideOut projectsInfo={projectsInfo} scope="dashboard" />
