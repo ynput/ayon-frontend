@@ -28,15 +28,12 @@ const UserList = ({
   isSelfSelected,
 }) => {
   // Selection
-  const selection = useMemo(
-    () => {
-      return userList.filter((user) => selectedUsers.includes(user.name))
-    },
-    [selectedUsers, selectedProjects, userList],
-  )
+  const selection = useMemo(() => {
+    return userList.filter((user) => selectedUsers.includes(user.name))
+  }, [selectedUsers, selectedProjects, userList])
 
   const onContextMenu = (e) => {
-    let newSelectedUsers = [...selectedUsers];
+    let newSelectedUsers = [...selectedUsers]
     if (!selectedUsers.includes(e.data.name)) {
       newSelectedUsers = [e.data.name]
     }
