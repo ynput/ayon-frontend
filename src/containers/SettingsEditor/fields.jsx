@@ -290,6 +290,7 @@ function ObjectFieldTemplate(props) {
       className={`obj-override-${overrideLevel}`}
       enabledToggler={enabledToggler}
       onContextMenu={onContextMenu}
+      currentId={props.formContext.currentId}
     >
       {fields}
     </SettingsPanel>
@@ -412,6 +413,7 @@ function FieldTemplate(props) {
           if (props.formContext.onSetBreadcrumbs && path) props.formContext.onSetBreadcrumbs(path)
         }}
         onContextMenu={onContextMenu}
+        currentId={props.formContext.currentId}
       >
         {props.children}
       </SettingsPanel>

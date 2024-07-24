@@ -1,5 +1,5 @@
 import Form from '@rjsf/core'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import styled from 'styled-components'
 
 import { TextWidget, SelectWidget, CheckboxWidget, DateTimeWidget } from './widgets'
@@ -113,6 +113,7 @@ const SettingsEditor = ({
   }
 
   const [localBreadcrumbs, setLocalBreadcrumbs] = useState([])
+  const formWrapperRef = useRef()
 
   const originalOverrides = useMemo(() => {
     const result = buildOverrides(originalData, true)
@@ -158,6 +159,28 @@ const SettingsEditor = ({
   }
 
   const totallyRealBreadcrumbs = breadcrumbs === undefined ? localBreadcrumbs : breadcrumbs
+  const currentId = totallyRealBreadcrumbs?.length && `root_${totallyRealBreadcrumbs.join('_')}`
+
+
+  useEffect(() => {
+    if (!currentId) return
+
+    setTimeout(() => {
+      if (!currentId) return
+      const el = document.querySelector(`[data-fieldid='${currentId}']`)
+      if (!el) return
+      const wrapper = document.getElementById('addon-settings-scroll-panel')
+      if (!wrapper) return
+      const rect = el.getBoundingClientRect()
+      const wrapperRect = wrapper.getBoundingClientRect()
+      if (rect.top > wrapperRect.top && rect.bottom < wrapperRect.bottom) 
+        return
+
+      el.scrollIntoView({ behavior: 'instant', block: 'center' })
+    }, 100)
+  }
+  , [currentId])
+
 
   const fullContext = {
     ...context,
@@ -165,12 +188,12 @@ const SettingsEditor = ({
     onSetChangedKeys: onSetChangedKeys || noop,
     onSetBreadcrumbs: setBc,
     breadcrumbs: totallyRealBreadcrumbs,
+    currentId: currentId,
   }
 
-  const currentId = totallyRealBreadcrumbs && `root_${totallyRealBreadcrumbs.join('_')}`
 
   return (
-    <FormWrapper currentSelection={currentId}>
+    <FormWrapper currentSelection={currentId} ref={formWrapperRef}>
       <Form
         schema={schema}
         uiSchema={uiSchema}
