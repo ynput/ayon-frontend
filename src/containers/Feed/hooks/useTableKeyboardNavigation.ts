@@ -2,7 +2,7 @@ import { TreeTable } from 'primereact/treetable'
 import { useMemo, useCallback, RefObject } from 'react'
 
 // Utility function to extract ID from a class list
-const extractIdFromClassList = (classList: DOMTokenList): string | null => {
+export const extractIdFromClassList = (classList: DOMTokenList): string | null => {
   const idClass = Array.from(classList).find((c) => c.startsWith('id-'))
   return idClass ? idClass.split('-')[1] : null
 }
