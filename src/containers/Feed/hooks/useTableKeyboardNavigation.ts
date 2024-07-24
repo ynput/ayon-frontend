@@ -7,12 +7,36 @@ export const extractIdFromClassList = (classList: DOMTokenList): string | null =
   return idClass ? idClass.split('-')[1] : null
 }
 
+export const getMultiSelection = (
+  selection: { [key: string]: boolean },
+  newSelection: string[],
+  orderedIds: string[],
+  nextId: string,
+  direction: number,
+): string[] => {
+  const previousSelection = Object.keys(selection)
+  newSelection = [...new Set([...newSelection, ...previousSelection])]
+  newSelection = orderedIds.filter((id) => newSelection.includes(id))
+
+  const isInPrevious = previousSelection.includes(nextId)
+  if (isInPrevious) {
+    if (direction === 1) {
+      newSelection.shift()
+    } else {
+      newSelection.pop()
+    }
+  }
+
+  return newSelection
+}
+
 // Type definitions for props
 interface UseTableNavigationProps {
   tableRef: RefObject<TreeTable>
   treeData: any[]
   selection: Record<string, boolean>
   onSelectionChange: (selection: { array: string[]; object: { [key: string]: boolean } }) => void
+  config: { multiSelect?: boolean }
 }
 
 // Hook to manage table navigation for Arrow keys
@@ -21,6 +45,7 @@ const useTableKeyboardNavigation = ({
   treeData,
   selection,
   onSelectionChange,
+  config: { multiSelect = true } = {},
 }: UseTableNavigationProps) => {
   // Get all row IDs from the table
   const tableRowsIds = useMemo(() => {
@@ -34,6 +59,7 @@ const useTableKeyboardNavigation = ({
           rows.push(id)
         }
       })
+
     return rows
   }, [tableRef.current, treeData])
 
@@ -53,29 +79,19 @@ const useTableKeyboardNavigation = ({
 
         const nextId = extractIdFromClassList(nextElement.classList)
 
-        if (nextId) {
-          let newSelection = [nextId]
-          if (shiftKey) {
-            const previousSelection = Object.keys(selection)
-            newSelection = [...new Set([...newSelection, ...previousSelection])]
-            newSelection = tableRowsIds.filter((id) => newSelection.includes(id))
-            const isInPrevious = previousSelection.includes(nextId)
-            if (isInPrevious) {
-              if (direction === 1) {
-                newSelection.shift()
-              } else {
-                newSelection.pop()
-              }
-            }
-          }
-          const array = newSelection
-          const object = newSelection.reduce((acc: { [key: string]: boolean }, id: string) => {
-            acc[id] = true
-            return acc
-          }, {})
+        if (!nextId && nextId !== 'undefined') return
 
-          onSelectionChange({ array, object })
+        let newSelection = [nextId]
+        if (shiftKey && multiSelect) {
+          newSelection = getMultiSelection(selection, newSelection, tableRowsIds, nextId, direction)
         }
+        const array = newSelection
+        const object = newSelection.reduce((acc: { [key: string]: boolean }, id: string) => {
+          acc[id] = true
+          return acc
+        }, {})
+
+        onSelectionChange({ array, object })
       }
     },
     [tableRowsIds, selection],

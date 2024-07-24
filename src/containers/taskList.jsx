@@ -13,6 +13,9 @@ import { useGetTasksQuery } from '@queries/getTasks'
 import useCreateContext from '@hooks/useCreateContext'
 import NoEntityFound from '@components/NoEntityFound'
 import { openViewer } from '@/features/viewer'
+import useTableKeyboardNavigation, {
+  extractIdFromClassList,
+} from './Feed/hooks/useTableKeyboardNavigation'
 
 const TaskList = ({ style = {}, autoSelect = false }) => {
   const tasksTypes = useSelector((state) => state.project.tasks)
@@ -121,13 +124,22 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
       dispatch(openViewer({ taskId: id, projectName: projectName, quickView }))
     }
   }
+  const handleTableKeyDown = useTableKeyboardNavigation({
+    tableRef,
+    treeData: tasksData,
+    selection: selectedTasks,
+    onSelectionChange: ({ object }) => onSelectionChange({ value: object }),
+  })
 
-  const handleTableKeyDown = (e) => {
-    if (e.key === ' ') {
-      e.preventDefault()
+  const handleKeyDown = (event) => {
+    if (event.key === ' ') {
+      event.preventDefault()
       const firstSelected = Object.keys(selectedTasks)[0]
       openInViewer(firstSelected, true)
     }
+
+    // if using arrow keys change selection
+    handleTableKeyDown(event)
   }
 
   // CONTEXT MENU
@@ -229,8 +241,12 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
     return <>Error</>
   }
 
-  const onRowClick = (event) => {
-    const node = event.node.data
+  // updates the URI on focus change
+  const onFocus = (event) => {
+    const id = extractIdFromClassList(event.target.classList)
+    if (!id) return
+    const node = tasksData.find((s) => s.key === id)?.data
+    if (!node) return
     let uri = `ayon+entity://${projectName}/${node.folderPath}`
     uri += `?task=${node.name}`
     dispatch(setUri(uri))
@@ -280,11 +296,12 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
             selectionKeys={selectedTasks}
             onSelectionChange={onSelectionChange}
             onContextMenu={onContextMenu}
-            onRowClick={onRowClick}
+            onFocus={onFocus}
             className={isFetching ? 'table-loading' : undefined}
             onClick={handleDeselect}
             ref={tableRef}
-            onKeyDown={handleTableKeyDown}
+            onKeyDown={handleKeyDown}
+            rowClassName={(rowData) => ({ ['id-' + rowData.key]: true })}
           >
             <Column field="name" header="Task" expander="true" body={nameRenderer} />
             {folderIds.length > 1 && <Column field="folderName" header="Folder" />}

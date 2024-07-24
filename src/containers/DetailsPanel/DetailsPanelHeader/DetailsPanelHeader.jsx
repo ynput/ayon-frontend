@@ -263,7 +263,7 @@ const DetailsPanelHeader = ({
           shimmer={isLoading}
           thumbnails={thumbnails}
           projectName={projectName}
-          onClick={thumbnails.length === 1 && handleThumbnailClick}
+          onClick={thumbnails.length === 1 ? handleThumbnailClick : undefined}
           hoverIcon={'play_circle'}
         />
         <Styled.Content className={classNames({ isLoading })}>

@@ -12,7 +12,9 @@ import { useGetHierarchyQuery } from '@queries/getHierarchy'
 import useCreateContext from '@hooks/useCreateContext'
 import HierarchyExpandFolders from './HierarchyExpandFolders'
 import { openViewer } from '@/features/viewer'
-import useTableKeyboardNavigation from './Feed/hooks/useTableKeyboardNavigation'
+import useTableKeyboardNavigation, {
+  extractIdFromClassList,
+} from './Feed/hooks/useTableKeyboardNavigation'
 
 const filterHierarchy = (text, folder, folders) => {
   let result = []
@@ -203,8 +205,11 @@ const Hierarchy = (props) => {
   // Set breadcrumbs on row click (the latest selected folder,
   // will be the one that is displayed in the breadcrumbs)
 
-  const onRowClick = (event) => {
-    const node = event.node.data
+  const onFocus = (event) => {
+    const id = extractIdFromClassList(event.target.classList)
+    if (!id) return
+    const node = hierarchyObjectData[id]
+    if (!node) return
     dispatch(setUri(`ayon+entity://${projectName}/${node.parents.join('/')}/${node.name}`))
   }
 
@@ -374,7 +379,7 @@ const Hierarchy = (props) => {
         emptyMessage={isError && 'No Folders Found'}
         onSelectionChange={onSelectionChange}
         onToggle={onToggle}
-        onRowClick={onRowClick}
+        onFocus={onFocus}
         onContextMenu={onContextMenu}
         className={isFetching ? 'table-loading' : undefined}
         onKeyDown={handleKeyDown}
