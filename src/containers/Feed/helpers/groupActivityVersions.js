@@ -59,6 +59,7 @@ const groupActivityVersions = (activities = []) => {
     // here we check if the currentVersion and the activity are similar enough to be grouped together
     // is same author
     const isSameAuthor = currentVersion.authorName === activity.authorName
+    const isSameEntity = currentVersion.origin.id === activity.origin.id
     // is within 30 minutes of currentVersion
     const minsDiff = differenceInMinutes(
       new Date(currentVersion.createdAt),
@@ -67,7 +68,7 @@ const groupActivityVersions = (activities = []) => {
 
     const isWithinMin = minsDiff <= minDifference
 
-    if (isSameAuthor && isWithinMin) {
+    if (isSameAuthor && isWithinMin && isSameEntity) {
       currentVersion.versions.push(activityToVersionItem(activity))
       continue
     } else {
@@ -79,6 +80,10 @@ const groupActivityVersions = (activities = []) => {
       currentVersion.versions = [activityToVersionItem(activity)]
       continue
     }
+  }
+  // if groupedVersions is empty, push the currentVersion
+  if (!groupedVersions.length) {
+    groupedVersions.push(currentVersion)
   }
 
   return groupedVersions
