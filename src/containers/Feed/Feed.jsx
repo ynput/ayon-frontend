@@ -77,6 +77,8 @@ const Feed = ({
     const endCursorValue = info?.endCursor || endCursor
     const hasPreviousPageValue = info ? info.hasPreviousPage : hasPreviousPage
 
+    console.log(info)
+
     // get cursor of last activity and if there is a next page
     if (!hasPreviousPageValue) return console.log('No more activities to load')
     if (!endCursorValue) return console.log('No cursor found')
@@ -262,7 +264,7 @@ const Feed = ({
               onChange={(inView) => inView && handleLoadMore()}
               rootMargin={'400px 0px 0px 0px'}
             >
-              <Styled.LoadMore style={{ height: 0 }} onClick={handleLoadMore}>
+              <Styled.LoadMore style={{ height: 0 }} onClick={() => handleLoadMore()}>
                 {isFetchingMore ? 'Loading more...' : 'Click to load more'}
               </Styled.LoadMore>
             </InView>
