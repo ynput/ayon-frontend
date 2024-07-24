@@ -10,7 +10,7 @@ import { InView, useInView } from 'react-intersection-observer'
 import 'react-perfect-scrollbar/dist/css/styles.css'
 import KanBanColumnDropzone from './KanBanColumnDropzone'
 import { useURIContext } from '@context/uriContext'
-import { getTaskRoute } from '@/helpers/routes'
+import { getTaskRoute } from '@helpers/routes'
 
 const KanBanColumn = forwardRef(
   (
@@ -35,7 +35,6 @@ const KanBanColumn = forwardRef(
   ) => {
     const dispatch = useDispatch()
     const { navigate } = useURIContext()
-
 
     const tasksCount = tasks.length
 

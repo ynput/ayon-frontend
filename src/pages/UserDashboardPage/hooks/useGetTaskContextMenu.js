@@ -3,7 +3,7 @@ import copyToClipboard from '@helpers/copyToClipboard'
 import { onTaskSelected } from '@state/dashboard'
 import { useSelector } from 'react-redux'
 import { useURIContext } from '@context/uriContext'
-import { getTaskRoute } from '@/helpers/routes'
+import { getTaskRoute } from '@helpers/routes'
 
 export const useGetTaskContextMenu = (tasks, dispatch) => {
   // URI NAVIGATE ON RIGHT CLICK
