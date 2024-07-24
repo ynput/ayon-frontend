@@ -129,14 +129,14 @@ const UsersSettings = () => {
     }
   }, [userList, selectedProjects])
 
-  const onDelete = async () => {
+  const onDelete = async (users) => {
     confirmDelete({
-      label: `${selectedUsers.length} Users`,
+      label: `${users.join(', ')} Users`,
       showToasts: false,
       accept: async () => {
         toastId.current = toast.info('Deleting users...')
         let i = 0
-        for (const user of selectedUsers) {
+        for (const user of users) {
           try {
             await deleteUser({ user }).unwrap()
             toast.update(toastId.current, {
@@ -265,7 +265,7 @@ const UsersSettings = () => {
             </form>
             <Spacer />
             <Button
-              onClick={onDelete}
+              onClick={() => onDelete(selectedUsers)}
               label="Delete Users"
               icon="person_remove"
               disabled={!selectedUsers.length || isSelfSelected || managerDisabled}
