@@ -6,6 +6,8 @@ import * as Styled from './ListGroup.styled'
 import { Button } from '@ynput/ayon-react-components'
 import ListItem from '@components/ListItem/ListItem'
 import { InView } from 'react-intersection-observer'
+import { useURIContext } from '@context/uriContext'
+import { getTaskRoute } from '@helpers/routes'
 
 const ListGroup = ({
   tasks = [],
@@ -26,6 +28,7 @@ const ListGroup = ({
   containerRef,
 }) => {
   const dispatch = useDispatch()
+  const { navigate } = useURIContext()
   const column = groups[id] || {}
 
   // CONTEXT MENU
@@ -73,6 +76,10 @@ const ListGroup = ({
                   selected={selectedTasks.includes(task.id)}
                   selectedLength={selectedTasks.length}
                   onClick={(e) => {
+                    if (e.detail == 2) {
+                      navigate(getTaskRoute(task))
+                      return
+                    }
                     closeContext()
                     onTaskSelected(e, task.id)
                   }}

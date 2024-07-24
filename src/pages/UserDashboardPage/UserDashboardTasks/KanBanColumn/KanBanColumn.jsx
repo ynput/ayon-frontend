@@ -10,6 +10,8 @@ import { InView, useInView } from 'react-intersection-observer'
 import 'react-perfect-scrollbar/dist/css/styles.css'
 import KanBanColumnDropzone from './KanBanColumnDropzone'
 import { classNames } from 'primereact/utils'
+import { useURIContext } from '@context/uriContext'
+import { getTaskRoute } from '@helpers/routes'
 
 const KanBanColumn = forwardRef(
   (
@@ -33,6 +35,7 @@ const KanBanColumn = forwardRef(
     ref,
   ) => {
     const dispatch = useDispatch()
+    const { navigate } = useURIContext()
 
     const tasksCount = tasks.length
 
@@ -113,6 +116,10 @@ const KanBanColumn = forwardRef(
                         <KanBanCardDraggable
                           task={task}
                           onClick={(e) => {
+                            if (e.detail == 2) {
+                              navigate(getTaskRoute(task))
+                              return
+                            }
                             closeContext()
                             handleTaskClick(e, task.id)
                           }}
