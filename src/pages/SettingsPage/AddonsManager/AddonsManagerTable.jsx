@@ -16,6 +16,7 @@ const AddonsManagerTable = ({
   onDelete,
   onDeleteSuccess,
   extraContext,
+  sortFunction,
   ...props
 }) => {
   const deleteLabel = isArchive ? 'Archive' : 'Uninstall'
@@ -111,6 +112,11 @@ const AddonsManagerTable = ({
             field={field}
             header={title}
             sortable
+            sortFunction={
+              sortFunction
+                ? (event) => event.data.sort((a, b) => sortFunction(event.order)(a, b))
+                : null
+            }
             body={(d) => (
               <span
                 data-tooltip={d?.tooltip}

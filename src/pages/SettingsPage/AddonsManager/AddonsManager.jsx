@@ -1,3 +1,4 @@
+import compare from 'semver/functions/compare'
 import { Button, Section } from '@ynput/ayon-react-components'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { useGetAddonListQuery } from '@queries/addons/getAddons'
@@ -185,6 +186,12 @@ const AddonsManager = () => {
             selection={selectedVersions}
             onChange={handleVersionSelect}
             field={'version'}
+            sortFunction={(eventOrder) => (a, b) => {
+              const aVersion = a.version.split(' ')[1]
+              const bVersion = b.version.split(' ')[1]
+              const compareResult = compare(aVersion, bVersion)
+              return eventOrder === 1 ? compareResult : -1 * compareResult
+            }}
             onDelete={handleDeleteVersions}
             onDeleteSuccess={handleDeleteVersionsSuccess}
             extraContext={viewInMarket}
