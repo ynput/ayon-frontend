@@ -166,9 +166,9 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
   }, [selectedTasksProjects, projectUsers])
 
   const isLoadingAll = isLoadingInfo || isLoadingTasks
-  const detailsMinWidth = 533
-  const detailsMaxWidth = '40vw'
-  const detailsMaxMaxWidth = 700
+  let detailsMinWidth = 533
+  let detailsMaxWidth = '40vw'
+  let detailsMaxMaxWidth = 700
 
   if (isError) return <EmptyPlaceholder error={error} />
 
@@ -203,12 +203,16 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
           isLoadingProjectUsers={isLoadingProjectUsers}
         />
       </SplitterPanel>
-      {selectedTasksData.length && !isDragging ? (
+      {selectedTasksData.length ? (
         <SplitterPanel
           size={1}
           style={{
-            maxWidth: `clamp(${detailsMinWidth}px, ${detailsMaxWidth}, ${detailsMaxMaxWidth}px)`,
-            minWidth: detailsMinWidth,
+            maxWidth: isDragging
+              ? 0
+              : `clamp(${detailsMinWidth}px, ${detailsMaxWidth}, ${detailsMaxMaxWidth}px)`,
+            minWidth: isDragging ? 0 : detailsMinWidth,
+            transition: 'min-width 0',
+            transitionDelay: '0.01s',
           }}
         >
           <DetailsPanel
