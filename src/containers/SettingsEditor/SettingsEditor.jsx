@@ -6,6 +6,33 @@ import { TextWidget, SelectWidget, CheckboxWidget, DateTimeWidget } from './widg
 import { FieldTemplate, ObjectFieldTemplate, ArrayFieldTemplate } from './fields'
 import './SettingsEditor.sass'
 
+
+const waitForElm = (selector, timeout = 1000) => {
+    return new Promise((resolve, reject) => {
+        if (document.querySelector(selector)) {
+            return resolve(document.querySelector(selector));
+        }
+
+        const observer = new MutationObserver(mutations => {
+            if (document.querySelector(selector)) {
+                observer.disconnect();
+                resolve(document.querySelector(selector));
+            }
+        });
+
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+
+        setTimeout(() => {
+            observer.disconnect();
+            reject(new Error(`Element with selector "${selector}" did not appear within ${timeout}ms`));
+        }, timeout);
+    });
+}
+
+
 const FormWrapper = styled.div`
   [data-fieldid='${(props) => props.currentSelection}'] {
     // border-left: 1px solid var(--color-changed) !important;
@@ -164,20 +191,17 @@ const SettingsEditor = ({
 
   useEffect(() => {
     if (!currentId) return
+    const wrapper = document.getElementById('settings-scroll-panel')
+    if (!wrapper) return
 
-    setTimeout(() => {
-      if (!currentId) return
-      const el = document.querySelector(`[data-fieldid='${currentId}']`)
-      if (!el) return
-      const wrapper = document.getElementById('addon-settings-scroll-panel')
-      if (!wrapper) return
+    waitForElm(`[data-fieldid='${currentId}']`)
+    .then((el) => {
       const rect = el.getBoundingClientRect()
       const wrapperRect = wrapper.getBoundingClientRect()
       if (rect.top > wrapperRect.top && rect.bottom < wrapperRect.bottom) 
         return
-
       el.scrollIntoView({ behavior: 'instant', block: 'center' })
-    }, 100)
+    })
   }
   , [currentId])
 

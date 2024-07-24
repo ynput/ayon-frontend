@@ -696,7 +696,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
         <Section className={showHelp && 'settings-help-visible'}>
           {settingsListHeader}
           <Section>
-            <ScrollPanel className="transparent nopad" style={{ flexGrow: 1 }} id="addon-settings-scroll-panel">
+            <ScrollPanel className="transparent nopad" style={{ flexGrow: 1 }} id="settings-scroll-panel">
               {selectedAddons
                 .filter((addon) => !addon.isBroken)
                 .reverse()
