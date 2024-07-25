@@ -1,4 +1,4 @@
-import styled, { css, keyframes } from 'styled-components'
+import styled, { keyframes } from 'styled-components'
 import PerfectScrollbar from 'react-perfect-scrollbar'
 import { Button } from '@ynput/ayon-react-components'
 
@@ -11,11 +11,9 @@ export const DropColumnWrapper = styled.div`
   flex-direction: column;
   overflow: hidden;
 
-  ${({ $active }) =>
-    $active &&
-    css`
-      z-index: 100;
-    `}
+  &.drop-active {
+    z-index: 100;
+  }
 `
 
 const FadeInAnimation = keyframes`
@@ -61,8 +59,22 @@ export const DropColumn = styled.div`
     position: absolute;
     inset: 0;
     background-color: ${({ $color }) => $color};
-    opacity: ${({ $active }) => ($active ? 0.5 : 0.08)};
+    opacity: 0.08;
     transition: opacity 0.2s ease;
+  }
+
+  &.source {
+    &:before {
+      opacity: 1;
+    }
+
+    opacity: 0.4;
+  }
+
+  &.drop-active {
+    &::before {
+      opacity: 0.5;
+    }
   }
 `
 
@@ -115,6 +127,10 @@ export const Header = styled.header`
   border-bottom: solid 1px var(--md-sys-color-outline);
   border-color: ${({ $color }) => $color};
   margin-bottom: 8px;
+
+  &.dragging {
+    border: none;
+  }
 
   /* toolbar */
   nav {
@@ -182,13 +198,11 @@ export const Items = styled(PerfectScrollbar)`
 
   padding-bottom: ${({ $isScrolling }) => ($isScrolling ? '30px' : '16px')};
 
-  ${({ $active }) =>
-    $active &&
-    css`
-      .ps__rail-y {
-        visibility: hidden;
-      }
-    `}
+  &.dragging {
+    .ps__rail-y {
+      visibility: hidden;
+    }
+  }
 
   .ps__rail-y {
     z-index: 1000;
