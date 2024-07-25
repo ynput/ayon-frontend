@@ -9,6 +9,7 @@ import { Button, Toolbar } from '@ynput/ayon-react-components'
 import { InView, useInView } from 'react-intersection-observer'
 import 'react-perfect-scrollbar/dist/css/styles.css'
 import KanBanColumnDropzone from './KanBanColumnDropzone'
+import { classNames } from 'primereact/utils'
 import { useURIContext } from '@context/uriContext'
 import { getTaskRoute } from '@helpers/routes'
 
@@ -153,12 +154,10 @@ const KanBanColumn = forwardRef(
     return (
       <Styled.Column ref={ref} id={id}>
         <Styled.DropColumnWrapper
-          className="dropzone"
+          className={classNames('dropzone', { 'drop-active': active })}
           style={{
             height: `calc(100vh - 32px - ${sectionRect?.top}px)`,
-            // display: 'none',
           }}
-          $active={!!active}
         >
           {active &&
             groupItems.map((item) => (
@@ -170,7 +169,7 @@ const KanBanColumn = forwardRef(
               />
             ))}
         </Styled.DropColumnWrapper>
-        <Styled.Header $color={column?.color}>
+        <Styled.Header $color={column?.color} className={classNames({ dragging: !!active })}>
           <h2
             style={{
               opacity: active ? 0 : 1,
@@ -190,10 +189,9 @@ const KanBanColumn = forwardRef(
         </Styled.Header>
 
         <Styled.Items
-          className="items"
+          className={classNames('items', { dragging: !!active })}
           ref={itemsRef}
           style={{ overflow: active && !isColumnActive && !isScrolling && 'hidden' }}
-          $active={!!active}
         >
           {allGroupedTasks}
           {!isLoading && tasksCount !== tasksAdded && !active && (

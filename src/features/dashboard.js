@@ -22,6 +22,7 @@ const dashboardSlice = createSlice({
       assignees: getInitialStateLocalStorage('dashboard-tasks-assignees', []),
       assigneesFilter: getInitialStateLocalStorage('dashboard-tasks-assigneesFilter', 'me'),
       collapsedColumns: getInitialStateLocalStorage('dashboard-tasks-collapsedColumns', []),
+      draggingIds: [],
     },
   },
   reducers: {
@@ -67,6 +68,12 @@ const dashboardSlice = createSlice({
       state.tasks.assigneesFilter = 'me'
       state.tasks.collapsedColumns = []
     },
+    onDraggingStart: (state, { payload }) => {
+      state.tasks.draggingIds = payload
+    },
+    onDraggingEnd: (state) => {
+      state.tasks.draggingIds = []
+    },
   },
 })
 
@@ -81,6 +88,8 @@ export const {
   onCollapsedColumnsChanged,
   onPrefetchIds,
   onClearDashboard,
+  onDraggingStart,
+  onDraggingEnd,
 } = dashboardSlice.actions
 export default dashboardSlice.reducer
 
