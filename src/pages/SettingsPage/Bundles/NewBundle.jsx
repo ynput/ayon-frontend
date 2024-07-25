@@ -28,6 +28,7 @@ const removeEmptyDevAddons = (addons = {}) => {
 const NewBundle = ({ initBundle, onSave, addons, installers, isLoading, isDev, developerMode }) => {
   // when updating a dev bundle, we need to track changes
   const [formData, setFormData] = useState(null)
+  const [skipBundleCheck, setSkipBundleCheck] = useState(false)
   const [selectedAddons, setSelectedAddons] = useState([])
 
   const [createBundle, { isLoading: isCreating }] = useCreateBundleMutation()
@@ -41,7 +42,7 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading, isDev, d
     {
       bundle: formData,
     },
-    { skip: !formData },
+    { skip: !formData || skipBundleCheck },
   )
   const bundleCheckError = bundleCheckData?.issues?.some((issue) => issue.severity === 'error')
 
@@ -108,6 +109,7 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading, isDev, d
           // update from formData
           const newFormData = { ...formData, addons: { ...formData.addons, [addon]: version } }
 
+          setSkipBundleCheck(false)
           setFormData(newFormData)
         }
       }
@@ -182,6 +184,7 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading, isDev, d
   }
 
   const setSelectedVersion = (latest = false) => {
+    setSkipBundleCheck(false);
     setFormData((prev) => {
       // set all selected addons to latest version if in formData
       const newFormData = { ...prev }
@@ -209,11 +212,13 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading, isDev, d
       addonDevelopment[name] = { ...(addonDevelopment[name] || {}), [key]: value }
     }
     newFormData.addonDevelopment = addonDevelopment
+    setSkipBundleCheck(true);
     setFormData(newFormData)
   }
 
   // when dep packages are changed in dev mode
   const handleDepPackagesDevChange = (packages) => {
+    setSkipBundleCheck(false);
     setFormData((prev) => {
       return { ...prev, dependencyPackages: packages }
     })
