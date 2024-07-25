@@ -6,7 +6,7 @@ import {
 
 import UserDashboardKanBan from './UserDashboardKanBan'
 import { useEffect, useMemo } from 'react'
-import { onAssigneesChanged } from '@state/dashboard'
+import { onAssigneesChanged, onTaskSelected } from '@state/dashboard'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import DetailsPanel from '@containers/DetailsPanel/DetailsPanel'
 import { getIntersectionFields, getMergedFields } from '../util'
@@ -164,6 +164,11 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
     )
   }, [selectedTasksProjects, projectUsers])
 
+  const handlePanelClose = () => {
+    dispatch(setUri(null))
+    dispatch(onTaskSelected({ ids: [], types: [] }))
+  }
+
   const isLoadingAll = isLoadingInfo || isLoadingTasks
   const detailsMinWidth = 533
   const detailsMaxWidth = '40vw'
@@ -211,6 +216,7 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
           }}
         >
           <DetailsPanel
+            onClose={handlePanelClose}
             entitiesData={selectedTasksData}
             statusesOptions={statusesOptions}
             disabledStatuses={disabledStatuses}

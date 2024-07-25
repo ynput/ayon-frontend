@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react'
 import * as Styled from './DetailsPanelHeader.styled'
-import copyToClipboard from '@helpers/copyToClipboard'
 import StackedThumbnails from '@pages/EditorPage/StackedThumbnails'
 import { classNames } from 'primereact/utils'
 import { isEqual, union, upperFirst } from 'lodash'
@@ -23,7 +22,6 @@ const DetailsPanelHeader = ({
   statusesOptions = [],
   disabledStatuses,
   tagsOptions = [],
-  onClose,
   isSlideOut,
   isFetching,
   isCompact = false,
@@ -215,12 +213,6 @@ const DetailsPanelHeader = ({
     }
   }
 
-  const fullPath = firstEntity?.path || ''
-  const pathArray = fullPath.split('/')
-  const handleCopyPath = () => {
-    copyToClipboard(fullPath)
-  }
-
   const hasUser =
     ['task', 'version', 'representation'].includes(entityType) &&
     (entityAssignees.length > 0 || entityType === 'task')
@@ -240,23 +232,6 @@ const DetailsPanelHeader = ({
       className={classNames('details-panel-header', { isCompact })}
       onDragEnter={() => setIsDraggingFile(true)}
     >
-      {onClose && (
-        <Styled.CloseButton
-          onClick={onClose}
-          icon="close"
-          variant="text"
-          data-shortcut="Esc"
-          data-tooltip-delay={0}
-        />
-      )}
-      <Styled.Path
-        value={pathArray.join(' / ')}
-        align="left"
-        onClick={handleCopyPath}
-        isCopy
-        icon="content_copy"
-        className={classNames('path', { onClose, isLoading })}
-      />
       <Styled.Header className={classNames('titles', { isCompact })}>
         <StackedThumbnails
           isLoading={isLoading}

@@ -88,6 +88,7 @@ export const transformEntityData = ({ entity = {}, entityType, projectName, proj
         users: entity.assignees,
         path: path,
         folderId: entity.folderId,
+        folder: entity.folder,
         icon: icon || getEntityTypeIcon('task'),
         entitySubType: entitySubType,
         versionId: versionId,

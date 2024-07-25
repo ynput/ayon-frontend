@@ -33,7 +33,7 @@ const dashboardSlice = createSlice({
       if (state.selectedProjects.includes(payload)) return
       state.selectedProjects = [payload]
     },
-    onTaskSelected: (state, { payload = [] }) => {
+    onTaskSelected: (state, { payload = {} }) => {
       state.tasks.selected = payload.ids
       state.tasks.types = payload.types
     },

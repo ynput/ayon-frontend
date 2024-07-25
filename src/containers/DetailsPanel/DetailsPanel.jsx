@@ -9,6 +9,8 @@ import { transformEntityData } from '@queries/userDashboard/userDashboardHelpers
 import DetailsPanelFiles from './DetailsPanelFiles'
 import { closeSlideOut, updateDetailsPanelTab } from '@state/details'
 import { entityDetailsTypesSupported } from '@/services/userDashboard/userDashboardQueries'
+import DetailsPanelToolbar from './DetailsPanelToolbar'
+import getEntityPathData from './helpers/getEntityPathData'
 
 export const entitiesWithoutFeed = ['product', 'representation']
 
@@ -98,6 +100,7 @@ const DetailsPanel = ({
   // get the first project name and info to be used in the feed.
   const firstProject = projectNames[0]
   const firstProjectInfo = projectsInfo[firstProject] || {}
+  const firstEntityData = entityDetailsData[0] || {}
 
   return (
     <>
@@ -112,6 +115,12 @@ const DetailsPanel = ({
         }}
         className="details-panel"
       >
+        <DetailsPanelToolbar
+          projectName={firstProject}
+          segments={getEntityPathData(firstEntityData)}
+          isSlideOut={isSlideOut}
+          onClose={onClose}
+        />
         <DetailsPanelHeader
           entityType={entityType}
           entitySubTypes={entitySubTypes}
@@ -121,7 +130,6 @@ const DetailsPanel = ({
           statusesOptions={statusesOptions}
           disabledStatuses={disabledStatuses}
           tagsOptions={tagsOptions}
-          onClose={onClose}
           isSlideOut={isSlideOut}
           isMultipleProjects={projectNames.length > 1}
           isFetching={isFetchingEntitiesDetails}
