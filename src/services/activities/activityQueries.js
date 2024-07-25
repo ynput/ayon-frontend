@@ -58,7 +58,7 @@ export const CHECKLISTS = `
 query getEntitiesChecklists($projectName: String!, $entityIds: [String!]!) {
   project(name: $projectName) {
     name
-    activities(entityIds: $entityIds, last: 1000, activityTypes: ["checklist"], referenceTypes: ["origin", "mention", "relation"]) {
+    activities(entityIds: $entityIds, last: 1000, activityTypes: ["checklist"], referenceTypes: ["origin", "mention", "relation", "watching"]) {
       edges {
         cursor
         node {

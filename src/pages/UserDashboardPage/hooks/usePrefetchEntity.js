@@ -34,7 +34,7 @@ export const usePrefetchEntity = (dispatch, projectsInfo, throttleTime, scope) =
       cursor: null,
       last: activitiesLast,
       currentUser: userName,
-      referenceTypes: ['origin', 'mention', 'relation'],
+      referenceTypes: ['origin', 'mention', 'relation', 'watching'],
       activityTypes: activityTypes,
       filter,
     })

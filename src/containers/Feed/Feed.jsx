@@ -57,7 +57,7 @@ const Feed = ({
     projectName: projectName,
     last: activitiesLast,
     currentUser: userName,
-    referenceTypes: ['origin', 'mention', 'relation'],
+    referenceTypes: ['origin', 'mention', 'relation', 'watching'],
     activityTypes: activityTypes,
     filter,
     cursor: null,
