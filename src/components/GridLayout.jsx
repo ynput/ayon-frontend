@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types'
 import styled from 'styled-components'
 import React from 'react'
+import { classNames } from 'primereact/utils'
 
 const StyledGridLayout = styled.div`
   width: 100%;
@@ -24,6 +25,7 @@ const GridLayout = React.forwardRef(
               aspectRatio: `${ratio} / 1`,
             }}
             key={index}
+            className={classNames('grid-item', child.props.className)}
           >
             {child}
           </div>

@@ -157,11 +157,7 @@ const ProductsGrid = ({
 
     onSelectionChange(newSelection)
     // updates the breadcrumbs
-    onItemClick({
-      node: {
-        data: product,
-      },
-    })
+    onItemClick(product)
   }
 
   const [collapsedGroups, setCollapsedGroups] = useState([])

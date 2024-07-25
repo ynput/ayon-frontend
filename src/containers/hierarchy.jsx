@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
 import { Section, Toolbar, InputText, TablePanel } from '@ynput/ayon-react-components'
@@ -12,6 +12,9 @@ import { useGetHierarchyQuery } from '@queries/getHierarchy'
 import useCreateContext from '@hooks/useCreateContext'
 import HierarchyExpandFolders from './HierarchyExpandFolders'
 import { openViewer } from '@/features/viewer'
+import useTableKeyboardNavigation, {
+  extractIdFromClassList,
+} from './Feed/hooks/useTableKeyboardNavigation'
 
 const filterHierarchy = (text, folder, folders) => {
   let result = []
@@ -202,8 +205,11 @@ const Hierarchy = (props) => {
   // Set breadcrumbs on row click (the latest selected folder,
   // will be the one that is displayed in the breadcrumbs)
 
-  const onRowClick = (event) => {
-    const node = event.node.data
+  const onFocus = (event) => {
+    const id = extractIdFromClassList(event.target.classList)
+    if (!id) return
+    const node = hierarchyObjectData[id]
+    if (!node) return
     dispatch(setUri(`ayon+entity://${projectName}/${node.parents.join('/')}/${node.name}`))
   }
 
@@ -281,12 +287,28 @@ const Hierarchy = (props) => {
     }
   }
 
-  const handleTableKeyDown = (e) => {
-    if (e.key === ' ') {
-      e.preventDefault()
+  const tableRef = useRef(null)
+
+  const handleTableKeyDown = useTableKeyboardNavigation({
+    tableRef,
+    treeData,
+    selection: selectedFolders,
+    onSelectionChange: ({ object }) => onSelectionChange({ value: object }),
+  })
+
+  // Separate handler for non-arrow key events
+  const handleKeyDown = (event) => {
+    const { key } = event
+
+    if (key === ' ') {
+      event.preventDefault()
       const firstSelected = Object.keys(selectedFolders)[0]
       openInViewer(firstSelected, true)
+      return
     }
+
+    // if using arrow keys change selection
+    handleTableKeyDown(event)
   }
 
   // Context Menu
@@ -346,6 +368,7 @@ const Hierarchy = (props) => {
   const table = useMemo(() => {
     return (
       <TreeTable
+        ref={tableRef}
         value={treeData}
         responsive="true"
         scrollable
@@ -356,10 +379,13 @@ const Hierarchy = (props) => {
         emptyMessage={isError && 'No Folders Found'}
         onSelectionChange={onSelectionChange}
         onToggle={onToggle}
-        onRowClick={onRowClick}
+        onFocus={onFocus}
         onContextMenu={onContextMenu}
         className={isFetching ? 'table-loading' : undefined}
-        onKeyDown={handleTableKeyDown}
+        onKeyDown={handleKeyDown}
+        rowClassName={(rowData) => ({
+          ['id-' + rowData.key]: true,
+        })}
       >
         <Column header="Hierarchy" field="body" expander={true} style={{ width: '100%' }} />
       </TreeTable>

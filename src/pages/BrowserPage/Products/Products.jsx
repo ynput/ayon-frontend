@@ -36,6 +36,7 @@ import { toast } from 'react-toastify'
 import { productTypes } from '@state/project'
 import * as Styled from './Products.styled'
 import { openViewer } from '@state/viewer'
+import { extractIdFromClassList } from '@containers/Feed/hooks/useTableKeyboardNavigation'
 
 const Products = () => {
   const dispatch = useDispatch()
@@ -395,7 +396,7 @@ const Products = () => {
   // and create a list of selected product rows compatible
   // with the TreeTable component
 
-  const selectedRows = useMemo(() => {
+  const selection = useMemo(() => {
     if (focusedVersions?.length === 0) return {}
     const productIds = {}
     for (const sdata of listData) {
@@ -494,18 +495,25 @@ const Products = () => {
     }
   }
 
-  // Set the breadcrumbs when a row is clicked
-  const onRowClick = (event) => {
-    if (event.node.data.isGroup) {
-      return
-    }
+  const updateUri = (node) => {
+    const isGroup = node.isGroup
+    if (isGroup) return
 
     let uri = `ayon+entity://${projectName}/`
-    uri += `${event.node.data.parents.join('/')}/${event.node.data.folder}`
-    uri += `?product=${event.node.data.name}`
-    uri += `&version=${event.node.data.versionName}`
+    uri += `${node.parents.join('/')}/${node.folder}`
+    uri += `?product=${node.name}`
+    uri += `&version=${node.versionName}`
     dispatch(setUri(uri))
-    dispatch(onFocusChanged(event.node.data.id))
+    dispatch(onFocusChanged(node.id))
+  }
+
+  const onRowFocusChange = (event) => {
+    const id = extractIdFromClassList(event.target.classList)
+    if (!id) return
+    const node = listData.find((s) => s.id === id)
+    if (!node) return
+
+    updateUri(node)
   }
 
   const onSelectionChange = (event) => {
@@ -583,7 +591,7 @@ const Products = () => {
   const handleKeyDown = (e) => {
     if (e.key === ' ') {
       e.preventDefault()
-      const firstSelected = Object.keys(selectedRows)[0]
+      const firstSelected = Object.keys(selection)[0]
       if (firstSelected) {
         handleOpenViewer(firstSelected, true)
       }
@@ -648,11 +656,11 @@ const Products = () => {
           <ProductsGrid
             isLoading={isLoading || isFetching}
             data={tableData}
-            onItemClick={onRowClick}
+            onItemClick={updateUri}
             onSelectionChange={onSelectionChange}
             onContext={handleContextMenu}
             onContextMenuSelectionChange={onContextMenuSelectionChange}
-            selection={selectedRows}
+            selection={selection}
             productTypes={productTypes}
             statuses={statusesObject}
             lastSelected={lastFocused}
@@ -663,10 +671,10 @@ const Products = () => {
         )}
         {viewMode === 'list' && (
           <ProductsList
-            data={tableData}
-            selectedRows={selectedRows}
+            treeData={tableData}
+            selection={selection}
             onSelectionChange={onSelectionChange}
-            onRowClick={onRowClick}
+            onFocus={onRowFocusChange}
             ctxMenuShow={handleContextMenu}
             onContextMenuSelectionChange={onContextMenuSelectionChange}
             setColumnWidths={setColumnWidths}

@@ -1,14 +1,15 @@
-import React, { useMemo } from 'react'
+import React, { useMemo, useRef } from 'react'
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 import { useDispatch, useSelector } from 'react-redux'
 import { setExpandedProducts } from '@state/context'
+import useTableKeyboardNavigation from '@containers/Feed/hooks/useTableKeyboardNavigation'
 
 const ProductsList = ({
-  data,
-  selectedRows,
+  treeData,
+  selection,
   onSelectionChange,
-  onRowClick,
+  onFocus,
   ctxMenuShow,
   onContextMenuSelectionChange,
   setColumnWidths,
@@ -42,16 +43,39 @@ const ProductsList = ({
   }, [])
 
   if (isLoading) {
-    data = loadingData
+    treeData = loadingData
   }
 
   const handleGroupExpand = (e) => {
     dispatch(setExpandedProducts(e.value))
   }
 
+  const tableRef = useRef(null)
+
+  const handleTableKeyDown = useTableKeyboardNavigation({
+    tableRef,
+    treeData,
+    selection,
+    onSelectionChange: ({ object }) => onSelectionChange({ value: object }),
+  })
+
+  // Separate handler for non-arrow key events
+  const handleKeyDown = (event) => {
+    const { key } = event
+
+    if (key === ' ') {
+      event.preventDefault()
+      return
+    }
+
+    // if using arrow keys change selection
+    handleTableKeyDown(event)
+  }
+
   return (
     <TreeTable
-      value={data}
+      ref={tableRef}
+      value={treeData}
       responsive="true"
       scrollHeight="100%"
       scrollable="true"
@@ -59,12 +83,14 @@ const ProductsList = ({
       columnResizeMode="expand"
       emptyMessage=" "
       selectionMode="multiple"
-      selectionKeys={selectedRows}
+      selectionKeys={selection}
       onSelectionChange={onSelectionChange}
-      onRowClick={onRowClick}
+      onFocus={onFocus}
+      onKeyDown={handleKeyDown}
       rowClassName={(rowData) => {
         const className = {
           loading: loadingProducts.includes(rowData.data.id),
+          ['id-' + rowData.key]: true,
         }
         if (!focusedTasks.length || focusedType !== 'task') return className
 
