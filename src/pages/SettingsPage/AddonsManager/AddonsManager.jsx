@@ -1,4 +1,3 @@
-import compare from 'semver/functions/compare'
 import { Button, Section } from '@ynput/ayon-react-components'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { useGetAddonListQuery } from '@queries/addons/getAddons'
@@ -55,8 +54,13 @@ const AddonsManager = () => {
   const setDeletedVersions = (versions) => dispatch(onDeletedVersions(versions))
 
   // different functions to transform the data for each table
-  const { addonsTableData, versionsTableData, bundlesTableData, filteredVersionsMap } =
-    useGetTableData(addonsVersionsBundles, selectedAddons, selectedVersions, deletedVersions)
+  const {
+    addonsTableData,
+    versionsTableData,
+    bundlesTableData,
+    filteredVersionsMap,
+    versionSort,
+  } = useGetTableData(addonsVersionsBundles, selectedAddons, selectedVersions, deletedVersions)
 
   // SELECTION HANDLERS vvv
   const handleVersionSelect = (versions) => {
@@ -186,12 +190,7 @@ const AddonsManager = () => {
             selection={selectedVersions}
             onChange={handleVersionSelect}
             field={'version'}
-            sortFunction={(eventOrder) => (a, b) => {
-              const aVersion = a.version.split(' ')[1]
-              const bVersion = b.version.split(' ')[1]
-              const compareResult = compare(aVersion, bVersion)
-              return eventOrder === 1 ? compareResult : -1 * compareResult
-            }}
+            sortFunction={versionSort}
             onDelete={handleDeleteVersions}
             onDeleteSuccess={handleDeleteVersionsSuccess}
             extraContext={viewInMarket}
