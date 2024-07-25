@@ -1,3 +1,5 @@
+import compare from 'semver/functions/compare'
+
 export const transformAddonsWithBundles = (addons = [], bundles = []) => {
   const result = new Map()
 
@@ -95,6 +97,13 @@ export const getVersionsForAddons = (data, addons = []) => {
 
 // versions: maps of the versions
 export const transformVersionsTable = (data, addons = [], deletedVersions) => {
+  const versionSort = (sortOrder) => (a, b) => {
+    const aVersion = a.version.split(' ')[1]
+    const bVersion = b.version.split(' ')[1]
+    const compareResult = compare(aVersion, bVersion)
+    return sortOrder === 1 ? compareResult : -1 * compareResult
+  }
+
   const versionsMap = getVersionsForAddons(data, addons)
 
   if (!versionsMap) return []
@@ -130,8 +139,8 @@ export const transformVersionsTable = (data, addons = [], deletedVersions) => {
 
     tableData.push({ version: versionName, status, tooltip, suffix })
   })
-
-  return [versionsMap, tableData]
+  tableData.sort(versionSort(-1))
+  return [versionsMap, tableData, versionSort]
 }
 
 // returns map of unique bundles for addons and versions

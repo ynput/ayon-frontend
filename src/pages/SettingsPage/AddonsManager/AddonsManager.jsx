@@ -54,8 +54,13 @@ const AddonsManager = () => {
   const setDeletedVersions = (versions) => dispatch(onDeletedVersions(versions))
 
   // different functions to transform the data for each table
-  const { addonsTableData, versionsTableData, bundlesTableData, filteredVersionsMap } =
-    useGetTableData(addonsVersionsBundles, selectedAddons, selectedVersions, deletedVersions)
+  const {
+    addonsTableData,
+    versionsTableData,
+    bundlesTableData,
+    filteredVersionsMap,
+    versionSort,
+  } = useGetTableData(addonsVersionsBundles, selectedAddons, selectedVersions, deletedVersions)
 
   // SELECTION HANDLERS vvv
   const handleVersionSelect = (versions) => {
@@ -185,6 +190,7 @@ const AddonsManager = () => {
             selection={selectedVersions}
             onChange={handleVersionSelect}
             field={'version'}
+            sortFunction={versionSort}
             onDelete={handleDeleteVersions}
             onDeleteSuccess={handleDeleteVersionsSuccess}
             extraContext={viewInMarket}
