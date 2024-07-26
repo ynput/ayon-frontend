@@ -137,7 +137,7 @@ const DetailsPanel = ({
             variant={'text'}
             onClick={() => onClose && onClose()}
             disabled={!onClose}
-            data-shortcut="Escape"
+            data-shortcut={onClose ? 'Escape' : undefined}
           />
         </Styled.Toolbar>
 
