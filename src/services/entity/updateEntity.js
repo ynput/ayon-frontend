@@ -133,6 +133,16 @@ const updateEntity = api.injectEndpoints({
             }))
 
             tags.push(...assigneesTags)
+
+            // invalidate the watchers query
+            dispatch(
+              enhancedDashboardGraphqlApi.util.invalidateTags([
+                {
+                  type: 'watchers',
+                  id: entityId,
+                },
+              ]),
+            )
           }
 
           // invalidate any other caches
