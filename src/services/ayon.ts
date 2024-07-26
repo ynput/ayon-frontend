@@ -92,6 +92,7 @@ const tagTypes = [
   'actions',
   'review',
   'viewer',
+  'watchers',
 ]
 
 const prepareHeaders = (headers: any) => {

@@ -7,7 +7,7 @@ const getEntityPathData = (entity: $Any) => {
   segments.push({ type: 'folder', label: entity.folder?.name, id: entity.folder?.id })
 
   const parentFolders = entity.folder?.path?.split('/').slice(1, -1)
-  if (parentFolders.length > 0) {
+  if (parentFolders?.length > 0) {
     parentFolders.forEach((folder: string) => {
       segments.push({ type: 'folder', label: folder, id: folder })
     })

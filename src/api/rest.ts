@@ -94,6 +94,19 @@ const injectedRtkApi = api.injectEndpoints({
         body: queryArg.suggestRequest,
       }),
     }),
+    getEntityWatchers: build.query<GetEntityWatchersApiResponse, GetEntityWatchersApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/${queryArg.entityType}/${queryArg.entityId}/watchers`,
+      }),
+    }),
+    setEntityWatchers: build.mutation<SetEntityWatchersApiResponse, SetEntityWatchersApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/${queryArg.entityType}/${queryArg.entityId}/watchers`,
+        method: 'POST',
+        body: queryArg.watchersModel,
+        headers: { 'x-sender': queryArg['x-sender'] },
+      }),
+    }),
     deleteAddon: build.mutation<DeleteAddonApiResponse, DeleteAddonApiArg>({
       query: (queryArg) => ({
         url: `/api/addons/${queryArg.addonName}`,
@@ -1464,6 +1477,20 @@ export type SuggestEntityMentionApiArg = {
   projectName: string
   suggestRequest: SuggestRequest
 }
+export type GetEntityWatchersApiResponse = /** status 200 Successful Response */ WatchersModel
+export type GetEntityWatchersApiArg = {
+  projectName: string
+  entityType: string
+  entityId: string
+}
+export type SetEntityWatchersApiResponse = /** status 201 Successful Response */ any
+export type SetEntityWatchersApiArg = {
+  projectName: string
+  entityType: string
+  entityId: string
+  'x-sender'?: string
+  watchersModel: WatchersModel
+}
 export type DeleteAddonApiResponse = /** status 200 Successful Response */ any
 export type DeleteAddonApiArg = {
   addonName: string
@@ -2637,6 +2664,7 @@ export type ProjectActivityPostModel = {
   id?: string
   activityType:
     | 'comment'
+    | 'watch'
     | 'reviewable'
     | 'status.change'
     | 'assignee.add'
@@ -2711,6 +2739,9 @@ export type SuggestResponse = {
 export type SuggestRequest = {
   entityType: 'folder' | 'task' | 'version'
   entityId: string
+}
+export type WatchersModel = {
+  watchers: string[]
 }
 export type ErrorResponse = {
   code: number

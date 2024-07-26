@@ -7,6 +7,8 @@ export const Path = styled.div`
   gap: var(--base-gap-small);
   user-select: none;
   color: var(--md-sys-color-outline);
+
+  flex: 1;
 `
 
 export const Segment = styled.span`

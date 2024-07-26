@@ -1,5 +1,5 @@
-import { Panel } from '@ynput/ayon-react-components'
-import React, { useEffect } from 'react'
+import { Button, Panel } from '@ynput/ayon-react-components'
+import React, { useEffect, useMemo } from 'react'
 import DetailsPanelHeader from './DetailsPanelHeader/DetailsPanelHeader'
 import { useDispatch, useSelector } from 'react-redux'
 import Feed from '@containers/Feed/Feed'
@@ -9,8 +9,11 @@ import { transformEntityData } from '@queries/userDashboard/userDashboardHelpers
 import DetailsPanelFiles from './DetailsPanelFiles'
 import { closeSlideOut, updateDetailsPanelTab } from '@state/details'
 import { entityDetailsTypesSupported } from '@/services/userDashboard/userDashboardQueries'
-import DetailsPanelToolbar from './DetailsPanelToolbar'
 import getEntityPathData from './helpers/getEntityPathData'
+import * as Styled from './DetailsPanel.styled'
+import EntityPath from '@components/EntityPath'
+import { Watchers } from '@containers/Watchers/Watchers'
+import Shortcuts from '@containers/Shortcuts'
 
 export const entitiesWithoutFeed = ['product', 'representation']
 
@@ -102,8 +105,19 @@ const DetailsPanel = ({
   const firstProjectInfo = projectsInfo[firstProject] || {}
   const firstEntityData = entityDetailsData[0] || {}
 
+  const shortcuts = useMemo(
+    () => [
+      {
+        key: 'Escape',
+        action: () => onClose && onClose(),
+      },
+    ],
+    [onClose],
+  )
+
   return (
     <>
+      <Shortcuts shortcuts={shortcuts} deps={[]} />
       <Panel
         style={{
           gap: 0,
@@ -115,12 +129,18 @@ const DetailsPanel = ({
         }}
         className="details-panel"
       >
-        <DetailsPanelToolbar
-          projectName={firstProject}
-          segments={getEntityPathData(firstEntityData)}
-          isSlideOut={isSlideOut}
-          onClose={onClose}
-        />
+        <Styled.Toolbar>
+          <EntityPath segments={getEntityPathData(firstEntityData)} projectName={firstProject} />
+          <Watchers entities={entitiesToQuery} entityType={entityType} options={projectUsers} />
+          <Button
+            icon="close"
+            variant={'text'}
+            onClick={() => onClose && onClose()}
+            disabled={!onClose}
+            data-shortcut="Escape"
+          />
+        </Styled.Toolbar>
+
         <DetailsPanelHeader
           entityType={entityType}
           entitySubTypes={entitySubTypes}
