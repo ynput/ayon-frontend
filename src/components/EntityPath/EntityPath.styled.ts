@@ -12,14 +12,13 @@ export const Path = styled.div`
 `
 
 export const Segment = styled.span`
-  cursor: pointer;
+  /* cursor: pointer; */
   padding: 0px 2px;
   border-radius: var(--border-radius-m);
   transition: all 0.2s;
 
   &:hover {
-    /* text-decoration: underline; */
-    background-color: var(--md-sys-color-surface-container-highest-hover);
-    color: var(--md-sys-color-on-surface);
+    /* background-color: var(--md-sys-color-surface-container-highest-hover);
+    color: var(--md-sys-color-on-surface); */
   }
 `
