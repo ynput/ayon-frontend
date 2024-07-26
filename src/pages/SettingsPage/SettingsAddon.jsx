@@ -15,7 +15,7 @@ const SettingsAddon = ({ addonName, addonVersion, sidebar }) => {
   const [loading, setLoading] = useState(true)
 
   const context = useSelector((state) => state.context)
-  const addonUrl = `${window.location.origin}/addons/${addonName}/${addonVersion}/frontend/`
+  const addonUrl = `${window.location.origin}/addons/${addonName}/${addonVersion}/frontend`
 
   const pushContext = () => {
     const addonWnd = addonRef.current.contentWindow
@@ -44,7 +44,7 @@ const SettingsAddon = ({ addonName, addonVersion, sidebar }) => {
       {sidebarComponent}
       <Section>
         {loading && <div style={{ display: 'none' }}>Loading...</div>}
-        <AddonWrapper src={addonUrl} ref={addonRef} onLoad={onAddonLoad} />
+        <AddonWrapper src={`${addonUrl}?id=${window.senderId}`} ref={addonRef} onLoad={onAddonLoad} />
       </Section>
     </main>
   )
