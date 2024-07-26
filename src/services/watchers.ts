@@ -87,8 +87,6 @@ const injectedApi2 = injectedApi.injectEndpoints({
 
         let patches: any[] = []
 
-        console.log(entries)
-
         try {
           // now update the cache for all affected queries
           entries.forEach((entry) => {
@@ -100,7 +98,7 @@ const injectedApi2 = injectedApi.injectEndpoints({
                   entry.originalArgs.entities.forEach((entryEntity: GetEntityWatchersApiArg) => {
                     // find the entity patch
                     const entity = entities.find((e) => e.entityId === entryEntity.entityId)
-                    if (!entity) throw new Error('Entity not found')
+                    if (!entity) return
                     // find the entity in the draft
                     const entityDraft = draft.find((e) => e.entityId === entity.entityId)
                     if (!entityDraft) throw new Error('Entity draft not found')
