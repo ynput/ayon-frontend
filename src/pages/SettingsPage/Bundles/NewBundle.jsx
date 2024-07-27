@@ -13,6 +13,7 @@ import { useSearchParams } from 'react-router-dom'
 import Shortcuts from '@containers/Shortcuts'
 import { useCheckBundleQuery } from '@queries/bundles/getBundles'
 import BundleChecks from './BundleChecks/BundleChecks'
+import usePrevious from '@hooks/usePrevious'
 
 const removeEmptyDevAddons = (addons = {}) => {
   if (!addons) return addons
@@ -30,9 +31,21 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading, isDev, d
   const [formData, setFormData] = useState(null)
   const [skipBundleCheck, setSkipBundleCheck] = useState(false)
   const [selectedAddons, setSelectedAddons] = useState([])
+  const previousFormData = usePrevious(formData)
 
   const [createBundle, { isLoading: isCreating }] = useCreateBundleMutation()
   const [updateBundle, { isLoading: isUpdating }] = useUpdateBundleMutation()
+
+  useEffect(() => {
+    if (!formData || !previousFormData) {
+      return
+    }
+    if (isEqual(formData.addonDevelopment, previousFormData.addonDevelopment)) {
+      setSkipBundleCheck(false)
+    } else {
+      setSkipBundleCheck(true)
+    }
+  }, [formData])
 
   const {
     data: bundleCheckData,
@@ -109,7 +122,6 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading, isDev, d
           // update from formData
           const newFormData = { ...formData, addons: { ...formData.addons, [addon]: version } }
 
-          setSkipBundleCheck(false)
           setFormData(newFormData)
         }
       }
@@ -184,7 +196,6 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading, isDev, d
   }
 
   const setSelectedVersion = (latest = false) => {
-    setSkipBundleCheck(false);
     setFormData((prev) => {
       // set all selected addons to latest version if in formData
       const newFormData = { ...prev }
@@ -212,13 +223,11 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading, isDev, d
       addonDevelopment[name] = { ...(addonDevelopment[name] || {}), [key]: value }
     }
     newFormData.addonDevelopment = addonDevelopment
-    setSkipBundleCheck(true);
     setFormData(newFormData)
   }
 
   // when dep packages are changed in dev mode
   const handleDepPackagesDevChange = (packages) => {
-    setSkipBundleCheck(false);
     setFormData((prev) => {
       return { ...prev, dependencyPackages: packages }
     })
