@@ -207,8 +207,8 @@ const Feed = ({
     dispatch(openSlideOut({ entityId, entityType, projectName, scope, activityId }))
   }
 
-  const handleFileExpand = (file) => {
-    dispatch(onCommentImageOpen({ ...file, projectName }))
+  const handleFileExpand = ({files, index}) => {
+    dispatch(onCommentImageOpen({ files, index, projectName }))
   }
 
   const loadingPlaceholders = useMemo(() => getLoadingPlaceholders(10), [])

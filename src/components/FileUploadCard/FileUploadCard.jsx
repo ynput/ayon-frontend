@@ -65,7 +65,6 @@ const getFileSizeString = (bytes) => {
 }
 
 const FileUploadCard = ({
-  id,
   name,
   mime,
   src,
@@ -97,7 +96,7 @@ const FileUploadCard = ({
 
   const handleImageClick = () => {
     if (!isPreviewable || !onExpand || imageError) return
-    onExpand({ name, mime, id, size, extension })
+    onExpand()
   }
 
   return (

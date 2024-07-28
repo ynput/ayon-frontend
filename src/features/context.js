@@ -33,14 +33,8 @@ const initialState = {
   uriChanged: 0,
   uploadProgress: 0, // percentage 0 - 100
   menuOpen: false,
-  previewFile: {
-    id: null,
-    name: null,
-    mime: null,
-    size: null,
-    projectName: null,
-    extension: null,
-  },
+  previewFiles: [],
+  previewFilesIndex: 0,
 }
 
 // all the keys that are stored in local storage
@@ -472,11 +466,16 @@ const contextSlice = createSlice({
     },
     onCommentImageOpen: (state, action) => {
       // set the preview file
-      state.previewFile = action.payload
+      state.previewFiles = action.payload.files.map(e => ({...e, projectName: action.payload.projectName}))
+      state.previewFilesIndex = action.payload.index
+    },
+    onCommentImageIndexChange: (state, action) => {
+      state.previewFilesIndex = action.payload.index
     },
     onFilePreviewClose: (state) => {
       // clear the preview file
-      state.previewFile = initialState.previewFile
+      state.previewFiles = initialState.previewFiles
+      state.previewFilesIndex = 0
     },
   }, // reducers
 })
@@ -511,6 +510,7 @@ export const {
   onUriNavigate,
   updateBrowserFilters,
   onCommentImageOpen,
+  onCommentImageIndexChange,
   onFilePreviewClose,
 } = contextSlice.actions
 

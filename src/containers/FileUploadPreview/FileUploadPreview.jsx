@@ -1,6 +1,6 @@
 import { useDispatch, useSelector } from 'react-redux'
 import * as Styled from './FileUploadPreview.styled'
-import { onFilePreviewClose } from '@state/context'
+import { onFilePreviewClose, onCommentImageIndexChange } from '@state/context'
 import { useEffect, useRef } from 'react'
 import ImageMime from './mimes/ImageMime'
 import TextMime from './mimes/TextMime'
@@ -36,8 +36,9 @@ export const getFileURL = (id, projectName) => `/api/projects/${projectName}/fil
 
 const FileUploadPreview = () => {
   const dispatch = useDispatch()
-  const file = useSelector((state) => state.context.previewFile)
-  const { id, projectName, mime, extension, name } = file || {}
+  const files = useSelector((state) => state.context.previewFiles)
+  const index = useSelector((state) => state.context.previewFilesIndex)
+  const { id, projectName, mime, extension, name } = files[index] || {}
 
   // when dialog open, focus on the dialog
   // we do this so that the user can navigate with the keyboard (esc works)
@@ -64,7 +65,7 @@ const FileUploadPreview = () => {
   // if there is a callback, run it and return null
   // mainly for pdfs
   if (callback) {
-    callback(file)
+    callback(files[index])
     return null
   }
 
@@ -74,6 +75,20 @@ const FileUploadPreview = () => {
 
   return (
     <Styled.DialogWrapper
+      onKeyDown={(e) => {
+        if (e.code == 'ArrowRight') {
+          if (index + 1 == files.length) {
+            return
+          }
+          dispatch(onCommentImageIndexChange({index : index + 1}))
+        }
+        if (e.code == 'ArrowLeft') {
+          if (index == 0 ) {
+            return
+          }
+          dispatch(onCommentImageIndexChange({index : index - 1}))
+        }
+      }}
       size="full"
       isOpen={id && projectName}
       onClose={handleClose}
@@ -82,7 +97,7 @@ const FileUploadPreview = () => {
       className={classNames({ isImage })}
       header={isImage ? null : name}
     >
-      <MimeComponent file={file} />
+      <MimeComponent file={files[index]} />
     </Styled.DialogWrapper>
   )
 }

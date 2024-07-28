@@ -13,6 +13,10 @@ const FilesGrid = ({
 }) => {
   if (!files.length) return null
 
+  const handleExpand = (index) => () => {
+    onExpand({ files, index })
+  }
+
   return (
     <Styled.Grid className={classNames({ compact: isCompact })} {...props}>
       {files.map((file, index) => (
@@ -27,7 +31,7 @@ const FilesGrid = ({
           onRemove={onRemove ? () => onRemove(file.id, file.name) : undefined}
           isCompact={isCompact}
           isDownloadable={isDownloadable}
-          onExpand={onExpand}
+          onExpand={handleExpand(index)}
         />
       ))}
     </Styled.Grid>
