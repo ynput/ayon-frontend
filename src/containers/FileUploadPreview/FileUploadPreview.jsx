@@ -5,6 +5,7 @@ import { useEffect, useRef } from 'react'
 import ImageMime from './mimes/ImageMime'
 import TextMime from './mimes/TextMime'
 import { classNames } from 'primereact/utils'
+import { Icon } from '@ynput/ayon-react-components'
 
 // define expandable mime types and their components
 export const expandableMimeTypes = {
@@ -69,6 +70,10 @@ const FileUploadPreview = () => {
     return null
   }
 
+  const handleNavigateToPrevious = () => index > 0  && dispatch(onCommentImageIndexChange({ index: index - 1 }))
+
+  const handleNavigateToNext = () => index < files.length -1 && dispatch(onCommentImageIndexChange({ index: index + 1 }))
+
   const isImage = typeId === 'image'
 
   if (!MimeComponent) return null
@@ -77,16 +82,10 @@ const FileUploadPreview = () => {
     <Styled.DialogWrapper
       onKeyDown={(e) => {
         if (e.code == 'ArrowRight') {
-          if (index + 1 == files.length) {
-            return
-          }
-          dispatch(onCommentImageIndexChange({index : index + 1}))
+          handleNavigateToNext()
         }
         if (e.code == 'ArrowLeft') {
-          if (index == 0 ) {
-            return
-          }
-          dispatch(onCommentImageIndexChange({index : index - 1}))
+          handleNavigateToPrevious()
         }
       }}
       size="full"
@@ -97,7 +96,17 @@ const FileUploadPreview = () => {
       className={classNames({ isImage })}
       header={isImage ? null : name}
     >
+      <Icon
+        icon="chevron_left"
+        className={classNames('navIcon', index == 0 ? 'disabled' : undefined)}
+        onClick={handleNavigateToPrevious}
+      />
       <MimeComponent file={files[index]} />
+      <Icon
+        icon="chevron_right"
+        className={classNames('navIcon', index == files.length - 1 ? 'disabled' : undefined)}
+        onClick={handleNavigateToNext}
+      />
     </Styled.DialogWrapper>
   )
 }

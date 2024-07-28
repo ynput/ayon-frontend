@@ -7,7 +7,20 @@ export const DialogWrapper = styled(Dialog)`
   max-width: 1000px;
 
   .body {
+    flex-direction: row;
     padding-top: 0;
+  }
+  .navIcon {
+    font-size: 48px;
+    &:hover {
+      cursor: pointer;
+    }
+    &.disabled {
+      opacity: .5;
+      &:hover {
+        cursor: not-allowed;
+      }
+    }
   }
 
   /* custom image styles */
