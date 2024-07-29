@@ -1,6 +1,7 @@
 import * as Styled from './FilesGrid.styled'
 import { classNames } from 'primereact/utils'
 import FileUploadCard from '@components/FileUploadCard/FileUploadCard'
+import { isFilePreviewable } from '@containers/FileUploadPreview/FileUploadPreview'
 
 const FilesGrid = ({
   files = [],
@@ -14,7 +15,9 @@ const FilesGrid = ({
   if (!files.length) return null
 
   const handleExpand = (index) => () => {
-    onExpand({ files, index })
+    const filteredFiles = files.filter(file => isFilePreviewable(file.mime, file.ext))
+    const updatedIndex = filteredFiles.findIndex(file => file.id === files[index].id)
+    onExpand({ files: filteredFiles, index: updatedIndex })
   }
 
   return (
