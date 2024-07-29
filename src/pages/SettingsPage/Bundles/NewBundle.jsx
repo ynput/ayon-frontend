@@ -13,6 +13,7 @@ import { useSearchParams } from 'react-router-dom'
 import Shortcuts from '@containers/Shortcuts'
 import { useCheckBundleQuery } from '@queries/bundles/getBundles'
 import BundleChecks from './BundleChecks/BundleChecks'
+import usePrevious from '@hooks/usePrevious'
 
 const removeEmptyDevAddons = (addons = {}) => {
   if (!addons) return addons
@@ -28,10 +29,23 @@ const removeEmptyDevAddons = (addons = {}) => {
 const NewBundle = ({ initBundle, onSave, addons, installers, isLoading, isDev, developerMode }) => {
   // when updating a dev bundle, we need to track changes
   const [formData, setFormData] = useState(null)
+  const [skipBundleCheck, setSkipBundleCheck] = useState(false)
   const [selectedAddons, setSelectedAddons] = useState([])
+  const previousFormData = usePrevious(formData)
 
   const [createBundle, { isLoading: isCreating }] = useCreateBundleMutation()
   const [updateBundle, { isLoading: isUpdating }] = useUpdateBundleMutation()
+
+  useEffect(() => {
+    if (!formData || !previousFormData) {
+      return
+    }
+    if (isEqual(formData.addonDevelopment, previousFormData.addonDevelopment)) {
+      setSkipBundleCheck(false)
+    } else {
+      setSkipBundleCheck(true)
+    }
+  }, [formData])
 
   const {
     data: bundleCheckData,
@@ -41,7 +55,7 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading, isDev, d
     {
       bundle: formData,
     },
-    { skip: !formData },
+    { skip: !formData || skipBundleCheck },
   )
   const bundleCheckError = bundleCheckData?.issues?.some((issue) => issue.severity === 'error')
 
