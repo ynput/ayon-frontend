@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo  } from 'react'
 import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 
@@ -93,6 +93,20 @@ const AddonSettings = ({ projectName, showSites = false }) => {
       fieldId,
     })
   }
+
+
+  const onFocusField = (addonKey, path) => {
+
+    setCurrentSelection({
+      addonName: addonKey.split('|')[0],
+      addonVersion: addonKey.split('|')[1],
+      addonString: addonKey.split('|').slice(0, 2).join('@'),
+      siteId: addonKey.split('|')[3] === '_' ? null : addonKey.split('|')[3],
+      path: path,
+      fieldId: `root_${path.join('_')}`,
+    })
+  }
+
 
   const user = useSelector((state) => state.user)
   const developerMode = user?.attrib?.developerMode
@@ -759,7 +773,12 @@ const AddonSettings = ({ projectName, showSites = false }) => {
       <SplitterPanel size={20}>
         <Section wrap style={{ minWidth: 300 }}>
           <Toolbar>{commitToolbar}</Toolbar>
-          <SettingsChangesTable changes={changedKeys} unpins={unpinnedKeys} onRevert={onRevertChange} />
+          <SettingsChangesTable 
+            changes={changedKeys} 
+            unpins={unpinnedKeys} 
+            onRevert={onRevertChange} 
+            onFocusField={onFocusField}
+          />
           {/*}
           <ScrollPanel className="transparent nopad" style={{ flexGrow: 1 }}>
             <pre style={{ whiteSpace: 'pre-wrap' }}>{JSON.stringify(localData, null, 2)}</pre>

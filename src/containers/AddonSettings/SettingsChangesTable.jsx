@@ -6,7 +6,7 @@ import { Section, TablePanel, Button } from '@ynput/ayon-react-components'
 import useCreateContext from '@hooks/useCreateContext'
 import { Badge, BadgeWrapper } from '@components/Badge'
 
-const SettingsChangesTable = ({ changes, unpins, onRevert }) => {
+const SettingsChangesTable = ({ changes, unpins, onRevert, onFocusField }) => {
   const [expandedKeys, setExpandedKeys] = useState({})
   const [selectedKeys, setSelectedKeys] = useState({})
   const [knownAddonKeys, setKnownAddonKeys] = useState({})
@@ -21,6 +21,8 @@ const SettingsChangesTable = ({ changes, unpins, onRevert }) => {
     setExpandedKeys((k) => ({ ...k, ...newExpandedKeys }))
     setKnownAddonKeys((k) => ({ ...k, ...newExpandedKeys }))
   }, [changes])
+
+
 
   const changesTree = useMemo(() => {
     let result = []
@@ -132,6 +134,40 @@ const SettingsChangesTable = ({ changes, unpins, onRevert }) => {
     return <Button variant="text" icon="delete" onClick={delChange} />
   }
 
+
+  const handleSelectionChange = (e) => {
+
+    if (!(e.value in selectedKeys)) {
+      setSelectedKeys(e.value)
+    }
+
+    if (Object.keys(e.value).length != 1)
+      return
+
+
+    for (const addonKey in changes) {
+      for (const change of changes[addonKey]) {
+        const key = `${addonKey}|${change.join('|')}`
+        if (key in selectedKeys) {
+          onFocusField(addonKey, change)
+
+        // const [addonName, addonVersion, variant, _siteName, _projectName] = addonKey.split('|')
+        //
+        // let uri = `ayon+settings://${addonName}`
+        // //if (addon.version) uri += `:${addon.version}`
+        // uri += `/${change.join('/')}`
+        // if (_projectName && _projectName !== "_") uri += `?project=${_projectName}`
+        // if (_siteName && _siteName !== "_") uri += `&site=${_siteName}`
+        // console.log(uri)
+        // dispatch(setUri(uri))
+        //
+        //   return
+        }
+      }
+    }
+
+  }
+
   return (
     <Section>
       <TablePanel>
@@ -141,12 +177,8 @@ const SettingsChangesTable = ({ changes, unpins, onRevert }) => {
           onToggle={(e) => setExpandedKeys(e.value)}
           selectionMode="multiple"
           selectionKeys={selectedKeys}
-          onSelectionChange={(e) => setSelectedKeys(e.value)}
-          onContextMenuSelectionChange={(event) => {
-            if (!(event.value in selectedKeys)) {
-              setSelectedKeys(event.value)
-            }
-          }}
+          onSelectionChange={handleSelectionChange}
+          onContextMenuSelectionChange={handleSelectionChange}
           onContextMenu={(event) => ctxMenuShow(event.originalEvent)}
           emptyMessage="No changes"
           scrollable="true"
