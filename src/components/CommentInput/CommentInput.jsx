@@ -508,6 +508,7 @@ const CommentInput = ({
         onDragLeave={() => setIsDropping(false)}
         onDrop={handleDrop}
         onClick={() => setIsDropping(false)}
+        onKeyDown={(e) => e.stopPropagation()}
       >
         <Styled.Comment
           className={classNames('block-shortcuts', {
@@ -592,6 +593,7 @@ const CommentInput = ({
                 className="comment"
                 active={!!editorValue || !!files.length}
                 onClick={handleSubmit}
+                disabled={isLoading}
               />
             </Styled.Buttons>
           </Styled.Footer>

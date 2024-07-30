@@ -15,7 +15,7 @@ const getEntityPathData = (entity: $Any) => {
 
   if (entity.entityType === 'version') {
     // add product
-    segments.push({ type: 'product', label: entity.product.name, id: entity.product.id })
+    segments.push({ type: 'product', label: entity.product?.name, id: entity.product?.id })
   }
 
   // add final entity segment (folder, task, product, version)

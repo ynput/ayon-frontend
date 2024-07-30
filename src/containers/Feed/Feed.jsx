@@ -140,7 +140,7 @@ const Feed = ({
   })
 
   // comment mutations here!
-  const { submitComment, updateComment, deleteComment } = useCommentMutations({
+  const { submitComment, updateComment, deleteComment, isSaving } = useCommentMutations({
     projectName,
     entityType: entityType,
     entities,
@@ -291,7 +291,7 @@ const Feed = ({
           projectInfo={projectInfo}
           filter={filter}
           disabled={isMultiProjects}
-          isLoading={isLoadingNew || !entities.length}
+          isLoading={isLoadingNew || !entities.length || isSaving}
           scope={scope}
         />
       </Styled.FeedContainer>

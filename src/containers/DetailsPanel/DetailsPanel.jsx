@@ -14,6 +14,7 @@ import * as Styled from './DetailsPanel.styled'
 import EntityPath from '@components/EntityPath'
 import { Watchers } from '@containers/Watchers/Watchers'
 import Shortcuts from '@containers/Shortcuts'
+import { isEmpty } from 'lodash'
 
 export const entitiesWithoutFeed = ['product', 'representation']
 
@@ -115,6 +116,8 @@ const DetailsPanel = ({
     [onClose],
   )
 
+  if (!firstEntityData || isEmpty(firstEntityData)) return null
+
   return (
     <>
       <Shortcuts shortcuts={shortcuts} deps={[]} />
@@ -130,7 +133,11 @@ const DetailsPanel = ({
         className="details-panel"
       >
         <Styled.Toolbar>
-          <EntityPath segments={getEntityPathData(firstEntityData)} projectName={firstProject} />
+          <EntityPath
+            segments={getEntityPathData(firstEntityData)}
+            projectName={firstProject}
+            isLoading={isFetchingEntitiesDetails}
+          />
           <Watchers entities={entitiesToQuery} entityType={entityType} options={projectUsers} />
           <Button
             icon="close"
