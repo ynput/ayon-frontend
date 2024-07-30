@@ -593,6 +593,7 @@ const CommentInput = ({
                 className="comment"
                 active={!!editorValue || !!files.length}
                 onClick={handleSubmit}
+                disabled={isLoading}
               />
             </Styled.Buttons>
           </Styled.Footer>

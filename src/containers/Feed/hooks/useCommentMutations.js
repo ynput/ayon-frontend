@@ -27,8 +27,8 @@ const useCommentMutations = ({
   const entityIds = entities.map((entity) => entity.id)
 
   // used to create and update activities (comments)
-  const [createEntityActivity] = useCreateEntityActivityMutation()
-  const [updateActivity] = useUpdateActivityMutation()
+  const [createEntityActivity, { isLoading: isLoadingCreate }] = useCreateEntityActivityMutation()
+  const [updateActivity, { isLoading: isLoadingUpdate }] = useUpdateActivityMutation()
   const [deleteActivity] = useDeleteActivityMutation()
 
   const invalidateRefs = (refs = []) => {
@@ -216,7 +216,12 @@ const useCommentMutations = ({
     }
   }
 
-  return { submitComment, updateComment, deleteComment }
+  return {
+    submitComment,
+    updateComment,
+    deleteComment,
+    isSaving: isLoadingCreate || isLoadingUpdate,
+  }
 }
 
 export default useCommentMutations
