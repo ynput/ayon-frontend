@@ -5,6 +5,8 @@ import { useEffect, useRef } from 'react'
 import ImageMime from './mimes/ImageMime'
 import TextMime from './mimes/TextMime'
 import { classNames } from 'primereact/utils'
+import { Icon } from '@ynput/ayon-react-components'
+import useAttachmentNavigation from './hooks/useAttachmentNavigation'
 
 // define expandable mime types and their components
 export const expandableMimeTypes = {
@@ -36,8 +38,25 @@ export const getFileURL = (id, projectName) => `/api/projects/${projectName}/fil
 
 const FileUploadPreview = () => {
   const dispatch = useDispatch()
-  const file = useSelector((state) => state.context.previewFile)
-  const { id, projectName, mime, extension, name } = file || {}
+  const {
+    previewFiles: files,
+    previewFilesIndex: index,
+    previewFilesActivityId: activityId,
+    previewFilesProjectName: projectName,
+  } = useSelector((state) => state.context)
+  const {
+    canNavigateDown,
+    canNavigateUp,
+    canNavigateLeft,
+    canNavigateRight,
+    getByIndexActivity,
+    navigateUp,
+    navigateDown,
+    navigateLeft,
+    navigateRight,
+  } = useAttachmentNavigation({ files, index, activityId })
+  const file = { ...getByIndexActivity(activityId, index), projectName }
+  const { id, mime, extension, name } = file
 
   // when dialog open, focus on the dialog
   // we do this so that the user can navigate with the keyboard (esc works)
@@ -68,12 +87,31 @@ const FileUploadPreview = () => {
     return null
   }
 
+  const handleNavigateToPrevActivity = () => canNavigateUp() && navigateUp()
+  const handleNavigateToNextActivity = () => canNavigateDown() && navigateDown()
+  const handleNavigateToPrevious = () => canNavigateLeft() && navigateLeft()
+  const handleNavigateToNext = () => canNavigateRight() && navigateRight()
+
   const isImage = typeId === 'image'
 
   if (!MimeComponent) return null
 
   return (
     <Styled.DialogWrapper
+      onKeyDown={(e) => {
+        if (e.code == 'ArrowUp') {
+          handleNavigateToPrevActivity()
+        }
+        if (e.code == 'ArrowDown') {
+          handleNavigateToNextActivity()
+        }
+        if (e.code == 'ArrowRight') {
+          handleNavigateToNext()
+        }
+        if (e.code == 'ArrowLeft') {
+          handleNavigateToPrevious()
+        }
+      }}
       size="full"
       isOpen={id && projectName}
       onClose={handleClose}
@@ -82,7 +120,17 @@ const FileUploadPreview = () => {
       className={classNames({ isImage })}
       header={isImage ? null : name}
     >
+      <Icon
+        icon="chevron_left"
+        className={classNames('navIcon', !canNavigateLeft() ? 'disabled' : undefined)}
+        onClick={handleNavigateToPrevious}
+      />
       <MimeComponent file={file} />
+      <Icon
+        icon="chevron_right"
+        className={classNames('navIcon', !canNavigateRight() ? 'disabled' : undefined)}
+        onClick={handleNavigateToNext}
+      />
     </Styled.DialogWrapper>
   )
 }
