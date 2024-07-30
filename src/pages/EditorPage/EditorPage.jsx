@@ -21,7 +21,7 @@ import { editorSelectionChanged, setUri, setExpandedFolders } from '@state/conte
 import { getColumns, formatType, formatAttribute, formatAssignees, formatStatus } from './utils'
 import { MultiSelect } from 'primereact/multiselect'
 import useLocalStorage from '@hooks/useLocalStorage'
-import { useGetHierarchyQuery } from '@queries/getHierarchy'
+import { useGetFolderHierarchyQuery } from '@queries/getHierarchy'
 import SearchDropdown from '@components/SearchDropdown'
 import useColumnResize from '@hooks/useColumnResize'
 import { capitalize, debounce, isEmpty } from 'lodash'
@@ -108,10 +108,12 @@ const EditorPage = () => {
   const [columnsWidths, setColumnWidths] = useColumnResize('editor')
 
   // Hierarchy data is used for fast searching
-  const { data: hierarchyData, isLoading: isSearchLoading } = useGetHierarchyQuery(
+  const { data: hierarchyResponse = {}, isLoading: isSearchLoading } = useGetFolderHierarchyQuery(
     { projectName },
     { skip: !projectName },
   )
+
+  const hierarchyData = hierarchyResponse.hierarchy || []
 
   const { data: allUsers = [] } = useGetUsersAssigneeQuery({ names: undefined, projectName })
 
