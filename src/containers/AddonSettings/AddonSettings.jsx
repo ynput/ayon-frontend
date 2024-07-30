@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo  } from 'react'
 import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 
@@ -759,7 +759,11 @@ const AddonSettings = ({ projectName, showSites = false }) => {
       <SplitterPanel size={20}>
         <Section wrap style={{ minWidth: 300 }}>
           <Toolbar>{commitToolbar}</Toolbar>
-          <SettingsChangesTable changes={changedKeys} unpins={unpinnedKeys} onRevert={onRevertChange} />
+          <SettingsChangesTable 
+            changes={changedKeys} 
+            unpins={unpinnedKeys} 
+            onRevert={onRevertChange} 
+          />
           {/*}
           <ScrollPanel className="transparent nopad" style={{ flexGrow: 1 }}>
             <pre style={{ whiteSpace: 'pre-wrap' }}>{JSON.stringify(localData, null, 2)}</pre>
