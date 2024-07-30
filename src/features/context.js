@@ -34,7 +34,9 @@ const initialState = {
   uploadProgress: 0, // percentage 0 - 100
   menuOpen: false,
   previewFiles: [],
-  previewFilesIndex: 0,
+  previewFilesProjectName: '',
+  previewFilesIndex: null,
+  previewFilesActivityId: null,
 }
 
 // all the keys that are stored in local storage
@@ -466,16 +468,31 @@ const contextSlice = createSlice({
     },
     onCommentImageOpen: (state, action) => {
       // set the preview file
-      state.previewFiles = action.payload.files.map(e => ({...e, projectName: action.payload.projectName}))
+      console.log('inside action:')
+      console.log(action.payload.files)
+      console.log(action.payload.activityId)
+      console.log(action.payload.index)
+      state.previewFiles = action.payload.files
+      state.previewFilesProjectName = action.payload.projectName
+      state.previewFilesActivityId = action.payload.activityId
+      state.previewFilesIndex = action.payload.index
+    },
+    onCommentImageActivityAndIndexChange: (state, action) => {
+      console.log(state, action)
+      state.previewFilesActivityId = action.payload.activityId
       state.previewFilesIndex = action.payload.index
     },
     onCommentImageIndexChange: (state, action) => {
-      state.previewFilesIndex = action.payload.index
+      console.log('on index change: ')
+      console.log(action)
+      state.previewFilesIndex += action.payload.delta
     },
     onFilePreviewClose: (state) => {
       // clear the preview file
       state.previewFiles = initialState.previewFiles
-      state.previewFilesIndex = 0
+      state.previewFilesProjectName = initialState.previewFilesProjectName
+      state.previewFilesActivityId = null
+      state.previewFilesIndex = null
     },
   }, // reducers
 })
@@ -511,6 +528,7 @@ export const {
   updateBrowserFilters,
   onCommentImageOpen,
   onCommentImageIndexChange,
+  onCommentImageActivityAndIndexChange,
   onFilePreviewClose,
 } = contextSlice.actions
 

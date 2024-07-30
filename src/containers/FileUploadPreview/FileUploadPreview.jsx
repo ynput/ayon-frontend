@@ -1,11 +1,12 @@
 import { useDispatch, useSelector } from 'react-redux'
 import * as Styled from './FileUploadPreview.styled'
-import { onFilePreviewClose, onCommentImageIndexChange } from '@state/context'
+import { onFilePreviewClose } from '@state/context'
 import { useEffect, useRef } from 'react'
 import ImageMime from './mimes/ImageMime'
 import TextMime from './mimes/TextMime'
 import { classNames } from 'primereact/utils'
 import { Icon } from '@ynput/ayon-react-components'
+import useAttachmentNavigation from './hooks/useAttachmentNavigation'
 
 // define expandable mime types and their components
 export const expandableMimeTypes = {
@@ -37,9 +38,25 @@ export const getFileURL = (id, projectName) => `/api/projects/${projectName}/fil
 
 const FileUploadPreview = () => {
   const dispatch = useDispatch()
-  const files = useSelector((state) => state.context.previewFiles)
-  const index = useSelector((state) => state.context.previewFilesIndex)
-  const { id, projectName, mime, extension, name } = files[index] || {}
+  const {
+    previewFiles: files,
+    previewFilesIndex: index,
+    previewFilesActivityId: activityId,
+    previewFilesProjectName: projectName,
+  } = useSelector((state) => state.context)
+  const {
+    canNavigateDown,
+    canNavigateUp,
+    canNavigateLeft,
+    canNavigateRight,
+    getByIndexActivity,
+    navigateUp,
+    navigateDown,
+    navigateLeft,
+    navigateRight,
+  } = useAttachmentNavigation({ files, index, activityId })
+  const file = { ...getByIndexActivity(activityId, index), projectName }
+  const { id, mime, extension, name } = file
 
   // when dialog open, focus on the dialog
   // we do this so that the user can navigate with the keyboard (esc works)
@@ -66,13 +83,14 @@ const FileUploadPreview = () => {
   // if there is a callback, run it and return null
   // mainly for pdfs
   if (callback) {
-    callback(files[index])
+    callback(file)
     return null
   }
 
-  const handleNavigateToPrevious = () => index > 0  && dispatch(onCommentImageIndexChange({ index: index - 1 }))
-
-  const handleNavigateToNext = () => index < files.length -1 && dispatch(onCommentImageIndexChange({ index: index + 1 }))
+  const handleNavigateToPrevActivity = () => canNavigateUp() && navigateUp()
+  const handleNavigateToNextActivity = () => canNavigateDown() && navigateDown()
+  const handleNavigateToPrevious = () => canNavigateLeft() && navigateLeft()
+  const handleNavigateToNext = () => canNavigateRight() && navigateRight()
 
   const isImage = typeId === 'image'
 
@@ -81,6 +99,12 @@ const FileUploadPreview = () => {
   return (
     <Styled.DialogWrapper
       onKeyDown={(e) => {
+        if (e.code == 'ArrowUp') {
+          handleNavigateToPrevActivity()
+        }
+        if (e.code == 'ArrowDown') {
+          handleNavigateToNextActivity()
+        }
         if (e.code == 'ArrowRight') {
           handleNavigateToNext()
         }
@@ -98,13 +122,13 @@ const FileUploadPreview = () => {
     >
       <Icon
         icon="chevron_left"
-        className={classNames('navIcon', index == 0 ? 'disabled' : undefined)}
+        className={classNames('navIcon', !canNavigateLeft() ? 'disabled' : undefined)}
         onClick={handleNavigateToPrevious}
       />
-      <MimeComponent file={files[index]} />
+      <MimeComponent file={file} />
       <Icon
         icon="chevron_right"
-        className={classNames('navIcon', index == files.length - 1 ? 'disabled' : undefined)}
+        className={classNames('navIcon', !canNavigateRight() ? 'disabled' : undefined)}
         onClick={handleNavigateToNext}
       />
     </Styled.DialogWrapper>

@@ -5,6 +5,7 @@ import { isFilePreviewable } from '@containers/FileUploadPreview/FileUploadPrevi
 
 const FilesGrid = ({
   files = [],
+  activityId,
   isCompact,
   onRemove,
   projectName,
@@ -17,7 +18,7 @@ const FilesGrid = ({
   const handleExpand = (index) => () => {
     const filteredFiles = files.filter(file => isFilePreviewable(file.mime, file.ext))
     const updatedIndex = filteredFiles.findIndex(file => file.id === files[index].id)
-    onExpand({ files: filteredFiles, index: updatedIndex })
+    onExpand({ files: filteredFiles, index: updatedIndex, activityId: activityId })
   }
 
   return (

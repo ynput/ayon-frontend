@@ -16,7 +16,7 @@ export const DialogWrapper = styled(Dialog)`
       cursor: pointer;
     }
     &.disabled {
-      opacity: .5;
+      color: var(--md-sys-color-outline-variant);
       &:hover {
         cursor: not-allowed;
       }

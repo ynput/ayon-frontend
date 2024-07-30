@@ -18,6 +18,7 @@ import { isEqual, union } from 'lodash'
 import useScrollToHighlighted from './hooks/useScrollToHighlighted'
 import { toast } from 'react-toastify'
 import ActivityReferenceTooltip from '@components/Feed/ActivityReferenceTooltip/ActivityReferenceTooltip'
+import { isFilePreviewable } from '@containers/FileUploadPreview/FileUploadPreview'
 
 // number of activities to get
 export const activitiesLast = 30
@@ -207,8 +208,16 @@ const Feed = ({
     dispatch(openSlideOut({ entityId, entityType, projectName, scope, activityId }))
   }
 
-  const handleFileExpand = ({files, index}) => {
-    dispatch(onCommentImageOpen({ files, index, projectName }))
+  const handleFileExpand = ({ index, activityId }) => {
+    const previewableFiles = Object.values(transformedActivitiesData)
+      .reverse()
+      .filter((a) => a.activityType == 'comment')
+      .map((a) => ({
+        id: a.activityId,
+        files: a.files.filter((file) => isFilePreviewable(file.mime, file.ext)),
+      }))
+      .filter((a) => a.files.length > 0)
+    dispatch(onCommentImageOpen({ files: previewableFiles, activityId, index, projectName }))
   }
 
   const loadingPlaceholders = useMemo(() => getLoadingPlaceholders(10), [])

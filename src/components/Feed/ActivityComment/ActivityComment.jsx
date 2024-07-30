@@ -162,6 +162,7 @@ const ActivityComment = ({
               <FilesGrid
                 files={files}
                 isCompact={files.length > 6}
+                activityId={activityId}
                 projectName={projectName}
                 isDownloadable
                 onExpand={onFileExpand}
