@@ -621,16 +621,17 @@ a {
   .p-splitter-gutter {
     z-index: 500;
     align-items: flex-start;
-    translate: 6px 0;
+    translate: 4px 0;
     transform-origin: left;
 
     .p-splitter-gutter-handle {
-      height: 34px;
-      background: var(--md-sys-color-outline-variant);
-      border-radius: var(--border-radius);
+      height: 100%;
+      background: transparent;
+      width: 2px;
 
-      &:hover {
-        background: var(--md-sys-color-outline);
+      &:hover,
+      &:active {
+        background: var(--md-sys-color-outline-variant);
       }
     }
   }

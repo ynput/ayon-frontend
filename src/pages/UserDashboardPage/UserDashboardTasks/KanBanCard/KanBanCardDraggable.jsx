@@ -31,7 +31,6 @@ const KanBanCardDraggable = ({
           if (e.key === ' ') {
             e.preventDefault()
           } else {
-            console.log(task)
             listeners?.onKeyDown(e, task.id)
           }
         }}

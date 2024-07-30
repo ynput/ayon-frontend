@@ -412,6 +412,7 @@ const Inbox = ({ filter }) => {
           messages={messagesData}
           selected={selected}
           projectsInfo={projectsInfo}
+          onClose={() => setSelected([])}
         />
         {!isLoadingAny && (errorInbox || !messagesData.length) && (
           <EmptyPlaceholder

@@ -5,7 +5,7 @@ import DetailsPanel from '@containers/DetailsPanel/DetailsPanel'
 import { useGetUsersAssigneeQuery } from '@queries/user/getUsers'
 import DetailsPanelSlideOut from '@containers/DetailsPanel/DetailsPanelSlideOut/DetailsPanelSlideOut'
 
-const InboxDetailsPanel = ({ messages = [], selected = [], projectsInfo = {} }) => {
+const InboxDetailsPanel = ({ messages = [], selected = [], projectsInfo = {}, onClose }) => {
   const selectedMessage = useMemo(() => {
     return messages.find((m) => m.activityId === selected[0]) || {}
   }, [messages, selected])
@@ -29,6 +29,7 @@ const InboxDetailsPanel = ({ messages = [], selected = [], projectsInfo = {} }) 
         disabledProjectUsers={[]}
         projectsInfo={projectsInfo}
         projectNames={[projectName]}
+        onClose={onClose}
         entityType={entityType}
         entitySubTypes={entitySubType ? [entitySubType] : null}
         scope="inbox"
