@@ -130,7 +130,11 @@ const DetailsPanel = ({
         className="details-panel"
       >
         <Styled.Toolbar>
-          <EntityPath segments={getEntityPathData(firstEntityData)} projectName={firstProject} />
+          <EntityPath
+            segments={getEntityPathData(firstEntityData)}
+            projectName={firstProject}
+            isLoading={isFetchingEntitiesDetails}
+          />
           <Watchers entities={entitiesToQuery} entityType={entityType} options={projectUsers} />
           <Button
             icon="close"

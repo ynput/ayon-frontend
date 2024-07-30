@@ -1,6 +1,9 @@
+import { getShimmerStyles } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
 export const Path = styled.div`
+  position: relative;
+  border-radius: var(--border-radius-m);
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -9,6 +12,18 @@ export const Path = styled.div`
   color: var(--md-sys-color-outline);
 
   flex: 1;
+
+  &.loading {
+    overflow: hidden;
+    & > * {
+      opacity: 0;
+      &::before {
+        opacity: 0;
+      }
+    }
+
+    ${getShimmerStyles()}
+  }
 `
 
 export const Segment = styled.span`
