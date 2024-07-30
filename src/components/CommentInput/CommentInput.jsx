@@ -508,6 +508,7 @@ const CommentInput = ({
         onDragLeave={() => setIsDropping(false)}
         onDrop={handleDrop}
         onClick={() => setIsDropping(false)}
+        onKeyDown={(e) => e.stopPropagation()}
       >
         <Styled.Comment
           className={classNames('block-shortcuts', {
