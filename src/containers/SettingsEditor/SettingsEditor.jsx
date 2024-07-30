@@ -134,10 +134,7 @@ const SettingsEditor = ({
   changedKeys,
   context,
 }) => {
-  if (!schema) {
-    // TODO: maybe a spinner or something?
-    return <div></div>
-  }
+
 
   const [localBreadcrumbs, setLocalBreadcrumbs] = useState([])
   const formWrapperRef = useRef()
@@ -153,6 +150,8 @@ const SettingsEditor = ({
   }, [originalData, overrides])
 
   const formContext = useMemo(() => {
+    if (!schema)
+        return {}
     const formOverrides = buildOverrides(formData)
 
     for (const key in formOverrides) {
@@ -188,7 +187,6 @@ const SettingsEditor = ({
   const totallyRealBreadcrumbs = breadcrumbs === undefined ? localBreadcrumbs : breadcrumbs
   const currentId = totallyRealBreadcrumbs?.length && `root_${totallyRealBreadcrumbs.join('_')}`
 
-
   useEffect(() => {
     if (!currentId) return
     const wrapper = document.getElementById('settings-scroll-panel')
@@ -205,6 +203,10 @@ const SettingsEditor = ({
   }
   , [currentId])
 
+  if (!schema) {
+    // TODO: maybe a spinner or something?
+    return <div></div>
+  }
 
   const fullContext = {
     ...context,
