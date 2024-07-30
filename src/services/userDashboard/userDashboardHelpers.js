@@ -1,6 +1,6 @@
 // NOTE: THIS DOES NOT RUN WHEN PATCHING THE TASKS
 
-import { upperCase, upperFirst } from 'lodash'
+import { isEmpty, upperCase, upperFirst } from 'lodash'
 import { productTypes } from '@state/project'
 import getEntityTypeIcon from '@helpers/getEntityTypeIcon'
 
@@ -66,6 +66,8 @@ export const transformEntityData = ({ entity = {}, entityType, projectName, proj
     }
     return acc
   }, {})
+
+  if (isEmpty(entity)) return null
 
   baseDetailsData['projectName'] = projectName
   baseDetailsData['entityType'] = entityType

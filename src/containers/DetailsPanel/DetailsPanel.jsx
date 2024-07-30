@@ -14,6 +14,7 @@ import * as Styled from './DetailsPanel.styled'
 import EntityPath from '@components/EntityPath'
 import { Watchers } from '@containers/Watchers/Watchers'
 import Shortcuts from '@containers/Shortcuts'
+import { isEmpty } from 'lodash'
 
 export const entitiesWithoutFeed = ['product', 'representation']
 
@@ -114,6 +115,8 @@ const DetailsPanel = ({
     ],
     [onClose],
   )
+
+  if (!firstEntityData || isEmpty(firstEntityData)) return null
 
   return (
     <>
