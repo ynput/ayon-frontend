@@ -5,11 +5,13 @@ import { Column } from 'primereact/column'
 import { Section, TablePanel, Button } from '@ynput/ayon-react-components'
 import useCreateContext from '@hooks/useCreateContext'
 import { Badge, BadgeWrapper } from '@components/Badge'
+import { useURIContext } from '@context/uriContext'
 
-const SettingsChangesTable = ({ changes, unpins, onRevert, onFocusField }) => {
+const SettingsChangesTable = ({ changes, unpins, onRevert }) => {
   const [expandedKeys, setExpandedKeys] = useState({})
   const [selectedKeys, setSelectedKeys] = useState({})
   const [knownAddonKeys, setKnownAddonKeys] = useState({})
+  const { navigate: navigateToUri } = useURIContext()
 
   useEffect(() => {
     const newExpandedKeys = {}
@@ -149,23 +151,17 @@ const SettingsChangesTable = ({ changes, unpins, onRevert, onFocusField }) => {
       for (const change of changes[addonKey]) {
         const key = `${addonKey}|${change.join('|')}`
         if (key in selectedKeys) {
-          onFocusField(addonKey, change)
-
-        // const [addonName, addonVersion, variant, _siteName, _projectName] = addonKey.split('|')
-        //
-        // let uri = `ayon+settings://${addonName}`
-        // //if (addon.version) uri += `:${addon.version}`
-        // uri += `/${change.join('/')}`
-        // if (_projectName && _projectName !== "_") uri += `?project=${_projectName}`
-        // if (_siteName && _siteName !== "_") uri += `&site=${_siteName}`
-        // console.log(uri)
-        // dispatch(setUri(uri))
-        //
-        //   return
+          const [addonName, addonVersion, variant, _siteName, _projectName] = addonKey.split('|')
+          let uri = `ayon+settings://${addonName}`
+          //if (addon.version) uri += `:${addon.version}`
+          uri += `/${change.join('/')}`
+          if (_projectName && _projectName !== "_") uri += `?project=${_projectName}`
+          if (_siteName && _siteName !== "_") uri += `&site=${_siteName}`
+          navigateToUri(uri)
+          return
         }
       }
     }
-
   }
 
   return (

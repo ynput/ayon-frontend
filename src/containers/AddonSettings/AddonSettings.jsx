@@ -94,20 +94,6 @@ const AddonSettings = ({ projectName, showSites = false }) => {
     })
   }
 
-
-  const onFocusField = (addonKey, path) => {
-
-    setCurrentSelection({
-      addonName: addonKey.split('|')[0],
-      addonVersion: addonKey.split('|')[1],
-      addonString: addonKey.split('|').slice(0, 2).join('@'),
-      siteId: addonKey.split('|')[3] === '_' ? null : addonKey.split('|')[3],
-      path: path,
-      fieldId: `root_${path.join('_')}`,
-    })
-  }
-
-
   const user = useSelector((state) => state.user)
   const developerMode = user?.attrib?.developerMode
 
@@ -777,7 +763,6 @@ const AddonSettings = ({ projectName, showSites = false }) => {
             changes={changedKeys} 
             unpins={unpinnedKeys} 
             onRevert={onRevertChange} 
-            onFocusField={onFocusField}
           />
           {/*}
           <ScrollPanel className="transparent nopad" style={{ flexGrow: 1 }}>
