@@ -15,27 +15,25 @@ interface EntityPathProps {
 }
 
 const EntityPath: FC<EntityPathProps> = ({ projectName, segments, isLoading }) => {
-  const lastFolder = segments.filter((segment) => segment.type === 'folder').pop()
-  const parentFolders = segments.filter((segment) => segment.type === 'folder').slice(0, -1)
-
-  const segmentsToShow = segments.filter((segment) => segment.type !== 'folder')
-  if (lastFolder) segmentsToShow.unshift(lastFolder)
+  // Check if there are fewer than or equal to 3 segments
+  const segmentsToShow = segments.length <= 3 ? segments : segments.slice(-3)
+  const hiddenSegments = segments.length <= 3 ? [] : segments.slice(0, -3)
 
   return (
     <Styled.Path className={classNames({ loading: isLoading })}>
       <Styled.Segment>{projectName}</Styled.Segment>
 
-      {!!parentFolders.length && (
+      {!!hiddenSegments.length && (
         <>
           <span>/</span>
           <Styled.Segment>...</Styled.Segment>
         </>
       )}
 
-      {segmentsToShow.map((entity) => (
-        <Fragment key={entity.id}>
+      {segmentsToShow.map((segment) => (
+        <Fragment key={segment.id}>
           <span>/</span>
-          <Styled.Segment key={entity.id}>{entity.label}</Styled.Segment>
+          <Styled.Segment key={segment.id}>{segment.label}</Styled.Segment>
         </Fragment>
       ))}
     </Styled.Path>

@@ -9,12 +9,12 @@ import { transformEntityData } from '@queries/userDashboard/userDashboardHelpers
 import DetailsPanelFiles from './DetailsPanelFiles'
 import { closeSlideOut, updateDetailsPanelTab } from '@state/details'
 import { entityDetailsTypesSupported } from '@/services/userDashboard/userDashboardQueries'
-import getEntityPathData from './helpers/getEntityPathData'
 import * as Styled from './DetailsPanel.styled'
 import EntityPath from '@components/EntityPath'
 import { Watchers } from '@containers/Watchers/Watchers'
 import Shortcuts from '@containers/Shortcuts'
 import { isEmpty } from 'lodash'
+import useGetEntityPath from './hooks/useGetEntityPath'
 
 export const entitiesWithoutFeed = ['product', 'representation']
 
@@ -106,6 +106,13 @@ const DetailsPanel = ({
   const firstProjectInfo = projectsInfo[firstProject] || {}
   const firstEntityData = entityDetailsData[0] || {}
 
+  // build the full entity path for the first entity
+  const entityPathSegments = useGetEntityPath({
+    entity: firstEntityData,
+    projectName: firstProject,
+    isLoading: isFetchingEntitiesDetails,
+  })
+
   const shortcuts = useMemo(
     () => [
       {
@@ -134,9 +141,9 @@ const DetailsPanel = ({
       >
         <Styled.Toolbar>
           <EntityPath
-            segments={getEntityPathData(firstEntityData)}
+            segments={entityPathSegments}
             projectName={firstProject}
-            isLoading={isFetchingEntitiesDetails}
+            isLoading={isFetchingEntitiesDetails || !entityPathSegments.length}
           />
           <Watchers entities={entitiesToQuery} entityType={entityType} options={projectUsers} />
           <Button
