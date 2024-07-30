@@ -79,6 +79,7 @@ const getChangedValues = (messages = []) => {
 const transformGroups = (groups = []) => {
   return groups.map((group) => {
     const firstMessage = group[0] || {}
+    const lastMessage = group[group.length - 1] || {}
     const isMultiple = group.length > 1
     const img = firstMessage.thumbnail.icon
     const date = firstMessage.createdAt
@@ -86,15 +87,9 @@ const transformGroups = (groups = []) => {
     const read = group.every((m) => m.read)
     const unReadCount = group.filter((m) => !m.read).length
 
-    const {
-      activityId,
-      activityType,
-      projectName,
-      author = {},
-      entityId,
-      entityType,
-      origin,
-    } = firstMessage
+    const { activityType, projectName, author = {}, entityId, entityType, origin } = firstMessage
+
+    const { activityId } = lastMessage
 
     return {
       activityId: activityId,
