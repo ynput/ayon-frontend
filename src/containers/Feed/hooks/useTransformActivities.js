@@ -89,14 +89,17 @@ const useTransformActivities = (activities = [], projectInfo = {}, entityType) =
   )
 
   // 7. ensure there are no duplicate activities
-  const uniqueActivitiesData = useMemo(
-    () => [
-      ...new Map(groupedVersionsData.map((activity) => [activity?.activityId, activity]))
-        .values()
-        .filter(Boolean),
-    ],
-    [groupedVersionsData],
-  )
+  const uniqueActivitiesData = useMemo(() => {
+    // Filter out invalid activities and create a Map to ensure uniqueness
+    const activityMap = new Map(
+      groupedVersionsData
+        .filter((activity) => activity && activity.activityId)
+        .map((activity) => [activity.activityId, activity]),
+    )
+
+    // Convert the Map values to an array
+    return [...activityMap.values()]
+  }, [groupedVersionsData])
 
   return uniqueActivitiesData
 }
