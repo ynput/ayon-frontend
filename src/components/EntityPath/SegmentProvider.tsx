@@ -1,9 +1,12 @@
-import { forwardRef } from 'react'
+import { forwardRef, MouseEvent } from 'react'
 import { ActiveSegment } from './EntityPath.styled'
 import { classNames } from 'primereact/utils'
 import { PathSegment } from './EntityPath'
 import { useDispatch } from 'react-redux'
 import { openSlideOut } from '@state/details'
+import { useContextMenu } from '@context/contextMenuContext'
+import useCreateContext from '@hooks/useCreateContext'
+import copyToClipboard from '@helpers/copyToClipboard'
 
 interface SegmentProviderProps extends React.HTMLAttributes<HTMLDivElement> {
   segment?: PathSegment
@@ -33,9 +36,27 @@ const SegmentProvider = forwardRef<HTMLDivElement, SegmentProviderProps>(
       )
     }
 
+    const buildContextMenu = (id: string) => [
+      {
+        label: `ID: ${id}`,
+        icon: 'content_copy',
+        command: () => copyToClipboard(id),
+      },
+    ]
+
+    const [contextMenuShow] = useCreateContext()
+
+    const handleOnContext = (e: MouseEvent<HTMLDivElement>) => {
+      if (!segment) return
+      const menu = buildContextMenu(segment.id)
+
+      contextMenuShow(e, menu)
+    }
+
     return (
       <ActiveSegment
         onClick={handleClick}
+        onContextMenu={handleOnContext}
         className={classNames({ link: isLinkable, open: isOpen })}
         {...props}
         ref={ref}
