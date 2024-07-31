@@ -80,7 +80,7 @@ const ProjectAddon = ({ addonName, addonVersion, sidebar, ...props }) => {
   const projectName = useSelector((state) => state.project.name)
   const userName = useSelector((state) => state.user.name)
   const focusedFolders = context.focused.folders
-  const addonUrl = `${window.location.origin}/addons/${addonName}/${addonVersion}/frontend/`
+  const addonUrl = `${window.location.origin}/addons/${addonName}/${addonVersion}/frontend`
 
   // Modals are used to display unified interface for
   // picking entities and other tasks from the addon
