@@ -1,6 +1,8 @@
 import { FC, Fragment, useRef, useState } from 'react'
 import * as Styled from './EntityPath.styled'
 import { classNames } from 'primereact/utils'
+import { SegmentWrapper } from './SegmentWrapper'
+import { Icon } from '@ynput/ayon-react-components'
 
 export type PathSegment = {
   type: 'folder' | 'task' | 'product' | 'version'
@@ -12,9 +14,10 @@ interface EntityPathProps {
   projectName: string
   segments: PathSegment[]
   isLoading: boolean
+  entityType: 'folder' | 'task' | 'version'
 }
 
-const EntityPath: FC<EntityPathProps> = ({ projectName, segments, isLoading }) => {
+const EntityPath: FC<EntityPathProps> = ({ projectName, segments, isLoading, entityType }) => {
   const moreRef = useRef<HTMLSpanElement>(null)
   const [moreHover, setMoreHover] = useState(false)
 
@@ -24,7 +27,9 @@ const EntityPath: FC<EntityPathProps> = ({ projectName, segments, isLoading }) =
 
   return (
     <Styled.Path className={classNames({ loading: isLoading })} id="entity-path">
-      <Styled.Segment>{projectName}</Styled.Segment>
+      <SegmentWrapper>
+        <Styled.Segment>{projectName}</Styled.Segment>
+      </SegmentWrapper>
 
       {!!hiddenSegments.length && (
         <>
@@ -52,7 +57,12 @@ const EntityPath: FC<EntityPathProps> = ({ projectName, segments, isLoading }) =
       {segmentsToShow.map((segment) => (
         <Fragment key={segment.id}>
           <span>/</span>
-          <Styled.Segment key={segment.id}>{segment.label}</Styled.Segment>
+          <SegmentWrapper segment={segment}>
+            <Styled.Segment key={segment.id}>
+              <span className="label">{segment.label}</span>
+              {segment?.type === 'version' && <Icon icon="expand_more" />}
+            </Styled.Segment>
+          </SegmentWrapper>
         </Fragment>
       ))}
     </Styled.Path>

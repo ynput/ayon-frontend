@@ -9,7 +9,10 @@ export const Path = styled.div`
   align-items: center;
   gap: var(--base-gap-small);
   user-select: none;
-  color: var(--md-sys-color-outline);
+  &,
+  .icon {
+    color: var(--md-sys-color-outline);
+  }
 
   flex: 1;
 
@@ -28,21 +31,44 @@ export const Path = styled.div`
 
 export const Segment = styled.span`
   position: relative;
-  cursor: pointer;
   padding: 0px 2px;
   border-radius: var(--border-radius-m);
   transition: color 0.2s, background-color 0.2s;
 
-  &:hover {
-    background-color: var(--md-sys-color-surface-container-highest-hover);
-    color: var(--md-sys-color-on-surface);
-  }
+  display: flex;
+  align-items: center;
 
   &.more {
-    padding: 0px 6px;
+    cursor: pointer;
 
+    padding: 0px 6px;
     &:hover {
-      background-color: var(--md-sys-color-surface-container-high);
+      background-color: var(--md-sys-color-surface-container);
+      color: var(--md-sys-color-on-surface);
+    }
+  }
+`
+
+export const ActiveSegment = styled.div`
+  & > span {
+    cursor: pointer;
+    &:hover {
+      background-color: var(--md-sys-color-surface-container);
+      &,
+      .icon {
+        color: var(--md-sys-color-on-surface);
+      }
+    }
+  }
+
+  &.link {
+    & > span {
+      &:hover {
+        background-color: var(--md-sys-color-surface-container-highest-hover);
+        .label {
+          text-decoration: underline;
+        }
+      }
     }
   }
 `
@@ -73,6 +99,7 @@ export const MoreItem = styled.li`
   border-radius: var(--border-radius-m);
 
   &:hover {
+    color: var(--md-sys-color-on-surface);
     background-color: var(--md-sys-color-surface-container-highest-hover);
   }
 `
