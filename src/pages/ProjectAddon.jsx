@@ -59,7 +59,7 @@ const TaskPicker = ({ callback, multiple }) => {
 }
 
 const FolderPicker = ({ callback, multiple }) => {
-  const focusedFolders = useSelector((state) => state.context.focused.folder)
+  const focusedFolders = useSelector((state) => state.context.focused.folders)
 
   const errorMessage = useMemo(() => {
     if (multiple && !focusedFolders.length) return 'Please select at least one folder'
@@ -88,15 +88,14 @@ const FolderPicker = ({ callback, multiple }) => {
 
   return (
     <Dialog
-      header="Select task"
+      header="Select folder"
       size="lg"
       footer={footer}
       isOpen={true}
       onClose={() => callback(null)}
+      style={{ maxHeight: 'unset' }}
     >
-      <div style={{ display: 'flex', flexDirection: 'row', minHeight: 500, gap: 12 }}>
-        <Hierarchy style={{ flex: 1, minWidth: 250, maxWidth: 500 }} />
-      </div>
+      <Hierarchy style={{ flex: 1, minWidth: 250, minHeight: 400 }} />
     </Dialog>
   )
 }
