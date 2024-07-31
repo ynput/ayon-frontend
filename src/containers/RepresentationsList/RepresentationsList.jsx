@@ -10,7 +10,6 @@ import groupResult from '@helpers/groupResult'
 import useCreateContext from '@hooks/useCreateContext'
 import DetailsDialog from '../DetailsDialog'
 import versionsToRepresentations from './versionsToRepresentations'
-import { openSlideOut } from '@state/details'
 
 const columns = [
   {
@@ -36,7 +35,7 @@ const columns = [
   },
 ]
 
-const RepresentationList = ({ entities = [], scope }) => {
+const RepresentationList = ({ entities = [] }) => {
   // merge all entities data into one array of entities
   const representations = useMemo(() => versionsToRepresentations(entities) || [], [entities])
 
@@ -67,17 +66,6 @@ const RepresentationList = ({ entities = [], scope }) => {
     dispatch(setUri(uri))
 
     onRepSelectionChange(e.node.data.id, projectName)
-
-    // open slide out panel
-    dispatch(
-      openSlideOut({
-        entityId: e.node.data.id,
-        entityType: 'representation',
-        projectName,
-        tab: 'attribs',
-        scope,
-      }),
-    )
   }
 
   const ctxMenuItems = (id) => [

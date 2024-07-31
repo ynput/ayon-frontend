@@ -196,9 +196,9 @@ const SettingsEditor = ({
     .then((el) => {
       const rect = el.getBoundingClientRect()
       const wrapperRect = wrapper.getBoundingClientRect()
-      if (rect.top > wrapperRect.top && rect.bottom < wrapperRect.bottom) 
+      if (rect.top > wrapperRect.top && rect.top < wrapperRect.bottom) 
         return
-      el.scrollIntoView({ behavior: 'instant', block: 'center' })
+      el.scrollIntoView({ behavior: 'instant', block: 'start' })
     })
   }
   , [currentId])
