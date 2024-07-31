@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useGetProjectQuery } from '@queries/project/getProject'
 import DashboardPanelWrapper from '../DashboardPanelWrapper'
-import Thumbnail from '@components/Thumbnail'
 import AttributeTable from '@containers/attributeTable'
 import { format } from 'date-fns'
 import { Button, SaveButton, Toolbar } from '@ynput/ayon-react-components'
@@ -195,9 +194,6 @@ const ProjectDetails = ({ projectName }) => {
       stylePanel={{ height: 'calc(100% - 8px)', flex: 1, overflow: 'hidden' }}
       style={{ height: '100%', overflow: 'hidden' }}
     >
-      <Styled.Thumbnail>
-        <Thumbnail projectName={projectName} isLoading={isFetching} shimmer />
-      </Styled.Thumbnail>
       {editing ? (
         <AttribForm
           form={projectForm}

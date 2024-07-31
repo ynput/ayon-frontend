@@ -139,13 +139,14 @@ const DetailsPanel = ({
             isLoading={isFetchingEntitiesDetails}
           />
           <Watchers entities={entitiesToQuery} entityType={entityType} options={projectUsers} />
-          <Button
-            icon="close"
-            variant={'text'}
-            onClick={() => onClose && onClose()}
-            disabled={!onClose}
-            data-shortcut={onClose ? 'Escape' : undefined}
-          />
+          {onClose && (
+            <Button
+              icon="close"
+              variant={'text'}
+              onClick={() => onClose && onClose()}
+              data-shortcut={onClose ? 'Escape' : undefined}
+            />
+          )}
         </Styled.Toolbar>
 
         <DetailsPanelHeader

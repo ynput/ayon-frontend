@@ -261,10 +261,7 @@ const UserDashboardKanBan = ({
   return (
     <>
       <Section style={{ height: '100%', zIndex: 10, padding: 0, overflow: 'hidden' }}>
-        <DashboardTasksToolbar
-          {...{ view, setView, isLoadingProjectUsers }}
-          allUsers={projectUsers}
-        />
+        <DashboardTasksToolbar {...{ view, setView, isLoadingProjectUsers }} />
         {view === 'kanban' && (
           <DndContext
             sensors={sensors}

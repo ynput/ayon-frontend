@@ -76,6 +76,7 @@ const StatusSelect = ({
     <StyledDropdown
       {...props}
       message={!disableMessage && multipleSelected > 1 && `${multipleSelected} Selected`}
+      messageOverButton
       widthExpand={widthExpand}
       onOpen={onOpen}
       align={align}

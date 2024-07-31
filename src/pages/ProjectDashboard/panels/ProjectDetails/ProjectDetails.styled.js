@@ -2,24 +2,6 @@ import styled, { css } from 'styled-components'
 import getShimmerStyles from '@/styles/getShimmerStyles'
 import { Toolbar } from '@ynput/ayon-react-components'
 
-export const Thumbnail = styled.div`
-  width: 100%;
-  height: auto;
-  position: relative;
-  aspect-ratio: 16 / 9;
-  min-height: auto;
-  & > div {
-    width: 100%;
-    height: 100%;
-    max-width: unset;
-    aspect-ratio: 16 / 9;
-
-    img {
-      object-fit: cover;
-    }
-  }
-`
-
 export const Code = styled.span`
   background-color: var(--md-sys-color-surface-container-lowest);
   padding: 2px 8px;

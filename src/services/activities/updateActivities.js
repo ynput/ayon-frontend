@@ -65,6 +65,8 @@ const getTags = ({ entityId, filter }) => {
 
   tags.push({ type: 'activity', id: 'LIST' })
 
+  tags.push({ type: 'watchers', id: entityId })
+
   return tags
 }
 
