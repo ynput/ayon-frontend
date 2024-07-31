@@ -58,6 +58,49 @@ const TaskPicker = ({ callback, multiple }) => {
   )
 }
 
+const FolderPicker = ({ callback, multiple }) => {
+  const focusedFolders = useSelector((state) => state.context.focused.folder)
+
+  const errorMessage = useMemo(() => {
+    if (multiple && !focusedFolders.length) return 'Please select at least one folder'
+  }, [focusedFolders])
+
+  const footer = useMemo(() => {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}
+      >
+        <span style={{ color: 'red' }}>{errorMessage}</span>
+        <Button
+          label="Select"
+          icon="library_add_check"
+          disabled={!focusedFolders.length}
+          onClick={() => callback(multiple ? focusedFolders : focusedFolders[0])}
+        />
+      </div>
+    )
+  }, [errorMessage, focusedFolders])
+
+  return (
+    <Dialog
+      header="Select task"
+      size="lg"
+      footer={footer}
+      isOpen={true}
+      onClose={() => callback(null)}
+    >
+      <div style={{ display: 'flex', flexDirection: 'row', minHeight: 500, gap: 12 }}>
+        <Hierarchy style={{ flex: 1, minWidth: 250, maxWidth: 500 }} />
+      </div>
+    </Dialog>
+  )
+}
+
 const RequestModal = ({ onClose, callback = () => {}, requestType = null, ...props }) => {
   if (!requestType) return <></>
 
@@ -68,6 +111,9 @@ const RequestModal = ({ onClose, callback = () => {}, requestType = null, ...pro
 
   if (requestType === 'taskPicker') {
     return <TaskPicker {...props} callback={onSubmit} />
+  }
+  if (requestType === 'folderPicker') {
+    return <FolderPicker {...props} callback={onSubmit} />
   }
 }
 
@@ -143,7 +189,11 @@ const ProjectAddon = ({ addonName, addonVersion, sidebar, ...props }) => {
       {sidebarComponent}
       <Section>
         <RequestModal {...requestModal} onClose={() => setRequestModal(null)} />
-        <AddonWrapper src={`${addonUrl}/?id=${window.senderId}`} ref={addonRef} onLoad={onAddonLoad} />
+        <AddonWrapper
+          src={`${addonUrl}/?id=${window.senderId}`}
+          ref={addonRef}
+          onLoad={onAddonLoad}
+        />
       </Section>
     </main>
   )
