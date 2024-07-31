@@ -26,6 +26,7 @@ interface EntityPathProps {
   isLoading: boolean
   entityType: string
   versions: PathSegment[]
+  scope: string
 }
 
 const EntityPath: FC<EntityPathProps> = ({
@@ -34,6 +35,7 @@ const EntityPath: FC<EntityPathProps> = ({
   versions = [],
   isLoading,
   entityType,
+  scope,
 }) => {
   const [dropdownOpen, setDropdownOpen] = useState<null | DropdownState>(null)
 
@@ -66,11 +68,11 @@ const EntityPath: FC<EntityPathProps> = ({
     else if (dropdownOpen !== id) setDropdownOpen(id)
   }
 
+  const segmentProps = { scope, projectName }
+
   return (
     <Styled.Path className={classNames({ loading: isLoading })} id="entity-path">
-      <SegmentProvider>
-        <Styled.Segment>{projectName}</Styled.Segment>
-      </SegmentProvider>
+      <Styled.Segment>{projectName}</Styled.Segment>
 
       {!!hiddenSegments.length && (
         <>
@@ -87,7 +89,7 @@ const EntityPath: FC<EntityPathProps> = ({
               <Styled.MoreModal>
                 <Styled.MoreList>
                   {hiddenSegments.map((segment) => (
-                    <SegmentProvider segment={segment} key={segment.id}>
+                    <SegmentProvider {...segmentProps} segment={segment} key={segment.id}>
                       <Styled.MoreItem>{segment.label}</Styled.MoreItem>
                     </SegmentProvider>
                   ))}
@@ -102,7 +104,7 @@ const EntityPath: FC<EntityPathProps> = ({
         <Fragment key={segment.id}>
           <span>/</span>
 
-          <SegmentProvider segment={segment}>
+          <SegmentProvider {...segmentProps} segment={segment}>
             <Styled.Segment>
               <span className="label">{segment.label}</span>
             </Styled.Segment>
@@ -120,7 +122,11 @@ const EntityPath: FC<EntityPathProps> = ({
             onMouseLeave={handleMouseLeave}
             onClick={handleDropdownClick}
           >
-            <SegmentProvider segment={versionSegment} isOpen={dropdownOpen === 'versions'}>
+            <SegmentProvider
+              {...segmentProps}
+              segment={versionSegment}
+              isOpen={dropdownOpen === 'versions'}
+            >
               <Styled.Segment>
                 <span className="label">{versionSegment.label}</span>
                 <Icon icon="expand_more" />
@@ -130,7 +136,7 @@ const EntityPath: FC<EntityPathProps> = ({
               <Styled.MoreModal>
                 <Styled.MoreList>
                   {versions.map((version) => (
-                    <SegmentProvider segment={version} key={version.id}>
+                    <SegmentProvider {...segmentProps} segment={version} key={version.id}>
                       <Styled.MoreItem>{version.label}</Styled.MoreItem>
                     </SegmentProvider>
                   ))}

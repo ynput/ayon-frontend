@@ -147,6 +147,7 @@ const DetailsPanel = ({
             projectName={firstProject}
             isLoading={isFetchingEntitiesDetails || !entityPathSegments.length}
             entityType={entityType}
+            scope={scope}
           />
           <Watchers entities={entitiesToQuery} entityType={entityType} options={projectUsers} />
           <Button
