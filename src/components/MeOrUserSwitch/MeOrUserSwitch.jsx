@@ -1,7 +1,21 @@
+import { useGetUsersQuery } from '@queries/user/getUsers'
 import * as Styled from './MeOrUserSwitch.styled'
 import { AssigneeSelect, Button } from '@ynput/ayon-react-components'
+import { useMemo } from 'react'
 
-const MeOrUserSwitch = ({ value = [], onChange, options = [], filter, ...props }) => {
+const MeOrUserSwitch = ({ value = [], onChange, filter, ...props }) => {
+  const { data: users = [] } = useGetUsersQuery({})
+
+  const options = useMemo(
+    () =>
+      users.map((user) => ({
+        name: user.name,
+        fullName: user.attrib.fullName,
+        avatarUrl: `/api/users/${user.name}/avatar`,
+      })),
+    [users],
+  )
+
   // this is so that the first click on the dropdown will set isMe false but not open the dropdown
   // a second click will open the dropdown
   // or if the there are no assignees selected already
