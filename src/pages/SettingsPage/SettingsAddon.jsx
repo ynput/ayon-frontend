@@ -53,7 +53,7 @@ const SettingsAddon = ({ addonName, addonVersion, sidebar }) => {
       {sidebarComponent}
       <Section>
         {loading && <div style={{ display: 'none' }}>Loading...</div>}
-        <AddonWrapper src={`${addonUrl}?id=${window.senderId}`} ref={addonRef} onLoad={onAddonLoad} />
+        <AddonWrapper src={`${addonUrl}/?id=${window.senderId}`} ref={addonRef} onLoad={onAddonLoad} />
       </Section>
     </main>
   )
