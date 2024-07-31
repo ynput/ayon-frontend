@@ -8,11 +8,11 @@ import {
   FormRow,
   InputText,
   Dropdown,
-  AssigneeSelect,
   InputDate,
   InputSwitch,
   TagsSelect,
 } from '@ynput/ayon-react-components'
+import AssigneesField from './fields/AssigneesField'
 
 import { useSelector } from 'react-redux'
 import { useState } from 'react'
@@ -614,21 +614,16 @@ const EditorPanel = ({
                   )
                 } else if (field === 'assignees') {
                   input = (
-                    <AssigneeSelect
-                      value={multipleValues ? union(...multipleValues) : value || []}
+                    <AssigneesField
+                      value={value}
+                      multipleValues={multipleValues}
                       options={allUsers}
-                      multipleValues={!!multipleValues}
                       placeholder={placeholder}
                       disabled={disabled}
-                      emptyMessage={'None assigned'}
-                      emptyIcon={false}
-                      onChange={(v) => handleLocalChange(v, changeKey, field)}
-                      buttonStyle={{
-                        border: '1px solid var(--md-sys-color-outline-variant)',
-                        overflow: 'hidden',
-                      }}
+                      onFieldChange={handleLocalChange}
+                      changeKey={changeKey}
+                      field={field}
                       isChanged={isChanged}
-                      widthExpand
                     />
                   )
                 } else if (field === 'tags') {
