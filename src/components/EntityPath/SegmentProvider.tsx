@@ -4,7 +4,6 @@ import { classNames } from 'primereact/utils'
 import { PathSegment } from './EntityPath'
 import { useDispatch } from 'react-redux'
 import { openSlideOut } from '@state/details'
-import { useContextMenu } from '@context/contextMenuContext'
 import useCreateContext from '@hooks/useCreateContext'
 import copyToClipboard from '@helpers/copyToClipboard'
 
