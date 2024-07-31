@@ -107,8 +107,9 @@ const DetailsPanel = ({
   const firstEntityData = entityDetailsData[0] || {}
 
   // build the full entity path for the first entity
-  const entityPathSegments = useGetEntityPath({
+  const [entityPathSegments, entityPathVersions] = useGetEntityPath({
     entity: firstEntityData,
+    entityType,
     projectName: firstProject,
     isLoading: isFetchingEntitiesDetails,
   })
@@ -142,6 +143,7 @@ const DetailsPanel = ({
         <Styled.Toolbar>
           <EntityPath
             segments={entityPathSegments}
+            versions={entityPathVersions}
             projectName={firstProject}
             isLoading={isFetchingEntitiesDetails || !entityPathSegments.length}
             entityType={entityType}

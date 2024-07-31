@@ -8,7 +8,7 @@ const getAllParents = (
   firstParentFolder: FolderListItem,
   folders: FoldersMap,
 ): FolderListItem[] => {
-  const parents: FolderListItem[] = []
+  const parents: FolderListItem[] = [firstParentFolder]
   let currentFolder = firstParentFolder
 
   while (currentFolder.parentId && currentFolder.parentId !== 'root') {
@@ -16,7 +16,7 @@ const getAllParents = (
     if (!parentFolder) {
       break
     }
-    parents.push(parentFolder)
+    parents.unshift(parentFolder)
     currentFolder = parentFolder
   }
 
@@ -28,10 +28,6 @@ const getEntityPathData = (entity: $Any, folders: FoldersMap) => {
 
   //   add parent folders
   let firstParentFolder = folders.get(entity.folderId || '')
-
-  // if entityType folder, skip the first parent folder because it's already added in final entity segment
-  // if (entity.entityType === 'folder')
-  //   firstParentFolder = folders.get(firstParentFolder?.parentId || '')
 
   // get all parent folders by looking up the parent id in the folders map
   const allParents = firstParentFolder ? getAllParents(firstParentFolder, folders) : []
@@ -45,15 +41,14 @@ const getEntityPathData = (entity: $Any, folders: FoldersMap) => {
     segments.push({ type: 'product', label: entity.product?.name, id: entity.product?.id })
   }
 
-  // add final entity segment (folder, task, product, version)
-  const finalEntitySegment = {
-    type: entity.entityType,
-    label: entity.label || entity.name,
-    id: entity.id,
-  }
-  segments.push(finalEntitySegment)
-
-  if (entity.entityType === 'version') {
+  if (entity.entityType !== 'folder') {
+    // add final entity segment (task, product, version)
+    const finalEntitySegment = {
+      type: entity.entityType,
+      label: entity.label || entity.name,
+      id: entity.id,
+    }
+    segments.push(finalEntitySegment)
   }
 
   return segments

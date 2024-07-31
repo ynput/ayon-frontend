@@ -1,5 +1,5 @@
 import { getShimmerStyles } from '@ynput/ayon-react-components'
-import styled from 'styled-components'
+import styled, { css } from 'styled-components'
 
 export const Path = styled.div`
   position: relative;
@@ -29,6 +29,10 @@ export const Path = styled.div`
   }
 `
 
+export const SegmentWrapper = styled.div`
+  position: relative;
+`
+
 export const Segment = styled.span`
   position: relative;
   padding: 0px 2px;
@@ -38,6 +42,7 @@ export const Segment = styled.span`
   display: flex;
   align-items: center;
 
+  /* ... styles */
   &.more {
     cursor: pointer;
 
@@ -49,25 +54,34 @@ export const Segment = styled.span`
   }
 `
 
+const NotClickableHover = css`
+  background-color: var(--md-sys-color-surface-container);
+  &,
+  .icon {
+    color: var(--md-sys-color-on-surface);
+  }
+`
+
 export const ActiveSegment = styled.div`
-  & > span {
+  & > span,
+  & > li {
     cursor: pointer;
     &:hover {
-      background-color: var(--md-sys-color-surface-container);
-      &,
-      .icon {
-        color: var(--md-sys-color-on-surface);
-      }
+      ${NotClickableHover}
+    }
+  }
+
+  &.open {
+    & > span {
+      ${NotClickableHover}
     }
   }
 
   &.link {
-    & > span {
+    & > span,
+    & > li {
       &:hover {
         background-color: var(--md-sys-color-surface-container-highest-hover);
-        .label {
-          text-decoration: underline;
-        }
       }
     }
   }
@@ -80,26 +94,29 @@ export const MoreModal = styled.div`
   width: 100%;
   min-width: fit-content;
 
-  z-index: 100;
+  z-index: 200;
   padding-top: 4px;
 `
 
 export const MoreList = styled.ul`
+  display: flex;
+  flex-direction: column;
+  gap: var(--base-gap-small);
+
   background-color: var(--md-sys-color-surface-container-high);
   border-radius: var(--border-radius-m);
   box-shadow: var(--md-sys-shadow-elevation-4);
   padding: var(--padding-s);
+
+  margin: 0;
   list-style: none;
 
-  overflow: hidden;
+  max-height: 500px;
+  overflow: auto;
 `
 
 export const MoreItem = styled.li`
   padding: var(--base-gap-small);
   border-radius: var(--border-radius-m);
-
-  &:hover {
-    color: var(--md-sys-color-on-surface);
-    background-color: var(--md-sys-color-surface-container-highest-hover);
-  }
+  color: var(--md-sys-color-on-surface);
 `

@@ -1535,6 +1535,18 @@
         "isOneOf": null,
         "fields": [
           {
+            "name": "car",
+            "description": "What car do you want?",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "clipIn",
             "description": null,
             "args": [],
@@ -1577,6 +1589,18 @@
             "type": {
               "kind": "SCALAR",
               "name": "DateTime",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "enum",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
               "ofType": null
             },
             "isDeprecated": false,
@@ -1643,20 +1667,8 @@
             "deprecationReason": null
           },
           {
-            "name": "goldCoins",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "SCALAR",
-              "name": "Int",
-              "ofType": null
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "hairColor",
-            "description": null,
+            "name": "hairColour",
+            "description": "hair",
             "args": [],
             "type": {
               "kind": "SCALAR",
@@ -1703,12 +1715,12 @@
             "deprecationReason": null
           },
           {
-            "name": "pizzaShare",
-            "description": "How much of the pizza do I get to have?",
+            "name": "progress",
+            "description": "Percentage of shot completetion",
             "args": [],
             "type": {
               "kind": "SCALAR",
-              "name": "Float",
+              "name": "Int",
               "ofType": null
             },
             "isDeprecated": false,
@@ -1799,7 +1811,7 @@
             "deprecationReason": null
           },
           {
-            "name": "testy",
+            "name": "test",
             "description": null,
             "args": [],
             "type": {
@@ -5121,6 +5133,18 @@
             "type": {
               "kind": "SCALAR",
               "name": "Float",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "progress",
+            "description": "Percentage of shot completetion",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "Int",
               "ofType": null
             },
             "isDeprecated": false,
@@ -9036,6 +9060,18 @@
         "isOneOf": null,
         "fields": [
           {
+            "name": "car",
+            "description": "What car do you want?",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "clipIn",
             "description": null,
             "args": [],
@@ -9078,6 +9114,18 @@
             "type": {
               "kind": "SCALAR",
               "name": "DateTime",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "enum",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
               "ofType": null
             },
             "isDeprecated": false,
@@ -9144,20 +9192,8 @@
             "deprecationReason": null
           },
           {
-            "name": "goldCoins",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "SCALAR",
-              "name": "Int",
-              "ofType": null
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "hairColor",
-            "description": null,
+            "name": "hairColour",
+            "description": "hair",
             "args": [],
             "type": {
               "kind": "SCALAR",
@@ -9204,12 +9240,12 @@
             "deprecationReason": null
           },
           {
-            "name": "pizzaShare",
-            "description": "How much of the pizza do I get to have?",
+            "name": "progress",
+            "description": "Percentage of shot completetion",
             "args": [],
             "type": {
               "kind": "SCALAR",
-              "name": "Float",
+              "name": "Int",
               "ofType": null
             },
             "isDeprecated": false,
@@ -9300,7 +9336,7 @@
             "deprecationReason": null
           },
           {
-            "name": "testy",
+            "name": "test",
             "description": null,
             "args": [],
             "type": {
@@ -10939,12 +10975,12 @@
         "isOneOf": null,
         "fields": [
           {
-            "name": "blessed",
-            "description": "The version that is currently the one to use.",
+            "name": "car",
+            "description": "What car do you want?",
             "args": [],
             "type": {
               "kind": "SCALAR",
-              "name": "Boolean",
+              "name": "String",
               "ofType": null
             },
             "isDeprecated": false,
@@ -11134,6 +11170,26 @@
               "kind": "SCALAR",
               "name": "Float",
               "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "productTypes",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                }
+              }
             },
             "isDeprecated": false,
             "deprecationReason": null
