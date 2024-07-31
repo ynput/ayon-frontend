@@ -4,6 +4,13 @@ import groupActivityVersions from '../helpers/groupActivityVersions'
 import groupMinorActivities from '../helpers/groupMinorActivities'
 import mergeSimilarActivities from '../helpers/mergeSimilarActivities'
 
+// Define the types of activities that are considered minor
+const minorActivityTypes = [
+  { status: 'status.change', strategy: 'group' },
+  { status: 'assignee.add', strategy: 'merge' },
+  { status: 'assignee.remove', strategy: 'merge' },
+]
+
 const getStatusActivityIcon = (activities = [], projectInfo = {}) => {
   return activities.map((activity) => {
     const newActivity = { ...activity, origin: { ...activity.origin } }
@@ -73,12 +80,9 @@ const useTransformActivities = (activities = [], projectInfo = {}, entityType) =
     [reversedActivitiesData],
   )
 
-  // Define the types of activities that are considered minor
-  const minorActivityTypes = ['status.change', 'assignee.add', 'assignee.remove', '']
-
   // 5. group minor activities together
   const groupedActivitiesData = useMemo(
-    () => groupMinorActivities(mergedActivitiesData, minorActivityTypes),
+    () => groupMinorActivities(mergedActivitiesData),
     [mergedActivitiesData],
   )
 
@@ -101,4 +105,5 @@ const useTransformActivities = (activities = [], projectInfo = {}, entityType) =
   return uniqueActivitiesData
 }
 
+export { minorActivityTypes }
 export default useTransformActivities
