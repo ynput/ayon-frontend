@@ -78,7 +78,7 @@ const Thumbnail = ({
       {(!isLoading || !loaded) && !disabled && (
         <Icon icon={icon || 'image'} className="type-icon" />
       )}
-      {((entityType && projectName && !(isWrongEntity || !entityId)) || url) && (
+      {entityType && projectName && !(isWrongEntity || !entityId) && (
         <Styled.Image alt={`Entity thumbnail ${entityId}`} src={url} />
       )}
       {hoverIcon && <Icon icon={hoverIcon} className="hover-icon" />}
