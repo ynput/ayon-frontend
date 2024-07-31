@@ -37,18 +37,13 @@ const getEntityPathData = (entity: $Any, folders: FoldersMap) => {
   })
 
   if (entity.entityType === 'version') {
-    // add product
-    segments.push({ type: 'product', label: entity.product?.name, id: entity.product?.id })
+    const productVersion = `${entity.product?.name} - ${entity.name}`
+    // add product - version
+    segments.push({ type: 'version', label: productVersion, id: entity.product?.id })
   }
-
-  if (entity.entityType !== 'folder') {
-    // add final entity segment (task, product, version)
-    const finalEntitySegment = {
-      type: entity.entityType,
-      label: entity.label || entity.name,
-      id: entity.id,
-    }
-    segments.push(finalEntitySegment)
+  if (entity.entityType === 'task') {
+    // add task
+    segments.push({ type: 'task', label: entity.name, id: entity.id })
   }
 
   return segments
