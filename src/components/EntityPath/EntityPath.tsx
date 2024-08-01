@@ -1,4 +1,4 @@
-import { FC, Fragment, MouseEvent, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { FC, Fragment, MouseEvent, useLayoutEffect, useRef, useState } from 'react'
 import * as Styled from './EntityPath.styled'
 import { classNames } from 'primereact/utils'
 import SegmentProvider from './SegmentProvider'
