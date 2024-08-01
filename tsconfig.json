@@ -34,9 +34,10 @@
       "@context/*": ["./context/*"],
       "@state/*": ["./features/*"],
       "@helpers/*": ["./helpers/*"],
-      "@/*": ["./*"],
+      "@/*": ["./*"]
     }
   },
   "include": ["src"],
+  "exclude": ["node_modules", "dist"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
