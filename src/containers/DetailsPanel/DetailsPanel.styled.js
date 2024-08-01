@@ -7,4 +7,8 @@ export const Toolbar = styled(ARCToolbar)`
   align-items: flex-start;
   padding: var(--padding-m);
   padding-bottom: 0;
+
+  & > * {
+    min-width: max-content;
+  }
 `

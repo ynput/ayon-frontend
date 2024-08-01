@@ -9,6 +9,7 @@ export const Path = styled.div`
   align-items: center;
   gap: var(--base-gap-small);
   user-select: none;
+  height: 100%;
   &,
   .icon {
     color: var(--md-sys-color-outline);
@@ -38,6 +39,7 @@ export const Segment = styled.span`
   padding: 0px 2px;
   border-radius: var(--border-radius-m);
   transition: color 0.2s, background-color 0.2s;
+  min-width: max-content;
 
   display: flex;
   align-items: center;
@@ -119,4 +121,6 @@ export const MoreItem = styled.li`
   padding: var(--base-gap-small);
   border-radius: var(--border-radius-m);
   color: var(--md-sys-color-on-surface);
+  min-width: max-content;
+  width: 100%;
 `
