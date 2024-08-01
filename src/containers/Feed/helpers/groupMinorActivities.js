@@ -22,7 +22,7 @@ const reduceMinorActivities = (activitiesGroup) => {
           assignee: [
             ...group.map(
               (a) =>
-                mappedUsers[a.activityData.assignee].attrib?.fullName || a.activityData.assignee,
+                mappedUsers[a.activityData.assignee]?.attrib?.fullName || a.activityData.assignee,
             ),
           ].join(', '),
           activityData: {
@@ -30,7 +30,7 @@ const reduceMinorActivities = (activitiesGroup) => {
             assignee: group
               .map(
                 (a) =>
-                  mappedUsers[a.activityData.assignee].attrib?.fullName || a.activityData.assignee,
+                  mappedUsers[a.activityData.assignee]?.attrib?.fullName || a.activityData.assignee,
               )
               .join(', '),
           },
@@ -75,7 +75,7 @@ const reduceMinorActivities = (activitiesGroup) => {
           ...group[0],
           activityData: {
             ...group[0].activityData,
-            assignee: mappedUsers[assignee].attrib.fullName || assignee,
+            assignee: mappedUsers[assignee]?.attrib.fullName || assignee,
           },
         })
       }

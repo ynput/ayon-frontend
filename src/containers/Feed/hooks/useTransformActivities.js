@@ -79,7 +79,7 @@ const useTransformActivities = (activities = [], users = [], projectInfo = {}, e
   // 5. group minor activities together
   const groupedActivitiesData = useMemo(
     () => groupMinorActivities(mergedActivitiesData, users),
-    [mergedActivitiesData],
+    [mergedActivitiesData, users],
   )
 
   // 6. group version activities together
