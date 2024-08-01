@@ -70,7 +70,14 @@ const reduceMinorActivities = (activitiesGroup) => {
     if (group.length > 2) {
       // Push the first item individually if it's the last group
       if (isFirstGroup) {
-        groupedActivities.push(group[0])
+        const assignee = group[0].activityData.assignee
+        groupedActivities.push({
+          ...group[0],
+          activityData: {
+            ...group[0].activityData,
+            assignee: mappedUsers[assignee].attrib.fullName || assignee,
+          },
+        })
       }
       // Push the rest of the group as a group
       groupedActivities.push({
