@@ -77,6 +77,11 @@ const App = () => {
 
   useEffect(() => {
     setLoading(true)
+
+    // Get authorize_url from query params
+    const urlParams = new URLSearchParams(window.location.search)
+    const authorizeRedirect = urlParams.get('auth_redirect')
+
     getInfo()
       .unwrap()
       .then((response) => {
@@ -89,6 +94,12 @@ const App = () => {
         }
 
         if (response.user) {
+
+          if (authorizeRedirect) {
+            const redirectUrl = `${authorizeRedirect}?access_token=${storedAccessToken}`
+            window.location.href = redirectUrl
+          }
+
           dispatch(
             login({
               user: response.user,
