@@ -240,6 +240,6 @@ const totalUpSegmentsWidth = (children: HTMLCollection, count: number, full: num
     total += width
   }
   const gap = 4
-  const moreWidth = 30
+  const moreWidth = 40
   return total + (gap * count - 1) + moreWidth
 }
