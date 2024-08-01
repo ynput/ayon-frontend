@@ -4,7 +4,10 @@ import groupActivityVersions from '../helpers/groupActivityVersions'
 import groupMinorActivities from '../helpers/groupMinorActivities'
 import mergeSimilarActivities from '../helpers/mergeSimilarActivities'
 
-const getStatusActivityIcon = (activities = [], projectInfo = {}) => {
+// Define the types of activities that are considered minor
+const minorActivityTypes = [ 'status.change', 'assignee.add', 'assignee.remove']
+
+const getStatusActivityIcon = (activities = [], usersDemographics, projectInfo = {}) => {
   return activities.map((activity) => {
     const newActivity = { ...activity, origin: { ...activity.origin } }
 
@@ -31,7 +34,7 @@ const filterOutRelations = (activities = [], entityTypes = [], entityType) => {
     : activities.filter((activity) => activity.referenceType !== 'relation')
 }
 
-const useTransformActivities = (activities = [], projectInfo = {}, entityType) => {
+const useTransformActivities = (activities = [], users = [], projectInfo = {}, entityType) => {
   // 1. add status icons and data for status change activities
   const activitiesWithIcons = useMemo(
     () => getStatusActivityIcon(activities, projectInfo),
@@ -73,13 +76,10 @@ const useTransformActivities = (activities = [], projectInfo = {}, entityType) =
     [reversedActivitiesData],
   )
 
-  // Define the types of activities that are considered minor
-  const minorActivityTypes = ['status.change', 'assignee.add', 'assignee.remove', '']
-
   // 5. group minor activities together
   const groupedActivitiesData = useMemo(
-    () => groupMinorActivities(mergedActivitiesData, minorActivityTypes),
-    [mergedActivitiesData],
+    () => groupMinorActivities(mergedActivitiesData, users),
+    [mergedActivitiesData, users],
   )
 
   // 6. group version activities together
@@ -104,4 +104,5 @@ const useTransformActivities = (activities = [], projectInfo = {}, entityType) =
   return uniqueActivitiesData
 }
 
+export { minorActivityTypes }
 export default useTransformActivities

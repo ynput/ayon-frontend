@@ -19,6 +19,7 @@ import useScrollToHighlighted from './hooks/useScrollToHighlighted'
 import { toast } from 'react-toastify'
 import ActivityReferenceTooltip from '@components/Feed/ActivityReferenceTooltip/ActivityReferenceTooltip'
 import { isFilePreviewable } from '@containers/FileUploadPreview/FileUploadPreview'
+import { useGetKanbanProjectUsersQuery } from '@queries/userDashboard/getUserDashboard'
 
 // number of activities to get
 export const activitiesLast = 30
@@ -71,6 +72,11 @@ const Feed = ({
   } = useGetActivitiesQuery(queryArgs, { skip: skip })
 
   const [getActivitiesData, { isFetching: isFetchingMore }] = useLazyGetActivitiesQuery()
+  const selectedProjects = useSelector((state) => state.dashboard.selectedProjects)
+  const { data: projectUsers = [] } = useGetKanbanProjectUsersQuery(
+    { projects: selectedProjects },
+    { skip: !selectedProjects?.length },
+  )
 
   const { hasPreviousPage, endCursor } = pageInfo
   // when we scroll to the top of the feed, fetch more activities
@@ -118,7 +124,7 @@ const Feed = ({
   // do any transformation on activities data
   // 1. status change activities, attach status data based on projectName
   // 2. reverse the order
-  const transformedActivitiesData = useTransformActivities(activitiesData, projectInfo, entityType)
+  const transformedActivitiesData = useTransformActivities(activitiesData, projectUsers, projectInfo, entityType)
 
   // REFS
   const feedRef = useRef(null)
