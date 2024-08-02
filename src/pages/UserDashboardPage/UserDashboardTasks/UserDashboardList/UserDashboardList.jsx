@@ -28,12 +28,21 @@ const UserDashboardList = ({
   // keep track of the longest folder name and task name
   const [minWidths, setMinWidths] = useState({})
 
+  // filter out fields that have no tasks
+  const filteredFields = useMemo(() => {
+    return groupedFields.filter((field) => {
+      const column = groupedTasks[field.id]
+      return column && column.tasks.length > 0
+    })
+  }, [groupedFields, groupedTasks])
+
   // sort the groupedTasks by id alphabetically based on groupByValue sortBy
+  // unless the groupByValue is status, then we keep the order of the statuses
   const sortedFields = useMemo(() => {
     if (groupByValue[0] && groupByValue[0].id !== 'status') {
       const asc = groupByValue[0].sortOrder
       // sort by id
-      return [...groupedFields].sort((a, b) => {
+      return [...filteredFields].sort((a, b) => {
         const hasATasksButBDoesNot = a.tasksCount === 0 && b.tasksCount > 0
         const hasBTasksButADoesNot = b.tasksCount === 0 && a.tasksCount > 0
         // If one group has tasks and the other does not, put the group without tasks at the end
@@ -48,9 +57,10 @@ const UserDashboardList = ({
           return b.id.localeCompare(a.id)
         }
       })
+    } else {
+      return filteredFields
     }
-    return groupedFields
-  }, [groupedFields, groupByValue])
+  }, [filteredFields, groupByValue])
 
   // store a reference to the list items in the ref
   useEffect(() => {
@@ -74,17 +84,17 @@ const UserDashboardList = ({
     }, 0)
 
     setMinWidths({ folder: minFolderWidth, task: minTaskWidth })
-  }, [containerRef.current, isLoading, groupedTasks, groupedFields])
+  }, [containerRef.current, isLoading, groupedTasks, filteredFields])
 
   const dispatch = useDispatch()
   // get all task ids in order
   const tasks = useMemo(() => {
-    return groupedFields.flatMap(({ id }) => {
+    return filteredFields.flatMap(({ id }) => {
       const column = groupedTasks[id]
       if (!column) return []
       return column.tasks
     })
-  }, [groupedTasks, groupedFields])
+  }, [groupedTasks, filteredFields])
 
   const taskIds = useMemo(() => tasks.map((t) => t.id), [tasks])
 
