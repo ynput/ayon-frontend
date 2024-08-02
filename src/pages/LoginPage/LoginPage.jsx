@@ -10,6 +10,8 @@ import { useGetInfoQuery } from '@queries/auth/getAuth'
 import ReactMarkdown from 'react-markdown'
 import LoadingPage from '../LoadingPage'
 import * as Styled from './LoginPage.styled'
+import useLocalStorage from '@hooks/useLocalStorage'
+import { isEmpty, isEqual } from 'lodash'
 
 const clearQueryParams = () => {
   const url = new URL(window.location)
@@ -18,7 +20,9 @@ const clearQueryParams = () => {
   history.pushState({}, '', url.href)
 }
 
-const LoginPage = ({ isFirstTime }) => {
+const LoginPage = ({ isFirstTime = false }) => {
+  // get query params from url
+  const search = new URLSearchParams(window.location.search)
   const dispatch = useDispatch()
   const [name, setName] = useState('')
   const [password, setPassword] = useState('')
@@ -27,6 +31,29 @@ const LoginPage = ({ isFirstTime }) => {
 
   const { data: info = {}, isLoading: isLoadingInfo } = useGetInfoQuery()
   const { motd, loginPageBrand = '', loginPageBackground = '' } = info
+
+  // we need to store the redirect in local storage to persist it across auth flows
+  const [redirectQueryParams, setRedirectQueryParams] = useLocalStorage(
+    'auth-redirect-params',
+    null,
+  )
+
+  const allowedParams = ['auth_redirect']
+  // preserve the redirect query params across auth flows
+  useEffect(() => {
+    // convert search params to object
+    const searchParams = search.entries().reduce((acc, [key, value]) => {
+      if (allowedParams.includes(key)) {
+        acc[key] = value
+      }
+      return acc
+    }, {})
+
+    if (isEmpty(searchParams) || isEqual(searchParams, redirectQueryParams)) return
+
+    // store the redirect in local storage
+    setRedirectQueryParams(searchParams)
+  }, [search, setRedirectQueryParams, redirectQueryParams])
 
   // OAuth2 handler after redirect from provider
   useEffect(() => {
@@ -79,6 +106,13 @@ const LoginPage = ({ isFirstTime }) => {
         .finally(() => {
           // clear the query string
           clearQueryParams()
+          // replace with redirect query params
+          if (redirectQueryParams) {
+            const redirect = new URLSearchParams(redirectQueryParams)
+            // clear local storage
+            localStorage.removeItem('auth-redirect-params')
+            window.location.search = redirect.toString()
+          }
           setIsLoading(false)
         })
     }
@@ -93,6 +127,8 @@ const LoginPage = ({ isFirstTime }) => {
       .post('/api/auth/login', { name, password })
       .then((response) => {
         if (response.data.user) {
+          // clear local storage
+          localStorage.removeItem('auth-redirect-params')
           toast.info(response.data.detail)
           dispatch(
             login({

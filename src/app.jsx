@@ -56,6 +56,7 @@ import { useLazyGetInfoQuery } from '@queries/auth/getAuth'
 // hooks
 import useTooltip from '@hooks/Tooltip/useTooltip'
 import WatchActivities from './containers/WatchActivities'
+import LauncherAuthPage from '@pages/LauncherAuthPage'
 
 const App = () => {
   const user = useSelector((state) => state.user)
@@ -77,6 +78,7 @@ const App = () => {
 
   useEffect(() => {
     setLoading(true)
+
     getInfo()
       .unwrap()
       .then((response) => {
@@ -95,6 +97,9 @@ const App = () => {
               accessToken: storedAccessToken,
             }),
           )
+
+          // clear any auth-redirect-params local storage
+          localStorage.removeItem('auth-redirect-params')
 
           if (!response.attributes.length) {
             toast.error('Unable to load attributes. Something is wrong')
@@ -285,6 +290,12 @@ const App = () => {
   // Then use the state of the app to determine which component to render
 
   if (loading) return loadingComponent
+
+  // Get authorize_url from query params
+  const urlParams = new URLSearchParams(window.location.search)
+  const authRedirect = urlParams.get('auth_redirect')
+  // return launcher auth flow
+  if (authRedirect) return <LauncherAuthPage user={user} redirect={authRedirect} />
 
   if (window.location.pathname.startsWith('/passwordReset')) {
     if (!user.name) return <PasswordResetPage />
