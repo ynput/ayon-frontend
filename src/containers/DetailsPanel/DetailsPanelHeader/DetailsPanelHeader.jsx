@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import * as Styled from './DetailsPanelHeader.styled'
 import StackedThumbnails from '@pages/EditorPage/StackedThumbnails'
-import { classNames } from 'primereact/utils'
+import clsx from 'clsx'
 import { isEqual, union, upperFirst } from 'lodash'
 import { useUpdateEntitiesMutation } from '@queries/entity/updateEntity'
 import { toast } from 'react-toastify'
@@ -229,10 +229,10 @@ const DetailsPanelHeader = ({
 
   return (
     <Styled.Grid
-      className={classNames('details-panel-header', { isCompact })}
+      className={clsx('details-panel-header', { isCompact })}
       onDragEnter={() => setIsDraggingFile(true)}
     >
-      <Styled.Header className={classNames('titles', { isCompact })}>
+      <Styled.Header className={clsx('titles', { isCompact })}>
         <StackedThumbnails
           isLoading={isLoading}
           shimmer={isLoading}
@@ -241,7 +241,7 @@ const DetailsPanelHeader = ({
           onClick={thumbnails.length === 1 ? handleThumbnailClick : undefined}
           hoverIcon={'play_circle'}
         />
-        <Styled.Content className={classNames({ isLoading })}>
+        <Styled.Content className={clsx({ isLoading })}>
           <h2>{!isMultiple ? firstEntity?.title : `${entities.length} ${entityType}s selected`}</h2>
           <div className="sub-title">
             <span>{upperFirst(entityType)} - </span>
@@ -256,7 +256,7 @@ const DetailsPanelHeader = ({
         invert
         style={{ maxWidth: 'unset' }}
         onChange={(value) => handleUpdate('status', value)}
-        className={classNames('status-select', { isLoading })}
+        className={clsx('status-select', { isLoading })}
         align={isCompact ? 'right' : 'left'}
       />
       {!isCompact &&

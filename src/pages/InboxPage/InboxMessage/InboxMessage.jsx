@@ -1,5 +1,5 @@
 import * as Styled from './InboxMessage.styled'
-import { classNames } from 'primereact/utils'
+import clsx from 'clsx'
 import { Icon } from '@ynput/ayon-react-components'
 import { isValid } from 'date-fns'
 import { isToday } from 'date-fns'
@@ -119,7 +119,7 @@ const InboxMessage = ({
     <Styled.Message
       {...props}
       tabIndex={0}
-      className={classNames('inbox-message', {
+      className={clsx('inbox-message', {
         isSelected,
         isRead,
         disableHover,
@@ -139,7 +139,7 @@ const InboxMessage = ({
         <span className={'title'}>{path.join(' - ')}</span>
       </Styled.Left>
       <Styled.Middle className="middle">
-        <Styled.Unread className={classNames(Typography.bodySmall, { hide: unReadCount < 2 })}>
+        <Styled.Unread className={clsx(Typography.bodySmall, { hide: unReadCount < 2 })}>
           {unReadCount}
         </Styled.Unread>
         {!isStatusChange && <Icon icon={typeIcon} className="type" />}

@@ -1,7 +1,7 @@
 import InboxMessage from '../InboxMessage/InboxMessage'
 import * as Styled from './Inbox.styled'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { classNames } from 'primereact/utils'
+import clsx from 'clsx'
 import InboxDetailsPanel from '../InboxDetailsPanel'
 import { useDispatch } from 'react-redux'
 import Shortcuts from '@containers/Shortcuts'
@@ -362,7 +362,7 @@ const Inbox = ({ filter }) => {
           ref={listRef}
           onMouseMove={() => setUsingKeyboard(false)}
           onKeyDown={handleKeyDown}
-          className={classNames({ isLoading: isLoadingInbox })}
+          className={clsx({ isLoading: isLoadingInbox })}
         >
           {messagesData.map((group) => (
             <InboxMessage

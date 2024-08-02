@@ -2,7 +2,7 @@ import { forwardRef, HTMLProps, MouseEvent } from 'react'
 import type { ReviewableModel } from '@api/rest'
 import * as Styled from './ReviewableCard.styled'
 import Typography from '@/theme/typography.module.css'
-import { classNames } from 'primereact/utils'
+import clsx from 'clsx'
 
 export interface ReviewableCardProps
   extends Pick<
@@ -58,7 +58,7 @@ const ReviewableCard = forwardRef<HTMLDivElement, ReviewableCardProps>(
       <Styled.Card
         id={fileId}
         ref={ref}
-        className={classNames({
+        className={clsx({
           draggable: isDraggable,
           'drop-placeholder': isDropPlaceholder,
           'drag-overlay': isDragOverlay,

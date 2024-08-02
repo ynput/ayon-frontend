@@ -2,7 +2,7 @@ import * as Styled from './FeedFilters.styled'
 import { useDispatch, useSelector } from 'react-redux'
 import { updateDetailsPanelTab, updateFeedFilter } from '@state/details'
 import { Spacer } from '@ynput/ayon-react-components'
-import { classNames } from 'primereact/utils'
+import clsx from 'clsx'
 import { entitiesWithoutFeed } from '../DetailsPanel'
 
 const FeedFilters = ({
@@ -57,7 +57,7 @@ const FeedFilters = ({
   const hideActivityFilters = entitiesWithoutFeed.includes(entityType)
 
   return (
-    <Styled.FiltersToolbar {...props} className={classNames(className, { isLoading })}>
+    <Styled.FiltersToolbar {...props} className={clsx(className, { isLoading })}>
       {!hideActivityFilters &&
         filtersLeft.map((filter) => (
           <Styled.FilterButton

@@ -5,7 +5,7 @@ import { Button, EntityCard, Icon } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 import PerfectScrollbar from 'react-perfect-scrollbar'
 import 'react-perfect-scrollbar/dist/css/styles.css'
-import { classNames } from 'primereact/utils'
+import clsx from 'clsx'
 import Shortcuts from '@containers/Shortcuts'
 
 const StyledGridLayout = styled(PerfectScrollbar)`
@@ -232,10 +232,7 @@ const ProductsGrid = ({
         <StyledGroup
           key={groupName}
           id={groupName}
-          className={classNames(
-            { isCollapsed: collapsedGroups.includes(groupName) },
-            'products-group',
-          )}
+          className={clsx({ isCollapsed: collapsedGroups.includes(groupName) }, 'products-group')}
         >
           {groupName && (
             <div className="header-wrapper">

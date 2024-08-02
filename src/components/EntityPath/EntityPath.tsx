@@ -1,6 +1,6 @@
 import { FC, Fragment } from 'react'
 import * as Styled from './EntityPath.styled'
-import { classNames } from 'primereact/utils'
+import clsx from 'clsx'
 
 export type PathSegment = {
   type: 'folder' | 'task' | 'product' | 'version'
@@ -22,7 +22,7 @@ const EntityPath: FC<EntityPathProps> = ({ projectName, segments, isLoading }) =
   if (lastFolder) segmentsToShow.unshift(lastFolder)
 
   return (
-    <Styled.Path className={classNames({ loading: isLoading })}>
+    <Styled.Path className={clsx({ loading: isLoading })}>
       <Styled.Segment>{projectName}</Styled.Segment>
 
       {!!parentFolders.length && (

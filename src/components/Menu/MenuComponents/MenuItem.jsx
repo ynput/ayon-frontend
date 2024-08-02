@@ -3,7 +3,7 @@ import React, { forwardRef } from 'react'
 import * as Styled from './Menu.styled'
 import { isArray } from 'lodash'
 import { Link } from 'react-router-dom'
-import classNames from 'classnames'
+import clsx from 'clsx'
 
 const MenuItem = forwardRef(
   (
@@ -27,7 +27,7 @@ const MenuItem = forwardRef(
     const Item = (
       <Styled.Item
         ref={ref}
-        className={classNames(
+        className={clsx(
           'menu-item',
           {
             highlighted: highlighted,

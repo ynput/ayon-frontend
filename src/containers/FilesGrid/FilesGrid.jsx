@@ -1,5 +1,5 @@
 import * as Styled from './FilesGrid.styled'
-import { classNames } from 'primereact/utils'
+import clsx from 'clsx'
 import FileUploadCard from '@components/FileUploadCard/FileUploadCard'
 import { isFilePreviewable } from '@containers/FileUploadPreview/FileUploadPreview'
 
@@ -16,13 +16,13 @@ const FilesGrid = ({
   if (!files.length) return null
 
   const handleExpand = (index) => () => {
-    const filteredFiles = files.filter(file => isFilePreviewable(file.mime, file.ext))
-    const updatedIndex = filteredFiles.findIndex(file => file.id === files[index].id)
+    const filteredFiles = files.filter((file) => isFilePreviewable(file.mime, file.ext))
+    const updatedIndex = filteredFiles.findIndex((file) => file.id === files[index].id)
     onExpand({ files: filteredFiles, index: updatedIndex, activityId: activityId })
   }
 
   return (
-    <Styled.Grid className={classNames({ compact: isCompact })} {...props}>
+    <Styled.Grid className={clsx({ compact: isCompact })} {...props}>
       {files.map((file, index) => (
         <FileUploadCard
           key={index}

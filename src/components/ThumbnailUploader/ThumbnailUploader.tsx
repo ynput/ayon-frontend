@@ -2,7 +2,7 @@ import { DragEvent, HTMLAttributes, useState } from 'react'
 import * as Styled from './ThumbnailUploader.styled'
 import { Icon } from '@ynput/ayon-react-components'
 import axios from 'axios'
-import { classNames } from 'primereact/utils'
+import clsx from 'clsx'
 import { toast } from 'react-toastify'
 
 type Entity = {
@@ -89,7 +89,7 @@ const ThumbnailUploader = ({ onFinish, entities, ...props }: ThumbnailUploaderPr
 
   return (
     <Styled.ThumbnailUploaderWrapper
-      className={classNames({
+      className={clsx({
         uploading: uploadingFile,
       })}
       onDrop={handleInputDrop}

@@ -2,7 +2,7 @@ import { Panel, Section } from '@ynput/ayon-react-components'
 import React, { useState } from 'react'
 import styled from 'styled-components'
 import Type from '@/theme/typography.module.css'
-import { classNames } from 'primereact/utils'
+import clsx from 'clsx'
 import YnputConnector from '@components/YnputCloud/YnputConnector'
 
 const StyledSection = styled(Section)`
@@ -83,11 +83,11 @@ const AddonFilters = ({ onSelect, onConnection }) => {
   return (
     <StyledSection>
       <StyledList>
-        <div className={classNames('title', Type.titleMedium)}>Downloaded</div>
+        <div className={clsx('title', Type.titleMedium)}>Downloaded</div>
         {downloadFilters.map((filter) => (
           <div
             key={filter.id}
-            className={classNames('item', { isSelected: selected === filter.id })}
+            className={clsx('item', { isSelected: selected === filter.id })}
             id={filter.id}
             onClick={(e) => handleSelect(e, filter.filter)}
             data-tooltip={filter.tooltip}
