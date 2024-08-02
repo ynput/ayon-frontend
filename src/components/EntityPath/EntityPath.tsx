@@ -51,7 +51,6 @@ const EntityPath: FC<EntityPathProps> = ({
   }, [segments])
 
   useLayoutEffect(() => {
-    console.log('calc')
     if (!containerRef.current) {
       setCalcMaxWidth(false)
       return
