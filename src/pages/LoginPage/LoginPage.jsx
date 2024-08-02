@@ -42,7 +42,7 @@ const LoginPage = ({ isFirstTime = false }) => {
   // preserve the redirect query params across auth flows
   useEffect(() => {
     // convert search params to object
-    const searchParams = search.entries().reduce((acc, [key, value]) => {
+    const searchParams = Array.from(search.entries()).reduce((acc, [key, value]) => {
       if (allowedParams.includes(key)) {
         acc[key] = value
       }
