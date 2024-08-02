@@ -78,7 +78,9 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
 
   // are we currently looking at review?
   const reviewableIds = useSelector((state: $Any) => state.viewer.reviewableIds) || []
-  const username = useSelector((state: $Any) => state.user?.name)
+  const currentUser = useSelector((state: $Any) => state.user)
+  const currentUserName = currentUser.name
+  const currentIsUser = currentUser.data.isUser
 
   // either null or the reviewable id we are editing
   const [editActivityId, setEditActivityId] = useState<null | string>(null)
@@ -275,7 +277,7 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
                 if (upload.name !== file.name) return upload
                 return {
                   ...upload,
-                  error: error.message,
+                  error: error.response.data.detail || error.message,
                 }
               })
 
@@ -388,7 +390,7 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
     const items: {
       label: string
       icon: string
-      onClick: () => void
+      onClick?: () => void
       disabled?: boolean
       danger?: boolean
     }[] = [
@@ -400,7 +402,7 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
       },
     ]
 
-    if (username === reviewable.author.name) {
+    if (currentUserName === reviewable.author.name || !currentIsUser) {
       items.push({
         label: 'Delete',
         icon: 'delete',
@@ -408,6 +410,13 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
         danger: true,
       })
     }
+
+    // add author
+    items.push({
+      label: `Author: ${reviewable.author.fullName || reviewable.author.name}`,
+      icon: 'person',
+      disabled: true,
+    })
 
     ctxMenuShow(event, items)
   }
