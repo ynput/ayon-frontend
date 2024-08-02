@@ -383,6 +383,7 @@ const Hierarchy = (props) => {
         className={isFetching ? 'table-loading' : undefined}
         rowClassName={(rowData) => ({
           ['id-' + rowData.key]: true,
+          compact: true,
         })}
         pt={{
           root: {

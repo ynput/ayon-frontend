@@ -89,6 +89,7 @@ const ProductsList = ({
         const className = {
           loading: loadingProducts.includes(rowData.data.id),
           ['id-' + rowData.key]: true,
+          compact: true,
         }
         if (!focusedTasks.length || focusedType !== 'task') return className
 

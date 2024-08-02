@@ -298,7 +298,7 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
             onContextMenu={onContextMenu}
             className={isFetching ? 'table-loading' : undefined}
             ref={tableRef}
-            rowClassName={(rowData) => ({ ['id-' + rowData.key]: true })}
+            rowClassName={(rowData) => ({ ['id-' + rowData.key]: true, compact: true })}
             pt={{
               root: {
                 onKeyDown: handleKeyDown,

@@ -1868,6 +1868,7 @@ const EditorPage = () => {
                     deleted: rowData.key in changes && changes[rowData.key]?.__action == 'delete',
                     ['id-' + rowData.key]: true,
                     ['type-' + rowData.data.__entityType]: true,
+                    compact: true,
                   }
                 }}
                 onContextMenu={onContextMenu}
