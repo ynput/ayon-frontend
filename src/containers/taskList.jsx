@@ -296,12 +296,16 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
             selectionKeys={selectedTasks}
             onSelectionChange={onSelectionChange}
             onContextMenu={onContextMenu}
-            onFocus={onFocus}
             className={isFetching ? 'table-loading' : undefined}
-            onClick={handleDeselect}
             ref={tableRef}
-            onKeyDown={handleKeyDown}
             rowClassName={(rowData) => ({ ['id-' + rowData.key]: true })}
+            pt={{
+              root: {
+                onKeyDown: handleKeyDown,
+                onFocus: onFocus,
+                onClick: handleDeselect,
+              },
+            }}
           >
             <Column field="name" header="Task" expander="true" body={nameRenderer} />
             {folderIds.length > 1 && <Column field="folderName" header="Folder" />}

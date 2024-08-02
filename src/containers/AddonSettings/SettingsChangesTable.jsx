@@ -24,8 +24,6 @@ const SettingsChangesTable = ({ changes, unpins, onRevert }) => {
     setKnownAddonKeys((k) => ({ ...k, ...newExpandedKeys }))
   }, [changes])
 
-
-
   const changesTree = useMemo(() => {
     let result = []
 
@@ -136,16 +134,12 @@ const SettingsChangesTable = ({ changes, unpins, onRevert }) => {
     return <Button variant="text" icon="delete" onClick={delChange} />
   }
 
-
   const handleSelectionChange = (e) => {
-
     if (!(e.value in selectedKeys)) {
       setSelectedKeys(e.value)
     }
 
-    if (Object.keys(e.value).length != 1)
-      return
-
+    if (Object.keys(e.value).length != 1) return
 
     for (const addonKey in changes) {
       for (const change of changes[addonKey]) {
@@ -155,8 +149,8 @@ const SettingsChangesTable = ({ changes, unpins, onRevert }) => {
           let uri = `ayon+settings://${addonName}`
           //if (addon.version) uri += `:${addon.version}`
           uri += `/${change.join('/')}`
-          if (_projectName && _projectName !== "_") uri += `?project=${_projectName}`
-          if (_siteName && _siteName !== "_") uri += `&site=${_siteName}`
+          if (_projectName && _projectName !== '_') uri += `?project=${_projectName}`
+          if (_siteName && _siteName !== '_') uri += `&site=${_siteName}`
           navigateToUri(uri)
           return
         }

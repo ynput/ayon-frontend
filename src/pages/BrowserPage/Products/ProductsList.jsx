@@ -85,8 +85,6 @@ const ProductsList = ({
       selectionMode="multiple"
       selectionKeys={selection}
       onSelectionChange={onSelectionChange}
-      onFocus={onFocus}
-      onKeyDown={handleKeyDown}
       rowClassName={(rowData) => {
         const className = {
           loading: loadingProducts.includes(rowData.data.id),
@@ -106,6 +104,12 @@ const ProductsList = ({
       className={isLoading ? 'table-loading' : undefined}
       onToggle={handleGroupExpand}
       expandedKeys={expandedProducts}
+      pt={{
+        root: {
+          onKeyDown: handleKeyDown,
+          onFocus: onFocus,
+        },
+      }}
     >
       {columns.map((col, i) => {
         return (

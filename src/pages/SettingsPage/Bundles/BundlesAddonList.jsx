@@ -8,6 +8,35 @@ import { InputSwitch, InputText, VersionSelect } from '@ynput/ayon-react-compone
 import { FilePath, LatestIcon } from './Bundles.styled'
 import useCreateContext from '@hooks/useCreateContext'
 import { useNavigate } from 'react-router'
+import styled from 'styled-components'
+
+const StyledDataTable = styled(DataTable)`
+  tr {
+    display: flex;
+    flex-wrap: nowrap;
+    width: 100%;
+
+    th,
+    td {
+      &:first-child {
+        flex: 1;
+      }
+    }
+
+    td {
+      display: flex;
+      align-items: center;
+    }
+
+    .version-column {
+      width: 200px;
+    }
+
+    .path-column {
+      flex: 1;
+    }
+  }
+`
 
 const AddonListItem = ({ version, setVersion, selection, addons = [], versions }) => {
   const options = useMemo(
@@ -27,7 +56,7 @@ const AddonListItem = ({ version, setVersion, selection, addons = [], versions }
 
   return (
     <VersionSelect
-      style={{ width: 200, height: 32 }}
+      style={{ width: '100%', height: 32 }}
       buttonStyle={{ zIndex: 0 }}
       versions={options}
       value={version ? [version] : []}
@@ -141,7 +170,7 @@ const BundlesAddonList = React.forwardRef(
     }
 
     return (
-      <DataTable
+      <StyledDataTable
         value={addonsTable}
         scrollable
         scrollHeight="flex"
@@ -159,16 +188,21 @@ const BundlesAddonList = React.forwardRef(
         <Column
           header="Name"
           field="name"
-          style={{ padding: '8px !important', maxWidth: isDev ? 250 : 'unset' }}
-          bodyStyle={{ height: 38 }}
+          pt={{
+            root: {
+              style: {
+                height: 38,
+                maxWidth: isDev ? 250 : 'unset',
+              },
+            },
+          }}
           sortable
         />
         <Column
           sortable
           field="version"
           header="Version"
-          style={{ maxWidth: 200 }}
-          bodyStyle={{ padding: 8 }}
+          className="version-column"
           body={(addon) => {
             const isPipeline = addon.addonType === 'pipeline'
             const currentVersion = addon.version
@@ -205,6 +239,7 @@ const BundlesAddonList = React.forwardRef(
           <Column
             field="path"
             header="Addon directory"
+            className="path-column"
             body={(addon) => (
               <FilePath>
                 <InputSwitch
@@ -226,7 +261,7 @@ const BundlesAddonList = React.forwardRef(
             )}
           />
         )}
-      </DataTable>
+      </StyledDataTable>
     )
   },
 )

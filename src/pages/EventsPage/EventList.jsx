@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react'
+import React, { useRef } from 'react'
 import { Section, TablePanel } from '@ynput/ayon-react-components'
 import { TimestampField } from '@containers/fieldFormat'
 import { DataTable } from 'primereact/datatable'
@@ -35,45 +35,15 @@ const statusBodyTemplate = (rowData) => {
 const EventList = ({ eventData, isLoading, selectedEvent, setSelectedEvent, onScrollBottom }) => {
   const dataTableRef = useRef(null)
 
-  useEffect(() => {
-    // table has the scrollable parent of the table
-    const tableWrapper = dataTableRef.current.getElement().querySelector('.p-datatable-wrapper')
+  const loadedLast = useRef(0)
+  const handleLazy = (e) => {
+    // only load new data if we have scrolled to the bottom
+    if (loadedLast.current < e.last) {
+      loadedLast.current = e.last
 
-    let timeoutId = null
-    let atBottom = false
-
-    // Wrap the event listener function in a throttled function
-    const throttledHandleScrollEvent = (e) => {
-      if (timeoutId) {
-        return
-      }
-      timeoutId = setTimeout(() => {
-        timeoutId = null
-      }, 100)
-
-      const { scrollTop, scrollHeight, clientHeight } = e.target
-      const scrollPosition = scrollTop + clientHeight
-
-      const offset = 600
-      // offset pixels from bottom
-      if (scrollPosition >= scrollHeight - offset && !atBottom) {
-        atBottom = true
-
-        // fire on scroll bottom event
-        onScrollBottom()
-      } else if (scrollPosition < scrollHeight - offset) {
-        atBottom = false
-      }
+      onScrollBottom()
     }
-
-    // Assign the throttled function as the scroll event listener
-    tableWrapper.addEventListener('scroll', throttledHandleScrollEvent)
-
-    return () => {
-      // remove scroll event listener
-      tableWrapper.removeEventListener('scroll', throttledHandleScrollEvent)
-    }
-  }, [dataTableRef.current, onScrollBottom, eventData])
+  }
 
   return (
     <Section wrap>
@@ -96,6 +66,12 @@ const EventList = ({ eventData, isLoading, selectedEvent, setSelectedEvent, onSc
             }
           }}
           ref={dataTableRef}
+          virtualScrollerOptions={{
+            itemSize: 29,
+            step: 99,
+            lazy: true,
+            onLazyLoad: handleLazy,
+          }}
         >
           <Column style={{ maxWidth: 30 }} body={statusBodyTemplate} />
           <Column

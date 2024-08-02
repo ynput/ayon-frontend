@@ -1859,12 +1859,8 @@ const EditorPage = () => {
                 columnResizeMode="expand"
                 expandedKeys={expandedFolders}
                 onToggle={handleToggleFolder}
-                onDoubleClick={handleDoubleClick}
                 selectionMode="multiple"
                 selectionKeys={currentSelection}
-                onSelectionChange={(e) => handleSelectionChange(e.value)}
-                onClick={handleDeselect}
-                onFocus={updateURI}
                 rowClassName={(rowData) => {
                   return {
                     changed: rowData.key in changes,
@@ -1881,7 +1877,15 @@ const EditorPage = () => {
                 rows={20}
                 className={fullPageLoading ? 'table-loading' : undefined}
                 ref={tableRef}
-                onKeyDown={handleTableKeyDown}
+                onSelectionChange={(e) => handleSelectionChange(e.value)}
+                pt={{
+                  root: {
+                    onKeyDown: handleTableKeyDown,
+                    onFocus: updateURI,
+                    onClick: handleDeselect,
+                    onDoubleClick: handleDoubleClick,
+                  },
+                }}
               >
                 {allColumns}
               </TreeTable>
