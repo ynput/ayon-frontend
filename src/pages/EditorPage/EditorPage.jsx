@@ -36,7 +36,6 @@ import {
   onForceChange,
   onNewChanges,
   onRevert,
-  updateNodes,
 } from '@state/editor'
 import EditorPanel from './EditorPanel'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
@@ -1599,19 +1598,6 @@ const EditorPage = () => {
     }
   }
 
-  // when a thumbnail is uploaded, refetch data for that entity
-  const handleThumbnailUpload = (uploaded = {}) => {
-    const { id, type } = uploaded
-
-    if (!id || !type) return
-
-    // patch new updatedAt value to node
-    const newDate = new Date().toISOString()
-    const newData = { id, updatedAt: newDate }
-
-    dispatch(updateNodes({ updated: [newData] }))
-  }
-
   const tableRef = useRef(null)
 
   const handleTableKeyDown = useTableKeyboardNavigation({
@@ -1911,7 +1897,6 @@ const EditorPage = () => {
               attribs={attribFields}
               projectName={projectName}
               onForceChange={handleForceChange}
-              onThumbnailUpload={handleThumbnailUpload}
               allUsers={allUsers}
             />
           </SplitterPanel>
