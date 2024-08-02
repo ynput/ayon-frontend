@@ -8,7 +8,7 @@ import { MultiSelect } from 'primereact/multiselect'
 import { CellWithIcon } from '@components/icons'
 import EntityDetail from './DetailsDialog'
 import { setFocusedFolders, setUri, setExpandedFolders, setSelectedVersions } from '@state/context'
-import { useGetHierarchyQuery } from '@queries/getHierarchy'
+import { useGetFolderHierarchyQuery } from '@queries/getHierarchy'
 import useCreateContext from '@hooks/useCreateContext'
 import HierarchyExpandFolders from './HierarchyExpandFolders'
 import { openViewer } from '@/features/viewer'
@@ -106,16 +106,21 @@ const Hierarchy = (props) => {
 
   // Fetch the hierarchy data from the server, when the project changes
   // or when user changes the folder types to be displayed
-  const { isError, error, data, isFetching, isSuccess } = useGetHierarchyQuery(
-    { projectName },
-    { skip: !projectName },
-  )
+  const {
+    data = {},
+    isError,
+    error,
+    isFetching,
+    isSuccess,
+  } = useGetFolderHierarchyQuery({ projectName }, { skip: !projectName })
+
+  const hierarchyData = data.hierarchy || []
 
   // We already have the data, so we can do the client-side filtering
   // and tree transformation
 
   const parents = useMemo(() => {
-    if (!data) return []
+    if (!hierarchyData) return []
 
     const result = {}
 
@@ -129,17 +134,17 @@ const Hierarchy = (props) => {
       }
     }
 
-    data.forEach((folder) => {
+    hierarchyData.forEach((folder) => {
       crawl(folder)
     })
 
     return result
-  }, [data])
+  }, [hierarchyData])
 
   let treeData = useMemo(() => {
-    if (!data) return []
-    return filterHierarchy(query, data, folders)
-  }, [data, query, isFetching])
+    if (!hierarchyData) return []
+    return filterHierarchy(query, hierarchyData, folders)
+  }, [hierarchyData, query, isFetching])
 
   function filterArray(arr = [], filter = []) {
     return arr
@@ -171,10 +176,10 @@ const Hierarchy = (props) => {
   }
 
   const hierarchyObjectData = useMemo(() => {
-    if (data) {
-      return createDataObject(data)
+    if (hierarchyData) {
+      return createDataObject(hierarchyData)
     }
-  }, [data, isFetching])
+  }, [hierarchyData, isFetching])
 
   const treeDataFlat = useMemo(() => {
     if (selectedFolderTypes.length) {

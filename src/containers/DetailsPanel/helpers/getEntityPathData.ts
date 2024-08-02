@@ -1,32 +1,49 @@
+import { FolderListItem } from '@api/rest'
 import { PathSegment } from '@components/EntityPath/EntityPath'
 import { $Any } from '@types'
 
-const getEntityPathData = (entity: $Any) => {
+type FoldersMap = Map<string, FolderListItem>
+
+const getAllParents = (
+  firstParentFolder: FolderListItem,
+  folders: FoldersMap,
+): FolderListItem[] => {
+  const parents: FolderListItem[] = [firstParentFolder]
+  let currentFolder = firstParentFolder
+
+  while (currentFolder.parentId && currentFolder.parentId !== 'root') {
+    const parentFolder = folders.get(currentFolder.parentId)
+    if (!parentFolder) {
+      break
+    }
+    parents.unshift(parentFolder)
+    currentFolder = parentFolder
+  }
+
+  return parents
+}
+
+const getEntityPathData = (entity: $Any, folders: FoldersMap) => {
   const segments: PathSegment[] = []
+
   //   add parent folders
-  segments.push({ type: 'folder', label: entity.folder?.name, id: entity.folder?.id })
+  let firstParentFolder = folders.get(entity.folderId || '')
 
-  const parentFolders = entity.folder?.path?.split('/').slice(1, -1)
-  if (parentFolders?.length > 0) {
-    parentFolders.forEach((folder: string) => {
-      segments.push({ type: 'folder', label: folder, id: folder })
-    })
-  }
+  // get all parent folders by looking up the parent id in the folders map
+  const allParents = firstParentFolder ? getAllParents(firstParentFolder, folders) : []
 
-  if (entity.entityType === 'version') {
-    // add product
-    segments.push({ type: 'product', label: entity.product?.name, id: entity.product?.id })
-  }
-
-  // add final entity segment (folder, task, product, version)
-  const finalEntitySegment = {
-    type: entity.entityType,
-    label: entity.label || entity.name,
-    id: entity.id,
-  }
-  segments.push(finalEntitySegment)
+  allParents.forEach((folder) => {
+    segments.push({ type: 'folder', label: folder.label || folder.name, id: folder.id })
+  })
 
   if (entity.entityType === 'version') {
+    const productVersion = `${entity.product?.name} - ${entity.name}`
+    // add product - version
+    segments.push({ type: 'version', label: productVersion, id: entity.product?.id })
+  }
+  if (entity.entityType === 'task') {
+    // add task
+    segments.push({ type: 'task', label: entity.name, id: entity.id })
   }
 
   return segments

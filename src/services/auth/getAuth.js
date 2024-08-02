@@ -30,8 +30,9 @@ const getAuth = api.injectEndpoints({
         localStorage.removeItem('dashboard-tasks-selected')
         // clear dashboard state
         dispatch(onClearDashboard())
+        const redirect = arg?.redirect || '/login'
         // redirect to login
-        window.location.href = '/login'
+        window.location.href = redirect
       },
     }),
   }),
@@ -40,4 +41,5 @@ const getAuth = api.injectEndpoints({
 
 //
 
-export const { useGetInfoQuery, useLazyGetInfoQuery, useLogOutMutation } = getAuth
+export const { useGetInfoQuery, useLazyGetInfoQuery, useLogOutMutation, useCreateSessionMutation } =
+  getAuth

@@ -401,6 +401,13 @@ const injectedRtkApi = api.injectEndpoints({
     listActiveSessions: build.query<ListActiveSessionsApiResponse, ListActiveSessionsApiArg>({
       query: () => ({ url: `/api/auth/sessions` }),
     }),
+    createSession: build.mutation<CreateSessionApiResponse, CreateSessionApiArg>({
+      query: (queryArg) => ({
+        url: `/api/auth/sessions`,
+        method: 'POST',
+        body: queryArg.createSessionRequest,
+      }),
+    }),
     listBundles: build.query<ListBundlesApiResponse, ListBundlesApiArg>({
       query: (queryArg) => ({ url: `/api/bundles`, params: { archived: queryArg.archived } }),
     }),
@@ -1289,10 +1296,15 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/users/${queryArg.userName}`,
         method: 'PUT',
         body: queryArg.newUserModel,
+        headers: { 'x-sender': queryArg['x-sender'] },
       }),
     }),
     deleteUser: build.mutation<DeleteUserApiResponse, DeleteUserApiArg>({
-      query: (queryArg) => ({ url: `/api/users/${queryArg.userName}`, method: 'DELETE' }),
+      query: (queryArg) => ({
+        url: `/api/users/${queryArg.userName}`,
+        method: 'DELETE',
+        headers: { 'x-sender': queryArg['x-sender'] },
+      }),
     }),
     patchUser: build.mutation<PatchUserApiResponse, PatchUserApiArg>({
       query: (queryArg) => ({
@@ -1320,6 +1332,7 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/users/${queryArg.userName}/rename`,
         method: 'PATCH',
         body: queryArg.changeUserNameRequestModel,
+        headers: { 'x-sender': queryArg['x-sender'] },
       }),
     }),
     getUserSessions: build.query<GetUserSessionsApiResponse, GetUserSessionsApiArg>({
@@ -1724,6 +1737,10 @@ export type LogoutApiResponse = /** status 200 Successful Response */ LogoutResp
 export type LogoutApiArg = void
 export type ListActiveSessionsApiResponse = /** status 200 Successful Response */ SessionModel[]
 export type ListActiveSessionsApiArg = void
+export type CreateSessionApiResponse = /** status 200 Successful Response */ SessionModel
+export type CreateSessionApiArg = {
+  createSessionRequest: CreateSessionRequest
+}
 export type ListBundlesApiResponse = /** status 200 Successful Response */ ListBundleModel
 export type ListBundlesApiArg = {
   /** Include archived bundles */
@@ -2445,7 +2462,8 @@ export type PasswordResetApiArg = {
 }
 export type GetCurrentUserApiResponse = /** status 200 Successful Response */ UserModel
 export type GetCurrentUserApiArg = void
-export type GetUserApiResponse = /** status 200 Successful Response */
+export type GetUserApiResponse =
+  /** status 200 Successful Response */
   | UserModel
   | {
       [key: string]: string
@@ -2456,11 +2474,13 @@ export type GetUserApiArg = {
 export type CreateUserApiResponse = /** status 200 Successful Response */ any
 export type CreateUserApiArg = {
   userName: string
+  'x-sender'?: string
   newUserModel: NewUserModel
 }
 export type DeleteUserApiResponse = /** status 200 Successful Response */ any
 export type DeleteUserApiArg = {
   userName: string
+  'x-sender'?: string
 }
 export type PatchUserApiResponse = /** status 200 Successful Response */ any
 export type PatchUserApiArg = {
@@ -2480,6 +2500,7 @@ export type CheckPasswordApiArg = {
 export type ChangeUserNameApiResponse = /** status 200 Successful Response */ any
 export type ChangeUserNameApiArg = {
   userName: string
+  'x-sender'?: string
   changeUserNameRequestModel: ChangeUserNameRequestModel
 }
 export type GetUserSessionsApiResponse =
@@ -3110,6 +3131,12 @@ export type SessionModel = {
   lastUsed?: number
   isService?: boolean
   clientInfo?: ClientInfo
+}
+export type CreateSessionRequest = {
+  /** User name to create session for */
+  userName?: string
+  /** Message to log in event stream */
+  message?: string
 }
 export type AddonDevelopmentItem = {
   /** Enable/disable addon development */
@@ -4603,6 +4630,7 @@ export type VersionAttribModel = {
   site?: string
   families?: string[]
   colorSpace?: string
+  productTypes?: string[]
   /** Textual description of the entity */
   description?: string
   ftrackId?: string
