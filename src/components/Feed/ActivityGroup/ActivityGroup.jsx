@@ -3,7 +3,7 @@ import * as Styled from './ActivityGroup.styled'
 import ActivityItem from '../ActivityItem'
 import { Icon } from '@ynput/ayon-react-components'
 
-const ActivityGroup = ({ activities, ...props }) => {
+const ActivityGroup = ({ activities, editProps, ...props }) => {
   const [isOpen, setIsOpen] = useState(false)
 
   return (
@@ -16,7 +16,7 @@ const ActivityGroup = ({ activities, ...props }) => {
       </Styled.Wrapper>
       {isOpen &&
         activities.map((activity) => (
-          <ActivityItem key={activity.activityId} activity={activity} fromGroup {...props} />
+          <ActivityItem key={activity.activityId} editProps={editProps} activity={activity} fromGroup {...props} />
         ))}
     </>
   )

@@ -19,7 +19,7 @@ const mergeSimilarActivities = (activities, type, oldKey = 'oldValue') => {
       }
 
       const isSameAuthor = currentActivity.authorName === activity.authorName
-      const isSameEntity = currentActivity.entityId === activity.entityId
+      const isSameEntity = currentActivity.origin.id=== activity.entityId
       const currentCreatedAt = new Date(currentActivity.createdAt)
       const activityCreatedAt = new Date(activity.createdAt)
       const activityDuration =

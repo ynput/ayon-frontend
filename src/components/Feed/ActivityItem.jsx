@@ -42,7 +42,7 @@ const ActivityItem = ({
       return <ActivityVersions {...{ activity, projectInfo }} {...props} />
     case 'group':
       // fromGroup prevents infinite recursion
-      return !fromGroup && <ActivityGroup activities={activity.items} {...props} />
+      return !fromGroup && <ActivityGroup editProps={editProps} activities={activity.items} {...props} />
     case 'end':
       return (
         <FeedEnd>
