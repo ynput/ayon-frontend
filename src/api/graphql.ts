@@ -169,25 +169,28 @@ export type FileNode = {
 
 export type FolderAttribType = {
   __typename?: 'FolderAttribType';
+  /** What car do you want? */
+  car?: Maybe<Scalars['String']['output']>;
   clipIn?: Maybe<Scalars['Int']['output']>;
   clipOut?: Maybe<Scalars['Int']['output']>;
   /** Textual description of the entity */
   description?: Maybe<Scalars['String']['output']>;
   /** Deadline date and time */
   endDate?: Maybe<Scalars['DateTime']['output']>;
+  enum?: Maybe<Scalars['String']['output']>;
   /** Frame rate */
   fps?: Maybe<Scalars['Float']['output']>;
   frameEnd?: Maybe<Scalars['Int']['output']>;
   frameStart?: Maybe<Scalars['Int']['output']>;
   ftrackId?: Maybe<Scalars['String']['output']>;
   ftrackPath?: Maybe<Scalars['String']['output']>;
-  goldCoins?: Maybe<Scalars['Int']['output']>;
-  hairColor?: Maybe<Scalars['String']['output']>;
+  /** hair */
+  hairColour?: Maybe<Scalars['String']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
-  /** How much of the pizza do I get to have? */
-  pizzaShare?: Maybe<Scalars['Float']['output']>;
+  /** Percentage of shot completetion */
+  progress?: Maybe<Scalars['Int']['output']>;
   /** Vertical resolution */
   resolutionHeight?: Maybe<Scalars['Int']['output']>;
   /** Horizontal resolution */
@@ -200,7 +203,7 @@ export type FolderAttribType = {
   sokoPath?: Maybe<Scalars['String']['output']>;
   /** Date and time when the project or task or asset was started */
   startDate?: Maybe<Scalars['DateTime']['output']>;
-  testy?: Maybe<Scalars['String']['output']>;
+  test?: Maybe<Scalars['String']['output']>;
   tools?: Maybe<Array<Scalars['String']['output']>>;
 };
 
@@ -523,6 +526,8 @@ export type ProjectAttribType = {
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
+  /** Percentage of shot completetion */
+  progress?: Maybe<Scalars['Int']['output']>;
   /** Vertical resolution */
   resolutionHeight?: Maybe<Scalars['Int']['output']>;
   /** Horizontal resolution */
@@ -941,25 +946,28 @@ export type RepresentationsConnection = {
 
 export type TaskAttribType = {
   __typename?: 'TaskAttribType';
+  /** What car do you want? */
+  car?: Maybe<Scalars['String']['output']>;
   clipIn?: Maybe<Scalars['Int']['output']>;
   clipOut?: Maybe<Scalars['Int']['output']>;
   /** Textual description of the entity */
   description?: Maybe<Scalars['String']['output']>;
   /** Deadline date and time */
   endDate?: Maybe<Scalars['DateTime']['output']>;
+  enum?: Maybe<Scalars['String']['output']>;
   /** Frame rate */
   fps?: Maybe<Scalars['Float']['output']>;
   frameEnd?: Maybe<Scalars['Int']['output']>;
   frameStart?: Maybe<Scalars['Int']['output']>;
   ftrackId?: Maybe<Scalars['String']['output']>;
   ftrackPath?: Maybe<Scalars['String']['output']>;
-  goldCoins?: Maybe<Scalars['Int']['output']>;
-  hairColor?: Maybe<Scalars['String']['output']>;
+  /** hair */
+  hairColour?: Maybe<Scalars['String']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
-  /** How much of the pizza do I get to have? */
-  pizzaShare?: Maybe<Scalars['Float']['output']>;
+  /** Percentage of shot completetion */
+  progress?: Maybe<Scalars['Int']['output']>;
   /** Vertical resolution */
   resolutionHeight?: Maybe<Scalars['Int']['output']>;
   /** Horizontal resolution */
@@ -972,7 +980,7 @@ export type TaskAttribType = {
   sokoPath?: Maybe<Scalars['String']['output']>;
   /** Date and time when the project or task or asset was started */
   startDate?: Maybe<Scalars['DateTime']['output']>;
-  testy?: Maybe<Scalars['String']['output']>;
+  test?: Maybe<Scalars['String']['output']>;
   tools?: Maybe<Array<Scalars['String']['output']>>;
 };
 
@@ -1131,8 +1139,8 @@ export type UsersConnection = {
 
 export type VersionAttribType = {
   __typename?: 'VersionAttribType';
-  /** The version that is currently the one to use. */
-  blessed?: Maybe<Scalars['Boolean']['output']>;
+  /** What car do you want? */
+  car?: Maybe<Scalars['String']['output']>;
   clipIn?: Maybe<Scalars['Int']['output']>;
   clipOut?: Maybe<Scalars['Int']['output']>;
   colorSpace?: Maybe<Scalars['String']['output']>;
@@ -1150,6 +1158,7 @@ export type VersionAttribType = {
   intent?: Maybe<Scalars['String']['output']>;
   machine?: Maybe<Scalars['String']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
+  productTypes?: Maybe<Array<Scalars['String']['output']>>;
   /** Vertical resolution */
   resolutionHeight?: Maybe<Scalars['Int']['output']>;
   /** Horizontal resolution */
@@ -1306,6 +1315,14 @@ export type WorkfilesConnection = {
   pageInfo: PageInfo;
 };
 
+export type GetProductVersionsQueryVariables = Exact<{
+  projectName: Scalars['String']['input'];
+  productId: Scalars['String']['input'];
+}>;
+
+
+export type GetProductVersionsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', product: { __typename?: 'ProductNode', versionList: Array<{ __typename?: 'VersionListItem', id: string, name: string, version: number }> } } };
+
 export type GetInboxHasUnreadQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -1421,6 +1438,19 @@ export const KanbanFragmentFragmentDoc = `
   folderLabel
   folderName
   folderPath
+}
+    `;
+export const GetProductVersionsDocument = `
+    query GetProductVersions($projectName: String!, $productId: String!) {
+  project(name: $projectName) {
+    product(id: $productId) {
+      versionList {
+        id
+        name
+        version
+      }
+    }
+  }
 }
     `;
 export const GetInboxHasUnreadDocument = `
@@ -1542,6 +1572,9 @@ export const GetKanbanTasksDocument = `
 
 const injectedRtkApi = restApi.injectEndpoints({
   endpoints: (build) => ({
+    GetProductVersions: build.query<GetProductVersionsQuery, GetProductVersionsQueryVariables>({
+      query: (variables) => ({ document: GetProductVersionsDocument, variables })
+    }),
     GetInboxHasUnread: build.query<GetInboxHasUnreadQuery, GetInboxHasUnreadQueryVariables | void>({
       query: (variables) => ({ document: GetInboxHasUnreadDocument, variables })
     }),

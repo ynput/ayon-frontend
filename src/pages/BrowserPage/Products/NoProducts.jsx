@@ -92,7 +92,7 @@ const NoProducts = ({ label, error }) => {
       {error && (
         <Error>
           <Icon icon="error" />
-          Error: {error || 'Unknown'}
+          Error: {JSON.stringify(error) || 'Unknown'}
         </Error>
       )}
     </NoneFound>

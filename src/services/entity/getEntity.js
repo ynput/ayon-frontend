@@ -123,7 +123,7 @@ export const formatEntityTiles = (project, entities) => {
   return allEntities
 }
 
-const getEntity = api.injectEndpoints({
+const injectedApi = api.injectEndpoints({
   endpoints: (build) => ({
     getEventTile: build.query({
       query: ({ projectName, id, type }) => ({
@@ -158,9 +158,16 @@ const getEntity = api.injectEndpoints({
   overrideExisting: true,
 })
 
+const enhancedApi = injectedApi.enhanceEndpoints({
+  endpoints: {
+    GetProductVersions: {},
+  },
+})
+
 export const {
   useGetEventTileQuery,
   useGetEntityTilesQuery,
   useGetEntityQuery,
   useLazyGetEntityQuery,
-} = getEntity
+  useGetProductVersionsQuery,
+} = enhancedApi
