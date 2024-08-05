@@ -1,7 +1,7 @@
 import * as Styled from './CommentMentionSelect.styled'
 import { Icon } from '@ynput/ayon-react-components'
 import UserImage from '@components/UserImage'
-import { classNames } from 'primereact/utils'
+import clsx from 'clsx'
 import { upperFirst } from 'lodash'
 
 const CommentMentionSelect = ({
@@ -44,7 +44,7 @@ const CommentMentionSelect = ({
               id={option.id}
               onClick={() => onChange(option)}
               $isCircle={config?.isCircle}
-              className={classNames({ selected: selectedIndex === i })}
+              className={clsx({ selected: selectedIndex === i })}
             >
               {option.type === 'user' ? (
                 <UserImage size={20} name={option.id} className="image" />

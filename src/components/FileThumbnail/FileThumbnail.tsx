@@ -1,7 +1,7 @@
 import { getMimeTypeIcon, Icon } from '@ynput/ayon-react-components'
 import { FC, HTMLAttributes, ImgHTMLAttributes, useEffect, useState } from 'react'
 import styled from 'styled-components'
-import { classNames } from 'primereact/utils'
+import clsx from 'clsx'
 
 const Wrapper = styled.div`
   position: relative;
@@ -44,7 +44,7 @@ const FileThumbnail: FC<FileThumbnailProps> = ({ mimetype = '', src, ...props })
   }, [src])
 
   return (
-    <Wrapper {...props} className={classNames('file-thumbnail', props.className)}>
+    <Wrapper {...props} className={clsx('file-thumbnail', props.className)}>
       <Icon icon={getMimeTypeIcon(mimetype)} />
       <Image
         src={src}
@@ -57,7 +57,7 @@ const FileThumbnail: FC<FileThumbnailProps> = ({ mimetype = '', src, ...props })
           setLoaded(true)
           setError(false)
         }}
-        className={classNames({ hidden: !loaded || error })}
+        className={clsx({ hidden: !loaded || error })}
       />
     </Wrapper>
   )

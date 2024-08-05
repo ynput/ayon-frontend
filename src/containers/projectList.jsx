@@ -11,7 +11,7 @@ import useCreateContext from '@hooks/useCreateContext'
 import useLocalStorage from '@hooks/useLocalStorage'
 import CollapseButton from '@components/CollapseButton'
 import styled, { css } from 'styled-components'
-import { classNames } from 'primereact/utils'
+import clsx from 'clsx'
 import { toast } from 'react-toastify'
 import { useUpdateUserPreferencesMutation } from '@/services/user/updateUser'
 
@@ -373,7 +373,7 @@ const ProjectList = ({
   return (
     <Section
       style={sectionStyle}
-      className={classNames('project-list-section', className, { collapsed })}
+      className={clsx('project-list-section', className, { collapsed })}
       wrap={wrap}
     >
       {onSelectAll && (
@@ -415,7 +415,7 @@ const ProjectList = ({
           onRowClick={onRowClick}
           onRowDoubleClick={(e) => navigate(`/projects/${e.data.name}/browser`)}
           onContextMenu={onContextMenu}
-          className={classNames('project-list', {
+          className={clsx('project-list', {
             'table-loading': isLoading,
             collapsed: collapsed,
             collapsible: isCollapsible,
@@ -430,7 +430,7 @@ const ProjectList = ({
             header="Projects"
             body={(rowData) => (
               <StyledProjectName
-                className={classNames({
+                className={clsx({
                   isActive: rowData.name === '_' || rowData.active,
                   isOpen: !collapsed,
                 })}
@@ -448,7 +448,7 @@ const ProjectList = ({
               style={{ maxWidth: 80 }}
               body={(rowData) => (
                 <StyledProjectName
-                  className={classNames({
+                  className={clsx({
                     isActive: rowData.name === '_' || rowData.active,
                   })}
                 >

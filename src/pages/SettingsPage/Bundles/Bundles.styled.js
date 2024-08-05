@@ -111,7 +111,7 @@ export const DevSelect = styled(AssigneeSelect)`
 
 export const LatestIcon = styled(Icon)`
   color: var(--md-sys-color-outline);
-  margin-left: 8px;
+  margin-left: auto;
   &:hover {
     color: var(--md-sys-color-on-surface);
   }

@@ -1,6 +1,6 @@
 import { useDroppable } from '@dnd-kit/core'
 import * as Styled from './KanBanColumn.styled'
-import { classNames } from 'primereact/utils'
+import clsx from 'clsx'
 const KanBanColumnDropzone = ({ item, activeColumn, disabled }) => {
   const { isOver, setNodeRef } = useDroppable({
     id: item.id,
@@ -14,7 +14,7 @@ const KanBanColumnDropzone = ({ item, activeColumn, disabled }) => {
       key={item.id}
       ref={setNodeRef}
       $color={item.color}
-      className={classNames({
+      className={clsx({
         source: isDraggingFrom,
         'drop-active': isOver && !isDraggingFrom && !disabled,
       })}

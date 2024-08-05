@@ -1,6 +1,6 @@
 import { HTMLAttributes, useEffect, useState } from 'react'
 import { Icon } from '@ynput/ayon-react-components'
-import { classNames } from 'primereact/utils'
+import clsx from 'clsx'
 import * as Styled from './Thumbnail.styled'
 
 interface ThumbnailProps extends HTMLAttributes<HTMLDivElement> {
@@ -67,7 +67,7 @@ const Thumbnail = ({
 
   return (
     <Styled.Card
-      className={classNames(className, 'thumbnail', {
+      className={clsx(className, 'thumbnail', {
         shimmer: shimmer && (isLoading || !loaded),
         loaded,
         error,

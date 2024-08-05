@@ -1,5 +1,4 @@
-//import { Panel } from 'primereact/panel'
-import {useEffect} from 'react'
+import { useEffect } from 'react'
 import useLocalStorage from '@hooks/useLocalStorage'
 import { Icon } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
@@ -133,7 +132,7 @@ const SettingsPanel = ({
 
   useEffect(() => {
     if (!currentId) return
-    if (currentId.startsWith(objId + '_') && !expandedObjects.includes(objId)){
+    if (currentId.startsWith(objId + '_') && !expandedObjects.includes(objId)) {
       console.log('expanding', objId)
       setExpandedObjects([...expandedObjects, objId])
     }

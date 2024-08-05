@@ -2,7 +2,7 @@ import React, { forwardRef } from 'react'
 import * as Styled from './ListItem.styled'
 import { Icon } from '@ynput/ayon-react-components'
 import { addDays, formatDistanceToNow, isSameDay, isValid } from 'date-fns'
-import { classNames } from 'primereact/utils'
+import clsx from 'clsx'
 
 const ListItem = forwardRef(
   (
@@ -62,7 +62,7 @@ const ListItem = forwardRef(
       endDateString = endDateString.slice(6)
     }
 
-    const listItemClass = classNames(className, {
+    const listItemClass = clsx(className, {
       selected: selected,
       last: isLast,
       first: isFirst,
@@ -114,7 +114,7 @@ const ListItem = forwardRef(
           disabledValues={disabledProjectUsers}
         />
 
-        <Styled.Date className={classNames({ late: pastEndDate })}>{endDateString}</Styled.Date>
+        <Styled.Date className={clsx({ late: pastEndDate })}>{endDateString}</Styled.Date>
         <Styled.Code>{task.projectCode}</Styled.Code>
       </Styled.Item>
     )

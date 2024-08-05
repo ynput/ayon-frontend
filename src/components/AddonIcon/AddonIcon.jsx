@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react'
 import * as Styled from './AddonIcon.styled'
-import { classNames } from 'primereact/utils'
+import clsx from 'clsx'
 import { Icon } from '@ynput/ayon-react-components'
 
 const AddonIcon = ({ isPlaceholder, size, ...props }) => {
@@ -15,7 +15,7 @@ const AddonIcon = ({ isPlaceholder, size, ...props }) => {
 
   const isLoading = isPlaceholder || imageLoading
   return (
-    <Styled.Icon className={classNames({ isLoading, isError: imageError })} $size={size}>
+    <Styled.Icon className={clsx({ isLoading, isError: imageError })} $size={size}>
       {imageError || !props.src ? (
         <Icon icon="extension" />
       ) : (

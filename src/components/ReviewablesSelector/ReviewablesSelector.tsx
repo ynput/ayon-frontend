@@ -1,6 +1,6 @@
 import { FC, useEffect, useRef, useState } from 'react'
 import * as Styled from './ReviewablesSelector.styled'
-import { classNames } from 'primereact/utils'
+import clsx from 'clsx'
 import FileThumbnail from '../FileThumbnail'
 import { ReviewableModel } from '@/api/rest'
 import isHTMLElement from '@helpers/isHTMLElement'
@@ -117,7 +117,7 @@ const ReviewablesSelector: FC<ReviewablesSelectorProps> = ({
             key={fileId}
             id={'preview-' + fileId}
             onClick={() => onChange && onChange(fileId)}
-            className={classNames('reviewable-card', { selected: selected.includes(fileId) })}
+            className={clsx('reviewable-card', { selected: selected.includes(fileId) })}
             onMouseOver={(e) => handleMouseOver(e, { label })}
           >
             <FileThumbnail src={`/api/projects/${projectName}/files/${fileId}/thumbnail`} />
