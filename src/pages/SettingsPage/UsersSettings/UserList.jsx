@@ -125,6 +125,7 @@ const UserList = ({
           dataKey="name"
           selectionMode="multiple"
           className={`user-list-table ${isLoading ? 'table-loading' : ''}`}
+          rowClassName={(rowData) => ({'inactive' : !rowData.active})}
           onSelectionChange={onSelectionChange}
           onContextMenu={onContextMenu}
           selection={selection}

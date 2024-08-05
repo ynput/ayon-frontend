@@ -24,4 +24,13 @@
   .p-datatable-wrapper {
     overflow-x: visible;
   }
+  .p-selectable-row.inactive td {
+    color: var(--md-sys-color-outline);
+    span {
+      color: var(--md-sys-color-outline);
+      &.user-image {
+        opacity: 0.7;
+      }
+    }
+  }
 }
