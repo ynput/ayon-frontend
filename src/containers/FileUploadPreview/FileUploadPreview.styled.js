@@ -4,7 +4,7 @@ import styled from 'styled-components'
 export const DialogWrapper = styled(Dialog)`
   min-height: 90vh;
   max-height: 90vh;
-  min-width: min(90vw, 1000px);
+  min-width: min(90vw, 100%);
   max-width: 1000px;
 
   .body {
@@ -17,15 +17,18 @@ export const DialogWrapper = styled(Dialog)`
   .navIcon {
     position: absolute;
     top: 50%;
-    transform: translateY(-50%);
+    user-select: none;
+
     &.left {
-      left: -48px;
+      left: 0;
+      translate: -100% -50%;
     }
     &.right {
-      right: -48px;
+      right: 0;
+      translate: 100% -50%;
     }
     align-content: center;
-    font-size: 48px;
+    font-size: 60px;
     &:hover {
       cursor: pointer;
       color: var(--md-sys-color-primary);
