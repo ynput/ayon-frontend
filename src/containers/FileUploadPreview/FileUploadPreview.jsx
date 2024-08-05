@@ -111,6 +111,9 @@ const FileUploadPreview = () => {
         if (e.code == 'ArrowLeft') {
           handleNavigateToPrevious()
         }
+        if (e.key === 'Escape') {
+          handleClose()
+        }
       }}
       size="full"
       isOpen={id && projectName}
