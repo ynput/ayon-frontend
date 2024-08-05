@@ -125,13 +125,13 @@ const FileUploadPreview = () => {
     >
       <Icon
         icon="chevron_left"
-        className={clsx('navIcon', !canNavigateLeft() ? 'disabled' : undefined)}
+        className={clsx('navIcon', 'left', { disabled: !canNavigateLeft() })}
         onClick={handleNavigateToPrevious}
       />
       <MimeComponent file={file} />
       <Icon
         icon="chevron_right"
-        className={clsx('navIcon', !canNavigateRight() ? 'disabled' : undefined)}
+        className={clsx('navIcon', 'right', { disabled: !canNavigateRight() })}
         onClick={handleNavigateToNext}
       />
     </Styled.DialogWrapper>
