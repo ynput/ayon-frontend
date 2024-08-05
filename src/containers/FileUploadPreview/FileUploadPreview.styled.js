@@ -4,14 +4,26 @@ import styled from 'styled-components'
 export const DialogWrapper = styled(Dialog)`
   min-height: 90vh;
   max-height: 90vh;
+  min-width: min(90vw, 1000px);
   max-width: 1000px;
 
   .body {
     flex-direction: row;
+    flex-wrap: wrap;
     justify-content: center;
+    align-content: center;
     padding-top: 0;
   }
   .navIcon {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    &.left {
+      left: -48px;
+    }
+    &.right {
+      right: -48px;
+    }
     align-content: center;
     font-size: 48px;
     &:hover {
@@ -29,15 +41,11 @@ export const DialogWrapper = styled(Dialog)`
   /* custom image styles */
   &.isImage {
     /* remove min/max height */
-    min-height: unset;
-    max-height: unset;
 
     background-color: unset;
-    overflow: hidden;
     border-radius: 0;
 
     width: 0;
-    min-width: fit-content;
 
     .cancelButton {
       top: 1px;

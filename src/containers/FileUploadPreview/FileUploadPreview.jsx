@@ -123,17 +123,15 @@ const FileUploadPreview = () => {
       className={classNames({ isImage })}
       header={isImage ? null : name}
     >
-      <Icon
-        icon="chevron_left"
-        className={classNames('navIcon', !canNavigateLeft() ? 'disabled' : undefined)}
-        onClick={handleNavigateToPrevious}
-      />
-      <div>
-        <MimeComponent file={file} />
-      </div>
+        <Icon
+          icon="chevron_left"
+          className={classNames('navIcon', 'left', !canNavigateLeft() ? 'disabled' : undefined)}
+          onClick={handleNavigateToPrevious}
+        />
+      <MimeComponent file={file} />
       <Icon
         icon="chevron_right"
-        className={classNames('navIcon', !canNavigateRight() ? 'disabled' : undefined)}
+        className={classNames('navIcon', 'right', !canNavigateRight() ? 'disabled' : undefined)}
         onClick={handleNavigateToNext}
       />
     </Styled.DialogWrapper>
