@@ -2,7 +2,7 @@ import { Button, Icon, SaveButton } from '@ynput/ayon-react-components'
 import React, { useEffect, useMemo, useState } from 'react'
 import * as Styled from './AddonDetails.styled'
 import Type from '@/theme/typography.module.css'
-import { classNames } from 'primereact/utils'
+import clsx from 'clsx'
 import { isEmpty } from 'lodash'
 import AddonIcon from '@components/AddonIcon/AddonIcon'
 import { rcompare } from 'semver'
@@ -11,7 +11,7 @@ import { Link } from 'react-router-dom'
 
 const MetaPanelRow = ({ label, children, valueDirection = 'column', ...props }) => (
   <Styled.MetaPanelRow {...props}>
-    <span className={classNames('label', Type.titleMedium)}>{label}</span>
+    <span className={clsx('label', Type.titleMedium)}>{label}</span>
     <span
       className="value"
       style={{
@@ -148,15 +148,15 @@ const AddonDetails = ({ addon = {}, isLoading, onDownload, isUpdatingAll }) => {
   const duplicateQueryString = encodeURIComponent(JSON.stringify(addonVersionObject))
 
   return (
-    <Styled.PanelContainer direction="row" className={classNames({ noData: !name })}>
+    <Styled.PanelContainer direction="row" className={clsx({ noData: !name })}>
       {name && (
         <>
           <Styled.Left className={Type.bodyLarge}>
-            <Styled.Header className={classNames({ isPlaceholder: isLoading })}>
+            <Styled.Header className={clsx({ isPlaceholder: isLoading })}>
               <AddonIcon size={64} src={icon} alt={name + ' icon'} isPlaceholder={isLoading} />
               <div className="titles">
                 <h2 className={Type.headlineSmall}>{title}</h2>
-                <span className={classNames(verifiedString.toLowerCase(), 'verification')}>
+                <span className={clsx(verifiedString.toLowerCase(), 'verification')}>
                   {verifiedIcon}
                   {verifiedString}
                 </span>
@@ -175,12 +175,12 @@ const AddonDetails = ({ addon = {}, isLoading, onDownload, isUpdatingAll }) => {
                 </a>
               </Styled.ErrorCard>
             )}
-            <Styled.Description className={classNames({ isPlaceholder: isLoading })}>
+            <Styled.Description className={clsx({ isPlaceholder: isLoading })}>
               {description}
             </Styled.Description>
           </Styled.Left>
           {/* RIGHT PANEL */}
-          <Styled.Right className={classNames(Type.bodyMedium, { isLoading })}>
+          <Styled.Right className={clsx(Type.bodyMedium, { isLoading })}>
             <Styled.Download>
               {actionButton}
 
@@ -201,7 +201,7 @@ const AddonDetails = ({ addon = {}, isLoading, onDownload, isUpdatingAll }) => {
                 )}
               />
             </Styled.Download>
-            <Styled.MetaPanel className={classNames({ isPlaceholder: isLoading })}>
+            <Styled.MetaPanel className={clsx({ isPlaceholder: isLoading })}>
               <MetaPanelRow label="Downloaded Versions">
                 {versionsToShow.length
                   ? versionsToShow.map((version) => <span key={version}>{version}</span>)
@@ -213,7 +213,7 @@ const AddonDetails = ({ addon = {}, isLoading, onDownload, isUpdatingAll }) => {
                 )}
               </MetaPanelRow>
             </Styled.MetaPanel>
-            <Styled.MetaPanel className={classNames({ isPlaceholder: isLoading })}>
+            <Styled.MetaPanel className={clsx({ isPlaceholder: isLoading })}>
               <MetaPanelRow label="Production Usage" valueDirection="row">
                 <span>
                   {currentProductionVersion ? currentProductionVersion : 'Not used in Production'}
@@ -238,7 +238,7 @@ const AddonDetails = ({ addon = {}, isLoading, onDownload, isUpdatingAll }) => {
                   ))}
               </MetaPanelRow>
             </Styled.MetaPanel>
-            <Styled.MetaPanel className={classNames({ isPlaceholder: isLoading })}>
+            <Styled.MetaPanel className={clsx({ isPlaceholder: isLoading })}>
               <MetaPanelRow label="Author">{orgTitle}</MetaPanelRow>
               <MetaPanelRow label="Latest Version">
                 {latestVersion && <p>{latestVersion}</p>}

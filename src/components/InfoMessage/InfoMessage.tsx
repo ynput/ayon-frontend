@@ -1,6 +1,6 @@
 import { forwardRef } from 'react'
 import * as Styled from './InfoMessage.styled'
-import { classNames } from 'primereact/utils'
+import clsx from 'clsx'
 import { Icon, IconProps } from '@ynput/ayon-react-components'
 
 interface InfoMessageProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -12,7 +12,7 @@ export const InfoMessage = forwardRef<HTMLDivElement, InfoMessageProps>(
   ({ variant = 'info', message, ...props }, ref) => {
     return (
       <Styled.MessageCard
-        className={classNames('message', props.className, variant)}
+        className={clsx('message', props.className, variant)}
         {...props}
         ref={ref}
       >

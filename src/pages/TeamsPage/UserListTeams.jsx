@@ -1,48 +1,12 @@
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { TablePanel, Section } from '@ynput/ayon-react-components'
-import UserImage from '@components/UserImage'
+import { ProfileRow } from '@pages/SettingsPage/UsersSettings/UserList'
 
 import { useMemo } from 'react'
-import styled from 'styled-components'
 import addRemoveMembers from './addRemoveMembers'
 import useCreateContext from '@hooks/useCreateContext'
 import UsersListTeamsSmall from './UsersListTeamsSmall'
-
-const StyledProfileRow = styled.div`
-  display: flex;
-  align-items: center;
-  gap: var(--base-gap-large);
-  overflow: hidden;
-`
-
-const ProfileRow = ({ rowData }) => {
-  const { name, self, isMissing } = rowData
-  return (
-    <StyledProfileRow>
-      <UserImage
-        name={name}
-        size={25}
-        style={{
-          margin: 'auto',
-          transform: 'scale(0.8)',
-          minHeight: 25,
-          minWidth: 25,
-          maxHeight: 25,
-          maxWidth: 25,
-        }}
-        highlight={self}
-      />
-      <span
-        style={{
-          color: isMissing ? 'var(--color-hl-error)' : 'inherit',
-        }}
-      >
-        {name}
-      </span>
-    </StyledProfileRow>
-  )
-}
 
 const UserListTeams = ({
   selectedProjects,
@@ -227,7 +191,7 @@ const UserListTeams = ({
           <Column
             field="name"
             header="Username"
-            body={(rowData) => ProfileRow({ rowData })}
+            body={(rowData) => <ProfileRow rowData={rowData} />}
             style={{
               width: '20%',
             }}

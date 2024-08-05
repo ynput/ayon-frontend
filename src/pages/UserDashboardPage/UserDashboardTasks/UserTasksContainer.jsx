@@ -15,7 +15,7 @@ import DetailsPanelSlideOut from '@containers/DetailsPanel/DetailsPanelSlideOut/
 import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
 import transformKanbanTasks from './transformKanbanTasks'
 import styled from 'styled-components'
-import { classNames } from 'primereact/utils'
+import clsx from 'clsx'
 
 const StyledSplitter = styled(Splitter)`
   .details-panel-splitter {
@@ -224,7 +224,7 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
       {selectedTasksData.length ? (
         <SplitterPanel
           size={1}
-          className={classNames('details-panel-splitter', { dragging: isDragging })}
+          className={clsx('details-panel-splitter', { dragging: isDragging })}
           style={{
             maxWidth: isDragging
               ? 0

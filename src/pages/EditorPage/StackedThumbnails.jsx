@@ -2,7 +2,7 @@ import React from 'react'
 import styled, { css } from 'styled-components'
 import Thumbnail from '@components/Thumbnail'
 import { useSelector } from 'react-redux'
-import { classNames } from 'primereact/utils'
+import clsx from 'clsx'
 
 const StackedStyled = styled.div`
   display: flex;
@@ -56,7 +56,7 @@ const StackedThumbnails = ({
   return (
     <StackedStyled
       length={thumbnails.length}
-      className={classNames('stacked-thumbnails', className, { stacking: isStacking })}
+      className={clsx('stacked-thumbnails', className, { stacking: isStacking })}
     >
       {thumbnails.map((thumb, i) =>
         thumb ? (

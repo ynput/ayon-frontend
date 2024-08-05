@@ -235,7 +235,6 @@ const AnatomyPresets = () => {
             icon="delete"
             disabled={selectedPreset === '_'}
             onClick={() => handleDeletePreset(selectedPreset, isSelectedPrimary)}
-            style={{ display: selectedPreset === '_' ? 'none' : 'flex' }}
           />
           <Button
             label="Save as a new preset"

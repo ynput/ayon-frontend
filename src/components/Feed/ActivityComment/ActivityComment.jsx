@@ -5,7 +5,7 @@ import ReactMarkdown from 'react-markdown'
 import CommentWrapper from './CommentWrapper'
 import remarkGfm from 'remark-gfm'
 import emoji from 'remark-emoji'
-import { classNames } from 'primereact/utils'
+import clsx from 'clsx'
 import { useSelector } from 'react-redux'
 import CommentInput from '@components/CommentInput/CommentInput'
 import { aTag, blockquoteTag, codeTag, inputTag } from './activityMarkdownComponents'
@@ -93,7 +93,7 @@ const ActivityComment = ({
   return (
     <>
       <Styled.Comment
-        className={classNames('comment', { isOwner, isMenuOpen, isEditing, isHighlighted })}
+        className={clsx('comment', { isOwner, isMenuOpen, isEditing, isHighlighted })}
       >
         <ActivityHeader
           name={authorName}
@@ -107,7 +107,7 @@ const ActivityComment = ({
           onReferenceClick={onReferenceClick}
           onReferenceTooltip={setRefTooltip}
         />
-        <Styled.Body className={classNames('comment-body', { isEditing })}>
+        <Styled.Body className={clsx('comment-body', { isEditing })}>
           <Styled.Tools className={'tools'} ref={moreRef}>
             {isOwner && handleEditComment && (
               <Styled.ToolButton icon="edit_square" onClick={handleEditComment} />

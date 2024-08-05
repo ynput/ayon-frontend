@@ -5,7 +5,7 @@ import VideoOverlay from './VideoOverlay'
 import Trackbar from './Trackbar'
 import VideoPlayerControls from './VideoPlayerControls'
 import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
-import { classNames } from 'primereact/utils'
+import clsx from 'clsx'
 
 const VideoPlayerContainer = styled.div`
   position: absolute;
@@ -271,8 +271,7 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay }) => {
   }
 
   const handleScrub = (newTime) => {
-    if (newTime === videoRef.current?.currentTime) 
-      return
+    if (newTime === videoRef.current?.currentTime) return
     videoRef.current?.pause()
     seekToTime(newTime)
     initialPosition.current = newTime
@@ -293,7 +292,7 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay }) => {
   const handleEnded = () => {
     if (!isPlaying) {
       console.debug('ended, but not playing')
-      console.debug("position: ", videoRef.current.currentTime)
+      console.debug('position: ', videoRef.current.currentTime)
       return
     }
     if (loop) {
@@ -325,7 +324,7 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay }) => {
   return (
     <VideoPlayerContainer>
       <div
-        className={classNames('video-row video-container', { 'no-content': loadError })}
+        className={clsx('video-row video-container', { 'no-content': loadError })}
         ref={videoRowRef}
       >
         <div

@@ -1,5 +1,5 @@
 // shows the production installers available for download for a specific platform
-import { classNames } from 'primereact/utils'
+import clsx from 'clsx'
 import * as Styled from './InstallerProdCard.styled'
 import AppleLogo from '@/svg/AppleLogo'
 import LinuxLogo from '@/svg/LinuxLogo'
@@ -28,7 +28,7 @@ const InstallerProdCard = ({ platform, isFeatured = false, installers = [], onIn
   }
 
   return (
-    <Styled.Card className={classNames({ featured: isFeatured })}>
+    <Styled.Card className={clsx({ featured: isFeatured })}>
       {icon}
       <h2>{title} Installer</h2>
       <Styled.DownloadLinks>

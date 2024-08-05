@@ -1,6 +1,6 @@
 import { Button, Icon, InputText, Panel } from '@ynput/ayon-react-components'
 import * as Styled from './UserAccessGroupsProjects.styled'
-import { classNames } from 'primereact/utils'
+import clsx from 'clsx'
 import { useMemo, useRef, useState } from 'react'
 import { matchSorter } from 'match-sorter'
 
@@ -175,7 +175,7 @@ const UserAccessGroupsProjects = ({
       onKeyDown={handleKeyDown}
       id="user-access-groups-projects"
     >
-      <Styled.Header className={classNames({ searchOpen, disabled: isDisabled })}>
+      <Styled.Header className={clsx({ searchOpen, disabled: isDisabled })}>
         {searchOpen ? (
           <>
             <InputText
@@ -209,7 +209,7 @@ const UserAccessGroupsProjects = ({
         {projectOptions.map(({ name, active, deleted }) => (
           <Styled.ProjectItem
             key={name}
-            className={classNames('project-item', {
+            className={clsx('project-item', {
               active: values.includes(name),
               disabled: isDisabled,
               dragging: isDragging.current,

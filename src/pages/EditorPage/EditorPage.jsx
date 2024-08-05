@@ -36,7 +36,6 @@ import {
   onForceChange,
   onNewChanges,
   onRevert,
-  updateNodes,
 } from '@state/editor'
 import EditorPanel from './EditorPanel'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
@@ -1601,19 +1600,6 @@ const EditorPage = () => {
     }
   }
 
-  // when a thumbnail is uploaded, refetch data for that entity
-  const handleThumbnailUpload = (uploaded = {}) => {
-    const { id, type } = uploaded
-
-    if (!id || !type) return
-
-    // patch new updatedAt value to node
-    const newDate = new Date().toISOString()
-    const newData = { id, updatedAt: newDate }
-
-    dispatch(updateNodes({ updated: [newData] }))
-  }
-
   const tableRef = useRef(null)
 
   const handleTableKeyDown = useTableKeyboardNavigation({
@@ -1875,12 +1861,8 @@ const EditorPage = () => {
                 columnResizeMode="expand"
                 expandedKeys={expandedFolders}
                 onToggle={handleToggleFolder}
-                onDoubleClick={handleDoubleClick}
                 selectionMode="multiple"
                 selectionKeys={currentSelection}
-                onSelectionChange={(e) => handleSelectionChange(e.value)}
-                onClick={handleDeselect}
-                onFocus={updateURI}
                 rowClassName={(rowData) => {
                   return {
                     changed: rowData.key in changes,
@@ -1888,6 +1870,7 @@ const EditorPage = () => {
                     deleted: rowData.key in changes && changes[rowData.key]?.__action == 'delete',
                     ['id-' + rowData.key]: true,
                     ['type-' + rowData.data.__entityType]: true,
+                    compact: true,
                   }
                 }}
                 onContextMenu={onContextMenu}
@@ -1897,7 +1880,15 @@ const EditorPage = () => {
                 rows={20}
                 className={fullPageLoading ? 'table-loading' : undefined}
                 ref={tableRef}
-                onKeyDown={handleTableKeyDown}
+                onSelectionChange={(e) => handleSelectionChange(e.value)}
+                pt={{
+                  root: {
+                    onKeyDown: handleTableKeyDown,
+                    onFocus: updateURI,
+                    onClick: handleDeselect,
+                    onDoubleClick: handleDoubleClick,
+                  },
+                }}
               >
                 {allColumns}
               </TreeTable>
@@ -1913,7 +1904,6 @@ const EditorPage = () => {
               attribs={attribFields}
               projectName={projectName}
               onForceChange={handleForceChange}
-              onThumbnailUpload={handleThumbnailUpload}
               allUsers={allUsers}
             />
           </SplitterPanel>

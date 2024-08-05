@@ -17,7 +17,7 @@ import { toast } from 'react-toastify'
 import { toggleDevMode } from '@state/user'
 import styled from 'styled-components'
 import { useRestart } from '@context/restartContext'
-import { classNames } from 'primereact/utils'
+import clsx from 'clsx'
 import InboxNotificationIcon from './InboxNotification'
 
 const DeveloperSwitch = styled.div`
@@ -147,7 +147,7 @@ const Header = () => {
           icon="home"
           label="Home"
           variant="nav"
-          className={classNames({ selected: location.pathname.startsWith('/dashboard') })}
+          className={clsx({ selected: location.pathname.startsWith('/dashboard') })}
           id="home-button"
         />
       </Link>
@@ -180,7 +180,7 @@ const Header = () => {
         icon="help"
         ref={helpButtonRef}
         onClick={() => handleToggleMenu('help')}
-        className={classNames({ active: menuOpen === 'help' })}
+        className={clsx({ active: menuOpen === 'help' })}
         variant="nav"
       />
       <MenuContainer id="help" target={helpButtonRef.current}>
@@ -197,7 +197,7 @@ const Header = () => {
         onClick={() => handleToggleMenu('app')}
         ref={appButtonRef}
         variant="nav"
-        className={classNames({ active: menuOpen === 'app', notification: isSnoozing })}
+        className={clsx({ active: menuOpen === 'app', notification: isSnoozing })}
       />
       <MenuContainer id="app" target={appButtonRef.current}>
         <AppMenu user={user} />
@@ -206,7 +206,7 @@ const Header = () => {
 
       {/* User icon and menu vvv */}
       <HeaderButton
-        className={classNames({ active: menuOpen === 'user' })}
+        className={clsx({ active: menuOpen === 'user' })}
         onClick={() => handleToggleMenu('user')}
         ref={userButtonRef}
         variant="nav"

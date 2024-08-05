@@ -1,6 +1,6 @@
 import { DefaultValueTemplate } from '@ynput/ayon-react-components'
 import { DropdownHeader, DropdownItem, StyledDropdown } from './ActionsDropdown.styled'
-import { classNames } from 'primereact/utils'
+import clsx from 'clsx'
 import { upperFirst } from 'lodash'
 import ActionIcon from '@/containers/Actions/ActionIcon'
 
@@ -19,7 +19,7 @@ const ActionsDropdown = ({ options, isLoading, onAction }) => {
   return (
     <StyledDropdown
       disabled={isLoading}
-      className={classNames('more', { isLoading: isLoading })}
+      className={clsx('more', { isLoading: isLoading })}
       options={options}
       value={[]}
       placeholder=""

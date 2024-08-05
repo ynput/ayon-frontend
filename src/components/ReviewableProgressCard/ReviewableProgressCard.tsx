@@ -1,7 +1,7 @@
 import { FC, HTMLProps } from 'react'
 import * as Styled from './ReviewableProgressCard.styled'
 import { Button, getFileSizeString, Icon } from '@ynput/ayon-react-components'
-import { classNames } from 'primereact/utils'
+import clsx from 'clsx'
 
 export interface ReviewableProgress {
   name: string
@@ -68,13 +68,13 @@ const ReviewableProgressCard: FC<ReviewableProgressCardProps> = ({
   return (
     <Styled.UploadCard
       key={name}
-      className={classNames({ finished, error: !!error, [type]: true })}
+      className={clsx({ finished, error: !!error, [type]: true })}
       id={fileId}
       {...props}
     >
       <Styled.Type>
         {src && <img src={src} />}
-        {icon && <Icon icon={icon} className={classNames({ spinning: isSpinning })} />}
+        {icon && <Icon icon={icon} className={clsx({ spinning: isSpinning })} />}
       </Styled.Type>
 
       <span className="content">

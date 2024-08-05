@@ -1,6 +1,6 @@
 import React from 'react'
 import * as Styled from './Actions.styled'
-import { classNames } from 'primereact/utils'
+import clsx from 'clsx'
 import { toast } from 'react-toastify'
 import { useMemo } from 'react'
 import { useExecuteActionMutation, useGetActionsFromContextQuery } from '@/services/actions/actions'
@@ -174,7 +174,7 @@ const Actions = ({ entities, entityType, entitySubTypes, isLoadingEntity }) => {
       {featuredActionsToDisplay.map((action, i) => (
         <Styled.FeaturedAction
           key={action.identifier + '-' + i}
-          className={classNames('action', {
+          className={clsx('action', {
             isLoading: isLoading,
             isPlaceholder: action.isPlaceholder,
           })}

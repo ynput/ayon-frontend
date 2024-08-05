@@ -13,7 +13,7 @@ import useScrollOnInputOpen from './hooks/useScrollOnInputOpen'
 import { getLoadingPlaceholders } from './feedHelpers'
 import { onCommentImageOpen } from '@state/context'
 import { Icon } from '@ynput/ayon-react-components'
-import { classNames } from 'primereact/utils'
+import clsx from 'clsx'
 import { isEqual, union } from 'lodash'
 import useScrollToHighlighted from './hooks/useScrollToHighlighted'
 import { toast } from 'react-toastify'
@@ -124,7 +124,12 @@ const Feed = ({
   // do any transformation on activities data
   // 1. status change activities, attach status data based on projectName
   // 2. reverse the order
-  const transformedActivitiesData = useTransformActivities(activitiesData, projectUsers, projectInfo, entityType)
+  const transformedActivitiesData = useTransformActivities(
+    activitiesData,
+    projectUsers,
+    projectInfo,
+    entityType,
+  )
 
   // REFS
   const feedRef = useRef(null)
@@ -243,7 +248,7 @@ const Feed = ({
             {warningMessage}
           </Styled.Warning>
         )}
-        <Styled.FeedContent ref={feedRef} className={classNames({ isLoading: isLoadingNew })}>
+        <Styled.FeedContent ref={feedRef} className={clsx({ isLoading: isLoadingNew })}>
           {isLoadingNew
             ? loadingPlaceholders
             : transformedActivitiesData.map((activity) => (
