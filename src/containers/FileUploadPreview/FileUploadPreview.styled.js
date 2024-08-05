@@ -8,9 +8,11 @@ export const DialogWrapper = styled(Dialog)`
 
   .body {
     flex-direction: row;
+    justify-content: center;
     padding-top: 0;
   }
   .navIcon {
+    align-content: center;
     font-size: 48px;
     &:hover {
       cursor: pointer;
@@ -53,7 +55,7 @@ export const DialogWrapper = styled(Dialog)`
 
     .body {
       padding: 0;
-      align-items: center;
+      align-items: stretch;
       user-select: none;
       overflow: hidden;
     }

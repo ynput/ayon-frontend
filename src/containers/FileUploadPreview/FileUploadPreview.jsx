@@ -125,7 +125,9 @@ const FileUploadPreview = () => {
         className={classNames('navIcon', !canNavigateLeft() ? 'disabled' : undefined)}
         onClick={handleNavigateToPrevious}
       />
-      <MimeComponent file={file} />
+      <div>
+        <MimeComponent file={file} />
+      </div>
       <Icon
         icon="chevron_right"
         className={classNames('navIcon', !canNavigateRight() ? 'disabled' : undefined)}
