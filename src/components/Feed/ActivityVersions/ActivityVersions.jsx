@@ -1,7 +1,6 @@
 import { Icon } from '@ynput/ayon-react-components'
 import ActivityHeader from '../ActivityHeader/ActivityHeader'
 import * as Styled from './ActivityVersions.styled'
-import { productTypes } from '@state/project'
 import { useState } from 'react'
 import { More } from '../ActivityGroup/ActivityGroup.styled'
 import ActivityDate from '../ActivityDate'
@@ -40,7 +39,7 @@ const ActivityVersions = ({
         onReferenceClick={onReferenceClick}
       />
       {versions.flatMap(
-        ({ name, id, productId, productName, productType, updatedAt, createdAt }, index) =>
+        ({ name, id, productId, productName, updatedAt, createdAt }, index) =>
           (index < limit || showAll) && (
             <Styled.Card onClick={() => handleClick(id, productId)} key={id}>
               <Styled.Content>
@@ -57,7 +56,7 @@ const ActivityVersions = ({
                 onError={() => setThumbnailError(true)}
                 iconOnly={thumbnailError}
                 entityUpdatedAt={updatedAt}
-                icon={productTypes[productType]?.icon || 'home_repair_service'}
+                icon={'play_circle'}
               />
             </Styled.Card>
           ),

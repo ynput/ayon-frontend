@@ -16,6 +16,7 @@ const TASK_FRAGMENT = () => `
     createdAt
     folderId
     thumbnailId
+    hasReviewables
     folder {
       name
       label
@@ -101,6 +102,7 @@ export const VERSION_DETAILS_QUERY = (attribs = []) => `
                 updatedAt
                 createdAt
                 thumbnailId
+                hasReviewables
                 product {
                   id
                   name
@@ -145,6 +147,7 @@ query FolderDetails($projectName: String!, $entityId: String!) {
           thumbnailId
           folderType
           path
+          hasReviewables
           attrib {
             ${attribs.join('\n')}
           }
@@ -162,6 +165,7 @@ export const REP_QUERY = (attribs) => `
           status
           tags
           updatedAt
+          hasReviewables
           attrib {
             ${attribs.join('\n')}
           }

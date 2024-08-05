@@ -89,6 +89,7 @@ const parseVersionsData = (data) =>
       versionUpdatedAt: node.updatedAt,
       versionAuthor: node.author,
       productId: node.productId,
+      hasReviewables: node.hasReviewables,
     }
   })
 
@@ -103,11 +104,12 @@ fragment ProductVersionFragment on VersionNode {
   updatedAt
   thumbnailId
   taskId
+  status
+  hasReviewables
   task {
     name
     taskType
   }
-  status
   attrib {
       fps
       resolutionWidth
