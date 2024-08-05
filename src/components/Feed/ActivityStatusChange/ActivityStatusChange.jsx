@@ -11,13 +11,12 @@ const ActivityStatusChange = ({ entityType, activity = {} }) => {
     <Styled.StatusChange>
       <Styled.Body>
         <Styled.Text>{authorFullName}</Styled.Text>
-        <Styled.Text>changed status</Styled.Text>
+        <Styled.Text>- {tagList.join(' / ')} -</Styled.Text>
         {newStatus.icon && <Icon icon={oldStatus.icon} style={{ color: oldStatus.color }} />}
         <Styled.Text>{oldStatus.name}</Styled.Text>
         <Icon icon="trending_flat" />
         {newStatus.icon && <Icon icon={newStatus.icon} style={{ color: newStatus.color }} />}
         <Styled.Text>{newStatus.name}</Styled.Text>
-        <Styled.Text>( {tagList.join(' | ')} )</Styled.Text>
       </Styled.Body>
       <ActivityDate date={createdAt} />
     </Styled.StatusChange>
