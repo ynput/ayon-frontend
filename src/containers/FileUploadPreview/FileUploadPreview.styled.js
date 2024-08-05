@@ -16,6 +16,7 @@ export const DialogWrapper = styled(Dialog)`
     font-size: 48px;
     &:hover {
       cursor: pointer;
+      color: var(--md-sys-color-primary);
     }
     &.disabled {
       color: var(--md-sys-color-outline-variant);
