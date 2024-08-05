@@ -103,20 +103,22 @@ const getAddons = api.injectEndpoints({
       invalidatesTags: ['addonList'],
     }), // setAddonVersions
 
-    setCopyAddonVariant: build.mutation({
-      query: ({ addonName, copyFrom, copyTo }) => ({
-        url: '/api/addons',
-        method: 'POST',
-        body: {
-          copyVariant: {
-            addonName,
-            copyFrom,
-            copyTo,
-          },
-        },
-      }),
-      invalidatesTags: ['addonList'],
-    }), // setCopyAddonVariant
+    // TODO: Deprecated, remove
+    // setCopyAddonVariant: build.mutation({
+    //   query: ({ addonName, copyFrom, copyTo }) => ({
+    //     url: '/api/addons',
+    //     method: 'POST',
+    //     body: {
+    //       copyVariant: {
+    //         addonName,
+    //         copyFrom,
+    //         copyTo,
+    //       },
+    //     },
+    //   }),
+    //   invalidatesTags: ['addonList'],
+    // }), // setCopyAddonVariant
+
     getAddonInstall: build.query({
       query: () => ({
         url: `/api/addons/install`,
@@ -133,7 +135,6 @@ export const {
   useGetSettingsAddonsQuery,
   useSetAddonVersionMutation,
   useSetAddonVersionsMutation,
-  useSetCopyAddonVariantMutation,
   useGetAddonInstallQuery,
   useLazyGetAddonInstallQuery,
 } = getAddons
