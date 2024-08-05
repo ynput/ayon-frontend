@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import * as Styled from './AddonDetails.styled'
 import Type from '@/theme/typography.module.css'
 import clsx from 'clsx'
-import { isEmpty } from 'lodash'
+import { capitalize, isEmpty } from 'lodash'
 import AddonIcon from '@components/AddonIcon/AddonIcon'
 import { rcompare } from 'semver'
 import useUninstall from './useUninstall'
@@ -33,6 +33,7 @@ const AddonDetails = ({ addon = {}, isLoading, onDownload, isUpdatingAll }) => {
     title,
     description,
     icon,
+    links,
     isDownloaded,
     isDownloading,
     isFinished,
@@ -92,6 +93,19 @@ const AddonDetails = ({ addon = {}, isLoading, onDownload, isUpdatingAll }) => {
     if (!downloaded.includes(version)) {
       setDownloadedByAddon((v) => ({ ...v, [name]: [...(v[name] || []), version] }))
     }
+  }
+
+  let groupedLinks = []
+  if (links !== undefined) {
+    links.forEach((link) => {
+      let group = groupedLinks.find((el) => el.type == link.type)
+      if (group != undefined) {
+        group.links.push(link)
+        return
+      }
+
+      groupedLinks.push({ type: link.type, links: [link] })
+    })
   }
 
   let actionButton = null
@@ -238,6 +252,7 @@ const AddonDetails = ({ addon = {}, isLoading, onDownload, isUpdatingAll }) => {
                   ))}
               </MetaPanelRow>
             </Styled.MetaPanel>
+
             <Styled.MetaPanel className={clsx({ isPlaceholder: isLoading })}>
               <MetaPanelRow label="Author">{orgTitle}</MetaPanelRow>
               <MetaPanelRow label="Latest Version">
@@ -245,6 +260,24 @@ const AddonDetails = ({ addon = {}, isLoading, onDownload, isUpdatingAll }) => {
                 {warning && <p>{warning}</p>}
               </MetaPanelRow>
             </Styled.MetaPanel>
+
+            {groupedLinks && (
+              <Styled.MetaPanel className={clsx({ isPlaceholder: isLoading })}>
+                {groupedLinks.map((group) => (
+                  <MetaPanelRow
+                    className="capitalized"
+                    key={group.type}
+                    label={capitalize(group.type)}
+                  >
+                    {group.links.map((link) => (
+                      <a className="link" target="_blank" rel="noreferrer noopener" href={link.url} key={link.label}>
+                        {link.label}
+                      </a>
+                    ))}
+                  </MetaPanelRow>
+                ))}
+              </Styled.MetaPanel>
+            )}
           </Styled.Right>
         </>
       )}

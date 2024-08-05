@@ -175,6 +175,10 @@ export const MetaPanelRow = styled.div`
   flex-direction: column;
   gap: var(--base-gap-small);
 
+  .link {
+    text-decoration: underline;
+  }
+
   .value {
     display: flex;
     flex-direction: column;
