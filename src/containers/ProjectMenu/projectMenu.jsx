@@ -14,7 +14,7 @@ import useLocalStorage from '@/hooks/useLocalStorage'
 import ProjectButton from '@components/ProjectButton/ProjectButton'
 import { createPortal } from 'react-dom'
 import { useShortcutsContext } from '@context/shortcutsContext'
-import { classNames } from 'primereact/utils'
+import clsx from 'clsx'
 import { onProjectOpened } from '/src/features/dashboard'
 import { useUpdateUserPreferencesMutation } from '@/services/user/updateUser'
 
@@ -144,7 +144,7 @@ const ProjectMenu = ({ isOpen, onHide }) => {
         <ProjectButton
           label={project.name}
           code={project.code}
-          className={classNames('project-item', { pinned: pinned.includes(project.name) })}
+          className={clsx('project-item', { pinned: pinned.includes(project.name) })}
           highlighted={projectSelected === project.name}
           onPin={(e) => handlePinChange(project.name, e)}
           onEdit={!isUser && ((e) => handleEditClick(e, project.name))}

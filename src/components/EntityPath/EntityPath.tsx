@@ -1,6 +1,6 @@
 import { FC, Fragment, MouseEvent, useLayoutEffect, useRef, useState } from 'react'
 import * as Styled from './EntityPath.styled'
-import { classNames } from 'primereact/utils'
+import clsx from 'clsx'
 import SegmentProvider from './SegmentProvider'
 import { Icon } from '@ynput/ayon-react-components'
 
@@ -51,7 +51,6 @@ const EntityPath: FC<EntityPathProps> = ({
   }, [segments])
 
   useLayoutEffect(() => {
-    console.log('calc')
     if (!containerRef.current) {
       setCalcMaxWidth(false)
       return
@@ -128,7 +127,7 @@ const EntityPath: FC<EntityPathProps> = ({
   const segmentProps = { scope, projectName }
 
   return (
-    <Styled.Path className={classNames({ loading: isLoading })} id="entity-path" ref={containerRef}>
+    <Styled.Path className={clsx({ loading: isLoading })} id="entity-path" ref={containerRef}>
       <Styled.Segment>{projectName}</Styled.Segment>
 
       {!!hiddenSegments.length && (

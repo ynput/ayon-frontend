@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import HeaderButton from './HeaderButton'
-import { classNames } from 'primereact/utils'
+import clsx from 'clsx'
 import { useGetInboxHasUnreadQuery } from '@queries/inbox/getInbox'
 
 const InboxNotificationIcon = () => {
@@ -8,11 +8,7 @@ const InboxNotificationIcon = () => {
 
   return (
     <Link to="/inbox/important">
-      <HeaderButton
-        icon="inbox"
-        variant="nav"
-        className={classNames({ notification: hasUnread })}
-      />
+      <HeaderButton icon="inbox" variant="nav" className={clsx({ notification: hasUnread })} />
     </Link>
   )
 }

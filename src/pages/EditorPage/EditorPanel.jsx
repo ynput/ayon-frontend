@@ -86,7 +86,6 @@ const EditorPanel = ({
   attribs,
   projectName,
   onForceChange,
-  onThumbnailUpload,
   allUsers,
 }) => {
   // SELECTORS
@@ -509,7 +508,6 @@ const EditorPanel = ({
         <>
           <EntityDetailsHeader
             values={nodeIds.map((id) => nodes[id]?.data)}
-            onThumbnailUpload={onThumbnailUpload}
             tools={
               <>
                 <Button

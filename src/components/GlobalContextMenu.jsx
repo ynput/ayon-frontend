@@ -1,4 +1,4 @@
-import { ContextMenu } from 'primereact/contextmenu'
+import { ContextMenu } from 'primereact-context/contextmenu'
 import React from 'react'
 import { useContextMenu } from '@context/contextMenuContext'
 
@@ -8,6 +8,7 @@ export const GlobalContextMenu = () => {
   return (
     <ContextMenu
       model={model}
+      global
       ref={ref}
       onShow={() => setIsContextOpen(true)}
       onHide={() => setIsContextOpen(false)}

@@ -4,7 +4,7 @@ import { onFilePreviewClose } from '@state/context'
 import { useEffect, useRef } from 'react'
 import ImageMime from './mimes/ImageMime'
 import TextMime from './mimes/TextMime'
-import { classNames } from 'primereact/utils'
+import clsx from 'clsx'
 import { Icon } from '@ynput/ayon-react-components'
 import useAttachmentNavigation from './hooks/useAttachmentNavigation'
 
@@ -117,18 +117,18 @@ const FileUploadPreview = () => {
       onClose={handleClose}
       hideCancelButton={isImage}
       ref={dialogRef}
-      className={classNames({ isImage })}
+      className={clsx({ isImage })}
       header={isImage ? null : name}
     >
       <Icon
         icon="chevron_left"
-        className={classNames('navIcon', !canNavigateLeft() ? 'disabled' : undefined)}
+        className={clsx('navIcon', !canNavigateLeft() ? 'disabled' : undefined)}
         onClick={handleNavigateToPrevious}
       />
       <MimeComponent file={file} />
       <Icon
         icon="chevron_right"
-        className={classNames('navIcon', !canNavigateRight() ? 'disabled' : undefined)}
+        className={clsx('navIcon', !canNavigateRight() ? 'disabled' : undefined)}
         onClick={handleNavigateToNext}
       />
     </Styled.DialogWrapper>

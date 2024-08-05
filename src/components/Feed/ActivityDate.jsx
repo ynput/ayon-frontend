@@ -9,7 +9,7 @@ import {
   isSameMinute,
 } from 'date-fns'
 import Typography from '@/theme/typography.module.css'
-import { classNames } from 'primereact/utils'
+import clsx from 'clsx'
 import styled from 'styled-components'
 import { useState } from 'react'
 
@@ -72,7 +72,7 @@ const ActivityDate = ({ date, isExact, ...props }) => {
 
   return (
     <DateStyled
-      className={classNames(Typography.bodySmall, 'date')}
+      className={clsx(Typography.bodySmall, 'date')}
       {...props}
       onClick={toggleFuzzy}
       onMouseOver={() => setIsFuzzy(false)}

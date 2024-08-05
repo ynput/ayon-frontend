@@ -15,6 +15,33 @@ const StyledProfileRow = styled.div`
   gap: var(--base-gap-large);
 `
 
+export const ProfileRow = ({ rowData }) => {
+  const { name, self, isMissing } = rowData
+  return (
+    <StyledProfileRow>
+      <UserImage
+        name={name}
+        size={25}
+        style={{
+          transform: 'scale(0.8)',
+          minHeight: 25,
+          minWidth: 25,
+          maxHeight: 25,
+          maxWidth: 25,
+        }}
+        highlight={self}
+      />
+      <span
+        style={{
+          color: isMissing ? 'var(--color-hl-error)' : 'inherit',
+        }}
+      >
+        {name}
+      </span>
+    </StyledProfileRow>
+  )
+}
+
 const UserList = ({
   selectedProjects,
   selectedUsers,
@@ -75,21 +102,6 @@ const UserList = ({
 
   const [ctxMenuShow] = useCreateContext()
 
-  const ProfileRow = ({ rowData }) => {
-    const { name, self } = rowData
-    return (
-      <StyledProfileRow>
-        <UserImage
-          name={name}
-          size={25}
-          style={{ margin: 'auto', transform: 'scale(0.8)', maxHeight: 25, maxWidth: 25 }}
-          highlight={self}
-        />
-        <span>{self ? `${name} (me)` : name}</span>
-      </StyledProfileRow>
-    )
-  }
-
   // create 10 dummy rows
   const loadingData = useMemo(() => {
     return Array.from({ length: 10 }, (_, i) => ({
@@ -127,9 +139,8 @@ const UserList = ({
             field="name"
             header="Username"
             sortable
-            body={(rowData) => ProfileRow({ rowData })}
+            body={(rowData) => <ProfileRow rowData={rowData} />}
             resizeable
-            style={{ width: 150 }}
           />
           <Column field="attrib.fullName" header="Full name" sortable resizeable />
           <Column field="attrib.email" header="Email" sortable />

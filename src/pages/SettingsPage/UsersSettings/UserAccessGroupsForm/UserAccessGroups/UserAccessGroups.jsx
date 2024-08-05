@@ -1,6 +1,6 @@
 import { Button, Icon, Panel } from '@ynput/ayon-react-components'
 import * as Styled from './UserAccessGroups.styled'
-import { classNames } from 'primereact/utils'
+import clsx from 'clsx'
 import { Link } from 'react-router-dom'
 
 // access groups panel
@@ -61,7 +61,7 @@ const UserAccessGroups = ({ values = {}, selected = [], onChange, disableNewGrou
         {sortedValues.map(([accessGroup, projects = []]) => (
           <Styled.AccessGroupItem
             key={accessGroup}
-            className={classNames({
+            className={clsx({
               active: !!projects.length,
               selected: selected.includes(accessGroup),
             })}

@@ -1,4 +1,4 @@
-import { classNames } from 'primereact/utils'
+import clsx from 'clsx'
 import * as Styled from './MarketAddonCard.styled'
 import Type from '@/theme/typography.module.css'
 import AddonIcon from '../AddonIcon/AddonIcon'
@@ -49,7 +49,7 @@ const MarketAddonCard = ({
   }
 
   return (
-    <Styled.Container {...props} className={classNames({ isSelected, isPlaceholder })}>
+    <Styled.Container {...props} className={clsx({ isSelected, isPlaceholder })}>
       <AddonIcon isPlaceholder={isPlaceholder} size={32} src={icon} alt={title + ' icon'} />
       <Styled.Content className="content">
         <Styled.TitleWrapper className="header">

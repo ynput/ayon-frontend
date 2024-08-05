@@ -384,13 +384,18 @@ const Hierarchy = (props) => {
         emptyMessage={isError && 'No Folders Found'}
         onSelectionChange={onSelectionChange}
         onToggle={onToggle}
-        onFocus={onFocus}
         onContextMenu={onContextMenu}
         className={isFetching ? 'table-loading' : undefined}
-        onKeyDown={handleKeyDown}
         rowClassName={(rowData) => ({
           ['id-' + rowData.key]: true,
+          compact: true,
         })}
+        pt={{
+          root: {
+            onFocus: onFocus,
+            onKeyDown: handleKeyDown,
+          },
+        }}
       >
         <Column header="Hierarchy" field="body" expander={true} style={{ width: '100%' }} />
       </TreeTable>
