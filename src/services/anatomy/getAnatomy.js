@@ -1,27 +1,5 @@
 import api from '@api'
 
-const transformAnatomyPresets = (data) => {
-  const defaultPreset = { name: '_', title: '<default (built-in)>' }
-  let primaryPreset = defaultPreset
-  let presets = []
-  for (const preset of data) {
-    if (preset.primary)
-      primaryPreset = {
-        name: preset.name,
-        title: `<default (${preset.name})>`,
-        primary: 'PRIMARY',
-        default: true,
-      }
-    presets.push({
-      name: preset.name,
-      title: preset.name,
-      version: preset.version,
-      primary: preset.primary ? 'PRIMARY' : '',
-    })
-  }
-  return [primaryPreset, ...presets]
-}
-
 const getAnatomy = api.injectEndpoints({
   endpoints: (build) => ({
     getAnatomySchema: build.query({
@@ -39,7 +17,7 @@ const getAnatomy = api.injectEndpoints({
       query: () => ({
         url: `/api/anatomy/presets`,
       }),
-      transformResponse: (response) => transformAnatomyPresets(response.presets),
+      transformResponse: (response) => response.presets,
       providesTags: (result) => [
         ...result.map(({ name }) => ({ type: 'anatomyPresets', id: name })),
         { type: 'anatomyPresets', id: 'LIST' },
