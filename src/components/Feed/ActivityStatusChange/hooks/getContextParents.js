@@ -13,7 +13,7 @@ const useGetContextParents = (activity, entityType) => {
 
   if (focusedFolders?.length > 1 && !tagTypes.folder) {
     tagTypes.folder = true
-    tag.push(activity.activityData.parents.find((p) => p.type == 'folder')?.name)
+    tag.push(activity.activityData.parents?.find((p) => p.type == 'folder')?.name)
   }
 
   if (activity.activityData.origin.type == 'task' && !tagTypes.task) {
@@ -29,7 +29,7 @@ const useGetContextParents = (activity, entityType) => {
   if (entityType == 'version' || activity.activityData.origin.type == 'version') {
     if (!tagTypes.product) {
       tagTypes.product = true
-      tag.push(activity.activityData.parents.find((p) => p.type == 'product')?.name)
+      tag.push(activity.activityData.parents?.find((p) => p.type == 'product')?.name)
     }
     if (!tagTypes.version) {
       tagTypes.version = true
