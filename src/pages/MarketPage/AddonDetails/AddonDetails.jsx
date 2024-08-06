@@ -271,14 +271,15 @@ const AddonDetails = ({ addon = {}, isLoading, onDownload, isUpdatingAll }) => {
                     label={capitalize(group.type)}
                   >
                     {group.links.map((link) => (
-                      <Styled.UseButton
+                      <Styled.ExternalLInk
+                        href={link.url}
                         key={link.label}
-                        variant="text"
-                        onClick={() => window.open(link.url, '_blank').focus()}
+                        target="_blank"
+                        rel="noreferrer"
                       >
                         <span className="label"> {link.label || getSimplifiedUrl(link.url)} </span>
                         <Icon icon="open_in_new" />
-                      </Styled.UseButton>
+                      </Styled.ExternalLInk>
                     ))}
                   </MetaPanelRow>
                 ))}
