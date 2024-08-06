@@ -257,8 +257,8 @@ const AddonDetails = ({ addon = {}, isLoading, onDownload, isUpdatingAll }) => {
             <Styled.MetaPanel className={clsx({ isPlaceholder: isLoading })}>
               <MetaPanelRow label="Author">{orgTitle}</MetaPanelRow>
               <MetaPanelRow label="Latest Version">
-                {latestVersion && <p>{latestVersion}</p>}
-                {warning && <p>{warning}</p>}
+                {latestVersion && <span>{latestVersion}</span>}
+                {warning && <span>{warning}</span>}
               </MetaPanelRow>
             </Styled.MetaPanel>
 
@@ -271,11 +271,14 @@ const AddonDetails = ({ addon = {}, isLoading, onDownload, isUpdatingAll }) => {
                     label={capitalize(group.type)}
                   >
                     {group.links.map((link) => (
-                      <Styled.UseButton key={link.label} variant="text" onClick={() => window.open(link.url, '_blank').focus()}>
-                          <span> {link.label || getSimplifiedUrl(link.url)} </span>
-                          <Icon icon="open_in_new" />
+                      <Styled.UseButton
+                        key={link.label}
+                        variant="text"
+                        onClick={() => window.open(link.url, '_blank').focus()}
+                      >
+                        <span className="label"> {link.label || getSimplifiedUrl(link.url)} </span>
+                        <Icon icon="open_in_new" />
                       </Styled.UseButton>
-
                     ))}
                   </MetaPanelRow>
                 ))}

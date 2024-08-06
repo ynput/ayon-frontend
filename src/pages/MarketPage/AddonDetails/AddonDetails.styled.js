@@ -143,6 +143,7 @@ export const Description = styled(ReactMarkdown)`
     )}
     border-radius: var(--border-radius);
     min-height: 80px;
+    overflow: hidden;
   }
 `
 
@@ -183,6 +184,7 @@ export const MetaPanelRow = styled.div`
   .value {
     display: flex;
     flex-direction: column;
+    min-height: 24px;
   }
 
   .more:hover {
@@ -203,6 +205,10 @@ export const UseButton = styled(Button)`
     white-space: nowrap;
     display: block;
     text-overflow: ellipsis;
+  }
+
+  .label {
+    flex: 1;
   }
 `
 
