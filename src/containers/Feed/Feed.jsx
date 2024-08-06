@@ -41,6 +41,9 @@ const Feed = ({
   const filter = useSelector((state) => state.details[path][scope].filter)
   const highlighted = useSelector((state) => state.details[path].highlighted)
 
+  // hide comment input for specific filters
+  const hideCommentInput = ['publishes'].includes(filter)
+
   // STATES
   const [isCommentInputOpen, setIsCommentInputOpen] = useState(false)
 
@@ -290,21 +293,23 @@ const Feed = ({
             </InView>
           )}
         </Styled.FeedContent>
-        <CommentInput
-          initValue={null}
-          onSubmit={submitComment}
-          isOpen={isCommentInputOpen}
-          onClose={() => setIsCommentInputOpen(false)}
-          onOpen={() => setIsCommentInputOpen(true)}
-          projectName={projectName}
-          entities={entities}
-          entityType={entityType}
-          projectInfo={projectInfo}
-          filter={filter}
-          disabled={isMultiProjects}
-          isLoading={isLoadingNew || !entities.length || isSaving}
-          scope={scope}
-        />
+        {!hideCommentInput && (
+          <CommentInput
+            initValue={null}
+            onSubmit={submitComment}
+            isOpen={isCommentInputOpen}
+            onClose={() => setIsCommentInputOpen(false)}
+            onOpen={() => setIsCommentInputOpen(true)}
+            projectName={projectName}
+            entities={entities}
+            entityType={entityType}
+            projectInfo={projectInfo}
+            filter={filter}
+            disabled={isMultiProjects}
+            isLoading={isLoadingNew || !entities.length || isSaving}
+            scope={scope}
+          />
+        )}
       </Styled.FeedContainer>
       <ActivityReferenceTooltip {...{ dispatch, projectName, projectInfo }} />
     </>
