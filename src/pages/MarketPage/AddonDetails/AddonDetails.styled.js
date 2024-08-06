@@ -143,6 +143,7 @@ export const Description = styled(ReactMarkdown)`
     )}
     border-radius: var(--border-radius);
     min-height: 80px;
+    overflow: hidden;
   }
 `
 
@@ -172,12 +173,18 @@ export const MetaPanel = styled.div`
 
 export const MetaPanelRow = styled.div`
   display: flex;
+  width: 100%;
   flex-direction: column;
   gap: var(--base-gap-small);
+
+  .link {
+    text-decoration: underline;
+  }
 
   .value {
     display: flex;
     flex-direction: column;
+    min-height: 24px;
   }
 
   .more:hover {
@@ -188,9 +195,21 @@ export const MetaPanelRow = styled.div`
 
 export const UseButton = styled(Button)`
   padding: 2px 6px;
-  width: fit-content;
-  margin-left: auto;
+  width: 100%;
+  max-width: fit-content;
+  justify-content: start;
   gap: var(--base-gap-small);
+  span {
+    width: auto;
+    overflow: hidden;
+    white-space: nowrap;
+    display: block;
+    text-overflow: ellipsis;
+  }
+
+  .label {
+    flex: 1;
+  }
 `
 
 export const ErrorCard = styled(Panel)`

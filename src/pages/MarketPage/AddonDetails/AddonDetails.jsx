@@ -3,11 +3,12 @@ import React, { useEffect, useMemo, useState } from 'react'
 import * as Styled from './AddonDetails.styled'
 import Type from '@/theme/typography.module.css'
 import clsx from 'clsx'
-import { isEmpty } from 'lodash'
+import { capitalize, isEmpty } from 'lodash'
 import AddonIcon from '@components/AddonIcon/AddonIcon'
 import { rcompare } from 'semver'
 import useUninstall from './useUninstall'
 import { Link } from 'react-router-dom'
+import { getSimplifiedUrl } from '@helpers/url'
 
 const MetaPanelRow = ({ label, children, valueDirection = 'column', ...props }) => (
   <Styled.MetaPanelRow {...props}>
@@ -33,6 +34,7 @@ const AddonDetails = ({ addon = {}, isLoading, onDownload, isUpdatingAll }) => {
     title,
     description,
     icon,
+    links,
     isDownloaded,
     isDownloading,
     isFinished,
@@ -92,6 +94,19 @@ const AddonDetails = ({ addon = {}, isLoading, onDownload, isUpdatingAll }) => {
     if (!downloaded.includes(version)) {
       setDownloadedByAddon((v) => ({ ...v, [name]: [...(v[name] || []), version] }))
     }
+  }
+
+  let groupedLinks = []
+  if (links) {
+    links.forEach((link) => {
+      let group = groupedLinks.find((el) => el.type == link.type)
+      if (group != undefined) {
+        group.links.push(link)
+        return
+      }
+
+      groupedLinks.push({ type: link.type, links: [link] })
+    })
   }
 
   let actionButton = null
@@ -238,13 +253,37 @@ const AddonDetails = ({ addon = {}, isLoading, onDownload, isUpdatingAll }) => {
                   ))}
               </MetaPanelRow>
             </Styled.MetaPanel>
+
             <Styled.MetaPanel className={clsx({ isPlaceholder: isLoading })}>
               <MetaPanelRow label="Author">{orgTitle}</MetaPanelRow>
               <MetaPanelRow label="Latest Version">
-                {latestVersion && <p>{latestVersion}</p>}
-                {warning && <p>{warning}</p>}
+                {latestVersion && <span>{latestVersion}</span>}
+                {warning && <span>{warning}</span>}
               </MetaPanelRow>
             </Styled.MetaPanel>
+
+            {groupedLinks.length > 0 && (
+              <Styled.MetaPanel className={clsx({ isPlaceholder: isLoading })}>
+                {groupedLinks.map((group) => (
+                  <MetaPanelRow
+                    className="capitalized"
+                    key={group.type}
+                    label={capitalize(group.type)}
+                  >
+                    {group.links.map((link) => (
+                      <Styled.UseButton
+                        key={link.label}
+                        variant="text"
+                        onClick={() => window.open(link.url, '_blank').focus()}
+                      >
+                        <span className="label"> {link.label || getSimplifiedUrl(link.url)} </span>
+                        <Icon icon="open_in_new" />
+                      </Styled.UseButton>
+                    ))}
+                  </MetaPanelRow>
+                ))}
+              </Styled.MetaPanel>
+            )}
           </Styled.Right>
         </>
       )}
