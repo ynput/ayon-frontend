@@ -20,6 +20,7 @@ import { toast } from 'react-toastify'
 import ActivityReferenceTooltip from '@components/Feed/ActivityReferenceTooltip/ActivityReferenceTooltip'
 import { isFilePreviewable } from '@containers/FileUploadPreview/FileUploadPreview'
 import { useGetKanbanProjectUsersQuery } from '@queries/userDashboard/getUserDashboard'
+import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
 
 // number of activities to get
 export const activitiesLast = 30
@@ -281,6 +282,10 @@ const Feed = ({
                   scope={scope}
                 />
               ))}
+          {/* message when no versions published */}
+          {transformedActivitiesData.length === 1 && filter === 'publishes' && !isLoadingNew && (
+            <EmptyPlaceholder message="No versions published yet" icon="layers" />
+          )}
           {hasPreviousPage && (
             <InView
               root={feedRef.current}
