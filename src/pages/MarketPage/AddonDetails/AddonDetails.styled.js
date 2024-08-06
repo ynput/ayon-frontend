@@ -222,3 +222,26 @@ export const ErrorCard = styled(Panel)`
     border: var(--md-sys-color-on-error-container) 1px solid;
   }
 `
+
+export const ExternalLInk = styled.a`
+  display: flex;
+  align-items: start;
+  padding: 2px 6px;
+  width: 100%;
+  justify-content: start;
+  gap: var(--base-gap-small);
+  border-radius: var(--border-radius-m);
+  &:hover {
+    background-color: var(--md-sys-color-surface-container-highest);
+  }
+  span {
+    width: auto;
+    overflow: hidden;
+    white-space: nowrap;
+    display: inline;
+    text-overflow: ellipsis;
+    &.label {
+      flex: 1;
+    }
+  }
+`
