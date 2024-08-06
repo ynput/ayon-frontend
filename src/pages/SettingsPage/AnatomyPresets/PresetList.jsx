@@ -2,10 +2,11 @@ import { useCallback, useMemo } from 'react'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 
-import { Button, Icon, TablePanel } from '@ynput/ayon-react-components'
+import { Icon, TablePanel } from '@ynput/ayon-react-components'
 
 import useCreateContext from '@hooks/useCreateContext'
 import styled from 'styled-components'
+import clsx from 'clsx'
 
 const StyledContainer = styled.div`
   display: flex;
@@ -17,6 +18,7 @@ const StyledContainer = styled.div`
     display: inline-block !important;
     width: 100%;
     text-align: center;
+    height: 20px;
   }
 `
 
@@ -58,20 +60,39 @@ const PresetList = ({
   const ctxMenuItems = useMemo(() => getCtxMenuItems(), [])
 
   const [ctxMenuShow] = useCreateContext(ctxMenuItems)
+  // add built-in presets to the start of the list
+  let presetListWithBuiltIn = useMemo(() => {
+    const noPrimary = presetList.every((preset) => !preset.primary)
+    return [
+      {
+        name: '_',
+        label: 'AYON default (read only)',
+        primary: noPrimary,
+      },
+      ...presetList.map((preset) => ({
+        ...preset,
+        label: preset.name,
+      })),
+    ]
+  }, [presetList])
 
-  const defaultPreset = presetList.find((preset) => preset.primary)
+  // create 10 dummy rows
+  const loadingData = useMemo(() => {
+    return Array.from({ length: 6 }, (_, i) => ({
+      key: i,
+      data: {},
+    }))
+  }, [])
+
+  if (isLoading) {
+    presetListWithBuiltIn = loadingData
+  }
 
   return (
     <StyledContainer>
-      <Button
-        onClick={() => defaultPreset && setSelectedPreset(defaultPreset?.name)}
-        disabled={!defaultPreset}
-      >
-        Primary: {defaultPreset?.name || 'System Default'}
-      </Button>
-      <TablePanel loading={isLoading}>
+      <TablePanel>
         <DataTable
-          value={presetList}
+          value={presetListWithBuiltIn}
           scrollable
           scrollHeight="flex"
           selectionMode="single"
@@ -81,8 +102,10 @@ const PresetList = ({
           onSelectionChange={(e) => setSelectedPreset(e.value.name)}
           onContextMenuSelectionChange={(e) => setSelectedPreset(e.value.name)}
           onContextMenu={(e) => ctxMenuShow(e.originalEvent, getCtxMenuItems(e.data))}
+          className={clsx({ 'table-loading': isLoading })}
+          rowClassName={(data) => clsx({ default: data.primary })}
         >
-          <Column field="name" header="Name" />
+          <Column field="label" header="Name" />
           <Column field="version" header="Version" style={{ maxWidth: 80 }} />
           <Column
             field="primary"

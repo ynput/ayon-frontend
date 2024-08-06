@@ -9,16 +9,27 @@ const AnatomyPresetDropdown = ({ selectedPreset, setSelectedPreset }) => {
   useEffect(() => {
     if (isLoading || !isSuccess) return
     // this works because the default preset is always the first one
-    if (!selectedPreset) setSelectedPreset(presetList[0].name)
+    if (!selectedPreset) {
+      // find primary preset
+      const primaryPreset = presetList.find((p) => p.primary)
+
+      setSelectedPreset(primaryPreset?.name || '_')
+    }
   }, [presetList, isLoading, isSuccess])
 
   // remove default options
-  const options = presetList
-    .filter((preset) => !preset.default)
-    .map((preset) => ({
+  const options = [
+    {
+      value: '_',
+      label: 'AYON default',
+    },
+    ...presetList.map((preset) => ({
       value: preset.name,
-      label: preset.primary === 'PRIMARY' ? `${preset.title} (default)` : preset.title,
-    }))
+      label: preset.primary ? `${preset.name} (primary)` : preset.name,
+    })),
+  ]
+
+  console.log(selectedPreset)
 
   return (
     <Dropdown
