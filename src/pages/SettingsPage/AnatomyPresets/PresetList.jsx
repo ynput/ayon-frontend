@@ -67,7 +67,7 @@ const PresetList = ({
       {
         name: '_',
         label: 'AYON default (read only)',
-        primary: noPrimary ? 'PRIMARY' : '',
+        primary: noPrimary,
       },
       ...presetList.map((preset) => ({
         ...preset,
