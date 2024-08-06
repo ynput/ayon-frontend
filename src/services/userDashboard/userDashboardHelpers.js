@@ -59,7 +59,16 @@ export const transformTasksData = ({ projectName, tasks = [], code }) =>
 
 export const transformEntityData = ({ entity = {}, entityType, projectName, projectInfo = {} }) => {
   // fields that are top level for all entity types
-  const sharedFields = ['id', 'tags', 'status', 'updatedAt', 'createdAt', 'thumbnailId', 'attrib']
+  const sharedFields = [
+    'id',
+    'tags',
+    'status',
+    'updatedAt',
+    'createdAt',
+    'thumbnailId',
+    'attrib',
+    'hasReviewables',
+  ]
   const baseDetailsData = sharedFields.reduce((acc, field) => {
     if (entity[field]) {
       acc[field] = entity[field]

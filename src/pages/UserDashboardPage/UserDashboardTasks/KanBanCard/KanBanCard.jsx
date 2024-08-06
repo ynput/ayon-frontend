@@ -25,6 +25,7 @@ const KanBanCard = forwardRef(
           $isOverlay={isOverlay}
           isLoading={props.isLoading}
           assignees={(!!task.assigneesData?.length && task.assigneesData) || null}
+          isPlayable={task.hasReviewables}
           {...props}
         />
       </>

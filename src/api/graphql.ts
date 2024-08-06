@@ -169,41 +169,25 @@ export type FileNode = {
 
 export type FolderAttribType = {
   __typename?: 'FolderAttribType';
-  /** What car do you want? */
-  car?: Maybe<Scalars['String']['output']>;
   clipIn?: Maybe<Scalars['Int']['output']>;
   clipOut?: Maybe<Scalars['Int']['output']>;
   /** Textual description of the entity */
   description?: Maybe<Scalars['String']['output']>;
   /** Deadline date and time */
   endDate?: Maybe<Scalars['DateTime']['output']>;
-  enum?: Maybe<Scalars['String']['output']>;
   /** Frame rate */
   fps?: Maybe<Scalars['Float']['output']>;
   frameEnd?: Maybe<Scalars['Int']['output']>;
   frameStart?: Maybe<Scalars['Int']['output']>;
-  ftrackId?: Maybe<Scalars['String']['output']>;
-  ftrackPath?: Maybe<Scalars['String']['output']>;
-  /** hair */
-  hairColour?: Maybe<Scalars['String']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
-  /** Percentage of shot completetion */
-  progress?: Maybe<Scalars['Int']['output']>;
   /** Vertical resolution */
   resolutionHeight?: Maybe<Scalars['Int']['output']>;
   /** Horizontal resolution */
   resolutionWidth?: Maybe<Scalars['Int']['output']>;
-  /** The Shotgrid ID of this entity. */
-  shotgridId?: Maybe<Scalars['String']['output']>;
-  /** The Shotgrid Type of this entity. */
-  shotgridType?: Maybe<Scalars['String']['output']>;
-  sokoId?: Maybe<Scalars['String']['output']>;
-  sokoPath?: Maybe<Scalars['String']['output']>;
   /** Date and time when the project or task or asset was started */
   startDate?: Maybe<Scalars['DateTime']['output']>;
-  test?: Maybe<Scalars['String']['output']>;
   tools?: Maybe<Array<Scalars['String']['output']>>;
 };
 
@@ -225,6 +209,7 @@ export type FolderNode = BaseNode & {
   folderType: Scalars['String']['output'];
   hasChildren: Scalars['Boolean']['output'];
   hasProducts: Scalars['Boolean']['output'];
+  hasReviewables: Scalars['Boolean']['output'];
   hasTasks: Scalars['Boolean']['output'];
   id: Scalars['String']['output'];
   label?: Maybe<Scalars['String']['output']>;
@@ -365,6 +350,7 @@ export type KanbanNode = {
   folderLabel?: Maybe<Scalars['String']['output']>;
   folderName: Scalars['String']['output'];
   folderPath: Scalars['String']['output'];
+  hasReviewables: Scalars['Boolean']['output'];
   id: Scalars['String']['output'];
   label?: Maybe<Scalars['String']['output']>;
   lastVersionWithReviewableProductId?: Maybe<Scalars['String']['output']>;
@@ -521,25 +507,13 @@ export type ProjectAttribType = {
   fps?: Maybe<Scalars['Float']['output']>;
   frameEnd?: Maybe<Scalars['Int']['output']>;
   frameStart?: Maybe<Scalars['Int']['output']>;
-  ftrackId?: Maybe<Scalars['String']['output']>;
-  ftrackPath?: Maybe<Scalars['String']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
-  /** Percentage of shot completetion */
-  progress?: Maybe<Scalars['Int']['output']>;
   /** Vertical resolution */
   resolutionHeight?: Maybe<Scalars['Int']['output']>;
   /** Horizontal resolution */
   resolutionWidth?: Maybe<Scalars['Int']['output']>;
-  /** The Shotgrid ID of this entity. */
-  shotgridId?: Maybe<Scalars['String']['output']>;
-  /** Push changes done to this project to Shotgird. Requires the transmitter service. */
-  shotgridPush?: Maybe<Scalars['Boolean']['output']>;
-  /** The Shotgrid Type of this entity. */
-  shotgridType?: Maybe<Scalars['String']['output']>;
-  sokoId?: Maybe<Scalars['String']['output']>;
-  sokoPath?: Maybe<Scalars['String']['output']>;
   /** Date and time when the project or task or asset was started */
   startDate?: Maybe<Scalars['DateTime']['output']>;
   tools?: Maybe<Array<Scalars['String']['output']>>;
@@ -946,41 +920,25 @@ export type RepresentationsConnection = {
 
 export type TaskAttribType = {
   __typename?: 'TaskAttribType';
-  /** What car do you want? */
-  car?: Maybe<Scalars['String']['output']>;
   clipIn?: Maybe<Scalars['Int']['output']>;
   clipOut?: Maybe<Scalars['Int']['output']>;
   /** Textual description of the entity */
   description?: Maybe<Scalars['String']['output']>;
   /** Deadline date and time */
   endDate?: Maybe<Scalars['DateTime']['output']>;
-  enum?: Maybe<Scalars['String']['output']>;
   /** Frame rate */
   fps?: Maybe<Scalars['Float']['output']>;
   frameEnd?: Maybe<Scalars['Int']['output']>;
   frameStart?: Maybe<Scalars['Int']['output']>;
-  ftrackId?: Maybe<Scalars['String']['output']>;
-  ftrackPath?: Maybe<Scalars['String']['output']>;
-  /** hair */
-  hairColour?: Maybe<Scalars['String']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
-  /** Percentage of shot completetion */
-  progress?: Maybe<Scalars['Int']['output']>;
   /** Vertical resolution */
   resolutionHeight?: Maybe<Scalars['Int']['output']>;
   /** Horizontal resolution */
   resolutionWidth?: Maybe<Scalars['Int']['output']>;
-  /** The Shotgrid ID of this entity. */
-  shotgridId?: Maybe<Scalars['String']['output']>;
-  /** The Shotgrid Type of this entity. */
-  shotgridType?: Maybe<Scalars['String']['output']>;
-  sokoId?: Maybe<Scalars['String']['output']>;
-  sokoPath?: Maybe<Scalars['String']['output']>;
   /** Date and time when the project or task or asset was started */
   startDate?: Maybe<Scalars['DateTime']['output']>;
-  test?: Maybe<Scalars['String']['output']>;
   tools?: Maybe<Array<Scalars['String']['output']>>;
 };
 
@@ -1003,6 +961,7 @@ export type TaskNode = BaseNode & {
   /** Parent folder of the task */
   folder: FolderNode;
   folderId: Scalars['String']['output'];
+  hasReviewables: Scalars['Boolean']['output'];
   id: Scalars['String']['output'];
   label?: Maybe<Scalars['String']['output']>;
   links: LinksConnection;
@@ -1139,8 +1098,6 @@ export type UsersConnection = {
 
 export type VersionAttribType = {
   __typename?: 'VersionAttribType';
-  /** What car do you want? */
-  car?: Maybe<Scalars['String']['output']>;
   clipIn?: Maybe<Scalars['Int']['output']>;
   clipOut?: Maybe<Scalars['Int']['output']>;
   colorSpace?: Maybe<Scalars['String']['output']>;
@@ -1152,19 +1109,16 @@ export type VersionAttribType = {
   fps?: Maybe<Scalars['Float']['output']>;
   frameEnd?: Maybe<Scalars['Int']['output']>;
   frameStart?: Maybe<Scalars['Int']['output']>;
-  ftrackId?: Maybe<Scalars['String']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
   intent?: Maybe<Scalars['String']['output']>;
   machine?: Maybe<Scalars['String']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
-  productTypes?: Maybe<Array<Scalars['String']['output']>>;
   /** Vertical resolution */
   resolutionHeight?: Maybe<Scalars['Int']['output']>;
   /** Horizontal resolution */
   resolutionWidth?: Maybe<Scalars['Int']['output']>;
   site?: Maybe<Scalars['String']['output']>;
-  sokoId?: Maybe<Scalars['String']['output']>;
   source?: Maybe<Scalars['String']['output']>;
 };
 
@@ -1191,6 +1145,7 @@ export type VersionNode = BaseNode & {
   author?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['DateTime']['output'];
   data?: Maybe<Scalars['String']['output']>;
+  hasReviewables: Scalars['Boolean']['output'];
   id: Scalars['String']['output'];
   links: LinksConnection;
   name: Scalars['String']['output'];
@@ -1365,7 +1320,7 @@ export type GetKanbanQueryVariables = Exact<{
 }>;
 
 
-export type GetKanbanQuery = { __typename?: 'Query', kanban: { __typename?: 'KanbanConnection', edges: Array<{ __typename?: 'KanbanEdge', node: { __typename?: 'KanbanNode', id: string, projectName: string, projectCode: string, name: string, label?: string | null, status: string, tags: Array<string>, taskType: string, assignees: Array<string>, updatedAt: any, createdAt: any, dueDate?: any | null, folderId: string, thumbnailId?: string | null, folderLabel?: string | null, folderName: string, folderPath: string } }> } };
+export type GetKanbanQuery = { __typename?: 'Query', kanban: { __typename?: 'KanbanConnection', edges: Array<{ __typename?: 'KanbanEdge', node: { __typename?: 'KanbanNode', id: string, projectName: string, projectCode: string, name: string, label?: string | null, status: string, tags: Array<string>, taskType: string, assignees: Array<string>, updatedAt: any, createdAt: any, dueDate?: any | null, folderId: string, thumbnailId?: string | null, folderLabel?: string | null, folderName: string, folderPath: string, hasReviewables: boolean } }> } };
 
 export type GetKanbanProjectUsersQueryVariables = Exact<{
   projects?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
@@ -1381,9 +1336,9 @@ export type GetKanbanTasksQueryVariables = Exact<{
 }>;
 
 
-export type GetKanbanTasksQuery = { __typename?: 'Query', kanban: { __typename?: 'KanbanConnection', edges: Array<{ __typename?: 'KanbanEdge', node: { __typename?: 'KanbanNode', id: string, projectName: string, projectCode: string, name: string, label?: string | null, status: string, tags: Array<string>, taskType: string, assignees: Array<string>, updatedAt: any, createdAt: any, dueDate?: any | null, folderId: string, thumbnailId?: string | null, folderLabel?: string | null, folderName: string, folderPath: string } }> } };
+export type GetKanbanTasksQuery = { __typename?: 'Query', kanban: { __typename?: 'KanbanConnection', edges: Array<{ __typename?: 'KanbanEdge', node: { __typename?: 'KanbanNode', id: string, projectName: string, projectCode: string, name: string, label?: string | null, status: string, tags: Array<string>, taskType: string, assignees: Array<string>, updatedAt: any, createdAt: any, dueDate?: any | null, folderId: string, thumbnailId?: string | null, folderLabel?: string | null, folderName: string, folderPath: string, hasReviewables: boolean } }> } };
 
-export type KanbanFragmentFragment = { __typename?: 'KanbanNode', id: string, projectName: string, projectCode: string, name: string, label?: string | null, status: string, tags: Array<string>, taskType: string, assignees: Array<string>, updatedAt: any, createdAt: any, dueDate?: any | null, folderId: string, thumbnailId?: string | null, folderLabel?: string | null, folderName: string, folderPath: string };
+export type KanbanFragmentFragment = { __typename?: 'KanbanNode', id: string, projectName: string, projectCode: string, name: string, label?: string | null, status: string, tags: Array<string>, taskType: string, assignees: Array<string>, updatedAt: any, createdAt: any, dueDate?: any | null, folderId: string, thumbnailId?: string | null, folderLabel?: string | null, folderName: string, folderPath: string, hasReviewables: boolean };
 
 export const MessageFragmentFragmentDoc = `
     fragment MessageFragment on ActivityNode {
@@ -1438,6 +1393,7 @@ export const KanbanFragmentFragmentDoc = `
   folderLabel
   folderName
   folderPath
+  hasReviewables
 }
     `;
 export const GetProductVersionsDocument = `

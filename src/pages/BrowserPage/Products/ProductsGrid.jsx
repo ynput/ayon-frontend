@@ -290,7 +290,7 @@ const ProductsGrid = ({
                         onContextMenu={(e) => handleContext(e, product.id)}
                         projectName={projectName}
                         isFullHighlight
-                        // isActiveAnimate
+                        isPlayable={product.hasReviewables}
                       />
                     )
                   })}

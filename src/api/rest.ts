@@ -107,6 +107,16 @@ const injectedRtkApi = api.injectEndpoints({
         headers: { 'x-sender': queryArg['x-sender'] },
       }),
     }),
+    listAddons: build.query<ListAddonsApiResponse, ListAddonsApiArg>({
+      query: (queryArg) => ({ url: `/api/addons`, params: { details: queryArg.details } }),
+    }),
+    configureAddons: build.mutation<ConfigureAddonsApiResponse, ConfigureAddonsApiArg>({
+      query: (queryArg) => ({
+        url: `/api/addons`,
+        method: 'POST',
+        body: queryArg.addonConfigRequest,
+      }),
+    }),
     deleteAddon: build.mutation<DeleteAddonApiResponse, DeleteAddonApiArg>({
       query: (queryArg) => ({
         url: `/api/addons/${queryArg.addonName}`,
@@ -319,16 +329,6 @@ const injectedRtkApi = api.injectEndpoints({
         method: 'PUT',
         body: queryArg.payload,
         params: { variant: queryArg.variant },
-      }),
-    }),
-    listAddons: build.query<ListAddonsApiResponse, ListAddonsApiArg>({
-      query: (queryArg) => ({ url: `/api/addons`, params: { details: queryArg.details } }),
-    }),
-    configureAddons: build.mutation<ConfigureAddonsApiResponse, ConfigureAddonsApiArg>({
-      query: (queryArg) => ({
-        url: `/api/addons`,
-        method: 'POST',
-        body: queryArg.addonConfigRequest,
       }),
     }),
     getAnatomySchema: build.query<GetAnatomySchemaApiResponse, GetAnatomySchemaApiArg>({
@@ -1504,6 +1504,14 @@ export type SetEntityWatchersApiArg = {
   'x-sender'?: string
   watchersModel: WatchersModel
 }
+export type ListAddonsApiResponse = /** status 200 Successful Response */ AddonList
+export type ListAddonsApiArg = {
+  details?: boolean
+}
+export type ConfigureAddonsApiResponse = /** status 200 Successful Response */ any
+export type ConfigureAddonsApiArg = {
+  addonConfigRequest: AddonConfigRequest
+}
 export type DeleteAddonApiResponse = /** status 200 Successful Response */ any
 export type DeleteAddonApiArg = {
   addonName: string
@@ -1674,14 +1682,6 @@ export type SetRawAddonStudioOverridesApiArg = {
   addonVersion: string
   variant?: string
   payload: object
-}
-export type ListAddonsApiResponse = /** status 200 Successful Response */ AddonList
-export type ListAddonsApiArg = {
-  details?: boolean
-}
-export type ConfigureAddonsApiResponse = /** status 200 Successful Response */ any
-export type ConfigureAddonsApiArg = {
-  addonConfigRequest: AddonConfigRequest
 }
 export type GetAnatomySchemaApiResponse = /** status 200 Successful Response */ object
 export type GetAnatomySchemaApiArg = void
@@ -1972,13 +1972,14 @@ export type DeleteEntityLinkApiArg = {
   projectName: string
   linkId: string
 }
-export type MarketAddonListApiResponse = /** status 200 Successful Response */ any
+export type MarketAddonListApiResponse = /** status 200 Successful Response */ AddonList2
 export type MarketAddonListApiArg = void
-export type MarketAddonDetailApiResponse = /** status 200 Successful Response */ any
+export type MarketAddonDetailApiResponse = /** status 200 Successful Response */ AddonDetail
 export type MarketAddonDetailApiArg = {
   addonName: string
 }
-export type MarketAddonVersionDetailApiResponse = /** status 200 Successful Response */ any
+export type MarketAddonVersionDetailApiResponse =
+  /** status 200 Successful Response */ AddonVersionDetail
 export type MarketAddonVersionDetailApiArg = {
   addonName: string
   addonVersion: string
@@ -2462,8 +2463,7 @@ export type PasswordResetApiArg = {
 }
 export type GetCurrentUserApiResponse = /** status 200 Successful Response */ UserModel
 export type GetCurrentUserApiArg = void
-export type GetUserApiResponse =
-  /** status 200 Successful Response */
+export type GetUserApiResponse = /** status 200 Successful Response */
   | UserModel
   | {
       [key: string]: string
@@ -2764,32 +2764,6 @@ export type SuggestRequest = {
 export type WatchersModel = {
   watchers: string[]
 }
-export type ErrorResponse = {
-  code: number
-  detail: string
-}
-export type AddonInstallListItemModel = {
-  id: string
-  topic: 'addon.install' | 'addon.install_from_url'
-  description: string
-  addonName?: string
-  addonVersion?: string
-  user?: string
-  status: string
-  createdAt: string
-  updatedAt?: string
-}
-export type AddonInstallListResponseModel = {
-  items: AddonInstallListItemModel[]
-  restartRequired: boolean
-}
-export type InstallAddonResponseModel = {
-  eventId: string
-}
-export type ModifyOverridesRequestModel = {
-  action: 'delete' | 'pin'
-  path: string[]
-}
 export type PathDefinition = {
   windows?: string
   linux?: string
@@ -2848,6 +2822,10 @@ export type AddonList = {
   /** List of available addons */
   addons: AddonListItem[]
 }
+export type ErrorResponse = {
+  code: number
+  detail: string
+}
 export type VariantCopyRequest = {
   /** Addon name */
   addonName: string
@@ -2858,6 +2836,28 @@ export type VariantCopyRequest = {
 }
 export type AddonConfigRequest = {
   copyVariant?: VariantCopyRequest
+}
+export type AddonInstallListItemModel = {
+  id: string
+  topic: 'addon.install' | 'addon.install_from_url'
+  description: string
+  addonName?: string
+  addonVersion?: string
+  user?: string
+  status: string
+  createdAt: string
+  updatedAt?: string
+}
+export type AddonInstallListResponseModel = {
+  items: AddonInstallListItemModel[]
+  restartRequired: boolean
+}
+export type InstallAddonResponseModel = {
+  eventId: string
+}
+export type ModifyOverridesRequestModel = {
+  action: 'delete' | 'pin'
+  path: string[]
 }
 export type AnatomyPresetListItem = {
   name: string
@@ -2937,16 +2937,6 @@ export type ProjectAttribModel = {
   description?: string
   applications?: string[]
   tools?: string[]
-  ftrackId?: string
-  ftrackPath?: string
-  /** The Shotgrid ID of this entity. */
-  shotgridId?: string
-  /** The Shotgrid Type of this entity. */
-  shotgridType?: string
-  /** Push changes done to this project to Shotgird. Requires the transmitter service. */
-  shotgridPush?: boolean
-  sokoId?: string
-  sokoPath?: string
 }
 export type FolderType = {
   name: string
@@ -3429,19 +3419,6 @@ export type FolderAttribModel = {
   /** Textual description of the entity */
   description?: string
   tools?: string[]
-  ftrackId?: string
-  ftrackPath?: string
-  /** The Shotgrid ID of this entity. */
-  shotgridId?: string
-  /** The Shotgrid Type of this entity. */
-  shotgridType?: string
-  hairColor?: string
-  sokoId?: string
-  sokoPath?: string
-  goldCoins?: number
-  /** How much of the pizza do I get to have? */
-  pizzaShare?: number
-  testy?: string
 }
 export type FolderModel = {
   /** Unique identifier of the {entity_name} */
@@ -3583,6 +3560,100 @@ export type CreateLinkRequestModel = {
   linkType?: string
   /** Link data */
   data?: object
+}
+export type LinkModel = {
+  type?: 'homepage' | 'github' | 'documentation'
+  label?: string
+  url: string
+}
+export type AddonListItem2 = {
+  name: string
+  title: string
+  /** Addon description */
+  description?: string
+  /** Organization name */
+  orgName?: string
+  /** Organization title */
+  orgTitle?: string
+  icon?: string
+  /** Latest version of the addon */
+  latestVersion?: string
+  /** Links to the addon's homepage and GitHub repository */
+  links?: LinkModel[]
+  currentProductionVersion?: string
+  currentLatestVersion?: string
+  isOutdated?: boolean
+}
+export type AddonList2 = {
+  addons?: AddonListItem2[]
+}
+export type AddonVersionListItem = {
+  version: string
+  ayonVersion?: string
+  createdAt?: string
+  updatedAt?: string
+  /** Is this version compatible? */
+  isCompatible?: boolean
+  /** Is this version installed? */
+  isInstalled?: boolean
+  /** Is this version in production? */
+  isProduction?: boolean
+}
+export type AddonDetail = {
+  name: string
+  title: string
+  /** Addon description */
+  description?: string
+  /** Organization name */
+  orgName?: string
+  /** Organization title */
+  orgTitle?: string
+  icon?: string
+  /** Latest version of the addon */
+  latestVersion?: string
+  /** Links to the addon's homepage and GitHub repository */
+  links?: LinkModel[]
+  currentProductionVersion?: string
+  currentLatestVersion?: string
+  isOutdated?: boolean
+  /** A list of versions of this addon */
+  versions?: AddonVersionListItem[]
+  /** A warning message to display to the user */
+  warning?: string
+}
+export type AddonVersionDetail = {
+  name: string
+  title: string
+  /** Addon description */
+  description?: string
+  /** Organization name */
+  orgName?: string
+  /** Organization title */
+  orgTitle?: string
+  icon?: string
+  /** Latest version of the addon */
+  latestVersion?: string
+  /** Links to the addon's homepage and GitHub repository */
+  links?: LinkModel[]
+  currentProductionVersion?: string
+  currentLatestVersion?: string
+  isOutdated?: boolean
+  version: string
+  url?: string
+  altUrl?: string
+  checksum?: string
+  /** The version of Ayon this version is compatible with */
+  ayonVersion?: string
+  /** When this version was created */
+  createdAt?: string
+  /** When this version was last updated */
+  updatedAt?: string
+  /** Is this version installed? */
+  isInstalled?: boolean
+  /** Is this version in production? */
+  isProduction?: boolean
+  /** Is this version compatible? */
+  isCompatible?: boolean
 }
 export type InitializeRequestModel = {
   /** Username */
@@ -3886,16 +3957,6 @@ export type ProjectAttribModel2 = {
   description?: string
   applications?: string[]
   tools?: string[]
-  ftrackId?: string
-  ftrackPath?: string
-  /** The Shotgrid ID of this entity. */
-  shotgridId?: string
-  /** The Shotgrid Type of this entity. */
-  shotgridType?: string
-  /** Push changes done to this project to Shotgird. Requires the transmitter service. */
-  shotgridPush?: boolean
-  sokoId?: string
-  sokoPath?: string
 }
 export type ProjectModel = {
   /** Name is an unique id of the {entity_name} */
@@ -4432,19 +4493,6 @@ export type TaskAttribModel = {
   /** Textual description of the entity */
   description?: string
   tools?: string[]
-  ftrackId?: string
-  ftrackPath?: string
-  /** The Shotgrid ID of this entity. */
-  shotgridId?: string
-  /** The Shotgrid Type of this entity. */
-  shotgridType?: string
-  hairColor?: string
-  sokoId?: string
-  sokoPath?: string
-  goldCoins?: number
-  /** How much of the pizza do I get to have? */
-  pizzaShare?: number
-  testy?: string
 }
 export type TaskModel = {
   /** Unique identifier of the {entity_name} */
@@ -4630,13 +4678,8 @@ export type VersionAttribModel = {
   site?: string
   families?: string[]
   colorSpace?: string
-  productTypes?: string[]
   /** Textual description of the entity */
   description?: string
-  ftrackId?: string
-  sokoId?: string
-  /** The version that is currently the one to use. */
-  blessed?: boolean
 }
 export type VersionModel = {
   /** Unique identifier of the {entity_name} */

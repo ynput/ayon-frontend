@@ -12,6 +12,7 @@ import { useGetChecklistsCountQuery } from '@queries/activities/getActivities'
 import ThumbnailUploader from '@components/ThumbnailUploader/ThumbnailUploader'
 import { useDispatch } from 'react-redux'
 import { openViewer } from '@state/viewer'
+import { Icon } from '@ynput/ayon-react-components'
 
 const DetailsPanelHeader = ({
   entityType,
@@ -232,15 +233,22 @@ const DetailsPanelHeader = ({
       className={clsx('details-panel-header', { isCompact })}
       onDragEnter={() => setIsDraggingFile(true)}
     >
-      <Styled.Header className={clsx('titles', { isCompact })}>
-        <StackedThumbnails
-          isLoading={isLoading}
-          shimmer={isLoading}
-          thumbnails={thumbnails}
-          projectName={projectName}
-          onClick={thumbnails.length === 1 ? handleThumbnailClick : undefined}
-          hoverIcon={'play_circle'}
-        />
+      <Styled.Header className={clsx('titles', { isCompact, isLoading })}>
+        <Styled.ThumbnailWrapper>
+          <StackedThumbnails
+            isLoading={isLoading}
+            shimmer={isLoading}
+            thumbnails={thumbnails}
+            projectName={projectName}
+            onClick={thumbnails.length === 1 ? handleThumbnailClick : undefined}
+            hoverIcon={'play_circle'}
+          />
+          {!isMultiple && firstEntity?.hasReviewables && (
+            <Styled.Playable className="playable">
+              <Icon icon="play_circle" />
+            </Styled.Playable>
+          )}
+        </Styled.ThumbnailWrapper>
         <Styled.Content className={clsx({ isLoading })}>
           <h2>{!isMultiple ? firstEntity?.title : `${entities.length} ${entityType}s selected`}</h2>
           <div className="sub-title">
