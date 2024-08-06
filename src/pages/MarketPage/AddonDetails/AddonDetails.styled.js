@@ -228,20 +228,20 @@ export const ExternalLInk = styled.a`
   align-items: start;
   padding: 2px 6px;
   width: 100%;
-  max-width: fit-content;
   justify-content: start;
   gap: var(--base-gap-small);
+  border-radius: var(--border-radius-m);
   &:hover {
     background-color: var(--md-sys-color-surface-container-highest);
   }
-    span {
-      width: auto;
-      overflow: hidden;
-      white-space: nowrap;
-      display: inline;
-      text-overflow: ellipsis;
-      &.label {
-        flex: 1;
-      }
+  span {
+    width: auto;
+    overflow: hidden;
+    white-space: nowrap;
+    display: inline;
+    text-overflow: ellipsis;
+    &.label {
+      flex: 1;
     }
+  }
 `
