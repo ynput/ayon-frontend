@@ -8,6 +8,7 @@ import AddonIcon from '@components/AddonIcon/AddonIcon'
 import { rcompare } from 'semver'
 import useUninstall from './useUninstall'
 import { Link } from 'react-router-dom'
+import { getSimplifiedUrl } from '@helpers/url'
 
 const MetaPanelRow = ({ label, children, valueDirection = 'column', ...props }) => (
   <Styled.MetaPanelRow {...props}>
@@ -96,7 +97,7 @@ const AddonDetails = ({ addon = {}, isLoading, onDownload, isUpdatingAll }) => {
   }
 
   let groupedLinks = []
-  if (links !== undefined) {
+  if (links) {
     links.forEach((link) => {
       let group = groupedLinks.find((el) => el.type == link.type)
       if (group != undefined) {
@@ -261,7 +262,7 @@ const AddonDetails = ({ addon = {}, isLoading, onDownload, isUpdatingAll }) => {
               </MetaPanelRow>
             </Styled.MetaPanel>
 
-            {groupedLinks && (
+            {groupedLinks.length > 0 && (
               <Styled.MetaPanel className={clsx({ isPlaceholder: isLoading })}>
                 {groupedLinks.map((group) => (
                   <MetaPanelRow
@@ -270,9 +271,11 @@ const AddonDetails = ({ addon = {}, isLoading, onDownload, isUpdatingAll }) => {
                     label={capitalize(group.type)}
                   >
                     {group.links.map((link) => (
-                      <a className="link" target="_blank" rel="noreferrer noopener" href={link.url} key={link.label}>
-                        {link.label}
-                      </a>
+                      <Styled.UseButton key={link.label} variant="text" onClick={() => window.open(link.url, '_blank').focus()}>
+                          <span> {link.label || getSimplifiedUrl(link.url)} </span>
+                          <Icon icon="open_in_new" />
+                      </Styled.UseButton>
+
                     ))}
                   </MetaPanelRow>
                 ))}

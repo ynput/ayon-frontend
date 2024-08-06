@@ -172,6 +172,7 @@ export const MetaPanel = styled.div`
 
 export const MetaPanelRow = styled.div`
   display: flex;
+  width: 100%;
   flex-direction: column;
   gap: var(--base-gap-small);
 
@@ -192,9 +193,16 @@ export const MetaPanelRow = styled.div`
 
 export const UseButton = styled(Button)`
   padding: 2px 6px;
-  width: fit-content;
-  margin-left: auto;
+  width: 100%;
+  justify-content: start;
   gap: var(--base-gap-small);
+  span {
+    width: auto;
+    overflow: hidden;
+    white-space: nowrap;
+    display: block;
+    text-overflow: ellipsis;
+  }
 `
 
 export const ErrorCard = styled(Panel)`
