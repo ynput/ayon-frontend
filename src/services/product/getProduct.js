@@ -63,6 +63,7 @@ const parseProductData = (data) => {
       versionUpdatedAt: vers.updatedAt || null,
       versionAuthor: vers ? vers.author : null,
       versionThumbnailId: vers ? vers.thumbnailId : null,
+      hasReviewables: vers ? vers.hasReviewables : false,
       taskId: vers && vers.taskId ? vers.taskId : null,
       taskName: vers && vers.task ? vers.task.name : null,
       taskType: vers && vers.task ? vers.task.taskType : null,
