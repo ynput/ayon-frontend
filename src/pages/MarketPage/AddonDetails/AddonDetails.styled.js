@@ -194,6 +194,7 @@ export const MetaPanelRow = styled.div`
 export const UseButton = styled(Button)`
   padding: 2px 6px;
   width: 100%;
+  max-width: fit-content;
   justify-content: start;
   gap: var(--base-gap-small);
   span {
