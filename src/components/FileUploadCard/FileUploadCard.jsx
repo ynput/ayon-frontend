@@ -1,6 +1,6 @@
 import { Button, Icon } from '@ynput/ayon-react-components'
 import * as Styled from './FileUploadCard.styled'
-import { classNames } from 'primereact/utils'
+import clsx from 'clsx'
 import { useState } from 'react'
 import { isFilePreviewable } from '@containers/FileUploadPreview/FileUploadPreview'
 
@@ -39,7 +39,7 @@ const fileIcons = {
   picture_as_pdf: ['pdf', '.pdf'],
   // default
   image: ['image', '.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp'],
-  videocam: ['video', '.mp4', '.mov', '.avi', '.mkv', '.webm'],
+  videocam: ['video', '.mp4', '.mov', '.avi', '.mkv', '.webm', '.mxf'],
   business_center: ['application'],
   audio_file: ['audio'],
   text_snippet: ['text'],
@@ -65,7 +65,6 @@ const getFileSizeString = (bytes) => {
 }
 
 const FileUploadCard = ({
-  id,
   name,
   mime,
   src,
@@ -97,20 +96,20 @@ const FileUploadCard = ({
 
   const handleImageClick = () => {
     if (!isPreviewable || !onExpand || imageError) return
-    onExpand({ name, mime, id, size, extension })
+    onExpand()
   }
 
   return (
-    <Styled.File className={classNames({ compact: isCompact, isDownloadable, isPreviewable })}>
+    <Styled.File className={clsx({ compact: isCompact, isDownloadable, isPreviewable })}>
       <Styled.ContentWrapper
-        className={classNames('content-wrapper', { isPreviewable })}
+        className={clsx('content-wrapper', { isPreviewable })}
         onClick={handleImageClick}
       >
         <Icon icon={getIconForType(mime || '.' + extension)} className="type-icon" />
         {isImage && src && (
-          <Styled.ImageWrapper className={classNames({ isDownloadable })}>
+          <Styled.ImageWrapper className={clsx({ isDownloadable })}>
             <img
-              src={src + '?preview=true'}
+              src={src + '/thumbnail'}
               onError={() => setImageError(true)}
               style={{
                 display: imageError ? 'none' : 'block',
@@ -120,7 +119,7 @@ const FileUploadCard = ({
         )}
         {isPreviewable && <Icon icon="open_in_full" className="expand-icon" />}
       </Styled.ContentWrapper>
-      <Styled.Footer className={classNames({ inProgress, isPreviewable, isDownloadable })}>
+      <Styled.Footer className={clsx({ inProgress, isPreviewable, isDownloadable })}>
         <span className="progress" style={{ right: `${100 - progress}%` }} />
         <div className="name-wrapper">
           <span className="name">{fileName}</span>

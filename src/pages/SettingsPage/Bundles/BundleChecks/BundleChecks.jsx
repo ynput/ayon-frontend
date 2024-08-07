@@ -1,6 +1,6 @@
 import { Icon } from '@ynput/ayon-react-components'
 import * as Styled from './BundleChecks.styled'
-import { classNames } from 'primereact/utils'
+import clsx from 'clsx'
 import Typography from '@/theme/typography.module.css'
 
 const BundleChecks = ({ check = {}, isLoading = true, isCheckError = false, onIssueClick }) => {
@@ -51,7 +51,7 @@ const BundleChecks = ({ check = {}, isLoading = true, isCheckError = false, onIs
 
   return (
     <Styled.Checks>
-      <Styled.Status className={classNames(state)}>
+      <Styled.Status className={clsx(state)}>
         <Icon icon={icon} />
         <span className={Typography.titleSmall}>{message}</span>
       </Styled.Status>
@@ -60,7 +60,7 @@ const BundleChecks = ({ check = {}, isLoading = true, isCheckError = false, onIs
           {sortedIssues.map((issue, i) => (
             <Styled.ErrorItem
               key={i}
-              className={classNames(issue.severity)}
+              className={clsx(issue.severity)}
               onClick={() => onIssueClick(issue.requiredAddon)}
             >
               <Icon icon={issue.severity} />

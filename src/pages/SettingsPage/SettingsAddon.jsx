@@ -1,4 +1,4 @@
-import { useRef, useMemo, useState } from 'react'
+import { useRef, useMemo, useState, useEffect } from 'react'
 import { useSelector } from 'react-redux'
 import { Section } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
@@ -15,9 +15,12 @@ const SettingsAddon = ({ addonName, addonVersion, sidebar }) => {
   const [loading, setLoading] = useState(true)
 
   const context = useSelector((state) => state.context)
-  const addonUrl = `${window.location.origin}/addons/${addonName}/${addonVersion}/frontend/`
+  const addonUrl = `${window.location.origin}/addons/${addonName}/${addonVersion}/frontend`
 
   const pushContext = () => {
+    if (!addonRef.current) {
+      return
+    }
     const addonWnd = addonRef.current.contentWindow
     addonWnd.postMessage({
       scope: 'settings',
@@ -39,12 +42,18 @@ const SettingsAddon = ({ addonName, addonVersion, sidebar }) => {
     pushContext()
   }
 
+  useEffect(() => {
+    if (addonRef.current) {
+      pushContext()
+    }
+  }, [context])
+
   return (
     <main>
       {sidebarComponent}
       <Section>
         {loading && <div style={{ display: 'none' }}>Loading...</div>}
-        <AddonWrapper src={addonUrl} ref={addonRef} onLoad={onAddonLoad} />
+        <AddonWrapper src={`${addonUrl}/?id=${window.senderId}`} ref={addonRef} onLoad={onAddonLoad} />
       </Section>
     </main>
   )

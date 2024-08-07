@@ -25,11 +25,42 @@ const injectedRtkApi = api.injectEndpoints({
         method: 'DELETE',
       }),
     }),
+    listAvailableActionsForContext: build.mutation<
+      ListAvailableActionsForContextApiResponse,
+      ListAvailableActionsForContextApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/actions/list`,
+        method: 'POST',
+        body: queryArg.actionContext,
+        params: { mode: queryArg.mode },
+      }),
+    }),
+    listAllActions: build.query<ListAllActionsApiResponse, ListAllActionsApiArg>({
+      query: () => ({ url: `/api/actions/manage` }),
+    }),
+    executeAction: build.mutation<ExecuteActionApiResponse, ExecuteActionApiArg>({
+      query: (queryArg) => ({
+        url: `/api/actions/execute`,
+        method: 'POST',
+        body: queryArg.actionContext,
+        params: {
+          addonName: queryArg.addonName,
+          addonVersion: queryArg.addonVersion,
+          variant: queryArg.variant,
+          identifier: queryArg.identifier,
+        },
+      }),
+    }),
+    takeAction: build.query<TakeActionApiResponse, TakeActionApiArg>({
+      query: (queryArg) => ({ url: `/api/actions/take/${queryArg.token}` }),
+    }),
     postProjectActivity: build.mutation<PostProjectActivityApiResponse, PostProjectActivityApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/${queryArg.entityType}/${queryArg.entityId}/activities`,
         method: 'POST',
         body: queryArg.projectActivityPostModel,
+        headers: { 'x-sender': queryArg['x-sender'] },
       }),
     }),
     deleteProjectActivity: build.mutation<
@@ -39,6 +70,7 @@ const injectedRtkApi = api.injectEndpoints({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/activities/${queryArg.activityId}`,
         method: 'DELETE',
+        headers: { 'x-sender': queryArg['x-sender'] },
       }),
     }),
     patchProjectActivity: build.mutation<
@@ -49,6 +81,7 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/activities/${queryArg.activityId}`,
         method: 'PATCH',
         body: queryArg.activityPatchModel,
+        headers: { 'x-sender': queryArg['x-sender'] },
       }),
     }),
     suggestEntityMention: build.mutation<
@@ -59,6 +92,29 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/suggest`,
         method: 'POST',
         body: queryArg.suggestRequest,
+      }),
+    }),
+    getEntityWatchers: build.query<GetEntityWatchersApiResponse, GetEntityWatchersApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/${queryArg.entityType}/${queryArg.entityId}/watchers`,
+      }),
+    }),
+    setEntityWatchers: build.mutation<SetEntityWatchersApiResponse, SetEntityWatchersApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/${queryArg.entityType}/${queryArg.entityId}/watchers`,
+        method: 'POST',
+        body: queryArg.watchersModel,
+        headers: { 'x-sender': queryArg['x-sender'] },
+      }),
+    }),
+    listAddons: build.query<ListAddonsApiResponse, ListAddonsApiArg>({
+      query: (queryArg) => ({ url: `/api/addons`, params: { details: queryArg.details } }),
+    }),
+    configureAddons: build.mutation<ConfigureAddonsApiResponse, ConfigureAddonsApiArg>({
+      query: (queryArg) => ({
+        url: `/api/addons`,
+        method: 'POST',
+        body: queryArg.addonConfigRequest,
       }),
     }),
     deleteAddon: build.mutation<DeleteAddonApiResponse, DeleteAddonApiArg>({
@@ -275,16 +331,6 @@ const injectedRtkApi = api.injectEndpoints({
         params: { variant: queryArg.variant },
       }),
     }),
-    listAddons: build.query<ListAddonsApiResponse, ListAddonsApiArg>({
-      query: (queryArg) => ({ url: `/api/addons`, params: { details: queryArg.details } }),
-    }),
-    configureAddons: build.mutation<ConfigureAddonsApiResponse, ConfigureAddonsApiArg>({
-      query: (queryArg) => ({
-        url: `/api/addons`,
-        method: 'POST',
-        body: queryArg.addonConfigRequest,
-      }),
-    }),
     getAnatomySchema: build.query<GetAnatomySchemaApiResponse, GetAnatomySchemaApiArg>({
       query: () => ({ url: `/api/anatomy/schema` }),
     }),
@@ -354,6 +400,13 @@ const injectedRtkApi = api.injectEndpoints({
     }),
     listActiveSessions: build.query<ListActiveSessionsApiResponse, ListActiveSessionsApiArg>({
       query: () => ({ url: `/api/auth/sessions` }),
+    }),
+    createSession: build.mutation<CreateSessionApiResponse, CreateSessionApiArg>({
+      query: (queryArg) => ({
+        url: `/api/auth/sessions`,
+        method: 'POST',
+        body: queryArg.createSessionRequest,
+      }),
     }),
     listBundles: build.query<ListBundlesApiResponse, ListBundlesApiArg>({
       query: (queryArg) => ({ url: `/api/bundles`, params: { archived: queryArg.archived } }),
@@ -545,10 +598,9 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
-    downloadProjectFile: build.query<DownloadProjectFileApiResponse, DownloadProjectFileApiArg>({
+    getProjectFile: build.query<GetProjectFileApiResponse, GetProjectFileApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/files/${queryArg.fileId}`,
-        params: { preview: queryArg.preview },
       }),
     }),
     deleteProjectFile: build.mutation<DeleteProjectFileApiResponse, DeleteProjectFileApiArg>({
@@ -561,6 +613,14 @@ const injectedRtkApi = api.injectEndpoints({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/files/${queryArg.fileId}`,
         method: 'HEAD',
+      }),
+    }),
+    getProjectFileThumbnail: build.query<
+      GetProjectFileThumbnailApiResponse,
+      GetProjectFileThumbnailApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/files/${queryArg.fileId}/thumbnail`,
       }),
     }),
     getFolder: build.query<GetFolderApiResponse, GetFolderApiArg>({
@@ -869,6 +929,67 @@ const injectedRtkApi = api.injectEndpoints({
         params: { pathOnly: queryArg.pathOnly },
       }),
     }),
+    getReviewablesForProduct: build.query<
+      GetReviewablesForProductApiResponse,
+      GetReviewablesForProductApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/products/${queryArg.productId}/reviewables`,
+      }),
+    }),
+    getReviewablesForVersion: build.query<
+      GetReviewablesForVersionApiResponse,
+      GetReviewablesForVersionApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/versions/${queryArg.versionId}/reviewables`,
+      }),
+    }),
+    uploadReviewable: build.mutation<UploadReviewableApiResponse, UploadReviewableApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/versions/${queryArg.versionId}/reviewables`,
+        method: 'POST',
+        headers: {
+          'content-type': queryArg['content-type'],
+          'x-file-name': queryArg['x-file-name'],
+          'x-sender': queryArg['x-sender'],
+        },
+        params: { label: queryArg.label },
+      }),
+    }),
+    sortVersionReviewables: build.mutation<
+      SortVersionReviewablesApiResponse,
+      SortVersionReviewablesApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/versions/${queryArg.versionId}/reviewables`,
+        method: 'PATCH',
+        body: queryArg.sortReviewablesRequest,
+      }),
+    }),
+    getReviewablesForTask: build.query<
+      GetReviewablesForTaskApiResponse,
+      GetReviewablesForTaskApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/tasks/${queryArg.taskId}/reviewables`,
+      }),
+    }),
+    getReviewablesForFolder: build.query<
+      GetReviewablesForFolderApiResponse,
+      GetReviewablesForFolderApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/folders/${queryArg.folderId}/reviewables`,
+      }),
+    }),
+    updateReviewable: build.mutation<UpdateReviewableApiResponse, UpdateReviewableApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/versions/${queryArg.versionId}/reviewables/${queryArg.activityId}`,
+        method: 'PATCH',
+        body: queryArg.updateReviewablesRequest,
+      }),
+    }),
     listServices: build.query<ListServicesApiResponse, ListServicesApiArg>({
       query: () => ({ url: `/api/services` }),
     }),
@@ -933,7 +1054,10 @@ const injectedRtkApi = api.injectEndpoints({
       query: () => ({ url: `/api/info` }),
     }),
     getProductionMetrics: build.query<GetProductionMetricsApiResponse, GetProductionMetricsApiArg>({
-      query: (queryArg) => ({ url: `/api/metrics`, params: { saturated: queryArg.saturated } }),
+      query: (queryArg) => ({
+        url: `/api/metrics`,
+        params: { system: queryArg.system, saturated: queryArg.saturated },
+      }),
     }),
     getSystemMetrics: build.query<GetSystemMetricsApiResponse, GetSystemMetricsApiArg>({
       query: () => ({ url: `/api/metrics/system` }),
@@ -1172,10 +1296,15 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/users/${queryArg.userName}`,
         method: 'PUT',
         body: queryArg.newUserModel,
+        headers: { 'x-sender': queryArg['x-sender'] },
       }),
     }),
     deleteUser: build.mutation<DeleteUserApiResponse, DeleteUserApiArg>({
-      query: (queryArg) => ({ url: `/api/users/${queryArg.userName}`, method: 'DELETE' }),
+      query: (queryArg) => ({
+        url: `/api/users/${queryArg.userName}`,
+        method: 'DELETE',
+        headers: { 'x-sender': queryArg['x-sender'] },
+      }),
     }),
     patchUser: build.mutation<PatchUserApiResponse, PatchUserApiArg>({
       query: (queryArg) => ({
@@ -1203,6 +1332,7 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/users/${queryArg.userName}/rename`,
         method: 'PATCH',
         body: queryArg.changeUserNameRequestModel,
+        headers: { 'x-sender': queryArg['x-sender'] },
       }),
     }),
     getUserSessions: build.query<GetUserSessionsApiResponse, GetUserSessionsApiArg>({
@@ -1313,29 +1443,74 @@ export type DeleteAccessGroupApiArg = {
   accessGroupName: string
   projectName: string
 }
+export type ListAvailableActionsForContextApiResponse =
+  /** status 200 Successful Response */ AvailableActionsListModel
+export type ListAvailableActionsForContextApiArg = {
+  mode?: 'simple' | 'dynamic' | 'all'
+  actionContext: ActionContext
+}
+export type ListAllActionsApiResponse = /** status 200 Successful Response */ BaseActionManifest[]
+export type ListAllActionsApiArg = void
+export type ExecuteActionApiResponse = /** status 200 Successful Response */ ExecuteResponseModel
+export type ExecuteActionApiArg = {
+  addonName: string
+  addonVersion: string
+  variant?: string
+  identifier: string
+  actionContext: ActionContext
+}
+export type TakeActionApiResponse = /** status 200 Successful Response */ TakeResponseModel
+export type TakeActionApiArg = {
+  token: string
+}
 export type PostProjectActivityApiResponse =
   /** status 201 Successful Response */ CreateActivityResponseModel
 export type PostProjectActivityApiArg = {
   projectName: string
   entityType: string
   entityId: string
+  'x-sender'?: string
   projectActivityPostModel: ProjectActivityPostModel
 }
 export type DeleteProjectActivityApiResponse = /** status 200 Successful Response */ any
 export type DeleteProjectActivityApiArg = {
   activityId: string
   projectName: string
+  'x-sender'?: string
 }
 export type PatchProjectActivityApiResponse = /** status 200 Successful Response */ any
 export type PatchProjectActivityApiArg = {
   activityId: string
   projectName: string
+  'x-sender'?: string
   activityPatchModel: ActivityPatchModel
 }
 export type SuggestEntityMentionApiResponse = /** status 200 Successful Response */ SuggestResponse
 export type SuggestEntityMentionApiArg = {
   projectName: string
   suggestRequest: SuggestRequest
+}
+export type GetEntityWatchersApiResponse = /** status 200 Successful Response */ WatchersModel
+export type GetEntityWatchersApiArg = {
+  projectName: string
+  entityType: string
+  entityId: string
+}
+export type SetEntityWatchersApiResponse = /** status 201 Successful Response */ any
+export type SetEntityWatchersApiArg = {
+  projectName: string
+  entityType: string
+  entityId: string
+  'x-sender'?: string
+  watchersModel: WatchersModel
+}
+export type ListAddonsApiResponse = /** status 200 Successful Response */ AddonList
+export type ListAddonsApiArg = {
+  details?: boolean
+}
+export type ConfigureAddonsApiResponse = /** status 200 Successful Response */ any
+export type ConfigureAddonsApiArg = {
+  addonConfigRequest: AddonConfigRequest
 }
 export type DeleteAddonApiResponse = /** status 200 Successful Response */ any
 export type DeleteAddonApiArg = {
@@ -1508,14 +1683,6 @@ export type SetRawAddonStudioOverridesApiArg = {
   variant?: string
   payload: object
 }
-export type ListAddonsApiResponse = /** status 200 Successful Response */ AddonList
-export type ListAddonsApiArg = {
-  details?: boolean
-}
-export type ConfigureAddonsApiResponse = /** status 200 Successful Response */ any
-export type ConfigureAddonsApiArg = {
-  addonConfigRequest: AddonConfigRequest
-}
 export type GetAnatomySchemaApiResponse = /** status 200 Successful Response */ object
 export type GetAnatomySchemaApiArg = void
 export type GetAnatomyPresetsApiResponse =
@@ -1570,6 +1737,10 @@ export type LogoutApiResponse = /** status 200 Successful Response */ LogoutResp
 export type LogoutApiArg = void
 export type ListActiveSessionsApiResponse = /** status 200 Successful Response */ SessionModel[]
 export type ListActiveSessionsApiArg = void
+export type CreateSessionApiResponse = /** status 200 Successful Response */ SessionModel
+export type CreateSessionApiArg = {
+  createSessionRequest: CreateSessionRequest
+}
 export type ListBundlesApiResponse = /** status 200 Successful Response */ ListBundleModel
 export type ListBundlesApiArg = {
   /** Include archived bundles */
@@ -1712,12 +1883,10 @@ export type UploadProjectFileApiArg = {
   'x-activity-id'?: string
   'content-type': string
 }
-export type DownloadProjectFileApiResponse = /** status 200 Successful Response */ any
-export type DownloadProjectFileApiArg = {
+export type GetProjectFileApiResponse = /** status 200 Successful Response */ any
+export type GetProjectFileApiArg = {
   fileId: string
   projectName: string
-  /** Preview mode */
-  preview?: boolean
 }
 export type DeleteProjectFileApiResponse = /** status 200 Successful Response */ any
 export type DeleteProjectFileApiArg = {
@@ -1726,6 +1895,11 @@ export type DeleteProjectFileApiArg = {
 }
 export type GetProjectFileHeadApiResponse = /** status 200 Successful Response */ any
 export type GetProjectFileHeadApiArg = {
+  fileId: string
+  projectName: string
+}
+export type GetProjectFileThumbnailApiResponse = /** status 200 Successful Response */ any
+export type GetProjectFileThumbnailApiArg = {
   fileId: string
   projectName: string
 }
@@ -1798,13 +1972,14 @@ export type DeleteEntityLinkApiArg = {
   projectName: string
   linkId: string
 }
-export type MarketAddonListApiResponse = /** status 200 Successful Response */ any
+export type MarketAddonListApiResponse = /** status 200 Successful Response */ AddonList2
 export type MarketAddonListApiArg = void
-export type MarketAddonDetailApiResponse = /** status 200 Successful Response */ any
+export type MarketAddonDetailApiResponse = /** status 200 Successful Response */ AddonDetail
 export type MarketAddonDetailApiArg = {
   addonName: string
 }
-export type MarketAddonVersionDetailApiResponse = /** status 200 Successful Response */ any
+export type MarketAddonVersionDetailApiResponse =
+  /** status 200 Successful Response */ AddonVersionDetail
 export type MarketAddonVersionDetailApiArg = {
   addonName: string
   addonVersion: string
@@ -1992,6 +2167,53 @@ export type ResolveUrisApiArg = {
   'x-ayon-site-id'?: string
   resolveRequestModel: ResolveRequestModel
 }
+export type GetReviewablesForProductApiResponse =
+  /** status 200 Successful Response */ VersionReviewablesModel[]
+export type GetReviewablesForProductApiArg = {
+  projectName: string
+  productId: string
+}
+export type GetReviewablesForVersionApiResponse =
+  /** status 200 Successful Response */ VersionReviewablesModel
+export type GetReviewablesForVersionApiArg = {
+  projectName: string
+  versionId: string
+}
+export type UploadReviewableApiResponse = /** status 200 Successful Response */ ReviewableModel
+export type UploadReviewableApiArg = {
+  projectName: string
+  versionId: string
+  /** Label */
+  label?: string
+  'content-type': string
+  'x-file-name': string
+  'x-sender'?: string
+}
+export type SortVersionReviewablesApiResponse = /** status 200 Successful Response */ any
+export type SortVersionReviewablesApiArg = {
+  projectName: string
+  versionId: string
+  sortReviewablesRequest: SortReviewablesRequest
+}
+export type GetReviewablesForTaskApiResponse =
+  /** status 200 Successful Response */ VersionReviewablesModel[]
+export type GetReviewablesForTaskApiArg = {
+  projectName: string
+  taskId: string
+}
+export type GetReviewablesForFolderApiResponse =
+  /** status 200 Successful Response */ VersionReviewablesModel[]
+export type GetReviewablesForFolderApiArg = {
+  projectName: string
+  folderId: string
+}
+export type UpdateReviewableApiResponse = /** status 200 Successful Response */ any
+export type UpdateReviewableApiArg = {
+  projectName: string
+  versionId: string
+  activityId: string
+  updateReviewablesRequest: UpdateReviewablesRequest
+}
 export type ListServicesApiResponse = /** status 200 Successful Response */ ServiceListModel
 export type ListServicesApiArg = void
 export type SpawnServiceApiResponse = /** status 204 Successful Response */ void
@@ -2049,6 +2271,8 @@ export type GetSiteInfoApiResponse = /** status 200 Successful Response */ InfoR
 export type GetSiteInfoApiArg = void
 export type GetProductionMetricsApiResponse = /** status 200 Successful Response */ Metrics
 export type GetProductionMetricsApiArg = {
+  /** Collect system metrics */
+  system?: boolean
   /** Collect saturated (more granular) metrics */
   saturated?: boolean
 }
@@ -2250,11 +2474,13 @@ export type GetUserApiArg = {
 export type CreateUserApiResponse = /** status 200 Successful Response */ any
 export type CreateUserApiArg = {
   userName: string
+  'x-sender'?: string
   newUserModel: NewUserModel
 }
 export type DeleteUserApiResponse = /** status 200 Successful Response */ any
 export type DeleteUserApiArg = {
   userName: string
+  'x-sender'?: string
 }
 export type PatchUserApiResponse = /** status 200 Successful Response */ any
 export type PatchUserApiArg = {
@@ -2274,6 +2500,7 @@ export type CheckPasswordApiArg = {
 export type ChangeUserNameApiResponse = /** status 200 Successful Response */ any
 export type ChangeUserNameApiArg = {
   userName: string
+  'x-sender'?: string
   changeUserNameRequestModel: ChangeUserNameRequestModel
 }
 export type GetUserSessionsApiResponse =
@@ -2387,16 +2614,88 @@ export type Permissions = {
   /** Whitelist REST endpoints a user can access */
   endpoints?: EndpointsAccessList
 }
+export type IconModel = {
+  type?: 'material-symbols' | 'url'
+  /** The name of the icon (for material-symbols) */
+  name?: string
+  /** The color of the icon (for material-symbols) */
+  color?: string
+  /** The URL of the icon (for url) */
+  url?: string
+}
+export type BaseActionManifest = {
+  /** The identifier of the action */
+  identifier: string
+  /** Human-friendly name of the action */
+  label: string
+  /** Action category */
+  category?: string
+  /** The order of the action */
+  order?: number
+  /** Path to the action icon */
+  icon?: IconModel
+  featured?: boolean
+  /** The name of the addon providing the action */
+  addonName?: string
+  /** The version of the addon providing the action */
+  addonVersion?: string
+  /** The settings variant of the addon */
+  variant?: string
+}
+export type AvailableActionsListModel = {
+  /** The list of available actions */
+  actions?: BaseActionManifest[]
+}
+export type ActionContext = {
+  /** The name of the project */
+  projectName: string
+  /** The type of the entity */
+  entityType: 'folder' | 'product' | 'version' | 'representation' | 'task' | 'workfile'
+  /** List of subtypes present in the entity list */
+  entitySubtypes?: string[]
+  /** The IDs of the entities */
+  entityIds: string[]
+}
+export type ExecuteResponseModel = {
+  /** The type of response */
+  type: 'launcher' | 'server'
+  /** Whether the action was successful */
+  success?: boolean
+  /** The message to display */
+  message?: string
+  /** The uri to call from the browser */
+  uri?: string
+}
+export type TakeResponseModel = {
+  eventId: string
+  actionIdentifier: string
+  args?: string[]
+  context: ActionContext
+  addonName: string
+  addonVersion: string
+  variant: string
+  /** The user who initiated the action */
+  userName: string
+}
 export type CreateActivityResponseModel = {
   id: string
 }
 export type ProjectActivityPostModel = {
   /** Explicitly set the ID of the activity */
   id?: string
-  activityType: 'comment' | 'status.change' | 'assignee.add' | 'assignee.remove' | 'version.publish'
+  activityType:
+    | 'comment'
+    | 'watch'
+    | 'reviewable'
+    | 'status.change'
+    | 'assignee.add'
+    | 'assignee.remove'
+    | 'version.publish'
   body?: string
   files?: string[]
   timestamp?: string
+  /** Additional data */
+  data?: object
 }
 export type ActivityPatchModel = {
   body: string
@@ -2462,31 +2761,8 @@ export type SuggestRequest = {
   entityType: 'folder' | 'task' | 'version'
   entityId: string
 }
-export type ErrorResponse = {
-  code: number
-  detail: string
-}
-export type AddonInstallListItemModel = {
-  id: string
-  topic: 'addon.install' | 'addon.install_from_url'
-  description: string
-  addonName?: string
-  addonVersion?: string
-  user?: string
-  status: string
-  createdAt: string
-  updatedAt?: string
-}
-export type AddonInstallListResponseModel = {
-  items: AddonInstallListItemModel[]
-  restartRequired: boolean
-}
-export type InstallAddonResponseModel = {
-  eventId: string
-}
-export type ModifyOverridesRequestModel = {
-  action: 'delete' | 'pin'
-  path: string[]
+export type WatchersModel = {
+  watchers: string[]
 }
 export type PathDefinition = {
   windows?: string
@@ -2546,6 +2822,10 @@ export type AddonList = {
   /** List of available addons */
   addons: AddonListItem[]
 }
+export type ErrorResponse = {
+  code: number
+  detail: string
+}
 export type VariantCopyRequest = {
   /** Addon name */
   addonName: string
@@ -2556,6 +2836,28 @@ export type VariantCopyRequest = {
 }
 export type AddonConfigRequest = {
   copyVariant?: VariantCopyRequest
+}
+export type AddonInstallListItemModel = {
+  id: string
+  topic: 'addon.install' | 'addon.install_from_url'
+  description: string
+  addonName?: string
+  addonVersion?: string
+  user?: string
+  status: string
+  createdAt: string
+  updatedAt?: string
+}
+export type AddonInstallListResponseModel = {
+  items: AddonInstallListItemModel[]
+  restartRequired: boolean
+}
+export type InstallAddonResponseModel = {
+  eventId: string
+}
+export type ModifyOverridesRequestModel = {
+  action: 'delete' | 'pin'
+  path: string[]
 }
 export type AnatomyPresetListItem = {
   name: string
@@ -2633,16 +2935,8 @@ export type ProjectAttribModel = {
   endDate?: string
   /** Textual description of the entity */
   description?: string
-  ftrackId?: string
-  ftrackPath?: string
   applications?: string[]
   tools?: string[]
-  /** The Shotgrid ID of this entity. */
-  shotgridId?: string
-  /** The Shotgrid Type of this entity. */
-  shotgridType?: string
-  /** Push changes done to this project to Shotgrid. Requires the transmitter service. */
-  shotgridPush?: boolean
 }
 export type FolderType = {
   name: string
@@ -2827,6 +3121,12 @@ export type SessionModel = {
   lastUsed?: number
   isService?: boolean
   clientInfo?: ClientInfo
+}
+export type CreateSessionRequest = {
+  /** User name to create session for */
+  userName?: string
+  /** Message to log in event stream */
+  message?: string
 }
 export type AddonDevelopmentItem = {
   /** Enable/disable addon development */
@@ -3052,7 +3352,7 @@ export type DispatchEventRequestModel = {
   payload?: object
   /** Is event finished (one shot event) */
   finished?: boolean
-  /** Set to False to not store one-shot event in database. */
+  /** Set to False for fire-and-forget events */
   store?: boolean
 }
 export type EventModel = {
@@ -3118,14 +3418,7 @@ export type FolderAttribModel = {
   endDate?: string
   /** Textual description of the entity */
   description?: string
-  ftrackId?: string
-  ftrackPath?: string
   tools?: string[]
-  /** The Shotgrid ID of this entity. */
-  shotgridId?: string
-  car?: string
-  /** The Shotgrid Type of this entity. */
-  shotgridType?: string
 }
 export type FolderModel = {
   /** Unique identifier of the {entity_name} */
@@ -3267,6 +3560,100 @@ export type CreateLinkRequestModel = {
   linkType?: string
   /** Link data */
   data?: object
+}
+export type LinkModel = {
+  type?: 'homepage' | 'github' | 'documentation'
+  label?: string
+  url: string
+}
+export type AddonListItem2 = {
+  name: string
+  title: string
+  /** Addon description */
+  description?: string
+  /** Organization name */
+  orgName?: string
+  /** Organization title */
+  orgTitle?: string
+  icon?: string
+  /** Latest version of the addon */
+  latestVersion?: string
+  /** Links to the addon's homepage and GitHub repository */
+  links?: LinkModel[]
+  currentProductionVersion?: string
+  currentLatestVersion?: string
+  isOutdated?: boolean
+}
+export type AddonList2 = {
+  addons?: AddonListItem2[]
+}
+export type AddonVersionListItem = {
+  version: string
+  ayonVersion?: string
+  createdAt?: string
+  updatedAt?: string
+  /** Is this version compatible? */
+  isCompatible?: boolean
+  /** Is this version installed? */
+  isInstalled?: boolean
+  /** Is this version in production? */
+  isProduction?: boolean
+}
+export type AddonDetail = {
+  name: string
+  title: string
+  /** Addon description */
+  description?: string
+  /** Organization name */
+  orgName?: string
+  /** Organization title */
+  orgTitle?: string
+  icon?: string
+  /** Latest version of the addon */
+  latestVersion?: string
+  /** Links to the addon's homepage and GitHub repository */
+  links?: LinkModel[]
+  currentProductionVersion?: string
+  currentLatestVersion?: string
+  isOutdated?: boolean
+  /** A list of versions of this addon */
+  versions?: AddonVersionListItem[]
+  /** A warning message to display to the user */
+  warning?: string
+}
+export type AddonVersionDetail = {
+  name: string
+  title: string
+  /** Addon description */
+  description?: string
+  /** Organization name */
+  orgName?: string
+  /** Organization title */
+  orgTitle?: string
+  icon?: string
+  /** Latest version of the addon */
+  latestVersion?: string
+  /** Links to the addon's homepage and GitHub repository */
+  links?: LinkModel[]
+  currentProductionVersion?: string
+  currentLatestVersion?: string
+  isOutdated?: boolean
+  version: string
+  url?: string
+  altUrl?: string
+  checksum?: string
+  /** The version of Ayon this version is compatible with */
+  ayonVersion?: string
+  /** When this version was created */
+  createdAt?: string
+  /** When this version was last updated */
+  updatedAt?: string
+  /** Is this version installed? */
+  isInstalled?: boolean
+  /** Is this version in production? */
+  isProduction?: boolean
+  /** Is this version compatible? */
+  isCompatible?: boolean
 }
 export type InitializeRequestModel = {
   /** Username */
@@ -3568,16 +3955,8 @@ export type ProjectAttribModel2 = {
   endDate?: string
   /** Textual description of the entity */
   description?: string
-  ftrackId?: string
-  ftrackPath?: string
   applications?: string[]
   tools?: string[]
-  /** The Shotgrid ID of this entity. */
-  shotgridId?: string
-  /** The Shotgrid Type of this entity. */
-  shotgridType?: string
-  /** Push changes done to this project to Shotgrid. Requires the transmitter service. */
-  shotgridPush?: boolean
 }
 export type ProjectModel = {
   /** Name is an unique id of the {entity_name} */
@@ -3775,6 +4154,48 @@ export type ResolveRequestModel = {
   /** List of uris to resolve */
   uris: string[]
 }
+export type ReviewableProcessingStatus = {
+  eventId?: string
+  status: string
+  description: string
+}
+export type ReviewableAuthor = {
+  name: string
+  fullName?: string
+}
+export type ReviewableModel = {
+  fileId: string
+  activityId: string
+  filename: string
+  label?: string
+  mimetype: string
+  availability?: 'unknown' | 'conversionRequired' | 'conversionRecommended' | 'ready'
+  mediaInfo?: object
+  createdFrom?: string
+  /** Information about the processing status */
+  processing?: ReviewableProcessingStatus
+  createdAt?: string
+  updatedAt?: string
+  author: ReviewableAuthor
+}
+export type VersionReviewablesModel = {
+  id: string
+  name: string
+  version: string
+  status: string
+  productId: string
+  productName: string
+  productType: string
+  /** List of available reviewables */
+  reviewables?: ReviewableModel[]
+}
+export type SortReviewablesRequest = {
+  /** List of reviewable (activity) ids in the order you want them to appear in the UI. */
+  sort?: string[]
+}
+export type UpdateReviewablesRequest = {
+  label?: string
+}
 export type ServiceDataModel = {
   volumes?: string[]
   ports?: string[]
@@ -3922,6 +4343,17 @@ export type InfoResponseModel = {
   sites?: SiteInfo[]
   ssoOptions?: SsoOption[]
 }
+export type SystemMetricsData = {
+  cpuUsage?: number
+  memoryUsage?: number
+  swapUsage?: number
+  uptimeSeconds?: number
+  runtimeSeconds?: number
+  dbSizeShared?: number
+  dbSizeTotal?: number
+  redisSizeTotal?: number
+  storageUtilizationTotal?: number
+}
 export type UserCounts = {
   total?: number
   active?: number
@@ -3933,6 +4365,7 @@ export type ProjectCounts = {
   active?: number
 }
 export type ProjectMetrics = {
+  nickname: string
   folderCount?: number
   productCount?: number
   versionCount?: number
@@ -3943,6 +4376,8 @@ export type ProjectMetrics = {
   teamCount?: number
   /** Duration in days */
   duration?: number
+  dbSize?: number
+  storageUtilization?: number
   /** List of folder types in the project. Collected only in the 'saturated' mode. */
   folderTypes?: string[]
   /** List of task types in the project. Collected only in the 'saturated' mode. */
@@ -3973,6 +4408,11 @@ export type Metrics = {
   releaseInfo?: ReleaseInfo
   /** Time (seconds) since the server was (re)started */
   uptime?: number
+  /** System metrics data
+    Contains information about machine utilization,
+    and database sizes.
+     */
+  system?: SystemMetricsData
   /** Number of total and active users, admins and managers */
   userCounts?: UserCounts
   /** Number of total and active projects */
@@ -4052,14 +4492,7 @@ export type TaskAttribModel = {
   endDate?: string
   /** Textual description of the entity */
   description?: string
-  ftrackId?: string
-  ftrackPath?: string
   tools?: string[]
-  /** The Shotgrid ID of this entity. */
-  shotgridId?: string
-  car?: string
-  /** The Shotgrid Type of this entity. */
-  shotgridType?: string
 }
 export type TaskModel = {
   /** Unique identifier of the {entity_name} */
@@ -4183,6 +4616,8 @@ export type NewUserModel = {
   active?: boolean
   /** Password for the new user */
   password?: string
+  /** API Key for the new service user */
+  apiKey?: string
 }
 export type UserPatchModel = {
   attrib?: UserAttribModel
@@ -4245,7 +4680,6 @@ export type VersionAttribModel = {
   colorSpace?: string
   /** Textual description of the entity */
   description?: string
-  ftrackId?: string
 }
 export type VersionModel = {
   /** Unique identifier of the {entity_name} */

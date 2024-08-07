@@ -1,11 +1,11 @@
 import { isEqual } from 'lodash'
-import { ayonApi } from '../ayon'
+import api from '@api'
 import { taskProvideTags } from '../userDashboard/userDashboardHelpers'
-import { transformActivityData, transformTooltipData } from './activitiesHelpers'
+import { countChecklists, transformActivityData, transformTooltipData } from './activitiesHelpers'
 // import PubSub from '@/pubsub'
-import { ACTIVITIES, ENTITY_TOOLTIP } from './activityQueries'
+import { ACTIVITIES, ACTIVITIES_BY_ACTIVITY, CHECKLISTS, ENTITY_TOOLTIP } from './activityQueries'
 
-const getActivities = ayonApi.injectEndpoints({
+const getActivities = api.injectEndpoints({
   endpoints: (build) => ({
     // get multiple entities activities
     getActivities: build.query({
@@ -64,6 +64,19 @@ const getActivities = ayonApi.injectEndpoints({
         return !isEqual(currentArg, previousArg)
       },
     }),
+    // get a single activity
+    getActivityForEntities: build.query({
+      query: ({ projectName, entityIds, activityIds }) => ({
+        url: '/graphql',
+        method: 'POST',
+        body: {
+          query: ACTIVITIES_BY_ACTIVITY,
+          variables: { projectName, entityIds, activityIds },
+        },
+      }),
+      transformResponse: (res, meta, { currentUser }) =>
+        transformActivityData(res?.data, currentUser, false),
+    }),
     // get data for a reference tooltip based on type,id and projectName
     getEntityTooltip: build.query({
       query: ({ projectName, entityId, entityType }) => ({
@@ -78,10 +91,32 @@ const getActivities = ayonApi.injectEndpoints({
         transformTooltipData(res?.data?.project, entityType),
       providesTags: (res, error, { entityType }) => taskProvideTags([res], 'task', entityType),
     }),
+    getChecklistsCount: build.query({
+      query: ({ projectName, entityIds }) => ({
+        url: '/graphql',
+        method: 'POST',
+        body: {
+          query: CHECKLISTS,
+          variables: { projectName, entityIds },
+        },
+      }),
+      transformResponse: (res) => countChecklists(res?.data),
+      providesTags: (res, _error, { entityIds }) => [
+        { type: 'activity', id: 'LIST' },
+        ...res.ids.map((id) => ({ type: 'activity', id: 'checklist-' + id })),
+        ...entityIds.map((id) => ({ type: 'entityActivities', id: 'checklist-' + id })),
+      ],
+    }),
   }),
+  overrideExisting: true,
 })
 
 //
 
-export const { useGetActivitiesQuery, useLazyGetActivitiesQuery, useGetEntityTooltipQuery } =
-  getActivities
+export const {
+  useGetActivitiesQuery,
+  useLazyGetActivitiesQuery,
+  useGetEntityTooltipQuery,
+  useLazyGetActivityForEntitiesQuery,
+  useGetChecklistsCountQuery,
+} = getActivities

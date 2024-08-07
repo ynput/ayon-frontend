@@ -8,6 +8,7 @@ import { useRestart } from '@context/restartContext'
 export const AppMenu = ({ user, ...props }) => {
   // check if user is logged in and is manager or admin
   const isUser = user?.data?.isUser
+  const isManager = user?.data?.isManager
   const isAdmin = user?.data?.isAdmin
 
   // restart server
@@ -47,13 +48,6 @@ export const AppMenu = ({ user, ...props }) => {
 
   const managerItems = [
     {
-      id: 'market',
-      link: '/market',
-      label: 'Addon Market',
-      icon: 'store',
-      shortcut: 'M+M',
-    },
-    {
       id: 'events',
       link: '/events',
       label: 'Event Viewer',
@@ -70,11 +64,18 @@ export const AppMenu = ({ user, ...props }) => {
   ]
 
   // add protected items if user is manager or admin
-  if (!isUser) items.push(...managerItems)
+  if (isManager || isAdmin) items.push(...managerItems)
 
   const adminItems = [
     {
       id: 'divider',
+    },
+    {
+      id: 'market',
+      link: '/market',
+      label: 'Addon Market',
+      icon: 'store',
+      shortcut: 'M+M',
     },
     {
       id: 'onboarding',

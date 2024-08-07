@@ -15,12 +15,14 @@ const dashboardSlice = createSlice({
     prefetchedIds: [],
     tasks: {
       selected: getInitialStateLocalStorage('dashboard-tasks-selected', []),
+      types: getInitialStateLocalStorage('dashboard-tasks-types', []),
       sortBy: getInitialStateLocalStorage('dashboard-tasks-sortBy', []),
       groupBy: getInitialStateLocalStorage('dashboard-tasks-groupBy', []),
       filter: getInitialStateLocalStorage('dashboard-tasks-filter', ''),
       assignees: getInitialStateLocalStorage('dashboard-tasks-assignees', []),
       assigneesFilter: getInitialStateLocalStorage('dashboard-tasks-assigneesFilter', 'me'),
       collapsedColumns: getInitialStateLocalStorage('dashboard-tasks-collapsedColumns', []),
+      draggingIds: [],
     },
   },
   reducers: {
@@ -32,8 +34,9 @@ const dashboardSlice = createSlice({
       if (state.selectedProjects.includes(payload)) return
       state.selectedProjects = [payload]
     },
-    onTaskSelected: (state, { payload = [] }) => {
-      state.tasks.selected = payload
+    onTaskSelected: (state, { payload = {} }) => {
+      state.tasks.selected = payload.ids
+      state.tasks.types = payload.types
     },
     onTasksSortByChanged: (state, { payload = [] }) => {
       state.tasks.sortBy = payload
@@ -63,8 +66,13 @@ const dashboardSlice = createSlice({
       state.tasks.filter = ''
       state.tasks.assignees = []
       state.tasks.assigneesFilter = 'me'
-      state.details.filter = 'activity'
       state.tasks.collapsedColumns = []
+    },
+    onDraggingStart: (state, { payload }) => {
+      state.tasks.draggingIds = payload
+    },
+    onDraggingEnd: (state) => {
+      state.tasks.draggingIds = []
     },
   },
 })
@@ -80,6 +88,8 @@ export const {
   onCollapsedColumnsChanged,
   onPrefetchIds,
   onClearDashboard,
+  onDraggingStart,
+  onDraggingEnd,
 } = dashboardSlice.actions
 export default dashboardSlice.reducer
 
@@ -89,7 +99,10 @@ export const dashboardLocalItems = {
   'dashboard/onTasksSortByChanged': [{ key: 'dashboard-tasks-sortBy' }],
   'dashboard/onTasksGroupByChanged': [{ key: 'dashboard-tasks-groupBy' }],
   'dashboard/onTasksFilterChanged': [{ key: 'dashboard-tasks-filter' }],
-  'dashboard/onTaskSelected': [{ key: 'dashboard-tasks-selected' }],
+  'dashboard/onTaskSelected': [
+    { key: 'dashboard-tasks-selected', payload: 'ids' },
+    { key: 'dashboard-tasks-types', payload: 'types' },
+  ],
   'dashboard/onAssigneesChanged': [
     { key: 'dashboard-tasks-assignees', payload: 'assignees' },
     { key: 'dashboard-tasks-assigneesFilter', payload: 'filter' },

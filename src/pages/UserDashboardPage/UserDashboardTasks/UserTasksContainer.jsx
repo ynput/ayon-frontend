@@ -6,7 +6,7 @@ import {
 
 import UserDashboardKanBan from './UserDashboardKanBan'
 import { useEffect, useMemo } from 'react'
-import { onAssigneesChanged } from '@state/dashboard'
+import { onAssigneesChanged, onTaskSelected } from '@state/dashboard'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import DetailsPanel from '@containers/DetailsPanel/DetailsPanel'
 import { getIntersectionFields, getMergedFields } from '../util'
@@ -14,6 +14,18 @@ import { setUri } from '@state/context'
 import DetailsPanelSlideOut from '@containers/DetailsPanel/DetailsPanelSlideOut/DetailsPanelSlideOut'
 import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
 import transformKanbanTasks from './transformKanbanTasks'
+import styled from 'styled-components'
+import clsx from 'clsx'
+
+const StyledSplitter = styled(Splitter)`
+  .details-panel-splitter {
+    /* This is a crazy hack to prevent the cursor being out of line with the dragging card */
+    &.dragging {
+      transition: max-width 0s, min-width 0s;
+      transition-delay: 0.1s;
+    }
+  }
+`
 
 export const getThumbnailUrl = ({ entityId, entityType, thumbnailId, updatedAt, projectName }) => {
   // If projectName is not provided or neither thumbnailId nor entityId and entityType are provided, return null
@@ -25,12 +37,12 @@ export const getThumbnailUrl = ({ entityId, entityType, thumbnailId, updatedAt, 
   // If entityId and entityType are provided, construct the URL using them
   if (entityId && entityType) {
     const entityUrl = `/api/projects/${projectName}/${entityType}s/${entityId}/thumbnail`
-    return `${entityUrl}${updatedAtQueryParam}&placeholder=none`
+    return `${entityUrl}${updatedAtQueryParam}`
   }
 
   // If entityId and entityType are not provided, fallback on thumbnailId
   const thumbnailUrl = `/api/projects/${projectName}/thumbnails/${thumbnailId}`
-  return `${thumbnailUrl}${updatedAtQueryParam}&placeholder=none`
+  return `${thumbnailUrl}${updatedAtQueryParam}`
 }
 
 const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
@@ -39,6 +51,8 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
   const user = useSelector((state) => state.user)
   const assigneesState = useSelector((state) => state.dashboard.tasks.assignees)
   const assigneesFilter = useSelector((state) => state.dashboard.tasks.assigneesFilter)
+  const draggingIds = useSelector((state) => state.dashboard.tasks.draggingIds)
+  const isDragging = draggingIds.length > 0
   // Only admins and managers can see task of other users
 
   let assignees = []
@@ -57,6 +71,7 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
   }
 
   const selectedTasks = useSelector((state) => state.dashboard.tasks.selected) || []
+  const taskTypes = useSelector((state) => state.dashboard.tasks.types) || []
 
   // once user is loaded, set assignees to user
   useEffect(() => {
@@ -163,15 +178,20 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
     )
   }, [selectedTasksProjects, projectUsers])
 
+  const handlePanelClose = () => {
+    dispatch(setUri(null))
+    dispatch(onTaskSelected({ ids: [], types: [] }))
+  }
+
   const isLoadingAll = isLoadingInfo || isLoadingTasks
-  const detailsMinWidth = 533
-  const detailsMaxWidth = '40vw'
-  const detailsMaxMaxWidth = 700
+  let detailsMinWidth = 533
+  let detailsMaxWidth = '40vw'
+  let detailsMaxMaxWidth = 700
 
   if (isError) return <EmptyPlaceholder error={error} />
 
   return (
-    <Splitter
+    <StyledSplitter
       layout="horizontal"
       style={{
         height: '100%',
@@ -204,12 +224,16 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
       {selectedTasksData.length ? (
         <SplitterPanel
           size={1}
+          className={clsx('details-panel-splitter', { dragging: isDragging })}
           style={{
-            maxWidth: `clamp(${detailsMinWidth}px, ${detailsMaxWidth}, ${detailsMaxMaxWidth}px)`,
-            minWidth: detailsMinWidth,
+            maxWidth: isDragging
+              ? 0
+              : `clamp(${detailsMinWidth}px, ${detailsMaxWidth}, ${detailsMaxMaxWidth}px)`,
+            minWidth: isDragging ? 0 : detailsMinWidth,
           }}
         >
           <DetailsPanel
+            onClose={handlePanelClose}
             entitiesData={selectedTasksData}
             statusesOptions={statusesOptions}
             disabledStatuses={disabledStatuses}
@@ -221,6 +245,7 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
             projectsInfo={projectsInfo}
             projectNames={selectedTasksProjects}
             entityType="task"
+            entitySubTypes={taskTypes}
             scope="dashboard"
           />
           <DetailsPanelSlideOut projectsInfo={projectsInfo} scope="dashboard" />
@@ -228,7 +253,7 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
       ) : (
         <SplitterPanel style={{ maxWidth: 0 }}></SplitterPanel>
       )}
-    </Splitter>
+    </StyledSplitter>
   )
 }
 

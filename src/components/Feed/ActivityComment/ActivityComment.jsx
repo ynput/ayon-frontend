@@ -1,17 +1,20 @@
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
 import * as Styled from './ActivityComment.styled'
 import ActivityHeader from '../ActivityHeader/ActivityHeader'
 import ReactMarkdown from 'react-markdown'
 import CommentWrapper from './CommentWrapper'
 import remarkGfm from 'remark-gfm'
 import emoji from 'remark-emoji'
-import { classNames } from 'primereact/utils'
+import clsx from 'clsx'
 import { useSelector } from 'react-redux'
 import CommentInput from '@components/CommentInput/CommentInput'
-import { aTag, codeTag, inputTag } from './activityMarkdownComponents'
+import { aTag, blockquoteTag, codeTag, inputTag } from './activityMarkdownComponents'
 import FilesGrid from '@containers/FilesGrid/FilesGrid'
 import useReferenceTooltip from '@containers/Feed/hooks/useReferenceTooltip'
 import { getTextRefs } from '../../CommentInput/quillToMarkdown'
+import MenuContainer from '@/components/Menu/MenuComponents/MenuContainer'
+import ActivityCommentMenu from '../ActivityCommentMenu/ActivityCommentMenu'
+import { toggleMenuOpen } from '@/features/context'
 
 const ActivityComment = ({
   activity = {},
@@ -28,6 +31,7 @@ const ActivityComment = ({
   showOrigin,
   isHighlighted,
   dispatch,
+  scope,
 }) => {
   let {
     body,
@@ -44,7 +48,7 @@ const ActivityComment = ({
   } = activity
   if (!authorName) authorName = author?.name || ''
   if (!authorFullName) authorFullName = author?.fullName || authorName
-  let menuId = 'comment-' + activity.activityId
+  let menuId = `comment-${scope}-${activity.activityId}`
   if (isSlideOut) menuId += '-slideout'
   const isMenuOpen = useSelector((state) => state.context.menuOpen) === menuId
 
@@ -81,29 +85,41 @@ const ActivityComment = ({
     onDelete && onDelete(activityId, entityId, refs, body)
   }
 
+  const handleToggleMenu = (menu) => dispatch(toggleMenuOpen(menu))
+  const moreRef = useRef()
+
   const [, setRefTooltip] = useReferenceTooltip({ dispatch })
 
   return (
     <>
       <Styled.Comment
-        className={classNames('comment', { isOwner, isMenuOpen, isEditing, isHighlighted })}
+        className={clsx('comment', { isOwner, isMenuOpen, isEditing, isHighlighted })}
       >
         <ActivityHeader
-          id={menuId}
           name={authorName}
           fullName={authorFullName}
           date={createdAt}
           isRef={isRef}
           activity={activity}
-          onDelete={handleDelete}
-          onEdit={handleEditComment}
           projectInfo={projectInfo}
           projectName={projectName}
           entityType={entityType}
           onReferenceClick={onReferenceClick}
           onReferenceTooltip={setRefTooltip}
         />
-        <Styled.Body className={classNames('comment-body', { isEditing })}>
+        <Styled.Body className={clsx('comment-body', { isEditing })}>
+          <Styled.Tools className={'tools'} ref={moreRef}>
+            {isOwner && handleEditComment && (
+              <Styled.ToolButton icon="edit_square" onClick={handleEditComment} />
+            )}
+            {isOwner && (
+              <Styled.ToolButton
+                icon="more_horiz"
+                className="more"
+                onClick={() => handleToggleMenu(menuId)}
+              />
+            )}
+          </Styled.Tools>
           {isEditing ? (
             <CommentInput
               isOpen={true}
@@ -136,6 +152,7 @@ const ActivityComment = ({
                     input: (props) => inputTag(props, { activity, onCheckChange }),
                     // code syntax highlighting
                     code: (props) => codeTag(props),
+                    blockquote: (props) => blockquoteTag(props),
                   }}
                 >
                   {body}
@@ -145,12 +162,17 @@ const ActivityComment = ({
               <FilesGrid
                 files={files}
                 isCompact={files.length > 6}
+                activityId={activityId}
                 projectName={projectName}
                 isDownloadable
                 onExpand={onFileExpand}
               />
             </>
           )}
+
+          <MenuContainer id={menuId} target={moreRef.current}>
+            <ActivityCommentMenu onDelete={() => isOwner && handleDelete()} />
+          </MenuContainer>
         </Styled.Body>
       </Styled.Comment>
     </>

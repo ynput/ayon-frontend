@@ -26,6 +26,14 @@ const KanBanCardDraggable = ({
         isDragging={draggingCard}
         {...attributes}
         {...listeners}
+        onKeyDown={(e) => {
+          // we block space to use for viewer
+          if (e.key === ' ') {
+            e.preventDefault()
+          } else {
+            listeners?.onKeyDown(e, task.id)
+          }
+        }}
       />
     ),
     [task, onClick, onKeyUp, isActive, style, props, setNodeRef, isDragging, attributes, listeners],

@@ -67,7 +67,6 @@ const CheckboxWidget = function (props) {
   }, [props.onChange, value])
 
   useEffect(() => {
-    //console.log(props.id, props.value, value)
     // Sync the local state with the formData
     if (props.value === undefined) return
     if (value === props.value) return
@@ -299,26 +298,20 @@ const TextWidget = (props) => {
 
   if (['integer', 'number'].includes(props.schema.type)) {
     Input = InputNumber
-    if (props.schema.type === 'number') {
-      opts.step = 0.1
-    } else {
-      opts.step = 1
-    }
-    opts.value = value || ''
-    if (props.schema.minimum !== undefined) opts.min = props.schema.minimum
-    if (props.schema.maximum !== undefined) opts.max = props.schema.maximum
-    if (props.schema.exclusiveMinimum !== undefined)
-      opts.min = props.schema.exclusiveMinimum + opts.step
-    if (props.schema.exclusiveMaximum !== undefined)
-      opts.max = props.schema.exclusiveMaximum - opts.step
+    opts.value = (value === undefined || value === null) ?  '' : value
     opts.showButtons = true
     opts.useGrouping = false
     opts.onBlur = () => onChangeCommit(props.schema.type)
     opts.onChange = (e) => {
-      const value = e.target.value
-      const parsedValue = parseFloat(value)
-      if (isNaN(parsedValue)) return onChange('')
-      onChange(parsedValue)
+  
+      // ensure that the value is a number. decimal points are allowed
+      // but no other characters
+      // use regex to check if the value is a number
+
+      if (! /^-?\d*\.?\d*$/.test(e.target.value)) 
+        return
+
+      onChange(e.target.value)
     }
   } else if (props.schema.widget === 'color') {
     //

@@ -7,7 +7,7 @@ import { GetMarketInstallEventsQuery } from '@/api/graphql'
 
 type MarketAddonItemRes = MarketAddonListApiResponse['addons'][0]
 export interface MarketAddonItem extends MarketAddonItemRes {
-  isInstalled: boolean
+  isDownloaded: boolean
   isOfficial: boolean
   isProductionOutdated: boolean
   isVerified: boolean
@@ -15,38 +15,48 @@ export interface MarketAddonItem extends MarketAddonItemRes {
 
 export type MarketAddonList = MarketAddonItem[]
 
-type Definitions = DefinitionsFromApi<typeof api.rest>
-type TagTypes = TagTypesFromApi<typeof api.rest>
+type MarketAddonInstallEvent = GetMarketInstallEventsQuery['events']['edges'][0]['node']
+
+export type MarketAddonInstallEventList = MarketAddonInstallEvent[]
+
+type Definitions = DefinitionsFromApi<typeof api>
+type TagTypes = TagTypesFromApi<typeof api>
 
 type UpdatedDefinitions = Omit<Definitions, 'marketAddonList'> & {
   marketAddonList: OverrideResultType<Definitions['marketAddonList'], MarketAddonList>
+  GetMarketInstallEvents: OverrideResultType<
+    Definitions['GetMarketInstallEvents'],
+    MarketAddonInstallEventList
+  >
 }
 
-export const enhancedMarketRest = api.rest.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
+export const enhancedMarketRest = api.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
   endpoints: {
     marketAddonList: {
-      providesTags: (addons: $Any) =>
-        [
-          ...(addons?.map(({ id }: $Any) => ({ type: 'marketAddon', id })) || []),
-          {
-            type: 'marketAddon',
-            id: 'LIST',
-          },
-        ] || [],
+      providesTags: (addons: $Any) => [
+        ...(addons?.map(({ id }: $Any) => ({ type: 'marketAddon', id })) || []),
+        {
+          type: 'marketAddon',
+          id: 'LIST',
+        },
+      ],
       transformResponse: (response: MarketAddonListApiResponse) =>
-        (response?.addons || []).map((addon: $Any) => {
-          const isInstalled = !!addon.currentLatestVersion
-          const isOfficial = addon.orgName === 'ynput-official'
-          const isProductionOutdated = addon.currentLatestVersion !== addon.currentProductionVersion
+        [...(response?.addons || [])]
+          .map((addon: $Any) => {
+            const isDownloaded = !!addon.currentLatestVersion
+            const isOfficial = addon.orgName === 'ynput-official'
+            const isProductionOutdated =
+              addon.currentLatestVersion !== addon.currentProductionVersion
 
-          return {
-            ...addon,
-            isOfficial,
-            isInstalled,
-            isProductionOutdated,
-            isVerified: false,
-          }
-        }),
+            return {
+              ...addon,
+              isOfficial,
+              isDownloaded,
+              isProductionOutdated,
+              isVerified: false,
+            }
+          })
+          .sort((a, b) => a.title.localeCompare(b.title)),
     },
     marketAddonDetail: {
       providesTags: (_r, _e, { addonName }) => [
@@ -60,35 +70,6 @@ export const enhancedMarketRest = api.rest.enhanceEndpoints<TagTypes, UpdatedDef
         { type: 'marketAddon', id: 'LIST' },
       ],
     },
-  },
-})
-
-export const {
-  useMarketAddonListQuery,
-  useMarketAddonDetailQuery,
-  useLazyMarketAddonDetailQuery,
-  useLazyMarketAddonVersionDetailQuery,
-} = enhancedMarketRest
-
-type DefinitionsGQL = DefinitionsFromApi<typeof api.graphql>
-type TagTypesGQL = TagTypesFromApi<typeof api.graphql>
-
-type MarketAddonInstallEvent = GetMarketInstallEventsQuery['events']['edges'][0]['node']
-
-export type MarketAddonInstallEventList = MarketAddonInstallEvent[]
-
-type UpdatedDefinitionsGQL = Omit<DefinitionsGQL, 'GetMarketInstallEvents'> & {
-  GetMarketInstallEvents: OverrideResultType<
-    DefinitionsGQL['GetMarketInstallEvents'],
-    MarketAddonInstallEventList
-  >
-}
-
-export const enhanceMarketGraphql = api.graphql.enhanceEndpoints<
-  TagTypesGQL,
-  UpdatedDefinitionsGQL
->({
-  endpoints: {
     GetMarketInstallEvents: {
       transformResponse: (response: GetMarketInstallEventsQuery) =>
         response.events.edges.map(({ node }) => node).filter((e) => e.status !== 'finished'),
@@ -130,4 +111,10 @@ export const enhanceMarketGraphql = api.graphql.enhanceEndpoints<
   },
 })
 
-export const { useGetMarketInstallEventsQuery } = enhanceMarketGraphql
+export const {
+  useMarketAddonListQuery,
+  useMarketAddonDetailQuery,
+  useLazyMarketAddonDetailQuery,
+  useLazyMarketAddonVersionDetailQuery,
+  useGetMarketInstallEventsQuery,
+} = enhancedMarketRest

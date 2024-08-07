@@ -1,33 +1,7 @@
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { TablePanel, Section } from '@ynput/ayon-react-components'
-import UserImage from '@components/UserImage'
-import styled from 'styled-components'
-
-const StyledProfileRow = styled.div`
-  display: flex;
-  align-items: center;
-  gap: var(--base-gap-large);
-  overflow: hidden;
-`
-
-const StyledUserImage = styled(UserImage)`
-  margin: 'auto';
-  transform: scale(0.8);
-`
-
-const FullnameImage = ({ rowData }) => {
-  const { name, self, isMissing } = rowData
-  const { fullName } = rowData.attrib || false
-  return (
-    <StyledProfileRow>
-      <StyledUserImage $isMissing={isMissing} name={name} size={25} highlight={self} />
-      <span style={{ color: isMissing ? 'var(--color-hl-error)' : 'inherit' }}>
-        {fullName || name}
-      </span>
-    </StyledProfileRow>
-  )
-}
+import { ProfileRow } from '@pages/SettingsPage/UsersSettings/UserList'
 
 const UsersListTeamsSmall = ({
   handleContext,
@@ -67,7 +41,7 @@ const UsersListTeamsSmall = ({
             field="attrib.fullName"
             header="Full Name"
             style={{ width: '20%' }}
-            body={(rowData) => FullnameImage({ rowData })}
+            body={(rowData) => <ProfileRow rowData={rowData} />}
           />
         </DataTable>
       </TablePanel>

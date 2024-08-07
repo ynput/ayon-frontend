@@ -10,6 +10,7 @@
         "kind": "OBJECT",
         "name": "ActivitiesConnection",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "edges",
@@ -61,6 +62,7 @@
         "kind": "OBJECT",
         "name": "ActivityEdge",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "cursor",
@@ -100,6 +102,7 @@
         "kind": "OBJECT",
         "name": "ActivityFileNode",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "author",
@@ -211,6 +214,7 @@
         "kind": "OBJECT",
         "name": "ActivityNode",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "active",
@@ -578,6 +582,7 @@
         "kind": "OBJECT",
         "name": "ActivityOriginNode",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "id",
@@ -677,6 +682,7 @@
         "kind": "INPUT_OBJECT",
         "name": "AtrributeFilterInput",
         "description": null,
+        "isOneOf": false,
         "fields": null,
         "inputFields": [
           {
@@ -728,6 +734,7 @@
         "kind": "INTERFACE",
         "name": "BaseNode",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "active",
@@ -1080,6 +1087,7 @@
         "kind": "SCALAR",
         "name": "Boolean",
         "description": "The `Boolean` scalar type represents `true` or `false`.",
+        "isOneOf": null,
         "fields": null,
         "inputFields": null,
         "interfaces": null,
@@ -1090,6 +1098,7 @@
         "kind": "SCALAR",
         "name": "DateTime",
         "description": "Date with time (isoformat)",
+        "isOneOf": null,
         "fields": null,
         "inputFields": null,
         "interfaces": null,
@@ -1100,6 +1109,7 @@
         "kind": "OBJECT",
         "name": "EventEdge",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "cursor",
@@ -1139,6 +1149,7 @@
         "kind": "OBJECT",
         "name": "EventNode",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "createdAt",
@@ -1354,6 +1365,7 @@
         "kind": "OBJECT",
         "name": "EventsConnection",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "edges",
@@ -1405,6 +1417,7 @@
         "kind": "OBJECT",
         "name": "FileNode",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "hash",
@@ -1508,6 +1521,7 @@
         "kind": "SCALAR",
         "name": "Float",
         "description": "The `Float` scalar type represents signed double-precision fractional values as specified by [IEEE 754](https://en.wikipedia.org/wiki/IEEE_floating_point).",
+        "isOneOf": null,
         "fields": null,
         "inputFields": null,
         "interfaces": null,
@@ -1518,19 +1532,8 @@
         "kind": "OBJECT",
         "name": "FolderAttribType",
         "description": null,
+        "isOneOf": null,
         "fields": [
-          {
-            "name": "car",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "SCALAR",
-              "name": "String",
-              "ofType": null
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
           {
             "name": "clipIn",
             "description": null,
@@ -1616,30 +1619,6 @@
             "deprecationReason": null
           },
           {
-            "name": "ftrackId",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "SCALAR",
-              "name": "String",
-              "ofType": null
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "ftrackPath",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "SCALAR",
-              "name": "String",
-              "ofType": null
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
             "name": "handleEnd",
             "description": null,
             "args": [],
@@ -1700,30 +1679,6 @@
             "deprecationReason": null
           },
           {
-            "name": "shotgridId",
-            "description": "The Shotgrid ID of this entity.",
-            "args": [],
-            "type": {
-              "kind": "SCALAR",
-              "name": "String",
-              "ofType": null
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "shotgridType",
-            "description": "The Shotgrid Type of this entity.",
-            "args": [],
-            "type": {
-              "kind": "SCALAR",
-              "name": "String",
-              "ofType": null
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
             "name": "startDate",
             "description": "Date and time when the project or task or asset was started",
             "args": [],
@@ -1765,6 +1720,7 @@
         "kind": "OBJECT",
         "name": "FolderEdge",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "cursor",
@@ -1804,6 +1760,7 @@
         "kind": "OBJECT",
         "name": "FolderNode",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "active",
@@ -2020,6 +1977,22 @@
           },
           {
             "name": "hasProducts",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Boolean",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "hasReviewables",
             "description": null,
             "args": [],
             "type": {
@@ -2957,6 +2930,7 @@
         "kind": "OBJECT",
         "name": "FolderType",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "icon",
@@ -3000,6 +2974,7 @@
         "kind": "OBJECT",
         "name": "FoldersConnection",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "edges",
@@ -3051,6 +3026,7 @@
         "kind": "ENUM",
         "name": "HasLinksFilter",
         "description": null,
+        "isOneOf": null,
         "fields": null,
         "inputFields": null,
         "interfaces": null,
@@ -3092,6 +3068,7 @@
         "kind": "OBJECT",
         "name": "InboxConnection",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "edges",
@@ -3143,6 +3120,7 @@
         "kind": "OBJECT",
         "name": "InboxEdge",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "cursor",
@@ -3182,6 +3160,7 @@
         "kind": "SCALAR",
         "name": "Int",
         "description": "The `Int` scalar type represents non-fractional signed whole numeric values. Int can represent values between -(2^31) and 2^31 - 1.",
+        "isOneOf": null,
         "fields": null,
         "inputFields": null,
         "interfaces": null,
@@ -3192,6 +3171,7 @@
         "kind": "OBJECT",
         "name": "KanbanConnection",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "edges",
@@ -3243,6 +3223,7 @@
         "kind": "OBJECT",
         "name": "KanbanEdge",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "cursor",
@@ -3282,6 +3263,7 @@
         "kind": "OBJECT",
         "name": "KanbanNode",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "assignees",
@@ -3396,6 +3378,22 @@
             "deprecationReason": null
           },
           {
+            "name": "hasReviewables",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Boolean",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "id",
             "description": null,
             "args": [],
@@ -3413,6 +3411,30 @@
           },
           {
             "name": "label",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "lastVersionWithReviewableProductId",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "lastVersionWithReviewableVersionId",
             "description": null,
             "args": [],
             "type": {
@@ -3577,6 +3599,7 @@
         "kind": "OBJECT",
         "name": "LinkEdge",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "author",
@@ -3752,6 +3775,7 @@
         "kind": "OBJECT",
         "name": "LinksConnection",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "edges",
@@ -3803,6 +3827,7 @@
         "kind": "OBJECT",
         "name": "PageInfo",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "endCursor",
@@ -3870,6 +3895,7 @@
         "kind": "OBJECT",
         "name": "ProductAttribType",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "description",
@@ -3905,6 +3931,7 @@
         "kind": "OBJECT",
         "name": "ProductEdge",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "cursor",
@@ -3944,6 +3971,7 @@
         "kind": "OBJECT",
         "name": "ProductNode",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "Folder",
@@ -4740,6 +4768,7 @@
         "kind": "OBJECT",
         "name": "ProductType",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "color",
@@ -4791,6 +4820,7 @@
         "kind": "OBJECT",
         "name": "ProductsConnection",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "edges",
@@ -4842,6 +4872,7 @@
         "kind": "OBJECT",
         "name": "ProjectAttribType",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "applications",
@@ -4948,30 +4979,6 @@
             "deprecationReason": null
           },
           {
-            "name": "ftrackId",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "SCALAR",
-              "name": "String",
-              "ofType": null
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "ftrackPath",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "SCALAR",
-              "name": "String",
-              "ofType": null
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
             "name": "handleEnd",
             "description": null,
             "args": [],
@@ -5032,42 +5039,6 @@
             "deprecationReason": null
           },
           {
-            "name": "shotgridId",
-            "description": "The Shotgrid ID of this entity.",
-            "args": [],
-            "type": {
-              "kind": "SCALAR",
-              "name": "String",
-              "ofType": null
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "shotgridPush",
-            "description": "Push changes done to this project to Shotgrid. Requires the transmitter service.",
-            "args": [],
-            "type": {
-              "kind": "SCALAR",
-              "name": "Boolean",
-              "ofType": null
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "shotgridType",
-            "description": "The Shotgrid Type of this entity.",
-            "args": [],
-            "type": {
-              "kind": "SCALAR",
-              "name": "String",
-              "ofType": null
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
             "name": "startDate",
             "description": "Date and time when the project or task or asset was started",
             "args": [],
@@ -5109,6 +5080,7 @@
         "kind": "OBJECT",
         "name": "ProjectEdge",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "cursor",
@@ -5148,6 +5120,7 @@
         "kind": "OBJECT",
         "name": "ProjectNode",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "active",
@@ -5169,6 +5142,26 @@
             "name": "activities",
             "description": null,
             "args": [
+              {
+                "name": "activityIds",
+                "description": null,
+                "type": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "String",
+                      "ofType": null
+                    }
+                  }
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
               {
                 "name": "activityTypes",
                 "description": null,
@@ -7290,6 +7283,7 @@
         "kind": "OBJECT",
         "name": "ProjectsConnection",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "edges",
@@ -7341,6 +7335,7 @@
         "kind": "OBJECT",
         "name": "Query",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "events",
@@ -8103,6 +8098,7 @@
         "kind": "OBJECT",
         "name": "RepresentationAttribType",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "clipIn",
@@ -8282,6 +8278,7 @@
         "kind": "OBJECT",
         "name": "RepresentationEdge",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "cursor",
@@ -8321,6 +8318,7 @@
         "kind": "OBJECT",
         "name": "RepresentationNode",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "active",
@@ -8800,6 +8798,7 @@
         "kind": "OBJECT",
         "name": "RepresentationsConnection",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "edges",
@@ -8851,6 +8850,7 @@
         "kind": "SCALAR",
         "name": "String",
         "description": "The `String` scalar type represents textual data, represented as UTF-8 character sequences. The String type is most often used by GraphQL to represent free-form human-readable text.",
+        "isOneOf": null,
         "fields": null,
         "inputFields": null,
         "interfaces": null,
@@ -8861,19 +8861,8 @@
         "kind": "OBJECT",
         "name": "TaskAttribType",
         "description": null,
+        "isOneOf": null,
         "fields": [
-          {
-            "name": "car",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "SCALAR",
-              "name": "String",
-              "ofType": null
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
           {
             "name": "clipIn",
             "description": null,
@@ -8959,30 +8948,6 @@
             "deprecationReason": null
           },
           {
-            "name": "ftrackId",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "SCALAR",
-              "name": "String",
-              "ofType": null
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "ftrackPath",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "SCALAR",
-              "name": "String",
-              "ofType": null
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
             "name": "handleEnd",
             "description": null,
             "args": [],
@@ -9043,30 +9008,6 @@
             "deprecationReason": null
           },
           {
-            "name": "shotgridId",
-            "description": "The Shotgrid ID of this entity.",
-            "args": [],
-            "type": {
-              "kind": "SCALAR",
-              "name": "String",
-              "ofType": null
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "shotgridType",
-            "description": "The Shotgrid Type of this entity.",
-            "args": [],
-            "type": {
-              "kind": "SCALAR",
-              "name": "String",
-              "ofType": null
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
             "name": "startDate",
             "description": "Date and time when the project or task or asset was started",
             "args": [],
@@ -9108,6 +9049,7 @@
         "kind": "OBJECT",
         "name": "TaskEdge",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "cursor",
@@ -9147,6 +9089,7 @@
         "kind": "OBJECT",
         "name": "TaskNode",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "Folder",
@@ -9375,6 +9318,22 @@
               "ofType": {
                 "kind": "SCALAR",
                 "name": "String",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "hasReviewables",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Boolean",
                 "ofType": null
               }
             },
@@ -10180,6 +10139,7 @@
         "kind": "OBJECT",
         "name": "TaskType",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "name",
@@ -10207,6 +10167,7 @@
         "kind": "OBJECT",
         "name": "TasksConnection",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "edges",
@@ -10258,6 +10219,7 @@
         "kind": "OBJECT",
         "name": "UserAttribType",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "avatarUrl",
@@ -10317,6 +10279,7 @@
         "kind": "OBJECT",
         "name": "UserEdge",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "cursor",
@@ -10356,6 +10319,7 @@
         "kind": "OBJECT",
         "name": "UserNode",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "accessGroups",
@@ -10644,6 +10608,7 @@
         "kind": "OBJECT",
         "name": "UsersConnection",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "edges",
@@ -10695,6 +10660,7 @@
         "kind": "OBJECT",
         "name": "VersionAttribType",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "clipIn",
@@ -10807,18 +10773,6 @@
             "type": {
               "kind": "SCALAR",
               "name": "Int",
-              "ofType": null
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "ftrackId",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "SCALAR",
-              "name": "String",
               "ofType": null
             },
             "isDeprecated": false,
@@ -10942,6 +10896,7 @@
         "kind": "OBJECT",
         "name": "VersionEdge",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "cursor",
@@ -10981,6 +10936,7 @@
         "kind": "OBJECT",
         "name": "VersionListItem",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "id",
@@ -11040,6 +10996,7 @@
         "kind": "OBJECT",
         "name": "VersionNode",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "active",
@@ -11214,6 +11171,22 @@
               "kind": "SCALAR",
               "name": "String",
               "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "hasReviewables",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Boolean",
+                "ofType": null
+              }
             },
             "isDeprecated": false,
             "deprecationReason": null
@@ -11708,6 +11681,7 @@
         "kind": "OBJECT",
         "name": "VersionsConnection",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "edges",
@@ -11759,6 +11733,7 @@
         "kind": "OBJECT",
         "name": "WorkfileAttribType",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "description",
@@ -11794,6 +11769,7 @@
         "kind": "OBJECT",
         "name": "WorkfileEdge",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "cursor",
@@ -11833,6 +11809,7 @@
         "kind": "OBJECT",
         "name": "WorkfileNode",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "active",
@@ -12308,6 +12285,7 @@
         "kind": "OBJECT",
         "name": "WorkfilesConnection",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "edges",
@@ -12359,6 +12337,7 @@
         "kind": "OBJECT",
         "name": "__Directive",
         "description": "A Directive provides a way to describe alternate runtime execution and type validation behavior in a GraphQL document.\n\nIn some cases, you need to provide options to alter GraphQL's execution behavior in ways field arguments will not suffice, such as conditionally including or skipping a field. Directives provide this by describing additional information to the executor.",
+        "isOneOf": null,
         "fields": [
           {
             "name": "name",
@@ -12475,6 +12454,7 @@
         "kind": "ENUM",
         "name": "__DirectiveLocation",
         "description": "A Directive can be adjacent to many parts of the GraphQL language, a __DirectiveLocation describes one such possible adjacencies.",
+        "isOneOf": null,
         "fields": null,
         "inputFields": null,
         "interfaces": null,
@@ -12600,6 +12580,7 @@
         "kind": "OBJECT",
         "name": "__EnumValue",
         "description": "One possible value for a given Enum. Enum values are unique values, not a placeholder for a string or numeric value. However an Enum value is returned in a JSON response as a string.",
+        "isOneOf": null,
         "fields": [
           {
             "name": "name",
@@ -12667,6 +12648,7 @@
         "kind": "OBJECT",
         "name": "__Field",
         "description": "Object and Interface types are described by a list of Fields, each of which has a name, potentially a list of arguments, and a return type.",
+        "isOneOf": null,
         "fields": [
           {
             "name": "name",
@@ -12787,6 +12769,7 @@
         "kind": "OBJECT",
         "name": "__InputValue",
         "description": "Arguments provided to Fields or Directives and the input fields of an InputObject are represented as Input Values which describe their type and optionally a default value.",
+        "isOneOf": null,
         "fields": [
           {
             "name": "name",
@@ -12882,6 +12865,7 @@
         "kind": "OBJECT",
         "name": "__Schema",
         "description": "A GraphQL Schema defines the capabilities of a GraphQL server. It exposes all available types and directives on the server, as well as the entry points for query, mutation, and subscription operations.",
+        "isOneOf": null,
         "fields": [
           {
             "name": "description",
@@ -12993,6 +12977,7 @@
         "kind": "OBJECT",
         "name": "__Type",
         "description": "The fundamental unit of any GraphQL Schema is the type. There are many kinds of types in GraphQL as represented by the `__TypeKind` enum.\n\nDepending on the kind of a type, certain fields describe information about that type. Scalar types provide no information beyond a name, description and optional `specifiedByURL`, while Enum types provide their values. Object and Interface types provide the fields they describe. Abstract types, Union and Interface, provide the Object types possible at runtime. List and NonNull types compose other types.",
+        "isOneOf": null,
         "fields": [
           {
             "name": "kind",
@@ -13196,6 +13181,18 @@
             },
             "isDeprecated": false,
             "deprecationReason": null
+          },
+          {
+            "name": "isOneOf",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "Boolean",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
           }
         ],
         "inputFields": null,
@@ -13207,6 +13204,7 @@
         "kind": "ENUM",
         "name": "__TypeKind",
         "description": "An enum describing what kind of type a given `__Type` is.",
+        "isOneOf": null,
         "fields": null,
         "inputFields": null,
         "interfaces": null,

@@ -1,10 +1,11 @@
 import { Icon } from '@ynput/ayon-react-components'
 import ActivityHeader from '../ActivityHeader/ActivityHeader'
 import * as Styled from './ActivityVersions.styled'
-import { productTypes } from '@state/project'
 import { useState } from 'react'
 import { More } from '../ActivityGroup/ActivityGroup.styled'
 import ActivityDate from '../ActivityDate'
+import { useDispatch } from 'react-redux'
+import { openViewer } from '@state/viewer'
 
 const ActivityVersions = ({
   activity,
@@ -21,6 +22,10 @@ const ActivityVersions = ({
 
   const [thumbnailError, setThumbnailError] = useState(false)
 
+  const dispatch = useDispatch()
+  const handleClick = (versionId, productId) =>
+    dispatch(openViewer({ versionIds: [versionId], productId, projectName }))
+
   return (
     <Styled.Container>
       <ActivityHeader
@@ -34,12 +39,9 @@ const ActivityVersions = ({
         onReferenceClick={onReferenceClick}
       />
       {versions.flatMap(
-        ({ name, id, productName, productType, updatedAt, createdAt }, index) =>
+        ({ name, id, productId, productName, updatedAt, createdAt }, index) =>
           (index < limit || showAll) && (
-            <Styled.Card
-              key={id}
-              onClick={() => onReferenceClick({ entityType: 'version', entityId: id, projectName })}
-            >
+            <Styled.Card onClick={() => handleClick(id, productId)} key={id}>
               <Styled.Content>
                 <Styled.Title>
                   <span>{productName}</span>
@@ -54,7 +56,7 @@ const ActivityVersions = ({
                 onError={() => setThumbnailError(true)}
                 iconOnly={thumbnailError}
                 entityUpdatedAt={updatedAt}
-                icon={productTypes[productType]?.icon || 'home_repair_service'}
+                icon={'play_circle'}
               />
             </Styled.Card>
           ),

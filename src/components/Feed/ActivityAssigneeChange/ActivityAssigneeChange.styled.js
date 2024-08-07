@@ -17,8 +17,8 @@ export const StatusChange = styled.li`
 
 export const Body = styled.div`
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
+  flex-wrap: nowrap;
+  align-items: start;
   flex: 1;
   gap: var(--base-gap-small);
   padding: 0px 4px;
@@ -27,6 +27,6 @@ export const Body = styled.div`
 
 export const Text = styled.span`
   color: var(--md-sys-color-outline);
-  white-space: nowrap;
+  white-space: wrap;
   font-size: 12px;
 `

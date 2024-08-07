@@ -1,19 +1,23 @@
 import { useDroppable } from '@dnd-kit/core'
 import * as Styled from './KanBanColumn.styled'
+import clsx from 'clsx'
 const KanBanColumnDropzone = ({ item, activeColumn, disabled }) => {
-  const { isOver, setNodeRef, over } = useDroppable({
+  const { isOver, setNodeRef } = useDroppable({
     id: item.id,
     disabled,
   })
 
-  const isOverSelf = over?.id === activeColumn?.id
+  const isDraggingFrom = item.id === activeColumn?.id
 
   return (
     <Styled.DropColumn
       key={item.id}
       ref={setNodeRef}
       $color={item.color}
-      $active={isOver && !isOverSelf && !disabled}
+      className={clsx({
+        source: isDraggingFrom,
+        'drop-active': isOver && !isDraggingFrom && !disabled,
+      })}
     >
       <div className="title">
         <span>{item.name}</span>

@@ -19,6 +19,7 @@ const mergeSimilarActivities = (activities, type, oldKey = 'oldValue') => {
       }
 
       const isSameAuthor = currentActivity.authorName === activity.authorName
+      const isSameEntity = currentActivity.origin.id=== activity.entityId
       const currentCreatedAt = new Date(currentActivity.createdAt)
       const activityCreatedAt = new Date(activity.createdAt)
       const activityDuration =
@@ -31,7 +32,7 @@ const mergeSimilarActivities = (activities, type, oldKey = 'oldValue') => {
       const isWithinSeconds =
         !('minutes' in activityDuration) && activityDuration.seconds <= seconds
 
-      if (isSameAuthor && isWithinSeconds) {
+      if (isSameAuthor && isWithinSeconds && isSameEntity) {
         // Continue the sequence, update the newValue from the current activity
         currentActivity[oldKey] = activity[oldKey]
         // also update newValue

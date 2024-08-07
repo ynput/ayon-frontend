@@ -1,9 +1,11 @@
 import { Section } from '@ynput/ayon-react-components'
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import KanBanColumn from './KanBanColumn/KanBanColumn'
 import { useDndContext } from '@dnd-kit/core'
 import styled from 'styled-components'
 import CollapsedColumn from './KanBanColumn/CollapsedColumn'
+import { useSelector } from 'react-redux'
+import { useTaskSpacebarViewer } from '../hooks'
 
 const StyledWrapper = styled(Section)`
   height: 100%;
@@ -15,6 +17,7 @@ const StyledWrapper = styled(Section)`
 `
 
 const ColumnsWrapper = ({
+  allTasks = [],
   fieldsColumns,
   tasksColumns,
   groupByValue,
@@ -29,16 +32,19 @@ const ColumnsWrapper = ({
   const columnsRefs = useRef({})
 
   // find out which column the active card has come from
-  const activeColumn = Object.values(tasksColumns).find((column) =>
-    column.tasks.find((t) => t.id === active?.id),
-  )
+  const activeColumn = useMemo(() => {
+    return Object.values(tasksColumns).find((column) =>
+      column.tasks.find((t) => t.id === active?.id),
+    )
+  }, [tasksColumns, active])
 
-  const [scrollDirection, setScrollDirection] = useState(null)
+  // const [scrollDirection, setScrollDirection] = useState(null)
+  const scrollDirection = useRef(null)
 
   // we get section rect to figure out how high to make droppable area
   const [sectionRect, setSectionRect] = useState(null)
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!sectionRef.current) return
     const rect = sectionRef.current.getBoundingClientRect()
     setSectionRect(rect)
@@ -53,28 +59,28 @@ const ColumnsWrapper = ({
 
     let intervalId = null
 
-    if (scrollDirection) {
+    if (scrollDirection.current) {
       intervalId = setInterval(() => {
-        el.scrollLeft += speed * scrollDirection
+        el.scrollLeft += speed * scrollDirection.current
       }, 5)
     }
 
     return () => {
       clearInterval(intervalId)
     }
-  }, [scrollDirection, sectionRef.current])
+  }, [scrollDirection.current, sectionRef.current])
 
   // if we are dragging, detect if we are near the edge of the section
   useEffect(() => {
     const handleMouseMove = (event) => {
       const el = sectionRef.current
       if (!active || !el) {
-        setScrollDirection(null)
+        scrollDirection.current = null
         return
       }
       const isOverflowing = el.scrollWidth > el.clientWidth
       if (!isOverflowing) {
-        setScrollDirection(null)
+        scrollDirection.current = null
         return
       }
 
@@ -88,10 +94,10 @@ const ColumnsWrapper = ({
 
       if (newScrollDirection === null) {
         // console.log('setting null')
-        setScrollDirection(null)
+        scrollDirection.current = null
       } else if (newScrollDirection !== scrollDirection) {
         // console.log('setting new', newScrollDirection)
-        setScrollDirection(newScrollDirection)
+        scrollDirection.current = newScrollDirection
       }
     }
 
@@ -99,16 +105,58 @@ const ColumnsWrapper = ({
       window.addEventListener('mousemove', handleMouseMove)
     } else {
       window.removeEventListener('mousemove', handleMouseMove)
-      setScrollDirection(null)
+      scrollDirection.current = null
     }
     return () => {
       window.removeEventListener('mousemove', handleMouseMove)
-      setScrollDirection(null)
+      scrollDirection.current = null
     }
   }, [active, sectionRef.current])
 
+  const wasDragging = useRef(false)
+  useEffect(() => {
+    if (active) {
+      wasDragging.current = true
+    }
+  }, [active])
+
+  const selectedTasks = useSelector((state) => state.dashboard.tasks.selected)
+  // after dragging (active) has ended or selection changes, ensure selected task is in view
+  useEffect(() => {
+    if (active) return
+
+    // find the column that the selected task is in
+    const columnId = Object.entries(tasksColumns).find(([, column]) =>
+      column.tasks.find((t) => t.id === selectedTasks[0]),
+    )?.[0]
+
+    if (!columnId) return
+    const columnEl = columnsRefs.current[columnId]
+    if (!columnEl) return
+
+    // check if outside of the scroll horizontally
+    const rect = columnEl.getBoundingClientRect()
+    const sectionRect = sectionRef.current.getBoundingClientRect()
+    const columnRight = rect.right
+    const containerWidth = sectionRect.right
+
+    if (columnRight > containerWidth) {
+      const containerWidth = sectionRef.current.clientWidth
+      const elementWidth = columnEl.clientWidth
+      const offsetLeft = columnEl.offsetLeft
+      const padding = 8
+
+      sectionRef.current.scrollLeft = offsetLeft - containerWidth + elementWidth + padding
+    }
+  }, [active, selectedTasks, wasDragging])
+
+  const shortcuts = useTaskSpacebarViewer({
+    tasks: allTasks,
+  })
+
   return (
     <>
+      {shortcuts}
       <StyledWrapper
         style={{
           cursor: active && 'grabbing',
@@ -135,6 +183,7 @@ const ColumnsWrapper = ({
             <KanBanColumn
               key={id}
               column={column}
+              allTasks={allTasks}
               tasks={tasks}
               groupItems={items}
               isLoading={isLoading}

@@ -1,4 +1,4 @@
-import { ayonApi } from '../ayon'
+import api from '@api'
 import { toast } from 'react-toastify'
 import { filterActivityTypes } from '@state/dashboard'
 
@@ -29,12 +29,12 @@ const patchActivities = async (
 
   const state = getState()
   // get caches that would be affected by this activity
-  const entries = ayonApi.util.selectInvalidatedBy(state, invalidatingTags)
+  const entries = api.util.selectInvalidatedBy(state, invalidatingTags)
 
   // now patch all the caches with the update
   const patches = entries.forEach(({ originalArgs }) =>
     dispatch(
-      ayonApi.util.updateQueryData(
+      api.util.updateQueryData(
         'getActivities',
         { projectName, entityIds: originalArgs.entityIds, activityTypes, filter },
         (draft) => updateCache(draft.activities, patch, method === 'delete'),
@@ -58,13 +58,19 @@ const patchActivities = async (
 const getTags = ({ entityId, filter }) => {
   const invalidateFilters = Object.keys(filterActivityTypes).filter((key) => key !== filter)
 
-  return invalidateFilters.map((filter) => ({
+  const tags = invalidateFilters.map((filter) => ({
     type: 'entityActivities',
     id: entityId + '-' + filter,
   }))
+
+  tags.push({ type: 'activity', id: 'LIST' })
+
+  tags.push({ type: 'watchers', id: entityId })
+
+  return tags
 }
 
-const updateActivities = ayonApi.injectEndpoints({
+const updateActivities = api.injectEndpoints({
   endpoints: (build) => ({
     createEntityActivity: build.mutation({
       query: ({ projectName, entityType, entityId, data = {} }) => ({
@@ -104,6 +110,7 @@ const updateActivities = ayonApi.injectEndpoints({
       invalidatesTags: (result, error, { entityId, filter }) => getTags({ entityId, filter }),
     }),
   }),
+  overrideExisting: true,
 })
 
 export const {

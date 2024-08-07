@@ -9,7 +9,7 @@
  * for this file to be re-created
  */
 
-import { GraphQL } from '@queries/ayon';
+import { restApi } from './rest';
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
@@ -169,7 +169,6 @@ export type FileNode = {
 
 export type FolderAttribType = {
   __typename?: 'FolderAttribType';
-  car?: Maybe<Scalars['String']['output']>;
   clipIn?: Maybe<Scalars['Int']['output']>;
   clipOut?: Maybe<Scalars['Int']['output']>;
   /** Textual description of the entity */
@@ -180,8 +179,6 @@ export type FolderAttribType = {
   fps?: Maybe<Scalars['Float']['output']>;
   frameEnd?: Maybe<Scalars['Int']['output']>;
   frameStart?: Maybe<Scalars['Int']['output']>;
-  ftrackId?: Maybe<Scalars['String']['output']>;
-  ftrackPath?: Maybe<Scalars['String']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
@@ -189,10 +186,6 @@ export type FolderAttribType = {
   resolutionHeight?: Maybe<Scalars['Int']['output']>;
   /** Horizontal resolution */
   resolutionWidth?: Maybe<Scalars['Int']['output']>;
-  /** The Shotgrid ID of this entity. */
-  shotgridId?: Maybe<Scalars['String']['output']>;
-  /** The Shotgrid Type of this entity. */
-  shotgridType?: Maybe<Scalars['String']['output']>;
   /** Date and time when the project or task or asset was started */
   startDate?: Maybe<Scalars['DateTime']['output']>;
   tools?: Maybe<Array<Scalars['String']['output']>>;
@@ -216,6 +209,7 @@ export type FolderNode = BaseNode & {
   folderType: Scalars['String']['output'];
   hasChildren: Scalars['Boolean']['output'];
   hasProducts: Scalars['Boolean']['output'];
+  hasReviewables: Scalars['Boolean']['output'];
   hasTasks: Scalars['Boolean']['output'];
   id: Scalars['String']['output'];
   label?: Maybe<Scalars['String']['output']>;
@@ -356,8 +350,11 @@ export type KanbanNode = {
   folderLabel?: Maybe<Scalars['String']['output']>;
   folderName: Scalars['String']['output'];
   folderPath: Scalars['String']['output'];
+  hasReviewables: Scalars['Boolean']['output'];
   id: Scalars['String']['output'];
   label?: Maybe<Scalars['String']['output']>;
+  lastVersionWithReviewableProductId?: Maybe<Scalars['String']['output']>;
+  lastVersionWithReviewableVersionId?: Maybe<Scalars['String']['output']>;
   lastVersionWithThumbnailId?: Maybe<Scalars['String']['output']>;
   name: Scalars['String']['output'];
   projectCode: Scalars['String']['output'];
@@ -510,8 +507,6 @@ export type ProjectAttribType = {
   fps?: Maybe<Scalars['Float']['output']>;
   frameEnd?: Maybe<Scalars['Int']['output']>;
   frameStart?: Maybe<Scalars['Int']['output']>;
-  ftrackId?: Maybe<Scalars['String']['output']>;
-  ftrackPath?: Maybe<Scalars['String']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
@@ -519,12 +514,6 @@ export type ProjectAttribType = {
   resolutionHeight?: Maybe<Scalars['Int']['output']>;
   /** Horizontal resolution */
   resolutionWidth?: Maybe<Scalars['Int']['output']>;
-  /** The Shotgrid ID of this entity. */
-  shotgridId?: Maybe<Scalars['String']['output']>;
-  /** Push changes done to this project to Shotgrid. Requires the transmitter service. */
-  shotgridPush?: Maybe<Scalars['Boolean']['output']>;
-  /** The Shotgrid Type of this entity. */
-  shotgridType?: Maybe<Scalars['String']['output']>;
   /** Date and time when the project or task or asset was started */
   startDate?: Maybe<Scalars['DateTime']['output']>;
   tools?: Maybe<Array<Scalars['String']['output']>>;
@@ -583,6 +572,7 @@ export type ProjectNode = {
 
 
 export type ProjectNodeActivitiesArgs = {
+  activityIds?: InputMaybe<Array<Scalars['String']['input']>>;
   activityTypes?: InputMaybe<Array<Scalars['String']['input']>>;
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -930,7 +920,6 @@ export type RepresentationsConnection = {
 
 export type TaskAttribType = {
   __typename?: 'TaskAttribType';
-  car?: Maybe<Scalars['String']['output']>;
   clipIn?: Maybe<Scalars['Int']['output']>;
   clipOut?: Maybe<Scalars['Int']['output']>;
   /** Textual description of the entity */
@@ -941,8 +930,6 @@ export type TaskAttribType = {
   fps?: Maybe<Scalars['Float']['output']>;
   frameEnd?: Maybe<Scalars['Int']['output']>;
   frameStart?: Maybe<Scalars['Int']['output']>;
-  ftrackId?: Maybe<Scalars['String']['output']>;
-  ftrackPath?: Maybe<Scalars['String']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
@@ -950,10 +937,6 @@ export type TaskAttribType = {
   resolutionHeight?: Maybe<Scalars['Int']['output']>;
   /** Horizontal resolution */
   resolutionWidth?: Maybe<Scalars['Int']['output']>;
-  /** The Shotgrid ID of this entity. */
-  shotgridId?: Maybe<Scalars['String']['output']>;
-  /** The Shotgrid Type of this entity. */
-  shotgridType?: Maybe<Scalars['String']['output']>;
   /** Date and time when the project or task or asset was started */
   startDate?: Maybe<Scalars['DateTime']['output']>;
   tools?: Maybe<Array<Scalars['String']['output']>>;
@@ -978,6 +961,7 @@ export type TaskNode = BaseNode & {
   /** Parent folder of the task */
   folder: FolderNode;
   folderId: Scalars['String']['output'];
+  hasReviewables: Scalars['Boolean']['output'];
   id: Scalars['String']['output'];
   label?: Maybe<Scalars['String']['output']>;
   links: LinksConnection;
@@ -1125,7 +1109,6 @@ export type VersionAttribType = {
   fps?: Maybe<Scalars['Float']['output']>;
   frameEnd?: Maybe<Scalars['Int']['output']>;
   frameStart?: Maybe<Scalars['Int']['output']>;
-  ftrackId?: Maybe<Scalars['String']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
   intent?: Maybe<Scalars['String']['output']>;
@@ -1162,6 +1145,7 @@ export type VersionNode = BaseNode & {
   author?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['DateTime']['output'];
   data?: Maybe<Scalars['String']['output']>;
+  hasReviewables: Scalars['Boolean']['output'];
   id: Scalars['String']['output'];
   links: LinksConnection;
   name: Scalars['String']['output'];
@@ -1286,6 +1270,14 @@ export type WorkfilesConnection = {
   pageInfo: PageInfo;
 };
 
+export type GetProductVersionsQueryVariables = Exact<{
+  projectName: Scalars['String']['input'];
+  productId: Scalars['String']['input'];
+}>;
+
+
+export type GetProductVersionsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', product: { __typename?: 'ProductNode', versionList: Array<{ __typename?: 'VersionListItem', id: string, name: string, version: number }> } } };
+
 export type GetInboxHasUnreadQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -1299,9 +1291,9 @@ export type GetInboxMessagesQueryVariables = Exact<{
 }>;
 
 
-export type GetInboxMessagesQuery = { __typename?: 'Query', inbox: { __typename?: 'InboxConnection', pageInfo: { __typename?: 'PageInfo', hasPreviousPage: boolean, startCursor?: string | null, endCursor?: string | null }, edges: Array<{ __typename?: 'InboxEdge', cursor?: string | null, node: { __typename?: 'ActivityNode', projectName: string, activityId: string, activityType: string, activityData: string, referenceType: string, referenceId: string, body: string, createdAt: any, updatedAt: any, active: boolean, read: boolean, author?: { __typename?: 'UserNode', name: string, attrib: { __typename?: 'UserAttribType', fullName?: string | null } } | null, origin?: { __typename?: 'ActivityOriginNode', id: string, name: string, label?: string | null, type: string } | null, parents: Array<{ __typename?: 'ActivityOriginNode', type: string, name: string, label?: string | null }> } }> } };
+export type GetInboxMessagesQuery = { __typename?: 'Query', inbox: { __typename?: 'InboxConnection', pageInfo: { __typename?: 'PageInfo', hasPreviousPage: boolean, startCursor?: string | null, endCursor?: string | null }, edges: Array<{ __typename?: 'InboxEdge', cursor?: string | null, node: { __typename?: 'ActivityNode', projectName: string, activityId: string, activityType: string, activityData: string, referenceType: string, referenceId: string, body: string, createdAt: any, updatedAt: any, active: boolean, read: boolean, author?: { __typename?: 'UserNode', name: string, attrib: { __typename?: 'UserAttribType', fullName?: string | null } } | null, origin?: { __typename?: 'ActivityOriginNode', id: string, name: string, label?: string | null, type: string, subtype?: string | null } | null, parents: Array<{ __typename?: 'ActivityOriginNode', type: string, name: string, label?: string | null }> } }> } };
 
-export type MessageFragmentFragment = { __typename?: 'ActivityNode', projectName: string, activityId: string, activityType: string, activityData: string, referenceType: string, referenceId: string, body: string, createdAt: any, updatedAt: any, active: boolean, read: boolean, author?: { __typename?: 'UserNode', name: string, attrib: { __typename?: 'UserAttribType', fullName?: string | null } } | null, origin?: { __typename?: 'ActivityOriginNode', id: string, name: string, label?: string | null, type: string } | null, parents: Array<{ __typename?: 'ActivityOriginNode', type: string, name: string, label?: string | null }> };
+export type MessageFragmentFragment = { __typename?: 'ActivityNode', projectName: string, activityId: string, activityType: string, activityData: string, referenceType: string, referenceId: string, body: string, createdAt: any, updatedAt: any, active: boolean, read: boolean, author?: { __typename?: 'UserNode', name: string, attrib: { __typename?: 'UserAttribType', fullName?: string | null } } | null, origin?: { __typename?: 'ActivityOriginNode', id: string, name: string, label?: string | null, type: string, subtype?: string | null } | null, parents: Array<{ __typename?: 'ActivityOriginNode', type: string, name: string, label?: string | null }> };
 
 export type GetInboxUnreadCountQueryVariables = Exact<{
   important?: InputMaybe<Scalars['Boolean']['input']>;
@@ -1325,11 +1317,10 @@ export type GetProjectLatestQuery = { __typename?: 'Query', project: { __typenam
 export type GetKanbanQueryVariables = Exact<{
   projects?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
   assignees?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
 }>;
 
 
-export type GetKanbanQuery = { __typename?: 'Query', kanban: { __typename?: 'KanbanConnection', edges: Array<{ __typename?: 'KanbanEdge', node: { __typename?: 'KanbanNode', id: string, projectName: string, projectCode: string, name: string, label?: string | null, status: string, tags: Array<string>, taskType: string, assignees: Array<string>, updatedAt: any, createdAt: any, dueDate?: any | null, folderId: string, thumbnailId?: string | null, folderLabel?: string | null, folderName: string, folderPath: string, lastVersionWithThumbnailId?: string | null } }> } };
+export type GetKanbanQuery = { __typename?: 'Query', kanban: { __typename?: 'KanbanConnection', edges: Array<{ __typename?: 'KanbanEdge', node: { __typename?: 'KanbanNode', id: string, projectName: string, projectCode: string, name: string, label?: string | null, status: string, tags: Array<string>, taskType: string, assignees: Array<string>, updatedAt: any, createdAt: any, dueDate?: any | null, folderId: string, thumbnailId?: string | null, folderLabel?: string | null, folderName: string, folderPath: string, hasReviewables: boolean } }> } };
 
 export type GetKanbanProjectUsersQueryVariables = Exact<{
   projects?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
@@ -1345,9 +1336,9 @@ export type GetKanbanTasksQueryVariables = Exact<{
 }>;
 
 
-export type GetKanbanTasksQuery = { __typename?: 'Query', kanban: { __typename?: 'KanbanConnection', edges: Array<{ __typename?: 'KanbanEdge', node: { __typename?: 'KanbanNode', id: string, projectName: string, projectCode: string, name: string, label?: string | null, status: string, tags: Array<string>, taskType: string, assignees: Array<string>, updatedAt: any, createdAt: any, dueDate?: any | null, folderId: string, thumbnailId?: string | null, folderLabel?: string | null, folderName: string, folderPath: string, lastVersionWithThumbnailId?: string | null } }> } };
+export type GetKanbanTasksQuery = { __typename?: 'Query', kanban: { __typename?: 'KanbanConnection', edges: Array<{ __typename?: 'KanbanEdge', node: { __typename?: 'KanbanNode', id: string, projectName: string, projectCode: string, name: string, label?: string | null, status: string, tags: Array<string>, taskType: string, assignees: Array<string>, updatedAt: any, createdAt: any, dueDate?: any | null, folderId: string, thumbnailId?: string | null, folderLabel?: string | null, folderName: string, folderPath: string, hasReviewables: boolean } }> } };
 
-export type KanbanFragmentFragment = { __typename?: 'KanbanNode', id: string, projectName: string, projectCode: string, name: string, label?: string | null, status: string, tags: Array<string>, taskType: string, assignees: Array<string>, updatedAt: any, createdAt: any, dueDate?: any | null, folderId: string, thumbnailId?: string | null, folderLabel?: string | null, folderName: string, folderPath: string, lastVersionWithThumbnailId?: string | null };
+export type KanbanFragmentFragment = { __typename?: 'KanbanNode', id: string, projectName: string, projectCode: string, name: string, label?: string | null, status: string, tags: Array<string>, taskType: string, assignees: Array<string>, updatedAt: any, createdAt: any, dueDate?: any | null, folderId: string, thumbnailId?: string | null, folderLabel?: string | null, folderName: string, folderPath: string, hasReviewables: boolean };
 
 export const MessageFragmentFragmentDoc = `
     fragment MessageFragment on ActivityNode {
@@ -1373,6 +1364,7 @@ export const MessageFragmentFragmentDoc = `
     name
     label
     type
+    subtype
   }
   parents {
     type
@@ -1401,7 +1393,20 @@ export const KanbanFragmentFragmentDoc = `
   folderLabel
   folderName
   folderPath
-  lastVersionWithThumbnailId
+  hasReviewables
+}
+    `;
+export const GetProductVersionsDocument = `
+    query GetProductVersions($projectName: String!, $productId: String!) {
+  project(name: $projectName) {
+    product(id: $productId) {
+      versionList {
+        id
+        name
+        version
+      }
+    }
+  }
 }
     `;
 export const GetInboxHasUnreadDocument = `
@@ -1482,8 +1487,8 @@ export const GetProjectLatestDocument = `
 }
     `;
 export const GetKanbanDocument = `
-    query GetKanban($projects: [String!], $assignees: [String!], $last: Int) {
-  kanban(projects: $projects, assigneesAny: $assignees, last: $last) {
+    query GetKanban($projects: [String!], $assignees: [String!]) {
+  kanban(projects: $projects, assigneesAny: $assignees, last: 2000) {
     edges {
       node {
         ...KanbanFragment
@@ -1521,8 +1526,11 @@ export const GetKanbanTasksDocument = `
 }
     ${KanbanFragmentFragmentDoc}`;
 
-const injectedRtkApi = GraphQL.injectEndpoints({
+const injectedRtkApi = restApi.injectEndpoints({
   endpoints: (build) => ({
+    GetProductVersions: build.query<GetProductVersionsQuery, GetProductVersionsQueryVariables>({
+      query: (variables) => ({ document: GetProductVersionsDocument, variables })
+    }),
     GetInboxHasUnread: build.query<GetInboxHasUnreadQuery, GetInboxHasUnreadQueryVariables | void>({
       query: (variables) => ({ document: GetInboxHasUnreadDocument, variables })
     }),

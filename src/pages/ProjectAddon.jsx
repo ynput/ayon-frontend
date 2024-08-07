@@ -58,6 +58,48 @@ const TaskPicker = ({ callback, multiple }) => {
   )
 }
 
+const FolderPicker = ({ callback, multiple }) => {
+  const focusedFolders = useSelector((state) => state.context.focused.folders)
+
+  const errorMessage = useMemo(() => {
+    if (multiple && !focusedFolders.length) return 'Please select at least one folder'
+  }, [focusedFolders])
+
+  const footer = useMemo(() => {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}
+      >
+        <span style={{ color: 'red' }}>{errorMessage}</span>
+        <Button
+          label="Select"
+          icon="library_add_check"
+          disabled={!focusedFolders.length}
+          onClick={() => callback(multiple ? focusedFolders : focusedFolders[0])}
+        />
+      </div>
+    )
+  }, [errorMessage, focusedFolders])
+
+  return (
+    <Dialog
+      header="Select folder"
+      size="lg"
+      footer={footer}
+      isOpen={true}
+      onClose={() => callback(null)}
+      style={{ maxHeight: 'unset' }}
+    >
+      <Hierarchy style={{ flex: 1, minWidth: 250, minHeight: 400 }} />
+    </Dialog>
+  )
+}
+
 const RequestModal = ({ onClose, callback = () => {}, requestType = null, ...props }) => {
   if (!requestType) return <></>
 
@@ -68,6 +110,9 @@ const RequestModal = ({ onClose, callback = () => {}, requestType = null, ...pro
 
   if (requestType === 'taskPicker') {
     return <TaskPicker {...props} callback={onSubmit} />
+  }
+  if (requestType === 'folderPicker') {
+    return <FolderPicker {...props} callback={onSubmit} />
   }
 }
 
@@ -80,7 +125,7 @@ const ProjectAddon = ({ addonName, addonVersion, sidebar, ...props }) => {
   const projectName = useSelector((state) => state.project.name)
   const userName = useSelector((state) => state.user.name)
   const focusedFolders = context.focused.folders
-  const addonUrl = `${window.location.origin}/addons/${addonName}/${addonVersion}/frontend/?type=folder&id=9e978892e50c11ed8e8f0242ac120004`
+  const addonUrl = `${window.location.origin}/addons/${addonName}/${addonVersion}/frontend`
 
   // Modals are used to display unified interface for
   // picking entities and other tasks from the addon
@@ -143,7 +188,11 @@ const ProjectAddon = ({ addonName, addonVersion, sidebar, ...props }) => {
       {sidebarComponent}
       <Section>
         <RequestModal {...requestModal} onClose={() => setRequestModal(null)} />
-        <AddonWrapper src={addonUrl} ref={addonRef} onLoad={onAddonLoad} />
+        <AddonWrapper
+          src={`${addonUrl}/?id=${window.senderId}`}
+          ref={addonRef}
+          onLoad={onAddonLoad}
+        />
       </Section>
     </main>
   )

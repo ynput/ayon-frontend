@@ -1,6 +1,6 @@
-import { ayonApi } from '../ayon'
+import api from '@api'
 
-const getAddons = ayonApi.injectEndpoints({
+const getAddons = api.injectEndpoints({
   endpoints: (build) => ({
     //  Return a list of all addons installed on the server
 
@@ -103,20 +103,22 @@ const getAddons = ayonApi.injectEndpoints({
       invalidatesTags: ['addonList'],
     }), // setAddonVersions
 
-    setCopyAddonVariant: build.mutation({
-      query: ({ addonName, copyFrom, copyTo }) => ({
-        url: '/api/addons',
-        method: 'POST',
-        body: {
-          copyVariant: {
-            addonName,
-            copyFrom,
-            copyTo,
-          },
-        },
-      }),
-      invalidatesTags: ['addonList'],
-    }), // setCopyAddonVariant
+    // TODO: Deprecated, remove
+    // setCopyAddonVariant: build.mutation({
+    //   query: ({ addonName, copyFrom, copyTo }) => ({
+    //     url: '/api/addons',
+    //     method: 'POST',
+    //     body: {
+    //       copyVariant: {
+    //         addonName,
+    //         copyFrom,
+    //         copyTo,
+    //       },
+    //     },
+    //   }),
+    //   invalidatesTags: ['addonList'],
+    // }), // setCopyAddonVariant
+
     getAddonInstall: build.query({
       query: () => ({
         url: `/api/addons/install`,
@@ -124,6 +126,7 @@ const getAddons = ayonApi.injectEndpoints({
       }),
     }),
   }), // endpoints
+  overrideExisting: true,
 })
 
 export const {
@@ -132,7 +135,6 @@ export const {
   useGetSettingsAddonsQuery,
   useSetAddonVersionMutation,
   useSetAddonVersionsMutation,
-  useSetCopyAddonVariantMutation,
   useGetAddonInstallQuery,
   useLazyGetAddonInstallQuery,
 } = getAddons

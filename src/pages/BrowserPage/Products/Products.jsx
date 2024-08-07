@@ -26,7 +26,7 @@ import usePatchProductsListWithVersions from '@hooks/usePatchProductsListWithVer
 import useSearchFilter, { filterByFieldsAndValues } from '@hooks/useSearchFilter'
 import useColumnResize from '@hooks/useColumnResize'
 import { useUpdateEntitiesMutation } from '@queries/entity/updateEntity'
-import { ayonApi } from '@queries/ayon'
+import api from '@api'
 import useCreateContext from '@hooks/useCreateContext'
 import ViewModeToggle from './ViewModeToggle'
 import ProductsList from './ProductsList'
@@ -35,6 +35,8 @@ import NoProducts from './NoProducts'
 import { toast } from 'react-toastify'
 import { productTypes } from '@state/project'
 import * as Styled from './Products.styled'
+import { openViewer } from '@state/viewer'
+import { extractIdFromClassList } from '@containers/Feed/hooks/useTableKeyboardNavigation'
 
 const Products = () => {
   const dispatch = useDispatch()
@@ -187,10 +189,10 @@ const Products = () => {
 
       // invalidate 'version' query (specific version query)
       // we do this so that when we select this version again, it doesn't use stale version query
-      dispatch(ayonApi.util.invalidateTags(ids.map((id) => ({ type: 'version', id }))))
+      dispatch(api.util.invalidateTags(ids.map((id) => ({ type: 'version', id }))))
 
       // invalidate 'detail' query (details panel)
-      // dispatch(ayonApi.util.invalidateTags(ids.map((id) => ({ type: 'detail', id }))))
+      // dispatch(api.util.invalidateTags(ids.map((id) => ({ type: 'detail', id }))))
     } catch (error) {
       console.error(error)
 
@@ -199,12 +201,11 @@ const Products = () => {
     }
   }
 
-  const handleStatusOpen = (id) => {
+  const handleStatusOpen = (productId, versionId) => {
     // handles the edge case where the use foccusess multiple products but then changes a different status
-    if (!focusedProducts.includes(id)) {
+    if (!focusedProducts.includes(productId)) {
       // not in focused selection
-      // reset selection to status id
-      dispatch(setFocusedProducts([id]))
+      dispatch(productSelected({ products: [productId], versions: [versionId] }))
     }
   }
 
@@ -284,7 +285,7 @@ const Products = () => {
               size={resolveWidth(versionStatusWidth)}
               onChange={(v) => handleStatusChange(v, node.data.id)}
               multipleSelected={focusedProducts.length}
-              onOpen={() => handleStatusOpen(node.data.id)}
+              onOpen={() => handleStatusOpen(node.data.id, node.data.versionId)}
               style={{ maxWidth: '100%' }}
             />
           )
@@ -395,7 +396,7 @@ const Products = () => {
   // and create a list of selected product rows compatible
   // with the TreeTable component
 
-  const selectedRows = useMemo(() => {
+  const selection = useMemo(() => {
     if (focusedVersions?.length === 0) return {}
     const productIds = {}
     for (const sdata of listData) {
@@ -494,18 +495,25 @@ const Products = () => {
     }
   }
 
-  // Set the breadcrumbs when a row is clicked
-  const onRowClick = (event) => {
-    if (event.node.data.isGroup) {
-      return
-    }
+  const updateUri = (node) => {
+    const isGroup = node.isGroup
+    if (isGroup) return
 
     let uri = `ayon+entity://${projectName}/`
-    uri += `${event.node.data.parents.join('/')}/${event.node.data.folder}`
-    uri += `?product=${event.node.data.name}`
-    uri += `&version=${event.node.data.versionName}`
+    uri += `${node.parents.join('/')}/${node.folder}`
+    uri += `?product=${node.name}`
+    uri += `&version=${node.versionName}`
     dispatch(setUri(uri))
-    dispatch(onFocusChanged(event.node.data.id))
+    dispatch(onFocusChanged(node.id))
+  }
+
+  const onRowFocusChange = (event) => {
+    const id = extractIdFromClassList(event.target.classList)
+    if (!id) return
+    const node = listData.find((s) => s.id === id)
+    if (!node) return
+
+    updateUri(node)
   }
 
   const onSelectionChange = (event) => {
@@ -532,7 +540,36 @@ const Products = () => {
     dispatch(setFocusedVersions([versionId]))
   }
 
-  const ctxMenuItems = [
+  // viewer open
+  const viewerIsOpen = useSelector((state) => state.viewer.isOpen)
+
+  const handleOpenViewer = (productId, quickView) => {
+    // find the version id of the product
+    const product = listData.find((s) => s.id === productId) || {}
+    if (!product) return toast.error('No product found')
+    const { versionId, folderId } = product
+
+    // check review isn't already open
+    if (!viewerIsOpen) {
+      dispatch(
+        openViewer({
+          folderId,
+          selectedProductId: productId,
+          versionIds: [versionId],
+          projectName,
+          quickView,
+        }),
+      )
+    }
+  }
+
+  const ctxMenuItems = (id) => [
+    {
+      label: 'Open in viewer',
+      command: () => handleOpenViewer(id),
+      icon: 'play_circle',
+      shortcut: 'Spacebar',
+    },
     {
       label: 'Product detail',
       command: () => setShowDetail('product'),
@@ -545,7 +582,21 @@ const Products = () => {
     },
   ]
 
-  const [ctxMenuShow] = useCreateContext(ctxMenuItems)
+  const [ctxMenuShow] = useCreateContext([])
+
+  const handleContextMenu = (e, id) => {
+    ctxMenuShow(e, ctxMenuItems(id))
+  }
+
+  const handleKeyDown = (e) => {
+    if (e.key === ' ') {
+      e.preventDefault()
+      const firstSelected = Object.keys(selection)[0]
+      if (firstSelected) {
+        handleOpenViewer(firstSelected, true)
+      }
+    }
+  }
 
   //
   // Render
@@ -589,7 +640,11 @@ const Products = () => {
           disabled={focusedFolders.length > 1 ? ['grid'] : []}
         />
       </Toolbar>
-      <TablePanel style={{ overflow: 'hidden' }} onContextMenu={handleTablePanelContext}>
+      <TablePanel
+        style={{ overflow: 'hidden' }}
+        onContextMenu={handleTablePanelContext}
+        onKeyDown={handleKeyDown}
+      >
         <EntityDetail
           projectName={projectName}
           entityType={showDetail || 'product'}
@@ -601,11 +656,11 @@ const Products = () => {
           <ProductsGrid
             isLoading={isLoading || isFetching}
             data={tableData}
-            onItemClick={onRowClick}
+            onItemClick={updateUri}
             onSelectionChange={onSelectionChange}
-            onContext={ctxMenuShow}
+            onContext={handleContextMenu}
             onContextMenuSelectionChange={onContextMenuSelectionChange}
-            selection={selectedRows}
+            selection={selection}
             productTypes={productTypes}
             statuses={statusesObject}
             lastSelected={lastFocused}
@@ -616,11 +671,11 @@ const Products = () => {
         )}
         {viewMode === 'list' && (
           <ProductsList
-            data={tableData}
-            selectedRows={selectedRows}
+            treeData={tableData}
+            selection={selection}
             onSelectionChange={onSelectionChange}
-            onRowClick={onRowClick}
-            ctxMenuShow={ctxMenuShow}
+            onFocus={onRowFocusChange}
+            ctxMenuShow={handleContextMenu}
             onContextMenuSelectionChange={onContextMenuSelectionChange}
             setColumnWidths={setColumnWidths}
             columns={columns}

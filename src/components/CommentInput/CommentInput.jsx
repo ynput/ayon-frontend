@@ -1,11 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import * as Styled from './CommentInput.styled'
 import { Button, Icon, SaveButton } from '@ynput/ayon-react-components'
-import 'react-quill-ayon/dist/quill.bubble.css'
 
 import ReactQuill, { Quill } from 'react-quill-ayon'
 var Delta = Quill.import('delta')
-import { classNames } from 'primereact/utils'
+import clsx from 'clsx'
 
 import { toast } from 'react-toastify'
 import CommentMentionSelect from '../CommentMentionSelect/CommentMentionSelect'
@@ -503,14 +502,15 @@ const CommentInput = ({
   return (
     <>
       <Styled.AutoHeight
-        className={classNames({ isOpen, isEditing })}
+        className={clsx({ isOpen, isEditing })}
         onDragOver={handleDragOver}
         onDragLeave={() => setIsDropping(false)}
         onDrop={handleDrop}
         onClick={() => setIsDropping(false)}
+        onKeyDown={(e) => e.stopPropagation()}
       >
         <Styled.Comment
-          className={classNames('block-shortcuts', {
+          className={clsx('block-shortcuts', {
             isOpen,
             isClosed: !isOpen || disabled,
             isEditing,
@@ -592,11 +592,12 @@ const CommentInput = ({
                 className="comment"
                 active={!!editorValue || !!files.length}
                 onClick={handleSubmit}
+                disabled={isLoading}
               />
             </Styled.Buttons>
           </Styled.Footer>
 
-          <Styled.Dropzone className={classNames({ show: isDropping && isOpen })}>
+          <Styled.Dropzone className={clsx({ show: isDropping && isOpen })}>
             <Icon icon="cloud_upload" />
           </Styled.Dropzone>
         </Styled.Comment>

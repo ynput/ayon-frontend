@@ -66,6 +66,12 @@ const EventDetail = ({ id, setSelectedEvent, onFilter, events }) => {
     type = topic.split('.')[1]
   }
 
+  let entityId = summary.entityId
+  if (topic.includes('reviewable')) {
+    type = 'version'
+    entityId = summary.versionId
+  }
+
   return (
     <Section wrap style={{ gap: 4 }}>
       <DetailHeader
@@ -145,12 +151,18 @@ const EventDetail = ({ id, setSelectedEvent, onFilter, events }) => {
             </EventTile>
           </RowStyled>
         )}
-        {summary.entityId && (
+        {entityId && (
           <RowStyled>
             <h2>Entity</h2>
-            <EntityTile id={summary.entityId} type={type} disableHover projectName={project}>
+            <EntityTile id={entityId} type={type} disableHover projectName={project}>
               <Button
                 icon="filter_alt"
+                variant="text"
+                onClick={() => onFilter(type)}
+                data-tooltip={'Filter by ' + type}
+              />
+              <Button
+                icon="east"
                 variant="text"
                 onClick={() => onFilter(type)}
                 data-tooltip={'Filter by ' + type}

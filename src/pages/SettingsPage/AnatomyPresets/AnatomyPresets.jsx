@@ -24,7 +24,6 @@ import {
   useDeletePresetMutation,
   useUpdatePresetMutation,
   useUpdatePrimaryPresetMutation,
-  useUnsetPrimaryPresetMutation,
 } from '@queries/anatomy/updateAnatomy'
 import confirmDelete from '@helpers/confirmDelete'
 
@@ -49,13 +48,14 @@ const AnatomyPresets = () => {
   useEffect(() => {
     // preselect primary preset if there is one
     // otherwise select default preset
-    const primaryPreset = presetList.find((p) => p.primary === 'PRIMARY')
+    if (isLoading) return
+    const primaryPreset = presetList.find((p) => p.primary)
     if (primaryPreset) {
       setSelectedPreset(primaryPreset.name)
     } else {
       setSelectedPreset('_')
     }
-  }, [presetList])
+  }, [presetList.length])
 
   const isSelectedPrimary = useMemo(() => {
     // find preset in list
@@ -80,7 +80,6 @@ const AnatomyPresets = () => {
   const [updatePreset, { isLoading: isUpdating }] = useUpdatePresetMutation()
   const [deletePreset] = useDeletePresetMutation()
   const [updatePrimaryPreset] = useUpdatePrimaryPresetMutation()
-  const [unsetPrimaryPreset] = useUnsetPrimaryPresetMutation()
 
   // SAVE PRESET
   const savePreset = (name) => {
@@ -118,23 +117,11 @@ const AnatomyPresets = () => {
     updatePrimaryPreset({ name })
       .unwrap()
       .then(() => {
-        if (name) {
+        if (name !== '_') {
           toast.info(`Preset ${name} set as primary`)
         } else {
-          toast.info(`Unset primary preset`)
+          toast.info(`Preset set to built in default`)
         }
-      })
-      .catch((err) => {
-        toast.error(err.message)
-      })
-  }
-
-  // UNSET PRIMARY PRESET
-  const unsetPrimary = (name) => {
-    unsetPrimaryPreset({ name })
-      .unwrap()
-      .then(() => {
-        toast.info(`Unset primary preset`)
       })
       .catch((err) => {
         toast.error(err.message)
@@ -225,17 +212,10 @@ const AnatomyPresets = () => {
             onClick={() => setPrimaryPreset(selectedPreset)}
           />
           <Button
-            label="Unset primary"
-            icon="flag"
-            disabled={!isSelectedPrimary}
-            onClick={() => unsetPrimary(selectedPreset)}
-          />
-          <Button
             label="Delete preset"
             icon="delete"
             disabled={selectedPreset === '_'}
             onClick={() => handleDeletePreset(selectedPreset, isSelectedPrimary)}
-            style={{ display: selectedPreset === '_' ? 'none' : 'flex' }}
           />
           <Button
             label="Save as a new preset"

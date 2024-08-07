@@ -16,7 +16,12 @@ import { toast } from 'react-toastify'
 
 import ColumnsWrapper from './ColumnsWrapper'
 import DashboardTasksToolbar from './DashboardTasksToolbar/DashboardTasksToolbar'
-import { onCollapsedColumnsChanged, onTaskSelected } from '@state/dashboard'
+import {
+  onCollapsedColumnsChanged,
+  onDraggingEnd,
+  onDraggingStart,
+  onTaskSelected,
+} from '@state/dashboard'
 import KanBanCardOverlay from './KanBanCard/KanBanCardOverlay'
 import { StringParam, useQueryParam, withDefault } from 'use-query-params'
 import UserDashboardList from './UserDashboardList/UserDashboardList'
@@ -40,7 +45,7 @@ const UserDashboardKanBan = ({
   const [view, setView] = useQueryParam('view', withDefault(StringParam, 'kanban'))
 
   const selectedTasks = useSelector((state) => state.dashboard.tasks.selected)
-  const setSelectedTasks = (tasks) => dispatch(onTaskSelected(tasks))
+  const setSelectedTasks = (ids, types) => dispatch(onTaskSelected({ ids, types }))
 
   const selectedProjects = useSelector((state) => state.dashboard.selectedProjects)
 
@@ -186,14 +191,27 @@ const UserDashboardKanBan = ({
   const [activeDraggingId, setActiveDraggingId] = useState(null)
 
   const handleDragStart = (event) => {
+    const isSelected = selectedTasks.includes(event.active.id)
+
+    let draggingTasks = []
+    // set dragging id
+    if (isSelected) draggingTasks = selectedTasks
+    else draggingTasks = [event.active.id]
+
+    dispatch(onDraggingStart(draggingTasks))
+
     setActiveDraggingId(event.active.id)
     // select card
     if (!selectedTasks.includes(event.active.id)) {
-      setSelectedTasks([event.active.id])
+      // get the task
+      const task = tasks.find((t) => t.id === event.active.id)
+      setSelectedTasks([event.active.id], [task.taskType])
     }
   }
 
   const handleDragEnd = async (event) => {
+    dispatch(onDraggingEnd())
+
     setActiveDraggingId(null)
     // first check if field can be edited on task
     if (splitByField.isEditable === false)
@@ -243,10 +261,7 @@ const UserDashboardKanBan = ({
   return (
     <>
       <Section style={{ height: '100%', zIndex: 10, padding: 0, overflow: 'hidden' }}>
-        <DashboardTasksToolbar
-          {...{ view, setView, isLoadingProjectUsers }}
-          allUsers={projectUsers}
-        />
+        <DashboardTasksToolbar {...{ view, setView, isLoadingProjectUsers }} />
         {view === 'kanban' && (
           <DndContext
             sensors={sensors}
@@ -255,6 +270,7 @@ const UserDashboardKanBan = ({
             autoScroll={false}
           >
             <ColumnsWrapper
+              allTasks={tasks}
               tasksColumns={tasksColumns}
               fieldsColumns={groupedOpenFieldColumns}
               groupByValue={groupByValue}

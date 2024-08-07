@@ -1,0 +1,89 @@
+import { HTMLAttributes, useEffect, useState } from 'react'
+import { Icon } from '@ynput/ayon-react-components'
+import clsx from 'clsx'
+import * as Styled from './Thumbnail.styled'
+
+interface ThumbnailProps extends HTMLAttributes<HTMLDivElement> {
+  projectName: string
+  entityType: string
+  entityId: string
+  icon?: string
+  entityUpdatedAt?: string
+  isLoading?: boolean
+  shimmer?: boolean
+  className?: string
+  disabled?: boolean
+  src?: string
+  hoverIcon?: string
+}
+
+const Thumbnail = ({
+  projectName,
+  entityType,
+  entityId,
+  icon,
+  entityUpdatedAt,
+  isLoading,
+  shimmer,
+  className,
+  disabled,
+  src,
+  hoverIcon,
+  ...props
+}: ThumbnailProps) => {
+  let url =
+    src || (projectName && `/api/projects/${projectName}/${entityType}s/${entityId}/thumbnail`)
+  const queryArgs = `?updatedAt=${entityUpdatedAt}`
+  url += queryArgs
+  const isWrongEntity = ['product'].includes(entityType)
+
+  const [error, setError] = useState(false)
+  const [loaded, setLoaded] = useState(false)
+  useEffect(() => {
+    // Reset loaded and error states when src changes
+    setLoaded(false)
+    setError(false)
+    const imageUrl = src || `${url}`
+
+    // Function to fetch image and check status code
+    const fetchImage = async () => {
+      try {
+        const response = await fetch(imageUrl, { cache: 'force-cache' })
+        if (response.status === 200) {
+          setLoaded(true)
+        } else {
+          throw new Error('Image not OK')
+        }
+      } catch (error) {
+        setError(true) // Handle error (e.g., set error state)
+        setLoaded(true)
+      }
+    }
+
+    if (url) {
+      fetchImage()
+    }
+  }, [url])
+
+  return (
+    <Styled.Card
+      className={clsx(className, 'thumbnail', {
+        shimmer: shimmer && (isLoading || !loaded),
+        loaded,
+        error,
+        clickable: !!props.onClick,
+      })}
+      {...props}
+    >
+      {(!isLoading || !loaded) && !disabled && (
+        <Icon icon={icon || 'image'} className="type-icon" />
+      )}
+      {entityType && projectName && !(isWrongEntity || !entityId) && (
+        <Styled.Image alt={`Entity thumbnail ${entityId}`} src={url} />
+      )}
+      {hoverIcon && <Icon icon={hoverIcon} className="hover-icon" />}
+    </Styled.Card>
+  )
+}
+
+export default Thumbnail

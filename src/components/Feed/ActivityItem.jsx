@@ -27,6 +27,7 @@ const ActivityItem = ({
   projectInfo = {},
   createdAts = [],
   editProps,
+  filter,
   ...props
 }) => {
   switch (activity.activityType) {
@@ -39,21 +40,27 @@ const ActivityItem = ({
     case 'assignee.remove':
       return <ActivityAssigneeChange activity={activity} {...props} />
     case 'version.publish':
-      return <ActivityVersions {...{ activity, projectInfo }} {...props} />
+      return <ActivityVersions {...{ activity, projectInfo, filter }} {...props} />
     case 'group':
       // fromGroup prevents infinite recursion
-      return !fromGroup && <ActivityGroup activities={activity.items} {...props} />
-    case 'end':
       return (
-        <FeedEnd>
-          <>
-            {`${upperFirst(props.entityType)}${createdAts.length > 1 ? 's' : ''} created:`}
-            {createdAts.map((c, i) => (
-              <ActivityDate date={c} key={i} style={{ margin: 0 }} />
-            ))}
-          </>
-        </FeedEnd>
+        !fromGroup && <ActivityGroup editProps={editProps} activities={activity.items} {...props} />
       )
+    case 'end':
+      if (filter === 'activity') {
+        return (
+          <FeedEnd>
+            <>
+              {`${upperFirst(props.entityType)}${createdAts.length > 1 ? 's' : ''} created:`}
+              {createdAts.map((c, i) => (
+                <ActivityDate date={c} key={i} style={{ margin: 0 }} />
+              ))}
+            </>
+          </FeedEnd>
+        )
+      } else {
+        return null
+      }
     default:
       return null
   }

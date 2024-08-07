@@ -15,6 +15,33 @@ const StyledProfileRow = styled.div`
   gap: var(--base-gap-large);
 `
 
+export const ProfileRow = ({ rowData }) => {
+  const { name, self, isMissing } = rowData
+  return (
+    <StyledProfileRow>
+      <UserImage
+        name={name}
+        size={25}
+        style={{
+          transform: 'scale(0.8)',
+          minHeight: 25,
+          minWidth: 25,
+          maxHeight: 25,
+          maxWidth: 25,
+        }}
+        highlight={self}
+      />
+      <span
+        style={{
+          color: isMissing ? 'var(--color-hl-error)' : 'inherit',
+        }}
+      >
+        {name}
+      </span>
+    </StyledProfileRow>
+  )
+}
+
 const UserList = ({
   selectedProjects,
   selectedUsers,
@@ -28,10 +55,18 @@ const UserList = ({
   isSelfSelected,
 }) => {
   // Selection
-  const selection = useMemo(
-    () => userList.filter((user) => selectedUsers.includes(user.name)),
-    [selectedUsers, selectedProjects, userList],
-  )
+  const selection = useMemo(() => {
+    return userList.filter((user) => selectedUsers.includes(user.name))
+  }, [selectedUsers, selectedProjects, userList])
+
+  const onContextMenu = (e) => {
+    let newSelectedUsers = [...selectedUsers]
+    if (!selectedUsers.includes(e.data.name)) {
+      newSelectedUsers = [e.data.name]
+    }
+    onSelectUsers(newSelectedUsers)
+    ctxMenuShow(e.originalEvent, ctxMenuItems(newSelectedUsers))
+  }
 
   const onSelectionChange = (e) => {
     if (!onSelectUsers) return
@@ -41,8 +76,8 @@ const UserList = ({
   }
 
   // IDEA: Can these go into the details panel as well?
-  const ctxMenuTableItems = useMemo(
-    () => [
+  const ctxMenuItems = (newSelectedUsers) => {
+    return [
       {
         label: 'Set username',
         disabled: selection.length !== 1,
@@ -58,30 +93,14 @@ const UserList = ({
       {
         label: 'Delete selected',
         disabled: !selection.length || isSelfSelected,
-        command: () => onDelete(),
+        command: () => onDelete(newSelectedUsers),
         icon: 'delete',
         danger: true,
       },
-    ],
-    [selection, isSelfSelected, setShowRenameUser, setShowSetPassword, onDelete],
-  )
-
-  const [ctxMenuTableShow] = useCreateContext(ctxMenuTableItems)
-
-  const ProfileRow = ({ rowData }) => {
-    const { name, self } = rowData
-    return (
-      <StyledProfileRow>
-        <UserImage
-          name={name}
-          size={25}
-          style={{ margin: 'auto', transform: 'scale(0.8)', maxHeight: 25, maxWidth: 25 }}
-          highlight={self}
-        />
-        <span>{self ? `${name} (me)` : name}</span>
-      </StyledProfileRow>
-    )
+    ]
   }
+
+  const [ctxMenuShow] = useCreateContext()
 
   // create 10 dummy rows
   const loadingData = useMemo(() => {
@@ -106,13 +125,9 @@ const UserList = ({
           dataKey="name"
           selectionMode="multiple"
           className={`user-list-table ${isLoading ? 'table-loading' : ''}`}
+          rowClassName={(rowData) => ({'inactive' : !rowData.active})}
           onSelectionChange={onSelectionChange}
-          onContextMenu={(e) => ctxMenuTableShow(e.originalEvent)}
-          onContextMenuSelectionChange={(e) => {
-            if (!selectedUsers.includes(e.value.name)) {
-              onSelectUsers([...selection, e.value.name])
-            }
-          }}
+          onContextMenu={onContextMenu}
           selection={selection}
           columnResizeMode="expand"
           resizableColumns
@@ -125,9 +140,8 @@ const UserList = ({
             field="name"
             header="Username"
             sortable
-            body={(rowData) => ProfileRow({ rowData })}
+            body={(rowData) => <ProfileRow rowData={rowData} />}
             resizeable
-            style={{ width: 150 }}
           />
           <Column field="attrib.fullName" header="Full name" sortable resizeable />
           <Column field="attrib.email" header="Email" sortable />

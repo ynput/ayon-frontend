@@ -1,52 +1,35 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import * as Styled from './DetailsPanelHeader.styled'
-import copyToClipboard from '@helpers/copyToClipboard'
 import StackedThumbnails from '@pages/EditorPage/StackedThumbnails'
-import { classNames } from 'primereact/utils'
+import clsx from 'clsx'
 import { isEqual, union, upperFirst } from 'lodash'
 import { useUpdateEntitiesMutation } from '@queries/entity/updateEntity'
 import { toast } from 'react-toastify'
-import Actions from '@components/Actions/Actions'
+import Actions from '@containers/Actions/Actions'
 import FeedFilters from '../FeedFilters/FeedFilters'
 import usePatchProductsListWithVersions from '@hooks/usePatchProductsListWithVersions'
-
-// DUMMY ACTIONS DATA
-const actions = [
-  { id: 'nuke', icon: 'nuke.png', pinned: 'actions2D' },
-  { id: 'afterEffects', icon: 'after-effects.png', pinned: 'actions2D' },
-  { id: 'maya', icon: 'maya.png', pinned: 'actions3D' },
-  { id: 'houdini', icon: 'houdini.png', pinned: 'actions3D' },
-  { id: 'photoshop', icon: 'photoshop.png' },
-]
-
-const actionTaskTypes = {
-  actions2D: ['compositing', 'roto', 'matchmove', 'edit', 'paint'],
-  actions3D: [
-    'modeling',
-    'texture',
-    'lookdev',
-    'rigging',
-    'layout',
-    'setdress',
-    'animation',
-    'fx',
-    'lighting',
-  ],
-}
+import { useGetChecklistsCountQuery } from '@queries/activities/getActivities'
+import ThumbnailUploader from '@components/ThumbnailUploader/ThumbnailUploader'
+import { useDispatch } from 'react-redux'
+import { openViewer } from '@state/viewer'
+import { Icon } from '@ynput/ayon-react-components'
 
 const DetailsPanelHeader = ({
   entityType,
+  entitySubTypes,
   entities = [],
   disabledAssignees = [],
   users = [],
   statusesOptions = [],
   disabledStatuses,
   tagsOptions = [],
-  onClose,
   isSlideOut,
   isFetching,
   isCompact = false,
+  scope,
 }) => {
+  const dispatch = useDispatch()
+
   // for selected entities, get flat list of assignees
   const entityAssignees = useMemo(
     () => union(...entities.map((entity) => entity.users)),
@@ -67,6 +50,23 @@ const DetailsPanelHeader = ({
     }
   }
   const projectName = entities.length > 1 ? null : firstEntity?.projectName
+
+  const entityIds = entities
+    .filter((e) => e.projectName === firstEntity?.projectName && e.id)
+    .map((entity) => entity.id)
+
+  // get checklists count
+  const { data: checklistCount = {} } = useGetChecklistsCountQuery(
+    {
+      projectName: firstEntity?.projectName,
+      entityIds,
+    },
+    { skip: !firstEntity?.projectName || !entityIds.length },
+  )
+  let checklistsLabel
+  if (checklistCount.total > 0) {
+    checklistsLabel = `${checklistCount.checked}/${checklistCount.total}`
+  }
 
   const thumbnails = useMemo(() => {
     if (!entities[0]) return []
@@ -145,48 +145,74 @@ const DetailsPanelHeader = ({
     }
   }
 
-  const handleThumbnailUpload = ({ id, thumbnailId }) => {
+  const [isDraggingFile, setIsDraggingFile] = useState(false)
+  const handleThumbnailUpload = (thumbnails = []) => {
+    // always set isDraggingFile to false
+    // hides the thumbnail uploader
+    setIsDraggingFile(false)
+
+    // check something was actually uploaded
+    if (!entities.length) return
     // patching the updatedAt will force a refresh of the thumbnail url
     const newUpdatedAt = new Date().toISOString()
-    const entity = entities.find((entity) => entity.id === id)
-    const currentAssignees = entity?.users || []
-    const operations = [
-      { id, projectName, data: { updatedAt: newUpdatedAt, thumbnailId }, currentAssignees },
-    ]
 
-    const versionPatch = {
-      productId: entity.productId,
-      versionUpdatedAt: newUpdatedAt,
-      versionThumbnailId: thumbnailId,
+    let operations = [],
+      versionPatches = []
+
+    for (const entity of thumbnails) {
+      const entityToPatch = entities.find((e) => e.id === entity.id)
+      if (!entityToPatch) continue
+      const thumbnailId = entity.thumbnailId
+      const currentAssignees = entity.users || []
+
+      operations.push({
+        id: entityToPatch.id,
+        projectName: entityToPatch.projectName,
+        data: { updatedAt: newUpdatedAt },
+        currentAssignees,
+      })
+
+      const versionPatch = {
+        productId: entityToPatch.productId,
+        versionUpdatedAt: newUpdatedAt,
+        versionThumbnailId: thumbnailId,
+      }
+
+      versionPatches.push(versionPatch)
     }
 
     // update productsList cache with new status
-    let productsPatch = patchProductsListWithVersions([versionPatch])
+    let productsPatch = patchProductsListWithVersions(versionPatches)
     try {
       updateEntities({ operations, entityType })
     } catch (error) {
       productsPatch?.undo()
-      productsPatch?.undo()
     }
   }
 
-  const fullPath = firstEntity?.path || ''
-  const pathArray = fullPath.split('/')
-  const handleCopyPath = () => {
-    copyToClipboard(fullPath)
-  }
+  const handleThumbnailClick = () => {
+    let versionIds,
+      id = firstEntity.id,
+      entityTypeKey = entityType + 'Id'
 
-  const pinned = actions
-    .filter((action) => {
-      const actions = actionTaskTypes[action.pinned]
-      if (!actions) return false
-      return actions.some(
-        (action) => action.toLowerCase() === firstEntity?.entitySubType?.toLowerCase(),
+    if (entityType === 'version') {
+      versionIds = [firstEntity.id]
+      id = firstEntity.productId
+      entityTypeKey = 'productId'
+    }
+
+    console.log(entityTypeKey)
+
+    if (id) {
+      dispatch(
+        openViewer({
+          [entityTypeKey]: id,
+          projectName,
+          versionIds,
+        }),
       )
-    })
-    .map((action) => action.id)
-
-  const portalId = 'dashboard-details-header'
+    }
+  }
 
   const hasUser =
     ['task', 'version', 'representation'].includes(entityType) &&
@@ -203,35 +229,27 @@ const DetailsPanelHeader = ({
   }
 
   return (
-    <Styled.Grid id={portalId} className={classNames('details-panel-header', { isCompact })}>
-      {onClose && (
-        <Styled.CloseButton
-          onClick={onClose}
-          icon="close"
-          variant="text"
-          data-shortcut="Esc"
-          data-tooltip-delay={0}
-        />
-      )}
-      <Styled.Path
-        value={pathArray.join(' / ')}
-        align="left"
-        onClick={handleCopyPath}
-        isCopy
-        icon="content_copy"
-        className={classNames('path', { onClose, isLoading })}
-      />
-      <Styled.Header className={classNames('titles', { isCompact })}>
-        <StackedThumbnails
-          isLoading={isLoading}
-          shimmer={isLoading}
-          style={{ aspectRatio: '1' }}
-          thumbnails={thumbnails}
-          projectName={projectName}
-          portalId={portalId}
-          onUpload={handleThumbnailUpload}
-        />
-        <Styled.Content className={classNames({ isLoading })}>
+    <Styled.Grid
+      className={clsx('details-panel-header', { isCompact })}
+      onDragEnter={() => setIsDraggingFile(true)}
+    >
+      <Styled.Header className={clsx('titles', { isCompact, isLoading })}>
+        <Styled.ThumbnailWrapper>
+          <StackedThumbnails
+            isLoading={isLoading}
+            shimmer={isLoading}
+            thumbnails={thumbnails}
+            projectName={projectName}
+            onClick={thumbnails.length === 1 ? handleThumbnailClick : undefined}
+            hoverIcon={'play_circle'}
+          />
+          {!isMultiple && firstEntity?.hasReviewables && (
+            <Styled.Playable className="playable">
+              <Icon icon="play_circle" />
+            </Styled.Playable>
+          )}
+        </Styled.ThumbnailWrapper>
+        <Styled.Content className={clsx({ isLoading })}>
           <h2>{!isMultiple ? firstEntity?.title : `${entities.length} ${entityType}s selected`}</h2>
           <div className="sub-title">
             <span>{upperFirst(entityType)} - </span>
@@ -246,7 +264,7 @@ const DetailsPanelHeader = ({
         invert
         style={{ maxWidth: 'unset' }}
         onChange={(value) => handleUpdate('status', value)}
-        className={classNames('status-select', { isLoading })}
+        className={clsx('status-select', { isLoading })}
         align={isCompact ? 'right' : 'left'}
       />
       {!isCompact &&
@@ -268,7 +286,12 @@ const DetailsPanelHeader = ({
             }
           />
         ))}
-      <Actions options={actions} pinned={pinned} isLoading={isLoading} />
+      <Actions
+        entities={entities}
+        entityType={entityType}
+        entitySubTypes={entitySubTypes}
+        isLoadingEntity={isFetching}
+      />
       <Styled.TagsSelect
         value={union(...tagsValues)}
         isMultiple={tagsValues.some((v) => !isEqual(v, tagsValues[0]))}
@@ -284,7 +307,27 @@ const DetailsPanelHeader = ({
         isLoading={isLoading}
         entityType={entityType}
         className="filters"
+        overrides={{
+          checklists: {
+            label: checklistsLabel,
+          },
+        }}
+        scope={scope}
       />
+
+      {isDraggingFile && (
+        <ThumbnailUploader
+          isPortal
+          onFinish={handleThumbnailUpload}
+          onDragLeave={() => setIsDraggingFile(false)}
+          onDragOver={(e) => e.preventDefault()}
+          className="thumbnail-uploader"
+          entities={entities}
+          entityType={entityType}
+          entityId={firstEntity?.id}
+          entityUpdatedAt={firstEntity?.updatedAt}
+        />
+      )}
     </Styled.Grid>
   )
 }

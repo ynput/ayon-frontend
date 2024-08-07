@@ -27,7 +27,7 @@ function remapNestedProperties(object, remappingItems) {
 }
 
 // we flatten the activity object a little bit
-export const transformActivityData = (data = {}, currentUser) => {
+export const transformActivityData = (data = {}, currentUser, deduplicate = true) => {
   const activities = []
   const activitiesData = data?.project?.activities
   const pageInfo = activitiesData?.pageInfo || {}
@@ -46,7 +46,10 @@ export const transformActivityData = (data = {}, currentUser) => {
     const activityNode = data
 
     // check that the activity hasn't already been added.
-    if (activities.some(({ activityId }) => activityId === activityNode.activityId)) {
+    if (
+      activities.some(({ activityId }) => activityId === activityNode.activityId) &&
+      deduplicate
+    ) {
       // oh no this shouldn't happen!
       // referenceType priorities in order: origin, mention, relation
 
@@ -147,4 +150,29 @@ export const transformTooltipData = (data = {}, type) => {
     default:
       return {}
   }
+}
+
+export const countChecklists = (data = {}) => {
+  const activities = data?.project?.activities?.edges?.map((edge) => edge?.node)
+  // get all bodies from each activity
+  const bodies = activities.map((a) => a.body)
+  const ids = activities.map((a) => a.activityId)
+
+  // count how many checklists are in each body
+
+  // count unchecked * [ ] items
+  const unChecked = bodies.reduce((acc, body) => {
+    if (!body) return acc
+    const matches = body.match(/\*\s\[\s\]/g)
+    return acc + (matches ? matches.length : 0)
+  }, 0)
+
+  // count checked * [x] items
+  const checked = bodies.reduce((acc, body) => {
+    if (!body) return acc
+    const matches = body.match(/\*\s\[x\]/g)
+    return acc + (matches ? matches.length : 0)
+  }, 0)
+
+  return { total: unChecked + checked, checked, unChecked, ids }
 }

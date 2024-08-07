@@ -3,7 +3,8 @@ import ListGroup from '../ListGroup/ListGroup'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { onCollapsedColumnsChanged, onTaskSelected } from '@state/dashboard'
-import { getFakeTasks, usePrefetchEntity, useTaskClick } from '../../util'
+import { getFakeTasks } from '../../util'
+import { useTaskSpacebarViewer, usePrefetchEntity, useTaskClick } from '../../hooks'
 import { useUpdateEntitiesMutation } from '@queries/entity/updateEntity'
 import { toast } from 'react-toastify'
 import getPreviousTagElement from '@helpers/getPreviousTagElement'
@@ -27,12 +28,21 @@ const UserDashboardList = ({
   // keep track of the longest folder name and task name
   const [minWidths, setMinWidths] = useState({})
 
+  // filter out fields that have no tasks
+  const filteredFields = useMemo(() => {
+    return groupedFields.filter((field) => {
+      const column = groupedTasks[field.id]
+      return column && column.tasks.length > 0
+    })
+  }, [groupedFields, groupedTasks])
+
   // sort the groupedTasks by id alphabetically based on groupByValue sortBy
+  // unless the groupByValue is status, then we keep the order of the statuses
   const sortedFields = useMemo(() => {
     if (groupByValue[0] && groupByValue[0].id !== 'status') {
       const asc = groupByValue[0].sortOrder
       // sort by id
-      return [...groupedFields].sort((a, b) => {
+      return [...filteredFields].sort((a, b) => {
         const hasATasksButBDoesNot = a.tasksCount === 0 && b.tasksCount > 0
         const hasBTasksButADoesNot = b.tasksCount === 0 && a.tasksCount > 0
         // If one group has tasks and the other does not, put the group without tasks at the end
@@ -47,9 +57,10 @@ const UserDashboardList = ({
           return b.id.localeCompare(a.id)
         }
       })
+    } else {
+      return filteredFields
     }
-    return groupedFields
-  }, [groupedFields, groupByValue])
+  }, [filteredFields, groupByValue])
 
   // store a reference to the list items in the ref
   useEffect(() => {
@@ -73,23 +84,23 @@ const UserDashboardList = ({
     }, 0)
 
     setMinWidths({ folder: minFolderWidth, task: minTaskWidth })
-  }, [containerRef.current, isLoading, groupedTasks, groupedFields])
+  }, [containerRef.current, isLoading, groupedTasks, filteredFields])
 
   const dispatch = useDispatch()
   // get all task ids in order
   const tasks = useMemo(() => {
-    return groupedFields.flatMap(({ id }) => {
+    return filteredFields.flatMap(({ id }) => {
       const column = groupedTasks[id]
       if (!column) return []
       return column.tasks
     })
-  }, [groupedTasks, groupedFields])
+  }, [groupedTasks, filteredFields])
 
   const taskIds = useMemo(() => tasks.map((t) => t.id), [tasks])
 
   // SELECTED TASKS
   const selectedTasks = useSelector((state) => state.dashboard.tasks.selected)
-  const setSelectedTasks = (tasks) => dispatch(onTaskSelected(tasks))
+  const setSelectedTasks = (ids, types) => dispatch(onTaskSelected({ ids, types }))
 
   const selectedTasksData = useMemo(
     () => tasks.filter((task) => selectedTasks.includes(task.id)),
@@ -98,10 +109,10 @@ const UserDashboardList = ({
 
   // PREFETCH TASK WHEN HOVERING
   // we keep track of the ids that have been pre-fetched to avoid fetching them again
-  const handlePrefetch = usePrefetchEntity(dispatch, projectsInfo, 300)
+  const handlePrefetch = usePrefetchEntity(dispatch, projectsInfo, 300, 'dashboard')
 
   // HANDLE TASK CLICK
-  const taskClick = useTaskClick(dispatch)
+  const taskClick = useTaskClick(dispatch, tasks)
 
   // KEYBOARD SUPPORT
   const handleKeyDown = (e) => {
@@ -121,7 +132,13 @@ const UserDashboardList = ({
         // holding shift key, add to the selected tasks
         newIds.unshift(...selectedTasks)
       }
-      setSelectedTasks(newIds)
+
+      // get task for newIds
+      const newTasks = tasks.filter((task) => newIds.includes(task.id))
+      // get taskTypes
+      const newTypes = newTasks.map((task) => task.taskType)
+
+      setSelectedTasks(newIds, newTypes)
 
       // get the next li element based on the nextIndex from the ref
       const nextLi = listItemsRef.current[nextIndex]
@@ -163,7 +180,13 @@ const UserDashboardList = ({
         // holding shift key, add to the selected tasks
         newIds.push(...selectedTasks)
       }
-      setSelectedTasks(newIds)
+
+      // get task for newIds
+      const newTasks = tasks.filter((task) => newIds.includes(task.id))
+      // get taskTypes
+      const newTypes = newTasks.map((task) => task.taskType)
+
+      setSelectedTasks(newIds, newTypes)
 
       // get the previous li element based on the prevIndex from the ref
       const prevLi = listItemsRef.current[prevIndex]
@@ -284,8 +307,12 @@ const UserDashboardList = ({
     [collapsedGroups],
   )
 
+  // HANDLE SPACEBAR VIEWER OPEN SHORTCUT
+  const spacebarShortcut = useTaskSpacebarViewer({ tasks })
+
   return (
     <>
+      {spacebarShortcut}
       <Shortcuts shortcuts={shortcuts} deps={[collapsedGroups]} />
       <Styled.ListContainer onKeyDown={handleKeyDown} className="tasks-list">
         <Styled.Inner ref={containerRef}>

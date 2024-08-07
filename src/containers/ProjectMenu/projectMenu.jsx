@@ -4,25 +4,26 @@ import { useDispatch, useSelector } from 'react-redux'
 import { selectProject } from '@state/project'
 import { selectProject as selectProjectContext, setUri } from '@state/context'
 import { onProjectChange } from '@state/editor'
-import { ayonApi } from '@queries/ayon'
+import api from '@api'
 import MenuList from '@components/Menu/MenuComponents/MenuList'
 import { useListProjectsQuery } from '@queries/project/getProject'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { InputText, Section } from '@ynput/ayon-react-components'
 import useCreateContext from '@hooks/useCreateContext'
-import useLocalStorage from '@hooks/useLocalStorage'
+import useLocalStorage from '@/hooks/useLocalStorage'
 import ProjectButton from '@components/ProjectButton/ProjectButton'
 import { createPortal } from 'react-dom'
 import { useShortcutsContext } from '@context/shortcutsContext'
-import { classNames } from 'primereact/utils'
+import clsx from 'clsx'
 import { onProjectOpened } from '/src/features/dashboard'
+import { useUpdateUserPreferencesMutation } from '@/services/user/updateUser'
 
 const ProjectMenu = ({ isOpen, onHide }) => {
   const navigate = useNavigate()
   const dispatch = useDispatch()
   const menuRef = useRef(null)
   const searchRef = useRef(null)
-  const [pinned, setPinned] = useLocalStorage('projectMenu-pinned', [])
+  const [oldPinned, setOldPinned] = useLocalStorage('projectMenu-pinned', [])
   const [searchOpen, setSearchOpen] = useState(false)
   const [search, setSearch] = useState('')
 
@@ -50,23 +51,54 @@ const ProjectMenu = ({ isOpen, onHide }) => {
   }, [menuRef.current, isOpen])
 
   const projectSelected = useSelector((state) => state.project.name)
-  const user = useSelector((state) => state.user)
-  const isUser = user?.data?.isUser
+  const username = useSelector((state) => state.user?.name)
+  const isUser = useSelector((state) => state.user?.data?.isUser)
+  const pinnedState =
+    useSelector((state) => state.user?.data?.frontendPreferences?.pinnedProjects) || []
+  // merge pinned from user and local storage
+  const pinned = [...new Set([...pinnedState, ...oldPinned])]
 
   const { data: projects = [] } = useListProjectsQuery({ active: true })
 
   const [showContext] = useCreateContext([])
 
+  const [updateUserPreferences] = useUpdateUserPreferencesMutation()
+
+  const updatePinned = async (pinnedProjects) => {
+    try {
+      // update user preferences
+      await updateUserPreferences({
+        name: username,
+        preferences: { pinnedProjects: pinnedProjects },
+      }).unwrap()
+
+      // if local storage had pinned, remove it
+      if (oldPinned.length > 0) {
+        setOldPinned([])
+        // remove local storage
+        localStorage.removeItem('projectMenu-pinned')
+      }
+
+      return true
+    } catch (error) {
+      console.error('Error updating user preferences', error)
+      return false
+    }
+  }
+
   const handlePinChange = (projectName, e) => {
     e.stopPropagation()
-    // e.originalEvent.preventDefault()
+    const newPinned = [...pinned]
     if (pinned.includes(projectName)) {
       // remove from pinned
-      setPinned(pinned.filter((p) => p !== projectName))
+      newPinned.splice(newPinned.indexOf(projectName), 1)
     } else {
       // add to pinned
-      setPinned([...pinned, projectName])
+      newPinned.push(projectName)
     }
+
+    // update user preferences
+    updatePinned(newPinned)
   }
 
   const buildContextMenu = (projectName) => {
@@ -112,7 +144,7 @@ const ProjectMenu = ({ isOpen, onHide }) => {
         <ProjectButton
           label={project.name}
           code={project.code}
-          className={classNames('project-item', { pinned: pinned.includes(project.name) })}
+          className={clsx('project-item', { pinned: pinned.includes(project.name) })}
           highlighted={projectSelected === project.name}
           onPin={(e) => handlePinChange(project.name, e)}
           onEdit={!isUser && ((e) => handleEditClick(e, project.name))}
@@ -175,7 +207,7 @@ const ProjectMenu = ({ isOpen, onHide }) => {
     // reset editor
     dispatch(onProjectChange(projectName))
     // remove editor query caches
-    dispatch(ayonApi.util.invalidateTags(['branch', 'workfile', 'hierarchy', 'project', 'product']))
+    dispatch(api.util.invalidateTags(['branch', 'workfile', 'hierarchy', 'project', 'product']))
     // reset uri
     dispatch(setUri(`ayon+entity://${projectName}`))
     // set dashboard projects

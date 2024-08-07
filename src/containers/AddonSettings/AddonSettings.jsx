@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo  } from 'react'
 import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 
@@ -324,7 +324,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
 
     const message = (
       <>
-        <p>This action will instanlty remove the selected override.</p>
+        <p>This action will instantly remove the selected override.</p>
         <p>Are you sure you want to continue?</p>
       </>
     )
@@ -364,7 +364,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
     // Remove all overrides for this addon (within current project and variant)
     const message = (
       <>
-        <p>This action will instanlty remove all overrides for this addon.</p>
+        <p>This action will instantly remove all overrides for this addon.</p>
         <p>Are you sure you want to proceed?</p>
       </>
     )
@@ -400,7 +400,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   const onPinOverride = async (addon, siteId, path) => {
     const message = (
       <>
-        <p>This action will instanlty pin the current value as an override. </p>
+        <p>This action will instantly pin the current value as an override. </p>
         <p>Are you sure you want to proceed?</p>
       </>
     )
@@ -696,7 +696,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
         <Section className={showHelp && 'settings-help-visible'}>
           {settingsListHeader}
           <Section>
-            <ScrollPanel className="transparent nopad" style={{ flexGrow: 1 }}>
+            <ScrollPanel className="transparent nopad" style={{ flexGrow: 1 }} id="settings-scroll-panel">
               {selectedAddons
                 .filter((addon) => !addon.isBroken)
                 .reverse()
@@ -759,7 +759,11 @@ const AddonSettings = ({ projectName, showSites = false }) => {
       <SplitterPanel size={20}>
         <Section wrap style={{ minWidth: 300 }}>
           <Toolbar>{commitToolbar}</Toolbar>
-          <SettingsChangesTable changes={changedKeys} unpins={unpinnedKeys} onRevert={onRevertChange} />
+          <SettingsChangesTable 
+            changes={changedKeys} 
+            unpins={unpinnedKeys} 
+            onRevert={onRevertChange} 
+          />
           {/*}
           <ScrollPanel className="transparent nopad" style={{ flexGrow: 1 }}>
             <pre style={{ whiteSpace: 'pre-wrap' }}>{JSON.stringify(localData, null, 2)}</pre>

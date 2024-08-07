@@ -1,6 +1,6 @@
 // NOTE: THIS DOES NOT RUN WHEN PATCHING THE TASKS
 
-import { upperCase, upperFirst } from 'lodash'
+import { isEmpty, upperCase, upperFirst } from 'lodash'
 import { productTypes } from '@state/project'
 import getEntityTypeIcon from '@helpers/getEntityTypeIcon'
 
@@ -59,13 +59,24 @@ export const transformTasksData = ({ projectName, tasks = [], code }) =>
 
 export const transformEntityData = ({ entity = {}, entityType, projectName, projectInfo = {} }) => {
   // fields that are top level for all entity types
-  const sharedFields = ['id', 'tags', 'status', 'updatedAt', 'createdAt', 'thumbnailId', 'attrib']
+  const sharedFields = [
+    'id',
+    'tags',
+    'status',
+    'updatedAt',
+    'createdAt',
+    'thumbnailId',
+    'attrib',
+    'hasReviewables',
+  ]
   const baseDetailsData = sharedFields.reduce((acc, field) => {
     if (entity[field]) {
       acc[field] = entity[field]
     }
     return acc
   }, {})
+
+  if (isEmpty(entity)) return null
 
   baseDetailsData['projectName'] = projectName
   baseDetailsData['entityType'] = entityType
@@ -76,6 +87,10 @@ export const transformEntityData = ({ entity = {}, entityType, projectName, proj
       const tasks = projectInfo.task_types || []
       const entitySubType = entity.taskType
       const icon = tasks.find((task) => task.name === entitySubType)?.icon
+      const latestVersion = entity.versions?.edges?.map((edge) => edge.node)?.[0]
+      const versionId = latestVersion?.id
+      const productId = latestVersion?.productId
+
       return {
         ...baseDetailsData,
         name: entity.name,
@@ -84,8 +99,11 @@ export const transformEntityData = ({ entity = {}, entityType, projectName, proj
         users: entity.assignees,
         path: path,
         folderId: entity.folderId,
+        folder: entity.folder,
         icon: icon || getEntityTypeIcon('task'),
         entitySubType: entitySubType,
+        versionId: versionId,
+        productId: productId,
       }
     }
     case 'version': {

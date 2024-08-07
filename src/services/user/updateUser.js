@@ -1,6 +1,7 @@
-import { ayonApi } from '../ayon'
+import { updateUserPreferences } from '@/features/user'
+import api from '@api'
 
-const updateUser = ayonApi.injectEndpoints({
+const updateUser = api.injectEndpoints({
   endpoints: (build) => ({
     updateUser: build.mutation({
       query: ({ name, patch }) => ({
@@ -20,7 +21,7 @@ const updateUser = ayonApi.injectEndpoints({
       queryFn: async (updates, { dispatch }) => {
         const results = await Promise.all(
           updates.map(({ name, patch }) => {
-            return dispatch(ayonApi.endpoints.updateUser.initiate({ name, patch }))
+            return dispatch(api.endpoints.updateUser.initiate({ name, patch }))
           }),
         )
         console.log(results)
@@ -60,6 +61,19 @@ const updateUser = ayonApi.injectEndpoints({
         { type: 'user', id: 'LIST' },
         ['info'],
       ],
+      async onQueryStarted({ preferences }, { dispatch, queryFulfilled, getState }) {
+        // get current preferences
+        const currentPreferences = getState().user?.data?.frontendPreferences || {}
+
+        // update redux store with new preferences
+        dispatch(updateUserPreferences(preferences))
+        try {
+          await queryFulfilled
+        } catch {
+          // revert to previous preferences
+          dispatch(updateUserPreferences(currentPreferences))
+        }
+      }, // onQueryStarted
     }),
     addUser: build.mutation({
       query: ({ name, user }) => ({
@@ -95,6 +109,7 @@ const updateUser = ayonApi.injectEndpoints({
       invalidatesTags: (res, err, { token }) => [{ type: 'session', id: token }],
     }),
   }),
+  overrideExisting: true,
 })
 
 export const {

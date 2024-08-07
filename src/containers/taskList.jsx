@@ -12,6 +12,10 @@ import { toast } from 'react-toastify'
 import { useGetTasksQuery } from '@queries/getTasks'
 import useCreateContext from '@hooks/useCreateContext'
 import NoEntityFound from '@components/NoEntityFound'
+import { openViewer } from '@/features/viewer'
+import useTableKeyboardNavigation, {
+  extractIdFromClassList,
+} from './Feed/hooks/useTableKeyboardNavigation'
 
 const TaskList = ({ style = {}, autoSelect = false }) => {
   const tasksTypes = useSelector((state) => state.project.tasks)
@@ -54,8 +58,15 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
 
       const matchedTasksIds = matchedTasks.map((task) => task.data.id)
       const matchedTasksNames = matchedTasks.map((task) => task.data.name)
+      const matchedTasksSubTypes = matchedTasks.map((task) => task.data.taskType)
 
-      dispatch(setFocusedTasks({ ids: matchedTasksIds, names: matchedTasksNames }))
+      dispatch(
+        setFocusedTasks({
+          ids: matchedTasksIds,
+          names: matchedTasksNames,
+          subTypes: matchedTasksSubTypes,
+        }),
+      )
       // set pairing
       setPairs(matchedTasksIds)
     }
@@ -80,18 +91,17 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
 
     setPairs(taskIds)
 
-    const names = []
+    const names = [],
+      subTypes = []
     for (const tid of taskIds) {
       const task = tasksData.find((t) => t.data?.id === tid)
-      if (task) names.push(task.data?.name)
+      if (task) {
+        names.push(task.data?.name)
+        subTypes.push(task.data?.taskType)
+      }
     }
 
-    dispatch(setFocusedTasks({ ids: taskIds, names }))
-  }
-
-  const dispatchFocusedTasks = (taskId) => {
-    dispatch(setPairing([{ taskId: taskId }]))
-    dispatch(setFocusedTasks({ ids: [taskId] }))
+    dispatch(setFocusedTasks({ ids: taskIds, names, subTypes }))
   }
 
   const handleFilterProductsBySelected = (selected = []) => {
@@ -106,8 +116,40 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
     dispatch(updateBrowserFilters({ productTaskTypes: uniqueTaskTypes }))
   }
 
+  // viewer open
+  const viewerIsOpen = useSelector((state) => state.viewer.isOpen)
+
+  const openInViewer = (id, quickView) => {
+    if (id && !viewerIsOpen) {
+      dispatch(openViewer({ taskId: id, projectName: projectName, quickView }))
+    }
+  }
+  const handleTableKeyDown = useTableKeyboardNavigation({
+    tableRef,
+    treeData: tasksData,
+    selection: selectedTasks,
+    onSelectionChange: ({ object }) => onSelectionChange({ value: object }),
+  })
+
+  const handleKeyDown = (event) => {
+    if (event.key === ' ') {
+      event.preventDefault()
+      const firstSelected = Object.keys(selectedTasks)[0]
+      openInViewer(firstSelected, true)
+    }
+
+    // if using arrow keys change selection
+    handleTableKeyDown(event)
+  }
+
   // CONTEXT MENU
   const ctxMenuItems = (selected = []) => [
+    {
+      label: 'Open in viewer',
+      icon: 'play_circle',
+      shortcut: 'Spacebar',
+      command: () => openInViewer(selected[0], false),
+    },
     {
       label: `Filter products by task${selected.length > 1 ? 's' : ''}`,
       icon: 'filter_list',
@@ -120,20 +162,22 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
     },
   ]
 
+  const [ctxMenuShow] = useCreateContext()
+
   const onContextMenu = (event) => {
     let newFocused = [...focusedTasks]
     const itemId = event.node.data.id
     if (itemId && !focusedTasks?.includes(itemId)) {
       // if the selection does not include the clicked node, new selection is the clicked node
-      newFocused = [itemId]
+      const subType = event.node.data.taskType
+      const name = event.node.data.name
       // update selection state
-      dispatchFocusedTasks(itemId)
+      dispatch(setPairing([{ taskId: itemId }]))
+      dispatch(setFocusedTasks({ ids: [itemId], subTypes: [subType], names: [name] }))
     }
 
     ctxMenuShow(event.originalEvent, ctxMenuItems(newFocused))
   }
-
-  const [ctxMenuShow] = useCreateContext([])
 
   // create 10 dummy rows
   const loadingData = useMemo(() => {
@@ -197,8 +241,12 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
     return <>Error</>
   }
 
-  const onRowClick = (event) => {
-    const node = event.node.data
+  // updates the URI on focus change
+  const onFocus = (event) => {
+    const id = extractIdFromClassList(event.target.classList)
+    if (!id) return
+    const node = tasksData.find((s) => s.key === id)?.data
+    if (!node) return
     let uri = `ayon+entity://${projectName}/${node.folderPath}`
     uri += `?task=${node.name}`
     dispatch(setUri(uri))
@@ -215,7 +263,7 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
     if (tableHeader?.contains(e.target) || table?.contains(e.target)) return
 
     // deselect all
-    dispatch(setFocusedTasks({ ids: [], names: [] }))
+    dispatch(setFocusedTasks({ ids: [], names: [], subTypes: [] }))
     // remove paring
     dispatch(setPairing([]))
   }
@@ -246,12 +294,18 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
             emptyMessage=" "
             selectionMode="multiple"
             selectionKeys={selectedTasks}
-            onSelectionChange={(e) => onSelectionChange(e)}
-            onContextMenu={(e) => onContextMenu(e)}
-            onRowClick={onRowClick}
+            onSelectionChange={onSelectionChange}
+            onContextMenu={onContextMenu}
             className={isFetching ? 'table-loading' : undefined}
-            onClick={handleDeselect}
             ref={tableRef}
+            rowClassName={(rowData) => ({ ['id-' + rowData.key]: true, compact: true })}
+            pt={{
+              root: {
+                onKeyDown: handleKeyDown,
+                onFocus: onFocus,
+                onClick: handleDeselect,
+              },
+            }}
           >
             <Column field="name" header="Task" expander="true" body={nameRenderer} />
             {folderIds.length > 1 && <Column field="folderName" header="Folder" />}

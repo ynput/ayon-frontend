@@ -10,8 +10,8 @@ import {
   useGetReleaseQuery,
   useInstallPresetMutation,
   useLazyGetReleaseQuery,
+  useGetReleasesQuery,
 } from '@queries/onBoarding/onBoarding'
-import { useGetReleasesQuery } from '@queries/getRelease'
 import useLocalStorage from '@hooks/useLocalStorage'
 import { useLazyGetBundleListQuery } from '@queries/bundles/getBundles'
 import { useCreateBundleMutation } from '@queries/bundles/updateBundles'
@@ -48,7 +48,7 @@ const userFormFields = [
   },
 ]
 
-const createBundleFromRelease = (release, selectedAddons, bundleList) => {
+const createBundleFromRelease = ({ release, selectedAddons, selectedPlatforms, bundleList }) => {
   const addons = {}
   for (const name of selectedAddons) {
     // find addon in release
@@ -61,17 +61,22 @@ const createBundleFromRelease = (release, selectedAddons, bundleList) => {
   const installerVersion = release.installers[0]?.version
   const dependencyPackages = {}
   for (const depPackage of release.dependencyPackages) {
+    // skip if platform is not selected
+    if (!selectedPlatforms.includes(depPackage.platform)) continue
     dependencyPackages[depPackage.platform] = depPackage.filename
   }
 
   const name = getNewBundleName(release.name, bundleList)
+
+  // check if there is already a production bundles
+  const hasProduction = bundleList.some((bundle) => bundle?.isProduction)
 
   return {
     name,
     addons,
     installerVersion,
     dependencyPackages,
-    isProduction: true,
+    isProduction: !hasProduction,
   }
 }
 
@@ -111,11 +116,30 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
   // console.log({ ynputConnect })
   // step 2
   const [userForm, setUserForm] = useState(initUserForm)
-  // step 3
+  // step 5
   const [selectedPreset, setSelectedPreset] = useState(null)
 
-  // step 4
+  // step 6
   const [selectedAddons, setSelectedAddons] = useState([])
+
+  // step 7
+  // guess the users operating system
+  const guessedPlatform = useMemo(() => {
+    let platform
+
+    if (navigator.userAgentData && navigator.userAgentData.platform) {
+      platform = navigator.userAgentData.platform?.toLowerCase()
+    }
+
+    if (!platform) return []
+
+    if (platform.includes('win')) return ['windows']
+    if (platform.includes('mac')) return ['darwin']
+    if (platform.includes('linux')) return ['linux']
+    return []
+  }, [])
+
+  const [selectedPlatforms, setSelectedPlatforms] = useState(guessedPlatform)
 
   // get selected release data
   const { data: release = {}, isFetching: isLoadingAddons } = useGetReleaseQuery(
@@ -189,18 +213,22 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
 
       // sources = [{type: url, url: 'https://...'}, {type: file, url: 'filename.exe'}]
       // for every installer, get all the sources urls and filter out the ones that are not urls
-      const installers = release.installers.reduce((acc, installer) => {
-        const sources = installer.sources.filter(({ type, url }) => type === 'http' && !!url)
-        return [...acc, ...sources.map(({ url }) => ({ url, data: installer }))]
-      }, [])
+      const installers = release.installers
+        .filter((installer) => selectedPlatforms.includes(installer.platform)) // Filter installers by selected platforms
+        .reduce((acc, installer) => {
+          const sources = installer.sources.filter(({ type, url }) => type === 'http' && !!url)
+          return [...acc, ...sources.map(({ url }) => ({ url, data: installer }))]
+        }, [])
 
       // same as above but for dep packages
-      const depPackages = release.dependencyPackages.reduce((acc, depPackage) => {
-        const sources = depPackage.sources.filter(({ type, url }) => type === 'http' && !!url)
-        return [...acc, ...sources.map(({ url }) => ({ url, data: depPackage }))]
-      }, [])
+      const depPackages = release.dependencyPackages
+        .filter((depPackage) => selectedPlatforms.includes(depPackage.platform))
+        .reduce((acc, depPackage) => {
+          const sources = depPackage.sources.filter(({ type, url }) => type === 'http' && !!url)
+          return [...acc, ...sources.map(({ url }) => ({ url, data: depPackage }))]
+        }, [])
 
-      // got to next step
+      // go to next step
       nextStep()
 
       // create bundle we release
@@ -227,7 +255,12 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
         // get bundle list
         const bundleList = (await getBundleList({ archived: true }).unwrap()) || []
         // first create the bundle from the release
-        const bundle = createBundleFromRelease(release, selectedAddons, bundleList)
+        const bundle = createBundleFromRelease({
+          release,
+          selectedAddons,
+          selectedPlatforms,
+          bundleList,
+        })
 
         await createBundle({ data: bundle, force: true }).unwrap()
       }
@@ -250,6 +283,8 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
     setSelectedPreset,
     selectedAddons,
     setSelectedAddons,
+    selectedPlatforms,
+    setSelectedPlatforms,
     onSubmit: handleSubmit,
     setUserForm,
     userForm,

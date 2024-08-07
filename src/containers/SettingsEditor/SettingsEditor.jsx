@@ -1,10 +1,37 @@
 import Form from '@rjsf/core'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import styled from 'styled-components'
 
 import { TextWidget, SelectWidget, CheckboxWidget, DateTimeWidget } from './widgets'
 import { FieldTemplate, ObjectFieldTemplate, ArrayFieldTemplate } from './fields'
 import './SettingsEditor.sass'
+
+
+const waitForElm = (selector, timeout = 1000) => {
+    return new Promise((resolve, reject) => {
+        if (document.querySelector(selector)) {
+            return resolve(document.querySelector(selector));
+        }
+
+        const observer = new MutationObserver(mutations => {
+            if (document.querySelector(selector)) {
+                observer.disconnect();
+                resolve(document.querySelector(selector));
+            }
+        });
+
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+
+        setTimeout(() => {
+            observer.disconnect();
+            reject(new Error(`Element with selector "${selector}" did not appear within ${timeout}ms`));
+        }, timeout);
+    });
+}
+
 
 const FormWrapper = styled.div`
   [data-fieldid='${(props) => props.currentSelection}'] {
@@ -107,12 +134,10 @@ const SettingsEditor = ({
   changedKeys,
   context,
 }) => {
-  if (!schema) {
-    // TODO: maybe a spinner or something?
-    return <div></div>
-  }
+
 
   const [localBreadcrumbs, setLocalBreadcrumbs] = useState([])
+  const formWrapperRef = useRef()
 
   const originalOverrides = useMemo(() => {
     const result = buildOverrides(originalData, true)
@@ -125,6 +150,8 @@ const SettingsEditor = ({
   }, [originalData, overrides])
 
   const formContext = useMemo(() => {
+    if (!schema)
+        return {}
     const formOverrides = buildOverrides(formData)
 
     for (const key in formOverrides) {
@@ -158,6 +185,28 @@ const SettingsEditor = ({
   }
 
   const totallyRealBreadcrumbs = breadcrumbs === undefined ? localBreadcrumbs : breadcrumbs
+  const currentId = totallyRealBreadcrumbs?.length && `root_${totallyRealBreadcrumbs.join('_')}`
+
+  useEffect(() => {
+    if (!currentId) return
+    const wrapper = document.getElementById('settings-scroll-panel')
+    if (!wrapper) return
+
+    waitForElm(`[data-fieldid='${currentId}']`)
+    .then((el) => {
+      const rect = el.getBoundingClientRect()
+      const wrapperRect = wrapper.getBoundingClientRect()
+      if (rect.top > wrapperRect.top && rect.top < wrapperRect.bottom) 
+        return
+      el.scrollIntoView({ behavior: 'instant', block: 'start' })
+    })
+  }
+  , [currentId])
+
+  if (!schema) {
+    // TODO: maybe a spinner or something?
+    return <div></div>
+  }
 
   const fullContext = {
     ...context,
@@ -165,12 +214,12 @@ const SettingsEditor = ({
     onSetChangedKeys: onSetChangedKeys || noop,
     onSetBreadcrumbs: setBc,
     breadcrumbs: totallyRealBreadcrumbs,
+    currentId: currentId,
   }
 
-  const currentId = totallyRealBreadcrumbs && `root_${totallyRealBreadcrumbs.join('_')}`
 
   return (
-    <FormWrapper currentSelection={currentId}>
+    <FormWrapper currentSelection={currentId} ref={formWrapperRef}>
       <Form
         schema={schema}
         uiSchema={uiSchema}

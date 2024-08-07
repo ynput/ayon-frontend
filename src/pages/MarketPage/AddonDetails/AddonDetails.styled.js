@@ -1,4 +1,4 @@
-import { Button, Panel, getShimmerStyles } from '@ynput/ayon-react-components'
+import { Button, Dropdown, Panel, getShimmerStyles } from '@ynput/ayon-react-components'
 import ReactMarkdown from 'react-markdown'
 import styled from 'styled-components'
 
@@ -47,6 +47,43 @@ export const Right = styled.div`
     background-color: unset;
     ${getShimmerStyles(undefined, undefined, { opacity: 1 })}
   }
+`
+
+export const Download = styled.div`
+  display: flex;
+  gap: var(--base-gap-small);
+  width: 100%;
+
+  button {
+    flex: 1;
+  }
+`
+
+export const VersionDropdown = styled(Dropdown)`
+  button {
+    background-color: var(--md-sys-color-surface-container-highest);
+    &:hover {
+      background-color: var(--md-sys-color-surface-container-highest-hover);
+    }
+
+    & > div {
+      padding: 0 6px;
+      border: none;
+      & > div {
+        display: none;
+      }
+    }
+  }
+`
+
+export const VersionDropdownItem = styled.div`
+  display: flex;
+  gap: var(--base-gap-large);
+  align-items: center;
+  justify-content: space-between;
+  height: 32px;
+  padding: 0px 8px;
+  padding-right: 16px;
 `
 
 // header is in the left column and contains icon, title and verification status
@@ -106,6 +143,7 @@ export const Description = styled(ReactMarkdown)`
     )}
     border-radius: var(--border-radius);
     min-height: 80px;
+    overflow: hidden;
   }
 `
 
@@ -135,12 +173,18 @@ export const MetaPanel = styled.div`
 
 export const MetaPanelRow = styled.div`
   display: flex;
+  width: 100%;
   flex-direction: column;
   gap: var(--base-gap-small);
+
+  .link {
+    text-decoration: underline;
+  }
 
   .value {
     display: flex;
     flex-direction: column;
+    min-height: 24px;
   }
 
   .more:hover {
@@ -151,9 +195,21 @@ export const MetaPanelRow = styled.div`
 
 export const UseButton = styled(Button)`
   padding: 2px 6px;
-  width: fit-content;
-  margin-left: auto;
+  width: 100%;
+  max-width: fit-content;
+  justify-content: start;
   gap: var(--base-gap-small);
+  span {
+    width: auto;
+    overflow: hidden;
+    white-space: nowrap;
+    display: block;
+    text-overflow: ellipsis;
+  }
+
+  .label {
+    flex: 1;
+  }
 `
 
 export const ErrorCard = styled(Panel)`
@@ -164,5 +220,28 @@ export const ErrorCard = styled(Panel)`
 
   button {
     border: var(--md-sys-color-on-error-container) 1px solid;
+  }
+`
+
+export const ExternalLInk = styled.a`
+  display: flex;
+  align-items: start;
+  padding: 2px 6px;
+  width: 100%;
+  justify-content: start;
+  gap: var(--base-gap-small);
+  border-radius: var(--border-radius-m);
+  &:hover {
+    background-color: var(--md-sys-color-surface-container-highest);
+  }
+  span {
+    width: auto;
+    overflow: hidden;
+    white-space: nowrap;
+    display: inline;
+    text-overflow: ellipsis;
+    &.label {
+      flex: 1;
+    }
   }
 `

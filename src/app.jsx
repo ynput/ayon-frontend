@@ -45,7 +45,7 @@ import { NotificationsProvider } from '@context/notificationsContext'
 import Header from '@containers/header'
 import ProtectedRoute from '@containers/ProtectedRoute'
 import FileUploadPreview from '@containers/FileUploadPreview/FileUploadPreview'
-import PreviewDialog from '@containers/Preview/PreviewDialog'
+import { ViewerDialog } from '@containers/Viewer'
 
 // state
 import { login } from '@state/user'
@@ -55,6 +55,8 @@ import { useLazyGetInfoQuery } from '@queries/auth/getAuth'
 
 // hooks
 import useTooltip from '@hooks/Tooltip/useTooltip'
+import WatchActivities from './containers/WatchActivities'
+import LauncherAuthPage from '@pages/LauncherAuthPage'
 
 const App = () => {
   const user = useSelector((state) => state.user)
@@ -76,6 +78,7 @@ const App = () => {
 
   useEffect(() => {
     setLoading(true)
+
     getInfo()
       .unwrap()
       .then((response) => {
@@ -94,6 +97,9 @@ const App = () => {
               accessToken: storedAccessToken,
             }),
           )
+
+          // clear any auth-redirect-params local storage
+          localStorage.removeItem('auth-redirect-params')
 
           if (!response.attributes.length) {
             toast.error('Unable to load attributes. Something is wrong')
@@ -118,22 +124,14 @@ const App = () => {
   const [handleMouse, tooltipComponent] = useTooltip()
 
   useEffect(() => {
-    const root = document.getElementById('root')
-    const portal = document.body.lastElementChild
+    const body = document.body
 
-    // attach mouseOver event listener to root element
-    root.addEventListener('mouseover', handleMouse)
-
-    if (portal) {
-      portal.addEventListener('mouseover', handleMouse)
-    }
+    // attach mouseOver event listener to body element
+    body.addEventListener('mouseover', handleMouse)
 
     // cleanup
     return () => {
-      root.removeEventListener('mouseover', handleMouse)
-      if (portal) {
-        portal.removeEventListener('mouseover', handleMouse)
-      }
+      body.removeEventListener('mouseover', handleMouse)
     }
   }, [])
 
@@ -144,6 +142,7 @@ const App = () => {
     () => (
       <ErrorBoundary FallbackComponent={ErrorFallback}>
         <Favicon />
+        <WatchActivities />
         <Suspense fallback={<LoadingPage />}>
           <RestartProvider>
             <ContextMenuProvider>
@@ -162,7 +161,7 @@ const App = () => {
                         >
                           <Header />
                           <ShareDialog />
-                          <PreviewDialog />
+                          <ViewerDialog />
                           <ConfirmDialog />
                           <FileUploadPreview />
                           <Routes>
@@ -291,6 +290,12 @@ const App = () => {
   // Then use the state of the app to determine which component to render
 
   if (loading) return loadingComponent
+
+  // Get authorize_url from query params
+  const urlParams = new URLSearchParams(window.location.search)
+  const authRedirect = urlParams.get('auth_redirect')
+  // return launcher auth flow
+  if (authRedirect) return <LauncherAuthPage user={user} redirect={authRedirect} />
 
   if (window.location.pathname.startsWith('/passwordReset')) {
     if (!user.name) return <PasswordResetPage />

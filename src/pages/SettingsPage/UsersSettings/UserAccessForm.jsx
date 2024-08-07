@@ -23,7 +23,7 @@ const NoteStyled = styled.span`
 `
 
 const UserAccessForm = ({ accessGroupsData, formData, onChange, disabled, selectedProjects }) => {
-  const isUserAdmin = useSelector((state) => state.user.data.isAdmin)
+  const authenticatedUser = useSelector((state) => state.user.data)
 
   const userLevels = [
     { label: 'User', value: 'user' },
@@ -31,9 +31,8 @@ const UserAccessForm = ({ accessGroupsData, formData, onChange, disabled, select
   ]
 
   // only admins can
-  if (isUserAdmin) {
+  if (authenticatedUser.isAdmin) {
     userLevels.push({ label: 'Admin', value: 'admin' })
-    userLevels.push({ label: 'Service', value: 'service' })
   }
 
   const activeOptions = [
@@ -46,12 +45,13 @@ const UserAccessForm = ({ accessGroupsData, formData, onChange, disabled, select
   }
 
   const isUser = formData?.userLevel === 'user'
+  const isManager = formData?.userLevel === 'manager'
   const isAdmin = formData?.userLevel === 'admin'
 
-  const defaultAccessGroups = formData?.defaultAccessGroups
+  const defaultAccessGroups = formData?.defaultAccessGroups || []
 
   // {user1: {project1: [accessGroup1, accessGroup2], project2: [accessGroup1, accessGroup2]}}
-  const usersAccessGroups = formData?.accessGroups
+  const usersAccessGroups = formData?.accessGroups || []
 
   // merge accessGroups into one array based on the selectedProjects, check if there are mixed fields (one AG on one project, another AG on another project)
   const mergedAccessGroups = []
@@ -110,6 +110,22 @@ const UserAccessForm = ({ accessGroupsData, formData, onChange, disabled, select
     updateFormData('accessGroups', newUsersAccessGroups)
   }
 
+  const isDeveloperSwitchDisabled = () => isUser || isManager || !authenticatedUser.isAdmin
+
+  const getTooltip = () => {
+    if (isUser) {
+      return 'Users cannot be developers'
+    }
+    if (isManager) {
+      return 'Managers cannot be developers'
+    }
+    if (authenticatedUser.isManager) {
+      return 'Only admins can set developers'
+    }
+
+    return 'Developers have access to enhanced tools and features'
+  }
+
   return (
     <>
       <b>Access Control</b>
@@ -141,19 +157,11 @@ const UserAccessForm = ({ accessGroupsData, formData, onChange, disabled, select
         </FormRowStyled>
 
         <FormRowStyled label="Developer">
-          <div
-            data-tooltip={
-              isUser
-                ? 'Users cannot be developers'
-                : 'Developers have access to enhanced tools and features.'
-            }
-            data-tooltip-delay={0}
-            style={{ width: 'fit-content' }}
-          >
+          <div data-tooltip={getTooltip()} data-tooltip-delay={0} style={{ width: 'fit-content' }}>
             <InputSwitch
               checked={formData?.isDeveloper}
               onChange={(e) => updateFormData('isDeveloper', e.target.checked)}
-              disabled={isUser}
+              disabled={isDeveloperSwitchDisabled()}
               style={{
                 opacity: disabled ? 0.5 : 1,
               }}

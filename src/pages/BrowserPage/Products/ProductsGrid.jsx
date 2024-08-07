@@ -5,7 +5,7 @@ import { Button, EntityCard, Icon } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 import PerfectScrollbar from 'react-perfect-scrollbar'
 import 'react-perfect-scrollbar/dist/css/styles.css'
-import { classNames } from 'primereact/utils'
+import clsx from 'clsx'
 import Shortcuts from '@containers/Shortcuts'
 
 const StyledGridLayout = styled(PerfectScrollbar)`
@@ -84,7 +84,7 @@ const ProductsGrid = ({
 
   const handleContext = (e, id) => {
     onContextMenuSelectionChange({ value: id })
-    onContext(e)
+    onContext(e, id)
   }
 
   data = useMemo(() => {
@@ -157,11 +157,7 @@ const ProductsGrid = ({
 
     onSelectionChange(newSelection)
     // updates the breadcrumbs
-    onItemClick({
-      node: {
-        data: product,
-      },
-    })
+    onItemClick(product)
   }
 
   const [collapsedGroups, setCollapsedGroups] = useState([])
@@ -229,16 +225,14 @@ const ProductsGrid = ({
         zIndex: 1,
       }}
       onClick={() => onSelectionChange({ value: {} })}
+      onKeyDown={(e) => e.key === ' ' && e.preventDefault()}
     >
       <Shortcuts shortcuts={shortcuts} deps={[collapsedGroups]} />
       {Object.entries(groupedData).map(([groupName, groupData], index) => (
         <StyledGroup
           key={groupName}
           id={groupName}
-          className={classNames(
-            { isCollapsed: collapsedGroups.includes(groupName) },
-            'products-group',
-          )}
+          className={clsx({ isCollapsed: collapsedGroups.includes(groupName) }, 'products-group')}
         >
           {groupName && (
             <div className="header-wrapper">
@@ -275,9 +269,7 @@ const ProductsGrid = ({
                   ))
                 : groupData.map(({ data: product }, index) => {
                     if (!product) return null
-                    const thumbnailUrl = product.versionThumbnailId
-                      ? `/api/projects/${projectName}/versions/${product.versionId}/thumbnail?updatedAt=${product.versionUpdatedAt}&placeholder=none`
-                      : null
+                    const thumbnailUrl = `/api/projects/${projectName}/versions/${product.versionId}/thumbnail?updatedAt=${product.versionUpdatedAt}`
 
                     return (
                       <EntityCard
@@ -298,7 +290,7 @@ const ProductsGrid = ({
                         onContextMenu={(e) => handleContext(e, product.id)}
                         projectName={projectName}
                         isFullHighlight
-                        // isActiveAnimate
+                        isPlayable={product.hasReviewables}
                       />
                     )
                   })}

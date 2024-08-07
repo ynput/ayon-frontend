@@ -1,18 +1,22 @@
 import * as Styled from './KanBanColumn.styled'
 import React, { Fragment, forwardRef, useEffect, useMemo, useRef, useState } from 'react'
-import { getFakeTasks, getGroupedTasks, usePrefetchEntity, useTaskClick } from '../../util'
+import { getFakeTasks, getGroupedTasks } from '../../util'
+import { useGetTaskContextMenu, useTaskClick, usePrefetchEntity } from '../../hooks'
 import { useDispatch, useSelector } from 'react-redux'
 import KanBanCardDraggable from '../KanBanCard/KanBanCardDraggable'
 import KanBanCard from '../KanBanCard/KanBanCard'
 import { Button, Toolbar } from '@ynput/ayon-react-components'
 import { InView, useInView } from 'react-intersection-observer'
-import { useGetTaskContextMenu } from '../../util'
 import 'react-perfect-scrollbar/dist/css/styles.css'
 import KanBanColumnDropzone from './KanBanColumnDropzone'
+import clsx from 'clsx'
+import { useURIContext } from '@context/uriContext'
+import { getTaskRoute } from '@helpers/routes'
 
 const KanBanColumn = forwardRef(
   (
     {
+      allTasks = [],
       tasks = [],
       id,
       groupByValue = {},
@@ -31,6 +35,7 @@ const KanBanColumn = forwardRef(
     ref,
   ) => {
     const dispatch = useDispatch()
+    const { navigate } = useURIContext()
 
     const tasksCount = tasks.length
 
@@ -69,13 +74,13 @@ const KanBanColumn = forwardRef(
 
     // PREFETCH TASK WHEN HOVERING
     // we keep track of the ids that have been pre-fetched to avoid fetching them again
-    const handlePrefetch = usePrefetchEntity(dispatch, projectsInfo, 500)
+    const handlePrefetch = usePrefetchEntity(dispatch, projectsInfo, 500, 'dashboard')
 
     // CONTEXT MENU
     const { handleContextMenu, closeContext } = useGetTaskContextMenu(tasks, dispatch)
 
     // HANDLE TASK CLICK
-    const handleTaskClick = useTaskClick(dispatch)
+    const handleTaskClick = useTaskClick(dispatch, allTasks)
 
     // return 5 fake loading events if loading
     const loadingTasks = useMemo(() => getFakeTasks(), [])
@@ -111,6 +116,10 @@ const KanBanColumn = forwardRef(
                         <KanBanCardDraggable
                           task={task}
                           onClick={(e) => {
+                            if (e.detail == 2) {
+                              navigate(getTaskRoute(task))
+                              return
+                            }
                             closeContext()
                             handleTaskClick(e, task.id)
                           }}
@@ -145,12 +154,10 @@ const KanBanColumn = forwardRef(
     return (
       <Styled.Column ref={ref} id={id}>
         <Styled.DropColumnWrapper
-          className="dropzone"
+          className={clsx('dropzone', { 'drop-active': active })}
           style={{
             height: `calc(100vh - 32px - ${sectionRect?.top}px)`,
-            // display: 'none',
           }}
-          $active={!!active}
         >
           {active &&
             groupItems.map((item) => (
@@ -162,7 +169,7 @@ const KanBanColumn = forwardRef(
               />
             ))}
         </Styled.DropColumnWrapper>
-        <Styled.Header $color={column?.color}>
+        <Styled.Header $color={column?.color} className={clsx({ dragging: !!active })}>
           <h2
             style={{
               opacity: active ? 0 : 1,
@@ -182,10 +189,9 @@ const KanBanColumn = forwardRef(
         </Styled.Header>
 
         <Styled.Items
-          className="items"
+          className={clsx('items', { dragging: !!active })}
           ref={itemsRef}
           style={{ overflow: active && !isColumnActive && !isScrolling && 'hidden' }}
-          $active={!!active}
         >
           {allGroupedTasks}
           {!isLoading && tasksCount !== tasksAdded && !active && (

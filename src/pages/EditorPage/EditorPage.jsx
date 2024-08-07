@@ -21,7 +21,7 @@ import { editorSelectionChanged, setUri, setExpandedFolders } from '@state/conte
 import { getColumns, formatType, formatAttribute, formatAssignees, formatStatus } from './utils'
 import { MultiSelect } from 'primereact/multiselect'
 import useLocalStorage from '@hooks/useLocalStorage'
-import { useGetHierarchyQuery } from '@queries/getHierarchy'
+import { useGetFolderHierarchyQuery } from '@queries/getHierarchy'
 import SearchDropdown from '@components/SearchDropdown'
 import useColumnResize from '@hooks/useColumnResize'
 import { capitalize, debounce, isEmpty } from 'lodash'
@@ -36,7 +36,6 @@ import {
   onForceChange,
   onNewChanges,
   onRevert,
-  updateNodes,
 } from '@state/editor'
 import EditorPanel from './EditorPanel'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
@@ -45,7 +44,7 @@ import { useGetAttributesQuery } from '@queries/attributes/getAttributes'
 import NewEntity from './NewEntity'
 import checkName from '@helpers/checkName'
 import useCreateContext from '@hooks/useCreateContext'
-import { ayonApi } from '@queries/ayon'
+import api from '@api'
 import { confirmDialog } from 'primereact/confirmdialog'
 import BuildHierarchyButton from '@containers/HierarchyBuilder'
 import NewSequence from './NewSequence'
@@ -53,6 +52,9 @@ import { useGetUsersAssigneeQuery } from '@queries/user/getUsers'
 import confirmDelete from '@helpers/confirmDelete'
 import { useGetProjectAnatomyQuery } from '@queries/project/getProject'
 import Shortcuts from '@containers/Shortcuts'
+import useTableKeyboardNavigation, {
+  extractIdFromClassList,
+} from '@containers/Feed/hooks/useTableKeyboardNavigation'
 
 const EditorPage = () => {
   const project = useSelector((state) => state.project)
@@ -105,10 +107,12 @@ const EditorPage = () => {
   const [columnsWidths, setColumnWidths] = useColumnResize('editor')
 
   // Hierarchy data is used for fast searching
-  const { data: hierarchyData, isLoading: isSearchLoading } = useGetHierarchyQuery(
+  const { data: hierarchyResponse = {}, isLoading: isSearchLoading } = useGetFolderHierarchyQuery(
     { projectName },
     { skip: !projectName },
   )
+
+  const hierarchyData = hierarchyResponse.hierarchy || []
 
   const { data: allUsers = [] } = useGetUsersAssigneeQuery({ names: undefined, projectName })
 
@@ -750,7 +754,9 @@ const EditorPage = () => {
     // invalidate these tags ['hierarchy', 'folder', 'task']
     // so that the query will be executed again
     // and the new data will be fetched
-    dispatch(ayonApi.util.invalidateTags(['hierarchy', 'folder', 'task']))
+    dispatch(
+      api.util.invalidateTags(['hierarchy', 'folder', 'task', { type: 'kanBanTask', id: 'LIST' }]),
+    )
 
     // add new branches to redux editor slice
     dispatch(nodesUpdated({ updated: updated, deleted, forcedSave }))
@@ -1466,28 +1472,15 @@ const EditorPage = () => {
     [currentSelection, expandedFolders, rootData, loadNewBranches, dispatch],
   )
 
-  const handleSelectionChange = (value) => {
-    const selection = Object.keys(value)
-    // reduce into two arrays, one with type folder and one with type task
-    const folders = []
-    const tasks = []
-    for (const [key, v] of Object.entries(value)) {
-      if (rootData[key]?.data.__entityType === 'folder' && v) folders.push(key)
-      else if (rootData[key]?.data.__entityType === 'task' && v) tasks.push(key)
-    }
+  const updateURI = (e) => {
+    // get id
+    const id = extractIdFromClassList(e.target.classList)
 
-    // for each task in tasks, add __parentId to folders if not already there
-    for (const task of tasks) {
-      const folder = rootData[task].data.__parentId
-      if (!folders.includes(folder)) folders.push(folder)
-    }
+    if (!id) return
 
-    // update redux store
-    dispatch(editorSelectionChanged({ folders, tasks, selection }))
-  }
+    const node = rootData[id]?.data
 
-  const onRowClick = (event) => {
-    const node = event.node.data
+    if (!node) return
     //
     let endFolder
     if (node.__entityType === 'folder') {
@@ -1536,11 +1529,31 @@ const EditorPage = () => {
     if (pathNames.length) {
       let uri = `ayon+entity://${projectName}`
       uri += `/${pathNames.join('/')}`
-      if (event.node.data.__entityType === 'task') {
-        uri += `?task=${event.node?.data?.name}`
+      if (node.__entityType === 'task') {
+        uri += `?task=${node.name}`
       }
       dispatch(setUri(uri))
     }
+  }
+
+  const handleSelectionChange = (value) => {
+    const selection = Object.keys(value)
+    // reduce into two arrays, one with type folder and one with type task
+    const folders = []
+    const tasks = []
+    for (const [key, v] of Object.entries(value)) {
+      if (rootData[key]?.data.__entityType === 'folder' && v) folders.push(key)
+      else if (rootData[key]?.data.__entityType === 'task' && v) tasks.push(key)
+    }
+
+    // for each task in tasks, add __parentId to folders if not already there
+    for (const task of tasks) {
+      const folder = rootData[task].data.__parentId
+      if (!folders.includes(folder)) folders.push(folder)
+    }
+
+    // update redux store
+    dispatch(editorSelectionChanged({ folders, tasks, selection }))
   }
 
   const columnFilterOptions = [
@@ -1587,82 +1600,14 @@ const EditorPage = () => {
     }
   }
 
-  // when a thumbnail is uploaded, refetch data for that entity
-  const handleThumbnailUpload = (uploaded = {}) => {
-    const { id, type } = uploaded
-
-    if (!id || !type) return
-
-    // patch new updatedAt value to node
-    const newDate = new Date().toISOString()
-    const newData = { id, updatedAt: newDate }
-
-    dispatch(updateNodes({ updated: [newData] }))
-  }
-
   const tableRef = useRef(null)
 
-  // get all ids of the rows in the table, this is useful because the ids are in the same order as the rows
-  const tableRowsIds = useMemo(() => {
-    const rows = []
-    tableRef.current
-      ?.getElement()
-      .querySelectorAll('.p-treetable-tbody tr')
-      .forEach((tr) => {
-        const id = Array.from(tr.classList)
-          .find((c) => c.startsWith('id-'))
-          ?.split('-')[1]
-        if (id) {
-          rows.push(id)
-        }
-      })
-    return rows
-  }, [tableRef.current, treeData])
-
-  const handleKeyPress = (event) => {
-    if (event.target.tagName === 'TR') {
-      if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
-        const direction = event.key === 'ArrowDown' ? 1 : 0
-
-        const nextEl = direction
-          ? event.target.nextElementSibling
-          : event.target.previousElementSibling
-
-        if (!nextEl) return
-
-        const nextId = Array.from(nextEl.classList)
-          .filter((c) => c.startsWith('id-'))[0]
-          .split('-')[1]
-
-        const nextType = Array.from(nextEl.classList)
-          .filter((c) => c.startsWith('type-'))[0]
-          .split('-')[1]
-
-        if (nextId && nextType) {
-          let selection = [nextId]
-          if (event.shiftKey) {
-            //  get previous selection
-            const previousSelection = Object.keys(currentSelection)
-
-            // add the range to the selection
-            selection = [...new Set([...selection, ...previousSelection])]
-            // this will make selection in the correct order
-            selection = tableRowsIds.filter((id) => selection.includes(id))
-            const isInPrevious = previousSelection.includes(nextId)
-            if (isInPrevious) {
-              if (direction) {
-                selection.shift()
-              } else {
-                selection.pop()
-              }
-            }
-          }
-          // based on type update focused state
-          dispatch(editorSelectionChanged({ selection, [nextType + 's']: selection }))
-        }
-      }
-    }
-  }
+  const handleTableKeyDown = useTableKeyboardNavigation({
+    tableRef,
+    treeData,
+    selection: currentSelection,
+    onSelectionChange: ({ object }) => handleSelectionChange(object),
+  })
 
   const handleDoubleClick = (e) => {
     // check if type-folder
@@ -1916,12 +1861,8 @@ const EditorPage = () => {
                 columnResizeMode="expand"
                 expandedKeys={expandedFolders}
                 onToggle={handleToggleFolder}
-                onDoubleClick={handleDoubleClick}
                 selectionMode="multiple"
                 selectionKeys={currentSelection}
-                onSelectionChange={(e) => handleSelectionChange(e.value)}
-                onClick={handleDeselect}
-                onRowClick={onRowClick}
                 rowClassName={(rowData) => {
                   return {
                     changed: rowData.key in changes,
@@ -1929,6 +1870,7 @@ const EditorPage = () => {
                     deleted: rowData.key in changes && changes[rowData.key]?.__action == 'delete',
                     ['id-' + rowData.key]: true,
                     ['type-' + rowData.data.__entityType]: true,
+                    compact: true,
                   }
                 }}
                 onContextMenu={onContextMenu}
@@ -1938,7 +1880,15 @@ const EditorPage = () => {
                 rows={20}
                 className={fullPageLoading ? 'table-loading' : undefined}
                 ref={tableRef}
-                onKeyDown={handleKeyPress}
+                onSelectionChange={(e) => handleSelectionChange(e.value)}
+                pt={{
+                  root: {
+                    onKeyDown: handleTableKeyDown,
+                    onFocus: updateURI,
+                    onClick: handleDeselect,
+                    onDoubleClick: handleDoubleClick,
+                  },
+                }}
               >
                 {allColumns}
               </TreeTable>
@@ -1954,7 +1904,6 @@ const EditorPage = () => {
               attribs={attribFields}
               projectName={projectName}
               onForceChange={handleForceChange}
-              onThumbnailUpload={handleThumbnailUpload}
               allUsers={allUsers}
             />
           </SplitterPanel>

@@ -1,7 +1,7 @@
 import { useRef } from 'react'
 import * as Styled from './ActivityReference.styled'
 import { Icon } from '@ynput/ayon-react-components'
-import { classNames } from 'primereact/utils'
+import clsx from 'clsx'
 import getEntityTypeIcon from '@helpers/getEntityTypeIcon'
 
 // variants = filled, text
@@ -35,7 +35,7 @@ const ActivityReference = ({
       $variant={variant}
       ref={ref}
       onMouseEnter={handleMouseEnter}
-      className={classNames({ disabled, isEntity }, 'reference')}
+      className={clsx({ disabled, isEntity }, 'reference')}
       id={`ref-${id}`}
     >
       <Icon icon={icon} />

@@ -13,6 +13,7 @@ export const Container = styled.div`
 `
 
 export const Grid = styled.div`
+  position: relative;
   padding: 8px;
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
   flex: none;
@@ -59,13 +60,55 @@ export const Header = styled.header`
   gap: var(--base-gap-large);
   z-index: 50;
 
-  .thumbnail {
-    width: 48px;
-  }
-
   &.isCompact {
     /* only take up one column */
     grid-column: span 1;
+  }
+
+  &.isLoading {
+    .playable {
+      display: none;
+    }
+  }
+`
+
+export const ThumbnailWrapper = styled.div`
+  position: relative;
+
+  &:hover {
+    .playable {
+      opacity: 0.8;
+    }
+  }
+`
+
+export const Playable = styled.span`
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  z-index: 10;
+  --icon-size: 14px;
+  width: var(--icon-size);
+  height: var(--icon-size);
+  pointer-events: none;
+
+  transition: opacity 200ms;
+
+  .icon {
+    font-variation-settings: 'FILL' 1, 'wght' 700, 'GRAD' 200, 'opsz' 24;
+    font-size: var(--icon-size);
+    z-index: 10;
+    position: relative;
+    color: var(--md-sys-color-outline-variant);
+  }
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    background: var(--md-sys-color-on-surface);
+    z-index: 0;
+    border-radius: 100%;
   }
 `
 

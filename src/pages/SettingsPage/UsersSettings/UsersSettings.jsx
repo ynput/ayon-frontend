@@ -18,6 +18,7 @@ import UsersOverview from './UsersOverview'
 import { useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import NewUser from './newUser'
+import NewServiceUser from './newServiceUser'
 import confirmDelete from '@helpers/confirmDelete'
 import { useGetAccessGroupsQuery } from '@queries/accessGroups/getAccessGroups'
 import Shortcuts from '@containers/Shortcuts'
@@ -86,6 +87,7 @@ const UsersSettings = () => {
   // USE STATE
   const [selectedProjects, setSelectedProjects] = useState(null)
   const [showNewUser, setShowNewUser] = useState(false)
+  const [showNewServiceUser, setShowNewServiceUser] = useState(false)
   const [showRenameUser, setShowRenameUser] = useState(false)
   const [showSetPassword, setShowSetPassword] = useState(false)
   // show users for selected projects
@@ -127,14 +129,14 @@ const UsersSettings = () => {
     }
   }, [userList, selectedProjects])
 
-  const onDelete = async () => {
+  const onDelete = async (users) => {
     confirmDelete({
-      label: `${selectedUsers.length} Users`,
+      label: `${users.join(', ')} Users`,
       showToasts: false,
       accept: async () => {
         toastId.current = toast.info('Deleting users...')
         let i = 0
-        for (const user of selectedUsers) {
+        for (const user of users) {
           try {
             await deleteUser({ user }).unwrap()
             toast.update(toastId.current, {
@@ -169,6 +171,9 @@ const UsersSettings = () => {
 
   const openNewUser = () => {
     setShowNewUser(true)
+  }
+  const openNewServiceUser = () => {
+    setShowNewServiceUser(true)
   }
 
   // use filteredUserList if projectAccessOnly
@@ -238,6 +243,14 @@ const UsersSettings = () => {
         accessGroupsData={accessGroupsData}
       />
 
+      <NewServiceUser
+        onHide={(newUsers = []) => {
+          setShowNewServiceUser(false)
+          if (newUsers.length) setSelectedUsers(newUsers)
+        }}
+        open={showNewServiceUser}
+      />
+
       <main>
         <Section>
           <Toolbar>
@@ -252,11 +265,12 @@ const UsersSettings = () => {
             </form>
             <Spacer />
             <Button
-              onClick={onDelete}
+              onClick={() => onDelete(selectedUsers)}
               label="Delete Users"
               icon="person_remove"
               disabled={!selectedUsers.length || isSelfSelected || managerDisabled}
             />
+            <Button onClick={openNewServiceUser} label="Add Service User" icon="person_add" />
             <Button
               onClick={openNewUser}
               label="Add New User"

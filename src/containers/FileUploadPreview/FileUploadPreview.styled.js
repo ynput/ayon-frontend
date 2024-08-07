@@ -4,24 +4,51 @@ import styled from 'styled-components'
 export const DialogWrapper = styled(Dialog)`
   min-height: 90vh;
   max-height: 90vh;
+  min-width: min(90vw, 100%);
   max-width: 1000px;
 
   .body {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-content: center;
     padding-top: 0;
+  }
+  .navIcon {
+    position: absolute;
+    top: 50%;
+    user-select: none;
+
+    &.left {
+      left: 0;
+      translate: -100% -50%;
+    }
+    &.right {
+      right: 0;
+      translate: 100% -50%;
+    }
+    align-content: center;
+    font-size: 60px;
+    &:hover {
+      cursor: pointer;
+      color: var(--md-sys-color-primary);
+    }
+    &.disabled {
+      color: var(--md-sys-color-outline-variant);
+      &:hover {
+        cursor: not-allowed;
+      }
+    }
   }
 
   /* custom image styles */
   &.isImage {
     /* remove min/max height */
-    min-height: unset;
-    max-height: unset;
 
     background-color: unset;
-    overflow: hidden;
     border-radius: 0;
 
     width: 0;
-    min-width: fit-content;
 
     .cancelButton {
       top: 1px;
@@ -40,7 +67,7 @@ export const DialogWrapper = styled(Dialog)`
 
     .body {
       padding: 0;
-      align-items: center;
+      align-items: stretch;
       user-select: none;
       overflow: hidden;
     }

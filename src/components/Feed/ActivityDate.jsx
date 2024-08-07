@@ -9,8 +9,9 @@ import {
   isSameMinute,
 } from 'date-fns'
 import Typography from '@/theme/typography.module.css'
-import { classNames } from 'primereact/utils'
+import clsx from 'clsx'
 import styled from 'styled-components'
+import { useState } from 'react'
 
 const DateStyled = styled.span`
   margin-left: auto;
@@ -39,6 +40,7 @@ export const getFuzzyDate = (date) => {
 }
 
 const ActivityDate = ({ date, isExact, ...props }) => {
+  const [isFuzzy, setIsFuzzy] = useState(true)
   const dateObj = new Date(date)
   if (!isValid(dateObj)) return null
 
@@ -53,15 +55,29 @@ const ActivityDate = ({ date, isExact, ...props }) => {
   const timeFormat = 'h:mm a'
 
   let dateString =
-    today && !isExact ? getFuzzyDate(dateObj) : format(dateObj, `${dateFormat}, ${timeFormat}`)
+    isFuzzy && !isExact
+      ? today
+        ? getFuzzyDate(dateObj)
+        : format(dateObj, `${dateFormat}, ${timeFormat}`)
+      : format(dateObj, `EEEE, dd MMM yyyy ${timeFormat}`)
 
   if (yesterday) dateString = `Yesterday${dateString}`
 
   // if less than a minute ago overwrite the date string
   if (sameMin) dateString = 'Just now'
 
+  const toggleFuzzy = () => {
+    setIsFuzzy(!isFuzzy)
+  }
+
   return (
-    <DateStyled className={classNames(Typography.bodySmall, 'date')} {...props}>
+    <DateStyled
+      className={clsx(Typography.bodySmall, 'date')}
+      {...props}
+      onClick={toggleFuzzy}
+      onMouseOver={() => setIsFuzzy(false)}
+      onMouseOut={() => setIsFuzzy(true)}
+    >
       {dateString}
     </DateStyled>
   )

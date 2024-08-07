@@ -1,9 +1,8 @@
 import * as Styled from './DetailsPanelSlideOut.styled'
 import { useDispatch, useSelector } from 'react-redux'
-import { closeSlideOut } from '@state/details'
 import DetailsPanel from '../DetailsPanel'
 import { useGetUsersAssigneeQuery } from '@queries/user/getUsers'
-import Shortcuts from '@containers/Shortcuts'
+import { closeSlideOut } from '@state/details'
 
 const DetailsPanelSlideOut = ({ projectsInfo, scope }) => {
   const dispatch = useDispatch()
@@ -18,9 +17,7 @@ const DetailsPanelSlideOut = ({ projectsInfo, scope }) => {
 
   if (!isSlideOutOpen) return null
 
-  const handleClose = () => {
-    dispatch(closeSlideOut())
-  }
+  const handleClose = () => dispatch(closeSlideOut())
 
   return (
     <Styled.SlideOut>
@@ -29,15 +26,14 @@ const DetailsPanelSlideOut = ({ projectsInfo, scope }) => {
         entities={[{ id: entityId, projectName }]}
         projectsInfo={{ [projectName]: projectInfo }}
         projectNames={[projectName]}
-        onClose={handleClose}
         statusesOptions={statuses}
         tagsOptions={tags}
         projectUsers={users}
         activeProjectUsers={users}
         isSlideOut
         scope={scope}
+        onClose={handleClose}
       />
-      <Shortcuts shortcuts={[{ key: 'Escape', action: handleClose }]} deps={[]} />
     </Styled.SlideOut>
   )
 }
