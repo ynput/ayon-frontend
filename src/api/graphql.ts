@@ -169,6 +169,8 @@ export type FileNode = {
 
 export type FolderAttribType = {
   __typename?: 'FolderAttribType';
+  /** What car do you want? */
+  car?: Maybe<Scalars['String']['output']>;
   clipIn?: Maybe<Scalars['Int']['output']>;
   clipOut?: Maybe<Scalars['Int']['output']>;
   /** Textual description of the entity */
@@ -179,15 +181,28 @@ export type FolderAttribType = {
   fps?: Maybe<Scalars['Float']['output']>;
   frameEnd?: Maybe<Scalars['Int']['output']>;
   frameStart?: Maybe<Scalars['Int']['output']>;
+  ftrackId?: Maybe<Scalars['String']['output']>;
+  ftrackPath?: Maybe<Scalars['String']['output']>;
+  /** hair */
+  hairColour?: Maybe<Scalars['String']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
+  /** Percentage of shot completetion */
+  progress?: Maybe<Scalars['Int']['output']>;
   /** Vertical resolution */
   resolutionHeight?: Maybe<Scalars['Int']['output']>;
   /** Horizontal resolution */
   resolutionWidth?: Maybe<Scalars['Int']['output']>;
+  /** The Shotgrid ID of this entity. */
+  shotgridId?: Maybe<Scalars['String']['output']>;
+  /** The Shotgrid Type of this entity. */
+  shotgridType?: Maybe<Scalars['String']['output']>;
+  sokoId?: Maybe<Scalars['String']['output']>;
+  sokoPath?: Maybe<Scalars['String']['output']>;
   /** Date and time when the project or task or asset was started */
   startDate?: Maybe<Scalars['DateTime']['output']>;
+  test?: Maybe<Scalars['String']['output']>;
   tools?: Maybe<Array<Scalars['String']['output']>>;
 };
 
@@ -507,13 +522,25 @@ export type ProjectAttribType = {
   fps?: Maybe<Scalars['Float']['output']>;
   frameEnd?: Maybe<Scalars['Int']['output']>;
   frameStart?: Maybe<Scalars['Int']['output']>;
+  ftrackId?: Maybe<Scalars['String']['output']>;
+  ftrackPath?: Maybe<Scalars['String']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
+  /** Percentage of shot completetion */
+  progress?: Maybe<Scalars['Int']['output']>;
   /** Vertical resolution */
   resolutionHeight?: Maybe<Scalars['Int']['output']>;
   /** Horizontal resolution */
   resolutionWidth?: Maybe<Scalars['Int']['output']>;
+  /** The Shotgrid ID of this entity. */
+  shotgridId?: Maybe<Scalars['String']['output']>;
+  /** Push changes done to this project to Shotgird. Requires the transmitter service. */
+  shotgridPush?: Maybe<Scalars['Boolean']['output']>;
+  /** The Shotgrid Type of this entity. */
+  shotgridType?: Maybe<Scalars['String']['output']>;
+  sokoId?: Maybe<Scalars['String']['output']>;
+  sokoPath?: Maybe<Scalars['String']['output']>;
   /** Date and time when the project or task or asset was started */
   startDate?: Maybe<Scalars['DateTime']['output']>;
   tools?: Maybe<Array<Scalars['String']['output']>>;
@@ -920,6 +947,8 @@ export type RepresentationsConnection = {
 
 export type TaskAttribType = {
   __typename?: 'TaskAttribType';
+  /** What car do you want? */
+  car?: Maybe<Scalars['String']['output']>;
   clipIn?: Maybe<Scalars['Int']['output']>;
   clipOut?: Maybe<Scalars['Int']['output']>;
   /** Textual description of the entity */
@@ -930,15 +959,28 @@ export type TaskAttribType = {
   fps?: Maybe<Scalars['Float']['output']>;
   frameEnd?: Maybe<Scalars['Int']['output']>;
   frameStart?: Maybe<Scalars['Int']['output']>;
+  ftrackId?: Maybe<Scalars['String']['output']>;
+  ftrackPath?: Maybe<Scalars['String']['output']>;
+  /** hair */
+  hairColour?: Maybe<Scalars['String']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
+  /** Percentage of shot completetion */
+  progress?: Maybe<Scalars['Int']['output']>;
   /** Vertical resolution */
   resolutionHeight?: Maybe<Scalars['Int']['output']>;
   /** Horizontal resolution */
   resolutionWidth?: Maybe<Scalars['Int']['output']>;
+  /** The Shotgrid ID of this entity. */
+  shotgridId?: Maybe<Scalars['String']['output']>;
+  /** The Shotgrid Type of this entity. */
+  shotgridType?: Maybe<Scalars['String']['output']>;
+  sokoId?: Maybe<Scalars['String']['output']>;
+  sokoPath?: Maybe<Scalars['String']['output']>;
   /** Date and time when the project or task or asset was started */
   startDate?: Maybe<Scalars['DateTime']['output']>;
+  test?: Maybe<Scalars['String']['output']>;
   tools?: Maybe<Array<Scalars['String']['output']>>;
 };
 
@@ -1098,6 +1140,8 @@ export type UsersConnection = {
 
 export type VersionAttribType = {
   __typename?: 'VersionAttribType';
+  /** What car do you want? */
+  car?: Maybe<Scalars['String']['output']>;
   clipIn?: Maybe<Scalars['Int']['output']>;
   clipOut?: Maybe<Scalars['Int']['output']>;
   colorSpace?: Maybe<Scalars['String']['output']>;
@@ -1109,16 +1153,19 @@ export type VersionAttribType = {
   fps?: Maybe<Scalars['Float']['output']>;
   frameEnd?: Maybe<Scalars['Int']['output']>;
   frameStart?: Maybe<Scalars['Int']['output']>;
+  ftrackId?: Maybe<Scalars['String']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
   intent?: Maybe<Scalars['String']['output']>;
   machine?: Maybe<Scalars['String']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
+  productTypes?: Maybe<Array<Scalars['String']['output']>>;
   /** Vertical resolution */
   resolutionHeight?: Maybe<Scalars['Int']['output']>;
   /** Horizontal resolution */
   resolutionWidth?: Maybe<Scalars['Int']['output']>;
   site?: Maybe<Scalars['String']['output']>;
+  sokoId?: Maybe<Scalars['String']['output']>;
   source?: Maybe<Scalars['String']['output']>;
 };
 
@@ -1314,6 +1361,14 @@ export type GetProjectLatestQueryVariables = Exact<{
 
 export type GetProjectLatestQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string } };
 
+export type GetTasksProgressQueryVariables = Exact<{
+  projectName: Scalars['String']['input'];
+  folderIds?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
+}>;
+
+
+export type GetTasksProgressQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', folders: { __typename?: 'FoldersConnection', edges: Array<{ __typename?: 'FolderEdge', node: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, parents: Array<string>, tasks: { __typename?: 'TasksConnection', edges: Array<{ __typename?: 'TaskEdge', node: { __typename?: 'TaskNode', id: string, name: string, label?: string | null, taskType: string, status: string, assignees: Array<string>, folderId: string } }> } } }> } } };
+
 export type GetKanbanQueryVariables = Exact<{
   projects?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
   assignees?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
@@ -1486,6 +1541,35 @@ export const GetProjectLatestDocument = `
   }
 }
     `;
+export const GetTasksProgressDocument = `
+    query GetTasksProgress($projectName: String!, $folderIds: [String!]) {
+  project(name: $projectName) {
+    folders(ids: $folderIds) {
+      edges {
+        node {
+          id
+          name
+          label
+          parents
+          tasks {
+            edges {
+              node {
+                id
+                name
+                label
+                taskType
+                status
+                assignees
+                folderId
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+    `;
 export const GetKanbanDocument = `
     query GetKanban($projects: [String!], $assignees: [String!]) {
   kanban(projects: $projects, assigneesAny: $assignees, last: 2000) {
@@ -1545,6 +1629,9 @@ const injectedRtkApi = restApi.injectEndpoints({
     }),
     GetProjectLatest: build.query<GetProjectLatestQuery, GetProjectLatestQueryVariables>({
       query: (variables) => ({ document: GetProjectLatestDocument, variables })
+    }),
+    GetTasksProgress: build.query<GetTasksProgressQuery, GetTasksProgressQueryVariables>({
+      query: (variables) => ({ document: GetTasksProgressDocument, variables })
     }),
     GetKanban: build.query<GetKanbanQuery, GetKanbanQueryVariables | void>({
       query: (variables) => ({ document: GetKanbanDocument, variables })

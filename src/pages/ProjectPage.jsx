@@ -8,6 +8,7 @@ import EditorPage from './EditorPage'
 import LoadingPage from './LoadingPage'
 import ProjectAddon from './ProjectAddon'
 import WorkfilesPage from './WorkfilesPage'
+import TasksProgressPage from './TasksProgressPage'
 
 import usePubSub from '@hooks/usePubSub'
 import { selectProject } from '@state/project'
@@ -92,6 +93,7 @@ const ProjectPage = () => {
     () => [
       { name: 'Browser', path: `/projects/${projectName}/browser`, module: 'browser' },
       { name: 'Editor', path: `/projects/${projectName}/editor`, module: 'editor' },
+      { name: 'Tasks', path: `/projects/${projectName}/tasks`, module: 'tasks' },
       { name: 'Workfiles', path: `/projects/${projectName}/workfiles`, module: 'workfiles' },
       ...addonsData.map((addon) => ({
         name: addon.title,
@@ -132,6 +134,7 @@ const ProjectPage = () => {
 
   let child = null
   if (module === 'editor') child = <EditorPage />
+  else if (module === 'tasks') child = <TasksProgressPage />
   else if (module === 'workfiles') child = <WorkfilesPage />
   else if (addonName) {
     for (const addon of addonsData) {

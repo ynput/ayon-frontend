@@ -55,6 +55,7 @@ import Shortcuts from '@containers/Shortcuts'
 import useTableKeyboardNavigation, {
   extractIdFromClassList,
 } from '@containers/Feed/hooks/useTableKeyboardNavigation'
+import clsx from 'clsx'
 
 const EditorPage = () => {
   const project = useSelector((state) => state.project)
@@ -1878,7 +1879,7 @@ const EditorPage = () => {
                 reorderableColumns
                 onColReorder={handleColumnReorder}
                 rows={20}
-                className={fullPageLoading ? 'table-loading' : undefined}
+                className={clsx({ 'table-loading': fullPageLoading }, 'TABLEEEEE')}
                 ref={tableRef}
                 onSelectionChange={(e) => handleSelectionChange(e.value)}
                 pt={{
