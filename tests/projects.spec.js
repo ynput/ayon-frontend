@@ -48,5 +48,7 @@ test.describe.serial('project_create_delete', () => {
     await page.getByLabel('Delete', { exact: true }).click()
     // check if the project is deleted successfully from toast message
     await expect(page.getByText(`Project: ${projectName} deleted`)).toBeVisible()
+
+    await expect(page.getByRole('cell', { name: projectName })).toBeHidden()
   })
 })

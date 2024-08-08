@@ -28,19 +28,19 @@ test.describe.serial('bundle_create_delete', () => {
   //   deletes newly created user
   test('delete-bundle', async ({ page }, { project }) => {
     const bundleName = getBundleName(project.name)
-    await page.goto('http://127.0.0.1:3000/settings/bundles')
+    await page.goto('/settings/bundles')
     // right click bundle
     await page.getByRole('cell', { name: bundleName }).click({
       button: 'right',
     })
     // archive bundle
-    await page.getByRole('menuitem', { name: 'archive Archive chevron_right' }).click()
+    await page.getByRole('menuitem', { name: 'archive Archive' }).click()
     // right click on archived bundle
     await page.getByRole('cell', { name: `${bundleName} (archived)` }).click({
       button: 'right',
     })
     // delete bundle
-    await page.getByRole('menuitem', { name: 'delete Delete chevron_right' }).click()
+    await page.getByRole('menuitem', { name: 'delete Delete' }).click()
     // confirm the deletion
     await page.getByLabel('Delete', { exact: true }).click()
     // check toast

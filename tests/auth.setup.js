@@ -3,6 +3,7 @@ import { test as setup } from '@playwright/test'
 const authFile = 'playwright/.auth/user.json'
 
 setup('authenticate', async ({ page }) => {
+  await page.goto('http://localhost:3000/');
   console.log('USERNAME:', process.env.NAME)
   // Perform authentication steps. Replace these actions with your own.
   await page.getByLabel('Username').fill(process.env.NAME)
@@ -12,7 +13,7 @@ setup('authenticate', async ({ page }) => {
   //
   // Sometimes login flow sets cookies in the process of several redirects.
   // Wait for the final URL to ensure that the cookies are actually set.
-  await page.waitForURL('/')
+  await page.waitForURL('http://localhost:3000/dashboard/tasks')
 
   // End of authentication steps.
 

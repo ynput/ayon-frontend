@@ -25,7 +25,7 @@ test.describe.serial('user_create_delete', () => {
   //   deletes newly created user
   test('delete-user', async ({ page }, { project }) => {
     const userName = getUserName(project.name)
-    await page.goto(`http://127.0.0.1:3000/settings/users?name=${userName}`)
+    await page.goto(`/settings/users?name=${userName}`)
     // click on delete button (top right)
     await page.getByRole('button', { name: 'person_remove Delete Users' }).click()
     // confirm the deletion
