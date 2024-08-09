@@ -7,6 +7,8 @@ import { useMemo } from 'react'
 import addRemoveMembers from './addRemoveMembers'
 import useCreateContext from '@hooks/useCreateContext'
 import UsersListTeamsSmall from './UsersListTeamsSmall'
+import clsx from 'clsx'
+import userTableLoadingData from '@hooks/userTableLoadingData'
 
 const UserListTeams = ({
   selectedProjects,
@@ -113,18 +115,6 @@ const UserListTeams = ({
   // create ref and model
   const [contextMenuShow] = useCreateContext([])
 
-  // create 10 dummy rows
-  const loadingData = useMemo(() => {
-    return Array.from({ length: 10 }, (_, i) => ({
-      key: i,
-      data: {},
-    }))
-  }, [])
-
-  if (isLoading) {
-    userList = loadingData
-  }
-
   const handleContext = (e) => {
     // we all of this to keep users in sync
     // when right clicking on a new user we need to use the event NOT selectedUsers as it is not updated yet
@@ -146,17 +136,22 @@ const UserListTeams = ({
     )
   }
 
+  const tableData = userTableLoadingData(userList, isLoading, 10, 'name')
+
   if (!isFullSize)
     return (
       <UsersListTeamsSmall
         handleContext={handleContext}
-        userList={userList}
+        userList={tableData}
         isLoading={isLoading}
         onSelectionChange={onSelectionChange}
         onContextSelectionChange={onContextSelectionChange}
         selection={selection}
+        className={clsx('user-list-table', { loading: isLoading })}
+        rowClassName={() => clsx({ loading: isLoading })}
       />
     )
+
   return (
     <Section
       style={{
@@ -166,12 +161,13 @@ const UserListTeams = ({
     >
       <TablePanel onContextMenu={handleContext}>
         <DataTable
-          value={userList}
+          value={tableData}
           scrollable="true"
           scrollHeight="flex"
           dataKey="name"
           selectionMode="multiple"
-          className={`user-list-table ${isLoading ? 'table-loading' : ''}`}
+          className={clsx('user-list-table', { loading: isLoading })}
+          rowClassName={() => clsx({ loading: isLoading })}
           onSelectionChange={onSelectionChange}
           onContextMenuSelectionChange={onContextSelectionChange}
           onContextMenu={handleContext}
@@ -191,7 +187,7 @@ const UserListTeams = ({
           <Column
             field="name"
             header="Username"
-            body={(rowData) => <ProfileRow rowData={rowData} />}
+            body={(rowData) => !isLoading && <ProfileRow rowData={rowData} />}
             style={{
               width: '20%',
             }}

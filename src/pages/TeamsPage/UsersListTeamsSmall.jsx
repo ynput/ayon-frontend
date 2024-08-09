@@ -2,6 +2,7 @@ import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { TablePanel, Section } from '@ynput/ayon-react-components'
 import { ProfileRow } from '@pages/SettingsPage/UsersSettings/UserList'
+import clsx from 'clsx'
 
 const UsersListTeamsSmall = ({
   handleContext,
@@ -20,7 +21,8 @@ const UsersListTeamsSmall = ({
           scrollHeight="flex"
           dataKey="name"
           selectionMode="multiple"
-          className={`user-list-table ${isLoading ? 'table-loading' : ''}`}
+          className={clsx('user-list-table', { loading: isLoading })}
+          rowClassName={() => clsx({ loading: isLoading })}
           onSelectionChange={onSelectionChange}
           onContextMenuSelectionChange={onContextSelectionChange}
           onContextMenu={handleContext}
@@ -41,7 +43,7 @@ const UsersListTeamsSmall = ({
             field="attrib.fullName"
             header="Full Name"
             style={{ width: '20%' }}
-            body={(rowData) => <ProfileRow rowData={rowData} />}
+            body={(rowData) => !isLoading && <ProfileRow rowData={rowData} />}
           />
         </DataTable>
       </TablePanel>

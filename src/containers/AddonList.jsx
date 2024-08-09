@@ -6,6 +6,8 @@ import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 
 import { useGetAddonSettingsListQuery } from '@queries/addonSettings'
+import clsx from 'clsx'
+import userTableLoadingData from '@hooks/userTableLoadingData'
 
 const AddonList = ({
   selectedAddons,
@@ -19,7 +21,7 @@ const AddonList = ({
   siteId, // used for changed addons
   setBundleName,
 }) => {
-  const { data, loading, isError } = useGetAddonSettingsListQuery({
+  const { data, isLoading, isError } = useGetAddonSettingsListQuery({
     projectName,
     siteId,
     variant,
@@ -31,7 +33,7 @@ const AddonList = ({
   // Filter addons by variant
   // add 'version' property to each addon
   const addons = useMemo(() => {
-    if (loading) return []
+    if (isLoading) return []
     let result = []
     for (const addon of data?.addons || []) {
       if (siteSettings) {
@@ -122,19 +124,25 @@ const AddonList = ({
   }
 
   const rowDataClassNameFormatter = (rowData) => {
-    if (changedAddonKeys && changedAddonKeys.includes(rowData.key)) return 'changed'
-    if (rowData.isBroken) return 'broken-addon-row'
-    if (rowData.hasProjectSiteOverrides) return 'changed-site'
-    if (rowData.hasProjectOverrides) return 'changed-project'
-    if (rowData.hasStudioOverrides) return 'changed-studio'
-    return ''
+    return clsx({
+      changed: changedAddonKeys && changedAddonKeys.includes(rowData.key),
+      'broken-addon-row': rowData.isBroken,
+      'changed-site': rowData.hasProjectSiteOverrides,
+      'changed-project': rowData.hasProjectOverrides,
+      'changed-studio': rowData.hasStudioOverrides,
+      loading: isLoading,
+    })
   }
+
+  let tableData = userTableLoadingData(addons, isLoading, 40)
+
+  if (isError) tableData = []
 
   return (
     <Section style={{ minWidth: 250 }}>
-      <TablePanel loading={loading}>
+      <TablePanel>
         <DataTable
-          value={isError ? [] : addons}
+          value={tableData}
           selectionMode="multiple"
           scrollable="true"
           scrollHeight="flex"
@@ -142,6 +150,7 @@ const AddonList = ({
           onSelectionChange={onSelectionChange}
           onContextMenuSelectionChange={onSelectionChange}
           onContextMenu={onContextMenu}
+          className={clsx('addon-list-table', { loading: isLoading })}
           rowClassName={rowDataClassNameFormatter}
           emptyMessage={isError ? `WARNING: No bundle set to ${variant}` : 'No addons found'}
         >

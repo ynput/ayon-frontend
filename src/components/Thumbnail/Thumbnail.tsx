@@ -68,7 +68,7 @@ const Thumbnail = ({
   return (
     <Styled.Card
       className={clsx(className, 'thumbnail', {
-        shimmer: shimmer && (isLoading || !loaded),
+        loading: shimmer && (isLoading || !loaded),
         loaded,
         error,
         clickable: !!props.onClick,

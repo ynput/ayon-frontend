@@ -15,7 +15,7 @@ const AddonIcon = ({ isPlaceholder, size, ...props }) => {
 
   const isLoading = isPlaceholder || imageLoading
   return (
-    <Styled.Icon className={clsx({ isLoading, isError: imageError })} $size={size}>
+    <Styled.Icon className={clsx({ loading: isLoading, isError: imageError })} $size={size}>
       {imageError || !props.src ? (
         <Icon icon="extension" />
       ) : (

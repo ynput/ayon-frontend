@@ -1,4 +1,4 @@
-import { Dropdown, getShimmerStyles } from '@ynput/ayon-react-components'
+import { Dropdown } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
 export const StyledDropdown = styled(Dropdown)`
@@ -21,21 +21,6 @@ export const StyledDropdown = styled(Dropdown)`
 
     &:hover {
       background-color: var(--md-sys-color-surface-container-highest-hover);
-    }
-  }
-
-  &.isLoading {
-    button {
-      position: relative;
-      background-color: unset;
-    }
-    ${getShimmerStyles()}
-    opacity: 1;
-    overflow: hidden;
-    border-radius: var(--border-radius-m);
-
-    .icon {
-      opacity: 0 !important;
     }
   }
 `

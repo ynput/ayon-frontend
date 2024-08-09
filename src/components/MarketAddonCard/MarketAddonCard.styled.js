@@ -1,4 +1,4 @@
-import { Button, getShimmerStyles } from '@ynput/ayon-react-components'
+import { Button } from '@ynput/ayon-react-components'
 import styled, { keyframes } from 'styled-components'
 
 export const Container = styled.div`
@@ -19,21 +19,17 @@ export const Container = styled.div`
     background-color: var(--md-sys-color-surface-container-low-hover);
   }
 
-  &.isSelected {
+  &.selected {
     background-color: var(--md-sys-color-primary-container);
 
     border-radius: var(--border-radius-m);
     border-color: var(--md-sys-color-primary);
   }
 
-  &.isPlaceholder {
-    ${getShimmerStyles()}
-
-    .content {
-      border-radius: var(--border-radius-m);
-      overflow: hidden;
-      position: relative;
-      ${getShimmerStyles(undefined, undefined, { opacity: 1 })}
+  &.loading {
+    cursor: default;
+    &:hover {
+      background-color: var(--md-sys-color-surface-container-low);
     }
   }
 `
@@ -43,6 +39,8 @@ export const Content = styled.div`
   flex-direction: column;
   justify-content: start;
   align-items: start;
+  min-height: 40px;
+  flex: 1;
 `
 
 export const TitleWrapper = styled.div`

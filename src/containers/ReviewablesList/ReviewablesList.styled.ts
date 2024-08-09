@@ -1,4 +1,3 @@
-import { getShimmerStyles } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
 export const ReviewablesList = styled.div`
@@ -15,8 +14,6 @@ export const LoadingCard = styled.div`
   border-radius: var(--border-radius-m);
   width: 100%;
   min-height: 50px;
-
-  ${getShimmerStyles()}
 `
 
 export const Upload = styled.div`

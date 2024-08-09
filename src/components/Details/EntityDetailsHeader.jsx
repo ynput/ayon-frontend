@@ -7,7 +7,6 @@ import { useSelector } from 'react-redux'
 import styled from 'styled-components'
 import { OverflowField } from '@ynput/ayon-react-components'
 import copyToClipboard from '@helpers/copyToClipboard'
-import getShimmerStyles from '@/styles/getShimmerStyles'
 import { productTypes } from '@state/project'
 
 const ToolsStyled = styled.div`
@@ -19,16 +18,7 @@ const ToolsStyled = styled.div`
   margin-right: 1px;
 `
 
-const StyledLoading = styled.div`
-  width: 100%;
-  height: 37px;
-  border-radius: var(--border-radius-m);
-  position: relative;
-
-  ${getShimmerStyles()}
-`
-
-const EntityDetailsHeader = ({ values = [], tools, isLoading, hideThumbnail }) => {
+const EntityDetailsHeader = ({ values = [], tools, hideThumbnail }) => {
   const { folders, tasks } = useSelector((state) => state.project)
   const changes = useSelector((state) => state.editor.changes)
   const uri = useSelector((state) => state.context.uri)
@@ -82,39 +72,33 @@ const EntityDetailsHeader = ({ values = [], tools, isLoading, hideThumbnail }) =
   return (
     <DetailHeader>
       {!hideThumbnail && (
-        <StackedThumbnails
-          thumbnails={thumbnails}
-          isLoading={isLoading}
-          portalId={'editor-entity-details-container'}
-        />
+        <StackedThumbnails thumbnails={thumbnails} portalId={'editor-entity-details-container'} />
       )}
-      {isLoading ? (
-        <StyledLoading />
-      ) : (
-        <div style={{ overflowX: 'clip', paddingLeft: 3, marginLeft: -3 }}>
-          {!isMultiple ? (
-            <NameField
-              node={values[0]}
-              changes={changes}
-              styled
-              tasks={tasks}
-              folders={folders}
-              productTypes={productTypes}
-              style={{ display: 'flex', gap: 4, fontWeight: 'bold' }}
-              iconStyle={{ fontSize: 19, marginRight: 0 }}
-              prefix={`${values[0]?.product?.name}`}
-            />
-          ) : (
-            <span style={{ whiteSpace: 'nowrap' }}>Multiple Selected ({values.length})</span>
-          )}
-          <OverflowField
-            value={subTitle}
-            style={{ left: -3 }}
-            align="left"
-            onClick={() => copyToClipboard(breadcrumbs.join('/'), true)}
+
+      <div style={{ overflowX: 'clip', paddingLeft: 3, marginLeft: -3 }}>
+        {!isMultiple ? (
+          <NameField
+            node={values[0]}
+            changes={changes}
+            styled
+            tasks={tasks}
+            folders={folders}
+            productTypes={productTypes}
+            style={{ display: 'flex', gap: 4, fontWeight: 'bold' }}
+            iconStyle={{ fontSize: 19, marginRight: 0 }}
+            prefix={`${values[0]?.product?.name}`}
           />
-        </div>
-      )}
+        ) : (
+          <span style={{ whiteSpace: 'nowrap' }}>Multiple Selected ({values.length})</span>
+        )}
+        <OverflowField
+          value={subTitle}
+          style={{ left: -3 }}
+          align="left"
+          onClick={() => copyToClipboard(breadcrumbs.join('/'), true)}
+        />
+      </div>
+
       {tools && <ToolsStyled>{tools}</ToolsStyled>}
     </DetailHeader>
   )
