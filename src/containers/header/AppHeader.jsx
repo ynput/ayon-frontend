@@ -208,6 +208,7 @@ const Header = () => {
       <HeaderButton
         className={clsx({ active: menuOpen === 'user' })}
         onClick={() => handleToggleMenu('user')}
+        aria-label='User menu'
         ref={userButtonRef}
         variant="nav"
         style={{ padding: 6 }}
