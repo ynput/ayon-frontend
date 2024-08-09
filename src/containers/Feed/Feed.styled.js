@@ -1,4 +1,3 @@
-import { getShimmerStyles } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
 export const FeedContainer = styled.section`
@@ -47,7 +46,7 @@ export const FeedContent = styled.ul`
 
   flex-direction: column-reverse;
 
-  &.isLoading {
+  &.loading {
     overflow: hidden;
   }
 `
@@ -60,12 +59,10 @@ export const LoadMore = styled.span`
 
 export const Placeholder = styled.div`
   height: 50px;
-  background-color: var(--md-sys-color-surface-container-low);
   border-radius: 8px;
   overflow: hidden;
   margin: 8px 0;
+  opacity: 0.5;
 
   position: relative;
-
-  ${getShimmerStyles()}
 `

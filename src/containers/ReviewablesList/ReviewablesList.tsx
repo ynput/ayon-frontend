@@ -426,7 +426,9 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
       {!isDraggingFile && (
         <Styled.ReviewablesList onDragEnter={() => setIsDraggingFile(true)}>
           {isLoading ? (
-            Array.from({ length: 3 }).map((_, index) => <Styled.LoadingCard key={index} />)
+            Array.from({ length: 3 }).map((_, index) => (
+              <Styled.LoadingCard key={index} className="loading" />
+            ))
           ) : (
             <>
               <DndContext

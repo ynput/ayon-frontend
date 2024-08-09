@@ -7,6 +7,7 @@ import { Icon, TablePanel } from '@ynput/ayon-react-components'
 import useCreateContext from '@hooks/useCreateContext'
 import styled from 'styled-components'
 import clsx from 'clsx'
+import userTableLoadingData from '@hooks/userTableLoadingData'
 
 const StyledContainer = styled.div`
   display: flex;
@@ -76,23 +77,13 @@ const PresetList = ({
     ]
   }, [presetList])
 
-  // create 10 dummy rows
-  const loadingData = useMemo(() => {
-    return Array.from({ length: 6 }, (_, i) => ({
-      key: i,
-      data: {},
-    }))
-  }, [])
-
-  if (isLoading) {
-    presetListWithBuiltIn = loadingData
-  }
+  const tableData = userTableLoadingData(presetListWithBuiltIn, isLoading, 6, 'name')
 
   return (
     <StyledContainer>
       <TablePanel>
         <DataTable
-          value={presetListWithBuiltIn}
+          value={tableData}
           scrollable
           scrollHeight="flex"
           selectionMode="single"
@@ -102,8 +93,8 @@ const PresetList = ({
           onSelectionChange={(e) => setSelectedPreset(e.value.name)}
           onContextMenuSelectionChange={(e) => setSelectedPreset(e.value.name)}
           onContextMenu={(e) => ctxMenuShow(e.originalEvent, getCtxMenuItems(e.data))}
-          className={clsx({ 'table-loading': isLoading })}
-          rowClassName={(data) => clsx({ default: data.primary })}
+          className={clsx({ loading: isLoading })}
+          rowClassName={(data) => clsx({ default: data.primary, loading: isLoading })}
         >
           <Column field="label" header="Name" />
           <Column field="version" header="Version" style={{ maxWidth: 80 }} />

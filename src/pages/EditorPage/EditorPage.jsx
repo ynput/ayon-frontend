@@ -55,6 +55,7 @@ import Shortcuts from '@containers/Shortcuts'
 import useTableKeyboardNavigation, {
   extractIdFromClassList,
 } from '@containers/Feed/hooks/useTableKeyboardNavigation'
+import clsx from 'clsx'
 
 const EditorPage = () => {
   const project = useSelector((state) => state.project)
@@ -1709,6 +1710,7 @@ const EditorPage = () => {
       data: {},
       children: [],
       leaf: true,
+      isLoading: true,
     }))
   }
 
@@ -1720,7 +1722,7 @@ const EditorPage = () => {
         data: {},
         children: [],
         leaf: true,
-        className: 'loading',
+        isLoading: true,
       }))
     } else if (branch.children) {
       newBranch.children = branch.children.map((child) =>
@@ -1871,6 +1873,7 @@ const EditorPage = () => {
                     ['id-' + rowData.key]: true,
                     ['type-' + rowData.data.__entityType]: true,
                     compact: true,
+                    loading: rowData.isLoading,
                   }
                 }}
                 onContextMenu={onContextMenu}
@@ -1878,7 +1881,7 @@ const EditorPage = () => {
                 reorderableColumns
                 onColReorder={handleColumnReorder}
                 rows={20}
-                className={fullPageLoading ? 'table-loading' : undefined}
+                className={clsx({ loading: fullPageLoading })}
                 ref={tableRef}
                 onSelectionChange={(e) => handleSelectionChange(e.value)}
                 pt={{

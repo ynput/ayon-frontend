@@ -3,6 +3,7 @@ import * as Styled from './ReleasePreset.styled'
 import { Icon } from '@ynput/ayon-react-components'
 import { format, formatDistanceToNow } from 'date-fns'
 import Type from '@/theme/typography.module.css'
+import clsx from 'clsx'
 
 const ReleasePreset = ({
   label,
@@ -44,8 +45,7 @@ const ReleasePreset = ({
 
   return (
     <Styled.Preset
-      $selected={isSelected}
-      $loading={isLoading}
+      className={clsx({ loading: isLoading, selected: isSelected })}
       onClick={onClick}
       {...props}
       tabIndex={0}

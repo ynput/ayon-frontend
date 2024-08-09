@@ -233,7 +233,7 @@ const DetailsPanelHeader = ({
       className={clsx('details-panel-header', { isCompact })}
       onDragEnter={() => setIsDraggingFile(true)}
     >
-      <Styled.Header className={clsx('titles', { isCompact, isLoading })}>
+      <Styled.Header className={clsx('titles', { isCompact, loading: isLoading }, 'no-shimmer')}>
         <Styled.ThumbnailWrapper>
           <StackedThumbnails
             isLoading={isLoading}
@@ -249,7 +249,7 @@ const DetailsPanelHeader = ({
             </Styled.Playable>
           )}
         </Styled.ThumbnailWrapper>
-        <Styled.Content className={clsx({ isLoading })}>
+        <Styled.Content className={clsx({ loading: isLoading })}>
           <h2>{!isMultiple ? firstEntity?.title : `${entities.length} ${entityType}s selected`}</h2>
           <div className="sub-title">
             <span>{upperFirst(entityType)} - </span>
@@ -264,7 +264,7 @@ const DetailsPanelHeader = ({
         invert
         style={{ maxWidth: 'unset' }}
         onChange={(value) => handleUpdate('status', value)}
-        className={clsx('status-select', { isLoading })}
+        className={clsx('status-select', { loading: isLoading })}
         align={isCompact ? 'right' : 'left'}
       />
       {!isCompact &&
@@ -290,7 +290,7 @@ const DetailsPanelHeader = ({
         entities={entities}
         entityType={entityType}
         entitySubTypes={entitySubTypes}
-        isLoadingEntity={isFetching}
+        isLoadingEntity={isFetching || isLoading}
       />
       <Styled.TagsSelect
         value={union(...tagsValues)}

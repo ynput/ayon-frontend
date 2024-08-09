@@ -17,6 +17,8 @@ import { useUpdateAttributesMutation } from '@queries/attributes/updateAttribute
 import useSearchFilter from '@hooks/useSearchFilter'
 import useCreateContext from '@hooks/useCreateContext'
 import { isEqual } from 'lodash'
+import clsx from 'clsx'
+import userTableLoadingData from '@hooks/userTableLoadingData'
 
 const Attributes = () => {
   const [attributes, setAttributes] = useState([])
@@ -137,6 +139,8 @@ const Attributes = () => {
     ctxMenuTableShow(e.originalEvent, getContextMenu(e.value))
   }
 
+  const tableData = userTableLoadingData(filteredData, isLoading, 30, 'name')
+
   return (
     <>
       <main>
@@ -183,7 +187,7 @@ const Attributes = () => {
               scrollable="true"
               scrollHeight="flex"
               dataKey="name"
-              value={filteredData}
+              value={tableData}
               reorderableRows
               onRowReorder={onRowReorder}
               selectionMode="single"
@@ -192,6 +196,8 @@ const Attributes = () => {
               onContextMenuSelectionChange={handleContextSelectionChange}
               onRowDoubleClick={() => !Array.isArray(selectedAttribute) && setShowEditor(true)}
               resizableColumns
+              className={clsx({ loading: isLoading })}
+              rowClassName={() => ({ loading: isLoading })}
             >
               <Column rowReorder style={{ maxWidth: 30 }} />
               <Column field="name" header="Name" style={{ maxWidth: 130 }} sortable />
@@ -206,7 +212,7 @@ const Attributes = () => {
               <Column
                 header="Scopes"
                 field="scopeLength"
-                body={(rowData) => rowData.scope.join(', ')}
+                body={(rowData) => rowData?.scope?.join(', ')}
                 style={{ maxWidth: 330 }}
                 sortable
               />

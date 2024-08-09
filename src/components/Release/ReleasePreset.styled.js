@@ -1,5 +1,4 @@
-import styled, { css } from 'styled-components'
-import getShimmerStyles from '@/styles/getShimmerStyles'
+import styled from 'styled-components'
 
 export const Preset = styled.li`
   display: flex;
@@ -29,32 +28,16 @@ export const Preset = styled.li`
     width: 100%;
   }
 
-  ${({ $selected }) =>
-    $selected &&
-    css`
-      &,
-      &:hover {
-        background-color: var(--md-sys-color-primary-container);
-      }
+  &.selected {
+    &,
+    &:hover {
+      background-color: var(--md-sys-color-primary-container);
+    }
 
-      .bio {
-        white-space: normal;
-      }
-    `}
-
-  ${({ $loading }) =>
-    $loading &&
-    css`
-      /* hide all text */
-      & > * {
-        visibility: hidden;
-        user-select: none;
-        pointer-events: none;
-      }
-
-      /* add shimmer */
-      ${getShimmerStyles(undefined, undefined, { opacity: 0.5 })}
-    `}
+    .bio {
+      white-space: normal;
+    }
+  }
 `
 
 export const Header = styled.header`

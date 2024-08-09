@@ -3,21 +3,34 @@ import * as Styled from './YnputCloud.styled'
 import { Icon, Spacer } from '@ynput/ayon-react-components'
 import Type from '@/theme/typography.module.css'
 import CloudLogo from '@/svg/CloudLogo'
+import clsx from 'clsx'
 
 const YnputCloudButton = React.forwardRef(
   (
-    { isConnected, showStatus, showDropdown, isOpen, isLoading, smallLogo, darkMode, ...props },
+    {
+      isConnected,
+      showStatus,
+      showDropdown,
+      isOpen,
+      isLoading,
+      smallLogo,
+      darkMode,
+      disabled,
+      ...props
+    },
     ref,
   ) => {
     return (
       <Styled.HeaderButton
         {...props}
         ref={ref}
-        $disabled={props.disabled || isLoading}
+        disabled={disabled || isLoading}
         $isLoading={isLoading}
-        $isOpen={isOpen}
-        $darkMode={darkMode}
-        style={{ borderRadius: 8 }}
+        className={clsx({
+          loading: isLoading,
+          open: isOpen,
+          darkMode,
+        })}
       >
         <CloudLogo style={{ height: smallLogo ? 20 : 29 }} darkMode={darkMode} />
         {(showStatus || showDropdown) && (

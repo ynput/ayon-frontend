@@ -11,6 +11,7 @@ import { isEmpty, isEqual } from 'lodash'
 import { useSelector } from 'react-redux'
 import { useUpdateProjectMutation } from '@queries/project/updateProject'
 import { toast } from 'react-toastify'
+import clsx from 'clsx'
 
 const ProjectDetails = ({ projectName }) => {
   const isUser = useSelector((state) => state.user.data.isUser)
@@ -92,7 +93,7 @@ const ProjectDetails = ({ projectName }) => {
   // Active status
   attribArray.unshift({
     value: (
-      <Styled.Active $isLoading={isFetching} $isActive={active}>
+      <Styled.Active className={clsx({ loading: isFetching, active })}>
         {active ? 'active' : ' inactive'}
       </Styled.Active>
     ),

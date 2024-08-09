@@ -11,6 +11,7 @@ import LoadingPage from '@pages/LoadingPage'
 import * as Styled from './YnputCloud.styled'
 import { useLocation } from 'react-router'
 import { useSelector } from 'react-redux'
+import clsx from 'clsx'
 
 const YnputConnector = ({
   onConnection,
@@ -114,8 +115,7 @@ const YnputConnector = ({
   return (
     <Styled.Container
       style={styleContainer}
-      $darkMode={isConnected && darkMode}
-      className="connector"
+      className={clsx('connector', { darkMode: isConnected && darkMode })}
     >
       <YnputCloudButton
         disabled={disabled}
