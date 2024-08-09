@@ -501,6 +501,13 @@ a {
   padding-bottom: 60px;
 }
 
+.p-treetable-tbody,
+  .p-datatable-tbody {
+    &::after {
+      display: none;
+    }
+  }
+
 .table-loading {
   .p-treetable-tbody,
   .p-datatable-tbody {
