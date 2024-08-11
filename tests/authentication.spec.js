@@ -27,7 +27,6 @@ test.describe.serial('user_login_logout', () => {
 
     await page.getByLabel('User menu').click()
     await page.getByText('Sign out').click()
-    await page.waitForLoadState('domcontentloaded'); // Wait for the 'DOMContentLoaded' event.
-    expect(page).toHaveURL('/login')
+    await expect(page).toHaveURL('/login')
   })
 })
