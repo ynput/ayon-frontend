@@ -7,12 +7,11 @@ import {
   LockedInput,
   SaveButton,
   InputText,
-  getShimmerStyles,
   InputSwitch,
 } from '@ynput/ayon-react-components'
 import { useUpdateUserMutation, useUpdateUserPreferencesMutation } from '@queries/user/updateUser'
 import Avatar from '@components/Avatar/Avatar'
-import styled, { css } from 'styled-components'
+import styled from 'styled-components'
 import UserAttribForm from '../SettingsPage/UsersSettings/UserAttribForm'
 import SetPasswordDialog from '../SettingsPage/UsersSettings/SetPasswordDialog'
 import ayonClient from '../../ayon'
@@ -20,6 +19,7 @@ import Type from '@/theme/typography.module.css'
 import { updateUserAttribs, updateUserPreferences } from '@state/user'
 import { useDispatch } from 'react-redux'
 import { useNotifications } from '@context/notificationsContext'
+import clsx from 'clsx'
 
 const FormsStyled = styled.section`
   flex: 1;
@@ -52,16 +52,6 @@ export const AvatarName = styled.span`
   justify-content: center;
   align-items: center;
   padding: 16px 16px 8px 16px;
-  > span {
-    position: relative;
-    ${({ $hasData }) =>
-      !$hasData &&
-      css`
-        color: transparent;
-        border-radius: var(--border-radius-m);
-        ${getShimmerStyles()}
-      `}
-  }
 `
 
 const ProfilePage = ({ user = {}, isLoading }) => {
@@ -253,7 +243,7 @@ const ProfilePage = ({ user = {}, isLoading }) => {
       <Section style={{ paddingTop: 16 }}>
         <FormsStyled>
           <Avatar user={user} />
-          <AvatarName $hasData={!!userName}>
+          <AvatarName className={clsx({ loading: !userName || isLoading }, 'shimmer-lightest')}>
             <span className={Type.headlineMedium}>{userName ? userName : 'User FullName'}</span>
           </AvatarName>
           <Panel style={{ background: 'none' }}>

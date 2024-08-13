@@ -3,7 +3,7 @@ import { Chart } from 'primereact/chart'
 import styled from 'styled-components'
 import DashboardPanelWrapper from './DashboardPanelWrapper'
 import { useGetProjectDashboardQuery } from '@queries/getProjectDashboard'
-import getShimmerStyles from '@/styles/getShimmerStyles'
+import clsx from 'clsx'
 
 const ChartStyled = styled(Chart)`
   width: 100%;
@@ -16,14 +16,6 @@ const ChartStyled = styled(Chart)`
     width: 100% !important;
     aspect-ratio: unset;
   }
-`
-
-const StyledLoading = styled.div`
-  position: absolute;
-  inset: 8px;
-  background-color: var(--md-sys-color-surface-container-high);
-  border-radius: var(--border-radius-m);
-  ${getShimmerStyles()}
 `
 
 const HeartBeat = ({ projectName }) => {
@@ -77,9 +69,8 @@ const HeartBeat = ({ projectName }) => {
   }
 
   return (
-    <DashboardPanelWrapper>
+    <DashboardPanelWrapper className={clsx({ loading: isFetching }, 'shimmer-dark')}>
       <ChartStyled data={chart} type={'line'} options={options} />
-      {isFetching && <StyledLoading />}
     </DashboardPanelWrapper>
   )
 }

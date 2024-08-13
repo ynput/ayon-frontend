@@ -14,6 +14,7 @@ import styled, { css } from 'styled-components'
 import clsx from 'clsx'
 import { toast } from 'react-toastify'
 import { useUpdateUserPreferencesMutation } from '@/services/user/updateUser'
+import userTableLoadingData from '@hooks/userTableLoadingData'
 
 const formatName = (rowData, defaultTitle, field = 'name') => {
   if (rowData[field] === '_') return defaultTitle
@@ -355,13 +356,7 @@ const ProjectList = ({
     tableContextMenuShow(event.originalEvent, getContextItems(newSelection))
   }
 
-  // create 10 dummy rows
-  const loadingData = useMemo(() => {
-    return Array.from({ length: 10 }, (_, i) => ({
-      key: i,
-      projects: {},
-    }))
-  }, [])
+  const tableData = userTableLoadingData(projectList, isLoading, 10, 'name')
 
   const sectionStyle = {
     ...styleSection,
@@ -403,7 +398,7 @@ const ProjectList = ({
           />
         )}
         <DataTable
-          value={isLoading ? loadingData : projectList}
+          value={tableData}
           scrollable="true"
           scrollHeight="flex"
           selectionMode={multiselect ? 'multiple' : 'single'}
@@ -416,10 +411,11 @@ const ProjectList = ({
           onRowDoubleClick={(e) => navigate(`/projects/${e.data.name}/browser`)}
           onContextMenu={onContextMenu}
           className={clsx('project-list', {
-            'table-loading': isLoading,
+            loading: isLoading,
             collapsed: collapsed,
             collapsible: isCollapsible,
           })}
+          rowClassName={() => ({ loading: isLoading })}
           style={{
             maxWidth: 'unset',
           }}

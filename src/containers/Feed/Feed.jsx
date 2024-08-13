@@ -252,7 +252,7 @@ const Feed = ({
             {warningMessage}
           </Styled.Warning>
         )}
-        <Styled.FeedContent ref={feedRef} className={clsx({ isLoading: isLoadingNew })}>
+        <Styled.FeedContent ref={feedRef} className={clsx({ loading: isLoadingNew }, 'no-shimmer')}>
           {isLoadingNew
             ? loadingPlaceholders
             : transformedActivitiesData.map((activity) => (

@@ -1,5 +1,4 @@
 import styled from 'styled-components'
-import getShimmerStyles from '../../styles/getShimmerStyles'
 
 export const Card = styled.div`
   position: relative;
@@ -89,17 +88,9 @@ export const Card = styled.div`
     }
   }
 
-  &.shimmer {
-    .icon {
-      opacity: 0;
-      animation: none;
-    }
-
+  &.loading {
     border: none;
     border-color: transparent;
-    background-color: unset;
-
-    ${getShimmerStyles()}
   }
 `
 

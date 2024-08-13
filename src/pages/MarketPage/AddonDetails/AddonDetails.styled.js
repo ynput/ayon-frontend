@@ -1,5 +1,4 @@
-import { Button, Dropdown, Panel, getShimmerStyles } from '@ynput/ayon-react-components'
-import ReactMarkdown from 'react-markdown'
+import { Button, Dropdown, Panel } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
 export const PanelContainer = styled(Panel)`
@@ -39,13 +38,6 @@ export const Right = styled.div`
 
   & > button {
     width: 100%;
-  }
-
-  &.isLoading > button {
-    position: relative;
-    overflow: hidden;
-    background-color: unset;
-    ${getShimmerStyles(undefined, undefined, { opacity: 1 })}
   }
 `
 
@@ -92,6 +84,7 @@ export const Header = styled.div`
   flex-direction: row;
   align-items: center;
   gap: var(--base-gap-large);
+  width: 100%;
 
   .titles {
     display: flex;
@@ -117,34 +110,6 @@ export const Header = styled.div`
   .official {
     color: var(--md-sys-color-tertiary);
   }
-
-  /* loading styles */
-  &.isPlaceholder {
-    .titles > * {
-      position: relative;
-      ${getShimmerStyles(undefined, undefined, { opacity: 1 })}
-      border-radius: var(--border-radius);
-      overflow: hidden;
-      margin: 1px 0;
-    }
-  }
-`
-
-// description in the left column
-export const Description = styled(ReactMarkdown)`
-  position: relative;
-  /* loading styles */
-  &.isPlaceholder {
-    color: transparent;
-    ${getShimmerStyles(
-      'var(--md-sys-color-surface-container)',
-      'var(--md-sys-color-surface-container-high)',
-      { opacity: 1 },
-    )}
-    border-radius: var(--border-radius);
-    min-height: 80px;
-    overflow: hidden;
-  }
 `
 
 // meta panel in the right column
@@ -160,15 +125,6 @@ export const MetaPanel = styled.div`
   width: 100%;
   position: relative;
   background-color: var(--md-sys-color-surface-container);
-
-  &.isPlaceholder {
-    ${getShimmerStyles(
-      'var(--md-sys-color-surface-container)',
-      'var(--md-sys-color-surface-container-high)',
-      { opacity: 1 },
-    )}
-    border-radius: var(--border-radius-m);
-  }
 `
 
 export const MetaPanelRow = styled.div`

@@ -41,7 +41,7 @@ export const AddonSelectStep = ({
       <Styled.AddonsContainer>
         {isLoadingAddons
           ? placeholders.map((placeholder) => (
-              <Styled.PlaceholderCard key={placeholder} icon={''} />
+              <AddonCard key={placeholder} className="loading" icon={''} />
             ))
           : notMandatoryAddons.map((addon) => (
               <AddonCard

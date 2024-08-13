@@ -7,12 +7,14 @@ import { useGetAccessGroupsQuery } from '@queries/accessGroups/getAccessGroups'
 import { useDeleteAccessGroupMutation } from '@queries/accessGroups/updateAccessGroups'
 import NewAccessGroup from './NewAccessGroup'
 import confirmDelete from '@helpers/confirmDelete'
+import clsx from 'clsx'
+import userTableLoadingData from '@hooks/userTableLoadingData'
 
 const AccessGroupList = ({ projectName, selectedAccessGroup, onSelectAccessGroup }) => {
   const [showNewAccessGroup, setShowNewAccessGroup] = useState(false)
 
   // Load user list
-  const { data: accessGroupList = [], isLoading: loading } = useGetAccessGroupsQuery({
+  const { data: accessGroupList = [], isLoading } = useGetAccessGroupsQuery({
     projectName,
   })
 
@@ -42,7 +44,7 @@ const AccessGroupList = ({ projectName, selectedAccessGroup, onSelectAccessGroup
 
   // FIXME: this doesn't update when access group details updates
   const getRowClass = (rowData) => {
-    return { 'changed-project': rowData.isProjectLevel }
+    return { 'changed-project': rowData.isProjectLevel, loading: isLoading }
   }
 
   // Render
@@ -97,6 +99,8 @@ const AccessGroupList = ({ projectName, selectedAccessGroup, onSelectAccessGroup
 
   const [ctxMenuShow] = useCreateContext([])
 
+  const tableData = userTableLoadingData(accessGroupList, isLoading, 5, 'name')
+
   return (
     <Section style={{ maxWidth: 400, flex: 2 }}>
       {showNewAccessGroup && (
@@ -113,9 +117,9 @@ const AccessGroupList = ({ projectName, selectedAccessGroup, onSelectAccessGroup
         <Button label="Delete access group" onClick={onDeleteGlobal} icon="delete" />
       </Toolbar>
 
-      <TablePanel loading={loading}>
+      <TablePanel>
         <DataTable
-          value={accessGroupList}
+          value={tableData}
           scrollable="true"
           scrollHeight="flex"
           dataKey="name"
@@ -123,6 +127,7 @@ const AccessGroupList = ({ projectName, selectedAccessGroup, onSelectAccessGroup
           selection={selection}
           onSelectionChange={(e) => onSelectionChange(e.value)}
           rowClassName={getRowClass}
+          className={clsx({ loading: isLoading })}
           onContextMenu={(e) => onContextMenu(e)}
         >
           <Column field="name" header="Access group" />

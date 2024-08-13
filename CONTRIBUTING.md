@@ -103,7 +103,7 @@ Notes
 - Avoid spinners
 - Avoid layout shifts when the data loads in.
 - Use skeleton shimmer placeholders.
-- Use `${getShimmerStyles}` in styled components.
+- Use `loading` class for loading shimmer.
 
 Example loading shimmer
 ![Image](https://github.com/ynput/ayon-frontend/assets/49156310/f589ca02-37a3-41e4-a64a-3e2062083407)

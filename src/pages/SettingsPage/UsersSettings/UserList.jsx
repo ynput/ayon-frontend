@@ -8,6 +8,8 @@ import './users.scss'
 import { useMemo } from 'react'
 import styled from 'styled-components'
 import useCreateContext from '@hooks/useCreateContext'
+import clsx from 'clsx'
+import userTableLoadingData from '@hooks/userTableLoadingData'
 
 const StyledProfileRow = styled.div`
   display: flex;
@@ -102,30 +104,20 @@ const UserList = ({
 
   const [ctxMenuShow] = useCreateContext()
 
-  // create 10 dummy rows
-  const loadingData = useMemo(() => {
-    return Array.from({ length: 10 }, (_, i) => ({
-      key: i,
-      data: {},
-    }))
-  }, [])
+  const tableData = userTableLoadingData(tableList, isLoading, 40, 'name')
 
-  if (isLoading) {
-    tableList = loadingData
-  }
   // Render
-
   return (
     <Section wrap>
       <TablePanel>
         <DataTable
-          value={tableList}
+          value={tableData}
           scrollable="true"
           scrollHeight="flex"
           dataKey="name"
           selectionMode="multiple"
-          className={`user-list-table ${isLoading ? 'table-loading' : ''}`}
-          rowClassName={(rowData) => ({'inactive' : !rowData.active})}
+          className={clsx('user-list-table', { loading: isLoading })}
+          rowClassName={(rowData) => clsx({ inactive: !rowData.active, loading: isLoading })}
           onSelectionChange={onSelectionChange}
           onContextMenu={onContextMenu}
           selection={selection}
@@ -140,7 +132,7 @@ const UserList = ({
             field="name"
             header="Username"
             sortable
-            body={(rowData) => <ProfileRow rowData={rowData} />}
+            body={(rowData) => !isLoading && <ProfileRow rowData={rowData} />}
             resizeable
           />
           <Column field="attrib.fullName" header="Full name" sortable resizeable />

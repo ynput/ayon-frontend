@@ -16,6 +16,8 @@ import { openViewer } from '@/features/viewer'
 import useTableKeyboardNavigation, {
   extractIdFromClassList,
 } from './Feed/hooks/useTableKeyboardNavigation'
+import clsx from 'clsx'
+import userTableLoadingData from '@hooks/userTableLoadingData'
 
 const TaskList = ({ style = {}, autoSelect = false }) => {
   const tasksTypes = useSelector((state) => state.project.tasks)
@@ -179,18 +181,6 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
     ctxMenuShow(event.originalEvent, ctxMenuItems(newFocused))
   }
 
-  // create 10 dummy rows
-  const loadingData = useMemo(() => {
-    return Array.from({ length: 6 }, (_, i) => ({
-      key: i,
-      data: {},
-    }))
-  }, [])
-
-  //
-  // Render
-  //
-
   const nameRenderer = (node) => {
     const isActive = node.data.active
     const isGroup = node.data.isGroup
@@ -268,11 +258,13 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
     dispatch(setPairing([]))
   }
 
-  if (isFetching) {
-    tasksData = loadingData
-  }
+  const tableData = userTableLoadingData(tasksData, isFetching, 6)
 
   const noTasks = !isFetching && tasksData.length === 0
+
+  //
+  // Render
+  //
 
   return (
     <Section style={style}>
@@ -288,7 +280,7 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
           <NoEntityFound type="task" />
         ) : (
           <TreeTable
-            value={tasksData}
+            value={tableData}
             scrollable="true"
             scrollHeight="100%"
             emptyMessage=" "
@@ -296,9 +288,13 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
             selectionKeys={selectedTasks}
             onSelectionChange={onSelectionChange}
             onContextMenu={onContextMenu}
-            className={isFetching ? 'table-loading' : undefined}
+            className={clsx({ loading: isFetching })}
             ref={tableRef}
-            rowClassName={(rowData) => ({ ['id-' + rowData.key]: true, compact: true })}
+            rowClassName={(rowData) => ({
+              ['id-' + rowData.key]: true,
+              compact: true,
+              loading: isFetching,
+            })}
             pt={{
               root: {
                 onKeyDown: handleKeyDown,

@@ -1,9 +1,9 @@
 import styled, { css } from 'styled-components'
 import ThumbnailSimple from '@containers/ThumbnailSimple'
-import { Button, getShimmerStyles } from '@ynput/ayon-react-components'
+import { Button } from '@ynput/ayon-react-components'
 
 const showClearButton = css`
-  &.isClearable {
+  &.clearable {
     .clear {
       display: flex;
     }
@@ -28,7 +28,7 @@ export const Message = styled.li`
 
   background-color: var(--md-sys-color-surface-container-low);
 
-  &:hover:not(.disableHover):not(.isPlaceholder) {
+  &:hover:not(.disableHover):not(.placeholder) {
     background-color: var(--md-sys-color-surface-container-low-hover);
 
     ${showClearButton}
@@ -47,7 +47,7 @@ export const Message = styled.li`
     margin-bottom: 32px;
   }
 
-  &.isSelected:not(.isPlaceholder) {
+  &.isSelected:not(.placeholder) {
     border-radius: var(--border-radius-m);
     background-color: var(--md-sys-color-primary-container);
     color: var(--md-sys-color-on-primary-container);
@@ -98,37 +98,22 @@ export const Message = styled.li`
   }
 
   /* loading placeholder shimmer state */
-  &.isPlaceholder {
+  &.placeholder {
     cursor: default;
     .left,
     .middle,
-    .right {
-      position: relative;
-      border-radius: var(--border-radius-m);
-      overflow: hidden;
+    .right,
+    .title {
       min-height: 30px;
-
-      ${getShimmerStyles()}
-
-      &::after {
-        border-radius: var(--border-radius-m);
-      }
-
-      /* hide all children */
-      * {
-        display: none;
-      }
     }
 
-    .left {
-      &::after {
-        max-width: 80%;
-      }
+    .title {
+      min-width: 300px;
     }
-    .middle {
-      &::after {
-        max-width: 60%;
-      }
+
+    .right {
+      min-width: unset;
+      margin-left: 40px;
     }
   }
 `

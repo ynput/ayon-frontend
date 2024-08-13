@@ -1,4 +1,4 @@
-import { Button, getShimmerStyles } from '@ynput/ayon-react-components'
+import { Button } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
 export const Actions = styled.div`
@@ -17,7 +17,7 @@ export const FeaturedAction = styled(Button)`
     object-fit: contain;
   }
 
-  &.isLoading {
+  &.loading {
     .icon,
     img {
       opacity: 0;
@@ -26,7 +26,5 @@ export const FeaturedAction = styled(Button)`
     overflow: hidden;
 
     background-color: unset;
-
-    ${getShimmerStyles()}
   }
 `

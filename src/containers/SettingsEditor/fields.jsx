@@ -544,7 +544,7 @@ const ArrayFieldTemplate = (props) => {
     <FormArrayField>
       {props.items.map((element, idx) => (
         <React.Fragment key={idx}>
-          <ArrayItemTemplate {...element} />
+          <ArrayItemTemplate {...element} key={element?.key} />
         </React.Fragment>
       ))}
 

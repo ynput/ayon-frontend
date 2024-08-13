@@ -1,4 +1,3 @@
-import { getShimmerStyles } from '@ynput/ayon-react-components'
 import styled, { css } from 'styled-components'
 
 export const Path = styled.div`
@@ -16,18 +15,6 @@ export const Path = styled.div`
   }
 
   flex: 1;
-
-  &.loading {
-    overflow: hidden;
-    & > * {
-      opacity: 0;
-      &::before {
-        opacity: 0;
-      }
-    }
-
-    ${getShimmerStyles()}
-  }
 `
 
 export const SegmentWrapper = styled.div`

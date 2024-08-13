@@ -46,6 +46,8 @@ const NameField = ({
       getEntityTypeIcon('version')
   }
 
+  if (value === undefined) return ''
+
   return (
     <CellWithIcon
       icon={icon}

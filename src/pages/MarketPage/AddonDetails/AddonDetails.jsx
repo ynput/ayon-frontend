@@ -9,6 +9,7 @@ import { rcompare } from 'semver'
 import useUninstall from './useUninstall'
 import { Link } from 'react-router-dom'
 import { getSimplifiedUrl } from '@helpers/url'
+import ReactMarkdown from 'react-markdown'
 
 const MetaPanelRow = ({ label, children, valueDirection = 'column', ...props }) => (
   <Styled.MetaPanelRow {...props}>
@@ -167,8 +168,8 @@ const AddonDetails = ({ addon = {}, isLoading, onDownload, isUpdatingAll }) => {
       {name && (
         <>
           <Styled.Left className={Type.bodyLarge}>
-            <Styled.Header className={clsx({ isPlaceholder: isLoading })}>
-              <AddonIcon size={64} src={icon} alt={name + ' icon'} isPlaceholder={isLoading} />
+            <Styled.Header className={clsx({ loading: isLoading })}>
+              <AddonIcon size={64} src={icon} alt={name + ' icon'} loading={isLoading} />
               <div className="titles">
                 <h2 className={Type.headlineSmall}>{title}</h2>
                 <span className={clsx(verifiedString.toLowerCase(), 'verification')}>
@@ -190,13 +191,11 @@ const AddonDetails = ({ addon = {}, isLoading, onDownload, isUpdatingAll }) => {
                 </a>
               </Styled.ErrorCard>
             )}
-            <Styled.Description className={clsx({ isPlaceholder: isLoading })}>
-              {description}
-            </Styled.Description>
+            <ReactMarkdown className={clsx({ loading: isLoading })}>{description}</ReactMarkdown>
           </Styled.Left>
           {/* RIGHT PANEL */}
-          <Styled.Right className={clsx(Type.bodyMedium, { isLoading })}>
-            <Styled.Download>
+          <Styled.Right className={clsx(Type.bodyMedium)}>
+            <Styled.Download className={clsx({ loading: isLoading })}>
               {actionButton}
 
               <Styled.VersionDropdown
@@ -216,7 +215,7 @@ const AddonDetails = ({ addon = {}, isLoading, onDownload, isUpdatingAll }) => {
                 )}
               />
             </Styled.Download>
-            <Styled.MetaPanel className={clsx({ isPlaceholder: isLoading })}>
+            <Styled.MetaPanel className={clsx({ loading: isLoading })}>
               <MetaPanelRow label="Downloaded Versions">
                 {versionsToShow.length
                   ? versionsToShow.map((version) => <span key={version}>{version}</span>)
@@ -228,7 +227,7 @@ const AddonDetails = ({ addon = {}, isLoading, onDownload, isUpdatingAll }) => {
                 )}
               </MetaPanelRow>
             </Styled.MetaPanel>
-            <Styled.MetaPanel className={clsx({ isPlaceholder: isLoading })}>
+            <Styled.MetaPanel className={clsx({ loading: isLoading })}>
               <MetaPanelRow label="Production Usage" valueDirection="row">
                 <span>
                   {currentProductionVersion ? currentProductionVersion : 'Not used in Production'}
@@ -254,7 +253,7 @@ const AddonDetails = ({ addon = {}, isLoading, onDownload, isUpdatingAll }) => {
               </MetaPanelRow>
             </Styled.MetaPanel>
 
-            <Styled.MetaPanel className={clsx({ isPlaceholder: isLoading })}>
+            <Styled.MetaPanel className={clsx({ loading: isLoading })}>
               <MetaPanelRow label="Author">{orgTitle}</MetaPanelRow>
               <MetaPanelRow label="Latest Version">
                 {latestVersion && <span>{latestVersion}</span>}
@@ -263,7 +262,7 @@ const AddonDetails = ({ addon = {}, isLoading, onDownload, isUpdatingAll }) => {
             </Styled.MetaPanel>
 
             {groupedLinks.length > 0 && (
-              <Styled.MetaPanel className={clsx({ isPlaceholder: isLoading })}>
+              <Styled.MetaPanel className={clsx({ loading: isLoading })}>
                 {groupedLinks.map((group) => (
                   <MetaPanelRow
                     className="capitalized"

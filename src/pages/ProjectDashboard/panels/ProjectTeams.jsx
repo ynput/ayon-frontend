@@ -5,8 +5,8 @@ import UserTile from '@pages/SettingsPage/UsersSettings/UserTile'
 import DashboardPanelWrapper from './DashboardPanelWrapper'
 import { useGetTeamsQuery } from '@queries/team/getTeams'
 import { Button } from '@ynput/ayon-react-components'
-import getShimmerStyles from '@/styles/getShimmerStyles'
-import styled, { css } from 'styled-components'
+import clsx from 'clsx'
+import styled from 'styled-components'
 import TeamMembersStacked from '@components/TeamMembersStacked/TeamMembersStacked'
 
 const subTitle = (members, leaders) => {
@@ -36,12 +36,9 @@ const StyledTeam = styled.div`
     background-color: var(--md-sys-color-surface-container);
   }
 
-  ${({ $isLoading }) =>
-    $isLoading &&
-    css`
-      min-height: 100px;
-      ${getShimmerStyles()}
-    `}
+  &.loading {
+    min-height: 100px;
+  }
 `
 
 const ProjectTeams = ({ projectName }) => {
@@ -63,7 +60,7 @@ const ProjectTeams = ({ projectName }) => {
   return (
     <DashboardPanelWrapper title={`Teams - ${data.length}`}>
       {data.map((team, i) => (
-        <StyledTeam key={i} $isLoading={isFetching}>
+        <StyledTeam key={i} className={clsx({ loading: isFetching })}>
           {!isFetching && (
             <>
               <h2 style={{ position: 'relative' }}>

@@ -2,8 +2,6 @@ import styled from 'styled-components'
 import StatusSelectComponent from '@components/status/statusSelect'
 import {
   Button,
-  OverflowField,
-  getShimmerStyles,
   AssigneeSelect as AssigneeSelectComponent,
   TagsSelect as TagsSelectComponent,
 } from '@ynput/ayon-react-components'
@@ -65,7 +63,7 @@ export const Header = styled.header`
     grid-column: span 1;
   }
 
-  &.isLoading {
+  &.loading {
     .playable {
       display: none;
     }
@@ -112,31 +110,6 @@ export const Playable = styled.span`
   }
 `
 
-export const Path = styled(OverflowField)`
-  position: relative;
-
-  &:hover {
-    z-index: 100;
-  }
-
-  &.onClose {
-    padding-right: 40px;
-  }
-
-  & > span {
-    transform: translate3d(0, 0, 0);
-  }
-
-  &.isLoading {
-    overflow: hidden;
-    border-radius: var(--border-radius-m);
-    span {
-      opacity: 0;
-    }
-    ${getShimmerStyles()}
-  }
-`
-
 export const Content = styled.div`
   display: flex;
   flex-direction: column;
@@ -160,12 +133,12 @@ export const Content = styled.div`
     text-overflow: ellipsis;
   }
 
-  &.isLoading {
+  &.loading {
     width: 70%;
-    ${getShimmerStyles()}
 
-    h2, h3, .sub-title {
-      opacity: 0;
+    h2,
+    h3,
+    .sub-title {
       white-space: nowrap;
     }
   }
@@ -202,15 +175,6 @@ export const StatusSelect = styled(StatusSelectComponent)`
     padding-right: 8px;
     width: calc(100% - 1px);
     margin-bottom: 2px;
-  }
-
-  &.isLoading {
-    ${getShimmerStyles()}
-    border-radius: var(--border-radius-m);
-
-    .button {
-      opacity: 0;
-    }
   }
 `
 

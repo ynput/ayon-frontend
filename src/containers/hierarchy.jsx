@@ -15,6 +15,8 @@ import { openViewer } from '@/features/viewer'
 import useTableKeyboardNavigation, {
   extractIdFromClassList,
 } from './Feed/hooks/useTableKeyboardNavigation'
+import clsx from 'clsx'
+import userTableLoadingData from '@hooks/userTableLoadingData'
 
 const filterHierarchy = (text, folder, folders) => {
   let result = []
@@ -354,17 +356,7 @@ const Hierarchy = (props) => {
     ctxMenuShow(event.originalEvent, ctxMenuItems(newFocused))
   }
 
-  // create 10 dummy rows
-  const loadingData = useMemo(() => {
-    return Array.from({ length: 15 }, (_, i) => ({
-      key: i,
-      data: {},
-    }))
-  }, [])
-
-  if (isFetching) {
-    treeData = loadingData
-  }
+  treeData = userTableLoadingData(treeData, isFetching, 15)
 
   //
   // Render
@@ -385,10 +377,11 @@ const Hierarchy = (props) => {
         onSelectionChange={onSelectionChange}
         onToggle={onToggle}
         onContextMenu={onContextMenu}
-        className={isFetching ? 'table-loading' : undefined}
+        className={clsx({ loading: isFetching })}
         rowClassName={(rowData) => ({
           ['id-' + rowData.key]: true,
           compact: true,
+          loading: isFetching,
         })}
         pt={{
           root: {

@@ -19,7 +19,7 @@ const ActionsDropdown = ({ options, isLoading, onAction }) => {
   return (
     <StyledDropdown
       disabled={isLoading}
-      className={clsx('more', { isLoading: isLoading })}
+      className={clsx('more', { loading: isLoading })}
       options={options}
       value={[]}
       placeholder=""

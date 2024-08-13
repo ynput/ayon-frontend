@@ -1,9 +1,11 @@
-import React, { useMemo, useRef } from 'react'
+import React, { useRef } from 'react'
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 import { useDispatch, useSelector } from 'react-redux'
 import { setExpandedProducts } from '@state/context'
 import useTableKeyboardNavigation from '@containers/Feed/hooks/useTableKeyboardNavigation'
+import clsx from 'clsx'
+import userTableLoadingData from '@hooks/userTableLoadingData'
 
 const ProductsList = ({
   treeData,
@@ -34,18 +36,6 @@ const ProductsList = ({
     localStorage.setItem('products-columns-order', JSON.stringify(localStorageOrder))
   }
 
-  // create 10 dummy rows
-  const loadingData = useMemo(() => {
-    return Array.from({ length: 10 }, (_, i) => ({
-      key: i,
-      data: {},
-    }))
-  }, [])
-
-  if (isLoading) {
-    treeData = loadingData
-  }
-
   const handleGroupExpand = (e) => {
     dispatch(setExpandedProducts(e.value))
   }
@@ -72,6 +62,8 @@ const ProductsList = ({
     handleTableKeyDown(event)
   }
 
+  treeData = userTableLoadingData(treeData, isLoading, 40)
+
   return (
     <TreeTable
       ref={tableRef}
@@ -86,8 +78,10 @@ const ProductsList = ({
       selectionKeys={selection}
       onSelectionChange={onSelectionChange}
       rowClassName={(rowData) => {
+        const loadingVersion = loadingProducts.includes(rowData.data.id)
         const className = {
-          loading: loadingProducts.includes(rowData.data.id),
+          loading: loadingVersion || isLoading,
+          'shimmer-light': loadingVersion,
           ['id-' + rowData.key]: true,
           compact: true,
         }
@@ -102,7 +96,7 @@ const ProductsList = ({
       onColumnResizeEnd={setColumnWidths}
       reorderableColumns
       onColReorder={handleColumnReorder}
-      className={isLoading ? 'table-loading' : undefined}
+      className={clsx({ loading: isLoading })}
       onToggle={handleGroupExpand}
       expandedKeys={expandedProducts}
       pt={{
