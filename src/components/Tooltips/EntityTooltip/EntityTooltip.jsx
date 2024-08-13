@@ -39,13 +39,15 @@ const EntityTooltip = ({ type, id, pos: { left, top } = {}, projectName, project
   return (
     <Styled.TooltipEntityCard
       style={{ left, top, maxWidth: width }}
-      {...{ title, subTitle }}
-      description={projectName + path}
+      title={title}
+      header={subTitle}
+      path={path}
+      showPath
+      status={status}
+      users={users}
       isLoading={isFetching || skip}
-      assignees={users}
+      loadingSections={['header', 'title', 'users', 'status']}
       titleIcon={icons[type]}
-      icon={status?.icon}
-      iconColor={status?.color}
       imageUrl={thumbnailUrl}
     />
   )

@@ -29,7 +29,7 @@ const EntityCardStyled = styled(EntityCard)`
   &.isPlaceholder {
     &::after,
     .thumbnail::after,
-    .inner-card::after {
+    .tag::after {
       display: none;
     }
 
@@ -129,7 +129,8 @@ const ProjectLatestRow = ({
               key={`${rowIndex}-${index}`}
               title={entity.name}
               titleIcon={entity.typeIcon}
-              subTitle={entity.footer}
+              imageIcon={entity.typeIcon}
+              header={entity.footer}
               className={entity.className}
               imageUrl={
                 !isLoadingData &&
@@ -141,8 +142,8 @@ const ProjectLatestRow = ({
                 minWidth: 'unset',
               }}
               isLoading={isLoadingData}
+              loadingSections={['header', 'title']}
               onClick={() => onEntityClick(entity)}
-              isFullHighlight
             />
           ),
       )}

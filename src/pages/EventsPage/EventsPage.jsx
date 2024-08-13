@@ -215,7 +215,7 @@ const EventsPage = () => {
               placeholder="Filter events..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              autocomplete="off"
+              autoComplete="off"
             />
           </form>
           <InputSwitch

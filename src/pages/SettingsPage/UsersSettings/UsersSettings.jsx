@@ -260,7 +260,7 @@ const UsersSettings = () => {
                 placeholder="Filter users..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                autocomplete="search-users"
+                autoComplete="search-users"
               />
             </form>
             <Spacer />

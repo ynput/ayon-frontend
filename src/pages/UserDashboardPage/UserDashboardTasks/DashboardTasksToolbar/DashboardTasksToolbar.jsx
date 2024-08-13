@@ -84,7 +84,6 @@ const DashboardTasksToolbar = ({ isLoading, view, setView }) => {
           filter={assigneesFilter}
           align={'right'}
           placeholder="Assignees"
-          editor
           buttonStyle={{ outline: '1px solid var(--md-sys-color-outline-variant)' }}
           style={{ zIndex: 20 }}
         />

@@ -27,7 +27,7 @@
     "@rtk-query/codegen-openapi": "^1.2.0",
     "@rtk-query/graphql-request-base-query": "^2.3.1",
     "@uiw/react-textarea-code-editor": "^2.1.9",
-    "@ynput/ayon-react-components": "^1.5.9",
+    "@ynput/ayon-react-components": "^1.6.0",
     "axios": "^1.6.3",
     "chart.js": "^4.2.0",
     "clsx": "^2.1.1",
@@ -67,7 +67,7 @@
     "sass": "^1.62.0",
     "semver": "^7.6.0",
     "short-uuid": "^4.2.0",
-    "styled-components": "^5.3.6",
+    "styled-components": "^6.1.12",
     "turndown": "^7.1.2",
     "use-query-params": "^2.1.2",
     "uuid": "^9.0.0"

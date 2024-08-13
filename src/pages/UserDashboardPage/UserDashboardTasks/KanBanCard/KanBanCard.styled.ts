@@ -1,8 +1,8 @@
 import { DragOverlay } from '@dnd-kit/core'
 import { EntityCard } from '@ynput/ayon-react-components'
-import styled, { css, keyframes } from 'styled-components'
+import styled, { keyframes } from 'styled-components'
 
-const topAnimation = (i) => keyframes`
+const topAnimation = (i: number) => keyframes`
   from {
     top: 0;
   }
@@ -10,24 +10,25 @@ const topAnimation = (i) => keyframes`
     top: ${`calc((30px - 100%) * ${i})`};
   }
 `
+type KanBanEntityCardProps = {
+  $index: number
+}
 
-export const KanBanEntityCard = styled(EntityCard)`
+export const KanBanEntityCard = styled(EntityCard)<KanBanEntityCardProps>`
   /* if we are dragging, hide description and rotate */
-  ${({ $isOverlay, $index }) =>
-    $isOverlay &&
-    css`
-      cursor: grabbing;
+  &.overlay {
+    cursor: grabbing;
 
-      /* box shadow */
-      box-shadow: 0 10px 5px 0px rgb(0 0 0 / 10%);
+    /* box shadow */
+    box-shadow: 0 10px 5px 0px rgb(0 0 0 / 10%);
 
-      .description {
-        grid-template-rows: 0fr !important;
-        padding-top: 0 !important;
-      }
+    .description {
+      grid-template-rows: 0fr !important;
+      padding-top: 0 !important;
+    }
 
-      animation: ${topAnimation($index)} 100ms forwards;
-    `}
+    animation: ${({ $index }) => topAnimation($index)} 100ms forwards;
+  }
 `
 
 export const CardDragOverlay = styled(DragOverlay)`

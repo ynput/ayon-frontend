@@ -462,7 +462,7 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
                   placeholder="Filter users..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  autocomplete="off"
+                  autoComplete="off"
                 />
                 <InputSwitch
                   checked={showTeamUsersOnly}

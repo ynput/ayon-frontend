@@ -206,7 +206,7 @@ const KanBanColumn = forwardRef(
             <span>{tasksCount - tasksAdded > 0 ? `+ ${tasksCount - tasksAdded} more` : ''}</span>
           )}
           {isLoading &&
-            loadingTasks.map((task) => <KanBanCard task={task} key={task.id} isLoading={true} />)}
+            loadingTasks.map((task) => <KanBanCard task={task} key={task.id} isLoading />)}
         </Styled.Items>
       </Styled.Column>
     )

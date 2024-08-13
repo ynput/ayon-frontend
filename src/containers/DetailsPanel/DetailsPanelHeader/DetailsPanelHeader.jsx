@@ -297,6 +297,7 @@ const DetailsPanelHeader = ({
         isMultiple={tagsValues.some((v) => !isEqual(v, tagsValues[0]))}
         tags={tagsOptionsObject}
         editable
+        editor
         onChange={(value) => handleUpdate('tags', value)}
         align="right"
         styleDropdown={{ display: isLoading && 'none' }}
