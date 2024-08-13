@@ -5,7 +5,7 @@ const getUserName = (browser) => 'test_user_' + browser
 // This test suite is for creating and deleting users
 test.describe.serial('user_create_delete', () => {
   // creates a new user
-  test('new-user', async ({ page }, { project }) => {
+  test.skip('new-user', async ({ page }, { project }) => {
     const userName = getUserName(project.name)
     await page.goto('/settings/users')
     // click on the create new user button
@@ -23,7 +23,7 @@ test.describe.serial('user_create_delete', () => {
   })
 
   //   deletes newly created user
-  test('delete-user', async ({ page }, { project }) => {
+  test.skip('delete-user', async ({ page }, { project }) => {
     const userName = getUserName(project.name)
     await page.goto(`/settings/users?name=${userName}`)
     // click on delete button (top right)

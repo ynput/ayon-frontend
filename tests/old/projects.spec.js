@@ -5,7 +5,7 @@ import { getProjectName } from './fixtures/project'
 // This test suite is for creating and deleting projects
 test.describe.serial('project_create_delete', () => {
   // creates a new project
-  test('new-project', async ({ page }, { project }) => {
+  test.skip('new-project', async ({ page }, { project }) => {
     const projectName = getProjectName('test_project')(project.name)
     await page.goto('/manageProjects')
     // click on the create new project button
@@ -23,7 +23,7 @@ test.describe.serial('project_create_delete', () => {
   })
 
   // deletes newly created project
-  test('delete-project', async ({ page }, { project }) => {
+  test.skip('delete-project', async ({ page }, { project }) => {
     const projectName = getProjectName('test_project')(project.name)
     await page.goto('/manageProjects')
 

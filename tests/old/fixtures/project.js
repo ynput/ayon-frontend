@@ -1,7 +1,5 @@
 import { expect } from '@playwright/test'
 
-const getProjectName = prefix => browser => prefix + '_' + browser
-
 const createProject = async (page, projectName) => {
     await page.goto('/manageProjects')
     await page.getByRole('button', { name: 'create_new_folder Add New' }).click()

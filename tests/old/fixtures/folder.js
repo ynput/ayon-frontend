@@ -1,6 +1,5 @@
 import { expect } from '@playwright/test'
 
-const getFolderName = prefix => browser => prefix + '_' + browser
 
 const createFolder = async (page, projectName, folderName) => {
   await page.goto(`/projects/${projectName}/editor`)

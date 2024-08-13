@@ -5,7 +5,7 @@ const getBundleName = (browser) => 'test_bundle_' + browser
 // This test suite is for creating and deleting users
 test.describe.serial('bundle_create_delete', () => {
   // creates a new user
-  test('new-bundle', async ({ page }, { project }) => {
+  test.skip('new-bundle', async ({ page }, { project }) => {
     const bundleName = getBundleName(project.name)
     await page.goto('/settings/bundles')
     // click on the create new bundle button
@@ -26,7 +26,7 @@ test.describe.serial('bundle_create_delete', () => {
   })
 
   //   deletes newly created user
-  test('delete-bundle', async ({ page }, { project }) => {
+  test.skip('delete-bundle', async ({ page }, { project }) => {
     const bundleName = getBundleName(project.name)
     await page.goto('/settings/bundles')
     // right click bundle

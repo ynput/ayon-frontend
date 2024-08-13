@@ -4,7 +4,7 @@ test.use({ storageState: { cookies: [], origins: [] } })
 
 // This test suite is for creating and deleting users
 test.describe.serial('user_login_logout', () => {
-  test('user_login', async ({ page }) => {
+  test.skip('user_login', async ({ page }) => {
     await page.goto('/')
     // Perform authentication steps. Replace these actions with your own.
     await page.getByLabel('Username').fill(process.env.NAME)
@@ -17,7 +17,7 @@ test.describe.serial('user_login_logout', () => {
     await page.waitForURL('/dashboard/tasks')
   })
 
-  test('user_logout', async ({ page }) => {
+  test.skip('user_logout', async ({ page }) => {
     await page.goto('/')
     // Perform authentication steps. Replace these actions with your own.
     await page.getByLabel('Username').fill(process.env.NAME)

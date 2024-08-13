@@ -1,55 +1,34 @@
-import { test, expect } from '@playwright/test'
-import { createProject, deleteProject, getProjectName } from './fixtures/project'
-import { createFolder, getFolderName } from './fixtures/folder'
+import { test as base } from '@playwright/test'
+import TaskPage, { getTaskName, taskTest } from './fixtures/taskPage'
+import { getFolderName } from './fixtures/folderPage'
+import FolderPage from './fixtures/folderPage'
+import ProjectPage, { getProjectName } from './fixtures/projectPage'
 
-const getTaskName = (browser) => 'test_task_task' + browser
-
-test.describe.serial('task_create_delete', () => {
-  test('new-task', async ({ page }, { project }) => {
-    const projectName = getProjectName('test_task_project')(project.name)
-    const folderName = getFolderName('test_task_folder')(project.name)
-    const taskName = getTaskName(project.name)
-
-    await createProject(page, projectName)
-    await createFolder(page, projectName, folderName)
-
-    await page.getByText(folderName).click()
-    await page.getByRole('button', { name: 'add_task Add tasks' }).click()
-
-    await page.getByText('task_altGeneric').click()
-    await page.locator('input[value="Generic"]').fill(taskName)
-    await page.getByRole('button', { name: 'check Add and Close' }).click()
-
-    await expect(page.getByRole('cell', { name: taskName })).toBeVisible()
-
-    await page.getByRole('button', { name: 'check Save Changes' }).click()
-    await page.getByText('Changes saved').click()
-  })
-
-  test('delete-task', async ({ page }, { project }) => {
-    const projectName = getProjectName('test_task_project')(project.name)
-    const folderName = getFolderName('test_task_folder')(project.name)
-
-    // Minor hack: Double navigation to actually load the editor page, it was giving inconsistent results without it.
-    await page.goto(`/`)
-    await page.goto(`/projects/${projectName}/editor`)
-
-    var folderLocator = page.locator('.p-treetable-scrollable-body span').getByText(folderName)
-    expect(folderLocator).toBeVisible()
-    folderLocator.dblclick()
-
-    const taskName = getTaskName(project.name)
-
-    await page.getByRole('cell', { name: taskName }).click({ button: 'right' })
-    await page.getByRole('menuitem', { name: 'delete Delete' }).click()
-
-    await page.getByRole('button', { name: 'check Save Changes' }).click()
-    await page.getByText('Changes saved').click()
-    await expect(page.getByRole('cell', { name: taskName })).toBeHidden()
-
-    await deleteProject(page, projectName)
-  })
+const test = base.extend<{ projectPage: ProjectPage; folderPage: FolderPage; taskPage: TaskPage }>({
+  folderPage: async ({ page, browserName }, use) => {
+    const folderPage = new FolderPage(page, browserName)
+    await folderPage.goto('foo')
+    use(folderPage)
+  },
+  projectPage: async ({ page, browserName }, use) => {
+    const projectPage = new ProjectPage(page, browserName)
+    use(projectPage)
+  },
+  taskPage: async ({ page, browserName }, use) => {
+    const taskPage = new TaskPage(page)
+    use(taskPage)
+  },
 })
 
+test('create/delete task', async ({ projectPage, folderPage, taskPage, browserName }) => {
+  const projectName = getProjectName('test_project_task')(browserName)
+  const folderName = getFolderName('test_project_task_folder')(browserName)
+  const taskName = getTaskName('test_project_task_task')(browserName)
 
-
+  await projectPage.createProject(projectName)
+  await folderPage.createFolder(projectName, folderName)
+  await taskPage.createTask(projectName, folderName, taskName)
+  await taskPage.deleteTask(projectName, folderName, taskName)
+  await folderPage.deleteFolder(projectName, folderName)
+  await projectPage.deleteProject(projectName)
+})
