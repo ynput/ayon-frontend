@@ -22,7 +22,7 @@ const DefaultItemStyled = styled.span`
       background-color: var(--md-sys-color-primary-container);
       color: var(--md-sys-color-on-primary-container);
       /* remove hover */
-      :hover {
+      &:hover {
         background-color: var(--md-sys-color-primary-container-hover);
       }
       :active {

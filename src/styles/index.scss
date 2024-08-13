@@ -144,7 +144,7 @@ input:-webkit-autofill:focus {
   width: 32px;
   height: auto;
   transition: color 0.4s ease;
-  :hover {
+  &:hover {
     transition: color 0.4s ease;
   }
   //
