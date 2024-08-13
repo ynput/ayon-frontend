@@ -1,5 +1,6 @@
 import api from '@api'
 import ayonClient from '@/ayon'
+import { $Any } from '@types'
 
 const USER_BY_NAME_QUERY = `
   query UserList($name:String!) {
@@ -78,9 +79,9 @@ query Assignees($projectName: String) {
 }
 }`
 
-const buildUsersQuery = (QUERY) => {
+const buildUsersQuery = (QUERY: string) => {
   let f_attribs = ''
-  for (const attrib of ayonClient.settings.attributes) {
+  for (const attrib of ayonClient.settings.attributes as $Any) {
     if (attrib.scope.includes('user')) f_attribs += `${attrib.name}\n`
   }
 
@@ -95,7 +96,7 @@ const getUsers = api.injectEndpoints({
       query: () => ({
         url: '/api/users',
       }),
-      transformResponse: (res) => res?.data?.users.edges.map((e) => e.node),
+      transformResponse: (res: $Any) => res?.data?.users.edges.map((e: $Any) => e.node),
       providesTags: () => ['user', { type: 'user', id: 'LIST' }],
     }),
     getUsers: build.query({
@@ -107,13 +108,13 @@ const getUsers = api.injectEndpoints({
           variables: {},
         },
       }),
-      transformResponse: (res, meta, { selfName }) => {
+      transformResponse: (res: $Any, meta, { selfName }) => {
         if (res?.errors) {
           console.log(res.errors)
           throw new Error(res.errors[0].message)
         }
 
-        return res?.data?.users.edges.map((e) => ({
+        return res?.data?.users.edges.map((e: $Any) => ({
           ...e.node,
           self: e.node.name === selfName,
           avatarUrl: `/api/users/${e.node.name}/avatar`,
@@ -122,7 +123,10 @@ const getUsers = api.injectEndpoints({
       },
       providesTags: (users) =>
         users
-          ? [...users.map((e) => ({ type: 'user', id: e.name })), { type: 'user', id: 'LIST' }]
+          ? [
+              ...users.map((e: $Any) => ({ type: 'user', id: e.name })),
+              { type: 'user', id: 'LIST' },
+            ]
           : [{ type: 'user', id: 'LIST' }],
     }),
     getUser: build.query({
@@ -143,14 +147,14 @@ const getUsers = api.injectEndpoints({
           variables: { name },
         },
       }),
-      transformResponse: (res) =>
-        res?.data?.users.edges.map((e) => ({
+      transformResponse: (res: $Any) =>
+        res?.data?.users.edges.map((e: $Any) => ({
           ...e.node,
           avatarUrl: `/api/users/${e.node?.name}/avatar`,
         })),
       providesTags: (res) =>
         res
-          ? [...res.map((e) => ({ type: 'user', id: e.name }, { type: 'user', id: 'LIST' }))]
+          ? [...res.map((e: $Any) => ({ type: 'user', id: e.name })), { type: 'user', id: 'LIST' }]
           : ['user', { type: 'user', id: 'LIST' }],
     }),
     getUsersAssignee: build.query({
@@ -162,8 +166,8 @@ const getUsers = api.injectEndpoints({
           variables: { names, projectName },
         },
       }),
-      transformResponse: (res) =>
-        res?.data?.users.edges.flatMap((u) => {
+      transformResponse: (res: $Any) =>
+        res?.data?.users.edges.flatMap((u: $Any) => {
           if (!u.node) return []
 
           const n = u.node
@@ -176,7 +180,10 @@ const getUsers = api.injectEndpoints({
         }),
       providesTags: (res) =>
         res
-          ? [...res.map((user) => ({ type: 'user', id: user.name })), { type: 'user', id: 'LIST' }]
+          ? [
+              ...res.map((user: $Any) => ({ type: 'user', id: user.name })),
+              { type: 'user', id: 'LIST' },
+            ]
           : [{ type: 'user', id: 'LIST' }],
     }),
     getMe: build.query({
@@ -192,7 +199,7 @@ const getUsers = api.injectEndpoints({
       query: ({ name }) => ({
         url: `/api/users/${name}/sessions`,
       }),
-      transformResponse: (res) => res?.sessions,
+      transformResponse: (res: $Any) => res?.sessions,
       providesTags: (res, g, { token }) => [{ type: 'session', id: token }],
     }),
   }),
