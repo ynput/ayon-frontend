@@ -1,6 +1,5 @@
 import {expect, test as base } from '@playwright/test'
 import type {Page } from '@playwright/test'
-import { getProjectName } from '../old/fixtures/project'
 
 const getProjectName = prefix => browser => prefix + '_' + browser
 
