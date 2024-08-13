@@ -24,4 +24,4 @@ const createProject = async (page, projectName) => {
     await expect(page.getByRole('cell', { name: projectName })).toBeHidden()
   }
 
-export { createProject, deleteProject, getProjectName }
+export { createProject, deleteProject }

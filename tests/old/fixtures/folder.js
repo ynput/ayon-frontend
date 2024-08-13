@@ -24,4 +24,4 @@ const deleteFolder = async (page, projectName, folderName) => {
   await expect(page.getByRole('cell', { name: folderName })).toBeHidden()
 }
 
-export { createFolder, deleteFolder, getFolderName }
+export { createFolder, deleteFolder }

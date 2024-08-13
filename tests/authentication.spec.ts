@@ -1,7 +1,8 @@
-import { getBundleName, bundleTest as test} from './fixtures/bundlePage'
+import { authenticationTest as test} from './fixtures/authenticationPage'
 
-test('create/delete bundle', async ({bundlePage, browserName}) => {
-  const bundleName= getBundleName('test_bundle')(browserName)
-  await bundlePage.createBundle(bundleName)
-  await bundlePage.deleteBundle(bundleName)
+test.use({ storageState: { cookies: [], origins: [] } })
+
+test('login/logout user', async ({authenticationPage, browserName}) => {
+  await authenticationPage.login(process.env.NAME!, process.env.PASSWORD!)
+  await authenticationPage.logout()
 })

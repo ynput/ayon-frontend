@@ -1,7 +1,8 @@
 import { test, expect } from '@playwright/test'
-import { createProject, deleteProject, getProjectName } from './fixtures/project'
-import { createFolder, getFolderName } from './fixtures/folder'
-import { BrowserRouter } from 'react-router-dom'
+import { createProject, deleteProject } from './fixtures/project'
+import { createFolder } from './fixtures/folder'
+import { getProjectName } from '../fixtures/projectPage'
+import { getFolderName } from '../fixtures/folderPage'
 
 const getTaskName = prefix => (browser) => prefix + '_' + browser
 

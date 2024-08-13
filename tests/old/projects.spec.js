@@ -1,6 +1,6 @@
 // @ts-check
 import { test, expect } from '@playwright/test'
-import { getProjectName } from './fixtures/project'
+import { getProjectName } from '../fixtures/projectPage'
 
 // This test suite is for creating and deleting projects
 test.describe.serial('project_create_delete', () => {

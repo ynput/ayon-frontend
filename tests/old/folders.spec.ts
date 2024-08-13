@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test'
-import { createProject, deleteProject, getProjectName } from './fixtures/project'
+import { createProject, deleteProject } from './fixtures/project'
+import { getProjectName } from '../fixtures/projectPage'
 
 const getFolderName = (browser) => 'test_folder_' + browser
 
