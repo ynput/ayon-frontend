@@ -8,7 +8,6 @@ export const GlobalContextMenu = () => {
   return (
     <ContextMenu
       model={model}
-      global
       ref={ref}
       onShow={() => setIsContextOpen(true)}
       onHide={() => setIsContextOpen(false)}

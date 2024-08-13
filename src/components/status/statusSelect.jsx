@@ -29,7 +29,6 @@ const StatusSelect = ({
   options,
   invert = false,
   isChanged,
-  isChevron = false,
   ...props
 }) => {
   const statusesObject = options
@@ -65,13 +64,6 @@ const StatusSelect = ({
   const dropdownValue = Array.isArray(value) ? uniq(value) : [value]
   const isMixed = dropdownValue.length > 1
 
-  // Hide chevron for mixed values and if isChevron is false
-  const resolveChevronVisibility = (isChevron, isActive) => {
-    if (!isChevron) return false
-    if (isChevron && isMixed) return false
-    return isActive
-  }
-
   return (
     <StyledDropdown
       {...props}
@@ -94,7 +86,6 @@ const StatusSelect = ({
           statuses={statusesObject}
           invert={invert}
           className={'value'}
-          showChevron={isChevron}
           isChanged={isChanged}
         />
       )}
@@ -108,7 +99,6 @@ const StatusSelect = ({
             isActive={isActive}
             height={height}
             statuses={statusesObject}
-            showChevron={resolveChevronVisibility(isChevron, isActive)}
           />
         )
       }
