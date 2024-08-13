@@ -24,7 +24,7 @@ import Shortcuts from '@containers/Shortcuts'
 const AddonsManager = () => {
   const navigate = useNavigate()
   // QUERIES
-  const { data: addons = [] } = useGetAddonListQuery()
+  const { data: addons = [], isLoading } = useGetAddonListQuery()
   const { data: bundles = [] } = useGetBundleListQuery({ archived: false })
 
   // addon upload dialog
@@ -54,13 +54,8 @@ const AddonsManager = () => {
   const setDeletedVersions = (versions) => dispatch(onDeletedVersions(versions))
 
   // different functions to transform the data for each table
-  const {
-    addonsTableData,
-    versionsTableData,
-    bundlesTableData,
-    filteredVersionsMap,
-    versionSort,
-  } = useGetTableData(addonsVersionsBundles, selectedAddons, selectedVersions, deletedVersions)
+  let { addonsTableData, versionsTableData, bundlesTableData, filteredVersionsMap, versionSort } =
+    useGetTableData(addonsVersionsBundles, selectedAddons, selectedVersions, deletedVersions)
 
   // SELECTION HANDLERS vvv
   const handleVersionSelect = (versions) => {
@@ -151,6 +146,20 @@ const AddonsManager = () => {
     },
   ]
 
+  const loadingData = useMemo(() => {
+    return Array.from({ length: 5 }, (_, i) => ({
+      key: i,
+      data: {},
+    }))
+  }, [])
+
+  // LOADING DUMMY DATA
+  if (isLoading) {
+    addonsTableData = loadingData
+    versionsTableData = loadingData
+    bundlesTableData = loadingData
+  }
+
   return (
     <Section style={{ overflow: 'hidden' }}>
       <Shortcuts shortcuts={shortcuts} />
@@ -180,6 +189,8 @@ const AddonsManager = () => {
               </div>
             }
             extraContext={viewInMarket}
+            emptyMessage="No addons found"
+            isLoading={isLoading}
           />
         </SplitterPanel>
         <SplitterPanel>
@@ -194,6 +205,8 @@ const AddonsManager = () => {
             onDelete={handleDeleteVersions}
             onDeleteSuccess={handleDeleteVersionsSuccess}
             extraContext={viewInMarket}
+            emptyMessage={selectedAddons.length ? 'No versions found' : 'Select an addon'}
+            isLoading={isLoading}
           />
         </SplitterPanel>
         <SplitterPanel>
@@ -213,6 +226,8 @@ const AddonsManager = () => {
                 icon: 'arrow_circle_right',
               },
             ]}
+            emptyMessage={selectedVersions.length ? 'No bundles found' : 'Select versions'}
+            isLoading={isLoading}
           />
         </SplitterPanel>
         {/* <SplitterPanel>

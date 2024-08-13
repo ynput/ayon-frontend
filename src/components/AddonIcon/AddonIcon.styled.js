@@ -1,4 +1,3 @@
-import { getShimmerStyles } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
 export const Icon = styled.div`
@@ -13,13 +12,8 @@ export const Icon = styled.div`
     object-fit: contain;
   }
 
-  &.isLoading {
-    ${getShimmerStyles(undefined, undefined, { opacity: 1 })}
+  &.loading {
     border-radius: 100%;
-    img {
-      opacity: 0;
-    }
-    overflow: hidden;
   }
 
   .icon {

@@ -607,7 +607,6 @@ const EditorPanel = ({
                       placeholder={placeholder}
                       disableMessage
                       widthExpand
-                      isChevron
                     />
                   )
                 } else if (field === 'assignees') {
@@ -641,6 +640,7 @@ const EditorPanel = ({
                       width={200}
                       buttonStyle={{ border: '1px solid var(--md-sys-color-outline-variant)' }}
                       isChanged={isChanged}
+                      editor
                     />
                   )
                 } else if (attrib?.enum) {

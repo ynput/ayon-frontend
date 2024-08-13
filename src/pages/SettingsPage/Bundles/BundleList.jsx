@@ -8,6 +8,8 @@ import { useDeleteBundleMutation, useUpdateBundleMutation } from '@queries/bundl
 import { useMemo } from 'react'
 import confirmDelete from '@helpers/confirmDelete'
 import { toast } from 'react-toastify'
+import clsx from 'clsx'
+import userTableLoadingData from '@hooks/userTableLoadingData'
 
 const BundleList = ({
   selectedBundles = [],
@@ -178,10 +180,12 @@ const BundleList = ({
     onBundleSelect(selected)
   }
 
+  const tableData = userTableLoadingData(sortedBundleList, isLoading, 10, 'name')
+
   return (
-    <TablePanel loading={isLoading}>
+    <TablePanel>
       <DataTable
-        value={sortedBundleList}
+        value={tableData}
         scrollable
         scrollHeight="flex"
         selectionMode="multiple"
@@ -190,8 +194,8 @@ const BundleList = ({
         onContextMenu={onContextMenu}
         selection={selectedBundles.map((name) => ({ name }))}
         onSelectionChange={handleSelect}
-        rowClassName={(rowData) => (rowData?.isArchived ? 'archived' : '')}
-        className="bundles-table"
+        className={clsx('bundles-table', { loading: isLoading })}
+        rowClassName={(rowData) => ({ archived: rowData?.isArchived, loading: isLoading })}
         resizableColumns
         emptyMessage={errorMessage ? 'Error: ' + errorMessage : 'No bundles found'}
       >

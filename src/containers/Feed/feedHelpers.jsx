@@ -8,5 +8,9 @@ export const getLoadingPlaceholders = (amount) =>
   new Array(amount)
     .fill(0)
     .map((_, index) => (
-      <Styled.Placeholder key={index} style={{ minHeight: getRandomNumberBetween(50, 150) }} />
+      <Styled.Placeholder
+        key={index}
+        className="loading"
+        style={{ minHeight: getRandomNumberBetween(50, 150) }}
+      />
     ))

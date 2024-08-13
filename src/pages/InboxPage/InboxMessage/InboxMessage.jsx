@@ -123,8 +123,8 @@ const InboxMessage = ({
         isSelected,
         isRead,
         disableHover,
-        isPlaceholder,
-        isClearable: !!onClear,
+        placeholder: isPlaceholder,
+        clearable: !!onClear,
       })}
       id={'message-' + id}
       onClick={handleOnClick}
@@ -135,10 +135,11 @@ const InboxMessage = ({
           entityType={entityType}
           entityId={entityId}
           icon={getEntityTypeIcon(entityType)}
+          className={clsx({ loading: isPlaceholder })}
         />
-        <span className={'title'}>{path.join(' - ')}</span>
+        <span className={clsx('title', { loading: isPlaceholder })}>{path.join(' - ')}</span>
       </Styled.Left>
-      <Styled.Middle className="middle">
+      <Styled.Middle className={clsx('middle', { loading: isPlaceholder })}>
         <Styled.Unread className={clsx(Typography.bodySmall, { hide: unReadCount < 2 })}>
           {unReadCount}
         </Styled.Unread>
@@ -149,7 +150,7 @@ const InboxMessage = ({
           <Styled.Body className="body">{body}</Styled.Body>
         )}
       </Styled.Middle>
-      <Styled.Right className="right">
+      <Styled.Right className={clsx('right', { loading: isPlaceholder })}>
         {onClear && (
           <Styled.ClearButton
             id={'clear-' + id}
@@ -162,7 +163,7 @@ const InboxMessage = ({
             {clearLabel}
           </Styled.ClearButton>
         )}
-        <UserImage name={userName} size={20} />
+        <UserImage name={userName} size={20} className={'n-shimmer'} />
         <Styled.Date className="date">{getDateString(date)}</Styled.Date>
       </Styled.Right>
     </Styled.Message>

@@ -175,7 +175,7 @@ const Actions = ({ entities, entityType, entitySubTypes, isLoadingEntity }) => {
         <Styled.FeaturedAction
           key={action.identifier + '-' + i}
           className={clsx('action', {
-            isLoading: isLoading,
+            loading: isLoading,
             isPlaceholder: action.isPlaceholder,
           })}
           data-tooltip={action.label}

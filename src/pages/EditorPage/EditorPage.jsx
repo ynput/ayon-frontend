@@ -1710,6 +1710,7 @@ const EditorPage = () => {
       data: {},
       children: [],
       leaf: true,
+      isLoading: true,
     }))
   }
 
@@ -1721,7 +1722,7 @@ const EditorPage = () => {
         data: {},
         children: [],
         leaf: true,
-        className: 'loading',
+        isLoading: true,
       }))
     } else if (branch.children) {
       newBranch.children = branch.children.map((child) =>
@@ -1872,6 +1873,7 @@ const EditorPage = () => {
                     ['id-' + rowData.key]: true,
                     ['type-' + rowData.data.__entityType]: true,
                     compact: true,
+                    loading: rowData.isLoading,
                   }
                 }}
                 onContextMenu={onContextMenu}
@@ -1879,7 +1881,7 @@ const EditorPage = () => {
                 reorderableColumns
                 onColReorder={handleColumnReorder}
                 rows={20}
-                className={clsx({ 'table-loading': fullPageLoading }, 'TABLEEEEE')}
+                className={clsx({ loading: fullPageLoading })}
                 ref={tableRef}
                 onSelectionChange={(e) => handleSelectionChange(e.value)}
                 pt={{

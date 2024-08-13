@@ -612,7 +612,7 @@ const Products = () => {
           placeholder="Filter products..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          autocomplete="off"
+          autoComplete="off"
           data-tooltip="Use '!' to exclude and ',' to separate multiple filters. Example: '!image, render, compositing'"
         />
         <Styled.TaskFilterDropdown

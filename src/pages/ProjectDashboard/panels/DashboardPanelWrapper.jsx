@@ -68,9 +68,18 @@ const IconStyled = styled(Button)`
   min-height: unset;
 `
 
-const DashboardPanelWrapper = ({ title, children, span = 1, style, stylePanel, header, icon }) => {
+const DashboardPanelWrapper = ({
+  title,
+  children,
+  span = 1,
+  style,
+  stylePanel,
+  header,
+  icon,
+  ...props
+}) => {
   return (
-    <PanelStyled span={span} style={stylePanel}>
+    <PanelStyled span={span} style={stylePanel} {...props}>
       {title && (
         <header>
           <h1>{title}</h1>

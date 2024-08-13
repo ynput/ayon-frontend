@@ -152,7 +152,6 @@ const StatusField = ({
   statuses = {},
   invert,
   className,
-  showChevron,
   isChanged,
   ...props
 }) => {
@@ -185,7 +184,6 @@ const StatusField = ({
           {size !== 'icon' && (size === 'full' ? shownValue : shortName)}
         </span>
       </div>
-      {showChevron && <Icon icon="expand_more" />}
     </StatusStyled>
   )
 }

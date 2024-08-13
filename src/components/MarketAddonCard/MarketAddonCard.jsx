@@ -49,9 +49,12 @@ const MarketAddonCard = ({
   }
 
   return (
-    <Styled.Container {...props} className={clsx({ isSelected, isPlaceholder })}>
+    <Styled.Container
+      {...props}
+      className={clsx({ selected: isSelected, loading: isPlaceholder }, 'no-shimmer')}
+    >
       <AddonIcon isPlaceholder={isPlaceholder} size={32} src={icon} alt={title + ' icon'} />
-      <Styled.Content className="content">
+      <Styled.Content className={clsx({ loading: isPlaceholder })}>
         <Styled.TitleWrapper className="header">
           <Styled.Title className={Type.titleMedium}>{title}</Styled.Title>
           {isOfficial && <img src="/favicon-32x32.png" width={15} height={15} />}

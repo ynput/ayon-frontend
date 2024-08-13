@@ -57,7 +57,7 @@ const FeedFilters = ({
   const hideActivityFilters = entitiesWithoutFeed.includes(entityType)
 
   return (
-    <Styled.FiltersToolbar {...props} className={clsx(className, { isLoading })}>
+    <Styled.FiltersToolbar {...props} className={clsx(className, { loading: isLoading })}>
       {!hideActivityFilters &&
         filtersLeft.map((filter) => (
           <Styled.FilterButton

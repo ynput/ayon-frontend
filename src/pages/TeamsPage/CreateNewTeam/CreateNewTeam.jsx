@@ -173,7 +173,7 @@ const CreateNewTeam = ({
             placeholder="Filter users..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            autocomplete="off"
+            autoComplete="off"
           />
           <UserListTeams
             selectedProjects={[projectName]}

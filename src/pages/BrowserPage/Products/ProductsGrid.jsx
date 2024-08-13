@@ -265,11 +265,13 @@ const ProductsGrid = ({
                       style={{
                         minWidth: 'unset',
                       }}
+                      loadingSections={['header', 'title', 'users', 'status']}
                     />
                   ))
                 : groupData.map(({ data: product }, index) => {
                     if (!product) return null
                     const thumbnailUrl = `/api/projects/${projectName}/versions/${product.versionId}/thumbnail?updatedAt=${product.versionUpdatedAt}`
+                    const status = statuses[product.versionStatus]
 
                     return (
                       <EntityCard
@@ -277,19 +279,16 @@ const ProductsGrid = ({
                           minWidth: 'unset',
                         }}
                         key={index}
-                        title={product.name}
-                        titleIcon={productTypes[product.productType]?.icon || 'inventory_2'}
-                        icon={statuses[product.versionStatus]?.icon || ''}
-                        iconColor={statuses[product.versionStatus]?.color || ''}
+                        header={product.name}
+                        path={multipleFoldersSelected && product.folder}
+                        title={product.versionName}
+                        users={[{ name: product.versionAuthor }]}
+                        imageIcon={productTypes[product.productType]?.icon || 'inventory_2'}
+                        status={status}
                         imageUrl={projectName && thumbnailUrl}
-                        subTitle={`${product.versionName}${
-                          multipleFoldersSelected && product.folder ? ' - ' + product.folder : ''
-                        }`}
                         onClick={(e) => handleSelection(e, product)}
                         isActive={product.id in selection}
                         onContextMenu={(e) => handleContext(e, product.id)}
-                        projectName={projectName}
-                        isFullHighlight
                         isPlayable={product.hasReviewables}
                       />
                     )

@@ -116,7 +116,7 @@ const transformTaskTooltip = (data = {}) => {
     updatedAt,
     taskType,
     users: assignees.map((name) => ({ name, avatarUrl: `/api/users/${name}/avatar` })),
-    path: folder.path,
+    path: folder.path.split('/').splice(-2, 1).join(''),
   }
 
   return tooltip
@@ -134,7 +134,7 @@ const transformVersionTooltip = (data = {}) => {
     updatedAt,
     users: [{ name: author, avatarUrl: `/api/users/${author}/avatar` }],
     productType: product.productType,
-    path: product.folder?.path,
+    path: product.folder?.path?.split('/').pop(),
   }
 
   return tooltip

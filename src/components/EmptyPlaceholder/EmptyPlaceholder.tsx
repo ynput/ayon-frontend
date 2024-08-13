@@ -60,7 +60,7 @@ const EmptyPlaceholder = ({ icon, message, error, children }: EmptyPlaceholderPr
       <Placeholder className={'isError'}>
         <Icon icon="error" className="placeholder-icon" />
         <h3 className={Typography.titleLarge}>Something went wrong.</h3>
-        <span className="error-message">ERROR: {error}</span>
+        <span className="error-message">ERROR: {JSON.stringify(message)}</span>
         <span>This should not happen. Please send a screenshot to the Ynput team!</span>
         {children}
       </Placeholder>
@@ -70,7 +70,7 @@ const EmptyPlaceholder = ({ icon, message, error, children }: EmptyPlaceholderPr
   return (
     <Placeholder>
       <Icon icon={icon} className="placeholder-icon" />
-      <h3 className={Typography.titleLarge}>{message}</h3>
+      <h3 className={Typography.titleLarge}>{JSON.stringify(message)}</h3>
       {children}
     </Placeholder>
   )
