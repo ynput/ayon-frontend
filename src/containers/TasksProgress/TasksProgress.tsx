@@ -17,8 +17,6 @@ const TasksProgress: FC<TasksProgressProps> = ({}) => {
   const selectedFolders = useSelector((state: $Any) => state.context.focused.folders) as string[]
   const projectName = useSelector((state: $Any) => state.project.name) as string
 
-  const [expandedRows, setExpandedRows] = useState<string[]>([])
-
   //   GET PROJECT INFO FOR STATUS
   const { data: { statuses = [], taskTypes = [] } = {} } = useGetProjectQuery(
     { projectName },
@@ -37,22 +35,35 @@ const TasksProgress: FC<TasksProgressProps> = ({}) => {
     { skip: !selectedFolders.length || !projectName },
   )
 
+  const [expandedRows, setExpandedRows] = useState<string[]>([])
+  // ids of selected tasks cells
+  const [selectedTasks, setSelectedTasks] = useState<string[]>([])
+
+  const handleSelectTask = (id: string, multiselect: boolean) => {
+    // either add or remove the task id from the selectedTasks array
+    setSelectedTasks((prev) => {
+      if (!multiselect) return [id]
+      if (prev.includes(id)) {
+        return prev.filter((taskId) => taskId !== id)
+      }
+      return [...prev, id]
+    })
+  }
+
   const tableData = useMemo(() => formatTaskProgressForTable(foldersTasksData), [foldersTasksData])
 
   const handleTaskFieldChange: TaskFieldChange = async (id, key, value) => {}
 
-  const taskColumns = useMemo(
-    () =>
-      generateTaskColumns({
-        tableData,
-        expandedRows,
-        statuses,
-        users,
-        taskTypes,
-        onChange: handleTaskFieldChange,
-      }),
-    [tableData, statuses, users, expandedRows],
-  )
+  const taskColumns = generateTaskColumns({
+    tableData,
+    expandedRows,
+    selectedTasks,
+    statuses,
+    users,
+    taskTypes,
+    onChange: handleTaskFieldChange,
+    onSelectTask: handleSelectTask,
+  })
 
   const handleExpandToggle = (folderId: string) => {
     // update the expanded rows by either adding or removing the folderId
