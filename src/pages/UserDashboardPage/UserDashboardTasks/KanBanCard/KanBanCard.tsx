@@ -36,7 +36,7 @@ const KanBanCard = forwardRef<HTMLDivElement, KanBanCardProps>(
       return <div style={{ minHeight: 'var(--min-height)' }}></div>
 
     // get second last part of folder path
-    const parent = task.shortPath?.split('/').slice(-3, -1)[0]
+    const parent = task.folderPath?.split('/').slice(-3, -1)[0]
 
     return (
       <>
@@ -45,6 +45,7 @@ const KanBanCard = forwardRef<HTMLDivElement, KanBanCardProps>(
           id={task.id}
           header={task.folderLabel || task.folderName}
           path={!isOverlay && parent}
+          project={task.projectCode}
           titleIcon={task.taskInfo?.icon}
           title={task.label || task.name}
           imageUrl={task.thumbnailUrl}

@@ -282,9 +282,11 @@ const ProductsGrid = ({
                         header={product.name}
                         path={multipleFoldersSelected && product.folder}
                         title={product.versionName}
+                        titleIcon={productTypes[product.productType]?.icon || 'layers'}
                         users={[{ name: product.versionAuthor }]}
                         imageIcon={productTypes[product.productType]?.icon || 'inventory_2'}
                         status={status}
+                        hidePriority
                         imageUrl={projectName && thumbnailUrl}
                         onClick={(e) => handleSelection(e, product)}
                         isActive={product.id in selection}
