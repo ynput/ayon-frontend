@@ -106,6 +106,20 @@ const UserList = ({
 
   const tableData = userTableLoadingData(tableList, isLoading, 40, 'name')
 
+  const accessGroupsSortFunction = (sortEvent) => {
+    // Early return while data is still loading
+    if (sortEvent.data[0].isLoading) {
+      return sortEvent.data;
+    }
+    const validUsers = sortEvent.data.filter(e => e.accessGroupList.length != 1 || e.accessGroupList[0] != 'none')
+    const invalidUsers = sortEvent.data.filter(e => e.accessGroupList.length == 1 && e.accessGroupList[0] == 'none')
+    validUsers.sort((a, b) => {
+      return a.accessGroupList.join('').localeCompare(b.accessGroupList.join('')) * sortEvent.order
+    })
+
+    return [...validUsers, ...invalidUsers]
+  }
+
   // Render
   return (
     <Section wrap>
@@ -152,6 +166,7 @@ const UserList = ({
                   </span>
                 ))
             }
+            sortFunction={accessGroupsSortFunction}
             sortable
             resizeable
           />
