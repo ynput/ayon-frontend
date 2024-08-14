@@ -24,6 +24,15 @@
   --shimmer-lightness: var(--shimmer-base-lightness);
   --highlight-lightness: var(--shimmer-highlight-lightness);
 
+  // remove any backgrounds
+  background-color: unset !important;
+  color: transparent !important;
+  //   disable any interaction
+  cursor: default !important;
+  user-select: none !important;
+  pointer-events: none !important;
+  user-select: none !important;
+
   // hide everything inside
   & > *:not(.loading):not(.loading-visible):not(td) {
     visibility: hidden !important;
@@ -83,24 +92,17 @@
     );
   }
 
-  // remove any backgrounds
-  background-color: unset !important;
-  color: transparent !important;
-  //   add the shimmer effect
-  background: linear-gradient(
-    to right,
-    var(--shimmer-base) 8%,
-    var(--shimmer-highlight) 18%,
-    var(--shimmer-base) 33%
-  );
-  background-size: 1000px 42px;
-  //   animation
-  animation: shimmer 1.5s infinite linear;
-  animation-delay: 0.15s;
-
-  //   disable any interaction
-  cursor: default !important;
-  user-select: none !important;
-  pointer-events: none !important;
-  user-select: none !important;
+  & {
+    //   add the shimmer effect
+    background: linear-gradient(
+      to right,
+      var(--shimmer-base) 8%,
+      var(--shimmer-highlight) 18%,
+      var(--shimmer-base) 33%
+    );
+    background-size: 1000px 42px;
+    //   animation
+    animation: shimmer 1.5s infinite linear;
+    animation-delay: 0.15s;
+  }
 }

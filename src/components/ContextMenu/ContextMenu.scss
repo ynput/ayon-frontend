@@ -3,6 +3,8 @@
   width: unset;
   padding: 0;
   z-index: 4000 !important;
+  background-color: var(--md-sys-color-surface-container-lowest);
+  border-color: var(--md-sys-color-outline-variant);
 
   .p-submenu-list {
     padding: 0;
@@ -27,8 +29,6 @@
     background: inherit;
   }
 
-  background-color: var(--md-sys-color-surface-container-lowest);
-  border-color: var(--md-sys-color-outline-variant);
   .p-menuitem {
     // when hovering
     &.p-menuitem-active > .p-menuitem-link {
