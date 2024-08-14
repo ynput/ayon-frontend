@@ -1552,7 +1552,7 @@ export const GetTasksProgressDocument = `
     query GetTasksProgress($projectName: String!, $folderIds: [String!]) {
   project(name: $projectName) {
     name
-    tasks(folderIds: $folderIds) {
+    tasks(folderIds: $folderIds, last: 1000) {
       edges {
         node {
           projectName

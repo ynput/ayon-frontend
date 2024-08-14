@@ -1,15 +1,14 @@
 import { Column } from 'primereact/column'
 import { FolderRow, TaskTypeRow } from './formatTaskProgressForTable'
 import { EntityCard } from '@ynput/ayon-react-components'
-import { TaskTypeCell } from '../components'
+import { TaskColumnHeader, TaskTypeCell, TaskTypeName } from '../components'
 import { Status, TaskType } from '@api/rest'
 import { GetAllProjectUsersAsAssigneeResult } from '@queries/user/getUsers'
-import styled from 'styled-components'
 
 export type TaskFieldChange = (
   taskId: string,
   key: 'status' | 'assignee' | 'priority',
-  value: string | string[],
+  value: string[],
 ) => void
 
 type GenerateTaskColumnsProps = {
@@ -21,8 +20,6 @@ type GenerateTaskColumnsProps = {
   onChange: TaskFieldChange
 }
 
-const StyledCard = styled(EntityCard)``
-
 export const generateTaskColumns = ({
   tableData = [],
   statuses = [], // project statuses schema
@@ -33,6 +30,8 @@ export const generateTaskColumns = ({
 }: GenerateTaskColumnsProps) => {
   // for all columns that have taskType as a key, create a new column
   const taskTypeKeys: string[] = []
+  // when a taskType has multiple names, store them here
+  const taskTypeNames: Record<string, Set<TaskTypeName>> = {}
 
   tableData.forEach((folderRow) => {
     Object.keys(folderRow).forEach((key) => {
@@ -42,7 +41,16 @@ export const generateTaskColumns = ({
         'taskType' in value &&
         !taskTypeKeys.includes(value.taskType)
       ) {
-        taskTypeKeys.push(key)
+        taskTypeKeys.push(value.taskType)
+
+        value.tasks.forEach((task) => {
+          // store the names of the taskType
+          if (!taskTypeNames[value.taskType]) {
+            // add new set if it doesn't exist yet
+            taskTypeNames[value.taskType] = new Set()
+          }
+          taskTypeNames[value.taskType].add({ name: task.name, label: task.label })
+        })
       }
     })
   })
@@ -52,7 +60,14 @@ export const generateTaskColumns = ({
       <Column
         key={taskTypeKey}
         field={taskTypeKey}
-        header={taskTypeKey}
+        header={
+          <TaskColumnHeader
+            taskType={taskTypeKey}
+            taskNames={Array.from(taskTypeNames[taskTypeKey])}
+          />
+        }
+        headerStyle={{ minWidth: 60 }}
+        pt={{ headerTitle: { style: { width: '100%' } } }}
         body={(rowData) => {
           const taskCellData = rowData[taskTypeKey] as TaskTypeRow
           const taskType = taskTypes.find((t) => t.name === taskTypeKey)

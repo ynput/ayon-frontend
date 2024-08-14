@@ -3,7 +3,7 @@
 import api from '@api'
 import { GetTasksProgressQuery } from '@api/graphql'
 
-type ProgressTask = GetTasksProgressQuery['project']['tasks']['edges'][0]['node']
+export type ProgressTask = GetTasksProgressQuery['project']['tasks']['edges'][0]['node']
 
 interface GetTasksProgress {
   name: string

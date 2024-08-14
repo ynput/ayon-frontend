@@ -65,8 +65,16 @@ const TasksProgress: FC<TasksProgressProps> = ({}) => {
   }
 
   return (
-    <div>
-      <DataTable value={tableData}>
+    <div style={{ height: '100%' }}>
+      <DataTable
+        value={tableData}
+        scrollable
+        scrollHeight="flex"
+        virtualScrollerOptions={{ itemSize: 42 }}
+        sortField="_folder"
+        sortOrder={1}
+        sortMode="single"
+      >
         <Column
           field="_folder"
           header="Folder"
