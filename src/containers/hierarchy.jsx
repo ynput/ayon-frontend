@@ -84,6 +84,7 @@ const Hierarchy = (props) => {
 
   const dispatch = useDispatch()
   const [query, setQuery] = useState('')
+  const [newUri, setNewUri] = useState('')
   const [selectedFolderTypes, setSelectedFolderTypes] = useState([])
   const [showDetail, setShowDetail] = useState(false)
 
@@ -217,7 +218,7 @@ const Hierarchy = (props) => {
     if (!id) return
     const node = hierarchyObjectData[id]
     if (!node) return
-    dispatch(setUri(`ayon+entity://${projectName}/${node.parents.join('/')}/${node.name}`))
+    setNewUri(`ayon+entity://${projectName}/${node.parents.join('/')}/${node.name}`)
   }
 
   // Update the folder selection in the project context
@@ -249,6 +250,9 @@ const Hierarchy = (props) => {
 
     // update redux
     dispatch(setExpandedFolders(mergedExpandedFolders))
+
+    //updating uri after expanded folder to avoid race condition
+    dispatch(setUri(newUri))
   }
 
   const onToggle = (event) => {
