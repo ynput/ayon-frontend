@@ -137,9 +137,12 @@ const Actions = ({ entities, entityType, entitySubTypes, isLoadingEntity }) => {
     return tempFeaturedActions
   }, [actions, groupedActions, placeholder])
 
-  const [executeAction] = useExecuteActionMutation()
+  const [executeAction, { isLoading: isLoadingExecution, originalArgs }] =
+    useExecuteActionMutation()
+  const executingAction = isLoadingExecution && originalArgs?.identifier
 
-  const handleExecuteAction = async (identifier) => {
+  const handleExecuteAction = async (identifier, e) => {
+    e?.preventDefault()
     const action = actions.find((option) => option.identifier === identifier)
 
     const params = {
@@ -180,9 +183,9 @@ const Actions = ({ entities, entityType, entitySubTypes, isLoadingEntity }) => {
           })}
           data-tooltip={action.label}
           disabled={action.isPlaceholder}
-          onClick={() => handleExecuteAction(action.identifier)}
+          onClick={(e) => handleExecuteAction(action.identifier, e)}
         >
-          <ActionIcon icon={action.icon} />
+          <ActionIcon icon={action.icon} isExecuting={executingAction === action.identifier} />
         </Styled.FeaturedAction>
       ))}
       <ActionsDropdown
