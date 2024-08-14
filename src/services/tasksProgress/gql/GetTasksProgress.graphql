@@ -1,26 +1,22 @@
 query GetTasksProgress($projectName: String!, $folderIds: [String!]) {
   project(name: $projectName) {
     name
-    folders(ids: $folderIds) {
+    tasks(folderIds: $folderIds) {
       edges {
         node {
+          projectName
           id
           name
           label
-          parents
-          tasks {
-            edges {
-              node {
-                id
-                name
-                label
-                taskType
-                status
-                assignees
-                folderId
-                updatedAt
-              }
-            }
+          taskType
+          status
+          assignees
+          updatedAt
+          folder {
+            id
+            name
+            label
+            parents
           }
         }
       }

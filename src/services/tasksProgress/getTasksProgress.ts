@@ -3,10 +3,11 @@
 import api from '@api'
 import { GetTasksProgressQuery } from '@api/graphql'
 
-type ProgressFolder = GetTasksProgressQuery['project']['folders']['edges'][0]['node']
-export type ProgressTask = ProgressFolder['tasks']['edges'][0]['node']
+type ProgressTask = GetTasksProgressQuery['project']['tasks']['edges'][0]['node']
 
-interface GetTasksProgress extends Omit<ProgressFolder, 'tasks'> {
+interface GetTasksProgress {
+  name: string
+  id: string
   projectName: string
   tasks: ProgressTask[]
 }
@@ -14,14 +15,30 @@ interface GetTasksProgress extends Omit<ProgressFolder, 'tasks'> {
 export type GetTasksProgressResult = GetTasksProgress[]
 
 const transformTasksProgress = (data: GetTasksProgressQuery): GetTasksProgressResult => {
-  const foldersWithTasks = data.project.folders.edges.map((folder) => {
-    const tasks = folder.node.tasks.edges.map((task) => task.node)
-    return {
-      ...folder.node,
-      projectName: data.project.name,
-      tasks,
+  const groupedTasks: {
+    [key: string]: {
+      id: string
+      name: string
+      projectName: string
+      tasks: ProgressTask[]
     }
+  } = {}
+
+  data.project.tasks.edges.forEach((edge) => {
+    const folder = edge.node.folder
+    if (!groupedTasks[folder.id]) {
+      groupedTasks[folder.id] = {
+        ...folder,
+        projectName: edge.node.projectName,
+        tasks: [],
+      }
+    }
+    groupedTasks[folder.id].tasks.push({
+      ...edge.node,
+    })
   })
+
+  const foldersWithTasks = Object.values(groupedTasks)
 
   return foldersWithTasks
 }
@@ -54,3 +71,10 @@ const enhancedEndpoints = api.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
 })
 
 export const { useGetTasksProgressQuery } = enhancedEndpoints
+
+// {
+//   "projectName": "AY_CG_demo",
+//   "folderIds": [
+//     "ac3374ea3c6858efbbc609d3ac83c9fa"
+//   ]
+// }

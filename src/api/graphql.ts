@@ -1367,7 +1367,7 @@ export type GetTasksProgressQueryVariables = Exact<{
 }>;
 
 
-export type GetTasksProgressQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, folders: { __typename?: 'FoldersConnection', edges: Array<{ __typename?: 'FolderEdge', node: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, parents: Array<string>, tasks: { __typename?: 'TasksConnection', edges: Array<{ __typename?: 'TaskEdge', node: { __typename?: 'TaskNode', id: string, name: string, label?: string | null, taskType: string, status: string, assignees: Array<string>, folderId: string, updatedAt: any } }> } } }> } } };
+export type GetTasksProgressQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, tasks: { __typename?: 'TasksConnection', edges: Array<{ __typename?: 'TaskEdge', node: { __typename?: 'TaskNode', projectName: string, id: string, name: string, label?: string | null, taskType: string, status: string, assignees: Array<string>, updatedAt: any, folder: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, parents: Array<string> } } }> } } };
 
 export type GetAllProjectUsersAsAssigneeQueryVariables = Exact<{
   projectName?: InputMaybe<Scalars['String']['input']>;
@@ -1552,26 +1552,22 @@ export const GetTasksProgressDocument = `
     query GetTasksProgress($projectName: String!, $folderIds: [String!]) {
   project(name: $projectName) {
     name
-    folders(ids: $folderIds) {
+    tasks(folderIds: $folderIds) {
       edges {
         node {
+          projectName
           id
           name
           label
-          parents
-          tasks {
-            edges {
-              node {
-                id
-                name
-                label
-                taskType
-                status
-                assignees
-                folderId
-                updatedAt
-              }
-            }
+          taskType
+          status
+          assignees
+          updatedAt
+          folder {
+            id
+            name
+            label
+            parents
           }
         }
       }

@@ -60,7 +60,7 @@ export const generateTaskColumns = ({
           return (
             <TaskTypeCell key={taskTypeKey}>
               {taskCellData.tasks.map((task) => {
-                const { name, color } = statuses.find((s) => s.name === task.status) || {}
+                const status = statuses.find((s) => s.name === task.status)
                 // add avatarUrl to each user
                 const assigneeOptions = users.map((user) => ({
                   ...user,
@@ -78,11 +78,13 @@ export const generateTaskColumns = ({
                     title={task.label || task.name}
                     titleIcon={taskType?.icon}
                     imageUrl={isExpanded ? thumbnailUrl : undefined}
-                    users={task.assignees.map((assignee) => ({ name: assignee }))}
+                    users={task.assignees.map((assignee: string) => ({ name: assignee }))}
                     assigneeOptions={assigneeOptions}
                     // onAssigneeChange={(a) => onChange(task.id, 'assignee', a)}
-                    status={name ? { name, color } : undefined}
+                    status={status}
                     statusOptions={statuses}
+                    statusMiddle
+                    statusNameOnly
                     // onStatusChange={(s) => onChange(task.id, 'status', s)}
                     priority={{
                       name: 'high',
