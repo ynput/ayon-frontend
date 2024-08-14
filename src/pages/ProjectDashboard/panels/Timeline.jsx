@@ -53,7 +53,7 @@ const ProgressStyled = styled.div`
       }
     `}
 
-  :hover {
+  &:hover {
     div:last-child {
       scale: 0;
     }
@@ -66,7 +66,7 @@ const ProgressStyled = styled.div`
   hr {
     border-radius: 0 !important;
 
-    :hover {
+    &:hover {
       scale: 1 !important;
 
       ::after {

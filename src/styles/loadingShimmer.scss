@@ -11,16 +11,6 @@
 .loading:not(.no-shimmer):not(.p-treetable):not(.p-datatable),
 .p-treetable .p-treetable-tbody > tr.loading,
 .p-datatable .p-datatable-tbody > tr.loading {
-  // hide everything inside
-  & > *:not(.loading):not(.loading-visible):not(td) {
-    visibility: hidden !important;
-  }
-
-  // hide td content because visibility: hidden doesn't work on td
-  & > *:not(.loading):not(.loading-visible) {
-    opacity: 0 !important;
-  }
-
   /* Shimmer Effect Variables */
   --shimmer-hue: 215;
   --shimmer-saturation: 15%;
@@ -33,6 +23,16 @@
   /* Shimmer Lightness */
   --shimmer-lightness: var(--shimmer-base-lightness);
   --highlight-lightness: var(--shimmer-highlight-lightness);
+
+  // hide everything inside
+  & > *:not(.loading):not(.loading-visible):not(td) {
+    visibility: hidden !important;
+  }
+
+  // hide td content because visibility: hidden doesn't work on td
+  & > *:not(.loading):not(.loading-visible) {
+    opacity: 0 !important;
+  }
 
   /* Darken the Shimmer Effect */
   &.shimmer-dark,
@@ -59,13 +59,15 @@
     );
   }
 
-  /* Shimmer Colors */
-  --shimmer-base: hsl(var(--shimmer-hue), var(--shimmer-saturation), var(--shimmer-lightness));
-  --shimmer-highlight: hsl(
-    var(--shimmer-hue),
-    var(--shimmer-saturation),
-    var(--highlight-lightness)
-  );
+  & {
+    /* Shimmer Colors */
+    --shimmer-base: hsl(var(--shimmer-hue), var(--shimmer-saturation), var(--shimmer-lightness));
+    --shimmer-highlight: hsl(
+      var(--shimmer-hue),
+      var(--shimmer-saturation),
+      var(--highlight-lightness)
+    );
+  }
   //  for first loading children, increase lightness
   & > *:has(.loading) > .loading {
     /* Shimmer Colors */

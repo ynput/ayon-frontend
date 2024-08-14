@@ -8,7 +8,7 @@ const StyledTeamMembersStacked = styled(UserImagesStacked)`
   border-radius: var(--border-radius);
   cursor: pointer;
 
-  :hover {
+  &:hover {
     background-color: var(--md-sys-color-surface-container-high-hover);
   }
 `

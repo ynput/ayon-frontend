@@ -100,7 +100,7 @@ const LineStyled = styled.hr`
   ${({ label }) =>
     label &&
     css`
-      :hover {
+      &:hover {
         scale: 1.2;
         transform-origin: center;
         z-index: 20;
@@ -117,7 +117,7 @@ const LineStyled = styled.hr`
         !animation &&
         css`
           transform-origin: ${index === 0 ? 'left' : 'right'} !important;
-          :hover {
+          &:hover {
             ::after {
               left: ${index === 0 ? '0' : '100%'};
               transform: translateX(${index === 0 ? '0' : '-100%'}) scale(1);

@@ -141,7 +141,7 @@ export const Item = styled.li`
     display: inline-block;
   }
 
-  :hover {
+  &:hover {
     background-color: var(--md-sys-color-surface-container-highest);
   }
 
