@@ -159,7 +159,7 @@ const Actions = ({ entities, entityType, entitySubTypes, isLoadingEntity }) => {
 
       toast.success(response?.message || 'Action executed successfully')
       if (response?.uri) {
-        window.location.href = response.uri
+        window.history.pushState({}, '', response.uri)
       }
     } catch (error) {
       console.warn('Error executing action', error)
