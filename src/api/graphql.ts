@@ -1367,7 +1367,14 @@ export type GetTasksProgressQueryVariables = Exact<{
 }>;
 
 
-export type GetTasksProgressQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', folders: { __typename?: 'FoldersConnection', edges: Array<{ __typename?: 'FolderEdge', node: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, parents: Array<string>, tasks: { __typename?: 'TasksConnection', edges: Array<{ __typename?: 'TaskEdge', node: { __typename?: 'TaskNode', id: string, name: string, label?: string | null, taskType: string, status: string, assignees: Array<string>, folderId: string } }> } } }> } } };
+export type GetTasksProgressQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, folders: { __typename?: 'FoldersConnection', edges: Array<{ __typename?: 'FolderEdge', node: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, parents: Array<string>, tasks: { __typename?: 'TasksConnection', edges: Array<{ __typename?: 'TaskEdge', node: { __typename?: 'TaskNode', id: string, name: string, label?: string | null, taskType: string, status: string, assignees: Array<string>, folderId: string, updatedAt: any } }> } } }> } } };
+
+export type GetAllProjectUsersAsAssigneeQueryVariables = Exact<{
+  projectName?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+
+export type GetAllProjectUsersAsAssigneeQuery = { __typename?: 'Query', users: { __typename?: 'UsersConnection', edges: Array<{ __typename?: 'UserEdge', node: { __typename?: 'UserNode', name: string, attrib: { __typename?: 'UserAttribType', fullName?: string | null } } }> } };
 
 export type GetKanbanQueryVariables = Exact<{
   projects?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
@@ -1544,6 +1551,7 @@ export const GetProjectLatestDocument = `
 export const GetTasksProgressDocument = `
     query GetTasksProgress($projectName: String!, $folderIds: [String!]) {
   project(name: $projectName) {
+    name
     folders(ids: $folderIds) {
       edges {
         node {
@@ -1561,9 +1569,24 @@ export const GetTasksProgressDocument = `
                 status
                 assignees
                 folderId
+                updatedAt
               }
             }
           }
+        }
+      }
+    }
+  }
+}
+    `;
+export const GetAllProjectUsersAsAssigneeDocument = `
+    query GetAllProjectUsersAsAssignee($projectName: String) {
+  users(last: 2000, projectName: $projectName) {
+    edges {
+      node {
+        name
+        attrib {
+          fullName
         }
       }
     }
@@ -1632,6 +1655,9 @@ const injectedRtkApi = restApi.injectEndpoints({
     }),
     GetTasksProgress: build.query<GetTasksProgressQuery, GetTasksProgressQueryVariables>({
       query: (variables) => ({ document: GetTasksProgressDocument, variables })
+    }),
+    GetAllProjectUsersAsAssignee: build.query<GetAllProjectUsersAsAssigneeQuery, GetAllProjectUsersAsAssigneeQueryVariables | void>({
+      query: (variables) => ({ document: GetAllProjectUsersAsAssigneeDocument, variables })
     }),
     GetKanban: build.query<GetKanbanQuery, GetKanbanQueryVariables | void>({
       query: (variables) => ({ document: GetKanbanDocument, variables })

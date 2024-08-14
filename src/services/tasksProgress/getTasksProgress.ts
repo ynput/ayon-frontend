@@ -4,9 +4,10 @@ import api from '@api'
 import { GetTasksProgressQuery } from '@api/graphql'
 
 type ProgressFolder = GetTasksProgressQuery['project']['folders']['edges'][0]['node']
-type ProgressTask = ProgressFolder['tasks']['edges'][0]['node']
+export type ProgressTask = ProgressFolder['tasks']['edges'][0]['node']
 
 interface GetTasksProgress extends Omit<ProgressFolder, 'tasks'> {
+  projectName: string
   tasks: ProgressTask[]
 }
 
@@ -17,6 +18,7 @@ const transformTasksProgress = (data: GetTasksProgressQuery): GetTasksProgressRe
     const tasks = folder.node.tasks.edges.map((task) => task.node)
     return {
       ...folder.node,
+      projectName: data.project.name,
       tasks,
     }
   })

@@ -1,5 +1,6 @@
 query GetTasksProgress($projectName: String!, $folderIds: [String!]) {
   project(name: $projectName) {
+    name
     folders(ids: $folderIds) {
       edges {
         node {
@@ -17,6 +18,7 @@ query GetTasksProgress($projectName: String!, $folderIds: [String!]) {
                 status
                 assignees
                 folderId
+                updatedAt
               }
             }
           }

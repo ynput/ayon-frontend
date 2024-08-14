@@ -1,4 +1,5 @@
 import Hierarchy from '@containers/hierarchy'
+import TasksProgress from '@containers/TasksProgress'
 import { Section } from '@ynput/ayon-react-components'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { FC } from 'react'
@@ -22,7 +23,9 @@ const TasksProgressPage: FC = () => {
         </SplitterPanel>
         <SplitterPanel size={82}>
           <Splitter layout="horizontal" style={{ height: '100%' }} stateKey="browser-splitter-2">
-            <SplitterPanel style={{ minWidth: 500 }}>Tasks progress</SplitterPanel>
+            <SplitterPanel style={{ minWidth: 500 }}>
+              <TasksProgress />
+            </SplitterPanel>
             {/* <SplitterPanel
             style={{
               maxWidth: `clamp(${detailsMinWidth}px, ${detailsMaxWidth}, ${detailsMaxMaxWidth}px)`,

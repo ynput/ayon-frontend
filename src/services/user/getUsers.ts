@@ -1,6 +1,7 @@
 import api from '@api'
 import ayonClient from '@/ayon'
 import { $Any } from '@types'
+import { GetAllProjectUsersAsAssigneeQuery } from '@api/graphql'
 
 const USER_BY_NAME_QUERY = `
   query UserList($name:String!) {
@@ -90,7 +91,7 @@ const buildUsersQuery = (QUERY: string) => {
   return QUERY.replace('#ATTRS#', f_attribs)
 }
 
-const getUsers = api.injectEndpoints({
+const injectedApi = api.injectEndpoints({
   endpoints: (build) => ({
     getUsersList: build.query({
       query: () => ({
@@ -206,6 +207,36 @@ const getUsers = api.injectEndpoints({
   overrideExisting: true,
 })
 
+type AssigneeNode = GetAllProjectUsersAsAssigneeQuery['users']['edges'][0]['node']
+export type GetAllProjectUsersAsAssigneeResult = {
+  name: AssigneeNode['name']
+  fullName: AssigneeNode['attrib']['fullName']
+}[]
+
+import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
+type Definitions = DefinitionsFromApi<typeof api>
+type TagTypes = TagTypesFromApi<typeof api>
+// update the definitions to include the new types
+type UpdatedDefinitions = Omit<Definitions, 'GetAllProjectUsersAsAssignee'> & {
+  GetAllProjectUsersAsAssignee: OverrideResultType<
+    Definitions['GetAllProjectUsersAsAssignee'],
+    GetAllProjectUsersAsAssigneeResult
+  >
+}
+
+const enhancedApi = injectedApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
+  endpoints: {
+    GetAllProjectUsersAsAssignee: {
+      transformResponse: (res: GetAllProjectUsersAsAssigneeQuery) =>
+        res.users.edges.map((e) => ({ name: e.node.name, fullName: e.node.attrib.fullName })),
+      providesTags: (res) =>
+        res
+          ? [{ type: 'user', id: 'LIST' }, ...res.map((e) => ({ type: 'user', id: e.name }))]
+          : [{ type: 'user', id: 'LIST' }],
+    },
+  },
+})
+
 export const {
   useGetUsersQuery,
   useGetUsersListQuery,
@@ -215,4 +246,5 @@ export const {
   useGetUsersAssigneeQuery,
   useGetMeQuery,
   useGetUserSessionsQuery,
-} = getUsers
+  useGetAllProjectUsersAsAssigneeQuery,
+} = enhancedApi
