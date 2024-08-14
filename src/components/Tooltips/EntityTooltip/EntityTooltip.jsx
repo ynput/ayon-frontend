@@ -45,6 +45,7 @@ const EntityTooltip = ({ type, id, pos: { left, top } = {}, projectName, project
       showPath
       status={status}
       users={users}
+      hidePriority
       isLoading={isFetching || skip}
       loadingSections={['header', 'title', 'users', 'status']}
       titleIcon={icons[type]}
