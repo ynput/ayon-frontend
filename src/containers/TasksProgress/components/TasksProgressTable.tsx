@@ -8,13 +8,15 @@ import styled from 'styled-components'
 import { FolderBody, TaskColumnHeader, TaskTypeCell } from '.'
 
 // state
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { toggleDetailsPanel } from '@state/details'
 // types
 import type { Status, TaskType } from '@api/rest'
 import type { FolderRow, TaskTypeRow } from '../helpers/formatTaskProgressForTable'
 import type { GetAllProjectUsersAsAssigneeResult } from '@queries/user/getUsers'
 import type { KeyboardEvent, MouseEvent } from 'react'
+import { $Any } from '@types'
+import { InView } from 'react-intersection-observer'
 
 export const Cells = styled.div`
   display: flex;
@@ -48,6 +50,7 @@ export const TasksProgressTable = forwardRef<DataTable<any>, TasksProgressTableP
     },
     ref,
   ) => {
+    const selectedTasks = useSelector((state: $Any) => state.context.focused.tasks) as string[]
     const dispatch = useDispatch()
     const [expandedRows, setExpandedRows] = useState<string[]>([])
 
@@ -152,27 +155,39 @@ export const TasksProgressTable = forwardRef<DataTable<any>, TasksProgressTableP
                       onOpenPanel()
                     }
 
+                    const isSelected = selectedTasks.includes(task.id)
+
                     const widthBreakPoints = [170, 150, 130]
                     return (
-                      <TaskTypeCell
-                        key={task.id}
-                        onClick={handleCellClick}
-                        onKeyDown={handleCellKeyDown}
-                        onDoubleClick={handleCellDoubleClick}
-                        tabIndex={0}
-                        style={{
-                          minWidth:
-                            widthBreakPoints[
-                              Math.min(widthBreakPoints.length - 1, array.length - 1)
-                            ],
-                        }}
-                        task={task}
-                        assigneeOptions={assigneeOptions}
-                        isExpanded={isExpanded}
-                        taskIcon={taskType?.icon || ''}
-                        statuses={statuses}
-                        onChange={onChange}
-                      />
+                      <InView>
+                        {({ inView, ref }) => (
+                          <div key={task.id} ref={ref} style={{ display: 'flex', width: '100%' }}>
+                            {inView ? (
+                              <TaskTypeCell
+                                isSelected={isSelected}
+                                onClick={handleCellClick}
+                                onKeyDown={handleCellKeyDown}
+                                onDoubleClick={handleCellDoubleClick}
+                                tabIndex={0}
+                                style={{
+                                  minWidth:
+                                    widthBreakPoints[
+                                      Math.min(widthBreakPoints.length - 1, array.length - 1)
+                                    ],
+                                }}
+                                task={task}
+                                assigneeOptions={assigneeOptions}
+                                isExpanded={isExpanded}
+                                taskIcon={taskType?.icon || ''}
+                                statuses={statuses}
+                                onChange={onChange}
+                              />
+                            ) : (
+                              <div style={{ height: isExpanded ? 118 : 42, flex: 1 }}></div>
+                            )}
+                          </div>
+                        )}
+                      </InView>
                     )
                   })}
                 </Cells>

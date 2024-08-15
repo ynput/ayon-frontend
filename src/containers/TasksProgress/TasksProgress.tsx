@@ -1,6 +1,6 @@
+import { FC, useMemo } from 'react'
 import { useGetTasksProgressQuery } from '@queries/tasksProgress/getTasksProgress'
 import { $Any } from '@types'
-import { FC, useMemo } from 'react'
 import { useSelector } from 'react-redux'
 import { formatTaskProgressForTable } from './helpers'
 import { useGetAllProjectUsersAsAssigneeQuery } from '@queries/user/getUsers'

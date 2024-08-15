@@ -1,9 +1,8 @@
 import { FC } from 'react'
 import * as Styled from './TaskTypeCell.styled'
 import clsx from 'clsx'
-import { useSelector } from 'react-redux'
-import { $Any } from '@types'
 import { EntityCard } from '@ynput/ayon-react-components'
+
 // types
 import type { EntityCardProps } from '@ynput/ayon-react-components'
 import type { Status } from '@api/rest'
@@ -16,6 +15,7 @@ interface TaskTypeCellProps extends Omit<React.HTMLAttributes<HTMLDivElement>, '
   assigneeOptions: EntityCardProps['assigneeOptions']
   isExpanded: boolean
   taskIcon: string
+  isSelected: boolean
   onChange: TaskFieldChange
 }
 
@@ -26,10 +26,9 @@ export const TaskTypeCell: FC<TaskTypeCellProps> = ({
   isExpanded,
   taskIcon,
   onChange,
+  isSelected,
   ...props
 }) => {
-  const selectedTasks = useSelector((state: $Any) => state.context.focused.tasks) as string[]
-
   const status = statuses.find((s) => s.name === task.status)
 
   const thumbnailUrl = `/api/projects/${task.projectName}/tasks/${task.id}/thumbnail?updatedAt=${task.updatedAt}`
@@ -43,8 +42,6 @@ export const TaskTypeCell: FC<TaskTypeCellProps> = ({
     onStatusChange: undefined,
     onPriorityChange: undefined,
   }
-
-  const isSelected = selectedTasks.includes(task.id)
 
   if (isSelected) {
     changeProps = {
