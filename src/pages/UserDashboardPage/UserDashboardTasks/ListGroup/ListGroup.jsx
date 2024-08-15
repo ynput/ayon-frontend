@@ -76,7 +76,7 @@ const ListGroup = ({
                   selected={selectedTasks.includes(task.id)}
                   selectedLength={selectedTasks.length}
                   onClick={(e) => {
-                    if (e.detail == 2) {
+                    if (e && e.detail == 2) {
                       navigate(getTaskRoute(task))
                       return
                     }
