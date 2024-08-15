@@ -1,28 +1,26 @@
 import { useGetTasksProgressQuery } from '@queries/tasksProgress/getTasksProgress'
 import { $Any } from '@types'
-import { Column } from 'primereact/column'
-import { DataTable } from 'primereact/datatable'
-import { FC, useMemo, useState } from 'react'
+import { FC, useMemo } from 'react'
 import { useSelector } from 'react-redux'
-import { formatTaskProgressForTable, generateTaskColumns } from './helpers'
-import { useGetProjectQuery } from '@queries/project/getProject'
+import { formatTaskProgressForTable } from './helpers'
 import { useGetAllProjectUsersAsAssigneeQuery } from '@queries/user/getUsers'
-import { TaskFieldChange } from './helpers/generateTaskColumns'
-import { FolderBody } from './components'
-import { FolderRow } from './helpers/formatTaskProgressForTable'
+import { Status, TaskType } from '@api/rest'
+import { TaskFieldChange, TasksProgressTable } from './components'
+// state
+import { setFocusedTasks } from '@state/context'
+import { useDispatch } from 'react-redux'
 
-interface TasksProgressProps {}
+interface TasksProgressProps {
+  statuses?: Status[]
+  taskTypes?: TaskType[]
+  projectName: string
+}
 
-const TasksProgress: FC<TasksProgressProps> = ({}) => {
+const TasksProgress: FC<TasksProgressProps> = ({ statuses = [], taskTypes = [], projectName }) => {
+  const dispatch = useDispatch()
+
   const selectedFolders = useSelector((state: $Any) => state.context.focused.folders) as string[]
-  const projectName = useSelector((state: $Any) => state.project.name) as string
-
-  //   GET PROJECT INFO FOR STATUS
-  const { data: { statuses = [], taskTypes = [] } = {} } = useGetProjectQuery(
-    { projectName },
-    { skip: !projectName },
-  )
-
+  const selectedTasks = useSelector((state: $Any) => state.context.focused.tasks) as string[]
   //   GET PROJECT ASSIGNEES
   const { data: users = [] } = useGetAllProjectUsersAsAssigneeQuery(
     { projectName },
@@ -35,70 +33,34 @@ const TasksProgress: FC<TasksProgressProps> = ({}) => {
     { skip: !selectedFolders.length || !projectName },
   )
 
-  const [expandedRows, setExpandedRows] = useState<string[]>([])
-  // ids of selected tasks cells
-  const [selectedTasks, setSelectedTasks] = useState<string[]>([])
-
-  const handleSelectTask = (id: string, multiselect: boolean) => {
-    // either add or remove the task id from the selectedTasks array
-    setSelectedTasks((prev) => {
-      if (!multiselect) return [id]
-      if (prev.includes(id)) {
-        return prev.filter((taskId) => taskId !== id)
-      }
-      return [...prev, id]
-    })
-  }
-
   const tableData = useMemo(() => formatTaskProgressForTable(foldersTasksData), [foldersTasksData])
 
   const handleTaskFieldChange: TaskFieldChange = async (id, key, value) => {}
 
-  const taskColumns = generateTaskColumns({
-    tableData,
-    expandedRows,
-    selectedTasks,
-    statuses,
-    users,
-    taskTypes,
-    onChange: handleTaskFieldChange,
-    onSelectTask: handleSelectTask,
-  })
+  const handleTaskSelect = (id: string, multiSelect: boolean) => {
+    const newIds = []
 
-  const handleExpandToggle = (folderId: string) => {
-    // update the expanded rows by either adding or removing the folderId
-    setExpandedRows((prev) => {
-      if (prev.includes(folderId)) {
-        return prev.filter((id) => id !== folderId)
-      }
-      return [...prev, folderId]
-    })
+    if (!multiSelect) {
+      newIds.push(id)
+    } else if (selectedTasks.includes(id)) {
+      newIds.push(...selectedTasks.filter((taskId) => taskId !== id))
+    } else {
+      newIds.push(...selectedTasks, id)
+    }
+
+    dispatch(setFocusedTasks({ ids: newIds }))
   }
 
   return (
     <div style={{ height: '100%' }}>
-      <DataTable
-        value={tableData}
-        scrollable
-        scrollHeight="flex"
-        virtualScrollerOptions={{ itemSize: 42 }}
-        sortField="_folder"
-        sortOrder={1}
-        sortMode="single"
-      >
-        <Column
-          field="_folder"
-          header="Folder"
-          body={(row: FolderRow) => (
-            <FolderBody
-              name={row._folder}
-              isExpanded={expandedRows.includes(row.__folderId)}
-              onExpandToggle={() => handleExpandToggle(row.__folderId)}
-            />
-          )}
-        />
-        {taskColumns}
-      </DataTable>
+      <TasksProgressTable
+        tableData={tableData}
+        statuses={statuses}
+        taskTypes={taskTypes}
+        users={users}
+        onChange={handleTaskFieldChange}
+        onSelection={handleTaskSelect}
+      />
     </div>
   )
 }

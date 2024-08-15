@@ -33,11 +33,12 @@ const initialTooltip = {
   pos: {},
 }
 
-const scopes = ['dashboard', 'project', 'inbox', 'review']
+const scopes = ['dashboard', 'project', 'inbox', 'review', 'progress']
 
 const detailsSlice = createSlice({
   name: 'details',
   initialState: {
+    open: false,
     pinned: {
       highlighted: getInitialStateQueryParam('highlighted', []),
       // scoped
@@ -117,6 +118,13 @@ const detailsSlice = createSlice({
       // hide tooltip
       state.refTooltip = initialTooltip
     },
+    toggleDetailsPanel: (state, { payload }) => {
+      if (payload !== undefined) {
+        state.open = payload
+      } else {
+        state.open = !state.open
+      }
+    },
   },
 })
 
@@ -129,6 +137,7 @@ export const {
   clearHighlights,
   showRefTooltip,
   hideRefTooltip,
+  toggleDetailsPanel,
 } = detailsSlice.actions
 export default detailsSlice.reducer
 
