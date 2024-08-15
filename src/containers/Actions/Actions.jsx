@@ -6,6 +6,7 @@ import { useMemo } from 'react'
 import { useExecuteActionMutation, useGetActionsFromContextQuery } from '@/services/actions/actions'
 import ActionsDropdown from '@/components/ActionsDropdown/ActionsDropdown'
 import ActionIcon from './ActionIcon'
+import customProtocolCheck from 'custom-protocol-check'
 
 const placeholder = {
   identifier: 'placeholder',
@@ -159,7 +160,17 @@ const Actions = ({ entities, entityType, entitySubTypes, isLoadingEntity }) => {
 
       toast.success(response?.message || 'Action executed successfully')
       if (response?.uri) {
-        window.history.pushState({}, '', response.uri)
+        customProtocolCheck(
+          response.uri,
+          () => {
+            console.log('Custom protocol not found.', response.uri)
+            toast.error('AYON launcher not found. Is it installed and running?')
+          },
+          () => {
+            console.log('Custom protocol found and opened the file successfully.')
+          },
+          2000,
+        )
       }
     } catch (error) {
       console.warn('Error executing action', error)
