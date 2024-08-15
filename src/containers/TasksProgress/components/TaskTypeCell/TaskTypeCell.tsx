@@ -64,12 +64,12 @@ export const TaskTypeCell: FC<TaskTypeCellProps> = ({
         statusOptions={statuses}
         statusMiddle
         statusNameOnly
-        priority={{
-          name: 'high',
-          icon: 'keyboard_double_arrow_up',
-          label: 'High',
-          color: '#ff0000',
-        }}
+        // priority={{
+        //   name: 'high',
+        //   icon: 'keyboard_double_arrow_up',
+        //   label: 'High',
+        //   color: '#ff0000',
+        // }}
         {...changeProps}
         style={{ width: 'unset', aspectRatio: 'unset' }}
         isCollapsed={!isExpanded}
