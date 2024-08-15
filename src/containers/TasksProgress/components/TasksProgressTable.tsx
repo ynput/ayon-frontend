@@ -1,4 +1,4 @@
-import { forwardRef, useState } from 'react'
+import { useRef, useState } from 'react'
 // Prime react
 import { DataTable, DataTableBaseProps } from 'primereact/datatable'
 import { Column } from 'primereact/column'
@@ -37,165 +37,171 @@ interface TasksProgressTableProps extends Omit<DataTableBaseProps<any>, 'onChang
   onSelection: (taskId: string, isMultiSelect: boolean) => void
 }
 
-export const TasksProgressTable = forwardRef<DataTable<any>, TasksProgressTableProps>(
-  (
-    {
-      tableData = [],
-      statuses = [], // project statuses schema
-      taskTypes = [], // project task types schema
-      users = [], // users in the project
-      onChange,
-      onSelection,
-      ...props
-    },
-    ref,
-  ) => {
-    const selectedTasks = useSelector((state: $Any) => state.context.focused.tasks) as string[]
-    const dispatch = useDispatch()
-    const [expandedRows, setExpandedRows] = useState<string[]>([])
+export const TasksProgressTable = ({
+  tableData = [],
+  statuses = [], // project statuses schema
+  taskTypes = [], // project task types schema
+  users = [], // users in the project
+  onChange,
+  onSelection,
+  ...props
+}: TasksProgressTableProps) => {
+  const tableRef = useRef<any>(null)
+  const selectedTasks = useSelector((state: $Any) => state.context.focused.tasks) as string[]
+  const dispatch = useDispatch()
+  const [expandedRows, setExpandedRows] = useState<string[]>([])
 
-    const handleExpandToggle = (folderId: string) => {
-      // update the expanded rows by either adding or removing the folderId
-      setExpandedRows((prev) => {
-        if (prev.includes(folderId)) {
-          return prev.filter((id) => id !== folderId)
-        }
-        return [...prev, folderId]
-      })
-    }
-
-    // for all columns that have taskType as a key, create a new column
-    const taskTypeKeys: string[] = []
-
-    tableData.forEach((folderRow) => {
-      Object.keys(folderRow).forEach((key) => {
-        const value = folderRow[key]
-        if (
-          typeof value === 'object' &&
-          'taskType' in value &&
-          !taskTypeKeys.includes(value.taskType)
-        ) {
-          taskTypeKeys.push(value.taskType)
-        }
-      })
+  const handleExpandToggle = (folderId: string) => {
+    // update the expanded rows by either adding or removing the folderId
+    setExpandedRows((prev) => {
+      if (prev.includes(folderId)) {
+        return prev.filter((id) => id !== folderId)
+      }
+      return [...prev, folderId]
     })
+  }
 
-    const onOpenPanel = () => {
-      dispatch(toggleDetailsPanel(true))
-    }
+  // for all columns that have taskType as a key, create a new column
+  const taskTypeKeys: string[] = []
 
-    return (
-      <DataTable
-        ref={ref}
-        value={tableData}
-        scrollable
-        scrollHeight="flex"
-        sortField="_folder"
-        sortOrder={1}
-        sortMode="single"
-        pt={{ thead: { style: { zIndex: 101 } } }}
-        {...props}
-      >
+  tableData.forEach((folderRow) => {
+    Object.keys(folderRow).forEach((key) => {
+      const value = folderRow[key]
+      if (
+        typeof value === 'object' &&
+        'taskType' in value &&
+        !taskTypeKeys.includes(value.taskType)
+      ) {
+        taskTypeKeys.push(value.taskType)
+      }
+    })
+  })
+
+  const onOpenPanel = () => {
+    dispatch(toggleDetailsPanel(true))
+  }
+
+  const tableWrapperEl = (tableRef.current?.getElement() as HTMLElement)?.querySelector(
+    '.p-datatable-wrapper',
+  )
+
+  const widthBreakPoints = [170, 150, 130]
+
+  return (
+    <DataTable
+      ref={tableRef}
+      value={tableData}
+      scrollable
+      scrollHeight="flex"
+      sortField="_folder"
+      sortOrder={1}
+      sortMode="single"
+      pt={{ thead: { style: { zIndex: 101 } } }}
+      {...props}
+    >
+      <Column
+        field="_folder"
+        header="Folder"
+        frozen
+        style={{ zIndex: 100 }}
+        body={(row: FolderRow) => (
+          <FolderBody
+            name={row._folder}
+            isExpanded={expandedRows.includes(row.__folderId)}
+            onExpandToggle={() => handleExpandToggle(row.__folderId)}
+          />
+        )}
+      />
+      {taskTypeKeys.map((taskTypeKey) => (
         <Column
-          field="_folder"
-          header="Folder"
-          frozen
-          style={{ zIndex: 100 }}
-          body={(row: FolderRow) => (
-            <FolderBody
-              name={row._folder}
-              isExpanded={expandedRows.includes(row.__folderId)}
-              onExpandToggle={() => handleExpandToggle(row.__folderId)}
-            />
-          )}
-        />
-        {taskTypeKeys.map((taskTypeKey) => (
-          <Column
-            key={taskTypeKey}
-            field={taskTypeKey}
-            header={<TaskColumnHeader taskType={taskTypeKey} />}
-            pt={{ bodyCell: { style: { padding: 0 } } }}
-            body={(rowData) => {
-              const taskCellData = rowData[taskTypeKey] as TaskTypeRow
-              const taskType = taskTypes.find((t) => t.name === taskTypeKey)
-              if (!taskCellData) return null
+          key={taskTypeKey}
+          field={taskTypeKey}
+          header={<TaskColumnHeader taskType={taskTypeKey} />}
+          pt={{ bodyCell: { style: { padding: 0 } } }}
+          body={(rowData) => {
+            const taskCellData = rowData[taskTypeKey] as TaskTypeRow
+            const taskType = taskTypes.find((t) => t.name === taskTypeKey)
+            if (!taskCellData) return null
 
-              return (
-                <Cells key={taskTypeKey}>
-                  {taskCellData.tasks.map((task, _i, array) => {
-                    // add avatarUrl to each user
-                    const assigneeOptions = users.map((user) => ({
-                      ...user,
-                      avatarUrl: `/api/users/${user.name}/avatar`,
-                    }))
-                    const isExpanded = expandedRows.includes(task.folder.id)
+            return (
+              <Cells key={taskTypeKey}>
+                {taskCellData.tasks.map((task, _i, array) => {
+                  // add avatarUrl to each user
+                  const assigneeOptions = users.map((user) => ({
+                    ...user,
+                    avatarUrl: `/api/users/${user.name}/avatar`,
+                  }))
+                  const isExpanded = expandedRows.includes(task.folder.id)
 
-                    const handleCellClick = (e: MouseEvent<HTMLDivElement>) => {
-                      // check if the click is editable item
-                      const target = e.target as HTMLElement
-                      if (target.closest('.editable')) {
-                        return
-                      }
+                  const handleCellClick = (e: MouseEvent<HTMLDivElement>) => {
+                    // check if the click is editable item
+                    const target = e.target as HTMLElement
+                    if (target.closest('.editable')) {
+                      return
+                    }
+                    onSelection(task.id, e.metaKey || e.ctrlKey || e.shiftKey)
+                  }
+
+                  // handle hitting enter on the cell
+                  const handleCellKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+                    if (e.key === 'Enter') {
                       onSelection(task.id, e.metaKey || e.ctrlKey || e.shiftKey)
                     }
+                  }
 
-                    // handle hitting enter on the cell
-                    const handleCellKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
-                      if (e.key === 'Enter') {
-                        onSelection(task.id, e.metaKey || e.ctrlKey || e.shiftKey)
-                      }
+                  const handleCellDoubleClick = (e: MouseEvent<HTMLDivElement>) => {
+                    // check if the click is editable item
+                    const target = e.target as HTMLElement
+                    if (target.closest('.editable')) {
+                      return
                     }
+                    onOpenPanel()
+                  }
 
-                    const handleCellDoubleClick = (e: MouseEvent<HTMLDivElement>) => {
-                      // check if the click is editable item
-                      const target = e.target as HTMLElement
-                      if (target.closest('.editable')) {
-                        return
-                      }
-                      onOpenPanel()
-                    }
+                  const isSelected = selectedTasks.includes(task.id)
+                  const minWidth =
+                    widthBreakPoints[Math.min(widthBreakPoints.length - 1, array.length)]
 
-                    const isSelected = selectedTasks.includes(task.id)
-
-                    const widthBreakPoints = [170, 150, 130]
-                    return (
-                      <InView>
-                        {({ inView, ref }) => (
-                          <div key={task.id} ref={ref} style={{ display: 'flex', width: '100%' }}>
-                            {inView ? (
-                              <TaskTypeCell
-                                isSelected={isSelected}
-                                onClick={handleCellClick}
-                                onKeyDown={handleCellKeyDown}
-                                onDoubleClick={handleCellDoubleClick}
-                                tabIndex={0}
-                                style={{
-                                  minWidth:
-                                    widthBreakPoints[
-                                      Math.min(widthBreakPoints.length - 1, array.length - 1)
-                                    ],
-                                }}
-                                task={task}
-                                assigneeOptions={assigneeOptions}
-                                isExpanded={isExpanded}
-                                taskIcon={taskType?.icon || ''}
-                                statuses={statuses}
-                                onChange={onChange}
-                              />
-                            ) : (
-                              <div style={{ height: isExpanded ? 118 : 42, flex: 1 }}></div>
-                            )}
-                          </div>
-                        )}
-                      </InView>
-                    )
-                  })}
-                </Cells>
-              )
-            }}
-          />
-        ))}
-      </DataTable>
-    )
-  },
-)
+                  return (
+                    <InView
+                      root={tableWrapperEl}
+                      rootMargin="200px 200px 200px 200px"
+                      key={task.id}
+                    >
+                      {({ inView, ref }) => (
+                        <div key={task.id} ref={ref} style={{ display: 'flex', width: '100%' }}>
+                          {inView ? (
+                            <TaskTypeCell
+                              isSelected={isSelected}
+                              onClick={handleCellClick}
+                              onKeyDown={handleCellKeyDown}
+                              onDoubleClick={handleCellDoubleClick}
+                              tabIndex={0}
+                              style={{
+                                minWidth: minWidth,
+                              }}
+                              task={task}
+                              assigneeOptions={assigneeOptions}
+                              isExpanded={isExpanded}
+                              taskIcon={taskType?.icon || ''}
+                              statuses={statuses}
+                              onChange={onChange}
+                            />
+                          ) : (
+                            <div
+                              style={{ height: isExpanded ? 118 : 42, flex: 1, minWidth: minWidth }}
+                            ></div>
+                          )}
+                        </div>
+                      )}
+                    </InView>
+                  )
+                })}
+              </Cells>
+            )
+          }}
+        />
+      ))}
+    </DataTable>
+  )
+}
