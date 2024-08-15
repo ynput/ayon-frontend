@@ -87,10 +87,10 @@ export const TasksProgressTable = forwardRef<DataTable<any>, TasksProgressTableP
         value={tableData}
         scrollable
         scrollHeight="flex"
-        virtualScrollerOptions={{ itemSize: 42 }}
         sortField="_folder"
         sortOrder={1}
         sortMode="single"
+        pt={{ thead: { style: { zIndex: 101 } } }}
         {...props}
       >
         <Column

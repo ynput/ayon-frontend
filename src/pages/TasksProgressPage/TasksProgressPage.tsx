@@ -31,9 +31,13 @@ const TasksProgressPage: FC = () => {
             <Hierarchy />
           </Section>
         </SplitterPanel>
-        <SplitterPanel size={82}>
-          <Splitter layout="horizontal" style={{ height: '100%' }} stateKey="browser-splitter-2">
-            <SplitterPanel>
+        <SplitterPanel size={82} style={{ overflow: 'hidden' }}>
+          <Splitter
+            layout="horizontal"
+            style={{ height: '100%', overflow: 'hidden' }}
+            stateKey="browser-splitter-2"
+          >
+            <SplitterPanel style={{ overflow: 'hidden' }}>
               <TasksProgress
                 statuses={projectInfo?.statuses}
                 taskTypes={projectInfo?.taskTypes}
@@ -51,7 +55,7 @@ const TasksProgressPage: FC = () => {
                 <TaskProgressDetailsPanel projectInfo={projectInfo} projectName={projectName} />
               </SplitterPanel>
             ) : (
-              <SplitterPanel size={0}></SplitterPanel>
+              <SplitterPanel size={0} style={{ maxWidth: 0 }}></SplitterPanel>
             )}
           </Splitter>
         </SplitterPanel>
