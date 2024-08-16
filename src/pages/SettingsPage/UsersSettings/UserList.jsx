@@ -10,6 +10,7 @@ import styled from 'styled-components'
 import useCreateContext from '@hooks/useCreateContext'
 import clsx from 'clsx'
 import userTableLoadingData from '@hooks/userTableLoadingData'
+import { accessGroupsSortFunction } from '@helpers/user'
 
 const StyledProfileRow = styled.div`
   display: flex;
@@ -106,6 +107,7 @@ const UserList = ({
 
   const tableData = userTableLoadingData(tableList, isLoading, 40, 'name')
 
+
   // Render
   return (
     <Section wrap>
@@ -152,6 +154,7 @@ const UserList = ({
                   </span>
                 ))
             }
+            sortFunction={accessGroupsSortFunction}
             sortable
             resizeable
           />
