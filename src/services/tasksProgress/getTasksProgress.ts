@@ -49,8 +49,10 @@ const provideTagsTasksProgress = (result: GetTasksProgressResult | undefined) =>
   const taskTags = result.flatMap((folder) =>
     folder.tasks.map((task) => ({ id: task.id, type: 'task' })),
   )
+  // progress tags
+  const progressTags = [...folderTags, ...taskTags].map((tag) => ({ id: tag.id, type: 'progress' }))
 
-  return [...folderTags, ...taskTags]
+  return [...folderTags, ...taskTags, ...progressTags]
 }
 
 import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'

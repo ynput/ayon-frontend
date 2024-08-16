@@ -23,7 +23,7 @@ export const Cells = styled.div`
 `
 
 export type TaskFieldChange = (
-  taskId: string,
+  task: string,
   key: 'status' | 'assignee' | 'priority',
   value: string[],
 ) => void

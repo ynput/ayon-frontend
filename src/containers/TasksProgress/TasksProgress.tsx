@@ -1,5 +1,5 @@
 import { FC, useMemo } from 'react'
-import { useGetTasksProgressQuery } from '@queries/tasksProgress/getTasksProgress'
+import { ProgressTask, useGetTasksProgressQuery } from '@queries/tasksProgress/getTasksProgress'
 import { $Any } from '@types'
 import { useSelector } from 'react-redux'
 import { formatTaskProgressForTable } from './helpers'
@@ -9,6 +9,8 @@ import { TaskFieldChange, TasksProgressTable } from './components'
 // state
 import { setFocusedTasks } from '@state/context'
 import { useDispatch } from 'react-redux'
+import { useUpdateEntitiesMutation } from '@queries/entity/updateEntity'
+import { toast } from 'react-toastify'
 
 interface TasksProgressProps {
   statuses?: Status[]
@@ -33,9 +35,65 @@ const TasksProgress: FC<TasksProgressProps> = ({ statuses = [], taskTypes = [], 
     { skip: !selectedFolders.length || !projectName },
   )
 
+  // create a map of all tasks
+  const allTasksMap = useMemo(() => {
+    const map = new Map<string, ProgressTask>()
+    foldersTasksData.forEach((folder) => {
+      folder.tasks.forEach((task) => {
+        map.set(task.id, task)
+      })
+    })
+    return map
+  }, [foldersTasksData])
+
   const tableData = useMemo(() => formatTaskProgressForTable(foldersTasksData), [foldersTasksData])
 
-  const handleTaskFieldChange: TaskFieldChange = async (id, key, value) => {}
+  const [updateEntities] = useUpdateEntitiesMutation()
+
+  type Operation = {
+    id: string
+    projectName: string
+    data: { [key: string]: any }
+    meta: { folderId: string }
+  }
+
+  const handleUpdateEntities = async (operations: Operation[]) => {
+    try {
+      await updateEntities({ operations, entityType: 'task' })
+    } catch (error) {
+      console.error(error)
+      toast.error('Failed to update task status')
+    }
+  }
+
+  const getStatusChangeOperations = (tasks: ProgressTask[], status: string) => {
+    const operations: Operation[] = tasks.map((task) => ({
+      id: task.id,
+      projectName,
+      data: { status },
+      meta: { folderId: task.folder.id },
+    }))
+
+    return operations
+  }
+
+  const handleTaskFieldChange: TaskFieldChange = (_taskId, key, value) => {
+    // filter out allTasksMap to only include tasks that are selected
+    const selectedTasksData = selectedTasks
+      .map((taskId) => allTasksMap.get(taskId))
+      .filter((task) => !!task)
+    let operations: Operation[] = []
+    switch (key) {
+      case 'status':
+        operations = getStatusChangeOperations(selectedTasksData, value[0])
+        break
+
+      default:
+        break
+    }
+
+    handleUpdateEntities(operations)
+  }
 
   const handleTaskSelect = (id: string, multiSelect: boolean) => {
     const newIds = []
