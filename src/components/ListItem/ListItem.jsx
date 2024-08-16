@@ -110,6 +110,7 @@ const ListItem = forwardRef(
           value={task.assignees}
           align="right"
           size={18}
+          onOpen={!selected && onClick}
           onChange={(v) => onUpdate('assignees', v)}
           disabledValues={disabledProjectUsers}
         />
