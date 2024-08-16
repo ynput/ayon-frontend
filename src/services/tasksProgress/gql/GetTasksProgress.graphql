@@ -12,6 +12,7 @@ query GetTasksProgress($projectName: String!, $folderIds: [String!]) {
           status
           assignees
           updatedAt
+          active
           folder {
             id
             name

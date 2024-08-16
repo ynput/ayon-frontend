@@ -28,20 +28,22 @@ export const formatTaskProgressForTable = (data: GetTasksProgressResult): Folder
     }
 
     // groups tasks by type
-    folder.tasks.forEach((task) => {
-      const taskType = task.taskType
-      if (!row[taskType]) {
-        row[taskType] = {
-          name: taskType,
-          taskType,
-          tasks: [],
+    folder.tasks
+      .filter((t) => t.active)
+      .forEach((task) => {
+        const taskType = task.taskType
+        if (!row[taskType]) {
+          row[taskType] = {
+            name: taskType,
+            taskType,
+            tasks: [],
+          }
         }
-      }
 
-      if (typeof row[taskType] === 'object') {
-        row[taskType].tasks.push(task)
-      }
-    })
+        if (typeof row[taskType] === 'object') {
+          row[taskType].tasks.push(task)
+        }
+      })
 
     rows.push(row)
   })
