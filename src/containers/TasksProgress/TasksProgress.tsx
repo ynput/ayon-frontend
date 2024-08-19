@@ -1,4 +1,4 @@
-import { FC, useMemo } from 'react'
+import { FC, useMemo, useState } from 'react'
 import { ProgressTask, useGetTasksProgressQuery } from '@queries/tasksProgress/getTasksProgress'
 import { $Any } from '@types'
 import { useSelector } from 'react-redux'
@@ -9,12 +9,13 @@ import {
 } from './helpers'
 import { useGetAllProjectUsersAsAssigneeQuery } from '@queries/user/getUsers'
 import { Status, TaskType } from '@api/rest'
-import { TaskFieldChange, TasksProgressTable } from './components'
+import { ProgressSearch, TaskFieldChange, TasksProgressTable } from './components'
 // state
 import { setFocusedTasks } from '@state/context'
 import { useDispatch } from 'react-redux'
 import { useUpdateEntitiesMutation } from '@queries/entity/updateEntity'
 import { toast } from 'react-toastify'
+import { Section, Toolbar } from '@ynput/ayon-react-components'
 
 export type Operation = {
   id: string
@@ -31,6 +32,9 @@ interface TasksProgressProps {
 
 const TasksProgress: FC<TasksProgressProps> = ({ statuses = [], taskTypes = [], projectName }) => {
   const dispatch = useDispatch()
+
+  const [filteredFolderIds, setFilteredFolderIds] = useState<null | string[]>(null)
+  const [highlightedTaskIds, setHighlightedTaskIds] = useState<string[]>([])
 
   const selectedFolders = useSelector((state: $Any) => state.context.focused.folders) as string[]
   const selectedTasks = useSelector((state: $Any) => state.context.focused.tasks) as string[]
@@ -73,6 +77,13 @@ const TasksProgress: FC<TasksProgressProps> = ({ statuses = [], taskTypes = [], 
   }, [selectedTasksData])
 
   const tableData = useMemo(() => formatTaskProgressForTable(foldersTasksData), [foldersTasksData])
+
+  const filteredTableData = useMemo(() => {
+    if (!filteredFolderIds) {
+      return tableData
+    }
+    return tableData.filter((row) => filteredFolderIds.includes(row.__folderId))
+  }, [tableData, filteredFolderIds])
 
   const [updateEntities] = useUpdateEntitiesMutation()
 
@@ -117,17 +128,27 @@ const TasksProgress: FC<TasksProgressProps> = ({ statuses = [], taskTypes = [], 
   }
 
   return (
-    <div style={{ height: '100%' }}>
+    <Section style={{ height: '100%' }} direction="column">
+      <Toolbar>
+        <ProgressSearch
+          data={tableData}
+          onSearch={(f, t) => {
+            setFilteredFolderIds(f)
+            setHighlightedTaskIds(t)
+          }}
+        />
+      </Toolbar>
       <TasksProgressTable
-        tableData={tableData}
+        tableData={filteredTableData}
         selectedAssignees={selectedAssignees}
+        highlightedTasks={highlightedTaskIds}
         statuses={statuses}
         taskTypes={taskTypes}
         users={users}
         onChange={handleTaskFieldChange}
         onSelection={handleTaskSelect}
       />
-    </div>
+    </Section>
   )
 }
 

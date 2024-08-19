@@ -6,12 +6,20 @@ export const Cell = styled.div`
   box-shadow: 0px 0px 4px rgba(0, 0, 0, 0.2);
   cursor: pointer;
 
+  &.highlighted {
+    box-shadow: inset 0px 0px 0px 1px var(--md-sys-color-primary);
+    border-radius: var(--border-radius-xxl);
+    background-color: var(--md-sys-color-surface-container-lowest);
+  }
+
   &:hover {
+    border-radius: 0;
     background-color: var(--md-sys-color-secondary-container);
     box-shadow: inset 0px 0px 0px 2px var(--md-sys-color-outline);
   }
 
   &.selected {
+    border-radius: 0;
     background-color: var(--md-sys-color-primary-container);
     box-shadow: inset 0px 0px 0px 2px var(--md-sys-color-primary);
   }

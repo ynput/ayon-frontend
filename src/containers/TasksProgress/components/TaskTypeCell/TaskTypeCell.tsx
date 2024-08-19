@@ -17,6 +17,7 @@ interface TaskTypeCellProps extends Omit<React.HTMLAttributes<HTMLDivElement>, '
   isExpanded: boolean
   taskIcon: string
   isSelected: boolean
+  isHighlighted: boolean
   isMultipleSelected: boolean
   onChange: TaskFieldChange
 }
@@ -30,6 +31,7 @@ export const TaskTypeCell: FC<TaskTypeCellProps> = ({
   taskIcon,
   onChange,
   isSelected,
+  isHighlighted,
   isMultipleSelected,
   ...props
 }) => {
@@ -57,7 +59,7 @@ export const TaskTypeCell: FC<TaskTypeCellProps> = ({
   }
 
   return (
-    <Styled.Cell className={clsx({ selected: isSelected })} {...props}>
+    <Styled.Cell className={clsx({ selected: isSelected, highlighted: isHighlighted })} {...props}>
       <EntityCard
         variant="status"
         title={task.label || task.name}

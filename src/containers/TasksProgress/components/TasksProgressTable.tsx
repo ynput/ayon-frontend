@@ -32,6 +32,7 @@ export type TaskFieldChange = (
 interface TasksProgressTableProps extends Omit<DataTableBaseProps<any>, 'onChange'> {
   tableData: FolderRow[]
   selectedAssignees: string[]
+  highlightedTasks: string[]
   statuses: Status[]
   users: GetAllProjectUsersAsAssigneeResult
   taskTypes: TaskType[]
@@ -42,6 +43,7 @@ interface TasksProgressTableProps extends Omit<DataTableBaseProps<any>, 'onChang
 export const TasksProgressTable = ({
   tableData = [],
   selectedAssignees = [],
+  highlightedTasks = [],
   statuses = [], // project statuses schema
   taskTypes = [], // project task types schema
   users = [], // users in the project
@@ -162,6 +164,8 @@ export const TasksProgressTable = ({
                   }
 
                   const isSelected = selectedTasks.includes(task.id)
+                  const isHighlighted = highlightedTasks.includes(task.id)
+
                   const minWidth =
                     widthBreakPoints[Math.min(widthBreakPoints.length - 1, array.length)]
 
@@ -176,6 +180,7 @@ export const TasksProgressTable = ({
                           {inView ? (
                             <TaskTypeCell
                               isSelected={isSelected}
+                              isHighlighted={isHighlighted}
                               isMultipleSelected={selectedTasks.length > 1}
                               onClick={handleCellClick}
                               onKeyDown={handleCellKeyDown}
