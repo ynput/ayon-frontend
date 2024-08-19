@@ -12,21 +12,25 @@ import type { TaskFieldChange } from '../TasksProgressTable'
 interface TaskTypeCellProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onChange'> {
   statuses: Status[]
   task: ProgressTask
+  selectedAssignees: string[]
   assigneeOptions: EntityCardProps['assigneeOptions']
   isExpanded: boolean
   taskIcon: string
   isSelected: boolean
+  isMultipleSelected: boolean
   onChange: TaskFieldChange
 }
 
 export const TaskTypeCell: FC<TaskTypeCellProps> = ({
   statuses,
   task,
+  selectedAssignees,
   assigneeOptions,
   isExpanded,
   taskIcon,
   onChange,
   isSelected,
+  isMultipleSelected,
   ...props
 }) => {
   const status = statuses.find((s) => s.name === task.status)
@@ -34,7 +38,7 @@ export const TaskTypeCell: FC<TaskTypeCellProps> = ({
   const thumbnailUrl = `/api/projects/${task.projectName}/tasks/${task.id}/thumbnail?updatedAt=${task.updatedAt}`
 
   let changeProps: {
-    onAssigneeChange?: EntityCardProps['onAssigneeChange']
+    onAssigneeChange: EntityCardProps['onAssigneeChange']
     onStatusChange?: EntityCardProps['onStatusChange']
     onPriorityChange?: EntityCardProps['onPriorityChange']
   } = {
@@ -45,9 +49,10 @@ export const TaskTypeCell: FC<TaskTypeCellProps> = ({
 
   if (isSelected) {
     changeProps = {
-      onAssigneeChange: (a) => onChange(task.id, 'assignee', a),
-      onStatusChange: (s) => onChange(task.id, 'status', s),
-      onPriorityChange: (p) => onChange(task.id, 'priority', p),
+      onAssigneeChange: (added) =>
+        isMultipleSelected ? {} : onChange(task.id, 'assignee', added, []), // noop
+      onStatusChange: (s) => onChange(task.id, 'status', s, []),
+      onPriorityChange: (p) => onChange(task.id, 'priority', p, []),
     }
   }
 
@@ -64,12 +69,18 @@ export const TaskTypeCell: FC<TaskTypeCellProps> = ({
         statusOptions={statuses}
         statusMiddle
         statusNameOnly
-        // priority={{
-        //   name: 'high',
-        //   icon: 'keyboard_double_arrow_up',
-        //   label: 'High',
-        //   color: '#ff0000',
-        // }}
+        pt={{
+          assigneeSelect: {
+            value: isMultipleSelected ? selectedAssignees : task.assignees,
+            multiSelectClose: false,
+            isMultiple: isMultipleSelected,
+            multipleOverride: !isMultipleSelected,
+            onAddItem: (add) =>
+              isMultipleSelected ? onChange(task.id, 'assignee', [add], []) : {},
+            onRemoveItem: (remove) =>
+              isMultipleSelected ? onChange(task.id, 'assignee', [], [remove]) : {},
+          },
+        }}
         {...changeProps}
         style={{ width: 'unset', aspectRatio: 'unset' }}
         isCollapsed={!isExpanded}
