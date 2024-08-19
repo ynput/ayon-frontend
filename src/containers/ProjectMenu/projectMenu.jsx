@@ -120,7 +120,7 @@ const ProjectMenu = ({ isOpen, onHide }) => {
           {
             label: 'Project Settings',
             icon: 'settings_applications',
-            command: () => navigate(`/manageProjects/anatomy?project=${projectName}`),
+            command: () => setTimeout(() => navigate(`/manageProjects/anatomy?project=${projectName}`), 0),
           },
         ],
       )
