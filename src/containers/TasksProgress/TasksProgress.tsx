@@ -16,6 +16,8 @@ import { useDispatch } from 'react-redux'
 import { useUpdateEntitiesMutation } from '@queries/entity/updateEntity'
 import { toast } from 'react-toastify'
 import { Section, Toolbar } from '@ynput/ayon-react-components'
+import CategorySelect from '@components/CategorySelect/CategorySelect'
+import useLocalStorage from '@hooks/useLocalStorage'
 
 export type Operation = {
   id: string
@@ -33,8 +35,13 @@ interface TasksProgressProps {
 const TasksProgress: FC<TasksProgressProps> = ({ statuses = [], taskTypes = [], projectName }) => {
   const dispatch = useDispatch()
 
+  // filter states
   const [filteredFolderIds, setFilteredFolderIds] = useState<null | string[]>(null)
   const [highlightedTaskIds, setHighlightedTaskIds] = useState<string[]>([])
+  const [filteredTaskTypes, setFilteredTaskTypes] = useLocalStorage(
+    `progress-types-${projectName}`,
+    [],
+  )
 
   const selectedFolders = useSelector((state: $Any) => state.context.focused.folders) as string[]
   const selectedTasks = useSelector((state: $Any) => state.context.focused.tasks) as string[]
@@ -76,13 +83,20 @@ const TasksProgress: FC<TasksProgressProps> = ({ statuses = [], taskTypes = [], 
     return Array.from(assignees)
   }, [selectedTasksData])
 
-  const tableData = useMemo(() => formatTaskProgressForTable(foldersTasksData), [foldersTasksData])
+  const tableData = useMemo(
+    () => formatTaskProgressForTable(foldersTasksData, filteredTaskTypes),
+    [foldersTasksData, filteredTaskTypes],
+  )
 
   const filteredTableData = useMemo(() => {
-    if (!filteredFolderIds) {
-      return tableData
+    let filtered = tableData
+
+    // search filter
+    if (filteredFolderIds) {
+      filtered = tableData.filter((row) => filteredFolderIds.includes(row.__folderId))
     }
-    return tableData.filter((row) => filteredFolderIds.includes(row.__folderId))
+
+    return filtered
   }, [tableData, filteredFolderIds])
 
   const [updateEntities] = useUpdateEntitiesMutation()
@@ -137,13 +151,28 @@ const TasksProgress: FC<TasksProgressProps> = ({ statuses = [], taskTypes = [], 
             setHighlightedTaskIds(t)
           }}
         />
+        <CategorySelect
+          value={filteredTaskTypes}
+          options={taskTypes.map((taskType) => ({
+            value: taskType.name,
+            label: taskType.name,
+            icon: taskType.icon,
+          }))}
+          onChange={(value) => setFilteredTaskTypes(value)}
+          onClearNull={() => setFilteredTaskTypes([])}
+          multiSelectClose={false}
+          onSelectAll={() => {}}
+          multiSelect
+          placeholder="Filter task types..."
+          style={{ width: 185 }}
+        />
       </Toolbar>
       <TasksProgressTable
         tableData={filteredTableData}
         selectedAssignees={selectedAssignees}
         highlightedTasks={highlightedTaskIds}
         statuses={statuses}
-        taskTypes={taskTypes}
+        taskTypes={taskTypes} // for task icon etc.
         users={users}
         onChange={handleTaskFieldChange}
         onSelection={handleTaskSelect}

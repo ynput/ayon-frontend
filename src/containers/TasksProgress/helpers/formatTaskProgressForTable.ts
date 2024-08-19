@@ -17,7 +17,10 @@ export type FolderRow = {
   [taskType: string]: TaskTypeRow | string
 }
 
-export const formatTaskProgressForTable = (data: GetTasksProgressResult): FolderRow[] => {
+export const formatTaskProgressForTable = (
+  data: GetTasksProgressResult,
+  shownColumns: string[] = [],
+): FolderRow[] => {
   const rows: FolderRow[] = []
 
   data.forEach((folder) => {
@@ -32,6 +35,10 @@ export const formatTaskProgressForTable = (data: GetTasksProgressResult): Folder
       .filter((t) => t.active)
       .forEach((task) => {
         const taskType = task.taskType
+
+        // do not add if hidden
+        if (!!shownColumns.length && !shownColumns.includes(taskType)) return
+
         if (!row[taskType]) {
           row[taskType] = {
             name: taskType,

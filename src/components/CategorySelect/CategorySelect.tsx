@@ -1,6 +1,17 @@
-import { DefaultValueTemplate, Dropdown, Icon } from '@ynput/ayon-react-components'
+import {
+  DefaultValueTemplate,
+  DefaultValueTemplateProps,
+  Dropdown,
+  DropdownProps,
+  Icon,
+} from '@ynput/ayon-react-components'
 
-const IconsTemplate = ({ value, selected, isOpen, options, ...props }) => {
+interface IconsTemplateProps extends DefaultValueTemplateProps {
+  selected: string[]
+  options: { value: string; icon: string }[]
+}
+
+const IconsTemplate = ({ value, selected, isOpen, options, ...props }: IconsTemplateProps) => {
   return (
     <DefaultValueTemplate
       {...props}
@@ -16,7 +27,11 @@ const IconsTemplate = ({ value, selected, isOpen, options, ...props }) => {
   )
 }
 
-const CategorySelect = ({ truncateAt = 3, ...props }) => {
+interface CategorySelectProps extends DropdownProps {
+  truncateAt?: number
+}
+
+const CategorySelect = ({ truncateAt = 3, ...props }: CategorySelectProps) => {
   return (
     <Dropdown
       {...props}
