@@ -29,13 +29,16 @@ export type TaskFieldChange = (
   removed: string[],
 ) => void
 
-interface TasksProgressTableProps extends Omit<DataTableBaseProps<any>, 'onChange'> {
+interface TasksProgressTableProps
+  extends Omit<DataTableBaseProps<any>, 'onChange' | 'expandedRows'> {
   tableData: FolderRow[]
   selectedAssignees: string[]
   highlightedTasks: string[]
   statuses: Status[]
   users: GetAllProjectUsersAsAssigneeResult
   taskTypes: TaskType[]
+  expandedRows: string[]
+  onExpandRow: (folderId: string) => void
   onChange: TaskFieldChange
   onSelection: (taskId: string, isMultiSelect: boolean) => void
 }
@@ -47,6 +50,8 @@ export const TasksProgressTable = ({
   statuses = [], // project statuses schema
   taskTypes = [], // project task types schema
   users = [], // users in the project
+  expandedRows = [],
+  onExpandRow,
   onChange,
   onSelection,
   ...props
@@ -54,17 +59,6 @@ export const TasksProgressTable = ({
   const tableRef = useRef<any>(null)
   const selectedTasks = useSelector((state: $Any) => state.context.focused.tasks) as string[]
   const dispatch = useDispatch()
-  const [expandedRows, setExpandedRows] = useState<string[]>([])
-
-  const handleExpandToggle = (folderId: string) => {
-    // update the expanded rows by either adding or removing the folderId
-    setExpandedRows((prev) => {
-      if (prev.includes(folderId)) {
-        return prev.filter((id) => id !== folderId)
-      }
-      return [...prev, folderId]
-    })
-  }
 
   // for all columns that have taskType as a key, create a new column
   const taskTypeKeys: string[] = []
@@ -113,7 +107,7 @@ export const TasksProgressTable = ({
           <FolderBody
             name={row._folder}
             isExpanded={expandedRows.includes(row.__folderId)}
-            onExpandToggle={() => handleExpandToggle(row.__folderId)}
+            onExpandToggle={() => onExpandRow(row.__folderId)}
           />
         )}
       />

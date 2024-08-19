@@ -15,9 +15,10 @@ import { setFocusedTasks } from '@state/context'
 import { useDispatch } from 'react-redux'
 import { useUpdateEntitiesMutation } from '@queries/entity/updateEntity'
 import { toast } from 'react-toastify'
-import { Section, Toolbar } from '@ynput/ayon-react-components'
+import { Button, Section, ShortcutTag, Spacer, Toolbar } from '@ynput/ayon-react-components'
 import CategorySelect from '@components/CategorySelect/CategorySelect'
 import useLocalStorage from '@hooks/useLocalStorage'
+import Shortcuts from '@containers/Shortcuts'
 
 export type Operation = {
   id: string
@@ -42,6 +43,7 @@ const TasksProgress: FC<TasksProgressProps> = ({ statuses = [], taskTypes = [], 
     `progress-types-${projectName}`,
     [],
   )
+  const [expandedRows, setExpandedRows] = useState<string[]>([])
 
   const selectedFolders = useSelector((state: $Any) => state.context.focused.folders) as string[]
   const selectedTasks = useSelector((state: $Any) => state.context.focused.tasks) as string[]
@@ -141,43 +143,84 @@ const TasksProgress: FC<TasksProgressProps> = ({ statuses = [], taskTypes = [], 
     dispatch(setFocusedTasks({ ids: newIds }))
   }
 
+  const handleExpandToggle = (folderId: string) => {
+    // update the expanded rows by either adding or removing the folderId
+    setExpandedRows((prev) => {
+      if (prev.includes(folderId)) {
+        return prev.filter((id) => id !== folderId)
+      }
+      return [...prev, folderId]
+    })
+  }
+
+  // are more than half of the rows expanded?
+  const shouldExpand = expandedRows.length < filteredTableData.length / 2
+  const handleExpandAllToggle = () => {
+    if (shouldExpand) {
+      setExpandedRows(filteredTableData.map((row) => row.__folderId))
+    } else {
+      setExpandedRows([])
+    }
+  }
+
+  const shortcuts = [
+    {
+      key: 'E',
+      action: handleExpandAllToggle,
+    },
+  ]
+
   return (
-    <Section style={{ height: '100%' }} direction="column">
-      <Toolbar>
-        <ProgressSearch
-          data={tableData}
-          onSearch={(f, t) => {
-            setFilteredFolderIds(f)
-            setHighlightedTaskIds(t)
-          }}
+    <>
+      <Shortcuts shortcuts={shortcuts} deps={[expandedRows]} />
+      <Section style={{ height: '100%' }} direction="column">
+        <Toolbar>
+          <ProgressSearch
+            data={tableData}
+            onSearch={(f, t) => {
+              setFilteredFolderIds(f)
+              setHighlightedTaskIds(t)
+            }}
+          />
+          <CategorySelect
+            value={filteredTaskTypes}
+            options={taskTypes.map((taskType) => ({
+              value: taskType.name,
+              label: taskType.name,
+              icon: taskType.icon,
+            }))}
+            onChange={(value) => setFilteredTaskTypes(value)}
+            onClearNull={() => setFilteredTaskTypes([])}
+            multiSelectClose={false}
+            onSelectAll={() => {}}
+            multiSelect
+            placeholder="Filter task types..."
+            style={{ width: 185 }}
+          />
+          <Spacer />
+          <Button
+            onClick={handleExpandAllToggle}
+            icon={shouldExpand ? 'expand_all' : 'collapse_all'}
+            style={{ width: 220, justifyContent: 'flex-start' }}
+          >
+            {`${shouldExpand ? 'Expand' : 'Collapse'} all rows`}
+            <ShortcutTag style={{ marginLeft: 'auto' }}>Shift + E</ShortcutTag>
+          </Button>
+        </Toolbar>
+        <TasksProgressTable
+          tableData={filteredTableData}
+          selectedAssignees={selectedAssignees}
+          highlightedTasks={highlightedTaskIds}
+          statuses={statuses}
+          taskTypes={taskTypes} // for task icon etc.
+          users={users}
+          onChange={handleTaskFieldChange}
+          onSelection={handleTaskSelect}
+          expandedRows={expandedRows}
+          onExpandRow={handleExpandToggle}
         />
-        <CategorySelect
-          value={filteredTaskTypes}
-          options={taskTypes.map((taskType) => ({
-            value: taskType.name,
-            label: taskType.name,
-            icon: taskType.icon,
-          }))}
-          onChange={(value) => setFilteredTaskTypes(value)}
-          onClearNull={() => setFilteredTaskTypes([])}
-          multiSelectClose={false}
-          onSelectAll={() => {}}
-          multiSelect
-          placeholder="Filter task types..."
-          style={{ width: 185 }}
-        />
-      </Toolbar>
-      <TasksProgressTable
-        tableData={filteredTableData}
-        selectedAssignees={selectedAssignees}
-        highlightedTasks={highlightedTaskIds}
-        statuses={statuses}
-        taskTypes={taskTypes} // for task icon etc.
-        users={users}
-        onChange={handleTaskFieldChange}
-        onSelection={handleTaskSelect}
-      />
-    </Section>
+      </Section>
+    </>
   )
 }
 
