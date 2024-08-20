@@ -17,7 +17,7 @@ import type { GetAllProjectUsersAsAssigneeResult } from '@queries/user/getUsers'
 import type { KeyboardEvent, MouseEvent } from 'react'
 import { $Any } from '@types'
 import { InView } from 'react-intersection-observer'
-import { openViewer } from '@state/viewer'
+import useCreateContext from '@hooks/useCreateContext'
 
 export const Cells = styled.div`
   display: flex;
@@ -81,6 +81,40 @@ export const TasksProgressTable = ({
 
   const onOpenPanel = () => {
     dispatch(toggleDetailsPanel(true))
+  }
+
+  const buildContextMenu = (selection: string[], taskId: string) => {
+    return [
+      {
+        label: 'Open in side panel',
+        icon: 'dock_to_left',
+        shortcut: 'Double click',
+        command: () => onOpenPanel(),
+      },
+      {
+        label: 'Open in viewer',
+        icon: 'play_circle',
+        shortcut: 'Spacebar',
+        command: () => onOpenViewer(taskId, false),
+      },
+    ]
+  }
+
+  const [ctxMenuShow] = useCreateContext()
+
+  const handleContextMenu = (e: MouseEvent<HTMLDivElement>, taskId: string) => {
+    // check if the click is within selection already
+    let selection = selectedTasks
+    const inSelection = selectedTasks.includes(taskId)
+    // if not in selection, clear selection and select the task
+    if (!inSelection) {
+      selection = [taskId]
+      // update the selection
+      onSelection(taskId, false)
+    }
+
+    // show context menu
+    ctxMenuShow(e, buildContextMenu(selection, taskId))
   }
 
   const tableWrapperEl = (tableRef.current?.getElement() as HTMLElement)?.querySelector(
@@ -186,6 +220,7 @@ export const TasksProgressTable = ({
                               onClick={handleCellClick}
                               onKeyDown={handleCellKeyDown}
                               onDoubleClick={handleCellDoubleClick}
+                              onContextMenu={(e) => handleContextMenu(e, task.id)}
                               tabIndex={0}
                               style={{
                                 minWidth: minWidth,

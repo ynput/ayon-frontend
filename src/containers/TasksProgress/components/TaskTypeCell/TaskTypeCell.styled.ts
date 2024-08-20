@@ -21,6 +21,7 @@ export const Cell = styled.div`
   &.selected {
     border-radius: 0;
     background-color: var(--md-sys-color-primary-container);
-    box-shadow: inset 0px 0px 0px 2px var(--md-sys-color-primary);
+    box-shadow: inset 0px 0px 0px 0.5px var(--md-sys-color-primary-container),
+      inset 0px 0px 0px 2.5px var(--md-sys-color-primary);
   }
 `
