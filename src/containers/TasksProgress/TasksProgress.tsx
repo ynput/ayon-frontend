@@ -1,4 +1,4 @@
-import { FC, useMemo, useState } from 'react'
+import { FC, useMemo, useState, useRef } from 'react'
 import { ProgressTask, useGetTasksProgressQuery } from '@queries/tasksProgress/getTasksProgress'
 import { $Any } from '@types'
 import { useSelector } from 'react-redux'
@@ -6,6 +6,7 @@ import {
   formatTaskProgressForTable,
   getStatusChangeOperations,
   getAssigneesChangeOperations,
+  resolveShiftSelect,
 } from './helpers'
 import { useGetAllProjectUsersAsAssigneeQuery } from '@queries/user/getUsers'
 import { FolderType, Status, TaskType } from '@api/rest'
@@ -42,6 +43,7 @@ const TasksProgress: FC<TasksProgressProps> = ({
   projectName,
 }) => {
   const dispatch = useDispatch()
+  const tableRef = useRef<any>(null)
 
   // filter states
   const [filteredFolderIds, setFilteredFolderIds] = useState<null | string[]>(null)
@@ -53,6 +55,7 @@ const TasksProgress: FC<TasksProgressProps> = ({
 
   const selectedFolders = useSelector((state: $Any) => state.context.focused.folders) as string[]
   const selectedTasks = useSelector((state: $Any) => state.context.focused.tasks) as string[]
+  const [activeTask, setActiveTask] = useState<string | null>(null)
   //   GET PROJECT ASSIGNEES
   const { data: users = [] } = useGetAllProjectUsersAsAssigneeQuery(
     { projectName },
@@ -136,16 +139,37 @@ const TasksProgress: FC<TasksProgressProps> = ({
     handleUpdateEntities(operations)
   }
 
-  const handleTaskSelect = (id: string, multiSelect: boolean) => {
+  const handleTaskSelect = (id: string, meta: boolean, shift: boolean) => {
     const newIds = []
 
-    if (!multiSelect) {
+    if (shift) {
+      // get correct index of the selected task
+      const tableEl = tableRef.current?.getTable()
+
+      if (!tableEl) return
+
+      const taskIds = resolveShiftSelect(id, tableEl)
+
+      dispatch(setFocusedTasks({ ids: taskIds }))
+
+      return
+    }
+
+    let newActiveId: string | null = id
+    if (!meta) {
+      // single select
       newIds.push(id)
     } else if (selectedTasks.includes(id)) {
+      // remove the task from the selected tasks
       newIds.push(...selectedTasks.filter((taskId) => taskId !== id))
+      // change active task to the last selected task else to null
+      newActiveId = newIds[newIds.length - 1] || null
     } else {
+      // add the task to the selected tasks
       newIds.push(...selectedTasks, id)
     }
+
+    setActiveTask(newActiveId)
 
     dispatch(setFocusedTasks({ ids: newIds }))
   }
@@ -216,9 +240,11 @@ const TasksProgress: FC<TasksProgressProps> = ({
           </Button>
         </Toolbar>
         <TasksProgressTable
+          tableRef={tableRef}
           tableData={filteredTableData}
           isLoading={isFetchingTasks}
           selectedFolders={selectedFolders}
+          activeTask={activeTask}
           selectedAssignees={selectedAssignees}
           statuses={statuses} // status icons etc.
           taskTypes={taskTypes} // for tasks icon etc.

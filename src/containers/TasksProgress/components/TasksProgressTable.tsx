@@ -19,6 +19,7 @@ import { $Any } from '@types'
 import { InView } from 'react-intersection-observer'
 import useCreateContext from '@hooks/useCreateContext'
 import { Body } from './FolderBody/FolderBody.styled'
+import clsx from 'clsx'
 
 export const Cells = styled.div`
   display: flex;
@@ -33,9 +34,11 @@ export type TaskFieldChange = (
 
 interface TasksProgressTableProps
   extends Omit<DataTableBaseProps<any>, 'onChange' | 'expandedRows'> {
+  tableRef: React.RefObject<any>
   tableData: FolderRow[]
   isLoading: boolean
   selectedFolders: string[]
+  activeTask: string | null
   selectedAssignees: string[]
   statuses: Status[]
   taskTypes: TaskType[]
@@ -43,14 +46,16 @@ interface TasksProgressTableProps
   expandedRows: string[]
   onExpandRow: (folderId: string) => void
   onChange: TaskFieldChange
-  onSelection: (taskId: string, isMultiSelect: boolean) => void
+  onSelection: (taskId: string, meta: boolean, shift: boolean) => void
   onOpenViewer: (taskId: string, quickView: boolean) => void
 }
 
 export const TasksProgressTable = ({
+  tableRef,
   tableData = [],
   isLoading,
   selectedFolders = [],
+  activeTask,
   selectedAssignees = [],
   statuses = [], // project statuses schema
   taskTypes = [], // project task types schema
@@ -62,7 +67,6 @@ export const TasksProgressTable = ({
   onOpenViewer,
   ...props
 }: TasksProgressTableProps) => {
-  const tableRef = useRef<any>(null)
   const selectedTasks = useSelector((state: $Any) => state.context.focused.tasks) as string[]
   const dispatch = useDispatch()
 
@@ -114,7 +118,7 @@ export const TasksProgressTable = ({
     if (!inSelection) {
       selection = [taskId]
       // update the selection
-      onSelection(taskId, false)
+      onSelection(taskId, false, false)
     }
 
     // show context menu
@@ -182,7 +186,7 @@ export const TasksProgressTable = ({
             if (!taskCellData) return null
 
             return (
-              <Cells key={taskTypeKey}>
+              <Cells key={taskTypeKey} className="cells">
                 {taskCellData.tasks.map((task, _i, array) => {
                   // add avatarUrl to each user
                   const assigneeOptions = users.map((user) => ({
@@ -197,13 +201,13 @@ export const TasksProgressTable = ({
                     if (target.closest('.editable')) {
                       return
                     }
-                    onSelection(task.id, e.metaKey || e.ctrlKey || e.shiftKey)
+                    onSelection(task.id, e.metaKey || e.ctrlKey, e.shiftKey)
                   }
 
                   // handle hitting enter on the cell
                   const handleCellKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
                     if (e.key === 'Enter') {
-                      onSelection(task.id, e.metaKey || e.ctrlKey || e.shiftKey)
+                      onSelection(task.id, e.metaKey || e.ctrlKey, e.shiftKey)
                     }
                     if (e.key === ' ') {
                       e.preventDefault()
@@ -221,6 +225,7 @@ export const TasksProgressTable = ({
                   }
 
                   const isSelected = selectedTasks.includes(task.id)
+                  const isActive = activeTask === task.id
 
                   const minWidth =
                     widthBreakPoints[Math.min(widthBreakPoints.length - 1, array.length)]
@@ -232,9 +237,19 @@ export const TasksProgressTable = ({
                       key={task.id}
                     >
                       {({ inView, ref }) => (
-                        <div key={task.id} ref={ref} style={{ display: 'flex', width: '100%' }}>
+                        <div
+                          key={task.id}
+                          ref={ref}
+                          style={{ display: 'flex', width: '100%' }}
+                          data-task-id={task.id}
+                          className={clsx('cell-wrapper', {
+                            selected: isSelected,
+                            active: isActive,
+                          })}
+                        >
                           {inView ? (
                             <TaskTypeCell
+                              isActive={isActive}
                               isSelected={isSelected}
                               isMultipleSelected={selectedTasks.length > 1}
                               onClick={handleCellClick}

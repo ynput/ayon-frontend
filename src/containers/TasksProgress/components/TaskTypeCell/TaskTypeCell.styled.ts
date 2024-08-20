@@ -16,6 +16,11 @@ export const Cell = styled.div`
     border-radius: 0;
     background-color: var(--md-sys-color-primary-container);
     box-shadow: inset 0px 0px 0px 0.5px var(--md-sys-color-primary-container),
-      inset 0px 0px 0px 2.5px var(--md-sys-color-primary);
+      inset 0px 0px 0px 1px var(--md-sys-color-primary);
+  }
+
+  &.active {
+    box-shadow: inset 0px 0px 0px 0.5px var(--md-sys-color-primary-container),
+      inset 0px 0px 0px 3px var(--md-sys-color-primary);
   }
 `
