@@ -9,7 +9,6 @@ import { useUpdateEntitiesMutation } from '@queries/entity/updateEntity'
 import { toast } from 'react-toastify'
 import getPreviousTagElement from '@helpers/getPreviousTagElement'
 import Shortcuts from '@containers/Shortcuts'
-import { useWidthsCalculator } from './hooks/useWidthsCalculator'
 
 const UserDashboardList = ({
   groupedTasks = {},
@@ -60,15 +59,6 @@ const UserDashboardList = ({
       return filteredFields
     }
   }, [filteredFields, groupByValue])
-
-  const { minWidths } = useWidthsCalculator(
-    containerRef,
-    listItemsRef,
-    isLoading,
-    groupedFields,
-    groupedTasks,
-    filteredFields,
-  )
 
   const dispatch = useDispatch()
   // get all task ids in order
@@ -325,7 +315,6 @@ const UserDashboardList = ({
                     onUpdate={handleUpdate}
                     isCollapsed={collapsedGroups.includes(id)}
                     onCollapseChange={handleCollapseToggle}
-                    minWidths={minWidths}
                     containerRef={containerRef}
                   />
                 )
