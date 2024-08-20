@@ -9,7 +9,7 @@ import { useMemo } from 'react'
 import styled from 'styled-components'
 import useCreateContext from '@hooks/useCreateContext'
 import clsx from 'clsx'
-import userTableLoadingData from '@hooks/userTableLoadingData'
+import useTableLoadingData from '@hooks/useTableLoadingData'
 
 const StyledProfileRow = styled.div`
   display: flex;
@@ -104,7 +104,7 @@ const UserList = ({
 
   const [ctxMenuShow] = useCreateContext()
 
-  const tableData = userTableLoadingData(tableList, isLoading, 40, 'name')
+  const tableData = useTableLoadingData(tableList, isLoading, 40, 'name')
 
   // Render
   return (

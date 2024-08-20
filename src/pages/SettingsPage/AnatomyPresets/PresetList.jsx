@@ -7,7 +7,7 @@ import { Icon, TablePanel } from '@ynput/ayon-react-components'
 import useCreateContext from '@hooks/useCreateContext'
 import styled from 'styled-components'
 import clsx from 'clsx'
-import userTableLoadingData from '@hooks/userTableLoadingData'
+import useTableLoadingData from '@hooks/useTableLoadingData'
 
 const StyledContainer = styled.div`
   display: flex;
@@ -77,7 +77,7 @@ const PresetList = ({
     ]
   }, [presetList])
 
-  const tableData = userTableLoadingData(presetListWithBuiltIn, isLoading, 6, 'name')
+  const tableData = useTableLoadingData(presetListWithBuiltIn, isLoading, 6, 'name')
 
   return (
     <StyledContainer>

@@ -8,7 +8,7 @@ import { useDeleteAccessGroupMutation } from '@queries/accessGroups/updateAccess
 import NewAccessGroup from './NewAccessGroup'
 import confirmDelete from '@helpers/confirmDelete'
 import clsx from 'clsx'
-import userTableLoadingData from '@hooks/userTableLoadingData'
+import useTableLoadingData from '@hooks/useTableLoadingData'
 
 const AccessGroupList = ({ projectName, selectedAccessGroup, onSelectAccessGroup }) => {
   const [showNewAccessGroup, setShowNewAccessGroup] = useState(false)
@@ -99,7 +99,7 @@ const AccessGroupList = ({ projectName, selectedAccessGroup, onSelectAccessGroup
 
   const [ctxMenuShow] = useCreateContext([])
 
-  const tableData = userTableLoadingData(accessGroupList, isLoading, 5, 'name')
+  const tableData = useTableLoadingData(accessGroupList, isLoading, 5, 'name')
 
   return (
     <Section style={{ maxWidth: 400, flex: 2 }}>

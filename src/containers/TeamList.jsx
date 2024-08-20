@@ -6,7 +6,7 @@ import { Column } from 'primereact/column'
 import { useEffect } from 'react'
 import useCreateContext from '@hooks/useCreateContext'
 import clsx from 'clsx'
-import userTableLoadingData from '@hooks/userTableLoadingData'
+import useTableLoadingData from '@hooks/useTableLoadingData'
 
 const TeamList = ({
   teams,
@@ -109,7 +109,7 @@ const TeamList = ({
   // create the ref and model
   const [tableContextMenuShow] = useCreateContext(tableContextItems)
 
-  const tableData = userTableLoadingData(teamList, isLoading, 10, 'name')
+  const tableData = useTableLoadingData(teamList, isLoading, 10, 'name')
 
   return (
     <>

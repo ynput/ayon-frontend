@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { setExpandedProducts } from '@state/context'
 import useTableKeyboardNavigation from '@containers/Feed/hooks/useTableKeyboardNavigation'
 import clsx from 'clsx'
-import userTableLoadingData from '@hooks/userTableLoadingData'
+import useTableLoadingData from '@hooks/useTableLoadingData'
 
 const ProductsList = ({
   treeData,
@@ -62,7 +62,7 @@ const ProductsList = ({
     handleTableKeyDown(event)
   }
 
-  treeData = userTableLoadingData(treeData, isLoading, 40)
+  treeData = useTableLoadingData(treeData, isLoading, 40)
 
   return (
     <TreeTable

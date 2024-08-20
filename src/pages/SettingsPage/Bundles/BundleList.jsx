@@ -9,7 +9,7 @@ import { useMemo } from 'react'
 import confirmDelete from '@helpers/confirmDelete'
 import { toast } from 'react-toastify'
 import clsx from 'clsx'
-import userTableLoadingData from '@hooks/userTableLoadingData'
+import useTableLoadingData from '@hooks/useTableLoadingData'
 
 const BundleList = ({
   selectedBundles = [],
@@ -180,7 +180,7 @@ const BundleList = ({
     onBundleSelect(selected)
   }
 
-  const tableData = userTableLoadingData(sortedBundleList, isLoading, 10, 'name')
+  const tableData = useTableLoadingData(sortedBundleList, isLoading, 10, 'name')
 
   return (
     <TablePanel>
