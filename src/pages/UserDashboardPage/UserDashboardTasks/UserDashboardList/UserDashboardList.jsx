@@ -1,6 +1,6 @@
 import * as Styled from './UserDashboardList.styled'
 import ListGroup from '../ListGroup/ListGroup'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useMemo, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { onCollapsedColumnsChanged, onTaskSelected } from '@state/dashboard'
 import { getFakeTasks } from '../../util'
@@ -9,6 +9,7 @@ import { useUpdateEntitiesMutation } from '@queries/entity/updateEntity'
 import { toast } from 'react-toastify'
 import getPreviousTagElement from '@helpers/getPreviousTagElement'
 import Shortcuts from '@containers/Shortcuts'
+import { useWidthsCalculator } from './hooks/useWidthsCalculator'
 
 const UserDashboardList = ({
   groupedTasks = {},
@@ -25,8 +26,6 @@ const UserDashboardList = ({
 
   // create a ref for the list items
   const listItemsRef = useRef([])
-  // keep track of the longest folder name and task name
-  const [minWidths, setMinWidths] = useState({})
 
   // filter out fields that have no tasks
   const filteredFields = useMemo(() => {
@@ -62,29 +61,14 @@ const UserDashboardList = ({
     }
   }, [filteredFields, groupByValue])
 
-  // store a reference to the list items in the ref
-  useEffect(() => {
-    const listItems = containerRef.current.querySelectorAll('li:not(.none)')
-    // store the list items in the ref
-    listItemsRef.current = listItems
-    // from all of the items, find the one with the longest className='folder' and set the width of the folder column to that
-    const minFolderWidth = Array.from(listItems).reduce((acc, item) => {
-      const folder = item.querySelector('.folder')
-      if (!folder) return acc
-      const width = folder.getBoundingClientRect().width
-      return Math.max(acc, width)
-    }, 0)
-
-    // from all of the items, find the one with the longest className='task' and set the width of the task column to that
-    const minTaskWidth = Array.from(listItems).reduce((acc, item) => {
-      const task = item.querySelector('.task')
-      if (!task) return acc
-      const width = task.getBoundingClientRect().width
-      return Math.max(acc, width)
-    }, 0)
-
-    setMinWidths({ folder: minFolderWidth, task: minTaskWidth })
-  }, [containerRef.current, isLoading, groupedTasks, filteredFields])
+  const { minWidths } = useWidthsCalculator(
+    containerRef,
+    listItemsRef,
+    isLoading,
+    groupedFields,
+    groupedTasks,
+    filteredFields,
+  )
 
   const dispatch = useDispatch()
   // get all task ids in order
