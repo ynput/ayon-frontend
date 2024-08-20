@@ -8,7 +8,7 @@ import {
   getAssigneesChangeOperations,
 } from './helpers'
 import { useGetAllProjectUsersAsAssigneeQuery } from '@queries/user/getUsers'
-import { Status, TaskType } from '@api/rest'
+import { FolderType, Status, TaskType } from '@api/rest'
 import { ProgressSearch, TaskFieldChange, TasksProgressTable } from './components'
 // state
 import { setFocusedTasks } from '@state/context'
@@ -31,10 +31,16 @@ export type Operation = {
 interface TasksProgressProps {
   statuses?: Status[]
   taskTypes?: TaskType[]
+  folderTypes?: FolderType[]
   projectName: string
 }
 
-const TasksProgress: FC<TasksProgressProps> = ({ statuses = [], taskTypes = [], projectName }) => {
+const TasksProgress: FC<TasksProgressProps> = ({
+  statuses = [],
+  taskTypes = [],
+  folderTypes = [],
+  projectName,
+}) => {
   const dispatch = useDispatch()
 
   // filter states
@@ -86,8 +92,10 @@ const TasksProgress: FC<TasksProgressProps> = ({ statuses = [], taskTypes = [], 
     return Array.from(assignees)
   }, [selectedTasksData])
 
+  console.log(foldersTasksData)
+
   const tableData = useMemo(
-    () => formatTaskProgressForTable(foldersTasksData, filteredTaskTypes),
+    () => formatTaskProgressForTable(foldersTasksData, filteredTaskTypes, { folderTypes }),
     [foldersTasksData, filteredTaskTypes],
   )
 
@@ -219,8 +227,8 @@ const TasksProgress: FC<TasksProgressProps> = ({ statuses = [], taskTypes = [], 
           tableData={filteredTableData}
           selectedAssignees={selectedAssignees}
           highlightedTasks={highlightedTaskIds}
-          statuses={statuses}
-          taskTypes={taskTypes} // for task icon etc.
+          statuses={statuses} // status icons etc.
+          taskTypes={taskTypes} // for tasks icon etc.
           users={users}
           onChange={handleTaskFieldChange}
           onSelection={handleTaskSelect}

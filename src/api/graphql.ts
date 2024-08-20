@@ -1367,7 +1367,7 @@ export type GetTasksProgressQueryVariables = Exact<{
 }>;
 
 
-export type GetTasksProgressQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, tasks: { __typename?: 'TasksConnection', edges: Array<{ __typename?: 'TaskEdge', node: { __typename?: 'TaskNode', projectName: string, id: string, name: string, label?: string | null, taskType: string, status: string, assignees: Array<string>, updatedAt: any, active: boolean, hasReviewables: boolean, folder: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, parents: Array<string> } } }> } } };
+export type GetTasksProgressQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, tasks: { __typename?: 'TasksConnection', edges: Array<{ __typename?: 'TaskEdge', node: { __typename?: 'TaskNode', projectName: string, id: string, name: string, label?: string | null, taskType: string, status: string, assignees: Array<string>, updatedAt: any, active: boolean, hasReviewables: boolean, folder: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, parents: Array<string>, folderType: string } } }> } } };
 
 export type GetAllProjectUsersAsAssigneeQueryVariables = Exact<{
   projectName?: InputMaybe<Scalars['String']['input']>;
@@ -1570,6 +1570,7 @@ export const GetTasksProgressDocument = `
             name
             label
             parents
+            folderType
           }
         }
       }

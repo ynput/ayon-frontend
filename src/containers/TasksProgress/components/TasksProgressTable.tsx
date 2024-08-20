@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useRef } from 'react'
 // Prime react
 import { DataTable, DataTableBaseProps } from 'primereact/datatable'
 import { Column } from 'primereact/column'
@@ -36,8 +36,8 @@ interface TasksProgressTableProps
   selectedAssignees: string[]
   highlightedTasks: string[]
   statuses: Status[]
-  users: GetAllProjectUsersAsAssigneeResult
   taskTypes: TaskType[]
+  users: GetAllProjectUsersAsAssigneeResult
   expandedRows: string[]
   onExpandRow: (folderId: string) => void
   onChange: TaskFieldChange
@@ -70,6 +70,7 @@ export const TasksProgressTable = ({
     Object.keys(folderRow).forEach((key) => {
       const value = folderRow[key]
       if (
+        value &&
         typeof value === 'object' &&
         'taskType' in value &&
         !taskTypeKeys.includes(value.taskType)
@@ -143,6 +144,10 @@ export const TasksProgressTable = ({
         body={(row: FolderRow) => (
           <FolderBody
             name={row._folder}
+            folderId={row.__folderId}
+            folderIcon={row._folderIcon}
+            projectName={row.__projectName}
+            isLoading={false}
             isExpanded={expandedRows.includes(row.__folderId)}
             onExpandToggle={() => onExpandRow(row.__folderId)}
           />

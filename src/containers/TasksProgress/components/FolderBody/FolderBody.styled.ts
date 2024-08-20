@@ -1,3 +1,4 @@
+import Thumbnail from '@components/Thumbnail'
 import { Button } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
@@ -28,5 +29,21 @@ export const ExpandButton = styled(Button)`
 
   &:active {
     background-color: var(--md-sys-color-surface-container-high-active);
+  }
+`
+
+export const FolderThumbnail = styled(Thumbnail)`
+  width: 50px;
+  min-width: 50px;
+  max-width: 50px;
+  height: 30px;
+  max-height: 30px;
+  margin: 0;
+  border-radius: var(--border-radius-m);
+  margin-right: 4px;
+
+  .icon {
+    font-size: 18px;
+    display: flex !important;
   }
 `

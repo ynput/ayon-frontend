@@ -7,7 +7,7 @@ interface ThumbnailProps extends HTMLAttributes<HTMLDivElement> {
   projectName: string
   entityType: string
   entityId: string
-  icon?: string
+  icon?: string | null
   entityUpdatedAt?: string
   isLoading?: boolean
   shimmer?: boolean

@@ -9,6 +9,7 @@ interface GetTasksProgress {
   name: string
   id: string
   projectName: string
+  folderType: string
   tasks: ProgressTask[]
 }
 
@@ -20,6 +21,7 @@ const transformTasksProgress = (data: GetTasksProgressQuery): GetTasksProgressRe
       id: string
       name: string
       projectName: string
+      folderType: string
       tasks: ProgressTask[]
     }
   } = {}

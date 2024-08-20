@@ -41,6 +41,7 @@ const TasksProgressPage: FC = () => {
               <TasksProgress
                 statuses={projectInfo?.statuses}
                 taskTypes={projectInfo?.taskTypes}
+                folderTypes={projectInfo?.folderTypes}
                 projectName={projectName}
               />
             </SplitterPanel>

@@ -1,3 +1,4 @@
+import { FolderType } from '@api/rest'
 import { GetTasksProgressResult, ProgressTask } from '@queries/tasksProgress/getTasksProgress'
 
 export type TaskTypeRow = {
@@ -11,22 +12,27 @@ export type TaskTypeRow = {
 
 export type FolderRow = {
   _folder: string
+  _folderIcon?: string | null
+  __folderType: string
   __folderId: string
   __projectName: string
   // completed: number
-  [taskType: string]: TaskTypeRow | string
+  [taskType: string]: TaskTypeRow | string | null | undefined
 }
 
 export const formatTaskProgressForTable = (
   data: GetTasksProgressResult,
   shownColumns: string[] = [],
+  { folderTypes }: { folderTypes: FolderType[] },
 ): FolderRow[] => {
   const rows: FolderRow[] = []
 
   data.forEach((folder) => {
     const row: FolderRow = {
       _folder: folder.name,
+      _folderIcon: folderTypes.find((ft) => ft.name === folder.folderType)?.icon,
       __folderId: folder.id,
+      __folderType: folder.folderType,
       __projectName: folder.projectName,
     }
 
