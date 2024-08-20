@@ -269,7 +269,11 @@ const ProjectList = ({
       {
         label: 'Open Project',
         icon: 'event_list',
-        command: () => navigate(`/projects/${sel[0]}/browser`),
+        command: () => {
+          closeContextMenu()
+          //Enqueing navigation to event loop to avoid close context menu race condition
+          setTimeout(() => navigate(`/projects/${sel[0]}/browser`), 0)
+        },
       },
     ]
 
@@ -291,7 +295,8 @@ const ProjectList = ({
         icon: 'settings_applications',
         command: () => {
           closeContextMenu()
-          navigate(`/manageProjects?project=${sel[0]}`)
+          //Enqueing navigation to event loop to avoid close context menu race condition
+          setTimeout(() => navigate(`/manageProjects/anatomy?project=${sel[0]}`), 0)
         },
       })
     }
