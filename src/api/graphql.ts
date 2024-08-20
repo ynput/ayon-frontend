@@ -169,8 +169,6 @@ export type FileNode = {
 
 export type FolderAttribType = {
   __typename?: 'FolderAttribType';
-  /** What car do you want? */
-  car?: Maybe<Scalars['String']['output']>;
   clipIn?: Maybe<Scalars['Int']['output']>;
   clipOut?: Maybe<Scalars['Int']['output']>;
   /** Textual description of the entity */
@@ -183,13 +181,13 @@ export type FolderAttribType = {
   frameStart?: Maybe<Scalars['Int']['output']>;
   ftrackId?: Maybe<Scalars['String']['output']>;
   ftrackPath?: Maybe<Scalars['String']['output']>;
-  /** hair */
-  hairColour?: Maybe<Scalars['String']['output']>;
+  goldCoins?: Maybe<Scalars['Int']['output']>;
+  hairColor?: Maybe<Scalars['String']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
-  /** Percentage of shot completetion */
-  progress?: Maybe<Scalars['Int']['output']>;
+  /** How much of the pizza do I get to have? */
+  pizzaShare?: Maybe<Scalars['Float']['output']>;
   /** Vertical resolution */
   resolutionHeight?: Maybe<Scalars['Int']['output']>;
   /** Horizontal resolution */
@@ -202,7 +200,7 @@ export type FolderAttribType = {
   sokoPath?: Maybe<Scalars['String']['output']>;
   /** Date and time when the project or task or asset was started */
   startDate?: Maybe<Scalars['DateTime']['output']>;
-  test?: Maybe<Scalars['String']['output']>;
+  testy?: Maybe<Scalars['String']['output']>;
   tools?: Maybe<Array<Scalars['String']['output']>>;
 };
 
@@ -299,6 +297,7 @@ export type FolderNodeTasksArgs = {
   folderIds?: InputMaybe<Array<Scalars['String']['input']>>;
   hasLinks?: InputMaybe<HasLinksFilter>;
   ids?: InputMaybe<Array<Scalars['String']['input']>>;
+  includeFolderChildren?: Scalars['Boolean']['input'];
   last?: InputMaybe<Scalars['Int']['input']>;
   names?: InputMaybe<Array<Scalars['String']['input']>>;
   sortBy?: InputMaybe<Scalars['String']['input']>;
@@ -527,8 +526,6 @@ export type ProjectAttribType = {
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
-  /** Percentage of shot completetion */
-  progress?: Maybe<Scalars['Int']['output']>;
   /** Vertical resolution */
   resolutionHeight?: Maybe<Scalars['Int']['output']>;
   /** Horizontal resolution */
@@ -710,6 +707,7 @@ export type ProjectNodeTasksArgs = {
   folderIds?: InputMaybe<Array<Scalars['String']['input']>>;
   hasLinks?: InputMaybe<HasLinksFilter>;
   ids?: InputMaybe<Array<Scalars['String']['input']>>;
+  includeFolderChildren?: Scalars['Boolean']['input'];
   last?: InputMaybe<Scalars['Int']['input']>;
   names?: InputMaybe<Array<Scalars['String']['input']>>;
   sortBy?: InputMaybe<Scalars['String']['input']>;
@@ -947,8 +945,6 @@ export type RepresentationsConnection = {
 
 export type TaskAttribType = {
   __typename?: 'TaskAttribType';
-  /** What car do you want? */
-  car?: Maybe<Scalars['String']['output']>;
   clipIn?: Maybe<Scalars['Int']['output']>;
   clipOut?: Maybe<Scalars['Int']['output']>;
   /** Textual description of the entity */
@@ -961,13 +957,14 @@ export type TaskAttribType = {
   frameStart?: Maybe<Scalars['Int']['output']>;
   ftrackId?: Maybe<Scalars['String']['output']>;
   ftrackPath?: Maybe<Scalars['String']['output']>;
-  /** hair */
-  hairColour?: Maybe<Scalars['String']['output']>;
+  goldCoins?: Maybe<Scalars['Int']['output']>;
+  hairColor?: Maybe<Scalars['String']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
+  jiraCurrentPhase?: Maybe<Array<Scalars['String']['output']>>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
-  /** Percentage of shot completetion */
-  progress?: Maybe<Scalars['Int']['output']>;
+  /** How much of the pizza do I get to have? */
+  pizzaShare?: Maybe<Scalars['Float']['output']>;
   /** Vertical resolution */
   resolutionHeight?: Maybe<Scalars['Int']['output']>;
   /** Horizontal resolution */
@@ -980,7 +977,7 @@ export type TaskAttribType = {
   sokoPath?: Maybe<Scalars['String']['output']>;
   /** Date and time when the project or task or asset was started */
   startDate?: Maybe<Scalars['DateTime']['output']>;
-  test?: Maybe<Scalars['String']['output']>;
+  testy?: Maybe<Scalars['String']['output']>;
   tools?: Maybe<Array<Scalars['String']['output']>>;
 };
 
@@ -1140,8 +1137,8 @@ export type UsersConnection = {
 
 export type VersionAttribType = {
   __typename?: 'VersionAttribType';
-  /** What car do you want? */
-  car?: Maybe<Scalars['String']['output']>;
+  /** The version that is currently the one to use. */
+  blessed?: Maybe<Scalars['Boolean']['output']>;
   clipIn?: Maybe<Scalars['Int']['output']>;
   clipOut?: Maybe<Scalars['Int']['output']>;
   colorSpace?: Maybe<Scalars['String']['output']>;
@@ -1159,7 +1156,6 @@ export type VersionAttribType = {
   intent?: Maybe<Scalars['String']['output']>;
   machine?: Maybe<Scalars['String']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
-  productTypes?: Maybe<Array<Scalars['String']['output']>>;
   /** Vertical resolution */
   resolutionHeight?: Maybe<Scalars['Int']['output']>;
   /** Horizontal resolution */
@@ -1552,7 +1548,7 @@ export const GetTasksProgressDocument = `
     query GetTasksProgress($projectName: String!, $folderIds: [String!]) {
   project(name: $projectName) {
     name
-    tasks(folderIds: $folderIds, last: 1000) {
+    tasks(folderIds: $folderIds, last: 1000, includeFolderChildren: true) {
       edges {
         node {
           projectName

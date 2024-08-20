@@ -1,7 +1,7 @@
 query GetTasksProgress($projectName: String!, $folderIds: [String!]) {
   project(name: $projectName) {
     name
-    tasks(folderIds: $folderIds, last: 1000) {
+    tasks(folderIds: $folderIds, last: 1000, includeFolderChildren: true) {
       edges {
         node {
           projectName
