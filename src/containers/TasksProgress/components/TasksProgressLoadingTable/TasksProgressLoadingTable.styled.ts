@@ -15,7 +15,7 @@ export const LoadingTable = styled.div`
 `
 
 export const LoadingHeader = styled.div`
-  height: 36px;
+  min-height: 36px;
   background-color: var(--md-sys-color-surface-container-low);
 `
 
@@ -23,7 +23,7 @@ export const LoadingRow = styled.div`
   display: flex;
   gap: 8px;
   align-items: center;
-  height: 42px;
+  min-height: 42px;
   padding: 0 var(--padding-m);
 
   & > * {
