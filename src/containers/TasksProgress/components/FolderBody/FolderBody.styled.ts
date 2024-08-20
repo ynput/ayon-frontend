@@ -8,12 +8,10 @@ export const Body = styled.div`
   align-items: flex-start;
   height: 100%;
   min-width: 200px;
+  max-width: 500px;
 
   & > * {
     height: 34px;
-  }
-
-  .title {
     display: flex;
     align-items: center;
   }

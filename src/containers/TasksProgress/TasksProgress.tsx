@@ -61,7 +61,7 @@ const TasksProgress: FC<TasksProgressProps> = ({
   )
 
   // GET TASKS PROGRESS FOR FOLDERS
-  const { data: foldersTasksData = [] } = useGetTasksProgressQuery(
+  const { data: foldersTasksData = [], isFetching: isFetchingTasks } = useGetTasksProgressQuery(
     { projectName, folderIds: selectedFolders },
     { skip: !selectedFolders.length || !projectName },
   )
@@ -224,6 +224,8 @@ const TasksProgress: FC<TasksProgressProps> = ({
         </Toolbar>
         <TasksProgressTable
           tableData={filteredTableData}
+          isLoading={isFetchingTasks}
+          selectedFolders={selectedFolders}
           selectedAssignees={selectedAssignees}
           highlightedTasks={highlightedTaskIds}
           statuses={statuses} // status icons etc.

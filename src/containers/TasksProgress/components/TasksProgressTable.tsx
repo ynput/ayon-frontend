@@ -5,7 +5,7 @@ import { Column } from 'primereact/column'
 // libraries
 import styled from 'styled-components'
 // components
-import { FolderBody, TaskColumnHeader, TaskTypeCell } from '.'
+import { FolderBody, TaskColumnHeader, TasksProgressLoadingTable, TaskTypeCell } from '.'
 
 // state
 import { useDispatch, useSelector } from 'react-redux'
@@ -34,6 +34,8 @@ export type TaskFieldChange = (
 interface TasksProgressTableProps
   extends Omit<DataTableBaseProps<any>, 'onChange' | 'expandedRows'> {
   tableData: FolderRow[]
+  isLoading: boolean
+  selectedFolders: string[]
   selectedAssignees: string[]
   highlightedTasks: string[]
   statuses: Status[]
@@ -48,6 +50,8 @@ interface TasksProgressTableProps
 
 export const TasksProgressTable = ({
   tableData = [],
+  isLoading,
+  selectedFolders = [],
   selectedAssignees = [],
   highlightedTasks = [],
   statuses = [], // project statuses schema
@@ -125,6 +129,8 @@ export const TasksProgressTable = ({
 
   const widthBreakPoints = [170, 150, 130]
 
+  if (isLoading) return <TasksProgressLoadingTable rows={selectedFolders.length} />
+
   return (
     <DataTable
       ref={tableRef}
@@ -134,7 +140,7 @@ export const TasksProgressTable = ({
       sortField="_folder"
       sortOrder={1}
       sortMode="single"
-      pt={{ thead: { style: { zIndex: 101 } } }}
+      pt={{ thead: { style: { zIndex: 101, height: 36 } } }}
       {...props}
     >
       <Column
@@ -158,7 +164,11 @@ export const TasksProgressTable = ({
       <Column
         field={'_complete'}
         header={'Complete'}
-        body={(row: FolderRow) => <Body style={{ minWidth: 'unset' }}>{`${row._complete}%`}</Body>}
+        body={(row: FolderRow) => (
+          <Body style={{ minWidth: 'unset' }}>
+            <span>{`${row._complete}%`}</span>
+          </Body>
+        )}
         sortable
       />
       {taskTypeKeys.map((taskTypeKey) => (
