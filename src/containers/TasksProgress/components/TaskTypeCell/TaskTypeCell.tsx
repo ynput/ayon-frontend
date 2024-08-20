@@ -29,10 +29,10 @@ export const TaskTypeCell: FC<TaskTypeCellProps> = ({
   assigneeOptions,
   isExpanded,
   taskIcon,
-  onChange,
   isSelected,
   isHighlighted,
   isMultipleSelected,
+  onChange,
   ...props
 }) => {
   const status = statuses.find((s) => s.name === task.status)
@@ -71,6 +71,7 @@ export const TaskTypeCell: FC<TaskTypeCellProps> = ({
         statusOptions={statuses}
         statusMiddle
         statusNameOnly
+        isPlayable={task.hasReviewables}
         pt={{
           assigneeSelect: {
             value: isMultipleSelected ? selectedAssignees : task.assignees,

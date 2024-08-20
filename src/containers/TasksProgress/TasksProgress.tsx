@@ -19,6 +19,7 @@ import { Button, Section, ShortcutTag, Spacer, Toolbar } from '@ynput/ayon-react
 import CategorySelect from '@components/CategorySelect/CategorySelect'
 import useLocalStorage from '@hooks/useLocalStorage'
 import Shortcuts from '@containers/Shortcuts'
+import { openViewer } from '@state/viewer'
 
 export type Operation = {
   id: string
@@ -153,6 +154,13 @@ const TasksProgress: FC<TasksProgressProps> = ({ statuses = [], taskTypes = [], 
     })
   }
 
+  const viewerIsOpen = useSelector((state: $Any) => state.viewer.isOpen)
+  const openInViewer = (id: string, quickView: boolean) => {
+    if (id && !viewerIsOpen) {
+      dispatch(openViewer({ taskId: id, projectName: projectName, quickView }))
+    }
+  }
+
   // are more than half of the rows expanded?
   const shouldExpand = expandedRows.length < filteredTableData.length / 2
   const handleExpandAllToggle = () => {
@@ -190,7 +198,7 @@ const TasksProgress: FC<TasksProgressProps> = ({ statuses = [], taskTypes = [], 
               icon: taskType.icon,
             }))}
             onChange={(value) => setFilteredTaskTypes(value)}
-            onClearNull={() => setFilteredTaskTypes([])}
+            onClearNull={filteredTaskTypes.length ? () => setFilteredTaskTypes([]) : undefined}
             multiSelectClose={false}
             onSelectAll={() => {}}
             multiSelect
@@ -218,6 +226,7 @@ const TasksProgress: FC<TasksProgressProps> = ({ statuses = [], taskTypes = [], 
           onSelection={handleTaskSelect}
           expandedRows={expandedRows}
           onExpandRow={handleExpandToggle}
+          onOpenViewer={openInViewer}
         />
       </Section>
     </>

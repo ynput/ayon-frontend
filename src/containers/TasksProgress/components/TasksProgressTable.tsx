@@ -17,6 +17,7 @@ import type { GetAllProjectUsersAsAssigneeResult } from '@queries/user/getUsers'
 import type { KeyboardEvent, MouseEvent } from 'react'
 import { $Any } from '@types'
 import { InView } from 'react-intersection-observer'
+import { openViewer } from '@state/viewer'
 
 export const Cells = styled.div`
   display: flex;
@@ -41,6 +42,7 @@ interface TasksProgressTableProps
   onExpandRow: (folderId: string) => void
   onChange: TaskFieldChange
   onSelection: (taskId: string, isMultiSelect: boolean) => void
+  onOpenViewer: (taskId: string, quickView: boolean) => void
 }
 
 export const TasksProgressTable = ({
@@ -54,6 +56,7 @@ export const TasksProgressTable = ({
   onExpandRow,
   onChange,
   onSelection,
+  onOpenViewer,
   ...props
 }: TasksProgressTableProps) => {
   const tableRef = useRef<any>(null)
@@ -145,6 +148,10 @@ export const TasksProgressTable = ({
                   const handleCellKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
                     if (e.key === 'Enter') {
                       onSelection(task.id, e.metaKey || e.ctrlKey || e.shiftKey)
+                    }
+                    if (e.key === ' ') {
+                      e.preventDefault()
+                      onOpenViewer(task.id, true)
                     }
                   }
 

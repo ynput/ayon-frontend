@@ -70,7 +70,9 @@ const EmptyPlaceholder = ({ icon, message, error, children }: EmptyPlaceholderPr
   return (
     <Placeholder>
       <Icon icon={icon} className="placeholder-icon" />
-      <h3 className={Typography.titleLarge}>{JSON.stringify(message)}</h3>
+      <h3 className={Typography.titleLarge}>
+        {typeof message === 'object' ? JSON.stringify(message) : message}
+      </h3>
       {children}
     </Placeholder>
   )

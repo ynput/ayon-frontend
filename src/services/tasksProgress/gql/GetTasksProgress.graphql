@@ -13,6 +13,7 @@ query GetTasksProgress($projectName: String!, $folderIds: [String!]) {
           assignees
           updatedAt
           active
+          hasReviewables
           folder {
             id
             name
