@@ -130,12 +130,13 @@ const InboxMessage = ({
       onClick={handleOnClick}
     >
       <Styled.Left className="left">
-        <Styled.Thumbnail
+        <Styled.MessageThumbnail
           projectName={projectName}
           entityType={entityType}
           entityId={entityId}
           icon={getEntityTypeIcon(entityType)}
           className={clsx({ loading: isPlaceholder })}
+          showBorder={false}
         />
         <span className={clsx('title', { loading: isPlaceholder })}>{path.join(' - ')}</span>
       </Styled.Left>

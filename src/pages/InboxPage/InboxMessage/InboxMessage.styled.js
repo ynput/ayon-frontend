@@ -1,6 +1,6 @@
 import styled, { css } from 'styled-components'
-import ThumbnailSimple from '@containers/ThumbnailSimple'
 import { Button } from '@ynput/ayon-react-components'
+import Thumbnail from '@components/Thumbnail'
 
 const showClearButton = css`
   &.clearable {
@@ -132,10 +132,12 @@ export const Left = styled.div`
   }
 `
 
-export const Thumbnail = styled(ThumbnailSimple)`
+export const MessageThumbnail = styled(Thumbnail)`
   width: 50px;
   min-width: 50px;
+  max-width: 50px;
   height: 30px;
+  max-height: 30px;
   margin: 0;
   border-radius: var(--border-radius-m);
   margin-right: 4px;
