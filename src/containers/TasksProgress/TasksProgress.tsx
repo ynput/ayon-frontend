@@ -45,7 +45,6 @@ const TasksProgress: FC<TasksProgressProps> = ({
 
   // filter states
   const [filteredFolderIds, setFilteredFolderIds] = useState<null | string[]>(null)
-  const [highlightedTaskIds, setHighlightedTaskIds] = useState<string[]>([])
   const [filteredTaskTypes, setFilteredTaskTypes] = useLocalStorage(
     `progress-types-${projectName}`,
     [],
@@ -190,13 +189,7 @@ const TasksProgress: FC<TasksProgressProps> = ({
       <Shortcuts shortcuts={shortcuts} deps={[expandedRows]} />
       <Section style={{ height: '100%' }} direction="column">
         <Toolbar>
-          <ProgressSearch
-            data={tableData}
-            onSearch={(f, t) => {
-              setFilteredFolderIds(f)
-              setHighlightedTaskIds(t)
-            }}
-          />
+          <ProgressSearch data={tableData} onSearch={setFilteredFolderIds} />
           <CategorySelect
             value={filteredTaskTypes}
             options={taskTypes.map((taskType) => ({
@@ -227,7 +220,6 @@ const TasksProgress: FC<TasksProgressProps> = ({
           isLoading={isFetchingTasks}
           selectedFolders={selectedFolders}
           selectedAssignees={selectedAssignees}
-          highlightedTasks={highlightedTaskIds}
           statuses={statuses} // status icons etc.
           taskTypes={taskTypes} // for tasks icon etc.
           users={users}
