@@ -18,6 +18,7 @@ import type { KeyboardEvent, MouseEvent } from 'react'
 import { $Any } from '@types'
 import { InView } from 'react-intersection-observer'
 import useCreateContext from '@hooks/useCreateContext'
+import { Body } from './FolderBody/FolderBody.styled'
 
 export const Cells = styled.div`
   display: flex;
@@ -84,7 +85,7 @@ export const TasksProgressTable = ({
     dispatch(toggleDetailsPanel(true))
   }
 
-  const buildContextMenu = (selection: string[], taskId: string) => {
+  const buildContextMenu = (_selection: string[], taskId: string) => {
     return [
       {
         label: 'Open in side panel',
@@ -140,6 +141,7 @@ export const TasksProgressTable = ({
         field="_folder"
         header="Folder"
         frozen
+        sortable
         style={{ zIndex: 100 }}
         body={(row: FolderRow) => (
           <FolderBody
@@ -152,6 +154,12 @@ export const TasksProgressTable = ({
             onExpandToggle={() => onExpandRow(row.__folderId)}
           />
         )}
+      />
+      <Column
+        field={'_complete'}
+        header={'Complete'}
+        body={(row: FolderRow) => <Body style={{ minWidth: 'unset' }}>{`${row._complete}%`}</Body>}
+        sortable
       />
       {taskTypeKeys.map((taskTypeKey) => (
         <Column

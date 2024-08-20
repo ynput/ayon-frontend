@@ -92,10 +92,9 @@ const TasksProgress: FC<TasksProgressProps> = ({
     return Array.from(assignees)
   }, [selectedTasksData])
 
-  console.log(foldersTasksData)
-
   const tableData = useMemo(
-    () => formatTaskProgressForTable(foldersTasksData, filteredTaskTypes, { folderTypes }),
+    () =>
+      formatTaskProgressForTable(foldersTasksData, filteredTaskTypes, { folderTypes, statuses }),
     [foldersTasksData, filteredTaskTypes],
   )
 

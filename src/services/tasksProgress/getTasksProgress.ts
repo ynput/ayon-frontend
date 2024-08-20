@@ -5,26 +5,20 @@ import { GetTasksProgressQuery } from '@api/graphql'
 
 export type ProgressTask = GetTasksProgressQuery['project']['tasks']['edges'][0]['node']
 
-interface GetTasksProgress {
-  name: string
-  id: string
+type ProgressTaskFolder = ProgressTask['folder']
+interface FolderGroup extends ProgressTaskFolder {
   projectName: string
-  folderType: string
   tasks: ProgressTask[]
 }
 
-export type GetTasksProgressResult = GetTasksProgress[]
+export type GetTasksProgressResult = FolderGroup[]
+
+type GroupedTasksType = {
+  [key: string]: FolderGroup
+}
 
 const transformTasksProgress = (data: GetTasksProgressQuery): GetTasksProgressResult => {
-  const groupedTasks: {
-    [key: string]: {
-      id: string
-      name: string
-      projectName: string
-      folderType: string
-      tasks: ProgressTask[]
-    }
-  } = {}
+  const groupedTasks: GroupedTasksType = {}
 
   data.project.tasks.edges.forEach((edge) => {
     const folder = edge.node.folder
