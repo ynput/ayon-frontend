@@ -138,6 +138,7 @@ export const TasksProgressTable = ({
       sortField="_folder"
       sortOrder={1}
       sortMode="single"
+      style={{ overflow: 'hidden' }}
       pt={{ thead: { style: { zIndex: 101, height: 36 } } }}
       {...props}
     >
