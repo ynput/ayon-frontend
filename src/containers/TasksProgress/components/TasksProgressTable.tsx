@@ -139,7 +139,7 @@ export const TasksProgressTable = ({
       value={tableData}
       scrollable
       scrollHeight="flex"
-      sortField="_folder"
+      sortField="__folderKey"
       sortOrder={1}
       sortMode="single"
       style={{ overflow: 'hidden' }}
