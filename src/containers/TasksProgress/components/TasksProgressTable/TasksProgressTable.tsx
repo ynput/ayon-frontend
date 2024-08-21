@@ -108,6 +108,13 @@ export const TasksProgressTable = ({
     })
   })
 
+  // sort the taskTypeKeys by the order in the taskTypes array
+  taskTypeKeys.sort((a, b) => {
+    const aIndex = taskTypes.findIndex((t) => t.name === a)
+    const bIndex = taskTypes.findIndex((t) => t.name === b)
+    return aIndex - bIndex
+  })
+
   const onOpenPanel = () => {
     dispatch(toggleDetailsPanel(true))
   }
