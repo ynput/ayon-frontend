@@ -242,6 +242,7 @@ const TasksProgress: FC<TasksProgressProps> = ({
         <TasksProgressTable
           tableRef={tableRef}
           tableData={filteredTableData}
+          projectName={projectName}
           isLoading={isFetchingTasks}
           selectedFolders={selectedFolders}
           activeTask={activeTask}

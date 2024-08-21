@@ -7,7 +7,7 @@ import { EntityCard } from '@ynput/ayon-react-components'
 import type { EntityCardProps } from '@ynput/ayon-react-components'
 import type { Status } from '@api/rest'
 import type { ProgressTask } from '@queries/tasksProgress/getTasksProgress'
-import type { TaskFieldChange } from '../TasksProgressTable'
+import type { TaskFieldChange } from '../TasksProgressTable/TasksProgressTable'
 
 interface TaskTypeCellProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onChange'> {
   statuses: Status[]

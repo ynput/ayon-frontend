@@ -93,7 +93,7 @@ const ProjectPage = () => {
     () => [
       { name: 'Browser', path: `/projects/${projectName}/browser`, module: 'browser' },
       { name: 'Editor', path: `/projects/${projectName}/editor`, module: 'editor' },
-      { name: 'Tasks', path: `/projects/${projectName}/tasks`, module: 'tasks' },
+      { name: 'Progress Overview', path: `/projects/${projectName}/tasks`, module: 'tasks' },
       { name: 'Workfiles', path: `/projects/${projectName}/workfiles`, module: 'workfiles' },
       ...addonsData.map((addon) => ({
         name: addon.title,
