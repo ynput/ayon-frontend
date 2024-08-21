@@ -6,7 +6,6 @@ export const Body = styled.div`
   display: flex;
   gap: var(--base-gap-small);
   align-items: flex-start;
-  height: 100%;
   min-width: 200px;
   max-width: 500px;
 
