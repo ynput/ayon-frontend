@@ -92,8 +92,8 @@ const ProjectPage = () => {
   const links = useMemo(
     () => [
       { name: 'Browser', path: `/projects/${projectName}/browser`, module: 'browser' },
+      { name: 'Tasks progress', path: `/projects/${projectName}/tasks`, module: 'tasks' },
       { name: 'Editor', path: `/projects/${projectName}/editor`, module: 'editor' },
-      { name: 'Progress Overview', path: `/projects/${projectName}/tasks`, module: 'tasks' },
       { name: 'Workfiles', path: `/projects/${projectName}/workfiles`, module: 'workfiles' },
       ...addonsData.map((addon) => ({
         name: addon.title,
