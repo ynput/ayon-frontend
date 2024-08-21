@@ -50,7 +50,7 @@ export const Placeholder = styled.div`
 interface EmptyPlaceholderProps {
   icon: string
   message: string
-  error?: string
+  error?: any
   children?: React.ReactNode
 }
 

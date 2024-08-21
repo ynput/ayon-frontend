@@ -55,34 +55,40 @@ const patchProgressView = ({ operations = [], state, dispatch }) => {
   // if there are no entries, return
   if (!entries.length) return
 
-  // patch each entry with updated task data
-  const patches = entries.map((entry) =>
-    dispatch(
-      api.util.updateQueryData(entry.endpointName, entry.originalArgs, (draft) => {
-        for (const operation of operations) {
-          const taskId = operation.id
-          const patch = operation.data
-          const folderId = operation.meta?.folderId
-          const folder = draft.find((folder) => folder.id === folderId)
-          if (!folder) return console.log('Patching progress view: folder not found')
-          const task = folder.tasks?.find((task) => task.id === taskId)
-          if (!task) return console.log('Patching progress view: task not found')
-          // update task
-          const newTask = { ...task, ...patch }
-          // update folder
-          const newFolder = {
-            ...folder,
-            tasks: folder.tasks.map((t) => (t.id === taskId ? newTask : t)),
+  try {
+    // patch each entry with updated task data
+    const patches = entries.map((entry) =>
+      dispatch(
+        api.util.updateQueryData(entry.endpointName, entry.originalArgs, (draft) => {
+          for (const operation of operations) {
+            const taskId = operation.id
+            const patch = operation.data
+            const folderId = operation.meta?.folderId
+            const folder = draft.find((folder) => folder.id === folderId)
+            if (!folder) throw new Error('Patching progress view: folder not found')
+            const task = folder.tasks?.find((task) => task.id === taskId)
+            if (!task) throw new Error('Patching progress view: task not found')
+            // update task
+            const newTask = { ...task, ...patch }
+            // update folder
+            const newFolder = {
+              ...folder,
+              tasks: folder.tasks.map((t) => (t.id === taskId ? newTask : t)),
+            }
+            // update query
+            const folderIndex = draft.findIndex((f) => f.id === folderId)
+            draft[folderIndex] = newFolder
           }
-          // update query
-          const folderIndex = draft.findIndex((f) => f.id === folderId)
-          draft[folderIndex] = newFolder
-        }
-      }),
-    ),
-  )
-
-  return patches
+        }),
+      ),
+    )
+    return patches
+  } catch (error) {
+    console.error(error)
+    // invalidate the progress view queries instead
+    dispatch(api.util.invalidateTags(invalidationTags))
+    return []
+  }
 }
 
 const updateEntity = api.injectEndpoints({

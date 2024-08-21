@@ -22,6 +22,7 @@ import useLocalStorage from '@hooks/useLocalStorage'
 import Shortcuts from '@containers/Shortcuts'
 import { openViewer } from '@state/viewer'
 import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
+import { isEqual, union } from 'lodash'
 
 export type Operation = {
   id: string
@@ -63,15 +64,30 @@ const TasksProgress: FC<TasksProgressProps> = ({
     { skip: !projectName },
   )
 
+  // VVV MAIN QUERY VVV
+  //
+  //
   // GET TASKS PROGRESS FOR FOLDERS
   const {
     data: foldersTasksData = [],
     isFetching: isFetchingTasks,
     error,
+    originalArgs,
   } = useGetTasksProgressQuery(
     { projectName, folderIds: selectedFolders },
     { skip: !selectedFolders.length || !projectName },
   )
+  //
+  //
+  // ^^^ MAIN QUERY ^^^
+
+  // check if currentData matches all the entityIds
+  // if not, this means we are loading new entity
+  const isLoadingNew = useMemo(() => {
+    if (!isFetchingTasks) return false
+
+    return !isEqual(originalArgs?.folderIds, selectedFolders)
+  }, [originalArgs, selectedFolders, isFetchingTasks])
 
   // create a map of all tasks
   const allTasksMap = useMemo(() => {
@@ -250,7 +266,7 @@ const TasksProgress: FC<TasksProgressProps> = ({
               tableRef={tableRef}
               tableData={filteredTableData}
               projectName={projectName}
-              isLoading={isFetchingTasks}
+              isLoading={isLoadingNew}
               selectedFolders={selectedFolders}
               activeTask={activeTask}
               selectedAssignees={selectedAssignees}
