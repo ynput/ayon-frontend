@@ -4,6 +4,7 @@ import clsx from 'clsx'
 
 interface FolderBodyProps {
   name: string
+  parents: string[]
   folderId: string
   folderIcon?: string | null
   isExpanded: boolean
@@ -14,6 +15,7 @@ interface FolderBodyProps {
 
 export const FolderBody: FC<FolderBodyProps> = ({
   name,
+  parents,
   folderId,
   folderIcon,
   isExpanded,
@@ -21,6 +23,8 @@ export const FolderBody: FC<FolderBodyProps> = ({
   isLoading,
   onExpandToggle,
 }) => {
+  const firstParent = parents[parents.length - 1]
+
   return (
     <Styled.Body>
       <Styled.ExpandButton
@@ -36,6 +40,8 @@ export const FolderBody: FC<FolderBodyProps> = ({
         className={clsx({ loading: isLoading })}
         showBorder={false}
       />
+      <span className="parent">{firstParent}</span>
+      <span>/</span>
       <span className="title">{name}</span>
     </Styled.Body>
   )

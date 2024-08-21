@@ -8,6 +8,8 @@ export const Body = styled.div`
   align-items: flex-start;
   min-width: 200px;
   max-width: 500px;
+  height: 100%;
+  min-height: 32px;
 
   & > * {
     height: 34px;

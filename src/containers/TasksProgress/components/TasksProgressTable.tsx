@@ -1,4 +1,3 @@
-import { useRef } from 'react'
 // Prime react
 import { DataTable, DataTableBaseProps } from 'primereact/datatable'
 import { Column } from 'primereact/column'
@@ -20,6 +19,7 @@ import { InView } from 'react-intersection-observer'
 import useCreateContext from '@hooks/useCreateContext'
 import { Body } from './FolderBody/FolderBody.styled'
 import clsx from 'clsx'
+import ParentBody from './ParentBody/ParentBody'
 
 export const Cells = styled.div`
   display: flex;
@@ -147,22 +147,27 @@ export const TasksProgressTable = ({
       {...props}
     >
       <Column
-        field="_folder"
+        field="__folderKey"
         header="Folder"
         frozen
         sortable
         style={{ zIndex: 100 }}
-        body={(row: FolderRow) => (
-          <FolderBody
-            name={row._folder}
-            folderId={row.__folderId}
-            folderIcon={row._folderIcon}
-            projectName={row.__projectName}
-            isLoading={false}
-            isExpanded={expandedRows.includes(row.__folderId)}
-            onExpandToggle={() => onExpandRow(row.__folderId)}
-          />
-        )}
+        body={(row: FolderRow) =>
+          row.__isParent ? (
+            <ParentBody name={row._folder} />
+          ) : (
+            <FolderBody
+              name={row._folder}
+              parents={row._parents}
+              folderId={row.__folderId}
+              folderIcon={row._folderIcon}
+              projectName={row.__projectName}
+              isLoading={false}
+              isExpanded={expandedRows.includes(row.__folderId)}
+              onExpandToggle={() => onExpandRow(row.__folderId)}
+            />
+          )
+        }
       />
       <Column
         field={'_complete'}
