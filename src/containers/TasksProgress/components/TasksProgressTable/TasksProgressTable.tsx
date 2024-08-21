@@ -262,7 +262,7 @@ export const TasksProgressTable = ({
             const width = resolveColumnWidth(taskTypeKey)
 
             return (
-              <Cells key={taskTypeKey} className="cells" style={{ width: width }}>
+              <Cells key={taskTypeKey} className="cells" style={{ minWidth: width }}>
                 {taskCellData.tasks.map((task) => {
                   // add avatarUrl to each user
                   const assigneeOptions = users.map((user) => ({
