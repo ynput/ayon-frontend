@@ -18,8 +18,14 @@ query GetTasksProgress($projectName: String!, $folderIds: [String!]) {
             id
             name
             label
-            parents
             folderType
+            parents
+            parent {
+              id
+              name
+              label
+              parents
+            }
           }
         }
       }
