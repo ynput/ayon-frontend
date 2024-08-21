@@ -21,6 +21,7 @@ import CategorySelect from '@components/CategorySelect/CategorySelect'
 import useLocalStorage from '@hooks/useLocalStorage'
 import Shortcuts from '@containers/Shortcuts'
 import { openViewer } from '@state/viewer'
+import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
 
 export type Operation = {
   id: string
@@ -63,7 +64,11 @@ const TasksProgress: FC<TasksProgressProps> = ({
   )
 
   // GET TASKS PROGRESS FOR FOLDERS
-  const { data: foldersTasksData = [], isFetching: isFetchingTasks } = useGetTasksProgressQuery(
+  const {
+    data: foldersTasksData = [],
+    isFetching: isFetchingTasks,
+    error,
+  } = useGetTasksProgressQuery(
     { projectName, folderIds: selectedFolders },
     { skip: !selectedFolders.length || !projectName },
   )
@@ -239,23 +244,38 @@ const TasksProgress: FC<TasksProgressProps> = ({
             <ShortcutTag style={{ marginLeft: 'auto' }}>Shift + E</ShortcutTag>
           </Button>
         </Toolbar>
-        <TasksProgressTable
-          tableRef={tableRef}
-          tableData={filteredTableData}
-          projectName={projectName}
-          isLoading={isFetchingTasks}
-          selectedFolders={selectedFolders}
-          activeTask={activeTask}
-          selectedAssignees={selectedAssignees}
-          statuses={statuses} // status icons etc.
-          taskTypes={taskTypes} // for tasks icon etc.
-          users={users}
-          onChange={handleTaskFieldChange}
-          onSelection={handleTaskSelect}
-          expandedRows={expandedRows}
-          onExpandRow={handleExpandToggle}
-          onOpenViewer={openInViewer}
-        />
+        {selectedFolders.length ? (
+          filteredTableData.length ? (
+            <TasksProgressTable
+              tableRef={tableRef}
+              tableData={filteredTableData}
+              projectName={projectName}
+              isLoading={isFetchingTasks}
+              selectedFolders={selectedFolders}
+              activeTask={activeTask}
+              selectedAssignees={selectedAssignees}
+              statuses={statuses} // status icons etc.
+              taskTypes={taskTypes} // for tasks icon etc.
+              users={users}
+              onChange={handleTaskFieldChange}
+              onSelection={handleTaskSelect}
+              expandedRows={expandedRows}
+              onExpandRow={handleExpandToggle}
+              onOpenViewer={openInViewer}
+            />
+          ) : (
+            <EmptyPlaceholder
+              message={'No tasks under this folder. Try selecting another one.'}
+              icon="folder_open"
+            />
+          )
+        ) : (
+          <EmptyPlaceholder
+            message={'Select a folder to begin.'}
+            icon="folder_open"
+            error={error}
+          />
+        )}
       </Section>
     </>
   )
