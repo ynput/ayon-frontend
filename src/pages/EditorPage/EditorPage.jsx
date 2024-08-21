@@ -479,7 +479,7 @@ const EditorPage = () => {
           name: rootData[childId].data?.name,
           data: {
             ...rootData[childId].data,
-            labelThanName: rootData[childId].data.label || rootData[childId].data.name,
+            labelThenName: rootData[childId].data.label || rootData[childId].data.name,
           },
           leaf: rootData[childId].leaf,
         }
@@ -1622,7 +1622,7 @@ const EditorPage = () => {
   let allColumns = useMemo(
     () => [
       <Column
-        field="labelThanName"
+        field="labelThenName"
         key="name"
         header="Name"
         expander={true}
