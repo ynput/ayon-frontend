@@ -20,6 +20,7 @@ import useCreateContext from '@hooks/useCreateContext'
 import { Body } from './FolderBody/FolderBody.styled'
 import clsx from 'clsx'
 import ParentBody from './ParentBody/ParentBody'
+import { completeSort, folderSort } from '../helpers'
 
 export const Cells = styled.div`
   display: flex;
@@ -151,6 +152,7 @@ export const TasksProgressTable = ({
         header="Folder"
         frozen
         sortable
+        sortFunction={folderSort}
         style={{ zIndex: 100 }}
         body={(row: FolderRow) =>
           row.__isParent ? (
@@ -178,6 +180,7 @@ export const TasksProgressTable = ({
           </Body>
         )}
         sortable
+        sortFunction={completeSort}
       />
       {taskTypeKeys.map((taskTypeKey) => (
         <Column
