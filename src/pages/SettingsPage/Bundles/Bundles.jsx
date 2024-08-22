@@ -95,6 +95,11 @@ const Bundles = () => {
 
     if (foundBundle) {
       setSelectedBundles([foundBundle.name])
+    } else {
+      const productionBundle = bundleList.filter((e) => e.isProduction)
+      setSelectedBundles([
+        productionBundle.length > 0 ? productionBundle[0].name : bundleList[0].name,
+      ])
     }
 
     const duplicateParam = searchParams.get('duplicate')
