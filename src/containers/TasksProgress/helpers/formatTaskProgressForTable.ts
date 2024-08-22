@@ -7,6 +7,10 @@ export type TaskTypeRow = {
   tasks: ProgressTask[]
 }
 
+export type TaskTypeStatusBar = {
+  [status: string]: number
+}
+
 // no _ means it's a task type
 // _ is for permanent columns
 // __ is for metadata fields
@@ -21,10 +25,10 @@ export type FolderRow = {
   __folderId: string
   __projectName: string
   _complete?: number
-  [taskType: string]: TaskTypeRow | any
+  [taskType: string]: TaskTypeRow | TaskTypeStatusBar | any
   // parent specific fields
-  _numberOfTasks?: number
-  _numberOfFolders?: number
+  _taskCount?: number
+  _folderCount?: number
   _completeFolders?: number[]
 }
 
@@ -52,8 +56,8 @@ export const formatTaskProgressForTable = (
         _folder: parent.label || parent.name,
         _parents: parent.parents,
         __projectName: folder.projectName,
-        _numberOfFolders: 0,
-        _numberOfTasks: 0,
+        _folderCount: 0,
+        _taskCount: 0,
         _completeFolders: [],
       }
 
@@ -115,14 +119,43 @@ export const formatTaskProgressForTable = (
     // get existing parent folder
     const parentFolder = parent && rows.get(parentKey || '')
     if (parentFolder) {
+      const tasks = folder.tasks.filter((t) => t.active)
       // update number of folders and tasks
-      parentFolder._numberOfFolders = (parentFolder._numberOfFolders || 0) + 1
-      parentFolder._numberOfTasks = (parentFolder._numberOfTasks || 0) + folder.tasks.length
+      parentFolder._folderCount = (parentFolder._folderCount || 0) + 1
+      parentFolder._taskCount = (parentFolder._taskCount || 0) + tasks.length
       // add completed to parent folder completedFolders array
       // we do this so that later on we can calculate the actual percentage but we must loop through all folders first
       parentFolder._completeFolders?.push(row._complete || 0)
+
+      // get all statuses for that folders (row) task types
+      const taskTypeStatuses = tasks.reduce((acc, curr) => {
+        // initialize task type status
+        if (!acc[curr.taskType]) {
+          acc[curr.taskType] = {
+            [curr.status]: 0,
+          }
+        }
+
+        // update task type status
+        acc[curr.taskType][curr.status] = (acc[curr.taskType][curr.status] || 0) + 1
+
+        return acc
+      }, {} as { [taskType: string]: TaskTypeStatusBar })
+
+      // update parent folder with statuses
+      Object.entries(taskTypeStatuses).forEach(([taskType, status]) => {
+        if (!parentFolder[taskType]) {
+          parentFolder[taskType] = status
+        } else {
+          // merge statuses
+          Object.entries(status).forEach(([statusName, count]) => {
+            parentFolder[taskType][statusName] = (parentFolder[taskType][statusName] || 0) + count
+          })
+        }
+      })
     }
 
+    // add to rows
     rows.set(folder.id, row)
   })
 

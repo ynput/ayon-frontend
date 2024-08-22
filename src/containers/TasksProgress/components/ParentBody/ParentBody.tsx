@@ -1,15 +1,19 @@
 import { FC } from 'react'
-import { Body } from '../FolderBody/FolderBody.styled'
+import * as Styled from './ParentBody.styled'
 
 interface ParentBodyProps {
   name: string
+  folderCount?: number
+  taskCount?: number
 }
 
-const ParentBody: FC<ParentBodyProps> = ({ name }) => {
+const ParentBody: FC<ParentBodyProps> = ({ name, folderCount, taskCount }) => {
   return (
-    <Body>
+    <Styled.ParentBody>
       <span className="title">{name}</span>
-    </Body>
+      {folderCount && <span className="count"> - {folderCount} folders</span>}
+      {taskCount && <span className="count"> - {taskCount} tasks</span>}
+    </Styled.ParentBody>
   )
 }
 

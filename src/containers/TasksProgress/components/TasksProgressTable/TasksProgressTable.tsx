@@ -4,14 +4,24 @@ import { Column } from 'primereact/column'
 // libraries
 import styled from 'styled-components'
 // components
-import { FolderBody, TaskColumnHeader, TasksProgressLoadingTable, TaskTypeCell } from '..'
+import {
+  FolderBody,
+  TaskColumnHeader,
+  TasksProgressLoadingTable,
+  TaskStatusBar,
+  TaskTypeCell,
+} from '..'
 
 // state
 import { useDispatch, useSelector } from 'react-redux'
 import { toggleDetailsPanel } from '@state/details'
 // types
 import type { Status, TaskType } from '@api/rest'
-import type { FolderRow, TaskTypeRow } from '../../helpers/formatTaskProgressForTable'
+import type {
+  FolderRow,
+  TaskTypeRow,
+  TaskTypeStatusBar,
+} from '../../helpers/formatTaskProgressForTable'
 import type { GetAllProjectUsersAsAssigneeResult } from '@queries/user/getUsers'
 import type { KeyboardEvent, MouseEvent } from 'react'
 import { $Any } from '@types'
@@ -219,7 +229,11 @@ export const TasksProgressTable = ({
         style={{ zIndex: 100, minWidth: 300 }}
         body={(row: FolderRow) =>
           row.__isParent ? (
-            <ParentBody name={row._folder} />
+            <ParentBody
+              name={row._folder}
+              folderCount={row._folderCount}
+              taskCount={row._taskCount}
+            />
           ) : (
             <FolderBody
               name={row._folder}
@@ -255,6 +269,13 @@ export const TasksProgressTable = ({
           className="column task-column"
           headerClassName="column-header task-column-header"
           body={(rowData) => {
+            // the bar at the top with all the status colours
+            if (rowData.__isParent) {
+              const taskCellData = rowData[taskTypeKey] as TaskTypeStatusBar
+
+              return <TaskStatusBar statuses={statuses} statusCounts={taskCellData} />
+            }
+
             const taskCellData = rowData[taskTypeKey] as TaskTypeRow
             const taskType = taskTypes.find((t) => t.name === taskTypeKey)
             if (!taskCellData) return null
