@@ -13,26 +13,41 @@ type Props = {
 
 export const useFolderSort = ({ parents, children }: Props) => {
   const sortFolderRows = (event: CustomColumnSortEvent): FolderRow[] => {
-    const sortField = event.field
-    const order = event.order
+    const { field: sortField, order } = event
 
-    const sortByField = (a: FolderRow, b: FolderRow) => {
+    // Comparator function to handle sorting
+    const compareFields = (a: FolderRow, b: FolderRow) => {
       const fieldA = a[sortField]
       const fieldB = b[sortField]
-      if (fieldA < fieldB) return order === 1 ? -1 : 1
-      if (fieldA > fieldB) return order === 1 ? 1 : -1
-      return 0
+
+      if (typeof fieldA === 'string' && typeof fieldB === 'string') {
+        return order * fieldA.localeCompare(fieldB)
+      }
+      return order * (fieldA < fieldB ? -1 : fieldA > fieldB ? 1 : 0)
     }
 
-    // Sort parent rows
-    parents.sort(sortByField)
-    // Sort child rows
-    children.sort(sortByField)
+    // Sort parents and children independently
+    parents.sort(compareFields)
+    children.sort(compareFields)
 
-    // Insert child rows after their parent
+    // Create a map to group children by their parent ID for quick access
+    const childrenByParentId = new Map<string, FolderRow[]>()
+    children.forEach((child) => {
+      if (!child.__parentId) return
+      const parentId = child.__parentId
+      if (!childrenByParentId.has(parentId)) {
+        childrenByParentId.set(parentId, [])
+      }
+      childrenByParentId.get(parentId)!.push(child)
+    })
+
+    // Combine parents and their corresponding children while maintaining hierarchy
     const sortedData = parents.reduce((acc, parent) => {
       acc.push(parent)
-      acc.push(...children.filter((child) => child.__parentId === parent.__folderId))
+      const associatedChildren = childrenByParentId.get(parent.__folderId)
+      if (associatedChildren) {
+        acc.push(...associatedChildren)
+      }
       return acc
     }, [] as FolderRow[])
 
