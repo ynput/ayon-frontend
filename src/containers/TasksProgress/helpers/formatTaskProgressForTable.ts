@@ -17,6 +17,7 @@ export type TaskTypeStatusBar = {
 
 export type FolderRow = {
   __isParent: boolean
+  __parentId?: string
   __folderKey: string
   _folder: string
   _parents: string[]
@@ -44,7 +45,7 @@ export const formatTaskProgressForTable = (
     // add parent folder row
 
     const parent = folder.parent
-    const parentKey = parent ? parent.id + '-parent' : undefined
+    const parentKey = parent ? parent.id : undefined
     // check parent has not been added
     if (parent && parentKey && !rows.has(parentKey)) {
       //
@@ -67,6 +68,7 @@ export const formatTaskProgressForTable = (
     // add main folder row
     const row: FolderRow = {
       __isParent: false,
+      __parentId: parentKey,
       __folderKey: folder.parents[folder.parents.length - 1] + folder.name, // used to sort the folders row
       _folder: folder.label || folder.name,
       _parents: folder.parents,

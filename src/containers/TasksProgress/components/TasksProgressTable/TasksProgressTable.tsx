@@ -23,14 +23,14 @@ import type {
   TaskTypeStatusBar,
 } from '../../helpers/formatTaskProgressForTable'
 import type { GetAllProjectUsersAsAssigneeResult } from '@queries/user/getUsers'
-import type { KeyboardEvent, MouseEvent } from 'react'
+import { useMemo, type KeyboardEvent, type MouseEvent } from 'react'
 import { $Any } from '@types'
 import { InView } from 'react-intersection-observer'
 import useCreateContext from '@hooks/useCreateContext'
 import { Body } from '../FolderBody/FolderBody.styled'
 import clsx from 'clsx'
 import ParentBody from '../ParentBody/ParentBody'
-import { completeSort, folderSort } from '../../helpers'
+import { useFolderSort } from '../../helpers'
 import useLocalStorage from '@hooks/useLocalStorage'
 
 export const Cells = styled.div`
@@ -124,6 +124,11 @@ export const TasksProgressTable = ({
     const bIndex = taskTypes.findIndex((t) => t.name === b)
     return aIndex - bIndex
   })
+
+  // separate the parent and child rows with useMemo (used for sorting)
+  const parentRows = useMemo(() => tableData.filter((row) => row.__isParent), [tableData])
+  const childRows = useMemo(() => tableData.filter((row) => !row.__isParent), [tableData])
+  const sortFolderFunction = useFolderSort({ parents: parentRows, children: childRows })
 
   const onOpenPanel = () => {
     dispatch(toggleDetailsPanel(true))
@@ -225,7 +230,7 @@ export const TasksProgressTable = ({
         frozen
         resizeable
         sortable
-        sortFunction={folderSort}
+        sortFunction={sortFolderFunction}
         style={{ zIndex: 100, minWidth: 300 }}
         body={(row: FolderRow) =>
           row.__isParent ? (
@@ -257,7 +262,7 @@ export const TasksProgressTable = ({
           </Body>
         )}
         sortable
-        sortFunction={completeSort}
+        sortFunction={sortFolderFunction}
       />
       {taskTypeKeys.map((taskTypeKey) => (
         <Column
