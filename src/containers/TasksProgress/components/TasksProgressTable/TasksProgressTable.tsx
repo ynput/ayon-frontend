@@ -199,7 +199,7 @@ export const TasksProgressTable = ({
     '.p-datatable-wrapper',
   )
 
-  if (isLoading) return <TasksProgressLoadingTable rows={selectedFolders.length} />
+  if (isLoading) return <TasksProgressLoadingTable rows={20} />
 
   return (
     <DataTable

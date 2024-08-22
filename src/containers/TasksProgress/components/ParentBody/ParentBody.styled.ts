@@ -4,7 +4,7 @@ import { theme } from '@ynput/ayon-react-components'
 
 export const ParentBody = styled(Body)`
   & > * {
-    ${theme.labelLarge}
+    ${theme.titleMedium}
     font-weight: 600;
   }
 `

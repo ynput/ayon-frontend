@@ -8,7 +8,7 @@ interface TaskStatusBarProps {
   statusCounts: TaskTypeStatusBar
 }
 
-export const TaskStatusBar: FC<TaskStatusBarProps> = ({ statuses, statusCounts }) => {
+export const TaskStatusBar: FC<TaskStatusBarProps> = ({ statuses = [], statusCounts = {} }) => {
   const stateOrder = ['done', 'in_progress', 'blocked', 'not_started']
   const lastState = stateOrder[stateOrder.length - 1]
   // sort statuses by state
