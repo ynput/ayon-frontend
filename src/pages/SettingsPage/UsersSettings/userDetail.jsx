@@ -268,7 +268,7 @@ const UserDetail = ({
       data.isManager = formData.userLevel === 'manager'
       data.isService = formData.userLevel === 'service'
       data.isGuest = formData.isGuest
-      data.isDeveloper = formData.isDeveloper
+      data.isDeveloper = formData.isDeveloper && data.isAdmin
 
       const patch = {
         active: formData.userActive,
