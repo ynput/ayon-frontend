@@ -15,6 +15,8 @@ const detailsMaxMaxWidth = 700
 const TasksProgressPage: FC = () => {
   const projectName = useSelector((state: $Any) => state.project.name) as string
   const isOpen = useSelector((state: $Any) => state.details.open) as boolean
+  const selectedTasks = useSelector((state: $Any) => state.context.focused.tasks) as string[]
+  const detailsOpen = isOpen && selectedTasks.length > 0
 
   //   GET PROJECT INFO FOR STATUS
   const { data: projectInfo } = useGetProjectQuery({ projectName }, { skip: !projectName })
@@ -45,7 +47,7 @@ const TasksProgressPage: FC = () => {
                 projectName={projectName}
               />
             </SplitterPanel>
-            {isOpen ? (
+            {detailsOpen ? (
               <SplitterPanel
                 style={{
                   maxWidth: `clamp(${detailsMinWidth}px, ${detailsMaxWidth}, ${detailsMaxMaxWidth}px)`,
