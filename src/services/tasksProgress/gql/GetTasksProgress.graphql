@@ -1,32 +1,12 @@
+#import "./ProgressTaskFragment.graphql"
+
 query GetTasksProgress($projectName: String!, $folderIds: [String!]) {
   project(name: $projectName) {
     name
     tasks(folderIds: $folderIds, last: 1000, includeFolderChildren: true) {
       edges {
         node {
-          projectName
-          id
-          name
-          label
-          taskType
-          status
-          assignees
-          updatedAt
-          active
-          hasReviewables
-          folder {
-            id
-            name
-            label
-            folderType
-            parents
-            parent {
-              id
-              name
-              label
-              parents
-            }
-          }
+          ...ProgressTaskFragment
         }
       }
     }

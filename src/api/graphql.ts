@@ -1357,6 +1357,14 @@ export type GetProjectLatestQueryVariables = Exact<{
 
 export type GetProjectLatestQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string } };
 
+export type GetProgressTaskQueryVariables = Exact<{
+  projectName: Scalars['String']['input'];
+  taskId: Scalars['String']['input'];
+}>;
+
+
+export type GetProgressTaskQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, task: { __typename?: 'TaskNode', projectName: string, id: string, name: string, label?: string | null, taskType: string, status: string, assignees: Array<string>, updatedAt: any, active: boolean, hasReviewables: boolean, folder: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, folderType: string, parents: Array<string>, parent?: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, parents: Array<string> } | null } } } };
+
 export type GetTasksProgressQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
   folderIds?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
@@ -1364,6 +1372,8 @@ export type GetTasksProgressQueryVariables = Exact<{
 
 
 export type GetTasksProgressQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, tasks: { __typename?: 'TasksConnection', edges: Array<{ __typename?: 'TaskEdge', node: { __typename?: 'TaskNode', projectName: string, id: string, name: string, label?: string | null, taskType: string, status: string, assignees: Array<string>, updatedAt: any, active: boolean, hasReviewables: boolean, folder: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, folderType: string, parents: Array<string>, parent?: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, parents: Array<string> } | null } } }> } } };
+
+export type ProgressTaskFragmentFragment = { __typename?: 'TaskNode', projectName: string, id: string, name: string, label?: string | null, taskType: string, status: string, assignees: Array<string>, updatedAt: any, active: boolean, hasReviewables: boolean, folder: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, folderType: string, parents: Array<string>, parent?: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, parents: Array<string> } | null } };
 
 export type GetAllProjectUsersAsAssigneeQueryVariables = Exact<{
   projectName?: InputMaybe<Scalars['String']['input']>;
@@ -1428,6 +1438,33 @@ export const MessageFragmentFragmentDoc = `
     type
     name
     label
+  }
+}
+    `;
+export const ProgressTaskFragmentFragmentDoc = `
+    fragment ProgressTaskFragment on TaskNode {
+  projectName
+  id
+  name
+  label
+  taskType
+  status
+  assignees
+  updatedAt
+  active
+  hasReviewables
+  folder {
+    id
+    name
+    label
+    folderType
+    parents
+    parent {
+      id
+      name
+      label
+      parents
+    }
   }
 }
     `;
@@ -1544,6 +1581,16 @@ export const GetProjectLatestDocument = `
   }
 }
     `;
+export const GetProgressTaskDocument = `
+    query GetProgressTask($projectName: String!, $taskId: String!) {
+  project(name: $projectName) {
+    name
+    task(id: $taskId) {
+      ...ProgressTaskFragment
+    }
+  }
+}
+    ${ProgressTaskFragmentFragmentDoc}`;
 export const GetTasksProgressDocument = `
     query GetTasksProgress($projectName: String!, $folderIds: [String!]) {
   project(name: $projectName) {
@@ -1551,35 +1598,13 @@ export const GetTasksProgressDocument = `
     tasks(folderIds: $folderIds, last: 1000, includeFolderChildren: true) {
       edges {
         node {
-          projectName
-          id
-          name
-          label
-          taskType
-          status
-          assignees
-          updatedAt
-          active
-          hasReviewables
-          folder {
-            id
-            name
-            label
-            folderType
-            parents
-            parent {
-              id
-              name
-              label
-              parents
-            }
-          }
+          ...ProgressTaskFragment
         }
       }
     }
   }
 }
-    `;
+    ${ProgressTaskFragmentFragmentDoc}`;
 export const GetAllProjectUsersAsAssigneeDocument = `
     query GetAllProjectUsersAsAssignee($projectName: String) {
   users(last: 2000, projectName: $projectName) {
@@ -1653,6 +1678,9 @@ const injectedRtkApi = restApi.injectEndpoints({
     }),
     GetProjectLatest: build.query<GetProjectLatestQuery, GetProjectLatestQueryVariables>({
       query: (variables) => ({ document: GetProjectLatestDocument, variables })
+    }),
+    GetProgressTask: build.query<GetProgressTaskQuery, GetProgressTaskQueryVariables>({
+      query: (variables) => ({ document: GetProgressTaskDocument, variables })
     }),
     GetTasksProgress: build.query<GetTasksProgressQuery, GetTasksProgressQueryVariables>({
       query: (variables) => ({ document: GetTasksProgressDocument, variables })

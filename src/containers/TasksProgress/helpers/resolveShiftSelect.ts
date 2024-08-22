@@ -58,7 +58,7 @@ export const resolveShiftSelect = (id: string, tableEl: HTMLElement): string[] =
       TDs.forEach((td) => {
         const TdIndex = Array.from(row.children).indexOf(td)
         const cells = td.querySelectorAll('.cell-wrapper')
-        cells.forEach((cell, index, array) => {
+        cells.forEach((cell, index) => {
           const isInRange =
             index === startColInnerIndex ||
             (index >= startColInnerIndex && index <= endColInnerIndex) ||
