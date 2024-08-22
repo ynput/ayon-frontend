@@ -5,7 +5,7 @@ import { MarketAddonListApiResponse } from '@/api/rest'
 import { $Any } from '@/types'
 import { GetMarketInstallEventsQuery } from '@/api/graphql'
 
-type MarketAddonItemRes = MarketAddonListApiResponse['addons'][0]
+type MarketAddonItemRes = NonNullable<MarketAddonListApiResponse['addons']>[0]
 export interface MarketAddonItem extends MarketAddonItemRes {
   isDownloaded: boolean
   isOfficial: boolean
