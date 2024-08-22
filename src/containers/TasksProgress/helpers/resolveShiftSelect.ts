@@ -43,7 +43,10 @@ export const resolveShiftSelect = (id: string, tableEl: HTMLElement): string[] =
       Math.max(startRowIndex, endRowIndex) + 1,
     ) as HTMLElement[]
 
-    const inverseSelection = startColIndex > endColIndex
+    const sameColumn = startColIndex === endColIndex
+    const inverseSelection = sameColumn
+      ? startColInnerIndex > endColInnerIndex
+      : startColIndex > endColIndex
 
     const taskIds: string[] = []
     rows.forEach((row) => {
@@ -55,11 +58,16 @@ export const resolveShiftSelect = (id: string, tableEl: HTMLElement): string[] =
       TDs.forEach((td) => {
         const TdIndex = Array.from(row.children).indexOf(td)
         const cells = td.querySelectorAll('.cell-wrapper')
-        cells.forEach((cell, index) => {
+        cells.forEach((cell, index, array) => {
           const isInRange =
-            startColInnerIndex === index || endColInnerIndex === index || endColIndex > TdIndex
-          const isInRangeInverse = endColIndex <= TdIndex
+            index === startColInnerIndex ||
+            (index >= startColInnerIndex && index <= endColInnerIndex) ||
+            TdIndex < endColIndex
+          const isInRangeInverse =
+            (index <= startColInnerIndex && index >= endColInnerIndex) || TdIndex > endColIndex
+
           const isInRangeResolved = inverseSelection ? isInRangeInverse : isInRange
+          // console.log({ index, startColInnerIndex, endColInnerIndex, isInRange, isInRangeInverse })
 
           if (isInRangeResolved) {
             // if the cell is not in the range, skip
