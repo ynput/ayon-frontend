@@ -1,17 +1,27 @@
 import { ColumnSortEvent } from 'primereact/column'
 import { FolderRow } from './formatTaskProgressForTable'
+import { useMemo } from 'react'
 
 interface CustomColumnSortEvent extends ColumnSortEvent {
   data: FolderRow[]
   order: 1 | -1
 }
 
-type Props = {
-  parents: FolderRow[]
-  children: FolderRow[]
-}
+export const useFolderSort = (tableData: FolderRow[]) => {
+  // Separate the parent and child rows with useMemo (used for sorting)
+  const [parents, children] = useMemo(() => {
+    const parentRows: FolderRow[] = []
+    const childRows: FolderRow[] = []
+    for (const row of tableData) {
+      if (row.__isParent) {
+        parentRows.push(row)
+      } else {
+        childRows.push(row)
+      }
+    }
+    return [parentRows, childRows]
+  }, [tableData])
 
-export const useFolderSort = ({ parents, children }: Props) => {
   const sortFolderRows = (event: CustomColumnSortEvent): FolderRow[] => {
     const { field: sortField, order } = event
 

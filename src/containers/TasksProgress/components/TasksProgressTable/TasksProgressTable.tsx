@@ -23,7 +23,7 @@ import type {
   TaskTypeStatusBar,
 } from '../../helpers/formatTaskProgressForTable'
 import type { GetAllProjectUsersAsAssigneeResult } from '@queries/user/getUsers'
-import { useMemo, type KeyboardEvent, type MouseEvent } from 'react'
+import type { KeyboardEvent, MouseEvent } from 'react'
 import { $Any } from '@types'
 import { InView } from 'react-intersection-observer'
 import useCreateContext from '@hooks/useCreateContext'
@@ -125,10 +125,7 @@ export const TasksProgressTable = ({
     return aIndex - bIndex
   })
 
-  // separate the parent and child rows with useMemo (used for sorting)
-  const parentRows = useMemo(() => tableData.filter((row) => row.__isParent), [tableData])
-  const childRows = useMemo(() => tableData.filter((row) => !row.__isParent), [tableData])
-  const sortFolderFunction = useFolderSort({ parents: parentRows, children: childRows })
+  const sortFolderFunction = useFolderSort(tableData)
 
   const onOpenPanel = () => {
     dispatch(toggleDetailsPanel(true))
