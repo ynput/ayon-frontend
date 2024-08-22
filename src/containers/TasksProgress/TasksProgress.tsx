@@ -22,7 +22,7 @@ import useLocalStorage from '@hooks/useLocalStorage'
 import Shortcuts from '@containers/Shortcuts'
 import { openViewer } from '@state/viewer'
 import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
-import { isEqual, union } from 'lodash'
+import { isEqual } from 'lodash'
 
 export type Operation = {
   id: string
