@@ -15,6 +15,7 @@ interface TaskTypeCellProps extends Omit<React.HTMLAttributes<HTMLDivElement>, '
   selectedAssignees: string[]
   assigneeOptions: EntityCardProps['assigneeOptions']
   isExpanded: boolean
+  tooltip?: string
   taskIcon: string
   isSelected: boolean
   isActive: boolean
@@ -28,6 +29,7 @@ export const TaskTypeCell: FC<TaskTypeCellProps> = ({
   selectedAssignees,
   assigneeOptions,
   isExpanded,
+  tooltip,
   taskIcon,
   isSelected,
   isActive,
@@ -59,7 +61,11 @@ export const TaskTypeCell: FC<TaskTypeCellProps> = ({
   }
 
   return (
-    <Styled.Cell className={clsx('cell', { selected: isSelected, active: isActive })} {...props}>
+    <Styled.Cell
+      className={clsx('cell', { selected: isSelected, active: isActive })}
+      {...props}
+      data-tooltip={tooltip}
+    >
       <EntityCard
         variant="status"
         title={task.label || task.name}

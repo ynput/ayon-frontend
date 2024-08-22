@@ -270,6 +270,7 @@ export const TasksProgressTable = ({
                     avatarUrl: `/api/users/${user.name}/avatar`,
                   }))
                   const isExpanded = expandedRows.includes(task.folder.id)
+                  const tooltip = task.label || task.name
 
                   const handleCellClick = (e: MouseEvent<HTMLDivElement>) => {
                     // check if the click is editable item
@@ -334,6 +335,7 @@ export const TasksProgressTable = ({
                               selectedAssignees={selectedAssignees}
                               assigneeOptions={assigneeOptions}
                               isExpanded={isExpanded}
+                              tooltip={!isExpanded ? tooltip : undefined}
                               taskIcon={taskType?.icon || ''}
                               statuses={statuses}
                               onChange={onChange}
