@@ -16,6 +16,7 @@ import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
 import transformKanbanTasks from './transformKanbanTasks'
 import styled from 'styled-components'
 import clsx from 'clsx'
+import { toggleDetailsPanel } from '@state/details'
 
 const StyledSplitter = styled(Splitter)`
   .details-panel-splitter {
@@ -48,6 +49,7 @@ export const getThumbnailUrl = ({ entityId, entityType, thumbnailId, updatedAt, 
 const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
   const dispatch = useDispatch()
   const selectedProjects = useSelector((state) => state.dashboard.selectedProjects)
+  const isPanelOpen = useSelector((state) => state.details.open)
   const user = useSelector((state) => state.user)
   const assigneesState = useSelector((state) => state.dashboard.tasks.assignees)
   const assigneesFilter = useSelector((state) => state.dashboard.tasks.assigneesFilter)
@@ -181,6 +183,7 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
   const handlePanelClose = () => {
     dispatch(setUri(null))
     dispatch(onTaskSelected({ ids: [], types: [] }))
+    dispatch(toggleDetailsPanel(false))
   }
 
   const isLoadingAll = isLoadingInfo || isLoadingTasks
@@ -221,7 +224,7 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
           isLoadingProjectUsers={isLoadingProjectUsers}
         />
       </SplitterPanel>
-      {selectedTasksData.length ? (
+      {selectedTasksData.length && isPanelOpen ? (
         <SplitterPanel
           size={1}
           className={clsx('details-panel-splitter', { dragging: isDragging })}

@@ -26,13 +26,21 @@ const KanBanCardDraggable = ({
         isDragging={draggingCard}
         {...attributes}
         {...listeners}
-        onKeyDown={(e) => {
-          // we block space to use for viewer
-          if (e.key === ' ') {
-            e.preventDefault()
-          } else {
-            listeners?.onKeyDown(e, task.id)
-          }
+        pt={{
+          thumbnail: {
+            onKeyDown: (e) => {
+              const passThroughKeys = [' ', 'Escape']
+              if (passThroughKeys.includes(e.key)) {
+                console.log('STOP')
+                e.stopPropagation()
+                console.log(props.onKeyDown)
+                // forward the event to the parent
+                props.onKeyDown && props.onKeyDown(e)
+              } else {
+                listeners?.onKeyDown(e, task.id)
+              }
+            },
+          },
         }}
       />
     ),

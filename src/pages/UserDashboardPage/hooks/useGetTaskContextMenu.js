@@ -5,6 +5,7 @@ import { useSelector } from 'react-redux'
 import { useURIContext } from '@context/uriContext'
 import { getTaskRoute } from '@helpers/routes'
 import useOpenTaskInViewer from './useOpenTaskInViewer'
+import { toggleDetailsPanel } from '@state/details'
 
 export const useGetTaskContextMenu = (tasks, dispatch) => {
   // URI NAVIGATE ON RIGHT CLICK
@@ -12,9 +13,16 @@ export const useGetTaskContextMenu = (tasks, dispatch) => {
   const selectedTasks = useSelector((state) => state.dashboard.tasks.selected)
 
   const openTaskInViewer = useOpenTaskInViewer()
+  const isMacOS = /Macintosh|MacIntel|MacPPC|Mac68K/.test(navigator.userAgent)
 
   const getContextMenuItems = (task) => {
     return [
+      {
+        label: 'Show details',
+        icon: 'dock_to_left',
+        shortcut: 'Double click',
+        command: () => dispatch(toggleDetailsPanel(true)),
+      },
       {
         label: 'Open in viewer',
         command: () => openTaskInViewer(task),
@@ -25,7 +33,7 @@ export const useGetTaskContextMenu = (tasks, dispatch) => {
         label: 'Open in browser',
         command: () => navigateToUri(getTaskRoute(task)),
         icon: 'open_in_new',
-        shortcut: 'Double click',
+        shortcut: `${isMacOS ? '⌘' : 'Ctrl'} + Double Click`,
       },
       {
         label: 'Copy task ID',

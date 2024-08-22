@@ -10,8 +10,7 @@ import { InView, useInView } from 'react-intersection-observer'
 import 'react-perfect-scrollbar/dist/css/styles.css'
 import KanBanColumnDropzone from './KanBanColumnDropzone'
 import clsx from 'clsx'
-import { useURIContext } from '@context/uriContext'
-import { getTaskRoute } from '@helpers/routes'
+import { toggleDetailsPanel } from '@state/details'
 
 const KanBanColumn = forwardRef(
   (
@@ -35,7 +34,6 @@ const KanBanColumn = forwardRef(
     ref,
   ) => {
     const dispatch = useDispatch()
-    const { navigate } = useURIContext()
 
     const tasksCount = tasks.length
 
@@ -82,6 +80,11 @@ const KanBanColumn = forwardRef(
     // HANDLE TASK CLICK
     const handleTaskClick = useTaskClick(dispatch, allTasks)
 
+    // OPEN DETAILS PANEL
+    const onTogglePanel = (open) => {
+      dispatch(toggleDetailsPanel(open))
+    }
+
     // return 5 fake loading events if loading
     const loadingTasks = useMemo(() => getFakeTasks(), [])
 
@@ -116,13 +119,11 @@ const KanBanColumn = forwardRef(
                         <KanBanCardDraggable
                           task={task}
                           onClick={(e) => {
-                            if (e.detail == 2) {
-                              navigate(getTaskRoute(task))
-                              return
-                            }
                             closeContext()
                             handleTaskClick(e, task.id)
                           }}
+                          onDoubleClick={() => onTogglePanel(true)}
+                          onKeyDown={(e) => e.key === 'Escape' && onTogglePanel(true)}
                           onMouseOver={() => handlePrefetch(task)}
                           isActive={selectedTasks.includes(task.id)}
                           isDraggingActive={active}

@@ -15,8 +15,11 @@ const detailsMaxMaxWidth = 700
 const TasksProgressPage: FC = () => {
   const projectName = useSelector((state: $Any) => state.project.name) as string
   const isOpen = useSelector((state: $Any) => state.details.open) as boolean
+  const selectedFolders = useSelector((state: $Any) => state.context.focused.folders) as string[]
   const selectedTasks = useSelector((state: $Any) => state.context.focused.tasks) as string[]
-  const detailsOpen = isOpen && selectedTasks.length > 0
+  const detailsOpen = isOpen && selectedFolders.length > 0 && selectedTasks.length > 0
+
+  console.log(selectedFolders, selectedTasks)
 
   //   GET PROJECT INFO FOR STATUS
   const { data: projectInfo } = useGetProjectQuery({ projectName }, { skip: !projectName })

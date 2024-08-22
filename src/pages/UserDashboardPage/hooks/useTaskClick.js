@@ -39,8 +39,6 @@ export const useTaskClick = (dispatch, tasks = []) => {
     } else if (!newSelection.includes(id) || newSelection.length > 1) {
       // replace selection
       newSelection = [id]
-    } else {
-      newSelection = []
     }
 
     const newTasks = tasks.filter((task) => newSelection.includes(task.id))
