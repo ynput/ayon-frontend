@@ -503,7 +503,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
         </p>
         <p>
           This will mark the current staging bundle as production and copy all staging
-          settings (studio and projects) to production as well.
+          studio settings and staging projects overrides to production as well.
         </p>
       </>
     )
