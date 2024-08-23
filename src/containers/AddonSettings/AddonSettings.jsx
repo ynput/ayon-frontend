@@ -502,8 +502,8 @@ const AddonSettings = ({ projectName, showSites = false }) => {
           Are you sure you want to push <strong>{bundleName}</strong> to production?
         </p>
         <p>
-          This will mark the current staging bundle as production and copy all staging studio
-          settings to production as well.
+          This will mark the current staging bundle as production and copy all staging
+          settings (studio and projects) to production as well.
         </p>
       </>
     )
