@@ -42,4 +42,30 @@ const searchParamsMiddleware = (types) => () => (next) => (action) => {
   return next(action)
 }
 
+// Keeping URL 'ayon-entity' query param in sync with the store context URI
+const updateUrlOnUriChange = () => () => (next) => (action) => {
+  const key = 'ayon-entity'
+  const matchedType = 'context/setUri'
+  const uri = action.payload
+
+  if (action.type !== matchedType) {
+    return next(action)
+  }
+
+  const urlParams = new URLSearchParams(window.location.search)
+  urlParams.delete(key)
+  if (uri != null) {
+    urlParams.set(key, encodeURIComponent(uri))
+  }
+
+  const paramsString = urlParams.toString()
+  const newUrl = paramsString
+    ? `${window.location.pathname}?${paramsString}`
+    : window.location.pathname
+  window.history.replaceState({}, '', newUrl)
+
+  return next(action)
+}
+
+export { updateUrlOnUriChange }
 export default searchParamsMiddleware
