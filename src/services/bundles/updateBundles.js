@@ -49,11 +49,20 @@ const updateBundles = api.injectEndpoints({
     }),
 
     createBundle: build.mutation({
-      query: ({ data, force = false }) => ({
-        url: `/api/bundles?force=${force}`,
-        method: 'POST',
-        body: data,
-      }),
+      query: ({ data, force = false, settingsFromBundle = null, settingsFromVariant = null }) => {
+
+        const queryParameters = new URLSearchParams()
+        if (force) queryParameters.append('force', force)
+        if (settingsFromBundle) queryParameters.append('settingsFromBundle', settingsFromBundle)
+        if (settingsFromVariant) queryParameters.append('settingsFromVariant', settingsFromVariant)
+
+        return {
+          url: `/api/bundles?${queryParameters.toString()}`,
+          method: 'POST',
+          body: data,
+        }
+
+      },
       // optimisticUpdate bundleList to add new bundle
       // TURNED OFF: having the lag is good user feedback
       // onQueryStarted: async ({ archived = false, data }, { dispatch, queryFulfilled }) => {
