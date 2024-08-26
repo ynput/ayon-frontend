@@ -514,6 +514,8 @@ const AddonSettings = ({ projectName, showSites = false }) => {
       accept: async () => {
         await promoteBundle({ name: bundleName }).unwrap()
         setLocalData({})
+        setOriginalData({})
+        setSelectedAddons([])
         toast.success('Bundle pushed to production')
         setVariant('production')
       },
