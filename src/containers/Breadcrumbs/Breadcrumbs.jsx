@@ -123,8 +123,18 @@ const Breadcrumbs = () => {
   }
 
   useEffect(() => {
-    if (ctxUri === localUri) return
-    setLocalUri(ctxUri)
+    if (ctxUri !== localUri) {
+      setLocalUri(ctxUri)
+    }
+
+    const urlParams = new URLSearchParams(window.location.search)
+    const encodedAyonEntity = urlParams.get('ayon-entity');
+    if (encodedAyonEntity !== null) {
+      const ayonEntity = decodeURIComponent(encodedAyonEntity)
+      if (ayonEntity != ctxUri) {
+        navigate(ayonEntity)
+      }
+    }
   }, [ctxUri])
 
   const uriDisplay = uri2crumbs(ctxUri, location.pathname).join(' / ')
