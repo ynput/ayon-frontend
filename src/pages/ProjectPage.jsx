@@ -130,23 +130,34 @@ const ProjectPage = () => {
     return <div className="page">Project Not Found, Redirecting...</div>
   }
 
-  let child = null
-  if (module === 'editor') child = <EditorPage />
-  else if (module === 'workfiles') child = <WorkfilesPage />
-  else if (addonName) {
-    for (const addon of addonsData) {
-      if (addon.name === addonName) {
-        child = (
-          <ProjectAddon
-            addonName={addonName}
-            addonVersion={addon.version}
-            sidebar={addon.settings.sidebar}
-          />
-        )
-        break
-      }
+  const getPageByModuleAndAddonData = (module, addonName, addonsData) => {
+    if (module === 'editor') {
+      return <EditorPage />
     }
-  } else child = <BrowserPage />
+    if (module === 'workfiles') {
+      return <WorkfilesPage />
+    }
+
+    if (!addonName) {
+      return <BrowserPage />
+    }
+
+    const filteredAddons = addonsData.filter((item) => item.name === addonName)
+    if (filteredAddons.length) {
+      return (
+        <ProjectAddon
+          addonName={addonName}
+          addonVersion={filteredAddons[0].version}
+          sidebar={filteredAddons[0].settings.sidebar}
+        />
+      )
+    }
+
+    // Fallback to browser page if no addon matches addonName
+    return <BrowserPage />
+  }
+
+  const child = getPageByModuleAndAddonData(module, addonName, addonsData)
 
   return (
     <>
