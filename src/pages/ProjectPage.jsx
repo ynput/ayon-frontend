@@ -90,9 +90,9 @@ const ProjectPage = () => {
 
   const links = useMemo(
     () => [
-      { name: 'Browser', path: `/projects/${projectName}/browser`, module: 'browser' },
-      { name: 'Editor', path: `/projects/${projectName}/editor`, module: 'editor' },
-      { name: 'Workfiles', path: `/projects/${projectName}/workfiles`, module: 'workfiles' },
+      { name: 'Browser', path: `/projects/${projectName}/browser`, module: 'browser', uriSync: true },
+      { name: 'Editor', path: `/projects/${projectName}/editor`, module: 'editor' , uriSync: true },
+      { name: 'Workfiles', path: `/projects/${projectName}/workfiles`, module: 'workfiles' , uriSync: true },
       ...addonsData.map((addon) => ({
         name: addon.title,
         path: `/projects/${projectName}/addon/${addon.name}`,
