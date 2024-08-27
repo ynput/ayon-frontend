@@ -15,7 +15,7 @@ import { useCheckBundleQuery } from '@queries/bundles/getBundles'
 import BundleChecks from './BundleChecks/BundleChecks'
 import usePrevious from '@hooks/usePrevious'
 
-import useNewBundleDialog from './NewBundleDialog'
+import useCopyBundleSettingsDialog from './CopyBundleSettingsDialog'
 
 const removeEmptyDevAddons = (addons = {}) => {
   if (!addons) return addons
@@ -38,7 +38,7 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading, isDev, d
   const [createBundle, { isLoading: isCreating }] = useCreateBundleMutation()
   const [updateBundle, { isLoading: isUpdating }] = useUpdateBundleMutation()
 
-  const [NewBundleDialog, newBundlePrompt] = useNewBundleDialog()
+  const [CopyBundleSettingsDialog, copyBundleSettingsPrompt] = useCopyBundleSettingsDialog()
 
   useEffect(() => {
     if (!formData || !previousFormData) {
@@ -162,7 +162,7 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading, isDev, d
       // TODO: this should be changed to allow copying settings from another bundle
       // to dev bundles as well, but this is a P.O.C. for now
 
-      const res = await newBundlePrompt()
+      const res = await copyBundleSettingsPrompt(true)
       console.log('res', res)
       if (!res) return
 
@@ -407,7 +407,7 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading, isDev, d
           onIssueClick={handleIssueClick}
         />
       </BundleForm>
-      <NewBundleDialog />
+      <CopyBundleSettingsDialog />
     </>
   )
 }

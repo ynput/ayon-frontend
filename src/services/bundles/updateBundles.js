@@ -82,6 +82,10 @@ const updateBundles = api.injectEndpoints({
         { type: 'bundleList' },
         { type: 'addonList' },
         { type: 'addonSettingsList' },
+        // TODO: invalidate settings
+        { type: 'addonSettings' },
+        { type: 'addonSettingsOverrides' },
+        { type: 'addonSettingsList' },
       ],
     }),
 
@@ -116,6 +120,27 @@ const updateBundles = api.injectEndpoints({
         { type: 'marketAddon' },
       ],
     }),
+
+
+    migrateSettingsByBundle: build.mutation({
+
+      query: ({ sourceBundle, sourceVariant, targetBundle, targetVariant }) => ({
+        url: '/api/migrateSettingsByBundle',
+        method: 'POST',
+        body: { sourceBundle, sourceVariant, targetBundle, targetVariant},
+      }),
+
+      invalidatesTags: (result, error, id) => [
+        { type: 'addonSettings' },
+        { type: 'addonSettingsOverrides' },
+        { type: 'addonSettingsList' },
+      ],
+
+
+
+    }), // migrateSettingsByBundle
+
+
   }), // endpoints
   overrideExisting: true,
 })
@@ -125,4 +150,5 @@ export const {
   useCreateBundleMutation,
   useUpdateBundleMutation,
   usePromoteBundleMutation,
+  useMigrateSettingsByBundleMutation,
 } = updateBundles
