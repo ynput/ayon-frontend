@@ -143,6 +143,14 @@ const Breadcrumbs = () => {
   return (
     <Styled.Wrapper>
       <Styled.Crumbtainer>
+        {uriDisplay && localUri && (
+          <Button
+            icon="edit"
+            style={{ opacity: editMode ? 0 : 1, width: editMode ? 0 : 'auto', borderRadius: '4px 0 0 4px'  }}
+            onClick={() => setEditMode(true)}
+            variant="tonal"
+          />
+        )}
         <Styled.CrumbsForm onSubmit={goThere}>
           <label data-value={inputValue}>
             <InputText
@@ -152,7 +160,7 @@ const Breadcrumbs = () => {
               onFocus={() => setEditMode(true)}
               onKeyDown={handleKeyDown}
               ref={inputRef}
-              style={{ borderRadius: !localUri ? 4 : '4px 0 0 4px' }}
+              style={{ borderRadius: !localUri ? 4 : 0 }}
             />
           </label>
         </Styled.CrumbsForm>
