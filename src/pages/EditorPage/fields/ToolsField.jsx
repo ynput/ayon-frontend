@@ -38,16 +38,16 @@ const ToolsField = ({ value, className, attrib }) => {
   const [isOpen, setIsOpen] = useState(false)
 
   const _enum = attrib?.enum
-
-  const labels = _enum
-    ?.filter((item) => value.includes(item.value))
-    .map((item) => item.label || item.value)
-
+  const labels = _enum?.filter((el) => value.includes(el.value)).map((el) => el.label || el.value)
   const isInheritedAndChanged = className.includes('inherited') && className.includes('changed')
 
-  if (isInheritedAndChanged) return <span className="editor-field changed">(inherited)</span>
+  if (isInheritedAndChanged) {
+    return <span className="editor-field changed">(inherited)</span>
+  }
 
-  if (!value?.length) return null
+  if (!value?.length) {
+    return null
+  }
 
   return (
     <StyledDropdown
@@ -59,7 +59,7 @@ const ToolsField = ({ value, className, attrib }) => {
       onClose={() => setIsOpen(false)}
       valueTemplate={() => (
         <DefaultValueTemplate value={value}>
-          {`(${labels?.length}) ${labels?.join(', ')}`}
+          {!labels.length ? 'None' : `(${labels?.length}) ${labels?.join(', ')}`}
         </DefaultValueTemplate>
       )}
       $isOpen={isOpen}

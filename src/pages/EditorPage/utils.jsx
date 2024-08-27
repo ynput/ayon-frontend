@@ -1,57 +1,7 @@
 import ayonClient from '@/ayon'
 import { AssigneeSelect, Icon } from '@ynput/ayon-react-components'
-import { TimestampField } from '@containers/fieldFormat'
 import { useSelector } from 'react-redux'
-import ToolsField from './fields/ToolsField'
 import { StyledStatus } from './utils.styled'
-
-const formatAttribute = (node, changes, fieldName, styled = true) => {
-  const chobj = changes[node.id]
-
-  let tooltip = null
-  let className = ''
-  let value = node.attrib && node.attrib[fieldName]
-  if (chobj && fieldName in chobj) {
-    // if value is null then it inherits (default value)
-    value = chobj[fieldName] || '(inherited)'
-    className = 'changed'
-    // show changed style and inherited style if the change was to set to null (inherited)
-    if (chobj[fieldName] === null) className += ' inherited'
-  } else if (node.ownAttrib && !node.ownAttrib.includes(fieldName)) {
-    className = 'inherited'
-  }
-
-  if (!styled) return value
-
-  if (ayonClient.settings.attributes.length) {
-    const attribSettings = ayonClient.settings.attributes.find(
-      (attrib) => attrib.name === fieldName,
-    ).data
-    const fieldType = attribSettings.type
-    if (fieldName === 'tools' && value)
-      return <ToolsField value={value} className={className} attrib={attribSettings} />
-    else if (fieldType === 'datetime') return <TimestampField value={value} ddOnly />
-    else if (fieldType === 'boolean')
-      return !value ? '' : <Icon icon="check" className={`editor-field ${className}`} />
-    else if (fieldType === 'list_of_strings' && typeof value === 'object') {
-      if (!value?.length) return ''
-      const _enum = attribSettings.enum
-
-      const labels = _enum
-        .filter((item) => value.includes(item.value))
-        .map((item) => item.label || item.value)
-      const values = _enum.filter((item) => value.includes(item.value)).map((item) => item.value)
-      value = labels.join(', ')
-      tooltip = values.join(', ')
-    }
-  }
-
-  return (
-    <span className={`editor-field ${className}`} title={tooltip}>
-      {value}
-    </span>
-  )
-}
 
 const formatType = (node, changes, styled = true) => {
   const chobj = changes[node.id] || {}
@@ -144,4 +94,4 @@ const getColumns = () => {
   return cols
 }
 
-export { getColumns, formatType, formatAttribute, formatAssignees, formatStatus }
+export { getColumns, formatType, formatAssignees, formatStatus }

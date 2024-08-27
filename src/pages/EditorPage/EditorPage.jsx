@@ -18,7 +18,7 @@ import { sortByLabelAndName } from '@helpers/sortByHelpers'
 
 import { editorSelectionChanged, setUri, setExpandedFolders } from '@state/context'
 
-import { getColumns, formatType, formatAttribute, formatAssignees, formatStatus } from './utils'
+import { getColumns, formatType, formatAssignees, formatStatus } from './utils'
 import { MultiSelect } from 'primereact/multiselect'
 import useLocalStorage from '@hooks/useLocalStorage'
 import { useGetFolderHierarchyQuery } from '@queries/getHierarchy'
@@ -56,6 +56,7 @@ import useTableKeyboardNavigation, {
   extractIdFromClassList,
 } from '@containers/Feed/hooks/useTableKeyboardNavigation'
 import clsx from 'clsx'
+import { formatAttribute } from './utils-ts'
 
 const EditorPage = () => {
   const project = useSelector((state) => state.project)

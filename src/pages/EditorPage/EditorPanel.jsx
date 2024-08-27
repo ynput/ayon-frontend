@@ -653,7 +653,6 @@ const EditorPanel = ({
 
                   // never show value when inherited, just show placeholder
                   if (!isOwn) enumValue = null
-
                   input = (
                     <Dropdown
                       style={{ flexGrow: 1 }}
@@ -668,7 +667,7 @@ const EditorPanel = ({
                       emptyMessage={`Select option${isMultiSelect ? 's' : ''}...`}
                       multipleValues={!!multipleValues}
                       onClear={
-                        field !== 'attrib.tools'
+                        field !== 'attrib.tools' && isMultiSelect
                           ? (value) => handleLocalChange(value, changeKey, field)
                           : undefined
                       }
