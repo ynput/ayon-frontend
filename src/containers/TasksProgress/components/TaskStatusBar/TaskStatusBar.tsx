@@ -16,9 +16,19 @@ export const TaskStatusBar: FC<TaskStatusBarProps> = ({ statuses = [], statusCou
   const sortedStatuses = [...statuses].sort(
     (a, b) => stateOrder.indexOf(a.state || lastState) - stateOrder.indexOf(b.state || lastState),
   )
+  const total = Object.values(statusCounts).reduce((acc, count) => acc + count, 0)
+
+  const tooltip = sortedStatuses
+    .map((status) => {
+      const count = statusCounts[status.name] || 0
+      const percentage = Math.round((count / total) * 100 * 10) / 10
+
+      return `${status.name}: ${count} (${percentage}%)`
+    })
+    .join('\n')
 
   return (
-    <Styled.Cell>
+    <Styled.Cell data-tooltip={tooltip} data-tooltip-as="markdown">
       <Styled.StatusBar>
         {sortedStatuses.map((status) => {
           const count = statusCounts[status.name] || 0
