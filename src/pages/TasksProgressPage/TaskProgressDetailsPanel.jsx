@@ -34,7 +34,7 @@ const TaskProgressDetailsPanel = ({ projectInfo, projectName }) => {
         scope="progress"
         onClose={() => dispatch(toggleDetailsPanel())}
       />
-      <DetailsPanelSlideOut projectsInfo={projectsInfo} scope="project" />
+      <DetailsPanelSlideOut projectsInfo={projectsInfo} scope="progress" />
     </>
   )
 }
