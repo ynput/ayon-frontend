@@ -38,7 +38,7 @@ export const Container = styled.div`
     z-index: 20;
     border-radius: var(--border-radius-xxl);
     &.hasIcon {
-      padding: 8px 16px;
+      padding: 16px 24px;
     }
   }
 `
