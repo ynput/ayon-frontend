@@ -23,7 +23,7 @@ const StyledSection = styled.div`
   padding: var(--padding-m);
   overflow: auto;
 
-  :first-child {
+  &:first-child {
     border-bottom: 1px solid var(--md-sys-color-outline-variant);
   }
 `
