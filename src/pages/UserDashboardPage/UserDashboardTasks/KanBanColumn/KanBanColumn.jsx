@@ -124,7 +124,7 @@ const KanBanColumn = forwardRef(
             []
           ) : (
             <Fragment key={group.label}>
-              <Styled.GroupHeader>{group.label}</Styled.GroupHeader>
+              {group.label && <Styled.GroupHeader>{group.label}</Styled.GroupHeader>}
               {group.tasks.flatMap((task, i) => {
                 if (tasksAdded >= taskLimit) return []
                 tasksAdded++
