@@ -30,6 +30,7 @@ const ColumnsWrapper = ({
   const { active } = useDndContext()
   const sectionRef = useRef(null)
   const columnsRefs = useRef({})
+  const detailsOpen = useSelector((state) => state.details.open)
 
   // find out which column the active card has come from
   const activeColumn = useMemo(() => {
@@ -146,9 +147,10 @@ const ColumnsWrapper = ({
       const offsetLeft = columnEl.offsetLeft
       const padding = 8
 
+      // scroll the task into view
       sectionRef.current.scrollLeft = offsetLeft - containerWidth + elementWidth + padding
     }
-  }, [active, selectedTasks, wasDragging])
+  }, [active, selectedTasks, wasDragging, detailsOpen])
 
   const shortcuts = useTaskSpacebarViewer({
     tasks: allTasks,
