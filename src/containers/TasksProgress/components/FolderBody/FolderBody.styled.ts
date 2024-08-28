@@ -22,7 +22,10 @@ export const ExpandButton = styled(Button)`
   width: 34px;
   height: 34px;
 
+  color: var(--md-sys-color-outline);
+
   &:hover {
+    color: var(--md-sys-color-on-surface);
     background-color: var(--md-sys-color-surface-container-high-hover);
   }
 
