@@ -32,8 +32,9 @@ export const CrumbsForm = styled.form`
   }
 
   button {
-    background-color: transparent;
     display: inline-flex;
+    background-color: transparent;
+    padding: '6px',
   }
 
   label {

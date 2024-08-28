@@ -153,7 +153,10 @@ const Breadcrumbs = () => {
                 opacity: editMode ? 0 : 1,
                 width: editMode ? 0 : 'auto',
               }}
-              onClick={() => setEditMode(true)}
+              onClick={(e) => {
+                e.preventDefault()
+                setEditMode(true)
+              }}
               variant="tonal"
             />
           )}
@@ -168,11 +171,17 @@ const Breadcrumbs = () => {
               style={{ borderRadius: !localUri ? 4 : 0 }}
             />
           </label>
+          <Button
+            icon="arrow_forward"
+            style={{ display: editMode ? 'inline-flex' : 'none' }}
+            onClick={() => setEditMode(false)}
+            variant="tonal"
+          />
         </Styled.CrumbsForm>
         {uriDisplay && localUri && (
           <Button
             icon="content_copy"
-            style={{ opacity: editMode ? 0 : 1, width: editMode ? 0 : 'auto' }}
+            style={{ display: editMode ? 'none' : 'inline-flex' }}
             onClick={onCopy}
             variant="tonal"
           />
