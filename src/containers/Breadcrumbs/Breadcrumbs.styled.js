@@ -21,9 +21,19 @@ export const Crumbtainer = styled.div`
 `
 
 export const CrumbsForm = styled.form`
+  background-color: var(--md-sys-color-secondary-container);
+  border-radius: 4px 0 0 4px;
   *::before,
   *::after {
     box-sizing: border-box;
+  }
+  &:hover {
+    background-color: var(--md-sys-color-secondary-container-hover);
+  }
+
+  button {
+    background-color: transparent;
+    display: inline-flex;
   }
 
   label {
@@ -46,7 +56,7 @@ export const CrumbsForm = styled.form`
       background: none;
       appearance: none;
 
-      background-color: var(--md-sys-color-secondary-container);
+      background-color: transparent;
       border: 1px solid;
       border-color: transparent;
       transition: all 0.1s;
@@ -65,11 +75,6 @@ export const CrumbsForm = styled.form`
       line-height: var(--md-sys-typescale-title-small-line-height);
     }
 
-    input {
-      &:hover {
-        background-color: var(--md-sys-color-secondary-container-hover);
-      }
-    }
 
     &::after {
       content: attr(data-value);
