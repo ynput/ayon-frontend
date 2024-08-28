@@ -6,7 +6,6 @@ import { ProgressTableSortFunction } from './useFolderSort'
 export const taskStatusSortFunction =
   (statuses: Status[]): ProgressTableSortFunction =>
   (a, b, { field, order }): number => {
-    console.log('sorting', statuses, a, b)
     // get status (state) with the highest index in stateOrder
     const findStatus = (tasks: TaskTypeRow['tasks']) => {
       let currentHighestStateIndex = 0

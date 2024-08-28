@@ -32,8 +32,6 @@ import clsx from 'clsx'
 import ParentBody from '../ParentBody/ParentBody'
 import { useFolderSort } from '../../helpers'
 import useLocalStorage from '@hooks/useLocalStorage'
-import { CustomColumnSortEvent } from '@containers/TasksProgress/helpers/useFolderSort'
-import { stateOrder } from '../TaskStatusBar/TaskStatusBar'
 import { taskStatusSortFunction } from '@containers/TasksProgress/helpers/taskStatusSortFunction'
 
 export const Cells = styled.div`
