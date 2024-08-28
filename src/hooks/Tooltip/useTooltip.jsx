@@ -128,7 +128,7 @@ const useTooltip = () => {
       // target top will also be tooltip bottom
       const targetTop = target.getBoundingClientRect().top
 
-      const newTargetPos = { x: asData === 'markdown' ? e.x : targetCenter, y: targetTop }
+      const newTargetPos = { x: targetCenter, y: targetTop }
       const newTooltip = {
         tooltip: tooltipData ?? '',
         shortcut: shortcutData ?? '',
