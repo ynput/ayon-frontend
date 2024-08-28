@@ -253,11 +253,13 @@ export const TasksProgressTable = ({
       <Column
         field={'_complete'}
         header={'Complete'}
-        body={(row: FolderRow) => (
-          <Body style={{ minWidth: 'unset' }}>
-            <span>{`${row._complete}%`}</span>
-          </Body>
-        )}
+        body={(row: FolderRow) =>
+          row._complete !== undefined && (
+            <Body style={{ minWidth: 'unset' }}>
+              <span>{`${Math.round(row._complete * 10) / 10}%`}</span>
+            </Body>
+          )
+        }
         sortable
         sortFunction={sortFolderFunction}
       />

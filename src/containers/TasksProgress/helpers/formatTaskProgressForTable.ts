@@ -111,7 +111,7 @@ export const formatTaskProgressForTable = (
             const toAdd = completed ? taskFraction : 0
             const newDone = (row._complete || 0) + toAdd
             // rounded to 1 decimal
-            row._complete = Math.round(newDone * 10) / 10
+            row._complete = newDone
           }
 
           updateCompleted()
@@ -167,7 +167,7 @@ export const formatTaskProgressForTable = (
       const completedFolders = row._completeFolders || []
       const average =
         completedFolders.reduce((acc, curr) => acc + curr, 0) / completedFolders.length
-      row._complete = Math.round(average * 10) / 10
+      row._complete = average
     }
   })
 
