@@ -32,6 +32,9 @@ import clsx from 'clsx'
 import ParentBody from '../ParentBody/ParentBody'
 import { useFolderSort } from '../../helpers'
 import useLocalStorage from '@hooks/useLocalStorage'
+import { CustomColumnSortEvent } from '@containers/TasksProgress/helpers/useFolderSort'
+import { stateOrder } from '../TaskStatusBar/TaskStatusBar'
+import { taskStatusSortFunction } from '@containers/TasksProgress/helpers/taskStatusSortFunction'
 
 export const Cells = styled.div`
   display: flex;
@@ -269,6 +272,8 @@ export const TasksProgressTable = ({
           field={taskTypeKey}
           resizeable
           header={<TaskColumnHeader taskType={taskTypeKey} />}
+          sortable
+          sortFunction={(e) => sortFolderFunction(e, taskStatusSortFunction(statuses))}
           pt={{ bodyCell: { style: { padding: 0 } } }}
           className="column task-column"
           headerClassName="column-header task-column-header"

@@ -2,10 +2,15 @@ import { ColumnSortEvent } from 'primereact/column'
 import { FolderRow } from './formatTaskProgressForTable'
 import { useMemo } from 'react'
 
-interface CustomColumnSortEvent extends ColumnSortEvent {
+export interface CustomColumnSortEvent extends ColumnSortEvent {
   data: FolderRow[]
-  order: 1 | -1
 }
+
+export type ProgressTableSortFunction = (
+  a: FolderRow,
+  b: FolderRow,
+  { field, order }: { field: string; order: ColumnSortEvent['order'] },
+) => number
 
 export const useFolderSort = (tableData: FolderRow[]) => {
   // Separate the parent and child rows with useMemo (used for sorting)
@@ -22,23 +27,28 @@ export const useFolderSort = (tableData: FolderRow[]) => {
     return [parentRows, childRows]
   }, [tableData])
 
-  const sortFolderRows = (event: CustomColumnSortEvent): FolderRow[] => {
-    const { field: sortField, order } = event
+  const sortFolderRows = (
+    event: CustomColumnSortEvent,
+    customSortFunction?: ProgressTableSortFunction,
+  ): FolderRow[] => {
+    const { field, order } = event
 
     // Comparator function to handle sorting
-    const compareFields = (a: FolderRow, b: FolderRow) => {
-      const fieldA = a[sortField]
-      const fieldB = b[sortField]
+    const compareFields: ProgressTableSortFunction = (a, b, { field, order }) => {
+      const fieldA = a[field]
+      const fieldB = b[field]
 
       if (typeof fieldA === 'string' && typeof fieldB === 'string') {
-        return order * fieldA.localeCompare(fieldB)
+        return (order ?? 1) * fieldA.localeCompare(fieldB)
       }
-      return order * (fieldA < fieldB ? -1 : fieldA > fieldB ? 1 : 0)
+      return (order ?? 1) * (fieldA < fieldB ? -1 : fieldA > fieldB ? 1 : 0)
     }
 
+    const sortFunction = customSortFunction || compareFields
+
     // Sort parents and children independently
-    parents.sort(compareFields)
-    children.sort(compareFields)
+    parents.sort((a, b) => sortFunction(a, b, { field, order }))
+    children.sort((a, b) => sortFunction(a, b, { field, order }))
 
     // Create a map to group children by their parent ID for quick access
     const childrenByParentId = new Map<string, FolderRow[]>()
@@ -64,5 +74,6 @@ export const useFolderSort = (tableData: FolderRow[]) => {
     return sortedData
   }
 
-  return (e: CustomColumnSortEvent) => sortFolderRows(e)
+  return (e: CustomColumnSortEvent, customSortFunction?: ProgressTableSortFunction) =>
+    sortFolderRows(e, customSortFunction)
 }
