@@ -116,10 +116,13 @@ const Breadcrumbs = () => {
 
   const handleKeyDown = (e) => {
     // if escape, cancel edit mode
-    if (e.key === 'Escape') {
+    if (['Escape', 'Enter'].includes(e.key)) {
       setEditMode(false)
       setLocalUri(ctxUri)
       inputRef.current.blur()
+    }
+    if (e.key === 'Enter') {
+      goThere(e)
     }
   }
 
@@ -174,7 +177,7 @@ const Breadcrumbs = () => {
           <Button
             icon="arrow_forward"
             style={{ display: editMode ? 'inline-flex' : 'none' }}
-            onClick={() => setEditMode(false)}
+            onMouseDown={goThere}
             variant="tonal"
           />
         </Styled.CrumbsForm>
