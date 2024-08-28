@@ -1632,7 +1632,8 @@ const EditorPage = () => {
             changes={changes}
             styled
             tasks={tasks}
-            folders={foldersObject} />
+            folders={foldersObject}
+          />
         )}
         style={{ width: columnsWidths['name'] || 230, height: 33 }}
         sortable
@@ -1686,7 +1687,7 @@ const EditorPage = () => {
 
   // only filter columns if required
   if (shownColumns.length < allColumns.length) {
-    allColumns = allColumns.filter(({ props }) => shownColumns.includes(props.field))
+    allColumns = allColumns.filter(({ key }) => shownColumns.includes(key))
   }
 
   // filter nodes that are undefined for editor
