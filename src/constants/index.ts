@@ -1,3 +1,3 @@
-const ayonUrlParam = 'ayon-uri'
+const ayonUrlParam = 'uri'
 
 export { ayonUrlParam }
