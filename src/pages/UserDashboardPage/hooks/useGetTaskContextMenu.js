@@ -7,6 +7,7 @@ import { toggleDetailsPanel } from '@state/details'
 
 export const useGetTaskContextMenu = (tasks, dispatch, { onOpenInBrowser } = {}) => {
   const selectedTasks = useSelector((state) => state.dashboard.tasks.selected)
+  const isDetailsOpen = useSelector((state) => state.details.open)
 
   const openTaskInViewer = useOpenTaskInViewer()
   const isMacOS = /Macintosh|MacIntel|MacPPC|Mac68K/.test(navigator.userAgent)
@@ -14,10 +15,10 @@ export const useGetTaskContextMenu = (tasks, dispatch, { onOpenInBrowser } = {})
   const getContextMenuItems = (task) => {
     return [
       {
-        label: 'Show details',
+        label: isDetailsOpen ? 'Hide details' : 'Show details',
         icon: 'dock_to_left',
-        shortcut: 'Double click',
-        command: () => dispatch(toggleDetailsPanel(true)),
+        shortcut: isDetailsOpen ? 'Escape' : 'Double click',
+        command: () => dispatch(toggleDetailsPanel(!isDetailsOpen)),
       },
       {
         label: 'Open in viewer',
