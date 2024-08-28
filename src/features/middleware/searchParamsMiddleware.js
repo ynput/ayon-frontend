@@ -2,6 +2,7 @@
 // It intercepts the action and saves the state to the local storage
 // if the action type matches the type specified in the types object
 
+import { ayonUrlParam } from '@/constants'
 import { isEmpty } from 'lodash'
 
 const searchParamsMiddleware = (types) => () => (next) => (action) => {
@@ -42,20 +43,17 @@ const searchParamsMiddleware = (types) => () => (next) => (action) => {
   return next(action)
 }
 
-// Keeping URL 'ayon-entity' query param in sync with the store context URI
+// Keeping ayon URI query param in sync with the store context URI
 const updateUrlOnUriChange = () => () => (next) => (action) => {
-  const key = 'ayon-entity'
-  const matchedType = 'context/setUri'
-  const uri = action.payload
-
-  if (action.type !== matchedType) {
+  if (action.type !==  'context/setUri') {
     return next(action)
   }
 
+  const uri = action.payload
   const urlParams = new URLSearchParams(window.location.search)
-  urlParams.delete(key)
+  urlParams.delete(ayonUrlParam)
   if (uri != null) {
-    urlParams.set(key, encodeURIComponent(uri))
+    urlParams.set(ayonUrlParam, encodeURIComponent(uri))
   }
 
   const paramsString = urlParams.toString()

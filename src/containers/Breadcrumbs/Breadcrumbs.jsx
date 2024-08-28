@@ -7,6 +7,7 @@ import * as Styled from './Breadcrumbs.styled'
 import { upperFirst } from 'lodash'
 import copyToClipboard from '@helpers/copyToClipboard'
 import { useURIContext } from '@context/uriContext'
+import { ayonUrlParam } from '@/constants'
 
 const uri2crumbs = (uri = '', pathname) => {
   // parse uri to path and query params
@@ -128,7 +129,7 @@ const Breadcrumbs = () => {
     }
 
     const urlParams = new URLSearchParams(window.location.search)
-    const encodedAyonEntity = urlParams.get('ayon-entity');
+    const encodedAyonEntity = urlParams.get(ayonUrlParam);
     if (encodedAyonEntity !== null) {
       const ayonEntity = decodeURIComponent(encodedAyonEntity)
       if (ayonEntity != ctxUri) {
