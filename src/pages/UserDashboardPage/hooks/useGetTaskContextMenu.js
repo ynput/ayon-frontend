@@ -2,14 +2,10 @@ import useCreateContext from '@hooks/useCreateContext'
 import copyToClipboard from '@helpers/copyToClipboard'
 import { onTaskSelected } from '@state/dashboard'
 import { useSelector } from 'react-redux'
-import { useURIContext } from '@context/uriContext'
-import { getTaskRoute } from '@helpers/routes'
 import useOpenTaskInViewer from './useOpenTaskInViewer'
 import { toggleDetailsPanel } from '@state/details'
 
-export const useGetTaskContextMenu = (tasks, dispatch) => {
-  // URI NAVIGATE ON RIGHT CLICK
-  const { navigate: navigateToUri } = useURIContext()
+export const useGetTaskContextMenu = (tasks, dispatch, { onOpenInBrowser } = {}) => {
   const selectedTasks = useSelector((state) => state.dashboard.tasks.selected)
 
   const openTaskInViewer = useOpenTaskInViewer()
@@ -31,7 +27,7 @@ export const useGetTaskContextMenu = (tasks, dispatch) => {
       },
       {
         label: 'Open in browser',
-        command: () => navigateToUri(getTaskRoute(task)),
+        command: () => onOpenInBrowser(task),
         icon: 'open_in_new',
         shortcut: `${isMacOS ? '⌘' : 'Ctrl'} + Double Click`,
       },
