@@ -68,6 +68,7 @@ const Breadcrumbs = () => {
 
   const [localUri, setLocalUri] = useState('')
   const [editMode, setEditMode] = useState(false)
+  const [forceEffect] = useState(true)
   const ctxUri = useSelector((state) => state.context.uri) || ''
   const { navigate } = useURIContext()
 
@@ -135,11 +136,11 @@ const Breadcrumbs = () => {
     const encodedAyonEntity = urlParams.get(ayonUrlParam);
     if (encodedAyonEntity !== null) {
       const ayonEntity = decodeURIComponent(encodedAyonEntity)
-      if (ayonEntity != ctxUri) {
+      if (ayonEntity != ctxUri || forceEffect) {
         navigate(ayonEntity)
       }
     }
-  }, [ctxUri])
+  }, [ctxUri, forceEffect]) //Forcing effect to run at least once to avoid bugs where context uri already has the same value on page load
 
   const uriDisplay = uri2crumbs(ctxUri, location.pathname).join(' / ')
   const inputValue = editMode ? localUri : uriDisplay || 'Go to URI...'
