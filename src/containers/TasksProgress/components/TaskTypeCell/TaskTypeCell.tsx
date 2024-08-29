@@ -70,6 +70,7 @@ export const TaskTypeCell: FC<TaskTypeCellProps> = ({
         variant="status"
         title={task.label || task.name}
         titleIcon={taskIcon}
+        imageIcon={taskIcon}
         imageUrl={isExpanded ? thumbnailUrl : undefined}
         users={task.assignees.map((assignee: string) => ({ name: assignee }))}
         assigneeOptions={assigneeOptions}

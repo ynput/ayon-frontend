@@ -23,4 +23,11 @@ export const Cell = styled.div`
     box-shadow: inset 0px 0px 0px 0.5px var(--md-sys-color-primary-container),
       inset 0px 0px 0px 3px var(--md-sys-color-primary);
   }
+
+  /* adjust image icon on entity card */
+  .entity-card {
+    .no-image {
+      top: 45%;
+    }
+  }
 `
