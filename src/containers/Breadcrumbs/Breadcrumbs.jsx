@@ -125,7 +125,6 @@ const Breadcrumbs = () => {
       goThere(e)
     }
   }
-
   useEffect(() => {
     if (ctxUri !== localUri) {
       setLocalUri(ctxUri)
@@ -171,16 +170,19 @@ const Breadcrumbs = () => {
               onFocus={() => setEditMode(true)}
               onKeyDown={handleKeyDown}
               ref={inputRef}
-              style={{ borderRadius: !localUri ? 4 : 0 }}
+              style={{ borderRadius: '4px 0 0 4px' }}
             />
           </label>
-          <Button
-            icon="arrow_forward"
-            style={{ display: editMode ? 'inline-flex' : 'none' }}
-            onMouseDown={goThere}
-            variant="tonal"
-          />
         </Styled.CrumbsForm>
+        <Button
+          icon="arrow_forward"
+          style={{
+            display: !editMode ? 'none' : 'inline-flex',
+            borderRadius: '0 4px 4px 0',
+          }}
+          onMouseDown={goThere}
+          variant="tonal"
+        />
         {uriDisplay && localUri && (
           <Button
             icon="content_copy"

@@ -5,6 +5,7 @@ import { NavLink, useNavigate, useParams } from 'react-router-dom'
 import * as Styled from './AppNavLinks.styled'
 import Typography from '@/theme/typography.module.css'
 import { replaceQueryParams } from '@helpers/url'
+import { ayonUrlParam } from '@/constants'
 
 const AppNavLinks = ({ links = [] }) => {
   // item = { name: 'name', path: 'path', node: node | 'spacer', accessLevel: [] }
@@ -15,7 +16,7 @@ const AppNavLinks = ({ links = [] }) => {
   const uri = useSelector((state) => state.context.uri)
 
   const appendUri = (path) =>
-    uri ? replaceQueryParams(path, { 'ayon-enity': encodeURIComponent(uri) }) : path
+    uri ? replaceQueryParams(path, { [ayonUrlParam]: encodeURIComponent(uri) }) : path
 
   const access = {
     manager: isManager || isAdmin,

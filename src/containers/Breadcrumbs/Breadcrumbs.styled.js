@@ -91,7 +91,6 @@ export const CrumbsForm = styled.form`
         color: var(--md-sys-color-on-secondary-container);
         outline: none;
         border-color: var(--md-sys-color-outline);
-        border-radius: var(--border-radius-m);
 
         box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.15);
       }
