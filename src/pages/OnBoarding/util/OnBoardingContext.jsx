@@ -253,7 +253,7 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
     try {
       if (!skip) {
         // get bundle list
-        const bundleList = (await listBundles({ archived: true }).unwrap()) || []
+        const { bundles: bundleList = [] } = (await listBundles({ archived: true }).unwrap()) || {}
         // first create the bundle from the release
         const bundle = createBundleFromRelease({
           release,
