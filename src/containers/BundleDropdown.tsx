@@ -4,6 +4,8 @@ import { Dropdown } from '@ynput/ayon-react-components'
 
 import { useListBundlesQuery } from '@queries/bundles/getBundles'
 import styled from 'styled-components'
+import { BundleModel } from '@api/rest/bundles'
+import { $Any } from '@types'
 
 const BundleDropdownItem = styled.div`
   display: flex;
@@ -21,12 +23,37 @@ const DropdownBadge = styled.span`
   color: black;
 `
 
-const BundleDropdown = ({ bundleName, setBundleName, disabled, style, setVariant, exclude }) => {
-  const { data: { bundles = [] } = {}, isLoading, isError } = useListBundlesQuery({})
-  const userName = useSelector((state) => state.user.name)
-  const devMode = useSelector((state) => state.user.attrib.developerMode)
+type BundleOption = {
+  value: string
+  label: string
+  isProduction: boolean
+  isStaging: boolean
+  isDev: boolean
+  activeUser: string
+}
 
-  const formatBundleDropdownItem = (bundle) => {
+type BundleDropdownProps = {
+  bundleName: string
+  setBundleName: (bundleName: string) => void
+  disabled?: boolean
+  style?: React.CSSProperties
+  setVariant?: (variant: string) => void
+  exclude?: string[]
+}
+
+const BundleDropdown = ({
+  bundleName,
+  setBundleName,
+  disabled,
+  style,
+  setVariant,
+  exclude,
+}: BundleDropdownProps) => {
+  const { data: { bundles = [] } = {}, isLoading, isError } = useListBundlesQuery({})
+  const userName = useSelector((state: $Any) => state.user.name)
+  const devMode = useSelector((state: $Any) => state.user.attrib.developerMode)
+
+  const formatBundleDropdownItem = (bundle: BundleOption) => {
     let prodBadge = null
     let stagBadge = null
     let devBadge = null
@@ -64,7 +91,7 @@ const BundleDropdown = ({ bundleName, setBundleName, disabled, style, setVariant
     )
   }
 
-  const bundleFilter = (b) => {
+  const bundleFilter = (b: BundleModel) => {
     if (exclude?.length && exclude.includes(b.name)) return false
     if (b.isDev && !devMode) return false
     return true
@@ -82,8 +109,8 @@ const BundleDropdown = ({ bundleName, setBundleName, disabled, style, setVariant
     }))
   }, [bundles])
 
-  const handleChange = (e) => {
-    const selectedBundle = bundleOptions.find((b) => b.value === e[0])
+  const handleChange = (v: string[]) => {
+    const selectedBundle = bundleOptions.find((b) => b.value === v[0])
     if (!selectedBundle) return
 
     if (setBundleName) setBundleName(selectedBundle.value)
