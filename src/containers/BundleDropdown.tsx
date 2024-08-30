@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { useSelector } from 'react-redux'
-import { DefaultValueTemplate, Dropdown } from '@ynput/ayon-react-components'
+import { DefaultValueTemplate, Dropdown, DropdownProps } from '@ynput/ayon-react-components'
 
 import { useListBundlesQuery } from '@queries/bundles/getBundles'
 import styled from 'styled-components'
@@ -33,6 +33,11 @@ const DefaultValueTemplateStyled = styled(DefaultValueTemplate)`
   }
 `
 
+const BadgesWrapper = styled.div`
+  display: flex;
+  gap: var(--base-gap-small);
+`
+
 const DropdownBadge = styled.span`
   border-radius: 3px;
   padding: 2px 4px;
@@ -53,9 +58,11 @@ type BundleOption = {
 type BundleBadgesProps = {
   bundle: BundleOption
   devMode: boolean
+  startContent?: React.ReactNode
+  endContent?: React.ReactNode
 }
 
-const BundleBadges = ({ bundle, devMode }: BundleBadgesProps) => {
+export const BundleBadges = ({ bundle, devMode, startContent, endContent }: BundleBadgesProps) => {
   const userName = useSelector((state: $Any) => state.user.name)
 
   let prodBadge = null
@@ -64,29 +71,37 @@ const BundleBadges = ({ bundle, devMode }: BundleBadgesProps) => {
 
   if (bundle.isProduction) {
     prodBadge = (
-      <DropdownBadge style={{ backgroundColor: 'var(--color-hl-production)' }}>
+      <DropdownBadge className="badge" style={{ backgroundColor: 'var(--color-hl-production)' }}>
+        {startContent}
         Production
+        {endContent}
       </DropdownBadge>
     )
   }
   if (bundle.isStaging) {
     stagBadge = (
-      <DropdownBadge style={{ backgroundColor: 'var(--color-hl-staging)' }}>Staging</DropdownBadge>
+      <DropdownBadge className="badge" style={{ backgroundColor: 'var(--color-hl-staging)' }}>
+        {startContent}
+        Staging
+        {endContent}
+      </DropdownBadge>
     )
   }
 
   if (devMode && bundle.isDev) {
     devBadge = (
-      <DropdownBadge style={{ backgroundColor: 'var(--color-hl-developer)' }}>
+      <DropdownBadge className="badge" style={{ backgroundColor: 'var(--color-hl-developer)' }}>
+        {startContent}
         {bundle.activeUser === userName ? 'Active' : 'Dev'}
+        {endContent}
       </DropdownBadge>
     )
   }
 
   return (
-    <span>
+    <BadgesWrapper>
       {prodBadge} {stagBadge} {devBadge}
-    </span>
+    </BadgesWrapper>
   )
 }
 
@@ -96,7 +111,7 @@ type BundleDropdownItemProps = {
   isActive?: boolean
 }
 
-const BundleDropdownItem = ({ bundle, devMode, isActive }: BundleDropdownItemProps) => {
+export const BundleDropdownItem = ({ bundle, devMode, isActive }: BundleDropdownItemProps) => {
   return (
     <BundleDropdownItemStyled className={clsx({ active: isActive })}>
       {bundle?.value}
@@ -105,13 +120,14 @@ const BundleDropdownItem = ({ bundle, devMode, isActive }: BundleDropdownItemPro
   )
 }
 
-type BundleDropdownProps = {
+interface BundleDropdownProps extends Omit<DropdownProps, 'value' | 'options'> {
   bundleName: string
   setBundleName: (bundleName: string) => void
   disabled?: boolean
   style?: React.CSSProperties
   setVariant?: (variant: string) => void
   exclude?: string[]
+  activeOnly?: boolean // only show production, staging, and dev bundles
 }
 
 const BundleDropdown = ({
@@ -121,6 +137,8 @@ const BundleDropdown = ({
   style,
   setVariant,
   exclude,
+  activeOnly,
+  ...props
 }: BundleDropdownProps) => {
   const { data: { bundles = [] } = {}, isLoading, isError } = useListBundlesQuery({})
   const devMode = useSelector((state: $Any) => state.user.attrib.developerMode)
@@ -128,6 +146,7 @@ const BundleDropdown = ({
   const bundleFilter = (b: BundleModel) => {
     if (exclude?.length && exclude.includes(b.name)) return false
     if (b.isDev && !devMode) return false
+    if (activeOnly && !b.isProduction && !b.isStaging && !b.isDev) return false
     return true
   }
 
@@ -164,7 +183,7 @@ const BundleDropdown = ({
       options={bundleOptions}
       onChange={handleChange}
       placeholder="Select a bundle"
-      style={style || { flexGrow: 1 }}
+      style={style || { flex: 1 }}
       disabled={disabled}
       valueTemplate={(value, _selected, isOpen) => (
         <DefaultValueTemplateStyled value={value} isOpen={isOpen}>
@@ -177,6 +196,7 @@ const BundleDropdown = ({
       itemTemplate={(bundle, isActive) => (
         <BundleDropdownItem bundle={bundle} devMode={devMode} isActive={isActive} />
       )}
+      {...props}
     />
   )
 }

@@ -10,8 +10,7 @@ import confirmDelete from '@helpers/confirmDelete'
 import { toast } from 'react-toastify'
 import clsx from 'clsx'
 import userTableLoadingData from '@hooks/userTableLoadingData'
-import useCopyBundleSettingsDialog from './CopyBundleSettingsDialog'
-import { useMigrateSettingsByBundleMutation } from '@queries/bundles/updateBundles'
+import CopyBundleSettingsDialog from './CopyBundleSettingsDialog/CopyBundleSettingsDialog'
 
 const BundleList = ({
   selectedBundles = [],
@@ -19,14 +18,13 @@ const BundleList = ({
   bundleList,
   isLoading,
   onDuplicate,
+  onCopySettings,
   toggleBundleStatus,
   errorMessage,
   developerMode,
 }) => {
   const [updateBundle] = useUpdateBundleMutation()
   const [deleteBundle] = useDeleteBundleMutation()
-  const [CopyBundleSettingsDialog, copyBundleSettingsPrompt] = useCopyBundleSettingsDialog()
-  const [migrateSettingsByBundle] = useMigrateSettingsByBundleMutation()
 
   // sort bundleList so that isArchived is at the bottom
   const sortedBundleList = useMemo(() => {
@@ -70,27 +68,6 @@ const BundleList = ({
         }
       },
     })
-
-
-  const onCopySettings = async (targetBundle, targetVariant) => {
-
-    const res = await copyBundleSettingsPrompt(false) 
-    if (!res) return
-
-    const sourceBundle = res.sourceBundle
-    const sourceVariant = res.sourceVariant
-    
-    await migrateSettingsByBundle({
-      sourceBundle,
-      targetBundle,
-      sourceVariant,
-      targetVariant,
-    }).unwrap()
-
-    toast.success('Settings copied')
-
-  }
-
 
   const getBundleStatusItem = (status, bundle, disabledExtra) => {
     const key = 'is' + status.charAt(0).toUpperCase() + status.slice(1)
@@ -147,18 +124,12 @@ const BundleList = ({
       disabled: selectedBundles.length > 1,
     })
 
-    let tgtVariant = null
-    if (activeBundle.isProduction) tgtVariant = 'production'
-    else if (activeBundle.isStaging) tgtVariant = 'staging'
-    else if (activeBundle.isDev) tgtVariant = 'activeBundleName'
-
     ctxMenuItems.push({
       label: 'Copy settings from...',
-      icon: 'content_copy',
-      command: () => onCopySettings(activeBundleName, tgtVariant),
-      disabled: selectedBundles.length !== 1 || (!tgtVariant),
+      icon: 'system_update_alt',
+      command: () => onCopySettings(activeBundle),
+      disabled: selectedBundles.length !== 1 || !(isStaging || isProduction || isDev),
     })
-
 
     const newSelectedBundles = bundleList.filter((b) => newSelection.includes(b.name))
 
