@@ -14,6 +14,16 @@ const injectedRtkApi = api.injectEndpoints({
         body: queryArg.bundleModel,
       }),
     }),
+    migrateSettingsByBundle: build.mutation<
+      MigrateSettingsByBundleApiResponse,
+      MigrateSettingsByBundleApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/migrateSettingsByBundle`,
+        method: 'POST',
+        body: queryArg.migrateBundleSettingsRequest,
+      }),
+    }),
   }),
   overrideExisting: false,
 })
@@ -27,6 +37,10 @@ export type CheckBundleCompatibilityApiResponse =
   /** status 200 Successful Response */ CheckBundleResponseModel
 export type CheckBundleCompatibilityApiArg = {
   bundleModel: BundleModel
+}
+export type MigrateSettingsByBundleApiResponse = /** status 200 Successful Response */ any
+export type MigrateSettingsByBundleApiArg = {
+  migrateBundleSettingsRequest: MigrateBundleSettingsRequest
 }
 export type AddonDevelopmentItem = {
   /** Enable/disable addon development */
@@ -78,4 +92,16 @@ export type BundleIssueModel = {
 export type CheckBundleResponseModel = {
   success?: boolean
   issues?: BundleIssueModel[]
+}
+export type MigrateBundleSettingsRequest = {
+  /** Source bundle */
+  sourceBundle: string
+  /** Target bundle */
+  targetBundle: string
+  /** Source variant */
+  sourceVariant: string
+  /** Target variant */
+  targetVariant: string
+  /** Migrate project settings */
+  withProjects?: boolean
 }
