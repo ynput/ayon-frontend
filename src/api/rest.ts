@@ -420,7 +420,7 @@ const injectedRtkApi = api.injectEndpoints({
         params: { force: queryArg.force },
       }),
     }),
-    checkBundleCompatibility: build.mutation<
+    checkBundleCompatibility: build.query<
       CheckBundleCompatibilityApiResponse,
       CheckBundleCompatibilityApiArg
     >({
@@ -584,6 +584,13 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/events/${queryArg.eventId}`,
         method: 'PATCH',
         body: queryArg.updateEventRequestModel,
+      }),
+    }),
+    eventOperations: build.mutation<EventOperationsApiResponse, EventOperationsApiArg>({
+      query: (queryArg) => ({
+        url: `/api/eventops`,
+        method: 'POST',
+        body: queryArg.eventOperationModel,
       }),
     }),
     uploadProjectFile: build.mutation<UploadProjectFileApiResponse, UploadProjectFileApiArg>({
@@ -1420,7 +1427,7 @@ const injectedRtkApi = api.injectEndpoints({
   }),
   overrideExisting: false,
 })
-export { injectedRtkApi as restApi }
+export { injectedRtkApi as api }
 export type GetAccessGroupSchemaApiResponse = /** status 200 Successful Response */ any
 export type GetAccessGroupSchemaApiArg = void
 export type GetAccessGroupsApiResponse = /** status 200 Successful Response */ object[]
@@ -1873,6 +1880,10 @@ export type UpdateExistingEventApiResponse = /** status 204 Successful Response 
 export type UpdateExistingEventApiArg = {
   eventId: string
   updateEventRequestModel: UpdateEventRequestModel
+}
+export type EventOperationsApiResponse = /** status 200 Successful Response */ any
+export type EventOperationsApiArg = {
+  eventOperationModel: EventOperationModel
 }
 export type UploadProjectFileApiResponse =
   /** status 201 Successful Response */ CreateFileResponseModel
@@ -3309,6 +3320,7 @@ export type Condition = {
     | 'notin'
     | 'contains'
     | 'excludes'
+    | 'like'
 }
 export type Filter = {
   /** List of conditions to be evaluated */
@@ -3317,7 +3329,7 @@ export type Filter = {
   operator?: 'and' | 'or'
 }
 export type EnrollRequestModel = {
-  sourceTopic: string
+  sourceTopic: string | string[]
   targetTopic: string
   sender: string
   /** Short, human readable description of the target event */
@@ -3394,6 +3406,11 @@ export type UpdateEventRequestModel = {
   progress?: number
   /** Force number of attempted retries */
   retries?: number
+}
+export type EventOperationModel = {
+  type: 'delete' | 'restart' | 'abort'
+  /** Filter source events */
+  filter: Filter
 }
 export type CreateFileResponseModel = {
   id: string
@@ -4351,6 +4368,7 @@ export type SystemMetricsData = {
   runtimeSeconds?: number
   dbSizeShared?: number
   dbSizeTotal?: number
+  dbAvailableConnections?: number
   redisSizeTotal?: number
   storageUtilizationTotal?: number
 }

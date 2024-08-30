@@ -9,7 +9,7 @@
  * for this file to be re-created
  */
 
-import { restApi } from './rest';
+import { api } from './rest';
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
@@ -284,6 +284,7 @@ export type FolderNodeTasksArgs = {
   folderIds?: InputMaybe<Array<Scalars['String']['input']>>;
   hasLinks?: InputMaybe<HasLinksFilter>;
   ids?: InputMaybe<Array<Scalars['String']['input']>>;
+  includeFolderChildren?: Scalars['Boolean']['input'];
   last?: InputMaybe<Scalars['Int']['input']>;
   names?: InputMaybe<Array<Scalars['String']['input']>>;
   sortBy?: InputMaybe<Scalars['String']['input']>;
@@ -683,6 +684,7 @@ export type ProjectNodeTasksArgs = {
   folderIds?: InputMaybe<Array<Scalars['String']['input']>>;
   hasLinks?: InputMaybe<HasLinksFilter>;
   ids?: InputMaybe<Array<Scalars['String']['input']>>;
+  includeFolderChildren?: Scalars['Boolean']['input'];
   last?: InputMaybe<Scalars['Int']['input']>;
   names?: InputMaybe<Array<Scalars['String']['input']>>;
   sortBy?: InputMaybe<Scalars['String']['input']>;
@@ -1526,7 +1528,7 @@ export const GetKanbanTasksDocument = `
 }
     ${KanbanFragmentFragmentDoc}`;
 
-const injectedRtkApi = restApi.injectEndpoints({
+const injectedRtkApi = api.injectEndpoints({
   endpoints: (build) => ({
     GetProductVersions: build.query<GetProductVersionsQuery, GetProductVersionsQueryVariables>({
       query: (variables) => ({ document: GetProductVersionsDocument, variables })
