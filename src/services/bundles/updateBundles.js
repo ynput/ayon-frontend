@@ -8,21 +8,6 @@ const updateBundles = api.injectEndpoints({
         url: `/api/bundles/${name}`,
         method: 'DELETE',
       }),
-      // optimisticUpdate bundleList to remove deleted bundle
-      // eslint-disable-next-line no-unused-vars
-      onQueryStarted: async ({ name, archived = true }, { dispatch, queryFulfilled }) => {
-        const patchResult = dispatch(
-          api.util.updateQueryData('listBundles', { archived }, (draft) => {
-            const bundleIndex = draft.findIndex((bundle) => bundle.name === name)
-            draft.splice(bundleIndex, 1)
-          }),
-        )
-        try {
-          await queryFulfilled
-        } catch {
-          patchResult.undo()
-        }
-      },
 
       // eslint-disable-next-line no-unused-vars
       invalidatesTags: (result, error, id) => [
@@ -75,9 +60,9 @@ const updateBundles = api.injectEndpoints({
         const patchResult = dispatch(
           api.util.updateQueryData('listBundles', { archived }, (draft) => {
             if (!patch) return
-            const bundleIndex = draft.findIndex((bundle) => bundle.name === name)
+            const bundleIndex = draft.bundles.findIndex((bundle) => bundle.name === name)
             if (bundleIndex === -1) throw new Error('bundle not found')
-            draft[bundleIndex] = patch
+            draft.bundles[bundleIndex] = patch
           }),
         )
         try {

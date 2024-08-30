@@ -39,7 +39,7 @@ const Bundles = () => {
 
   // REDUX QUERIES
   let {
-    data: { bundles } = {},
+    data: { bundles = [] } = {},
     isLoading,
     isFetching,
     isError,
@@ -59,7 +59,7 @@ const Bundles = () => {
         .filter((bundle) => !bundle.isArchived)
         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
     }
-    return bundleList
+    return bundles
   }, [bundles, showArchived])
 
   // filter out isDev bundles if developerMode off
@@ -268,8 +268,10 @@ const Bundles = () => {
           const patch = { ...oldBundle, [statusKey]: false }
           patchResult = dispatch(
             bundlesApi.util.updateQueryData('listBundles', { archived: true }, (draft) => {
-              const bundleIndex = draft.findIndex((bundle) => bundle.name === oldBundle.name)
-              draft[bundleIndex] = patch
+              const bundleIndex = draft.bundles.findIndex(
+                (bundle) => bundle.name === oldBundle.name,
+              )
+              draft.bundles[bundleIndex] = patch
             }),
           )
         } catch (error) {
