@@ -1,11 +1,11 @@
 import api from '@/api'
 import PubSub from '@/pubsub'
 import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
-import { MarketAddonListApiResponse } from '@/api/rest'
+import { AddonListItem2, MarketAddonListApiResponse } from '@/api/rest'
 import { $Any } from '@/types'
 import { GetMarketInstallEventsQuery } from '@/api/graphql'
 
-type MarketAddonItemRes = MarketAddonListApiResponse['addons'][0]
+type MarketAddonItemRes = AddonListItem2
 export interface MarketAddonItem extends MarketAddonItemRes {
   isDownloaded: boolean
   isOfficial: boolean

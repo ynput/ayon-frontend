@@ -88,7 +88,30 @@ const Bundles = () => {
   // if there is a url query ?bundle={name} = latest then select the bundle and remove the query
   // if selected = prod then select the production bundle
   useEffect(() => {
-    if (isLoading) return
+    if (isLoading) {
+      return
+    }
+
+    const duplicateParam = searchParams.get('duplicate')
+
+    if (duplicateParam) {
+      const foundDuplicate = getBundleFromQuery(duplicateParam)
+      if (foundDuplicate) {
+        handleDuplicateBundle(foundDuplicate.name)
+      }
+    }
+
+    // delete
+    searchParams.delete('bundle')
+    searchParams.delete('duplicate')
+    setSearchParams(searchParams)
+  }, [searchParams, isLoading, bundleList])
+
+  useEffect(() => {
+    if (isLoading) {
+      return
+    }
+
     const bundleParam = searchParams.get('bundle')
     // if bundleParam = latest then select the latest bundle createdAt
     const foundBundle = getBundleFromQuery(bundleParam)
@@ -103,22 +126,7 @@ const Bundles = () => {
         setSelectedBundles([bundleList[0].name])
       }
     }
-
-    const duplicateParam = searchParams.get('duplicate')
-
-    if (duplicateParam) {
-      const foundDuplicate = getBundleFromQuery(duplicateParam)
-      if (foundDuplicate) {
-        // setSelectedBundles([foundDuplicate.name])
-        handleDuplicateBundle(foundDuplicate.name)
-      }
-    }
-
-    // delete
-    searchParams.delete('bundle')
-    searchParams.delete('duplicate')
-    setSearchParams(searchParams)
-  }, [searchParams, isLoading, bundleList])
+  }, [searchParams, isLoading])
 
   // REDUX MUTATIONS
   const [updateBundle] = useUpdateBundleMutation()
