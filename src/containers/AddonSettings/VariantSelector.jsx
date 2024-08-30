@@ -107,7 +107,7 @@ const DevModeSelector = ({ variant, setVariant, disabled, style }) => {
   )
 }
 
-const VariantSelector = ({ variant, setVariant, disabled, style }) => {
+const VariantSelector = ({ variant, setVariant, disabled = false, style = {} }) => {
   const user = useSelector((state) => state.user)
 
   useEffect(() => {
