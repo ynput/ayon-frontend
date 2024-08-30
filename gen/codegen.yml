@@ -24,7 +24,7 @@ generates:
       - typescript-operations
       - typescript-rtk-query:
           importBaseApiFrom: './rest'
-          importBaseApiAlternateName: 'restApi'
+          importBaseApiAlternateName: 'api'
   ./graphql.schema.json:
     plugins:
       - 'introspection'

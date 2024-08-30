@@ -3,7 +3,7 @@ import BundleList from './BundleList'
 import BundleDetail from './BundleDetail'
 import { Button, InputSwitch, Section } from '@ynput/ayon-react-components'
 import * as Styled from './Bundles.styled'
-import { useGetBundleListQuery } from '@queries/bundles/getBundles'
+import { useListBundlesQuery } from '@queries/bundles/getBundles'
 import { useUpdateBundleMutation } from '@queries/bundles/updateBundles'
 import getNewBundleName from './getNewBundleName'
 import NewBundle from './NewBundle'
@@ -14,7 +14,7 @@ import { toast } from 'react-toastify'
 import AddonDialog from '@components/AddonDialog/AddonDialog'
 import { useGetAddonSettingsQuery } from '@queries/addonSettings'
 import getLatestSemver from './getLatestSemver'
-import api from '@api'
+import { api as bundlesApi } from '@api/rest/bundles'
 import { useDispatch, useSelector } from 'react-redux'
 import useLocalStorage from '@hooks/useLocalStorage'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
@@ -39,12 +39,12 @@ const Bundles = () => {
 
   // REDUX QUERIES
   let {
-    data: bundleList = [],
+    data: { bundles } = {},
     isLoading,
     isFetching,
     isError,
     error,
-  } = useGetBundleListQuery({ archived: true })
+  } = useListBundlesQuery({ archived: true })
   // GET INSTALLERS
   const { data: installerList = [], isLoading: isLoadingInstallers } = useGetInstallerListQuery()
   // GET ADDONS
@@ -53,14 +53,14 @@ const Bundles = () => {
   })
 
   // filter out archived bundles if showArchived is true
-  bundleList = useMemo(() => {
+  let bundleList = useMemo(() => {
     if (!showArchived) {
-      return [...bundleList]
+      return [...bundles]
         .filter((bundle) => !bundle.isArchived)
         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
     }
     return bundleList
-  }, [bundleList, showArchived])
+  }, [bundles, showArchived])
 
   // filter out isDev bundles if developerMode off
   bundleList = useMemo(() => {
@@ -267,7 +267,7 @@ const Bundles = () => {
         try {
           const patch = { ...oldBundle, [statusKey]: false }
           patchResult = dispatch(
-            api.util.updateQueryData('getBundleList', { archived: true }, (draft) => {
+            bundlesApi.util.updateQueryData('listBundles', { archived: true }, (draft) => {
               const bundleIndex = draft.findIndex((bundle) => bundle.name === oldBundle.name)
               draft[bundleIndex] = patch
             }),

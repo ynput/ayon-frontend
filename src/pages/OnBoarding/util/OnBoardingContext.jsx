@@ -13,7 +13,7 @@ import {
   useGetReleasesQuery,
 } from '@queries/onBoarding/onBoarding'
 import useLocalStorage from '@hooks/useLocalStorage'
-import { useLazyGetBundleListQuery } from '@queries/bundles/getBundles'
+import { useLazyListBundlesQuery } from '@queries/bundles/getBundles'
 import { useCreateBundleMutation } from '@queries/bundles/updateBundles'
 import getNewBundleName from '../../SettingsPage/Bundles/getNewBundleName'
 
@@ -248,12 +248,12 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
   // create bundle
   const [createBundle] = useCreateBundleMutation()
   // get bundle list so that we can make sure the bundle name is unique
-  const [getBundleList] = useLazyGetBundleListQuery()
+  const [listBundles] = useLazyListBundlesQuery()
   const handleFinish = async (restart, skip = false) => {
     try {
       if (!skip) {
         // get bundle list
-        const bundleList = (await getBundleList({ archived: true }).unwrap()) || []
+        const bundleList = (await listBundles({ archived: true }).unwrap()) || []
         // first create the bundle from the release
         const bundle = createBundleFromRelease({
           release,

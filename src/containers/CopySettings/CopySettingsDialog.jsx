@@ -13,7 +13,7 @@ import VariantSelector from '@containers/AddonSettings/VariantSelector'
 import CopySettingsNode from './CopySettingsNode'
 
 import { setValueByPath } from '../AddonSettings/utils'
-import { useGetBundleListQuery } from '@queries/bundles/getBundles'
+import { useListBundlesQuery } from '@queries/bundles/getBundles'
 import { cloneDeep } from 'lodash'
 
 const StateShade = styled.div`
@@ -54,21 +54,21 @@ const CopySettingsDialog = ({
   const [nodeState, setNodeState] = useState({})
 
   const {
-    data: bundlesData,
+    data: { bundles = [] } = {},
     isLoading: bundlesLoading,
     isError: bundlesError,
-  } = useGetBundleListQuery({})
+  } = useListBundlesQuery({})
 
   const sourceVersions = useMemo(() => {
     if (!sourceBundle) return {}
 
     if (bundlesLoading || bundlesError) return {}
 
-    if (!bundlesData) return {}
+    if (!bundles) return {}
 
-    const sb = bundlesData.find((i) => i.name === sourceBundle)
+    const sb = bundles.find((i) => i.name === sourceBundle)
     return sb?.addons || {}
-  }, [sourceBundle, bundlesData, bundlesLoading, bundlesError])
+  }, [sourceBundle, bundles, bundlesLoading, bundlesError])
 
   const doTheMagic = () => {
     const newLocalData = cloneDeep(localData)
@@ -107,14 +107,15 @@ const CopySettingsDialog = ({
         addonSettings = setValueByPath(addonSettings, change.path, value)
         addonOverrides.push(change.path)
 
-        if (change.targetLevel === 'studio' && change.sourceLevel === 'default'){
+        if (change.targetLevel === 'studio' && change.sourceLevel === 'default') {
           addonUnpins.push(change.path)
         }
-        if (change.targetLevel === 'project' && ['studio', 'default'].includes(change.sourceLevel)){
+        if (
+          change.targetLevel === 'project' &&
+          ['studio', 'default'].includes(change.sourceLevel)
+        ) {
           addonUnpins.push(change.path)
         }
-
-
       } // for change of node.children
 
       newLocalData[key] = addonSettings
@@ -209,8 +210,8 @@ const CopySettingsDialog = ({
       )}
     </Toolbar>
   )
-  
-  const dialogHeader = `Copy ${projectName? `${projectName} `:''}${variant} settings from...`
+
+  const dialogHeader = `Copy ${projectName ? `${projectName} ` : ''}${variant} settings from...`
 
   return (
     <Dialog
