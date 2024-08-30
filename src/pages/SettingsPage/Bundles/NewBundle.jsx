@@ -15,8 +15,6 @@ import { useCheckBundleCompatibilityQuery } from '@queries/bundles/getBundles'
 import BundleChecks from './BundleChecks/BundleChecks'
 import usePrevious from '@hooks/usePrevious'
 
-import useCopyBundleSettingsDialog from './CopyBundleSettingsDialog'
-
 const removeEmptyDevAddons = (addons = {}) => {
   if (!addons) return addons
   const newAddonDevelopment = {}
@@ -37,8 +35,6 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading, isDev, d
 
   const [createBundle, { isLoading: isCreating }] = useCreateBundleMutation()
   const [updateBundle, { isLoading: isUpdating }] = useUpdateBundleMutation()
-
-  const [CopyBundleSettingsDialog, copyBundleSettingsPrompt] = useCopyBundleSettingsDialog()
 
   useEffect(() => {
     if (!formData || !previousFormData) {
@@ -152,34 +148,8 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading, isDev, d
 
     if (!developerMode) data.isDev = false
 
-    const payload = {...data}
-    const qparams = {}
-
-    if (!data.isDev) {
-      // when we're not creating a dev bundle, we prompt the user
-      // whether they want to mark the bundle as production or staging
-      // and whether they want to copy settings from another bundle
-
-      // TODO: this should be changed to allow copying settings from another bundle
-      // to dev bundles as well, but this is a P.O.C. for now
-
-      const res = await copyBundleSettingsPrompt(true)
-      console.log('res', res)
-      if (!res) return
-
-      // TODO: support for setting to staging/maybe dev?
-      payload.isProduction = res.markAs[0] === 'production'
-      payload.isStaging = res.markAs[0] === 'staging'
-
-      if (res.copyFrom) {
-        qparams.settingsFromBundle = res.sourceBundle
-        qparams.settingsFromVariant = res.sourceVariant
-      }
-
-    }
-
     try {
-      await createBundle({ data: payload, force: data.isDev, ...qparams }).unwrap()
+      await createBundle({ data: data, force: data.isDev }).unwrap()
       toast.success('Bundle created')
       onSave(data.name)
     } catch (error) {
@@ -408,7 +378,6 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading, isDev, d
           onIssueClick={handleIssueClick}
         />
       </BundleForm>
-      <CopyBundleSettingsDialog />
     </>
   )
 }
