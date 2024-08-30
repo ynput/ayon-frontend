@@ -1,18 +1,36 @@
 import { useMemo } from 'react'
 import { useSelector } from 'react-redux'
-import { Dropdown } from '@ynput/ayon-react-components'
+import { DefaultValueTemplate, Dropdown } from '@ynput/ayon-react-components'
 
 import { useListBundlesQuery } from '@queries/bundles/getBundles'
 import styled from 'styled-components'
 import { BundleModel } from '@api/rest/bundles'
 import { $Any } from '@types'
+import clsx from 'clsx'
 
-const BundleDropdownItem = styled.div`
+const BundleDropdownItemStyled = styled.div`
+  width: 100%;
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
   padding: 4px 8px;
+
+  &.active {
+    background-color: var(--md-sys-color-primary-container);
+    color: var(--md-sys-color-on-primary-container);
+
+    &:hover {
+      background-color: var(--md-sys-color-primary-container-hover);
+    }
+  }
+`
+
+const DefaultValueTemplateStyled = styled(DefaultValueTemplate)`
+  padding-left: 0;
+  & > div > span {
+    flex: 1;
+  }
 `
 
 const DropdownBadge = styled.span`
@@ -26,10 +44,65 @@ const DropdownBadge = styled.span`
 type BundleOption = {
   value: string
   label: string
-  isProduction: boolean
-  isStaging: boolean
-  isDev: boolean
-  activeUser: string
+  isProduction?: boolean
+  isStaging?: boolean
+  isDev?: boolean
+  activeUser?: string
+}
+
+type BundleBadgesProps = {
+  bundle: BundleOption
+  devMode: boolean
+}
+
+const BundleBadges = ({ bundle, devMode }: BundleBadgesProps) => {
+  const userName = useSelector((state: $Any) => state.user.name)
+
+  let prodBadge = null
+  let stagBadge = null
+  let devBadge = null
+
+  if (bundle.isProduction) {
+    prodBadge = (
+      <DropdownBadge style={{ backgroundColor: 'var(--color-hl-production)' }}>
+        Production
+      </DropdownBadge>
+    )
+  }
+  if (bundle.isStaging) {
+    stagBadge = (
+      <DropdownBadge style={{ backgroundColor: 'var(--color-hl-staging)' }}>Staging</DropdownBadge>
+    )
+  }
+
+  if (devMode && bundle.isDev) {
+    devBadge = (
+      <DropdownBadge style={{ backgroundColor: 'var(--color-hl-developer)' }}>
+        {bundle.activeUser === userName ? 'Active' : 'Dev'}
+      </DropdownBadge>
+    )
+  }
+
+  return (
+    <span>
+      {prodBadge} {stagBadge} {devBadge}
+    </span>
+  )
+}
+
+type BundleDropdownItemProps = {
+  bundle?: BundleOption
+  devMode: boolean
+  isActive?: boolean
+}
+
+const BundleDropdownItem = ({ bundle, devMode, isActive }: BundleDropdownItemProps) => {
+  return (
+    <BundleDropdownItemStyled className={clsx({ active: isActive })}>
+      {bundle?.value}
+      {bundle && <BundleBadges bundle={bundle} devMode={devMode} />}
+    </BundleDropdownItemStyled>
+  )
 }
 
 type BundleDropdownProps = {
@@ -50,46 +123,7 @@ const BundleDropdown = ({
   exclude,
 }: BundleDropdownProps) => {
   const { data: { bundles = [] } = {}, isLoading, isError } = useListBundlesQuery({})
-  const userName = useSelector((state: $Any) => state.user.name)
   const devMode = useSelector((state: $Any) => state.user.attrib.developerMode)
-
-  const formatBundleDropdownItem = (bundle: BundleOption) => {
-    let prodBadge = null
-    let stagBadge = null
-    let devBadge = null
-
-    if (bundle.isProduction) {
-      prodBadge = (
-        <DropdownBadge style={{ backgroundColor: 'var(--color-hl-production)' }}>
-          Production
-        </DropdownBadge>
-      )
-    }
-    if (bundle.isStaging) {
-      stagBadge = (
-        <DropdownBadge style={{ backgroundColor: 'var(--color-hl-staging)' }}>
-          Staging
-        </DropdownBadge>
-      )
-    }
-
-    if (devMode && bundle.isDev) {
-      devBadge = (
-        <DropdownBadge style={{ backgroundColor: 'var(--color-hl-developer)' }}>
-          {bundle.activeUser === userName ? 'Active' : 'Dev'}
-        </DropdownBadge>
-      )
-    }
-
-    return (
-      <BundleDropdownItem>
-        {bundle.value}{' '}
-        <span>
-          {prodBadge} {stagBadge} {devBadge}
-        </span>
-      </BundleDropdownItem>
-    )
-  }
 
   const bundleFilter = (b: BundleModel) => {
     if (exclude?.length && exclude.includes(b.name)) return false
@@ -132,7 +166,17 @@ const BundleDropdown = ({
       placeholder="Select a bundle"
       style={style || { flexGrow: 1 }}
       disabled={disabled}
-      itemTemplate={formatBundleDropdownItem}
+      valueTemplate={(value, _selected, isOpen) => (
+        <DefaultValueTemplateStyled value={value} isOpen={isOpen}>
+          <BundleDropdownItem
+            bundle={bundleOptions.find((b) => b.value === value[0])}
+            devMode={devMode}
+          />
+        </DefaultValueTemplateStyled>
+      )}
+      itemTemplate={(bundle, isActive) => (
+        <BundleDropdownItem bundle={bundle} devMode={devMode} isActive={isActive} />
+      )}
     />
   )
 }
