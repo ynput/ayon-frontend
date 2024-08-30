@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { useSelector } from 'react-redux'
 import { Dropdown } from '@ynput/ayon-react-components'
 
-import { useGetBundleListQuery } from '@queries/bundles/getBundles'
+import { useListBundlesQuery } from '@queries/bundles/getBundles'
 import styled from 'styled-components'
 
 const BundleDropdownItem = styled.div`
@@ -22,7 +22,7 @@ const DropdownBadge = styled.span`
 `
 
 const BundleDropdown = ({ bundleName, setBundleName, disabled, style, setVariant, exclude }) => {
-  const { data, isLoading, isError } = useGetBundleListQuery({})
+  const { data: { bundles = [] } = {}, isLoading, isError } = useListBundlesQuery({})
   const userName = useSelector((state) => state.user.name)
   const devMode = useSelector((state) => state.user.attrib.developerMode)
 
@@ -72,7 +72,7 @@ const BundleDropdown = ({ bundleName, setBundleName, disabled, style, setVariant
 
   const bundleOptions = useMemo(() => {
     if (isLoading || isError) return []
-    return data.filter(bundleFilter).map((bundle) => ({
+    return bundles.filter(bundleFilter).map((bundle) => ({
       value: bundle.name,
       label: bundle.name,
       isProduction: bundle.isProduction,
@@ -80,7 +80,7 @@ const BundleDropdown = ({ bundleName, setBundleName, disabled, style, setVariant
       isDev: bundle.isDev,
       activeUser: bundle.activeUser,
     }))
-  }, [data])
+  }, [bundles])
 
   const handleChange = (e) => {
     const selectedBundle = bundleOptions.find((b) => b.value === e[0])

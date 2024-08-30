@@ -1,7 +1,7 @@
 import { Button, Section } from '@ynput/ayon-react-components'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { useGetAddonListQuery } from '@queries/addons/getAddons'
-import { useGetBundleListQuery } from '@queries/bundles/getBundles'
+import { useListBundlesQuery } from '@queries/bundles/getBundles'
 import { useUpdateBundleMutation } from '@queries/bundles/updateBundles'
 import { useMemo, useState } from 'react'
 import { transformAddonsWithBundles } from './helpers'
@@ -25,7 +25,7 @@ const AddonsManager = () => {
   const navigate = useNavigate()
   // QUERIES
   const { data: addons = [], isLoading } = useGetAddonListQuery()
-  const { data: bundles = [] } = useGetBundleListQuery({ archived: false })
+  const { data: { bundles = [] } = {} } = useListBundlesQuery({ archived: false })
 
   // addon upload dialog
   const [uploadOpen, setUploadOpen] = useState('')

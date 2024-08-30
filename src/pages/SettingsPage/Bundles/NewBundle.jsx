@@ -11,7 +11,7 @@ import BundleDeps from './BundleDeps'
 import useAddonSelection from './useAddonSelection'
 import { useSearchParams } from 'react-router-dom'
 import Shortcuts from '@containers/Shortcuts'
-import { useCheckBundleQuery } from '@queries/bundles/getBundles'
+import { useCheckBundleCompatibilityQuery } from '@queries/bundles/getBundles'
 import BundleChecks from './BundleChecks/BundleChecks'
 import usePrevious from '@hooks/usePrevious'
 
@@ -52,16 +52,17 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading, isDev, d
   }, [formData])
 
   const {
-    data: bundleCheckData,
+    data: bundleCheckData = {},
     isFetching: isFetchingCheck,
     isError: isCheckError,
-  } = useCheckBundleQuery(
+  } = useCheckBundleCompatibilityQuery(
     {
-      bundle: formData,
+      bundleModel: formData,
     },
     { skip: !formData || skipBundleCheck },
   )
-  const bundleCheckError = bundleCheckData?.issues?.some((issue) => issue.severity === 'error')
+
+  const bundleCheckError = bundleCheckData.issues?.some((issue) => issue.severity === 'error')
 
   //   build initial form data
   useEffect(() => {

@@ -1,6 +1,6 @@
 overwrite: true
 schema:
-  - http://localhost:3000/graphql:
+  - https://test.ayon.dev/graphql:
       headers:
         Authorization: Bearer ${TOKEN}
 documents: '../src/**/*.graphql'
@@ -24,7 +24,7 @@ generates:
       - typescript-operations
       - typescript-rtk-query:
           importBaseApiFrom: './rest'
-          importBaseApiAlternateName: 'restApi'
+          importBaseApiAlternateName: 'api'
   ./graphql.schema.json:
     plugins:
       - 'introspection'
