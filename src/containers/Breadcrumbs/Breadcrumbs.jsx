@@ -8,6 +8,7 @@ import { upperFirst } from 'lodash'
 import copyToClipboard from '@helpers/copyToClipboard'
 import { useURIContext } from '@context/uriContext'
 import { ayonUrlParam } from '@/constants'
+import clsx from 'clsx'
 
 const uri2crumbs = (uri = '', pathname) => {
   // parse uri to path and query params
@@ -146,7 +147,7 @@ const Breadcrumbs = () => {
   return (
     <Styled.Wrapper>
       <Styled.Crumbtainer>
-        <Styled.CrumbsForm onSubmit={goThere}>
+        <Styled.CrumbsForm onSubmit={goThere} className={clsx({ noUri: !uriDisplay || !localUri })}>
           {uriDisplay && localUri && (
             <Button
               icon="edit"
@@ -173,16 +174,16 @@ const Breadcrumbs = () => {
               style={{ borderRadius: '4px 0 0 4px' }}
             />
           </label>
+          <Button
+            icon="arrow_forward"
+            style={{
+              display: editMode ? 'inline-flex' : 'none',
+              borderRadius: '0 4px 4px 0',
+            }}
+            onMouseDown={goThere}
+            variant="tonal"
+          />
         </Styled.CrumbsForm>
-        <Button
-          icon="arrow_forward"
-          style={{
-            display: !editMode ? 'none' : 'inline-flex',
-            borderRadius: '0 4px 4px 0',
-          }}
-          onMouseDown={goThere}
-          variant="tonal"
-        />
         {uriDisplay && localUri && (
           <Button
             icon="content_copy"

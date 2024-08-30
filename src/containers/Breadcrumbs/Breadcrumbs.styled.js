@@ -27,14 +27,17 @@ export const CrumbsForm = styled.form`
   *::after {
     box-sizing: border-box;
   }
+  &:focus-within, &.noUri {
+    border-radius: 4px;
+  }
   &:hover {
     background-color: var(--md-sys-color-secondary-container-hover);
   }
 
-  button {
+  button, button:hover {
     display: inline-flex;
     background-color: transparent;
-    padding: '6px',
+    padding: '6px';
   }
 
   label {
