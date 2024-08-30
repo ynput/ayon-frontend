@@ -53,7 +53,7 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading, isDev, d
     isError: isCheckError,
   } = useCheckBundleCompatibilityQuery(
     {
-      bundle: formData,
+      bundleModel: formData,
     },
     { skip: !formData || skipBundleCheck },
   )
