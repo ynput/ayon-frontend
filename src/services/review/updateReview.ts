@@ -1,10 +1,8 @@
-import {
-  DeleteProjectActivityApiResponse,
-  DeleteProjectActivityApiArg,
-  ReviewableModel,
-} from '@/api/rest'
-import api from '@api'
+import { DeleteProjectActivityApiResponse, DeleteProjectActivityApiArg } from '@/api/rest'
+import api from './getReview'
+import baseApi from '@api'
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
+import { ReviewableResponse } from './types'
 
 const injectedEndpoints = api.injectEndpoints({
   endpoints: (build) => ({
@@ -13,7 +11,7 @@ const injectedEndpoints = api.injectEndpoints({
         queryFn: async (args, { dispatch }) => {
           try {
             // get list of installed addons
-            const res = await dispatch(api.endpoints.deleteProjectActivity.initiate(args))
+            const res = await dispatch(baseApi.endpoints.deleteProjectActivity.initiate(args))
 
             if (res.error) {
               return { error: res.error as FetchBaseQueryError }
@@ -46,7 +44,7 @@ const enhancedEndpoints = injectedEndpoints.enhanceEndpoints({
             (draft) => {
               const sortingOrder = sortReviewablesRequest.sort
               // Create a new array to store the reordered reviewables
-              const newReviewables: ReviewableModel[] = []
+              const newReviewables: ReviewableResponse[] = []
 
               // Create a Set to track activityIds that are in the sortingOrder
               const orderedIds = new Set(sortingOrder)

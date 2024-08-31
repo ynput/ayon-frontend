@@ -4,7 +4,10 @@ import { $Any } from '@types'
 import axios from 'axios'
 // queries
 import api from '@api'
-import { useGetReviewablesForVersionQuery, useHasTranscoderQuery } from '@queries/review/getReview'
+import reviewApi, {
+  useGetReviewablesForVersionQuery,
+  useHasTranscoderQuery,
+} from '@queries/review/getReview'
 import {
   useDeleteReviewableMutation,
   useSortVersionReviewablesMutation,
@@ -249,13 +252,14 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
 
             dispatch(
               // @ts-ignore
-              api.util.updateQueryData(
+              reviewApi.util.updateQueryData(
                 'getReviewablesForVersion',
                 { projectName, versionId },
                 (draft) => {
                   if (!draft.reviewables) {
                     draft.reviewables = []
                   }
+                  // @ts-ignore
                   draft.reviewables.push(data)
                 },
               ),
