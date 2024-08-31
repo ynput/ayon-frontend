@@ -1,6 +1,7 @@
 import { GetKanbanProjectUsersQuery, GetKanbanQuery } from '@/api/graphql'
 import { $Any } from '@/types'
 import api from '@api'
+import getProjectApi from '@queries/project/getProject'
 import PubSub from '@/pubsub'
 import convertAccessGroupsData, { AccessGroups } from '@/helpers/convertAccessGroupsData'
 
@@ -18,6 +19,7 @@ export type GetKanbanProjectUsersResponse = KanbanProjectUserNode[]
 import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
 import getUserProjectsAccess from './getUserProjectsAccess'
 import { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
+
 type Definitions = DefinitionsFromApi<typeof api>
 type TagTypes = TagTypesFromApi<typeof api>
 // update the definitions to include the new types
@@ -235,7 +237,7 @@ const injectedDashboardRestApi = api.injectEndpoints({
             // hopefully this will be cached
             // it also allows for different combination of projects but still use the cache
             const response = await dispatch(
-              api.endpoints.getProjectAnatomy.initiate(
+              getProjectApi.endpoints.getProjectAnatomy.initiate(
                 { projectName: project },
                 { forceRefetch: false },
               ),
