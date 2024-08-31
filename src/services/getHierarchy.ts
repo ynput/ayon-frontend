@@ -1,4 +1,4 @@
-import api from '@api'
+import { api } from '@api/rest/folders'
 import { FolderListModel } from '@api/rest'
 
 const enhancedApi = api.enhanceEndpoints({

@@ -3,6 +3,7 @@ import type { ConfigFile } from '@rtk-query/codegen-openapi'
 // Specify the endpoints you want to generate
 const outputFiles = {
   bundles: ['listBundles', 'checkBundleCompatibility'],
+  folders: ['getFolderHierarchy', 'getFolderList'],
 }
 
 const buildOutputFiles = (files: { [name: string]: string[] }) =>
