@@ -1,8 +1,8 @@
-import api from '@/api'
 import {
+  api,
   ListAvailableActionsForContextApiArg,
   ListAvailableActionsForContextApiResponse,
-} from '@/api/rest'
+} from '@/api/rest/actions'
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 
 const injectedActionsRest = api.injectEndpoints({
