@@ -1,18 +1,11 @@
-import {
-  FormLayout,
-  FormRow,
-  InputText,
-  SaveButton,
-  Spacer,
-  Dialog,
-} from '@ynput/ayon-react-components'
+import { FormLayout, FormRow, InputText, SaveButton, Dialog } from '@ynput/ayon-react-components'
 import { useMemo, useState } from 'react'
-import { useCreateAccessGroupMutation } from '@queries/accessGroups/updateAccessGroups'
+import { useSaveAccessGroupMutation } from '@queries/accessGroups/updateAccessGroups'
 import { toast } from 'react-toastify'
 
 const NewAccessGroup = ({ onClose, accessGroupList }) => {
   const [accessGroupName, setAccessGroupName] = useState('')
-  const [createAccessGroup] = useCreateAccessGroupMutation()
+  const [createAccessGroup] = useSaveAccessGroupMutation()
 
   const accessGroupNames = useMemo(
     () => accessGroupList.map((i) => i?.name.toLowerCase()),
@@ -21,7 +14,7 @@ const NewAccessGroup = ({ onClose, accessGroupList }) => {
 
   const onSubmit = async (close) => {
     try {
-      await createAccessGroup({ name: accessGroupName }).unwrap()
+      await createAccessGroup({ accessGroupName, projectName: '_', data: {} }).unwrap()
 
       close && onClose(accessGroupName)
     } catch (error) {

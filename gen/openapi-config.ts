@@ -17,6 +17,13 @@ const outputFiles = {
     'updateReviewable',
   ],
   actions: ['listAvailableActionsForContext', 'executeAction'],
+  accessGroups: [
+    'getAccessGroupSchema',
+    'getAccessGroups',
+    'getAccessGroup',
+    'deleteAccessGroup',
+    'saveAccessGroup',
+  ],
 }
 
 const buildOutputFiles = (files: { [name: string]: string[] }) =>
