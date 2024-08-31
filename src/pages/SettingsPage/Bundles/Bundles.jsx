@@ -283,8 +283,24 @@ const Bundles = () => {
       // before updating status, check if we need to copy settings
       if (newActive) {
         // source is the current bundle that matches statusKey
-        const source = bundleList.find((b) => b.name !== name && b[statusKey])
-        await openCopySettingsWithPromise({ bundle: patch, env: status, source: source.name })
+        let source = bundleList.find((b) => b.name !== name && b[statusKey])
+
+        // if no source, use the other status
+        if (!source) {
+          statusKey === 'isProduction'
+            ? (source = bundleList.find((b) => b.isStaging))
+            : (source = bundleList.find((b) => b.isProduction))
+        }
+
+        // if still no source and developerMode is enabled, use the dev bundle
+        if (!source && developerMode) {
+          source = bundleList.find((b) => b.isDev)
+        }
+
+        // no source at all, do not open copy settings dialog
+        if (source) {
+          await openCopySettingsWithPromise({ bundle: patch, env: status, source: source?.name })
+        }
       }
 
       if (newActive) {
@@ -312,6 +328,7 @@ const Bundles = () => {
 
       toast.success(upperFirst(message))
     } catch (error) {
+      console.error(error)
       toast.error(`Error setting ${message}`)
       // revert optimistic update if failed to set new bundle
       patchResult?.undo()

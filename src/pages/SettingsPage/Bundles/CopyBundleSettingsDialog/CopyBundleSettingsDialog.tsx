@@ -115,7 +115,7 @@ const CopyBundleSettingsDialog = ({
       footer={footer}
       isOpen
       size="md"
-      onClose={handleClose}
+      onClose={() => {}}
       hideCancelButton
     >
       <div className="cards">
