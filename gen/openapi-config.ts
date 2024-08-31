@@ -5,6 +5,18 @@ const outputFiles = {
   bundles: ['listBundles', 'checkBundleCompatibility'],
   folders: ['getFolderHierarchy', 'getFolderList'],
   market: ['marketAddonList', 'marketAddonDetail', 'marketAddonVersionDetail'],
+  watchers: ['getEntityWatchers', 'setEntityWatchers'],
+  inbox: ['manageInboxItem'],
+  project: ['getProject', 'listProjects', 'getProjectAnatomy'],
+  review: [
+    'getReviewablesForVersion',
+    'getReviewablesForProduct',
+    'getReviewablesForTask',
+    'getReviewablesForFolder',
+    'sortVersionReviewables',
+    'updateReviewable',
+  ],
+  actions: ['listAvailableActionsForContext', 'executeAction'],
 }
 
 const buildOutputFiles = (files: { [name: string]: string[] }) =>

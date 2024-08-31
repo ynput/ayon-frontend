@@ -9,7 +9,7 @@
  * for this file to be re-created
  */
 
-import { api } from './rest';
+import { RestAPI } from '../services/ayon';
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
@@ -1528,7 +1528,7 @@ export const GetKanbanTasksDocument = `
 }
     ${KanbanFragmentFragmentDoc}`;
 
-const injectedRtkApi = api.injectEndpoints({
+const injectedRtkApi = RestAPI.injectEndpoints({
   endpoints: (build) => ({
     GetProductVersions: build.query<GetProductVersionsQuery, GetProductVersionsQueryVariables>({
       query: (variables) => ({ document: GetProductVersionsDocument, variables })

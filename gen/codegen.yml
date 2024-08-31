@@ -23,8 +23,8 @@ generates:
              */
       - typescript-operations
       - typescript-rtk-query:
-          importBaseApiFrom: './rest'
-          importBaseApiAlternateName: 'api'
+          importBaseApiFrom: '../services/ayon'
+          importBaseApiAlternateName: 'RestAPI'
   ./graphql.schema.json:
     plugins:
       - 'introspection'
