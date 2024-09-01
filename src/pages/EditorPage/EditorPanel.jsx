@@ -146,23 +146,25 @@ const EditorPanel = ({
   //   checking if any other types don't match the first one
   const hasMixedTypes = types.length > 1
 
-  const createInitialForm = () => {
-    const getParentValue = (nodeId, attribName) => {
-      if (!editorNodes[nodeId]) {
-        return null
-      }
-      if (
-        editorNodes[nodeId].data.attrib[attribName] != null &&
-        editorNodes[nodeId].data.ownAttrib.includes(attribName)
-      ) {
-        return editorNodes[nodeId].data.attrib[attribName]
-      }
-      if (editorNodes[nodeId].data.__parentId == 'root') {
-        return null
-      }
-
-      return getParentValue(editorNodes[nodeId].data.__parentId)
+  const getParentValue = (nodeId, attribName) => {
+    if (!editorNodes[nodeId]) {
+      return null
     }
+    if (
+      editorNodes[nodeId].data.attrib[attribName] != null &&
+      editorNodes[nodeId].data.ownAttrib.includes(attribName)
+    ) {
+      return editorNodes[nodeId].data.attrib[attribName]
+    }
+
+    if (editorNodes[nodeId].data.__parentId == 'root') {
+      return null
+    }
+
+    return getParentValue(editorNodes[nodeId].data.__parentId, attribName)
+  }
+
+  const createInitialForm = () => {
     const statusValues = getFieldValue('status', '_status')
     const nameValues = getFieldValue('name', '_name')
     const labelValues = getFieldValue('label', '_label')
@@ -415,7 +417,9 @@ const EditorPanel = ({
         // dif value or multipleValues
         const ownValue = nodes[id]?.data.ownAttrib.includes(changeKey)
 
-        const isSame = (!ownValue && newValue === null) || (ownValue&& ogValue === newValue )
+        const isSame =
+          (!ownValue && (newValue === null || isEqual(newValue, []))) ||
+          (ownValue && isEqual(ogValue, newValue))
         isChanged = !isSame
 
         // stop looping if isChanged is ever true
@@ -477,7 +481,6 @@ const EditorPanel = ({
         }
         // only update again if old !== new
         if (oldChanges !== row.value) {
-          // console.log('change')
           handleGlobalChange(row.value, row.changeKey)
         }
       } else {
@@ -673,6 +676,20 @@ const EditorPanel = ({
                     />
                   )
                 } else if (attrib?.enum) {
+                const getInheritLabel = (attrib, parentValue, isMultiSelect) => {
+                  if (!parentValue) {
+                    return
+                  }
+                  if (!isMultiSelect) {
+                    return (
+                      attrib.enum.filter((el) => el.value === parentValue)[0]?.label +
+                        ' (inherited)' || null
+                    )
+                  }
+                  const labels = attrib.enum?.filter((el) => parentValue.includes(el.value)).map((el) => el.label || el.value)
+                  return `(${labels.length} - inherited) ${labels.join(', ')}`
+                }
+
                   // dropdown
                   const isMultiSelect = ['list_of_strings'].includes(attrib?.type)
                   let enumValue = isMultiSelect ? value : [value]
@@ -681,24 +698,30 @@ const EditorPanel = ({
                   }
 
                   let options = attrib.enum
-                  const inheritedOptionLabel = attrib.enum.filter(el => el.value === parentValue)[0]?.label  + ' (inherited)'|| null
+                  const inheritedOptionLabel = getInheritLabel(attrib, parentValue, isMultiSelect)
                   if (inheritedOptionLabel) {
-                    options = [{value: null, label: inheritedOptionLabel}, ...attrib.enum, ]
                     placeholder = inheritedOptionLabel
+                    if (!isMultiSelect) {
+                      options = [
+                        { value: isMultiSelect ? [] : null, label: inheritedOptionLabel },
+                        ...attrib.enum,
+                      ]
+                    }
                   }
 
                   // never show value when inherited, just show placeholder
                   if (!isOwn) enumValue = null
                   input = (
                     <Dropdown
-                      style={{ flexGrow: 1,
+                      style={{
+                        flexGrow: 1,
                         fontStyle: isOwn ? 'normal' : 'italic',
                         color: isChanged
                           ? 'var(--color-on-changed)'
                           : !isOwn
                           ? 'var(--md-ref-palette-neutral-variant60'
                           : 'var(--md-sys-color-on-surface-variant)',
-                       }}
+                      }}
                       value={enumValue}
                       isChanged={isChanged}
                       options={options}
@@ -710,7 +733,7 @@ const EditorPanel = ({
                       emptyMessage={`Select option${isMultiSelect ? 's' : ''}...`}
                       multipleValues={!!multipleValues}
                       onClear={
-                        field !== 'attrib.tools' && isMultiSelect
+                        isMultiSelect
                           ? (value) => handleLocalChange(value, changeKey, field)
                           : undefined
                       }
