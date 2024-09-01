@@ -147,6 +147,22 @@ const EditorPanel = ({
   const hasMixedTypes = types.length > 1
 
   const createInitialForm = () => {
+    const getParentValue = (nodeId, attribName) => {
+      if (!editorNodes[nodeId]) {
+        return null
+      }
+      if (
+        editorNodes[nodeId].data.attrib[attribName] != null &&
+        editorNodes[nodeId].data.ownAttrib.includes(attribName)
+      ) {
+        return editorNodes[nodeId].data.attrib[attribName]
+      }
+      if (editorNodes[nodeId].data.__parentId == 'root') {
+        return null
+      }
+
+      return getParentValue(editorNodes[nodeId].data.__parentId)
+    }
     const statusValues = getFieldValue('status', '_status')
     const nameValues = getFieldValue('name', '_name')
     const labelValues = getFieldValue('label', '_label')
@@ -255,6 +271,7 @@ const EditorPanel = ({
         isChanged,
         isOwn,
         value,
+        parentValue: getParentValue(nodeIds[0], attrib.name),
         label: data?.title,
         attrib: attrib.data,
       }
@@ -371,48 +388,59 @@ const EditorPanel = ({
       newForm = formState
     }
     // check key is in form
-    if (changeKey in form) {
-      const oldValue = newForm[changeKey]
-      const type = oldValue?.attrib?.type
-      let newValue = value
+    if (!(changeKey in form)) {
+      return
+    }
 
-      if (type === 'datetime' && value) {
-        newValue = new Date(value)
-        newValue = newValue.toISOString()
-      }
+    const oldValue = newForm[changeKey]
+    const type = oldValue?.attrib?.type
+    let newValue = value
 
-      let isChanged = true
+    if (type === 'datetime' && value) {
+      newValue = new Date(value)
+      newValue = newValue.toISOString()
+    }
 
-      if (!oldValue?.multipleValues && !oldValue?.__new) {
-        for (const id of nodeIds) {
-          const ogValue = getFieldInObject(field, nodes[id]?.data)
+    let isChanged = true
 
-          // if value undefined or it's a new node skip
-          // (always changed)
-          if (!ogValue || nodes[id]?.__new) break
+    if (!oldValue?.multipleValues && !oldValue?.__new) {
+      for (const id of nodeIds) {
+        const ogValue = getFieldInObject(field, nodes[id]?.data)
+        // if value undefined or it's a new node skip
+        // (always changed)
+        if (!ogValue || nodes[id]?.__new) {
+          break
+        }
 
-          // dif value or multipleValues
-          isChanged = ogValue?.toString() !== newValue
+        // dif value or multipleValues
+        const ownValue = nodes[id]?.data.ownAttrib.includes(changeKey)
 
-          // stop looping if isChanged is ever true
-          if (isChanged) break
+        const isSame = (!ownValue && newValue === null) || (ownValue&& ogValue === newValue )
+        isChanged = !isSame
+
+        // stop looping if isChanged is ever true
+        if (isChanged) {
+          break
         }
       }
-
-      newForm[changeKey] = {
-        ...newForm[changeKey],
-        value: newValue,
-        isChanged,
-        isOwn: true,
-        multipleValues: oldValue?.multipleValues && !isChanged,
-      }
-
-      setLocalChange(true)
-
-      if (setFormNew) return setFormNew(newForm)
-      // update state
-      setForm(newForm)
     }
+
+    newForm[changeKey] = {
+      ...newForm[changeKey],
+      value: newValue,
+      isChanged,
+      isOwn: true,
+      multipleValues: oldValue?.multipleValues && !isChanged,
+    }
+
+    setLocalChange(true)
+
+    if (setFormNew) {
+      setFormNew(newForm)
+      return
+    }
+    // update state
+    setForm(newForm)
   }
 
   // save and sync changes with table (global redux)
@@ -540,6 +568,7 @@ const EditorPanel = ({
                   field,
                   attrib,
                   value,
+                  parentValue,
                   isChanged,
                   isOwn,
                   multipleValues,
@@ -651,14 +680,28 @@ const EditorPanel = ({
                     enumValue = isMultiSelect ? union(...multipleValues) : multipleValues
                   }
 
+                  let options = attrib.enum
+                  const inheritedOptionLabel = attrib.enum.filter(el => el.value === parentValue)[0]?.label  + ' (inherited)'|| null
+                  if (inheritedOptionLabel) {
+                    options = [{value: null, label: inheritedOptionLabel}, ...attrib.enum, ]
+                    placeholder = inheritedOptionLabel
+                  }
+
                   // never show value when inherited, just show placeholder
                   if (!isOwn) enumValue = null
                   input = (
                     <Dropdown
-                      style={{ flexGrow: 1 }}
+                      style={{ flexGrow: 1,
+                        fontStyle: isOwn ? 'normal' : 'italic',
+                        color: isChanged
+                          ? 'var(--color-on-changed)'
+                          : !isOwn
+                          ? 'var(--md-ref-palette-neutral-variant60'
+                          : 'var(--md-sys-color-on-surface-variant)',
+                       }}
                       value={enumValue}
                       isChanged={isChanged}
-                      options={attrib?.enum}
+                      options={options}
                       onChange={(v) =>
                         handleLocalChange(isMultiSelect ? v : v[0], changeKey, field)
                       }
@@ -671,8 +714,8 @@ const EditorPanel = ({
                           ? (value) => handleLocalChange(value, changeKey, field)
                           : undefined
                       }
-                      onClearNull={(value) => handleLocalChange(value, changeKey, field)}
-                      nullPlaceholder="(inherited)"
+                      placeholder={inheritedOptionLabel}
+                      nullPlaceholder={inheritedOptionLabel}
                       search={attrib?.enum?.length > 10}
                     />
                   )
