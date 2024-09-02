@@ -37,7 +37,7 @@ const Bundles = () => {
   const [newBundleOpen, setNewBundleOpen] = useState(null)
 
   // show copy settings dialog
-  const initCopySettingsBundle = { env: null, bundle: null, source: null }
+  const initCopySettingsBundle = { env: null, bundle: null }
   const [copySettingsBundle, setCopySettingsBundle] = useState(initCopySettingsBundle)
   const [copySettingsPromise, setCopySettingsPromise] = useState(null)
   const openCopySettingsWithPromise = async (data) => {
@@ -299,7 +299,7 @@ const Bundles = () => {
 
         // no source at all, do not open copy settings dialog
         if (source) {
-          await openCopySettingsWithPromise({ bundle: patch, env: status, source: source?.name })
+          await openCopySettingsWithPromise({ bundle: patch, env: status })
         }
       }
 
@@ -402,7 +402,6 @@ const Bundles = () => {
       <CopyBundleSettingsDialog
         bundle={copySettingsBundle.bundle}
         envTarget={copySettingsBundle.env}
-        source={copySettingsBundle.source}
         devMode={developerMode}
         onCancel={closeCopySettings}
         onFinish={closeCopySettings}
@@ -469,7 +468,6 @@ const Bundles = () => {
                   setCopySettingsBundle({
                     bundle: b,
                     env: null,
-                    source: b.isProduction ? stageBundle?.name : prodBundle?.name,
                   })
                 }
               />

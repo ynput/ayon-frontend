@@ -16,31 +16,24 @@ import { BundleModel } from '@api/rest'
 // Other imports
 import { toast } from 'react-toastify'
 import * as Styled from './CopyBundleSettingsDialog.styled'
+import CopyBundleSettingsDropdown from './CopyBundleSettingsDropdown'
 
 type DialogBodyProps = {
   onCancel: () => void
   onFinish: () => void
   bundle?: BundleModel | null
   envTarget?: string | null // has the bundle just been set to production, staging, or dev
-  source: string // default production bundle otherwise staging
   devMode: boolean
 }
 
 const CopyBundleSettingsDialog = ({
   bundle,
   envTarget,
-  source,
   onCancel,
   onFinish,
   devMode,
 }: DialogBodyProps) => {
-  const [sourceBundle, setSourceBundle] = useState(source)
-
-  // update the source bundle when the bundle changes
-  useEffect(() => {
-    setSourceBundle(source)
-  }, [source])
-
+  const [sourceBundle, setSourceBundle] = useState<string | null>(null)
   const [sourceVariant, setSourceVariant] = useState('production')
 
   const { data: { bundles = [] } = {} } = useListBundlesQuery({})
@@ -50,10 +43,50 @@ const CopyBundleSettingsDialog = ({
     [bundles],
   )
 
+  const currentStagingBundle = useMemo(
+    () => bundles?.find((b) => b?.isStaging && !b?.isArchived),
+    [bundles],
+  )
+
   useEffect(() => {
-    if (!currentProductionBundle) return
-    setSourceBundle(currentProductionBundle?.name)
-  }, [currentProductionBundle])
+    const determineVariantAndBundle = () => {
+      if (envTarget === 'production' && currentProductionBundle) {
+        return { variant: 'production', bundleName: currentProductionBundle.name }
+      }
+      if (envTarget === 'staging' && currentStagingBundle) {
+        return { variant: 'staging', bundleName: currentStagingBundle.name }
+      }
+
+      // Handle case when envTarget is not set
+      if (!envTarget && bundle) {
+        if (bundle.isProduction && currentStagingBundle) {
+          return { variant: 'staging', bundleName: currentStagingBundle.name }
+        }
+        if (!bundle.isProduction && currentProductionBundle) {
+          return { variant: 'production', bundleName: currentProductionBundle.name }
+        }
+      }
+
+      // Fallback to available bundle
+      if (currentProductionBundle) {
+        return { variant: 'production', bundleName: currentProductionBundle.name }
+      }
+      if (currentStagingBundle) {
+        return { variant: 'staging', bundleName: currentStagingBundle.name }
+      }
+
+      // if there is nothing to copy from, hide the dialog
+      return null
+    }
+
+    const bundleInfo = determineVariantAndBundle()
+    if (bundleInfo) {
+      setSourceVariant(bundleInfo.variant)
+      setSourceBundle(bundleInfo.bundleName)
+    } else {
+      onCancel()
+    }
+  }, [currentProductionBundle, envTarget, currentStagingBundle, bundle])
 
   const handleClose = () => {
     onCancel()
@@ -64,6 +97,7 @@ const CopyBundleSettingsDialog = ({
   const handleConfirm = async () => {
     console.log('copying settings over')
     try {
+      if (!sourceBundle || !sourceVariant) throw new Error('Bundle not found')
       if (!bundle || !envTarget) throw new Error('Bundle not found')
       await migrateSettingsByBundle({
         migrateBundleSettingsRequest: {
@@ -109,6 +143,19 @@ const CopyBundleSettingsDialog = ({
 
   if (!bundle) return null
 
+  let exclude = []
+  const excludeBundleName = bundle.name
+  // we cannot copy same bundle and same variant into itself
+  if (bundle.isProduction) {
+    exclude.push(excludeBundleName + '__production')
+  }
+  if (bundle.isStaging) {
+    exclude.push(excludeBundleName + '__staging')
+  }
+  if (bundle.isDev) {
+    exclude.push(excludeBundleName + '__dev')
+  }
+
   return (
     <FriendlyDialog
       header={header}
@@ -122,12 +169,15 @@ const CopyBundleSettingsDialog = ({
         <Styled.BundleCard>
           <Styled.Row>
             <span>Bundle:</span>
-            <Styled.BundleSelect
-              bundleName={sourceBundle}
-              setBundleName={setSourceBundle}
-              setVariant={setSourceVariant}
-              exclude={[bundle.name]}
-              activeOnly
+            <CopyBundleSettingsDropdown
+              bundles={bundles}
+              bundle={sourceBundle}
+              variant={sourceVariant}
+              exclude={exclude}
+              onBundleChange={(b, v) => {
+                setSourceBundle(b)
+                setSourceVariant(v)
+              }}
             />
           </Styled.Row>
         </Styled.BundleCard>

@@ -1,4 +1,3 @@
-import BundleDropdown from '@containers/BundleDropdown'
 import { Dialog, theme } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
@@ -71,15 +70,6 @@ export const Row = styled.div`
   display: flex;
   align-items: center;
   gap: var(--base-gap-large);
-`
-
-export const BundleSelect = styled(BundleDropdown)`
-  button {
-    background-color: unset;
-    .template-value {
-      border: none;
-    }
-  }
 `
 
 export const TargetBundle = styled.span`

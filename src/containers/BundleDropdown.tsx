@@ -8,13 +8,14 @@ import { BundleModel } from '@api/rest/bundles'
 import { $Any } from '@types'
 import clsx from 'clsx'
 
-const BundleDropdownItemStyled = styled.div`
+export const BundleDropdownItemStyled = styled.div`
   width: 100%;
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
   padding: 4px 8px;
+  padding-right: 12px;
 
   &.active {
     background-color: var(--md-sys-color-primary-container);
@@ -26,7 +27,7 @@ const BundleDropdownItemStyled = styled.div`
   }
 `
 
-const DefaultValueTemplateStyled = styled(DefaultValueTemplate)`
+export const DefaultValueTemplateStyled = styled(DefaultValueTemplate)`
   padding-left: 0;
   & > div > span {
     flex: 1;
@@ -46,7 +47,7 @@ const DropdownBadge = styled.span`
   color: black;
 `
 
-type BundleOption = {
+export type BundleOption = {
   value: string
   label: string
   isProduction?: boolean
@@ -114,7 +115,7 @@ type BundleDropdownItemProps = {
 export const BundleDropdownItem = ({ bundle, devMode, isActive }: BundleDropdownItemProps) => {
   return (
     <BundleDropdownItemStyled className={clsx({ active: isActive })}>
-      {bundle?.value}
+      {bundle?.label}
       {bundle && <BundleBadges bundle={bundle} devMode={devMode} />}
     </BundleDropdownItemStyled>
   )

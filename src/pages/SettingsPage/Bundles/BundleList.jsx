@@ -10,7 +10,6 @@ import confirmDelete from '@helpers/confirmDelete'
 import { toast } from 'react-toastify'
 import clsx from 'clsx'
 import userTableLoadingData from '@hooks/userTableLoadingData'
-import CopyBundleSettingsDialog from './CopyBundleSettingsDialog/CopyBundleSettingsDialog'
 
 const BundleList = ({
   selectedBundles = [],
@@ -23,6 +22,9 @@ const BundleList = ({
   errorMessage,
   developerMode,
 }) => {
+  const prodBundleName = useMemo(() => bundleList.find((b) => b.isProduction)?.name, [bundleList])
+  const stagingBundleName = useMemo(() => bundleList.find((b) => b.isStaging)?.name, [bundleList])
+
   const [updateBundle] = useUpdateBundleMutation()
   const [deleteBundle] = useDeleteBundleMutation()
 
@@ -124,11 +126,24 @@ const BundleList = ({
       disabled: selectedBundles.length > 1,
     })
 
+    const resolveCanCopySettings = () => {
+      // Check if the selected bundle has staging status and there is a production bundle available
+      const noProd = isStaging && !prodBundleName
+
+      // Check if the selected bundle has production status and there is a staging bundle available
+      const noStag = isProduction && !stagingBundleName
+
+      // bundle is not production or staging or dev
+      const notActive = !isProduction && !isStaging && !isDev
+
+      return selectedBundles.length > 1 || noProd || noStag || notActive
+    }
+
     ctxMenuItems.push({
       label: 'Copy settings from...',
       icon: 'system_update_alt',
       command: () => onCopySettings(activeBundle),
-      disabled: selectedBundles.length !== 1 || !(isStaging || isProduction || isDev),
+      disabled: resolveCanCopySettings(),
     })
 
     const newSelectedBundles = bundleList.filter((b) => newSelection.includes(b.name))
@@ -215,7 +230,6 @@ const BundleList = ({
         />
         <Column header="Status" body={formatStatus} style={{ maxWidth: 130 }} />
       </DataTable>
-      <CopyBundleSettingsDialog />
     </TablePanel>
   )
 }
