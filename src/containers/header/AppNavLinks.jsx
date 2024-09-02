@@ -4,6 +4,8 @@ import { useSelector } from 'react-redux'
 import { NavLink, useNavigate, useParams } from 'react-router-dom'
 import * as Styled from './AppNavLinks.styled'
 import Typography from '@/theme/typography.module.css'
+import { replaceQueryParams } from '@helpers/url'
+import { ayonUrlParam } from '@/constants'
 
 const AppNavLinks = ({ links = [] }) => {
   // item = { name: 'name', path: 'path', node: node | 'spacer', accessLevel: [] }
@@ -11,6 +13,10 @@ const AppNavLinks = ({ links = [] }) => {
   const { module } = useParams()
   const isManager = useSelector((state) => state.user.data.isManager)
   const isAdmin = useSelector((state) => state.user.data.isAdmin)
+  const uri = useSelector((state) => state.context.uri)
+
+  const appendUri = (path) =>
+    uri ? replaceQueryParams(path, { [ayonUrlParam]: encodeURIComponent(uri) }) : path
 
   const access = {
     manager: isManager || isAdmin,
@@ -47,6 +53,7 @@ const AppNavLinks = ({ links = [] }) => {
               name,
               startContent,
               endContent,
+              uriSync,
               ...props
             } = {},
             idx,
@@ -68,7 +75,7 @@ const AppNavLinks = ({ links = [] }) => {
 
             return (
               <Styled.NavItem key={idx} data-shortcut={shortcut} data-tooltip={tooltip} {...props}>
-                <NavLink to={path}>
+                <NavLink to={uriSync ? appendUri(path) : path}>
                   <Button variant="nav" className={Typography.titleSmall} tabIndex={-1}>
                     {startContent && startContent}
                     {name}

@@ -27,7 +27,7 @@ import { setupListeners } from '@reduxjs/toolkit/query'
 import short from 'short-uuid'
 import { SocketProvider } from '@context/websocketContext'
 import localStorageMiddleware from '@state/middleware/localStorageMiddleware'
-import searchParamsMiddleware from './features/middleware/searchParamsMiddleware'
+import searchParamsMiddleware, { updateUrlOnUriChange } from './features/middleware/searchParamsMiddleware'
 
 // generate unique session id
 window.senderId = short.generate()
@@ -54,7 +54,8 @@ const store = configureStore({
           ...detailsLocalItems,
         }),
       )
-      .concat(searchParamsMiddleware({ ...viewerSearchParams })),
+      .concat(searchParamsMiddleware({ ...viewerSearchParams }))
+      .concat(updateUrlOnUriChange())
 })
 
 setupListeners(store.dispatch)
