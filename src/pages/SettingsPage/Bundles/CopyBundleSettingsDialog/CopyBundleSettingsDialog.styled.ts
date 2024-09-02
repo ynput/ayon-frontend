@@ -41,6 +41,7 @@ export const FriendlyDialog = styled(Dialog)`
     .overrides {
       ${theme.labelLarge}
       margin-top: 16px;
+      color: var(--md-sys-color-outline);
     }
   }
 `

@@ -124,15 +124,17 @@ const CopyBundleSettingsDialog = ({
     <>
       <span className="title">{title}</span>
       <span className="message">
-        Addons do not share settings between different versions automatically. Would you like to
-        copy the settings from an existing bundle to maintain the addon settings from the versions
-        used there?
+        Addons do not share settings between different versions automatically.
+      </span>
+      <span className="message">
+        Here you can choose to apply all studio, project and site settings from the source to the
+        target bundle automatically.
       </span>
     </>
   )
 
   const confirmActive = !!sourceBundle && !!sourceVariant
-  const cancelLabel = envTarget ? 'Do not copy now' : 'Cancel'
+  const cancelLabel = envTarget ? 'Do not copy' : 'Cancel'
 
   const footer = (
     <>
@@ -225,8 +227,7 @@ const CopyBundleSettingsDialog = ({
         </Styled.BundleCard>
       </div>
       <span className="overrides">
-        This will copy all studio settings, project setting overrides for all projects and site
-        settings.
+        If you skip this step, you can always copy addon settings selectively later on.
       </span>
     </FriendlyDialog>
   )
