@@ -24,6 +24,7 @@ const outputFiles = {
     'deleteAccessGroup',
     'saveAccessGroup',
   ],
+  auth: ['createSession'],
 }
 
 const buildOutputFiles = (files: { [name: string]: string[] }) =>
