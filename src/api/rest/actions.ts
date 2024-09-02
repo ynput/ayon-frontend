@@ -9,7 +9,9 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/actions/list`,
         method: 'POST',
         body: queryArg.actionContext,
-        params: { mode: queryArg.mode },
+        params: {
+          mode: queryArg.mode,
+        },
       }),
     }),
     executeAction: build.mutation<ExecuteActionApiResponse, ExecuteActionApiArg>({

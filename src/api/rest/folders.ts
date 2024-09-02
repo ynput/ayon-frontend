@@ -4,13 +4,18 @@ const injectedRtkApi = api.injectEndpoints({
     getFolderList: build.query<GetFolderListApiResponse, GetFolderListApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/folders`,
-        params: { attrib: queryArg.attrib },
+        params: {
+          attrib: queryArg.attrib,
+        },
       }),
     }),
     getFolderHierarchy: build.query<GetFolderHierarchyApiResponse, GetFolderHierarchyApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/hierarchy`,
-        params: { search: queryArg.search, types: queryArg.types },
+        params: {
+          search: queryArg.search,
+          types: queryArg.types,
+        },
       }),
     }),
   }),

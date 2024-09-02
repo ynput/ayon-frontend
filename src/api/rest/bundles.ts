@@ -2,7 +2,12 @@ import { RestAPI as api } from '../../services/ayon'
 const injectedRtkApi = api.injectEndpoints({
   endpoints: (build) => ({
     listBundles: build.query<ListBundlesApiResponse, ListBundlesApiArg>({
-      query: (queryArg) => ({ url: `/api/bundles`, params: { archived: queryArg.archived } }),
+      query: (queryArg) => ({
+        url: `/api/bundles`,
+        params: {
+          archived: queryArg.archived,
+        },
+      }),
     }),
     checkBundleCompatibility: build.query<
       CheckBundleCompatibilityApiResponse,

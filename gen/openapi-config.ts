@@ -15,6 +15,7 @@ const outputFiles = {
     'getReviewablesForFolder',
     'sortVersionReviewables',
     'updateReviewable',
+    'uploadReviewable',
   ],
   actions: ['listAvailableActionsForContext', 'executeAction'],
   accessGroups: [
@@ -25,6 +26,9 @@ const outputFiles = {
     'saveAccessGroup',
   ],
   auth: ['createSession'],
+  addons: ['listAddons'],
+  activities: ['deleteProjectActivity'],
+  users: ['getUser'],
 }
 
 const buildOutputFiles = (files: { [name: string]: string[] }) =>

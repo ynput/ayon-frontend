@@ -1,7 +1,7 @@
 import PubSub from '@/pubsub'
 import { $Any } from '@/types'
-import { api } from '@api/rest/review'
-import baseApi from '@api'
+import { api, ReviewableModel, VersionReviewablesModel } from '@api/rest/review'
+import { api as addonsApi } from '@api/rest/addons'
 import {
   Summary,
   GetReviewablesResponse,
@@ -10,7 +10,6 @@ import {
   UpdatedDefinitions,
 } from './types'
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
-import { VersionReviewablesModel } from '@/api/rest'
 
 const getViewerReviewablesTags = (
   result: (GetReviewablesResponse | VersionReviewablesModel | undefined)[] | undefined,
@@ -131,7 +130,7 @@ const enhancedApi = api.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
 
             // check if the reviewable is in the cache
             const index = cache.data?.reviewables?.findIndex(
-              (r) => r?.fileId === summary.sourceFileId,
+              (r: ReviewableModel) => r?.fileId === summary.sourceFileId,
             )
 
             if (index && index !== -1 && message.status !== 'finished') {
@@ -296,7 +295,7 @@ const reviewApi = enhancedApi.injectEndpoints({
     hasTranscoder: build.query<boolean, undefined>({
       queryFn: async (_arg, { dispatch }) => {
         // get list of installed addons
-        const res = await dispatch(baseApi.endpoints.listAddons.initiate({ details: false }))
+        const res = await dispatch(addonsApi.endpoints.listAddons.initiate({ details: false }))
 
         if (res.data) {
           const hasTranscoder = res.data.addons.some((addon) => addon.name === 'transcoder')

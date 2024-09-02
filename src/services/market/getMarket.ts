@@ -3,10 +3,9 @@ import { $Any } from '@types'
 import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
 
 // VVV REST endpoints VVV
-import { api as apiRest } from '@api/rest/market'
-import { AddonListItem2, MarketAddonListApiResponse } from '@api/rest'
+import { api as apiRest, AddonListItem, MarketAddonListApiResponse } from '@api/rest/market'
 
-type MarketAddonItemRes = AddonListItem2
+type MarketAddonItemRes = AddonListItem
 export interface MarketAddonItem extends MarketAddonItemRes {
   isDownloaded: boolean
   isOfficial: boolean

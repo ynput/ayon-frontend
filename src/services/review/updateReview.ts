@@ -1,6 +1,9 @@
-import { DeleteProjectActivityApiResponse, DeleteProjectActivityApiArg } from '@/api/rest'
+import {
+  api as activitiesApi,
+  DeleteProjectActivityApiResponse,
+  DeleteProjectActivityApiArg,
+} from '@/api/rest/activities'
 import api from './getReview'
-import baseApi from '@api'
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import { ReviewableResponse } from './types'
 
@@ -10,8 +13,8 @@ const injectedEndpoints = api.injectEndpoints({
       {
         queryFn: async (args, { dispatch }) => {
           try {
-            // get list of installed addons
-            const res = await dispatch(baseApi.endpoints.deleteProjectActivity.initiate(args))
+            // delete reviewable activity
+            const res = await dispatch(activitiesApi.endpoints.deleteProjectActivity.initiate(args))
 
             if (res.error) {
               return { error: res.error as FetchBaseQueryError }
@@ -52,12 +55,12 @@ const enhancedEndpoints = injectedEndpoints.enhanceEndpoints({
               sortingOrder?.forEach((id) => {
                 // Filter the reviewables that match the current activityId and push them to newReviewables
                 draft.reviewables
-                  ?.filter((r) => r.activityId === id)
-                  .forEach((r) => newReviewables.push(r))
+                  ?.filter((r: ReviewableResponse) => r.activityId === id)
+                  .forEach((r: ReviewableResponse) => newReviewables.push(r))
               })
 
               // Add remaining reviewables that were not in the sortingOrder to the end
-              draft.reviewables?.forEach((r) => {
+              draft.reviewables?.forEach((r: ReviewableResponse) => {
                 if (!orderedIds.has(r.activityId)) {
                   newReviewables.push(r)
                 }

@@ -11,7 +11,9 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/${queryArg.entityType}/${queryArg.entityId}/watchers`,
         method: 'POST',
         body: queryArg.watchersModel,
-        headers: { 'x-sender': queryArg['x-sender'] },
+        headers: {
+          'x-sender': queryArg['x-sender'],
+        },
       }),
     }),
   }),

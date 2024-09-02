@@ -12,7 +12,7 @@ import {
   useDeleteReviewableMutation,
   useSortVersionReviewablesMutation,
 } from '@queries/review/updateReview'
-import { UploadReviewableApiResponse } from '@api/rest'
+import { UploadReviewableApiResponse } from '@api/rest/review'
 
 // DND
 import {

@@ -32,7 +32,9 @@ const injectedRtkApi = api.injectEndpoints({
     getProjectActivity: build.query<GetProjectActivityApiResponse, GetProjectActivityApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/dashboard/activity`,
-        params: { days: queryArg.days },
+        params: {
+          days: queryArg.days,
+        },
       }),
     }),
     getProjectUsers: build.query<GetProjectUsersApiResponse, GetProjectUsersApiArg>({
@@ -70,8 +72,12 @@ const injectedRtkApi = api.injectEndpoints({
     getProjectSiteRoots: build.query<GetProjectSiteRootsApiResponse, GetProjectSiteRootsApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/siteRoots`,
-        headers: { 'x-ayon-site-id': queryArg['x-ayon-site-id'] },
-        params: { platform: queryArg.platform },
+        headers: {
+          'x-ayon-site-id': queryArg['x-ayon-site-id'],
+        },
+        params: {
+          platform: queryArg.platform,
+        },
       }),
     }),
     getProjectEntityUris: build.mutation<

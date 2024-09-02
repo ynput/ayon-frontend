@@ -40,13 +40,13 @@ export type GetAccessGroupApiArg = {
   accessGroupName: string
   projectName: string
 }
-export type SaveAccessGroupApiResponse = /** status 204 Successful Response */ void
+export type SaveAccessGroupApiResponse = unknown
 export type SaveAccessGroupApiArg = {
   accessGroupName: string
   projectName: string
   data: Permissions
 }
-export type DeleteAccessGroupApiResponse = /** status 204 Successful Response */ void
+export type DeleteAccessGroupApiResponse = unknown
 export type DeleteAccessGroupApiArg = {
   accessGroupName: string
   projectName: string

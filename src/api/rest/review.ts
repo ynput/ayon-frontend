@@ -17,6 +17,20 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/versions/${queryArg.versionId}/reviewables`,
       }),
     }),
+    uploadReviewable: build.mutation<UploadReviewableApiResponse, UploadReviewableApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/versions/${queryArg.versionId}/reviewables`,
+        method: 'POST',
+        headers: {
+          'content-type': queryArg['content-type'],
+          'x-file-name': queryArg['x-file-name'],
+          'x-sender': queryArg['x-sender'],
+        },
+        params: {
+          label: queryArg.label,
+        },
+      }),
+    }),
     sortVersionReviewables: build.mutation<
       SortVersionReviewablesApiResponse,
       SortVersionReviewablesApiArg
@@ -65,6 +79,16 @@ export type GetReviewablesForVersionApiResponse =
 export type GetReviewablesForVersionApiArg = {
   projectName: string
   versionId: string
+}
+export type UploadReviewableApiResponse = /** status 200 Successful Response */ ReviewableModel
+export type UploadReviewableApiArg = {
+  projectName: string
+  versionId: string
+  /** Label */
+  label?: string
+  'content-type': string
+  'x-file-name': string
+  'x-sender'?: string
 }
 export type SortVersionReviewablesApiResponse = /** status 200 Successful Response */ any
 export type SortVersionReviewablesApiArg = {
