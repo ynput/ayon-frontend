@@ -136,7 +136,10 @@ const BundleList = ({
       // bundle is not production or staging or dev
       const notActive = !isProduction && !isStaging && !isDev
 
-      return selectedBundles.length > 1 || noProd || noStag || notActive
+      // it is both production and staging
+      const isBoth = isProduction && isStaging
+
+      return selectedBundles.length > 1 || noProd || noStag || notActive || isBoth
     }
 
     ctxMenuItems.push({

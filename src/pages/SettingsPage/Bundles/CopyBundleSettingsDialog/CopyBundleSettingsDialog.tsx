@@ -151,14 +151,20 @@ const CopyBundleSettingsDialog = ({
   let exclude = []
   const excludeBundleName = bundle.name
   // we cannot copy same bundle and same variant into itself
-  if (bundle.isProduction) {
-    exclude.push(excludeBundleName + '__production')
-  }
-  if (bundle.isStaging) {
-    exclude.push(excludeBundleName + '__staging')
-  }
-  if (bundle.isDev) {
-    exclude.push(excludeBundleName + '__dev')
+  if (envTarget) {
+    if (bundle.isProduction && envTarget === 'production') {
+      exclude.push(excludeBundleName + '__production')
+    }
+    if (bundle.isStaging && envTarget === 'staging') {
+      exclude.push(excludeBundleName + '__staging')
+    }
+  } else {
+    if (bundle.isProduction) {
+      exclude.push(excludeBundleName + '__production')
+    }
+    if (bundle.isStaging) {
+      exclude.push(excludeBundleName + '__staging')
+    }
   }
 
   return (
