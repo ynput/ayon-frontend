@@ -117,7 +117,13 @@ const ProjectMenu = ({ isOpen, onHide }) => {
           {
             label: 'Project Settings',
             icon: 'settings_applications',
-            command: () => setTimeout(() => navigate(`/manageProjects/anatomy?project=${projectName}`), 0),
+            command: () =>
+              setTimeout(
+                dispatch((_, getState) =>
+                  navigate(getState)(`/manageProjects/anatomy?project=${projectName}`),
+                ),
+                0,
+              ),
           },
         ],
       )
@@ -126,9 +132,12 @@ const ProjectMenu = ({ isOpen, onHide }) => {
     return userItems
   }
 
-  const handleEditClick = (e, name) => {
+  const handleEditClick = (e, projectName) => {
     e.stopPropagation()
-    navigate(`/manageProjects/anatomy?project=${name}`)
+    setTimeout(
+      dispatch((_, getState) => navigate(getState)(`/manageProjects/anatomy?project=${projectName}`)),
+      0,
+    )
     onHide()
   }
 

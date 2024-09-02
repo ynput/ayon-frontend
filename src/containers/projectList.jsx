@@ -307,7 +307,7 @@ const ProjectList = ({
         command: () => {
           closeContextMenu()
           //Enqueing navigation to event loop to avoid close context menu race condition
-          setTimeout(() => navigate(`/manageProjects/anatomy?project=${sel[0]}`), 0)
+          setTimeout(dispatch((_, getState) => navigate(getState)(`/manageProjects/anatomy?project=${sel[0]}`)), 0)
         },
       })
     }
