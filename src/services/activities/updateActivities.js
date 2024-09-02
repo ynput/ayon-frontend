@@ -17,12 +17,13 @@ const updateCache = (activitiesDraft, patch = {}, isDelete) => {
 }
 
 const patchActivities = async (
-  { projectName, patch, entityIds, activityTypes = [], filter },
+  { projectName, patch, entityIds = [], activityTypes = [], filter, refs = [] },
   { dispatch, queryFulfilled, getState },
   method,
 ) => {
+  const refIds = refs.map((ref) => ref.id) || []
   // build tags that would be affected by this activity
-  const invalidatingTags = entityIds.map((id) => ({
+  const invalidatingTags = [...entityIds, ...refIds].map((id) => ({
     type: 'entityActivities',
     id: id + '-' + filter,
   }))

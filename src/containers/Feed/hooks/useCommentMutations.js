@@ -6,8 +6,6 @@ import {
   useUpdateActivityMutation,
 } from '@queries/activities/updateActivities'
 import { useSelector } from 'react-redux'
-import api from '@api'
-import { filterActivityTypes } from '@state/details'
 
 // does the body have a checklist anywhere in it
 // * [ ] or * [x]
@@ -15,14 +13,7 @@ export const bodyHasChecklist = (body) => {
   return body.includes('* [ ]') || body.includes('* [x]')
 }
 
-const useCommentMutations = ({
-  projectName,
-  entityType,
-  entities = [],
-  activityTypes,
-  filter,
-  dispatch,
-}) => {
+const useCommentMutations = ({ projectName, entityType, entities = [], activityTypes, filter }) => {
   const { name, attrib = {} } = useSelector((state) => state.user)
   const entityIds = entities.map((entity) => entity.id)
 
@@ -30,14 +21,6 @@ const useCommentMutations = ({
   const [createEntityActivity, { isLoading: isLoadingCreate }] = useCreateEntityActivityMutation()
   const [updateActivity, { isLoading: isLoadingUpdate }] = useUpdateActivityMutation()
   const [deleteActivity] = useDeleteActivityMutation()
-
-  const invalidateRefs = (refs = []) => {
-    const entityIds = refs.filter((v) => v.type !== 'user').map((v) => v.id)
-    const uniqueEntityIds = [...new Set(entityIds)]
-    const tags = uniqueEntityIds.map((id) => ({ type: 'entityActivities', id }))
-
-    dispatch(api.util.invalidateTags(tags))
-  }
 
   const createPatch = ({ entityId, newId, subTitle, value, files = [] }) => {
     const patch = {
@@ -67,45 +50,7 @@ const useCommentMutations = ({
 
   const getActivityId = () => uuid1().replace(/-/g, '')
 
-  const patchAllRefs = ({ refs = [], value = '', files = [], isDelete = false, id }) => {
-    const hasChecklist = bodyHasChecklist(value)
-    // We need to try and update the cache for all the refs
-    refs.forEach((ref) => {
-      // create a new patch for optimistic update of refs
-      const patch = !isDelete
-        ? createPatch({
-            entityId: ref.id,
-            newId: id,
-            subTitle: '',
-            value,
-            files,
-          })
-        : {}
-      //  we don't know which filters the refs are using, so we need to update all of them
-      Object.entries(filterActivityTypes).forEach(([filter, activityTypes]) => {
-        // a comment never shows up in publishes
-        if (filter === 'publishes') return
-
-        // only add to checklist if the comment has a checklist
-        if (filter === 'checklists' && !hasChecklist) return
-
-        const argsForCachingMatching = { entityIds: [ref.id], activityTypes, projectName, filter }
-        dispatch(
-          api.util.updateQueryData('getActivities', argsForCachingMatching, (draft) => {
-            if (isDelete) {
-              // delete the comment from the list
-              draft.activities = draft.activities.filter((activity) => activity.body !== value)
-            } else {
-              // add the new comment to the top of the list
-              draft.activities = [patch, ...draft.activities]
-            }
-          }),
-        )
-      })
-    })
-  }
-
-  const submitComment = async (value, files = [], refs = []) => {
+  const submitComment = async (value, files = []) => {
     // map over all the entities and create a new comment for each
     let patchId = null
     const promises = entities.map(({ id: entityId, subTitle }) => {
@@ -140,16 +85,13 @@ const useCommentMutations = ({
     try {
       const results = await Promise.all(promises)
 
-      // try and patch any ref caches
-      patchAllRefs({ value, refs, files, id: patchId })
-
       return results
     } catch (error) {
       return []
     }
   }
 
-  const updateComment = async (activity, value, files = [], refs = []) => {
+  const updateComment = async (activity, value, files = []) => {
     const fileIds = files.map((file) => file.id)
 
     const updatedActivity = {
@@ -177,12 +119,6 @@ const useCommentMutations = ({
         ...argsForCachingMatching,
       }).unwrap()
 
-      // try and patch any ref caches
-      patchAllRefs({ value, refs, files, id: activity.activityId })
-
-      // try invalidating any refs as a backup
-      invalidateRefs(refs)
-
       return res
     } catch (error) {
       console.error(error)
@@ -190,7 +126,7 @@ const useCommentMutations = ({
     }
   }
 
-  const deleteComment = async (id, entityId, refs = [], body) => {
+  const deleteComment = async (id, entityId, refs = []) => {
     // we only need these args to update the cache of the original query
     const argsForCachingMatching = { entityType, entityIds, activityTypes }
 
@@ -203,14 +139,9 @@ const useCommentMutations = ({
         entityId,
         filter,
         patch: { activityId: id },
+        refs,
         ...argsForCachingMatching,
       }).unwrap()
-
-      // try and patch any ref caches
-      patchAllRefs({ refs, isDelete: true, value: body })
-
-      // try invalidating any refs as a backup
-      invalidateRefs(refs)
     } catch (error) {
       // error is handled in the mutation
     }
