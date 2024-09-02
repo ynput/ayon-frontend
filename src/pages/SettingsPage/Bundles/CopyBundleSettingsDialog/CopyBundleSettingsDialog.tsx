@@ -115,9 +115,14 @@ const CopyBundleSettingsDialog = ({
     }
   }
 
+  let title = `Copy addon settings from another bundle's addons?`
+  if (envTarget) {
+    title = `Copy addon settings to your new ${envTarget} bundle?`
+  }
+
   const header = (
     <>
-      <span className="title">Would you like to copy addon settings?</span>
+      <span className="title">{title}</span>
       <span className="message">
         Addons do not share settings between different versions automatically. Would you like to
         copy the settings from an existing bundle to maintain the addon settings from the versions
