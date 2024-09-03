@@ -1,4 +1,4 @@
-import type { FolderType, Status } from '@api/rest'
+import type { FolderType, Status } from '@api/rest/project'
 import { GetTasksProgressResult, ProgressTask } from '@queries/tasksProgress/getTasksProgress'
 
 export type TaskTypeRow = {

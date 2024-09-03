@@ -16,7 +16,7 @@ import {
 import { useDispatch, useSelector } from 'react-redux'
 import { toggleDetailsPanel } from '@state/details'
 // types
-import type { Status, TaskType } from '@api/rest'
+import type { Status, TaskType } from '@api/rest/project'
 import type {
   FolderRow,
   TaskTypeRow,

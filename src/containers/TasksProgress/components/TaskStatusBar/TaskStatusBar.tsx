@@ -1,4 +1,4 @@
-import { Status } from '@api/rest'
+import { Status } from '@api/rest/project'
 import { TaskTypeStatusBar } from '@containers/TasksProgress/helpers/formatTaskProgressForTable'
 import { FC } from 'react'
 import * as Styled from './TaskStatusBar.styled'

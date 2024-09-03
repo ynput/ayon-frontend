@@ -5,7 +5,7 @@ import { EntityCard } from '@ynput/ayon-react-components'
 
 // types
 import type { EntityCardProps } from '@ynput/ayon-react-components'
-import type { Status } from '@api/rest'
+import type { Status } from '@api/rest/project'
 import type { ProgressTask } from '@queries/tasksProgress/getTasksProgress'
 import type { TaskFieldChange } from '../TasksProgressTable/TasksProgressTable'
 

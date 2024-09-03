@@ -9,7 +9,7 @@ import {
   resolveShiftSelect,
 } from './helpers'
 import { useGetAllProjectUsersAsAssigneeQuery } from '@queries/user/getUsers'
-import { FolderType, Status, TaskType } from '@api/rest'
+import { FolderType, Status, TaskType } from '@api/rest/project'
 import { ProgressSearch, TaskFieldChange, TasksProgressTable } from './components'
 // state
 import { setFocusedTasks } from '@state/context'
