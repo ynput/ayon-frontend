@@ -15,7 +15,7 @@ const AccessGroupList = ({ projectName, selectedAccessGroup, onSelectAccessGroup
 
   // Load user list
   const { data: accessGroupList = [], isLoading } = useGetAccessGroupsQuery({
-    projectName,
+    projectName: projectName || '_',
   })
 
   const [deleteAccessGroup] = useDeleteAccessGroupMutation()
@@ -52,7 +52,7 @@ const AccessGroupList = ({ projectName, selectedAccessGroup, onSelectAccessGroup
   const globalGroupPayload = {
     label: 'Access group',
     accept: async () =>
-      await deleteAccessGroup({ name: selection.name, projectName: '_' }).unwrap(),
+      await deleteAccessGroup({ accessGroupName: selection.name, projectName: '_' }).unwrap(),
     message: 'Are you sure you want to delete this access group ?',
   }
 
@@ -76,7 +76,7 @@ const AccessGroupList = ({ projectName, selectedAccessGroup, onSelectAccessGroup
             deleteLabel: 'Clear',
             label: 'Project overrides',
             accept: async () =>
-              await deleteAccessGroup({ name: eventData.name, projectName }).unwrap(),
+              await deleteAccessGroup({ accessGroupName: eventData.name, projectName }).unwrap(),
             message:
               'Are you sure you want to delete all project override settings for this access group?',
           }),
@@ -88,7 +88,10 @@ const AccessGroupList = ({ projectName, selectedAccessGroup, onSelectAccessGroup
           confirmDelete({
             label: 'Access group',
             accept: async () =>
-              await deleteAccessGroup({ name: eventData.name, projectName: '_' }).unwrap(),
+              await deleteAccessGroup({
+                accessGroupName: eventData.name,
+                projectName: '_',
+              }).unwrap(),
             message: 'Are you sure you want to delete this access group ?',
           }),
         danger: true,

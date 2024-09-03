@@ -1,8 +1,14 @@
-import api from '@api'
+import { api } from '@api/rest/auth'
 import { onClearDashboard } from '@state/dashboard'
 import { logout } from '@state/user'
 
-const getAuth = api.injectEndpoints({
+const authApi = api.enhanceEndpoints({
+  endpoints: {
+    createSession: {},
+  },
+})
+
+const authApiInjected = authApi.injectEndpoints({
   endpoints: (build) => ({
     getInfo: build.query({
       query: () => ({
@@ -42,4 +48,4 @@ const getAuth = api.injectEndpoints({
 //
 
 export const { useGetInfoQuery, useLazyGetInfoQuery, useLogOutMutation, useCreateSessionMutation } =
-  getAuth
+  authApiInjected

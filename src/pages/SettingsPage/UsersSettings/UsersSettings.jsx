@@ -106,7 +106,9 @@ const UsersSettings = () => {
   }
 
   // GET ACCESS GROUPS QUERY
-  const { data: accessGroupsData } = useGetAccessGroupsQuery()
+  const { data: accessGroupsData } = useGetAccessGroupsQuery({
+    projectName: '_',
+  })
 
   // MUTATION HOOK
   const [deleteUser] = useDeleteUserMutation()

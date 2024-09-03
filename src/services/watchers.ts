@@ -1,5 +1,4 @@
-import { api } from '@api/graphql'
-import { GetEntityWatchersApiArg } from '@api/rest'
+import { api, GetEntityWatchersApiArg } from '@api/rest/watchers'
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import { $Any } from '@types'
 

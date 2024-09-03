@@ -3,6 +3,32 @@ import type { ConfigFile } from '@rtk-query/codegen-openapi'
 // Specify the endpoints you want to generate
 const outputFiles = {
   bundles: ['listBundles', 'checkBundleCompatibility', 'migrateSettingsByBundle'],
+  folders: ['getFolderHierarchy', 'getFolderList'],
+  market: ['marketAddonList', 'marketAddonDetail', 'marketAddonVersionDetail'],
+  watchers: ['getEntityWatchers', 'setEntityWatchers'],
+  inbox: ['manageInboxItem'],
+  project: ['getProject', 'listProjects', 'getProjectAnatomy'],
+  review: [
+    'getReviewablesForVersion',
+    'getReviewablesForProduct',
+    'getReviewablesForTask',
+    'getReviewablesForFolder',
+    'sortVersionReviewables',
+    'updateReviewable',
+    'uploadReviewable',
+  ],
+  actions: ['listAvailableActionsForContext', 'executeAction'],
+  accessGroups: [
+    'getAccessGroupSchema',
+    'getAccessGroups',
+    'getAccessGroup',
+    'deleteAccessGroup',
+    'saveAccessGroup',
+  ],
+  auth: ['createSession'],
+  addons: ['listAddons'],
+  activities: ['deleteProjectActivity'],
+  users: ['getUser'],
 }
 
 const buildOutputFiles = (files: { [name: string]: string[] }) =>

@@ -1,4 +1,4 @@
-import api from '@api'
+import { api } from '@api/rest/project'
 // @ts-ignore
 import { selectProject, setProjectData } from '@state/project'
 
@@ -34,7 +34,7 @@ const createProjectQuery = (attribs: $Any, fields: $Any) => {
   `
 }
 
-const getProject = api.injectEndpoints({
+const getProjectInjected = api.injectEndpoints({
   endpoints: (build) => ({
     getProjectAttribs: build.query({
       query: ({ projectName, attribs = [], fields = [] }) => ({
@@ -55,7 +55,7 @@ const getProject = api.injectEndpoints({
 import { $Any } from '@/types'
 
 // TODO: sort out the types
-const enhancedRest = api.enhanceEndpoints({
+const getProjectApi = getProjectInjected.enhanceEndpoints({
   endpoints: {
     getProject: {
       transformErrorResponse: (error: $Any) => error.data.detail || `Error ${error.status}`,
@@ -125,6 +125,11 @@ const enhancedRest = api.enhanceEndpoints({
   },
 })
 
-export const { useGetProjectQuery, useListProjectsQuery, useGetProjectAnatomyQuery } = enhancedRest
+export const {
+  useGetProjectQuery,
+  useListProjectsQuery,
+  useGetProjectAnatomyQuery,
+  useGetProjectAttribsQuery,
+} = getProjectApi
 
-export const { useGetProjectAttribsQuery } = getProject
+export default getProjectApi

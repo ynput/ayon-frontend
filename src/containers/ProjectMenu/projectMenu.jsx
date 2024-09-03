@@ -1,10 +1,5 @@
-import { useNavigate } from 'react-router-dom'
 import * as Styled from './projectMenu.styled'
 import { useDispatch, useSelector } from 'react-redux'
-import { selectProject } from '@state/project'
-import { selectProject as selectProjectContext, setUri } from '@state/context'
-import { onProjectChange } from '@state/editor'
-import api from '@api'
 import MenuList from '@components/Menu/MenuComponents/MenuList'
 import { useListProjectsQuery } from '@queries/project/getProject'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -15,11 +10,12 @@ import ProjectButton from '@components/ProjectButton/ProjectButton'
 import { createPortal } from 'react-dom'
 import { useShortcutsContext } from '@context/shortcutsContext'
 import clsx from 'clsx'
-import { onProjectOpened } from '/src/features/dashboard'
 import { useUpdateUserPreferencesMutation } from '@/services/user/updateUser'
+import useAyonNavigate from '@hooks/useAyonNavigate'
+import { useProjectSelectDispatcher } from './hooks/useProjectSelectDispatcher'
 
 const ProjectMenu = ({ isOpen, onHide }) => {
-  const navigate = useNavigate()
+  const navigate = useAyonNavigate()
   const dispatch = useDispatch()
   const menuRef = useRef(null)
   const searchRef = useRef(null)
@@ -61,6 +57,7 @@ const ProjectMenu = ({ isOpen, onHide }) => {
   const { data: projects = [] } = useListProjectsQuery({ active: true })
 
   const [showContext] = useCreateContext([])
+  const [handleProjectSelectionDispatches] = useProjectSelectDispatcher([])
 
   const [updateUserPreferences] = useUpdateUserPreferencesMutation()
 
@@ -197,23 +194,8 @@ const ProjectMenu = ({ isOpen, onHide }) => {
   const onProjectSelect = (projectName) => {
     handleHide()
 
-    // if already on project page, do not navigate
-    if (window.location.pathname.split('/')[2] === projectName) return
+    handleProjectSelectionDispatches(projectName)
 
-    // reset selected folders
-    dispatch(selectProject(projectName))
-    // reset context for projects
-    dispatch(selectProjectContext(projectName))
-    // reset editor
-    dispatch(onProjectChange(projectName))
-    // remove editor query caches
-    dispatch(api.util.invalidateTags(['branch', 'workfile', 'hierarchy', 'project', 'product']))
-    // reset uri
-    dispatch(setUri(`ayon+entity://${projectName}`))
-    // set dashboard projects
-    dispatch(onProjectOpened(projectName))
-
-    // close search if it was open
     setSearchOpen(false)
 
     // if projects/[project] is null, projects/[projectName]/browser, else projects/[projectName]/[module]
@@ -221,7 +203,7 @@ const ProjectMenu = ({ isOpen, onHide }) => {
       ? `/projects/${projectName}/${window.location.pathname.split('/')[3] || 'browser'}`
       : `/projects/${projectName}/browser`
 
-    navigate(link)
+    dispatch((_, getState) => navigate(getState)(link))
   }
 
   const handleSearchClick = (e) => {

@@ -1,11 +1,17 @@
-import api from '@/api'
 import {
+  api,
   ListAvailableActionsForContextApiArg,
   ListAvailableActionsForContextApiResponse,
-} from '@/api/rest'
+} from '@/api/rest/actions'
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 
-const injectedActionsRest = api.injectEndpoints({
+const actionsApi = api.enhanceEndpoints({
+  endpoints: {
+    executeAction: {},
+  },
+})
+
+const injectedActionsApi = actionsApi.injectEndpoints({
   endpoints: (build) => ({
     getActionsFromContext: build.query<
       ListAvailableActionsForContextApiResponse,
@@ -33,4 +39,4 @@ const injectedActionsRest = api.injectEndpoints({
   }),
 })
 
-export const { useGetActionsFromContextQuery, useExecuteActionMutation } = injectedActionsRest
+export const { useGetActionsFromContextQuery, useExecuteActionMutation } = injectedActionsApi

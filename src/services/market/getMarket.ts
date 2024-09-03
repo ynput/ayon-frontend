@@ -1,11 +1,11 @@
-import api from '@/api'
 import PubSub from '@/pubsub'
+import { $Any } from '@types'
 import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
-import { AddonListItem2, MarketAddonListApiResponse } from '@/api/rest'
-import { $Any } from '@/types'
-import { GetMarketInstallEventsQuery } from '@/api/graphql'
 
-type MarketAddonItemRes = AddonListItem2
+// VVV REST endpoints VVV
+import { api as apiRest, AddonListItem, MarketAddonListApiResponse } from '@api/rest/market'
+
+type MarketAddonItemRes = AddonListItem
 export interface MarketAddonItem extends MarketAddonItemRes {
   isDownloaded: boolean
   isOfficial: boolean
@@ -15,22 +15,14 @@ export interface MarketAddonItem extends MarketAddonItemRes {
 
 export type MarketAddonList = MarketAddonItem[]
 
-type MarketAddonInstallEvent = GetMarketInstallEventsQuery['events']['edges'][0]['node']
+type DefinitionsRest = DefinitionsFromApi<typeof apiRest>
+type TagTypesRest = TagTypesFromApi<typeof apiRest>
 
-export type MarketAddonInstallEventList = MarketAddonInstallEvent[]
-
-type Definitions = DefinitionsFromApi<typeof api>
-type TagTypes = TagTypesFromApi<typeof api>
-
-type UpdatedDefinitions = Omit<Definitions, 'marketAddonList'> & {
-  marketAddonList: OverrideResultType<Definitions['marketAddonList'], MarketAddonList>
-  GetMarketInstallEvents: OverrideResultType<
-    Definitions['GetMarketInstallEvents'],
-    MarketAddonInstallEventList
-  >
+type UpdatedDefinitionsRest = Omit<DefinitionsRest, 'marketAddonList'> & {
+  marketAddonList: OverrideResultType<DefinitionsRest['marketAddonList'], MarketAddonList>
 }
 
-export const enhancedMarketRest = api.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
+export const enhancedMarketRest = apiRest.enhanceEndpoints<TagTypesRest, UpdatedDefinitionsRest>({
   endpoints: {
     marketAddonList: {
       providesTags: (addons: $Any) => [
@@ -70,6 +62,37 @@ export const enhancedMarketRest = api.enhanceEndpoints<TagTypes, UpdatedDefiniti
         { type: 'marketAddon', id: 'LIST' },
       ],
     },
+  },
+})
+
+export const {
+  useMarketAddonListQuery,
+  useMarketAddonDetailQuery,
+  useLazyMarketAddonDetailQuery,
+  useLazyMarketAddonVersionDetailQuery,
+} = enhancedMarketRest
+
+// VVV GraphQL endpoints VVV
+import apiGQL from '@api'
+
+import { GetMarketInstallEventsQuery } from '@/api/graphql'
+
+type MarketAddonInstallEvent = GetMarketInstallEventsQuery['events']['edges'][0]['node']
+
+export type MarketAddonInstallEventList = MarketAddonInstallEvent[]
+
+type DefinitionsGQL = DefinitionsFromApi<typeof apiGQL>
+type TagTypesGQL = TagTypesFromApi<typeof apiGQL>
+
+type UpdatedDefinitionsGQL = Omit<DefinitionsGQL, 'marketAddonList'> & {
+  GetMarketInstallEvents: OverrideResultType<
+    DefinitionsGQL['GetMarketInstallEvents'],
+    MarketAddonInstallEventList
+  >
+}
+
+export const enhancedMarketGQL = apiGQL.enhanceEndpoints<TagTypesGQL, UpdatedDefinitionsGQL>({
+  endpoints: {
     GetMarketInstallEvents: {
       transformResponse: (response: GetMarketInstallEventsQuery) =>
         response.events.edges.map(({ node }) => node).filter((e) => e.status !== 'finished'),
@@ -111,10 +134,4 @@ export const enhancedMarketRest = api.enhanceEndpoints<TagTypes, UpdatedDefiniti
   },
 })
 
-export const {
-  useMarketAddonListQuery,
-  useMarketAddonDetailQuery,
-  useLazyMarketAddonDetailQuery,
-  useLazyMarketAddonVersionDetailQuery,
-  useGetMarketInstallEventsQuery,
-} = enhancedMarketRest
+export const { useGetMarketInstallEventsQuery } = enhancedMarketGQL

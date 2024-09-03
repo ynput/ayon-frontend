@@ -82,7 +82,7 @@ const ActivityComment = ({
     }
 
     // note: body is used to match other refs to delete
-    onDelete && onDelete(activityId, entityId, refs, body)
+    onDelete && onDelete(activityId, entityId, refs)
   }
 
   const handleToggleMenu = (menu) => dispatch(toggleMenuOpen(menu))

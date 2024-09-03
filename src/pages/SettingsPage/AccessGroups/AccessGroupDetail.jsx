@@ -17,7 +17,7 @@ import {
 } from '@queries/accessGroups/getAccessGroups'
 import {
   useDeleteAccessGroupMutation,
-  useUpdateAccessGroupMutation,
+  useSaveAccessGroupMutation,
 } from '@queries/accessGroups/updateAccessGroups'
 import confirmDelete from '@helpers/confirmDelete'
 
@@ -29,7 +29,7 @@ const AccessGroupDetail = ({ projectName, accessGroupName }) => {
 
   const { data } = useGetAccessGroupQuery(
     {
-      name: accessGroupName,
+      accessGroupName: accessGroupName,
       projectName: projectName || '_',
     },
     { skip: !accessGroupName },
@@ -37,7 +37,7 @@ const AccessGroupDetail = ({ projectName, accessGroupName }) => {
   const { data: schema } = useGetAccessGroupSchemaQuery()
 
   const { data: accessGroupList = [] } = useGetAccessGroupsQuery({
-    projectName,
+    projectName: projectName || '_',
   })
 
   const isProjectLevel = useMemo(() => {
@@ -53,7 +53,7 @@ const AccessGroupDetail = ({ projectName, accessGroupName }) => {
   }, [data])
 
   // mutations
-  const [updateAccessGroup, { isLoading: saving }] = useUpdateAccessGroupMutation()
+  const [saveAccessGroup, { isLoading: saving }] = useSaveAccessGroupMutation()
   const [deleteAccessGroup] = useDeleteAccessGroupMutation()
 
   const isChanged = useMemo(() => {
@@ -63,8 +63,8 @@ const AccessGroupDetail = ({ projectName, accessGroupName }) => {
 
   const onSave = async () => {
     try {
-      await updateAccessGroup({
-        name: accessGroupName,
+      await saveAccessGroup({
+        accessGroupName,
         projectName: projectName || '_',
         data: formData,
       }).unwrap()
@@ -80,7 +80,7 @@ const AccessGroupDetail = ({ projectName, accessGroupName }) => {
       header: 'Clear project overrides',
       deleteLabel: 'Clear',
       label: 'Project overrides',
-      accept: async () => await deleteAccessGroup({ name: accessGroupName, projectName }).unwrap(),
+      accept: async () => await deleteAccessGroup({ accessGroupName, projectName }).unwrap(),
       message:
         'Are you sure you want to delete all project override settings for this access group?',
     })

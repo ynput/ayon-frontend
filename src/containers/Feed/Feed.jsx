@@ -161,7 +161,6 @@ const Feed = ({
     entities,
     activityTypes,
     filter,
-    dispatch,
   })
 
   // When a checkbox is clicked, update the body to add/remove "x" in [ ] markdown
