@@ -1,0 +1,11 @@
+// custom table styles for TasksProgress page
+.p-datatable .p-datatable-tbody > tr {
+  &,
+  &:hover {
+    background: var(--md-sys-color-surface-container-low) !important;
+  }
+}
+
+.p-datatable-table.p-datatable-scrollable-table.p-datatable-resizable-table {
+  width: 100% !important;
+}

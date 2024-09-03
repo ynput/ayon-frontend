@@ -40,9 +40,11 @@ export const FolderBody: FC<FolderBodyProps> = ({
         className={clsx({ loading: isLoading })}
         showBorder={false}
       />
-      <span className="parent">{firstParent}</span>
-      <span>/</span>
-      <span className="title">{name}</span>
+      <Styled.Path>
+        <span className="parent">{firstParent}</span>
+        <span>/</span>
+        <span className="title">{name}</span>
+      </Styled.Path>
     </Styled.Body>
   )
 }

@@ -8,9 +8,9 @@ import { FC } from 'react'
 import { useSelector } from 'react-redux'
 import TaskProgressDetailsPanel from './TaskProgressDetailsPanel'
 
-const detailsMinWidth = 533
-const detailsMaxWidth = '40vw'
-const detailsMaxMaxWidth = 700
+const detailsMinWidth = 300
+const detailsMaxWidth = '30vw'
+const detailsMaxMaxWidth = 500
 
 const TasksProgressPage: FC = () => {
   const projectName = useSelector((state: $Any) => state.project.name) as string
@@ -19,30 +19,20 @@ const TasksProgressPage: FC = () => {
   const selectedTasks = useSelector((state: $Any) => state.context.focused.tasks) as string[]
   const detailsOpen = isOpen && selectedFolders.length > 0 && selectedTasks.length > 0
 
-  console.log(selectedFolders, selectedTasks)
-
   //   GET PROJECT INFO FOR STATUS
   const { data: projectInfo } = useGetProjectQuery({ projectName }, { skip: !projectName })
 
   return (
     <main style={{ overflow: 'hidden' }}>
-      <Splitter
-        layout="horizontal"
-        style={{ width: '100%', height: '100%' }}
-        stateKey="browser-splitter-1"
-      >
-        <SplitterPanel size={18} style={{ minWidth: 250, maxWidth: 600 }}>
+      <Splitter layout="horizontal" style={{ width: '100%', height: '100%' }}>
+        <SplitterPanel size={isOpen ? 12 : 18} style={{ minWidth: 200, maxWidth: 500 }}>
           <Section wrap>
             <Hierarchy />
           </Section>
         </SplitterPanel>
-        <SplitterPanel size={82} style={{ overflow: 'hidden' }}>
-          <Splitter
-            layout="horizontal"
-            style={{ height: '100%', overflow: 'hidden' }}
-            stateKey="browser-splitter-2"
-          >
-            <SplitterPanel style={{ overflow: 'hidden' }}>
+        <SplitterPanel size={90} style={{ overflow: 'hidden' }}>
+          <Splitter layout="horizontal" style={{ height: '100%', overflow: 'hidden' }}>
+            <SplitterPanel size={80} style={{ overflow: 'hidden' }}>
               <TasksProgress
                 statuses={projectInfo?.statuses}
                 taskTypes={projectInfo?.taskTypes}
@@ -55,6 +45,7 @@ const TasksProgressPage: FC = () => {
                 style={{
                   maxWidth: `clamp(${detailsMinWidth}px, ${detailsMaxWidth}, ${detailsMaxMaxWidth}px)`,
                   minWidth: detailsMinWidth,
+                  width: '3vw',
                   zIndex: 200,
                 }}
               >

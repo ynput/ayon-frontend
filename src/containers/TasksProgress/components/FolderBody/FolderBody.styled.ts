@@ -6,15 +6,31 @@ export const Body = styled.div`
   display: flex;
   gap: var(--base-gap-small);
   align-items: flex-start;
-  min-width: 200px;
   max-width: 500px;
   height: 100%;
   min-height: 32px;
+  overflow: hidden;
 
   & > * {
     height: 34px;
     display: flex;
     align-items: center;
+  }
+`
+
+export const Path = styled.span`
+  overflow: hidden;
+  display: flex;
+  gap: var(--base-gap-small);
+  width: min-content;
+
+  /* first child ellipses */
+  & > :first-child {
+    white-space: nowrap;
+    overflow: hidden;
+
+    display: flex;
+    justify-content: flex-end;
   }
 `
 
@@ -35,11 +51,11 @@ export const ExpandButton = styled(Button)`
 `
 
 export const FolderThumbnail = styled(Thumbnail)`
-  width: 50px;
-  min-width: 50px;
-  max-width: 50px;
-  height: 30px;
-  max-height: 30px;
+  width: auto;
+  min-width: max-content;
+  aspect-ratio: 16 / 9;
+  height: 32px;
+  max-height: 32px;
   margin: 0;
   border-radius: var(--border-radius-m);
   margin-right: 4px;

@@ -6,7 +6,7 @@ export const LoadingTable = styled.div`
   width: 100%;
   border-radius: var(--border-radius-m);
   overflow: hidden;
-  background-color: var(--md-sys-color-surface-container);
+  background-color: var(--md-sys-color-surface-container-low);
   padding-bottom: var(--padding-m);
 
   & > * {

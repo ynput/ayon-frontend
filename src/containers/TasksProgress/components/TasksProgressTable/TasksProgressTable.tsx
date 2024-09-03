@@ -23,7 +23,7 @@ import type {
   TaskTypeStatusBar,
 } from '../../helpers/formatTaskProgressForTable'
 import type { GetAllProjectUsersAsAssigneeResult } from '@queries/user/getUsers'
-import type { KeyboardEvent, MouseEvent } from 'react'
+import { type KeyboardEvent, type MouseEvent } from 'react'
 import { $Any } from '@types'
 import { InView } from 'react-intersection-observer'
 import useCreateContext from '@hooks/useCreateContext'
@@ -83,13 +83,14 @@ export const TasksProgressTable = ({
   ...props
 }: TasksProgressTableProps) => {
   const selectedTasks = useSelector((state: $Any) => state.context.focused.tasks) as string[]
+  const detailsOpen = useSelector((state: $Any) => state.details.open) as boolean
   const dispatch = useDispatch()
 
   // for all columns that have taskType as a key, create a new column
   const taskTypeKeys: string[] = []
   // how many tasks are in each task type row
   const allTaskTypeTasksNumber: { [key: string]: number[] } = {}
-  const taskTypeAverageTasksNumber: { [key: string]: number } = {}
+  const taskTypeMajorityTasksNumber: { [key: string]: number } = {}
 
   tableData.forEach((folderRow) => {
     // skip parent folders
@@ -109,12 +110,33 @@ export const TasksProgressTable = ({
         const tasksLength = value.tasks.length
         // add the number of tasks to the array for that rows task type
         allTaskTypeTasksNumber[value.taskType].push(tasksLength)
-        // update the average number of tasks for that task type (rounded)
-        const average =
-          allTaskTypeTasksNumber[value.taskType].reduce((a, b) => a + b, 0) /
-          allTaskTypeTasksNumber[value.taskType].length
+        // Calculate the majority number of tasks for each task type
+        const taskTypeTasksNumber = allTaskTypeTasksNumber[value.taskType]
+        const taskTypeTasksCount: { [key: number]: number } = {}
+        let maxCount = 0
+        let majorityTasksNumber = 0
 
-        taskTypeAverageTasksNumber[value.taskType] = Math.round(average * 10) / 10
+        // Count the number of tasks for each task type
+        taskTypeTasksNumber.forEach((tasksLength) => {
+          // Initialize count for tasks length if it doesn't exist
+          if (!taskTypeTasksCount[tasksLength]) {
+            taskTypeTasksCount[tasksLength] = 0
+          }
+          // Increment the count for tasks length
+          taskTypeTasksCount[tasksLength]++
+          // Update the max count and majority tasks number
+          if (taskTypeTasksCount[tasksLength] > maxCount) {
+            maxCount = taskTypeTasksCount[tasksLength]
+            majorityTasksNumber = tasksLength
+          } else if (
+            taskTypeTasksCount[tasksLength] === maxCount &&
+            tasksLength > majorityTasksNumber
+          ) {
+            majorityTasksNumber = tasksLength
+          }
+        })
+
+        taskTypeMajorityTasksNumber[value.taskType] = majorityTasksNumber
       }
     })
   })
@@ -166,15 +188,18 @@ export const TasksProgressTable = ({
     ctxMenuShow(e, buildContextMenu(selection, taskId))
   }
 
+  type SavedWidths = { [task: string]: number | null }
+
   const localStorageKey = `tasks-progress-table-${projectName}`
   const [savedWidths, setSavedWidths] = useLocalStorage(localStorageKey, null) as [
-    { [task: string]: number | null } | null,
-    (value: { [task: string]: number | null }) => void,
+    SavedWidths,
+    (value: SavedWidths) => void,
   ]
 
   const resolveColumnWidth = (taskType: string, useDefault?: boolean) => {
     const savedWidth = savedWidths?.[taskType]
-    const defaultWidth = taskTypeAverageTasksNumber[taskType] * 150
+    const minWidthPerTask = detailsOpen ? 100 : 150
+    const defaultWidth = taskTypeMajorityTasksNumber[taskType] * minWidthPerTask
     if (useDefault) return defaultWidth
     return savedWidth || defaultWidth
   }
@@ -188,14 +213,18 @@ export const TasksProgressTable = ({
     const newWidth = currentWidth + delta
 
     // set the new width to local storage
-    setSavedWidths({ ...savedWidths, [taskType]: newWidth })
+    setSavedWidths({
+      ...savedWidths,
+      [taskType]: newWidth,
+    })
   }
 
   const resetColumnWidth = (taskType?: string) => {
     if (!taskType) return console.error('Width reset error: No task type found')
-    taskType && setSavedWidths({ ...savedWidths, [taskType]: null })
-    // BUG: The tables own widths are not being reset and so a page refresh is required to reset the widths
-    // BEST IDEA: fork the primereact datatable and add a reset button to the column headers
+    // remove taskType from column widths
+    const newWidths = { ...savedWidths }
+    delete newWidths[taskType]
+    taskType && setSavedWidths(newWidths)
   }
 
   const tableWrapperEl = (tableRef.current?.getElement() as HTMLElement)?.querySelector(
@@ -211,14 +240,20 @@ export const TasksProgressTable = ({
       resizableColumns
       columnResizeMode="expand"
       onColumnResizeEnd={handleColumnResize}
-      onColumnResizerDoubleClick={(e) => resetColumnWidth(e.column.props.field)}
+      onColumnResizerClick={(e) => e.originalEvent.stopPropagation()}
+      onColumnResizerDoubleClick={(e) => {
+        e.originalEvent.stopPropagation()
+        resetColumnWidth(e.column.props.field)
+      }}
       scrollable
       scrollHeight="flex"
       sortField="__folderKey"
       sortOrder={1}
       sortMode="single"
       style={{ overflow: 'hidden' }}
-      pt={{ thead: { style: { zIndex: 101, height: 36 } } }}
+      pt={{
+        thead: { style: { zIndex: 101, height: 36 } },
+      }}
       className="tasks-progress-table"
       {...props}
     >
@@ -229,7 +264,9 @@ export const TasksProgressTable = ({
         resizeable
         sortable
         sortFunction={sortFolderFunction}
-        style={{ zIndex: 100, minWidth: 300 }}
+        style={{ zIndex: 100, maxWidth: detailsOpen ? 250 : 300, width: detailsOpen ? 250 : 300 }}
+        headerStyle={{ zIndex: 400 }}
+        bodyStyle={{ paddingLeft: 0 }}
         body={(row: FolderRow) =>
           row.__isParent ? (
             <ParentBody
@@ -253,7 +290,10 @@ export const TasksProgressTable = ({
       />
       <Column
         field={'_complete'}
-        header={'Complete'}
+        header={'Done'}
+        headerStyle={{ paddingLeft: 2 }}
+        style={{ maxWidth: 70, width: 70 }}
+        resizeable
         body={(row: FolderRow) =>
           row._complete !== undefined && (
             <Body style={{ minWidth: 'unset' }}>
@@ -273,6 +313,7 @@ export const TasksProgressTable = ({
           sortable
           sortFunction={(e) => sortFolderFunction(e, taskStatusSortFunction(statuses))}
           pt={{ bodyCell: { style: { padding: 0 } } }}
+          style={{ width: resolveColumnWidth(taskTypeKey) }}
           className="column task-column"
           headerClassName="column-header task-column-header"
           body={(rowData) => {
@@ -287,10 +328,10 @@ export const TasksProgressTable = ({
             const taskType = taskTypes.find((t) => t.name === taskTypeKey)
             if (!taskCellData) return null
 
-            const width = resolveColumnWidth(taskTypeKey)
+            // const width = resolveColumnWidth(taskTypeKey)
 
             return (
-              <Cells key={taskTypeKey} className="cells" style={{ minWidth: width }}>
+              <Cells key={taskTypeKey} className="cells">
                 {taskCellData.tasks.map((task) => {
                   // add avatarUrl to each user
                   const assigneeOptions = users.map((user) => ({
