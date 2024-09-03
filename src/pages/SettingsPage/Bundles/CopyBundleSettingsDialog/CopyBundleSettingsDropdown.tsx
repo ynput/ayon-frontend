@@ -19,9 +19,11 @@ const StyledDropdown = styled(Dropdown)`
   }
 `
 
+export type SourceBundle = BundleModel & { previous?: boolean }
+
 interface CopyBundleSettingsDropdownProps
   extends Omit<DropdownProps, 'value' | 'options' | 'onChange'> {
-  bundles: BundleModel[]
+  bundles: SourceBundle[]
   bundle: string | null
   exclude?: string[]
   variant: string
@@ -47,7 +49,7 @@ const CopyBundleSettingsDropdown: FC<CopyBundleSettingsDropdownProps> = ({
       isProduction: bundle.isProduction,
       isStaging: bundle.isStaging,
       isDev: bundle.isDev,
-      activeUser: bundle.activeUser,
+      previous: !!bundle.previous,
     }))
   }, [bundles])
 
@@ -84,8 +86,6 @@ const CopyBundleSettingsDropdown: FC<CopyBundleSettingsDropdownProps> = ({
     const bundle = v[0].substring(0, splitIndex)
     const variant = v[0].substring(splitIndex + 2)
     onBundleChange(bundle, variant)
-
-    console.log(v, bundle, variant)
   }
 
   let value = [bundle + '__' + variant]

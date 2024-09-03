@@ -16,18 +16,20 @@ import { BundleModel } from '@api/rest'
 // Other imports
 import { toast } from 'react-toastify'
 import * as Styled from './CopyBundleSettingsDialog.styled'
-import CopyBundleSettingsDropdown from './CopyBundleSettingsDropdown'
+import CopyBundleSettingsDropdown, { SourceBundle } from './CopyBundleSettingsDropdown'
 
 type DialogBodyProps = {
   onCancel: () => void
   onFinish: () => void
   bundle?: BundleModel | null
+  previousBundle?: BundleModel | null
   envTarget?: string | null // has the bundle just been set to production, staging, or dev
   devMode: boolean
 }
 
 const CopyBundleSettingsDialog = ({
   bundle,
+  previousBundle,
   envTarget,
   onCancel,
   onFinish,
@@ -38,40 +40,43 @@ const CopyBundleSettingsDialog = ({
 
   const { data: { bundles = [] } = {} } = useListBundlesQuery({})
 
+  //  replace bundle with previous bundle if it is set
+  const sourceBundles = useMemo(() => {
+    let updatedBundles: SourceBundle[] = [...bundles]
+    if (previousBundle) {
+      const replaceIndex = updatedBundles.findIndex((b) => b.name === previousBundle.name)
+      if (replaceIndex > -1) {
+        updatedBundles[replaceIndex] = { ...previousBundle, previous: true }
+      }
+    }
+    return updatedBundles
+  }, [bundles, previousBundle, bundle])
+
   const currentProductionBundle = useMemo(
-    () => bundles?.find((b) => b?.isProduction && !b?.isArchived),
-    [bundles],
+    () => sourceBundles?.find((b) => b?.isProduction && !b?.isArchived),
+    [sourceBundles],
   )
 
   const currentStagingBundle = useMemo(
-    () => bundles?.find((b) => b?.isStaging && !b?.isArchived),
-    [bundles],
+    () => sourceBundles?.find((b) => b?.isStaging && !b?.isArchived),
+    [sourceBundles],
   )
 
   useEffect(() => {
     const determineVariantAndBundle = () => {
-      if (envTarget === 'production' && currentProductionBundle) {
-        return { variant: 'production', bundleName: currentProductionBundle.name }
-      }
-      if (envTarget === 'staging' && currentStagingBundle) {
-        return { variant: 'staging', bundleName: currentStagingBundle.name }
-      }
-
-      // Handle case when envTarget is not set
-      if (!envTarget && bundle) {
-        if (bundle.isProduction && currentStagingBundle) {
-          return { variant: 'staging', bundleName: currentStagingBundle.name }
-        }
-        if (!bundle.isProduction && currentProductionBundle) {
-          return { variant: 'production', bundleName: currentProductionBundle.name }
-        }
+      if (previousBundle && envTarget && bundle?.name !== previousBundle.name) {
+        return { variant: envTarget, bundleName: previousBundle.name }
       }
 
       // Fallback to available bundle
-      if (currentProductionBundle) {
+      const isProdSelf =
+        currentProductionBundle?.name === bundle?.name && envTarget === 'production'
+
+      if (currentProductionBundle && !isProdSelf) {
         return { variant: 'production', bundleName: currentProductionBundle.name }
       }
-      if (currentStagingBundle) {
+      const isStagingSelf = currentStagingBundle?.name === bundle?.name && envTarget === 'staging'
+      if (currentStagingBundle && !isStagingSelf) {
         return { variant: 'staging', bundleName: currentStagingBundle.name }
       }
 
@@ -86,7 +91,7 @@ const CopyBundleSettingsDialog = ({
     } else {
       onCancel()
     }
-  }, [currentProductionBundle, envTarget, currentStagingBundle, bundle])
+  }, [currentProductionBundle, envTarget, currentStagingBundle, bundle, sourceBundles])
 
   const handleClose = () => {
     onCancel()
@@ -107,9 +112,10 @@ const CopyBundleSettingsDialog = ({
           targetVariant: envTarget,
         },
       }).unwrap()
+      toast.success(`Settings copied from ${sourceBundle} successfully`)
     } catch (error: any) {
       console.error(error)
-      toast.error('Failed to copy settings: ' + JSON.stringify(error))
+      toast.error('Failed to copy settings: ' + error.data.detail)
     } finally {
       onFinish()
     }
@@ -183,7 +189,7 @@ const CopyBundleSettingsDialog = ({
           <Styled.Row>
             <span>Bundle:</span>
             <CopyBundleSettingsDropdown
-              bundles={bundles}
+              bundles={sourceBundles}
               bundle={sourceBundle}
               variant={sourceVariant}
               exclude={exclude}

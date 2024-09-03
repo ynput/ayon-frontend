@@ -37,7 +37,7 @@ const Bundles = () => {
   const [newBundleOpen, setNewBundleOpen] = useState(null)
 
   // show copy settings dialog
-  const initCopySettingsBundle = { env: null, bundle: null }
+  const initCopySettingsBundle = { env: null, bundle: null, previous: null }
   const [copySettingsBundle, setCopySettingsBundle] = useState(initCopySettingsBundle)
   const [copySettingsPromise, setCopySettingsPromise] = useState(null)
   const openCopySettingsWithPromise = async (data) => {
@@ -296,11 +296,6 @@ const Bundles = () => {
         if (!source && developerMode) {
           source = bundleList.find((b) => b.isDev)
         }
-
-        // no source at all, do not open copy settings dialog
-        if (source) {
-          await openCopySettingsWithPromise({ bundle: patch, env: status })
-        }
       }
 
       if (newActive) {
@@ -309,24 +304,24 @@ const Bundles = () => {
         if (oldBundle) {
           // optimistically update old bundle to remove status
           try {
-            const patch = { ...oldBundle, [statusKey]: false }
+            const patchOld = { ...oldBundle, [statusKey]: false }
             patchResult = dispatch(
               bundlesApi.util.updateQueryData('listBundles', { archived: true }, (draft) => {
                 const bundleIndex = draft.bundles.findIndex(
                   (bundle) => bundle.name === oldBundle.name,
                 )
-                draft.bundles[bundleIndex] = patch
+                draft.bundles[bundleIndex] = patchOld
               }),
             )
           } catch (error) {
             console.error(error)
           }
         }
+
+        openCopySettingsWithPromise({ bundle: patch, env: status, previous: oldBundle })
       }
 
       await updateBundle({ name, data: { [statusKey]: newActive }, patch }).unwrap()
-
-      toast.success(upperFirst(message))
     } catch (error) {
       console.error(error)
       toast.error(`Error setting ${message}`)
@@ -401,6 +396,7 @@ const Bundles = () => {
       />
       <CopyBundleSettingsDialog
         bundle={copySettingsBundle.bundle}
+        previousBundle={copySettingsBundle.previous}
         envTarget={copySettingsBundle.env}
         devMode={developerMode}
         onCancel={closeCopySettings}

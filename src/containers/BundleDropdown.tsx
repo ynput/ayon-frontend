@@ -37,6 +37,11 @@ export const DefaultValueTemplateStyled = styled(DefaultValueTemplate)`
 const BadgesWrapper = styled.div`
   display: flex;
   gap: var(--base-gap-small);
+
+  &.previous > * {
+    /* strikethrough text */
+    text-decoration: line-through;
+  }
 `
 
 const DropdownBadge = styled.span`
@@ -54,6 +59,7 @@ export type BundleOption = {
   isStaging?: boolean
   isDev?: boolean
   activeUser?: string
+  previous?: boolean
 }
 
 type BundleBadgesProps = {
@@ -61,9 +67,16 @@ type BundleBadgesProps = {
   devMode: boolean
   startContent?: React.ReactNode
   endContent?: React.ReactNode
+  previous?: boolean
 }
 
-export const BundleBadges = ({ bundle, devMode, startContent, endContent }: BundleBadgesProps) => {
+export const BundleBadges = ({
+  bundle,
+  devMode,
+  startContent,
+  endContent,
+  previous,
+}: BundleBadgesProps) => {
   const userName = useSelector((state: $Any) => state.user.name)
 
   let prodBadge = null
@@ -100,7 +113,7 @@ export const BundleBadges = ({ bundle, devMode, startContent, endContent }: Bund
   }
 
   return (
-    <BadgesWrapper>
+    <BadgesWrapper className={clsx({ previous })}>
       {prodBadge} {stagBadge} {devBadge}
     </BadgesWrapper>
   )
@@ -116,7 +129,7 @@ export const BundleDropdownItem = ({ bundle, devMode, isActive }: BundleDropdown
   return (
     <BundleDropdownItemStyled className={clsx({ active: isActive })}>
       {bundle?.label}
-      {bundle && <BundleBadges bundle={bundle} devMode={devMode} />}
+      {bundle && <BundleBadges bundle={bundle} devMode={devMode} previous={bundle.previous} />}
     </BundleDropdownItemStyled>
   )
 }
