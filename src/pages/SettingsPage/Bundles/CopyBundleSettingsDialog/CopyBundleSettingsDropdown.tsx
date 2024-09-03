@@ -89,7 +89,7 @@ const CopyBundleSettingsDropdown: FC<CopyBundleSettingsDropdownProps> = ({
   }
 
   let value = [bundle + '__' + variant]
-  if (!bundle) value = [bundleOptions[0].value]
+  if (!bundle && bundleOptions[0]) value = [bundleOptions[0].value]
 
   return (
     <StyledDropdown

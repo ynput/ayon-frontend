@@ -194,17 +194,17 @@ const BundleList = ({
         }}
       >
         {rowData.isProduction && (
-          <Badge hl="production" id={`${rowData.name}-production`}>
+          <Badge hl="production" data-testid={`${rowData.name}-production`}>
             Production
           </Badge>
         )}
         {rowData.isStaging && (
-          <Badge hl="staging" id={`${rowData.name}-staging`}>
+          <Badge hl="staging" data-testid={`${rowData.name}-staging`}>
             Staging
           </Badge>
         )}
         {rowData.isDev && (
-          <Badge hl="developer" id={`${rowData.name}-dev`}>
+          <Badge hl="developer" data-testid={`${rowData.name}-dev`}>
             Dev{rowData.activeUser && ` (${rowData.activeUser})`}
           </Badge>
         )}
