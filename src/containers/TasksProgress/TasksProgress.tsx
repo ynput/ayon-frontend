@@ -54,6 +54,7 @@ const TasksProgress: FC<TasksProgressProps> = ({
     [],
   )
   const [expandedRows, setExpandedRows] = useState<string[]>([])
+  const [collapsedFolders, setCollapsedFolders] = useState<string[]>([])
 
   const selectedFolders = useSelector((state: $Any) => state.context.focused.folders) as string[]
   const selectedTasks = useSelector((state: $Any) => state.context.focused.tasks) as string[]
@@ -108,8 +109,11 @@ const TasksProgress: FC<TasksProgressProps> = ({
 
   const tableData = useMemo(
     () =>
-      formatTaskProgressForTable(foldersTasksData, filteredTaskTypes, { folderTypes, statuses }),
-    [foldersTasksData, filteredTaskTypes],
+      formatTaskProgressForTable(foldersTasksData, filteredTaskTypes, collapsedFolders, {
+        folderTypes,
+        statuses,
+      }),
+    [foldersTasksData, filteredTaskTypes, collapsedFolders],
   )
 
   const filteredTableData = useMemo(() => {
@@ -213,6 +217,16 @@ const TasksProgress: FC<TasksProgressProps> = ({
     }
   }
 
+  const handleCollapseToggle = (id: string) => {
+    // update the collapsed rows by either adding or removing the folderId
+    setCollapsedFolders((prev) => {
+      if (prev.includes(id)) {
+        return prev.filter((folderId) => folderId !== id)
+      }
+      return [...prev, id]
+    })
+  }
+
   const shortcuts = [
     {
       key: 'E',
@@ -269,6 +283,8 @@ const TasksProgress: FC<TasksProgressProps> = ({
               expandedRows={expandedRows}
               onExpandRow={handleExpandToggle}
               onOpenViewer={openInViewer}
+              collapsedRows={collapsedFolders}
+              onCollapseRow={handleCollapseToggle}
             />
           ) : (
             <EmptyPlaceholder

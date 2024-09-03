@@ -36,6 +36,7 @@ export type FolderRow = {
 export const formatTaskProgressForTable = (
   data: GetTasksProgressResult,
   shownColumns: string[] = [],
+  collapsedFolders: string[] = [],
   { folderTypes, statuses }: { folderTypes: FolderType[]; statuses: Status[] },
 ): FolderRow[] => {
   // TODO: try using a map instead of an array to easily lookup parent folders
@@ -173,5 +174,14 @@ export const formatTaskProgressForTable = (
 
   const rowsArray = Array.from(rows.values())
 
-  return rowsArray
+  // filter out collapsed folders
+  let filteredRows = rowsArray
+  if (collapsedFolders.length) {
+    filteredRows = rowsArray.filter((row) => {
+      const parent = row.__parentId
+      return !collapsedFolders.includes(parent || '')
+    })
+  }
+
+  return filteredRows
 }

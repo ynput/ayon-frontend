@@ -59,6 +59,8 @@ interface TasksProgressTableProps
   users: GetAllProjectUsersAsAssigneeResult
   expandedRows: string[]
   onExpandRow: (folderId: string) => void
+  collapsedRows: string[]
+  onCollapseRow: (folderId: string) => void
   onChange: TaskFieldChange
   onSelection: (taskId: string, meta: boolean, shift: boolean) => void
   onOpenViewer: (taskId: string, quickView: boolean) => void
@@ -77,6 +79,9 @@ export const TasksProgressTable = ({
   users = [], // users in the project
   expandedRows = [],
   onExpandRow,
+  collapsedRows = [],
+  onCollapseRow,
+
   onChange,
   onSelection,
   onOpenViewer,
@@ -273,6 +278,8 @@ export const TasksProgressTable = ({
               name={row._folder}
               folderCount={row._folderCount}
               taskCount={row._taskCount}
+              isCollapsed={collapsedRows.includes(row.__folderId)}
+              onCollapseToggle={() => onCollapseRow(row.__folderId)}
             />
           ) : (
             <FolderBody
