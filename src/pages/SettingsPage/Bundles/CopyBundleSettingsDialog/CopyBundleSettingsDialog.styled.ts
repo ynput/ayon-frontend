@@ -4,8 +4,10 @@ import styled from 'styled-components'
 export const FriendlyDialog = styled(Dialog)`
   background-color: var(--md-sys-color-surface-container-high);
   border-radius: var(--border-radius-xxl);
-  max-width: 1000px;
-  width: 1000px;
+  min-width: min(1000px, 90vw);
+  width: max-content;
+  max-width: 90vw;
+  max-height: unset;
 
   .header {
     .title {
@@ -42,6 +44,21 @@ export const FriendlyDialog = styled(Dialog)`
       ${theme.labelLarge}
       margin-top: 16px;
       color: var(--md-sys-color-outline);
+    }
+  }
+
+  @media (max-width: 1100px) {
+    .body {
+      .cards {
+        flex-direction: column;
+        .card {
+          width: 100%;
+        }
+      }
+
+      .arrow {
+        rotate: 90deg;
+      }
     }
   }
 `

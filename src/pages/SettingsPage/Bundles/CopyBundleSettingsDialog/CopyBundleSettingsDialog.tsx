@@ -11,7 +11,7 @@ import { useListBundlesQuery } from '@queries/bundles/getBundles'
 import { useMigrateSettingsByBundleMutation } from '@queries/bundles/updateBundles'
 
 // API imports
-import { BundleModel } from '@api/rest'
+import { BundleModel } from '@api/rest/bundles'
 
 // Other imports
 import { toast } from 'react-toastify'
@@ -185,7 +185,7 @@ const CopyBundleSettingsDialog = ({
       hideCancelButton
     >
       <div className="cards">
-        <Styled.BundleCard>
+        <Styled.BundleCard className="card">
           <Styled.Row>
             <span>Bundle:</span>
             <CopyBundleSettingsDropdown
@@ -201,7 +201,7 @@ const CopyBundleSettingsDialog = ({
           </Styled.Row>
         </Styled.BundleCard>
         <Icon icon="arrow_right_alt" className="arrow" />
-        <Styled.BundleCard>
+        <Styled.BundleCard className="card">
           <Styled.Row>
             <span>Bundle:</span>
             <Styled.TargetBundle>{bundle.name}</Styled.TargetBundle>
