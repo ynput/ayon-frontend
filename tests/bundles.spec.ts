@@ -22,7 +22,7 @@ test('bundle status', async ({ bundlePage, browserName }) => {
   // set bundle status to staging
   await bundlePage.setBundleStatus(stagingBundleName, 'staging')
   // check copy settings dialog opens and works
-  await bundlePage.copySettingsDialog(true)
+  await bundlePage.copySettingsDialog('staging', true)
   // CLEANUP: unset statuses
   await bundlePage.unsetBundleStatus(prodBundleName, 'production')
   await bundlePage.unsetBundleStatus(stagingBundleName, 'staging')

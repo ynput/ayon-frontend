@@ -4,7 +4,7 @@ import type { Page } from '@playwright/test'
 const getBundleName = (prefix: string, suffix?: string) => (browser: string) =>
   prefix + '_' + browser + `${suffix ? '_' + suffix : ''}`
 
-const dialogTitle = 'Copy addon settings to your new staging bundle?'
+const dialogTitle = 'Copy addon settings to your new {status} bundle?'
 
 class BundlePage {
   constructor(public readonly page: Page, public readonly browserName: String) {}
@@ -20,7 +20,9 @@ class BundlePage {
     await this.page.getByRole('main').getByRole('textbox').fill(name)
     await this.page.getByRole('button', { name: 'Select an option...' }).click()
     const launcher = '1.0.2'
+    await expect(this.page.getByText(launcher)).toBeVisible()
     await this.page.getByText(launcher).click()
+
     // check that bundle is compatible
     const compatibleMessage = 'Checks complete: Bundle is compatible'
     await expect(this.page.getByText(compatibleMessage)).toBeVisible()
@@ -35,9 +37,9 @@ class BundlePage {
     await this.page.getByRole('menuitem', { name: actionName }).click()
   }
 
-  async copySettingsDialog(confirm: boolean) {
+  async copySettingsDialog(bundleStatus, confirm: boolean) {
     // check dialog is visible
-    await expect(this.page.getByText(dialogTitle)).toBeVisible()
+    await expect(this.page.getByText(dialogTitle.replace('{status}', bundleStatus))).toBeVisible()
     // confirm dialog
     if (confirm) {
       await this.page.getByRole('button', { name: 'Copy all settings' }).click()
@@ -45,7 +47,7 @@ class BundlePage {
       await this.page.getByRole('button', { name: 'Do not copy' }).click()
     }
     // check dialog is hidden
-    await expect(this.page.getByText(dialogTitle)).toBeHidden()
+    await expect(this.page.getByText(dialogTitle.replace('{status}', bundleStatus))).toBeHidden()
     if (confirm) {
       // check for success toast
       await expect(this.page.getByText('Settings copied from')).toBeVisible()
