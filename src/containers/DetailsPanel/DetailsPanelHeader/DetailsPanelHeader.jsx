@@ -1,18 +1,20 @@
-import { useMemo, useState } from 'react'
-import * as Styled from './DetailsPanelHeader.styled'
-import StackedThumbnails from '@pages/EditorPage/StackedThumbnails'
-import clsx from 'clsx'
-import { isEqual, union, upperFirst } from 'lodash'
-import { useUpdateEntitiesMutation } from '@queries/entity/updateEntity'
-import { toast } from 'react-toastify'
-import Actions from '@containers/Actions/Actions'
-import FeedFilters from '../FeedFilters/FeedFilters'
-import usePatchProductsListWithVersions from '@hooks/usePatchProductsListWithVersions'
-import { useGetChecklistsCountQuery } from '@queries/activities/getActivities'
-import ThumbnailUploader from '@components/ThumbnailUploader/ThumbnailUploader'
+import { useMemo } from 'react'
 import { useDispatch } from 'react-redux'
-import { openViewer } from '@state/viewer'
+import { toast } from 'react-toastify'
+import { isEqual, union, upperFirst } from 'lodash'
+import clsx from 'clsx'
 import { Icon } from '@ynput/ayon-react-components'
+
+import Actions from '@containers/Actions/Actions'
+import EntityThumbnailUploader from '@components/EntityThumbnailUploader'
+import usePatchProductsListWithVersions from '@hooks/usePatchProductsListWithVersions'
+import StackedThumbnails from '@pages/EditorPage/StackedThumbnails'
+import { useUpdateEntitiesMutation } from '@queries/entity/updateEntity'
+import { useGetChecklistsCountQuery } from '@queries/activities/getActivities'
+import { openViewer } from '@state/viewer'
+
+import FeedFilters from '../FeedFilters/FeedFilters'
+import * as Styled from './DetailsPanelHeader.styled'
 
 const DetailsPanelHeader = ({
   entityType,
@@ -145,51 +147,6 @@ const DetailsPanelHeader = ({
     }
   }
 
-  const [isDraggingFile, setIsDraggingFile] = useState(false)
-  const handleThumbnailUpload = (thumbnails = []) => {
-    // always set isDraggingFile to false
-    // hides the thumbnail uploader
-    setIsDraggingFile(false)
-
-    // check something was actually uploaded
-    if (!entities.length) return
-    // patching the updatedAt will force a refresh of the thumbnail url
-    const newUpdatedAt = new Date().toISOString()
-
-    let operations = [],
-      versionPatches = []
-
-    for (const entity of thumbnails) {
-      const entityToPatch = entities.find((e) => e.id === entity.id)
-      if (!entityToPatch) continue
-      const thumbnailId = entity.thumbnailId
-      const currentAssignees = entity.users || []
-
-      operations.push({
-        id: entityToPatch.id,
-        projectName: entityToPatch.projectName,
-        data: { updatedAt: newUpdatedAt },
-        currentAssignees,
-      })
-
-      const versionPatch = {
-        productId: entityToPatch.productId,
-        versionUpdatedAt: newUpdatedAt,
-        versionThumbnailId: thumbnailId,
-      }
-
-      versionPatches.push(versionPatch)
-    }
-
-    // update productsList cache with new status
-    let productsPatch = patchProductsListWithVersions(versionPatches)
-    try {
-      updateEntities({ operations, entityType })
-    } catch (error) {
-      productsPatch?.undo()
-    }
-  }
-
   const handleThumbnailClick = () => {
     let versionIds,
       id = firstEntity.id,
@@ -229,12 +186,13 @@ const DetailsPanelHeader = ({
   }
 
   return (
-    <Styled.Grid
-      className={clsx('details-panel-header', { isCompact })}
-      onDragEnter={() => setIsDraggingFile(true)}
-    >
+    <Styled.Grid className={clsx('details-panel-header', { isCompact })}>
       <Styled.Header className={clsx('titles', { isCompact, loading: isLoading }, 'no-shimmer')}>
-        <Styled.ThumbnailWrapper>
+        <EntityThumbnailUploader
+          entities={entities}
+          entityType={entityType}
+          projectName={projectName}
+        >
           <StackedThumbnails
             isLoading={isLoading}
             shimmer={isLoading}
@@ -248,7 +206,7 @@ const DetailsPanelHeader = ({
               <Icon icon="play_circle" />
             </Styled.Playable>
           )}
-        </Styled.ThumbnailWrapper>
+        </EntityThumbnailUploader>
         <Styled.Content className={clsx({ loading: isLoading })}>
           <h2>{!isMultiple ? firstEntity?.title : `${entities.length} ${entityType}s selected`}</h2>
           <div className="sub-title">
@@ -315,20 +273,6 @@ const DetailsPanelHeader = ({
         }}
         scope={scope}
       />
-
-      {isDraggingFile && (
-        <ThumbnailUploader
-          isPortal
-          onFinish={handleThumbnailUpload}
-          onDragLeave={() => setIsDraggingFile(false)}
-          onDragOver={(e) => e.preventDefault()}
-          className="thumbnail-uploader"
-          entities={entities}
-          entityType={entityType}
-          entityId={firstEntity?.id}
-          entityUpdatedAt={firstEntity?.updatedAt}
-        />
-      )}
     </Styled.Grid>
   )
 }

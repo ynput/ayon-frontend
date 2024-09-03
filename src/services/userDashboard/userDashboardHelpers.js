@@ -185,3 +185,23 @@ export const taskProvideTags = (result, type = 'task', entityType = 'task') =>
         { type: `kanBan${upperFirst(entityType)}`, id: upperCase(entityType) + 'S' },
       ]
     : [{ type, id: upperCase(entityType) + 'S' }]
+
+
+export  const getEntityDetailsData = ({ entities, entityType, projectsInfo, detailsData, isSuccess, isError }) => {
+    if (isSuccess && !isError) {
+      return detailsData
+    }
+
+    if (entities.length) {
+      return entities.map(({ id }) => ({ id }))
+    }
+
+    return entities.map((entity) =>
+      transformEntityData({
+        entity,
+        entityType,
+        projectName: entity.projectName,
+        projectInfo: projectsInfo[entity.projectName],
+      }),
+    )
+  }
