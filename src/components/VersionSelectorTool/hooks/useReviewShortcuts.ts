@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import isHTMLElement from '@helpers/isHTMLElement'
-import { VersionReviewablesModel } from '@/api/rest'
+import { VersionReviewablesModel } from '@/api/rest/review'
 
 type VersionButtonKey = 'selected' | 'previous' | 'next' | 'latest' | 'approved' | 'hero'
 

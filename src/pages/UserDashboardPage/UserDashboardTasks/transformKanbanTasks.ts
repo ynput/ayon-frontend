@@ -5,7 +5,7 @@
 import { KanbanNode } from '@/api/graphql'
 import { GetKanbanResponse } from '@queries/userDashboard/getUserDashboard'
 import { $Any } from '@/types'
-import { Status, TaskType } from '@api/rest'
+import { Status, TaskType } from '@api/rest/project'
 
 type ProjectsInfo = {
   [key: string]: $Any

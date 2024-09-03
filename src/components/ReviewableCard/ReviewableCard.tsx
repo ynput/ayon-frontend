@@ -1,5 +1,5 @@
 import { forwardRef, HTMLProps, MouseEvent } from 'react'
-import type { ReviewableModel } from '@api/rest'
+import type { ReviewableModel } from '@api/rest/review'
 import * as Styled from './ReviewableCard.styled'
 import Typography from '@/theme/typography.module.css'
 import clsx from 'clsx'

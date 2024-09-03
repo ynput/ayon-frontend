@@ -26,9 +26,11 @@ export const getPlatformIcon = (platform) => {
 const DownloadsPage = () => {
   //  production installers grouped by platform
   //  non-production installers grouped by version
-  const { prodInstallers, nonProdInstallers, platform, handleDownload } = useGetInstallerDownload()
+  const { prodInstallers, allInstallers, platform, handleDownload } = useGetInstallerDownload()
 
   const platforms = ['windows', 'darwin', 'linux']
+
+  console.log(allInstallers)
 
   return (
     <main style={{ overflow: 'hidden' }}>
@@ -48,7 +50,7 @@ const DownloadsPage = () => {
           <Panel style={{ overflow: 'auto' }}>
             <h2>All Versions</h2>
             <Styled.All>
-              {Object.entries(nonProdInstallers).map(([version, installers]) => (
+              {Object.entries(allInstallers).map(([version, installers]) => (
                 <div key={version}>
                   <Styled.Installer variant="text">
                     <span>
@@ -60,6 +62,8 @@ const DownloadsPage = () => {
                           key={installer.filename}
                           onClick={() => handleDownload(installer.sources, installer.filename)}
                           variant="text"
+                          data-tooltip={installer.filename}
+                          data-tooltip-delay={300}
                           style={{
                             order:
                               installer.platform === 'windows'

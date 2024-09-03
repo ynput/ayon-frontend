@@ -6,13 +6,13 @@ export type Summary = {
 }
 
 import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
-import api from '@/api'
 import {
+  api,
   ReviewableModel,
   ReviewableProcessingStatus,
   GetReviewablesForVersionApiResponse,
   VersionReviewablesModel,
-} from '@/api/rest'
+} from '@api/rest/review'
 
 // UPDATE GetReviewablesForVersionApiResponse to include the new processing type
 // Define a type alias for Processing to extend it correctly

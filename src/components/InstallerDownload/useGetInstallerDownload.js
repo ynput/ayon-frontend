@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { useGetBundleListQuery } from '@queries/bundles/getBundles'
+import { useListBundlesQuery } from '@queries/bundles/getBundles'
 import { useGetInstallerListQuery } from '@queries/installers'
 import { coerce, rcompare } from 'semver'
 import useLocalStorage from '@hooks/useLocalStorage'
@@ -8,7 +8,7 @@ import { toast } from 'react-toastify'
 const useGetInstallerDownload = () => {
   const { data: installers = [] } = useGetInstallerListQuery()
 
-  const { data: bundleList = [] } = useGetBundleListQuery({ archived: true })
+  const { data: { bundles: bundleList = [] } = {} } = useListBundlesQuery({ archived: true })
   const production = useMemo(() => {
     return bundleList.find((bundle) => bundle.isProduction)
   }, [bundleList])
@@ -33,13 +33,9 @@ const useGetInstallerDownload = () => {
       })
   }, [installers])
 
-  // Filter sorted installers into production and non-production installers
+  // Filter sorted installers into production installers
   const productionInstallers = useMemo(() => {
     return sortedInstallers.filter((installer) => installer.version === installerVersion)
-  }, [sortedInstallers, installerVersion])
-
-  const nonProductionInstallers = useMemo(() => {
-    return sortedInstallers.filter((installer) => installer.version !== installerVersion)
   }, [sortedInstallers, installerVersion])
 
   // Function to group installers by platform
@@ -58,9 +54,9 @@ const useGetInstallerDownload = () => {
     () => groupInstallersBy(productionInstallers, 'platform'),
     [productionInstallers],
   )
-  const nonProductionInstallersGroupedByPlatform = useMemo(
-    () => groupInstallersBy(nonProductionInstallers, 'version'),
-    [nonProductionInstallers],
+  const allInstallersGroupedByPlatform = useMemo(
+    () => groupInstallersBy(sortedInstallers, 'version'),
+    [sortedInstallers],
   )
 
   // get operating system of user
@@ -142,7 +138,7 @@ const useGetInstallerDownload = () => {
 
   return {
     prodInstallers: productionInstallersGroupedByPlatform,
-    nonProdInstallers: nonProductionInstallersGroupedByPlatform,
+    allInstallers: allInstallersGroupedByPlatform,
     directDownload,
     platform: userPlatform,
     handleDownload,

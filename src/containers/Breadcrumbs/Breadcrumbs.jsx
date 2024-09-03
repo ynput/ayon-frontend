@@ -7,6 +7,8 @@ import * as Styled from './Breadcrumbs.styled'
 import { upperFirst } from 'lodash'
 import copyToClipboard from '@helpers/copyToClipboard'
 import { useURIContext } from '@context/uriContext'
+import { ayonUrlParam } from '@/constants'
+import clsx from 'clsx'
 
 const uri2crumbs = (uri = '', pathname) => {
   // parse uri to path and query params
@@ -115,16 +117,28 @@ const Breadcrumbs = () => {
 
   const handleKeyDown = (e) => {
     // if escape, cancel edit mode
-    if (e.key === 'Escape') {
+    if (['Escape', 'Enter'].includes(e.key)) {
       setEditMode(false)
       setLocalUri(ctxUri)
       inputRef.current.blur()
     }
+    if (e.key === 'Enter') {
+      goThere(e)
+    }
   }
-
   useEffect(() => {
-    if (ctxUri === localUri) return
-    setLocalUri(ctxUri)
+    if (ctxUri !== localUri) {
+      setLocalUri(ctxUri)
+    }
+
+    const urlParams = new URLSearchParams(window.location.search)
+    const encodedAyonEntity = urlParams.get(ayonUrlParam)
+    if (encodedAyonEntity !== null) {
+      const ayonEntity = decodeURIComponent(encodedAyonEntity)
+      if (ayonEntity != ctxUri) {
+        navigate(ayonEntity)
+      }
+    }
   }, [ctxUri])
 
   const uriDisplay = uri2crumbs(ctxUri, location.pathname).join(' / ')
@@ -133,7 +147,22 @@ const Breadcrumbs = () => {
   return (
     <Styled.Wrapper>
       <Styled.Crumbtainer>
-        <Styled.CrumbsForm onSubmit={goThere}>
+        <Styled.CrumbsForm onSubmit={goThere} className={clsx({ noUri: !uriDisplay || !localUri })}>
+          {uriDisplay && localUri && (
+            <Button
+              icon="edit"
+              style={{
+                padding: editMode ? 0 : '6px',
+                opacity: editMode ? 0 : 1,
+                width: editMode ? 0 : 'auto',
+              }}
+              onClick={(e) => {
+                e.preventDefault()
+                setEditMode(true)
+              }}
+              variant="tonal"
+            />
+          )}
           <label data-value={inputValue}>
             <InputText
               value={inputValue}
@@ -142,14 +171,23 @@ const Breadcrumbs = () => {
               onFocus={() => setEditMode(true)}
               onKeyDown={handleKeyDown}
               ref={inputRef}
-              style={{ borderRadius: !localUri ? 4 : '4px 0 0 4px' }}
+              style={{ borderRadius: '4px 0 0 4px' }}
             />
           </label>
+          <Button
+            icon="arrow_forward"
+            style={{
+              display: editMode ? 'inline-flex' : 'none',
+              borderRadius: '0 4px 4px 0',
+            }}
+            onMouseDown={goThere}
+            variant="tonal"
+          />
         </Styled.CrumbsForm>
         {uriDisplay && localUri && (
           <Button
             icon="content_copy"
-            style={{ opacity: editMode ? 0 : 1, width: editMode ? 0 : 'auto' }}
+            style={{ display: editMode ? 'none' : 'inline-flex' }}
             onClick={onCopy}
             variant="tonal"
           />

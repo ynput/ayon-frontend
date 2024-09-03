@@ -2,7 +2,7 @@ import { FC, useEffect, useRef, useState } from 'react'
 import * as Styled from './ReviewablesSelector.styled'
 import clsx from 'clsx'
 import FileThumbnail from '../FileThumbnail'
-import { ReviewableModel } from '@/api/rest'
+import { ReviewableModel } from '@/api/rest/review'
 import isHTMLElement from '@helpers/isHTMLElement'
 import ScrollBar from 'react-perfect-scrollbar'
 

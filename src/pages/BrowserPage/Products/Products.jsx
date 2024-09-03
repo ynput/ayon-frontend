@@ -105,8 +105,41 @@ const Products = () => {
   // lazy query to fetch versions, the cache is based on versionIds provided
   const [getProductsVersions] = useLazyGetProductsVersionsQuery()
 
-  // merge products and versions data
-  const listData = productsData
+
+  const getListData = (productsData) => {
+    let selectionId
+    let selectedVersionId
+    for (const key in selectedVersions) {
+      if (selectedVersions[key].folderId == focusedFolders[0]) {
+        selectionId = key
+        selectedVersionId = selectedVersions[key].versionId
+        break
+      }
+    }
+
+    if (!focusedFolders[0]) {
+      return productsData
+    }
+
+    return productsData.map((el) => {
+      if (el.id !== selectionId) {
+        return el
+      }
+
+      const versionName = el.versionList.filter(el => el.id == selectedVersionId)[0]?.name
+      if (!versionName) {
+        return el
+      }
+
+      return {
+        ...el,
+        versionId: selectedVersionId,
+        versionName,
+      }
+    })
+  }
+
+  const listData = getListData(productsData)
 
   const patchProductsListWithVersions = usePatchProductsListWithVersions({ projectName })
 

@@ -104,14 +104,15 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
     if (selectedTasks.length && !isLoadingTasks) {
       // first find task
       const task = tasks.find((t) => t.id === selectedTasks[0])
-      if (!task) return
-      // updates the breadcrumbs
-      let uri = `ayon+entity://${task.projectName}/${task.folderPath}?task=${task.name}`
-
-      dispatch(setUri(uri))
-    } else {
-      dispatch(setUri(null))
+      if (task) {
+        // updates the breadcrumbs
+        let uri = `ayon+entity://${task.projectName}/${task.folderPath}?task=${task.name}`
+        dispatch(setUri(uri))
+        return
+      }
     }
+    // no tasks in current lproject or selected tasks NOT in current project
+      dispatch(setUri(null))
   }, [selectedTasks, isLoadingTasks, tasks])
 
   // add extra fields to tasks like: icons, thumbnailUrl, shortPath

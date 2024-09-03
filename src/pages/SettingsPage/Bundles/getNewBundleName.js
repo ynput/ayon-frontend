@@ -1,7 +1,7 @@
 // new bundles name format [studio-name]-[YYYY]-[MM]-[DD]-[xx]
 // xx is a number that increments for each bundle created on the same day
 
-const getNewBundleName = (studioName, bundleList) => {
+const getNewBundleName = (studioName, bundleList = []) => {
   const defaultStudio = 'Studio-Name'
   const now = new Date()
   const year = now.getFullYear()

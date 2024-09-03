@@ -40,23 +40,23 @@ const initialState = {
 }
 
 // all the keys that are stored in local storage
+// TODO: remove focus local keys marked with // as they are not used anymore
 const localStorageKeys = [
   'expandedFolders',
   'expandedProducts',
   'expandedRepresentations',
-  'focused.type',
-  'focused.subTypes',
-  'focused.folders',
-  'focused.products',
-  'focused.versions',
-  'focused.representations',
-  'focused.tasks',
-  'focused.tasksNames',
-  'focused.workfiles',
-  'focused.editor',
-  'selectedVersions',
-  'uri',
   'filters.browser.productTaskTypes',
+  'focused.type', //
+  'focused.subTypes', //
+  'focused.folders', //
+  'focused.products', //
+  'focused.versions', //
+  'focused.representations', //
+  'focused.tasks', //
+  'focused.tasksNames', //
+  'focused.workfiles', //
+  'focused.editor', //
+  'selectedVersions', //
 ]
 
 const initialStateWithLocalStorage = cloneDeep(initialState)

@@ -1,4 +1,4 @@
-import { FolderListItem } from '@api/rest'
+import { FolderListItem } from '@api/rest/folders'
 import { PathSegment } from '@components/EntityPath/EntityPath'
 import { $Any } from '@types'
 

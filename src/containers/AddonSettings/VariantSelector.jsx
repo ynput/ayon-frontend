@@ -1,7 +1,7 @@
 import { Button, Dropdown } from '@ynput/ayon-react-components'
 import { useSelector } from 'react-redux'
 import { useMemo, useEffect } from 'react'
-import { useGetBundleListQuery } from '@queries/bundles/getBundles'
+import { useListBundlesQuery } from '@queries/bundles/getBundles'
 import styled from 'styled-components'
 
 const BundleDropdownItem = styled.div`
@@ -23,16 +23,16 @@ const DropdownBadge = styled.span`
 `
 
 const DevModeSelector = ({ variant, setVariant, disabled, style }) => {
-  const { data } = useGetBundleListQuery({})
+  const { data: { bundles = [] } = {} } = useListBundlesQuery({})
   const userName = useSelector((state) => state.user.name)
 
   const bundleList = useMemo(() => {
     return [
       { label: 'Production', name: 'production' },
       { label: 'Staging', name: 'staging' },
-      ...(data || []).filter((b) => !b?.isArchived && b?.isDev),
+      ...(bundles || []).filter((b) => !b?.isArchived && b?.isDev),
     ]
-  }, [data])
+  }, [bundles])
 
   const bundleOptions = useMemo(() => {
     return bundleList.map((b) => ({
