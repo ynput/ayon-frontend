@@ -9,3 +9,7 @@
 .p-datatable-table.p-datatable-scrollable-table.p-datatable-resizable-table {
   width: 100% !important;
 }
+
+.p-datatable .p-sortable-column.p-highlight:not(.p-sortable-disabled):hover {
+  background: var(--md-sys-color-surface-container-low-hover);
+}
