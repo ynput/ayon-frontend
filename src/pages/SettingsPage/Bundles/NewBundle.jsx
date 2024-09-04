@@ -26,7 +26,7 @@ const removeEmptyDevAddons = (addons = {}) => {
   return newAddonDevelopment
 }
 
-const NewBundle = ({ initBundle, onSave, addons, installers, isLoading, isDev, developerMode }) => {
+const NewBundle = ({ initBundle, onSave, addons, installers, isDev, developerMode }) => {
   // when updating a dev bundle, we need to track changes
   const [formData, setFormData] = useState(null)
   const [skipBundleCheck, setSkipBundleCheck] = useState(false)
@@ -40,7 +40,10 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading, isDev, d
     if (!formData || !previousFormData) {
       return
     }
-    if (isEqual(formData.addonDevelopment, previousFormData.addonDevelopment)) {
+    if (
+      isEqual(formData.addonDevelopment, previousFormData.addonDevelopment) &&
+      formData.name === previousFormData.name
+    ) {
       setSkipBundleCheck(false)
     } else {
       setSkipBundleCheck(true)
@@ -60,9 +63,12 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading, isDev, d
 
   const bundleCheckError = bundleCheckData.issues?.some((issue) => issue.severity === 'error')
 
+  const addonsString = JSON.stringify(formData?.addons)
+  const installersString = JSON.stringify(formData?.installers)
+
   //   build initial form data
   useEffect(() => {
-    if (initBundle && !isLoading) {
+    if (initBundle) {
       // addons = [{name: 'addon1', versions:{'1.0.0': {}}}]
       // reduce down addons to latest version
       const initAddons = {}
@@ -84,16 +90,15 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isLoading, isDev, d
       }
 
       const initForm = {
-        addons: initAddons,
         ...initBundle,
-        name: formData?.name || '',
-        installerVersion: formData?.installerVersion || null,
+        addons: initAddons,
         isDev: developerMode || isDev,
         addonDevelopment: { ...initBundle.addonDevelopment, ...initAddonsDev },
       }
+
       setFormData(initForm)
     }
-  }, [initBundle, installers, isLoading, addons])
+  }, [initBundle, addonsString, installersString])
 
   // Select addon if query search has addon=addonName
   const addonListRef = useRef()

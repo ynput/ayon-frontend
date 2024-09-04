@@ -1,6 +1,27 @@
 import { AssigneeSelect, Button, Toolbar, Icon } from '@ynput/ayon-react-components'
 import styled, { css } from 'styled-components'
 
+export const FormRow = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--base-gap-large);
+
+  label {
+    min-width: 120px;
+  }
+
+  .field {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: left;
+    overflow: hidden;
+    padding: 1px;
+    margin: -1px;
+  }
+`
+
 const platformColors = {
   windows: '#00a2ed',
   linux: '#f47421',

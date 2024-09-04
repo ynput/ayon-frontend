@@ -175,7 +175,7 @@ const BundleList = ({
         label: 'Delete',
         icon: 'delete',
         command: () => onDelete(newSelection),
-        disabled: isStaging || isProduction || !allArchived,
+        disabled: isStaging || isProduction || (!allArchived && !metaKey),
         danger: true,
       })
     }

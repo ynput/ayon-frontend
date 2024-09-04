@@ -21,6 +21,7 @@ import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { useSearchParams } from 'react-router-dom'
 import Shortcuts from '@containers/Shortcuts'
 import CopyBundleSettingsDialog from './CopyBundleSettingsDialog/CopyBundleSettingsDialog'
+import BundleFormLoading from './BundleFormLoading'
 
 const Bundles = () => {
   const userName = useSelector((state) => state.user.name)
@@ -465,11 +466,12 @@ const Bundles = () => {
           </SplitterPanel>
           <SplitterPanel size={70} style={{ overflow: 'hidden' }}>
             <Section style={{ height: '100%' }}>
-              {newBundleOpen ? (
+              {isLoadingAddons || isLoadingInstallers ? (
+                <BundleFormLoading />
+              ) : newBundleOpen ? (
                 <NewBundle
                   initBundle={newBundleOpen}
                   onSave={handleNewBundleEnd}
-                  isLoading={isLoadingInstallers || isFetching}
                   installers={installerVersions}
                   addons={addons}
                   developerMode={developerMode}
