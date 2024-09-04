@@ -38,11 +38,6 @@ export const DefaultValueTemplateStyled = styled(DefaultValueTemplate)`
 const BadgesWrapper = styled.div`
   display: flex;
   gap: var(--base-gap-small);
-
-  &.previous > * {
-    /* strikethrough text */
-    text-decoration: line-through;
-  }
 `
 
 const DropdownBadge = styled.span`
@@ -51,6 +46,11 @@ const DropdownBadge = styled.span`
   font-size: 0.7rem;
   font-weight: 600;
   color: black;
+
+  &.disabled {
+    /* strikethrough text */
+    text-decoration: line-through;
+  }
 `
 
 export type BundleOption = {
@@ -60,7 +60,7 @@ export type BundleOption = {
   isStaging?: boolean
   isDev?: boolean
   activeUser?: string
-  previous?: boolean
+  previous?: string | null
 }
 
 type BundleBadgesProps = {
@@ -68,7 +68,7 @@ type BundleBadgesProps = {
   devMode: boolean
   startContent?: React.ReactNode
   endContent?: React.ReactNode
-  previous?: boolean
+  previous?: BundleOption['previous']
 }
 
 export const BundleBadges = ({
@@ -86,7 +86,10 @@ export const BundleBadges = ({
 
   if (bundle.isProduction) {
     prodBadge = (
-      <DropdownBadge className="badge" style={{ backgroundColor: 'var(--color-hl-production)' }}>
+      <DropdownBadge
+        className={clsx('badge', { disabled: previous === 'production' })}
+        style={{ backgroundColor: 'var(--color-hl-production)' }}
+      >
         {startContent}
         Production
         {endContent}
@@ -95,7 +98,10 @@ export const BundleBadges = ({
   }
   if (bundle.isStaging) {
     stagBadge = (
-      <DropdownBadge className="badge" style={{ backgroundColor: 'var(--color-hl-staging)' }}>
+      <DropdownBadge
+        className={clsx('badge', { disabled: previous === 'staging' })}
+        style={{ backgroundColor: 'var(--color-hl-staging)' }}
+      >
         {startContent}
         Staging
         {endContent}
@@ -105,7 +111,10 @@ export const BundleBadges = ({
 
   if (devMode && bundle.isDev) {
     devBadge = (
-      <DropdownBadge className="badge" style={{ backgroundColor: 'var(--color-hl-developer)' }}>
+      <DropdownBadge
+        className={clsx('badge', { disabled: previous === 'dev' })}
+        style={{ backgroundColor: 'var(--color-hl-developer)' }}
+      >
         {startContent}
         {bundle.activeUser === userName ? 'Active' : 'Dev'}
         {endContent}
@@ -114,7 +123,7 @@ export const BundleBadges = ({
   }
 
   return (
-    <BadgesWrapper className={clsx({ previous })}>
+    <BadgesWrapper>
       {prodBadge} {stagBadge} {devBadge}
     </BadgesWrapper>
   )

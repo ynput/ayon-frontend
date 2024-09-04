@@ -189,9 +189,9 @@ const CopyBundleSettingsDialog = ({
           <Styled.Row>
             <span>Bundle:</span>
             <CopyBundleSettingsDropdown
-              bundles={sourceBundles}
-              bundle={sourceBundle}
-              variant={sourceVariant}
+              bundles={sourceBundles} // all bundles
+              bundleValue={sourceBundle} // selected bundle name
+              variantValue={sourceVariant} // selected bundle variant (production, staging, dev)
               exclude={exclude}
               onBundleChange={(b, v) => {
                 setSourceBundle(b)

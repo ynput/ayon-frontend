@@ -24,15 +24,15 @@ export type SourceBundle = BundleModel & { previous?: boolean }
 interface CopyBundleSettingsDropdownProps
   extends Omit<DropdownProps, 'value' | 'options' | 'onChange'> {
   bundles: SourceBundle[]
-  bundle: string | null
+  bundleValue: string | null
+  variantValue: string
   exclude?: string[]
-  variant: string
-  onBundleChange: (bundle: string, variant: string) => void
+  onBundleChange: (bundleValue: string, variantValue: string) => void
 }
 
 const CopyBundleSettingsDropdown: FC<CopyBundleSettingsDropdownProps> = ({
-  bundle,
-  variant,
+  bundleValue,
+  variantValue,
   bundles,
   onBundleChange,
   exclude,
@@ -42,6 +42,8 @@ const CopyBundleSettingsDropdown: FC<CopyBundleSettingsDropdownProps> = ({
 
   const bundleFilter = (b: BundleModel) => b.isProduction || b.isStaging || (b.isDev && devMode)
 
+  // filter out bundles that are not production, staging, or dev
+  // create options objects for the dropdown
   let bundleOptions: BundleOption[] = useMemo(() => {
     return bundles.filter(bundleFilter).map((bundle) => ({
       value: bundle.name,
@@ -49,7 +51,7 @@ const CopyBundleSettingsDropdown: FC<CopyBundleSettingsDropdownProps> = ({
       isProduction: bundle.isProduction,
       isStaging: bundle.isStaging,
       isDev: bundle.isDev,
-      previous: !!bundle.previous,
+      previous: !!bundle.previous ? variantValue : null,
     }))
   }, [bundles])
 
@@ -83,13 +85,13 @@ const CopyBundleSettingsDropdown: FC<CopyBundleSettingsDropdownProps> = ({
 
   const handleBundleChange = (v: string[]) => {
     const splitIndex = v[0].lastIndexOf('__')
-    const bundle = v[0].substring(0, splitIndex)
-    const variant = v[0].substring(splitIndex + 2)
-    onBundleChange(bundle, variant)
+    const bundleValue = v[0].substring(0, splitIndex)
+    const variantValue = v[0].substring(splitIndex + 2)
+    onBundleChange(bundleValue, variantValue)
   }
 
-  let value = [bundle + '__' + variant]
-  if (!bundle && bundleOptions[0]) value = [bundleOptions[0].value]
+  let value = [bundleValue + '__' + variantValue]
+  if (!bundleValue && bundleOptions[0]) value = [bundleOptions[0].value]
 
   return (
     <StyledDropdown
