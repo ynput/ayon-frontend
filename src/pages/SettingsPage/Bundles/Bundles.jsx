@@ -290,9 +290,10 @@ const Bundles = () => {
         }
       }
 
-      // try and find an old bundle with the same status and unset it
+      const settingDev = statusKey === 'isDev'
+      // try and find an old bundle with the same status and unset it (not if setting dev)
       const oldBundle = bundleList.find((b) => b.name !== name && b[statusKey])
-      if (newActive) {
+      if (newActive && !settingDev) {
         if (oldBundle) {
           // optimistically update old bundle to remove status
           try {

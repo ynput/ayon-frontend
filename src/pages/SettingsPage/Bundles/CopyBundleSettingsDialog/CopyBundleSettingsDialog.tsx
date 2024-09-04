@@ -43,7 +43,7 @@ const CopyBundleSettingsDialog = ({
   //  replace bundle with previous bundle if it is set
   const sourceBundles = useMemo(() => {
     let updatedBundles: SourceBundle[] = [...bundles]
-    if (previousBundle) {
+    if (previousBundle && envTarget !== 'dev') {
       const replaceIndex = updatedBundles.findIndex((b) => b.name === previousBundle.name)
       if (replaceIndex > -1) {
         updatedBundles[replaceIndex] = { ...previousBundle, previous: true }
@@ -165,6 +165,9 @@ const CopyBundleSettingsDialog = ({
     }
     if (bundle.isStaging && envTarget === 'staging') {
       exclude.push(excludeBundleName + '__staging')
+    }
+    if (bundle.isDev && envTarget === 'dev') {
+      exclude.push(excludeBundleName + '__dev')
     }
   } else {
     if (bundle.isProduction) {
