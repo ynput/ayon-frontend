@@ -1,22 +1,6 @@
 import { api } from '@api/rest/accessGroups'
 
-// HACK: manually create types as they are not in the API yet
-export type AccessGroup = {
-  name?: string
-  isProjectLevel?: boolean
-}
-
-export type getAccessGroupsResult = AccessGroup[]
-
-import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
-type Definitions = DefinitionsFromApi<typeof api>
-type TagTypes = TagTypesFromApi<typeof api>
-// update the definitions to include the new types
-type UpdatedDefinitions = Omit<Definitions, 'getAccessGroups'> & {
-  getAccessGroups: OverrideResultType<Definitions['getAccessGroups'], getAccessGroupsResult>
-}
-
-const accessGroupsApi = api.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
+const accessGroupsApi = api.enhanceEndpoints({
   endpoints: {
     getAccessGroups: {
       providesTags: (result) =>

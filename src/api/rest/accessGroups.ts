@@ -31,7 +31,7 @@ const injectedRtkApi = api.injectEndpoints({
 export { injectedRtkApi as api }
 export type GetAccessGroupSchemaApiResponse = /** status 200 Successful Response */ any
 export type GetAccessGroupSchemaApiArg = void
-export type GetAccessGroupsApiResponse = /** status 200 Successful Response */ object[]
+export type GetAccessGroupsApiResponse = /** status 200 Successful Response */ AccessGroupObject[]
 export type GetAccessGroupsApiArg = {
   projectName: string
 }
@@ -40,16 +40,22 @@ export type GetAccessGroupApiArg = {
   accessGroupName: string
   projectName: string
 }
-export type SaveAccessGroupApiResponse = unknown
+export type SaveAccessGroupApiResponse = /** status 204 Successful Response */ void
 export type SaveAccessGroupApiArg = {
   accessGroupName: string
   projectName: string
   data: Permissions
 }
-export type DeleteAccessGroupApiResponse = unknown
+export type DeleteAccessGroupApiResponse = /** status 204 Successful Response */ void
 export type DeleteAccessGroupApiArg = {
   accessGroupName: string
   projectName: string
+}
+export type AccessGroupObject = {
+  /** Name of the access group */
+  name: string
+  /** Whether the access group is project level */
+  isProjectLevel: boolean
 }
 export type ValidationError = {
   loc: (string | number)[]
