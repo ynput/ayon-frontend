@@ -27,13 +27,13 @@ export const taskStatusSortFunction =
     }
 
     const isParent = a.__isParent || b.__isParent
-    const taskTypeA = a[field] as TaskTypeRow
-    const taskTypeB = b[field] as TaskTypeRow
+    const taskTypeA = a[field] as TaskTypeRow | undefined
+    const taskTypeB = b[field] as TaskTypeRow | undefined
 
     const folderSort = () => {
       // compare the tasks by their status for that taskType
-      const statusA = findStatus(taskTypeA.tasks)
-      const statusB = findStatus(taskTypeB.tasks)
+      const statusA = taskTypeA && findStatus(taskTypeA.tasks)
+      const statusB = taskTypeB && findStatus(taskTypeB.tasks)
       const orderValue = order === 1 ? 1 : -1
       const statusIndexA = statuses.findIndex((s) => s.name === statusA)
       const statusIndexB = statuses.findIndex((s) => s.name === statusB)

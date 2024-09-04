@@ -23,7 +23,7 @@ import type {
   TaskTypeStatusBar,
 } from '../../helpers/formatTaskProgressForTable'
 import type { GetAllProjectUsersAsAssigneeResult } from '@queries/user/getUsers'
-import { type KeyboardEvent, type MouseEvent } from 'react'
+import { useEffect, useState, type KeyboardEvent, type MouseEvent } from 'react'
 import { $Any } from '@types'
 import { InView } from 'react-intersection-observer'
 import useCreateContext from '@hooks/useCreateContext'
@@ -81,7 +81,6 @@ export const TasksProgressTable = ({
   onExpandRow,
   collapsedRows = [],
   onCollapseRow,
-
   onChange,
   onSelection,
   onOpenViewer,
@@ -90,6 +89,21 @@ export const TasksProgressTable = ({
   const selectedTasks = useSelector((state: $Any) => state.context.focused.tasks) as string[]
   const detailsOpen = useSelector((state: $Any) => state.details.open) as boolean
   const dispatch = useDispatch()
+
+  // HACK: this forces a complete rerender of the table
+  // used for resting the column widths
+  const [reloadTable, setReloadTable] = useState(false)
+  const forceReloadTable = () => setReloadTable(true)
+  useEffect(() => {
+    if (!reloadTable) return
+
+    // timeout to reset reloadTable after 1 second
+    const timeout = setTimeout(() => {
+      setReloadTable(false)
+    }, 0)
+
+    return () => clearTimeout(timeout)
+  }, [reloadTable])
 
   // for all columns that have taskType as a key, create a new column
   const taskTypeKeys: string[] = []
@@ -230,13 +244,34 @@ export const TasksProgressTable = ({
     const newWidths = { ...savedWidths }
     delete newWidths[taskType]
     taskType && setSavedWidths(newWidths)
+
+    forceReloadTable()
   }
 
   const tableWrapperEl = (tableRef.current?.getElement() as HTMLElement)?.querySelector(
     '.p-datatable-wrapper',
   )
 
+  const buildColumnHeaderMenuItems = (taskType: string) => [
+    {
+      label: 'Reset column width',
+      icon: 'width',
+      command: () => resetColumnWidth(taskType),
+    },
+  ]
+
+  const handleColumnHeaderContextMenu = (
+    e: MouseEvent<HTMLTableCellElement, globalThis.MouseEvent>,
+    taskType: string,
+  ) => {
+    console.log(e)
+    e.preventDefault()
+    ctxMenuShow(e, buildColumnHeaderMenuItems(taskType))
+  }
+
   if (isLoading) return <TasksProgressLoadingTable rows={20} />
+
+  if (reloadTable) return null
 
   return (
     <DataTable
@@ -319,10 +354,13 @@ export const TasksProgressTable = ({
           header={<TaskColumnHeader taskType={taskTypeKey} />}
           sortable
           sortFunction={(e) => sortFolderFunction(e, taskStatusSortFunction(statuses))}
-          pt={{ bodyCell: { style: { padding: 0 } } }}
+          pt={{
+            bodyCell: { style: { padding: 0 } },
+            headerCell: { onContextMenu: (e) => handleColumnHeaderContextMenu(e, taskTypeKey) },
+          }}
           style={{ width: resolveColumnWidth(taskTypeKey) }}
-          className="column task-column"
-          headerClassName="column-header task-column-header"
+          className={clsx('column', 'task-column', taskTypeKey)}
+          headerClassName={clsx('column-header', 'task-column', 'task-column-header', taskTypeKey)}
           body={(rowData) => {
             // the bar at the top with all the status colours
             if (rowData.__isParent) {
@@ -338,7 +376,7 @@ export const TasksProgressTable = ({
             // const width = resolveColumnWidth(taskTypeKey)
 
             return (
-              <Cells key={taskTypeKey} className="cells">
+              <Cells className="cells">
                 {taskCellData.tasks.map((task) => {
                   // add avatarUrl to each user
                   const assigneeOptions = users.map((user) => ({
