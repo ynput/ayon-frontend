@@ -61,18 +61,22 @@ const BundleForm = ({
   return (
     <Panel style={{ flexGrow: 1, overflow: 'hidden' }}>
       <FormLayout style={{ gap: 8, paddingTop: 1, maxWidth: 900 }}>
-        <FormRow label="Name">
-          {isNew ? (
-            <InputText
-              value={formData?.name || ''}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              style={showNameError ? { outline: '1px solid var(--color-hl-error)' } : {}}
-              disabled={!formData || isDev}
-            />
-          ) : (
-            <h2 style={{ margin: 0 }}>{formData?.name}</h2>
-          )}
-        </FormRow>
+        <Styled.FormRow>
+          <label htmlFor="bundle-name">Bundle name</label>
+          <div className="field">
+            {isNew ? (
+              <InputText
+                value={formData?.name || ''}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                style={showNameError ? { outline: '1px solid var(--color-hl-error)' } : {}}
+                disabled={!formData || isDev}
+                id={'bundle-name'}
+              />
+            ) : (
+              <h2 style={{ margin: 0 }}>{formData?.name}</h2>
+            )}
+          </div>
+        </Styled.FormRow>
         <FormRow label="Launcher version">
           {isNew ? (
             <InstallerSelector

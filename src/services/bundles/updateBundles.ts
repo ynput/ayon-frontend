@@ -1,7 +1,20 @@
 // we continue to use the enhanced bundles api from getBundles.js
 import api from './getBundles'
 
-const updateBundles = api.injectEndpoints({
+const enhancedUpdateBundles = api.enhanceEndpoints({
+  endpoints: {
+    migrateSettingsByBundle: {
+      invalidatesTags: () => [
+        { type: 'addonSettings' },
+        { type: 'addonSettingsOverrides' },
+        { type: 'addonSettingsList' },
+      ],
+    },
+  },
+})
+
+// Rest of non converted queries that will eventually be converted to use the enhanced api
+const updateBundles = enhancedUpdateBundles.injectEndpoints({
   endpoints: (build) => ({
     deleteBundle: build.mutation({
       query: ({ name }) => ({
@@ -10,7 +23,7 @@ const updateBundles = api.injectEndpoints({
       }),
 
       // eslint-disable-next-line no-unused-vars
-      invalidatesTags: (result, error, id) => [
+      invalidatesTags: () => [
         { type: 'bundleList' },
         { type: 'addonList' },
         { type: 'addonSettingsList' },
@@ -24,7 +37,7 @@ const updateBundles = api.injectEndpoints({
         body: { action: 'promote' },
       }),
       // eslint-disable-next-line no-unused-vars
-      invalidatesTags: (result, error, id) => [
+      invalidatesTags: () => [
         { type: 'bundleList' },
         { type: 'addonList' },
         { type: 'addonSettingsList' },
@@ -35,15 +48,26 @@ const updateBundles = api.injectEndpoints({
     }),
 
     createBundle: build.mutation({
-      query: ({ data, force = false }) => ({
-        url: `/api/bundles?force=${force}`,
-        method: 'POST',
-        body: data,
-      }),
+      query: ({ data, force = false, settingsFromBundle = null, settingsFromVariant = null }) => {
+        const queryParameters = new URLSearchParams()
+        if (force) queryParameters.append('force', force)
+        if (settingsFromBundle) queryParameters.append('settingsFromBundle', settingsFromBundle)
+        if (settingsFromVariant) queryParameters.append('settingsFromVariant', settingsFromVariant)
+
+        return {
+          url: `/api/bundles?${queryParameters.toString()}`,
+          method: 'POST',
+          body: data,
+        }
+      },
       // eslint-disable-next-line no-unused-vars
-      invalidatesTags: (result, error, id) => [
+      invalidatesTags: () => [
         { type: 'bundleList' },
         { type: 'addonList' },
+        { type: 'addonSettingsList' },
+        // TODO: invalidate settings
+        { type: 'addonSettings' },
+        { type: 'addonSettingsOverrides' },
         { type: 'addonSettingsList' },
       ],
     }),
@@ -59,7 +83,7 @@ const updateBundles = api.injectEndpoints({
       onQueryStarted: async ({ name, archived = true, patch }, { dispatch, queryFulfilled }) => {
         const patchResult = dispatch(
           api.util.updateQueryData('listBundles', { archived }, (draft) => {
-            if (!patch) return
+            if (!patch || !draft?.bundles) return
             const bundleIndex = draft.bundles.findIndex((bundle) => bundle.name === name)
             if (bundleIndex === -1) throw new Error('bundle not found')
             draft.bundles[bundleIndex] = patch
@@ -72,7 +96,7 @@ const updateBundles = api.injectEndpoints({
         }
       },
       // eslint-disable-next-line no-unused-vars
-      invalidatesTags: (result, error, id) => [
+      invalidatesTags: () => [
         { type: 'bundleList' },
         { type: 'addonList' },
         { type: 'addonSettingsList' },
@@ -88,4 +112,5 @@ export const {
   useCreateBundleMutation,
   useUpdateBundleMutation,
   usePromoteBundleMutation,
+  useMigrateSettingsByBundleMutation,
 } = updateBundles

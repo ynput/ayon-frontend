@@ -82,7 +82,7 @@ const App = () => {
     getInfo()
       .unwrap()
       .then((response) => {
-        setNoAdminUser(!!response.noAdminUser)
+        setNoAdminUser(!!response?.noAdminUser)
 
         if (response.onboarding) {
           setIsOnboarding(true)

@@ -20,6 +20,8 @@ import useLocalStorage from '@hooks/useLocalStorage'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { useSearchParams } from 'react-router-dom'
 import Shortcuts from '@containers/Shortcuts'
+import CopyBundleSettingsDialog from './CopyBundleSettingsDialog/CopyBundleSettingsDialog'
+import BundleFormLoading from './BundleFormLoading'
 
 const Bundles = () => {
   const userName = useSelector((state) => state.user.name)
@@ -34,6 +36,14 @@ const Bundles = () => {
   // open bundle details
   // set a bundle name to open the new bundle form, plus add any extra data
   const [newBundleOpen, setNewBundleOpen] = useState(null)
+
+  // show copy settings dialog
+  const initCopySettingsBundle = { env: null, bundle: null, previous: null }
+  const [copySettingsBundle, setCopySettingsBundle] = useState(initCopySettingsBundle)
+
+  const closeCopySettings = () => {
+    setCopySettingsBundle(initCopySettingsBundle)
+  }
 
   const [showArchived, setShowArchived] = useLocalStorage('bundles-archived', true)
 
@@ -259,32 +269,57 @@ const Bundles = () => {
     const message = `bundle ${name} ${newActive ? 'set' : 'unset'} ${status}`
     let patchResult
 
-    if (newActive) {
-      // try and find an old bundle with the same status and unset it
-      const oldBundle = bundleList.find((b) => b.name !== name && b[statusKey])
-      if (oldBundle) {
-        // optimistically update old bundle to remove status
-        try {
-          const patch = { ...oldBundle, [statusKey]: false }
-          patchResult = dispatch(
-            bundlesApi.util.updateQueryData('listBundles', { archived: true }, (draft) => {
-              const bundleIndex = draft.bundles.findIndex(
-                (bundle) => bundle.name === oldBundle.name,
-              )
-              draft.bundles[bundleIndex] = patch
-            }),
-          )
-        } catch (error) {
-          console.error(error)
-        }
-      }
-    }
-
     try {
       const patch = { ...bundle, [statusKey]: newActive }
+
+      // before updating status, check if we need to copy settings
+      if (newActive) {
+        // source is the current bundle that matches statusKey
+        let source = bundleList.find((b) => b.name !== name && b[statusKey])
+
+        // if no source, use the other status
+        if (!source) {
+          statusKey === 'isProduction'
+            ? (source = bundleList.find((b) => b.isStaging))
+            : (source = bundleList.find((b) => b.isProduction))
+        }
+
+        // if still no source and developerMode is enabled, use the dev bundle
+        if (!source && developerMode) {
+          source = bundleList.find((b) => b.isDev)
+        }
+      }
+
+      const settingDev = statusKey === 'isDev'
+      // try and find an old bundle with the same status and unset it (not if setting dev)
+      const oldBundle = bundleList.find((b) => b.name !== name && b[statusKey])
+      if (newActive && !settingDev) {
+        if (oldBundle) {
+          // optimistically update old bundle to remove status
+          try {
+            const patchOld = { ...oldBundle, [statusKey]: false }
+            patchResult = dispatch(
+              bundlesApi.util.updateQueryData('listBundles', { archived: true }, (draft) => {
+                const bundleIndex = draft.bundles.findIndex(
+                  (bundle) => bundle.name === oldBundle.name,
+                )
+                draft.bundles[bundleIndex] = patchOld
+              }),
+            )
+          } catch (error) {
+            console.error(error)
+          }
+        }
+      }
+
       await updateBundle({ name, data: { [statusKey]: newActive }, patch }).unwrap()
-      toast.success(upperFirst(message))
+
+      if (newActive) {
+        // now ask if the user wants to copy settings from the source bundle
+        setCopySettingsBundle({ bundle: patch, env: status, previous: oldBundle })
+      }
     } catch (error) {
+      console.error(error)
       toast.error(`Error setting ${message}`)
       // revert optimistic update if failed to set new bundle
       patchResult?.undo()
@@ -355,6 +390,14 @@ const Bundles = () => {
         setUploadOpen={setUploadOpen}
         uploadHeader={uploadHeader}
       />
+      <CopyBundleSettingsDialog
+        bundle={copySettingsBundle.bundle}
+        previousBundle={copySettingsBundle.previous}
+        envTarget={copySettingsBundle.env}
+        devMode={developerMode}
+        onCancel={closeCopySettings}
+        onFinish={closeCopySettings}
+      />
       <main style={{ overflow: 'hidden' }}>
         <Splitter style={{ width: '100%' }} stateStorage="local" stateKey="bundles-splitter">
           <SplitterPanel style={{ minWidth: 200, width: 400, maxWidth: 800, zIndex: 10 }} size={30}>
@@ -413,16 +456,23 @@ const Bundles = () => {
                 toggleBundleStatus={toggleBundleStatus}
                 errorMessage={!isFetching && isError && error?.data?.traceback}
                 developerMode={developerMode}
+                onCopySettings={(b) =>
+                  setCopySettingsBundle({
+                    bundle: b,
+                    env: null,
+                  })
+                }
               />
             </Section>
           </SplitterPanel>
           <SplitterPanel size={70} style={{ overflow: 'hidden' }}>
             <Section style={{ height: '100%' }}>
-              {newBundleOpen ? (
+              {isLoadingAddons || isLoadingInstallers ? (
+                <BundleFormLoading />
+              ) : newBundleOpen ? (
                 <NewBundle
                   initBundle={newBundleOpen}
                   onSave={handleNewBundleEnd}
-                  isLoading={isLoadingInstallers || isFetching}
                   installers={installerVersions}
                   addons={addons}
                   developerMode={developerMode}

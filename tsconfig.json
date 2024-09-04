@@ -27,7 +27,6 @@
       "@components/*": ["./components/*"],
       "@api/*": ["./api/*"],
       "@api": ["./api"],
-      "@types/*": ["./types/*"],
       "@types": ["./types"],
       "@queries/*": ["./services/*"],
       "@pages/*": ["./pages/*"],

@@ -17,10 +17,15 @@ const BundleList = ({
   bundleList,
   isLoading,
   onDuplicate,
+  onCopySettings,
   toggleBundleStatus,
   errorMessage,
   developerMode,
 }) => {
+  const prodBundleName = useMemo(() => bundleList.find((b) => b.isProduction)?.name, [bundleList])
+  const stagingBundleName = useMemo(() => bundleList.find((b) => b.isStaging)?.name, [bundleList])
+  const hasDevBundles = useMemo(() => bundleList.some((b) => b.isDev), [bundleList])
+
   const [updateBundle] = useUpdateBundleMutation()
   const [deleteBundle] = useDeleteBundleMutation()
 
@@ -122,6 +127,30 @@ const BundleList = ({
       disabled: selectedBundles.length > 1,
     })
 
+    const resolveCanCopySettings = () => {
+      const devAvailable = hasDevBundles && developerMode
+      // Check if the selected bundle has staging status and there is a production bundle available
+      const noProd = isStaging && !prodBundleName && !devAvailable
+
+      // Check if the selected bundle has production status and there is a staging bundle available
+      const noStag = isProduction && !stagingBundleName && !devAvailable
+
+      // bundle is not production or staging or dev
+      const notActive = !isProduction && !isStaging && !isDev
+
+      // it is both production and staging
+      const isBoth = isProduction && isStaging
+
+      return selectedBundles.length > 1 || noProd || noStag || notActive || isBoth
+    }
+
+    ctxMenuItems.push({
+      label: 'Copy settings from...',
+      icon: 'system_update_alt',
+      command: () => onCopySettings(activeBundle),
+      disabled: resolveCanCopySettings(),
+    })
+
     const newSelectedBundles = bundleList.filter((b) => newSelection.includes(b.name))
 
     // count number of isArchived newSelectedBundles
@@ -148,7 +177,7 @@ const BundleList = ({
         label: 'Delete',
         icon: 'delete',
         command: () => onDelete(newSelection),
-        disabled: isStaging || isProduction || !allArchived,
+        disabled: isStaging || isProduction || (!allArchived && !metaKey),
         danger: true,
       })
     }
@@ -166,10 +195,20 @@ const BundleList = ({
           marginLeft: 0,
         }}
       >
-        {rowData.isProduction && <Badge hl="production">Production</Badge>}
-        {rowData.isStaging && <Badge hl="staging">Staging</Badge>}
+        {rowData.isProduction && (
+          <Badge hl="production" data-testid={`${rowData.name}-production`}>
+            Production
+          </Badge>
+        )}
+        {rowData.isStaging && (
+          <Badge hl="staging" data-testid={`${rowData.name}-staging`}>
+            Staging
+          </Badge>
+        )}
         {rowData.isDev && (
-          <Badge hl="developer">Dev{rowData.activeUser && ` (${rowData.activeUser})`}</Badge>
+          <Badge hl="developer" data-testid={`${rowData.name}-dev`}>
+            Dev{rowData.activeUser && ` (${rowData.activeUser})`}
+          </Badge>
         )}
       </BadgeWrapper>
     )
