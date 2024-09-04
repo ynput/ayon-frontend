@@ -62,9 +62,16 @@ const CopyBundleSettingsDialog = ({
     [sourceBundles],
   )
 
+  const firstDevBundle = useMemo(() => sourceBundles?.find((b) => b?.isDev), [sourceBundles])
+
   useEffect(() => {
     const determineVariantAndBundle = () => {
-      if (previousBundle && envTarget && bundle?.name !== previousBundle.name) {
+      if (
+        previousBundle &&
+        envTarget &&
+        bundle?.name !== previousBundle.name &&
+        envTarget !== 'dev'
+      ) {
         return { variant: envTarget, bundleName: previousBundle.name }
       }
 
@@ -83,10 +90,8 @@ const CopyBundleSettingsDialog = ({
 
         // last resort: if in dev mode, try and copy from the dev bundle
         if (devMode) {
-          // get first dev bundle
-          const devBundle = sourceBundles.find((b) => b.isDev)
-          if (devBundle) {
-            return { variant: 'dev', bundleName: devBundle.name }
+          if (firstDevBundle) {
+            return { variant: 'dev', bundleName: firstDevBundle.name }
           }
         }
 
@@ -97,6 +102,8 @@ const CopyBundleSettingsDialog = ({
           return { variant: 'staging', bundleName: currentStagingBundle.name }
         } else if (bundle?.isStaging && currentProductionBundle) {
           return { variant: 'production', bundleName: currentProductionBundle.name }
+        } else if (devMode && firstDevBundle) {
+          return { variant: 'dev', bundleName: firstDevBundle.name }
         }
       }
     }
