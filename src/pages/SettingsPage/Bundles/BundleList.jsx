@@ -24,6 +24,7 @@ const BundleList = ({
 }) => {
   const prodBundleName = useMemo(() => bundleList.find((b) => b.isProduction)?.name, [bundleList])
   const stagingBundleName = useMemo(() => bundleList.find((b) => b.isStaging)?.name, [bundleList])
+  const hasDevBundles = useMemo(() => bundleList.some((b) => b.isDev), [bundleList])
 
   const [updateBundle] = useUpdateBundleMutation()
   const [deleteBundle] = useDeleteBundleMutation()
@@ -127,11 +128,12 @@ const BundleList = ({
     })
 
     const resolveCanCopySettings = () => {
+      const devAvailable = hasDevBundles && developerMode
       // Check if the selected bundle has staging status and there is a production bundle available
-      const noProd = isStaging && !prodBundleName
+      const noProd = isStaging && !prodBundleName && !devAvailable
 
       // Check if the selected bundle has production status and there is a staging bundle available
-      const noStag = isProduction && !stagingBundleName
+      const noStag = isProduction && !stagingBundleName && !devAvailable
 
       // bundle is not production or staging or dev
       const notActive = !isProduction && !isStaging && !isDev

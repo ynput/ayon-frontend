@@ -69,19 +69,36 @@ const CopyBundleSettingsDialog = ({
       }
 
       // Fallback to available bundle
-      const isProdSelf =
-        currentProductionBundle?.name === bundle?.name && envTarget === 'production'
+      if (envTarget || bundle?.isDev) {
+        const isProdSelf =
+          currentProductionBundle?.name === bundle?.name && envTarget === 'production'
 
-      if (currentProductionBundle && !isProdSelf) {
-        return { variant: 'production', bundleName: currentProductionBundle.name }
-      }
-      const isStagingSelf = currentStagingBundle?.name === bundle?.name && envTarget === 'staging'
-      if (currentStagingBundle && !isStagingSelf) {
-        return { variant: 'staging', bundleName: currentStagingBundle.name }
-      }
+        if (currentProductionBundle && !isProdSelf) {
+          return { variant: 'production', bundleName: currentProductionBundle.name }
+        }
+        const isStagingSelf = currentStagingBundle?.name === bundle?.name && envTarget === 'staging'
+        if (currentStagingBundle && !isStagingSelf) {
+          return { variant: 'staging', bundleName: currentStagingBundle.name }
+        }
 
-      // if there is nothing to copy from, hide the dialog
-      return null
+        // last resort: if in dev mode, try and copy from the dev bundle
+        if (devMode) {
+          // get first dev bundle
+          const devBundle = sourceBundles.find((b) => b.isDev)
+          if (devBundle) {
+            return { variant: 'dev', bundleName: devBundle.name }
+          }
+        }
+
+        return null
+      } else {
+        // try and copy from the opposite variant
+        if (bundle?.isProduction && currentStagingBundle) {
+          return { variant: 'staging', bundleName: currentStagingBundle.name }
+        } else if (bundle?.isStaging && currentProductionBundle) {
+          return { variant: 'production', bundleName: currentProductionBundle.name }
+        }
+      }
     }
 
     const bundleInfo = determineVariantAndBundle()
@@ -91,7 +108,7 @@ const CopyBundleSettingsDialog = ({
     } else {
       onCancel()
     }
-  }, [currentProductionBundle, envTarget, currentStagingBundle, bundle, sourceBundles])
+  }, [currentProductionBundle, envTarget, currentStagingBundle, bundle, sourceBundles, devMode])
 
   const handleClose = () => {
     onCancel()
@@ -192,6 +209,7 @@ const CopyBundleSettingsDialog = ({
           <Styled.Row>
             <span>Bundle:</span>
             <CopyBundleSettingsDropdown
+              devMode={devMode}
               bundles={sourceBundles} // all bundles
               bundleValue={sourceBundle} // selected bundle name
               variantValue={sourceVariant} // selected bundle variant (production, staging, dev)
@@ -200,6 +218,7 @@ const CopyBundleSettingsDialog = ({
                 setSourceBundle(b)
                 setSourceVariant(v)
               }}
+              onError={() => onCancel()}
             />
           </Styled.Row>
         </Styled.BundleCard>
