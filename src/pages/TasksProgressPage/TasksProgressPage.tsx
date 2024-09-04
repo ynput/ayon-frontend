@@ -8,10 +8,6 @@ import { FC } from 'react'
 import { useSelector } from 'react-redux'
 import TaskProgressDetailsPanel from './TaskProgressDetailsPanel'
 
-const detailsMinWidth = 300
-const detailsMaxWidth = '30vw'
-const detailsMaxMaxWidth = 500
-
 const TasksProgressPage: FC = () => {
   const projectName = useSelector((state: $Any) => state.project.name) as string
   const isOpen = useSelector((state: $Any) => state.details.open) as boolean
@@ -32,7 +28,7 @@ const TasksProgressPage: FC = () => {
         </SplitterPanel>
         <SplitterPanel size={90} style={{ overflow: 'hidden' }}>
           <Splitter layout="horizontal" style={{ height: '100%', overflow: 'hidden' }}>
-            <SplitterPanel size={80} style={{ overflow: 'hidden' }}>
+            <SplitterPanel size={60} style={{ overflow: 'hidden' }}>
               <TasksProgress
                 statuses={projectInfo?.statuses}
                 taskTypes={projectInfo?.taskTypes}
@@ -42,10 +38,10 @@ const TasksProgressPage: FC = () => {
             </SplitterPanel>
             {detailsOpen ? (
               <SplitterPanel
+                size={20}
                 style={{
-                  maxWidth: `clamp(${detailsMinWidth}px, ${detailsMaxWidth}, ${detailsMaxMaxWidth}px)`,
-                  minWidth: detailsMinWidth,
-                  width: '3vw',
+                  minWidth: 300,
+                  maxWidth: 800,
                   zIndex: 200,
                 }}
               >
