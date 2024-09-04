@@ -9,6 +9,7 @@ import { useUpdateEntitiesMutation } from '@queries/entity/updateEntity'
 import usePatchProductsListWithVersions from '@hooks/usePatchProductsListWithVersions'
 import { $Any } from '@/types'
 import * as Styled from './EntityThumbnailUploader.styled'
+import { ThumbnailUploadProvider } from './ThumbnailUploaderProvider'
 
 type Operation = {
   id: string
@@ -21,7 +22,7 @@ type Props = {
   entities: $Any[]
   isCompact: boolean
   projectName: any
-  children: $Any[]
+  children?: JSX.Element|JSX.Element[];
   fileUpload: false,
   onUploaded: (operations: Operation[]) => void
   resetFileUploadState: () => void
@@ -34,7 +35,6 @@ const EntityThumbnailUploader = ({
   isCompact = false,
   fileUpload,
   onUploaded,
-  resetFileUploadState,
 }: Props) => {
   const [isDraggingFile, setIsDraggingFile] = useState(false)
 
@@ -92,7 +92,7 @@ const EntityThumbnailUploader = ({
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-      resetFileUploadState()
+      // resetFileUploadState()
       if (fileUpload) {
         inputRef.current?.click()
       }
@@ -117,8 +117,6 @@ const EntityThumbnailUploader = ({
       let promises = []
       for (const entity of entities) {
         const { id, entityType, projectName } = entity
-
-        console.log(projectName)
 
         if (!projectName) throw new Error('Project name is required')
 
@@ -148,24 +146,29 @@ const EntityThumbnailUploader = ({
     }
   }
 
-
   return (
-    <Styled.DragAndDropWrapper
-      className={clsx({ isCompact })}
-      onDragEnter={() => setIsDraggingFile(true)}
+    <ThumbnailUploadProvider
+      entities={entities}
+      handleThumbnailUpload={handleThumbnailUpload}
+      inputRef={inputRef}
     >
-      <ThumbnailWrapper>{children}</ThumbnailWrapper>
-      {isDraggingFile && (
-        <ThumbnailUploader
-          onFinish={handleThumbnailUpload}
-          onDragLeave={() => setIsDraggingFile(false)}
-          onDragOver={(e) => e.preventDefault()}
-          className="thumbnail-uploader"
-          entities={entities}
-        />
-      )}
-      <input type="file" onChange={handleFileUpload} ref={inputRef} />
-    </Styled.DragAndDropWrapper>
+      <Styled.DragAndDropWrapper
+        className={clsx({ isCompact })}
+        onDragEnter={() => setIsDraggingFile(true)}
+      >
+        <ThumbnailWrapper>{children}</ThumbnailWrapper>
+        {isDraggingFile && (
+          <ThumbnailUploader
+            onFinish={handleThumbnailUpload}
+            onDragLeave={() => setIsDraggingFile(false)}
+            onDragOver={(e) => e.preventDefault()}
+            className="thumbnail-uploader"
+            entities={entities}
+          />
+        )}
+        <input type="file" onChange={handleFileUpload} ref={inputRef} />
+      </Styled.DragAndDropWrapper>
+    </ThumbnailUploadProvider>
   )
 }
 

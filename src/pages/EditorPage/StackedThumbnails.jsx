@@ -1,8 +1,9 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import styled, { css } from 'styled-components'
 import Thumbnail from '@components/Thumbnail'
 import { useSelector } from 'react-redux'
 import clsx from 'clsx'
+import { ThumbnailUploadContext } from '@components/EntityThumbnailUploader/ThumbnailUploaderProvider'
 
 const StackedStyled = styled.div`
   display: flex;
@@ -48,6 +49,7 @@ const StackedThumbnails = ({
   style,
   ...props
 }) => {
+  const { onContextMenu } = useContext(ThumbnailUploadContext)
   const projectName2 = projectName || useSelector((state) => state.project.name)
   // limit to 5 users
   thumbnails = thumbnails.slice(0, 5)
@@ -69,6 +71,7 @@ const StackedThumbnails = ({
             entityUpdatedAt={thumb.updatedAt}
             isLoading={isLoading}
             src={thumb.src}
+            onContextMenu={onContextMenu}
             {...props}
           />
         ) : null,

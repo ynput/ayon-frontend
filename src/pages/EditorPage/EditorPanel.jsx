@@ -20,10 +20,9 @@ import {
 
 import StatusSelect from '@components/status/statusSelect'
 import EntityDetailsHeader from '@components/Details/EntityDetailsHeader'
-import EntityThumbnailUploader from '@components/EntityThumbnailUploader'
+import EntityThumbnailUploader from '@components/EntityThumbnailUploader/EntityThumbnailUploader'
 import { SubRow, Container } from './EditorPanel.styled'
 import getFieldInObject from '@helpers/getFieldInObject'
-import useCreateContext from '@hooks/useCreateContext'
 import useFocusedEntities from '@hooks/useFocused'
 import { useGetEntitiesDetailsPanelQuery } from '@queries/entity/getEntityPanel'
 import { useGetProjectsInfoQuery } from '@queries/userDashboard/getUserDashboard'
@@ -507,22 +506,6 @@ const EditorPanel = ({
     handleFormChanged()
   }, [form, nodes, changes])
 
-  const [fileUploadInProgress, setFileUploadInProgress] = useState(false)
-  const ctxMenuItems = () => [
-    {
-      label: 'Upload New Thumbnail',
-      icon: 'upload',
-      command: () => setFileUploadInProgress(true)
-    },
-  ]
-
-  // create the ref and model
-  const [ctxMenuShow] = useCreateContext()
-
-  const onContextMenu = (event) => {
-    ctxMenuShow(event, ctxMenuItems())
-  }
-
   return (
     <Section wrap id="editor-entity-details-container">
       {!noSelection && (
@@ -543,13 +526,10 @@ const EditorPanel = ({
 
               refetch()
             }}
-            fileUpload={fileUploadInProgress}
-            resetFileUploadState={() => setFileUploadInProgress(false)}
           >
             <EntityDetailsHeader
               values={nodeIds.map((id) => nodes[id]?.data)}
               entityType={entityType}
-              onContextMenu={onContextMenu}
               tools={
                 <>
                   <Button

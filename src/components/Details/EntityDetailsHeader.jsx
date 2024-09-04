@@ -18,7 +18,7 @@ const ToolsStyled = styled.div`
   margin-right: 1px;
 `
 
-const EntityDetailsHeader = ({ values = [], tools, hideThumbnail, onContextMenu }) => {
+const EntityDetailsHeader = ({ values = [], tools, hideThumbnail }) => {
   const { folders, tasks } = useSelector((state) => state.project)
   const changes = useSelector((state) => state.editor.changes)
   const uri = useSelector((state) => state.context.uri)
@@ -72,11 +72,7 @@ const EntityDetailsHeader = ({ values = [], tools, hideThumbnail, onContextMenu 
   return (
     <DetailHeader>
       {!hideThumbnail && (
-        <StackedThumbnails 
-        thumbnails={thumbnails} 
-        portalId={'editor-entity-details-container'} 
-        onContextMenu={onContextMenu}
-        />
+        <StackedThumbnails thumbnails={thumbnails} portalId={'editor-entity-details-container'} />
       )}
 
       <div style={{ overflowX: 'clip', paddingLeft: 3, marginLeft: -3 }}>
