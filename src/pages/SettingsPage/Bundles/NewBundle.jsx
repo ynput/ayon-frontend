@@ -68,6 +68,8 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isDev, developerMod
 
   //   build initial form data
   useEffect(() => {
+    if (formData?.name === initBundle?.name) return
+
     if (initBundle) {
       // addons = [{name: 'addon1', versions:{'1.0.0': {}}}]
       // reduce down addons to latest version
