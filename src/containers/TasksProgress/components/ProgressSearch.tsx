@@ -15,11 +15,15 @@ export const ProgressSearch = forwardRef<HTMLInputElement, ProgressSearchProps>(
 
     const searchTable = () => {
       // if there is a search, filter out rows that have no matches and highlight tasks that match
+      const folderIds: string[] = []
 
-      const folderIds = data
+      data
         .filter((row) => {
           // find matches on the folder itself
           const folderMatch = row._folder.toLowerCase().includes(search)
+          // check if any parents match
+          const parentMatch =
+            row.__parentId && row._parents.some((parent) => parent.toLowerCase().includes(search))
           // find matches on the tasks of the folder
           const taskTypes = Object.entries(row).filter(
             ([key, value]) => typeof value === 'object' && !key.startsWith('_'),
@@ -41,11 +45,14 @@ export const ProgressSearch = forwardRef<HTMLInputElement, ProgressSearchProps>(
             fields: ['name', 'label', 'taskType', 'status', 'assignees'],
           })
 
-          const anyMatches = folderMatch || filteredTasks.length
+          const anyMatches = folderMatch || parentMatch || filteredTasks.length
 
           return anyMatches
         })
-        .map((row) => row.__folderId)
+        .forEach((row) => {
+          folderIds.push(row.__folderId)
+          row.__parentId && folderIds.push(row.__parentId)
+        })
 
       return folderIds
     }
@@ -62,7 +69,7 @@ export const ProgressSearch = forwardRef<HTMLInputElement, ProgressSearchProps>(
       } else {
         onSearch(null)
       }
-    }, [search])
+    }, [search, data, onSearch])
 
     return (
       <InputText

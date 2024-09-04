@@ -288,7 +288,11 @@ const TasksProgress: FC<TasksProgressProps> = ({
             />
           ) : (
             <EmptyPlaceholder
-              message={'No tasks under this folder. Try selecting another one.'}
+              message={
+                filteredFolderIds
+                  ? ' No results found. Try a different search.'
+                  : 'No tasks under this folder. Try selecting another one.'
+              }
               icon="folder_open"
             />
           )
