@@ -25,7 +25,7 @@ const TasksProgressPage: FC = () => {
   return (
     <main style={{ overflow: 'hidden' }}>
       <Splitter layout="horizontal" style={{ width: '100%', height: '100%' }}>
-        <SplitterPanel size={isOpen ? 12 : 18} style={{ minWidth: 200, maxWidth: 500 }}>
+        <SplitterPanel size={isOpen ? 12 : 18} style={{ minWidth: 227, maxWidth: 500 }}>
           <Section wrap>
             <Hierarchy />
           </Section>
