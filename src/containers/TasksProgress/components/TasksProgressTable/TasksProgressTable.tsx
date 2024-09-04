@@ -216,8 +216,17 @@ export const TasksProgressTable = ({
   ]
 
   const resolveColumnWidth = (taskType: string, useDefault?: boolean) => {
+    const screenWidthMultiple = (min: number, max: number, target: number): number => {
+      // target is percentage of the screen width
+      const screenWidth = window.innerWidth
+      const width = screenWidth * (target / 100)
+      return Math.round(Math.min(max, Math.max(min, width)))
+    }
+
     const savedWidth = savedWidths?.[taskType]
-    const minWidthPerTask = detailsOpen ? 100 : 150
+    const fullWidth = screenWidthMultiple(180, 250, 13)
+    const compactWidth = screenWidthMultiple(80, 150, 10)
+    const minWidthPerTask = detailsOpen ? compactWidth : fullWidth
     const defaultWidth = taskTypeMajorityTasksNumber[taskType] * minWidthPerTask
     if (useDefault) return defaultWidth
     return savedWidth || defaultWidth
