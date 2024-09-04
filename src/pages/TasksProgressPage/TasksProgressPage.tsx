@@ -27,7 +27,11 @@ const TasksProgressPage: FC = () => {
           </Section>
         </SplitterPanel>
         <SplitterPanel size={90} style={{ overflow: 'hidden' }}>
-          <Splitter layout="horizontal" style={{ height: '100%', overflow: 'hidden' }}>
+          <Splitter
+            layout="horizontal"
+            style={{ height: '100%', overflow: 'hidden' }}
+            pt={{ gutter: { style: { width: detailsOpen ? 4 : 0 } } }}
+          >
             <SplitterPanel size={60} style={{ overflow: 'hidden' }}>
               <TasksProgress
                 statuses={projectInfo?.statuses}
