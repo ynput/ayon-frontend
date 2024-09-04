@@ -23,7 +23,7 @@ import StatusSelect from '@components/status/statusSelect'
 import EntityDetailsHeader from '@components/Details/EntityDetailsHeader'
 import EntityThumbnailUploader from '@components/EntityThumbnailUploader'
 import TypeEditor from './TypeEditor'
-import { SubRow } from './EditorPanel.styled'
+import { SubRow, Container } from './EditorPanel.styled'
 import useFocusedEntities from '@hooks/useFocused'
 import { useGetEntitiesDetailsPanelQuery } from '@queries/entity/getEntityPanel'
 import { useGetProjectsInfoQuery } from '@queries/userDashboard/getUserDashboard'
@@ -509,7 +509,9 @@ const EditorPanel = ({
     <Section wrap id="editor-entity-details-container">
       {!noSelection && (
         <>
+        <Container>
           <EntityThumbnailUploader
+            isCompact
             entities={isFetchingEntitiesDetails ? entitiesToQuery : entityDetailsData}
             entityType={entityType}
             onUploaded={operations => {
@@ -552,6 +554,7 @@ const EditorPanel = ({
               }
             />
           </EntityThumbnailUploader>
+          </Container>
 
           <Panel style={{ overflowY: 'auto', height: '100%' }}>
             <FormLayout>

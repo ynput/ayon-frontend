@@ -14,10 +14,9 @@ type Entity = {
 interface ThumbnailUploaderProps extends HTMLAttributes<HTMLDivElement> {
   onFinish: (entities: { id: string; thumbnailId: string }[]) => void
   entities: Entity[]
-  isCompact?: boolean
 }
 
-const ThumbnailUploader = ({ onFinish, entities, isCompact, ...props }: ThumbnailUploaderProps) => {
+const ThumbnailUploader = ({ onFinish, entities, ...props }: ThumbnailUploaderProps) => {
   const [uploadingFile, setUploadingFile] = useState<null | File>()
   const [uploadingPreview, setUploadingPreview] = useState<null | string>()
   const [progress, setProgress] = useState(0)
@@ -111,7 +110,7 @@ const ThumbnailUploader = ({ onFinish, entities, isCompact, ...props }: Thumbnai
         </Styled.Uploading>
       ) : (
         <Styled.Message>
-          <Icon icon="add_photo_alternate" className={clsx('upload', isCompact && 'compact')} />
+          <Icon icon="add_photo_alternate" className="upload" />
           <span>Upload thumbnail</span>
         </Styled.Message>
       )}

@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import clsx from 'clsx'
+
 import ThumbnailUploader from '@components/ThumbnailUploader/ThumbnailUploader'
 import { ThumbnailWrapper } from '@containers/DetailsPanel/DetailsPanelHeader/DetailsPanelHeader.styled'
-
 import { useUpdateEntitiesMutation } from '@queries/entity/updateEntity'
 import usePatchProductsListWithVersions from '@hooks/usePatchProductsListWithVersions'
 import { $Any } from '@/types'
+import * as Styled from './EntityThumbnailUploader.styled'
 
 type Operation = {
   id: string
@@ -16,10 +17,9 @@ type Operation = {
 type Props = {
   entityType: string
   entities: any[]
-  isCompact:boolean
+  isCompact: boolean
   projectName: any
-  isLoading: any,
-  children: any[],
+  children: any[]
   onUploaded: (operations: Operation[]) => void
 }
 
@@ -28,7 +28,6 @@ const EntityThumbnailUploader = ({
   entityType,
   entities = [],
   isCompact = false,
-  isLoading,
   onUploaded,
 }: Props) => {
   const [isDraggingFile, setIsDraggingFile] = useState(false)
@@ -85,15 +84,11 @@ const EntityThumbnailUploader = ({
   }
 
   return (
-    <div
-      className={clsx('details-panel-header', { isCompact })}
+    <Styled.DragAndDropWrapper
+      className={clsx({ isCompact })}
       onDragEnter={() => setIsDraggingFile(true)}
     >
-      <header className={clsx('titles', { isCompact, loading: isLoading }, 'no-shimmer')}>
-        <ThumbnailWrapper>
-          {children}
-        </ThumbnailWrapper>
-      </header>
+      <ThumbnailWrapper>{children}</ThumbnailWrapper>
       {isDraggingFile && (
         <ThumbnailUploader
           onFinish={handleThumbnailUpload}
@@ -103,7 +98,7 @@ const EntityThumbnailUploader = ({
           entities={entities}
         />
       )}
-    </div>
+    </Styled.DragAndDropWrapper>
   )
 }
 

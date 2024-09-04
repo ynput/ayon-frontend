@@ -6,7 +6,7 @@ import {
   TagsSelect as TagsSelectComponent,
 } from '@ynput/ayon-react-components'
 
-export const Container = styled.div`
+export const HeaderContainer = styled.div`
   position: relative;
 `
 

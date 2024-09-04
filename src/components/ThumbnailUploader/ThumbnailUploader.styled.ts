@@ -54,9 +54,6 @@ export const Message = styled.div`
     pointer-events: none;
     background-color: unset;
     font-size: 3rem;
-    &.compact {
-      font-size: 2rem;
-    }
 
     transition: scale 0.2s, opacity 0.1s;
   }

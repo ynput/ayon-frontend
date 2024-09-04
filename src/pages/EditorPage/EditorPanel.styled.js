@@ -1,5 +1,9 @@
 import styled from 'styled-components'
 
+const Container = styled.div`
+  position: relative;
+`
+
 const SubRow = styled.div`
   flex: 1;
   display: flex;
@@ -37,4 +41,4 @@ const SubRow = styled.div`
   }
 `
 
-export { SubRow }
+export { Container, SubRow }
