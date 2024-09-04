@@ -92,10 +92,10 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isDev, developerMod
       }
 
       const initForm = {
-        ...initBundle,
         addons: initAddons,
         isDev: developerMode || isDev,
         addonDevelopment: { ...initBundle.addonDevelopment, ...initAddonsDev },
+        ...initBundle,
       }
 
       setFormData(initForm)
