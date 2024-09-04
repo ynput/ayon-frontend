@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
 import { isEqual, union, upperFirst } from 'lodash'
@@ -15,6 +15,7 @@ import { openViewer } from '@state/viewer'
 
 import FeedFilters from '../FeedFilters/FeedFilters'
 import * as Styled from './DetailsPanelHeader.styled'
+import useCreateContext from '@hooks/useCreateContext'
 
 const DetailsPanelHeader = ({
   entityType,
@@ -185,12 +186,28 @@ const DetailsPanelHeader = ({
     }
   }
 
+  const [fileUploadInProgress, setFileUploadInProgress] = useState(false)
+  const ctxMenuItems = () => [
+    {
+      label: 'Upload New Thumbnail',
+      icon: 'upload',
+      command: () => setFileUploadInProgress(true)
+    },
+  ]
+
+  const [ctxMenuShow] = useCreateContext()
+  const onContextMenu = (event) => {
+    ctxMenuShow(event, ctxMenuItems())
+  }
+
   return (
     <Styled.HeaderContainer>
       <EntityThumbnailUploader
         entities={entities}
         entityType={entityType}
         projectName={projectName}
+        fileUpload={fileUploadInProgress}
+        resetFileUploadState={() => setFileUploadInProgress(false)}
       >
         <Styled.Grid className={clsx('details-panel-header', { isCompact })}>
           <Styled.Header
@@ -203,6 +220,7 @@ const DetailsPanelHeader = ({
               projectName={projectName}
               onClick={thumbnails.length === 1 ? handleThumbnailClick : undefined}
               hoverIcon={'play_circle'}
+              onContextMenu={event => onContextMenu(event)}
             />
             {!isMultiple && firstEntity?.hasReviewables && (
               <Styled.Playable className="playable">

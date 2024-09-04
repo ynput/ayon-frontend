@@ -18,17 +18,19 @@ import {
   TagsSelect,
 } from '@ynput/ayon-react-components'
 
-import getFieldInObject from '@helpers/getFieldInObject'
 import StatusSelect from '@components/status/statusSelect'
 import EntityDetailsHeader from '@components/Details/EntityDetailsHeader'
 import EntityThumbnailUploader from '@components/EntityThumbnailUploader'
-import TypeEditor from './TypeEditor'
 import { SubRow, Container } from './EditorPanel.styled'
+import getFieldInObject from '@helpers/getFieldInObject'
+import useCreateContext from '@hooks/useCreateContext'
 import useFocusedEntities from '@hooks/useFocused'
 import { useGetEntitiesDetailsPanelQuery } from '@queries/entity/getEntityPanel'
 import { useGetProjectsInfoQuery } from '@queries/userDashboard/getUserDashboard'
 import { entityDetailsTypesSupported } from '@queries/userDashboard/userDashboardQueries'
 import { getEntityDetailsData } from '@queries/userDashboard/userDashboardHelpers'
+
+import TypeEditor from './TypeEditor'
 
 const inputTypes = {
   datetime: { type: 'date' },
@@ -505,6 +507,22 @@ const EditorPanel = ({
     handleFormChanged()
   }, [form, nodes, changes])
 
+  const [fileUploadInProgress, setFileUploadInProgress] = useState(false)
+  const ctxMenuItems = () => [
+    {
+      label: 'Upload New Thumbnail',
+      icon: 'upload',
+      command: () => setFileUploadInProgress(true)
+    },
+  ]
+
+  // create the ref and model
+  const [ctxMenuShow] = useCreateContext()
+
+  const onContextMenu = (event) => {
+    ctxMenuShow(event, ctxMenuItems())
+  }
+
   return (
     <Section wrap id="editor-entity-details-container">
       {!noSelection && (
@@ -513,6 +531,7 @@ const EditorPanel = ({
           <EntityThumbnailUploader
             isCompact
             entities={isFetchingEntitiesDetails ? entitiesToQuery : entityDetailsData}
+            projectName={projectName}
             entityType={entityType}
             onUploaded={operations => {
               const firstOperation = operations[0]
@@ -524,11 +543,13 @@ const EditorPanel = ({
 
               refetch()
             }}
-            projectName={projectName}
+            fileUpload={fileUploadInProgress}
+            resetFileUploadState={() => setFileUploadInProgress(false)}
           >
             <EntityDetailsHeader
               values={nodeIds.map((id) => nodes[id]?.data)}
               entityType={entityType}
+              onContextMenu={onContextMenu}
               tools={
                 <>
                   <Button

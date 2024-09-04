@@ -1,4 +1,6 @@
-import { useState } from 'react'
+import axios from 'axios'
+import { ChangeEvent } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import clsx from 'clsx'
 
 import ThumbnailUploader from '@components/ThumbnailUploader/ThumbnailUploader'
@@ -16,11 +18,13 @@ type Operation = {
 }
 type Props = {
   entityType: string
-  entities: any[]
+  entities: $Any[]
   isCompact: boolean
   projectName: any
-  children: any[]
+  children: $Any[]
+  fileUpload: false,
   onUploaded: (operations: Operation[]) => void
+  resetFileUploadState: () => void
 }
 
 const EntityThumbnailUploader = ({
@@ -28,7 +32,9 @@ const EntityThumbnailUploader = ({
   entityType,
   entities = [],
   isCompact = false,
+  fileUpload,
   onUploaded,
+  resetFileUploadState,
 }: Props) => {
   const [isDraggingFile, setIsDraggingFile] = useState(false)
 
@@ -83,6 +89,66 @@ const EntityThumbnailUploader = ({
     }
   }
 
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+      resetFileUploadState()
+      if (fileUpload) {
+        inputRef.current?.click()
+      }
+  }, [fileUpload])
+
+  const handleFileUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files
+    if (!files) {
+      return
+    }
+
+    const file = files[0]
+    if (!file) {
+      return
+    }
+
+    try {
+      if (!file.type.includes('image')) {
+        throw new Error('File is not an image')
+      }
+
+      let promises = []
+      for (const entity of entities) {
+        const { id, entityType, projectName } = entity
+
+        console.log(projectName)
+
+        if (!projectName) throw new Error('Project name is required')
+
+        const promise = axios.post(
+          projectName && `/api/projects/${projectName}/${entityType}s/${id}/thumbnail`,
+          file,
+          {
+            headers: {
+              'Content-Type': file.type,
+            },
+          },
+        )
+
+        promises.push(promise)
+      }
+
+      const res = await Promise.all(promises)
+
+      const updatedEntities = res.map((res, i) => ({
+        thumbnailId: res.data.id as string,
+        id: entities[i].id,
+      }))
+
+      handleThumbnailUpload(updatedEntities)
+    } catch (error: any) {
+      console.error(error)
+    }
+  }
+
+
   return (
     <Styled.DragAndDropWrapper
       className={clsx({ isCompact })}
@@ -98,6 +164,7 @@ const EntityThumbnailUploader = ({
           entities={entities}
         />
       )}
+      <input type="file" onChange={handleFileUpload} ref={inputRef} />
     </Styled.DragAndDropWrapper>
   )
 }

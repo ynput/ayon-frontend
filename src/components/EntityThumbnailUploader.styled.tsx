@@ -1,9 +1,13 @@
 import styled from "styled-components";
 
 export const DragAndDropWrapper = styled.div`
-  &.isCompact{
+  &.isCompact {
     .icon {
       font-size: 2rem;
     }
+  }
+
+  > input[type='file'] {
+    display: none;
   }
 `
