@@ -39,17 +39,8 @@ const Bundles = () => {
   // show copy settings dialog
   const initCopySettingsBundle = { env: null, bundle: null, previous: null }
   const [copySettingsBundle, setCopySettingsBundle] = useState(initCopySettingsBundle)
-  const [copySettingsPromise, setCopySettingsPromise] = useState(null)
-  const openCopySettingsWithPromise = async (data) => {
-    return new Promise((resolve) => {
-      setCopySettingsBundle(data)
-      setCopySettingsPromise({ resolve })
-    })
-  }
+
   const closeCopySettings = () => {
-    if (copySettingsPromise) {
-      copySettingsPromise.resolve()
-    }
     setCopySettingsBundle(initCopySettingsBundle)
   }
 
@@ -298,9 +289,9 @@ const Bundles = () => {
         }
       }
 
+      // try and find an old bundle with the same status and unset it
+      const oldBundle = bundleList.find((b) => b.name !== name && b[statusKey])
       if (newActive) {
-        // try and find an old bundle with the same status and unset it
-        const oldBundle = bundleList.find((b) => b.name !== name && b[statusKey])
         if (oldBundle) {
           // optimistically update old bundle to remove status
           try {
@@ -317,11 +308,14 @@ const Bundles = () => {
             console.error(error)
           }
         }
-
-        openCopySettingsWithPromise({ bundle: patch, env: status, previous: oldBundle })
       }
 
       await updateBundle({ name, data: { [statusKey]: newActive }, patch }).unwrap()
+
+      if (newActive) {
+        // now ask if the user wants to copy settings from the source bundle
+        setCopySettingsBundle({ bundle: patch, env: status, previous: oldBundle })
+      }
     } catch (error) {
       console.error(error)
       toast.error(`Error setting ${message}`)
