@@ -74,6 +74,7 @@ export const Uploading = styled.div`
   z-index: 10;
 
   img {
+    height: 50%;
     object-fit: contain;
     width: 100%;
   }
