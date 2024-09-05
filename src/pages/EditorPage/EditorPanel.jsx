@@ -146,11 +146,12 @@ const EditorPanel = ({
   //   checking if any other types don't match the first one
   const hasMixedTypes = types.length > 1
 
-  const getParentValue = (nodeId, attribName) => {
+  const getParentValue = (nodeId, attribName, {self}) => {
     if (!editorNodes[nodeId]) {
       return null
     }
     if (
+      !self &&
       editorNodes[nodeId].data.attrib[attribName] != null &&
       editorNodes[nodeId].data.ownAttrib.includes(attribName)
     ) {
@@ -161,7 +162,7 @@ const EditorPanel = ({
       return null
     }
 
-    return getParentValue(editorNodes[nodeId].data.__parentId, attribName)
+    return getParentValue(editorNodes[nodeId].data.__parentId, attribName, {self: false})
   }
 
   const createInitialForm = () => {
@@ -273,7 +274,7 @@ const EditorPanel = ({
         isChanged,
         isOwn,
         value,
-        parentValue: getParentValue(nodeIds[0], attrib.name),
+        parentValue: getParentValue(nodeIds[0], attrib.name, {self: true}),
         label: data?.title,
         attrib: attrib.data,
       }
@@ -287,10 +288,6 @@ const EditorPanel = ({
   useEffect(() => {
     // resets every time selection is changed
     // changes saved to global state will show up here
-    // console.log('creating initial form')
-
-    // console.log(editorNodes['9a3a9040c41511edb8920b11c777c69f'])
-
     setForm(createInitialForm())
   }, [nodeIds, type, editorNodes])
 
@@ -315,7 +312,6 @@ const EditorPanel = ({
     for (const id of nodeIds) {
       let nodeValue
 
-      // split by period
       const keys = field.split('.')
       const data = nodes[id]?.data
 
@@ -329,8 +325,11 @@ const EditorPanel = ({
           // check if value is inherited or isOwn
           if (parent !== 'attrib') {
             isOwn = true
-          } else if (data?.ownAttrib?.includes(key)) isOwn = true
-          else isOwn = false
+          } else if (data?.ownAttrib?.includes(key)) {
+            isOwn = true
+          } else {
+            isOwn = false
+          }
         }
 
         parent = key
@@ -384,7 +383,6 @@ const EditorPanel = ({
 
   // update the local form on changes
   const handleLocalChange = (value, changeKey, field, formState, setFormNew) => {
-    // console.log('local change', value, changeKey, field, form)
     let newForm = { ...form }
     if (formState) {
       newForm = formState
@@ -397,6 +395,10 @@ const EditorPanel = ({
     const oldValue = newForm[changeKey]
     const type = oldValue?.attrib?.type
     let newValue = value
+
+    if (Array.isArray(newValue) && newValue.length == 1 && newValue[0] === null) {
+      newValue = null
+    }
 
     if (type === 'datetime' && value) {
       newValue = new Date(value)
@@ -414,7 +416,7 @@ const EditorPanel = ({
           break
         }
 
-        // dif value or multipleValues
+        // diff value or multipleValues
         const ownValue = nodes[id]?.data.ownAttrib.includes(changeKey)
 
         const isSame =
@@ -433,7 +435,7 @@ const EditorPanel = ({
       ...newForm[changeKey],
       value: newValue,
       isChanged,
-      isOwn: true,
+      isOwn: newValue == null,
       multipleValues: oldValue?.multipleValues && !isChanged,
     }
 
@@ -503,7 +505,6 @@ const EditorPanel = ({
                 onRevert(nodes[id])
               } else {
                 // console.log('remove key from changes', newChanges)
-
                 onChange([newChanges])
               }
             }
@@ -676,19 +677,20 @@ const EditorPanel = ({
                     />
                   )
                 } else if (attrib?.enum) {
-                const getInheritLabel = (attrib, parentValue, isMultiSelect) => {
-                  if (!parentValue) {
-                    return
+                  const getInheritLabel = (attrib, parentValue, isMultiSelect) => {
+                    if (!parentValue) {
+                      return
+                    }
+                    if (!isMultiSelect) {
+                      return (
+                        'inherited - ' + attrib.enum.filter((el) => el.value === parentValue)[0]?.label || null
+                      )
+                    }
+                    const labels = attrib.enum
+                      ?.filter((el) => parentValue.includes(el.value))
+                      .map((el) => el.label || el.value)
+                    return `inhreited - (${labels.join(', ')})`
                   }
-                  if (!isMultiSelect) {
-                    return (
-                      attrib.enum.filter((el) => el.value === parentValue)[0]?.label +
-                        ' (inherited)' || null
-                    )
-                  }
-                  const labels = attrib.enum?.filter((el) => parentValue.includes(el.value)).map((el) => el.label || el.value)
-                  return `(${labels.length} - inherited) ${labels.join(', ')}`
-                }
 
                   // dropdown
                   const isMultiSelect = ['list_of_strings'].includes(attrib?.type)
@@ -701,12 +703,7 @@ const EditorPanel = ({
                   const inheritedOptionLabel = getInheritLabel(attrib, parentValue, isMultiSelect)
                   if (inheritedOptionLabel) {
                     placeholder = inheritedOptionLabel
-                    if (!isMultiSelect) {
-                      options = [
-                        { value: isMultiSelect ? [] : null, label: inheritedOptionLabel },
-                        ...attrib.enum,
-                      ]
-                    }
+                    options = [{ value: null, label: inheritedOptionLabel }, ...attrib.enum]
                   }
 
                   // never show value when inherited, just show placeholder
@@ -732,11 +729,6 @@ const EditorPanel = ({
                       widthExpand
                       emptyMessage={`Select option${isMultiSelect ? 's' : ''}...`}
                       multipleValues={!!multipleValues}
-                      onClear={
-                        isMultiSelect
-                          ? (value) => handleLocalChange(value, changeKey, field)
-                          : undefined
-                      }
                       placeholder={inheritedOptionLabel}
                       nullPlaceholder={inheritedOptionLabel}
                       search={attrib?.enum?.length > 10}
