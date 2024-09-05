@@ -57,9 +57,11 @@ interface TasksProgressTableProps
   statuses: Status[]
   taskTypes: TaskType[]
   users: GetAllProjectUsersAsAssigneeResult
+  allExpanded: boolean
   expandedRows: string[]
-  onExpandRow: (folderId: string) => void
   collapsedRows: string[]
+  onExpandRow: (folderId: string) => void
+  collapsedParents: string[]
   onCollapseRow: (folderId: string) => void
   onChange: TaskFieldChange
   onSelection: (taskId: string, meta: boolean, shift: boolean) => void
@@ -77,9 +79,11 @@ export const TasksProgressTable = ({
   statuses = [], // project statuses schema
   taskTypes = [], // project task types schema
   users = [], // users in the project
+  allExpanded,
   expandedRows = [],
-  onExpandRow,
   collapsedRows = [],
+  onExpandRow,
+  collapsedParents = [],
   onCollapseRow,
   onChange,
   onSelection,
@@ -278,6 +282,9 @@ export const TasksProgressTable = ({
     ctxMenuShow(e, buildColumnHeaderMenuItems(taskType))
   }
 
+  const getIsExpanded = (id: string) =>
+    (allExpanded || expandedRows.includes(id)) && !collapsedRows.includes(id)
+
   if (isLoading) return <TasksProgressLoadingTable rows={20} />
 
   if (reloadTable) return null
@@ -322,7 +329,7 @@ export const TasksProgressTable = ({
               name={row._folder}
               folderCount={row._folderCount}
               taskCount={row._taskCount}
-              isCollapsed={collapsedRows.includes(row.__folderId)}
+              isCollapsed={collapsedParents.includes(row.__folderId)}
               onCollapseToggle={() => onCollapseRow(row.__folderId)}
             />
           ) : (
@@ -333,7 +340,7 @@ export const TasksProgressTable = ({
               folderIcon={row._folderIcon}
               projectName={row.__projectName}
               isLoading={false}
-              isExpanded={expandedRows.includes(row.__folderId)}
+              isExpanded={getIsExpanded(row.__folderId)}
               onExpandToggle={() => onExpandRow(row.__folderId)}
             />
           )
@@ -391,7 +398,6 @@ export const TasksProgressTable = ({
                     ...user,
                     avatarUrl: `/api/users/${user.name}/avatar`,
                   }))
-                  const isExpanded = expandedRows.includes(task.folder.id)
 
                   const handleCellClick = (e: MouseEvent<HTMLDivElement>) => {
                     // check if the click is editable item
@@ -422,6 +428,7 @@ export const TasksProgressTable = ({
                     togglePanel()
                   }
 
+                  const isExpanded = getIsExpanded(task.folder?.id)
                   const isSelected = selectedTasks.includes(task.id)
                   const isActive = activeTask === task.id
 

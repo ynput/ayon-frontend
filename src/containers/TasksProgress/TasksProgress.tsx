@@ -53,8 +53,16 @@ const TasksProgress: FC<TasksProgressProps> = ({
     `progress-types-${projectName}`,
     [],
   )
+
+  // should rows be expanded (unless in collapsedRows)
+  const [expandAll, setExpandAll] = useState(false)
+  // explicitly expanded rows even when allExpanded is false
   const [expandedRows, setExpandedRows] = useState<string[]>([])
-  const [collapsedFolders, setCollapsedFolders] = useState<string[]>([])
+  // explicitly collapsed rows even when allExpanded is true
+  const [collapsedRows, setCollapsedRows] = useState<string[]>([])
+
+  // hide parent folder child rows
+  const [collapsedParents, setCollapsedParents] = useState<string[]>([])
 
   const selectedFolders = useSelector((state: $Any) => state.context.focused.folders) as string[]
   const selectedTasks = useSelector((state: $Any) => state.context.focused.tasks) as string[]
@@ -109,11 +117,11 @@ const TasksProgress: FC<TasksProgressProps> = ({
 
   const tableData = useMemo(
     () =>
-      formatTaskProgressForTable(foldersTasksData, filteredTaskTypes, collapsedFolders, {
+      formatTaskProgressForTable(foldersTasksData, filteredTaskTypes, collapsedParents, {
         folderTypes,
         statuses,
       }),
-    [foldersTasksData, filteredTaskTypes, collapsedFolders],
+    [foldersTasksData, filteredTaskTypes, collapsedParents],
   )
 
   const filteredTableData = useMemo(() => {
@@ -191,13 +199,34 @@ const TasksProgress: FC<TasksProgressProps> = ({
   }
 
   const handleExpandToggle = (folderId: string) => {
+    // check current state of the folderId
+    const isExpanded =
+      (expandedRows.includes(folderId) || expandAll) && !collapsedRows.includes(folderId)
     // update the expanded rows by either adding or removing the folderId
-    setExpandedRows((prev) => {
-      if (prev.includes(folderId)) {
-        return prev.filter((id) => id !== folderId)
+    const newExpandedRows = [...expandedRows]
+    const newCollapsedRows = [...collapsedRows]
+
+    if (isExpanded) {
+      // remove from expanded rows
+      newExpandedRows.splice(newExpandedRows.indexOf(folderId), 1)
+      // add to collapsed rows
+      newCollapsedRows.push(folderId)
+    } else {
+      // add to expanded rows
+      newExpandedRows.push(folderId)
+      // remove from collapsed rows
+      newCollapsedRows.splice(newCollapsedRows.indexOf(folderId), 1)
+    }
+
+    setExpandedRows(newExpandedRows)
+    setCollapsedRows(newCollapsedRows)
+
+    if (!expandedRows.length && expandAll) {
+      const allTasksLength = filteredTableData.filter((row) => !row.__isParent).length
+      if (allTasksLength === newCollapsedRows.length) {
+        setExpandAll(false)
       }
-      return [...prev, folderId]
-    })
+    }
   }
 
   const viewerIsOpen = useSelector((state: $Any) => state.viewer.isOpen)
@@ -207,19 +236,17 @@ const TasksProgress: FC<TasksProgressProps> = ({
     }
   }
 
-  // are more than half of the rows expanded?
-  const shouldExpand = expandedRows.length < filteredTableData.length / 2
   const handleExpandAllToggle = () => {
-    if (shouldExpand) {
-      setExpandedRows(filteredTableData.map((row) => row.__folderId))
-    } else {
-      setExpandedRows([])
-    }
+    // reset all collapsed and expanded rows
+    setCollapsedRows([])
+    setExpandedRows([])
+    // set expand all to the opposite of the current state
+    setExpandAll(!expandAll)
   }
 
   const handleCollapseToggle = (id: string) => {
     // update the collapsed rows by either adding or removing the folderId
-    setCollapsedFolders((prev) => {
+    setCollapsedParents((prev) => {
       if (prev.includes(id)) {
         return prev.filter((folderId) => folderId !== id)
       }
@@ -258,10 +285,11 @@ const TasksProgress: FC<TasksProgressProps> = ({
           <Spacer />
           <Button
             onClick={handleExpandAllToggle}
-            icon={shouldExpand ? 'expand_all' : 'collapse_all'}
+            icon={expandAll ? 'collapse_all' : 'expand_all'}
             style={{ width: 220, justifyContent: 'flex-start' }}
+            selected={expandAll}
           >
-            {`${shouldExpand ? 'Expand' : 'Collapse'} all rows`}
+            {`${expandAll ? 'Collapse' : 'Expand'} all rows`}
             <ShortcutTag style={{ marginLeft: 'auto' }}>Shift + E</ShortcutTag>
           </Button>
         </Toolbar>
@@ -280,10 +308,12 @@ const TasksProgress: FC<TasksProgressProps> = ({
               users={users}
               onChange={handleTaskFieldChange}
               onSelection={handleTaskSelect}
+              allExpanded={expandAll}
               expandedRows={expandedRows}
+              collapsedRows={collapsedRows}
               onExpandRow={handleExpandToggle}
               onOpenViewer={openInViewer}
-              collapsedRows={collapsedFolders}
+              collapsedParents={collapsedParents}
               onCollapseRow={handleCollapseToggle}
             />
           ) : (
