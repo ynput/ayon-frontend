@@ -162,13 +162,8 @@ const Actions = ({ entities, entityType, entitySubTypes, isLoadingEntity }) => {
       if (response?.uri) {
         customProtocolCheck(
           response.uri,
-          () => {
-            console.log('Custom protocol not found.', response.uri)
-            toast.error('AYON launcher not found. Is it installed and running?')
-          },
-          () => {
-            console.log('Custom protocol found and opened the file successfully.')
-          },
+          () => {},
+          () => {},
           2000,
         )
       }
