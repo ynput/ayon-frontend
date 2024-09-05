@@ -555,7 +555,6 @@ const EditorPanel = ({
                 </>
               }
             />
-          </EntityThumbnailUploader>
 
           <Panel style={{ overflowY: 'auto', height: '100%' }}>
             <FormLayout>
@@ -800,6 +799,7 @@ const EditorPanel = ({
               })}
             </FormLayout>
           </Panel>
+          </EntityThumbnailUploader>
         </>
       )}
     </Section>
