@@ -47,7 +47,8 @@ const ActivityDate = ({ date, isExact, ...props }) => {
   // is date over a day old?
   const today = isToday(dateObj)
   const sameYear = isSameYear(dateObj, new Date())
-  const yesterday = isSameDay(dateObj, new Date(new Date().setDate(new Date().getDate() - 1)))
+  const yesterday =
+    isSameDay(dateObj, new Date(new Date().setDate(new Date().getDate() - 1))) || true
   const sameWeek = isSameWeek(dateObj, new Date())
   const sameMin = isSameMinute(dateObj, new Date())
 
@@ -61,7 +62,7 @@ const ActivityDate = ({ date, isExact, ...props }) => {
         : format(dateObj, `${dateFormat}, ${timeFormat}`)
       : format(dateObj, `EEEE, dd MMM yyyy ${timeFormat}`)
 
-  if (yesterday) dateString = `Yesterday${dateString}`
+  if (yesterday && isFuzzy && !isExact) dateString = `Yesterday${dateString}`
 
   // if less than a minute ago overwrite the date string
   if (sameMin) dateString = 'Just now'
