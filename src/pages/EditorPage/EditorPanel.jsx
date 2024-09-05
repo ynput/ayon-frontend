@@ -1,5 +1,9 @@
-import React from 'react'
+import React, { useState, useEffect, createRef  } from 'react'
+import { useSelector } from 'react-redux'
 import PropTypes from 'prop-types'
+import { Link } from 'react-router-dom'
+import styled from 'styled-components'
+import { isEmpty, isEqual, union } from 'lodash'
 import {
   Panel,
   Button,
@@ -14,16 +18,11 @@ import {
   TagsSelect,
 } from '@ynput/ayon-react-components'
 
-import { useSelector } from 'react-redux'
-import { useState } from 'react'
-import { useEffect } from 'react'
 import getFieldInObject from '@helpers/getFieldInObject'
-import { isEmpty, isEqual, union } from 'lodash'
-import StatusSelect from '@components/status/statusSelect'
-import TypeEditor from './TypeEditor'
 import EntityDetailsHeader from '@components/Details/EntityDetailsHeader'
-import { Link } from 'react-router-dom'
-import styled from 'styled-components'
+import StatusSelect from '@components/status/statusSelect'
+
+import TypeEditor from './TypeEditor'
 
 const SubRow = styled.div`
   flex: 1;
@@ -378,7 +377,7 @@ const EditorPanel = ({
       finalValue = type
     }
 
-    return { value: finalValue, isChanged, isOwn, multipleValues }
+    return { value: isOwn ? finalValue : null, isChanged, isOwn, multipleValues }
   }
 
   // update the local form on changes
@@ -396,7 +395,7 @@ const EditorPanel = ({
     const type = oldValue?.attrib?.type
     let newValue = value
 
-    if (Array.isArray(newValue) && newValue.length == 1 && newValue[0] === null) {
+    if (Array.isArray(newValue) && newValue.includes(null)) {
       newValue = null
     }
 
@@ -405,7 +404,7 @@ const EditorPanel = ({
       newValue = newValue.toISOString()
     }
 
-    let isChanged = true
+    let isChanged = false
 
     if (!oldValue?.multipleValues && !oldValue?.__new) {
       for (const id of nodeIds) {
@@ -435,7 +434,7 @@ const EditorPanel = ({
       ...newForm[changeKey],
       value: newValue,
       isChanged,
-      isOwn: newValue == null,
+      isOwn: newValue !== null,
       multipleValues: oldValue?.multipleValues && !isChanged,
     }
 
@@ -446,6 +445,22 @@ const EditorPanel = ({
       return
     }
     // update state
+    setForm(newForm)
+  }
+
+  const resetMultiSelect = (changeKey) => {
+    let newForm = { ...form }
+    const isChanged = form[changeKey].value != null
+
+    newForm[changeKey] = {
+      ...newForm[changeKey],
+      value: null,
+      isChanged : isChanged,
+      isOwn: false,
+      multipleValues: form[changeKey]?.multipleValues && !isChanged,
+    }
+
+    setLocalChange(true)
     setForm(newForm)
   }
 
@@ -533,6 +548,9 @@ const EditorPanel = ({
     // throttle this
     handleFormChanged()
   }, [form, nodes, changes])
+
+  let formRefs = {}
+  Object.values(form).map(el => formRefs[el.label] = createRef())
 
   return (
     <Section wrap id="editor-entity-details-container">
@@ -689,7 +707,7 @@ const EditorPanel = ({
                     const labels = attrib.enum
                       ?.filter((el) => parentValue.includes(el.value))
                       .map((el) => el.label || el.value)
-                    return `inhreited - (${labels.join(', ')})`
+                    return `inherited - (${labels.join(', ')})`
                   }
 
                   // dropdown
@@ -707,24 +725,42 @@ const EditorPanel = ({
                   }
 
                   // never show value when inherited, just show placeholder
-                  if (!isOwn) enumValue = null
+                  if (!isOwn) {
+                    enumValue = null
+                  }
+
+                  const styles = {
+                    flexGrow: 1,
+                    fontStyle: isOwn ? 'normal' : 'italic',
+                    color: isChanged
+                      ? 'var(--color-on-changed)'
+                      : !isOwn
+                      ? 'var (--md-sys-color-outline)'
+                      : 'var(--md-sys-color-on-surface-variant)',
+                  }
+
                   input = (
                     <Dropdown
-                      style={{
-                        flexGrow: 1,
-                        fontStyle: isOwn ? 'normal' : 'italic',
-                        color: isChanged
-                          ? 'var(--color-on-changed)'
-                          : !isOwn
-                          ? 'var(--md-ref-palette-neutral-variant60'
-                          : 'var(--md-sys-color-on-surface-variant)',
+                      style={styles}
+                      itemStyle={{
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
                       }}
                       value={enumValue}
                       isChanged={isChanged}
                       options={options}
-                      onChange={(v) =>
+                      onChange={(v) => {
                         handleLocalChange(isMultiSelect ? v : v[0], changeKey, field)
                       }
+                      }
+                      onAddItem={isMultiSelect ? (item) => {
+                        if (item == null) {
+                          resetMultiSelect(changeKey)
+                          formRefs[label].current.close()
+                        }
+                      } : undefined}
+                      ref={formRefs[label]}
                       multiSelect={isMultiSelect}
                       widthExpand
                       emptyMessage={`Select option${isMultiSelect ? 's' : ''}...`}
