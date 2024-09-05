@@ -37,6 +37,7 @@ const EntityThumbnailUploader = ({
   onUploaded,
 }: Props) => {
   const [isDraggingFile, setIsDraggingFile] = useState(false)
+  const [isUploadingFile, setIsUploadingFile] = useState(false)
 
   const [updateEntities] = useUpdateEntitiesMutation()
   const patchProductsListWithVersions = usePatchProductsListWithVersions({
@@ -46,6 +47,7 @@ const EntityThumbnailUploader = ({
   const handleThumbnailUpload = async (thumbnails: any[] = []) => {
     // always set isDraggingFile to false
     setIsDraggingFile(false)
+    setIsUploadingFile(false)
 
     // check something was actually uploaded
     if (!entities.length) {
@@ -98,54 +100,6 @@ const EntityThumbnailUploader = ({
       }
   }, [fileUpload])
 
-  const handleFileUpload = async (event: ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files
-    if (!files) {
-      return
-    }
-
-    const file = files[0]
-    if (!file) {
-      return
-    }
-
-    try {
-      if (!file.type.includes('image')) {
-        throw new Error('File is not an image')
-      }
-
-      let promises = []
-      for (const entity of entities) {
-        const { id, entityType, projectName } = entity
-
-        if (!projectName) throw new Error('Project name is required')
-
-        const promise = axios.post(
-          projectName && `/api/projects/${projectName}/${entityType}s/${id}/thumbnail`,
-          file,
-          {
-            headers: {
-              'Content-Type': file.type,
-            },
-          },
-        )
-
-        promises.push(promise)
-      }
-
-      const res = await Promise.all(promises)
-
-      const updatedEntities = res.map((res, i) => ({
-        thumbnailId: res.data.id as string,
-        id: entities[i].id,
-      }))
-
-      handleThumbnailUpload(updatedEntities)
-    } catch (error: any) {
-      console.error(error)
-    }
-  }
-
   return (
     <ThumbnailUploadProvider
       entities={entities}
@@ -157,16 +111,15 @@ const EntityThumbnailUploader = ({
         onDragEnter={() => setIsDraggingFile(true)}
       >
         <ThumbnailWrapper>{children}</ThumbnailWrapper>
-        {isDraggingFile && (
-          <ThumbnailUploader
-            onFinish={handleThumbnailUpload}
-            onDragLeave={() => setIsDraggingFile(false)}
-            onDragOver={(e) => e.preventDefault()}
-            className="thumbnail-uploader"
-            entities={entities}
-          />
-        )}
-        <input type="file" onChange={handleFileUpload} ref={inputRef} />
+        <ThumbnailUploader
+          entities={entities}
+          inputRef={inputRef}
+          className={clsx('thumbnail-uploader', { hidden: !isDraggingFile && !isUploadingFile })}
+          onUploadInProgress={() => setIsUploadingFile(true)}
+          onFinish={handleThumbnailUpload}
+          onDragLeave={() => setIsDraggingFile(false)}
+          onDragOver={(e) => e.preventDefault()}
+        />
       </Styled.DragAndDropWrapper>
     </ThumbnailUploadProvider>
   )

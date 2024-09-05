@@ -9,6 +9,9 @@ export const ThumbnailUploaderWrapper = styled.div`
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  &.hidden {
+    display: none;
+  }
 
   .bg {
     position: absolute;

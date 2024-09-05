@@ -27,7 +27,7 @@ const ThumbnailUploadProvider = ({
 
   const ctxMenuItems = () => [
     {
-      label: 'Upload New Thumbnail',
+      label: 'Upload new thumbnail',
       icon: 'upload',
       command: () => {
         if (inputRef) {

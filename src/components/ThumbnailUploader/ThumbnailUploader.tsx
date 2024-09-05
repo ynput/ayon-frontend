@@ -1,4 +1,4 @@
-import { DragEvent, HTMLAttributes, useState } from 'react'
+import { ChangeEvent, DragEvent, HTMLAttributes, LegacyRef, useState } from 'react'
 import * as Styled from './ThumbnailUploader.styled'
 import { Icon } from '@ynput/ayon-react-components'
 import axios from 'axios'
@@ -13,10 +13,12 @@ type Entity = {
 
 interface ThumbnailUploaderProps extends HTMLAttributes<HTMLDivElement> {
   onFinish: (entities: { id: string; thumbnailId: string }[]) => void
+  inputRef: LegacyRef<HTMLInputElement>
+  onUploadInProgress: Function
   entities: Entity[]
 }
 
-const ThumbnailUploader = ({ onFinish, entities, ...props }: ThumbnailUploaderProps) => {
+const ThumbnailUploader = ({ onFinish, entities, onUploadInProgress, inputRef, ...props }: ThumbnailUploaderProps) => {
   const [uploadingFile, setUploadingFile] = useState<null | File>()
   const [uploadingPreview, setUploadingPreview] = useState<null | string>()
   const [progress, setProgress] = useState(0)
@@ -27,7 +29,7 @@ const ThumbnailUploader = ({ onFinish, entities, ...props }: ThumbnailUploaderPr
     setUploadingPreview(null)
   }
 
-  const handleFileUpload = async (file: File) => {
+  const handleDroppedFileUpload = async (file: File) => {
     if (!file) return onFinish([])
 
     try {
@@ -80,41 +82,55 @@ const ThumbnailUploader = ({ onFinish, entities, ...props }: ThumbnailUploaderPr
     }
   }
 
+  const handleFileUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+    onUploadInProgress()
+    const files = event.target.files
+    if (!files) {
+      return
+    }
+
+    const file = files[0]
+    if (file) {
+      handleDroppedFileUpload(file)
+    }
+  }
+
   const handleInputDrop = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault()
 
     const file = e.dataTransfer.files[0]
-    handleFileUpload(file)
+    handleDroppedFileUpload(file)
   }
 
   return (
-    <Styled.ThumbnailUploaderWrapper
-      className={clsx({
-        uploading: uploadingFile,
-      })}
-      onDrop={handleInputDrop}
-      {...props}
-    >
-      <div className="bg" />
+    <>
+      <Styled.ThumbnailUploaderWrapper
+        className={clsx({ uploading: uploadingFile })}
+        onDrop={handleInputDrop}
+        {...props}
+      >
+        <div className="bg" />
 
-      {uploadingFile && uploadingPreview ? (
-        <Styled.Uploading>
-          <img src={uploadingPreview} alt="uploading preview" />
-          <div className="progress-wrapper">
-            <Styled.Progress
-              style={{
-                right: `${100 - progress}%`,
-              }}
-            />
-          </div>
-        </Styled.Uploading>
-      ) : (
-        <Styled.Message>
-          <Icon icon="add_photo_alternate" className="upload" />
-          <span>Upload thumbnail</span>
-        </Styled.Message>
-      )}
-    </Styled.ThumbnailUploaderWrapper>
+        {uploadingFile && uploadingPreview ? (
+          <Styled.Uploading>
+            <img src={uploadingPreview} alt="uploading preview" />
+            <div className="progress-wrapper">
+              <Styled.Progress
+                style={{
+                  right: `${100 - progress}%`,
+                }}
+              />
+            </div>
+          </Styled.Uploading>
+        ) : (
+          <Styled.Message>
+            <Icon icon="add_photo_alternate" className="upload" />
+            <span>Upload thumbnail</span>
+          </Styled.Message>
+        )}
+      </Styled.ThumbnailUploaderWrapper>
+      <input type="file" onChange={handleFileUpload} ref={inputRef} />
+    </>
   )
 }
 
