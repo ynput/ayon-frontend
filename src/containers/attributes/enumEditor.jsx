@@ -2,7 +2,6 @@ import React, { useMemo, useState } from 'react'
 import PropTypes from 'prop-types'
 import { InputText, Button, LockedInput } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
-import { camelCase } from 'lodash'
 
 const RowStyled = styled.form`
   display: flex;
@@ -37,7 +36,7 @@ const EnumEditor = ({ values = [], onChange }) => {
 
     const newItem = {
       label: v,
-      value: (newItemValueChanged.includes(index) && curValue?.value) || camelCase(v),
+      value: (newItemValueChanged.includes(index) && curValue?.value) || v,
     }
 
     if (curValue) {
@@ -55,7 +54,7 @@ const EnumEditor = ({ values = [], onChange }) => {
     const curLabel = values[index].label
 
     const newValues = [...values]
-    newValues.splice(index, 1, { label: curLabel, value: camelCase(v) })
+    newValues.splice(index, 1, { label: curLabel, value: v })
 
     onChange(newValues)
   }
