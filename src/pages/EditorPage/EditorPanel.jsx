@@ -516,12 +516,14 @@ const EditorPanel = ({
             projectName={projectName}
             entityType={entityType}
             onUploaded={operations => {
-              const firstOperation = operations[0]
-              const {id, updatedAt} = {id: firstOperation.id, updatedAt: firstOperation?.data?.updatedAt}
+              for (const operation of operations) {
+
+              const {id, updatedAt} = {id: operation.id, updatedAt: operation?.data?.updatedAt}
               setNodes((prev) => {
                 let updatedEntity = {...prev[id], data: {...prev[id]?.data, updatedAt: updatedAt}};
                 return { ...prev, [id]: updatedEntity }
               })
+              }
 
               refetch()
             }}

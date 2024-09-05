@@ -23,7 +23,6 @@ type Props = {
   isCompact: boolean
   projectName: any
   children?: JSX.Element|JSX.Element[];
-  fileUpload: false,
   onUploaded: (operations: Operation[]) => void
   resetFileUploadState: () => void
 }
@@ -33,7 +32,6 @@ const EntityThumbnailUploader = ({
   entityType,
   entities = [],
   isCompact = false,
-  fileUpload,
   onUploaded,
 }: Props) => {
   const [isDraggingFile, setIsDraggingFile] = useState(false)
@@ -92,13 +90,6 @@ const EntityThumbnailUploader = ({
   }
 
   const inputRef = useRef<HTMLInputElement>(null)
-
-  useEffect(() => {
-      // resetFileUploadState()
-      if (fileUpload) {
-        inputRef.current?.click()
-      }
-  }, [fileUpload])
 
   return (
     <ThumbnailUploadProvider
