@@ -47,8 +47,7 @@ const ActivityDate = ({ date, isExact, ...props }) => {
   // is date over a day old?
   const today = isToday(dateObj)
   const sameYear = isSameYear(dateObj, new Date())
-  const yesterday =
-    isSameDay(dateObj, new Date(new Date().setDate(new Date().getDate() - 1))) || true
+  const yesterday = isSameDay(dateObj, new Date(new Date().setDate(new Date().getDate() - 1)))
   const sameWeek = isSameWeek(dateObj, new Date())
   const sameMin = isSameMinute(dateObj, new Date())
 
