@@ -13,6 +13,7 @@ const StackedStyled = styled.div`
   overflow: hidden;
   border-radius: 8px;
   min-width: min-content;
+  cursor: pointer;
 
   &.stacking {
     & > * {
