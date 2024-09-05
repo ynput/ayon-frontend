@@ -19,6 +19,7 @@ export const TaskStatusBar: FC<TaskStatusBarProps> = ({ statuses = [], statusCou
   const total = Object.values(statusCounts).reduce((acc, count) => acc + count, 0)
 
   const tooltip = sortedStatuses
+    .filter((status) => statusCounts[status.name] > 0)
     .map((status) => {
       const count = statusCounts[status.name] || 0
       const percentage = Math.round((count / total) * 100 * 10) / 10
@@ -28,7 +29,7 @@ export const TaskStatusBar: FC<TaskStatusBarProps> = ({ statuses = [], statusCou
     .join('\n')
 
   return (
-    <Styled.Cell data-tooltip={tooltip} data-tooltip-as="markdown">
+    <Styled.Cell data-tooltip={tooltip} data-tooltip-as="markdown" data-tooltip-clickable="false">
       <Styled.StatusBar>
         {sortedStatuses.map((status) => {
           const count = statusCounts[status.name] || 0

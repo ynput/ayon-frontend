@@ -169,17 +169,17 @@ export const TasksProgressTable = ({
 
   const sortFolderFunction = useFolderSort(tableData)
 
-  const onOpenPanel = () => {
-    dispatch(toggleDetailsPanel(true))
+  const togglePanel = (open: boolean = true) => {
+    dispatch(toggleDetailsPanel(open))
   }
 
   const buildContextMenu = (_selection: string[], taskId: string) => {
     return [
       {
-        label: 'Show details',
+        label: detailsOpen ? 'Hide details' : 'Show details',
         icon: 'dock_to_left',
-        shortcut: 'Double click',
-        command: () => onOpenPanel(),
+        shortcut: detailsOpen ? 'Escape' : 'Double click',
+        command: () => togglePanel(!detailsOpen),
       },
       {
         label: 'Open in viewer',
@@ -342,8 +342,7 @@ export const TasksProgressTable = ({
       <Column
         field={'_complete'}
         header={'Done'}
-        headerStyle={{ paddingLeft: 2 }}
-        style={{ maxWidth: 70, width: 70 }}
+        style={{ maxWidth: 72, width: 72 }}
         resizeable
         body={(row: FolderRow) =>
           row._complete !== undefined && (
@@ -393,7 +392,6 @@ export const TasksProgressTable = ({
                     avatarUrl: `/api/users/${user.name}/avatar`,
                   }))
                   const isExpanded = expandedRows.includes(task.folder.id)
-                  const tooltip = task.label || task.name
 
                   const handleCellClick = (e: MouseEvent<HTMLDivElement>) => {
                     // check if the click is editable item
@@ -421,7 +419,7 @@ export const TasksProgressTable = ({
                     if (target.closest('.editable')) {
                       return
                     }
-                    onOpenPanel()
+                    togglePanel()
                   }
 
                   const isSelected = selectedTasks.includes(task.id)
@@ -458,7 +456,6 @@ export const TasksProgressTable = ({
                               selectedAssignees={selectedAssignees}
                               assigneeOptions={assigneeOptions}
                               isExpanded={isExpanded}
-                              tooltip={!isExpanded ? tooltip : undefined}
                               taskIcon={taskType?.icon || ''}
                               statuses={statuses}
                               onChange={onChange}
