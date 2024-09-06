@@ -39,7 +39,7 @@ const InboxDetailsPanel = ({ messages = [], selected = [], projectsInfo = {}, on
         onWatchersUpdate={(added) => {
           if (added.includes(user)) {
             const name = selectedMessage.messages[0].origin.name
-            toast.success(`Future messages for ${name} will go to important.`)
+            toast.success(`All future updates for ${name} will appear in your important inbox.`)
           }
         }}
         style={{ boxShadow: 'none', borderRadius: 4, overflow: 'hidden' }}
