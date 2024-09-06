@@ -3,7 +3,7 @@ import * as Styled from './Inbox.styled'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import clsx from 'clsx'
 import InboxDetailsPanel from '../InboxDetailsPanel'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import Shortcuts from '@containers/Shortcuts'
 import { clearHighlights, highlightActivity } from '@state/details'
 import { InView } from 'react-intersection-observer'
@@ -39,6 +39,8 @@ const filters = {
 
 const Inbox = ({ filter }) => {
   const dispatch = useDispatch()
+
+  const user = useSelector((state) => state.user.name)
 
   const last = 100
   const filterArgs = filters[filter] || {}
@@ -88,7 +90,7 @@ const Inbox = ({ filter }) => {
   )
 
   // group messages of same entity and type together
-  const groupedMessages = useGroupMessages({ messages: messagesSortedByDate })
+  const groupedMessages = useGroupMessages({ messages: messagesSortedByDate, currentUser: user })
 
   // single select only allow but multi select is possible
   // it always seems to become multi select so i'll just support it from the start

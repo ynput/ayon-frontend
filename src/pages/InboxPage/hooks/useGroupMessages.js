@@ -11,7 +11,7 @@
 import { isSameDay } from 'date-fns'
 import { useMemo } from 'react'
 
-const groupMessages = (messages = []) => {
+const groupMessages = (messages = [], currentUser) => {
   const groups = []
   const visited = new Array(messages.length).fill(false) // Tracks if a message has been grouped
 
@@ -32,12 +32,23 @@ const groupMessages = (messages = []) => {
 
       // Check if the next message meets the grouping criteria
       const sameDay = isSameDay(messageDate, nextMessageDate)
+      const isSameType = nextMessage.activityType === message.activityType
+      const isSameEntity = nextMessage.entityId === message.entityId
 
-      if (
-        nextMessage.activityType === message.activityType &&
-        nextMessage.entityId === message.entityId &&
-        sameDay
-      ) {
+      let isSameAssignee = true
+      // for assignee change, check if the user is currentUser
+      if (message.activityType.includes('assignee')) {
+        const assigneeIsMe = message?.activityData?.assignee === currentUser
+        const nextAssigneeIsMe = nextMessage?.activityData?.assignee === currentUser
+        // if they don't match, don't group
+        if (assigneeIsMe !== nextAssigneeIsMe) {
+          isSameAssignee = false
+        }
+      }
+
+      const canGroupMessage = isSameType && isSameEntity && sameDay && isSameAssignee
+
+      if (canGroupMessage) {
         currentGroup.push(nextMessage) // Add to the current group
         visited[j] = true // Mark this message as visited
       }
@@ -112,10 +123,10 @@ const transformGroups = (groups = []) => {
   })
 }
 
-const useGroupMessages = ({ messages }) => {
+const useGroupMessages = ({ messages, currentUser }) => {
   const grouped = useMemo(() => {
     // const simpleGroups = messages.map((message) => [message])
-    const simpleGroups = groupMessages(messages)
+    const simpleGroups = groupMessages(messages, currentUser)
     const transformedGroups = transformGroups(simpleGroups)
     // console.log(transformedGroups)
     return transformedGroups
