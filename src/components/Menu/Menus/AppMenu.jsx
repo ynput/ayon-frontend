@@ -78,6 +78,12 @@ export const AppMenu = ({ user, ...props }) => {
       shortcut: 'M+M',
     },
     {
+      id: 'releases',
+      label: 'Release Installer',
+      onClick: handleBootstrapLaunch,
+      icon: 'orders',
+    },
+    {
       id: 'onboarding',
       label: 'Launch Bootstrap Setup',
       onClick: handleBootstrapLaunch,
