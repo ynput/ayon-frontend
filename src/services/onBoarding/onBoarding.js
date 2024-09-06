@@ -38,18 +38,6 @@ const onBoarding = api.injectEndpoints({
         method: 'POST',
       }),
     }),
-    getReleases: build.query({
-      query: () => ({
-        url: '/api/onboarding/releases',
-      }),
-      transformResponse: (response) => response?.releases || [],
-    }),
-    getRelease: build.query({
-      query: ({ name }) => ({
-        url: `/api/onboarding/releases/${name}`,
-      }),
-      transformResponse: (response) => response || {},
-    }),
     getInstallStatus: build.query({
       query: () => ({
         url: '/api/onboarding/status',
@@ -169,11 +157,8 @@ const onBoarding = api.injectEndpoints({
 export const {
   useInitializeUserMutation,
   useAbortOnBoardingMutation,
-  useGetReleasesQuery,
   useGetInstallStatusQuery,
   useInstallPresetMutation,
   useGetInstallEventsQuery,
-  useGetReleaseQuery,
-  useLazyGetReleaseQuery,
   useRestartOnBoardingMutation,
 } = onBoarding

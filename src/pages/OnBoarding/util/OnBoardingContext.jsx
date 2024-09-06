@@ -7,11 +7,13 @@ import { useGetYnputConnectionsQuery } from '@queries/ynputConnect'
 import {
   useAbortOnBoardingMutation,
   useGetInstallEventsQuery,
-  useGetReleaseQuery,
   useInstallPresetMutation,
-  useLazyGetReleaseQuery,
-  useGetReleasesQuery,
 } from '@queries/onBoarding/onBoarding'
+import {
+  useGetReleasesQuery,
+  useGetReleaseInfoQuery,
+  useLazyGetReleaseInfoQuery,
+} from '@queries/releases/getReleases'
 import useLocalStorage from '@hooks/useLocalStorage'
 import { useLazyListBundlesQuery } from '@queries/bundles/getBundles'
 import { useCreateBundleMutation } from '@queries/bundles/updateBundles'
@@ -89,7 +91,7 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
   const { data: ynputConnect, isLoading: isLoadingConnect } = useGetYnputConnectionsQuery({})
 
   // get releases data
-  const { data: releases = [], isLoading: isLoadingReleases } = useGetReleasesQuery(
+  const { data: { releases = [] } = {}, isLoading: isLoadingReleases } = useGetReleasesQuery(
     {
       ynputConnect,
     },
@@ -142,8 +144,8 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
   const [selectedPlatforms, setSelectedPlatforms] = useState(guessedPlatform)
 
   // get selected release data
-  const { data: release = {}, isFetching: isLoadingAddons } = useGetReleaseQuery(
-    { name: selectedPreset },
+  const { data: release = {}, isFetching: isLoadingAddons } = useGetReleaseInfoQuery(
+    { releaseName: selectedPreset },
     { skip: !selectedPreset || stepIndex < 5 },
   )
 
@@ -199,13 +201,13 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
     }
   }, [isSuccess, isFetching, isFinished])
 
-  const [getRelease, { isFetching: isLoadingRelease }] = useLazyGetReleaseQuery()
+  const [getRelease, { isFetching: isLoadingRelease }] = useLazyGetReleaseInfoQuery()
 
   const handleSubmit = async () => {
     // install addons, installers, dep packages
     try {
       // get release data
-      const release = await getRelease({ name: selectedPreset }).unwrap()
+      const release = await getRelease({ releaseName: selectedPreset }).unwrap()
       // create array of addon urls based on selected addons
       const addons = release.addons
         .filter((addon) => selectedAddons.includes(addon.name) && !!addon.url)
