@@ -1,18 +1,20 @@
-import { useMemo, useState } from 'react'
-import * as Styled from './DetailsPanelHeader.styled'
-import StackedThumbnails from '@pages/EditorPage/StackedThumbnails'
-import clsx from 'clsx'
-import { isEqual, union, upperFirst } from 'lodash'
-import { useUpdateEntitiesMutation } from '@queries/entity/updateEntity'
-import { toast } from 'react-toastify'
-import Actions from '@containers/Actions/Actions'
-import FeedFilters from '../FeedFilters/FeedFilters'
-import usePatchProductsListWithVersions from '@hooks/usePatchProductsListWithVersions'
-import { useGetChecklistsCountQuery } from '@queries/activities/getActivities'
-import ThumbnailUploader from '@components/ThumbnailUploader/ThumbnailUploader'
+import { useMemo } from 'react'
 import { useDispatch } from 'react-redux'
-import { openViewer } from '@state/viewer'
+import { toast } from 'react-toastify'
+import { isEqual, union, upperFirst } from 'lodash'
+import clsx from 'clsx'
 import { Icon } from '@ynput/ayon-react-components'
+
+import EntityThumbnailUploader from '@components/EntityThumbnailUploader/EntityThumbnailUploader'
+import Actions from '@containers/Actions/Actions'
+import usePatchProductsListWithVersions from '@hooks/usePatchProductsListWithVersions'
+import StackedThumbnails from '@pages/EditorPage/StackedThumbnails'
+import { useUpdateEntitiesMutation } from '@queries/entity/updateEntity'
+import { useGetChecklistsCountQuery } from '@queries/activities/getActivities'
+import { openViewer } from '@state/viewer'
+
+import FeedFilters from '../FeedFilters/FeedFilters'
+import * as Styled from './DetailsPanelHeader.styled'
 
 const DetailsPanelHeader = ({
   entityType,
@@ -145,51 +147,6 @@ const DetailsPanelHeader = ({
     }
   }
 
-  const [isDraggingFile, setIsDraggingFile] = useState(false)
-  const handleThumbnailUpload = (thumbnails = []) => {
-    // always set isDraggingFile to false
-    // hides the thumbnail uploader
-    setIsDraggingFile(false)
-
-    // check something was actually uploaded
-    if (!entities.length) return
-    // patching the updatedAt will force a refresh of the thumbnail url
-    const newUpdatedAt = new Date().toISOString()
-
-    let operations = [],
-      versionPatches = []
-
-    for (const entity of thumbnails) {
-      const entityToPatch = entities.find((e) => e.id === entity.id)
-      if (!entityToPatch) continue
-      const thumbnailId = entity.thumbnailId
-      const currentAssignees = entity.users || []
-
-      operations.push({
-        id: entityToPatch.id,
-        projectName: entityToPatch.projectName,
-        data: { updatedAt: newUpdatedAt },
-        currentAssignees,
-      })
-
-      const versionPatch = {
-        productId: entityToPatch.productId,
-        versionUpdatedAt: newUpdatedAt,
-        versionThumbnailId: thumbnailId,
-      }
-
-      versionPatches.push(versionPatch)
-    }
-
-    // update productsList cache with new status
-    let productsPatch = patchProductsListWithVersions(versionPatches)
-    try {
-      updateEntities({ operations, entityType })
-    } catch (error) {
-      productsPatch?.undo()
-    }
-  }
-
   const handleThumbnailClick = () => {
     let versionIds,
       id = firstEntity.id,
@@ -229,107 +186,106 @@ const DetailsPanelHeader = ({
   }
 
   return (
-    <Styled.Grid
-      className={clsx('details-panel-header', { isCompact })}
-      onDragEnter={() => setIsDraggingFile(true)}
-    >
-      <Styled.Header className={clsx('titles', { isCompact, loading: isLoading }, 'no-shimmer')}>
-        <Styled.ThumbnailWrapper>
-          <StackedThumbnails
-            isLoading={isLoading}
-            shimmer={isLoading}
-            thumbnails={thumbnails}
-            projectName={projectName}
-            onClick={thumbnails.length === 1 ? handleThumbnailClick : undefined}
-            hoverIcon={'play_circle'}
-          />
-          {!isMultiple && firstEntity?.hasReviewables && (
-            <Styled.Playable className="playable">
-              <Icon icon="play_circle" />
-            </Styled.Playable>
-          )}
-        </Styled.ThumbnailWrapper>
-        <Styled.Content className={clsx({ loading: isLoading })}>
-          <h2>{!isMultiple ? firstEntity?.title : `${entities.length} ${entityType}s selected`}</h2>
-          <div className="sub-title">
-            <span>{upperFirst(entityType)} - </span>
-            <h3>{!isMultiple ? firstEntity?.subTitle : entities.map((t) => t.title).join(', ')}</h3>
-          </div>
-        </Styled.Content>
-      </Styled.Header>
-      <Styled.StatusSelect
-        value={statusesValue}
-        options={statusesOptions}
-        disabledValues={disabledStatuses}
-        invert
-        style={{ maxWidth: 'unset' }}
-        onChange={(value) => handleUpdate('status', value)}
-        className={clsx('status-select', { loading: isLoading })}
-        align={isCompact ? 'right' : 'left'}
-      />
-      {!isCompact &&
-        (!hasUser || isLoading ? (
-          <div></div>
-        ) : (
-          <Styled.AssigneeSelect
-            value={entityAssignees}
-            options={usersOptions}
-            disabledValues={disabledAssignees.map((u) => u.name)}
-            isMultiple={isMultiple && entityAssignees.length > 1 && entityType === 'task'}
-            readOnly={entityType !== 'task'}
-            emptyMessage={entityType === 'task' ? 'Assign user' : ''}
-            align="right"
-            onChange={(value) => handleUpdate('assignees', value)}
-            className="assignee-select"
-            data-tooltip={
-              entityAssignees.length ? (entityType === 'task' ? 'Assigned users' : 'Author') : ''
-            }
-          />
-        ))}
-      <Actions
+    <Styled.HeaderContainer>
+      <EntityThumbnailUploader
         entities={entities}
         entityType={entityType}
-        entitySubTypes={entitySubTypes}
-        isLoadingEntity={isFetching || isLoading}
-      />
-      <Styled.TagsSelect
-        value={union(...tagsValues)}
-        isMultiple={tagsValues.some((v) => !isEqual(v, tagsValues[0]))}
-        tags={tagsOptionsObject}
-        editable
-        editor
-        onChange={(value) => handleUpdate('tags', value)}
-        align="right"
-        styleDropdown={{ display: isLoading && 'none' }}
-        className="tags-select"
-      />
-      <FeedFilters
-        isSlideOut={isSlideOut}
-        isLoading={isLoading}
-        entityType={entityType}
-        className="filters"
-        overrides={{
-          checklists: {
-            label: checklistsLabel,
-          },
-        }}
-        scope={scope}
-      />
-
-      {isDraggingFile && (
-        <ThumbnailUploader
-          isPortal
-          onFinish={handleThumbnailUpload}
-          onDragLeave={() => setIsDraggingFile(false)}
-          onDragOver={(e) => e.preventDefault()}
-          className="thumbnail-uploader"
-          entities={entities}
-          entityType={entityType}
-          entityId={firstEntity?.id}
-          entityUpdatedAt={firstEntity?.updatedAt}
-        />
-      )}
-    </Styled.Grid>
+        projectName={projectName}
+      >
+        <Styled.Grid className={clsx('details-panel-header', { isCompact })}>
+          <Styled.Header
+            className={clsx('titles', { isCompact, loading: isLoading }, 'no-shimmer')}
+          >
+            <StackedThumbnails
+              isLoading={isLoading}
+              shimmer={isLoading}
+              thumbnails={thumbnails}
+              projectName={projectName}
+              onClick={thumbnails.length === 1 ? handleThumbnailClick : undefined}
+              hoverIcon={'play_circle'}
+            />
+            {!isMultiple && firstEntity?.hasReviewables && (
+              <Styled.Playable className="playable">
+                <Icon icon="play_circle" />
+              </Styled.Playable>
+            )}
+            <Styled.Content className={clsx({ loading: isLoading })}>
+              <h2>
+                {!isMultiple ? firstEntity?.title : `${entities.length} ${entityType}s selected`}
+              </h2>
+              <div className="sub-title">
+                <span>{upperFirst(entityType)} - </span>
+                <h3>
+                  {!isMultiple ? firstEntity?.subTitle : entities.map((t) => t.title).join(', ')}
+                </h3>
+              </div>
+            </Styled.Content>
+          </Styled.Header>
+          <Styled.StatusSelect
+            value={statusesValue}
+            options={statusesOptions}
+            disabledValues={disabledStatuses}
+            invert
+            style={{ maxWidth: 'unset' }}
+            onChange={(value) => handleUpdate('status', value)}
+            className={clsx('status-select', { loading: isLoading })}
+            align={isCompact ? 'right' : 'left'}
+          />
+          {!isCompact &&
+            (!hasUser || isLoading ? (
+              <div></div>
+            ) : (
+              <Styled.AssigneeSelect
+                value={entityAssignees}
+                options={usersOptions}
+                disabledValues={disabledAssignees.map((u) => u.name)}
+                isMultiple={isMultiple && entityAssignees.length > 1 && entityType === 'task'}
+                readOnly={entityType !== 'task'}
+                emptyMessage={entityType === 'task' ? 'Assign user' : ''}
+                align="right"
+                onChange={(value) => handleUpdate('assignees', value)}
+                className="assignee-select"
+                data-tooltip={
+                  entityAssignees.length
+                    ? entityType === 'task'
+                      ? 'Assigned users'
+                      : 'Author'
+                    : ''
+                }
+              />
+            ))}
+          <Actions
+            entities={entities}
+            entityType={entityType}
+            entitySubTypes={entitySubTypes}
+            isLoadingEntity={isFetching || isLoading}
+          />
+          <Styled.TagsSelect
+            value={union(...tagsValues)}
+            isMultiple={tagsValues.some((v) => !isEqual(v, tagsValues[0]))}
+            tags={tagsOptionsObject}
+            editable
+            editor
+            onChange={(value) => handleUpdate('tags', value)}
+            align="right"
+            styleDropdown={{ display: isLoading && 'none' }}
+            className="tags-select"
+          />
+          <FeedFilters
+            isSlideOut={isSlideOut}
+            isLoading={isLoading}
+            entityType={entityType}
+            className="filters"
+            overrides={{
+              checklists: {
+                label: checklistsLabel,
+              },
+            }}
+            scope={scope}
+          />
+        </Styled.Grid>
+      </EntityThumbnailUploader>
+    </Styled.HeaderContainer>
   )
 }
 

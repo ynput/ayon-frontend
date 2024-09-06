@@ -9,6 +9,9 @@ export const ThumbnailUploaderWrapper = styled.div`
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  &.hidden {
+    display: none;
+  }
 
   .bg {
     position: absolute;
@@ -74,6 +77,7 @@ export const Uploading = styled.div`
   z-index: 10;
 
   img {
+    height: 50%;
     object-fit: contain;
     width: 100%;
   }

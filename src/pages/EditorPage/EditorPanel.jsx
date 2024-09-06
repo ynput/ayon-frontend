@@ -1,5 +1,9 @@
-import React from 'react'
+import { isEmpty, isEqual, union } from 'lodash'
 import PropTypes from 'prop-types'
+import React, { useState, useEffect } from 'react'
+import { useSelector } from 'react-redux'
+import { Link } from 'react-router-dom'
+
 import {
   Panel,
   Button,
@@ -14,53 +18,18 @@ import {
   TagsSelect,
 } from '@ynput/ayon-react-components'
 
-import { useSelector } from 'react-redux'
-import { useState } from 'react'
-import { useEffect } from 'react'
-import getFieldInObject from '@helpers/getFieldInObject'
-import { isEmpty, isEqual, union } from 'lodash'
 import StatusSelect from '@components/status/statusSelect'
-import TypeEditor from './TypeEditor'
 import EntityDetailsHeader from '@components/Details/EntityDetailsHeader'
-import { Link } from 'react-router-dom'
-import styled from 'styled-components'
+import EntityThumbnailUploader from '@components/EntityThumbnailUploader/EntityThumbnailUploader'
+import { SubRow } from './EditorPanel.styled'
+import getFieldInObject from '@helpers/getFieldInObject'
+import useFocusedEntities from '@hooks/useFocused'
+import { useGetEntitiesDetailsPanelQuery } from '@queries/entity/getEntityPanel'
+import { useGetProjectsInfoQuery } from '@queries/userDashboard/getUserDashboard'
+import { entityDetailsTypesSupported } from '@queries/userDashboard/userDashboardQueries'
+import { getEntityDetailsData } from '@queries/userDashboard/userDashboardHelpers'
 
-const SubRow = styled.div`
-  flex: 1;
-  display: flex;
-  flex-direction: row;
-
-  > *:first-child {
-    flex-grow: 1;
-    margin-right: 4px;
-
-    /* reveal null button on hover */
-    &:hover + .null {
-      display: block;
-    }
-  }
-
-  /* set to null button */
-  .null {
-    background-color: unset;
-    position: absolute;
-    right: 24px;
-    padding: 2px;
-    top: 4px;
-
-    display: none;
-    &:hover {
-      display: block;
-      background-color: unset;
-    }
-  }
-
-  &.isChanged {
-    .null {
-      color: var(--color-on-changed);
-    }
-  }
-`
+import TypeEditor from './TypeEditor'
 
 const inputTypes = {
   datetime: { type: 'date' },
@@ -107,6 +76,41 @@ const EditorPanel = ({
   const [form, setForm] = useState({})
   // used to rebuild fields for when the type changes
   const [type, setType] = useState(null)
+
+  const { entities, entityType } = useFocusedEntities(projectName)
+
+
+  const { data: projectsInfo = {} } = useGetProjectsInfoQuery({ projects: [projectName] })
+
+  // now we get the full details data for selected entities
+  let entitiesToQuery = entities.length
+    ? entities.map((entity) => ({ id: entity.id, projectName: entity.projectName }))
+    : []
+  // : entitiesData.map((entity) => ({ id: entity.id, projectName: entity.projectName }))
+
+  const {
+    data: detailsData = [],
+    isFetching: isFetchingEntitiesDetails,
+    isSuccess,
+    isError,
+    refetch,
+    // originalArgs,
+  } = useGetEntitiesDetailsPanelQuery(
+    { entityType, entities: entitiesToQuery, projectsInfo },
+    {
+      skip: !entitiesToQuery.length || !entityDetailsTypesSupported.includes(entityType),
+    },
+  )
+
+  // merge current entities data with fresh details data
+  const entityDetailsData = getEntityDetailsData({
+    entities,
+    entityType,
+    projectsInfo,
+    detailsData,
+    isSuccess,
+    isError,
+  })
 
   // when selection or nodes change, update nodes state
   useEffect(() => {
@@ -506,28 +510,52 @@ const EditorPanel = ({
     <Section wrap id="editor-entity-details-container">
       {!noSelection && (
         <>
-          <EntityDetailsHeader
-            values={nodeIds.map((id) => nodes[id]?.data)}
-            tools={
-              <>
-                <Button
-                  icon="replay"
-                  onClick={handleRevert}
-                  disabled={noSelection}
-                  data-tooltip="Clear changes"
-                />
-                <Button
-                  icon="delete"
-                  onClick={() => onDelete(nodes)}
-                  disabled={noSelection}
-                  data-tooltip="Delete"
-                />
-                <Link to={`/projects/${projectName}/browser`}>
-                  <Button icon="visibility" disabled={noSelection} data-tooltip="View in Browser" />
-                </Link>
-              </>
-            }
-          />
+          <EntityThumbnailUploader
+            isCompact
+            entities={isFetchingEntitiesDetails ? entitiesToQuery : entityDetailsData}
+            projectName={projectName}
+            entityType={entityType}
+            onUploaded={operations => {
+              for (const operation of operations) {
+
+              const {id, updatedAt} = {id: operation.id, updatedAt: operation?.data?.updatedAt}
+              setNodes((prev) => {
+                let updatedEntity = {...prev[id], data: {...prev[id]?.data, updatedAt: updatedAt}};
+                return { ...prev, [id]: updatedEntity }
+              })
+              }
+
+              refetch()
+            }}
+          >
+            <EntityDetailsHeader
+              values={nodeIds.map((id) => nodes[id]?.data)}
+              entityType={entityType}
+              tools={
+                <>
+                  <Button
+                    icon="replay"
+                    onClick={handleRevert}
+                    disabled={noSelection}
+                    data-tooltip="Clear changes"
+                  />
+                  <Button
+                    icon="delete"
+                    onClick={() => onDelete(nodes)}
+                    disabled={noSelection}
+                    data-tooltip="Delete"
+                  />
+                  <Link to={`/projects/${projectName}/browser`}>
+                    <Button
+                      icon="visibility"
+                      disabled={noSelection}
+                      data-tooltip="View in Browser"
+                    />
+                  </Link>
+                </>
+              }
+            />
+
           <Panel style={{ overflowY: 'auto', height: '100%' }}>
             <FormLayout>
               {Object.values(form).map((row, i) => {
@@ -771,6 +799,7 @@ const EditorPanel = ({
               })}
             </FormLayout>
           </Panel>
+          </EntityThumbnailUploader>
         </>
       )}
     </Section>
