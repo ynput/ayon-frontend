@@ -8,10 +8,11 @@ import { toast } from 'react-toastify'
 interface WatchersProps extends Omit<WatcherSelectProps, 'currentUser'> {
   entities: { id: string; projectName: string }[]
   entityType: string
+  onWatchersUpdate?: (added: any[], removed: any[]) => void,
 }
 
 export const Watchers = forwardRef<DropdownRef, WatchersProps>(
-  ({ entities, entityType, ...props }, ref) => {
+  ({ entities, entityType, onWatchersUpdate, ...props }, ref) => {
     const user = useSelector((state: $Any) => state.user.name)
 
     const entitiesQuery = entities.map((entity) => ({
@@ -55,6 +56,7 @@ export const Watchers = forwardRef<DropdownRef, WatchersProps>(
       //   update
       try {
         await setEntitiesWatchers({ entities: updatedEntities }).unwrap()
+        onWatchersUpdate && onWatchersUpdate(added, removed)
       } catch (error) {
         toast.error('Failed to update watchers')
       }

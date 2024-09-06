@@ -4,8 +4,11 @@ import { useMemo } from 'react'
 import DetailsPanel from '@containers/DetailsPanel/DetailsPanel'
 import { useGetUsersAssigneeQuery } from '@queries/user/getUsers'
 import DetailsPanelSlideOut from '@containers/DetailsPanel/DetailsPanelSlideOut/DetailsPanelSlideOut'
+import { useSelector } from 'react-redux'
+import { toast } from 'react-toastify'
 
 const InboxDetailsPanel = ({ messages = [], selected = [], projectsInfo = {}, onClose }) => {
+  const user = useSelector((state) => state.user.name)
   const selectedMessage = useMemo(() => {
     return messages.find((m) => m.activityId === selected[0]) || {}
   }, [messages, selected])
@@ -33,6 +36,12 @@ const InboxDetailsPanel = ({ messages = [], selected = [], projectsInfo = {}, on
         entityType={entityType}
         entitySubTypes={entitySubType ? [entitySubType] : null}
         scope="inbox"
+        onWatchersUpdate={(added) => {
+          if (added.includes(user)) {
+            const name = selectedMessage.messages[0].origin.name
+            toast.success(`All future updates for ${name} will appear in your important inbox.`)
+          }
+        }}
         style={{ boxShadow: 'none', borderRadius: 4, overflow: 'hidden' }}
       />
       <DetailsPanelSlideOut projectsInfo={projectsInfo} scope="inbox" />
