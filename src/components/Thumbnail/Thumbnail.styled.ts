@@ -8,10 +8,14 @@ export const Card = styled.div`
   overflow: hidden;
   border-radius: var(--border-radius-l);
   margin: auto;
-  border: solid 2px var(--md-sys-color-outline-variant);
+
   background-color: var(--md-sys-color-surface-container-lowest);
 
   transition: border-color 0.2s, background-color 0.2s;
+
+  &.border {
+    border: solid 2px var(--md-sys-color-outline-variant);
+  }
 
   /* icon */
   .icon {

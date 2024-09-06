@@ -138,6 +138,9 @@ const DetailsPanelHeader = ({
           [field]: value,
         },
         currentAssignees: entity.users,
+        meta: {
+          folderId: entity.folderId,
+        },
       }))
 
       await updateEntities({ operations, entityType })

@@ -8,7 +8,7 @@ import addRemoveMembers from './addRemoveMembers'
 import useCreateContext from '@hooks/useCreateContext'
 import UsersListTeamsSmall from './UsersListTeamsSmall'
 import clsx from 'clsx'
-import userTableLoadingData from '@hooks/userTableLoadingData'
+import useTableLoadingData from '@hooks/useTableLoadingData'
 
 const UserListTeams = ({
   selectedProjects,
@@ -136,7 +136,7 @@ const UserListTeams = ({
     )
   }
 
-  const tableData = userTableLoadingData(userList, isLoading, 10, 'name')
+  const tableData = useTableLoadingData(userList, isLoading, 10, 'name')
 
   if (!isFullSize)
     return (

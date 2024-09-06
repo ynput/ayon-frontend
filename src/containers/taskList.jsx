@@ -17,7 +17,7 @@ import useTableKeyboardNavigation, {
   extractIdFromClassList,
 } from './Feed/hooks/useTableKeyboardNavigation'
 import clsx from 'clsx'
-import userTableLoadingData from '@hooks/userTableLoadingData'
+import useTableLoadingData from '@hooks/useTableLoadingData'
 
 const TaskList = ({ style = {}, autoSelect = false }) => {
   const tasksTypes = useSelector((state) => state.project.tasks)
@@ -258,7 +258,7 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
     dispatch(setPairing([]))
   }
 
-  const tableData = userTableLoadingData(tasksData, isFetching, 6)
+  const tableData = useTableLoadingData(tasksData, isFetching, 6)
 
   const noTasks = !isFetching && tasksData.length === 0
 

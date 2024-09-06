@@ -179,15 +179,28 @@ export type FolderAttribType = {
   fps?: Maybe<Scalars['Float']['output']>;
   frameEnd?: Maybe<Scalars['Int']['output']>;
   frameStart?: Maybe<Scalars['Int']['output']>;
+  ftrackId?: Maybe<Scalars['String']['output']>;
+  ftrackPath?: Maybe<Scalars['String']['output']>;
+  goldCoins?: Maybe<Scalars['Int']['output']>;
+  hairColor?: Maybe<Scalars['String']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
+  /** How much of the pizza do I get to have? */
+  pizzaShare?: Maybe<Scalars['Float']['output']>;
   /** Vertical resolution */
   resolutionHeight?: Maybe<Scalars['Int']['output']>;
   /** Horizontal resolution */
   resolutionWidth?: Maybe<Scalars['Int']['output']>;
+  /** The Shotgrid ID of this entity. */
+  shotgridId?: Maybe<Scalars['String']['output']>;
+  /** The Shotgrid Type of this entity. */
+  shotgridType?: Maybe<Scalars['String']['output']>;
+  sokoId?: Maybe<Scalars['String']['output']>;
+  sokoPath?: Maybe<Scalars['String']['output']>;
   /** Date and time when the project or task or asset was started */
   startDate?: Maybe<Scalars['DateTime']['output']>;
+  testy?: Maybe<Scalars['String']['output']>;
   tools?: Maybe<Array<Scalars['String']['output']>>;
 };
 
@@ -508,6 +521,8 @@ export type ProjectAttribType = {
   fps?: Maybe<Scalars['Float']['output']>;
   frameEnd?: Maybe<Scalars['Int']['output']>;
   frameStart?: Maybe<Scalars['Int']['output']>;
+  ftrackId?: Maybe<Scalars['String']['output']>;
+  ftrackPath?: Maybe<Scalars['String']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
@@ -515,6 +530,14 @@ export type ProjectAttribType = {
   resolutionHeight?: Maybe<Scalars['Int']['output']>;
   /** Horizontal resolution */
   resolutionWidth?: Maybe<Scalars['Int']['output']>;
+  /** The Shotgrid ID of this entity. */
+  shotgridId?: Maybe<Scalars['String']['output']>;
+  /** Push changes done to this project to Shotgird. Requires the transmitter service. */
+  shotgridPush?: Maybe<Scalars['Boolean']['output']>;
+  /** The Shotgrid Type of this entity. */
+  shotgridType?: Maybe<Scalars['String']['output']>;
+  sokoId?: Maybe<Scalars['String']['output']>;
+  sokoPath?: Maybe<Scalars['String']['output']>;
   /** Date and time when the project or task or asset was started */
   startDate?: Maybe<Scalars['DateTime']['output']>;
   tools?: Maybe<Array<Scalars['String']['output']>>;
@@ -932,15 +955,29 @@ export type TaskAttribType = {
   fps?: Maybe<Scalars['Float']['output']>;
   frameEnd?: Maybe<Scalars['Int']['output']>;
   frameStart?: Maybe<Scalars['Int']['output']>;
+  ftrackId?: Maybe<Scalars['String']['output']>;
+  ftrackPath?: Maybe<Scalars['String']['output']>;
+  goldCoins?: Maybe<Scalars['Int']['output']>;
+  hairColor?: Maybe<Scalars['String']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
+  jiraCurrentPhase?: Maybe<Array<Scalars['String']['output']>>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
+  /** How much of the pizza do I get to have? */
+  pizzaShare?: Maybe<Scalars['Float']['output']>;
   /** Vertical resolution */
   resolutionHeight?: Maybe<Scalars['Int']['output']>;
   /** Horizontal resolution */
   resolutionWidth?: Maybe<Scalars['Int']['output']>;
+  /** The Shotgrid ID of this entity. */
+  shotgridId?: Maybe<Scalars['String']['output']>;
+  /** The Shotgrid Type of this entity. */
+  shotgridType?: Maybe<Scalars['String']['output']>;
+  sokoId?: Maybe<Scalars['String']['output']>;
+  sokoPath?: Maybe<Scalars['String']['output']>;
   /** Date and time when the project or task or asset was started */
   startDate?: Maybe<Scalars['DateTime']['output']>;
+  testy?: Maybe<Scalars['String']['output']>;
   tools?: Maybe<Array<Scalars['String']['output']>>;
 };
 
@@ -1100,6 +1137,8 @@ export type UsersConnection = {
 
 export type VersionAttribType = {
   __typename?: 'VersionAttribType';
+  /** The version that is currently the one to use. */
+  blessed?: Maybe<Scalars['Boolean']['output']>;
   clipIn?: Maybe<Scalars['Int']['output']>;
   clipOut?: Maybe<Scalars['Int']['output']>;
   colorSpace?: Maybe<Scalars['String']['output']>;
@@ -1111,6 +1150,7 @@ export type VersionAttribType = {
   fps?: Maybe<Scalars['Float']['output']>;
   frameEnd?: Maybe<Scalars['Int']['output']>;
   frameStart?: Maybe<Scalars['Int']['output']>;
+  ftrackId?: Maybe<Scalars['String']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
   intent?: Maybe<Scalars['String']['output']>;
@@ -1121,6 +1161,7 @@ export type VersionAttribType = {
   /** Horizontal resolution */
   resolutionWidth?: Maybe<Scalars['Int']['output']>;
   site?: Maybe<Scalars['String']['output']>;
+  sokoId?: Maybe<Scalars['String']['output']>;
   source?: Maybe<Scalars['String']['output']>;
 };
 
@@ -1316,6 +1357,31 @@ export type GetProjectLatestQueryVariables = Exact<{
 
 export type GetProjectLatestQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string } };
 
+export type GetProgressTaskQueryVariables = Exact<{
+  projectName: Scalars['String']['input'];
+  taskId: Scalars['String']['input'];
+}>;
+
+
+export type GetProgressTaskQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, task: { __typename?: 'TaskNode', projectName: string, id: string, name: string, label?: string | null, taskType: string, status: string, assignees: Array<string>, updatedAt: any, active: boolean, hasReviewables: boolean, folder: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, folderType: string, parents: Array<string>, parent?: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, parents: Array<string> } | null } } } };
+
+export type GetTasksProgressQueryVariables = Exact<{
+  projectName: Scalars['String']['input'];
+  folderIds?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
+}>;
+
+
+export type GetTasksProgressQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, tasks: { __typename?: 'TasksConnection', edges: Array<{ __typename?: 'TaskEdge', node: { __typename?: 'TaskNode', projectName: string, id: string, name: string, label?: string | null, taskType: string, status: string, assignees: Array<string>, updatedAt: any, active: boolean, hasReviewables: boolean, folder: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, folderType: string, parents: Array<string>, parent?: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, parents: Array<string> } | null } } }> } } };
+
+export type ProgressTaskFragmentFragment = { __typename?: 'TaskNode', projectName: string, id: string, name: string, label?: string | null, taskType: string, status: string, assignees: Array<string>, updatedAt: any, active: boolean, hasReviewables: boolean, folder: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, folderType: string, parents: Array<string>, parent?: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, parents: Array<string> } | null } };
+
+export type GetAllProjectUsersAsAssigneeQueryVariables = Exact<{
+  projectName?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+
+export type GetAllProjectUsersAsAssigneeQuery = { __typename?: 'Query', users: { __typename?: 'UsersConnection', edges: Array<{ __typename?: 'UserEdge', node: { __typename?: 'UserNode', name: string, attrib: { __typename?: 'UserAttribType', fullName?: string | null } } }> } };
+
 export type GetKanbanQueryVariables = Exact<{
   projects?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
   assignees?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
@@ -1372,6 +1438,33 @@ export const MessageFragmentFragmentDoc = `
     type
     name
     label
+  }
+}
+    `;
+export const ProgressTaskFragmentFragmentDoc = `
+    fragment ProgressTaskFragment on TaskNode {
+  projectName
+  id
+  name
+  label
+  taskType
+  status
+  assignees
+  updatedAt
+  active
+  hasReviewables
+  folder {
+    id
+    name
+    label
+    folderType
+    parents
+    parent {
+      id
+      name
+      label
+      parents
+    }
   }
 }
     `;
@@ -1488,6 +1581,44 @@ export const GetProjectLatestDocument = `
   }
 }
     `;
+export const GetProgressTaskDocument = `
+    query GetProgressTask($projectName: String!, $taskId: String!) {
+  project(name: $projectName) {
+    name
+    task(id: $taskId) {
+      ...ProgressTaskFragment
+    }
+  }
+}
+    ${ProgressTaskFragmentFragmentDoc}`;
+export const GetTasksProgressDocument = `
+    query GetTasksProgress($projectName: String!, $folderIds: [String!]) {
+  project(name: $projectName) {
+    name
+    tasks(folderIds: $folderIds, last: 1000, includeFolderChildren: true) {
+      edges {
+        node {
+          ...ProgressTaskFragment
+        }
+      }
+    }
+  }
+}
+    ${ProgressTaskFragmentFragmentDoc}`;
+export const GetAllProjectUsersAsAssigneeDocument = `
+    query GetAllProjectUsersAsAssignee($projectName: String) {
+  users(last: 2000, projectName: $projectName) {
+    edges {
+      node {
+        name
+        attrib {
+          fullName
+        }
+      }
+    }
+  }
+}
+    `;
 export const GetKanbanDocument = `
     query GetKanban($projects: [String!], $assignees: [String!]) {
   kanban(projects: $projects, assigneesAny: $assignees, last: 2000) {
@@ -1547,6 +1678,15 @@ const injectedRtkApi = RestAPI.injectEndpoints({
     }),
     GetProjectLatest: build.query<GetProjectLatestQuery, GetProjectLatestQueryVariables>({
       query: (variables) => ({ document: GetProjectLatestDocument, variables })
+    }),
+    GetProgressTask: build.query<GetProgressTaskQuery, GetProgressTaskQueryVariables>({
+      query: (variables) => ({ document: GetProgressTaskDocument, variables })
+    }),
+    GetTasksProgress: build.query<GetTasksProgressQuery, GetTasksProgressQueryVariables>({
+      query: (variables) => ({ document: GetTasksProgressDocument, variables })
+    }),
+    GetAllProjectUsersAsAssignee: build.query<GetAllProjectUsersAsAssigneeQuery, GetAllProjectUsersAsAssigneeQueryVariables | void>({
+      query: (variables) => ({ document: GetAllProjectUsersAsAssigneeDocument, variables })
     }),
     GetKanban: build.query<GetKanbanQuery, GetKanbanQueryVariables | void>({
       query: (variables) => ({ document: GetKanbanDocument, variables })

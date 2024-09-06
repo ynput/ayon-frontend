@@ -1,13 +1,15 @@
 import { useSelector } from 'react-redux'
 import { onTaskSelected } from '@state/dashboard'
+import { toggleDetailsPanel } from '@state/details'
 
-export const useTaskClick = (dispatch, tasks = []) => {
+export const useTaskClick = (dispatch, tasks = [], closeContext) => {
   const selectedTasks = useSelector((state) => state.dashboard.tasks.selected)
   const setSelectedTasks = (ids, types) => dispatch(onTaskSelected({ ids, types }))
   // HANDLE TASK CLICK
-  const handleTaskClick = (e, id, taskIds) => {
+  const handleTaskClick = (e, id, taskIds, openPanel = false) => {
     e?.preventDefault()
     e?.stopPropagation()
+    closeContext && closeContext()
 
     const { metaKey, ctrlKey, shiftKey } = e || {}
     const ctrlOrMeta = metaKey || ctrlKey
@@ -39,14 +41,16 @@ export const useTaskClick = (dispatch, tasks = []) => {
     } else if (!newSelection.includes(id) || newSelection.length > 1) {
       // replace selection
       newSelection = [id]
-    } else {
-      newSelection = []
     }
 
     const newTasks = tasks.filter((task) => newSelection.includes(task.id))
     const taskTypes = [...new Set(newTasks.map((task) => task.taskType))]
 
     setSelectedTasks(newSelection, taskTypes)
+
+    if (openPanel) {
+      dispatch(toggleDetailsPanel(true))
+    }
   }
 
   return handleTaskClick

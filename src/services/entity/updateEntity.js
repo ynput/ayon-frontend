@@ -46,6 +46,51 @@ const patchKanban = (
   return [patchResult, kanbanPatched]
 }
 
+// try to patch the progress view if there are queries that need to be updated
+const patchProgressView = ({ operations = [], state, dispatch }) => {
+  // create invalidation tags for progress view
+  const invalidationTags = operations.map((o) => ({ type: 'progress', id: o.id }))
+  // find the entries that need to be updated
+  let entries = api.util.selectInvalidatedBy(state, invalidationTags)
+  // if there are no entries, return
+  if (!entries.length) return
+
+  try {
+    // patch each entry with updated task data
+    const patches = entries.map((entry) =>
+      dispatch(
+        api.util.updateQueryData(entry.endpointName, entry.originalArgs, (draft) => {
+          for (const operation of operations) {
+            const taskId = operation.id
+            const patch = operation.data
+            const folderId = operation.meta?.folderId
+            const folder = draft.find((folder) => folder.id === folderId)
+            if (!folder) throw new Error('Patching progress view: folder not found')
+            const task = folder.tasks?.find((task) => task.id === taskId)
+            if (!task) throw new Error('Patching progress view: task not found')
+            // update task
+            const newTask = { ...task, ...patch }
+            // update folder
+            const newFolder = {
+              ...folder,
+              tasks: folder.tasks.map((t) => (t.id === taskId ? newTask : t)),
+            }
+            // update query
+            const folderIndex = draft.findIndex((f) => f.id === folderId)
+            draft[folderIndex] = newFolder
+          }
+        }),
+      ),
+    )
+    return patches
+  } catch (error) {
+    console.error(error)
+    // invalidate the progress view queries instead
+    dispatch(api.util.invalidateTags(invalidationTags))
+    return []
+  }
+}
+
 const updateEntity = api.injectEndpoints({
   endpoints: (build) => ({
     updateEntity: build.mutation({
@@ -223,7 +268,7 @@ const updateEntity = api.injectEndpoints({
       },
     }),
     updateEntities: build.mutation({
-      async queryFn({ operations = [], entityType }, { dispatch }) {
+      async queryFn({ operations = [], entityType }, { dispatch, getState }) {
         try {
           const promises = []
           for (const { projectName, data, id, currentAssignees = [] } of operations) {
@@ -274,32 +319,29 @@ const updateEntity = api.injectEndpoints({
               },
             ),
           )
+          const state = getState()
+
+          let progressPatches = []
+          if (entityType === 'task') {
+            // patch the progress for task updates
+            progressPatches = patchProgressView({ operations, state, dispatch })
+          }
 
           // check if any of the requests failed and invalidate the tasks cache again to refetch
           const results = await Promise.allSettled(promises)
-          if (results.some((result) => result.value?.error)) {
+
+          // did any of the requests fail?
+          const someError = results.some((result) => result.value?.error)
+          if (someError) {
             dispatch(
               api.util.invalidateTags(operations.map((o) => ({ type: 'kanBanTask', id: o.id }))),
             )
+
+            // revert the progress view patches
+            progressPatches.forEach((patch) => patch?.undo())
           }
 
           const activityTags = []
-
-          // these are the fields that if changed will trigger a new activity
-          // const fieldsWithNewActivity = ['status', 'assignees']
-
-          // invalidate the activity query of the entity activities
-
-          // operations.forEach((operation) => {
-          //   // check if any of the fields in the operation data are in the fieldsWithNewActivity array
-          //   const hasAtLeastOneField = fieldsWithNewActivity.some(
-          //     (field) => field in (operation.data || {}),
-          //   )
-          //   if (hasAtLeastOneField) {
-          //     const getActivitiesTags = [{ type: 'entityActivities', id: operation.id }]
-          //     activityTags.push(...getActivitiesTags)
-          //   }
-          // })
 
           if (activityTags.length) {
             dispatch(api.util.invalidateTags(activityTags))

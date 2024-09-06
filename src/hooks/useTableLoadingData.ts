@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 
-const userTableLoadingData = (data: any, isLoading: boolean, number = 10, dataKey?: string) => {
+const useTableLoadingData = (data: any, isLoading: boolean, number = 10, dataKey?: string) => {
   let tableData = data
 
   const loadingData = useMemo(() => {
@@ -18,4 +18,4 @@ const userTableLoadingData = (data: any, isLoading: boolean, number = 10, dataKe
   return tableData
 }
 
-export default userTableLoadingData
+export default useTableLoadingData

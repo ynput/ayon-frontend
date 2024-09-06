@@ -16,7 +16,7 @@ import useTableKeyboardNavigation, {
   extractIdFromClassList,
 } from './Feed/hooks/useTableKeyboardNavigation'
 import clsx from 'clsx'
-import userTableLoadingData from '@hooks/userTableLoadingData'
+import useTableLoadingData from '@hooks/useTableLoadingData'
 
 const filterHierarchy = (text, folder, folders) => {
   let result = []
@@ -360,7 +360,7 @@ const Hierarchy = (props) => {
     ctxMenuShow(event.originalEvent, ctxMenuItems(newFocused))
   }
 
-  treeData = userTableLoadingData(treeData, isFetching, 15)
+  treeData = useTableLoadingData(treeData, isFetching, 15)
 
   //
   // Render

@@ -1,0 +1,21 @@
+// custom table styles for TasksProgress page
+.tasks-progress-table.p-datatable {
+  border-radius: var(--border-radius);
+  height: fit-content;
+}
+
+.tasks-progress-table.p-datatable .p-datatable-tbody > tr {
+  &,
+  &:hover {
+    background: var(--md-sys-color-surface-container-low) !important;
+  }
+}
+
+.tasks-progress-table .p-datatable-table.p-datatable-scrollable-table.p-datatable-resizable-table {
+  width: 100% !important;
+}
+
+.tasks-progress-table.p-datatable
+  .p-sortable-column:not(.p-highlight):not(.p-sortable-disabled):hover {
+  background: var(--md-sys-color-surface-container-low-hover);
+}

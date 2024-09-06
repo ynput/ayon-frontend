@@ -7,7 +7,7 @@ import { Column } from 'primereact/column'
 
 import { useGetAddonSettingsListQuery } from '@queries/addonSettings'
 import clsx from 'clsx'
-import userTableLoadingData from '@hooks/userTableLoadingData'
+import useTableLoadingData from '@hooks/useTableLoadingData'
 
 const AddonList = ({
   selectedAddons,
@@ -134,7 +134,7 @@ const AddonList = ({
     })
   }
 
-  let tableData = userTableLoadingData(addons, isLoading, 40)
+  let tableData = useTableLoadingData(addons, isLoading, 40)
 
   if (isError) tableData = []
 

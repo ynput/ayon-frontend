@@ -27,9 +27,10 @@ const KanBanCardDraggable = ({
         {...attributes}
         {...listeners}
         onKeyDown={(e) => {
-          // we block space to use for viewer
-          if (e.key === ' ') {
-            e.preventDefault()
+          const passThroughKeys = [' ', 'Escape']
+          if (passThroughKeys.includes(e.key)) {
+            // forward the event to the parent
+            props.onKeyDown && props.onKeyDown(e)
           } else {
             listeners?.onKeyDown(e, task.id)
           }

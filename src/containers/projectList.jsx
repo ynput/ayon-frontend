@@ -13,7 +13,7 @@ import styled, { css } from 'styled-components'
 import clsx from 'clsx'
 import { toast } from 'react-toastify'
 import { useUpdateUserPreferencesMutation } from '@/services/user/updateUser'
-import userTableLoadingData from '@hooks/userTableLoadingData'
+import useTableLoadingData from '@hooks/useTableLoadingData'
 import { useProjectSelectDispatcher } from './ProjectMenu/hooks/useProjectSelectDispatcher'
 import useAyonNavigate from '@hooks/useAyonNavigate'
 
@@ -372,7 +372,7 @@ const ProjectList = ({
     tableContextMenuShow(event.originalEvent, getContextItems(newSelection))
   }
 
-  const tableData = userTableLoadingData(projectList, isLoading, 10, 'name')
+  const tableData = useTableLoadingData(projectList, isLoading, 10, 'name')
 
   const sectionStyle = {
     ...styleSection,

@@ -61,7 +61,7 @@ const ActivityDate = ({ date, isExact, ...props }) => {
         : format(dateObj, `${dateFormat}, ${timeFormat}`)
       : format(dateObj, `EEEE, dd MMM yyyy ${timeFormat}`)
 
-  if (yesterday) dateString = `Yesterday${dateString}`
+  if (yesterday && isFuzzy && !isExact) dateString = `Yesterday${dateString}`
 
   // if less than a minute ago overwrite the date string
   if (sameMin) dateString = 'Just now'

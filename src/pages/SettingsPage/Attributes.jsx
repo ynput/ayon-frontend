@@ -18,7 +18,7 @@ import useSearchFilter from '@hooks/useSearchFilter'
 import useCreateContext from '@hooks/useCreateContext'
 import { isEqual } from 'lodash'
 import clsx from 'clsx'
-import userTableLoadingData from '@hooks/userTableLoadingData'
+import useTableLoadingData from '@hooks/useTableLoadingData'
 
 const Attributes = () => {
   const [attributes, setAttributes] = useState([])
@@ -139,7 +139,7 @@ const Attributes = () => {
     ctxMenuTableShow(e.originalEvent, getContextMenu(e.value))
   }
 
-  const tableData = userTableLoadingData(filteredData, isLoading, 30, 'name')
+  const tableData = useTableLoadingData(filteredData, isLoading, 30, 'name')
 
   return (
     <>

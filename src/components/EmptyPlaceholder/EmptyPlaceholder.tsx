@@ -50,7 +50,7 @@ export const Placeholder = styled.div`
 interface EmptyPlaceholderProps {
   icon: string
   message: string
-  error?: string
+  error?: any
   children?: React.ReactNode
 }
 
@@ -60,7 +60,7 @@ const EmptyPlaceholder = ({ icon, message, error, children }: EmptyPlaceholderPr
       <Placeholder className={'isError'}>
         <Icon icon="error" className="placeholder-icon" />
         <h3 className={Typography.titleLarge}>Something went wrong.</h3>
-        <span className="error-message">ERROR: {JSON.stringify(message)}</span>
+        <span className="error-message">ERROR: {JSON.stringify(error)}</span>
         <span>This should not happen. Please send a screenshot to the Ynput team!</span>
         {children}
       </Placeholder>
@@ -70,7 +70,9 @@ const EmptyPlaceholder = ({ icon, message, error, children }: EmptyPlaceholderPr
   return (
     <Placeholder>
       <Icon icon={icon} className="placeholder-icon" />
-      <h3 className={Typography.titleLarge}>{JSON.stringify(message)}</h3>
+      <h3 className={Typography.titleLarge}>
+        {typeof message === 'object' ? JSON.stringify(message) : message}
+      </h3>
       {children}
     </Placeholder>
   )

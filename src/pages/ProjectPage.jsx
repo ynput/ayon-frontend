@@ -8,6 +8,7 @@ import EditorPage from './EditorPage'
 import LoadingPage from './LoadingPage'
 import ProjectAddon from './ProjectAddon'
 import WorkfilesPage from './WorkfilesPage'
+import TasksProgressPage from './TasksProgressPage'
 
 import usePubSub from '@hooks/usePubSub'
 import { selectProject } from '@state/project'
@@ -90,9 +91,25 @@ const ProjectPage = () => {
 
   const links = useMemo(
     () => [
-      { name: 'Browser', path: `/projects/${projectName}/browser`, module: 'browser', uriSync: true },
-      { name: 'Editor', path: `/projects/${projectName}/editor`, module: 'editor' , uriSync: true },
-      { name: 'Workfiles', path: `/projects/${projectName}/workfiles`, module: 'workfiles' , uriSync: true },
+      {
+        name: 'Browser',
+        path: `/projects/${projectName}/browser`,
+        module: 'browser',
+        uriSync: true,
+      },
+      {
+        name: 'Task progress',
+        path: `/projects/${projectName}/tasks`,
+        module: 'tasks',
+        uriSync: true,
+      },
+      { name: 'Editor', path: `/projects/${projectName}/editor`, module: 'editor', uriSync: true },
+      {
+        name: 'Workfiles',
+        path: `/projects/${projectName}/workfiles`,
+        module: 'workfiles',
+        uriSync: true,
+      },
       ...addonsData.map((addon) => ({
         name: addon.title,
         path: `/projects/${projectName}/addon/${addon.name}`,
@@ -133,6 +150,9 @@ const ProjectPage = () => {
   const getPageByModuleAndAddonData = (module, addonName, addonsData) => {
     if (module === 'editor') {
       return <EditorPage />
+    }
+    if (module === 'tasks') {
+      return <TasksProgressPage />
     }
     if (module === 'workfiles') {
       return <WorkfilesPage />

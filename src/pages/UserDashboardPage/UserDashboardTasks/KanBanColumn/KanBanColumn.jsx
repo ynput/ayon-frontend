@@ -10,6 +10,7 @@ import { InView, useInView } from 'react-intersection-observer'
 import 'react-perfect-scrollbar/dist/css/styles.css'
 import KanBanColumnDropzone from './KanBanColumnDropzone'
 import clsx from 'clsx'
+import { toggleDetailsPanel } from '@state/details'
 import { useURIContext } from '@context/uriContext'
 import { getTaskRoute } from '@helpers/routes'
 
@@ -35,7 +36,6 @@ const KanBanColumn = forwardRef(
     ref,
   ) => {
     const dispatch = useDispatch()
-    const { navigate } = useURIContext()
 
     const tasksCount = tasks.length
 
@@ -76,11 +76,30 @@ const KanBanColumn = forwardRef(
     // we keep track of the ids that have been pre-fetched to avoid fetching them again
     const handlePrefetch = usePrefetchEntity(dispatch, projectsInfo, 500, 'dashboard')
 
+    const { navigate: navigateToUri } = useURIContext()
+    const openInBrowser = (task) => navigateToUri(getTaskRoute(task))
+
     // CONTEXT MENU
-    const { handleContextMenu, closeContext } = useGetTaskContextMenu(tasks, dispatch)
+    const { handleContextMenu, closeContext } = useGetTaskContextMenu(tasks, dispatch, {
+      onOpenInBrowser: openInBrowser,
+    })
 
     // HANDLE TASK CLICK
-    const handleTaskClick = useTaskClick(dispatch, allTasks)
+    const handleTaskClick = useTaskClick(dispatch, allTasks, closeContext)
+
+    const handleDoubleClick = (e, task) => {
+      if (e.metaKey || e.ctrlKey) {
+        // get the task
+        openInBrowser(task)
+      } else {
+        onTogglePanel(true)
+      }
+    }
+
+    // OPEN DETAILS PANEL
+    const onTogglePanel = (open) => {
+      dispatch(toggleDetailsPanel(open))
+    }
 
     // return 5 fake loading events if loading
     const loadingTasks = useMemo(() => getFakeTasks(), [])
@@ -105,7 +124,7 @@ const KanBanColumn = forwardRef(
             []
           ) : (
             <Fragment key={group.label}>
-              <Styled.GroupHeader>{group.label}</Styled.GroupHeader>
+              {group.label && <Styled.GroupHeader>{group.label}</Styled.GroupHeader>}
               {group.tasks.flatMap((task, i) => {
                 if (tasksAdded >= taskLimit) return []
                 tasksAdded++
@@ -116,13 +135,12 @@ const KanBanColumn = forwardRef(
                         <KanBanCardDraggable
                           task={task}
                           onClick={(e) => {
-                            if (e.detail == 2) {
-                              navigate(getTaskRoute(task))
-                              return
-                            }
-                            closeContext()
-                            handleTaskClick(e, task.id)
+                            if (e.detail === 1) {
+                              handleTaskClick(e, task.id)
+                            } else handleDoubleClick(e, task)
                           }}
+                          onTitleClick={(e) => handleTaskClick(e, task.id, undefined, true)}
+                          onKeyDown={(e) => e.key === 'Escape' && onTogglePanel(true)}
                           onMouseOver={() => handlePrefetch(task)}
                           isActive={selectedTasks.includes(task.id)}
                           isDraggingActive={active}

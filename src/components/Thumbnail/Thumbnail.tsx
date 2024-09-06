@@ -7,7 +7,7 @@ interface ThumbnailProps extends HTMLAttributes<HTMLDivElement> {
   projectName: string
   entityType: string
   entityId: string
-  icon?: string
+  icon?: string | null
   entityUpdatedAt?: string
   isLoading?: boolean
   shimmer?: boolean
@@ -15,6 +15,7 @@ interface ThumbnailProps extends HTMLAttributes<HTMLDivElement> {
   disabled?: boolean
   src?: string
   hoverIcon?: string
+  showBorder?: boolean
 }
 
 const Thumbnail = ({
@@ -29,6 +30,7 @@ const Thumbnail = ({
   disabled,
   src,
   hoverIcon,
+  showBorder = true,
   ...props
 }: ThumbnailProps) => {
   let url =
@@ -72,6 +74,7 @@ const Thumbnail = ({
         loaded,
         error,
         clickable: !!props.onClick,
+        border: showBorder,
       })}
       {...props}
     >

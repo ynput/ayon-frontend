@@ -128,7 +128,14 @@ const useTooltip = () => {
       // target top will also be tooltip bottom
       const targetTop = target.getBoundingClientRect().top
 
-      const newTargetPos = { x: asData === 'markdown' ? e.x : targetCenter, y: targetTop }
+      // can the user click the tooltip
+      const clickableData = target?.dataset?.tooltipClickable
+      let clickable = clickableData === 'true'
+      // if markdown and clickable is not set, set clickable to true
+      if (asData === 'markdown' && (clickableData === undefined || clickable === true))
+        clickable = true
+
+      const newTargetPos = { x: targetCenter, y: targetTop }
       const newTooltip = {
         tooltip: tooltipData ?? '',
         shortcut: shortcutData ?? '',
@@ -136,6 +143,7 @@ const useTooltip = () => {
         id,
         hide: false,
         as: asData || 'div',
+        clickable: clickable,
       }
 
       // check if tooltip is already set to same value
@@ -171,7 +179,7 @@ const useTooltip = () => {
           opacity: hideTooltip ? 0 : 1,
           left: tooltip?.pos?.x || 0,
           top: tooltip?.pos?.y || 0,
-          pointerEvents: tooltip?.as !== 'markdown' && 'none',
+          pointerEvents: tooltip?.clickable ? 'auto' : 'none',
         }}
         $targetPos={tooltip?.target}
       >
