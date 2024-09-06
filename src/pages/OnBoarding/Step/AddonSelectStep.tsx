@@ -61,7 +61,7 @@ export const AddonSelectStep = ({
                 key={addon.name}
                 title={addon.title}
                 name={addon.name}
-                version={addon.version}
+                endContent={addon.version}
                 icon={selectedAddons.includes(addon.name) ? 'check_circle' : 'circle'}
                 isSelected={selectedAddons.includes(addon.name)}
                 onClick={() => handleAddonClick(addon.name)}

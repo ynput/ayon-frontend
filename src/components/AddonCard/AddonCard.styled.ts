@@ -67,7 +67,7 @@ export const AddonCard = styled.button`
     color: var(--md-sys-color-on-error-container);
   }
 
-  .version {
+  .endContent {
     margin-left: auto;
 
     /* for OS logos */

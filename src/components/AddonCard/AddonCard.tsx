@@ -1,21 +1,21 @@
-import React, { HTMLAttributes } from 'react'
+import React from 'react'
 import * as Styled from './AddonCard.styled'
 import { Icon } from '@ynput/ayon-react-components'
 import Type from '@/theme/typography.module.css'
 import clsx from 'clsx'
 
-interface AddonCardProps extends HTMLAttributes<HTMLButtonElement> {
+interface AddonCardProps extends React.HTMLAttributes<HTMLButtonElement> {
   name?: string
   icon?: string
   isSelected?: boolean
   error?: string
-  version?: string
+  endContent?: string | React.ReactNode
   title?: string
 }
 
 const AddonCard = React.forwardRef<HTMLButtonElement, AddonCardProps>(
   (
-    { name, icon = 'check_circle', isSelected, error, version, title, className, ...props },
+    { name, icon = 'check_circle', isSelected, error, endContent, title, className, ...props },
     ref,
   ) => {
     return (
@@ -27,7 +27,7 @@ const AddonCard = React.forwardRef<HTMLButtonElement, AddonCardProps>(
         <Icon icon={icon} />
         <span className={Type.titleSmall}>{title || name || 'addon'}</span>
         {error && <span className="error">{error}</span>}
-        {version && <span className="version">{version}</span>}
+        {endContent && <span className="endContent">{endContent}</span>}
       </Styled.AddonCard>
     )
   },
