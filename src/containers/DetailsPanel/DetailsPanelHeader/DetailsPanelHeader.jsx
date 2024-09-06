@@ -196,19 +196,21 @@ const DetailsPanelHeader = ({
           <Styled.Header
             className={clsx('titles', { isCompact, loading: isLoading }, 'no-shimmer')}
           >
-            <StackedThumbnails
-              isLoading={isLoading}
-              shimmer={isLoading}
-              thumbnails={thumbnails}
-              projectName={projectName}
-              onClick={thumbnails.length === 1 ? handleThumbnailClick : undefined}
-              hoverIcon={'play_circle'}
-            />
-            {!isMultiple && firstEntity?.hasReviewables && (
-              <Styled.Playable className="playable">
-                <Icon icon="play_circle" />
-              </Styled.Playable>
-            )}
+            <div style={{ position: 'relative' }}>
+              <StackedThumbnails
+                isLoading={isLoading}
+                shimmer={isLoading}
+                thumbnails={thumbnails}
+                projectName={projectName}
+                onClick={thumbnails.length === 1 ? handleThumbnailClick : undefined}
+                hoverIcon={'play_circle'}
+              />
+              {!isMultiple && firstEntity?.hasReviewables && (
+                <Styled.Playable className="playable">
+                  <Icon icon="play_circle" />
+                </Styled.Playable>
+              )}
+            </div>
             <Styled.Content className={clsx({ loading: isLoading })}>
               <h2>
                 {!isMultiple ? firstEntity?.title : `${entities.length} ${entityType}s selected`}
