@@ -248,7 +248,7 @@ const Inbox = ({ filter }) => {
   }
 
   const handleClearShortcut = (e) => {
-    const id = getHoveredMessageId(e, '.isClearable')
+    const id = getHoveredMessageId(e, '.clearable')
     if (!id) return
 
     // if something is selected, check if the selected message is the same as the target
