@@ -1,5 +1,8 @@
+// Redux Toolkit
 import { configureStore } from '@reduxjs/toolkit'
+import { setupListeners } from '@reduxjs/toolkit/query'
 
+// Reducers
 import userReducer from '@state/user'
 import contextReducer, { contextLocalItems } from '@state/context'
 import projectReducer from '@state/project'
@@ -8,10 +11,14 @@ import dashboardReducer, { dashboardLocalItems } from '@state/dashboard'
 import detailsReducer, { detailsLocalItems } from '@state/details'
 import addonsManagerReducer from '@state/addonsManager'
 import viewerReducer, { viewerSearchParams } from '@state/viewer'
+import releaseInstallerReducer from '@state/releaseInstaller'
+
+// API
 import { RestAPI } from '@queries/ayon'
+
+// Middleware
 import localStorageMiddleware from './middleware/localStorageMiddleware'
 import searchParamsMiddleware, { updateUrlOnUriChange } from './middleware/searchParamsMiddleware'
-import { setupListeners } from '@reduxjs/toolkit/query'
 
 const store = configureStore({
   reducer: {
@@ -23,6 +30,7 @@ const store = configureStore({
     details: detailsReducer,
     addonsManager: addonsManagerReducer,
     viewer: viewerReducer,
+    releaseInstaller: releaseInstallerReducer,
     [RestAPI.reducerPath]: RestAPI.reducer,
   },
   middleware: (getDefaultMiddleware) =>

@@ -4,8 +4,11 @@ import { useRestartOnBoardingMutation } from '@queries/onBoarding/onBoarding'
 import { toast } from 'react-toastify'
 import ayonClient from '@/ayon'
 import { useRestart } from '@context/restartContext'
+import { useAppDispatch } from '@state/store'
+import { toggleReleaseInstaller } from '@state/releaseInstaller'
 
 export const AppMenu = ({ user, ...props }) => {
+  const dispatch = useAppDispatch()
   // check if user is logged in and is manager or admin
   const isUser = user?.data?.isUser
   const isManager = user?.data?.isManager
@@ -25,6 +28,10 @@ export const AppMenu = ({ user, ...props }) => {
       console.error(error)
       toast.error('Failed to launch bootstrap setup')
     }
+  }
+
+  const handleReleaseInstaller = () => {
+    dispatch(toggleReleaseInstaller(true))
   }
 
   const items = [
@@ -80,7 +87,7 @@ export const AppMenu = ({ user, ...props }) => {
     {
       id: 'releases',
       label: 'Release Installer',
-      onClick: handleBootstrapLaunch,
+      onClick: handleReleaseInstaller,
       icon: 'orders',
     },
     {
