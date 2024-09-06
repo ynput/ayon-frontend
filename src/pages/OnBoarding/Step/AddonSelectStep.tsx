@@ -1,6 +1,19 @@
-import React, { useMemo } from 'react'
+import { useMemo } from 'react'
 import * as Styled from '../util/OnBoardingStep.styled'
 import AddonCard from '@components/AddonCard/AddonCard'
+import { ReleaseInfoModel, ReleaseListItemModel } from '@api/rest/releases'
+
+type AddonSelectStepProps = {
+  Header: React.ElementType
+  Footer: React.ElementType
+  selectedAddons: string[]
+  selectedPreset: string
+  releases: ReleaseListItemModel[]
+  release?: ReleaseInfoModel | null
+  setSelectedAddons: (selectedAddons: string[]) => void
+  isLoadingRelease: boolean
+  isLoadingAddons: boolean
+}
 
 export const AddonSelectStep = ({
   Header,
@@ -8,11 +21,11 @@ export const AddonSelectStep = ({
   selectedAddons = [],
   selectedPreset,
   releases = [],
-  release = {},
+  release,
   setSelectedAddons,
   isLoadingRelease,
   isLoadingAddons,
-}) => {
+}: AddonSelectStepProps) => {
   const { addons = [] } = release || {}
   // filter out mandatory addons
   const notMandatoryAddons = addons.filter((addon) => !addon.mandatory)
@@ -26,7 +39,7 @@ export const AddonSelectStep = ({
     return notMandatorAddons || [...Array(20)].map((_, i) => `Addon ${i}`)
   }, [selectedPreset, releases])
 
-  const handleAddonClick = (name) => {
+  const handleAddonClick = (name: string) => {
     // if it's already selected, remove it
     if (selectedAddons.includes(name)) {
       setSelectedAddons(selectedAddons.filter((addon) => addon !== name))

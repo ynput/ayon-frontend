@@ -1,4 +1,4 @@
-import styled, { css } from 'styled-components'
+import styled from 'styled-components'
 
 export const AddonCard = styled.button`
   /* reset button */
@@ -33,38 +33,33 @@ export const AddonCard = styled.button`
     line-height: 100%;
   }
 
-  ${({ $selected }) =>
-    $selected &&
-    css`
-      background-color: var(--md-sys-color-primary-container);
+  &.selected {
+    background-color: var(--md-sys-color-primary-container);
 
-      &:hover {
-        background-color: var(--md-sys-color-primary-container-hover);
+    &:hover {
+      background-color: var(--md-sys-color-primary-container-hover);
 
-        &:disabled {
-          background-color: var(--md-sys-color-primary-container);
-        }
+      &:disabled {
+        background-color: var(--md-sys-color-primary-container);
       }
-    `}
-
-  .icon {
-    /* fill icon */
-    ${({ $selected }) => ($selected ? 'font-variation-settings: "FILL" 1;' : '')}
+    }
+    .icon {
+      /* fill icon */
+      font-variation-settings: 'FILL' 1;
+    }
   }
 
-  ${({ $error }) =>
-    $error &&
-    css`
-      background-color: var(--md-sys-color-error-container);
-      &,
-      .icon {
-        color: var(--md-sys-color-on-error-container);
-      }
+  &.error {
+    background-color: var(--md-sys-color-error-container);
+    &,
+    .icon {
+      color: var(--md-sys-color-on-error-container);
+    }
 
-      &:hover {
-        background-color: var(--md-sys-color-error-container);
-      }
-    `}
+    &:hover {
+      background-color: var(--md-sys-color-error-container);
+    }
+  }
 
   .error {
     margin-left: auto;
