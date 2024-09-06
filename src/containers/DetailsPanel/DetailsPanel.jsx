@@ -39,6 +39,7 @@ const DetailsPanel = ({
   style = {},
   scope,
   isCompact = false,
+  onWatchersUpdate,
 }) => {
   const path = isSlideOut ? 'slideOut' : 'pinned'
   let selectedTab = useSelector((state) => state.details[path][scope].tab)
@@ -136,7 +137,12 @@ const DetailsPanel = ({
             entityType={entityType}
             scope={scope}
           />
-          <Watchers entities={entitiesToQuery} entityType={entityType} options={projectUsers} />
+          <Watchers
+            entities={entitiesToQuery}
+            entityType={entityType}
+            options={projectUsers}
+            onWatchersUpdate={onWatchersUpdate && onWatchersUpdate}
+          />
           {onClose && (
             <Button
               icon="close"
