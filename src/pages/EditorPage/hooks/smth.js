@@ -1,6 +1,35 @@
 import getFieldInObject from '@helpers/getFieldInObject'
 import { isEmpty, isEqual } from 'lodash'
 
+const getTypes = (nodes, nodeIds) => {
+  const types = []
+
+  for (const id of nodeIds) {
+    if (!types.includes(nodes[id]?.data?.__entityType)) {
+      types.push(nodes[id]?.data?.__entityType)
+    }
+  }
+
+  return types
+}
+
+const getInputProps = (attrib = {}) => {
+  const inputTypes = {
+    datetime: { type: 'date' },
+    integer: { type: 'number', step: 1 },
+    float: { type: 'number', step: 1 },
+  }
+
+  let props = {}
+
+  if (attrib.type) {
+    const type = inputTypes[attrib.type] || { type: 'string' }
+    props = { ...type }
+  }
+
+  return props
+}
+
 // look up the og value using field
 // look up any changes using changeKey
 // compare both values and use changedValue if there is one
@@ -80,7 +109,9 @@ const getFieldValue = (field, changeKey, { type = '', nodeIds, nodes, changes })
   return { value: finalValue, isChanged, isOwn, multipleValues }
 }
 
-const createInitialForm = (singleSelect, types, { nodeIds, nodes, attribs, changes, setType }) => {
+const createInitialForm = (types, { nodeIds, nodes, attribs, changes, setType }) => {
+  const singleSelect = nodeIds.length === 1 ? nodes[nodeIds[0]]?.data || {} : null
+
   //   checking if any other types don't match the first one
   const hasMixedTypes = types.length > 1
 
@@ -340,4 +371,4 @@ const handleLocalChange = (
     setForm(newForm)
   }
 }
-export { handleGlobalChange, handleLocalChange, handleFormChanged, createInitialForm }
+export { handleGlobalChange, handleLocalChange, handleFormChanged, createInitialForm, getInputProps, getTypes }

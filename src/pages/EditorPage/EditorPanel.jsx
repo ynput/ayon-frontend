@@ -1,5 +1,4 @@
 import { union } from 'lodash'
-import PropTypes from 'prop-types'
 import React, { useState, useEffect } from 'react'
 import { useSelector } from 'react-redux'
 import { Link } from 'react-router-dom'
@@ -28,25 +27,15 @@ import { useGetProjectsInfoQuery } from '@queries/userDashboard/getUserDashboard
 import { entityDetailsTypesSupported } from '@queries/userDashboard/userDashboardQueries'
 import { getEntityDetailsData } from '@queries/userDashboard/userDashboardHelpers'
 
+import {
+  createInitialForm,
+  getInputProps,
+  getTypes,
+  handleFormChanged,
+  handleLocalChange,
+} from './hooks/smth'
 import TypeEditor from './TypeEditor'
-import { createInitialForm, handleFormChanged, handleLocalChange } from './hooks/smth'
-
-const inputTypes = {
-  datetime: { type: 'date' },
-  integer: { type: 'number', step: 1 },
-  float: { type: 'number', step: 1 },
-}
-
-const getInputProps = (attrib = {}) => {
-  let props = {}
-
-  if (attrib.type) {
-    const type = inputTypes[attrib.type] || { type: 'string' }
-    props = { ...type }
-  }
-
-  return props
-}
+import clsx from 'clsx'
 
 const EditorPanel = ({
   onDelete,
@@ -68,24 +57,23 @@ const EditorPanel = ({
   const projectTagsObject = useSelector((state) => state.project.tags)
 
   // STATES
-  // used to throttle changes to redux changes state and keep input fast
-  const [localChange, setLocalChange] = useState(false)
   const [nodeIds, setNodeIds] = useState([])
   const [nodes, setNodes] = useState({})
   const [isNew, setIsNew] = useState(false)
   const [form, setForm] = useState({})
+
+  // used to throttle changes to redux changes state and keep input fast
+  const [localChange, setLocalChange] = useState(false)
   // used to rebuild fields for when the type changes
   const [type, setType] = useState(null)
 
   const { entities, entityType } = useFocusedEntities(projectName)
-
   const { data: projectsInfo = {} } = useGetProjectsInfoQuery({ projects: [projectName] })
 
   // now we get the full details data for selected entities
   let entitiesToQuery = entities.length
     ? entities.map((entity) => ({ id: entity.id, projectName: entity.projectName }))
     : []
-  // : entitiesData.map((entity) => ({ id: entity.id, projectName: entity.projectName }))
 
   const {
     data: detailsData = [],
@@ -96,9 +84,7 @@ const EditorPanel = ({
     // originalArgs,
   } = useGetEntitiesDetailsPanelQuery(
     { entityType, entities: entitiesToQuery, projectsInfo },
-    {
-      skip: !entitiesToQuery.length || !entityDetailsTypesSupported.includes(entityType),
-    },
+    { skip: !entitiesToQuery.length || !entityDetailsTypesSupported.includes(entityType) },
   )
 
   // merge current entities data with fresh details data
@@ -131,33 +117,26 @@ const EditorPanel = ({
   }, [selected, editorNodes, newNodes])
 
   const noSelection = !nodeIds.length
-  let singleSelect = null
-  if (nodeIds.length === 1) {
-    singleSelect = nodes[nodeIds[0]]?.data || {}
-  }
-
   const hasLeaf = nodeIds.some((id) => nodes[id]?.leaf && nodes[id]?.data?.__entityType === 'task')
-  // const hasChildren = nodeIds.some(
-  //   (id) => nodes[id]?.data?.hasChildren || nodes[id]?.data?.hasTasks,
-  // )
-  const types = []
-
-  for (const id of nodeIds) {
-    if (!types.includes(nodes[id]?.data?.__entityType)) types.push(nodes[id]?.data?.__entityType)
-  }
+  const types = getTypes(nodes, nodeIds)
 
   useEffect(() => {
     // resets every time selection is changed
     // changes saved to global state will show up here
-    // console.log('creating initial form')
-
-    // console.log(editorNodes['9a3a9040c41511edb8920b11c777c69f'])
-
-    setForm(createInitialForm(singleSelect, types, { nodeIds, nodes, attribs, changes, setType }))
+    setForm(createInitialForm(types, { nodeIds, nodes, attribs, changes, setType }))
   }, [nodeIds, type, editorNodes])
 
-  //   Handlers
+  // every time local form changes, update global state
+  // throttle changes to improve perf
+  useEffect(() => {
+    // check if the change was local or global
+    if (!localChange) return
 
+    // check what local changes have been made and syncs with global state throttle this
+    handleFormChanged(form, changes, { nodeIds, nodes, setLocalChange, onChange, onRevert })
+  }, [form, nodes, changes])
+
+  //Handlers
   const handleRevert = () => {
     // revert global state
     onRevert(nodes)
@@ -167,7 +146,6 @@ const EditorPanel = ({
 
   // save and sync changes with table (global redux)
   // we throttle this to keep things fast
-
   const handleForceSave = (e) => {
     // we save input straight away with meta + enter key
     if ((e.metaKey || e.ctrl) && e.key === 'Enter') {
@@ -176,17 +154,23 @@ const EditorPanel = ({
       onForceChange(changeKey, value, nodeIds, type)
     }
   }
+  const handleUploaded = (operations) => {
+    for (const operation of operations) {
+      const { id, updatedAt } = {
+        id: operation.id,
+        updatedAt: operation?.data?.updatedAt,
+      }
+      setNodes((prev) => {
+        let updatedEntity = {
+          ...prev[id],
+          data: { ...prev[id]?.data, updatedAt: updatedAt },
+        }
+        return { ...prev, [id]: updatedEntity }
+      })
+    }
 
-  // every time local form changes, update global state
-  // throttle changes to improve perf
-  useEffect(() => {
-    // check if the change was local or global
-    if (!localChange) return
-
-    // check what local changes have been made and syncs with global state
-    // throttle this
-    handleFormChanged(form, changes, { nodeIds, nodes, setLocalChange, onChange, onRevert })
-  }, [form, nodes, changes])
+    refetch()
+  }
 
   return (
     <Section wrap id="editor-entity-details-container">
@@ -197,23 +181,7 @@ const EditorPanel = ({
             entities={isFetchingEntitiesDetails ? entitiesToQuery : entityDetailsData}
             projectName={projectName}
             entityType={entityType}
-            onUploaded={(operations) => {
-              for (const operation of operations) {
-                const { id, updatedAt } = {
-                  id: operation.id,
-                  updatedAt: operation?.data?.updatedAt,
-                }
-                setNodes((prev) => {
-                  let updatedEntity = {
-                    ...prev[id],
-                    data: { ...prev[id]?.data, updatedAt: updatedAt },
-                  }
-                  return { ...prev, [id]: updatedEntity }
-                })
-              }
-
-              refetch()
-            }}
+            onUploaded={handleUploaded}
           >
             <EntityDetailsHeader
               values={nodeIds.map((id) => nodes[id]?.data)}
@@ -263,12 +231,7 @@ const EditorPanel = ({
                   // input type, step, max, min
                   const extraProps = getInputProps(attrib)
                   const typeOptions = type === 'folder' ? folders : tasks
-
                   const isDate = attrib?.type === 'datetime'
-                  if (isDate && value) {
-                    // convert date to right format
-                    value = new Date(value)
-                  }
 
                   const changedStyles = {
                     backgroundColor: isChanged ? 'var(--color-changed)' : 'initial',
@@ -281,15 +244,8 @@ const EditorPanel = ({
                       : '1px solid var(--md-sys-color-outline-variant)',
                   }
 
-                  let disabledStyles = {}
-                  if (disabled) {
-                    disabledStyles = {
-                      opacity: 0.7,
-                      fontStyle: 'italic',
-                    }
-                  }
+                  const disabledStyles = disabled ? { opacity: 0.7, fontStyle: 'italic' } : {}
 
-                  // pick a react input
                   let input
 
                   if (field === 'name' && !isNew) {
@@ -299,7 +255,13 @@ const EditorPanel = ({
                       <TypeEditor
                         value={multipleValues ? multipleValues : [value]}
                         onChange={(v) =>
-                          handleLocalChange(v, changeKey, field, { form, nodeIds, nodes, setLocalChange, setForm })
+                          handleLocalChange(v, changeKey, field, {
+                            form,
+                            nodeIds,
+                            nodes,
+                            setLocalChange,
+                            setForm,
+                          })
                         }
                         options={typeOptions}
                         style={{
@@ -317,7 +279,13 @@ const EditorPanel = ({
                         value={multipleValues || value}
                         multipleSelected={nodeIds.length}
                         onChange={(v) =>
-                          handleLocalChange(v, changeKey, field, { form, nodeIds, nodes, setLocalChange, setForm })
+                          handleLocalChange(v, changeKey, field, {
+                            form,
+                            nodeIds,
+                            nodes,
+                            setLocalChange,
+                            setForm,
+                          })
                         }
                         maxWidth={'100%'}
                         style={borderDynamicStyles}
@@ -339,7 +307,13 @@ const EditorPanel = ({
                         emptyMessage={'None assigned'}
                         emptyIcon={false}
                         onChange={(v) =>
-                          handleLocalChange(v, changeKey, field, { form, nodeIds, nodes, setLocalChange, setForm })
+                          handleLocalChange(v, changeKey, field, {
+                            form,
+                            nodeIds,
+                            nodes,
+                            setLocalChange,
+                            setForm,
+                          })
                         }
                         buttonStyle={{
                           border: '1px solid var(--md-sys-color-outline-variant)',
@@ -357,7 +331,13 @@ const EditorPanel = ({
                         tagsOrder={projectTagsOrder}
                         isMultiple={!!multipleValues}
                         onChange={(v) =>
-                          handleLocalChange(v, changeKey, field, { form, nodeIds, nodes, setLocalChange, setForm })
+                          handleLocalChange(v, changeKey, field, {
+                            form,
+                            nodeIds,
+                            nodes,
+                            setLocalChange,
+                            setForm,
+                          })
                         }
                         align="right"
                         width={200}
@@ -422,6 +402,7 @@ const EditorPanel = ({
                       />
                     )
                   } else if (isDate) {
+                    value = value ? new Date(value) : value
                     input = (
                       <InputDate
                         selected={value || undefined}
@@ -508,16 +489,20 @@ const EditorPanel = ({
                     )
                   }
 
-                  if (!input) return null
+                  if (!input) {
+                    return null
+                  }
+
                   return (
                     <FormRow
                       key={i}
                       label={label}
-                      className={`editor-form ${field} ${disabled ? 'disabled' : ''}${
-                        isOwn ? '' : 'inherited'
-                      } ${attrib?.type} ${multipleValues ? 'multipleValues' : ''} ${
-                        isChanged ? 'isChanged' : ''
-                      }`}
+                      className={clsx('editor-form', field, attrib?.type, {
+                        disabled,
+                        isChanged,
+                        inherited: !isOwn,
+                        multipleValues: multipleValues,
+                      })}
                       fieldStyle={{
                         overflow: !isDate ? 'hidden' : 'visible',
                       }}
@@ -552,10 +537,6 @@ const EditorPanel = ({
       )}
     </Section>
   )
-}
-
-EditorPanel.propTypes = {
-  nodes: PropTypes.object.isRequired,
 }
 
 export default EditorPanel
