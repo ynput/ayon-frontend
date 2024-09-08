@@ -45,7 +45,10 @@ const ToolsField = ({ value, className, attrib }) => {
 
   const isInheritedAndChanged = className.includes('inherited') && className.includes('changed')
 
-  if (isInheritedAndChanged) return <span className="editor-field changed">(inherited)</span>
+  if (isInheritedAndChanged) {
+    // TODO come back here
+    return <span className="editor-field changed">(inherited)</span>
+  }
 
   if (!value?.length) return null
 
@@ -59,7 +62,7 @@ const ToolsField = ({ value, className, attrib }) => {
       onClose={() => setIsOpen(false)}
       valueTemplate={() => (
         <DefaultValueTemplate value={value}>
-          {`(${labels?.length}) ${labels?.join(', ')}`}
+          {!labels.length ? 'None' : `(${labels?.length}) ${labels?.join(', ')}`}
         </DefaultValueTemplate>
       )}
       $isOpen={isOpen}

@@ -1,6 +1,26 @@
 import getFieldInObject from '@helpers/getFieldInObject'
 import { isEmpty, isEqual } from 'lodash'
 
+const getParentValue = (nodes, nodeId, attribName, { self }) => {
+  if (!nodes[nodeId]) {
+    return null
+  }
+  if (
+    !self &&
+    nodes[nodeId].data.attrib[attribName] != null &&
+    nodes[nodeId].data.ownAttrib.includes(attribName)
+  ) {
+    return nodes[nodeId].data.attrib[attribName]
+  }
+
+  if (nodes[nodeId].data.__parentId == 'root') {
+    return null
+  }
+
+  return getParentValue(nodes, nodes[nodeId].data.__parentId, attribName, { self: false })
+}
+
+
 const getTypes = (nodes, nodeIds) => {
   const types = []
 
@@ -168,7 +188,9 @@ const getInitialForm = (
   }
 }
 
-const createInitialForm = (types, { nodeIds, nodes, attribs, changes, setType }) => {
+const createInitialForm = ({ nodeIds, nodes, editorNodes, attribs, changes, setType }) => {
+  const types = getTypes(nodes, nodeIds)
+
   const statusValues = getFieldValue('status', '_status', { nodeIds, nodes, changes })
   const nameValues = getFieldValue('name', '_name', { nodeIds, nodes, changes })
   const labelValues = getFieldValue('label', '_label', { nodeIds, nodes, changes })
@@ -248,6 +270,7 @@ const createInitialForm = (types, { nodeIds, nodes, attribs, changes, setType })
       isChanged,
       isOwn,
       value,
+      parentValue: getParentValue(editorNodes, nodeIds[0], attrib.name, {self: true}),
       label: data?.title,
       attrib: attrib.data,
     }
@@ -289,7 +312,6 @@ const handleFormChanged = (form, changes, { nodeIds, nodes, onChange, onRevert }
       }
       // only update again if old !== new
       if (oldChanges !== row.value) {
-        // console.log('change')
         handleGlobalChange(row.value, row.changeKey, { nodes, onChange })
       }
     } else {
@@ -311,8 +333,6 @@ const handleFormChanged = (form, changes, { nodeIds, nodes, onChange, onRevert }
               // remove changes object completely
               onRevert(nodes[id])
             } else {
-              // console.log('remove key from changes', newChanges)
-
               onChange([newChanges])
             }
           }
@@ -327,62 +347,84 @@ const handleLocalChange = (
   value,
   changeKey,
   field,
-  { form, formState, nodeIds, nodes, setFormNew, setLocalChange, setForm },
+  { form, nodeIds, nodes, setLocalChange, setForm },
 ) => {
-  let newForm = { ...form }
-  if (formState) {
-    newForm = formState
+  if (!(changeKey in form)) {
+    return
   }
-  // check key is in form
-  if (changeKey in form) {
-    const oldValue = newForm[changeKey]
-    const type = oldValue?.attrib?.type
-    let newValue = value
 
-    if (type === 'datetime' && value) {
-      newValue = new Date(value)
-      newValue = newValue.toISOString()
-    }
+  let newForm = { ...form }
 
-    let isChanged = true
+  const oldValueObj = newForm[changeKey]
+  const type = oldValueObj?.attrib?.type
+  let newValue = value
 
-    if (!oldValue?.multipleValues && !oldValue?.__new) {
-      for (const id of nodeIds) {
-        const ogValue = getFieldInObject(field, nodes[id]?.data)
+  if (type === 'datetime' && value) {
+    newValue = new Date(value)
+    newValue = newValue.toISOString()
+  }
 
-        // if value undefined or it's a new node skip
-        // (always changed)
-        if (!ogValue || nodes[id]?.__new) {
-          break
-        }
+  let isChanged = true
 
-        // dif value or multipleValues
-        isChanged = ogValue?.toString() !== newValue
+  if (!oldValueObj?.multipleValues && !oldValueObj?.__new) {
+    for (const id of nodeIds) {
+      const ogValue = getFieldInObject(field, nodes[id]?.data)
 
-        // stop looping if isChanged is ever true
-        if (isChanged) {
-          break
-        }
+      // if value undefined or it's a new node skip
+      // (always changed)
+      if (!ogValue || nodes[id]?.__new) {
+        break
+      }
+
+      // diff value or multipleValues
+      const ownValue = nodes[id]?.data.ownAttrib.includes(changeKey)
+
+      const isSame =
+        (!ownValue && (newValue === null || isEqual(newValue, []))) ||
+        (ownValue && isEqual(ogValue, newValue))
+      isChanged = !isSame
+
+      // stop looping if isChanged is ever true
+      if (isChanged) {
+        break
       }
     }
-
-    newForm[changeKey] = {
-      ...newForm[changeKey],
-      value: newValue,
-      isChanged,
-      isOwn: true,
-      multipleValues: oldValue?.multipleValues && !isChanged,
-    }
-
-    setLocalChange(true)
-
-    if (setFormNew) {
-      setFormNew(newForm)
-    } else {
-      // update state
-      setForm(newForm)
-    }
   }
+
+  newForm[changeKey] = {
+    ...newForm[changeKey],
+    value: newValue,
+    isChanged,
+    isOwn: newValue !== null,
+    multipleValues: oldValueObj?.multipleValues && !isChanged,
+  }
+
+  setLocalChange(true)
+
+  setForm(newForm)
 }
 
-export { handleGlobalChange, handleLocalChange, handleFormChanged, createInitialForm, getInputProps, getTypes }
+const resetMultiSelect = (form, changeKey, {setLocalChange, setForm}) => {
+  let newForm = { ...form }
+  const isChanged = form[changeKey].value != null
+
+  newForm[changeKey] = {
+    ...newForm[changeKey],
+    value: null,
+    isChanged : isChanged,
+    isOwn: false,
+    multipleValues: form[changeKey]?.multipleValues && !isChanged,
+  }
+
+  setLocalChange(true)
+  setForm(newForm)
+}
+
+export {
+  handleGlobalChange,
+  handleLocalChange,
+  handleFormChanged,
+  createInitialForm,
+  getInputProps,
+  resetMultiSelect,
+}

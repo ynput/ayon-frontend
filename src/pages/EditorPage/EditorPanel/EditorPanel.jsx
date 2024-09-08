@@ -1,5 +1,5 @@
 import { union } from 'lodash'
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, createRef } from 'react'
 import { useSelector } from 'react-redux'
 import { Link } from 'react-router-dom'
 
@@ -23,9 +23,9 @@ import useFocusedEntities from '@hooks/useFocused'
 import {
   createInitialForm,
   getInputProps,
-  getTypes,
   handleFormChanged,
   handleLocalChange,
+  resetMultiSelect,
 } from './hooks/smth'
 import TypeEditor from '../TypeEditor'
 import clsx from 'clsx'
@@ -84,12 +84,11 @@ const EditorPanel = ({
 
   const noSelection = !nodeIds.length
   const hasLeaf = nodeIds.some((id) => nodes[id]?.leaf && nodes[id]?.data?.__entityType === 'task')
-  const types = getTypes(nodes, nodeIds)
 
   useEffect(() => {
     // resets every time selection is changed
     // changes saved to global state will show up here
-    setForm(createInitialForm(types, { nodeIds, nodes, attribs, changes, setType }))
+    setForm(createInitialForm({ nodeIds, nodes, editorNodes, attribs, changes, setType }))
   }, [nodeIds, type, editorNodes])
 
   // every time local form changes, update global state
@@ -122,6 +121,10 @@ const EditorPanel = ({
       onForceChange(changeKey, value, nodeIds, type)
     }
   }
+
+  let formRefs = {}
+  Object.values(form).map((el) => (formRefs[el.label] = createRef()))
+
   return (
     <Section wrap id="editor-entity-details-container">
       {!noSelection && (
@@ -181,6 +184,7 @@ const EditorPanel = ({
                     field,
                     attrib,
                     value,
+                    parentValue,
                     isChanged,
                     isOwn,
                     multipleValues,
@@ -212,8 +216,8 @@ const EditorPanel = ({
                     input = (
                       <TypeEditor
                         value={multipleValues ? multipleValues : [value]}
-                        onChange={(v) =>
-                          handleLocalChange(v, changeKey, field, {
+                        onChange={(value) =>
+                          handleLocalChange(value, changeKey, field, {
                             form,
                             nodeIds,
                             nodes,
@@ -236,8 +240,8 @@ const EditorPanel = ({
                       <StatusSelect
                         value={multipleValues || value}
                         multipleSelected={nodeIds.length}
-                        onChange={(v) =>
-                          handleLocalChange(v, changeKey, field, {
+                        onChange={(value) =>
+                          handleLocalChange(value, changeKey, field, {
                             form,
                             nodeIds,
                             nodes,
@@ -264,8 +268,8 @@ const EditorPanel = ({
                         disabled={disabled}
                         emptyMessage={'None assigned'}
                         emptyIcon={false}
-                        onChange={(v) =>
-                          handleLocalChange(v, changeKey, field, {
+                        onChange={(value) =>
+                          handleLocalChange(value, changeKey, field, {
                             form,
                             nodeIds,
                             nodes,
@@ -307,13 +311,16 @@ const EditorPanel = ({
                         <EnumRow
                           attrib={attrib}
                           value={value}
+                          placeholder={placeholder}
+                          parentValue={parentValue}
                           isChanged={isChanged}
                           isOwn={isOwn}
                           isMultiSelect={isMultiSelect}
                           multipleValues={multipleValues}
                           widthExpand
-                          onChange={(v) =>
-                            handleLocalChange(isMultiSelect ? v : v[0], changeKey, field, {
+                          reference={formRefs[label]}
+                          onChange={(value) =>
+                            handleLocalChange(isMultiSelect ? value : value[0], changeKey, field, {
                               form,
                               nodeIds,
                               nodes,
@@ -321,27 +328,12 @@ const EditorPanel = ({
                               setForm,
                             })
                           }
-                          // onClear={
-                          //   field !== 'attrib.tools'
-                          //     ? (value) =>
-                          //         handleLocalChange(value, changeKey, field, {
-                          //           form,
-                          //           nodeIds,
-                          //           nodes,
-                          //           setLocalChange,
-                          //           setForm,
-                          //         })
-                          //     : undefined
-                          // }
-                          // onClearNull={(value) =>
-                          //   handleLocalChange(value, changeKey, field, {
-                          //     form,
-                          //     nodeIds,
-                          //     nodes,
-                          //     setLocalChange,
-                          //     setForm,
-                          //   })
-                          // }
+                          onAddItem={isMultiSelect ? (item) => {
+                            if (item == null) {
+                              resetMultiSelect(form, changeKey, {setLocalChange, setForm})
+                              formRefs[label].current.close()
+                            }
+                          } : undefined}
                         />
                       )
                   } else if (isDate) {
