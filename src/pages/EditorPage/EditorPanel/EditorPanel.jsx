@@ -18,13 +18,8 @@ import {
 
 import StatusSelect from '@components/status/statusSelect'
 import EntityDetailsHeader from '@components/Details/EntityDetailsHeader'
-import EntityThumbnailUploader from '@components/EntityThumbnailUploader/EntityThumbnailUploader'
 import { SubRow } from './EditorPanel.styled'
 import useFocusedEntities from '@hooks/useFocused'
-import { useGetEntitiesDetailsPanelQuery } from '@queries/entity/getEntityPanel'
-import { useGetProjectsInfoQuery } from '@queries/userDashboard/getUserDashboard'
-import { entityDetailsTypesSupported } from '@queries/userDashboard/userDashboardQueries'
-import { getEntityDetailsData } from '@queries/userDashboard/userDashboardHelpers'
 
 import {
   createInitialForm,
@@ -36,6 +31,7 @@ import {
 import TypeEditor from '../TypeEditor'
 import clsx from 'clsx'
 import TagFormRow from './TagFormRow'
+import EntityThumbnailUploaderRow from './EntityTumbnailUploaderRow'
 
 const EditorPanel = ({
   onDelete,
@@ -53,6 +49,7 @@ const EditorPanel = ({
   const changes = useSelector((state) => state.editor.changes)
   const tasks = useSelector((state) => state.project.tasks)
   const folders = useSelector((state) => state.project.folders)
+  const { entityType } = useFocusedEntities(projectName)
 
   // STATES
   const [nodeIds, setNodeIds] = useState([])
@@ -65,35 +62,6 @@ const EditorPanel = ({
   // used to rebuild fields for when the type changes
   const [type, setType] = useState(null)
 
-  const { entities, entityType } = useFocusedEntities(projectName)
-  const { data: projectsInfo = {} } = useGetProjectsInfoQuery({ projects: [projectName] })
-
-  // now we get the full details data for selected entities
-  let entitiesToQuery = entities.length
-    ? entities.map((entity) => ({ id: entity.id, projectName: entity.projectName }))
-    : []
-
-  const {
-    data: detailsData = [],
-    isFetching: isFetchingEntitiesDetails,
-    isSuccess,
-    isError,
-    refetch,
-    // originalArgs,
-  } = useGetEntitiesDetailsPanelQuery(
-    { entityType, entities: entitiesToQuery, projectsInfo },
-    { skip: !entitiesToQuery.length || !entityDetailsTypesSupported.includes(entityType) },
-  )
-
-  // merge current entities data with fresh details data
-  const entityDetailsData = getEntityDetailsData({
-    entities,
-    entityType,
-    projectsInfo,
-    detailsData,
-    isSuccess,
-    isError,
-  })
 
   // when selection or nodes change, update nodes state
   useEffect(() => {
@@ -127,11 +95,13 @@ const EditorPanel = ({
   // every time local form changes, update global state
   // throttle changes to improve perf
   useEffect(() => {
-    // check if the change was local or global
-    if (!localChange) return
+    if (!localChange) {
+      return
+    }
 
+    setLocalChange(false)
     // check what local changes have been made and syncs with global state throttle this
-    handleFormChanged(form, changes, { nodeIds, nodes, setLocalChange, onChange, onRevert })
+    handleFormChanged(form, changes, { nodeIds, nodes, onChange, onRevert })
   }, [form, nodes, changes])
 
   //Handlers
@@ -152,34 +122,24 @@ const EditorPanel = ({
       onForceChange(changeKey, value, nodeIds, type)
     }
   }
-  const handleUploaded = (operations) => {
-    for (const operation of operations) {
-      const { id, updatedAt } = {
-        id: operation.id,
-        updatedAt: operation?.data?.updatedAt,
-      }
-      setNodes((prev) => {
-        let updatedEntity = {
-          ...prev[id],
-          data: { ...prev[id]?.data, updatedAt: updatedAt },
-        }
-        return { ...prev, [id]: updatedEntity }
-      })
-    }
-
-    refetch()
-  }
-
   return (
     <Section wrap id="editor-entity-details-container">
       {!noSelection && (
         <>
-          <EntityThumbnailUploader
+          <EntityThumbnailUploaderRow
             isCompact
-            entities={isFetchingEntitiesDetails ? entitiesToQuery : entityDetailsData}
             projectName={projectName}
             entityType={entityType}
-            onUploaded={handleUploaded}
+            onUpload={(id, updatedAt) =>
+              setNodes((prev) => {
+                let updatedEntity = {
+                  ...prev[id],
+                  data: { ...prev[id]?.data, updatedAt: updatedAt },
+                }
+
+                return { ...prev, [id]: updatedEntity }
+              })
+            }
           >
             <EntityDetailsHeader
               values={nodeIds.map((id) => nodes[id]?.data)}
@@ -524,7 +484,7 @@ const EditorPanel = ({
                 })}
               </FormLayout>
             </Panel>
-          </EntityThumbnailUploader>
+          </EntityThumbnailUploaderRow>
         </>
       )}
     </Section>

@@ -109,26 +109,13 @@ const getFieldValue = (field, changeKey, { type = '', nodeIds, nodes, changes })
   return { value: finalValue, isChanged, isOwn, multipleValues }
 }
 
-const createInitialForm = (types, { nodeIds, nodes, attribs, changes, setType }) => {
-  const singleSelect = nodeIds.length === 1 ? nodes[nodeIds[0]]?.data || {} : null
-
-  //   checking if any other types don't match the first one
-  const hasMixedTypes = types.length > 1
-
-  const statusValues = getFieldValue('status', '_status', { nodeIds, nodes, changes })
-  const nameValues = getFieldValue('name', '_name', { nodeIds, nodes, changes })
-  const labelValues = getFieldValue('label', '_label', { nodeIds, nodes, changes })
-  const tagValues = getFieldValue('tags', '_tags', { nodeIds, nodes, changes })
-
-  const assigneesValues = getFieldValue('assignees', '_assignees', {
-    type: [],
-    nodeIds,
-    nodes,
-    changes,
-  })
-
+const getInitialForm = (
+  singleSelect,
+  { types, statusValues, nameValues, labelValues, assigneesValues, tagValues },
+) => {
   const disableMessage = 'Names Can Not Be The Same...'
-  const initialForm = {
+
+  return {
     _label: {
       changeKey: '_label',
       label: 'Label',
@@ -179,6 +166,28 @@ const createInitialForm = (types, { nodeIds, nodes, attribs, changes, setType })
       ...tagValues,
     },
   }
+}
+
+const createInitialForm = (types, { nodeIds, nodes, attribs, changes, setType }) => {
+  const statusValues = getFieldValue('status', '_status', { nodeIds, nodes, changes })
+  const nameValues = getFieldValue('name', '_name', { nodeIds, nodes, changes })
+  const labelValues = getFieldValue('label', '_label', { nodeIds, nodes, changes })
+  const tagValues = getFieldValue('tags', '_tags', { nodeIds, nodes, changes })
+  const assigneesValues = getFieldValue('assignees', '_assignees', {
+    type: [],
+    nodeIds,
+    nodes,
+    changes,
+    tagValues
+  })
+
+  const initialForm = getInitialForm(nodeIds.length === 1 ? nodes[nodeIds[0]]?.data || {} : null, {
+    types,
+    statusValues,
+    nameValues,
+    labelValues,
+    assigneesValues,
+  })
 
   const type = nodes[nodeIds[0]]?.data?.__entityType
 
@@ -192,6 +201,9 @@ const createInitialForm = (types, { nodeIds, nodes, attribs, changes, setType })
       nodes,
       changes,
     })
+
+    //   checking if any other types don't match the first one
+    const hasMixedTypes = types.length > 1
 
     let placeholder = ''
     if (hasMixedTypes) {
@@ -264,12 +276,7 @@ const handleGlobalChange = (value, changeKey, { nodes, onChange }) => {
   onChange(allChanges)
 }
 
-const handleFormChanged = (
-  form,
-  changes,
-  { nodeIds, nodes, setLocalChange, onChange, onRevert },
-) => {
-  setLocalChange(false)
+const handleFormChanged = (form, changes, { nodeIds, nodes, onChange, onRevert }) => {
   // loop through form and get any changes
   for (const key in form) {
     const row = form[key]
@@ -322,7 +329,6 @@ const handleLocalChange = (
   field,
   { form, formState, nodeIds, nodes, setFormNew, setLocalChange, setForm },
 ) => {
-  // console.log('local change', value, changeKey, field, form)
   let newForm = { ...form }
   if (formState) {
     newForm = formState
@@ -346,13 +352,17 @@ const handleLocalChange = (
 
         // if value undefined or it's a new node skip
         // (always changed)
-        if (!ogValue || nodes[id]?.__new) break
+        if (!ogValue || nodes[id]?.__new) {
+          break
+        }
 
         // dif value or multipleValues
         isChanged = ogValue?.toString() !== newValue
 
         // stop looping if isChanged is ever true
-        if (isChanged) break
+        if (isChanged) {
+          break
+        }
       }
     }
 
@@ -366,9 +376,13 @@ const handleLocalChange = (
 
     setLocalChange(true)
 
-    if (setFormNew) return setFormNew(newForm)
-    // update state
-    setForm(newForm)
+    if (setFormNew) {
+      setFormNew(newForm)
+    } else {
+      // update state
+      setForm(newForm)
+    }
   }
 }
+
 export { handleGlobalChange, handleLocalChange, handleFormChanged, createInitialForm, getInputProps, getTypes }
