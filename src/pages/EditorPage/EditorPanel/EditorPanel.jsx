@@ -10,7 +10,6 @@ import {
   FormLayout,
   FormRow,
   InputText,
-  Dropdown,
   AssigneeSelect,
   InputDate,
   InputSwitch,
@@ -32,6 +31,7 @@ import TypeEditor from '../TypeEditor'
 import clsx from 'clsx'
 import TagFormRow from './TagFormRow'
 import EntityThumbnailUploaderRow from './EntityTumbnailUploaderRow'
+import EnumRow from './EnumRow'
 
 const EditorPanel = ({
   onDelete,
@@ -300,59 +300,50 @@ const EditorPanel = ({
                     )
                   } else if (attrib?.enum) {
                     // dropdown
+
                     const isMultiSelect = ['list_of_strings'].includes(attrib?.type)
-                    let enumValue = isMultiSelect ? value : [value]
-                    if (multipleValues) {
-                      enumValue = isMultiSelect ? union(...multipleValues) : multipleValues
-                    }
 
-                    // never show value when inherited, just show placeholder
-                    if (!isOwn) enumValue = null
-
-                    input = (
-                      <Dropdown
-                        style={{ flexGrow: 1 }}
-                        value={enumValue}
-                        isChanged={isChanged}
-                        options={attrib?.enum}
-                        onChange={(v) =>
-                          handleLocalChange(isMultiSelect ? v : v[0], changeKey, field, {
-                            form,
-                            nodeIds,
-                            nodes,
-                            setLocalChange,
-                            setForm,
-                          })
-                        }
-                        multiSelect={isMultiSelect}
-                        widthExpand
-                        emptyMessage={`Select option${isMultiSelect ? 's' : ''}...`}
-                        multipleValues={!!multipleValues}
-                        onClear={
-                          field !== 'attrib.tools'
-                            ? (value) =>
-                                handleLocalChange(value, changeKey, field, {
-                                  form,
-                                  nodeIds,
-                                  nodes,
-                                  setLocalChange,
-                                  setForm,
-                                })
-                            : undefined
-                        }
-                        onClearNull={(value) =>
-                          handleLocalChange(value, changeKey, field, {
-                            form,
-                            nodeIds,
-                            nodes,
-                            setLocalChange,
-                            setForm,
-                          })
-                        }
-                        nullPlaceholder="(inherited)"
-                        search={attrib?.enum?.length > 10}
-                      />
-                    )
+                      input = (
+                        <EnumRow
+                          attrib={attrib}
+                          value={value}
+                          isChanged={isChanged}
+                          isOwn={isOwn}
+                          isMultiSelect={isMultiSelect}
+                          multipleValues={multipleValues}
+                          widthExpand
+                          onChange={(v) =>
+                            handleLocalChange(isMultiSelect ? v : v[0], changeKey, field, {
+                              form,
+                              nodeIds,
+                              nodes,
+                              setLocalChange,
+                              setForm,
+                            })
+                          }
+                          // onClear={
+                          //   field !== 'attrib.tools'
+                          //     ? (value) =>
+                          //         handleLocalChange(value, changeKey, field, {
+                          //           form,
+                          //           nodeIds,
+                          //           nodes,
+                          //           setLocalChange,
+                          //           setForm,
+                          //         })
+                          //     : undefined
+                          // }
+                          // onClearNull={(value) =>
+                          //   handleLocalChange(value, changeKey, field, {
+                          //     form,
+                          //     nodeIds,
+                          //     nodes,
+                          //     setLocalChange,
+                          //     setForm,
+                          //   })
+                          // }
+                        />
+                      )
                   } else if (isDate) {
                     value = value ? new Date(value) : value
                     input = (
