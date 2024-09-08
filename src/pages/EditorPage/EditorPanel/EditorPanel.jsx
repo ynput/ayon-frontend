@@ -14,7 +14,6 @@ import {
   AssigneeSelect,
   InputDate,
   InputSwitch,
-  TagsSelect,
 } from '@ynput/ayon-react-components'
 
 import StatusSelect from '@components/status/statusSelect'
@@ -34,8 +33,9 @@ import {
   handleFormChanged,
   handleLocalChange,
 } from './hooks/smth'
-import TypeEditor from './TypeEditor'
+import TypeEditor from '../TypeEditor'
 import clsx from 'clsx'
+import TagFormRow from './TagFormRow'
 
 const EditorPanel = ({
   onDelete,
@@ -53,8 +53,6 @@ const EditorPanel = ({
   const changes = useSelector((state) => state.editor.changes)
   const tasks = useSelector((state) => state.project.tasks)
   const folders = useSelector((state) => state.project.folders)
-  const projectTagsOrder = useSelector((state) => state.project.tagsOrder)
-  const projectTagsObject = useSelector((state) => state.project.tags)
 
   // STATES
   const [nodeIds, setNodeIds] = useState([])
@@ -325,13 +323,12 @@ const EditorPanel = ({
                     )
                   } else if (field === 'tags') {
                     input = (
-                      <TagsSelect
+                      <TagFormRow
                         value={multipleValues ? union(...multipleValues) : value || []}
-                        tags={projectTagsObject}
-                        tagsOrder={projectTagsOrder}
+                        isChanged={isChanged}
                         isMultiple={!!multipleValues}
-                        onChange={(v) =>
-                          handleLocalChange(v, changeKey, field, {
+                        onChange={(value) =>
+                          handleLocalChange(value, changeKey, field, {
                             form,
                             nodeIds,
                             nodes,
@@ -339,11 +336,6 @@ const EditorPanel = ({
                             setForm,
                           })
                         }
-                        align="right"
-                        width={200}
-                        buttonStyle={{ border: '1px solid var(--md-sys-color-outline-variant)' }}
-                        isChanged={isChanged}
-                        editor
                       />
                     )
                   } else if (attrib?.enum) {
