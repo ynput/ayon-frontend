@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import * as Styled from '../util/OnBoardingStep.styled'
-import AddonCard from '@components/AddonCard/AddonCard'
 import { ReleaseInfoModel, ReleaseListItemModel } from '@api/rest/releases'
+import AddonsSelectGrid from '@components/AddonsSelectGrid/AddonsSelectGrid'
 
 type AddonSelectStepProps = {
   Header: React.ElementType
@@ -51,23 +51,13 @@ export const AddonSelectStep = ({
   return (
     <Styled.Section>
       <Header>Pick your Addons</Header>
-      <Styled.AddonsContainer>
-        {isLoadingAddons
-          ? placeholders.map((placeholder) => (
-              <AddonCard key={placeholder} className="loading" icon={''} />
-            ))
-          : notMandatoryAddons.map((addon) => (
-              <AddonCard
-                key={addon.name}
-                title={addon.title}
-                name={addon.name}
-                endContent={addon.version}
-                icon={selectedAddons.includes(addon.name) ? 'check_circle' : 'circle'}
-                isSelected={selectedAddons.includes(addon.name)}
-                onClick={() => handleAddonClick(addon.name)}
-              />
-            ))}
-      </Styled.AddonsContainer>
+      <AddonsSelectGrid
+        isLoading={isLoadingAddons}
+        placeholderCount={placeholders.length}
+        addons={notMandatoryAddons}
+        selected={selectedAddons}
+        onSelect={handleAddonClick}
+      />
       <Footer
         nextProps={{ saving: isLoadingRelease, disabled: isLoadingRelease }}
         showIcon={isLoadingRelease}
