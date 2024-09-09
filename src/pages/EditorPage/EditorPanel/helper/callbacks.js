@@ -1,6 +1,5 @@
-import getFieldInObject from '@helpers/getFieldInObject'
 import { isEmpty, isEqual } from 'lodash'
-import { getParentValue, getTypes } from './entityHelpers'
+import { getInitialForm, getParentValue, getTypes, hasChanged } from './entityHelpers'
 
 // look up the og value using field
 // look up any changes using changeKey
@@ -81,64 +80,6 @@ const getFieldValue = (field, changeKey, { type = '', nodeIds, nodes, changes })
   return { value: finalValue, isChanged, isOwn, multipleValues }
 }
 
-const getInitialForm = (
-  singleSelect,
-  { types, statusValues, nameValues, labelValues, assigneesValues, tagValues },
-) => {
-  const disableMessage = 'Names Can Not Be The Same...'
-
-  return {
-    _label: {
-      changeKey: '_label',
-      label: 'Label',
-      field: 'label',
-      type: 'string',
-      disabled: !singleSelect,
-      placeholder: !singleSelect ? disableMessage : '',
-      attrib: {
-        type: 'string',
-      },
-      ...labelValues,
-      value: singleSelect ? labelValues.value : disableMessage,
-    },
-    _name: {
-      changeKey: '_name',
-      label: 'Name',
-      field: 'name',
-      type: 'string',
-      disabled: !singleSelect,
-      placeholder: !singleSelect ? disableMessage : '',
-      attrib: {
-        type: 'string',
-      },
-      ...nameValues,
-      value: singleSelect ? nameValues.value : disableMessage,
-    },
-    _status: {
-      changeKey: '_status',
-      label: 'Status',
-      field: 'status',
-      placeholder: `Mixed (${
-        statusValues.multipleValues && statusValues.multipleValues.join(', ')
-      })`,
-      ...statusValues,
-    },
-    _assignees: {
-      changeKey: '_assignees',
-      label: 'Assignees',
-      field: 'assignees',
-      disabled: !types.includes('task'),
-      placeholder: `Folders Can Not Have Assignees...`,
-      ...assigneesValues,
-    },
-    _tags: {
-      changeKey: '_tags',
-      label: 'Tags',
-      field: 'tags',
-      ...tagValues,
-    },
-  }
-}
 
 const createInitialForm = ({ nodeIds, nodes, editorNodes, attribs, changes, setType }) => {
   const types = getTypes(nodes, nodeIds)
@@ -294,6 +235,7 @@ const handleFormChanged = (form, changes, { nodeIds, nodes, onChange, onRevert }
   }
 }
 
+
 // update the local form on changes
 const handleLocalChange = (
   value,
@@ -316,32 +258,7 @@ const handleLocalChange = (
     newValue = newValue.toISOString()
   }
 
-  let isChanged = true
-
-  if (!oldValueObj?.multipleValues && !oldValueObj?.__new) {
-    for (const id of nodeIds) {
-      const ogValue = getFieldInObject(field, nodes[id]?.data)
-
-      // if value undefined or it's a new node skip
-      // (always changed)
-      if (!ogValue || nodes[id]?.__new) {
-        break
-      }
-
-      // diff value or multipleValues
-      const ownValue = nodes[id]?.data.ownAttrib.includes(changeKey)
-
-      const isSame =
-        (!ownValue && (newValue === null || isEqual(newValue, []))) ||
-        (ownValue && isEqual(ogValue, newValue))
-      isChanged = !isSame
-
-      // stop looping if isChanged is ever true
-      if (isChanged) {
-        break
-      }
-    }
-  }
+  const isChanged = hasChanged(oldValueObj, field, changeKey, newValue, {nodeIds, nodes})
 
   newForm[changeKey] = {
     ...newForm[changeKey],
@@ -356,9 +273,11 @@ const handleLocalChange = (
   setForm(newForm)
 }
 
-const resetMultiSelect = (form, changeKey, {setLocalChange, setForm}) => {
+const resetMultiSelect = (form, changeKey, field, {setLocalChange, setForm, nodeIds, nodes}) => {
+  const oldValueObj = form[changeKey]
   let newForm = { ...form }
-  const isChanged = form[changeKey].value != null
+  const isChanged = hasChanged(oldValueObj, field, changeKey, null, {nodeIds, nodes})
+
 
   newForm[changeKey] = {
     ...newForm[changeKey],

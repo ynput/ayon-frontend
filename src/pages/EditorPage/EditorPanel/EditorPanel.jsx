@@ -330,7 +330,7 @@ const EditorPanel = ({
                           }
                           onAddItem={isMultiSelect ? (item) => {
                             if (item == null) {
-                              resetMultiSelect(form, changeKey, {setLocalChange, setForm})
+                              resetMultiSelect(form, changeKey, field, {setLocalChange, setForm, nodes, nodeIds})
                               formRefs[label].current.close()
                             }
                           } : undefined}
