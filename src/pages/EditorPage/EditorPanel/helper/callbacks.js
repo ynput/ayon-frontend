@@ -1,54 +1,6 @@
 import getFieldInObject from '@helpers/getFieldInObject'
 import { isEmpty, isEqual } from 'lodash'
-
-const getParentValue = (nodes, nodeId, attribName, { self }) => {
-  if (!nodes[nodeId]) {
-    return null
-  }
-  if (
-    !self &&
-    nodes[nodeId].data.attrib[attribName] != null &&
-    nodes[nodeId].data.ownAttrib.includes(attribName)
-  ) {
-    return nodes[nodeId].data.attrib[attribName]
-  }
-
-  if (nodes[nodeId].data.__parentId == 'root') {
-    return null
-  }
-
-  return getParentValue(nodes, nodes[nodeId].data.__parentId, attribName, { self: false })
-}
-
-
-const getTypes = (nodes, nodeIds) => {
-  const types = []
-
-  for (const id of nodeIds) {
-    if (!types.includes(nodes[id]?.data?.__entityType)) {
-      types.push(nodes[id]?.data?.__entityType)
-    }
-  }
-
-  return types
-}
-
-const getInputProps = (attrib = {}) => {
-  const inputTypes = {
-    datetime: { type: 'date' },
-    integer: { type: 'number', step: 1 },
-    float: { type: 'number', step: 1 },
-  }
-
-  let props = {}
-
-  if (attrib.type) {
-    const type = inputTypes[attrib.type] || { type: 'string' }
-    props = { ...type }
-  }
-
-  return props
-}
+import { getParentValue, getTypes } from './entityHelpers'
 
 // look up the og value using field
 // look up any changes using changeKey
@@ -421,10 +373,8 @@ const resetMultiSelect = (form, changeKey, {setLocalChange, setForm}) => {
 }
 
 export {
-  handleGlobalChange,
   handleLocalChange,
   handleFormChanged,
   createInitialForm,
-  getInputProps,
   resetMultiSelect,
 }

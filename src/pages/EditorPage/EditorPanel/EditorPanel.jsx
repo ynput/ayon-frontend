@@ -22,16 +22,16 @@ import useFocusedEntities from '@hooks/useFocused'
 
 import {
   createInitialForm,
-  getInputProps,
   handleFormChanged,
   handleLocalChange,
   resetMultiSelect,
-} from './hooks/smth'
+} from './helper/callbacks'
 import TypeEditor from '../TypeEditor'
 import clsx from 'clsx'
 import TagFormRow from './TagFormRow'
 import EntityThumbnailUploaderRow from './EntityTumbnailUploaderRow'
 import EnumRow from './EnumRow'
+import { getInputProps } from './helper/entityHelpers'
 
 const EditorPanel = ({
   onDelete,
