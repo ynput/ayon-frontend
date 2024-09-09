@@ -221,6 +221,7 @@ const handleFormChanged = (form, changes, { nodeIds, nodes, onChange, onRevert }
             const tempChanges = { ...newChanges }
             delete tempChanges.__entityType
             delete tempChanges.__parentId
+            delete tempChanges.id
 
             if (isEmpty(tempChanges)) {
               // remove changes object completely
