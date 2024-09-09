@@ -58,7 +58,7 @@ const tagTypes = [
   'bundleList',
   'connections',
   'customRoots',
-  'dependencyPackageList',
+  'dependencyPackage',
   'entity',
   'entities',
   'folder',

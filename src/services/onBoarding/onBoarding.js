@@ -97,7 +97,7 @@ const onBoarding = api.injectEndpoints({
         'addonList',
         'addonSettingsList',
         'installerList',
-        'dependencyPackageList',
+        'dependencyPackage',
       ],
     }),
     getInstallEvents: build.query({

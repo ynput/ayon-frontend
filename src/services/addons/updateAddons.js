@@ -71,7 +71,7 @@ const updateAddons = api.injectEndpoints({
         'addonList',
         'addonSettingsList',
         'installerList',
-        'dependencyPackageList',
+        'dependencyPackage',
       ],
     }),
   }), // endpoints

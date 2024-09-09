@@ -1,12 +1,12 @@
 import { useMemo } from 'react'
 import { useListBundlesQuery } from '@queries/bundles/getBundles'
-import { useGetInstallerListQuery } from '@queries/installers'
 import { coerce, rcompare } from 'semver'
 import useLocalStorage from '@hooks/useLocalStorage'
 import { toast } from 'react-toastify'
+import { useListInstallersQuery } from '@queries/installers/getInstallers'
 
 const useGetInstallerDownload = () => {
-  const { data: installers = [] } = useGetInstallerListQuery()
+  const { data: { installers = [] } = {} } = useListInstallersQuery({})
 
   const { data: { bundles: bundleList = [] } = {} } = useListBundlesQuery({ archived: true })
   const production = useMemo(() => {
