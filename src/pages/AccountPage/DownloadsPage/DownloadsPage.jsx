@@ -23,6 +23,22 @@ export const getPlatformIcon = (platform) => {
   }
 }
 
+export const getPlatformLabel = (platform) => {
+  switch (platform) {
+    case 'windows':
+      return 'Windows'
+
+    case 'darwin':
+      return 'macOS'
+
+    case 'linux':
+      return 'Linux'
+
+    default:
+      return platform
+  }
+}
+
 const DownloadsPage = () => {
   //  production installers grouped by platform
   //  non-production installers grouped by version

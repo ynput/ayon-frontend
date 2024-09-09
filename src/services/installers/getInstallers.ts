@@ -43,6 +43,6 @@ const installersApi = api.enhanceEndpoints({
   },
 })
 
-export const { useListInstallersQuery } = installersApi
+export const { useListInstallersQuery, useLazyListInstallersQuery } = installersApi
 
 export default installersApi

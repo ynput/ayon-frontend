@@ -1,6 +1,7 @@
 import { ReleaseAddon } from '@api/rest/releases'
-import AddonCard from '@components/AddonCard/AddonCard'
-import { FC } from 'react'
+import AddonCard, { AddonCardProps } from '@components/AddonCard/AddonCard'
+import clsx from 'clsx'
+import { FC, HTMLAttributes } from 'react'
 import styled from 'styled-components'
 
 const Grid = styled.div`
@@ -17,12 +18,15 @@ const Grid = styled.div`
 
 type Addon = Pick<ReleaseAddon, 'name' | 'title' | 'version'>
 
-interface AddonsSelectGridProps {
+interface AddonsSelectGridProps extends Omit<HTMLAttributes<HTMLDivElement>, 'onSelect'> {
   isLoading: boolean
   placeholderCount: number
   addons: Addon[]
   selected: string[]
   onSelect: (name: string) => void
+  pt?: {
+    card?: AddonCardProps
+  }
 }
 
 const AddonsSelectGrid: FC<AddonsSelectGridProps> = ({
@@ -31,14 +35,21 @@ const AddonsSelectGrid: FC<AddonsSelectGridProps> = ({
   addons,
   selected,
   onSelect,
+  pt = {},
+  ...props
 }) => {
   const placeholders = [...Array(placeholderCount)].map((_, i) => `Addon ${i}`)
 
   return (
-    <Grid>
+    <Grid {...props}>
       {isLoading
         ? placeholders.map((placeholder) => (
-            <AddonCard key={placeholder} className="loading" icon={''} />
+            <AddonCard
+              key={placeholder}
+              icon={''}
+              {...pt.card}
+              className={clsx('loading', pt.card?.className)}
+            />
           ))
         : addons.map((addon) => (
             <AddonCard
@@ -49,6 +60,7 @@ const AddonsSelectGrid: FC<AddonsSelectGridProps> = ({
               icon={selected.includes(addon.name) ? 'check_circle' : 'circle'}
               isSelected={selected.includes(addon.name)}
               onClick={() => onSelect(addon.name)}
+              {...pt.card}
             />
           ))}
     </Grid>

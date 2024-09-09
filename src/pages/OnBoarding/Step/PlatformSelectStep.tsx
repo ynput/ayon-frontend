@@ -1,13 +1,6 @@
 import * as Styled from '../util/OnBoardingStep.styled'
-import AddonCard from '@components/AddonCard/AddonCard'
-import { getPlatformIcon } from '@/pages/AccountPage/DownloadsPage/DownloadsPage'
 import { ReleaseInfoModel } from '@api/rest/releases'
-
-const platformTitles = {
-  windows: 'Windows',
-  darwin: 'MacOS',
-  linux: 'Linux',
-}
+import PlatformSelect from '@components/PlatformSelect/PlatformSelect'
 
 type PlatformSelectStepProps = {
   Header: React.ElementType
@@ -41,19 +34,12 @@ export const PlatformSelectStep = ({
   return (
     <Styled.Section>
       <Header>Pick your Platforms</Header>
-      <Styled.AddonsContainer style={{ display: 'flex', flexDirection: 'column' }}>
-        {sortedInstallers.map((installer) => (
-          <AddonCard
-            key={installer.platform}
-            title={platformTitles[installer.platform]}
-            name={installer.platform}
-            endContent={getPlatformIcon(installer.platform)}
-            icon={selectedPlatforms.includes(installer.platform) ? 'check_circle' : 'circle'}
-            isSelected={selectedPlatforms.includes(installer.platform)}
-            onClick={() => handlePlatformClick(installer.platform)}
-          />
-        ))}
-      </Styled.AddonsContainer>
+      <PlatformSelect
+        platforms={sortedInstallers.map((i) => i.platform)}
+        selected={selectedPlatforms}
+        onSelect={handlePlatformClick}
+        style={{ width: 470, maxWidth: 470 }}
+      />
       <Footer
         next="Confirm"
         onNext={onSubmit}

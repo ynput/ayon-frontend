@@ -4,7 +4,7 @@ import { Icon } from '@ynput/ayon-react-components'
 import Type from '@/theme/typography.module.css'
 import clsx from 'clsx'
 
-interface AddonCardProps extends React.HTMLAttributes<HTMLButtonElement> {
+export interface AddonCardProps extends React.HTMLAttributes<HTMLButtonElement> {
   name?: string
   icon?: string
   isSelected?: boolean

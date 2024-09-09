@@ -4,10 +4,21 @@ import styled from 'styled-components'
 export const FriendlyDialog = styled(Dialog)`
   background-color: var(--md-sys-color-surface-container-high);
   border-radius: var(--border-radius-xxl);
+  max-height: 80%;
 
   p {
     margin: 0;
-    margin-bottom: 24px;
+    margin-bottom: 16px;
+  }
+
+  .body {
+    padding: 16px 32px;
+    gap: var(--base-gap-large);
+  }
+
+  .note {
+    color: var(--md-sys-color-outline);
+    margin-top: 16px;
   }
 `
 
@@ -45,5 +56,19 @@ export const Card = styled.div`
 
   .icon {
     font-size: 30px;
+  }
+`
+
+export const Footer = styled.footer`
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--base-gap-large);
+  width: 100%;
+  margin-top: 16px;
+
+  button:not(.filled) {
+    &:hover {
+      background-color: var(--md-sys-color-surface-container-highest-hover);
+    }
   }
 `

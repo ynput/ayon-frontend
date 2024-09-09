@@ -1,5 +1,5 @@
 import { forwardRef } from 'react'
-import * as Styled from '../ReleaseInstallerDialog.styled'
+import * as Styled from '../ReleaseInstaller.styled'
 import { MaterialSymbol } from '@types'
 import { Button, Icon } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
@@ -10,10 +10,11 @@ interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   icon: MaterialSymbol
   isLoading: boolean
   onChange?: () => void
+  required?: boolean
 }
 
 export const Card = forwardRef<HTMLDivElement, CardProps>(
-  ({ title, subTitle, icon, onChange, isLoading, className, ...props }, ref) => {
+  ({ title, subTitle, icon, onChange, isLoading, required, className, ...props }, ref) => {
     return (
       <Styled.Card
         {...props}
@@ -25,7 +26,11 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
           <div className="title">{title}</div>
           <div className="subTitle">{subTitle}</div>
         </div>
-        {onChange && <Button onClick={onChange}>Change</Button>}
+        {onChange && (
+          <Button onClick={onChange} variant={required ? 'filled' : 'surface'}>
+            Change
+          </Button>
+        )}
       </Styled.Card>
     )
   },
