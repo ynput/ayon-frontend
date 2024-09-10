@@ -22,6 +22,7 @@ import InboxNotificationIcon from './InboxNotification'
 
 const FlexWrapper = styled.div`
   display: flex;
+  gap: var(--base-gap-small);
 `
 
 const DeveloperSwitch = styled.div`
