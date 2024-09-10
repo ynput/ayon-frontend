@@ -10,7 +10,7 @@ const addonsApi = api.enhanceEndpoints({
 
 export const { useListAddonsQuery } = addonsApi
 
-const getAddons = addonsApi.injectEndpoints({
+const addonsApiInjected = addonsApi.injectEndpoints({
   endpoints: (build) => ({
     // Return a list of addons which have project-scoped frontend
     getProjectAddons: build.query({
@@ -68,4 +68,6 @@ const getAddons = addonsApi.injectEndpoints({
   overrideExisting: true,
 })
 
-export const { useGetProjectAddonsQuery, useGetSettingsAddonsQuery } = getAddons
+export const { useGetProjectAddonsQuery, useGetSettingsAddonsQuery } = addonsApiInjected
+
+export default addonsApiInjected

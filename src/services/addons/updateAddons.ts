@@ -1,0 +1,104 @@
+import api from './getAddons'
+import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
+
+const updateAddonsApi = api.enhanceEndpoints({
+  endpoints: {
+    deleteAddonVersion: {
+      invalidatesTags: ['addonList'],
+    },
+    uploadAddonZipFile: {
+      invalidatesTags: [
+        'info',
+        'bundleList',
+        'addonList',
+        'addonSettingsList',
+        'installerList',
+        'dependencyPackage',
+      ],
+    },
+  },
+})
+
+type DeleteAddonVersionsApiArg = {
+  addons: { name: string; version: string }[]
+}
+
+type UploadAddonZipFileApiResponse = string[] | undefined
+
+type UploadAddonZipFileApiArg = {
+  addons: { url: string; name: string; version: string }[]
+}
+
+const updateAddonsInjected = updateAddonsApi.injectEndpoints({
+  endpoints: (build) => ({
+    // delete multiple addon versions at once
+    deleteAddonVersions: build.mutation<undefined, DeleteAddonVersionsApiArg>({
+      async queryFn({ addons = [] }, { dispatch }) {
+        const promises = []
+
+        for (const addon of addons) {
+          if (!addon.name || !addon.version) continue
+
+          promises.push(
+            dispatch(
+              updateAddonsApi.endpoints.deleteAddonVersion.initiate({
+                addonName: addon.name,
+                addonVersion: addon.version,
+              }),
+            ),
+          )
+        }
+
+        try {
+          await Promise.all(promises)
+          return { data: undefined }
+        } catch (e: any) {
+          const error = { status: 'FETCH_ERROR', error: e.message } as FetchBaseQueryError
+          return { error }
+        }
+      },
+    }),
+    downloadAddons: build.mutation<UploadAddonZipFileApiResponse, UploadAddonZipFileApiArg>({
+      queryFn: async (arg, { dispatch }) => {
+        const { addons = [] } = arg || {}
+        let promises = []
+
+        for (const addon of addons) {
+          if (!addon.url || !addon.name || !addon.version) continue
+
+          promises.push(
+            dispatch(
+              updateAddonsApi.endpoints.uploadAddonZipFile.initiate({
+                url: addon.url,
+                addonName: addon.name,
+                addonVersion: addon.version,
+              }),
+            ),
+          )
+        }
+
+        try {
+          const results = await Promise.allSettled(promises)
+
+          // add eventIds to array
+          const eventIds = results
+            .filter((res) => res.status === 'fulfilled')
+            .flatMap((res) => (res.value.data?.eventId ? [res.value.data.eventId] : []))
+
+          return { data: eventIds }
+        } catch (e: any) {
+          return {
+            error: {
+              status: 'FETCH_ERROR',
+              data: undefined,
+              error: e.message,
+            },
+          }
+        }
+      },
+    }),
+  }), // endpoints
+  overrideExisting: true,
+})
+
+export const { useDeleteAddonVersionsMutation, useDownloadAddonsMutation } = updateAddonsInjected
