@@ -1,3 +1,4 @@
+import { UploadAddonZipFileApiArg } from '@api/rest/addons'
 import api from './getAddons'
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 
@@ -23,10 +24,14 @@ type DeleteAddonVersionsApiArg = {
   addons: { name: string; version: string }[]
 }
 
-type UploadAddonZipFileApiResponse = string[] | undefined
+export type DownloadAddonsApiResponse = string[] | undefined
 
-type UploadAddonZipFileApiArg = {
-  addons: { url: string; name: string; version: string }[]
+export type DownloadAddonsApiArg = {
+  addons: {
+    url: UploadAddonZipFileApiArg['url']
+    name: UploadAddonZipFileApiArg['addonName']
+    version: UploadAddonZipFileApiArg['addonVersion']
+  }[]
 }
 
 const updateAddonsInjected = updateAddonsApi.injectEndpoints({
@@ -58,7 +63,7 @@ const updateAddonsInjected = updateAddonsApi.injectEndpoints({
         }
       },
     }),
-    downloadAddons: build.mutation<UploadAddonZipFileApiResponse, UploadAddonZipFileApiArg>({
+    downloadAddons: build.mutation<DownloadAddonsApiResponse, DownloadAddonsApiArg>({
       queryFn: async (arg, { dispatch }) => {
         const { addons = [] } = arg || {}
         let promises = []

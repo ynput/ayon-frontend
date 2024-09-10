@@ -100,7 +100,7 @@ const ReleaseInstaller: FC<ReleaseInstallerProps> = ({ onFinish }) => {
           onSwitchDialog={handleSwitchDialog}
           onCancel={onFinish}
           onConfirm={handleConfirm}
-          isFormValid={resolveFormValidity(releaseForm)}
+          isFormValid={resolveFormValidity(releaseForm) && !isLoadingReleaseInfo}
         />
       )
     case 'addons':

@@ -6,6 +6,7 @@ import { Installer } from '@api/rest/installers'
 import { formatDistance } from 'date-fns'
 import { ReleaseForm } from './hooks/useReleaseForm'
 import { DependencyPackage } from '@api/rest/dependencyPackages'
+import { DownloadAddonsApiArg } from '@queries/addons/updateAddons'
 
 export const createReleaseSubtitle = (
   release: { name: string; createdAt: string } | null,
@@ -65,7 +66,7 @@ export const getReleaseInstallUrls = (
   selectedAddons: string[],
   selectedPlatforms: string[],
 ): {
-  addonInstalls: { url: SourceModel['url'] }[]
+  addonInstalls: DownloadAddonsApiArg['addons']
   installerInstalls: InstallInstaller[]
   dependencyPackageInstalls: InstallDependencyPackage[]
 } => {
@@ -73,7 +74,7 @@ export const getReleaseInstallUrls = (
 
   const addonInstalls = addons
     .filter((addon) => selectedAddons.includes(addon.name) && !!addon.url)
-    .map((addon) => ({ url: addon.url as string, data: { type: 'http' as 'http' } }))
+    .map((addon) => ({ url: addon.url as string, name: addon.name, version: addon.version }))
 
   const installerInstalls = installers
     .filter((installer) => selectedPlatforms.includes(installer.platform))
