@@ -8,7 +8,7 @@ import { useUpdateBundleMutation } from '@queries/bundles/updateBundles'
 import getNewBundleName from './getNewBundleName'
 import NewBundle from './NewBundle'
 import { useListInstallersQuery } from '@queries/installers/getInstallers'
-import { useGetAddonListQuery } from '@queries/addons/getAddons'
+import { useListAddonsQuery } from '@queries/addons/getAddons'
 import { upperFirst } from 'lodash'
 import { toast } from 'react-toastify'
 import AddonDialog from '@components/AddonDialog/AddonDialog'
@@ -60,9 +60,7 @@ const Bundles = () => {
     {},
   )
   // GET ADDONS
-  const { data: addons = [], isLoading: isLoadingAddons } = useGetAddonListQuery({
-    showVersions: true,
-  })
+  const { data: { addons = [] } = {}, isLoading: isLoadingAddons } = useListAddonsQuery({})
 
   // filter out archived bundles if showArchived is true
   let bundleList = useMemo(() => {

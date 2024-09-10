@@ -1,6 +1,6 @@
 import { Button, Section } from '@ynput/ayon-react-components'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
-import { useGetAddonListQuery } from '@queries/addons/getAddons'
+import { useListAddonsQuery } from '@queries/addons/getAddons'
 import { useListBundlesQuery } from '@queries/bundles/getBundles'
 import { useUpdateBundleMutation } from '@queries/bundles/updateBundles'
 import { useMemo, useState } from 'react'
@@ -24,7 +24,7 @@ import Shortcuts from '@containers/Shortcuts'
 const AddonsManager = () => {
   const navigate = useNavigate()
   // QUERIES
-  const { data: addons = [], isLoading } = useGetAddonListQuery()
+  const { data: { addons = [] } = {}, isLoading } = useListAddonsQuery({})
   const { data: { bundles = [] } = {} } = useListBundlesQuery({ archived: false })
 
   // addon upload dialog

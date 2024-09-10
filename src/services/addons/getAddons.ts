@@ -1,20 +1,17 @@
-import api from '@api'
+import { api } from '@api/rest/addons'
+
+const addonsApi = api.enhanceEndpoints({
+  endpoints: {
+    listAddons: {
+      providesTags: ['addonList'],
+    },
+  },
+})
+
+export const { useListAddonsQuery } = addonsApi
 
 const getAddons = api.injectEndpoints({
   endpoints: (build) => ({
-    //  Return a list of all addons installed on the server
-
-    getAddonList: build.query({
-      query: () => ({
-        url: `/api/addons`,
-        method: 'GET',
-      }),
-
-      providesTags: ['addonList'],
-      transformErrorResponse: (error) => error.data.detail || `Error ${error.status}`,
-      transformResponse: (response) => response.addons || [],
-    }), // getAddonList
-
     // Return a list of addons which have project-scoped frontend
 
     getProjectAddons: build.query({
@@ -102,8 +99,6 @@ const getAddons = api.injectEndpoints({
       }),
       invalidatesTags: ['addonList'],
     }), // setAddonVersions
-
-    // TODO: Deprecated, remove
     // setCopyAddonVariant: build.mutation({
     //   query: ({ addonName, copyFrom, copyTo }) => ({
     //     url: '/api/addons',
@@ -130,7 +125,6 @@ const getAddons = api.injectEndpoints({
 })
 
 export const {
-  useGetAddonListQuery,
   useGetProjectAddonsQuery,
   useGetSettingsAddonsQuery,
   useSetAddonVersionMutation,
