@@ -10,18 +10,17 @@ const addonsApi = api.enhanceEndpoints({
 
 export const { useListAddonsQuery } = addonsApi
 
-const getAddons = api.injectEndpoints({
+const getAddons = addonsApi.injectEndpoints({
   endpoints: (build) => ({
     // Return a list of addons which have project-scoped frontend
-
     getProjectAddons: build.query({
       query: () => ({
         url: `/api/addons`,
         method: 'GET',
       }),
       providesTags: ['projectAddons'],
-      transformErrorResponse: (error) => error.data.detail || `Error ${error.status}`,
-      transformResponse: (response) => {
+      transformErrorResponse: (error: any) => error.data.detail || `Error ${error.status}`,
+      transformResponse: (response: any) => {
         let result = []
         for (const definition of response.addons) {
           const versDef = definition.versions[definition.productionVersion]
@@ -39,17 +38,15 @@ const getAddons = api.injectEndpoints({
         return result
       },
     }),
-
     // Return a list of addons with settings-scoped frontend
-
     getSettingsAddons: build.query({
       query: () => ({
         url: `/api/addons`,
         method: 'GET',
       }),
       providesTags: ['settingsAddons'],
-      transformErrorResponse: (error) => error.data.detail || `Error ${error.status}`,
-      transformResponse: (response) => {
+      transformErrorResponse: (error: any) => error.data.detail || `Error ${error.status}`,
+      transformResponse: (response: any) => {
         let result = []
         for (const definition of response.addons) {
           const versDef = definition.versions[definition.productionVersion]
@@ -67,68 +64,8 @@ const getAddons = api.injectEndpoints({
         return result
       },
     }),
-
-    // Set production and staging version of an addon
-    // Set to null to disable the addon in the respective environment
-    // When productionVersion or stagingVersion is not set,
-    // the respective environment is not changed.
-
-    setAddonVersion: build.mutation({
-      query: ({ addonName, stagingVersion, productionVersion }) => ({
-        url: '/api/addons',
-        method: 'POST',
-        body: {
-          versions: {
-            [addonName]: { stagingVersion, productionVersion },
-          },
-        },
-      }),
-      invalidatesTags: ['addonList'],
-    }), // setAddonVersion
-
-    // Set production and staging versions of multiple addons
-    // at once. syntax is { [addonName]: { stagingVersion, productionVersion } }
-
-    setAddonVersions: build.mutation({
-      query: (versions) => ({
-        url: '/api/addons',
-        method: 'POST',
-        body: {
-          versions,
-        },
-      }),
-      invalidatesTags: ['addonList'],
-    }), // setAddonVersions
-    // setCopyAddonVariant: build.mutation({
-    //   query: ({ addonName, copyFrom, copyTo }) => ({
-    //     url: '/api/addons',
-    //     method: 'POST',
-    //     body: {
-    //       copyVariant: {
-    //         addonName,
-    //         copyFrom,
-    //         copyTo,
-    //       },
-    //     },
-    //   }),
-    //   invalidatesTags: ['addonList'],
-    // }), // setCopyAddonVariant
-
-    getAddonInstall: build.query({
-      query: () => ({
-        url: `/api/addons/install`,
-        method: 'GET',
-      }),
-    }),
-  }), // endpoints
+  }),
   overrideExisting: true,
 })
 
-export const {
-  useGetProjectAddonsQuery,
-  useGetSettingsAddonsQuery,
-  useSetAddonVersionMutation,
-  useSetAddonVersionsMutation,
-  useGetAddonInstallQuery,
-  useLazyGetAddonInstallQuery,
-} = getAddons
+export const { useGetProjectAddonsQuery, useGetSettingsAddonsQuery } = getAddons
