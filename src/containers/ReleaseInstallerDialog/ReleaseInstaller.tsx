@@ -17,7 +17,7 @@ import {
 
 // Helpers
 import { getHighestBundle, resolveRelease, resolveFormValidity } from './helpers'
-import { useReleaseForm, useReleaseInfo } from './hooks'
+import { useInstallRelease, useReleaseForm, useReleaseInfo } from './hooks'
 import { ReleaseFormType, switchDialog } from '@state/releaseInstaller'
 
 interface ReleaseInstallerProps {
@@ -84,8 +84,10 @@ const ReleaseInstaller: FC<ReleaseInstallerProps> = ({ onFinish }) => {
     dispatch(switchDialog('overview'))
   }
 
-  const handleConfirm = () => {
-    console.log('do stuff')
+  // hook logic for installing release
+  const installRelease = useInstallRelease({ releaseInfo, releaseForm })
+  const handleConfirm = async () => {
+    await installRelease()
   }
 
   switch (dialog) {

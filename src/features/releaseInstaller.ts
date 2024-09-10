@@ -1,7 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit'
 import type { PayloadAction } from '@reduxjs/toolkit'
 
-export type ReleaseFormType = 'overview' | 'addons' | 'installers'
+export type ReleaseFormType = 'overview' | 'addons' | 'installers' | 'progress'
 
 interface ReleaseState {
   open: boolean
