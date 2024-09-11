@@ -79,11 +79,11 @@ export const ThumbnailWrapper = styled.div`
       opacity: 0.8;
     }
   }
-  > div {
+  & > div {
     height: 100%;
     display: flex;
     flex-direction: column;
-    gap: var(--base-gap-large);
+    gap: var(--base-gap-small);
   }
 `
 
