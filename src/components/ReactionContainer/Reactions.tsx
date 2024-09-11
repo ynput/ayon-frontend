@@ -1,0 +1,19 @@
+import ExistingReactions from "./ExistingReactions"
+import ReactionPanelOpener from "./ReactionPanelOpener"
+import * as Styled from './ReactionStyles.styled'
+
+type Props = {
+  reactions: Reaction[]
+  changeHandler: (reaction: Reaction) => {}
+}
+
+const Reactions = ({ reactions, changeHandler }: Props) => {
+  return (
+    <Styled.ReactionsWrapper>
+      <ReactionPanelOpener reactions={reactions} changeHandler={changeHandler}/>
+      <ExistingReactions reactions={reactions} changeHandler={changeHandler} />
+    </Styled.ReactionsWrapper>
+  )
+}
+
+export default Reactions

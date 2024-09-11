@@ -2,5 +2,7 @@ type ReactionType = 'thumb_up' | 'thumb_down'| 'heart_plus' | 'celebration' | 'n
 
 type Reaction = {
   type: ReactionType
-  userIds: number[]
+  count?: number,
+  isActive: boolean
 }
+type ReactionComponentVariant = 'standard' | 'compact'

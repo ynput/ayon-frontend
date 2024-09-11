@@ -20,8 +20,24 @@ const Reaction = styled.div`
     background-color: var(--md-sys-color-primary-container);
     border-color: var(--md-sys-color-primary);
     &:hover {
-    background-color: var(--md-sys-color-primary-container-hover);
+      background-color: var(--md-sys-color-primary-container-hover);
       border-color: var(--md-sys-color-primary-hover);
+    }
+  }
+
+  &.compact {
+    width: 32px;
+    height: 32px;
+    padding: 8px;
+    border-color: transparent;
+    border-radius: var(--border-radius-m);
+    &.active {
+      box-shadow: 2px 2px 0  rgba(0, 0, 0, 0.15);
+      background-color: var(--md-sys-color-surface-container-high-hover);
+      border-color: transparent;
+      &:hover {
+        border-color: var(--md-sys-color-surface-container-highest-hover);
+      }
     }
   }
 `
@@ -47,19 +63,6 @@ const ReactionsPanel = styled.div`
 
   animation: 0.03s ease-in forwards;
   transform-origin: bottom left;
-  .emoji {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    width: 32px;
-    height: 32px;
-    font-size: 14px;
-    &:hover {
-      border-radius: var(--border-radius-m);
-      background-color: var(--md-sys-color-surface-container-highest-hover);
-    }
-  }
 `
 
 

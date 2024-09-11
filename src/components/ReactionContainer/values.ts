@@ -17,19 +17,13 @@ const reactionMappingObj: {[key in ReactionType]: string } = {
   const mockReactions: Reaction[] = [
     {
       type: 'thumb_up',
-      userIds: [1, 2, 3],
-    },
-    {
-      type: 'thumb_down',
-      userIds: [3],
+      count: 3,
+      isActive: true,
     },
     {
       type: 'heart_plus',
-      userIds: [2, 3],
-    },
-    {
-      type: 'celebration',
-      userIds: [1, 2, 3, 4],
+      count: 4,
+      isActive: false,
     },
   ]
 
