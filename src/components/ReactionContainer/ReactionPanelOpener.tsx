@@ -6,7 +6,7 @@ import Reaction from "./Reaction"
 
 type Props = {
   reactions: Reaction[]
-  changeHandler: (reaction: Reaction) => {}
+  changeHandler: (reaction: Reaction) => void
 }
 
 const ReactionPanelOpener = ({reactions, changeHandler}: Props) => {
@@ -36,6 +36,7 @@ const ReactionPanelOpener = ({reactions, changeHandler}: Props) => {
                 variant="compact"
                 onClick={() => {
                   changeHandler({ ...reactionObj, isActive: !reactionObj.isActive })
+                  setIsOpen(false)
                 }}
               />
             )

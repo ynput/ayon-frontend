@@ -3,7 +3,7 @@ import * as Styled from './ReactionStyles.styled'
 
 type Props = {
   reactions: Reaction[]
-  changeHandler: (reaction: Reaction) => {}
+  changeHandler: (reaction: Reaction) => void
 }
 
 const ExistingReactions = ({ reactions, changeHandler }: Props) => {
