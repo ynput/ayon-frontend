@@ -33,6 +33,9 @@ export type FolderRow = {
   _completeFolders?: number[]
 }
 
+const getParentKey = (parent: GetTasksProgressResult[0]['parent']) =>
+  parent ? `${parent.id}-${parent.name}` : undefined
+
 export const formatTaskProgressForTable = (
   data: GetTasksProgressResult,
   shownColumns: string[] = [],
@@ -41,14 +44,15 @@ export const formatTaskProgressForTable = (
 ): FolderRow[] => {
   // TODO: try using a map instead of an array to easily lookup parent folders
   const rows = new Map<string, FolderRow>()
+  const parents = new Set<string>()
 
   data.forEach((folder) => {
     // add parent folder row
 
     const parent = folder.parent
-    const parentKey = parent ? parent.id : undefined
+    const parentKey = getParentKey(parent)
     // check parent has not been added
-    if (parent && parentKey && !rows.has(parentKey)) {
+    if (parent && parentKey && !parents.has(parentKey)) {
       //
       // add parent folder row
       const parentRow = {
@@ -64,12 +68,14 @@ export const formatTaskProgressForTable = (
       }
 
       rows.set(parentKey, parentRow)
+      // add to parents set to keep track of parent folders added
+      parents.add(parentKey)
     }
 
     // add main folder row
     const row: FolderRow = {
       __isParent: false,
-      __parentId: parentKey,
+      __parentId: parent?.id,
       __folderKey: folder.parents[folder.parents.length - 1] + folder.name, // used to sort the folders row
       _folder: folder.label || folder.name,
       _parents: folder.parents,
@@ -83,45 +89,45 @@ export const formatTaskProgressForTable = (
     // find the percentages of each task
     const taskFraction = 100 / folder.tasks.length
 
+    const activeTasks = folder.tasks.filter((t) => t.active)
+
     // groups tasks by type
-    folder.tasks
-      .filter((t) => t.active)
-      .forEach((task) => {
-        const taskType = task.taskType
+    activeTasks.forEach((task) => {
+      const taskType = task.taskType
 
-        // do not add if hidden
-        if (!!shownColumns.length && !shownColumns.includes(taskType)) return
+      // do not add if hidden
+      if (!!shownColumns.length && !shownColumns.includes(taskType)) return
 
-        if (!row[taskType]) {
-          row[taskType] = {
-            name: taskType,
-            taskType,
-            tasks: [],
-          }
+      if (!row[taskType]) {
+        row[taskType] = {
+          name: taskType,
+          taskType,
+          tasks: [],
+        }
+      }
+
+      if (typeof row[taskType] === 'object' && !Array.isArray(row[taskType])) {
+        // update tasks
+        row[taskType].tasks.push(task)
+
+        const updateCompleted = () => {
+          const status = task.status
+          const statusType = statuses.find((s) => s.name === status)
+          const statusState = statusType?.state
+          const completed = statusState === 'done'
+          const toAdd = completed ? taskFraction : 0
+          const newDone = (row._complete || 0) + toAdd
+          // rounded to 1 decimal
+          row._complete = newDone
         }
 
-        if (typeof row[taskType] === 'object' && !Array.isArray(row[taskType])) {
-          // update tasks
-          row[taskType].tasks.push(task)
-
-          const updateCompleted = () => {
-            const status = task.status
-            const statusType = statuses.find((s) => s.name === status)
-            const statusState = statusType?.state
-            const completed = statusState === 'done'
-            const toAdd = completed ? taskFraction : 0
-            const newDone = (row._complete || 0) + toAdd
-            // rounded to 1 decimal
-            row._complete = newDone
-          }
-
-          updateCompleted()
-        }
-      })
+        updateCompleted()
+      }
+    })
 
     // get existing parent folder
     const parentFolder = parent && rows.get(parentKey || '')
-    if (parentFolder) {
+    if (parentFolder?.__isParent) {
       const tasks = folder.tasks.filter((t) => t.active)
       // update number of folders and tasks
       parentFolder._folderCount = (parentFolder._folderCount || 0) + 1
