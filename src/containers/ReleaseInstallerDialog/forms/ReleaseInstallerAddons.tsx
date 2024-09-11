@@ -7,14 +7,16 @@ import { Footer } from '../components'
 interface ReleaseInstallerAddonsProps {
   releaseForm: ReleaseForm
   releaseAddons: ReleaseAddon[]
+  mandatoryAddons: string[]
   isLoading: boolean
   onCancel: () => void
   onConfirm: (selected: string[]) => void
 }
 
 export const ReleaseInstallerAddons: FC<ReleaseInstallerAddonsProps> = ({
-  releaseAddons,
   releaseForm,
+  releaseAddons,
+  mandatoryAddons,
   isLoading,
   onCancel,
   onConfirm,
@@ -40,9 +42,10 @@ export const ReleaseInstallerAddons: FC<ReleaseInstallerAddonsProps> = ({
 
   return (
     <>
-      <span>Select release addons</span>
+      <span>Select addons to install from the release</span>
       <AddonsSelectGrid
         addons={releaseAddons}
+        disabledAddons={mandatoryAddons}
         selected={selected}
         onSelect={handleSelectAddon}
         isLoading={isLoading}

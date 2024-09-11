@@ -4,31 +4,39 @@ import { createAddonsSubtitle, createInstallersSubtitle, createReleaseSubtitle }
 import { ReleaseFormType } from '@state/releaseInstaller'
 import { ReleaseListItemModel } from '@api/rest/releases'
 import { ReleaseForm } from '../hooks/useReleaseForm'
+import { Error } from '../ReleaseInstaller.styled'
+import { Icon } from '@ynput/ayon-react-components'
 
 interface ReleaseInstallerOverviewProps {
   releaseForm: ReleaseForm
   release: ReleaseListItemModel | null
   isLoading: boolean
+  isLoadingRelease: boolean
+  isSubmitting: boolean
   onSwitchDialog: (dialog: ReleaseFormType) => void
   isFormValid: boolean
   onCancel: () => void
   onConfirm: () => void
+  error?: string | null
 }
 
 export const ReleaseInstallerOverview: FC<ReleaseInstallerOverviewProps> = ({
   release,
   isLoading,
+  isLoadingRelease,
+  isSubmitting,
   releaseForm,
   onSwitchDialog,
   isFormValid,
   onCancel,
   onConfirm,
+  error,
 }) => {
   return (
     <>
       <p className="bio">
         Releases are official packages with the latest tested and stable add-ons, dependencies, and
-        installers.
+        installers for your pipeline.
       </p>
       <p className="bio">Your install is pre-configured here, but you can adjust it if needed.</p>
 
@@ -57,11 +65,21 @@ export const ReleaseInstallerOverview: FC<ReleaseInstallerOverviewProps> = ({
       <span className="note">
         This will not affect your existing setup, a new bundle will be created for testing first.
       </span>
+      {error && (
+        <Error>
+          <Icon icon="error" />
+          Error installing release: {error}
+        </Error>
+      )}
       <Footer
         onCancel={onCancel}
         onConfirm={onConfirm}
         isFinal
-        saveButton={{ active: isFormValid }}
+        saveButton={{
+          active: true,
+          saving: isSubmitting || isLoading || isLoadingRelease,
+          disabled: isLoading || isLoadingRelease || !isFormValid,
+        }}
       />
     </>
   )

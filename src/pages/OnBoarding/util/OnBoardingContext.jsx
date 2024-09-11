@@ -18,6 +18,7 @@ import useLocalStorage from '@hooks/useLocalStorage'
 import { useLazyListBundlesQuery } from '@queries/bundles/getBundles'
 import { useCreateBundleMutation } from '@queries/bundles/updateBundles'
 import getNewBundleName from '../../SettingsPage/Bundles/getNewBundleName'
+import { guessPlatform } from '@containers/ReleaseInstallerDialog/helpers'
 
 const userFormFields = [
   {
@@ -126,22 +127,11 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
 
   // step 7
   // guess the users operating system
-  const guessedPlatform = useMemo(() => {
-    let platform
+  const guessedPlatform = useMemo(() => guessPlatform(), [])
 
-    if (navigator.userAgentData && navigator.userAgentData.platform) {
-      platform = navigator.userAgentData.platform?.toLowerCase()
-    }
-
-    if (!platform) return []
-
-    if (platform.includes('win')) return ['windows']
-    if (platform.includes('mac')) return ['darwin']
-    if (platform.includes('linux')) return ['linux']
-    return []
-  }, [])
-
-  const [selectedPlatforms, setSelectedPlatforms] = useState(guessedPlatform)
+  const [selectedPlatforms, setSelectedPlatforms] = useState(
+    guessedPlatform ? [guessedPlatform] : [],
+  )
 
   // get selected release data
   const { data: release = {}, isFetching: isLoadingAddons } = useGetReleaseInfoQuery(

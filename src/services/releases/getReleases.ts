@@ -14,8 +14,29 @@ const releasesApi = api.enhanceEndpoints({
 export const { useGetReleasesQuery, useGetReleaseInfoQuery, useLazyGetReleaseInfoQuery } =
   releasesApi
 
+export type InstallMessage = {
+  id: string
+  topic: string
+  project: string | null
+  user: string
+  dependsOn: string | null
+  description: string
+  summary: {
+    url: string
+    name: string
+    version: string
+  }
+  status: string
+  sender: string | null
+  createdAt: string
+  updatedAt: string
+  progress: number
+}
+
+export type InstallEventNode = GetInstallEventsQuery['events']['edges'][0]['node']
 // GRAPHQL QUERIES (from different api slice)
-type GetInstallEventsResult = GetInstallEventsQuery['events']['edges'][0]['node'][]
+export type GetInstallEvent = InstallEventNode | InstallMessage
+export type GetInstallEventsResult = GetInstallEvent[]
 
 import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
 type Definitions = DefinitionsFromApi<typeof graphqlApi>
@@ -40,7 +61,7 @@ const releasesGqlApi = graphqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>
         ]
 
         try {
-          const handlePubSub = (topic: string, message: $Any) => {
+          const handlePubSub = (topic: string, message: InstallMessage) => {
             if (topic === 'client.connected') {
               return
             }

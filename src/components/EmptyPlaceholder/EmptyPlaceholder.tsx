@@ -51,15 +51,27 @@ interface EmptyPlaceholderProps extends React.HTMLAttributes<HTMLDivElement> {
   icon: string
   message: string
   error?: any
+  pt?: {
+    error?: React.HTMLAttributes<HTMLDivElement>
+  }
 }
 
-const EmptyPlaceholder = ({ icon, message, error, children, ...props }: EmptyPlaceholderProps) => {
+const EmptyPlaceholder = ({
+  icon,
+  message,
+  error,
+  children,
+  pt,
+  ...props
+}: EmptyPlaceholderProps) => {
   if (error) {
     return (
       <Placeholder className={'isError'} {...props}>
         <Icon icon="error" className="placeholder-icon" />
         <h3 className={Typography.titleLarge}>Something went wrong.</h3>
-        <span className="error-message">ERROR: {JSON.stringify(error)}</span>
+        <span className="error-message" {...pt?.error}>
+          ERROR: {JSON.stringify(error)}
+        </span>
         <span>This should not happen. Please send a screenshot to the Ynput team!</span>
         {children}
       </Placeholder>

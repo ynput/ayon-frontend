@@ -72,3 +72,14 @@ export const Footer = styled.footer`
     }
   }
 `
+
+export const Error = styled.div`
+  display: flex;
+  align-items: center;
+  padding: var(--padding-m);
+  gap: var(--base-gap-large);
+  border-radius: var(--border-radius-m);
+
+  background-color: var(--md-sys-color-error-container);
+  color: var(--md-sys-color-on-error-container);
+`

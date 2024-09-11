@@ -40,10 +40,26 @@ export const resolveRelease = (releases: ReleaseListItemModel[], selected?: stri
 export const getHighestBundle = (bundles: BundleModel[]): BundleModel | null => {
   if (!bundles.length) return null
 
-  const selectedBundle =
-    bundles.find((bundle) => bundle.isProduction || bundle.isStaging || bundle.isDev) || bundles[0]
+  const selectedBundle = bundles.find((bundle) => bundle.isProduction) || null
 
   return selectedBundle
+}
+
+export const guessPlatform = () => {
+  let platform
+
+  //@ts-ignore
+  if (navigator.userAgentData && navigator.userAgentData.platform) {
+    //@ts-ignore
+    platform = navigator.userAgentData.platform?.toLowerCase()
+  }
+
+  if (!platform) return null
+
+  if (platform.includes('win')) return 'windows'
+  if (platform.includes('mac')) return 'darwin'
+  if (platform.includes('linux')) return 'linux'
+  return null
 }
 
 export const resolveFormValidity = (form: ReleaseForm) => {

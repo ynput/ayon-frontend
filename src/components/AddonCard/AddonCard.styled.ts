@@ -76,4 +76,11 @@ export const AddonCard = styled.button`
       fill: var(--md-sys-color-on-surface);
     }
   }
+
+  &:disabled {
+    background-color: var(--md-sys-color-surface-container);
+    color: var(--md-sys-color-on-surface);
+    cursor: not-allowed;
+    pointer-events: none;
+  }
 `

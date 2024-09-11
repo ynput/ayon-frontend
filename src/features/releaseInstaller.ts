@@ -1,5 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit'
 import type { PayloadAction } from '@reduxjs/toolkit'
+import getInitialStateLocalStorage from './middleware/getInitialStateLocalStorage'
 
 export type ReleaseFormType = 'overview' | 'addons' | 'installers' | 'progress'
 
@@ -10,13 +11,13 @@ interface ReleaseState {
 }
 
 const initialState = {
-  open: false,
+  open: getInitialStateLocalStorage('releaseInstaller-open', false) as boolean,
   release: null,
   dialog: 'overview',
 } satisfies ReleaseState as ReleaseState
 
 const counterSlice = createSlice({
-  name: 'counter',
+  name: 'releaseInstaller',
   initialState,
   reducers: {
     // open/close the dialog
@@ -41,3 +42,9 @@ const counterSlice = createSlice({
 
 export const { toggleReleaseInstaller, switchDialog } = counterSlice.actions
 export default counterSlice.reducer
+
+// topics that need to set localStorage. If there is no explicit value, it will be the payload value
+export const releaseInstallerLocalItems = {
+  'releaseInstaller/toggleReleaseInstaller': [{ key: 'releaseInstaller-open' }],
+  'releaseInstaller/installRelease': [{ key: 'releaseInstaller-open', value: true }],
+}

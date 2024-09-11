@@ -11,7 +11,7 @@ import dashboardReducer, { dashboardLocalItems } from '@state/dashboard'
 import detailsReducer, { detailsLocalItems } from '@state/details'
 import addonsManagerReducer from '@state/addonsManager'
 import viewerReducer, { viewerSearchParams } from '@state/viewer'
-import releaseInstallerReducer from '@state/releaseInstaller'
+import releaseInstallerReducer, { releaseInstallerLocalItems } from '@state/releaseInstaller'
 
 // API
 import { RestAPI } from '@queries/ayon'
@@ -41,6 +41,7 @@ const store = configureStore({
           ...dashboardLocalItems,
           ...contextLocalItems,
           ...detailsLocalItems,
+          ...releaseInstallerLocalItems,
         }),
       )
       .concat(searchParamsMiddleware({ ...viewerSearchParams }))

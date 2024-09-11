@@ -22,6 +22,7 @@ interface AddonsSelectGridProps extends Omit<HTMLAttributes<HTMLDivElement>, 'on
   isLoading: boolean
   placeholderCount: number
   addons: Addon[]
+  disabledAddons: string[]
   selected: string[]
   onSelect: (name: string) => void
   pt?: {
@@ -33,6 +34,7 @@ const AddonsSelectGrid: FC<AddonsSelectGridProps> = ({
   isLoading,
   placeholderCount,
   addons,
+  disabledAddons = [],
   selected,
   onSelect,
   pt = {},
@@ -60,6 +62,7 @@ const AddonsSelectGrid: FC<AddonsSelectGridProps> = ({
               icon={selected.includes(addon.name) ? 'check_circle' : 'circle'}
               isSelected={selected.includes(addon.name)}
               onClick={() => onSelect(addon.name)}
+              disabled={disabledAddons.includes(addon.name)}
               {...pt.card}
             />
           ))}

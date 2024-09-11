@@ -13,12 +13,14 @@ import {
   ReleaseInstallerOverview,
   ReleaseInstallerAddons,
   ReleaseInstallerPlatforms,
+  ReleaseInstallerProgress,
 } from './forms'
 
 // Helpers
 import { getHighestBundle, resolveRelease, resolveFormValidity } from './helpers'
 import { useInstallRelease, useReleaseForm, useReleaseInfo } from './hooks'
 import { ReleaseFormType, switchDialog } from '@state/releaseInstaller'
+import { useRestart } from '@context/restartContext'
 
 interface ReleaseInstallerProps {
   onFinish: () => void
@@ -60,11 +62,11 @@ const ReleaseInstaller: FC<ReleaseInstallerProps> = ({ onFinish }) => {
   ] = useReleaseInfo({
     selectedRelease: releaseForm.name,
     selectedAddons: releaseForm.addons,
+    release,
   })
 
   const isLoadingAny = isLoadingReleases || isLoadingBundles || !releaseForm.name
   const anyError = releasesError || bundlesError || releaseInfoError
-  if (anyError) return <ReleaseInstallerError error={error} />
 
   const handleSwitchDialog = (dialog: ReleaseFormType) => {
     dispatch(switchDialog(dialog))
@@ -84,11 +86,36 @@ const ReleaseInstaller: FC<ReleaseInstallerProps> = ({ onFinish }) => {
     dispatch(switchDialog('overview'))
   }
 
+  // const fakeProgress =
+
   // hook logic for installing release
-  const installRelease = useInstallRelease({ releaseInfo, releaseForm })
+  const [installRelease, isSubmitting, installProgress, installError, setEvents] =
+    useInstallRelease({
+      releaseInfo,
+      releaseForm,
+    })
+
   const handleConfirm = async () => {
     await installRelease()
   }
+
+  const { confirmRestart, snoozeRestart } = useRestart()
+
+  const handleInstallComplete = (restart: boolean) => {
+    // reset events
+    setEvents([])
+    // close dialog
+    onFinish()
+    if (restart) {
+      // restart server
+      confirmRestart()
+    } else {
+      // snooze
+      snoozeRestart()
+    }
+  }
+
+  if (anyError) return <ReleaseInstallerError error={error} onClose={onFinish} />
 
   switch (dialog) {
     case 'overview':
@@ -96,19 +123,23 @@ const ReleaseInstaller: FC<ReleaseInstallerProps> = ({ onFinish }) => {
         <ReleaseInstallerOverview
           release={release}
           isLoading={isLoadingAny}
+          isLoadingRelease={isLoadingReleaseInfo}
           releaseForm={releaseForm}
           onSwitchDialog={handleSwitchDialog}
           onCancel={onFinish}
           onConfirm={handleConfirm}
-          isFormValid={resolveFormValidity(releaseForm) && !isLoadingReleaseInfo}
+          isFormValid={resolveFormValidity(releaseForm)}
+          isSubmitting={isSubmitting}
+          error={installError}
         />
       )
     case 'addons':
       return (
         <ReleaseInstallerAddons
-          releaseAddons={releaseAddons}
-          isLoading={isLoadingAny || isLoadingReleaseInfo}
           releaseForm={releaseForm}
+          releaseAddons={releaseAddons}
+          mandatoryAddons={release?.mandatoryAddons || []}
+          isLoading={isLoadingAny || isLoadingReleaseInfo}
           onConfirm={handleAddonsConfirm}
           onCancel={handleSelectCancel}
         />
@@ -122,6 +153,10 @@ const ReleaseInstaller: FC<ReleaseInstallerProps> = ({ onFinish }) => {
           onConfirm={handlePlatformsConfirm}
           onCancel={handleSelectCancel}
         />
+      )
+    case 'progress':
+      return (
+        <ReleaseInstallerProgress progress={installProgress} onFinish={handleInstallComplete} />
       )
     default:
       break

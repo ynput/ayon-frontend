@@ -8,6 +8,7 @@ export interface AddonCardProps extends React.HTMLAttributes<HTMLButtonElement> 
   name?: string
   icon?: string
   isSelected?: boolean
+  disabled?: boolean
   error?: string
   endContent?: string | React.ReactNode
   title?: string
@@ -15,13 +16,24 @@ export interface AddonCardProps extends React.HTMLAttributes<HTMLButtonElement> 
 
 const AddonCard = React.forwardRef<HTMLButtonElement, AddonCardProps>(
   (
-    { name, icon = 'check_circle', isSelected, error, endContent, title, className, ...props },
+    {
+      name,
+      icon = 'check_circle',
+      isSelected,
+      disabled,
+      error,
+      endContent,
+      title,
+      className,
+      ...props
+    },
     ref,
   ) => {
     return (
       <Styled.AddonCard
         ref={ref}
         className={clsx(className, { selected: isSelected, error: !!error })}
+        disabled={disabled}
         {...props}
       >
         <Icon icon={icon} />

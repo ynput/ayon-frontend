@@ -1,16 +1,18 @@
 import { useEffect, useState } from 'react'
 import { useGetReleaseInfoQuery } from '@queries/releases/getReleases'
-import { ReleaseAddon, ReleaseInfoModel } from '@api/rest/releases'
+import { ReleaseAddon, ReleaseInfoModel, ReleaseListItemModel } from '@api/rest/releases'
 import { ReleaseForm } from './useReleaseForm'
 
 type Props = {
   selectedAddons: ReleaseForm['addons']
   selectedRelease: ReleaseForm['name']
+  release: ReleaseListItemModel | null
 }
 
 export const useReleaseInfo = ({
   selectedAddons = [],
   selectedRelease,
+  release,
 }: Props): [
   ReleaseInfoModel | undefined,
   ReleaseAddon[],
@@ -33,9 +35,19 @@ export const useReleaseInfo = ({
     if (!releaseInfo || isLoadingReleaseInfo) return
     // set ordered addons based on selected
     const orderedAddons = [...(releaseInfo.addons || [])].sort((a, b) => {
+      const mandatoryAddons = release?.mandatoryAddons || []
       const aIndex = selectedAddons.indexOf(a.name)
       const bIndex = selectedAddons.indexOf(b.name)
 
+      if (aIndex !== -1 && bIndex !== -1) {
+        const aMandatory = mandatoryAddons.includes(a.name)
+        const bMandatory = mandatoryAddons.includes(b.name)
+        if ((aMandatory && bMandatory) || (!aMandatory && !bMandatory)) {
+          return a.name.localeCompare(b.name)
+        }
+        if (aMandatory && !bMandatory) return -1
+        if (!aMandatory && bMandatory) return 1
+      }
       return bIndex - aIndex
     })
 
