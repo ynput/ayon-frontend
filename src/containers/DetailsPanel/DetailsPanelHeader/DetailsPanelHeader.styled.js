@@ -72,11 +72,18 @@ export const Header = styled.header`
 
 export const ThumbnailWrapper = styled.div`
   position: relative;
+  height: 100%;
 
   &:hover {
     .playable {
       opacity: 0.8;
     }
+  }
+  > div {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: var(--base-gap-large);
   }
 `
 

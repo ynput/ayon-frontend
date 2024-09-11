@@ -101,7 +101,11 @@ const EntityThumbnailUploader = ({
         className={clsx({ isCompact })}
         onDragEnter={() => setIsDraggingFile(true)}
       >
-        <ThumbnailWrapper>{children}</ThumbnailWrapper>
+        <ThumbnailWrapper>
+          <div>
+            {children}
+          </div>
+        </ThumbnailWrapper>
         <ThumbnailUploader
           entities={entities}
           inputRef={inputRef}
