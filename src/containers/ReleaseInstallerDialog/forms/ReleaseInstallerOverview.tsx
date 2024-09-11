@@ -35,8 +35,8 @@ export const ReleaseInstallerOverview: FC<ReleaseInstallerOverviewProps> = ({
   return (
     <>
       <p className="bio">
-        Releases are official packages with the latest tested and stable add-ons, dependencies, and
-        installers for your pipeline.
+        Releases are official bundles with the latest tested and stable addons, launchers and their
+        dependencies for your pipeline.
       </p>
       <p className="bio">Your install is pre-configured here, but you can adjust it if needed.</p>
 
