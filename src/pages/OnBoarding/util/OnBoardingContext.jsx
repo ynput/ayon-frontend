@@ -6,13 +6,13 @@ import { toast } from 'react-toastify'
 import { useGetYnputConnectionsQuery } from '@queries/ynputConnect'
 import {
   useAbortOnBoardingMutation,
-  useGetInstallEventsQuery,
   useInstallPresetMutation,
 } from '@queries/onBoarding/onBoarding'
 import {
   useGetReleasesQuery,
   useGetReleaseInfoQuery,
   useLazyGetReleaseInfoQuery,
+  useGetInstallEventsQuery,
 } from '@queries/releases/getReleases'
 import useLocalStorage from '@hooks/useLocalStorage'
 import { useLazyListBundlesQuery } from '@queries/bundles/getBundles'
@@ -169,13 +169,6 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
     [selectedPreset],
   )
 
-  // starts monitoring the events
-  const topics = [
-    'addon.install_from_url',
-    'installer.install_from_url',
-    'dependency_package.install_from_url',
-  ]
-
   const eventIds = useMemo(
     () => idsInstalling.filter((res) => res.eventId).map((res) => res.eventId),
     [idsInstalling],
@@ -186,7 +179,7 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
     isSuccess,
     isFetching,
     refetch,
-  } = useGetInstallEventsQuery({ topics, ids: eventIds }, { skip: !eventIds.length })
+  } = useGetInstallEventsQuery({ ids: eventIds }, { skip: !eventIds.length })
 
   // once installProgress is success (first time) and not fetching then refetch every 1 second
   useEffect(() => {
