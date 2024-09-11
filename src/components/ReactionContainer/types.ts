@@ -4,5 +4,6 @@ type Reaction = {
   type: ReactionType
   count?: number,
   isActive: boolean
+  users?: string[]
 }
 type ReactionComponentVariant = 'standard' | 'compact'

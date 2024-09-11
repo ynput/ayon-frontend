@@ -19,11 +19,13 @@ const mockReactions: Reaction[] = [
     type: 'thumb_up',
     count: 3,
     isActive: true,
+    users: ['Luke', 'Florin', 'Martin'],
   },
   {
     type: 'heart_plus',
     count: 4,
     isActive: false,
+    users: ['Luke', 'Martin'],
   },
 ]
 

@@ -1,4 +1,4 @@
-import styled from "styled-components"
+import styled from 'styled-components'
 
 const Reaction = styled.div`
   display: flex;
@@ -8,6 +8,7 @@ const Reaction = styled.div`
 
   height: 24px;
   padding: 0px 8px;
+  cursor: pointer;
   user-select: none;
 
   border: solid 1px var(--md-sys-color-outline-variant);
@@ -32,8 +33,7 @@ const Reaction = styled.div`
     border-color: transparent;
     border-radius: var(--border-radius-m);
     &.active {
-      box-shadow: 2px 2px 0  rgba(0, 0, 0, 0.15);
-      background-color: var(--md-sys-color-surface-container-high-hover);
+      background-color: var(--md-sys-color-secondary-container);
       border-color: transparent;
       &:hover {
         border-color: var(--md-sys-color-surface-container-highest-hover);
@@ -49,33 +49,37 @@ const ActiveReactionsList = styled.div`
 
 const ReactionsPanel = styled.div`
   display: flex;
-  gap: 8px;
+  gap: 4px;
 
   position: absolute;
-  top: -40px;
-  left: 16px;
+  top: -48px;
+  left: 0;
   z-index: 30;
 
   background-color: var(--md-sys-color-surface-container-high);
-  padding: 8px;
+  padding: 4px;
   border-radius: 4px;
-  box-shadow: 0px 0px 4px 4px rgba(0, 0, 0, 0.25);
+  box-shadow: 0px 0px 2px 2px rgba(0, 0, 0, 0.15);
 
   animation: 0.03s ease-in forwards;
   transform-origin: bottom left;
 `
-
 
 const ReactionPanelOpener = styled.div`
   user-select: none;
   .add-reaction {
     background-color: var(--md-sys-color-surface-container-high);
     border-radius: 12px;
+    font-size: 16px;
     width: 24px;
     height: 24px;
     display: flex;
     justify-content: center;
     align-items: center;
+    cursor: pointer;
+    &:hover {
+      background-color: var(--md-sys-color-surface-container-high-hover);
+    }
   }
 `
 const ReactionsWrapper = styled.div`

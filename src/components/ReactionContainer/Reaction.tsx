@@ -10,11 +10,14 @@ type Props = {
   onClick: MouseEventHandler
 }
 
-const Reaction = ({ reaction, variant = 'standard', onClick}: Props) => {
+const Reaction = ({ reaction, variant = 'standard', onClick }: Props) => {
+  const users = reaction.users?.join(', ') || undefined
+
   return (
     <Styled.Reaction
       className={clsx(variant, { active: reaction.isActive })}
       onClick={onClick}
+      data-tooltip={users}
     >
       {reactionMappingObj[reaction.type]}
       {reaction.count && <span>{reaction.count}</span>}

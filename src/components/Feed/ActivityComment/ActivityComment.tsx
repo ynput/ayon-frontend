@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import * as Styled from './ActivityComment.styled'
 import ActivityHeader from '../ActivityHeader/ActivityHeader'
 import ReactMarkdown from 'react-markdown'
@@ -15,6 +15,28 @@ import { getTextRefs } from '../../CommentInput/quillToMarkdown'
 import MenuContainer from '@/components/Menu/MenuComponents/MenuContainer'
 import ActivityCommentMenu from '../ActivityCommentMenu/ActivityCommentMenu'
 import { toggleMenuOpen } from '@/features/context'
+import { mockReactions, updateReactionData } from '@components/ReactionContainer/values'
+import Reactions from '@components/ReactionContainer/Reactions'
+import { $Any } from '@types'
+
+type Props = {
+  activity: $Any,
+  onCheckChange: Function,
+  onDelete: Function,
+  onUpdate: Function,
+  projectInfo: $Any,
+  editProps: Object,
+  projectName: string,
+  entityType: string,
+  onReferenceClick: Function,
+  isSlideOut: boolean,
+  onFileExpand: Function,
+  showOrigin: boolean,
+  isHighlighted: boolean,
+  dispatch: Function,
+  scope: string,
+
+}
 
 const ActivityComment = ({
   activity = {},
@@ -32,7 +54,7 @@ const ActivityComment = ({
   isHighlighted,
   dispatch,
   scope,
-}) => {
+}: Props) => {
   let {
     body,
     authorName,
@@ -50,10 +72,11 @@ const ActivityComment = ({
   if (!authorFullName) authorFullName = author?.fullName || authorName
   let menuId = `comment-${scope}-${activity.activityId}`
   if (isSlideOut) menuId += '-slideout'
-  const isMenuOpen = useSelector((state) => state.context.menuOpen) === menuId
+  const isMenuOpen = useSelector((state: $Any) => state.context.menuOpen) === menuId
 
   // EDITING
   const [isEditing, setIsEditing] = useState(false)
+  const [reactions, setReactions] = useState(mockReactions)
 
   const handleEditComment = () => {
     setIsEditing(true)
@@ -63,7 +86,7 @@ const ActivityComment = ({
     setIsEditing(false)
   }
 
-  const handleSave = async (value, files) => {
+  const handleSave = async (value: $Any, files: $Any) => {
     await onUpdate(value, files)
     // this won't run if the update fails
     setIsEditing(false)
@@ -85,10 +108,14 @@ const ActivityComment = ({
     onDelete && onDelete(activityId, entityId, refs)
   }
 
-  const handleToggleMenu = (menu) => dispatch(toggleMenuOpen(menu))
+  const handleToggleMenu = (menu: $Any) => dispatch(toggleMenuOpen(menu))
   const moreRef = useRef()
 
   const [, setRefTooltip] = useReferenceTooltip({ dispatch })
+
+  const reactionChangeHandler = (reaction: Reaction) => {
+    setReactions(updateReactionData(reactions, reaction))
+  }
 
   return (
     <>
@@ -101,14 +128,17 @@ const ActivityComment = ({
           date={createdAt}
           isRef={isRef}
           activity={activity}
-          projectInfo={projectInfo}
+          // projectInfo={projectInfo}
           projectName={projectName}
           entityType={entityType}
           onReferenceClick={onReferenceClick}
           onReferenceTooltip={setRefTooltip}
+          children={undefined}
         />
         <Styled.Body className={clsx('comment-body', { isEditing })}>
+          {/* @ts-ignore */}
           <Styled.Tools className={'tools'} ref={moreRef}>
+
             {isOwner && handleEditComment && (
               <Styled.ToolButton icon="edit_square" onClick={handleEditComment} />
             )}
@@ -121,6 +151,7 @@ const ActivityComment = ({
             )}
           </Styled.Tools>
           {isEditing ? (
+            // @ts-ignore
             <CommentInput
               isOpen={true}
               initValue={body}
@@ -140,6 +171,7 @@ const ActivityComment = ({
                   components={{
                     // a links
                     a: (props) =>
+            // @ts-ignore
                       aTag(props, {
                         entityId,
                         projectName,
@@ -149,9 +181,13 @@ const ActivityComment = ({
                         activityId,
                       }),
                     // checkbox inputs
+            // @ts-ignore
                     input: (props) => inputTag(props, { activity, onCheckChange }),
                     // code syntax highlighting
+                    // eslint-disable-next-line
+            // @ts-ignore
                     code: (props) => codeTag(props),
+            // @ts-ignore
                     blockquote: (props) => blockquoteTag(props),
                   }}
                 >
@@ -166,13 +202,18 @@ const ActivityComment = ({
                 projectName={projectName}
                 isDownloadable
                 onExpand={onFileExpand}
+                onRemove={undefined}
               />
             </>
           )}
 
+          {/* @ts-ignore */}
           <MenuContainer id={menuId} target={moreRef.current}>
             <ActivityCommentMenu onDelete={() => isOwner && handleDelete()} />
           </MenuContainer>
+          <div style={{marginTop: '16px'}}>
+          <Reactions reactions={reactions} changeHandler={reactionChangeHandler} />
+          </div>
         </Styled.Body>
       </Styled.Comment>
     </>
