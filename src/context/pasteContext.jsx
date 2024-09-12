@@ -64,9 +64,32 @@ const PasteModal = () => {
       <Button onClick={() => submit(null)} label="Cancel" />
     </div>
   )
+
+  const header = (
+    <p style={{ display: 'inline' }}>
+      Paste Data
+      <span style={{ display: 'inline-block', margin: '0px 8px' }}> - </span>
+      <span>
+        <a
+          href="https://support.google.com/chrome/answer/114662?hl=en"
+          target="_blank"
+          rel="noreferrer noopener"
+          style={{
+            textDecoration: 'underline',
+            fontSize: '14px',
+            color: 'var(--md-sys-color-outline)',
+          }}
+          data-tooltip="Ensure your browser clipboard permissions are set to 'Allow'."
+        >
+          Why is pasting not working?
+        </a>
+      </span>
+    </p>
+  )
+
   return (
     <Dialog
-      header="Paste Data"
+      header={header}
       footer={footer}
       isOpen
       size="lg"
