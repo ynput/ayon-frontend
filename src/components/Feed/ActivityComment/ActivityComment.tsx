@@ -1,23 +1,32 @@
-import { useRef, useState } from 'react'
-import * as Styled from './ActivityComment.styled'
-import ActivityHeader from '../ActivityHeader/ActivityHeader'
-import ReactMarkdown from 'react-markdown'
-import CommentWrapper from './CommentWrapper'
-import remarkGfm from 'remark-gfm'
-import emoji from 'remark-emoji'
 import clsx from 'clsx'
+import { useMemo, useRef, useState } from 'react'
+import ReactMarkdown from 'react-markdown'
 import { useSelector } from 'react-redux'
+import emoji from 'remark-emoji'
+import remarkGfm from 'remark-gfm'
+
+import { UserModel } from '@api/rest/users'
 import CommentInput from '@components/CommentInput/CommentInput'
-import { aTag, blockquoteTag, codeTag, inputTag } from './activityMarkdownComponents'
-import FilesGrid from '@containers/FilesGrid/FilesGrid'
-import useReferenceTooltip from '@containers/Feed/hooks/useReferenceTooltip'
-import { getTextRefs } from '../../CommentInput/quillToMarkdown'
 import MenuContainer from '@/components/Menu/MenuComponents/MenuContainer'
-import ActivityCommentMenu from '../ActivityCommentMenu/ActivityCommentMenu'
-import { toggleMenuOpen } from '@/features/context'
-import { mockReactions, updateReactionData } from '@components/ReactionContainer/values'
 import Reactions from '@components/ReactionContainer/Reactions'
+import { } from '@components/ReactionContainer/helpers'
+import { Reaction } from '@components/ReactionContainer/types'
+import useReferenceTooltip from '@containers/Feed/hooks/useReferenceTooltip'
+import FilesGrid from '@containers/FilesGrid/FilesGrid'
+import { toggleMenuOpen } from '@/features/context'
+import {
+  useCreateReactionToActivityMutation,
+  useDeleteReactionToActivityMutation,
+} from '@queries/reaction/updateReaction'
 import { $Any } from '@types'
+
+import ActivityCommentMenu from '../ActivityCommentMenu/ActivityCommentMenu'
+import ActivityHeader from '../ActivityHeader/ActivityHeader'
+import { getTextRefs } from '../../CommentInput/quillToMarkdown'
+import * as Styled from './ActivityComment.styled'
+import CommentWrapper from './CommentWrapper'
+import { aTag, blockquoteTag, codeTag, inputTag } from './activityMarkdownComponents'
+import { mapGraphQLReactions } from './mappers'
 
 type Props = {
   activity: $Any,
@@ -73,10 +82,13 @@ const ActivityComment = ({
   let menuId = `comment-${scope}-${activity.activityId}`
   if (isSlideOut) menuId += '-slideout'
   const isMenuOpen = useSelector((state: $Any) => state.context.menuOpen) === menuId
+  const user = useSelector((state: $Any) => state.user) as UserModel
+
+  const [ deleteReactionToActivity ] = useDeleteReactionToActivityMutation()
+  const [ createReactionToActivity ] = useCreateReactionToActivityMutation()
 
   // EDITING
   const [isEditing, setIsEditing] = useState(false)
-  const [reactions, setReactions] = useState(mockReactions)
 
   const handleEditComment = () => {
     setIsEditing(true)
@@ -113,8 +125,28 @@ const ActivityComment = ({
 
   const [, setRefTooltip] = useReferenceTooltip({ dispatch })
 
+  const mappedReactions = useMemo(
+    () =>
+      mapGraphQLReactions(activity.reactions, user.name),
+    [[...activity.reactions]],
+  )
+
   const reactionChangeHandler = (reaction: Reaction) => {
-    setReactions(updateReactionData(reactions, reaction))
+    if (reaction.isActive) {
+      createReactionToActivity({
+        projectName: projectName,
+        activityId: activityId,
+        createReactionModel: {
+          reaction: reaction.type,
+        },
+      })
+    } else {
+      deleteReactionToActivity({
+        projectName: projectName,
+        activityId: activityId,
+        reaction: reaction.type,
+      })
+    }
   }
 
   return (
@@ -212,7 +244,7 @@ const ActivityComment = ({
             <ActivityCommentMenu onDelete={() => isOwner && handleDelete()} />
           </MenuContainer>
           <div style={{marginTop: '16px'}}>
-          <Reactions reactions={reactions} changeHandler={reactionChangeHandler} />
+          <Reactions reactions={mappedReactions} changeHandler={reactionChangeHandler} />
           </div>
         </Styled.Body>
       </Styled.Comment>

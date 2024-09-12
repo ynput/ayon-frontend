@@ -1,10 +1,11 @@
 import clsx from 'clsx'
 import * as Styled from './ReactionStyles.styled'
-import { reactionMappingObj } from './values'
+import { reactionMappingObj } from './helpers'
 import { MouseEventHandler } from 'react'
+import { Reaction as ReactionType, ReactionComponentVariant } from './types'
 
 type Props = {
-  reaction: Reaction
+  reaction: ReactionType
   isActive?: boolean
   variant?: ReactionComponentVariant
   onClick: MouseEventHandler
@@ -20,7 +21,7 @@ const Reaction = ({ reaction, variant = 'standard', onClick }: Props) => {
       data-tooltip={users}
     >
       {reactionMappingObj[reaction.type]}
-      {reaction.count && <span>{reaction.count}</span>}
+      {reaction.users && <span>{reaction.users.length}</span>}
     </Styled.Reaction>
   )
 }

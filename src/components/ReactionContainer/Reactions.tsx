@@ -1,6 +1,7 @@
 import ExistingReactions from "./ExistingReactions"
 import ReactionPanelOpener from "./ReactionPanelOpener"
 import * as Styled from './ReactionStyles.styled'
+import { Reaction } from "./types"
 
 type Props = {
   reactions: Reaction[]

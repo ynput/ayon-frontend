@@ -29,6 +29,12 @@ fragment ActivityFragment on ActivityNode {
       label
       type
     }
+    reactions {
+      fullName
+      userName
+      reaction
+      timestamp
+    }
   }
 `
 

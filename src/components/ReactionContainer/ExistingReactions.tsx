@@ -1,5 +1,6 @@
-import Reaction from './Reaction'
+import ReactionComponent from './Reaction'
 import * as Styled from './ReactionStyles.styled'
+import { Reaction } from './types'
 
 type Props = {
   reactions: Reaction[]
@@ -10,7 +11,7 @@ const ExistingReactions = ({ reactions, changeHandler }: Props) => {
   return (
     <Styled.ActiveReactionsList>
       {reactions.map((reaction) => (
-        <Reaction
+        <ReactionComponent
           reaction={reaction}
           isActive={reaction.isActive}
           onClick={() => {

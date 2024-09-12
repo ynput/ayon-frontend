@@ -1,12 +1,13 @@
 import { useState } from "react"
 import { Icon } from "@ynput/ayon-react-components"
 import * as Styled from './ReactionStyles.styled'
-import { reactionMapping } from "./values"
+import { reactionMapping } from "./helpers"
+import { Reaction as ReactionType } from "./types"
 import Reaction from "./Reaction"
 
 type Props = {
-  reactions: Reaction[]
-  changeHandler: (reaction: Reaction) => void
+  reactions: ReactionType[]
+  changeHandler: (reaction: ReactionType) => void
 }
 
 const ReactionPanelOpener = ({reactions, changeHandler}: Props) => {
