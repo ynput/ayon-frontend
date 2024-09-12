@@ -86,7 +86,7 @@ export const AppMenu = ({ user, ...props }) => {
     },
     {
       id: 'releases',
-      label: 'Release Installer',
+      label: 'Install latest release',
       onClick: handleReleaseInstaller,
       icon: 'orders',
     },
