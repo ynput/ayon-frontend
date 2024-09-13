@@ -124,35 +124,49 @@ const baseGraphqlQuery = graphqlRequestBaseQuery({
 // check for 401 and redirect to login
 const baseQuery = fetchBaseQuery({ baseUrl: '/', prepareHeaders: prepareHeaders })
 
+const polymorphBaseQuery = combineBaseQueries(baseQuery, {
+  baseQuery: baseGraphqlQuery,
+  predicate: (args: any) => !!args.document && !!args.variables,
+})
+
+// @ts-ignore
 const baseQueryWithRedirect: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError> = async (
   args,
   api,
   extraOptions,
 ) => {
-  try {
-    const result = await baseQuery(args, api, extraOptions)
-
-    const url = typeof args === 'string' ? args : args.url
-
-    if (result.error?.status === 401 && !url.includes('connect') && !url.startsWith('/login')) {
+  const url = window.location.pathname
+  const shouldRedirectToLogin = () => {
+    if (!url.includes('connect') && !url.startsWith('/login')) {
+      console.error('Unauthorized: 401 error')
       window.location.href = '/login'
     }
+  }
+
+  try {
+    const result = await polymorphBaseQuery(args, api, extraOptions)
+
+    // @ts-ignore
+    if (result?.error?.status === 401) {
+      shouldRedirectToLogin()
+    }
+
     return result
-  } catch (error) {
-    console.error('Base query error:', error)
+  } catch (error: any) {
+    if (error?.response && error.response?.status === 401) {
+      shouldRedirectToLogin()
+    } else {
+      console.error(error)
+    }
     throw error
+  } finally {
   }
 }
-
-const polymorphBaseQuery = combineBaseQueries(baseQueryWithRedirect, {
-  baseQuery: baseGraphqlQuery,
-  predicate: (args: any) => !!args.document && !!args.variables,
-})
 
 // Define the REST API and Graphql API
 export const RestAPI = createApi({
   reducerPath: 'restApi',
-  baseQuery: polymorphBaseQuery,
+  baseQuery: baseQueryWithRedirect,
   endpoints: () => ({}),
   tagTypes,
 })
