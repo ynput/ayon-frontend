@@ -12,7 +12,7 @@ import Reactions from '@components/ReactionContainer/Reactions'
 import { Reaction } from '@components/ReactionContainer/types'
 import useReferenceTooltip from '@containers/Feed/hooks/useReferenceTooltip'
 import FilesGrid from '@containers/FilesGrid/FilesGrid'
-import { toggleMenuOpen } from '@/features/context'
+import { toggleMenuOpen, toggleActiveReactionPopup } from '@/features/context'
 import {
   useCreateReactionToActivityMutation,
   useDeleteReactionToActivityMutation,
@@ -80,6 +80,7 @@ const ActivityComment = ({
   let menuId = `comment-${scope}-${activity.activityId}`
   if (isSlideOut) menuId += '-slideout'
   const isMenuOpen = useSelector((state: $Any) => state.context.menuOpen) === menuId
+  const activeReactionPopup = useSelector((state: $Any) => state.context.activeReactionPopup)
   const user = useSelector((state: $Any) => state.user) as UserModel
 
   const [deleteReactionToActivity] = useDeleteReactionToActivityMutation()
@@ -241,7 +242,14 @@ const ActivityComment = ({
           </MenuContainer>
           <div style={{ marginTop: '16px' }}>
             {mappedReactions && (
-              <Reactions reactions={mappedReactions} changeHandler={reactionChangeHandler} />
+              <Reactions
+                reactions={mappedReactions}
+                changeHandler={reactionChangeHandler}
+                isActivePopup={activeReactionPopup === activityId}
+                toggleActivePopup={(value: boolean) =>
+                  dispatch(toggleActiveReactionPopup({ activityId, value }))
+                }
+              />
             )}
           </div>
         </Styled.Body>

@@ -33,6 +33,7 @@ const initialState = {
   uriChanged: 0,
   uploadProgress: 0, // percentage 0 - 100
   menuOpen: false,
+  activeReactionPopup: null,
   previewFiles: [],
   previewFilesProjectName: '',
   previewFilesIndex: null,
@@ -458,6 +459,9 @@ const contextSlice = createSlice({
     setMenuOpen: (state, action) => {
       state.menuOpen = action.payload
     },
+    toggleActiveReactionPopup: (state, action) => {
+        state.activeReactionPopup  = action.payload.value ? action.payload.activityId : null
+    },
     toggleMenuOpen: (state, action) => {
       // no payload means toggle off
       if (!action.payload) action.payload = false
@@ -523,6 +527,7 @@ export const {
   onUploadProgress,
   onUploadFinished,
   setMenuOpen,
+  toggleActiveReactionPopup,
   toggleMenuOpen,
   onUriNavigate,
   updateBrowserFilters,

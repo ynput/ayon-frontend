@@ -12,6 +12,7 @@ const ExistingReactions = ({ reactions, changeHandler }: Props) => {
     <Styled.ActiveReactionsList>
       {reactions.map((reaction) => (
         <ReactionComponent
+          key={reaction.type}
           reaction={reaction}
           isActive={reaction.isActive}
           onClick={() => {

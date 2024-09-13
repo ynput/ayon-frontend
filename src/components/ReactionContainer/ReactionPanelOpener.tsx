@@ -1,4 +1,3 @@
-import { useState } from "react"
 import { Icon } from "@ynput/ayon-react-components"
 import * as Styled from './ReactionStyles.styled'
 import { reactionMapping } from "./helpers"
@@ -7,11 +6,12 @@ import Reaction from "./Reaction"
 
 type Props = {
   reactions: ReactionType[]
+  isActivePopup: boolean
   changeHandler: (reaction: ReactionType) => void
+  toggleActivePopup: (value: boolean) => void
 }
 
-const ReactionPanelOpener = ({reactions, changeHandler}: Props) => {
-  const [isOpen, setIsOpen] =  useState(false)
+const ReactionPanelOpener = ({reactions, isActivePopup, changeHandler, toggleActivePopup}: Props) => {
 
   const activeReactions = reactions
     .filter((reaction) => reaction.isActive)
@@ -22,9 +22,9 @@ const ReactionPanelOpener = ({reactions, changeHandler}: Props) => {
       <Icon
         icon="add_reaction"
         className="add-reaction"
-        onClick={() => setIsOpen((prev) => !prev)}
+        onClick={() => toggleActivePopup(!isActivePopup)}
       />
-      {isOpen && (
+      {isActivePopup && (
         <Styled.ReactionsPanel>
           {reactionMapping.map((reaction) => {
             const reactionObj = {
@@ -33,11 +33,12 @@ const ReactionPanelOpener = ({reactions, changeHandler}: Props) => {
             }
             return (
               <Reaction
+                key={reactionObj.type}
                 reaction={reactionObj}
                 variant="compact"
                 onClick={() => {
                   changeHandler({ ...reactionObj, isActive: !reactionObj.isActive })
-                  setIsOpen(false)
+                  toggleActivePopup(false)
                 }}
               />
             )
@@ -47,4 +48,5 @@ const ReactionPanelOpener = ({reactions, changeHandler}: Props) => {
     </Styled.ReactionPanelOpener>
   )
 }
+
 export default ReactionPanelOpener
