@@ -19,7 +19,7 @@ class BundlePage {
     await this.page.getByRole('button', { name: 'add Add Bundle' }).click()
     await this.page.getByLabel('Bundle name').fill(name)
     await this.page.getByRole('button', { name: 'Select an option...' }).click()
-    const launcher = '1.0.2'
+    const launcher = '1.0.3'
     await expect(this.page.getByText(launcher)).toBeVisible()
     await this.page.getByText(launcher).click()
 
