@@ -1,7 +1,12 @@
 // Need to use the React-specific entry point to allow generating React hooks
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 import { graphqlRequestBaseQuery } from '@rtk-query/graphql-request-base-query'
-import type { BaseQueryApi, BaseQueryFn } from '@reduxjs/toolkit/query'
+import type {
+  BaseQueryApi,
+  BaseQueryFn,
+  FetchArgs,
+  FetchBaseQueryError,
+} from '@reduxjs/toolkit/query'
 import { GraphQLClient } from 'graphql-request'
 import type { BaseQueryArg, BaseQueryError, BaseQueryExtraOptions, BaseQueryResult } from '@types'
 
@@ -119,7 +124,27 @@ const baseGraphqlQuery = graphqlRequestBaseQuery({
 // check for 401 and redirect to login
 const baseQuery = fetchBaseQuery({ baseUrl: '/', prepareHeaders: prepareHeaders })
 
-const polymorphBaseQuery = combineBaseQueries(baseQuery, {
+const baseQueryWithRedirect: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError> = async (
+  args,
+  api,
+  extraOptions,
+) => {
+  try {
+    const result = await baseQuery(args, api, extraOptions)
+
+    const url = typeof args === 'string' ? args : args.url
+
+    if (result.error?.status === 401 && !url.includes('connect') && !url.startsWith('/login')) {
+      window.location.href = '/login'
+    }
+    return result
+  } catch (error) {
+    console.error('Base query error:', error)
+    throw error
+  }
+}
+
+const polymorphBaseQuery = combineBaseQueries(baseQueryWithRedirect, {
   baseQuery: baseGraphqlQuery,
   predicate: (args: any) => !!args.document && !!args.variables,
 })
