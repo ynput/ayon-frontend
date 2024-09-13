@@ -45,7 +45,7 @@ const searchParamsMiddleware = (types) => () => (next) => (action) => {
 
 // Keeping ayon URI query param in sync with the store context URI
 const updateUrlOnUriChange = () => () => (next) => (action) => {
-  if (action.type !==  'context/setUri') {
+  if (action.type !== 'context/setUri') {
     return next(action)
   }
 
@@ -53,7 +53,7 @@ const updateUrlOnUriChange = () => () => (next) => (action) => {
   const urlParams = new URLSearchParams(window.location.search)
   urlParams.delete(ayonUrlParam)
   if (uri != null) {
-    urlParams.set(ayonUrlParam, encodeURIComponent(uri))
+    urlParams.set(ayonUrlParam, uri)
   }
 
   const paramsString = urlParams.toString()
