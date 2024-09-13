@@ -17,8 +17,7 @@ import {
 import useLocalStorage from '@hooks/useLocalStorage'
 import { useLazyListBundlesQuery } from '@queries/bundles/getBundles'
 import { useCreateBundleMutation } from '@queries/bundles/updateBundles'
-import getNewBundleName from '../../SettingsPage/Bundles/getNewBundleName'
-import { guessPlatform } from '@containers/ReleaseInstallerDialog/helpers'
+import { createBundleFromRelease, guessPlatform } from '@containers/ReleaseInstallerDialog/helpers'
 
 const userFormFields = [
   {
@@ -50,38 +49,6 @@ const userFormFields = [
     type: 'text',
   },
 ]
-
-const createBundleFromRelease = ({ release, selectedAddons, selectedPlatforms, bundleList }) => {
-  const addons = {}
-  for (const name of selectedAddons) {
-    // find addon in release
-    const addon = release?.addons?.find((addon) => addon?.name === name)
-    if (addon) {
-      addons[name] = addon.version
-    }
-  }
-
-  const installerVersion = release.installers[0]?.version
-  const dependencyPackages = {}
-  for (const depPackage of release.dependencyPackages) {
-    // skip if platform is not selected
-    if (!selectedPlatforms.includes(depPackage.platform)) continue
-    dependencyPackages[depPackage.platform] = depPackage.filename
-  }
-
-  const name = getNewBundleName(release.name, bundleList)
-
-  // check if there is already a production bundles
-  const hasProduction = bundleList.some((bundle) => bundle?.isProduction)
-
-  return {
-    name,
-    addons,
-    installerVersion,
-    dependencyPackages,
-    isProduction: !hasProduction,
-  }
-}
 
 export const OnBoardingContext = createContext()
 
@@ -240,12 +207,12 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
         // get bundle list
         const { bundles: bundleList = [] } = (await listBundles({ archived: true }).unwrap()) || {}
         // first create the bundle from the release
-        const bundle = createBundleFromRelease({
+        const bundle = createBundleFromRelease(
           release,
           selectedAddons,
           selectedPlatforms,
           bundleList,
-        })
+        )
 
         await createBundle({ data: bundle, force: true }).unwrap()
       }

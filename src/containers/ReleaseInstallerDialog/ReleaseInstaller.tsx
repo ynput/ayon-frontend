@@ -17,10 +17,16 @@ import {
 } from './forms'
 
 // Helpers
-import { getHighestBundle, resolveRelease, resolveFormValidity } from './helpers'
+import {
+  getHighestBundle,
+  resolveRelease,
+  resolveFormValidity,
+  createBundleFromRelease,
+} from './helpers'
 import { useInstallRelease, useReleaseForm, useReleaseInfo } from './hooks'
 import { ReleaseFormType, switchDialog } from '@state/releaseInstaller'
 import { useRestart } from '@context/restartContext'
+import { useCreateBundleMutation } from '@queries/bundles/updateBundles'
 
 interface ReleaseInstallerProps {
   onFinish: () => void
@@ -101,11 +107,24 @@ const ReleaseInstaller: FC<ReleaseInstallerProps> = ({ onFinish }) => {
 
   const { confirmRestart, snoozeRestart } = useRestart()
 
+  const [createBundle] = useCreateBundleMutation()
   const handleInstallComplete = (restart: boolean) => {
     // reset events
     setEvents([])
     // close dialog
     onFinish()
+    if (releaseInfo) {
+      // build new bundle from release
+      const bundle = createBundleFromRelease(
+        releaseInfo,
+        releaseForm.addons,
+        releaseForm.platforms,
+        bundles,
+      )
+
+      // then create the bundle
+      createBundle({ data: bundle, force: true }).unwrap()
+    }
     if (restart) {
       // restart server
       confirmRestart()

@@ -7,6 +7,7 @@ import { formatDistance } from 'date-fns'
 import { ReleaseForm } from './hooks/useReleaseForm'
 import { DependencyPackage } from '@api/rest/dependencyPackages'
 import { DownloadAddonsApiArg } from '@queries/addons/updateAddons'
+import getNewBundleName from '@pages/SettingsPage/Bundles/getNewBundleName'
 
 export const createReleaseSubtitle = (
   release: { name: string; createdAt: string } | null,
@@ -120,4 +121,45 @@ export const getReleaseInstallUrls = (
     }, [])
 
   return { addonInstalls, installerInstalls, dependencyPackageInstalls }
+}
+
+export const createBundleFromRelease = (
+  release: GetReleaseInfoApiResponse,
+  selectedAddons: string[],
+  selectedPlatforms: string[],
+  bundleList: BundleModel[],
+) => {
+  const { installers = [], dependencyPackages = [] } = release
+
+  const bundleAddons: {
+    [name: string]: string
+  } = {}
+  for (const name of selectedAddons) {
+    // find addon in release
+    const addon = release?.addons?.find((addon) => addon?.name === name)
+    if (addon && addon.version) {
+      bundleAddons[name] = addon.version
+    }
+  }
+
+  const installerVersion = installers[0]?.version
+  const bundleDepPackages: { [platform: string]: string } = {}
+  for (const depPackage of dependencyPackages) {
+    // skip if platform is not selected
+    if (!selectedPlatforms.includes(depPackage.platform)) continue
+    bundleDepPackages[depPackage.platform] = depPackage.filename
+  }
+
+  const name = getNewBundleName(release.name, bundleList)
+
+  // check if there is already a production bundles
+  const hasProduction = bundleList.some((bundle) => bundle?.isProduction)
+
+  return {
+    name,
+    addons: bundleAddons,
+    installerVersion,
+    dependencyPackages: bundleDepPackages,
+    isProduction: !hasProduction,
+  }
 }

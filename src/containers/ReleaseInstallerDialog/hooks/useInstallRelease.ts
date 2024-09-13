@@ -43,7 +43,7 @@ export const useInstallRelease = ({
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [events, setEvents] = useLocalStorage('install-progress-event-ids', [])
-  const eventIds = events.map((event: any) => event.id)
+  const eventIds: string[] = events.map((event: any) => event.id)
   const [error, setError] = useState<null | string>(null)
 
   // query is made once the events are set
