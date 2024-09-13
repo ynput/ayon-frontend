@@ -15,6 +15,7 @@ export const AppMenu = ({ user, ...props }) => {
   const isUser = user?.data?.isUser
   const isManager = user?.data?.isManager
   const isAdmin = user?.data?.isAdmin
+  const developerMode = user?.attrib.developerMode
 
   // restart server
   const { confirmRestart, isRestartRequired } = useRestart()
@@ -96,12 +97,6 @@ export const AppMenu = ({ user, ...props }) => {
       icon: 'orders',
     },
     {
-      id: 'onboarding',
-      label: 'Launch Bootstrap Setup',
-      onClick: handleBootstrapLaunch,
-      icon: 'verified_user',
-    },
-    {
       id: 'restart',
       label: isRestartRequired ? 'Restart Required' : 'Restart Server',
       icon: 'restart_alt',
@@ -113,6 +108,23 @@ export const AppMenu = ({ user, ...props }) => {
 
   // add protected items if user is admin
   if (isAdmin) items.push(...adminItems)
+
+  const developerItems = [
+    {
+      id: 'divider',
+    },
+    {
+      id: 'onboarding',
+      label: 'Launch Bootstrap Setup',
+      onClick: handleBootstrapLaunch,
+      icon: 'verified_user',
+      isDev: true,
+    },
+  ]
+  // if developer add dev items
+  if (developerMode) {
+    items.push(...developerItems)
+  }
 
   return (
     <>

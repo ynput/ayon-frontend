@@ -193,6 +193,17 @@ export const Item = styled.li`
       }
     }
   }
+
+  &.dev {
+    &,
+    .icon {
+      color: var(--color-hl-developer);
+    }
+
+    &:hover {
+      background-color: var(--color-hl-developer-container-hover);
+    }
+  }
 `
 
 export const Footer = styled.footer`
