@@ -9,7 +9,6 @@ import { UserModel } from '@api/rest/users'
 import CommentInput from '@components/CommentInput/CommentInput'
 import MenuContainer from '@/components/Menu/MenuComponents/MenuContainer'
 import Reactions from '@components/ReactionContainer/Reactions'
-import { } from '@components/ReactionContainer/helpers'
 import { Reaction } from '@components/ReactionContainer/types'
 import useReferenceTooltip from '@containers/Feed/hooks/useReferenceTooltip'
 import FilesGrid from '@containers/FilesGrid/FilesGrid'
@@ -29,22 +28,21 @@ import { aTag, blockquoteTag, codeTag, inputTag } from './activityMarkdownCompon
 import { mapGraphQLReactions } from './mappers'
 
 type Props = {
-  activity: $Any,
-  onCheckChange: Function,
-  onDelete: Function,
-  onUpdate: Function,
-  projectInfo: $Any,
-  editProps: Object,
-  projectName: string,
-  entityType: string,
-  onReferenceClick: Function,
-  isSlideOut: boolean,
-  onFileExpand: Function,
-  showOrigin: boolean,
-  isHighlighted: boolean,
-  dispatch: Function,
-  scope: string,
-
+  activity: $Any
+  onCheckChange: Function
+  onDelete: Function
+  onUpdate: Function
+  projectInfo: $Any
+  editProps: Object
+  projectName: string
+  entityType: string
+  onReferenceClick: Function
+  isSlideOut: boolean
+  onFileExpand: Function
+  showOrigin: boolean
+  isHighlighted: boolean
+  dispatch: Function
+  scope: string
 }
 
 const ActivityComment = ({
@@ -84,8 +82,8 @@ const ActivityComment = ({
   const isMenuOpen = useSelector((state: $Any) => state.context.menuOpen) === menuId
   const user = useSelector((state: $Any) => state.user) as UserModel
 
-  const [ deleteReactionToActivity ] = useDeleteReactionToActivityMutation()
-  const [ createReactionToActivity ] = useCreateReactionToActivityMutation()
+  const [deleteReactionToActivity] = useDeleteReactionToActivityMutation()
+  const [createReactionToActivity] = useCreateReactionToActivityMutation()
 
   // EDITING
   const [isEditing, setIsEditing] = useState(false)
@@ -126,9 +124,8 @@ const ActivityComment = ({
   const [, setRefTooltip] = useReferenceTooltip({ dispatch })
 
   const mappedReactions = useMemo(
-    () =>
-      mapGraphQLReactions(activity.reactions, user.name),
-    [[...activity.reactions]],
+    () => mapGraphQLReactions(activity.reactions, user.name),
+    [[...(activity.reactions || [])]],
   )
 
   const reactionChangeHandler = (reaction: Reaction) => {
@@ -170,7 +167,6 @@ const ActivityComment = ({
         <Styled.Body className={clsx('comment-body', { isEditing })}>
           {/* @ts-ignore */}
           <Styled.Tools className={'tools'} ref={moreRef}>
-
             {isOwner && handleEditComment && (
               <Styled.ToolButton icon="edit_square" onClick={handleEditComment} />
             )}
@@ -203,7 +199,7 @@ const ActivityComment = ({
                   components={{
                     // a links
                     a: (props) =>
-            // @ts-ignore
+                      // @ts-ignore
                       aTag(props, {
                         entityId,
                         projectName,
@@ -213,13 +209,13 @@ const ActivityComment = ({
                         activityId,
                       }),
                     // checkbox inputs
-            // @ts-ignore
+                    // @ts-ignore
                     input: (props) => inputTag(props, { activity, onCheckChange }),
                     // code syntax highlighting
                     // eslint-disable-next-line
-            // @ts-ignore
+                    // @ts-ignore
                     code: (props) => codeTag(props),
-            // @ts-ignore
+                    // @ts-ignore
                     blockquote: (props) => blockquoteTag(props),
                   }}
                 >
@@ -243,8 +239,10 @@ const ActivityComment = ({
           <MenuContainer id={menuId} target={moreRef.current}>
             <ActivityCommentMenu onDelete={() => isOwner && handleDelete()} />
           </MenuContainer>
-          <div style={{marginTop: '16px'}}>
-          <Reactions reactions={mappedReactions} changeHandler={reactionChangeHandler} />
+          <div style={{ marginTop: '16px' }}>
+            {mappedReactions && (
+              <Reactions reactions={mappedReactions} changeHandler={reactionChangeHandler} />
+            )}
           </div>
         </Styled.Body>
       </Styled.Comment>

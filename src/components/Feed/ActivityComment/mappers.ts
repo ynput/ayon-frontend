@@ -8,7 +8,7 @@ type GraphQLActivityReaction = {
   timestamp: string
 }
 
-const mapGraphQLReactions = (reactions: GraphQLActivityReaction[], user: string): Reaction[] => {
+const mapGraphQLReactions = (reactions: GraphQLActivityReaction[] | undefined = [], user: string): Reaction[] => {
   let mappedReactions: { [key in ReactionType]?: Reaction } = {}
   reactions.forEach((reaction) => {
     const reactionType = reaction.reaction as ReactionType
