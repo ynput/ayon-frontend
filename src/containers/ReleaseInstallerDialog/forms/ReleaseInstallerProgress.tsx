@@ -42,9 +42,16 @@ export const ReleaseInstallerProgress: FC<ReleaseInstallerProgressProps> = ({
   const currentInstalling = progress.find((event) => event.status === 'in_progress')
   const isFinished = progress.every((event) => event.status === 'finished')
 
+  // total size of all events
+  const totalSize = progress.reduce((acc, event) => {
+    return acc + event.size
+  }, 0)
+
+  console.log(progress)
+
   return (
     <StyledProgress>
-      <ProgressBar $progress={calculateTotalProgress(progress)} />
+      <ProgressBar $progress={calculateTotalProgress(progress, totalSize)} />
       {isFinished
         ? 'Installed successfully. Restart server to apply changes.'
         : getInstallMessage(currentInstalling)}
@@ -68,11 +75,14 @@ const getInstallMessage = (event?: EventWithProgress): string => {
 }
 
 // take all the events and calculate the total progress based on progress field
-const calculateTotalProgress = (progress: EventWithProgress[]): number => {
-  const total = progress.reduce((acc, event) => {
-    if (event.status === 'finished') return acc + 1
-    return acc + (event.progress || 0) / 100
+const calculateTotalProgress = (progress: EventWithProgress[], total: number): number => {
+  // total progress of all events
+  const progressTotal = progress.reduce((acc, event) => {
+    if (event.status === 'finished') return acc + event.size
+    return acc + ((event.progress || 0) / 100) * event.size
   }, 0)
 
-  return Math.round((total / progress.length) * 100) / 100
+  console.log(progressTotal < total)
+
+  return Math.round((progressTotal / total) * 100) / 100
 }

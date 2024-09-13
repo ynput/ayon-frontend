@@ -21,6 +21,9 @@ type Props = {
   releaseForm: ReleaseForm
 }
 
+// extra data on the event response
+type MetaData = { label: string; size: number }
+
 // merges events with progress to get labels
 export type EventWithProgress = Event & Partial<InstallEventNode> & Partial<InstallMessage>
 
@@ -87,12 +90,18 @@ export const useInstallRelease = ({
 
       let promises = []
       // same order as promises so we can map the results to some labels
-      let eventLabels = []
+      let eventMetaData: MetaData[] = []
+      // average size of an addon
+      // (this is way higher to make the progress bar look better)
+      const defaultSize = 5000000 * installerInstalls.length
       //   create all installers from url
       for (const { url, installer } of installerInstalls) {
         const promise = createInstaller({ installer, force: true, overwrite: true, url }).unwrap()
         promises.push(promise)
-        eventLabels.push(`Launcher - ${installer.platform}`)
+        eventMetaData.push({
+          label: `Installer - ${installer.platform}`,
+          size: installer.size || defaultSize,
+        })
       }
 
       //   create all dependency packages from url
@@ -104,13 +113,18 @@ export const useInstallRelease = ({
           url,
         }).unwrap()
         promises.push(promise)
-        eventLabels.push(`Dependency package - ${dependencyPackage.platform}`)
+        eventMetaData.push({
+          label: `Dependency package - ${dependencyPackage.platform}`,
+          size: dependencyPackage.size || defaultSize,
+        })
       }
 
       //   create all addons from url
       promises.push(downloadAddons({ addons: addonInstalls }).unwrap())
       // add file names
-      eventLabels.push(...addonInstalls.map((addon) => `Addon - ${addon.name}`))
+      eventMetaData.push(
+        ...addonInstalls.map((addon) => ({ label: `Addon - ${addon.name}`, size: defaultSize })),
+      )
 
       // Wait for all promises to resolve
       setIsSubmitting(true)
@@ -118,7 +132,7 @@ export const useInstallRelease = ({
       setIsSubmitting(false)
 
       //   create a flat list of eventIds
-      const events = transformEventIds(res, eventLabels)
+      const events = transformEventIds(res, eventMetaData)
 
       // NOTE: The useEffect will switch to the progress screen because of the events
 
@@ -144,10 +158,10 @@ export const useInstallRelease = ({
 // HELPER FUNCTIONS
 
 // creates a flat list of eventIds
-type Event = { id: string; label: string }
+type Event = { id: string } & MetaData
 const transformEventIds = (
   result: (InstallResponseModel | DownloadAddonsApiResponse)[],
-  labels: string[],
+  labels: MetaData[],
 ): Event[] =>
   result
     .flatMap((item) => {
@@ -160,7 +174,7 @@ const transformEventIds = (
       }
       return []
     })
-    .map((id, i) => ({ id, label: labels[i] }))
+    .map((id, i) => ({ id, label: labels[i]?.label, size: labels[i]?.size }))
 
 const mergeEventsWithProgress = (
   events: Event[],
