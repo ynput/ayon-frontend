@@ -1,5 +1,5 @@
 import ReactionComponent from './Reaction'
-import * as Styled from './ReactionStyles.styled'
+import * as Styled from './Reactions.styled'
 import { Reaction } from './types'
 
 type Props = {

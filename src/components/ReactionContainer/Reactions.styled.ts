@@ -40,6 +40,12 @@ const Reaction = styled.div`
       }
     }
   }
+
+  .inner-content {
+    position: relative;
+    top: 1px;
+    font-size: 13px;
+  }
 `
 const ActiveReactionsList = styled.div`
   outline: 'solid 1px red';
@@ -47,6 +53,14 @@ const ActiveReactionsList = styled.div`
   gap: 8px;
 `
 
+const Overlay = styled.div`
+position: fixed;
+top: 0;
+bottom: 0;
+left: 0;
+right: 0;
+z-index: 55;
+`
 const ReactionsPanel = styled.div`
   display: flex;
   gap: 4px;
@@ -54,12 +68,12 @@ const ReactionsPanel = styled.div`
   position: absolute;
   top: -48px;
   left: 0;
-  z-index: 30;
+  z-index: 60;
 
   background-color: var(--md-sys-color-surface-container-high);
   padding: 4px;
   border-radius: 4px;
-  box-shadow: 0px 0px 2px 2px rgba(0, 0, 0, 0.15);
+  box-shadow: 0px 0px 6px 2px rgba(0, 0, 0, 0.15);
 
   animation: 0.03s ease-in forwards;
   transform-origin: bottom left;
@@ -69,6 +83,7 @@ const ReactionPanelOpener = styled.div`
   user-select: none;
   .add-reaction {
     background-color: var(--md-sys-color-surface-container-high);
+    color: var(--md-sys-color-outline);
     border-radius: 12px;
     font-size: 16px;
     width: 24px;
@@ -88,4 +103,4 @@ const ReactionsWrapper = styled.div`
   position: relative;
 `
 
-export { Reaction, ActiveReactionsList, ReactionsPanel, ReactionPanelOpener, ReactionsWrapper }
+export { Reaction, ActiveReactionsList, ReactionsPanel, ReactionPanelOpener, ReactionsWrapper, Overlay }

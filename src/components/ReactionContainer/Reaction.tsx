@@ -1,5 +1,5 @@
 import clsx from 'clsx'
-import * as Styled from './ReactionStyles.styled'
+import * as Styled from './Reactions.styled'
 import { reactionMappingObj } from './helpers'
 import { MouseEventHandler } from 'react'
 import { Reaction as ReactionType, ReactionComponentVariant } from './types'
@@ -20,8 +20,10 @@ const Reaction = ({ reaction, variant = 'standard', onClick }: Props) => {
       onClick={onClick}
       data-tooltip={users}
     >
-      {reactionMappingObj[reaction.type]}
-      {reaction.users && <span>{reaction.users.length}</span>}
+      <div className='inner-content'>
+        {reactionMappingObj[reaction.type]}
+        {reaction.users && <span>{reaction.users.length}</span>}
+      </div>
     </Styled.Reaction>
   )
 }
