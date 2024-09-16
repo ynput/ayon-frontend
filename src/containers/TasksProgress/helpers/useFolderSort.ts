@@ -18,7 +18,8 @@ export const useFolderSort = (tableData: FolderRow[]) => {
     const parentRows: FolderRow[] = []
     const childRows: FolderRow[] = []
     for (const row of tableData) {
-      if (row.__isParent) {
+      // check for parent node or node without parent (root)
+      if (row.__isParent || !row.__parentId) {
         parentRows.push(row)
       } else {
         childRows.push(row)
@@ -53,7 +54,10 @@ export const useFolderSort = (tableData: FolderRow[]) => {
     // Create a map to group children by their parent ID for quick access
     const childrenByParentId = new Map<string, FolderRow[]>()
     children.forEach((child) => {
-      if (!child.__parentId) return
+      if (!child.__parentId) {
+        console.log('I HAVE NO PARENTS')
+        return
+      }
       const parentId = child.__parentId
       if (!childrenByParentId.has(parentId)) {
         childrenByParentId.set(parentId, [])
@@ -64,6 +68,8 @@ export const useFolderSort = (tableData: FolderRow[]) => {
     // Combine parents and their corresponding children while maintaining hierarchy
     const sortedData = parents.reduce((acc, parent) => {
       acc.push(parent)
+      // check parent is a folder parent (it could be a root task)
+      if (!parent.__isParent) return acc
       const associatedChildren = childrenByParentId.get(parent.__folderId)
       if (associatedChildren) {
         acc.push(...associatedChildren)

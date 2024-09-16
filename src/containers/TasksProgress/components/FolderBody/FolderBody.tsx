@@ -42,7 +42,7 @@ export const FolderBody: FC<FolderBodyProps> = ({
       />
       <Styled.Path>
         <span className="parent">{firstParent}</span>
-        <span>/</span>
+        {firstParent && <span>/</span>}
         <span className="title">{name}</span>
       </Styled.Path>
     </Styled.Body>

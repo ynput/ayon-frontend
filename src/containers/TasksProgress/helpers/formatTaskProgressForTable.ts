@@ -76,7 +76,9 @@ export const formatTaskProgressForTable = (
     const row: FolderRow = {
       __isParent: false,
       __parentId: parent?.id,
-      __folderKey: folder.parents[folder.parents.length - 1] + folder.name, // used to sort the folders row
+      __folderKey: folder.parents.length
+        ? folder.parents[folder.parents.length - 1]
+        : 'root' + folder.name, // used to sort the folders row
       _folder: folder.label || folder.name,
       _parents: folder.parents,
       _folderIcon: folderTypes.find((ft) => ft.name === folder.folderType)?.icon,
