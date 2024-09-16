@@ -132,6 +132,8 @@ const ActivityComment = ({
     if (reaction.isActive) {
       createReactionToActivity({
         projectName: projectName,
+        // @ts-ignore exposed endpoint doesn't need the username, we still need to pass it for the optismistic update
+        userName: user.name,
         activityId: activityId,
         createReactionModel: {
           reaction: reaction.type,
@@ -140,6 +142,8 @@ const ActivityComment = ({
     } else {
       deleteReactionToActivity({
         projectName: projectName,
+        // @ts-ignore exposed endpoint doesn't need the username, we still need to pass it for the optismistic update
+        userName: user.name,
         activityId: activityId,
         reaction: reaction.type,
       })
