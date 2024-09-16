@@ -11,7 +11,7 @@ const reactionMapping: { key: ReactionType; value: string }[] = [
 const reactionMappingObj: { [key in ReactionType]: string } = {
   thumb_up: '👍',
   thumb_down: '👎',
-  heart_plus: '❤',
+  heart_plus: '❤️',
   celebration: '🎉',
   notes: '📝',
 }

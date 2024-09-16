@@ -20,7 +20,7 @@ const Reaction = ({ reaction, variant = 'standard', onClick }: Props) => {
       onClick={onClick}
       data-tooltip={users}
     >
-      <span className='emoji'>
+      <span className="emoji">
         {reactionMappingObj[reaction.type]}
       </span>
         {reaction.users && <span>{reaction.users.length}</span>}
