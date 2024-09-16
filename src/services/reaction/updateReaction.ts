@@ -42,7 +42,6 @@ const patchActivity = ({ activityId, userName, reaction }, { getState, dispatch 
 const enhancedApi = api.enhanceEndpoints({
   endpoints: {
     createReactionToActivity: {
-      invalidatesTags: (_result, _error, args) => [{ type: 'activity', id: args.activityId }],
       async onQueryStarted(args, { getState, dispatch, queryFulfilled }) {
         const patches = patchActivity(
           {
@@ -65,7 +64,6 @@ const enhancedApi = api.enhanceEndpoints({
       },
     },
     deleteReactionToActivity: {
-      invalidatesTags: (_result, _error, args) => [{ type: 'activity', id: args.activityId }],
       async onQueryStarted(args, { getState, dispatch, queryFulfilled }) {
         const patches = patchActivity(
           // @ts-ignore
