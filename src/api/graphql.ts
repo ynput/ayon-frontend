@@ -179,28 +179,15 @@ export type FolderAttribType = {
   fps?: Maybe<Scalars['Float']['output']>;
   frameEnd?: Maybe<Scalars['Int']['output']>;
   frameStart?: Maybe<Scalars['Int']['output']>;
-  ftrackId?: Maybe<Scalars['String']['output']>;
-  ftrackPath?: Maybe<Scalars['String']['output']>;
-  goldCoins?: Maybe<Scalars['Int']['output']>;
-  hairColor?: Maybe<Scalars['String']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
-  /** How much of the pizza do I get to have? */
-  pizzaShare?: Maybe<Scalars['Float']['output']>;
   /** Vertical resolution */
   resolutionHeight?: Maybe<Scalars['Int']['output']>;
   /** Horizontal resolution */
   resolutionWidth?: Maybe<Scalars['Int']['output']>;
-  /** The Shotgrid ID of this entity. */
-  shotgridId?: Maybe<Scalars['String']['output']>;
-  /** The Shotgrid Type of this entity. */
-  shotgridType?: Maybe<Scalars['String']['output']>;
-  sokoId?: Maybe<Scalars['String']['output']>;
-  sokoPath?: Maybe<Scalars['String']['output']>;
   /** Date and time when the project or task or asset was started */
   startDate?: Maybe<Scalars['DateTime']['output']>;
-  testy?: Maybe<Scalars['String']['output']>;
   tools?: Maybe<Array<Scalars['String']['output']>>;
 };
 
@@ -521,8 +508,6 @@ export type ProjectAttribType = {
   fps?: Maybe<Scalars['Float']['output']>;
   frameEnd?: Maybe<Scalars['Int']['output']>;
   frameStart?: Maybe<Scalars['Int']['output']>;
-  ftrackId?: Maybe<Scalars['String']['output']>;
-  ftrackPath?: Maybe<Scalars['String']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
@@ -530,14 +515,6 @@ export type ProjectAttribType = {
   resolutionHeight?: Maybe<Scalars['Int']['output']>;
   /** Horizontal resolution */
   resolutionWidth?: Maybe<Scalars['Int']['output']>;
-  /** The Shotgrid ID of this entity. */
-  shotgridId?: Maybe<Scalars['String']['output']>;
-  /** Push changes done to this project to Shotgird. Requires the transmitter service. */
-  shotgridPush?: Maybe<Scalars['Boolean']['output']>;
-  /** The Shotgrid Type of this entity. */
-  shotgridType?: Maybe<Scalars['String']['output']>;
-  sokoId?: Maybe<Scalars['String']['output']>;
-  sokoPath?: Maybe<Scalars['String']['output']>;
   /** Date and time when the project or task or asset was started */
   startDate?: Maybe<Scalars['DateTime']['output']>;
   tools?: Maybe<Array<Scalars['String']['output']>>;
@@ -955,29 +932,15 @@ export type TaskAttribType = {
   fps?: Maybe<Scalars['Float']['output']>;
   frameEnd?: Maybe<Scalars['Int']['output']>;
   frameStart?: Maybe<Scalars['Int']['output']>;
-  ftrackId?: Maybe<Scalars['String']['output']>;
-  ftrackPath?: Maybe<Scalars['String']['output']>;
-  goldCoins?: Maybe<Scalars['Int']['output']>;
-  hairColor?: Maybe<Scalars['String']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
-  jiraCurrentPhase?: Maybe<Array<Scalars['String']['output']>>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
-  /** How much of the pizza do I get to have? */
-  pizzaShare?: Maybe<Scalars['Float']['output']>;
   /** Vertical resolution */
   resolutionHeight?: Maybe<Scalars['Int']['output']>;
   /** Horizontal resolution */
   resolutionWidth?: Maybe<Scalars['Int']['output']>;
-  /** The Shotgrid ID of this entity. */
-  shotgridId?: Maybe<Scalars['String']['output']>;
-  /** The Shotgrid Type of this entity. */
-  shotgridType?: Maybe<Scalars['String']['output']>;
-  sokoId?: Maybe<Scalars['String']['output']>;
-  sokoPath?: Maybe<Scalars['String']['output']>;
   /** Date and time when the project or task or asset was started */
   startDate?: Maybe<Scalars['DateTime']['output']>;
-  testy?: Maybe<Scalars['String']['output']>;
   tools?: Maybe<Array<Scalars['String']['output']>>;
 };
 
@@ -1137,8 +1100,6 @@ export type UsersConnection = {
 
 export type VersionAttribType = {
   __typename?: 'VersionAttribType';
-  /** The version that is currently the one to use. */
-  blessed?: Maybe<Scalars['Boolean']['output']>;
   clipIn?: Maybe<Scalars['Int']['output']>;
   clipOut?: Maybe<Scalars['Int']['output']>;
   colorSpace?: Maybe<Scalars['String']['output']>;
@@ -1150,7 +1111,6 @@ export type VersionAttribType = {
   fps?: Maybe<Scalars['Float']['output']>;
   frameEnd?: Maybe<Scalars['Int']['output']>;
   frameStart?: Maybe<Scalars['Int']['output']>;
-  ftrackId?: Maybe<Scalars['String']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
   intent?: Maybe<Scalars['String']['output']>;
@@ -1161,7 +1121,6 @@ export type VersionAttribType = {
   /** Horizontal resolution */
   resolutionWidth?: Maybe<Scalars['Int']['output']>;
   site?: Maybe<Scalars['String']['output']>;
-  sokoId?: Maybe<Scalars['String']['output']>;
   source?: Maybe<Scalars['String']['output']>;
 };
 
@@ -1349,6 +1308,13 @@ export type GetMarketInstallEventsQueryVariables = Exact<{ [key: string]: never;
 
 
 export type GetMarketInstallEventsQuery = { __typename?: 'Query', events: { __typename?: 'EventsConnection', edges: Array<{ __typename?: 'EventEdge', node: { __typename?: 'EventNode', id: string, status: string, description: string, summary: string } }> } };
+
+export type GetInstallEventsQueryVariables = Exact<{
+  ids: Array<Scalars['String']['input']> | Scalars['String']['input'];
+}>;
+
+
+export type GetInstallEventsQuery = { __typename?: 'Query', events: { __typename?: 'EventsConnection', edges: Array<{ __typename?: 'EventEdge', node: { __typename?: 'EventNode', id: string, status: string, description: string } }> } };
 
 export type GetProjectLatestQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
@@ -1574,6 +1540,19 @@ export const GetMarketInstallEventsDocument = `
   }
 }
     `;
+export const GetInstallEventsDocument = `
+    query GetInstallEvents($ids: [String!]!) {
+  events(last: 100, ids: $ids) {
+    edges {
+      node {
+        id
+        status
+        description
+      }
+    }
+  }
+}
+    `;
 export const GetProjectLatestDocument = `
     query GetProjectLatest($projectName: String!) {
   project(name: $projectName) {
@@ -1675,6 +1654,9 @@ const injectedRtkApi = RestAPI.injectEndpoints({
     }),
     GetMarketInstallEvents: build.query<GetMarketInstallEventsQuery, GetMarketInstallEventsQueryVariables | void>({
       query: (variables) => ({ document: GetMarketInstallEventsDocument, variables })
+    }),
+    GetInstallEvents: build.query<GetInstallEventsQuery, GetInstallEventsQueryVariables>({
+      query: (variables) => ({ document: GetInstallEventsDocument, variables })
     }),
     GetProjectLatest: build.query<GetProjectLatestQuery, GetProjectLatestQueryVariables>({
       query: (variables) => ({ document: GetProjectLatestDocument, variables })

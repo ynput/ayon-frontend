@@ -21,11 +21,9 @@ const useDownload = (onDownload) => {
 
       if (!data?.url) throw new Error('No download candidate found')
 
-      const { error: downloadError } = await downloadAddons({
+      await downloadAddons({
         addons: [{ url: data.url, name, version }],
       }).unwrap()
-
-      if (downloadError) throw new Error(downloadError)
 
       onDownload(name)
     } catch (error) {

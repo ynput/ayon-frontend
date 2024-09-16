@@ -7,8 +7,8 @@ import { useListBundlesQuery } from '@queries/bundles/getBundles'
 import { useUpdateBundleMutation } from '@queries/bundles/updateBundles'
 import getNewBundleName from './getNewBundleName'
 import NewBundle from './NewBundle'
-import { useGetInstallerListQuery } from '@queries/installers'
-import { useGetAddonListQuery } from '@queries/addons/getAddons'
+import { useListInstallersQuery } from '@queries/installers/getInstallers'
+import { useListAddonsQuery } from '@queries/addons/getAddons'
 import { upperFirst } from 'lodash'
 import { toast } from 'react-toastify'
 import AddonDialog from '@components/AddonDialog/AddonDialog'
@@ -56,11 +56,11 @@ const Bundles = () => {
     error,
   } = useListBundlesQuery({ archived: true })
   // GET INSTALLERS
-  const { data: installerList = [], isLoading: isLoadingInstallers } = useGetInstallerListQuery()
+  const { data: { installers = [] } = {}, isLoading: isLoadingInstallers } = useListInstallersQuery(
+    {},
+  )
   // GET ADDONS
-  const { data: addons = [], isLoading: isLoadingAddons } = useGetAddonListQuery({
-    showVersions: true,
-  })
+  const { data: { addons = [] } = {}, isLoading: isLoadingAddons } = useListAddonsQuery({})
 
   // filter out archived bundles if showArchived is true
   let bundleList = useMemo(() => {
@@ -170,13 +170,13 @@ const Bundles = () => {
     return result
   }, [bundleList, selectedBundles])
 
-  // takes an array of installer objects (installerList) and groups them by version.
+  // takes an array of installer objects (installers) and groups them by version.
   // The result is an array of objects, each containing a version number and an array of platforms for that version.
   const installerVersions = useMemo(() => {
-    if (!installerList) return []
+    if (!installers) return []
 
     const r = {}
-    for (const installer of installerList) {
+    for (const installer of installers) {
       if (r[installer.version]) {
         r[installer.version].push(installer.platform)
       } else {
@@ -188,7 +188,7 @@ const Bundles = () => {
       platforms: platforms.sort(),
       version,
     }))
-  }, [installerList])
+  }, [installers])
 
   const handleBundleSelect = (names) => {
     setSelectedBundles(names)

@@ -3,8 +3,14 @@ import { Button, FileUpload, SaveButton } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 import api from '@api'
 import { useDispatch, useSelector } from 'react-redux'
-import { useCreateInstallerMutation, useUploadInstallersMutation } from '@queries/installers'
-import { useUploadDependencyPackagesMutation } from '@queries/dependencyPackages'
+import {
+  useCreateInstallerMutation,
+  useUploadInstallersMutation,
+} from '@queries/installers/updateInstallers'
+import {
+  useUploadDependencyPackagesMutation,
+  useCreateDependencyPackageMutation,
+} from '@queries/dependencyPackages/updateDependencyPackages'
 import { onUploadFinished, onUploadProgress } from '@state/context'
 import axios from 'axios'
 
@@ -50,10 +56,9 @@ const AddonUpload = ({ onClose, type = 'addon', onInstall, dropOnly, ...props })
   const [createInstaller] = useCreateInstallerMutation()
   const [uploadInstallers] = useUploadInstallersMutation()
   // upload packages
+  const [createPackage] = useCreateDependencyPackageMutation()
   const [uploadPackages] = useUploadDependencyPackagesMutation()
 
-  let endPoint = 'installers'
-  if (type === 'package') endPoint = 'dependencyPackages'
   const typeLabel =
     type === 'package' ? 'Dependency Package' : type === 'addon' ? 'Addon' : 'Installer'
 
@@ -79,8 +84,8 @@ const AddonUpload = ({ onClose, type = 'addon', onInstall, dropOnly, ...props })
           }
         })
         // Use the data object here
-        // create installer with json data
-        await createInstaller({ data, endPoint }).unwrap()
+        if (type === 'package') await createPackage({ dependencyPackage: data }).unwrap()
+        if (type === 'installer') await createInstaller({ installer: data }).unwrap()
       }
 
       console.log('finished: created ' + type)

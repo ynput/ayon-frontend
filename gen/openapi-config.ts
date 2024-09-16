@@ -26,9 +26,12 @@ const outputFiles = {
     'saveAccessGroup',
   ],
   auth: ['createSession'],
-  addons: ['listAddons'],
+  addons: ['listAddons', 'deleteAddonVersion', 'uploadAddonZipFile'],
   activities: ['deleteProjectActivity'],
   users: ['getUser'],
+  releases: ['getReleases', 'getReleaseInfo'],
+  installers: ['listInstallers', 'createInstaller'],
+  dependencyPackages: ['listDependencyPackages', 'createDependencyPackage'],
 }
 
 const buildOutputFiles = (files: { [name: string]: string[] }) =>

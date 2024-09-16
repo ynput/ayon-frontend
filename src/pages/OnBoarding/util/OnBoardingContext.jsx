@@ -6,16 +6,18 @@ import { toast } from 'react-toastify'
 import { useGetYnputConnectionsQuery } from '@queries/ynputConnect'
 import {
   useAbortOnBoardingMutation,
-  useGetInstallEventsQuery,
-  useGetReleaseQuery,
   useInstallPresetMutation,
-  useLazyGetReleaseQuery,
-  useGetReleasesQuery,
 } from '@queries/onBoarding/onBoarding'
+import {
+  useGetReleasesQuery,
+  useGetReleaseInfoQuery,
+  useLazyGetReleaseInfoQuery,
+  useGetInstallEventsQuery,
+} from '@queries/releases/getReleases'
 import useLocalStorage from '@hooks/useLocalStorage'
 import { useLazyListBundlesQuery } from '@queries/bundles/getBundles'
 import { useCreateBundleMutation } from '@queries/bundles/updateBundles'
-import getNewBundleName from '../../SettingsPage/Bundles/getNewBundleName'
+import { createBundleFromRelease, guessPlatform } from '@containers/ReleaseInstallerDialog/helpers'
 
 const userFormFields = [
   {
@@ -48,38 +50,6 @@ const userFormFields = [
   },
 ]
 
-const createBundleFromRelease = ({ release, selectedAddons, selectedPlatforms, bundleList }) => {
-  const addons = {}
-  for (const name of selectedAddons) {
-    // find addon in release
-    const addon = release?.addons?.find((addon) => addon?.name === name)
-    if (addon) {
-      addons[name] = addon.version
-    }
-  }
-
-  const installerVersion = release.installers[0]?.version
-  const dependencyPackages = {}
-  for (const depPackage of release.dependencyPackages) {
-    // skip if platform is not selected
-    if (!selectedPlatforms.includes(depPackage.platform)) continue
-    dependencyPackages[depPackage.platform] = depPackage.filename
-  }
-
-  const name = getNewBundleName(release.name, bundleList)
-
-  // check if there is already a production bundles
-  const hasProduction = bundleList.some((bundle) => bundle?.isProduction)
-
-  return {
-    name,
-    addons,
-    installerVersion,
-    dependencyPackages,
-    isProduction: !hasProduction,
-  }
-}
-
 export const OnBoardingContext = createContext()
 
 export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
@@ -89,7 +59,7 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
   const { data: ynputConnect, isLoading: isLoadingConnect } = useGetYnputConnectionsQuery({})
 
   // get releases data
-  const { data: releases = [], isLoading: isLoadingReleases } = useGetReleasesQuery(
+  const { data: { releases = [] } = {}, isLoading: isLoadingReleases } = useGetReleasesQuery(
     {
       ynputConnect,
     },
@@ -124,26 +94,15 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
 
   // step 7
   // guess the users operating system
-  const guessedPlatform = useMemo(() => {
-    let platform
+  const guessedPlatform = useMemo(() => guessPlatform(), [])
 
-    if (navigator.userAgentData && navigator.userAgentData.platform) {
-      platform = navigator.userAgentData.platform?.toLowerCase()
-    }
-
-    if (!platform) return []
-
-    if (platform.includes('win')) return ['windows']
-    if (platform.includes('mac')) return ['darwin']
-    if (platform.includes('linux')) return ['linux']
-    return []
-  }, [])
-
-  const [selectedPlatforms, setSelectedPlatforms] = useState(guessedPlatform)
+  const [selectedPlatforms, setSelectedPlatforms] = useState(
+    guessedPlatform ? [guessedPlatform] : [],
+  )
 
   // get selected release data
-  const { data: release = {}, isFetching: isLoadingAddons } = useGetReleaseQuery(
-    { name: selectedPreset },
+  const { data: release = {}, isFetching: isLoadingAddons } = useGetReleaseInfoQuery(
+    { releaseName: selectedPreset },
     { skip: !selectedPreset || stepIndex < 5 },
   )
 
@@ -167,13 +126,6 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
     [selectedPreset],
   )
 
-  // starts monitoring the events
-  const topics = [
-    'addon.install_from_url',
-    'installer.install_from_url',
-    'dependency_package.install_from_url',
-  ]
-
   const eventIds = useMemo(
     () => idsInstalling.filter((res) => res.eventId).map((res) => res.eventId),
     [idsInstalling],
@@ -184,7 +136,7 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
     isSuccess,
     isFetching,
     refetch,
-  } = useGetInstallEventsQuery({ topics, ids: eventIds }, { skip: !eventIds.length })
+  } = useGetInstallEventsQuery({ ids: eventIds }, { skip: !eventIds.length })
 
   // once installProgress is success (first time) and not fetching then refetch every 1 second
   useEffect(() => {
@@ -199,13 +151,13 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
     }
   }, [isSuccess, isFetching, isFinished])
 
-  const [getRelease, { isFetching: isLoadingRelease }] = useLazyGetReleaseQuery()
+  const [getRelease, { isFetching: isLoadingRelease }] = useLazyGetReleaseInfoQuery()
 
   const handleSubmit = async () => {
     // install addons, installers, dep packages
     try {
       // get release data
-      const release = await getRelease({ name: selectedPreset }).unwrap()
+      const release = await getRelease({ releaseName: selectedPreset }).unwrap()
       // create array of addon urls based on selected addons
       const addons = release.addons
         .filter((addon) => selectedAddons.includes(addon.name) && !!addon.url)
@@ -255,12 +207,12 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
         // get bundle list
         const { bundles: bundleList = [] } = (await listBundles({ archived: true }).unwrap()) || {}
         // first create the bundle from the release
-        const bundle = createBundleFromRelease({
+        const bundle = createBundleFromRelease(
           release,
           selectedAddons,
           selectedPlatforms,
           bundleList,
-        })
+        )
 
         await createBundle({ data: bundle, force: true }).unwrap()
       }
