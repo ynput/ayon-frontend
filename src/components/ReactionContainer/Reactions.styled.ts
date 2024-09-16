@@ -43,7 +43,7 @@ const Reaction = styled.div`
 
   .emoji {
     position: relative;
-    top: 1px;
+    top: 2px;
   }
 `
 const ActiveReactionsList = styled.div`
@@ -53,12 +53,12 @@ const ActiveReactionsList = styled.div`
 `
 
 const Overlay = styled.div`
-position: fixed;
-top: 0;
-bottom: 0;
-left: 0;
-right: 0;
-z-index: 55;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 55;
 `
 const ReactionsPanel = styled.div`
   display: flex;
@@ -99,4 +99,11 @@ const ReactionsWrapper = styled.div`
   position: relative;
 `
 
-export { Reaction, ActiveReactionsList, ReactionsPanel, ReactionPanelOpener, ReactionsWrapper, Overlay }
+export {
+  Reaction,
+  ActiveReactionsList,
+  ReactionsPanel,
+  ReactionPanelOpener,
+  ReactionsWrapper,
+  Overlay,
+}
