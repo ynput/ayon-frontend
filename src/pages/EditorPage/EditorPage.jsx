@@ -37,7 +37,7 @@ import {
   onNewChanges,
   onRevert,
 } from '@state/editor'
-import EditorPanel from './EditorPanel'
+import EditorPanel from './EditorPanel/EditorPanel'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import NameField from './fields/NameField'
 import { useGetAttributesQuery } from '@queries/attributes/getAttributes'

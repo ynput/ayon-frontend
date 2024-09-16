@@ -24,7 +24,7 @@ type Props = {
   projectName: any
   children?: JSX.Element|JSX.Element[];
   onUploaded: (operations: Operation[]) => void
-  resetFileUploadState: () => void
+  resetFileUploadState?: () => void
 }
 
 const EntityThumbnailUploader = ({
