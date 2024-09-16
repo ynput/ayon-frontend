@@ -34,17 +34,16 @@ const Reaction = styled.div`
     border-radius: var(--border-radius-m);
     &.active {
       background-color: var(--md-sys-color-secondary-container);
-      border-color: transparent;
       &:hover {
-        border-color: var(--md-sys-color-surface-container-highest-hover);
+        border-color: transparent;
+        background-color: var(--md-sys-color-secondary-container-hover);
       }
     }
   }
 
-  .inner-content {
+  .emoji {
     position: relative;
     top: 1px;
-    font-size: 13px;
   }
 `
 const ActiveReactionsList = styled.div`
@@ -74,9 +73,6 @@ const ReactionsPanel = styled.div`
   padding: 4px;
   border-radius: 4px;
   box-shadow: 0px 0px 6px 2px rgba(0, 0, 0, 0.15);
-
-  animation: 0.03s ease-in forwards;
-  transform-origin: bottom left;
 `
 
 const ReactionPanelOpener = styled.div`
