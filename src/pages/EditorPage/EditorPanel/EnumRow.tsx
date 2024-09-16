@@ -30,7 +30,11 @@ const EnumRow = ({
   onChange,
   onAddItem,
 }: Props) => {
-  const getInheritLabel = (attrib: $Any, parentValue: $Any, isMultiSelect: boolean): string | undefined => {
+  const getInheritLabel = (
+    attrib: $Any,
+    parentValue: $Any,
+    isMultiSelect: boolean,
+  ): string | undefined => {
     if (!parentValue) {
       return
     }
@@ -50,7 +54,6 @@ const EnumRow = ({
   if (multipleValues) {
     enumValue = isMultiSelect ? union(...multipleValues) : multipleValues
   }
-
 
   let options = attrib.enum
   const inheritedOptionLabel = getInheritLabel(attrib, parentValue, isMultiSelect)
@@ -92,6 +95,7 @@ const EnumRow = ({
         textOverflow: 'ellipsis',
       }}
       widthExpand
+      widthExpandMax
     />
   )
 }
