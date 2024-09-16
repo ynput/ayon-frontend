@@ -4,8 +4,7 @@ import * as Styled from './ConnectDialog.styled'
 import { Icon, Dialog } from '@ynput/ayon-react-components'
 import Type from '@/theme/typography.module.css'
 
-const ConnectDialog = ({ redirect, ...props }) => {
-  const { visible, onHide } = props
+const ConnectDialog = ({ redirect, visible, onHide, ...props }) => {
   return (
     <Dialog
       header="Connect to Ynput Cloud"
@@ -29,8 +28,8 @@ const ConnectDialog = ({ redirect, ...props }) => {
             <Icon icon="check_circle" />
             <span className={Type.titleMedium}>Automated Bootstrapping</span>
           </Styled.ListItem>
+          <YnputConnector smallLogo showLoading skip redirect={redirect} />
         </Styled.List>
-        <YnputConnector smallLogo showLoading skip redirect={redirect} />
       </Styled.Body>
     </Dialog>
   )

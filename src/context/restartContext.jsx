@@ -53,7 +53,13 @@ function RestartProvider(props) {
 
   return (
     <RestartContext.Provider
-      value={{ restartRequired, confirmRestart, isRestartRequired, isSnoozing }}
+      value={{
+        restartRequired,
+        confirmRestart,
+        snoozeRestart: handleSnooze,
+        isRestartRequired,
+        isSnoozing,
+      }}
     >
       {props.children}
       {isRestartRequired && isAdmin && !isSnoozing && (

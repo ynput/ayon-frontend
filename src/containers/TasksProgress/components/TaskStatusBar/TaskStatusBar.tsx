@@ -2,6 +2,7 @@ import { Status } from '@api/rest/project'
 import { TaskTypeStatusBar } from '@containers/TasksProgress/helpers/formatTaskProgressForTable'
 import { FC } from 'react'
 import * as Styled from './TaskStatusBar.styled'
+import { isEmpty } from 'lodash'
 
 interface TaskStatusBarProps {
   statuses: Status[]
@@ -27,6 +28,8 @@ export const TaskStatusBar: FC<TaskStatusBarProps> = ({ statuses = [], statusCou
       return `${status.name}: ${count} (${percentage}%)`
     })
     .join('\n')
+
+  if (isEmpty(statusCounts)) return null
 
   return (
     <Styled.Cell data-tooltip={tooltip} data-tooltip-as="markdown" data-tooltip-clickable="false">

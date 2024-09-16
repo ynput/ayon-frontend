@@ -4,12 +4,18 @@ import { useRestartOnBoardingMutation } from '@queries/onBoarding/onBoarding'
 import { toast } from 'react-toastify'
 import ayonClient from '@/ayon'
 import { useRestart } from '@context/restartContext'
+import { useAppDispatch } from '@state/store'
+import { toggleReleaseInstaller } from '@state/releaseInstaller'
+import { useNavigate } from 'react-router'
 
 export const AppMenu = ({ user, ...props }) => {
+  const navigate = useNavigate()
+  const dispatch = useAppDispatch()
   // check if user is logged in and is manager or admin
   const isUser = user?.data?.isUser
   const isManager = user?.data?.isManager
   const isAdmin = user?.data?.isAdmin
+  const developerMode = user?.attrib.developerMode
 
   // restart server
   const { confirmRestart, isRestartRequired } = useRestart()
@@ -25,6 +31,13 @@ export const AppMenu = ({ user, ...props }) => {
       console.error(error)
       toast.error('Failed to launch bootstrap setup')
     }
+  }
+
+  const handleReleaseInstaller = () => {
+    // go to bundles page
+    navigate('/settings/bundles')
+    // open menu
+    dispatch(toggleReleaseInstaller(true))
   }
 
   const items = [
@@ -78,10 +91,10 @@ export const AppMenu = ({ user, ...props }) => {
       shortcut: 'M+M',
     },
     {
-      id: 'onboarding',
-      label: 'Launch Bootstrap Setup',
-      onClick: handleBootstrapLaunch,
-      icon: 'verified_user',
+      id: 'releases',
+      label: 'Install latest release',
+      onClick: handleReleaseInstaller,
+      icon: 'orders',
     },
     {
       id: 'restart',
@@ -95,6 +108,23 @@ export const AppMenu = ({ user, ...props }) => {
 
   // add protected items if user is admin
   if (isAdmin) items.push(...adminItems)
+
+  const developerItems = [
+    {
+      id: 'divider',
+    },
+    {
+      id: 'onboarding',
+      label: 'Launch Bootstrap Setup',
+      onClick: handleBootstrapLaunch,
+      icon: 'verified_user',
+      isDev: true,
+    },
+  ]
+  // if developer add dev items
+  if (developerMode) {
+    items.push(...developerItems)
+  }
 
   return (
     <>

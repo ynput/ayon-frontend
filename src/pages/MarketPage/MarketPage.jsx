@@ -13,7 +13,7 @@ import {
 import MarketAddonsList from './MarketAddonsList'
 import 'react-perfect-scrollbar/dist/css/styles.css'
 import AddonDetails from './AddonDetails/AddonDetails'
-import { useGetAddonListQuery } from '@queries/addons/getAddons'
+import { useListAddonsQuery } from '@queries/addons/getAddons'
 import { mergeAddonWithDownloaded } from './mergeAddonsData'
 import { throttle } from 'lodash'
 import styled from 'styled-components'
@@ -51,7 +51,8 @@ const MarketPage = () => {
     error,
   } = useMarketAddonListQuery()
   // GET ALL INSTALLED ADDONS for addon details
-  const { data: downloadedAddons = [], isLoading: isLoadingDownloaded } = useGetAddonListQuery()
+  const { data: { addons: downloadedAddons = [] } = {}, isLoading: isLoadingDownloaded } =
+    useListAddonsQuery({})
 
   // keep track of which addons are being downloaded
   const [downloadingAddons, setDownloadingAddons] = useState([])

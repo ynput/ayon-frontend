@@ -1,7 +1,6 @@
 import styled from 'styled-components'
 
 export const Wrapper = styled.div`
-  position: absolute;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -23,6 +22,7 @@ export const Crumbtainer = styled.div`
 export const CrumbsForm = styled.form`
   background-color: var(--md-sys-color-secondary-container);
   border-radius: 4px 0 0 4px;
+  display: inline-flex;
   *::before,
   *::after {
     box-sizing: border-box;
@@ -59,6 +59,7 @@ export const CrumbsForm = styled.form`
       resize: none;
       background: none;
       appearance: none;
+      text-overflow: ellipsis;
 
       background-color: transparent;
       border: 1px solid;
@@ -84,6 +85,7 @@ export const CrumbsForm = styled.form`
       content: attr(data-value);
       visibility: hidden;
       white-space: pre-wrap;
+      height: 1rem;
     }
 
     &:focus-within {

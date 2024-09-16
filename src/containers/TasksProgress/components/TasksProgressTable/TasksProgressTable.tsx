@@ -277,7 +277,6 @@ export const TasksProgressTable = ({
     e: MouseEvent<HTMLTableCellElement, globalThis.MouseEvent>,
     taskType: string,
   ) => {
-    console.log(e)
     e.preventDefault()
     ctxMenuShow(e, buildColumnHeaderMenuItems(taskType))
   }
@@ -387,8 +386,6 @@ export const TasksProgressTable = ({
             const taskCellData = rowData[taskTypeKey] as TaskTypeRow
             const taskType = taskTypes.find((t) => t.name === taskTypeKey)
             if (!taskCellData) return null
-
-            // const width = resolveColumnWidth(taskTypeKey)
 
             return (
               <Cells className="cells">

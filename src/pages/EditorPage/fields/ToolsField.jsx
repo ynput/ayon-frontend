@@ -55,11 +55,12 @@ const ToolsField = ({ value, className, attrib }) => {
   return (
     <StyledDropdown
       value={labels}
+      options={labels.map((label) => ({ label, value: label }))}
       className={className}
-      multiSelect
       itemStyle={{ pointerEvents: 'none', backgroundColor: 'unset' }}
       onOpen={() => setIsOpen(true)}
       onClose={() => setIsOpen(false)}
+      onDoubleClick={(e) => e.stopPropagation()}
       valueTemplate={() => (
         <DefaultValueTemplate value={value}>
           {!labels.length ? 'None' : `(${labels?.length}) ${labels?.join(', ')}`}

@@ -47,20 +47,31 @@ export const Placeholder = styled.div`
   }
 `
 
-interface EmptyPlaceholderProps {
+interface EmptyPlaceholderProps extends React.HTMLAttributes<HTMLDivElement> {
   icon: string
   message: string
   error?: any
-  children?: React.ReactNode
+  pt?: {
+    error?: React.HTMLAttributes<HTMLDivElement>
+  }
 }
 
-const EmptyPlaceholder = ({ icon, message, error, children }: EmptyPlaceholderProps) => {
+const EmptyPlaceholder = ({
+  icon,
+  message,
+  error,
+  children,
+  pt,
+  ...props
+}: EmptyPlaceholderProps) => {
   if (error) {
     return (
-      <Placeholder className={'isError'}>
+      <Placeholder className={'isError'} {...props}>
         <Icon icon="error" className="placeholder-icon" />
         <h3 className={Typography.titleLarge}>Something went wrong.</h3>
-        <span className="error-message">ERROR: {JSON.stringify(error)}</span>
+        <span className="error-message" {...pt?.error}>
+          ERROR: {JSON.stringify(error)}
+        </span>
         <span>This should not happen. Please send a screenshot to the Ynput team!</span>
         {children}
       </Placeholder>
@@ -68,7 +79,7 @@ const EmptyPlaceholder = ({ icon, message, error, children }: EmptyPlaceholderPr
   }
 
   return (
-    <Placeholder>
+    <Placeholder {...props}>
       <Icon icon={icon} className="placeholder-icon" />
       <h3 className={Typography.titleLarge}>
         {typeof message === 'object' ? JSON.stringify(message) : message}

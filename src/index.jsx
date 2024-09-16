@@ -1,18 +1,9 @@
 import React from 'react'
 import axios from 'axios'
 import { createRoot } from 'react-dom/client'
-import { configureStore } from '@reduxjs/toolkit'
+import store from '@state/store'
 import { Provider as ReduxProvider } from 'react-redux'
 import { ToastContainer, Flip } from 'react-toastify'
-
-import userReducer from '@state/user'
-import contextReducer, { contextLocalItems } from '@state/context'
-import projectReducer from '@state/project'
-import editorReducer from '@state/editor'
-import dashboardReducer, { dashboardLocalItems } from '@state/dashboard'
-import detailsReducer, { detailsLocalItems } from '@state/details'
-import addonsManagerReducer from '@state/addonsManager'
-import viewerReducer, { viewerSearchParams } from '@state/viewer'
 
 import App from './app'
 
@@ -22,43 +13,11 @@ import 'primeicons/primeicons.css'
 import '@ynput/ayon-react-components/dist/style.css'
 
 import './styles/index.scss'
-import { RestAPI } from '@queries/ayon'
-import { setupListeners } from '@reduxjs/toolkit/query'
 import short from 'short-uuid'
 import { SocketProvider } from '@context/websocketContext'
-import localStorageMiddleware from '@state/middleware/localStorageMiddleware'
-import searchParamsMiddleware, { updateUrlOnUriChange } from './features/middleware/searchParamsMiddleware'
 
 // generate unique session id
 window.senderId = short.generate()
-
-const store = configureStore({
-  reducer: {
-    user: userReducer,
-    context: contextReducer,
-    project: projectReducer,
-    editor: editorReducer,
-    dashboard: dashboardReducer,
-    details: detailsReducer,
-    addonsManager: addonsManagerReducer,
-    viewer: viewerReducer,
-    [RestAPI.reducerPath]: RestAPI.reducer,
-  },
-  middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware()
-      .concat(RestAPI.middleware)
-      .concat(
-        localStorageMiddleware({
-          ...dashboardLocalItems,
-          ...contextLocalItems,
-          ...detailsLocalItems,
-        }),
-      )
-      .concat(searchParamsMiddleware({ ...viewerSearchParams }))
-      .concat(updateUrlOnUriChange())
-})
-
-setupListeners(store.dispatch)
 
 axios.interceptors.response.use(
   (response) => {
