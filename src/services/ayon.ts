@@ -1,7 +1,12 @@
 // Need to use the React-specific entry point to allow generating React hooks
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 import { graphqlRequestBaseQuery } from '@rtk-query/graphql-request-base-query'
-import type { BaseQueryApi, BaseQueryFn } from '@reduxjs/toolkit/query'
+import type {
+  BaseQueryApi,
+  BaseQueryFn,
+  FetchArgs,
+  FetchBaseQueryError,
+} from '@reduxjs/toolkit/query'
 import { GraphQLClient } from 'graphql-request'
 import type { BaseQueryArg, BaseQueryError, BaseQueryExtraOptions, BaseQueryResult } from '@types'
 
@@ -124,10 +129,44 @@ const polymorphBaseQuery = combineBaseQueries(baseQuery, {
   predicate: (args: any) => !!args.document && !!args.variables,
 })
 
+// @ts-ignore
+const baseQueryWithRedirect: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError> = async (
+  args,
+  api,
+  extraOptions,
+) => {
+  const url = window.location.pathname
+  const shouldRedirectToLogin = () => {
+    if (!url.includes('connect') && !url.startsWith('/login')) {
+      console.error('Unauthorized: 401 error')
+      window.location.href = '/login'
+    }
+  }
+
+  try {
+    const result = await polymorphBaseQuery(args, api, extraOptions)
+
+    // @ts-ignore
+    if (result?.error?.status === 401) {
+      shouldRedirectToLogin()
+    }
+
+    return result
+  } catch (error: any) {
+    if (error?.response && error.response?.status === 401) {
+      shouldRedirectToLogin()
+    } else {
+      console.error(error)
+    }
+    throw error
+  } finally {
+  }
+}
+
 // Define the REST API and Graphql API
 export const RestAPI = createApi({
   reducerPath: 'restApi',
-  baseQuery: polymorphBaseQuery,
+  baseQuery: baseQueryWithRedirect,
   endpoints: () => ({}),
   tagTypes,
 })
