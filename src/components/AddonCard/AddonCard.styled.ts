@@ -33,6 +33,14 @@ export const AddonCard = styled.button`
     line-height: 100%;
   }
 
+  .icon.info {
+    position: relative;
+    top: -8px;
+    left: -4px;
+    font-size: 12px;
+    color: var(--md-sys-color-warning);
+  }
+
   &.selected {
     background-color: var(--md-sys-color-primary-container);
 

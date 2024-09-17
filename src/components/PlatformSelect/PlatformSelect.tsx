@@ -17,6 +17,8 @@ interface PlatformSelectProps extends Omit<React.HTMLAttributes<HTMLDivElement>,
   onSelect: (platform: string) => void
 }
 
+const linuxInfo = 'This will install Rocky 9 specific environment that should be compatible with all EL9 linux variants'
+
 const PlatformSelect = forwardRef<HTMLDivElement, PlatformSelectProps>(
   ({ platforms, selected, onSelect, ...props }, ref) => {
     return (
@@ -26,6 +28,7 @@ const PlatformSelect = forwardRef<HTMLDivElement, PlatformSelectProps>(
             key={platform}
             title={getPlatformLabel(platform)}
             name={platform}
+            tooltip={platform === 'linux'? linuxInfo : undefined}
             endContent={getPlatformIcon(platform)}
             icon={selected.includes(platform) ? 'check_circle' : 'circle'}
             isSelected={selected.includes(platform)}

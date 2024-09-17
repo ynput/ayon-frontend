@@ -12,6 +12,7 @@ export interface AddonCardProps extends React.HTMLAttributes<HTMLButtonElement> 
   error?: string
   endContent?: string | React.ReactNode
   title?: string
+  tooltip?: string
 }
 
 const AddonCard = React.forwardRef<HTMLButtonElement, AddonCardProps>(
@@ -24,6 +25,7 @@ const AddonCard = React.forwardRef<HTMLButtonElement, AddonCardProps>(
       error,
       endContent,
       title,
+      tooltip,
       className,
       ...props
     },
@@ -38,6 +40,7 @@ const AddonCard = React.forwardRef<HTMLButtonElement, AddonCardProps>(
       >
         <Icon icon={icon} />
         <span className={Type.titleSmall}>{title || name || 'addon'}</span>
+        {tooltip && <Icon icon="info" className="info" data-tooltip={tooltip} />}
         {error && <span className="error">{error}</span>}
         {endContent && <span className="endContent">{endContent}</span>}
       </Styled.AddonCard>
