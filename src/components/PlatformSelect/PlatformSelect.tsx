@@ -28,7 +28,7 @@ const PlatformSelect = forwardRef<HTMLDivElement, PlatformSelectProps>(
             key={platform}
             title={getPlatformLabel(platform)}
             name={platform}
-            tooltip={platform === 'linux'? linuxInfo : undefined}
+            data-tooltip={platform === 'linux'? linuxInfo : undefined}
             endContent={getPlatformIcon(platform)}
             icon={selected.includes(platform) ? 'check_circle' : 'circle'}
             isSelected={selected.includes(platform)}
