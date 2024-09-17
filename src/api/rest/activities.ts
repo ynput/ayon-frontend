@@ -8,9 +8,28 @@ const injectedRtkApi = api.injectEndpoints({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/activities/${queryArg.activityId}`,
         method: 'DELETE',
-        headers: {
-          'x-sender': queryArg['x-sender'],
-        },
+        headers: { 'x-sender': queryArg['x-sender'] },
+      }),
+    }),
+    createReactionToActivity: build.mutation<
+      CreateReactionToActivityApiResponse,
+      CreateReactionToActivityApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/activities/${queryArg.activityId}/reactions`,
+        method: 'POST',
+        body: queryArg.createReactionModel,
+        headers: { 'x-sender': queryArg['x-sender'] },
+      }),
+    }),
+    deleteReactionToActivity: build.mutation<
+      DeleteReactionToActivityApiResponse,
+      DeleteReactionToActivityApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/activities/${queryArg.activityId}/reactions/${queryArg.reaction}`,
+        method: 'DELETE',
+        headers: { 'x-sender': queryArg['x-sender'] },
       }),
     }),
   }),
@@ -19,8 +38,25 @@ const injectedRtkApi = api.injectEndpoints({
 export { injectedRtkApi as api }
 export type DeleteProjectActivityApiResponse = /** status 200 Successful Response */ any
 export type DeleteProjectActivityApiArg = {
-  activityId: string
   projectName: string
+  activityId: string
+  'x-sender'?: string
+}
+export type CreateReactionToActivityApiResponse = /** status 201 Successful Response */ any
+export type CreateReactionToActivityApiArg = {
+  projectName: string
+  activityId: string
+  /** The sender of the request */
+  'x-sender'?: string
+  createReactionModel: CreateReactionModel
+}
+export type DeleteReactionToActivityApiResponse = /** status 204 Successful Response */ void
+export type DeleteReactionToActivityApiArg = {
+  /** The reaction to be deleted */
+  reaction: string
+  projectName: string
+  activityId: string
+  /** The sender of the request */
   'x-sender'?: string
 }
 export type ValidationError = {
@@ -30,4 +66,8 @@ export type ValidationError = {
 }
 export type HttpValidationError = {
   detail?: ValidationError[]
+}
+export type CreateReactionModel = {
+  /** The reaction to be created */
+  reaction: string
 }
