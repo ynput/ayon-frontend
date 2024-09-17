@@ -43,7 +43,7 @@ const Reaction = styled.div`
 
   .emoji {
     position: relative;
-    top: 2px;
+    height: 19px;
   }
 `
 const ActiveReactionsList = styled.div`
