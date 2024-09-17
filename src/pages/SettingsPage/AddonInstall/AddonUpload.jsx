@@ -44,7 +44,14 @@ const StyledProgressBar = styled.hr`
   transition: width 0.3s;
 `
 
-const AddonUpload = ({ onClose, type = 'addon', onInstall, dropOnly, ...props }) => {
+const AddonUpload = ({
+  onClose,
+  type = 'addon',
+  onInstall,
+  dropOnly,
+  abortController,
+  ...props
+}) => {
   const dispatch = useDispatch()
   const [files, setFiles] = useState([])
   const [isUploading, setIsUploading] = useState(false)
@@ -104,7 +111,11 @@ const AddonUpload = ({ onClose, type = 'addon', onInstall, dropOnly, ...props })
     try {
       let success, res
       if (type === 'installer') {
-        res = await uploadInstallers({ files: filesToUpload, isNameEndpoint: true }).unwrap()
+        res = await uploadInstallers({
+          files: filesToUpload,
+          isNameEndpoint: true,
+          abortController,
+        }).unwrap()
         success = true
       } else if (type === 'package') {
         res = await uploadPackages({ files: filesToUpload, isNameEndpoint: true }).unwrap()
@@ -184,7 +195,6 @@ const AddonUpload = ({ onClose, type = 'addon', onInstall, dropOnly, ...props })
     onInstall(type)
   }
 
-  const abortController = new AbortController()
   const cancelToken = axios.CancelToken
   const cancelTokenSource = cancelToken.source()
 

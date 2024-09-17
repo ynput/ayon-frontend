@@ -5,8 +5,10 @@ import AddonUpload from '@pages/SettingsPage/AddonInstall/AddonUpload'
 const AddonDialog = ({ uploadOpen, setUploadOpen, uploadHeader }) => {
   // keep track is an addon was installed
   const [restartRequired, setRestartRequired] = useState(false)
+  const abortController = new AbortController()
 
   const handleAddonInstallFinish = () => {
+    abortController.abort();
     if (restartRequired) setRestartRequired(false)
     setUploadOpen(false)
   }
@@ -20,6 +22,7 @@ const AddonDialog = ({ uploadOpen, setUploadOpen, uploadHeader }) => {
     >
       {uploadOpen && (
         <AddonUpload
+          abortController={abortController}
           onClose={handleAddonInstallFinish}
           type={uploadOpen}
           onInstall={(uploadOpen) => uploadOpen === 'addon' && setRestartRequired(true)}
