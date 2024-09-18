@@ -222,8 +222,6 @@ const CopySettingsNode = ({
       ...new Set([...Object.keys(sourceOverrides.data), ...Object.keys(targetOverrides.data)]),
     ]
 
-    console.debug('Considering:', allIds)
-
     for (const id of allIds) {
       const sourceOverride = sourceOverrides.data[id]
       const targetOverride = targetOverrides.data[id]
@@ -236,7 +234,6 @@ const CopySettingsNode = ({
         continue
       }
 
-      console.log("TargetOverride", targetOverride)
       if (targetProjectName && !availableScopes.includes('project')) {
         console.debug('Skipping override', path, 'because it is not project-scoped')
         continue
