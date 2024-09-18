@@ -50,6 +50,7 @@ const AddonUpload = ({
   onInstall,
   dropOnly,
   abortController,
+  onUploadStateChange,
   ...props
 }) => {
   const dispatch = useDispatch()
@@ -58,6 +59,12 @@ const AddonUpload = ({
   const [isComplete, setIsComplete] = useState(false)
   const [errorMessage, setErrorMessage] = useState(null)
   const progress = useSelector((state) => state.context.uploadProgress)
+
+  // Wrapping state callback to sync the parent uploading state
+  const toggleIsUploading = (value) => {
+    setIsUploading(value)
+    onUploadStateChange(value)
+  }
 
   // installers
   const [createInstaller] = useCreateInstallerMutation()
@@ -98,6 +105,7 @@ const AddonUpload = ({
       console.log('finished: created ' + type)
       return true
     } catch (error) {
+      toggleIsUploading(false)
       setErrorMessage(error?.data?.detail)
       console.error(error)
       return false
@@ -118,7 +126,11 @@ const AddonUpload = ({
         }).unwrap()
         success = true
       } else if (type === 'package') {
-        res = await uploadPackages({ files: filesToUpload, isNameEndpoint: true }).unwrap()
+        res = await uploadPackages({
+          files: filesToUpload,
+          isNameEndpoint: true,
+          abortController,
+        }).unwrap()
         success = true
       } else success = false
 
@@ -148,12 +160,12 @@ const AddonUpload = ({
     }
 
     // start loading
-    setIsUploading(true)
+    toggleIsUploading(true)
     setIsComplete(false)
     setErrorMessage(null)
 
     const onError = () => {
-      setIsUploading(false)
+      toggleIsUploading(false)
       setIsComplete(true)
     }
 
@@ -187,7 +199,7 @@ const AddonUpload = ({
     //   message = type + 's uploaded'
     // }
 
-    setIsUploading(false)
+    toggleIsUploading(false)
     setIsComplete(true)
 
     setFiles([])
@@ -200,7 +212,7 @@ const AddonUpload = ({
 
   const handleAddonInstall = async () => {
     let index = 0
-    setIsUploading(true)
+    toggleIsUploading(true)
     try {
       for (const file of files) {
         const opts = {
@@ -219,7 +231,7 @@ const AddonUpload = ({
         await axios.post('/api/addons/install', file.file, opts)
         index++
       }
-      setIsUploading(false)
+      toggleIsUploading(false)
       setIsComplete(true)
 
       setFiles([])
@@ -229,7 +241,7 @@ const AddonUpload = ({
       dispatch(api.util.invalidateTags(['bundleList', 'addonList']))
     } catch (error) {
       console.log(error)
-      setIsUploading(false)
+      toggleIsUploading(false)
       setIsComplete(true)
       dispatch(onUploadFinished())
       setErrorMessage('ERROR: ' + error?.response?.data?.detail)
@@ -279,8 +291,9 @@ const AddonUpload = ({
             {message}
             {isUploading && <StyledProgressBar $progress={progress} />}
             <div>
-              {onClose && <Button onClick={onClose} label="Close" />}
+              {onClose && <Button onClick={onClose} label="Cancel" />}
               <SaveButton
+                disabled={isUploading}
                 active={files.length}
                 label="Upload"
                 onClick={handleSubmit}
