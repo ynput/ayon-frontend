@@ -13,14 +13,22 @@ const patchActivity = ({ activityId, userName, reaction }, { getState, dispatch 
       apiRest.util.updateQueryData('getActivities', cacheArgs.originalArgs, (draft) => {
         // @ts-ignore
         const index = draft.activities.findIndex((a: ActivityNode) => a.activityId === activityId)
+        if (index === -1) {
+          return
+        }
+
         if (action === 'create') {
           // @ts-ignore
-          draft.activities[index].reactions.push({
-            reaction,
-            userName,
-            fullName: '',
-            timeStamp: '',
-          })
+          draft.activities[index].reactions = [
+          // @ts-ignore
+            ...(draft.activities[index].reactions || []),
+            {
+              reaction,
+              userName,
+              fullName: '',
+              timeStamp: '',
+            },
+          ]
         }
 
         if (action === 'delete') {
@@ -39,6 +47,7 @@ const patchActivity = ({ activityId, userName, reaction }, { getState, dispatch 
     )
   })
 }
+
 const enhancedApi = api.enhanceEndpoints({
   endpoints: {
     createReactionToActivity: {
