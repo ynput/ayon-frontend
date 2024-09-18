@@ -5,10 +5,11 @@ import InfoMessage from '@components/InfoMessage'
 type DeleteUserDialogProps = {
   onHide: () => void
   selectedUsers: string[]
-  onSubmit: () => void
+  onDelete: () => void
+  onDisable: () => void
 }
 
-const DeleteUserDialog = ({ onHide, selectedUsers, onSubmit }: DeleteUserDialogProps) => {
+const DeleteUserDialog = ({ onHide, selectedUsers, onDelete, onDisable }: DeleteUserDialogProps) => {
   const [value, setValue] = useState('')
 
 
@@ -24,12 +25,15 @@ const DeleteUserDialog = ({ onHide, selectedUsers, onSubmit }: DeleteUserDialogP
       size="md"
       header={`Delete ${selectedUsersString} Users`}
       footer={
-        <Button
-          variant="danger"
-          label="Delete"
-          onClick={onSubmit}
-          disabled={value !== selectedUsersString}
-        />
+        <>
+          <Button label={selectedUsers.length > 1 ? 'Disable users' : 'Disable user'} onClick={onDisable} />
+          <Button
+            variant="danger"
+            label="Delete"
+            onClick={onDelete}
+            disabled={value !== selectedUsersString}
+          />
+        </>
       }
       isOpen={true}
       onClose={onHide}
@@ -40,7 +44,7 @@ const DeleteUserDialog = ({ onHide, selectedUsers, onSubmit }: DeleteUserDialogP
           message="Deleting users can have unintended consequences. Consider deactivating the user instead?"
         />
         <FormRow
-          label={`To confirm type '${selectedUsersString}' in the box below`}
+          label={`To confirm delete action, type '${selectedUsersString}' in the box below`}
           style={{ flexDirection: 'column', alignItems: 'start', marginTop: '16px' }}
           labelStyle={{ height: 'auto', lineHeight: 'auto' }}
           fieldStyle={{ display: 'block', width: '100%' }}

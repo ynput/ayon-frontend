@@ -11,7 +11,7 @@ import { useGetUsersQuery } from '@queries/user/getUsers'
 import ProjectList from '@containers/projectList'
 import UserDetail from './userDetail'
 import UserList from './UserList'
-import { useDeleteUserMutation } from '@queries/user/updateUser'
+import { useDeleteUserMutation, useUpdateUserMutation } from '@queries/user/updateUser'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { useSelector } from 'react-redux'
 import UsersOverview from './UsersOverview'
@@ -113,6 +113,7 @@ const UsersSettings = () => {
 
   // MUTATION HOOK
   const [deleteUser] = useDeleteUserMutation()
+  const [updateUser] = useUpdateUserMutation()
 
   let filteredUserList = useMemo(() => {
     // filter out users that are not in project if projectAccessOnly is true
@@ -131,6 +132,30 @@ const UsersSettings = () => {
       return userList
     }
   }, [userList, selectedProjects])
+
+  const handleDisable = async (users) => {
+    toastId.current = toast.info('Disabling users...')
+    let i = 0
+    for (const user of users) {
+
+      try {
+        await updateUser({
+          name: user,
+          patch: { active: false },
+        }).unwrap()
+
+        toast.update(toastId.current, {
+          render: `Disabled user ${user}`,
+          type: toast.TYPE.SUCCESS,
+        })
+        setSelectedUsers([])
+        i += 1
+      } catch {
+        toast.error(`Unable to disable user: ${user}`)
+      }
+    }
+    toast.update(toastId.current, { render: `Disabled ${i} user(s)`, type: toast.TYPE.SUCCESS })
+  }
 
   const handleDelete = async (users) => {
     toastId.current = toast.info('Deleting users...')
@@ -366,7 +391,8 @@ const UsersSettings = () => {
           <DeleteUserDialog
             selectedUsers={selectedUsers}
             onHide={() => setShowDeleteUser(false)}
-            onSubmit={() => handleDelete(selectedUsers)}
+            onDelete={() => handleDelete(selectedUsers)}
+            onDisable={() => handleDisable(selectedUsers)}
           />
         )}
 
