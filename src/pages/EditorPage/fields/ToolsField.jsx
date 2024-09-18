@@ -45,21 +45,25 @@ const ToolsField = ({ value, className, attrib }) => {
 
   const isInheritedAndChanged = className.includes('inherited') && className.includes('changed')
 
-  if (isInheritedAndChanged) return <span className="editor-field changed">(inherited)</span>
+  if (isInheritedAndChanged) {
+    // TODO come back here
+    return <span className="editor-field changed">(inherited)</span>
+  }
 
   if (!value?.length) return null
 
   return (
     <StyledDropdown
       value={labels}
+      options={labels.map((label) => ({ label, value: label }))}
       className={className}
-      multiSelect
       itemStyle={{ pointerEvents: 'none', backgroundColor: 'unset' }}
       onOpen={() => setIsOpen(true)}
       onClose={() => setIsOpen(false)}
+      onDoubleClick={(e) => e.stopPropagation()}
       valueTemplate={() => (
         <DefaultValueTemplate value={value}>
-          {`(${labels?.length}) ${labels?.join(', ')}`}
+          {!labels.length ? 'None' : `(${labels?.length}) ${labels?.join(', ')}`}
         </DefaultValueTemplate>
       )}
       $isOpen={isOpen}

@@ -3,7 +3,7 @@ import React, { useState } from 'react'
 import BundleDepPackage from './BundleDepPackage'
 import { useUpdateBundleMutation } from '@queries/bundles/updateBundles'
 import { toast } from 'react-toastify'
-import { useGetDependencyPackageListQuery } from '@queries/dependencyPackages'
+import { useListDependencyPackagesQuery } from '@queries/dependencyPackages/getDependencyPackages'
 import BundleDepsPicker from './BundleDepsPicker'
 
 const BundleDeps = ({ bundle, onChange }) => {
@@ -14,7 +14,7 @@ const BundleDeps = ({ bundle, onChange }) => {
   const [updatePackageForm, setUpdatePackageForm] = useState(initPackageForm)
 
   // get dep packages from server
-  const { data: packages = [] } = useGetDependencyPackageListQuery()
+  const { data: { packages = [] } = {} } = useListDependencyPackagesQuery()
 
   const [updateBundle, { isLoading: isUpdating }] = useUpdateBundleMutation()
 

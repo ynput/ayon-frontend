@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useMemo } from 'react'
-import { useGetAddonListQuery } from '@queries/addons/getAddons'
+import { useListAddonsQuery } from '@queries/addons/getAddons'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { SocketContext } from '@context/websocketContext'
@@ -100,9 +100,7 @@ const BundlesAddonList = React.forwardRef(
   ) => {
     const navigate = useNavigate()
 
-    const { data: addons = [], refetch } = useGetAddonListQuery({
-      showVersions: true,
-    })
+    const { data: { addons = [] } = {}, refetch } = useListAddonsQuery({})
 
     const readyState = useContext(SocketContext).readyState
     useEffect(() => {

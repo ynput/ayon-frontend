@@ -24,7 +24,7 @@ type Props = {
   projectName: any
   children?: JSX.Element|JSX.Element[];
   onUploaded: (operations: Operation[]) => void
-  resetFileUploadState: () => void
+  resetFileUploadState?: () => void
 }
 
 const EntityThumbnailUploader = ({
@@ -101,7 +101,11 @@ const EntityThumbnailUploader = ({
         className={clsx({ isCompact })}
         onDragEnter={() => setIsDraggingFile(true)}
       >
-        <ThumbnailWrapper>{children}</ThumbnailWrapper>
+        <ThumbnailWrapper>
+          <div>
+            {children}
+          </div>
+        </ThumbnailWrapper>
         <ThumbnailUploader
           entities={entities}
           inputRef={inputRef}

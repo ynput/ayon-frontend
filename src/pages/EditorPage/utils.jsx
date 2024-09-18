@@ -33,7 +33,19 @@ const formatAttribute = (node, changes, fieldName, styled = true) => {
     else if (fieldType === 'datetime') return <TimestampField value={value} ddOnly />
     else if (fieldType === 'boolean')
       return !value ? '' : <Icon icon="check" className={`editor-field ${className}`} />
-    else if (fieldType === 'list_of_strings' && typeof value === 'object') {
+    else if (fieldType === 'string') {
+      const _enum = attribSettings.enum
+      if (!value?.length || !_enum) {
+        return value || ''
+      }
+
+      const labels = _enum
+        .filter((item) => value.includes(item.value))
+        .map((item) => item.label || item.value)
+      const values = _enum.filter((item) => value.includes(item.value)).map((item) => item.value)
+      value = labels.join(', ')
+      tooltip = values.join(', ')
+    } else if (fieldType === 'list_of_strings' && typeof value === 'object') {
       if (!value?.length) return ''
       const _enum = attribSettings.enum
 

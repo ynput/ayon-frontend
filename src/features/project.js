@@ -15,7 +15,7 @@ export const productTypes = {
   setdress: { name: 'setdress', icon: 'forest' },
   groom: { name: 'groom', icon: 'content_cut' },
   matchmove: { name: 'matchmove', icon: 'switch_video' },
-  vdb: { name: 'vdb', icon: 'local_fire_department' },
+  vdbcache: { name: 'vdbcache', icon: 'local_fire_department' },
   lightrig: { name: 'lightrig', icon: 'wb_incandescent' },
   lut: { name: 'lut', icon: 'opacity' },
   workfile: { name: 'workfile', icon: 'home_repair_service' },

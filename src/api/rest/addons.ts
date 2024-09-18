@@ -2,10 +2,23 @@ import { RestAPI as api } from '../../services/ayon'
 const injectedRtkApi = api.injectEndpoints({
   endpoints: (build) => ({
     listAddons: build.query<ListAddonsApiResponse, ListAddonsApiArg>({
+      query: (queryArg) => ({ url: `/api/addons`, params: { details: queryArg.details } }),
+    }),
+    deleteAddonVersion: build.mutation<DeleteAddonVersionApiResponse, DeleteAddonVersionApiArg>({
       query: (queryArg) => ({
-        url: `/api/addons`,
+        url: `/api/addons/${queryArg.addonName}/${queryArg.addonVersion}`,
+        method: 'DELETE',
+        params: { purge: queryArg.purge },
+      }),
+    }),
+    uploadAddonZipFile: build.mutation<UploadAddonZipFileApiResponse, UploadAddonZipFileApiArg>({
+      query: (queryArg) => ({
+        url: `/api/addons/install`,
+        method: 'POST',
         params: {
-          details: queryArg.details,
+          url: queryArg.url,
+          addonName: queryArg.addonName,
+          addonVersion: queryArg.addonVersion,
         },
       }),
     }),
@@ -16,6 +29,19 @@ export { injectedRtkApi as api }
 export type ListAddonsApiResponse = /** status 200 Successful Response */ AddonList
 export type ListAddonsApiArg = {
   details?: boolean
+}
+export type DeleteAddonVersionApiResponse = /** status 200 Successful Response */ any
+export type DeleteAddonVersionApiArg = {
+  addonName: string
+  addonVersion: string
+  purge?: boolean
+}
+export type UploadAddonZipFileApiResponse =
+  /** status 200 Successful Response */ InstallAddonResponseModel
+export type UploadAddonZipFileApiArg = {
+  url?: string
+  addonName?: string
+  addonVersion?: string
 }
 export type PathDefinition = {
   windows?: string
@@ -86,4 +112,7 @@ export type ValidationError = {
 }
 export type HttpValidationError = {
   detail?: ValidationError[]
+}
+export type InstallAddonResponseModel = {
+  eventId: string
 }

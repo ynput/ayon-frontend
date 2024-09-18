@@ -1,20 +1,5 @@
 import api from '@api'
 import queryUpload from '../queryUpload'
-import PubSub from '@/pubsub'
-
-const EVENTS_QUERY = `
-query InstallEvents($ids: [String!]!) {
-  events(last: 100, ids: $ids) {
-    edges {
-      node {
-        id
-        status
-        description
-      }
-    }
-  }
-}
-`
 
 const onBoarding = api.injectEndpoints({
   endpoints: (build) => ({
@@ -37,18 +22,6 @@ const onBoarding = api.injectEndpoints({
         url: '/api/onboarding/restart',
         method: 'POST',
       }),
-    }),
-    getReleases: build.query({
-      query: () => ({
-        url: '/api/onboarding/releases',
-      }),
-      transformResponse: (response) => response?.releases || [],
-    }),
-    getRelease: build.query({
-      query: ({ name }) => ({
-        url: `/api/onboarding/releases/${name}`,
-      }),
-      transformResponse: (response) => response || {},
     }),
     getInstallStatus: build.query({
       query: () => ({
@@ -109,58 +82,8 @@ const onBoarding = api.injectEndpoints({
         'addonList',
         'addonSettingsList',
         'installerList',
-        'dependencyPackageList',
+        'dependencyPackage',
       ],
-    }),
-    getInstallEvents: build.query({
-      query: ({ ids = [] }) => ({
-        url: '/graphql',
-        method: 'POST',
-        body: {
-          query: EVENTS_QUERY,
-          variables: { ids },
-        },
-      }),
-      transformResponse: (response) => response?.data?.events?.edges?.map(({ node }) => node),
-      async onCacheEntryAdded({ topics = [], ids = [] }, { updateCachedData, cacheEntryRemoved }) {
-        let subscriptions = []
-        try {
-          const handlePubSub = (topic, message) => {
-            if (topic === 'client.connected') {
-              return
-            }
-
-            // if message is not in ids, ignore
-            if (!ids.includes(message.id)) return
-
-            // update cache
-            updateCachedData((draft) => {
-              // find index of event
-              const index = draft.findIndex((e) => e.id === message.id)
-              // replace event
-              if (index !== -1) {
-                draft[index] = message
-              } else {
-                // add event
-                draft.push(message)
-              }
-            })
-          }
-
-          // sub to websocket topics
-          topics.forEach((topic) => {
-            const sub = PubSub.subscribe(topic, handlePubSub)
-            subscriptions.push(sub)
-          })
-        } catch (error) {
-          // no-op in case `cacheEntryRemoved` resolves before `cacheDataLoaded`,
-          // in which case `cacheDataLoaded` will throw
-          console.error(error)
-        }
-        await cacheEntryRemoved
-        // unsubscribe from all topics
-        subscriptions.forEach((sub) => PubSub.unsubscribe(sub))
-      },
     }),
   }),
   overrideExisting: true,
@@ -169,11 +92,7 @@ const onBoarding = api.injectEndpoints({
 export const {
   useInitializeUserMutation,
   useAbortOnBoardingMutation,
-  useGetReleasesQuery,
   useGetInstallStatusQuery,
   useInstallPresetMutation,
-  useGetInstallEventsQuery,
-  useGetReleaseQuery,
-  useLazyGetReleaseQuery,
   useRestartOnBoardingMutation,
 } = onBoarding

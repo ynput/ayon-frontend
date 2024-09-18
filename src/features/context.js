@@ -33,6 +33,7 @@ const initialState = {
   uriChanged: 0,
   uploadProgress: 0, // percentage 0 - 100
   menuOpen: false,
+  activeReactionPopup: null,
   previewFiles: [],
   previewFilesProjectName: '',
   previewFilesIndex: null,

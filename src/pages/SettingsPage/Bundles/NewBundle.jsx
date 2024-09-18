@@ -63,8 +63,6 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isDev, developerMod
 
   const bundleCheckError = bundleCheckData.issues?.some((issue) => issue.severity === 'error')
 
-  const addonsString = JSON.stringify(formData?.addons)
-  const installersString = JSON.stringify(formData?.installers)
 
   //   build initial form data
   useEffect(() => {
@@ -100,7 +98,7 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isDev, developerMod
 
       setFormData(initForm)
     }
-  }, [initBundle, addonsString, installersString])
+  }, [initBundle])
 
   // Select addon if query search has addon=addonName
   const addonListRef = useRef()

@@ -1,14 +1,10 @@
-import {expect, test as base } from '@playwright/test'
-import type {Page } from '@playwright/test'
-import { getProjectName } from '../old/fixtures/project'
+import { expect, test as base } from '@playwright/test'
+import type { Page } from '@playwright/test'
 
 const getUserName = (prefix: string) => (browser: string) => prefix + '_' + browser
 
 class UserPage {
-  constructor(
-    public readonly page: Page,
-    public readonly browserName: String,
-  ) {}
+  constructor(public readonly page: Page, public readonly browserName: String) {}
 
   async goto(userName?: string) {
     if (userName) {
@@ -33,17 +29,18 @@ class UserPage {
     await this.page.getByRole('button', { name: 'person_remove Delete Users' }).click()
     await this.page.getByLabel('Delete', { exact: true }).click()
     await expect(this.page.getByText('Deleted 1 user(s)')).toBeVisible()
-    await expect(this.page.locator('span').filter({ hasText: new RegExp(`^${userName}$`) })).toBeHidden()
-
+    await expect(
+      this.page.locator('span').filter({ hasText: new RegExp(`^${userName}$`) }),
+    ).toBeHidden()
   }
 }
 
 const test = base.extend<{ userPage: UserPage }>({
   userPage: async ({ page, browserName }, use) => {
-    const projectPage = new UserPage(page, browserName);
-    await use(projectPage);
+    const userPage = new UserPage(page, browserName)
+    await use(userPage)
   },
-});
+})
 
 export default UserPage
 export { getUserName, test as userTest }
