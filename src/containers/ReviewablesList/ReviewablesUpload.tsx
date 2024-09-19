@@ -14,15 +14,56 @@ import { toggleUpload } from '@state/viewer'
 // components
 import ReviewableProgressCard, { ReviewableProgress } from '@components/ReviewableProgressCard'
 import * as Styled from './ReviewablesList.styled'
+import styled from 'styled-components'
 
+export const ReviewablesList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: var(--base-gap-small);
+  min-height: 100%;
+  padding-bottom: var(--padding-m);
+  width: 100%;
+  height: 100%;
+`
+
+export const Upload = styled.div`
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+
+  background-color: var(--md-sys-color-surface-container-low);
+
+  border-radius: var(--border-radius-xxl);
+  border: 2px dashed var(--md-sys-color-outline-variant);
+  color: var(--md-sys-color-outline-variant);
+
+  &:hover {
+    background-color: var(--md-sys-color-surface-container-low-hover);
+    border-color: var(--md-sys-color-outline);
+    color: var(--md-sys-color-outline);
+  }
+
+  input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+`
 
 interface ReviewableUploadProps {
   projectName: string
   versionId: string
   productId: string
+  onUpload: () => void
 }
 
-const ReviewableUpload: FC<ReviewableUploadProps> = ({ projectName, versionId, productId }) => {
+const ReviewableUpload: FC<ReviewableUploadProps> = ({ projectName, versionId, productId, onUpload }) => {
   const dispatch = useDispatch()
 
   // are we dragging a file over?
@@ -144,6 +185,8 @@ const ReviewableUpload: FC<ReviewableUploadProps> = ({ projectName, versionId, p
           .then(successHandler(file))
           .catch(errorHandler(file))
       }
+      // Callback after successful uploads
+      onUpload()
     } catch (error) {
       // something went wrong with everything, EEEEK!
       console.error(error)
@@ -174,7 +217,7 @@ const ReviewableUpload: FC<ReviewableUploadProps> = ({ projectName, versionId, p
   return (
     <>
       {!isDraggingFile && (
-        <Styled.ReviewablesList onDragEnter={() => setIsDraggingFile(true)}>
+        <ReviewablesList onDragEnter={() => setIsDraggingFile(true)}>
           <>
             {/* uploading items */}
             {uploading[versionId]?.map((file) => (
@@ -187,12 +230,12 @@ const ReviewableUpload: FC<ReviewableUploadProps> = ({ projectName, versionId, p
             ))}
 
             {/* upload button */}
-            <Styled.Upload className="upload">
+            <Upload className="upload">
               <span>Drop or click to upload</span>
               <input type="file" multiple onChange={handleInputChange} ref={inputRef} />
-            </Styled.Upload>
+            </Upload>
           </>
-        </Styled.ReviewablesList>
+        </ReviewablesList>
       )}
 
       {isDraggingFile && (

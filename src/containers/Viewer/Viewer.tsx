@@ -288,7 +288,7 @@ const Viewer = ({ onClose }: ViewerProps) => {
         alt={selectedReviewable.label || selectedReviewable.filename}
       />
     )
-  } else if (!isFetchingReviewables) {
+  } else if (!isFetchingReviewables && versionReviewableIds?.length === 0) {
     viewerComponent = (
       <div
         id="foo"
@@ -304,6 +304,7 @@ const Viewer = ({ onClose }: ViewerProps) => {
           projectName={projectName}
           versionId={versionIds[0]}
           productId={productId}
+          onUpload = {() => dispatch(updateDetailsPanelTab({ scope: 'review', tab: 'files' }))}
         />
       </div>
     )
