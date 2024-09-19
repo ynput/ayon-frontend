@@ -11,7 +11,7 @@ import { useGetUsersQuery } from '@queries/user/getUsers'
 import ProjectList from '@containers/projectList'
 import UserDetail from './userDetail'
 import UserList from './UserList'
-import { useDeleteUserMutation } from '@queries/user/updateUser'
+import { useDeleteUserMutation, useUpdateUserMutation } from '@queries/user/updateUser'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { useSelector } from 'react-redux'
 import UsersOverview from './UsersOverview'
@@ -19,10 +19,10 @@ import { useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import NewUser from './newUser'
 import NewServiceUser from './newServiceUser'
-import confirmDelete from '@helpers/confirmDelete'
 import { useGetAccessGroupsQuery } from '@queries/accessGroups/getAccessGroups'
 import Shortcuts from '@containers/Shortcuts'
 import SwitchButton from '@components/SwitchButton/SwitchButton'
+import DeleteUserDialog from './DeleteUserDialog'
 
 // what to show in the access column
 const formatAccessGroups = (rowData, selectedProjects) => {
@@ -89,6 +89,7 @@ const UsersSettings = () => {
   const [showNewUser, setShowNewUser] = useState(false)
   const [showNewServiceUser, setShowNewServiceUser] = useState(false)
   const [showRenameUser, setShowRenameUser] = useState(false)
+  const [showDeleteUser, setShowDeleteUser] = useState(false)
   const [showSetPassword, setShowSetPassword] = useState(false)
   // show users for selected projects
   const [projectAccessOnly, setProjectAccessOnly] = useState(true)
@@ -112,6 +113,7 @@ const UsersSettings = () => {
 
   // MUTATION HOOK
   const [deleteUser] = useDeleteUserMutation()
+  const [updateUser] = useUpdateUserMutation()
 
   let filteredUserList = useMemo(() => {
     // filter out users that are not in project if projectAccessOnly is true
@@ -131,29 +133,48 @@ const UsersSettings = () => {
     }
   }, [userList, selectedProjects])
 
-  const onDelete = async (users) => {
-    confirmDelete({
-      label: `${users.join(', ')} Users`,
-      showToasts: false,
-      accept: async () => {
-        toastId.current = toast.info('Deleting users...')
-        let i = 0
-        for (const user of users) {
-          try {
-            await deleteUser({ user }).unwrap()
-            toast.update(toastId.current, {
-              render: `Deleted user: ${user}`,
-              type: toast.TYPE.SUCCESS,
-            })
-            setSelectedUsers([])
-            i += 1
-          } catch {
-            toast.error(`Unable to delete user: ${user}`)
-          }
-        }
-        toast.update(toastId.current, { render: `Deleted ${i} user(s)`, type: toast.TYPE.SUCCESS })
-      },
-    })
+  const handleDisable = async (users) => {
+    toastId.current = toast.info('Disabling users...')
+    let i = 0
+    for (const user of users) {
+
+      try {
+        await updateUser({
+          name: user,
+          patch: { active: false },
+        }).unwrap()
+
+        toast.update(toastId.current, {
+          render: `Disabled user ${user}`,
+          type: toast.TYPE.SUCCESS,
+        })
+        i += 1
+      } catch {
+        toast.error(`Unable to disable user: ${user}`)
+      }
+    }
+    setShowDeleteUser(false)
+    toast.update(toastId.current, { render: `Disabled ${i} user(s)`, type: toast.TYPE.SUCCESS })
+  }
+
+  const handleDelete = async (users) => {
+    toastId.current = toast.info('Deleting users...')
+    let i = 0
+    for (const user of users) {
+      try {
+        await deleteUser({ user }).unwrap()
+        toast.update(toastId.current, {
+          render: `Deleted user: ${user}`,
+          type: toast.TYPE.SUCCESS,
+        })
+        setSelectedUsers([])
+        i += 1
+      } catch {
+        toast.error(`Unable to delete user: ${user}`)
+      }
+    }
+    setShowDeleteUser(false)
+    toast.update(toastId.current, { render: `Deleted ${i} user(s)`, type: toast.TYPE.SUCCESS })
   }
 
   const onTotal = (total) => {
@@ -267,7 +288,7 @@ const UsersSettings = () => {
             </form>
             <Spacer />
             <Button
-              onClick={() => onDelete(selectedUsers)}
+              onClick={() => setShowDeleteUser(selectedUsers)}
               label="Delete Users"
               icon="person_remove"
               disabled={!selectedUsers.length || isSelfSelected || managerDisabled}
@@ -327,7 +348,7 @@ const UsersSettings = () => {
                   selectedUsers,
                   setShowSetPassword,
                   setShowRenameUser,
-                  onDelete,
+                  setShowDeleteUser,
                   isLoading,
                   isSelfSelected,
                 }}
@@ -364,6 +385,15 @@ const UsersSettings = () => {
             selectedUsers={selectedUsers}
             onHide={() => setShowRenameUser(false)}
             onSuccess={(name) => setSelectedUsers([name])}
+          />
+        )}
+
+        {showDeleteUser && (
+          <DeleteUserDialog
+            selectedUsers={selectedUsers}
+            onHide={() => setShowDeleteUser(false)}
+            onDelete={() => handleDelete(selectedUsers)}
+            onDisable={() => handleDisable(selectedUsers)}
           />
         )}
 

@@ -51,8 +51,8 @@ const UserList = ({
   userList,
   tableList,
   setShowRenameUser,
+  setShowDeleteUser,
   setShowSetPassword,
-  onDelete,
   isLoading,
   onSelectUsers,
   isSelfSelected,
@@ -96,7 +96,7 @@ const UserList = ({
       {
         label: 'Delete selected',
         disabled: !selection.length || isSelfSelected,
-        command: () => onDelete(newSelectedUsers),
+        command: () => setShowDeleteUser(newSelectedUsers),
         icon: 'delete',
         danger: true,
       },
