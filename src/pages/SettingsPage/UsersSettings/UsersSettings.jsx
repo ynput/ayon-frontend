@@ -148,12 +148,12 @@ const UsersSettings = () => {
           render: `Disabled user ${user}`,
           type: toast.TYPE.SUCCESS,
         })
-        setSelectedUsers([])
         i += 1
       } catch {
         toast.error(`Unable to disable user: ${user}`)
       }
     }
+    setShowDeleteUser(false)
     toast.update(toastId.current, { render: `Disabled ${i} user(s)`, type: toast.TYPE.SUCCESS })
   }
 
@@ -173,6 +173,7 @@ const UsersSettings = () => {
         toast.error(`Unable to delete user: ${user}`)
       }
     }
+    setShowDeleteUser(false)
     toast.update(toastId.current, { render: `Deleted ${i} user(s)`, type: toast.TYPE.SUCCESS })
   }
 
