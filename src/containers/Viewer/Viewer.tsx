@@ -9,7 +9,6 @@ import ViewerDetailsPanel from './ViewerDetailsPanel'
 import ViewerPlayer from './ViewerPlayer'
 import ReviewablesSelector from '@components/ReviewablesSelector'
 import { updateDetailsPanelTab } from '@state/details'
-import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
 import { $Any } from '@types'
 import { useFullScreenHandle } from 'react-full-screen'
 import { getGroupedReviewables } from '../ReviewablesList/getGroupedReviewables'
@@ -17,6 +16,7 @@ import { GetReviewablesResponse } from '@queries/review/types'
 import { compareDesc } from 'date-fns'
 import ReviewVersionDropdown from '@/components/ReviewVersionDropdown'
 import { productTypes } from '@state/project'
+import ReviewableUpload from '@containers/ReviewablesList/ReviewablesUpload'
 
 interface ViewerProps {
   onClose?: () => void
@@ -289,26 +289,23 @@ const Viewer = ({ onClose }: ViewerProps) => {
       />
     )
   } else if (!isFetchingReviewables) {
-    let message = 'No preview available'
-    let children = null
-
-    if (noVersions) {
-      message = 'This task has published no versions.'
-    } else if (!reviewables.length) {
-      message = 'This version has no online reviewables.'
-      children = (
-        <Button onClick={handleUploadButton} icon="upload" variant="filled">
-          Upload a file
-        </Button>
-      )
-    } else if (availability === 'conversionRequired') {
-      message = 'File not supported and needs conversion'
-    }
-
     viewerComponent = (
-      <EmptyPlaceholder icon="hide_image" message={message}>
-        {children}
-      </EmptyPlaceholder>
+      <div
+        id="foo"
+        style={{
+          width: '100%',
+          height: '100%',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
+      >
+        <ReviewableUpload
+          projectName={projectName}
+          versionId={versionIds[0]}
+          productId={productId}
+        />
+      </div>
     )
   }
 
