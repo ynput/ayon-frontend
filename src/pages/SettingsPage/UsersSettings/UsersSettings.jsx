@@ -179,17 +179,21 @@ const UsersSettings = () => {
 
   const onTotal = (total) => {
     // if total already in search, remove it
-    if (search === total) return setSearch('')
+    if (search === total) {
+      return setSearch('')
+    }
 
-    // if "total" select all users
-    // else set search to total
+    // if "total" -> no users selected
     if (total === 'total') {
       setSearch('')
-      setSelectedUsers(filteredUserList.map((user) => user.name))
-      if (selectedProjects) setProjectAccessOnly(true)
-    } else {
-      setSearch(total)
+      setSelectedUsers([])
+      if (selectedProjects) {
+        setProjectAccessOnly(true)
+      }
+      return
     }
+
+    setSearch(total)
   }
 
   const openNewUser = () => {
