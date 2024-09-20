@@ -58,7 +58,7 @@ interface ReviewableUploadProps {
   projectName: string
   versionId: string
   productId: string
-  maximized?: boolean
+  variant?: 'normal' | 'large'
   onUpload?: () => void
   children?: $Any
 }
@@ -69,9 +69,14 @@ const ReviewableUpload: FC<ReviewableUploadProps> = ({
   productId,
   onUpload,
   children,
-  maximized,
+  variant = 'normal',
 }) => {
   const dispatch = useDispatch()
+
+  const {
+    taskId,
+    folderId,
+  } = useSelector((state: $Any) => state.viewer)
 
   // are we dragging a file over?
   const [isDraggingFile, setIsDraggingFile] = useState(false)
@@ -130,6 +135,9 @@ const ReviewableUpload: FC<ReviewableUploadProps> = ({
 
       // also invalidate the viewer cache
       dispatch(api.util.invalidateTags([{ type: 'viewer', id: productId }]))
+      dispatch(api.util.invalidateTags([{ type: 'viewer', id: versionId }]))
+      dispatch(api.util.invalidateTags([{ type: 'viewer', id: folderId }]))
+      dispatch(api.util.invalidateTags([{ type: 'viewer', id: taskId }]))
       // remove the file from the list
       handleRemoveUpload(file.name)
     }
@@ -238,7 +246,7 @@ const ReviewableUpload: FC<ReviewableUploadProps> = ({
             ))}
 
             {/* upload button */}
-            <Upload className="upload" style={{ height: maximized ? '100%' : 'auto' }}>
+            <Upload className="upload" style={{ height: variant == 'large' ? '80px' : ''}}>
               <span>Drop or click to upload</span>
               <input type="file" multiple onChange={handleInputChange} ref={inputRef} />
             </Upload>

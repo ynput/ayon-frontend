@@ -17,6 +17,7 @@ import { compareDesc } from 'date-fns'
 import ReviewVersionDropdown from '@/components/ReviewVersionDropdown'
 import { productTypes } from '@state/project'
 import ReviewableUpload from '@containers/ReviewablesList/ReviewablesUpload'
+import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
 
 interface ViewerProps {
   onClose?: () => void
@@ -289,25 +290,38 @@ const Viewer = ({ onClose }: ViewerProps) => {
       />
     )
   } else if (!isFetchingReviewables && versionReviewableIds?.length === 0) {
+    let message = 'No preview available'
+
+    if (noVersions) {
+      message = 'This task has published no versions.'
+    } else if (!reviewables.length) {
+      message = 'This version has no online reviewables.'
+    } else if (availability === 'conversionRequired') {
+      message = 'File not supported and needs conversion'
+    }
+
     viewerComponent = (
-      <div
-        id="foo"
-        style={{
-          width: '100%',
-          height: '100%',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-        }}
-      >
+      <Styled.EmptyPlaceholderWrapper>
         <ReviewableUpload
           projectName={projectName}
           versionId={versionIds[0]}
           productId={productId}
-          maximized
-          onUpload = {() => dispatch(updateDetailsPanelTab({ scope: 'review', tab: 'files' }))}
-        />
-      </div>
+          variant="large"
+          onUpload={() => dispatch(updateDetailsPanelTab({ scope: 'review', tab: 'files' }))}
+        >
+          <EmptyPlaceholder
+            icon="hide_image"
+            message={message}
+            style={{
+              position: 'relative',
+              transform: 'none',
+              top: 'auto',
+              left: 'auto',
+              paddingBottom: '16px',
+            }}
+          />
+        </ReviewableUpload>
+      </Styled.EmptyPlaceholderWrapper>
     )
   }
 
