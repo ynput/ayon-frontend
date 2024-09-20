@@ -8,6 +8,9 @@ import AddonUpload from './AddonUpload'
 const AddonInstall = () => {
   const user = useSelector((state) => state.user)
 
+  const abortController = new AbortController()
+  const handleClose = () => abortController.abort()
+
   if (!user?.data?.isAdmin) {
     return (
       <Section style={{ alignItems: 'center', justifyContent: 'center' }}>
@@ -18,7 +21,7 @@ const AddonInstall = () => {
 
   return (
     <Section style={{ alignItems: 'center', justifyContent: 'center' }}>
-      <AddonUpload />
+      <AddonUpload abortController={abortController} onClose={handleClose} />
     </Section>
   )
 }
