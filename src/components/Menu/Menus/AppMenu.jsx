@@ -92,7 +92,7 @@ export const AppMenu = ({ user, ...props }) => {
     },
     {
       id: 'releases',
-      label: 'Update pipeline',
+      label: 'Update Pipeline',
       onClick: handleReleaseInstaller,
       icon: 'valve',
     },
