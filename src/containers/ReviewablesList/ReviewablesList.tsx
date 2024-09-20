@@ -1,10 +1,8 @@
-import { FC, MouseEvent, useState, DragEvent, ChangeEvent, useRef, useEffect } from 'react'
+import { FC, MouseEvent, useState, useRef, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { $Any } from '@types'
-import axios from 'axios'
 // queries
-import api from '@api'
-import reviewApi, {
+import {
   useGetReviewablesForVersionQuery,
   useHasTranscoderQuery,
 } from '@queries/review/getReview'
@@ -12,7 +10,6 @@ import {
   useDeleteReviewableMutation,
   useSortVersionReviewablesMutation,
 } from '@queries/review/updateReview'
-import { UploadReviewableApiResponse } from '@api/rest/review'
 
 // DND
 import {
@@ -36,10 +33,9 @@ import {
 
 // components
 import ReviewableCard from '@components/ReviewableCard'
-import ReviewableProgressCard, { ReviewableProgress } from '@components/ReviewableProgressCard'
+import ReviewableProgressCard from '@components/ReviewableProgressCard'
 import SortableReviewableCard from './SortableReviewableCard'
 import * as Styled from './ReviewablesList.styled'
-import { Icon } from '@ynput/ayon-react-components'
 import { toast } from 'react-toastify'
 
 import { openViewer, toggleUpload } from '@state/viewer'
@@ -49,6 +45,7 @@ import { getGroupedReviewables } from './getGroupedReviewables'
 import useCreateContext from '@hooks/useCreateContext'
 import confirmDelete from '@helpers/confirmDelete'
 import EditReviewableDialog from './EditReviewableDialog'
+import ReviewableUpload from './ReviewablesUpload'
 
 interface ReviewablesListProps {
   projectName: string
@@ -87,9 +84,6 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
 
   // either null or the reviewable id we are editing
   const [editActivityId, setEditActivityId] = useState<null | string>(null)
-
-  // are we dragging a file over?
-  const [isDraggingFile, setIsDraggingFile] = useState(false)
 
   // dragging activeId
   const [activeId, setActiveId] = useState<null | string>(null)
@@ -186,139 +180,6 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
       }
     }
     setActiveId(null)
-  }
-
-  const [uploading, setUploads] = useState<{ [key: string]: ReviewableProgress[] }>({})
-
-  const handleRemoveUpload = (name: string) => {
-    setUploads((uploads) => ({
-      ...uploads,
-      [versionId]: uploads[versionId]?.filter((upload) => upload.name !== name) || [],
-    }))
-  }
-
-  const handleFileUpload = async (files: FileList) => {
-    const uploadingFiles = Array.from(files).map((file) => ({
-      name: file.name,
-      size: file.size,
-      progress: 0,
-    }))
-
-    const newUploadsForVersion = [...(uploading[versionId] || []), ...uploadingFiles]
-
-    setUploads({ ...uploading, [versionId]: newUploadsForVersion })
-
-    try {
-      // upload the files
-      for (const file of files) {
-        const autoLabel = file.name.split('.').slice(0, -1).join('.')
-
-        axios
-          .post(
-            `/api/projects/${projectName}/versions/${versionId}/reviewables?label=${autoLabel}`,
-            file,
-            {
-              headers: {
-                'content-type': file.type,
-                'x-file-name': file.name,
-              },
-              onUploadProgress: (progressEvent) =>
-                setUploads((uploads) => {
-                  // current uploads for versionId
-                  const currentUploads = uploads[versionId] || []
-                  const updatedUploads = currentUploads.map((upload) => {
-                    if (upload.name !== file.name) return upload
-                    return {
-                      ...upload,
-                      progress: progressEvent.total
-                        ? Math.round((progressEvent.loaded / progressEvent.total) * 100)
-                        : 0,
-                    }
-                  })
-
-                  // update state
-                  return {
-                    ...uploads,
-                    [versionId]: updatedUploads,
-                  }
-                }),
-            },
-          )
-          .then((response) => {
-            // Handle successful upload
-            console.log(`Upload successful for ${file.name}`)
-            // patch the new data into the reviewables cache
-            const data = response.data as UploadReviewableApiResponse
-
-            dispatch(
-              // @ts-ignore
-              reviewApi.util.updateQueryData(
-                'getReviewablesForVersion',
-                { projectName, versionId },
-                (draft) => {
-                  if (!draft.reviewables) {
-                    draft.reviewables = []
-                  }
-                  // @ts-ignore
-                  draft.reviewables.push(data)
-                },
-              ),
-            )
-
-            // also invalidate the viewer cache
-            dispatch(api.util.invalidateTags([{ type: 'viewer', id: productId }]))
-            // remove the file from the list
-            handleRemoveUpload(file.name)
-          })
-          .catch((error) => {
-            console.error(`Upload failed for ${file.name}: ${error}`)
-            toast.error(`Failed to upload file: ${file.name}`)
-            // add error to the file
-            setUploads((uploads) => {
-              // current uploads for versionId
-              const currentUploads = uploads[versionId] || []
-              const updatedUploads = currentUploads.map((upload) => {
-                if (upload.name !== file.name) return upload
-                return {
-                  ...upload,
-                  error: error.response.data.detail || error.message,
-                }
-              })
-
-              // update state
-              return {
-                ...uploads,
-                [versionId]: updatedUploads,
-              }
-            })
-          })
-      }
-    } catch (error) {
-      // something went wrong with everything, EEEEK!
-      console.error(error)
-      toast.error('Failed to upload file/s')
-    }
-  }
-
-  //   when the user selects a file
-  const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files
-
-    if (!files) return
-
-    handleFileUpload(files)
-  }
-
-  //   when the user drops a file
-  const handleFileDrop = (event: DragEvent<HTMLDivElement>) => {
-    event.preventDefault()
-    setIsDraggingFile(false)
-
-    const files = event.dataTransfer.files
-
-    if (!files) return
-
-    handleFileUpload(files)
   }
 
   const overlayModifiers = []
@@ -427,116 +288,91 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
 
   return (
     <>
-      {!isDraggingFile && (
-        <Styled.ReviewablesList onDragEnter={() => setIsDraggingFile(true)}>
-          {isLoading ? (
-            Array.from({ length: 3 }).map((_, index) => (
-              <Styled.LoadingCard key={index} className="loading" />
-            ))
-          ) : (
-            <>
-              <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragStart={handleDragStart}
-                onDragEnd={handleDragEnd}
-                onDragCancel={() => setActiveId(null)}
+      <ReviewableUpload
+        projectName={projectName}
+        versionId={versionId}
+        productId={productId}
+      >
+        {isLoading ? (
+          Array.from({ length: 3 }).map((_, index) => (
+            <Styled.LoadingCard key={index} className="loading" />
+          ))
+        ) : (
+          <>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+              onDragCancel={() => setActiveId(null)}
+            >
+              <SortableContext
+                items={reviewables.map(({ fileId }) => fileId as UniqueIdentifier)}
+                strategy={verticalListSortingStrategy}
               >
-                <SortableContext
-                  items={reviewables.map(({ fileId }) => fileId as UniqueIdentifier)}
-                  strategy={verticalListSortingStrategy}
-                >
-                  {sortableReviewables.map((reviewable) => (
-                    <SortableReviewableCard
-                      key={reviewable.fileId}
-                      projectName={projectName}
-                      onClick={handleReviewableClick}
-                      isSelected={reviewableIds.includes(reviewable.fileId)}
-                      isDragging={!!activeId}
-                      onContextMenu={handleContextMenu}
-                      onEdit={(e) => {
-                        e.stopPropagation()
-                        setEditActivityId(reviewable.activityId)
-                      }}
-                      {...reviewable}
-                    />
-                  ))}
-                </SortableContext>
+                {sortableReviewables.map((reviewable) => (
+                  <SortableReviewableCard
+                    key={reviewable.fileId}
+                    projectName={projectName}
+                    onClick={handleReviewableClick}
+                    isSelected={reviewableIds.includes(reviewable.fileId)}
+                    isDragging={!!activeId}
+                    onContextMenu={handleContextMenu}
+                    onEdit={(e) => {
+                      e.stopPropagation()
+                      setEditActivityId(reviewable.activityId)
+                    }}
+                    {...reviewable}
+                  />
+                ))}
+              </SortableContext>
 
-                {/* drag overlay */}
-                <DragOverlay modifiers={overlayModifiers}>
-                  {draggingReview ? (
-                    <ReviewableCard
-                      {...draggingReview}
-                      projectName={projectName}
-                      isDragOverlay
-                      isDragging
-                      isSelected={reviewableIds.includes(draggingReview.fileId)}
-                    />
-                  ) : null}
-                </DragOverlay>
-              </DndContext>
-              {processing.map((reviewable) => (
-                <ReviewableProgressCard
-                  key={reviewable.fileId}
-                  name={reviewable.filename}
-                  type={'processing'}
-                  progress={reviewable.processing?.progress}
-                  fileId={reviewable.fileId}
-                />
-              ))}
+              {/* drag overlay */}
+              <DragOverlay modifiers={overlayModifiers}>
+                {draggingReview ? (
+                  <ReviewableCard
+                    {...draggingReview}
+                    projectName={projectName}
+                    isDragOverlay
+                    isDragging
+                    isSelected={reviewableIds.includes(draggingReview.fileId)}
+                  />
+                ) : null}
+              </DragOverlay>
+            </DndContext>
+            {processing.map((reviewable) => (
+              <ReviewableProgressCard
+                key={reviewable.fileId}
+                name={reviewable.filename}
+                type={'processing'}
+                progress={reviewable.processing?.progress}
+                fileId={reviewable.fileId}
+              />
+            ))}
 
-              {queued.map((reviewable) => (
-                <ReviewableProgressCard
-                  key={reviewable.fileId}
-                  name={reviewable.filename}
-                  type={'queued'}
-                  fileId={reviewable.fileId}
-                />
-              ))}
+            {queued.map((reviewable) => (
+              <ReviewableProgressCard
+                key={reviewable.fileId}
+                name={reviewable.filename}
+                type={'queued'}
+                fileId={reviewable.fileId}
+              />
+            ))}
 
-              {incompatible.map((reviewable) => (
-                <ReviewableProgressCard
-                  key={reviewable.fileId}
-                  name={reviewable.filename}
-                  type={'unsupported'}
-                  tooltip={incompatibleMessage}
-                  src={`/api/projects/${projectName}/files/${reviewable.fileId}/thumbnail`}
-                  onContextMenu={handleContextMenu}
-                  fileId={reviewable.fileId}
-                />
-              ))}
-
-              {/* uploading items */}
-              {uploading[versionId]?.map((file) => (
-                <ReviewableProgressCard
-                  key={file.name}
-                  {...file}
-                  type={'upload'}
-                  onRemove={() => handleRemoveUpload(file.name)}
-                />
-              ))}
-
-              {/* upload button */}
-              <Styled.Upload className="upload">
-                <span>Drop or click to upload</span>
-                <input type="file" multiple onChange={handleInputChange} ref={inputRef} />
-              </Styled.Upload>
-            </>
-          )}
-        </Styled.ReviewablesList>
-      )}
-
-      {isDraggingFile && (
-        <Styled.Dropzone
-          onDragOver={(e) => e.preventDefault()}
-          onDragLeave={() => setIsDraggingFile(false)}
-          onDrop={handleFileDrop}
-        >
-          <Icon icon="upload" />
-          <span>Upload reviewable</span>
-        </Styled.Dropzone>
-      )}
+            {incompatible.map((reviewable) => (
+              <ReviewableProgressCard
+                key={reviewable.fileId}
+                name={reviewable.filename}
+                type={'unsupported'}
+                tooltip={incompatibleMessage}
+                src={`/api/projects/${projectName}/files/${reviewable.fileId}/thumbnail`}
+                onContextMenu={handleContextMenu}
+                fileId={reviewable.fileId}
+              />
+            ))}
+          </>
+        )}
+      </ReviewableUpload>
 
       {editActivityId && (
         <EditReviewableDialog

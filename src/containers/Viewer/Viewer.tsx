@@ -304,6 +304,7 @@ const Viewer = ({ onClose }: ViewerProps) => {
           projectName={projectName}
           versionId={versionIds[0]}
           productId={productId}
+          maximized
           onUpload = {() => dispatch(updateDetailsPanelTab({ scope: 'review', tab: 'files' }))}
         />
       </div>

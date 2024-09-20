@@ -28,8 +28,6 @@ export const ReviewablesList = styled.div`
 
 export const Upload = styled.div`
   position: relative;
-  width: 100%;
-  height: 100%;
   min-height: 50px;
   display: flex;
   align-items: center;
@@ -60,10 +58,19 @@ interface ReviewableUploadProps {
   projectName: string
   versionId: string
   productId: string
-  onUpload: () => void
+  maximized?: boolean
+  onUpload?: () => void
+  children?: $Any
 }
 
-const ReviewableUpload: FC<ReviewableUploadProps> = ({ projectName, versionId, productId, onUpload }) => {
+const ReviewableUpload: FC<ReviewableUploadProps> = ({
+  projectName,
+  versionId,
+  productId,
+  onUpload,
+  children,
+  maximized,
+}) => {
   const dispatch = useDispatch()
 
   // are we dragging a file over?
@@ -186,7 +193,7 @@ const ReviewableUpload: FC<ReviewableUploadProps> = ({ projectName, versionId, p
           .catch(errorHandler(file))
       }
       // Callback after successful uploads
-      onUpload()
+      onUpload && onUpload()
     } catch (error) {
       // something went wrong with everything, EEEEK!
       console.error(error)
@@ -219,6 +226,7 @@ const ReviewableUpload: FC<ReviewableUploadProps> = ({ projectName, versionId, p
       {!isDraggingFile && (
         <ReviewablesList onDragEnter={() => setIsDraggingFile(true)}>
           <>
+            {children}
             {/* uploading items */}
             {uploading[versionId]?.map((file) => (
               <ReviewableProgressCard
@@ -230,7 +238,7 @@ const ReviewableUpload: FC<ReviewableUploadProps> = ({ projectName, versionId, p
             ))}
 
             {/* upload button */}
-            <Upload className="upload">
+            <Upload className="upload" style={{ height: maximized ? '100%' : 'auto' }}>
               <span>Drop or click to upload</span>
               <input type="file" multiple onChange={handleInputChange} ref={inputRef} />
             </Upload>
