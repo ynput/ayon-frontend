@@ -28,7 +28,8 @@ export const createAddonsSubtitle = (releaseAddons: string[], selectedAddons: st
 export const createInstallersSubtitle = (platform: string[]): string => {
   if (platform.length === 0) return 'None selected'
   // replace darwin with macOS and return string
-  return platform.map((installer) => getPlatformLabel(installer)).join(', ')
+  const uniquePlatforms = Array.from(new Set(platform))
+  return uniquePlatforms.map((installer) => getPlatformLabel(installer)).join(', ')
 }
 
 export const resolveRelease = (releases: ReleaseListItemModel[], selected?: string | null) => {
