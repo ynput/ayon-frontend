@@ -8,7 +8,7 @@ const DetailsPanelSlideOut = ({ projectsInfo, scope }) => {
   const dispatch = useDispatch()
   const slideOut = useSelector((state) => state.details.slideOut[scope])
   const { entityType, entityId, projectName } = slideOut || {}
-  const isSlideOutOpen = entityType && entityId && projectName
+  const isSlideOutOpen = !!entityType && !!entityId && !!projectName
 
   const { data: users } = useGetUsersAssigneeQuery({ projectName }, { skip: !projectName })
 
