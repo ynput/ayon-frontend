@@ -6,7 +6,6 @@ import Viewer from './Viewer'
 import styled from 'styled-components'
 import { $Any } from '@/types'
 import isHTMLElement from '@helpers/isHTMLElement'
-import clsx from 'clsx'
 
 const StyledDialog = styled(Dialog)`
   /* dnd overlay must offset this 64px by 32px */
@@ -14,9 +13,6 @@ const StyledDialog = styled(Dialog)`
   height: calc(99% - 64px);
   max-height: unset;
   max-width: unset;
-  &.isHidden {
-    visibility: hidden;
-  }
 
   .body {
     overflow: hidden;
