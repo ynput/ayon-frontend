@@ -63,5 +63,4 @@ export const ViewerDetailsPanelWrapper = styled.div`
   min-width: clamp(460px, 25vw, 600px);
   position: relative;
   z-index: 1000;
-  overflow: hidden;
 `

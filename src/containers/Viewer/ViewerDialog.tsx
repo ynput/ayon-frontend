@@ -7,6 +7,7 @@ import styled from 'styled-components'
 import { useLocation } from 'react-router'
 import { $Any } from '@/types'
 import isHTMLElement from '@helpers/isHTMLElement'
+import { closeSlideOut } from '@state/details'
 
 const StyledDialog = styled(Dialog)`
   /* dnd overlay must offset this 64px by 32px */
@@ -38,6 +39,7 @@ const ViewerDialog = () => {
   const folderId = useSelector((state: $Any) => state.viewer.folderId)
   const projectName = useSelector((state: $Any) => state.viewer.projectName)
   const fullscreen = useSelector((state: $Any) => state.viewer.fullscreen)
+  const slideOut = useSelector((state: $Any) => state.details.slideOut['review'])
 
   const handleClose = () => {
     // close the dialog
@@ -54,13 +56,20 @@ const ViewerDialog = () => {
       }
 
       if (e.key === 'Escape' && !fullscreen) {
-        handleClose()
+        // first check if slideOut is open
+        if (slideOut.entityId) {
+          // close the slideOut
+          dispatch(closeSlideOut())
+        } else {
+          // close the dialog
+          handleClose()
+        }
       }
     }
 
     document.addEventListener('keydown', handleEscape)
     return () => document.removeEventListener('keydown', handleEscape)
-  }, [productId, fullscreen])
+  }, [productId, fullscreen, slideOut.entityId])
 
   if ((!productId && !taskId && !folderId) || !projectName) return null
 
