@@ -35,10 +35,7 @@ const ReviewableUpload: FC<ReviewableUploadProps> = ({
 }) => {
   const dispatch = useDispatch()
 
-  const {
-    taskId,
-    folderId,
-  } = useSelector((state: $Any) => state.viewer)
+  const { taskId, folderId } = useSelector((state: $Any) => state.viewer)
 
   // are we dragging a file over?
   const [isDraggingFile, setIsDraggingFile] = useState(false)
@@ -190,6 +187,8 @@ const ReviewableUpload: FC<ReviewableUploadProps> = ({
       handleFileUpload(files)
     }
   }
+  const variantStyles =
+    variant === 'large' ? { minWidth: '360px', maxWidth: '480px', alignSelf: 'center' } : {}
 
   return (
     <>
@@ -211,7 +210,7 @@ const ReviewableUpload: FC<ReviewableUploadProps> = ({
             ))}
 
             {/* upload button */}
-            <Styled.Upload id="upload" className={clsx('upload', variant)} style={{}}>
+            <Styled.Upload id="upload" className={clsx('upload', variant)} style={variantStyles}>
               <span>Drop or click to upload</span>
               <input type="file" multiple onChange={handleInputChange} ref={inputRef} />
             </Styled.Upload>
