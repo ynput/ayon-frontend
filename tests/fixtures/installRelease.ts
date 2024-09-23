@@ -10,7 +10,7 @@ class InstallRelease {
 
   async openMenu() {
     await this.page.getByRole('button', { name: 'apps' }).click()
-    await this.page.getByText('Install latest release').click()
+    await this.page.getByText('Update Pipeline').click()
     await expect(this.page.getByText('Install pipeline release')).toBeVisible()
   }
   async changeAddons() {
