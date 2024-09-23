@@ -64,3 +64,13 @@ export const ViewerDetailsPanelWrapper = styled.div`
   position: relative;
   z-index: 1000;
 `
+
+export const EmptyPlaceholderWrapper = styled.div`
+  padding-top: '160px';
+  height: '100%';
+  width: '100%';
+  max-width: '400px';
+  display: 'flex';
+  justify-content: 'center';
+  align-items: 'center';
+`

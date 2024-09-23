@@ -1,22 +1,24 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Button } from '@ynput/ayon-react-components'
-import * as Styled from './Viewer.styled'
-import VersionSelectorTool from '@components/VersionSelectorTool/VersionSelectorTool'
-import { useGetViewerReviewablesQuery } from '@queries/review/getReview'
-import { useDispatch, useSelector } from 'react-redux'
-import { toggleFullscreen, toggleUpload, updateSelection, updateProduct } from '@state/viewer'
-import ViewerDetailsPanel from './ViewerDetailsPanel'
-import ViewerPlayer from './ViewerPlayer'
-import ReviewablesSelector from '@components/ReviewablesSelector'
-import { updateDetailsPanelTab } from '@state/details'
-import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
-import { $Any } from '@types'
-import { useFullScreenHandle } from 'react-full-screen'
-import { getGroupedReviewables } from '../ReviewablesList/getGroupedReviewables'
-import { GetReviewablesResponse } from '@queries/review/types'
 import { compareDesc } from 'date-fns'
+import { useEffect, useMemo } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import { useFullScreenHandle } from 'react-full-screen'
+
+import { Button } from '@ynput/ayon-react-components'
+import { $Any } from '@types'
+
+import VersionSelectorTool from '@components/VersionSelectorTool/VersionSelectorTool'
 import ReviewVersionDropdown from '@/components/ReviewVersionDropdown'
+import ReviewablesSelector from '@components/ReviewablesSelector'
+import { useGetViewerReviewablesQuery } from '@queries/review/getReview'
+import { GetReviewablesResponse } from '@queries/review/types'
+import { updateDetailsPanelTab } from '@state/details'
 import { productTypes } from '@state/project'
+import { toggleFullscreen, toggleUpload, updateSelection, updateProduct } from '@state/viewer'
+
+import { getGroupedReviewables } from '../ReviewablesList/getGroupedReviewables'
+import ViewerComponent from './ViewerComponent'
+import ViewerDetailsPanel from './ViewerDetailsPanel'
+import * as Styled from './Viewer.styled'
 
 interface ViewerProps {
   onClose?: () => void
@@ -36,7 +38,6 @@ const Viewer = ({ onClose }: ViewerProps) => {
     selectedProductId,
   } = useSelector((state: $Any) => state.viewer)
 
-  const [autoPlay, setAutoPlay] = useState(quickView)
 
   const dispatch = useDispatch()
 
@@ -225,17 +226,13 @@ const Viewer = ({ onClose }: ViewerProps) => {
     dispatch(updateSelection({ reviewableIds: [reviewableId] }))
   }
 
-  const handleUploadButton = () => {
+  const handleUploadAction = (toggleNativeFileUpload = false) => () => {
     // switch to files tab
     dispatch(updateDetailsPanelTab({ scope: 'review', tab: 'files' }))
     // open the file dialog
-    dispatch(toggleUpload(true))
-  }
-
-  const handlePlayReviewable = () => {
-    // reset auto play
-    // auto play should only be enabled on first video load
-    setAutoPlay(false)
+    if (toggleNativeFileUpload) {
+      dispatch(toggleUpload(true))
+    }
   }
 
   const handle = useFullScreenHandle()
@@ -265,52 +262,8 @@ const Viewer = ({ onClose }: ViewerProps) => {
 
   const shownOptions = [...optimized, ...unoptimized]
 
-  let viewerComponent
-  const availability = selectedReviewable?.availability
-  const isPlayable = availability !== 'conversionRequired'
 
   const noVersions = !versionsAndReviewables.length && !isFetchingReviewables
-
-  if (selectedReviewable?.mimetype.includes('video') && isPlayable) {
-    viewerComponent = (
-      <ViewerPlayer
-        projectName={projectName}
-        reviewable={selectedReviewable}
-        onUpload={handleUploadButton}
-        autoplay={autoPlay}
-        onPlay={handlePlayReviewable}
-      />
-    )
-  } else if (selectedReviewable?.mimetype.includes('image') && isPlayable) {
-    viewerComponent = (
-      <Styled.Image
-        src={`/api/projects/${projectName}/files/${selectedReviewable.fileId}`}
-        alt={selectedReviewable.label || selectedReviewable.filename}
-      />
-    )
-  } else if (!isFetchingReviewables) {
-    let message = 'No preview available'
-    let children = null
-
-    if (noVersions) {
-      message = 'This task has published no versions.'
-    } else if (!reviewables.length) {
-      message = 'This version has no online reviewables.'
-      children = (
-        <Button onClick={handleUploadButton} icon="upload" variant="filled">
-          Upload a file
-        </Button>
-      )
-    } else if (availability === 'conversionRequired') {
-      message = 'File not supported and needs conversion'
-    }
-
-    viewerComponent = (
-      <EmptyPlaceholder icon="hide_image" message={message}>
-        {children}
-      </EmptyPlaceholder>
-    )
-  }
 
   // todo: noVersions modal smaller
   return (
@@ -337,13 +290,24 @@ const Viewer = ({ onClose }: ViewerProps) => {
       </Styled.PlayerToolbar>
       {onClose && <Button onClick={onClose} icon={'close'} className="close" />}
       <Styled.FullScreenWrapper handle={handle} onChange={fullScreenChange}>
-        {viewerComponent}
+        <ViewerComponent
+          projectName={projectName}
+          productId={productId}
+          reviewables={reviewables}
+          selectedReviewable={selectedReviewable}
+          versionIds={versionIds}
+          versionReviewableIds={versionReviewableIds}
+          isFetchingReviewables={isFetchingReviewables}
+          noVersions={noVersions}
+          quickView={quickView}
+          onUpload={handleUploadAction}
+        />
       </Styled.FullScreenWrapper>
       <ReviewablesSelector
         reviewables={shownOptions}
         selected={reviewableIds}
         onChange={handleReviewableChange}
-        onUpload={handleUploadButton}
+        onUpload={handleUploadAction(true)}
         projectName={projectName}
       />
       {!noVersions && <ViewerDetailsPanel versionIds={versionIds} projectName={projectName} />}

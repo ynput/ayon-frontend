@@ -4,7 +4,6 @@ import { closeViewer } from '@state/viewer'
 import { useEffect } from 'react'
 import Viewer from './Viewer'
 import styled from 'styled-components'
-import { useLocation } from 'react-router'
 import { $Any } from '@/types'
 import isHTMLElement from '@helpers/isHTMLElement'
 import { closeSlideOut } from '@state/details'
@@ -31,7 +30,6 @@ const StyledDialog = styled(Dialog)`
 `
 
 const ViewerDialog = () => {
-  const location = useLocation()
   const dispatch = useDispatch()
   // check if dialog is open or not
   const productId = useSelector((state: $Any) => state.viewer.productId)
@@ -71,12 +69,14 @@ const ViewerDialog = () => {
     return () => document.removeEventListener('keydown', handleEscape)
   }, [productId, fullscreen, slideOut.entityId])
 
-  if ((!productId && !taskId && !folderId) || !projectName) return null
+  if ((!productId && !taskId && !folderId) || !projectName) {
+    return null
+  }
 
   return (
     <>
       <StyledDialog
-        isOpen={location.pathname !== '/review'}
+        isOpen
         hideCancelButton
         size="full"
         onClose={() => {}}
