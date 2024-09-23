@@ -222,12 +222,11 @@ const CopySettingsNode = ({
       ...new Set([...Object.keys(sourceOverrides.data), ...Object.keys(targetOverrides.data)]),
     ]
 
-    console.debug('Considering:', allIds)
-
     for (const id of allIds) {
       const sourceOverride = sourceOverrides.data[id]
       const targetOverride = targetOverrides.data[id]
       const path = sourceOverride?.path || targetOverride?.path
+      const availableScopes = sourceOverride?.scope || targetOverride?.scope || ["studio", "project"]
 
       // Remove noise
       if (sourceOverride?.inGroup || sourceOverride?.type === 'branch' || targetOverride?.inGroup || targetOverride?.type === 'branch') {
@@ -235,6 +234,13 @@ const CopySettingsNode = ({
         continue
       }
 
+      if (targetProjectName && !availableScopes.includes('project')) {
+        console.debug('Skipping override', path, 'because it is not project-scoped')
+        continue
+      } else if (!targetProjectName && !availableScopes.includes('studio')) {
+        console.debug('Skipping override', path, 'because it is not studio-scoped')
+        continue
+      }
 
       let sourceValue = getValueByPath(sourceSettings.data, path)
       let targetValue = getValueByPath(targetSettings.data, path)
@@ -384,12 +390,15 @@ const CopySettingsNode = ({
   const body = (
     <NodePanelBody>
       <ChangesTable>
+        <thead>
         <tr>
           <th className="btn">&nbsp;</th>
           <th>Path</th>
           <th className="valpvw">Current&nbsp;value</th>
           <th className="valpvw">New&nbsp;value</th>
         </tr>
+        </thead>
+        <tbody>
         {(nodeData?.changes || []).map((change) => {
 
           return (
@@ -432,6 +441,7 @@ const CopySettingsNode = ({
             </tr>
           )
         })}
+        </tbody>
       </ChangesTable>
     </NodePanelBody>
   )
