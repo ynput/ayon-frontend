@@ -63,7 +63,6 @@ import LauncherAuthPage from '@pages/LauncherAuthPage'
 import ReleaseInstallerDialog from '@containers/ReleaseInstallerDialog/ReleaseInstallerDialog'
 import getTrialDates from '@components/TrialBanner/helpers/getTrialDates'
 import TrialEnded from '@containers/TrialEnded/TrialEnded'
-import Customerly from './containers/Customerly'
 
 const App = () => {
   const user = useSelector((state) => state.user)
@@ -162,110 +161,110 @@ const App = () => {
               <PasteProvider>
                 <PasteModal />
                 <BrowserRouter>
-                  <CustomerlyProvider appId={PROJECT_ID}>
-                    <NotificationsProvider>
-                      <URIProvider>
-                        <ShortcutsProvider>
-                          <QueryParamProvider
-                            adapter={ReactRouter6Adapter}
-                            options={{
-                              updateType: 'replaceIn',
-                            }}
-                          >
-                            <Header />
-                            <ShareDialog />
-                            <ViewerDialog />
-                            <ConfirmDialog />
-                            <FileUploadPreview />
-                            <ReleaseInstallerDialog />
-                            <Routes>
-                              <Route
-                                path="/"
-                                exact
-                                element={<Navigate replace to="/dashboard/tasks" />}
-                              />
-                              <Route
-                                path="/manageProjects"
-                                exact
-                                element={<Navigate replace to="/manageProjects/anatomy" />}
-                              />
+                  <NotificationsProvider>
+                    <URIProvider>
+                      <ShortcutsProvider>
+                        <QueryParamProvider
+                          adapter={ReactRouter6Adapter}
+                          options={{
+                            updateType: 'replaceIn',
+                          }}
+                        >
+                          <Header />
+                          <ShareDialog />
+                          <ViewerDialog />
+                          <ConfirmDialog />
+                          <FileUploadPreview />
+                          <ReleaseInstallerDialog />
+                          <Routes>
+                            <Route
+                              path="/"
+                              exact
+                              element={<Navigate replace to="/dashboard/tasks" />}
+                            />
+                            <Route
+                              path="/manageProjects"
+                              exact
+                              element={<Navigate replace to="/manageProjects/anatomy" />}
+                            />
 
-                              <Route
-                                path="/dashboard"
-                                element={<Navigate replace to="/dashboard/tasks" />}
-                              />
-                              <Route
-                                path="/dashboard/:module"
-                                exact
-                                element={<UserDashboardPage />}
-                              />
+                            <Route
+                              path="/dashboard"
+                              element={<Navigate replace to="/dashboard/tasks" />}
+                            />
+                            <Route
+                              path="/dashboard/:module"
+                              exact
+                              element={<UserDashboardPage />}
+                            />
 
-                              <Route
-                                path="/manageProjects/:module"
-                                element={<ProjectManagerPage />}
-                              />
-                              <Route
-                                path={'/projects/:projectName/:module'}
-                                element={<ProjectPage />}
-                              />
-                              <Route
-                                path={'/projects/:projectName/addon/:addonName'}
-                                element={<ProjectPage />}
-                              />
-                              <Route
-                                path="/settings"
-                                exact
-                                element={<Navigate replace to="/settings/anatomyPresets" />}
-                              />
-                              <Route path="/settings/:module" exact element={<SettingsPage />} />
-                              <Route
-                                path="/settings/addon/:addonName"
-                                exact
-                                element={<SettingsPage />}
-                              />
-                              <Route
-                                path="/services"
-                                element={
-                                  <ProtectedRoute isAllowed={!isUser} redirectPath="/">
-                                    <ServicesPage />
-                                  </ProtectedRoute>
-                                }
-                              />
-                              <Route
-                                path="/market"
-                                element={
-                                  <ProtectedRoute isAllowed={!isUser} redirectPath="/">
-                                    <MarketPage />
-                                  </ProtectedRoute>
-                                }
-                              />
+                            <Route
+                              path="/manageProjects/:module"
+                              element={<ProjectManagerPage />}
+                            />
+                            <Route
+                              path={'/projects/:projectName/:module'}
+                              element={<ProjectPage />}
+                            />
+                            <Route
+                              path={'/projects/:projectName/addon/:addonName'}
+                              element={<ProjectPage />}
+                            />
+                            <Route
+                              path="/settings"
+                              exact
+                              element={<Navigate replace to="/settings/anatomyPresets" />}
+                            />
+                            <Route path="/settings/:module" exact element={<SettingsPage />} />
+                            <Route
+                              path="/settings/addon/:addonName"
+                              exact
+                              element={<SettingsPage />}
+                            />
+                            <Route
+                              path="/services"
+                              element={
+                                <ProtectedRoute isAllowed={!isUser} redirectPath="/">
+                                  <ServicesPage />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/market"
+                              element={
+                                <ProtectedRoute isAllowed={!isUser} redirectPath="/">
+                                  <MarketPage />
+                                </ProtectedRoute>
+                              }
+                            />
 
-                              <Route path="/inbox/:module" exact element={<InboxPage />} />
-                              <Route
-                                path="/inbox"
-                                exact
-                                element={<Navigate to="/inbox/important" />}
-                              />
+                            <Route path="/inbox/:module" exact element={<InboxPage />} />
+                            <Route
+                              path="/inbox"
+                              exact
+                              element={<Navigate to="/inbox/important" />}
+                            />
 
-                              <Route path="/explorer" element={<ExplorerPage />} />
-                              <Route path="/doc/api" element={<APIDocsPage />} />
-                              <Route
-                                path="/account"
-                                exact
-                                element={<Navigate replace to="/account/profile" />}
-                              />
-                              <Route path="/account/:module" exact element={<AccountPage />} />
-                              <Route path="/events" element={<EventsPage />} />
-                              <Route element={<ErrorPage code="404" />} />
-                            </Routes>
-                          </QueryParamProvider>
-                        </ShortcutsProvider>
-                      </URIProvider>
-                    </NotificationsProvider>
-                    <Customerly />
-                  </CustomerlyProvider>
+                            <Route path="/explorer" element={<ExplorerPage />} />
+                            <Route path="/doc/api" element={<APIDocsPage />} />
+                            <Route
+                              path="/account"
+                              exact
+                              element={<Navigate replace to="/account/profile" />}
+                            />
+                            <Route path="/account/:module" exact element={<AccountPage />} />
+                            <Route path="/events" element={<EventsPage />} />
+                            <Route element={<ErrorPage code="404" />} />
+                          </Routes>
+                        </QueryParamProvider>
+                      </ShortcutsProvider>
+                    </URIProvider>
+                  </NotificationsProvider>
                 </BrowserRouter>
-                <TrialBanner />
+                {/* TRIAL BANNER */}
+                <CustomerlyProvider appId={PROJECT_ID}>
+                  <TrialBanner />
+                </CustomerlyProvider>
               </PasteProvider>
             </ContextMenuProvider>
           </RestartProvider>
@@ -333,7 +332,13 @@ const App = () => {
 
   // Trial has finished
   if (isTrialing && left?.finished) {
-    return <TrialEnded instanceId={ynputConnect.instanceId} />
+    return (
+      <BrowserRouter>
+        <CustomerlyProvider appId={PROJECT_ID}>
+          <TrialEnded instanceId={ynputConnect.instanceId} />
+        </CustomerlyProvider>
+      </BrowserRouter>
+    )
   }
 
   // user needs to go through onboarding

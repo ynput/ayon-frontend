@@ -7,6 +7,9 @@ const userSlice = createSlice({
     name: '',
     data: {
       frontendPreferences: {},
+      isAdmin: false,
+      isManager: false,
+      isUser: true,
     },
     attrib: {
       fullName: '',

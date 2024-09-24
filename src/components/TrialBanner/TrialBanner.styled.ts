@@ -31,10 +31,21 @@ export const TrialBanner = styled.div`
   transform: translateY(100%);
   animation: ${slideUp} 1s ease 1s forwards;
 
-  span,
+  .icon {
+    color: var(--md-sys-color-on-tertiary);
+  }
+
+  span:not(.icon),
   a {
     color: var(--md-sys-color-on-tertiary);
     ${theme.titleMedium}
+  }
+
+  button {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
   }
 
   &.urgent {

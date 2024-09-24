@@ -8,6 +8,18 @@ export const TrialEndContainer = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
+  background-image: linear-gradient(to right top, #1f292f, #232e35, #28323b, #2c3741, #313c47);
+  nav {
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 0;
+
+    padding: var(--padding-m);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
 `
 
 export const TrialEndCard = styled.div`
@@ -22,10 +34,16 @@ export const TrialEndCard = styled.div`
   justify-content: center;
   gap: 32px;
 
-  p {
+  p,
+  u {
     ${theme.bodyLarge}
     text-align: center;
     margin: 0;
+  }
+
+  u {
+    cursor: pointer;
+    color: var(--md-sys-color-primary);
   }
 
   h1 {
@@ -39,4 +57,8 @@ export const TrialEndCard = styled.div`
     ${theme.titleMedium}
     padding: 8px;
   }
+`
+
+export const Logo = styled.img`
+  height: 40px;
 `
