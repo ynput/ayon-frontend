@@ -71,6 +71,7 @@ export type ActivityNode = {
   origin?: Maybe<ActivityOriginNode>;
   parents: Array<ActivityOriginNode>;
   projectName: Scalars['String']['output'];
+  reactions: Array<ActivityReactionNode>;
   read: Scalars['Boolean']['output'];
   referenceData: Scalars['String']['output'];
   referenceId: Scalars['String']['output'];
@@ -87,6 +88,14 @@ export type ActivityOriginNode = {
   name: Scalars['String']['output'];
   subtype?: Maybe<Scalars['String']['output']>;
   type: Scalars['String']['output'];
+};
+
+export type ActivityReactionNode = {
+  __typename?: 'ActivityReactionNode';
+  fullName?: Maybe<Scalars['String']['output']>;
+  reaction: Scalars['String']['output'];
+  timestamp: Scalars['DateTime']['output'];
+  userName: Scalars['String']['output'];
 };
 
 export type AtrributeFilterInput = {
@@ -1341,6 +1350,11 @@ export type GetTasksProgressQuery = { __typename?: 'Query', project: { __typenam
 
 export type ProgressTaskFragmentFragment = { __typename?: 'TaskNode', projectName: string, id: string, name: string, label?: string | null, taskType: string, status: string, assignees: Array<string>, updatedAt: any, active: boolean, hasReviewables: boolean, folder: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, folderType: string, parents: Array<string>, parent?: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, parents: Array<string> } | null } };
 
+export type GetActiveUsersCountQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetActiveUsersCountQuery = { __typename?: 'Query', users: { __typename?: 'UsersConnection', edges: Array<{ __typename?: 'UserEdge', node: { __typename?: 'UserNode', active: boolean, isGuest: boolean } }> } };
+
 export type GetAllProjectUsersAsAssigneeQueryVariables = Exact<{
   projectName?: InputMaybe<Scalars['String']['input']>;
 }>;
@@ -1584,6 +1598,18 @@ export const GetTasksProgressDocument = `
   }
 }
     ${ProgressTaskFragmentFragmentDoc}`;
+export const GetActiveUsersCountDocument = `
+    query GetActiveUsersCount {
+  users(last: 2000) {
+    edges {
+      node {
+        active
+        isGuest
+      }
+    }
+  }
+}
+    `;
 export const GetAllProjectUsersAsAssigneeDocument = `
     query GetAllProjectUsersAsAssignee($projectName: String) {
   users(last: 2000, projectName: $projectName) {
@@ -1666,6 +1692,9 @@ const injectedRtkApi = RestAPI.injectEndpoints({
     }),
     GetTasksProgress: build.query<GetTasksProgressQuery, GetTasksProgressQueryVariables>({
       query: (variables) => ({ document: GetTasksProgressDocument, variables })
+    }),
+    GetActiveUsersCount: build.query<GetActiveUsersCountQuery, GetActiveUsersCountQueryVariables | void>({
+      query: (variables) => ({ document: GetActiveUsersCountDocument, variables })
     }),
     GetAllProjectUsersAsAssignee: build.query<GetAllProjectUsersAsAssigneeQuery, GetAllProjectUsersAsAssigneeQueryVariables | void>({
       query: (variables) => ({ document: GetAllProjectUsersAsAssigneeDocument, variables })

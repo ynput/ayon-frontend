@@ -7,6 +7,7 @@ import { useGetYnputCloudInfoQuery } from '@queries/cloud/cloud'
 import useCustomerlyChat from '@hooks/useCustomerly'
 import { useAppSelector } from '@state/store'
 import { Button } from '@ynput/ayon-react-components'
+import { useGetActiveUsersCountQuery } from '@queries/user/getUsers'
 
 interface TrialBannerProps {}
 
@@ -28,6 +29,9 @@ const TrialBanner: FC<TrialBannerProps> = ({}) => {
 
   const { data: connect } = useGetYnputCloudInfoQuery()
   const { isTrialing, left } = getTrialDates(connect?.subscriptions)
+
+  // get the number of users currently active
+  const { data: activeUsersCount = 10 } = useGetActiveUsersCountQuery()
 
   useCustomerlyChat({
     position: { desktop: { side: 8, bottom: 52 }, mobile: { side: 8, bottom: 52 } },
@@ -54,7 +58,11 @@ const TrialBanner: FC<TrialBannerProps> = ({}) => {
       {canManage && (
         <>
           <span>-</span>
-          <a href={getSubscribeLink(connect.instanceId)} target="_blank" rel="noreferrer">
+          <a
+            href={getSubscribeLink(connect.instanceId, activeUsersCount)}
+            target="_blank"
+            rel="noreferrer"
+          >
             <u>
               <span>subscribe to keep your data</span>
             </u>

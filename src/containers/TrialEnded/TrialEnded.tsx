@@ -5,6 +5,7 @@ import * as Styled from './TrialEnded.styled'
 import useCustomerlyChat from '@hooks/useCustomerly'
 import { useNavigate } from 'react-router'
 import { useAppSelector } from '@state/store'
+import { useGetActiveUsersCountQuery } from '@queries/user/getUsers'
 
 interface TrialEndedProps {
   instanceId: string
@@ -23,6 +24,9 @@ const TrialEnded: FC<TrialEndedProps> = ({ instanceId }) => {
     }
   }, [])
 
+  // get the number of users currently active
+  const { data: activeUsersCount = 10 } = useGetActiveUsersCountQuery()
+
   return (
     <Styled.TrialEndContainer>
       <Toolbar>
@@ -40,7 +44,11 @@ const TrialEnded: FC<TrialEndedProps> = ({ instanceId }) => {
               <u onClick={open}>support team</u> is here for you if required.
             </p>
             <p>Subscribe to keep using AYON and protect your data!</p>
-            <a href={getSubscribeLink(instanceId)} target="_blank" rel="noreferrer">
+            <a
+              href={getSubscribeLink(instanceId, activeUsersCount)}
+              target="_blank"
+              rel="noreferrer"
+            >
               <Button variant="tertiary">Subscribe now</Button>
             </a>
           </>
