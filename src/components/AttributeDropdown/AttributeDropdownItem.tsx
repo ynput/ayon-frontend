@@ -1,3 +1,5 @@
+import { useSortable } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { Icon, IconSelect, InputSwitch } from '@ynput/ayon-react-components'
 import * as Styled from './AttributeDropdown.styled'
 import { AttributeData } from './AttributeDropdown'
@@ -17,8 +19,18 @@ const AttributeDropdownItem = ({
 }: AttributeDropdownItemProps) => {
   const icon = item.icon || 'question_mark'
 
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
+    id: item.id,
+    animateLayoutChanges: () => false,
+  })
+
+  const style = {
+    transition,
+    transform: CSS.Transform.toString(transform),
+  }
+
   return (
-    <Styled.AttributeDropdownWrapper>
+    <Styled.AttributeDropdownWrapper ref={setNodeRef} style={style}>
       <Styled.AttributeDropdownItemHeader>
         <Icon className="icon" icon={icon} />
         <span className="expanded">{item.label}</span>
@@ -29,7 +41,7 @@ const AttributeDropdownItem = ({
           }}
           icon={item.isExpanded ? 'collapse_all' : 'expand_all'}
         />
-        <Icon className="icon actionable" icon="drag_indicator" />
+        <Icon {...listeners} {...attributes} className="icon actionable" icon="drag_indicator" />
       </Styled.AttributeDropdownItemHeader>
 
       {item.isExpanded && (
