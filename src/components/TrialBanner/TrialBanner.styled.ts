@@ -1,0 +1,57 @@
+import { theme } from '@ynput/ayon-react-components'
+import styled, { keyframes } from 'styled-components'
+
+// slide up animation
+
+export const slideUp = keyframes`
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+
+`
+
+export const TrialBanner = styled.div`
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 500;
+
+  display: flex;
+  justify-content: center;
+  gap: var(--base-gap-small);
+
+  background-color: var(--md-sys-color-tertiary);
+  padding: var(--padding-m);
+  box-shadow: 0px -2px 4px rgba(0, 0, 0, 0.1);
+
+  transform: translateY(100%);
+  animation: ${slideUp} 1s ease 1s forwards;
+
+  span,
+  a {
+    color: var(--md-sys-color-on-tertiary);
+    ${theme.titleMedium}
+  }
+
+  &.urgent {
+    background-color: var(--md-sys-color-warning-container);
+
+    span,
+    a {
+      color: var(--md-sys-color-on-warning-container);
+    }
+  }
+
+  &.critical {
+    background-color: var(--md-sys-color-error-container);
+
+    span,
+    a {
+      color: var(--md-sys-color-on-error-container);
+    }
+  }
+`

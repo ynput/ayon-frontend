@@ -32,6 +32,7 @@ const outputFiles = {
   releases: ['getReleases', 'getReleaseInfo'],
   installers: ['listInstallers', 'createInstaller'],
   dependencyPackages: ['listDependencyPackages', 'createDependencyPackage'],
+  cloud: ['getYnputCloudInfo', 'setYnputCloudKey', 'deleteYnputCloudKey'],
 }
 
 const buildOutputFiles = (files: { [name: string]: string[] }) =>

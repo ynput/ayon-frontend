@@ -32,6 +32,7 @@ import { GlobalContextMenu } from '@components/GlobalContextMenu'
 import Favicon from '@components/Favicon/Favicon'
 import { ConfirmDialog } from 'primereact/confirmdialog'
 import { toast } from 'react-toastify'
+import TrialBanner from '@components/TrialBanner/TrialBanner'
 
 // context
 import { ContextMenuProvider } from '@context/contextMenuContext'
@@ -52,12 +53,15 @@ import { login } from '@state/user'
 
 // queries
 import { useLazyGetInfoQuery } from '@queries/auth/getAuth'
+import { useGetYnputCloudInfoQuery } from '@queries/cloud/cloud'
 
 // hooks
 import useTooltip from '@hooks/Tooltip/useTooltip'
 import WatchActivities from './containers/WatchActivities'
 import LauncherAuthPage from '@pages/LauncherAuthPage'
 import ReleaseInstallerDialog from '@containers/ReleaseInstallerDialog/ReleaseInstallerDialog'
+import getTrialDates from '@components/TrialBanner/helpers/getTrialDates'
+import TrialEnded from '@containers/TrialEnded/TrialEnded'
 
 const App = () => {
   const user = useSelector((state) => state.user)
@@ -76,6 +80,9 @@ const App = () => {
   // Call /api/info to check whether the user is logged in
   // and to acquire server settings
   const [getInfo] = useLazyGetInfoQuery()
+
+  // get subscriptions info
+  const { data: ynputConnect } = useGetYnputCloudInfoQuery()
 
   useEffect(() => {
     setLoading(true)
@@ -251,6 +258,7 @@ const App = () => {
                     </URIProvider>
                   </NotificationsProvider>
                 </BrowserRouter>
+                <TrialBanner />
               </PasteProvider>
             </ContextMenuProvider>
           </RestartProvider>
@@ -314,6 +322,14 @@ const App = () => {
     )
   }
 
+  const { isTrialing, left } = getTrialDates(ynputConnect?.subscriptions)
+
+  // Trial has finished
+  if (isTrialing && left?.finished) {
+    return <TrialEnded instanceId={ynputConnect.instanceId} />
+  }
+
+  // user needs to go through onboarding
   if (isOnboarding || noAdminUser) {
     return (
       <>
