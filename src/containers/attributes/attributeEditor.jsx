@@ -11,9 +11,9 @@ import {
   Dropdown,
   Dialog,
 } from '@ynput/ayon-react-components'
-import EnumEditor from './enumEditor'
 import { camelCase, upperFirst } from 'lodash'
 import MinMaxField from '@components/MinMaxField/MinMaxField'
+import AttributeDropdown from '@components/AttributeDropdown/AttributeDropdown'
 
 const SCOPE_OPTIONS = [
   { value: 'project', label: 'Project' },
@@ -118,7 +118,7 @@ const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
 
   const customFields = {
     enum: (value = [], onChange) => (
-      <EnumEditor values={value} onChange={(value) => onChange(value)} />
+      <AttributeDropdown values={value} syncHandler={(value) => onChange(value)} />
     ),
     inherit: (value, onChange) => (
       <InputSwitch checked={value} onChange={(e) => onChange(e.target.checked)} />

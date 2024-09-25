@@ -10,6 +10,7 @@ const centeredContentFlexColumn = `
   align-items: center;
   gap: 8px;
 `
+
 const centeredContentFlexRow = `
   display: flex;
   align-items: center;

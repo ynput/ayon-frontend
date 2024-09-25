@@ -2,27 +2,42 @@ import { DragEndEvent } from '@dnd-kit/core';
 import { uniqueId } from 'lodash'
 import { useState } from 'react'
 
-const useDraggableList = <T extends {id: string}>({ creator, initialData }: { creator: () => T; initialData: T[] }) => {
-  console.log(creator, initialData)
-
+const useDraggableList = <T extends { id: string }, U>({
+  creator,
+  initialData,
+  syncHandler,
+  normalizer,
+}: {
+  creator: () => T
+  initialData: T[]
+  syncHandler: (data: U[]) => U[]
+  normalizer: (data: T[]) => U[]
+}) => {
   const [items, setItems] = useState<T[]>(initialData)
 
-  const handleAddItem = () => {
-    setItems([...items, { ...creator(), id: uniqueId() }])
-  }
-  const handleRemoveItem = (idx: number) => () => {
-    setItems([...items.slice(0, idx), ...items.slice(idx + 1)])
+  const updateAndSync = (data: T[]) => {
+    syncHandler(normalizer(data))
+    setItems(data)
   }
 
-  const handleChangeItem = (idx: number) => (attr: keyof T, value: boolean | string | undefined) => {
-    let updatedItem: T = {...items[idx] }
-    // @ts-ignore
-    updatedItem[attr] = value
-    setItems([...items.slice(0, idx), updatedItem, ...items.slice(idx+ 1)])
+  const handleAddItem = () => {
+    updateAndSync([...items, { ...creator(), id: uniqueId() }])
   }
+
+  const handleRemoveItem = (idx: number) => () => {
+    updateAndSync([...items.slice(0, idx), ...items.slice(idx + 1)])
+  }
+
+  const handleChangeItem =
+    (idx: number) => (attr: keyof T, value: boolean | string | undefined) => {
+      let updatedItem: T = { ...items[idx] }
+      // @ts-ignore
+      updatedItem[attr] = value
+      updateAndSync([...items.slice(0, idx), updatedItem, ...items.slice(idx + 1)])
+    }
 
   const handleDuplicateItem = (idx: number) => {
-    setItems([
+    updateAndSync([
       ...items.slice(0, idx + 1),
       { ...items[idx], id: uniqueId() },
       ...items.slice(idx + 1),
@@ -40,14 +55,14 @@ const useDraggableList = <T extends {id: string}>({ creator, initialData }: { cr
     const overItemIndex = items.indexOf(overItem!)
 
     if (activeItemIndex < overItemIndex) {
-      setItems([
+      updateAndSync([
         ...items.slice(0, activeItemIndex),
         ...items.slice(activeItemIndex + 1, overItemIndex + 1),
         activeItem!,
         ...items.slice(overItemIndex + 1),
       ])
     } else {
-      setItems([
+      updateAndSync([
         ...items.slice(0, overItemIndex),
         activeItem!,
         ...items.slice(overItemIndex, activeItemIndex),
@@ -62,7 +77,7 @@ const useDraggableList = <T extends {id: string}>({ creator, initialData }: { cr
     handleRemoveItem,
     handleChangeItem,
     handleDuplicateItem,
-    handleDraggableEnd
+    handleDraggableEnd,
   }
 }
 
