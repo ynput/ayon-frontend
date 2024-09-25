@@ -18,7 +18,16 @@ const centeredContentFlexRow = `
 `
 
 export const AttributeDropdownWrapper = styled.div`
-  width: 480px;
+  display: flex;
+  flex-direction: column;
+  justify-content: stretch;
+  gap: 4px;
+`
+
+export const AttributeDropdownItemWrapper = styled.div`
+  justify-content: stretch;
+  border-radius: 4px;
+  overflow: hidden;
 `
 
 export const AttributeDropdownItemHeader = styled.div`
@@ -29,24 +38,60 @@ export const AttributeDropdownItemHeader = styled.div`
   height: 36px;
   font-size: 14px;
   line-height: 17px;
-  background-color: var(--md-sys-color-surface-container-highest);
+  background-color: var(--md-sys-color-surface-container-high);
+  &:hover {
+    background-color: var(--md-sys-color-surface-container-high-hover);
+    .icon.toggle-expand {
+      visibility: visible;
+    }
+  }
   .icon {
     width: 20px;
     height: 20px;
     &.actionable {
       cursor: pointer;
     }
+    &.toggle-expand {
+      visibility: hidden;
+    }
   }
-  .expanded {
+  &.collapsed {
+    color: red;
+    height: 0;
+  }
+  &.expanded {
+    background-color: var(--md-sys-color-surface-container-highest);
+    .icon.toggle-expand {
+      visibility: visible;
+    }
+  }
+  .label {
     flex-grow: 1;
+  }
+`
+
+export const AttributeDropdownItemBodyExpander = styled.div`
+  display: grid;
+  grid-template-rows: 0fr;
+  overflow: hidden;
+  transition: grid-template-rows .75s;
+  &.expanded {
+    grid-template-rows: 1fr;
   }
 `
 
 export const AttributeDropdownItemBody = styled.div`
   ${centeredContentFlexColumn}
+  background-color: var(--md-sys-color-surface-container-high);
   align-items: stretch;
-  padding: 8px;
-  background-color: var(--md-sys-color-surface-container-high-dark);
+  padding: 0px 8px;
+  min-height: 0;
+  opacity: 0;
+  transition: all .75s;
+  &.expanded {
+    opacity: 1;
+    padding: 8px;
+  }
 `
 
 export const Label = styled.div`
@@ -65,11 +110,14 @@ export const Row = styled.div`
 export const ActionWrapper = styled.div`
   ${centeredContentFlexRow}
   padding: 8px;
+  gap: 4px;
   cursor: pointer;
   user-select: none;
 `
 
 export const InputText = styled(BaseInputText)`
+  background-color: var(--md-sys-color-surface-container-low);
+  border-color: var(--md-sys-color-outline-variant);
   width: 360px;
   padding: 4px 8px;
   &.compact {

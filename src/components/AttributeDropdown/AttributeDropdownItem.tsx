@@ -3,6 +3,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { Icon, IconSelect, InputSwitch } from '@ynput/ayon-react-components'
 import * as Styled from './AttributeDropdown.styled'
 import { AttributeData } from './AttributeDropdown'
+import clsx from 'clsx'
 
 type AttributeDropdownItemProps = {
   item: AttributeData
@@ -18,6 +19,7 @@ const AttributeDropdownItem = ({
   onDuplicate,
 }: AttributeDropdownItemProps) => {
   const icon = item.icon || 'question_mark'
+  const iconColor = item.color && item.isColorEnabled ? item.color : 'initial'
 
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
     id: item.id,
@@ -26,16 +28,23 @@ const AttributeDropdownItem = ({
 
   const style = {
     transition,
-    transform: CSS.Transform.toString(transform),
+    transform: CSS.Translate.toString(transform),
   }
 
   return (
-    <Styled.AttributeDropdownWrapper ref={setNodeRef} style={style}>
-      <Styled.AttributeDropdownItemHeader>
-        <Icon className="icon" icon={icon} />
-        <span className="expanded">{item.label}</span>
+    <Styled.AttributeDropdownItemWrapper ref={setNodeRef} style={style}>
+      <Styled.AttributeDropdownItemHeader className={clsx({ expanded: item.isExpanded })}>
         <Icon
-          className="icon actionable"
+          className="icon"
+          icon={icon && item.isIconEnabled ? icon : ''}
+          style={{ color: iconColor }}
+        />
+
+        <span className="label" style={{ color: iconColor }}>
+          {item.label}
+        </span>
+        <Icon
+          className="icon actionable toggle-expand"
           onClick={() => {
             onChange('isExpanded', !item.isExpanded)
           }}
@@ -44,8 +53,11 @@ const AttributeDropdownItem = ({
         <Icon {...listeners} {...attributes} className="icon actionable" icon="drag_indicator" />
       </Styled.AttributeDropdownItemHeader>
 
-      {item.isExpanded && (
-        <Styled.AttributeDropdownItemBody>
+      <Styled.AttributeDropdownItemBodyExpander
+      className={clsx({expanded: item.isExpanded})}>
+        <Styled.AttributeDropdownItemBody
+          className={clsx(item.isExpanded ? 'expanded' : 'collapsed')}
+        >
           <Styled.Row key="label">
             <Styled.Label> Label </Styled.Label>
             <Styled.InputText
@@ -126,8 +138,8 @@ const AttributeDropdownItem = ({
             </Styled.ActionWrapper>
           </Styled.Row>
         </Styled.AttributeDropdownItemBody>
-      )}
-    </Styled.AttributeDropdownWrapper>
+      </Styled.AttributeDropdownItemBodyExpander>
+    </Styled.AttributeDropdownItemWrapper>
   )
 }
 

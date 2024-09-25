@@ -4,7 +4,7 @@ import { Icon } from '@ynput/ayon-react-components'
 import useDraggableList from './hooks/useDraggableList'
 import AttributeDropdownItem from './AttributeDropdownItem'
 import * as Styled from './AttributeDropdown.styled'
-import { DndContext } from '@dnd-kit/core'
+import { closestCenter, DndContext } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { $Any } from '@types'
 
@@ -29,8 +29,8 @@ export type NormalizedData = {
 const newItem = (): AttributeData => ({
   id: uniqueId(),
   isExpanded: true,
-  label: 'testing',
-  value: 'testing_value',
+  label: '',
+  value: '',
   isIconEnabled: true,
   isColorEnabled: true,
 })
@@ -78,19 +78,21 @@ const AttributeDropdown = ({values, syncHandler}: {values: $Any, syncHandler: $A
   return (
     <>
       <Styled.AttributeDropdownWrapper>
-        <DndContext onDragEnd={handleDraggableEnd}>
-
-        <SortableContext items={items} strategy={verticalListSortingStrategy}>
-          {items.map((item, idx) => (
-            <AttributeDropdownItem
-              key={`AttributeDropdown_${idx}`}
-              item={item}
-              onChange={handleChangeItem(idx)}
-              onRemove={handleRemoveItem(idx)}
-              onDuplicate={() => handleDuplicateItem(idx)}
-            />
-          ))}
-        </SortableContext>
+        <DndContext
+          collisionDetection={closestCenter}
+          onDragEnd={handleDraggableEnd}
+        >
+          <SortableContext items={items} strategy={verticalListSortingStrategy}>
+            {items.map((item, idx) => (
+              <AttributeDropdownItem
+                key={`AttributeDropdown_${item.id}`}
+                item={item}
+                onChange={handleChangeItem(idx)}
+                onRemove={handleRemoveItem(idx)}
+                onDuplicate={() => handleDuplicateItem(idx)}
+              />
+            ))}
+          </SortableContext>
         </DndContext>
 
         <Styled.ActionWrapper style={{ justifyContent: 'end' }} onClick={handleAddItem}>
