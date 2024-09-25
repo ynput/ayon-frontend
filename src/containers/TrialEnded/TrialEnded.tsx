@@ -7,11 +7,9 @@ import { useNavigate } from 'react-router'
 import { useAppSelector } from '@state/store'
 import { useGetActiveUsersCountQuery } from '@queries/user/getUsers'
 
-interface TrialEndedProps {
-  instanceId: string
-}
+interface TrialEndedProps {}
 
-const TrialEnded: FC<TrialEndedProps> = ({ instanceId }) => {
+const TrialEnded: FC<TrialEndedProps> = () => {
   const user = useAppSelector((state) => state.user)
   const canManage = user.data.isAdmin || user.data.isManager
   const navigate = useNavigate()
@@ -44,11 +42,7 @@ const TrialEnded: FC<TrialEndedProps> = ({ instanceId }) => {
               <u onClick={open}>support team</u> is here for you if required.
             </p>
             <p>Subscribe to keep using AYON and protect your data!</p>
-            <a
-              href={getSubscribeLink(instanceId, activeUsersCount)}
-              target="_blank"
-              rel="noreferrer"
-            >
+            <a href={getSubscribeLink(activeUsersCount)} target="_blank" rel="noreferrer">
               <Button variant="tertiary">Subscribe now</Button>
             </a>
           </>

@@ -335,7 +335,7 @@ const App = () => {
     return (
       <BrowserRouter>
         <CustomerlyProvider appId={PROJECT_ID}>
-          <TrialEnded instanceId={ynputConnect.instanceId} />
+          <TrialEnded />
         </CustomerlyProvider>
       </BrowserRouter>
     )
