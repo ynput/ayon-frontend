@@ -60,7 +60,7 @@ const denormalize = (data: NormalizedData[]): AttributeData[] => {
 
 }
 
-const AttributeDropdown = ({values, syncHandler}: {values: $Any, syncHandler: $Any}) => {
+const AttributeDropdown = ({ values, syncHandler }: { values: $Any; syncHandler: $Any }) => {
   const {
     items,
     handleAddItem,
@@ -78,10 +78,7 @@ const AttributeDropdown = ({values, syncHandler}: {values: $Any, syncHandler: $A
   return (
     <>
       <Styled.AttributeDropdownWrapper>
-        <DndContext
-          collisionDetection={closestCenter}
-          onDragEnd={handleDraggableEnd}
-        >
+        <DndContext collisionDetection={closestCenter} onDragEnd={handleDraggableEnd}>
           <SortableContext items={items} strategy={verticalListSortingStrategy}>
             {items.map((item, idx) => (
               <AttributeDropdownItem
@@ -95,10 +92,12 @@ const AttributeDropdown = ({values, syncHandler}: {values: $Any, syncHandler: $A
           </SortableContext>
         </DndContext>
 
-        <Styled.ActionWrapper style={{ justifyContent: 'end' }} onClick={handleAddItem}>
-          <Icon icon="add" />
-          Add new item
-        </Styled.ActionWrapper>
+        <Styled.Row className="footer" style={{ justifyContent: 'end' }}>
+          <Styled.ActionWrapper onClick={handleAddItem}>
+            <Icon icon="add" />
+            Add new item
+          </Styled.ActionWrapper>
+        </Styled.Row>
       </Styled.AttributeDropdownWrapper>
     </>
   )
