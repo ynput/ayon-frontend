@@ -238,25 +238,28 @@ const BundlesAddonList = React.forwardRef(
             field="path"
             header="Addon directory"
             className="path-column"
-            body={(addon) => (
-              <FilePath>
-                <InputSwitch
-                  checked={addon.dev?.enabled}
-                  onChange={() =>
-                    onDevChange([addon.name], { value: !addon.dev?.enabled, key: 'enabled' })
-                  }
-                />
-                <InputText
-                  value={addon.dev?.path}
-                  style={{ width: '100%' }}
-                  placeholder="/path/to/dev/addon..."
-                  onChange={(e) =>
-                    onDevChange([addon.name], { value: e.target.value, key: 'path' })
-                  }
-                  disabled={!addon.dev?.enabled}
-                />
-              </FilePath>
-            )}
+            body={(addon) => {
+              console.log(addon.dev?.path, addon.name)
+              return (
+                <FilePath>
+                  <InputSwitch
+                    checked={addon.dev?.enabled}
+                    onChange={() =>
+                      onDevChange([addon.name], { value: !addon.dev?.enabled, key: 'enabled' })
+                    }
+                  />
+                  <InputText
+                    value={addon.dev?.path || ''}
+                    style={{ width: '100%' }}
+                    placeholder="/path/to/dev/addon..."
+                    onChange={(e) =>
+                      onDevChange([addon.name], { value: e.target.value, key: 'path' })
+                    }
+                    disabled={!addon.dev?.enabled}
+                  />
+                </FilePath>
+              )
+            }}
           />
         )}
       </StyledDataTable>
