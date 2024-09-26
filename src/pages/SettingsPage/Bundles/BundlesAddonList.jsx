@@ -247,7 +247,7 @@ const BundlesAddonList = React.forwardRef(
                   }
                 />
                 <InputText
-                  value={addon.dev?.path}
+                  value={addon.dev?.path || ''}
                   style={{ width: '100%' }}
                   placeholder="/path/to/dev/addon..."
                   onChange={(e) =>
