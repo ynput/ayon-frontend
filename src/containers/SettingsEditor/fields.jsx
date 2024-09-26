@@ -1,3 +1,4 @@
+import clsx from 'clsx'
 import React, { useMemo } from 'react'
 import { Button, Divider } from '@ynput/ayon-react-components'
 import ReactMarkdown from 'react-markdown'
@@ -160,11 +161,16 @@ function ObjectFieldTemplate(props) {
                 (element.name !== 'enabled' || ['compact', 'root'].includes(props.schema.layout)) &&
                 !hiddenFields.includes(element.name),
             )
-            .map((element, index) => (
-              <div key={index} className="form-object-field-item">
+            .map((element, index) => {
+              let widget = element.content.props?.schema?.widget
+              widget = widget || ((element.content.props?.name === 'shortName') ? 'short' : null)
+              return(
+              <div key={index} className={clsx("form-object-field-item", widget && `widget-${widget}`)}>
                 {element.content}
               </div>
-            ))}
+              )
+              }
+            )}
         </div>
       </>
     )
