@@ -1,6 +1,6 @@
 import {
   InputText as BaseInputText,
-  InputColor as BaseInputColor,
+  IconSelect as BaseIconSelect,
 } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
@@ -32,7 +32,7 @@ export const AttributeDropdownItemWrapper = styled.div`
 
 export const AttributeDropdownItemHeader = styled.div`
   ${centeredContentFlexRow}
-  cursor: unset;
+  cursor: pointer;
   user-select: none;
   padding: 8px;
   height: 36px;
@@ -48,8 +48,8 @@ export const AttributeDropdownItemHeader = styled.div`
   .icon {
     width: 20px;
     height: 20px;
-    &.actionable {
-      cursor: pointer;
+    &.draggable {
+      cursor: grab;
     }
     &.toggle-expand {
       visibility: hidden;
@@ -65,7 +65,7 @@ export const AttributeDropdownItemHeader = styled.div`
       visibility: visible;
     }
   }
-  .label {
+  .spacer {
     flex-grow: 1;
   }
 `
@@ -74,7 +74,7 @@ export const AttributeDropdownItemBodyExpander = styled.div`
   display: grid;
   grid-template-rows: 0fr;
   overflow: hidden;
-  transition: grid-template-rows .75s;
+  transition: grid-template-rows 0.375s;
   &.expanded {
     grid-template-rows: 1fr;
   }
@@ -86,22 +86,20 @@ export const AttributeDropdownItemBody = styled.div`
   align-items: stretch;
   padding: 0px 8px;
   min-height: 0;
-  opacity: 0;
-  transition: all .75s;
+  transition: padding-top 0.75s;
   &.expanded {
-    opacity: 1;
-    padding: 8px;
+    padding: 8px 8px;
   }
 `
 
 export const Label = styled.div`
   user-select: none;
-  width: 80px;
+  min-width: 80px;
 `
 
 export const Row = styled.div`
   ${centeredContentFlexRow}
-  &.footer{
+  &.footer {
     justify-content: space-between;
     padding: 0 8px;
   }
@@ -109,36 +107,36 @@ export const Row = styled.div`
 
 export const ActionWrapper = styled.div`
   ${centeredContentFlexRow}
-  padding: 8px;
   gap: 4px;
-  cursor: pointer;
-  user-select: none;
+`
+
+export const LabelColor = styled.div`
+  border-radius: 4px;
+  width: 20px;
+  height: 20px;
+`
+
+export const IconSelect = styled(BaseIconSelect)`
+  flex-grow: 1;
+  button div {
+    width: 100%;
+  }
 `
 
 export const InputText = styled(BaseInputText)`
   background-color: var(--md-sys-color-surface-container-low);
   border-color: var(--md-sys-color-outline-variant);
-  width: 360px;
+  flex-grow: 1;
   padding: 4px 8px;
-  &.compact {
-    width: 312px;
-  }
-`
-
-export const InputColor = styled(BaseInputColor)`
-  width: 312px;
-  input {
-    width: 312px;
-  }
 `
 
 export const MockInputColor = styled(InputText)`
-  width: 312px;
+  // width: 312px;
   outline-width: 0;
   opacity: 0.75;
   cursor: pointer;
   input {
-    width: 312px;
+    // width: 312px;
     &:focus {
       outline: none;
     }

@@ -36,10 +36,10 @@ const useDraggableList = <T extends { id: string }, U>({
       updateAndSync([...items.slice(0, idx), updatedItem, ...items.slice(idx + 1)])
     }
 
-  const handleDuplicateItem = (idx: number) => {
+  const handleDuplicateItem = (idx: number, overrides: Partial<T>) => {
     updateAndSync([
       ...items.slice(0, idx + 1),
-      { ...items[idx], id: uniqueId() },
+      { ...items[idx], id: uniqueId(), ...overrides },
       ...items.slice(idx + 1),
     ])
   }

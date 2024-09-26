@@ -1,5 +1,5 @@
 import { uniqueId } from 'lodash'
-import { Icon } from '@ynput/ayon-react-components'
+import { Button, Icon } from '@ynput/ayon-react-components'
 
 import useDraggableList from './hooks/useDraggableList'
 import AttributeDropdownItem from './AttributeDropdownItem'
@@ -15,6 +15,7 @@ export type AttributeData = {
   value: string
   color?: string
   icon?: string
+  isLabelFocused: boolean
   isIconEnabled: boolean
   isColorEnabled: boolean
 }
@@ -31,32 +32,37 @@ const newItem = (): AttributeData => ({
   isExpanded: true,
   label: '',
   value: '',
-  isIconEnabled: true,
-  isColorEnabled: true,
+  isLabelFocused: true,
+  isIconEnabled: false,
+  isColorEnabled: false,
 })
 const normalize = (data: AttributeData[]): NormalizedData[] => {
-  return data.map(({label, value, icon, color, isIconEnabled, isColorEnabled})=> {
-    return {
-      label,
-      value,
-      icon: isIconEnabled ? icon : undefined,
-      color: isColorEnabled ? color : undefined,
-    }
-
-  })
+  return data
+    .filter((item) => item.label !== '' && item.value !== '')
+    .map(({ label, value, icon, color, isIconEnabled, isColorEnabled }) => {
+      return {
+        label,
+        value,
+        icon: isIconEnabled ? icon : undefined,
+        color: isColorEnabled ? color : undefined,
+      }
+    })
 }
 
 const denormalize = (data: NormalizedData[]): AttributeData[] => {
-  return data.map(({ label, value, icon, color }) => ({
-    id: uniqueId(),
-    isExpanded: false,
-    label,
-    value,
-    icon: icon,
-    color: color,
-    isIconEnabled: icon !== undefined,
-    isColorEnabled: color !== undefined,
-  }))
+  return data.map(({ label, value, icon, color }) => {
+    return ({
+      id: uniqueId(),
+      isExpanded: false,
+      label,
+      value,
+      icon: icon,
+      color: color,
+      isLabelFocused: false,
+      isIconEnabled: icon !== '' && icon !== null,
+      isColorEnabled: color !== '' && color !== null,
+    })
+  })
 
 }
 
@@ -86,16 +92,17 @@ const AttributeDropdown = ({ values, syncHandler }: { values: $Any; syncHandler:
                 item={item}
                 onChange={handleChangeItem(idx)}
                 onRemove={handleRemoveItem(idx)}
-                onDuplicate={() => handleDuplicateItem(idx)}
+                onDuplicate={() => handleDuplicateItem(idx, { isLabelFocused: true })}
               />
             ))}
           </SortableContext>
         </DndContext>
 
         <Styled.Row className="footer" style={{ justifyContent: 'end' }}>
-          <Styled.ActionWrapper onClick={handleAddItem}>
-            <Icon icon="add" />
-            Add new item
+          <Styled.ActionWrapper>
+            <Button icon="add" variant="text" onClick={handleAddItem}>
+              Add new item
+            </Button>
           </Styled.ActionWrapper>
         </Styled.Row>
       </Styled.AttributeDropdownWrapper>
