@@ -5,7 +5,7 @@ $field-gap: 8px
 
 .form-field
   flex-grow: 1
-  min-width: 150px
+  // min-width: 150px
 
 .form-inline-field-help, .form-object-field-help
   display: none
@@ -59,15 +59,33 @@ $field-gap: 8px
 
     &.layout-compact       
       flex-direction: row
-      flex-grow: 1
+      align-items: flex-start
+      gap: 8px
 
       .form-object-field-item
-        flex-grow: 1
-        max-width: 300px
+
+        // .form-inline-field-widget
+        //   max-width: 300px
 
         .dropdown
           min-width: 180px
           max-width: 180px
+
+        &.widget-color .form-inline-field-widget
+          max-width: 30px
+
+        &.widget-icon .form-inline-field-widget
+          max-width: 150px
+          .dropdown
+            min-width: 150px !important
+            max-width: 150px !important
+
+        &.widget-short .form-inline-field-widget
+          max-width: 70px
+          >*
+            min-width: 70px !important
+            max-width: 70px !important
+
 
 
     &.layout-expanded
