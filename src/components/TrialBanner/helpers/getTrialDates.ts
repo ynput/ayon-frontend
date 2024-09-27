@@ -13,11 +13,20 @@ const getTrialDates = (
   }
 } => {
   // get subscription data
-  const subscription = subscriptions?.find((s) => s.productType === 'ayon')
+  const ayonSubs = subscriptions?.filter((s) => s.productType === 'ayon')
 
-  if (!subscription?.trialEnd) return { isTrialing: false, left: undefined }
+  // get any trial subscription
+  const trial = ayonSubs?.find((s) => !!s.trialEnd)
+  // get non trial subscription
+  const noTrial = ayonSubs?.find((s) => !s.trialEnd)
 
-  const trialEnd = new Date(subscription.trialEnd)
+  // if there is no trial subscription, return false
+  // if there is a subscription (non trial), return false
+  if (!trial || noTrial) return { isTrialing: false, left: undefined }
+
+  if (!trial?.trialEnd) return { isTrialing: false, left: undefined }
+
+  const trialEnd = new Date(trial.trialEnd)
   let timeLeft = formatDistanceToNow(trialEnd, { addSuffix: false })
   // remove "about" from the string
   if (timeLeft.startsWith('about ')) {
