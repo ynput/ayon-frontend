@@ -38,13 +38,29 @@ const newItem = (): AttributeData => ({
   isIconEnabled: false,
   isColorEnabled: false,
 })
+
+const appendOrUpdateNumericSuffix = (value: string) => {
+  const tokens = value.split('-')
+  const lastToken = tokens[tokens.length - 1]
+  if (!isNaN(Number(lastToken))) {
+    return [...tokens.splice(-1), parseInt(lastToken) + 1].join('-')
+  }
+
+  return value + '-2'
+}
+
 const normalize = (data: AttributeData[]): NormalizedData[] => {
+  let values: string[] = []
   return data
     .filter((item) => item.label !== '' && item.value !== '')
     .map(({ label, value, icon, color, isIconEnabled, isColorEnabled }) => {
+      let normalizedValue = value
+      if (values.includes(value)) {
+        normalizedValue = appendOrUpdateNumericSuffix(value)
+      }
       return {
         label,
-        value,
+        value: normalizedValue,
         icon: isIconEnabled ? icon : undefined,
         color: isColorEnabled ? color : undefined,
       }
@@ -53,7 +69,7 @@ const normalize = (data: AttributeData[]): NormalizedData[] => {
 
 const denormalize = (data: NormalizedData[]): AttributeData[] => {
   return data.map(({ label, value, icon, color }) => {
-    return ({
+    return {
       id: uniqueId(),
       isExpanded: false,
       label,
@@ -63,9 +79,8 @@ const denormalize = (data: NormalizedData[]): AttributeData[] => {
       isLabelFocused: false,
       isIconEnabled: icon !== '' && icon !== null,
       isColorEnabled: color !== '' && color !== null,
-    })
+    }
   })
-
 }
 
 const AttributeDropdown = ({ values, syncHandler }: { values: $Any; syncHandler: $Any }) => {
@@ -86,7 +101,7 @@ const AttributeDropdown = ({ values, syncHandler }: { values: $Any; syncHandler:
   const [draggedItemId, setDraggedItemId] = useState<string | null>()
   let draggedItem
   if (draggedItemId) {
-    draggedItem = items.find(item => item.id === draggedItemId)
+    draggedItem = items.find((item) => item.id === draggedItemId)
   }
 
   function handleDragStart(event: DragStartEvent) {
@@ -114,7 +129,12 @@ const AttributeDropdown = ({ values, syncHandler }: { values: $Any; syncHandler:
                 isBeingDragged={item.id === draggedItemId}
                 onChange={handleChangeItem(idx)}
                 onRemove={handleRemoveItem(idx)}
-                onDuplicate={() => handleDuplicateItem(idx, { isLabelFocused: true })}
+                onDuplicate={() =>
+                  handleDuplicateItem(idx, {
+                    isLabelFocused: true,
+                    value: appendOrUpdateNumericSuffix(items[idx].value),
+                  })
+                }
               />
             ))}
           </SortableContext>
@@ -132,9 +152,14 @@ const AttributeDropdown = ({ values, syncHandler }: { values: $Any; syncHandler:
           )}
         </DndContext>
 
-            <Button icon="add" variant="text" onClick={handleAddItem} style={{display: 'flex', justifyContent: 'start'}}>
-              Add new item
-            </Button>
+        <Button
+          icon="add"
+          variant="text"
+          onClick={handleAddItem}
+          style={{ display: 'flex', justifyContent: 'start' }}
+        >
+          Add new item
+        </Button>
       </Styled.AttributeDropdownWrapper>
     </>
   )

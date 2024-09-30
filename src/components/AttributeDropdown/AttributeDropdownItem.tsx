@@ -22,21 +22,22 @@ const AttributeDropdownItem = ({
   onRemove,
   onDuplicate,
 }: AttributeDropdownItemProps) => {
+  const {id, label, value, color, isColorEnabled, isIconEnabled, isExpanded, isLabelFocused} = item
   const icon = item.icon || 'question_mark'
-  const iconColor = item.color && item.isColorEnabled ? item.color : 'initial'
+  const iconColor = color && isColorEnabled ? color : 'initial'
   const labelRef = useRef<HTMLInputElement>(null)
   const valueRef = useRef<HTMLInputElement>(null)
   const colorPickerRef = useRef<HTMLInputElement>(null)
 
   const focusLabelIfExpanded = () => {
-    if (!item.isExpanded) {
+    if (!isExpanded) {
       // Avoids jittery expand animation
       setTimeout(() => labelRef.current!.focus(), 250)
     }
   }
 
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
-    id: item.id,
+    id: id,
     animateLayoutChanges: () => false,
   })
 
@@ -52,22 +53,22 @@ const AttributeDropdownItem = ({
       className={clsx({ dragged: isBeingDragged })}
     >
       <Styled.AttributeDropdownItemHeader
-        className={clsx({ expanded: item.isExpanded })}
+        className={clsx({ expanded: isExpanded })}
         onClick={() => {
-          onChange && onChange('isExpanded', !item.isExpanded)
+          onChange && onChange('isExpanded', !isExpanded)
           focusLabelIfExpanded()
         }}
       >
-        {item.isIconEnabled && (
-          <Icon className="icon" icon={icon && item.isIconEnabled ? icon : ''} />
+        {isIconEnabled && (
+          <Icon className="icon" icon={icon && isIconEnabled ? icon : ''} />
         )}
-        {item.isColorEnabled && <Styled.LabelColor style={{ backgroundColor: iconColor }} />}
-        <span> {item.label} </span>
+        {isColorEnabled && <Styled.LabelColor style={{ backgroundColor: iconColor }} />}
+        <span> {label} </span>
         <span className="spacer" />
 
         <Icon
           className="icon toggle-expand"
-          icon={item.isExpanded ? 'collapse_all' : 'expand_all'}
+          icon={isExpanded ? 'collapse_all' : 'expand_all'}
         />
         <Icon
           {...listeners}
@@ -78,16 +79,16 @@ const AttributeDropdownItem = ({
         />
       </Styled.AttributeDropdownItemHeader>
 
-      <Styled.AttributeDropdownItemBodyExpander className={clsx({ expanded: item.isExpanded })}>
+      <Styled.AttributeDropdownItemBodyExpander className={clsx({ expanded: isExpanded })}>
         <Styled.AttributeDropdownItemBody
-          className={clsx(item.isExpanded ? 'expanded' : 'collapsed')}
+          className={clsx(isExpanded ? 'expanded' : 'collapsed')}
         >
           <Styled.Row key="label">
             <Styled.Label> Label </Styled.Label>
             <Styled.InputText
               ref={labelRef}
-              value={item.label}
-              autoFocus={item.isLabelFocused}
+              value={label}
+              autoFocus={isLabelFocused}
               onChange={(event) => {
                 valueRef.current!.value = kebabCase(event.target.value)
                 onChange && onChange('label', event.target.value)
@@ -99,7 +100,7 @@ const AttributeDropdownItem = ({
             <Styled.Label> Value </Styled.Label>
             <Styled.InputText
               ref={valueRef}
-              value={valueRef.current?.value || item.value}
+              value={valueRef.current?.value || value}
               onChange={(event) => onChange && onChange('value', event.target.value)}
             />
           </Styled.Row>
@@ -107,17 +108,17 @@ const AttributeDropdownItem = ({
           <Styled.Row key="icon">
             <Styled.Label> Icon </Styled.Label>
             <Styled.IconSelect
-              disabled={!item.isIconEnabled}
+              disabled={!isIconEnabled}
               value={[icon]}
               style={{ maxWidth: 'auto' }}
               onChange={(value) => {
-                if (item.isIconEnabled) {
+                if (isIconEnabled) {
                   return onChange && onChange('icon', value[0])
                 }
               }}
             />
             <InputSwitch
-              checked={item.isIconEnabled}
+              checked={isIconEnabled}
               onChange={(event) =>
                 onChange && onChange('isIconEnabled', (event.target as HTMLInputElement).checked)
               }
@@ -127,27 +128,27 @@ const AttributeDropdownItem = ({
           <Styled.Row key="color">
             <Styled.Label> Color </Styled.Label>
             <Styled.ColorPicker
-              style={{ backgroundColor: item.color }}
-              className={clsx({ disabled: !item.isColorEnabled })}
+              style={{ backgroundColor: color }}
+              className={clsx({ disabled: !isColorEnabled })}
               onClick={() => {
-                if (item.isColorEnabled) {
+                if (isColorEnabled) {
                   colorPickerRef.current!.click()
                 }
               }}
             >
               <input
                 type="color"
-                value={item.color || '#000000'}
+                value={color || '#000000'}
                 ref={colorPickerRef}
                 onChange={(event) => {
-                  if (item.isColorEnabled) {
+                  if (isColorEnabled) {
                     onChange && onChange('color', event?.target.value.toString())
                   }
                 }}
               />
             </Styled.ColorPicker>
             <InputSwitch
-              checked={item.isColorEnabled}
+              checked={isColorEnabled}
               onChange={(event) =>
                 onChange && onChange('isColorEnabled', (event.target as HTMLInputElement).checked)
               }
