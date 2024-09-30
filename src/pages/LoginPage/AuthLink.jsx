@@ -4,6 +4,16 @@ import PropTypes from 'prop-types'
 import OAuth2ProviderIcon from '@components/oauthIcons'
 import { upperFirst } from 'lodash'
 import { Button } from '@ynput/ayon-react-components'
+import styled from 'styled-components'
+
+const AuthButton = styled(Button)`
+  max-height: none;
+
+  transition: filter 0.2s;
+  &:hover {
+    filter: brightness(1.2);
+  }
+`
 
 const AuthLink = ({ url, name, icon, color, textColor }) => {
   const colours = {
@@ -17,9 +27,8 @@ const AuthLink = ({ url, name, icon, color, textColor }) => {
 
   return (
     <a href={url} key={name} title={name}>
-      <Button
+      <AuthButton
         style={{
-          maxHeight: 'none',
           backgroundColor: colour,
           color: textColour,
         }}
@@ -30,7 +39,7 @@ const AuthLink = ({ url, name, icon, color, textColor }) => {
             ) : (
               <OAuth2ProviderIcon name={name} />
             )}
-            <h2>{'Login With ' + upperFirst(name)}</h2>
+            <span className="label">{'Login With ' + upperFirst(name)}</span>
           </>
         }
       />

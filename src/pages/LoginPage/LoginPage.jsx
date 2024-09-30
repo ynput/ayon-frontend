@@ -27,6 +27,12 @@ const LoginPage = ({ isFirstTime = false }) => {
   const [name, setName] = useState('')
   const [password, setPassword] = useState('')
 
+  // which methods are featured (all others are hidden)
+  const featuredMethods = search.getAll('provider')
+
+  // if there are none [] then show all
+  const [shownProviders, setShownProviders] = useState(featuredMethods)
+
   const [isLoading, setIsLoading] = useState(false)
 
   const { data: info = {}, isLoading: isLoadingInfo } = useGetInfoQuery()
@@ -157,6 +163,9 @@ const LoginPage = ({ isFirstTime = false }) => {
 
   if (isLoading || isLoadingInfo) return isFirstTime ? null : <LoadingPage />
 
+  const showAllProviders = !shownProviders.length
+  const showPasswordLogin = showAllProviders || shownProviders.includes('password')
+
   return (
     <main className="center">
       {loginPageBackground && <Styled.BG src={loginPageBackground} />}
@@ -172,31 +181,36 @@ const LoginPage = ({ isFirstTime = false }) => {
         <Panel>
           <Styled.Ayon src="/AYON.svg" />
           <Styled.Methods>
-            <form onSubmit={handleSubmit}>
-              <label id="username">Username</label>
-              <InputText
-                autoFocus
-                placeholder="Enter your username"
-                name="username"
-                aria-label="Username"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-              <label id="password">Password</label>
-              <InputPassword
-                placeholder="Enter password"
-                name="password"
-                aria-label="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-              <Button label={<strong>Login</strong>} type="submit" />
-            </form>
+            {showPasswordLogin && (
+              <form onSubmit={handleSubmit}>
+                <label id="username">Username</label>
+                <InputText
+                  autoFocus
+                  placeholder="Enter your username"
+                  name="username"
+                  aria-label="Username"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+                <label id="password">Password</label>
+                <InputPassword
+                  placeholder="Enter password"
+                  name="password"
+                  aria-label="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+                <Button type="submit">
+                  <span className="label">Login with password</span>
+                </Button>
+              </form>
+            )}
 
             {
               info.ssoOptions?.length
-                ? info.ssoOptions.map(
-                    ({ name, title, url, args, redirectKey, icon, color, textColor }) => {
+                ? info.ssoOptions
+                    .filter(({ name }) => shownProviders.includes(name) || showAllProviders)
+                    .map(({ name, title, url, args, redirectKey, icon, color, textColor }) => {
                       const queryDict = { ...args }
                       const redirect_uri = `${window.location.origin}/login/${name}`
                       queryDict[redirectKey] = redirect_uri
@@ -214,12 +228,18 @@ const LoginPage = ({ isFirstTime = false }) => {
                           textColor={textColor}
                         />
                       )
-                    },
-                  )
+                    })
                 : null // ssoOptions.map
             }
           </Styled.Methods>
-          {info?.passwordRecoveryAvailable && <a href="/passwordReset">Reset password</a>}
+          {info?.passwordRecoveryAvailable && showPasswordLogin && (
+            <a href="/passwordReset">Reset password</a>
+          )}
+          {!showAllProviders && (
+            <Button style={{ width: '100%' }} variant="text" onClick={() => setShownProviders([])}>
+              Show all login options
+            </Button>
+          )}
         </Panel>
       </Styled.LoginForm>
     </main>

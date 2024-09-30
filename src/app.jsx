@@ -32,6 +32,7 @@ import { GlobalContextMenu } from '@components/GlobalContextMenu'
 import Favicon from '@components/Favicon/Favicon'
 import { ConfirmDialog } from 'primereact/confirmdialog'
 import { toast } from 'react-toastify'
+import TrialBanner from '@components/TrialBanner/TrialBanner'
 
 // context
 import { ContextMenuProvider } from '@context/contextMenuContext'
@@ -40,6 +41,7 @@ import { RestartProvider } from '@context/restartContext'
 import { PasteProvider, PasteModal } from '@context/pasteContext'
 import { URIProvider } from '@context/uriContext'
 import { NotificationsProvider } from '@context/notificationsContext'
+import { CustomerlyProvider } from 'react-live-chat-customerly'
 
 // containers
 import Header from '@containers/header'
@@ -52,12 +54,15 @@ import { login } from '@state/user'
 
 // queries
 import { useLazyGetInfoQuery } from '@queries/auth/getAuth'
+import { useGetYnputCloudInfoQuery } from '@queries/cloud/cloud'
 
 // hooks
 import useTooltip from '@hooks/Tooltip/useTooltip'
 import WatchActivities from './containers/WatchActivities'
 import LauncherAuthPage from '@pages/LauncherAuthPage'
 import ReleaseInstallerDialog from '@containers/ReleaseInstallerDialog/ReleaseInstallerDialog'
+import getTrialDates from '@components/TrialBanner/helpers/getTrialDates'
+import TrialEnded from '@containers/TrialEnded/TrialEnded'
 
 const App = () => {
   const user = useSelector((state) => state.user)
@@ -76,6 +81,9 @@ const App = () => {
   // Call /api/info to check whether the user is logged in
   // and to acquire server settings
   const [getInfo] = useLazyGetInfoQuery()
+
+  // get subscriptions info
+  const { data: ynputConnect } = useGetYnputCloudInfoQuery()
 
   useEffect(() => {
     setLoading(true)
@@ -137,6 +145,8 @@ const App = () => {
   }, [])
 
   const isUser = user?.data?.isUser
+
+  const PROJECT_ID = 'e9c7c6ee'
 
   // DEFINE ALL HIGH LEVEL COMPONENT PAGES HERE
   const mainComponent = useMemo(
@@ -251,6 +261,10 @@ const App = () => {
                     </URIProvider>
                   </NotificationsProvider>
                 </BrowserRouter>
+                {/* TRIAL BANNER */}
+                <CustomerlyProvider appId={PROJECT_ID}>
+                  <TrialBanner />
+                </CustomerlyProvider>
               </PasteProvider>
             </ContextMenuProvider>
           </RestartProvider>
@@ -314,6 +328,20 @@ const App = () => {
     )
   }
 
+  const { isTrialing, left } = getTrialDates(ynputConnect?.subscriptions)
+
+  // Trial has finished
+  if (isTrialing && left?.finished) {
+    return (
+      <BrowserRouter>
+        <CustomerlyProvider appId={PROJECT_ID}>
+          <TrialEnded />
+        </CustomerlyProvider>
+      </BrowserRouter>
+    )
+  }
+
+  // user needs to go through onboarding
   if (isOnboarding || noAdminUser) {
     return (
       <>

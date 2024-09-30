@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react'
 import PropTypes from 'prop-types'
 import { InputText, Button, LockedInput } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
+import AttributeDropdown from '@components/AttributeDropdown/AttributeDropdown'
 
 const RowStyled = styled.form`
   display: flex;
@@ -70,34 +71,7 @@ const EnumEditor = ({ values = [], onChange }) => {
 
   return (
     <ContainerStyled>
-      {[...values, newItem].map(({ value, label }, index) => (
-        <RowStyled key={index}>
-          <label htmlFor="label">Label</label>
-          <InputText
-            id="label"
-            onChange={(e) => handleLabelChange(e.target.value, index)}
-            error={valuesValues.includes(label)}
-            value={label}
-          />
-          <label htmlFor="label">Value</label>
-          <LockedInput
-            id="value"
-            value={value}
-            onSubmit={(v) => handleValueChange(v, index)}
-            style={{ minWidth: 'unset' }}
-            fullUnlock
-            saveLabel=""
-            cancelLabel=""
-          />
-
-          <Button
-            onClick={(e) => handleRemoveItem(e, index)}
-            icon="cancel"
-            disabled={index === values.length}
-            style={{ visibility: index === values.length ? 'hidden' : 'visible' }}
-          />
-        </RowStyled>
-      ))}
+      <AttributeDropdown />
     </ContainerStyled>
   )
 }
