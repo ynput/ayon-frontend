@@ -1,6 +1,7 @@
 import {
   InputText as BaseInputText,
   IconSelect as BaseIconSelect,
+  Button as BaseButton,
 } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
@@ -28,6 +29,9 @@ export const AttributeDropdownItemWrapper = styled.div`
   justify-content: stretch;
   border-radius: 4px;
   overflow: hidden;
+  &.dragged {
+    opacity: 0
+  }
 `
 
 export const AttributeDropdownItemHeader = styled.div`
@@ -74,7 +78,7 @@ export const AttributeDropdownItemBodyExpander = styled.div`
   display: grid;
   grid-template-rows: 0fr;
   overflow: hidden;
-  transition: grid-template-rows 0.375s;
+  transition: grid-template-rows 0.25s;
   &.expanded {
     grid-template-rows: 1fr;
   }
@@ -84,11 +88,11 @@ export const AttributeDropdownItemBody = styled.div`
   ${centeredContentFlexColumn}
   background-color: var(--md-sys-color-surface-container-high);
   align-items: stretch;
-  padding: 0px 8px;
+  padding: 0 8px;
   min-height: 0;
-  transition: padding-top 0.75s;
+  transition: padding 0.25s;
   &.expanded {
-    padding: 8px 8px;
+    padding: 8px;
   }
 `
 
@@ -112,14 +116,20 @@ export const ActionWrapper = styled.div`
 
 export const LabelColor = styled.div`
   border-radius: 4px;
-  width: 20px;
-  height: 20px;
+  width: 14px;
+  height: 14px;
 `
 
 export const IconSelect = styled(BaseIconSelect)`
   flex-grow: 1;
   button div {
     width: 100%;
+  }
+`
+
+export const Button = styled(BaseButton)`
+  &:hover {
+    background-color: var(--md-sys-color-surface-container-high-hover);
   }
 `
 
@@ -130,15 +140,16 @@ export const InputText = styled(BaseInputText)`
   padding: 4px 8px;
 `
 
-export const MockInputColor = styled(InputText)`
-  // width: 312px;
-  outline-width: 0;
-  opacity: 0.75;
+export const ColorPicker = styled.div`
+  position: relative;
+  display: flex;
+  flex-grow: 1;
   cursor: pointer;
+  &.disabled {
+    cursor: default;
+    opacity: 0.75;
+  }
   input {
-    // width: 312px;
-    &:focus {
-      outline: none;
-    }
+    visibility: hidden;
   }
 `
