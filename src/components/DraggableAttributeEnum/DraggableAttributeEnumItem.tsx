@@ -1,28 +1,31 @@
+import clsx from 'clsx'
+import { kebabCase } from 'lodash'
+import { useRef } from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { Icon, InputSwitch } from '@ynput/ayon-react-components'
-import * as Styled from './AttributeDropdown.styled'
-import { AttributeData } from './AttributeDropdown'
-import clsx from 'clsx'
-import { useRef } from 'react'
-import { kebabCase } from 'lodash'
 
-type AttributeDropdownItemProps = {
+import { Icon, InputSwitch } from '@ynput/ayon-react-components'
+
+import * as Styled from './DraggableAttributeEnum.styled'
+import { AttributeData } from './DraggableAttributeEnum'
+
+type Props = {
   item: AttributeData
   isBeingDragged?: boolean
-  onChange?: (attr: keyof AttributeData, value: string | boolean) => void
+  onChange?: (attr: (keyof AttributeData)[], value: (boolean | string | undefined)[]) => void
   onRemove?: () => void
   onDuplicate?: () => void
 }
 
-const AttributeDropdownItem = ({
+const DraggableAttributeEnumItem = ({
   item,
   isBeingDragged,
   onChange,
   onRemove,
   onDuplicate,
-}: AttributeDropdownItemProps) => {
-  const {id, label, value, color, isColorEnabled, isIconEnabled, isExpanded, isLabelFocused} = item
+}: Props) => {
+  const { id, label, value, color, isColorEnabled, isIconEnabled, isExpanded, isLabelFocused } =
+    item
   const icon = item.icon || 'question_mark'
   const iconColor = color && isColorEnabled ? color : 'initial'
   const labelRef = useRef<HTMLInputElement>(null)
@@ -47,29 +50,24 @@ const AttributeDropdownItem = ({
   }
 
   return (
-    <Styled.AttributeDropdownItemWrapper
+    <Styled.EnumItemWrapper
       ref={setNodeRef}
       style={style}
       className={clsx({ dragged: isBeingDragged })}
     >
-      <Styled.AttributeDropdownItemHeader
+      <Styled.EnumItemHeader
         className={clsx({ expanded: isExpanded })}
         onClick={() => {
-          onChange && onChange('isExpanded', !isExpanded)
+          onChange && onChange(['isExpanded'], [!isExpanded])
           focusLabelIfExpanded()
         }}
       >
-        {isIconEnabled && (
-          <Icon className="icon" icon={icon && isIconEnabled ? icon : ''} />
-        )}
+        {isIconEnabled && <Icon className="icon" icon={icon && isIconEnabled ? icon : ''} />}
         {isColorEnabled && <Styled.LabelColor style={{ backgroundColor: iconColor }} />}
         <span> {label} </span>
         <span className="spacer" />
 
-        <Icon
-          className="icon toggle-expand"
-          icon={isExpanded ? 'collapse_all' : 'expand_all'}
-        />
+        <Icon className="icon toggle-expand" icon={isExpanded ? 'collapse_all' : 'expand_all'} />
         <Icon
           {...listeners}
           {...attributes}
@@ -77,12 +75,10 @@ const AttributeDropdownItem = ({
           icon="drag_indicator"
           id="icon"
         />
-      </Styled.AttributeDropdownItemHeader>
+      </Styled.EnumItemHeader>
 
-      <Styled.AttributeDropdownItemBodyExpander className={clsx({ expanded: isExpanded })}>
-        <Styled.AttributeDropdownItemBody
-          className={clsx(isExpanded ? 'expanded' : 'collapsed')}
-        >
+      <Styled.EnumItemBodyExpander className={clsx({ expanded: isExpanded })}>
+        <Styled.EnumItemBody className={clsx(isExpanded ? 'expanded' : 'collapsed')}>
           <Styled.Row key="label">
             <Styled.Label> Label </Styled.Label>
             <Styled.InputText
@@ -91,7 +87,9 @@ const AttributeDropdownItem = ({
               autoFocus={isLabelFocused}
               onChange={(event) => {
                 valueRef.current!.value = kebabCase(event.target.value)
-                onChange && onChange('label', event.target.value)
+                if (onChange) {
+                  onChange(['label', 'value'], [event.target.value, valueRef.current!.value])
+                }
               }}
             />
           </Styled.Row>
@@ -101,7 +99,7 @@ const AttributeDropdownItem = ({
             <Styled.InputText
               ref={valueRef}
               value={valueRef.current?.value || value}
-              onChange={(event) => onChange && onChange('value', event.target.value)}
+              onChange={(event) => onChange && onChange(['value'], [event.target.value])}
             />
           </Styled.Row>
 
@@ -113,14 +111,14 @@ const AttributeDropdownItem = ({
               style={{ maxWidth: 'auto' }}
               onChange={(value) => {
                 if (isIconEnabled) {
-                  return onChange && onChange('icon', value[0])
+                  return onChange && onChange(['icon'], [value[0]])
                 }
               }}
             />
             <InputSwitch
               checked={isIconEnabled}
               onChange={(event) =>
-                onChange && onChange('isIconEnabled', (event.target as HTMLInputElement).checked)
+                onChange && onChange(['isIconEnabled'], [(event.target as HTMLInputElement).checked])
               }
             />
           </Styled.Row>
@@ -142,7 +140,7 @@ const AttributeDropdownItem = ({
                 ref={colorPickerRef}
                 onChange={(event) => {
                   if (isColorEnabled) {
-                    onChange && onChange('color', event?.target.value.toString())
+                    onChange && onChange(['color'], [event?.target.value.toString()])
                   }
                 }}
               />
@@ -150,7 +148,7 @@ const AttributeDropdownItem = ({
             <InputSwitch
               checked={isColorEnabled}
               onChange={(event) =>
-                onChange && onChange('isColorEnabled', (event.target as HTMLInputElement).checked)
+                onChange && onChange(['isColorEnabled'], [(event.target as HTMLInputElement).checked])
               }
             />
           </Styled.Row>
@@ -167,10 +165,10 @@ const AttributeDropdownItem = ({
               </Styled.Button>
             </Styled.ActionWrapper>
           </Styled.Row>
-        </Styled.AttributeDropdownItemBody>
-      </Styled.AttributeDropdownItemBodyExpander>
-    </Styled.AttributeDropdownItemWrapper>
+        </Styled.EnumItemBody>
+      </Styled.EnumItemBodyExpander>
+    </Styled.EnumItemWrapper>
   )
 }
 
-export default AttributeDropdownItem
+export default DraggableAttributeEnumItem

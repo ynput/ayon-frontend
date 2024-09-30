@@ -2,7 +2,7 @@ import { DragEndEvent } from '@dnd-kit/core';
 import { uniqueId } from 'lodash'
 import { useState } from 'react'
 
-const useDraggableList = <T extends { id: string }, U>({
+const useDraggable = <T extends { id: string }, U>({
   creator,
   initialData,
   syncHandler,
@@ -29,10 +29,10 @@ const useDraggableList = <T extends { id: string }, U>({
   }
 
   const handleChangeItem =
-    (idx: number) => (attr: keyof T, value: boolean | string | undefined) => {
+    (idx: number) => (attrs: (keyof T)[], values: (boolean | string | undefined)[]) => {
       let updatedItem: T = { ...items[idx] }
-      // @ts-ignore
-      updatedItem[attr] = value
+      //@ts-ignore
+      attrs.map((attr, index) => (updatedItem[attr] = values[index]))
       updateAndSync([...items.slice(0, idx), updatedItem, ...items.slice(idx + 1)])
     }
 
@@ -81,4 +81,4 @@ const useDraggableList = <T extends { id: string }, U>({
   }
 }
 
-export default useDraggableList
+export default useDraggable

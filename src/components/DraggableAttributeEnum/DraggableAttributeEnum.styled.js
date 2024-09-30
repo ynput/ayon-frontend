@@ -18,14 +18,14 @@ const centeredContentFlexRow = `
   gap: 8px;
 `
 
-export const AttributeDropdownWrapper = styled.div`
+export const EnumListWrapper = styled.div`
   display: flex;
   flex-direction: column;
   justify-content: stretch;
   gap: 4px;
 `
 
-export const AttributeDropdownItemWrapper = styled.div`
+export const EnumItemWrapper = styled.div`
   justify-content: stretch;
   border-radius: 4px;
   overflow: hidden;
@@ -34,7 +34,7 @@ export const AttributeDropdownItemWrapper = styled.div`
   }
 `
 
-export const AttributeDropdownItemHeader = styled.div`
+export const EnumItemHeader = styled.div`
   ${centeredContentFlexRow}
   cursor: pointer;
   user-select: none;
@@ -74,7 +74,7 @@ export const AttributeDropdownItemHeader = styled.div`
   }
 `
 
-export const AttributeDropdownItemBodyExpander = styled.div`
+export const EnumItemBodyExpander = styled.div`
   display: grid;
   grid-template-rows: 0fr;
   overflow: hidden;
@@ -84,7 +84,7 @@ export const AttributeDropdownItemBodyExpander = styled.div`
   }
 `
 
-export const AttributeDropdownItemBody = styled.div`
+export const EnumItemBody = styled.div`
   ${centeredContentFlexColumn}
   background-color: var(--md-sys-color-surface-container-high);
   align-items: stretch;

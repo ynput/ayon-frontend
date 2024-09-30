@@ -1,14 +1,15 @@
-import { uniqueId } from 'lodash'
-import { Button } from '@ynput/ayon-react-components'
-
-import useDraggableList from './hooks/useDraggableList'
-import AttributeDropdownItem from './AttributeDropdownItem'
-import * as Styled from './AttributeDropdown.styled'
-import { closestCenter, DndContext, DragEndEvent, DragOverlay, DragStartEvent } from '@dnd-kit/core'
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
-import { $Any } from '@types'
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
+import { uniqueId } from 'lodash'
+import { closestCenter, DndContext, DragEndEvent, DragOverlay, DragStartEvent } from '@dnd-kit/core'
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
+
+import { Button } from '@ynput/ayon-react-components'
+import { $Any } from '@types'
+
+import DraggableAttributeEnumItem from './DraggableAttributeEnumItem'
+import * as Styled from './DraggableAttributeEnum.styled'
+import useDraggable from './hooks/useDraggable'
 
 export type AttributeData = {
   id: string,
@@ -29,7 +30,7 @@ export type NormalizedData = {
   icon?: string
 }
 
-const newItem = (): AttributeData => ({
+const creator = (): AttributeData => ({
   id: uniqueId(),
   isExpanded: true,
   label: '',
@@ -83,7 +84,7 @@ const denormalize = (data: NormalizedData[]): AttributeData[] => {
   })
 }
 
-const AttributeDropdown = ({ values, syncHandler }: { values: $Any; syncHandler: $Any }) => {
+const DraggableAttributeEnum = ({ values, syncHandler }: { values: $Any; syncHandler: $Any }) => {
   const {
     items,
     handleAddItem,
@@ -91,12 +92,21 @@ const AttributeDropdown = ({ values, syncHandler }: { values: $Any; syncHandler:
     handleChangeItem,
     handleDuplicateItem,
     handleDraggableEnd,
-  } = useDraggableList<AttributeData, NormalizedData>({
-    creator: newItem,
+  } = useDraggable<AttributeData, NormalizedData>({
+    creator,
     initialData: denormalize(values),
     syncHandler,
     normalizer: normalize,
   })
+
+  const handleDragStart = (event: DragStartEvent) => {
+    setDraggedItemId(event.active.id as string)
+  }
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    setDraggedItemId(null)
+    handleDraggableEnd(event)
+  }
 
   const [draggedItemId, setDraggedItemId] = useState<string | null>()
   let draggedItem
@@ -104,18 +114,9 @@ const AttributeDropdown = ({ values, syncHandler }: { values: $Any; syncHandler:
     draggedItem = items.find((item) => item.id === draggedItemId)
   }
 
-  function handleDragStart(event: DragStartEvent) {
-    setDraggedItemId(event.active.id as string)
-  }
-
-  function handleDragEnd(event: DragEndEvent) {
-    setDraggedItemId(null)
-    handleDraggableEnd(event)
-  }
-
   return (
     <>
-      <Styled.AttributeDropdownWrapper>
+      <Styled.EnumListWrapper>
         <DndContext
           collisionDetection={closestCenter}
           onDragStart={handleDragStart}
@@ -123,8 +124,8 @@ const AttributeDropdown = ({ values, syncHandler }: { values: $Any; syncHandler:
         >
           <SortableContext items={items} strategy={verticalListSortingStrategy}>
             {items.map((item, idx) => (
-              <AttributeDropdownItem
-                key={`AttributeDropdown_${item.id}`}
+              <DraggableAttributeEnumItem
+                key={`DraggableAttributeEnum_${item.id}`}
                 item={item}
                 isBeingDragged={item.id === draggedItemId}
                 onChange={handleChangeItem(idx)}
@@ -141,12 +142,7 @@ const AttributeDropdown = ({ values, syncHandler }: { values: $Any; syncHandler:
 
           {createPortal(
             <DragOverlay style={{}}>
-              {draggedItem && (
-                <AttributeDropdownItem
-                  key={`AttributeDropdown_${draggedItem.id}`}
-                  item={draggedItem}
-                />
-              )}
+              {draggedItem && <DraggableAttributeEnumItem item={draggedItem} />}
             </DragOverlay>,
             document.body,
           )}
@@ -160,9 +156,9 @@ const AttributeDropdown = ({ values, syncHandler }: { values: $Any; syncHandler:
         >
           Add new item
         </Button>
-      </Styled.AttributeDropdownWrapper>
+      </Styled.EnumListWrapper>
     </>
   )
 }
 
-export default AttributeDropdown
+export default DraggableAttributeEnum
