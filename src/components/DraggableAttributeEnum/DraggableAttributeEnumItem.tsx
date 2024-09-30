@@ -1,6 +1,6 @@
 import clsx from 'clsx'
 import { kebabCase } from 'lodash'
-import { useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 
@@ -38,6 +38,12 @@ const DraggableAttributeEnumItem = ({
       setTimeout(() => labelRef.current!.focus(), 250)
     }
   }
+
+  useEffect(() => {
+    if (item.hasPreselectedLabel) {
+      labelRef.current!.select()
+    }
+  }, [])
 
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
     id: id,
@@ -118,7 +124,8 @@ const DraggableAttributeEnumItem = ({
             <InputSwitch
               checked={isIconEnabled}
               onChange={(event) =>
-                onChange && onChange(['isIconEnabled'], [(event.target as HTMLInputElement).checked])
+                onChange &&
+                onChange(['isIconEnabled'], [(event.target as HTMLInputElement).checked])
               }
             />
           </Styled.Row>
@@ -126,7 +133,7 @@ const DraggableAttributeEnumItem = ({
           <Styled.Row key="color">
             <Styled.Label> Color </Styled.Label>
             <Styled.ColorPicker
-              style={{ backgroundColor: color }}
+              style={{ backgroundColor: color || 'transparent' }}
               className={clsx({ disabled: !isColorEnabled })}
               onClick={() => {
                 if (isColorEnabled) {
@@ -134,6 +141,14 @@ const DraggableAttributeEnumItem = ({
                 }
               }}
             >
+              {!color && (
+                <span
+                  className={clsx('placeholder', { disabled: !isColorEnabled })}
+                  data-tooltip="Toggle switch to enable color picker"
+                >
+                  Pick a color
+                </span>
+              )}
               <input
                 type="color"
                 value={color || '#000000'}
@@ -148,7 +163,8 @@ const DraggableAttributeEnumItem = ({
             <InputSwitch
               checked={isColorEnabled}
               onChange={(event) =>
-                onChange && onChange(['isColorEnabled'], [(event.target as HTMLInputElement).checked])
+                onChange &&
+                onChange(['isColorEnabled'], [(event.target as HTMLInputElement).checked])
               }
             />
           </Styled.Row>

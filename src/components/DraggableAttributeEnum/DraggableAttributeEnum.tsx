@@ -19,6 +19,7 @@ export type AttributeData = {
   color?: string
   icon?: string
   isLabelFocused: boolean
+  hasPreselectedLabel: boolean
   isIconEnabled: boolean
   isColorEnabled: boolean
 }
@@ -36,18 +37,19 @@ const creator = (): AttributeData => ({
   label: '',
   value: '',
   isLabelFocused: true,
+  hasPreselectedLabel: false,
   isIconEnabled: false,
   isColorEnabled: false,
 })
 
-const appendOrUpdateNumericSuffix = (value: string) => {
-  const tokens = value.split('-')
+const appendOrUpdateNumericSuffix = (value: string, separator: string) => {
+  const tokens = value.split(separator)
   const lastToken = tokens[tokens.length - 1]
   if (!isNaN(Number(lastToken))) {
-    return [...tokens.splice(-1), parseInt(lastToken) + 1].join('-')
+    return [...tokens.splice(-1), parseInt(lastToken) + 1].join(separator)
   }
 
-  return value + '-2'
+  return value + separator + '2'
 }
 
 const normalize = (data: AttributeData[]): NormalizedData[] => {
@@ -57,7 +59,7 @@ const normalize = (data: AttributeData[]): NormalizedData[] => {
     .map(({ label, value, icon, color, isIconEnabled, isColorEnabled }) => {
       let normalizedValue = value
       if (values.includes(value)) {
-        normalizedValue = appendOrUpdateNumericSuffix(value)
+        normalizedValue = appendOrUpdateNumericSuffix(value, '-')
       }
       return {
         label,
@@ -78,6 +80,7 @@ const denormalize = (data: NormalizedData[]): AttributeData[] => {
       icon: icon,
       color: color,
       isLabelFocused: false,
+      hasPreselectedLabel: false,
       isIconEnabled: icon !== '' && icon !== null,
       isColorEnabled: color !== '' && color !== null,
     }
@@ -131,9 +134,12 @@ const DraggableAttributeEnum = ({ values, syncHandler }: { values: $Any; syncHan
                 onChange={handleChangeItem(idx)}
                 onRemove={handleRemoveItem(idx)}
                 onDuplicate={() =>
-                  handleDuplicateItem(idx, {
+                  handleDuplicateItem(idx,
+                    {
                     isLabelFocused: true,
-                    value: appendOrUpdateNumericSuffix(items[idx].value),
+                    hasPreselectedLabel: true,
+                    label: appendOrUpdateNumericSuffix(items[idx].label, ' '),
+                    value: appendOrUpdateNumericSuffix(items[idx].value, '-'),
                   })
                 }
               />

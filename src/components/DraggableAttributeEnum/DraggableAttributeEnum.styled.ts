@@ -17,6 +17,14 @@ const centeredContentFlexRow = `
   align-items: center;
   gap: 8px;
 `
+const inputLikeColorsAndBorder = `
+  min-height: var(--base-input-size);
+  max-height: var(--base-input-size);
+  background-color: var(--md-sys-color-surface-container-low);
+  border-radius: var(--border-radius-m);
+  border: 1px solid;
+  border-color: var(--md-sys-color-outline-variant);
+`
 
 export const EnumListWrapper = styled.div`
   display: flex;
@@ -65,6 +73,9 @@ export const EnumItemHeader = styled.div`
   }
   &.expanded {
     background-color: var(--md-sys-color-surface-container-highest);
+    &:hover {
+      background-color: var(--md-sys-color-surface-container-highest-hover);
+    }
     .icon.toggle-expand {
       visibility: visible;
     }
@@ -141,15 +152,32 @@ export const InputText = styled(BaseInputText)`
 `
 
 export const ColorPicker = styled.div`
+  ${inputLikeColorsAndBorder}
   position: relative;
   display: flex;
   flex-grow: 1;
   cursor: pointer;
+  &:hover {
+    filter: brightness(125%);
+  }
   &.disabled {
     cursor: default;
-    opacity: 0.75;
+    opacity: 0.5;
   }
-  input {
+  .placeholder {
+    ${inputLikeColorsAndBorder}
+    display: flex;
+    justify-content: start;
+    align-items: center;
+    width: 100%;
+    padding-left: 8px;
+    user-select: none;
+    &.disabled {
+      cursor: not-allowed;
+    }
+  }
+  input[type='color'] {
+    position: absolute;
     visibility: hidden;
   }
 `
