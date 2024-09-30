@@ -2,7 +2,6 @@ import React from 'react'
 
 import PropTypes from 'prop-types'
 import OAuth2ProviderIcon from '@components/oauthIcons'
-import { upperFirst } from 'lodash'
 import { Button } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
@@ -39,7 +38,7 @@ const AuthLink = ({ url, name, icon, color, textColor }) => {
             ) : (
               <OAuth2ProviderIcon name={name} />
             )}
-            <span className="label">{'Login With ' + upperFirst(name)}</span>
+            <span className="label">{'Login with ' + name}</span>
           </>
         }
       />
