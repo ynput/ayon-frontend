@@ -3,27 +3,31 @@ import {
   IconSelect as BaseIconSelect,
   Button as BaseButton,
 } from '@ynput/ayon-react-components'
-import styled from 'styled-components'
+import styled, { css } from 'styled-components'
 
-const centeredContentFlexColumn = `
+const centeredContentFlexColumn = css`
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
 `
 
-const centeredContentFlexRow = `
+const centeredContentFlexRow = css`
   display: flex;
   align-items: center;
   gap: 8px;
 `
-const inputLikeColorsAndBorder = `
+const inputLikeColorsAndBorder = css`
   min-height: var(--base-input-size);
   max-height: var(--base-input-size);
   background-color: var(--md-sys-color-surface-container-low);
   border-radius: var(--border-radius-m);
   border: 1px solid;
   border-color: var(--md-sys-color-outline-variant);
+
+  &:hover {
+    background-color: var(--md-sys-color-surface-container-low-hover);
+  }
 `
 
 export const EnumListWrapper = styled.div`
@@ -38,7 +42,7 @@ export const EnumItemWrapper = styled.div`
   border-radius: 4px;
   overflow: hidden;
   &.dragged {
-    opacity: 0
+    opacity: 0;
   }
 `
 
@@ -152,19 +156,21 @@ export const InputText = styled(BaseInputText)`
 `
 
 export const PlaceholderWrapper = styled.div`
-    display: flex;
-    justify-content: start;
-    flex-grow: 1;
+  display: flex;
+  justify-content: start;
+  flex-grow: 1;
+  gap: var(--base-gap-small);
 `
 export const Placeholder = styled.div`
-    ${inputLikeColorsAndBorder}
-    display: flex;
-    justify-content: start;
-    flex-grow: 1;
-    align-items: center;
-    width: 100%;
-    padding-left: 8px;
-    user-select: none;
+  ${inputLikeColorsAndBorder}
+  cursor: pointer;
+  display: flex;
+  justify-content: start;
+  flex-grow: 1;
+  align-items: center;
+  width: 100%;
+  padding-left: 8px;
+  user-select: none;
 `
 
 export const ColorPicker = styled(Placeholder)`
@@ -172,7 +178,7 @@ export const ColorPicker = styled(Placeholder)`
   position: relative;
   cursor: pointer;
   &.active:hover {
-    filter: brightness(1.5);
+    filter: brightness(1.4);
   }
   input {
     position: absolute;

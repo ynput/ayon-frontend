@@ -120,7 +120,7 @@ const DraggableEnumEditorItem = ({
                     iconSelectRef.current!.open()
                   }}
                 >
-                  Pick an icon
+                  Pick an icon...
                 </Styled.Placeholder>
               }
 
@@ -156,7 +156,7 @@ const DraggableEnumEditorItem = ({
                 style={{ backgroundColor: color || undefined }}
                 onClick={() => colorPickerRef.current!.click()}
               >
-                {!color ? 'Pick a color' : ''}
+                {!color ? 'Pick a color...' : ''}
                 <input
                   type="color"
                   ref={colorPickerRef}
