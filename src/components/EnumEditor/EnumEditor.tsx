@@ -5,7 +5,6 @@ import { closestCenter, DndContext, DragEndEvent, DragOverlay, DragStartEvent } 
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 
 import { Button } from '@ynput/ayon-react-components'
-import { $Any } from '@types'
 
 import DraggableEnumEditorItem from './DraggableEnumEditorItem'
 import * as Styled from './EnumEditor.styled'
@@ -20,7 +19,7 @@ export type AttributeData = {
   color?: string
   icon?: string
   isLabelFocused: boolean
-  hasPreselectedLabel: boolean
+  isNewAttribute: boolean
 }
 
 export type NormalizedData = {
@@ -36,9 +35,8 @@ const creator = (): AttributeData => ({
   label: '',
   value: '',
   isLabelFocused: true,
-  hasPreselectedLabel: false,
+  isNewAttribute: false,
 })
-
 
 const normalize = (data: AttributeData[]): NormalizedData[] => {
   return data
@@ -64,12 +62,16 @@ const denormalize = (data: NormalizedData[]): AttributeData[] => {
       icon: icon,
       color: color,
       isLabelFocused: false,
-      hasPreselectedLabel: false,
+      isNewAttribute: false,
     }
   })
 }
 
-const EnumEditor = ({ values, syncHandler }: { values: $Any; syncHandler: $Any }) => {
+type Props = {
+  values: NormalizedData[]
+  onChange: (data: NormalizedData[]) => void
+}
+const EnumEditor = ({ values, onChange }: Props) => {
   if (!values) {
     return null
   }
@@ -84,7 +86,7 @@ const EnumEditor = ({ values, syncHandler }: { values: $Any; syncHandler: $Any }
   } = useDraggable<AttributeData, NormalizedData>({
     creator,
     initialData: denormalize(values),
-    syncHandler,
+    onChange,
     normalizer: normalize,
   })
 
@@ -122,9 +124,17 @@ const EnumEditor = ({ values, syncHandler }: { values: $Any; syncHandler: $Any }
                 onDuplicate={() =>
                   handleDuplicateItem(idx, {
                     isLabelFocused: true,
-                    hasPreselectedLabel: true,
-                    label: appendOrUpdateNumericSuffix(items[idx].label, items.map(el => el.label), ' '),
-                    value: appendOrUpdateNumericSuffix(items[idx].value, items.map(el => el.value), '-'),
+                    isNewAttribute: true,
+                    label: appendOrUpdateNumericSuffix(
+                      items[idx].label,
+                      items.map((e) => e.label),
+                      ' ',
+                    ),
+                    value: appendOrUpdateNumericSuffix(
+                      items[idx].value,
+                      items.map((el) => el.value),
+                      '-',
+                    ),
                   })
                 }
               />
@@ -142,7 +152,7 @@ const EnumEditor = ({ values, syncHandler }: { values: $Any; syncHandler: $Any }
         <Button
           icon="add"
           variant="text"
-          onClick={handleAddItem}
+          onClick={() => handleAddItem({isNewAttribute: true})}
           style={{ display: 'flex', justifyContent: 'start' }}
         >
           Add new item

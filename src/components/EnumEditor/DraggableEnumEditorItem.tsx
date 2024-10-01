@@ -24,7 +24,7 @@ const DraggableEnumEditorItem = ({
   onRemove,
   onDuplicate,
 }: Props) => {
-  const { id, label, value, icon, color, isExpanded, isLabelFocused } = item
+  const { id, label, value, icon, color, isExpanded, isNewAttribute } = item
   const labelRef = useRef<HTMLInputElement>(null)
   const valueRef = useRef<HTMLInputElement>(null)
   const colorPickerRef = useRef<HTMLInputElement>(null)
@@ -38,7 +38,7 @@ const DraggableEnumEditorItem = ({
   }
 
   useEffect(() => {
-    if (item.hasPreselectedLabel) {
+    if (item.isNewAttribute) {
       labelRef.current!.select()
     }
   }, [])
@@ -88,12 +88,14 @@ const DraggableEnumEditorItem = ({
             <Styled.InputText
               ref={labelRef}
               value={label}
-              autoFocus={isLabelFocused}
+              autoFocus={isNewAttribute}
               onChange={(event) => {
-                valueRef.current!.value = kebabCase(event.target.value)
-                if (onChange) {
-                  onChange(['label', 'value'], [event.target.value, valueRef.current!.value])
+                if (!isNewAttribute) {
+                  return onChange && onChange(['label'], [event.target.value])
                 }
+                valueRef.current!.value = kebabCase(event.target.value)
+                onChange &&
+                  onChange(['label', 'value'], [event.target.value, kebabCase(event.target.value)])
               }}
             />
           </Styled.Row>

@@ -118,7 +118,7 @@ const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
 
   const customFields = {
     enum: (value = [], onChange) => (
-      <EnumEditor values={value} syncHandler={(value) => onChange(value)} />
+      <EnumEditor values={value} onChange={(value) => onChange(value)} />
     ),
     inherit: (value, onChange) => (
       <InputSwitch checked={value} onChange={(e) => onChange(e.target.checked)} />

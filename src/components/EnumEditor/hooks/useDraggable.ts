@@ -5,23 +5,23 @@ import { useState } from 'react'
 const useDraggable = <T extends { id: string }, U>({
   creator,
   initialData,
-  syncHandler,
+  onChange,
   normalizer,
 }: {
   creator: () => T
   initialData: T[]
-  syncHandler: (data: U[]) => U[]
+  onChange: (data: U[]) => void
   normalizer: (data: T[]) => U[]
 }) => {
   const [items, setItems] = useState<T[]>(initialData)
 
   const updateAndSync = (data: T[]) => {
-    syncHandler(normalizer(data))
+    onChange(normalizer(data))
     setItems(data)
   }
 
-  const handleAddItem = () => {
-    updateAndSync([...items, { ...creator(), id: uniqueId() }])
+  const handleAddItem = (overrides: Partial<T>) => {
+    updateAndSync([...items, { ...creator(), ...overrides, id: uniqueId() }])
   }
 
   const handleRemoveItem = (idx: number) => () => {
