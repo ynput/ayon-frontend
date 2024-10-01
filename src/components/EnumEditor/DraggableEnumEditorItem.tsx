@@ -6,8 +6,8 @@ import { CSS } from '@dnd-kit/utilities'
 
 import { DropdownRef, Icon } from '@ynput/ayon-react-components'
 
-import * as Styled from './DraggableAttributeEnum.styled'
-import { AttributeData } from './DraggableAttributeEnum'
+import * as Styled from './EnumEditor.styled'
+import { AttributeData } from './EnumEditor'
 
 type Props = {
   item: AttributeData
@@ -17,7 +17,7 @@ type Props = {
   onDuplicate?: () => void
 }
 
-const DraggableAttributeEnumItem = ({
+const DraggableEnumEditorItem = ({
   item,
   isBeingDragged,
   onChange,
@@ -194,4 +194,4 @@ const DraggableAttributeEnumItem = ({
   )
 }
 
-export default DraggableAttributeEnumItem
+export default DraggableEnumEditorItem

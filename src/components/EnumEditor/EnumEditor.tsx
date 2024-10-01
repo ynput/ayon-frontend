@@ -7,8 +7,8 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { Button } from '@ynput/ayon-react-components'
 import { $Any } from '@types'
 
-import DraggableAttributeEnumItem from './DraggableAttributeEnumItem'
-import * as Styled from './DraggableAttributeEnum.styled'
+import DraggableEnumEditorItem from './DraggableEnumEditorItem'
+import * as Styled from './EnumEditor.styled'
 import useDraggable from './hooks/useDraggable'
 import { appendOrUpdateNumericSuffix } from '@helpers/string'
 
@@ -69,7 +69,7 @@ const denormalize = (data: NormalizedData[]): AttributeData[] => {
   })
 }
 
-const DraggableAttributeEnum = ({ values, syncHandler }: { values: $Any; syncHandler: $Any }) => {
+const EnumEditor = ({ values, syncHandler }: { values: $Any; syncHandler: $Any }) => {
   if (!values) {
     return null
   }
@@ -113,7 +113,7 @@ const DraggableAttributeEnum = ({ values, syncHandler }: { values: $Any; syncHan
         >
           <SortableContext items={items} strategy={verticalListSortingStrategy}>
             {items.map((item, idx) => (
-              <DraggableAttributeEnumItem
+              <DraggableEnumEditorItem
                 key={`DraggableAttributeEnum_${item.id}`}
                 item={item}
                 isBeingDragged={item.id === draggedItemId}
@@ -133,7 +133,7 @@ const DraggableAttributeEnum = ({ values, syncHandler }: { values: $Any; syncHan
 
           {createPortal(
             <DragOverlay style={{}}>
-              {draggedItem && <DraggableAttributeEnumItem item={draggedItem} />}
+              {draggedItem && <DraggableEnumEditorItem item={draggedItem} />}
             </DragOverlay>,
             document.body,
           )}
@@ -152,4 +152,4 @@ const DraggableAttributeEnum = ({ values, syncHandler }: { values: $Any; syncHan
   )
 }
 
-export default DraggableAttributeEnum
+export default EnumEditor

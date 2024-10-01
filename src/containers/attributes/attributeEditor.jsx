@@ -13,7 +13,7 @@ import {
 } from '@ynput/ayon-react-components'
 import { camelCase, upperFirst } from 'lodash'
 import MinMaxField from '@components/MinMaxField/MinMaxField'
-import DraggableAttributeEnum from '@components/DraggableAttributeEnum/DraggableAttributeEnum'
+import EnumEditor from '@components/EnumEditor/EnumEditor'
 
 const SCOPE_OPTIONS = [
   { value: 'project', label: 'Project' },
@@ -118,7 +118,7 @@ const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
 
   const customFields = {
     enum: (value = [], onChange) => (
-      <DraggableAttributeEnum values={value} syncHandler={(value) => onChange(value)} />
+      <EnumEditor values={value} syncHandler={(value) => onChange(value)} />
     ),
     inherit: (value, onChange) => (
       <InputSwitch checked={value} onChange={(e) => onChange(e.target.checked)} />
