@@ -13,7 +13,7 @@ const DetailsPanelSlideOut = ({ projectsInfo, scope }) => {
   const { data: users } = useGetUsersAssigneeQuery({ projectName }, { skip: !projectName })
 
   const projectInfo = projectsInfo[projectName] || {}
-  const { statuses = [], tags = [] } = projectInfo
+  const { tags = [] } = projectInfo
 
   if (!isSlideOutOpen) return null
 
@@ -26,7 +26,6 @@ const DetailsPanelSlideOut = ({ projectsInfo, scope }) => {
         entities={[{ id: entityId, projectName }]}
         projectsInfo={{ [projectName]: projectInfo }}
         projectNames={[projectName]}
-        statusesOptions={statuses}
         tagsOptions={tags}
         projectUsers={users}
         activeProjectUsers={users}

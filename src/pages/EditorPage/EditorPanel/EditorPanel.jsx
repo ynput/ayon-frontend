@@ -32,6 +32,7 @@ import TagFormRow from './TagFormRow'
 import EntityThumbnailUploaderRow from './EntityTumbnailUploaderRow'
 import EnumRow from './EnumRow'
 import { getInputProps } from './helper/entityHelpers'
+import useScopedStatuses from '@hooks/useScopedStatuses'
 
 const EditorPanel = ({
   onDelete,
@@ -41,6 +42,7 @@ const EditorPanel = ({
   projectName,
   onForceChange,
   allUsers,
+  parentEditorNodes
 }) => {
   // SELECTORS
   const selected = useSelector((state) => state.context.focused.editor)
@@ -50,6 +52,9 @@ const EditorPanel = ({
   const tasks = useSelector((state) => state.project.tasks)
   const folders = useSelector((state) => state.project.folders)
   const { entityType } = useFocusedEntities(projectName)
+
+  const nodeTypes = Object.values(parentEditorNodes).map(node => node.data.__entityType)
+  const statuses = useScopedStatuses(nodeTypes)
 
   // STATES
   const [nodeIds, setNodeIds] = useState([])
@@ -241,6 +246,7 @@ const EditorPanel = ({
                       <StatusSelect
                         value={multipleValues || value}
                         multipleSelected={nodeIds.length}
+                        options={statuses}
                         onChange={(value) =>
                           handleLocalChange(value, changeKey, field, {
                             form,

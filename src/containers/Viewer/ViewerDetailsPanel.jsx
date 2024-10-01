@@ -23,7 +23,6 @@ const ViewerDetailsPanel = ({ versionIds = [], projectName }) => {
       {!!versionIds.length && (
         <DetailsPanel
           entities={entities}
-          statusesOptions={projectInfo.statuses || []}
           tagsOptions={projectInfo.tags || []}
           projectUsers={users}
           activeProjectUsers={users}

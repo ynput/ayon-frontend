@@ -25,7 +25,6 @@ const InboxDetailsPanel = ({ messages = [], selected = [], projectsInfo = {}, on
     <div className="inbox-details-panel">
       <DetailsPanel
         entities={[{ id: entityId, projectName, entityType: entityType }]}
-        statusesOptions={projectInfo.statuses || []}
         tagsOptions={projectInfo.tags || []}
         projectUsers={users}
         activeProjectUsers={users}

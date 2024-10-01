@@ -238,7 +238,6 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
           <DetailsPanel
             onClose={handlePanelClose}
             entitiesData={selectedTasksData}
-            statusesOptions={statusesOptions}
             disabledStatuses={disabledStatuses}
             tagsOptions={tagsOptions}
             projectUsers={projectUsers}
