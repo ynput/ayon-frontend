@@ -10,9 +10,10 @@ import { $Any } from '@types'
 import DraggableAttributeEnumItem from './DraggableAttributeEnumItem'
 import * as Styled from './DraggableAttributeEnum.styled'
 import useDraggable from './hooks/useDraggable'
+import { appendOrUpdateNumericSuffix } from '@helpers/string'
 
 export type AttributeData = {
-  id: string,
+  id: string
   isExpanded: boolean
   label: string
   value: string
@@ -20,8 +21,6 @@ export type AttributeData = {
   icon?: string
   isLabelFocused: boolean
   hasPreselectedLabel: boolean
-  isIconEnabled: boolean
-  isColorEnabled: boolean
 }
 
 export type NormalizedData = {
@@ -38,34 +37,19 @@ const creator = (): AttributeData => ({
   value: '',
   isLabelFocused: true,
   hasPreselectedLabel: false,
-  isIconEnabled: false,
-  isColorEnabled: false,
 })
 
-const appendOrUpdateNumericSuffix = (value: string, separator: string) => {
-  const tokens = value.split(separator)
-  const lastToken = tokens[tokens.length - 1]
-  if (!isNaN(Number(lastToken))) {
-    return [...tokens.splice(-1), parseInt(lastToken) + 1].join(separator)
-  }
-
-  return value + separator + '2'
-}
 
 const normalize = (data: AttributeData[]): NormalizedData[] => {
-  let values: string[] = []
   return data
     .filter((item) => item.label !== '' && item.value !== '')
-    .map(({ label, value, icon, color, isIconEnabled, isColorEnabled }) => {
+    .map(({ label, value, icon, color }) => {
       let normalizedValue = value
-      if (values.includes(value)) {
-        normalizedValue = appendOrUpdateNumericSuffix(value, '-')
-      }
       return {
         label,
         value: normalizedValue,
-        icon: isIconEnabled ? icon : undefined,
-        color: isColorEnabled ? color : undefined,
+        icon: icon || undefined,
+        color: color || undefined,
       }
     })
 }
@@ -81,13 +65,15 @@ const denormalize = (data: NormalizedData[]): AttributeData[] => {
       color: color,
       isLabelFocused: false,
       hasPreselectedLabel: false,
-      isIconEnabled: icon !== '' && icon !== null,
-      isColorEnabled: color !== '' && color !== null,
     }
   })
 }
 
 const DraggableAttributeEnum = ({ values, syncHandler }: { values: $Any; syncHandler: $Any }) => {
+  if (!values) {
+    return null
+  }
+
   const {
     items,
     handleAddItem,
@@ -134,12 +120,11 @@ const DraggableAttributeEnum = ({ values, syncHandler }: { values: $Any; syncHan
                 onChange={handleChangeItem(idx)}
                 onRemove={handleRemoveItem(idx)}
                 onDuplicate={() =>
-                  handleDuplicateItem(idx,
-                    {
+                  handleDuplicateItem(idx, {
                     isLabelFocused: true,
                     hasPreselectedLabel: true,
-                    label: appendOrUpdateNumericSuffix(items[idx].label, ' '),
-                    value: appendOrUpdateNumericSuffix(items[idx].value, '-'),
+                    label: appendOrUpdateNumericSuffix(items[idx].label, items.map(el => el.label), ' '),
+                    value: appendOrUpdateNumericSuffix(items[idx].value, items.map(el => el.value), '-'),
                   })
                 }
               />

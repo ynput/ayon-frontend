@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 
-import { Icon, InputSwitch } from '@ynput/ayon-react-components'
+import { DropdownRef, Icon } from '@ynput/ayon-react-components'
 
 import * as Styled from './DraggableAttributeEnum.styled'
 import { AttributeData } from './DraggableAttributeEnum'
@@ -24,13 +24,11 @@ const DraggableAttributeEnumItem = ({
   onRemove,
   onDuplicate,
 }: Props) => {
-  const { id, label, value, color, isColorEnabled, isIconEnabled, isExpanded, isLabelFocused } =
-    item
-  const icon = item.icon || 'question_mark'
-  const iconColor = color && isColorEnabled ? color : 'initial'
+  const { id, label, value, icon, color, isExpanded, isLabelFocused } = item
   const labelRef = useRef<HTMLInputElement>(null)
   const valueRef = useRef<HTMLInputElement>(null)
   const colorPickerRef = useRef<HTMLInputElement>(null)
+  const iconSelectRef = useRef<DropdownRef>(null)
 
   const focusLabelIfExpanded = () => {
     if (!isExpanded) {
@@ -68,8 +66,8 @@ const DraggableAttributeEnumItem = ({
           focusLabelIfExpanded()
         }}
       >
-        {isIconEnabled && <Icon className="icon" icon={icon && isIconEnabled ? icon : ''} />}
-        {isColorEnabled && <Styled.LabelColor style={{ backgroundColor: iconColor }} />}
+        {color && <Styled.LabelColor style={{ backgroundColor: color }} />}
+        {icon && <Icon className="icon" icon={icon} />}
         <span> {label} </span>
         <span className="spacer" />
 
@@ -111,62 +109,71 @@ const DraggableAttributeEnumItem = ({
 
           <Styled.Row key="icon">
             <Styled.Label> Icon </Styled.Label>
-            <Styled.IconSelect
-              disabled={!isIconEnabled}
-              value={[icon]}
-              style={{ maxWidth: 'auto' }}
-              onChange={(value) => {
-                if (isIconEnabled) {
-                  return onChange && onChange(['icon'], [value[0]])
-                }
-              }}
-            />
-            <InputSwitch
-              checked={isIconEnabled}
-              onChange={(event) =>
-                onChange &&
-                onChange(['isIconEnabled'], [(event.target as HTMLInputElement).checked])
+
+            <Styled.PlaceholderWrapper style={{ position: 'relative' }}>
+              {
+                <Styled.Placeholder
+                  style={{ display: icon ? 'none' : 'flex' }}
+                  onClick={() => {
+                    iconSelectRef.current!.open()
+                  }}
+                >
+                  Pick an icon
+                </Styled.Placeholder>
               }
-            />
+
+              <Styled.IconSelect
+                ref={iconSelectRef}
+                value={[icon || 'question_mark']}
+                style={{
+                  position: icon ? 'relative' : 'absolute',
+                  visibility: icon ? 'visible' : 'hidden',
+                }}
+                onChange={(value) => {
+                  return onChange && onChange(['icon'], [value[0]])
+                }}
+              />
+              {icon && (
+                <Styled.Button
+                  icon="close"
+                  variant="text"
+                  onClick={() => {
+                    onChange && onChange(['icon'], [undefined])
+                  }}
+                />
+              )}
+            </Styled.PlaceholderWrapper>
           </Styled.Row>
 
           <Styled.Row key="color">
             <Styled.Label> Color </Styled.Label>
-            <Styled.ColorPicker
-              style={{ backgroundColor: color || 'transparent' }}
-              className={clsx({ disabled: !isColorEnabled })}
-              onClick={() => {
-                if (isColorEnabled) {
-                  colorPickerRef.current!.click()
-                }
-              }}
-            >
-              {!color && (
-                <span
-                  className={clsx('placeholder', { disabled: !isColorEnabled })}
-                  data-tooltip="Toggle switch to enable color picker"
-                >
-                  Pick a color
-                </span>
-              )}
-              <input
-                type="color"
-                value={color || '#000000'}
-                ref={colorPickerRef}
-                onChange={(event) => {
-                  if (isColorEnabled) {
+
+            <Styled.PlaceholderWrapper style={{ position: 'relative' }}>
+              <Styled.ColorPicker
+                className={clsx({ active: color })}
+                style={{ backgroundColor: color || undefined }}
+                onClick={() => colorPickerRef.current!.click()}
+              >
+                {!color ? 'Pick a color' : ''}
+                <input
+                  type="color"
+                  ref={colorPickerRef}
+                  value={color || '#000000'}
+                  onChange={(event) =>
                     onChange && onChange(['color'], [event?.target.value.toString()])
                   }
-                }}
-              />
-            </Styled.ColorPicker>
-            <InputSwitch
-              checked={isColorEnabled}
-              onChange={(event) =>
-                onChange &&
-                onChange(['isColorEnabled'], [(event.target as HTMLInputElement).checked])
-              }
-            />
+                />
+              </Styled.ColorPicker>
+              {color && (
+                <Styled.Button
+                  icon="close"
+                  variant="text"
+                  onClick={() => {
+                    onChange && onChange(['color'], [undefined])
+                  }}
+                />
+              )}
+            </Styled.PlaceholderWrapper>
           </Styled.Row>
 
           <Styled.Row className="footer">

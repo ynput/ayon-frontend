@@ -151,32 +151,30 @@ export const InputText = styled(BaseInputText)`
   padding: 4px 8px;
 `
 
-export const ColorPicker = styled.div`
-  ${inputLikeColorsAndBorder}
-  position: relative;
-  display: flex;
-  flex-grow: 1;
-  cursor: pointer;
-  &:hover {
-    filter: brightness(125%);
-  }
-  &.disabled {
-    cursor: default;
-    opacity: 0.5;
-  }
-  .placeholder {
+export const PlaceholderWrapper = styled.div`
+    display: flex;
+    justify-content: start;
+    flex-grow: 1;
+`
+export const Placeholder = styled.div`
     ${inputLikeColorsAndBorder}
     display: flex;
     justify-content: start;
+    flex-grow: 1;
     align-items: center;
     width: 100%;
     padding-left: 8px;
     user-select: none;
-    &.disabled {
-      cursor: not-allowed;
-    }
+`
+
+export const ColorPicker = styled(Placeholder)`
+  ${inputLikeColorsAndBorder}
+  position: relative;
+  cursor: pointer;
+  &.active:hover {
+    filter: brightness(1.5);
   }
-  input[type='color'] {
+  input {
     position: absolute;
     visibility: hidden;
   }
