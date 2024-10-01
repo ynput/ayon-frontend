@@ -15,7 +15,8 @@ const sanitizeURL = (url = '') => {
   // ensure that the url is valid https url
   // or a valid {type}:{id} reference
   if (url.startsWith('https://')) return { url, type: 'url' }
-  if (url.includes(':')) {
+  else if (url.startsWith('/')) return { url, type: 'relative' }
+  else if (url.includes(':')) {
     const sections = url.split(':')
     const [type, id] = sections
     if (allowedRefTypes.includes(type) && id && sections.length === 2) return { type, id }
@@ -33,14 +34,19 @@ export const aTag = (
   if (!url && !type && !id) {
     return children
   }
+
   // return regular url
   // if no reference type, return regular link with no href
   if (url || !type || !id) {
-    return (
-      <a href={url} target="_blank" rel="noreferrer">
-        {children}
-      </a>
-    )
+    if (type === 'relative') {
+      return <Link to={url}>{children}</Link>
+    } else {
+      return (
+        <a href={url} target="_blank" rel="noreferrer">
+          {children}
+        </a>
+      )
+    }
   }
 
   const label = children && children.replace('@', '')
@@ -76,6 +82,7 @@ export const inputTag = ({ type, checked, ...props }, { activity, onCheckChange 
 }
 
 import { BlockCode, QuoteLine } from './ActivityComment.styled'
+import { Link } from 'react-router-dom'
 // eslint-disable-next-line
 export const codeTag = ({ node, className, children }) => {
   return <BlockCode>{children}</BlockCode>
