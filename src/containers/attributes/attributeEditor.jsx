@@ -11,9 +11,9 @@ import {
   Dropdown,
   Dialog,
 } from '@ynput/ayon-react-components'
-import EnumEditor from './enumEditor'
 import { camelCase, upperFirst } from 'lodash'
 import MinMaxField from '@components/MinMaxField/MinMaxField'
+import EnumEditor from '@components/EnumEditor/EnumEditor'
 
 const SCOPE_OPTIONS = [
   { value: 'project', label: 'Project' },
@@ -25,8 +25,12 @@ const SCOPE_OPTIONS = [
   { value: 'user', label: 'User' },
 ]
 
-// Fields used on all types
-const GLOBAL_FIELDS = ['description', 'example', 'default', 'inherit']
+const GLOBAL_FIELDS = [
+  { value: 'description', scope: null },
+  { value: 'example', scope: null },
+  { value: 'default', scope: ['project'] },
+  { value: 'inherit', scope: null },
+]
 
 const TYPE_OPTIONS = {
   string: {
@@ -109,7 +113,15 @@ const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
     </div>
   )
 
-  let dataFields = [...GLOBAL_FIELDS]
+  let dataFields = []
+
+  // add global fields, only if scope are null (all) or the scope is included
+  GLOBAL_FIELDS.forEach((field) => {
+    if (!field?.scope || field?.scope?.some((s) => formData?.scope?.includes(s))) {
+      dataFields.push(field.value)
+    }
+  })
+
   if (TYPE_OPTIONS[formData?.data.type]) {
     dataFields = [...dataFields, ...TYPE_OPTIONS[formData?.data.type].fields].filter(
       (f) => !TYPE_OPTIONS[formData?.data.type].exclude?.includes(f),
@@ -118,7 +130,12 @@ const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
 
   const customFields = {
     enum: (value = [], onChange) => (
-      <EnumEditor values={value} onChange={(value) => onChange(value)} />
+      <EnumEditor
+        values={value}
+        onChange={(value) => {
+          onChange(value)
+        }}
+      />
     ),
     inherit: (value, onChange) => (
       <InputSwitch checked={value} onChange={(e) => onChange(e.target.checked)} />
