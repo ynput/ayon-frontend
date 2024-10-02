@@ -223,6 +223,7 @@ const EditorPanel = ({
                             nodes,
                             setLocalChange,
                             setForm,
+                            isAttribute: false,
                           })
                         }
                         options={typeOptions}
@@ -247,6 +248,7 @@ const EditorPanel = ({
                             nodes,
                             setLocalChange,
                             setForm,
+                            isAttribute: false,
                           })
                         }
                         maxWidth={'100%'}
@@ -275,6 +277,7 @@ const EditorPanel = ({
                             nodes,
                             setLocalChange,
                             setForm,
+                            isAttribute: false,
                           })
                         }
                         buttonStyle={{
@@ -298,6 +301,7 @@ const EditorPanel = ({
                             nodes,
                             setLocalChange,
                             setForm,
+                            isAttribute: false,
                           })
                         }
                       />
