@@ -12,7 +12,7 @@ import {
   SaveButton,
 } from '@ynput/ayon-react-components'
 import AttributeEditor from '@containers/attributes/attributeEditor'
-import { useGetAttributesQuery } from '@queries/attributes/getAttributes'
+import { useGetAttributeListQuery } from '@queries/attributes/getAttributes'
 import { useUpdateAttributesMutation } from '@queries/attributes/updateAttributes'
 import useSearchFilter from '@hooks/useSearchFilter'
 import useCreateContext from '@hooks/useCreateContext'
@@ -24,7 +24,7 @@ const Attributes = () => {
   const [attributes, setAttributes] = useState([])
   const [selectedAttribute, setSelectedAttribute] = useState(null)
   const [showEditor, setShowEditor] = useState(false)
-  const { data, isLoading, isError, error, isFetching } = useGetAttributesQuery()
+  const { data, isLoading, isError, error, isFetching } = useGetAttributeListQuery()
 
   const [updateAttributes, { isLoading: updateLoading }] = useUpdateAttributesMutation()
 
