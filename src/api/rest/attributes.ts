@@ -11,6 +11,9 @@ const injectedRtkApi = api.injectEndpoints({
         body: queryArg.setAttributeListModel,
       }),
     }),
+    getAttributeConfig: build.query<GetAttributeConfigApiResponse, GetAttributeConfigApiArg>({
+      query: (queryArg) => ({ url: `/api/attributes/${queryArg.attributeName}` }),
+    }),
   }),
   overrideExisting: false,
 })
@@ -21,6 +24,10 @@ export type GetAttributeListApiArg = void
 export type SetAttributeListApiResponse = /** status 204 Successful Response */ void
 export type SetAttributeListApiArg = {
   setAttributeListModel: SetAttributeListModel
+}
+export type GetAttributeConfigApiResponse = /** status 200 Successful Response */ AttributeModel
+export type GetAttributeConfigApiArg = {
+  attributeName: string
 }
 export type AttributeEnumItem = {
   value: string | number | number | boolean

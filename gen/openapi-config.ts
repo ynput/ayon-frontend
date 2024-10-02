@@ -33,7 +33,7 @@ const outputFiles = {
   installers: ['listInstallers', 'createInstaller'],
   dependencyPackages: ['listDependencyPackages', 'createDependencyPackage'],
   cloud: ['getYnputCloudInfo', 'setYnputCloudKey', 'deleteYnputCloudKey'],
-  attributes: ['getAttributeList', 'setAttributeList'],
+  attributes: ['getAttributeList', 'setAttributeList', 'getAttributeConfig'],
 }
 
 const buildOutputFiles = (files: { [name: string]: string[] }) =>

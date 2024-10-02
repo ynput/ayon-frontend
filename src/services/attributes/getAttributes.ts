@@ -19,7 +19,13 @@ export const attributesApi = api.enhanceEndpoints<TagTypes, UpdatedDefinitions>(
           ? [...result.map(({ name }) => ({ type: 'attribute', id: name })), 'attribute']
           : ['attribute'],
     },
+    getAttributeConfig: {
+      providesTags: (_r, _e, { attributeName }) => [
+        { type: 'attribute', id: attributeName },
+        'attribute',
+      ],
+    },
   },
 })
 
-export const { useGetAttributeListQuery } = attributesApi
+export const { useGetAttributeListQuery, useGetAttributeConfigQuery } = attributesApi
