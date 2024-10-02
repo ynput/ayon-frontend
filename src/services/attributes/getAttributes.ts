@@ -10,7 +10,7 @@ type UpdatedDefinitions = Omit<Definitions, 'getAttributeList'> & {
   getAttributeList: OverrideResultType<Definitions['getAttributeList'], GetAttributeListResult>
 }
 
-const attributesApi = api.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
+export const attributesApi = api.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
   endpoints: {
     getAttributeList: {
       transformResponse: (res: GetAttributeListApiResponse) => res.attributes || [],

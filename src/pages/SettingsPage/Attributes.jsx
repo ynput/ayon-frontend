@@ -13,7 +13,7 @@ import {
 } from '@ynput/ayon-react-components'
 import AttributeEditor from '@containers/attributes/attributeEditor'
 import { useGetAttributeListQuery } from '@queries/attributes/getAttributes'
-import { useUpdateAttributesMutation } from '@queries/attributes/updateAttributes'
+import { useSetAttributeListMutation } from '@queries/attributes/updateAttributes'
 import useSearchFilter from '@hooks/useSearchFilter'
 import useCreateContext from '@hooks/useCreateContext'
 import { isEqual } from 'lodash'
@@ -26,7 +26,7 @@ const Attributes = () => {
   const [showEditor, setShowEditor] = useState(false)
   const { data, isLoading, isError, error, isFetching } = useGetAttributeListQuery()
 
-  const [updateAttributes, { isLoading: updateLoading }] = useUpdateAttributesMutation()
+  const [updateAttributes, { isLoading: updateLoading }] = useSetAttributeListMutation()
 
   // when new data is loaded come in update local state
   useEffect(() => {
@@ -55,7 +55,7 @@ const Attributes = () => {
   )
 
   const onSave = async () => {
-    await updateAttributes({ attributes, deleteMissing: true, patches: attributes })
+    await updateAttributes({ setAttributeListModel: { attributes, deleteMissing: true } })
       .unwrap()
       .then(() => {
         toast.success('Attribute set saved')

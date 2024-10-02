@@ -4,6 +4,13 @@ const injectedRtkApi = api.injectEndpoints({
     getAttributeList: build.query<GetAttributeListApiResponse, GetAttributeListApiArg>({
       query: () => ({ url: `/api/attributes` }),
     }),
+    setAttributeList: build.mutation<SetAttributeListApiResponse, SetAttributeListApiArg>({
+      query: (queryArg) => ({
+        url: `/api/attributes`,
+        method: 'PUT',
+        body: queryArg.setAttributeListModel,
+      }),
+    }),
   }),
   overrideExisting: false,
 })
@@ -11,6 +18,10 @@ export { injectedRtkApi as api }
 export type GetAttributeListApiResponse =
   /** status 200 Successful Response */ GetAttributeListModel
 export type GetAttributeListApiArg = void
+export type SetAttributeListApiResponse = /** status 204 Successful Response */ void
+export type SetAttributeListApiArg = {
+  setAttributeListModel: SetAttributeListModel
+}
 export type AttributeEnumItem = {
   value: string | number | number | boolean
   label: string
@@ -77,4 +88,9 @@ export type ValidationError = {
 }
 export type HttpValidationError = {
   detail?: ValidationError[]
+}
+export type SetAttributeListModel = {
+  attributes?: AttributeModel[]
+  /** Delete custom attributes not includedin the payload from the database. */
+  deleteMissing?: boolean
 }
