@@ -17,7 +17,11 @@
     "test-ui": "npx playwright test --ui",
     "test-auth": "npx playwright test auth.setup.js",
     "test-report": "yarn playwright show-report",
-    "test-codegen": "npx playwright codegen http://localhost:3000 --load-storage=playwright/.auth/user.json"
+    "test-codegen": "npx playwright codegen http://localhost:3000 --load-storage=playwright/.auth/user.json",
+    "dev-arc": "yarn setup:arc && concurrently \"yarn watch:arc\" \"vite --port 3000 --force\"",
+    "setup:arc": "cd ../ayon-react-components && yarn link && cd - && yarn link @ynput/ayon-react-components",
+    "watch:arc": "nodemon --watch ../ayon-react-components/dist --exec \"yarn link @ynput/ayon-react-components\"",
+    "arc-unlink": "yarn unlink @ynput/ayon-react-components && yarn install --force"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.0.8",
