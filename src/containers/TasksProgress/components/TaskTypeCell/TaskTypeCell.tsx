@@ -8,9 +8,11 @@ import type { EntityCardProps } from '@ynput/ayon-react-components'
 import type { Status } from '@api/rest/project'
 import type { ProgressTask } from '@queries/tasksProgress/getTasksProgress'
 import type { TaskFieldChange } from '../TasksProgressTable/TasksProgressTable'
+import { AttributeEnumItem } from '@api/rest/attributes'
 
 interface TaskTypeCellProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onChange'> {
   statuses: Status[]
+  priorities: AttributeEnumItem[]
   task: ProgressTask
   selectedAssignees: string[]
   assigneeOptions: EntityCardProps['assigneeOptions']
@@ -24,6 +26,7 @@ interface TaskTypeCellProps extends Omit<React.HTMLAttributes<HTMLDivElement>, '
 
 export const TaskTypeCell: FC<TaskTypeCellProps> = ({
   statuses,
+  priorities,
   task,
   selectedAssignees,
   assigneeOptions,
@@ -63,6 +66,7 @@ export const TaskTypeCell: FC<TaskTypeCellProps> = ({
       className={clsx('cell', { selected: isSelected, active: isActive })}
       {...props}
       data-tooltip={task.label || task.name}
+      data-tooltip-delay={250}
     >
       <EntityCard
         variant="status"
@@ -76,6 +80,8 @@ export const TaskTypeCell: FC<TaskTypeCellProps> = ({
         statusOptions={statuses}
         statusMiddle
         statusNameOnly
+        priorityOptions={priorities}
+        priority={priorities.find((p) => p.value === task.attrib.priority)}
         isPlayable={task.hasReviewables}
         pt={{
           assigneeSelect: {

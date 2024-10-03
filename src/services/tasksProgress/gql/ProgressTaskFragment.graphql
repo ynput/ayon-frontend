@@ -9,6 +9,9 @@ fragment ProgressTaskFragment on TaskNode {
   updatedAt
   active
   hasReviewables
+  attrib {
+    priority
+  }
   folder {
     id
     name

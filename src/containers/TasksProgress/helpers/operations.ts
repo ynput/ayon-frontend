@@ -41,3 +41,18 @@ export const getAssigneesChangeOperations = (
 
   return operations
 }
+
+export const getPriorityChangeOperations = (
+  tasks: ProgressTask[],
+  projectName: string,
+  priority: string,
+) => {
+  const operations: Operation[] = tasks.map((task) => ({
+    id: task.id,
+    projectName,
+    data: { attrib: { priority } },
+    meta: { folderId: task.folder.id },
+  }))
+
+  return operations
+}

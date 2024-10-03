@@ -7,6 +7,8 @@ import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { FC } from 'react'
 import { useSelector } from 'react-redux'
 import TaskProgressDetailsPanel from './TaskProgressDetailsPanel'
+import { useGetAttributeConfigQuery } from '@queries/attributes/getAttributes'
+import { getPriorityOptions } from './helpers'
 
 const TasksProgressPage: FC = () => {
   const projectName = useSelector((state: $Any) => state.project.name) as string
@@ -17,6 +19,9 @@ const TasksProgressPage: FC = () => {
 
   //   GET PROJECT INFO FOR STATUS
   const { data: projectInfo } = useGetProjectQuery({ projectName }, { skip: !projectName })
+  // Get attributes so we can use priority
+  const { data: priorityAttrib } = useGetAttributeConfigQuery({ attributeName: 'priority' })
+  const priorities = getPriorityOptions(priorityAttrib)
 
   return (
     <main style={{ overflow: 'hidden' }}>
@@ -37,6 +42,7 @@ const TasksProgressPage: FC = () => {
                 statuses={projectInfo?.statuses}
                 taskTypes={projectInfo?.taskTypes}
                 folderTypes={projectInfo?.folderTypes}
+                priorities={priorities}
                 projectName={projectName}
               />
             </SplitterPanel>
