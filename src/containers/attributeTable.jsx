@@ -1,6 +1,6 @@
 import styled from 'styled-components'
 import { TableRow } from '@ynput/ayon-react-components'
-import { useGetAttributesQuery } from '@queries/attributes/getAttributes'
+import { useGetAttributeListQuery } from '@queries/attributes/getAttributes'
 import copyToClipboard from '../helpers/copyToClipboard'
 import { format } from 'date-fns'
 
@@ -32,7 +32,7 @@ const AttributeTable = ({
   isLoading: isLoadingData,
 }) => {
   // get attrib fields
-  let { data: attribsData = [], isLoadingAttribs } = useGetAttributesQuery()
+  let { data: attribsData = [], isLoadingAttribs } = useGetAttributeListQuery()
   //   filter out scopes
   const attribFields = attribsData.filter(
     (a) => a.scope.some((s) => s === entityType) && a.name in data,

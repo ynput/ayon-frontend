@@ -7,6 +7,7 @@ import {
   getStatusChangeOperations,
   getAssigneesChangeOperations,
   resolveShiftSelect,
+  getPriorityChangeOperations,
 } from './helpers'
 import { useGetAllProjectUsersAsAssigneeQuery } from '@queries/user/getUsers'
 import { FolderType, Status, TaskType } from '@api/rest/project'
@@ -23,6 +24,7 @@ import Shortcuts from '@containers/Shortcuts'
 import { openViewer } from '@state/viewer'
 import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
 import './styles.scss'
+import { AttributeEnumItem } from '@api/rest/attributes'
 
 export type Operation = {
   id: string
@@ -35,6 +37,7 @@ interface TasksProgressProps {
   statuses?: Status[]
   taskTypes?: TaskType[]
   folderTypes?: FolderType[]
+  priorities?: AttributeEnumItem[]
   projectName: string
 }
 
@@ -42,6 +45,7 @@ const TasksProgress: FC<TasksProgressProps> = ({
   statuses = [],
   taskTypes = [],
   folderTypes = [],
+  priorities = [],
   projectName,
 }) => {
   const dispatch = useDispatch()
@@ -155,6 +159,9 @@ const TasksProgress: FC<TasksProgressProps> = ({
         break
       case 'assignee':
         operations = getAssigneesChangeOperations(selectedTasksData, projectName, added, removed)
+        break
+      case 'priority':
+        operations = getPriorityChangeOperations(selectedTasksData, projectName, added[0])
         break
       default:
         break
@@ -305,6 +312,7 @@ const TasksProgress: FC<TasksProgressProps> = ({
               selectedAssignees={selectedAssignees}
               statuses={statuses} // status icons etc.
               taskTypes={taskTypes} // for tasks icon etc.
+              priorities={priorities} // for priority icons and colors
               users={users}
               onChange={handleTaskFieldChange}
               onSelection={handleTaskSelect}

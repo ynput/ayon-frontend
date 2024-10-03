@@ -40,7 +40,7 @@ import {
 import EditorPanel from './EditorPanel/EditorPanel'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import NameField from './fields/NameField'
-import { useGetAttributesQuery } from '@queries/attributes/getAttributes'
+import { useGetAttributeListQuery } from '@queries/attributes/getAttributes'
 import NewEntity from './NewEntity'
 import checkName from '@helpers/checkName'
 import useCreateContext from '@hooks/useCreateContext'
@@ -79,7 +79,7 @@ const EditorPage = () => {
 
   // get attrib fields
   // pass editor: true so that it uses different cache.
-  let { data: attribsData = [] } = useGetAttributesQuery({}, { refetchOnMountOrArgChange: true })
+  let { data: attribsData = [] } = useGetAttributeListQuery({}, { refetchOnMountOrArgChange: true })
 
   // get project attribs values (for root inherited attribs)
   const { data: projectAnatomyData } = useGetProjectAnatomyQuery(
