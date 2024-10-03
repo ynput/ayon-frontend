@@ -243,14 +243,13 @@ const ActivityComment = ({
           <MenuContainer id={menuId} target={moreRef.current}>
             <ActivityCommentMenu onDelete={() => isOwner && handleDelete()} />
           </MenuContainer>
-          <div style={{ marginTop: '16px' }}>
-            {mappedReactions && (
-              <Reactions
-                reactions={mappedReactions}
-                changeHandler={reactionChangeHandler}
-              />
-            )}
-          </div>
+          {!isEditing && (
+            <div style={{ marginTop: '16px' }}>
+              {mappedReactions && (
+                <Reactions reactions={mappedReactions} changeHandler={reactionChangeHandler} />
+              )}
+            </div>
+          )}
         </Styled.Body>
       </Styled.Comment>
     </>
