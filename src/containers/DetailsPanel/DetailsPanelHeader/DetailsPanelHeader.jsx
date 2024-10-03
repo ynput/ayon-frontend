@@ -32,7 +32,7 @@ const DetailsPanelHeader = ({
 }) => {
   const dispatch = useDispatch()
 
-  const statuses = useScopedStatuses([entityType])
+  const statuses = useScopedStatuses(entities.map(entity => entity.projectName), [entityType])
 
   // for selected entities, get flat list of assignees
   const entityAssignees = useMemo(

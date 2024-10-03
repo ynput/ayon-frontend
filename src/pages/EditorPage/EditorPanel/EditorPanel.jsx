@@ -42,7 +42,7 @@ const EditorPanel = ({
   projectName,
   onForceChange,
   allUsers,
-  parentEditorNodes
+  parentEditorNodes,
 }) => {
   // SELECTORS
   const selected = useSelector((state) => state.context.focused.editor)
@@ -53,8 +53,8 @@ const EditorPanel = ({
   const folders = useSelector((state) => state.project.folders)
   const { entityType } = useFocusedEntities(projectName)
 
-  const nodeTypes = Object.values(parentEditorNodes).map(node => node.data.__entityType)
-  const statuses = useScopedStatuses(nodeTypes)
+  const nodeTypes = Object.values(parentEditorNodes).map((node) => node.data.__entityType)
+  const statuses = useScopedStatuses([projectName], nodeTypes)
 
   // STATES
   const [nodeIds, setNodeIds] = useState([])
@@ -66,7 +66,6 @@ const EditorPanel = ({
   const [localChange, setLocalChange] = useState(false)
   // used to rebuild fields for when the type changes
   const [type, setType] = useState(null)
-
 
   // when selection or nodes change, update nodes state
   useEffect(() => {
@@ -317,35 +316,44 @@ const EditorPanel = ({
 
                     const isMultiSelect = ['list_of_strings'].includes(attrib?.type)
 
-                      input = (
-                        <EnumRow
-                          attrib={attrib}
-                          value={value}
-                          placeholder={placeholder}
-                          parentValue={parentValue}
-                          isChanged={isChanged}
-                          isOwn={isOwn}
-                          isMultiSelect={isMultiSelect}
-                          multipleValues={multipleValues}
-                          widthExpand
-                          reference={formRefs[label]}
-                          onChange={(value) =>
-                            handleLocalChange(isMultiSelect ? value : value[0], changeKey, field, {
-                              form,
-                              nodeIds,
-                              nodes,
-                              setLocalChange,
-                              setForm,
-                            })
-                          }
-                          onAddItem={isMultiSelect ? (item) => {
-                            if (item == null) {
-                              resetMultiSelect(form, changeKey, field, {setLocalChange, setForm, nodes, nodeIds})
-                              formRefs[label].current.close()
-                            }
-                          } : undefined}
-                        />
-                      )
+                    input = (
+                      <EnumRow
+                        attrib={attrib}
+                        value={value}
+                        placeholder={placeholder}
+                        parentValue={parentValue}
+                        isChanged={isChanged}
+                        isOwn={isOwn}
+                        isMultiSelect={isMultiSelect}
+                        multipleValues={multipleValues}
+                        widthExpand
+                        reference={formRefs[label]}
+                        onChange={(value) =>
+                          handleLocalChange(isMultiSelect ? value : value[0], changeKey, field, {
+                            form,
+                            nodeIds,
+                            nodes,
+                            setLocalChange,
+                            setForm,
+                          })
+                        }
+                        onAddItem={
+                          isMultiSelect
+                            ? (item) => {
+                                if (item == null) {
+                                  resetMultiSelect(form, changeKey, field, {
+                                    setLocalChange,
+                                    setForm,
+                                    nodes,
+                                    nodeIds,
+                                  })
+                                  formRefs[label].current.close()
+                                }
+                              }
+                            : undefined
+                        }
+                      />
+                    )
                   } else if (isDate) {
                     value = value ? new Date(value) : value
                     input = (

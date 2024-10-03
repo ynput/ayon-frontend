@@ -145,8 +145,9 @@ const UserDashboardKanBan = ({
       })
     })
 
-    return groupFieldColumns
-  }, [columnGroups, fieldsColumns, collapsedColumns, tasksColumns])
+    const filterdStatusIds = statusesOptions.map((status) => status.id)
+    return groupFieldColumns.filter((item) => filterdStatusIds.includes(item.id))
+  }, [columnGroups, fieldsColumns, collapsedColumns, tasksColumns, statusesOptions])
 
   // now sort the columns by index
   groupFieldColumns.sort((a, b) => a.index - b.index)

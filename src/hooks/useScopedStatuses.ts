@@ -1,19 +1,31 @@
-import { $Any } from '@types'
-import { useSelector } from 'react-redux'
+import { ProjectModel, Status } from '@api/rest/project'
+import { useGetProjectsInfoQuery } from '@queries/userDashboard/getUserDashboard'
+import { intersectionBy } from 'lodash'
 
-type EntityStatus = {
-  name: string
-  icon: string
-  color: string
-  state: string
-  shortName: string
+type EntityStatus = Status & {
   scope?: string[]
 }
-const useScopedStatuses = (entityTypes: string[]) => {
-  const { statuses } = useSelector((state: $Any) => state.project)
-  let statusesList: EntityStatus[] = Object.values(statuses || {})
 
-  return filterProjectStatuses(statusesList, entityTypes)
+const useScopedStatuses = (projects: string[], entityTypes: string[]) => {
+  const response = useGetProjectsInfoQuery({ projects: [...new Set(projects).values()] })
+
+  if (!response || !response.data) {
+    return []
+  }
+
+  let currentStatuses: EntityStatus[] | undefined
+  for (const item of Object.values(response.data) as ProjectModel[]) {
+    const filteredStatuses = item.statuses!.filter((status: EntityStatus) =>
+      entityTypes.every((type) => status.scope!.includes(type)),
+    )
+    if (currentStatuses === undefined) {
+      currentStatuses = filteredStatuses
+      continue
+    }
+    currentStatuses = intersectionBy(currentStatuses, filteredStatuses, 'name')
+  }
+
+  return currentStatuses
 }
 
 const filterProjectStatuses = (statuses: EntityStatus[], entityTypes: string[]) => {
