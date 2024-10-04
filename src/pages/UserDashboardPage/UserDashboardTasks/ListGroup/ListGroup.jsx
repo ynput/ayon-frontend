@@ -8,6 +8,7 @@ import ListItem from '@components/ListItem/ListItem'
 import { InView } from 'react-intersection-observer'
 import { useURIContext } from '@context/uriContext'
 import { getTaskRoute } from '@helpers/routes'
+import { toggleDetailsPanel } from '@state/details'
 
 const ListGroup = ({
   tasks = [],
@@ -29,11 +30,28 @@ const ListGroup = ({
   containerRef,
 }) => {
   const dispatch = useDispatch()
-  const { navigate } = useURIContext()
+  const { navigate: navigateToUri } = useURIContext()
+  const openInBrowser = (task) => navigateToUri(getTaskRoute(task))
   const column = groups[id] || {}
 
+  // OPEN DETAILS PANEL
+  const onTogglePanel = (open) => {
+    dispatch(toggleDetailsPanel(open))
+  }
+
   // CONTEXT MENU
-  const { handleContextMenu, closeContext } = useGetTaskContextMenu(tasks, dispatch)
+  const { handleContextMenu, closeContext } = useGetTaskContextMenu(tasks, dispatch, {
+    onOpenInBrowser: openInBrowser,
+  })
+
+  const handleDoubleClick = (e, task) => {
+    if (e.metaKey || e.ctrlKey) {
+      // get the task
+      openInBrowser(task)
+    } else {
+      onTogglePanel(true)
+    }
+  }
 
   return (
     <>
@@ -78,8 +96,7 @@ const ListGroup = ({
                   selectedLength={selectedTasks.length}
                   onClick={(e) => {
                     if (e && e.detail == 2) {
-                      navigate(getTaskRoute(task))
-                      return
+                      return handleDoubleClick(e, task)
                     }
                     closeContext()
                     onTaskSelected(e, task.id)
