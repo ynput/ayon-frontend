@@ -1903,7 +1903,7 @@ const EditorPage = () => {
           <SplitterPanel size={30} minSize={30}>
             <EditorPanel
               editorMode
-              nodes={editorNodes}
+              parentEditorNodes={editorNodes}
               onChange={(c) => throttledEditorChanges(c)}
               onDelete={() => onDelete(currentSelection)}
               onRevert={() => revertChangesOnSelection(currentSelection)}

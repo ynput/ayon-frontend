@@ -37,6 +37,7 @@ import { productTypes } from '@state/project'
 import * as Styled from './Products.styled'
 import { openViewer } from '@state/viewer'
 import { extractIdFromClassList } from '@containers/Feed/hooks/useTableKeyboardNavigation'
+import useScopedStatuses from '@hooks/useScopedStatuses'
 
 const Products = () => {
   const dispatch = useDispatch()
@@ -59,6 +60,7 @@ const Products = () => {
   // context redux
   const selectedVersions = useSelector((state) => state.context.selectedVersions)
   const pairing = useSelector((state) => state.context.pairing)
+  const versionStatusesList = useScopedStatuses([projectName], ['version'])
 
   const selectedTaskTypes = useSelector((state) => state.context.filters.browser.productTaskTypes)
   // create an array of options for the tasks dropdown using tasksOrder and tasks
@@ -105,7 +107,6 @@ const Products = () => {
   // lazy query to fetch versions, the cache is based on versionIds provided
   const [getProductsVersions] = useLazyGetProductsVersionsQuery()
 
-
   const getListData = (productsData) => {
     let selectionId
     let selectedVersionId
@@ -126,7 +127,7 @@ const Products = () => {
         return el
       }
 
-      const versionName = el.versionList.filter(el => el.id == selectedVersionId)[0]?.name
+      const versionName = el.versionList.filter((el) => el.id == selectedVersionId)[0]?.name
       if (!versionName) {
         return el
       }
@@ -314,6 +315,7 @@ const Products = () => {
 
           return (
             <StatusSelect
+              options={versionStatusesList}
               value={node.data.versionStatus}
               size={resolveWidth(versionStatusWidth)}
               onChange={(v) => handleStatusChange(v, node.data.id)}

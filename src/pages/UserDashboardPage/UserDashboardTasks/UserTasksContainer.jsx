@@ -17,6 +17,7 @@ import transformKanbanTasks from './transformKanbanTasks'
 import styled from 'styled-components'
 import clsx from 'clsx'
 import { toggleDetailsPanel } from '@state/details'
+import { filterProjectStatuses } from '@hooks/useScopedStatuses'
 
 const StyledSplitter = styled(Splitter)`
   .details-panel-splitter {
@@ -140,6 +141,11 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
     [projectsInfo, isLoadingInfo],
   )
 
+  const scopedStatusesOptions = useMemo(
+    () => filterProjectStatuses(statusesOptions, ['task']),
+    [statusesOptions, isLoadingInfo],
+  )
+
   const statusesIntersection = useMemo(
     () => getIntersectionFields(projectsInfo, 'statuses', selectedTasksProjects),
     [projectsInfo, selectedTasksProjects],
@@ -147,10 +153,10 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
 
   const disabledStatuses = useMemo(
     () =>
-      statusesOptions
+      scopedStatusesOptions
         .filter((s) => !statusesIntersection.some((s2) => s2.name === s.name))
         .map((s) => s.name),
-    [projectsInfo, selectedTasksProjects, statusesOptions],
+    [projectsInfo, selectedTasksProjects, scopedStatusesOptions],
   )
 
   // find the intersection of all the tags of the projects for the selected tasks
@@ -217,7 +223,7 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
           isLoading={isLoadingAll}
           projectsInfo={projectsInfo}
           taskFields={taskFields}
-          statusesOptions={statusesOptions}
+          statusesOptions={scopedStatusesOptions}
           disabledStatuses={disabledStatuses}
           disabledProjectUsers={disabledProjectUsers}
           projectUsers={projectUsers}
@@ -238,7 +244,6 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
           <DetailsPanel
             onClose={handlePanelClose}
             entitiesData={selectedTasksData}
-            statusesOptions={statusesOptions}
             disabledStatuses={disabledStatuses}
             tagsOptions={tagsOptions}
             projectUsers={projectUsers}
