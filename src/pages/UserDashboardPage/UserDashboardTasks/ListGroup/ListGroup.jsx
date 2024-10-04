@@ -21,6 +21,7 @@ const ListGroup = ({
   disabledProjectUsers = [],
   onUpdate,
   allUsers = [],
+  priorities,
   onCollapseChange,
   isCollapsed,
   isLoading,
@@ -90,6 +91,7 @@ const ListGroup = ({
                   disabledProjectUsers={disabledProjectUsers}
                   onUpdate={onUpdate}
                   allUsers={allUsers}
+                  priorities={priorities}
                   className={'card'}
                   minWidths={minWidths}
                   inView={inView}

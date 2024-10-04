@@ -4,6 +4,7 @@ import {
   Button,
   AssigneeSelect as AssigneeSelectComponent,
   TagsSelect as TagsSelectComponent,
+  EnumDropdown,
 } from '@ynput/ayon-react-components'
 
 export const HeaderContainer = styled.div`
@@ -58,15 +59,24 @@ export const Header = styled.header`
   gap: var(--base-gap-large);
   z-index: 50;
 
-  &.isCompact {
-    /* only take up one column */
-    grid-column: span 1;
+  .entity-type {
+    min-width: fit-content;
   }
 
   &.loading {
     .playable {
       display: none;
     }
+  }
+`
+
+export const Title = styled.div`
+  display: flex;
+  align-items: center;
+  gap: var(--base-gap-small);
+
+  h2 {
+    min-width: fit-content;
   }
 `
 
@@ -191,9 +201,45 @@ export const AssigneeSelect = styled(AssigneeSelectComponent)`
   max-width: 100%;
 `
 export const TagsSelect = styled(TagsSelectComponent)`
-  width: fit-content;
+  height: 24px;
+  .template-value {
+    padding: 0 2px;
+  }
+  .tag {
+    padding: 0 4px;
+  }
+  .placeholder {
+    padding: 0 2px;
+    span:not(.icon) {
+      display: none;
+    }
+  }
+`
+
+export const PriorityEnumDropdown = styled(EnumDropdown)`
+  width: max-content;
   justify-self: end;
-  max-width: 100%;
+  /* remove text and dropdown icon */
+  .control {
+    display: none;
+  }
+
+  .template-value {
+    border: none;
+    padding: 0;
+    & > div {
+      justify-content: center;
+    }
+  }
+
+  button {
+    padding: 0 8px;
+    background-color: unset;
+
+    &:hover {
+      background-color: var(--md-sys-color-surface-container-low-hover);
+    }
+  }
 `
 
 export const Footer = styled.footer`

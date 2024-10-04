@@ -34,6 +34,7 @@ const UserDashboardKanBan = ({
   statusesOptions,
   disabledStatuses,
   disabledProjectUsers = [],
+  priorities,
   projectUsers = [],
   isLoadingProjectUsers,
 }) => {
@@ -300,6 +301,7 @@ const UserDashboardKanBan = ({
             disabledStatuses={disabledStatuses}
             disabledProjectUsers={disabledProjectUsers}
             projectsInfo={projectsInfo}
+            priorities={priorities}
           />
         )}
       </Section>

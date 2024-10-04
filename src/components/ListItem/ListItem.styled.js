@@ -1,7 +1,7 @@
 import styled from 'styled-components'
 import ThumbnailSimple from '@containers/ThumbnailSimple'
 import StatusSelect from '../status/statusSelect'
-import { AssigneeSelect } from '@ynput/ayon-react-components'
+import { AssigneeSelect, EnumDropdown } from '@ynput/ayon-react-components'
 
 export const Item = styled.li`
   /* reset defaults */
@@ -205,6 +205,30 @@ export const ItemAssignees = styled(AssigneeSelect)`
 
     .user-image {
       top: 0;
+    }
+  }
+`
+
+export const PriorityEnumDropdown = styled(EnumDropdown)`
+  /* remove text and dropdown icon */
+  .value-label,
+  .control {
+    display: none;
+  }
+
+  .template-value {
+    border: none;
+    padding: 0;
+    & > div {
+      justify-content: center;
+    }
+  }
+
+  button {
+    background-color: unset;
+
+    &:hover {
+      background-color: var(--md-sys-color-surface-container-hover);
     }
   }
 `

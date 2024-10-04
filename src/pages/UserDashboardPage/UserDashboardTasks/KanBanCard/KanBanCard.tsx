@@ -56,6 +56,7 @@ const KanBanCard = forwardRef<HTMLDivElement, KanBanCardProps>(
           onClick={onClick}
           users={(!!task.assigneesData?.length && task.assigneesData) || null}
           status={task.statusInfo}
+          priority={task.priorityInfo}
           isActive={isActive}
           style={{ width: 210, visibility: isDragging ? 'hidden' : 'visible', ...style }}
           onKeyUp={onKeyUp}

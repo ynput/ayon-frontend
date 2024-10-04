@@ -15,6 +15,14 @@ const patchKanban = (
       { projects: projects, assignees: assignees },
       (draft) => {
         const taskIndex = draft.findIndex((task) => task.id === taskId)
+        let patchData = { ...data }
+        // if the data include attrib.priority it needs to be transformed to just priority
+        // this is because priority is a top level field on kanban query
+        if (data?.attrib?.priority) {
+          const { priority } = patchData.attrib
+          patchData = { ...patchData, priority }
+        }
+
         if (taskIndex === -1) {
           // task not found, assignee must have just been added
           if (taskData) {
@@ -35,7 +43,7 @@ const patchKanban = (
             draft.splice(taskIndex, 1)
           } else {
             // task found: update the task in the cache
-            const newData = { ...draft[taskIndex], ...data }
+            const newData = { ...draft[taskIndex], ...patchData }
             draft[taskIndex] = newData
           }
         }
@@ -122,6 +130,7 @@ const updateEntity = api.injectEndpoints({
           const currentDashNeedsUpdating = hasSomeAssignees && hasSomeProjects
 
           if (currentDashNeedsUpdating) {
+            console.log({ data })
             const [result, wasPatched] = patchKanban(
               { assignees: cacheUsers, projects: dashboardProjects },
               { newAssignees, taskId: entityId, data },
@@ -245,6 +254,10 @@ const updateEntity = api.injectEndpoints({
                 patchData.users = patchData.assignees
                 delete patchData.assignees
               }
+              if (patchData.attrib) {
+                const newAttrib = { ...draft.attrib, ...patchData.attrib }
+                patchData.attrib = newAttrib
+              }
               const newData = { ...draft, ...patchData }
               Object.assign(draft, newData)
             },
@@ -309,6 +322,11 @@ const updateEntity = api.injectEndpoints({
                   if (patchData.assignees) {
                     patchData.users = patchData.assignees
                     delete patchData.assignees
+                  }
+
+                  if (patchData.attrib) {
+                    const newAttrib = { ...draft[entityIndex].attrib, ...patchData.attrib }
+                    patchData.attrib = newAttrib
                   }
 
                   // merge the new data into the entity

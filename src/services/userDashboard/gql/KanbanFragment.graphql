@@ -18,4 +18,5 @@ fragment KanbanFragment on KanbanNode {
   folderName
   folderPath
   hasReviewables
+  priority
 }
