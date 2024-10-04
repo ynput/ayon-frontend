@@ -1,15 +1,19 @@
 import sortByOptions from '../UserDashboardTasks/DashboardTasksToolbar/KanBanSortByOptions'
 
 // sort in order of sortBy
-export const getSortedTasks = (tasks = [], sortBy = []) => {
+export const getSortedTasks = (tasks = [], sortBy = [], anatomy = {}) => {
   return [...tasks].sort((a, b) => {
     for (let i = 0; i < sortBy.length; i++) {
-      const { id, sortOrder } = sortBy[i]
+      const { id, sortOrder, fallbacks = [] } = sortBy[i]
+      const { sortByEnumOrder } = sortByOptions.find((option) => option.id === id) || {}
 
-      const sortOption = sortByOptions.find((option) => option.id === id)
-      const fallbacks = sortOption?.fallbacks || []
-      const aVal = a[id] || fallbacks.reduce((acc, fallback) => acc || a[fallback], null)
-      const bVal = b[id] || fallbacks.reduce((acc, fallback) => acc || b[fallback], null)
+      let aVal = a[id] || fallbacks.reduce((acc, fallback) => acc || a[fallback], null)
+      let bVal = b[id] || fallbacks.reduce((acc, fallback) => acc || b[fallback], null)
+
+      if (anatomy[id] && sortByEnumOrder) {
+        aVal = anatomy[id].findIndex((option) => option.value === aVal)
+        bVal = anatomy[id].findIndex((option) => option.value === bVal)
+      }
 
       const dateA = new Date(aVal)
       const dateB = new Date(bVal)

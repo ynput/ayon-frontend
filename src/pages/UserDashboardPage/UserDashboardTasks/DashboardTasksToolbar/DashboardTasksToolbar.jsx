@@ -10,6 +10,7 @@ import {
 import MeOrUserSwitch from '@components/MeOrUserSwitch/MeOrUserSwitch'
 import * as Styled from './DashboardTasksToolbar.styled'
 import sortByOptions from './KanBanSortByOptions'
+import { getGroupByOptions } from './KanBanGroupByOptions'
 
 const DashboardTasksToolbar = ({ isLoading, view, setView }) => {
   const dispatch = useDispatch()
@@ -27,21 +28,20 @@ const DashboardTasksToolbar = ({ isLoading, view, setView }) => {
   const setSortByValue = (value) => dispatch(onTasksSortByChanged(value))
 
   // GROUP BY
-  const groupByOptions = [
-    { id: 'projectName', label: 'Project', sortOrder: true },
-    { id: 'status', label: 'Status', sortOrder: true },
-    { id: 'taskType', label: 'Type', sortOrder: true },
-    { id: 'folderName', label: 'Folder', sortOrder: true },
-  ]
-
-  const assigneesGroupBy = { id: 'assignees', label: 'Assignee', sortOrder: true }
-  if (assigneesFilter !== 'me') {
-    groupByOptions.push(assigneesGroupBy)
-  }
+  const groupByOptions = getGroupByOptions(assigneesFilter !== 'me')
 
   const groupByValue = useSelector((state) => state.dashboard.tasks.groupBy)
 
   const setGroupByValue = (value) => dispatch(onTasksGroupByChanged(value))
+
+  const handleGroupBy = (value) => {
+    const option = groupByOptions.find((o) => o.id === value?.id)
+    if (!option) return setGroupByValue([])
+    const optionValue = { ...option, sortOrder: value.sortOrder }
+
+    // update state
+    setGroupByValue([optionValue])
+  }
 
   // FILTER
   const filterValue = useSelector((state) => state.dashboard.tasks.filter)
@@ -69,7 +69,7 @@ const DashboardTasksToolbar = ({ isLoading, view, setView }) => {
         title="Group by"
         options={groupByOptions}
         value={groupByValue}
-        onChange={setGroupByValue}
+        onChange={(v) => handleGroupBy(v[0])}
         multiSelect={false}
       />
       <InputText

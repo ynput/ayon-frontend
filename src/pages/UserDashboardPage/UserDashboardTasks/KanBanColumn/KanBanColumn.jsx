@@ -24,7 +24,7 @@ const KanBanColumn = forwardRef(
       groupItems = [],
       column = {},
       isLoading,
-      allUsers = [],
+      projectUsers = [],
       disabledStatuses,
       sectionRect,
       sectionRef,
@@ -32,6 +32,7 @@ const KanBanColumn = forwardRef(
       active,
       activeColumn,
       projectsInfo,
+      priorities,
     },
     ref,
   ) => {
@@ -40,15 +41,18 @@ const KanBanColumn = forwardRef(
     const tasksCount = tasks.length
 
     // create groupBy labels for assignees
-    const groupByLabels = useMemo(() => {
-      const assigneesLabels = allUsers.map(({ name }) => ({
+    const groupByAnatomy = useMemo(() => {
+      const assignees = projectUsers.map(({ name, attrib }) => ({
         img: name && `/api/users/${name}/avatar`,
+        value: name,
+        label: attrib?.fullName || name,
       }))
 
       return {
-        assignees: assigneesLabels,
+        assignees: assignees,
+        priority: priorities,
       }
-    }, [allUsers])
+    }, [projectUsers, priorities])
 
     // SELECTED TASKS
     const selectedTasks = useSelector((state) => state.dashboard.tasks.selected)
@@ -105,8 +109,8 @@ const KanBanColumn = forwardRef(
     const loadingTasks = useMemo(() => getFakeTasks(), [])
 
     const groupedTasks = useMemo(
-      () => getGroupedTasks(tasks, groupByValue[0], groupByLabels),
-      [tasks, groupByValue, groupByLabels],
+      () => getGroupedTasks(tasks, groupByValue[0], groupByAnatomy),
+      [tasks, groupByValue, groupByAnatomy],
     )
 
     let [taskLimit, setTaskLimit] = useState(10)
