@@ -120,6 +120,7 @@ const ListItem = forwardRef(
           options={priorities}
           value={[task.priorityInfo?.value]}
           style={{ width: 22, height: 22 }}
+          onOpen={!selected && onClick}
           onChange={(v) => onUpdate('attrib', { priority: v[0] })}
           placeholder=""
         />
