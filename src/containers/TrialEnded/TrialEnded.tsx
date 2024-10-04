@@ -6,6 +6,7 @@ import useCustomerlyChat from '@hooks/useCustomerly'
 import { useNavigate } from 'react-router'
 import { useAppSelector } from '@state/store'
 import { useGetActiveUsersCountQuery } from '@queries/user/getUsers'
+import { useLogOutMutation } from '@queries/auth/getAuth'
 
 interface TrialEndedProps {}
 
@@ -25,11 +26,14 @@ const TrialEnded: FC<TrialEndedProps> = () => {
   // get the number of users currently active
   const { data: activeUsersCount = 10 } = useGetActiveUsersCountQuery()
 
+  // sign out
+  const [logout] = useLogOutMutation()
+
   return (
     <Styled.TrialEndContainer>
       <Toolbar>
         <Styled.Logo src="/AYON.svg" />
-        <Button className="logout" variant="text">
+        <Button className="logout" variant="text" onClick={logout}>
           Logout
         </Button>
       </Toolbar>
