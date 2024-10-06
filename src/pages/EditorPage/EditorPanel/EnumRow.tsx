@@ -69,7 +69,7 @@ const EnumRow = ({
 
   return (
     <EnumDropdown
-      value={enumValue}
+      value={enumValue || []}
       isChanged={isChanged}
       options={options}
       onChange={onChange}
