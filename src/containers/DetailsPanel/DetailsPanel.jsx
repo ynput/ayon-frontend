@@ -1,5 +1,5 @@
 import { Button, Panel } from '@ynput/ayon-react-components'
-import React, { useCallback, useEffect, useMemo } from 'react'
+import React, { useEffect, useMemo } from 'react'
 import DetailsPanelHeader from './DetailsPanelHeader/DetailsPanelHeader'
 import { useAppDispatch, useAppSelector } from '@state/store'
 import Feed from '@containers/Feed/Feed'
@@ -7,7 +7,7 @@ import { useGetEntitiesDetailsPanelQuery } from '@queries/entity/getEntityPanel'
 import TaskAttributes from '@pages/UserDashboardPage/UserDashboardTasks/TaskAttributes/TaskAttributes'
 import { getEntityDetailsData } from '@queries/userDashboard/userDashboardHelpers'
 import DetailsPanelFiles from './DetailsPanelFiles'
-import { closeSlideOut, updateDetailsPanelTab } from '@state/details'
+import { closeSlideOut, openPip, updateDetailsPanelTab } from '@state/details'
 import { entityDetailsTypesSupported } from '@/services/userDashboard/userDashboardQueries'
 import * as Styled from './DetailsPanel.styled'
 import EntityPath from '@components/EntityPath'
@@ -15,8 +15,6 @@ import { Watchers } from '@containers/Watchers/Watchers'
 import Shortcuts from '@containers/Shortcuts'
 import { isEmpty } from 'lodash'
 import useGetEntityPath from './hooks/useGetEntityPath'
-import DetailsPanelFloating from './DetailsPanelFloating/DetailsPanelFloating'
-import PiPWindow from '@context/pip/PiPWindow'
 import { usePiPWindow } from '@context/pip/PiPProvider'
 
 export const entitiesWithoutFeed = ['product', 'representation']
@@ -122,34 +120,28 @@ const DetailsPanel = ({
     [onClose],
   )
 
-  const { requestPipWindow, pipWindow, pipId } = usePiPWindow()
+  const { requestPipWindow } = usePiPWindow()
 
-  const startPiP = useCallback(() => {
+  const handleOpenPip = () => {
+    // set pip state
+    dispatch(
+      openPip({
+        entityType: entityType,
+        entities: entitiesToQuery,
+        scope: scope,
+        statePath: statePath,
+      }),
+    )
+
+    // open pip
     requestPipWindow(500, 500)
-  }, [requestPipWindow])
+  }
 
   if (!firstEntityData || isEmpty(firstEntityData)) return null
 
   return (
     <>
       <Shortcuts shortcuts={shortcuts || []} deps={[]} />
-
-      {pipWindow && (
-        <PiPWindow pipWindow={pipWindow}>
-          <div className="pipRoot">
-            <DetailsPanelFloating
-              entities={entityDetailsData}
-              entityType={entityType}
-              projectName={firstProject}
-              statusesOptions={statusesOptions}
-              users={projectUsers}
-              scope={scope}
-              statePath={statePath}
-              id={pipId}
-            />
-          </div>
-        </PiPWindow>
-      )}
 
       <Panel
         style={{
@@ -181,7 +173,7 @@ const DetailsPanel = ({
             icon="picture_in_picture"
             variant={'text'}
             data-tooltip="Picture in Picture"
-            onClick={startPiP}
+            onClick={handleOpenPip}
           />
 
           {onClose && (

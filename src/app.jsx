@@ -64,6 +64,7 @@ import ReleaseInstallerDialog from '@containers/ReleaseInstallerDialog/ReleaseIn
 import getTrialDates from '@components/TrialBanner/helpers/getTrialDates'
 import TrialEnded from '@containers/TrialEnded/TrialEnded'
 import { PiPProvider } from '@context/pip/PiPProvider'
+import DetailsPanelFloating from '@containers/DetailsPanel/DetailsPanelFloating/DetailsPanelFloating'
 
 const App = () => {
   const user = useSelector((state) => state.user)
@@ -258,6 +259,7 @@ const App = () => {
                               <Route path="/events" element={<EventsPage />} />
                               <Route element={<ErrorPage code="404" />} />
                             </Routes>
+                            <DetailsPanelFloating />
                           </QueryParamProvider>
                         </PiPProvider>
                       </ShortcutsProvider>

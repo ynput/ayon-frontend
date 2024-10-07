@@ -28,15 +28,23 @@ export function PiPProvider({ children }: PiPProviderProps) {
 
   // Close pip window programmatically
   const closePipWindow = useCallback(() => {
+    setPipId(null)
     if (pipWindow != null) {
       pipWindow.close()
       setPipWindow(null)
     }
-  }, [pipWindow])
+  }, [pipWindow, pipId])
 
   // Open new pipWindow
   const requestPipWindow = useCallback(
     async (width: number, height: number) => {
+      // check pip is supported
+      if (!isSupported) {
+        // open but not with window
+        setPipId(uuid())
+        return
+      }
+
       // We don't want to allow multiple requests.
       if (pipWindow != null) {
         console.log('pipWindow is already open')

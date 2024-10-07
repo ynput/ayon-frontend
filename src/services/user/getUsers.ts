@@ -1,7 +1,11 @@
 import api from '@api'
 import ayonClient from '@/ayon'
 import { $Any } from '@types'
-import { GetActiveUsersCountQuery, GetAllProjectUsersAsAssigneeQuery } from '@api/graphql'
+import {
+  GetActiveUsersCountQuery,
+  GetAllAssigneesQuery,
+  GetAllProjectUsersAsAssigneeQuery,
+} from '@api/graphql'
 
 const USER_BY_NAME_QUERY = `
   query UserList($name:String!) {
@@ -127,7 +131,7 @@ const injectedApi = api.injectEndpoints({
       query: ({ name }) => ({
         url: `/api/users/${name}`,
       }),
-      providesTags: (res, g, { name }) => [
+      providesTags: (_res, _g, { name }) => [
         { type: 'user', id: name },
         { type: 'user', id: 'LIST' },
       ],
@@ -201,7 +205,7 @@ const injectedApi = api.injectEndpoints({
 })
 
 type AssigneeNode = GetAllProjectUsersAsAssigneeQuery['users']['edges'][0]['node']
-export type GetAllProjectUsersAsAssigneeResult = {
+export type Assignees = {
   name: AssigneeNode['name']
   fullName: AssigneeNode['attrib']['fullName']
 }[]
@@ -213,9 +217,10 @@ type TagTypes = TagTypesFromApi<typeof api>
 type UpdatedDefinitions = Omit<Definitions, 'GetAllProjectUsersAsAssignee'> & {
   GetAllProjectUsersAsAssignee: OverrideResultType<
     Definitions['GetAllProjectUsersAsAssignee'],
-    GetAllProjectUsersAsAssigneeResult
+    Assignees
   >
   GetActiveUsersCount: OverrideResultType<Definitions['GetActiveUsersCount'], number>
+  GetAllAssignees: OverrideResultType<Definitions['GetAllAssignees'], Assignees>
 }
 
 const enhancedApi = injectedApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
@@ -233,6 +238,14 @@ const enhancedApi = injectedApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
         res.users.edges.filter((e) => e.node.active && !e.node.isGuest).length,
       providesTags: [{ type: 'user', id: 'LIST' }],
     },
+    GetAllAssignees: {
+      transformResponse: (res: GetAllAssigneesQuery) =>
+        res.users.edges.map((e) => ({ name: e.node.name, fullName: e.node.attrib.fullName })),
+      providesTags: (res) =>
+        res
+          ? [{ type: 'user', id: 'LIST' }, ...res.map((e) => ({ type: 'user', id: e.name }))]
+          : [{ type: 'user', id: 'LIST' }],
+    },
   },
 })
 
@@ -246,4 +259,5 @@ export const {
   useGetUserSessionsQuery,
   useGetAllProjectUsersAsAssigneeQuery,
   useGetActiveUsersCountQuery,
+  useGetAllAssigneesQuery,
 } = enhancedApi

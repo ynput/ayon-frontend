@@ -18,6 +18,13 @@ const initialStateSlideOut = {
   tab: 'feed', // feed | attribs | files,
 }
 
+const initialPip = {
+  entityType: '',
+  entities: [],
+  scope: '',
+  statePath: '',
+}
+
 const initialStatePinned = {
   filter: getInitialStateLocalStorage('details/filter', 'activity'), // activity | comments | publishes | checklists
   activityTypes:
@@ -55,7 +62,7 @@ const detailsSlice = createSlice({
         return acc
       }, {}),
     },
-    floating: { main: initialStateSlideOut },
+    pip: initialPip,
     refTooltip: initialTooltip,
   },
   reducers: {
@@ -126,11 +133,11 @@ const detailsSlice = createSlice({
         state.open = !state.open
       }
     },
-    openFloating: (state, { payload }) => {
-      state.floating.main = payload
+    openPip: (state, { payload }) => {
+      state.pip = payload
     },
-    closeFloating: (state) => {
-      state.floating.main = initialStateSlideOut
+    closePip: (state) => {
+      state.pip = initialStateSlideOut
     },
   },
 })
@@ -145,8 +152,8 @@ export const {
   showRefTooltip,
   hideRefTooltip,
   toggleDetailsPanel,
-  openFloating,
-  closeFloating,
+  openPip,
+  closePip,
 } = detailsSlice.actions
 export default detailsSlice.reducer
 

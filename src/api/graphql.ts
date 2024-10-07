@@ -191,6 +191,7 @@ export type FolderAttribType = {
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
+  priority?: Maybe<Scalars['String']['output']>;
   /** Vertical resolution */
   resolutionHeight?: Maybe<Scalars['Int']['output']>;
   /** Horizontal resolution */
@@ -367,6 +368,7 @@ export type KanbanNode = {
   lastVersionWithReviewableVersionId?: Maybe<Scalars['String']['output']>;
   lastVersionWithThumbnailId?: Maybe<Scalars['String']['output']>;
   name: Scalars['String']['output'];
+  priority?: Maybe<Scalars['String']['output']>;
   projectCode: Scalars['String']['output'];
   projectName: Scalars['String']['output'];
   status: Scalars['String']['output'];
@@ -520,6 +522,7 @@ export type ProjectAttribType = {
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
+  priority?: Maybe<Scalars['String']['output']>;
   /** Vertical resolution */
   resolutionHeight?: Maybe<Scalars['Int']['output']>;
   /** Horizontal resolution */
@@ -944,6 +947,7 @@ export type TaskAttribType = {
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
+  priority?: Maybe<Scalars['String']['output']>;
   /** Vertical resolution */
   resolutionHeight?: Maybe<Scalars['Int']['output']>;
   /** Horizontal resolution */
@@ -1355,6 +1359,11 @@ export type GetActiveUsersCountQueryVariables = Exact<{ [key: string]: never; }>
 
 export type GetActiveUsersCountQuery = { __typename?: 'Query', users: { __typename?: 'UsersConnection', edges: Array<{ __typename?: 'UserEdge', node: { __typename?: 'UserNode', active: boolean, isGuest: boolean } }> } };
 
+export type GetAllAssigneesQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetAllAssigneesQuery = { __typename?: 'Query', users: { __typename?: 'UsersConnection', edges: Array<{ __typename?: 'UserEdge', node: { __typename?: 'UserNode', name: string, attrib: { __typename?: 'UserAttribType', fullName?: string | null } } }> } };
+
 export type GetAllProjectUsersAsAssigneeQueryVariables = Exact<{
   projectName?: InputMaybe<Scalars['String']['input']>;
 }>;
@@ -1610,6 +1619,20 @@ export const GetActiveUsersCountDocument = `
   }
 }
     `;
+export const GetAllAssigneesDocument = `
+    query GetAllAssignees {
+  users(last: 2000) {
+    edges {
+      node {
+        name
+        attrib {
+          fullName
+        }
+      }
+    }
+  }
+}
+    `;
 export const GetAllProjectUsersAsAssigneeDocument = `
     query GetAllProjectUsersAsAssignee($projectName: String) {
   users(last: 2000, projectName: $projectName) {
@@ -1695,6 +1718,9 @@ const injectedRtkApi = RestAPI.injectEndpoints({
     }),
     GetActiveUsersCount: build.query<GetActiveUsersCountQuery, GetActiveUsersCountQueryVariables | void>({
       query: (variables) => ({ document: GetActiveUsersCountDocument, variables })
+    }),
+    GetAllAssignees: build.query<GetAllAssigneesQuery, GetAllAssigneesQueryVariables | void>({
+      query: (variables) => ({ document: GetAllAssigneesDocument, variables })
     }),
     GetAllProjectUsersAsAssignee: build.query<GetAllProjectUsersAsAssigneeQuery, GetAllProjectUsersAsAssigneeQueryVariables | void>({
       query: (variables) => ({ document: GetAllProjectUsersAsAssigneeDocument, variables })

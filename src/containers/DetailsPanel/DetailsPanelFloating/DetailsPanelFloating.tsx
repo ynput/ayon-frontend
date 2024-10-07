@@ -1,11 +1,16 @@
-import { FC, useEffect, useMemo, useState } from 'react'
+import { FC, useMemo } from 'react'
 import * as Styled from './DetailsPanelFloating.styled'
-import { Status } from '@api/rest/project'
 import getThumbnails from '../helpers/getThumbnails'
 import StackedThumbnails from '@pages/EditorPage/StackedThumbnails'
 import { upperFirst } from 'lodash'
 import { AssigneeField, StatusSelect } from '@ynput/ayon-react-components'
 import Feed from '@containers/Feed/Feed'
+import PiPWrapper from '@context/pip/PiPWrapper'
+import { useGetEntitiesDetailsPanelQuery } from '@queries/entity/getEntityPanel'
+import { useAppSelector } from '@state/store'
+import { useGetProjectsInfoQuery } from '@queries/userDashboard/getUserDashboard'
+import { useGetAllAssigneesQuery } from '@queries/user/getUsers'
+import { Status } from '@api/rest/project'
 
 type Entity = {
   id: string
@@ -19,80 +24,102 @@ type Entity = {
   users: string[]
   tags: string[]
   status: string
-}
-
-export interface DetailsPanelFloatingProps {
-  entities: Entity[]
-  entityType: string
-  statusesOptions: Status[]
-  assignees: { name: string; label: string }[]
   projectName: string
-  users: { name: string; label: string }[]
-  scope: string
-  statePath: string
-  id: string // identifier for the floating panel
 }
 
-const DetailsPanelFloating: FC<DetailsPanelFloatingProps> = (props) => {
-  // this ensures as the props change, the initial props don't
-  const [initialProps, setInitialProps] = useState(props)
-  const { entities, entityType, statusesOptions, projectName, users, scope, statePath } =
-    initialProps
+export interface DetailsPanelFloatingProps {}
 
-  // when id changes, update the initial props
-  useEffect(() => {
-    setInitialProps(props)
-  }, [props.id])
+const DetailsPanelFloating: FC<DetailsPanelFloatingProps> = () => {
+  const { entities, entityType, scope, statePath } = useAppSelector((state) => state.details.pip)
 
-  const thumbnails = useMemo(() => getThumbnails(entities, entityType), [entities, entityType])
+  const projects: string[] = entities.map((e: any) => e.projectName)
 
-  const isMultiple = entities.length > 1
-  const firstEntity = entities[0]
+  const { data: allUsers = [] } = useGetAllAssigneesQuery({})
 
-  // for selected entities, get flat list of assignees
-  const entityAssignees = useMemo(() => {
-    const allEntityUsers = entities.flatMap((entity) => entity.users)
-    return users.filter((user) => allEntityUsers.some((entityUser) => entityUser === user.name))
-  }, [entities, users])
+  const { data: projectsInfo = {}, isFetching: isFetchingInfo } = useGetProjectsInfoQuery({
+    projects: projects,
+  })
 
-  const statusesValue = useMemo(() => entities.map((t) => t.status), [entities])
+  // get all statuses from projects info, removing duplicate names
+  const statuses: Status[] = useMemo(() => {
+    const statuses = projects
+      .map((p) => projectsInfo[p]?.statuses)
+      .flat()
+      .filter(Boolean)
+    const uniqueStatuses = new Map(statuses.map((status) => [status.name, status]))
+    return Array.from(uniqueStatuses.values())
+  }, [projects, projectsInfo])
+
+  const { data = [], isFetching: isFetchingEntitiesDetails } = useGetEntitiesDetailsPanelQuery(
+    { entityType, entities: entities, projectsInfo },
+    {
+      skip: !entities.length || isFetchingInfo,
+    },
+  )
+  const entitiesData: Entity[] = data
+
+  const thumbnails = useMemo(
+    () => getThumbnails(entitiesData, entityType),
+    [entitiesData, entityType],
+  )
+
+  // users for assignee field, find in all users
+  const users = useMemo(() => {
+    return allUsers
+      .filter((u) => entitiesData.some((e) => e.users?.includes(u.name)))
+      .map((u) => ({ ...u, avatarUrl: `/api/users/${u.name}/avatar` }))
+  }, [allUsers, entities])
+
+  const isMultiple = entitiesData.length > 1
+  const firstEntity = entitiesData[0]
+  const projectName = firstEntity?.projectName
+
+  const statusesValue = useMemo(() => entitiesData.map((t) => t.status), [entitiesData])
+
+  if (isFetchingEntitiesDetails) return <div>Loading...</div>
 
   return (
-    <Styled.Container onClick={() => console.log('test')}>
-      <Styled.Header>
-        <StackedThumbnails thumbnails={thumbnails} projectName={projectName} />
-        <Styled.Content>
-          <h2>{!isMultiple ? firstEntity?.title : `${entities.length} ${entityType}s selected`}</h2>
-          <div className="sub-title">
-            <span>{upperFirst(entityType)} - </span>
-            <h3>{!isMultiple ? firstEntity?.subTitle : entities.map((t) => t.title).join(', ')}</h3>
-          </div>
-        </Styled.Content>
-      </Styled.Header>
-      <Styled.Row>
-        <StatusSelect
-          value={statusesValue}
-          options={statusesOptions}
-          invert
-          disableOpen
-          buttonStyle={{ pointerEvents: 'none' }}
-        />
-        <AssigneeField users={entityAssignees} style={{ pointerEvents: 'none' }} />
-      </Styled.Row>
-      <Styled.FeedContainer>
-        <Feed
-          entityType={entityType}
-          entities={entities}
-          activeUsers={[]}
-          // selectedTasksProjects={{}}
-          // projectInfo={firstProjectInfo}
-          projectName={projectName}
-          isMultiProjects={false}
-          scope={scope}
-          statePath={statePath}
-        />
-      </Styled.FeedContainer>
-    </Styled.Container>
+    <PiPWrapper>
+      <Styled.Container>
+        <Styled.Header>
+          <StackedThumbnails thumbnails={thumbnails} projectName={projectName} />
+          <Styled.Content>
+            <h2>
+              {!isMultiple ? firstEntity?.title : `${entitiesData.length} ${entityType}s selected`}
+            </h2>
+            <div className="sub-title">
+              <span>{upperFirst(entityType)} - </span>
+              <h3>
+                {!isMultiple ? firstEntity?.subTitle : entitiesData.map((t) => t.title).join(', ')}
+              </h3>
+            </div>
+          </Styled.Content>
+        </Styled.Header>
+        <Styled.Row>
+          <StatusSelect
+            value={statusesValue}
+            options={statuses}
+            invert
+            disableOpen
+            buttonStyle={{ pointerEvents: 'none' }}
+          />
+          <AssigneeField users={users} style={{ pointerEvents: 'none' }} />
+        </Styled.Row>
+        <Styled.FeedContainer>
+          <Feed
+            entityType={entityType}
+            entities={entitiesData}
+            activeUsers={[]}
+            // selectedTasksProjects={{}}
+            // projectInfo={firstProjectInfo}
+            projectName={projectName}
+            isMultiProjects={false}
+            scope={scope}
+            statePath={statePath}
+          />
+        </Styled.FeedContainer>
+      </Styled.Container>
+    </PiPWrapper>
   )
 }
 
