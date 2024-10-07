@@ -6,22 +6,20 @@ import clsx from 'clsx'
 import { entitiesWithoutFeed } from '../DetailsPanel'
 
 const FeedFilters = ({
-  isSlideOut,
   isLoading,
   entityType,
   className,
   overrides = {},
   scope,
+  statePath,
   ...props
 }) => {
   const dispatch = useDispatch()
-  const setFeedFilter = (value) => dispatch(updateFeedFilter({ value, isSlideOut, scope }))
-  const setTab = (tab) => dispatch(updateDetailsPanelTab({ isSlideOut, tab, scope }))
+  const setFeedFilter = (value) => dispatch(updateFeedFilter({ value, statePath, scope }))
+  const setTab = (tab) => dispatch(updateDetailsPanelTab({ statePath, tab, scope }))
 
-  const filtersStateLocation = isSlideOut ? 'slideOut' : 'pinned'
-
-  const selectedFilter = useSelector((state) => state.details[filtersStateLocation][scope].filter)
-  const selectedTab = useSelector((state) => state.details[filtersStateLocation][scope].tab)
+  const selectedFilter = useSelector((state) => state.details[statePath][scope].filter)
+  const selectedTab = useSelector((state) => state.details[statePath][scope].tab)
 
   const filtersLeft = [
     {

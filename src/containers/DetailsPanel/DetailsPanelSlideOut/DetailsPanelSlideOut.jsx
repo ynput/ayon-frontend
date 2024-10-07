@@ -31,6 +31,7 @@ const DetailsPanelSlideOut = ({ projectsInfo, scope }) => {
         projectUsers={users}
         activeProjectUsers={users}
         isSlideOut
+        statePath="slideOut"
         scope={scope}
         onClose={handleClose}
       />

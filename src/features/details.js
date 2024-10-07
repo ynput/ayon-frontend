@@ -55,19 +55,20 @@ const detailsSlice = createSlice({
         return acc
       }, {}),
     },
+    floating: { main: initialStateSlideOut },
     refTooltip: initialTooltip,
   },
   reducers: {
     updateDetailsPanelTab: (state, { payload }) => {
       const scope = payload.scope
-      const location = payload.isSlideOut ? 'slideOut' : 'pinned'
+      const location = payload.statePath
 
       // toggle the details open
       state[location][scope].tab = payload.tab
     },
     updateFeedFilter: (state, { payload }) => {
       const scope = payload.scope
-      const location = payload.isSlideOut ? 'slideOut' : 'pinned'
+      const location = payload.statePath
       state[location][scope].filter = payload.value
       state[location][scope].activityTypes =
         filterActivityTypes[payload.value] || filterActivityTypes.activity
@@ -102,12 +103,12 @@ const detailsSlice = createSlice({
         state.slideOut[scope] = initialStateSlideOut
       }
     },
-    highlightActivity: (state, { payload: { isSlideOut = false, activityIds } = {} }) => {
-      const location = isSlideOut ? 'slideOut' : 'pinned'
+    highlightActivity: (state, { payload: { statePath = 'pinned', activityIds } = {} }) => {
+      const location = statePath
       state[location].highlighted = activityIds
     },
-    clearHighlights: (state, { payload: { isSlideOut = false } = {} }) => {
-      const location = isSlideOut ? 'slideOut' : 'pinned'
+    clearHighlights: (state, { payload: { statePath = 'pinned' } = {} }) => {
+      const location = statePath
       state[location].highlighted = []
     },
     showRefTooltip: (state, { payload }) => {
@@ -125,6 +126,12 @@ const detailsSlice = createSlice({
         state.open = !state.open
       }
     },
+    openFloating: (state, { payload }) => {
+      state.floating.main = payload
+    },
+    closeFloating: (state) => {
+      state.floating.main = initialStateSlideOut
+    },
   },
 })
 
@@ -138,6 +145,8 @@ export const {
   showRefTooltip,
   hideRefTooltip,
   toggleDetailsPanel,
+  openFloating,
+  closeFloating,
 } = detailsSlice.actions
 export default detailsSlice.reducer
 

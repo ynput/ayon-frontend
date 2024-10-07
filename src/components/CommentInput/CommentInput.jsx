@@ -502,7 +502,7 @@ const CommentInput = ({
   return (
     <>
       <Styled.AutoHeight
-        className={clsx({ isOpen, isEditing })}
+        className={clsx('comment-container', { isOpen, isEditing })}
         onDragOver={handleDragOver}
         onDragLeave={() => setIsDropping(false)}
         onDrop={handleDrop}
