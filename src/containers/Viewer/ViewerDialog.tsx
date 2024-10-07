@@ -51,6 +51,7 @@ const ViewerDialog = () => {
       if (isHTMLElement(e.target)) {
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
         if (e.target.isContentEditable) return
+        if (e.target.closest('.block-shortcuts')) return
       }
 
       if (e.key === 'Escape' && !fullscreen) {
@@ -75,12 +76,7 @@ const ViewerDialog = () => {
 
   return (
     <>
-      <StyledDialog
-        isOpen
-        hideCancelButton
-        size="full"
-        onClose={() => {}}
-      >
+      <StyledDialog isOpen hideCancelButton size="full" onClose={() => {}}>
         <Viewer onClose={handleClose} />
       </StyledDialog>
     </>

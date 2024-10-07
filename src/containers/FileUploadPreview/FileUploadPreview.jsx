@@ -126,7 +126,7 @@ const FileUploadPreview = () => {
       onClose={handleClose}
       hideCancelButton={isImage}
       ref={dialogRef}
-      className={clsx({ isImage })}
+      className={clsx({ isImage }, 'block-shortcuts')}
       header={isImage ? null : name}
     >
       <div style={{ position: 'absolute', inset: 0, zIndex: zIndex }} onClick={handleClose}></div>
