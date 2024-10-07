@@ -1,4 +1,4 @@
-import { Dropdown, DropdownRef } from '@ynput/ayon-react-components'
+import { DropdownRef, EnumDropdown } from '@ynput/ayon-react-components'
 import { $Any } from '@types'
 import { union } from 'lodash'
 import { LegacyRef } from 'react'
@@ -68,8 +68,8 @@ const EnumRow = ({
   }
 
   return (
-    <Dropdown
-      value={enumValue}
+    <EnumDropdown
+      value={enumValue || []}
       isChanged={isChanged}
       options={options}
       onChange={onChange}

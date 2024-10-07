@@ -27,7 +27,7 @@ const useCustomerlyChat = ({ position, delay, disabled }: UseCustomerlyChat = {}
 
     if (!loaded.current && !disabled) {
       load({
-        visible: !delay && !disabled,
+        visible: !delay,
         position,
         user_id: userId,
         email: user.attrib.email ?? undefined,
@@ -49,13 +49,13 @@ const useCustomerlyChat = ({ position, delay, disabled }: UseCustomerlyChat = {}
 
   //   once the chat is loaded, we can open it after the delay
   useEffect(() => {
-    if (!Number.isNaN(delay) && loaded.current) {
+    if (!Number.isNaN(delay) && loaded.current && !disabled) {
       const timer = setTimeout(() => {
         rest.show()
       }, delay)
       return () => clearTimeout(timer)
     }
-  }, [delay, rest, loaded.current])
+  }, [delay, rest, loaded.current, disabled])
 
   return { ...rest }
 }

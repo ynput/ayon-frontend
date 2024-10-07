@@ -1,4 +1,4 @@
-import { FC, useEffect, useState } from 'react'
+import { FC } from 'react'
 import * as Styled from './TrialBanner.styled'
 import clsx from 'clsx'
 import getTrialDates from './helpers/getTrialDates'
@@ -6,37 +6,37 @@ import getSubscribeLink from './helpers/getSubscribeLink'
 import { useGetYnputCloudInfoQuery } from '@queries/cloud/cloud'
 import useCustomerlyChat from '@hooks/useCustomerly'
 import { useAppSelector } from '@state/store'
-import { Button } from '@ynput/ayon-react-components'
+import { Button, Icon } from '@ynput/ayon-react-components'
 import { useGetActiveUsersCountQuery } from '@queries/user/getUsers'
+import useLocalStorage from '@hooks/useLocalStorage'
+import { createPortal } from 'react-dom'
 
 interface TrialBannerProps {}
 
 const TrialBanner: FC<TrialBannerProps> = ({}) => {
   const user = useAppSelector((state) => state.user)
   const canManage = user.data.isAdmin || user.data.isManager
-  const [hide, setHide] = useState(false)
 
-  // when hidden, show again after 30 minutes
-  const timeoutMins = 30
-  useEffect(() => {
-    if (hide) {
-      const timer = setTimeout(() => {
-        setHide(false)
-      }, timeoutMins * 60 * 1000)
-      return () => clearTimeout(timer)
-    }
-  }, [hide])
+  const [snooze, setSnooze] = useLocalStorage('trialBannerSnooze', null)
 
   const { data: connect } = useGetYnputCloudInfoQuery()
   const { isTrialing, left } = getTrialDates(connect?.subscriptions)
+  const { formatted, oneDay, oneHour } = left || {}
+
+  const getIsSnoozing = () => {
+    // snooze is in the future and not oneDay or oneHour left
+    return snooze && snooze > new Date().getTime() && !oneDay && !oneHour
+  }
+
+  const isSnoozing = getIsSnoozing()
 
   // get the number of users currently active
   const { data: activeUsersCount = 10 } = useGetActiveUsersCountQuery()
 
-  useCustomerlyChat({
+  const { show, hide } = useCustomerlyChat({
     position: { desktop: { side: 8, bottom: 52 }, mobile: { side: 8, bottom: 52 } },
     delay: 2000,
-    disabled: !isTrialing,
+    disabled: !isTrialing || isSnoozing,
   })
 
   //   check if there is a sub
@@ -44,12 +44,38 @@ const TrialBanner: FC<TrialBannerProps> = ({}) => {
 
   if (!isTrialing || !left) return null
 
-  const { formatted, oneDay, oneHour } = left
-
-  if (hide) return null
-
   const handleHideBanner = () => {
-    setHide(true)
+    const snoozeTimeHours = 1
+
+    const now = new Date().getTime()
+    const snoozeUntil = now + snoozeTimeHours * 60 * 60 * 1000
+
+    setSnooze(snoozeUntil)
+    // hide customerly
+    hide()
+  }
+
+  const handleShowBanner = () => {
+    // show banner
+    setSnooze(null)
+    // show customerly
+    show()
+  }
+
+  // toast.warn('Your free trial is ending soon. Subscribe to keep your data.', { autoClose: false })
+
+  if (isSnoozing) {
+    // check there is a component with 'header-menu-right' id
+    const headerMenuRight = document.getElementById('header-menu-right')
+    if (!headerMenuRight) return null
+
+    return createPortal(
+      <Styled.TrialBubble onClick={handleShowBanner}>
+        <Icon icon="schedule" />
+        Free trial - {formatted}
+      </Styled.TrialBubble>,
+      headerMenuRight,
+    )
   }
 
   return (

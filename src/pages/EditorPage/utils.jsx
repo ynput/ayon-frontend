@@ -1,5 +1,5 @@
 import ayonClient from '@/ayon'
-import { AssigneeSelect, Icon } from '@ynput/ayon-react-components'
+import { AssigneeSelect, EnumTemplate, Icon } from '@ynput/ayon-react-components'
 import { TimestampField } from '@containers/fieldFormat'
 import { useSelector } from 'react-redux'
 import ToolsField from './fields/ToolsField'
@@ -11,7 +11,9 @@ const formatAttribute = (node, changes, fieldName, styled = true) => {
   let tooltip = null
   let className = ''
   let value = node.attrib && node.attrib[fieldName]
+  let isChanged = false
   if (chobj && fieldName in chobj) {
+    isChanged = true
     // if value is null then it inherits (default value)
     value = chobj[fieldName] || '(inherited)'
     className = 'changed'
@@ -39,12 +41,19 @@ const formatAttribute = (node, changes, fieldName, styled = true) => {
         return value || ''
       }
 
-      const labels = _enum
-        .filter((item) => value.includes(item.value))
-        .map((item) => item.label || item.value)
-      const values = _enum.filter((item) => value.includes(item.value)).map((item) => item.value)
-      value = labels.join(', ')
-      tooltip = values.join(', ')
+      const option = _enum.find((item) => item.value === value)
+      const changedStyles = {
+        backgroundColor: 'var(--color-changed)',
+        borderRadius: 'var(--border-radius-m)',
+        paddingLeft: 4,
+      }
+      return (
+        <EnumTemplate
+          option={option}
+          isChanged={isChanged}
+          style={isChanged ? changedStyles : { paddingLeft: 4 }}
+        />
+      )
     } else if (fieldType === 'list_of_strings' && typeof value === 'object') {
       if (!value?.length) return ''
       const _enum = attribSettings.enum

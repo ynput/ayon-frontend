@@ -127,6 +127,7 @@ const DraggableEnumEditorItem = ({
               <Styled.IconSelect
                 ref={iconSelectRef}
                 value={[icon || 'question_mark']}
+                widthExpand
                 style={{
                   position: icon ? 'relative' : 'absolute',
                   visibility: icon ? 'visible' : 'hidden',

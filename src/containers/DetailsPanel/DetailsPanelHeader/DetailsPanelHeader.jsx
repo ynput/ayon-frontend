@@ -16,6 +16,7 @@ import { openViewer } from '@state/viewer'
 import FeedFilters from '../FeedFilters/FeedFilters'
 import * as Styled from './DetailsPanelHeader.styled'
 import getThumbnails from '../helpers/getThumbnails'
+import useScopedStatuses from '@hooks/useScopedStatuses'
 
 const DetailsPanelHeader = ({
   entityType,
@@ -23,7 +24,6 @@ const DetailsPanelHeader = ({
   entities = [],
   disabledAssignees = [],
   users = [],
-  statusesOptions = [],
   disabledStatuses,
   tagsOptions = [],
   isFetching,
@@ -32,6 +32,11 @@ const DetailsPanelHeader = ({
   statePath,
 }) => {
   const dispatch = useDispatch()
+
+  const statuses = useScopedStatuses(
+    entities.map((entity) => entity.projectName),
+    [entityType],
+  )
 
   // for selected entities, get flat list of assignees
   const entityAssignees = useMemo(
@@ -151,8 +156,6 @@ const DetailsPanelHeader = ({
       entityTypeKey = 'productId'
     }
 
-    console.log(entityTypeKey)
-
     if (id) {
       dispatch(
         openViewer({
@@ -218,7 +221,7 @@ const DetailsPanelHeader = ({
           </Styled.Header>
           <Styled.StatusSelect
             value={statusesValue}
-            options={statusesOptions}
+            options={statuses}
             disabledValues={disabledStatuses}
             invert
             style={{ maxWidth: 'unset' }}

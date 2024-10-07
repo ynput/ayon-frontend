@@ -33,6 +33,7 @@ import ParentBody from '../ParentBody/ParentBody'
 import { useFolderSort } from '../../helpers'
 import useLocalStorage from '@hooks/useLocalStorage'
 import { taskStatusSortFunction } from '@containers/TasksProgress/helpers/taskStatusSortFunction'
+import { AttributeEnumItem } from '@api/rest/attributes'
 
 export const Cells = styled.div`
   display: flex;
@@ -56,6 +57,7 @@ interface TasksProgressTableProps
   selectedAssignees: string[]
   statuses: Status[]
   taskTypes: TaskType[]
+  priorities: AttributeEnumItem[]
   users: Assignees
   allExpanded: boolean
   expandedRows: string[]
@@ -78,6 +80,7 @@ export const TasksProgressTable = ({
   selectedAssignees = [],
   statuses = [], // project statuses schema
   taskTypes = [], // project task types schema
+  priorities = [], // project priorities schema
   users = [], // users in the project
   allExpanded,
   expandedRows = [],
@@ -462,6 +465,7 @@ export const TasksProgressTable = ({
                               isExpanded={isExpanded}
                               taskIcon={taskType?.icon || ''}
                               statuses={statuses}
+                              priorities={priorities}
                               onChange={onChange}
                             />
                           ) : (

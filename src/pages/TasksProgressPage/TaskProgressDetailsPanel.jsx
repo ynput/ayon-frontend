@@ -26,7 +26,6 @@ const TaskProgressDetailsPanel = ({ projectInfo, projectName }) => {
         entities={entities}
         projectsInfo={projectsInfo}
         projectNames={[projectName]}
-        statusesOptions={projectInfo.statuses || []}
         tagsOptions={projectInfo.tags || []}
         projectUsers={users}
         activeProjectUsers={users}

@@ -66,3 +66,37 @@ export const TrialBanner = styled.div`
     }
   }
 `
+export const TrialBubble = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  order: -1;
+
+  gap: var(--base-gap-small);
+  padding: var(--padding-s);
+  padding-right: var(--padding-m);
+  border-radius: var(--border-radius-m);
+  user-select: none;
+  cursor: pointer;
+
+  background-color: var(--panel-background);
+
+  ${theme.titleMedium}
+  &,
+  .icon {
+    color: var(--md-sys-color-tertiary);
+  }
+
+  .icon {
+    font-size: 24px;
+  }
+
+  &:hover {
+    background-color: var(--md-sys-color-tertiary-hover);
+
+    &,
+    .icon {
+      color: var(--md-sys-color-on-tertiary);
+    }
+  }
+`

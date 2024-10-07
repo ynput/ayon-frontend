@@ -26,7 +26,6 @@ const DetailsPanel = ({
   entitiesData = [],
   // entityIds are used to get the full details data for the entities
   entities = [],
-  statusesOptions = [],
   tagsOptions = [],
   disabledStatuses,
   projectUsers,
@@ -192,7 +191,6 @@ const DetailsPanel = ({
           entities={isFetchingEntitiesDetails ? entitiesToQuery : entityDetailsData}
           users={projectUsers}
           disabledAssignees={disabledProjectUsers}
-          statusesOptions={statusesOptions}
           disabledStatuses={disabledStatuses}
           tagsOptions={tagsOptions}
           isMultipleProjects={projectNames.length > 1}

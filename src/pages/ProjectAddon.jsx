@@ -5,6 +5,8 @@ import styled from 'styled-components'
 
 import Hierarchy from '@containers/hierarchy'
 import TaskList from '@containers/taskList'
+import useAddonContextResend from '@hooks/useAddonContextResend'
+import LoadingPage from './LoadingPage'
 
 const AddonWrapper = styled.iframe`
   flex-grow: 1;
@@ -134,6 +136,11 @@ const ProjectAddon = ({ addonName, addonVersion, sidebar, ...props }) => {
     setRequestModal({ callback, requestType })
   }
 
+  //Switching between addons didn't update the loading state which affects the rest of the logic
+  useEffect(() => {
+    setLoading(true)
+  }, [addonUrl])
+
   useEffect(() => {
     window.modalRequest = modalRequest
     return () => (window.modalRequest = undefined)
@@ -160,11 +167,15 @@ const ProjectAddon = ({ addonName, addonVersion, sidebar, ...props }) => {
   }
 
   // Push context on addon load and on every context change
-
   useEffect(() => {
-    if (loading) return
+    if (loading) {
+      return
+    }
     pushContext()
   }, [focusedFolders])
+
+  // Push context to addon whenever explicitly requested
+  useAddonContextResend(pushContext)
 
   // Render sidebar
   // Each addon may have a sidebar component that is rendered on the left side of the screen
@@ -188,7 +199,11 @@ const ProjectAddon = ({ addonName, addonVersion, sidebar, ...props }) => {
       {sidebarComponent}
       <Section>
         <RequestModal {...requestModal} onClose={() => setRequestModal(null)} />
+        <div style={{ position: 'absolute', inset: 0 }}>
+          {loading && <LoadingPage style={{ position: 'absolute' }} />}
+        </div>
         <AddonWrapper
+          style={{ opacity: loading ? 0 : 1 }}
           src={`${addonUrl}/?id=${window.senderId}`}
           ref={addonRef}
           onLoad={onAddonLoad}

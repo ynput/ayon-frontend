@@ -153,7 +153,7 @@ const App = () => {
   // DEFINE ALL HIGH LEVEL COMPONENT PAGES HERE
   const mainComponent = useMemo(
     () => (
-      <ErrorBoundary FallbackComponent={ErrorFallback}>
+      <>
         <Favicon />
         <WatchActivities />
         <Suspense fallback={<LoadingPage />}>
@@ -274,7 +274,7 @@ const App = () => {
             </ContextMenuProvider>
           </RestartProvider>
         </Suspense>
-      </ErrorBoundary>
+      </>
     ),
     [isUser],
   )
@@ -372,7 +372,11 @@ const App = () => {
 
   return (
     <>
-      {mainComponent}
+      {import.meta.env.DEV && mainComponent}
+
+      {!import.meta.env.DEV && (
+        <ErrorBoundary FallbackComponent={ErrorFallback}>{mainComponent}</ErrorBoundary>
+      )}
       {tooltipComponent}
     </>
   )

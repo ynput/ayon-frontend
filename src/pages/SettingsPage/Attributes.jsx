@@ -12,8 +12,8 @@ import {
   SaveButton,
 } from '@ynput/ayon-react-components'
 import AttributeEditor from '@containers/attributes/attributeEditor'
-import { useGetAttributesQuery } from '@queries/attributes/getAttributes'
-import { useUpdateAttributesMutation } from '@queries/attributes/updateAttributes'
+import { useGetAttributeListQuery } from '@queries/attributes/getAttributes'
+import { useSetAttributeListMutation } from '@queries/attributes/updateAttributes'
 import useSearchFilter from '@hooks/useSearchFilter'
 import useCreateContext from '@hooks/useCreateContext'
 import { isEqual } from 'lodash'
@@ -24,9 +24,9 @@ const Attributes = () => {
   const [attributes, setAttributes] = useState([])
   const [selectedAttribute, setSelectedAttribute] = useState(null)
   const [showEditor, setShowEditor] = useState(false)
-  const { data, isLoading, isError, error, isFetching } = useGetAttributesQuery()
+  const { data, isLoading, isError, error, isFetching } = useGetAttributeListQuery()
 
-  const [updateAttributes, { isLoading: updateLoading }] = useUpdateAttributesMutation()
+  const [updateAttributes, { isLoading: updateLoading }] = useSetAttributeListMutation()
 
   // when new data is loaded come in update local state
   useEffect(() => {
@@ -55,7 +55,7 @@ const Attributes = () => {
   )
 
   const onSave = async () => {
-    await updateAttributes({ attributes, deleteMissing: true, patches: attributes })
+    await updateAttributes({ setAttributeListModel: { attributes, deleteMissing: true } })
       .unwrap()
       .then(() => {
         toast.success('Attribute set saved')

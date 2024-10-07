@@ -20,6 +20,12 @@ export const TrialEndContainer = styled.div`
     justify-content: space-between;
     align-items: center;
   }
+
+  .logout {
+    &:hover {
+      background-color: var(--md-sys-color-surface-container-highest-hover);
+    }
+  }
 `
 
 export const TrialEndCard = styled.div`

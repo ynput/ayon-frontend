@@ -2,6 +2,8 @@ import { useRef, useMemo, useState, useEffect } from 'react'
 import { useSelector } from 'react-redux'
 import { Section } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
+import useAddonContextResend from '@hooks/useAddonContextResend'
+import LoadingPage from '@pages/LoadingPage'
 
 const AddonWrapper = styled.iframe`
   flex-grow: 1;
@@ -17,6 +19,11 @@ const SettingsAddon = ({ addonName, addonVersion, sidebar }) => {
   const context = useSelector((state) => state.context)
   const addonUrl = `${window.location.origin}/addons/${addonName}/${addonVersion}/frontend`
 
+  //Switching between addons didn't update the loading state which affects the rest of the logic
+  useEffect(() => {
+    setLoading(true)
+  }, [addonUrl])
+
   const pushContext = () => {
     if (!addonRef.current) {
       return
@@ -30,6 +37,9 @@ const SettingsAddon = ({ addonName, addonVersion, sidebar }) => {
       addonVersion,
     })
   }
+
+  // Push context to addon whenever explicitly requested
+  useAddonContextResend(pushContext)
 
   const sidebarComponent = useMemo(() => {
     if (sidebar === 'addonList') {
@@ -52,7 +62,9 @@ const SettingsAddon = ({ addonName, addonVersion, sidebar }) => {
     <main>
       {sidebarComponent}
       <Section>
-        {loading && <div style={{ display: 'none' }}>Loading...</div>}
+        <div style={{ position: 'absolute', inset: 0 }}>
+          {loading && <LoadingPage style={{ position: 'absolute' }} />}
+        </div>
         <AddonWrapper src={`${addonUrl}/?id=${window.senderId}`} ref={addonRef} onLoad={onAddonLoad} />
       </Section>
     </main>

@@ -229,7 +229,7 @@ type GetProjectsInfoResponse = $Any
 const injectedDashboardRestApi = api.injectEndpoints({
   endpoints: (build) => ({
     getProjectsInfo: build.query<GetProjectsInfoResponse, GetProjectsInfoParams>({
-      async queryFn({ projects = [] }, { dispatch }) {
+      async queryFn({ projects = [] }, { dispatch, forced }) {
         try {
           // get project info for each project
           const projectInfo: $Any = {}
@@ -239,7 +239,7 @@ const injectedDashboardRestApi = api.injectEndpoints({
             const response = await dispatch(
               getProjectApi.endpoints.getProjectAnatomy.initiate(
                 { projectName: project },
-                { forceRefetch: false },
+                { forceRefetch: forced },
               ),
             )
 
@@ -255,6 +255,7 @@ const injectedDashboardRestApi = api.injectEndpoints({
           return { error, meta: undefined, data: undefined }
         }
       },
+      providesTags: (_res, _error, { projects }) => projects.map(projectName => ({ type: 'project', id: projectName })),
     }),
   }),
 })
