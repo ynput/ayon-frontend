@@ -1,5 +1,5 @@
 import { Button, Panel } from '@ynput/ayon-react-components'
-import React, { useEffect, useMemo } from 'react'
+import React, { useCallback, useEffect, useMemo } from 'react'
 import DetailsPanelHeader from './DetailsPanelHeader/DetailsPanelHeader'
 import { useAppDispatch, useAppSelector } from '@state/store'
 import Feed from '@containers/Feed/Feed'
@@ -15,8 +15,9 @@ import { Watchers } from '@containers/Watchers/Watchers'
 import Shortcuts from '@containers/Shortcuts'
 import { isEmpty } from 'lodash'
 import useGetEntityPath from './hooks/useGetEntityPath'
-import ReactDocumentPictureInPicture from '@components/ReactDocumentPictureInPicture/ReactDocumentPictureInPicture'
 import DetailsPanelFloating from './DetailsPanelFloating/DetailsPanelFloating'
+import PiPWindow from '@context/pip/PiPWindow'
+import { usePiPWindow } from '@context/pip/PiPProvider'
 
 export const entitiesWithoutFeed = ['product', 'representation']
 
@@ -121,11 +122,34 @@ const DetailsPanel = ({
     [onClose],
   )
 
+  const { requestPipWindow, pipWindow, pipId } = usePiPWindow()
+
+  const startPiP = useCallback(() => {
+    requestPipWindow(500, 500)
+  }, [requestPipWindow])
+
   if (!firstEntityData || isEmpty(firstEntityData)) return null
 
   return (
     <>
       <Shortcuts shortcuts={shortcuts || []} deps={[]} />
+
+      {pipWindow && (
+        <PiPWindow pipWindow={pipWindow}>
+          <div className="pipRoot">
+            <DetailsPanelFloating
+              entities={entityDetailsData}
+              entityType={entityType}
+              projectName={firstProject}
+              statusesOptions={statusesOptions}
+              users={projectUsers}
+              scope={scope}
+              statePath={statePath}
+              id={pipId}
+            />
+          </div>
+        </PiPWindow>
+      )}
 
       <Panel
         style={{
@@ -153,27 +177,13 @@ const DetailsPanel = ({
             options={projectUsers}
             onWatchersUpdate={onWatchersUpdate && onWatchersUpdate}
           />
-          <ReactDocumentPictureInPicture
-            buttonRenderer={({ open }) => (
-              <Button
-                icon="picture_in_picture"
-                variant={'text'}
-                data-tooltip="Picture in Picture"
-                onClick={() => open()}
-              />
-            )}
-            shareStyles
-          >
-            <DetailsPanelFloating
-              entities={entityDetailsData}
-              entityType={entityType}
-              projectName={firstProject}
-              statusesOptions={statusesOptions}
-              users={projectUsers}
-              scope={scope}
-              statePath={statePath}
-            />
-          </ReactDocumentPictureInPicture>
+          <Button
+            icon="picture_in_picture"
+            variant={'text'}
+            data-tooltip="Picture in Picture"
+            onClick={startPiP}
+          />
+
           {onClose && (
             <Button
               icon="close"
