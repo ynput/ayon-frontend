@@ -5,6 +5,7 @@ import styled from 'styled-components'
 
 import Hierarchy from '@containers/hierarchy'
 import TaskList from '@containers/taskList'
+import useAddonContextResend from '@hooks/useAddonContextResend'
 
 const AddonWrapper = styled.iframe`
   flex-grow: 1;
@@ -160,11 +161,13 @@ const ProjectAddon = ({ addonName, addonVersion, sidebar, ...props }) => {
   }
 
   // Push context on addon load and on every context change
-
   useEffect(() => {
     if (loading) return
     pushContext()
   }, [focusedFolders])
+
+  // Push context to addon whenever explicitly requested
+  useAddonContextResend(pushContext)
 
   // Render sidebar
   // Each addon may have a sidebar component that is rendered on the left side of the screen

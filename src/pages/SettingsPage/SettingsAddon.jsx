@@ -2,6 +2,7 @@ import { useRef, useMemo, useState, useEffect } from 'react'
 import { useSelector } from 'react-redux'
 import { Section } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
+import useAddonContextResend from '@hooks/useAddonContextResend'
 
 const AddonWrapper = styled.iframe`
   flex-grow: 1;
@@ -30,6 +31,9 @@ const SettingsAddon = ({ addonName, addonVersion, sidebar }) => {
       addonVersion,
     })
   }
+
+  // Push context to addon whenever explicitly requested
+  useAddonContextResend(pushContext)
 
   const sidebarComponent = useMemo(() => {
     if (sidebar === 'addonList') {
