@@ -9,6 +9,9 @@ import useCreateContext from '@hooks/useCreateContext'
 import { isEqual } from 'lodash'
 import { Badge, BadgeWrapper } from '@components/Badge'
 import copyToClipboard from '@helpers/copyToClipboard'
+import { $Any } from '@types'
+import { ArrayFieldTemplateProps, FieldTemplateProps, ObjectFieldTemplateProps } from '@rjsf/utils'
+import { CSS } from 'styled-components/dist/types'
 
 const FormArrayField = styled.div`
   flex-grow: 1;
@@ -43,7 +46,7 @@ const ArrayItemControls = styled.div`
   }
 `
 
-const arrayStartsWith = (arr1, arr2) => {
+const arrayStartsWith = (arr1: $Any, arr2: $Any) => {
   // return true, if first array starts with second array
   if ((arr2 || []).length > (arr1 || []).length) return false
   if ((arr2 || []).length === 0) return true
@@ -53,11 +56,11 @@ const arrayStartsWith = (arr1, arr2) => {
   return true
 }
 
-const arrayContainsArray = (arr1, arr2) => {
-  return arr1.some((el) => isEqual(el, arr2))
+const arrayContainsArray = (arr1: $Any, arr2: $Any) => {
+  return arr1.some((el: $Any) => isEqual(el, arr2))
 }
 
-function ObjectFieldTemplate(props) {
+function ObjectFieldTemplate(props: {id: string} & ObjectFieldTemplateProps) {
   const [contextMenu] = useCreateContext([])
   let className = 'form-object-field'
   if (props.schema.layout) className += ` layout-${props.schema.layout}`
@@ -114,16 +117,20 @@ function ObjectFieldTemplate(props) {
   }, [props.properties])
 
   const fields = useMemo(() => {
-    let hiddenFields = []
+    let hiddenFields: $Any[] = []
     for (const propName in props?.schema?.properties || {}) {
+      //@ts-ignore
       const ppts = props?.schema?.properties[propName]
+      //@ts-ignore
       if (!(ppts.scope || ['studio', 'project']).includes(props.formContext.level)) {
         hiddenFields.push(propName)
       }
+      //@ts-ignore
       if (ppts.conditionalEnum) {
         hiddenFields = [
           ...hiddenFields,
-          ...(ppts?.enum || []).filter((e) => e !== props.formData[propName]),
+          //@ts-ignore
+          ...(ppts?.enum || []).filter((e: $Any) => e !== props.formData[propName]),
         ]
       }
     }
@@ -241,24 +248,24 @@ function ObjectFieldTemplate(props) {
     title = label || props.formData.name || <span className="new-object">Unnamed item</span>
   }
 
-  if (props.idSchema.$id === 'root' && props.formContext.formTitle)
+  if (props.idSchema.$id === 'root' && props.formContext.formTitle) {
     title = props.formContext.formTitle
+  }
 
   if (props.idSchema.$id === 'root') {
     const projectMark = props.formContext.headerProjectName && (
-      <Badge hl="project">{props.formContext.headerProjectName}</Badge>
+      <Badge hl="project" style={{}}>{props.formContext.headerProjectName}</Badge>
     )
     const siteMark = props.formContext.headerSiteId && (
-      <Badge hl="site">{props.formContext.headerSiteId}</Badge>
+      <Badge hl="site" style={{}}>{props.formContext.headerSiteId}</Badge>
     )
 
     const envMark = props.formContext.headerVariant && (
       <Badge
-        hl={
-          ['production', 'staging'].includes(props.formContext.headerVariant)
-            ? props.formContext.headerVariant
-            : 'developer'
-        }
+        hl={['production', 'staging'].includes(props.formContext.headerVariant)
+          ? props.formContext.headerVariant
+          : 'developer'} 
+          style={{}}   
       >
         {props.formContext.headerVariant}
       </Badge>
@@ -278,7 +285,7 @@ function ObjectFieldTemplate(props) {
 
   // Execute context menu
 
-  const onContextMenu = (e) => {
+  const onContextMenu = (e: $Any) => {
     if (props.formContext.onSetBreadcrumbs) props.formContext.onSetBreadcrumbs(path || [])
     if (!contextMenuModel?.length) return
     e.preventDefault()
@@ -290,20 +297,21 @@ function ObjectFieldTemplate(props) {
       objId={objId}
       onClick={() => {
         if (props.formContext.onSetBreadcrumbs) props.formContext.onSetBreadcrumbs(path)
-      }}
+      } }
       title={title}
       description={shortDescription}
       className={`obj-override-${overrideLevel}`}
       enabledToggler={enabledToggler}
       onContextMenu={onContextMenu}
       currentId={props.formContext.currentId}
+      layout={undefined}
     >
       {fields}
     </SettingsPanel>
   )
 }
 
-function FieldTemplate(props) {
+function FieldTemplate(props: FieldTemplateProps) {
   const [contextMenu] = useCreateContext([])
 
   // Do not render the field if it belongs to a different scope (studio/project/local) or if it is hidden
@@ -342,8 +350,7 @@ function FieldTemplate(props) {
   }, [props.formContext.changedKeys, path])
 
   const overrideLevel = fieldChanged ? 'edit' : override?.level || 'default'
-  let labelStyle = {}
-
+  let labelStyle: CSS.Properties = { }
   if (override) {
     if (override?.inGroup) labelStyle.fontStyle = 'italic'
   }
@@ -384,7 +391,7 @@ function FieldTemplate(props) {
     return model
   }, [override, path])
 
-  const onContextMenu = (e) => {
+  const onContextMenu = (e: $Any) => {
     e.preventDefault()
     contextMenu(e, contextMenuModel)
     if (props.formContext.onSetBreadcrumbs && path) props.formContext.onSetBreadcrumbs(path)
@@ -394,6 +401,7 @@ function FieldTemplate(props) {
 
   if (
     props.schema.type === 'array' &&
+    // @ts-ignore
     props.schema.items.type !== 'string' &&
     props.schema.layout !== 'compact'
   ) {
@@ -417,9 +425,11 @@ function FieldTemplate(props) {
         className={classes.join(' ')}
         onClick={() => {
           if (props.formContext.onSetBreadcrumbs && path) props.formContext.onSetBreadcrumbs(path)
-        }}
+        } }
         onContextMenu={onContextMenu}
         currentId={props.formContext.currentId}
+        layout={undefined}
+        enabledToggler={undefined}
       >
         {props.children}
       </SettingsPanel>
@@ -473,7 +483,7 @@ function FieldTemplate(props) {
   )
 }
 
-const ArrayItemTemplate = (props) => {
+const ArrayItemTemplate = (props: $Any) => {
   const parentSchema = props?.children?._owner?.memoizedProps?.schema || {}
   const itemName = props?.children?.props?.formData?.name
   let undeletable = false
@@ -530,7 +540,7 @@ const ArrayItemTemplate = (props) => {
   )
 }
 
-const ArrayFieldTemplate = (props) => {
+const ArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
   /* Complete array including the add button */
 
   const onAddItem = () => {
@@ -546,11 +556,14 @@ const ArrayFieldTemplate = (props) => {
   // not wrapped in react fragment. I suspected it was the key, but it was not.
   // I have no idea why this works, but it does. Do not touch!
 
+
   return (
-    <FormArrayField>
+    <FormArrayField style={{outline: 'solid 1px red'}}>
       {props.items.map((element, idx) => (
         <React.Fragment key={idx}>
+          <label style={{color: 'red'}}>
           <ArrayItemTemplate {...element} key={element?.key} />
+          </label>
         </React.Fragment>
       ))}
 
