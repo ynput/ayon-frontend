@@ -19,6 +19,7 @@ const ListItem = forwardRef(
       onClick,
       onUpdate,
       allUsers,
+      priorities,
       className,
       minWidths = {},
       inView,
@@ -113,6 +114,15 @@ const ListItem = forwardRef(
           onOpen={!selected && onClick}
           onChange={(v) => onUpdate('assignees', v)}
           disabledValues={disabledProjectUsers}
+        />
+
+        <Styled.PriorityEnumDropdown
+          options={priorities}
+          value={[task.priorityInfo?.value]}
+          style={{ width: 22, height: 22 }}
+          onOpen={!selected && onClick}
+          onChange={(v) => onUpdate('attrib', { priority: v[0] })}
+          placeholder=""
         />
 
         <Styled.Date className={clsx({ late: pastEndDate })}>{endDateString}</Styled.Date>

@@ -1377,7 +1377,7 @@ export type GetKanbanQueryVariables = Exact<{
 }>;
 
 
-export type GetKanbanQuery = { __typename?: 'Query', kanban: { __typename?: 'KanbanConnection', edges: Array<{ __typename?: 'KanbanEdge', node: { __typename?: 'KanbanNode', id: string, projectName: string, projectCode: string, name: string, label?: string | null, status: string, tags: Array<string>, taskType: string, assignees: Array<string>, updatedAt: any, createdAt: any, dueDate?: any | null, folderId: string, thumbnailId?: string | null, folderLabel?: string | null, folderName: string, folderPath: string, hasReviewables: boolean } }> } };
+export type GetKanbanQuery = { __typename?: 'Query', kanban: { __typename?: 'KanbanConnection', edges: Array<{ __typename?: 'KanbanEdge', node: { __typename?: 'KanbanNode', id: string, projectName: string, projectCode: string, name: string, label?: string | null, status: string, tags: Array<string>, taskType: string, assignees: Array<string>, updatedAt: any, createdAt: any, dueDate?: any | null, folderId: string, thumbnailId?: string | null, folderLabel?: string | null, folderName: string, folderPath: string, hasReviewables: boolean, priority?: string | null } }> } };
 
 export type GetKanbanProjectUsersQueryVariables = Exact<{
   projects?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
@@ -1393,9 +1393,9 @@ export type GetKanbanTasksQueryVariables = Exact<{
 }>;
 
 
-export type GetKanbanTasksQuery = { __typename?: 'Query', kanban: { __typename?: 'KanbanConnection', edges: Array<{ __typename?: 'KanbanEdge', node: { __typename?: 'KanbanNode', id: string, projectName: string, projectCode: string, name: string, label?: string | null, status: string, tags: Array<string>, taskType: string, assignees: Array<string>, updatedAt: any, createdAt: any, dueDate?: any | null, folderId: string, thumbnailId?: string | null, folderLabel?: string | null, folderName: string, folderPath: string, hasReviewables: boolean } }> } };
+export type GetKanbanTasksQuery = { __typename?: 'Query', kanban: { __typename?: 'KanbanConnection', edges: Array<{ __typename?: 'KanbanEdge', node: { __typename?: 'KanbanNode', id: string, projectName: string, projectCode: string, name: string, label?: string | null, status: string, tags: Array<string>, taskType: string, assignees: Array<string>, updatedAt: any, createdAt: any, dueDate?: any | null, folderId: string, thumbnailId?: string | null, folderLabel?: string | null, folderName: string, folderPath: string, hasReviewables: boolean, priority?: string | null } }> } };
 
-export type KanbanFragmentFragment = { __typename?: 'KanbanNode', id: string, projectName: string, projectCode: string, name: string, label?: string | null, status: string, tags: Array<string>, taskType: string, assignees: Array<string>, updatedAt: any, createdAt: any, dueDate?: any | null, folderId: string, thumbnailId?: string | null, folderLabel?: string | null, folderName: string, folderPath: string, hasReviewables: boolean };
+export type KanbanFragmentFragment = { __typename?: 'KanbanNode', id: string, projectName: string, projectCode: string, name: string, label?: string | null, status: string, tags: Array<string>, taskType: string, assignees: Array<string>, updatedAt: any, createdAt: any, dueDate?: any | null, folderId: string, thumbnailId?: string | null, folderLabel?: string | null, folderName: string, folderPath: string, hasReviewables: boolean, priority?: string | null };
 
 export const MessageFragmentFragmentDoc = `
     fragment MessageFragment on ActivityNode {
@@ -1481,6 +1481,7 @@ export const KanbanFragmentFragmentDoc = `
   folderName
   folderPath
   hasReviewables
+  priority
 }
     `;
 export const GetProductVersionsDocument = `

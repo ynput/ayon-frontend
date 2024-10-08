@@ -22,10 +22,11 @@ const ColumnsWrapper = ({
   tasksColumns,
   groupByValue,
   isLoading,
-  allUsers = [],
+  projectUsers = [],
   disabledStatuses = [],
   onCollapsedColumnsChange,
   projectsInfo,
+  priorities,
 }) => {
   const { active } = useDndContext()
   const sectionRef = useRef(null)
@@ -191,7 +192,7 @@ const ColumnsWrapper = ({
               isLoading={isLoading}
               id={id}
               groupByValue={groupByValue}
-              allUsers={allUsers}
+              projectUsers={projectUsers}
               sectionRect={sectionRect}
               sectionRef={sectionRef}
               disabledStatuses={disabledStatuses}
@@ -202,6 +203,7 @@ const ColumnsWrapper = ({
               active={active}
               activeColumn={activeColumn}
               projectsInfo={projectsInfo}
+              priorities={priorities}
             />
           )
         })}

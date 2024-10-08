@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
-import { isEqual, union, upperFirst } from 'lodash'
+import { union, upperFirst } from 'lodash'
 import clsx from 'clsx'
 import { Icon } from '@ynput/ayon-react-components'
 
@@ -17,6 +17,8 @@ import FeedFilters from '../FeedFilters/FeedFilters'
 import * as Styled from './DetailsPanelHeader.styled'
 import getThumbnails from '../helpers/getThumbnails'
 import useScopedStatuses from '@hooks/useScopedStatuses'
+import { useGetAttributeConfigQuery } from '@queries/attributes/getAttributes'
+import { getPriorityOptions } from '@pages/TasksProgressPage/helpers'
 
 const DetailsPanelHeader = ({
   entityType,
@@ -57,6 +59,7 @@ const DetailsPanelHeader = ({
       subTitle: 'loading...',
     }
   }
+
   const projectName = entities.length > 1 ? null : firstEntity?.projectName
 
   const entityIds = entities
@@ -76,12 +79,18 @@ const DetailsPanelHeader = ({
     checklistsLabel = `${checklistCount.checked}/${checklistCount.total}`
   }
 
+  // get priorities
+  // get priority attribute so we know the colors and icons for each priority
+  const { data: priorityAttrib } = useGetAttributeConfigQuery({ attributeName: 'priority' })
+  const priorities = getPriorityOptions(priorityAttrib, entityType)
+
   const thumbnails = useMemo(() => getThumbnails(entities, entityType), [entities, entityType])
 
   // we need to get the intersection of all the statuses of the projects for the selected entities
   // this means that if we have 2 entities from 2 different projects, we need to get the intersection of the statuses of those 2 projects
   //  and it prevents us from showing statuses that are not available for the selected entities
   const statusesValue = useMemo(() => entities.map((t) => t.status), [entities])
+  const priorityValues = useMemo(() => entities.map((t) => t.attrib?.priority), [entities])
   const tagsValues = useMemo(() => entities.map((t) => t.tags), [entities])
   const tagsOptionsObject = useMemo(
     () =>
@@ -208,11 +217,21 @@ const DetailsPanelHeader = ({
               )}
             </div>
             <Styled.Content className={clsx({ loading: isLoading })}>
-              <h2>
-                {!isMultiple ? firstEntity?.title : `${entities.length} ${entityType}s selected`}
-              </h2>
+              <Styled.Title>
+                <h2>{!isMultiple ? firstEntity?.title : `${entities.length} ${entityType}s`}</h2>
+                <Styled.TagsSelect
+                  value={union(...tagsValues)}
+                  tags={tagsOptionsObject}
+                  editable
+                  editor
+                  onChange={(value) => handleUpdate('tags', value)}
+                  align="right"
+                  styleDropdown={{ display: isLoading && 'none' }}
+                  className="tags-select"
+                />
+              </Styled.Title>
               <div className="sub-title">
-                <span>{upperFirst(entityType)} - </span>
+                <span className="entity-type">{upperFirst(entityType)} - </span>
                 <h3>
                   {!isMultiple ? firstEntity?.subTitle : entities.map((t) => t.title).join(', ')}
                 </h3>
@@ -258,17 +277,18 @@ const DetailsPanelHeader = ({
             entitySubTypes={entitySubTypes}
             isLoadingEntity={isFetching || isLoading}
           />
-          <Styled.TagsSelect
-            value={union(...tagsValues)}
-            isMultiple={tagsValues.some((v) => !isEqual(v, tagsValues[0]))}
-            tags={tagsOptionsObject}
-            editable
-            editor
-            onChange={(value) => handleUpdate('tags', value)}
-            align="right"
-            styleDropdown={{ display: isLoading && 'none' }}
-            className="tags-select"
-          />
+          {priorities ? (
+            <Styled.PriorityEnumDropdown
+              options={priorities}
+              editor
+              placeholder="No priority"
+              value={priorityValues}
+              onChange={(value) => handleUpdate('attrib', { priority: value[0] })}
+              align="right"
+            />
+          ) : (
+            <div style={{ height: 32 }}></div>
+          )}
           <FeedFilters
             isLoading={isLoading}
             entityType={entityType}

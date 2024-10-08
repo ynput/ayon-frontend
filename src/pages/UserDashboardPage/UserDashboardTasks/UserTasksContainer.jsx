@@ -18,6 +18,8 @@ import styled from 'styled-components'
 import clsx from 'clsx'
 import { toggleDetailsPanel } from '@state/details'
 import { filterProjectStatuses } from '@hooks/useScopedStatuses'
+import { useGetAttributeConfigQuery } from '@queries/attributes/getAttributes'
+import { getPriorityOptions } from '@pages/TasksProgressPage/helpers'
 
 const StyledSplitter = styled(Splitter)`
   .details-panel-splitter {
@@ -100,6 +102,10 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
     { skip: !assignees.length || !selectedProjects?.length },
   )
 
+  // get priority attribute so we know the colors and icons for each priority
+  const { data: priorityAttrib } = useGetAttributeConfigQuery({ attributeName: 'priority' })
+  const priorities = getPriorityOptions(priorityAttrib, 'task') || []
+
   // update the uri breadcrumbs when the selected tasks change
   useEffect(() => {
     if (selectedTasks.length && !isLoadingTasks) {
@@ -112,14 +118,14 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
         return
       }
     }
-    // no tasks in current lproject or selected tasks NOT in current project
-      dispatch(setUri(null))
+    // no tasks in current project or selected tasks NOT in current project
+    dispatch(setUri(null))
   }, [selectedTasks, isLoadingTasks, tasks])
 
   // add extra fields to tasks like: icons, thumbnailUrl, shortPath
   const transformedTasks = useMemo(
-    () => transformKanbanTasks(tasks, projectsInfo, isLoadingTasks),
-    [tasks, projectsInfo, isLoadingTasks],
+    () => transformKanbanTasks(tasks, { projectsInfo, isLoadingTasks, priorities }),
+    [tasks, projectsInfo, priorities, isLoadingTasks],
   )
 
   const selectedTasksData = useMemo(
@@ -226,6 +232,7 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
           statusesOptions={scopedStatusesOptions}
           disabledStatuses={disabledStatuses}
           disabledProjectUsers={disabledProjectUsers}
+          priorities={priorities}
           projectUsers={projectUsers}
           isLoadingProjectUsers={isLoadingProjectUsers}
         />

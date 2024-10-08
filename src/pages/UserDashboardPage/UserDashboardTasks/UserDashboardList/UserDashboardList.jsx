@@ -19,6 +19,7 @@ const UserDashboardList = ({
   statusesOptions,
   disabledStatuses,
   disabledProjectUsers,
+  priorities,
   projectsInfo,
 }) => {
   const containerRef = useRef(null)
@@ -312,6 +313,7 @@ const UserDashboardList = ({
                     statusesOptions={statusesOptions}
                     disabledStatuses={disabledStatuses}
                     disabledProjectUsers={disabledProjectUsers}
+                    priorities={priorities}
                     onUpdate={handleUpdate}
                     isCollapsed={collapsedGroups.includes(id)}
                     onCollapseChange={handleCollapseToggle}

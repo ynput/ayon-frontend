@@ -34,6 +34,7 @@ const UserDashboardKanBan = ({
   statusesOptions,
   disabledStatuses,
   disabledProjectUsers = [],
+  priorities,
   projectUsers = [],
   isLoadingProjectUsers,
 }) => {
@@ -85,7 +86,7 @@ const UserDashboardKanBan = ({
 
   // sort tasks by sort by values
   const sortedTasks = useMemo(
-    () => getSortedTasks(filteredTasks, sortByValue),
+    () => getSortedTasks(filteredTasks, sortByValue, { priority: priorities }),
     [filteredTasks, sortByValue],
   )
 
@@ -280,6 +281,7 @@ const UserDashboardKanBan = ({
               disabledStatuses={disabledStatuses}
               onCollapsedColumnsChange={handleCollapseToggle}
               projectsInfo={projectsInfo}
+              priorities={priorities}
             />
             <KanBanCardOverlay
               activeDraggingId={activeDraggingId}
@@ -300,6 +302,7 @@ const UserDashboardKanBan = ({
             disabledStatuses={disabledStatuses}
             disabledProjectUsers={disabledProjectUsers}
             projectsInfo={projectsInfo}
+            priorities={priorities}
           />
         )}
       </Section>
