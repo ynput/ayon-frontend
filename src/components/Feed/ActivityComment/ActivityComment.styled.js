@@ -98,7 +98,7 @@ export const Body = styled.div`
     flex-direction: column;
     gap: var(--base-gap-large);
     padding-left: 8px;
-    margin: 8px 0;
+    margin: 16px 0;
 
     li {
       align-items: center;
