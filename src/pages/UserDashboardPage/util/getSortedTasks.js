@@ -16,8 +16,6 @@ export const getSortedTasks = (tasks = [], sortBy = [], anatomy = {}) => {
         bVal = anatomy[id].findIndex((option) => option.value === bVal)
       }
 
-      console.log(id, a)
-
       const dateA = new Date(aVal)
       const dateB = new Date(bVal)
       const decreaseIfSort = sortOrder ? -1 : 1
