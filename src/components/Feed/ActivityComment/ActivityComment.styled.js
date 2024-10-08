@@ -257,3 +257,26 @@ export const ToolButton = styled(Button)`
     top: -1px;
   }
 `
+
+export const Tip = styled.span`
+  background-color: var(--md-sys-color-secondary-container);
+  display: flex;
+  align-items: center;
+  gap: var(--base-gap-small);
+  border-radius: var(--border-radius-m);
+  padding: var(--padding-m);
+  margin: 16px 0 !important;
+
+  &,
+  .icon {
+    color: var(--md-sys-color-on-secondary-container);
+  }
+
+  p {
+    margin: 0;
+  }
+
+  .icon {
+    font-size: 24px;
+  }
+`

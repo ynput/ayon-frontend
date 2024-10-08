@@ -4,6 +4,8 @@ import ReactMarkdown from 'react-markdown'
 import { useSelector } from 'react-redux'
 import emoji from 'remark-emoji'
 import remarkGfm from 'remark-gfm'
+import remarkDirective from 'remark-directive'
+import remarkDirectiveRehype from 'remark-directive-rehype'
 
 import { UserModel } from '@api/rest/users'
 import CommentInput from '@components/CommentInput/CommentInput'
@@ -26,6 +28,7 @@ import * as Styled from './ActivityComment.styled'
 import CommentWrapper from './CommentWrapper'
 import { aTag, blockquoteTag, codeTag, inputTag } from './activityMarkdownComponents'
 import { mapGraphQLReactions } from './mappers'
+import { Icon } from '@ynput/ayon-react-components'
 
 type Props = {
   activity: $Any
@@ -156,6 +159,7 @@ const ActivityComment = ({
     <>
       <Styled.Comment
         className={clsx('comment', { isOwner, isMenuOpen, isEditing, isHighlighted })}
+        id={activityId}
       >
         <ActivityHeader
           name={authorName}
@@ -201,7 +205,7 @@ const ActivityComment = ({
             <>
               <CommentWrapper>
                 <ReactMarkdown
-                  remarkPlugins={[remarkGfm, emoji]}
+                  remarkPlugins={[remarkGfm, emoji, remarkDirective, remarkDirectiveRehype]}
                   urlTransform={(url) => url}
                   components={{
                     // a links
@@ -224,6 +228,13 @@ const ActivityComment = ({
                     code: (props) => codeTag(props),
                     // @ts-ignore
                     blockquote: (props) => blockquoteTag(props),
+                    // @ts-ignore
+                    tip: (props) => (
+                      <Styled.Tip>
+                        <Icon icon="info" />
+                        {props.children}
+                      </Styled.Tip>
+                    ),
                   }}
                 >
                   {body}

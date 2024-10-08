@@ -67,6 +67,8 @@
     "react-transition-group": "^4.4.2",
     "react-use-websocket": "^4.2.0",
     "rehype-external-links": "^3.0.0",
+    "remark-directive": "^3.0.0",
+    "remark-directive-rehype": "^0.4.2",
     "remark-emoji": "^4.0.1",
     "remark-gfm": "^4.0.0",
     "remove-markdown": "^0.5.0",
