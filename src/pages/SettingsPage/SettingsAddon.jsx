@@ -62,10 +62,16 @@ const SettingsAddon = ({ addonName, addonVersion, sidebar }) => {
     <main>
       {sidebarComponent}
       <Section>
-        <div style={{ position: 'absolute', inset: 0 }}>
-          {loading && <LoadingPage style={{ position: 'absolute' }} />}
-        </div>
-        <AddonWrapper src={`${addonUrl}/?id=${window.senderId}`} ref={addonRef} onLoad={onAddonLoad} />
+        {loading && (
+          <div style={{ position: 'absolute', inset: 0 }}>
+            <LoadingPage style={{ position: 'absolute' }} />
+          </div>
+        )}
+        <AddonWrapper
+          src={`${addonUrl}/?id=${window.senderId}`}
+          ref={addonRef}
+          onLoad={onAddonLoad}
+        />
       </Section>
     </main>
   )

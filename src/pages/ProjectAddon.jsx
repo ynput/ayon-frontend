@@ -199,9 +199,11 @@ const ProjectAddon = ({ addonName, addonVersion, sidebar, ...props }) => {
       {sidebarComponent}
       <Section>
         <RequestModal {...requestModal} onClose={() => setRequestModal(null)} />
-        <div style={{ position: 'absolute', inset: 0 }}>
-          {loading && <LoadingPage style={{ position: 'absolute' }} />}
-        </div>
+        {loading && (
+          <div style={{ position: 'absolute', inset: 0 }}>
+            <LoadingPage style={{ position: 'absolute' }} />
+          </div>
+        )}
         <AddonWrapper
           style={{ opacity: loading ? 0 : 1 }}
           src={`${addonUrl}/?id=${window.senderId}`}
