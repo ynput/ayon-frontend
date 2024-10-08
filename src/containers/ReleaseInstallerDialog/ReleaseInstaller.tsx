@@ -50,7 +50,6 @@ const ReleaseInstaller: FC<ReleaseInstallerProps> = ({ onFinish }) => {
   const { data: { bundles = [] } = {}, isLoading: isLoadingBundles } = useListBundlesQuery({
     archived: false,
   })
-  const bundlesError = !bundles.length && !isLoadingBundles
 
   // QUERIES
 
@@ -72,7 +71,7 @@ const ReleaseInstaller: FC<ReleaseInstallerProps> = ({ onFinish }) => {
   })
 
   const isLoadingAny = isLoadingReleases || isLoadingBundles || !releaseForm.name
-  const anyError = releasesError || bundlesError || releaseInfoError
+  const anyError = releasesError || releaseInfoError
 
   const handleSwitchDialog = (dialog: ReleaseFormType) => {
     dispatch(switchDialog(dialog))
