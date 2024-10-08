@@ -469,17 +469,12 @@ const contextSlice = createSlice({
     },
     onCommentImageOpen: (state, action) => {
       // set the preview file
-      console.log('inside action:')
-      console.log(action.payload.files)
-      console.log(action.payload.activityId)
-      console.log(action.payload.index)
       state.previewFiles = action.payload.files
       state.previewFilesProjectName = action.payload.projectName
       state.previewFilesActivityId = action.payload.activityId
       state.previewFilesIndex = action.payload.index
     },
     onCommentImageActivityAndIndexChange: (state, action) => {
-      console.log(state, action)
       state.previewFilesActivityId = action.payload.activityId
       state.previewFilesIndex = action.payload.index
     },
