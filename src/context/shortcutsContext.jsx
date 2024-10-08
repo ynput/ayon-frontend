@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
-import { useDispatch, useSelector } from 'react-redux'
+import { useAppDispatch, useAppSelector } from '@state/store'
 import { toggleMenuOpen } from '@state/context'
 import { useLogOutMutation } from '@queries/auth/getAuth'
 import { useSearchParams } from 'react-router-dom'
@@ -10,10 +10,10 @@ const ShortcutsContext = createContext()
 function ShortcutsProvider(props) {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const dispatch = useDispatch()
+  const dispatch = useAppDispatch()
 
   // review open
-  const reviewOpen = useSelector((state) => state.viewer.isOpen)
+  const reviewOpen = useAppSelector((state) => state.viewer.isOpen)
 
   // logout
   const [logout] = useLogOutMutation()

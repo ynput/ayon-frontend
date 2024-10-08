@@ -3,7 +3,7 @@ import { Icon } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import * as Styled from './Thumbnail.styled'
 
-interface ThumbnailProps extends HTMLAttributes<HTMLDivElement> {
+export interface ThumbnailProps extends HTMLAttributes<HTMLDivElement> {
   projectName: string
   entityType: string
   entityId: string

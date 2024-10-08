@@ -1,0 +1,12 @@
+query GetAllAssignees {
+  users(last: 2000) {
+    edges {
+      node {
+        name
+        attrib {
+          fullName
+        }
+      }
+    }
+  }
+}

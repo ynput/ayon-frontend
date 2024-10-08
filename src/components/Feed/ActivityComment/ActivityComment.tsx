@@ -37,12 +37,12 @@ type Props = {
   projectName: string
   entityType: string
   onReferenceClick: Function
-  isSlideOut: boolean
   onFileExpand: Function
   showOrigin: boolean
   isHighlighted: boolean
   dispatch: Function
   scope: string
+  statePath: string
 }
 
 const ActivityComment = ({
@@ -55,12 +55,12 @@ const ActivityComment = ({
   projectName,
   entityType,
   onReferenceClick,
-  isSlideOut,
   onFileExpand,
   showOrigin,
   isHighlighted,
   dispatch,
   scope,
+  statePath,
 }: Props) => {
   let {
     body,
@@ -78,7 +78,7 @@ const ActivityComment = ({
   if (!authorName) authorName = author?.name || ''
   if (!authorFullName) authorFullName = author?.fullName || authorName
   let menuId = `comment-${scope}-${activity.activityId}`
-  if (isSlideOut) menuId += '-slideout'
+  if (statePath) menuId += '-' + statePath
   const isMenuOpen = useSelector((state: $Any) => state.context.menuOpen) === menuId
   const user = useSelector((state: $Any) => state.user) as UserModel
 
@@ -244,7 +244,7 @@ const ActivityComment = ({
             <ActivityCommentMenu onDelete={() => isOwner && handleDelete()} />
           </MenuContainer>
           {!isEditing && (
-            <div style={{ marginTop: '16px' }}>
+            <div style={{ marginTop: '16px' }} className="reactions-wrapper">
               {mappedReactions && (
                 <Reactions reactions={mappedReactions} changeHandler={reactionChangeHandler} />
               )}

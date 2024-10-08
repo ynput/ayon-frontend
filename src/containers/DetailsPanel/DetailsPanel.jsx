@@ -1,13 +1,13 @@
 import { Button, Panel } from '@ynput/ayon-react-components'
 import React, { useEffect, useMemo } from 'react'
 import DetailsPanelHeader from './DetailsPanelHeader/DetailsPanelHeader'
-import { useDispatch, useSelector } from 'react-redux'
+import { useAppDispatch, useAppSelector } from '@state/store'
 import Feed from '@containers/Feed/Feed'
 import { useGetEntitiesDetailsPanelQuery } from '@queries/entity/getEntityPanel'
 import TaskAttributes from '@pages/UserDashboardPage/UserDashboardTasks/TaskAttributes/TaskAttributes'
 import { getEntityDetailsData } from '@queries/userDashboard/userDashboardHelpers'
 import DetailsPanelFiles from './DetailsPanelFiles'
-import { closeSlideOut, updateDetailsPanelTab } from '@state/details'
+import { closeSlideOut, openPip, updateDetailsPanelTab } from '@state/details'
 import { entityDetailsTypesSupported } from '@/services/userDashboard/userDashboardQueries'
 import * as Styled from './DetailsPanel.styled'
 import EntityPath from '@components/EntityPath'
@@ -15,6 +15,7 @@ import { Watchers } from '@containers/Watchers/Watchers'
 import Shortcuts from '@containers/Shortcuts'
 import { isEmpty } from 'lodash'
 import useGetEntityPath from './hooks/useGetEntityPath'
+import { usePiPWindow } from '@context/pip/PiPProvider'
 
 export const entitiesWithoutFeed = ['product', 'representation']
 
@@ -35,14 +36,14 @@ const DetailsPanel = ({
   projectNames = [],
   onClose,
   isSlideOut = false,
+  statePath = 'pinned',
   style = {},
   scope,
   isCompact = false,
   onWatchersUpdate,
 }) => {
-  const path = isSlideOut ? 'slideOut' : 'pinned'
-  let selectedTab = useSelector((state) => state.details[path][scope].tab)
-  const dispatch = useDispatch()
+  let selectedTab = useAppSelector((state) => state.details[statePath][scope].tab)
+  const dispatch = useAppDispatch()
 
   // if the entity type is product or representation, we show the attribs tab only
   if (entitiesWithoutFeed.includes(entityType)) selectedTab = 'attribs'
@@ -54,7 +55,7 @@ const DetailsPanel = ({
     if (selectedTab === 'files') {
       // check entity type is still version
       if (entityType !== 'version') {
-        dispatch(updateDetailsPanelTab({ isSlideOut, tab: 'feed', scope }))
+        dispatch(updateDetailsPanelTab({ statePath, tab: 'feed', scope }))
       }
     }
   }, [entityType, selectedTab])
@@ -86,7 +87,14 @@ const DetailsPanel = ({
   }, [originalArgs])
 
   // merge current entities data with fresh details data
-  const entityDetailsData = getEntityDetailsData({ entities, entityType, projectsInfo, detailsData, isSuccess, isError })
+  const entityDetailsData = getEntityDetailsData({
+    entities,
+    entityType,
+    projectsInfo,
+    detailsData,
+    isSuccess,
+    isError,
+  })
 
   // get the first project name and info to be used in the feed.
   const firstProject = projectNames[0]
@@ -111,11 +119,29 @@ const DetailsPanel = ({
     [onClose],
   )
 
+  const { requestPipWindow } = usePiPWindow()
+
+  const handleOpenPip = () => {
+    // set pip state
+    dispatch(
+      openPip({
+        entityType: entityType,
+        entities: entitiesToQuery,
+        scope: scope,
+        statePath: statePath,
+      }),
+    )
+
+    // open pip
+    requestPipWindow(500, 500)
+  }
+
   if (!firstEntityData || isEmpty(firstEntityData)) return null
 
   return (
     <>
-      <Shortcuts shortcuts={shortcuts} deps={[]} />
+      <Shortcuts shortcuts={shortcuts || []} deps={[]} />
+
       <Panel
         style={{
           gap: 0,
@@ -142,6 +168,13 @@ const DetailsPanel = ({
             options={projectUsers}
             onWatchersUpdate={onWatchersUpdate && onWatchersUpdate}
           />
+          <Button
+            icon="picture_in_picture"
+            variant={'text'}
+            data-tooltip="Picture in Picture"
+            onClick={handleOpenPip}
+          />
+
           {onClose && (
             <Button
               icon="close"
@@ -160,11 +193,11 @@ const DetailsPanel = ({
           disabledAssignees={disabledProjectUsers}
           disabledStatuses={disabledStatuses}
           tagsOptions={tagsOptions}
-          isSlideOut={isSlideOut}
           isMultipleProjects={projectNames.length > 1}
           isFetching={isFetchingEntitiesDetails}
           isCompact={isCompact}
           scope={scope}
+          statePath={statePath}
         />
         {selectedTab === 'feed' && !isError && (
           <Feed
@@ -175,8 +208,8 @@ const DetailsPanel = ({
             projectInfo={firstProjectInfo}
             projectName={firstProject}
             isMultiProjects={projectNames.length > 1}
-            isSlideOut={isSlideOut}
             scope={scope}
+            statePath={statePath}
           />
         )}
         {selectedTab === 'files' && (
