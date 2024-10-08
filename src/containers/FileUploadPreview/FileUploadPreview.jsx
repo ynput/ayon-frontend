@@ -93,43 +93,57 @@ const FileUploadPreview = () => {
   const handleNavigateToNext = () => canNavigateRight() && navigateRight()
 
   const isImage = typeId === 'image'
+  const zIndex = 50
 
-  if (!MimeComponent) return null
+  const handleKeyDown = (e) => {
+    if (e.code == 'ArrowUp') {
+      handleNavigateToPrevActivity()
+    }
+    if (e.code == 'ArrowDown') {
+      handleNavigateToNextActivity()
+    }
+    if (e.code == 'ArrowRight') {
+      handleNavigateToNext()
+    }
+    if (e.code == 'ArrowLeft') {
+      handleNavigateToPrevious()
+    }
+    if (e.key === 'Escape') {
+      e.preventDefault()
+      handleClose()
+    }
+  }
+
+  if (!MimeComponent) {
+    return null
+  }
 
   return (
     <Styled.DialogWrapper
-      onKeyDown={(e) => {
-        if (e.code == 'ArrowUp') {
-          handleNavigateToPrevActivity()
-        }
-        if (e.code == 'ArrowDown') {
-          handleNavigateToNextActivity()
-        }
-        if (e.code == 'ArrowRight') {
-          handleNavigateToNext()
-        }
-        if (e.code == 'ArrowLeft') {
-          handleNavigateToPrevious()
-        }
-        if (e.key === 'Escape') {
-          handleClose()
-        }
-      }}
+      onKeyDown={handleKeyDown}
       size="full"
       isOpen={id && projectName}
       onClose={handleClose}
       hideCancelButton={isImage}
       ref={dialogRef}
-      className={clsx({ isImage })}
+      className={clsx({ isImage }, 'block-shortcuts')}
       header={isImage ? null : name}
     >
+      <div style={{ position: 'absolute', inset: 0, zIndex: zIndex }} onClick={handleClose}></div>
+
       <Icon
+        style={{ zIndex: zIndex + 1 }}
         icon="chevron_left"
         className={clsx('navIcon', 'left', { disabled: !canNavigateLeft() })}
         onClick={handleNavigateToPrevious}
       />
-      <MimeComponent file={file} />
+
+      <div style={{ zIndex: zIndex + 1 }}>
+        <MimeComponent file={file} />
+      </div>
+
       <Icon
+        style={{ zIndex: zIndex + 1 }}
         icon="chevron_right"
         className={clsx('navIcon', 'right', { disabled: !canNavigateRight() })}
         onClick={handleNavigateToNext}

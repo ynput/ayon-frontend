@@ -174,7 +174,7 @@ const Header = () => {
       </FlexWrapper>
 
       <Breadcrumbs />
-      <FlexWrapper style={{ justifyContent: 'end' }}>
+      <FlexWrapper style={{ justifyContent: 'end' }} id="header-menu-right">
         <InstallerDownloadPrompt />
         {isDeveloper && (
           <DeveloperSwitch $isChecked={developerMode} onClick={handleDeveloperMode}>

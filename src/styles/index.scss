@@ -469,7 +469,7 @@ a {
 }
 
 .react-datepicker-popper {
-  z-index: 1000;
+  z-index: 1000 !important;
 }
 
 // clearing a date input

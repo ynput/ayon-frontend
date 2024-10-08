@@ -26,7 +26,6 @@ const useCustomerlyChat = ({ position, delay, disabled }: UseCustomerlyChat = {}
     const userId = `${orgName}-${user.name}`
 
     if (!loaded.current && !disabled) {
-      console.log('loading customerly...', loaded.current)
       load({
         visible: !delay,
         position,
@@ -52,7 +51,6 @@ const useCustomerlyChat = ({ position, delay, disabled }: UseCustomerlyChat = {}
   useEffect(() => {
     if (!Number.isNaN(delay) && loaded.current && !disabled) {
       const timer = setTimeout(() => {
-        console.log('show')
         rest.show()
       }, delay)
       return () => clearTimeout(timer)

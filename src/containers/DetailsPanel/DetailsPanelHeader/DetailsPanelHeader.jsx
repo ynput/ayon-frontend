@@ -15,6 +15,7 @@ import { openViewer } from '@state/viewer'
 
 import FeedFilters from '../FeedFilters/FeedFilters'
 import * as Styled from './DetailsPanelHeader.styled'
+import getThumbnails from '../helpers/getThumbnails'
 import useScopedStatuses from '@hooks/useScopedStatuses'
 import { useGetAttributeConfigQuery } from '@queries/attributes/getAttributes'
 import { getPriorityOptions } from '@pages/TasksProgressPage/helpers'
@@ -27,10 +28,10 @@ const DetailsPanelHeader = ({
   users = [],
   disabledStatuses,
   tagsOptions = [],
-  isSlideOut,
   isFetching,
   isCompact = false,
   scope,
+  statePath,
 }) => {
   const dispatch = useDispatch()
 
@@ -83,18 +84,7 @@ const DetailsPanelHeader = ({
   const { data: priorityAttrib } = useGetAttributeConfigQuery({ attributeName: 'priority' })
   const priorities = getPriorityOptions(priorityAttrib, entityType)
 
-  const thumbnails = useMemo(() => {
-    if (!entities[0]) return []
-
-    if (entityType === 'representation') return [{ icon: 'view_in_ar' }]
-
-    return entities.slice(0, 6).map((entity) => ({
-      icon: entity.icon,
-      id: entity.id,
-      type: entityType,
-      updatedAt: entity.updatedAt,
-    }))
-  }, [entities, entityType])
+  const thumbnails = useMemo(() => getThumbnails(entities, entityType), [entities, entityType])
 
   // we need to get the intersection of all the statuses of the projects for the selected entities
   // this means that if we have 2 entities from 2 different projects, we need to get the intersection of the statuses of those 2 projects
@@ -300,7 +290,6 @@ const DetailsPanelHeader = ({
             <div style={{ height: 32 }}></div>
           )}
           <FeedFilters
-            isSlideOut={isSlideOut}
             isLoading={isLoading}
             entityType={entityType}
             className="filters"
@@ -310,6 +299,7 @@ const DetailsPanelHeader = ({
               },
             }}
             scope={scope}
+            statePath={statePath}
           />
         </Styled.Grid>
       </EntityThumbnailUploader>

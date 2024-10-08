@@ -1359,6 +1359,11 @@ export type GetActiveUsersCountQueryVariables = Exact<{ [key: string]: never; }>
 
 export type GetActiveUsersCountQuery = { __typename?: 'Query', users: { __typename?: 'UsersConnection', edges: Array<{ __typename?: 'UserEdge', node: { __typename?: 'UserNode', active: boolean, isGuest: boolean } }> } };
 
+export type GetAllAssigneesQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetAllAssigneesQuery = { __typename?: 'Query', users: { __typename?: 'UsersConnection', edges: Array<{ __typename?: 'UserEdge', node: { __typename?: 'UserNode', name: string, attrib: { __typename?: 'UserAttribType', fullName?: string | null } } }> } };
+
 export type GetAllProjectUsersAsAssigneeQueryVariables = Exact<{
   projectName?: InputMaybe<Scalars['String']['input']>;
 }>;
@@ -1618,6 +1623,20 @@ export const GetActiveUsersCountDocument = `
   }
 }
     `;
+export const GetAllAssigneesDocument = `
+    query GetAllAssignees {
+  users(last: 2000) {
+    edges {
+      node {
+        name
+        attrib {
+          fullName
+        }
+      }
+    }
+  }
+}
+    `;
 export const GetAllProjectUsersAsAssigneeDocument = `
     query GetAllProjectUsersAsAssignee($projectName: String) {
   users(last: 2000, projectName: $projectName) {
@@ -1703,6 +1722,9 @@ const injectedRtkApi = RestAPI.injectEndpoints({
     }),
     GetActiveUsersCount: build.query<GetActiveUsersCountQuery, GetActiveUsersCountQueryVariables | void>({
       query: (variables) => ({ document: GetActiveUsersCountDocument, variables })
+    }),
+    GetAllAssignees: build.query<GetAllAssigneesQuery, GetAllAssigneesQueryVariables | void>({
+      query: (variables) => ({ document: GetAllAssigneesDocument, variables })
     }),
     GetAllProjectUsersAsAssignee: build.query<GetAllProjectUsersAsAssigneeQuery, GetAllProjectUsersAsAssigneeQueryVariables | void>({
       query: (variables) => ({ document: GetAllProjectUsersAsAssigneeDocument, variables })

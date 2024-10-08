@@ -22,7 +22,7 @@ import type {
   TaskTypeRow,
   TaskTypeStatusBar,
 } from '../../helpers/formatTaskProgressForTable'
-import type { GetAllProjectUsersAsAssigneeResult } from '@queries/user/getUsers'
+import type { Assignees } from '@queries/user/getUsers'
 import { useEffect, useState, type KeyboardEvent, type MouseEvent } from 'react'
 import { $Any } from '@types'
 import { InView } from 'react-intersection-observer'
@@ -58,7 +58,7 @@ interface TasksProgressTableProps
   statuses: Status[]
   taskTypes: TaskType[]
   priorities: AttributeEnumItem[]
-  users: GetAllProjectUsersAsAssigneeResult
+  users: Assignees
   allExpanded: boolean
   expandedRows: string[]
   collapsedRows: string[]

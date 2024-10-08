@@ -67,28 +67,24 @@ export const TrialBanner = styled.div`
   }
 `
 export const TrialBubble = styled.div`
-  position: fixed;
-  bottom: 12px;
-  right: 12px;
-  z-index: 300;
-  box-shadow: 0px 0px 4px rgba(0, 0, 0, 0.1);
-
   display: flex;
   justify-content: center;
   align-items: center;
+  order: -1;
 
   gap: var(--base-gap-small);
-  padding: var(--padding-m);
-  border-radius: var(--border-radius-l);
+  padding: var(--padding-s);
+  padding-right: var(--padding-m);
+  border-radius: var(--border-radius-m);
   user-select: none;
   cursor: pointer;
 
-  background-color: var(--md-sys-color-tertiary);
+  background-color: var(--panel-background);
 
   ${theme.titleMedium}
   &,
   .icon {
-    color: var(--md-sys-color-on-tertiary);
+    color: var(--md-sys-color-tertiary);
   }
 
   .icon {
@@ -97,5 +93,10 @@ export const TrialBubble = styled.div`
 
   &:hover {
     background-color: var(--md-sys-color-tertiary-hover);
+
+    &,
+    .icon {
+      color: var(--md-sys-color-on-tertiary);
+    }
   }
 `

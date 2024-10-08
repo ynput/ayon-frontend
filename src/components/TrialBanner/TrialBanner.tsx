@@ -9,6 +9,7 @@ import { useAppSelector } from '@state/store'
 import { Button, Icon } from '@ynput/ayon-react-components'
 import { useGetActiveUsersCountQuery } from '@queries/user/getUsers'
 import useLocalStorage from '@hooks/useLocalStorage'
+import { createPortal } from 'react-dom'
 
 interface TrialBannerProps {}
 
@@ -63,13 +64,19 @@ const TrialBanner: FC<TrialBannerProps> = ({}) => {
 
   // toast.warn('Your free trial is ending soon. Subscribe to keep your data.', { autoClose: false })
 
-  if (isSnoozing)
-    return (
+  if (isSnoozing) {
+    // check there is a component with 'header-menu-right' id
+    const headerMenuRight = document.getElementById('header-menu-right')
+    if (!headerMenuRight) return null
+
+    return createPortal(
       <Styled.TrialBubble onClick={handleShowBanner}>
-        <Icon icon="info" />
-        Free trial
-      </Styled.TrialBubble>
+        <Icon icon="schedule" />
+        Free trial - {formatted}
+      </Styled.TrialBubble>,
+      headerMenuRight,
     )
+  }
 
   return (
     <Styled.TrialBanner className={clsx({ urgent: oneDay, critical: oneHour })}>

@@ -151,9 +151,9 @@ const Inbox = ({ filter }) => {
 
     if (message?.activityType === 'comment' && idsToHighlight.length > 0) {
       // highlight the activity in the feed
-      dispatch(highlightActivity({ isSlideOut: false, activityIds: idsToHighlight }))
+      dispatch(highlightActivity({ statePath: 'pinned', activityIds: idsToHighlight }))
     } else {
-      dispatch(clearHighlights, { isSlideOut: false })
+      dispatch(clearHighlights, { statePath: 'pinned' })
     }
 
     const idsToMarkAsRead = unReadMessages.map((m) => m.referenceId)
