@@ -3,7 +3,7 @@ import * as Styled from './DetailsPanelFloating.styled'
 import getThumbnails from '../helpers/getThumbnails'
 import StackedThumbnails from '@pages/EditorPage/StackedThumbnails'
 import { upperFirst } from 'lodash'
-import { AssigneeField, StatusSelect } from '@ynput/ayon-react-components'
+import { AssigneeField, Icon } from '@ynput/ayon-react-components'
 import Feed from '@containers/Feed/Feed'
 import PiPWrapper from '@context/pip/PiPWrapper'
 import { useGetEntitiesDetailsPanelQuery } from '@queries/entity/getEntityPanel'
@@ -74,7 +74,11 @@ const DetailsPanelFloating: FC<DetailsPanelFloatingProps> = () => {
   const firstEntity = entitiesData[0]
   const projectName = firstEntity?.projectName
 
-  const statusesValue = useMemo(() => entitiesData.map((t) => t.status), [entitiesData])
+  const statusAnatomy = statuses.find((s) => s.name === firstEntity?.status) || {
+    icon: '',
+    color: '',
+    name: 'None',
+  }
 
   if (isFetchingEntitiesDetails) return <div>Loading...</div>
 
@@ -96,13 +100,10 @@ const DetailsPanelFloating: FC<DetailsPanelFloatingProps> = () => {
           </Styled.Content>
         </Styled.Header>
         <Styled.Row>
-          <StatusSelect
-            value={statusesValue}
-            options={statuses}
-            invert
-            disableOpen
-            buttonStyle={{ pointerEvents: 'none' }}
-          />
+          <Styled.Status style={{ backgroundColor: statusAnatomy?.color }}>
+            {<Icon icon={statusAnatomy.icon || 'question_mark'} />}
+            <span className="label">{statusAnatomy?.name}</span>
+          </Styled.Status>
           <AssigneeField users={users} style={{ pointerEvents: 'none' }} />
         </Styled.Row>
         <Styled.FeedContainer>
@@ -114,8 +115,8 @@ const DetailsPanelFloating: FC<DetailsPanelFloatingProps> = () => {
             // projectInfo={firstProjectInfo}
             projectName={projectName}
             isMultiProjects={false}
-            scope={scope}
-            statePath={statePath}
+            scope={scope || undefined}
+            statePath={statePath || undefined}
           />
         </Styled.FeedContainer>
       </Styled.Container>

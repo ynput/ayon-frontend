@@ -32,8 +32,8 @@ const Feed = ({
   projectName,
   entityType,
   isMultiProjects,
-  scope,
-  statePath,
+  scope = 'dashboard',
+  statePath = 'pinned',
 }) => {
   const dispatch = useDispatch()
   const userName = useSelector((state) => state.user.name)

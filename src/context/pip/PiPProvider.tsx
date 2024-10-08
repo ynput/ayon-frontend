@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useMemo, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { uuid } from 'short-uuid'
 
 type PiPContextType = {
@@ -64,34 +64,36 @@ export function PiPProvider({ children }: PiPProviderProps) {
         setPipId(null)
       })
 
-      // It is important to copy all parent window styles. Otherwise, there would be no CSS available at all
-      // https://developer.chrome.com/docs/web-platform/document-picture-in-picture/#copy-style-sheets-to-the-picture-in-picture-window
-      ;[...document.styleSheets].forEach((styleSheet) => {
-        try {
-          const cssRules = [...styleSheet.cssRules].map((rule) => rule.cssText).join('')
-          const style = document.createElement('style')
-
-          style.textContent = cssRules
-          pip.document.head.appendChild(style)
-        } catch (e) {
-          const link = document.createElement('link')
-          if (styleSheet.href == null) {
-            return
-          }
-
-          link.rel = 'stylesheet'
-          link.type = styleSheet.type
-          link.media = styleSheet.media.toString()
-          link.href = styleSheet.href
-          pip.document.head.appendChild(link)
-        }
-      })
-
       setPipWindow(pip)
       setPipId(uuid())
     },
     [pipWindow, pipId],
   )
+
+  useEffect(() => {
+    // It is important to copy all parent window styles. Otherwise, there would be no CSS available at all
+    // https://developer.chrome.com/docs/web-platform/document-picture-in-picture/#copy-style-sheets-to-the-picture-in-picture-window
+    ;[...document.styleSheets].forEach((styleSheet) => {
+      try {
+        const cssRules = [...styleSheet.cssRules].map((rule) => rule.cssText).join('')
+        const style = document.createElement('style')
+
+        style.textContent = cssRules
+        pipWindow?.document.head.appendChild(style)
+      } catch (e) {
+        const link = document.createElement('link')
+        if (styleSheet.href == null) {
+          return
+        }
+
+        link.rel = 'stylesheet'
+        link.type = styleSheet.type
+        link.media = styleSheet.media.toString()
+        link.href = styleSheet.href
+        pipWindow?.document.head.appendChild(link)
+      }
+    })
+  }, [pipWindow])
 
   const value = useMemo(() => {
     {

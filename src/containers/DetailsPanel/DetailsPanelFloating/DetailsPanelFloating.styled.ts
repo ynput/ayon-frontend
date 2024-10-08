@@ -96,3 +96,21 @@ export const FeedContainer = styled.div`
     }
   }
 `
+
+export const Status = styled.div`
+  display: flex;
+  align-items: center;
+  gap: var(--base-gap-small);
+  padding: 0 8px;
+  height: 32px;
+  border-radius: var(--border-radius-m);
+
+  &,
+  .icon {
+    color: black;
+  }
+
+  .icon {
+    font-variation-settings: 'FILL' 1, 'wght' 300, 'GRAD' 300, 'opsz' 20;
+  }
+`
