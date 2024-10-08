@@ -74,11 +74,21 @@ const DetailsPanelFloating: FC<DetailsPanelFloatingProps> = () => {
   const firstEntity = entitiesData[0]
   const projectName = firstEntity?.projectName
 
-  const statusAnatomy = statuses.find((s) => s.name === firstEntity?.status) || {
-    icon: '',
-    color: '',
-    name: 'None',
+  // are there multiple statuses of different names?
+  const mixedStatuses = entitiesData.some((e) => e.status !== firstEntity?.status)
+  const mixedStatus = {
+    icon: 'question_mark',
+    color: 'var(--md-sys-color-surface-container-highest)',
+    name: 'Mixed statuses',
   }
+
+  const statusAnatomy = mixedStatuses
+    ? mixedStatus
+    : statuses.find((s) => s.name === firstEntity?.status) || {
+        icon: '',
+        color: '',
+        name: 'None',
+      }
 
   if (isFetchingEntitiesDetails) return <div>Loading...</div>
 
