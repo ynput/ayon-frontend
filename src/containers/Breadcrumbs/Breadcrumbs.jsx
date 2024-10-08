@@ -126,6 +126,7 @@ const Breadcrumbs = () => {
       goThere(e)
     }
   }
+
   useEffect(() => {
     if (ctxUri !== localUri) {
       setLocalUri(ctxUri)
@@ -135,7 +136,7 @@ const Breadcrumbs = () => {
     const encodedAyonEntity = urlParams.get(ayonUrlParam)
     if (encodedAyonEntity !== null) {
       const ayonEntity = decodeURIComponent(encodedAyonEntity)
-      if (ayonEntity != ctxUri) {
+      if (ayonEntity != ctxUri && ctxUri !== '') {
         navigate(ayonEntity)
       }
     }
