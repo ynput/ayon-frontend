@@ -1,4 +1,4 @@
-import { Button } from '@ynput/ayon-react-components'
+import { Button, theme } from '@ynput/ayon-react-components'
 import styled, { css } from 'styled-components'
 
 export const CommentWrapper = styled.div`
@@ -66,7 +66,7 @@ export const Body = styled.div`
     margin-top: 0;
   }
 
-  & > *:not(.tools) {
+  & > *:not(.tools):not(h1) {
     margin-bottom: 0;
   }
 
@@ -83,6 +83,27 @@ export const Body = styled.div`
     .reference {
       top: 5px;
     }
+  }
+
+  h1 {
+    ${theme.titleLarge}
+    font-size: 24px;
+  }
+
+  h2 {
+    ${theme.titleMedium}
+    font-size: 20px;
+  }
+
+  h3 {
+    ${theme.titleSmall}
+    font-size: 16px;
+  }
+
+  h1,
+  h2,
+  h3 {
+    margin-top: 16px;
   }
 
   ul,

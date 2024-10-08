@@ -5,7 +5,7 @@ import * as Styled from './Menu.styled'
 import { useNavigate } from 'react-router'
 import { createPortal } from 'react-dom'
 
-const MenuContainer = ({ id, target, targetId, children, ...props }) => {
+const MenuContainer = ({ id, target, targetId = '', children, ...props }) => {
   const dispatch = useDispatch()
   const navigate = useNavigate()
   const isOpen = useSelector((state) => state.context.menuOpen) === id

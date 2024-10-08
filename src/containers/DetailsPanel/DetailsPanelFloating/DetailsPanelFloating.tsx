@@ -127,6 +127,7 @@ const DetailsPanelFloating: FC<DetailsPanelFloatingProps> = () => {
             isMultiProjects={false}
             scope={scope || undefined}
             statePath={statePath || undefined}
+            readOnly
           />
         </Styled.FeedContainer>
       </Styled.Container>

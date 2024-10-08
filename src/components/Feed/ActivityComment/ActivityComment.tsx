@@ -43,6 +43,7 @@ type Props = {
   dispatch: Function
   scope: string
   statePath: string
+  readOnly: boolean
 }
 
 const ActivityComment = ({
@@ -61,6 +62,7 @@ const ActivityComment = ({
   dispatch,
   scope,
   statePath,
+  readOnly,
 }: Props) => {
   let {
     body,
@@ -119,7 +121,7 @@ const ActivityComment = ({
   }
 
   const handleToggleMenu = (menu: $Any) => dispatch(toggleMenuOpen(menu))
-  const moreRef = useRef()
+  const moreRef = useRef<HTMLDivElement>(null)
 
   const [, setRefTooltip] = useReferenceTooltip({ dispatch })
 
@@ -169,19 +171,20 @@ const ActivityComment = ({
           children={undefined}
         />
         <Styled.Body className={clsx('comment-body', { isEditing })}>
-          {/* @ts-ignore */}
-          <Styled.Tools className={'tools'} ref={moreRef}>
-            {isOwner && handleEditComment && (
-              <Styled.ToolButton icon="edit_square" onClick={handleEditComment} />
-            )}
-            {isOwner && (
-              <Styled.ToolButton
-                icon="more_horiz"
-                className="more"
-                onClick={() => handleToggleMenu(menuId)}
-              />
-            )}
-          </Styled.Tools>
+          {!readOnly && (
+            <Styled.Tools className={'tools'} ref={moreRef}>
+              {isOwner && handleEditComment && (
+                <Styled.ToolButton icon="edit_square" onClick={handleEditComment} />
+              )}
+              {isOwner && (
+                <Styled.ToolButton
+                  icon="more_horiz"
+                  className="more"
+                  onClick={() => handleToggleMenu(menuId)}
+                />
+              )}
+            </Styled.Tools>
+          )}
           {isEditing ? (
             // @ts-ignore
             <CommentInput
@@ -239,14 +242,19 @@ const ActivityComment = ({
             </>
           )}
 
-          {/* @ts-ignore */}
-          <MenuContainer id={menuId} target={moreRef.current}>
-            <ActivityCommentMenu onDelete={() => isOwner && handleDelete()} />
-          </MenuContainer>
+          {!readOnly && (
+            <MenuContainer id={menuId} target={moreRef.current}>
+              <ActivityCommentMenu onDelete={() => isOwner && handleDelete()} />
+            </MenuContainer>
+          )}
           {!isEditing && (
-            <div style={{ marginTop: '16px' }} className="reactions-wrapper">
+            <div style={{ marginTop: '16px' }}>
               {mappedReactions && (
-                <Reactions reactions={mappedReactions} changeHandler={reactionChangeHandler} />
+                <Reactions
+                  reactions={mappedReactions}
+                  changeHandler={reactionChangeHandler}
+                  readOnly={readOnly}
+                />
               )}
             </div>
           )}

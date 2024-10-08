@@ -34,6 +34,7 @@ const Feed = ({
   isMultiProjects,
   scope = 'dashboard',
   statePath = 'pinned',
+  readOnly,
 }) => {
   const dispatch = useDispatch()
   const userName = useSelector((state) => state.user.name)
@@ -278,6 +279,7 @@ const Feed = ({
                   dispatch={dispatch}
                   scope={scope}
                   statePath={statePath}
+                  readOnly={readOnly}
                 />
               ))}
           {/* message when no versions published */}
