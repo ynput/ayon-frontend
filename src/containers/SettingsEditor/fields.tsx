@@ -1,50 +1,18 @@
 import clsx from 'clsx'
-import React, { useMemo } from 'react'
-import { Button, Divider } from '@ynput/ayon-react-components'
+import { useMemo } from 'react'
+import { Divider } from '@ynput/ayon-react-components'
 import ReactMarkdown from 'react-markdown'
 import SettingsPanel from './SettingsPanel'
-import styled from 'styled-components'
 import useCreateContext from '@hooks/useCreateContext'
 
 import { isEqual } from 'lodash'
 import { Badge, BadgeWrapper } from '@components/Badge'
 import copyToClipboard from '@helpers/copyToClipboard'
 import { $Any } from '@types'
-import { ArrayFieldTemplateProps, FieldTemplateProps, ObjectFieldTemplateProps } from '@rjsf/utils'
+import { FieldTemplateProps, ObjectFieldTemplateProps } from '@rjsf/utils'
 import { CSS } from 'styled-components/dist/types'
 
-const FormArrayField = styled.div`
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
-  gap: var(--base-gap-large);
-`
 
-const FormArrayFieldItem = styled.div`
-  flex-grow: 1;
-  display: flex;
-  flex-direction: row;
-  gap: var(--base-gap-large);
-
-  margin-right: 4px;
-
-  .panel-content {
-    flex-grow: 1;
-  }
-`
-
-const ArrayItemControls = styled.div`
-  display: flex;
-  flex-direction: row;
-  justify-content: flex-start;
-  gap: 5px;
-
-  button {
-    border-radius: 50%;
-    width: 30px;
-    height: 30px;
-  }
-`
 
 const arrayStartsWith = (arr1: $Any, arr2: $Any) => {
   // return true, if first array starts with second array
@@ -234,7 +202,9 @@ function ObjectFieldTemplate(props: {id: string} & ObjectFieldTemplateProps) {
 
   // Title + handle root object
 
-  let title = props.title
+  let stringTitle = props.title
+  let rootTitle
+  let titleComponent
   // In case of "pseudo-dicts" (array of objects with a "name" attribute)
   // use the "name" attributeas the title
 
@@ -245,11 +215,11 @@ function ObjectFieldTemplate(props: {id: string} & ObjectFieldTemplateProps) {
   if ('name' in (props.schema.properties || {})) {
     let label = null
     if ('label' in (props.schema.properties || {})) label = props.formData.label
-    title = label || props.formData.name || <span className="new-object">Unnamed item</span>
+    stringTitle = label || props.formData.name || <span className="new-object">Unnamed item</span>
   }
 
   if (props.idSchema.$id === 'root' && props.formContext.formTitle) {
-    title = props.formContext.formTitle
+    stringTitle = props.formContext.formTitle
   }
 
   if (props.idSchema.$id === 'root') {
@@ -271,9 +241,9 @@ function ObjectFieldTemplate(props: {id: string} & ObjectFieldTemplateProps) {
       </Badge>
     )
 
-    title = (
+    rootTitle = (
       <>
-        {title}
+        {stringTitle}
         <BadgeWrapper>
           {projectMark}
           {siteMark}
@@ -281,6 +251,10 @@ function ObjectFieldTemplate(props: {id: string} & ObjectFieldTemplateProps) {
         </BadgeWrapper>
       </>
     )
+  }
+
+  if (props.idSchema.$id === 'root') {
+    titleComponent = true ? rootTitle : stringTitle
   }
 
   // Execute context menu
@@ -298,7 +272,7 @@ function ObjectFieldTemplate(props: {id: string} & ObjectFieldTemplateProps) {
       onClick={() => {
         if (props.formContext.onSetBreadcrumbs) props.formContext.onSetBreadcrumbs(path)
       } }
-      title={title}
+      title={titleComponent}
       description={shortDescription}
       className={`obj-override-${overrideLevel}`}
       enabledToggler={enabledToggler}
@@ -483,97 +457,6 @@ function FieldTemplate(props: FieldTemplateProps) {
   )
 }
 
-const ArrayItemTemplate = (props: $Any) => {
-  const parentSchema = props?.children?._owner?.memoizedProps?.schema || {}
-  const itemName = props?.children?.props?.formData?.name
-  let undeletable = false
-
-  const children = props.children
-
-  if (itemName && (parentSchema.requiredItems || []).includes(itemName)) {
-    undeletable = true
-    // TODO: Store this information elsewhere. since switching to RTK query
-    // schema props are immutable! use form context maybe?
-
-    //if (children.props.formData.name === itemName)
-    //  children.props.schema.properties.name.fixedValue = itemName
-  }
-
-  const onArrayChanged = () => {
-    const parentId = props.children.props.idSchema.$id.split('_').slice(0, -1).join('_')
-    const formContext = props.children._owner.memoizedProps.formContext
-    const path = formContext.overrides[parentId].path
-    formContext.onSetChangedKeys([{ path, isChanged: true }])
-  }
-
-  const onRemoveItem = () => {
-    onArrayChanged()
-    const r = props.onDropIndexClick(props.index)
-    r()
-  }
-
-  const onMoveUp = () => {
-    onArrayChanged()
-    const r = props.onReorderClick(props.index, props.index - 1)
-    r()
-  }
-
-  const onMoveDown = () => {
-    onArrayChanged()
-    const r = props.onReorderClick(props.index, props.index + 1)
-    r()
-  }
-
-  const rmButton = props.hasRemove && !parentSchema.disabled && (
-    <ArrayItemControls>
-      <Button onClick={onRemoveItem} icon="close" disabled={undeletable} />
-      <Button onClick={onMoveUp} icon="arrow_upward" />
-      <Button onClick={onMoveDown} icon="arrow_downward" />
-    </ArrayItemControls>
-  )
-
-  return (
-    <FormArrayFieldItem>
-      {children}
-      {rmButton}
-    </FormArrayFieldItem>
-  )
-}
-
-const ArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
-  /* Complete array including the add button */
-
-  const onAddItem = () => {
-    const id = props.idSchema.$id
-    const formContext = props.formContext
-    const path = formContext.overrides[id]?.path
-
-    formContext.onSetChangedKeys([{ path, isChanged: true }])
-    props.onAddClick()
-  }
-
-  // for some werird reason, the array sorting breaks when ArrayItemTemplate is
-  // not wrapped in react fragment. I suspected it was the key, but it was not.
-  // I have no idea why this works, but it does. Do not touch!
 
 
-  return (
-    <FormArrayField style={{outline: 'solid 1px red'}}>
-      {props.items.map((element, idx) => (
-        <React.Fragment key={idx}>
-          <label style={{color: 'red'}}>
-          <ArrayItemTemplate {...element} key={element?.key} />
-          </label>
-        </React.Fragment>
-      ))}
-
-      {props.canAdd && !props.schema?.disabled && (
-        <ArrayItemControls>
-          <Button onClick={onAddItem} icon="add" />
-        </ArrayItemControls>
-      )}
-    </FormArrayField>
-  )
-}
-
-export { ObjectFieldTemplate, FieldTemplate, ArrayFieldTemplate }
+export { ObjectFieldTemplate, FieldTemplate }
