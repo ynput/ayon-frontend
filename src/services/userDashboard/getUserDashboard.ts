@@ -35,7 +35,15 @@ type UpdatedDefinitions = Omit<
   >
 }
 
-const transformKanban = (response: GetKanbanQuery) => response.kanban.edges.map(({ node }) => node)
+// get edges and sort by task label || name
+const transformKanban = (response: GetKanbanQuery) =>
+  response.kanban.edges
+    .map(({ node }) => node)
+    .sort((a, b) => {
+      const aLabel = a.label || a.name
+      const bLabel = b.label || b.name
+      return aLabel.localeCompare(bLabel)
+    })
 
 const provideKanbanTags = (result: GetKanbanResponse | undefined, _error: $Any, args: $Any) =>
   result?.length
@@ -255,7 +263,8 @@ const injectedDashboardRestApi = api.injectEndpoints({
           return { error, meta: undefined, data: undefined }
         }
       },
-      providesTags: (_res, _error, { projects }) => projects.map(projectName => ({ type: 'project', id: projectName })),
+      providesTags: (_res, _error, { projects }) =>
+        projects.map((projectName) => ({ type: 'project', id: projectName })),
     }),
   }),
 })
