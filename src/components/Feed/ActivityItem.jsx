@@ -29,11 +29,14 @@ const ActivityItem = ({
   editProps,
   filter,
   readOnly,
+  statuses = [],
   ...props
 }) => {
   switch (activity.activityType) {
     case 'comment':
-      return <ActivityComment {...{ activity, projectInfo, editProps, readOnly }} {...props} />
+      return (
+        <ActivityComment {...{ activity, projectInfo, editProps, readOnly, statuses }} {...props} />
+      )
     case 'status.change':
       return <ActivityStatusChange activity={activity} {...props} />
     case 'assignee.add':

@@ -35,6 +35,7 @@ const Feed = ({
   scope = 'dashboard',
   statePath = 'pinned',
   readOnly,
+  statuses = [],
 }) => {
   const dispatch = useDispatch()
   const userName = useSelector((state) => state.user.name)
@@ -286,6 +287,7 @@ const Feed = ({
                   scope={scope}
                   statePath={statePath}
                   readOnly={readOnly}
+                  statuses={statuses}
                 />
               ))}
           {/* message when no versions published */}

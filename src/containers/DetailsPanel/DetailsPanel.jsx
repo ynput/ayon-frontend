@@ -16,6 +16,7 @@ import Shortcuts from '@containers/Shortcuts'
 import { isEmpty } from 'lodash'
 import useGetEntityPath from './hooks/useGetEntityPath'
 import { usePiPWindow } from '@context/pip/PiPProvider'
+import getAllProjectStatuses from './helpers/getAllProjectsStatuses'
 
 export const entitiesWithoutFeed = ['product', 'representation']
 
@@ -95,6 +96,8 @@ const DetailsPanel = ({
     isSuccess,
     isError,
   })
+
+  const allStatuses = getAllProjectStatuses(projectsInfo)
 
   // get the first project name and info to be used in the feed.
   const firstProject = projectNames[0]
@@ -210,6 +213,7 @@ const DetailsPanel = ({
             isMultiProjects={projectNames.length > 1}
             scope={scope}
             statePath={statePath}
+            statuses={allStatuses}
           />
         )}
         {selectedTab === 'files' && (

@@ -10,7 +10,7 @@ import { useGetEntitiesDetailsPanelQuery } from '@queries/entity/getEntityPanel'
 import { useAppSelector } from '@state/store'
 import { useGetProjectsInfoQuery } from '@queries/userDashboard/getUserDashboard'
 import { useGetAllAssigneesQuery } from '@queries/user/getUsers'
-import { Status } from '@api/rest/project'
+import getAllProjectStatuses from '../helpers/getAllProjectsStatuses'
 
 type Entity = {
   id: string
@@ -41,14 +41,10 @@ const DetailsPanelFloating: FC<DetailsPanelFloatingProps> = () => {
   })
 
   // get all statuses from projects info, removing duplicate names
-  const statuses: Status[] = useMemo(() => {
-    const statuses = projects
-      .map((p) => projectsInfo[p]?.statuses)
-      .flat()
-      .filter(Boolean)
-    const uniqueStatuses = new Map(statuses.map((status) => [status.name, status]))
-    return Array.from(uniqueStatuses.values())
-  }, [projects, projectsInfo])
+  const statuses = useMemo(
+    () => getAllProjectStatuses(projectsInfo, projects),
+    [projectsInfo, projects],
+  )
 
   const { data = [], isFetching: isFetchingEntitiesDetails } = useGetEntitiesDetailsPanelQuery(
     { entityType, entities: entities, projectsInfo },
@@ -128,6 +124,7 @@ const DetailsPanelFloating: FC<DetailsPanelFloatingProps> = () => {
             scope={scope || undefined}
             statePath={statePath || undefined}
             readOnly
+            statuses={statuses}
           />
         </Styled.FeedContainer>
       </Styled.Container>

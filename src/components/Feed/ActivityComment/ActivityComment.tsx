@@ -29,6 +29,8 @@ import CommentWrapper from './CommentWrapper'
 import { aTag, blockquoteTag, codeTag, inputTag } from './activityMarkdownComponents'
 import { mapGraphQLReactions } from './mappers'
 import { Icon } from '@ynput/ayon-react-components'
+import ActivityStatus from '../ActivityStatus/ActivityStatus'
+import { Status } from '@api/rest/project'
 
 type Props = {
   activity: $Any
@@ -47,6 +49,7 @@ type Props = {
   scope: string
   statePath: string
   readOnly: boolean
+  statuses: Status[]
 }
 
 const ActivityComment = ({
@@ -66,6 +69,7 @@ const ActivityComment = ({
   scope,
   statePath,
   readOnly,
+  statuses = [],
 }: Props) => {
   let {
     body,
@@ -235,6 +239,14 @@ const ActivityComment = ({
                         {props.children}
                       </Styled.Tip>
                     ),
+                    // @ts-ignore
+                    status: (props) => {
+                      return (
+                        <ActivityStatus name={props.id} statuses={statuses}>
+                          {props.children}
+                        </ActivityStatus>
+                      )
+                    },
                   }}
                 >
                   {body}
