@@ -25,16 +25,16 @@ const Actions = ({ entities, entityType, entitySubTypes, isLoadingEntity }) => {
       .filter((value, index, self) => self.indexOf(value) === index && value)
 
     // try and use the passed in entitySubTypes, if not use the loaded ones
-    const entitySubtypes = entitySubTypes || entitySubtypesLoaded || []
+    const entitySubTypesToUse = entitySubTypes || entitySubtypesLoaded || []
 
     // all types except version should have subtypes
-    if (!entitySubTypes?.length && entityType !== 'version') return
+    if (!entitySubTypesToUse?.length && entityType !== 'version') return
 
     return {
       projectName: entities[0].projectName,
       entityType: entityType,
       entityIds: entities.map((entity) => entity.id),
-      entitySubtypes: entitySubtypes,
+      entitySubtypes: entitySubTypesToUse,
     }
   }, [entities, entityType])
 
