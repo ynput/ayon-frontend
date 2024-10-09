@@ -1,8 +1,9 @@
 import groupResult from './groupResult'
 
 const sortByName = (a, b) => {
-  if (a.node.name < b.node.name) return -1
-  if (a.node.name > b.node.name) return 1
+  const labelA = a.node.label || a.node.name
+  const labelB = b.node.label || b.node.name
+  return labelA.localeCompare(labelB)
 }
 
 export const parseTasksList = (tasks, userName) => {
