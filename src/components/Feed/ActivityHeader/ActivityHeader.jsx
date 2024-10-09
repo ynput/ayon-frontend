@@ -10,9 +10,7 @@ const ActivityHeader = ({
   date,
   isRef,
   activity = {},
-
   children,
-
   projectName,
   entityType,
   onReferenceClick,
@@ -33,7 +31,7 @@ const ActivityHeader = ({
     <Styled.Header>
       <Styled.Body>
         {name && !noUser && <UserImage name={name} size={22} />}
-        {noUser && <Icon icon="no_accounts" />}
+        {noUser && <Icon icon="account_circle" />}
         <h5>{fullName || activity.activityData?.author || 'Unknown'}</h5>
         {isRef && (
           <>
