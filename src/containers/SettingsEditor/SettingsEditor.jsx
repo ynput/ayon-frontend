@@ -4,9 +4,13 @@ import validator from '@rjsf/validator-ajv8'
 import { useState, useMemo, useEffect, useRef } from 'react'
 import styled from 'styled-components'
 
-import { TextWidget, SelectWidget, CheckboxWidget, DateTimeWidget } from './widgets'
-import { FieldTemplate, ObjectFieldTemplate, ArrayFieldTemplate } from './fields'
+import { CheckboxWidget } from './CheckboxWidget'
+import { FieldTemplate, ObjectFieldTemplate } from './Fields/fields'
+import { ArrayFieldTemplate } from './Fields/ArrayFieldTemplate'
 import './SettingsEditor.sass'
+import { TextWidget } from './Widgets/TextWidget'
+import { SelectWidget } from './Widgets/SelectWidget'
+import { DateTimeWidget } from './Widgets/DateTimeWidget'
 
 const waitForElm = (selector, timeout = 1000) => {
   return new Promise((resolve, reject) => {
@@ -211,9 +215,6 @@ const SettingsEditor = ({
     currentId: currentId,
   }
 
-  console.log('schema: ', schema)
-  console.log('ui schem: ', uiSchema)
-  console.log('form data: ', formData)
   return (
     <FormWrapper currentSelection={currentId} ref={formWrapperRef}>
       <Form

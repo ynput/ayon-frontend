@@ -2,7 +2,7 @@ import clsx from 'clsx'
 import { useMemo } from 'react'
 import { Divider } from '@ynput/ayon-react-components'
 import ReactMarkdown from 'react-markdown'
-import SettingsPanel from './SettingsPanel'
+import SettingsPanel from '../SettingsPanel'
 import useCreateContext from '@hooks/useCreateContext'
 
 import { isEqual } from 'lodash'

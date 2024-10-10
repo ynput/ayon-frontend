@@ -1,8 +1,14 @@
 import { ArrayFieldTemplateProps } from "@rjsf/utils"
-import { $Any } from "@types"
-import { Button } from "@ynput/ayon-react-components"
-import React from "react"
+import { Button } from '@ynput/ayon-react-components'
+import { useState } from "react"
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
+import { closestCenter, DndContext, DragEndEvent, DragOverlay, DragStartEvent } from "@dnd-kit/core"
+import { createPortal } from "react-dom"
+import { DraggableItem } from "./DraggableItem"
+import { ArrayItemTemplate } from "./ArrayFieldItemTemplate"
+import * as Styled from "./FormFields.styled"
 import styled from "styled-components"
+import { $Any } from "@types"
 
 const FormArrayField = styled.div`
   flex-grow: 1;
@@ -11,32 +17,99 @@ const FormArrayField = styled.div`
   gap: var(--base-gap-large);
 `
 
-const ArrayItemControls = styled.div`
-  display: flex;
-  flex-direction: row;
-  justify-content: flex-start;
-  gap: 5px;
+const ArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
+  // console.log('props: ', props)
+  const onAddItem = () => {
+    const id = props.idSchema.$id
+    const formContext = props.formContext
+    const path = formContext.overrides[id]?.path
 
-  button {
-    border-radius: 50%;
-    width: 30px;
-    height: 30px;
+    formContext.onSetChangedKeys([{ path, isChanged: true }])
+    props.onAddClick()
   }
-`
-const FormArrayFieldItem = styled.div`
-  flex-grow: 1;
-  display: flex;
-  flex-direction: row;
-  gap: var(--base-gap-large);
 
-  margin-right: 4px;
-
-  .panel-content {
-    flex-grow: 1;
+  const [draggedItemId, setDraggedItemId] = useState<string | null>()
+  const handleDraggableEnd = (event: DragEndEvent) => {
+    // console.log('event', event)
+    // console.log('props: ', props)
+    const item = items.find(item => item.id === event.active.id)
+    if (item)  {
+      // console.log('found item: ', item)
+      // console.log(item.onReorderClick)
+      item.onReorderClick(item.index, parseInt(event.over!.id.toString()))()
+    }
   }
-`
+
+  const items = props.items.map((item) => ({ ...item, id: item.index.toString() }))
+
+  const handleDragStart = (event: DragStartEvent) => {
+    setDraggedItemId(event.active.id as string)
+  }
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    setDraggedItemId(null)
+    handleDraggableEnd(event)
+  }
+
+  let draggedItem
+  if (draggedItemId) {
+    draggedItem = items.find((item) => item.id === draggedItemId)
+  }
+  if (items.length == 1) {
+    return <FormArrayFieldWrapper item={items[0]} />
+  }
 
 
+  return (
+    <DndContext
+      collisionDetection={closestCenter}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
+      <SortableContext items={items} strategy={verticalListSortingStrategy}>
+        {items.map((item) => (
+          <Styled.ItemWrapper style={{ marginBottom: '4px', display: '' }}>
+            <DraggableItem id={item.id} isVisible={item.id !== draggedItemId} key={item.key}>
+              <FormArrayFieldWrapper item={item} />
+            </DraggableItem>
+          </Styled.ItemWrapper>
+        ))}
+      </SortableContext>
+
+      {props.canAdd && !props.schema?.disabled && (
+        <Styled.ArrayItemControls>
+          <Button onClick={onAddItem} icon="add" />
+        </Styled.ArrayItemControls>
+      )}
+
+      {draggedItem && createPortal(
+        //class needed to inherit styling defined in settings editor sass file
+        <DragOverlay className="rjsf">
+          <DraggableItem
+            id={draggedItem!.id }
+            isVisible={draggedItem.id === draggedItemId}
+          >
+            <FormArrayFieldWrapper item={draggedItem} />
+          </DraggableItem>
+        </DragOverlay>,
+        document.body,
+      )}
+    </DndContext>
+  )
+}
+
+const FormArrayFieldWrapper = ({item}: {item: $Any}) => {
+  console.log(item)
+  return (
+    <FormArrayField>
+      <ArrayItemTemplate {...item} />
+    </FormArrayField>
+  )
+}
+
+export { ArrayFieldTemplate }
+
+/*
 const ArrayItemTemplate = (props: $Any) => {
   const parentSchema = props?.children?._owner?.memoizedProps?.schema || {}
   const itemName = props?.children?.props?.formData?.name
@@ -78,55 +151,5 @@ const ArrayItemTemplate = (props: $Any) => {
     r()
   }
 
-  const rmButton = props.hasRemove && !parentSchema.disabled && (
-    <ArrayItemControls>
-      <Button onClick={onRemoveItem} icon="close" disabled={undeletable} />
-      <Button onClick={onMoveUp} icon="arrow_upward" />
-      <Button onClick={onMoveDown} icon="arrow_downward" />
-    </ArrayItemControls>
-  )
-
-  return (
-    <FormArrayFieldItem>
-      {children}
-      {rmButton}
-    </FormArrayFieldItem>
-  )
 }
-
-const ArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
-  /* Complete array including the add button */
-
-  const onAddItem = () => {
-    const id = props.idSchema.$id
-    const formContext = props.formContext
-    const path = formContext.overrides[id]?.path
-
-    formContext.onSetChangedKeys([{ path, isChanged: true }])
-    props.onAddClick()
-  }
-
-  // for some werird reason, the array sorting breaks when ArrayItemTemplate is
-  // not wrapped in react fragment. I suspected it was the key, but it was not.
-  // I have no idea why this works, but it does. Do not touch!
-
-
-  return (
-    <FormArrayField style={{outline: 'solid 1px red'}}>
-      {props.items.map((element, idx) => (
-        <React.Fragment key={idx}>
-          <label style={{color: 'red'}}>
-          <ArrayItemTemplate {...element} key={element?.key} />
-          </label>
-        </React.Fragment>
-      ))}
-
-      {props.canAdd && !props.schema?.disabled && (
-        <ArrayItemControls>
-          <Button onClick={onAddItem} icon="add" />
-        </ArrayItemControls>
-      )}
-    </FormArrayField>
-  )
-}
-export default ArrayFieldTemplate
+*/
