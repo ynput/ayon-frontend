@@ -27,8 +27,6 @@ type Props = {
   id: string
   isVisible?: boolean
   children: ReactNode
-  onRemove?: () => void
-  onDuplicate?: () => void
 }
 
 const DraggableItem = ({ id, isVisible, children }: Props) => {
@@ -66,4 +64,4 @@ const DraggableItem = ({ id, isVisible, children }: Props) => {
   )
 }
 
-export { DraggableItem }
+export default DraggableItem

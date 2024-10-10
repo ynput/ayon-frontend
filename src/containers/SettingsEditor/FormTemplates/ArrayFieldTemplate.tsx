@@ -4,8 +4,8 @@ import { useState } from "react"
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { closestCenter, DndContext, DragEndEvent, DragOverlay, DragStartEvent } from "@dnd-kit/core"
 import { createPortal } from "react-dom"
-import { DraggableItem } from "./DraggableItem"
-import { ArrayItemTemplate } from "./ArrayFieldItemTemplate"
+import DraggableItem from "./DraggableItem"
+import  ArrayItemTemplate from "./ArrayFieldItemTemplate"
 import * as Styled from "./FormTemplates.styled"
 import styled from "styled-components"
 import { $Any } from "@types"
@@ -19,7 +19,7 @@ const FormArrayField = styled.div`
 
 const ArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
 
-  const onArrayChanged = (item: $Any) => {
+  const onArrayChanged = (item: $Any) => () => {
     // @ts-ignore
     const parentId = item.children.props.idSchema.$id.split('_').slice(0, -1).join('_')
     // @ts-ignore
@@ -41,7 +41,7 @@ const ArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
 
   const handleDraggableEnd = (event: DragEndEvent) => {
     const item = items.find(item => item.id === event.active.id)
-    onArrayChanged(item)
+    onArrayChanged(item)()
     if (item)  {
       item.onReorderClick(item.index, parseInt(event.over!.id.toString()))()
     }
@@ -73,7 +73,7 @@ const ArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
         {items.map((item) => (
           <Styled.ItemWrapper style={{ marginBottom: '4px', display: '' }}>
             <DraggableItem id={item.id} isVisible={item.id !== draggedItemId} key={item.key}>
-              <FormArrayFieldWrapper item={item} />
+              <FormArrayFieldWrapper onChange={onArrayChanged(item)} item={item} />
             </DraggableItem>
           </Styled.ItemWrapper>
         ))}
@@ -101,10 +101,10 @@ const ArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
   )
 }
 
-const FormArrayFieldWrapper = ({item}: {item: $Any}) => {
+const FormArrayFieldWrapper = ({ item, onChange }: { item: $Any; onChange?: () => void }) => {
   return (
     <FormArrayField>
-      <ArrayItemTemplate {...item} />
+      <ArrayItemTemplate onChange={onChange} {...item} />
     </FormArrayField>
   )
 }
@@ -127,14 +127,5 @@ const ArrayItemTemplate2 = (props: $Any) => {
     //if (children.props.formData.name === itemName)
     //  children.props.schema.properties.name.fixedValue = itemName
   }
-
-
-  const onRemoveItem = () => {
-    onArrayChanged()
-    const r = props.onDropIndexClick(props.index)
-    r()
-  }
-
-
 }
   */

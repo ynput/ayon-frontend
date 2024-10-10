@@ -43,26 +43,10 @@ const ArrayItemTemplate = (props: $Any) => {
     //  children.props.schema.properties.name.fixedValue = itemName
   }
 
-  const onArrayChanged = () => {
-    const parentId = props.children.props.idSchema.$id.split('_').slice(0, -1).join('_')
-    const formContext = props.children._owner.memoizedProps.formContext
-    const path = formContext.overrides[parentId].path
-    formContext.onSetChangedKeys([{ path, isChanged: true }])
-  }
-
   const onRemoveItem = () => {
-    onArrayChanged()
-    const r = props.onDropIndexClick(props.index)
-    r()
+    props.onChange()
+    props.onDropIndexClick(props.index)()
   }
-
-  /*
-  const onMoveUp = () => {
-    onArrayChanged()
-    const r = props.onReorderClick(props.index, props.index - 1)
-    r()
-  }
-    */
 
   const rmButton = props.hasRemove && !parentSchema.disabled && (
     <ArrayItemControls>
@@ -78,4 +62,4 @@ const ArrayItemTemplate = (props: $Any) => {
   )
 }
 
-export { ArrayItemTemplate }
+export default ArrayItemTemplate
