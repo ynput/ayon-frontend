@@ -52,7 +52,7 @@ const DetailsPanelFloating: FC<DetailsPanelFloatingProps> = () => {
       skip: !entities.length || isFetchingInfo,
     },
   )
-  const entitiesData: Entity[] = data.map((d: Entity | null) => !!d)
+  const entitiesData: Entity[] = data.filter((e: Entity | null) => !!e)
 
   const thumbnails = useMemo(
     () => getThumbnails(entitiesData, entityType),
