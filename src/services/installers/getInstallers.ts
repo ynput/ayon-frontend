@@ -7,7 +7,7 @@ const installersApi = api.enhanceEndpoints({
       transformResponse: (res: ListInstallersApiResponse) => {
         //  coerce versions using semver
         const installers =
-          res.installers?.map((i) => ({
+          res?.installers?.map((i) => ({
             ...i,
             semver: coerce(i.version)?.version || null,
           })) || []
