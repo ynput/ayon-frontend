@@ -1,37 +1,42 @@
 import Form from '@rjsf/core'
+import validator from '@rjsf/validator-ajv8'
+
 import { useState, useMemo, useEffect, useRef } from 'react'
 import styled from 'styled-components'
 
-import { TextWidget, SelectWidget, CheckboxWidget, DateTimeWidget } from './widgets'
-import { FieldTemplate, ObjectFieldTemplate, ArrayFieldTemplate } from './fields'
+import { CheckboxWidget } from './Widgets/CheckboxWidget'
+import FieldTemplate from './FormTemplates/FieldTemplate'
+import ObjectFieldTemplate from './FormTemplates/ObjectFieldTemplate'
+import ArrayFieldTemplate from './FormTemplates/ArrayFieldTemplate'
 import './SettingsEditor.sass'
-
+import { TextWidget } from './Widgets/TextWidget'
+import { SelectWidget } from './Widgets/SelectWidget'
+import { DateTimeWidget } from './Widgets/DateTimeWidget'
 
 const waitForElm = (selector, timeout = 1000) => {
-    return new Promise((resolve, reject) => {
-        if (document.querySelector(selector)) {
-            return resolve(document.querySelector(selector));
-        }
+  return new Promise((resolve, reject) => {
+    if (document.querySelector(selector)) {
+      return resolve(document.querySelector(selector))
+    }
 
-        const observer = new MutationObserver(mutations => {
-            if (document.querySelector(selector)) {
-                observer.disconnect();
-                resolve(document.querySelector(selector));
-            }
-        });
+    const observer = new MutationObserver(() => {
+      if (document.querySelector(selector)) {
+        observer.disconnect()
+        resolve(document.querySelector(selector))
+      }
+    })
 
-        observer.observe(document.body, {
-            childList: true,
-            subtree: true
-        });
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+    })
 
-        setTimeout(() => {
-            observer.disconnect();
-            reject(new Error(`Element with selector "${selector}" did not appear within ${timeout}ms`));
-        }, timeout);
-    });
+    setTimeout(() => {
+      observer.disconnect()
+      reject(new Error(`Element with selector "${selector}" did not appear within ${timeout}ms`))
+    }, timeout)
+  })
 }
-
 
 const FormWrapper = styled.div`
   [data-fieldid='${(props) => props.currentSelection}'] {
@@ -134,8 +139,6 @@ const SettingsEditor = ({
   changedKeys,
   context,
 }) => {
-
-
   const [localBreadcrumbs, setLocalBreadcrumbs] = useState([])
   const formWrapperRef = useRef()
 
@@ -150,8 +153,7 @@ const SettingsEditor = ({
   }, [originalData, overrides])
 
   const formContext = useMemo(() => {
-    if (!schema)
-        return {}
+    if (!schema) return {}
     const formOverrides = buildOverrides(formData)
 
     for (const key in formOverrides) {
@@ -192,16 +194,13 @@ const SettingsEditor = ({
     const wrapper = document.getElementById('settings-scroll-panel')
     if (!wrapper) return
 
-    waitForElm(`[data-fieldid='${currentId}']`)
-    .then((el) => {
+    waitForElm(`[data-fieldid='${currentId}']`).then((el) => {
       const rect = el.getBoundingClientRect()
       const wrapperRect = wrapper.getBoundingClientRect()
-      if (rect.top > wrapperRect.top && rect.top < wrapperRect.bottom) 
-        return
+      if (rect.top > wrapperRect.top && rect.top < wrapperRect.bottom) return
       el.scrollIntoView({ behavior: 'instant', block: 'start' })
     })
-  }
-  , [currentId])
+  }, [currentId])
 
   if (!schema) {
     // TODO: maybe a spinner or something?
@@ -217,7 +216,6 @@ const SettingsEditor = ({
     currentId: currentId,
   }
 
-
   return (
     <FormWrapper currentSelection={currentId} ref={formWrapperRef}>
       <Form
@@ -226,11 +224,14 @@ const SettingsEditor = ({
         formData={formData}
         formContext={fullContext}
         widgets={widgets}
-        FieldTemplate={FieldTemplate}
-        ObjectFieldTemplate={ObjectFieldTemplate}
-        ArrayFieldTemplate={ArrayFieldTemplate}
         onChange={(evt) => onChange(evt.formData)}
+        templates={{
+          FieldTemplate,
+          ArrayFieldTemplate,
+          ObjectFieldTemplate,
+        }}
         onError={(evt) => console.log('Form contains errors:', evt)}
+        validator={validator}
       >
         <div />
       </Form>
