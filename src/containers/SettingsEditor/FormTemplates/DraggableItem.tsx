@@ -1,8 +1,27 @@
 import { Icon } from '@ynput/ayon-react-components'
 import { CSS } from '@dnd-kit/utilities'
-import { useSortable } from "@dnd-kit/sortable"
-import { ReactNode } from "react"
+import { useSortable } from '@dnd-kit/sortable'
+import { ReactNode } from 'react'
+import styled from 'styled-components'
 
+const StyledIconWrapper = styled.div`
+  height: var(--base-input-size);
+  max-height: var(--base-input-size);
+  display: flex;
+  align-items: center;
+`
+
+const StyledIcon = styled(Icon)`
+  user-select: none;
+  &:hover {
+    cursor: grab;
+  }
+`
+
+const DraggableContainer = styled.div`
+  display: flex;
+  justify-content: center;
+`
 
 type Props = {
   id: string
@@ -12,11 +31,7 @@ type Props = {
   onDuplicate?: () => void
 }
 
-const DraggableItem = ({
-  id,
-  isVisible,
-  children,
-}: Props) => {
+const DraggableItem = ({ id, isVisible, children }: Props) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
     id,
     animateLayoutChanges: () => false,
@@ -35,19 +50,20 @@ const DraggableItem = ({
         opacity: isVisible ? 1 : 0,
       }}
     >
-      <div style={{ display: 'flex' }}>
-        <Icon
+      <DraggableContainer style={{ display: 'flex' }}>
+        <StyledIconWrapper>
+        <StyledIcon
           {...listeners}
           {...attributes}
           className="icon draggable"
           icon="drag_indicator"
           id="icon"
         />
+        </StyledIconWrapper>
         {children}
-      </div>
+      </DraggableContainer>
     </div>
   )
 }
-
 
 export { DraggableItem }

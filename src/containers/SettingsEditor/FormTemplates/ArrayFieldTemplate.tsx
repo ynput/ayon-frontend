@@ -6,7 +6,7 @@ import { closestCenter, DndContext, DragEndEvent, DragOverlay, DragStartEvent } 
 import { createPortal } from "react-dom"
 import { DraggableItem } from "./DraggableItem"
 import { ArrayItemTemplate } from "./ArrayFieldItemTemplate"
-import * as Styled from "./FormFields.styled"
+import * as Styled from "./FormTemplates.styled"
 import styled from "styled-components"
 import { $Any } from "@types"
 
@@ -18,7 +18,16 @@ const FormArrayField = styled.div`
 `
 
 const ArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
-  // console.log('props: ', props)
+
+  const onArrayChanged = (item: $Any) => {
+    // @ts-ignore
+    const parentId = item.children.props.idSchema.$id.split('_').slice(0, -1).join('_')
+    // @ts-ignore
+    const formContext = item.children._owner.memoizedProps.formContext
+    const path = formContext.overrides[parentId].path
+    formContext.onSetChangedKeys([{ path, isChanged: true }])
+  }
+
   const onAddItem = () => {
     const id = props.idSchema.$id
     const formContext = props.formContext
@@ -29,13 +38,11 @@ const ArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
   }
 
   const [draggedItemId, setDraggedItemId] = useState<string | null>()
+
   const handleDraggableEnd = (event: DragEndEvent) => {
-    // console.log('event', event)
-    // console.log('props: ', props)
     const item = items.find(item => item.id === event.active.id)
+    onArrayChanged(item)
     if (item)  {
-      // console.log('found item: ', item)
-      // console.log(item.onReorderClick)
       item.onReorderClick(item.index, parseInt(event.over!.id.toString()))()
     }
   }
@@ -55,10 +62,6 @@ const ArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
   if (draggedItemId) {
     draggedItem = items.find((item) => item.id === draggedItemId)
   }
-  if (items.length == 1) {
-    return <FormArrayFieldWrapper item={items[0]} />
-  }
-
 
   return (
     <DndContext
@@ -99,7 +102,6 @@ const ArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
 }
 
 const FormArrayFieldWrapper = ({item}: {item: $Any}) => {
-  console.log(item)
   return (
     <FormArrayField>
       <ArrayItemTemplate {...item} />
@@ -107,10 +109,10 @@ const FormArrayFieldWrapper = ({item}: {item: $Any}) => {
   )
 }
 
-export { ArrayFieldTemplate }
+export default ArrayFieldTemplate
 
-/*
-const ArrayItemTemplate = (props: $Any) => {
+  /*
+const ArrayItemTemplate2 = (props: $Any) => {
   const parentSchema = props?.children?._owner?.memoizedProps?.schema || {}
   const itemName = props?.children?.props?.formData?.name
   let undeletable = false
@@ -126,12 +128,6 @@ const ArrayItemTemplate = (props: $Any) => {
     //  children.props.schema.properties.name.fixedValue = itemName
   }
 
-  const onArrayChanged = () => {
-    const parentId = props.children.props.idSchema.$id.split('_').slice(0, -1).join('_')
-    const formContext = props.children._owner.memoizedProps.formContext
-    const path = formContext.overrides[parentId].path
-    formContext.onSetChangedKeys([{ path, isChanged: true }])
-  }
 
   const onRemoveItem = () => {
     onArrayChanged()
@@ -139,17 +135,6 @@ const ArrayItemTemplate = (props: $Any) => {
     r()
   }
 
-  const onMoveUp = () => {
-    onArrayChanged()
-    const r = props.onReorderClick(props.index, props.index - 1)
-    r()
-  }
-
-  const onMoveDown = () => {
-    onArrayChanged()
-    const r = props.onReorderClick(props.index, props.index + 1)
-    r()
-  }
 
 }
-*/
+  */
