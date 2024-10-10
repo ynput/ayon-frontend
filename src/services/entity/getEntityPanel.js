@@ -62,7 +62,7 @@ const getEntityPanel = api.injectEndpoints({
 
           const entitiesDetails = []
           for (const response of res) {
-            if (response.status === 'rejected') {
+            if (response.status === 'rejected' || !response.data) {
               console.error('No entity found')
               continue
             }

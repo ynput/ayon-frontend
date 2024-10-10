@@ -52,7 +52,7 @@ const DetailsPanelFloating: FC<DetailsPanelFloatingProps> = () => {
       skip: !entities.length || isFetchingInfo,
     },
   )
-  const entitiesData: Entity[] = data
+  const entitiesData: Entity[] = data.map((d: Entity | null) => !!d)
 
   const thumbnails = useMemo(
     () => getThumbnails(entitiesData, entityType),
@@ -62,16 +62,20 @@ const DetailsPanelFloating: FC<DetailsPanelFloatingProps> = () => {
   // users for assignee field, find in all users
   const users = useMemo(() => {
     return allUsers
-      .filter((u) => entitiesData.some((e) => e.users?.includes(u.name)))
+      .filter((u) => entitiesData.some((e) => e?.users?.includes(u.name)))
       .map((u) => ({ ...u, avatarUrl: `/api/users/${u.name}/avatar` }))
   }, [allUsers, entities])
 
   const isMultiple = entitiesData.length > 1
   const firstEntity = entitiesData[0]
+  if (!entitiesData.length || !firstEntity) return null
+
+  if (isFetchingEntitiesDetails) return <div>Loading...</div>
+
   const projectName = firstEntity?.projectName
 
   // are there multiple statuses of different names?
-  const mixedStatuses = entitiesData.some((e) => e.status !== firstEntity?.status)
+  const mixedStatuses = entitiesData.some((e) => e?.status !== firstEntity?.status)
   const mixedStatus = {
     icon: 'question_mark',
     color: 'var(--md-sys-color-surface-container-highest)',
@@ -85,8 +89,6 @@ const DetailsPanelFloating: FC<DetailsPanelFloatingProps> = () => {
         color: '',
         name: 'None',
       }
-
-  if (isFetchingEntitiesDetails) return <div>Loading...</div>
 
   return (
     <PiPWrapper>
