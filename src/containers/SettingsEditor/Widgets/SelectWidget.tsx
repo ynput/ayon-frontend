@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Dropdown } from '@ynput/ayon-react-components'
 
-import { updateChangedKeys, equiv, parseContext  } from '../helpers'
+import { updateChangedKeys, equiv, parseContext } from '../helpers'
 import { $Any } from '@types'
-
 
 const SelectWidget = (props: $Any) => {
   const { originalValue, path } = parseContext(props)
@@ -100,6 +99,5 @@ const SelectWidget = (props: $Any) => {
     />
   )
 }
-
 
 export { SelectWidget }

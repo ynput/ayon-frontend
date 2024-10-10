@@ -1,5 +1,5 @@
-import { $Any } from "@types"
-import { isEqual } from "lodash"
+import { $Any } from '@types'
+import { isEqual } from 'lodash'
 
 const parseContext = (props: $Any) => {
   const result = { originalValue: undefined, path: [] }

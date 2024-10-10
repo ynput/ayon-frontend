@@ -1,7 +1,13 @@
-import { useEffect, useState } from "react"
-import { equiv, getDefaultValue, parseContext, updateChangedKeys } from "../helpers"
-import { $Any } from "@types"
-import { IconSelect, InputColor, InputNumber, InputText, InputTextarea } from "@ynput/ayon-react-components"
+import { useEffect, useState } from 'react'
+import { equiv, getDefaultValue, parseContext, updateChangedKeys } from '../helpers'
+import { $Any } from '@types'
+import {
+  IconSelect,
+  InputColor,
+  InputNumber,
+  InputText,
+  InputTextarea,
+} from '@ynput/ayon-react-components'
 
 export const TextWidget = (props: $Any) => {
   const { originalValue, path } = parseContext(props)
@@ -86,18 +92,16 @@ export const TextWidget = (props: $Any) => {
 
   if (['integer', 'number'].includes(props.schema.type)) {
     Input = InputNumber
-    opts.value = (value === undefined || value === null) ?  '' : value
+    opts.value = value === undefined || value === null ? '' : value
     opts.showButtons = true
     opts.useGrouping = false
     opts.onBlur = () => onChangeCommit(props.schema.type)
     opts.onChange = (e: $Any) => {
-  
       // ensure that the value is a number. decimal points are allowed
       // but no other characters
       // use regex to check if the value is a number
 
-      if (! /^-?\d*\.?\d*$/.test(e.target.value)) 
-        return
+      if (!/^-?\d*\.?\d*$/.test(e.target.value)) return
 
       onChange(e.target.value)
     }

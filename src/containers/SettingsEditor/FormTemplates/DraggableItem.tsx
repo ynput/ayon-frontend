@@ -29,7 +29,7 @@ type Props = {
   children: ReactNode
 }
 
-const DraggableItem = ({ id, isVisible, children }: Props) => {
+const DraggableItem = ({ id, isVisible = true, children }: Props) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
     id,
     animateLayoutChanges: () => false,
@@ -50,13 +50,13 @@ const DraggableItem = ({ id, isVisible, children }: Props) => {
     >
       <DraggableContainer style={{ display: 'flex' }}>
         <StyledIconWrapper>
-        <StyledIcon
-          {...listeners}
-          {...attributes}
-          className="icon draggable"
-          icon="drag_indicator"
-          id="icon"
-        />
+          <StyledIcon
+            {...listeners}
+            {...attributes}
+            className="icon draggable"
+            icon="drag_indicator"
+            id="icon"
+          />
         </StyledIconWrapper>
         {children}
       </DraggableContainer>

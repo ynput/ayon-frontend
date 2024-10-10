@@ -9,8 +9,6 @@ import { $Any } from '@types'
 import { FieldTemplateProps } from '@rjsf/utils'
 import { CSS } from 'styled-components/dist/types'
 
-
-
 const arrayStartsWith = (arr1: $Any, arr2: $Any) => {
   // return true, if first array starts with second array
   if ((arr2 || []).length > (arr1 || []).length) return false
@@ -64,7 +62,7 @@ function FieldTemplate(props: FieldTemplateProps) {
   }, [props.formContext.changedKeys, path])
 
   const overrideLevel = fieldChanged ? 'edit' : override?.level || 'default'
-  let labelStyle: CSS.Properties = { }
+  let labelStyle: CSS.Properties = {}
   if (override) {
     if (override?.inGroup) labelStyle.fontStyle = 'italic'
   }
@@ -139,7 +137,7 @@ function FieldTemplate(props: FieldTemplateProps) {
         className={classes.join(' ')}
         onClick={() => {
           if (props.formContext.onSetBreadcrumbs && path) props.formContext.onSetBreadcrumbs(path)
-        } }
+        }}
         onContextMenu={onContextMenu}
         currentId={props.formContext.currentId}
         layout={undefined}

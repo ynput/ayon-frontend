@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { InputSwitch } from '@ynput/ayon-react-components'
 
-import { updateChangedKeys, parseContext } from './helpers'
+import { updateChangedKeys, parseContext } from '../helpers'
 import { $Any } from '@types'
 
 const CheckboxWidget = function (props: $Any) {

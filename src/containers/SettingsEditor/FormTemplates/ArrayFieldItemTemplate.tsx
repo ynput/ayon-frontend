@@ -1,6 +1,6 @@
-import { $Any } from "@types"
+import { $Any } from '@types'
 import { Button } from '@ynput/ayon-react-components'
-import styled from "styled-components"
+import styled from 'styled-components'
 
 const ArrayItemControls = styled.div`
   display: flex;
