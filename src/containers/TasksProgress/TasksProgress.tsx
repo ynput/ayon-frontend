@@ -25,6 +25,7 @@ import { openViewer } from '@state/viewer'
 import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
 import './styles.scss'
 import { AttributeEnumItem } from '@api/rest/attributes'
+import SearchFilter from '@components/SearchFilter/SearchFilter'
 
 export type Operation = {
   id: string
@@ -273,8 +274,9 @@ const TasksProgress: FC<TasksProgressProps> = ({
       <Shortcuts shortcuts={shortcuts} deps={[expandedRows]} />
       <Section style={{ height: '100%' }} direction="column">
         <Toolbar>
-          <ProgressSearch data={tableData} onSearch={setFilteredFolderIds} />
-          <CategorySelect
+          <SearchFilter />
+          {/* <ProgressSearch data={tableData} onSearch={setFilteredFolderIds} /> */}
+          {/* <CategorySelect
             value={filteredTaskTypes}
             options={taskTypes.map((taskType) => ({
               value: taskType.name,
@@ -288,7 +290,7 @@ const TasksProgress: FC<TasksProgressProps> = ({
             multiSelect
             placeholder="Filter task types..."
             style={{ width: 185 }}
-          />
+          /> */}
           <Spacer />
           <Button
             onClick={handleExpandAllToggle}
