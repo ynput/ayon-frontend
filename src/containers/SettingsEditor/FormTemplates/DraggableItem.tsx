@@ -28,12 +28,15 @@ const DraggableContainer = styled.div`
   border-radius: 4px;
   margin-right: 4px;
 
-  &:has(.icon:hover) {
+  /* highlight row if: */
+  &:has(> div > span.icon:hover), // drag icon hovered
+  &:has(> div > div > div > button.delete:hover) // delete button hovered
+  {
     background-color: var(--md-sys-color-surface-container-high);
   }
 
   &.isOverlay {
-    background-color: var(--md-sys-color-surface-container-high-hover) !important;
+    background-color: var(--md-sys-color-surface-container-high);
     box-shadow: 0 0 4px 1px rgba(0, 0, 0, 0.1);
     /* face delete icon */
     [icon='delete'] {

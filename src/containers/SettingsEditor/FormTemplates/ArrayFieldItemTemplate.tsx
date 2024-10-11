@@ -57,7 +57,12 @@ const ArrayItemTemplate = (props: $Any) => {
 
   const rmButton = props.hasRemove && !parentSchema.disabled && (
     <ArrayItemControls>
-      <DeleteButton onClick={onRemoveItem} icon="delete" disabled={undeletable} />
+      <DeleteButton
+        onClick={onRemoveItem}
+        icon="delete"
+        className="delete"
+        disabled={undeletable}
+      />
     </ArrayItemControls>
   )
 
