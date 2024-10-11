@@ -3,6 +3,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { useSortable } from '@dnd-kit/sortable'
 import { ReactNode } from 'react'
 import styled from 'styled-components'
+import clsx from 'clsx'
 
 const StyledIconWrapper = styled.div`
   height: var(--base-input-size);
@@ -21,15 +22,34 @@ const StyledIcon = styled(Icon)`
 const DraggableContainer = styled.div`
   display: flex;
   justify-content: center;
+
+  padding: 4px;
+  padding-right: 0;
+  border-radius: 4px;
+  margin-right: 4px;
+
+  &:has(.icon:hover) {
+    background-color: var(--md-sys-color-surface-container-high);
+  }
+
+  &.isOverlay {
+    background-color: var(--md-sys-color-surface-container-high-hover) !important;
+    box-shadow: 0 0 4px 1px rgba(0, 0, 0, 0.1);
+    /* face delete icon */
+    [icon='delete'] {
+      opacity: 0.4;
+    }
+  }
 `
 
 type Props = {
   id: string
   isVisible?: boolean
   children: ReactNode
+  isOverlay?: boolean
 }
 
-const DraggableItem = ({ id, isVisible = true, children }: Props) => {
+const DraggableItem = ({ id, isVisible = true, isOverlay, children }: Props) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
     id,
     animateLayoutChanges: () => false,
@@ -48,7 +68,7 @@ const DraggableItem = ({ id, isVisible = true, children }: Props) => {
         opacity: isVisible ? 1 : 0,
       }}
     >
-      <DraggableContainer style={{ display: 'flex' }}>
+      <DraggableContainer style={{ display: 'flex' }} className={clsx({ isOverlay })}>
         <StyledIconWrapper>
           <StyledIcon
             {...listeners}

@@ -22,10 +22,6 @@ export const ArrayItemControls = styled.div`
   }
 `
 
-export const ItemWrapper = styled.div`
-  margin-bottom: 8px;
-`
-
 const FormArrayField = styled.div`
   flex-grow: 1;
   display: flex;
@@ -82,11 +78,9 @@ const ArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
     >
       <SortableContext items={items} strategy={verticalListSortingStrategy}>
         {items.map((item) => (
-          <ItemWrapper>
-            <DraggableItem id={item.id} isVisible={item.id !== draggedItemId} key={item.key}>
-              <FormArrayFieldWrapper onChange={onArrayChanged(item)} item={item} />
-            </DraggableItem>
-          </ItemWrapper>
+          <DraggableItem id={item.id} isVisible={item.id !== draggedItemId} key={item.key}>
+            <FormArrayFieldWrapper onChange={onArrayChanged(item)} item={item} />
+          </DraggableItem>
         ))}
       </SortableContext>
 
@@ -100,7 +94,7 @@ const ArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
         createPortal(
           //class needed to inherit styling defined in settings editor sass file
           <DragOverlay className="rjsf">
-            <DraggableItem id={draggedItem!.id}>
+            <DraggableItem id={draggedItem!.id} isOverlay>
               <FormArrayFieldWrapper item={draggedItem} />
             </DraggableItem>
           </DragOverlay>,

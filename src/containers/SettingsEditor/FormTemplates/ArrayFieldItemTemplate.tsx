@@ -27,6 +27,13 @@ const FormArrayFieldItem = styled.div`
   }
 `
 
+const DeleteButton = styled(Button)`
+  /* on hover show red */
+  &:hover {
+    background-color: var(--md-sys-color-error-container);
+  }
+`
+
 const ArrayItemTemplate = (props: $Any) => {
   const parentSchema = props?.children?._owner?.memoizedProps?.schema || {}
   const itemName = props?.children?.props?.formData?.name
@@ -50,7 +57,7 @@ const ArrayItemTemplate = (props: $Any) => {
 
   const rmButton = props.hasRemove && !parentSchema.disabled && (
     <ArrayItemControls>
-      <Button onClick={onRemoveItem} icon="delete" disabled={undeletable} />
+      <DeleteButton onClick={onRemoveItem} icon="delete" disabled={undeletable} />
     </ArrayItemControls>
   )
 
