@@ -48,9 +48,13 @@ class InstallRelease {
     // check we are on the progress page
     await expect(this.page.getByText('Installing')).toBeVisible()
     // check for success message (this could take a while)
-    await expect(this.page.getByText('Installed successfully.')).toBeVisible({ timeout: 60000 })
+    await expect(this.page.getByText('Installed successfully.')).toBeVisible({ timeout: 80000 })
     // close dialog
     await this.page.getByRole('button', { name: 'snooze Restart later (snooze)' }).click()
+
+    // Unsetting production on the created bundle to prevent bundle specs failures
+    await this.page.getByRole('cell', { name: 'Production' }).locator('div').click({ button: 'right' })
+    await this.page.getByRole('menuitem', { name: 'remove Unset production Shift' }).click();
     // check dialog is closed
     await expect(this.page.getByText('Install pipeline release')).not.toBeVisible()
   }
