@@ -3,10 +3,13 @@ import { Filter, filterOptions, initFilter, Option } from './types'
 import * as Styled from './SearchFilter.styled'
 import { Icon } from '@ynput/ayon-react-components'
 import { SearchFilterItem } from './SearchFilterItem'
-import SearchFilterDropdown from './SearchFilterDropdown'
+import SearchFilterDropdown, {
+  getIsValueSelected,
+  SearchFilterDropdownProps,
+} from './SearchFilterDropdown/SearchFilterDropdown'
 import { uuid } from 'short-uuid'
 import clsx from 'clsx'
-import { useFocusFirstOption } from './hooks'
+import { useFocusOptions } from './hooks'
 
 interface SearchFilterProps {}
 
@@ -18,15 +21,15 @@ const SearchFilter: FC<SearchFilterProps> = ({}) => {
 
   const [options, setOptions] = useState<Option[] | null>(null)
 
-  useFocusFirstOption({ ref: dropdownRef, options })
+  useFocusOptions({ ref: dropdownRef, options })
 
   const handleOpenOptions = () => {
     setOptions(filterOptions)
   }
 
-  const handleClose = () => {
+  const handleClose = (filters: Filter[]) => {
     // remove any filters that have no values
-    const updatedFilters = filtersData.filter((filter) => filter.values && filter.values.length > 0)
+    const updatedFilters = filters.filter((filter) => filter.values && filter.values.length > 0)
     setFiltersData(updatedFilters)
 
     // set options to null
@@ -45,7 +48,7 @@ const SearchFilter: FC<SearchFilterProps> = ({}) => {
     }
   }
 
-  const handleOptionSelect = (option: Option) => {
+  const handleOptionSelect: SearchFilterDropdownProps['onSelect'] = (option, config) => {
     const { values, parentId } = option
 
     // create new id for the filter so we can add multiple of the same filter name
@@ -66,9 +69,14 @@ const SearchFilter: FC<SearchFilterProps> = ({}) => {
           values: updatedValues,
         }
 
-        setFiltersData(
-          filtersData.map((filter) => (filter.id === parentId ? updatedParentFilter : filter)),
+        const updatedFilters = filtersData.map((filter) =>
+          filter.id === parentId ? updatedParentFilter : filter,
         )
+
+        setFiltersData(updatedFilters)
+
+        // close the dropdown with the new filters
+        if (config?.confirm) handleClose(updatedFilters)
       }
     } else {
       const addFilter = { ...option, id: newId, values: [] }
@@ -77,20 +85,34 @@ const SearchFilter: FC<SearchFilterProps> = ({}) => {
     }
 
     // if there are values set the next options
-    if (values && values.length > 0) {
+    if (values && values.length > 0 && !parentId) {
       const newOptions = values.map((value) => ({ ...value, parentId: newId }))
 
       setOptions(newOptions)
     }
   }
 
+  const sortSelectedToTopFields = ['assignee']
   const handleEditFilter = (id: string) => {
     const filterName = id.split('-')[0]
     // find the filter option and set those values
     const filterOption = filterOptions.find((option) => option.id === filterName)
     if (filterOption && filterOption.values && filterOption.values.length > 0) {
-      console.log(id)
-      const newOptions = filterOption.values.map((value) => ({ ...value, parentId: id }))
+      const newOptions = filterOption.values.map((value) => ({
+        ...value,
+        parentId: id,
+        isSelected: getIsValueSelected(value.id, id, filtersData),
+      }))
+
+      if (sortSelectedToTopFields.includes(filterName)) {
+        // sort selected to top
+        newOptions.sort((a, b) => {
+          if (a.isSelected && !b.isSelected) return -1
+          if (!a.isSelected && b.isSelected) return 1
+          return 0
+        })
+      }
+
       setOptions(newOptions)
     } else {
       setOptions(filterOptions)
@@ -108,7 +130,7 @@ const SearchFilter: FC<SearchFilterProps> = ({}) => {
     if (event.key === 'Escape') {
       event.preventDefault()
       event.stopPropagation()
-      handleClose()
+      handleClose(filtersData)
     }
   }
 
@@ -145,7 +167,7 @@ const SearchFilter: FC<SearchFilterProps> = ({}) => {
 
   return (
     <Styled.Container onKeyDown={handleContainerKeyDown}>
-      {options && <Styled.Backdrop onClick={handleClose} />}
+      {options && <Styled.Backdrop onClick={() => handleClose(filtersData)} />}
       <Styled.SearchBar
         className={clsx({ empty: !filtersData.length })}
         onClick={() => !filtersData.length && handleOpenOptions()}

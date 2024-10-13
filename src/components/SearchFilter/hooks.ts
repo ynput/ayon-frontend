@@ -1,17 +1,18 @@
 import { useEffect } from 'react'
 import { Option } from './types'
 
-type UseFocusFirstOption = {
+type UseFocusOptions = {
   ref: React.RefObject<HTMLUListElement>
   options: Option[] | null
 }
 
-export const useFocusFirstOption = ({ ref, options }: UseFocusFirstOption) => {
+export const useFocusOptions = ({ ref, options }: UseFocusOptions) => {
   // map all ids into a string to be used to compare different dropdowns
   const ids = options?.map((option) => option.id)
 
   useEffect(() => {
     if (!ids?.length) return
-    ref.current?.querySelector('li')?.focus()
+    // focus search input
+    ref.current?.querySelector('input')?.focus()
   }, [ref, ids?.join('-')])
 }

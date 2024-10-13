@@ -18,6 +18,7 @@ export const SearchBar = styled.div`
   border: 1px solid var(--md-sys-color-outline-variant);
   background-color: var(--md-sys-color-surface-container-low);
 
+  position: relative;
   z-index: 301;
 
   /* search button */
