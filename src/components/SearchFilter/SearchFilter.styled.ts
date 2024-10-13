@@ -9,15 +9,24 @@ export const Container = styled.div`
 export const SearchBar = styled.div`
   display: flex;
 
-  padding: 1px 8px;
+  padding: 3px 8px;
   align-items: center;
-  gap: 8px;
+  gap: var(--base-gap-small);
 
   border-radius: var(--border-radius-m);
   border: 1px solid var(--md-sys-color-outline-variant);
   background-color: var(--md-sys-color-surface-container-low);
 
   z-index: 301;
+
+  /* search button */
+  .search {
+    cursor: pointer;
+  }
+  /* when hovering search, hover whole thing */
+  &:has(.search:hover) {
+    background-color: var(--md-sys-color-surface-container-low-hover);
+  }
 `
 
 export const SearchBarFilters = styled.div`
@@ -25,9 +34,9 @@ export const SearchBarFilters = styled.div`
   gap: var(--base-gap-small);
 `
 
-export const AddButton = styled(Button)`
+export const FilterButton = styled(Button)`
   &.hasIcon {
-    padding: 4px;
+    padding: 2px;
   }
 `
 

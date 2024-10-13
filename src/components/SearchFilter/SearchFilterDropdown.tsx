@@ -64,6 +64,10 @@ const Item = styled.li`
     height: 20px;
     border-radius: 50%;
   }
+
+  .check {
+    margin-left: auto;
+  }
 `
 
 interface SearchFilterDropdownProps {
@@ -121,6 +125,7 @@ const SearchFilterDropdown: FC<SearchFilterDropdownProps> = ({
             <span className="label" style={{ color: color || undefined }}>
               {label}
             </span>
+            {isSelected && <Icon icon="check" className="check" />}
           </Item>
         )
       })}

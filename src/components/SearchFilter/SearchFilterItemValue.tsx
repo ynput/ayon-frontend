@@ -34,10 +34,11 @@ interface SearchFilterItemValueProps
     FilterValue {
   showOperator?: boolean
   isCompact?: boolean
+  parentId?: string
 }
 
 export const SearchFilterItemValue = forwardRef<HTMLDivElement, SearchFilterItemValueProps>(
-  ({ value, label, img, icon, showOperator, color, isCompact, ...props }, ref) => {
+  ({ value, label, img, icon, showOperator, color, isCompact, parentId, ...props }, ref) => {
     const colorStyle = color ? color : 'var(--md-sys-color-on-surface)'
 
     return (

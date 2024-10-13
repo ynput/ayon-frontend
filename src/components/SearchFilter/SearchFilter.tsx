@@ -4,6 +4,7 @@ import * as Styled from './SearchFilter.styled'
 import { Icon } from '@ynput/ayon-react-components'
 import { SearchFilterItem } from './SearchFilterItem'
 import SearchFilterDropdown from './SearchFilterDropdown'
+import { uuid } from 'short-uuid'
 
 interface SearchFilterProps {}
 
@@ -11,6 +12,10 @@ const SearchFilter: FC<SearchFilterProps> = ({}) => {
   const [filtersData, setFiltersData] = useState<Filter[]>(initFilter)
 
   const [options, setOptions] = useState<Option[] | null>(null)
+
+  const handleOpenOptions = () => {
+    setOptions(filterOptions)
+  }
 
   const handleClose = () => {
     // remove any filters that have no values
@@ -24,6 +29,8 @@ const SearchFilter: FC<SearchFilterProps> = ({}) => {
   const handleOptionSelect = (option: Option) => {
     const { values, parentId } = option
 
+    // create new id for the filter so we can add multiple of the same filter name
+    const newId = `${option.id}-${uuid()}`
     // check if there is a parent id
     if (parentId) {
       // find the parent filter
@@ -45,46 +52,55 @@ const SearchFilter: FC<SearchFilterProps> = ({}) => {
         )
       }
     } else {
-      const addFilter = { ...option, values: [] }
+      const addFilter = { ...option, id: newId, values: [] }
       // add to filters top level
       setFiltersData([...filtersData, addFilter])
     }
 
     // if there are values set the next options
     if (values && values.length > 0) {
-      const newOptions = values.map((value) => ({ ...value, parentId: option.id }))
+      const newOptions = values.map((value) => ({ ...value, parentId: newId }))
 
       setOptions(newOptions)
     }
   }
 
-  const handleOpenFilter = (filter: Filter) => {
+  const handleEditFilter = (id: string) => {
+    const filterName = id.split('-')[0]
     // find the filter option and set those values
-    const filterOption = filterOptions.find((option) => option.id === filter.id)
+    const filterOption = filterOptions.find((option) => option.id === filterName)
     if (filterOption && filterOption.values && filterOption.values.length > 0) {
-      const newOptions = filterOption.values.map((value) => ({ ...value, parentId: filter.id }))
+      console.log(id)
+      const newOptions = filterOption.values.map((value) => ({ ...value, parentId: id }))
       setOptions(newOptions)
     } else {
       setOptions(filterOptions)
     }
   }
 
+  const handleRemoveFilter = (id: string) => {
+    // remove a filter by id
+    const updatedFilters = filtersData.filter((filter) => filter.id !== id)
+    setFiltersData(updatedFilters)
+  }
+
   return (
     <Styled.Container>
       {options && <Styled.Backdrop onClick={handleClose} />}
       <Styled.SearchBar>
-        <Icon icon="search" />
+        <Icon icon="search" className="search" onClick={handleOpenOptions} />
         <Styled.SearchBarFilters>
           {filtersData.map((filter, index) => (
             <SearchFilterItem
               key={filter.id + index}
               {...filter}
               showOperator={index > 0}
-              onClick={() => handleOpenFilter(filter)}
+              onClick={() => handleEditFilter(filter.id)}
+              onRemove={handleRemoveFilter}
             />
           ))}
         </Styled.SearchBarFilters>
-        <Styled.AddButton icon={'add'} variant="text" onClick={() => setOptions(filterOptions)} />
+        <Styled.FilterButton icon={'add'} variant="text" onClick={handleOpenOptions} />
       </Styled.SearchBar>
       {options && (
         <SearchFilterDropdown
