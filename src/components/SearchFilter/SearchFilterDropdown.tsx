@@ -1,4 +1,4 @@
-import { FC } from 'react'
+import { forwardRef } from 'react'
 import { Filter, Option } from './types'
 import styled from 'styled-components'
 import { Icon } from '@ynput/ayon-react-components'
@@ -73,65 +73,77 @@ const Item = styled.li`
 interface SearchFilterDropdownProps {
   options: Option[]
   values: Filter[]
-  onCancel?: () => void
   onSelect: (option: Option) => void
 }
 
-const SearchFilterDropdown: FC<SearchFilterDropdownProps> = ({
-  options,
-  values,
-  onCancel,
-  onSelect,
-}) => {
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
-    // cancel on esc
-    if (event.key === 'Escape') {
+const SearchFilterDropdown = forwardRef<HTMLUListElement, SearchFilterDropdownProps>(
+  ({ options, values, onSelect }, ref) => {
+    const handleSelectOption = (
+      event: React.MouseEvent<HTMLElement> | React.KeyboardEvent<HTMLElement>,
+    ) => {
       event.preventDefault()
       event.stopPropagation()
-      onCancel && onCancel()
+
+      const target = event.target as HTMLElement
+      const id = target.closest('li')?.id
+
+      // get option by id
+      const option = options.find((option) => option.id === id)
+      if (!option) return console.error('Option not found:', id)
+
+      onSelect(option)
     }
-  }
 
-  const handleSelectOption = (
-    event: React.MouseEvent<HTMLElement> | React.KeyboardEvent<HTMLElement>,
-  ) => {
-    event.preventDefault()
-    event.stopPropagation()
+    const handleKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
+      // cancel on esc
+      if ([' ', 'Enter'].includes(event.key)) {
+        event.preventDefault()
+        event.stopPropagation()
+        handleSelectOption(event)
+      }
+      // up arrow
+      if (event.key === 'ArrowUp') {
+        event.preventDefault()
+        event.stopPropagation()
+        const target = event.target as HTMLElement
+        const prev = target.previousElementSibling as HTMLElement
+        prev?.focus()
+      }
+      // down arrow
+      if (event.key === 'ArrowDown') {
+        event.preventDefault()
+        event.stopPropagation()
+        const target = event.target as HTMLElement
+        const next = target.nextElementSibling as HTMLElement
+        next?.focus()
+      }
+    }
 
-    const target = event.target as HTMLElement
-    const id = target.closest('li')?.id
-
-    // get option by id
-    const option = options.find((option) => option.id === id)
-    if (!option) return console.error('Option not found:', id)
-
-    onSelect(option)
-  }
-
-  return (
-    <OptionsContainer onKeyDown={handleKeyDown}>
-      {options.map(({ id, parentId, label, icon, img, color }) => {
-        const isSelected = parentId && getIsValueSelected(id, parentId, values)
-        return (
-          <Item
-            key={id}
-            id={id}
-            tabIndex={0}
-            className={clsx({ selected: isSelected })}
-            onClick={(event) => handleSelectOption(event)}
-          >
-            {icon && <Icon icon={icon} style={{ color: color || undefined }} />}
-            {img && <img src={img} alt={label} />}
-            <span className="label" style={{ color: color || undefined }}>
-              {label}
-            </span>
-            {isSelected && <Icon icon="check" className="check" />}
-          </Item>
-        )
-      })}
-    </OptionsContainer>
-  )
-}
+    return (
+      <OptionsContainer onKeyDown={handleKeyDown} ref={ref}>
+        {options.map(({ id, parentId, label, icon, img, color }) => {
+          const isSelected = parentId && getIsValueSelected(id, parentId, values)
+          return (
+            <Item
+              key={id}
+              id={id}
+              tabIndex={0}
+              className={clsx({ selected: isSelected })}
+              onClick={(event) => handleSelectOption(event)}
+            >
+              {icon && <Icon icon={icon} style={{ color: color || undefined }} />}
+              {img && <img src={img} alt={label} />}
+              <span className="label" style={{ color: color || undefined }}>
+                {label}
+              </span>
+              {isSelected && <Icon icon="check" className="check" />}
+            </Item>
+          )
+        })}
+      </OptionsContainer>
+    )
+  },
+)
 
 export default SearchFilterDropdown
 

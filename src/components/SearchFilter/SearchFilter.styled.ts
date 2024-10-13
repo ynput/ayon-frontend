@@ -10,6 +10,7 @@ export const SearchBar = styled.div`
   display: flex;
 
   padding: 3px 8px;
+  height: 32px;
   align-items: center;
   gap: var(--base-gap-small);
 
@@ -26,6 +27,13 @@ export const SearchBar = styled.div`
   /* when hovering search, hover whole thing */
   &:has(.search:hover) {
     background-color: var(--md-sys-color-surface-container-low-hover);
+  }
+
+  &.empty {
+    cursor: pointer;
+    &:hover {
+      background-color: var(--md-sys-color-surface-container-low-hover);
+    }
   }
 `
 
