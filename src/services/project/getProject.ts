@@ -110,7 +110,7 @@ const getProjectApi = getProjectInjected.enhanceEndpoints({
       },
     },
     listProjects: {
-      transformResponse: (res: $Any) => res.projects,
+      transformResponse: (res: $Any) => res?.projects || [],
       transformErrorResponse: (error: $Any) => error.data.detail || `Error ${error.status}`,
       // @ts-ignore
       providesTags: (_res, _error, { active }) => [
