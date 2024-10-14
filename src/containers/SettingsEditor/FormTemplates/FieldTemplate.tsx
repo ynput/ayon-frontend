@@ -175,7 +175,7 @@ function FieldTemplate(props: FieldTemplateProps) {
         data-tooltip-delay={300}
         data-tooltip-as="markdown"
       >
-        {props.label && (
+        {props.label && props.schema.title && (
           <div className={`form-inline-field-label ${overrideLevel}`}>
             <span
               onClick={() => {

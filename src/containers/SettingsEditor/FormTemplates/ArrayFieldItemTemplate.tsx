@@ -1,3 +1,4 @@
+import { ArrayFieldTemplateItemType } from '@rjsf/utils'
 import { $Any } from '@types'
 import { Button } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
@@ -34,12 +35,17 @@ const DeleteButton = styled(Button)`
   }
 `
 
-const ArrayItemTemplate = (props: $Any) => {
+type Props = ArrayFieldTemplateItemType & {
+  children: {
+    _owner: $Any
+  }
+  onChange: Function
+}
+
+const ArrayItemTemplate = (props: Props) => {
   const parentSchema = props?.children?._owner?.memoizedProps?.schema || {}
   const itemName = props?.children?.props?.formData?.name
   let undeletable = false
-
-  const children = props.children
 
   if (itemName && (parentSchema.requiredItems || []).includes(itemName)) {
     undeletable = true
@@ -68,7 +74,7 @@ const ArrayItemTemplate = (props: $Any) => {
 
   return (
     <FormArrayFieldItem>
-      {children}
+      {props.children}
       {rmButton}
     </FormArrayFieldItem>
   )

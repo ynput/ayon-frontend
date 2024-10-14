@@ -89,7 +89,7 @@ function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
         hiddenFields = [
           ...hiddenFields,
           //@ts-ignore
-          ...(ppts?.enum || []).filter((e: $Any) => e !== props.formData[propName]),
+          ...(ppts?.enum || []).filter((e: $Any) => e !== props.formData?.[propName] ),
         ]
       }
     }

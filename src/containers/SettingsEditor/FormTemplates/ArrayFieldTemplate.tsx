@@ -78,7 +78,7 @@ const ArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
     >
       <SortableContext items={items} strategy={verticalListSortingStrategy}>
         {items.map((item) => (
-          <DraggableItem id={item.id} isVisible={item.id !== draggedItemId} key={item.key}>
+          <DraggableItem id={item.id} isVisible={item.id !== draggedItemId}>
             <FormArrayFieldWrapper onChange={onArrayChanged(item)} item={item} />
           </DraggableItem>
         ))}
