@@ -53,8 +53,11 @@ class InstallRelease {
     await this.page.getByRole('button', { name: 'snooze Restart later (snooze)' }).click()
 
     // Unsetting production on the created bundle to prevent bundle specs failures
-    await this.page.getByRole('cell', { name: 'Production' }).locator('div').click({ button: 'right' })
-    await this.page.getByRole('menuitem', { name: 'remove Unset production Shift' }).click();
+    const prodButton = this.page.getByRole('cell', { name: 'Production' }).locator('div')
+    if (await prodButton.isVisible()) {
+      await prodButton.click({ button: 'right' })
+      await this.page.getByRole('menuitem', { name: 'remove Unset production Shift' }).click()
+    }
     // check dialog is closed
     await expect(this.page.getByText('Install pipeline release')).not.toBeVisible()
   }
