@@ -5,6 +5,7 @@ import { Icon } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import { matchSorter } from 'match-sorter'
 import { uuid } from 'short-uuid'
+import checkColorBrightness from '../checkColorBrightness'
 
 type OnSelectConfig = {
   confirm: boolean
@@ -147,6 +148,7 @@ const SearchFilterDropdown = forwardRef<HTMLUListElement, SearchFilterDropdownPr
         </Styled.SearchContainer>
         {filteredOptions.map(({ id, parentId, label, icon, img, color }) => {
           const isSelected = getIsValueSelected(id, parentId, values)
+          const adjustedColor = color ? checkColorBrightness(color, '#1C2026') : undefined
           return (
             <Styled.Item
               key={id}
@@ -155,9 +157,9 @@ const SearchFilterDropdown = forwardRef<HTMLUListElement, SearchFilterDropdownPr
               className={clsx({ selected: isSelected })}
               onClick={(event) => handleSelectOption(event)}
             >
-              {icon && <Icon icon={icon} style={{ color: color || undefined }} />}
+              {icon && <Icon icon={icon} style={{ color: adjustedColor }} />}
               {img && <img src={img} alt={label} />}
-              <span className="label" style={{ color: color || undefined }}>
+              <span className="label" style={{ color: adjustedColor }}>
                 {label}
               </span>
               {isSelected && <Icon icon="check" className="check" />}

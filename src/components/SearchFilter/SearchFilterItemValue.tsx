@@ -3,6 +3,7 @@ import { FilterValue } from './types'
 import styled from 'styled-components'
 import { Icon, theme } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
+import checkColorBrightness from './checkColorBrightness'
 
 const ValueChip = styled.div`
   display: flex;
@@ -44,7 +45,8 @@ interface SearchFilterItemValueProps
 
 export const SearchFilterItemValue = forwardRef<HTMLDivElement, SearchFilterItemValueProps>(
   ({ value, label, img, icon, color, showOperator, isCompact, isCustom, ...props }, ref) => {
-    const colorStyle = color ? color : 'var(--md-sys-color-on-surface)'
+    const colorStyle = color ? color : '#ffffff'
+    const adjustedColor = checkColorBrightness(colorStyle, '#353B46')
 
     return (
       <>
@@ -54,7 +56,7 @@ export const SearchFilterItemValue = forwardRef<HTMLDivElement, SearchFilterItem
             <Icon
               icon={icon}
               style={{
-                color: colorStyle,
+                color: adjustedColor,
               }}
             />
           )}
@@ -62,7 +64,7 @@ export const SearchFilterItemValue = forwardRef<HTMLDivElement, SearchFilterItem
           <span
             className="label"
             style={{
-              color: colorStyle,
+              color: adjustedColor,
             }}
           >
             {label}
