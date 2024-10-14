@@ -208,7 +208,7 @@ function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
   if ('name' in (props.schema.properties || {})) {
     let label = null
     if ('label' in (props.schema.properties || {})) label = props.formData.label
-    stringTitle = label || props.formData.name || <span className="new-object">Unnamed item</span>
+    stringTitle = label || props.formData?.name || <span className="new-object">Unnamed item</span>
   }
 
   if (props.idSchema.$id === 'root' && props.formContext.formTitle) {
