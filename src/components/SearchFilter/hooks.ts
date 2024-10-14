@@ -11,7 +11,7 @@ export const useFocusOptions = ({ ref, options }: UseFocusOptions) => {
   const ids = options?.map((option) => option.id)
 
   useEffect(() => {
-    if (!ids?.length) return
+    if (!ids) return
     // focus search input
     ref.current?.querySelector('input')?.focus()
   }, [ref, ids?.join('-')])

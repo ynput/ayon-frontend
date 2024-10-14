@@ -1,5 +1,5 @@
 import { FC, useRef, useState } from 'react'
-import { Filter, filterOptions, initFilter, Option } from './types'
+import { Filter, Option } from './types'
 import * as Styled from './SearchFilter.styled'
 import { Icon } from '@ynput/ayon-react-components'
 import { SearchFilterItem } from './SearchFilterItem'
@@ -11,20 +11,38 @@ import { uuid } from 'short-uuid'
 import clsx from 'clsx'
 import { useFocusOptions } from './hooks'
 
-interface SearchFilterProps {}
+interface SearchFilterProps {
+  value: Filter[]
+  options: Option[]
+  disableSearch?: boolean
+}
 
-const SearchFilter: FC<SearchFilterProps> = ({}) => {
+const SearchFilter: FC<SearchFilterProps> = ({
+  value = [],
+  options: initOptions = [],
+  disableSearch = false,
+}) => {
   const filtersRef = useRef<HTMLDivElement>(null)
   const dropdownRef = useRef<HTMLUListElement>(null)
 
-  const [filtersData, setFiltersData] = useState<Filter[]>(initFilter)
+  const options = getOptionsWithSearch(initOptions, disableSearch)
+  const [filtersData, setFiltersData] = useState<Filter[]>(value)
 
-  const [options, setOptions] = useState<Option[] | null>(null)
+  const [dropdownParentId, setDropdownParentId] = useState<null | string>(null)
+  const [dropdownOptions, setOptions] = useState<Option[] | null>(null)
 
-  useFocusOptions({ ref: dropdownRef, options })
+  useFocusOptions({ ref: dropdownRef, options: dropdownOptions })
 
-  const handleOpenOptions = () => {
-    setOptions(filterOptions)
+  const openOptions = (options: Option[], parentId: string | null) => {
+    setOptions(options)
+    setDropdownParentId(parentId)
+  }
+
+  const openInitialOptions = () => openOptions(options, null)
+
+  const closeOptions = () => {
+    setOptions(null)
+    setDropdownParentId(null)
   }
 
   const handleClose = (filters: Filter[]) => {
@@ -32,14 +50,12 @@ const SearchFilter: FC<SearchFilterProps> = ({}) => {
     const updatedFilters = filters.filter((filter) => filter.values && filter.values.length > 0)
     setFiltersData(updatedFilters)
 
-    // set options to null
-    setOptions(null)
+    // set dropdownOptions to null
+    closeOptions()
 
-    // get parent id from options
-    const id = options?.[0].parentId
-    if (id) {
+    if (dropdownParentId) {
       // find filter element by the id and focus it
-      document.getElementById(id)?.focus()
+      document.getElementById(dropdownParentId)?.focus()
     } else {
       // focus last filter
       const filters = filtersRef.current?.querySelectorAll('.search-filter-item')
@@ -80,30 +96,35 @@ const SearchFilter: FC<SearchFilterProps> = ({}) => {
       }
     } else {
       const addFilter = { ...option, id: newId, values: [] }
+      // remove not required fields
+      delete addFilter.allowsCustomValues
       // add to filters top level
       setFiltersData([...filtersData, addFilter])
     }
 
-    // if there are values set the next options
-    if (values && values.length > 0 && !parentId) {
-      const newOptions = values.map((value) => ({ ...value, parentId: newId }))
+    // if there are values set the next dropdownOptions
+    // or the option allows custom values (text)
+    if ((values && values.length > 0 && !parentId) || option.allowsCustomValues) {
+      const newOptions = values?.map((value) => ({ ...value, parentId: newId })) || []
 
-      setOptions(newOptions)
+      openOptions(newOptions, newId)
     }
   }
 
+  // TODO: fix opening and adding for custom values
   const sortSelectedToTopFields = ['assignee']
   const handleEditFilter = (id: string) => {
-    const filterName = id.split('-')[0]
     // find the filter option and set those values
-    const filterOption = filterOptions.find((option) => option.id === filterName)
-    if (filterOption && filterOption.values && filterOption.values.length > 0) {
-      const newOptions = filterOption.values.map((value) => ({
+    const filter = filtersData.find((filter) => filter.id === id)
+    if (filter && filter.values && filter.values.length > 0) {
+      // Merge options with filter values to include custom values
+      const newOptions = mergeOptionsWithFilterValues(filter, options).map((value) => ({
         ...value,
         parentId: id,
         isSelected: getIsValueSelected(value.id, id, filtersData),
       }))
 
+      const filterName = id.split('-')[0]
       if (sortSelectedToTopFields.includes(filterName)) {
         // sort selected to top
         newOptions.sort((a, b) => {
@@ -112,10 +133,9 @@ const SearchFilter: FC<SearchFilterProps> = ({}) => {
           return 0
         })
       }
-
-      setOptions(newOptions)
+      openOptions(newOptions, id)
     } else {
-      setOptions(filterOptions)
+      openOptions(options, id)
     }
   }
 
@@ -139,7 +159,7 @@ const SearchFilter: FC<SearchFilterProps> = ({}) => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault()
       event.stopPropagation()
-      handleOpenOptions()
+      openOptions(options, null)
     }
     // focus next item on arrow right / left
     if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {
@@ -167,14 +187,14 @@ const SearchFilter: FC<SearchFilterProps> = ({}) => {
 
   return (
     <Styled.Container onKeyDown={handleContainerKeyDown}>
-      {options && <Styled.Backdrop onClick={() => handleClose(filtersData)} />}
+      {dropdownOptions && <Styled.Backdrop onClick={() => handleClose(filtersData)} />}
       <Styled.SearchBar
         className={clsx({ empty: !filtersData.length })}
-        onClick={() => !filtersData.length && handleOpenOptions()}
+        onClick={() => !filtersData.length && openInitialOptions()}
         onKeyDown={handleSearchBarKeyDown}
         tabIndex={0}
       >
-        <Icon icon="search" className="search" onClick={handleOpenOptions} />
+        <Icon icon="search" className="search" onClick={openInitialOptions} />
         <Styled.SearchBarFilters ref={filtersRef}>
           {filtersData.map((filter, index) => (
             <SearchFilterItem
@@ -187,16 +207,19 @@ const SearchFilter: FC<SearchFilterProps> = ({}) => {
           ))}
         </Styled.SearchBarFilters>
         {filtersData.length ? (
-          <Styled.FilterButton icon={'add'} variant="text" onClick={handleOpenOptions} />
+          <Styled.FilterButton icon={'add'} variant="text" onClick={openInitialOptions} />
         ) : (
-          <span>Search and filter</span>
+          <span>{getEmptyPlaceholder(disableSearch)}</span>
         )}
       </Styled.SearchBar>
-      {options && (
+      {dropdownOptions && (
         <SearchFilterDropdown
-          options={options}
+          options={dropdownOptions}
           values={filtersData}
+          parentId={dropdownParentId}
+          isCustomAllowed={getIsCustomAllowed(options, dropdownParentId)}
           onSelect={handleOptionSelect}
+          onConfirmAndClose={(filters) => handleClose(filters)}
           ref={dropdownRef}
         />
       )}
@@ -205,3 +228,42 @@ const SearchFilter: FC<SearchFilterProps> = ({}) => {
 }
 
 export default SearchFilter
+
+const getEmptyPlaceholder = (disableSearch: boolean) => {
+  return disableSearch ? 'Filter' : 'Search and filter'
+}
+const getOptionsWithSearch = (options: Option[], disableSearch: boolean) => {
+  if (disableSearch) return options
+  //  unshift search option
+  const searchFilter: Option = {
+    id: 'text',
+    label: 'Text',
+    icon: 'manage_search',
+    inverted: false,
+    values: [],
+    allowsCustomValues: true,
+  }
+
+  return [searchFilter, ...options]
+}
+
+const getIsCustomAllowed = (options: Option[], parentId: string | null): boolean => {
+  const fieldName = parentId?.split('-')[0]
+  const parentOption = options.find((option) => option.id === fieldName)
+  return !!parentOption?.allowsCustomValues
+}
+
+const mergeOptionsWithFilterValues = (filter: Filter, options: Option[]): Option[] => {
+  const filterName = filter.id.split('-')[0]
+  const filterOptions = options.find((option) => option.id === filterName)?.values || []
+
+  const mergedOptions = [...filterOptions]
+
+  filter.values?.forEach((value) => {
+    if (!mergedOptions.some((option) => option.id === value.id)) {
+      mergedOptions.push(value)
+    }
+  })
+
+  return mergedOptions
+}

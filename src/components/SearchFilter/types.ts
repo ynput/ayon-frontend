@@ -5,6 +5,8 @@ export type FilterValue = {
   img?: string | null
   icon?: string | null
   color?: string | null
+  isCustom?: boolean
+  parentId?: string | null
 }
 
 export type Filter = {
@@ -14,23 +16,16 @@ export type Filter = {
   icon?: string | null
   img?: string | null
   values?: FilterValue[]
+  isCustom?: boolean
 }
 
 export interface Option extends Filter {
-  customValue?: boolean
+  allowsCustomValues?: boolean
   color?: string | null
   parentId?: string | null
 }
 
 export const filterOptions: Option[] = [
-  {
-    id: 'text',
-    label: 'Text',
-    icon: 'manage_search',
-    inverted: false,
-    values: [],
-    customValue: true,
-  },
   {
     id: 'assignee',
     label: 'Assignee',

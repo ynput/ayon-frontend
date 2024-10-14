@@ -26,6 +26,7 @@ import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
 import './styles.scss'
 import { AttributeEnumItem } from '@api/rest/attributes'
 import SearchFilter from '@components/SearchFilter/SearchFilter'
+import { filterOptions } from '@components/SearchFilter/types'
 
 export type Operation = {
   id: string
@@ -274,7 +275,7 @@ const TasksProgress: FC<TasksProgressProps> = ({
       <Shortcuts shortcuts={shortcuts} deps={[expandedRows]} />
       <Section style={{ height: '100%' }} direction="column">
         <Toolbar>
-          <SearchFilter />
+          <SearchFilter options={filterOptions} value={[]} />
           {/* <ProgressSearch data={tableData} onSearch={setFilteredFolderIds} /> */}
           {/* <CategorySelect
             value={filteredTaskTypes}

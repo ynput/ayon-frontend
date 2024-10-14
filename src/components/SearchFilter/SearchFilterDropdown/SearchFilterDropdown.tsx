@@ -4,6 +4,7 @@ import * as Styled from './SearchFilterDropdown.styled'
 import { Icon } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import { matchSorter } from 'match-sorter'
+import { uuid } from 'short-uuid'
 
 type OnSelectConfig = {
   confirm: boolean
@@ -12,11 +13,14 @@ type OnSelectConfig = {
 export interface SearchFilterDropdownProps {
   options: Option[]
   values: Filter[]
+  parentId: string | null
+  isCustomAllowed: boolean
   onSelect: (option: Option, config?: OnSelectConfig) => void
+  onConfirmAndClose?: (filters: Filter[]) => void // close the dropdown and update the filters
 }
 
 const SearchFilterDropdown = forwardRef<HTMLUListElement, SearchFilterDropdownProps>(
-  ({ options, values, onSelect }, ref) => {
+  ({ options, values, parentId, isCustomAllowed, onSelect, onConfirmAndClose }, ref) => {
     const [search, setSearch] = useState('')
 
     // 1. filter options based on search
@@ -69,16 +73,45 @@ const SearchFilterDropdown = forwardRef<HTMLUListElement, SearchFilterDropdownPr
       }
     }
 
+    const handleSearchSubmit = () => {
+      const addedOption = getAddOption(search, filteredOptions, parentId, isCustomAllowed)
+      if (!addedOption) return
+
+      // add the first option
+      onSelect(addedOption, { confirm: true })
+      // reset search
+      setSearch('')
+    }
+
+    const handleCustomSearchShortcut = () => {
+      // check there is a text option
+      const hasTextOption = options.some((option) => option.id === 'text')
+      if (!hasTextOption) return
+
+      const newId = `text-${uuid()}`
+
+      const newFilter: Filter = {
+        id: newId,
+        label: 'Text',
+        values: [{ id: search, label: search, value: search, parentId: newId, isCustom: true }],
+      }
+
+      onConfirmAndClose && onConfirmAndClose([...values, newFilter])
+    }
+
     const handleSearchKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
       // enter will select the first option
       if (event.key === 'Enter') {
         event.preventDefault()
         event.stopPropagation()
-        if (!search || !filteredOptions[0]) return
-        // add the first option
-        onSelect(filteredOptions[0], { confirm: true })
-        // reset search
-        setSearch('')
+
+        if (search && !parentId && filteredOptions.length === 0) {
+          // if the root field search has no results, add the custom value as text
+          handleCustomSearchShortcut()
+        } else {
+          // otherwise, add the first option
+          handleSearchSubmit()
+        }
       }
       // arrow down will focus the first option
       if (event.key === 'ArrowDown') {
@@ -97,10 +130,20 @@ const SearchFilterDropdown = forwardRef<HTMLUListElement, SearchFilterDropdownPr
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             onKeyDown={handleSearchKeyDown}
-            placeholder={'Search...'}
+            placeholder={getSearchPlaceholder(isCustomAllowed, options)}
             autoFocus
           />
-          <Styled.SearchIcon icon="search" />
+          <Styled.SearchIcon icon={isCustomAllowed ? 'zoom_in' : 'search'} />
+          {isCustomAllowed && (
+            <Styled.AddSearch
+              icon="add"
+              variant="text"
+              onClick={handleSearchSubmit}
+              disabled={!search}
+            >
+              Add
+            </Styled.AddSearch>
+          )}
         </Styled.SearchContainer>
         {filteredOptions.map(({ id, parentId, label, icon, img, color }) => {
           const isSelected = getIsValueSelected(id, parentId, values)
@@ -121,6 +164,7 @@ const SearchFilterDropdown = forwardRef<HTMLUListElement, SearchFilterDropdownPr
             </Styled.Item>
           )
         })}
+        {filteredOptions.length === 0 && !isCustomAllowed && <span>No filters found</span>}
       </Styled.OptionsContainer>
     )
   },
@@ -153,4 +197,30 @@ const getFilteredOptions = (options: Option[], search: string) => {
   return matchSorter(options, parsedSearch, {
     keys: ['label', 'context', 'keywords'],
   })
+}
+
+const getSearchPlaceholder = (isCustomAllowed: boolean, options: Option[]) => {
+  const somePreMadeOptions = options.length > 0 && options.some((option) => !option.isCustom)
+
+  return !somePreMadeOptions && isCustomAllowed
+    ? 'Add filter text...'
+    : isCustomAllowed
+    ? 'Search or add filter text...'
+    : 'Search...'
+}
+
+const getAddOption = (
+  customValue: string,
+  options: Option[],
+  parentId: string | null,
+  isCustomAllowed?: boolean,
+): Option | null => {
+  if (customValue && parentId && isCustomAllowed) {
+    // add custom value
+    return { id: customValue, label: customValue, values: [], parentId, isCustom: true }
+  } else if (!isCustomAllowed && options.length) {
+    return options[0]
+  } else {
+    return null
+  }
 }

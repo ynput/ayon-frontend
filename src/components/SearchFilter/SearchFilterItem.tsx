@@ -51,7 +51,19 @@ interface SearchFilterItemProps extends Omit<React.HTMLAttributes<HTMLDivElement
 
 export const SearchFilterItem = forwardRef<HTMLDivElement, SearchFilterItemProps>(
   (
-    { id, label, inverted, values, showOperator, onEdit, onRemove, onClick, icon, ...props },
+    {
+      id,
+      label,
+      inverted,
+      values,
+      showOperator,
+      onEdit,
+      onRemove,
+      onClick,
+      icon,
+      isCustom,
+      ...props
+    },
     ref,
   ) => {
     const handleRemove = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -93,9 +105,15 @@ export const SearchFilterItem = forwardRef<HTMLDivElement, SearchFilterItemProps
           {values?.map((value, index) => (
             <SearchFilterItemValue
               key={(value.value || '') + index}
-              {...value}
+              id={value.id}
+              value={value.value}
+              label={value.label}
+              img={value.img}
+              icon={value.icon}
+              color={value.color}
+              isCustom={value.isCustom}
               showOperator={index > 0}
-              isCompact={values.length > 1}
+              isCompact={values.length > 1 && (!!value.icon || !!value.img)}
             />
           ))}
           {onRemove && <Remove variant="text" icon="close" onClick={handleRemove} />}

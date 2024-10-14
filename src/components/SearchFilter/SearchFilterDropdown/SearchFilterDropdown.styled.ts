@@ -1,4 +1,4 @@
-import { Icon } from '@ynput/ayon-react-components'
+import { Button, Icon } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
 export const OptionsContainer = styled.ul`
@@ -28,6 +28,7 @@ export const Item = styled.li`
   margin: 0;
   list-style: none;
   cursor: pointer;
+  user-select: none;
 
   width: 100%;
 
@@ -91,4 +92,15 @@ export const SearchIcon = styled(Icon)`
   top: 50%;
   left: 8px;
   transform: translateY(-50%);
+`
+
+export const AddSearch = styled(Button)`
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  &.hasIcon {
+    padding: 2px 4px;
+    padding-right: 6px;
+  }
 `
