@@ -29,6 +29,7 @@ import SearchFilter from '@components/SearchFilter/SearchFilter'
 import { Filter, filterOptions } from '@components/SearchFilter/types'
 import SearchFilterWrapper from '@components/SearchFilter/SearchFilterWrapper'
 import formatFilterAttributesData from './helpers/formatFilterAttributesData'
+import formatFilterTagsData from './helpers/formatFilterTagsData'
 
 export type Operation = {
   id: string
@@ -62,8 +63,6 @@ const TasksProgress: FC<TasksProgressProps> = ({
     [],
   )
   const [filters, setFilters] = useState<Filter[]>([])
-
-  console.log(filters)
 
   // should rows be expanded (unless in collapsedRows)
   const [expandAll, setExpandAll] = useState(false)
@@ -151,6 +150,9 @@ const TasksProgress: FC<TasksProgressProps> = ({
     () => formatFilterAttributesData(foldersTasksData),
     [foldersTasksData],
   )
+
+  // format tags data for the search filter
+  const filterTagsData = useMemo(() => formatFilterTagsData(foldersTasksData), [foldersTasksData])
 
   const [updateEntities] = useUpdateEntitiesMutation()
 
@@ -293,6 +295,7 @@ const TasksProgress: FC<TasksProgressProps> = ({
             projectNames={[projectName]}
             scope="task"
             attributesData={filterAttributesData}
+            tagsData={filterTagsData}
           />
           {/* <ProgressSearch data={tableData} onSearch={setFilteredFolderIds} /> */}
           {/* <CategorySelect

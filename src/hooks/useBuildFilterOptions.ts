@@ -4,6 +4,7 @@
 // attributes by scope
 
 import { AttributeModel, AttributeEnumItem, AttributeData } from '@api/rest/attributes'
+import { Tag } from '@api/rest/project'
 import { Option } from '@components/SearchFilter/types'
 import getEntityTypeIcon from '@helpers/getEntityTypeIcon'
 import { useGetAttributeListQuery } from '@queries/attributes/getAttributes'
@@ -34,6 +35,7 @@ export type BuildFilterOptions = {
   projectNames: string[]
   scope: Scope
   attributesData?: Record<string, AttributeDataValue[]>
+  tagsData?: string[]
 }
 
 const useBuildFilterOptions = ({
@@ -41,6 +43,7 @@ const useBuildFilterOptions = ({
   projectNames,
   scope,
   attributesData = {},
+  tagsData = [],
 }: BuildFilterOptions): Option[] => {
   let options: Option[] = []
 
@@ -150,6 +153,62 @@ const useBuildFilterOptions = ({
     })
 
     options.push(usersOption)
+  }
+
+  // add tags options
+  if (tagsData.length > 0) {
+    const tagsOption: Option = {
+      id: 'tags',
+      label: 'Tags',
+      icon: 'local_offer',
+      inverted: false,
+      values: [],
+      allowsCustomValues: true,
+    }
+
+    // reduce projectsInfo to get all tags
+    const tagsAnatomy = new Map<string, Tag>()
+    Object.values(projectsInfo).forEach((project) => {
+      if (project?.tags) {
+        project.tags.forEach((tag) => {
+          if (!tagsAnatomy.has(tag.name)) {
+            tagsAnatomy.set(tag.name, tag)
+          }
+        })
+      }
+    })
+
+    // create options for each tag, finding color if in tagsAnatomy
+    const tagOptionValuesMap = new Map<string, Option & { count: number }>()
+    tagsData.forEach((tag) => {
+      const existingTag = tagOptionValuesMap.get(tag)
+      if (existingTag) {
+        // increment count
+        existingTag.count++
+        return
+      } else {
+        // create new tag
+        const tagData = tagsAnatomy.get(tag)
+
+        tagOptionValuesMap.set(tag, {
+          id: tag,
+          label: tag,
+          values: [],
+          color: tagData?.color || null,
+          count: 1,
+        })
+      }
+    })
+
+    // convert values map to array and sort based on count
+    const tagOptionValues = Array.from(tagOptionValuesMap.values()).sort(
+      (a, b) => b.count - a.count,
+    )
+
+    // add tag options to the tagsOption
+    tagsOption.values?.push(...tagOptionValues)
+
+    options.push(tagsOption)
   }
 
   // dynamically add attributes options
@@ -466,6 +525,9 @@ const getAttributeOptions = (
       })
     }
   })
+
+  // sort options based on count
+  options.sort((a, b) => b.count - a.count)
 
   // enum options first, then the rest
   return [...enumOptions, ...options]

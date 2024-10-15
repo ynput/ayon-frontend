@@ -6,6 +6,7 @@ const formatFilterAttributesData = (
 ): BuildFilterOptions['attributesData'] => {
   const attributes: BuildFilterOptions['attributesData'] = {}
 
+  //   add attributes from tasks
   data.forEach((folder) => {
     folder.tasks.forEach((task) => {
       Object.entries(task.attrib).forEach(([key, value]) => {

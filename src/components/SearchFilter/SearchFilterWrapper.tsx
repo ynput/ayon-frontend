@@ -15,8 +15,15 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
   projectNames,
   scope,
   attributesData,
+  tagsData,
 }) => {
-  const options = useBuildFilterOptions({ filterTypes, projectNames, scope, attributesData })
+  const options = useBuildFilterOptions({
+    filterTypes,
+    projectNames,
+    scope,
+    attributesData,
+    tagsData,
+  })
 
   // keeps track of the filters whilst adding/removing filters
   const [filters, setFilters] = useState<Filter[]>(_filters)
