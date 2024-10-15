@@ -51,6 +51,7 @@ const DeleteUserDialog = ({ onHide, selectedUsers, onDelete, onDisable }: Delete
         >
           <InputText
             style={{ width: '100%' }}
+            data-testid="delete-user-dialog-input"
             value={value}
             onChange={(e) => setValue(e.target.value)}
           />

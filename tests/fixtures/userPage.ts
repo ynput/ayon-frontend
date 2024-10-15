@@ -27,7 +27,8 @@ class UserPage {
   async deleteUser(userName) {
     await this.goto(userName)
     await this.page.getByRole('button', { name: 'person_remove Delete Users' }).click()
-    await this.page.getByLabel('Delete', { exact: true }).click()
+    await this.page.getByTestId("delete-user-dialog-input").fill(userName)
+    await this.page.getByRole('button', { name: 'Delete', exact: true }).click()
     await expect(this.page.getByText('Deleted 1 user(s)')).toBeVisible()
     await expect(
       this.page.locator('span').filter({ hasText: new RegExp(`^${userName}$`) }),
