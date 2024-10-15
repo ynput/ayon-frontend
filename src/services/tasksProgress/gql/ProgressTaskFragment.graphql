@@ -11,6 +11,10 @@ fragment ProgressTaskFragment on TaskNode {
   hasReviewables
   attrib {
     priority
+    endDate
+    resolutionHeight
+    resolutionWidth
+    fps
   }
   folder {
     id

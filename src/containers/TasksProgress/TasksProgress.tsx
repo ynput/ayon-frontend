@@ -26,7 +26,9 @@ import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
 import './styles.scss'
 import { AttributeEnumItem } from '@api/rest/attributes'
 import SearchFilter from '@components/SearchFilter/SearchFilter'
-import { filterOptions } from '@components/SearchFilter/types'
+import { Filter, filterOptions } from '@components/SearchFilter/types'
+import SearchFilterWrapper from '@components/SearchFilter/SearchFilterWrapper'
+import formatFilterAttributesData from './helpers/formatFilterAttributesData'
 
 export type Operation = {
   id: string
@@ -59,6 +61,9 @@ const TasksProgress: FC<TasksProgressProps> = ({
     `progress-types-${projectName}`,
     [],
   )
+  const [filters, setFilters] = useState<Filter[]>([])
+
+  console.log(filters)
 
   // should rows be expanded (unless in collapsedRows)
   const [expandAll, setExpandAll] = useState(false)
@@ -140,6 +145,12 @@ const TasksProgress: FC<TasksProgressProps> = ({
 
     return filtered
   }, [tableData, filteredFolderIds])
+
+  // format attributes data for the search filter (show value suggestions)
+  const filterAttributesData = useMemo(
+    () => formatFilterAttributesData(foldersTasksData),
+    [foldersTasksData],
+  )
 
   const [updateEntities] = useUpdateEntitiesMutation()
 
@@ -275,7 +286,14 @@ const TasksProgress: FC<TasksProgressProps> = ({
       <Shortcuts shortcuts={shortcuts} deps={[expandedRows]} />
       <Section style={{ height: '100%' }} direction="column">
         <Toolbar>
-          <SearchFilter options={filterOptions} value={[]} />
+          <SearchFilterWrapper
+            filters={filters}
+            onChange={setFilters}
+            filterTypes={['attributes', 'entitySubType', 'status', 'assignees']}
+            projectNames={[projectName]}
+            scope="task"
+            attributesData={filterAttributesData}
+          />
           {/* <ProgressSearch data={tableData} onSearch={setFilteredFolderIds} /> */}
           {/* <CategorySelect
             value={filteredTaskTypes}

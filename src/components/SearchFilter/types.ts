@@ -17,6 +17,7 @@ export type Filter = {
   img?: string | null
   values?: FilterValue[]
   isCustom?: boolean
+  singleSelect?: boolean
 }
 
 export interface Option extends Filter {
@@ -135,7 +136,7 @@ export const filterOptions: Option[] = [
   {
     id: 'status',
     label: 'Status',
-    icon: 'check_circle',
+    icon: 'arrow_circle_right',
     inverted: false,
     values: [
       {
@@ -195,6 +196,11 @@ export const filterOptions: Option[] = [
         color: 'lightgreen',
       },
     ],
+  },
+  {
+    id: 'taskType',
+    label: 'Task Type',
+    icon: 'check_circle',
   },
 ]
 

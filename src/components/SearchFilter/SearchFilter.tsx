@@ -11,14 +11,20 @@ import { uuid } from 'short-uuid'
 import clsx from 'clsx'
 import { useFocusOptions } from './hooks'
 
-interface SearchFilterProps {
-  value: Filter[]
+const sortSelectedToTopFields = ['assignee', 'taskType']
+
+export interface SearchFilterProps {
+  filters: Filter[]
+  onChange: (filters: Filter[]) => void
+  onFinish?: (filters: Filter[]) => void
   options: Option[]
   disableSearch?: boolean
 }
 
 const SearchFilter: FC<SearchFilterProps> = ({
-  value = [],
+  filters = [],
+  onChange,
+  onFinish,
   options: initOptions = [],
   disableSearch = false,
 }) => {
@@ -26,7 +32,6 @@ const SearchFilter: FC<SearchFilterProps> = ({
   const dropdownRef = useRef<HTMLUListElement>(null)
 
   const options = getOptionsWithSearch(initOptions, disableSearch)
-  const [filtersData, setFiltersData] = useState<Filter[]>(value)
 
   const [dropdownParentId, setDropdownParentId] = useState<null | string>(null)
   const [dropdownOptions, setOptions] = useState<Option[] | null>(null)
@@ -48,10 +53,12 @@ const SearchFilter: FC<SearchFilterProps> = ({
   const handleClose = (filters: Filter[]) => {
     // remove any filters that have no values
     const updatedFilters = filters.filter((filter) => filter.values && filter.values.length > 0)
-    setFiltersData(updatedFilters)
+    onChange(updatedFilters)
 
     // set dropdownOptions to null
     closeOptions()
+    // call onClose if it exists
+    onFinish && onFinish(updatedFilters)
 
     if (dropdownParentId) {
       // find filter element by the id and focus it
@@ -72,7 +79,7 @@ const SearchFilter: FC<SearchFilterProps> = ({
     // check if there is a parent id
     if (parentId) {
       // find the parent filter
-      const parentFilter = filtersData.find((filter) => filter.id === parentId)
+      const parentFilter = filters.find((filter) => filter.id === parentId)
 
       // add to the parent filter values
       if (parentFilter) {
@@ -85,11 +92,11 @@ const SearchFilter: FC<SearchFilterProps> = ({
           values: updatedValues,
         }
 
-        const updatedFilters = filtersData.map((filter) =>
+        const updatedFilters = filters.map((filter) =>
           filter.id === parentId ? updatedParentFilter : filter,
         )
 
-        setFiltersData(updatedFilters)
+        onChange(updatedFilters)
 
         // close the dropdown with the new filters
         if (config?.confirm) handleClose(updatedFilters)
@@ -99,7 +106,7 @@ const SearchFilter: FC<SearchFilterProps> = ({
       // remove not required fields
       delete addFilter.allowsCustomValues
       // add to filters top level
-      setFiltersData([...filtersData, addFilter])
+      onChange([...filters, addFilter])
     }
 
     // if there are values set the next dropdownOptions
@@ -111,17 +118,15 @@ const SearchFilter: FC<SearchFilterProps> = ({
     }
   }
 
-  // TODO: fix opening and adding for custom values
-  const sortSelectedToTopFields = ['assignee']
   const handleEditFilter = (id: string) => {
     // find the filter option and set those values
-    const filter = filtersData.find((filter) => filter.id === id)
+    const filter = filters.find((filter) => filter.id === id)
     if (filter && filter.values && filter.values.length > 0) {
       // Merge options with filter values to include custom values
       const newOptions = mergeOptionsWithFilterValues(filter, options).map((value) => ({
         ...value,
         parentId: id,
-        isSelected: getIsValueSelected(value.id, id, filtersData),
+        isSelected: getIsValueSelected(value.id, id, filters),
       }))
 
       const filterName = id.split('-')[0]
@@ -141,8 +146,9 @@ const SearchFilter: FC<SearchFilterProps> = ({
 
   const handleRemoveFilter = (id: string) => {
     // remove a filter by id
-    const updatedFilters = filtersData.filter((filter) => filter.id !== id)
-    setFiltersData(updatedFilters)
+    const updatedFilters = filters.filter((filter) => filter.id !== id)
+    onChange(updatedFilters)
+    onFinish && onFinish(updatedFilters)
   }
 
   const handleContainerKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
@@ -150,7 +156,7 @@ const SearchFilter: FC<SearchFilterProps> = ({
     if (event.key === 'Escape') {
       event.preventDefault()
       event.stopPropagation()
-      handleClose(filtersData)
+      handleClose(filters)
     }
   }
 
@@ -187,26 +193,31 @@ const SearchFilter: FC<SearchFilterProps> = ({
 
   return (
     <Styled.Container onKeyDown={handleContainerKeyDown}>
-      {dropdownOptions && <Styled.Backdrop onClick={() => handleClose(filtersData)} />}
+      {dropdownOptions && <Styled.Backdrop onClick={() => handleClose(filters)} />}
       <Styled.SearchBar
-        className={clsx({ empty: !filtersData.length })}
-        onClick={() => !filtersData.length && openInitialOptions()}
+        className={clsx({ empty: !filters.length })}
+        onClick={() => !filters.length && openInitialOptions()}
         onKeyDown={handleSearchBarKeyDown}
         tabIndex={0}
       >
         <Icon icon="search" className="search" onClick={openInitialOptions} />
         <Styled.SearchBarFilters ref={filtersRef}>
-          {filtersData.map((filter, index) => (
+          {filters.map((filter, index) => (
             <SearchFilterItem
               key={filter.id + index}
-              {...filter}
+              id={filter.id}
+              label={filter.label}
+              inverted={filter.inverted}
+              values={filter.values}
+              icon={filter.icon}
+              isCustom={filter.isCustom}
               showOperator={index > 0}
               onEdit={handleEditFilter}
               onRemove={handleRemoveFilter}
             />
           ))}
         </Styled.SearchBarFilters>
-        {filtersData.length ? (
+        {filters.length ? (
           <Styled.FilterButton icon={'add'} variant="text" onClick={openInitialOptions} />
         ) : (
           <span>{getEmptyPlaceholder(disableSearch)}</span>
@@ -215,7 +226,7 @@ const SearchFilter: FC<SearchFilterProps> = ({
       {dropdownOptions && (
         <SearchFilterDropdown
           options={dropdownOptions}
-          values={filtersData}
+          values={filters}
           parentId={dropdownParentId}
           isCustomAllowed={getIsCustomAllowed(options, dropdownParentId)}
           onSelect={handleOptionSelect}
