@@ -30,6 +30,7 @@ import formatFilterAttributesData from './helpers/formatFilterAttributesData'
 import formatFilterTagsData from './helpers/formatFilterTagsData'
 import { useAppSelector } from '@state/store'
 import { useSetFrontendPreferencesMutation } from '@queries/user/updateUser'
+import getFilterFromId from '@components/SearchFilter/getFilterFromId'
 
 export type Operation = {
   id: string
@@ -58,10 +59,6 @@ const TasksProgress: FC<TasksProgressProps> = ({
 
   // filter states
   const [filteredFolderIds, setFilteredFolderIds] = useState<null | string[]>(null)
-  const [filteredTaskTypes, setFilteredTaskTypes] = useLocalStorage(
-    `progress-types-${projectName}`,
-    [],
-  )
 
   // FILTERS
   //
@@ -84,6 +81,22 @@ const TasksProgress: FC<TasksProgressProps> = ({
     const updatedFrontendPreferences = { ...frontendPreferences, filters: updatedUserFilters }
     updateUserPreferences({ userName, patchData: updatedFrontendPreferences })
   }
+
+  // remove task columns so slightly different to normal filtering of rows
+  const filteredTaskTypes = useMemo(
+    () =>
+      filters
+        .filter((filter) => getFilterFromId(filter.id) === 'taskType')
+        .flatMap((filter) =>
+          filter.inverted
+            ? taskTypes
+                .filter((taskType) => !filter.values?.some((value) => value.id === taskType.name))
+                .map((taskType) => taskType.name)
+            : filter.values?.map((value) => value.id) || [],
+        ),
+    [filters, taskTypes],
+  )
+
   //
   //
   // FILTERS
