@@ -1,5 +1,5 @@
 import useBuildFilterOptions, { BuildFilterOptions } from '@hooks/useBuildFilterOptions'
-import { FC, useState } from 'react'
+import { FC, useEffect, useState } from 'react'
 import SearchFilter, { SearchFilterProps } from './SearchFilter'
 import { Filter } from './types'
 
@@ -27,6 +27,11 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
 
   // keeps track of the filters whilst adding/removing filters
   const [filters, setFilters] = useState<Filter[]>(_filters)
+
+  // update filters when it changes
+  useEffect(() => {
+    setFilters(_filters)
+  }, [_filters, setFilters])
 
   return (
     <SearchFilter

@@ -18,18 +18,18 @@ import { useDispatch } from 'react-redux'
 import { useUpdateEntitiesMutation } from '@queries/entity/updateEntity'
 import { toast } from 'react-toastify'
 import { Button, Section, ShortcutTag, Spacer, Toolbar } from '@ynput/ayon-react-components'
-import CategorySelect from '@components/CategorySelect/CategorySelect'
 import useLocalStorage from '@hooks/useLocalStorage'
 import Shortcuts from '@containers/Shortcuts'
 import { openViewer } from '@state/viewer'
 import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
 import './styles.scss'
 import { AttributeEnumItem } from '@api/rest/attributes'
-import SearchFilter from '@components/SearchFilter/SearchFilter'
-import { Filter, filterOptions } from '@components/SearchFilter/types'
+import { Filter } from '@components/SearchFilter/types'
 import SearchFilterWrapper from '@components/SearchFilter/SearchFilterWrapper'
 import formatFilterAttributesData from './helpers/formatFilterAttributesData'
 import formatFilterTagsData from './helpers/formatFilterTagsData'
+import { useAppSelector } from '@state/store'
+import { useSetFrontendPreferencesMutation } from '@queries/user/updateUser'
 
 export type Operation = {
   id: string
@@ -62,7 +62,31 @@ const TasksProgress: FC<TasksProgressProps> = ({
     `progress-types-${projectName}`,
     [],
   )
-  const [filters, setFilters] = useState<Filter[]>([])
+
+  // FILTERS
+  //
+  //
+  const userName = useAppSelector((state) => state.user.name)
+  const frontendPreferences = useAppSelector((state) => state.user.data.frontendPreferences)
+  const frontendPreferencesFilters: {
+    [page: string]: {
+      [projectName: string]: Filter[]
+    }
+  } = frontendPreferences?.filters
+  const pageFilters = frontendPreferencesFilters?.progress ?? {}
+  const filters = pageFilters[projectName] ?? []
+
+  const [updateUserPreferences] = useSetFrontendPreferencesMutation()
+
+  const setFilters = (value: Filter[]) => {
+    const updatedPageFilters = { ...pageFilters, [projectName]: value }
+    const updatedUserFilters = { ...frontendPreferencesFilters, progress: updatedPageFilters }
+    const updatedFrontendPreferences = { ...frontendPreferences, filters: updatedUserFilters }
+    updateUserPreferences({ userName, patchData: updatedFrontendPreferences })
+  }
+  //
+  //
+  // FILTERS
 
   // should rows be expanded (unless in collapsedRows)
   const [expandAll, setExpandAll] = useState(false)
