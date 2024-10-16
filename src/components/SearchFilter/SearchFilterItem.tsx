@@ -18,6 +18,10 @@ const FilterItem = styled.div`
   cursor: pointer;
   &:hover {
     background-color: var(--md-sys-color-surface-container-high-hover);
+
+    .button {
+      background-color: var(--md-sys-color-surface-container-highest-hover);
+    }
   }
 `
 
@@ -27,11 +31,17 @@ const Operator = styled.span`
   align-items: center;
 `
 
-const Remove = styled(Button)`
+const ChipButton = styled(Button)`
   border-radius: 50%;
+  background-color: unset;
 
   &:hover {
-    background-color: var(--md-sys-color-surface-container-highest-hover);
+    &.button {
+      background-color: var(--md-sys-color-primary);
+    }
+    .icon {
+      color: var(--md-sys-color-on-primary);
+    }
   }
 
   &.hasIcon {
@@ -47,6 +57,7 @@ interface SearchFilterItemProps extends Omit<React.HTMLAttributes<HTMLDivElement
   showOperator?: boolean
   onEdit?: (id: string) => void
   onRemove?: (id: string) => void
+  onInvert?: (id: string) => void
 }
 
 export const SearchFilterItem = forwardRef<HTMLDivElement, SearchFilterItemProps>(
@@ -61,6 +72,7 @@ export const SearchFilterItem = forwardRef<HTMLDivElement, SearchFilterItemProps
       showOperator,
       onEdit,
       onRemove,
+      onInvert,
       onClick,
       ...props
     },
@@ -71,6 +83,13 @@ export const SearchFilterItem = forwardRef<HTMLDivElement, SearchFilterItemProps
       event?.stopPropagation()
       // remove filter
       onRemove?.(id)
+    }
+
+    const handleInvert = (event: React.MouseEvent<HTMLButtonElement>) => {
+      // block main onClick event
+      event?.stopPropagation()
+      // remove filter
+      onInvert?.(id)
     }
 
     const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
@@ -100,7 +119,16 @@ export const SearchFilterItem = forwardRef<HTMLDivElement, SearchFilterItemProps
           onClick={handleClick}
           className="search-filter-item"
         >
-          <Icon icon={inverted ? 'do_not_disturb_on' : 'check_small'} />
+          <ChipButton
+            className="button"
+            icon={inverted ? 'do_not_disturb_on' : 'check_small'}
+            onClick={handleInvert}
+            data-tooltip={
+              inverted
+                ? 'Values excluded (click to switch to include)'
+                : 'Values included (click to switch to exclude)'
+            }
+          />
           <span className="label">{label}:</span>
           {values?.map((value, index) => (
             <SearchFilterItemValue
@@ -116,7 +144,7 @@ export const SearchFilterItem = forwardRef<HTMLDivElement, SearchFilterItemProps
               isCompact={values.length > 1 && (!!value.icon || !!value.img)}
             />
           ))}
-          {onRemove && <Remove variant="text" icon="close" onClick={handleRemove} />}
+          {onRemove && <ChipButton className="button" icon="close" onClick={handleRemove} />}
         </FilterItem>
       </>
     )

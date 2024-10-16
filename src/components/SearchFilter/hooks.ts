@@ -14,5 +14,5 @@ export const useFocusOptions = ({ ref, options }: UseFocusOptions) => {
     if (!ids) return
     // focus search input
     ref.current?.querySelector('input')?.focus()
-  }, [ref, ids?.join('-')])
+  }, [ref, ids?.join('_')])
 }

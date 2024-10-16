@@ -7,9 +7,10 @@ import SearchFilterDropdown, {
   getIsValueSelected,
   SearchFilterDropdownProps,
 } from './SearchFilterDropdown/SearchFilterDropdown'
-import { uuid } from 'short-uuid'
 import clsx from 'clsx'
 import { useFocusOptions } from './hooks'
+import buildFilterId from './buildFilterId'
+import getFilterFromId from './getFilterFromId'
 
 const sortSelectedToTopFields = ['assignee', 'taskType']
 
@@ -75,7 +76,7 @@ const SearchFilter: FC<SearchFilterProps> = ({
     const { values, parentId } = option
 
     // create new id for the filter so we can add multiple of the same filter name
-    const newId = `${option.id}-${uuid()}`
+    const newId = buildFilterId(option.id)
     // check if there is a parent id
     if (parentId) {
       // find the parent filter
@@ -129,7 +130,7 @@ const SearchFilter: FC<SearchFilterProps> = ({
         isSelected: getIsValueSelected(value.id, id, filters),
       }))
 
-      const filterName = id.split('-')[0]
+      const filterName = getFilterFromId(id)
       if (sortSelectedToTopFields.includes(filterName)) {
         // sort selected to top
         newOptions.sort((a, b) => {
@@ -147,6 +148,15 @@ const SearchFilter: FC<SearchFilterProps> = ({
   const handleRemoveFilter = (id: string) => {
     // remove a filter by id
     const updatedFilters = filters.filter((filter) => filter.id !== id)
+    onChange(updatedFilters)
+    onFinish && onFinish(updatedFilters)
+  }
+
+  const handleInvertFilter = (id: string) => {
+    // find the filter and update the inverted value
+    const updatedFilters = filters.map((filter) =>
+      filter.id === id ? { ...filter, inverted: !filter.inverted } : filter,
+    )
     onChange(updatedFilters)
     onFinish && onFinish(updatedFilters)
   }
@@ -214,6 +224,7 @@ const SearchFilter: FC<SearchFilterProps> = ({
               showOperator={index > 0}
               onEdit={handleEditFilter}
               onRemove={handleRemoveFilter}
+              onInvert={handleInvertFilter}
             />
           ))}
         </Styled.SearchBarFilters>
@@ -259,13 +270,14 @@ const getOptionsWithSearch = (options: Option[], disableSearch: boolean) => {
 }
 
 const getIsCustomAllowed = (options: Option[], parentId: string | null): boolean => {
-  const fieldName = parentId?.split('-')[0]
+  if (!parentId) return false
+  const fieldName = getFilterFromId(parentId)
   const parentOption = options.find((option) => option.id === fieldName)
   return !!parentOption?.allowsCustomValues
 }
 
 const mergeOptionsWithFilterValues = (filter: Filter, options: Option[]): Option[] => {
-  const filterName = filter.id.split('-')[0]
+  const filterName = getFilterFromId(filter.id)
   const filterOptions = options.find((option) => option.id === filterName)?.values || []
 
   const mergedOptions = [...filterOptions]

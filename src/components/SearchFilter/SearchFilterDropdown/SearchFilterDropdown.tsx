@@ -4,8 +4,8 @@ import * as Styled from './SearchFilterDropdown.styled'
 import { Icon } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import { matchSorter } from 'match-sorter'
-import { uuid } from 'short-uuid'
 import checkColorBrightness from '../checkColorBrightness'
+import buildFilterId from '../buildFilterId'
 
 type OnSelectConfig = {
   confirm: boolean
@@ -89,7 +89,7 @@ const SearchFilterDropdown = forwardRef<HTMLUListElement, SearchFilterDropdownPr
       const hasTextOption = options.some((option) => option.id === 'text')
       if (!hasTextOption) return
 
-      const newId = `text-${uuid()}`
+      const newId = buildFilterId('text')
 
       const newFilter: Filter = {
         id: newId,
