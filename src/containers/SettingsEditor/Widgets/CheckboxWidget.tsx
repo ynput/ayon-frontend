@@ -60,22 +60,11 @@ const CheckboxWidget = function (props: $Any) {
   }
 
   return (
-    <span style={value !== props.value ? { outline: '1px solid yellow' } : {}}>
+    <span >
       <InputSwitch checked={value || false} onChange={onChange} />
-      {/* {JSON.stringify(props.value)} / {JSON.stringify(value)}  */}
     </span>
   )
 
-  // For debugging
-  /*
-  return (
-    <>
-      <InputSwitch checked={value || false} onChange={onChange} />
-      {JSON.stringify(value)}
-      {JSON.stringify(props.value) || 'und'}
-    </>
-  )
-  */
 }
 
 export { CheckboxWidget }
