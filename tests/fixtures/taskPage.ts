@@ -4,9 +4,7 @@ import type { Page } from '@playwright/test'
 const getTaskName = prefix => (browser) => prefix + '_' + browser
 
 class TaskPage {
-  constructor(
-    public readonly page: Page,
-  ) {}
+  constructor(public readonly page: Page) {}
 
   async goto(projectName) {
     await this.page.goto(`/projects/${projectName}/editor`)
@@ -17,6 +15,12 @@ class TaskPage {
     await this.page.getByText(folderName).click()
     await this.page.getByRole('button', { name: 'add_task Add tasks' }).click()
     await this.page.getByText('task_altGeneric').click()
+    const snoozeButton = await this.page.getByRole('button', {
+      name: 'snooze Restart later (snooze)',
+    })
+    if (await snoozeButton.isVisible()) {
+      await snoozeButton.click()
+    }
     await this.page.locator('input[value="Generic"]').fill(taskName)
     await this.page.getByRole('button', { name: 'check Add and Close' }).click()
     await expect(this.page.getByRole('cell', { name: taskName })).toBeVisible()
@@ -33,7 +37,7 @@ class TaskPage {
     expect(folderLocator).toBeVisible()
     folderLocator.dblclick()
 
-    await this.page.getByRole('cell', { name: taskName }).click({ button: 'right' })
+    await this.page.getByRole('cell', { name: taskName }).click({ button: 'right', force: true })
     await this.page.getByRole('menuitem', { name: 'delete Delete' }).click()
     await this.page.getByRole('button', { name: 'check Save Changes' }).click()
     await this.page.getByText('Changes saved').click()
@@ -43,8 +47,8 @@ class TaskPage {
 
 const test = base.extend<{ taskPage: TaskPage }>({
   taskPage: async ({ page }, use) => {
-    const folderPage = new TaskPage(page)
-    await use(folderPage)
+    const taskpage = new TaskPage(page)
+    await use(taskpage)
   },
 })
 

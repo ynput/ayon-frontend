@@ -228,7 +228,7 @@ const Viewer = ({ onClose }: ViewerProps) => {
 
   const handleUploadAction = (toggleNativeFileUpload = false) => () => {
     // switch to files tab
-    dispatch(updateDetailsPanelTab({ scope: 'review', tab: 'files' }))
+    dispatch(updateDetailsPanelTab({ statePath: 'slideOut', scope: 'review', tab: 'files' }))
     // open the file dialog
     if (toggleNativeFileUpload) {
       dispatch(toggleUpload(true))

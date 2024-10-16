@@ -20,7 +20,7 @@ class AuthenticationPage {
     // Perform authentication steps. Replace these actions with your own.
     await this.page.getByLabel('Username').fill(username)
     await this.page.getByLabel('Password').fill(password)
-    await this.page.getByRole('button', { name: 'Login', exact: true }).click()
+    await this.page.getByRole('button', { name: 'Login with password', exact: true }).click()
     await this.waitForNextPage()
   }
 
