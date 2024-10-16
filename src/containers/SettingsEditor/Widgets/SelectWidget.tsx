@@ -88,13 +88,10 @@ const SelectWidget = (props: $Any) => {
       onSelectionChange={props.multiple ? setValue : (e) => setValue(e[0])}
       onBlur={props.onBlur}
       onFocus={onFocus}
-      optionLabel="label"
-      tooltipOptions={{ position: 'bottom' }}
       placeholder={props.schema?.placeholder}
       className={`form-field`}
       multiSelect={props.multiple}
       style={hlstyle}
-      optionValue="value"
       disabled={props.schema?.disabled}
     />
   )

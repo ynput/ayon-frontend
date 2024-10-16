@@ -77,8 +77,8 @@ const ArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
       onDragEnd={handleDragEnd}
     >
       <SortableContext items={items} strategy={verticalListSortingStrategy}>
-        {items.map((item) => (
-          <DraggableItem id={item.id} isVisible={item.id !== draggedItemId}>
+        {items.map((item, idx) => (
+          <DraggableItem id={item.id} isVisible={item.id !== draggedItemId} key={idx}>
             <FormArrayFieldWrapper onChange={onArrayChanged(item)} item={item} />
           </DraggableItem>
         ))}
@@ -105,9 +105,10 @@ const ArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
 }
 
 const FormArrayFieldWrapper = ({ item, onChange }: { item: $Any; onChange?: () => void }) => {
+  const {key, ...dynProps} = item
   return (
     <FormArrayField>
-      <ArrayItemTemplate onChange={onChange} {...item} />
+      <ArrayItemTemplate onChange={onChange} {...dynProps} />
     </FormArrayField>
   )
 }
