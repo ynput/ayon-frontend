@@ -1,7 +1,33 @@
 import { updateUserPreferences } from '@/features/user'
-import api from '@api'
+import globalApi from '@api'
+import { api } from '@api/rest/users'
+import { $Any } from '@types'
 
-const updateUser = api.injectEndpoints({
+const updateUserApi = api.enhanceEndpoints({
+  endpoints: {
+    setFrontendPreferences: {
+      invalidatesTags: (_result, _error, { userName }) => [{ type: 'user', id: userName }, 'info'],
+      async onQueryStarted({ patchData }, { dispatch, queryFulfilled, getState }) {
+        // get current preferences
+        // @ts-ignore
+        const currentPreferences = getState().user?.data?.frontendPreferences || {}
+
+        // update redux store with new preferences
+        dispatch(updateUserPreferences(patchData))
+        try {
+          await queryFulfilled
+        } catch {
+          // revert to previous preferences
+          dispatch(updateUserPreferences(currentPreferences))
+        }
+      }, // onQueryStarted
+    },
+  },
+})
+
+export const { useSetFrontendPreferencesMutation } = updateUserApi
+
+const updateUser = globalApi.injectEndpoints({
   endpoints: (build) => ({
     updateUser: build.mutation({
       query: ({ name, patch }) => ({
@@ -10,18 +36,20 @@ const updateUser = api.injectEndpoints({
         body: patch,
       }),
       transformErrorResponse: (res) => res.data,
-      invalidatesTags: (result, error, { name }) => [
+      invalidatesTags: (_result, _error, { name }) => [
         { type: 'user', id: name },
         { type: 'user', id: 'LIST' },
-        ['info'],
+        'info',
       ],
     }),
     // update multiple users at once
     updateUsers: build.mutation({
+      // @ts-ignore
       queryFn: async (updates, { dispatch }) => {
         const results = await Promise.all(
-          updates.map(({ name, patch }) => {
-            return dispatch(api.endpoints.updateUser.initiate({ name, patch }))
+          updates.map(({ name, patch }: { name: string; patch: $Any }) => {
+            // @ts-ignore
+            return dispatch(globalApi.endpoints.updateUser.initiate({ name, patch }))
           }),
         )
         console.log(results)
@@ -34,7 +62,7 @@ const updateUser = api.injectEndpoints({
         method: 'PATCH',
         body: { newName },
       }),
-      invalidatesTags: (result, error, { name }) => [
+      invalidatesTags: (_result, _error, { name }) => [
         { type: 'user', id: name },
         { type: 'user', id: 'LIST' },
       ],
@@ -48,32 +76,6 @@ const updateUser = api.injectEndpoints({
       }),
       invalidatesTags: () => ['user'],
       transformErrorResponse: (res) => res.data,
-    }),
-    updateUserPreferences: build.mutation({
-      query: ({ name, preferences }) => ({
-        url: `/api/users/${name}/frontendPreferences`,
-        method: 'PATCH',
-        body: preferences,
-      }),
-      transformErrorResponse: (res) => res.data,
-      invalidatesTags: (result, error, { name }) => [
-        { type: 'user', id: name },
-        { type: 'user', id: 'LIST' },
-        ['info'],
-      ],
-      async onQueryStarted({ preferences }, { dispatch, queryFulfilled, getState }) {
-        // get current preferences
-        const currentPreferences = getState().user?.data?.frontendPreferences || {}
-
-        // update redux store with new preferences
-        dispatch(updateUserPreferences(preferences))
-        try {
-          await queryFulfilled
-        } catch {
-          // revert to previous preferences
-          dispatch(updateUserPreferences(currentPreferences))
-        }
-      }, // onQueryStarted
     }),
     addUser: build.mutation({
       query: ({ name, user }) => ({
@@ -106,7 +108,7 @@ const updateUser = api.injectEndpoints({
         url: `/api/users/${name}/sessions/${token}`,
         method: 'DELETE',
       }),
-      invalidatesTags: (res, err, { token }) => [{ type: 'session', id: token }],
+      invalidatesTags: (_res, _err, { token }) => [{ type: 'session', id: token }],
     }),
   }),
   overrideExisting: true,
@@ -117,7 +119,6 @@ export const {
   useUpdateUsersMutation,
   useUpdateUserNameMutation,
   useUpdateUserPasswordMutation,
-  useUpdateUserPreferencesMutation,
   useAddUserMutation,
   useDeleteUserMutation,
   useUpdateUserAPIKeyMutation,

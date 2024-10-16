@@ -1,6 +1,6 @@
 import { Button } from '@ynput/ayon-react-components'
 import { useNotifications } from '@context/notificationsContext'
-import { useUpdateUserPreferencesMutation } from '@queries/user/updateUser'
+import { useSetFrontendPreferencesMutation } from '@queries/user/updateUser'
 import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 import { useState } from 'react'
@@ -11,7 +11,7 @@ const EnableNotifications = () => {
   const { sendNotification } = useNotifications()
 
   // update user preferences to enable notifications
-  const [updatePreferences] = useUpdateUserPreferencesMutation()
+  const [updatePreferences] = useSetFrontendPreferencesMutation()
 
   const handleEnable = async () => {
     try {
@@ -23,8 +23,8 @@ const EnableNotifications = () => {
       if (!granted) return
 
       await updatePreferences({
-        name: user.name,
-        preferences: { notifications: true },
+        userName: user.name,
+        patchData: { notifications: true },
       }).unwrap()
 
       setHide(true)
