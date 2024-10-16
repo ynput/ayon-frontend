@@ -84,7 +84,11 @@ const TrialBanner: FC<TrialBannerProps> = ({}) => {
       {canManage && (
         <>
           <span>-</span>
-          <a href={getSubscribeLink(activeUsersCount)} target="_blank" rel="noreferrer">
+          <a
+            href={getSubscribeLink(activeUsersCount, connect.orgName)}
+            target="_blank"
+            rel="noreferrer"
+          >
             <u>
               <span>subscribe to keep your data</span>
             </u>
