@@ -22,6 +22,8 @@ const filterTasksBySearch = (folders: GetTasksProgressResult, filters: Filter[])
       // check the task matches all filters
       const isVisible = filters.every(({ values, id, type, inverted }) => {
         const fieldName = getFilterFromId(id)
+        // skip taskType as it has already been filtered
+        if (fieldName === 'taskType') return true
         // check if task matches at least one value in the filter
         const atLeastOneMatch = values?.some(({ id: filterValue }) => {
           if (!filterValue) return true
@@ -60,6 +62,8 @@ const filterTasksBySearch = (folders: GetTasksProgressResult, filters: Filter[])
 
         return inverted ? !atLeastOneMatch : atLeastOneMatch
       })
+
+      console.log(isVisible)
 
       return { ...task, isHidden: !isVisible }
     })
