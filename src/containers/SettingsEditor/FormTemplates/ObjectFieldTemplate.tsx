@@ -260,7 +260,7 @@ function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
         </BadgeWrapper>
       </>
     )
-  }
+  } // Root object - show badges and title
 
   titleComponent = props.idSchema.$id === 'root' ? rootTitle : stringTitle
 
@@ -274,6 +274,11 @@ function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
   }
 
   const matches = matchesFilterKeys(props.formContext.searchText, props.formContext.filterKeys, props.formContext.addonName, props.idSchema.$id)
+
+  const hasEnabled = (props?.schema?.properties || {}).hasOwnProperty('enabled')
+  const isEnabled = props?.formData?.enabled
+
+  const disabled = props.formContext.hideDisabledGroups && hasEnabled && !isEnabled
 
   return (
     <div
@@ -297,6 +302,7 @@ function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
         onContextMenu={onContextMenu}
         currentId={props.formContext.currentId}
         layout={undefined}
+        disabled={disabled}
       >
         {fields}
       </SettingsPanel>

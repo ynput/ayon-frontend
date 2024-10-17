@@ -121,6 +121,7 @@ const SettingsPanel = ({
   onClick,
   onContextMenu,
   currentId,
+  disabled,
 }) => {
   const [expandedObjects, setExpandedObjects] = useLocalStorage('expanded-settings-keys', [])
 
@@ -157,7 +158,7 @@ const SettingsPanel = ({
     <Panel
       header={panelHeader}
       onToggle={onToggle}
-      expanded={expanded}
+      expanded={expanded && !disabled}
       className={nclass}
       onHeaderClick={onClick}
       onContextMenu={onContextMenu}
