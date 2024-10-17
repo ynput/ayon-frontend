@@ -1,136 +1,63 @@
-import React, { useEffect, useRef, useState } from 'react'
-import PropTypes from 'prop-types'
-import { Icon, InputText } from '@ynput/ayon-react-components'
-import styled, { css, keyframes } from 'styled-components'
+import { KeyboardEvent, useEffect, useRef, useState } from 'react'
+import { Icon } from '@ynput/ayon-react-components'
+import {
+  BackdropStyled,
+  InputTextStyled,
+  SearchStyled,
+  SuggestionItemStyled,
+  SuggestionsStyled,
+} from './SearchDropdown.styled'
+import { $Any } from '@types'
 
-const SearchStyled = styled.form`
-  position: relative;
-  width: 200;
-  z-index: 10;
-`
+type Suggestion = {
+  id: string
+  icon: string
+  label: string
+  value: string
+}
 
-const InputTextStyled = styled(InputText)`
-  width: 100%;
-  z-index: 10;
-  position: relative;
-  transition: border 0.2s;
-
-  /* open styles */
-  ${({ open }) =>
-    open &&
-    css`
-      &:not(:focus) {
-        border-radius: 3px 3px 0 0;
-      }
-    `}
-`
-
-const openAnimation = (limit) => keyframes`
-  from {
-    height: 0;
-  }
-  to {
-    height: ${limit * 30}px
-  }
-`
-
-const SuggestionsStyled = styled.ul`
-  position: absolute;
-  display: flex;
-  flex-direction: column;
-  z-index: 9;
-  border: 1px solid var(--md-sys-color-outline-variant);
-  border-top: none;
-  background-color: var(--md-sys-color-surface-container-low);
-  border-radius: 0 0 3px 3px;
-  padding: 0px;
-  margin: 0px;
-  width: 100%;
-  overflow: hidden;
-
-  /* opening animation */
-  height: 0;
-  transition: height 0.15s;
-  ${({ open, items, showResults }) =>
-    open &&
-    css`
-      height: ${(items + showResults) * 30}px;
-      animation: ${(props) => props.showAnimation && openAnimation(props.items)} 0.15s;
-      animation-iteration-count: 1;
-    `}
-`
-
-const SuggestionItemStyled = styled.li`
-  list-style: none;
-  padding: 0 5px;
-  min-height: 30px;
-  overflow: hidden;
-  cursor: pointer;
-  user-select: none;
-
-  display: flex;
-  align-items: center;
-  gap: var(--base-gap-small);
-
-  /* ICON STYLES */
-  span.icon {
-    font-size: 18px;
-  }
-
-  /* TEXT STYLES */
-  span.text {
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-  }
-
-  /* active by keyboard */
-  ${({ activeIndex, index }) =>
-    activeIndex === index &&
-    css`
-      background-color: var(--md-sys-color-surface-container-low-hover);
-    `}
-
-  &.results span {
-    text-align: center;
-    width: 100%;
-    opacity: 0.5;
-  }
-`
-
-const BackdropStyled = styled.div`
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-`
+type Props = {
+  suggestions: Suggestion[]
+  suggestionsLimit: number
+  placeholder: string
+  isLoading: boolean
+  onSubmit: (a: $Any, b: $Any) => void
+  onClear: () => void
+  onFocus: () => void
+  onClose: () => void
+  filter: (newSearch: string, suggestions: Suggestion[]) => Suggestion[]
+}
 
 const SearchDropdown = ({
   suggestions = [],
   suggestionsLimit = 5,
+  placeholder,
   isLoading,
   onSubmit,
   onClear,
   onFocus,
   onClose,
   filter,
-}) => {
+}: Props) => {
   const [search, setSearch] = useState('')
-  const [searchResults, setSearchResults] = useState([])
+  const [searchResults, setSearchResults] = useState<Suggestion[]>([])
   const [suggestionsOpen, setSuggestionsOpen] = useState(false)
   const [showAnimation, setShowAnimation] = useState(true)
-  const [activeIndex, setActiveIndex] = useState(null)
+  const [activeIndex, setActiveIndex] = useState<number | null>(null)
   const [usingKeyboard, setUsingKeyboard] = useState(false)
-  const inputRef = useRef()
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  console.log('suggestions: ', suggestions)
 
   useEffect(() => {
     setSearchResults(suggestions)
-  }, [suggestions, setSearchResults])
+  }, [suggestions])
 
-  const handleFilterResults = (newSearch) => {
+  const handleFilterResults = (newSearch: string) => {
     // console.log('filtering search results by', newSearch)
     // if there is a filter use to filter out suggestions
     if (filter) {
-      let newSuggestions = filter(newSearch, [...suggestions])
+      const newSuggestions = filter(newSearch, [...suggestions])
       setSearchResults(newSuggestions)
     }
   }
@@ -139,20 +66,20 @@ const SearchDropdown = ({
     // close suggestions
     setSuggestionsOpen(false)
     // defocus input
-    inputRef.current.blur()
+    inputRef.current!.blur()
     // reset animation
     setShowAnimation(true)
     // close callback
     onClose && onClose()
   }
 
-  const handleSubmit = (e, useAll, preventClose) => {
+  const handleSubmit = (e: $Any | null, useAll?: boolean, preventClose?: boolean) => {
     e && e.preventDefault()
-    const input = inputRef.current.value
+    const input = inputRef.current!.value
 
     !preventClose && closeSearch()
     // if active index true find item
-    const item = suggestionsSpliced[activeIndex]
+    const item = suggestionsSpliced[activeIndex!]
 
     // no search text clear search
     if (!input && useAll) {
@@ -194,7 +121,7 @@ const SearchDropdown = ({
     return () => clearTimeout(delayDebounceFn)
   }, [search])
 
-  const handleOnChange = (e) => {
+  const handleOnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const inputText = e.target.value
     setSearch(inputText)
 
@@ -218,7 +145,7 @@ const SearchDropdown = ({
 
     if (search) {
       // if there's text select all the text
-      inputRef.current.select()
+      inputRef.current!.select()
       // and open suggestions
       setSuggestionsOpen(true)
     }
@@ -236,7 +163,7 @@ const SearchDropdown = ({
   const suggestionsSpliced = spliceSuggestionsDown()
 
   // KEY BOARD CONTROL
-  const handleKeyPress = (e) => {
+  const handleKeyPress = (e: KeyboardEvent) => {
     // NAVIGATE DOWN
     if (e.code === 'ArrowDown') {
       if (activeIndex === null || activeIndex >= suggestionsSpliced.length - 1) {
@@ -278,11 +205,11 @@ const SearchDropdown = ({
     }
   }
 
-  const handleMouseEnter = (i) => {
+  const handleMouseEnter = (i: number) => {
     if (i !== activeIndex) setActiveIndex(i)
   }
 
-  const handleMouseLeave = (i) => {
+  const handleMouseLeave = (i: number) => {
     if (i === activeIndex) setActiveIndex(null)
   }
 
@@ -293,7 +220,7 @@ const SearchDropdown = ({
     >
       {suggestionsOpen && <BackdropStyled onClick={handleBlur} />}
       <InputTextStyled
-        placeholder="Filter folders & tasks..."
+        placeholder={placeholder}
         value={search}
         onChange={handleOnChange}
         onFocus={handleFocus}
@@ -345,22 +272,5 @@ const SearchDropdown = ({
   )
 }
 
-SearchDropdown.propTypes = {
-  suggestions: PropTypes.arrayOf(
-    PropTypes.shape({
-      value: PropTypes.string.isRequired,
-      id: PropTypes.string.isRequired,
-      label: PropTypes.string,
-      icon: PropTypes.string,
-    }).isRequired,
-  ).isRequired,
-  suggestionsLimit: PropTypes.number,
-  onSubmit: PropTypes.func.isRequired,
-  isLoading: PropTypes.bool,
-  onClear: PropTypes.func,
-  onClose: PropTypes.func,
-  onFocus: PropTypes.func,
-  filter: PropTypes.func,
-}
-
+export type { Suggestion }
 export default SearchDropdown

@@ -44,6 +44,7 @@ const StyledScrollPanel = styled(ScrollPanel)`
   padding-right: 8px;
 }
 `
+import SettingsListHeader from './SettingsListHeader'
 
 /*
  * key is {addonName}|{addonVersion}|{variant}|{siteId}|{projectKey}
@@ -606,22 +607,6 @@ const AddonSettings = ({ projectName, showSites = false }) => {
     )
   }, [variant, changedKeys, bundleName, projectName, developerMode])
 
-  const settingsListHeader = useMemo(() => {
-    return (
-      <Toolbar>
-        <Spacer />
-        <Button
-          onClick={() => {
-            setShowHelp(!showHelp)
-          }}
-          icon="help"
-          data-tooltip="Show help descriptions"
-          selected={showHelp}
-        />
-      </Toolbar>
-    )
-  }, [showHelp])
-
   const commitToolbar = useMemo(
     () => (
       <>
@@ -647,6 +632,8 @@ const AddonSettings = ({ projectName, showSites = false }) => {
     setSelectedAddons(newSelection)
     setCurrentSelection(null)
   }
+
+  console.log('selected addons: ', selectedAddons)
 
   return (
     <Splitter layout="horizontal" style={{ width: '100%', height: '100%' }}>
@@ -693,6 +680,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
             siteSettings={showSites}
             onContextMenu={showAddonListContextMenu}
           />
+
           {showSites && (
             <SiteList
               value={selectedSites}
@@ -702,8 +690,14 @@ const AddonSettings = ({ projectName, showSites = false }) => {
             />
           )}
         </Section>
+
         <Section className={showHelp && 'settings-help-visible'}>
-          {settingsListHeader}
+          <SettingsListHeader
+            showHelp={showHelp}
+            setShowHelp={setShowHelp}
+            projectName={projectName}
+            addonsData={selectedAddons || []}
+          />
           <Section>
             <StyledScrollPanel
               className="transparent nopad"
