@@ -63,8 +63,6 @@ const filterTasksBySearch = (folders: GetTasksProgressResult, filters: Filter[])
         return inverted ? !atLeastOneMatch : atLeastOneMatch
       })
 
-      console.log(isVisible)
-
       return { ...task, isHidden: !isVisible }
     })
 
