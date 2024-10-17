@@ -250,7 +250,7 @@ function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
         </BadgeWrapper>
       </>
     )
-  }
+  } // Root object - show badges and title
 
   titleComponent = props.idSchema.$id === 'root' ? rootTitle : stringTitle
 
@@ -262,6 +262,12 @@ function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
     e.preventDefault()
     contextMenu(e, contextMenuModel)
   }
+
+
+  const hasEnabled = (props?.schema?.properties || {}).hasOwnProperty('enabled')
+  const isEnabled = props?.formData?.enabled
+
+  const disabled = props.formContext.hideDisabledGroups && hasEnabled && !isEnabled
 
   return (
     <SettingsPanel
@@ -276,6 +282,7 @@ function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
       onContextMenu={onContextMenu}
       currentId={props.formContext.currentId}
       layout={undefined}
+      disabled={disabled}
     >
       {fields}
     </SettingsPanel>
