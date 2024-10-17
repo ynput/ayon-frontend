@@ -2,6 +2,7 @@ import { toast } from 'react-toastify'
 import { useState } from 'react'
 import { ScrollPanel, SaveButton, Spacer, Button } from '@ynput/ayon-react-components'
 import { useUpdateProjectAnatomyMutation } from '@queries/project/updateProject'
+import { useGetCurrentUserProjectPermissionsQuery } from '@queries/permissions/getPermissions'
 import ProjectManagerPageLayout from './ProjectManagerPageLayout'
 import AnatomyEditor from '@containers/AnatomyEditor'
 
@@ -14,6 +15,15 @@ const ProjectAnatomy = ({ projectName, projectList }) => {
 
   const [updateProjectAnatomy, { isLoading: isUpdating }] = useUpdateProjectAnatomyMutation()
   const { requestPaste } = usePaste()
+
+
+  const { data: permissions } = useGetCurrentUserProjectPermissionsQuery({
+    projectName: projectName,
+  })
+
+  const accessLevel = permissions?.project?.enabled ? permissions.project.anatomy : 2
+  //const accessLevel = 2
+
 
   const saveAnatomy = () => {
     updateProjectAnatomy({ projectName, anatomy: formData })
@@ -62,23 +72,25 @@ const ProjectAnatomy = ({ projectName, projectList }) => {
             }}
           />
           <Button label="Paste anatomy" icon="content_paste" onClick={onPasteAnatomy} />
+          {accessLevel === 1 && "Read-only"}
           <Spacer />
           <SaveButton
             label="Save changes"
             onClick={saveAnatomy}
-            active={isChanged}
+            active={isChanged && accessLevel > 1}
             saving={isUpdating}
           />
         </>
       }
     >
       <ScrollPanel style={{ flexGrow: 1 }} className="transparent">
+        {accessLevel ? (
         <AnatomyEditor
           projectName={projectName}
           formData={formData}
           setFormData={setFormData}
           setIsChanged={setIsChanged}
-        />
+        />) : "You don't have access to this project's anatomy. We should redirect you somewhere else."}
       </ScrollPanel>
     </ProjectManagerPageLayout>
   )
