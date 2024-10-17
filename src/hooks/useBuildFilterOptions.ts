@@ -14,10 +14,27 @@ import {
   useGetProjectsInfoQuery,
 } from '@queries/userDashboard/getUserDashboard'
 import { productTypes } from '@state/project'
+import {
+  addMonths,
+  addWeeks,
+  addYears,
+  isAfter,
+  isBefore,
+  isSameMonth,
+  isSameWeek,
+  isSameYear,
+  isToday,
+  isYesterday,
+} from 'date-fns'
 import { isEmpty, upperFirst } from 'lodash'
 
 type Scope = 'folder' | 'product' | 'task' | 'user'
-type FilterFieldType = 'entitySubType' | ('users' | 'assignees') | 'attributes' | 'status'
+export type FilterFieldType =
+  | 'entitySubType'
+  | ('users' | 'assignees')
+  | 'attributes'
+  | 'status'
+  | 'tags'
 type AttributeType =
   | string
   | number
@@ -30,20 +47,100 @@ type AttributeType =
 
 type AttributeDataValue = AttributeType | null | undefined
 
+export const filterDateFunctions = {
+  today: (date: Date) => isToday(date),
+  yesterday: (date: Date) => isYesterday(date),
+  ['after-now']: (date: Date) => isAfter(date, new Date()),
+  ['before-now']: (date: Date) => isBefore(new Date(), date),
+  ['this-week']: (date: Date) => isSameWeek(date, new Date()),
+  ['last-week']: (date: Date) => isSameWeek(date, addWeeks(new Date(), -1)),
+  ['this-month']: (date: Date) => isSameMonth(date, new Date()),
+  ['last-month']: (date: Date) => isSameMonth(date, addMonths(new Date(), -1)),
+  ['this-year']: (date: Date) => isSameYear(date, new Date()),
+  ['last-year']: (date: Date) => isSameYear(date, addYears(new Date(), -1)),
+}
+
+type DateOptionType = keyof typeof filterDateFunctions
+
+const dateOptions: (Option & { id: DateOptionType })[] = [
+  {
+    id: 'today',
+    label: 'Today',
+    values: [],
+    icon: 'today',
+  },
+  {
+    id: 'yesterday',
+    label: 'Yesterday',
+    values: [],
+    icon: 'date_range',
+  },
+  {
+    id: 'after-now',
+    label: 'After Now',
+    values: [],
+    icon: 'event_upcoming',
+  },
+  {
+    id: 'before-now',
+    label: 'Before Now',
+    values: [],
+    icon: 'event_busy',
+  },
+  {
+    id: 'this-week',
+    label: 'This Week',
+    values: [],
+    icon: 'date_range',
+  },
+  {
+    id: 'last-week',
+    label: 'Last Week',
+    values: [],
+    icon: 'date_range',
+  },
+  {
+    id: 'this-month',
+    label: 'This Month',
+    values: [],
+    icon: 'calendar_month',
+  },
+  {
+    id: 'last-month',
+    label: 'Last Month',
+    values: [],
+    icon: 'calendar_month',
+  },
+  {
+    id: 'this-year',
+    label: 'This Year',
+    values: [],
+    icon: 'calendar_month',
+  },
+  {
+    id: 'last-year',
+    label: 'Last Year',
+    values: [],
+    icon: 'calendar_month',
+  },
+]
+
 export type BuildFilterOptions = {
   filterTypes: FilterFieldType[]
   projectNames: string[]
   scope: Scope
-  attributesData?: Record<string, AttributeDataValue[]>
-  tagsData?: string[]
+  data: {
+    tags?: string[]
+    attributes?: Record<string, AttributeDataValue[]>
+    assignees?: string[]
+  }
 }
 
 const useBuildFilterOptions = ({
   filterTypes,
   projectNames,
   scope,
-  attributesData = {},
-  tagsData = [],
+  data,
 }: BuildFilterOptions): Option[] => {
   let options: Option[] = []
 
@@ -83,6 +180,7 @@ const useBuildFilterOptions = ({
   if (filterTypes.includes('entitySubType') && scope !== 'user') {
     const entitySubTypeOption: Option = {
       id: `${scope}Type`,
+      type: 'string',
       label: `${upperFirst(scope)} Type`,
       icon: getEntityTypeIcon(scope),
       inverted: false,
@@ -102,6 +200,7 @@ const useBuildFilterOptions = ({
   if (filterTypes.includes('status')) {
     const statusOption: Option = {
       id: 'status',
+      type: 'string',
       label: 'Status',
       icon: 'arrow_circle_right',
       inverted: false,
@@ -115,7 +214,6 @@ const useBuildFilterOptions = ({
         if (!statusOption.values?.some((value) => value.id === status.name)) {
           statusOption.values?.push({
             id: status.name,
-            value: status.name,
             label: status.name,
             icon: status.icon,
             color: status.color,
@@ -131,7 +229,8 @@ const useBuildFilterOptions = ({
   if (filterTypes.includes('users') || filterTypes.includes('assignees')) {
     const isAssignees = filterTypes.includes('assignees')
     const usersOption: Option = {
-      id: isAssignees ? 'assignee' : 'user',
+      id: isAssignees ? 'assignees' : 'user',
+      type: 'list_of_strings',
       label: isAssignees ? 'Assignee' : 'User',
       icon: 'person',
       inverted: false,
@@ -144,21 +243,27 @@ const useBuildFilterOptions = ({
       if (!usersOption.values?.some((value) => value.id === user.name)) {
         usersOption.values?.push({
           id: user.name,
-          value: user.name,
           label: user.attrib.fullName || user.name,
           img: `/api/users/${user.name}/avatar`,
           icon: null,
         })
       }
     })
+    // sort the assignees based on the number of times they appear in data.assignees
+    usersOption.values?.sort((a, b) => {
+      const aCount = data.assignees?.filter((assignee) => assignee === a.id).length || 0
+      const bCount = data.assignees?.filter((assignee) => assignee === b.id).length || 0
+      return bCount - aCount
+    })
 
     options.push(usersOption)
   }
 
   // add tags options
-  if (tagsData.length > 0) {
+  if (filterTypes.includes('tags')) {
     const tagsOption: Option = {
       id: 'tags',
+      type: 'list_of_strings',
       label: 'Tags',
       icon: 'local_offer',
       inverted: false,
@@ -180,7 +285,7 @@ const useBuildFilterOptions = ({
 
     // create options for each tag, finding color if in tagsAnatomy
     const tagOptionValuesMap = new Map<string, Option & { count: number }>()
-    tagsData.forEach((tag) => {
+    data.tags?.forEach((tag) => {
       const existingTag = tagOptionValuesMap.get(tag)
       if (existingTag) {
         // increment count
@@ -192,6 +297,7 @@ const useBuildFilterOptions = ({
 
         tagOptionValuesMap.set(tag, {
           id: tag,
+          type: 'string',
           label: tag,
           values: [],
           color: tagData?.color || null,
@@ -215,15 +321,15 @@ const useBuildFilterOptions = ({
   if (filterTypes.includes('attributes')) {
     const attributesByScope = attributes.filter((attribute) => attribute.scope?.includes(scope))
     // if attributesData is provided, filter out attributes that are not in the attributesData
-    const attributesByValues = !isEmpty(attributesData)
-      ? attributesByScope.filter((attribute) => attributesData[attribute.name])
+    const attributesByValues = !isEmpty(data.attributes)
+      ? attributesByScope.filter((attribute) => data.attributes && data.attributes[attribute.name])
       : attributesByScope
 
     attributesByValues.forEach((attribute) => {
       // for the attribute, get the option root
       const option = getAttributeFieldOptionRoot(attribute, true)
 
-      const realData = attributesData[attribute.name]
+      const realData = data.attributes && data.attributes[attribute.name]
       const enums = attribute.data.enum
 
       const suggestValuesForTypes: AttributeData['type'][] = [
@@ -238,7 +344,7 @@ const useBuildFilterOptions = ({
 
       // if the attribute type is in the suggestValuesForTypes, get the options based on real values
       if (suggestValuesForTypes.includes(attribute.data.type)) {
-        const options = getAttributeOptions(realData, enums)
+        const options = getAttributeOptions(realData, enums, attribute.data.type)
         optionValues.push(...options)
       }
 
@@ -263,69 +369,7 @@ const useBuildFilterOptions = ({
 
       // if the attribute type is datetime, add datetime options
       if (attribute.data.type === 'datetime') {
-        const options = [
-          {
-            id: 'today',
-            label: 'Today',
-            values: [],
-            icon: 'today',
-          },
-          {
-            id: 'yesterday',
-            label: 'Yesterday',
-            values: [],
-            icon: 'date_range',
-          },
-          {
-            id: 'after-now',
-            label: 'After Now',
-            values: [],
-            icon: 'event_upcoming',
-          },
-          {
-            id: 'before-now',
-            label: 'Before Now',
-            values: [],
-            icon: 'event_busy',
-          },
-          {
-            id: 'this-week',
-            label: 'This Week',
-            values: [],
-            icon: 'date_range',
-          },
-          {
-            id: 'last-week',
-            label: 'Last Week',
-            values: [],
-            icon: 'date_range',
-          },
-          {
-            id: 'this-month',
-            label: 'This Month',
-            values: [],
-            icon: 'calendar_month',
-          },
-          {
-            id: 'last-month',
-            label: 'Last Month',
-            values: [],
-            icon: 'calendar_month',
-          },
-          {
-            id: 'this-year',
-            label: 'This Year',
-            values: [],
-            icon: 'calendar_month',
-          },
-          {
-            id: 'last-year',
-            label: 'Last Year',
-            values: [],
-            icon: 'calendar_month',
-          },
-        ]
-        optionValues.push(...options)
+        optionValues.push(...dateOptions)
       }
 
       // add option to the list of options
@@ -352,6 +396,7 @@ const getSubTypes = (projectsInfo: GetProjectsInfoResponse, type: Scope): Option
     Object.values(productTypes).forEach(({ icon, name }) => {
       options.push({
         id: name,
+        type: 'string',
         label: name,
         icon: icon,
         inverted: false,
@@ -367,6 +412,7 @@ const getSubTypes = (projectsInfo: GetProjectsInfoResponse, type: Scope): Option
         if (!options.some((option) => option.id === taskType.name)) {
           options.push({
             id: taskType.name,
+            type: 'string',
             label: taskType.name,
             icon: taskType.icon,
             inverted: false,
@@ -384,6 +430,7 @@ const getSubTypes = (projectsInfo: GetProjectsInfoResponse, type: Scope): Option
         if (!options.some((option) => option.id === folderType.name)) {
           options.push({
             id: folderType.name,
+            type: 'string',
             label: folderType.name,
             icon: folderType.icon,
             inverted: false,
@@ -403,6 +450,7 @@ const getAttributeFieldOptionRoot = (
   allowsCustomValues: boolean = false,
 ): Option => ({
   id: attribute.name,
+  type: attribute.data.type,
   label: attribute.data.title || attribute.name,
   values: [],
   allowsCustomValues,
@@ -458,6 +506,7 @@ const getAttributeIcon = (attribute: AttributeModel): string => {
 const getAttributeOptions = (
   values?: AttributeDataValue[],
   enums?: AttributeEnumItem[],
+  type?: AttributeData['type'],
 ): Option[] => {
   const enumOptions: Option[] = []
   const options: (Option & { count: number })[] = []
@@ -467,6 +516,7 @@ const getAttributeOptions = (
     enums.forEach((enumItem) => {
       enumOptions.push({
         id: enumItem.value.toString(),
+        type: type,
         label: enumItem.label,
         values: [],
         icon: enumItem.icon,
@@ -519,6 +569,7 @@ const getAttributeOptions = (
       // add option
       options.push({
         id,
+        type: type,
         label: text,
         values: [],
         count: 1,

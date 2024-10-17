@@ -3,8 +3,8 @@ import { GetTasksProgressResult } from '@queries/tasksProgress/getTasksProgress'
 
 const formatFilterAttributesData = (
   data: GetTasksProgressResult,
-): BuildFilterOptions['attributesData'] => {
-  const attributes: BuildFilterOptions['attributesData'] = {}
+): BuildFilterOptions['data']['attributes'] => {
+  const attributes: BuildFilterOptions['data']['attributes'] = {}
 
   //   add attributes from tasks
   data.forEach((folder) => {

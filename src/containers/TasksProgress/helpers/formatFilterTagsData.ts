@@ -1,8 +1,8 @@
 import { BuildFilterOptions } from '@hooks/useBuildFilterOptions'
 import { GetTasksProgressResult } from '@queries/tasksProgress/getTasksProgress'
 
-const formatFilterTagsData = (data: GetTasksProgressResult): BuildFilterOptions['tagsData'] => {
-  const tags: BuildFilterOptions['tagsData'] = []
+const formatFilterTagsData = (data: GetTasksProgressResult): BuildFilterOptions['data']['tags'] => {
+  const tags: BuildFilterOptions['data']['tags'] = []
 
   //   add tags from tasks
   data.forEach((folder) => {

@@ -54,7 +54,7 @@ const ChipButton = styled(Button)`
 `
 
 interface SearchFilterItemProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'id'>, Filter {
-  showOperator?: boolean
+  index?: number
   onEdit?: (id: string) => void
   onRemove?: (id: string) => void
   onInvert?: (id: string) => void
@@ -69,7 +69,7 @@ export const SearchFilterItem = forwardRef<HTMLDivElement, SearchFilterItemProps
       values,
       icon,
       isCustom,
-      showOperator,
+      index,
       onEdit,
       onRemove,
       onInvert,
@@ -107,9 +107,11 @@ export const SearchFilterItem = forwardRef<HTMLDivElement, SearchFilterItemProps
       onClick && onClick(event)
     }
 
+    const operatorText = getOperatorText(index || 0, inverted)
+
     return (
       <>
-        {showOperator && <Operator>{`and ${inverted ? 'not' : ''}`}</Operator>}
+        {operatorText && <Operator>{operatorText}</Operator>}
         <FilterItem
           id={id}
           {...props}
@@ -123,18 +125,13 @@ export const SearchFilterItem = forwardRef<HTMLDivElement, SearchFilterItemProps
             className="button"
             icon={inverted ? 'do_not_disturb_on' : 'check_small'}
             onClick={handleInvert}
-            data-tooltip={
-              inverted
-                ? 'Values excluded (click to switch to include)'
-                : 'Values included (click to switch to exclude)'
-            }
+            data-tooltip={'include/exclude'}
           />
           <span className="label">{label}:</span>
           {values?.map((value, index) => (
             <SearchFilterItemValue
-              key={(value.value || '') + index}
+              key={(value.id || '') + index}
               id={value.id}
-              value={value.value}
               label={value.label}
               img={value.img}
               icon={value.icon}
@@ -150,3 +147,13 @@ export const SearchFilterItem = forwardRef<HTMLDivElement, SearchFilterItemProps
     )
   },
 )
+
+const getOperatorText = (index: number, inverted?: boolean): string | undefined => {
+  if (index > 0) {
+    return `and ${inverted ? 'not' : ''}`
+  } else if (inverted) {
+    return 'not'
+  } else {
+    return undefined
+  }
+}

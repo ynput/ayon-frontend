@@ -41,6 +41,8 @@ const SearchFilterDropdown = forwardRef<HTMLUListElement, SearchFilterDropdownPr
       if (!option) return console.error('Option not found:', id)
 
       onSelect(option)
+      // clear search
+      setSearch('')
     }
 
     const handleKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
@@ -80,7 +82,7 @@ const SearchFilterDropdown = forwardRef<HTMLUListElement, SearchFilterDropdownPr
 
       // add the first option
       onSelect(addedOption, { confirm: true })
-      // reset search
+      // clear search
       setSearch('')
     }
 
@@ -94,7 +96,7 @@ const SearchFilterDropdown = forwardRef<HTMLUListElement, SearchFilterDropdownPr
       const newFilter: Filter = {
         id: newId,
         label: 'Text',
-        values: [{ id: search, label: search, value: search, parentId: newId, isCustom: true }],
+        values: [{ id: search, label: search, parentId: newId, isCustom: true }],
       }
 
       onConfirmAndClose && onConfirmAndClose([...values, newFilter])
