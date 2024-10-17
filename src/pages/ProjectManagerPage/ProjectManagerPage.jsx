@@ -49,7 +49,9 @@ const ProjectManagerPage = () => {
     withDefault(StringParam, projectName),
   )
 
-  const { data: permissions} = useGetCurrentUserProjectPermissionsQuery({ projectName: selectedProject })
+  const { data: permissions } = useGetCurrentUserProjectPermissionsQuery({
+    projectName: selectedProject,
+  })
 
   // UPDATE DATA
   const [updateProject] = useUpdateProjectMutation()
@@ -85,20 +87,23 @@ const ProjectManagerPage = () => {
   }
 
   const links = []
-  const projectPermissions = permissions?.project_settings
+  if (permissions?.project) {
+    // How to read this code:
+    // If project management restrictions are NOT enabled
+    // OR if project management restrctions ARE enabled
+    // and access to anatomy is allowed
 
-  if (projectPermissions){
-    if (!projectPermissions.enabled || projectPermissions.anatomy_update) {
+    if (!permissions.project.enabled || permissions.project.anatomy) {
       links.push({
-          name: 'Anatomy',
-          path: '/manageProjects/anatomy',
-          module: 'anatomy',
-          accessLevels: [],
-          shortcut: 'A+A',
+        name: 'Anatomy',
+        path: '/manageProjects/anatomy',
+        module: 'anatomy',
+        accessLevels: [],
+        shortcut: 'A+A',
       })
     }
 
-    if (!projectPermissions.enabled || projectPermissions.addon_settings_update) {
+    if (!permissions.project.enabled || permissions.project.settings) {
       links.push({
         name: 'Project settings',
         path: '/manageProjects/projectSettings',
@@ -108,7 +113,6 @@ const ProjectManagerPage = () => {
       })
     }
   }
-
 
   links.push(
     {
