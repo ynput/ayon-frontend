@@ -7,8 +7,8 @@ import { GetProgressTaskQuery, GetTasksProgressQuery } from '@api/graphql'
 
 export type ProgressTask = GetTasksProgressQuery['project']['tasks']['edges'][0]['node']
 
-type ProgressTaskFolder = ProgressTask['folder']
-interface FolderGroup extends ProgressTaskFolder {
+export type ProgressTaskFolder = ProgressTask['folder']
+export interface FolderGroup extends ProgressTaskFolder {
   projectName: string
   tasks: ProgressTask[]
 }

@@ -19,6 +19,7 @@ export type GetKanbanProjectUsersResponse = KanbanProjectUserNode[]
 import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
 import getUserProjectsAccess from './getUserProjectsAccess'
 import { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
+import { ProjectAnatomy } from '@api/rest/project'
 
 type Definitions = DefinitionsFromApi<typeof api>
 type TagTypes = TagTypesFromApi<typeof api>
@@ -232,7 +233,7 @@ type GetProjectsInfoParams = {
   projects: string[]
 }
 
-type GetProjectsInfoResponse = $Any
+export type GetProjectsInfoResponse = { [projectName: string]: ProjectAnatomy | undefined }
 
 const injectedDashboardRestApi = api.injectEndpoints({
   endpoints: (build) => ({

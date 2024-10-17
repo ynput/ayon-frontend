@@ -9,7 +9,7 @@ import {
   InputText,
   InputSwitch,
 } from '@ynput/ayon-react-components'
-import { useUpdateUserMutation, useUpdateUserPreferencesMutation } from '@queries/user/updateUser'
+import { useUpdateUserMutation, useSetFrontendPreferencesMutation } from '@queries/user/updateUser'
 import Avatar from '@components/Avatar/Avatar'
 import styled from 'styled-components'
 import UserAttribForm from '../SettingsPage/UsersSettings/UserAttribForm'
@@ -140,7 +140,7 @@ const ProfilePage = ({ user = {}, isLoading }) => {
 
   // USER PREFERENCES
   const [updatePreferences, { isLoading: isUpdatingPreferences }] =
-    useUpdateUserPreferencesMutation()
+    useSetFrontendPreferencesMutation()
 
   const initPreferences = { notifications: false, notificationSound: false }
   const [initPreferencesData, setInitPreferencesData] = useState(initPreferences)
@@ -186,8 +186,8 @@ const ProfilePage = ({ user = {}, isLoading }) => {
     setPreferenceChanges(false)
     try {
       await updatePreferences({
-        name: user.name,
-        preferences: preferencesData,
+        userName: user.name,
+        patchData: preferencesData,
       }).unwrap()
 
       dispatch(updateUserPreferences(preferencesData))
@@ -204,8 +204,8 @@ const ProfilePage = ({ user = {}, isLoading }) => {
         if (!granted) {
           // something went wrong, undo the change to turn notifications off
           await updatePreferences({
-            name: user.name,
-            preferences: { notifications: false },
+            userName: user.name,
+            patchData: { notifications: false },
           }).unwrap()
         }
       }

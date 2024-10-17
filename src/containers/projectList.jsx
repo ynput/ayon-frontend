@@ -12,7 +12,7 @@ import CollapseButton from '@components/CollapseButton'
 import styled, { css } from 'styled-components'
 import clsx from 'clsx'
 import { toast } from 'react-toastify'
-import { useUpdateUserPreferencesMutation } from '@/services/user/updateUser'
+import { useSetFrontendPreferencesMutation } from '@/services/user/updateUser'
 import useTableLoadingData from '@hooks/useTableLoadingData'
 import { useProjectSelectDispatcher } from './ProjectMenu/hooks/useProjectSelectDispatcher'
 import useAyonNavigate from '@hooks/useAyonNavigate'
@@ -219,7 +219,7 @@ const ProjectList = ({
     } // single select
   }, [selection, projectList, isFetching])
 
-  const [updateUserPreferences] = useUpdateUserPreferencesMutation()
+  const [updateUserPreferences] = useSetFrontendPreferencesMutation()
 
   const handlePinProjects = async (sel, isPinning) => {
     try {
@@ -240,8 +240,8 @@ const ProjectList = ({
 
       // update user preferences
       await updateUserPreferences({
-        name: user.name,
-        preferences: { pinnedProjects: newPinnedProjects },
+        userName: user.name,
+        patchData: { pinnedProjects: newPinnedProjects },
       }).unwrap()
     } catch (error) {
       console.error(error)
@@ -307,7 +307,12 @@ const ProjectList = ({
         command: () => {
           closeContextMenu()
           //Enqueing navigation to event loop to avoid close context menu race condition
-          setTimeout(dispatch((_, getState) => navigate(getState)(`/manageProjects/anatomy?project=${sel[0]}`)), 0)
+          setTimeout(
+            dispatch((_, getState) =>
+              navigate(getState)(`/manageProjects/anatomy?project=${sel[0]}`),
+            ),
+            0,
+          )
         },
       })
     }
