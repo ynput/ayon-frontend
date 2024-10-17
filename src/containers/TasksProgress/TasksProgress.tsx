@@ -190,7 +190,7 @@ const TasksProgress: FC<TasksProgressProps> = ({
 
   // the tasks don't get filtered out but just hidden
   const filteredFoldersTasks = useMemo(
-    () => filterTasksBySearch(foldersTasksData, filters, searchFilterTypes),
+    () => filterTasksBySearch(foldersTasksData, filters),
     [foldersTasksData, filters],
   )
   //

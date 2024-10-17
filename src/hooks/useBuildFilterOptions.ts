@@ -176,147 +176,126 @@ const useBuildFilterOptions = ({
 
   // ADD OPTIONS
 
+  // ENTITY SUBTYPE
   // add entitySubType option
   if (filterTypes.includes('entitySubType') && scope !== 'user') {
-    const entitySubTypeOption: Option = {
-      id: `${scope}Type`,
-      type: 'string',
-      label: `${upperFirst(scope)} Type`,
-      icon: getEntityTypeIcon(scope),
-      inverted: false,
-      values: [],
-      allowsCustomValues: false,
+    const entitySubTypeOption = getOptionRoot('entitySubType', scope)
+    if (entitySubTypeOption) {
+      // get all subTypes for the current scope (entityType)
+      let subTypes = getSubTypes(projectsInfo, scope)
+
+      entitySubTypeOption.values?.push(...subTypes)
+
+      options.push(entitySubTypeOption)
     }
-
-    // get all subTypes for the current scope (entityType)
-    let subTypes = getSubTypes(projectsInfo, scope)
-
-    entitySubTypeOption.values?.push(...subTypes)
-
-    options.push(entitySubTypeOption)
   }
 
+  // STATUS
   // add status option
   if (filterTypes.includes('status')) {
-    const statusOption: Option = {
-      id: 'status',
-      type: 'string',
-      label: 'Status',
-      icon: 'arrow_circle_right',
-      inverted: false,
-      values: [],
-      allowsCustomValues: false,
-    }
+    const statusOption = getOptionRoot('status')
 
-    Object.values(projectsInfo).forEach((project) => {
-      const statuses = project?.statuses || []
-      statuses.forEach((status) => {
-        if (!statusOption.values?.some((value) => value.id === status.name)) {
-          statusOption.values?.push({
-            id: status.name,
-            label: status.name,
-            icon: status.icon,
-            color: status.color,
+    if (statusOption) {
+      Object.values(projectsInfo).forEach((project) => {
+        const statuses = project?.statuses || []
+        statuses.forEach((status) => {
+          if (!statusOption.values?.some((value) => value.id === status.name)) {
+            statusOption.values?.push({
+              id: status.name,
+              label: status.name,
+              icon: status.icon,
+              color: status.color,
+            })
+          }
+        })
+      })
+
+      options.push(statusOption)
+    }
+  }
+
+  // ASSIGNEES
+  // add users/assignees option
+  if (filterTypes.includes('assignees')) {
+    const assigneesOption = getOptionRoot('assignees')
+
+    if (assigneesOption) {
+      // add every user for the projects (skip duplicates)
+      projectUsers.forEach((user) => {
+        if (!assigneesOption.values?.some((value) => value.id === user.name)) {
+          assigneesOption.values?.push({
+            id: user.name,
+            label: user.attrib.fullName || user.name,
+            img: `/api/users/${user.name}/avatar`,
+            icon: null,
           })
         }
       })
-    })
+      // sort the assignees based on the number of times they appear in data.assignees
+      assigneesOption.values?.sort((a, b) => {
+        const aCount = data.assignees?.filter((assignee) => assignee === a.id).length || 0
+        const bCount = data.assignees?.filter((assignee) => assignee === b.id).length || 0
+        return bCount - aCount
+      })
 
-    options.push(statusOption)
-  }
-
-  // add users/assignees option
-  if (filterTypes.includes('users') || filterTypes.includes('assignees')) {
-    const isAssignees = filterTypes.includes('assignees')
-    const usersOption: Option = {
-      id: isAssignees ? 'assignees' : 'user',
-      type: 'list_of_strings',
-      label: isAssignees ? 'Assignee' : 'User',
-      icon: 'person',
-      inverted: false,
-      values: [],
-      allowsCustomValues: false,
+      options.push(assigneesOption)
     }
-
-    // add every user for the projects (skip duplicates)
-    projectUsers.forEach((user) => {
-      if (!usersOption.values?.some((value) => value.id === user.name)) {
-        usersOption.values?.push({
-          id: user.name,
-          label: user.attrib.fullName || user.name,
-          img: `/api/users/${user.name}/avatar`,
-          icon: null,
-        })
-      }
-    })
-    // sort the assignees based on the number of times they appear in data.assignees
-    usersOption.values?.sort((a, b) => {
-      const aCount = data.assignees?.filter((assignee) => assignee === a.id).length || 0
-      const bCount = data.assignees?.filter((assignee) => assignee === b.id).length || 0
-      return bCount - aCount
-    })
-
-    options.push(usersOption)
   }
 
+  // TAGS
   // add tags options
   if (filterTypes.includes('tags')) {
-    const tagsOption: Option = {
-      id: 'tags',
-      type: 'list_of_strings',
-      label: 'Tags',
-      icon: 'local_offer',
-      inverted: false,
-      values: [],
-      allowsCustomValues: true,
+    const tagsOption = getOptionRoot('tags')
+
+    if (tagsOption) {
+      // reduce projectsInfo to get all tags
+      const tagsAnatomy = new Map<string, Tag>()
+      Object.values(projectsInfo).forEach((project) => {
+        if (project?.tags) {
+          project.tags.forEach((tag) => {
+            if (!tagsAnatomy.has(tag.name)) {
+              tagsAnatomy.set(tag.name, tag)
+            }
+          })
+        }
+      })
+
+      // create options for each tag, finding color if in tagsAnatomy
+      const tagOptionValuesMap = new Map<string, Option & { count: number }>()
+      data.tags?.forEach((tag) => {
+        const existingTag = tagOptionValuesMap.get(tag)
+        if (existingTag) {
+          // increment count
+          existingTag.count++
+          return
+        } else {
+          // create new tag
+          const tagData = tagsAnatomy.get(tag)
+
+          tagOptionValuesMap.set(tag, {
+            id: tag,
+            type: 'string',
+            label: tag,
+            values: [],
+            color: tagData?.color || null,
+            count: 1,
+          })
+        }
+      })
+
+      // convert values map to array and sort based on count
+      const tagOptionValues = Array.from(tagOptionValuesMap.values()).sort(
+        (a, b) => b.count - a.count,
+      )
+
+      // add tag options to the tagsOption
+      tagsOption.values?.push(...tagOptionValues)
+
+      options.push(tagsOption)
     }
-
-    // reduce projectsInfo to get all tags
-    const tagsAnatomy = new Map<string, Tag>()
-    Object.values(projectsInfo).forEach((project) => {
-      if (project?.tags) {
-        project.tags.forEach((tag) => {
-          if (!tagsAnatomy.has(tag.name)) {
-            tagsAnatomy.set(tag.name, tag)
-          }
-        })
-      }
-    })
-
-    // create options for each tag, finding color if in tagsAnatomy
-    const tagOptionValuesMap = new Map<string, Option & { count: number }>()
-    data.tags?.forEach((tag) => {
-      const existingTag = tagOptionValuesMap.get(tag)
-      if (existingTag) {
-        // increment count
-        existingTag.count++
-        return
-      } else {
-        // create new tag
-        const tagData = tagsAnatomy.get(tag)
-
-        tagOptionValuesMap.set(tag, {
-          id: tag,
-          type: 'string',
-          label: tag,
-          values: [],
-          color: tagData?.color || null,
-          count: 1,
-        })
-      }
-    })
-
-    // convert values map to array and sort based on count
-    const tagOptionValues = Array.from(tagOptionValuesMap.values()).sort(
-      (a, b) => b.count - a.count,
-    )
-
-    // add tag options to the tagsOption
-    tagsOption.values?.push(...tagOptionValues)
-
-    options.push(tagsOption)
   }
 
+  // ATTRIBUTES
   // dynamically add attributes options
   if (filterTypes.includes('attributes')) {
     const attributesByScope = attributes.filter((attribute) => attribute.scope?.includes(scope))
@@ -445,6 +424,70 @@ const getSubTypes = (projectsInfo: GetProjectsInfoResponse, type: Scope): Option
   return options
 }
 
+const getOptionRoot = (fieldType: FilterFieldType, scope?: string) => {
+  let rootOption: Option | null = null
+  switch (fieldType) {
+    case 'entitySubType':
+      rootOption = {
+        id: `${scope}Type`,
+        type: 'string',
+        label: `${upperFirst(scope)} Type`,
+        icon: getEntityTypeIcon(scope),
+        inverted: false,
+        values: [],
+        allowsCustomValues: false,
+        allowHasValue: false,
+        allowNoValue: false,
+      }
+      break
+    case 'status':
+      rootOption = {
+        id: 'status',
+        type: 'string',
+        label: 'Status',
+        icon: 'arrow_circle_right',
+        inverted: false,
+        values: [],
+        allowsCustomValues: false,
+        allowHasValue: false,
+        allowNoValue: false,
+      }
+      break
+    case 'assignees':
+      rootOption = {
+        id: 'assignees',
+        type: 'list_of_strings',
+        label: 'Assignee',
+        icon: 'person',
+        inverted: false,
+        values: [],
+        allowsCustomValues: false,
+        allowHasValue: true,
+        allowNoValue: true,
+      }
+      break
+    case 'tags':
+      rootOption = {
+        id: 'tags',
+        type: 'list_of_strings',
+        label: 'Tags',
+        icon: 'local_offer',
+        inverted: false,
+        values: [],
+        allowsCustomValues: true,
+        allowHasValue: true,
+        allowNoValue: true,
+      }
+      break
+    default:
+      break
+
+    // Note: attributes are handled separately
+  }
+
+  return rootOption
+}
+
 const getAttributeFieldOptionRoot = (
   attribute: AttributeModel,
   allowsCustomValues: boolean = false,
@@ -454,6 +497,8 @@ const getAttributeFieldOptionRoot = (
   label: attribute.data.title || attribute.name,
   values: [],
   allowsCustomValues,
+  allowHasValue: true,
+  allowNoValue: true,
   icon: getAttributeIcon(attribute),
   singleSelect: ['boolean', 'datetime'].includes(attribute.data.type),
 })

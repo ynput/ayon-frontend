@@ -1,7 +1,7 @@
 import { forwardRef } from 'react'
 import styled from 'styled-components'
 import { Filter } from './types'
-import { Button, Icon, theme } from '@ynput/ayon-react-components'
+import { Button, theme } from '@ynput/ayon-react-components'
 import { SearchFilterItemValue } from './SearchFilterItemValue'
 
 const FilterItem = styled.div`

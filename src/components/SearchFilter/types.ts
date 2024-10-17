@@ -24,6 +24,8 @@ export type Filter = {
 }
 
 export interface Option extends Filter {
+  allowNoValue?: boolean
+  allowHasValue?: boolean
   allowsCustomValues?: boolean
   color?: string | null
   parentId?: string | null

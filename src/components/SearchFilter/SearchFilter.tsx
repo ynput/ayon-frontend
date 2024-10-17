@@ -37,6 +37,10 @@ const SearchFilter: FC<SearchFilterProps> = ({
   const [dropdownParentId, setDropdownParentId] = useState<null | string>(null)
   const [dropdownOptions, setOptions] = useState<Option[] | null>(null)
 
+  const parentOption = options.find(
+    (option) => dropdownParentId && option.id === getFilterFromId(dropdownParentId),
+  )
+
   useFocusOptions({ ref: dropdownRef, options: dropdownOptions })
 
   const openOptions = (options: Option[], parentId: string | null) => {
@@ -84,19 +88,34 @@ const SearchFilter: FC<SearchFilterProps> = ({
 
       // add to the parent filter values
       if (parentFilter) {
-        const updatedValues = parentFilter.values?.some((val) => val.id === option.id)
-          ? parentFilter.values.filter((val) => val.id !== option.id)
-          : [...(parentFilter.values || []), option]
+        const valueAlreadyExists = parentFilter.values?.some((val) => val.id === option.id)
 
+        let updatedValues =
+          valueAlreadyExists && parentFilter.values
+            ? // If the option already exists, remove it
+              parentFilter.values.filter((val) => val.id !== option.id)
+            : // Otherwise, add the new option to the values array
+              [...(parentFilter.values || []), option]
+
+        // if the option is hasValue or noValue, remove the other option
+        if (option.id === 'hasValue' || option.id === 'noValue') {
+          updatedValues = updatedValues.filter(
+            (val) => val.id !== (option.id === 'hasValue' ? 'noValue' : 'hasValue'),
+          )
+        }
+
+        // Create a new parent filter with the updated values
         const updatedParentFilter = {
           ...parentFilter,
           values: updatedValues,
         }
 
+        // Update the filters array by replacing the parent filter with the updated one
         const updatedFilters = filters.map((filter) =>
           filter.id === parentId ? updatedParentFilter : filter,
         )
 
+        // Call the onChange callback with the updated filters
         onChange(updatedFilters)
 
         // close the dropdown with the new filters
@@ -239,7 +258,10 @@ const SearchFilter: FC<SearchFilterProps> = ({
           options={dropdownOptions}
           values={filters}
           parentId={dropdownParentId}
-          isCustomAllowed={getIsCustomAllowed(options, dropdownParentId)}
+          parentLabel={parentOption?.label}
+          isCustomAllowed={!!parentOption?.allowsCustomValues}
+          isHasValueAllowed={!!parentOption?.allowHasValue}
+          isNoValueAllowed={!!parentOption?.allowNoValue}
           onSelect={handleOptionSelect}
           onConfirmAndClose={(filters) => handleClose(filters)}
           ref={dropdownRef}
@@ -269,13 +291,6 @@ const getOptionsWithSearch = (options: Option[], disableSearch: boolean) => {
   return [searchFilter, ...options]
 }
 
-const getIsCustomAllowed = (options: Option[], parentId: string | null): boolean => {
-  if (!parentId) return false
-  const fieldName = getFilterFromId(parentId)
-  const parentOption = options.find((option) => option.id === fieldName)
-  return !!parentOption?.allowsCustomValues
-}
-
 const mergeOptionsWithFilterValues = (filter: Filter, options: Option[]): Option[] => {
   const filterName = getFilterFromId(filter.id)
   const filterOptions = options.find((option) => option.id === filterName)?.values || []
@@ -283,6 +298,7 @@ const mergeOptionsWithFilterValues = (filter: Filter, options: Option[]): Option
   const mergedOptions = [...filterOptions]
 
   filter.values?.forEach((value) => {
+    if (value.id === 'hasValue' || value.id === 'noValue') return
     if (!mergedOptions.some((option) => option.id === value.id)) {
       mergedOptions.push(value)
     }

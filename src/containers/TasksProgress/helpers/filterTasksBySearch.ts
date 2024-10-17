@@ -1,22 +1,19 @@
 import getFilterFromId from '@components/SearchFilter/getFilterFromId'
 import { Filter } from '@components/SearchFilter/types'
-import { filterDateFunctions, FilterFieldType } from '@hooks/useBuildFilterOptions'
+import { filterDateFunctions } from '@hooks/useBuildFilterOptions'
 import {
   GetTasksProgressResult,
   ProgressTask,
   ProgressTaskFolder,
 } from '@queries/tasksProgress/getTasksProgress'
+import { isEmpty } from 'lodash'
 
 export interface FolderTask extends ProgressTaskFolder {
   projectName: string
   tasks: (ProgressTask & { isHidden?: boolean })[]
 }
 
-const filterTasksBySearch = (
-  folders: GetTasksProgressResult,
-  filters: Filter[],
-  filterTypes: FilterFieldType[],
-): FolderTask[] => {
+const filterTasksBySearch = (folders: GetTasksProgressResult, filters: Filter[]): FolderTask[] => {
   if (!filters.length) return folders
 
   const filtered = folders.map((folder) => {
@@ -36,9 +33,22 @@ const filterTasksBySearch = (
           // if taskFieldValue is still undefined, return true
           if (taskFieldValue === undefined) return false
 
-          let result = false
           // compare the task field with the filter value
-          if (type === 'string') {
+          let result = false
+          //   if filterValue is hasValue, check only for a value
+          if (filterValue === 'hasValue') {
+            result =
+              taskFieldValue !== undefined &&
+              taskFieldValue !== null &&
+              (typeof taskFieldValue === 'object'
+                ? !isEmpty(taskFieldValue)
+                : taskFieldValue !== '')
+          } else if (filterValue === 'noValue') {
+            result =
+              typeof taskFieldValue === 'object'
+                ? isEmpty(taskFieldValue)
+                : taskFieldValue === undefined || taskFieldValue === null || taskFieldValue === ''
+          } else if (type === 'string') {
             result = taskFieldValue.toLowerCase().includes(filterValue.toLowerCase())
           } else if (type === 'list_of_strings' && Array.isArray(taskFieldValue)) {
             result = taskFieldValue.map((v) => v.toLowerCase()).includes(filterValue.toLowerCase())

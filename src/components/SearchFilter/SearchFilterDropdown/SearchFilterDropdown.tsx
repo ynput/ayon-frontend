@@ -6,6 +6,7 @@ import clsx from 'clsx'
 import { matchSorter } from 'match-sorter'
 import checkColorBrightness from '../checkColorBrightness'
 import buildFilterId from '../buildFilterId'
+import { FilterFieldType } from '@hooks/useBuildFilterOptions'
 
 type OnSelectConfig = {
   confirm: boolean
@@ -15,17 +16,88 @@ export interface SearchFilterDropdownProps {
   options: Option[]
   values: Filter[]
   parentId: string | null
+  parentLabel?: string
   isCustomAllowed: boolean
+  isHasValueAllowed?: boolean
+  isNoValueAllowed?: boolean
   onSelect: (option: Option, config?: OnSelectConfig) => void
   onConfirmAndClose?: (filters: Filter[]) => void // close the dropdown and update the filters
 }
 
 const SearchFilterDropdown = forwardRef<HTMLUListElement, SearchFilterDropdownProps>(
-  ({ options, values, parentId, isCustomAllowed, onSelect, onConfirmAndClose }, ref) => {
+  (
+    {
+      options,
+      values,
+      parentId,
+      parentLabel,
+      isCustomAllowed,
+      isHasValueAllowed,
+      isNoValueAllowed,
+      onSelect,
+      onConfirmAndClose,
+    },
+    ref,
+  ) => {
     const [search, setSearch] = useState('')
 
-    // 1. filter options based on search
-    const filteredOptions = useMemo(() => getFilteredOptions(options, search), [options, search])
+    // sort options based on selected, skipping certain fields
+    const sortedOptions = useMemo(() => {
+      // do not sort for fields that have set order
+      const doNotSortFields: FilterFieldType[] = ['entitySubType', 'status']
+      // if the option has an icon, it is most likely an enum and do not sort
+      const anyIcons = options.some((option) => option.icon)
+
+      // should we sort?
+      if (!parentId || doNotSortFields.includes(parentId as FilterFieldType) || anyIcons)
+        return options
+
+      const selectedOptions = options.filter((option) => {
+        const isSelected = getIsValueSelected(option.id, parentId, values)
+        return isSelected
+      })
+      const unselectedOptions = options.filter((option) => {
+        const isSelected = getIsValueSelected(option.id, parentId, values)
+        return !isSelected
+      })
+      return [...selectedOptions, ...unselectedOptions]
+    }, [options])
+
+    // add any extra options
+    const allOptions = useMemo(() => {
+      let optionsList = [...sortedOptions]
+      if (parentId && isHasValueAllowed) {
+        optionsList = [
+          {
+            id: 'hasValue',
+            label: `Has ${parentLabel}`,
+            parentId,
+            values: [],
+            icon: 'check',
+          },
+          ...optionsList,
+        ]
+      }
+      if (parentId && isNoValueAllowed) {
+        optionsList = [
+          {
+            id: 'noValue',
+            label: `No ${parentLabel}`,
+            parentId,
+            values: [],
+            icon: 'unpublished',
+          },
+          ...optionsList,
+        ]
+      }
+      return optionsList
+    }, [sortedOptions, parentId, parentLabel, isHasValueAllowed, isNoValueAllowed])
+
+    // filter options based on search
+    const filteredOptions = useMemo(
+      () => getFilteredOptions(allOptions, search),
+      [allOptions, search],
+    )
 
     const handleSelectOption = (
       event: React.MouseEvent<HTMLElement> | React.KeyboardEvent<HTMLElement>,
@@ -37,10 +109,12 @@ const SearchFilterDropdown = forwardRef<HTMLUListElement, SearchFilterDropdownPr
       const id = target.closest('li')?.id
 
       // get option by id
-      const option = options.find((option) => option.id === id)
+      const option = allOptions.find((option) => option.id === id)
       if (!option) return console.error('Option not found:', id)
 
-      onSelect(option)
+      const closeOptions = option.id === 'hasValue'
+
+      onSelect(option, { confirm: closeOptions })
       // clear search
       setSearch('')
     }
@@ -88,7 +162,7 @@ const SearchFilterDropdown = forwardRef<HTMLUListElement, SearchFilterDropdownPr
 
     const handleCustomSearchShortcut = () => {
       // check there is a text option
-      const hasTextOption = options.some((option) => option.id === 'text')
+      const hasTextOption = allOptions.some((option) => option.id === 'text')
       if (!hasTextOption) return
 
       const newId = buildFilterId('text')
@@ -133,7 +207,7 @@ const SearchFilterDropdown = forwardRef<HTMLUListElement, SearchFilterDropdownPr
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             onKeyDown={handleSearchKeyDown}
-            placeholder={getSearchPlaceholder(isCustomAllowed, options)}
+            placeholder={getSearchPlaceholder(isCustomAllowed, allOptions)}
             autoFocus
           />
           <Styled.SearchIcon icon={isCustomAllowed ? 'zoom_in' : 'search'} />
