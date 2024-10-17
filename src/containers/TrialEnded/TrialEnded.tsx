@@ -8,9 +8,11 @@ import { useAppSelector } from '@state/store'
 import { useGetActiveUsersCountQuery } from '@queries/user/getUsers'
 import { useLogOutMutation } from '@queries/auth/getAuth'
 
-interface TrialEndedProps {}
+interface TrialEndedProps {
+  orgName: string
+}
 
-const TrialEnded: FC<TrialEndedProps> = () => {
+const TrialEnded: FC<TrialEndedProps> = ({ orgName }) => {
   const user = useAppSelector((state) => state.user)
   const canManage = user.data.isAdmin || user.data.isManager
   const navigate = useNavigate()
@@ -46,7 +48,7 @@ const TrialEnded: FC<TrialEndedProps> = () => {
               <u onClick={open}>support team</u> is here for you if required.
             </p>
             <p>Subscribe to keep using AYON and protect your data!</p>
-            <a href={getSubscribeLink(activeUsersCount)} target="_blank" rel="noreferrer">
+            <a href={getSubscribeLink(activeUsersCount, orgName)} target="_blank" rel="noreferrer">
               <Button variant="tertiary">Subscribe now</Button>
             </a>
           </>
