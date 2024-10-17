@@ -116,6 +116,7 @@ const AccessGroupDetail = ({ projectName, accessGroupName }) => {
           level={projectName ? 'project' : 'studio'}
           context={{
             headerProjectName: projectName,
+            hideDisabledGroups: true,
           }}
         />
       </ScrollPanel>
