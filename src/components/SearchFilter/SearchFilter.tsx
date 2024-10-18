@@ -7,7 +7,6 @@ import SearchFilterDropdown, {
   getIsValueSelected,
   SearchFilterDropdownProps,
 } from './SearchFilterDropdown/SearchFilterDropdown'
-import clsx from 'clsx'
 import { useFocusOptions } from './hooks'
 import buildFilterId from './buildFilterId'
 import getFilterFromId from './getFilterFromId'
@@ -118,8 +117,13 @@ const SearchFilter: FC<SearchFilterProps> = ({
         // Call the onChange callback with the updated filters
         onChange(updatedFilters)
 
-        // close the dropdown with the new filters
-        if (config?.confirm) handleClose(updatedFilters)
+        if (config?.confirm && !config.restart) {
+          // close the dropdown with the new filters
+          handleClose(updatedFilters)
+        } else if (config?.restart) {
+          // go back to initial options
+          openInitialOptions()
+        }
       }
     } else {
       const addFilter = { ...option, id: newId, values: [] }
@@ -220,16 +224,27 @@ const SearchFilter: FC<SearchFilterProps> = ({
     }
   }
 
+  // focus a different filter to edit
+  const handleSwitchFilterFocus = (direction: 'left' | 'right') => {
+    // get current filter from dropdownParentId
+    const filterIndex = filters.findIndex((filter) => filter.id === dropdownParentId)
+    // get next filter
+    const nextFilter = filters[filterIndex + (direction === 'right' ? 1 : -1)]
+    if (!nextFilter) return
+
+    // open options for the next filter
+    handleEditFilter(nextFilter.id)
+  }
+
   return (
     <Styled.Container onKeyDown={handleContainerKeyDown}>
       {dropdownOptions && <Styled.Backdrop onClick={() => handleClose(filters)} />}
       <Styled.SearchBar
-        className={clsx({ empty: !filters.length })}
-        onClick={() => !filters.length && openInitialOptions()}
+        onClick={openInitialOptions}
         onKeyDown={handleSearchBarKeyDown}
         tabIndex={0}
       >
-        <Icon icon="search" className="search" onClick={openInitialOptions} />
+        <Icon icon="search" className="search" />
         <Styled.SearchBarFilters ref={filtersRef}>
           {filters.map((filter, index) => (
             <SearchFilterItem
@@ -241,6 +256,7 @@ const SearchFilter: FC<SearchFilterProps> = ({
               icon={filter.icon}
               isCustom={filter.isCustom}
               index={index}
+              isEditing={dropdownParentId === filter.id}
               onEdit={handleEditFilter}
               onRemove={handleRemoveFilter}
               onInvert={handleInvertFilter}
@@ -248,7 +264,7 @@ const SearchFilter: FC<SearchFilterProps> = ({
           ))}
         </Styled.SearchBarFilters>
         {filters.length ? (
-          <Styled.FilterButton icon={'add'} variant="text" onClick={openInitialOptions} />
+          <Styled.FilterButton icon={'add'} variant="text" />
         ) : (
           <span>{getEmptyPlaceholder(disableSearch)}</span>
         )}
@@ -263,7 +279,10 @@ const SearchFilter: FC<SearchFilterProps> = ({
           isHasValueAllowed={!!parentOption?.allowHasValue}
           isNoValueAllowed={!!parentOption?.allowNoValue}
           onSelect={handleOptionSelect}
-          onConfirmAndClose={(filters) => handleClose(filters)}
+          onConfirmAndClose={(filters, config) =>
+            config?.restart ? openInitialOptions() : handleClose(filters)
+          }
+          onSwitchFilter={handleSwitchFilterFocus}
           ref={dropdownRef}
         />
       )}

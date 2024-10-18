@@ -511,8 +511,8 @@ const getAttributeIcon = (attribute: AttributeModel): string => {
   } = {
     priority: 'keyboard_double_arrow_up',
     fps: '30fps_select',
-    resolutionWidth: 'fit_width',
-    resolutionHeight: 'height',
+    resolutionWidth: 'settings_overscan',
+    resolutionHeight: 'settings_overscan',
     pixelAspect: 'stop',
     clipIn: 'line_start_diamond',
     clipOut: 'line_end_diamond',

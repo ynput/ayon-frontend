@@ -3,6 +3,7 @@ import styled from 'styled-components'
 import { Filter } from './types'
 import { Button, theme } from '@ynput/ayon-react-components'
 import { SearchFilterItemValue } from './SearchFilterItemValue'
+import clsx from 'clsx'
 
 const FilterItem = styled.div`
   display: flex;
@@ -22,6 +23,10 @@ const FilterItem = styled.div`
     .button {
       background-color: var(--md-sys-color-surface-container-highest-hover);
     }
+  }
+
+  &.editing {
+    outline: 2px solid #99c8ff;
   }
 `
 
@@ -55,6 +60,7 @@ const ChipButton = styled(Button)`
 
 interface SearchFilterItemProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'id'>, Filter {
   index?: number
+  isEditing?: boolean
   onEdit?: (id: string) => void
   onRemove?: (id: string) => void
   onInvert?: (id: string) => void
@@ -70,6 +76,7 @@ export const SearchFilterItem = forwardRef<HTMLDivElement, SearchFilterItemProps
       icon,
       isCustom,
       index,
+      isEditing,
       onEdit,
       onRemove,
       onInvert,
@@ -103,6 +110,8 @@ export const SearchFilterItem = forwardRef<HTMLDivElement, SearchFilterItemProps
 
     // trigger onEdit callback and forward onClick event
     const handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
+      // stop propagation to opening whole search bar
+      event.stopPropagation()
       onEdit && onEdit(id)
       onClick && onClick(event)
     }
@@ -119,7 +128,7 @@ export const SearchFilterItem = forwardRef<HTMLDivElement, SearchFilterItemProps
           tabIndex={0}
           onKeyDown={handleKeyDown}
           onClick={handleClick}
-          className="search-filter-item"
+          className={clsx('search-filter-item', { editing: isEditing })}
         >
           <ChipButton
             className="button"

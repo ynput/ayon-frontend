@@ -9,7 +9,8 @@ import buildFilterId from '../buildFilterId'
 import { FilterFieldType } from '@hooks/useBuildFilterOptions'
 
 type OnSelectConfig = {
-  confirm: boolean
+  confirm?: boolean
+  restart?: boolean
 }
 
 export interface SearchFilterDropdownProps {
@@ -21,7 +22,8 @@ export interface SearchFilterDropdownProps {
   isHasValueAllowed?: boolean
   isNoValueAllowed?: boolean
   onSelect: (option: Option, config?: OnSelectConfig) => void
-  onConfirmAndClose?: (filters: Filter[]) => void // close the dropdown and update the filters
+  onConfirmAndClose?: (filters: Filter[], config?: OnSelectConfig) => void // close the dropdown and update the filters
+  onSwitchFilter?: (direction: 'left' | 'right') => void // switch to the next filter to edit
 }
 
 const SearchFilterDropdown = forwardRef<HTMLUListElement, SearchFilterDropdownProps>(
@@ -36,6 +38,7 @@ const SearchFilterDropdown = forwardRef<HTMLUListElement, SearchFilterDropdownPr
       isNoValueAllowed,
       onSelect,
       onConfirmAndClose,
+      onSwitchFilter,
     },
     ref,
   ) => {
@@ -114,7 +117,7 @@ const SearchFilterDropdown = forwardRef<HTMLUListElement, SearchFilterDropdownPr
 
       const closeOptions = option.id === 'hasValue'
 
-      onSelect(option, { confirm: closeOptions })
+      onSelect(option, { confirm: closeOptions, restart: closeOptions })
       // clear search
       setSearch('')
     }
@@ -124,7 +127,13 @@ const SearchFilterDropdown = forwardRef<HTMLUListElement, SearchFilterDropdownPr
       if ([' ', 'Enter'].includes(event.key)) {
         event.preventDefault()
         event.stopPropagation()
-        handleSelectOption(event)
+        if (event.key === 'Enter' && (event.metaKey || event.ctrlKey || event.shiftKey)) {
+          //  shift + enter will confirm but keep the dropdown open
+          //  (cmd or ctrl) + enter will confirm and close dropdown
+          onConfirmAndClose && onConfirmAndClose(values, { restart: event.shiftKey })
+        } else {
+          handleSelectOption(event)
+        }
       }
       // up arrow
       if (event.key === 'ArrowUp') {
@@ -148,6 +157,13 @@ const SearchFilterDropdown = forwardRef<HTMLUListElement, SearchFilterDropdownPr
         const next = target.nextElementSibling as HTMLElement
         next?.focus()
       }
+      // arrow left or right
+      if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+        event.preventDefault()
+        event.stopPropagation()
+        // trigger event to switch to next filter to edit, logic in parent
+        onSwitchFilter && onSwitchFilter(event.key === 'ArrowRight' ? 'right' : 'left')
+      }
     }
 
     const handleSearchSubmit = () => {
@@ -155,7 +171,7 @@ const SearchFilterDropdown = forwardRef<HTMLUListElement, SearchFilterDropdownPr
       if (!addedOption) return
 
       // add the first option
-      onSelect(addedOption, { confirm: true })
+      onSelect(addedOption, { confirm: true, restart: true })
       // clear search
       setSearch('')
     }

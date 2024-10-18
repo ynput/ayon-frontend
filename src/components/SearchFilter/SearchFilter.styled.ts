@@ -21,20 +21,14 @@ export const SearchBar = styled.div`
   position: relative;
   z-index: 301;
 
-  /* search button */
-  .search {
-    cursor: pointer;
-  }
-  /* when hovering search, hover whole thing */
-  &:has(.search:hover) {
+  cursor: pointer;
+
+  &:hover {
     background-color: var(--md-sys-color-surface-container-low-hover);
   }
 
-  &.empty {
-    cursor: pointer;
-    &:hover {
-      background-color: var(--md-sys-color-surface-container-low-hover);
-    }
+  &:has(.search-filter-item:hover) {
+    background-color: var(--md-sys-color-surface-container-low);
   }
 `
 
