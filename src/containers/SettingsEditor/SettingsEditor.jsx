@@ -2,7 +2,6 @@ import Form from '@rjsf/core'
 import validator from '@rjsf/validator-ajv8'
 
 import { useState, useMemo, useEffect, useRef } from 'react'
-import styled from 'styled-components'
 
 import { CheckboxWidget } from './Widgets/CheckboxWidget'
 import FieldTemplate from './FormTemplates/FieldTemplate'
@@ -12,6 +11,7 @@ import './SettingsEditor.sass'
 import { TextWidget } from './Widgets/TextWidget'
 import { SelectWidget } from './Widgets/SelectWidget'
 import { DateTimeWidget } from './Widgets/DateTimeWidget'
+import { FormWrapper } from './SettingsEditor.styled'
 
 const waitForElm = (selector, timeout = 1000) => {
   return new Promise((resolve, reject) => {
@@ -37,47 +37,6 @@ const waitForElm = (selector, timeout = 1000) => {
     }, timeout)
   })
 }
-
-const FormWrapper = styled.div`
-  [data-fieldid='${(props) => props.currentSelection}'] {
-    // border-left: 1px solid var(--color-changed) !important;
-    border-radius: 4px;
-    background-color: rgba(0, 0, 0, 0.2);
-  }
-
-  .rjsf {
-    flex-grow: 1;
-    margin: 0;
-    padding: 0;
-
-    .form-root-field {
-      animation-name: delay-visibility;
-      animation-duration: 0.4s;
-      animation-fill-mode: forwards;
-      opacity: 0;
-
-      @keyframes delay-visibility {
-        to {
-          opacity: 1;
-        }
-      }
-    }
-
-    .errors {
-      display: none;
-    }
-
-    .switch-body {
-      .slider {
-        transition-duration: 0s;
-
-        &::before {
-          transition-duration: 0s;
-        }
-      }
-    }
-  }
-`
 
 const widgets = {
   TextWidget,
@@ -217,7 +176,7 @@ const SettingsEditor = ({
   }
 
   return (
-    <FormWrapper currentSelection={currentId} ref={formWrapperRef}>
+    <FormWrapper $currentSelection={currentId} ref={formWrapperRef}>
       <Form
         schema={schema}
         uiSchema={uiSchema}

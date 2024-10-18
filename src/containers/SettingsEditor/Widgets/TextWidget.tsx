@@ -93,8 +93,6 @@ export const TextWidget = (props: $Any) => {
   if (['integer', 'number'].includes(props.schema.type)) {
     Input = InputNumber
     opts.value = value === undefined || value === null ? '' : value
-    opts.showButtons = true
-    opts.useGrouping = false
     opts.onBlur = () => onChangeCommit(props.schema.type)
     opts.onChange = (e: $Any) => {
       // ensure that the value is a number. decimal points are allowed
@@ -131,7 +129,6 @@ export const TextWidget = (props: $Any) => {
     // Textarea
     //
     Input = InputTextarea
-    opts.autoResize = true
     opts.rows = 8
     opts.value = value || ''
     opts.onBlur = onChangeCommit
@@ -186,8 +183,7 @@ export const TextWidget = (props: $Any) => {
     <Input
       className={`form-field`}
       onFocus={onFocus}
-      tooltip={tooltip.join('\n')}
-      tooltipOptions={{ position: 'bottom' }}
+      data-tooltip={tooltip.join('\n')}
       {...opts}
       style={hlstyle}
     />
