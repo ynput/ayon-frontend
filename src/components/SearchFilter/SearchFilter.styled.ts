@@ -20,6 +20,7 @@ export const SearchBar = styled.div`
 
   position: relative;
   z-index: 301;
+  overflow: hidden;
 
   cursor: pointer;
 

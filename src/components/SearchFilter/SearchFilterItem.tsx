@@ -10,6 +10,7 @@ const FilterItem = styled.div`
   align-items: center;
   gap: var(--base-gap-small);
   user-select: none;
+  white-space: nowrap;
 
   background-color: var(--md-sys-color-surface-container-high);
   padding: 2px 4px;
