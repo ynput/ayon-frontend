@@ -184,12 +184,10 @@ export const formatTaskProgressForTable = (
 
   const rowsArray = Array.from(rows.values())
 
-  // filter out collapsed folders and folders with no tasks
+  // filter out folders with no tasks
   let filteredRows = rowsArray
   filteredRows = rowsArray.filter((row) => {
     if (row.__isParent) return true
-    const parent = row.__parentId
-    const isCollapsed = collapsedFolders.includes(parent || '')
     const hasNoTasks = Object.keys(row)
       .filter((key) => !key.startsWith('_'))
       .every((taskType) => {
@@ -197,14 +195,23 @@ export const formatTaskProgressForTable = (
         return tasks && tasks.tasks.length === 0
       })
 
-    return !isCollapsed && !hasNoTasks
+    return !hasNoTasks
   })
 
-  // filter out parent rows that have no children
+  // filter out parent rows that have no children and NOT collapsedFolders
   filteredRows = filteredRows.filter((row) => {
     if (!row.__isParent) return true
 
     return filteredRows.some((r) => r.__parentId === row.__folderId)
+  })
+
+  // filter out tasks where their parent is collapsed
+  filteredRows = filteredRows.filter((row) => {
+    if (row.__isParent) return true
+    const parent = row.__parentId
+    const isCollapsed = collapsedFolders.includes(parent || '')
+
+    return !isCollapsed
   })
 
   return filteredRows
