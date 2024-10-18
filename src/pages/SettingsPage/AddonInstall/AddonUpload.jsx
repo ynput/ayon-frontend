@@ -291,7 +291,7 @@ const AddonUpload = ({
             {message}
             {isUploading && <StyledProgressBar $progress={progress} />}
             <div>
-              {onClose && <Button onClick={onClose} label="Cancel" />}
+              {onClose && <Button onClick={onClose} label={isComplete ? "Close" : "Cancel"} />}
               <SaveButton
                 disabled={isUploading}
                 active={files.length}
