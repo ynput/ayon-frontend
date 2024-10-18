@@ -31,8 +31,7 @@ const FormArrayField = styled.div`
 `
 
 const DndContextWrapper = styled.div`
-  width: 100%;
-  overflow: scroll;
+  width: max-content;
 `
 
 const ArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
