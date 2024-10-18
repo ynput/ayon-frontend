@@ -1,6 +1,7 @@
 import { FC } from 'react'
 import * as Styled from './ParentBody.styled'
 import { ExpandButton } from '../FolderBody/FolderBody.styled'
+import clsx from 'clsx'
 
 interface ParentBodyProps {
   name: string
@@ -20,9 +21,10 @@ const ParentBody: FC<ParentBodyProps> = ({
   return (
     <Styled.ParentBody>
       <ExpandButton
-        icon={isCollapsed ? 'expand_less' : 'expand_more'}
+        icon={'expand_more'}
         variant="text"
         onClick={onCollapseToggle}
+        className={clsx({ collapsed: isCollapsed })}
       />
       <span className="title">{name}</span>
       {folderCount && <span className="count"> - {folderCount} folders</span>}
