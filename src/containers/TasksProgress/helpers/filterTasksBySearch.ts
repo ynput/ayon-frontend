@@ -110,9 +110,5 @@ const compareValues = (
     else result = dateFunction(dataValue)
   }
 
-  if (result) {
-    console.log(dataValue, filterValue, fieldType)
-  }
-
   return result
 }

@@ -356,7 +356,7 @@ const TasksProgress: FC<TasksProgressProps> = ({
           <Button
             onClick={handleExpandAllToggle}
             icon={expandAll ? 'collapse_all' : 'expand_all'}
-            style={{ width: 220, justifyContent: 'flex-start' }}
+            style={{ minWidth: 220, justifyContent: 'flex-start' }}
             selected={expandAll}
           >
             {`${expandAll ? 'Collapse' : 'Expand'} all rows`}
