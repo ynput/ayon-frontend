@@ -176,7 +176,7 @@ const SettingsEditor = ({
   }
 
   return (
-    <FormWrapper currentSelection={currentId} ref={formWrapperRef}>
+    <FormWrapper $currentSelection={currentId} ref={formWrapperRef}>
       <Form
         schema={schema}
         uiSchema={uiSchema}

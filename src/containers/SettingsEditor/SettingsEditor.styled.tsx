@@ -1,11 +1,7 @@
 import styled from 'styled-components'
 
-type Props = {
-  currentSelection: string
-}
-
-const FormWrapper = styled.div<Props>`
-  [data-fieldid='${(props) => props.currentSelection}'] {
+const FormWrapper = styled.div<{$currentSelection: string}>`
+  [data-fieldid='${(props) => props.$currentSelection}'] {
     border-radius: 4px;
     background-color: rgba(0, 0, 0, 0.2);
   }
