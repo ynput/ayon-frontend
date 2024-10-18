@@ -1,20 +1,12 @@
 import { Button, Icon } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
-export const OptionsContainer = styled.ul`
+export const OptionsContainer = styled.div`
   position: absolute;
   top: 40px;
   left: 0;
   right: 0;
-  max-height: calc(min(300px, calc(100vh - 100px)));
-  overflow: auto;
-
-  display: flex;
-  flex-direction: column;
-  gap: var(--base-gap-small);
-
-  padding: var(--padding-m);
-  margin: 0;
+  overflow: hidden;
 
   border-radius: var(--border-radius-l);
   background-color: var(--md-sys-color-surface-container-low);
@@ -22,6 +14,26 @@ export const OptionsContainer = styled.ul`
 
   box-shadow: 0px 3px 5px 0px rgba(0, 0, 0, 0.25);
   z-index: 301;
+`
+
+export const Scrollable = styled.div`
+  overflow: auto;
+  height: 100%;
+  max-height: calc(min(350px, calc(100vh - 100px)));
+  padding: var(--padding-m);
+
+  &:has(.toolbar) {
+    margin-bottom: 40px;
+  }
+`
+
+export const OptionsList = styled.ul`
+  margin: 0;
+  padding: 0;
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--base-gap-small);
 `
 
 export const Item = styled.li`
@@ -103,4 +115,19 @@ export const AddSearch = styled(Button)`
     padding: 2px 4px;
     padding-right: 6px;
   }
+`
+
+export const Toolbar = styled.div`
+  background-color: var(--md-sys-color-surface-container-low);
+  left: 0;
+  right: 0;
+
+  position: absolute;
+  bottom: 0;
+  padding: var(--padding-m);
+  /* padding-bottom: var(--padding-m); */
+
+  display: flex;
+  gap: var(--base-gap-large);
+  align-items: center;
 `

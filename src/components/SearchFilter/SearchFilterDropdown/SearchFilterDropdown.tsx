@@ -1,16 +1,18 @@
 import { forwardRef, useMemo, useState } from 'react'
 import { Filter, Option } from '../types'
 import * as Styled from './SearchFilterDropdown.styled'
-import { Icon } from '@ynput/ayon-react-components'
+import { Button, Icon, InputSwitch, Spacer } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import { matchSorter } from 'match-sorter'
 import checkColorBrightness from '../checkColorBrightness'
 import buildFilterId from '../buildFilterId'
 import { FilterFieldType } from '@hooks/useBuildFilterOptions'
+import getFilterFromId from '../getFilterFromId'
 
 type OnSelectConfig = {
   confirm?: boolean
   restart?: boolean
+  previous?: string // used to go back to the previous field along with restart
 }
 
 export interface SearchFilterDropdownProps {
@@ -22,6 +24,7 @@ export interface SearchFilterDropdownProps {
   isHasValueAllowed?: boolean
   isNoValueAllowed?: boolean
   onSelect: (option: Option, config?: OnSelectConfig) => void
+  onInvert: (id: string) => void // invert the filter
   onConfirmAndClose?: (filters: Filter[], config?: OnSelectConfig) => void // close the dropdown and update the filters
   onSwitchFilter?: (direction: 'left' | 'right') => void // switch to the next filter to edit
 }
@@ -37,11 +40,14 @@ const SearchFilterDropdown = forwardRef<HTMLUListElement, SearchFilterDropdownPr
       isHasValueAllowed,
       isNoValueAllowed,
       onSelect,
+      onInvert,
       onConfirmAndClose,
       onSwitchFilter,
     },
     ref,
   ) => {
+    const parentFilter = values.find((filter) => filter.id === parentId)
+
     const [search, setSearch] = useState('')
 
     // sort options based on selected, skipping certain fields
@@ -164,6 +170,17 @@ const SearchFilterDropdown = forwardRef<HTMLUListElement, SearchFilterDropdownPr
         // trigger event to switch to next filter to edit, logic in parent
         onSwitchFilter && onSwitchFilter(event.key === 'ArrowRight' ? 'right' : 'left')
       }
+
+      // back key
+      if (event.key === 'Backspace' && !search) {
+        event.preventDefault()
+        event.stopPropagation()
+
+        if (!parentFilter?.values?.length && parentId) {
+          const previousField = getFilterFromId(parentId)
+          handleBack(previousField)
+        }
+      }
     }
 
     const handleSearchSubmit = () => {
@@ -174,6 +191,15 @@ const SearchFilterDropdown = forwardRef<HTMLUListElement, SearchFilterDropdownPr
       onSelect(addedOption, { confirm: true, restart: true })
       // clear search
       setSearch('')
+    }
+
+    const handleBack = (previousField?: string) => {
+      // remove the parentId value if the filter has no values
+      const newValues = values.filter(
+        (filter) => !(filter.id === parentId && !filter.values?.length),
+      )
+
+      onConfirmAndClose && onConfirmAndClose(newValues, { restart: true, previous: previousField })
     }
 
     const handleCustomSearchShortcut = () => {
@@ -217,48 +243,71 @@ const SearchFilterDropdown = forwardRef<HTMLUListElement, SearchFilterDropdownPr
     }
 
     return (
-      <Styled.OptionsContainer onKeyDown={handleKeyDown} ref={ref}>
-        <Styled.SearchContainer className="search">
-          <Styled.SearchInput
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            onKeyDown={handleSearchKeyDown}
-            placeholder={getSearchPlaceholder(isCustomAllowed, allOptions)}
-            autoFocus
-          />
-          <Styled.SearchIcon icon={isCustomAllowed ? 'zoom_in' : 'search'} />
-          {isCustomAllowed && (
-            <Styled.AddSearch
-              icon="add"
-              variant="text"
-              onClick={handleSearchSubmit}
-              disabled={!search}
-            >
-              Add
-            </Styled.AddSearch>
-          )}
-        </Styled.SearchContainer>
-        {filteredOptions.map(({ id, parentId, label, icon, img, color }) => {
-          const isSelected = getIsValueSelected(id, parentId, values)
-          const adjustedColor = color ? checkColorBrightness(color, '#1C2026') : undefined
-          return (
-            <Styled.Item
-              key={id}
-              id={id}
-              tabIndex={0}
-              className={clsx({ selected: isSelected })}
-              onClick={(event) => handleSelectOption(event)}
-            >
-              {icon && <Icon icon={icon} style={{ color: adjustedColor }} />}
-              {img && <img src={img} alt={label} />}
-              <span className="label" style={{ color: adjustedColor }}>
-                {label}
-              </span>
-              {isSelected && <Icon icon="check" className="check" />}
-            </Styled.Item>
-          )
-        })}
-        {filteredOptions.length === 0 && !isCustomAllowed && <span>No filters found</span>}
+      <Styled.OptionsContainer onKeyDown={handleKeyDown}>
+        <Styled.Scrollable>
+          <Styled.OptionsList ref={ref}>
+            <Styled.SearchContainer className="search">
+              <Styled.SearchInput
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                onKeyDown={handleSearchKeyDown}
+                placeholder={getSearchPlaceholder(isCustomAllowed, allOptions)}
+                autoFocus
+              />
+              <Styled.SearchIcon icon={isCustomAllowed ? 'zoom_in' : 'search'} />
+              {isCustomAllowed && (
+                <Styled.AddSearch
+                  icon="add"
+                  variant="text"
+                  onClick={handleSearchSubmit}
+                  disabled={!search}
+                >
+                  Add
+                </Styled.AddSearch>
+              )}
+            </Styled.SearchContainer>
+            {filteredOptions.map(({ id, parentId, label, icon, img, color }) => {
+              const isSelected = getIsValueSelected(id, parentId, values)
+              const adjustedColor = color ? checkColorBrightness(color, '#1C2026') : undefined
+              return (
+                <Styled.Item
+                  key={id}
+                  id={id}
+                  tabIndex={0}
+                  className={clsx({ selected: isSelected })}
+                  onClick={(event) => handleSelectOption(event)}
+                >
+                  {icon && <Icon icon={icon} style={{ color: adjustedColor }} />}
+                  {img && <img src={img} alt={label} />}
+                  <span className="label" style={{ color: adjustedColor }}>
+                    {label}
+                  </span>
+                  {isSelected && <Icon icon="check" className="check" />}
+                </Styled.Item>
+              )
+            })}
+            {filteredOptions.length === 0 && !isCustomAllowed && <span>No filters found</span>}
+            {parentId && (
+              <Styled.Toolbar className="toolbar">
+                <Button variant="text" onClick={() => handleBack()} icon="arrow_back">
+                  Back
+                </Button>
+                <Spacer />
+                <span>Inverted</span>
+                <InputSwitch checked={parentFilter?.inverted} onChange={() => onInvert(parentId)} />
+                <Button
+                  variant="filled"
+                  onClick={() => {
+                    onConfirmAndClose && onConfirmAndClose(values)
+                  }}
+                  icon="check"
+                >
+                  Confirm
+                </Button>
+              </Styled.Toolbar>
+            )}
+          </Styled.OptionsList>
+        </Styled.Scrollable>
       </Styled.OptionsContainer>
     )
   },

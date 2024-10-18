@@ -173,6 +173,8 @@ const SearchFilter: FC<SearchFilterProps> = ({
     const updatedFilters = filters.filter((filter) => filter.id !== id)
     onChange(updatedFilters)
     onFinish && onFinish(updatedFilters)
+    // close the dropdown
+    closeOptions()
   }
 
   const handleInvertFilter = (id: string) => {
@@ -236,6 +238,27 @@ const SearchFilter: FC<SearchFilterProps> = ({
     handleEditFilter(nextFilter.id)
   }
 
+  const handleConfirmAndClose: SearchFilterDropdownProps['onConfirmAndClose'] = (
+    filters,
+    config,
+  ) => {
+    if (config?.restart) {
+      // update filters
+      onChange(filters)
+      // go back to initial options
+      openInitialOptions()
+
+      if (config.previous) {
+        // find the filter element by the id and focus it
+        // @ts-ignore
+        setTimeout(() => document.getElementById(config.previous)?.focus(), 50)
+      }
+    } else {
+      // close the dropdown
+      handleClose(filters)
+    }
+  }
+
   return (
     <Styled.Container onKeyDown={handleContainerKeyDown}>
       {dropdownOptions && <Styled.Backdrop onClick={() => handleClose(filters)} />}
@@ -279,9 +302,8 @@ const SearchFilter: FC<SearchFilterProps> = ({
           isHasValueAllowed={!!parentOption?.allowHasValue}
           isNoValueAllowed={!!parentOption?.allowNoValue}
           onSelect={handleOptionSelect}
-          onConfirmAndClose={(filters, config) =>
-            config?.restart ? openInitialOptions() : handleClose(filters)
-          }
+          onInvert={handleInvertFilter}
+          onConfirmAndClose={handleConfirmAndClose}
           onSwitchFilter={handleSwitchFilterFocus}
           ref={dropdownRef}
         />
