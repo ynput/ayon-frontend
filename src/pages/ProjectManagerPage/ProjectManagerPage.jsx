@@ -11,6 +11,7 @@ import NewProjectDialog from './NewProjectDialog'
 
 import { selectProject } from '@state/context'
 import { useDeleteProjectMutation, useUpdateProjectMutation } from '@queries/project/updateProject'
+import { useGetCurrentUserProjectPermissionsQuery } from '@queries/permissions/getPermissions'
 import TeamsPage from '../TeamsPage'
 import ProjectManagerPageContainer from './ProjectManagerPageContainer'
 import ProjectManagerPageLayout from './ProjectManagerPageLayout'
@@ -48,6 +49,10 @@ const ProjectManagerPage = () => {
     withDefault(StringParam, projectName),
   )
 
+  const { data: permissions } = useGetCurrentUserProjectPermissionsQuery({
+    projectName: selectedProject,
+  })
+
   // UPDATE DATA
   const [updateProject] = useUpdateProjectMutation()
 
@@ -81,21 +86,35 @@ const ProjectManagerPage = () => {
     await updateProject({ projectName: sel, update: { active } }).unwrap()
   }
 
-  let links = [
-    {
-      name: 'Anatomy',
-      path: '/manageProjects/anatomy',
-      module: 'anatomy',
-      accessLevels: ['manager'],
-      shortcut: 'A+A',
-    },
-    {
-      name: 'Project settings',
-      path: '/manageProjects/projectSettings',
-      module: 'projectSettings',
-      accessLevels: ['manager'],
-      shortcut: 'P+P',
-    },
+  const links = []
+  if (permissions?.project) {
+    // How to read this code:
+    // If project management restrictions are NOT enabled
+    // OR if project management restrctions ARE enabled
+    // and access to anatomy is allowed
+
+    if (!permissions.project.enabled || permissions.project.anatomy) {
+      links.push({
+        name: 'Anatomy',
+        path: '/manageProjects/anatomy',
+        module: 'anatomy',
+        accessLevels: [],
+        shortcut: 'A+A',
+      })
+    }
+
+    if (!permissions.project.enabled || permissions.project.settings) {
+      links.push({
+        name: 'Project settings',
+        path: '/manageProjects/projectSettings',
+        module: 'projectSettings',
+        accessLevels: [],
+        shortcut: 'P+P',
+      })
+    }
+  }
+
+  links.push(
     {
       name: 'Site settings',
       path: '/manageProjects/siteSettings',
@@ -114,7 +133,7 @@ const ProjectManagerPage = () => {
       module: 'teams',
       accessLevels: ['manager'],
     },
-  ]
+  )
 
   const linksWithProject = useMemo(
     () =>
