@@ -293,7 +293,7 @@ const SearchFilterDropdown = forwardRef<HTMLUListElement, SearchFilterDropdownPr
                   Back
                 </Button>
                 <Spacer />
-                <span>Inverted</span>
+                <span>Excludes</span>
                 <InputSwitch checked={parentFilter?.inverted} onChange={() => onInvert(parentId)} />
                 <Button
                   variant="filled"
