@@ -10,7 +10,7 @@ import ProjectButton from '@components/ProjectButton/ProjectButton'
 import { createPortal } from 'react-dom'
 import { useShortcutsContext } from '@context/shortcutsContext'
 import clsx from 'clsx'
-import { useUpdateUserPreferencesMutation } from '@/services/user/updateUser'
+import { useSetFrontendPreferencesMutation } from '@/services/user/updateUser'
 import useAyonNavigate from '@hooks/useAyonNavigate'
 import { useProjectSelectDispatcher } from './hooks/useProjectSelectDispatcher'
 
@@ -59,14 +59,14 @@ const ProjectMenu = ({ isOpen, onHide }) => {
   const [showContext] = useCreateContext([])
   const [handleProjectSelectionDispatches] = useProjectSelectDispatcher([])
 
-  const [updateUserPreferences] = useUpdateUserPreferencesMutation()
+  const [updateUserPreferences] = useSetFrontendPreferencesMutation()
 
   const updatePinned = async (pinnedProjects) => {
     try {
       // update user preferences
       await updateUserPreferences({
-        name: username,
-        preferences: { pinnedProjects: pinnedProjects },
+        userName: username,
+        patchData: { pinnedProjects: pinnedProjects },
       }).unwrap()
 
       // if local storage had pinned, remove it
@@ -135,7 +135,9 @@ const ProjectMenu = ({ isOpen, onHide }) => {
   const handleEditClick = (e, projectName) => {
     e.stopPropagation()
     setTimeout(
-      dispatch((_, getState) => navigate(getState)(`/manageProjects/anatomy?project=${projectName}`)),
+      dispatch((_, getState) =>
+        navigate(getState)(`/manageProjects/anatomy?project=${projectName}`),
+      ),
       0,
     )
     onHide()

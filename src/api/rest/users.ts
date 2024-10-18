@@ -7,6 +7,16 @@ const injectedRtkApi = api.injectEndpoints({
     getUserSessions: build.query<GetUserSessionsApiResponse, GetUserSessionsApiArg>({
       query: (queryArg) => ({ url: `/api/users/${queryArg.userName}/sessions` }),
     }),
+    setFrontendPreferences: build.mutation<
+      SetFrontendPreferencesApiResponse,
+      SetFrontendPreferencesApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/users/${queryArg.userName}/frontendPreferences`,
+        method: 'PATCH',
+        body: queryArg.patchData,
+      }),
+    }),
   }),
   overrideExisting: false,
 })
@@ -23,6 +33,11 @@ export type GetUserSessionsApiResponse =
   /** status 200 Successful Response */ UserSessionsResponseModel
 export type GetUserSessionsApiArg = {
   userName: string
+}
+export type SetFrontendPreferencesApiResponse = /** status 200 Successful Response */ any
+export type SetFrontendPreferencesApiArg = {
+  userName: string
+  patchData: object
 }
 export type UserAttribModel = {
   fullName?: string

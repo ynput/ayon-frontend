@@ -218,10 +218,7 @@ export const TasksProgressTable = ({
   type SavedWidths = { [task: string]: number | null }
 
   const localStorageKey = `tasks-progress-table-${projectName}`
-  const [savedWidths, setSavedWidths] = useLocalStorage(localStorageKey, null) as [
-    SavedWidths,
-    (value: SavedWidths) => void,
-  ]
+  const [savedWidths, setSavedWidths] = useLocalStorage<SavedWidths | null>(localStorageKey, null)
 
   const resolveColumnWidth = (taskType: string, useDefault?: boolean) => {
     const screenWidthMultiple = (min: number, max: number, target: number): number => {

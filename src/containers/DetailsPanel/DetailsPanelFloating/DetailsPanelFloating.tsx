@@ -123,6 +123,7 @@ const DetailsPanelFloating: FC<DetailsPanelFloatingProps> = () => {
         <Styled.FeedContainer>
           <Feed
             entityType={entityType}
+            // @ts-ignore
             entities={entitiesData}
             activeUsers={[]}
             // selectedTasksProjects={{}}
@@ -132,6 +133,7 @@ const DetailsPanelFloating: FC<DetailsPanelFloatingProps> = () => {
             scope={scope || undefined}
             statePath={statePath || undefined}
             readOnly
+            // @ts-ignore
             statuses={statuses}
           />
         </Styled.FeedContainer>

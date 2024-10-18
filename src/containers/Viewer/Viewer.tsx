@@ -38,7 +38,6 @@ const Viewer = ({ onClose }: ViewerProps) => {
     selectedProductId,
   } = useSelector((state: $Any) => state.viewer)
 
-
   const dispatch = useDispatch()
 
   // new query: returns all reviewables for a product
@@ -226,14 +225,16 @@ const Viewer = ({ onClose }: ViewerProps) => {
     dispatch(updateSelection({ reviewableIds: [reviewableId] }))
   }
 
-  const handleUploadAction = (toggleNativeFileUpload = false) => () => {
-    // switch to files tab
-    dispatch(updateDetailsPanelTab({ statePath: 'slideOut', scope: 'review', tab: 'files' }))
-    // open the file dialog
-    if (toggleNativeFileUpload) {
-      dispatch(toggleUpload(true))
+  const handleUploadAction =
+    (toggleNativeFileUpload = false) =>
+    () => {
+      // switch to files tab
+      dispatch(updateDetailsPanelTab({ scope: 'review', tab: 'files', statePath: 'pinned' }))
+      // open the file dialog
+      if (toggleNativeFileUpload) {
+        dispatch(toggleUpload(true))
+      }
     }
-  }
 
   const handle = useFullScreenHandle()
 
@@ -261,7 +262,6 @@ const Viewer = ({ onClose }: ViewerProps) => {
   )
 
   const shownOptions = [...optimized, ...unoptimized]
-
 
   const noVersions = !versionsAndReviewables.length && !isFetchingReviewables
 

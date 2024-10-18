@@ -28,7 +28,7 @@ const outputFiles = {
   auth: ['createSession'],
   addons: ['listAddons', 'deleteAddonVersion', 'uploadAddonZipFile'],
   activities: ['deleteProjectActivity'],
-  users: ['getUser'],
+  users: ['getUser', 'setFrontendPreferences'],
   releases: ['getReleases', 'getReleaseInfo'],
   installers: ['listInstallers', 'createInstaller'],
   dependencyPackages: ['listDependencyPackages', 'createDependencyPackage'],

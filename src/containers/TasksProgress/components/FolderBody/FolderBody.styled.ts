@@ -10,6 +10,7 @@ export const Body = styled.div`
   height: 100%;
   min-height: 32px;
   overflow: hidden;
+  padding-left: var(--padding-s);
 
   & > * {
     height: 34px;

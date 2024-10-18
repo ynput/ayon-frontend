@@ -11,20 +11,37 @@ import {
 } from './helpers'
 import { useGetAllProjectUsersAsAssigneeQuery } from '@queries/user/getUsers'
 import { FolderType, Status, TaskType } from '@api/rest/project'
-import { ProgressSearch, TaskFieldChange, TasksProgressTable } from './components'
+import { TaskFieldChange, TasksProgressTable } from './components'
 // state
 import { setFocusedTasks } from '@state/context'
 import { useDispatch } from 'react-redux'
 import { useUpdateEntitiesMutation } from '@queries/entity/updateEntity'
 import { toast } from 'react-toastify'
 import { Button, Section, ShortcutTag, Spacer, Toolbar } from '@ynput/ayon-react-components'
-import CategorySelect from '@components/CategorySelect/CategorySelect'
-import useLocalStorage from '@hooks/useLocalStorage'
 import Shortcuts from '@containers/Shortcuts'
 import { openViewer } from '@state/viewer'
 import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
 import './styles.scss'
 import { AttributeEnumItem } from '@api/rest/attributes'
+import { Filter } from '@components/SearchFilter/types'
+import SearchFilterWrapper from '@components/SearchFilter/SearchFilterWrapper'
+import formatFilterAttributesData from './helpers/formatFilterAttributesData'
+import formatFilterTagsData from './helpers/formatFilterTagsData'
+import { useAppSelector } from '@state/store'
+import { useSetFrontendPreferencesMutation } from '@queries/user/updateUser'
+import getFilterFromId from '@components/SearchFilter/getFilterFromId'
+import filterTasksBySearch from './helpers/filterTasksBySearch'
+import { FilterFieldType } from '@hooks/useBuildFilterOptions'
+import formatFilterAssigneesData from './helpers/formatFilterAssigneesData'
+
+// what to search by
+const searchFilterTypes: FilterFieldType[] = [
+  'attributes',
+  'entitySubType',
+  'status',
+  'assignees',
+  'tags',
+]
 
 export type Operation = {
   id: string
@@ -51,12 +68,46 @@ const TasksProgress: FC<TasksProgressProps> = ({
   const dispatch = useDispatch()
   const tableRef = useRef<any>(null)
 
-  // filter states
-  const [filteredFolderIds, setFilteredFolderIds] = useState<null | string[]>(null)
-  const [filteredTaskTypes, setFilteredTaskTypes] = useLocalStorage(
-    `progress-types-${projectName}`,
-    [],
+  // FILTERS
+  //
+  //
+  const userName = useAppSelector((state) => state.user.name)
+  const frontendPreferences = useAppSelector((state) => state.user.data.frontendPreferences)
+  const frontendPreferencesFilters: {
+    [page: string]: {
+      [projectName: string]: Filter[]
+    }
+  } = frontendPreferences?.filters
+  const pageFilters = frontendPreferencesFilters?.progress ?? {}
+  const filters = pageFilters[projectName] ?? []
+
+  const [updateUserPreferences] = useSetFrontendPreferencesMutation()
+
+  const setFilters = (value: Filter[]) => {
+    const updatedPageFilters = { ...pageFilters, [projectName]: value }
+    const updatedUserFilters = { ...frontendPreferencesFilters, progress: updatedPageFilters }
+    const updatedFrontendPreferences = { ...frontendPreferences, filters: updatedUserFilters }
+    updateUserPreferences({ userName, patchData: updatedFrontendPreferences })
+  }
+
+  // remove task columns so slightly different to normal filtering of rows
+  const filteredTaskTypes = useMemo(
+    () =>
+      filters
+        .filter((filter) => getFilterFromId(filter.id) === 'taskType')
+        .flatMap((filter) =>
+          filter.inverted
+            ? taskTypes
+                .filter((taskType) => !filter.values?.some((value) => value.id === taskType.name))
+                .map((taskType) => taskType.name)
+            : filter.values?.map((value) => value.id) || [],
+        ),
+    [filters, taskTypes],
   )
+
+  //
+  //
+  // FILTERS
 
   // should rows be expanded (unless in collapsedRows)
   const [expandAll, setExpandAll] = useState(false)
@@ -119,25 +170,41 @@ const TasksProgress: FC<TasksProgressProps> = ({
     return Array.from(assignees)
   }, [selectedTasksData])
 
+  // FILTERS
+  //
+  //
+  // format attributes data for the search filter (show value suggestions)
+  const filterAttributesData = useMemo(
+    () => formatFilterAttributesData(foldersTasksData),
+    [foldersTasksData],
+  )
+
+  // format tags data for the search filter
+  const filterTagsData = useMemo(() => formatFilterTagsData(foldersTasksData), [foldersTasksData])
+
+  // format tags data for the search filter
+  const filterAssigneesData = useMemo(
+    () => formatFilterAssigneesData(foldersTasksData),
+    [foldersTasksData],
+  )
+
+  // the tasks don't get filtered out but just hidden
+  const filteredFoldersTasks = useMemo(
+    () => filterTasksBySearch(foldersTasksData, filters),
+    [foldersTasksData, filters],
+  )
+  //
+  //
+  // FILTERS
+
   const tableData = useMemo(
     () =>
-      formatTaskProgressForTable(foldersTasksData, filteredTaskTypes, collapsedParents, {
+      formatTaskProgressForTable(filteredFoldersTasks, filteredTaskTypes, collapsedParents, {
         folderTypes,
         statuses,
       }),
-    [foldersTasksData, filteredTaskTypes, collapsedParents],
+    [filteredFoldersTasks, filteredTaskTypes, collapsedParents],
   )
-
-  const filteredTableData = useMemo(() => {
-    let filtered = tableData
-
-    // search filter
-    if (filteredFolderIds) {
-      filtered = tableData.filter((row) => filteredFolderIds.includes(row.__folderId))
-    }
-
-    return filtered
-  }, [tableData, filteredFolderIds])
 
   const [updateEntities] = useUpdateEntitiesMutation()
 
@@ -229,7 +296,7 @@ const TasksProgress: FC<TasksProgressProps> = ({
     setCollapsedRows(newCollapsedRows)
 
     if (!expandedRows.length && expandAll) {
-      const allTasksLength = filteredTableData.filter((row) => !row.__isParent).length
+      const allTasksLength = tableData.filter((row) => !row.__isParent).length
       if (allTasksLength === newCollapsedRows.length) {
         setExpandAll(false)
       }
@@ -273,27 +340,23 @@ const TasksProgress: FC<TasksProgressProps> = ({
       <Shortcuts shortcuts={shortcuts} deps={[expandedRows]} />
       <Section style={{ height: '100%' }} direction="column">
         <Toolbar>
-          <ProgressSearch data={tableData} onSearch={setFilteredFolderIds} />
-          <CategorySelect
-            value={filteredTaskTypes}
-            options={taskTypes.map((taskType) => ({
-              value: taskType.name,
-              label: taskType.name,
-              icon: taskType.icon,
-            }))}
-            onChange={(value) => setFilteredTaskTypes(value)}
-            onClearNull={filteredTaskTypes.length ? () => setFilteredTaskTypes([]) : undefined}
-            multiSelectClose={false}
-            onSelectAll={() => {}}
-            multiSelect
-            placeholder="Filter task types..."
-            style={{ width: 185 }}
+          <SearchFilterWrapper
+            filters={filters}
+            onChange={setFilters}
+            filterTypes={searchFilterTypes}
+            projectNames={[projectName]}
+            scope="task"
+            data={{
+              tags: filterTagsData,
+              attributes: filterAttributesData,
+              assignees: filterAssigneesData,
+            }}
           />
           <Spacer />
           <Button
             onClick={handleExpandAllToggle}
             icon={expandAll ? 'collapse_all' : 'expand_all'}
-            style={{ width: 220, justifyContent: 'flex-start' }}
+            style={{ minWidth: 220, justifyContent: 'flex-start' }}
             selected={expandAll}
           >
             {`${expandAll ? 'Collapse' : 'Expand'} all rows`}
@@ -301,10 +364,10 @@ const TasksProgress: FC<TasksProgressProps> = ({
           </Button>
         </Toolbar>
         {selectedFolders.length ? (
-          filteredTableData.length || isFetchingTasks ? (
+          tableData.length || isFetchingTasks ? (
             <TasksProgressTable
               tableRef={tableRef}
-              tableData={filteredTableData}
+              tableData={tableData}
               projectName={projectName}
               isLoading={isFetchingTasks}
               selectedFolders={selectedFolders}
@@ -326,11 +389,7 @@ const TasksProgress: FC<TasksProgressProps> = ({
             />
           ) : (
             <EmptyPlaceholder
-              message={
-                filteredFolderIds
-                  ? ' No results found. Try a different search.'
-                  : 'No tasks under this folder. Try selecting another one.'
-              }
+              message={'No tasks found, try selecting another folder or expanding your filters.'}
               icon="folder_open"
             />
           )
