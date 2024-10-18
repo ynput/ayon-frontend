@@ -8,8 +8,10 @@ import Feed from '@containers/Feed/Feed'
 import PiPWrapper from '@context/pip/PiPWrapper'
 import { useGetEntitiesDetailsPanelQuery } from '@queries/entity/getEntityPanel'
 import { useAppSelector } from '@state/store'
-import { useGetProjectsInfoQuery } from '@queries/userDashboard/getUserDashboard'
-import { useGetAllAssigneesQuery } from '@queries/user/getUsers'
+import {
+  useGetKanbanProjectUsersQuery,
+  useGetProjectsInfoQuery,
+} from '@queries/userDashboard/getUserDashboard'
 import getAllProjectStatuses from '../helpers/getAllProjectsStatuses'
 
 type Entity = {
@@ -31,14 +33,18 @@ export interface DetailsPanelFloatingProps {}
 
 const DetailsPanelFloating: FC<DetailsPanelFloatingProps> = () => {
   const { entities, entityType, scope, statePath } = useAppSelector((state) => state.details.pip)
+  const isOpen = entities.length > 0 && !!entityType
 
   const projects: string[] = entities.map((e: any) => e.projectName)
 
-  const { data: allUsers = [] } = useGetAllAssigneesQuery({})
+  const { data: allUsers = [] } = useGetKanbanProjectUsersQuery({ projects }, { skip: !isOpen })
 
-  const { data: projectsInfo = {}, isFetching: isFetchingInfo } = useGetProjectsInfoQuery({
-    projects: projects,
-  })
+  const { data: projectsInfo = {}, isFetching: isFetchingInfo } = useGetProjectsInfoQuery(
+    {
+      projects: projects,
+    },
+    { skip: !isOpen },
+  )
 
   // get all statuses from projects info, removing duplicate names
   const statuses = useMemo(
@@ -49,7 +55,7 @@ const DetailsPanelFloating: FC<DetailsPanelFloatingProps> = () => {
   const { data = [], isFetching: isFetchingEntitiesDetails } = useGetEntitiesDetailsPanelQuery(
     { entityType, entities: entities, projectsInfo },
     {
-      skip: !entities.length || isFetchingInfo,
+      skip: !isOpen || isFetchingInfo,
     },
   )
   const entitiesData: Entity[] = data.filter((e: Entity | null) => !!e)

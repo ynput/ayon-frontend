@@ -11,6 +11,7 @@ import {
   TaskStatusBar,
   TaskTypeCell,
 } from '..'
+import './TaskProgressTable.scss'
 
 // state
 import { useDispatch, useSelector } from 'react-redux'
@@ -313,6 +314,7 @@ export const TasksProgressTable = ({
         thead: { style: { zIndex: 101, height: 36 } },
       }}
       className="tasks-progress-table"
+      rowClassName={(rowData: FolderRow) => (rowData.__isParent ? 'parent-row' : 'folder-row')}
       {...props}
     >
       <Column
@@ -337,11 +339,9 @@ export const TasksProgressTable = ({
           ) : (
             <FolderBody
               name={row._folder}
-              parents={row._parents}
               folderId={row.__folderId}
               folderIcon={row._folderIcon}
               projectName={row.__projectName}
-              isLoading={false}
               isExpanded={getIsExpanded(row.__folderId)}
               onExpandToggle={() => onExpandRow(row.__folderId)}
             />
@@ -435,7 +435,7 @@ export const TasksProgressTable = ({
                   return (
                     <InView
                       root={tableWrapperEl}
-                      rootMargin="200px 200px 200px 200px"
+                      rootMargin="100px 100px 100px 100px"
                       key={task.id}
                     >
                       {({ inView, ref }) => (
