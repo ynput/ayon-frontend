@@ -11,7 +11,7 @@ import {
 } from './helpers'
 import { useGetAllProjectUsersAsAssigneeQuery } from '@queries/user/getUsers'
 import { FolderType, Status, TaskType } from '@api/rest/project'
-import { ProgressSearch, TaskFieldChange, TasksProgressTable } from './components'
+import { TaskFieldChange, TasksProgressTable } from './components'
 // state
 import { setFocusedTasks } from '@state/context'
 import { useDispatch } from 'react-redux'
@@ -352,22 +352,6 @@ const TasksProgress: FC<TasksProgressProps> = ({
               assignees: filterAssigneesData,
             }}
           />
-          {/* <ProgressSearch data={tableData} onSearch={setFilteredFolderIds} /> */}
-          {/* <CategorySelect
-            value={filteredTaskTypes}
-            options={taskTypes.map((taskType) => ({
-              value: taskType.name,
-              label: taskType.name,
-              icon: taskType.icon,
-            }))}
-            onChange={(value) => setFilteredTaskTypes(value)}
-            onClearNull={filteredTaskTypes.length ? () => setFilteredTaskTypes([]) : undefined}
-            multiSelectClose={false}
-            onSelectAll={() => {}}
-            multiSelect
-            placeholder="Filter task types..."
-            style={{ width: 185 }}
-          /> */}
           <Spacer />
           <Button
             onClick={handleExpandAllToggle}
@@ -405,7 +389,7 @@ const TasksProgress: FC<TasksProgressProps> = ({
             />
           ) : (
             <EmptyPlaceholder
-              message={'No tasks under this folder. Try selecting another one.'}
+              message={'No tasks found, try selecting another folder or expanding your filters.'}
               icon="folder_open"
             />
           )
