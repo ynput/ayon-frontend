@@ -35,11 +35,10 @@ const useCustomerlyChat = ({ position, delay, disabled }: UseCustomerlyChat = {}
         company: {
           company_id: connect.orgId,
           name: orgName,
+          trialEnd: ayonSubscription.trialEnd,
         },
         attributes: {
-          trialing: true,
-          instanceId: connect.instanceId,
-          trialEnd: ayonSubscription.trialEnd,
+          visitedInstance: true,
           userLevel: userLevel,
         },
       })
