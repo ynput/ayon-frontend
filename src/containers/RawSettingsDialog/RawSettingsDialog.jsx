@@ -30,6 +30,7 @@ const EditorWrapper = styled.div`
   }
   .w-tc-editor {
     flex-grow: 1;
+    overflow: unset !important;
     * {
       font-family: monospace !important;
       font-size: 12px;
@@ -160,7 +161,7 @@ const RawSettingsDialog = ({
       )}
       <EditorWrapper>
         <CodeEditor
-          wrap={false}
+          wrap="false"
           value={code}
           language="json"
           placeholder="Please enter JS code."
