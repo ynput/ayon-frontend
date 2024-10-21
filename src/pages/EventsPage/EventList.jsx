@@ -24,12 +24,18 @@ const InlineSpinner = styled.div`
 `
 
 const statusBodyTemplate = (rowData) => {
-  if (rowData.status === 'finished') return <CellWithIcon icon="check" />
-  if (rowData.status === 'aborted') return <CellWithIcon icon="times" />
-  if (rowData.status === 'failed') return <CellWithIcon icon="error" />
-  if (rowData.status === 'in_progress') return <InlineSpinner />
-  if (rowData.status === 'pending') return <CellWithIcon icon="timer" />
-  if (rowData.status === 'restarted') return <CellWithIcon icon="history" />
+  const statusObj = {
+  'finished': "check",
+  'aborted': "times",
+  'failed': "error",
+  'pending': "timer",
+  'restarted': "history",
+  }
+  if (Object.keys(statusObj).includes(rowData.status)) {
+    return <CellWithIcon iconStyle={{ marginRight: '0.2rem' }} icon={statusObj[rowData.status]} />
+  }
+
+  return <InlineSpinner />
 }
 
 const EventList = ({ eventData, isLoading, selectedEvent, setSelectedEvent, onScrollBottom }) => {
@@ -73,7 +79,7 @@ const EventList = ({ eventData, isLoading, selectedEvent, setSelectedEvent, onSc
             onLazyLoad: handleLazy,
           }}
         >
-          <Column style={{ maxWidth: 30 }} body={statusBodyTemplate} />
+          <Column style={{ maxWidth: 36, overflow: 'hidden' }} body={statusBodyTemplate} />
           <Column
             header="Time"
             body={(row) => <TimestampField value={row?.updatedAt} />}
