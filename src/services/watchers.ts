@@ -49,7 +49,10 @@ const injectedApi = enhancedApi.injectEndpoints({
         }
       },
       providesTags: (_result, _error, { entities }) =>
-        entities.map((entity) => ({ type: 'watchers', id: entity.entityId })),
+        entities.flatMap((entity) => [
+          { type: 'watchers', id: entity.entityId },
+          { type: 'watchers', id: `${entity.entityType.toUpperCase()}-LIST` },
+        ]),
     }),
   }),
 })
@@ -119,6 +122,11 @@ const injectedApi2 = injectedApi.injectEndpoints({
           patches.forEach((patch) => patch?.undo())
         }
       },
+      // invalidates all versions if any of the entities are tasks
+      invalidatesTags: (_result, _error, { entities }) =>
+        entities.some((entity) => entity.entityType === 'task')
+          ? [{ type: 'watchers', id: 'VERSION-LIST' }]
+          : [],
     }),
   }),
 })

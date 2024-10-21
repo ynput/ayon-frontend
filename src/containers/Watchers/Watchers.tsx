@@ -8,7 +8,7 @@ import { toast } from 'react-toastify'
 interface WatchersProps extends Omit<WatcherSelectProps, 'currentUser'> {
   entities: { id: string; projectName: string }[]
   entityType: string
-  onWatchersUpdate?: (added: any[], removed: any[]) => void,
+  onWatchersUpdate?: (added: any[], removed: any[]) => void
 }
 
 export const Watchers = forwardRef<DropdownRef, WatchersProps>(
