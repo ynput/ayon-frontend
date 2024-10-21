@@ -54,7 +54,7 @@ const TasksProgressPage: FC = () => {
                 style={{
                   minWidth: 300,
                   maxWidth: 800,
-                  zIndex: 200,
+                  zIndex: 500,
                 }}
               >
                 <TaskProgressDetailsPanel projectInfo={projectInfo} projectName={projectName} />
