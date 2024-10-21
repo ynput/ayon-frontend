@@ -24,9 +24,14 @@ export const ArrayItemControls = styled.div`
 
 const FormArrayField = styled.div`
   flex-grow: 1;
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: var(--base-gap-large);
+`
+
+const DndContextWrapper = styled.div`
+  width: max-content;
 `
 
 const ArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
@@ -71,41 +76,43 @@ const ArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
   const draggedItem = items.find((item) => item.id === draggedItemId)
 
   return (
-    <DndContext
-      collisionDetection={closestCenter}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-    >
-      <SortableContext items={items} strategy={verticalListSortingStrategy}>
-        {items.map((item, idx) => (
-          <DraggableItem id={item.id} isVisible={item.id !== draggedItemId} key={idx}>
-            <FormArrayFieldWrapper onChange={onArrayChanged(item)} item={item} />
-          </DraggableItem>
-        ))}
-      </SortableContext>
-
-      {props.canAdd && !props.schema?.disabled && (
-        <ArrayItemControls>
-          <Button onClick={onAddItem} icon="add" />
-        </ArrayItemControls>
-      )}
-
-      {draggedItem &&
-        createPortal(
-          //class needed to inherit styling defined in settings editor sass file
-          <DragOverlay className="rjsf">
-            <DraggableItem id={draggedItem!.id} isOverlay>
-              <FormArrayFieldWrapper item={draggedItem} />
+    <DndContextWrapper>
+      <DndContext
+        collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext items={items} strategy={verticalListSortingStrategy}>
+          {items.map((item, idx) => (
+            <DraggableItem id={item.id} isVisible={item.id !== draggedItemId} key={idx}>
+              <FormArrayFieldWrapper onChange={onArrayChanged(item)} item={item} />
             </DraggableItem>
-          </DragOverlay>,
-          document.body,
+          ))}
+        </SortableContext>
+
+        {props.canAdd && !props.schema?.disabled && (
+          <ArrayItemControls>
+            <Button onClick={onAddItem} icon="add" />
+          </ArrayItemControls>
         )}
-    </DndContext>
+
+        {draggedItem &&
+          createPortal(
+            //class needed to inherit styling defined in settings editor sass file
+            <DragOverlay className="rjsf">
+              <DraggableItem id={draggedItem!.id} isOverlay>
+                <FormArrayFieldWrapper item={draggedItem} />
+              </DraggableItem>
+            </DragOverlay>,
+            document.body,
+          )}
+      </DndContext>
+    </DndContextWrapper>
   )
 }
 
 const FormArrayFieldWrapper = ({ item, onChange }: { item: $Any; onChange?: () => void }) => {
-  const {key, ...dynProps} = item
+  const { key, ...dynProps } = item
   return (
     <FormArrayField>
       <ArrayItemTemplate onChange={onChange} {...dynProps} />
