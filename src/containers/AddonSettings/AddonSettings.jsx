@@ -1,4 +1,4 @@
-import { useState, useMemo  } from 'react'
+import { useState, useMemo } from 'react'
 import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 
@@ -47,6 +47,7 @@ const StyledScrollPanel = styled(ScrollPanel)`
 import SettingsListHeader from './SettingsListHeader'
 import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
 import { attachLabels } from './searchTools'
+import useUserProjectPermissions from '@hooks/useUserProjectPermissions'
 
 /*
  * key is {addonName}|{addonVersion}|{variant}|{siteId}|{projectKey}
@@ -95,6 +96,8 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   const [modifyAddonOverride] = useModifyAddonOverrideMutation()
   const [promoteBundle] = usePromoteBundleMutation()
   const { requestPaste } = usePaste()
+
+  const userPermissions = useUserProjectPermissions(projectName)
 
   const projectKey = projectName || '_'
 
@@ -633,6 +636,10 @@ const AddonSettings = ({ projectName, showSites = false }) => {
         />
         <SaveButton
           label="Save Changes"
+          disabled={!userPermissions.canEditSettings()}
+          data-tooltip={
+            !userPermissions.canEditSettings() ? "You don't have edit permissions" : undefined
+          }
           onClick={onSave}
           active={canCommit}
           saving={setAddonSettingsUpdating}
