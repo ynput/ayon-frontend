@@ -188,7 +188,7 @@ export const taskProvideTags = (result, type = 'task', entityType = 'task') =>
 
 
 export  const getEntityDetailsData = ({ entities, entityType, projectsInfo, detailsData, isSuccess, isError }) => {
-    if (isSuccess && !isError) {
+    if (isSuccess && !isError && detailsData.length > 0) {
       return detailsData
     }
 
