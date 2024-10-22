@@ -16,6 +16,7 @@ import { useSetFrontendPreferencesMutation } from '@/services/user/updateUser'
 import useTableLoadingData from '@hooks/useTableLoadingData'
 import { useProjectSelectDispatcher } from './ProjectMenu/hooks/useProjectSelectDispatcher'
 import useAyonNavigate from '@hooks/useAyonNavigate'
+import useUserProjectPermissions from '@hooks/useUserProjectPermissions'
 
 const formatName = (rowData, defaultTitle, field = 'name') => {
   if (rowData[field] === '_') return defaultTitle
@@ -52,6 +53,11 @@ const StyledProjectName = styled.div`
       opacity: 1;
     }
   }
+`
+
+const ButtonPlaceholder = styled.div`
+  height: 26px;
+  width: 100%;
 `
 
 const StyledAddButton = styled(Button)`
@@ -220,6 +226,8 @@ const ProjectList = ({
   }, [selection, projectList, isFetching])
 
   const [updateUserPreferences] = useSetFrontendPreferencesMutation()
+
+  const userPermissions = useUserProjectPermissions()
 
   const handlePinProjects = async (sel, isPinning) => {
     try {
@@ -400,7 +408,7 @@ const ProjectList = ({
           disabled={onSelectAllDisabled}
         />
       )}
-      {isProjectManager && (
+      {(isProjectManager || userPermissions.canCreateProject()) ? (
         <StyledAddButton onClick={onNewProject} $isOpen={!collapsed}>
           {/* <div className="spacer" /> */}
           <div className="content">
@@ -409,7 +417,8 @@ const ProjectList = ({
           </div>
           {/* <div className="spacer" /> */}
         </StyledAddButton>
-      )}
+      ): <ButtonPlaceholder />}
+
       <TablePanel>
         {isCollapsible && (
           <CollapseButton

@@ -11,12 +11,12 @@ import NewProjectDialog from './NewProjectDialog'
 
 import { selectProject } from '@state/context'
 import { useDeleteProjectMutation, useUpdateProjectMutation } from '@queries/project/updateProject'
-import { useGetCurrentUserProjectPermissionsQuery } from '@queries/permissions/getPermissions'
 import TeamsPage from '../TeamsPage'
 import ProjectManagerPageContainer from './ProjectManagerPageContainer'
 import ProjectManagerPageLayout from './ProjectManagerPageLayout'
 import AppNavLinks from '@containers/header/AppNavLinks'
 import confirmDelete from '@helpers/confirmDelete'
+import useUserProjectPermissions from '@hooks/useUserProjectPermissions'
 
 const ProjectSettings = ({ projectList, projectManager, projectName }) => {
   return (
@@ -49,9 +49,7 @@ const ProjectManagerPage = () => {
     withDefault(StringParam, projectName),
   )
 
-  const { data: permissions } = useGetCurrentUserProjectPermissionsQuery({
-    projectName: selectedProject,
-  })
+  const userPermissions = useUserProjectPermissions(selectedProject)
 
   // UPDATE DATA
   const [updateProject] = useUpdateProjectMutation()
@@ -87,13 +85,8 @@ const ProjectManagerPage = () => {
   }
 
   const links = []
-  if (permissions?.project) {
-    // How to read this code:
-    // If project management restrictions are NOT enabled
-    // OR if project management restrctions ARE enabled
-    // and access to anatomy is allowed
-
-    if (!permissions.project.enabled || permissions.project.anatomy) {
+  if (userPermissions.projectSettingsAreEnabled()) {
+    if (userPermissions.canViewAnatomy()) {
       links.push({
         name: 'Anatomy',
         path: '/manageProjects/anatomy',
@@ -103,7 +96,7 @@ const ProjectManagerPage = () => {
       })
     }
 
-    if (!permissions.project.enabled || permissions.project.settings) {
+    if (userPermissions.canViewSettings()) {
       links.push({
         name: 'Project settings',
         path: '/manageProjects/projectSettings',
@@ -157,8 +150,8 @@ const ProjectManagerPage = () => {
         onDeleteProject={handleDeleteProject}
         onActivateProject={handleActivateProject}
       >
-        {module === 'anatomy' && <ProjectAnatomy />}
-        {module === 'projectSettings' && <ProjectSettings />}
+        {module === 'anatomy' && userPermissions.canViewAnatomy() && <ProjectAnatomy />}
+        {module === 'projectSettings' && userPermissions.canViewSettings() && <ProjectSettings />}
         {module === 'siteSettings' && <SiteSettings />}
         {module === 'roots' && <ProjectRoots />}
         {module === 'teams' && <TeamsPage />}

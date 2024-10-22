@@ -2,12 +2,12 @@ import { toast } from 'react-toastify'
 import { useState } from 'react'
 import { ScrollPanel, SaveButton, Spacer, Button } from '@ynput/ayon-react-components'
 import { useUpdateProjectAnatomyMutation } from '@queries/project/updateProject'
-import { useGetCurrentUserProjectPermissionsQuery } from '@queries/permissions/getPermissions'
 import ProjectManagerPageLayout from './ProjectManagerPageLayout'
 import AnatomyEditor from '@containers/AnatomyEditor'
 
 import copyToClipboard from '@helpers/copyToClipboard'
 import { usePaste } from '@context/pasteContext'
+import useUserProjectPermissions, { UserPermissionsLevel } from '@hooks/useUserProjectPermissions'
 
 const ProjectAnatomy = ({ projectName, projectList }) => {
   const [formData, setFormData] = useState(null)
@@ -16,14 +16,8 @@ const ProjectAnatomy = ({ projectName, projectList }) => {
   const [updateProjectAnatomy, { isLoading: isUpdating }] = useUpdateProjectAnatomyMutation()
   const { requestPaste } = usePaste()
 
-
-  const { data: permissions } = useGetCurrentUserProjectPermissionsQuery({
-    projectName: projectName,
-  })
-
-  const accessLevel = permissions?.project?.enabled ? permissions.project.anatomy : 2
-  //const accessLevel = 2
-
+  const userPermissions = useUserProjectPermissions(projectName)
+  const accessLevel = userPermissions.getAnatomyPermissionLevel()
 
   const saveAnatomy = () => {
     updateProjectAnatomy({ projectName, anatomy: formData })
@@ -72,19 +66,20 @@ const ProjectAnatomy = ({ projectName, projectList }) => {
             }}
           />
           <Button label="Paste anatomy" icon="content_paste" onClick={onPasteAnatomy} />
-          {accessLevel === 1 && "Read-only"}
+          {UserPermissionsLevel.readOnly === accessLevel && "Read-only"}
           <Spacer />
           <SaveButton
             label="Save changes"
+            data-tooltip={UserPermissionsLevel.readWrite !== accessLevel ?  "You don't have edit permissions" : undefined}
             onClick={saveAnatomy}
-            active={isChanged && accessLevel > 1}
+            active={isChanged && UserPermissionsLevel.readWrite === accessLevel}
             saving={isUpdating}
           />
         </>
       }
     >
       <ScrollPanel style={{ flexGrow: 1 }} className="transparent">
-        {accessLevel ? (
+        {UserPermissionsLevel.none !== accessLevel ? (
         <AnatomyEditor
           projectName={projectName}
           formData={formData}

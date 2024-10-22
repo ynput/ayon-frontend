@@ -28,7 +28,7 @@ const ProjectManagerPageContainer = ({
             onDeleteProject={onDeleteProject}
             onActivateProject={onActivateProject}
             onNewProject={onNewProject}
-            isProjectManager
+            isProjectManager={!isUser}
             {...props}
           />
         ),

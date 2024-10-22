@@ -1,4 +1,4 @@
-import { useState, useMemo  } from 'react'
+import { useState, useMemo } from 'react'
 import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 
@@ -37,6 +37,7 @@ import { getValueByPath, setValueByPath, sameKeysStructure, compareObjects } fro
 import arrayEquals from '@helpers/arrayEquals'
 import { cloneDeep } from 'lodash'
 import { usePaste } from '@context/pasteContext'
+import useUserProjectPermissions from '@hooks/useUserProjectPermissions'
 
 /*
  * key is {addonName}|{addonVersion}|{variant}|{siteId}|{projectKey}
@@ -72,6 +73,8 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   const [modifyAddonOverride] = useModifyAddonOverrideMutation()
   const [promoteBundle] = usePromoteBundleMutation()
   const { requestPaste } = usePaste()
+
+  const userPermissions = useUserProjectPermissions(projectName)
 
   const projectKey = projectName || '_'
 
@@ -281,8 +284,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
           }
 
           return { ...unpinnedKeys, [addonKey]: addonChanges }
-        })  // setUnpinnedKeys
-
+        }) // setUnpinnedKeys
       }
     }
   }
@@ -294,15 +296,15 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   const onRemoveOverride = async (addon, siteId, path) => {
     // Remove a single override for this addon (within current project and variant)
     // path is an array of strings
-    
-    // TODO: Use this to staged unpin. 
+
+    // TODO: Use this to staged unpin.
     // It is not used now because we don't have an information about the original value
     //
     // const key = `${addon.name}|${addon.version}|${addon.variant}|${siteId || '_'}|${projectKey}`
     //
     // setChangedKeys((changedKeys) => {
     //   const keyData = changedKeys[key] || []
-    //   
+    //
     //   const index = keyData.findIndex((keyItem) => arrayEquals(keyItem, path))
     //   if (index === -1) {
     //     keyData.push(path)
@@ -502,8 +504,8 @@ const AddonSettings = ({ projectName, showSites = false }) => {
           Are you sure you want to push <strong>{bundleName}</strong> to production?
         </p>
         <p>
-          This will mark the current staging bundle as production and copy all staging
-          studio settings and staging projects overrides to production as well.
+          This will mark the current staging bundle as production and copy all staging studio
+          settings and staging projects overrides to production as well.
         </p>
       </>
     )
@@ -627,6 +629,10 @@ const AddonSettings = ({ projectName, showSites = false }) => {
         />
         <SaveButton
           label="Save Changes"
+          disabled={!userPermissions.canEditSettings()}
+          data-tooltip={
+            !userPermissions.canEditSettings() ? "You don't have edit permissions" : undefined
+          }
           onClick={onSave}
           active={canCommit}
           saving={setAddonSettingsUpdating}
@@ -698,7 +704,11 @@ const AddonSettings = ({ projectName, showSites = false }) => {
         <Section className={showHelp && 'settings-help-visible'}>
           {settingsListHeader}
           <Section>
-            <ScrollPanel className="transparent nopad" style={{ flexGrow: 1 }} id="settings-scroll-panel">
+            <ScrollPanel
+              className="transparent nopad"
+              style={{ flexGrow: 1 }}
+              id="settings-scroll-panel"
+            >
               {selectedAddons
                 .filter((addon) => !addon.isBroken)
                 .reverse()
@@ -761,10 +771,10 @@ const AddonSettings = ({ projectName, showSites = false }) => {
       <SplitterPanel size={20}>
         <Section wrap style={{ minWidth: 300 }}>
           <Toolbar>{commitToolbar}</Toolbar>
-          <SettingsChangesTable 
-            changes={changedKeys} 
-            unpins={unpinnedKeys} 
-            onRevert={onRevertChange} 
+          <SettingsChangesTable
+            changes={changedKeys}
+            unpins={unpinnedKeys}
+            onRevert={onRevertChange}
           />
           {/*}
           <ScrollPanel className="transparent nopad" style={{ flexGrow: 1 }}>
