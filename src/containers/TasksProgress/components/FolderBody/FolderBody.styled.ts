@@ -8,7 +8,7 @@ export const Body = styled.div`
   align-items: flex-start;
   max-width: 500px;
   height: 100%;
-  min-height: 32px;
+  height: 32px;
   overflow: hidden;
   padding-left: var(--padding-s);
 
@@ -22,14 +22,16 @@ export const Body = styled.div`
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    transition: width 0.2s, opacity 0.2s;
+    transition: width 0.15s, opacity 0.15s;
   }
 
+  transition: height 0.15s;
   &.expanded {
     .title {
       width: 0;
       opacity: 0;
     }
+    height: 100px;
   }
 `
 

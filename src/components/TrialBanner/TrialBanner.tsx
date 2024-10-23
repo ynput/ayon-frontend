@@ -17,7 +17,7 @@ const TrialBanner: FC<TrialBannerProps> = ({}) => {
   const user = useAppSelector((state) => state.user)
   const canManage = user.data.isAdmin || user.data.isManager
 
-  const [snooze, setSnooze] = useLocalStorage('trialBannerSnooze', null)
+  const [snooze, setSnooze] = useLocalStorage<number | null>('trialBannerSnooze', null)
 
   const { data: connect } = useGetYnputCloudInfoQuery()
   const { isTrialing, left } = getTrialDates(connect?.subscriptions)
@@ -31,12 +31,12 @@ const TrialBanner: FC<TrialBannerProps> = ({}) => {
   const isSnoozing = getIsSnoozing()
 
   // get the number of users currently active
-  const { data: activeUsersCount = 10 } = useGetActiveUsersCountQuery()
+  const { data: activeUsersCount = 10 } = useGetActiveUsersCountQuery({})
 
   const { show, hide } = useCustomerlyChat({
     position: { desktop: { side: 8, bottom: 52 }, mobile: { side: 8, bottom: 52 } },
     delay: 2000,
-    disabled: !isTrialing || isSnoozing,
+    disabled: !isTrialing || !!isSnoozing,
   })
 
   //   check if there is a sub
