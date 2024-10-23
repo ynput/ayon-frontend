@@ -187,21 +187,28 @@ export const taskProvideTags = (result, type = 'task', entityType = 'task') =>
     : [{ type, id: upperCase(entityType) + 'S' }]
 
 
-export  const getEntityDetailsData = ({ entities, entityType, projectsInfo, detailsData, isSuccess, isError }) => {
-    if (isSuccess && !isError && detailsData.length > 0) {
-      return detailsData
-    }
-
-    if (entities.length) {
-      return entities.map(({ id }) => ({ id }))
-    }
-
-    return entities.map((entity) =>
-      transformEntityData({
-        entity,
-        entityType,
-        projectName: entity.projectName,
-        projectInfo: projectsInfo[entity.projectName],
-      }),
-    )
+export const getEntityDetailsData = ({
+  entities,
+  entityType,
+  projectsInfo,
+  detailsData,
+  isSuccess,
+  isError,
+}) => {
+  if (isSuccess && !isError && detailsData.length > 0) {
+    return detailsData
   }
+
+  if (entities.length) {
+    return entities.map(({ id }) => ({ id }))
+  }
+
+  return entities.map((entity) =>
+    transformEntityData({
+      entity,
+      entityType,
+      projectName: entity.projectName,
+      projectInfo: projectsInfo[entity.projectName],
+    }),
+  )
+}
