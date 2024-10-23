@@ -16,6 +16,7 @@ import ProjectManagerPageContainer from './ProjectManagerPageContainer'
 import ProjectManagerPageLayout from './ProjectManagerPageLayout'
 import AppNavLinks from '@containers/header/AppNavLinks'
 import confirmDelete from '@helpers/confirmDelete'
+import useUserProjectPermissions from '@hooks/useUserProjectPermissions'
 
 const ProjectSettings = ({ projectList, projectManager, projectName }) => {
   return (
@@ -47,6 +48,8 @@ const ProjectManagerPage = () => {
     'project',
     withDefault(StringParam, projectName),
   )
+
+  const userPermissions = useUserProjectPermissions(selectedProject)
 
   // UPDATE DATA
   const [updateProject] = useUpdateProjectMutation()
@@ -81,21 +84,30 @@ const ProjectManagerPage = () => {
     await updateProject({ projectName: sel, update: { active } }).unwrap()
   }
 
-  let links = [
-    {
-      name: 'Anatomy',
-      path: '/manageProjects/anatomy',
-      module: 'anatomy',
-      accessLevels: ['manager'],
-      shortcut: 'A+A',
-    },
-    {
-      name: 'Project settings',
-      path: '/manageProjects/projectSettings',
-      module: 'projectSettings',
-      accessLevels: ['manager'],
-      shortcut: 'P+P',
-    },
+  const links = []
+  if (userPermissions.projectSettingsAreEnabled()) {
+    if (userPermissions.canViewAnatomy()) {
+      links.push({
+        name: 'Anatomy',
+        path: '/manageProjects/anatomy',
+        module: 'anatomy',
+        accessLevels: [],
+        shortcut: 'A+A',
+      })
+    }
+
+    if (userPermissions.canViewSettings()) {
+      links.push({
+        name: 'Project settings',
+        path: '/manageProjects/projectSettings',
+        module: 'projectSettings',
+        accessLevels: [],
+        shortcut: 'P+P',
+      })
+    }
+  }
+
+  links.push(
     {
       name: 'Site settings',
       path: '/manageProjects/siteSettings',
@@ -114,7 +126,7 @@ const ProjectManagerPage = () => {
       module: 'teams',
       accessLevels: ['manager'],
     },
-  ]
+  )
 
   const linksWithProject = useMemo(
     () =>
@@ -138,8 +150,8 @@ const ProjectManagerPage = () => {
         onDeleteProject={handleDeleteProject}
         onActivateProject={handleActivateProject}
       >
-        {module === 'anatomy' && <ProjectAnatomy />}
-        {module === 'projectSettings' && <ProjectSettings />}
+        {module === 'anatomy' && userPermissions.canViewAnatomy() && <ProjectAnatomy />}
+        {module === 'projectSettings' && userPermissions.canViewSettings() && <ProjectSettings />}
         {module === 'siteSettings' && <SiteSettings />}
         {module === 'roots' && <ProjectRoots />}
         {module === 'teams' && <TeamsPage />}
