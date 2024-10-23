@@ -31,6 +31,7 @@ const FormArrayField = styled.div`
 `
 
 const DndContextWrapper = styled.div`
+  min-width: 100%;
   width: max-content;
 `
 
