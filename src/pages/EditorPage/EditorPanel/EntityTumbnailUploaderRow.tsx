@@ -19,7 +19,8 @@ const EntityThumbnailUploaderRow = ({
 }: Props) => {
 
 
-  const { entities, entityType } = useFocusedEntities(projectName)
+  // Focused type doesn't apply in editor page, we need to specifically pass the editor focusType
+  const { entities, entityType } = useFocusedEntities(projectName, 'editor')
   const { data: projectsInfo = {} } = useGetProjectsInfoQuery({ projects: [projectName] })
 
   let entitiesToQuery = entities.length

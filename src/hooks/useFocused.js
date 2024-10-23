@@ -1,8 +1,19 @@
 import { isEqual } from "lodash"
 import { useSelector } from "react-redux"
 
-function useFocusedEntities(projectName) {
-  const subscribedStateFields = ['versions', 'products', 'folders', 'tasks']
+const subscribedStateFields = ['versions', 'products', 'folders', 'tasks']
+
+function useFocusedEntities(projectName, focusType) {
+  function getFirstEntityType(entityIds) {
+    for (const entityId of entityIds) {
+      for (const type of subscribedStateFields) {
+        if (focused[type].includes(entityId)) {
+          return type.slice(0, -1)
+        }
+      }
+    }
+  }
+
 
   const focused = useSelector(
     (state) => state.context.focused,
@@ -21,7 +32,12 @@ function useFocusedEntities(projectName) {
   if (entityType === 'representation') {
     entityType = 'version'
   }
-  const entityIds = focused[entityType + 's'] || []
+
+  const entityIds = (focusType !== undefined ? focused[focusType] : focused[entityType + 's']) || []
+  if (focusType === 'editor') {
+    entityType = getFirstEntityType(entityIds)
+  }
+
   const entities = entityIds.map((id) => ({ id, projectName }))
 
   return {entities, entityType, subTypes}
