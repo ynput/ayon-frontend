@@ -37,6 +37,13 @@ import { getValueByPath, setValueByPath, sameKeysStructure, compareObjects } fro
 import arrayEquals from '@helpers/arrayEquals'
 import { cloneDeep } from 'lodash'
 import { usePaste } from '@context/pasteContext'
+import styled from 'styled-components'
+
+const StyledScrollPanel = styled(ScrollPanel)`
+> div {
+  padding-right: 8px;
+}
+`
 
 /*
  * key is {addonName}|{addonVersion}|{variant}|{siteId}|{projectKey}
@@ -698,7 +705,11 @@ const AddonSettings = ({ projectName, showSites = false }) => {
         <Section className={showHelp && 'settings-help-visible'}>
           {settingsListHeader}
           <Section>
-            <ScrollPanel className="transparent nopad" style={{ flexGrow: 1 }} id="settings-scroll-panel">
+            <StyledScrollPanel
+              className="transparent nopad"
+              style={{ flexGrow: 1 }}
+              id="settings-scroll-panel"
+            >
               {selectedAddons
                 .filter((addon) => !addon.isBroken)
                 .reverse()
@@ -754,17 +765,17 @@ const AddonSettings = ({ projectName, showSites = false }) => {
                 })}
 
               <Spacer />
-            </ScrollPanel>
+            </StyledScrollPanel>
           </Section>
         </Section>
       </SplitterPanel>
       <SplitterPanel size={20}>
         <Section wrap style={{ minWidth: 300 }}>
           <Toolbar>{commitToolbar}</Toolbar>
-          <SettingsChangesTable 
-            changes={changedKeys} 
-            unpins={unpinnedKeys} 
-            onRevert={onRevertChange} 
+          <SettingsChangesTable
+            changes={changedKeys}
+            unpins={unpinnedKeys}
+            onRevert={onRevertChange}
           />
           {/*}
           <ScrollPanel className="transparent nopad" style={{ flexGrow: 1 }}>

@@ -64,7 +64,7 @@ const PanelHeader = styled.div`
 
 const PanelContent = styled.div`
   width: 100%;
-  overflow: scroll;
+  overflow: auto;
   display: flex;
   flex-direction: column;
   border-left: 1px dotted #434a56;
