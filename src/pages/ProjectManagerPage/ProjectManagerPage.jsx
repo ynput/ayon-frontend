@@ -150,8 +150,8 @@ const ProjectManagerPage = () => {
         onDeleteProject={handleDeleteProject}
         onActivateProject={handleActivateProject}
       >
-        {module === 'anatomy' && userPermissions.canViewAnatomy() && <ProjectAnatomy />}
-        {module === 'projectSettings' && userPermissions.canViewSettings() && <ProjectSettings />}
+        {module === 'anatomy' && <ProjectAnatomy />}
+        {module === 'projectSettings' && <ProjectSettings />}
         {module === 'siteSettings' && <SiteSettings />}
         {module === 'roots' && <ProjectRoots />}
         {module === 'teams' && <TeamsPage />}

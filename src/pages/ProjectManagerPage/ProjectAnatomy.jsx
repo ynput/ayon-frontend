@@ -8,6 +8,7 @@ import AnatomyEditor from '@containers/AnatomyEditor'
 import copyToClipboard from '@helpers/copyToClipboard'
 import { usePaste } from '@context/pasteContext'
 import useUserProjectPermissions, { UserPermissionsLevel } from '@hooks/useUserProjectPermissions'
+import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
 
 const ProjectAnatomy = ({ projectName, projectList }) => {
   const [formData, setFormData] = useState(null)
@@ -57,6 +58,7 @@ const ProjectAnatomy = ({ projectName, projectList }) => {
     <ProjectManagerPageLayout
       projectList={projectList}
       toolbar={
+        userPermissions.canViewAnatomy() &&
         <>
           <Button
             label="Copy anatomy"
@@ -66,11 +68,15 @@ const ProjectAnatomy = ({ projectName, projectList }) => {
             }}
           />
           <Button label="Paste anatomy" icon="content_paste" onClick={onPasteAnatomy} />
-          {UserPermissionsLevel.readOnly === accessLevel && "Read-only"}
+          {UserPermissionsLevel.readOnly === accessLevel && 'Read-only'}
           <Spacer />
           <SaveButton
             label="Save changes"
-            data-tooltip={UserPermissionsLevel.readWrite !== accessLevel ?  "You don't have edit permissions" : undefined}
+            data-tooltip={
+              !userPermissions.canEditAnatomy() 
+                ? "You don't have edit permissions"
+                : undefined
+            }
             onClick={saveAnatomy}
             active={isChanged && UserPermissionsLevel.readWrite === accessLevel}
             saving={isUpdating}
@@ -79,13 +85,19 @@ const ProjectAnatomy = ({ projectName, projectList }) => {
       }
     >
       <ScrollPanel style={{ flexGrow: 1 }} className="transparent">
-        {UserPermissionsLevel.none !== accessLevel ? (
-        <AnatomyEditor
-          projectName={projectName}
-          formData={formData}
-          setFormData={setFormData}
-          setIsChanged={setIsChanged}
-        />) : "You don't have access to this project's anatomy. We should redirect you somewhere else."}
+        {userPermissions.canViewAnatomy() ? (
+          <AnatomyEditor
+            projectName={projectName}
+            formData={formData}
+            setFormData={setFormData}
+            setIsChanged={setIsChanged}
+          />
+        ) : (
+          <EmptyPlaceholder
+            icon="settings_alert"
+            message="You don't have permissions to view the this project's anatomy"
+          />
+        )}
       </ScrollPanel>
     </ProjectManagerPageLayout>
   )

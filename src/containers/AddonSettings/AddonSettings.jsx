@@ -674,6 +674,13 @@ const AddonSettings = ({ projectName, showSites = false }) => {
 
   // console.log('selected addons: ', selectedAddons)
 
+  if (!userPermissions.canViewSettings()) {
+    return <EmptyPlaceholder
+      icon="settings_alert"
+      message="You don't have permissions to view the addon settings for this project"
+    />
+  }
+
   return (
     <Splitter layout="horizontal" style={{ width: '100%', height: '100%' }}>
       <SplitterPanel size={80} style={{ display: 'flex', flexDirection: 'row', gap: 8 }}>
