@@ -5,6 +5,8 @@ $field-gap: 8px
 
 .form-field
   flex-grow: 1
+  width: 100%
+  max-width: 600px
   // min-width: 150px
 
 .form-inline-field-help, .form-object-field-help
@@ -25,7 +27,7 @@ $field-gap: 8px
     font-size: .8rem
     white-space: pre
     overflow-wrap: normal
-    overflow-x: scroll
+    overflow-x: auto
 
   // If the 'enabled' switch is in a panel header hide its label
   .form-object-header-enabled-toggler
@@ -143,6 +145,7 @@ $field-gap: 8px
 
 
     .form-inline-field-widget
+      width: 100%
       flex-grow: 1
       display: flex
       flex-direction: column
