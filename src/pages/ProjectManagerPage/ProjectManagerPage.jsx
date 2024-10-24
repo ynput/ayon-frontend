@@ -17,6 +17,7 @@ import ProjectManagerPageLayout from './ProjectManagerPageLayout'
 import AppNavLinks from '@containers/header/AppNavLinks'
 import confirmDelete from '@helpers/confirmDelete'
 import useUserProjectPermissions from '@hooks/useUserProjectPermissions'
+import ProjectUsers from './Users/ProjectUsers'
 
 const ProjectSettings = ({ projectList, projectManager, projectName }) => {
   return (
@@ -86,7 +87,7 @@ const ProjectManagerPage = () => {
 
   const links = []
   if (userPermissions.projectSettingsAreEnabled()) {
-    if (userPermissions.canViewAnatomy()) {
+    if (userPermissions.canViewAnatomy() || module === 'anatomy') {
       links.push({
         name: 'Anatomy',
         path: '/manageProjects/anatomy',
@@ -96,13 +97,22 @@ const ProjectManagerPage = () => {
       })
     }
 
-    if (userPermissions.canViewSettings()) {
+    if (userPermissions.canViewSettings() || module === 'projectSettings') {
       links.push({
         name: 'Project settings',
         path: '/manageProjects/projectSettings',
         module: 'projectSettings',
         accessLevels: [],
         shortcut: 'P+P',
+      })
+    }
+    if (userPermissions.canViewSettings() || module === 'userSettings') {
+      links.push({
+        name: 'Project Users',
+        path: '/manageProjects/userSettings',
+        module: 'userSettings',
+        accessLevels: [],
+        shortcut: 'P+U',
       })
     }
   }
@@ -153,6 +163,7 @@ const ProjectManagerPage = () => {
         {module === 'anatomy' && <ProjectAnatomy />}
         {module === 'projectSettings' && <ProjectSettings />}
         {module === 'siteSettings' && <SiteSettings />}
+        {module === 'userSettings' && <ProjectUsers />}
         {module === 'roots' && <ProjectRoots />}
         {module === 'teams' && <TeamsPage />}
       </ProjectManagerPageContainer>

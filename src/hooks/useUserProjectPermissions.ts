@@ -1,10 +1,16 @@
 import { GetCurrentUserPermissionsApiResponse } from '@api/rest/permissions'
 import { useGetCurrentUserPermissionsQuery, useGetCurrentUserProjectPermissionsQuery } from '@queries/permissions/getPermissions'
 
-const UserPermissionsLevel = {
-  none: 0,
-  readOnly: 1,
-  readWrite: 2,
+enum UserPermissionsLevel {
+  none = 0,
+  readOnly = 1,
+  readWrite = 2,
+}
+
+enum UserPermissionsEntity {
+  users = 'users',
+  anatomy = 'anatomy',
+  settings = 'settings',
 }
 
 class UserPermissions {
@@ -18,48 +24,63 @@ class UserPermissions {
     return this.projectSettingsAreEnabled() && this.permissions?.project?.create || false
   }
 
-  getSettingsPermissionLevel(): typeof UserPermissionsLevel {
-    return this.permissions?.project?.settings || UserPermissionsLevel.readWrite
+  getPermissionLevel(type: UserPermissionsEntity): UserPermissionsLevel {
+    return this.permissions?.project?.[type]|| UserPermissionsLevel.readWrite
   }
 
-  getAnatomyPermissionLevel(): typeof UserPermissionsLevel {
-    return this.permissions?.project?.anatomy || UserPermissionsLevel.readWrite
+  canEdit(type: UserPermissionsEntity): boolean {
+    if (!this.projectSettingsAreEnabled()) {
+      return true
+    }
+
+    return this.permissions?.project?.[type] === UserPermissionsLevel.readWrite
+  }
+
+  canView(type: UserPermissionsEntity): boolean {
+    if (!this.projectSettingsAreEnabled()) {
+      return true
+    }
+
+    return (
+      this.canEdit(type) || this.permissions?.project?.[type]=== UserPermissionsLevel.readOnly
+    )
+
+  }
+
+  getSettingsPermissionLevel(): UserPermissionsLevel {
+    return this.getPermissionLevel(UserPermissionsEntity.settings)
+  }
+
+  getAnatomyPermissionLevel(): UserPermissionsLevel {
+    return this.getPermissionLevel(UserPermissionsEntity.anatomy)
+  }
+
+  getUsersPermissionLevel(): UserPermissionsLevel {
+    return this.getPermissionLevel(UserPermissionsEntity.users)
   }
 
   canEditSettings(): boolean {
-    if (!this.projectSettingsAreEnabled()) {
-      return true
-    }
-
-    return this.permissions?.project?.settings === UserPermissionsLevel.readWrite
+    return this.canEdit(UserPermissionsEntity.settings)
   }
 
   canEditAnatomy(): boolean {
-    if (!this.projectSettingsAreEnabled()) {
-      return true
-    }
+    return this.canEdit(UserPermissionsEntity.anatomy)
+  }
 
-    return this.permissions?.project?.anatomy === UserPermissionsLevel.readWrite
+  canEditUsers(): boolean {
+    return this.canEdit(UserPermissionsEntity.users)
   }
 
   canViewSettings(): boolean {
-    if (!this.projectSettingsAreEnabled()) {
-      return true
-    }
-
-    return (
-      this.canEditSettings() || this.permissions?.project?.settings === UserPermissionsLevel.readOnly
-    )
+    return this.canView(UserPermissionsEntity.settings)
   }
 
   canViewAnatomy(): boolean {
-    if (!this.projectSettingsAreEnabled()) {
-      return true
-    }
+    return this.canView(UserPermissionsEntity.anatomy)
+  }
 
-    return (
-      this.canEditAnatomy() || this.permissions?.project?.anatomy === UserPermissionsLevel.readOnly
-    )
+  canViewUsers(): boolean {
+    return this.canView(UserPermissionsEntity.users)
   }
 
   projectSettingsAreEnabled(): boolean {
