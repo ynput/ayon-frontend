@@ -89,7 +89,7 @@ const SelectWidget = (props: $Any) => {
       onBlur={props.onBlur}
       onFocus={onFocus}
       placeholder={props.schema?.placeholder}
-      className={`form-field`}
+      className={`form-field select-field`}
       multiSelect={props.multiple}
       style={hlstyle}
       disabled={props.schema?.disabled}
