@@ -13,9 +13,18 @@ import ProjectDashboard from '../ProjectDashboard'
 import NewProjectDialog from '../ProjectManagerPage/NewProjectDialog'
 import { useDeleteProjectMutation, useUpdateProjectMutation } from '@queries/project/updateProject'
 import confirmDelete from '@helpers/confirmDelete'
+import { useGetDashboardAddonsQuery } from '@queries/addons/getAddons'
+import DashboardAddon from '@pages/ProjectDashboard/DashboardAddon'
 
 const UserDashboardPage = () => {
-  let { module } = useParams()
+  let { module, addonName } = useParams()
+
+  const {
+    data: addonsData = [],
+    //isLoading: addonsLoading,
+    //isError: addonsIsError,
+  } = useGetDashboardAddonsQuery({})
+
   const links = [
     {
       name: 'Tasks',
@@ -31,6 +40,19 @@ const UserDashboardPage = () => {
       accessLevels: [],
     },
   ]
+
+  for (const addon of addonsData) {
+    links.push({
+      name: addon.title,
+      path: `/dashboard/addon/${addon.name}`,
+      module: addon.name,
+    })
+  }
+
+  const addData = addonsData.find((addon) => addon.name === addonName)
+  const addonModule = addData ? (
+    <DashboardAddon addonName={addData.name} addonVersion={addData.version} />
+  ) : null
 
   const navigate = useNavigate()
   const [showNewProject, setShowNewProject] = useState(false)
@@ -115,6 +137,7 @@ const UserDashboardPage = () => {
             />
           )}
           {module === 'overview' && <ProjectDashboard projectName={selectedProjects[0]} />}
+          {!!addonName && addonModule}
         </Section>
       </main>
       {showNewProject && (
