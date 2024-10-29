@@ -25,7 +25,7 @@ const generateSuggestion = ({
   value?: string
   isKey?: boolean
 }): Suggestion => {
-  console.log('path: ', path)
+  // console.log('path: ', path)
   return {
     id: 'id: ' + id,
     icon: 'chevron_right',
@@ -35,8 +35,8 @@ const generateSuggestion = ({
 }
 
 const generateFilterKey = (path: string) => {
-  console.log('generating filter key...')
-  console.log('path: ', path)
+  // console.log('generating filter key...')
+  // console.log('path: ', path)
 
   return ['root', ...path.split('/')].join('_')
 }
@@ -46,7 +46,7 @@ const generateResultsAndFilterIds = (keyResults: $Any, hydratedObject: $Any, add
   let suggestions: $Any = []
   let filterKeys: string[]  = []
   keyResults.forEach((keyRes: $Any) => {
-    console.log('keyRes: ', keyRes)
+    // console.log('keyRes: ', keyRes)
     suggestions.push(
       generateSuggestion({
         addonName: addon.title,

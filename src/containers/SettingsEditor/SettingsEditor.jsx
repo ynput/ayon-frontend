@@ -175,8 +175,8 @@ const SettingsEditor = ({
     currentId: currentId,
   }
 
-  console.log('context? ', fullContext)
-  console.log('schema? ', schema)
+  // console.log('context? ', fullContext)
+  // console.log('schema? ', schema)
 
 
   return (

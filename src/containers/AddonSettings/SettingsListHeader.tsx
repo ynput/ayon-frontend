@@ -40,10 +40,9 @@ const SettingsListHeader = ({ showHelp, setShowHelp, addonsData, projectName, se
     projectName,
   })
 
-  console.log('schema: ', schema, schemaLoading, refetchSchema)
+  // console.log('schema: ', schema, schemaLoading )
 
 
-  console.log(addonsData)
   const [search, setSearch] = useState<string>('')
   const [filterKeys, setFilterKeys] = useState<string[]>([])
 
@@ -121,8 +120,6 @@ const attachLabels = (settings: $Any, relSchema: $Any, globalSchema: $Any): $Any
     return ref
   }
 
-  // console.log('settings: ', settings)
-  // console.log('schema: ', relSchema)
   let hydratedObject: $Any = {}
   for (const key of Object.keys(settings)) {
     const schemaVal = relSchema.properties[key]

@@ -51,7 +51,6 @@ const SearchDropdown = ({
 
 
   useEffect(() => {
-    console.log('suggestions: ', suggestions)
     setSearchResults(suggestions)
   }, [suggestions])
 
@@ -220,7 +219,7 @@ const SearchDropdown = ({
       onKeyDown={handleKeyPress}
       onMouseMove={() => usingKeyboard && setUsingKeyboard(false)}
     >
-      {suggestionsOpen && <BackdropStyled onClick={handleBlur} />}
+      {!hideSuggestions && suggestionsOpen && <BackdropStyled onClick={handleBlur} />}
       <InputTextStyled
         placeholder={placeholder}
         value={search}
