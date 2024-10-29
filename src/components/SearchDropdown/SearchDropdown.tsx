@@ -21,6 +21,7 @@ type Props = {
   suggestionsLimit: number
   placeholder: string
   isLoading: boolean
+  hideSuggestions: boolean
   onSubmit: (a: $Any, b: $Any) => void
   onClear: () => void
   onFocus: () => void
@@ -33,6 +34,7 @@ const SearchDropdown = ({
   suggestionsLimit = 5,
   placeholder,
   isLoading,
+  hideSuggestions = false,
   onSubmit,
   onClear,
   onFocus,
@@ -47,9 +49,9 @@ const SearchDropdown = ({
   const [usingKeyboard, setUsingKeyboard] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  console.log('suggestions: ', suggestions)
 
   useEffect(() => {
+    console.log('suggestions: ', suggestions)
     setSearchResults(suggestions)
   }, [suggestions])
 
@@ -228,7 +230,7 @@ const SearchDropdown = ({
         open={suggestionsOpen}
         autoComplete="off"
       />
-      {suggestionsOpen && (
+      {!hideSuggestions && suggestionsOpen && (
         <SuggestionsStyled
           open={suggestionsOpen}
           items={suggestionsSpliced.length}

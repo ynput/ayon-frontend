@@ -74,6 +74,8 @@ const AddonSettings = ({ projectName, showSites = false }) => {
 
   const [showCopySettings, setShowCopySettings] = useState(false)
   const [showRawEdit, setShowRawEdit] = useState(false)
+  const [searchText, setSearchText] = useState('')
+  const [filterKeys, setFilterKeys] = useState([])
 
   const [setAddonSettings, { isLoading: setAddonSettingsUpdating }] = useSetAddonSettingsMutation()
   const [deleteAddonSettings] = useDeleteAddonSettingsMutation()
@@ -696,6 +698,16 @@ const AddonSettings = ({ projectName, showSites = false }) => {
             showHelp={showHelp}
             setShowHelp={setShowHelp}
             projectName={projectName}
+            searchCallback={(searchText, filterKeys) => {
+              if (searchText === undefined) {
+                setSearchText('')
+                setFilterKeys([])
+                return
+              }
+
+              setSearchText(searchText)
+              setFilterKeys(filterKeys)
+            }}
             addonsData={selectedAddons || []}
           />
           <Section>
@@ -743,10 +755,15 @@ const AddonSettings = ({ projectName, showSites = false }) => {
                           onSelect={setCurrentSelection}
                           projectName={projectName}
                           siteId={siteId === '_' ? null : siteId}
+                          // Needed for rerender, component memoized
+                          searchText={searchText}
+                          filterKeys={filterKeys}
                           context={{
                             headerProjectName: projectName,
                             headerSiteId: siteId === '_' ? null : siteId,
                             headerVariant: addon.variant,
+                            searchText,
+                            filterKeys,
                             onRemoveOverride: (path) => onRemoveOverride(addon, siteId, path),
                             onPinOverride: (path) => onPinOverride(addon, siteId, path),
                             onRemoveAllOverrides: () => onRemoveAllOverrides(addon, siteId),

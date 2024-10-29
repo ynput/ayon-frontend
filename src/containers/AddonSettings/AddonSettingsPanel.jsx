@@ -15,6 +15,8 @@ const AddonSettingsPanel = ({
   localData,
   changedKeys,
   projectName = null,
+  searchText,
+  filterKeys,
   siteId = null,
   onChange = () => {},
   onLoad = () => {},
@@ -141,7 +143,7 @@ const AddonSettingsPanel = ({
         context={context}
       />
     )
-  }, [schema, localData, overrides, breadcrumbs, schemaLoading, settingsLoading, overridesLoading])
+  }, [schema, localData, overrides, breadcrumbs, schemaLoading, settingsLoading, overridesLoading, searchText, filterKeys])
 
   // if (schemaLoading || settingsLoading || overridesLoading) {
   //   return `Loading... ${projectName}`

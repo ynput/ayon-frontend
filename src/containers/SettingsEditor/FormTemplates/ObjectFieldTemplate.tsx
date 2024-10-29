@@ -89,7 +89,7 @@ function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
         hiddenFields = [
           ...hiddenFields,
           //@ts-ignore
-          ...(ppts?.enum || []).filter((e: $Any) => e !== props.formData?.[propName] ),
+          ...(ppts?.enum || []).filter((e: $Any) => e !== props.formData?.[propName]),
         ]
       }
     }
@@ -263,22 +263,51 @@ function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
     contextMenu(e, contextMenuModel)
   }
 
+  const matchesFilterKeys = (filterKeys: string[], id: string): boolean => {
+    if (filterKeys.length === 0) {
+      return true
+    }
+    if (id == 'root') {
+      return true
+    }
+
+    for (const key of filterKeys) {
+      if (id.indexOf(key) !== -1 || key.indexOf(id) !== -1) {
+        return true
+      }
+    }
+
+    return false
+  }
+
+  const conditional = matchesFilterKeys(props.formContext.filterKeys, props.idSchema.$id)
+
   return (
-    <SettingsPanel
-      objId={objId}
-      onClick={() => {
-        if (props.formContext.onSetBreadcrumbs) props.formContext.onSetBreadcrumbs(path)
+    <div
+      data-schema-id={props.idSchema.$id}
+      data-hidden={conditional ? 'false' : 'true'}
+      style={{
+        visibility: conditional ? 'visible' : 'hidden',
+        position: conditional ? 'relative' : 'absolute',
+        height: conditional ? 'auto' : 0,
       }}
-      title={titleComponent}
-      description={shortDescription}
-      className={`obj-override-${overrideLevel}`}
-      enabledToggler={enabledToggler}
-      onContextMenu={onContextMenu}
-      currentId={props.formContext.currentId}
-      layout={undefined}
     >
-      {fields}
-    </SettingsPanel>
+      <SettingsPanel
+        objId={objId}
+        onClick={() => {
+          if (props.formContext.onSetBreadcrumbs) props.formContext.onSetBreadcrumbs(path)
+        }}
+        title={titleComponent}
+        description={shortDescription}
+        className={`obj-override-${overrideLevel}`}
+        enabledToggler={enabledToggler}
+        onContextMenu={onContextMenu}
+        currentId={props.formContext.currentId}
+        layout={undefined}
+      >
+        {fields}
+      </SettingsPanel>
+    </div>
   )
 }
 

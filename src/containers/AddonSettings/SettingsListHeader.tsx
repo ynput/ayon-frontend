@@ -6,7 +6,7 @@ import { Button, Spacer, Toolbar } from '@ynput/ayon-react-components'
 import { useState } from 'react';
 import { $Any } from '@types';
 import { useGetAddonSettingsSchemaQuery } from '@queries/addonSettings';
-import { hydrate } from 'react-dom';
+import { generateResultsAndFilterIds } from './helpers';
 
 type AddonData = {
   name: string
@@ -20,11 +20,12 @@ type Props = {
   addonsData: AddonData[]
   projectName: string
   setShowHelp: (value: boolean) => void
+  searchCallback: (searchText?: string, filterKeys?: string[]) => void
 }
 
-const SettingsListHeader = ({ showHelp, setShowHelp, addonsData, projectName }: Props) => {
+const SettingsListHeader = ({ showHelp, setShowHelp, addonsData, projectName, searchCallback }: Props) => {
   if (addonsData.length === 0) {
-    return 'foo'
+    return null
   }
 
 
@@ -42,83 +43,54 @@ const SettingsListHeader = ({ showHelp, setShowHelp, addonsData, projectName }: 
   console.log('schema: ', schema, schemaLoading, refetchSchema)
 
 
-
   console.log(addonsData)
-  const [suggestions, setSuggestions] = useState<Suggestion[]>([])
+  const [search, setSearch] = useState<string>('')
+  const [filterKeys, setFilterKeys] = useState<string[]>([])
 
 
-  const generateSuggestion = ({
-    addonName,
-    path,
-    id,
-    value,
-    isKey = false,
-  }: {
-    addonName: string
-    path: string
-    id: string
-    value?: string
-    isKey?: boolean
-  }): Suggestion => {
-    return {
-      id: 'id: ' + id,
-      icon: 'chevron_right',
-      label: addonName + ': ' + path.split('/').join(' / ') + (value ? ` :: "${value}"` : ''),
-      value: isKey ? '' : 'value: ' + value,
-    }
-  }
 
-  const filter = (newSearch: string, suggestions: Suggestion[]) => {
-    console.log('filtering...')
-    console.log('data: ', addonsData)
-    console.log(newSearch)
-    console.log(suggestions)
+  const filter = (newSearch: string) => {
+    setSearch(newSearch)
     const regexp = RegExp(newSearch, 'i')
-    console.log('regexp: ', regexp)
-    let results: Suggestion[] = []
+    let computedSuggestions = []
     for (const addon of addonsData) {
-      console.log('addon: ', addon)
+      // console.log('addon: ', addon)
       const hydratedObject  = attachLabels(addon.settings, schema, schema)
       console.log('hydrated object: ', hydratedObject)
-      const result = sh.forValue(hydratedObject, regexp)
-      const result2 = sh.forValue(addon.settings, regexp)
+      const keyResults = sh.forValue(hydratedObject, regexp)
+      console.log('key results: ', keyResults)
 
-      console.log('keys: ', result)
-      console.log('values: ', result2)
-      let i = 0
-      result.forEach((keyRes: $Any) => {
-        console.log(keyRes.value.__label__)
-        results.push(generateSuggestion({
-          addonName: addon.title,
-          path: generatePath(hydratedObject, keyRes.path.substr(0, keyRes.path.length -10)), // /__label__ length
-          id: addon.title + i++,
-          value: keyRes.value.__label__,
-          isKey: true
-        }))
-      })
-      result2.forEach((keyRes: $Any) => {
-        results.push(generateSuggestion({
-          addonName: addon.title,
-          path: keyRes.path,
-          value: keyRes.value,
-          id: addon.title + i++,
-        }))
-      })
+      const {suggestions: addonSuggestions, filterKeys} = generateResultsAndFilterIds(keyResults, hydratedObject, addon)
+      setFilterKeys(filterKeys)
+
+      computedSuggestions = addonSuggestions
+
+      // const result2 = sh.forValue(addon.settings, regexp)
+      // result2.forEach((keyRes: $Any) => {
+      //   results.push(generateSuggestion({
+      //     addonName: addon.title,
+      //     path: keyRes.path,
+      //     value: keyRes.value,
+      //     id: addon.title + i++,
+      //   }))
+      // })
     }
 
-    console.log('results: ', results)
-    return results
+    return []
   }
 
   return (
     <Toolbar>
       <SearchDropdown
         placeholder="Search & filter settings"
-        suggestions={suggestions}
+        suggestions={[]}
         suggestionsLimit={10}
         isLoading={false}
-        onSubmit={() => {}}
-        onClear={() => {}}
+        hideSuggestions={true}
+        onSubmit={() => {
+          searchCallback(search, filterKeys)
+        }}
+        onClear={() => {searchCallback()}}
         onFocus={() => {}}
         onClose={() => {}}
         filter={filter}
@@ -167,16 +139,6 @@ const attachLabels = (settings: $Any, relSchema: $Any, globalSchema: $Any): $Any
   // console.log('hydrated object: ', hydratedObject)
 
   return hydratedObject
-}
-const generatePath = (hydratedObject: $Any, path: $Any) => {
-  console.log('path: ', path)
-  let friendlyPath = []
-  let relSchema = hydratedObject
-  for (const key of path.split('/')) {
-    friendlyPath.push(relSchema[key].__label__)
-    relSchema = relSchema[key]
-  }
-    return friendlyPath.join('/')
 }
 
 export default SettingsListHeader

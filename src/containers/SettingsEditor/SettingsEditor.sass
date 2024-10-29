@@ -59,7 +59,7 @@ $field-gap: 8px
     .obj-override-edit > .panel-header
         border-left: 4px solid var(--color-changed)
 
-    &.layout-compact       
+    &.layout-compact
       flex-direction: row
       align-items: flex-start
       gap: 8px
@@ -106,6 +106,13 @@ $field-gap: 8px
         flex-direction: column
         gap: 8px
 
+
+  .form-object-field-item
+    &:has(>div[data-hidden="true"])
+      position: absolute
+      visibility: hidden
+      margin: 0
+      height: 0
 
   .form-inline-field
     display: flex
