@@ -164,3 +164,12 @@ export const createBundleFromRelease = (
     isProduction: !hasProduction,
   }
 }
+
+export const areAddonsOnlyMandatory = (
+  addons: string[],
+  mandatoryAddons: string[] = [],
+  releaseAddons: string[] = [],
+) => {
+  const filteredAddons = addons.filter((addon) => releaseAddons.includes(addon))
+  return filteredAddons.every((addon) => mandatoryAddons.includes(addon))
+}
