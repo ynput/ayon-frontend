@@ -33,12 +33,11 @@ const InstallerDownloadPrompt = () => {
     <Styled.Container>
       {directDownload && (
         <Styled.DownloadButton icon={'install_desktop'} onClick={handleDirectDownload}>
-          Download Launcher
+          Download launcher
         </Styled.DownloadButton>
       )}
 
       <Styled.CloseButton
-        $isSpecial={true}
         icon="close"
         onClick={() => setInstallersDownloaded([...installersDownloaded, directDownload.filename])}
       />

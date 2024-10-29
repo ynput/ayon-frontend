@@ -1,6 +1,11 @@
 import { FC } from 'react'
 import { Card, Footer } from '../components'
-import { createAddonsSubtitle, createInstallersSubtitle, createReleaseSubtitle } from '../helpers'
+import {
+  areAddonsOnlyMandatory,
+  createAddonsSubtitle,
+  createInstallersSubtitle,
+  createReleaseSubtitle,
+} from '../helpers'
 import { ReleaseFormType } from '@state/releaseInstaller'
 import { ReleaseListItemModel } from '@api/rest/releases'
 import { ReleaseForm } from '../hooks/useReleaseForm'
@@ -52,7 +57,10 @@ export const ReleaseInstallerOverview: FC<ReleaseInstallerOverviewProps> = ({
         icon="extension"
         isLoading={isLoading}
         onChange={() => onSwitchDialog('addons')}
-        required={releaseForm.addons.length === 0}
+        required={
+          releaseForm.addons.length === 0 ||
+          areAddonsOnlyMandatory(releaseForm.addons, release?.mandatoryAddons, release?.addons)
+        }
       />
       <Card
         title="AYON launchers"

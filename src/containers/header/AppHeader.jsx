@@ -7,7 +7,7 @@ import Breadcrumbs from '../Breadcrumbs/Breadcrumbs'
 import HeaderButton from './HeaderButton'
 import AppMenu from '@components/Menu/Menus/AppMenu'
 import ProjectMenu from '../ProjectMenu/projectMenu'
-import { useDispatch, useSelector } from 'react-redux'
+import { useAppDispatch, useAppSelector } from '@state/store'
 import InstallerDownloadPrompt from '@components/InstallerDownload/InstallerDownloadPrompt'
 import { toggleMenuOpen, setMenuOpen } from '@state/context'
 import { HelpMenu, UserMenu } from '@components/Menu'
@@ -19,6 +19,7 @@ import styled from 'styled-components'
 import { useRestart } from '@context/restartContext'
 import clsx from 'clsx'
 import InboxNotificationIcon from './InboxNotification'
+import ReleaseInstallerPrompt from '@containers/ReleaseInstallerDialog/ReleaseInstallerPrompt/ReleaseInstallerPrompt'
 
 const FlexWrapper = styled.div`
   display: flex;
@@ -71,14 +72,14 @@ const StyledSwitch = styled(InputSwitch)`
 `
 
 const Header = () => {
-  const dispatch = useDispatch()
-  const menuOpen = useSelector((state) => state.context.menuOpen)
+  const dispatch = useAppDispatch()
+  const menuOpen = useAppSelector((state) => state.context.menuOpen)
   const handleToggleMenu = (menu) => dispatch(toggleMenuOpen(menu))
   const handleSetMenu = (menu) => dispatch(setMenuOpen(menu))
   const location = useLocation()
   const navigate = useNavigate()
   // get user from redux store
-  const user = useSelector((state) => state.user)
+  const user = useAppSelector((state) => state.user)
 
   // restart server notification
   const { isSnoozing } = useRestart()
@@ -176,6 +177,7 @@ const Header = () => {
       <Breadcrumbs />
       <FlexWrapper style={{ justifyContent: 'end' }} id="header-menu-right">
         <InstallerDownloadPrompt />
+        <ReleaseInstallerPrompt isAdmin={user.data.isAdmin} />
         {isDeveloper && (
           <DeveloperSwitch $isChecked={developerMode} onClick={handleDeveloperMode}>
             <span>Developer Mode</span>

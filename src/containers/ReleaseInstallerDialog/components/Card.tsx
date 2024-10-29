@@ -28,7 +28,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
         </div>
         {onChange && (
           <Button onClick={onChange} variant={required ? 'filled' : 'surface'}>
-            Change
+            {required ? `Pick ${title}` : 'Change'}
           </Button>
         )}
       </Styled.Card>
