@@ -5,7 +5,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetCurrentUserPermissionsApiResponse,
       GetCurrentUserPermissionsApiArg
     >({
-      query: () => ({ url: `/api/users/me/perimissions` }),
+      query: () => ({ url: `/api/users/me/permissions` }),
     }),
     getCurrentUserProjectPermissions: build.query<
       GetCurrentUserProjectPermissionsApiResponse,
