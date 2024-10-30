@@ -126,8 +126,18 @@ const CopyBundleSettingsDialog = ({
   const handleConfirm = async () => {
     console.log('copying settings over')
     try {
-      if (!sourceBundle || !sourceVariant) throw new Error('Bundle not found')
-      if (!bundle || !envTarget) throw new Error('Bundle not found')
+      if (!sourceBundle || !sourceVariant || !bundle || !envTarget) {
+        const missingFields = [
+          !sourceBundle && 'Source bundle not found',
+          !sourceVariant && 'Source variant not found',
+          !bundle && 'Target bundle not found',
+          !envTarget && 'Environment target not found',
+        ].filter(Boolean)
+
+        const errorMessage = missingFields.join(', ')
+        throw { data: { detail: errorMessage } }
+      }
+
       await migrateSettingsByBundle({
         migrateBundleSettingsRequest: {
           sourceBundle: sourceBundle,
@@ -139,7 +149,7 @@ const CopyBundleSettingsDialog = ({
       toast.success(`Settings copied from ${sourceBundle} successfully`)
     } catch (error: any) {
       console.error(error)
-      toast.error('Failed to copy settings: ' + error.data.detail)
+      toast.error('Failed to copy settings: ' + error?.data?.detail)
     } finally {
       onFinish()
     }
