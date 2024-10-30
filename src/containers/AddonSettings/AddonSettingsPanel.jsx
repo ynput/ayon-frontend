@@ -22,6 +22,7 @@ const AddonSettingsPanel = ({
   onLoad = () => {},
   onSetChangedKeys = () => {},
   onSelect = () => {},
+  updateAddonSchema = () => {},
   currentSelection = null,
   context,
 }) => {
@@ -38,6 +39,8 @@ const AddonSettingsPanel = ({
   const {
     data: schema,
     isLoading: schemaLoading,
+    isError,
+    isSuccess,
     refetch: refetchSchema,
   } = useGetAddonSettingsSchemaQuery({
     addonName: addon.name,
@@ -46,6 +49,12 @@ const AddonSettingsPanel = ({
     projectName,
     siteId,
   })
+
+  useMemo(() => {
+    if (isSuccess) {
+      updateAddonSchema(addon.name, schema)
+    }
+  }, [addon.name, addon.version, isSuccess])
 
   const {
     //eslint-disable-next-line no-unused-vars

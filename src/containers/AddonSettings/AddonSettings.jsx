@@ -81,6 +81,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   const [selectedSites, setSelectedSites] = useState([])
   const [variant, setVariant] = useState('production')
   const [bundleName, setBundleName] = useState()
+  const [addonSchemas, setAddonSchemas] = useState({})
 
   const [showCopySettings, setShowCopySettings] = useState(false)
   const [showRawEdit, setShowRawEdit] = useState(false)
@@ -640,8 +641,18 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   )
 
   const onSelectAddon = (newSelection) => {
+    console.log('on select addon...', newSelection)
     setSelectedAddons(newSelection)
     setCurrentSelection(null)
+  }
+
+  const onUpdateAddonSchema = (addonName, schema) => {
+    setAddonSchemas((prev) => {
+      return {
+        ...prev,
+        [addonName]: schema,
+      }
+    })
   }
 
   // console.log('selected addons: ', selectedAddons)
@@ -704,6 +715,8 @@ const AddonSettings = ({ projectName, showSites = false }) => {
 
         <Section className={showHelp && 'settings-help-visible'}>
           <SettingsListHeader
+            addonsData={selectedAddons || []}
+            addonSchemas={addonSchemas || {}}
             showHelp={showHelp}
             setShowHelp={setShowHelp}
             projectName={projectName}
@@ -719,7 +732,6 @@ const AddonSettings = ({ projectName, showSites = false }) => {
               setSearchText(searchText)
               setFilterKeys(filterKeys)
             }}
-            addonsData={selectedAddons || []}
           />
           <Section>
             <StyledScrollPanel
@@ -753,6 +765,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
                       >
                         <AddonSettingsPanel
                           addon={addon}
+                          updateAddonSchema={onUpdateAddonSchema}
                           onChange={(data) =>
                             onSettingsChange(addon.name, addon.version, addon.variant, siteId, data)
                           }

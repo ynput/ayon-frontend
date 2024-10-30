@@ -1,11 +1,10 @@
 // @ts-ignore
 import sh from 'searchhash';
 
-import SearchDropdown, { Suggestion } from '@components/SearchDropdown/SearchDropdown'
+import SearchDropdown from '@components/SearchDropdown/SearchDropdown'
 import { Button, Spacer, Toolbar } from '@ynput/ayon-react-components'
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { $Any } from '@types';
-import { useGetAddonSettingsSchemaQuery } from '@queries/addonSettings';
 import { generateResultsAndFilterIds } from './helpers';
 
 type AddonData = {
@@ -18,17 +17,23 @@ type AddonData = {
 type Props = {
   showHelp: boolean
   addonsData: AddonData[]
-  projectName: string
+  addonSchemas: $Any
   setShowHelp: (value: boolean) => void
   searchCallback: (searchText?: string, filterKeys?: string[]) => void
 }
 
-const SettingsListHeader = ({ showHelp, setShowHelp, addonsData, projectName, searchCallback }: Props) => {
+const SettingsListHeader = ({
+  addonsData,
+  addonSchemas,
+  showHelp,
+  setShowHelp,
+  searchCallback,
+}: Props) => {
   if (addonsData.length === 0) {
     return null
   }
 
-
+  /*
   const {
     data: schema,
     isLoading: schemaLoading,
@@ -39,28 +44,43 @@ const SettingsListHeader = ({ showHelp, setShowHelp, addonsData, projectName, se
     variant: addonsData[0].variant,
     projectName,
   })
-
-  // console.log('schema: ', schema, schemaLoading )
-
+    */
 
   const [search, setSearch] = useState<string>('')
   const [filterKeys, setFilterKeys] = useState<string[]>([])
+  useEffect(() => {
+    filter()
+  }, [addonsData, addonSchemas])
 
+  useEffect(() => {
+  }, [filterKeys])
 
+  const filter = () => {
+    if (search === '') {
+      setFilterKeys([])
+      return []
+    }
 
-  const filter = (newSearch: string) => {
-    setSearch(newSearch)
-    const regexp = RegExp(newSearch, 'i')
+    const regexp = RegExp(search, 'i')
+
     let computedSuggestions = []
+    setFilterKeys([])
     for (const addon of addonsData) {
       // console.log('addon: ', addon)
-      const hydratedObject  = attachLabels(addon.settings, schema, schema)
-      console.log('hydrated object: ', hydratedObject)
+      if (addonSchemas === undefined || addonSchemas[addon.name] === undefined) {
+        continue
+      }
+      const hydratedObject = attachLabels(addon.settings, addonSchemas[addon.name], addonSchemas[addon.name])
       const keyResults = sh.forValue(hydratedObject, regexp)
-      console.log('key results: ', keyResults)
 
-      const {suggestions: addonSuggestions, filterKeys} = generateResultsAndFilterIds(keyResults, hydratedObject, addon)
-      setFilterKeys(filterKeys)
+      const { suggestions: addonSuggestions, filterKeys } = generateResultsAndFilterIds(
+        keyResults,
+        hydratedObject,
+        addon,
+      )
+      setFilterKeys((prev) => {
+        return [...prev, ...filterKeys]
+      })
 
       computedSuggestions = addonSuggestions
 
@@ -89,10 +109,13 @@ const SettingsListHeader = ({ showHelp, setShowHelp, addonsData, projectName, se
         onSubmit={() => {
           searchCallback(search, filterKeys)
         }}
-        onClear={() => {searchCallback()}}
+        onClear={() => searchCallback()}
         onFocus={() => {}}
         onClose={() => {}}
-        filter={filter}
+        filter={(newSearch) => {
+          setSearch(newSearch)
+          return filter()
+        }}
       />
 
       <Spacer />
