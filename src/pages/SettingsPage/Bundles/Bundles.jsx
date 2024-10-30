@@ -326,6 +326,14 @@ const Bundles = () => {
     }
   }
 
+  const handleCopySettingsFrom = (bundle) => {
+    const status = bundle.isProduction ? 'production' : bundle.isStaging ? 'staging' : 'dev'
+    setCopySettingsBundle({
+      bundle: bundle,
+      env: status,
+    })
+  }
+
   let uploadHeader = ''
   switch (uploadOpen) {
     case 'addon':
@@ -456,12 +464,7 @@ const Bundles = () => {
                 toggleBundleStatus={toggleBundleStatus}
                 errorMessage={!isFetching && isError && error?.data?.traceback}
                 developerMode={developerMode}
-                onCopySettings={(b) =>
-                  setCopySettingsBundle({
-                    bundle: b,
-                    env: null,
-                  })
-                }
+                onCopySettings={handleCopySettingsFrom}
               />
             </Section>
           </SplitterPanel>
