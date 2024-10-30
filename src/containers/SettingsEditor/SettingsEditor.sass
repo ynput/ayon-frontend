@@ -108,11 +108,22 @@ $field-gap: 8px
 
 
   .form-object-field-item
-    &:has(>div[data-hidden="true"])
+    display: contents
+    outline: solid 1px yellow
+    div[data-hidden="true"]
       position: absolute
       visibility: hidden
       margin: 0
       height: 0
+      div
+        position: absolute
+        height: 0
+        padding-top: 0
+        padding-bottom: 0
+        outline: solid 1px red
+    &:has(div[data-hidden="false"])
+      position: relative
+      visibility: visible
 
   .form-inline-field
     display: flex

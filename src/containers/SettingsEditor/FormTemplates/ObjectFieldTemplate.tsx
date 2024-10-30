@@ -8,6 +8,7 @@ import { Badge, BadgeWrapper } from '@components/Badge'
 import copyToClipboard from '@helpers/copyToClipboard'
 import { $Any } from '@types'
 import { ObjectFieldTemplateProps } from '@rjsf/utils'
+import { matchesFilterKeys } from './helpers'
 
 const arrayStartsWith = (arr1: $Any, arr2: $Any) => {
   // return true, if first array starts with second array
@@ -103,7 +104,7 @@ function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
         else otherFields.push(element.content)
       }
       return (
-        <>
+        <div className="foo">
           {longDescription}
           <div className={className}>
             <div className="name-field">{nameField}</div>
@@ -113,14 +114,23 @@ function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
                 .map((element) => element)}
             </div>
           </div>
-        </>
+        </div>
       )
     } // ugly layout
 
+    const matches = matchesFilterKeys(props.formContext.filterKeys, props.idSchema.$id)
+
     return (
-      <>
+      <div
+        data-hidden={matches ? 'false' : 'true'}
+        style={{
+          visibility: matches ? 'visible' : 'hidden',
+          position: matches ? 'relative' : 'absolute',
+          height: matches ? 'auto' : 0,
+        }}
+      >
         {longDescription}
-        <div className={className} data-fieldid={props.id}>
+        <div className={className} data-test="test-aa" data-fieldid={props.id}>
           {props.properties
             .filter(
               (element) =>
@@ -140,7 +150,7 @@ function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
               )
             })}
         </div>
-      </>
+      </div>
     )
   }, [props.properties, className])
 
@@ -263,33 +273,16 @@ function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
     contextMenu(e, contextMenuModel)
   }
 
-  const matchesFilterKeys = (filterKeys: string[], id: string): boolean => {
-    if (filterKeys.length === 0) {
-      return true
-    }
-    if (id == 'root') {
-      return true
-    }
-
-    for (const key of filterKeys) {
-      if (id.indexOf(key) !== -1 || key.indexOf(id) !== -1) {
-        return true
-      }
-    }
-
-    return false
-  }
-
-  const conditional = matchesFilterKeys(props.formContext.filterKeys, props.idSchema.$id)
+  const matches = matchesFilterKeys(props.formContext.filterKeys, props.idSchema.$id)
 
   return (
     <div
       data-schema-id={props.idSchema.$id}
-      data-hidden={conditional ? 'false' : 'true'}
+      data-hidden={matches ? 'false' : 'true'}
       style={{
-        visibility: conditional ? 'visible' : 'hidden',
-        position: conditional ? 'relative' : 'absolute',
-        height: conditional ? 'auto' : 0,
+        visibility: matches ? 'visible' : 'hidden',
+        position: matches ? 'relative' : 'absolute',
+        height: matches ? 'auto' : 0,
       }}
     >
       <SettingsPanel
