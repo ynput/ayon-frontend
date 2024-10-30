@@ -11,6 +11,7 @@ import 'react-toastify/dist/ReactToastify.css'
 import 'primereact/resources/primereact.min.css'
 import 'primeicons/primeicons.css'
 import '@ynput/ayon-react-components/dist/style.css'
+import './styles/loadingShimmer.scss'
 
 import './styles/index.scss'
 import short from 'short-uuid'
