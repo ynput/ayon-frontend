@@ -1,9 +1,12 @@
-// Prime react
+// PrimeReact components
 import { DataTable, DataTableBaseProps, DataTableColumnResizeEndEvent } from 'primereact/datatable'
 import { Column } from 'primereact/column'
-// libraries
+
+// Styling
 import styled from 'styled-components'
-// components
+import './TaskProgressTable.scss'
+
+// Components
 import {
   FolderBody,
   TaskColumnHeader,
@@ -11,12 +14,14 @@ import {
   TaskStatusBar,
   TaskTypeCell,
 } from '..'
-import './TaskProgressTable.scss'
+import ParentBody from '../ParentBody/ParentBody'
+import { Body } from '../FolderBody/FolderBody.styled'
 
-// state
-import { useDispatch, useSelector } from 'react-redux'
+// State management
+import { useAppDispatch, useAppSelector } from '@state/store'
 import { toggleDetailsPanel } from '@state/details'
-// types
+
+// Types
 import type { Status, TaskType } from '@api/rest/project'
 import type {
   FolderRow,
@@ -24,17 +29,20 @@ import type {
   TaskTypeStatusBar,
 } from '../../helpers/formatTaskProgressForTable'
 import type { Assignees } from '@queries/user/getUsers'
-import { useEffect, useState, type KeyboardEvent, type MouseEvent } from 'react'
 import { $Any } from '@types'
+import { AttributeEnumItem } from '@api/rest/attributes'
+
+// Hooks
+import { useEffect, useState, type KeyboardEvent, type MouseEvent } from 'react'
 import { InView } from 'react-intersection-observer'
 import useCreateContext from '@hooks/useCreateContext'
-import { Body } from '../FolderBody/FolderBody.styled'
-import clsx from 'clsx'
-import ParentBody from '../ParentBody/ParentBody'
-import { useFolderSort } from '../../helpers'
 import useLocalStorage from '@hooks/useLocalStorage'
+
+// Helpers
+import { useFolderSort } from '../../helpers'
 import { taskStatusSortFunction } from '@containers/TasksProgress/helpers/taskStatusSortFunction'
-import { AttributeEnumItem } from '@api/rest/attributes'
+import clsx from 'clsx'
+import { selectProgress } from '@state/progress'
 
 export const Cells = styled.div`
   display: flex;
@@ -94,12 +102,12 @@ export const TasksProgressTable = ({
   onOpenViewer,
   ...props
 }: TasksProgressTableProps) => {
-  const selectedTasks = useSelector((state: $Any) => state.context.focused.tasks) as string[]
-  const detailsOpen = useSelector((state: $Any) => state.details.open) as boolean
-  const dispatch = useDispatch()
+  const selectedTasks = useAppSelector((state: $Any) => state.context.focused.tasks) as string[]
+  const detailsOpen = useAppSelector((state: $Any) => state.details.open) as boolean
+  const dispatch = useAppDispatch()
 
   // HACK: this forces a complete rerender of the table
-  // used for resting the column widths
+  // used for resetting the column widths
   const [reloadTable, setReloadTable] = useState(false)
   const forceReloadTable = () => setReloadTable(true)
   useEffect(() => {
@@ -282,6 +290,12 @@ export const TasksProgressTable = ({
     ctxMenuShow(e, buildColumnHeaderMenuItems(taskType))
   }
 
+  const handleFolderOpen = (folderId: string) => {
+    dispatch(selectProgress({ ids: [folderId], type: 'folder' }))
+    // open the details panel
+    dispatch(toggleDetailsPanel(true))
+  }
+
   const getIsExpanded = (id: string) =>
     (allExpanded || expandedRows.includes(id)) && !collapsedRows.includes(id)
 
@@ -341,6 +355,7 @@ export const TasksProgressTable = ({
               projectName={row.__projectName}
               isExpanded={getIsExpanded(row.__folderId)}
               onExpandToggle={() => onExpandRow(row.__folderId)}
+              onFolderOpen={handleFolderOpen}
             />
           )
         }
@@ -402,6 +417,7 @@ export const TasksProgressTable = ({
                     if (target.closest('.editable')) {
                       return
                     }
+
                     onSelection(task.id, e.metaKey || e.ctrlKey, e.shiftKey)
                   }
 

@@ -9,6 +9,7 @@ interface FolderBodyProps {
   isExpanded: boolean
   projectName: string
   onExpandToggle: () => void
+  onFolderOpen?: (id: string) => void
 }
 
 export const FolderBody: FC<FolderBodyProps> = ({
@@ -18,6 +19,7 @@ export const FolderBody: FC<FolderBodyProps> = ({
   isExpanded,
   projectName,
   onExpandToggle,
+  onFolderOpen,
 }) => {
   return (
     <Styled.Body className={clsx({ expanded: isExpanded })}>
@@ -38,7 +40,7 @@ export const FolderBody: FC<FolderBodyProps> = ({
           {name}
         </Styled.ThumbnailShotName>
       </Styled.ThumbnailCard>
-      <Styled.Path>
+      <Styled.Path onClick={() => onFolderOpen?.(folderId)}>
         <span className="title">{name}</span>
       </Styled.Path>
     </Styled.Body>

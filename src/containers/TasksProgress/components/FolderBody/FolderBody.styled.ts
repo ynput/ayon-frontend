@@ -49,6 +49,11 @@ export const Path = styled.span`
     display: flex;
     justify-content: flex-end;
   }
+
+  cursor: pointer;
+  &:hover {
+    text-decoration: underline;
+  }
 `
 
 export const ExpandButton = styled(Button)`
