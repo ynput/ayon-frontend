@@ -49,9 +49,10 @@ const UserDashboardPage = () => {
     })
   }
 
-  const addData = addonsData.find((addon) => addon.name === addonName)
-  const addonModule = addData ? (
-    <DashboardAddon addonName={addData.name} addonVersion={addData.version} />
+  const addonData = addonsData.find((addon) => addon.name === addonName)
+
+  const addonModule = addonData ? (
+    <DashboardAddon addonName={addonData.name} addonVersion={addonData.version} />
   ) : null
 
   const navigate = useNavigate()
@@ -110,26 +111,28 @@ const UserDashboardPage = () => {
       <AppNavLinks links={links} />
       <main style={{ overflow: 'hidden' }}>
         <Section direction="row" wrap style={{ position: 'relative', overflow: 'hidden' }}>
-          <ProjectList
-            wrap
-            isCollapsible
-            collapsedId="dashboard"
-            styleSection={{ position: 'relative', height: '100%', minWidth: 200, maxWidth: 200 }}
-            hideCode
-            multiselect={isProjectsMultiSelect}
-            selection={isProjectsMultiSelect ? selectedProjects : selectedProjects[0]}
-            onSelect={(p) => setSelectedProjects(isProjectsMultiSelect ? p : [p])}
-            onNoProject={(p) => p && setSelectedProjects([p])}
-            autoSelect
-            onSelectAll={
-              module !== 'overview' ? (projects) => setSelectedProjects(projects) : undefined
-            }
-            onSelectAllDisabled={!isProjectsMultiSelect}
-            isProjectManager={module === 'overview'}
-            onNewProject={() => setShowNewProject(true)}
-            onDeleteProject={handleDeleteProject}
-            onActivateProject={handleActivateProject}
-          />
+          {!addonName && (
+            <ProjectList
+              wrap
+              isCollapsible
+              collapsedId="dashboard"
+              styleSection={{ position: 'relative', height: '100%', minWidth: 200, maxWidth: 200 }}
+              hideCode
+              multiselect={isProjectsMultiSelect}
+              selection={isProjectsMultiSelect ? selectedProjects : selectedProjects[0]}
+              onSelect={(p) => setSelectedProjects(isProjectsMultiSelect ? p : [p])}
+              onNoProject={(p) => p && setSelectedProjects([p])}
+              autoSelect
+              onSelectAll={
+                module !== 'overview' ? (projects) => setSelectedProjects(projects) : undefined
+              }
+              onSelectAllDisabled={!isProjectsMultiSelect}
+              isProjectManager={module === 'overview'}
+              onNewProject={() => setShowNewProject(true)}
+              onDeleteProject={handleDeleteProject}
+              onActivateProject={handleActivateProject}
+            />
+          )}
           {module === 'tasks' && (
             <UserTasksContainer
               projectsInfo={projectsInfoWithProjects}

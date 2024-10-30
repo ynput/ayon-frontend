@@ -53,20 +53,18 @@ const DashboardAddon = ({ addonName, addonVersion }) => {
   }, [context])
 
   return (
-    <main>
-      <Section>
-        {loading && (
-          <div style={{ position: 'absolute', inset: 0 }}>
-            <LoadingPage style={{ position: 'absolute' }} />
-          </div>
-        )}
-        <AddonWrapper
-          src={`${addonUrl}/?id=${window.senderId}`}
-          ref={addonRef}
-          onLoad={onAddonLoad}
-        />
-      </Section>
-    </main>
+    <Section style={{ height: '100%' }}>
+      {loading && (
+        <div style={{ position: 'absolute', inset: 0 }}>
+          <LoadingPage style={{ position: 'absolute' }} />
+        </div>
+      )}
+      <AddonWrapper
+        src={`${addonUrl}/?id=${window.senderId}`}
+        ref={addonRef}
+        onLoad={onAddonLoad}
+      />
+    </Section>
   )
 }
 
