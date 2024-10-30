@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { InputSwitch } from '@ynput/ayon-react-components'
 
-import { updateChangedKeys, parseContext } from '../helpers'
+import { updateChangedKeys, parseContext, getDefaultValue } from '../helpers'
 import { $Any } from '@types'
 
 const CheckboxWidget = function (props: $Any) {
@@ -27,9 +27,11 @@ const CheckboxWidget = function (props: $Any) {
 
   useEffect(() => {
     // Sync the local state with the formData
-    if (props.value === undefined) return
-    if (value === props.value) return
-    setValue(props.value || false)
+    if (value === props.value) {
+      return
+    }
+
+    setValue(props.value || getDefaultValue(props))
   }, [props.value])
 
   useEffect(() => {

@@ -28,9 +28,18 @@ const SelectWidget = (props: $Any) => {
 
   useEffect(() => {
     // Sync the local state with the formData
-    if (props.value === undefined) return
-    if (equiv(value, props.value)) return
-    setValue(props.value || (props.multiple ? [] : ''))
+    if (equiv(value, props.value)) {
+      return
+    }
+
+    let defaultValue
+    if (props.multiple) {
+      defaultValue = props.schema.default || []
+    } else {
+      defaultValue = props.schema.default || ''
+    }
+
+    setValue(props.value || defaultValue)
   }, [props.value])
 
   useEffect(() => {

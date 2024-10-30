@@ -35,8 +35,10 @@ const updateChangedKeys = (props: $Any, changed: $Any, path: $Any) => {
 }
 
 const getDefaultValue = (props: $Any) => {
-  //console.log("Creating default value for", props.id)
   if (props.schema.widget === 'color' && !props.value) {
+    if (props.schema.default) {
+      return props.schema.default
+    }
     if (props.schema.colorFormat === 'hex') {
       return props.schema.colorAlpha ? '#00000000' : '#000000'
     }
@@ -44,6 +46,10 @@ const getDefaultValue = (props: $Any) => {
   }
   if (props.value !== undefined) {
     return props.value
+  }
+
+  if (props.schema.type === 'boolean') {
+    return props.schema.default || false
   }
 
   if (props.schema.type === 'string') {
