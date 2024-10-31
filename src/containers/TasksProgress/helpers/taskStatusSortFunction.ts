@@ -23,7 +23,7 @@ export const taskStatusSortFunction =
         }
       })
 
-      return pickedStatus || tasks[0].status
+      return pickedStatus || (tasks[0] ? tasks[0].status : -1)
     }
 
     const isParent = a.__isParent || b.__isParent

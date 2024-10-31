@@ -33,6 +33,7 @@ import getFilterFromId from '@components/SearchFilter/getFilterFromId'
 import filterTasksBySearch from './helpers/filterTasksBySearch'
 import { FilterFieldType } from '@hooks/useBuildFilterOptions'
 import formatFilterAssigneesData from './helpers/formatFilterAssigneesData'
+import { selectProgress } from '@state/progress'
 
 // what to search by
 const searchFilterTypes: FilterFieldType[] = [
@@ -247,9 +248,11 @@ const TasksProgress: FC<TasksProgressProps> = ({
       if (!tableEl) return
 
       const taskIds = resolveShiftSelect(id, tableEl)
+      // update main context focused tasks
 
       dispatch(setFocusedTasks({ ids: taskIds }))
-
+      // update progress state focused tasks (used for the details panel)
+      dispatch(selectProgress({ ids: taskIds, type: 'task' }))
       return
     }
 
@@ -269,7 +272,10 @@ const TasksProgress: FC<TasksProgressProps> = ({
 
     setActiveTask(newActiveId)
 
+    // update main context focused tasks
     dispatch(setFocusedTasks({ ids: newIds }))
+    // update progress state focused tasks (used for the details panel)
+    dispatch(selectProgress({ ids: newIds, type: 'task' }))
   }
 
   const handleExpandToggle = (folderId: string) => {

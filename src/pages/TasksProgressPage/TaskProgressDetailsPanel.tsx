@@ -1,37 +1,46 @@
 // this is a wrapper around the DetailsPanel
 // we do this so that focused changes do not re-render the entire page
 
-import { useDispatch, useSelector } from 'react-redux'
+import { useAppDispatch, useAppSelector } from '@state/store'
 import DetailsPanel from '@containers/DetailsPanel/DetailsPanel'
 import DetailsPanelSlideOut from '@containers/DetailsPanel/DetailsPanelSlideOut/DetailsPanelSlideOut'
 import { useGetUsersAssigneeQuery } from '@queries/user/getUsers'
-import { toggleDetailsPanel } from '@state/details'
+import { toggleDetailsOpen } from '@state/progress'
+import { $Any } from '@types'
 
-const TaskProgressDetailsPanel = ({ projectInfo, projectName }) => {
-  const selectedTasks = useSelector((state) => state.context.focused.tasks)
-  const dispatch = useDispatch()
+type TaskProgressDetailsPanelProps = {
+  projectInfo: $Any
+  projectName: string
+}
+
+const TaskProgressDetailsPanel = ({ projectInfo, projectName }: TaskProgressDetailsPanelProps) => {
+  const selected = useAppSelector((state) => state.progress.selected)
+  const dispatch = useAppDispatch()
   const projectsInfo = { [projectName]: projectInfo }
 
-  const entities = selectedTasks.map((id) => ({ id, projectName }))
+  const entities = selected.ids.map((id) => ({ id, projectName }))
 
   const { data: users = [] } = useGetUsersAssigneeQuery({ names: undefined, projectName })
+
+  console.log(entities)
 
   if (!entities.length) return null
 
   return (
     <>
+      {/* @ts-ignore */}
       <DetailsPanel
         // entitySubTypes={subTypes}
-        entityType={'task'}
-        entities={entities}
+        entityType={selected.type}
+        entities={entities as any}
         projectsInfo={projectsInfo}
-        projectNames={[projectName]}
+        projectNames={[projectName] as any}
         tagsOptions={projectInfo.tags || []}
         projectUsers={users}
         activeProjectUsers={users}
         style={{ boxShadow: 'none' }}
         scope="progress"
-        onClose={() => dispatch(toggleDetailsPanel())}
+        onClose={() => dispatch(toggleDetailsOpen(false))}
       />
       <DetailsPanelSlideOut projectsInfo={projectsInfo} scope="progress" />
     </>

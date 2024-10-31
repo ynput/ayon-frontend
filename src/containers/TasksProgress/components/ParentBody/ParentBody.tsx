@@ -1,6 +1,5 @@
 import { FC } from 'react'
 import * as Styled from './ParentBody.styled'
-import { ExpandButton } from '../FolderBody/FolderBody.styled'
 import clsx from 'clsx'
 
 interface ParentBodyProps {
@@ -20,7 +19,7 @@ const ParentBody: FC<ParentBodyProps> = ({
 }) => {
   return (
     <Styled.ParentBody>
-      <ExpandButton
+      <Styled.ExpandButton
         icon={'expand_more'}
         variant="text"
         onClick={onCollapseToggle}
