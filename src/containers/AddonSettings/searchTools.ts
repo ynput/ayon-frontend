@@ -1,6 +1,5 @@
 import { $Any } from "@types"
 
-
 const generateFilterKey = (path: string) => {
   return ['root', ...path.split('/')].join('_')
 }

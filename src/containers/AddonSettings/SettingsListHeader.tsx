@@ -5,7 +5,7 @@ import SearchDropdown from '@components/SearchDropdown/SearchDropdown'
 import { Button, Spacer, Toolbar } from '@ynput/ayon-react-components'
 import { useEffect, useState } from 'react';
 import { $Any } from '@types';
-import { generateResultsAndFilterIds } from './helpers';
+import { generateResultsAndFilterIds } from './searchTools';
 
 type AddonData = {
   name: string

@@ -1,4 +1,4 @@
-const arrayMatchingRegex = new RegExp(/([\w_+]+?_[\d+])_[\d]*\w+$/)
+const arrayMatchingRegex = new RegExp(/([\w_+]+?)_[\d+]_[\d]*\w+$/)
 
 const matchesFilterKeys = (
   searchText: string,

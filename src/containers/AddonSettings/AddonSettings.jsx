@@ -46,7 +46,7 @@ const StyledScrollPanel = styled(ScrollPanel)`
 `
 import SettingsListHeader from './SettingsListHeader'
 import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
-import { attachLabels } from './helpers'
+import { attachLabels } from './searchTools'
 
 /*
  * key is {addonName}|{addonVersion}|{variant}|{siteId}|{projectKey}

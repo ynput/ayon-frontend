@@ -8,7 +8,7 @@ import { Badge, BadgeWrapper } from '@components/Badge'
 import copyToClipboard from '@helpers/copyToClipboard'
 import { $Any } from '@types'
 import { ObjectFieldTemplateProps } from '@rjsf/utils'
-import { matchesFilterKeys } from './helpers'
+import { matchesFilterKeys } from './searchMatcher'
 
 const arrayStartsWith = (arr1: $Any, arr2: $Any) => {
   // return true, if first array starts with second array
