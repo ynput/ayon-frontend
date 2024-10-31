@@ -41,6 +41,14 @@ const attachLabels = (settings: $Any, relSchema: $Any, globalSchema: $Any): $Any
       }
 
       if (schemaVal.type === 'array') {
+        if (Object.keys(schemaVal).includes('items') && schemaVal.items.type !== undefined) {
+          for (const idx in settings[key]) {
+            hydratedObject[key][idx] = {}
+            hydratedObject[key][idx][settings[key][idx]] = {
+              __label__: settings[key][idx],
+            }
+          }
+        }
         if (Object.keys(schemaVal).includes('items') && schemaVal.items.$ref !== undefined) {
           const refChain = schemaVal.items.$ref.slice(2).split('/')
           const deepSchema = getDeepObject(globalSchema, refChain)
@@ -62,6 +70,7 @@ const attachLabels = (settings: $Any, relSchema: $Any, globalSchema: $Any): $Any
     }
   }
 
+  console.log('hydrated object', hydratedObject)
   return hydratedObject
 }
 
