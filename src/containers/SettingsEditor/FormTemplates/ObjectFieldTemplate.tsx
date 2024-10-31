@@ -118,7 +118,7 @@ function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
       )
     } // ugly layout
 
-    const matches = matchesFilterKeys(props.formContext.filterKeys, props.idSchema.$id)
+    const matches = matchesFilterKeys(props.formContext.filterKeys, props.formContext.addonName, props.idSchema.$id)
 
     return (
       <div
@@ -273,7 +273,7 @@ function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
     contextMenu(e, contextMenuModel)
   }
 
-  const matches = matchesFilterKeys(props.formContext.filterKeys, props.idSchema.$id)
+  const matches = matchesFilterKeys(props.formContext.filterKeys, props.formContext.addonName, props.idSchema.$id)
 
   return (
     <div

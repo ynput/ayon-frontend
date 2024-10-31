@@ -46,6 +46,7 @@ const StyledScrollPanel = styled(ScrollPanel)`
 `
 import SettingsListHeader from './SettingsListHeader'
 import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
+import { attachLabels } from './helpers'
 
 /*
  * key is {addonName}|{addonVersion}|{variant}|{siteId}|{projectKey}
@@ -87,6 +88,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   const [showRawEdit, setShowRawEdit] = useState(false)
   const [searchText, setSearchText] = useState('')
   const [filterKeys, setFilterKeys] = useState([])
+  const [searchTree, setSearchTree] = useState([])
 
   const [setAddonSettings, { isLoading: setAddonSettingsUpdating }] = useSetAddonSettingsMutation()
   const [deleteAddonSettings] = useDeleteAddonSettingsMutation()
@@ -647,6 +649,14 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   }
 
   const onUpdateAddonSchema = (addonName, schema) => {
+    const settings = selectedAddons.find(el => el.name == addonName).settings
+    const hydratedObject = attachLabels(settings, schema, schema)
+    setSearchTree((prev) => {
+      return {
+      ...prev,
+      [addonName]: hydratedObject,
+      }
+    })
     setAddonSchemas((prev) => {
       return {
         ...prev,
@@ -716,6 +726,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
         <Section className={showHelp && 'settings-help-visible'}>
           <SettingsListHeader
             addonsData={selectedAddons || []}
+            searchTreeData={searchTree}
             addonSchemas={addonSchemas || {}}
             showHelp={showHelp}
             setShowHelp={setShowHelp}
@@ -748,6 +759,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
                   if (filterKeys.length === 0 && searchText !== '') {
                     return (
                       <StyledEmptyPlaceholder
+                        key={addon.name}
                         icon="filter_list"
                         message="No settings found for the current search"
                       />
@@ -794,6 +806,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
                             headerProjectName: projectName,
                             headerSiteId: siteId === '_' ? null : siteId,
                             headerVariant: addon.variant,
+                            addonName: addon.name,
                             searchText,
                             filterKeys,
                             onRemoveOverride: (path) => onRemoveOverride(addon, siteId, path),

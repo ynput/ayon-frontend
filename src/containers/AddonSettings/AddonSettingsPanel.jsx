@@ -39,7 +39,6 @@ const AddonSettingsPanel = ({
   const {
     data: schema,
     isLoading: schemaLoading,
-    isError,
     isSuccess,
     refetch: refetchSchema,
   } = useGetAddonSettingsSchemaQuery({

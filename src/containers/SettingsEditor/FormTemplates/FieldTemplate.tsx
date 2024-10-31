@@ -9,7 +9,6 @@ import { $Any } from '@types'
 import { FieldTemplateProps } from '@rjsf/utils'
 import { CSS } from 'styled-components/dist/types'
 import { matchesFilterKeys } from './helpers'
-import clsx from 'clsx'
 
 const arrayStartsWith = (arr1: $Any, arr2: $Any) => {
   // return true, if first array starts with second array
@@ -36,15 +35,17 @@ function FieldTemplate(props: FieldTemplateProps) {
   ) {
     return null
   }
+  const filterKeys = props.formContext.filterKeys
+  const section = props.schema.section
 
   const divider = useMemo(() => {
-    const matches = matchesFilterKeys(props.formContext.filterKeys, props.id)
+    const matches = matchesFilterKeys(props.formContext.filterKeys, props.formContext.addonName, props.id)
     if (props.schema.section && matches) {
       return <Divider> {props.schema.section !== '---' && props.schema.section} </Divider>
     }
 
     return <></>
-  }, [props.schema.section, props.schema.filterKeys])
+  }, [section, filterKeys])
 
   // Object fields
 
@@ -134,7 +135,7 @@ function FieldTemplate(props: FieldTemplateProps) {
 
     if (!classes.includes('obj-override-edit')) classes.push(`obj-override-${overrideLevel}`)
 
-    const matches = matchesFilterKeys(props.formContext.filterKeys, props.id)
+    const matches = matchesFilterKeys(props.formContext.filterKeys, props.formContext.addonName, props.id)
 
     return (
       <div
@@ -180,9 +181,18 @@ function FieldTemplate(props: FieldTemplateProps) {
   // let className = `form-inline-field ${
   //   props.errors.props.errors && props.schema.widget !== 'color' ? 'error' : ''
   // }`
+  const matches = matchesFilterKeys(props.formContext.filterKeys, props.formContext.addonName, props.id)
 
   return (
-    <>
+    <div
+      data-schema-id={props.id}
+      data-hidden={matches ? 'false' : 'true'}
+      style={{
+        visibility: matches ? 'visible' : 'hidden',
+        position: matches ? 'relative' : 'absolute',
+        height: matches ? 'auto' : 0,
+      }}
+    >
       {divider}
       <div
         className={className}
@@ -208,7 +218,7 @@ function FieldTemplate(props: FieldTemplateProps) {
         )}
         <div className={`form-inline-field-widget ${widgetClass}`}>{props.children}</div>
       </div>
-    </>
+    </div>
   )
 }
 

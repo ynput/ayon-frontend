@@ -17,13 +17,15 @@ type AddonData = {
 type Props = {
   showHelp: boolean
   addonsData: AddonData[]
+  searchTreeData: $Any,
   addonSchemas: $Any
   setShowHelp: (value: boolean) => void
-  searchCallback: (searchText?: string, filterKeys?: string[]) => void
+  searchCallback: (searchText?: string, filterKeys?: {[key: string]: string[]}) => void
 }
 
 const SettingsListHeader = ({
   addonsData,
+  searchTreeData,
   addonSchemas,
   showHelp,
   setShowHelp,
@@ -33,66 +35,43 @@ const SettingsListHeader = ({
     return null
   }
 
-  /*
-  const {
-    data: schema,
-    isLoading: schemaLoading,
-    refetch: refetchSchema,
-  } = useGetAddonSettingsSchemaQuery({
-    addonName: addonsData[0].name,
-    addonVersion: addonsData[0].version,
-    variant: addonsData[0].variant,
-    projectName,
-  })
-    */
-
   const [search, setSearch] = useState<string>('')
-  const [filterKeys, setFilterKeys] = useState<string[]>([])
+  const [filterKeys, setFilterKeys] = useState<{[key: string]: string[]}>({})
   useEffect(() => {
     filter()
   }, [addonsData, addonSchemas])
+
+  useEffect(() => {
+    searchCallback(search, filterKeys)
+  }, [filterKeys])
 
   useEffect(() => {
   }, [filterKeys])
 
   const filter = () => {
     if (search === '') {
-      setFilterKeys([])
+      setFilterKeys({})
       return []
     }
 
     const regexp = RegExp(search, 'i')
 
-    let computedSuggestions = []
-    setFilterKeys([])
+    setFilterKeys({})
     for (const addon of addonsData) {
       // console.log('addon: ', addon)
       if (addonSchemas === undefined || addonSchemas[addon.name] === undefined) {
         continue
       }
-      const hydratedObject = attachLabels(addon.settings, addonSchemas[addon.name], addonSchemas[addon.name])
+      const hydratedObject = searchTreeData[addon.name] || {}
       const keyResults = sh.forValue(hydratedObject, regexp)
 
-      const { suggestions: addonSuggestions, filterKeys } = generateResultsAndFilterIds(
-        keyResults,
-        hydratedObject,
-        addon,
-      )
+      const filterKeys = generateResultsAndFilterIds(keyResults)
       setFilterKeys((prev) => {
-        return [...prev, ...filterKeys]
+        if (prev[addon.name] === undefined) {
+          prev[addon.name] = []
+        }
+        return { ...prev, [addon.name]: [...prev[addon.name], ...filterKeys] }
       })
-
-      computedSuggestions = addonSuggestions
-
-      // const result2 = sh.forValue(addon.settings, regexp)
-      // result2.forEach((keyRes: $Any) => {
-      //   results.push(generateSuggestion({
-      //     addonName: addon.title,
-      //     path: keyRes.path,
-      //     value: keyRes.value,
-      //     id: addon.title + i++,
-      //   }))
-      // })
     }
 
     return []
@@ -133,32 +112,5 @@ const SettingsListHeader = ({
 }
 
 
-const attachLabels = (settings: $Any, relSchema: $Any, globalSchema: $Any): $Any => {
-  const getDeepObject = (schema: $Any, pathList: string[]) => {
-    let ref = schema
-    for (const item of pathList) {
-      ref = ref[item]
-    }
-
-    return ref
-  }
-
-  let hydratedObject: $Any = {}
-  for (const key of Object.keys(settings)) {
-    const schemaVal = relSchema.properties[key]
-    if (Object.keys(schemaVal).includes('allOf')) {
-      const refChain = schemaVal.allOf[0].$ref.slice(2).split('/')
-      const deepSchema = getDeepObject(globalSchema, refChain)
-      // console.log('refchain: ', refChain)
-      hydratedObject[key] = {
-        ...attachLabels(settings[key], deepSchema, globalSchema),
-        __label__: relSchema.properties[key].title,
-      }
-    }
-  }
-  // console.log('hydrated object: ', hydratedObject)
-
-  return hydratedObject
-}
 
 export default SettingsListHeader
