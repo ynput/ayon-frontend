@@ -68,12 +68,12 @@ const attachLabels = (settings: $Any, relSchema: $Any, globalSchema: $Any): $Any
         __label__: relSchema.properties[key].title,
       }
     }
-    if (['array', 'boolean', 'string'].includes(schemaVal.type)) {
+    if (['array', 'boolean', 'string', 'integer'].includes(schemaVal.type)) {
       hydratedObject[key] = {
         __label__: relSchema.properties[key].title,
       }
-      if (schemaVal.type === 'string') {
-        hydratedObject[key].__value__ = settings[key]
+      if (schemaVal.type === 'string' || schemaVal.type === 'integer') {
+        hydratedObject[key].__value__ = settings[key].toString()
       }
       if (schemaVal.description !== undefined) {
         //__descr__ matches __label__ str length - keep an eye on it, it's used in other places!

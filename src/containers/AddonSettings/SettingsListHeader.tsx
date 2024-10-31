@@ -80,7 +80,7 @@ const SettingsListHeader = ({
   return (
     <Toolbar>
       <SearchDropdown
-        placeholder="Search & filter settings"
+        placeholder="Search and filter settings"
         suggestions={[]}
         suggestionsLimit={10}
         isLoading={false}
