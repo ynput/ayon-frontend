@@ -1,11 +1,11 @@
 import Thumbnail from '@components/Thumbnail'
-import { Button } from '@ynput/ayon-react-components'
+import { Button, StatusField } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
 export const Body = styled.div`
   display: flex;
-  gap: var(--base-gap-small);
   align-items: flex-start;
+  gap: 0 !important;
   max-width: 500px;
   height: 100%;
   height: 34px;
@@ -33,6 +33,7 @@ export const Body = styled.div`
 
   transition: height 0.15s;
   &.expanded {
+    gap: var(--base-gap-small) !important;
     .small-title {
       width: 0;
       opacity: 0;
@@ -95,9 +96,6 @@ export const Path = styled.span`
 `
 
 export const ExpandButton = styled(Button)`
-  width: 32px;
-  height: 32px;
-
   color: var(--md-sys-color-outline);
 
   &:hover {
@@ -109,13 +107,20 @@ export const ExpandButton = styled(Button)`
     background-color: var(--md-sys-color-surface-container-high-active);
   }
 
-  .icon {
-    transition: rotate 0.1s ease;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  padding: 0 !important;
+
+  &:not(.expanded) {
+    transition: width 0.15s, height 0.15s, opacity 0.15s;
   }
-  &.collapsed {
-    .icon {
-      rotate: -90deg;
-    }
+
+  &.expanded {
+    width: 32px;
+    height: 32px;
+    opacity: 1;
+    padding: 6px !important;
   }
 `
 
@@ -146,12 +151,39 @@ export const ThumbnailCard = styled.div`
   }
 `
 
+export const Status = styled(StatusField)`
+  width: 32px;
+  padding: 0;
+  justify-content: center;
+
+  .status-text {
+    display: none;
+  }
+
+  cursor: default;
+
+  &.expanded {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+`
+
 export const FolderThumbnail = styled(Thumbnail)`
   width: 100%;
   height: 100%;
   width: auto;
   min-width: max-content;
   aspect-ratio: 16 / 9;
+
+  cursor: pointer;
+
+  /* &:hover {
+    background-color: var(--md-sys-color-surface-container-hover);
+    img {
+      opacity: 0.7 !important;
+    }
+  } */
 
   border-radius: 0;
   img {

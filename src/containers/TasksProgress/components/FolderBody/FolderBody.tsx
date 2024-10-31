@@ -36,9 +36,11 @@ export const FolderBody: FC<FolderBodyProps> = ({
         icon={isExpanded ? 'collapse_all' : 'expand_all'}
         variant="text"
         onClick={onExpandToggle}
+        className={clsx({ expanded: isExpanded })}
       />
 
       <Styled.ContentContainer>
+        {folder.status && <Styled.Status size="icon" status={folder.status} />}
         <Styled.ContentWrapper className={clsx({ expanded: isExpanded })}>
           <EntityCard
             title={folder.name}
@@ -59,9 +61,10 @@ export const FolderBody: FC<FolderBodyProps> = ({
             icon={folder.icon}
             showBorder={false}
             src={thumbnailUrl}
+            hoverIcon="expand_all"
+            onClick={() => !isExpanded && onExpandToggle()}
           />
         </Styled.ThumbnailCard>
-
         <Styled.Path
           onClick={() => onFolderOpen?.(folder.id)}
           className={clsx({ selected: isSelected })}
