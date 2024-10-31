@@ -64,10 +64,37 @@ const addonsApiInjected = addonsApi.injectEndpoints({
         return result
       },
     }),
+    // Return a list of addons with dashboard-scoped frontend
+    getDashboardAddons: build.query({
+      query: () => ({
+        url: `/api/addons`,
+        method: 'GET',
+      }),
+      providesTags: ['dashboardAddons'],
+      transformErrorResponse: (error: any) => error.data.detail || `Error ${error.status}`,
+      transformResponse: (response: any) => {
+        let result = []
+        for (const definition of response.addons) {
+          const versDef = definition.versions[definition.productionVersion]
+          if (!versDef) continue
+          const settingsScope = versDef.frontendScopes['dashboard']
+          if (!settingsScope) continue
+
+          result.push({
+            name: definition.name,
+            title: definition.title,
+            version: definition.productionVersion,
+            settings: settingsScope,
+          })
+        }
+        return result
+      },
+    }),
   }),
   overrideExisting: true,
 })
 
-export const { useGetProjectAddonsQuery, useGetSettingsAddonsQuery } = addonsApiInjected
+export const { useGetProjectAddonsQuery, useGetSettingsAddonsQuery, useGetDashboardAddonsQuery } =
+  addonsApiInjected
 
 export default addonsApiInjected

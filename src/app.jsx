@@ -200,6 +200,11 @@ const App = () => {
                                 exact
                                 element={<UserDashboardPage />}
                               />
+                              <Route
+                                path="/dashboard/addon/:addonName"
+                                exact
+                                element={<UserDashboardPage />}
+                              />
 
                               <Route
                                 path="/manageProjects/:module"
