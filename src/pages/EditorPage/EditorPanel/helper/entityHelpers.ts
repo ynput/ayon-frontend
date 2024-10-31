@@ -67,7 +67,7 @@ const getInitialForm = (
       label: 'Assignees',
       field: 'assignees',
       disabled: !types.includes('task'),
-      placeholder: `Folders Can Not Have Assignees...`,
+      placeholder: `Folders can not have assignees`,
       ...assigneesValues,
     },
     _tags: {
