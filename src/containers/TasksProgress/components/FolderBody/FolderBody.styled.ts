@@ -8,7 +8,7 @@ export const Body = styled.div`
   align-items: flex-start;
   max-width: 500px;
   height: 100%;
-  height: 32px;
+  height: 34px;
   overflow: hidden;
   padding-left: var(--padding-s);
 
@@ -37,7 +37,7 @@ export const Body = styled.div`
       width: 0;
       opacity: 0;
     }
-    height: 100px;
+    height: 110px;
 
     .entity-card-wrapper {
       height: 100%;
@@ -95,8 +95,8 @@ export const Path = styled.span`
 `
 
 export const ExpandButton = styled(Button)`
-  width: 34px;
-  height: 34px;
+  width: 32px;
+  height: 32px;
 
   color: var(--md-sys-color-outline);
 
@@ -139,6 +139,10 @@ export const ThumbnailCard = styled.div`
     opacity: 0;
     width: 0;
     height: 0;
+  }
+
+  .thumbnail {
+    background-color: var(--md-sys-color-surface-container);
   }
 `
 
