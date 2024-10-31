@@ -19,7 +19,8 @@ import { Body } from '../FolderBody/FolderBody.styled'
 
 // State management
 import { useAppDispatch, useAppSelector } from '@state/store'
-import { toggleDetailsPanel } from '@state/details'
+import { selectProgress, toggleDetailsOpen } from '@state/progress'
+import { setFocusedTasks } from '@state/context'
 
 // Types
 import type { Status, TaskType } from '@api/rest/project'
@@ -29,7 +30,6 @@ import type {
   TaskTypeStatusBar,
 } from '../../helpers/formatTaskProgressForTable'
 import type { Assignees } from '@queries/user/getUsers'
-import { $Any } from '@types'
 import { AttributeEnumItem } from '@api/rest/attributes'
 
 // Hooks
@@ -42,7 +42,6 @@ import useLocalStorage from '@hooks/useLocalStorage'
 import { useFolderSort } from '../../helpers'
 import { taskStatusSortFunction } from '@containers/TasksProgress/helpers/taskStatusSortFunction'
 import clsx from 'clsx'
-import { selectProgress } from '@state/progress'
 
 export const Cells = styled.div`
   display: flex;
@@ -102,8 +101,9 @@ export const TasksProgressTable = ({
   onOpenViewer,
   ...props
 }: TasksProgressTableProps) => {
-  const selectedTasks = useAppSelector((state: $Any) => state.context.focused.tasks) as string[]
-  const detailsOpen = useAppSelector((state: $Any) => state.details.open) as boolean
+  const selectedTasks = useAppSelector((state) => state.context.focused.tasks) as string[]
+  const progressSelected = useAppSelector((state) => state.progress.selected)
+  const detailsOpen = useAppSelector((state) => state.details.open)
   const dispatch = useAppDispatch()
 
   // HACK: this forces a complete rerender of the table
@@ -186,7 +186,7 @@ export const TasksProgressTable = ({
   const sortFolderFunction = useFolderSort(tableData)
 
   const togglePanel = (open: boolean = true) => {
-    dispatch(toggleDetailsPanel(open))
+    dispatch(toggleDetailsOpen(open))
   }
 
   const buildContextMenu = (_selection: string[], taskId: string) => {
@@ -291,9 +291,12 @@ export const TasksProgressTable = ({
   }
 
   const handleFolderOpen = (folderId: string) => {
+    // update the selected progress
     dispatch(selectProgress({ ids: [folderId], type: 'folder' }))
+    // remove any selected tasks
+    dispatch(setFocusedTasks([]))
     // open the details panel
-    dispatch(toggleDetailsPanel(true))
+    togglePanel(true)
   }
 
   const getIsExpanded = (id: string) =>
@@ -349,9 +352,16 @@ export const TasksProgressTable = ({
             />
           ) : (
             <FolderBody
-              name={row._folder}
-              folderId={row.__folderId}
-              folderIcon={row._folderIcon}
+              folder={{
+                id: row.__folderId,
+                name: row._folder,
+                icon: row.__folderIcon,
+                status: statuses.find((s) => s.name === row.__folderStatus),
+                updatedAt: row.__folderUpdatedAt,
+              }}
+              isSelected={
+                progressSelected.type === 'folder' && progressSelected.ids.includes(row.__folderId)
+              }
               projectName={row.__projectName}
               isExpanded={getIsExpanded(row.__folderId)}
               onExpandToggle={() => onExpandRow(row.__folderId)}
@@ -443,7 +453,7 @@ export const TasksProgressTable = ({
 
                   const isExpanded = getIsExpanded(task.folder?.id)
                   const isSelected = selectedTasks.includes(task.id)
-                  const isActive = activeTask === task.id
+                  const isActive = progressSelected.type === 'task' && activeTask === task.id
 
                   return (
                     <InView

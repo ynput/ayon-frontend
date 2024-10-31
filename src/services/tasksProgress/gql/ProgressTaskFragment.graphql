@@ -23,6 +23,8 @@ fragment ProgressTaskFragment on TaskNode {
     label
     folderType
     parents
+    status
+    updatedAt
     parent {
       id
       name

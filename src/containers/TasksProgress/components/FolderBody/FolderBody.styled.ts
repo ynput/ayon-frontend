@@ -18,20 +18,54 @@ export const Body = styled.div`
     align-items: center;
   }
 
-  .title {
+  .small-title {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     transition: width 0.15s, opacity 0.15s;
   }
 
+  .entity-card-wrapper {
+    height: 0;
+    opacity: 0;
+    transition: height 0.15s, opacity 0.15s;
+  }
+
   transition: height 0.15s;
   &.expanded {
-    .title {
+    .small-title {
       width: 0;
       opacity: 0;
     }
     height: 100px;
+
+    .entity-card-wrapper {
+      height: 100%;
+      opacity: 1;
+    }
+  }
+
+  .entity-card {
+    min-height: unset !important;
+    height: 100%;
+    aspect-ratio: 16 / 9;
+    width: auto;
+  }
+`
+
+export const ContentContainer = styled.div`
+  position: relative;
+  width: 100%;
+  height: 100%;
+`
+
+export const ContentWrapper = styled.div`
+  position: absolute;
+  inset: 0;
+
+  pointer-events: none;
+  &.expanded {
+    pointer-events: all;
   }
 `
 
@@ -53,6 +87,10 @@ export const Path = styled.span`
   cursor: pointer;
   &:hover {
     text-decoration: underline;
+  }
+
+  &.selected {
+    color: var(--md-sys-color-primary);
   }
 `
 
@@ -92,13 +130,15 @@ export const ThumbnailCard = styled.div`
 
   overflow: hidden;
 
-  transition: padding-bottom 0.2s;
+  transition: width 0.15s, height 0.15s, opacity 0.15s;
 
   height: 100%;
   max-height: unset;
 
   &.expanded {
-    padding-bottom: 10px;
+    opacity: 0;
+    width: 0;
+    height: 0;
   }
 `
 

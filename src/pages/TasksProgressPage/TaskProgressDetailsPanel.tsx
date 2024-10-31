@@ -5,7 +5,7 @@ import { useAppDispatch, useAppSelector } from '@state/store'
 import DetailsPanel from '@containers/DetailsPanel/DetailsPanel'
 import DetailsPanelSlideOut from '@containers/DetailsPanel/DetailsPanelSlideOut/DetailsPanelSlideOut'
 import { useGetUsersAssigneeQuery } from '@queries/user/getUsers'
-import { toggleDetailsPanel } from '@state/details'
+import { toggleDetailsOpen } from '@state/progress'
 import { $Any } from '@types'
 
 type TaskProgressDetailsPanelProps = {
@@ -21,6 +21,8 @@ const TaskProgressDetailsPanel = ({ projectInfo, projectName }: TaskProgressDeta
   const entities = selected.ids.map((id) => ({ id, projectName }))
 
   const { data: users = [] } = useGetUsersAssigneeQuery({ names: undefined, projectName })
+
+  console.log(entities)
 
   if (!entities.length) return null
 
@@ -38,7 +40,7 @@ const TaskProgressDetailsPanel = ({ projectInfo, projectName }: TaskProgressDeta
         activeProjectUsers={users}
         style={{ boxShadow: 'none' }}
         scope="progress"
-        onClose={() => dispatch(toggleDetailsPanel(false))}
+        onClose={() => dispatch(toggleDetailsOpen(false))}
       />
       <DetailsPanelSlideOut projectsInfo={projectsInfo} scope="progress" />
     </>

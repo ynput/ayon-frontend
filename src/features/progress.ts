@@ -5,6 +5,7 @@ interface ProgressState {
     ids: string[]
     type: 'task' | 'folder'
   }
+  detailsOpen: boolean
 }
 
 const initialState = {
@@ -12,6 +13,7 @@ const initialState = {
     ids: [],
     type: 'task',
   },
+  detailsOpen: false,
 } satisfies ProgressState as ProgressState
 
 const counterSlice = createSlice({
@@ -21,8 +23,11 @@ const counterSlice = createSlice({
     selectProgress: (state, action: { payload: ProgressState['selected'] }) => {
       state.selected = action.payload
     },
+    toggleDetailsOpen: (state, action: { payload: boolean }) => {
+      state.detailsOpen = action.payload
+    },
   },
 })
 
-export const { selectProgress } = counterSlice.actions
+export const { selectProgress, toggleDetailsOpen } = counterSlice.actions
 export default counterSlice.reducer
