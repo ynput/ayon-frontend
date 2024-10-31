@@ -1,8 +1,13 @@
 const matchesFilterKeys = (
+  searchText: string,
   filterKeys: { [key: string]: string[] },
   addonName: string,
   id: string,
 ): boolean => {
+  if (searchText === undefined || searchText === '') {
+    return true
+  }
+
   if (filterKeys === undefined || Object.keys(filterKeys).length == 0) {
     return true
   }

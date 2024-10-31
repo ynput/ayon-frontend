@@ -39,7 +39,7 @@ function FieldTemplate(props: FieldTemplateProps) {
   const section = props.schema.section
 
   const divider = useMemo(() => {
-    const matches = matchesFilterKeys(props.formContext.filterKeys, props.formContext.addonName, props.id)
+    const matches = matchesFilterKeys(props.formContext.searchText, props.formContext.filterKeys, props.formContext.addonName, props.id)
     if (props.schema.section && matches) {
       return <Divider> {props.schema.section !== '---' && props.schema.section} </Divider>
     }
@@ -135,7 +135,7 @@ function FieldTemplate(props: FieldTemplateProps) {
 
     if (!classes.includes('obj-override-edit')) classes.push(`obj-override-${overrideLevel}`)
 
-    const matches = matchesFilterKeys(props.formContext.filterKeys, props.formContext.addonName, props.id)
+    const matches = matchesFilterKeys(props.formContext.searchText, props.formContext.filterKeys, props.formContext.addonName, props.id)
 
     return (
       <div
@@ -181,7 +181,7 @@ function FieldTemplate(props: FieldTemplateProps) {
   // let className = `form-inline-field ${
   //   props.errors.props.errors && props.schema.widget !== 'color' ? 'error' : ''
   // }`
-  const matches = matchesFilterKeys(props.formContext.filterKeys, props.formContext.addonName, props.id)
+  const matches = matchesFilterKeys(props.formContext.searchText, props.formContext.filterKeys, props.formContext.addonName, props.id)
 
   return (
     <div
