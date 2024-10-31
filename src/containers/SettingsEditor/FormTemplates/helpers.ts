@@ -1,3 +1,5 @@
+const arrayMatchingRegex = new RegExp(/([\w+]+_\d+)_\w+$/)
+
 const matchesFilterKeys = (
   searchText: string,
   filterKeys: { [key: string]: string[] },
@@ -21,12 +23,21 @@ const matchesFilterKeys = (
   }
 
   for (const key of filterKeys[addonName]) {
-    if (id.indexOf(key) !== -1 || key.indexOf(id) !== -1) {
+    let sanitizedKey = key
+    const matches = getArrayMatch(key);
+    if (matches) {
+      sanitizedKey = matches[1]
+    }
+    if (id.indexOf(sanitizedKey) !== -1 || sanitizedKey.indexOf(id) !== -1) {
       return true
     }
   }
 
   return false
+}
+
+const getArrayMatch = (key: string) => {
+  return key.match(arrayMatchingRegex)
 }
 
 export { matchesFilterKeys }

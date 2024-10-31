@@ -1,38 +1,5 @@
-import { Suggestion } from "@components/SearchDropdown/SearchDropdown"
 import { $Any } from "@types"
 
-const generatePath = (hydratedObject: $Any, path: $Any) => {
-  // console.log('path: ', path)
-  let friendlyPath = []
-  let relSchema = hydratedObject
-  for (const key of path.split('/')) {
-    friendlyPath.push(relSchema[key].__label__)
-    relSchema = relSchema[key]
-  }
-  return friendlyPath.join('/')
-}
-
-const generateSuggestion = ({
-  addonName,
-  path,
-  id,
-  value,
-  isKey = false,
-}: {
-  addonName: string
-  path: string
-  id: string
-  value?: string
-  isKey?: boolean
-}): Suggestion => {
-  // console.log('path: ', path)
-  return {
-    id: 'id: ' + id,
-    icon: 'chevron_right',
-    label: addonName + ': ' + path.split('/').join(' / ') + (value ? ` :: "${value}"` : ''),
-    value: isKey ? '' : 'value: ' + value,
-  }
-}
 
 const generateFilterKey = (path: string) => {
   return ['root', ...path.split('/')].join('_')
@@ -68,11 +35,24 @@ const attachLabels = (settings: $Any, relSchema: $Any, globalSchema: $Any): $Any
         __label__: relSchema.properties[key].title,
       }
     }
-    if (['array', 'boolean', 'string', 'integer'].includes(schemaVal.type)) {
+    if (['array', 'boolean', 'string', 'integer', 'number'].includes(schemaVal.type)) {
       hydratedObject[key] = {
         __label__: relSchema.properties[key].title,
       }
-      if (schemaVal.type === 'string' || schemaVal.type === 'integer') {
+
+      if (schemaVal.type === 'array') {
+        if (Object.keys(schemaVal).includes('items') && schemaVal.items.$ref !== undefined) {
+          const refChain = schemaVal.items.$ref.slice(2).split('/')
+          const deepSchema = getDeepObject(globalSchema, refChain)
+          for (const idx in settings[key]) {
+            hydratedObject[key][idx] = {
+              ...attachLabels(settings[key][idx], deepSchema, globalSchema),
+            }
+          }
+        }
+      }
+
+      if (['string', 'integer', 'number'].includes(schemaVal.type)) {
         hydratedObject[key].__value__ = settings[key].toString()
       }
       if (schemaVal.description !== undefined) {
