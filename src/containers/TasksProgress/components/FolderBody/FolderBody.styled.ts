@@ -92,6 +92,7 @@ export const Path = styled.span`
 
   &.selected {
     color: var(--md-sys-color-primary);
+    text-decoration: underline;
   }
 `
 
