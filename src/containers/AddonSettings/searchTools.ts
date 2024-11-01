@@ -26,6 +26,9 @@ const attachLabels = (settings: $Any, relSchema: $Any, globalSchema: $Any): $Any
   let hydratedObject: $Any = {}
   for (const key of Object.keys(settings)) {
     const schemaVal = relSchema.properties[key]
+    if (schemaVal === undefined) {
+      continue
+    }
     if (Object.keys(schemaVal).includes('allOf')) {
       const refChain = schemaVal.allOf[0].$ref.slice(2).split('/')
       const deepSchema = getDeepObject(globalSchema, refChain)
