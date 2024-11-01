@@ -75,6 +75,9 @@ export const Path = styled.span`
   display: flex;
   gap: var(--base-gap-small);
   width: min-content;
+  padding: var(--padding-s);
+  border-radius: var(--border-radius-m);
+  border: 1px solid transparent;
 
   /* first child ellipses */
   & > :first-child {
@@ -87,12 +90,13 @@ export const Path = styled.span`
 
   cursor: pointer;
   &:hover {
-    text-decoration: underline;
+    background-color: var(--md-sys-color-surface-container-hover);
   }
 
   &.selected {
-    color: var(--md-sys-color-primary);
-    text-decoration: underline;
+    background-color: var(--md-sys-color-primary-container);
+    color: var(--md-sys-color-on-primary-container);
+    border-color: var(--md-sys-color-primary);
   }
 `
 
