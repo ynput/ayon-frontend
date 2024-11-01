@@ -8,6 +8,7 @@ import { Badge, BadgeWrapper } from '@components/Badge'
 import copyToClipboard from '@helpers/copyToClipboard'
 import { $Any } from '@types'
 import { ObjectFieldTemplateProps } from '@rjsf/utils'
+import { matchesFilterKeys } from './searchMatcher'
 
 const arrayStartsWith = (arr1: $Any, arr2: $Any) => {
   // return true, if first array starts with second array
@@ -89,7 +90,7 @@ function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
         hiddenFields = [
           ...hiddenFields,
           //@ts-ignore
-          ...(ppts?.enum || []).filter((e: $Any) => e !== props.formData?.[propName] ),
+          ...(ppts?.enum || []).filter((e: $Any) => e !== props.formData?.[propName]),
         ]
       }
     }
@@ -103,7 +104,7 @@ function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
         else otherFields.push(element.content)
       }
       return (
-        <>
+        <div className="foo">
           {longDescription}
           <div className={className}>
             <div className="name-field">{nameField}</div>
@@ -113,14 +114,23 @@ function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
                 .map((element) => element)}
             </div>
           </div>
-        </>
+        </div>
       )
     } // ugly layout
 
+    const matches = matchesFilterKeys(props.formContext.searchText, props.formContext.filterKeys, props.formContext.addonName, props.idSchema.$id)
+
     return (
-      <>
+      <div
+        data-hidden={matches ? 'false' : 'true'}
+        style={{
+          visibility: matches ? 'visible' : 'hidden',
+          position: matches ? 'relative' : 'absolute',
+          height: matches ? 'auto' : 0,
+        }}
+      >
         {longDescription}
-        <div className={className} data-fieldid={props.id}>
+        <div className={className} data-test="test-aa" data-fieldid={props.id}>
           {props.properties
             .filter(
               (element) =>
@@ -140,7 +150,7 @@ function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
               )
             })}
         </div>
-      </>
+      </div>
     )
   }, [props.properties, className])
 
@@ -263,22 +273,34 @@ function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
     contextMenu(e, contextMenuModel)
   }
 
+  const matches = matchesFilterKeys(props.formContext.searchText, props.formContext.filterKeys, props.formContext.addonName, props.idSchema.$id)
+
   return (
-    <SettingsPanel
-      objId={objId}
-      onClick={() => {
-        if (props.formContext.onSetBreadcrumbs) props.formContext.onSetBreadcrumbs(path)
+    <div
+      data-schema-id={props.idSchema.$id}
+      data-hidden={matches ? 'false' : 'true'}
+      style={{
+        visibility: matches ? 'visible' : 'hidden',
+        position: matches ? 'relative' : 'absolute',
+        height: matches ? 'auto' : 0,
       }}
-      title={titleComponent}
-      description={shortDescription}
-      className={`obj-override-${overrideLevel}`}
-      enabledToggler={enabledToggler}
-      onContextMenu={onContextMenu}
-      currentId={props.formContext.currentId}
-      layout={undefined}
     >
-      {fields}
-    </SettingsPanel>
+      <SettingsPanel
+        objId={objId}
+        onClick={() => {
+          if (props.formContext.onSetBreadcrumbs) props.formContext.onSetBreadcrumbs(path)
+        }}
+        title={titleComponent}
+        description={shortDescription}
+        className={`obj-override-${overrideLevel}`}
+        enabledToggler={enabledToggler}
+        onContextMenu={onContextMenu}
+        currentId={props.formContext.currentId}
+        layout={undefined}
+      >
+        {fields}
+      </SettingsPanel>
+    </div>
   )
 }
 

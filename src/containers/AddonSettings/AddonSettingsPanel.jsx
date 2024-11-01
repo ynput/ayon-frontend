@@ -15,11 +15,14 @@ const AddonSettingsPanel = ({
   localData,
   changedKeys,
   projectName = null,
+  searchText,
+  filterKeys,
   siteId = null,
   onChange = () => {},
   onLoad = () => {},
   onSetChangedKeys = () => {},
   onSelect = () => {},
+  updateAddonSchema = () => {},
   currentSelection = null,
   context,
 }) => {
@@ -36,6 +39,7 @@ const AddonSettingsPanel = ({
   const {
     data: schema,
     isLoading: schemaLoading,
+    isSuccess,
     refetch: refetchSchema,
   } = useGetAddonSettingsSchemaQuery({
     addonName: addon.name,
@@ -44,6 +48,12 @@ const AddonSettingsPanel = ({
     projectName,
     siteId,
   })
+
+  useMemo(() => {
+    if (isSuccess) {
+      updateAddonSchema(addon.name, schema)
+    }
+  }, [addon.name, addon.version, isSuccess])
 
   const {
     //eslint-disable-next-line no-unused-vars
@@ -141,7 +151,7 @@ const AddonSettingsPanel = ({
         context={context}
       />
     )
-  }, [schema, localData, overrides, breadcrumbs, schemaLoading, settingsLoading, overridesLoading])
+  }, [schema, localData, overrides, breadcrumbs, schemaLoading, settingsLoading, overridesLoading, searchText, filterKeys])
 
   // if (schemaLoading || settingsLoading || overridesLoading) {
   //   return `Loading... ${projectName}`

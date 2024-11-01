@@ -44,11 +44,23 @@ const StyledScrollPanel = styled(ScrollPanel)`
   padding-right: 8px;
 }
 `
+import SettingsListHeader from './SettingsListHeader'
+import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
+import { attachLabels } from './searchTools'
 
 /*
  * key is {addonName}|{addonVersion}|{variant}|{siteId}|{projectKey}
  * if project name or siteid is N/a, use _ instead
  */
+
+const StyledEmptyPlaceholder = styled(EmptyPlaceholder)`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  widows: 100%;
+`
 
 const isChildPath = (childPath, parentPath) => {
   if (childPath.length < parentPath.length) return false
@@ -70,9 +82,13 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   const [selectedSites, setSelectedSites] = useState([])
   const [variant, setVariant] = useState('production')
   const [bundleName, setBundleName] = useState()
+  const [addonSchemas, setAddonSchemas] = useState({})
 
   const [showCopySettings, setShowCopySettings] = useState(false)
   const [showRawEdit, setShowRawEdit] = useState(false)
+  const [searchText, setSearchText] = useState('')
+  const [filterKeys, setFilterKeys] = useState([])
+  const [searchTree, setSearchTree] = useState([])
 
   const [setAddonSettings, { isLoading: setAddonSettingsUpdating }] = useSetAddonSettingsMutation()
   const [deleteAddonSettings] = useDeleteAddonSettingsMutation()
@@ -288,8 +304,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
           }
 
           return { ...unpinnedKeys, [addonKey]: addonChanges }
-        })  // setUnpinnedKeys
-
+        }) // setUnpinnedKeys
       }
     }
   }
@@ -301,15 +316,15 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   const onRemoveOverride = async (addon, siteId, path) => {
     // Remove a single override for this addon (within current project and variant)
     // path is an array of strings
-    
-    // TODO: Use this to staged unpin. 
+
+    // TODO: Use this to staged unpin.
     // It is not used now because we don't have an information about the original value
     //
     // const key = `${addon.name}|${addon.version}|${addon.variant}|${siteId || '_'}|${projectKey}`
     //
     // setChangedKeys((changedKeys) => {
     //   const keyData = changedKeys[key] || []
-    //   
+    //
     //   const index = keyData.findIndex((keyItem) => arrayEquals(keyItem, path))
     //   if (index === -1) {
     //     keyData.push(path)
@@ -462,8 +477,8 @@ const AddonSettings = ({ projectName, showSites = false }) => {
 
     if (!sameKeysStructure(oldValue, value)) {
       toast.error('Incompatible data structure')
-      console.log('Old value', oldValue)
-      console.log('New value', value)
+      // console.log('Old value', oldValue)
+      // console.log('New value', value)
       return
     }
 
@@ -509,8 +524,8 @@ const AddonSettings = ({ projectName, showSites = false }) => {
           Are you sure you want to push <strong>{bundleName}</strong> to production?
         </p>
         <p>
-          This will mark the current staging bundle as production and copy all staging
-          studio settings and staging projects overrides to production as well.
+          This will mark the current staging bundle as production and copy all staging studio
+          settings and staging projects overrides to production as well.
         </p>
       </>
     )
@@ -606,22 +621,6 @@ const AddonSettings = ({ projectName, showSites = false }) => {
     )
   }, [variant, changedKeys, bundleName, projectName, developerMode])
 
-  const settingsListHeader = useMemo(() => {
-    return (
-      <Toolbar>
-        <Spacer />
-        <Button
-          onClick={() => {
-            setShowHelp(!showHelp)
-          }}
-          icon="help"
-          data-tooltip="Show help descriptions"
-          selected={showHelp}
-        />
-      </Toolbar>
-    )
-  }, [showHelp])
-
   const commitToolbar = useMemo(
     () => (
       <>
@@ -644,9 +643,29 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   )
 
   const onSelectAddon = (newSelection) => {
+    console.log('on select addon...', newSelection)
     setSelectedAddons(newSelection)
     setCurrentSelection(null)
   }
+
+  const onUpdateAddonSchema = (addonName, schema) => {
+    const settings = selectedAddons.find(el => el.name == addonName).settings
+    const hydratedObject = attachLabels(settings, schema, schema)
+    setSearchTree((prev) => {
+      return {
+      ...prev,
+      [addonName]: hydratedObject,
+      }
+    })
+    setAddonSchemas((prev) => {
+      return {
+        ...prev,
+        [addonName]: schema,
+      }
+    })
+  }
+
+  // console.log('selected addons: ', selectedAddons)
 
   return (
     <Splitter layout="horizontal" style={{ width: '100%', height: '100%' }}>
@@ -693,6 +712,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
             siteSettings={showSites}
             onContextMenu={showAddonListContextMenu}
           />
+
           {showSites && (
             <SiteList
               value={selectedSites}
@@ -702,8 +722,28 @@ const AddonSettings = ({ projectName, showSites = false }) => {
             />
           )}
         </Section>
+
         <Section className={showHelp && 'settings-help-visible'}>
-          {settingsListHeader}
+          <SettingsListHeader
+            addonsData={selectedAddons || []}
+            searchTreeData={searchTree}
+            addonSchemas={addonSchemas || {}}
+            showHelp={showHelp}
+            setShowHelp={setShowHelp}
+            projectName={projectName}
+            searchCallback={(searchText, filterKeys) => {
+              console.log('search text', searchText)
+              console.log('filterKeys', filterKeys)
+              if (searchText === undefined) {
+                setSearchText('')
+                setFilterKeys([])
+                return
+              }
+
+              setSearchText(searchText)
+              setFilterKeys(filterKeys)
+            }}
+          />
           <Section>
             <StyledScrollPanel
               className="transparent nopad"
@@ -716,6 +756,15 @@ const AddonSettings = ({ projectName, showSites = false }) => {
                 .map((addon) => {
                   const sites = showSites ? (selectedSites.length ? selectedSites : []) : ['_']
 
+                  if (filterKeys.length === 0 && searchText !== '') {
+                    return (
+                      <StyledEmptyPlaceholder
+                        key={addon.name}
+                        icon="filter_list"
+                        message="No settings found for the current search"
+                      />
+                    )
+                  }
                   return sites.map((siteId) => {
                     const key = `${addon.name}|${addon.version}|${addon.variant}|${siteId}|${projectKey}`
 
@@ -728,6 +777,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
                       >
                         <AddonSettingsPanel
                           addon={addon}
+                          updateAddonSchema={onUpdateAddonSchema}
                           onChange={(data) =>
                             onSettingsChange(addon.name, addon.version, addon.variant, siteId, data)
                           }
@@ -749,10 +799,16 @@ const AddonSettings = ({ projectName, showSites = false }) => {
                           onSelect={setCurrentSelection}
                           projectName={projectName}
                           siteId={siteId === '_' ? null : siteId}
+                          // Needed for rerender, component memoized
+                          searchText={searchText}
+                          filterKeys={filterKeys}
                           context={{
                             headerProjectName: projectName,
                             headerSiteId: siteId === '_' ? null : siteId,
                             headerVariant: addon.variant,
+                            addonName: addon.name,
+                            searchText,
+                            filterKeys,
                             onRemoveOverride: (path) => onRemoveOverride(addon, siteId, path),
                             onPinOverride: (path) => onPinOverride(addon, siteId, path),
                             onRemoveAllOverrides: () => onRemoveAllOverrides(addon, siteId),

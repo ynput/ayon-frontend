@@ -22,7 +22,7 @@ import { getColumns, formatType, formatAttribute, formatAssignees, formatStatus 
 import { MultiSelect } from 'primereact/multiselect'
 import useLocalStorage from '@hooks/useLocalStorage'
 import { useGetFolderHierarchyQuery } from '@queries/getHierarchy'
-import SearchDropdown from '@components/SearchDropdown'
+import SearchDropdown from '@components/SearchDropdown/SearchDropdown'
 import useColumnResize from '@hooks/useColumnResize'
 import { capitalize, debounce, isEmpty } from 'lodash'
 import { useLazyGetExpandedBranchQuery } from '@queries/editor/getEditor'
@@ -1828,12 +1828,13 @@ const EditorPage = () => {
             style={{ maxWidth: 200 }}
           />
           <SearchDropdown
-            filter={searchFilter}
             suggestions={searchableFolders}
             suggestionsLimit={5}
+            isLoading={isSearchLoading}
+            placeholder="Filter folders & tasks..."
+            filter={searchFilter}
             onSubmit={handleSearchComplete}
             onClear={() => searchIds && setSearchIds({})}
-            isLoading={isSearchLoading}
           />
           <Spacer />
           <Button
