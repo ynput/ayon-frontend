@@ -19,6 +19,11 @@ const initialStateFromQueryParams: ViewerState = Object.entries(initialStateQuer
   {} as Partial<ViewerState>,
 ) as ViewerState
 
+type Annotation = {
+  frame: number
+  svg: string
+}
+
 interface ViewerState {
   isOpen: boolean
   versionIds: string[]
@@ -31,17 +36,16 @@ interface ViewerState {
   quickView: boolean
   upload: boolean
   fullscreen: boolean
+  annotations: Annotation[]
 }
 
 const initialState: ViewerState = {
   ...initialStateFromQueryParams,
-  versionIds: [],
-  projectName: null,
-  productId: null,
-  taskId: null,
-  folderId: null,
-  reviewableIds: [],
-  selectedProductId: null,
+  isOpen: false,
+  upload: false, // used to open upload file picker
+  fullscreen: false,
+  quickView: false, // used to open quick view mode (reduced UI for quick view)
+  annotations: [],
 }
 
 const viewerSlice = createSlice({
