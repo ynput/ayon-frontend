@@ -26,11 +26,15 @@ const FilesGrid = ({
       {files.map((file, index) => (
         <FileUploadCard
           key={index}
-          id={file.id}
+          id={file.id || file.name}
           name={file.name}
-          mime={file.mime}
+          mime={file.mime || file.type}
           size={file.size}
-          src={`/api/projects/${projectName}/files/${file.id}`}
+          src={
+            file instanceof File
+              ? URL.createObjectURL(file)
+              : `/api/projects/${projectName}/files/${file.id}`
+          }
           progress={file.progress}
           onRemove={onRemove ? () => onRemove(file.id, file.name) : undefined}
           isCompact={isCompact}

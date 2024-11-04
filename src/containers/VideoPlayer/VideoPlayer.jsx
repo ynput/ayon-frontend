@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import styled from 'styled-components'
 
 import VideoOverlay from './VideoOverlay'
@@ -6,6 +6,7 @@ import Trackbar from './Trackbar'
 import VideoPlayerControls from './VideoPlayerControls'
 import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
 import clsx from 'clsx'
+import Drawover from '@containers/TasksProgress/components/Drawover/Drawover'
 
 const VideoPlayerContainer = styled.div`
   position: absolute;
@@ -320,6 +321,8 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay }) => {
     setMuted(value)
     videoRef.current.muted = value
   }
+  const currentFrame = Math.floor(videoRef.current?.currentTime * frameRate) + 1
+  const numFrames = useMemo(() => Math.floor(duration * frameRate), [frameRate, duration])
 
   return (
     <VideoPlayerContainer>
@@ -329,7 +332,11 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay }) => {
       >
         <div
           className="video-wrapper"
-          style={{ width: videoDimensions.width, height: videoDimensions.height }}
+          style={{
+            width: videoDimensions.width,
+            height: videoDimensions.height,
+            position: 'relative',
+          }}
         >
           <video
             ref={videoRef}
@@ -350,6 +357,12 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay }) => {
             showOverlay={showOverlay}
             showStill={showStill}
             videoRef={videoRef}
+          />
+          <Drawover
+            range={[currentFrame, currentFrame]}
+            durationFrames={numFrames}
+            isPlaying={isPlaying}
+            videoRef={videoRef.current}
           />
         </div>
       </div>

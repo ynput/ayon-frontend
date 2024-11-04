@@ -4,7 +4,7 @@ import PerfectScrollbar from 'react-perfect-scrollbar'
 
 export const ReviewablesSelector = styled.div`
   position: relative;
-  height: 100%;
+  flex: 1;
   z-index: 1000;
 `
 

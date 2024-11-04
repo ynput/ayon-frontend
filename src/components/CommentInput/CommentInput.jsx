@@ -21,6 +21,7 @@ import FilesGrid from '@containers/FilesGrid/FilesGrid'
 import { getModules, quillFormats } from './modules'
 import { useGetMentionSuggestionsQuery } from '@queries/mentions/getMentions'
 import useMentionLink from './hooks/useMentionLink'
+import useDrawingsSync from './hooks/useDrawingsSync'
 
 const mentionTypes = ['@', '@@', '@@@']
 export const mentionTypeOptions = {
@@ -59,6 +60,10 @@ const CommentInput = ({
   const [files, setFiles] = useState(initFiles)
   const [filesUploading, setFilesUploading] = useState([])
   const [isDropping, setIsDropping] = useState(false)
+
+  const [drawingFiles, setDrawingFiles] = useDrawingsSync({
+    openCommentInput: onOpen,
+  })
 
   // MENTION STATES
   const [mention, setMention] = useState(null)
@@ -436,7 +441,6 @@ const CommentInput = ({
     setFiles((prev) => prev.filter((file) => file.id !== id))
     // remove from uploading
     setFilesUploading((prev) => {
-      console.log(prev)
       return prev.filter((file) => file.name !== name)
     })
   }
@@ -488,7 +492,9 @@ const CommentInput = ({
     [projectName, setFiles, setFilesUploading],
   )
 
-  const allFiles = [...(files || []), ...filesUploading].sort((a, b) => a.order - b.order)
+  const allFiles = [...drawingFiles, ...(files || []), ...filesUploading].sort(
+    (a, b) => a.order - b.order,
+  )
   const compactGrid = allFiles.length > 6
 
   // disable version mentions for folders
