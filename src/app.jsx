@@ -86,6 +86,7 @@ const App = () => {
 
   // get subscriptions info
   const { data: ynputConnect } = useGetYnputCloudInfoQuery()
+  const { isTrialing, left } = getTrialDates(ynputConnect?.subscriptions)
 
   useEffect(() => {
     setLoading(true)
@@ -267,16 +268,18 @@ const App = () => {
                   </NotificationsProvider>
                 </BrowserRouter>
                 {/* TRIAL BANNER */}
-                <CustomerlyProvider appId={PROJECT_ID}>
-                  <TrialBanner />
-                </CustomerlyProvider>
+                {isTrialing && (
+                  <CustomerlyProvider appId={PROJECT_ID}>
+                    <TrialBanner />
+                  </CustomerlyProvider>
+                )}
               </PasteProvider>
             </ContextMenuProvider>
           </RestartProvider>
         </Suspense>
       </>
     ),
-    [isUser],
+    [isUser, isTrialing],
   )
 
   const loadingComponent = useMemo(() => <LoadingPage />, [])
@@ -332,8 +335,6 @@ const App = () => {
       </>
     )
   }
-
-  const { isTrialing, left } = getTrialDates(ynputConnect?.subscriptions)
 
   // Trial has finished
   if (isTrialing && left?.finished) {
