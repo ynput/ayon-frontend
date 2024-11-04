@@ -1,7 +1,7 @@
-import { createSlice } from '@reduxjs/toolkit'
+import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import getInitialStateQueryParam from './middleware/getInitialStateQueryParam'
 
-export const initialStateQueryParams = {
+export const initialStateQueryParams: Record<string, { key: string; initial: any }> = {
   projectName: { key: 'project_name', initial: null },
   productId: { key: 'viewer_product', initial: null },
   selectedProductId: { key: 'selected_product', initial: null }, // used when there are reviewables from multiple products
@@ -10,57 +10,71 @@ export const initialStateQueryParams = {
   versionIds: { key: 'viewer_version', initial: [] },
   reviewableIds: { key: 'reviewable_id', initial: [] },
 }
-const initialStateFromQueryParams = Object.entries(initialStateQueryParams).reduce(
-  (acc, [key, value]) => {
-    acc[key] = getInitialStateQueryParam(value.key, value.initial)
+
+const initialStateFromQueryParams: ViewerState = Object.entries(initialStateQueryParams).reduce(
+  (acc: Partial<ViewerState>, [key, value]) => {
+    acc[key as keyof ViewerState] = getInitialStateQueryParam(value.key, value.initial)
     return acc
   },
-  {},
-)
+  {} as Partial<ViewerState>,
+) as ViewerState
+
+interface ViewerState {
+  isOpen: boolean
+  versionIds: string[]
+  projectName: string | null
+  productId: string | null
+  taskId: string | null
+  folderId: string | null
+  reviewableIds: string[]
+  selectedProductId: string | null
+  quickView: boolean
+  upload: boolean
+  fullscreen: boolean
+}
+
+const initialState: ViewerState = {
+  ...initialStateFromQueryParams,
+  versionIds: [],
+  projectName: null,
+  productId: null,
+  taskId: null,
+  folderId: null,
+  reviewableIds: [],
+  selectedProductId: null,
+}
 
 const viewerSlice = createSlice({
   name: 'viewer',
-  initialState: {
-    ...initialStateFromQueryParams,
-    isOpen: false,
-    upload: false, // used to open upload file picker
-    fullscreen: false,
-    quickView: false, // used to open quick view mode (reduced UI for quick view)
-  },
+  initialState,
   reducers: {
-    openViewer: (
-      state,
-      {
-        payload: {
-          versionIds,
-          projectName,
-          productId,
-          taskId,
-          folderId,
-          reviewableIds,
-          quickView,
-          selectedProductId,
-        } = {},
-      } = {},
-    ) => {
-      state.projectName = projectName
-      state.quickView = !!quickView
+    openViewer: (state: ViewerState, { payload }: PayloadAction<Partial<ViewerState>>) => {
+      state.projectName = payload.projectName || state.projectName
+      state.quickView = !!payload.quickView
 
-      if (productId) state.productId = productId
-      if (selectedProductId) state.selectedProductId = selectedProductId
-      if (taskId) state.taskId = taskId
-      if (folderId) state.folderId = folderId
+      if (payload.productId) state.productId = payload.productId
+      if (payload.selectedProductId) state.selectedProductId = payload.selectedProductId
+      if (payload.taskId) state.taskId = payload.taskId
+      if (payload.folderId) state.folderId = payload.folderId
 
-      if (productId || taskId || folderId) state.isOpen = true
+      if (payload.productId || payload.taskId || payload.folderId) state.isOpen = true
 
-      if (versionIds) state.versionIds = versionIds
-      if (reviewableIds) state.reviewableIds = reviewableIds || []
+      if (payload.versionIds) state.versionIds = payload.versionIds
+      if (payload.reviewableIds) state.reviewableIds = payload.reviewableIds || []
     },
-    updateProduct: (state, { payload: { selectedProductId } }) => {
+    updateProduct: (
+      state: ViewerState,
+      { payload: { selectedProductId } }: PayloadAction<{ selectedProductId: string | null }>,
+    ) => {
       state.selectedProductId = selectedProductId
       if (state.isOpen === false) state.isOpen = true
     },
-    updateSelection: (state, { payload: { versionIds, reviewableIds, productId, quickView } }) => {
+    updateSelection: (
+      state: ViewerState,
+      {
+        payload: { versionIds, reviewableIds, productId, quickView },
+      }: PayloadAction<Partial<ViewerState>>,
+    ) => {
       if (productId !== undefined) state.productId = productId
       if (versionIds !== undefined) {
         state.versionIds = versionIds
@@ -73,7 +87,7 @@ const viewerSlice = createSlice({
       }
       if (state.isOpen === false) state.isOpen = true
     },
-    closeViewer: (state) => {
+    closeViewer: (state: ViewerState) => {
       state.versionIds = []
       state.projectName = null
       state.productId = null
@@ -83,10 +97,13 @@ const viewerSlice = createSlice({
       state.isOpen = false
       state.selectedProductId = null
     },
-    toggleUpload: (state, { payload }) => {
+    toggleUpload: (state: ViewerState, { payload }: PayloadAction<boolean>) => {
       state.upload = payload
     },
-    toggleFullscreen: (state, { payload }) => {
+    toggleFullscreen: (
+      state: ViewerState,
+      { payload }: PayloadAction<{ fullscreen: boolean } | undefined>,
+    ) => {
       state.fullscreen = payload ? payload.fullscreen : !state.fullscreen
     },
   },

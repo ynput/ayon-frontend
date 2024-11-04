@@ -1,10 +1,9 @@
 import { compareDesc } from 'date-fns'
 import { useEffect, useMemo } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
+import { useAppDispatch, useAppSelector } from '@state/store'
 import { useFullScreenHandle } from 'react-full-screen'
 
 import { Button } from '@ynput/ayon-react-components'
-import { $Any } from '@types'
 
 import VersionSelectorTool from '@components/VersionSelectorTool/VersionSelectorTool'
 import ReviewVersionDropdown from '@/components/ReviewVersionDropdown'
@@ -36,16 +35,15 @@ const Viewer = ({ onClose }: ViewerProps) => {
     fullscreen,
     quickView,
     selectedProductId,
-  } = useSelector((state: $Any) => state.viewer)
+  } = useAppSelector((state) => state.viewer)
 
-  const dispatch = useDispatch()
+  const dispatch = useAppDispatch()
 
   // new query: returns all reviewables for a product
   const { data: allVersionsAndReviewables = [], isFetching: isFetchingReviewables } =
-    useGetViewerReviewablesQuery(
-      { projectName, productId, taskId, folderId },
-      { skip: !projectName || (!productId && !taskId && !folderId) },
-    )
+    useGetViewerReviewablesQuery({ projectName, productId, taskId, folderId } as any, {
+      skip: !projectName || (!productId && !taskId && !folderId),
+    })
 
   // check if there are multiple products in the reviewables. At least one productId is different
   const hasMultipleProducts = useMemo(() => {
@@ -218,7 +216,7 @@ const Viewer = ({ onClose }: ViewerProps) => {
     if (!newReviewableId)
       newReviewableId = newVersion.reviewables?.find((r) => r.availability === 'ready')?.fileId
 
-    dispatch(updateSelection({ versionIds: [versionId], reviewableIds: [newReviewableId] }))
+    dispatch(updateSelection({ versionIds: [versionId], reviewableIds: [newReviewableId || ''] }))
   }
 
   const handleReviewableChange = (reviewableId: string) => {
@@ -303,13 +301,16 @@ const Viewer = ({ onClose }: ViewerProps) => {
           onUpload={handleUploadAction}
         />
       </Styled.FullScreenWrapper>
-      <ReviewablesSelector
-        reviewables={shownOptions}
-        selected={reviewableIds}
-        onChange={handleReviewableChange}
-        onUpload={handleUploadAction(true)}
-        projectName={projectName}
-      />
+      <Styled.RightToolBar>
+        <ReviewablesSelector
+          reviewables={shownOptions}
+          selected={reviewableIds}
+          onChange={handleReviewableChange}
+          onUpload={handleUploadAction(true)}
+          projectName={projectName}
+        />
+        <div id="view-drawing-tools"></div>
+      </Styled.RightToolBar>
       {!noVersions && <ViewerDetailsPanel versionIds={versionIds} projectName={projectName} />}
     </Styled.Container>
   )
