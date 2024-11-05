@@ -104,7 +104,7 @@ function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
         else otherFields.push(element.content)
       }
       return (
-        <div className="foo">
+        <div style={{width: '100%'}}>
           {longDescription}
           <div className={className}>
             <div className="name-field">{nameField}</div>
