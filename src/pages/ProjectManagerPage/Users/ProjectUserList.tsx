@@ -46,29 +46,33 @@ export const ProfileRow = ({ rowData }: $Any) => {
 }
 
 type Props = {
-  selectedProjects: string[],
   selectedUsers: string[],
   userList: UserModel[],
   tableList: $Any,
-  isLoading: boolean,
-  onSelectUsers: (selectedUsers: string[]) => void,
+  isLoading: boolean
+  header?: string
+  sortable?: boolean
+  onSelectUsers?: (selectedUsers: string[]) => void
 }
 
 const ProjectUserList = ({
-  selectedProjects,
   selectedUsers,
   userList,
   tableList,
   isLoading,
+  header,
+  sortable = false,
   onSelectUsers,
 }: Props) => {
   // Selection
   const selection = useMemo(() => {
     return userList.filter((user: UserModel) => selectedUsers.includes(user.name))
-  }, [selectedUsers, selectedProjects, userList])
+  }, [selectedUsers, userList])
 
   const onSelectionChange = (e: $Any) => {
-    if (!onSelectUsers) return
+    if (!onSelectUsers) {
+      return
+    }
     let result = []
     for (const user of e.value) result.push(user.name)
     onSelectUsers(result)
@@ -90,22 +94,15 @@ const ProjectUserList = ({
           rowClassName={(rowData: $Any) => clsx({ inactive: !rowData.active, loading: isLoading })}
           onSelectionChange={onSelectionChange}
           selection={selection}
-          columnResizeMode="expand"
-          resizableColumns
-          // @ts-ignore
-          responsive="true"
-          stateKey="users-datatable"
           stateStorage={'local'}
-          reorderableColumns
         >
           <Column
             field="name"
-            header="Username"
+            header={header}
+            headerStyle={{textTransform: 'capitalize'}}
             body={(rowData) => !isLoading && <ProfileRow rowData={rowData} />}
-            sortable
-            resizeable
+            sortable={sortable}
           />
-          <Column field="attrib.fullName" header="Full name" sortable resizeable />
         </DataTable>
       </TablePanel>
     </Section>
