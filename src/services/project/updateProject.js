@@ -53,6 +53,13 @@ const updateProject = api.injectEndpoints({
               { type: 'projects', id: 'LIST' },
             ],
     }),
+    updateProjectUsers: build.mutation({
+      query: ({ projectName, userName, update }) => ({
+        url: `/api/projects/${projectName}/users/${userName}`,
+        method: 'PATCH',
+        body: update,
+      }),
+    }),
   }),
   overrideExisting: true,
 })
@@ -62,4 +69,5 @@ export const {
   useDeleteProjectMutation,
   useUpdateProjectAnatomyMutation,
   useUpdateProjectMutation,
+  useUpdateProjectUsersMutation
 } = updateProject

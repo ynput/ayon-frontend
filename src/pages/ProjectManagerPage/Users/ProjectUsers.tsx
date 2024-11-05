@@ -7,10 +7,15 @@ import { useState } from 'react'
 import { useSelector } from 'react-redux'
 import ProjectUserList from './ProjectUserList'
 import SearchFilter from '@components/SearchFilter/SearchFilter'
+import { getProjectsListForSelection } from '@pages/SettingsPage/UsersSettings/UserAccessGroupsForm/UserAccessGroupsHelpers'
 import { useListProjectsQuery } from '@queries/project/getProject'
 import { useGetAccessGroupsQuery } from '@queries/accessGroups/getAccessGroups'
-import ProjectList from '@containers/projectList'
 import AssignAccessGroupsDialog from './AssignAccessGroupsDialog'
+import ProjectList from '@containers/projectList'
+import {api }from '@api/rest/project'
+import { useUpdateProjectUsersMutation } from '@queries/project/updateProject'
+import { toast } from 'react-toastify'
+import { AccessGroupObject } from '@api/rest/accessGroups'
 
 type Props = {}
 
@@ -18,29 +23,75 @@ const ProjectUsers = ({}: Props) => {
   const selfName = useSelector((state: $Any) => state.user.name)
   let { data: userList = [], isLoading } = useGetUsersQuery({ selfName })
 
+  const { data: projectsList = [] } = useListProjectsQuery({})
+  // Load user list
   const { data: accessGroupList = [] } = useGetAccessGroupsQuery({
     projectName: '_',
   })
-  console.log(accessGroupList)
+  console.log('ag list', accessGroupList)
 
+
+  const [updateUser] = useUpdateProjectUsersMutation()
+
+  // const accessGroups = { artist: ['project_a', 'project_b', 'project_c'], freelancer: [], supervisor: [] }
+  // const { allProjects, activeProjects } = getProjectsListForSelection([], accessGroups)
+
+  // const [localActiveProjects, setLocalActiveProjects] = useState<$Any[]>(activeProjects)
+  // const [selectedAccessGroups, setSelectedAccessGroups] = useState<$Any>([])
   const [selectedProjects, setSelectedProjects] = useState<string[]>([])
   const [selectedUsers, setSelectedUsers] = useState<string[]>([])
   const [showDialog, setShowDialog] = useState<boolean>(false)
 
-  const onSelectProjects = (selection: string[]) => {
-    setSelectedProjects(selection)
+  const results = api.useGetProjectUsersQuery({ projectName: selectedProjects[0] || '_' })
+  console.log('getting users: ', results)
+
+  const onSelectProjects = (selection: string) => {
+    setSelectedProjects([selection])
   }
 
   const actionEnabled = selectedProjects.length > 0 && selectedUsers.length > 0
 
+  // console.log({userList})
   const filteredUsers = userList.filter(
     (user: UserNode) => !user.isAdmin && !user.isManager && user.active,
   )
+  // console.log({filteredUsers})
+
+  // keeps track of the filters whilst adding/removing filters
+  // const [filters, setFilters] = useState<Filter[]>([
+  //   { id: 'user_filter', type: 'string', label: 'user' },
+  //   { id: 'project_filter', type: 'string', label: 'project' },
+  // ])
 
   const onFiltersChange = (changes: $Any) => {
+    console.log('on change? ', changes)
   }
 
   const onFiltersFinish = (changes: $Any) => {
+    console.log('on filters finish: ', changes)
+  }
+
+  const onSave = async (changes: $Any) => {
+    console.log('saving????')
+    console.log(changes);
+    for (const user of selectedUsers) {
+      console.log('user: ', user)
+      console.log(selectedProjects)
+      const accessGroups = changes.filter((ag: $Any) => ag.selected).map((ag: $Any) => ag.name)
+      console.log('ags: ', accessGroups)
+
+      try {
+        await updateUser({
+          projectName: selectedProjects,
+          userName: user,
+          update: accessGroups
+        }).unwrap()
+      } catch (error: $Any) {
+        console.log(error)
+        toast.error('Unable to update profile')
+        toast.error(error.details)
+      }
+    }
   }
 
   return (
@@ -57,13 +108,15 @@ const ProjectUsers = ({}: Props) => {
           icon="remove"
           label="Remove access"
           disabled={!actionEnabled}
-          onClick={() => setShowDialog(true)}
+          // onClick={handleRevert}
         />
         <SaveButton
           icon="add"
           label="Add access"
           disabled={!actionEnabled}
           onClick={() => setShowDialog(true)}
+          // active={canCommit}
+          // saving={commitUpdating}
         />
       </Toolbar>
 
@@ -115,7 +168,7 @@ const ProjectUsers = ({}: Props) => {
       {showDialog && (
         <AssignAccessGroupsDialog
           accessGroups={accessGroupList.map((item) => ({ ...item, selected: false }))}
-          onSave={() => {}}
+          onSave={onSave}
           onClose={function (): void {
             setShowDialog(false)
           }}
