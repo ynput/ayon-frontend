@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { Editor, TLPageId } from 'tldraw'
-import { getRangeId } from './useSaveDrawing'
+import { getRangeId } from './useSaveAnnotation'
 
 type Props = {
   editor: Editor | null

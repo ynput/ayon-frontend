@@ -1,32 +1,24 @@
-import { getRangeId } from '@containers/TasksProgress/components/Drawover/hooks/useSaveDrawing'
+import { getRangeId } from '@containers/TasksProgress/components/Drawover/hooks/useSaveAnnotation'
 import { useAppSelector } from '@state/store'
 import { useEffect, useState } from 'react'
-
-type file = {
-  id: string
-  name: string
-  mime: string
-  size: number
-  order: number
-}
 
 type Props = {
   openCommentInput: () => void
 }
 
-const useDrawingsSync = ({ openCommentInput }: Props) => {
-  const [drawingFiles, setDrawingFiles] = useState<File[]>([])
-  // listen to the viewer for drawings
-  const drawings = useAppSelector((state) => state.viewer.drawings)
+const useAnnotationsSync = ({ openCommentInput }: Props) => {
+  const [annotationFiles, setAnnotationFiles] = useState<File[]>([])
+  // listen to the viewer for annotations
+  const annotations = useAppSelector((state) => state.viewer.annotations)
 
-  // when drawings change, update the state
+  // when annotations change, update the state
   // convert the base64 image to a file
   useEffect(() => {
     const files: File[] = []
-    for (const key in drawings) {
-      const drawing = drawings[key]
-      const range = drawing.range
-      const img = drawing.img
+    for (const key in annotations) {
+      const annotation = annotations[key]
+      const range = annotation.range
+      const img = annotation.img
       const blob = base64ToBlob(img)
       const file = new File([blob], `${getRangeId(range[0], range[1])}.png`, {
         type: 'image/png',
@@ -34,22 +26,22 @@ const useDrawingsSync = ({ openCommentInput }: Props) => {
       files.push(file)
     }
 
-    // replace or add the drawings
-    setDrawingFiles((f) => {
+    // replace or add the annotations
+    setAnnotationFiles((f) => {
       const newFiles = f.filter((file) => !files.some((f) => f.name === file.name))
       return [...newFiles, ...files]
     })
 
-    // open the comment input if there are drawings
+    // open the comment input if there are annotations
     if (files.length > 0) {
       openCommentInput()
     }
-  }, [drawings, setDrawingFiles])
+  }, [annotations, setAnnotationFiles])
 
-  return [drawingFiles, setDrawingFiles]
+  return { annotationFiles }
 }
 
-export default useDrawingsSync
+export default useAnnotationsSync
 
 function base64ToBlob(base64: string) {
   const byteString = atob(base64.split(',')[1])

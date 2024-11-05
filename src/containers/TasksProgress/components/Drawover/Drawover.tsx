@@ -4,7 +4,7 @@ import * as Styled from './Drawover.styled'
 import { DefaultColorStyle, Editor, GeoShapeGeoStyle, Tldraw, useValue } from 'tldraw'
 import 'tldraw/tldraw.css'
 import clsx from 'clsx'
-import useSaveDrawing from './hooks/useSaveDrawing'
+import useSaveAnnotation from './hooks/useSaveAnnotation'
 import useFramePageSync from './hooks/useFramePageSync'
 import usePlayingState from './hooks/usePlayingState'
 import useInitialEditorLoad from './hooks/useInitialEditorLoad'
@@ -71,9 +71,9 @@ const Drawover = ({ range, durationFrames, isPlaying, videoRef }: Props) => {
   // set initial tool
   useInitialEditorLoad({ editor, isOpen, handleToolClick })
 
-  useSaveDrawing({ editor, videoRef, range })
+  useSaveAnnotation({ editor, videoRef, range })
 
-  const toolbarPortalEl = document.getElementById('view-drawing-tools')
+  const toolbarPortalEl = document.getElementById('view-annotation-tools')
 
   return (
     <Styled.Wrapper style={{ position: 'absolute', inset: 0, opacity: editor ? 1 : 0 }}>

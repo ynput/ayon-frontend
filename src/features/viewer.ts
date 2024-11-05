@@ -24,8 +24,7 @@ type Annotation = {
   width: number
   height: number
   range: [number, number]
-  snapshot: { store: any; schema: any }
-  svg: string
+  overlay: string
   img: string
 }
 
@@ -41,7 +40,7 @@ interface ViewerState {
   quickView: boolean
   upload: boolean
   fullscreen: boolean
-  drawings: { [is: string]: Annotation }
+  annotations: { [is: string]: Annotation }
 }
 
 const initialState: ViewerState = {
@@ -50,7 +49,7 @@ const initialState: ViewerState = {
   upload: false, // used to open upload file picker
   fullscreen: false,
   quickView: false, // used to open quick view mode (reduced UI for quick view)
-  drawings: {},
+  annotations: {},
 }
 
 const viewerSlice = createSlice({
@@ -115,8 +114,8 @@ const viewerSlice = createSlice({
     ) => {
       state.fullscreen = payload ? payload.fullscreen : !state.fullscreen
     },
-    addDrawing: (state: ViewerState, { payload }: PayloadAction<Annotation>) => {
-      state.drawings[payload.id] = payload
+    addAnnotation: (state: ViewerState, { payload }: PayloadAction<Annotation>) => {
+      state.annotations[payload.id] = payload
     },
   },
 })
@@ -128,7 +127,7 @@ export const {
   closeViewer,
   toggleUpload,
   toggleFullscreen,
-  addDrawing,
+  addAnnotation,
 } = viewerSlice.actions
 export default viewerSlice.reducer
 

@@ -21,7 +21,7 @@ import FilesGrid from '@containers/FilesGrid/FilesGrid'
 import { getModules, quillFormats } from './modules'
 import { useGetMentionSuggestionsQuery } from '@queries/mentions/getMentions'
 import useMentionLink from './hooks/useMentionLink'
-import useDrawingsSync from './hooks/useDrawingsSync'
+import useAnnotationsSync from './hooks/useAnnotationsSync'
 
 const mentionTypes = ['@', '@@', '@@@']
 export const mentionTypeOptions = {
@@ -61,7 +61,7 @@ const CommentInput = ({
   const [filesUploading, setFilesUploading] = useState([])
   const [isDropping, setIsDropping] = useState(false)
 
-  const [drawingFiles, setDrawingFiles] = useDrawingsSync({
+  const { annotationFiles } = useAnnotationsSync({
     openCommentInput: onOpen,
   })
 
@@ -492,7 +492,7 @@ const CommentInput = ({
     [projectName, setFiles, setFilesUploading],
   )
 
-  const allFiles = [...drawingFiles, ...(files || []), ...filesUploading].sort(
+  const allFiles = [...annotationFiles, ...(files || []), ...filesUploading].sort(
     (a, b) => a.order - b.order,
   )
   const compactGrid = allFiles.length > 6
