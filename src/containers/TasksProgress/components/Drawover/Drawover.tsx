@@ -18,6 +18,8 @@ type Props = {
   name: string
 }
 
+const presetColors = ['white', 'black', 'red', 'green']
+
 const Drawover = ({ range, durationFrames, isPlaying, videoRef, name }: Props) => {
   const [isOpen, setIsOpen] = useState<null | { id: string; value?: string }>(null)
   const [editor, setEditor] = useState<Editor | null>(null)
@@ -136,14 +138,17 @@ const Drawover = ({ range, durationFrames, isPlaying, videoRef, name }: Props) =
             </Styled.ToolsSection>
             <Styled.Divider />
             <Styled.ToolsSection>
-              <Styled.ToolButton
-                onClick={() => handleToolClick({ id: 'color', value: 'red' })}
-                className={clsx('color', {
-                  selected: currentColor === 'red',
-                })}
-              >
-                <Styled.Color style={{ backgroundColor: 'red' }} />
-              </Styled.ToolButton>
+              {presetColors.map((color) => (
+                <Styled.ToolButton
+                  key={color}
+                  onClick={() => handleToolClick({ id: 'color', value: color })}
+                  className={clsx('color', {
+                    selected: currentColor === color,
+                  })}
+                >
+                  <Styled.Color style={{ backgroundColor: color }} />
+                </Styled.ToolButton>
+              ))}
             </Styled.ToolsSection>
             <Styled.Divider />
             <Styled.ToolsSection>
