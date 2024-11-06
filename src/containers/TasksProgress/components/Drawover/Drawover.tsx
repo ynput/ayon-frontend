@@ -1,7 +1,14 @@
-import { useState } from 'react'
+import { MouseEvent, useState } from 'react'
 import { createPortal } from 'react-dom'
 import * as Styled from './Drawover.styled'
-import { DefaultColorStyle, Editor, GeoShapeGeoStyle, Tldraw, useValue } from 'tldraw'
+import {
+  DefaultColorStyle,
+  DefaultSizeStyle,
+  Editor,
+  GeoShapeGeoStyle,
+  Tldraw,
+  useValue,
+} from 'tldraw'
 import 'tldraw/tldraw.css'
 import clsx from 'clsx'
 import useSaveAnnotation from './hooks/useSaveAnnotation'
@@ -9,6 +16,7 @@ import useFramePageSync from './hooks/useFramePageSync'
 import usePlayingState from './hooks/usePlayingState'
 import useInitialEditorLoad from './hooks/useInitialEditorLoad'
 import useRemoveAnnotation from './hooks/useRemoveAnnotation'
+import { Slider } from 'primereact/slider'
 
 type Props = {
   range: [number, number]
@@ -16,6 +24,21 @@ type Props = {
   isPlaying: boolean
   videoRef: HTMLVideoElement | null
   name: string
+}
+
+type SliderState = {
+  id: string
+  pos: {
+    y: number
+  }
+  value: number
+  steps: number
+  onChange: (e: any) => void
+}
+
+const sliders = {
+  width: ['s', 'm', 'l', 'xl'],
+  opacity: [0, 1, 2, 3, 4],
 }
 
 const presetColors = ['white', 'black', 'red', 'green']
@@ -41,6 +64,10 @@ const Drawover = ({ range, durationFrames, isPlaying, videoRef, name }: Props) =
     editor,
   ])
 
+  const sliderValues = {
+    width: useValue('m', () => editor?.getStyleForNextShape(DefaultSizeStyle), [editor]) || 'm',
+  }
+
   const handleToolClick = ({ id, value }: { id: string; value?: string }) => {
     // first open the drawover if not already open
     if (!isOpen) {
@@ -57,7 +84,6 @@ const Drawover = ({ range, durationFrames, isPlaying, videoRef, name }: Props) =
         editor.setCurrentTool('draw')
         break
       case 'geo':
-        if (!editor || !value) return
         editor.run(() => {
           editor.setStyleForNextShapes(GeoShapeGeoStyle, value)
           editor.setCurrentTool('geo')
@@ -70,16 +96,49 @@ const Drawover = ({ range, durationFrames, isPlaying, videoRef, name }: Props) =
         })
         break
       case 'color':
-        if (!editor || !value) return
         editor.run(() => {
           editor.setStyleForSelectedShapes(DefaultColorStyle, value as any)
           editor.setStyleForNextShapes(DefaultColorStyle, value)
         })
+        break
 
+      case 'size':
+        editor.run(() => {
+          editor.setStyleForSelectedShapes(DefaultSizeStyle, value as any)
+          editor.setStyleForNextShapes(DefaultSizeStyle, value)
+        })
         break
       default:
         break
     }
+  }
+
+  const [slider, setSlider] = useState<SliderState | null>(null)
+
+  const handleSliderOpen = (e: MouseEvent<HTMLButtonElement>, id: keyof typeof sliders) => {
+    const slider = sliders[id]
+    const target = e.target as HTMLButtonElement
+    if (!slider) return
+
+    setSlider({
+      id: id,
+      pos: { y: target.offsetTop },
+      value: sliderValues[id],
+      steps: slider.length,
+      onChange: (e) => {
+        const sliderValue = e.value as number
+        // based on value out of 100, find the index of the slider array
+        const index = Math.floor((sliderValue / 100) * slider.length)
+        const value = slider[index]
+
+        if (!value) return
+
+        editor?.run(() => {
+          editor.setStyleForSelectedShapes(DefaultSizeStyle, value as any)
+          editor.setStyleForNextShapes(DefaultSizeStyle, value as any)
+        })
+      },
+    })
   }
 
   // set initial tool
@@ -144,6 +203,14 @@ const Drawover = ({ range, durationFrames, isPlaying, videoRef, name }: Props) =
               />
             </Styled.ToolsSection>
             <Styled.Divider />
+
+            <Styled.ToolButton
+              onClick={(e) => handleSliderOpen(e, 'width')}
+              icon={`pen_size_${sliders.width.indexOf(sliderValues.width)}`}
+              style={{ width: '100%' }}
+            />
+
+            <Styled.Divider />
             <Styled.ToolsSection>
               {presetColors.map((color) => (
                 <Styled.ToolButton
@@ -162,6 +229,19 @@ const Drawover = ({ range, durationFrames, isPlaying, videoRef, name }: Props) =
               <Styled.ToolButton icon="undo" onClick={() => editor?.undo()} />
               <Styled.ToolButton icon="redo" onClick={() => editor?.redo()} />
             </Styled.ToolsSection>
+            {slider && (
+              <Styled.Slider
+                style={{
+                  top: slider.pos.y,
+                }}
+              >
+                <Slider
+                  value={slider.value}
+                  step={sliders[slider.id].length}
+                  onChange={slider.onChange}
+                />
+              </Styled.Slider>
+            )}
           </Styled.Toolbar>,
           toolbarPortalEl,
         )}

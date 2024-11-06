@@ -309,7 +309,7 @@ const Viewer = ({ onClose }: ViewerProps) => {
           onUpload={handleUploadAction(true)}
           projectName={projectName}
         />
-        <div id="view-annotation-tools"></div>
+        <div id="view-annotation-tools" style={{ position: 'relative' }}></div>
       </Styled.RightToolBar>
       {!noVersions && <ViewerDetailsPanel versionIds={versionIds} projectName={projectName} />}
     </Styled.Container>

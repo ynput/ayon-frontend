@@ -58,3 +58,24 @@ export const Divider = styled.hr`
   border-top: 1px solid var(--md-sys-color-outline-variant);
   width: 100%;
 `
+
+export const Slider = styled.div`
+  position: absolute;
+
+  border-radius: var(--border-radius-m);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  .p-slider {
+    width: 100%;
+  }
+
+  left: -4px;
+  translate: -100% -6px;
+  height: 32px;
+  width: 100px;
+  background-color: red;
+  z-index: 1000;
+`
