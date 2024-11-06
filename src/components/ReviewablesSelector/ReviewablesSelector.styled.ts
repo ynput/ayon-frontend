@@ -41,8 +41,8 @@ export const ReviewableCard = styled.div`
 
   .file-thumbnail {
     width: 100%;
-    height: 48px;
-    width: 48px;
+    height: 62px;
+    width: 62px;
     object-fit: cover;
     border-radius: var(--border-radius-m);
   }
@@ -73,8 +73,8 @@ export const Label = styled.span`
 `
 
 export const AddButton = styled(Button)`
-  width: 48px;
-  height: 48px;
+  width: 62px;
+  height: 62px;
   background-color: var(--md-sys-color-surface-container-high);
 
   &:hover {
