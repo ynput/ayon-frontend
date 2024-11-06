@@ -47,24 +47,31 @@ const Drawover = ({ range, durationFrames, isPlaying, videoRef, name }: Props) =
       setIsOpen({ id, value })
     }
 
+    if (!editor) return
+
     switch (id) {
       case 'select':
-        editor?.setCurrentTool('select')
+        editor.setCurrentTool('select')
         break
       case 'draw':
-        editor?.setCurrentTool('draw')
+        editor.setCurrentTool('draw')
         break
       case 'geo':
         if (!editor || !value) return
-        editor?.run(() => {
+        editor.run(() => {
           editor.setStyleForNextShapes(GeoShapeGeoStyle, value)
           editor.setCurrentTool('geo')
         })
 
         break
+      case 'arrow':
+        editor.run(() => {
+          editor.setCurrentTool('arrow')
+        })
+        break
       case 'color':
         if (!editor || !value) return
-        editor?.run(() => {
+        editor.run(() => {
           editor.setStyleForSelectedShapes(DefaultColorStyle, value as any)
           editor.setStyleForNextShapes(DefaultColorStyle, value)
         })
@@ -130,7 +137,7 @@ const Drawover = ({ range, durationFrames, isPlaying, videoRef, name }: Props) =
               />
               <Styled.ToolButton
                 icon="line_end_arrow"
-                onClick={() => handleToolClick({ id: 'geo', value: 'arrow-up' })}
+                onClick={() => handleToolClick({ id: 'arrow' })}
                 className={clsx({
                   selected: currentToolId === 'geo' && currentGeoShape === 'arrow-up',
                 })}
