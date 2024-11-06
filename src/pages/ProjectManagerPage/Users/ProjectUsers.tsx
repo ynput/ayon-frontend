@@ -7,15 +7,16 @@ import { useState } from 'react'
 import { useSelector } from 'react-redux'
 import ProjectUserList from './ProjectUserList'
 import SearchFilter from '@components/SearchFilter/SearchFilter'
-import { getProjectsListForSelection } from '@pages/SettingsPage/UsersSettings/UserAccessGroupsForm/UserAccessGroupsHelpers'
 import { useListProjectsQuery } from '@queries/project/getProject'
 import { useGetAccessGroupsQuery } from '@queries/accessGroups/getAccessGroups'
 import AssignAccessGroupsDialog from './AssignAccessGroupsDialog'
-import ProjectList from '@containers/projectList'
 import {api }from '@api/rest/project'
 import { useUpdateProjectUsersMutation } from '@queries/project/updateProject'
 import { toast } from 'react-toastify'
-import { AccessGroupObject } from '@api/rest/accessGroups'
+import LocalProjectList from './ProjectList'
+import ProjectList from '@containers/projectList'
+import { getAllProjectUsers, mapUsersByAccessGroups } from './mappers'
+import { access } from 'fs'
 
 type Props = {}
 
@@ -42,20 +43,23 @@ const ProjectUsers = ({}: Props) => {
   const [selectedUsers, setSelectedUsers] = useState<string[]>([])
   const [showDialog, setShowDialog] = useState<boolean>(false)
 
-  const results = api.useGetProjectUsersQuery({ projectName: selectedProjects[0] || '_' })
-  console.log('getting users: ', results)
+  const result = api.useGetProjectUsersQuery({ projectName: selectedProjects[0] || '_' })
+  const mappedUsers = mapUsersByAccessGroups(result.data)
 
-  const onSelectProjects = (selection: string) => {
+
+  const onSelectProjects = (selection: $Any) => {
+    console.log('on select projects...')
     setSelectedProjects([selection])
   }
 
   const actionEnabled = selectedProjects.length > 0 && selectedUsers.length > 0
 
   // console.log({userList})
-  const filteredUsers = userList.filter(
+  const activeNonManagerUsers = userList.filter(
     (user: UserNode) => !user.isAdmin && !user.isManager && user.active,
   )
-  // console.log({filteredUsers})
+  const allProjectUsers = getAllProjectUsers(mappedUsers)
+  const unasignedUsers = activeNonManagerUsers.filter((user: UserNode) => !allProjectUsers.includes(user.name))
 
   // keeps track of the filters whilst adding/removing filters
   // const [filters, setFilters] = useState<Filter[]>([
@@ -127,15 +131,15 @@ const ProjectUsers = ({}: Props) => {
           minSize={10}
         >
           {/* @ts-ignore */}
-          <ProjectList selection={selectedProjects} onSelect={onSelectProjects} />
+          <ProjectList selection={selectedProjects} onSelect={setSelectedProjects} multiselect />
         </SplitterPanel>
 
         <SplitterPanel size={50}>
           <ProjectUserList
             header="Username"
             selectedUsers={selectedUsers}
-            userList={filteredUsers}
-            tableList={filteredUsers}
+            userList={unasignedUsers}
+            tableList={unasignedUsers}
             isLoading={isLoading}
             onSelectUsers={(selection: string[]) => setSelectedUsers(selection)}
             sortable
@@ -144,18 +148,20 @@ const ProjectUsers = ({}: Props) => {
 
         <SplitterPanel size={20}>
           <Splitter layout="vertical">
-            {accessGroupList.map((accessGroup) => {
+            {Object.keys(mappedUsers).map((accessGroup) => {
               return (
                 <SplitterPanel
-                  key={accessGroup.name}
+                  key={accessGroup}
                   className="flex align-items-center justify-content-center"
                   minSize={20}
                 >
                   <ProjectUserList
-                    header={accessGroup.name}
+                    header={accessGroup}
                     selectedUsers={[]}
-                    userList={filteredUsers}
-                    tableList={filteredUsers}
+                    userList={mappedUsers[accessGroup]}
+                    tableList={activeNonManagerUsers.filter((user: UserNode) =>
+                      mappedUsers[accessGroup].includes(user.name),
+                    )}
                     isLoading={isLoading}
                   />
                 </SplitterPanel>

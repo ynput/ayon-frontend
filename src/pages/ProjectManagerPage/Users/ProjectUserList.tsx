@@ -47,7 +47,7 @@ export const ProfileRow = ({ rowData }: $Any) => {
 
 type Props = {
   selectedUsers: string[],
-  userList: UserModel[],
+  userList: string[],
   tableList: $Any,
   isLoading: boolean
   header?: string
@@ -66,7 +66,7 @@ const ProjectUserList = ({
 }: Props) => {
   // Selection
   const selection = useMemo(() => {
-    return userList.filter((user: UserModel) => selectedUsers.includes(user.name))
+    return userList.filter((user: string) => selectedUsers.includes(user))
   }, [selectedUsers, userList])
 
   const onSelectionChange = (e: $Any) => {
