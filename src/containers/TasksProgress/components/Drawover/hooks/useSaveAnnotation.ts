@@ -15,7 +15,6 @@ const useSaveAnnotation = ({ editor, videoRef, range, name }: Props) => {
   const dispatch = useAppDispatch()
 
   const saveAnnotation = async () => {
-    console.log('SAVING ANNOTATION: start', range)
     if (!editor) return
     const currentPage = editor.getCurrentPage()
     if (!currentPage) return

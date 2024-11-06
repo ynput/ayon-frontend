@@ -18,7 +18,6 @@ const useRemoveAnnotation = ({ editor }: Props) => {
 
     if (annotationsToRemove.length > 0) {
       const annotationId = annotationsToRemove[0]
-      console.log(annotationId)
 
       const page = editor.getPage(annotationId as TLPageId)
       if (!page) return

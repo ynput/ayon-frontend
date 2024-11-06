@@ -5,6 +5,7 @@ import { useEffect } from 'react'
 type Props = {
   openCommentInput: () => void
   entityId: string
+  filesUploading: File[]
 }
 
 type AnnotationPreview = Annotation & {
@@ -12,30 +13,22 @@ type AnnotationPreview = Annotation & {
 }
 
 // annotations are temporary store
-const useAnnotationsSync = ({ openCommentInput, entityId }: Props) => {
+const useAnnotationsSync = ({ openCommentInput, entityId, filesUploading }: Props) => {
   const dispatch = useAppDispatch()
   // listen to the viewer for annotations
   const allAnnotations = useAppSelector((state) => state.viewer.annotations)
-  // filter out annotations that are for this entity
+  // filter out annotations that are for this entity and are NOT uploading
   const annotations = Object.values(allAnnotations)
-    .filter((annotation) => annotation.versionId === entityId)
+    .filter(
+      (annotation) =>
+        annotation.versionId === entityId &&
+        !filesUploading.some((file) => file.name === annotation.name),
+    )
     .map((annotation) => ({ ...annotation, isAnnotation: true })) as AnnotationPreview[]
 
   // when annotations change, update the state
   // convert the base64 image to a file
   useEffect(() => {
-    // const files: File[] = []
-    // for (const key in annotations) {
-    //   const annotation = annotations[key]
-    //   const range = annotation.range
-    //   const img = annotation.img
-    //   const blob = base64ToBlob(img)
-    //   const file = new File([blob], `${getRangeId(range[0], range[1])}.png`, {
-    //     type: 'image/png',
-    //   })
-    //   files.push(file)
-    // }
-
     // open the comment input if there are annotations
     if (annotations.length > 0) {
       openCommentInput()
@@ -50,14 +43,3 @@ const useAnnotationsSync = ({ openCommentInput, entityId }: Props) => {
 }
 
 export default useAnnotationsSync
-
-// function base64ToBlob(base64: string) {
-//   const byteString = atob(base64.split(',')[1])
-//   const mimeString = base64.split(',')[0].split(':')[1].split(';')[0]
-//   const ab = new ArrayBuffer(byteString.length)
-//   const ia = new Uint8Array(ab)
-//   for (let i = 0; i < byteString.length; i++) {
-//     ia[i] = byteString.charCodeAt(i)
-//   }
-//   return new Blob([ab], { type: mimeString })
-// }
