@@ -1,27 +1,39 @@
+// React and related hooks
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import * as Styled from './CommentInput.styled'
-import { Button, Icon, SaveButton } from '@ynput/ayon-react-components'
 
-import ReactQuill, { Quill } from 'react-quill-ayon'
-var Delta = Quill.import('delta')
+// Third-party libraries
 import clsx from 'clsx'
-
 import { toast } from 'react-toastify'
+import ReactQuill, { Quill } from 'react-quill-ayon'
+
+// Components
+import { Button, Icon, SaveButton } from '@ynput/ayon-react-components'
 import CommentMentionSelect from '../CommentMentionSelect/CommentMentionSelect'
+import InputMarkdownConvert from './InputMarkdownConvert'
+import FilesGrid from '@containers/FilesGrid/FilesGrid'
+
+// Styled components
+import * as Styled from './CommentInput.styled'
+
+// Helpers and utilities
 import getMentionOptions from '@containers/Feed/mentionHelpers/getMentionOptions'
 import getMentionUsers from '@containers/Feed/mentionHelpers/getMentionUsers'
 import getMentionTasks from '@containers/Feed/mentionHelpers/getMentionTasks'
 import getMentionVersions from '@containers/Feed/mentionHelpers/getMentionVersions'
 import { convertToMarkdown } from './quillToMarkdown'
 import { handleFileDrop, parseImages, typeWithDelay } from './helpers'
+import { getModules, quillFormats } from './modules'
+
+// Hooks
 import useInitialValue from './hooks/useInitialValue'
 import useSetCursorEnd from './hooks/useSetCursorEnd'
-import InputMarkdownConvert from './InputMarkdownConvert'
-import FilesGrid from '@containers/FilesGrid/FilesGrid'
-import { getModules, quillFormats } from './modules'
-import { useGetMentionSuggestionsQuery } from '@queries/mentions/getMentions'
 import useMentionLink from './hooks/useMentionLink'
 import useAnnotationsSync from './hooks/useAnnotationsSync'
+
+// State management
+import { useGetMentionSuggestionsQuery } from '@queries/mentions/getMentions'
+
+var Delta = Quill.import('delta')
 
 const mentionTypes = ['@', '@@', '@@@']
 export const mentionTypeOptions = {
@@ -61,8 +73,9 @@ const CommentInput = ({
   const [filesUploading, setFilesUploading] = useState([])
   const [isDropping, setIsDropping] = useState(false)
 
-  const { annotationFiles } = useAnnotationsSync({
+  const { annotations, removeAnnotation } = useAnnotationsSync({
     openCommentInput: onOpen,
+    entityId: entities[0]?.id,
   })
 
   // MENTION STATES
@@ -436,13 +449,18 @@ const CommentInput = ({
     setFilesUploading((prev) => prev.filter((uploading) => uploading.name !== file.name))
   }
 
-  const handleFileRemove = (id, name) => {
-    // remove file from files
-    setFiles((prev) => prev.filter((file) => file.id !== id))
-    // remove from uploading
-    setFilesUploading((prev) => {
-      return prev.filter((file) => file.name !== name)
-    })
+  const handleFileRemove = (id, name, isAnnotation) => {
+    if (isAnnotation) {
+      // remove from annotations (if it's an annotation)
+      removeAnnotation(id)
+    } else {
+      // remove file from files
+      setFiles((prev) => prev.filter((file) => file.id !== id))
+      // remove from uploading
+      setFilesUploading((prev) => {
+        return prev.filter((file) => file.name !== name)
+      })
+    }
   }
 
   const handleFileProgress = (e, file) => {
@@ -492,7 +510,7 @@ const CommentInput = ({
     [projectName, setFiles, setFilesUploading],
   )
 
-  const allFiles = [...annotationFiles, ...(files || []), ...filesUploading].sort(
+  const allFiles = [...annotations, ...(files || []), ...filesUploading].sort(
     (a, b) => a.order - b.order,
   )
   const compactGrid = allFiles.length > 6

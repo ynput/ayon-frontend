@@ -68,6 +68,7 @@ const FileUploadCard = ({
   name,
   mime,
   src,
+  isAnnotation,
   size,
   progress,
   onRemove,
@@ -85,7 +86,7 @@ const FileUploadCard = ({
   const fileName = nameParts.join('.')
 
   const isPreviewable = isFilePreviewable(mime || '.' + extension)
-  const isImage = mime?.includes('image/')
+  const isImage = mime?.includes('image/') || isAnnotation
 
   const downloadComponent = (
     <>

@@ -19,13 +19,16 @@ const initialStateFromQueryParams: ViewerState = Object.entries(initialStateQuer
   {} as Partial<ViewerState>,
 ) as ViewerState
 
-type Annotation = {
+export type Annotation = {
   id: string
+  name: string
   width: number
   height: number
   range: [number, number]
   overlay: string
   img: string
+  versionId: string
+  reviewableId: string
 }
 
 interface ViewerState {
@@ -40,7 +43,8 @@ interface ViewerState {
   quickView: boolean
   upload: boolean
   fullscreen: boolean
-  annotations: { [is: string]: Annotation }
+  annotations: { [id: string]: Annotation }
+  annotationsToRemove: string[]
 }
 
 const initialState: ViewerState = {
@@ -50,6 +54,7 @@ const initialState: ViewerState = {
   fullscreen: false,
   quickView: false, // used to open quick view mode (reduced UI for quick view)
   annotations: {},
+  annotationsToRemove: [],
 }
 
 const viewerSlice = createSlice({
@@ -114,8 +119,26 @@ const viewerSlice = createSlice({
     ) => {
       state.fullscreen = payload ? payload.fullscreen : !state.fullscreen
     },
-    addAnnotation: (state: ViewerState, { payload }: PayloadAction<Annotation>) => {
-      state.annotations[payload.id] = payload
+    addAnnotation: (
+      state: ViewerState,
+      { payload }: PayloadAction<Omit<Annotation, 'reviewableId' | 'versionId'>>,
+    ) => {
+      state.annotations[payload.id] = {
+        versionId: state.versionIds[0],
+        reviewableId: state.reviewableIds[0],
+        ...payload,
+      }
+    },
+    removeAnnotation: (state: ViewerState, { payload }: PayloadAction<string>) => {
+      delete state.annotations[payload]
+      if (!state.annotationsToRemove.includes(payload)) {
+        state.annotationsToRemove.push(payload)
+      }
+    },
+
+    // callback from the drawover editor that the annotation has been removed
+    onAnnotationRemoved: (state: ViewerState, { payload }: PayloadAction<string>) => {
+      state.annotationsToRemove = state.annotationsToRemove.filter((id) => id !== payload)
     },
   },
 })
@@ -128,6 +151,8 @@ export const {
   toggleUpload,
   toggleFullscreen,
   addAnnotation,
+  removeAnnotation,
+  onAnnotationRemoved,
 } = viewerSlice.actions
 export default viewerSlice.reducer
 

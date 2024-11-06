@@ -7,6 +7,7 @@ import VideoPlayerControls from './VideoPlayerControls'
 import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
 import clsx from 'clsx'
 import Drawover from '@containers/TasksProgress/components/Drawover/Drawover'
+import { snakeCase } from 'lodash'
 
 const VideoPlayerContainer = styled.div`
   position: absolute;
@@ -54,7 +55,7 @@ const VideoPlayerContainer = styled.div`
   }
 `
 
-const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay }) => {
+const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, label = '' }) => {
   const videoRef = useRef(null)
   const videoRowRef = useRef(null)
 
@@ -363,6 +364,7 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay }) => {
             durationFrames={numFrames}
             isPlaying={isPlaying}
             videoRef={videoRef.current}
+            name={snakeCase(label)}
           />
         </div>
       </div>

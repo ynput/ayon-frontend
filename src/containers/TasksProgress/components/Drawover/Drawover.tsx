@@ -8,15 +8,17 @@ import useSaveAnnotation from './hooks/useSaveAnnotation'
 import useFramePageSync from './hooks/useFramePageSync'
 import usePlayingState from './hooks/usePlayingState'
 import useInitialEditorLoad from './hooks/useInitialEditorLoad'
+import useRemoveAnnotation from './hooks/useRemoveAnnotation'
 
 type Props = {
   range: [number, number]
   durationFrames: number
   isPlaying: boolean
   videoRef: HTMLVideoElement | null
+  name: string
 }
 
-const Drawover = ({ range, durationFrames, isPlaying, videoRef }: Props) => {
+const Drawover = ({ range, durationFrames, isPlaying, videoRef, name }: Props) => {
   const [isOpen, setIsOpen] = useState<null | { id: string; value?: string }>(null)
   const [editor, setEditor] = useState<Editor | null>(null)
 
@@ -25,6 +27,9 @@ const Drawover = ({ range, durationFrames, isPlaying, videoRef }: Props) => {
 
   // disabled editor when playing video
   usePlayingState({ editor, isPlaying })
+
+  // remove annotations when removed in the comment input
+  useRemoveAnnotation({ editor })
 
   const currentToolId = useValue('select', () => editor?.getCurrentToolId(), [editor])
   const currentGeoShape = useValue('oval', () => editor?.getStyleForNextShape(GeoShapeGeoStyle), [
@@ -71,7 +76,7 @@ const Drawover = ({ range, durationFrames, isPlaying, videoRef }: Props) => {
   // set initial tool
   useInitialEditorLoad({ editor, isOpen, handleToolClick })
 
-  useSaveAnnotation({ editor, videoRef, range })
+  useSaveAnnotation({ editor, videoRef, range, name })
 
   const toolbarPortalEl = document.getElementById('view-annotation-tools')
 

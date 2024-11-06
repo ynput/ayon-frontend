@@ -8,9 +8,10 @@ type Props = {
   editor: Editor | null
   videoRef: HTMLVideoElement | null
   range: [number, number]
+  name: string
 }
 
-const useSaveAnnotation = ({ editor, videoRef, range }: Props) => {
+const useSaveAnnotation = ({ editor, videoRef, range, name }: Props) => {
   const dispatch = useAppDispatch()
 
   const saveAnnotation = async () => {
@@ -55,12 +56,13 @@ const useSaveAnnotation = ({ editor, videoRef, range }: Props) => {
       // Dispatch the combined image and current frame time
       dispatch(
         addAnnotation({
-          id: getRangeId(range[0], range[1]),
-          overlay: overlay,
-          img: dataUrl,
+          id: currentPage.id,
+          name: `${name}-${range[0]}-${range[1]}.png`,
           range: range,
           width: canvas.width,
           height: canvas.height,
+          overlay: overlay,
+          img: dataUrl,
         }),
       )
     }
@@ -84,8 +86,6 @@ const useSaveAnnotation = ({ editor, videoRef, range }: Props) => {
 }
 
 export default useSaveAnnotation
-
-export const getRangeId = (start: number, end: number): string => `${start}-${end}`
 
 export type PageSnapshot = {
   store: SerializedStore<TLRecord>
