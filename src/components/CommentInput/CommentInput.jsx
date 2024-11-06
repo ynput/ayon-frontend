@@ -74,7 +74,7 @@ const CommentInput = ({
   const [filesUploading, setFilesUploading] = useState([])
   const [isDropping, setIsDropping] = useState(false)
 
-  const { annotations, removeAnnotation } = useAnnotationsSync({
+  const { annotations, removeAnnotation, goToAnnotation } = useAnnotationsSync({
     openCommentInput: onOpen,
     entityId: entities[0]?.id,
     filesUploading,
@@ -436,7 +436,6 @@ const CommentInput = ({
 
   const uploadAnnotations = useAnnotationsUpload({
     projectName,
-    onUploadProgress: handleFileProgress,
     onSuccess: handleFileUploaded,
   })
 
@@ -576,6 +575,7 @@ const CommentInput = ({
               onRemove={handleFileRemove}
               style={{ borderBottom: '1px solid var(--md-sys-color-outline-variant)' }}
               projectName={projectName}
+              onAnnotationClick={goToAnnotation}
             />
           )}
           {isOpen && !disabled ? (

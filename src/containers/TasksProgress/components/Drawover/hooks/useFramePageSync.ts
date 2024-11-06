@@ -6,10 +6,11 @@ type Props = {
   editor: Editor | null
   range: [number, number]
   durationFrames: number
+  isPlaying: boolean
 }
 
 // syncs the tldraw pages with the current frame
-const useFramePageSync = ({ editor, range, durationFrames }: Props) => {
+const useFramePageSync = ({ editor, range, durationFrames, isPlaying }: Props) => {
   const reviewableIds = useAppSelector((state) => state.viewer.reviewableIds)
   const reviewableId = reviewableIds[0]
 
@@ -18,6 +19,7 @@ const useFramePageSync = ({ editor, range, durationFrames }: Props) => {
   // when frame updates, set the page to the new frame
   useEffect(() => {
     if (editor) {
+      if (isPlaying) return
       if (fFrame > durationFrames || lFrame > durationFrames) return
 
       // get the page for the frame
@@ -33,7 +35,7 @@ const useFramePageSync = ({ editor, range, durationFrames }: Props) => {
       // set the current page to the frame
       editor.setCurrentPage(annotationId)
     }
-  }, [range, editor, durationFrames])
+  }, [range, editor, durationFrames, isPlaying])
 }
 
 export default useFramePageSync

@@ -1,5 +1,5 @@
 import { useAppDispatch, useAppSelector } from '@state/store'
-import { Annotation, removeAnnotation } from '@state/viewer'
+import { Annotation, goToFrame, removeAnnotation } from '@state/viewer'
 import { useEffect } from 'react'
 
 type Props = {
@@ -39,7 +39,16 @@ const useAnnotationsSync = ({ openCommentInput, entityId, filesUploading }: Prop
     dispatch(removeAnnotation(id))
   }
 
-  return { annotations, removeAnnotation: handleRemoveAnnotation }
+  const handleGoToAnnotation = (annotation: AnnotationPreview) => {
+    const firstFrame = annotation.range[0]
+    dispatch(goToFrame(firstFrame - 1))
+  }
+
+  return {
+    annotations,
+    removeAnnotation: handleRemoveAnnotation,
+    goToAnnotation: handleGoToAnnotation,
+  }
 }
 
 export default useAnnotationsSync

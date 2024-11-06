@@ -23,7 +23,7 @@ const Drawover = ({ range, durationFrames, isPlaying, videoRef, name }: Props) =
   const [editor, setEditor] = useState<Editor | null>(null)
 
   // when frame updates, set the page to the new frame
-  useFramePageSync({ editor, range, durationFrames })
+  useFramePageSync({ editor, range, durationFrames, isPlaying })
 
   // disabled editor when playing video
   usePlayingState({ editor, isPlaying })

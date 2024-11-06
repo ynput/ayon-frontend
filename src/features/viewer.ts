@@ -45,6 +45,7 @@ interface ViewerState {
   fullscreen: boolean
   annotations: { [id: string]: Annotation }
   annotationsToRemove: string[]
+  goToFrame: number | null
 }
 
 const initialState: ViewerState = {
@@ -55,6 +56,7 @@ const initialState: ViewerState = {
   quickView: false, // used to open quick view mode (reduced UI for quick view)
   annotations: {},
   annotationsToRemove: [],
+  goToFrame: null,
 }
 
 const viewerSlice = createSlice({
@@ -135,7 +137,9 @@ const viewerSlice = createSlice({
         state.annotationsToRemove.push(payload)
       }
     },
-
+    goToFrame: (state: ViewerState, { payload }: PayloadAction<ViewerState['goToFrame']>) => {
+      state.goToFrame = payload
+    },
     // callback from the drawover editor that the annotation has been removed
     onAnnotationRemoved: (state: ViewerState, { payload }: PayloadAction<string>) => {
       state.annotationsToRemove = state.annotationsToRemove.filter((id) => id !== payload)
@@ -153,6 +157,7 @@ export const {
   addAnnotation,
   removeAnnotation,
   onAnnotationRemoved,
+  goToFrame,
 } = viewerSlice.actions
 export default viewerSlice.reducer
 

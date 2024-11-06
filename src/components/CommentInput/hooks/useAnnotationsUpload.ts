@@ -1,17 +1,15 @@
 import { useAppDispatch } from '@state/store'
 import { Annotation, removeAnnotation } from '@state/viewer'
 import { uploadFile } from '../helpers'
-import { AxiosProgressEvent } from 'axios'
 import { $Any } from '@types'
 import { toast } from 'react-toastify'
 
 type Props = {
   projectName: string
-  onUploadProgress: (event: AxiosProgressEvent, file: File) => void
   onSuccess: (data: $Any) => void
 }
 
-const useAnnotationsUpload = ({ projectName, onUploadProgress, onSuccess }: Props) => {
+const useAnnotationsUpload = ({ projectName, onSuccess }: Props) => {
   const dispatch = useAppDispatch()
 
   const uploadAnnotations = async (annotations: Annotation[]) => {

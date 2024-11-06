@@ -8,6 +8,7 @@ import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
 import clsx from 'clsx'
 import Drawover from '@containers/TasksProgress/components/Drawover/Drawover'
 import { snakeCase } from 'lodash'
+import useGoToFrame from './hooks/useGoToFrame'
 
 const VideoPlayerContainer = styled.div`
   position: absolute;
@@ -79,6 +80,8 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, label = ''
     width: null,
     height: null,
   })
+
+  useGoToFrame({ setCurrentTime, frameRate, duration, videoElement: videoRef.current })
 
   //
   // Video size handling

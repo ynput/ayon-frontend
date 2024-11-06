@@ -11,14 +11,19 @@ const FilesGrid = ({
   projectName,
   isDownloadable,
   onExpand,
+  onAnnotationClick,
   ...props
 }) => {
   if (!files.length) return null
 
-  const handleExpand = (index) => () => {
-    const filteredFiles = files.filter((file) => isFilePreviewable(file.mime, file.ext))
-    const updatedIndex = filteredFiles.findIndex((file) => file.id === files[index].id)
-    onExpand({ files: filteredFiles, index: updatedIndex, activityId: activityId })
+  const handleExpand = (file, index) => {
+    if (file.isAnnotation) {
+      onAnnotationClick?.(file)
+    } else {
+      const filteredFiles = files.filter((file) => isFilePreviewable(file.mime, file.ext))
+      const updatedIndex = filteredFiles.findIndex((file) => file.id === files[index].id)
+      onExpand({ files: filteredFiles, index: updatedIndex, activityId: activityId })
+    }
   }
 
   return (
@@ -36,7 +41,7 @@ const FilesGrid = ({
           onRemove={onRemove ? () => onRemove(file.id, file.name, file.isAnnotation) : undefined}
           isCompact={isCompact}
           isDownloadable={isDownloadable}
-          onExpand={handleExpand(index)}
+          onExpand={() => handleExpand(file, index)}
         />
       ))}
     </Styled.Grid>

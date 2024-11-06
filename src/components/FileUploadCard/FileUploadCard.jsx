@@ -96,19 +96,23 @@ const FileUploadCard = ({
   )
 
   const handleImageClick = () => {
-    if (!isPreviewable || !onExpand || imageError) return
+    if ((!isPreviewable && !isAnnotation) || !onExpand || imageError) return
     onExpand()
   }
 
   return (
-    <Styled.File className={clsx({ compact: isCompact, isDownloadable, isPreviewable })}>
+    <Styled.File
+      className={clsx({ compact: isCompact, isDownloadable, isPreviewable, isAnnotation })}
+    >
       <Styled.ContentWrapper
-        className={clsx('content-wrapper', { isPreviewable })}
+        className={clsx('content-wrapper', { isPreviewable, isAnnotation })}
         onClick={handleImageClick}
       >
         <Icon icon={getIconForType(mime || '.' + extension)} className="type-icon" />
         {isImage && src && (
-          <Styled.ImageWrapper className={clsx({ isDownloadable })}>
+          <Styled.ImageWrapper
+            className={clsx({ isDownloadable: isDownloadable || isPreviewable || isAnnotation })}
+          >
             <img
               src={src}
               onError={() => setImageError(true)}
@@ -119,6 +123,7 @@ const FileUploadCard = ({
           </Styled.ImageWrapper>
         )}
         {isPreviewable && <Icon icon="open_in_full" className="expand-icon" />}
+        {isAnnotation && <Icon icon="play_circle" className="expand-icon" />}
       </Styled.ContentWrapper>
       <Styled.Footer className={clsx({ inProgress, isPreviewable, isDownloadable })}>
         <span className="progress" style={{ right: `${100 - progress}%` }} />
