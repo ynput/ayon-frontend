@@ -20,6 +20,8 @@ type Props = {
   isUnassigned?: boolean
   onContextMenu?: $Any
   onSelectUsers?: (selectedUsers: string[]) => void
+  onAdd: () => void
+  onRemove?: (user: string) => void
 }
 
 const ProjectUserList = ({
@@ -30,6 +32,8 @@ const ProjectUserList = ({
   header,
   sortable = false,
   isUnassigned = false,
+  onAdd,
+  onRemove,
   onContextMenu,
   onSelectUsers,
 }: Props) => {
@@ -74,6 +78,12 @@ const ProjectUserList = ({
                 <UserRow
                   rowData={rowData}
                   isUnassigned={isUnassigned}
+                  onAdd={() => {
+                    onAdd()
+                  }}
+                  onRemove={() => {
+                    onRemove && onRemove(rowData.name)
+                  }}
                   showButtonsOnHover={selectedUnassignedUsers.length == 0}
                   selected={selectedUnassignedUserNames.includes(rowData.name)}
                 />

@@ -2,8 +2,8 @@ import { Button } from '@ynput/ayon-react-components'
 import UserImage from '@components/UserImage'
 
 import styled from 'styled-components'
-import { $Any } from '@types'
 import clsx from 'clsx'
+import { $Any } from '@types'
 
 const StyledProfileRow = styled.div`
   display: flex;
@@ -28,12 +28,23 @@ const StyledProfileRow = styled.div`
     }
   }
 `
+type Props = {
+  rowData: $Any
+  selected: boolean
+  isUnassigned: boolean
+  showButtonsOnHover: boolean
+  onAdd: () => void
+  onRemove?: () => void
+}
+
 export const UserRow = ({
   rowData,
   selected = false,
   isUnassigned = false,
   showButtonsOnHover = false,
-}: $Any) => {
+  onAdd,
+  onRemove,
+}: Props) => {
   const { name, self, isMissing } = rowData
   return (
     <StyledProfileRow className={clsx({ actionable: showButtonsOnHover, selected })}>
@@ -64,6 +75,7 @@ export const UserRow = ({
         icon={'add'}
         onClick={(e) => {
           e.stopPropagation()
+          onAdd()
         }}
       >
         {isUnassigned ? (
@@ -83,6 +95,7 @@ export const UserRow = ({
           variant="filled"
           onClick={(e) => {
             e.stopPropagation()
+            onRemove!()
           }}
         >
           {isUnassigned ? (
