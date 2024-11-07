@@ -2,56 +2,23 @@
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { TablePanel, Section } from '@ynput/ayon-react-components'
-import UserImage from '@components/UserImage'
 
 import { useMemo } from 'react'
-import styled from 'styled-components'
 import clsx from 'clsx'
 import useTableLoadingData from '@hooks/useTableLoadingData'
-import { accessGroupsSortFunction } from '@helpers/user'
 import { $Any } from '@types'
-import { UserModel } from '@api/rest/auth'
-
-const StyledProfileRow = styled.div`
-  display: flex;
-  align-items: center;
-  gap: var(--base-gap-large);
-`
-export const ProfileRow = ({ rowData }: $Any) => {
-  const { name, self, isMissing } = rowData
-  return (
-    <StyledProfileRow>
-      {/* @ts-ignore */}
-      <UserImage
-        name={name}
-        size={25}
-        style={{
-          transform: 'scale(0.8)',
-          minHeight: 25,
-          minWidth: 25,
-          maxHeight: 25,
-          maxWidth: 25,
-        }}
-        highlight={self}
-      />
-      <span
-        style={{
-          color: isMissing ? 'var(--color-hl-error)' : 'inherit',
-        }}
-      >
-        {name}
-      </span>
-    </StyledProfileRow>
-  )
-}
+import { UserNode } from '@api/graphql'
+import UserRow from './UserRow'
 
 type Props = {
-  selectedUsers: string[],
-  userList: string[],
-  tableList: $Any,
+  selectedUsers: string[]
+  userList: string[]
+  tableList: $Any
   isLoading: boolean
   header?: string
   sortable?: boolean
+  isUnassigned?: boolean
+  onContextMenu?: $Any
   onSelectUsers?: (selectedUsers: string[]) => void
 }
 
@@ -62,6 +29,8 @@ const ProjectUserList = ({
   isLoading,
   header,
   sortable = false,
+  isUnassigned = false,
+  onContextMenu,
   onSelectUsers,
 }: Props) => {
   // Selection
@@ -70,37 +39,46 @@ const ProjectUserList = ({
   }, [selectedUsers, userList])
 
   const onSelectionChange = (e: $Any) => {
-    if (!onSelectUsers) {
-      return
-    }
-    let result = []
-    for (const user of e.value) result.push(user.name)
-    onSelectUsers(result)
+    const result = e.value.map((user: UserNode) => user.name)
+
+    onSelectUsers!(result)
   }
 
   const tableData = useTableLoadingData(tableList, isLoading, 40, 'name')
-
+  const selectedUnassignedUsers = tableData.filter((user: $Any) => selectedUsers.includes(user.name))
+  const selectedUnassignedUserNames = selectedUnassignedUsers.map((user: $Any) => user.name)
   // Render
   return (
     <Section wrap>
       <TablePanel>
         <DataTable
+          selection={selectedUnassignedUsers}
           value={tableData}
+          selectionMode="multiple"
           scrollable={true}
           scrollHeight="flex"
           dataKey="name"
-          selectionMode="multiple"
           className={clsx('user-list-table', { loading: isLoading })}
           rowClassName={(rowData: $Any) => clsx({ inactive: !rowData.active, loading: isLoading })}
-          onSelectionChange={onSelectionChange}
-          selection={selection}
-          stateStorage={'local'}
+          onContextMenu={onContextMenu}
+          onSelectionChange={(selection) => {
+            return onSelectUsers && onSelectionChange(selection)
+          }}
         >
           <Column
             field="name"
             header={header}
-            headerStyle={{textTransform: 'capitalize'}}
-            body={(rowData) => !isLoading && <ProfileRow rowData={rowData} />}
+            headerStyle={{ textTransform: 'capitalize' }}
+            body={(rowData) =>
+              !isLoading && (
+                <UserRow
+                  rowData={rowData}
+                  isUnassigned={isUnassigned}
+                  showButtonsOnHover={selectedUnassignedUsers.length == 0}
+                  selected={selectedUnassignedUserNames.includes(rowData.name)}
+                />
+              )
+            }
             sortable={sortable}
           />
         </DataTable>

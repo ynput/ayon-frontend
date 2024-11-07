@@ -1,12 +1,6 @@
-type ProjectUsersResponse = {
-    [key: string]: string[]
-}
+import { AccessGroupUsers, ProjectUsersResponse } from './types'
 
-type AccessGroupUsers = {
-  [key: string]: string[]
-}
-
-const getAllProjectUsers = (groupedUsers: AccessGroupUsers): string[]  => {
+const getAllProjectUsers = (groupedUsers: AccessGroupUsers): string[] => {
   let allUsers: string[] = []
   for (const [_, users] of Object.entries(groupedUsers)) {
     allUsers.push(...users)
@@ -22,7 +16,6 @@ const mapUsersByAccessGroups = (response: ProjectUsersResponse | undefined): Acc
 
   const groupedUsers: { [key: string]: string[] } = {}
   for (const [user, acessGroupsList] of Object.entries(response)) {
-    console.log(user)
     for (const accessGroup of acessGroupsList) {
       if (groupedUsers[accessGroup] === undefined) {
         groupedUsers[accessGroup] = []

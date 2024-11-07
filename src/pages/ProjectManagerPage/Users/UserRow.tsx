@@ -1,0 +1,102 @@
+import { Button } from '@ynput/ayon-react-components'
+import UserImage from '@components/UserImage'
+
+import styled from 'styled-components'
+import { $Any } from '@types'
+import clsx from 'clsx'
+
+const StyledProfileRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: var(--base-gap-large);
+  button {
+    visibility: hidden;
+    .shortcut {
+      padding: 4px;
+      background-color: var(--md-sys-color-primary-container);
+      border-radius: var(--border-radius-m);
+    }
+  }
+  &.actionable:hover {
+    button {
+      visibility: visible;
+    }
+  }
+  &.selected {
+    button {
+      visibility: visible;
+    }
+  }
+`
+export const UserRow = ({
+  rowData,
+  selected = false,
+  isUnassigned = false,
+  showButtonsOnHover = false,
+}: $Any) => {
+  const { name, self, isMissing } = rowData
+  return (
+    <StyledProfileRow className={clsx({ actionable: showButtonsOnHover, selected })}>
+      {/* @ts-ignore */}
+      <UserImage
+        name={name}
+        size={25}
+        style={{
+          transform: 'scale(0.8)',
+          minHeight: 25,
+          minWidth: 25,
+          maxHeight: 25,
+          maxWidth: 25,
+        }}
+        highlight={self}
+      />
+      <span
+        style={{
+          flexGrow: 1,
+          color: isMissing ? 'var(--color-hl-error)' : 'inherit',
+        }}
+      >
+        {name}
+      </span>
+      <Button
+        className="action"
+        variant={isUnassigned ? 'filled' : 'text'}
+        icon={'add'}
+        onClick={(e) => {
+          e.stopPropagation()
+        }}
+      >
+        {isUnassigned ? (
+          <>
+            {' '}
+            Add <span className="shortcut">A</span>{' '}
+          </>
+        ) : (
+          'Add more'
+        )}
+      </Button>
+
+      {!isUnassigned && (
+        <Button
+          className="action"
+          icon={'remove'}
+          variant="filled"
+          onClick={(e) => {
+            e.stopPropagation()
+          }}
+        >
+          {isUnassigned ? (
+            'Remove'
+          ) : (
+            <>
+              {' '}
+              Remove <span className="shortcut">R</span>{' '}
+            </>
+          )}
+        </Button>
+      )}
+    </StyledProfileRow>
+  )
+}
+
+export default UserRow

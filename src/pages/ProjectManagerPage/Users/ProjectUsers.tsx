@@ -13,10 +13,9 @@ import AssignAccessGroupsDialog from './AssignAccessGroupsDialog'
 import {api }from '@api/rest/project'
 import { useUpdateProjectUsersMutation } from '@queries/project/updateProject'
 import { toast } from 'react-toastify'
-import LocalProjectList from './ProjectList'
 import ProjectList from '@containers/projectList'
 import { getAllProjectUsers, mapUsersByAccessGroups } from './mappers'
-import { access } from 'fs'
+import { SelectedAccessGroupUsers } from './types'
 
 type Props = {}
 
@@ -29,8 +28,6 @@ const ProjectUsers = ({}: Props) => {
   const { data: accessGroupList = [] } = useGetAccessGroupsQuery({
     projectName: '_',
   })
-  console.log('ag list', accessGroupList)
-
 
   const [updateUser] = useUpdateProjectUsersMutation()
 
@@ -42,30 +39,31 @@ const ProjectUsers = ({}: Props) => {
   const [selectedProjects, setSelectedProjects] = useState<string[]>([])
   const [selectedUsers, setSelectedUsers] = useState<string[]>([])
   const [showDialog, setShowDialog] = useState<boolean>(false)
+  const [selectedAccessGroupUsers, setSelectedAccessGroupUsers] = useState<SelectedAccessGroupUsers | undefined>()
 
-  const result = api.useGetProjectUsersQuery({ projectName: selectedProjects[0] || '_' })
-  const mappedUsers = mapUsersByAccessGroups(result.data)
 
 
   const onSelectProjects = (selection: $Any) => {
-    console.log('on select projects...')
     setSelectedProjects([selection])
   }
 
   const actionEnabled = selectedProjects.length > 0 && selectedUsers.length > 0
 
-  // console.log({userList})
   const activeNonManagerUsers = userList.filter(
     (user: UserNode) => !user.isAdmin && !user.isManager && user.active,
   )
+
+  const result = api.useGetProjectUsersQuery({ projectName: selectedProjects[0] || '_' })
+  const mappedUsers = mapUsersByAccessGroups(result.data)
   const allProjectUsers = getAllProjectUsers(mappedUsers)
   const unasignedUsers = activeNonManagerUsers.filter((user: UserNode) => !allProjectUsers.includes(user.name))
 
-  // keeps track of the filters whilst adding/removing filters
-  // const [filters, setFilters] = useState<Filter[]>([
-  //   { id: 'user_filter', type: 'string', label: 'user' },
-  //   { id: 'project_filter', type: 'string', label: 'project' },
-  // ])
+  const getAccessGroupUsers = (accessGroup?: string): string[] => {
+    if (!selectedAccessGroupUsers || !accessGroup) {
+      return []
+    }
+    return selectedAccessGroupUsers.accessGroup === accessGroup ?  selectedAccessGroupUsers.users : []
+  }
 
   const onFiltersChange = (changes: $Any) => {
     console.log('on change? ', changes)
@@ -75,14 +73,13 @@ const ProjectUsers = ({}: Props) => {
     console.log('on filters finish: ', changes)
   }
 
+  const updateSelectedAccessGroupUsers = (accessGroup: string, selectedUsers: string[]) => {
+    setSelectedAccessGroupUsers({ accessGroup, users: selectedUsers })
+  }
+
   const onSave = async (changes: $Any) => {
-    console.log('saving????')
-    console.log(changes);
     for (const user of selectedUsers) {
-      console.log('user: ', user)
-      console.log(selectedProjects)
       const accessGroups = changes.filter((ag: $Any) => ag.selected).map((ag: $Any) => ag.name)
-      console.log('ags: ', accessGroups)
 
       try {
         await updateUser({
@@ -92,7 +89,6 @@ const ProjectUsers = ({}: Props) => {
         }).unwrap()
       } catch (error: $Any) {
         console.log(error)
-        toast.error('Unable to update profile')
         toast.error(error.details)
       }
     }
@@ -143,30 +139,35 @@ const ProjectUsers = ({}: Props) => {
             isLoading={isLoading}
             onSelectUsers={(selection: string[]) => setSelectedUsers(selection)}
             sortable
+            isUnassigned
           />
         </SplitterPanel>
 
         <SplitterPanel size={20}>
           <Splitter layout="vertical">
-            {Object.keys(mappedUsers).map((accessGroup) => {
-              return (
-                <SplitterPanel
-                  key={accessGroup}
-                  className="flex align-items-center justify-content-center"
-                  minSize={20}
-                >
-                  <ProjectUserList
-                    header={accessGroup}
-                    selectedUsers={[]}
-                    userList={mappedUsers[accessGroup]}
-                    tableList={activeNonManagerUsers.filter((user: UserNode) =>
-                      mappedUsers[accessGroup].includes(user.name),
-                    )}
-                    isLoading={isLoading}
-                  />
-                </SplitterPanel>
-              )
-            })}
+            {Object.keys(mappedUsers)
+              .map((accessGroup) => {
+                return (
+                  <SplitterPanel
+                    key={accessGroup}
+                    className="flex align-items-center justify-content-center"
+                    minSize={20}
+                  >
+                    <ProjectUserList
+                      header={accessGroup}
+                      selectedUsers={getAccessGroupUsers(accessGroup)}
+                      userList={mappedUsers[accessGroup]}
+                      tableList={activeNonManagerUsers.filter((user: UserNode) =>
+                        mappedUsers[accessGroup].includes(user.name),
+                      )}
+                      onSelectUsers={(selection: string[]) =>
+                        updateSelectedAccessGroupUsers(accessGroup, selection)
+                      }
+                      isLoading={isLoading}
+                    />
+                  </SplitterPanel>
+                )
+              })}
           </Splitter>
         </SplitterPanel>
       </Splitter>
