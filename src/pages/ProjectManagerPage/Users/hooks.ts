@@ -5,6 +5,20 @@ import { useUpdateProjectUsersMutation } from "@queries/project/updateProject"
 import { useDispatch } from "react-redux"
 
 const useProjectAccessGroupData = () => {
+
+  const udpateApiCache = (project: string, user: string, accessGroups: string[]) => {
+    dispatch(
+      // @ts-ignore
+      api.util.updateQueryData(
+        'getProjectUsers',
+        { projectName: project},
+        (draft: $Any) => {
+          draft[user] = accessGroups
+        },
+      ),
+    )
+  }
+
   const dispatch = useDispatch()
   const [updateUser] = useUpdateProjectUsersMutation()
 
@@ -24,16 +38,7 @@ const useProjectAccessGroupData = () => {
       userName: user,
       update: updatedAccessGroups,
     })
-    dispatch(
-      // @ts-ignore
-      api.util.updateQueryData(
-        'getProjectUsers',
-        { projectName: selectedProjects[0] },
-        (draft: $Any) => {
-          draft[user] = updatedAccessGroups
-        },
-      ),
-    )
+    udpateApiCache(selectedProjects[0], user, updatedAccessGroups)
   }
   const updateUserAccessGroups = async (users: $Any, changes: $Any ): Promise<string | void> => {
     for (const user of users) {
@@ -41,10 +46,11 @@ const useProjectAccessGroupData = () => {
 
       try {
         await updateUser({
-          projectName: selectedProjects,
+          projectName: selectedProjects[0],
           userName: user,
           update: accessGroups,
         }).unwrap()
+        udpateApiCache(selectedProjects[0], user, accessGroups)
       } catch (error: $Any) {
         console.log(error)
         return(error.details)

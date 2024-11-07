@@ -51,6 +51,7 @@ const ProjectUsers = ({}: Props) => {
 
 
   const [selectedUsers, setSelectedUsers] = useState<string[]>([])
+  const [actionedUsers, setActionedUsers] = useState<string[]>([])
   const [showDialog, setShowDialog] = useState<boolean>(false)
   const [selectedAccessGroupUsers, setSelectedAccessGroupUsers] = useState<
     SelectedAccessGroupUsers | undefined
@@ -73,8 +74,8 @@ const ProjectUsers = ({}: Props) => {
     setSelectedAccessGroupUsers({ accessGroup, users: selectedUsers })
   }
 
-  const onSave = async (changes: $Any) => {
-    const errorMessage = await updateUserAccessGroups(selectedUsers, changes)
+  const onSave = async (changes: $Any, users: string[]) => {
+    const errorMessage = await updateUserAccessGroups(users, changes)
     if (errorMessage) {
       toast.error(errorMessage)
     }
@@ -92,21 +93,6 @@ const ProjectUsers = ({}: Props) => {
           // onChange={(v) => onFiltersChange(v)}
           // onFinish={(v) => onFiltersFinish(v)} // when changes are applied
           options={[]}
-        />
-        <Spacer />
-        <Button
-          icon="remove"
-          label="Remove access"
-          disabled={!actionEnabled}
-          // onClick={handleRevert}
-        />
-        <SaveButton
-          icon="add"
-          label="Add access"
-          disabled={!actionEnabled}
-          onClick={() => setShowDialog(true)}
-          // active={canCommit}
-          // saving={commitUpdating}
         />
       </Toolbar>
 
@@ -127,7 +113,10 @@ const ProjectUsers = ({}: Props) => {
             userList={unassignedUsers}
             tableList={unassignedUsers}
             isLoading={isLoading}
-            onAdd={() => { }}
+            onAdd={() => {
+              setActionedUsers(selectedUsers)
+              setShowDialog(true)
+            }}
             onSelectUsers={(selection: string[]) => setSelectedUsers(selection)}
             sortable
             isUnassigned
@@ -136,36 +125,42 @@ const ProjectUsers = ({}: Props) => {
 
         <SplitterPanel size={20}>
           <Splitter layout="vertical">
-            {Object.keys(mappedUsers).sort().map((accessGroup) => {
-              return (
-                <SplitterPanel
-                  key={accessGroup}
-                  className="flex align-items-center justify-content-center"
-                  minSize={20}
-                >
-                  <ProjectUserList
-                    header={accessGroup}
-                    selectedUsers={getAccessGroupUsers(accessGroup)}
-                    userList={mappedUsers[accessGroup]}
-                    tableList={activeNonManagerUsers.filter((user: UserNode) =>
-                      mappedUsers[accessGroup].includes(user.name),
-                    )}
-                    onSelectUsers={(selection: string[]) =>
-                      updateSelectedAccessGroupUsers(accessGroup, selection)
-                    }
-                    onAdd={() => {}}
-                    onRemove={onRemove(accessGroup)}
-                    isLoading={isLoading}
-                  />
-                </SplitterPanel>
-              )
-            })}
+            {Object.keys(mappedUsers)
+              .sort()
+              .map((accessGroup) => {
+                return (
+                  <SplitterPanel
+                    key={accessGroup}
+                    className="flex align-items-center justify-content-center"
+                    minSize={20}
+                  >
+                    <ProjectUserList
+                      header={accessGroup}
+                      selectedUsers={getAccessGroupUsers(accessGroup)}
+                      userList={mappedUsers[accessGroup]}
+                      tableList={activeNonManagerUsers.filter((user: UserNode) =>
+                        mappedUsers[accessGroup].includes(user.name),
+                      )}
+                      onSelectUsers={(selection: string[]) =>
+                        updateSelectedAccessGroupUsers(accessGroup, selection)
+                      }
+                      onAdd={() => {
+                        setActionedUsers(getAccessGroupUsers(accessGroup))
+                        setShowDialog(true)
+                      }}
+                      onRemove={onRemove(accessGroup)}
+                      isLoading={isLoading}
+                    />
+                  </SplitterPanel>
+                )
+              })}
           </Splitter>
         </SplitterPanel>
       </Splitter>
 
       {showDialog && (
         <AssignAccessGroupsDialog
+          users={actionedUsers}
           accessGroups={accessGroupList.map((item) => ({ ...item, selected: false }))}
           onSave={onSave}
           onClose={function (): void {

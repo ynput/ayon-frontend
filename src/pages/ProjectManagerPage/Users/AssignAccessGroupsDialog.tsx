@@ -6,15 +6,17 @@ import * as Styled from './AssignAccessGroupsDialog.styled'
 
 type Props = {
   accessGroups: $Any[]
-  onSave: (items: AccessGroupItem[]) => void
+  users: string[]
+  onSave: (items: AccessGroupItem[], users: string[]) => void
   onClose: () => void
 }
+
 type AccessGroupItem = {
   name: string
   selected: boolean
 }
 
-const AssignAccessGroupsDialog = ({ accessGroups, onSave, onClose }: Props) => {
+const AssignAccessGroupsDialog = ({ accessGroups, users, onSave, onClose }: Props) => {
   const [accessGroupItems, setAccessGroupItems] = useState<AccessGroupItem[]>(accessGroups)
 
   const toggleAccessGroup = (accessGroup: AccessGroupItem) => {
@@ -28,14 +30,14 @@ const AssignAccessGroupsDialog = ({ accessGroups, onSave, onClose }: Props) => {
   }
 
   const handleSave = () => {
-    onSave(accessGroupItems)
+    onSave(accessGroupItems, users)
     onClose()
   }
 
   return (
     <Dialog
       size="sm"
-      header={`Add access`}
+      header={`Add access for ${users.join(', ')}`}
       footer={<Button icon="check" variant="filled" label="Save" onClick={() => handleSave()} />}
       isOpen={true}
       onClose={handleClose}
