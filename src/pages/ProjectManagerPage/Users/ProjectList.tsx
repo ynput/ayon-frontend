@@ -7,6 +7,8 @@ import useTableLoadingData from '@hooks/useTableLoadingData'
 import { $Any } from '@types'
 import { useRef } from 'react'
 import { TablePanel } from '@ynput/ayon-react-components'
+import { ProjectNode } from '@api/graphql'
+import { Filter } from '@components/SearchFilter/types'
 
 const formatName = (rowData: $Any, field: string) => {
   return rowData[field]
@@ -27,11 +29,6 @@ const StyledProjectName = styled.div`
     opacity: 0;
   }
 
-  &:not(.isActive) {
-    font-style: italic;
-    color: var(--md-ref-palette-secondary50);
-  }
-
   &:not(.isOpen) {
     span:first-child {
       opacity: 0;
@@ -45,50 +42,63 @@ const StyledProjectName = styled.div`
 type Props = {
   className: string
   selection: string[]
-  onSelectionChange: (selection: $Any) => {}
+  filters: Filter[]
+  setSelection: $Any
+  onSelectionChange: (selection: $Any) => void
 }
 
-const ProjectList = ({ selection, onSelectionChange }: Props) => {
-  const tableRef = useRef(null)
+const ProjectList = ({ selection, onSelectionChange, filters }: Props) => {
+  console.log('filters', filters)
   const { data: projects = [], isLoading, isError, error } = useListProjectsQuery({})
   if (isError) {
     console.error(error)
   }
 
-  const projectList = projects
+  const getFilteredProjects = (projects: ProjectNode[], filters: Filter) => {
+    if (!filters) {
+      return projects
+    }
+
+    const filterProjects = filters && filters.values!.map((match: Filter) => match.id)
+    if (filters!.inverted) {
+      return projects.filter((project: ProjectNode) => !filterProjects.includes(project.name))
+    }
+    return projects.filter((project: ProjectNode) => filterProjects.includes(project.name))
+  }
+
+  // @ts-ignore
+  const projectList = getFilteredProjects(projects, filters)
   const tableData = useTableLoadingData(projectList, isLoading, 10, 'name')
-  console.log('td: ', tableData)
-  console.log('sel: ', selection)
+  const selected = tableData.filter((project: ProjectNode) => selection.includes(project.name))
 
   return (
-      <TablePanel>
-
-    <DataTable
-      ref={tableRef}
-      value={tableData}
-      selection={selection}
-      multiple={true}
-      scrollable={true}
-      scrollHeight="flex"
-      className={clsx({ loading: isLoading })}
-      rowClassName={() => ({ loading: isLoading })}
-      onSelectionChange={(selection) => {
-        console.log(selection)
-        return onSelectionChange(selection.value)
-      }}
-    >
-      <Column
-        field="name"
-        header="Project name"
-        body={(rowData) => (
-          <StyledProjectName>
-            <span>{formatName(rowData, 'name')}</span>
-          </StyledProjectName>
-        )}
-        style={{ minWidth: 150 }}
-      />
-    </DataTable>
-      </TablePanel>
+    <TablePanel>
+      <DataTable
+        value={tableData}
+        selection={selected}
+        multiple={true}
+        scrollable={true}
+        scrollHeight="flex"
+        selectionMode="multiple"
+        className={clsx({ loading: isLoading })}
+        rowClassName={() => ({ loading: isLoading })}
+        onSelectionChange={(selection) => {
+          console.log(selection)
+          onSelectionChange(selection.value.map((project: ProjectNode) => project.name))
+        }}
+      >
+        <Column
+          field="name"
+          header="Project name"
+          body={(rowData) => (
+            <StyledProjectName>
+              <span>{formatName(rowData, 'name')}</span>
+            </StyledProjectName>
+          )}
+          style={{ minWidth: 150 }}
+        />
+      </DataTable>
+    </TablePanel>
   )
 }
 

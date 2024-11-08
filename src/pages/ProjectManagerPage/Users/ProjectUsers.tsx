@@ -4,10 +4,8 @@ import { Button, Toolbar } from '@ynput/ayon-react-components'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { useState } from 'react'
 import ProjectUserList from './ProjectUserList'
-import SearchFilter from '@components/SearchFilter/SearchFilter'
 import { useGetAccessGroupsQuery } from '@queries/accessGroups/getAccessGroups'
 import AssignAccessGroupsDialog from './AssignAccessGroupsDialog'
-import ProjectList from '@containers/projectList'
 import { SelectedAccessGroupUsers } from './types'
 import { useProjectAccessGroupData } from './hooks'
 import { toast } from 'react-toastify'
@@ -16,6 +14,9 @@ import { getAllProjectUsers, mapUsersByAccessGroups } from './mappers'
 import { useSelector } from 'react-redux'
 import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
 import styled from 'styled-components'
+import ProjectAccessSearchFilterWrapper from './ProjectAccessSearchFilterWrapper'
+import ProjectList from './ProjectList'
+import { Filter } from '@components/SearchFilter/types'
 
 const StyledButton = styled(Button)`
   .shortcut {
@@ -28,9 +29,6 @@ const ProjectUsers = () => {
   const { data: accessGroupList = [] } = useGetAccessGroupsQuery({
     projectName: '_',
   })
-
-  // const onFiltersChange = (changes: $Any) => { console.log('on change? ', changes) }
-  // const onFiltersFinish = (changes: $Any) => { console.log('on filters finish: ', changes) }
 
   const {
     users: projectUsers,
@@ -54,6 +52,7 @@ const ProjectUsers = () => {
 
   const [actionedUsers, setActionedUsers] = useState<string[]>([])
   const [showDialog, setShowDialog] = useState<boolean>(false)
+  const [filters, setFilters] = useState<$Any>([])
   const [selectedAccessGroupUsers, setSelectedAccessGroupUsers] = useState<
     SelectedAccessGroupUsers | undefined
   >()
@@ -113,11 +112,9 @@ const ProjectUsers = () => {
     <div style={{ height: '100%' }}>
       <Toolbar style={{ display: 'flex', margin: '4px 0' }}>
         {/* @ts-ignore */}
-        <SearchFilter
-          filters={[]}
-          // onChange={(v) => onFiltersChange(v)}
-          // onFinish={(v) => onFiltersFinish(v)} // when changes are applied
-          options={[]}
+        <ProjectAccessSearchFilterWrapper
+          filters={filters}
+          onChange={(results: $Any) => setFilters(results)}
         />
         <StyledButton
           className="action"
@@ -154,7 +151,11 @@ const ProjectUsers = () => {
           minSize={10}
         >
           {/* @ts-ignore */}
-          <ProjectList selection={selectedProjects} onSelect={setSelectedProjects} multiselect />
+          <ProjectList
+            filters={filters?.find((el: Filter) => el.label === 'Project')}
+            selection={selectedProjects}
+            onSelectionChange={(selection: $Any) => setSelectedProjects(selection)}
+          />
         </SplitterPanel>
 
         <SplitterPanel size={50}>
@@ -165,6 +166,7 @@ const ProjectUsers = () => {
               selectedProjects={selectedProjects}
               selectedUsers={getSelectedUsers()}
               tableList={unassignedUsers}
+              filters={filters?.find((el: Filter) => el.label === 'User')}
               isLoading={isLoading}
               onAdd={handleAdd}
               onSelectUsers={(selection) => setSelectedAccessGroupUsers({ users: selection })}

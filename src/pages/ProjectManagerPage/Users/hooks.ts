@@ -4,6 +4,12 @@ import { useState } from "react"
 import { useUpdateProjectUsersMutation } from "@queries/project/updateProject"
 import { useDispatch } from "react-redux"
 import { SelectionStatus } from "./types"
+import { Option } from "@components/SearchFilter/types"
+
+type FilterValues = {
+  id: string,
+  label: string
+}
 
 const useProjectAccessGroupData = () => {
 
@@ -86,4 +92,21 @@ const useProjectAccessGroupData = () => {
   return { users, accessGroupUsers, selectedProjects, setSelectedProjects, removeUserAccessGroup, updateUserAccessGroups }
 }
 
-export { useProjectAccessGroupData }
+
+const useProjectAccessSearchFilterBuiler = ({
+  projects,
+  users,
+  accessGroups,
+}: {
+  [key: string]: FilterValues[]
+}) => {
+  const options: Option[] = [
+    { id: 'project', label: 'Project', icon: 'deployed_code', values: projects, allowsCustomValues: true },
+    { id: 'user', label: 'User', icon: 'person', values: users, allowsCustomValues: true },
+    { id: 'accessGroup', label: 'Access Group', icon: 'key', values: accessGroups, allowsCustomValues: true },
+  ]
+
+  return options
+}
+
+export { useProjectAccessGroupData, useProjectAccessSearchFilterBuiler }
