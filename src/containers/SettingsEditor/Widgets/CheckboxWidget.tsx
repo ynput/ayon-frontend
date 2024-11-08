@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react'
 import { InputSwitch } from '@ynput/ayon-react-components'
 
-import { updateChangedKeys, parseContext } from '../helpers'
+import { updateChangedKeys, parseContext, getDefaultValue } from '../helpers'
 import { $Any } from '@types'
 
 const CheckboxWidget = function (props: $Any) {
   const { originalValue, path } = parseContext(props)
-  const [value, setValue] = useState(null)
+  const [value, setValue] = useState(props.value || getDefaultValue(props))
   const [initialized, setInitialized] = useState(false)
 
   useEffect(() => {
@@ -17,6 +17,9 @@ const CheckboxWidget = function (props: $Any) {
     if (value === null) return
     if (value === props.value) return
     if (initialized) return
+    if (props.value === undefined && value === getDefaultValue(props)) {
+      return
+    }
 
     setInitialized(true)
     if (path?.length) return
@@ -27,9 +30,11 @@ const CheckboxWidget = function (props: $Any) {
 
   useEffect(() => {
     // Sync the local state with the formData
-    if (props.value === undefined) return
-    if (value === props.value) return
-    setValue(props.value || false)
+    if (value === props.value) {
+      return
+    }
+
+    setValue(props.value || getDefaultValue(props))
   }, [props.value])
 
   useEffect(() => {
@@ -44,6 +49,9 @@ const CheckboxWidget = function (props: $Any) {
     if (!props.onChange) return
     if (value === null) return
     if (value === props.value) return
+    if (props.value === undefined && value === getDefaultValue(props)) {
+      return
+    }
     // this timeout must be here. idk why. if not,
     // the value will be set to the original value or smth
     props.onChange(value)

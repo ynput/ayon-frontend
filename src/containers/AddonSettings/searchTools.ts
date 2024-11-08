@@ -72,7 +72,6 @@ const attachLabels = (settings: $Any, relSchema: $Any, globalSchema: $Any): $Any
     }
   }
 
-  console.log('hydrated object', hydratedObject)
   return hydratedObject
 }
 
