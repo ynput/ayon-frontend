@@ -1,6 +1,6 @@
 import { UserNode } from '@api/graphql'
 import { $Any } from '@types'
-import { Button, SaveButton, Spacer, Toolbar } from '@ynput/ayon-react-components'
+import { Button, Toolbar } from '@ynput/ayon-react-components'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { useState } from 'react'
 import ProjectUserList from './ProjectUserList'
@@ -14,10 +14,17 @@ import { toast } from 'react-toastify'
 import { useGetUsersQuery } from '@queries/user/getUsers'
 import { getAllProjectUsers, mapUsersByAccessGroups } from './mappers'
 import { useSelector } from 'react-redux'
+import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
+import styled from 'styled-components'
 
-type Props = {}
-
-const ProjectUsers = ({}: Props) => {
+const StyledButton = styled(Button)`
+  .shortcut {
+    padding: 4px;
+    background-color: var(--md-sys-color-primary-container-dark);
+    border-radius: var(--border-radius-m);
+  }
+`
+const ProjectUsers = () => {
   const { data: accessGroupList = [] } = useGetAccessGroupsQuery({
     projectName: '_',
   })
@@ -32,7 +39,6 @@ const ProjectUsers = ({}: Props) => {
 
   const {
     users: projectUsers,
-    accessGroupUsers,
     selectedProjects,
     setSelectedProjects,
     removeUserAccessGroup,
@@ -47,18 +53,25 @@ const ProjectUsers = ({}: Props) => {
 
   const mappedUsers = mapUsersByAccessGroups(projectUsers)
   const allProjectUsers = getAllProjectUsers(mappedUsers)
-  const unassignedUsers = activeNonManagerUsers.filter((user: UserNode) => !allProjectUsers.includes(user.name))
+  const unassignedUsers = activeNonManagerUsers.filter(
+    (user: UserNode) => !allProjectUsers.includes(user.name),
+  )
 
-
-  const [selectedUsers, setSelectedUsers] = useState<string[]>([])
   const [actionedUsers, setActionedUsers] = useState<string[]>([])
   const [showDialog, setShowDialog] = useState<boolean>(false)
   const [selectedAccessGroupUsers, setSelectedAccessGroupUsers] = useState<
     SelectedAccessGroupUsers | undefined
   >()
 
+  const getSelectedUsers = (): string[] => {
+    if (!selectedAccessGroupUsers) {
+      return []
+    }
 
-  const actionEnabled = selectedProjects.length > 0 && selectedUsers.length > 0
+    return selectedAccessGroupUsers!.users
+  }
+
+  const actionEnabled = selectedProjects.length > 0 && getSelectedUsers().length > 0
 
   const getAccessGroupUsers = (accessGroup?: string): string[] => {
     if (!selectedAccessGroupUsers || !accessGroup) {
@@ -68,20 +81,37 @@ const ProjectUsers = ({}: Props) => {
       ? selectedAccessGroupUsers.users
       : []
   }
-
+  const handleAdd = (user?: string) => {
+    setActionedUsers(user ? [user] : getSelectedUsers())
+    setShowDialog(true)
+  }
 
   const updateSelectedAccessGroupUsers = (accessGroup: string, selectedUsers: string[]) => {
     setSelectedAccessGroupUsers({ accessGroup, users: selectedUsers })
   }
 
+  const resetSelectedUsers = () => setSelectedAccessGroupUsers({ users: [] })
+
   const onSave = async (changes: $Any, users: string[]) => {
     const errorMessage = await updateUserAccessGroups(users, changes)
     if (errorMessage) {
       toast.error(errorMessage)
+    } else {
+      toast.success('Operation successful')
     }
+    resetSelectedUsers()
   }
-  const onRemove = (accessGroup: string) => (user: string) => {
-    removeUserAccessGroup(user, accessGroup)
+
+  const onRemove = (accessGroup: string) => async (user?: string) => {
+    if (user) {
+      await removeUserAccessGroup(user, accessGroup)
+    } else {
+      for (const user of selectedAccessGroupUsers!.users) {
+        await removeUserAccessGroup(user, accessGroup)
+      }
+    }
+    toast.success('Operation successful')
+    resetSelectedUsers()
   }
 
   return (
@@ -94,6 +124,30 @@ const ProjectUsers = ({}: Props) => {
           // onFinish={(v) => onFiltersFinish(v)} // when changes are applied
           options={[]}
         />
+        <StyledButton
+          className="action"
+          disabled={!actionEnabled}
+          data-tooltip={false ? 'No project selected' : undefined}
+          icon={'add'}
+          onClick={(e) => {
+            e.stopPropagation()
+            setActionedUsers(getSelectedUsers())
+            setShowDialog(true)
+          }}
+        >
+          Add <span className="shortcut">A</span>{' '}
+        </StyledButton>
+
+        <StyledButton
+          className="action"
+          icon={'remove'}
+          disabled={!actionEnabled}
+          onClick={(e) => {
+            e.stopPropagation()
+          }}
+        >
+          Remove <span className="shortcut">R</span>{' '}
+        </StyledButton>
       </Toolbar>
 
       <Splitter layout="horizontal" style={{ height: '100%' }}>
@@ -107,39 +161,48 @@ const ProjectUsers = ({}: Props) => {
         </SplitterPanel>
 
         <SplitterPanel size={50}>
-          <ProjectUserList
-            header="Username"
-            selectedUsers={selectedUsers}
-            userList={unassignedUsers}
-            tableList={unassignedUsers}
-            isLoading={isLoading}
-            onAdd={() => {
-              setActionedUsers(selectedUsers)
-              setShowDialog(true)
-            }}
-            onSelectUsers={(selection: string[]) => setSelectedUsers(selection)}
-            sortable
-            isUnassigned
-          />
+          {selectedProjects.length > 0 ? (
+            <ProjectUserList
+              header="Username"
+              emptyMessage="All users assigned"
+              selectedProjects={selectedProjects}
+              selectedUsers={getSelectedUsers()}
+              tableList={unassignedUsers}
+              isLoading={isLoading}
+              onAdd={handleAdd}
+              onSelectUsers={(selection) => setSelectedAccessGroupUsers({ users: selection })}
+              sortable
+              isUnassigned
+            />
+          ) : (
+            <EmptyPlaceholder message={'No project selected'} icon={'list'}>
+              <span style={{ textAlign: 'center' }}>
+                Select a project on the left side to manage users access groups
+              </span>
+            </EmptyPlaceholder>
+          )}
         </SplitterPanel>
 
         <SplitterPanel size={20}>
-          <Splitter layout="vertical">
-            {Object.keys(mappedUsers)
-              .sort()
+          <Splitter layout="vertical" style={{ overflowY: 'scroll', overflowX: 'hidden' }}>
+            {accessGroupList
+              .map((item) => item.name)
               .map((accessGroup) => {
                 return (
                   <SplitterPanel
+                    style={{ minHeight: '250px', minWidth: '350px' }}
                     key={accessGroup}
                     className="flex align-items-center justify-content-center"
-                    minSize={20}
+                    size={45}
                   >
                     <ProjectUserList
+                      selectedProjects={selectedProjects}
                       header={accessGroup}
+                      emptyMessage="No users assigned"
                       selectedUsers={getAccessGroupUsers(accessGroup)}
-                      userList={mappedUsers[accessGroup]}
-                      tableList={activeNonManagerUsers.filter((user: UserNode) =>
-                        mappedUsers[accessGroup].includes(user.name),
+                      tableList={activeNonManagerUsers.filter(
+                        (user: UserNode) =>
+                          mappedUsers[accessGroup] && mappedUsers[accessGroup].includes(user.name),
                       )}
                       onSelectUsers={(selection: string[]) =>
                         updateSelectedAccessGroupUsers(accessGroup, selection)
@@ -161,6 +224,7 @@ const ProjectUsers = ({}: Props) => {
       {showDialog && (
         <AssignAccessGroupsDialog
           users={actionedUsers}
+          userAccessGroups={mappedUsers}
           accessGroups={accessGroupList.map((item) => ({ ...item, selected: false }))}
           onSave={onSave}
           onClose={function (): void {

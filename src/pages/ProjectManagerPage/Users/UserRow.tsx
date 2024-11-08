@@ -17,12 +17,7 @@ const StyledProfileRow = styled.div`
       border-radius: var(--border-radius-m);
     }
   }
-  &.actionable:hover {
-    button {
-      visibility: visible;
-    }
-  }
-  &.selected {
+  &:hover {
     button {
       visibility: visible;
     }
@@ -33,7 +28,8 @@ type Props = {
   selected: boolean
   isUnassigned: boolean
   showButtonsOnHover: boolean
-  onAdd: () => void
+  addButtonDisabled: boolean
+  onAdd: (user?: string) => void
   onRemove?: () => void
 }
 
@@ -42,6 +38,7 @@ export const UserRow = ({
   selected = false,
   isUnassigned = false,
   showButtonsOnHover = false,
+  addButtonDisabled = false,
   onAdd,
   onRemove,
 }: Props) => {
@@ -71,17 +68,18 @@ export const UserRow = ({
       </span>
       <Button
         className="action"
+        disabled={addButtonDisabled}
+        data-tooltip={addButtonDisabled ? 'No project selected' : undefined}
         variant={isUnassigned ? 'filled' : 'text'}
         icon={'add'}
         onClick={(e) => {
           e.stopPropagation()
-          onAdd()
+          onAdd(rowData.name)
         }}
       >
         {isUnassigned ? (
           <>
-            {' '}
-            Add <span className="shortcut">A</span>{' '}
+            Add
           </>
         ) : (
           'Add more'
@@ -98,14 +96,7 @@ export const UserRow = ({
             onRemove!()
           }}
         >
-          {isUnassigned ? (
-            'Remove'
-          ) : (
-            <>
-              {' '}
-              Remove <span className="shortcut">R</span>{' '}
-            </>
-          )}
+          Remove
         </Button>
       )}
     </StyledProfileRow>

@@ -3,7 +3,6 @@ import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { TablePanel, Section } from '@ynput/ayon-react-components'
 
-import { useMemo } from 'react'
 import clsx from 'clsx'
 import useTableLoadingData from '@hooks/useTableLoadingData'
 import { $Any } from '@types'
@@ -11,25 +10,27 @@ import { UserNode } from '@api/graphql'
 import UserRow from './UserRow'
 
 type Props = {
+  selectedProjects: string[]
   selectedUsers: string[]
-  userList: string[]
   tableList: $Any
   isLoading: boolean
   header?: string
+  emptyMessage: string
   sortable?: boolean
   isUnassigned?: boolean
   onContextMenu?: $Any
   onSelectUsers?: (selectedUsers: string[]) => void
-  onAdd: () => void
-  onRemove?: (user: string) => void
+  onAdd: (user? : string) => void
+  onRemove?: (user?: string) => void
 }
 
 const ProjectUserList = ({
+  selectedProjects,
   selectedUsers,
-  userList,
   tableList,
   isLoading,
   header,
+  emptyMessage,
   sortable = false,
   isUnassigned = false,
   onAdd,
@@ -37,15 +38,22 @@ const ProjectUserList = ({
   onContextMenu,
   onSelectUsers,
 }: Props) => {
-  // Selection
-  const selection = useMemo(() => {
-    return userList.filter((user: string) => selectedUsers.includes(user))
-  }, [selectedUsers, userList])
-
   const onSelectionChange = (e: $Any) => {
     const result = e.value.map((user: UserNode) => user.name)
 
     onSelectUsers!(result)
+  }
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
+    if (selectedProjects.length === 0) {
+      return
+    }
+
+    if (event.key === 'r') {
+      onRemove && onRemove()
+    }
+    if (event.key === 'a') {
+      onAdd()
+    }
   }
 
   const tableData = useTableLoadingData(tableList, isLoading, 40, 'name')
@@ -61,10 +69,12 @@ const ProjectUserList = ({
           selectionMode="multiple"
           scrollable={true}
           scrollHeight="flex"
+          emptyMessage={emptyMessage}
           dataKey="name"
           className={clsx('user-list-table', { loading: isLoading })}
           rowClassName={(rowData: $Any) => clsx({ inactive: !rowData.active, loading: isLoading })}
           onContextMenu={onContextMenu}
+          onKeyDown={handleKeyDown}
           onSelectionChange={(selection) => {
             return onSelectUsers && onSelectionChange(selection)
           }}
@@ -78,13 +88,12 @@ const ProjectUserList = ({
                 <UserRow
                   rowData={rowData}
                   isUnassigned={isUnassigned}
-                  onAdd={() => {
-                    onAdd()
-                  }}
+                  onAdd={(user?: string) => onAdd(user)}
                   onRemove={() => {
                     onRemove && onRemove(rowData.name)
                   }}
                   showButtonsOnHover={selectedUnassignedUsers.length == 0}
+                  addButtonDisabled={selectedProjects.length === 0}
                   selected={selectedUnassignedUserNames.includes(rowData.name)}
                 />
               )

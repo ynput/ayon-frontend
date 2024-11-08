@@ -3,6 +3,7 @@ import { api } from '@api/rest/project'
 import { useState } from "react"
 import { useUpdateProjectUsersMutation } from "@queries/project/updateProject"
 import { useDispatch } from "react-redux"
+import { SelectionStatus } from "./types"
 
 const useProjectAccessGroupData = () => {
 
@@ -23,7 +24,6 @@ const useProjectAccessGroupData = () => {
   const [updateUser] = useUpdateProjectUsersMutation()
 
   const [selectedProjects, setSelectedProjects] = useState<string[]>([])
-  const [projectUsers, setProjectUsers] = useState<$Any>({})
 
   const result = api.useGetProjectUsersQuery({ projectName: selectedProjects[0] || '_' })
   const users = result.data
@@ -31,34 +31,59 @@ const useProjectAccessGroupData = () => {
 
   const accessGroupUsers: $Any = {}
   const removeUserAccessGroup = (user: string, accessGroup: string) => {
-    setProjectUsers({})
     const updatedAccessGroups = users![user].filter((item: string) => item !== accessGroup)
-    updateUser({
-      projectName: selectedProjects,
-      userName: user,
-      update: updatedAccessGroups,
-    })
-    udpateApiCache(selectedProjects[0], user, updatedAccessGroups)
-  }
-  const updateUserAccessGroups = async (users: $Any, changes: $Any ): Promise<string | void> => {
-    for (const user of users) {
-      const accessGroups = changes.filter((ag: $Any) => ag.selected).map((ag: $Any) => ag.name)
-
+    for (const project of selectedProjects) {
       try {
-        await updateUser({
-          projectName: selectedProjects[0],
+        updateUser({
+          projectName: project,
           userName: user,
-          update: accessGroups,
-        }).unwrap()
-        udpateApiCache(selectedProjects[0], user, accessGroups)
+          update: updatedAccessGroups,
+        })
+        udpateApiCache(project, user, updatedAccessGroups)
       } catch (error: $Any) {
         console.log(error)
-        return(error.details)
+        return error.details
       }
     }
   }
 
-  return { users, projectUsers, accessGroupUsers, selectedProjects, setSelectedProjects, removeUserAccessGroup, updateUserAccessGroups }
+  const updateUserAccessGroups = async (selectedUsers: $Any, changes: {name: string, status: SelectionStatus}[] ): Promise<string | void> => {
+    const updatedAccessGroups = (
+      existing: string[],
+      changes: { name: string; status: SelectionStatus }[],
+    ): string[] => {
+      const existingSet = new Set(existing)
+      for (const change of changes) {
+        if (change.status == SelectionStatus.All) {
+          existingSet.add(change.name)
+        } else {
+          existingSet.delete(change.name)
+        }
+      }
+
+      return [...existingSet]
+    }
+
+    for (const user of selectedUsers) {
+      const accessGroups = updatedAccessGroups(users?.[user] || [], changes)
+
+        for (const project of selectedProjects) {
+          try {
+            await updateUser({
+              projectName: project,
+              userName: user,
+              update: accessGroups,
+            }).unwrap()
+            udpateApiCache(project, user, accessGroups)
+          } catch (error: $Any) {
+            console.log(error)
+            return error.details
+          }
+        }
+    }
+  }
+
+  return { users, accessGroupUsers, selectedProjects, setSelectedProjects, removeUserAccessGroup, updateUserAccessGroups }
 }
 
 export { useProjectAccessGroupData }

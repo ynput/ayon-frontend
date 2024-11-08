@@ -3,26 +3,72 @@ import { FormLayout, Dialog, Button, Icon } from '@ynput/ayon-react-components'
 import { $Any } from '@types'
 import clsx from 'clsx'
 import * as Styled from './AssignAccessGroupsDialog.styled'
+import { AccessGroupUsers, SelectionStatus } from './types'
 
-type Props = {
-  accessGroups: $Any[]
-  users: string[]
-  onSave: (items: AccessGroupItem[], users: string[]) => void
-  onClose: () => void
+const icons: {[key in SelectionStatus] : string | undefined} = {
+  [SelectionStatus.None]: 'add',
+  [SelectionStatus.Mixed]: 'remove',
+  [SelectionStatus.All]: 'check',
 }
 
 type AccessGroupItem = {
   name: string
-  selected: boolean
+  status: SelectionStatus
 }
 
-const AssignAccessGroupsDialog = ({ accessGroups, users, onSave, onClose }: Props) => {
-  const [accessGroupItems, setAccessGroupItems] = useState<AccessGroupItem[]>(accessGroups)
+type Props = {
+  accessGroups: $Any[]
+  users: string[]
+  userAccessGroups: AccessGroupUsers
+  onSave: (items: AccessGroupItem[], users: string[]) => void
+  onClose: () => void
+}
+
+const AssignAccessGroupsDialog = ({
+  accessGroups,
+  users,
+  userAccessGroups,
+  onSave,
+  onClose,
+}: Props) => {
+  const mapStates = () => {
+    const getStatus = (users: string[], accessGroupUsers: string[]) => {
+      const usersSet = new Set(users)
+      const accessGroupUsersSet = new Set(accessGroupUsers)
+      const intersection = usersSet.intersection(accessGroupUsersSet)
+
+      // No users in ag users
+      if (intersection.size == 0) {
+        return SelectionStatus.None
+      }
+
+      //All users / some users in ag users
+      return intersection.size == usersSet.size ? SelectionStatus.All : SelectionStatus.Mixed
+    }
+
+    const data: $Any = {}
+    accessGroups.map((ag) => {
+      if (userAccessGroups[ag.name] === undefined) {
+        data[ag.name] = SelectionStatus.None
+      } else {
+        data[ag.name] = getStatus(users, userAccessGroups[ag.name])
+      }
+    })
+
+    return data
+  }
+
+  const initialStates = mapStates()
+  const initialStatesList = Object.keys(initialStates).map(agName => ({name: agName, status: initialStates[agName]}))
+
+  const [accessGroupItems, setAccessGroupItems] = useState<AccessGroupItem[]>(initialStatesList)
+
 
   const toggleAccessGroup = (accessGroup: AccessGroupItem) => {
+    const newStatus = [SelectionStatus.Mixed, SelectionStatus.All].includes(accessGroup.status) ? SelectionStatus.None : SelectionStatus.All
     setAccessGroupItems((prev: AccessGroupItem[]) => {
       const idx = prev.findIndex((item) => item.name === accessGroup.name)
-      return [...prev.slice(0, idx), accessGroup, ...prev.slice(idx + 1)]
+      return [...prev.slice(0, idx), {...accessGroup, status: newStatus}, ...prev.slice(idx + 1)]
     })
   }
   const handleClose = () => {
@@ -30,7 +76,8 @@ const AssignAccessGroupsDialog = ({ accessGroups, users, onSave, onClose }: Prop
   }
 
   const handleSave = () => {
-    onSave(accessGroupItems, users)
+    const changes = accessGroupItems.filter(item => initialStates[item.name] !== item.status)
+    onSave(changes, users)
     onClose()
   }
 
@@ -44,20 +91,20 @@ const AssignAccessGroupsDialog = ({ accessGroups, users, onSave, onClose }: Prop
     >
       <FormLayout>
         <Styled.List>
-          {accessGroupItems.map(({ name, selected }) => (
+          {accessGroupItems.map((item) => (
             <Styled.ProjectItem
-              key={name}
+              key={item.name}
               className={clsx('project-item', {
-                selected: selected,
+                selected: item.status === SelectionStatus.All
               })}
-              id={name}
+              id={item.name}
               tabIndex={0}
               onClick={() => {
-                toggleAccessGroup({ name, selected: !selected })
+                toggleAccessGroup(item)
               }}
             >
-              <span className="name">{name}</span>
-              <Icon icon={selected ? 'check' : 'add'} />
+              <span className="name">{item.name}</span>
+              {icons[item.status] !== undefined && <Icon icon={icons[item.status]!} />}
             </Styled.ProjectItem>
           ))}
         </Styled.List>
