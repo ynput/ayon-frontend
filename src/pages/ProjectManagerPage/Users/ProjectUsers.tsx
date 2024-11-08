@@ -29,11 +29,6 @@ const ProjectUsers = () => {
     projectName: '_',
   })
 
-  // const accessGroups = { artist: ['project_a', 'project_b', 'project_c'], freelancer: [], supervisor: [] }
-  // const { allProjects, activeProjects } = getProjectsListForSelection([], accessGroups)
-  // const [localActiveProjects, setLocalActiveProjects] = useState<$Any[]>(activeProjects)
-  // const [selectedAccessGroups, setSelectedAccessGroups] = useState<$Any>([])
-  // const onSelectProjects = (selection: $Any) => { setSelectedProjects([selection]) }
   // const onFiltersChange = (changes: $Any) => { console.log('on change? ', changes) }
   // const onFiltersFinish = (changes: $Any) => { console.log('on filters finish: ', changes) }
 
@@ -144,6 +139,8 @@ const ProjectUsers = () => {
           disabled={!actionEnabled}
           onClick={(e) => {
             e.stopPropagation()
+            setActionedUsers(getSelectedUsers())
+            onRemove(selectedAccessGroupUsers!.accessGroup!)()
           }}
         >
           Remove <span className="shortcut">R</span>{' '}
