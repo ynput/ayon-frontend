@@ -38,6 +38,14 @@ type GetProjectsUsersParams = {
   projects: string[]
 }
 
+export type GetProjectsUsersApiResponse = {
+  data: {
+  [project: string]: {
+    [user: string]: string[]
+  }
+  }
+}
+
 const getProjectInjected = api.injectEndpoints({
   endpoints: (build) => ({
     getProjectAttribs: build.query({
@@ -52,7 +60,7 @@ const getProjectInjected = api.injectEndpoints({
       transformResponse: (res: any) => res.data?.project,
       providesTags: (_res, _error, { projectName }) => [{ type: 'project', id: projectName }],
     }),
-    getProjectsUsers: build.query<GetProjectUsersApiResponse, GetProjectsUsersParams>({
+    getProjectsUsers: build.query<GetProjectsUsersApiResponse, GetProjectsUsersParams>({
       async queryFn({ projects = [] }, { dispatch, forced }) {
         try {
           const projectUsersData: $Any = {}

@@ -15,6 +15,7 @@ import {
   getAllProjectUsers,
   getFilteredAccessGroups,
   getFilteredProjects,
+  getFilteredSelectedProjects,
   getFilteredUsers,
   getSelectedUsers,
   mapUsersByAccessGroups,
@@ -26,6 +27,7 @@ import ProjectUserAccessSearchFilterWrapper from './ProjectUserAccessSearchFilte
 import ProjectUserAccessProjectList from './ProjectUserAccessProjectList'
 import { Filter } from '@components/SearchFilter/types'
 import { AccessGroupObject } from '@api/rest/accessGroups'
+import { useListProjectsQuery } from '@queries/project/getProject'
 
 const StyledButton = styled(Button)`
   .shortcut {
@@ -66,10 +68,15 @@ const ProjectUserAccess = () => {
     SelectedAccessGroupUsers | undefined
   >()
 
-  const filteredSelectedProjects = getFilteredProjects(
-    selectedProjects,
-    filters.find((filter: Filter) => filter.label === 'Project'),
-  )
+  const { data: projects, isLoading: projectsIsLoading, isError, error } = useListProjectsQuery({})
+  if (isError) {
+    console.error(error)
+  }
+
+  const projectFilters = filters.find((filter: Filter) => filter.label === 'Project')
+  // @ts-ignore Weird one, the response type seems to be mismatched?
+  const filteredProjects = getFilteredProjects(projects, projectFilters)
+  const filteredSelectedProjects = getFilteredSelectedProjects(selectedProjects, projectFilters)
 
   const filteredUnassignedUsers = getFilteredUsers(
     unassignedUsers,
@@ -158,11 +165,12 @@ const ProjectUserAccess = () => {
           size={25}
           minSize={10}
         >
-          {/* @ts-ignore */}
           <ProjectUserAccessProjectList
             selection={filteredSelectedProjects}
-            onSelectionChange={setSelectedProjects}
-          />
+            // @ts-ignore
+            projects={filteredProjects}
+            isLoading={projectsIsLoading}
+            onSelectionChange={setSelectedProjects} />
         </SplitterPanel>
 
         <SplitterPanel size={50}>

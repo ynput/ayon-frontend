@@ -1,6 +1,5 @@
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
-import { useListProjectsQuery } from '@queries/project/getProject'
 import styled from 'styled-components'
 import clsx from 'clsx'
 import useTableLoadingData from '@hooks/useTableLoadingData'
@@ -38,18 +37,13 @@ const StyledProjectName = styled.div`
 `
 
 type Props = {
-  className: string
+  projects: ProjectNode[]
   selection: string[]
+  isLoading: boolean
   onSelectionChange: (selection: $Any) => void
 }
 
-const ProjectUserAccessProjectList = ({ selection, onSelectionChange }: Props) => {
-  const { data: projects = [], isLoading, isError, error } = useListProjectsQuery({})
-  if (isError) {
-    console.error(error)
-  }
-
-  // @ts-ignore
+const ProjectUserAccessProjectList = ({ projects, isLoading, selection, onSelectionChange }: Props) => {
   const tableData = useTableLoadingData(projects, isLoading, 10, 'name')
   const selected = tableData.filter((project: ProjectNode) => selection.includes(project.name))
 

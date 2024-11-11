@@ -1,5 +1,5 @@
 import { $Any } from "@types"
-import { useGetProjectsUsersQuery } from '@queries/project/getProject'
+import api, { useGetProjectsUsersQuery } from '@queries/project/getProject'
 import { useState } from "react"
 import { useUpdateProjectUsersMutation } from "@queries/project/updateProject"
 import { useDispatch } from "react-redux"
@@ -14,13 +14,14 @@ type FilterValues = {
 const useProjectAccessGroupData = () => {
 
   const udpateApiCache = (project: string, user: string, accessGroups: string[]) => {
+    dispatch(api.util.invalidateTags([{ type: 'project', id: project }]))
     dispatch(
       // @ts-ignore
       api.util.updateQueryData(
-        'getProjectUsers',
-        { projectName: project},
+        'getProjectsUsers',
+        { projects: [project]},
         (draft: $Any) => {
-          draft[user] = accessGroups
+          draft[project][user] = accessGroups
         },
       ),
     )
@@ -36,8 +37,9 @@ const useProjectAccessGroupData = () => {
 
   const accessGroupUsers: $Any = {}
   const removeUserAccessGroup = (user: string, accessGroup: string) => {
-    const updatedAccessGroups = users![user].filter((item: string) => item !== accessGroup)
     for (const project of selectedProjects) {
+      // @ts-ignore
+      const updatedAccessGroups = users![project][user].filter((item: string) => item !== accessGroup)
       try {
         updateUser({
           projectName: project,
@@ -70,6 +72,7 @@ const useProjectAccessGroupData = () => {
     }
 
     for (const user of selectedUsers) {
+      // @ts-ignore
       const accessGroups = updatedAccessGroups(users?.[user] || [], changes)
 
         for (const project of selectedProjects) {
