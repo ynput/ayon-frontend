@@ -72,6 +72,7 @@ const isChildPath = (childPath, parentPath) => {
 }
 
 const AddonSettings = ({ projectName, showSites = false }) => {
+  const isUser = useSelector((state) => state.user.data.isUser)
   //const navigate = useNavigate()
   const [showHelp, setShowHelp] = useState(false)
   const [selectedAddons, setSelectedAddons] = useState([])
@@ -97,7 +98,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   const [promoteBundle] = usePromoteBundleMutation()
   const { requestPaste } = usePaste()
 
-  const userPermissions = useUserProjectPermissions(projectName)
+  const userPermissions = useUserProjectPermissions(null, isUser)
 
   const projectKey = projectName || '_'
 

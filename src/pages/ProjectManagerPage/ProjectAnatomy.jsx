@@ -9,16 +9,19 @@ import copyToClipboard from '@helpers/copyToClipboard'
 import { usePaste } from '@context/pasteContext'
 import useUserProjectPermissions, { UserPermissionsLevel } from '@hooks/useUserProjectPermissions'
 import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
+import { useSelector } from 'react-redux'
 
 const ProjectAnatomy = ({ projectName, projectList }) => {
-  const [formData, setFormData] = useState(null)
-  const [isChanged, setIsChanged] = useState(false)
-
+  const isUser = useSelector((state) => state.user.data.isUser)
   const [updateProjectAnatomy, { isLoading: isUpdating }] = useUpdateProjectAnatomyMutation()
   const { requestPaste } = usePaste()
 
-  const userPermissions = useUserProjectPermissions(projectName)
+  const userPermissions = useUserProjectPermissions(projectName, isUser)
   const accessLevel = userPermissions.getAnatomyPermissionLevel()
+  const [formData, setFormData] = useState(null)
+  const [isChanged, setIsChanged] = useState(false)
+
+
 
   const saveAnatomy = () => {
     updateProjectAnatomy({ projectName, anatomy: formData })

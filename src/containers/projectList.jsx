@@ -55,11 +55,6 @@ const StyledProjectName = styled.div`
   }
 `
 
-const ButtonPlaceholder = styled.div`
-  height: 26px;
-  width: 100%;
-`
-
 const StyledAddButton = styled(Button)`
   overflow: hidden;
   position: relative;
@@ -227,7 +222,7 @@ const ProjectList = ({
 
   const [updateUserPreferences] = useSetFrontendPreferencesMutation()
 
-  const userPermissions = useUserProjectPermissions()
+  const userPermissions = useUserProjectPermissions(null, user?.data?.isUser || true)
 
   const handlePinProjects = async (sel, isPinning) => {
     try {
@@ -417,7 +412,7 @@ const ProjectList = ({
           </div>
           {/* <div className="spacer" /> */}
         </StyledAddButton>
-      ): <ButtonPlaceholder />}
+      ): null}
 
       <TablePanel>
         {isCollapsible && (

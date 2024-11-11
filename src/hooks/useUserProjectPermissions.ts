@@ -15,29 +15,29 @@ enum UserPermissionsEntity {
 
 class UserPermissions {
   permissions: GetCurrentUserPermissionsApiResponse
-  isUser: boolean
+  hasLimitedPermissions: boolean
 
-  constructor(permissions: GetCurrentUserPermissionsApiResponse, isUser: boolean = false) {
+  constructor(permissions: GetCurrentUserPermissionsApiResponse, hasLimitedPermissions: boolean = false) {
     this.permissions = permissions
-    this.isUser = isUser
+    this.hasLimitedPermissions = hasLimitedPermissions
   }
 
   canCreateProject(): boolean {
-    if (!this.isUser) {
+    if (!this.hasLimitedPermissions) {
       return true
     }
     return this.projectSettingsAreEnabled() && this.permissions?.project?.create || false
   }
 
   getPermissionLevel(type: UserPermissionsEntity): UserPermissionsLevel {
-    if (!this.isUser) {
+    if (!this.hasLimitedPermissions) {
       return UserPermissionsLevel.readWrite
     }
     return this.permissions?.project?.[type]|| UserPermissionsLevel.readWrite
   }
 
   canEdit(type: UserPermissionsEntity): boolean {
-    if (!this.isUser || !this.projectSettingsAreEnabled()) {
+    if (!this.hasLimitedPermissions || !this.projectSettingsAreEnabled()) {
       return true
     }
 
@@ -45,7 +45,7 @@ class UserPermissions {
   }
 
   canView(type: UserPermissionsEntity): boolean {
-    if (!this.isUser || !this.projectSettingsAreEnabled()) {
+    if (!this.hasLimitedPermissions || !this.projectSettingsAreEnabled()) {
       return true
     }
 
@@ -95,12 +95,12 @@ class UserPermissions {
   }
 }
 
-const useUserProjectPermissions = (projectName: string, isUser?: boolean): UserPermissions | undefined => {
+const useUserProjectPermissions = (projectName: string, hasLimitedPermissions?: boolean): UserPermissions | undefined => {
   const { data: permissions } = projectName
     ? useGetCurrentUserProjectPermissionsQuery({ projectName })
     : useGetCurrentUserPermissionsQuery()
 
-  return new UserPermissions(permissions, isUser)
+  return new UserPermissions(permissions, hasLimitedPermissions)
 }
 
 export { UserPermissionsLevel }
