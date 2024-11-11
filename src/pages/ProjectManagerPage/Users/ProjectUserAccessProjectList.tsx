@@ -5,10 +5,8 @@ import styled from 'styled-components'
 import clsx from 'clsx'
 import useTableLoadingData from '@hooks/useTableLoadingData'
 import { $Any } from '@types'
-import { useRef } from 'react'
 import { TablePanel } from '@ynput/ayon-react-components'
 import { ProjectNode } from '@api/graphql'
-import { Filter } from '@components/SearchFilter/types'
 
 const formatName = (rowData: $Any, field: string) => {
   return rowData[field]
@@ -42,37 +40,21 @@ const StyledProjectName = styled.div`
 type Props = {
   className: string
   selection: string[]
-  filters: Filter[]
-  setSelection: $Any
   onSelectionChange: (selection: $Any) => void
 }
 
-const ProjectList = ({ selection, onSelectionChange, filters }: Props) => {
-  console.log('filters', filters)
+const ProjectUserAccessProjectList = ({ selection, onSelectionChange }: Props) => {
   const { data: projects = [], isLoading, isError, error } = useListProjectsQuery({})
   if (isError) {
     console.error(error)
   }
 
-  const getFilteredProjects = (projects: ProjectNode[], filters: Filter) => {
-    if (!filters) {
-      return projects
-    }
-
-    const filterProjects = filters && filters.values!.map((match: Filter) => match.id)
-    if (filters!.inverted) {
-      return projects.filter((project: ProjectNode) => !filterProjects.includes(project.name))
-    }
-    return projects.filter((project: ProjectNode) => filterProjects.includes(project.name))
-  }
-
   // @ts-ignore
-  const projectList = getFilteredProjects(projects, filters)
-  const tableData = useTableLoadingData(projectList, isLoading, 10, 'name')
+  const tableData = useTableLoadingData(projects, isLoading, 10, 'name')
   const selected = tableData.filter((project: ProjectNode) => selection.includes(project.name))
 
   return (
-    <TablePanel>
+    <TablePanel style={{ height: '100%' }}>
       <DataTable
         value={tableData}
         selection={selected}
@@ -83,7 +65,6 @@ const ProjectList = ({ selection, onSelectionChange, filters }: Props) => {
         className={clsx({ loading: isLoading })}
         rowClassName={() => ({ loading: isLoading })}
         onSelectionChange={(selection) => {
-          console.log(selection)
           onSelectionChange(selection.value.map((project: ProjectNode) => project.name))
         }}
       >
@@ -102,4 +83,4 @@ const ProjectList = ({ selection, onSelectionChange, filters }: Props) => {
   )
 }
 
-export default ProjectList
+export default ProjectUserAccessProjectList

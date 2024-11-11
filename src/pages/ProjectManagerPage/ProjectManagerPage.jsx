@@ -17,7 +17,7 @@ import ProjectManagerPageLayout from './ProjectManagerPageLayout'
 import AppNavLinks from '@containers/header/AppNavLinks'
 import confirmDelete from '@helpers/confirmDelete'
 import useUserProjectPermissions from '@hooks/useUserProjectPermissions'
-import ProjectUsers from './Users/ProjectUsers'
+import ProjectUserAccess from './Users/ProjectUserAccess'
 
 const ProjectSettings = ({ projectList, projectManager, projectName }) => {
   return (
@@ -50,7 +50,8 @@ const ProjectManagerPage = () => {
     withDefault(StringParam, projectName),
   )
 
-  const userPermissions = useUserProjectPermissions(selectedProject)
+  const userPermissions = useUserProjectPermissions(selectedProject, isUser)
+  console.log('up: ', userPermissions)
 
   // UPDATE DATA
   const [updateProject] = useUpdateProjectMutation()
@@ -86,7 +87,7 @@ const ProjectManagerPage = () => {
   }
 
   const links = []
-  if (userPermissions.projectSettingsAreEnabled()) {
+  if (!isUser || userPermissions.projectSettingsAreEnabled()) {
     if (userPermissions.canViewAnatomy() || module === 'anatomy') {
       links.push({
         name: 'Anatomy',
@@ -163,7 +164,7 @@ const ProjectManagerPage = () => {
         {module === 'anatomy' && <ProjectAnatomy />}
         {module === 'projectSettings' && <ProjectSettings />}
         {module === 'siteSettings' && <SiteSettings />}
-        {module === 'userSettings' && <ProjectUsers />}
+        {module === 'userSettings' && <ProjectUserAccess />}
         {module === 'roots' && <ProjectRoots />}
         {module === 'teams' && <TeamsPage />}
       </ProjectManagerPageContainer>

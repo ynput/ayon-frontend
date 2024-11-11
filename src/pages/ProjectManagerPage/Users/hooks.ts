@@ -34,7 +34,6 @@ const useProjectAccessGroupData = () => {
   const result = api.useGetProjectUsersQuery({ projectName: selectedProjects[0] || '_' })
   const users = result.data
 
-
   const accessGroupUsers: $Any = {}
   const removeUserAccessGroup = (user: string, accessGroup: string) => {
     const updatedAccessGroups = users![user].filter((item: string) => item !== accessGroup)
@@ -89,7 +88,14 @@ const useProjectAccessGroupData = () => {
     }
   }
 
-  return { users, accessGroupUsers, selectedProjects, setSelectedProjects, removeUserAccessGroup, updateUserAccessGroups }
+  return {
+    users,
+    accessGroupUsers,
+    selectedProjects,
+    setSelectedProjects,
+    removeUserAccessGroup,
+    updateUserAccessGroups,
+  }
 }
 
 

@@ -15,21 +15,29 @@ enum UserPermissionsEntity {
 
 class UserPermissions {
   permissions: GetCurrentUserPermissionsApiResponse
+  isUser: boolean
 
-  constructor(permissions: GetCurrentUserPermissionsApiResponse) {
+  constructor(permissions: GetCurrentUserPermissionsApiResponse, isUser: boolean = false) {
     this.permissions = permissions
+    this.isUser = isUser
   }
 
   canCreateProject(): boolean {
+    if (!this.isUser) {
+      return true
+    }
     return this.projectSettingsAreEnabled() && this.permissions?.project?.create || false
   }
 
   getPermissionLevel(type: UserPermissionsEntity): UserPermissionsLevel {
+    if (!this.isUser) {
+      return UserPermissionsLevel.readWrite
+    }
     return this.permissions?.project?.[type]|| UserPermissionsLevel.readWrite
   }
 
   canEdit(type: UserPermissionsEntity): boolean {
-    if (!this.projectSettingsAreEnabled()) {
+    if (!this.isUser || !this.projectSettingsAreEnabled()) {
       return true
     }
 
@@ -37,14 +45,13 @@ class UserPermissions {
   }
 
   canView(type: UserPermissionsEntity): boolean {
-    if (!this.projectSettingsAreEnabled()) {
+    if (!this.isUser || !this.projectSettingsAreEnabled()) {
       return true
     }
 
     return (
       this.canEdit(type) || this.permissions?.project?.[type]=== UserPermissionsLevel.readOnly
     )
-
   }
 
   getSettingsPermissionLevel(): UserPermissionsLevel {
@@ -88,12 +95,12 @@ class UserPermissions {
   }
 }
 
-const useUserProjectPermissions = (projectName?: string): UserPermissions | undefined => {
+const useUserProjectPermissions = (projectName: string, isUser?: boolean): UserPermissions | undefined => {
   const { data: permissions } = projectName
     ? useGetCurrentUserProjectPermissionsQuery({ projectName })
     : useGetCurrentUserPermissionsQuery()
 
-  return new UserPermissions(permissions)
+  return new UserPermissions(permissions, isUser)
 }
 
 export { UserPermissionsLevel }

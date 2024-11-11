@@ -13,7 +13,7 @@ type Props = {
   onChange: $Any
 }
 
-const ProjectAccessSearchFilterWrapper = ({ filters: _filters, onChange }: Props) => {
+const ProjectUserAccessSearchFilterWrapper = ({ filters: _filters, onChange }: Props) => {
   const selfName = useSelector((state: $Any) => state.user.name)
   const { isLoading: isProjectsLoading, data: projects = [] } = useListProjectsQuery({})
   const { isLoading: isUsersLoading, data: users = [] } = useGetUsersQuery({ selfName })
@@ -54,4 +54,4 @@ const ProjectAccessSearchFilterWrapper = ({ filters: _filters, onChange }: Props
   )
 }
 
-export default ProjectAccessSearchFilterWrapper
+export default ProjectUserAccessSearchFilterWrapper

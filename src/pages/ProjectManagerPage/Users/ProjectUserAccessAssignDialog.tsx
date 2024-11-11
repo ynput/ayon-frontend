@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { FormLayout, Dialog, Button, Icon } from '@ynput/ayon-react-components'
 import { $Any } from '@types'
 import clsx from 'clsx'
-import * as Styled from './AssignAccessGroupsDialog.styled'
+import * as Styled from './ProjectUserAccessAssignDialog.styled'
 import { AccessGroupUsers, SelectionStatus } from './types'
 
 const icons: {[key in SelectionStatus] : string | undefined} = {
@@ -24,7 +24,7 @@ type Props = {
   onClose: () => void
 }
 
-const AssignAccessGroupsDialog = ({
+const ProjectUserAccessAssignDialog = ({
   accessGroups,
   users,
   userAccessGroups,
@@ -113,4 +113,4 @@ const AssignAccessGroupsDialog = ({
   )
 }
 
-export default AssignAccessGroupsDialog
+export default ProjectUserAccessAssignDialog
