@@ -1,5 +1,5 @@
 import { $Any } from "@types"
-import { api } from '@api/rest/project'
+import { useGetProjectsUsersQuery } from '@queries/project/getProject'
 import { useState } from "react"
 import { useUpdateProjectUsersMutation } from "@queries/project/updateProject"
 import { useDispatch } from "react-redux"
@@ -31,7 +31,7 @@ const useProjectAccessGroupData = () => {
 
   const [selectedProjects, setSelectedProjects] = useState<string[]>([])
 
-  const result = api.useGetProjectUsersQuery({ projectName: selectedProjects[0] || '_' })
+  const result = useGetProjectsUsersQuery({ projects: selectedProjects })
   const users = result.data
 
   const accessGroupUsers: $Any = {}

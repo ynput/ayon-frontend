@@ -1,7 +1,8 @@
 import { AccessGroupObject } from '@api/rest/accessGroups'
-import { AccessGroupUsers, ProjectUsersResponse, SelectedAccessGroupUsers } from './types'
+import { AccessGroupUsers, SelectedAccessGroupUsers } from './types'
 import { Filter } from '@components/SearchFilter/types'
-import { ProjectNode, UserNode } from '@api/graphql'
+import { UserNode } from '@api/graphql'
+import { GetProjectUsersApiResponse } from '@api/rest/project'
 
 const getAllProjectUsers = (groupedUsers: AccessGroupUsers): string[] => {
   let allUsers: string[] = []
@@ -12,21 +13,23 @@ const getAllProjectUsers = (groupedUsers: AccessGroupUsers): string[] => {
   return [...new Set(allUsers)]
 }
 
-const mapUsersByAccessGroups = (response: ProjectUsersResponse | undefined): AccessGroupUsers => {
+const mapUsersByAccessGroups = (response: GetProjectUsersApiResponse | undefined): AccessGroupUsers => {
   if (!response) {
     return {}
   }
 
   const groupedUsers: { [key: string]: string[] } = {}
-  for (const [user, acessGroupsList] of Object.entries(response)) {
-    for (const accessGroup of acessGroupsList) {
-      if (groupedUsers[accessGroup] === undefined) {
-        groupedUsers[accessGroup] = []
+  for (const [_, projectData] of Object.entries(response)) {
+    for (const [user, acessGroupsList] of Object.entries(projectData)) {
+      for (const accessGroup of acessGroupsList) {
+        if (groupedUsers[accessGroup] === undefined) {
+          groupedUsers[accessGroup] = []
+        }
+        if (groupedUsers[accessGroup].includes(user)) {
+          continue
+        }
+        groupedUsers[accessGroup].push(user)
       }
-      if (groupedUsers[accessGroup].includes(user)) {
-        continue
-      }
-      groupedUsers[accessGroup].push(user)
     }
   }
 
