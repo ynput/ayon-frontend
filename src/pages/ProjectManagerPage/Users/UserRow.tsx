@@ -12,7 +12,11 @@ const StyledProfileRow = styled.div`
   button {
     visibility: hidden;
     .shortcut {
-      padding: 4px;
+      font-size: 11px;
+      line-height: 16px;
+      font-weight: 700;
+      padding: 1px 4px;
+      vertical-align: middle;
       background-color: var(--md-sys-color-primary-container);
       border-radius: var(--border-radius-m);
     }
@@ -23,6 +27,17 @@ const StyledProfileRow = styled.div`
     }
   }
 `
+const StyledButton = styled(Button)`
+  padding: 0;
+  &.hasIcon {
+    padding: 2px 4px;
+  }
+  .icon {
+    height: 20px;
+    width: 20px;
+  }
+`
+
 type Props = {
   rowData: $Any
   selected: boolean
@@ -46,18 +61,7 @@ export const UserRow = ({
   return (
     <StyledProfileRow className={clsx({ actionable: showButtonsOnHover, selected })}>
       {/* @ts-ignore */}
-      <UserImage
-        name={name}
-        size={25}
-        style={{
-          transform: 'scale(0.8)',
-          minHeight: 25,
-          minWidth: 25,
-          maxHeight: 25,
-          maxWidth: 25,
-        }}
-        highlight={self}
-      />
+      <UserImage name={name} highlight={self} />
       <span
         style={{
           flexGrow: 1,
@@ -66,7 +70,7 @@ export const UserRow = ({
       >
         {name}
       </span>
-      <Button
+      <StyledButton
         className="action"
         disabled={addButtonDisabled}
         data-tooltip={addButtonDisabled ? 'No project selected' : undefined}
@@ -79,15 +83,15 @@ export const UserRow = ({
       >
         {isUnassigned ? (
           <>
-            Add
+            Add <span className="shortcut">A</span>
           </>
         ) : (
           'Add more'
         )}
-      </Button>
+      </StyledButton>
 
       {!isUnassigned && (
-        <Button
+        <StyledButton
           className="action"
           icon={'remove'}
           variant="filled"
@@ -96,8 +100,8 @@ export const UserRow = ({
             onRemove!()
           }}
         >
-          Remove
-        </Button>
+          Remove <span className="shortcut">R</span>
+        </StyledButton>
       )}
     </StyledProfileRow>
   )

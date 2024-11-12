@@ -28,6 +28,16 @@ import ProjectUserAccessProjectList from './ProjectUserAccessProjectList'
 import { Filter } from '@components/SearchFilter/types'
 import { AccessGroupObject } from '@api/rest/accessGroups'
 import { useListProjectsQuery } from '@queries/project/getProject'
+import useUserProjectPermissions, { UserPermissionsEntity } from '@hooks/useUserProjectPermissions'
+import ProjectManagerPageLayout from '../ProjectManagerPageLayout'
+import { StyledEmptyPlaceholder, StyledEmptyPlaceholderWrapper } from './ProjectUserAccess.styled'
+
+const StyledHeader = styled.p`
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 700;
+  margin: 8px 0;
+`
 
 const StyledButton = styled(Button)`
   .shortcut {
@@ -82,6 +92,10 @@ const ProjectUserAccess = () => {
     unassignedUsers,
     filters?.find((el: Filter) => el.label === 'User'),
   )
+  const filteredNonManagerUsers = getFilteredUsers(
+    activeNonManagerUsers,
+    filters?.find((el: Filter) => el.label === 'User'),
+  )
   const selectedUsers = getSelectedUsers(selectedAccessGroupUsers, filteredUnassignedUsers)
 
   const addActionEnabled = filteredSelectedProjects.length > 0 && selectedUsers.length > 0
@@ -106,7 +120,7 @@ const ProjectUserAccess = () => {
     if (errorMessage) {
       toast.error(errorMessage)
     } else {
-      toast.success('Operation successful')
+      toast.success('Access added')
     }
     resetSelectedUsers()
   }
@@ -119,12 +133,25 @@ const ProjectUserAccess = () => {
         await removeUserAccessGroup(user, accessGroup)
       }
     }
-    toast.success('Operation successful')
+    toast.success('Access removed')
     resetSelectedUsers()
   }
 
+  const isUser = useSelector((state: $Any) => state.user.data.isUser)
+  const userPermissions = useUserProjectPermissions(!isUser)
+
+  if (!userPermissions?.canViewAny(UserPermissionsEntity.users)) {
+    return (
+      <EmptyPlaceholder
+        message="You don't have permissions to view the this project's users"
+        icon="person"
+      />
+    )
+  }
+
   return (
-    <div style={{ height: '100%' }}>
+    // @ts-ignore
+    <ProjectManagerPageLayout style={{ height: '100%' }}>
       <Toolbar style={{ display: 'flex', margin: '4px 0' }}>
         {/* @ts-ignore */}
         <ProjectUserAccessSearchFilterWrapper
@@ -142,7 +169,7 @@ const ProjectUserAccess = () => {
             setShowDialog(true)
           }}
         >
-          Add <span className="shortcut">A</span>{' '}
+          Add access
         </StyledButton>
 
         <StyledButton
@@ -155,7 +182,7 @@ const ProjectUserAccess = () => {
             onRemove(selectedAccessGroupUsers!.accessGroup!)()
           }}
         >
-          Remove <span className="shortcut">R</span>{' '}
+          Remove access
         </StyledButton>
       </Toolbar>
 
@@ -165,46 +192,60 @@ const ProjectUserAccess = () => {
           size={25}
           minSize={10}
         >
+          <StyledHeader>Projects</StyledHeader>
           <ProjectUserAccessProjectList
             selection={filteredSelectedProjects}
             // @ts-ignore
             projects={filteredProjects}
             isLoading={projectsIsLoading}
-            onSelectionChange={setSelectedProjects} />
+            onSelectionChange={setSelectedProjects}
+          />
         </SplitterPanel>
 
         <SplitterPanel size={50}>
+          <StyledHeader>No project access</StyledHeader>
+
           {filteredSelectedProjects.length > 0 ? (
-            <ProjectUserAccessUserList
-              header="Username"
-              emptyMessage="All users assigned"
-              selectedProjects={filteredSelectedProjects}
-              selectedUsers={selectedUsers}
-              tableList={filteredUnassignedUsers}
-              isLoading={isLoading}
-              onAdd={handleAdd}
-              onSelectUsers={(selection) => setSelectedAccessGroupUsers({ users: selection })}
-              sortable
-              isUnassigned
-            />
+            <div style={{ position: 'relative', height: '100%' }}>
+              <ProjectUserAccessUserList
+                header="Username"
+                emptyMessage="All users assigned"
+                selectedProjects={filteredSelectedProjects}
+                selectedUsers={selectedUsers}
+                tableList={filteredUnassignedUsers}
+                isLoading={isLoading}
+                onAdd={handleAdd}
+                onSelectUsers={(selection) => setSelectedAccessGroupUsers({ users: selection })}
+                sortable
+                isUnassigned
+              />
+            </div>
           ) : (
-            <EmptyPlaceholder message={'No project selected'} icon={'list'}>
-              <span style={{ textAlign: 'center' }}>
-                Select a project on the left side to manage users access groups
-              </span>
-            </EmptyPlaceholder>
+            <StyledEmptyPlaceholderWrapper>
+              <StyledEmptyPlaceholder message={'No project selected'} icon={'list'}>
+                <span style={{ textAlign: 'center' }}>
+                  Select a project on the left side to manage users access groups
+                </span>
+              </StyledEmptyPlaceholder>
+            </StyledEmptyPlaceholderWrapper>
           )}
         </SplitterPanel>
-        <SplitterPanel size={20}>
-          {filteredSelectedProjects.length > 0 && (
-            <Splitter layout="vertical" style={{ overflowY: 'scroll', overflowX: 'hidden' }}>
+        <SplitterPanel size={50} style={{ height: '100%', overflow: 'hidden' }}>
+          <StyledHeader>Access groups</StyledHeader>
+          {filteredSelectedProjects.length > 0 ? (
+            <Splitter layout="vertical" style={{ height: '100%', overflow: 'auto'}}>
               {getFilteredAccessGroups(accessGroupList, filters)
                 .map((item: AccessGroupObject) => item.name)
                 .map((accessGroup) => {
                   const selectedUsers = getAccessGroupUsers(selectedAccessGroupUsers!, accessGroup)
                   return (
                     <SplitterPanel
-                      style={{ minHeight: '250px', minWidth: '350px' }}
+                      style={{
+                        minHeight: '250px',
+                        minWidth: '350px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                      }}
                       key={accessGroup}
                       className="flex align-items-center justify-content-center"
                       size={45}
@@ -214,7 +255,7 @@ const ProjectUserAccess = () => {
                         selectedUsers={selectedUsers}
                         header={accessGroup}
                         emptyMessage="No users assigned"
-                        tableList={activeNonManagerUsers.filter(
+                        tableList={filteredNonManagerUsers.filter(
                           (user: UserNode) =>
                             mappedUsers[accessGroup] &&
                             mappedUsers[accessGroup].includes(user.name),
@@ -233,6 +274,8 @@ const ProjectUserAccess = () => {
                   )
                 })}
             </Splitter>
+          ) : (
+            <StyledEmptyPlaceholderWrapper />
           )}
         </SplitterPanel>
       </Splitter>
@@ -248,7 +291,7 @@ const ProjectUserAccess = () => {
           }}
         />
       )}
-    </div>
+    </ProjectManagerPageLayout>
   )
 }
 export default ProjectUserAccess

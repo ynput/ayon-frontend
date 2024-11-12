@@ -8,6 +8,8 @@ import { $Any } from '@types'
 import { UserNode } from '@api/graphql'
 import UserRow from './UserRow'
 import { Filter } from '@components/SearchFilter/types'
+import { StyledEmptyPlaceholder, StyledEmptyPlaceholderWrapper } from './ProjectUserAccess.styled'
+
 
 type Props = {
   selectedProjects: string[]
@@ -61,6 +63,16 @@ const ProjectUserAccessUserList = ({
   const selectedUnassignedUsers = tableList.filter((user: $Any) => selectedUsers.includes(user.name))
   const selectedUnassignedUserNames = selectedUnassignedUsers.map((user: $Any) => user.name)
   // Render
+
+  if (tableList.length === 0) {
+    return (
+      <StyledEmptyPlaceholderWrapper>
+        <p className="header">{header}</p>
+        <StyledEmptyPlaceholder icon="person" message="No users assigned" style={{}} />
+      </StyledEmptyPlaceholderWrapper>
+    )
+  }
+
   return (
     <Section wrap>
       <TablePanel>
