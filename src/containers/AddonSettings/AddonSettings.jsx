@@ -98,7 +98,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   const [promoteBundle] = usePromoteBundleMutation()
   const { requestPaste } = usePaste()
 
-  const userPermissions = useUserProjectPermissions(null, isUser)
+  const userPermissions = useUserProjectPermissions(!isUser)
 
   const projectKey = projectName || '_'
 
@@ -637,9 +637,9 @@ const AddonSettings = ({ projectName, showSites = false }) => {
         />
         <SaveButton
           label="Save Changes"
-          disabled={!userPermissions.canEditSettings()}
+          disabled={!userPermissions.canEditSettings(projectName)}
           data-tooltip={
-            !userPermissions.canEditSettings() ? "You don't have edit permissions" : undefined
+            !userPermissions.canEditSettings(projectName) ? "You don't have edit permissions" : undefined
           }
           onClick={onSave}
           active={canCommit}
@@ -675,7 +675,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
 
   // console.log('selected addons: ', selectedAddons)
 
-  if (!userPermissions.canViewSettings()) {
+  if (!userPermissions.canViewSettings(projectName)) {
     return <EmptyPlaceholder
       icon="settings_alert"
       message="You don't have permissions to view the addon settings for this project"

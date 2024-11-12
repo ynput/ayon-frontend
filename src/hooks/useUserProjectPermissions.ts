@@ -1,107 +1,156 @@
-import { GetCurrentUserPermissionsApiResponse } from '@api/rest/permissions'
-import { useGetCurrentUserPermissionsQuery, useGetCurrentUserProjectPermissionsQuery } from '@queries/permissions/getPermissions'
+import { useGetCurrentUserPermissionsQuery } from '@queries/permissions/getPermissions'
 
-enum UserPermissionsLevel {
+type AllProjectsPremissions = {
+  projects: {
+    [projectName: string]: {
+      project: {
+        anatomy: PermissionLevel
+        create: boolean
+        enabled: boolean
+        settings: PermissionLevel
+        users: PermissionLevel
+      }
+    }
+  }
+  studio: {
+    create_project: boolean
+  }
+  user_level: 'user' | 'admin'
+}
+
+enum PermissionLevel {
   none = 0,
   readOnly = 1,
   readWrite = 2,
 }
 
-enum UserPermissionsEntity {
+export enum UserPermissionsEntity {
   users = 'users',
   anatomy = 'anatomy',
   settings = 'settings',
 }
 
 class UserPermissions {
-  permissions: GetCurrentUserPermissionsApiResponse
-  hasLimitedPermissions: boolean
+  permissions: AllProjectsPremissions
+  hasElevatedPrivileges: boolean
 
-  constructor(permissions: GetCurrentUserPermissionsApiResponse, hasLimitedPermissions: boolean = false) {
+  constructor(permissions: AllProjectsPremissions, hasLimitedPermissions: boolean = false) {
     this.permissions = permissions
-    this.hasLimitedPermissions = hasLimitedPermissions
+    this.hasElevatedPrivileges = hasLimitedPermissions
   }
 
   canCreateProject(): boolean {
-    if (!this.hasLimitedPermissions) {
+    if (this.hasElevatedPrivileges) {
       return true
     }
-    return this.projectSettingsAreEnabled() && this.permissions?.project?.create || false
-  }
-
-  getPermissionLevel(type: UserPermissionsEntity): UserPermissionsLevel {
-    if (!this.hasLimitedPermissions) {
-      return UserPermissionsLevel.readWrite
+    if (!this.permissions) {
+      return false
     }
-    return this.permissions?.project?.[type]|| UserPermissionsLevel.readWrite
+
+    return (this.projectSettingsAreEnabled() && this.permissions.studio.create_project) || false
   }
 
-  canEdit(type: UserPermissionsEntity): boolean {
-    if (!this.hasLimitedPermissions || !this.projectSettingsAreEnabled()) {
+  getPermissionLevel(type: UserPermissionsEntity, projectName: string): PermissionLevel {
+    if (this.hasElevatedPrivileges) {
+      return PermissionLevel.readWrite
+    }
+    if (!this.permissions) {
+      return PermissionLevel.none
+    }
+
+    return this.permissions.projects[projectName]?.project[type] || PermissionLevel.none
+  }
+
+  canEdit(type: UserPermissionsEntity, projectName: string): boolean {
+    if (this.hasElevatedPrivileges || !this.projectSettingsAreEnabled()) {
+      return true
+    }
+    if (!this.permissions || !projectName) {
+      return false
+    }
+
+    return this.permissions.projects[projectName]?.project[type] === PermissionLevel.readWrite
+  }
+
+  canView(type: UserPermissionsEntity, projectName: string): boolean {
+    if (!this.permissions) {
+      return false
+    }
+
+    if (this.hasElevatedPrivileges || !this.projectSettingsAreEnabled()) {
       return true
     }
 
-    return this.permissions?.project?.[type] === UserPermissionsLevel.readWrite
-  }
-
-  canView(type: UserPermissionsEntity): boolean {
-    if (!this.hasLimitedPermissions || !this.projectSettingsAreEnabled()) {
+    if (this.canEdit(type, projectName)) {
       return true
     }
 
-    return (
-      this.canEdit(type) || this.permissions?.project?.[type]=== UserPermissionsLevel.readOnly
-    )
+    if (this.permissions.projects[projectName]?.project[type] === PermissionLevel.readOnly) {
+      return true
+    }
+
+    return false
   }
 
-  getSettingsPermissionLevel(): UserPermissionsLevel {
-    return this.getPermissionLevel(UserPermissionsEntity.settings)
+  getAnatomyPermissionLevel(projectName: string): PermissionLevel {
+    return this.getPermissionLevel(UserPermissionsEntity.anatomy, projectName)
   }
 
-  getAnatomyPermissionLevel(): UserPermissionsLevel {
-    return this.getPermissionLevel(UserPermissionsEntity.anatomy)
+  canEditSettings(projectName: string): boolean {
+    return this.canEdit(UserPermissionsEntity.settings, projectName)
   }
 
-  getUsersPermissionLevel(): UserPermissionsLevel {
-    return this.getPermissionLevel(UserPermissionsEntity.users)
+  canEditAnatomy(projectName: string): boolean {
+    return this.canEdit(UserPermissionsEntity.anatomy, projectName)
   }
 
-  canEditSettings(): boolean {
-    return this.canEdit(UserPermissionsEntity.settings)
+  canViewSettings(projectName?: string ): boolean {
+    if (projectName) {
+      return this.canView(UserPermissionsEntity.settings, projectName)
+    }
+
+    return this.canViewAny(UserPermissionsEntity.settings)
   }
 
-  canEditAnatomy(): boolean {
-    return this.canEdit(UserPermissionsEntity.anatomy)
+  canViewAnatomy(projectName?: string): boolean {
+    if (projectName) {
+    return this.canView(UserPermissionsEntity.anatomy, projectName)
+    }
+
+    return this.canViewAny(UserPermissionsEntity.anatomy)
+  }
+  canViewAny(type: UserPermissionsEntity): boolean {
+    if (!this.permissions) {
+      return false
+    }
+
+    for (const projectName of Object.keys(this.permissions.projects)) {
+      if (this.canView(type, projectName)) {
+        return true
+      }
+    }
+
+    return false
   }
 
-  canEditUsers(): boolean {
-    return this.canEdit(UserPermissionsEntity.users)
-  }
+  canViewUsers(projectName?: string): boolean {
+    if (projectName) {
+      return this.canView(UserPermissionsEntity.users, projectName)
+    }
 
-  canViewSettings(): boolean {
-    return this.canView(UserPermissionsEntity.settings)
-  }
-
-  canViewAnatomy(): boolean {
-    return this.canView(UserPermissionsEntity.anatomy)
-  }
-
-  canViewUsers(): boolean {
-    return this.canView(UserPermissionsEntity.users)
+    return this.canViewAny(UserPermissionsEntity.users)
   }
 
   projectSettingsAreEnabled(): boolean {
-    return this.permissions?.project?.enabled
+    return this.permissions?.user_level === 'user'
   }
 }
 
-const useUserProjectPermissions = (projectName: string, hasLimitedPermissions?: boolean): UserPermissions | undefined => {
-  const { data: permissions } = projectName
-    ? useGetCurrentUserProjectPermissionsQuery({ projectName })
-    : useGetCurrentUserPermissionsQuery()
+const useUserProjectPermissions = (hasLimitedPermissions?: boolean): UserPermissions | undefined => {
+  const { data: permissions } = useGetCurrentUserPermissionsQuery()
 
   return new UserPermissions(permissions, hasLimitedPermissions)
 }
 
-export { UserPermissionsLevel }
+export { PermissionLevel}
 export default useUserProjectPermissions

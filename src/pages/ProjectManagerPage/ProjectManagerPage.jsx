@@ -16,7 +16,7 @@ import ProjectManagerPageContainer from './ProjectManagerPageContainer'
 import ProjectManagerPageLayout from './ProjectManagerPageLayout'
 import AppNavLinks from '@containers/header/AppNavLinks'
 import confirmDelete from '@helpers/confirmDelete'
-import useUserProjectPermissions from '@hooks/useUserProjectPermissions'
+import useUserProjectPermissions, { UserPermissionsEntity } from '@hooks/useUserProjectPermissions'
 import ProjectUserAccess from './Users/ProjectUserAccess'
 
 const ProjectSettings = ({ projectList, projectManager, projectName }) => {
@@ -50,8 +50,7 @@ const ProjectManagerPage = () => {
     withDefault(StringParam, projectName),
   )
 
-  const userPermissions = useUserProjectPermissions(selectedProject, isUser)
-  console.log('up: ', userPermissions)
+  const userPermissions = useUserProjectPermissions(!isUser)
 
   // UPDATE DATA
   const [updateProject] = useUpdateProjectMutation()
@@ -88,7 +87,7 @@ const ProjectManagerPage = () => {
 
   const links = []
   if (!isUser || userPermissions.projectSettingsAreEnabled()) {
-    if (userPermissions.canViewAnatomy() || module === 'anatomy') {
+    if (userPermissions.canViewAny(UserPermissionsEntity.anatomy) || module === 'anatomy') {
       links.push({
         name: 'Anatomy',
         path: '/manageProjects/anatomy',
@@ -98,7 +97,7 @@ const ProjectManagerPage = () => {
       })
     }
 
-    if (userPermissions.canViewSettings() || module === 'projectSettings') {
+    if (userPermissions.canViewAny(UserPermissionsEntity.settings) || module === 'projectSettings') {
       links.push({
         name: 'Project settings',
         path: '/manageProjects/projectSettings',
@@ -107,7 +106,7 @@ const ProjectManagerPage = () => {
         shortcut: 'P+P',
       })
     }
-    if (userPermissions.canViewSettings() || module === 'userSettings') {
+    if (userPermissions.canViewAny(UserPermissionsEntity.users) || module === 'userSettings') {
       links.push({
         name: 'Project Users',
         path: '/manageProjects/userSettings',

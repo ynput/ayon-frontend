@@ -7,7 +7,7 @@ import AnatomyEditor from '@containers/AnatomyEditor'
 
 import copyToClipboard from '@helpers/copyToClipboard'
 import { usePaste } from '@context/pasteContext'
-import useUserProjectPermissions, { UserPermissionsLevel } from '@hooks/useUserProjectPermissions'
+import useUserProjectPermissions, { PermissionLevel } from '@hooks/useUserProjectPermissions'
 import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
 import { useSelector } from 'react-redux'
 
@@ -16,8 +16,8 @@ const ProjectAnatomy = ({ projectName, projectList }) => {
   const [updateProjectAnatomy, { isLoading: isUpdating }] = useUpdateProjectAnatomyMutation()
   const { requestPaste } = usePaste()
 
-  const userPermissions = useUserProjectPermissions(projectName, isUser)
-  const accessLevel = userPermissions.getAnatomyPermissionLevel()
+  const userPermissions = useUserProjectPermissions(!isUser)
+  const accessLevel = userPermissions.getAnatomyPermissionLevel(projectName)
   const [formData, setFormData] = useState(null)
   const [isChanged, setIsChanged] = useState(false)
 
@@ -61,34 +61,33 @@ const ProjectAnatomy = ({ projectName, projectList }) => {
     <ProjectManagerPageLayout
       projectList={projectList}
       toolbar={
-        userPermissions.canViewAnatomy() &&
-        <>
-          <Button
-            label="Copy anatomy"
-            icon="content_copy"
-            onClick={() => {
-              copyToClipboard(JSON.stringify(formData, null, 2))
-            }}
-          />
-          <Button label="Paste anatomy" icon="content_paste" onClick={onPasteAnatomy} />
-          {UserPermissionsLevel.readOnly === accessLevel && 'Read-only'}
-          <Spacer />
-          <SaveButton
-            label="Save changes"
-            data-tooltip={
-              !userPermissions.canEditAnatomy() 
-                ? "You don't have edit permissions"
-                : undefined
-            }
-            onClick={saveAnatomy}
-            active={isChanged && UserPermissionsLevel.readWrite === accessLevel}
-            saving={isUpdating}
-          />
-        </>
+        userPermissions.canViewAnatomy(projectName) && (
+          <>
+            <Button
+              label="Copy anatomy"
+              icon="content_copy"
+              onClick={() => {
+                copyToClipboard(JSON.stringify(formData, null, 2))
+              }}
+            />
+            <Button label="Paste anatomy" icon="content_paste" onClick={onPasteAnatomy} />
+            {PermissionLevel.readOnly === accessLevel && 'Read-only'}
+            <Spacer />
+            <SaveButton
+              label="Save changes"
+              data-tooltip={
+                !userPermissions.canEditAnatomy(projectName) ? "You don't have edit permissions" : undefined
+              }
+              onClick={saveAnatomy}
+              active={isChanged && PermissionLevel.readWrite === accessLevel}
+              saving={isUpdating}
+            />
+          </>
+        )
       }
     >
       <ScrollPanel style={{ flexGrow: 1 }} className="transparent">
-        {userPermissions.canViewAnatomy() ? (
+        {userPermissions.canViewAnatomy(projectName) ? (
           <AnatomyEditor
             projectName={projectName}
             formData={formData}
