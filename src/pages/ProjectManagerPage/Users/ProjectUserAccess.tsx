@@ -113,7 +113,7 @@ const ProjectUserAccess = () => {
 
   const handleAddContextMenu = (e: $Any) => {
     let actionedUsers = selectedUsers
-    if (!selectedUsers.includes(e.data.name)) {
+    if (!actionedUsers.includes(e.data.name)) {
       actionedUsers = [e.data.name]
       setSelectedAccessGroupUsers({ users: [e.data.name] })
     }
@@ -123,6 +123,22 @@ const ProjectUserAccess = () => {
         id: 'add',
         label: 'Add to access groups',
         command: () => handleAdd(actionedUsers),
+      },
+    ])
+  }
+
+  const handleRemoveContextMenu = (e: $Any, accessGroup: string) => {
+    let actionedUsers = selectedAccessGroupUsers?.users || []
+    if (!actionedUsers.includes(e.data.name)) {
+      actionedUsers = [e.data.name]
+      setSelectedAccessGroupUsers({ users: [e.data.name] })
+    }
+
+    ctxMenuShow(e.originalEvent, [
+      {
+        id: 'remove',
+        label: 'Remove from access group',
+        command: () => onRemove(accessGroup)(actionedUsers),
       },
     ])
   }
@@ -278,7 +294,9 @@ const ProjectUserAccess = () => {
                         selectedProjects={filteredSelectedProjects}
                         selectedUsers={selectedUsers}
                         header={accessGroup}
+                        showAddMoreButton={filteredAccessGroups.length > 1}
                         emptyMessage="No users assigned"
+                        onContextMenu={(e: $Any) => handleRemoveContextMenu(e, accessGroup)}
                         tableList={filteredNonManagerUsers.filter(
                           (user: UserNode) =>
                             mappedUsers[accessGroup] &&

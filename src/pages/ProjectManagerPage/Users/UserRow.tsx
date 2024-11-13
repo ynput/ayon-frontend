@@ -44,6 +44,7 @@ type Props = {
   isUnassigned: boolean
   showButtonsOnHover: boolean
   addButtonDisabled: boolean
+  showAddMoreButton: boolean
   onAdd: (user?: string) => void
   onRemove?: () => void
 }
@@ -54,6 +55,7 @@ export const UserRow = ({
   isUnassigned = false,
   showButtonsOnHover = false,
   addButtonDisabled = false,
+  showAddMoreButton = false,
   onAdd,
   onRemove,
 }: Props) => {
@@ -70,25 +72,27 @@ export const UserRow = ({
       >
         {name}
       </span>
-      <StyledButton
-        className="action"
-        disabled={addButtonDisabled}
-        data-tooltip={addButtonDisabled ? 'No project selected' : undefined}
-        variant={isUnassigned ? 'filled' : 'text'}
-        icon={'add'}
-        onClick={(e) => {
-          e.stopPropagation()
-          onAdd(rowData.name)
-        }}
-      >
-        {isUnassigned ? (
-          <>
-            Add <span className="shortcut">A</span>
-          </>
-        ) : (
-          'Add more'
-        )}
-      </StyledButton>
+      {(isUnassigned || showAddMoreButton) && (
+        <StyledButton
+          className="action"
+          disabled={addButtonDisabled}
+          data-tooltip={addButtonDisabled ? 'No project selected' : undefined}
+          variant={isUnassigned ? 'filled' : 'text'}
+          icon={'add'}
+          onClick={(e) => {
+            e.stopPropagation()
+            onAdd(rowData.name)
+          }}
+        >
+          {isUnassigned ? (
+            <>
+              Add <span className="shortcut">A</span>
+            </>
+          ) : (
+            'Add more'
+          )}
+        </StyledButton>
+      )}
 
       {!isUnassigned && (
         <StyledButton

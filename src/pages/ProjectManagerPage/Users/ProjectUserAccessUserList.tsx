@@ -21,6 +21,7 @@ type Props = {
   emptyMessage: string
   sortable?: boolean
   isUnassigned?: boolean
+  showAddMoreButton?: boolean
   onContextMenu?: $Any
   onSelectUsers?: (selectedUsers: string[]) => void
   onAdd: (users? : string[]) => void
@@ -37,6 +38,7 @@ const ProjectUserAccessUserList = ({
   emptyMessage,
   sortable = false,
   isUnassigned = false,
+  showAddMoreButton = false,
   onAdd,
   onRemove,
   onContextMenu,
@@ -101,6 +103,7 @@ const ProjectUserAccessUserList = ({
                 <UserRow
                   rowData={rowData}
                   isUnassigned={isUnassigned}
+                  showAddMoreButton={showAddMoreButton}
                   onAdd={(user?: string) => onAdd(user ? [user] : undefined)}
                   onRemove={() => {
                     onRemove && onRemove([rowData.name])
