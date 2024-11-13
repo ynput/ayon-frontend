@@ -108,7 +108,6 @@ const ProjectUserAccess = () => {
     filters.find((filter: Filter) => filter.label === 'Access Group'),
   )
 
-
   const [ctxMenuShow] = useCreateContext([])
 
   const handleAddContextMenu = (e: $Any) => {
@@ -191,6 +190,17 @@ const ProjectUserAccess = () => {
       />
     )
   }
+  const handleProjectSelectionChange = (selection: string[]) => {
+    if (selection.length <= 1) {
+      setSelectedProjects(selection)
+      return
+    }
+
+    const filteredSelection = selection.filter((projectName) =>
+      userPermissions.canEdit(UserPermissionsEntity.users, projectName),
+    )
+    setSelectedProjects(filteredSelection)
+  }
 
   return (
     // @ts-ignore
@@ -237,7 +247,8 @@ const ProjectUserAccess = () => {
             // @ts-ignore
             projects={filteredProjects}
             isLoading={projectsIsLoading}
-            onSelectionChange={setSelectedProjects}
+            userPermissions={userPermissions}
+            onSelectionChange={handleProjectSelectionChange}
           />
         </SplitterPanel>
 

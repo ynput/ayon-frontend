@@ -121,6 +121,8 @@ const ProjectList = ({
   wrap,
   onSelectAll,
   onSelectAllDisabled,
+  customSort,
+  isActiveCallable,
 }) => {
   const navigate = useAyonNavigate()
   const tableRef = useRef(null)
@@ -181,18 +183,20 @@ const ProjectList = ({
       pinned: project.active ? pinnedProjects.includes(project.name) : false,
     }))
     .sort((a, b) => {
-      if (!a.active && b.active) {
-        return 1 // a goes to the bottom
-      } else if (a.active && !b.active) {
-        return -1 // b goes to the bottom
-      } else if (a.pinned && !b.pinned) {
-        return -1 // a comes before b
-      } else if (!a.pinned && b.pinned) {
-        return 1 // b comes before a
-      } else {
-        // If both have the same pinned status, sort alphabetically by name
-        return a.name.localeCompare(b.name)
+      const aActive = a.active ? 10 : -10
+      const bActive = a.active ? 10 : -10
+      const aPinned = a.pinned ? 1 : -1
+      const bPinned = b.pinned ? 1 : -1
+      const mainComparison = bActive + bPinned - aActive - aPinned
+      if (mainComparison !== 0) {
+        return mainComparison
       }
+
+      if (customSort) {
+        return customSort(a.name, b.name)
+      }
+
+      return a.name.localeCompare(b.name)
     })
 
   const projectList = projectListWithPinned
@@ -449,17 +453,20 @@ const ProjectList = ({
           <Column
             field="name"
             header="Projects"
-            body={(rowData) => (
-              <StyledProjectName
-                className={clsx({
-                  isActive: rowData.name === '_' || rowData.active,
-                  isOpen: !collapsed,
-                })}
-              >
-                <span>{formatName(rowData, showNull)}</span>
-                <span>{formatName(rowData, showNull, 'code')}</span>
-              </StyledProjectName>
-            )}
+            body={(rowData) => {
+              const isActiveCallableValue = isActiveCallable ? isActiveCallable(rowData.name) : true
+              return (
+                <StyledProjectName
+                  className={clsx({
+                    isActive: isActiveCallableValue && (rowData.name === '_' || rowData.active),
+                    isOpen: !collapsed,
+                  })}
+                >
+                  <span>{formatName(rowData, showNull)}</span>
+                  <span>{formatName(rowData, showNull, 'code')}</span>
+                </StyledProjectName>
+              )
+            }}
             style={{ minWidth: 150, ...style }}
           />
           {!hideCode && !collapsed && (
@@ -467,15 +474,18 @@ const ProjectList = ({
               field="code"
               header="Code"
               style={{ maxWidth: 80 }}
-              body={(rowData) => (
-                <StyledProjectName
-                  className={clsx({
-                    isActive: rowData.name === '_' || rowData.active,
-                  })}
-                >
-                  <span>{rowData.code}</span>
-                </StyledProjectName>
-              )}
+              body={(rowData) => {
+              const isActiveCallableValue = isActiveCallable ? isActiveCallable(rowData.name) : true
+                return (
+                  <StyledProjectName
+                    className={clsx({
+                      isActive: isActiveCallableValue && (rowData.name === '_' || rowData.active),
+                    })}
+                  >
+                    <span>{rowData.code}</span>
+                  </StyledProjectName>
+                )
+              }}
             />
           )}
           {!collapsed && (

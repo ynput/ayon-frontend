@@ -112,7 +112,7 @@ const ProjectManagerPage = () => {
         path: '/manageProjects/userSettings',
         module: 'userSettings',
         accessLevels: [],
-        shortcut: 'P+U',
+        shortcut: 'P+A',
       })
     }
   }
@@ -159,6 +159,28 @@ const ProjectManagerPage = () => {
         onNewProject={() => setShowNewProject(true)}
         onDeleteProject={handleDeleteProject}
         onActivateProject={handleActivateProject}
+        customSort={(a, b) => {
+          if (module === 'anatomy') {
+            const aPerm = userPermissions.canView(UserPermissionsEntity.anatomy, a) ? 1 : -1
+            const bPerm = userPermissions.canView(UserPermissionsEntity.anatomy, b) ? 1 : -1
+            return bPerm - aPerm
+          }
+          if (module === 'siteSettings') {
+            const aPerm = userPermissions.canView(UserPermissionsEntity.settings, a) ? 1 : -1
+            const bPerm = userPermissions.canView(UserPermissionsEntity.settings, b) ? 1 : -1
+            return bPerm - aPerm
+          }
+          return 0
+        }}
+        isActiveCallable={(projectName) => {
+          if (module === 'anatomy') {
+            return userPermissions.canView(UserPermissionsEntity.anatomy, projectName)
+          }
+          if (module === 'siteSettings') {
+            return userPermissions.canView(UserPermissionsEntity.settings, projectName)
+          }
+          return true
+        }}
       >
         {module === 'anatomy' && <ProjectAnatomy />}
         {module === 'projectSettings' && <ProjectSettings />}

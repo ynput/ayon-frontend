@@ -159,5 +159,5 @@ const useUserProjectPermissions = (
   return new UserPermissions(permissions, hasLimitedPermissions)
 }
 
-export { PermissionLevel }
+export { UserPermissions, PermissionLevel }
 export default useUserProjectPermissions
