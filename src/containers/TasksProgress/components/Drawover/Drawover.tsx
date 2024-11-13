@@ -123,6 +123,7 @@ const Drawover = ({ range, durationFrames, isPlaying, videoRef, name }: Props) =
     setSlider({
       id: id,
       pos: { y: target.offsetTop },
+      // @ts-ignore
       value: sliderValues[id],
       steps: slider.length,
       onChange: (e) => {
@@ -170,6 +171,9 @@ const Drawover = ({ range, durationFrames, isPlaying, videoRef, name }: Props) =
             ZoomMenu: null,
             Minimap: null,
             LoadingScreen: null,
+            MainMenu: null,
+            QuickActions: null,
+            StylePanel: null,
           }}
         />
       )}
@@ -202,13 +206,13 @@ const Drawover = ({ range, durationFrames, isPlaying, videoRef, name }: Props) =
                 })}
               />
             </Styled.ToolsSection>
-            <Styled.Divider />
+            {/* <Styled.Divider />
 
             <Styled.ToolButton
               onClick={(e) => handleSliderOpen(e, 'width')}
               icon={`pen_size_${sliders.width.indexOf(sliderValues.width)}`}
               style={{ width: '100%' }}
-            />
+            /> */}
 
             <Styled.Divider />
             <Styled.ToolsSection>
@@ -229,7 +233,7 @@ const Drawover = ({ range, durationFrames, isPlaying, videoRef, name }: Props) =
               <Styled.ToolButton icon="undo" onClick={() => editor?.undo()} />
               <Styled.ToolButton icon="redo" onClick={() => editor?.redo()} />
             </Styled.ToolsSection>
-            {slider && (
+            {/* {slider && (
               <Styled.Slider
                 style={{
                   top: slider.pos.y,
@@ -241,7 +245,7 @@ const Drawover = ({ range, durationFrames, isPlaying, videoRef, name }: Props) =
                   onChange={slider.onChange}
                 />
               </Styled.Slider>
-            )}
+            )} */}
           </Styled.Toolbar>,
           toolbarPortalEl,
         )}
