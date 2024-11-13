@@ -108,7 +108,7 @@ const ProjectManagerPage = () => {
     }
     if (userPermissions.canViewAny(UserPermissionsEntity.users) || module === 'userSettings') {
       links.push({
-        name: 'Project Users',
+        name: 'Project access',
         path: '/manageProjects/userSettings',
         module: 'userSettings',
         accessLevels: [],

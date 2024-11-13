@@ -1,4 +1,4 @@
-import { UserNode } from '@api/graphql'
+import { ProjectNode, UserNode } from '@api/graphql'
 import { $Any } from '@types'
 import { Button, Toolbar } from '@ynput/ayon-react-components'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
@@ -6,7 +6,7 @@ import { useState } from 'react'
 import ProjectUserAccessUserList from './ProjectUserAccessUserList'
 import { useGetAccessGroupsQuery } from '@queries/accessGroups/getAccessGroups'
 import ProjectUserAccessAssignDialog from './ProjectUserAccessAssignDialog'
-import { SelectedAccessGroupUsers } from './types'
+import { SelectedAccessGroupUsers, SelectionStatus } from './types'
 import { useProjectAccessGroupData } from './hooks'
 import { toast } from 'react-toastify'
 import { useGetUsersQuery } from '@queries/user/getUsers'
@@ -31,6 +31,7 @@ import { useListProjectsQuery } from '@queries/project/getProject'
 import useUserProjectPermissions, { UserPermissionsEntity } from '@hooks/useUserProjectPermissions'
 import ProjectManagerPageLayout from '../ProjectManagerPageLayout'
 import { StyledEmptyPlaceholder, StyledEmptyPlaceholderWrapper } from './ProjectUserAccess.styled'
+import useCreateContext from '@hooks/useCreateContext'
 
 const StyledHeader = styled.p`
   font-size: 16px;
@@ -84,8 +85,11 @@ const ProjectUserAccess = () => {
   }
 
   const projectFilters = filters.find((filter: Filter) => filter.label === 'Project')
-  // @ts-ignore Weird one, the response type seems to be mismatched?
-  const filteredProjects = getFilteredProjects(projects, projectFilters)
+  const filteredProjects = getFilteredProjects(
+    // @ts-ignore Weird one, the response type seems to be mismatched?
+    (projects || []).filter((project: ProjectNode) => project.active), // Always filtering out inactive projects
+    projectFilters,
+  )
   const filteredSelectedProjects = getFilteredSelectedProjects(selectedProjects, projectFilters)
 
   const userFilter = filters?.find((el: Filter) => el.label === 'User')
@@ -99,8 +103,39 @@ const ProjectUserAccess = () => {
     getSelectedUsers(selectedAccessGroupUsers, [], true).length > 0 &&
     selectedAccessGroupUsers?.accessGroup != undefined
 
-  const handleAdd = (user?: string) => {
-    setActionedUsers(user ? [user] : selectedUsers)
+  const filteredAccessGroups = getFilteredAccessGroups(
+    accessGroupList,
+    filters.find((filter: Filter) => filter.label === 'Access Group'),
+  )
+
+
+  const [ctxMenuShow] = useCreateContext([])
+
+  const handleAddContextMenu = (e: $Any) => {
+    let actionedUsers = selectedUsers
+    if (!selectedUsers.includes(e.data.name)) {
+      actionedUsers = [e.data.name]
+      setSelectedAccessGroupUsers({ users: [e.data.name] })
+    }
+
+    ctxMenuShow(e.originalEvent, [
+      {
+        id: 'add',
+        label: 'Add to access groups',
+        command: () => handleAdd(actionedUsers),
+      },
+    ])
+  }
+
+  const handleAdd = (users?: string[]) => {
+    const actionedUsers = users ? users : selectedUsers
+    setActionedUsers(actionedUsers)
+    if (filteredAccessGroups.length == 1) {
+      onSave(actionedUsers, [{ name: filteredAccessGroups[0].name, status: SelectionStatus.All }])
+
+      return
+    }
+
     setShowDialog(true)
   }
 
@@ -120,13 +155,10 @@ const ProjectUserAccess = () => {
     resetSelectedUsers()
   }
 
-  const onRemove = (accessGroup: string) => async (user?: string) => {
-    if (user) {
+  const onRemove = (accessGroup: string) => async (users?: string[]) => {
+    const userList = users ? users : selectedAccessGroupUsers!.users
+    for (const user of userList) {
       await removeUserAccessGroup(user, accessGroup)
-    } else {
-      for (const user of selectedAccessGroupUsers!.users) {
-        await removeUserAccessGroup(user, accessGroup)
-      }
     }
     toast.success('Access removed')
     resetSelectedUsers()
@@ -158,11 +190,7 @@ const ProjectUserAccess = () => {
           disabled={!addActionEnabled}
           data-tooltip={false ? 'No project selected' : undefined}
           icon={'add'}
-          onClick={(e) => {
-            e.stopPropagation()
-            setActionedUsers(selectedUsers)
-            setShowDialog(true)
-          }}
+          onClick={() => handleAdd()}
         >
           Add access
         </StyledButton>
@@ -209,6 +237,7 @@ const ProjectUserAccess = () => {
                 selectedUsers={selectedUsers}
                 tableList={filteredUnassignedUsers}
                 isLoading={isLoading}
+                onContextMenu={handleAddContextMenu}
                 onAdd={handleAdd}
                 onSelectUsers={(selection) => setSelectedAccessGroupUsers({ users: selection })}
                 sortable
@@ -229,10 +258,7 @@ const ProjectUserAccess = () => {
           <StyledHeader>Access groups</StyledHeader>
           {filteredSelectedProjects.length > 0 ? (
             <Splitter layout="vertical" style={{ height: '100%', overflow: 'auto' }}>
-              {getFilteredAccessGroups(
-                accessGroupList,
-                filters.find((filter: Filter) => filter.label === 'Access Group'),
-              )
+              {filteredAccessGroups
                 .map((item: AccessGroupObject) => item.name)
                 .map((accessGroup) => {
                   const selectedUsers = getAccessGroupUsers(selectedAccessGroupUsers!, accessGroup)
@@ -261,10 +287,7 @@ const ProjectUserAccess = () => {
                         onSelectUsers={(selection: string[]) =>
                           updateSelectedAccessGroupUsers(accessGroup, selection)
                         }
-                        onAdd={() => {
-                          setActionedUsers(selectedUsers)
-                          setShowDialog(true)
-                        }}
+                        onAdd={() => handleAdd()}
                         onRemove={onRemove(accessGroup)}
                         isLoading={isLoading}
                       />
@@ -282,13 +305,7 @@ const ProjectUserAccess = () => {
         <ProjectUserAccessAssignDialog
           users={actionedUsers}
           userAccessGroups={mappedUsers}
-          accessGroups={getFilteredAccessGroups(
-            accessGroupList,
-            filters.find((filter: Filter) => filter.label === 'Access Group'),
-          ).map((item) => ({
-            ...item,
-            selected: false,
-          }))}
+          accessGroups={filteredAccessGroups.map((item) => ({ ...item, selected: false }))}
           onSave={onSave}
           onClose={function (): void {
             setShowDialog(false)
