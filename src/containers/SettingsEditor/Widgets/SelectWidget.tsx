@@ -3,6 +3,13 @@ import { Dropdown } from '@ynput/ayon-react-components'
 
 import { updateChangedKeys, equiv, parseContext } from '../helpers'
 import { $Any } from '@types'
+import styled from 'styled-components'
+
+const StyledDropdown = styled(Dropdown)`
+  button > div > div:has(span) {
+      width: 0;
+  }
+`
 
 const SelectWidget = (props: $Any) => {
   const { originalValue, path } = parseContext(props)
@@ -89,7 +96,7 @@ const SelectWidget = (props: $Any) => {
   }
 
   return (
-    <Dropdown
+    <StyledDropdown
       widthExpand
       options={options}
       value={renderableValue}
