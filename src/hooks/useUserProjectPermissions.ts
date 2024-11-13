@@ -104,7 +104,7 @@ class UserPermissions {
     return this.canEdit(UserPermissionsEntity.anatomy, projectName)
   }
 
-  canViewSettings(projectName?: string ): boolean {
+  canViewSettings(projectName?: string): boolean {
     if (projectName) {
       return this.canView(UserPermissionsEntity.settings, projectName)
     }
@@ -114,17 +114,22 @@ class UserPermissions {
 
   canViewAnatomy(projectName?: string): boolean {
     if (projectName) {
-    return this.canView(UserPermissionsEntity.anatomy, projectName)
+      return this.canView(UserPermissionsEntity.anatomy, projectName)
     }
 
     return this.canViewAny(UserPermissionsEntity.anatomy)
   }
+
   canViewAny(type: UserPermissionsEntity): boolean {
+    if (this.hasElevatedPrivileges) {
+      return true
+    }
+
     if (!this.permissions) {
       return false
     }
 
-    for (const projectName of Object.keys(this.permissions.projects)) {
+    for (const projectName of Object.keys(this.permissions?.projects || {})) {
       if (this.canView(type, projectName)) {
         return true
       }
@@ -146,11 +151,13 @@ class UserPermissions {
   }
 }
 
-const useUserProjectPermissions = (hasLimitedPermissions?: boolean): UserPermissions | undefined => {
+const useUserProjectPermissions = (
+  hasLimitedPermissions?: boolean,
+): UserPermissions | undefined => {
   const { data: permissions } = useGetCurrentUserPermissionsQuery()
 
   return new UserPermissions(permissions, hasLimitedPermissions)
 }
 
-export { PermissionLevel}
+export { PermissionLevel }
 export default useUserProjectPermissions

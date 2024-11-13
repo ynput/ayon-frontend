@@ -1,8 +1,7 @@
 import { AccessGroupObject } from '@api/rest/accessGroups'
 import { AccessGroupUsers, SelectedAccessGroupUsers } from './types'
 import { Filter } from '@components/SearchFilter/types'
-import { UserNode } from '@api/graphql'
-import { ListProjectsItemModel } from '@api/rest/project'
+import { ProjectNode, UserNode } from '@api/graphql'
 import { GetProjectsUsersApiResponse } from '@queries/project/getProject'
 
 const getAllProjectUsers = (groupedUsers: AccessGroupUsers): string[] => {
@@ -14,7 +13,9 @@ const getAllProjectUsers = (groupedUsers: AccessGroupUsers): string[] => {
   return [...new Set(allUsers)]
 }
 
-const mapUsersByAccessGroups = (response: GetProjectsUsersApiResponse | undefined): AccessGroupUsers => {
+const mapUsersByAccessGroups = (
+  response: GetProjectsUsersApiResponse | undefined,
+): AccessGroupUsers => {
   if (!response) {
     return {}
   }
@@ -38,108 +39,95 @@ const mapUsersByAccessGroups = (response: GetProjectsUsersApiResponse | undefine
   return groupedUsers
 }
 
-const getFilteredAccessGroups = (accessGroupList: AccessGroupObject[], filters: Filter[]) => {
-  if (!filters) {
-    return accessGroupList
-  }
-  const accessGroupFilters = filters?.find((el: Filter) => el.label === 'Access Group')
-  if (!accessGroupFilters) {
-    return accessGroupList
+
+const getSelectedUsers = (
+  selectedAccessGroupUsers: SelectedAccessGroupUsers | undefined,
+  filteredUsers: UserNode[],
+  skipFiltering = false,
+): string[] => {
+  if (!selectedAccessGroupUsers) {
+    return []
   }
 
-  const filterProjects = filters && accessGroupFilters.values!.map((match: Filter) => match.id)
-  if (accessGroupFilters!.inverted) {
-    return accessGroupList.filter(
-      (accessGroup: AccessGroupObject) => !filterProjects.includes(accessGroup.name),
-    )
+  if (skipFiltering) {
+    return selectedAccessGroupUsers.users
   }
-  return accessGroupList.filter((accessGroup: AccessGroupObject) =>
-    filterProjects.includes(accessGroup.name),
-  )
+
+  const filteredUserNames = filteredUsers.map((user: UserNode) => user.name)
+  return selectedAccessGroupUsers!.users.filter((user: string) => filteredUserNames.includes(user))
 }
 
-  const getSelectedUsers = (
-    selectedAccessGroupUsers: SelectedAccessGroupUsers | undefined,
-    filteredUsers: UserNode[],
-    skipFiltering = false,
-  ): string[] => {
-    if (!selectedAccessGroupUsers) {
-      return []
-    }
+const getAccessGroupUsers = (
+  selectedAccessGroupUsers: SelectedAccessGroupUsers,
+  accessGroup?: string,
+): string[] => {
+  if (!selectedAccessGroupUsers || !accessGroup) {
+    return []
+  }
+  return selectedAccessGroupUsers.accessGroup === accessGroup ? selectedAccessGroupUsers.users : []
+}
 
-    if (skipFiltering) {
-      return selectedAccessGroupUsers.users
-    }
-
-    const filteredUserNames = filteredUsers.map((user: UserNode) => user.name)
-    return selectedAccessGroupUsers!.users.filter((user: string) =>
-      filteredUserNames.includes(user),
-    )
+const getFilteredSelectedProjects = (projects: string[], filters: Filter) => {
+  if (!filters) {
+    return projects
   }
 
-  const getAccessGroupUsers = (
-    selectedAccessGroupUsers: SelectedAccessGroupUsers,
-    accessGroup?: string,
-  ): string[] => {
-    if (!selectedAccessGroupUsers || !accessGroup) {
-      return []
-    }
-    return selectedAccessGroupUsers.accessGroup === accessGroup
-      ? selectedAccessGroupUsers.users
-      : []
+  const filterProjects = filters && filters.values!.map((match: Filter) => match.id)
+  if (filters!.inverted) {
+    return projects.filter((project) => !filterProjects.includes(project))
+  }
+  return projects.filter((project) => filterProjects.includes(project))
+}
+
+const exactFilter = <T extends {name: string}>(entities: T[], filters: Filter): T[] => {
+  const filterUsers = filters && filters.values!.map((match: Filter) => match.id)
+  if (filters!.inverted) {
+    return entities.filter((entity: T) => !filterUsers.includes(entity.name))
+  }
+  return entities.filter((entity: T) => filterUsers.includes(entity.name))
+}
+
+const fuzzyFilter = <T extends {name: string}>(users: T[], filters: Filter): T[] => {
+  const filterString = filters.values![0].id
+  if (filters!.inverted) {
+    return users.filter((user: T) => user.name.indexOf(filterString) == -1)
+  }
+  return users.filter((user: T) => user.name.indexOf(filterString) != -1)
+}
+
+const getFilteredProjects = (projects: ProjectNode[], filter: Filter): ProjectNode[] => {
+  if (!filter || !filter.values || filter.values.length == 0) {
+    return projects
   }
 
-  const getFilteredSelectedProjects = (projects: string[], filters: Filter) => {
-    if (!filters) {
-      return projects
-    }
-
-    const filterProjects = filters && filters.values!.map((match: Filter) => match.id)
-    if (filters!.inverted) {
-      return projects.filter((project) => !filterProjects.includes(project))
-    }
-    return projects.filter((project) => filterProjects.includes(project))
+  if (filter.values!.length == 1 && filter.values[0]!.isCustom) {
+    return fuzzyFilter(projects, filter)
   }
 
-  const getFilteredProjects = (projects: ListProjectsItemModel[], filter: Filter) => {
-    if (!filter) {
-      return projects
-    }
+  return exactFilter(projects, filter)
+}
 
-    const filterProjects = filter.values!.map((match: Filter) => match.id)
-    if (filter!.inverted) {
-      return projects.filter((project: ListProjectsItemModel) => !filterProjects.includes(project.name))
-    }
-
-    return projects.filter((project: ListProjectsItemModel) => filterProjects.includes(project.name))
-  }
-
-const getFilteredUsers = (users: UserNode[], filters?: Filter) => {
-  const exactFilter = (users: UserNode[], filters: Filter) => {
-    const filterUsers = filters && filters.values!.map((match: Filter) => match.id)
-    if (filters!.inverted) {
-      return users.filter((user: UserNode) => !filterUsers.includes(user.name))
-    }
-    return users.filter((user: UserNode) => filterUsers.includes(user.name))
-  }
-
-  const fuzzyFilter = (users: UserNode[], filters: Filter) => {
-    const filterString = filters.values![0].id
-    if (filters!.inverted) {
-      return users.filter((user: UserNode) => user.name.indexOf(filterString) == -1)
-    }
-    return users.filter((user: UserNode) => user.name.indexOf(filterString) != -1)
-  }
-
-  if (!filters || !filters.values || filters.values.length == 0) {
+const getFilteredUsers = (users: UserNode[], filter?: Filter): UserNode[] => {
+  if (!filter || !filter.values || filter.values.length == 0) {
     return users
   }
 
-  if (filters.values!.length == 1 && filters.values[0]!.isCustom) {
-    return fuzzyFilter(users, filters)
+  if (filter.values!.length == 1 && filter.values[0]!.isCustom) {
+    return fuzzyFilter(users, filter)
   }
 
-  return exactFilter(users, filters)
+  return exactFilter(users, filter)
+}
+
+const getFilteredAccessGroups = (accessGroupList: AccessGroupObject[], filter: Filter): AccessGroupObject[] => {
+  if (!filter || !filter.values || filter.values.length == 0) {
+    return accessGroupList
+  }
+  if (filter.values!.length == 1 && filter.values[0]!.isCustom) {
+    return fuzzyFilter(accessGroupList, filter)
+  }
+
+  return exactFilter(accessGroupList, filter)
 }
 
 export {

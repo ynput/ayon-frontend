@@ -88,14 +88,9 @@ const ProjectUserAccess = () => {
   const filteredProjects = getFilteredProjects(projects, projectFilters)
   const filteredSelectedProjects = getFilteredSelectedProjects(selectedProjects, projectFilters)
 
-  const filteredUnassignedUsers = getFilteredUsers(
-    unassignedUsers,
-    filters?.find((el: Filter) => el.label === 'User'),
-  )
-  const filteredNonManagerUsers = getFilteredUsers(
-    activeNonManagerUsers,
-    filters?.find((el: Filter) => el.label === 'User'),
-  )
+  const userFilter = filters?.find((el: Filter) => el.label === 'User')
+  const filteredUnassignedUsers = getFilteredUsers(unassignedUsers, userFilter)
+  const filteredNonManagerUsers = getFilteredUsers(activeNonManagerUsers, userFilter)
   const selectedUsers = getSelectedUsers(selectedAccessGroupUsers, filteredUnassignedUsers)
 
   const addActionEnabled = filteredSelectedProjects.length > 0 && selectedUsers.length > 0
@@ -115,7 +110,7 @@ const ProjectUserAccess = () => {
 
   const resetSelectedUsers = () => setSelectedAccessGroupUsers({ users: [] })
 
-  const onSave = async (changes: $Any, users: string[]) => {
+  const onSave = async (users: string[], changes: $Any) => {
     const errorMessage = await updateUserAccessGroups(users, changes)
     if (errorMessage) {
       toast.error(errorMessage)
@@ -233,8 +228,11 @@ const ProjectUserAccess = () => {
         <SplitterPanel size={50} style={{ height: '100%', overflow: 'hidden' }}>
           <StyledHeader>Access groups</StyledHeader>
           {filteredSelectedProjects.length > 0 ? (
-            <Splitter layout="vertical" style={{ height: '100%', overflow: 'auto'}}>
-              {getFilteredAccessGroups(accessGroupList, filters)
+            <Splitter layout="vertical" style={{ height: '100%', overflow: 'auto' }}>
+              {getFilteredAccessGroups(
+                accessGroupList,
+                filters.find((filter: Filter) => filter.label === 'Access Group'),
+              )
                 .map((item: AccessGroupObject) => item.name)
                 .map((accessGroup) => {
                   const selectedUsers = getAccessGroupUsers(selectedAccessGroupUsers!, accessGroup)
@@ -284,7 +282,13 @@ const ProjectUserAccess = () => {
         <ProjectUserAccessAssignDialog
           users={actionedUsers}
           userAccessGroups={mappedUsers}
-          accessGroups={accessGroupList.map((item) => ({ ...item, selected: false }))}
+          accessGroups={getFilteredAccessGroups(
+            accessGroupList,
+            filters.find((filter: Filter) => filter.label === 'Access Group'),
+          ).map((item) => ({
+            ...item,
+            selected: false,
+          }))}
           onSave={onSave}
           onClose={function (): void {
             setShowDialog(false)
