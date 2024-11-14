@@ -5,7 +5,7 @@ import { Section, Toolbar } from '@ynput/ayon-react-components'
 const ProjectManagerPageLayout = ({ projectList, children, passthrough, toolbar, ...props }) => {
   if (passthrough) return children
   return (
-    <main style={{ overflowY: 'clip', ...props.style }}>
+    <main style={{ overflow: 'hidden', ...props.style }}>
       {projectList && projectList}
       <Section
         style={{

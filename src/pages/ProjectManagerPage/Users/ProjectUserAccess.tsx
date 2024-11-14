@@ -281,7 +281,7 @@ const ProjectUserAccess = () => {
         </StyledButton>
       </Toolbar>
 
-      <Splitter layout="horizontal" style={{ height: '100%' }}>
+      <Splitter layout="horizontal" style={{ height: '100%', overflow: 'hidden' }}>
         <SplitterPanel
           className="flex align-items-center justify-content-center"
           size={25}
@@ -329,7 +329,10 @@ const ProjectUserAccess = () => {
             </StyledEmptyPlaceholderWrapper>
           )}
         </SplitterPanel>
-        <SplitterPanel size={50} style={{ height: '100%', overflow: 'hidden' }}>
+        <SplitterPanel
+          size={50}
+          style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+        >
           <StyledHeader>Access groups</StyledHeader>
           {filteredSelectedProjects.length > 0 ? (
             <Splitter layout="vertical" style={{ height: '100%', overflow: 'auto' }}>
