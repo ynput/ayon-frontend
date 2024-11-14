@@ -2,11 +2,11 @@ import { ProjectNode, UserNode } from '@api/graphql'
 import { $Any } from '@types'
 import { Button, Toolbar } from '@ynput/ayon-react-components'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import ProjectUserAccessUserList from './ProjectUserAccessUserList'
 import { useGetAccessGroupsQuery } from '@queries/accessGroups/getAccessGroups'
 import ProjectUserAccessAssignDialog from './ProjectUserAccessAssignDialog'
-import { SelectedAccessGroupUsers, SelectionStatus } from './types'
+import { HoveredUser, SelectedAccessGroupUsers, SelectionStatus } from './types'
 import { useProjectAccessGroupData } from './hooks'
 import { toast } from 'react-toastify'
 import { useGetUsersQuery } from '@queries/user/getUsers'
@@ -33,6 +33,8 @@ import useUserProjectPermissions, { UserPermissionsEntity } from '@hooks/useUser
 import ProjectManagerPageLayout from '../ProjectManagerPageLayout'
 import { StyledEmptyPlaceholder, StyledEmptyPlaceholderWrapper } from './ProjectUserAccess.styled'
 import useCreateContext from '@hooks/useCreateContext'
+import Shortcuts from '@containers/Shortcuts'
+import { useShortcutsContext } from '@context/shortcutsContext'
 
 const StyledHeader = styled.p`
   font-size: 16px;
@@ -79,12 +81,14 @@ const ProjectUserAccess = () => {
   const [selectedAccessGroupUsers, setSelectedAccessGroupUsers] = useState<
     SelectedAccessGroupUsers | undefined
   >()
+  const [hoveredUser, setHoveredUser] = useState<HoveredUser | undefined>()
 
   const { data: projects, isLoading: projectsIsLoading, isError, error } = useListProjectsQuery({})
   if (isError) {
     console.error(error)
   }
 
+  const { setDisabled } = useShortcutsContext()
   const isUser = useSelector((state: $Any) => state.user.data.isUser)
   const userPermissions = useUserProjectPermissions(!isUser)
 
@@ -188,6 +192,50 @@ const ProjectUserAccess = () => {
     resetSelectedUsers()
   }
 
+  useEffect(() => {
+    setDisabled(['a+a'])
+    return () => {
+      setDisabled([])
+    }
+  }, [])
+
+  const shortcuts = useMemo(
+    () => [
+      {
+        key: 'a',
+        action: () => {
+          if (!hoveredUser?.user || hoveredUser?.accessGroup !== undefined) {
+            return
+          }
+
+          handleAdd([hoveredUser.user])
+        },
+      },
+      {
+        key: 'r',
+        action: () => {
+          if (!hoveredUser?.user || !hoveredUser?.accessGroup) {
+            return
+          }
+
+          onRemove(hoveredUser!.accessGroup!)([hoveredUser.user])
+        },
+      },
+    ],
+    [hoveredUser],
+  )
+
+  const handleProjectSelectionChange = (selection: string[]) => {
+    if (selection.length <= 1) {
+      setSelectedProjects(selection)
+      return
+    }
+
+    const filteredSelection = selection.filter((projectName) =>
+      userPermissions?.canEdit(UserPermissionsEntity.users, projectName),
+    )
+    setSelectedProjects(filteredSelection)
+  }
 
   if (!userPermissions?.canViewAny(UserPermissionsEntity.users)) {
     return (
@@ -197,21 +245,12 @@ const ProjectUserAccess = () => {
       />
     )
   }
-  const handleProjectSelectionChange = (selection: string[]) => {
-    if (selection.length <= 1) {
-      setSelectedProjects(selection)
-      return
-    }
-
-    const filteredSelection = selection.filter((projectName) =>
-      userPermissions.canEdit(UserPermissionsEntity.users, projectName),
-    )
-    setSelectedProjects(filteredSelection)
-  }
 
   return (
     // @ts-ignore
     <ProjectManagerPageLayout style={{ height: '100%' }}>
+      {/* @ts-ignore */}
+      <Shortcuts shortcuts={shortcuts} deps={[selectedProjects, selectedAccessGroupUsers, hoveredUser]} />
       <Toolbar style={{ display: 'flex', margin: '4px 0' }}>
         {/* @ts-ignore */}
         <ProjectUserAccessSearchFilterWrapper
@@ -274,6 +313,7 @@ const ProjectUserAccess = () => {
                 readOnly={!hasEditRightsOnProject}
                 onContextMenu={handleAddContextMenu}
                 onAdd={handleAdd}
+                onHoverRow={(userName: string) => setHoveredUser({ user: userName })}
                 onSelectUsers={(selection) => setSelectedAccessGroupUsers({ users: selection })}
                 sortable
                 isUnassigned
@@ -322,6 +362,9 @@ const ProjectUserAccess = () => {
                             mappedUsers[accessGroup] &&
                             mappedUsers[accessGroup].includes(user.name),
                         )}
+                        onHoverRow={(userName: string) =>
+                          setHoveredUser({ accessGroup, user: userName })
+                        }
                         onSelectUsers={(selection: string[]) =>
                           updateSelectedAccessGroupUsers(accessGroup, selection)
                         }

@@ -24,6 +24,7 @@ type Props = {
   isUnassigned?: boolean
   showAddMoreButton?: boolean
   onContextMenu?: $Any
+  onHoverRow: $Any
   onSelectUsers?: (selectedUsers: string[]) => void
   onAdd: (users? : string[]) => void
   onRemove?: (users?: string[]) => void
@@ -45,23 +46,12 @@ const ProjectUserAccessUserList = ({
   onRemove,
   onContextMenu,
   onSelectUsers,
+  onHoverRow,
 }: Props) => {
   const onSelectionChange = (e: $Any) => {
     const result = e.value.map((user: UserNode) => user.name)
 
     onSelectUsers!(result)
-  }
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
-    if (selectedProjects.length === 0) {
-      return
-    }
-
-    if (event.key === 'r') {
-      onRemove && onRemove()
-    }
-    if (event.key === 'a') {
-      onAdd()
-    }
   }
 
   const selectedUnassignedUsers = tableList.filter((user: $Any) =>
@@ -93,7 +83,8 @@ const ProjectUserAccessUserList = ({
           className={clsx('user-list-table', { loading: isLoading })}
           rowClassName={(rowData: $Any) => clsx({ inactive: !rowData.active, loading: isLoading })}
           onContextMenu={onContextMenu}
-          onKeyDown={handleKeyDown}
+          onRowMouseEnter={(e) => onHoverRow(e.data.name)}
+          onRowMouseLeave={() => onHoverRow()}
           onSelectionChange={(selection) => {
             return onSelectUsers && onSelectionChange(selection)
           }}
