@@ -45,6 +45,7 @@ type Props = {
   showButtonsOnHover: boolean
   addButtonDisabled: boolean
   showAddMoreButton: boolean
+  readOnly: boolean
   onAdd: (user?: string) => void
   onRemove?: () => void
 }
@@ -56,6 +57,7 @@ export const UserRow = ({
   showButtonsOnHover = false,
   addButtonDisabled = false,
   showAddMoreButton = false,
+  readOnly,
   onAdd,
   onRemove,
 }: Props) => {
@@ -72,7 +74,7 @@ export const UserRow = ({
       >
         {name}
       </span>
-      {(isUnassigned || showAddMoreButton) && (
+      {!readOnly && (isUnassigned || showAddMoreButton) && (
         <StyledButton
           className="action"
           disabled={addButtonDisabled}
@@ -94,7 +96,7 @@ export const UserRow = ({
         </StyledButton>
       )}
 
-      {!isUnassigned && (
+      {!readOnly && !isUnassigned && (
         <StyledButton
           className="action"
           icon={'remove'}

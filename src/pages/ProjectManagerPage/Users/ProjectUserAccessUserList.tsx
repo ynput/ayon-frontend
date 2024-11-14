@@ -17,6 +17,7 @@ type Props = {
   tableList: $Any
   filters?: Filter
   isLoading: boolean
+  readOnly: boolean,
   header?: string
   emptyMessage: string
   sortable?: boolean
@@ -34,6 +35,7 @@ const ProjectUserAccessUserList = ({
   tableList,
   filters,
   isLoading,
+  readOnly,
   header,
   emptyMessage,
   sortable = false,
@@ -62,7 +64,9 @@ const ProjectUserAccessUserList = ({
     }
   }
 
-  const selectedUnassignedUsers = tableList.filter((user: $Any) => selectedUsers.includes(user.name))
+  const selectedUnassignedUsers = tableList.filter((user: $Any) =>
+    selectedUsers.includes(user.name),
+  )
   const selectedUnassignedUserNames = selectedUnassignedUsers.map((user: $Any) => user.name)
   // Render
 
@@ -104,6 +108,7 @@ const ProjectUserAccessUserList = ({
                   rowData={rowData}
                   isUnassigned={isUnassigned}
                   showAddMoreButton={showAddMoreButton}
+                  readOnly={readOnly}
                   onAdd={(user?: string) => onAdd(user ? [user] : undefined)}
                   onRemove={() => {
                     onRemove && onRemove([rowData.name])

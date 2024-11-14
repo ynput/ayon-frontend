@@ -11,6 +11,7 @@ import { useProjectAccessGroupData } from './hooks'
 import { toast } from 'react-toastify'
 import { useGetUsersQuery } from '@queries/user/getUsers'
 import {
+  canAllEditUsers,
   getAccessGroupUsers,
   getAllProjectUsers,
   getFilteredAccessGroups,
@@ -84,10 +85,16 @@ const ProjectUserAccess = () => {
     console.error(error)
   }
 
+  const isUser = useSelector((state: $Any) => state.user.data.isUser)
+  const userPermissions = useUserProjectPermissions(!isUser)
+
   const projectFilters = filters.find((filter: Filter) => filter.label === 'Project')
   const filteredProjects = getFilteredProjects(
     // @ts-ignore Weird one, the response type seems to be mismatched?
-    (projects || []).filter((project: ProjectNode) => project.active), // Always filtering out inactive projects
+    (projects || []).filter(
+      (project: ProjectNode) =>
+        project.active && userPermissions?.canView(UserPermissionsEntity.users, project.name),
+    ),
     projectFilters,
   )
   const filteredSelectedProjects = getFilteredSelectedProjects(selectedProjects, projectFilters)
@@ -97,10 +104,12 @@ const ProjectUserAccess = () => {
   const filteredNonManagerUsers = getFilteredUsers(activeNonManagerUsers, userFilter)
   const selectedUsers = getSelectedUsers(selectedAccessGroupUsers, filteredUnassignedUsers)
 
-  const addActionEnabled = filteredSelectedProjects.length > 0 && selectedUsers.length > 0
-  const removeActionEnabled =
+  const hasEditRightsOnProject =
     filteredSelectedProjects.length > 0 &&
-    getSelectedUsers(selectedAccessGroupUsers, [], true).length > 0 &&
+    canAllEditUsers(filteredSelectedProjects, userPermissions)
+  const addActionEnabled = hasEditRightsOnProject && selectedUsers.length > 0
+  const removeActionEnabled = hasEditRightsOnProject
+  getSelectedUsers(selectedAccessGroupUsers, [], true).length > 0 &&
     selectedAccessGroupUsers?.accessGroup != undefined
 
   const filteredAccessGroups = getFilteredAccessGroups(
@@ -179,8 +188,6 @@ const ProjectUserAccess = () => {
     resetSelectedUsers()
   }
 
-  const isUser = useSelector((state: $Any) => state.user.data.isUser)
-  const userPermissions = useUserProjectPermissions(!isUser)
 
   if (!userPermissions?.canViewAny(UserPermissionsEntity.users)) {
     return (
@@ -264,6 +271,7 @@ const ProjectUserAccess = () => {
                 selectedUsers={selectedUsers}
                 tableList={filteredUnassignedUsers}
                 isLoading={isLoading}
+                readOnly={!hasEditRightsOnProject}
                 onContextMenu={handleAddContextMenu}
                 onAdd={handleAdd}
                 onSelectUsers={(selection) => setSelectedAccessGroupUsers({ users: selection })}
@@ -305,6 +313,7 @@ const ProjectUserAccess = () => {
                         selectedProjects={filteredSelectedProjects}
                         selectedUsers={selectedUsers}
                         header={accessGroup}
+                        readOnly={!hasEditRightsOnProject}
                         showAddMoreButton={filteredAccessGroups.length > 1}
                         emptyMessage="No users assigned"
                         onContextMenu={(e: $Any) => handleRemoveContextMenu(e, accessGroup)}

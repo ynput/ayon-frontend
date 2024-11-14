@@ -3,6 +3,7 @@ import { AccessGroupUsers, SelectedAccessGroupUsers } from './types'
 import { Filter } from '@components/SearchFilter/types'
 import { ProjectNode, UserNode } from '@api/graphql'
 import { GetProjectsUsersApiResponse } from '@queries/project/getProject'
+import { UserPermissions, UserPermissionsEntity } from '@hooks/useUserProjectPermissions'
 
 const getAllProjectUsers = (groupedUsers: AccessGroupUsers): string[] => {
   let allUsers: string[] = []
@@ -119,7 +120,10 @@ const getFilteredUsers = (users: UserNode[], filter?: Filter): UserNode[] => {
   return exactFilter(users, filter)
 }
 
-const getFilteredAccessGroups = (accessGroupList: AccessGroupObject[], filter: Filter): AccessGroupObject[] => {
+const getFilteredAccessGroups = (
+  accessGroupList: AccessGroupObject[],
+  filter: Filter,
+): AccessGroupObject[] => {
   if (!filter || !filter.values || filter.values.length == 0) {
     return accessGroupList
   }
@@ -130,7 +134,18 @@ const getFilteredAccessGroups = (accessGroupList: AccessGroupObject[], filter: F
   return exactFilter(accessGroupList, filter)
 }
 
+const canAllEditUsers = (projects: string[], userPermissions?: UserPermissions) => {
+  for (const project of projects) {
+    if (!userPermissions?.canEdit(UserPermissionsEntity.users, project)) {
+      return false
+    }
+  }
+
+  return true
+}
+
 export {
+  canAllEditUsers,
   mapUsersByAccessGroups,
   getAllProjectUsers,
   getFilteredAccessGroups,

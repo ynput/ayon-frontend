@@ -58,8 +58,8 @@ const ProjectUserAccessProjectList = ({ projects, isLoading, selection, userPerm
     <TablePanel style={{ height: '100%' }}>
       <DataTable
         value={tableData.sort((a: ProjectNode, b: ProjectNode) => {
-          const aPerm = userPermissions.canView(UserPermissionsEntity.users, a.name) ? 1 : -1
-          const bPerm = userPermissions.canView(UserPermissionsEntity.users, b.name) ? 1 : -1
+          const aPerm = userPermissions.canEdit(UserPermissionsEntity.users, a.name) ? 1 : -1
+          const bPerm = userPermissions.canEdit(UserPermissionsEntity.users, b.name) ? 1 : -1
           const mainComparison = bPerm - aPerm
           if (mainComparison !== 0) {
             return mainComparison
@@ -82,7 +82,7 @@ const ProjectUserAccessProjectList = ({ projects, isLoading, selection, userPerm
           field="name"
           header="Project name"
           body={(rowData) => {
-          const isActive = userPermissions.canView(UserPermissionsEntity.users, rowData.name)
+          const isActive = userPermissions.canEdit(UserPermissionsEntity.users, rowData.name)
             return (
               <StyledProjectName className={clsx({ isActive })}>
                 <span>{formatName(rowData, 'name')}</span>
