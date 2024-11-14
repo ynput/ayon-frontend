@@ -31,7 +31,7 @@ import clsx from 'clsx'
 import TagFormRow from './TagFormRow'
 import EntityThumbnailUploaderRow from './EntityTumbnailUploaderRow'
 import EnumRow from './EnumRow'
-import { getInputProps } from './helper/entityHelpers'
+import { getInputProps, getTypedValue } from './helper/entityHelpers'
 import useScopedStatuses from '@hooks/useScopedStatuses'
 
 const EditorPanel = ({
@@ -411,7 +411,7 @@ const EditorPanel = ({
                     // input type (text, number, password, etc.) stored in extraProps
                     input = (
                       <InputText
-                        value={value || ''}
+                        value={getTypedValue(attrib, value)}
                         disabled={(hasLeaf && leafDisabled) || disabled}
                         onChange={(e) =>
                           handleLocalChange(e.target.value, changeKey, field, {
