@@ -5,6 +5,7 @@ import TaskList from '@containers/taskList'
 
 import Products from './Products/Products'
 import BrowserDetailsPanel from './BrowserDetailsPanel'
+import Slicer from '@containers/Slicer/Slicer'
 
 const detailsMinWidth = 533
 const detailsMaxWidth = '40vw'
@@ -13,6 +14,7 @@ const detailsMaxMaxWidth = 700
 const BrowserPage = () => {
   return (
     <main style={{ overflow: 'hidden' }}>
+      <Slicer />
       <Splitter
         layout="horizontal"
         style={{ width: '100%', height: '100%' }}
