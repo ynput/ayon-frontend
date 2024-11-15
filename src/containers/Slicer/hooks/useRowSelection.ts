@@ -57,7 +57,7 @@ function useRowSelection<T>({
       else if (event.shiftKey) handleShiftSelect()
       else handleSingleSelect()
     },
-    [rows, rowSelection, setRowSelection, table],
+    [rows, rowSelection, setRowSelection],
   )
 
   return { handleRowSelect }

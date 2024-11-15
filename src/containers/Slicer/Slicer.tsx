@@ -1,29 +1,35 @@
 import { FC } from 'react'
 import * as Styled from './Slicer.styled'
 import SlicerTable from './SlicerTable'
-import useHierarchyTable from './hooks/useHierarchyTable'
-import { useAppSelector } from '@state/store'
-import { useGetProjectQuery } from '@queries/project/getProject'
+
+import useTableDataBySlice, { SliceType } from './hooks/useTableDataBySlice'
 
 interface SlicerProps {}
 
 const Slicer: FC<SlicerProps> = ({}) => {
-  const projectName = useAppSelector((state) => state.project.name)
-
-  const { data: project } = useGetProjectQuery(
-    { projectName: projectName || '' },
-    { skip: !projectName },
-  )
-
-  // project info
-  const { data: hierarchyData = [], isLoading: isLoadingHierarchy } = useHierarchyTable({
-    projectName,
-    folderTypes: project?.folderTypes || [],
-  })
+  const {
+    sliceOptions,
+    sliceType,
+    handleSliceChange,
+    table: { data: sliceTableData, isExpandable },
+    isLoading: isLoadingSliceTableData,
+  } = useTableDataBySlice({})
 
   return (
     <Styled.Container>
-      <SlicerTable data={hierarchyData} isLoading={isLoadingHierarchy} />
+      <Styled.Header>
+        <Styled.SlicerDropdown
+          options={sliceOptions}
+          value={[sliceType]}
+          onChange={(value) => handleSliceChange(value[0] as SliceType)}
+        />
+      </Styled.Header>
+      <SlicerTable
+        data={sliceTableData}
+        isExpandable={isExpandable}
+        isLoading={isLoadingSliceTableData}
+        sliceId={sliceType}
+      />
     </Styled.Container>
   )
 }

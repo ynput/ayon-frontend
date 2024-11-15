@@ -1,19 +1,19 @@
 import { useEffect } from 'react'
 import { TableRow } from '../SlicerTable'
 
-interface UsePlaceholderDataProps<T> {
+interface UsePlaceholderDataProps {
   isLoading: boolean
   data: TableRow[]
   placeholderCount?: number
   setTableData: (data: TableRow[]) => void
 }
 
-const usePlaceholderData = <T>({
+const usePlaceholderData = ({
   isLoading,
   data,
   placeholderCount = 10,
   setTableData,
-}: UsePlaceholderDataProps<T>) => {
+}: UsePlaceholderDataProps) => {
   useEffect(() => {
     if (!isLoading) return
 

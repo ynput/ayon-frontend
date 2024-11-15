@@ -1362,14 +1362,14 @@ export type GetActiveUsersCountQuery = { __typename?: 'Query', users: { __typena
 export type GetAllAssigneesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetAllAssigneesQuery = { __typename?: 'Query', users: { __typename?: 'UsersConnection', edges: Array<{ __typename?: 'UserEdge', node: { __typename?: 'UserNode', name: string, attrib: { __typename?: 'UserAttribType', fullName?: string | null } } }> } };
+export type GetAllAssigneesQuery = { __typename?: 'Query', users: { __typename?: 'UsersConnection', edges: Array<{ __typename?: 'UserEdge', node: { __typename?: 'UserNode', name: string, updatedAt: any, attrib: { __typename?: 'UserAttribType', fullName?: string | null } } }> } };
 
 export type GetAllProjectUsersAsAssigneeQueryVariables = Exact<{
   projectName?: InputMaybe<Scalars['String']['input']>;
 }>;
 
 
-export type GetAllProjectUsersAsAssigneeQuery = { __typename?: 'Query', users: { __typename?: 'UsersConnection', edges: Array<{ __typename?: 'UserEdge', node: { __typename?: 'UserNode', name: string, attrib: { __typename?: 'UserAttribType', fullName?: string | null } } }> } };
+export type GetAllProjectUsersAsAssigneeQuery = { __typename?: 'Query', users: { __typename?: 'UsersConnection', edges: Array<{ __typename?: 'UserEdge', node: { __typename?: 'UserNode', name: string, updatedAt: any, attrib: { __typename?: 'UserAttribType', fullName?: string | null } } }> } };
 
 export type GetKanbanQueryVariables = Exact<{
   projects?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
@@ -1636,6 +1636,7 @@ export const GetAllAssigneesDocument = `
     edges {
       node {
         name
+        updatedAt
         attrib {
           fullName
         }
@@ -1650,6 +1651,7 @@ export const GetAllProjectUsersAsAssigneeDocument = `
     edges {
       node {
         name
+        updatedAt
         attrib {
           fullName
         }

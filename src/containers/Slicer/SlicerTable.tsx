@@ -26,15 +26,18 @@ export type TableRow = {
   label: string
   icon?: string | null
   img?: string | null
+  startContent?: JSX.Element
   subRows: TableRow[]
 }
 
 interface SlicerTableProps {
   data: TableRow[]
   isLoading: boolean
+  isExpandable?: boolean // show expand/collapse icons
+  sliceId: string
 }
 
-const SlicerTable: FC<SlicerTableProps> = ({ data = [], isLoading }) => {
+const SlicerTable: FC<SlicerTableProps> = ({ data = [], isLoading, isExpandable, sliceId }) => {
   // stable data reference
   const [tableData, setTableData] = useState(data)
 
@@ -46,6 +49,12 @@ const SlicerTable: FC<SlicerTableProps> = ({ data = [], isLoading }) => {
   usePlaceholderData({ data: tableData, isLoading, setTableData })
 
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
+
+  useEffect(() => {
+    // reset selection when slice changes
+    setRowSelection({})
+  }, [sliceId])
+
   const [expanded, setExpanded] = useState<ExpandedState>({})
 
   const columns = useMemo<ColumnDef<TableRow>[]>(
@@ -74,15 +83,16 @@ const SlicerTable: FC<SlicerTableProps> = ({ data = [], isLoading }) => {
                 style={{ cursor: 'pointer' }}
               />
             ) : (
-              <div style={{ display: 'inline-block', minWidth: 24 }} />
+              isExpandable && <div style={{ display: 'inline-block', minWidth: 24 }} />
             )}
+            {row.original.startContent && row.original.startContent}
             {row.original.icon && <Icon icon={row.original.icon} />}
             <span className="title">{getValue<boolean>()}</span>
           </Styled.Cell>
         ),
       },
     ],
-    [isLoading],
+    [isLoading, sliceId, tableData],
   )
 
   const table = useReactTable({

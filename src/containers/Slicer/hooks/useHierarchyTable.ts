@@ -84,7 +84,9 @@ const useHierarchyTable = ({ projectName, folderTypes }: Props) => {
     return rows
   }, [folders, folderTypes])
 
-  return { data: tableData, isLoading: isLoading || isFetching }
+  const getHierarchyData = async () => tableData
+
+  return { data: tableData, getData: getHierarchyData, isLoading: isLoading || isFetching }
 }
 
 export default useHierarchyTable
