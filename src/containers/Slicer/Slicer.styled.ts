@@ -21,6 +21,8 @@ export const Container = styled.div`
 `
 
 export const TR = styled.tr`
+  user-select: none;
+
   &:hover {
     background-color: var(--md-sys-color-surface-container-hover);
   }

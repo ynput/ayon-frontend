@@ -1,4 +1,4 @@
-import { FC, useMemo, useRef, useState } from 'react'
+import { FC, MouseEvent, useCallback, useMemo, useRef, useState } from 'react'
 import * as Styled from './Slicer.styled'
 import {
   ExpandedState,
@@ -9,12 +9,14 @@ import {
   ColumnDef,
   flexRender,
   Row,
+  RowSelectionState,
 } from '@tanstack/react-table'
 import { useVirtualizer } from '@tanstack/react-virtual'
 
 import { Icon } from '@ynput/ayon-react-components'
 import './slicer.scss'
 import clsx from 'clsx'
+import useRowSelection from './hooks/useRowSelection'
 
 type Folder = {
   id: string
@@ -145,7 +147,7 @@ const Slicer: FC<SlicerProps> = ({}) => {
 
   const [tableData, setTableData] = useState<Folder[]>(hierarchyData)
 
-  const [rowSelection, setRowSelection] = useState({})
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
   const [expanded, setExpanded] = useState<ExpandedState>({})
 
   const table = useReactTable({
@@ -156,6 +158,8 @@ const Slicer: FC<SlicerProps> = ({}) => {
       rowSelection,
     },
     enableRowSelection: true, //enable row selection for all rows
+    getRowId: (row) => row.id,
+    enableSubRowSelection: false, //disable sub row selection
     onRowSelectionChange: setRowSelection,
     onExpandedChange: setExpanded,
     getSubRows: (row) => row.subRows,
@@ -182,6 +186,13 @@ const Slicer: FC<SlicerProps> = ({}) => {
         ? (element) => element?.getBoundingClientRect().height
         : undefined,
     overscan: 5,
+  })
+
+  const { handleRowSelect } = useRowSelection({
+    table,
+    rows,
+    rowSelection,
+    setRowSelection,
   })
 
   return (
@@ -230,7 +241,7 @@ const Slicer: FC<SlicerProps> = ({}) => {
                   width: '100%',
                 }}
                 className={clsx({ selected: row.getIsSelected() })}
-                onClick={row.getToggleSelectedHandler()}
+                onClick={(evt) => handleRowSelect(evt, row)}
               >
                 {row.getVisibleCells().map((cell) => {
                   return (
