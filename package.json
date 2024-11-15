@@ -32,6 +32,7 @@
     "@rjsf/validator-ajv8": "^5.22.1",
     "@rtk-query/codegen-openapi": "^1.2.0",
     "@rtk-query/graphql-request-base-query": "^2.3.1",
+    "@tanstack/match-sorter-utils": "^8.19.4",
     "@tanstack/react-table": "^8.20.5",
     "@tanstack/react-virtual": "^3.10.9",
     "@uiw/react-textarea-code-editor": "^2.1.9",

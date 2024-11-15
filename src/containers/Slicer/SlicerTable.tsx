@@ -10,6 +10,9 @@ import {
   flexRender,
   Row,
   RowSelectionState,
+  FilterFn,
+  SortingFn,
+  sortingFns,
 } from '@tanstack/react-table'
 import { useVirtualizer } from '@tanstack/react-virtual'
 
@@ -19,12 +22,55 @@ import useRowSelection from './hooks/useRowSelection'
 import useRowKeydown from './hooks/useRowKeydown'
 import usePlaceholderData from './hooks/usePlaceholderData'
 
+import { RankingInfo, rankItem, compareItems } from '@tanstack/match-sorter-utils'
+
+declare module '@tanstack/react-table' {
+  //add fuzzy filter to the filterFns
+  interface FilterFns {
+    fuzzy: FilterFn<unknown>
+  }
+  interface FilterMeta {
+    itemRank: RankingInfo
+  }
+}
+
+// Define a custom fuzzy filter function that will apply ranking info to rows (using match-sorter utils)
+const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
+  // Rank the item
+  const itemRank = rankItem(row.getValue(columnId), value)
+
+  // Store the itemRank info
+  addMeta({
+    itemRank,
+  })
+
+  // Return if the item should be filtered in/out
+  return itemRank.passed
+}
+
+// Define a custom fuzzy sort function that will sort by rank if the row has ranking information
+const fuzzySort: SortingFn<any> = (rowA, rowB, columnId) => {
+  let dir = 0
+
+  // Only sort by rank if the column has ranking information
+  if (rowA.columnFiltersMeta[columnId]) {
+    dir = compareItems(
+      rowA.columnFiltersMeta[columnId]?.itemRank!,
+      rowB.columnFiltersMeta[columnId]?.itemRank!,
+    )
+  }
+
+  // Provide an alphanumeric fallback for when the item ranks are equal
+  return dir === 0 ? sortingFns.alphanumeric(rowA, rowB, columnId) : dir
+}
+
 export type TableRow = {
   id: string
   parentId?: string
   name: string
   label: string
   icon?: string | null
+  iconColor?: string
   img?: string | null
   startContent?: JSX.Element
   subRows: TableRow[]
@@ -35,9 +81,16 @@ interface SlicerTableProps {
   isLoading: boolean
   isExpandable?: boolean // show expand/collapse icons
   sliceId: string
+  globalFilter: string
 }
 
-const SlicerTable: FC<SlicerTableProps> = ({ data = [], isLoading, isExpandable, sliceId }) => {
+const SlicerTable: FC<SlicerTableProps> = ({
+  data = [],
+  isLoading,
+  isExpandable,
+  sliceId,
+  globalFilter,
+}) => {
   // stable data reference
   const [tableData, setTableData] = useState(data)
 
@@ -62,6 +115,8 @@ const SlicerTable: FC<SlicerTableProps> = ({ data = [], isLoading, isExpandable,
       {
         accessorKey: 'label',
         header: undefined,
+        filterFn: 'fuzzy',
+        sortingFn: fuzzySort, //sort by fuzzy rank (falls back to alphanumeric)
         cell: ({ row, getValue }) => (
           <Styled.Cell
             className={clsx({ selected: row.getIsSelected(), loading: isLoading })}
@@ -86,7 +141,9 @@ const SlicerTable: FC<SlicerTableProps> = ({ data = [], isLoading, isExpandable,
               isExpandable && <div style={{ display: 'inline-block', minWidth: 24 }} />
             )}
             {row.original.startContent && row.original.startContent}
-            {row.original.icon && <Icon icon={row.original.icon} />}
+            {row.original.icon && (
+              <Icon icon={row.original.icon} style={{ color: row.original.iconColor }} />
+            )}
             <span className="title">{getValue<boolean>()}</span>
           </Styled.Cell>
         ),
@@ -101,6 +158,10 @@ const SlicerTable: FC<SlicerTableProps> = ({ data = [], isLoading, isExpandable,
     state: {
       expanded,
       rowSelection,
+      globalFilter,
+    },
+    filterFns: {
+      fuzzy: fuzzyFilter,
     },
     enableRowSelection: true, //enable row selection for all rows
     getRowId: (row) => row.id,

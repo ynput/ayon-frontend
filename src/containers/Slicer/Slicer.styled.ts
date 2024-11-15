@@ -13,14 +13,21 @@ export const Container = styled.div`
 
 export const Header = styled.div`
   padding: var(--padding-s);
-  padding-bottom: 0;
   width: 100%;
+  justify-content: space-between;
+  position: relative;
+
+  display: flex;
+  gap: var(--base-gap-small);
 
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
 `
 export const SlicerDropdown = styled(Dropdown)`
-  width: 100%;
   .template-value {
     border: 0;
+
+    .icon:not(.control) {
+      display: none;
+    }
   }
 `

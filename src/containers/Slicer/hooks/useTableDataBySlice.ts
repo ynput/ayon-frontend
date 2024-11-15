@@ -1,18 +1,21 @@
 import { useAppSelector } from '@state/store'
 import { useEffect, useState } from 'react'
 import useHierarchyTable from './useHierarchyTable'
-import { useGetProjectQuery } from '@queries/project/getProject'
 import useUsersTable from './useUsersTable'
 import { TableRow } from '../SlicerTable'
-import { DropdownProps } from '@ynput/ayon-react-components'
+import useProjectAnatomySlices from './useProjectAnatomySlices'
 
 interface Props {
-  projectName?: string
+  sliceFields: SliceType[]
 }
 
-export type SliceType = 'hierarchy' | 'users'
+export type SliceType = 'hierarchy' | 'users' | 'status' | 'type'
 
-type SliceOption = DropdownProps['options'][0] & { value: SliceType }
+interface SliceOption {
+  value: SliceType
+  label: string
+  icon: string
+}
 
 interface SliceData {
   getData: () => Promise<TableRow[]>
@@ -33,31 +36,49 @@ interface TableData {
   handleSliceChange: (slice: SliceType) => Promise<void>
 }
 
-const useTableDataBySlice = ({ projectName: propProjectName }: Props): TableData => {
-  const projectName = useAppSelector((state) => state.project.name) || propProjectName
+const useTableDataBySlice = ({ sliceFields }: Props): TableData => {
+  const projectName = useAppSelector((state) => state.project.name)
 
   const [sliceType, setSliceType] = useState<SliceType>('hierarchy')
 
-  const initSliceOptions: SliceOption[] = [
+  const defaultSliceOptions: SliceOption[] = [
     {
       label: 'Hierarchy',
-      value: 'hierarchy',
+      value: 'hierarchy' as SliceType,
+      icon: 'table_rows',
     },
     {
       label: 'Users',
-      value: 'users',
+      value: 'users' as SliceType,
+      icon: 'person',
+    },
+    {
+      label: 'Status',
+      value: 'status' as SliceType,
+      icon: 'arrow_circle_right',
+    },
+    {
+      label: 'Type',
+      value: 'type' as SliceType,
+      icon: 'folder',
     },
   ]
-  const [sliceOptions, setSliceOptions] = useState<SliceOption[]>(initSliceOptions)
+
+  const sliceOptions = defaultSliceOptions.filter(
+    (option) => !sliceFields.length || sliceFields.includes(option.value),
+  )
 
   const [isLoading, setIsLoading] = useState(false)
 
   // project info
-  const { data: project } = useGetProjectQuery(
-    { projectName: projectName || '' },
-    { skip: !projectName },
-  )
+  const {
+    project,
+    getStatuses,
+    getTypes,
+    isLoading: isLoadingProject,
+  } = useProjectAnatomySlices({ projectName })
 
+  //   Hierarchy
   const {
     data: hierarchyData = [],
     getData: getHierarchyData,
@@ -66,7 +87,7 @@ const useTableDataBySlice = ({ projectName: propProjectName }: Props): TableData
     projectName: projectName || '',
     folderTypes: project?.folderTypes || [],
   })
-
+  //   Users
   const { getData: getUsersData, isLoading: isUsersLoading } = useUsersTable({ projectName })
 
   const builtInSlices: Record<SliceType, SliceData> = {
@@ -79,6 +100,16 @@ const useTableDataBySlice = ({ projectName: propProjectName }: Props): TableData
       getData: getUsersData,
       isLoading: isUsersLoading,
       isExpandable: false,
+    },
+    status: {
+      getData: getStatuses,
+      isLoading: isLoadingProject,
+      isExpandable: false,
+    },
+    type: {
+      getData: getTypes,
+      isLoading: isLoadingProject,
+      isExpandable: true,
     },
   }
 
