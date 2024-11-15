@@ -1,33 +1,11 @@
 import styled from 'styled-components'
 
 export const Container = styled.div`
-  display: flex;
+  border-radius: var(--border-radius-m);
+  overflow: hidden;
   background-color: var(--md-sys-color-surface-container-low);
+  flex: 1;
 
-  height: 100%;
-  min-width: 300px;
-  overflow: auto;
-
-  table {
-    height: fit-content;
-  }
-
-  td {
-    height: 40px;
-  }
-  thead {
-    background-color: var(--md-sys-color-surface-container-low);
-  }
-`
-
-export const TR = styled.tr`
-  user-select: none;
-
-  &:hover {
-    background-color: var(--md-sys-color-surface-container-hover);
-  }
-
-  &.selected {
-    background-color: var(--md-sys-color-primary-container);
-  }
+  display: flex;
+  flex-direction: column;
 `

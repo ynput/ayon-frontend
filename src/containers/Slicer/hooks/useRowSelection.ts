@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react'
+import { KeyboardEvent, MouseEvent, useCallback, useRef } from 'react'
 import { Row, Table } from '@tanstack/react-table'
 import { RowSelectionState } from '@tanstack/table-core'
 
@@ -9,6 +9,8 @@ interface UseRowSelectionProps<T> {
   setRowSelection: (value: RowSelectionState) => void
 }
 
+type RowEvent = MouseEvent<HTMLDivElement> | KeyboardEvent<HTMLDivElement>
+
 function useRowSelection<T>({
   table,
   rows,
@@ -18,7 +20,7 @@ function useRowSelection<T>({
   const lastRowSelected = useRef<Row<T> | null>(null)
 
   const handleRowSelect = useCallback(
-    (event: MouseEvent, row: Row<T>) => {
+    (event: RowEvent, row: Row<T>) => {
       const handleMultiSelect = () => {
         row.toggleSelected()
         lastRowSelected.current = row
