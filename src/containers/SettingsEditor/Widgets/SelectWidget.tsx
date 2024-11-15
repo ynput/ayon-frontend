@@ -46,7 +46,7 @@ const SelectWidget = (props: $Any) => {
       defaultValue = props.schema.default || ''
     }
 
-    setValue(props.value || defaultValue)
+    setValue(props.value !== null && props.value !== undefined ? props.value : defaultValue)
   }, [props.value])
 
   useEffect(() => {
