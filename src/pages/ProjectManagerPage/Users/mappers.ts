@@ -1,9 +1,10 @@
 import { AccessGroupObject } from '@api/rest/accessGroups'
-import { AccessGroupUsers, SelectedAccessGroupUsers } from './types'
+import { AccessGroupUsers, SelectedAccessGroupUsers, SelectionStatus } from './types'
 import { Filter } from '@components/SearchFilter/types'
 import { ProjectNode, UserNode } from '@api/graphql'
 import { GetProjectsUsersApiResponse } from '@queries/project/getProject'
 import { UserPermissions, UserPermissionsEntity } from '@hooks/useUserProjectPermissions'
+import { $Any } from '@types'
 
 const getAllProjectUsers = (groupedUsers: AccessGroupUsers): string[] => {
   let allUsers: string[] = []
@@ -68,16 +69,13 @@ const getAccessGroupUsers = (
   return selectedAccessGroupUsers.accessGroup === accessGroup ? selectedAccessGroupUsers.users : []
 }
 
-const getFilteredSelectedProjects = (projects: string[], filters: Filter) => {
-  if (!filters) {
+const getFilteredSelectedProjects = (projects: string[], filteredProjects: ProjectNode[] ) => {
+  if (!filteredProjects) {
     return projects
   }
 
-  const filterProjects = filters && filters.values!.map((match: Filter) => match.id)
-  if (filters!.inverted) {
-    return projects.filter((project) => !filterProjects.includes(project))
-  }
-  return projects.filter((project) => filterProjects.includes(project))
+  const filteredProjectNames = filteredProjects.map(project => project.name)
+  return projects.filter((project) => filteredProjectNames.includes(project))
 }
 
 const exactFilter = <T extends {name: string}>(entities: T[], filters: Filter): T[] => {
@@ -88,15 +86,15 @@ const exactFilter = <T extends {name: string}>(entities: T[], filters: Filter): 
   return entities.filter((entity: T) => filterUsers.includes(entity.name))
 }
 
-const fuzzyFilter = <T extends {name: string}>(users: T[], filters: Filter): T[] => {
+const fuzzyFilter = <T extends {name: string}>(entities: T[], filters: Filter): T[] => {
   const filterString = filters.values![0].id
   if (filters!.inverted) {
-    return users.filter((user: T) => user.name.indexOf(filterString) == -1)
+    return entities.filter((entity: T) => entity.name.indexOf(filterString) == -1)
   }
-  return users.filter((user: T) => user.name.indexOf(filterString) != -1)
+  return entities.filter((entity: T) => entity.name.indexOf(filterString) != -1)
 }
 
-const getFilteredProjects = (projects: ProjectNode[], filter: Filter): ProjectNode[] => {
+const getFilteredProjects = (projects: ProjectNode[], filter?: Filter): ProjectNode[] => {
   if (!filter || !filter.values || filter.values.length == 0) {
     return projects
   }
@@ -122,7 +120,7 @@ const getFilteredUsers = (users: UserNode[], filter?: Filter): UserNode[] => {
 
 const getFilteredAccessGroups = (
   accessGroupList: AccessGroupObject[],
-  filter: Filter,
+  filter?: Filter,
 ): AccessGroupObject[] => {
   if (!filter || !filter.values || filter.values.length == 0) {
     return accessGroupList
@@ -144,6 +142,37 @@ const canAllEditUsers = (projects: string[], userPermissions?: UserPermissions) 
   return true
 }
 
+  const mapInitialAccessGroupStates = (
+    accessGroups: $Any[],
+    users: string[],
+    userAccessGroups: AccessGroupUsers,
+  ) => {
+    const getStatus = (users: string[], accessGroupUsers: string[]) => {
+      const usersSet = new Set(users)
+      const accessGroupUsersSet = new Set(accessGroupUsers)
+      const intersection = usersSet.intersection(accessGroupUsersSet)
+
+      // No users in ag users
+      if (intersection.size == 0) {
+        return SelectionStatus.None
+      }
+
+      //All users / some users in ag users
+      return intersection.size == usersSet.size ? SelectionStatus.All : SelectionStatus.Mixed
+    }
+
+    const data: $Any = {}
+    accessGroups.map((ag) => {
+      if (userAccessGroups[ag.name] === undefined) {
+        data[ag.name] = SelectionStatus.None
+      } else {
+        data[ag.name] = getStatus(users, userAccessGroups[ag.name])
+      }
+    })
+
+    return data
+  }
+
 export {
   canAllEditUsers,
   mapUsersByAccessGroups,
@@ -154,4 +183,5 @@ export {
   getFilteredSelectedProjects,
   getFilteredProjects,
   getFilteredUsers,
+  mapInitialAccessGroupStates,
 }

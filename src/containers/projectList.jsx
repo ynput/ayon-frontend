@@ -123,6 +123,7 @@ const ProjectList = ({
   onSelectAllDisabled,
   customSort,
   isActiveCallable,
+  hideAddProjectButton = false,
 }) => {
   const navigate = useAyonNavigate()
   const tableRef = useRef(null)
@@ -407,7 +408,7 @@ const ProjectList = ({
           disabled={onSelectAllDisabled}
         />
       )}
-      {(isProjectManager || userPermissions.canCreateProject()) ? (
+      {!hideAddProjectButton && (isProjectManager || userPermissions.canCreateProject()) ? (
         <StyledAddButton onClick={onNewProject} $isOpen={!collapsed}>
           {/* <div className="spacer" /> */}
           <div className="content">
@@ -416,7 +417,7 @@ const ProjectList = ({
           </div>
           {/* <div className="spacer" /> */}
         </StyledAddButton>
-      ): null}
+      ) : null}
 
       <TablePanel>
         {isCollapsible && (
@@ -475,7 +476,9 @@ const ProjectList = ({
               header="Code"
               style={{ maxWidth: 80 }}
               body={(rowData) => {
-              const isActiveCallableValue = isActiveCallable ? isActiveCallable(rowData.name) : true
+                const isActiveCallableValue = isActiveCallable
+                  ? isActiveCallable(rowData.name)
+                  : true
                 return (
                   <StyledProjectName
                     className={clsx({

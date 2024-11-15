@@ -2,7 +2,7 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import { Section, Toolbar } from '@ynput/ayon-react-components'
 
-const ProjectManagerPageLayout = ({ projectList, children, passthrough, toolbar, ...props }) => {
+const ProjectManagerPageLayout = ({ projectList, children, passthrough, toolbar, sectionStyle, ...props }) => {
   if (passthrough) return children
   return (
     <main style={{ overflow: 'hidden', ...props.style }}>
@@ -10,6 +10,7 @@ const ProjectManagerPageLayout = ({ projectList, children, passthrough, toolbar,
       <Section
         style={{
           alignItems: 'start',
+          ...sectionStyle
         }}
       >
         {toolbar && <Toolbar>{toolbar}</Toolbar>}

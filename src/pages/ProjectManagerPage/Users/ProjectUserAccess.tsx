@@ -7,7 +7,7 @@ import ProjectUserAccessUserList from './ProjectUserAccessUserList'
 import { useGetAccessGroupsQuery } from '@queries/accessGroups/getAccessGroups'
 import ProjectUserAccessAssignDialog from './ProjectUserAccessAssignDialog'
 import { HoveredUser, SelectedAccessGroupUsers, SelectionStatus } from './types'
-import { useProjectAccessGroupData } from './hooks'
+import { useProjectAccessGroupData, userPageFilters } from './hooks'
 import { toast } from 'react-toastify'
 import { useGetUsersQuery } from '@queries/user/getUsers'
 import {
@@ -50,10 +50,12 @@ const StyledButton = styled(Button)`
     border-radius: var(--border-radius-m);
   }
 `
+
 const ProjectUserAccess = () => {
   const { data: accessGroupList = [] } = useGetAccessGroupsQuery({
     projectName: '_',
   })
+
 
   const {
     users: projectUsers,
@@ -62,6 +64,8 @@ const ProjectUserAccess = () => {
     removeUserAccessGroup,
     updateUserAccessGroups,
   } = useProjectAccessGroupData()
+
+  const [filters, setFilters] = userPageFilters()
 
   const selfName = useSelector((state: $Any) => state.user.name)
   let { data: userList = [], isLoading } = useGetUsersQuery({ selfName })
@@ -77,7 +81,6 @@ const ProjectUserAccess = () => {
 
   const [actionedUsers, setActionedUsers] = useState<string[]>([])
   const [showDialog, setShowDialog] = useState<boolean>(false)
-  const [filters, setFilters] = useState<$Any>([])
   const [selectedAccessGroupUsers, setSelectedAccessGroupUsers] = useState<
     SelectedAccessGroupUsers | undefined
   >()
@@ -92,7 +95,7 @@ const ProjectUserAccess = () => {
   const isUser = useSelector((state: $Any) => state.user.data.isUser)
   const userPermissions = useUserProjectPermissions(!isUser)
 
-  const projectFilters = filters.find((filter: Filter) => filter.label === 'Project')
+  const projectFilters = (filters || []).find((filter: Filter) => filter.label === 'Project')
   const filteredProjects = getFilteredProjects(
     // @ts-ignore Weird one, the response type seems to be mismatched?
     (projects || []).filter(
@@ -101,18 +104,18 @@ const ProjectUserAccess = () => {
     ),
     projectFilters,
   )
-  const filteredSelectedProjects = getFilteredSelectedProjects(selectedProjects, projectFilters)
+  const filteredSelectedProjects = getFilteredSelectedProjects(selectedProjects, filteredProjects)
 
   const userFilter = filters?.find((el: Filter) => el.label === 'User')
-  const filteredUnassignedUsers = getFilteredUsers(unassignedUsers, userFilter)
   const filteredNonManagerUsers = getFilteredUsers(activeNonManagerUsers, userFilter)
-  const selectedUsers = getSelectedUsers(selectedAccessGroupUsers, filteredUnassignedUsers)
+  const filteredUnassignedUsers = getFilteredUsers(unassignedUsers, userFilter)
+  const selectedUnassignedUsers = getSelectedUsers(selectedAccessGroupUsers, filteredUnassignedUsers)
 
   const hasEditRightsOnProject =
     filteredSelectedProjects.length > 0 &&
     canAllEditUsers(filteredSelectedProjects, userPermissions)
-  const addActionEnabled = hasEditRightsOnProject && selectedUsers.length > 0
-  const removeActionEnabled = hasEditRightsOnProject
+  const addActionEnabled = hasEditRightsOnProject && selectedUnassignedUsers.length > 0
+  const removeActionEnabled = hasEditRightsOnProject &&
   getSelectedUsers(selectedAccessGroupUsers, [], true).length > 0 &&
     selectedAccessGroupUsers?.accessGroup != undefined
 
@@ -124,7 +127,7 @@ const ProjectUserAccess = () => {
   const [ctxMenuShow] = useCreateContext([])
 
   const handleAddContextMenu = (e: $Any) => {
-    let actionedUsers = selectedUsers
+    let actionedUsers = selectedUnassignedUsers
     if (!actionedUsers.includes(e.data.name)) {
       actionedUsers = [e.data.name]
       setSelectedAccessGroupUsers({ users: [e.data.name] })
@@ -133,8 +136,23 @@ const ProjectUserAccess = () => {
     ctxMenuShow(e.originalEvent, [
       {
         id: 'add',
-        label: 'Add to access groups',
+        icon: 'add',
+        label: 'Add access',
         command: () => handleAdd(actionedUsers),
+      },
+      {
+        id: 'remove',
+        icon: 'remove',
+        label: 'Remove access',
+        disabled: true,
+        command: () => handleAdd(actionedUsers),
+      },
+      {
+        id: 'remove_all',
+        icon: 'remove_moderator',
+        label: 'Remove all access',
+        disabled: true,
+        command: () => onRemove()(actionedUsers),
       },
     ])
   }
@@ -148,15 +166,34 @@ const ProjectUserAccess = () => {
 
     ctxMenuShow(e.originalEvent, [
       {
+        id: 'add',
+        icon: 'add',
+        label: 'Add access',
+        command: () => handleAdd(actionedUsers),
+      },
+      {
         id: 'remove',
-        label: 'Remove from access group',
+        icon: 'remove',
+        label: 'Remove access',
         command: () => onRemove(accessGroup)(actionedUsers),
+      },
+      {
+        id: 'remove',
+        icon: 'remove_moderator',
+        label: 'Remove all access',
+        command: () => onRemove()(actionedUsers),
       },
     ])
   }
 
   const handleAdd = (users?: string[]) => {
-    const actionedUsers = users ? users : selectedUsers
+    const selectedUsers = getSelectedUsers(selectedAccessGroupUsers, filteredNonManagerUsers)
+    // Selection is picked based on access group being set or not. Might be redundant, check later if is necessary
+    const actionedUsers = users
+      ? users
+      : selectedAccessGroupUsers?.accessGroup
+      ? selectedUsers
+      : selectedUnassignedUsers
     setActionedUsers(actionedUsers)
     if (filteredAccessGroups.length == 1) {
       onSave(actionedUsers, [{ name: filteredAccessGroups[0].name, status: SelectionStatus.All }])
@@ -183,7 +220,7 @@ const ProjectUserAccess = () => {
     resetSelectedUsers()
   }
 
-  const onRemove = (accessGroup: string) => async (users?: string[]) => {
+  const onRemove = (accessGroup?: string) => async (users?: string[]) => {
     const userList = users ? users : selectedAccessGroupUsers!.users
     for (const user of userList) {
       await removeUserAccessGroup(user, accessGroup)
@@ -204,17 +241,16 @@ const ProjectUserAccess = () => {
       {
         key: 'a',
         action: () => {
-          if (!hoveredUser?.user || hoveredUser?.accessGroup !== undefined) {
+          if(!selectedAccessGroupUsers?.users || hoveredUser?.user) {
             return
           }
-
-          handleAdd([hoveredUser.user])
+          handleAdd(selectedAccessGroupUsers?.users)
         },
       },
       {
         key: 'r',
         action: () => {
-          if (!hoveredUser?.user || !hoveredUser?.accessGroup) {
+          if (!selectedAccessGroupUsers?.users || !hoveredUser?.accessGroup) {
             return
           }
 
@@ -248,13 +284,15 @@ const ProjectUserAccess = () => {
 
   return (
     // @ts-ignore
-    <ProjectManagerPageLayout style={{ height: '100%' }}>
+    <ProjectManagerPageLayout style={{ height: '100%'}} sectionStyle={{gap: 0}}>
       {/* @ts-ignore */}
       <Shortcuts shortcuts={shortcuts} deps={[selectedProjects, selectedAccessGroupUsers, hoveredUser]} />
-      <Toolbar style={{ display: 'flex', margin: '4px 0' }}>
+      <Toolbar style={{ display: 'flex', margin: '0' }}>
         {/* @ts-ignore */}
         <ProjectUserAccessSearchFilterWrapper
           filters={filters}
+          projects={filteredProjects}
+          users={activeNonManagerUsers}
           onChange={(results: $Any) => setFilters(results)}
         />
         <StyledButton
@@ -273,7 +311,7 @@ const ProjectUserAccess = () => {
           disabled={!removeActionEnabled}
           onClick={(e) => {
             e.stopPropagation()
-            setActionedUsers(selectedUsers)
+            setActionedUsers(selectedUnassignedUsers)
             onRemove(selectedAccessGroupUsers!.accessGroup!)()
           }}
         >
@@ -304,10 +342,10 @@ const ProjectUserAccess = () => {
           {filteredSelectedProjects.length > 0 ? (
             <div style={{ position: 'relative', height: '100%' }}>
               <ProjectUserAccessUserList
-                header="Username"
+                header="User"
                 emptyMessage="All users assigned"
                 selectedProjects={filteredSelectedProjects}
-                selectedUsers={selectedUsers}
+                selectedUsers={selectedUnassignedUsers}
                 tableList={filteredUnassignedUsers}
                 isLoading={isLoading}
                 readOnly={!hasEditRightsOnProject}
@@ -339,7 +377,6 @@ const ProjectUserAccess = () => {
               {filteredAccessGroups
                 .map((item: AccessGroupObject) => item.name)
                 .map((accessGroup) => {
-                  const selectedUsers = getAccessGroupUsers(selectedAccessGroupUsers!, accessGroup)
                   return (
                     <SplitterPanel
                       style={{
@@ -354,7 +391,7 @@ const ProjectUserAccess = () => {
                     >
                       <ProjectUserAccessUserList
                         selectedProjects={filteredSelectedProjects}
-                        selectedUsers={selectedUsers}
+                        selectedUsers={getAccessGroupUsers(selectedAccessGroupUsers!, accessGroup)}
                         header={accessGroup}
                         readOnly={!hasEditRightsOnProject}
                         showAddMoreButton={filteredAccessGroups.length > 1}

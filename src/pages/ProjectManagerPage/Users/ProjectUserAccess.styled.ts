@@ -27,6 +27,7 @@ export const StyledEmptyPlaceholderWrapper = styled.div`
 
   position: relative;
   height: 100%;
+  border-radius: var(--border-radius-m);
 
   background: var(--md-sys-color-surface-container-low);
   .header {

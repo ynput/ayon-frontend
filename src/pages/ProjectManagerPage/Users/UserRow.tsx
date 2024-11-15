@@ -65,7 +65,7 @@ export const UserRow = ({
   return (
     <StyledProfileRow className={clsx({ actionable: showButtonsOnHover, selected })}>
       {/* @ts-ignore */}
-      <UserImage name={name} highlight={self} />
+      <UserImage name={name} highlight={self} size={22} />
       <span
         style={{
           flexGrow: 1,
@@ -83,7 +83,8 @@ export const UserRow = ({
           icon={'add'}
           onClick={(e) => {
             e.stopPropagation()
-            onAdd(rowData.name)
+            // Handle click outside selection on hovering, make sure selection changes accordingly (one user selection only)
+            onAdd()
           }}
         >
           {isUnassigned ? (

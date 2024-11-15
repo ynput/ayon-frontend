@@ -1,9 +1,11 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { FormLayout, Dialog, Button, Icon, Spacer } from '@ynput/ayon-react-components'
 import { $Any } from '@types'
 import clsx from 'clsx'
 import * as Styled from './ProjectUserAccessAssignDialog.styled'
 import { AccessGroupUsers, SelectionStatus } from './types'
+import Shortcuts from '@containers/Shortcuts'
+import { mapInitialAccessGroupStates } from './mappers'
 
 const icons: {[key in SelectionStatus] : string | undefined} = {
   [SelectionStatus.None]: 'add',
@@ -31,34 +33,7 @@ const ProjectUserAccessAssignDialog = ({
   onSave,
   onClose,
 }: Props) => {
-  const mapStates = () => {
-    const getStatus = (users: string[], accessGroupUsers: string[]) => {
-      const usersSet = new Set(users)
-      const accessGroupUsersSet = new Set(accessGroupUsers)
-      const intersection = usersSet.intersection(accessGroupUsersSet)
-
-      // No users in ag users
-      if (intersection.size == 0) {
-        return SelectionStatus.None
-      }
-
-      //All users / some users in ag users
-      return intersection.size == usersSet.size ? SelectionStatus.All : SelectionStatus.Mixed
-    }
-
-    const data: $Any = {}
-    accessGroups.map((ag) => {
-      if (userAccessGroups[ag.name] === undefined) {
-        data[ag.name] = SelectionStatus.None
-      } else {
-        data[ag.name] = getStatus(users, userAccessGroups[ag.name])
-      }
-    })
-
-    return data
-  }
-
-  const initialStates = mapStates()
+  const initialStates = mapInitialAccessGroupStates(accessGroups, users, userAccessGroups)
   const initialStatesList = Object.keys(initialStates).map(agName => ({name: agName, status: initialStates[agName]}))
 
   const [accessGroupItems, setAccessGroupItems] = useState<AccessGroupItem[]>(initialStatesList)
@@ -92,46 +67,72 @@ const ProjectUserAccessAssignDialog = ({
     onClose()
   }
 
+  const shortcuts = useMemo(
+    () => [
+      {
+        key: 'ctrl+Enter',
+        action: handleSave,
+      },
+      {
+        key: 'ctrl+a',
+        action: () => handleToggleAll(!allSelected),
+      },
+    ],
+    [allSelected],
+  )
+
   return (
-    <Dialog
-      size="sm"
-      header={`Add access for ${users.join(', ')}`}
-      footer={
-        <>
-          <Button
-            icon="check"
-            variant={allSelected ? 'filled' : 'surface'}
-            label={allSelected ? 'Deselect all' : 'Select all'}
-            onClick={() => handleToggleAll(!allSelected)}
-          />
-          <Spacer />
-          <Button icon="check" variant="filled" label="Save" onClick={() => handleSave()} />
-        </>
-      }
-      isOpen={true}
-      onClose={handleClose}
-    >
-      <FormLayout>
-        <Styled.List>
-          {accessGroupItems.map((item) => (
-            <Styled.ProjectItem
-              key={item.name}
-              className={clsx('project-item', {
-                selected: item.status === SelectionStatus.All,
-              })}
-              id={item.name}
-              tabIndex={0}
-              onClick={() => {
-                toggleAccessGroup(item)
-              }}
-            >
-              <span className="name">{item.name}</span>
-              {icons[item.status] !== undefined && <Icon icon={icons[item.status]!} />}
-            </Styled.ProjectItem>
-          ))}
-        </Styled.List>
-      </FormLayout>
-    </Dialog>
+    <>
+      {/* @ts-ignore */}
+      <Shortcuts shortcuts={shortcuts} deps={[accessGroupItems]} />
+      <Dialog
+        size="md"
+        header={`Add access for ${users.join(', ')}`}
+        footer={
+          <>
+            <Styled.Button
+              icon="check"
+              variant="surface"
+              className={clsx({ 'all-selected': allSelected })}
+              label={(allSelected ? 'Deselect all' : 'Select all') + ' (Cmd+A)'}
+              onClick={() => handleToggleAll(!allSelected)}
+            />
+            <Spacer />
+            <Button icon="check" variant="filled" label="Save" onClick={() => handleSave()} />
+          </>
+        }
+        isOpen={true}
+        onClose={handleClose}
+      >
+        <FormLayout>
+          <Styled.List>
+            {accessGroupItems.map((item) => (
+              <Styled.ProjectItem
+                key={item.name}
+                className={clsx('project-item', {
+                  selected: item.status === SelectionStatus.All,
+                })}
+                id={item.name}
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'l' && e.metaKey) {
+                    handleToggleAll(!allSelected)
+                  }
+                  if (e.key == 'Enter' || e.key == ' ') {
+                    toggleAccessGroup(item)
+                    e.preventDefault()
+                  }
+                }}
+                onClick={() => toggleAccessGroup(item)}
+              >
+                <span className="name">{item.name}</span>
+                {icons[item.status] !== undefined && <Icon icon={icons[item.status]!} />}
+              </Styled.ProjectItem>
+            ))}
+          </Styled.List>
+        </FormLayout>
+      </Dialog>
+    </>
   )
 }
 

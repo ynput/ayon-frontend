@@ -165,7 +165,7 @@ const ProjectManagerPage = () => {
             const bPerm = userPermissions.canView(UserPermissionsEntity.anatomy, b) ? 1 : -1
             return bPerm - aPerm
           }
-          if (module === 'siteSettings') {
+          if (module === 'projectSettings') {
             const aPerm = userPermissions.canView(UserPermissionsEntity.settings, a) ? 1 : -1
             const bPerm = userPermissions.canView(UserPermissionsEntity.settings, b) ? 1 : -1
             return bPerm - aPerm
@@ -176,7 +176,7 @@ const ProjectManagerPage = () => {
           if (module === 'anatomy') {
             return userPermissions.canView(UserPermissionsEntity.anatomy, projectName)
           }
-          if (module === 'siteSettings') {
+          if (module === 'projectSettings') {
             return userPermissions.canView(UserPermissionsEntity.settings, projectName)
           }
           return true

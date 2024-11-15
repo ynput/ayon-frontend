@@ -118,6 +118,7 @@ const UserDashboardPage = () => {
               collapsedId="dashboard"
               styleSection={{ position: 'relative', height: '100%', minWidth: 200, maxWidth: 200 }}
               hideCode
+              hideAddProjectButton={module !== 'overview'}
               multiselect={isProjectsMultiSelect}
               selection={isProjectsMultiSelect ? selectedProjects : selectedProjects[0]}
               onSelect={(p) => setSelectedProjects(isProjectsMultiSelect ? p : [p])}

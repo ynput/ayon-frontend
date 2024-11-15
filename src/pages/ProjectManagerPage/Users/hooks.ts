@@ -4,7 +4,9 @@ import { useState } from 'react'
 import { useUpdateProjectUsersMutation } from '@queries/project/updateProject'
 import { useDispatch } from 'react-redux'
 import { SelectionStatus } from './types'
-import { Option } from '@components/SearchFilter/types'
+import { Filter, Option } from '@components/SearchFilter/types'
+import { useAppSelector } from '@state/store'
+import { useSetFrontendPreferencesMutation } from '@queries/user/updateUser'
 
 type FilterValues = {
   id: string
@@ -31,16 +33,16 @@ const useProjectAccessGroupData = () => {
   const users = result.data
 
   const accessGroupUsers: $Any = {}
-  const removeUserAccessGroup = (user: string, accessGroup: string) => {
+  const removeUserAccessGroup = (user: string, accessGroup?: string) => {
     for (const project of selectedProjects) {
       // @ts-ignore
       if (!users![project][user]) {
         continue
       }
       // @ts-ignore
-      const updatedAccessGroups = users![project][user]?.filter(
+      const updatedAccessGroups = accessGroup ? users![project][user]?.filter(
         (item: string) => item !== accessGroup,
-      )
+      ) : []
       try {
         updateUser({
           projectName: project,
@@ -133,4 +135,24 @@ const useProjectAccessSearchFilterBuiler = ({
   return options
 }
 
-export { useProjectAccessGroupData, useProjectAccessSearchFilterBuiler }
+const userPageFilters = (): [filters: Filter[], setFilters: (value: Filter[]) => void] => {
+  const pageId = 'project.settings.user.access_groups'
+  const [updateUserPreferences] = useSetFrontendPreferencesMutation()
+  const userName = useAppSelector((state) => state.user.name)
+  const frontendPreferences = useAppSelector((state) => state.user.data.frontendPreferences)
+  const frontendPreferencesFilters: {
+    [pageId: string]: []
+  } = frontendPreferences?.filters
+
+  const filters = frontendPreferencesFilters?.[pageId] || []
+
+  const setFilters = (value: Filter[]) => {
+    const updatedUserFilters = { ...frontendPreferencesFilters, [pageId]: value}
+    const updatedFrontendPreferences = { ...frontendPreferences, filters: updatedUserFilters }
+    updateUserPreferences({ userName, patchData: updatedFrontendPreferences })
+  }
+
+  return [filters, setFilters]
+}
+
+export { useProjectAccessGroupData, useProjectAccessSearchFilterBuiler, userPageFilters }

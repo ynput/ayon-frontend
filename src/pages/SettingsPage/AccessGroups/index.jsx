@@ -15,6 +15,7 @@ const AccessGroups = () => {
       <ProjectList
         showNull="Default (all projects)"
         selection={projectName}
+        hideAddProjectButton
         onSelect={setProjectName}
         style={{ flex: 1 }}
       />

@@ -10,7 +10,7 @@ export const ProjectItem = styled.div`
   align-self: stretch;
   border-radius: var(--border-radius-m);
   cursor: pointer;
-  min-height: 28px;
+  min-height: 32px;
   overflow: hidden;
   user-select: none;
 
@@ -46,4 +46,7 @@ export const List = styled.div`
 `
 
 export const Button = styled(BaseButton)`
+&.all-selected {
+  background-color: var(--md-sys-color-primary-container);
+}
 `
