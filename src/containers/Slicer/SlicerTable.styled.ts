@@ -10,6 +10,10 @@ export const TableContainer = styled.div`
   padding: 4px;
   padding-top: 8px;
 
+  &.isLoading {
+    overflow: hidden;
+  }
+
   table {
     height: fit-content;
     width: 100%;
@@ -57,6 +61,10 @@ export const Cell = styled.div`
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+  .loading {
+    pointer-events: none;
   }
 
   &:hover {

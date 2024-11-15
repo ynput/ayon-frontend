@@ -17,6 +17,7 @@ import { Icon } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import useRowSelection from './hooks/useRowSelection'
 import useRowKeydown from './hooks/useRowKeydown'
+import usePlaceholderData from './hooks/usePlaceholderData'
 
 export type TableRow = {
   id: string
@@ -30,15 +31,19 @@ export type TableRow = {
 
 interface SlicerTableProps {
   data: TableRow[]
+  isLoading: boolean
 }
 
-const SlicerTable: FC<SlicerTableProps> = ({ data = [] }) => {
+const SlicerTable: FC<SlicerTableProps> = ({ data = [], isLoading }) => {
   // stable data reference
   const [tableData, setTableData] = useState(data)
 
   useEffect(() => {
     setTableData(data)
-  }, [data])
+  }, [data, isLoading])
+
+  // show loading placeholders
+  usePlaceholderData({ data: tableData, isLoading, setTableData })
 
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
   const [expanded, setExpanded] = useState<ExpandedState>({})
@@ -50,7 +55,7 @@ const SlicerTable: FC<SlicerTableProps> = ({ data = [] }) => {
         header: undefined,
         cell: ({ row, getValue }) => (
           <Styled.Cell
-            className={clsx({ selected: row.getIsSelected() })}
+            className={clsx({ selected: row.getIsSelected(), loading: isLoading })}
             onClick={(evt) => handleRowSelect(evt, row)}
             onKeyDown={(evt) => handleRowKeyDown(evt, row)}
             style={{
@@ -77,7 +82,7 @@ const SlicerTable: FC<SlicerTableProps> = ({ data = [] }) => {
         ),
       },
     ],
-    [],
+    [isLoading],
   )
 
   const table = useReactTable({
@@ -127,7 +132,7 @@ const SlicerTable: FC<SlicerTableProps> = ({ data = [] }) => {
   const { handleRowKeyDown } = useRowKeydown({ handleRowSelect })
 
   return (
-    <Styled.TableContainer ref={tableContainerRef}>
+    <Styled.TableContainer ref={tableContainerRef} className={clsx({ isLoading })}>
       <table>
         <thead>
           {table.getHeaderGroups().map((headerGroup) => (

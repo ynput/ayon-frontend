@@ -11,10 +11,11 @@ type Props = {
 }
 
 const useHierarchyTable = ({ projectName, folderTypes }: Props) => {
-  const { data: { folders = [] } = {}, isLoading } = useGetFolderListQuery(
-    { projectName: projectName || '' },
-    { skip: !projectName },
-  )
+  const {
+    data: { folders = [] } = {},
+    isLoading,
+    isFetching,
+  } = useGetFolderListQuery({ projectName: projectName || '' }, { skip: !projectName })
 
   const getFolderIcon = (type: string) => {
     const folderType = folderTypes.find((folderType) => folderType.name === type)
@@ -83,7 +84,7 @@ const useHierarchyTable = ({ projectName, folderTypes }: Props) => {
     return rows
   }, [folders, folderTypes])
 
-  return { data: tableData, isLoading }
+  return { data: tableData, isLoading: isLoading || isFetching }
 }
 
 export default useHierarchyTable

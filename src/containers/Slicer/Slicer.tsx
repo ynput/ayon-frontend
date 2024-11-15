@@ -16,14 +16,14 @@ const Slicer: FC<SlicerProps> = ({}) => {
   )
 
   // project info
-  const { data: hierarchyData = [] } = useHierarchyTable({
+  const { data: hierarchyData = [], isLoading: isLoadingHierarchy } = useHierarchyTable({
     projectName,
     folderTypes: project?.folderTypes || [],
   })
 
   return (
     <Styled.Container>
-      <SlicerTable data={hierarchyData} />
+      <SlicerTable data={hierarchyData} isLoading={isLoadingHierarchy} />
     </Styled.Container>
   )
 }
