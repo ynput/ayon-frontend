@@ -4,7 +4,7 @@ export type AccessGroupUsers = {
 
 export type HoveredUser = {
   accessGroup?: string
-  user: string
+  user?: string
 }
 
 export type SelectedAccessGroupUsers = {

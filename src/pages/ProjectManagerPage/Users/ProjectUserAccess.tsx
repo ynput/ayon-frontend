@@ -241,24 +241,38 @@ const ProjectUserAccess = () => {
       {
         key: 'a',
         action: () => {
-          if(!selectedAccessGroupUsers?.users || hoveredUser?.user) {
+          if(!selectedAccessGroupUsers?.users && !hoveredUser?.user) {
             return
           }
-          handleAdd(selectedAccessGroupUsers?.users)
+          let actionedUsers = selectedAccessGroupUsers?.users || []
+          if (hoveredUser?.user && !actionedUsers.includes(hoveredUser.user)) {
+            actionedUsers = [hoveredUser.user]
+            setSelectedAccessGroupUsers({ accessGroup: hoveredUser.accessGroup, users: [hoveredUser.user]})
+          }
+
+          handleAdd(actionedUsers)
         },
       },
       {
         key: 'r',
         action: () => {
-          if (!selectedAccessGroupUsers?.users || !hoveredUser?.accessGroup) {
+          if (!selectedAccessGroupUsers?.accessGroup && !hoveredUser?.accessGroup) {
             return
           }
 
-          onRemove(hoveredUser!.accessGroup!)([hoveredUser.user])
+          let actionedUsers = selectedAccessGroupUsers?.users || []
+          let actionedAccessGroup = selectedAccessGroupUsers?.accessGroup
+          if (hoveredUser?.user && !actionedUsers.includes(hoveredUser.user)) {
+            actionedUsers = [hoveredUser.user]
+            actionedAccessGroup = hoveredUser.accessGroup
+            setSelectedAccessGroupUsers({ accessGroup: hoveredUser.accessGroup, users: [hoveredUser.user]})
+          }
+
+          onRemove(actionedAccessGroup)(actionedUsers)
         },
       },
     ],
-    [hoveredUser],
+    [selectedAccessGroupUsers, hoveredUser],
   )
 
   const handleProjectSelectionChange = (selection: string[]) => {
@@ -284,7 +298,7 @@ const ProjectUserAccess = () => {
 
   return (
     // @ts-ignore
-    <ProjectManagerPageLayout style={{ height: '100%'}} sectionStyle={{gap: 0}}>
+    <ProjectManagerPageLayout style={{ height: '100%' }} sectionStyle={{ gap: 0 }}>
       {/* @ts-ignore */}
       <Shortcuts shortcuts={shortcuts} deps={[selectedProjects, selectedAccessGroupUsers, hoveredUser]} />
       <Toolbar style={{ display: 'flex', margin: '0' }}>
@@ -351,7 +365,9 @@ const ProjectUserAccess = () => {
                 readOnly={!hasEditRightsOnProject}
                 onContextMenu={handleAddContextMenu}
                 onAdd={handleAdd}
-                onHoverRow={(userName: string) => setHoveredUser({ user: userName })}
+                onHoverRow={(userName: string) => {
+                  userName ? setHoveredUser({ user: userName }) : setHoveredUser({})
+                }}
                 onSelectUsers={(selection) => setSelectedAccessGroupUsers({ users: selection })}
                 sortable
                 isUnassigned
@@ -403,7 +419,9 @@ const ProjectUserAccess = () => {
                             mappedUsers[accessGroup].includes(user.name),
                         )}
                         onHoverRow={(userName: string) =>
-                          setHoveredUser({ accessGroup, user: userName })
+                          userName
+                            ? setHoveredUser({ accessGroup, user: userName })
+                            : setHoveredUser({})
                         }
                         onSelectUsers={(selection: string[]) =>
                           updateSelectedAccessGroupUsers(accessGroup, selection)

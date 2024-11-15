@@ -5,6 +5,7 @@ import { ProjectNode, UserNode } from '@api/graphql'
 import { GetProjectsUsersApiResponse } from '@queries/project/getProject'
 import { UserPermissions, UserPermissionsEntity } from '@hooks/useUserProjectPermissions'
 import { $Any } from '@types'
+import { matchSorter } from 'match-sorter'
 
 const getAllProjectUsers = (groupedUsers: AccessGroupUsers): string[] => {
   let allUsers: string[] = []
@@ -88,10 +89,13 @@ const exactFilter = <T extends {name: string}>(entities: T[], filters: Filter): 
 
 const fuzzyFilter = <T extends {name: string}>(entities: T[], filters: Filter): T[] => {
   const filterString = filters.values![0].id
+
+  const matches = matchSorter(entities, filterString, {keys: ['name']})
   if (filters!.inverted) {
-    return entities.filter((entity: T) => entity.name.indexOf(filterString) == -1)
+    return entities.filter((entity: T) => !matches.includes(entity))
   }
-  return entities.filter((entity: T) => entity.name.indexOf(filterString) != -1)
+
+  return matches
 }
 
 const getFilteredProjects = (projects: ProjectNode[], filter?: Filter): ProjectNode[] => {
