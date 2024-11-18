@@ -29,7 +29,7 @@ const ProjectSettings = ({ projectList, projectManager, projectName }) => {
 const SiteSettings = ({ projectList, projectManager, projectName }) => {
   return (
     <ProjectManagerPageLayout projectList={projectList} passthrough={!projectManager}>
-      <AddonSettings showSites projectName={projectName} />
+      <AddonSettings projectName={projectName} showSites bypassPermissions  />
     </ProjectManagerPageLayout>
   )
 }
@@ -50,7 +50,7 @@ const ProjectManagerPage = () => {
     withDefault(StringParam, projectName),
   )
 
-  const { permissions: userPermissions } = useUserProjectPermissions(!isUser)
+  const { isLoading: userPermissionsLoading, permissions: userPermissions } = useUserProjectPermissions(isUser)
 
   // UPDATE DATA
   const [updateProject] = useUpdateProjectMutation()
@@ -86,7 +86,7 @@ const ProjectManagerPage = () => {
   }
 
   const links = []
-  if (!isUser || userPermissions.projectSettingsAreEnabled()) {
+  if (!isUser || !userPermissionsLoading && userPermissions.projectSettingsAreEnabled()) {
     if (userPermissions.canViewAny(UserPermissionsEntity.anatomy) || module === 'anatomy') {
       links.push({
         name: 'Anatomy',
@@ -160,6 +160,9 @@ const ProjectManagerPage = () => {
         onDeleteProject={handleDeleteProject}
         onActivateProject={handleActivateProject}
         customSort={(a, b) => {
+          if (userPermissionsLoading) {
+            return 1
+          }
           if (module === 'anatomy') {
             const aPerm = userPermissions.canView(UserPermissionsEntity.anatomy, a) ? 1 : -1
             const bPerm = userPermissions.canView(UserPermissionsEntity.anatomy, b) ? 1 : -1
@@ -185,7 +188,7 @@ const ProjectManagerPage = () => {
         {module === 'anatomy' && <ProjectAnatomy />}
         {module === 'projectSettings' && <ProjectSettings />}
         {module === 'siteSettings' && <SiteSettings />}
-        {module === 'userSettings' && <ProjectUserAccess />}
+        {module === 'userSettings' && <ProjectUserAccess onSelect={setSelectedProject} />}
         {module === 'roots' && <ProjectRoots />}
         {module === 'teams' && <TeamsPage />}
       </ProjectManagerPageContainer>

@@ -39,20 +39,22 @@ import { cloneDeep } from 'lodash'
 import { usePaste } from '@context/pasteContext'
 import styled from 'styled-components'
 
-const StyledScrollPanel = styled(ScrollPanel)`
-> div {
-  padding-right: 8px;
-}
-`
 import SettingsListHeader from './SettingsListHeader'
 import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
 import { attachLabels } from './searchTools'
 import useUserProjectPermissions from '@hooks/useUserProjectPermissions'
+import LoadingPage from '@pages/LoadingPage'
 
 /*
  * key is {addonName}|{addonVersion}|{variant}|{siteId}|{projectKey}
  * if project name or siteid is N/a, use _ instead
  */
+
+const StyledScrollPanel = styled(ScrollPanel)`
+> div {
+  padding-right: 8px;
+}
+`
 
 const StyledEmptyPlaceholder = styled(EmptyPlaceholder)`
   display: flex;
@@ -71,7 +73,7 @@ const isChildPath = (childPath, parentPath) => {
   return true
 }
 
-const AddonSettings = ({ projectName, showSites = false }) => {
+const AddonSettings = ({ projectName, showSites = false, bypassPermissions = false }) => {
   const isUser = useSelector((state) => state.user.data.isUser)
   //const navigate = useNavigate()
   const [showHelp, setShowHelp] = useState(false)
@@ -98,7 +100,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   const [promoteBundle] = usePromoteBundleMutation()
   const { requestPaste } = usePaste()
 
-  const {permissions: userPermissions } = useUserProjectPermissions(!isUser)
+  const {isLoading, permissions: userPermissions } = useUserProjectPermissions(isUser)
 
   const projectKey = projectName || '_'
 
@@ -637,9 +639,11 @@ const AddonSettings = ({ projectName, showSites = false }) => {
         />
         <SaveButton
           label="Save Changes"
-          disabled={!userPermissions.canEditSettings(projectName)}
+          disabled={!bypassPermissions && !userPermissions.canEditSettings(projectName)}
           data-tooltip={
-            !userPermissions.canEditSettings(projectName) ? "You don't have edit permissions" : undefined
+            !bypassPermissions && !userPermissions.canEditSettings(projectName)
+              ? "You don't have edit permissions"
+              : undefined
           }
           onClick={onSave}
           active={canCommit}
@@ -675,7 +679,11 @@ const AddonSettings = ({ projectName, showSites = false }) => {
 
   // console.log('selected addons: ', selectedAddons)
 
-  if (!userPermissions.canViewSettings(projectName)) {
+  if (isLoading) {
+    return <LoadingPage />
+  }
+
+  if (!bypassPermissions && !userPermissions.canViewSettings(projectName)) {
     return <EmptyPlaceholder
       icon="settings_alert"
       message="You don't have permissions to view the addon settings for this project"

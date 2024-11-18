@@ -46,7 +46,7 @@ const StyledButton = styled(Button)`
   }
 `
 
-const ProjectUserAccess = () => {
+const ProjectUserAccess = ({ onSelect }: { onSelect: (projectName: string) => void }) => {
   const { data: accessGroupList = [] } = useGetAccessGroupsQuery({
     projectName: '_',
   })
@@ -92,13 +92,15 @@ const ProjectUserAccess = () => {
 
   const { setDisabled } = useShortcutsContext()
   const isUser = useSelector((state: $Any) => state.user.data.isUser)
-  const { isLoading: permissionsLoading, permissions: userPermissions } = useUserProjectPermissions(
-    !isUser,
-  )
+  const { isLoading: permissionsLoading, permissions: userPermissions } =
+    useUserProjectPermissions(isUser)
 
   const projectFilters = (filters || []).filter((filter: Filter) => filter.label === 'Project')
-  // @ts-ignore Weird one, the response type seems to be mismatched?
-  const filteredProjects = getFilteredEntities<ProjectNode>(Array.from(projects || []), projectFilters)
+  const filteredProjects = getFilteredEntities<ProjectNode>(
+    // @ts-ignore Weird one, the response type seems to be mismatched?
+    Array.from(projects || []),
+    projectFilters,
+  )
   const filteredSelectedProjects = getFilteredSelectedProjects(selectedProjects, filteredProjects)
 
   const userFilter = filters?.filter((el: Filter) => el.label === 'User')
@@ -110,8 +112,9 @@ const ProjectUserAccess = () => {
   )
 
   const hasEditRightsOnProject =
-    permissionsLoading || filteredSelectedProjects.length > 0 &&
-    canAllEditUsers(filteredSelectedProjects, userPermissions)
+    permissionsLoading ||
+    (filteredSelectedProjects.length > 0 &&
+      canAllEditUsers(filteredSelectedProjects, userPermissions))
   const addActionEnabled = hasEditRightsOnProject && selectedUnassignedUsers.length > 0
   const removeActionEnabled =
     hasEditRightsOnProject &&
@@ -281,6 +284,9 @@ const ProjectUserAccess = () => {
   )
 
   const handleProjectSelectionChange = (selection: string[]) => {
+    if (selection.length >= 0) {
+      onSelect(selection[0])
+    }
     if (selection.length <= 1) {
       setSelectedProjects(selection)
       return
@@ -294,7 +300,12 @@ const ProjectUserAccess = () => {
     setSelectedProjects(filteredSelection)
   }
 
-  const errorInfo = getErrorInfo(usersFetchError, filteredProjects, filteredSelectedProjects, userPermissions)
+  const errorInfo = getErrorInfo(
+    usersFetchError,
+    filteredProjects,
+    filteredSelectedProjects,
+    userPermissions,
+  )
 
   const projectsContent = (
     <>

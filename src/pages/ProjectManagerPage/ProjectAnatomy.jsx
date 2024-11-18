@@ -16,8 +16,9 @@ const ProjectAnatomy = ({ projectName, projectList }) => {
   const [updateProjectAnatomy, { isLoading: isUpdating }] = useUpdateProjectAnatomyMutation()
   const { requestPaste } = usePaste()
 
-  const { permissions: userPermissions, isLoading } = useUserProjectPermissions(!isUser)
-  const accessLevel = userPermissions.getAnatomyPermissionLevel(projectName)
+  const { isLoading, permissions: userPermissions } = useUserProjectPermissions(isUser)
+  const accessLevel = !isLoading && userPermissions.getAnatomyPermissionLevel(projectName)
+
   const [formData, setFormData] = useState(null)
   const [isChanged, setIsChanged] = useState(false)
 

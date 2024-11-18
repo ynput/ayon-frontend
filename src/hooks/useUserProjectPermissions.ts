@@ -36,7 +36,7 @@ class UserPermissions {
 
   constructor(permissions: AllProjectsPremissions, hasLimitedPermissions: boolean = false) {
     this.permissions = permissions
-    this.hasElevatedPrivileges = hasLimitedPermissions
+    this.hasElevatedPrivileges = !hasLimitedPermissions
   }
 
   canCreateProject(): boolean {

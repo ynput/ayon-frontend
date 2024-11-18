@@ -227,7 +227,7 @@ const ProjectList = ({
 
   const [updateUserPreferences] = useSetFrontendPreferencesMutation()
 
-  const { permissions: userPermissions } = useUserProjectPermissions(!user?.data?.isUser || true)
+  const { isLoading: userPermissionsLoading, permissions: userPermissions } = useUserProjectPermissions(user?.data?.isUser || true)
 
   const handlePinProjects = async (sel, isPinning) => {
     try {
@@ -408,7 +408,7 @@ const ProjectList = ({
           disabled={onSelectAllDisabled}
         />
       )}
-      {!hideAddProjectButton && (isProjectManager || userPermissions.canCreateProject()) ? (
+      {!hideAddProjectButton && (isProjectManager || (!userPermissionsLoading && userPermissions.canCreateProject())) ? (
         <StyledAddButton onClick={onNewProject} $isOpen={!collapsed}>
           {/* <div className="spacer" /> */}
           <div className="content">
