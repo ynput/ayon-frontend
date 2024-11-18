@@ -24,11 +24,6 @@ const WorkfileList = ({ style }) => {
     error,
   } = useGetWorkfileListQuery({ projectName, taskIds }, { skip: !taskIds.length })
 
-  if (isError) {
-    console.error(error)
-    return 'Error...'
-  }
-
   const formatName = (rowData) => {
     let className = ''
     let i = 0
@@ -68,6 +63,11 @@ const WorkfileList = ({ style }) => {
     onSelectionChange: ({ array }) => handleSelectionChange({ value: { id: array[0] } }),
     config: { multiSelect: false },
   })
+
+  if (isError) {
+    console.error(error)
+    return 'Error...'
+  }
 
   return (
     <Section style={style}>
