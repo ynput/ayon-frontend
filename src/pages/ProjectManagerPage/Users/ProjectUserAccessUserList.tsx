@@ -84,7 +84,7 @@ const ProjectUserAccessUserList = ({
           dataKey="name"
           className={clsx('user-list-table', { loading: isLoading })}
           rowClassName={(rowData: $Any) => clsx({ inactive: !rowData.active, loading: isLoading })}
-          onContextMenu={onContextMenu}
+          onContextMenu={!readOnly && onContextMenu}
           onRowMouseEnter={(e) => onHoverRow(e.data.name)}
           onRowMouseLeave={() => onHoverRow()}
           onSelectionChange={(selection) => {

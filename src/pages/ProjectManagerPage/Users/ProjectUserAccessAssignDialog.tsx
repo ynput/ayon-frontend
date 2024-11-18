@@ -6,6 +6,7 @@ import * as Styled from './ProjectUserAccessAssignDialog.styled'
 import { AccessGroupUsers, SelectionStatus } from './types'
 import Shortcuts from '@containers/Shortcuts'
 import { mapInitialAccessGroupStates } from './mappers'
+import { getPlatformShortcutKey, KeyMode } from '@helpers/platform'
 
 const icons: {[key in SelectionStatus] : string | undefined} = {
   [SelectionStatus.None]: 'add',
@@ -94,9 +95,11 @@ const ProjectUserAccessAssignDialog = ({
               icon="check"
               variant="surface"
               className={clsx({ 'all-selected': allSelected })}
-              label={(allSelected ? 'Deselect all' : 'Select all') + ' (Cmd+A)'}
+              label={(allSelected ? 'Deselect all' : 'Select all')}
               onClick={() => handleToggleAll(!allSelected)}
-            />
+              shortcut={{ children: getPlatformShortcutKey('a', [KeyMode.Ctrl]) }}
+            >
+            </Styled.Button>
             <Spacer />
             <Button icon="check" variant="filled" label="Save" onClick={() => handleSave()} />
           </>
@@ -115,9 +118,6 @@ const ProjectUserAccessAssignDialog = ({
                 id={item.name}
                 tabIndex={0}
                 onKeyDown={(e) => {
-                  if (e.key === 'l' && e.metaKey) {
-                    handleToggleAll(!allSelected)
-                  }
                   if (e.key == 'Enter' || e.key == ' ') {
                     toggleAccessGroup(item)
                     e.preventDefault()
