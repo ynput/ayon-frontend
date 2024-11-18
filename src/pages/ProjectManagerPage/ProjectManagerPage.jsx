@@ -50,7 +50,7 @@ const ProjectManagerPage = () => {
     withDefault(StringParam, projectName),
   )
 
-  const userPermissions = useUserProjectPermissions(!isUser)
+  const { permissions: userPermissions } = useUserProjectPermissions(!isUser)
 
   // UPDATE DATA
   const [updateProject] = useUpdateProjectMutation()

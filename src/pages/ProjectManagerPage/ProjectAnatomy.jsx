@@ -16,7 +16,7 @@ const ProjectAnatomy = ({ projectName, projectList }) => {
   const [updateProjectAnatomy, { isLoading: isUpdating }] = useUpdateProjectAnatomyMutation()
   const { requestPaste } = usePaste()
 
-  const userPermissions = useUserProjectPermissions(!isUser)
+  const { permissions: userPermissions, isLoading } = useUserProjectPermissions(!isUser)
   const accessLevel = userPermissions.getAnatomyPermissionLevel(projectName)
   const [formData, setFormData] = useState(null)
   const [isChanged, setIsChanged] = useState(false)
@@ -87,7 +87,7 @@ const ProjectAnatomy = ({ projectName, projectList }) => {
       }
     >
       <ScrollPanel style={{ flexGrow: 1 }} className="transparent">
-        {userPermissions.canViewAnatomy(projectName) ? (
+        {isLoading || userPermissions.canViewAnatomy(projectName) ? (
           <AnatomyEditor
             projectName={projectName}
             formData={formData}
@@ -97,7 +97,7 @@ const ProjectAnatomy = ({ projectName, projectList }) => {
         ) : (
           <EmptyPlaceholder
             icon="settings_alert"
-            message="You don't have permissions to view the this project's anatomy"
+            message="You don't have permissions to view this project's anatomy"
           />
         )}
       </ScrollPanel>

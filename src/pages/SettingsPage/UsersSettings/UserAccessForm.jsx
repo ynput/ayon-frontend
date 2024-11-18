@@ -127,7 +127,7 @@ const UserAccessForm = ({ accessGroupsData, formData, onChange, disabled}) => {
           <FormRowStyled
             label={'Default projects access'}
             data-tooltip={
-              'When a new project is created, the user will be added to these access groups by default.'
+              'When a new project is created, the user will automatically be added to the selected access groups. To grant a user the ability to manage project access for others, ensure an access group with those permissions is included here.'
             }
           >
             <AccessGroupsDropdown

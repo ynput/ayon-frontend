@@ -153,10 +153,10 @@ class UserPermissions {
 
 const useUserProjectPermissions = (
   hasLimitedPermissions?: boolean,
-): UserPermissions | undefined => {
-  const { data: permissions } = useGetCurrentUserPermissionsQuery()
+): {isLoading: boolean, permissions: UserPermissions | undefined} => {
+  const { data: permissions, isLoading } = useGetCurrentUserPermissionsQuery()
 
-  return new UserPermissions(permissions, hasLimitedPermissions)
+  return {isLoading, permissions: new UserPermissions(permissions, hasLimitedPermissions)}
 }
 
 export { UserPermissions, PermissionLevel }

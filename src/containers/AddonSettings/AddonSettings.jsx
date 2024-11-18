@@ -98,7 +98,7 @@ const AddonSettings = ({ projectName, showSites = false }) => {
   const [promoteBundle] = usePromoteBundleMutation()
   const { requestPaste } = usePaste()
 
-  const userPermissions = useUserProjectPermissions(!isUser)
+  const {permissions: userPermissions } = useUserProjectPermissions(!isUser)
 
   const projectKey = projectName || '_'
 

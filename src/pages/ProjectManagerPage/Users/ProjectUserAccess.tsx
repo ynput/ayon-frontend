@@ -36,6 +36,7 @@ import { StyledEmptyPlaceholder, StyledEmptyPlaceholderWrapper, StyledHeader } f
 import SplitterContainerThreePanes from './SplitterThreePanes'
 import SplitterContainerTwoPanes from './SplitterTwoPanes'
 import { ProjectNode, UserNode } from '@api/graphql'
+import LoadingPage from '@pages/LoadingPage'
 
 const StyledButton = styled(Button)`
   .shortcut {
@@ -63,7 +64,7 @@ const ProjectUserAccess = () => {
   const selfName = useSelector((state: $Any) => state.user.name)
   let {
     data: userList = [],
-    isLoading: isLoadingUsersList,
+    isLoading: usersLoading,
     isError: usersFetchError,
   } = useGetUsersQuery({ selfName })
 
@@ -84,14 +85,16 @@ const ProjectUserAccess = () => {
   >()
   const [hoveredUser, setHoveredUser] = useState<HoveredUser | undefined>()
 
-  const { data: projects, isLoading: projectsIsLoading, isError, error } = useListProjectsQuery({})
+  const { data: projects, isLoading: projectsLoading, isError, error } = useListProjectsQuery({})
   if (isError) {
     console.error(error)
   }
 
   const { setDisabled } = useShortcutsContext()
   const isUser = useSelector((state: $Any) => state.user.data.isUser)
-  const userPermissions = useUserProjectPermissions(!isUser)
+  const { isLoading: permissionsLoading, permissions: userPermissions } = useUserProjectPermissions(
+    !isUser,
+  )
 
   const projectFilters = (filters || []).filter((filter: Filter) => filter.label === 'Project')
   // @ts-ignore Weird one, the response type seems to be mismatched?
@@ -107,7 +110,7 @@ const ProjectUserAccess = () => {
   )
 
   const hasEditRightsOnProject =
-    filteredSelectedProjects.length > 0 &&
+    permissionsLoading || filteredSelectedProjects.length > 0 &&
     canAllEditUsers(filteredSelectedProjects, userPermissions)
   const addActionEnabled = hasEditRightsOnProject && selectedUnassignedUsers.length > 0
   const removeActionEnabled =
@@ -299,7 +302,7 @@ const ProjectUserAccess = () => {
       <ProjectUserAccessProjectList
         selection={filteredSelectedProjects}
         projects={filteredProjects}
-        isLoading={projectsIsLoading}
+        isLoading={projectsLoading}
         // @ts-ignore
         userPermissions={userPermissions}
         onSelectionChange={handleProjectSelectionChange}
@@ -317,7 +320,7 @@ const ProjectUserAccess = () => {
           selectedProjects={filteredSelectedProjects}
           selectedUsers={selectedUnassignedUsers}
           tableList={filteredUnassignedUsers}
-          isLoading={isLoadingUsersList}
+          isLoading={usersLoading}
           readOnly={!hasEditRightsOnProject}
           hoveredUser={hoveredUser}
           onContextMenu={handleAddContextMenu}
@@ -374,7 +377,7 @@ const ProjectUserAccess = () => {
                   }
                   onAdd={() => handleAdd()}
                   onRemove={onRemove(accessGroup)}
-                  isLoading={isLoadingUsersList}
+                  isLoading={usersLoading}
                 />
               </SplitterPanel>
             )
@@ -382,6 +385,10 @@ const ProjectUserAccess = () => {
       </Splitter>
     </>
   )
+
+  if (permissionsLoading || usersLoading || projectsLoading) {
+    return <LoadingPage message={''} children={''} />
+  }
 
   return (
     // @ts-ignore

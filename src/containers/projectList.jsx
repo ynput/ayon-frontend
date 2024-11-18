@@ -227,7 +227,7 @@ const ProjectList = ({
 
   const [updateUserPreferences] = useSetFrontendPreferencesMutation()
 
-  const userPermissions = useUserProjectPermissions(!user?.data?.isUser || true)
+  const { permissions: userPermissions } = useUserProjectPermissions(!user?.data?.isUser || true)
 
   const handlePinProjects = async (sel, isPinning) => {
     try {
