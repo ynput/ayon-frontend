@@ -69,7 +69,7 @@ const ProjectUserAccessUserList = ({
     return (
       <StyledEmptyPlaceholderWrapper>
         <p className="header">{header}</p>
-        <StyledEmptyPlaceholder icon="person" message="No users assigned" style={{}} />
+        <StyledEmptyPlaceholder icon="person" message={emptyMessage} style={{}} />
       </StyledEmptyPlaceholderWrapper>
     )
   }
