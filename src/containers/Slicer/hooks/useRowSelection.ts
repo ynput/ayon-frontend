@@ -1,34 +1,32 @@
 import { KeyboardEvent, MouseEvent, useCallback, useRef } from 'react'
-import { Row, Table } from '@tanstack/react-table'
-import { RowSelectionState } from '@tanstack/table-core'
+import { Row } from '@tanstack/react-table'
+import { useSlicerContext } from '@context/slicerContext'
 
 interface UseRowSelectionProps<T> {
-  table: Table<T>
   rows: Row<T>[]
-  rowSelection: RowSelectionState
-  setRowSelection: (value: RowSelectionState) => void
 }
 
 type RowEvent = MouseEvent<HTMLDivElement> | KeyboardEvent<HTMLDivElement>
 
-function useRowSelection<T>({
-  table,
-  rows,
-  rowSelection,
-  setRowSelection,
-}: UseRowSelectionProps<T>) {
+function useRowSelection<T>({ rows }: UseRowSelectionProps<T>) {
+  const { rowSelection, setRowSelection, onRowSelectionChange } = useSlicerContext()
+
   const lastRowSelected = useRef<Row<T> | null>(null)
 
   const handleRowSelect = useCallback(
     (event: RowEvent, row: Row<T>) => {
       const handleMultiSelect = () => {
-        row.toggleSelected()
+        const newRowSelection = { ...rowSelection }
+        if (newRowSelection[row.id]) {
+          delete newRowSelection[row.id]
+        } else {
+          newRowSelection[row.id] = true
+        }
         lastRowSelected.current = row
+        return newRowSelection
       }
 
       const handleShiftSelect = () => {
-        if (!row) return
-
         const lastIndex = lastRowSelected?.current?.index ?? row.index
         const [fromIndex, toIndex] = [
           Math.min(lastIndex, row.index),
@@ -44,20 +42,28 @@ function useRowSelection<T>({
           }
         })
 
-        setRowSelection(newRowSelection)
+        lastRowSelected.current = row
+
+        return newRowSelection
       }
 
       const handleSingleSelect = () => {
-        table.resetRowSelection(false)
-        row.toggleSelected(true)
+        const newSelection = row.getIsSelected() ? {} : { [row.id]: true }
         lastRowSelected.current = row
+        return newSelection
       }
 
-      if (event.ctrlKey || event.metaKey) handleMultiSelect()
-      else if (event.shiftKey) handleShiftSelect()
-      else handleSingleSelect()
+      let newSelection = {}
+      if (event.ctrlKey || event.metaKey) newSelection = handleMultiSelect()
+      else if (event.shiftKey) newSelection = handleShiftSelect()
+      else newSelection = handleSingleSelect()
+
+      // update selection
+      setRowSelection(newSelection)
+      // call the callback
+      onRowSelectionChange?.(newSelection)
     },
-    [rows, rowSelection, setRowSelection],
+    [rows, rowSelection, setRowSelection, onRowSelectionChange],
   )
 
   return { handleRowSelect }

@@ -100,12 +100,7 @@ const SlicerTable: FC<SlicerTableProps> = ({
   // show loading placeholders
   usePlaceholderData({ data: tableData, isLoading, setTableData })
 
-  const { rowSelection, setRowSelection, expanded, setExpanded } = useSlicerContext()
-
-  useEffect(() => {
-    // reset selection when slice changes
-    setRowSelection({})
-  }, [sliceId])
+  const { rowSelection, expanded, setExpanded } = useSlicerContext()
 
   const columns = useMemo<ColumnDef<TableRow>[]>(
     () => [
@@ -146,7 +141,7 @@ const SlicerTable: FC<SlicerTableProps> = ({
         ),
       },
     ],
-    [isLoading, sliceId, tableData],
+    [isLoading, sliceId, tableData, rowSelection],
   )
 
   const table = useReactTable({
@@ -163,7 +158,6 @@ const SlicerTable: FC<SlicerTableProps> = ({
     enableRowSelection: true, //enable row selection for all rows
     getRowId: (row) => row.id,
     enableSubRowSelection: false, //disable sub row selection
-    onRowSelectionChange: setRowSelection,
     onExpandedChange: setExpanded,
     getSubRows: (row) => row.subRows,
     getCoreRowModel: getCoreRowModel(),
@@ -190,11 +184,9 @@ const SlicerTable: FC<SlicerTableProps> = ({
     overscan: 5,
   })
 
+  // handles all of the selection logic
   const { handleRowSelect } = useRowSelection({
-    table,
     rows,
-    rowSelection,
-    setRowSelection,
   })
 
   const { handleRowKeyDown } = useRowKeydown({ handleRowSelect })

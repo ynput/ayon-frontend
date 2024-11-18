@@ -4,6 +4,7 @@ import useHierarchyTable from './useHierarchyTable'
 import useUsersTable from './useUsersTable'
 import { TableRow } from '../SlicerTable'
 import useProjectAnatomySlices from './useProjectAnatomySlices'
+import { useSlicerContext } from '@context/slicerContext'
 
 interface Props {
   sliceFields: SliceType[]
@@ -37,6 +38,7 @@ interface TableData {
 }
 
 const useTableDataBySlice = ({ sliceFields }: Props): TableData => {
+  const { setRowSelection } = useSlicerContext()
   const projectName = useAppSelector((state) => state.project.name)
 
   const [sliceType, setSliceType] = useState<SliceType>('hierarchy')
@@ -119,6 +121,8 @@ const useTableDataBySlice = ({ sliceFields }: Props): TableData => {
   const handleSliceChange = async (newSlice: SliceType) => {
     try {
       setSliceType(newSlice)
+      // clear row selection
+      setRowSelection({})
     } catch (error) {
       console.error('Error changing slice:', error)
     }

@@ -1,4 +1,4 @@
-import Hierarchy from '@containers/hierarchy'
+import Slicer from '@containers/Slicer'
 import TasksProgress from '@containers/TasksProgress'
 import { useGetProjectQuery } from '@queries/project/getProject'
 import { $Any } from '@types'
@@ -28,7 +28,7 @@ const TasksProgressPage: FC = () => {
       <Splitter layout="horizontal" style={{ width: '100%', height: '100%' }}>
         <SplitterPanel size={detailsOpen ? 12 : 18} style={{ minWidth: 227, maxWidth: 500 }}>
           <Section wrap>
-            <Hierarchy />
+            <Slicer sliceFields={['hierarchy']} />
           </Section>
         </SplitterPanel>
         <SplitterPanel size={90} style={{ overflow: 'hidden' }}>
