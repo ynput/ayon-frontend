@@ -100,7 +100,7 @@ const SlicerTable: FC<SlicerTableProps> = ({
   // show loading placeholders
   usePlaceholderData({ data: tableData, isLoading, setTableData })
 
-  const { rowSelection, expanded, setExpanded } = useSlicerContext()
+  const { rowSelection, expanded, setExpanded, onExpandedChange } = useSlicerContext()
 
   const columns = useMemo<ColumnDef<TableRow>[]>(
     () => [
@@ -158,7 +158,13 @@ const SlicerTable: FC<SlicerTableProps> = ({
     enableRowSelection: true, //enable row selection for all rows
     getRowId: (row) => row.id,
     enableSubRowSelection: false, //disable sub row selection
-    onExpandedChange: setExpanded,
+    onExpandedChange: (updater) => {
+      setExpanded((old) => {
+        const newExpanded = updater instanceof Function ? updater(old) : updater
+        onExpandedChange?.(newExpanded)
+        return newExpanded
+      })
+    },
     getSubRows: (row) => row.subRows,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
