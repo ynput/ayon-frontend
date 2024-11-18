@@ -1,7 +1,6 @@
 import { FC, useEffect, useMemo, useRef, useState } from 'react'
 import * as Styled from './SlicerTable.styled'
 import {
-  ExpandedState,
   useReactTable,
   getCoreRowModel,
   getFilteredRowModel,
@@ -9,7 +8,6 @@ import {
   ColumnDef,
   flexRender,
   Row,
-  RowSelectionState,
   FilterFn,
   SortingFn,
   sortingFns,
@@ -23,6 +21,7 @@ import useRowKeydown from './hooks/useRowKeydown'
 import usePlaceholderData from './hooks/usePlaceholderData'
 
 import { RankingInfo, rankItem, compareItems } from '@tanstack/match-sorter-utils'
+import { useSlicerContext } from '@context/slicerContext'
 
 declare module '@tanstack/react-table' {
   //add fuzzy filter to the filterFns
@@ -101,14 +100,12 @@ const SlicerTable: FC<SlicerTableProps> = ({
   // show loading placeholders
   usePlaceholderData({ data: tableData, isLoading, setTableData })
 
-  const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
+  const { rowSelection, setRowSelection, expanded, setExpanded } = useSlicerContext()
 
   useEffect(() => {
     // reset selection when slice changes
     setRowSelection({})
   }, [sliceId])
-
-  const [expanded, setExpanded] = useState<ExpandedState>({})
 
   const columns = useMemo<ColumnDef<TableRow>[]>(
     () => [
