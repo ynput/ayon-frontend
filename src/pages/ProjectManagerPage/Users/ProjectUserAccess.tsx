@@ -21,10 +21,8 @@ import {
   getAccessGroupUsers,
   getAllProjectUsers,
   getErrorInfo,
-  getFilteredAccessGroups,
-  getFilteredProjects,
+  getFilteredEntities,
   getFilteredSelectedProjects,
-  getFilteredUsers,
   getSelectedUsers,
   mapUsersByAccessGroups,
 } from './mappers'
@@ -37,7 +35,7 @@ import ProjectUserAccessProjectList from './ProjectUserAccessProjectList'
 import { StyledEmptyPlaceholder, StyledEmptyPlaceholderWrapper, StyledHeader } from './ProjectUserAccess.styled'
 import SplitterContainerThreePanes from './SplitterThreePanes'
 import SplitterContainerTwoPanes from './SplitterTwoPanes'
-import { UserNode } from '@api/graphql'
+import { ProjectNode, UserNode } from '@api/graphql'
 
 const StyledButton = styled(Button)`
   .shortcut {
@@ -95,14 +93,14 @@ const ProjectUserAccess = () => {
   const isUser = useSelector((state: $Any) => state.user.data.isUser)
   const userPermissions = useUserProjectPermissions(!isUser)
 
-  const projectFilters = (filters || []).find((filter: Filter) => filter.label === 'Project')
+  const projectFilters = (filters || []).filter((filter: Filter) => filter.label === 'Project')
   // @ts-ignore Weird one, the response type seems to be mismatched?
-  const filteredProjects = getFilteredProjects(Array.from(projects || []), projectFilters)
+  const filteredProjects = getFilteredEntities<ProjectNode>(Array.from(projects || []), projectFilters)
   const filteredSelectedProjects = getFilteredSelectedProjects(selectedProjects, filteredProjects)
 
-  const userFilter = filters?.find((el: Filter) => el.label === 'User')
-  const filteredNonManagerUsers = getFilteredUsers(activeNonManagerUsers, userFilter)
-  const filteredUnassignedUsers = getFilteredUsers(unassignedUsers, userFilter)
+  const userFilter = filters?.filter((el: Filter) => el.label === 'User')
+  const filteredNonManagerUsers = getFilteredEntities<UserNode>(activeNonManagerUsers, userFilter)
+  const filteredUnassignedUsers = getFilteredEntities<UserNode>(unassignedUsers, userFilter)
   const selectedUnassignedUsers = getSelectedUsers(
     selectedAccessGroupUsers,
     filteredUnassignedUsers,
@@ -117,9 +115,9 @@ const ProjectUserAccess = () => {
     getSelectedUsers(selectedAccessGroupUsers, [], true).length > 0 &&
     selectedAccessGroupUsers?.accessGroup != undefined
 
-  const filteredAccessGroups = getFilteredAccessGroups(
+  const filteredAccessGroups = getFilteredEntities(
     accessGroupList,
-    filters.find((filter: Filter) => filter.label === 'Access Group'),
+    filters.filter((filter: Filter) => filter.label === 'Access Group'),
   )
 
   const [ctxMenuShow] = useCreateContext([])

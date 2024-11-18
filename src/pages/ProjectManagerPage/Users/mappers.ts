@@ -1,6 +1,5 @@
-import { AccessGroupObject } from '@api/rest/accessGroups'
 import { AccessGroupUsers, ListingError, SelectedAccessGroupUsers, SelectionStatus } from './types'
-import { Filter } from '@components/SearchFilter/types'
+import { Filter, FilterValue } from '@components/SearchFilter/types'
 import { ProjectNode, UserNode } from '@api/graphql'
 import { GetProjectsUsersApiResponse } from '@queries/project/getProject'
 import { UserPermissions, UserPermissionsEntity } from '@hooks/useUserProjectPermissions'
@@ -78,61 +77,68 @@ const getFilteredSelectedProjects = (projects: string[], filteredProjects: Proje
   return projects.filter((project) => filteredProjectNames.includes(project))
 }
 
-const exactFilter = <T extends { name: string }>(entities: T[], filters: Filter): T[] => {
-  const filterUsers = filters && filters.values!.map((match: Filter) => match.id)
-  if (filters!.inverted) {
-    return entities.filter((entity: T) => !filterUsers.includes(entity.name))
+const exactFilter = <T extends { name: string }>(
+  entities: T[],
+  filterValues: FilterValue[],
+  inverted: boolean = false,
+): T[] => {
+  let matches: string[] = []
+  if (filterValues) {
+    matches.push(...filterValues.map((value: FilterValue) => value.id))
   }
-  return entities.filter((entity: T) => filterUsers.includes(entity.name))
+
+  if (inverted) {
+    return entities.filter((entity: T) => !matches.includes(entity.name))
+  }
+
+  return entities.filter((entity: T) => matches.includes(entity.name))
 }
 
-const fuzzyFilter = <T extends { name: string }>(entities: T[], filters: Filter): T[] => {
-  const filterString = filters.values![0].id
+const fuzzyFilter = <T extends { name: string }>(
+  entities: T[],
+  filterValue: FilterValue,
+  inverted: boolean = false,
+): T[] => {
+  const filterString = filterValue.id
 
   const matches = matchSorter(entities, filterString, { keys: ['name'] })
-  if (filters!.inverted) {
+  if (inverted) {
     return entities.filter((entity: T) => !matches.includes(entity))
   }
 
-  return matches
+  return entities.filter((entity: T) => matches.includes(entity))
 }
 
-const getFilteredProjects = (projects: ProjectNode[], filter?: Filter): ProjectNode[] => {
-  if (!filter || !filter.values || filter.values.length == 0) {
+const getFilteredEntities = <T extends {name: string}>(projects: T[], filters: Filter[] = []): T[] => {
+  if (filters.length == 0) {
     return projects
   }
 
-  if (filter.values!.length == 1 && filter.values[0]!.isCustom) {
-    return fuzzyFilter(projects, filter)
+  let intersection: Set<T> | null = null
+  for (const filter of filters) {
+    let matches: T[] = []
+    if (!filter.values) {
+      continue
+    }
+
+    for (const filterItem of filter.values.filter((filterValue) => filterValue.isCustom)) {
+      matches.push(...fuzzyFilter(projects, filterItem, filter.inverted))
+    }
+    const exactMatches = exactFilter(
+      projects,
+      filter.values.filter((filterValue) => !filterValue.isCustom),
+      filter.inverted,
+    )
+    matches.push(...exactMatches)
+    if (intersection === null) {
+      intersection = new Set(matches)
+      continue
+    }
+
+    intersection = intersection.intersection(new Set(matches))
   }
 
-  return exactFilter(projects, filter)
-}
-
-const getFilteredUsers = (users: UserNode[], filter?: Filter): UserNode[] => {
-  if (!filter || !filter.values || filter.values.length == 0) {
-    return users
-  }
-
-  if (filter.values!.length == 1 && filter.values[0]!.isCustom) {
-    return fuzzyFilter(users, filter)
-  }
-
-  return exactFilter(users, filter)
-}
-
-const getFilteredAccessGroups = (
-  accessGroupList: AccessGroupObject[],
-  filter?: Filter,
-): AccessGroupObject[] => {
-  if (!filter || !filter.values || filter.values.length == 0) {
-    return accessGroupList
-  }
-  if (filter.values!.length == 1 && filter.values[0]!.isCustom) {
-    return fuzzyFilter(accessGroupList, filter)
-  }
-
-  return exactFilter(accessGroupList, filter)
+  return Array.from(intersection || [])
 }
 
 const canAllEditUsers = (projects: string[], userPermissions?: UserPermissions) => {
@@ -182,7 +188,6 @@ const getErrorInfo = (
   filteredSelectedProjects: string[],
   userPermissions?: UserPermissions,
 ): ListingError | null => {
-
   const projectDisabled =
     filteredSelectedProjects.length == 1 &&
     !filteredProjects.find((project: ProjectNode) => project.name == filteredSelectedProjects[0])!
@@ -197,7 +202,7 @@ const getErrorInfo = (
     return {
       icon: 'admin_panel_settings',
       message: 'Missing permissions',
-      details: 'Project user management permissions are missing. Contact an admin for more info.'
+      details: 'Project user management permissions are missing. Contact an admin for more info.',
     }
   }
 
@@ -230,12 +235,10 @@ export {
   canAllEditUsers,
   mapUsersByAccessGroups,
   getAllProjectUsers,
-  getFilteredAccessGroups,
   getSelectedUsers,
   getAccessGroupUsers,
   getFilteredSelectedProjects,
-  getFilteredProjects,
-  getFilteredUsers,
+  getFilteredEntities,
   mapInitialAccessGroupStates,
   getErrorInfo,
 }

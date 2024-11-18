@@ -1,12 +1,13 @@
 import { useMemo, useState } from 'react'
-import { FormLayout, Dialog, Button, Icon, Spacer } from '@ynput/ayon-react-components'
-import { $Any } from '@types'
 import clsx from 'clsx'
-import * as Styled from './ProjectUserAccessAssignDialog.styled'
-import { AccessGroupUsers, SelectionStatus } from './types'
+
+import { FormLayout, Dialog, Button, Icon, Spacer, ShortcutTag } from '@ynput/ayon-react-components'
+import { $Any } from '@types'
 import Shortcuts from '@containers/Shortcuts'
-import { mapInitialAccessGroupStates } from './mappers'
 import { getPlatformShortcutKey, KeyMode } from '@helpers/platform'
+import { mapInitialAccessGroupStates } from './mappers'
+import { AccessGroupUsers, SelectionStatus } from './types'
+import * as Styled from './ProjectUserAccessAssignDialog.styled'
 
 const icons: {[key in SelectionStatus] : string | undefined} = {
   [SelectionStatus.None]: 'add',
@@ -97,8 +98,8 @@ const ProjectUserAccessAssignDialog = ({
               className={clsx({ 'all-selected': allSelected })}
               label={(allSelected ? 'Deselect all' : 'Select all')}
               onClick={() => handleToggleAll(!allSelected)}
-              shortcut={{ children: getPlatformShortcutKey('a', [KeyMode.Ctrl]) }}
             >
+              <ShortcutTag>{getPlatformShortcutKey('a', [KeyMode.Ctrl])}</ShortcutTag>
             </Styled.Button>
             <Spacer />
             <Button icon="check" variant="filled" label="Save" onClick={() => handleSave()} />
