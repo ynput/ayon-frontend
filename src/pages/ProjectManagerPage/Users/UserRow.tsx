@@ -21,7 +21,7 @@ const StyledProfileRow = styled.div`
       border-radius: var(--border-radius-m);
     }
   }
-  &:hover {
+  &.hovering {
     button {
       visibility: visible;
     }
@@ -42,6 +42,7 @@ type Props = {
   rowData: $Any
   selected: boolean
   isUnassigned: boolean
+  hovering: boolean
   showButtonsOnHover: boolean
   addButtonDisabled: boolean
   showAddMoreButton: boolean
@@ -54,6 +55,7 @@ export const UserRow = ({
   rowData,
   selected = false,
   isUnassigned = false,
+  hovering = false,
   showButtonsOnHover = false,
   addButtonDisabled = false,
   showAddMoreButton = false,
@@ -63,7 +65,7 @@ export const UserRow = ({
 }: Props) => {
   const { name, self, isMissing } = rowData
   return (
-    <StyledProfileRow className={clsx({ actionable: showButtonsOnHover, selected })}>
+    <StyledProfileRow className={clsx({ actionable: showButtonsOnHover, selected, hovering })}>
       {/* @ts-ignore */}
       <UserImage name={name} highlight={self} size={22} />
       <span

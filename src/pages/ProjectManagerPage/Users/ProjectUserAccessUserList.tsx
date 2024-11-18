@@ -9,12 +9,15 @@ import { UserNode } from '@api/graphql'
 import UserRow from './UserRow'
 import { Filter } from '@components/SearchFilter/types'
 import { StyledEmptyPlaceholder, StyledEmptyPlaceholderWrapper } from './ProjectUserAccess.styled'
+import { HoveredUser } from './types'
 
 
 type Props = {
   selectedProjects: string[]
   selectedUsers: string[]
   tableList: $Any
+  accessGroup?: string
+  hoveredUser?: HoveredUser
   filters?: Filter
   isLoading: boolean
   readOnly: boolean,
@@ -34,6 +37,8 @@ const ProjectUserAccessUserList = ({
   selectedProjects,
   selectedUsers,
   tableList,
+  accessGroup,
+  hoveredUser,
   filters,
   isLoading,
   readOnly,
@@ -101,6 +106,7 @@ const ProjectUserAccessUserList = ({
                   showAddMoreButton={showAddMoreButton}
                   readOnly={readOnly}
                   onAdd={(user?: string) => onAdd(user ? [user] : undefined)}
+                  hovering={hoveredUser?.user == rowData.name && hoveredUser?.accessGroup === accessGroup}
                   onRemove={() => {
                     onRemove && onRemove([rowData.name])
                   }}

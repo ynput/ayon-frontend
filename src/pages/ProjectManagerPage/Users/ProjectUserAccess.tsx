@@ -325,6 +325,7 @@ const ProjectUserAccess = () => {
           tableList={filteredUnassignedUsers}
           isLoading={isLoading}
           readOnly={!hasEditRightsOnProject}
+          hoveredUser={hoveredUser}
           onContextMenu={handleAddContextMenu}
           onAdd={handleAdd}
           onHoverRow={(userName: string) => {
@@ -363,6 +364,8 @@ const ProjectUserAccess = () => {
                   header={accessGroup}
                   readOnly={!hasEditRightsOnProject}
                   showAddMoreButton={filteredAccessGroups.length > 1}
+                  hoveredUser={hoveredUser}
+                  accessGroup={accessGroup}
                   emptyMessage="No users assigned"
                   onContextMenu={(e: $Any) => handleRemoveContextMenu(e, accessGroup)}
                   tableList={filteredNonManagerUsers.filter(
