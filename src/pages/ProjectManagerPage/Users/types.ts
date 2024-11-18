@@ -18,3 +18,8 @@ export enum SelectionStatus {
   Mixed = 'mixed',
   All = 'all',
 }
+export type ListingError = {
+  icon: string
+  message: string
+  details?: string
+}

@@ -8,10 +8,6 @@ import { TablePanel } from '@ynput/ayon-react-components'
 import { ProjectNode } from '@api/graphql'
 import { UserPermissions, UserPermissionsEntity } from '@hooks/useUserProjectPermissions'
 
-const formatName = (rowData: ProjectNode, userPermissions: UserPermissions) => {
-  const readOnly = !userPermissions.canEdit(UserPermissionsEntity.users, rowData.name)
-  return rowData.name + (readOnly ? ' (read only)' : '')
-}
 
 const StyledProjectName = styled.div`
   /* use grid to stack items on top of each other */
@@ -42,6 +38,13 @@ const StyledProjectName = styled.div`
     }
   }
 `
+
+const formatName = (rowData: ProjectNode, userPermissions: UserPermissions) => {
+  const readOnly =
+    !userPermissions.canEdit(UserPermissionsEntity.users, rowData.name) &&
+    userPermissions.canView(UserPermissionsEntity.users, rowData.name)
+  return rowData.name + (readOnly ? ' (read only)' : '')
+}
 
 type Props = {
   projects: ProjectNode[]
@@ -86,8 +89,11 @@ const ProjectUserAccessProjectList = ({ projects, isLoading, selection, userPerm
           header="Project name"
           body={(rowData) => {
           const isActive = rowData.active
+          const hasPermissions =
+            userPermissions.canEdit(UserPermissionsEntity.users, rowData.name) ||
+            userPermissions.canView(UserPermissionsEntity.users, rowData.name)
             return (
-              <StyledProjectName className={clsx({ isActive })}>
+              <StyledProjectName className={clsx({ isActive: isActive && hasPermissions})}>
                 <span>{formatName(rowData, userPermissions)}</span>
               </StyledProjectName>
             )

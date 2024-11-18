@@ -7,7 +7,6 @@ import clsx from 'clsx'
 import { $Any } from '@types'
 import { UserNode } from '@api/graphql'
 import UserRow from './UserRow'
-import { Filter } from '@components/SearchFilter/types'
 import { StyledEmptyPlaceholder, StyledEmptyPlaceholderWrapper } from './ProjectUserAccess.styled'
 import { HoveredUser } from './types'
 
@@ -18,7 +17,6 @@ type Props = {
   tableList: $Any
   accessGroup?: string
   hoveredUser?: HoveredUser
-  filters?: Filter
   isLoading: boolean
   readOnly: boolean,
   header?: string
@@ -39,7 +37,6 @@ const ProjectUserAccessUserList = ({
   tableList,
   accessGroup,
   hoveredUser,
-  filters,
   isLoading,
   readOnly,
   header,

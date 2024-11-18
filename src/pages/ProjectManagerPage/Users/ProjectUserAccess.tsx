@@ -4,10 +4,8 @@ import { useSelector } from 'react-redux'
 import { useEffect, useMemo, useState } from 'react'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { $Any } from '@types'
-import { ProjectNode, UserNode } from '@api/graphql'
 import { Button, Toolbar } from '@ynput/ayon-react-components'
 import { AccessGroupObject } from '@api/rest/accessGroups'
-import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
 import { Filter } from '@components/SearchFilter/types'
 import Shortcuts from '@containers/Shortcuts'
 import { useShortcutsContext } from '@context/shortcutsContext'
@@ -22,6 +20,7 @@ import {
   canAllEditUsers,
   getAccessGroupUsers,
   getAllProjectUsers,
+  getErrorInfo,
   getFilteredAccessGroups,
   getFilteredProjects,
   getFilteredSelectedProjects,
@@ -38,7 +37,7 @@ import ProjectUserAccessProjectList from './ProjectUserAccessProjectList'
 import { StyledEmptyPlaceholder, StyledEmptyPlaceholderWrapper, StyledHeader } from './ProjectUserAccess.styled'
 import SplitterContainerThreePanes from './SplitterThreePanes'
 import SplitterContainerTwoPanes from './SplitterTwoPanes'
-
+import { UserNode } from '@api/graphql'
 
 const StyledButton = styled(Button)`
   .shortcut {
@@ -64,7 +63,12 @@ const ProjectUserAccess = () => {
   const [filters, setFilters] = userPageFilters()
 
   const selfName = useSelector((state: $Any) => state.user.name)
-  let { data: userList = [], isLoading } = useGetUsersQuery({ selfName })
+  let {
+    data: userList = [],
+    isLoading: isLoadingUsersList,
+    isError: usersFetchError,
+  } = useGetUsersQuery({ selfName })
+
   const activeNonManagerUsers = userList.filter(
     (user: UserNode) => !user.isAdmin && !user.isManager && user.active,
   )
@@ -289,15 +293,7 @@ const ProjectUserAccess = () => {
     setSelectedProjects(filteredSelection)
   }
 
-  const projectDisabled =
-    filteredSelectedProjects.length == 1 &&
-    !filteredProjects.find((project: ProjectNode) => project.name == filteredSelectedProjects[0])!
-      .active
-
-  const missingPermissions =
-    (filteredSelectedProjects.length == 1 &&
-      !userPermissions?.canView(UserPermissionsEntity.users, filteredSelectedProjects[0])) ||
-    !userPermissions?.canViewAny(UserPermissionsEntity.users)
+  const errorInfo = getErrorInfo(usersFetchError, filteredProjects, filteredSelectedProjects, userPermissions)
 
   const projectsContent = (
     <>
@@ -323,7 +319,7 @@ const ProjectUserAccess = () => {
           selectedProjects={filteredSelectedProjects}
           selectedUsers={selectedUnassignedUsers}
           tableList={filteredUnassignedUsers}
-          isLoading={isLoading}
+          isLoading={isLoadingUsersList}
           readOnly={!hasEditRightsOnProject}
           hoveredUser={hoveredUser}
           onContextMenu={handleAddContextMenu}
@@ -380,7 +376,7 @@ const ProjectUserAccess = () => {
                   }
                   onAdd={() => handleAdd()}
                   onRemove={onRemove(accessGroup)}
-                  isLoading={isLoading}
+                  isLoading={isLoadingUsersList}
                 />
               </SplitterPanel>
             )
@@ -430,7 +426,7 @@ const ProjectUserAccess = () => {
         </StyledButton>
       </Toolbar>
 
-      {filteredSelectedProjects.length > 0 && !missingPermissions && !projectDisabled ? (
+      {!errorInfo ? (
         <SplitterContainerThreePanes
           leftContent={projectsContent}
           mainContent={unasssignedUsersContent}
@@ -441,26 +437,11 @@ const ProjectUserAccess = () => {
           leftContent={projectsContent}
           mainContent={
             <StyledEmptyPlaceholderWrapper>
-              {missingPermissions && (
-                <EmptyPlaceholder
-                  message="You don't have permissions to view the this project's users"
-                  icon="person"
-                />
-              )}
-              {filteredSelectedProjects.length == 0 && (
-                <StyledEmptyPlaceholder message={'No project selected'} icon={'list'}>
-                  <span style={{ textAlign: 'center' }}>
-                    Select an active project to manage users its access groups
-                  </span>
-                </StyledEmptyPlaceholder>
-              )}
-              {projectDisabled && (
-                <StyledEmptyPlaceholder message={'Project disabled'} icon={'list'}>
-                  <span style={{ textAlign: 'center' }}>
-                    Select an active project to manage users its access groups
-                  </span>
-                </StyledEmptyPlaceholder>
-              )}
+              <StyledEmptyPlaceholder message={errorInfo!.message} icon={errorInfo!.icon}>
+                {errorInfo!.details && (
+                  <span style={{ textAlign: 'center' }}>{errorInfo!.details!}</span>
+                )}
+              </StyledEmptyPlaceholder>
             </StyledEmptyPlaceholderWrapper>
           }
         />

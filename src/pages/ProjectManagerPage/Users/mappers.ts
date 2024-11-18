@@ -1,5 +1,5 @@
 import { AccessGroupObject } from '@api/rest/accessGroups'
-import { AccessGroupUsers, SelectedAccessGroupUsers, SelectionStatus } from './types'
+import { AccessGroupUsers, ListingError, SelectedAccessGroupUsers, SelectionStatus } from './types'
 import { Filter } from '@components/SearchFilter/types'
 import { ProjectNode, UserNode } from '@api/graphql'
 import { GetProjectsUsersApiResponse } from '@queries/project/getProject'
@@ -42,7 +42,6 @@ const mapUsersByAccessGroups = (
   return groupedUsers
 }
 
-
 const getSelectedUsers = (
   selectedAccessGroupUsers: SelectedAccessGroupUsers | undefined,
   filteredUsers: UserNode[],
@@ -70,16 +69,16 @@ const getAccessGroupUsers = (
   return selectedAccessGroupUsers.accessGroup === accessGroup ? selectedAccessGroupUsers.users : []
 }
 
-const getFilteredSelectedProjects = (projects: string[], filteredProjects: ProjectNode[] ) => {
+const getFilteredSelectedProjects = (projects: string[], filteredProjects: ProjectNode[]) => {
   if (!filteredProjects) {
     return projects
   }
 
-  const filteredProjectNames = filteredProjects.map(project => project.name)
+  const filteredProjectNames = filteredProjects.map((project) => project.name)
   return projects.filter((project) => filteredProjectNames.includes(project))
 }
 
-const exactFilter = <T extends {name: string}>(entities: T[], filters: Filter): T[] => {
+const exactFilter = <T extends { name: string }>(entities: T[], filters: Filter): T[] => {
   const filterUsers = filters && filters.values!.map((match: Filter) => match.id)
   if (filters!.inverted) {
     return entities.filter((entity: T) => !filterUsers.includes(entity.name))
@@ -87,10 +86,10 @@ const exactFilter = <T extends {name: string}>(entities: T[], filters: Filter): 
   return entities.filter((entity: T) => filterUsers.includes(entity.name))
 }
 
-const fuzzyFilter = <T extends {name: string}>(entities: T[], filters: Filter): T[] => {
+const fuzzyFilter = <T extends { name: string }>(entities: T[], filters: Filter): T[] => {
   const filterString = filters.values![0].id
 
-  const matches = matchSorter(entities, filterString, {keys: ['name']})
+  const matches = matchSorter(entities, filterString, { keys: ['name'] })
   if (filters!.inverted) {
     return entities.filter((entity: T) => !matches.includes(entity))
   }
@@ -146,36 +145,86 @@ const canAllEditUsers = (projects: string[], userPermissions?: UserPermissions) 
   return true
 }
 
-  const mapInitialAccessGroupStates = (
-    accessGroups: $Any[],
-    users: string[],
-    userAccessGroups: AccessGroupUsers,
-  ) => {
-    const getStatus = (users: string[], accessGroupUsers: string[]) => {
-      const usersSet = new Set(users)
-      const accessGroupUsersSet = new Set(accessGroupUsers)
-      const intersection = usersSet.intersection(accessGroupUsersSet)
+const mapInitialAccessGroupStates = (
+  accessGroups: $Any[],
+  users: string[],
+  userAccessGroups: AccessGroupUsers,
+) => {
+  const getStatus = (users: string[], accessGroupUsers: string[]) => {
+    const usersSet = new Set(users)
+    const accessGroupUsersSet = new Set(accessGroupUsers)
+    const intersection = usersSet.intersection(accessGroupUsersSet)
 
-      // No users in ag users
-      if (intersection.size == 0) {
-        return SelectionStatus.None
-      }
-
-      //All users / some users in ag users
-      return intersection.size == usersSet.size ? SelectionStatus.All : SelectionStatus.Mixed
+    // No users in ag users
+    if (intersection.size == 0) {
+      return SelectionStatus.None
     }
 
-    const data: $Any = {}
-    accessGroups.map((ag) => {
-      if (userAccessGroups[ag.name] === undefined) {
-        data[ag.name] = SelectionStatus.None
-      } else {
-        data[ag.name] = getStatus(users, userAccessGroups[ag.name])
-      }
-    })
-
-    return data
+    //All users / some users in ag users
+    return intersection.size == usersSet.size ? SelectionStatus.All : SelectionStatus.Mixed
   }
+
+  const data: $Any = {}
+  accessGroups.map((ag) => {
+    if (userAccessGroups[ag.name] === undefined) {
+      data[ag.name] = SelectionStatus.None
+    } else {
+      data[ag.name] = getStatus(users, userAccessGroups[ag.name])
+    }
+  })
+
+  return data
+}
+
+const getErrorInfo = (
+  usersFetchError: boolean,
+  filteredProjects: ProjectNode[],
+  filteredSelectedProjects: string[],
+  userPermissions?: UserPermissions,
+): ListingError | null => {
+
+  const projectDisabled =
+    filteredSelectedProjects.length == 1 &&
+    !filteredProjects.find((project: ProjectNode) => project.name == filteredSelectedProjects[0])!
+      .active
+
+  const missingPermissions =
+    (filteredSelectedProjects.length == 1 &&
+      !userPermissions?.canView(UserPermissionsEntity.users, filteredSelectedProjects[0])) ||
+    !userPermissions?.canViewAny(UserPermissionsEntity.users)
+
+  if (usersFetchError) {
+    return {
+      icon: 'admin_panel_settings',
+      message: 'Missing permissions',
+      details: 'Project user management permissions are missing. Contact an admin for more info.'
+    }
+  }
+
+  if (missingPermissions) {
+    return {
+      icon: 'person',
+      message: 'Missing permissions',
+      details: "You don't have permissions to manage this project's users",
+    }
+  }
+
+  if (projectDisabled) {
+    return {
+      icon: 'list',
+      message: 'Project disabled',
+      details: 'Select an active project to manage users its access groups',
+    }
+  }
+
+  if (filteredSelectedProjects.length == 0) {
+    return {
+      icon: 'list',
+      message: 'Select an active project to manage users its access groups',
+    }
+  }
+  return null
+}
 
 export {
   canAllEditUsers,
@@ -188,4 +237,5 @@ export {
   getFilteredProjects,
   getFilteredUsers,
   mapInitialAccessGroupStates,
+  getErrorInfo,
 }
