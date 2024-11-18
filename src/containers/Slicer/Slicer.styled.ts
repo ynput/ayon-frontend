@@ -30,4 +30,19 @@ export const SlicerDropdown = styled(Dropdown)`
       display: none;
     }
   }
+
+  &.single-option {
+    .control {
+      display: none;
+    }
+
+    .button {
+      .template-value {
+        cursor: default;
+      }
+      &:hover {
+        background-color: unset;
+      }
+    }
+  }
 `

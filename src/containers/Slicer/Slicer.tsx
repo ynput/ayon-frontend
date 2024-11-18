@@ -4,6 +4,7 @@ import SlicerTable from './SlicerTable'
 
 import useTableDataBySlice, { SliceType } from './hooks/useTableDataBySlice'
 import SlicerSearch from './SlicerSearch'
+import clsx from 'clsx'
 
 interface SlicerProps {
   sliceFields: SliceType[]
@@ -27,6 +28,8 @@ const Slicer: FC<SlicerProps> = ({ sliceFields = [] }) => {
           options={sliceOptions || []}
           value={[sliceType]}
           onChange={(value) => handleSliceChange(value[0] as SliceType)}
+          className={clsx('slicer-dropdown', { 'single-option': sliceOptions.length === 1 })}
+          disableOpen={sliceOptions.length === 1}
         />
         <SlicerSearch value={globalFilter} onChange={setGlobalFilter} />
       </Styled.Header>

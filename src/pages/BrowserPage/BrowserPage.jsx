@@ -20,7 +20,7 @@ const BrowserPage = () => {
       >
         <SplitterPanel size={18} style={{ minWidth: 250, maxWidth: 600 }}>
           <Section wrap>
-            <Slicer />
+            <Slicer sliceFields={['hierarchy']} />
             <TaskList style={{ maxHeight: 300 }} />
           </Section>
         </SplitterPanel>
