@@ -36,3 +36,9 @@ export const StyledEmptyPlaceholderWrapper = styled.div`
     text-transform: capitalize;
   }
 `
+export const StyledHeader = styled.p`
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 700;
+  margin: 8px 0;
+`

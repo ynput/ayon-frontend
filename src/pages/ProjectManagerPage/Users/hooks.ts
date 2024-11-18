@@ -4,14 +4,9 @@ import { useState } from 'react'
 import { useUpdateProjectUsersMutation } from '@queries/project/updateProject'
 import { useDispatch } from 'react-redux'
 import { SelectionStatus } from './types'
-import { Filter, Option } from '@components/SearchFilter/types'
+import { Filter, FilterValue, Option } from '@components/SearchFilter/types'
 import { useAppSelector } from '@state/store'
 import { useSetFrontendPreferencesMutation } from '@queries/user/updateUser'
-
-type FilterValues = {
-  id: string
-  label: string
-}
 
 const useProjectAccessGroupData = () => {
   const udpateApiCache = (project: string, user: string, accessGroups: string[]) => {
@@ -112,7 +107,7 @@ const useProjectAccessSearchFilterBuiler = ({
   users,
   accessGroups,
 }: {
-  [key: string]: FilterValues[]
+  [key: string]: FilterValue[]
 }) => {
   const options: Option[] = [
     {

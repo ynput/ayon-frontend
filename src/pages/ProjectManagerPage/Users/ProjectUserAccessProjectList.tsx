@@ -8,8 +8,9 @@ import { TablePanel } from '@ynput/ayon-react-components'
 import { ProjectNode } from '@api/graphql'
 import { UserPermissions, UserPermissionsEntity } from '@hooks/useUserProjectPermissions'
 
-const formatName = (rowData: $Any, field: string) => {
-  return rowData[field]
+const formatName = (rowData: ProjectNode, userPermissions: UserPermissions) => {
+  const readOnly = !userPermissions.canEdit(UserPermissionsEntity.users, rowData.name)
+  return rowData.name + (readOnly ? ' (read only)' : '')
 }
 
 const StyledProjectName = styled.div`
@@ -58,9 +59,11 @@ const ProjectUserAccessProjectList = ({ projects, isLoading, selection, userPerm
     <TablePanel style={{ height: '100%' }}>
       <DataTable
         value={tableData.sort((a: ProjectNode, b: ProjectNode) => {
+          const aActive = a.active ? 10 : -10
+          const bActive = b.active ? 10 : -10
           const aPerm = userPermissions.canEdit(UserPermissionsEntity.users, a.name) ? 1 : -1
           const bPerm = userPermissions.canEdit(UserPermissionsEntity.users, b.name) ? 1 : -1
-          const mainComparison = bPerm - aPerm
+          const mainComparison = bActive - aActive + bPerm - aPerm
           if (mainComparison !== 0) {
             return mainComparison
           }
@@ -82,10 +85,10 @@ const ProjectUserAccessProjectList = ({ projects, isLoading, selection, userPerm
           field="name"
           header="Project name"
           body={(rowData) => {
-          const isActive = userPermissions.canEdit(UserPermissionsEntity.users, rowData.name)
+          const isActive = rowData.active
             return (
               <StyledProjectName className={clsx({ isActive })}>
-                <span>{formatName(rowData, 'name')}</span>
+                <span>{formatName(rowData, userPermissions)}</span>
               </StyledProjectName>
             )
           }}

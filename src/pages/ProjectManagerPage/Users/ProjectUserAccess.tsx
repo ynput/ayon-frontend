@@ -1,15 +1,23 @@
-import { ProjectNode, UserNode } from '@api/graphql'
-import { $Any } from '@types'
-import { Button, Toolbar } from '@ynput/ayon-react-components'
-import { Splitter, SplitterPanel } from 'primereact/splitter'
-import { useEffect, useMemo, useState } from 'react'
-import ProjectUserAccessUserList from './ProjectUserAccessUserList'
-import { useGetAccessGroupsQuery } from '@queries/accessGroups/getAccessGroups'
-import ProjectUserAccessAssignDialog from './ProjectUserAccessAssignDialog'
-import { HoveredUser, SelectedAccessGroupUsers, SelectionStatus } from './types'
-import { useProjectAccessGroupData, userPageFilters } from './hooks'
 import { toast } from 'react-toastify'
+import styled from 'styled-components'
+import { useSelector } from 'react-redux'
+import { useEffect, useMemo, useState } from 'react'
+import { Splitter, SplitterPanel } from 'primereact/splitter'
+import { $Any } from '@types'
+import { ProjectNode, UserNode } from '@api/graphql'
+import { Button, Toolbar } from '@ynput/ayon-react-components'
+import { AccessGroupObject } from '@api/rest/accessGroups'
+import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
+import { Filter } from '@components/SearchFilter/types'
+import Shortcuts from '@containers/Shortcuts'
+import { useShortcutsContext } from '@context/shortcutsContext'
+import useCreateContext from '@hooks/useCreateContext'
+import useUserProjectPermissions, { UserPermissionsEntity } from '@hooks/useUserProjectPermissions'
+import { useGetAccessGroupsQuery } from '@queries/accessGroups/getAccessGroups'
 import { useGetUsersQuery } from '@queries/user/getUsers'
+import { useListProjectsQuery } from '@queries/project/getProject'
+
+import ProjectManagerPageLayout from '../ProjectManagerPageLayout'
 import {
   canAllEditUsers,
   getAccessGroupUsers,
@@ -21,27 +29,16 @@ import {
   getSelectedUsers,
   mapUsersByAccessGroups,
 } from './mappers'
-import { useSelector } from 'react-redux'
-import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
-import styled from 'styled-components'
+import { HoveredUser, SelectedAccessGroupUsers, SelectionStatus } from './types'
+import { useProjectAccessGroupData, userPageFilters } from './hooks'
+import ProjectUserAccessUserList from './ProjectUserAccessUserList'
+import ProjectUserAccessAssignDialog from './ProjectUserAccessAssignDialog'
 import ProjectUserAccessSearchFilterWrapper from './ProjectUserAccessSearchFilterWrapper'
 import ProjectUserAccessProjectList from './ProjectUserAccessProjectList'
-import { Filter } from '@components/SearchFilter/types'
-import { AccessGroupObject } from '@api/rest/accessGroups'
-import { useListProjectsQuery } from '@queries/project/getProject'
-import useUserProjectPermissions, { UserPermissionsEntity } from '@hooks/useUserProjectPermissions'
-import ProjectManagerPageLayout from '../ProjectManagerPageLayout'
-import { StyledEmptyPlaceholder, StyledEmptyPlaceholderWrapper } from './ProjectUserAccess.styled'
-import useCreateContext from '@hooks/useCreateContext'
-import Shortcuts from '@containers/Shortcuts'
-import { useShortcutsContext } from '@context/shortcutsContext'
+import { StyledEmptyPlaceholder, StyledEmptyPlaceholderWrapper, StyledHeader } from './ProjectUserAccess.styled'
+import SplitterContainerThreePanes from './SplitterThreePanes'
+import SplitterContainerTwoPanes from './SplitterTwoPanes'
 
-const StyledHeader = styled.p`
-  font-size: 16px;
-  line-height: 24px;
-  font-weight: 700;
-  margin: 8px 0;
-`
 
 const StyledButton = styled(Button)`
   .shortcut {
@@ -55,7 +52,6 @@ const ProjectUserAccess = () => {
   const { data: accessGroupList = [] } = useGetAccessGroupsQuery({
     projectName: '_',
   })
-
 
   const {
     users: projectUsers,
@@ -96,27 +92,25 @@ const ProjectUserAccess = () => {
   const userPermissions = useUserProjectPermissions(!isUser)
 
   const projectFilters = (filters || []).find((filter: Filter) => filter.label === 'Project')
-  const filteredProjects = getFilteredProjects(
-    // @ts-ignore Weird one, the response type seems to be mismatched?
-    (projects || []).filter(
-      (project: ProjectNode) =>
-        project.active && userPermissions?.canView(UserPermissionsEntity.users, project.name),
-    ),
-    projectFilters,
-  )
+  // @ts-ignore Weird one, the response type seems to be mismatched?
+  const filteredProjects = getFilteredProjects(Array.from(projects || []), projectFilters)
   const filteredSelectedProjects = getFilteredSelectedProjects(selectedProjects, filteredProjects)
 
   const userFilter = filters?.find((el: Filter) => el.label === 'User')
   const filteredNonManagerUsers = getFilteredUsers(activeNonManagerUsers, userFilter)
   const filteredUnassignedUsers = getFilteredUsers(unassignedUsers, userFilter)
-  const selectedUnassignedUsers = getSelectedUsers(selectedAccessGroupUsers, filteredUnassignedUsers)
+  const selectedUnassignedUsers = getSelectedUsers(
+    selectedAccessGroupUsers,
+    filteredUnassignedUsers,
+  )
 
   const hasEditRightsOnProject =
     filteredSelectedProjects.length > 0 &&
     canAllEditUsers(filteredSelectedProjects, userPermissions)
   const addActionEnabled = hasEditRightsOnProject && selectedUnassignedUsers.length > 0
-  const removeActionEnabled = hasEditRightsOnProject &&
-  getSelectedUsers(selectedAccessGroupUsers, [], true).length > 0 &&
+  const removeActionEnabled =
+    hasEditRightsOnProject &&
+    getSelectedUsers(selectedAccessGroupUsers, [], true).length > 0 &&
     selectedAccessGroupUsers?.accessGroup != undefined
 
   const filteredAccessGroups = getFilteredAccessGroups(
@@ -241,13 +235,16 @@ const ProjectUserAccess = () => {
       {
         key: 'a',
         action: () => {
-          if(!selectedAccessGroupUsers?.users && !hoveredUser?.user) {
+          if (!selectedAccessGroupUsers?.users && !hoveredUser?.user) {
             return
           }
           let actionedUsers = selectedAccessGroupUsers?.users || []
           if (hoveredUser?.user && !actionedUsers.includes(hoveredUser.user)) {
             actionedUsers = [hoveredUser.user]
-            setSelectedAccessGroupUsers({ accessGroup: hoveredUser.accessGroup, users: [hoveredUser.user]})
+            setSelectedAccessGroupUsers({
+              accessGroup: hoveredUser.accessGroup,
+              users: [hoveredUser.user],
+            })
           }
 
           handleAdd(actionedUsers)
@@ -265,7 +262,10 @@ const ProjectUserAccess = () => {
           if (hoveredUser?.user && !actionedUsers.includes(hoveredUser.user)) {
             actionedUsers = [hoveredUser.user]
             actionedAccessGroup = hoveredUser.accessGroup
-            setSelectedAccessGroupUsers({ accessGroup: hoveredUser.accessGroup, users: [hoveredUser.user]})
+            setSelectedAccessGroupUsers({
+              accessGroup: hoveredUser.accessGroup,
+              users: [hoveredUser.user],
+            })
           }
 
           onRemove(actionedAccessGroup)(actionedUsers)
@@ -281,26 +281,120 @@ const ProjectUserAccess = () => {
       return
     }
 
-    const filteredSelection = selection.filter((projectName) =>
-      userPermissions?.canEdit(UserPermissionsEntity.users, projectName),
+    const filteredSelection = selection.filter(
+      (projectName) =>
+        userPermissions?.canEdit(UserPermissionsEntity.users, projectName) &&
+        filteredProjects!.find((project) => project.name == projectName)!.active,
     )
     setSelectedProjects(filteredSelection)
   }
 
-  if (!userPermissions?.canViewAny(UserPermissionsEntity.users)) {
-    return (
-      <EmptyPlaceholder
-        message="You don't have permissions to view the this project's users"
-        icon="person"
+  const projectDisabled =
+    filteredSelectedProjects.length == 1 &&
+    !filteredProjects.find((project: ProjectNode) => project.name == filteredSelectedProjects[0])!
+      .active
+
+  const missingPermissions =
+    (filteredSelectedProjects.length == 1 &&
+      !userPermissions?.canView(UserPermissionsEntity.users, filteredSelectedProjects[0])) ||
+    !userPermissions?.canViewAny(UserPermissionsEntity.users)
+
+  const projectsContent = (
+    <>
+      <StyledHeader>Projects</StyledHeader>
+      <ProjectUserAccessProjectList
+        selection={filteredSelectedProjects}
+        projects={filteredProjects}
+        isLoading={projectsIsLoading}
+        // @ts-ignore
+        userPermissions={userPermissions}
+        onSelectionChange={handleProjectSelectionChange}
       />
-    )
-  }
+    </>
+  )
+
+  const unasssignedUsersContent = (
+    <>
+      <StyledHeader>No project access</StyledHeader>
+      <div style={{ position: 'relative', height: '100%' }}>
+        <ProjectUserAccessUserList
+          header="User"
+          emptyMessage="All users assigned"
+          selectedProjects={filteredSelectedProjects}
+          selectedUsers={selectedUnassignedUsers}
+          tableList={filteredUnassignedUsers}
+          isLoading={isLoading}
+          readOnly={!hasEditRightsOnProject}
+          onContextMenu={handleAddContextMenu}
+          onAdd={handleAdd}
+          onHoverRow={(userName: string) => {
+            userName ? setHoveredUser({ user: userName }) : setHoveredUser({})
+          }}
+          onSelectUsers={(selection) => setSelectedAccessGroupUsers({ users: selection })}
+          sortable
+          isUnassigned
+        />
+      </div>
+    </>
+  )
+
+  const accessGroupsContent = (
+    <>
+      <StyledHeader>Access groups</StyledHeader>
+      <Splitter layout="vertical" style={{ height: '100%', overflow: 'auto' }}>
+        {filteredAccessGroups
+          .map((item: AccessGroupObject) => item.name)
+          .map((accessGroup) => {
+            return (
+              <SplitterPanel
+                style={{
+                  minHeight: '250px',
+                  minWidth: '350px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                }}
+                key={accessGroup}
+                className="flex align-items-center justify-content-center"
+                size={45}
+              >
+                <ProjectUserAccessUserList
+                  selectedProjects={filteredSelectedProjects}
+                  selectedUsers={getAccessGroupUsers(selectedAccessGroupUsers!, accessGroup)}
+                  header={accessGroup}
+                  readOnly={!hasEditRightsOnProject}
+                  showAddMoreButton={filteredAccessGroups.length > 1}
+                  emptyMessage="No users assigned"
+                  onContextMenu={(e: $Any) => handleRemoveContextMenu(e, accessGroup)}
+                  tableList={filteredNonManagerUsers.filter(
+                    (user: UserNode) =>
+                      mappedUsers[accessGroup] && mappedUsers[accessGroup].includes(user.name),
+                  )}
+                  onHoverRow={(userName: string) =>
+                    userName ? setHoveredUser({ accessGroup, user: userName }) : setHoveredUser({})
+                  }
+                  onSelectUsers={(selection: string[]) =>
+                    updateSelectedAccessGroupUsers(accessGroup, selection)
+                  }
+                  onAdd={() => handleAdd()}
+                  onRemove={onRemove(accessGroup)}
+                  isLoading={isLoading}
+                />
+              </SplitterPanel>
+            )
+          })}
+      </Splitter>
+    </>
+  )
 
   return (
     // @ts-ignore
     <ProjectManagerPageLayout style={{ height: '100%' }} sectionStyle={{ gap: 0 }}>
-      {/* @ts-ignore */}
-      <Shortcuts shortcuts={shortcuts} deps={[selectedProjects, selectedAccessGroupUsers, hoveredUser]} />
+      <Shortcuts
+        // @ts-ignore
+        shortcuts={shortcuts}
+        // @ts-ignore
+        deps={[selectedProjects, selectedAccessGroupUsers, hoveredUser]}
+      />
       <Toolbar style={{ display: 'flex', margin: '0' }}>
         {/* @ts-ignore */}
         <ProjectUserAccessSearchFilterWrapper
@@ -333,112 +427,41 @@ const ProjectUserAccess = () => {
         </StyledButton>
       </Toolbar>
 
-      <Splitter layout="horizontal" style={{ height: '100%', overflow: 'hidden' }}>
-        <SplitterPanel
-          className="flex align-items-center justify-content-center"
-          size={25}
-          minSize={10}
-        >
-          <StyledHeader>Projects</StyledHeader>
-          <ProjectUserAccessProjectList
-            selection={filteredSelectedProjects}
-            // @ts-ignore
-            projects={filteredProjects}
-            isLoading={projectsIsLoading}
-            userPermissions={userPermissions}
-            onSelectionChange={handleProjectSelectionChange}
-          />
-        </SplitterPanel>
-
-        <SplitterPanel size={50}>
-          <StyledHeader>No project access</StyledHeader>
-
-          {filteredSelectedProjects.length > 0 ? (
-            <div style={{ position: 'relative', height: '100%' }}>
-              <ProjectUserAccessUserList
-                header="User"
-                emptyMessage="All users assigned"
-                selectedProjects={filteredSelectedProjects}
-                selectedUsers={selectedUnassignedUsers}
-                tableList={filteredUnassignedUsers}
-                isLoading={isLoading}
-                readOnly={!hasEditRightsOnProject}
-                onContextMenu={handleAddContextMenu}
-                onAdd={handleAdd}
-                onHoverRow={(userName: string) => {
-                  userName ? setHoveredUser({ user: userName }) : setHoveredUser({})
-                }}
-                onSelectUsers={(selection) => setSelectedAccessGroupUsers({ users: selection })}
-                sortable
-                isUnassigned
-              />
-            </div>
-          ) : (
+      {filteredSelectedProjects.length > 0 && !missingPermissions && !projectDisabled ? (
+        <SplitterContainerThreePanes
+          leftContent={projectsContent}
+          mainContent={unasssignedUsersContent}
+          rightContent={accessGroupsContent}
+        />
+      ) : (
+        <SplitterContainerTwoPanes
+          leftContent={projectsContent}
+          mainContent={
             <StyledEmptyPlaceholderWrapper>
-              <StyledEmptyPlaceholder message={'No project selected'} icon={'list'}>
-                <span style={{ textAlign: 'center' }}>
-                  Select a project on the left side to manage users access groups
-                </span>
-              </StyledEmptyPlaceholder>
+              {missingPermissions && (
+                <EmptyPlaceholder
+                  message="You don't have permissions to view the this project's users"
+                  icon="person"
+                />
+              )}
+              {filteredSelectedProjects.length == 0 && (
+                <StyledEmptyPlaceholder message={'No project selected'} icon={'list'}>
+                  <span style={{ textAlign: 'center' }}>
+                    Select an active project to manage users its access groups
+                  </span>
+                </StyledEmptyPlaceholder>
+              )}
+              {projectDisabled && (
+                <StyledEmptyPlaceholder message={'Project disabled'} icon={'list'}>
+                  <span style={{ textAlign: 'center' }}>
+                    Select an active project to manage users its access groups
+                  </span>
+                </StyledEmptyPlaceholder>
+              )}
             </StyledEmptyPlaceholderWrapper>
-          )}
-        </SplitterPanel>
-        <SplitterPanel
-          size={50}
-          style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
-        >
-          <StyledHeader>Access groups</StyledHeader>
-          {filteredSelectedProjects.length > 0 ? (
-            <Splitter layout="vertical" style={{ height: '100%', overflow: 'auto' }}>
-              {filteredAccessGroups
-                .map((item: AccessGroupObject) => item.name)
-                .map((accessGroup) => {
-                  return (
-                    <SplitterPanel
-                      style={{
-                        minHeight: '250px',
-                        minWidth: '350px',
-                        display: 'flex',
-                        flexDirection: 'column',
-                      }}
-                      key={accessGroup}
-                      className="flex align-items-center justify-content-center"
-                      size={45}
-                    >
-                      <ProjectUserAccessUserList
-                        selectedProjects={filteredSelectedProjects}
-                        selectedUsers={getAccessGroupUsers(selectedAccessGroupUsers!, accessGroup)}
-                        header={accessGroup}
-                        readOnly={!hasEditRightsOnProject}
-                        showAddMoreButton={filteredAccessGroups.length > 1}
-                        emptyMessage="No users assigned"
-                        onContextMenu={(e: $Any) => handleRemoveContextMenu(e, accessGroup)}
-                        tableList={filteredNonManagerUsers.filter(
-                          (user: UserNode) =>
-                            mappedUsers[accessGroup] &&
-                            mappedUsers[accessGroup].includes(user.name),
-                        )}
-                        onHoverRow={(userName: string) =>
-                          userName
-                            ? setHoveredUser({ accessGroup, user: userName })
-                            : setHoveredUser({})
-                        }
-                        onSelectUsers={(selection: string[]) =>
-                          updateSelectedAccessGroupUsers(accessGroup, selection)
-                        }
-                        onAdd={() => handleAdd()}
-                        onRemove={onRemove(accessGroup)}
-                        isLoading={isLoading}
-                      />
-                    </SplitterPanel>
-                  )
-                })}
-            </Splitter>
-          ) : (
-            <StyledEmptyPlaceholderWrapper />
-          )}
-        </SplitterPanel>
-      </Splitter>
+          }
+        />
+      )}
 
       {showDialog && (
         <ProjectUserAccessAssignDialog
