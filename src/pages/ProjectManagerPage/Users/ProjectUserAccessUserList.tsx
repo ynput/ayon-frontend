@@ -75,6 +75,7 @@ const ProjectUserAccessUserList = ({
     <Section wrap>
       <TablePanel>
         <DataTable
+          data-testid={`accessGroupPanel-${header}`}
           selection={selectedUnassignedUsers}
           value={tableList}
           selectionMode="multiple"
@@ -99,6 +100,7 @@ const ProjectUserAccessUserList = ({
               !isLoading && (
                 <UserRow
                   rowData={rowData}
+                  data-testid={`accessGroupUser-${rowData.name}`}
                   isUnassigned={isUnassigned}
                   showAddMoreButton={showAddMoreButton}
                   readOnly={readOnly}

@@ -59,7 +59,7 @@ const InstallerSelector = ({ value = [], options, onChange, disabled }) => {
         <VersionAndPlatformTemplate version={value} platforms={selectedOption?.platforms} />
       )}
       itemTemplate={(option, isActive) => (
-        <DefaultItemStyled $isSelected={isActive}>
+        <DefaultItemStyled $isSelected={isActive} data-testid={`installer-option-${option.version}`}>
           <span>{option.version}</span>
           {option?.platforms?.map((platform, i) => (
             <Styled.PlatformTag key={platform + '-' + i} $platform={platform}>

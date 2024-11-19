@@ -112,7 +112,8 @@ const ProjectUserAccessAssignDialog = ({
             {accessGroupItems.map((item) => (
               <Styled.ProjectItem
                 key={item.name}
-                className={clsx('project-item', {
+                data-testid={`access-group-${item.name}`}
+                className={clsx({
                   selected: item.status === SelectionStatus.All,
                 })}
                 id={item.name}

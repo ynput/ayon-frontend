@@ -59,7 +59,7 @@ const ProjectUserAccessProjectList = ({ projects, isLoading, selection, userPerm
   const selected = tableData.filter((project: ProjectNode) => selection.includes(project.name))
 
   return (
-    <TablePanel style={{ height: '100%' }}>
+    <TablePanel data-testid={`projectPanel`} style={{ height: '100%' }}>
       <DataTable
         value={tableData.sort((a: ProjectNode, b: ProjectNode) => {
           const aActive = a.active ? 10 : -10
@@ -88,12 +88,12 @@ const ProjectUserAccessProjectList = ({ projects, isLoading, selection, userPerm
           field="name"
           header="Project name"
           body={(rowData) => {
-          const isActive = rowData.active
-          const hasPermissions =
-            userPermissions.canEdit(UserPermissionsEntity.users, rowData.name) ||
-            userPermissions.canView(UserPermissionsEntity.users, rowData.name)
+            const isActive = rowData.active
+            const hasPermissions =
+              userPermissions.canEdit(UserPermissionsEntity.users, rowData.name) ||
+              userPermissions.canView(UserPermissionsEntity.users, rowData.name)
             return (
-              <StyledProjectName className={clsx({ isActive: isActive && hasPermissions})}>
+              <StyledProjectName className={clsx({ isActive: isActive && hasPermissions })}>
                 <span>{formatName(rowData, userPermissions)}</span>
               </StyledProjectName>
             )

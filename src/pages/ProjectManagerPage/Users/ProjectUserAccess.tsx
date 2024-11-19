@@ -9,7 +9,7 @@ import { Filter } from '@components/SearchFilter/types'
 import Shortcuts from '@containers/Shortcuts'
 import { useShortcutsContext } from '@context/shortcutsContext'
 import useCreateContext from '@hooks/useCreateContext'
-import useUserProjectPermissions, { UserPermissionsEntity } from '@hooks/useUserProjectPermissions'
+import useUserProjectPermissions from '@hooks/useUserProjectPermissions'
 import { useGetAccessGroupsQuery } from '@queries/accessGroups/getAccessGroups'
 import { useGetUsersQuery } from '@queries/user/getUsers'
 import { useListProjectsQuery } from '@queries/project/getProject'
@@ -46,7 +46,7 @@ const StyledButton = styled(Button)`
   }
 `
 
-const ProjectUserAccess = ({ onSelect }: { onSelect: (projectName: string) => void }) => {
+const ProjectUserAccess = () => {
   const { data: accessGroupList = [] } = useGetAccessGroupsQuery({
     projectName: '_',
   })
@@ -285,23 +285,6 @@ const ProjectUserAccess = ({ onSelect }: { onSelect: (projectName: string) => vo
     [selectedAccessGroupUsers, hoveredUser],
   )
 
-  const handleProjectSelectionChange = (selection: string[]) => {
-    if (selection.length >= 0) {
-      onSelect(selection[0])
-    }
-    if (selection.length <= 1) {
-      setSelectedProjects(selection)
-      return
-    }
-
-    const filteredSelection = selection.filter(
-      (projectName) =>
-        userPermissions?.canEdit(UserPermissionsEntity.users, projectName) &&
-        filteredProjects!.find((project) => project.name == projectName)!.active,
-    )
-    setSelectedProjects(filteredSelection)
-  }
-
   const errorInfo = getErrorInfo(
     usersFetchError,
     filteredProjects,
@@ -318,7 +301,7 @@ const ProjectUserAccess = ({ onSelect }: { onSelect: (projectName: string) => vo
         isLoading={projectsLoading}
         // @ts-ignore
         userPermissions={userPermissions}
-        onSelectionChange={handleProjectSelectionChange}
+        onSelectionChange={setSelectedProjects}
       />
     </>
   )

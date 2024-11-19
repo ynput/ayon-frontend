@@ -194,16 +194,6 @@ const getErrorInfo = (
   filteredSelectedProjects: string[],
   userPermissions?: UserPermissions,
 ): ListingError | null => {
-  const projectDisabled =
-    filteredSelectedProjects.length == 1 &&
-    !filteredProjects.find((project: ProjectNode) => project.name == filteredSelectedProjects[0])!
-      .active
-
-  const missingPermissions =
-    (filteredSelectedProjects.length == 1 &&
-      !userPermissions?.canView(UserPermissionsEntity.users, filteredSelectedProjects[0])) ||
-    !userPermissions?.canViewAny(UserPermissionsEntity.users)
-
   if (usersFetchError) {
     return {
       icon: 'admin_panel_settings',
@@ -211,29 +201,39 @@ const getErrorInfo = (
       details: 'Project user management permissions are missing. Contact an admin for more info.',
     }
   }
-
-  if (missingPermissions) {
-    return {
-      icon: 'person',
-      message: 'Missing permissions',
-      details: "You don't have permissions to manage this project's users",
-    }
-  }
-
-  if (projectDisabled) {
-    return {
-      icon: 'list',
-      message: 'Project disabled',
-      details: 'Select an active project to manage users its access groups',
-    }
-  }
-
   if (filteredSelectedProjects.length == 0) {
     return {
       icon: 'list',
       message: 'Select an active project to manage users its access groups',
     }
   }
+
+  const nameMappedProjects = filteredProjects.reduce<{ [key: string]: ProjectNode }>(
+    (acc, curr) => ({ ...acc, [curr.name]: curr }),
+    {},
+  )
+
+  for (const project of filteredSelectedProjects) {
+    if (!nameMappedProjects[project].active) {
+      return {
+        icon: 'list',
+        message: 'Project disabled',
+        details: 'Select an active project to manage users its access groups',
+      }
+    }
+
+    if (
+      !userPermissions?.canView(UserPermissionsEntity.users, project) &&
+      !userPermissions?.canView(UserPermissionsEntity.users, project)
+    ) {
+      return {
+        icon: 'person',
+        message: 'Missing permissions',
+        details: "You don't have permissions to manage this project's users",
+      }
+    }
+  }
+
   return null
 }
 
