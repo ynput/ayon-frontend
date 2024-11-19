@@ -4,13 +4,11 @@ import useHierarchyTable from './useHierarchyTable'
 import useUsersTable from './useUsersTable'
 import { TableRow } from '../SlicerTable'
 import useProjectAnatomySlices from './useProjectAnatomySlices'
-import { useSlicerContext } from '@context/slicerContext'
+import { SliceType, useSlicerContext } from '@context/slicerContext'
 
 interface Props {
   sliceFields: SliceType[]
 }
-
-export type SliceType = 'hierarchy' | 'users' | 'status' | 'type'
 
 interface SliceOption {
   value: SliceType
@@ -34,14 +32,12 @@ interface TableData {
   table: Slice
   isLoading: boolean
   sliceType: SliceType
-  handleSliceChange: (slice: SliceType) => Promise<void>
+  handleSliceTypeChange: (sliceType: SliceType) => void
 }
 
 const useTableDataBySlice = ({ sliceFields }: Props): TableData => {
-  const { setRowSelection } = useSlicerContext()
+  const { sliceType, onSliceTypeChange } = useSlicerContext()
   const projectName = useAppSelector((state) => state.project.name)
-
-  const [sliceType, setSliceType] = useState<SliceType>('hierarchy')
 
   const defaultSliceOptions: SliceOption[] = [
     {
@@ -114,16 +110,6 @@ const useTableDataBySlice = ({ sliceFields }: Props): TableData => {
   const initSlice = { data: [], isExpandable: false }
   const [slice, setSlice] = useState<Slice>(initSlice)
 
-  const handleSliceChange = async (newSlice: SliceType) => {
-    try {
-      setSliceType(newSlice)
-      // clear row selection
-      setRowSelection({})
-    } catch (error) {
-      console.error('Error changing slice:', error)
-    }
-  }
-
   useEffect(() => {
     // wait for hierarchy data to load before fetching slice data
     if (isLoadingHierarchy) return
@@ -150,7 +136,7 @@ const useTableDataBySlice = ({ sliceFields }: Props): TableData => {
     table: slice,
     isLoading: builtInSlices[sliceType].isLoading || isLoading,
     sliceType,
-    handleSliceChange,
+    handleSliceTypeChange: onSliceTypeChange,
   }
 }
 

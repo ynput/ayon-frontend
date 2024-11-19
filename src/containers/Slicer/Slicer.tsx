@@ -2,9 +2,10 @@ import { FC, useState } from 'react'
 import * as Styled from './Slicer.styled'
 import SlicerTable from './SlicerTable'
 
-import useTableDataBySlice, { SliceType } from './hooks/useTableDataBySlice'
+import useTableDataBySlice from './hooks/useTableDataBySlice'
 import SlicerSearch from './SlicerSearch'
 import clsx from 'clsx'
+import { SliceType } from '@context/slicerContext'
 
 interface SlicerProps {
   sliceFields: SliceType[]
@@ -16,7 +17,7 @@ const Slicer: FC<SlicerProps> = ({ sliceFields = [] }) => {
   const {
     sliceOptions,
     sliceType,
-    handleSliceChange,
+    handleSliceTypeChange,
     table: { data: sliceTableData, isExpandable },
     isLoading: isLoadingSliceTableData,
   } = useTableDataBySlice({ sliceFields })
@@ -27,7 +28,7 @@ const Slicer: FC<SlicerProps> = ({ sliceFields = [] }) => {
         <Styled.SlicerDropdown
           options={sliceOptions || []}
           value={[sliceType]}
-          onChange={(value) => handleSliceChange(value[0] as SliceType)}
+          onChange={(value) => handleSliceTypeChange(value[0] as SliceType)}
           className={clsx('slicer-dropdown', { 'single-option': sliceOptions.length === 1 })}
           disableOpen={sliceOptions.length === 1}
         />

@@ -2,6 +2,9 @@ import { createContext, useContext, useState, ReactNode } from 'react'
 import { ExpandedState, RowSelectionState } from '@tanstack/react-table'
 import useSlicerReduxSync from '@containers/Slicer/hooks/useSlicerReduxSync'
 
+export type SliceType = 'hierarchy' | 'users' | 'status' | 'type'
+const sliceTypes: SliceType[] = ['hierarchy', 'users', 'status', 'type']
+
 interface SlicerContextValue {
   rowSelection: RowSelectionState
   setRowSelection: React.Dispatch<React.SetStateAction<RowSelectionState>>
@@ -9,6 +12,8 @@ interface SlicerContextValue {
   expanded: ExpandedState
   setExpanded: React.Dispatch<React.SetStateAction<ExpandedState>>
   onExpandedChange?: (expanded: ExpandedState) => void
+  sliceType: SliceType
+  onSliceTypeChange: (sliceType: SliceType) => void
 }
 
 const SlicerContext = createContext<SlicerContextValue | undefined>(undefined)
@@ -20,6 +25,7 @@ interface SlicerProviderProps {
 export const SlicerProvider = ({ children }: SlicerProviderProps) => {
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
   const [expanded, setExpanded] = useState<ExpandedState>({})
+  const [sliceType, setSliceType] = useState<SliceType>('hierarchy')
 
   const { onRowSelectionChange, onExpandedChange } = useSlicerReduxSync({
     setRowSelection,
@@ -37,6 +43,14 @@ export const SlicerProvider = ({ children }: SlicerProviderProps) => {
     onExpandedChange(expanded)
   }
 
+  const handleSliceTypeChange = (sliceType: SliceType) => {
+    if (!sliceTypes.includes(sliceType)) return console.log('Invalid slice type')
+    // reset selection
+    setRowSelection({})
+    // set slice type
+    setSliceType(sliceType)
+  }
+
   return (
     <SlicerContext.Provider
       value={{
@@ -46,6 +60,8 @@ export const SlicerProvider = ({ children }: SlicerProviderProps) => {
         expanded,
         setExpanded,
         onExpandedChange: handleExpandedChange,
+        sliceType,
+        onSliceTypeChange: handleSliceTypeChange,
       }}
     >
       {children}
