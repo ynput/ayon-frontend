@@ -34,6 +34,7 @@ import filterTasksBySearch from './helpers/filterTasksBySearch'
 import { FilterFieldType } from '@hooks/useBuildFilterOptions'
 import formatFilterAssigneesData from './helpers/formatFilterAssigneesData'
 import { selectProgress } from '@state/progress'
+import { useSlicerContext } from '@context/slicerContext'
 
 // what to search by
 const searchFilterTypes: FilterFieldType[] = [
@@ -120,7 +121,8 @@ const TasksProgress: FC<TasksProgressProps> = ({
   // hide parent folder child rows
   const [collapsedParents, setCollapsedParents] = useState<string[]>([])
 
-  const selectedFolders = useSelector((state: $Any) => state.context.focused.folders) as string[]
+  const { rowSelection } = useSlicerContext()
+  const selectedFolders = Object.keys(rowSelection)
   const selectedTasks = useSelector((state: $Any) => state.context.focused.tasks) as string[]
   const [activeTask, setActiveTask] = useState<string | null>(null)
   //   GET PROJECT ASSIGNEES
@@ -343,6 +345,7 @@ const TasksProgress: FC<TasksProgressProps> = ({
 
   return (
     <>
+      {/* @ts-ignore */}
       <Shortcuts shortcuts={shortcuts} deps={[expandedRows]} />
       <Section style={{ height: '100%' }} direction="column">
         <Toolbar>
