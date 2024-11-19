@@ -275,11 +275,6 @@ function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
 
   const matches = matchesFilterKeys(props.formContext.searchText, props.formContext.filterKeys, props.formContext.addonName, props.idSchema.$id)
 
-  const hasEnabled = (props?.schema?.properties || {}).hasOwnProperty('enabled')
-  const isEnabled = props?.formData?.enabled
-
-  const disabled = props.formContext.hideDisabledGroups && hasEnabled && !isEnabled
-
   return (
     <div
       data-schema-id={props.idSchema.$id}
@@ -302,7 +297,6 @@ function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
         onContextMenu={onContextMenu}
         currentId={props.formContext.currentId}
         layout={undefined}
-        disabled={disabled}
       >
         {fields}
       </SettingsPanel>
