@@ -8,7 +8,9 @@ import {
   getAssigneesChangeOperations,
   resolveShiftSelect,
   getPriorityChangeOperations,
+  getPlaceholderMessage,
 } from './helpers'
+import { useRootFolders } from './hooks'
 import { useGetAllProjectUsersAsAssigneeQuery } from '@queries/user/getUsers'
 import { FolderType, Status, TaskType } from '@api/rest/project'
 import { TaskFieldChange, TasksProgressTable } from './components'
@@ -34,7 +36,8 @@ import filterTasksBySearch from './helpers/filterTasksBySearch'
 import { FilterFieldType } from '@hooks/useBuildFilterOptions'
 import formatFilterAssigneesData from './helpers/formatFilterAssigneesData'
 import { selectProgress } from '@state/progress'
-import { useSlicerContext } from '@context/slicerContext'
+import { SliceType, useSlicerContext } from '@context/slicerContext'
+import useFilterBySlice from './hooks/useFilterBySlice'
 
 // what to search by
 const searchFilterTypes: FilterFieldType[] = [
@@ -121,7 +124,7 @@ const TasksProgress: FC<TasksProgressProps> = ({
   // hide parent folder child rows
   const [collapsedParents, setCollapsedParents] = useState<string[]>([])
 
-  const { rowSelection } = useSlicerContext()
+  const { rowSelection, sliceType } = useSlicerContext()
   const selectedFolders = Object.keys(rowSelection)
   const selectedTasks = useSelector((state: $Any) => state.context.focused.tasks) as string[]
   const [activeTask, setActiveTask] = useState<string | null>(null)
@@ -131,6 +134,13 @@ const TasksProgress: FC<TasksProgressProps> = ({
     { skip: !projectName },
   )
 
+  // when the slice type is not hierarchy we need to get the root folders
+  const rootFolderIds = useRootFolders({ sliceType, projectName })
+
+  const getFolderIdsForTasks = (selected: string[], rootFolders: string[], sliceType: SliceType) =>
+    sliceType === 'hierarchy' ? selected : rootFolders
+
+  const folderIdsToFetch = getFolderIdsForTasks(selectedFolders, rootFolderIds, sliceType)
   // VVV MAIN QUERY VVV
   //
   //
@@ -140,8 +150,8 @@ const TasksProgress: FC<TasksProgressProps> = ({
     isFetching: isFetchingTasks,
     error,
   } = useGetTasksProgressQuery(
-    { projectName, folderIds: selectedFolders },
-    { skip: !selectedFolders.length || !projectName },
+    { projectName, folderIds: folderIdsToFetch },
+    { skip: !folderIdsToFetch.length || !projectName },
   )
   //
   //
@@ -191,10 +201,14 @@ const TasksProgress: FC<TasksProgressProps> = ({
     [foldersTasksData],
   )
 
+  // filter out by slice
+  const filteredFoldersTasksBySlice = useFilterBySlice({ folders: foldersTasksData, projectName })
+
+  // filter out by search and filter bar
   // the tasks don't get filtered out but just hidden
   const filteredFoldersTasks = useMemo(
-    () => filterTasksBySearch(foldersTasksData, filters),
-    [foldersTasksData, filters],
+    () => filterTasksBySearch(filteredFoldersTasksBySlice, filters),
+    [filteredFoldersTasksBySlice, filters],
   )
   //
   //
@@ -372,14 +386,14 @@ const TasksProgress: FC<TasksProgressProps> = ({
             <ShortcutTag style={{ marginLeft: 'auto' }}>Shift + E</ShortcutTag>
           </Button>
         </Toolbar>
-        {selectedFolders.length ? (
+        {folderIdsToFetch.length ? (
           tableData.length || isFetchingTasks ? (
             <TasksProgressTable
               tableRef={tableRef}
               tableData={tableData}
               projectName={projectName}
               isLoading={isFetchingTasks}
-              selectedFolders={selectedFolders}
+              selectedFolders={folderIdsToFetch}
               activeTask={activeTask}
               selectedAssignees={selectedAssignees}
               statuses={statuses} // status icons etc.
@@ -397,10 +411,7 @@ const TasksProgress: FC<TasksProgressProps> = ({
               onCollapseRow={handleCollapseToggle}
             />
           ) : (
-            <EmptyPlaceholder
-              message={'No tasks found, try selecting another folder or expanding your filters.'}
-              icon="folder_open"
-            />
+            <EmptyPlaceholder message={getPlaceholderMessage(sliceType)} icon="folder_open" />
           )
         ) : (
           <EmptyPlaceholder

@@ -1,6 +1,6 @@
 import { AttributeData } from '@api/rest/attributes'
 import getFilterFromId from '@components/SearchFilter/getFilterFromId'
-import { Filter } from '@components/SearchFilter/types'
+import { Filter, FilterValue } from '@components/SearchFilter/types'
 import { filterDateFunctions } from '@hooks/useBuildFilterOptions'
 import {
   GetTasksProgressResult,
@@ -9,12 +9,19 @@ import {
 } from '@queries/tasksProgress/getTasksProgress'
 import { isEmpty } from 'lodash'
 
+export type TaskFilterValue = Pick<Filter, 'id' | 'type' | 'inverted'> & {
+  values?: Pick<FilterValue, 'id'>[]
+}
+
 export interface FolderTask extends ProgressTaskFolder {
   projectName: string
   tasks: (ProgressTask & { isHidden?: boolean })[]
 }
 
-const filterTasksBySearch = (folders: GetTasksProgressResult, filters: Filter[]): FolderTask[] => {
+const filterTasksBySearch = (
+  folders: GetTasksProgressResult,
+  filters: TaskFilterValue[],
+): FolderTask[] => {
   if (!filters.length) return folders
 
   const filtered = folders.map((folder) => {
@@ -28,14 +35,14 @@ const filterTasksBySearch = (folders: GetTasksProgressResult, filters: Filter[])
         const atLeastOneMatch = values?.some(({ id: filterValue }) => {
           if (!filterValue) return true
           let taskFieldValue: any = fieldName in task ? (task as any)[fieldName] : undefined
-
           // if taskFieldValue is undefined, check if it's an attrib field
           if (taskFieldValue === undefined) {
             taskFieldValue = (task.attrib as { [key: string]: any })[fieldName]
           }
 
           // if taskFieldValue is still, check if it's a text field
-          if (taskFieldValue === undefined && fieldName !== 'text') return undefined
+          if (taskFieldValue === undefined && fieldName !== 'text')
+            return console.log('Field not found:', fieldName)
 
           if (fieldName === 'text') {
             const compareValueOnAllFields = (object: any): boolean => {
