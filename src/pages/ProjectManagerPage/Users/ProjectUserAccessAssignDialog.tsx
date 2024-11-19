@@ -56,7 +56,6 @@ const ProjectUserAccessAssignDialog = ({
     setAccessGroupItems((prev: AccessGroupItem[]) => {
       return prev.map(item => ({...item, status: value ? SelectionStatus.All : SelectionStatus.None}))
     })
-
   }
 
   const handleClose = () => {
@@ -80,7 +79,7 @@ const ProjectUserAccessAssignDialog = ({
         action: () => handleToggleAll(!allSelected),
       },
     ],
-    [allSelected],
+    [allSelected, accessGroupItems],
   )
 
   return (
