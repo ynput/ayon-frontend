@@ -1,7 +1,7 @@
 // create table data for the hierarchy
 import { useGetFolderListQuery } from '@queries/getHierarchy'
 import { TableRow } from '../SlicerTable'
-import { useMemo } from 'react'
+import { useCallback, useMemo } from 'react'
 import { FolderListItem } from '@api/rest/folders'
 import { FolderType } from '@api/rest/project'
 
@@ -77,14 +77,16 @@ const useHierarchyTable = ({ projectName, folderTypes }: Props) => {
   }
 
   const tableData: TableRow[] = useMemo(() => {
-    if (!folders.length) return []
+    if (!folders.length || isLoading || isFetching) return []
 
     const rows = createDataTree(folders)
 
     return rows
-  }, [folders, folderTypes])
+  }, [folders, folderTypes, isLoading, isFetching])
 
-  const getHierarchyData = async () => tableData
+  const getHierarchyData = useCallback(async () => {
+    return tableData
+  }, [tableData])
 
   return { data: tableData, getData: getHierarchyData, isLoading: isLoading || isFetching }
 }

@@ -81,11 +81,7 @@ const useTableDataBySlice = ({ sliceFields }: Props): TableData => {
   } = useProjectAnatomySlices({ projectName })
 
   //   Hierarchy
-  const {
-    data: hierarchyData = [],
-    getData: getHierarchyData,
-    isLoading: isLoadingHierarchy,
-  } = useHierarchyTable({
+  const { getData: getHierarchyData, isLoading: isLoadingHierarchy } = useHierarchyTable({
     projectName: projectName || '',
     folderTypes: project?.folderTypes || [],
   })
@@ -129,22 +125,25 @@ const useTableDataBySlice = ({ sliceFields }: Props): TableData => {
   }
 
   useEffect(() => {
+    // wait for hierarchy data to load before fetching slice data
+    if (isLoadingHierarchy) return
     const fetchData = async () => {
       try {
         setIsLoading(true)
-        const sliceConfig = builtInSlices[sliceType]
-        const newData = await sliceConfig.getData()
-        const newSlice = { data: newData, isExpandable: sliceConfig.isExpandable }
-        setSlice(newSlice)
-        setIsLoading(false)
+        const newData = await builtInSlices[sliceType].getData()
+        setSlice({
+          data: newData,
+          isExpandable: builtInSlices[sliceType].isExpandable,
+        })
       } catch (error) {
-        setIsLoading(false)
         console.error('Error fetching slice data:', error)
         setSlice(initSlice)
+      } finally {
+        setIsLoading(false)
       }
     }
     fetchData()
-  }, [sliceType, hierarchyData, projectName])
+  }, [sliceType, projectName, isLoadingHierarchy])
 
   return {
     sliceOptions,
