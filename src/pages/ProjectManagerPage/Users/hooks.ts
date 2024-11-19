@@ -8,7 +8,7 @@ import { Filter, FilterValue, Option } from '@components/SearchFilter/types'
 import { useAppSelector } from '@state/store'
 import { useSetFrontendPreferencesMutation } from '@queries/user/updateUser'
 
-const useProjectAccessGroupData = () => {
+const useProjectAccessGroupData = (selectedProject: string) => {
   const udpateApiCache = (project: string, user: string, accessGroups: string[]) => {
     dispatch(api.util.invalidateTags([{ type: 'project', id: project }]))
     dispatch(
@@ -22,7 +22,9 @@ const useProjectAccessGroupData = () => {
   const dispatch = useDispatch()
   const [updateUser] = useUpdateProjectUsersMutation()
 
-  const [selectedProjects, setSelectedProjects] = useState<string[]>([])
+  const [selectedProjects, setSelectedProjects] = useState<string[]>(
+    selectedProject ? [selectedProject] : [],
+  )
 
   const result = useGetProjectsUsersQuery({ projects: selectedProjects })
   const users = result.data

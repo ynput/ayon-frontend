@@ -5,7 +5,6 @@ import { useEffect, useMemo, useState } from 'react'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { $Any } from '@types'
 import { Button, Toolbar } from '@ynput/ayon-react-components'
-import { AccessGroupObject } from '@api/rest/accessGroups'
 import { Filter } from '@components/SearchFilter/types'
 import Shortcuts from '@containers/Shortcuts'
 import { useShortcutsContext } from '@context/shortcutsContext'
@@ -37,6 +36,7 @@ import SplitterContainerThreePanes from './SplitterThreePanes'
 import SplitterContainerTwoPanes from './SplitterTwoPanes'
 import { ProjectNode, UserNode } from '@api/graphql'
 import LoadingPage from '@pages/LoadingPage'
+import { useQueryParam } from 'use-query-params'
 
 const StyledButton = styled(Button)`
   .shortcut {
@@ -51,13 +51,15 @@ const ProjectUserAccess = ({ onSelect }: { onSelect: (projectName: string) => vo
     projectName: '_',
   })
 
+  const [selectedProject] = useQueryParam('project')
+
   const {
     users: projectUsers,
     selectedProjects,
     setSelectedProjects,
     removeUserAccessGroup,
     updateUserAccessGroups,
-  } = useProjectAccessGroupData()
+  } = useProjectAccessGroupData(selectedProject as string)
 
   const [filters, setFilters] = userPageFilters()
 
@@ -352,7 +354,7 @@ const ProjectUserAccess = ({ onSelect }: { onSelect: (projectName: string) => vo
       <StyledHeader>Access groups</StyledHeader>
       <Splitter layout="vertical" style={{ height: '100%', overflow: 'auto' }}>
         {filteredAccessGroups
-          .map((item: AccessGroupObject) => item.name)
+          .map((item: { name: string }) => item.name)
           .map((accessGroup) => {
             return (
               <SplitterPanel
