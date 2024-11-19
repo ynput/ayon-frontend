@@ -109,33 +109,39 @@ const fuzzyFilter = <T extends { name: string }>(
   return entities.filter((entity: T) => matches.includes(entity))
 }
 
-const getFilteredEntities = <T extends {name: string}>(projects: T[], filters: Filter[] = []): T[] => {
+const getFilteredEntities = <T extends { name: string }>(
+  entities: T[],
+  filters: Filter[] = [],
+): T[] => {
   if (filters.length == 0) {
-    return projects
+    return entities
   }
 
   let intersection: Set<T> | null = null
   for (const filter of filters) {
     let matches: T[] = []
+    let matchesSet: Set<T>
     if (!filter.values) {
       continue
     }
 
     for (const filterItem of filter.values.filter((filterValue) => filterValue.isCustom)) {
-      matches.push(...fuzzyFilter(projects, filterItem, filter.inverted))
+      matches.push(...fuzzyFilter(entities, filterItem))
     }
     const exactMatches = exactFilter(
-      projects,
+      entities,
       filter.values.filter((filterValue) => !filterValue.isCustom),
-      filter.inverted,
     )
     matches.push(...exactMatches)
+
+    matchesSet = filter.inverted ? new Set(entities).difference(new Set(matches)) : new Set(matches)
+
     if (intersection === null) {
-      intersection = new Set(matches)
+      intersection = matchesSet
       continue
     }
 
-    intersection = intersection.intersection(new Set(matches))
+    intersection = intersection.intersection(matchesSet)
   }
 
   return Array.from(intersection || [])
