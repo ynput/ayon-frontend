@@ -7,7 +7,7 @@ import { $Any } from '@types'
 
 const StyledProfileRow = styled.div`
   display: flex;
-  height: 28px;
+  height: 24px;
   align-items: center;
   gap: var(--base-gap-large);
   button {
