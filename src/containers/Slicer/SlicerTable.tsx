@@ -21,7 +21,7 @@ import useRowKeydown from './hooks/useRowKeydown'
 import usePlaceholderData from './hooks/usePlaceholderData'
 
 import { RankingInfo, rankItem, compareItems } from '@tanstack/match-sorter-utils'
-import { useSlicerContext } from '@context/slicerContext'
+import { SliceDataItem, useSlicerContext } from '@context/slicerContext'
 
 declare module '@tanstack/react-table' {
   //add fuzzy filter to the filterFns
@@ -73,6 +73,7 @@ export type TableRow = {
   img?: string | null
   startContent?: JSX.Element
   subRows: TableRow[]
+  data: SliceDataItem
 }
 
 interface SlicerTableProps {
@@ -193,6 +194,7 @@ const SlicerTable: FC<SlicerTableProps> = ({
   // handles all of the selection logic
   const { handleRowSelect } = useRowSelection({
     rows,
+    table,
   })
 
   const { handleRowKeyDown } = useRowKeydown({ handleRowSelect })

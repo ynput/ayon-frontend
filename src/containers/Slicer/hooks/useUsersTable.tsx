@@ -27,6 +27,11 @@ const useUsersTable = ({ projectName }: Props) => {
         />
       ),
       subRows: [],
+      data: {
+        id: user.name,
+        name: user.name,
+        label: user.fullName,
+      },
     }))
 
     const sortedRows = userTableRows.sort((a, b) => a.label.localeCompare(b.label))

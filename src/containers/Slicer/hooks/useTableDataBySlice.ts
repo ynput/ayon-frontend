@@ -57,8 +57,13 @@ const useTableDataBySlice = ({ sliceFields }: Props): TableData => {
     },
     {
       label: 'Type',
-      value: 'type' as SliceType,
+      value: 'type' as SliceType, // combination of folder and task types
       icon: 'folder',
+    },
+    {
+      label: 'Task Type',
+      value: 'taskType' as SliceType,
+      icon: 'check_circle',
     },
   ]
 
@@ -73,6 +78,7 @@ const useTableDataBySlice = ({ sliceFields }: Props): TableData => {
     project,
     getStatuses,
     getTypes,
+    getTaskTypes,
     isLoading: isLoadingProject,
   } = useProjectAnatomySlices({ projectName })
 
@@ -104,6 +110,11 @@ const useTableDataBySlice = ({ sliceFields }: Props): TableData => {
       getData: getTypes,
       isLoading: isLoadingProject,
       isExpandable: true,
+    },
+    taskType: {
+      getData: getTaskTypes,
+      isLoading: isLoadingProject,
+      isExpandable: false,
     },
   }
 

@@ -1,17 +1,33 @@
 import { KeyboardEvent, MouseEvent, useCallback, useRef } from 'react'
-import { Row } from '@tanstack/react-table'
-import { useSlicerContext } from '@context/slicerContext'
+import { Row, RowSelectionState, Table } from '@tanstack/react-table'
+import { SliceDataItem, useSlicerContext } from '@context/slicerContext'
 
 interface UseRowSelectionProps<T> {
   rows: Row<T>[]
+  table: Table<T>
 }
 
 type RowEvent = MouseEvent<HTMLDivElement> | KeyboardEvent<HTMLDivElement>
 
-function useRowSelection<T>({ rows }: UseRowSelectionProps<T>) {
-  const { rowSelection, setRowSelection, onRowSelectionChange } = useSlicerContext()
+function useRowSelection<T>({ rows, table }: UseRowSelectionProps<T>) {
+  const { rowSelection, setRowSelection, onRowSelectionChange, setRowSelectionData } =
+    useSlicerContext()
 
   const lastRowSelected = useRef<Row<T> | null>(null)
+
+  const getSelectionData = (selection: RowSelectionState, table: Table<T>) => {
+    // for each selected row, get the data
+    const selectedRows = Object.keys(selection).reduce<Record<string, SliceDataItem>>((acc, id) => {
+      const row = table.getRow(id)
+      if (!row) return acc
+
+      // @ts-ignore
+      acc[id as string] = row.original.data as SliceDataItem
+      return acc
+    }, {})
+
+    return selectedRows
+  }
 
   const handleRowSelect = useCallback(
     (event: RowEvent, row: Row<T>) => {
@@ -62,6 +78,10 @@ function useRowSelection<T>({ rows }: UseRowSelectionProps<T>) {
       setRowSelection(newSelection)
       // call the callback
       onRowSelectionChange?.(newSelection)
+
+      // get selection data
+      const selectionData = getSelectionData(newSelection, table)
+      setRowSelectionData(selectionData)
     },
     [rows, rowSelection, setRowSelection, onRowSelectionChange],
   )

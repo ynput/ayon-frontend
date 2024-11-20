@@ -202,8 +202,9 @@ const TasksProgress: FC<TasksProgressProps> = ({
   )
 
   // filter out by slice
-  const filteredFoldersTasksBySlice = useFilterBySlice({ folders: foldersTasksData, projectName })
-
+  const { folders: filteredFoldersTasksBySlice, taskTypes: sliceTaskTypes } = useFilterBySlice({
+    folders: foldersTasksData,
+  })
   // filter out by search and filter bar
   // the tasks don't get filtered out but just hidden
   const filteredFoldersTasks = useMemo(
@@ -214,13 +215,25 @@ const TasksProgress: FC<TasksProgressProps> = ({
   //
   // FILTERS
 
+  const getTaskTypesFilterIntersection = (filterTasks: string[], slicerTasks: string[]) => {
+    if (!filterTasks.length) return slicerTasks
+    if (!slicerTasks.length) return filterTasks
+    const intersection = filterTasks.filter((taskType) => slicerTasks.includes(taskType))
+    return intersection.length ? intersection : filterTasks
+  }
+
   const tableData = useMemo(
     () =>
-      formatTaskProgressForTable(filteredFoldersTasks, filteredTaskTypes, collapsedParents, {
-        folderTypes,
-        statuses,
-      }),
-    [filteredFoldersTasks, filteredTaskTypes, collapsedParents],
+      formatTaskProgressForTable(
+        filteredFoldersTasks,
+        getTaskTypesFilterIntersection(filteredTaskTypes, sliceTaskTypes),
+        collapsedParents,
+        {
+          folderTypes,
+          statuses,
+        },
+      ),
+    [filteredFoldersTasks, filteredTaskTypes, sliceTaskTypes, collapsedParents],
   )
 
   const [updateEntities] = useUpdateEntitiesMutation()

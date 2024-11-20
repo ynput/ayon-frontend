@@ -29,6 +29,12 @@ const useHierarchyTable = ({ projectName, folderTypes }: Props) => {
     label: folder.label || folder.name,
     icon: getFolderIcon(folder.folderType),
     img: null,
+    data: {
+      id: folder.id,
+      name: folder.name,
+      label: folder.label || folder.name,
+      subType: folder.folderType,
+    },
   })
 
   const createDataTree = <T extends FolderListItem>(

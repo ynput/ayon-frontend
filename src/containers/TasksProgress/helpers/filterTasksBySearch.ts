@@ -19,13 +19,15 @@ export interface FolderTask extends ProgressTaskFolder {
 }
 
 const filterTasksBySearch = (
-  folders: GetTasksProgressResult,
+  folders: GetTasksProgressResult | FolderTask[],
   filters: TaskFilterValue[],
 ): FolderTask[] => {
   if (!filters.length) return folders
 
   const filtered = folders.map((folder) => {
     const filteredTasks = folder.tasks.map((task) => {
+      // if task is already hidden, skip filtering
+      if ('isHidden' in task && task.isHidden) return task
       // check the task matches all filters
       const isVisible = filters.every(({ values, id, type, inverted }) => {
         const fieldName = getFilterFromId(id)

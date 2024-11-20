@@ -26,6 +26,11 @@ const useProjectAnatomySlices = ({ projectName }: Props) => {
       icon: typeof status.icon === 'string' ? status.icon : undefined,
       iconColor: status.color,
       subRows: [],
+      data: {
+        id: status.name,
+        name: status.name,
+        label: status.name,
+      },
     }))
 
     return statusTableRows
@@ -44,6 +49,11 @@ const useProjectAnatomySlices = ({ projectName }: Props) => {
       label: folderType.name,
       icon: folderType.icon,
       subRows: [],
+      data: {
+        id: folderType.name,
+        name: folderType.name,
+        label: folderType.name,
+      },
     }))
 
     const taskTypeTableRows: TableRow[] = taskTypes.map((taskType) => ({
@@ -53,6 +63,11 @@ const useProjectAnatomySlices = ({ projectName }: Props) => {
       label: taskType.name,
       icon: taskType.icon,
       subRows: [],
+      data: {
+        id: taskType.name,
+        name: taskType.name,
+        label: taskType.name,
+      },
     }))
 
     return [
@@ -61,17 +76,41 @@ const useProjectAnatomySlices = ({ projectName }: Props) => {
         name: 'folders',
         label: 'Folder Types',
         subRows: folderTypeTableRows,
+        data: { id: 'folder', name: 'folders', label: 'Folder Types' },
       },
       {
         id: 'task',
         name: 'tasks',
         label: 'Task Types',
         subRows: taskTypeTableRows,
+        data: { id: 'task', name: 'tasks', label: 'Task Types' },
       },
     ]
   }
 
-  return { project, getStatuses, getTypes, isLoading }
+  // gets only task types
+  const getTaskTypes = async () => {
+    const taskTypes = project?.taskTypes || []
+
+    // create table rows
+    const taskTypeTableRows: TableRow[] = taskTypes.map((taskType) => ({
+      id: taskType.name,
+      parentId: 'task',
+      name: taskType.name,
+      label: taskType.name,
+      icon: taskType.icon,
+      subRows: [],
+      data: {
+        id: taskType.name,
+        name: taskType.name,
+        label: taskType.name,
+      },
+    }))
+
+    return taskTypeTableRows
+  }
+
+  return { project, getStatuses, getTypes, getTaskTypes, isLoading }
 }
 
 export default useProjectAnatomySlices
