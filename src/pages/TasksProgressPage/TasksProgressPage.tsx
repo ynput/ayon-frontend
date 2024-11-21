@@ -28,7 +28,7 @@ const TasksProgressPage: FC = () => {
       <Splitter layout="horizontal" style={{ width: '100%', height: '100%' }}>
         <SplitterPanel size={detailsOpen ? 12 : 18} style={{ minWidth: 227, maxWidth: 500 }}>
           <Section wrap>
-            <Slicer sliceFields={['hierarchy', 'users', 'status', 'type']} />
+            <Slicer sliceFields={['hierarchy', 'assignees', 'status', 'type']} />
           </Section>
         </SplitterPanel>
         <SplitterPanel size={90} style={{ overflow: 'hidden' }}>

@@ -22,7 +22,7 @@ const useFilterBySlice = ({
   const { sliceType, rowSelectionData } = useSlicerContext()
 
   const sliceTypeToFilterMap: Record<SliceType, FilterMapping | undefined> = {
-    users: {
+    assignees: {
       id: 'assignees',
       type: 'list_of_strings',
       mapValue: (items) => items.map((item) => ({ id: item.name || item.id })),

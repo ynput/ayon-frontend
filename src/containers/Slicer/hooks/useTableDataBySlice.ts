@@ -20,6 +20,8 @@ interface SliceData {
   getData: () => Promise<TableRow[]>
   isLoading: boolean
   isExpandable: boolean
+  noValue?: boolean
+  hasValue?: boolean
 }
 
 interface Slice {
@@ -34,38 +36,59 @@ interface TableData {
   sliceType: SliceType
   handleSliceTypeChange: (sliceType: SliceType) => void
 }
+const defaultSliceOptions: SliceOption[] = [
+  {
+    label: 'Hierarchy',
+    value: 'hierarchy' as SliceType,
+    icon: 'table_rows',
+  },
+  {
+    label: 'Assignees',
+    value: 'assignees' as SliceType,
+    icon: 'person',
+  },
+  {
+    label: 'Status',
+    value: 'status' as SliceType,
+    icon: 'arrow_circle_right',
+  },
+  {
+    label: 'Type',
+    value: 'type' as SliceType, // combination of folder and task types
+    icon: 'folder',
+  },
+  {
+    label: 'Task Type',
+    value: 'taskType' as SliceType,
+    icon: 'check_circle',
+  },
+]
+
+const getNoValue = (field: string): TableRow => ({
+  id: 'noValue',
+  name: 'noValue',
+  label: `No ${field}`,
+  icon: 'unpublished',
+  subRows: [],
+  data: {
+    id: 'noValue',
+  },
+})
+
+const getSomeValue = (field: string): TableRow => ({
+  id: 'hasValue',
+  name: 'hasValue',
+  label: `Some ${field}`,
+  icon: 'check',
+  subRows: [],
+  data: {
+    id: 'hasValue',
+  },
+})
 
 const useTableDataBySlice = ({ sliceFields }: Props): TableData => {
   const { sliceType, onSliceTypeChange } = useSlicerContext()
   const projectName = useAppSelector((state) => state.project.name)
-
-  const defaultSliceOptions: SliceOption[] = [
-    {
-      label: 'Hierarchy',
-      value: 'hierarchy' as SliceType,
-      icon: 'table_rows',
-    },
-    {
-      label: 'Assignees',
-      value: 'users' as SliceType,
-      icon: 'person',
-    },
-    {
-      label: 'Status',
-      value: 'status' as SliceType,
-      icon: 'arrow_circle_right',
-    },
-    {
-      label: 'Type',
-      value: 'type' as SliceType, // combination of folder and task types
-      icon: 'folder',
-    },
-    {
-      label: 'Task Type',
-      value: 'taskType' as SliceType,
-      icon: 'check_circle',
-    },
-  ]
 
   const sliceOptions = defaultSliceOptions.filter(
     (option) => !sliceFields.length || sliceFields.includes(option.value),
@@ -96,10 +119,12 @@ const useTableDataBySlice = ({ sliceFields }: Props): TableData => {
       isLoading: isLoadingHierarchy,
       isExpandable: true,
     },
-    users: {
+    assignees: {
       getData: getUsersData,
       isLoading: isUsersLoading,
       isExpandable: false,
+      noValue: true,
+      hasValue: true,
     },
     status: {
       getData: getStatuses,
@@ -120,6 +145,7 @@ const useTableDataBySlice = ({ sliceFields }: Props): TableData => {
 
   const initSlice = { data: [], isExpandable: false }
   const [slice, setSlice] = useState<Slice>(initSlice)
+  const sliceConfig = builtInSlices[sliceType]
 
   useEffect(() => {
     // wait for hierarchy data to load before fetching slice data
@@ -127,10 +153,16 @@ const useTableDataBySlice = ({ sliceFields }: Props): TableData => {
     const fetchData = async () => {
       try {
         setIsLoading(true)
-        const newData = await builtInSlices[sliceType].getData()
+        const newData = await sliceConfig.getData()
+
+        // add some value option
+        if (sliceConfig.hasValue) newData.unshift(getSomeValue(sliceType))
+
+        // add no value option
+        if (sliceConfig.noValue) newData.unshift(getNoValue(sliceType))
         setSlice({
           data: newData,
-          isExpandable: builtInSlices[sliceType].isExpandable,
+          isExpandable: sliceConfig.isExpandable,
         })
       } catch (error) {
         console.error('Error fetching slice data:', error)

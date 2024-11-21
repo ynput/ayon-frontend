@@ -2,8 +2,8 @@ import { createContext, useContext, useState, ReactNode } from 'react'
 import { ExpandedState, RowSelectionState } from '@tanstack/react-table'
 import useSlicerReduxSync from '@containers/Slicer/hooks/useSlicerReduxSync'
 
-export type SliceType = 'hierarchy' | 'users' | 'status' | 'type' | 'taskType'
-const sliceTypes: SliceType[] = ['hierarchy', 'users', 'status', 'type', 'taskType']
+export type SliceType = 'hierarchy' | 'assignees' | 'status' | 'type' | 'taskType'
+const sliceTypes: SliceType[] = ['hierarchy', 'assignees', 'status', 'type', 'taskType']
 
 export type SliceDataItem = {
   id: string
