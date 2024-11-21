@@ -21,7 +21,6 @@ const useFilterBySlice = ({
 }: Props): { folders: FolderTask[]; taskTypes: string[]; folderTypes: string[] } => {
   const { sliceType, rowSelectionData } = useSlicerContext()
 
-  // TODO: fix this. It's not working
   const sliceTypeToFilterMap: Record<SliceType, FilterMapping | undefined> = {
     users: {
       id: 'assignees',
@@ -63,7 +62,9 @@ const useFilterBySlice = ({
   // filter tasks
   const filteredTasksFolders = useMemo(
     () =>
-      ['hierarchy', 'type'].includes(sliceType) ? folders : filterTasksBySearch(folders, filters),
+      ['hierarchy', 'type'].includes(sliceType) || !filter?.values?.length
+        ? folders
+        : filterTasksBySearch(folders, filters),
     [folders, filters],
   )
 
@@ -86,8 +87,6 @@ const useFilterBySlice = ({
   }
 
   const { taskTypes, folderTypes } = getTypesBySubType()
-
-  console.log(taskTypes, folderTypes)
 
   return { folders: filteredTasksFolders, taskTypes, folderTypes }
 }
