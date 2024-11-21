@@ -7,6 +7,7 @@ import { SelectionStatus } from './types'
 import { Filter, FilterValue, Option } from '@components/SearchFilter/types'
 import { useAppSelector } from '@state/store'
 import { useSetFrontendPreferencesMutation } from '@queries/user/updateUser'
+import { uuid } from 'short-uuid'
 
 const useProjectAccessGroupData = (selectedProject: string) => {
   const udpateApiCache = (project: string, user: string, accessGroups: string[]) => {
@@ -113,6 +114,14 @@ const useProjectAccessSearchFilterBuiler = ({
 }) => {
   const options: Option[] = [
     {
+      id: 'text',
+      label: 'Text',
+      icon: 'manage_search',
+      inverted: false,
+      allowsCustomValues: true,
+      values: [],
+    },
+    {
       id: 'project',
       label: 'Project',
       icon: 'deployed_code',
@@ -144,7 +153,31 @@ const userPageFilters = (): [filters: Filter[], setFilters: (value: Filter[]) =>
   const filters = frontendPreferencesFilters?.[pageId] || []
 
   const setFilters = (value: Filter[]) => {
-    const updatedUserFilters = { ...frontendPreferencesFilters, [pageId]: value}
+    const mergeTextFilters = (userFilters: Filter[], textFilter: Filter): Filter[] => {
+      if (userFilters.length === 0) {
+        return [{ icon: 'person', label: 'User', id: textFilter.id, values: textFilter.values }]
+      }
+
+      return [
+        ...userFilters,
+        { icon: 'person', label: 'User', id: textFilter.id, values: textFilter.values },
+      ]
+    }
+
+    const textFilter = value.find((filter) => filter.label === 'Text')
+    const textlessFilters = value.filter(
+      (filter) => filter.label !== 'Text' && filter.label !== 'User',
+    )
+    let userFilters = value.filter((filter) => filter.label === 'User')
+    let filteredValue = textlessFilters
+    if (!textFilter || textFilter.values!.length === 0) {
+      // No new filters, we return the existing ones
+      filteredValue = [...textlessFilters, ...userFilters]
+    } else {
+      // new text filters, we merge && convert them to user custom filters
+      filteredValue = [...textlessFilters, ...mergeTextFilters(userFilters, textFilter)]
+    }
+    const updatedUserFilters = { ...frontendPreferencesFilters, [pageId]: filteredValue }
     const updatedFrontendPreferences = { ...frontendPreferences, filters: updatedUserFilters }
     updateUserPreferences({ userName, patchData: updatedFrontendPreferences })
   }

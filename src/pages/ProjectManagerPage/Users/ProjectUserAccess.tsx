@@ -36,6 +36,7 @@ import SplitterContainerTwoPanes from './SplitterTwoPanes'
 import { ProjectNode, UserNode } from '@api/graphql'
 import LoadingPage from '@pages/LoadingPage'
 import { useQueryParam } from 'use-query-params'
+import { uuid } from 'short-uuid'
 
 const StyledButton = styled(Button)`
   .shortcut {
@@ -185,6 +186,29 @@ const ProjectUserAccess = () => {
         disabled: true,
         command: () => onRemove()(actionedUsers),
       },
+      {
+        id: 'filter_by_user',
+        icon: 'person',
+        label: 'Filter by user',
+        disabled: false,
+        command: () => handleUserFilterUpdate(actionedUsers)
+      },
+    ])
+  }
+
+  const handleUserFilterUpdate = (actionedUsers: string[]) => {
+    const otherFilters = filters.filter(filter => filter.label !== 'User')
+    const newFilterValues = userFilter.values = users
+      .filter((user: UserNode) => actionedUsers.includes(user.name))
+      .map((user: $Any) => ({
+        id: user.name,
+        label: user.name,
+        img: `/api/users/${user.name}/avatar`,
+      }))
+    let userFilters = filters.filter(filter => filter.label === 'User')[0]
+    setFilters([
+      ...otherFilters,
+      { icon: 'person', label: 'User', id: userFilters?.id || uuid(), values: newFilterValues },
     ])
   }
 
