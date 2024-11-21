@@ -13,6 +13,10 @@ const StyledButton = styled(Button)`
   &.open {
     background-color: unset !important;
   }
+
+  &:hover {
+    background-color: var(--md-sys-color-surface-container-low-hover);
+  }
 `
 
 const StyledInput = styled(InputText)`
