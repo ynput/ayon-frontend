@@ -202,7 +202,11 @@ const TasksProgress: FC<TasksProgressProps> = ({
   )
 
   // filter out by slice
-  const { folders: filteredFoldersTasksBySlice, taskTypes: sliceTaskTypes } = useFilterBySlice({
+  const {
+    folders: filteredFoldersTasksBySlice,
+    taskTypes: sliceTaskTypes,
+    folderTypes: sliceFolderTypes,
+  } = useFilterBySlice({
     folders: foldersTasksData,
   })
   // filter out by search and filter bar
@@ -228,6 +232,7 @@ const TasksProgress: FC<TasksProgressProps> = ({
         filteredFoldersTasks,
         getTaskTypesFilterIntersection(filteredTaskTypes, sliceTaskTypes),
         collapsedParents,
+        sliceFolderTypes,
         {
           folderTypes,
           statuses,

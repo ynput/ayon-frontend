@@ -16,7 +16,9 @@ type Props = {
   folders: GetTasksProgressResult
 }
 
-const useFilterBySlice = ({ folders }: Props): { folders: FolderTask[]; taskTypes: string[] } => {
+const useFilterBySlice = ({
+  folders,
+}: Props): { folders: FolderTask[]; taskTypes: string[]; folderTypes: string[] } => {
   const { sliceType, rowSelectionData } = useSlicerContext()
 
   // TODO: fix this. It's not working
@@ -32,12 +34,12 @@ const useFilterBySlice = ({ folders }: Props): { folders: FolderTask[]; taskType
 
       mapValue: (items) => items.map((item) => ({ id: item.name || item.id })),
     },
-    taskType: {
-      id: 'taskType',
+    type: {
+      id: 'type',
       type: 'string',
       mapValue: (items) => items.map((item) => ({ id: item.name || item.id })),
     },
-    type: undefined,
+    taskType: undefined,
     hierarchy: undefined,
   }
 
@@ -61,26 +63,33 @@ const useFilterBySlice = ({ folders }: Props): { folders: FolderTask[]; taskType
   // filter tasks
   const filteredTasksFolders = useMemo(
     () =>
-      ['hierarchy', 'taskType'].includes(sliceType)
-        ? folders
-        : filterTasksBySearch(folders, filters),
+      ['hierarchy', 'type'].includes(sliceType) ? folders : filterTasksBySearch(folders, filters),
     [folders, filters],
   )
 
-  // task types are filtered differently on the task progress page and doesn't use the filterTasksBySearch function
+  // task and folder types are filtered differently on the task progress page and doesn't use the filterTasksBySearch function
   // it uses another function after this hook, so we need to return the task types separately
-  const getTaskTypes = (): string[] => {
-    if (sliceType === 'taskType' && sliceTypeToFilterMap.taskType) {
-      return sliceTypeToFilterMap.taskType
-        .mapValue(Object.values(rowSelectionData))
-        .map((item) => item.id)
+  const getTypesBySubType = (): { taskTypes: string[]; folderTypes: string[] } => {
+    if (sliceType !== 'type' || !rowSelectionData) {
+      return { taskTypes: [], folderTypes: [] }
     }
-    return []
+
+    const selectedItems = Object.values(rowSelectionData)
+
+    const taskTypes = selectedItems.filter((item) => item.subType === 'task').map((item) => item.id)
+
+    const folderTypes = selectedItems
+      .filter((item) => item.subType === 'folder')
+      .map((item) => item.id)
+
+    return { taskTypes, folderTypes }
   }
 
-  const taskTypes = getTaskTypes()
+  const { taskTypes, folderTypes } = getTypesBySubType()
 
-  return { folders: filteredTasksFolders, taskTypes }
+  console.log(taskTypes, folderTypes)
+
+  return { folders: filteredTasksFolders, taskTypes, folderTypes }
 }
 
 export default useFilterBySlice

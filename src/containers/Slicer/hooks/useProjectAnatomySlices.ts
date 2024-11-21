@@ -53,6 +53,7 @@ const useProjectAnatomySlices = ({ projectName }: Props) => {
         id: folderType.name,
         name: folderType.name,
         label: folderType.name,
+        subType: 'folder',
       },
     }))
 
@@ -67,6 +68,7 @@ const useProjectAnatomySlices = ({ projectName }: Props) => {
         id: taskType.name,
         name: taskType.name,
         label: taskType.name,
+        subType: 'task',
       },
     }))
 
@@ -104,6 +106,7 @@ const useProjectAnatomySlices = ({ projectName }: Props) => {
         id: taskType.name,
         name: taskType.name,
         label: taskType.name,
+        subType: 'task',
       },
     }))
 
