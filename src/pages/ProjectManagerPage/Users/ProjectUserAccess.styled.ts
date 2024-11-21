@@ -1,4 +1,5 @@
 import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
+import { Button } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
 export const StyledEmptyPlaceholder = styled(EmptyPlaceholder)`
@@ -41,4 +42,38 @@ export const StyledHeader = styled.p`
   line-height: 24px;
   font-weight: 700;
   margin: 8px 0;
+`
+
+export const UserColumn = styled.div`
+  display: flex;
+  height: 24px;
+  align-items: center;
+  gap: var(--base-gap-large);
+  button {
+    visibility: hidden;
+    .shortcut {
+      font-size: 11px;
+      line-height: 16px;
+      font-weight: 700;
+      padding: 1px 4px;
+      vertical-align: middle;
+      background-color: var(--md-sys-color-primary-container);
+      border-radius: var(--border-radius-m);
+    }
+  }
+  &.hovering {
+    button {
+      visibility: visible;
+    }
+  }
+`
+export const ActionButton = styled(Button)`
+  padding: 0;
+  &.hasIcon {
+    padding: 2px 4px;
+  }
+  .icon {
+    height: 20px;
+    width: 20px;
+  }
 `

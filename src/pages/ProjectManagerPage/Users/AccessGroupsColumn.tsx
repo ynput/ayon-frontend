@@ -1,46 +1,10 @@
-import { Button } from '@ynput/ayon-react-components'
-import UserImage from '@components/UserImage'
-
-import styled from 'styled-components'
 import clsx from 'clsx'
 import { $Any } from '@types'
 
-const StyledProfileRow = styled.div`
-  display: flex;
-  height: 24px;
-  align-items: center;
-  gap: var(--base-gap-large);
-  button {
-    visibility: hidden;
-    .shortcut {
-      font-size: 11px;
-      line-height: 16px;
-      font-weight: 700;
-      padding: 1px 4px;
-      vertical-align: middle;
-      background-color: var(--md-sys-color-primary-container);
-      border-radius: var(--border-radius-m);
-    }
-  }
-  &.hovering {
-    button {
-      visibility: visible;
-    }
-  }
-`
-const StyledButton = styled(Button)`
-  padding: 0;
-  &.hasIcon {
-    padding: 2px 4px;
-  }
-  .icon {
-    height: 20px;
-    width: 20px;
-  }
-`
+import * as Styled from './ProjectUserAccess.styled'
 
 type Props = {
-  rowData: $Any
+  data: $Any
   selected: boolean
   isUnassigned: boolean
   hovering: boolean
@@ -52,8 +16,8 @@ type Props = {
   onRemove?: () => void
 }
 
-export const UserRow = ({
-  rowData,
+export const AccessGroupsColumn = ({
+  data,
   selected = false,
   isUnassigned = false,
   hovering = false,
@@ -64,21 +28,16 @@ export const UserRow = ({
   onAdd,
   onRemove,
 }: Props) => {
-  const { name, self, isMissing } = rowData
   return (
-    <StyledProfileRow className={clsx({ actionable: showButtonsOnHover, selected, hovering })}>
-      {/* @ts-ignore */}
-      <UserImage name={name} highlight={self} size={22} />
-      <span
-        style={{
-          flexGrow: 1,
-          color: isMissing ? 'var(--color-hl-error)' : 'inherit',
-        }}
-      >
-        {name}
-      </span>
-      {!readOnly && (isUnassigned || showAddMoreButton) && (
-        <StyledButton
+    <Styled.UserColumn className={clsx({ actionable: showButtonsOnHover, selected, hovering })}>
+      {data.assignedAccessGroups.map((ag: {accessGroup: string, complete: boolean}, idx: number) => (
+        <span style={{opacity: ag.complete ? 1 : .5}}>
+          {ag.accessGroup[0].toUpperCase() + ag.accessGroup.slice(1)}
+          {idx !== data.assignedAccessGroups.length - 1 ? ',' : ''}
+        </span>
+      ))}
+      {!readOnly && showButtonsOnHover && (isUnassigned || showAddMoreButton) && (
+        <Styled.ActionButton
           className="action"
           disabled={addButtonDisabled}
           data-tooltip={addButtonDisabled ? 'No project selected' : undefined}
@@ -97,11 +56,11 @@ export const UserRow = ({
           ) : (
             'Add more'
           )}
-        </StyledButton>
+        </Styled.ActionButton>
       )}
 
       {!readOnly && !isUnassigned && (
-        <StyledButton
+        <Styled.ActionButton
           className="action"
           icon={'remove'}
           variant="filled"
@@ -111,10 +70,10 @@ export const UserRow = ({
           }}
         >
           Remove <span className="shortcut">R</span>
-        </StyledButton>
+        </Styled.ActionButton>
       )}
-    </StyledProfileRow>
+    </Styled.UserColumn>
   )
 }
 
-export default UserRow
+export default AccessGroupsColumn

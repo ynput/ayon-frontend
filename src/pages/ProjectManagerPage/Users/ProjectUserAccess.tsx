@@ -18,7 +18,6 @@ import ProjectManagerPageLayout from '../ProjectManagerPageLayout'
 import {
   canAllEditUsers,
   getAccessGroupUsers,
-  getAllProjectUsers,
   getErrorInfo,
   getFilteredEntities,
   getFilteredSelectedProjects,
@@ -70,15 +69,8 @@ const ProjectUserAccess = () => {
     isError: usersFetchError,
   } = useGetUsersQuery({ selfName })
 
-  const activeNonManagerUsers = userList.filter(
-    (user: UserNode) => !user.isAdmin && !user.isManager && user.active,
-  )
-
+  const users = userList.filter((user: UserNode) => !user.isAdmin && !user.isManager && user.active)
   const mappedUsers = mapUsersByAccessGroups(projectUsers)
-  const allProjectUsers = getAllProjectUsers(mappedUsers)
-  const unassignedUsers = activeNonManagerUsers.filter(
-    (user: UserNode) => !allProjectUsers.includes(user.name),
-  )
 
   const [actionedUsers, setActionedUsers] = useState<string[]>([])
   const [showDialog, setShowDialog] = useState<boolean>(false)
@@ -106,18 +98,53 @@ const ProjectUserAccess = () => {
   const filteredSelectedProjects = getFilteredSelectedProjects(selectedProjects, filteredProjects)
 
   const userFilter = filters?.filter((el: Filter) => el.label === 'User')
-  const filteredNonManagerUsers = getFilteredEntities<UserNode>(activeNonManagerUsers, userFilter)
-  const filteredUnassignedUsers = getFilteredEntities<UserNode>(unassignedUsers, userFilter)
-  const selectedUnassignedUsers = getSelectedUsers(
-    selectedAccessGroupUsers,
-    filteredUnassignedUsers,
-  )
+  const filteredNonManagerUsers = getFilteredEntities<UserNode>(users, userFilter)
+  const filteredUsers = getFilteredEntities<UserNode>(users, userFilter)
+  const filteredUsersWithAccessGroups = filteredUsers.map((user: UserNode) => {
+    const assignedInAllProjects = (accessGroup: string) => {
+      for (const project of filteredSelectedProjects) {
+        // @ts-ignore
+        if (!user.accessGroups[project] || !user.accessGroups[project]!.includes(accessGroup)) {
+          return false
+        }
+      }
+      return true
+    }
+    const assignedAccessGroups = Object.keys(user.accessGroups).filter(ag => filteredSelectedProjects.includes(ag)).reduce(
+      (acc: $Any, curr: string) => {
+        // @ts-ignore
+        return [...acc, ...user.accessGroups[curr]]
+      },
+      [],
+    )
+    let assignedAccessGroupsList = Array.from(new Set(assignedAccessGroups))
+
+    let weightedAccessGroupsList = []
+    for (const agName of assignedAccessGroupsList) {
+      weightedAccessGroupsList.push({
+        accessGroup: agName,
+        complete: assignedInAllProjects(agName),
+      })
+    }
+    weightedAccessGroupsList.sort((a, b) => {
+      const aComplete = a.complete ? -10 : 10
+      const bComplete = b.complete ? -10 : 10
+
+      // @ts-ignore
+      const nameComparison = a.accessGroup.localeCompare(b.accessGroup)
+      return aComplete - bComplete + nameComparison
+    })
+
+    return { ...user, assignedAccessGroups: weightedAccessGroupsList }
+  })
+
+  const selectedUsers = getSelectedUsers(selectedAccessGroupUsers, filteredUsersWithAccessGroups)
 
   const hasEditRightsOnProject =
     permissionsLoading ||
     (filteredSelectedProjects.length > 0 &&
       canAllEditUsers(filteredSelectedProjects, userPermissions))
-  const addActionEnabled = hasEditRightsOnProject && selectedUnassignedUsers.length > 0
+  const addActionEnabled = hasEditRightsOnProject && selectedUsers.length > 0
   const removeActionEnabled =
     hasEditRightsOnProject &&
     getSelectedUsers(selectedAccessGroupUsers, [], true).length > 0 &&
@@ -131,7 +158,7 @@ const ProjectUserAccess = () => {
   const [ctxMenuShow] = useCreateContext([])
 
   const handleAddContextMenu = (e: $Any) => {
-    let actionedUsers = selectedUnassignedUsers
+    let actionedUsers = selectedUsers
     if (!actionedUsers.includes(e.data.name)) {
       actionedUsers = [e.data.name]
       setSelectedAccessGroupUsers({ users: [e.data.name] })
@@ -197,7 +224,7 @@ const ProjectUserAccess = () => {
       ? users
       : selectedAccessGroupUsers?.accessGroup
       ? selectedUsers
-      : selectedUnassignedUsers
+      : selectedUsers
     setActionedUsers(actionedUsers)
     if (filteredAccessGroups.length == 1) {
       onSave(actionedUsers, [{ name: filteredAccessGroups[0].name, status: SelectionStatus.All }])
@@ -306,16 +333,16 @@ const ProjectUserAccess = () => {
     </>
   )
 
-  const unasssignedUsersContent = (
+  const usersContent = (
     <>
-      <StyledHeader>No project access</StyledHeader>
+      <StyledHeader>All users</StyledHeader>
       <div style={{ position: 'relative', height: '100%' }}>
         <ProjectUserAccessUserList
           header="User"
           emptyMessage="All users assigned"
           selectedProjects={filteredSelectedProjects}
-          selectedUsers={selectedUnassignedUsers}
-          tableList={filteredUnassignedUsers}
+          selectedUsers={selectedUsers}
+          tableList={filteredUsersWithAccessGroups}
           isLoading={usersLoading}
           readOnly={!hasEditRightsOnProject}
           hoveredUser={hoveredUser}
@@ -327,6 +354,7 @@ const ProjectUserAccess = () => {
           onSelectUsers={(selection) => setSelectedAccessGroupUsers({ users: selection })}
           sortable
           isUnassigned
+          showAccessGroups
         />
       </div>
     </>
@@ -400,7 +428,7 @@ const ProjectUserAccess = () => {
         <ProjectUserAccessSearchFilterWrapper
           filters={filters}
           projects={filteredProjects}
-          users={activeNonManagerUsers}
+          users={users}
           onChange={(results: $Any) => setFilters(results)}
         />
         <StyledButton
@@ -419,7 +447,7 @@ const ProjectUserAccess = () => {
           disabled={!removeActionEnabled}
           onClick={(e) => {
             e.stopPropagation()
-            setActionedUsers(selectedUnassignedUsers)
+            setActionedUsers(selectedUsers)
             onRemove(selectedAccessGroupUsers!.accessGroup!)()
           }}
         >
@@ -430,7 +458,7 @@ const ProjectUserAccess = () => {
       {!errorInfo ? (
         <SplitterContainerThreePanes
           leftContent={projectsContent}
-          mainContent={unasssignedUsersContent}
+          mainContent={usersContent}
           rightContent={accessGroupsContent}
         />
       ) : (

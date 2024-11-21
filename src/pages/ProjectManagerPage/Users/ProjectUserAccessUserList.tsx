@@ -6,8 +6,9 @@ import { TablePanel, Section } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import { $Any } from '@types'
 import { UserNode } from '@api/graphql'
-import UserRow from './UserRow'
 import { StyledEmptyPlaceholder, StyledEmptyPlaceholderWrapper } from './ProjectUserAccess.styled'
+import UserColumn from './UserColumn'
+import AccessGroupsColumn from './AccessGroupsColumn'
 import { HoveredUser } from './types'
 
 
@@ -24,6 +25,7 @@ type Props = {
   sortable?: boolean
   isUnassigned?: boolean
   showAddMoreButton?: boolean
+  showAccessGroups?: boolean
   onContextMenu?: $Any
   onHoverRow: $Any
   onSelectUsers?: (selectedUsers: string[]) => void
@@ -44,6 +46,7 @@ const ProjectUserAccessUserList = ({
   sortable = false,
   isUnassigned = false,
   showAddMoreButton = false,
+  showAccessGroups = false,
   onAdd,
   onRemove,
   onContextMenu,
@@ -98,18 +101,20 @@ const ProjectUserAccessUserList = ({
             headerStyle={{ textTransform: 'capitalize' }}
             body={(rowData) =>
               !isLoading && (
-                <UserRow
+                <UserColumn
                   rowData={rowData}
                   data-testid={`accessGroupUser-${rowData.name}`}
                   isUnassigned={isUnassigned}
                   showAddMoreButton={showAddMoreButton}
                   readOnly={readOnly}
                   onAdd={(user?: string) => onAdd(user ? [user] : undefined)}
-                  hovering={hoveredUser?.user == rowData.name && hoveredUser?.accessGroup === accessGroup}
+                  hovering={
+                    hoveredUser?.user == rowData.name && hoveredUser?.accessGroup === accessGroup
+                  }
                   onRemove={() => {
                     onRemove && onRemove([rowData.name])
                   }}
-                  showButtonsOnHover={selectedUnassignedUsers.length == 0}
+                  showButtonsOnHover={!showAccessGroups && selectedUnassignedUsers.length == 0}
                   addButtonDisabled={selectedProjects.length === 0}
                   selected={selectedUnassignedUserNames.includes(rowData.name)}
                 />
@@ -117,6 +122,34 @@ const ProjectUserAccessUserList = ({
             }
             sortable={sortable}
           />
+          {showAccessGroups && (
+            <Column
+              field="name"
+              header="Project access groups"
+              body={(data) =>
+                !isLoading && (
+                  <AccessGroupsColumn
+                    data={data}
+                    data-testid={`accessGroupUser-${data.name}`}
+                    isUnassigned={isUnassigned}
+                    showAddMoreButton={showAddMoreButton}
+                    readOnly={readOnly}
+                    onAdd={(user?: string) => onAdd(user ? [user] : undefined)}
+                    hovering={
+                      hoveredUser?.user == data.name && hoveredUser?.accessGroup === accessGroup
+                    }
+                    onRemove={() => {
+                      onRemove && onRemove([data.name])
+                    }}
+                    showButtonsOnHover={selectedUnassignedUsers.length == 0}
+                    addButtonDisabled={selectedProjects.length === 0}
+                    selected={selectedUnassignedUserNames.includes(data.name)}
+                  />
+                )
+              }
+              sortable={sortable}
+            />
+          )}
         </DataTable>
       </TablePanel>
     </Section>
