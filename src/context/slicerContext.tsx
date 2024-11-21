@@ -42,17 +42,22 @@ export const SlicerProvider = ({ children }: SlicerProviderProps) => {
   const { onRowSelectionChange, onExpandedChange } = useSlicerReduxSync({
     setRowSelection,
     setExpanded,
+    sliceType,
   })
 
   //   do something with selection change
   const handleRowSelectionChange = (selection: RowSelectionState) => {
-    // update redux focused folders
-    onRowSelectionChange(selection)
+    if (sliceType === 'hierarchy') {
+      // update redux focused folders
+      onRowSelectionChange(selection)
+    }
   }
 
   const handleExpandedChange = (expanded: ExpandedState) => {
-    // update redux expanded folders
-    onExpandedChange(expanded)
+    if (sliceType === 'hierarchy') {
+      // update redux expanded folders
+      onExpandedChange(expanded)
+    }
   }
 
   const handleSliceTypeChange = (sliceType: SliceType) => {

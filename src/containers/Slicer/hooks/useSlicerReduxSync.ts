@@ -1,6 +1,7 @@
 // Syncs the redux store with selection and expanded rows used in legacy hierarchy table
 // This will be removed once the hierarchy table is refactored to use the new slicer table
 
+import { SliceType } from '@context/slicerContext'
 import { setExpandedFolders, setFocusedFolders } from '@state/context'
 import { useAppSelector } from '@state/store'
 import { ExpandedState, RowSelectionState } from '@tanstack/react-table'
@@ -10,9 +11,10 @@ import { useDispatch } from 'react-redux'
 type Props = {
   setRowSelection: React.Dispatch<React.SetStateAction<RowSelectionState>>
   setExpanded: React.Dispatch<React.SetStateAction<ExpandedState>>
+  sliceType: SliceType
 }
 
-const useSlicerReduxSync = ({ setRowSelection, setExpanded }: Props) => {
+const useSlicerReduxSync = ({ setRowSelection, setExpanded, sliceType }: Props) => {
   const dispatch = useDispatch()
   //  redux state
   const reduxFocusedFolders = useAppSelector((state) => state.context.focused.folders)
@@ -20,6 +22,7 @@ const useSlicerReduxSync = ({ setRowSelection, setExpanded }: Props) => {
 
   //   if redux focused folders change, update row selection if they are different
   useEffect(() => {
+    if (sliceType !== 'hierarchy') return
     setRowSelection((prev) => {
       const rowSelection = Object.fromEntries(reduxFocusedFolders.map((id) => [id, true]))
       if (JSON.stringify(rowSelection) !== JSON.stringify(prev)) {
@@ -27,7 +30,7 @@ const useSlicerReduxSync = ({ setRowSelection, setExpanded }: Props) => {
       }
       return prev
     })
-  }, [reduxFocusedFolders, setRowSelection])
+  }, [reduxFocusedFolders, setRowSelection, sliceType])
 
   //   when slicer selection changes update redux focused folders
   const onRowSelectionChange = (selection: RowSelectionState) => {
@@ -36,17 +39,17 @@ const useSlicerReduxSync = ({ setRowSelection, setExpanded }: Props) => {
 
   //   if redux expanded folders change, update expanded if they are different
   useEffect(() => {
+    if (sliceType !== 'hierarchy') return
     setExpanded((prev) => {
       if (JSON.stringify(reduxExpandedFolders) !== JSON.stringify(prev)) {
         return reduxExpandedFolders
       }
       return prev
     })
-  }, [reduxExpandedFolders, setExpanded])
+  }, [reduxExpandedFolders, setExpanded, sliceType])
 
   //   when slicer expanded changes update redux expanded folders
   const onExpandedChange = (expanded: ExpandedState) => {
-    console.log(expanded)
     dispatch(setExpandedFolders(expanded))
   }
 
