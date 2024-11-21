@@ -46,7 +46,7 @@ const useTableDataBySlice = ({ sliceFields }: Props): TableData => {
       icon: 'table_rows',
     },
     {
-      label: 'Users',
+      label: 'Assignees',
       value: 'users' as SliceType,
       icon: 'person',
     },
