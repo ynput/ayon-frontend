@@ -124,7 +124,6 @@ const ProjectUserAccessUserList = ({
           />
           {showAccessGroups && (
             <Column
-              field="name"
               header="Project access groups"
               body={(data) =>
                 !isLoading && (
@@ -147,7 +146,6 @@ const ProjectUserAccessUserList = ({
                   />
                 )
               }
-              sortable={sortable}
             />
           )}
         </DataTable>

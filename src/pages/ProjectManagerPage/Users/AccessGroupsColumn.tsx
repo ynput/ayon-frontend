@@ -2,6 +2,7 @@ import clsx from 'clsx'
 import { $Any } from '@types'
 
 import * as Styled from './ProjectUserAccess.styled'
+import { Spacer } from '@ynput/ayon-react-components'
 
 type Props = {
   data: $Any
@@ -36,6 +37,7 @@ export const AccessGroupsColumn = ({
           {idx !== data.assignedAccessGroups.length - 1 ? ',' : ''}
         </span>
       ))}
+      <Spacer />
       {!readOnly && showButtonsOnHover && (isUnassigned || showAddMoreButton) && (
         <Styled.ActionButton
           className="action"
