@@ -8,6 +8,11 @@ interface SearchFilterWrapperProps extends BuildFilterOptions {
   onChange: SearchFilterProps['onChange']
 }
 
+// feature flag to allow multiple filters of the same type (not supported yet)
+const ALLOW_MULTIPLE_SAME_FILTERS = false
+// feature flag to allow global search across all fields (not supported yet)
+const ALLOW_GLOBAL_SEARCH = false
+
 const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
   filters: _filters,
   onChange,
@@ -37,6 +42,8 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
       filters={filters}
       onChange={setFilters}
       onFinish={(v) => onChange(v)} // when changes are applied
+      allowMultipleSameFilters={ALLOW_MULTIPLE_SAME_FILTERS}
+      allowGlobalSearch={ALLOW_GLOBAL_SEARCH}
     />
   )
 }

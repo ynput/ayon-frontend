@@ -133,12 +133,10 @@ const SearchFilterDropdown = forwardRef<HTMLUListElement, SearchFilterDropdownPr
       if ([' ', 'Enter'].includes(event.key)) {
         event.preventDefault()
         event.stopPropagation()
-        if (event.key === 'Enter' && (event.metaKey || event.ctrlKey || event.shiftKey)) {
+        if (event.key === 'Enter') {
           //  shift + enter will confirm but keep the dropdown open
-          //  (cmd or ctrl) + enter will confirm and close dropdown
+          //  any other enter will confirm and close dropdown
           onConfirmAndClose && onConfirmAndClose(values, { restart: event.shiftKey })
-        } else {
-          handleSelectOption(event)
         }
       }
       // up arrow

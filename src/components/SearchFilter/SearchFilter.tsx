@@ -10,6 +10,7 @@ import SearchFilterDropdown, {
 import { useFocusOptions } from './hooks'
 import buildFilterId from './buildFilterId'
 import getFilterFromId from './getFilterFromId'
+import doesFilterExist from './doesFilterExist'
 
 const sortSelectedToTopFields = ['assignee', 'taskType']
 
@@ -18,7 +19,8 @@ export interface SearchFilterProps {
   onChange: (filters: Filter[]) => void
   onFinish?: (filters: Filter[]) => void
   options: Option[]
-  disableSearch?: boolean
+  allowGlobalSearch?: boolean
+  allowMultipleSameFilters?: boolean
 }
 
 const SearchFilter: FC<SearchFilterProps> = ({
@@ -26,12 +28,13 @@ const SearchFilter: FC<SearchFilterProps> = ({
   onChange,
   onFinish,
   options: initOptions = [],
-  disableSearch = false,
+  allowGlobalSearch = false,
+  allowMultipleSameFilters = false,
 }) => {
   const filtersRef = useRef<HTMLDivElement>(null)
   const dropdownRef = useRef<HTMLUListElement>(null)
 
-  const options = getOptionsWithSearch(initOptions, disableSearch)
+  const options = getOptionsWithSearch(initOptions, allowGlobalSearch)
 
   const [dropdownParentId, setDropdownParentId] = useState<null | string>(null)
   const [dropdownOptions, setOptions] = useState<Option[] | null>(null)
@@ -47,7 +50,9 @@ const SearchFilter: FC<SearchFilterProps> = ({
     setDropdownParentId(parentId)
   }
 
-  const openInitialOptions = () => openOptions(options, null)
+  const openInitialOptions = () => {
+    openOptions(getShownRootOptions(options, filters, allowMultipleSameFilters), null)
+  }
 
   const closeOptions = () => {
     setOptions(null)
@@ -77,6 +82,9 @@ const SearchFilter: FC<SearchFilterProps> = ({
 
   const handleOptionSelect: SearchFilterDropdownProps['onSelect'] = (option, config) => {
     const { values, parentId } = option
+
+    // check if the filter already exists and if we allow multiple of the same filter
+    if (!allowMultipleSameFilters && doesFilterExist(option.id, filters)) return
 
     // create new id for the filter so we can add multiple of the same filter name
     const newId = buildFilterId(option.id)
@@ -289,7 +297,7 @@ const SearchFilter: FC<SearchFilterProps> = ({
         {filters.length ? (
           <Styled.FilterButton icon={'add'} variant="text" />
         ) : (
-          <span>{getEmptyPlaceholder(disableSearch)}</span>
+          <span>{getEmptyPlaceholder(allowGlobalSearch)}</span>
         )}
       </Styled.SearchBar>
       {dropdownOptions && (
@@ -314,11 +322,11 @@ const SearchFilter: FC<SearchFilterProps> = ({
 
 export default SearchFilter
 
-const getEmptyPlaceholder = (disableSearch: boolean) => {
-  return disableSearch ? 'Filter' : 'Search and filter'
+const getEmptyPlaceholder = (allowGlobalSearch: boolean) => {
+  return allowGlobalSearch ? 'Search and filter' : 'Filter'
 }
-const getOptionsWithSearch = (options: Option[], disableSearch: boolean) => {
-  if (disableSearch) return options
+const getOptionsWithSearch = (options: Option[], allowGlobalSearch: boolean) => {
+  if (!allowGlobalSearch) return options
   //  unshift search option
   const searchFilter: Option = {
     id: 'text',
@@ -330,6 +338,20 @@ const getOptionsWithSearch = (options: Option[], disableSearch: boolean) => {
   }
 
   return [searchFilter, ...options]
+}
+
+// get all the top level fields that should be shown depending on the filters and allowMultipleSameFilters
+const getShownRootOptions = (
+  options: Option[],
+  filters: Filter[],
+  allowMultipleSameFilters: boolean,
+): Option[] => {
+  return options.filter((option) => {
+    if (!allowMultipleSameFilters) {
+      return !doesFilterExist(option.id, filters)
+    }
+    return true
+  })
 }
 
 const mergeOptionsWithFilterValues = (filter: Filter, options: Option[]): Option[] => {
