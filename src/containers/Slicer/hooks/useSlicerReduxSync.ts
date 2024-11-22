@@ -14,23 +14,17 @@ type Props = {
   sliceType: SliceType
 }
 
-const useSlicerReduxSync = ({ setRowSelection, setExpanded, sliceType }: Props) => {
+const useSlicerReduxSync = ({ setExpanded, sliceType }: Props) => {
   const dispatch = useDispatch()
   //  redux state
-  const reduxFocusedFolders = useAppSelector((state) => state.context.focused.folders)
+  // const reduxFocusedFolders = useAppSelector((state) => state.context.focused.folders)
   const reduxExpandedFolders = useAppSelector((state) => state.context.expandedFolders)
 
   //   if redux focused folders change, update row selection if they are different
-  useEffect(() => {
-    if (sliceType !== 'hierarchy') return
-    setRowSelection((prev) => {
-      const rowSelection = Object.fromEntries(reduxFocusedFolders.map((id) => [id, true]))
-      if (JSON.stringify(rowSelection) !== JSON.stringify(prev)) {
-        return rowSelection
-      }
-      return prev
-    })
-  }, [reduxFocusedFolders, setRowSelection, sliceType])
+  // useEffect(() => {
+  //   if (sliceType !== 'hierarchy') return
+  //   setRowSelection({})
+  // }, [reduxFocusedFolders, setRowSelection, sliceType])
 
   //   when slicer selection changes update redux focused folders
   const onRowSelectionChange = (selection: RowSelectionState) => {
