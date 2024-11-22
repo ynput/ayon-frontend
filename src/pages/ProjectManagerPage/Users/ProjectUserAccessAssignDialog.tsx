@@ -8,6 +8,7 @@ import { getPlatformShortcutKey, KeyMode } from '@helpers/platform'
 import { mapInitialAccessGroupStates } from './mappers'
 import { AccessGroupUsers, SelectionStatus } from './types'
 import * as Styled from './ProjectUserAccessAssignDialog.styled'
+import { ProjectUserData } from '@queries/project/getProject'
 
 const icons: {[key in SelectionStatus] : string | undefined} = {
   [SelectionStatus.None]: 'add',
@@ -22,6 +23,7 @@ type AccessGroupItem = {
 
 type Props = {
   accessGroups: $Any[]
+  projectUsers: ProjectUserData
   users: string[]
   userAccessGroups: AccessGroupUsers
   onSave: (users: string[], items: AccessGroupItem[]) => void
@@ -30,12 +32,13 @@ type Props = {
 
 const ProjectUserAccessAssignDialog = ({
   accessGroups,
+  projectUsers,
   users,
   userAccessGroups,
   onSave,
   onClose,
 }: Props) => {
-  const initialStates = mapInitialAccessGroupStates(accessGroups, users, userAccessGroups)
+  const initialStates = mapInitialAccessGroupStates(accessGroups, users, projectUsers, userAccessGroups)
   const initialStatesList = Object.keys(initialStates).map(agName => ({name: agName, status: initialStates[agName]}))
 
   const [accessGroupItems, setAccessGroupItems] = useState<AccessGroupItem[]>(initialStatesList)

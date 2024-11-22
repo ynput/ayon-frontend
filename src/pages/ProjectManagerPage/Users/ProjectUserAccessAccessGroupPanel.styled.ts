@@ -16,6 +16,7 @@ export const Header = styled.div`
   padding: 8px;
   font-size: 14px;
   line-height: 17px;
+  border-radius: var(--border-radius-m);
   background-color: var(--md-sys-color-surface-container-high);
   &:hover {
     background-color: var(--md-sys-color-surface-container-high-hover);

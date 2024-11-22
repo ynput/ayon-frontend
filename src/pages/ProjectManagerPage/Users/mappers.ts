@@ -160,9 +160,10 @@ const canAllEditUsers = (projects: string[], userPermissions?: UserPermissions) 
 const mapInitialAccessGroupStates = (
   accessGroups: $Any[],
   users: string[],
+  projectUsers: ProjectUserData,
   userAccessGroups: AccessGroupUsers,
 ) => {
-  const getStatus = (users: string[], accessGroupUsers: string[]) => {
+  const getStatus = (agName: string, users: string[], accessGroupUsers: string[]) => {
     const usersSet = new Set(users)
     const accessGroupUsersSet = new Set(accessGroupUsers)
     const intersection = usersSet.intersection(accessGroupUsersSet)
@@ -173,7 +174,20 @@ const mapInitialAccessGroupStates = (
     }
 
     //All users / some users in ag users
-    return intersection.size == usersSet.size ? SelectionStatus.All : SelectionStatus.Mixed
+    if (intersection.size !== usersSet.size) {
+      return SelectionStatus.Mixed
+    }
+
+    //Double checking with each project access groups
+    for (const project in projectUsers) {
+      for (const user of users) {
+        if (!projectUsers[project][user].includes(agName)) {
+          return SelectionStatus.Mixed
+        }
+      }
+    }
+
+    return SelectionStatus.All
   }
 
   const data: $Any = {}
@@ -181,7 +195,7 @@ const mapInitialAccessGroupStates = (
     if (userAccessGroups[ag.name] === undefined) {
       data[ag.name] = SelectionStatus.None
     } else {
-      data[ag.name] = getStatus(users, userAccessGroups[ag.name])
+      data[ag.name] = getStatus(ag.name, users, userAccessGroups[ag.name])
     }
   })
 

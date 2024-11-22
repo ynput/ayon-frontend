@@ -482,6 +482,8 @@ const ProjectUserAccess = () => {
       {showDialog && (
         <ProjectUserAccessAssignDialog
           users={actionedUsers}
+          // @ts-ignore
+          projectUsers={projectUsers}
           userAccessGroups={mappedUsers}
           accessGroups={filteredAccessGroups.map((item) => ({ ...item, selected: false }))}
           onSave={onSave}
