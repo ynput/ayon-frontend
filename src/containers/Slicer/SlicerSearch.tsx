@@ -62,7 +62,7 @@ const SlicerSearch = ({ value, onChange }: Props) => {
         />
       )}
       <StyledButton
-        icon={isOpen ? 'close' : 'search'}
+        icon={isOpen ? 'close' : 'filter_list'}
         onClick={onToggle}
         className={clsx({ open: isOpen })}
       />
