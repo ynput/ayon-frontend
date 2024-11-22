@@ -10,6 +10,13 @@ import TaskProgressDetailsPanel from './TaskProgressDetailsPanel'
 import { useGetAttributeConfigQuery } from '@queries/attributes/getAttributes'
 import { getPriorityOptions } from './helpers'
 import useScopedStatuses from '@hooks/useScopedStatuses'
+import { SliceType } from '@context/slicerContext'
+
+// feature flag to allow slicer of different fields
+const SLICE_BY_FIELDS = false
+const fields: SliceType[] = SLICE_BY_FIELDS
+  ? ['hierarchy', 'assignees', 'status', 'type']
+  : ['hierarchy']
 
 const TasksProgressPage: FC = () => {
   const projectName = useAppSelector((state: $Any) => state.project.name) as string
@@ -28,7 +35,7 @@ const TasksProgressPage: FC = () => {
       <Splitter layout="horizontal" style={{ width: '100%', height: '100%' }}>
         <SplitterPanel size={detailsOpen ? 12 : 18} style={{ minWidth: 227, maxWidth: 500 }}>
           <Section wrap>
-            <Slicer sliceFields={['hierarchy', 'assignees', 'status', 'type']} />
+            <Slicer sliceFields={fields} />
           </Section>
         </SplitterPanel>
         <SplitterPanel size={90} style={{ overflow: 'hidden' }}>
