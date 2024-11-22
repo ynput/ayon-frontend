@@ -1,5 +1,5 @@
 import { forwardRef, useMemo, useState } from 'react'
-import { Filter, Option } from '../types'
+import { Filter, FilterOperator, Option } from '../types'
 import * as Styled from './SearchFilterDropdown.styled'
 import { Button, Icon, InputSwitch, Spacer } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
@@ -26,6 +26,7 @@ export interface SearchFilterDropdownProps {
   isInvertedAllowed?: boolean
   onSelect: (option: Option, config?: OnSelectConfig) => void
   onInvert: (id: string) => void // invert the filter
+  onOperatorChange?: (id: string, operator: FilterOperator) => void // change the operator
   onConfirmAndClose?: (filters: Filter[], config?: OnSelectConfig) => void // close the dropdown and update the filters
   onSwitchFilter?: (direction: 'left' | 'right') => void // switch to the next filter to edit
 }
@@ -43,6 +44,7 @@ const SearchFilterDropdown = forwardRef<HTMLUListElement, SearchFilterDropdownPr
       isInvertedAllowed,
       onSelect,
       onInvert,
+      onOperatorChange,
       onConfirmAndClose,
       onSwitchFilter,
     },
@@ -302,6 +304,20 @@ const SearchFilterDropdown = forwardRef<HTMLUListElement, SearchFilterDropdownPr
                     />
                   </>
                 )}
+                <Styled.Operator>
+                  {['AND', 'OR'].map((operator) => (
+                    <Button
+                      key={operator}
+                      onClick={() => {
+                        onOperatorChange && onOperatorChange(parentId, operator as FilterOperator)
+                      }}
+                      selected={parentFilter?.operator === operator}
+                      icon={parentFilter?.operator === operator ? 'check' : undefined}
+                    >
+                      {operator}
+                    </Button>
+                  ))}
+                </Styled.Operator>
                 <Button
                   variant="filled"
                   onClick={() => {

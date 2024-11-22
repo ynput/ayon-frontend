@@ -1,5 +1,5 @@
 import { FC, useRef, useState } from 'react'
-import { Filter, Option } from './types'
+import { Filter, FilterOperator, Option } from './types'
 import * as Styled from './SearchFilter.styled'
 import { Icon } from '@ynput/ayon-react-components'
 import { SearchFilterItem } from './SearchFilterItem'
@@ -194,6 +194,15 @@ const SearchFilter: FC<SearchFilterProps> = ({
     onFinish && onFinish(updatedFilters)
   }
 
+  const handleFilterOperatorChange = (id: string, operator: FilterOperator) => {
+    // find the filter and update the operator value
+    const updatedFilters = filters.map((filter) =>
+      filter.id === id ? { ...filter, operator } : filter,
+    )
+    onChange(updatedFilters)
+    onFinish && onFinish(updatedFilters)
+  }
+
   const handleContainerKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
     // cancel on esc
     if (event.key === 'Escape') {
@@ -283,6 +292,7 @@ const SearchFilter: FC<SearchFilterProps> = ({
               id={filter.id}
               label={filter.label}
               inverted={filter.inverted}
+              operator={filter.operator}
               values={filter.values}
               icon={filter.icon}
               isCustom={filter.isCustom}
@@ -312,6 +322,7 @@ const SearchFilter: FC<SearchFilterProps> = ({
           isInvertedAllowed={!!parentOption?.allowExcludes}
           onSelect={handleOptionSelect}
           onInvert={handleInvertFilter}
+          onOperatorChange={handleFilterOperatorChange}
           onConfirmAndClose={handleConfirmAndClose}
           onSwitchFilter={handleSwitchFilterFocus}
           ref={dropdownRef}
