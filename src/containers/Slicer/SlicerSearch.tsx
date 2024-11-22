@@ -10,6 +10,10 @@ const StyledButton = styled(Button)`
   z-index: 110;
   position: relative;
 
+  &.hasIcon {
+    padding: 4px;
+  }
+
   &.open {
     background-color: unset !important;
   }
@@ -25,6 +29,8 @@ const StyledInput = styled(InputText)`
   top: 50%;
   transform: translateY(-50%);
   z-index: 100;
+  height: 28px;
+  min-height: 28px;
 `
 
 type Props = {

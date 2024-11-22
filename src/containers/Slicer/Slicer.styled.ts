@@ -12,7 +12,7 @@ export const Container = styled.div`
 `
 
 export const Header = styled.div`
-  padding: var(--padding-s);
+  padding: 2px;
   width: 100%;
   justify-content: space-between;
   position: relative;
@@ -23,6 +23,8 @@ export const Header = styled.div`
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
 `
 export const SlicerDropdown = styled(Dropdown)`
+  height: 28px;
+
   .template-value {
     border: 0;
 
