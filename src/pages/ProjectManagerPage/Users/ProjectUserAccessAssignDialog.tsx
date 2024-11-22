@@ -43,9 +43,8 @@ const ProjectUserAccessAssignDialog = ({
 
 
   const toggleAccessGroup = (accessGroup: AccessGroupItem) => {
-    const newStatus = [SelectionStatus.Mixed, SelectionStatus.All].includes(accessGroup.status)
-      ? SelectionStatus.None
-      : SelectionStatus.All
+    const newStatus =
+      SelectionStatus.All === accessGroup.status ? SelectionStatus.None : SelectionStatus.All
     setAccessGroupItems((prev: AccessGroupItem[]) => {
       const idx = prev.findIndex((item) => item.name === accessGroup.name)
       return [...prev.slice(0, idx), {...accessGroup, status: newStatus}, ...prev.slice(idx + 1)]
@@ -68,6 +67,25 @@ const ProjectUserAccessAssignDialog = ({
     onClose()
   }
 
+  const getHeader = () => {
+    if (users.length <= 3) {
+      return users.join(',')
+    }
+    return (
+      <span>
+        {users.slice(0, 3).join(', ')} and{' '}
+        <span
+          data-tooltip={users.slice(3).join(', ')}
+          style={{ borderBottom: '1px dashed white', cursor: 'pointer' }}
+        >
+          {users.length - 3} others
+        </span>
+      </span>
+    )
+
+
+  }
+
   const shortcuts = useMemo(
     () => [
       {
@@ -88,14 +106,14 @@ const ProjectUserAccessAssignDialog = ({
       <Shortcuts shortcuts={shortcuts} deps={[accessGroupItems]} />
       <Dialog
         size="md"
-        header={`Add access for ${users.join(', ')}`}
+        header={<span>Add access for {getHeader()}</span>}
         footer={
           <>
             <Styled.Button
               icon="check"
               variant="surface"
               className={clsx({ 'all-selected': allSelected })}
-              label={(allSelected ? 'Deselect all' : 'Select all')}
+              label={allSelected ? 'Deselect all' : 'Select all'}
               onClick={() => handleToggleAll(!allSelected)}
             >
               <ShortcutTag>{getPlatformShortcutKey('a', [KeyMode.Ctrl])}</ShortcutTag>
@@ -127,7 +145,9 @@ const ProjectUserAccessAssignDialog = ({
                 onClick={() => toggleAccessGroup(item)}
               >
                 <span className="name">{item.name}</span>
-                {icons[item.status] !== undefined && <Icon className={item.status} icon={icons[item.status]!} />}
+                {icons[item.status] !== undefined && (
+                  <Icon className={item.status} icon={icons[item.status]!} />
+                )}
               </Styled.ProjectItem>
             ))}
           </Styled.List>

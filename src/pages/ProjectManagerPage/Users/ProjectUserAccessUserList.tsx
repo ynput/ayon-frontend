@@ -6,7 +6,7 @@ import { TablePanel, Section } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import { $Any } from '@types'
 import { UserNode } from '@api/graphql'
-import { StyledEmptyPlaceholder, StyledEmptyPlaceholderWrapper } from './ProjectUserAccess.styled'
+import { CompactPlaceholder } from './ProjectUserAccess.styled'
 import UserColumn from './UserColumn'
 import AccessGroupsColumn from './AccessGroupsColumn'
 import { HoveredUser } from './types'
@@ -67,10 +67,10 @@ const ProjectUserAccessUserList = ({
 
   if (tableList.length === 0) {
     return (
-      <StyledEmptyPlaceholderWrapper>
+      <CompactPlaceholder>
         {header && <p className="header">{header}</p>}
-        <StyledEmptyPlaceholder icon="person" message={emptyMessage} style={{}} />
-      </StyledEmptyPlaceholderWrapper>
+        <p>{emptyMessage}</p>
+      </CompactPlaceholder>
     )
   }
 

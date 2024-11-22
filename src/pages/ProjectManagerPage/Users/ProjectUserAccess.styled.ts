@@ -80,3 +80,11 @@ export const ActionButton = styled(Button)`
     width: 20px;
   }
 `
+export const CompactPlaceholder = styled.div`
+  height: 100%;
+  p {
+    margin: 0;
+    padding: var(--padding-m);
+    color: var(--md-ref-palette-neutral-variant60);
+  }
+`

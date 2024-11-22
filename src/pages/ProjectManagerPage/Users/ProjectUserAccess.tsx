@@ -213,6 +213,13 @@ const ProjectUserAccess = () => {
         label: 'Remove all access',
         command: () => onRemove()(actionedUsers),
       },
+      {
+        id: 'filter_by_user',
+        icon: 'person',
+        label: 'Filter by user',
+        disabled: false,
+        command: () => handleUserFilterUpdate(actionedUsers),
+      },
     ])
   }
 

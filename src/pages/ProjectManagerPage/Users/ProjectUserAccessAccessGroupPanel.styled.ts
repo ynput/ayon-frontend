@@ -58,12 +58,12 @@ export const BodyExpander = styled.div`
   // transition: grid-template-rows 0.25s;
   &.expanded {
     grid-template-rows: 1fr;
-    min-height: 250px;
+    min-height: 96px;
   }
 `
 
 export const Body = styled.div`
-  background-color: var(--md-sys-color-surface-container-high);
+  background-color: var(--md-sys-color-surface-container-low);
   align-items: stretch;
   min-height: 0;
   transition: padding 0.25s;
