@@ -1,12 +1,11 @@
 
-import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
-import { TablePanel, Section } from '@ynput/ayon-react-components'
+import { Section } from '@ynput/ayon-react-components'
 
 import clsx from 'clsx'
 import { $Any } from '@types'
 import { UserNode } from '@api/graphql'
-import { CompactPlaceholder } from './ProjectUserAccess.styled'
+import { CompactPlaceholder, DataTable } from './ProjectUserAccess.styled'
 import UserColumn from './UserColumn'
 import AccessGroupsColumn from './AccessGroupsColumn'
 import { HoveredUser } from './types'
@@ -76,8 +75,9 @@ const ProjectUserAccessUserList = ({
 
   return (
     <Section style={{ height: '100%' }}>
-      <TablePanel style={!showAccessGroups ? { borderRadius: 0 } : undefined}>
+      <div style={{ borderRadius: '4px' }}>
         <DataTable
+          style={{ borderRadius: 'inherit' }}
           data-testid={`accessGroupPanel-${header}`}
           selection={selectedUnassignedUsers}
           value={tableList}
@@ -98,7 +98,7 @@ const ProjectUserAccessUserList = ({
           <Column
             field="name"
             header={header}
-            headerStyle={header ? { textTransform: 'capitalize' } : {display: 'none'}}
+            headerStyle={header ? { textTransform: 'capitalize' } : { display: 'none' }}
             body={(rowData) =>
               !isLoading && (
                 <UserColumn
@@ -144,7 +144,7 @@ const ProjectUserAccessUserList = ({
             />
           )}
         </DataTable>
-      </TablePanel>
+      </div>
     </Section>
   )
 }

@@ -1,5 +1,6 @@
 import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
 import { Button } from '@ynput/ayon-react-components'
+import { DataTable as BaseDataTable} from 'primereact/datatable'
 import styled from 'styled-components'
 
 export const StyledEmptyPlaceholder = styled(EmptyPlaceholder)`
@@ -86,5 +87,11 @@ export const CompactPlaceholder = styled.div`
     margin: 0;
     padding: var(--padding-m);
     color: var(--md-ref-palette-neutral-variant60);
+  }
+`
+
+export const DataTable = styled(BaseDataTable)`
+  .p-datatable-wrapper {
+    border-radius: inherit;
   }
 `

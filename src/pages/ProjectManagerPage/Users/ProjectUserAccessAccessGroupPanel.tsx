@@ -19,15 +19,19 @@ const ProjectUserAccesAccessGroupPanel = ({
   return (
     <Styled.Wrapper style={{ marginBottom: '4px' }}>
       <Styled.Header onClick={() => onToggleExpand && onToggleExpand(!isExpanded)}>
-        <div style={{display: 'flex'}}>
-        {header}
-        <Spacer />
-        <Icon icon={isExpanded ? 'collapse_all' : 'expand_all'} />
+        <div style={{ display: 'flex' }}>
+          {header}
+          <Spacer />
+          <Icon icon={isExpanded ? 'collapse_all' : 'expand_all'} />
         </div>
       </Styled.Header>
 
-      <Styled.BodyExpander className={clsx({ expanded: isExpanded })}>
-        <Styled.Body className={clsx(isExpanded ? 'expanded' : 'collapsed')}>
+      <Styled.BodyExpander
+        className={clsx({ expanded: isExpanded })}
+      >
+        <Styled.Body
+          className={clsx(isExpanded ? 'expanded' : 'collapsed')}
+        >
           {children}
         </Styled.Body>
       </Styled.BodyExpander>

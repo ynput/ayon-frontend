@@ -27,7 +27,9 @@ const SplitterContainerThreePanes = ({ leftContent, mainContent, rightContent }:
         size={30}
         style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
       >
+        <div style={{height: '100%', overflow: 'auto'}}>
         {rightContent}
+        </div>
       </SplitterPanel>
     </Splitter>
   )
