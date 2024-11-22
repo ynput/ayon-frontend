@@ -5,7 +5,7 @@
 
 import { AttributeModel, AttributeEnumItem, AttributeData } from '@api/rest/attributes'
 import { Tag } from '@api/rest/project'
-import { SHOW_DATE_FILTERS } from '@components/SearchFilter/featureFlags'
+import { ALLOW_INVERTED_FILTERS, SHOW_DATE_FILTERS } from '@components/SearchFilter/featureFlags'
 import { Option } from '@components/SearchFilter/types'
 import getEntityTypeIcon from '@helpers/getEntityTypeIcon'
 import { useGetAttributeListQuery } from '@queries/attributes/getAttributes'
@@ -444,6 +444,7 @@ const getOptionRoot = (fieldType: FilterFieldType, scope?: string) => {
         allowsCustomValues: false,
         allowHasValue: false,
         allowNoValue: false,
+        allowExcludes: ALLOW_INVERTED_FILTERS,
       }
       break
     case 'status':
@@ -457,6 +458,7 @@ const getOptionRoot = (fieldType: FilterFieldType, scope?: string) => {
         allowsCustomValues: false,
         allowHasValue: false,
         allowNoValue: false,
+        allowExcludes: ALLOW_INVERTED_FILTERS,
       }
       break
     case 'assignees':
@@ -470,6 +472,7 @@ const getOptionRoot = (fieldType: FilterFieldType, scope?: string) => {
         allowsCustomValues: false,
         allowHasValue: true,
         allowNoValue: true,
+        allowExcludes: ALLOW_INVERTED_FILTERS,
       }
       break
     case 'tags':
@@ -483,6 +486,7 @@ const getOptionRoot = (fieldType: FilterFieldType, scope?: string) => {
         allowsCustomValues: true,
         allowHasValue: true,
         allowNoValue: true,
+        allowExcludes: ALLOW_INVERTED_FILTERS,
       }
       break
     default:
@@ -505,6 +509,7 @@ const getAttributeFieldOptionRoot = (
   allowsCustomValues,
   allowHasValue: true,
   allowNoValue: true,
+  allowExcludes: false,
   icon: getAttributeIcon(attribute),
   singleSelect: ['boolean', 'datetime'].includes(attribute.data.type),
 })

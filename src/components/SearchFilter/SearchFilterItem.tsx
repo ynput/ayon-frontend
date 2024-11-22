@@ -41,7 +41,7 @@ const ChipButton = styled(Button)`
   border-radius: 50%;
   background-color: unset;
 
-  &:hover {
+  &:hover:not(.disabled) {
     &.button {
       background-color: var(--md-sys-color-primary);
     }
@@ -62,6 +62,7 @@ const ChipButton = styled(Button)`
 interface SearchFilterItemProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'id'>, Filter {
   index?: number
   isEditing?: boolean
+  isInvertedAllowed?: boolean
   onEdit?: (id: string) => void
   onRemove?: (id: string) => void
   onInvert?: (id: string) => void
@@ -78,6 +79,7 @@ export const SearchFilterItem = forwardRef<HTMLDivElement, SearchFilterItemProps
       isCustom,
       index,
       isEditing,
+      isInvertedAllowed,
       onEdit,
       onRemove,
       onInvert,
@@ -94,6 +96,7 @@ export const SearchFilterItem = forwardRef<HTMLDivElement, SearchFilterItemProps
     }
 
     const handleInvert = (event: React.MouseEvent<HTMLButtonElement>) => {
+      if (!isInvertedAllowed) return
       // block main onClick event
       event?.stopPropagation()
       // remove filter
@@ -132,10 +135,10 @@ export const SearchFilterItem = forwardRef<HTMLDivElement, SearchFilterItemProps
           className={clsx('search-filter-item', { editing: isEditing })}
         >
           <ChipButton
-            className="button"
+            className={clsx('button', { disabled: !isInvertedAllowed })}
             icon={inverted ? 'do_not_disturb_on' : 'check_small'}
             onClick={handleInvert}
-            data-tooltip={'include/exclude'}
+            data-tooltip={isInvertedAllowed ? 'include/exclude' : undefined}
           />
           <span className="label">{label}:</span>
           {values?.map((value, index) => (

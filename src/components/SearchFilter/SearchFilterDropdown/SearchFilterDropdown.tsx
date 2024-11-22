@@ -23,6 +23,7 @@ export interface SearchFilterDropdownProps {
   isCustomAllowed: boolean
   isHasValueAllowed?: boolean
   isNoValueAllowed?: boolean
+  isInvertedAllowed?: boolean
   onSelect: (option: Option, config?: OnSelectConfig) => void
   onInvert: (id: string) => void // invert the filter
   onConfirmAndClose?: (filters: Filter[], config?: OnSelectConfig) => void // close the dropdown and update the filters
@@ -39,6 +40,7 @@ const SearchFilterDropdown = forwardRef<HTMLUListElement, SearchFilterDropdownPr
       isCustomAllowed,
       isHasValueAllowed,
       isNoValueAllowed,
+      isInvertedAllowed,
       onSelect,
       onInvert,
       onConfirmAndClose,
@@ -291,8 +293,15 @@ const SearchFilterDropdown = forwardRef<HTMLUListElement, SearchFilterDropdownPr
                   Back
                 </Button>
                 <Spacer />
-                <span>Excludes</span>
-                <InputSwitch checked={parentFilter?.inverted} onChange={() => onInvert(parentId)} />
+                {isInvertedAllowed && (
+                  <>
+                    <span>Excludes</span>
+                    <InputSwitch
+                      checked={parentFilter?.inverted}
+                      onChange={() => onInvert(parentId)}
+                    />
+                  </>
+                )}
                 <Button
                   variant="filled"
                   onClick={() => {

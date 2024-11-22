@@ -309,6 +309,7 @@ const SearchFilter: FC<SearchFilterProps> = ({
           isCustomAllowed={!!parentOption?.allowsCustomValues}
           isHasValueAllowed={!!parentOption?.allowHasValue}
           isNoValueAllowed={!!parentOption?.allowNoValue}
+          isInvertedAllowed={!!parentOption?.allowExcludes}
           onSelect={handleOptionSelect}
           onInvert={handleInvertFilter}
           onConfirmAndClose={handleConfirmAndClose}
