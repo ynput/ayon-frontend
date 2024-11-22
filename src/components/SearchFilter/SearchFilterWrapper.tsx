@@ -2,16 +2,12 @@ import useBuildFilterOptions, { BuildFilterOptions } from '@hooks/useBuildFilter
 import { FC, useEffect, useState } from 'react'
 import SearchFilter, { SearchFilterProps } from './SearchFilter'
 import { Filter } from './types'
+import { ALLOW_GLOBAL_SEARCH, ALLOW_MULTIPLE_SAME_FILTERS } from './featureFlags'
 
 interface SearchFilterWrapperProps extends BuildFilterOptions {
   filters: SearchFilterProps['filters']
   onChange: SearchFilterProps['onChange']
 }
-
-// feature flag to allow multiple filters of the same type (not supported yet)
-const ALLOW_MULTIPLE_SAME_FILTERS = false
-// feature flag to allow global search across all fields (not supported yet)
-const ALLOW_GLOBAL_SEARCH = false
 
 const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
   filters: _filters,

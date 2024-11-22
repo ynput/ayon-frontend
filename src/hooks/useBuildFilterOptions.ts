@@ -5,6 +5,7 @@
 
 import { AttributeModel, AttributeEnumItem, AttributeData } from '@api/rest/attributes'
 import { Tag } from '@api/rest/project'
+import { SHOW_DATE_FILTERS } from '@components/SearchFilter/featureFlags'
 import { Option } from '@components/SearchFilter/types'
 import getEntityTypeIcon from '@helpers/getEntityTypeIcon'
 import { useGetAttributeListQuery } from '@queries/attributes/getAttributes'
@@ -304,7 +305,11 @@ const useBuildFilterOptions = ({
       ? attributesByScope.filter((attribute) => data.attributes && data.attributes[attribute.name])
       : attributesByScope
 
-    attributesByValues.forEach((attribute) => {
+    const attributesWithoutDates = SHOW_DATE_FILTERS
+      ? attributesByValues
+      : attributesByValues.filter((attribute) => attribute.data.type !== 'datetime')
+
+    attributesWithoutDates.forEach((attribute) => {
       // for the attribute, get the option root
       const option = getAttributeFieldOptionRoot(attribute, true)
 
@@ -347,6 +352,7 @@ const useBuildFilterOptions = ({
       }
 
       // if the attribute type is datetime, add datetime options
+
       if (attribute.data.type === 'datetime') {
         optionValues.push(...dateOptions)
       }
