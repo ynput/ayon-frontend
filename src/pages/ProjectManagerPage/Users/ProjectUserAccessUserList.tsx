@@ -24,6 +24,7 @@ type Props = {
   emptyMessage: string
   sortable?: boolean
   isUnassigned?: boolean
+  showAddButton?: boolean
   showAddMoreButton?: boolean
   showAccessGroups?: boolean
   onContextMenu?: $Any
@@ -44,7 +45,7 @@ const ProjectUserAccessUserList = ({
   header,
   emptyMessage,
   sortable = false,
-  isUnassigned = false,
+  showAddButton = false,
   showAddMoreButton = false,
   showAccessGroups = false,
   onAdd,
@@ -58,7 +59,6 @@ const ProjectUserAccessUserList = ({
 
     onSelectUsers!(result)
   }
-
   const selectedUnassignedUsers = tableList.filter((user: $Any) =>
     selectedUsers.includes(user.name),
   )
@@ -68,15 +68,15 @@ const ProjectUserAccessUserList = ({
   if (tableList.length === 0) {
     return (
       <StyledEmptyPlaceholderWrapper>
-        <p className="header">{header}</p>
+        {header && <p className="header">{header}</p>}
         <StyledEmptyPlaceholder icon="person" message={emptyMessage} style={{}} />
       </StyledEmptyPlaceholderWrapper>
     )
   }
 
   return (
-    <Section wrap>
-      <TablePanel>
+    <Section style={{ height: '100%' }}>
+      <TablePanel style={!showAccessGroups ? { borderRadius: 0 } : undefined}>
         <DataTable
           data-testid={`accessGroupPanel-${header}`}
           selection={selectedUnassignedUsers}
@@ -98,13 +98,13 @@ const ProjectUserAccessUserList = ({
           <Column
             field="name"
             header={header}
-            headerStyle={{ textTransform: 'capitalize' }}
+            headerStyle={header ? { textTransform: 'capitalize' } : {display: 'none'}}
             body={(rowData) =>
               !isLoading && (
                 <UserColumn
                   rowData={rowData}
                   data-testid={`accessGroupUser-${rowData.name}`}
-                  isUnassigned={isUnassigned}
+                  showAddButton={showAddButton}
                   showAddMoreButton={showAddMoreButton}
                   readOnly={readOnly}
                   onAdd={(user?: string) => onAdd(user ? [user] : undefined)}
@@ -130,17 +130,12 @@ const ProjectUserAccessUserList = ({
                   <AccessGroupsColumn
                     data={data}
                     data-testid={`accessGroupUser-${data.name}`}
-                    isUnassigned={isUnassigned}
-                    showAddMoreButton={showAddMoreButton}
+                    showAddButton={showAddButton}
                     readOnly={readOnly}
                     onAdd={(user?: string) => onAdd(user ? [user] : undefined)}
                     hovering={
                       hoveredUser?.user == data.name && hoveredUser?.accessGroup === accessGroup
                     }
-                    onRemove={() => {
-                      onRemove && onRemove([data.name])
-                    }}
-                    showButtonsOnHover={selectedUnassignedUsers.length == 0}
                     addButtonDisabled={selectedProjects.length === 0}
                     selected={selectedUnassignedUserNames.includes(data.name)}
                   />

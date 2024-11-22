@@ -6,10 +6,10 @@ import * as Styled from './ProjectUserAccess.styled'
 type Props = {
   rowData: $Any
   selected: boolean
-  isUnassigned: boolean
   hovering: boolean
   showButtonsOnHover: boolean
   addButtonDisabled: boolean
+  showAddButton: boolean
   showAddMoreButton: boolean
   readOnly: boolean
   onAdd: (user?: string) => void
@@ -19,7 +19,7 @@ type Props = {
 export const UserColumn = ({
   rowData,
   selected = false,
-  isUnassigned = false,
+  showAddButton = false,
   hovering = false,
   showButtonsOnHover = false,
   addButtonDisabled = false,
@@ -30,7 +30,7 @@ export const UserColumn = ({
 }: Props) => {
   const { name, self, isMissing } = rowData
   return (
-    <Styled.UserColumn className={clsx({ actionable: showButtonsOnHover, selected, hovering })}>
+    <Styled.DataColumn className={clsx({ actionable: showButtonsOnHover, selected, hovering })}>
       {/* @ts-ignore */}
       <UserImage name={name} highlight={self} size={22} />
       <span
@@ -41,12 +41,12 @@ export const UserColumn = ({
       >
         {name}
       </span>
-      {!readOnly && showButtonsOnHover && (isUnassigned || showAddMoreButton) && (
+      {!readOnly && showButtonsOnHover && (showAddButton || showAddMoreButton) && (
         <Styled.ActionButton
           className="action"
           disabled={addButtonDisabled}
           data-tooltip={addButtonDisabled ? 'No project selected' : undefined}
-          variant={isUnassigned ? 'filled' : 'text'}
+          variant={showAddButton ? 'filled' : 'text'}
           icon={'add'}
           onClick={(e) => {
             e.stopPropagation()
@@ -54,7 +54,7 @@ export const UserColumn = ({
             onAdd()
           }}
         >
-          {isUnassigned ? (
+          {showAddButton ? (
             <>
               Add <span className="shortcut">A</span>
             </>
@@ -64,7 +64,7 @@ export const UserColumn = ({
         </Styled.ActionButton>
       )}
 
-      {!readOnly && !isUnassigned && (
+      {!readOnly && !showAddButton && (
         <Styled.ActionButton
           className="action"
           icon={'remove'}
@@ -77,7 +77,7 @@ export const UserColumn = ({
           Remove <span className="shortcut">R</span>
         </Styled.ActionButton>
       )}
-    </Styled.UserColumn>
+    </Styled.DataColumn>
   )
 }
 

@@ -2,7 +2,6 @@ import { toast } from 'react-toastify'
 import styled from 'styled-components'
 import { useSelector } from 'react-redux'
 import { useEffect, useMemo, useState } from 'react'
-import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { $Any } from '@types'
 import { Button, Toolbar } from '@ynput/ayon-react-components'
 import { Filter } from '@components/SearchFilter/types'
@@ -22,10 +21,11 @@ import {
   getFilteredEntities,
   getFilteredSelectedProjects,
   getSelectedUsers,
+  getUserAccessGroups,
   mapUsersByAccessGroups,
 } from './mappers'
 import { HoveredUser, SelectedAccessGroupUsers, SelectionStatus } from './types'
-import { useProjectAccessGroupData, userPageFilters } from './hooks'
+import { useUserPreferencesExpandedPanels, useProjectAccessGroupData, useUserPageFilters } from './hooks'
 import ProjectUserAccessUserList from './ProjectUserAccessUserList'
 import ProjectUserAccessAssignDialog from './ProjectUserAccessAssignDialog'
 import ProjectUserAccessSearchFilterWrapper from './ProjectUserAccessSearchFilterWrapper'
@@ -37,6 +37,8 @@ import { ProjectNode, UserNode } from '@api/graphql'
 import LoadingPage from '@pages/LoadingPage'
 import { useQueryParam } from 'use-query-params'
 import { uuid } from 'short-uuid'
+import ProjectUserAccesAccessGroupPanel from './ProjectUserAccessAccessGroupPanel'
+import { capitalizeFirstLetter } from '@helpers/string'
 
 const StyledButton = styled(Button)`
   .shortcut {
@@ -61,7 +63,11 @@ const ProjectUserAccess = () => {
     updateUserAccessGroups,
   } = useProjectAccessGroupData(selectedProject as string)
 
-  const [filters, setFilters] = userPageFilters()
+  const [filters, setFilters] = useUserPageFilters()
+
+  const [expandedAccessGroups, setExpandedAccessGroups] = useUserPreferencesExpandedPanels()
+  const handleToggleExpandedAccessGroup = (accessGroupName: string, value: boolean) =>
+    setExpandedAccessGroups({ ...expandedAccessGroups, [accessGroupName]: value })
 
   const selfName = useSelector((state: $Any) => state.user.name)
   let {
@@ -101,43 +107,12 @@ const ProjectUserAccess = () => {
   const userFilter = filters?.filter((el: Filter) => el.label === 'User')
   const filteredNonManagerUsers = getFilteredEntities<UserNode>(users, userFilter)
   const filteredUsers = getFilteredEntities<UserNode>(users, userFilter)
-  const filteredUsersWithAccessGroups = filteredUsers.map((user: UserNode) => {
-    const assignedInAllProjects = (accessGroup: string) => {
-      for (const project of filteredSelectedProjects) {
-        // @ts-ignore
-        if (!user.accessGroups[project] || !user.accessGroups[project]!.includes(accessGroup)) {
-          return false
-        }
-      }
-      return true
-    }
-    const assignedAccessGroups = Object.keys(user.accessGroups).filter(ag => filteredSelectedProjects.includes(ag)).reduce(
-      (acc: $Any, curr: string) => {
-        // @ts-ignore
-        return [...acc, ...user.accessGroups[curr]]
-      },
-      [],
-    )
-    let assignedAccessGroupsList = Array.from(new Set(assignedAccessGroups))
-
-    let weightedAccessGroupsList = []
-    for (const agName of assignedAccessGroupsList) {
-      weightedAccessGroupsList.push({
-        accessGroup: agName,
-        complete: assignedInAllProjects(agName),
-      })
-    }
-    weightedAccessGroupsList.sort((a, b) => {
-      const aComplete = a.complete ? -10 : 10
-      const bComplete = b.complete ? -10 : 10
-
-      // @ts-ignore
-      const nameComparison = a.accessGroup.localeCompare(b.accessGroup)
-      return aComplete - bComplete + nameComparison
-    })
-
-    return { ...user, assignedAccessGroups: weightedAccessGroupsList }
-  })
+  const filteredUsersWithAccessGroups = getUserAccessGroups(
+    filteredUsers,
+    filteredSelectedProjects,
+    //@ts-ignore
+    projectUsers,
+  )
 
   const selectedUsers = getSelectedUsers(selectedAccessGroupUsers, filteredUsersWithAccessGroups)
 
@@ -191,21 +166,21 @@ const ProjectUserAccess = () => {
         icon: 'person',
         label: 'Filter by user',
         disabled: false,
-        command: () => handleUserFilterUpdate(actionedUsers)
+        command: () => handleUserFilterUpdate(actionedUsers),
       },
     ])
   }
 
   const handleUserFilterUpdate = (actionedUsers: string[]) => {
-    const otherFilters = filters.filter(filter => filter.label !== 'User')
-    const newFilterValues = userFilter.values = users
+    const otherFilters = filters.filter((filter: Filter) => filter.label !== 'User')
+    const newFilterValues = (userFilter.values = users
       .filter((user: UserNode) => actionedUsers.includes(user.name))
       .map((user: $Any) => ({
         id: user.name,
         label: user.name,
         img: `/api/users/${user.name}/avatar`,
-      }))
-    let userFilters = filters.filter(filter => filter.label === 'User')[0]
+      })))
+    let userFilters = filters.filter((filter) => filter.label === 'User')[0]
     setFilters([
       ...otherFilters,
       { icon: 'person', label: 'User', id: userFilters?.id || uuid(), values: newFilterValues },
@@ -377,7 +352,7 @@ const ProjectUserAccess = () => {
           }}
           onSelectUsers={(selection) => setSelectedAccessGroupUsers({ users: selection })}
           sortable
-          isUnassigned
+          showAddButton
           showAccessGroups
         />
       </div>
@@ -387,50 +362,47 @@ const ProjectUserAccess = () => {
   const accessGroupsContent = (
     <>
       <StyledHeader>Access groups</StyledHeader>
-      <Splitter layout="vertical" style={{ height: '100%', overflow: 'auto' }}>
-        {filteredAccessGroups
-          .map((item: { name: string }) => item.name)
-          .map((accessGroup) => {
-            return (
-              <SplitterPanel
-                style={{
-                  minHeight: '250px',
-                  minWidth: '350px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                }}
-                key={accessGroup}
-                className="flex align-items-center justify-content-center"
-                size={45}
-              >
-                <ProjectUserAccessUserList
-                  selectedProjects={filteredSelectedProjects}
-                  selectedUsers={getAccessGroupUsers(selectedAccessGroupUsers!, accessGroup)}
-                  header={accessGroup}
-                  readOnly={!hasEditRightsOnProject}
-                  showAddMoreButton={filteredAccessGroups.length > 1}
-                  hoveredUser={hoveredUser}
-                  accessGroup={accessGroup}
-                  emptyMessage="No users assigned"
-                  onContextMenu={(e: $Any) => handleRemoveContextMenu(e, accessGroup)}
-                  tableList={filteredNonManagerUsers.filter(
-                    (user: UserNode) =>
-                      mappedUsers[accessGroup] && mappedUsers[accessGroup].includes(user.name),
-                  )}
-                  onHoverRow={(userName: string) =>
-                    userName ? setHoveredUser({ accessGroup, user: userName }) : setHoveredUser({})
-                  }
-                  onSelectUsers={(selection: string[]) =>
-                    updateSelectedAccessGroupUsers(accessGroup, selection)
-                  }
-                  onAdd={() => handleAdd()}
-                  onRemove={onRemove(accessGroup)}
-                  isLoading={usersLoading}
-                />
-              </SplitterPanel>
-            )
-          })}
-      </Splitter>
+      {filteredAccessGroups
+        .map((item: { name: string }) => item.name)
+        .map((accessGroup) => {
+          return (
+            <ProjectUserAccesAccessGroupPanel
+              header={capitalizeFirstLetter(accessGroup)}
+              isExpanded={
+                expandedAccessGroups[accessGroup] !== undefined
+                  ? expandedAccessGroups[accessGroup]
+                  : true
+              }
+              onToggleExpand={(value: boolean) => {
+                handleToggleExpandedAccessGroup(accessGroup, value)
+              }}
+            >
+              <ProjectUserAccessUserList
+                selectedProjects={filteredSelectedProjects}
+                selectedUsers={getAccessGroupUsers(selectedAccessGroupUsers!, accessGroup)}
+                readOnly={!hasEditRightsOnProject}
+                showAddMoreButton={filteredAccessGroups.length > 1}
+                hoveredUser={hoveredUser}
+                accessGroup={accessGroup}
+                emptyMessage="No users assigned"
+                onContextMenu={(e: $Any) => handleRemoveContextMenu(e, accessGroup)}
+                tableList={filteredNonManagerUsers.filter(
+                  (user: UserNode) =>
+                    mappedUsers[accessGroup] && mappedUsers[accessGroup].includes(user.name),
+                )}
+                onHoverRow={(userName: string) =>
+                  userName ? setHoveredUser({ accessGroup, user: userName }) : setHoveredUser({})
+                }
+                onSelectUsers={(selection: string[]) =>
+                  updateSelectedAccessGroupUsers(accessGroup, selection)
+                }
+                onAdd={() => handleAdd()}
+                onRemove={onRemove(accessGroup)}
+                isLoading={usersLoading}
+              />
+            </ProjectUserAccesAccessGroupPanel>
+          )
+        })}
     </>
   )
 

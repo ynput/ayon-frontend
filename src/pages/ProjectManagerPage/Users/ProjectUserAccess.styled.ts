@@ -44,11 +44,14 @@ export const StyledHeader = styled.p`
   margin: 8px 0;
 `
 
-export const UserColumn = styled.div`
+export const DataColumn = styled.div`
   display: flex;
   height: 24px;
   align-items: center;
   gap: var(--base-gap-large);
+  .partial-match {
+    color: var(--md-ref-palette-neutral-variant60);
+  }
   button {
     visibility: hidden;
     .shortcut {

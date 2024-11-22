@@ -1,7 +1,7 @@
 import { AccessGroupUsers, ListingError, SelectedAccessGroupUsers, SelectionStatus } from './types'
 import { Filter, FilterValue } from '@components/SearchFilter/types'
 import { ProjectNode, UserNode } from '@api/graphql'
-import { GetProjectsUsersApiResponse } from '@queries/project/getProject'
+import { GetProjectsUsersApiResponse, ProjectUserData } from '@queries/project/getProject'
 import { UserPermissions, UserPermissionsEntity } from '@hooks/useUserProjectPermissions'
 import { $Any } from '@types'
 import { matchSorter } from 'match-sorter'
@@ -236,6 +236,61 @@ const getErrorInfo = (
 
   return null
 }
+const getUserAccessGroups = (
+  users: UserNode[],
+  selectedProjects: string[],
+  projectUsersData?: ProjectUserData,
+) => {
+  const getAssignedAccessGroups = (projects: string[], userName: string) => {
+    if (!projectUsersData) {
+      return []
+    }
+
+    let accessGroupsList = []
+    for (const project of projects) {
+      accessGroupsList.push(...projectUsersData?.[project]?.[userName] || [])
+    }
+
+    return Array.from(new Set(accessGroupsList))
+  }
+
+  const assignedInAllProjects = (userName: string, projects: string[], accessGroup: string) => {
+    for (const project of projects) {
+      if (
+        !projectUsersData?.[project]?.[userName] ||
+        !projectUsersData?.[project][userName]?.includes(accessGroup)
+      ) {
+        return false
+      }
+    }
+    return true
+  }
+
+  const filteredUsersWithAccessGroups = users.map((user: UserNode) => {
+    const assignedAccessGroups = getAssignedAccessGroups(selectedProjects, user.name)
+    let assignedAccessGroupsList = assignedAccessGroups
+
+    let weightedAccessGroupsList = []
+    for (const agName of assignedAccessGroupsList) {
+      weightedAccessGroupsList.push({
+        accessGroup: agName,
+        complete: assignedInAllProjects(user.name, selectedProjects, agName),
+      })
+    }
+    weightedAccessGroupsList.sort((a, b) => {
+      const aComplete = a.complete ? -10 : 10
+      const bComplete = b.complete ? -10 : 10
+
+      // @ts-ignore
+      const nameComparison = a.accessGroup.localeCompare(b.accessGroup)
+      return aComplete - bComplete + nameComparison
+    })
+
+    return { ...user, assignedAccessGroups: weightedAccessGroupsList }
+  })
+
+  return filteredUsersWithAccessGroups
+}
 
 export {
   canAllEditUsers,
@@ -247,4 +302,5 @@ export {
   getFilteredEntities,
   mapInitialAccessGroupStates,
   getErrorInfo,
+  getUserAccessGroups,
 }

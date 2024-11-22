@@ -38,12 +38,14 @@ type GetProjectsUsersParams = {
   projects: string[]
 }
 
-export type GetProjectsUsersApiResponse = {
-  data: {
+export type ProjectUserData = {
   [project: string]: {
     [user: string]: string[]
   }
-  }
+}
+
+export type GetProjectsUsersApiResponse = {
+  data: ProjectUserData
 }
 
 const getProjectInjected = api.injectEndpoints({

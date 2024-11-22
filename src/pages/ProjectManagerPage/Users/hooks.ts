@@ -141,7 +141,7 @@ const useProjectAccessSearchFilterBuiler = ({
   return options
 }
 
-const userPageFilters = (): [filters: Filter[], setFilters: (value: Filter[]) => void] => {
+const useUserPageFilters = (): [filters: Filter[], setFilters: (value: Filter[]) => void] => {
   const pageId = 'project.settings.user.access_groups'
   const [updateUserPreferences] = useSetFrontendPreferencesMutation()
   const userName = useAppSelector((state) => state.user.name)
@@ -185,4 +185,32 @@ const userPageFilters = (): [filters: Filter[], setFilters: (value: Filter[]) =>
   return [filters, setFilters]
 }
 
-export { useProjectAccessGroupData, useProjectAccessSearchFilterBuiler, userPageFilters }
+const useUserPreferencesExpandedPanels = (): [
+  expandedAccessGroups: {[key: string]: boolean},
+  setExpandedAccessGroups: (values: { [key: string]: boolean }) => void,
+] => {
+  const pageId = 'project.settings.user.access_groups'
+  const [updateUserPreferences] = useSetFrontendPreferencesMutation()
+  const userName = useAppSelector((state) => state.user.name)
+  const frontendPreferences = useAppSelector((state) => state.user.data.frontendPreferences)
+  const pageExpandedAccessGroups: {
+    [pageId: string]: {}
+  } = frontendPreferences?.expandedAccessGroups
+
+  const expandedAccessGroups = pageExpandedAccessGroups?.[pageId] || {}
+
+  const setExpandedAccessGroups = (value: { [accessGroupName: string]: boolean }) => {
+    const updatedData = { ...pageExpandedAccessGroups, [pageId]: value }
+    const updatedFrontendPreferences = { ...frontendPreferences, expandedAccessGroups: updatedData }
+    updateUserPreferences({ userName, patchData: updatedFrontendPreferences })
+  }
+
+  return [expandedAccessGroups, setExpandedAccessGroups]
+}
+
+export {
+  useProjectAccessGroupData,
+  useProjectAccessSearchFilterBuiler,
+  useUserPageFilters,
+  useUserPreferencesExpandedPanels,
+}
