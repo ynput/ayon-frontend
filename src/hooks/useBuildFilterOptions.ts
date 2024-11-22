@@ -446,6 +446,7 @@ const getOptionRoot = (fieldType: FilterFieldType, scope?: string) => {
         allowHasValue: false,
         allowNoValue: false,
         allowExcludes: ALLOW_INVERTED_FILTERS,
+        operatorChangeable: false,
       }
       break
     case 'status':
@@ -461,6 +462,7 @@ const getOptionRoot = (fieldType: FilterFieldType, scope?: string) => {
         allowHasValue: false,
         allowNoValue: false,
         allowExcludes: ALLOW_INVERTED_FILTERS,
+        operatorChangeable: false,
       }
       break
     case 'assignees':
@@ -476,6 +478,7 @@ const getOptionRoot = (fieldType: FilterFieldType, scope?: string) => {
         allowHasValue: true,
         allowNoValue: true,
         allowExcludes: ALLOW_INVERTED_FILTERS,
+        operatorChangeable: true,
       }
       break
     case 'tags':
@@ -491,6 +494,7 @@ const getOptionRoot = (fieldType: FilterFieldType, scope?: string) => {
         allowHasValue: true,
         allowNoValue: true,
         allowExcludes: ALLOW_INVERTED_FILTERS,
+        operatorChangeable: true,
       }
       break
     default:
@@ -513,9 +517,10 @@ const getAttributeFieldOptionRoot = (
   inverted: false,
   values: [],
   allowsCustomValues,
-  allowHasValue: true,
-  allowNoValue: true,
+  allowHasValue: false,
+  allowNoValue: false,
   allowExcludes: false,
+  operatorChangeable: false,
   icon: getAttributeIcon(attribute),
   singleSelect: ['boolean', 'datetime'].includes(attribute.data.type),
 })

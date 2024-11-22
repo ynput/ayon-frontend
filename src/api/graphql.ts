@@ -300,6 +300,7 @@ export type FolderNodeTasksArgs = {
   sortBy?: InputMaybe<Scalars['String']['input']>;
   statuses?: InputMaybe<Array<Scalars['String']['input']>>;
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
+  tagsAny?: InputMaybe<Array<Scalars['String']['input']>>;
   taskTypes?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
@@ -589,6 +590,8 @@ export type ProjectNodeActivitiesArgs = {
   activityTypes?: InputMaybe<Array<Scalars['String']['input']>>;
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
+  changedAfter?: InputMaybe<Scalars['String']['input']>;
+  changedBefore?: InputMaybe<Scalars['String']['input']>;
   entityIds?: InputMaybe<Array<Scalars['String']['input']>>;
   entityNames?: InputMaybe<Array<Scalars['String']['input']>>;
   entityType?: InputMaybe<Scalars['String']['input']>;
@@ -702,6 +705,7 @@ export type ProjectNodeTasksArgs = {
   sortBy?: InputMaybe<Scalars['String']['input']>;
   statuses?: InputMaybe<Array<Scalars['String']['input']>>;
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
+  tagsAny?: InputMaybe<Array<Scalars['String']['input']>>;
   taskTypes?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
@@ -795,6 +799,7 @@ export type QueryEventsArgs = {
   olderThan?: InputMaybe<Scalars['String']['input']>;
   projects?: InputMaybe<Array<Scalars['String']['input']>>;
   states?: InputMaybe<Array<Scalars['String']['input']>>;
+  statuses?: InputMaybe<Array<Scalars['String']['input']>>;
   topics?: InputMaybe<Array<Scalars['String']['input']>>;
   users?: InputMaybe<Array<Scalars['String']['input']>>;
 };
@@ -1347,6 +1352,13 @@ export type GetProgressTaskQuery = { __typename?: 'Query', project: { __typename
 export type GetTasksProgressQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
   folderIds?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
+  assignees?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
+  assigneesAny?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
+  tags?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
+  tagsAny?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
+  statuses?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
+  taskTypes?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
+  attributes?: InputMaybe<Array<AtrributeFilterInput> | AtrributeFilterInput>;
 }>;
 
 
@@ -1605,10 +1617,21 @@ export const GetProgressTaskDocument = `
 }
     ${ProgressTaskFragmentFragmentDoc}`;
 export const GetTasksProgressDocument = `
-    query GetTasksProgress($projectName: String!, $folderIds: [String!]) {
+    query GetTasksProgress($projectName: String!, $folderIds: [String!], $assignees: [String!], $assigneesAny: [String!], $tags: [String!], $tagsAny: [String!], $statuses: [String!], $taskTypes: [String!], $attributes: [AtrributeFilterInput!]) {
   project(name: $projectName) {
     name
-    tasks(folderIds: $folderIds, last: 1000, includeFolderChildren: true) {
+    tasks(
+      folderIds: $folderIds
+      last: 1000
+      includeFolderChildren: true
+      assignees: $assignees
+      assigneesAny: $assigneesAny
+      tags: $tags
+      tagsAny: $tagsAny
+      statuses: $statuses
+      taskTypes: $taskTypes
+      attributes: $attributes
+    ) {
       edges {
         node {
           ...ProgressTaskFragment

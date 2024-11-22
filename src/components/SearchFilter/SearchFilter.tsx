@@ -104,10 +104,13 @@ const SearchFilter: FC<SearchFilterProps> = ({
             : // Otherwise, add the new option to the values array
               [...(parentFilter.values || []), option]
 
-        // if the option is hasValue or noValue, remove the other option
+        // if the option is hasValue or noValue, remove all other options
         if (option.id === 'hasValue' || option.id === 'noValue') {
+          updatedValues = updatedValues.filter((val) => val.id === option.id)
+        } else {
+          // remove hasValue and noValue if a specific value is added
           updatedValues = updatedValues.filter(
-            (val) => val.id !== (option.id === 'hasValue' ? 'noValue' : 'hasValue'),
+            (val) => val.id !== 'hasValue' && val.id !== 'noValue',
           )
         }
 

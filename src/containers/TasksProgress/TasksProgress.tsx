@@ -32,12 +32,12 @@ import formatFilterTagsData from './helpers/formatFilterTagsData'
 import { useAppSelector } from '@state/store'
 import { useSetFrontendPreferencesMutation } from '@queries/user/updateUser'
 import getFilterFromId from '@components/SearchFilter/getFilterFromId'
-import filterTasksBySearch from './helpers/filterTasksBySearch'
 import { FilterFieldType } from '@hooks/useBuildFilterOptions'
 import formatFilterAssigneesData from './helpers/formatFilterAssigneesData'
 import { selectProgress } from '@state/progress'
 import { SliceType, useSlicerContext } from '@context/slicerContext'
 import useFilterBySlice from './hooks/useFilterBySlice'
+import formatSearchQueryFilters from './helpers/formatSearchQueryFilters'
 
 // what to search by
 const searchFilterTypes: FilterFieldType[] = [
@@ -110,6 +110,9 @@ const TasksProgress: FC<TasksProgressProps> = ({
     [filters, taskTypes],
   )
 
+  // build the graphql query filters
+  const queryFilters = useMemo(() => formatSearchQueryFilters(filters), [filters])
+
   //
   //
   // FILTERS
@@ -150,7 +153,17 @@ const TasksProgress: FC<TasksProgressProps> = ({
     isFetching: isFetchingTasks,
     error,
   } = useGetTasksProgressQuery(
-    { projectName, folderIds: folderIdsToFetch },
+    {
+      projectName,
+      folderIds: folderIdsToFetch,
+      assignees: queryFilters.assignees,
+      assigneesAny: queryFilters.assigneesAny,
+      tags: queryFilters.tags,
+      tagsAny: queryFilters.tagsAny,
+      taskTypes: queryFilters.taskTypes,
+      statuses: queryFilters.statuses,
+      attributes: queryFilters.attributes,
+    },
     { skip: !folderIdsToFetch.length || !projectName },
   )
   //
@@ -201,44 +214,31 @@ const TasksProgress: FC<TasksProgressProps> = ({
     [foldersTasksData],
   )
 
-  // filter out by slice
+  // filter out by slice (OLD)
   const {
-    folders: filteredFoldersTasksBySlice,
+    // folders: filteredFoldersTasksBySlice,
     taskTypes: sliceTaskTypes,
-    folderTypes: sliceFolderTypes,
+    // folderTypes: sliceFolderTypes,
   } = useFilterBySlice({
     folders: foldersTasksData,
   })
   // filter out by search and filter bar
   // the tasks don't get filtered out but just hidden
-  const filteredFoldersTasks = useMemo(
-    () => filterTasksBySearch(filteredFoldersTasksBySlice, filters),
-    [filteredFoldersTasksBySlice, filters],
-  )
+  // const filteredFoldersTasks = useMemo(
+  //   () => filterTasksBySearch(filteredFoldersTasksBySlice, filters),
+  //   [filteredFoldersTasksBySlice, filters],
+  // )
   //
   //
   // FILTERS
 
-  const getTaskTypesFilterIntersection = (filterTasks: string[], slicerTasks: string[]) => {
-    if (!filterTasks.length) return slicerTasks
-    if (!slicerTasks.length) return filterTasks
-    const intersection = filterTasks.filter((taskType) => slicerTasks.includes(taskType))
-    return intersection.length ? intersection : filterTasks
-  }
-
   const tableData = useMemo(
     () =>
-      formatTaskProgressForTable(
-        filteredFoldersTasks,
-        getTaskTypesFilterIntersection(filteredTaskTypes, sliceTaskTypes),
-        collapsedParents,
-        sliceFolderTypes,
-        {
-          folderTypes,
-          statuses,
-        },
-      ),
-    [filteredFoldersTasks, filteredTaskTypes, sliceTaskTypes, collapsedParents],
+      formatTaskProgressForTable(foldersTasksData, [], collapsedParents, [], {
+        folderTypes,
+        statuses,
+      }),
+    [foldersTasksData, filteredTaskTypes, sliceTaskTypes, collapsedParents],
   )
 
   const [updateEntities] = useUpdateEntitiesMutation()

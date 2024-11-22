@@ -2727,7 +2727,7 @@
               },
               {
                 "name": "assignees",
-                "description": "List of assignees to filter by",
+                "description": "List tasks with all of the provided assignees. Empty list will return tasks with no assignees.",
                 "type": {
                   "kind": "LIST",
                   "name": null,
@@ -2747,7 +2747,7 @@
               },
               {
                 "name": "assigneesAny",
-                "description": "List tasks with any of the selected assignees",
+                "description": "List tasks with any of the provided assignees. Empty list will return tasks with any assignees.",
                 "type": {
                   "kind": "LIST",
                   "name": null,
@@ -2943,7 +2943,27 @@
               },
               {
                 "name": "tags",
-                "description": "List of tags to filter by",
+                "description": "List tasks with all of the provided tags.Empty list will return tasks with no tags.",
+                "type": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "String",
+                      "ofType": null
+                    }
+                  }
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "tagsAny",
+                "description": "List tasks with any of the provided tags.Empty list will return tasks with any tags.",
                 "type": {
                   "kind": "LIST",
                   "name": null,
@@ -5355,6 +5375,30 @@
                 "deprecationReason": null
               },
               {
+                "name": "changedAfter",
+                "description": null,
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "changedBefore",
+                "description": null,
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "entityIds",
                 "description": null,
                 "type": {
@@ -6598,7 +6642,7 @@
               },
               {
                 "name": "assignees",
-                "description": "List of assignees to filter by",
+                "description": "List tasks with all of the provided assignees. Empty list will return tasks with no assignees.",
                 "type": {
                   "kind": "LIST",
                   "name": null,
@@ -6618,7 +6662,7 @@
               },
               {
                 "name": "assigneesAny",
-                "description": "List tasks with any of the selected assignees",
+                "description": "List tasks with any of the provided assignees. Empty list will return tasks with any assignees.",
                 "type": {
                   "kind": "LIST",
                   "name": null,
@@ -6814,7 +6858,27 @@
               },
               {
                 "name": "tags",
-                "description": "List of tags to filter by",
+                "description": "List tasks with all of the provided tags.Empty list will return tasks with no tags.",
+                "type": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "String",
+                      "ofType": null
+                    }
+                  }
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "tagsAny",
+                "description": "List tasks with any of the provided tags.Empty list will return tasks with any tags.",
                 "type": {
                   "kind": "LIST",
                   "name": null,
@@ -7659,7 +7723,27 @@
               },
               {
                 "name": "states",
-                "description": "List of states",
+                "description": "List of states (deprecated. use statuses)",
+                "type": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "String",
+                      "ofType": null
+                    }
+                  }
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "statuses",
+                "description": "List of statuses",
                 "type": {
                   "kind": "LIST",
                   "name": null,

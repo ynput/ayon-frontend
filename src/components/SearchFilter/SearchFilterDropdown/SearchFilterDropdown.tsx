@@ -24,6 +24,7 @@ export interface SearchFilterDropdownProps {
   isHasValueAllowed?: boolean
   isNoValueAllowed?: boolean
   isInvertedAllowed?: boolean
+  operatorChangeable?: boolean
   onSelect: (option: Option, config?: OnSelectConfig) => void
   onInvert: (id: string) => void // invert the filter
   onOperatorChange?: (id: string, operator: FilterOperator) => void // change the operator
@@ -42,6 +43,7 @@ const SearchFilterDropdown = forwardRef<HTMLUListElement, SearchFilterDropdownPr
       isHasValueAllowed,
       isNoValueAllowed,
       isInvertedAllowed,
+      operatorChangeable,
       onSelect,
       onInvert,
       onOperatorChange,
@@ -125,7 +127,8 @@ const SearchFilterDropdown = forwardRef<HTMLUListElement, SearchFilterDropdownPr
       const option = allOptions.find((option) => option.id === id)
       if (!option) return console.error('Option not found:', id)
 
-      const closeOptions = option.id === 'hasValue'
+      const closeOptions =
+        (option.id === 'hasValue' || option.id === 'noValue') && values.length === 0
 
       onSelect(option, { confirm: closeOptions, restart: closeOptions })
       // clear search
@@ -304,20 +307,22 @@ const SearchFilterDropdown = forwardRef<HTMLUListElement, SearchFilterDropdownPr
                     />
                   </>
                 )}
-                <Styled.Operator>
-                  {['AND', 'OR'].map((operator) => (
-                    <Button
-                      key={operator}
-                      onClick={() => {
-                        onOperatorChange && onOperatorChange(parentId, operator as FilterOperator)
-                      }}
-                      selected={parentFilter?.operator === operator}
-                      icon={parentFilter?.operator === operator ? 'check' : undefined}
-                    >
-                      {operator}
-                    </Button>
-                  ))}
-                </Styled.Operator>
+                {operatorChangeable && (
+                  <Styled.Operator>
+                    {['AND', 'OR'].map((operator) => (
+                      <Button
+                        key={operator}
+                        onClick={() => {
+                          onOperatorChange && onOperatorChange(parentId, operator as FilterOperator)
+                        }}
+                        selected={parentFilter?.operator === operator}
+                        icon={parentFilter?.operator === operator ? 'check' : undefined}
+                      >
+                        {operator}
+                      </Button>
+                    ))}
+                  </Styled.Operator>
+                )}
                 <Button
                   variant="filled"
                   onClick={() => {
