@@ -17,6 +17,9 @@ export const ProjectItem = styled.div`
   .icon {
     opacity: 0;
     user-select: none;
+    &.mixed {
+      opacity: 1;
+    }
   }
 
   &:hover {

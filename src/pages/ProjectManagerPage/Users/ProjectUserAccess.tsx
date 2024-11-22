@@ -340,7 +340,7 @@ const ProjectUserAccess = () => {
           header="User"
           emptyMessage="All users assigned"
           selectedProjects={filteredSelectedProjects}
-          selectedUsers={selectedUsers}
+          selectedUsers={selectedAccessGroupUsers?.accessGroup ? [] : selectedUsers }
           tableList={filteredUsersWithAccessGroups}
           isLoading={usersLoading}
           readOnly={!hasEditRightsOnProject}

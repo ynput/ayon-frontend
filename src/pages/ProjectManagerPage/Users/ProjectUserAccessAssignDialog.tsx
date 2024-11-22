@@ -127,7 +127,7 @@ const ProjectUserAccessAssignDialog = ({
                 onClick={() => toggleAccessGroup(item)}
               >
                 <span className="name">{item.name}</span>
-                {icons[item.status] !== undefined && <Icon icon={icons[item.status]!} />}
+                {icons[item.status] !== undefined && <Icon className={item.status} icon={icons[item.status]!} />}
               </Styled.ProjectItem>
             ))}
           </Styled.List>
