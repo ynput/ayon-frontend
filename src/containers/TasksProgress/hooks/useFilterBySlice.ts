@@ -15,7 +15,11 @@ interface FilterMapping {
   mapValue: (items: SliceDataItem[]) => { id: string }[]
 }
 
-const useFilterBySlice = (): TaskFilterValue | null => {
+type FilterBySliceData = {
+  filter: TaskFilterValue | null
+}
+
+const useFilterBySlice = (): FilterBySliceData => {
   const { sliceType, rowSelectionData } = useSlicerContext()
 
   const sliceTypeToFilterMap: Record<TaskProgressSliceType, FilterMapping | undefined> = {
@@ -54,7 +58,9 @@ const useFilterBySlice = (): TaskFilterValue | null => {
     }
   })()
 
-  return filter
+  return {
+    filter,
+  }
 }
 
 export default useFilterBySlice

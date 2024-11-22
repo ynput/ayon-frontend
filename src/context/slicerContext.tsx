@@ -14,6 +14,11 @@ export type SliceDataItem = {
 
 export type SelectionData = Record<string, SliceDataItem>
 
+export type OnSliceTypeChange = (
+  sliceType: SliceType,
+  leavePersistentSlice: boolean,
+  returnToPersistentSlice: boolean,
+) => void
 interface SlicerContextValue {
   rowSelection: RowSelectionState
   setRowSelection: React.Dispatch<React.SetStateAction<RowSelectionState>>
@@ -22,9 +27,11 @@ interface SlicerContextValue {
   setExpanded: React.Dispatch<React.SetStateAction<ExpandedState>>
   onExpandedChange?: (expanded: ExpandedState) => void
   sliceType: SliceType
-  onSliceTypeChange: (sliceType: SliceType) => void
+  onSliceTypeChange: OnSliceTypeChange
   rowSelectionData: SelectionData
   setRowSelectionData: React.Dispatch<React.SetStateAction<SelectionData>>
+  persistentRowSelectionData: SelectionData
+  setPersistentRowSelectionData: React.Dispatch<React.SetStateAction<SelectionData>>
 }
 
 const SlicerContext = createContext<SlicerContextValue | undefined>(undefined)
@@ -36,6 +43,8 @@ interface SlicerProviderProps {
 export const SlicerProvider = ({ children }: SlicerProviderProps) => {
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
   const [rowSelectionData, setRowSelectionData] = useState<SelectionData>({})
+  // if there is a need to leavePersistentSlice row selection data between slice changes (like the hierarchy)
+  const [persistentRowSelectionData, setPersistentRowSelectionData] = useState<SelectionData>({})
   const [expanded, setExpanded] = useState<ExpandedState>({})
   const [sliceType, setSliceType] = useState<SliceType>('hierarchy')
 
@@ -60,7 +69,11 @@ export const SlicerProvider = ({ children }: SlicerProviderProps) => {
     }
   }
 
-  const handleSliceTypeChange = (sliceType: SliceType) => {
+  const handleSliceTypeChange: OnSliceTypeChange = (
+    sliceType,
+    leavePersistentSlice,
+    returnToPersistentSlice,
+  ) => {
     if (!sliceTypes.includes(sliceType)) return console.log('Invalid slice type')
     // reset selection
     setRowSelection({})
@@ -68,6 +81,22 @@ export const SlicerProvider = ({ children }: SlicerProviderProps) => {
     setSliceType(sliceType)
     // reset selection data
     setRowSelectionData({})
+    // set persistent selection data
+    if (leavePersistentSlice) setPersistentRowSelectionData(rowSelectionData)
+    // we returned to the persisted slice type
+
+    if (returnToPersistentSlice) {
+      // clear the persisted selection data
+      setPersistentRowSelectionData({})
+      // restore the selection data and selection
+      setRowSelectionData(persistentRowSelectionData)
+      setRowSelection(
+        Object.keys(persistentRowSelectionData).reduce((acc, id) => {
+          acc[id] = true
+          return acc
+        }, {} as RowSelectionState),
+      )
+    }
   }
 
   return (
@@ -83,6 +112,8 @@ export const SlicerProvider = ({ children }: SlicerProviderProps) => {
         onSliceTypeChange: handleSliceTypeChange,
         rowSelectionData,
         setRowSelectionData,
+        persistentRowSelectionData,
+        setPersistentRowSelectionData,
       }}
     >
       {children}

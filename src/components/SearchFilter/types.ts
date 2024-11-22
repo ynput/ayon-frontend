@@ -22,6 +22,7 @@ export type Filter = {
   img?: string | null
   values?: FilterValue[]
   isCustom?: boolean
+  isReadonly?: boolean // can not be edited and only removed
   singleSelect?: boolean
   fieldType?: string
 }

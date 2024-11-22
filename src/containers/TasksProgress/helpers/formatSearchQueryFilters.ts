@@ -1,6 +1,6 @@
 // take filters from the search filter and transform them into something graphql can use
 
-import { AtrributeFilterInput, ProjectNodeTasksArgs } from '@api/graphql'
+import { AttributeFilterInput, ProjectNodeTasksArgs } from '@api/graphql'
 import getFilterFromId from '@components/SearchFilter/getFilterFromId'
 import { Filter } from '@components/SearchFilter/types'
 import { TaskFilterValue } from '../hooks/useFilterBySlice'
@@ -73,7 +73,7 @@ const formatSearchQueryFilters = (
       !['assignees', 'tags', 'taskType', 'status'].includes(getFilterFromId(f.id)) &&
       f.values?.length,
   )
-  const attributes: AtrributeFilterInput[] | undefined = attributeFilters.length
+  const attributes: AttributeFilterInput[] | undefined = attributeFilters.length
     ? attributeFilters.map((f) => ({
         name: getFilterFromId(f.id),
         values: f.values?.map((v) => v.id) ?? [],

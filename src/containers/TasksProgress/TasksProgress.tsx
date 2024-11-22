@@ -34,9 +34,11 @@ import { useSetFrontendPreferencesMutation } from '@queries/user/updateUser'
 import { FilterFieldType } from '@hooks/useBuildFilterOptions'
 import formatFilterAssigneesData from './helpers/formatFilterAssigneesData'
 import { selectProgress } from '@state/progress'
-import { SliceType, useSlicerContext } from '@context/slicerContext'
+import { SelectionData, SliceType, useSlicerContext } from '@context/slicerContext'
 import useFilterBySlice from './hooks/useFilterBySlice'
 import formatSearchQueryFilters from './helpers/formatSearchQueryFilters'
+import { isEmpty } from 'lodash'
+import { RowSelectionState } from '@tanstack/react-table'
 
 // what to search by
 const searchFilterTypes: FilterFieldType[] = [
@@ -95,7 +97,45 @@ const TasksProgress: FC<TasksProgressProps> = ({
   }
 
   // filter out by slice
-  const sliceFilter = useFilterBySlice()
+  const { rowSelection, sliceType, setPersistentRowSelectionData, persistentRowSelectionData } =
+    useSlicerContext()
+  const persistedHierarchySelection = isEmpty(persistentRowSelectionData)
+    ? null
+    : persistentRowSelectionData
+  const { filter: sliceFilter } = useFilterBySlice()
+
+  const handleFiltersChange = (value: Filter[]) => {
+    setFilters(value)
+
+    // check if we need to remove the hierarchy filter and clear hierarchy selection
+    if (!value.some((filter) => filter.id === 'hierarchy')) {
+      setPersistentRowSelectionData({})
+    }
+  }
+
+  // if the sliceFilter is not hierarchy and hierarchy is not empty
+  // add the hierarchy to the filters as disabled
+  const filtersWithHierarchy = useMemo(() => {
+    const buildHierarchyFilterOption = (hierarchy: SelectionData): Filter => ({
+      id: 'hierarchy',
+      label: 'Folder',
+      type: 'list_of_strings',
+      values: Object.values(hierarchy).map((item) => ({
+        id: item.id,
+        label: item.label || item.name || item.id,
+      })),
+      isCustom: true,
+      singleSelect: true,
+      fieldType: 'folder',
+      operator: 'OR',
+      isReadonly: true,
+    })
+
+    if (sliceFilter && persistedHierarchySelection) {
+      return [buildHierarchyFilterOption(persistedHierarchySelection), ...filters]
+    }
+    return filters
+  }, [sliceFilter, persistedHierarchySelection, filters])
 
   // build the graphql query filters
   const queryFilters = useMemo(
@@ -117,8 +157,6 @@ const TasksProgress: FC<TasksProgressProps> = ({
   // hide parent folder child rows
   const [collapsedParents, setCollapsedParents] = useState<string[]>([])
 
-  const { rowSelection, sliceType } = useSlicerContext()
-  const selectedFolders = Object.keys(rowSelection)
   const selectedTasks = useSelector((state: $Any) => state.context.focused.tasks) as string[]
   const [activeTask, setActiveTask] = useState<string | null>(null)
   //   GET PROJECT ASSIGNEES
@@ -130,10 +168,28 @@ const TasksProgress: FC<TasksProgressProps> = ({
   // when the slice type is not hierarchy we need to get the root folders
   const rootFolderIds = useRootFolders({ sliceType, projectName })
 
-  const getFolderIdsForTasks = (selected: string[], rootFolders: string[], sliceType: SliceType) =>
-    sliceType === 'hierarchy' ? selected : rootFolders
+  const resolveSelectedFolders = (
+    rowSelection: RowSelectionState,
+    persistedHierarchySelection: SelectionData | null,
+    rootFolderIds: string[],
+    sliceType: SliceType,
+  ): string[] => {
+    if (sliceType === 'hierarchy') {
+      return Object.keys(rowSelection)
+    } else if (persistedHierarchySelection) {
+      return Object.keys(persistedHierarchySelection)
+    } else {
+      return rootFolderIds
+    }
+  }
 
-  const folderIdsToFetch = getFolderIdsForTasks(selectedFolders, rootFolderIds, sliceType)
+  const folderIdsToFetch = resolveSelectedFolders(
+    rowSelection,
+    persistedHierarchySelection,
+    rootFolderIds,
+    sliceType,
+  )
+
   // VVV MAIN QUERY VVV
   //
   //
@@ -358,8 +414,8 @@ const TasksProgress: FC<TasksProgressProps> = ({
       <Section style={{ height: '100%' }} direction="column">
         <Toolbar>
           <SearchFilterWrapper
-            filters={filters}
-            onChange={setFilters}
+            filters={filtersWithHierarchy}
+            onChange={handleFiltersChange}
             filterTypes={searchFilterTypes}
             projectNames={[projectName]}
             scope="task"

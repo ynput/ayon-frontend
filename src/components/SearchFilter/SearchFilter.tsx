@@ -307,6 +307,7 @@ const SearchFilter: FC<SearchFilterProps> = ({
               index={index}
               isEditing={dropdownParentId === filter.id}
               isDisabled={disabledFilters?.includes(getFilterFromId(filter.id))}
+              isReadonly={filter.isReadonly}
               onEdit={handleEditFilter}
               onRemove={handleRemoveFilter}
               onInvert={handleInvertFilter}

@@ -9,9 +9,10 @@ import { SliceType } from '@context/slicerContext'
 
 interface SlicerProps {
   sliceFields: SliceType[]
+  persistFieldId?: SliceType // when changing slice type, leavePersistentSlice the selected field
 }
 
-const Slicer: FC<SlicerProps> = ({ sliceFields = [] }) => {
+const Slicer: FC<SlicerProps> = ({ sliceFields = [], persistFieldId }) => {
   const [globalFilter, setGlobalFilter] = useState('')
 
   const {
@@ -28,7 +29,13 @@ const Slicer: FC<SlicerProps> = ({ sliceFields = [] }) => {
         <Styled.SlicerDropdown
           options={sliceOptions || []}
           value={[sliceType]}
-          onChange={(value) => handleSliceTypeChange(value[0] as SliceType)}
+          onChange={(value) =>
+            handleSliceTypeChange(
+              value[0] as SliceType,
+              persistFieldId === sliceType,
+              persistFieldId === value[0],
+            )
+          }
           className={clsx('slicer-dropdown', { 'single-option': sliceOptions.length === 1 })}
           disableOpen={sliceOptions.length === 1}
         />

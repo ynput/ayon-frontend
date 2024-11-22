@@ -88,6 +88,7 @@ export const SearchFilterItem = forwardRef<HTMLDivElement, SearchFilterItemProps
       isEditing,
       isInvertedAllowed,
       isDisabled,
+      isReadonly,
       onEdit,
       onRemove,
       onInvert,
@@ -96,6 +97,11 @@ export const SearchFilterItem = forwardRef<HTMLDivElement, SearchFilterItemProps
     },
     ref,
   ) => {
+    const handleEdit = (id: string) => {
+      if (isReadonly) return
+      onEdit?.(id)
+    }
+
     const handleRemove = (event: React.MouseEvent<HTMLButtonElement>) => {
       // block main onClick event
       event?.stopPropagation()
@@ -116,7 +122,7 @@ export const SearchFilterItem = forwardRef<HTMLDivElement, SearchFilterItemProps
       if (event.key === 'Enter' || event.key === ' ') {
         event.preventDefault()
         event.stopPropagation()
-        onEdit && onEdit(id)
+        handleEdit(id)
       }
     }
 
@@ -124,7 +130,7 @@ export const SearchFilterItem = forwardRef<HTMLDivElement, SearchFilterItemProps
     const handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
       // stop propagation to opening whole search bar
       event.stopPropagation()
-      onEdit && onEdit(id)
+      handleEdit(id)
       onClick && onClick(event)
     }
 
@@ -162,7 +168,7 @@ export const SearchFilterItem = forwardRef<HTMLDivElement, SearchFilterItemProps
               isCompact={values.length > 1 && (!!value.icon || !!value.img)}
             />
           ))}
-          {onRemove && <ChipButton className="button" icon="close" onClick={handleRemove} />}
+          {onRemove && <ChipButton className="button remove" icon="close" onClick={handleRemove} />}
         </FilterItem>
       </>
     )

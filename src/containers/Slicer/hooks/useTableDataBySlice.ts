@@ -4,7 +4,7 @@ import useHierarchyTable from './useHierarchyTable'
 import useUsersTable from './useUsersTable'
 import { TableRow } from '../SlicerTable'
 import useProjectAnatomySlices from './useProjectAnatomySlices'
-import { SliceType, useSlicerContext } from '@context/slicerContext'
+import { OnSliceTypeChange, SliceType, useSlicerContext } from '@context/slicerContext'
 
 interface Props {
   sliceFields: SliceType[]
@@ -34,7 +34,7 @@ interface TableData {
   table: Slice
   isLoading: boolean
   sliceType: SliceType
-  handleSliceTypeChange: (sliceType: SliceType) => void
+  handleSliceTypeChange: OnSliceTypeChange
 }
 const defaultSliceOptions: SliceOption[] = [
   {

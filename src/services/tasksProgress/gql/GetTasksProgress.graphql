@@ -9,7 +9,7 @@ query GetTasksProgress(
   $tagsAny: [String!]
   $statuses: [String!]
   $taskTypes: [String!]
-  $attributes: [AtrributeFilterInput!]
+  $attributes: [AttributeFilterInput!]
 ) {
   project(name: $projectName) {
     name
