@@ -3,6 +3,10 @@
 import { AtrributeFilterInput, ProjectNodeTasksArgs } from '@api/graphql'
 import getFilterFromId from '@components/SearchFilter/getFilterFromId'
 import { Filter } from '@components/SearchFilter/types'
+import { TaskFilterValue } from '../hooks/useFilterBySlice'
+import { TaskProgressSliceType } from '@pages/TasksProgressPage/TasksProgressPage'
+
+type SliceField = Exclude<TaskProgressSliceType, 'hierarchy'>
 
 type FilterQueriesData = Pick<
   ProjectNodeTasksArgs,
@@ -35,7 +39,10 @@ const formatFilter = (filter: Filter | undefined, filterId: string): FilterResul
   return filter.operator === 'OR' ? { any: values } : { exact: values }
 }
 
-const formatSearchQueryFilters = (filters: Filter[]): FilterQueriesData => {
+const formatSearchQueryFilters = (
+  filters: Filter[],
+  slice: TaskFilterValue | null,
+): FilterQueriesData => {
   // ASSIGNEES
   const { exact: assignees, any: assigneesAny } = formatFilter(
     filters.find((f) => getFilterFromId(f.id) === 'assignees'),
@@ -66,14 +73,14 @@ const formatSearchQueryFilters = (filters: Filter[]): FilterQueriesData => {
       !['assignees', 'tags', 'taskType', 'status'].includes(getFilterFromId(f.id)) &&
       f.values?.length,
   )
-  const attributes: AtrributeFilterInput[] = attributeFilters.map((f) => ({
-    name: getFilterFromId(f.id),
-    values: f.values?.map((v) => v.id) ?? [],
-  }))
+  const attributes: AtrributeFilterInput[] | undefined = attributeFilters.length
+    ? attributeFilters.map((f) => ({
+        name: getFilterFromId(f.id),
+        values: f.values?.map((v) => v.id) ?? [],
+      }))
+    : undefined
 
-  console.log(attributes)
-
-  return {
+  const results: FilterQueriesData = {
     assignees,
     assigneesAny,
     tags,
@@ -82,6 +89,34 @@ const formatSearchQueryFilters = (filters: Filter[]): FilterQueriesData => {
     statuses,
     attributes,
   }
+
+  // finally add the slice filter query, it will replace any other filters that conflict
+  const filterMap: Record<
+    SliceField,
+    { exact: keyof FilterQueriesData; any: keyof FilterQueriesData }
+  > = {
+    assignees: { exact: 'assignees', any: 'assigneesAny' },
+    status: { exact: 'statuses', any: 'statuses' },
+    taskType: { exact: 'taskTypes', any: 'taskTypes' },
+  }
+
+  if (slice) {
+    const filterKeys = filterMap[slice.id as SliceField]
+    if (filterKeys) {
+      const values = slice.values?.map((v) => v.id)
+      if (values && values.length) {
+        if (values.includes('noValue')) {
+          results[filterKeys.exact] = []
+        } else if (values.includes('hasValue')) {
+          results[filterKeys.any] = []
+        } else if (filterKeys.any !== 'attributes') {
+          results[filterKeys.any] = values
+        }
+      }
+    }
+  }
+
+  return results
 }
 
 export default formatSearchQueryFilters

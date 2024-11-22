@@ -66,6 +66,8 @@ export const SlicerProvider = ({ children }: SlicerProviderProps) => {
     setRowSelection({})
     // set slice type
     setSliceType(sliceType)
+    // reset selection data
+    setRowSelectionData({})
   }
 
   return (

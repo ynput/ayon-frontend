@@ -70,7 +70,17 @@ function useRowSelection<T>({ rows, table }: UseRowSelectionProps<T>) {
       }
 
       let newSelection = {}
-      if (event.ctrlKey || event.metaKey) newSelection = handleMultiSelect()
+
+      // check if hasValue or noValue is involved
+      const hasValueInvolved =
+        row.id === 'hasValue' ||
+        row.id === 'noValue' ||
+        'noValue' in rowSelection ||
+        'hasValue' in rowSelection
+
+      if (hasValueInvolved) newSelection = handleSingleSelect()
+      // always single select when dealing with hasValue or noValue
+      else if (event.ctrlKey || event.metaKey) newSelection = handleMultiSelect()
       else if (event.shiftKey) newSelection = handleShiftSelect()
       else newSelection = handleSingleSelect()
 

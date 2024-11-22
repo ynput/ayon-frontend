@@ -31,7 +31,6 @@ import formatFilterAttributesData from './helpers/formatFilterAttributesData'
 import formatFilterTagsData from './helpers/formatFilterTagsData'
 import { useAppSelector } from '@state/store'
 import { useSetFrontendPreferencesMutation } from '@queries/user/updateUser'
-import getFilterFromId from '@components/SearchFilter/getFilterFromId'
 import { FilterFieldType } from '@hooks/useBuildFilterOptions'
 import formatFilterAssigneesData from './helpers/formatFilterAssigneesData'
 import { selectProgress } from '@state/progress'
@@ -95,23 +94,14 @@ const TasksProgress: FC<TasksProgressProps> = ({
     updateUserPreferences({ userName, patchData: updatedFrontendPreferences })
   }
 
-  // remove task columns so slightly different to normal filtering of rows
-  const filteredTaskTypes = useMemo(
-    () =>
-      filters
-        .filter((filter) => getFilterFromId(filter.id) === 'taskType')
-        .flatMap((filter) =>
-          filter.inverted
-            ? taskTypes
-                .filter((taskType) => !filter.values?.some((value) => value.id === taskType.name))
-                .map((taskType) => taskType.name)
-            : filter.values?.map((value) => value.id) || [],
-        ),
-    [filters, taskTypes],
-  )
+  // filter out by slice
+  const sliceFilter = useFilterBySlice()
 
   // build the graphql query filters
-  const queryFilters = useMemo(() => formatSearchQueryFilters(filters), [filters])
+  const queryFilters = useMemo(
+    () => formatSearchQueryFilters(filters, sliceFilter),
+    [filters, sliceFilter],
+  )
 
   //
   //
@@ -214,31 +204,17 @@ const TasksProgress: FC<TasksProgressProps> = ({
     [foldersTasksData],
   )
 
-  // filter out by slice (OLD)
-  const {
-    // folders: filteredFoldersTasksBySlice,
-    taskTypes: sliceTaskTypes,
-    // folderTypes: sliceFolderTypes,
-  } = useFilterBySlice({
-    folders: foldersTasksData,
-  })
-  // filter out by search and filter bar
-  // the tasks don't get filtered out but just hidden
-  // const filteredFoldersTasks = useMemo(
-  //   () => filterTasksBySearch(filteredFoldersTasksBySlice, filters),
-  //   [filteredFoldersTasksBySlice, filters],
-  // )
   //
   //
   // FILTERS
 
   const tableData = useMemo(
     () =>
-      formatTaskProgressForTable(foldersTasksData, [], collapsedParents, [], {
+      formatTaskProgressForTable(foldersTasksData, collapsedParents, {
         folderTypes,
         statuses,
       }),
-    [foldersTasksData, filteredTaskTypes, sliceTaskTypes, collapsedParents],
+    [foldersTasksData, collapsedParents],
   )
 
   const [updateEntities] = useUpdateEntitiesMutation()
@@ -392,6 +368,7 @@ const TasksProgress: FC<TasksProgressProps> = ({
               attributes: filterAttributesData,
               assignees: filterAssigneesData,
             }}
+            disabledFilters={sliceType ? [sliceType] : []}
           />
           <Spacer />
           <Button

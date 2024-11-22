@@ -1,6 +1,9 @@
 import type { FolderType, Status } from '@api/rest/project'
-import { FolderGroup, ProgressTask } from '@queries/tasksProgress/getTasksProgress'
-import { FolderTask } from './filterTasksBySearch'
+import {
+  FolderGroup,
+  ProgressTask,
+  ProgressTaskFolder,
+} from '@queries/tasksProgress/getTasksProgress'
 
 export type TaskTypeRow = {
   name: string
@@ -36,14 +39,17 @@ export type FolderRow = {
   _completeFolders?: number[]
 }
 
+interface FolderTask extends ProgressTaskFolder {
+  projectName: string
+  tasks: (ProgressTask & { isHidden?: boolean })[]
+}
+
 const getParentKey = (parent: FolderGroup['parent']) =>
   parent ? `${parent.id}-${parent.name}` : undefined
 
 export const formatTaskProgressForTable = (
   data: FolderTask[],
-  shownColumns: string[] = [],
   collapsedFolders: string[] = [],
-  shownFolderTypes: string[] = [],
   { folderTypes, statuses }: { folderTypes: FolderType[]; statuses: Status[] },
 ): FolderRow[] => {
   // TODO: try using a map instead of an array to easily lookup parent folders
@@ -103,9 +109,6 @@ export const formatTaskProgressForTable = (
     activeTasks.forEach((task) => {
       const taskType = task.taskType
 
-      // do not add if hidden
-      if (!!shownColumns.length && !shownColumns.includes(taskType)) return
-
       if (!row[taskType]) {
         row[taskType] = {
           name: taskType,
@@ -115,7 +118,6 @@ export const formatTaskProgressForTable = (
       }
 
       if (typeof row[taskType] === 'object' && !Array.isArray(row[taskType])) {
-        if (task.isHidden) return
         // update tasks
         row[taskType].tasks.push(task)
 
@@ -202,14 +204,6 @@ export const formatTaskProgressForTable = (
 
     return !hasNoTasks
   })
-
-  // filter out folders that are not shown, if the array is empty, show all
-  if (shownFolderTypes.length) {
-    filteredRows = filteredRows.filter((row) => {
-      if (row.__isParent) return true
-      return !!row.__folderType && shownFolderTypes.includes(row.__folderType)
-    })
-  }
 
   // filter out parent rows that have no children and NOT collapsedFolders
   filteredRows = filteredRows.filter((row) => {

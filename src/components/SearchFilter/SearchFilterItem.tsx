@@ -29,6 +29,11 @@ const FilterItem = styled.div`
   &.editing {
     outline: 2px solid #99c8ff;
   }
+
+  &.disabled {
+    pointer-events: none;
+    opacity: 0.5;
+  }
 `
 
 const Operator = styled.span`
@@ -63,6 +68,7 @@ interface SearchFilterItemProps extends Omit<React.HTMLAttributes<HTMLDivElement
   index?: number
   isEditing?: boolean
   isInvertedAllowed?: boolean
+  isDisabled?: boolean
   onEdit?: (id: string) => void
   onRemove?: (id: string) => void
   onInvert?: (id: string) => void
@@ -81,6 +87,7 @@ export const SearchFilterItem = forwardRef<HTMLDivElement, SearchFilterItemProps
       index,
       isEditing,
       isInvertedAllowed,
+      isDisabled,
       onEdit,
       onRemove,
       onInvert,
@@ -133,7 +140,7 @@ export const SearchFilterItem = forwardRef<HTMLDivElement, SearchFilterItemProps
           tabIndex={0}
           onKeyDown={handleKeyDown}
           onClick={handleClick}
-          className={clsx('search-filter-item', { editing: isEditing })}
+          className={clsx('search-filter-item', { editing: isEditing, disabled: isDisabled })}
         >
           <ChipButton
             className={clsx('button', { disabled: !isInvertedAllowed })}

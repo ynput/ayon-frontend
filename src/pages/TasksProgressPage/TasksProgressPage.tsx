@@ -13,9 +13,14 @@ import useScopedStatuses from '@hooks/useScopedStatuses'
 import { SliceType } from '@context/slicerContext'
 
 // feature flag to allow slicer of different fields
-const SLICE_BY_FIELDS = false
-const fields: SliceType[] = SLICE_BY_FIELDS
-  ? ['hierarchy', 'assignees', 'status', 'type']
+const SLICE_BY_FIELDS = true
+export type TaskProgressSliceType = Extract<
+  SliceType,
+  'hierarchy' | 'assignees' | 'status' | 'taskType'
+>
+
+export const taskProgressSliceFields: TaskProgressSliceType[] = SLICE_BY_FIELDS
+  ? ['hierarchy', 'assignees', 'status', 'taskType']
   : ['hierarchy']
 
 const TasksProgressPage: FC = () => {
@@ -35,7 +40,7 @@ const TasksProgressPage: FC = () => {
       <Splitter layout="horizontal" style={{ width: '100%', height: '100%' }}>
         <SplitterPanel size={detailsOpen ? 12 : 18} style={{ minWidth: 227, maxWidth: 500 }}>
           <Section wrap>
-            <Slicer sliceFields={fields} />
+            <Slicer sliceFields={taskProgressSliceFields} />
           </Section>
         </SplitterPanel>
         <SplitterPanel size={90} style={{ overflow: 'hidden' }}>

@@ -22,8 +22,6 @@ const TaskProgressDetailsPanel = ({ projectInfo, projectName }: TaskProgressDeta
 
   const { data: users = [] } = useGetUsersAssigneeQuery({ names: undefined, projectName })
 
-  console.log(entities)
-
   if (!entities.length) return null
 
   return (

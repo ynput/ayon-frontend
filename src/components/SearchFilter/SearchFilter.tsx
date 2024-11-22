@@ -21,6 +21,7 @@ export interface SearchFilterProps {
   options: Option[]
   allowGlobalSearch?: boolean
   allowMultipleSameFilters?: boolean
+  disabledFilters?: string[] // filters that should be disabled from adding, editing, or removing
 }
 
 const SearchFilter: FC<SearchFilterProps> = ({
@@ -30,6 +31,7 @@ const SearchFilter: FC<SearchFilterProps> = ({
   options: initOptions = [],
   allowGlobalSearch = false,
   allowMultipleSameFilters = false,
+  disabledFilters,
 }) => {
   const filtersRef = useRef<HTMLDivElement>(null)
   const dropdownRef = useRef<HTMLUListElement>(null)
@@ -51,7 +53,10 @@ const SearchFilter: FC<SearchFilterProps> = ({
   }
 
   const openInitialOptions = () => {
-    openOptions(getShownRootOptions(options, filters, allowMultipleSameFilters), null)
+    openOptions(
+      getShownRootOptions(options, filters, allowMultipleSameFilters, disabledFilters),
+      null,
+    )
   }
 
   const closeOptions = () => {
@@ -301,6 +306,7 @@ const SearchFilter: FC<SearchFilterProps> = ({
               isCustom={filter.isCustom}
               index={index}
               isEditing={dropdownParentId === filter.id}
+              isDisabled={disabledFilters?.includes(getFilterFromId(filter.id))}
               onEdit={handleEditFilter}
               onRemove={handleRemoveFilter}
               onInvert={handleInvertFilter}
@@ -355,13 +361,15 @@ const getOptionsWithSearch = (options: Option[], allowGlobalSearch: boolean) => 
   return [searchFilter, ...options]
 }
 
-// get all the top level fields that should be shown depending on the filters and allowMultipleSameFilters
+// get all the top level fields that should be shown depending on the filters and allowMultipleSameFilters and disabledFilters
 const getShownRootOptions = (
   options: Option[],
   filters: Filter[],
   allowMultipleSameFilters: boolean,
+  disabledFilters: string[] = [],
 ): Option[] => {
   return options.filter((option) => {
+    if (disabledFilters.includes(option.id)) return false
     if (!allowMultipleSameFilters) {
       return !doesFilterExist(option.id, filters)
     }
