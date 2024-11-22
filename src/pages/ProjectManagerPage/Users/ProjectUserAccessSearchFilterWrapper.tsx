@@ -4,8 +4,8 @@ import SearchFilter from '@components/SearchFilter/SearchFilter'
 import { Filter } from '@components/SearchFilter/types'
 import { useGetAccessGroupsQuery } from '@queries/accessGroups/getAccessGroups'
 import { $Any } from '@types'
+import { getProjectAccessSearchFilterBuiler } from './mappers'
 
-import { useProjectAccessSearchFilterBuiler } from './hooks'
 
 
 type Props = {
@@ -25,7 +25,7 @@ const ProjectUserAccessSearchFilterWrapper = ({
     projectName: '_',
   })
 
-  const options = useProjectAccessSearchFilterBuiler({
+  const options = getProjectAccessSearchFilterBuiler({
     projects: projects.map((project: $Any) => ({ id: project.name, label: project.name })),
     users: users.map((user: $Any) => ({
       id: user.name,

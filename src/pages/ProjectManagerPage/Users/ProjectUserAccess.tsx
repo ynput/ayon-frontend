@@ -259,9 +259,7 @@ const ProjectUserAccess = () => {
 
   const onRemove = (accessGroup?: string) => async (users?: string[]) => {
     const userList = users ? users : selectedAccessGroupUsers!.users
-    for (const user of userList) {
-      await removeUserAccessGroup(user, accessGroup)
-    }
+    await removeUserAccessGroup(userList, accessGroup)
     toast.success('Access removed')
     resetSelectedUsers()
   }

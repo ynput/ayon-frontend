@@ -1,5 +1,5 @@
 import { AccessGroupUsers, ListingError, SelectedAccessGroupUsers, SelectionStatus } from './types'
-import { Filter, FilterValue } from '@components/SearchFilter/types'
+import { Filter, FilterValue, Option } from '@components/SearchFilter/types'
 import { ProjectNode, UserNode } from '@api/graphql'
 import { GetProjectsUsersApiResponse, ProjectUserData } from '@queries/project/getProject'
 import { UserPermissions, UserPermissionsEntity } from '@hooks/useUserProjectPermissions'
@@ -181,7 +181,10 @@ const mapInitialAccessGroupStates = (
     //Double checking with each project access groups
     for (const project in projectUsers) {
       for (const user of users) {
-        if (!projectUsers[project][user].includes(agName)) {
+        if (!projectUsers[project][user]) {
+          return SelectionStatus.None
+        }
+        if (!projectUsers[project][user]?.includes(agName)) {
           return SelectionStatus.Mixed
         }
       }
@@ -306,6 +309,42 @@ const getUserAccessGroups = (
   return filteredUsersWithAccessGroups
 }
 
+const getProjectAccessSearchFilterBuiler = ({
+  projects,
+  users,
+  accessGroups,
+}: {
+  [key: string]: FilterValue[]
+}) => {
+  const options: Option[] = [
+    {
+      id: 'text',
+      label: 'Text',
+      icon: 'manage_search',
+      inverted: false,
+      allowsCustomValues: true,
+      values: [],
+    },
+    {
+      id: 'project',
+      label: 'Project',
+      icon: 'deployed_code',
+      values: projects,
+      allowsCustomValues: true,
+    },
+    { id: 'user', label: 'User', icon: 'person', values: users, allowsCustomValues: true },
+    {
+      id: 'accessGroup',
+      label: 'Access Group',
+      icon: 'key',
+      values: accessGroups,
+      allowsCustomValues: true,
+    },
+  ]
+
+  return options
+}
+
 export {
   canAllEditUsers,
   mapUsersByAccessGroups,
@@ -317,4 +356,5 @@ export {
   mapInitialAccessGroupStates,
   getErrorInfo,
   getUserAccessGroups,
+  getProjectAccessSearchFilterBuiler
 }

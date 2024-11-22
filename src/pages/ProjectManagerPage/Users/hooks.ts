@@ -1,13 +1,12 @@
 import { $Any } from '@types'
 import api, { useGetProjectsUsersQuery } from '@queries/project/getProject'
+import { api as accessApi } from '@api/rest/access'
 import { useState } from 'react'
-import { useUpdateProjectUsersMutation } from '@queries/project/updateProject'
 import { useDispatch } from 'react-redux'
 import { SelectionStatus } from './types'
-import { Filter, FilterValue, Option } from '@components/SearchFilter/types'
+import { Filter } from '@components/SearchFilter/types'
 import { useAppSelector } from '@state/store'
 import { useSetFrontendPreferencesMutation } from '@queries/user/updateUser'
-import { uuid } from 'short-uuid'
 
 const useProjectAccessGroupData = (selectedProject: string) => {
   const udpateApiCache = (project: string, user: string, accessGroups: string[]) => {
@@ -21,7 +20,7 @@ const useProjectAccessGroupData = (selectedProject: string) => {
   }
 
   const dispatch = useDispatch()
-  const [updateUser] = useUpdateProjectUsersMutation()
+  const [updateProjectAccess] = accessApi.useSetProjectsAccessMutation()
 
   const [selectedProjects, setSelectedProjects] = useState<string[]>(
     selectedProject ? [selectedProject] : [],
@@ -31,27 +30,37 @@ const useProjectAccessGroupData = (selectedProject: string) => {
   const users = result.data
 
   const accessGroupUsers: $Any = {}
-  const removeUserAccessGroup = (user: string, accessGroup?: string) => {
-    for (const project of selectedProjects) {
-      // @ts-ignore
-      if (!users![project][user]) {
-        continue
+  const removeUserAccessGroup = async (userList: string[], accessGroup?: string) => {
+    let multiUpdateData: { [key: string]: { [key: string]: string[] } } = {}
+    let cacheInvalidations = []
+    for (const user of userList) {
+      for (const project of selectedProjects) {
+        // @ts-ignore
+        if (!users![project][user]) {
+          continue
+        }
+        const updatedAccessGroups = accessGroup
+          ? // @ts-ignore
+            users![project][user]?.filter((item: string) => item !== accessGroup)
+          : []
+        multiUpdateData = {
+          ...multiUpdateData,
+          [user]: {
+            ...multiUpdateData[user],
+            [project]: updatedAccessGroups,
+          },
+        }
+        cacheInvalidations.push(() => udpateApiCache(project, user, updatedAccessGroups))
       }
-      // @ts-ignore
-      const updatedAccessGroups = accessGroup ? users![project][user]?.filter(
-        (item: string) => item !== accessGroup,
-      ) : []
-      try {
-        updateUser({
-          projectName: project,
-          userName: user,
-          update: updatedAccessGroups,
-        })
-        udpateApiCache(project, user, updatedAccessGroups)
-      } catch (error: $Any) {
-        console.log(error)
-        return error.details
+    }
+    try {
+      await updateProjectAccess({ payload: multiUpdateData }).unwrap()
+      for (const callable of cacheInvalidations) {
+        callable()
       }
+    } catch (error: $Any) {
+      console.log(error)
+      return error.details
     }
   }
 
@@ -75,23 +84,31 @@ const useProjectAccessGroupData = (selectedProject: string) => {
       return [...existingSet]
     }
 
-    for (const project of selectedProjects) {
-      for (const user of selectedUsers) {
+    let multiUpdateData: { [key: string]: { [key: string]: string[] } } = {}
+    let invalidations = []
+    for (const user of selectedUsers) {
+      for (const project of selectedProjects) {
         // @ts-ignore
         const accessGroups = updatedAccessGroups(users?.[project][user] || [], changes)
-
-        try {
-          await updateUser({
-            projectName: project,
-            userName: user,
-            update: accessGroups,
-          }).unwrap()
-          udpateApiCache(project, user, accessGroups)
-        } catch (error: $Any) {
-          console.log(error)
-          return error.details
+        multiUpdateData = {
+          ...multiUpdateData,
+          [user]: {
+            ...multiUpdateData[user],
+            [project]: accessGroups,
+          },
         }
+        invalidations.push(() => udpateApiCache(project, user, accessGroups))
       }
+    }
+
+    try {
+      updateProjectAccess({ payload: multiUpdateData })
+      for (const callable of invalidations) {
+        callable()
+      }
+    } catch (error: $Any) {
+      console.log(error)
+      return error.details
     }
   }
 
@@ -103,42 +120,6 @@ const useProjectAccessGroupData = (selectedProject: string) => {
     removeUserAccessGroup,
     updateUserAccessGroups,
   }
-}
-
-const useProjectAccessSearchFilterBuiler = ({
-  projects,
-  users,
-  accessGroups,
-}: {
-  [key: string]: FilterValue[]
-}) => {
-  const options: Option[] = [
-    {
-      id: 'text',
-      label: 'Text',
-      icon: 'manage_search',
-      inverted: false,
-      allowsCustomValues: true,
-      values: [],
-    },
-    {
-      id: 'project',
-      label: 'Project',
-      icon: 'deployed_code',
-      values: projects,
-      allowsCustomValues: true,
-    },
-    { id: 'user', label: 'User', icon: 'person', values: users, allowsCustomValues: true },
-    {
-      id: 'accessGroup',
-      label: 'Access Group',
-      icon: 'key',
-      values: accessGroups,
-      allowsCustomValues: true,
-    },
-  ]
-
-  return options
 }
 
 const useUserPageFilters = (): [filters: Filter[], setFilters: (value: Filter[]) => void] => {
@@ -186,7 +167,7 @@ const useUserPageFilters = (): [filters: Filter[], setFilters: (value: Filter[])
 }
 
 const useUserPreferencesExpandedPanels = (): [
-  expandedAccessGroups: {[key: string]: boolean},
+  expandedAccessGroups: { [key: string]: boolean },
   setExpandedAccessGroups: (values: { [key: string]: boolean }) => void,
 ] => {
   const pageId = 'project.settings.user.access_groups'
@@ -208,9 +189,4 @@ const useUserPreferencesExpandedPanels = (): [
   return [expandedAccessGroups, setExpandedAccessGroups]
 }
 
-export {
-  useProjectAccessGroupData,
-  useProjectAccessSearchFilterBuiler,
-  useUserPageFilters,
-  useUserPreferencesExpandedPanels,
-}
+export { useProjectAccessGroupData, useUserPageFilters, useUserPreferencesExpandedPanels }
