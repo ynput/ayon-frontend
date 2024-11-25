@@ -133,44 +133,6 @@ const ProjectUserAccess = () => {
 
   const [ctxMenuShow] = useCreateContext([])
 
-  const handleAddContextMenu = (e: $Any) => {
-    let actionedUsers = selectedUsers
-    if (!actionedUsers.includes(e.data.name)) {
-      actionedUsers = [e.data.name]
-      setSelectedAccessGroupUsers({ users: [e.data.name] })
-    }
-
-    ctxMenuShow(e.originalEvent, [
-      {
-        id: 'add',
-        icon: 'add',
-        label: 'Add access',
-        command: () => handleAdd(actionedUsers),
-      },
-      {
-        id: 'remove',
-        icon: 'remove',
-        label: 'Remove access',
-        disabled: true,
-        command: () => handleAdd(actionedUsers),
-      },
-      {
-        id: 'remove_all',
-        icon: 'remove_moderator',
-        label: 'Remove all access',
-        disabled: true,
-        command: () => onRemove()(actionedUsers),
-      },
-      {
-        id: 'filter_by_user',
-        icon: 'person',
-        label: 'Filter by user',
-        disabled: false,
-        command: () => handleUserFilterUpdate(actionedUsers),
-      },
-    ])
-  }
-
   const handleUserFilterUpdate = (actionedUsers: string[]) => {
     const otherFilters = filters.filter((filter: Filter) => filter.label !== 'User')
     const newFilterValues = (userFilter.values = users
@@ -187,30 +149,58 @@ const ProjectUserAccess = () => {
     ])
   }
 
-  const handleRemoveContextMenu = (e: $Any, accessGroup: string) => {
-    let actionedUsers = selectedAccessGroupUsers?.users || []
-    if (!actionedUsers.includes(e.data.name)) {
-      actionedUsers = [e.data.name]
-      setSelectedAccessGroupUsers({ users: [e.data.name] })
-    }
+  const handleAddButton = () => {
+    const { actionedUsers } = decideActionedUsers({
+      interactionType: InteractionType.bulkButton,
+    })
+
+    handleAdd({users: actionedUsers})
+  }
+
+  const handleRemoveButton = () => {
+    const { accessGroup: actionedAccessGroup, actionedUsers } = decideActionedUsers({
+      interactionType: InteractionType.bulkButton,
+    })
+
+    onRemove(actionedAccessGroup)(actionedUsers)
+  }
+
+  const handleRowAddButton = (data: {accessGroup?: string, users: string[]}) => {
+    const { actionedUsers } = decideActionedUsers({
+      accessGroup: data.accessGroup,
+      users: data.users,
+      interactionType: InteractionType.button,
+    })
+
+    handleAdd({users: actionedUsers})
+  }
+
+  const handleContextMenu = (accessGroup?: string) => (e: $Any) => {
+    const { actionedUsers } = decideActionedUsers({
+      accessGroup,
+      users: [e.data.name],
+      interactionType: InteractionType.button,
+    })
 
     ctxMenuShow(e.originalEvent, [
       {
         id: 'add',
         icon: 'add',
         label: 'Add access',
-        command: () => handleAdd(actionedUsers),
+        command: () => handleAdd({ users: actionedUsers }),
       },
       {
         id: 'remove',
         icon: 'remove',
         label: 'Remove access',
+        disabled: accessGroup === undefined,
         command: () => onRemove(accessGroup)(actionedUsers),
       },
       {
         id: 'remove',
         icon: 'remove_moderator',
         label: 'Remove all access',
+        disabled: accessGroup === undefined,
         command: () => onRemove()(actionedUsers),
       },
       {
@@ -223,17 +213,9 @@ const ProjectUserAccess = () => {
     ])
   }
 
-  const handleAdd = (users?: string[]) => {
-    const selectedUsers = getSelectedUsers(selectedAccessGroupUsers, filteredNonManagerUsers)
-    // Selection is picked based on access group being set or not. Might be redundant, check later if is necessary
-    const actionedUsers = users
-      ? users
-      : selectedAccessGroupUsers?.accessGroup
-      ? selectedUsers
-      : selectedUsers
-    setActionedUsers(actionedUsers)
+  const handleAdd = ({users}: {users: string[]}) => {
     if (filteredAccessGroups.length == 1) {
-      onSave(actionedUsers, [{ name: filteredAccessGroups[0].name, status: SelectionStatus.All }])
+      onSave(users, [{ name: filteredAccessGroups[0].name, status: SelectionStatus.All }])
 
       return
     }
@@ -257,6 +239,84 @@ const ProjectUserAccess = () => {
     resetSelectedUsers()
   }
 
+  enum InteractionType {
+    button = 'button',
+    bulkButton = 'bulk',
+    keyDown = 'keydown',
+
+  }
+  const decideActionedUsers = ({
+    accessGroup,
+    users,
+    interactionType,
+  }: {
+    accessGroup?: string
+    users?: string[]
+    interactionType: InteractionType
+  }): {
+    accessGroup?: string
+    actionedUsers: string[]
+  } => {
+    console.log({ accessGroup, users, interactionType})
+
+    //button click
+    //key || global button click
+    //hover & click
+
+    //no users -> user existing selection
+
+    let actionedUsers = selectedAccessGroupUsers?.users || []
+    let actionedAccessGroup = selectedAccessGroupUsers?.accessGroup
+    console.log('orig au: ', actionedUsers)
+    console.log('orig auag: ', actionedAccessGroup)
+
+    if (interactionType == InteractionType.bulkButton) {
+      console.log('testing if hovered user exists and matching the selection...')
+      console.log('hu: ', hoveredUser)
+      if (hoveredUser?.user && !actionedUsers.includes(hoveredUser.user)) {
+        actionedUsers = [hoveredUser.user]
+        actionedAccessGroup = hoveredUser.accessGroup
+        setSelectedAccessGroupUsers({
+          accessGroup: hoveredUser.accessGroup,
+          users: [hoveredUser.user],
+        })
+      }
+      // Nothing to do here ... for now!
+    } else if (interactionType == InteractionType.button) {
+      // We know it's only 1 user if interaction is button click
+      if (!actionedUsers.includes(users![0]) || accessGroup !== actionedAccessGroup) {
+        console.log('resetting selection, user/access group does not match')
+        actionedUsers = users!
+        actionedAccessGroup = accessGroup
+        setSelectedAccessGroupUsers({ accessGroup: actionedAccessGroup, users: users! })
+      }
+    }
+
+    setActionedUsers(actionedUsers)
+    console.log('returning: ', { accessGroup: actionedAccessGroup, actionedUsers })
+    return { accessGroup: actionedAccessGroup, actionedUsers }
+    /*
+          if (hoveredUser?.user && !actionedUsers.includes(hoveredUser.user)) {
+            actionedUsers = [hoveredUser.user]
+            setSelectedAccessGroupUsers({
+              accessGroup: hoveredUser.accessGroup,
+              users: [hoveredUser.user],
+            })
+          }
+
+    if (!selectedAccessGroupUsers?.users && !hoveredUser?.user) {
+      return
+    }
+    if (hoveredUser?.user && !actionedUsers.includes(hoveredUser.user)) {
+      actionedUsers = [hoveredUser.user]
+      setSelectedAccessGroupUsers({
+        accessGroup: hoveredUser.accessGroup,
+        users: [hoveredUser.user],
+      })
+    }
+      */
+  }
+
   const onRemove = (accessGroup?: string) => async (users?: string[]) => {
     const userList = users ? users : selectedAccessGroupUsers!.users
     await removeUserAccessGroup(userList, accessGroup)
@@ -276,19 +336,15 @@ const ProjectUserAccess = () => {
       {
         key: 'a',
         action: () => {
+          console.log('handling a keypress...')
+          console.log('sagu: ', selectedAccessGroupUsers)
+          console.log('hu: ', hoveredUser)
           if (!selectedAccessGroupUsers?.users && !hoveredUser?.user) {
+            console.log('nothing to do ?!?!!?')
             return
           }
-          let actionedUsers = selectedAccessGroupUsers?.users || []
-          if (hoveredUser?.user && !actionedUsers.includes(hoveredUser.user)) {
-            actionedUsers = [hoveredUser.user]
-            setSelectedAccessGroupUsers({
-              accessGroup: hoveredUser.accessGroup,
-              users: [hoveredUser.user],
-            })
-          }
 
-          handleAdd(actionedUsers)
+          handleAddButton()
         },
       },
       {
@@ -298,18 +354,7 @@ const ProjectUserAccess = () => {
             return
           }
 
-          let actionedUsers = selectedAccessGroupUsers?.users || []
-          let actionedAccessGroup = selectedAccessGroupUsers?.accessGroup
-          if (hoveredUser?.user && !actionedUsers.includes(hoveredUser.user)) {
-            actionedUsers = [hoveredUser.user]
-            actionedAccessGroup = hoveredUser.accessGroup
-            setSelectedAccessGroupUsers({
-              accessGroup: hoveredUser.accessGroup,
-              users: [hoveredUser.user],
-            })
-          }
-
-          onRemove(actionedAccessGroup)(actionedUsers)
+          handleRemoveButton()
         },
       },
     ],
@@ -345,13 +390,13 @@ const ProjectUserAccess = () => {
           header="User"
           emptyMessage="All users assigned"
           selectedProjects={filteredSelectedProjects}
-          selectedUsers={selectedAccessGroupUsers?.accessGroup ? [] : selectedUsers }
+          selectedUsers={selectedAccessGroupUsers?.accessGroup ? [] : selectedUsers}
           tableList={filteredUsersWithAccessGroups}
           isLoading={usersLoading}
           readOnly={!hasEditRightsOnProject}
           hoveredUser={hoveredUser}
-          onContextMenu={handleAddContextMenu}
-          onAdd={handleAdd}
+          onContextMenu={(e: $Any) => handleContextMenu()(e)}
+          onAdd={handleRowAddButton}
           onHoverRow={(userName: string) => {
             userName ? setHoveredUser({ user: userName }) : setHoveredUser({})
           }}
@@ -372,6 +417,7 @@ const ProjectUserAccess = () => {
         .map((accessGroup) => {
           return (
             <ProjectUserAccesAccessGroupPanel
+              key={`panel-${accessGroup}`}
               header={capitalizeFirstLetter(accessGroup)}
               isExpanded={
                 expandedAccessGroups[accessGroup] !== undefined
@@ -390,7 +436,7 @@ const ProjectUserAccess = () => {
                 hoveredUser={hoveredUser}
                 accessGroup={accessGroup}
                 emptyMessage="No users assigned"
-                onContextMenu={(e: $Any) => handleRemoveContextMenu(e, accessGroup)}
+                onContextMenu={(e: $Any) => handleContextMenu(accessGroup)(e)}
                 tableList={filteredNonManagerUsers.filter(
                   (user: UserNode) =>
                     mappedUsers[accessGroup] && mappedUsers[accessGroup].includes(user.name),
@@ -401,7 +447,7 @@ const ProjectUserAccess = () => {
                 onSelectUsers={(selection: string[]) =>
                   updateSelectedAccessGroupUsers(accessGroup, selection)
                 }
-                onAdd={() => handleAdd()}
+                onAdd={handleRowAddButton}
                 onRemove={onRemove(accessGroup)}
                 isLoading={usersLoading}
               />
@@ -437,7 +483,7 @@ const ProjectUserAccess = () => {
           disabled={!addActionEnabled}
           data-tooltip={false ? 'No project selected' : undefined}
           icon={'add'}
-          onClick={() => handleAdd()}
+          onClick={() => handleAddButton()}
         >
           Add access
         </StyledButton>

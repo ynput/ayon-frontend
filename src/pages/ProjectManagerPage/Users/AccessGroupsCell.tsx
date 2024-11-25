@@ -12,10 +12,10 @@ type Props = {
   hovering: boolean
   addButtonDisabled: boolean
   readOnly: boolean
-  onAdd: (user?: string) => void
+  onAdd: (user: string) => void
 }
 
-export const AccessGroupsColumn = ({
+export const AccessGroupsCell = ({
   data,
   selected = false,
   showAddButton = false,
@@ -43,15 +43,13 @@ export const AccessGroupsColumn = ({
           variant={showAddButton ? 'filled' : 'text'}
           icon={'add'}
           onClick={(e) => {
-            console.log('clicking add...')
             e.stopPropagation()
-            // Handle click outside selection on hovering, make sure selection changes accordingly (one user selection only)
-            onAdd()
+            onAdd(data.name)
           }}
         >
           {showAddButton && (
             <>
-              Add <span className="shortcut">A</span>{' '}
+              Add <span className="shortcut">A</span>
             </>
           )}
         </Styled.ActionButton>
@@ -60,4 +58,4 @@ export const AccessGroupsColumn = ({
   )
 }
 
-export default AccessGroupsColumn
+export default AccessGroupsCell

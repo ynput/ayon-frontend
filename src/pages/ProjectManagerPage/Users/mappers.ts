@@ -5,6 +5,7 @@ import { GetProjectsUsersApiResponse, ProjectUserData } from '@queries/project/g
 import { UserPermissions, UserPermissionsEntity } from '@hooks/useUserProjectPermissions'
 import { $Any } from '@types'
 import { matchSorter } from 'match-sorter'
+import { difference } from 'lodash'
 
 const getAllProjectUsers = (groupedUsers: AccessGroupUsers): string[] => {
   let allUsers: string[] = []
@@ -167,6 +168,7 @@ const mapInitialAccessGroupStates = (
     const usersSet = new Set(users)
     const accessGroupUsersSet = new Set(accessGroupUsers)
     const intersection = usersSet.intersection(accessGroupUsersSet)
+    const diff = usersSet.difference(accessGroupUsersSet)
 
     // No users in ag users
     if (intersection.size == 0) {
@@ -174,16 +176,12 @@ const mapInitialAccessGroupStates = (
     }
 
     //All users / some users in ag users
-    if (intersection.size !== usersSet.size) {
+    if (diff.size > 0) {
       return SelectionStatus.Mixed
     }
 
-    //Double checking with each project access groups
     for (const project in projectUsers) {
       for (const user of users) {
-        if (!projectUsers[project][user]) {
-          return SelectionStatus.None
-        }
         if (!projectUsers[project][user]?.includes(agName)) {
           return SelectionStatus.Mixed
         }

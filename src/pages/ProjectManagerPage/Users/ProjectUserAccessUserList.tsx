@@ -1,4 +1,3 @@
-
 import { Column } from 'primereact/column'
 import { Section } from '@ynput/ayon-react-components'
 
@@ -6,10 +5,9 @@ import clsx from 'clsx'
 import { $Any } from '@types'
 import { UserNode } from '@api/graphql'
 import { CompactPlaceholder, DataTable } from './ProjectUserAccess.styled'
-import UserColumn from './UserColumn'
-import AccessGroupsColumn from './AccessGroupsColumn'
+import UserCell from './UserCell'
+import AccessGroupsCell from './AccessGroupsCell'
 import { HoveredUser } from './types'
-
 
 type Props = {
   selectedProjects: string[]
@@ -18,7 +16,7 @@ type Props = {
   accessGroup?: string
   hoveredUser?: HoveredUser
   isLoading: boolean
-  readOnly: boolean,
+  readOnly: boolean
   header?: string
   emptyMessage: string
   sortable?: boolean
@@ -29,7 +27,7 @@ type Props = {
   onContextMenu?: $Any
   onHoverRow: $Any
   onSelectUsers?: (selectedUsers: string[]) => void
-  onAdd: (users? : string[]) => void
+  onAdd: ({ accessGroup, users }: { accessGroup?: string; users: string[] }) => void
   onRemove?: (users?: string[]) => void
 }
 
@@ -75,7 +73,7 @@ const ProjectUserAccessUserList = ({
 
   return (
     <Section style={{ height: '100%' }}>
-      <div style={{ borderRadius: '4px' }}>
+      <div style={{ borderRadius: '4px', height: '100%' }}>
         <DataTable
           style={{ borderRadius: 'inherit' }}
           data-testid={`accessGroupPanel-${header}`}
@@ -91,23 +89,22 @@ const ProjectUserAccessUserList = ({
           onContextMenu={!readOnly && onContextMenu}
           onRowMouseEnter={(e) => onHoverRow(e.data.name)}
           onRowMouseLeave={() => onHoverRow()}
-          onSelectionChange={(selection) => {
-            return onSelectUsers && onSelectionChange(selection)
-          }}
+          onSelectionChange={(selection) => onSelectUsers && onSelectionChange(selection)}
         >
           <Column
             field="name"
+            style={{ width: '200px' }}
             header={header}
             headerStyle={header ? { textTransform: 'capitalize' } : { display: 'none' }}
             body={(rowData) =>
               !isLoading && (
-                <UserColumn
+                <UserCell
                   rowData={rowData}
                   data-testid={`accessGroupUser-${rowData.name}`}
                   showAddButton={showAddButton}
                   showAddMoreButton={showAddMoreButton}
                   readOnly={readOnly}
-                  onAdd={(user?: string) => onAdd(user ? [user] : undefined)}
+                  onAdd={(user: string) => onAdd({ accessGroup, users: [user] })}
                   hovering={
                     hoveredUser?.user == rowData.name && hoveredUser?.accessGroup === accessGroup
                   }
@@ -127,12 +124,12 @@ const ProjectUserAccessUserList = ({
               header="Project access groups"
               body={(data) =>
                 !isLoading && (
-                  <AccessGroupsColumn
+                  <AccessGroupsCell
                     data={data}
                     data-testid={`accessGroupUser-${data.name}`}
                     showAddButton={showAddButton}
                     readOnly={readOnly}
-                    onAdd={(user?: string) => onAdd(user ? [user] : undefined)}
+                    onAdd={(user: string) => onAdd({ accessGroup, users: [user] })}
                     hovering={
                       hoveredUser?.user == data.name && hoveredUser?.accessGroup === accessGroup
                     }

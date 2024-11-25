@@ -38,8 +38,14 @@ const ProjectUserAccessAssignDialog = ({
   onSave,
   onClose,
 }: Props) => {
+  console.log('u: ', users)
+  console.log('pu: ', projectUsers)
+  console.log('ag: ', accessGroups)
+  console.log('uag: ', userAccessGroups)
   const initialStates = mapInitialAccessGroupStates(accessGroups, users, projectUsers, userAccessGroups)
   const initialStatesList = Object.keys(initialStates).map(agName => ({name: agName, status: initialStates[agName]}))
+  console.log('is: ', initialStates)
+  console.log('isl: ', initialStatesList)
 
   const [accessGroupItems, setAccessGroupItems] = useState<AccessGroupItem[]>(initialStatesList)
   const allSelected = accessGroupItems.find(item => item.status !== SelectionStatus.All) === undefined

@@ -12,11 +12,11 @@ type Props = {
   showAddButton: boolean
   showAddMoreButton: boolean
   readOnly: boolean
-  onAdd: (user?: string) => void
+  onAdd: (user: string) => void
   onRemove?: () => void
 }
 
-export const UserColumn = ({
+export const UserCell = ({
   rowData,
   selected = false,
   showAddButton = false,
@@ -51,7 +51,7 @@ export const UserColumn = ({
           onClick={(e) => {
             e.stopPropagation()
             // Handle click outside selection on hovering, make sure selection changes accordingly (one user selection only)
-            onAdd()
+            onAdd(name)
           }}
         >
           {showAddButton ? (
@@ -81,4 +81,4 @@ export const UserColumn = ({
   )
 }
 
-export default UserColumn
+export default UserCell
