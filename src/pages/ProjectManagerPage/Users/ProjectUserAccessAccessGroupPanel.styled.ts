@@ -4,7 +4,6 @@ export const Wrapper = styled.div`
 position: relative;
   justify-content: stretch;
   border-radius: 4px;
-  overflow: hidden;
   &.dragged {
     opacity: 0;
   }

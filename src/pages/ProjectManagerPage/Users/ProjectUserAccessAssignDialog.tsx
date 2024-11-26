@@ -80,14 +80,15 @@ const ProjectUserAccessAssignDialog = ({
     if (users.length <= 3) {
       return users.join(',')
     }
+    const rest = users.length - 3
     return (
       <span>
         {users.slice(0, 3).join(', ')} and{' '}
         <span
           data-tooltip={users.slice(3).join(', ')}
-          style={{ borderBottom: '1px dashed white', cursor: 'pointer' }}
+          style={{ textDecoration: 'underline', cursor: 'pointer' }}
         >
-          {users.length - 3} others
+          {rest} {rest > 1 ? 'others' : 'other'}
         </span>
       </span>
     )

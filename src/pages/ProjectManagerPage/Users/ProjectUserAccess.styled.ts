@@ -42,7 +42,7 @@ export const StyledHeader = styled.p`
   font-size: 16px;
   line-height: 24px;
   font-weight: 700;
-  margin: 8px 0;
+  margin: 0;
 `
 
 export const DataColumn = styled.div`
@@ -91,7 +91,23 @@ export const CompactPlaceholder = styled.div`
 `
 
 export const DataTable = styled(BaseDataTable)`
-  .p-datatable-wrapper {
-    border-radius: inherit;
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+  overflow: hidden;
+  &.fullBorderRadius {
+    border-radius: 4px;
   }
+`
+
+export const AccessGroupsWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`
+export const ProjectUserAccessUserListWrapper = styled.div`
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  background: var(--md-sys-color-surface-container-low);
+  border-radius: 4px;
 `

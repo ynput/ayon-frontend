@@ -1,5 +1,14 @@
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { ReactNode } from 'react'
+import styled from 'styled-components'
+
+const RightPanelWrapper = styled.div`
+  height: 100%;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+`
 
 type Props = {
   leftContent: ReactNode
@@ -27,9 +36,7 @@ const SplitterContainerThreePanes = ({ leftContent, mainContent, rightContent }:
         size={30}
         style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
       >
-        <div style={{height: '100%', overflow: 'auto'}}>
-        {rightContent}
-        </div>
+        <RightPanelWrapper>{rightContent}</RightPanelWrapper>
       </SplitterPanel>
     </Splitter>
   )

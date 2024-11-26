@@ -75,7 +75,6 @@ const ProjectUserAccessUserList = ({
     <Section style={{ height: '100%' }}>
       <div style={{ borderRadius: '4px', height: '100%' }}>
         <DataTable
-          style={{ borderRadius: 'inherit' }}
           data-testid={`accessGroupPanel-${header}`}
           selection={selectedUnassignedUsers}
           value={tableList}
@@ -84,7 +83,10 @@ const ProjectUserAccessUserList = ({
           scrollHeight="flex"
           emptyMessage={emptyMessage}
           dataKey="name"
-          className={clsx('user-list-table', { loading: isLoading })}
+          className={clsx('user-list-table', {
+            loading: isLoading,
+            fullBorderRadius: accessGroup === undefined,
+          })}
           rowClassName={(rowData: $Any) => clsx({ inactive: !rowData.active, loading: isLoading })}
           onContextMenu={!readOnly && onContextMenu}
           onRowMouseEnter={(e) => onHoverRow(e.data.name)}

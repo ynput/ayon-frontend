@@ -17,7 +17,7 @@ const ProjectUserAccesAccessGroupPanel = ({
   onToggleExpand,
 }: Props) => {
   return (
-    <Styled.Wrapper style={{ marginBottom: '4px' }}>
+    <Styled.Wrapper>
       <Styled.Header onClick={() => onToggleExpand && onToggleExpand(!isExpanded)}>
         <div style={{ display: 'flex' }}>
           {header}
