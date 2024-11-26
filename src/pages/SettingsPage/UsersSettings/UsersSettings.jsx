@@ -101,7 +101,6 @@ const UsersSettings = () => {
     toastId.current = toast.info('Disabling users...')
     let i = 0
     for (const user of users) {
-
       try {
         await updateUser({
           name: user,
@@ -284,7 +283,7 @@ const UsersSettings = () => {
                 }}
               />
             </SplitterPanel>
-            <SplitterPanel size={40} style={{ minWidth: 370 }}>
+            <SplitterPanel size={20} style={{ minWidth: 370 }}>
               {selectedUsers.length ? (
                 <UserDetail
                   setShowRenameUser={setShowRenameUser}
