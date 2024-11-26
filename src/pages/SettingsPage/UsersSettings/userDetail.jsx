@@ -18,7 +18,6 @@ import UserAccessForm from './UserAccessForm'
 import ServiceDetails from './ServiceDetails'
 import UserDetailsHeader from '@components/User/UserDetailsHeader'
 import { cloneDeep, isEqual } from 'lodash'
-import UserAccessGroupsForm from './UserAccessGroupsForm/UserAccessGroupsForm'
 
 const FormsStyled = styled.section`
   flex: 1;
@@ -176,7 +175,6 @@ const UserDetail = ({
   setShowRenameUser,
   selectedUsers,
   setShowSetPassword,
-  selectedProjects,
   setSelectedUsers,
   isSelfSelected,
   selectedUserList,
@@ -324,9 +322,7 @@ const UserDetail = ({
 
   const headerAccessGroups = formUsers.reduce((acc, user) => {
     let accessGroups = Object.entries(user.accessGroups)
-      .map(([project, accessGroup]) =>
-        selectedProjects ? (selectedProjects?.includes(project) ? accessGroup : []) : accessGroup,
-      )
+      .map(([accessGroup]) => accessGroup)
       .flat()
 
     // if user is admin, he has also a manager role
@@ -395,16 +391,8 @@ const UserDetail = ({
                 onChange={(key, value) => setFormData({ ...formData, [key]: value })}
                 disabled={managerDisabled || isSelfSelected}
                 accessGroupsData={accessGroupsData}
-                selectedProjects={selectedProjects}
               />
             </Panel>
-          )}
-          {formData?.userLevel === 'user' && !selectedProjects && (
-            <UserAccessGroupsForm
-              value={formData.accessGroups}
-              options={accessGroupsData}
-              onChange={(value) => setFormData({ ...formData, accessGroups: value })}
-            />
           )}
         </FormsStyled>
       )}
