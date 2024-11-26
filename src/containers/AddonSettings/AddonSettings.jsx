@@ -732,8 +732,6 @@ const AddonSettings = ({ projectName, showSites = false }) => {
             setShowHelp={setShowHelp}
             projectName={projectName}
             searchCallback={(searchText, filterKeys) => {
-              console.log('search text', searchText)
-              console.log('filterKeys', filterKeys)
               if (searchText === undefined) {
                 setSearchText('')
                 setFilterKeys([])

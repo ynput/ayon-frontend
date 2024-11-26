@@ -34,7 +34,7 @@ const CheckboxWidget = function (props: $Any) {
       return
     }
 
-    setValue(props.value || getDefaultValue(props))
+    setValue(props.value !== null && props.value !== undefined ? props.value : getDefaultValue(props))
   }, [props.value])
 
   useEffect(() => {

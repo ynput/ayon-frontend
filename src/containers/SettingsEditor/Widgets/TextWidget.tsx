@@ -92,7 +92,7 @@ export const TextWidget = (props: $Any) => {
 
   if (['integer', 'number'].includes(props.schema.type)) {
     Input = InputNumber
-    opts.value = value === undefined || value === null ? getDefaultValue(props) : value
+    opts.value = value !== null && value !== undefined ? value : getDefaultValue(props)
     opts.onBlur = () => onChangeCommit(props.schema.type)
     opts.onChange = (e: $Any) => {
       // ensure that the value is a number. decimal points are allowed
@@ -108,7 +108,7 @@ export const TextWidget = (props: $Any) => {
     // Color picker
     //
     Input = InputColor
-    opts.value = value || getDefaultValue(props)
+    opts.value = value !== null && value !== undefined ? value : getDefaultValue(props)
     opts.format = props.schema.colorFormat || 'hex'
     opts.alpha = props.schema.colorAlpha || false
     opts.onChange = (e: $Any) => {
@@ -147,7 +147,7 @@ export const TextWidget = (props: $Any) => {
   } else {
     // Default text input
     Input = InputText
-    opts.value = value || getDefaultValue(props)
+    opts.value = value !== null && value !== undefined ? value : getDefaultValue(props)
     opts.onBlur = onChangeCommit
     opts.onChange = (e: $Any) => {
       onChange(e.target.value)
