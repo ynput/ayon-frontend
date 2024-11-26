@@ -1,6 +1,6 @@
 import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
 import { Button } from '@ynput/ayon-react-components'
-import { DataTable as BaseDataTable} from 'primereact/datatable'
+import { DataTable as BaseDataTable } from 'primereact/datatable'
 import styled from 'styled-components'
 
 export const StyledEmptyPlaceholder = styled(EmptyPlaceholder)`
@@ -43,6 +43,7 @@ export const StyledHeader = styled.p`
   line-height: 24px;
   font-weight: 700;
   margin: 0;
+  padding: 4px 0;
 `
 
 export const DataColumn = styled.div`
