@@ -7,7 +7,7 @@ const useRemote = (scope: string, module: string) => {
       {
         name: scope,
         alias: scope,
-        entry: 'http://localhost:4174/remoteEntry.js',
+        entry: '/addons/example/2.0.1/public/dist/remoteEntry.js',
         type: 'module',
       },
     ])
