@@ -7,17 +7,11 @@ import UserAttribForm from './UserAttribForm'
 import UserAccessForm from './UserAccessForm'
 
 import styled from 'styled-components'
-import UserAccessGroupsForm from './UserAccessGroupsForm/UserAccessGroupsForm'
 import useUserMutations from '@containers/Feed/hooks/useUserMutations'
 import callbackOnKeyDown from '@helpers/callbackOnKeyDown'
 
 const DividerSmallStyled = styled(Divider)`
   margin: 8px 0;
-`
-
-const SubTitleStyled = styled.span`
-  margin-top: 16px;
-  margin-bottom: 0;
 `
 
 const NewUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
@@ -181,21 +175,6 @@ const NewUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
           onChange={(key, value) => setFormData({ ...formData, [key]: value })}
           accessGroupsData={accessGroupsData}
         />
-        {formData?.userLevel === 'user' && (
-          <>
-            <SubTitleStyled>
-              Give this new user access to projects by adding access groups per project
-            </SubTitleStyled>
-            <UserAccessGroupsForm
-              // value expects multiple users, so we need to pass an object with the username "_" as the key
-              value={{ _: formData.accessGroups }}
-              options={accessGroupsData}
-              // onChange provides all "users", in this case just the one "_" user
-              onChange={(value) => setFormData({ ...formData, accessGroups: value['_'] })}
-              disableNewGroup
-            />
-          </>
-        )}
       </Section>
     </Dialog>
   )
