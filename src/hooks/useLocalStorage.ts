@@ -7,12 +7,20 @@
 
 import { useEffect, useState } from 'react'
 
+const parseJSONString = (value: string | null, fallback: any = null) => {
+  if (!value) return fallback
+  try {
+    return JSON.parse(value)
+  } catch {
+    return fallback
+  }
+}
+
 export default function useLocalStorage<T>(key: string, defaultValue: T): [T, (value: T) => void] {
   const item = localStorage.getItem(key)
-  const [value, setValue] = useState(item ? JSON.parse(item) : defaultValue)
+  const [value, setValue] = useState(() => parseJSONString(item, defaultValue))
 
   useEffect(() => {
-
     if (!item) {
       localStorage.setItem(key, JSON.stringify(defaultValue))
     }
@@ -21,7 +29,7 @@ export default function useLocalStorage<T>(key: string, defaultValue: T): [T, (v
       if (e.key !== key) return
 
       const lsi = localStorage.getItem(key)
-      setValue(JSON.parse(lsi ?? ''))
+      setValue(parseJSONString(lsi, defaultValue))
     }
 
     window.addEventListener('storage', handler)
