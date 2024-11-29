@@ -10,6 +10,7 @@ const userSlice = createSlice({
         notifications: false,
         notificationSound: false,
         pinnedProjects: [],
+        expandedAccessGroups: {},
         filters: {},
       },
       isAdmin: false,

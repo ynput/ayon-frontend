@@ -19,9 +19,9 @@ class BundlePage {
     await this.page.getByRole('button', { name: 'add Add Bundle' }).click()
     await this.page.getByLabel('Bundle name').fill(name)
     await this.page.getByRole('button', { name: 'Select an option...' }).click()
-    const launcher = '1.0.3'
-    await expect(this.page.getByText(launcher)).toBeVisible()
-    await this.page.getByText(launcher).click()
+    const launcher = '1.1.1'
+    await expect(this.page.getByTestId(`installer-option-${launcher}`)).toBeVisible()
+    await (this.page.getByTestId(`installer-option-${launcher}`)).click()
 
     // check that bundle is compatible
     const compatibleMessage = 'Checks complete: Bundle is compatible'

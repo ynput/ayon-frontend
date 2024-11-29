@@ -113,7 +113,7 @@ const AccessGroupDetail = ({ projectName, accessGroupName }) => {
           originalData={originalData}
           formData={formData}
           onChange={setFormData}
-          level={isProjectLevel ? 'project' : 'studio'}
+          level={projectName ? 'project' : 'studio'}
           context={{
             headerProjectName: projectName,
           }}

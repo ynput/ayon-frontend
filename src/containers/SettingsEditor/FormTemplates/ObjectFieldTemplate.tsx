@@ -260,7 +260,7 @@ function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
         </BadgeWrapper>
       </>
     )
-  }
+  } // Root object - show badges and title
 
   titleComponent = props.idSchema.$id === 'root' ? rootTitle : stringTitle
 

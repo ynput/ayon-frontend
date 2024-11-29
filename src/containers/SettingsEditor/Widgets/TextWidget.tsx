@@ -1,13 +1,44 @@
+import React from 'react';
 import { useEffect, useState } from 'react'
 import { equiv, getDefaultValue, parseContext, updateChangedKeys } from '../helpers'
 import { $Any } from '@types'
 import {
+  Button,
   IconSelect,
   InputColor,
   InputNumber,
   InputText,
   InputTextarea,
 } from '@ynput/ayon-react-components'
+
+
+
+type PermissionWidgetProps = {
+  value: number;
+  setValue: (value: number) => void;
+};
+
+const PermissionWidget: React.FC<PermissionWidgetProps> = ({ value, setValue }) => {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'row', gap: 6 }}>
+      <Button
+        label="No access"
+        onClick={() => setValue(0)}
+        variant={!value ? 'danger' : 'surface'}
+      />
+      <Button
+        label="Read only"
+        onClick={() => setValue(1)}
+        variant={value === 1 ? 'filled' : 'surface'}
+      />
+      <Button
+        label="Read & Write"
+        onClick={() => setValue(2)}
+        variant={value === 2 ? 'tertiary' : 'surface'}
+      />
+    </div>
+  )
+}
 
 export const TextWidget = (props: $Any) => {
   const { originalValue, path } = parseContext(props)
@@ -91,17 +122,30 @@ export const TextWidget = (props: $Any) => {
   //
 
   if (['integer', 'number'].includes(props.schema.type)) {
-    Input = InputNumber
-    opts.value = value !== null && value !== undefined ? value : getDefaultValue(props)
-    opts.onBlur = () => onChangeCommit(props.schema.type)
-    opts.onChange = (e: $Any) => {
-      // ensure that the value is a number. decimal points are allowed
-      // but no other characters
-      // use regex to check if the value is a number
-
-      if (!/^-?\d*\.?\d*$/.test(e.target.value)) return
-
-      onChange(e.target.value)
+    if (props.schema.widget === 'permission') {
+      Input = PermissionWidget
+      opts.value = value || 0
+      opts.setValue = onChange
+      opts.setValue = (e: $Any) => {
+        // internal state is handled by the component,
+        // so we shouldn't need to debounce this
+        updateChangedKeys(props, e !== originalValue, path);
+        props.onChange(e);
+      }
+    } else {
+      Input = InputNumber
+      // opts.value = value === undefined || value === null ? '' : value
+      opts.value = value !== null && value !== undefined ? value : getDefaultValue(props)
+      opts.showButtons = true
+      opts.useGrouping = false
+      opts.onBlur = () => onChangeCommit(props.schema.type)
+      opts.onChange = (e: $Any) => {
+        // ensure that the value is a number. decimal points are allowed
+        // but no other characters
+        // use regex to check if the value is a number
+        if (!/^-?\d*\.?\d*$/.test(e.target.value)) return
+        onChange(e.target.value)
+      }
     }
   } else if (props.schema.widget === 'color') {
     //

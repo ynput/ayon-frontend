@@ -11,8 +11,8 @@ class BrowserPage {
   async addFolderComment(projectName, folderName, comment) {
     await this.goto(projectName)
     try {
-      const snoozeButton = this.page.getByRole('button', { name: 'snooze Snooze' })
-      if (await snoozeButton.isVisible()) {
+      const snoozeIsVisible = await this.page.getByRole('button', { name: 'snooze Snooze' }).isVisible()
+      if (snoozeIsVisible) {
         await this.page.getByRole('button', { name: 'snooze Snooze' }).click()
       }
     } catch (e) { }

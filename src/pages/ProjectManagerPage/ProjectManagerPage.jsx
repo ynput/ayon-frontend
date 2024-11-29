@@ -16,6 +16,8 @@ import ProjectManagerPageContainer from './ProjectManagerPageContainer'
 import ProjectManagerPageLayout from './ProjectManagerPageLayout'
 import AppNavLinks from '@containers/header/AppNavLinks'
 import confirmDelete from '@helpers/confirmDelete'
+import useUserProjectPermissions, { UserPermissionsEntity } from '@hooks/useUserProjectPermissions'
+import ProjectUserAccess from './Users/ProjectUserAccess'
 
 const ProjectSettings = ({ projectList, projectManager, projectName }) => {
   return (
@@ -27,7 +29,7 @@ const ProjectSettings = ({ projectList, projectManager, projectName }) => {
 const SiteSettings = ({ projectList, projectManager, projectName }) => {
   return (
     <ProjectManagerPageLayout projectList={projectList} passthrough={!projectManager}>
-      <AddonSettings showSites projectName={projectName} />
+      <AddonSettings projectName={projectName} showSites bypassPermissions  />
     </ProjectManagerPageLayout>
   )
 }
@@ -47,6 +49,8 @@ const ProjectManagerPage = () => {
     'project',
     withDefault(StringParam, projectName),
   )
+
+  const { isLoading: userPermissionsLoading, permissions: userPermissions } = useUserProjectPermissions(isUser)
 
   // UPDATE DATA
   const [updateProject] = useUpdateProjectMutation()
@@ -81,21 +85,39 @@ const ProjectManagerPage = () => {
     await updateProject({ projectName: sel, update: { active } }).unwrap()
   }
 
-  let links = [
-    {
-      name: 'Anatomy',
-      path: '/manageProjects/anatomy',
-      module: 'anatomy',
-      accessLevels: ['manager'],
-      shortcut: 'A+A',
-    },
-    {
-      name: 'Project settings',
-      path: '/manageProjects/projectSettings',
-      module: 'projectSettings',
-      accessLevels: ['manager'],
-      shortcut: 'P+P',
-    },
+  const links = []
+  if (!isUser || !userPermissionsLoading && userPermissions.projectSettingsAreEnabled()) {
+    if (userPermissions.canViewAny(UserPermissionsEntity.anatomy) || module === 'anatomy') {
+      links.push({
+        name: 'Anatomy',
+        path: '/manageProjects/anatomy',
+        module: 'anatomy',
+        accessLevels: [],
+        shortcut: 'A+A',
+      })
+    }
+
+    if (userPermissions.canViewAny(UserPermissionsEntity.settings) || module === 'projectSettings') {
+      links.push({
+        name: 'Project settings',
+        path: '/manageProjects/projectSettings',
+        module: 'projectSettings',
+        accessLevels: [],
+        shortcut: 'P+P',
+      })
+    }
+    if (userPermissions.canViewAny(UserPermissionsEntity.users) || module === 'userSettings') {
+      links.push({
+        name: 'Project access',
+        path: '/manageProjects/userSettings',
+        module: 'userSettings',
+        accessLevels: [],
+        shortcut: 'P+A',
+      })
+    }
+  }
+
+  links.push(
     {
       name: 'Site settings',
       path: '/manageProjects/siteSettings',
@@ -114,7 +136,7 @@ const ProjectManagerPage = () => {
       module: 'teams',
       accessLevels: ['manager'],
     },
-  ]
+  )
 
   const linksWithProject = useMemo(
     () =>
@@ -137,10 +159,36 @@ const ProjectManagerPage = () => {
         onNewProject={() => setShowNewProject(true)}
         onDeleteProject={handleDeleteProject}
         onActivateProject={handleActivateProject}
+        customSort={(a, b) => {
+          if (userPermissionsLoading) {
+            return 1
+          }
+          if (module === 'anatomy') {
+            const aPerm = userPermissions.canView(UserPermissionsEntity.anatomy, a) ? 1 : -1
+            const bPerm = userPermissions.canView(UserPermissionsEntity.anatomy, b) ? 1 : -1
+            return bPerm - aPerm
+          }
+          if (module === 'projectSettings') {
+            const aPerm = userPermissions.canView(UserPermissionsEntity.settings, a) ? 1 : -1
+            const bPerm = userPermissions.canView(UserPermissionsEntity.settings, b) ? 1 : -1
+            return bPerm - aPerm
+          }
+          return 0
+        }}
+        isActiveCallable={(projectName) => {
+          if (module === 'anatomy') {
+            return userPermissions.canView(UserPermissionsEntity.anatomy, projectName)
+          }
+          if (module === 'projectSettings') {
+            return userPermissions.canView(UserPermissionsEntity.settings, projectName)
+          }
+          return true
+        }}
       >
         {module === 'anatomy' && <ProjectAnatomy />}
         {module === 'projectSettings' && <ProjectSettings />}
         {module === 'siteSettings' && <SiteSettings />}
+        {module === 'userSettings' && <ProjectUserAccess onSelect={setSelectedProject} />}
         {module === 'roots' && <ProjectRoots />}
         {module === 'teams' && <TeamsPage />}
       </ProjectManagerPageContainer>
