@@ -2,6 +2,7 @@ import ayonClient from '@/ayon'
 import axios from 'axios'
 import { ErrorBoundary } from 'react-error-boundary'
 import { useEffect, useState, Suspense, lazy, useMemo } from 'react'
+
 import { useSelector, useDispatch } from 'react-redux'
 import { Routes, Route, Navigate, BrowserRouter } from 'react-router-dom'
 import { QueryParamProvider } from 'use-query-params'
@@ -51,6 +52,9 @@ import { ViewerDialog } from '@containers/Viewer'
 
 // state
 import { login } from '@state/user'
+
+// microservices
+import './remote/remoteModules'
 
 // queries
 import { useLazyGetInfoQuery } from '@queries/auth/getAuth'
