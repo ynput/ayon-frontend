@@ -18,6 +18,7 @@ import AppNavLinks from '@containers/header/AppNavLinks'
 import confirmDelete from '@helpers/confirmDelete'
 import useUserProjectPermissions, { UserPermissionsEntity } from '@hooks/useUserProjectPermissions'
 import ProjectUserAccess from './Users/ProjectUserAccess'
+import ProjectPermissions from './ProjectPermissions'
 
 const ProjectSettings = ({ projectList, projectManager, projectName }) => {
   return (
@@ -136,6 +137,12 @@ const ProjectManagerPage = () => {
       module: 'teams',
       accessLevels: ['manager'],
     },
+    {
+      name: 'Permissions',
+      path: '/manageProjects/permissions',
+      module: 'permissions',
+      accessLevels: ['manager'],
+    },
   )
 
   const linksWithProject = useMemo(
@@ -191,6 +198,7 @@ const ProjectManagerPage = () => {
         {module === 'userSettings' && <ProjectUserAccess onSelect={setSelectedProject} />}
         {module === 'roots' && <ProjectRoots />}
         {module === 'teams' && <TeamsPage />}
+        {module === 'permissions' && <ProjectPermissions />}
       </ProjectManagerPageContainer>
 
       {showNewProject && (
