@@ -28,7 +28,7 @@ export const UserCell = ({
   onAdd,
   onRemove,
 }: Props) => {
-  const { name, self, isMissing } = rowData
+  const { attrib, name, self, isMissing } = rowData
   return (
     <Styled.DataColumn className={clsx({ actionable: showButtonsOnHover, selected, hovering })}>
       {/* @ts-ignore */}
@@ -39,7 +39,7 @@ export const UserCell = ({
           color: isMissing ? 'var(--color-hl-error)' : 'inherit',
         }}
       >
-        {name}
+        {attrib?.fullName || name}
       </span>
       {!readOnly && showButtonsOnHover && (showAddButton || showAddMoreButton) && (
         <Styled.ActionButton

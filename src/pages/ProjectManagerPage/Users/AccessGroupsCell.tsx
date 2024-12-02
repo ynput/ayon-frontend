@@ -3,7 +3,6 @@ import { $Any } from '@types'
 
 import * as Styled from './ProjectUserAccess.styled'
 import { Spacer } from '@ynput/ayon-react-components'
-import { capitalizeFirstLetter } from '@helpers/string'
 
 type Props = {
   data: $Any
@@ -29,7 +28,7 @@ export const AccessGroupsCell = ({
       {data.assignedAccessGroups.map(
         (ag: { accessGroup: string; complete: boolean }, idx: number) => (
           <span key={ag.accessGroup} className={clsx({ 'partial-match': !ag.complete })}>
-            {capitalizeFirstLetter(ag.accessGroup)}
+            {ag.accessGroup}
             {idx !== data.assignedAccessGroups.length - 1 ? ',' : ''}
           </span>
         ),
