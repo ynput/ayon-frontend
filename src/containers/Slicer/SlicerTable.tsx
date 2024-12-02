@@ -21,7 +21,8 @@ import useRowKeydown from './hooks/useRowKeydown'
 import usePlaceholderData from './hooks/usePlaceholderData'
 
 import { RankingInfo, rankItem, compareItems } from '@tanstack/match-sorter-utils'
-import { SliceDataItem, useSlicerContext } from '@context/slicerContext'
+import { useSlicerContext } from '@context/slicerContext'
+import { SlicerTableProps, TableRow } from './types'
 
 declare module '@tanstack/react-table' {
   //add fuzzy filter to the filterFns
@@ -61,27 +62,6 @@ const fuzzySort: SortingFn<any> = (rowA, rowB, columnId) => {
 
   // Provide an alphanumeric fallback for when the item ranks are equal
   return dir === 0 ? sortingFns.alphanumeric(rowA, rowB, columnId) : dir
-}
-
-export type TableRow = {
-  id: string
-  parentId?: string
-  name: string
-  label: string
-  icon?: string | null
-  iconColor?: string
-  img?: string | null
-  startContent?: JSX.Element
-  subRows: TableRow[]
-  data: SliceDataItem
-}
-
-interface SlicerTableProps {
-  data: TableRow[]
-  isLoading: boolean
-  isExpandable?: boolean // show expand/collapse icons
-  sliceId: string
-  globalFilter: string
 }
 
 const SlicerTable: FC<SlicerTableProps> = ({

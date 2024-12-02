@@ -2,40 +2,14 @@ import { useAppSelector } from '@state/store'
 import { useEffect, useState } from 'react'
 import useHierarchyTable from './useHierarchyTable'
 import useUsersTable from './useUsersTable'
-import { TableRow } from '../SlicerTable'
 import useProjectAnatomySlices from './useProjectAnatomySlices'
-import { OnSliceTypeChange, SliceType, useSlicerContext } from '@context/slicerContext'
+import { SliceType, useSlicerContext } from '@context/slicerContext'
+import { Slice, SliceData, SliceOption, TableData, TableRow } from '../types'
 
 interface Props {
   sliceFields: SliceType[]
 }
 
-interface SliceOption {
-  value: SliceType
-  label: string
-  icon: string
-}
-
-interface SliceData {
-  getData: () => Promise<TableRow[]>
-  isLoading: boolean
-  isExpandable: boolean
-  noValue?: boolean
-  hasValue?: boolean
-}
-
-interface Slice {
-  data: TableRow[]
-  isExpandable: boolean
-}
-
-interface TableData {
-  sliceOptions: SliceOption[]
-  table: Slice
-  isLoading: boolean
-  sliceType: SliceType
-  handleSliceTypeChange: OnSliceTypeChange
-}
 const defaultSliceOptions: SliceOption[] = [
   {
     label: 'Hierarchy',

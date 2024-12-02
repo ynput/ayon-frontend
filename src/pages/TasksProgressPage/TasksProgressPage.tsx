@@ -11,6 +11,7 @@ import { useGetAttributeConfigQuery } from '@queries/attributes/getAttributes'
 import { getPriorityOptions } from './helpers'
 import useScopedStatuses from '@hooks/useScopedStatuses'
 import { SliceType } from '@context/slicerContext'
+import slicerConfig from 'slicer/config'
 
 // feature flag to allow slicer of different fields
 const SLICE_BY_FIELDS = true
@@ -19,8 +20,8 @@ export type TaskProgressSliceType = Extract<
   'hierarchy' | 'assignees' | 'status' | 'taskType'
 >
 
-export const taskProgressSliceFields: TaskProgressSliceType[] = SLICE_BY_FIELDS
-  ? ['hierarchy', 'assignees', 'status', 'taskType']
+const taskProgressSliceFields: SliceType[] = SLICE_BY_FIELDS
+  ? slicerConfig?.progress?.fields ?? ['hierarchy']
   : ['hierarchy']
 
 const TasksProgressPage: FC = () => {

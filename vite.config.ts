@@ -61,11 +61,11 @@ export default ({ mode }) => {
       federation({
         name: 'host',
         remotes: {
-          'remote-template': {
+          slicer: {
             type: 'module',
-            name: 'remote-template',
-            entry: 'http://localhost:4174/remoteEntry.js',
-            entryGlobalName: 'remote-template',
+            name: 'slicer',
+            entry: 'addons/slicer/0.0.1/frontend/modules/slicer/remoteEntry.js',
+            entryGlobalName: 'slicer',
             shareScope: 'default',
           },
         },
@@ -84,7 +84,11 @@ export default ({ mode }) => {
             requiredVersion: dependencies['styled-components'],
             singleton: true,
           },
+          // '@ynput/ayon-react-components': {
+          //   requiredVersion: dependencies['@ynput/ayon-react-components'],
+          // },
         },
+        runtimePlugins: ['./src/remote/custom-runtime-plugin'],
       }),
       react(),
     ],
