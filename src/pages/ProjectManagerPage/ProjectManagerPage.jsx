@@ -180,6 +180,11 @@ const ProjectManagerPage = () => {
             const bPerm = userPermissions.canView(UserPermissionsEntity.settings, b) ? 1 : -1
             return bPerm - aPerm
           }
+          if (module === 'roots') {
+            const aPerm = userPermissions.assignedToProject(a) ? 1 : -1
+            const bPerm = userPermissions.assignedToProject(b) ? 1 : -1
+            return bPerm - aPerm
+          }
           return 0
         }}
         isActiveCallable={(projectName) => {
@@ -188,6 +193,9 @@ const ProjectManagerPage = () => {
           }
           if (module === 'projectSettings') {
             return userPermissions.canView(UserPermissionsEntity.settings, projectName)
+          }
+          if (module === 'roots') {
+            return userPermissions.assignedToProject(projectName)
           }
           return true
         }}
