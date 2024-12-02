@@ -125,7 +125,7 @@ const ProjectRoots = ({ projectName, projectList, userPermissions }) => {
           message="You went wrong while fetching project roots data"
         />
       ) : forms.length === 0 ? (
-        <EmptyPlaceholder icon="lists" message="No sites have been defined for this project" />
+        <EmptyPlaceholder icon="lists" message="No sites were found" />
       ) : (
         <Section className="invisible" style={{ maxWidth: 600 }}>
           {forms.map((form) => (

@@ -1,3 +1,4 @@
+import { StudioManagementPermissions } from '@api/rest/users'
 import { useGetCurrentUserPermissionsQuery } from '@queries/permissions/getPermissions'
 
 type AllProjectsPremissions = {
@@ -12,9 +13,7 @@ type AllProjectsPremissions = {
       }
     }
   }
-  studio: {
-    create_project: boolean
-  }
+  studio: StudioManagementPermissions
   user_level: 'user' | 'admin'
 }
 
@@ -47,7 +46,7 @@ class UserPermissions {
       return false
     }
 
-    return (this.projectSettingsAreEnabled() && this.permissions.studio.create_project) || false
+    return (this.projectSettingsAreEnabled() && this.permissions.studio.create_projects) || false
   }
 
   getPermissionLevel(type: UserPermissionsEntity, projectName: string): PermissionLevel {
