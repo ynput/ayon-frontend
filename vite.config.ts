@@ -59,16 +59,38 @@ export default ({ mode }) => {
     },
     plugins: [
       federation({
-        name: 'ShellApp',
+        name: 'host',
         remotes: {
-          dummy: 'dummy.js',
+          'remote-template': {
+            type: 'module',
+            name: 'remote-template',
+            entry: 'http://localhost:4174/remoteEntry.js',
+            entryGlobalName: 'remote-template',
+            shareScope: 'default',
+          },
         },
         exposes: {},
         filename: 'remoteEntry.js',
-        //shared: ['react', 'react-dom', 'react-router-dom', "tailwindcss"],
+        shared: {
+          react: {
+            requiredVersion: dependencies.react,
+            singleton: true,
+          },
+          'react-dom': {
+            requiredVersion: dependencies['react-dom'],
+            singleton: true,
+          },
+          'styled-components': {
+            requiredVersion: dependencies['styled-components'],
+            singleton: true,
+          },
+        },
       }),
       react(),
     ],
+    build: {
+      target: 'chrome89',
+    },
     resolve: {
       alias: [
         { find: '@', replacement: fileURLToPath(new URL('./src', import.meta.url)) },

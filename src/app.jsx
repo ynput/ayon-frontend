@@ -53,9 +53,6 @@ import { ViewerDialog } from '@containers/Viewer'
 // state
 import { login } from '@state/user'
 
-// microservices
-import './remote/remoteModules'
-
 // queries
 import { useLazyGetInfoQuery } from '@queries/auth/getAuth'
 import { useGetYnputCloudInfoQuery } from '@queries/cloud/cloud'

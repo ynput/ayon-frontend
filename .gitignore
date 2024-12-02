@@ -11,3 +11,4 @@ yarn-error.log
 /playwright/.cache/
 
 playwright/.auth
+.__mf__temp/

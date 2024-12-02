@@ -16,7 +16,6 @@ import { useSetFrontendPreferencesMutation } from '@/services/user/updateUser'
 import useTableLoadingData from '@hooks/useTableLoadingData'
 import { useProjectSelectDispatcher } from './ProjectMenu/hooks/useProjectSelectDispatcher'
 import useAyonNavigate from '@hooks/useAyonNavigate'
-import Remote from '@/remote/useRemote'
 
 const formatName = (rowData, defaultTitle, field = 'name') => {
   if (rowData[field] === '_') return defaultTitle
@@ -393,7 +392,6 @@ const ProjectList = ({
       className={clsx('project-list-section', className, { collapsed })}
       wrap={wrap}
     >
-      <Remote />
       {onSelectAll && (
         <Button
           label={!collapsed && 'Select all projects'}
