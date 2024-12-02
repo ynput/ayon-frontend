@@ -60,15 +60,7 @@ export default ({ mode }) => {
     plugins: [
       federation({
         name: 'host',
-        remotes: {
-          slicer: {
-            type: 'module',
-            name: 'slicer',
-            entry: 'addons/slicer/0.0.1/frontend/modules/slicer/remoteEntry.js',
-            entryGlobalName: 'slicer',
-            shareScope: 'default',
-          },
-        },
+        remotes: {},
         exposes: {},
         filename: 'remoteEntry.js',
         shared: {

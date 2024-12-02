@@ -11,23 +11,20 @@ import { useGetAttributeConfigQuery } from '@queries/attributes/getAttributes'
 import { getPriorityOptions } from './helpers'
 import useScopedStatuses from '@hooks/useScopedStatuses'
 import { SliceType } from '@context/slicerContext'
-import slicerConfig from 'slicer/config'
-
-// feature flag to allow slicer of different fields
-const SLICE_BY_FIELDS = true
-export type TaskProgressSliceType = Extract<
-  SliceType,
-  'hierarchy' | 'assignees' | 'status' | 'taskType'
->
-
-const taskProgressSliceFields: SliceType[] = SLICE_BY_FIELDS
-  ? slicerConfig?.progress?.fields ?? ['hierarchy']
-  : ['hierarchy']
+import useLoadRemote from '@/remote/useLoadRemote'
 
 const TasksProgressPage: FC = () => {
   const projectName = useAppSelector((state: $Any) => state.project.name) as string
   const progressState = useAppSelector((state) => state.progress)
   const detailsOpen = progressState.detailsOpen && progressState.selected.ids.length > 0
+
+  // load slicer remote config
+  const config = useLoadRemote({
+    remote: 'slicer',
+    module: 'config',
+    fallback: { progress: { config: { fields: ['hierarchy'] as SliceType[] } } },
+  })
+  const taskProgressSliceFields = config?.progress?.config?.fields
 
   //   GET PROJECT INFO FOR STATUS
   const { data: projectInfo } = useGetProjectQuery({ projectName }, { skip: !projectName })
