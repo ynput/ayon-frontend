@@ -44,7 +44,7 @@ const getDefaultValue = (props: $Any) => {
     }
     return props.schema.colorAlpha ? [0, 0, 0, 0] : [0, 0, 0]
   }
-  if (props.value !== undefined) {
+  if (![undefined, null].includes(props.value)) {
     return props.value
   }
 

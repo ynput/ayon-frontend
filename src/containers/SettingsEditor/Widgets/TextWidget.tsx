@@ -1,4 +1,4 @@
-import React from 'react';
+import React from 'react'
 import { useEffect, useState } from 'react'
 import { equiv, getDefaultValue, parseContext, updateChangedKeys } from '../helpers'
 import { $Any } from '@types'
@@ -11,12 +11,10 @@ import {
   InputTextarea,
 } from '@ynput/ayon-react-components'
 
-
-
 type PermissionWidgetProps = {
-  value: number;
-  setValue: (value: number) => void;
-};
+  value: number
+  setValue: (value: number) => void
+}
 
 const PermissionWidget: React.FC<PermissionWidgetProps> = ({ value, setValue }) => {
   return (
@@ -46,7 +44,9 @@ export const TextWidget = (props: $Any) => {
   const [valueInitialized, setValueInitialized] = useState(false)
   const [initialized, setInitialized] = useState(false)
 
+  /*
   const doInitialPush = () => {
+    return // let's try do nothing
     // Initial push to formData
     // Used when the item is a part of an array
     // and it is newly added
@@ -61,6 +61,7 @@ export const TextWidget = (props: $Any) => {
       props.onChange(value)
     }, 200)
   }
+  */
 
   useEffect(() => {
     setValueInitialized(true)
@@ -129,8 +130,8 @@ export const TextWidget = (props: $Any) => {
       opts.setValue = (e: $Any) => {
         // internal state is handled by the component,
         // so we shouldn't need to debounce this
-        updateChangedKeys(props, e !== originalValue, path);
-        props.onChange(e);
+        updateChangedKeys(props, e !== originalValue, path)
+        props.onChange(e)
       }
     } else {
       Input = InputNumber
@@ -210,7 +211,7 @@ export const TextWidget = (props: $Any) => {
   }
 
   const onFocus = (e: $Any) => {
-    doInitialPush()
+    //doInitialPush()
     props.formContext.onSetBreadcrumbs(path)
     props.onFocus(e)
   }

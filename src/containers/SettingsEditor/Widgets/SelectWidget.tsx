@@ -7,7 +7,7 @@ import styled from 'styled-components'
 
 const StyledDropdown = styled(Dropdown)`
   button > div > div:has(span) {
-      width: 0;
+    width: 0;
   }
 `
 
@@ -16,22 +16,28 @@ const SelectWidget = (props: $Any) => {
   const [value, setValue] = useState(null)
   const [initialized, setInitialized] = useState(false)
 
+  /*
   useEffect(() => {
     // Initial push to formData
     // Used when the item is a part of an array
     // and it is newly added
     if (!props.onChange) return
     if (value === null) return
-    if (value === props.value) return
+    if (value === props.value) {
+      setInitialized(true)
+      return
+    }
     if (initialized) return
 
     setInitialized(true)
     if (path?.length) return
 
-    setTimeout(() => {
-      props.onChange(value)
-    }, 200)
+    console.log('Initial push for', props.id, 'with value', value, 'in props', props.value)
+    // setTimeout(() => {
+    //props.onChange(value)
+    //}, 1200)
   }, [props.onChange, value])
+  */
 
   useEffect(() => {
     // Sync the local state with the formData
