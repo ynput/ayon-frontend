@@ -22,9 +22,9 @@ const TasksProgressPage: FC = () => {
   const config = useLoadRemote({
     remote: 'slicer',
     module: 'config',
-    fallback: { progress: { config: { fields: ['hierarchy'] as SliceType[] } } },
+    fallback: { progress: { fields: ['hierarchy'] as SliceType[] } },
   })
-  const taskProgressSliceFields = config?.progress?.config?.fields
+  const taskProgressSliceFields = config?.progress?.fields
 
   //   GET PROJECT INFO FOR STATUS
   const { data: projectInfo } = useGetProjectQuery({ projectName }, { skip: !projectName })

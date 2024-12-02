@@ -8,6 +8,7 @@ import { Slice, SliceData, SliceOption, TableData, TableRow } from '../types'
 
 interface Props {
   sliceFields: SliceType[]
+  sliceOptions: SliceType[]
 }
 
 const defaultSliceOptions: SliceOption[] = [
@@ -25,11 +26,6 @@ const defaultSliceOptions: SliceOption[] = [
     label: 'Status',
     value: 'status' as SliceType,
     icon: 'arrow_circle_right',
-  },
-  {
-    label: 'Type',
-    value: 'type' as SliceType, // combination of folder and task types
-    icon: 'folder',
   },
   {
     label: 'Task Type',
@@ -121,9 +117,26 @@ const useTableDataBySlice = ({ sliceFields }: Props): TableData => {
   const [slice, setSlice] = useState<Slice>(initSlice)
   const sliceConfig = builtInSlices[sliceType]
 
+  const handleSliceTypeChange = (
+    sliceType: SliceType,
+    leavePersistentSlice: boolean,
+    returnToPersistentSlice: boolean,
+  ) => {
+    // check slice type is enabled
+    if (sliceFields.includes(sliceType)) {
+      onSliceTypeChange(sliceType, leavePersistentSlice, returnToPersistentSlice)
+    }
+  }
+
   useEffect(() => {
     // wait for hierarchy data to load before fetching slice data
     if (isLoadingHierarchy) return
+
+    // check if slice field is enabled
+    if (!sliceFields.includes(sliceType)) {
+      return
+    }
+
     const fetchData = async () => {
       try {
         setIsLoading(true)
@@ -153,7 +166,7 @@ const useTableDataBySlice = ({ sliceFields }: Props): TableData => {
     table: slice,
     isLoading: builtInSlices[sliceType].isLoading || isLoading,
     sliceType,
-    handleSliceTypeChange: onSliceTypeChange,
+    handleSliceTypeChange,
   }
 }
 

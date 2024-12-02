@@ -1,5 +1,6 @@
 import useLoadRemote from '@/remote/useLoadRemote'
 import { Assignees, useLazyGetAllProjectUsersAsAssigneeQuery } from '@queries/user/getUsers'
+import { TableRow } from '../types'
 
 type Props = {
   projectName?: string | null
@@ -7,7 +8,7 @@ type Props = {
 
 const useExtraSlicesDefault = () => {
   return {
-    formatAssignees: (_p?: Assignees): Assignees => [],
+    formatAssignees: (_p?: Assignees): TableRow[] => [],
   }
 }
 
