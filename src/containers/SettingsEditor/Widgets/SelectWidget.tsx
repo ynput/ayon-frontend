@@ -14,30 +14,6 @@ const StyledDropdown = styled(Dropdown)`
 const SelectWidget = (props: $Any) => {
   const { originalValue, path } = parseContext(props)
   const [value, setValue] = useState(null)
-  const [initialized, setInitialized] = useState(false)
-
-  /*
-  useEffect(() => {
-    // Initial push to formData
-    // Used when the item is a part of an array
-    // and it is newly added
-    if (!props.onChange) return
-    if (value === null) return
-    if (value === props.value) {
-      setInitialized(true)
-      return
-    }
-    if (initialized) return
-
-    setInitialized(true)
-    if (path?.length) return
-
-    console.log('Initial push for', props.id, 'with value', value, 'in props', props.value)
-    // setTimeout(() => {
-    //props.onChange(value)
-    //}, 1200)
-  }, [props.onChange, value])
-  */
 
   useEffect(() => {
     // Sync the local state with the formData
@@ -87,7 +63,8 @@ const SelectWidget = (props: $Any) => {
 
   let hlstyle: $Any = {}
   if (!equiv(value, props.multiple ? props.value || [] : props.value)) {
-    hlstyle.outline = '1px solid yellow'
+    // no one likes this :`-(
+    // hlstyle.outline = '1px solid yellow'
   } else if (originalValue && !equiv(props.value, originalValue)) {
     hlstyle.outline = '1px solid var(--color-changed)'
   }

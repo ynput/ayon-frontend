@@ -7,26 +7,6 @@ import { $Any } from '@types'
 const CheckboxWidget = function (props: $Any) {
   const { originalValue, path } = parseContext(props)
   const [value, setValue] = useState(props.value || getDefaultValue(props))
-  const [initialized, setInitialized] = useState(false)
-
-  useEffect(() => {
-    // Initial push to formData
-    // Used when the item is a part of an array
-    // and it is newly added
-    if (!props.onChange) return
-    if (value === null) return
-    if (value === props.value) return
-    if (initialized) return
-    if (props.value === undefined && value === getDefaultValue(props)) {
-      return
-    }
-
-    setInitialized(true)
-    if (path?.length) return
-    setTimeout(() => {
-      props.onChange(value)
-    }, 300)
-  }, [props.onChange, value])
 
   useEffect(() => {
     // Sync the local state with the formData
@@ -34,7 +14,9 @@ const CheckboxWidget = function (props: $Any) {
       return
     }
 
-    setValue(props.value !== null && props.value !== undefined ? props.value : getDefaultValue(props))
+    setValue(
+      props.value !== null && props.value !== undefined ? props.value : getDefaultValue(props),
+    )
   }, [props.value])
 
   useEffect(() => {
@@ -68,11 +50,10 @@ const CheckboxWidget = function (props: $Any) {
   }
 
   return (
-    <span >
+    <span>
       <InputSwitch checked={value || false} onChange={onChange} />
     </span>
   )
-
 }
 
 export { CheckboxWidget }
