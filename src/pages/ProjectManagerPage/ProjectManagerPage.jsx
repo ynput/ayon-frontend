@@ -196,7 +196,7 @@ const ProjectManagerPage = () => {
         {module === 'projectSettings' && <ProjectSettings />}
         {module === 'siteSettings' && <SiteSettings />}
         {module === 'userSettings' && <ProjectUserAccess onSelect={setSelectedProject} />}
-        {module === 'roots' && <ProjectRoots />}
+        {module === 'roots' && <ProjectRoots userPermissions={userPermissions} />}
         {module === 'teams' && <TeamsPage />}
         {module === 'permissions' && <ProjectPermissions />}
       </ProjectManagerPageContainer>

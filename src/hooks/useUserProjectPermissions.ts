@@ -104,6 +104,22 @@ class UserPermissions {
     return this.canEdit(UserPermissionsEntity.anatomy, projectName)
   }
 
+  assignedToProject(projectName: string): boolean {
+    if (!this.permissions) {
+      return false
+    }
+
+    if (this.hasElevatedPrivileges || !this.projectSettingsAreEnabled()) {
+      return true
+    }
+
+    if (this.permissions.projects[projectName] !== undefined) {
+      return true
+    }
+
+    return false
+  }
+
   canViewSettings(projectName?: string): boolean {
     if (projectName) {
       return this.canView(UserPermissionsEntity.settings, projectName)
