@@ -1,4 +1,5 @@
 import { StudioManagementPermissions } from '@api/rest/users'
+import { Module } from '@pages/ProjectManagerPage/mappers'
 import { useGetCurrentUserPermissionsQuery } from '@queries/permissions/getPermissions'
 
 type AllProjectsPremissions = {
@@ -69,6 +70,28 @@ class UserPermissions {
     }
 
     return this.permissions.projects[projectName]?.project[type] === PermissionLevel.readWrite
+  }
+
+  canAccessModule(module: string, projectName: string): boolean {
+    if (module === Module.siteSettings) {
+      return true
+    }
+
+    if (module === Module.projectSettings) {
+      return this.canView(UserPermissionsEntity.settings, projectName)
+    }
+
+    if (module === Module.anatomy) {
+      return this.canView(UserPermissionsEntity.anatomy, projectName)
+    }
+    if (module === Module.userSettings) {
+      return this.canView(UserPermissionsEntity.users, projectName)
+    }
+    if (module === Module.roots) {
+      return this.assignedToProject(projectName)
+    }
+
+    return true
   }
 
   canView(type: UserPermissionsEntity, projectName: string): boolean {

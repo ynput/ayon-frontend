@@ -657,7 +657,6 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
   )
 
   const onSelectAddon = (newSelection) => {
-    console.log('on select addon...', newSelection)
     setSelectedAddons(newSelection)
     setCurrentSelection(null)
   }
@@ -678,8 +677,6 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
       }
     })
   }
-
-  // console.log('selected addons: ', selectedAddons)
 
   if (isLoading) {
     return <LoadingPage />
