@@ -132,9 +132,8 @@ const useTableDataBySlice = ({ sliceFields }: Props): TableData => {
   }
 
   useEffect(() => {
-    console.log('get slicer data', sliceFields)
     // wait for hierarchy data to load before fetching slice data
-    if (isLoadingData) return console.log('waiting for data to load')
+    if (isLoadingData) return
 
     // check if slice field is enabled
     if (!sliceFields.includes(sliceType)) {
@@ -144,7 +143,6 @@ const useTableDataBySlice = ({ sliceFields }: Props): TableData => {
     const fetchData = async () => {
       try {
         setIsLoading(true)
-        console.log('getting slice data')
         const newData = await sliceConfig.getData()
 
         // add some value option
