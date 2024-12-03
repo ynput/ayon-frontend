@@ -76,7 +76,7 @@ const ProjectRoots = ({ projectName, projectList, userPermissions }) => {
     return <ProjectManagerPageLayout {...{ projectList }}>
         <EmptyPlaceholder
           icon="settings_alert"
-          message="You don't have permissions to view this project's roots"
+          message="You don't have permission to view this project's roots"
         />
     </ProjectManagerPageLayout>
   }
@@ -112,10 +112,6 @@ const ProjectRoots = ({ projectName, projectList, userPermissions }) => {
     } // sites iter
     return forms
   }, [project, rootOverrides])
-
-  if (isLoadingProject || isLoadingOverrides) {
-    return <LoadingPage />
-  }
 
   return (
     <ProjectManagerPageLayout {...{ projectList }}>

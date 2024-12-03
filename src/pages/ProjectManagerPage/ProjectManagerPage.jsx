@@ -38,10 +38,9 @@ const SiteSettings = ({ projectList, projectManager, projectName }) => {
 }
 
 const ProjectManagerPage = () => {
-  // get is user from context
-  const navigate = useNavigate()
   const isUser = useSelector((state) => state.user.data.isUser)
   const projectName = useSelector((state) => state.project.name)
+  const navigate = useNavigate()
   const dispatch = useDispatch()
 
   let { module } = useParams()
@@ -59,8 +58,6 @@ const ProjectManagerPage = () => {
 
   // UPDATE DATA
   const [updateProject] = useUpdateProjectMutation()
-  // We only need the to redirect on the initial navigation, the following are considered user explicit
-  const [initialRedirectDone, setInitialRedirectDone] = useState(false)
 
   useEffect(() => {
     // Update project name in header
@@ -116,11 +113,11 @@ const ProjectManagerPage = () => {
         shortcut: 'P+P',
       })
     }
-    if (userPermissions.canViewAny(UserPermissionsEntity.users) || module === Module.userSettings) {
+    if (userPermissions.canViewAny(UserPermissionsEntity.users) || module === Module.projectAccess) {
       links.push({
         name: 'Project access',
-        path: ModulePath[Module.userSettings],
-        module: Module.userSettings,
+        path: ModulePath[Module.projectAccess],
+        module: Module.projectAccess,
         accessLevels: [],
         shortcut: 'P+A',
       })
@@ -164,22 +161,17 @@ const ProjectManagerPage = () => {
   )
 
   useEffect(() => {
-    if (isLoadingUserPermissions || selectedProject === null || !module || initialRedirectDone) {
-      return
-    }
-
-    if (userPermissions.canAccessModule({ module, projectName: selectedProject })) {
+    if (isLoadingUserPermissions || module !== undefined) {
       return
     }
 
     for (const item of ModuleList) {
       if (userPermissions.canAccessModule({ module: item, projectName: selectedProject })) {
-        setInitialRedirectDone(true)
         navigate(replaceQueryParams(ModulePath[item], { project: selectedProject }))
         return
       }
     }
-  }, [isLoadingUserPermissions, selectedProject, module, initialRedirectDone])
+  }, [isLoadingUserPermissions, selectedProject, module])
 
   return (
     <>
@@ -199,7 +191,7 @@ const ProjectManagerPage = () => {
         {module === Module.anatomy && <ProjectAnatomy />}
         {module === Module.projectSettings && <ProjectSettings />}
         {module === Module.siteSettings && <SiteSettings />}
-        {module === Module.userSettings && <ProjectUserAccess onSelect={setSelectedProject} />}
+        {module === Module.projectAccess && <ProjectUserAccess onSelect={setSelectedProject} />}
         {module === Module.roots && <ProjectRoots userPermissions={userPermissions} />}
         {module === Module.teams && <TeamsPage />}
         {module === Module.permisssions && <ProjectPermissions />}

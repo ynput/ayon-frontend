@@ -683,12 +683,10 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
   }
 
   if (!bypassPermissions && !userPermissions.canViewSettings(projectName)) {
-    return (
-      <EmptyPlaceholder
-        icon="settings_alert"
-        message="You don't have permissions to view the addon settings for this project"
-      />
-    )
+    return <EmptyPlaceholder
+      icon="settings_alert"
+      message="You don't have permission to view the addon settings for this project"
+    />
   }
 
   return (

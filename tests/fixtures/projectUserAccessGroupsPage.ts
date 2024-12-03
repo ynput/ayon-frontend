@@ -5,7 +5,7 @@ class ProjectUserAccessGroupsPage {
   constructor(public readonly page: Page, public readonly browserName: String) {}
 
   async goto(userName?: string) {
-    await this.page.goto(`/manageProjects/userSettings`)
+    await this.page.goto(`/manageProjects/projectAccess`)
   }
 
   async selectProject(project: string, navigationNeeded = false) {

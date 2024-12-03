@@ -244,7 +244,7 @@ const getErrorInfo = (
       return {
         icon: 'person',
         message: 'Missing permissions',
-        details: "You don't have permissions to manage this project's users",
+        details: "You don't have permission to manage this project's users",
       }
     }
   }

@@ -84,7 +84,7 @@ class UserPermissions {
     if (module === Module.anatomy) {
       return this.canView(UserPermissionsEntity.anatomy, projectName)
     }
-    if (module === Module.userSettings) {
+    if (module === Module.projectAccess) {
       return this.canView(UserPermissionsEntity.users, projectName)
     }
     if (module === Module.roots) {
