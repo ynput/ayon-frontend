@@ -72,7 +72,7 @@ class UserPermissions {
     return this.permissions.projects[projectName]?.project[type] === PermissionLevel.readWrite
   }
 
-  canAccessModule(module: string, projectName: string): boolean {
+  canAccessModule({ module, projectName }: { module: string; projectName: string }): boolean {
     if (module === Module.siteSettings) {
       return true
     }

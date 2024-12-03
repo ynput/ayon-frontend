@@ -20,6 +20,7 @@ import useUserProjectPermissions, { UserPermissionsEntity } from '@hooks/useUser
 import ProjectUserAccess from './Users/ProjectUserAccess'
 import ProjectPermissions from './ProjectPermissions'
 import { isActiveDecider, projectSorter, Module, ModuleList, ModulePath } from './mappers'
+import { replaceQueryParams } from '@helpers/url'
 
 const ProjectSettings = ({ projectList, projectManager, projectName }) => {
   return (
@@ -31,7 +32,7 @@ const ProjectSettings = ({ projectList, projectManager, projectName }) => {
 const SiteSettings = ({ projectList, projectManager, projectName }) => {
   return (
     <ProjectManagerPageLayout projectList={projectList} passthrough={!projectManager}>
-      <AddonSettings projectName={projectName} showSites bypassPermissions  />
+      <AddonSettings projectName={projectName} showSites bypassPermissions />
     </ProjectManagerPageLayout>
   )
 }
@@ -53,10 +54,13 @@ const ProjectManagerPage = () => {
     withDefault(StringParam, projectName),
   )
 
-  const { isLoading: isLoadingUserPermissions, permissions: userPermissions } = useUserProjectPermissions(isUser)
+  const { isLoading: isLoadingUserPermissions, permissions: userPermissions } =
+    useUserProjectPermissions(isUser)
 
   // UPDATE DATA
   const [updateProject] = useUpdateProjectMutation()
+  // We only need the to redirect on the initial navigation, the following are considered user explicit
+  const [initialRedirectDone, setInitialRedirectDone] = useState(false)
 
   useEffect(() => {
     // Update project name in header
@@ -89,7 +93,7 @@ const ProjectManagerPage = () => {
   }
 
   const links = []
-  if (!isUser || !isLoadingUserPermissions && userPermissions.projectSettingsAreEnabled()) {
+  if (!isUser || (!isLoadingUserPermissions && userPermissions.projectSettingsAreEnabled())) {
     if (userPermissions.canViewAny(UserPermissionsEntity.anatomy) || module === Module.anatomy) {
       links.push({
         name: 'Anatomy',
@@ -100,7 +104,10 @@ const ProjectManagerPage = () => {
       })
     }
 
-    if (userPermissions.canViewAny(UserPermissionsEntity.settings) || module === Module.projectSettings) {
+    if (
+      userPermissions.canViewAny(UserPermissionsEntity.settings) ||
+      module === Module.projectSettings
+    ) {
       links.push({
         name: 'Project settings',
         path: ModulePath[Module.projectSettings],
@@ -151,27 +158,28 @@ const ProjectManagerPage = () => {
     () =>
       links.map((link) => ({
         ...link,
-        path: link.path + (selectedProject ? `?project=${selectedProject}` : ''),
+        path: replaceQueryParams(link.path, selectedProject ? { project: selectedProject } : {}),
       })),
     [links, selectedProject],
   )
 
   useEffect(() => {
-    if (isLoadingUserPermissions || selectedProject === null) {
+    if (isLoadingUserPermissions || selectedProject === null || !module || initialRedirectDone) {
       return
     }
 
-    if (userPermissions.canAccessModule(module)) {
+    if (userPermissions.canAccessModule({ module, projectName: selectedProject })) {
       return
     }
 
     for (const item of ModuleList) {
-      if (userPermissions.canAccessModule(item)) {
-        navigate(ModulePath[item])
+      if (userPermissions.canAccessModule({ module: item, projectName: selectedProject })) {
+        setInitialRedirectDone(true)
+        navigate(replaceQueryParams(ModulePath[item], { project: selectedProject }))
         return
       }
     }
-  }, [isLoadingUserPermissions, selectedProject, module])
+  }, [isLoadingUserPermissions, selectedProject, module, initialRedirectDone])
 
   return (
     <>
