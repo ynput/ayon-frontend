@@ -10,7 +10,12 @@ import confirmDelete from '@helpers/confirmDelete'
 import clsx from 'clsx'
 import useTableLoadingData from '@hooks/useTableLoadingData'
 
-const AccessGroupList = ({ projectName, selectedAccessGroup, onSelectAccessGroup }) => {
+const AccessGroupList = ({
+  projectName,
+  selectedAccessGroup,
+  onSelectAccessGroup,
+  canCreateOrDelete,
+}) => {
   const [showNewAccessGroup, setShowNewAccessGroup] = useState(false)
 
   // Load user list
@@ -110,15 +115,17 @@ const AccessGroupList = ({ projectName, selectedAccessGroup, onSelectAccessGroup
         <NewAccessGroup onClose={onNewAccessGroup} accessGroupList={accessGroupList} />
       )}
 
-      <Toolbar>
-        <Button
-          label="New access group"
-          onClick={() => setShowNewAccessGroup(true)}
-          icon="group_add"
-        />
-        <Spacer />
-        <Button label="Delete access group" onClick={onDeleteGlobal} icon="delete" />
-      </Toolbar>
+      {canCreateOrDelete && (
+        <Toolbar>
+          <Button
+            label="New access group"
+            onClick={() => setShowNewAccessGroup(true)}
+            icon="group_add"
+          />
+          <Spacer />
+          <Button label="Delete access group" onClick={onDeleteGlobal} icon="delete" />
+        </Toolbar>
+      )}
 
       <TablePanel>
         <DataTable
