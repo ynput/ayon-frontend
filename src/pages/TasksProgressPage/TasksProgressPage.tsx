@@ -10,8 +10,7 @@ import TaskProgressDetailsPanel from './TaskProgressDetailsPanel'
 import { useGetAttributeConfigQuery } from '@queries/attributes/getAttributes'
 import { getPriorityOptions } from './helpers'
 import useScopedStatuses from '@hooks/useScopedStatuses'
-import { SliceType } from '@context/slicerContext'
-import useLoadRemote from '@/remote/useLoadRemote'
+import { useSlicerContext } from '@context/slicerContext'
 
 const TasksProgressPage: FC = () => {
   const projectName = useAppSelector((state: $Any) => state.project.name) as string
@@ -19,11 +18,7 @@ const TasksProgressPage: FC = () => {
   const detailsOpen = progressState.detailsOpen && progressState.selected.ids.length > 0
 
   // load slicer remote config
-  const config = useLoadRemote({
-    remote: 'slicer',
-    module: 'config',
-    fallback: { progress: { fields: ['hierarchy'] as SliceType[] } },
-  })
+  const { config } = useSlicerContext()
   const taskProgressSliceFields = config?.progress?.fields
 
   //   GET PROJECT INFO FOR STATUS

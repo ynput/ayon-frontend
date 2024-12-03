@@ -1,25 +1,13 @@
-import useLoadRemote from '@/remote/useLoadRemote'
-import { Assignees, useLazyGetAllProjectUsersAsAssigneeQuery } from '@queries/user/getUsers'
-import { TableRow } from '../types'
+import { useLazyGetAllProjectUsersAsAssigneeQuery } from '@queries/user/getUsers'
+import { UseExtraSlices } from '@context/slicerContext'
 
 type Props = {
   projectName?: string | null
+  useExtraSlices: UseExtraSlices
 }
 
-const useExtraSlicesDefault = () => {
-  return {
-    formatAssignees: (_p?: Assignees): TableRow[] => [],
-  }
-}
-
-const useUsersTable = ({ projectName }: Props) => {
+const useUsersTable = ({ projectName, useExtraSlices }: Props) => {
   const [getUsers, { isLoading, isFetching }] = useLazyGetAllProjectUsersAsAssigneeQuery()
-
-  const useExtraSlices = useLoadRemote({
-    remote: 'slicer',
-    module: 'useExtraSlices',
-    fallback: useExtraSlicesDefault,
-  })
 
   const { formatAssignees } = useExtraSlices()
 

@@ -1,31 +1,17 @@
-import useLoadRemote from '@/remote/useLoadRemote'
-import { ProjectModel } from '@api/rest/project'
+import { UseExtraSlices } from '@context/slicerContext'
 import { useGetProjectQuery } from '@queries/project/getProject'
 
 type Props = {
   projectName: string | null
+  useExtraSlices: UseExtraSlices
 }
 
-const useExtraSlicesDefault = () => {
-  return {
-    formatStatuses: (_p?: ProjectModel) => [],
-    formatTaskTypes: (_p?: ProjectModel) => [],
-    formatTypes: (_p?: ProjectModel) => [],
-  }
-}
-
-const useProjectAnatomySlices = ({ projectName }: Props) => {
+const useProjectAnatomySlices = ({ projectName, useExtraSlices }: Props) => {
   // project info
   const { data: project, isLoading } = useGetProjectQuery(
     { projectName: projectName || '' },
     { skip: !projectName },
   )
-
-  const useExtraSlices = useLoadRemote({
-    remote: 'slicer',
-    module: 'useExtraSlices',
-    fallback: useExtraSlicesDefault,
-  })
 
   const { formatStatuses, formatTaskTypes, formatTypes } = useExtraSlices()
 

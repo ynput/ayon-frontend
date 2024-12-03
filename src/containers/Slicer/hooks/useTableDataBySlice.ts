@@ -56,7 +56,7 @@ const getSomeValue = (field: string): TableRow => ({
 })
 
 const useTableDataBySlice = ({ sliceFields }: Props): TableData => {
-  const { sliceType, onSliceTypeChange } = useSlicerContext()
+  const { sliceType, onSliceTypeChange, useExtraSlices } = useSlicerContext()
   const projectName = useAppSelector((state) => state.project.name)
 
   const sliceOptions = defaultSliceOptions.filter(
@@ -72,7 +72,7 @@ const useTableDataBySlice = ({ sliceFields }: Props): TableData => {
     getTypes,
     getTaskTypes,
     isLoading: isLoadingProject,
-  } = useProjectAnatomySlices({ projectName })
+  } = useProjectAnatomySlices({ projectName, useExtraSlices })
 
   //   Hierarchy
   const { getData: getHierarchyData, isLoading: isLoadingHierarchy } = useHierarchyTable({
@@ -80,7 +80,11 @@ const useTableDataBySlice = ({ sliceFields }: Props): TableData => {
     folderTypes: project?.folderTypes || [],
   })
   //   Users
-  const { getData: getUsersData, isLoading: isUsersLoading } = useUsersTable({ projectName })
+  const { getData: getUsersData, isLoading: isUsersLoading } = useUsersTable({
+    projectName,
+    useExtraSlices,
+  })
+  const isLoadingData = isLoadingHierarchy || isLoadingProject || isUsersLoading
 
   const builtInSlices: Record<SliceType, SliceData> = {
     hierarchy: {
@@ -128,8 +132,9 @@ const useTableDataBySlice = ({ sliceFields }: Props): TableData => {
   }
 
   useEffect(() => {
+    console.log('get slicer data', sliceFields)
     // wait for hierarchy data to load before fetching slice data
-    if (isLoadingHierarchy) return
+    if (isLoadingData) return console.log('waiting for data to load')
 
     // check if slice field is enabled
     if (!sliceFields.includes(sliceType)) {
@@ -139,6 +144,7 @@ const useTableDataBySlice = ({ sliceFields }: Props): TableData => {
     const fetchData = async () => {
       try {
         setIsLoading(true)
+        console.log('getting slice data')
         const newData = await sliceConfig.getData()
 
         // add some value option
@@ -158,12 +164,12 @@ const useTableDataBySlice = ({ sliceFields }: Props): TableData => {
       }
     }
     fetchData()
-  }, [sliceType, projectName, isLoadingHierarchy])
+  }, [sliceType, sliceFields, projectName, isLoadingData])
 
   return {
     sliceOptions,
     table: slice,
-    isLoading: builtInSlices[sliceType].isLoading || isLoading,
+    isLoading: builtInSlices[sliceType].isLoading || isLoading || isLoadingData,
     sliceType,
     handleSliceTypeChange,
   }

@@ -151,7 +151,7 @@ const SlicerTable: FC<SlicerTableProps> = ({
     getFilteredRowModel: getFilteredRowModel(),
     getExpandedRowModel: getExpandedRowModel(),
     filterFromLeafRows: true,
-    debugTable: true,
+    // debugTable: true,
   })
 
   const { rows } = table.getRowModel()
