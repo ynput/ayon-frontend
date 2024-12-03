@@ -11,10 +11,10 @@ type Remote = {
 }
 
 const remotes: Remote[] = [
-  {
-    remote: 'slicer',
-    version: '0.0.1',
-  },
+  // {
+  //   remote: 'slicer',
+  //   version: '0.0.1',
+  // },
 ]
 
 const registerAddonRemotes = () => {
