@@ -100,27 +100,6 @@ const ProjectUserAccessProjectList = ({ projects, isLoading, selection, userPerm
           }}
           style={{ minWidth: 150 }}
         />
-        <Column
-          field="count"
-          header="Count"
-          align='right'
-          headerStyle={{minWidth: '60px', width: '60px'}}
-          bodyStyle={{minWidth: '60px', width: '60px'}}
-          headerTooltip='Access groups assigned for selected users'
-          headerTooltipOptions={{position: 'top'}}
-          body={(rowData) => {
-            const isActive = rowData.active
-            const hasPermissions =
-              userPermissions.canEdit(UserPermissionsEntity.users, rowData.name) ||
-              userPermissions.canView(UserPermissionsEntity.users, rowData.name)
-            return (
-              <StyledProjectName className={clsx({ isActive: isActive && hasPermissions })}>
-                <span>1</span>
-              </StyledProjectName>
-            )
-          }}
-          style={{ minWidth: 150 }}
-        />
       </DataTable>
     </TablePanel>
   )
