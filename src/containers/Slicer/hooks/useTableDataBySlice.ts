@@ -8,7 +8,6 @@ import { Slice, SliceData, SliceOption, TableData, TableRow } from '../types'
 
 interface Props {
   sliceFields: SliceType[]
-  sliceOptions: SliceType[]
 }
 
 const defaultSliceOptions: SliceOption[] = [
