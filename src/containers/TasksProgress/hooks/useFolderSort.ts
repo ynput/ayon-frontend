@@ -1,5 +1,5 @@
 import { ColumnSortEvent } from 'primereact/column'
-import { FolderRow } from './formatTaskProgressForTable'
+import { FolderRow } from '../helpers/formatTaskProgressForTable'
 import { useMemo } from 'react'
 
 export interface CustomColumnSortEvent extends ColumnSortEvent {

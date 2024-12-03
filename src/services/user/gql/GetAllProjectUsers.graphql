@@ -3,6 +3,7 @@ query GetAllProjectUsersAsAssignee($projectName: String) {
     edges {
       node {
         name
+        updatedAt
         attrib {
           fullName
         }

@@ -1,4 +1,4 @@
-import Hierarchy from '@containers/hierarchy'
+import Slicer from '@containers/Slicer'
 import TasksProgress from '@containers/TasksProgress'
 import { useGetProjectQuery } from '@queries/project/getProject'
 import { $Any } from '@types'
@@ -10,11 +10,16 @@ import TaskProgressDetailsPanel from './TaskProgressDetailsPanel'
 import { useGetAttributeConfigQuery } from '@queries/attributes/getAttributes'
 import { getPriorityOptions } from './helpers'
 import useScopedStatuses from '@hooks/useScopedStatuses'
+import { useSlicerContext } from '@context/slicerContext'
 
 const TasksProgressPage: FC = () => {
   const projectName = useAppSelector((state: $Any) => state.project.name) as string
   const progressState = useAppSelector((state) => state.progress)
   const detailsOpen = progressState.detailsOpen && progressState.selected.ids.length > 0
+
+  // load slicer remote config
+  const { config } = useSlicerContext()
+  const taskProgressSliceFields = config?.progress?.fields
 
   //   GET PROJECT INFO FOR STATUS
   const { data: projectInfo } = useGetProjectQuery({ projectName }, { skip: !projectName })
@@ -28,7 +33,7 @@ const TasksProgressPage: FC = () => {
       <Splitter layout="horizontal" style={{ width: '100%', height: '100%' }}>
         <SplitterPanel size={detailsOpen ? 12 : 18} style={{ minWidth: 227, maxWidth: 500 }}>
           <Section wrap>
-            <Hierarchy />
+            <Slicer sliceFields={taskProgressSliceFields} persistFieldId="hierarchy" />
           </Section>
         </SplitterPanel>
         <SplitterPanel size={90} style={{ overflow: 'hidden' }}>

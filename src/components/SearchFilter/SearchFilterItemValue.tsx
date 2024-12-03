@@ -1,5 +1,5 @@
 import { forwardRef } from 'react'
-import { FilterValue } from './types'
+import { FilterOperator, FilterValue } from './types'
 import styled from 'styled-components'
 import { Icon, theme } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
@@ -39,18 +39,18 @@ const Operator = styled.span`
 interface SearchFilterItemValueProps
   extends Omit<React.HTMLAttributes<HTMLDivElement>, 'color' | 'id'>,
     FilterValue {
-  showOperator?: boolean
+  operator?: FilterOperator
   isCompact?: boolean
 }
 
 export const SearchFilterItemValue = forwardRef<HTMLDivElement, SearchFilterItemValueProps>(
-  ({ label, img, icon, color, showOperator, isCompact, isCustom, ...props }, ref) => {
+  ({ label, img, icon, color, operator, isCompact, isCustom, ...props }, ref) => {
     const colorStyle = color ? color : '#ffffff'
     const adjustedColor = checkColorBrightness(colorStyle, '#353B46')
 
     return (
       <>
-        {showOperator && <Operator>or</Operator>}
+        {operator && <Operator>{operator.toLowerCase()}</Operator>}
         <ValueChip {...props} ref={ref} className={clsx({ compact: isCompact, custom: isCustom })}>
           {icon && (
             <Icon

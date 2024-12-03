@@ -8,7 +8,9 @@ import {
   getAssigneesChangeOperations,
   resolveShiftSelect,
   getPriorityChangeOperations,
+  getPlaceholderMessage,
 } from './helpers'
+import { useRootFolders } from './hooks'
 import { useGetAllProjectUsersAsAssigneeQuery } from '@queries/user/getUsers'
 import { FolderType, Status, TaskType } from '@api/rest/project'
 import { TaskFieldChange, TasksProgressTable } from './components'
@@ -29,11 +31,14 @@ import formatFilterAttributesData from './helpers/formatFilterAttributesData'
 import formatFilterTagsData from './helpers/formatFilterTagsData'
 import { useAppSelector } from '@state/store'
 import { useSetFrontendPreferencesMutation } from '@queries/user/updateUser'
-import getFilterFromId from '@components/SearchFilter/getFilterFromId'
-import filterTasksBySearch from './helpers/filterTasksBySearch'
 import { FilterFieldType } from '@hooks/useBuildFilterOptions'
 import formatFilterAssigneesData from './helpers/formatFilterAssigneesData'
 import { selectProgress } from '@state/progress'
+import { SelectionData, SliceType, useSlicerContext } from '@context/slicerContext'
+import useFilterBySlice from './hooks/useFilterBySlice'
+import formatSearchQueryFilters from './helpers/formatSearchQueryFilters'
+import { isEmpty } from 'lodash'
+import { RowSelectionState } from '@tanstack/react-table'
 
 // what to search by
 const searchFilterTypes: FilterFieldType[] = [
@@ -91,19 +96,51 @@ const TasksProgress: FC<TasksProgressProps> = ({
     updateUserPreferences({ userName, patchData: updatedFrontendPreferences })
   }
 
-  // remove task columns so slightly different to normal filtering of rows
-  const filteredTaskTypes = useMemo(
-    () =>
-      filters
-        .filter((filter) => getFilterFromId(filter.id) === 'taskType')
-        .flatMap((filter) =>
-          filter.inverted
-            ? taskTypes
-                .filter((taskType) => !filter.values?.some((value) => value.id === taskType.name))
-                .map((taskType) => taskType.name)
-            : filter.values?.map((value) => value.id) || [],
-        ),
-    [filters, taskTypes],
+  // filter out by slice
+  const { rowSelection, sliceType, setPersistentRowSelectionData, persistentRowSelectionData } =
+    useSlicerContext()
+  const persistedHierarchySelection = isEmpty(persistentRowSelectionData)
+    ? null
+    : persistentRowSelectionData
+  const { filter: sliceFilter } = useFilterBySlice()
+
+  const handleFiltersChange = (value: Filter[]) => {
+    setFilters(value)
+
+    // check if we need to remove the hierarchy filter and clear hierarchy selection
+    if (!value.some((filter) => filter.id === 'hierarchy')) {
+      setPersistentRowSelectionData({})
+    }
+  }
+
+  // if the sliceFilter is not hierarchy and hierarchy is not empty
+  // add the hierarchy to the filters as disabled
+  const filtersWithHierarchy = useMemo(() => {
+    const buildHierarchyFilterOption = (hierarchy: SelectionData): Filter => ({
+      id: 'hierarchy',
+      label: 'Folder',
+      type: 'list_of_strings',
+      values: Object.values(hierarchy).map((item) => ({
+        id: item.id,
+        label: item.label || item.name || item.id,
+      })),
+      isCustom: true,
+      singleSelect: true,
+      fieldType: 'folder',
+      operator: 'OR',
+      isReadonly: true,
+    })
+
+    if (sliceFilter && persistedHierarchySelection) {
+      return [buildHierarchyFilterOption(persistedHierarchySelection), ...filters]
+    }
+    return filters
+  }, [sliceFilter, persistedHierarchySelection, filters])
+
+  // build the graphql query filters
+  const queryFilters = useMemo(
+    () => formatSearchQueryFilters(filters, sliceFilter),
+    [filters, sliceFilter],
   )
 
   //
@@ -120,13 +157,37 @@ const TasksProgress: FC<TasksProgressProps> = ({
   // hide parent folder child rows
   const [collapsedParents, setCollapsedParents] = useState<string[]>([])
 
-  const selectedFolders = useSelector((state: $Any) => state.context.focused.folders) as string[]
   const selectedTasks = useSelector((state: $Any) => state.context.focused.tasks) as string[]
   const [activeTask, setActiveTask] = useState<string | null>(null)
   //   GET PROJECT ASSIGNEES
   const { data: users = [] } = useGetAllProjectUsersAsAssigneeQuery(
     { projectName },
     { skip: !projectName },
+  )
+
+  // when the slice type is not hierarchy we need to get the root folders
+  const rootFolderIds = useRootFolders({ sliceType, projectName })
+
+  const resolveSelectedFolders = (
+    rowSelection: RowSelectionState,
+    persistedHierarchySelection: SelectionData | null,
+    rootFolderIds: string[],
+    sliceType: SliceType,
+  ): string[] => {
+    if (sliceType === 'hierarchy') {
+      return Object.keys(rowSelection)
+    } else if (persistedHierarchySelection) {
+      return Object.keys(persistedHierarchySelection)
+    } else {
+      return rootFolderIds
+    }
+  }
+
+  const folderIdsToFetch = resolveSelectedFolders(
+    rowSelection,
+    persistedHierarchySelection,
+    rootFolderIds,
+    sliceType,
   )
 
   // VVV MAIN QUERY VVV
@@ -138,8 +199,18 @@ const TasksProgress: FC<TasksProgressProps> = ({
     isFetching: isFetchingTasks,
     error,
   } = useGetTasksProgressQuery(
-    { projectName, folderIds: selectedFolders },
-    { skip: !selectedFolders.length || !projectName },
+    {
+      projectName,
+      folderIds: folderIdsToFetch,
+      assignees: queryFilters.assignees,
+      assigneesAny: queryFilters.assigneesAny,
+      tags: queryFilters.tags,
+      tagsAny: queryFilters.tagsAny,
+      taskTypes: queryFilters.taskTypes,
+      statuses: queryFilters.statuses,
+      attributes: queryFilters.attributes,
+    },
+    { skip: !folderIdsToFetch.length || !projectName },
   )
   //
   //
@@ -189,22 +260,17 @@ const TasksProgress: FC<TasksProgressProps> = ({
     [foldersTasksData],
   )
 
-  // the tasks don't get filtered out but just hidden
-  const filteredFoldersTasks = useMemo(
-    () => filterTasksBySearch(foldersTasksData, filters),
-    [foldersTasksData, filters],
-  )
   //
   //
   // FILTERS
 
   const tableData = useMemo(
     () =>
-      formatTaskProgressForTable(filteredFoldersTasks, filteredTaskTypes, collapsedParents, {
+      formatTaskProgressForTable(foldersTasksData, collapsedParents, {
         folderTypes,
         statuses,
       }),
-    [filteredFoldersTasks, filteredTaskTypes, collapsedParents],
+    [foldersTasksData, collapsedParents],
   )
 
   const [updateEntities] = useUpdateEntitiesMutation()
@@ -343,12 +409,13 @@ const TasksProgress: FC<TasksProgressProps> = ({
 
   return (
     <>
+      {/* @ts-ignore */}
       <Shortcuts shortcuts={shortcuts} deps={[expandedRows]} />
       <Section style={{ height: '100%' }} direction="column">
         <Toolbar>
           <SearchFilterWrapper
-            filters={filters}
-            onChange={setFilters}
+            filters={filtersWithHierarchy}
+            onChange={handleFiltersChange}
             filterTypes={searchFilterTypes}
             projectNames={[projectName]}
             scope="task"
@@ -357,6 +424,7 @@ const TasksProgress: FC<TasksProgressProps> = ({
               attributes: filterAttributesData,
               assignees: filterAssigneesData,
             }}
+            disabledFilters={sliceType ? [sliceType] : []}
           />
           <Spacer />
           <Button
@@ -369,14 +437,14 @@ const TasksProgress: FC<TasksProgressProps> = ({
             <ShortcutTag style={{ marginLeft: 'auto' }}>Shift + E</ShortcutTag>
           </Button>
         </Toolbar>
-        {selectedFolders.length ? (
+        {folderIdsToFetch.length ? (
           tableData.length || isFetchingTasks ? (
             <TasksProgressTable
               tableRef={tableRef}
               tableData={tableData}
               projectName={projectName}
               isLoading={isFetchingTasks}
-              selectedFolders={selectedFolders}
+              selectedFolders={folderIdsToFetch}
               activeTask={activeTask}
               selectedAssignees={selectedAssignees}
               statuses={statuses} // status icons etc.
@@ -394,10 +462,7 @@ const TasksProgress: FC<TasksProgressProps> = ({
               onCollapseRow={handleCollapseToggle}
             />
           ) : (
-            <EmptyPlaceholder
-              message={'No tasks found, try selecting another folder or expanding your filters.'}
-              icon="folder_open"
-            />
+            <EmptyPlaceholder message={getPlaceholderMessage(sliceType)} icon="folder_open" />
           )
         ) : (
           <EmptyPlaceholder

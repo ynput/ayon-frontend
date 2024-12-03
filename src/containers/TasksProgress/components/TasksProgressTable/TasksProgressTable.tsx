@@ -39,7 +39,7 @@ import useCreateContext from '@hooks/useCreateContext'
 import useLocalStorage from '@hooks/useLocalStorage'
 
 // Helpers
-import { useFolderSort } from '../../helpers'
+import { useFolderSort } from '../../hooks'
 import { taskStatusSortFunction } from '@containers/TasksProgress/helpers/taskStatusSortFunction'
 import clsx from 'clsx'
 

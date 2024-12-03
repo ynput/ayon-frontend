@@ -29,6 +29,11 @@ const FilterItem = styled.div`
   &.editing {
     outline: 2px solid #99c8ff;
   }
+
+  &.disabled {
+    pointer-events: none;
+    opacity: 0.5;
+  }
 `
 
 const Operator = styled.span`
@@ -41,7 +46,7 @@ const ChipButton = styled(Button)`
   border-radius: 50%;
   background-color: unset;
 
-  &:hover {
+  &:hover:not(.disabled) {
     &.button {
       background-color: var(--md-sys-color-primary);
     }
@@ -62,6 +67,8 @@ const ChipButton = styled(Button)`
 interface SearchFilterItemProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'id'>, Filter {
   index?: number
   isEditing?: boolean
+  isInvertedAllowed?: boolean
+  isDisabled?: boolean
   onEdit?: (id: string) => void
   onRemove?: (id: string) => void
   onInvert?: (id: string) => void
@@ -73,11 +80,15 @@ export const SearchFilterItem = forwardRef<HTMLDivElement, SearchFilterItemProps
       id,
       label,
       inverted,
+      operator,
       values,
       icon,
       isCustom,
       index,
       isEditing,
+      isInvertedAllowed,
+      isDisabled,
+      isReadonly,
       onEdit,
       onRemove,
       onInvert,
@@ -86,6 +97,11 @@ export const SearchFilterItem = forwardRef<HTMLDivElement, SearchFilterItemProps
     },
     ref,
   ) => {
+    const handleEdit = (id: string) => {
+      if (isReadonly) return
+      onEdit?.(id)
+    }
+
     const handleRemove = (event: React.MouseEvent<HTMLButtonElement>) => {
       // block main onClick event
       event?.stopPropagation()
@@ -94,6 +110,7 @@ export const SearchFilterItem = forwardRef<HTMLDivElement, SearchFilterItemProps
     }
 
     const handleInvert = (event: React.MouseEvent<HTMLButtonElement>) => {
+      if (!isInvertedAllowed) return
       // block main onClick event
       event?.stopPropagation()
       // remove filter
@@ -105,7 +122,7 @@ export const SearchFilterItem = forwardRef<HTMLDivElement, SearchFilterItemProps
       if (event.key === 'Enter' || event.key === ' ') {
         event.preventDefault()
         event.stopPropagation()
-        onEdit && onEdit(id)
+        handleEdit(id)
       }
     }
 
@@ -113,7 +130,7 @@ export const SearchFilterItem = forwardRef<HTMLDivElement, SearchFilterItemProps
     const handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
       // stop propagation to opening whole search bar
       event.stopPropagation()
-      onEdit && onEdit(id)
+      handleEdit(id)
       onClick && onClick(event)
     }
 
@@ -129,13 +146,13 @@ export const SearchFilterItem = forwardRef<HTMLDivElement, SearchFilterItemProps
           tabIndex={0}
           onKeyDown={handleKeyDown}
           onClick={handleClick}
-          className={clsx('search-filter-item', { editing: isEditing })}
+          className={clsx('search-filter-item', { editing: isEditing, disabled: isDisabled })}
         >
           <ChipButton
-            className="button"
+            className={clsx('button', { disabled: !isInvertedAllowed })}
             icon={inverted ? 'do_not_disturb_on' : 'check_small'}
             onClick={handleInvert}
-            data-tooltip={'include/exclude'}
+            data-tooltip={isInvertedAllowed ? 'include/exclude' : undefined}
           />
           <span className="label">{label}:</span>
           {values?.map((value, index) => (
@@ -147,11 +164,11 @@ export const SearchFilterItem = forwardRef<HTMLDivElement, SearchFilterItemProps
               icon={value.icon}
               color={value.color}
               isCustom={value.isCustom}
-              showOperator={index > 0}
+              operator={index > 0 ? operator : undefined}
               isCompact={values.length > 1 && (!!value.icon || !!value.img)}
             />
           ))}
-          {onRemove && <ChipButton className="button" icon="close" onClick={handleRemove} />}
+          {onRemove && <ChipButton className="button remove" icon="close" onClick={handleRemove} />}
         </FilterItem>
       </>
     )

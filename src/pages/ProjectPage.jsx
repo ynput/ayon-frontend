@@ -16,6 +16,7 @@ import { useGetProjectQuery } from '@queries/project/getProject'
 import { useGetProjectAddonsQuery } from '@queries/addons/getAddons'
 import { TabPanel, TabView } from 'primereact/tabview'
 import AppNavLinks from '@containers/header/AppNavLinks'
+import { SlicerProvider } from '@context/slicerContext'
 
 const ProjectContextInfo = () => {
   /**
@@ -191,7 +192,7 @@ const ProjectPage = () => {
         {showContextDialog && <ProjectContextInfo />}
       </Dialog>
       <AppNavLinks links={links} />
-      {child}
+      <SlicerProvider>{child}</SlicerProvider>
     </>
   )
 }
