@@ -1,4 +1,4 @@
-import React from 'react';
+import React from 'react'
 import { useEffect, useState } from 'react'
 import { equiv, getDefaultValue, parseContext, updateChangedKeys } from '../helpers'
 import { $Any } from '@types'
@@ -11,12 +11,10 @@ import {
   InputTextarea,
 } from '@ynput/ayon-react-components'
 
-
-
 type PermissionWidgetProps = {
-  value: number;
-  setValue: (value: number) => void;
-};
+  value: number
+  setValue: (value: number) => void
+}
 
 const PermissionWidget: React.FC<PermissionWidgetProps> = ({ value, setValue }) => {
   return (
@@ -44,23 +42,6 @@ export const TextWidget = (props: $Any) => {
   const { originalValue, path } = parseContext(props)
   const [value, setValue] = useState(null)
   const [valueInitialized, setValueInitialized] = useState(false)
-  const [initialized, setInitialized] = useState(false)
-
-  const doInitialPush = () => {
-    // Initial push to formData
-    // Used when the item is a part of an array
-    // and it is newly added
-    if (!props.onChange) return
-    if (value === null) return
-    if (value === props.value) return
-    if (initialized) return
-
-    //console.log("Initial push for", props.id, "with value", value)
-    setInitialized(true)
-    setTimeout(() => {
-      props.onChange(value)
-    }, 200)
-  }
 
   useEffect(() => {
     setValueInitialized(true)
@@ -129,15 +110,15 @@ export const TextWidget = (props: $Any) => {
       opts.setValue = (e: $Any) => {
         // internal state is handled by the component,
         // so we shouldn't need to debounce this
-        updateChangedKeys(props, e !== originalValue, path);
-        props.onChange(e);
+        updateChangedKeys(props, e !== originalValue, path)
+        props.onChange(e)
       }
     } else {
       Input = InputNumber
-      // opts.value = value === undefined || value === null ? '' : value
       opts.value = value !== null && value !== undefined ? value : getDefaultValue(props)
-      opts.showButtons = true
-      opts.useGrouping = false
+      // Not valid props - causing flooing of console
+      // opts.showButtons = true
+      // opts.useGrouping = false
       opts.onBlur = () => onChangeCommit(props.schema.type)
       opts.onChange = (e: $Any) => {
         // ensure that the value is a number. decimal points are allowed
@@ -210,7 +191,6 @@ export const TextWidget = (props: $Any) => {
   }
 
   const onFocus = (e: $Any) => {
-    doInitialPush()
     props.formContext.onSetBreadcrumbs(path)
     props.onFocus(e)
   }

@@ -51,9 +51,9 @@ import LoadingPage from '@pages/LoadingPage'
  */
 
 const StyledScrollPanel = styled(ScrollPanel)`
-> div {
-  padding-right: 8px;
-}
+  > div {
+    padding-right: 8px;
+  }
 `
 
 const StyledEmptyPlaceholder = styled(EmptyPlaceholder)`
@@ -100,7 +100,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
   const [promoteBundle] = usePromoteBundleMutation()
   const { requestPaste } = usePaste()
 
-  const {isLoading, permissions: userPermissions } = useUserProjectPermissions(isUser)
+  const { isLoading, permissions: userPermissions } = useUserProjectPermissions(isUser)
 
   const projectKey = projectName || '_'
 
@@ -639,7 +639,9 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
         />
         <SaveButton
           label="Save Changes"
-          disabled={!bypassPermissions && !userPermissions.canEditSettings(projectName)}
+          disabled={
+            (!bypassPermissions && !userPermissions.canEditSettings(projectName)) || !canCommit
+          }
           data-tooltip={
             !bypassPermissions && !userPermissions.canEditSettings(projectName)
               ? "You don't have edit permissions"
@@ -661,12 +663,12 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
   }
 
   const onUpdateAddonSchema = (addonName, schema) => {
-    const settings = selectedAddons.find(el => el.name == addonName).settings
+    const settings = selectedAddons.find((el) => el.name == addonName).settings
     const hydratedObject = attachLabels(settings, schema, schema)
     setSearchTree((prev) => {
       return {
-      ...prev,
-      [addonName]: hydratedObject,
+        ...prev,
+        [addonName]: hydratedObject,
       }
     })
     setAddonSchemas((prev) => {
@@ -684,10 +686,12 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
   }
 
   if (!bypassPermissions && !userPermissions.canViewSettings(projectName)) {
-    return <EmptyPlaceholder
-      icon="settings_alert"
-      message="You don't have permissions to view the addon settings for this project"
-    />
+    return (
+      <EmptyPlaceholder
+        icon="settings_alert"
+        message="You don't have permissions to view the addon settings for this project"
+      />
+    )
   }
 
   return (
