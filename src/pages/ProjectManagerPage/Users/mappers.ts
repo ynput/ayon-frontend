@@ -1,11 +1,10 @@
 import { AccessGroupUsers, ListingError, SelectedAccessGroupUsers, SelectionStatus } from './types'
 import { Filter, FilterValue, Option } from '@components/SearchFilter/types'
 import { ProjectNode, UserNode } from '@api/graphql'
-import { GetProjectsUsersApiResponse, ProjectUserData } from '@queries/project/getProject'
 import { UserPermissions, UserPermissionsEntity } from '@hooks/useUserProjectPermissions'
 import { $Any } from '@types'
 import { matchSorter } from 'match-sorter'
-import { difference } from 'lodash'
+import { GetProjectsUsersApiResponse, ProjectUserData } from '@queries/accessGroups/getAccessGroups'
 
 const getAllProjectUsers = (groupedUsers: AccessGroupUsers): string[] => {
   let allUsers: string[] = []

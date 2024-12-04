@@ -34,20 +34,6 @@ const createProjectQuery = (attribs: $Any, fields: $Any) => {
   `
 }
 
-type GetProjectsUsersParams = {
-  projects: string[]
-}
-
-export type ProjectUserData = {
-  [project: string]: {
-    [user: string]: string[]
-  }
-}
-
-export type GetProjectsUsersApiResponse = {
-  data: ProjectUserData
-}
-
 const getProjectInjected = api.injectEndpoints({
   endpoints: (build) => ({
     getProjectAttribs: build.query({
@@ -61,40 +47,6 @@ const getProjectInjected = api.injectEndpoints({
       }),
       transformResponse: (res: any) => res.data?.project,
       providesTags: (_res, _error, { projectName }) => [{ type: 'project', id: projectName }],
-    }),
-    getProjectsAccess: build.query<GetProjectsUsersApiResponse, GetProjectsUsersParams>({
-      async queryFn({ projects = [] }, { dispatch, forced }) {
-        try {
-          let promises = []
-          let projectUsersData: $Any = {}
-          for (const project of projects) {
-            promises.push(
-              dispatch(
-                api.endpoints.getProjectUsers.initiate(
-                  { projectName: project },
-                  { forceRefetch: forced },
-                ),
-              ).then((response) => {
-                if (response.status === 'rejected') {
-                  return
-                }
-                projectUsersData = {
-                  ...projectUsersData,
-                  [project]: response.data,
-                }
-              }),
-            )
-          }
-
-          await Promise.all(promises)
-          return { data: projectUsersData, meta: undefined, error: undefined }
-        } catch (error: $Any) {
-          console.error(error)
-          return { error, meta: undefined, data: undefined }
-        }
-      },
-      providesTags: (_res, _error, { projects }) =>
-        projects.map((projectName) => ({ type: 'projectAccess', id: projectName })),
     }),
   }),
   overrideExisting: true,
@@ -175,7 +127,6 @@ const getProjectApi = getProjectInjected.enhanceEndpoints({
 
 export const {
   useGetProjectQuery,
-  useGetProjectsAccessQuery,
   useListProjectsQuery,
   useGetProjectAnatomyQuery,
   useGetProjectAttribsQuery,

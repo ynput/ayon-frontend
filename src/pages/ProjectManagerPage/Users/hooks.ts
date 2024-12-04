@@ -1,11 +1,11 @@
 import { $Any } from '@types'
-import { useGetProjectsAccessQuery } from '@queries/project/getProject'
 import { useState } from 'react'
 import { SelectionStatus } from './types'
 import { Filter } from '@components/SearchFilter/types'
 import { useAppSelector } from '@state/store'
 import { useSetFrontendPreferencesMutation } from '@queries/user/updateUser'
 import { useUpdateAccessGroupsMutation } from '@queries/accessGroups/updateAccessGroups'
+import { useGetProjectsAccessQuery } from '@queries/accessGroups/getAccessGroups'
 
 const useProjectAccessGroupData = (selectedProject: string) => {
   const [selectedProjects, setSelectedProjects] = useState<string[]>(
