@@ -85,7 +85,7 @@ const useProjectAccessGroupData = (selectedProject: string) => {
     }
 
     try {
-      updateAcessGroups({ payload: multiUpdateData })
+      updateAccessGroups({ payload: multiUpdateData })
     } catch (error: $Any) {
       console.log(error)
       return error.details
