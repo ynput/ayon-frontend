@@ -2,7 +2,10 @@ import { ReleaseListItemModel } from '@api/rest/releases'
 import { MarketListItem } from '../MarketAddonsList'
 import { createReleaseSubtitle } from '@containers/ReleaseInstallerDialog/helpers'
 
-export const transformReleasesToTable = (releases: ReleaseListItemModel[]): MarketListItem[] => {
+export const transformReleasesToTable = (
+  releases: ReleaseListItemModel[],
+  hasCloud: boolean,
+): MarketListItem[] => {
   const releaseGroups: MarketListItem[] = []
 
   const sortedReleases = [...releases].sort((a, b) => b.name.localeCompare(a.name))
@@ -18,7 +21,7 @@ export const transformReleasesToTable = (releases: ReleaseListItemModel[]): Mark
       isOfficial: true,
       isVerified: true,
       isProductionOutdated: false,
-      isLocked: !release.isLatest,
+      isActive: release.isLatest || hasCloud,
       subTitle: createReleaseSubtitle({ createdAt: release.createdAt }),
     }
     if (foundGroup) {

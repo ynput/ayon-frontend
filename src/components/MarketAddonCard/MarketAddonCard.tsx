@@ -5,6 +5,7 @@ import AddonIcon from '../AddonIcon/AddonIcon'
 import { ButtonProps, Icon } from '@ynput/ayon-react-components'
 import { upperFirst } from 'lodash'
 import { HTMLAttributes } from 'react'
+import CloudButton from '@components/CloudButton'
 
 export type ListItemType = 'addon' | 'release'
 
@@ -25,7 +26,7 @@ interface MarketAddonCardProps extends HTMLAttributes<HTMLDivElement> {
   isDownloading?: boolean
   isFailed?: boolean
   isFinished?: boolean
-  isLocked?: boolean
+  isActive?: boolean
   onDownload: (name: string, version: string) => void
 }
 
@@ -46,7 +47,7 @@ export const MarketAddonCard = ({
   isDownloading,
   isFailed,
   isFinished,
-  isLocked,
+  isActive,
   onDownload,
   ...props
 }: MarketAddonCardProps) => {
@@ -67,7 +68,6 @@ export const MarketAddonCard = ({
   if (state === 'download') stateVariant = 'surface'
   if (state === 'failed') stateVariant = 'danger'
   if (state === 'update') stateVariant = 'filled'
-  if (isLocked) stateVariant = 'text'
 
   const handleActionClick = () => {
     if (['download', 'update'].includes(state) && latestVersion) {
@@ -99,15 +99,23 @@ export const MarketAddonCard = ({
       </Styled.Content>
       {!isPlaceholder && (
         <Styled.Buttons>
-          <Styled.Tag
-            variant={stateVariant}
-            className={state}
-            onClick={handleActionClick}
-            disabled={isWaiting}
-          >
-            {stateIcon && <Icon icon={stateIcon} />}
-            {upperFirst(state)}
-          </Styled.Tag>
+          {isActive ? (
+            <Styled.Tag
+              variant={stateVariant}
+              className={state}
+              onClick={handleActionClick}
+              disabled={isWaiting}
+            >
+              {stateIcon && <Icon icon={stateIcon} />}
+              {upperFirst(state)}
+            </Styled.Tag>
+          ) : (
+            <CloudButton
+              featureId="release-installer"
+              data-tooltip="Subscribe to Ynput Cloud to install previous releases"
+              data-tooltip-delay={0}
+            />
+          )}
         </Styled.Buttons>
       )}
     </Styled.Container>

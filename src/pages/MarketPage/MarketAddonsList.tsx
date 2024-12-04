@@ -64,7 +64,7 @@ interface ExtendedMarketAddonItem extends MarketAddonItem {
   isDownloading?: boolean
   isFailed?: boolean
   isFinished?: boolean
-  isLocked?: boolean
+  isActive?: boolean
 }
 
 export type MarketListItem = {
@@ -204,7 +204,7 @@ const MarketAddonsList = ({
                 isDownloading,
                 isFailed,
                 isFinished,
-                isLocked,
+                isActive,
               }) => {
                 listItems.push(
                   <MarketAddonCard
@@ -217,6 +217,7 @@ const MarketAddonsList = ({
                     onMouseOver={() => onHover(name, type)}
                     onDownload={(n, v) => onDownload(n, v, type)}
                     style={{ paddingLeft: group ? 40 : 4 }}
+                    isActive={isActive || type === 'addon'}
                     {...{
                       title,
                       name,
@@ -231,7 +232,6 @@ const MarketAddonsList = ({
                       isDownloading,
                       isFailed,
                       isFinished,
-                      isLocked,
                     }}
                   />,
                 )

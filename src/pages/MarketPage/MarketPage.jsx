@@ -223,7 +223,10 @@ const MarketPage = () => {
     useGetReleasesQuery({ all: true }, { skip: filterType !== 'releases' })
 
   // transform releases into a table list
-  const releaseItems = useMemo(() => transformReleasesToTable(releasesData), [releasesData])
+  const releaseItems = useMemo(
+    () => transformReleasesToTable(releasesData, hasCloudSub),
+    [releasesData],
+  )
 
   // GET SELECTED RELEASE
   const { data: selectedReleaseData = {}, isFetching: isFetchingRelease } = useGetReleaseInfoQuery(
