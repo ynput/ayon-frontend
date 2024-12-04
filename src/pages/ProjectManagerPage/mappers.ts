@@ -54,7 +54,7 @@ const projectSorter =
       const bPerm = userPermissions.canView(UserPermissionsEntity.settings, b) ? 1 : -1
       return bPerm - aPerm
     }
-    if (module === Module.roots) {
+    if ([Module.roots, Module.siteSettings].includes(module as Module)) {
       const aPerm = userPermissions.assignedToProject(a) ? 1 : -1
       const bPerm = userPermissions.assignedToProject(b) ? 1 : -1
       return bPerm - aPerm
@@ -78,7 +78,7 @@ const isActiveDecider =
     if (module === Module.projectSettings) {
       return userPermissions.canView(UserPermissionsEntity.settings, projectName)
     }
-    if (module === Module.roots) {
+    if ([Module.roots, Module.siteSettings].includes(module as Module)) {
       return userPermissions.assignedToProject(projectName)
     }
     return true
