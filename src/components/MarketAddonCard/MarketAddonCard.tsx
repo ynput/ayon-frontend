@@ -2,8 +2,28 @@ import clsx from 'clsx'
 import * as Styled from './MarketAddonCard.styled'
 import Type from '@/theme/typography.module.css'
 import AddonIcon from '../AddonIcon/AddonIcon'
-import { Icon } from '@ynput/ayon-react-components'
+import { ButtonProps, Icon } from '@ynput/ayon-react-components'
 import { upperFirst } from 'lodash'
+import { HTMLAttributes } from 'react'
+
+interface MarketAddonCardProps extends HTMLAttributes<HTMLDivElement> {
+  title: string
+  name: string
+  latestVersion?: string
+  author?: string
+  icon?: string
+  isSelected?: boolean
+  isOfficial?: boolean
+  isVerified?: boolean
+  isDownloaded?: boolean
+  isOutdated?: boolean
+  isPlaceholder?: boolean
+  isWaiting?: boolean
+  isDownloading?: boolean
+  isFailed?: boolean
+  isFinished?: boolean
+  onDownload: (name: string, version: string) => void
+}
 
 const MarketAddonCard = ({
   title,
@@ -22,8 +42,9 @@ const MarketAddonCard = ({
   isFailed,
   isFinished,
   onDownload,
+  className = '',
   ...props
-}) => {
+}: MarketAddonCardProps) => {
   let state = 'download'
   if (isDownloaded && !isOutdated) state = 'downloaded'
   if (isDownloaded && isOutdated) state = 'update'
@@ -37,13 +58,13 @@ const MarketAddonCard = ({
   if (isFailed) stateIcon = 'error'
   if (isFinished) stateIcon = 'check_circle'
 
-  let stateVariant = 'light'
+  let stateVariant: ButtonProps['variant'] = 'text'
   if (state === 'download') stateVariant = 'surface'
   if (state === 'failed') stateVariant = 'danger'
   if (state === 'update') stateVariant = 'filled'
 
   const handleActionClick = () => {
-    if (['download', 'update'].includes(state)) {
+    if (['download', 'update'].includes(state) && latestVersion) {
       onDownload(name, latestVersion)
     }
   }
@@ -51,7 +72,7 @@ const MarketAddonCard = ({
   return (
     <Styled.Container
       {...props}
-      className={clsx({ selected: isSelected, loading: isPlaceholder }, 'no-shimmer')}
+      className={clsx(className, { selected: isSelected, loading: isPlaceholder }, 'no-shimmer')}
     >
       <AddonIcon isPlaceholder={isPlaceholder} size={32} src={icon} alt={title + ' icon'} />
       <Styled.Content className={clsx({ loading: isPlaceholder })}>

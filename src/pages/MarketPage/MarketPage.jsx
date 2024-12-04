@@ -128,6 +128,7 @@ const MarketPage = () => {
   )
 
   // FILTER ADDONS BY FIELDS
+  const [filterType, setFilterType] = useState('addons')
   // [{isOutdated: true}]
   // [{isDownloaded: false}]
   const [filter, setFilter] = useState([])
@@ -301,7 +302,14 @@ const MarketPage = () => {
       />
       <main style={{ flexDirection: 'column', overflow: 'hidden' }}>
         <Section style={{ overflow: 'hidden', flexDirection: 'row', justifyContent: 'center' }}>
-          <AddonFilters onSelect={setFilter} onConnection={(user) => setIsCloudConnected(!!user)} />
+          <AddonFilters
+            filterType={filterType}
+            onSelect={(type, filter) => {
+              setFilterType(type)
+              setFilter(filter)
+            }}
+            onConnection={(user) => setIsCloudConnected(!!user)}
+          />
           <MarketAddonsList
             addons={isLoadingMarket ? placeholders : marketAddons}
             selected={selectedAddonId}

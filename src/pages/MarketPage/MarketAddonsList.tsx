@@ -1,9 +1,10 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import MarketAddonCard from '@components/MarketAddonCard/MarketAddonCard'
 import styled from 'styled-components'
 import PerfectScrollbar from 'react-perfect-scrollbar'
 import { InputText } from '@ynput/ayon-react-components'
 import { Tag } from '@components/MarketAddonCard/MarketAddonCard.styled'
+import { MarketAddonItem } from '@queries/market/getMarket'
 
 const StyledAddonList = styled.div`
   display: flex;
@@ -55,6 +56,18 @@ const StyledList = styled(PerfectScrollbar)`
   }
 `
 
+type MarketAddonListProps = {
+  addons: MarketAddonItem[]
+  selected: string
+  onSelect: (name: string) => void
+  onHover: (name: string) => void
+  onDownload: (name: string) => void
+  isLoading: boolean
+  onUpdateAll?: () => void
+  isUpdatingAll?: boolean
+  isUpdatingAllFinished?: boolean
+}
+
 const MarketAddonsList = ({
   addons = [],
   selected,
@@ -65,7 +78,7 @@ const MarketAddonsList = ({
   onUpdateAll,
   isUpdatingAll,
   isUpdatingAllFinished,
-}) => {
+}: MarketAddonListProps) => {
   const [search, setSearch] = useState('')
 
   // filter addons by search
@@ -79,8 +92,8 @@ const MarketAddonsList = ({
     [addons, search],
   )
 
-  const listRef = useRef(null)
-  const scrollRef = useRef(null)
+  const listRef = useRef<HTMLDivElement | null>(null)
+  const scrollRef = useRef<PerfectScrollbar | null>(null)
   const [initialScreenFinish, setInitialScreenFinish] = useState(false)
   // when addons have finished loading, scroll to position of selected addon (from a redirect)
   useEffect(() => {
@@ -119,7 +132,7 @@ const MarketAddonsList = ({
           </Tag>
         )}
       </div>
-      <StyledList ref={scrollRef} containerRef={(el) => (listRef.current = el)}>
+      <StyledList ref={scrollRef} containerRef={(el) => (listRef.current = el as HTMLDivElement)}>
         {filteredAddons.map(({ name, orgTitle, ...props }) => {
           return (
             <MarketAddonCard
