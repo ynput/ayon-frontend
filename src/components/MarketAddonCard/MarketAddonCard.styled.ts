@@ -12,6 +12,7 @@ export const Container = styled.div`
   gap: 12px;
   position: relative;
   z-index: 1;
+  user-select: none;
 
   cursor: pointer;
 

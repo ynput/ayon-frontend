@@ -80,7 +80,7 @@ export const MarketAddonCard = ({
           <Styled.Title className={Type.titleMedium}>{title}</Styled.Title>
           {isOfficial && <img src="/favicon-32x32.png" width={15} height={15} />}
           {isVerified && !isOfficial && (
-            <Icon icon="new_release" style={{ color: '    var(--md-sys-color-secondary)' }} />
+            <Icon icon="new_release" style={{ color: 'var(--md-sys-color-secondary)' }} />
           )}
         </Styled.TitleWrapper>
         <Styled.AuthorWrapper className="details">

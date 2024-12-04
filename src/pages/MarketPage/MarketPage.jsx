@@ -20,6 +20,8 @@ import ConnectDialog from './ConnectDialog/ConnectDialog'
 import { useRestart } from '@context/restartContext'
 import { toast } from 'react-toastify'
 import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
+import { useGetReleasesQuery } from '@queries/releases/getReleases'
+import { transformReleasesToTable } from './helpers'
 
 const placeholders = [...Array(20)].map((_, i) => ({
   name: `Addon ${i}`,
@@ -31,7 +33,7 @@ const MarketPage = () => {
   // GET ALL ADDONS IN MARKET
   const {
     data: marketAddonsData = [],
-    isLoading: isLoadingMarket,
+    isLoading: isLoadingAddons,
     error,
   } = useMarketAddonListQuery()
   // GET ALL INSTALLED ADDONS for addon details
@@ -50,11 +52,17 @@ const MarketPage = () => {
   // if the user hasn't connected to ynput cloud yet
   const [showConnectDialog, setShowConnectDialog] = useState(false)
 
+  // FILTER ADDONS BY FIELDS
+  const [filterType, setFilterType] = useQueryParam('type', withDefault(StringParam, 'addons'))
+  // [{isOutdated: true}]
+  // [{isDownloaded: false}]
+  const [filter, setFilter] = useState([])
+
   // subscribe to download events
   const { data: downloadProgress = [] } = useGetMarketInstallEventsQuery({})
 
   // QUERY PARAMS STATE
-  const [selectedAddonId, setSelectedAddonId] = useQueryParam(
+  const [selectedItemId, setSelectedItemId] = useQueryParam(
     'selected',
     withDefault(StringParam, null),
   )
@@ -121,17 +129,11 @@ const MarketPage = () => {
 
   // GET SELECTED ADDON
   const { data: selectedAddonData = {}, isFetching: isFetchingAddon } = useMarketAddonDetailQuery(
-    { addonName: selectedAddonId },
+    { addonName: selectedItemId },
     {
-      skip: !selectedAddonId,
+      skip: !selectedItemId || filterType !== 'addons',
     },
   )
-
-  // FILTER ADDONS BY FIELDS
-  const [filterType, setFilterType] = useState('addons')
-  // [{isOutdated: true}]
-  // [{isDownloaded: false}]
-  const [filter, setFilter] = useState([])
 
   // // merge downloaded with market addons
   // let marketAddons = useMemo(() => {
@@ -195,8 +197,8 @@ const MarketPage = () => {
 
   // merge selected addon with found addon in marketAddons
   const selectedAddon = useMemo(() => {
-    if (!selectedAddonId || !marketAddons) return {}
-    const found = marketAddons.find((addon) => addon.name === selectedAddonId) || {}
+    if (!selectedItemId || !marketAddons) return {}
+    const found = marketAddons.find((addon) => addon.name === selectedItemId) || {}
 
     const merge =
       mergeAddonWithDownloaded(
@@ -210,13 +212,30 @@ const MarketPage = () => {
     return merge
   }, [selectedAddonData, marketAddons])
 
+  // GET BUNDLE RELEASES
+  const { data: { releases: releasesData = [] } = {}, isLoading: isLoadingReleases } =
+    useGetReleasesQuery({}, { skip: filterType !== 'releases' })
+
+  // transform releases into a table list
+
+  const releaseItems = useMemo(() => transformReleasesToTable(releasesData), [releasesData])
+
+  const tableItems =
+    filterType === 'releases'
+      ? isLoadingReleases
+        ? placeholders
+        : releaseItems
+      : isLoadingAddons
+      ? placeholders
+      : marketAddons
+
   // GET SELECTED ADDON LAZY for performance (fetches on addon hover)
   const [fetchAddonData] = useLazyMarketAddonDetailQuery()
 
   const [cachedIds, setCachedIds] = useState([])
   // prefetch addon
   const handleHover = throttle(async (id) => {
-    if (isLoadingMarket) return
+    if (isLoadingAddons) return
     if (cachedIds.includes(id)) return
     setCachedIds([...cachedIds, id])
     await fetchAddonData({ addonName: id }, true)
@@ -224,19 +243,19 @@ const MarketPage = () => {
 
   // once addons are loaded, prefetch the first 3 addons
   useEffect(() => {
-    if (!marketAddons || isLoadingMarket) return
+    if (!marketAddons || isLoadingAddons) return
     const firstThree = marketAddons.slice(0, 3)
     firstThree.forEach((addon) => {
       setCachedIds([...cachedIds, addon.name])
       fetchAddonData({ addonName: addon.name }, true)
     })
-  }, [marketAddons, isLoadingMarket, setCachedIds])
+  }, [marketAddons, isLoadingAddons, setCachedIds])
 
   // pre-fetch next addon in the list when an addon is selected
   // only if it's not already cached and we aren't fetching already
   useEffect(() => {
-    if (!selectedAddonId || isLoadingMarket || isFetchingAddon) return
-    const index = marketAddons.findIndex((addon) => addon.name === selectedAddonId)
+    if (!selectedItemId || isLoadingAddons || isFetchingAddon) return
+    const index = marketAddons.findIndex((addon) => addon.name === selectedItemId)
     for (let i = index + 1; i <= index + 3; i++) {
       const nextAddon = marketAddons[i]
       if (nextAddon && !cachedIds.includes(nextAddon.name)) {
@@ -244,7 +263,7 @@ const MarketPage = () => {
         fetchAddonData({ addonName: nextAddon.name }, true)
       }
     }
-  }, [selectedAddonId, isLoadingMarket, isFetchingAddon, marketAddons, cachedIds, setCachedIds])
+  }, [selectedItemId, isLoadingAddons, isFetchingAddon, marketAddons, cachedIds, setCachedIds])
 
   const { downloadAddon } = useDownload((name) => setDownloadingAddons((a) => [...a, name]))
 
@@ -282,6 +301,12 @@ const MarketPage = () => {
     }
   }
 
+  const handleSelectFilter = (type, filter) => {
+    setSelectedItemId(null)
+    setFilterType(type)
+    setFilter(filter)
+  }
+
   if (error)
     return (
       <Section
@@ -302,25 +327,22 @@ const MarketPage = () => {
       <ConnectDialog
         visible={showConnectDialog}
         onHide={() => setShowConnectDialog(false)}
-        redirect={`/market?selected=${selectedAddonId}`}
+        redirect={`/market?addon=${selectedItemId}`}
       />
       <main style={{ flexDirection: 'column', overflow: 'hidden' }}>
         <Section style={{ overflow: 'hidden', flexDirection: 'row', justifyContent: 'center' }}>
           <AddonFilters
             filterType={filterType}
-            onSelect={(type, filter) => {
-              setFilterType(type)
-              setFilter(filter)
-            }}
+            onSelect={handleSelectFilter}
             onConnection={(user) => setIsCloudConnected(!!user)}
           />
           <MarketAddonsList
-            items={isLoadingMarket ? placeholders : marketAddons}
-            selected={selectedAddonId}
-            onSelect={setSelectedAddonId}
+            addons={tableItems}
+            selected={selectedItemId}
+            onSelect={setSelectedItemId}
             onHover={handleHover}
             onDownload={handleDownload}
-            isLoading={isLoadingMarket}
+            isLoading={isLoadingAddons}
             onUpdateAll={marketAddons.some((addon) => addon.isOutdated) && handleUpdateAll}
             isUpdatingAll={isUpdatingAll}
             isUpdatingAllFinished={isUpdatingAllFinished}
