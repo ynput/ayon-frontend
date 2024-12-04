@@ -1,5 +1,5 @@
 import { $Any } from '@types'
-import api, { useGetProjectsUsersQuery } from '@queries/project/getProject'
+import api, { useGetProjectsAccessQuery } from '@queries/project/getProject'
 import { api as accessApi } from '@api/rest/access'
 import { useState } from 'react'
 import { useDispatch } from 'react-redux'
@@ -7,32 +7,22 @@ import { SelectionStatus } from './types'
 import { Filter } from '@components/SearchFilter/types'
 import { useAppSelector } from '@state/store'
 import { useSetFrontendPreferencesMutation } from '@queries/user/updateUser'
+import { useUpdateAccessGroupsMutation } from '@queries/accessGroups/updateAccessGroups'
 
 const useProjectAccessGroupData = (selectedProject: string) => {
-  const udpateApiCache = (project: string, user: string, accessGroups: string[]) => {
-    dispatch(api.util.invalidateTags([{ type: 'project', id: project }]))
-    dispatch(
-      // @ts-ignore
-      api.util.updateQueryData('getProjectsUsers', { projects: [project] }, (draft: $Any) => {
-        draft[project][user] = accessGroups
-      }),
-    )
-  }
-
-  const dispatch = useDispatch()
-  const [updateProjectAccess] = accessApi.useSetProjectsAccessMutation()
 
   const [selectedProjects, setSelectedProjects] = useState<string[]>(
     selectedProject ? [selectedProject] : [],
   )
 
-  const result = useGetProjectsUsersQuery({ projects: selectedProjects })
+  const [updateAcessGroups] = useUpdateAccessGroupsMutation()
+  const result = useGetProjectsAccessQuery({ projects: selectedProjects })
   const users = result.data
 
   const accessGroupUsers: $Any = {}
   const removeUserAccessGroup = async (userList: string[], accessGroup?: string) => {
     let multiUpdateData: { [key: string]: { [key: string]: string[] } } = {}
-    let cacheInvalidations = []
+
     for (const user of userList) {
       for (const project of selectedProjects) {
         // @ts-ignore
@@ -50,14 +40,10 @@ const useProjectAccessGroupData = (selectedProject: string) => {
             [project]: updatedAccessGroups,
           },
         }
-        cacheInvalidations.push(() => udpateApiCache(project, user, updatedAccessGroups))
       }
     }
     try {
-      await updateProjectAccess({ payload: multiUpdateData }).unwrap()
-      for (const callable of cacheInvalidations) {
-        callable()
-      }
+      updateAcessGroups({ payload: multiUpdateData })
     } catch (error: $Any) {
       console.log(error)
       return error.details
@@ -85,7 +71,6 @@ const useProjectAccessGroupData = (selectedProject: string) => {
     }
 
     let multiUpdateData: { [key: string]: { [key: string]: string[] } } = {}
-    let invalidations = []
     for (const user of selectedUsers) {
       for (const project of selectedProjects) {
         // @ts-ignore
@@ -97,15 +82,11 @@ const useProjectAccessGroupData = (selectedProject: string) => {
             [project]: accessGroups,
           },
         }
-        invalidations.push(() => udpateApiCache(project, user, accessGroups))
       }
     }
 
     try {
-      updateProjectAccess({ payload: multiUpdateData })
-      for (const callable of invalidations) {
-        callable()
-      }
+      updateAcessGroups({ payload: multiUpdateData })
     } catch (error: $Any) {
       console.log(error)
       return error.details

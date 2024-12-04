@@ -1,4 +1,4 @@
-import { api, GetProjectUsersApiResponse } from '@api/rest/project'
+import { api } from '@api/rest/project'
 // @ts-ignore
 import { selectProject, setProjectData } from '@state/project'
 
@@ -62,7 +62,7 @@ const getProjectInjected = api.injectEndpoints({
       transformResponse: (res: any) => res.data?.project,
       providesTags: (_res, _error, { projectName }) => [{ type: 'project', id: projectName }],
     }),
-    getProjectsUsers: build.query<GetProjectsUsersApiResponse, GetProjectsUsersParams>({
+    getProjectsAccess: build.query<GetProjectsUsersApiResponse, GetProjectsUsersParams>({
       async queryFn({ projects = [] }, { dispatch, forced }) {
         try {
           const projectUsersData: $Any = {}
@@ -87,7 +87,7 @@ const getProjectInjected = api.injectEndpoints({
         }
       },
       providesTags: (_res, _error, { projects }) =>
-        projects.map((projectName) => ({ type: 'project', id: projectName })),
+        projects.map((projectName) => ({ type: 'projectAccess', id: projectName })),
     }),
   }),
   overrideExisting: true,
@@ -168,7 +168,7 @@ const getProjectApi = getProjectInjected.enhanceEndpoints({
 
 export const {
   useGetProjectQuery,
-  useGetProjectsUsersQuery,
+  useGetProjectsAccessQuery,
   useListProjectsQuery,
   useGetProjectAnatomyQuery,
   useGetProjectAttribsQuery,
