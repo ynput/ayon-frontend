@@ -65,21 +65,28 @@ const getProjectInjected = api.injectEndpoints({
     getProjectsAccess: build.query<GetProjectsUsersApiResponse, GetProjectsUsersParams>({
       async queryFn({ projects = [] }, { dispatch, forced }) {
         try {
-          const projectUsersData: $Any = {}
+          let promises = []
+          let projectUsersData: $Any = {}
           for (const project of projects) {
-            const response = await dispatch(
-              api.endpoints.getProjectUsers.initiate(
-                { projectName: project },
-                { forceRefetch: forced },
-              ),
+            promises.push(
+              dispatch(
+                api.endpoints.getProjectUsers.initiate(
+                  { projectName: project },
+                  { forceRefetch: forced },
+                ),
+              ).then((response) => {
+                if (response.status === 'rejected') {
+                  return
+                }
+                projectUsersData = {
+                  ...projectUsersData,
+                  [project]: response.data,
+                }
+              }),
             )
-
-            if (response.status === 'rejected') {
-              throw 'No projects found'
-            }
-            projectUsersData[project] = response.data
           }
 
+          await Promise.all(promises)
           return { data: projectUsersData, meta: undefined, error: undefined }
         } catch (error: $Any) {
           console.error(error)

@@ -25,17 +25,19 @@ const setAccessGroups = api.injectEndpoints({
             'getProjectsAccess',
             { projects: [...new Set(projects)] },
             (draft: $Any) => {
+              let updatedData: $Any = {}
               for (const user of Object.keys(payload)) {
                 for (const project of Object.keys(payload[user])) {
-                  draft = {
-                    ...draft,
+                  updatedData = {
+                    ...updatedData,
                     [project]: {
-                      ...draft[project],
-                      [user]: payload[user][project],
-                    },
+                      ...updatedData[project] || {},
+                      [user]: payload[user][project]
+                    }
                   }
                 }
               }
+              draft = { ...draft, ...updatedData }
             },
           ),
         )
