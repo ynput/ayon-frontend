@@ -150,7 +150,7 @@ const getFilteredEntities = <T extends { name: string }>(
 
 const canAllEditUsers = (projects: string[], userPermissions?: UserPermissions) => {
   for (const project of projects) {
-    if (!userPermissions?.canEdit(UserPermissionsEntity.users, project)) {
+    if (!userPermissions?.canEdit(UserPermissionsEntity.access, project)) {
       return false
     }
   }
@@ -238,8 +238,8 @@ const getErrorInfo = (
     }
 
     if (
-      !userPermissions?.canView(UserPermissionsEntity.users, project) &&
-      !userPermissions?.canView(UserPermissionsEntity.users, project)
+      !userPermissions?.canView(UserPermissionsEntity.access, project) &&
+      !userPermissions?.canView(UserPermissionsEntity.access, project)
     ) {
       return {
         icon: 'person',

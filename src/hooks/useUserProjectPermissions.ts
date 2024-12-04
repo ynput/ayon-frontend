@@ -1,17 +1,11 @@
-import { StudioManagementPermissions } from '@api/rest/users'
+import { StudioManagementPermissions, ProjectManagementPermissions } from '@api/rest/users'
 import { Module } from '@pages/ProjectManagerPage/mappers'
 import { useGetCurrentUserPermissionsQuery } from '@queries/permissions/getPermissions'
 
 type AllProjectsPremissions = {
   projects: {
     [projectName: string]: {
-      project: {
-        anatomy: PermissionLevel
-        create: boolean
-        enabled: boolean
-        settings: PermissionLevel
-        users: PermissionLevel
-      }
+      project: ProjectManagementPermissions
     }
   }
   studio: StudioManagementPermissions
@@ -25,7 +19,8 @@ enum PermissionLevel {
 }
 
 export enum UserPermissionsEntity {
-  users = 'users',
+  // TODO This needs to be in sync with ProjectManagementPermissions
+  access = 'access',
   anatomy = 'anatomy',
   settings = 'settings',
 }
@@ -85,7 +80,7 @@ class UserPermissions {
       return this.canView(UserPermissionsEntity.anatomy, projectName)
     }
     if (module === Module.projectAccess) {
-      return this.canView(UserPermissionsEntity.users, projectName)
+      return this.canView(UserPermissionsEntity.access, projectName)
     }
     if (module === Module.roots) {
       return this.assignedToProject(projectName)
@@ -178,10 +173,10 @@ class UserPermissions {
 
   canViewUsers(projectName?: string): boolean {
     if (projectName) {
-      return this.canView(UserPermissionsEntity.users, projectName)
+      return this.canView(UserPermissionsEntity.access, projectName)
     }
 
-    return this.canViewAny(UserPermissionsEntity.users)
+    return this.canViewAny(UserPermissionsEntity.access)
   }
 
   projectSettingsAreEnabled(): boolean {
