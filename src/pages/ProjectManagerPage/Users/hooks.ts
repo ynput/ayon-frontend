@@ -10,12 +10,11 @@ import { useSetFrontendPreferencesMutation } from '@queries/user/updateUser'
 import { useUpdateAccessGroupsMutation } from '@queries/accessGroups/updateAccessGroups'
 
 const useProjectAccessGroupData = (selectedProject: string) => {
-
   const [selectedProjects, setSelectedProjects] = useState<string[]>(
     selectedProject ? [selectedProject] : [],
   )
 
-  const [updateAcessGroups] = useUpdateAccessGroupsMutation()
+  const [updateAccessGroups] = useUpdateAccessGroupsMutation()
   const result = useGetProjectsAccessQuery({ projects: selectedProjects })
   const users = result.data
 
@@ -43,7 +42,7 @@ const useProjectAccessGroupData = (selectedProject: string) => {
       }
     }
     try {
-      updateAcessGroups({ payload: multiUpdateData })
+      updateAccessGroups({ payload: multiUpdateData })
     } catch (error: $Any) {
       console.log(error)
       return error.details
