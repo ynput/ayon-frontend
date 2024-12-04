@@ -43,7 +43,7 @@ const ReleaseInstaller: FC<ReleaseInstallerProps> = ({ onFinish }) => {
     data: { releases = [] } = {},
     isLoading: isLoadingReleases,
     error,
-  } = useGetReleasesQuery()
+  } = useGetReleasesQuery({})
   const releasesError = (!releases.length && !isLoadingReleases) || error
 
   // get all bundles

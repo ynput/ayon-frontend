@@ -6,7 +6,10 @@ import { ButtonProps, Icon } from '@ynput/ayon-react-components'
 import { upperFirst } from 'lodash'
 import { HTMLAttributes } from 'react'
 
+export type ListItemType = 'addon' | 'release'
+
 interface MarketAddonCardProps extends HTMLAttributes<HTMLDivElement> {
+  type: ListItemType
   title: string
   name: string
   latestVersion?: string
@@ -22,10 +25,12 @@ interface MarketAddonCardProps extends HTMLAttributes<HTMLDivElement> {
   isDownloading?: boolean
   isFailed?: boolean
   isFinished?: boolean
+  isLocked?: boolean
   onDownload: (name: string, version: string) => void
 }
 
 export const MarketAddonCard = ({
+  type,
   title,
   name,
   latestVersion,
@@ -41,8 +46,8 @@ export const MarketAddonCard = ({
   isDownloading,
   isFailed,
   isFinished,
+  isLocked,
   onDownload,
-  className = '',
   ...props
 }: MarketAddonCardProps) => {
   let state = 'download'
@@ -62,6 +67,7 @@ export const MarketAddonCard = ({
   if (state === 'download') stateVariant = 'surface'
   if (state === 'failed') stateVariant = 'danger'
   if (state === 'update') stateVariant = 'filled'
+  if (isLocked) stateVariant = 'text'
 
   const handleActionClick = () => {
     if (['download', 'update'].includes(state) && latestVersion) {
@@ -72,7 +78,11 @@ export const MarketAddonCard = ({
   return (
     <Styled.Container
       {...props}
-      className={clsx(className, { selected: isSelected, loading: isPlaceholder }, 'no-shimmer')}
+      className={clsx(
+        props.className,
+        { selected: isSelected, loading: isPlaceholder },
+        'no-shimmer',
+      )}
     >
       <AddonIcon isPlaceholder={isPlaceholder} size={32} src={icon} alt={title + ' icon'} />
       <Styled.Content className={clsx({ loading: isPlaceholder })}>

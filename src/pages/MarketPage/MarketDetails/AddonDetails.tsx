@@ -1,6 +1,6 @@
 import { Button, Icon, SaveButton } from '@ynput/ayon-react-components'
-import React, { useEffect, useMemo, useState } from 'react'
-import * as Styled from './AddonDetails.styled'
+import { useEffect, useMemo, useState } from 'react'
+import * as Styled from './MarketDetails.styled'
 import Type from '@/theme/typography.module.css'
 import clsx from 'clsx'
 import { capitalize, isEmpty } from 'lodash'
@@ -10,24 +10,32 @@ import useUninstall from './useUninstall'
 import { Link } from 'react-router-dom'
 import { getSimplifiedUrl } from '@helpers/url'
 import ReactMarkdown from 'react-markdown'
+import { AddonDetail, LinkModel } from '@api/rest/market'
+import MetaPanelRow from './MetaPanelRow'
 
-const MetaPanelRow = ({ label, children, valueDirection = 'column', ...props }) => (
-  <Styled.MetaPanelRow {...props}>
-    <span className={clsx('label', Type.titleMedium)}>{label}</span>
-    <span
-      className="value"
-      style={{
-        flexDirection: valueDirection,
-        alignItems: valueDirection === 'column' ? 'flex-start' : 'center',
-        gap: valueDirection === 'column' ? '0' : 8,
-      }}
-    >
-      {children}
-    </span>
-  </Styled.MetaPanelRow>
-)
+type ExtendedAddonDetail = AddonDetail & {
+  downloadedVersions: Record<string, string>
+  currentLatestVersion: string
+  currentProductionVersion: string
+  isProductionOutdated: boolean
+  isVerified: boolean
+  isOfficial: boolean
+  warning: string
+  isDownloaded: boolean
+  isDownloading: boolean
+  isFinished: boolean
+  isFailed: boolean
+  error: string
+}
 
-const AddonDetails = ({ addon = {}, isLoading, onDownload, isUpdatingAll }) => {
+type AddonDetailsProps = {
+  addon: ExtendedAddonDetail
+  isLoading: boolean
+  onDownload: (name: string, version: string) => void
+  isUpdatingAll: boolean
+}
+
+const AddonDetails = ({ addon, isLoading, onDownload, isUpdatingAll }: AddonDetailsProps) => {
   // latestVersion: is the latest version of the addon
   // versions: is an array of all versions DOWNLOADED of the addon
   const {
@@ -52,11 +60,11 @@ const AddonDetails = ({ addon = {}, isLoading, onDownload, isUpdatingAll }) => {
     isVerified,
     isOfficial,
     warning,
-  } = addon
+  } = addon || {}
 
   const versionKeys = isEmpty(downloadedVersions) ? [] : Object.keys(downloadedVersions)
   // keep track of downloaded versions
-  const [downloadedByAddon, setDownloadedByAddon] = useState({})
+  const [downloadedByAddon, setDownloadedByAddon] = useState<Record<string, string[]>>({})
   const downloaded = downloadedByAddon[name] || []
 
   useEffect(() => {
@@ -89,7 +97,7 @@ const AddonDetails = ({ addon = {}, isLoading, onDownload, isUpdatingAll }) => {
 
   // All the download logic is handled in the parent component (MarketPage.jsx)
   // Okay it's actually handled in the hook useDownload.js
-  const handleDownload = (version) => {
+  const handleDownload = (version: string) => {
     onDownload && onDownload(name, version)
     // update downloaded versions
     if (!downloaded.includes(version)) {
@@ -97,7 +105,10 @@ const AddonDetails = ({ addon = {}, isLoading, onDownload, isUpdatingAll }) => {
     }
   }
 
-  let groupedLinks = []
+  let groupedLinks: {
+    type: LinkModel['type']
+    links: LinkModel[]
+  }[] = []
   if (links) {
     links.forEach((link) => {
       let group = groupedLinks.find((el) => el.type == link.type)
@@ -126,11 +137,7 @@ const AddonDetails = ({ addon = {}, isLoading, onDownload, isUpdatingAll }) => {
       </Button>
     )
   } else if (isUpdatingAll) {
-    actionButton = (
-      <Button active saving disabled>
-        Pending...
-      </Button>
-    )
+    actionButton = <Button disabled>Pending...</Button>
   } else if (isDownloaded && !isOutdated) {
     actionButton = <Button onClick={onUninstall}>Uninstall</Button>
   } else if (isDownloaded && isOutdated && latestVersion) {
@@ -169,7 +176,7 @@ const AddonDetails = ({ addon = {}, isLoading, onDownload, isUpdatingAll }) => {
         <>
           <Styled.Left className={Type.bodyLarge}>
             <Styled.Header className={clsx({ loading: isLoading })}>
-              <AddonIcon size={64} src={icon} alt={name + ' icon'} loading={isLoading} />
+              <AddonIcon size={64} src={icon} alt={name + ' icon'} isPlaceholder={isLoading} />
               <div className="titles">
                 <h2 className={Type.headlineSmall}>{title}</h2>
                 <span className={clsx(verifiedString.toLowerCase(), 'verification')}>
@@ -205,6 +212,7 @@ const AddonDetails = ({ addon = {}, isLoading, onDownload, isUpdatingAll }) => {
                 widthExpand
                 onChange={(v) => handleDownload(v[0])}
                 itemStyle={{ justifyContent: 'space-between' }}
+                // @ts-expect-error
                 buttonProps={{ 'data-tooltip': 'Download a specific version' }}
                 search={versions.length > 10}
                 itemTemplate={(option) => (

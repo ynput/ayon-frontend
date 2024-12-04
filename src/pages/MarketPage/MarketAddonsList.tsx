@@ -5,6 +5,7 @@ import PerfectScrollbar from 'react-perfect-scrollbar'
 import { InputText } from '@ynput/ayon-react-components'
 import { Tag } from '@components/MarketAddonCard/MarketAddonCard.styled'
 import { MarketAddonItem } from '@queries/market/getMarket'
+import { ListItemType } from '@components/MarketAddonCard/MarketAddonCard'
 
 const StyledAddonList = styled.div`
   display: flex;
@@ -56,8 +57,19 @@ const StyledList = styled(PerfectScrollbar)`
   }
 `
 
-type ListItem = {
-  items: MarketAddonItem[]
+interface ExtendedMarketAddonItem extends MarketAddonItem {
+  subTitle?: string
+  isPlaceholder?: boolean
+  isWaiting?: boolean
+  isDownloading?: boolean
+  isFailed?: boolean
+  isFinished?: boolean
+  isLocked?: boolean
+}
+
+export type MarketListItem = {
+  type: ListItemType
+  items: ExtendedMarketAddonItem[]
   group?: {
     id: string
     title: string
@@ -69,11 +81,11 @@ type ListItem = {
 }
 
 type MarketAddonListProps = {
-  items: ListItem[]
+  items: MarketListItem[]
   selected: string
-  onSelect: (name: string) => void
-  onHover: (name: string) => void
-  onDownload: (name: string) => void
+  onSelect: (name: string, type: ListItemType) => void
+  onHover: (name: string, type: ListItemType) => void
+  onDownload: (name: string, version: string, type: ListItemType) => void
   isLoading: boolean
   onUpdateAll?: () => void
   isUpdatingAll?: boolean
@@ -154,7 +166,7 @@ const MarketAddonsList = ({
         )}
       </div>
       <StyledList ref={scrollRef} containerRef={(el) => (listRef.current = el as HTMLDivElement)}>
-        {filteredItems.flatMap(({ group, items }) => {
+        {filteredItems.flatMap(({ group, items, type }) => {
           const listItems: ReactNode[] = []
 
           // show group header if there is one
@@ -176,21 +188,55 @@ const MarketAddonsList = ({
 
           // show items if group is expanded or no group
           if (showChildItems(group?.id)) {
-            items.forEach(({ name, orgTitle, ...rest }) => {
-              listItems.push(
-                <MarketAddonCard
-                  id={name}
-                  key={name}
-                  author={orgTitle}
-                  onClick={() => onSelect(name)}
-                  isSelected={selected === name}
-                  onMouseOver={() => onHover(name)}
-                  onDownload={onDownload}
-                  name={name}
-                  {...rest}
-                />,
-              )
-            })
+            items.forEach(
+              ({
+                subTitle,
+                title,
+                name,
+                latestVersion,
+                icon,
+                isOfficial,
+                isVerified,
+                isDownloaded,
+                isOutdated,
+                isPlaceholder,
+                isWaiting, // waiting to be downloaded/updated by update all
+                isDownloading,
+                isFailed,
+                isFinished,
+                isLocked,
+              }) => {
+                listItems.push(
+                  <MarketAddonCard
+                    id={name}
+                    type={type}
+                    key={name}
+                    author={subTitle}
+                    onClick={() => onSelect(name, type)}
+                    isSelected={selected === name}
+                    onMouseOver={() => onHover(name, type)}
+                    onDownload={(n, v) => onDownload(n, v, type)}
+                    style={{ paddingLeft: group ? 40 : 4 }}
+                    {...{
+                      title,
+                      name,
+                      latestVersion,
+                      icon,
+                      isOfficial,
+                      isVerified,
+                      isDownloaded,
+                      isOutdated,
+                      isPlaceholder,
+                      isWaiting,
+                      isDownloading,
+                      isFailed,
+                      isFinished,
+                      isLocked,
+                    }}
+                  />,
+                )
+              },
+            )
           }
 
           return listItems

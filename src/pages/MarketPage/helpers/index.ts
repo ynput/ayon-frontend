@@ -1,0 +1,1 @@
+export { transformReleasesToTable } from './transformReleasesToTable'

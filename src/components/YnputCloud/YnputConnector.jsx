@@ -12,6 +12,7 @@ import * as Styled from './YnputCloud.styled'
 import { useLocation } from 'react-router'
 import { useSelector } from 'react-redux'
 import clsx from 'clsx'
+import { before } from 'lodash'
 
 const YnputConnector = ({
   onConnection,
@@ -45,6 +46,16 @@ const YnputConnector = ({
   const [connect, { isLoading: isLoadingConnect }] = useConnectYnputMutation()
   const [disconnect] = useDiscountYnputMutation()
 
+  const hasTrialExpired = (date) => {
+    if (!date) return false
+    const trialDate = new Date(date)
+    return before(trialDate, new Date())
+  }
+  const hasActiveSub = (subs) => {
+    if (!subs) return false
+    return subs.some((sub) => sub.productType === 'ayon' && !hasTrialExpired(sub.trialEnd))
+  }
+
   useEffect(() => {
     if (queryKey) {
       setQueryKey(undefined)
@@ -54,7 +65,7 @@ const YnputConnector = ({
         .unwrap()
         .then((res) => {
           console.log('ynput account connected', res)
-          onConnection && onConnection(res)
+          onConnection && onConnection(res, hasActiveSub(res.subscriptions))
         })
     }
   }, [queryKey])
@@ -62,9 +73,9 @@ const YnputConnector = ({
   useEffect(() => {
     if (!isLoading && onConnection) {
       if (!isError && connectData && onConnection) {
-        onConnection(true)
+        onConnection(true, hasActiveSub(connectData.subscriptions))
       } else {
-        onConnection(false)
+        onConnection(false, false)
       }
     }
   }, [isLoading, isError, connectData, onConnection])

@@ -3,8 +3,13 @@ import * as Styled from './AddonIcon.styled'
 import clsx from 'clsx'
 import { Icon } from '@ynput/ayon-react-components'
 
-const AddonIcon = ({ isPlaceholder, size, ...props }) => {
-  const [imageLoading, setImageLoading] = useState(props.src)
+interface AddonIconProps extends React.ImgHTMLAttributes<HTMLImageElement> {
+  isPlaceholder?: boolean
+  size?: number
+}
+
+const AddonIcon = ({ isPlaceholder, size, ...props }: AddonIconProps) => {
+  const [imageLoading, setImageLoading] = useState(!!props.src)
   const [imageError, setImageError] = useState(false)
   const imgRef = useRef(null)
 
