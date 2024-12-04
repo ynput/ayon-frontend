@@ -51,7 +51,7 @@ const useProjectAccessGroupData = (selectedProject: string) => {
     selectedUsers: $Any,
     changes: { name: string; status: SelectionStatus }[],
   ): Promise<string | void> => {
-    const updatedAccessGroups = (
+    const getUpdatedAccessGroups = (
       existing: string[],
       changes: { name: string; status: SelectionStatus }[],
     ): string[] => {
@@ -71,7 +71,7 @@ const useProjectAccessGroupData = (selectedProject: string) => {
     for (const user of selectedUsers) {
       for (const project of selectedProjects) {
         // @ts-ignore
-        const accessGroups = updatedAccessGroups(users?.[project][user] || [], changes)
+        const accessGroups = getUpdatedAccessGroups(users?.[project][user] || [], changes)
         multiUpdateData = {
           ...multiUpdateData,
           [user]: {
