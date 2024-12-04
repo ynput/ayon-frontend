@@ -139,9 +139,9 @@ const MarketPage = () => {
   // }, [marketAddonsData, downloadedAddons])
 
   let marketAddons = useMemo(() => {
-    const sortedData = [...marketAddonsData]
+    let addons = [...marketAddonsData]
     // sort by isDownloaded, isOutdated, isOfficial, name
-    sortedData?.sort(
+    addons?.sort(
       (a, b) =>
         b.isDownloaded - a.isDownloaded ||
         !!b.isOutdated - !!a.isOutdated ||
@@ -149,8 +149,9 @@ const MarketPage = () => {
         a.name.localeCompare(b.name),
     )
 
+    // if there are filters, filter the addons
     if (filter.length) {
-      return sortedData.filter((addon) => {
+      addons = addons.filter((addon) => {
         return filter.every((f) => {
           return Object.keys(f).every((key) => {
             return typeof f[key] === 'function' ? f[key](addon[key], addon) : addon[key] == f[key]
@@ -159,7 +160,10 @@ const MarketPage = () => {
       })
     }
 
-    return sortedData
+    // convert to grouping format for list
+    addons = addons.map((addon) => ({ group: undefined, items: [addon] }))
+
+    return addons
   }, [marketAddonsData, filter])
 
   // update addon if downloadingAddons or finishedDownloading changes
@@ -311,7 +315,7 @@ const MarketPage = () => {
             onConnection={(user) => setIsCloudConnected(!!user)}
           />
           <MarketAddonsList
-            addons={isLoadingMarket ? placeholders : marketAddons}
+            items={isLoadingMarket ? placeholders : marketAddons}
             selected={selectedAddonId}
             onSelect={setSelectedAddonId}
             onHover={handleHover}

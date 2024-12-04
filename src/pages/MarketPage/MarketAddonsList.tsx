@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import MarketAddonCard from '@components/MarketAddonCard/MarketAddonCard'
+import { ReactNode, useEffect, useMemo, useRef, useState } from 'react'
+import MarketAddonCard, { MarketAddonCardGroup } from '@components/MarketAddonCard'
 import styled from 'styled-components'
 import PerfectScrollbar from 'react-perfect-scrollbar'
 import { InputText } from '@ynput/ayon-react-components'
@@ -56,8 +56,20 @@ const StyledList = styled(PerfectScrollbar)`
   }
 `
 
+type ListItem = {
+  items: MarketAddonItem[]
+  group?: {
+    id: string
+    title: string
+    isOfficial: boolean
+    isVerified: boolean
+    author?: string
+    createdAt?: string
+  }
+}
+
 type MarketAddonListProps = {
-  addons: MarketAddonItem[]
+  items: ListItem[]
   selected: string
   onSelect: (name: string) => void
   onHover: (name: string) => void
@@ -69,7 +81,7 @@ type MarketAddonListProps = {
 }
 
 const MarketAddonsList = ({
-  addons = [],
+  items = [],
   selected,
   onSelect,
   onHover,
@@ -79,23 +91,24 @@ const MarketAddonsList = ({
   isUpdatingAll,
   isUpdatingAllFinished,
 }: MarketAddonListProps) => {
+  const [expandedGroups, setExpandedGroups] = useState<string[]>([])
   const [search, setSearch] = useState('')
 
-  // filter addons by search
-  const filteredAddons = useMemo(
+  // filter items by search
+  const filteredItems = useMemo(
     () =>
-      addons.filter(
+      items.filter(
         (addon) =>
-          addon.name?.toLowerCase().includes(search.toLowerCase()) ||
-          addon.description?.toLowerCase().includes(search.toLowerCase()),
+          addon.group?.title.toLowerCase().includes(search.toLowerCase()) ||
+          addon.items?.some((item) => item.name.toLowerCase().includes(search.toLowerCase())),
       ),
-    [addons, search],
+    [items, search],
   )
 
   const listRef = useRef<HTMLDivElement | null>(null)
   const scrollRef = useRef<PerfectScrollbar | null>(null)
   const [initialScreenFinish, setInitialScreenFinish] = useState(false)
-  // when addons have finished loading, scroll to position of selected addon (from a redirect)
+  // when items have finished loading, scroll to position of selected addon (from a redirect)
   useEffect(() => {
     if (listRef.current && selected && !isLoading && !initialScreenFinish) {
       const scrollContainer = listRef.current.querySelector('.scrollbar-container')
@@ -112,6 +125,14 @@ const MarketAddonsList = ({
 
     if (!isLoading && !initialScreenFinish) setInitialScreenFinish(true)
   }, [isLoading, selected, initialScreenFinish, listRef.current])
+
+  const showChildItems = (groupId?: string) => {
+    return !groupId || expandedGroups.includes(groupId)
+  }
+
+  const handleToggleGroup = (id: string) => {
+    setExpandedGroups((prev) => (prev.includes(id) ? prev.filter((g) => g !== id) : [...prev, id]))
+  }
 
   return (
     <StyledAddonList ref={listRef}>
@@ -133,20 +154,46 @@ const MarketAddonsList = ({
         )}
       </div>
       <StyledList ref={scrollRef} containerRef={(el) => (listRef.current = el as HTMLDivElement)}>
-        {filteredAddons.map(({ name, orgTitle, ...props }) => {
-          return (
-            <MarketAddonCard
-              id={name}
-              key={name}
-              author={orgTitle}
-              onClick={() => onSelect(name)}
-              isSelected={selected === name}
-              onMouseOver={() => onHover(name)}
-              onDownload={onDownload}
-              name={name}
-              {...props}
-            />
-          )
+        {filteredItems.flatMap(({ group, items }) => {
+          const listItems: ReactNode[] = []
+
+          // show group header if there is one
+          if (group) {
+            listItems.push(
+              <MarketAddonCardGroup
+                key={group.id}
+                title={group.title}
+                author={group.author}
+                createdAt={group.createdAt}
+                isOfficial={group.isOfficial}
+                isVerified={group.isVerified}
+                isExpanded={expandedGroups.includes(group.id)}
+                isPlaceholder={isLoading}
+                onClick={() => handleToggleGroup(group.id)}
+              />,
+            )
+          }
+
+          // show items if group is expanded or no group
+          if (showChildItems(group?.id)) {
+            items.forEach(({ name, orgTitle, ...rest }) => {
+              listItems.push(
+                <MarketAddonCard
+                  id={name}
+                  key={name}
+                  author={orgTitle}
+                  onClick={() => onSelect(name)}
+                  isSelected={selected === name}
+                  onMouseOver={() => onHover(name)}
+                  onDownload={onDownload}
+                  name={name}
+                  {...rest}
+                />,
+              )
+            })
+          }
+
+          return listItems
         })}
       </StyledList>
     </StyledAddonList>

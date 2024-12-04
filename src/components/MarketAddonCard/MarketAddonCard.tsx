@@ -25,7 +25,7 @@ interface MarketAddonCardProps extends HTMLAttributes<HTMLDivElement> {
   onDownload: (name: string, version: string) => void
 }
 
-const MarketAddonCard = ({
+export const MarketAddonCard = ({
   title,
   name,
   latestVersion,
@@ -103,5 +103,3 @@ const MarketAddonCard = ({
     </Styled.Container>
   )
 }
-
-export default MarketAddonCard
