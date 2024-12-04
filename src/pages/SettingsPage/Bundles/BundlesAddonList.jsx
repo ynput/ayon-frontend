@@ -144,7 +144,7 @@ const BundlesAddonList = React.forwardRef(
         {
           label: 'View in Market',
           icon: 'store',
-          command: () => navigate(`/market/?addon=${selected.name}`),
+          command: () => navigate(`/market/?selected=${selected.name}`),
         },
       ]
 

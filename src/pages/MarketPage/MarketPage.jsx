@@ -55,7 +55,7 @@ const MarketPage = () => {
 
   // QUERY PARAMS STATE
   const [selectedAddonId, setSelectedAddonId] = useQueryParam(
-    'addon',
+    'selected',
     withDefault(StringParam, null),
   )
 
@@ -302,7 +302,7 @@ const MarketPage = () => {
       <ConnectDialog
         visible={showConnectDialog}
         onHide={() => setShowConnectDialog(false)}
-        redirect={`/market?addon=${selectedAddonId}`}
+        redirect={`/market?selected=${selectedAddonId}`}
       />
       <main style={{ flexDirection: 'column', overflow: 'hidden' }}>
         <Section style={{ overflow: 'hidden', flexDirection: 'row', justifyContent: 'center' }}>
