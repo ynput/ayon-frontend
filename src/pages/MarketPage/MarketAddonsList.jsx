@@ -47,6 +47,8 @@ const StyledList = styled(PerfectScrollbar)`
   border-radius: var(--border-radius-m);
   padding-bottom: 100px;
   background-color: var(--md-sys-color-surface-container-low);
+  padding: var(--padding-s);
+  gap: var(--base-gap-small);
 
   .ps__rail-y {
     z-index: 100;

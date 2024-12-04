@@ -1,5 +1,4 @@
 import { Section } from '@ynput/ayon-react-components'
-import Type from '@/theme/typography.module.css'
 import AddonFilters from './AddonFilters'
 import { useEffect, useMemo, useState } from 'react'
 import { StringParam, useQueryParam, withDefault } from 'use-query-params'
@@ -16,7 +15,6 @@ import AddonDetails from './AddonDetails/AddonDetails'
 import { useListAddonsQuery } from '@queries/addons/getAddons'
 import { mergeAddonWithDownloaded } from './mergeAddonsData'
 import { throttle } from 'lodash'
-import styled from 'styled-components'
 import useDownload from './AddonDetails/useDownload'
 import ConnectDialog from './ConnectDialog/ConnectDialog'
 import { useRestart } from '@context/restartContext'
@@ -28,20 +26,6 @@ const placeholders = [...Array(20)].map((_, i) => ({
   isPlaceholder: true,
   orgTitle: 'Loading...',
 }))
-
-const StyledHeader = styled.header`
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  padding: 0 8px;
-  max-width: 1900px;
-  width: 100%;
-  margin: auto;
-
-  h1 {
-    margin: 8px;
-  }
-`
 
 const MarketPage = () => {
   // GET ALL ADDONS IN MARKET
@@ -316,9 +300,6 @@ const MarketPage = () => {
         redirect={`/market?addon=${selectedAddonId}`}
       />
       <main style={{ flexDirection: 'column', overflow: 'hidden' }}>
-        <StyledHeader>
-          <h1 className={Type.headlineSmall}>Addon Market</h1>
-        </StyledHeader>
         <Section style={{ overflow: 'hidden', flexDirection: 'row', justifyContent: 'center' }}>
           <AddonFilters onSelect={setFilter} onConnection={(user) => setIsCloudConnected(!!user)} />
           <MarketAddonsList
