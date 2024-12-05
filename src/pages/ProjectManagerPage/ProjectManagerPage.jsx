@@ -113,6 +113,14 @@ const ProjectManagerPage = () => {
         shortcut: 'P+P',
       })
     }
+
+    links.push({
+      name: 'Project permissions',
+      path: ModulePath[Module.permissions],
+      module: Module.permissions,
+      accessLevels: ['manager'],
+    })
+
     if (userPermissions.canViewAny(UserPermissionsEntity.access) || module === Module.projectAccess) {
       links.push({
         name: 'Project access',
@@ -141,12 +149,6 @@ const ProjectManagerPage = () => {
       name: 'Teams',
       path: ModulePath[Module.teams],
       module: Module.teams,
-      accessLevels: ['manager'],
-    },
-    {
-      name: 'Permissions',
-      path: ModulePath[Module.permisssions],
-      module: Module.permisssions,
       accessLevels: ['manager'],
     },
   )
@@ -194,7 +196,7 @@ const ProjectManagerPage = () => {
         {module === Module.projectAccess && <ProjectUserAccess onSelect={setSelectedProject} />}
         {module === Module.roots && <ProjectRoots userPermissions={userPermissions} />}
         {module === Module.teams && <TeamsPage />}
-        {module === Module.permisssions && <ProjectPermissions />}
+        {module === Module.permissions && <ProjectPermissions />}
       </ProjectManagerPageContainer>
 
       {showNewProject && (
