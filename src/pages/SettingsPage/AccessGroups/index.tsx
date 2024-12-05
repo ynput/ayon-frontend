@@ -16,7 +16,7 @@ const AccessGroups = ({ projectName, canCreateOrDelete }: Props) => {
   const [selectedAccessGroup, setSelectedAccessGroup] = useState<AccessGroupObject | null>(null)
 
   return (
-    <main style={{ display: 'flex', flexGrow: 1 }}>
+    <main style={{ display: 'flex', flexGrow: 1, gap: 'var(--base-gap-large)'}}>
       <AccessGroupList
         canCreateOrDelete={canCreateOrDelete}
         projectName={projectName}
