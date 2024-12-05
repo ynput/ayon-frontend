@@ -224,7 +224,7 @@ const MarketPage = () => {
     data: { releases: releasesData = [] } = {},
     isLoading: isLoadingReleases,
     error: errorReleases,
-  } = useGetReleasesQuery({ all: true }, { skip: filterType !== 'releases' })
+  } = useGetReleasesQuery({ all: false }, { skip: filterType !== 'releases' })
 
   // transform releases into a table list
   const releaseItems = useMemo(
