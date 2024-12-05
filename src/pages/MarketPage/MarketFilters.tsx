@@ -93,13 +93,13 @@ export const addonFilters: MarketFilter[] = [
 ]
 
 export const releaseFilters: MarketFilter[] = [
-  {
-    id: 'all',
-    type: 'releases',
-    name: 'All',
-    filter: [],
-    tooltip: 'All bundle releases',
-  },
+  // {
+  //   id: 'all',
+  //   type: 'releases',
+  //   name: 'All',
+  //   filter: [],
+  //   tooltip: 'All bundle releases',
+  // },
   {
     id: 'latest',
     type: 'releases',
