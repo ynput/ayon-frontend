@@ -13,17 +13,12 @@ const setAccessGroups = api.injectEndpoints({
     }),
     updateAccessGroups: build.mutation({
       query: (queryArg) => ({ url: `/api/access`, method: 'POST', body: queryArg.payload }),
-      async onQueryStarted({ payload }, { dispatch, queryFulfilled }) {
-        let projects = []
-        for (const user of Object.keys(payload)) {
-          projects.push(...Object.keys(payload[user]))
-        }
-
+      async onQueryStarted({ payload, selectedProjects }, { dispatch, queryFulfilled }) {
         const patchResult = dispatch(
           api.util.updateQueryData(
             // @ts-ignore
             'getProjectsAccess',
-            { projects: [...new Set(projects)] },
+            { projects: selectedProjects },
             (draft: $Any) => {
               let updatedData: $Any = {}
               for (const user of Object.keys(payload)) {
@@ -31,13 +26,15 @@ const setAccessGroups = api.injectEndpoints({
                   updatedData = {
                     ...updatedData,
                     [project]: {
-                      ...updatedData[project] || {},
-                      [user]: payload[user][project]
-                    }
+                      ...(draft[project] || {}),
+                      ...(updatedData[project] || {}),
+                      [user]: payload[user][project],
+                    },
                   }
                 }
               }
-              draft = { ...draft, ...updatedData }
+
+              return { ...draft, ...updatedData }
             },
           ),
         )

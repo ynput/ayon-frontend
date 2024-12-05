@@ -39,7 +39,7 @@ const useProjectAccessGroupData = (selectedProject: string) => {
       }
     }
     try {
-      updateAccessGroups({ payload: multiUpdateData })
+      updateAccessGroups({ payload: multiUpdateData, selectedProjects })
     } catch (error: $Any) {
       console.log(error)
       return error.details
@@ -82,7 +82,7 @@ const useProjectAccessGroupData = (selectedProject: string) => {
     }
 
     try {
-      updateAccessGroups({ payload: multiUpdateData })
+      updateAccessGroups({ payload: multiUpdateData, selectedProjects })
     } catch (error: $Any) {
       console.log(error)
       return error.details
