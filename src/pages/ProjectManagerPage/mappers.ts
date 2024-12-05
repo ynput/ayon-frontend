@@ -7,7 +7,7 @@ export enum Module {
   projectAccess = 'projectAccess',
   roots = 'roots',
   teams = 'teams',
-  permisssions = 'permisssions',
+  permissions = 'permissions',
 }
 
 const ModuleList = [
@@ -17,7 +17,7 @@ const ModuleList = [
   Module.projectAccess,
   Module.roots,
   Module.teams,
-  Module.permisssions,
+  Module.permissions,
 ]
 
 const ModulePath = {
@@ -27,7 +27,7 @@ const ModulePath = {
   [Module.projectAccess]: '/manageProjects/projectAccess',
   [Module.roots]: '/manageProjects/roots',
   [Module.teams]: '/manageProjects/teams',
-  [Module.permisssions]: '/manageProjects/permissions',
+  [Module.permissions]: '/manageProjects/permissions',
 }
 
 const projectSorter =

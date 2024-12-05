@@ -2,6 +2,10 @@ import { useState } from 'react'
 import AccessGroupList from './AccessGroupList'
 import AccessGroupDetail from './AccessGroupDetail'
 import { AccessGroupObject } from '@api/rest/accessGroups'
+import {
+  EmptyPlaceholderFlex,
+  EmptyPlaceholderFlexWrapper,
+} from '@components/EmptyPlaceholder/EmptyPlaceholderFlex.styled'
 
 type Props = {
   projectName?: string
@@ -12,7 +16,7 @@ const AccessGroups = ({ projectName, canCreateOrDelete }: Props) => {
   const [selectedAccessGroup, setSelectedAccessGroup] = useState<AccessGroupObject | null>(null)
 
   return (
-    <main style={{display: 'flex', flexGrow: 1}}>
+    <main style={{ display: 'flex', flexGrow: 1, gap: 'var(--base-gap-large)'}}>
       <AccessGroupList
         canCreateOrDelete={canCreateOrDelete}
         projectName={projectName}
@@ -20,7 +24,18 @@ const AccessGroups = ({ projectName, canCreateOrDelete }: Props) => {
         onSelectAccessGroup={setSelectedAccessGroup}
       />
 
-      <AccessGroupDetail projectName={projectName} accessGroupName={selectedAccessGroup?.name} />
+      {!selectedAccessGroup && (
+        <EmptyPlaceholderFlexWrapper>
+          <EmptyPlaceholderFlex
+            message="No access group selected"
+            icon={'group'}
+          ></EmptyPlaceholderFlex>
+        </EmptyPlaceholderFlexWrapper>
+      )}
+
+      {selectedAccessGroup && (
+        <AccessGroupDetail projectName={projectName} accessGroupName={selectedAccessGroup?.name} />
+      )}
     </main>
   )
 }

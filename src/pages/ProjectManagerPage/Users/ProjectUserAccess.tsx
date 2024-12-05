@@ -25,7 +25,11 @@ import {
   mapUsersByAccessGroups,
 } from './mappers'
 import { HoveredUser, SelectedAccessGroupUsers, SelectionStatus } from './types'
-import { useUserPreferencesExpandedPanels, useProjectAccessGroupData, useUserPageFilters } from './hooks'
+import {
+  useUserPreferencesExpandedPanels,
+  useProjectAccessGroupData,
+  useUserPageFilters,
+} from './hooks'
 import ProjectUserAccessUserList from './ProjectUserAccessUserList'
 import ProjectUserAccessAssignDialog from './ProjectUserAccessAssignDialog'
 import ProjectUserAccessSearchFilterWrapper from './ProjectUserAccessSearchFilterWrapper'
@@ -33,8 +37,6 @@ import ProjectUserAccessProjectList from './ProjectUserAccessProjectList'
 import {
   AccessGroupsWrapper,
   ProjectUserAccessUserListWrapper,
-  StyledEmptyPlaceholder,
-  StyledEmptyPlaceholderWrapper,
   StyledHeader,
 } from './ProjectUserAccess.styled'
 import SplitterContainerThreePanes from './SplitterThreePanes'
@@ -44,6 +46,10 @@ import LoadingPage from '@pages/LoadingPage'
 import { useQueryParam } from 'use-query-params'
 import { uuid } from 'short-uuid'
 import ProjectUserAccesAccessGroupPanel from './ProjectUserAccessAccessGroupPanel'
+import {
+  EmptyPlaceholderFlex,
+  EmptyPlaceholderFlexWrapper,
+} from '@components/EmptyPlaceholder/EmptyPlaceholderFlex.styled'
 
 const StyledButton = styled(Button)`
   .shortcut {
@@ -160,7 +166,7 @@ const ProjectUserAccess = () => {
       interactionType: InteractionType.bulkButton,
     })
 
-    handleAdd({users: actionedUsers})
+    handleAdd({ users: actionedUsers })
   }
 
   const handleRemoveButton = () => {
@@ -171,14 +177,14 @@ const ProjectUserAccess = () => {
     onRemove(actionedAccessGroup)(actionedUsers)
   }
 
-  const handleRowAddButton = (data: {accessGroup?: string, users: string[]}) => {
+  const handleRowAddButton = (data: { accessGroup?: string; users: string[] }) => {
     const { actionedUsers } = decideActionedUsers({
       accessGroup: data.accessGroup,
       users: data.users,
       interactionType: InteractionType.button,
     })
 
-    handleAdd({users: actionedUsers})
+    handleAdd({ users: actionedUsers })
   }
 
   const handleContextMenu = (accessGroup?: string) => (e: $Any) => {
@@ -188,7 +194,7 @@ const ProjectUserAccess = () => {
       interactionType: InteractionType.button,
     })
 
-    ctxMenuShow(e.originalEvent, [
+    let contextMenu = [
       {
         id: 'add',
         icon: 'add',
@@ -199,27 +205,29 @@ const ProjectUserAccess = () => {
         id: 'remove',
         icon: 'remove',
         label: 'Remove access',
-        disabled: accessGroup === undefined,
         command: () => onRemove(accessGroup)(actionedUsers),
       },
       {
-        id: 'remove',
+        id: 'remove_all',
         icon: 'remove_moderator',
         label: 'Remove all access',
-        disabled: accessGroup === undefined,
         command: () => onRemove()(actionedUsers),
       },
       {
         id: 'filter_by_user',
         icon: 'person',
         label: 'Filter by user',
-        disabled: false,
         command: () => handleUserFilterUpdate(actionedUsers),
       },
-    ])
+    ]
+    if (accessGroup === undefined) {
+      contextMenu = contextMenu.filter((item) => item.id !== 'remove')
+    }
+
+    ctxMenuShow(e.originalEvent, contextMenu)
   }
 
-  const handleAdd = ({users}: {users: string[]}) => {
+  const handleAdd = ({ users }: { users: string[] }) => {
     if (filteredAccessGroups.length == 1) {
       onSave(users, [{ name: filteredAccessGroups[0].name, status: SelectionStatus.All }])
 
@@ -249,7 +257,6 @@ const ProjectUserAccess = () => {
     button = 'button',
     bulkButton = 'bulk',
     keyDown = 'keydown',
-
   }
   const decideActionedUsers = ({
     accessGroup,
@@ -484,13 +491,13 @@ const ProjectUserAccess = () => {
         <SplitterContainerTwoPanes
           leftContent={projectsContent}
           mainContent={
-            <StyledEmptyPlaceholderWrapper>
-              <StyledEmptyPlaceholder message={errorInfo!.message} icon={errorInfo!.icon}>
+            <EmptyPlaceholderFlexWrapper>
+              <EmptyPlaceholderFlex message={errorInfo!.message} icon={errorInfo!.icon}>
                 {errorInfo!.details && (
                   <span style={{ textAlign: 'center' }}>{errorInfo!.details!}</span>
                 )}
-              </StyledEmptyPlaceholder>
-            </StyledEmptyPlaceholderWrapper>
+              </EmptyPlaceholderFlex>
+            </EmptyPlaceholderFlexWrapper>
           }
         />
       )}
