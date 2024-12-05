@@ -82,7 +82,7 @@ export const AppMenu = ({ user, ...props }) => {
     {
       id: 'market',
       link: '/market',
-      label: 'Addon Market',
+      label: 'Market',
       icon: 'store',
       shortcut: 'M+M',
     },
