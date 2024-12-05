@@ -4,15 +4,24 @@ import getInitialStateLocalStorage from './middleware/getInitialStateLocalStorag
 
 export type ReleaseFormType = 'overview' | 'addons' | 'installers' | 'progress'
 
-interface ReleaseState {
+export interface ReleaseState {
   open: boolean
   dialog: ReleaseFormType
   release: string | null
+  inherit: {
+    // do we inherit the config from the release bundle
+    addons: boolean
+    platforms: boolean
+  }
 }
 
 const initialState = {
   open: getInitialStateLocalStorage('releaseInstaller-open', false) as boolean,
   release: null,
+  inherit: {
+    addons: true,
+    platforms: true,
+  },
   dialog: 'overview',
 } satisfies ReleaseState as ReleaseState
 
@@ -21,8 +30,19 @@ const counterSlice = createSlice({
   initialState,
   reducers: {
     // open/close the dialog
-    toggleReleaseInstaller: (state, action: PayloadAction<boolean>) => {
-      state.open = action.payload
+    toggleReleaseInstaller: (
+      state,
+      action: PayloadAction<{ open: boolean; release?: string; inherit?: ReleaseState['inherit'] }>,
+    ) => {
+      // open dialog
+      state.open = action.payload.open
+      // set the release to install
+      if (action.payload.release) state.release = action.payload.release
+
+      // set inherit values (default to true)
+      if (action.payload.inherit) state.inherit = action.payload.inherit
+      else state.inherit = initialState.inherit
+
       // always set overview dialog
       state.dialog = 'overview'
     },

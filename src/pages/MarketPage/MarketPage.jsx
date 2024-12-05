@@ -220,12 +220,10 @@ const MarketPage = () => {
     error: errorReleases,
   } = useGetReleasesQuery({ all: true }, { skip: filterType !== 'releases' })
 
-  console.log(errorReleases)
-
   // transform releases into a table list
   const releaseItems = useMemo(
     () => transformReleasesToTable(releasesData, hasCloudSub),
-    [releasesData],
+    [releasesData, hasCloudSub],
   )
 
   // GET SELECTED RELEASE
@@ -245,7 +243,7 @@ const MarketPage = () => {
       isActive: found.isLatest || hasCloudSub,
       ...selectedReleaseData,
     }
-  }, [selectedReleaseData, releasesData, selectedItemId])
+  }, [selectedReleaseData, releasesData, selectedItemId, hasCloudSub])
 
   // convert addons to grouping format
   const addonsGrouped = useMemo(() => {
@@ -319,9 +317,17 @@ const MarketPage = () => {
   }
 
   const handleReleaseInstall = (name) => {
-    console.log(name)
     // open menu
-    dispatch(toggleReleaseInstaller(name))
+    dispatch(
+      toggleReleaseInstaller({
+        open: name,
+        release: name,
+        inherit: {
+          addons: false,
+          platforms: true,
+        },
+      }),
+    )
   }
 
   const handleItemDownload = (type, name, version) => {

@@ -6,10 +6,8 @@ import ayonClient from '@/ayon'
 import { useRestart } from '@context/restartContext'
 import { useAppDispatch } from '@state/store'
 import { toggleReleaseInstaller } from '@state/releaseInstaller'
-import { useNavigate } from 'react-router'
 
 export const AppMenu = ({ user, ...props }) => {
-  const navigate = useNavigate()
   const dispatch = useAppDispatch()
   // check if user is logged in and is manager or admin
   const isUser = user?.data?.isUser
@@ -34,10 +32,8 @@ export const AppMenu = ({ user, ...props }) => {
   }
 
   const handleReleaseInstaller = () => {
-    // go to bundles page
-    navigate('/settings/bundles')
     // open menu
-    dispatch(toggleReleaseInstaller(true))
+    dispatch(toggleReleaseInstaller({ open: true }))
   }
 
   const items = [
