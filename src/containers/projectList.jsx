@@ -366,6 +366,10 @@ const ProjectList = ({
 
   // When right clicking on the already selected node, we don't want to change the selection
   const onContextMenu = (event) => {
+    const isActiveCallableValue = isActiveCallable ? isActiveCallable(event.data.name) : true
+    if (!isActiveCallableValue) {
+      return
+    }
     let newSelection = selection
 
     if (multiselect) {

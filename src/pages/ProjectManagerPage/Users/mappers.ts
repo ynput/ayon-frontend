@@ -1,11 +1,10 @@
 import { AccessGroupUsers, ListingError, SelectedAccessGroupUsers, SelectionStatus } from './types'
 import { Filter, FilterValue, Option } from '@components/SearchFilter/types'
 import { ProjectNode, UserNode } from '@api/graphql'
-import { GetProjectsUsersApiResponse, ProjectUserData } from '@queries/project/getProject'
 import { UserPermissions, UserPermissionsEntity } from '@hooks/useUserProjectPermissions'
 import { $Any } from '@types'
 import { matchSorter } from 'match-sorter'
-import { difference } from 'lodash'
+import { GetProjectsUsersApiResponse, ProjectUserData } from '@queries/accessGroups/getAccessGroups'
 
 const getAllProjectUsers = (groupedUsers: AccessGroupUsers): string[] => {
   let allUsers: string[] = []
@@ -150,7 +149,7 @@ const getFilteredEntities = <T extends { name: string }>(
 
 const canAllEditUsers = (projects: string[], userPermissions?: UserPermissions) => {
   for (const project of projects) {
-    if (!userPermissions?.canEdit(UserPermissionsEntity.users, project)) {
+    if (!userPermissions?.canEdit(UserPermissionsEntity.access, project)) {
       return false
     }
   }
@@ -238,13 +237,13 @@ const getErrorInfo = (
     }
 
     if (
-      !userPermissions?.canView(UserPermissionsEntity.users, project) &&
-      !userPermissions?.canView(UserPermissionsEntity.users, project)
+      !userPermissions?.canView(UserPermissionsEntity.access, project) &&
+      !userPermissions?.canView(UserPermissionsEntity.access, project)
     ) {
       return {
         icon: 'person',
         message: 'Missing permissions',
-        details: "You don't have permissions to manage this project's users",
+        details: "You don't have permission to manage this project's users",
       }
     }
   }

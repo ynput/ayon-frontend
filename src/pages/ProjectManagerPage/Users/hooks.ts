@@ -1,47 +1,33 @@
 import { $Any } from '@types'
-import api, { useGetProjectsUsersQuery } from '@queries/project/getProject'
-import { api as accessApi } from '@api/rest/access'
 import { useState } from 'react'
-import { useDispatch } from 'react-redux'
 import { SelectionStatus } from './types'
 import { Filter } from '@components/SearchFilter/types'
 import { useAppSelector } from '@state/store'
 import { useSetFrontendPreferencesMutation } from '@queries/user/updateUser'
+import { useUpdateAccessGroupsMutation } from '@queries/accessGroups/updateAccessGroups'
+import { useGetProjectsAccessQuery } from '@queries/accessGroups/getAccessGroups'
 
 const useProjectAccessGroupData = (selectedProject: string) => {
-  const udpateApiCache = (project: string, user: string, accessGroups: string[]) => {
-    dispatch(api.util.invalidateTags([{ type: 'project', id: project }]))
-    dispatch(
-      // @ts-ignore
-      api.util.updateQueryData('getProjectsUsers', { projects: [project] }, (draft: $Any) => {
-        draft[project][user] = accessGroups
-      }),
-    )
-  }
-
-  const dispatch = useDispatch()
-  const [updateProjectAccess] = accessApi.useSetProjectsAccessMutation()
-
   const [selectedProjects, setSelectedProjects] = useState<string[]>(
     selectedProject ? [selectedProject] : [],
   )
 
-  const result = useGetProjectsUsersQuery({ projects: selectedProjects })
-  const users = result.data
+  const [updateAccessGroups] = useUpdateAccessGroupsMutation()
+  const { isLoading, data: usersData } = useGetProjectsAccessQuery({ projects: selectedProjects })
 
   const accessGroupUsers: $Any = {}
   const removeUserAccessGroup = async (userList: string[], accessGroup?: string) => {
     let multiUpdateData: { [key: string]: { [key: string]: string[] } } = {}
-    let cacheInvalidations = []
+
     for (const user of userList) {
       for (const project of selectedProjects) {
         // @ts-ignore
-        if (!users![project][user]) {
+        if (!usersData![project][user]) {
           continue
         }
         const updatedAccessGroups = accessGroup
           ? // @ts-ignore
-            users![project][user]?.filter((item: string) => item !== accessGroup)
+            usersData![project][user]?.filter((item: string) => item !== accessGroup)
           : []
         multiUpdateData = {
           ...multiUpdateData,
@@ -50,14 +36,10 @@ const useProjectAccessGroupData = (selectedProject: string) => {
             [project]: updatedAccessGroups,
           },
         }
-        cacheInvalidations.push(() => udpateApiCache(project, user, updatedAccessGroups))
       }
     }
     try {
-      await updateProjectAccess({ payload: multiUpdateData }).unwrap()
-      for (const callable of cacheInvalidations) {
-        callable()
-      }
+      updateAccessGroups({ payload: multiUpdateData, selectedProjects })
     } catch (error: $Any) {
       console.log(error)
       return error.details
@@ -68,7 +50,7 @@ const useProjectAccessGroupData = (selectedProject: string) => {
     selectedUsers: $Any,
     changes: { name: string; status: SelectionStatus }[],
   ): Promise<string | void> => {
-    const updatedAccessGroups = (
+    const getUpdatedAccessGroups = (
       existing: string[],
       changes: { name: string; status: SelectionStatus }[],
     ): string[] => {
@@ -85,11 +67,10 @@ const useProjectAccessGroupData = (selectedProject: string) => {
     }
 
     let multiUpdateData: { [key: string]: { [key: string]: string[] } } = {}
-    let invalidations = []
     for (const user of selectedUsers) {
       for (const project of selectedProjects) {
         // @ts-ignore
-        const accessGroups = updatedAccessGroups(users?.[project][user] || [], changes)
+        const accessGroups = getUpdatedAccessGroups(usersData?.[project][user] || [], changes)
         multiUpdateData = {
           ...multiUpdateData,
           [user]: {
@@ -97,15 +78,11 @@ const useProjectAccessGroupData = (selectedProject: string) => {
             [project]: accessGroups,
           },
         }
-        invalidations.push(() => udpateApiCache(project, user, accessGroups))
       }
     }
 
     try {
-      updateProjectAccess({ payload: multiUpdateData })
-      for (const callable of invalidations) {
-        callable()
-      }
+      updateAccessGroups({ payload: multiUpdateData, selectedProjects })
     } catch (error: $Any) {
       console.log(error)
       return error.details
@@ -113,7 +90,8 @@ const useProjectAccessGroupData = (selectedProject: string) => {
   }
 
   return {
-    users,
+    isLoading,
+    users: usersData,
     accessGroupUsers,
     selectedProjects,
     setSelectedProjects,

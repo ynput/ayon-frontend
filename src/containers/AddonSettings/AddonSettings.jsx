@@ -657,7 +657,6 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
   )
 
   const onSelectAddon = (newSelection) => {
-    console.log('on select addon...', newSelection)
     setSelectedAddons(newSelection)
     setCurrentSelection(null)
   }
@@ -679,19 +678,15 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
     })
   }
 
-  // console.log('selected addons: ', selectedAddons)
-
   if (isLoading) {
     return <LoadingPage />
   }
 
   if (!bypassPermissions && !userPermissions.canViewSettings(projectName)) {
-    return (
-      <EmptyPlaceholder
-        icon="settings_alert"
-        message="You don't have permissions to view the addon settings for this project"
-      />
-    )
+    return <EmptyPlaceholder
+      icon="settings_alert"
+      message="You don't have permission to view the addon settings for this project"
+    />
   }
 
   return (

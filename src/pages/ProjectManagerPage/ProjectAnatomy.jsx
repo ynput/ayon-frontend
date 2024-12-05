@@ -98,7 +98,7 @@ const ProjectAnatomy = ({ projectName, projectList }) => {
         ) : (
           <EmptyPlaceholder
             icon="settings_alert"
-            message="You don't have permissions to view this project's anatomy"
+            message="You don't have permission to view this project's anatomy"
           />
         )}
       </ScrollPanel>

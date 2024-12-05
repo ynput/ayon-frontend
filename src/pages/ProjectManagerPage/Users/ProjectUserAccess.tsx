@@ -44,7 +44,6 @@ import LoadingPage from '@pages/LoadingPage'
 import { useQueryParam } from 'use-query-params'
 import { uuid } from 'short-uuid'
 import ProjectUserAccesAccessGroupPanel from './ProjectUserAccessAccessGroupPanel'
-import { capitalizeFirstLetter } from '@helpers/string'
 
 const StyledButton = styled(Button)`
   .shortcut {
@@ -62,6 +61,7 @@ const ProjectUserAccess = () => {
   const [selectedProject] = useQueryParam('project')
 
   const {
+    isLoading: isLoadingAccessGroupsData,
     users: projectUsers,
     selectedProjects,
     setSelectedProjects,
@@ -78,7 +78,7 @@ const ProjectUserAccess = () => {
   const selfName = useSelector((state: $Any) => state.user.name)
   let {
     data: userList = [],
-    isLoading: usersLoading,
+    isLoading: isLoadingUsers,
     isError: usersFetchError,
   } = useGetUsersQuery({ selfName })
 
@@ -92,7 +92,7 @@ const ProjectUserAccess = () => {
   >()
   const [hoveredUser, setHoveredUser] = useState<HoveredUser | undefined>()
 
-  const { data: projects, isLoading: projectsLoading, isError, error } = useListProjectsQuery({})
+  const { data: projects, isLoading: isLoadingProjects, isError, error } = useListProjectsQuery({})
   if (isError) {
     console.error(error)
   }
@@ -263,22 +263,10 @@ const ProjectUserAccess = () => {
     accessGroup?: string
     actionedUsers: string[]
   } => {
-    console.log({ accessGroup, users, interactionType})
-
-    //button click
-    //key || global button click
-    //hover & click
-
-    //no users -> user existing selection
-
     let actionedUsers = selectedAccessGroupUsers?.users || []
     let actionedAccessGroup = selectedAccessGroupUsers?.accessGroup
-    console.log('orig au: ', actionedUsers)
-    console.log('orig auag: ', actionedAccessGroup)
 
     if (interactionType == InteractionType.bulkButton) {
-      console.log('testing if hovered user exists and matching the selection...')
-      console.log('hu: ', hoveredUser)
       if (hoveredUser?.user && !actionedUsers.includes(hoveredUser.user)) {
         actionedUsers = [hoveredUser.user]
         actionedAccessGroup = hoveredUser.accessGroup
@@ -287,11 +275,8 @@ const ProjectUserAccess = () => {
           users: [hoveredUser.user],
         })
       }
-      // Nothing to do here ... for now!
     } else if (interactionType == InteractionType.button) {
-      // We know it's only 1 user if interaction is button click
       if (!actionedUsers.includes(users![0]) || accessGroup !== actionedAccessGroup) {
-        console.log('resetting selection, user/access group does not match')
         actionedUsers = users!
         actionedAccessGroup = accessGroup
         setSelectedAccessGroupUsers({ accessGroup: actionedAccessGroup, users: users! })
@@ -299,28 +284,7 @@ const ProjectUserAccess = () => {
     }
 
     setActionedUsers(actionedUsers)
-    console.log('returning: ', { accessGroup: actionedAccessGroup, actionedUsers })
     return { accessGroup: actionedAccessGroup, actionedUsers }
-    /*
-          if (hoveredUser?.user && !actionedUsers.includes(hoveredUser.user)) {
-            actionedUsers = [hoveredUser.user]
-            setSelectedAccessGroupUsers({
-              accessGroup: hoveredUser.accessGroup,
-              users: [hoveredUser.user],
-            })
-          }
-
-    if (!selectedAccessGroupUsers?.users && !hoveredUser?.user) {
-      return
-    }
-    if (hoveredUser?.user && !actionedUsers.includes(hoveredUser.user)) {
-      actionedUsers = [hoveredUser.user]
-      setSelectedAccessGroupUsers({
-        accessGroup: hoveredUser.accessGroup,
-        users: [hoveredUser.user],
-      })
-    }
-      */
   }
 
   const onRemove = (accessGroup?: string) => async (users?: string[]) => {
@@ -342,11 +306,10 @@ const ProjectUserAccess = () => {
       {
         key: 'a',
         action: () => {
-          console.log('handling a keypress...')
-          console.log('sagu: ', selectedAccessGroupUsers)
-          console.log('hu: ', hoveredUser)
-          if (!selectedAccessGroupUsers?.users && !hoveredUser?.user) {
-            console.log('nothing to do ?!?!!?')
+          if (
+            (!selectedAccessGroupUsers?.users || selectedAccessGroupUsers!.users.length == 0) &&
+            !hoveredUser?.user
+          ) {
             return
           }
 
@@ -380,7 +343,7 @@ const ProjectUserAccess = () => {
       <ProjectUserAccessProjectList
         selection={filteredSelectedProjects}
         projects={filteredProjects}
-        isLoading={projectsLoading}
+        isLoading={isLoadingProjects}
         // @ts-ignore
         userPermissions={userPermissions}
         onSelectionChange={setSelectedProjects}
@@ -398,7 +361,7 @@ const ProjectUserAccess = () => {
           selectedProjects={filteredSelectedProjects}
           selectedUsers={selectedAccessGroupUsers?.accessGroup ? [] : selectedUsers}
           tableList={filteredUsersWithAccessGroups}
-          isLoading={usersLoading}
+          isLoading={isLoadingUsers || isLoadingAccessGroupsData}
           readOnly={!hasEditRightsOnProject}
           hoveredUser={hoveredUser}
           onContextMenu={(e: $Any) => handleContextMenu()(e)}
@@ -410,6 +373,7 @@ const ProjectUserAccess = () => {
           sortable
           showAddButton
           showAccessGroups
+          shimmerEnabled
         />
       </ProjectUserAccessUserListWrapper>
     </>
@@ -425,7 +389,7 @@ const ProjectUserAccess = () => {
             return (
               <ProjectUserAccesAccessGroupPanel
                 key={`panel-${accessGroup}`}
-                header={capitalizeFirstLetter(accessGroup)}
+                header={accessGroup}
                 isExpanded={
                   expandedAccessGroups[accessGroup] !== undefined
                     ? expandedAccessGroups[accessGroup]
@@ -456,7 +420,7 @@ const ProjectUserAccess = () => {
                   }
                   onAdd={handleRowAddButton}
                   onRemove={onRemove(accessGroup)}
-                  isLoading={usersLoading}
+                  isLoading={isLoadingUsers}
                 />
               </ProjectUserAccesAccessGroupPanel>
             )
@@ -465,7 +429,7 @@ const ProjectUserAccess = () => {
     </>
   )
 
-  if (permissionsLoading || usersLoading || projectsLoading) {
+  if (permissionsLoading || isLoadingUsers || isLoadingProjects) {
     return <LoadingPage message={''} children={''} />
   }
 

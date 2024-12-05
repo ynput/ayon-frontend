@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useParams, useSearchParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import { StringParam, useQueryParam, withDefault } from 'use-query-params'
 
@@ -19,6 +19,8 @@ import confirmDelete from '@helpers/confirmDelete'
 import useUserProjectPermissions, { UserPermissionsEntity } from '@hooks/useUserProjectPermissions'
 import ProjectUserAccess from './Users/ProjectUserAccess'
 import ProjectPermissions from './ProjectPermissions'
+import { isActiveDecider, projectSorter, Module, ModuleList, ModulePath } from './mappers'
+import { replaceQueryParams } from '@helpers/url'
 
 const ProjectSettings = ({ projectList, projectManager, projectName }) => {
   return (
@@ -30,15 +32,15 @@ const ProjectSettings = ({ projectList, projectManager, projectName }) => {
 const SiteSettings = ({ projectList, projectManager, projectName }) => {
   return (
     <ProjectManagerPageLayout projectList={projectList} passthrough={!projectManager}>
-      <AddonSettings projectName={projectName} showSites bypassPermissions  />
+      <AddonSettings projectName={projectName} showSites bypassPermissions />
     </ProjectManagerPageLayout>
   )
 }
 
 const ProjectManagerPage = () => {
-  // get is user from context
   const isUser = useSelector((state) => state.user.data.isUser)
   const projectName = useSelector((state) => state.project.name)
+  const navigate = useNavigate()
   const dispatch = useDispatch()
 
   let { module } = useParams()
@@ -51,7 +53,8 @@ const ProjectManagerPage = () => {
     withDefault(StringParam, projectName),
   )
 
-  const { isLoading: userPermissionsLoading, permissions: userPermissions } = useUserProjectPermissions(isUser)
+  const { isLoading: isLoadingUserPermissions, permissions: userPermissions } =
+    useUserProjectPermissions(isUser)
 
   // UPDATE DATA
   const [updateProject] = useUpdateProjectMutation()
@@ -87,31 +90,34 @@ const ProjectManagerPage = () => {
   }
 
   const links = []
-  if (!isUser || !userPermissionsLoading && userPermissions.projectSettingsAreEnabled()) {
-    if (userPermissions.canViewAny(UserPermissionsEntity.anatomy) || module === 'anatomy') {
+  if (!isUser || (!isLoadingUserPermissions && userPermissions.projectSettingsAreEnabled())) {
+    if (userPermissions.canViewAny(UserPermissionsEntity.anatomy) || module === Module.anatomy) {
       links.push({
         name: 'Anatomy',
-        path: '/manageProjects/anatomy',
-        module: 'anatomy',
+        path: ModulePath[Module.anatomy],
+        module: Module.anatomy,
         accessLevels: [],
         shortcut: 'A+A',
       })
     }
 
-    if (userPermissions.canViewAny(UserPermissionsEntity.settings) || module === 'projectSettings') {
+    if (
+      userPermissions.canViewAny(UserPermissionsEntity.settings) ||
+      module === Module.projectSettings
+    ) {
       links.push({
         name: 'Project settings',
-        path: '/manageProjects/projectSettings',
-        module: 'projectSettings',
+        path: ModulePath[Module.projectSettings],
+        module: Module.projectSettings,
         accessLevels: [],
         shortcut: 'P+P',
       })
     }
-    if (userPermissions.canViewAny(UserPermissionsEntity.users) || module === 'userSettings') {
+    if (userPermissions.canViewAny(UserPermissionsEntity.access) || module === Module.projectAccess) {
       links.push({
         name: 'Project access',
-        path: '/manageProjects/userSettings',
-        module: 'userSettings',
+        path: ModulePath[Module.projectAccess],
+        module: Module.projectAccess,
         accessLevels: [],
         shortcut: 'P+A',
       })
@@ -121,26 +127,26 @@ const ProjectManagerPage = () => {
   links.push(
     {
       name: 'Site settings',
-      path: '/manageProjects/siteSettings',
-      module: 'siteSettings',
+      path: ModulePath[Module.siteSettings],
+      module: Module.siteSettings,
       accessLevels: [],
     },
     {
       name: 'Roots',
-      path: '/manageProjects/roots',
-      module: 'roots',
+      path: ModulePath[Module.roots],
+      module: Module.roots,
       accessLevels: [],
     },
     {
       name: 'Teams',
-      path: '/manageProjects/teams',
-      module: 'teams',
+      path: ModulePath[Module.teams],
+      module: Module.teams,
       accessLevels: ['manager'],
     },
     {
       name: 'Permissions',
-      path: '/manageProjects/permissions',
-      module: 'permissions',
+      path: ModulePath[Module.permisssions],
+      module: Module.permisssions,
       accessLevels: ['manager'],
     },
   )
@@ -149,10 +155,23 @@ const ProjectManagerPage = () => {
     () =>
       links.map((link) => ({
         ...link,
-        path: link.path + (selectedProject ? `?project=${selectedProject}` : ''),
+        path: replaceQueryParams(link.path, selectedProject ? { project: selectedProject } : {}),
       })),
     [links, selectedProject],
   )
+
+  useEffect(() => {
+    if (isLoadingUserPermissions || module !== undefined) {
+      return
+    }
+
+    for (const item of ModuleList) {
+      if (userPermissions.canAccessModule({ module: item, projectName: selectedProject })) {
+        navigate(replaceQueryParams(ModulePath[item], { project: selectedProject }))
+        return
+      }
+    }
+  }, [isLoadingUserPermissions, selectedProject, module])
 
   return (
     <>
@@ -166,39 +185,16 @@ const ProjectManagerPage = () => {
         onNewProject={() => setShowNewProject(true)}
         onDeleteProject={handleDeleteProject}
         onActivateProject={handleActivateProject}
-        customSort={(a, b) => {
-          if (userPermissionsLoading) {
-            return 1
-          }
-          if (module === 'anatomy') {
-            const aPerm = userPermissions.canView(UserPermissionsEntity.anatomy, a) ? 1 : -1
-            const bPerm = userPermissions.canView(UserPermissionsEntity.anatomy, b) ? 1 : -1
-            return bPerm - aPerm
-          }
-          if (module === 'projectSettings') {
-            const aPerm = userPermissions.canView(UserPermissionsEntity.settings, a) ? 1 : -1
-            const bPerm = userPermissions.canView(UserPermissionsEntity.settings, b) ? 1 : -1
-            return bPerm - aPerm
-          }
-          return 0
-        }}
-        isActiveCallable={(projectName) => {
-          if (module === 'anatomy') {
-            return userPermissions.canView(UserPermissionsEntity.anatomy, projectName)
-          }
-          if (module === 'projectSettings') {
-            return userPermissions.canView(UserPermissionsEntity.settings, projectName)
-          }
-          return true
-        }}
+        customSort={projectSorter({ isLoadingUserPermissions, userPermissions, module })}
+        isActiveCallable={isActiveDecider({ userPermissions, projectName, module })}
       >
-        {module === 'anatomy' && <ProjectAnatomy />}
-        {module === 'projectSettings' && <ProjectSettings />}
-        {module === 'siteSettings' && <SiteSettings />}
-        {module === 'userSettings' && <ProjectUserAccess onSelect={setSelectedProject} />}
-        {module === 'roots' && <ProjectRoots />}
-        {module === 'teams' && <TeamsPage />}
-        {module === 'permissions' && <ProjectPermissions />}
+        {module === Module.anatomy && <ProjectAnatomy />}
+        {module === Module.projectSettings && <ProjectSettings />}
+        {module === Module.siteSettings && <SiteSettings />}
+        {module === Module.projectAccess && <ProjectUserAccess onSelect={setSelectedProject} />}
+        {module === Module.roots && <ProjectRoots userPermissions={userPermissions} />}
+        {module === Module.teams && <TeamsPage />}
+        {module === Module.permisssions && <ProjectPermissions />}
       </ProjectManagerPageContainer>
 
       {showNewProject && (

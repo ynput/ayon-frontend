@@ -1,4 +1,4 @@
-import { api, GetProjectUsersApiResponse } from '@api/rest/project'
+import { api } from '@api/rest/project'
 // @ts-ignore
 import { selectProject, setProjectData } from '@state/project'
 
@@ -34,20 +34,6 @@ const createProjectQuery = (attribs: $Any, fields: $Any) => {
   `
 }
 
-type GetProjectsUsersParams = {
-  projects: string[]
-}
-
-export type ProjectUserData = {
-  [project: string]: {
-    [user: string]: string[]
-  }
-}
-
-export type GetProjectsUsersApiResponse = {
-  data: ProjectUserData
-}
-
 const getProjectInjected = api.injectEndpoints({
   endpoints: (build) => ({
     getProjectAttribs: build.query({
@@ -61,33 +47,6 @@ const getProjectInjected = api.injectEndpoints({
       }),
       transformResponse: (res: any) => res.data?.project,
       providesTags: (_res, _error, { projectName }) => [{ type: 'project', id: projectName }],
-    }),
-    getProjectsUsers: build.query<GetProjectsUsersApiResponse, GetProjectsUsersParams>({
-      async queryFn({ projects = [] }, { dispatch, forced }) {
-        try {
-          const projectUsersData: $Any = {}
-          for (const project of projects) {
-            const response = await dispatch(
-              api.endpoints.getProjectUsers.initiate(
-                { projectName: project },
-                { forceRefetch: forced },
-              ),
-            )
-
-            if (response.status === 'rejected') {
-              throw 'No projects found'
-            }
-            projectUsersData[project] = response.data
-          }
-
-          return { data: projectUsersData, meta: undefined, error: undefined }
-        } catch (error: $Any) {
-          console.error(error)
-          return { error, meta: undefined, data: undefined }
-        }
-      },
-      providesTags: (_res, _error, { projects }) =>
-        projects.map((projectName) => ({ type: 'project', id: projectName })),
     }),
   }),
   overrideExisting: true,
@@ -168,7 +127,6 @@ const getProjectApi = getProjectInjected.enhanceEndpoints({
 
 export const {
   useGetProjectQuery,
-  useGetProjectsUsersQuery,
   useListProjectsQuery,
   useGetProjectAnatomyQuery,
   useGetProjectAttribsQuery,

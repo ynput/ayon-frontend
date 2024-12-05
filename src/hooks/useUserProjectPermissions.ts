@@ -1,20 +1,14 @@
+import { StudioManagementPermissions, ProjectManagementPermissions } from '@api/rest/users'
+import { Module } from '@pages/ProjectManagerPage/mappers'
 import { useGetCurrentUserPermissionsQuery } from '@queries/permissions/getPermissions'
 
 type AllProjectsPremissions = {
   projects: {
     [projectName: string]: {
-      project: {
-        anatomy: PermissionLevel
-        create: boolean
-        enabled: boolean
-        settings: PermissionLevel
-        users: PermissionLevel
-      }
+      project: ProjectManagementPermissions
     }
   }
-  studio: {
-    create_project: boolean
-  }
+  studio: StudioManagementPermissions
   user_level: 'user' | 'admin'
 }
 
@@ -25,7 +19,8 @@ enum PermissionLevel {
 }
 
 export enum UserPermissionsEntity {
-  users = 'users',
+  // TODO This needs to be in sync with ProjectManagementPermissions
+  access = 'access',
   anatomy = 'anatomy',
   settings = 'settings',
 }
@@ -47,7 +42,7 @@ class UserPermissions {
       return false
     }
 
-    return (this.projectSettingsAreEnabled() && this.permissions.studio.create_project) || false
+    return (this.projectSettingsAreEnabled() && this.permissions.studio.create_projects) || false
   }
 
   getPermissionLevel(type: UserPermissionsEntity, projectName: string): PermissionLevel {
@@ -70,6 +65,28 @@ class UserPermissions {
     }
 
     return this.permissions.projects[projectName]?.project[type] === PermissionLevel.readWrite
+  }
+
+  canAccessModule({ module, projectName }: { module: string; projectName: string }): boolean {
+    if (module === Module.siteSettings) {
+      return true
+    }
+
+    if (module === Module.projectSettings) {
+      return this.canView(UserPermissionsEntity.settings, projectName)
+    }
+
+    if (module === Module.anatomy) {
+      return this.canView(UserPermissionsEntity.anatomy, projectName)
+    }
+    if (module === Module.projectAccess) {
+      return this.canView(UserPermissionsEntity.access, projectName)
+    }
+    if (module === Module.roots) {
+      return this.assignedToProject(projectName)
+    }
+
+    return true
   }
 
   canView(type: UserPermissionsEntity, projectName: string): boolean {
@@ -102,6 +119,22 @@ class UserPermissions {
 
   canEditAnatomy(projectName: string): boolean {
     return this.canEdit(UserPermissionsEntity.anatomy, projectName)
+  }
+
+  assignedToProject(projectName: string): boolean {
+    if (!this.permissions) {
+      return false
+    }
+
+    if (this.hasElevatedPrivileges || !this.projectSettingsAreEnabled()) {
+      return true
+    }
+
+    if (this.permissions.projects[projectName] !== undefined) {
+      return true
+    }
+
+    return false
   }
 
   canViewSettings(projectName?: string): boolean {
@@ -140,10 +173,10 @@ class UserPermissions {
 
   canViewUsers(projectName?: string): boolean {
     if (projectName) {
-      return this.canView(UserPermissionsEntity.users, projectName)
+      return this.canView(UserPermissionsEntity.access, projectName)
     }
 
-    return this.canViewAny(UserPermissionsEntity.users)
+    return this.canViewAny(UserPermissionsEntity.access)
   }
 
   projectSettingsAreEnabled(): boolean {

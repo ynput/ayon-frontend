@@ -65,6 +65,20 @@ export type ValidationError = {
 export type HttpValidationError = {
   detail?: ValidationError[]
 }
+export type StudioManagementPermissions = {
+  /** Allow users to create new projects */
+  create_projects?: boolean
+  /** Allow users to list all users in the studio */
+  list_all_users?: boolean
+}
+export type ProjectManagementPermissions = {
+  /** Allow users to view or edit the project anatomy */
+  anatomy?: number
+  /** Allow users to view or assign users to project access groups */
+  access?: number
+  /** Allow users to view or edit the project addon settings */
+  settings?: number
+}
 export type FolderAccess = {
   access_type?: string
   /** The path of the folder to allow access to. Required for access_type 'hierarchy and 'children' */
@@ -83,6 +97,8 @@ export type EndpointsAccessList = {
   endpoints?: string[]
 }
 export type Permissions = {
+  studio?: StudioManagementPermissions
+  project?: ProjectManagementPermissions
   /** Whitelist folders a user can create */
   create?: FolderAccessList
   /** Whitelist folders a user can read */

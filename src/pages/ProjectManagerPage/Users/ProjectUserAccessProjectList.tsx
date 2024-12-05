@@ -41,8 +41,8 @@ const StyledProjectName = styled.div`
 
 const formatName = (rowData: ProjectNode, userPermissions: UserPermissions) => {
   const readOnly =
-    !userPermissions.canEdit(UserPermissionsEntity.users, rowData.name) &&
-    userPermissions.canView(UserPermissionsEntity.users, rowData.name)
+    !userPermissions.canEdit(UserPermissionsEntity.access, rowData.name) &&
+    userPermissions.canView(UserPermissionsEntity.access, rowData.name)
   return rowData.name + (readOnly ? ' (read only)' : '')
 }
 
@@ -64,8 +64,8 @@ const ProjectUserAccessProjectList = ({ projects, isLoading, selection, userPerm
         value={tableData.sort((a: ProjectNode, b: ProjectNode) => {
           const aActive = a.active ? 10 : -10
           const bActive = b.active ? 10 : -10
-          const aPerm = userPermissions.canEdit(UserPermissionsEntity.users, a.name) ? 1 : -1
-          const bPerm = userPermissions.canEdit(UserPermissionsEntity.users, b.name) ? 1 : -1
+          const aPerm = userPermissions.canEdit(UserPermissionsEntity.access, a.name) ? 1 : -1
+          const bPerm = userPermissions.canEdit(UserPermissionsEntity.access, b.name) ? 1 : -1
           const mainComparison = bActive - aActive + bPerm - aPerm
           if (mainComparison !== 0) {
             return mainComparison
@@ -90,8 +90,8 @@ const ProjectUserAccessProjectList = ({ projects, isLoading, selection, userPerm
           body={(rowData) => {
             const isActive = rowData.active
             const hasPermissions =
-              userPermissions.canEdit(UserPermissionsEntity.users, rowData.name) ||
-              userPermissions.canView(UserPermissionsEntity.users, rowData.name)
+              userPermissions.canEdit(UserPermissionsEntity.access, rowData.name) ||
+              userPermissions.canView(UserPermissionsEntity.access, rowData.name)
             return (
               <StyledProjectName className={clsx({ isActive: isActive && hasPermissions })}>
                 <span>{formatName(rowData, userPermissions)}</span>

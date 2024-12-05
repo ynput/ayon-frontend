@@ -8,7 +8,7 @@ import { getPlatformShortcutKey, KeyMode } from '@helpers/platform'
 import { mapInitialAccessGroupStates } from './mappers'
 import { AccessGroupUsers, SelectionStatus } from './types'
 import * as Styled from './ProjectUserAccessAssignDialog.styled'
-import { ProjectUserData } from '@queries/project/getProject'
+import { ProjectUserData } from '@queries/accessGroups/getAccessGroups'
 
 const icons: {[key in SelectionStatus] : string | undefined} = {
   [SelectionStatus.None]: 'add',
@@ -38,14 +38,8 @@ const ProjectUserAccessAssignDialog = ({
   onSave,
   onClose,
 }: Props) => {
-  console.log('u: ', users)
-  console.log('pu: ', projectUsers)
-  console.log('ag: ', accessGroups)
-  console.log('uag: ', userAccessGroups)
   const initialStates = mapInitialAccessGroupStates(accessGroups, users, projectUsers, userAccessGroups)
   const initialStatesList = Object.keys(initialStates).map(agName => ({name: agName, status: initialStates[agName]}))
-  console.log('is: ', initialStates)
-  console.log('isl: ', initialStatesList)
 
   const [accessGroupItems, setAccessGroupItems] = useState<AccessGroupItem[]>(initialStatesList)
   const allSelected = accessGroupItems.find(item => item.status !== SelectionStatus.All) === undefined

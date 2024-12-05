@@ -186,11 +186,6 @@ const App = () => {
                                 exact
                                 element={<Navigate replace to="/dashboard/tasks" />}
                               />
-                              <Route
-                                path="/manageProjects"
-                                exact
-                                element={<Navigate replace to="/manageProjects/anatomy" />}
-                              />
 
                               <Route
                                 path="/dashboard"
@@ -207,6 +202,10 @@ const App = () => {
                                 element={<UserDashboardPage />}
                               />
 
+                              <Route
+                                path="/manageProjects"
+                                element={<ProjectManagerPage />}
+                              />
                               <Route
                                 path="/manageProjects/:module"
                                 element={<ProjectManagerPage />}
