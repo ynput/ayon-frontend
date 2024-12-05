@@ -4,14 +4,12 @@ import Type from '@/theme/typography.module.css'
 import clsx from 'clsx'
 import ReactMarkdown from 'react-markdown'
 import MetaPanelRow from './MetaPanelRow'
-import { ReleaseInfoModel, ReleaseListItemModel } from '@api/rest/releases'
+import { ReleaseListItemModel } from '@api/rest/releases'
 import { format } from 'date-fns'
 import CloudButton from '@components/CloudButton'
 import AddonIcon from '@components/AddonIcon/AddonIcon'
 
-type ExtendedReleaseDetail = ReleaseInfoModel & {
-  icon: ReleaseListItemModel['icon']
-  bio: ReleaseListItemModel['bio']
+type ExtendedReleaseDetail = ReleaseListItemModel & {
   isActive: boolean // can the the release be installed
 }
 
@@ -64,11 +62,11 @@ const ReleaseDetails = ({ release, isLoading, onDownload }: ReleaseDetailsProps)
             <Styled.ReleaseAddons>
               {addons?.map((addon) => (
                 <Styled.ReleaseAddonLink
-                  to={`/market?selected=${addon.name}&type=addons`}
-                  key={addon.name}
+                  to={`/market?selected=${addon}&type=addons`}
+                  key={addon}
                   className={clsx({ loading: isLoading })}
                 >
-                  {addon.name}
+                  {addon}
                 </Styled.ReleaseAddonLink>
               ))}
             </Styled.ReleaseAddons>

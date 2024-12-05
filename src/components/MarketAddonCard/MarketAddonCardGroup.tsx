@@ -41,7 +41,7 @@ export const MarketAddonCardGroup = forwardRef<HTMLDivElement, MarketAddonCardGr
           </Styled.TitleWrapper>
           <Styled.AuthorWrapper className="details">
             <Styled.Author className={Type.labelMedium}>
-              {author} - {createdAt}
+              {author} {author && createdAt && '-'} {createdAt}
             </Styled.Author>
           </Styled.AuthorWrapper>
         </Styled.Content>

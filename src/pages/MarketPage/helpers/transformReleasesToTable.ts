@@ -33,8 +33,7 @@ export const transformReleasesToTable = (
         title: `${name} ${release.isLatest ? ' - Latest' : ''}`,
         isOfficial: true,
         isVerified: true,
-        author: 'Ynput',
-        createdAt: release.createdAt,
+        createdAt: createReleaseSubtitle({ createdAt: release.createdAt }),
       }
       releaseGroups.push({
         type: 'release',

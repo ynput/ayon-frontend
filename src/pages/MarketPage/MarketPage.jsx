@@ -19,16 +19,22 @@ import useDownload from './MarketDetails/useDownload'
 import ConnectDialog from './ConnectDialog/ConnectDialog'
 import { useRestart } from '@context/restartContext'
 import { toast } from 'react-toastify'
-import { useGetReleaseInfoQuery, useGetReleasesQuery } from '@queries/releases/getReleases'
+import { useGetReleasesQuery } from '@queries/releases/getReleases'
 import { transformReleasesToTable } from './helpers'
 import ReleaseDetails from './MarketDetails/ReleaseDetails'
 import { useAppDispatch } from '@state/store'
 import { toggleReleaseInstaller } from '@state/releaseInstaller'
 
 const placeholders = [...Array(20)].map((_, i) => ({
-  name: `Addon ${i}`,
-  isPlaceholder: true,
-  subTitle: 'Loading...',
+  type: 'addon',
+  group: undefined,
+  items: [
+    {
+      name: `Addon ${i}`,
+      isPlaceholder: true,
+      subTitle: 'Loading...',
+    },
+  ],
 }))
 
 const MarketPage = () => {
@@ -226,24 +232,16 @@ const MarketPage = () => {
     [releasesData, hasCloudSub],
   )
 
-  // GET SELECTED RELEASE
-  const { data: selectedReleaseData = {}, isFetching: isFetchingRelease } = useGetReleaseInfoQuery(
-    { releaseName: selectedItemId },
-    { skip: filterType !== 'releases' },
-  )
-
   // merge selected release with found release in releasesData
   const selectedRelease = useMemo(() => {
     if (!selectedItemId || !releasesData) return {}
     const found = releasesData.find((release) => release.name === selectedItemId) || {}
 
     return {
-      icon: found.icon,
-      bio: found.bio,
+      ...found,
       isActive: found.isLatest || hasCloudSub,
-      ...selectedReleaseData,
     }
-  }, [selectedReleaseData, releasesData, selectedItemId, hasCloudSub])
+  }, [releasesData, selectedItemId, hasCloudSub])
 
   // convert addons to grouping format
   const addonsGrouped = useMemo(() => {
@@ -412,7 +410,7 @@ const MarketPage = () => {
           {selectedItemId && filterType === 'releases' && (
             <ReleaseDetails
               release={selectedRelease}
-              isLoading={isLoadingReleases || isFetchingRelease}
+              isLoading={isLoadingReleases}
               onDownload={handleReleaseInstall}
             />
           )}
