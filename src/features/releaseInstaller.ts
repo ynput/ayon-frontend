@@ -65,6 +65,6 @@ export default counterSlice.reducer
 
 // topics that need to set localStorage. If there is no explicit value, it will be the payload value
 export const releaseInstallerLocalItems = {
-  'releaseInstaller/toggleReleaseInstaller': [{ key: 'releaseInstaller-open' }],
+  'releaseInstaller/toggleReleaseInstaller': [{ key: 'releaseInstaller-open', payload: 'open' }],
   'releaseInstaller/installRelease': [{ key: 'releaseInstaller-open', value: true }],
 }
