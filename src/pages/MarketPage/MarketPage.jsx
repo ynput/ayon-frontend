@@ -19,7 +19,6 @@ import useDownload from './MarketDetails/useDownload'
 import ConnectDialog from './ConnectDialog/ConnectDialog'
 import { useRestart } from '@context/restartContext'
 import { toast } from 'react-toastify'
-import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
 import { useGetReleaseInfoQuery, useGetReleasesQuery } from '@queries/releases/getReleases'
 import { transformReleasesToTable } from './helpers'
 import ReleaseDetails from './MarketDetails/ReleaseDetails'
@@ -38,7 +37,7 @@ const MarketPage = () => {
   const {
     data: marketAddonsData = [],
     isLoading: isLoadingAddons,
-    error,
+    error: errorAddons,
   } = useMarketAddonListQuery()
   // GET ALL INSTALLED ADDONS for addon details
   const { data: { addons: downloadedAddons = [] } = {}, isLoading: isLoadingDownloaded } =
@@ -215,8 +214,13 @@ const MarketPage = () => {
   }, [selectedAddonData, marketAddons])
 
   // GET BUNDLE RELEASES
-  const { data: { releases: releasesData = [] } = {}, isLoading: isLoadingReleases } =
-    useGetReleasesQuery({ all: true }, { skip: filterType !== 'releases' })
+  const {
+    data: { releases: releasesData = [] } = {},
+    isLoading: isLoadingReleases,
+    error: errorReleases,
+  } = useGetReleasesQuery({ all: true }, { skip: filterType !== 'releases' })
+
+  console.log(errorReleases)
 
   // transform releases into a table list
   const releaseItems = useMemo(
@@ -371,21 +375,6 @@ const MarketPage = () => {
     }
   }
 
-  if (error)
-    return (
-      <Section
-        style={{
-          width: '100%',
-          height: '100%',
-          alignItems: 'center',
-          justifyContent: 'center',
-          textAlign: 'center',
-        }}
-      >
-        <EmptyPlaceholder error={JSON.stringify(error)} />
-      </Section>
-    )
-
   return (
     <>
       <ConnectDialog
@@ -400,6 +389,7 @@ const MarketPage = () => {
             onSelect={handleSelectFilter}
             onConnection={handleYnputConnect}
           />
+
           <MarketAddonsList
             items={tableItems}
             selected={selectedItemId}
@@ -407,10 +397,12 @@ const MarketPage = () => {
             onHover={handleHover}
             onDownload={handleItemDownload}
             isLoading={isLoadingAddons}
+            error={errorAddons || errorReleases}
             onUpdateAll={marketAddons.some((addon) => addon.isOutdated) && handleUpdateAll}
             isUpdatingAll={isUpdatingAll}
             isUpdatingAllFinished={isUpdatingAllFinished}
           />
+
           {selectedItemId && filterType === 'releases' && (
             <ReleaseDetails
               release={selectedRelease}

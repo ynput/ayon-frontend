@@ -6,6 +6,8 @@ import { InputText } from '@ynput/ayon-react-components'
 import { Tag } from '@components/MarketAddonCard/MarketAddonCard.styled'
 import { MarketAddonItem } from '@queries/market/getMarket'
 import { ListItemType } from '@components/MarketAddonCard/MarketAddonCard'
+import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
+import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 
 const StyledAddonList = styled.div`
   display: flex;
@@ -87,6 +89,7 @@ type MarketAddonListProps = {
   onHover: (name: string, type: ListItemType) => void
   onDownload: (type: ListItemType, name: string, version?: string) => void
   isLoading: boolean
+  error?: FetchBaseQueryError
   onUpdateAll?: () => void
   isUpdatingAll?: boolean
   isUpdatingAllFinished?: boolean
@@ -99,6 +102,7 @@ const MarketAddonsList = ({
   onHover,
   onDownload,
   isLoading,
+  error,
   onUpdateAll,
   isUpdatingAll,
   isUpdatingAllFinished,
@@ -156,6 +160,18 @@ const MarketAddonsList = ({
 
   const handleToggleGroup = (id: string) => {
     setExpandedGroups((prev) => (prev.includes(id) ? prev.filter((g) => g !== id) : [...prev, id]))
+  }
+
+  if (error) {
+    return (
+      <EmptyPlaceholder
+        error={
+          // @ts-ignore
+          error?.data?.detail || JSON.stringify(error)
+        }
+        style={{ position: 'relative', left: 0, top: '-10%', transform: 'unset', flex: 1 }}
+      />
+    )
   }
 
   return (

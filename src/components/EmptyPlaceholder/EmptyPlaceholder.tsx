@@ -48,8 +48,8 @@ export const Placeholder = styled.div`
 `
 
 interface EmptyPlaceholderProps extends React.HTMLAttributes<HTMLDivElement> {
-  icon: string
-  message: string
+  icon?: string
+  message?: string
   error?: any
   pt?: {
     error?: React.HTMLAttributes<HTMLDivElement>
@@ -80,7 +80,7 @@ const EmptyPlaceholder = ({
 
   return (
     <Placeholder {...props}>
-      <Icon icon={icon} className="placeholder-icon" />
+      <Icon icon={icon || 'info'} className="placeholder-icon" />
       <h3 className={Typography.titleLarge}>
         {typeof message === 'object' ? JSON.stringify(message) : message}
       </h3>
