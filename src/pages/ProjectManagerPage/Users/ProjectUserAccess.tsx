@@ -194,7 +194,7 @@ const ProjectUserAccess = () => {
       interactionType: InteractionType.button,
     })
 
-    ctxMenuShow(e.originalEvent, [
+    let contextMenu = [
       {
         id: 'add',
         icon: 'add',
@@ -205,24 +205,26 @@ const ProjectUserAccess = () => {
         id: 'remove',
         icon: 'remove',
         label: 'Remove access',
-        disabled: accessGroup === undefined,
         command: () => onRemove(accessGroup)(actionedUsers),
       },
       {
-        id: 'remove',
+        id: 'remove_all',
         icon: 'remove_moderator',
         label: 'Remove all access',
-        disabled: accessGroup === undefined,
         command: () => onRemove()(actionedUsers),
       },
       {
         id: 'filter_by_user',
         icon: 'person',
         label: 'Filter by user',
-        disabled: false,
         command: () => handleUserFilterUpdate(actionedUsers),
       },
-    ])
+    ]
+    if (accessGroup === undefined) {
+      contextMenu = contextMenu.filter((item) => item.id !== 'remove')
+    }
+
+    ctxMenuShow(e.originalEvent, contextMenu)
   }
 
   const handleAdd = ({ users }: { users: string[] }) => {
