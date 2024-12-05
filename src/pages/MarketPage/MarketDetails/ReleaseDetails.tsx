@@ -7,6 +7,7 @@ import MetaPanelRow from './MetaPanelRow'
 import { ReleaseInfoModel, ReleaseListItemModel } from '@api/rest/releases'
 import { format } from 'date-fns'
 import CloudButton from '@components/CloudButton'
+import AddonIcon from '@components/AddonIcon/AddonIcon'
 
 type ExtendedReleaseDetail = ReleaseInfoModel & {
   icon: ReleaseListItemModel['icon']
@@ -17,9 +18,10 @@ type ExtendedReleaseDetail = ReleaseInfoModel & {
 type ReleaseDetailsProps = {
   release: ExtendedReleaseDetail
   isLoading: boolean
+  onDownload: (name: string) => void
 }
 
-const ReleaseDetails = ({ release, isLoading }: ReleaseDetailsProps) => {
+const ReleaseDetails = ({ release, isLoading, onDownload }: ReleaseDetailsProps) => {
   // latestVersion: is the latest version of the addon
   // versions: is an array of all versions DOWNLOADED of the addon
   const { name, label, createdAt, icon, bio, isActive, addons } = release || {}
@@ -36,7 +38,7 @@ const ReleaseDetails = ({ release, isLoading }: ReleaseDetailsProps) => {
         <>
           <Styled.Left className={Type.bodyLarge}>
             <Styled.Header className={clsx({ loading: isLoading })}>
-              <Icon icon={icon || 'order'} />
+              <AddonIcon size={64} icon={icon} alt={name + ' icon'} isPlaceholder={isLoading} />
               <div className="titles">
                 <h2 className={Type.headlineSmall}>{label}</h2>
                 <span className={clsx(verifiedString.toLowerCase(), 'verification')}>
@@ -61,9 +63,13 @@ const ReleaseDetails = ({ release, isLoading }: ReleaseDetailsProps) => {
             <ReactMarkdown className={clsx({ loading: isLoading })}>{bio}</ReactMarkdown>
             <Styled.ReleaseAddons>
               {addons?.map((addon) => (
-                <Styled.ReleaseAddon key={addon.name} className={clsx({ loading: isLoading })}>
-                  <span>{addon.name}</span>
-                </Styled.ReleaseAddon>
+                <Styled.ReleaseAddonLink
+                  to={`/market?selected=${addon.name}&type=addons`}
+                  key={addon.name}
+                  className={clsx({ loading: isLoading })}
+                >
+                  {addon.name}
+                </Styled.ReleaseAddonLink>
               ))}
             </Styled.ReleaseAddons>
           </Styled.Left>
@@ -71,7 +77,7 @@ const ReleaseDetails = ({ release, isLoading }: ReleaseDetailsProps) => {
           <Styled.Right className={clsx(Type.bodyMedium)}>
             <Styled.Download className={clsx({ loading: isLoading })}>
               {isActive ? (
-                <SaveButton active icon="download">
+                <SaveButton active icon="download" onClick={() => onDownload(name)}>
                   Install release bundle
                 </SaveButton>
               ) : (

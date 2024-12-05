@@ -85,7 +85,7 @@ type MarketAddonListProps = {
   selected: string
   onSelect: (name: string, type: ListItemType) => void
   onHover: (name: string, type: ListItemType) => void
-  onDownload: (name: string, version: string, type: ListItemType) => void
+  onDownload: (type: ListItemType, name: string, version?: string) => void
   isLoading: boolean
   onUpdateAll?: () => void
   isUpdatingAll?: boolean
@@ -103,8 +103,20 @@ const MarketAddonsList = ({
   isUpdatingAll,
   isUpdatingAllFinished,
 }: MarketAddonListProps) => {
+  const [initialExpandedGroups, setInitialExpandedGroups] = useState<boolean>(false)
   const [expandedGroups, setExpandedGroups] = useState<string[]>([])
   const [search, setSearch] = useState('')
+
+  useEffect(() => {
+    if (!initialExpandedGroups) {
+      const initExpandedGroups = items
+        .filter(({ items }) => items?.some(({ name }) => name === selected))
+        .map(({ group }) => group?.id)
+        .filter(Boolean) as string[]
+      setExpandedGroups(initExpandedGroups)
+      setInitialExpandedGroups(true)
+    }
+  }, [items])
 
   // filter items by search
   const filteredItems = useMemo(
@@ -215,7 +227,7 @@ const MarketAddonsList = ({
                     onClick={() => onSelect(name, type)}
                     isSelected={selected === name}
                     onMouseOver={() => onHover(name, type)}
-                    onDownload={(n, v) => onDownload(n, v, type)}
+                    onDownload={(n, v) => onDownload(type, n, v)}
                     style={{ paddingLeft: group ? 40 : 4 }}
                     isActive={isActive || type === 'addon'}
                     {...{

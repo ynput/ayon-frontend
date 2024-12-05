@@ -27,7 +27,7 @@ interface MarketAddonCardProps extends HTMLAttributes<HTMLDivElement> {
   isFailed?: boolean
   isFinished?: boolean
   isActive?: boolean
-  onDownload: (name: string, version: string) => void
+  onDownload: (name: string, version?: string) => void
 }
 
 export const MarketAddonCard = ({
@@ -51,7 +51,7 @@ export const MarketAddonCard = ({
   onDownload,
   ...props
 }: MarketAddonCardProps) => {
-  let state = 'download'
+  let state = 'install'
   if (isDownloaded && !isOutdated) state = 'downloaded'
   if (isDownloaded && isOutdated) state = 'update'
   if (isWaiting) state = 'pending'
@@ -65,12 +65,12 @@ export const MarketAddonCard = ({
   if (isFinished) stateIcon = 'check_circle'
 
   let stateVariant: ButtonProps['variant'] = 'text'
-  if (state === 'download') stateVariant = 'surface'
+  if (state === 'install') stateVariant = 'surface'
   if (state === 'failed') stateVariant = 'danger'
   if (state === 'update') stateVariant = 'filled'
 
   const handleActionClick = () => {
-    if (['download', 'update'].includes(state) && latestVersion) {
+    if (['install', 'update'].includes(state)) {
       onDownload(name, latestVersion)
     }
   }
@@ -84,7 +84,13 @@ export const MarketAddonCard = ({
         'no-shimmer',
       )}
     >
-      <AddonIcon isPlaceholder={isPlaceholder} size={32} src={icon} alt={title + ' icon'} />
+      <AddonIcon
+        isPlaceholder={isPlaceholder}
+        size={32}
+        src={type === 'addon' ? icon : undefined}
+        alt={title + ' icon'}
+        icon={type === 'addon' ? 'extension' : icon}
+      />
       <Styled.Content className={clsx({ loading: isPlaceholder })}>
         <Styled.TitleWrapper className="header">
           <Styled.Title className={Type.titleMedium}>{title}</Styled.Title>

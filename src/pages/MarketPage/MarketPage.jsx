@@ -23,6 +23,8 @@ import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
 import { useGetReleaseInfoQuery, useGetReleasesQuery } from '@queries/releases/getReleases'
 import { transformReleasesToTable } from './helpers'
 import ReleaseDetails from './MarketDetails/ReleaseDetails'
+import { useAppDispatch } from '@state/store'
+import { toggleReleaseInstaller } from '@state/releaseInstaller'
 
 const placeholders = [...Array(20)].map((_, i) => ({
   name: `Addon ${i}`,
@@ -31,6 +33,7 @@ const placeholders = [...Array(20)].map((_, i) => ({
 }))
 
 const MarketPage = () => {
+  const dispatch = useAppDispatch()
   // GET ALL ADDONS IN MARKET
   const {
     data: marketAddonsData = [],
@@ -164,13 +167,6 @@ const MarketPage = () => {
       })
     }
 
-    // convert to grouping format for list
-    addons = addons.map((addon) => ({
-      type: 'addon',
-      group: undefined,
-      items: [{ ...addon, subTitle: addon.orgTitle }],
-    }))
-
     return addons
   }, [marketAddonsData, filter])
 
@@ -247,6 +243,16 @@ const MarketPage = () => {
     }
   }, [selectedReleaseData, releasesData, selectedItemId])
 
+  // convert addons to grouping format
+  const addonsGrouped = useMemo(() => {
+    // convert to grouping format for list
+    return marketAddons.map((addon) => ({
+      type: 'addon',
+      group: undefined,
+      items: [{ ...addon, subTitle: addon.orgTitle }],
+    }))
+  }, [marketAddons])
+
   const tableItems =
     filterType === 'releases'
       ? isLoadingReleases
@@ -254,7 +260,7 @@ const MarketPage = () => {
         : releaseItems
       : isLoadingAddons
       ? placeholders
-      : marketAddons
+      : addonsGrouped
 
   // GET SELECTED ADDON LAZY for performance (fetches on addon hover)
   const [fetchAddonData] = useLazyMarketAddonDetailQuery()
@@ -298,13 +304,32 @@ const MarketPage = () => {
 
   const { downloadAddon } = useDownload((name) => setDownloadingAddons((a) => [...a, name]))
 
-  // DOWNLOAD/UPDATE ADDON
-  const handleDownload = (name, version, type) => {
-    if (type !== 'addon') return
+  // DOWNLOAD/UPDATE ADDON/RELEASE
+  const handleAddonDownload = (name, version) => {
     if (isCloudConnected) {
+      if (!version) return toast.error('No version found')
       return downloadAddon(name, version)
     } else {
       return setShowConnectDialog(true)
+    }
+  }
+
+  const handleReleaseInstall = (name) => {
+    console.log(name)
+    // open menu
+    dispatch(toggleReleaseInstaller(name))
+  }
+
+  const handleItemDownload = (type, name, version) => {
+    switch (type) {
+      case 'addon':
+        handleAddonDownload(name, version)
+        break
+      case 'release':
+        handleReleaseInstall(name)
+        break
+      default:
+        break
     }
   }
 
@@ -313,7 +338,7 @@ const MarketPage = () => {
     // for each outdated addon, download it
     const promises = marketAddons.map((addon) => {
       if (addon.isOutdated && addon.isDownloaded) {
-        const res = handleDownload(addon.name, addon.latestVersion)
+        const res = handleAddonDownload(addon.name, addon.latestVersion)
         return res
       }
     })
@@ -380,7 +405,7 @@ const MarketPage = () => {
             selected={selectedItemId}
             onSelect={setSelectedItemId}
             onHover={handleHover}
-            onDownload={handleDownload}
+            onDownload={handleItemDownload}
             isLoading={isLoadingAddons}
             onUpdateAll={marketAddons.some((addon) => addon.isOutdated) && handleUpdateAll}
             isUpdatingAll={isUpdatingAll}
@@ -390,6 +415,7 @@ const MarketPage = () => {
             <ReleaseDetails
               release={selectedRelease}
               isLoading={isLoadingReleases || isFetchingRelease}
+              onDownload={handleReleaseInstall}
             />
           )}
           {selectedItemId && filterType === 'addons' && (
@@ -397,7 +423,7 @@ const MarketPage = () => {
               addon={selectedAddon}
               isLoading={isLoadingDownloaded || isFetchingAddon}
               setDownloadingAddons={setDownloadingAddons}
-              onDownload={handleDownload}
+              onDownload={handleAddonDownload}
               isUpdatingAll={isUpdatingAll}
             />
           )}

@@ -23,6 +23,7 @@ export const transformReleasesToTable = (
       isProductionOutdated: false,
       isActive: release.isLatest || hasCloud,
       subTitle: createReleaseSubtitle({ createdAt: release.createdAt }),
+      icon: release.icon,
     }
     if (foundGroup) {
       foundGroup.items.push(releaseItem)

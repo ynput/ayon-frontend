@@ -1,4 +1,5 @@
 import { Button, Dropdown, Panel, theme } from '@ynput/ayon-react-components'
+import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 
 export const PanelContainer = styled(Panel)`
@@ -208,8 +209,9 @@ export const ReleaseAddons = styled.div`
   flex-wrap: wrap;
 `
 
-export const ReleaseAddon = styled.span`
+export const ReleaseAddonLink = styled(Link)`
   position: relative;
+  cursor: pointer;
   ${theme.bodySmall}
   user-select: none;
   color: var(--md-sys-color-outline);

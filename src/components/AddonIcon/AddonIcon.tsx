@@ -6,9 +6,10 @@ import { Icon } from '@ynput/ayon-react-components'
 interface AddonIconProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   isPlaceholder?: boolean
   size?: number
+  icon?: string
 }
 
-const AddonIcon = ({ isPlaceholder, size, ...props }: AddonIconProps) => {
+const AddonIcon = ({ isPlaceholder, size, icon = 'extension', ...props }: AddonIconProps) => {
   const [imageLoading, setImageLoading] = useState(!!props.src)
   const [imageError, setImageError] = useState(false)
   const imgRef = useRef(null)
@@ -22,7 +23,7 @@ const AddonIcon = ({ isPlaceholder, size, ...props }: AddonIconProps) => {
   return (
     <Styled.Icon className={clsx({ loading: isLoading, isError: imageError })} $size={size}>
       {imageError || !props.src ? (
-        <Icon icon="extension" />
+        <Icon icon={icon} />
       ) : (
         <img {...props} onLoad={handleLoad} ref={imgRef} />
       )}
