@@ -1,17 +1,21 @@
 import { ReleaseListItemModel } from '@api/rest/releases'
 import { MarketListItem } from '../MarketAddonsList'
 import { createReleaseSubtitle } from '@containers/ReleaseInstallerDialog/helpers'
+import { FilterCriteria, filterItems } from './filterItems'
 
 export const transformReleasesToTable = (
   releases: ReleaseListItemModel[],
   hasCloud: boolean,
+  filter: FilterCriteria[],
 ): MarketListItem[] => {
   const releaseGroups: MarketListItem[] = []
 
   const sortedReleases = [...releases].sort((a, b) => b.name.localeCompare(a.name))
 
+  const filteredReleases = filter.length ? filterItems(releases, filter) : sortedReleases
+
   // group releases by name split by '-' (first bit is the name)
-  sortedReleases.forEach((release) => {
+  filteredReleases.forEach((release) => {
     const [name] = release.name.split('-')
     const foundGroup = releaseGroups.find((item) => item.group?.id === name)
     const releaseItem: MarketListItem['items'][0] = {

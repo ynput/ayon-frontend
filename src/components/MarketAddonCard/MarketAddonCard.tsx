@@ -7,7 +7,7 @@ import { upperFirst } from 'lodash'
 import { HTMLAttributes } from 'react'
 import CloudButton from '@components/CloudButton'
 
-export type ListItemType = 'addon' | 'release'
+export type ListItemType = 'addon' | 'release' | 'placeholder'
 
 interface MarketAddonCardProps extends HTMLAttributes<HTMLDivElement> {
   type: ListItemType

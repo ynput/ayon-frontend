@@ -8,6 +8,7 @@ import { MarketAddonItem } from '@queries/market/getMarket'
 import { ListItemType } from '@components/MarketAddonCard/MarketAddonCard'
 import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
+import { useExpandedGroups } from './hooks'
 
 const StyledAddonList = styled.div`
   display: flex;
@@ -85,6 +86,7 @@ export type MarketListItem = {
 type MarketAddonListProps = {
   items: MarketListItem[]
   selected: string
+  filter: string
   onSelect: (name: string, type: ListItemType) => void
   onHover: (name: string, type: ListItemType) => void
   onDownload: (type: ListItemType, name: string, version?: string) => void
@@ -98,6 +100,7 @@ type MarketAddonListProps = {
 const MarketAddonsList = ({
   items = [],
   selected,
+  filter,
   onSelect,
   onHover,
   onDownload,
@@ -107,20 +110,12 @@ const MarketAddonsList = ({
   isUpdatingAll,
   isUpdatingAllFinished,
 }: MarketAddonListProps) => {
-  const [initialExpandedGroups, setInitialExpandedGroups] = useState<boolean>(false)
-  const [expandedGroups, setExpandedGroups] = useState<string[]>([])
+  const { expandedGroups, setExpandedGroups } = useExpandedGroups({
+    items,
+    selected,
+    filter,
+  })
   const [search, setSearch] = useState('')
-
-  useEffect(() => {
-    if (!initialExpandedGroups) {
-      const initExpandedGroups = items
-        .filter(({ items }) => items?.some(({ name }) => name === selected))
-        .map(({ group }) => group?.id)
-        .filter(Boolean) as string[]
-      setExpandedGroups(initExpandedGroups)
-      setInitialExpandedGroups(true)
-    }
-  }, [items])
 
   // filter items by search
   const filteredItems = useMemo(
@@ -159,7 +154,7 @@ const MarketAddonsList = ({
   }
 
   const handleToggleGroup = (id: string) => {
-    setExpandedGroups((prev) => (prev.includes(id) ? prev.filter((g) => g !== id) : [...prev, id]))
+    setExpandedGroups(id, filter)
   }
 
   if (error) {

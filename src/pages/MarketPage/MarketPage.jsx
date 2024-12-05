@@ -1,5 +1,5 @@
 import { Section } from '@ynput/ayon-react-components'
-import AddonFilters from './AddonFilters'
+import MarketFilters, { getMarketFilter } from './MarketFilters'
 import { useEffect, useMemo, useState } from 'react'
 import { StringParam, useQueryParam, withDefault } from 'use-query-params'
 
@@ -20,13 +20,13 @@ import ConnectDialog from './ConnectDialog/ConnectDialog'
 import { useRestart } from '@context/restartContext'
 import { toast } from 'react-toastify'
 import { useGetReleasesQuery } from '@queries/releases/getReleases'
-import { transformReleasesToTable } from './helpers'
+import { filterItems, transformReleasesToTable } from './helpers'
 import ReleaseDetails from './MarketDetails/ReleaseDetails'
 import { useAppDispatch } from '@state/store'
 import { toggleReleaseInstaller } from '@state/releaseInstaller'
 
 const placeholders = [...Array(20)].map((_, i) => ({
-  type: 'addon',
+  type: 'placeholder',
   group: undefined,
   items: [
     {
@@ -64,9 +64,14 @@ const MarketPage = () => {
 
   // FILTER ADDONS BY FIELDS
   const [filterType, setFilterType] = useQueryParam('type', withDefault(StringParam, 'addons'))
-  // [{isOutdated: true}]
-  // [{isDownloaded: false}]
-  const [filter, setFilter] = useState([])
+  const [selectedFilter, setSelectedFilter] = useQueryParam(
+    'filter',
+    withDefault(StringParam, 'all'),
+  )
+  const filter = useMemo(
+    () => getMarketFilter(filterType, selectedFilter),
+    [selectedFilter, filterType, getMarketFilter],
+  )
 
   // subscribe to download events
   const { data: downloadProgress = [] } = useGetMarketInstallEventsQuery({})
@@ -163,13 +168,7 @@ const MarketPage = () => {
 
     // if there are filters, filter the addons
     if (filter.length) {
-      addons = addons.filter((addon) => {
-        return filter.every((f) => {
-          return Object.keys(f).every((key) => {
-            return typeof f[key] === 'function' ? f[key](addon[key], addon) : addon[key] == f[key]
-          })
-        })
-      })
+      addons = filterItems(addons, filter)
     }
 
     return addons
@@ -224,12 +223,12 @@ const MarketPage = () => {
     data: { releases: releasesData = [] } = {},
     isLoading: isLoadingReleases,
     error: errorReleases,
-  } = useGetReleasesQuery({ all: false }, { skip: filterType !== 'releases' })
+  } = useGetReleasesQuery({ all: true }, { skip: filterType !== 'releases' })
 
   // transform releases into a table list
   const releaseItems = useMemo(
-    () => transformReleasesToTable(releasesData, hasCloudSub),
-    [releasesData, hasCloudSub],
+    () => transformReleasesToTable(releasesData, hasCloudSub, filter),
+    [releasesData, hasCloudSub, filter],
   )
 
   // merge selected release with found release in releasesData
@@ -253,14 +252,22 @@ const MarketPage = () => {
     }))
   }, [marketAddons])
 
-  const tableItems =
-    filterType === 'releases'
-      ? isLoadingReleases
-        ? placeholders
-        : releaseItems
-      : isLoadingAddons
-      ? placeholders
-      : addonsGrouped
+  // SELECT TABLE ITEMS
+  let tableItems
+
+  if (filterType === 'releases') {
+    if (isLoadingReleases) {
+      tableItems = placeholders
+    } else {
+      tableItems = releaseItems
+    }
+  } else {
+    if (isLoadingAddons) {
+      tableItems = placeholders
+    } else {
+      tableItems = addonsGrouped
+    }
+  }
 
   // GET SELECTED ADDON LAZY for performance (fetches on addon hover)
   const [fetchAddonData] = useLazyMarketAddonDetailQuery()
@@ -366,10 +373,10 @@ const MarketPage = () => {
     }
   }
 
-  const handleSelectFilter = (type, filter) => {
+  const handleSelectFilter = (type, filterId) => {
     setSelectedItemId(null)
     setFilterType(type)
-    setFilter(filter)
+    setSelectedFilter(filterId)
   }
 
   const handleYnputConnect = (isConnected, hasSubs) => {
@@ -388,15 +395,17 @@ const MarketPage = () => {
       />
       <main style={{ flexDirection: 'column', overflow: 'hidden' }}>
         <Section style={{ overflow: 'hidden', flexDirection: 'row', justifyContent: 'center' }}>
-          <AddonFilters
+          <MarketFilters
             filterType={filterType}
             onSelect={handleSelectFilter}
+            selected={selectedFilter}
             onConnection={handleYnputConnect}
           />
 
           <MarketAddonsList
             items={tableItems}
             selected={selectedItemId}
+            filter={filterType + selectedFilter}
             onSelect={setSelectedItemId}
             onHover={handleHover}
             onDownload={handleItemDownload}
