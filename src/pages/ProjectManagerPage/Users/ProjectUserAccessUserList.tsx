@@ -24,6 +24,7 @@ type Props = {
   showAddButton?: boolean
   showAddMoreButton?: boolean
   showAccessGroups?: boolean
+  shimmerEnabled?: boolean
   onContextMenu?: $Any
   onHoverRow: $Any
   onSelectUsers?: (selectedUsers: string[]) => void
@@ -45,6 +46,7 @@ const ProjectUserAccessUserList = ({
   showAddButton = false,
   showAddMoreButton = false,
   showAccessGroups = false,
+  shimmerEnabled = false,
   onAdd,
   onRemove,
   onContextMenu,
@@ -87,7 +89,13 @@ const ProjectUserAccessUserList = ({
             loading: isLoading,
             fullBorderRadius: accessGroup === undefined,
           })}
-          rowClassName={(rowData: $Any) => clsx({ inactive: !rowData.active, loading: isLoading })}
+          rowClassName={(rowData: $Any) =>
+            clsx({
+              inactive: !rowData.active,
+              loading: isLoading,
+              'shimmer-light': shimmerEnabled && isLoading,
+            })
+          }
           onContextMenu={!readOnly && onContextMenu}
           onRowMouseEnter={(e) => onHoverRow(e.data.name)}
           onRowMouseLeave={() => onHoverRow()}

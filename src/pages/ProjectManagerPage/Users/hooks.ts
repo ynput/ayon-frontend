@@ -13,8 +13,7 @@ const useProjectAccessGroupData = (selectedProject: string) => {
   )
 
   const [updateAccessGroups] = useUpdateAccessGroupsMutation()
-  const result = useGetProjectsAccessQuery({ projects: selectedProjects })
-  const users = result.data
+  const { isLoading, data: usersData } = useGetProjectsAccessQuery({ projects: selectedProjects })
 
   const accessGroupUsers: $Any = {}
   const removeUserAccessGroup = async (userList: string[], accessGroup?: string) => {
@@ -23,12 +22,12 @@ const useProjectAccessGroupData = (selectedProject: string) => {
     for (const user of userList) {
       for (const project of selectedProjects) {
         // @ts-ignore
-        if (!users![project][user]) {
+        if (!usersData![project][user]) {
           continue
         }
         const updatedAccessGroups = accessGroup
           ? // @ts-ignore
-            users![project][user]?.filter((item: string) => item !== accessGroup)
+            usersData![project][user]?.filter((item: string) => item !== accessGroup)
           : []
         multiUpdateData = {
           ...multiUpdateData,
@@ -71,7 +70,7 @@ const useProjectAccessGroupData = (selectedProject: string) => {
     for (const user of selectedUsers) {
       for (const project of selectedProjects) {
         // @ts-ignore
-        const accessGroups = getUpdatedAccessGroups(users?.[project][user] || [], changes)
+        const accessGroups = getUpdatedAccessGroups(usersData?.[project][user] || [], changes)
         multiUpdateData = {
           ...multiUpdateData,
           [user]: {
@@ -91,7 +90,8 @@ const useProjectAccessGroupData = (selectedProject: string) => {
   }
 
   return {
-    users,
+    isLoading,
+    users: usersData,
     accessGroupUsers,
     selectedProjects,
     setSelectedProjects,

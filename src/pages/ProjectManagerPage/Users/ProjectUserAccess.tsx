@@ -61,6 +61,7 @@ const ProjectUserAccess = () => {
   const [selectedProject] = useQueryParam('project')
 
   const {
+    isLoading: isLoadingAccessGroupsData,
     users: projectUsers,
     selectedProjects,
     setSelectedProjects,
@@ -77,7 +78,7 @@ const ProjectUserAccess = () => {
   const selfName = useSelector((state: $Any) => state.user.name)
   let {
     data: userList = [],
-    isLoading: usersLoading,
+    isLoading: isLoadingUsers,
     isError: usersFetchError,
   } = useGetUsersQuery({ selfName })
 
@@ -91,7 +92,7 @@ const ProjectUserAccess = () => {
   >()
   const [hoveredUser, setHoveredUser] = useState<HoveredUser | undefined>()
 
-  const { data: projects, isLoading: projectsLoading, isError, error } = useListProjectsQuery({})
+  const { data: projects, isLoading: isLoadingProjects, isError, error } = useListProjectsQuery({})
   if (isError) {
     console.error(error)
   }
@@ -339,7 +340,7 @@ const ProjectUserAccess = () => {
       <ProjectUserAccessProjectList
         selection={filteredSelectedProjects}
         projects={filteredProjects}
-        isLoading={projectsLoading}
+        isLoading={isLoadingProjects}
         // @ts-ignore
         userPermissions={userPermissions}
         onSelectionChange={setSelectedProjects}
@@ -357,7 +358,7 @@ const ProjectUserAccess = () => {
           selectedProjects={filteredSelectedProjects}
           selectedUsers={selectedAccessGroupUsers?.accessGroup ? [] : selectedUsers}
           tableList={filteredUsersWithAccessGroups}
-          isLoading={usersLoading}
+          isLoading={isLoadingUsers || isLoadingAccessGroupsData}
           readOnly={!hasEditRightsOnProject}
           hoveredUser={hoveredUser}
           onContextMenu={(e: $Any) => handleContextMenu()(e)}
@@ -369,6 +370,7 @@ const ProjectUserAccess = () => {
           sortable
           showAddButton
           showAccessGroups
+          shimmerEnabled
         />
       </ProjectUserAccessUserListWrapper>
     </>
@@ -415,7 +417,7 @@ const ProjectUserAccess = () => {
                   }
                   onAdd={handleRowAddButton}
                   onRemove={onRemove(accessGroup)}
-                  isLoading={usersLoading}
+                  isLoading={isLoadingUsers}
                 />
               </ProjectUserAccesAccessGroupPanel>
             )
@@ -424,7 +426,7 @@ const ProjectUserAccess = () => {
     </>
   )
 
-  if (permissionsLoading || usersLoading || projectsLoading) {
+  if (permissionsLoading || isLoadingUsers || isLoadingProjects) {
     return <LoadingPage message={''} children={''} />
   }
 
