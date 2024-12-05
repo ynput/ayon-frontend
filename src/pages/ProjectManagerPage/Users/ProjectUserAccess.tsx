@@ -306,7 +306,10 @@ const ProjectUserAccess = () => {
       {
         key: 'a',
         action: () => {
-          if (!selectedAccessGroupUsers?.users && !hoveredUser?.user) {
+          if (
+            (!selectedAccessGroupUsers?.users || selectedAccessGroupUsers!.users.length == 0) &&
+            !hoveredUser?.user
+          ) {
             return
           }
 
