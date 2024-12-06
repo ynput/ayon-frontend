@@ -129,3 +129,15 @@ export const Button = styled(ayonButton)`
   max-height: unset;
   flex: 1;
 `
+
+export const Links = styled.div`
+  width: 100%;
+  display: flex;
+  align-items: center;
+  padding: var(--padding-m);
+
+  button,
+  a {
+    width: 100%;
+  }
+`

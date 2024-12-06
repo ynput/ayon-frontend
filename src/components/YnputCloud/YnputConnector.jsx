@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react'
-import { Section } from '@ynput/ayon-react-components'
+import { Button, Icon, Section } from '@ynput/ayon-react-components'
 import { StringParam, useQueryParam, withDefault } from 'use-query-params'
 import YnputCloudButton from './YnputCloudButton'
 import {
@@ -13,6 +13,7 @@ import { useLocation } from 'react-router'
 import { useSelector } from 'react-redux'
 import clsx from 'clsx'
 import { isBefore } from 'date-fns'
+import { Link } from 'react-router-dom'
 
 const YnputConnector = ({
   onConnection,
@@ -25,6 +26,7 @@ const YnputConnector = ({
   initIsOpen = false,
   showStatus = true,
   showDisconnect = true,
+  showStudioLink = false,
   smallLogo = false,
   onClick,
   styleContainer,
@@ -140,7 +142,6 @@ const YnputConnector = ({
         darkMode={isConnected && darkMode}
         {...props}
       />
-
       <Styled.DropdownContainer $isOpen={isOpen}>
         <Styled.Dropdown className="dropdown">
           {productName && <span>{productName}</span>}
@@ -159,6 +160,16 @@ const YnputConnector = ({
           )}
         </Styled.Dropdown>
       </Styled.DropdownContainer>
+      {showStudioLink && isConnected && (
+        <Styled.Links>
+          <Link to={`https://ynput.cloud/org/${connectData.orgName}`} target="_blank">
+            <Button variant="tertiary">
+              Ynput Cloud Account
+              <Icon icon="arrow_right_alt" />
+            </Button>
+          </Link>
+        </Styled.Links>
+      )}
     </Styled.Container>
   )
 }

@@ -130,7 +130,7 @@ export const AppMenu = ({ user, ...props }) => {
           redirect={location.pathname + '/appMenu'}
           smallLogo
           darkMode
-          showDisconnect={false}
+          showStudioLink
         />
       )}
     </>
