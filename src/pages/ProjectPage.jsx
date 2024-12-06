@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { Button, Dialog } from '@ynput/ayon-react-components'
 
 import BrowserPage from './BrowserPage'
-import EditorPage from './EditorPage'
+import ProjectOverviewPage from './ProjectOverviewPage'
 import LoadingPage from './LoadingPage'
 import ProjectAddon from './ProjectAddon'
 import WorkfilesPage from './WorkfilesPage'
@@ -93,6 +93,12 @@ const ProjectPage = () => {
   const links = useMemo(
     () => [
       {
+        name: 'Overview',
+        path: `/projects/${projectName}/overview`,
+        module: 'overview',
+        uriSync: true,
+      },
+      {
         name: 'Browser',
         path: `/projects/${projectName}/browser`,
         module: 'browser',
@@ -104,7 +110,6 @@ const ProjectPage = () => {
         module: 'tasks',
         uriSync: true,
       },
-      { name: 'Editor', path: `/projects/${projectName}/editor`, module: 'editor', uriSync: true },
       {
         name: 'Workfiles',
         path: `/projects/${projectName}/workfiles`,
@@ -149,8 +154,8 @@ const ProjectPage = () => {
   }
 
   const getPageByModuleAndAddonData = (module, addonName, addonsData) => {
-    if (module === 'editor') {
-      return <EditorPage />
+    if (module === 'overview') {
+      return <ProjectOverviewPage />
     }
     if (module === 'tasks') {
       return <TasksProgressPage />

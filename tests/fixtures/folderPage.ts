@@ -1,16 +1,13 @@
 import { expect, test as base } from '@playwright/test'
 import type { Page } from '@playwright/test'
 
-const getFolderName = prefix => browser => prefix + '_' + browser
+const getFolderName = (prefix) => (browser) => prefix + '_' + browser
 
 class FolderPage {
-  constructor(
-    public readonly page: Page,
-    public readonly browserName: String,
-  ) {}
+  constructor(public readonly page: Page, public readonly browserName: String) {}
 
   async goto(projectName) {
-    await this.page.goto(`/projects/${projectName}/editor`)
+    await this.page.goto(`/projects/${projectName}/overview`)
   }
 
   async createFolder(projectName, folderName) {

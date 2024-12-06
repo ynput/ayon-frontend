@@ -21,7 +21,6 @@ const initialState = {
     tasks: [],
     tasksNames: [],
     workfiles: [],
-    editor: [],
     lastFocused: null,
   },
   selectedVersions: {},
@@ -56,7 +55,6 @@ const localStorageKeys = [
   'focused.tasks', //
   'focused.tasksNames', //
   'focused.workfiles', //
-  'focused.editor', //
   'selectedVersions', //
 ]
 
@@ -109,9 +107,6 @@ const reducers = {
     },
     'focused.workfiles': {
       value: initialState.focused.workfiles,
-    },
-    'focused.editor': {
-      value: initialState.focused.editor,
     },
   },
   setExpandedFolders: {
@@ -207,17 +202,6 @@ const reducers = {
     },
     'focused.representations': {
       payload: true,
-    },
-  },
-  editorSelectionChanged: {
-    'focused.editor': {
-      payload: 'selection',
-    },
-    'focused.folders': {
-      payload: 'folders',
-    },
-    'focused.tasks': {
-      payload: 'tasks',
     },
   },
   setFocusedVersions: {
@@ -384,9 +368,6 @@ const contextSlice = createSlice({
     setFocusedRepresentations: (state, action) => {
       updateStateWithReducer(reducers.setFocusedRepresentations, state, action)
     },
-    editorSelectionChanged: (state, action) => {
-      updateStateWithReducer(reducers.editorSelectionChanged, state, action)
-    },
     setFocusedVersions: (state, action) => {
       updateStateWithReducer(reducers.setFocusedVersions, state, action)
     },
@@ -508,7 +489,6 @@ export const {
   setUri,
   setUriChanged,
   productSelected,
-  editorSelectionChanged,
   projectSelected,
   onShare,
   closeShare,

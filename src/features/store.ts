@@ -6,7 +6,6 @@ import { setupListeners } from '@reduxjs/toolkit/query'
 import userReducer from '@state/user'
 import contextReducer, { contextLocalItems } from '@state/context'
 import projectReducer from '@state/project'
-import editorReducer from '@state/editor'
 import dashboardReducer, { dashboardLocalItems } from '@state/dashboard'
 import detailsReducer, { detailsLocalItems } from '@state/details'
 import addonsManagerReducer from '@state/addonsManager'
@@ -26,7 +25,6 @@ const store = configureStore({
     user: userReducer,
     context: contextReducer,
     project: projectReducer,
-    editor: editorReducer,
     dashboard: dashboardReducer,
     details: detailsReducer,
     addonsManager: addonsManagerReducer,
