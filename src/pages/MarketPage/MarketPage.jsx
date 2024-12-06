@@ -400,6 +400,7 @@ const MarketPage = () => {
             onSelect={handleSelectFilter}
             selected={selectedFilter}
             onConnection={handleYnputConnect}
+            showAllReleases={hasCloudSub}
           />
 
           <MarketAddonsList

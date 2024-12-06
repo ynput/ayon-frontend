@@ -93,13 +93,13 @@ export const addonFilters: MarketFilter[] = [
 ]
 
 export const releaseFilters: MarketFilter[] = [
-  // {
-  //   id: 'all',
-  //   type: 'releases',
-  //   name: 'All',
-  //   filter: [],
-  //   tooltip: 'All bundle releases',
-  // },
+  {
+    id: 'all',
+    type: 'releases',
+    name: 'All',
+    filter: [],
+    tooltip: 'All bundle releases',
+  },
   {
     id: 'latest',
     type: 'releases',
@@ -137,18 +137,33 @@ type MarketFiltersProps = {
   onSelect: (type: FilterType, id: string) => void
   onConnection: () => void
   filterType: FilterType
+  showAllReleases: boolean
 }
 
-const MarketFilters = ({ onSelect, selected, onConnection, filterType }: MarketFiltersProps) => {
+const MarketFilters = ({
+  onSelect,
+  selected,
+  onConnection,
+  filterType,
+  showAllReleases,
+}: MarketFiltersProps) => {
   const handleSelect = (e: MouseEvent<HTMLDivElement>, type: FilterType) => {
     const target = e.target as HTMLDivElement
     onSelect(type, target.id)
   }
 
+  const filteredMarketFilters = showAllReleases
+    ? marketFilters
+    : marketFilters.map((f) =>
+        f.type === 'releases'
+          ? { ...f, filters: f.filters.filter((f) => f.id !== 'all' || showAllReleases) }
+          : f,
+      )
+
   return (
     <StyledSection>
       <StyledList>
-        {marketFilters.map((filter) => (
+        {filteredMarketFilters.map((filter) => (
           <Fragment key={filter.type}>
             <div className={clsx('title', Type.titleMedium)}>{filter.name}</div>
             {filter.filters.map((f) => (
