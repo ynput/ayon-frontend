@@ -12,7 +12,7 @@ import * as Styled from './YnputCloud.styled'
 import { useLocation } from 'react-router'
 import { useSelector } from 'react-redux'
 import clsx from 'clsx'
-import { before } from 'lodash'
+import { isBefore } from 'date-fns'
 
 const YnputConnector = ({
   onConnection,
@@ -49,7 +49,7 @@ const YnputConnector = ({
   const hasTrialExpired = (date) => {
     if (!date) return false
     const trialDate = new Date(date)
-    return before(trialDate, new Date())
+    return isBefore(trialDate, new Date())
   }
   const hasActiveSub = (subs) => {
     if (!subs) return false
