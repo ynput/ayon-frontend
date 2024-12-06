@@ -63,10 +63,10 @@ const MarketPage = () => {
   const [showConnectDialog, setShowConnectDialog] = useState(false)
 
   // FILTER ADDONS BY FIELDS
-  const [filterType, setFilterType] = useQueryParam('type', withDefault(StringParam, 'addons'))
+  const [filterType, setFilterType] = useQueryParam('type', withDefault(StringParam, 'releases'))
   const [selectedFilter, setSelectedFilter] = useQueryParam(
     'filter',
-    withDefault(StringParam, 'all'),
+    withDefault(StringParam, 'latest'),
   )
   const filter = useMemo(
     () => getMarketFilter(filterType, selectedFilter),

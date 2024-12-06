@@ -94,18 +94,18 @@ export const addonFilters: MarketFilter[] = [
 
 export const releaseFilters: MarketFilter[] = [
   {
-    id: 'all',
-    type: 'releases',
-    name: 'All',
-    filter: [],
-    tooltip: 'All bundle releases',
-  },
-  {
     id: 'latest',
     type: 'releases',
     name: 'Latest',
     filter: [{ isLatest: true }],
     tooltip: 'Latest bundle releases',
+  },
+  {
+    id: 'all',
+    type: 'releases',
+    name: 'All',
+    filter: [],
+    tooltip: 'All bundle releases',
   },
 ]
 
@@ -115,14 +115,14 @@ export const marketFilters: {
   filters: MarketFilter[]
 }[] = [
   {
-    type: 'addons',
-    name: 'Addons',
-    filters: addonFilters,
-  },
-  {
     type: 'releases',
     name: 'Release Bundles',
     filters: releaseFilters,
+  },
+  {
+    type: 'addons',
+    name: 'Addons',
+    filters: addonFilters,
   },
 ]
 
