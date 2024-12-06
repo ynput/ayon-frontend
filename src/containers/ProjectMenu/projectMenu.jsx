@@ -209,10 +209,10 @@ const ProjectMenu = ({ isOpen, onHide }) => {
 
     setSearchOpen(false)
 
-    // if projects/[project] is null, projects/[projectName]/browser, else projects/[projectName]/[module]
+    // if projects/[project] is null, projects/[projectName]/overview, else projects/[projectName]/[module]
     const link = window.location.pathname.includes('projects')
-      ? `/projects/${projectName}/${window.location.pathname.split('/')[3] || 'browser'}`
-      : `/projects/${projectName}/browser`
+      ? `/projects/${projectName}/${window.location.pathname.split('/')[3] || 'overview'}`
+      : `/projects/${projectName}/overview`
 
     dispatch((_, getState) => navigate(getState)(link))
   }

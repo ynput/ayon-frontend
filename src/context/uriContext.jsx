@@ -61,7 +61,7 @@ function URIProvider({ children }) {
 
     const path = window.location.pathname
     if (!path.startsWith(`/projects/${project}`)) {
-      navigate(`/projects/${project}/browser`)
+      navigate(`/projects/${project}/overview`)
     }
   }
 

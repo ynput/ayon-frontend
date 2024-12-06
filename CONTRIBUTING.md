@@ -51,7 +51,7 @@ Commit messages should be formatted as follows:
   │       │             │
   │       │             └─⫸ Summary in present tense. Not capitalized. No period at the end.
   │       │
-  │       └─⫸ Commit Scope: setting|browser|editor|auth|inbox|preview|activities|....
+  │       └─⫸ Commit Scope: setting|browser|overview|auth|inbox|preview|activities|....
   │
   └─⫸ Commit Type: build|ci|docs|feat|fix|perf|refactor|test
 ```
