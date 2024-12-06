@@ -4,14 +4,15 @@ import styled, { keyframes } from 'styled-components'
 export const Container = styled.div`
   padding: 6px 12px;
   background-color: var(--md-sys-color-surface-container-low);
-  border: 1px solid var(--md-sys-color-surface-container-low);
-  border-bottom-color: var(--md-sys-color-outline-variant);
+  border-radius: var(--border-radius-m);
+  border: 1px solid transparent;
   display: inline-flex;
   justify-content: start;
   align-items: center;
   gap: 12px;
   position: relative;
   z-index: 1;
+  user-select: none;
 
   cursor: pointer;
 
@@ -22,7 +23,6 @@ export const Container = styled.div`
   &.selected {
     background-color: var(--md-sys-color-primary-container);
 
-    border-radius: var(--border-radius-m);
     border-color: var(--md-sys-color-primary);
   }
 

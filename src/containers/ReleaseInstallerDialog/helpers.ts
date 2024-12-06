@@ -10,13 +10,14 @@ import { DownloadAddonsApiArg } from '@queries/addons/updateAddons'
 import getNewBundleName from '@pages/SettingsPage/Bundles/getNewBundleName'
 
 export const createReleaseSubtitle = (
-  release: { name: string; createdAt: string } | null,
+  release: { name?: string; createdAt: string } | null,
 ): string => {
   if (!release) return 'loading...'
-  const releaseVersion = release.name.split('-')[0]
-  return `Ynput - ${releaseVersion} - ${formatDistance(new Date(release.createdAt), new Date(), {
+  const releaseVersion = release.name ? release.name.split('-')[0] : ''
+  const versionText = releaseVersion ? `Ynput - ${releaseVersion} - ` : 'Ynput - '
+  return `${versionText}${formatDistance(new Date(release.createdAt), new Date(), {
     addSuffix: true,
-  })}`
+  })}`.replace('about ', '')
 }
 
 export const createAddonsSubtitle = (releaseAddons: string[], selectedAddons: string[]): string => {

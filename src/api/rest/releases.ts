@@ -2,23 +2,26 @@ import { RestAPI as api } from '../../services/ayon'
 const injectedRtkApi = api.injectEndpoints({
   endpoints: (build) => ({
     getReleases: build.query<GetReleasesApiResponse, GetReleasesApiArg>({
-      query: () => ({ url: `/api/onboarding/releases` }),
+      query: (queryArg) => ({ url: `/api/market/releases`, params: { all: queryArg.all } }),
     }),
     getReleaseInfo: build.query<GetReleaseInfoApiResponse, GetReleaseInfoApiArg>({
-      query: (queryArg) => ({ url: `/api/onboarding/releases/${queryArg.releaseName}` }),
+      query: (queryArg) => ({ url: `/api/market/releases/${queryArg.releaseName}` }),
     }),
   }),
   overrideExisting: false,
 })
 export { injectedRtkApi as api }
 export type GetReleasesApiResponse = /** status 200 Successful Response */ ReleaseListModel
-export type GetReleasesApiArg = void
+export type GetReleasesApiArg = {
+  all?: boolean
+}
 export type GetReleaseInfoApiResponse = /** status 200 Successful Response */ ReleaseInfoModel
 export type GetReleaseInfoApiArg = {
   releaseName: string
 }
 export type ReleaseListItemModel = {
   name: string
+  release: string
   label: string
   bio?: string
   icon?: string
@@ -29,6 +32,14 @@ export type ReleaseListItemModel = {
 }
 export type ReleaseListModel = {
   releases: ReleaseListItemModel[]
+}
+export type ValidationError = {
+  loc: (string | number)[]
+  msg: string
+  type: string
+}
+export type HttpValidationError = {
+  detail?: ValidationError[]
 }
 export type ReleaseAddon = {
   name: string
@@ -112,12 +123,4 @@ export type ReleaseInfoModel = {
   addons?: ReleaseAddon[]
   installers?: InstallerManifest[]
   dependencyPackages?: DependencyPackageManifest[]
-}
-export type ValidationError = {
-  loc: (string | number)[]
-  msg: string
-  type: string
-}
-export type HttpValidationError = {
-  detail?: ValidationError[]
 }

@@ -1,6 +1,10 @@
 import styled from 'styled-components'
 
-export const Icon = styled.div`
+type IconProps = {
+  $size?: number
+}
+
+export const Icon = styled.div<IconProps>`
   position: relative;
   &,
   img {

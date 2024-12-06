@@ -1,4 +1,5 @@
-import { Button, Dropdown, Panel } from '@ynput/ayon-react-components'
+import { Button, Dropdown, Panel, theme } from '@ynput/ayon-react-components'
+import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 
 export const PanelContainer = styled(Panel)`
@@ -199,5 +200,31 @@ export const ExternalLInk = styled.a`
     &.label {
       flex: 1;
     }
+  }
+`
+
+export const ReleaseAddons = styled.div`
+  display: flex;
+  gap: var(--base-gap-small);
+  flex-wrap: wrap;
+`
+
+export const ReleaseAddonLink = styled(Link)`
+  position: relative;
+  cursor: pointer;
+  ${theme.bodySmall}
+  user-select: none;
+  color: var(--md-sys-color-outline);
+  padding: var(--padding-s) var(--padding-m);
+  border-radius: var(--border-radius-m);
+  border: solid 1px var(--md-sys-color-outline-variant);
+
+  &:hover {
+    background-color: var(--md-sys-color-surface-container-highest);
+    color: var(--md-sys-color-on-surface);
+  }
+
+  &.loading {
+    border-color: transparent;
   }
 `
