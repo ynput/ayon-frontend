@@ -60,7 +60,7 @@ function URIProvider({ children }) {
     dispatch(onUriNavigate(focused))
 
     const path = window.location.pathname
-    if (!path.startsWith(`/projects/${project}`)) {
+    if (!path.startsWith(`/projects/${project}`) && !path.startsWith(`/dashboard/tasks`)) {
       navigate(`/projects/${project}/browser`)
     }
   }
