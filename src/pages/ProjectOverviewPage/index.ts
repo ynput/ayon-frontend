@@ -1,2 +1,2 @@
-import EditorPage from './EditorPage'
+import EditorPage from './ProjectOverviewPage'
 export default EditorPage
