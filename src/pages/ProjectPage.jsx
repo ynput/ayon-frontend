@@ -17,6 +17,7 @@ import { useGetProjectAddonsQuery } from '@queries/addons/getAddons'
 import { TabPanel, TabView } from 'primereact/tabview'
 import AppNavLinks from '@containers/header/AppNavLinks'
 import { SlicerProvider } from '@context/slicerContext'
+import NewEditorPage from './NewEditor/NewEditorPage'
 
 const ProjectContextInfo = () => {
   /**
@@ -110,6 +111,8 @@ const ProjectPage = () => {
         module: 'tasks',
         uriSync: true,
       },
+      { name: 'Editor', path: `/projects/${projectName}/editor`, module: 'editor', uriSync: true },
+      { name: 'New editor', path: `/projects/${projectName}/newEditor`, module: 'newEditor', uriSync: true },
       {
         name: 'Workfiles',
         path: `/projects/${projectName}/workfiles`,
@@ -156,6 +159,9 @@ const ProjectPage = () => {
   const getPageByModuleAndAddonData = (module, addonName, addonsData) => {
     if (module === 'overview') {
       return <ProjectOverviewPage />
+    }
+    if (module === 'newEditor') {
+      return <NewEditorPage />
     }
     if (module === 'tasks') {
       return <TasksProgressPage />

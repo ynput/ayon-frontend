@@ -148,7 +148,10 @@ export const SlicerProvider = ({ children }: SlicerProviderProps) => {
 }
 
 const useSlicerRemotes = (): { config: SlicerConfig; useExtraSlices: UseExtraSlices } => {
-  const configFallback: SlicerConfig = { progress: { fields: ['hierarchy'] } }
+  const configFallback: SlicerConfig = {
+    progress: { fields: ['hierarchy'] },
+    overview: { fields: ['hierarchy'] },
+  }
 
   // get slicer remotes
   const [config] = useLoadModule({
