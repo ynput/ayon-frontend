@@ -55,7 +55,7 @@ const patchKanban = (
 }
 
 // try to patch the progress view if there are queries that need to be updated
-const patchProgressView = ({ operations = [], state, dispatch }) => {
+const patchProgressView = ({ operations = [], state, dispatch, entityType }) => {
   // create invalidation tags for progress view
   const invalidationTags = operations.map((o) => ({ type: 'progress', id: o.id }))
   // find the entries that need to be updated
@@ -69,23 +69,35 @@ const patchProgressView = ({ operations = [], state, dispatch }) => {
       dispatch(
         api.util.updateQueryData(entry.endpointName, entry.originalArgs, (draft) => {
           for (const operation of operations) {
-            const taskId = operation.id
+            const entityId = operation.id
             const patch = operation.data
-            const folderId = operation.meta?.folderId
-            const folder = draft.find((folder) => folder.id === folderId)
-            if (!folder) throw new Error('Patching progress view: folder not found')
-            const task = folder.tasks?.find((task) => task.id === taskId)
-            if (!task) throw new Error('Patching progress view: task not found')
-            // update task
-            const newTask = { ...task, ...patch }
-            // update folder
-            const newFolder = {
-              ...folder,
-              tasks: folder.tasks.map((t) => (t.id === taskId ? newTask : t)),
+
+            // patch the updated task data
+            if (entityType === 'task') {
+              const folderId = operation.meta?.folderId
+              const folder = draft.find((folder) => folder.id === folderId)
+              if (!folder) throw new Error('Patching progress view: folder not found')
+              const task = folder.tasks?.find((task) => task.id === entityId)
+              if (!task) throw new Error('Patching progress view: task not found')
+              // update task
+              const newTask = { ...task, ...patch }
+              // update folder
+              const newFolder = {
+                ...folder,
+                tasks: folder.tasks.map((t) => (t.id === entityId ? newTask : t)),
+              }
+              // update query
+              const folderIndex = draft.findIndex((f) => f.id === folderId)
+              draft[folderIndex] = newFolder
+            } else if (entityType === 'folder') {
+              const folder = draft.find((folder) => folder.id === entityId)
+              if (!folder) throw new Error('Patching progress view: folder not found')
+              // update folder
+              const newFolder = { ...folder, ...patch }
+              // update query
+              const folderIndex = draft.findIndex((f) => f.id === entityId)
+              draft[folderIndex] = newFolder
             }
-            // update query
-            const folderIndex = draft.findIndex((f) => f.id === folderId)
-            draft[folderIndex] = newFolder
           }
         }),
       ),
@@ -340,9 +352,9 @@ const updateEntity = api.injectEndpoints({
           const state = getState()
 
           let progressPatches = []
-          if (entityType === 'task') {
+          if (entityType === 'task' || entityType === 'folder') {
             // patch the progress for task updates
-            progressPatches = patchProgressView({ operations, state, dispatch })
+            progressPatches = patchProgressView({ operations, state, dispatch, entityType })
           }
 
           // check if any of the requests failed and invalidate the tasks cache again to refetch

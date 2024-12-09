@@ -36,6 +36,7 @@ export const SearchBar = styled.div`
 export const SearchBarFilters = styled.div`
   display: flex;
   gap: var(--base-gap-small);
+  white-space: nowrap;
 `
 
 export const FilterButton = styled(Button)`

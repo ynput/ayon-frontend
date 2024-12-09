@@ -1,46 +1,77 @@
 import { FC } from 'react'
 import * as Styled from './FolderBody.styled'
 import clsx from 'clsx'
+import { EntityCard } from '@ynput/ayon-react-components'
+import getEntityTypeIcon from '@helpers/getEntityTypeIcon'
+import { Status } from '@api/rest/project'
 
 interface FolderBodyProps {
-  name: string
-  folderId: string
-  folderIcon?: string | null
+  folder: {
+    id: string
+    name: string
+    icon?: string | null
+    status?: Status
+    updatedAt: string
+  }
+  isSelected: boolean
   isExpanded: boolean
   projectName: string
   onExpandToggle: () => void
+  onFolderOpen?: (id: string) => void
 }
 
 export const FolderBody: FC<FolderBodyProps> = ({
-  name,
-  folderId,
-  folderIcon,
+  folder,
+  isSelected,
   isExpanded,
   projectName,
   onExpandToggle,
+  onFolderOpen,
 }) => {
+  const thumbnailUrl = `/api/projects/${projectName}/folders/${folder.id}/thumbnail?updatedAt=${folder.updatedAt}`
+
   return (
     <Styled.Body className={clsx({ expanded: isExpanded })}>
       <Styled.ExpandButton
         icon={isExpanded ? 'collapse_all' : 'expand_all'}
         variant="text"
         onClick={onExpandToggle}
+        className={clsx({ expanded: isExpanded })}
       />
-      <Styled.ThumbnailCard className={clsx({ expanded: isExpanded })}>
-        <Styled.FolderThumbnail
-          projectName={projectName}
-          entityType={'folder'}
-          entityId={folderId}
-          icon={folderIcon}
-          showBorder={false}
-        />
-        <Styled.ThumbnailShotName className={clsx({ expanded: isExpanded })}>
-          {name}
-        </Styled.ThumbnailShotName>
-      </Styled.ThumbnailCard>
-      <Styled.Path>
-        <span className="title">{name}</span>
-      </Styled.Path>
+
+      <Styled.ContentContainer>
+        {folder.status && <Styled.Status size="icon" status={folder.status} />}
+        <Styled.ContentWrapper className={clsx({ expanded: isExpanded })}>
+          <EntityCard
+            title={folder.name}
+            titleIcon={folder.icon ?? getEntityTypeIcon('folder')}
+            imageUrl={thumbnailUrl}
+            imageIcon={folder.icon ?? getEntityTypeIcon('folder')}
+            status={folder.status}
+            onClick={() => onFolderOpen?.(folder.id)}
+            isActive={isSelected}
+          />
+        </Styled.ContentWrapper>
+        <Styled.ThumbnailCard className={clsx({ expanded: isExpanded })}>
+          <Styled.FolderThumbnail
+            entityId={folder.id}
+            entityType="folder"
+            projectName={projectName}
+            entityUpdatedAt={folder.updatedAt}
+            icon={folder.icon}
+            showBorder={false}
+            src={thumbnailUrl}
+            hoverIcon="expand_all"
+            onClick={() => !isExpanded && onExpandToggle()}
+          />
+        </Styled.ThumbnailCard>
+        <Styled.Path
+          onClick={() => onFolderOpen?.(folder.id)}
+          className={clsx({ selected: isSelected })}
+        >
+          <span className="small-title">{folder.name}</span>
+        </Styled.Path>
+      </Styled.ContentContainer>
     </Styled.Body>
   )
 }

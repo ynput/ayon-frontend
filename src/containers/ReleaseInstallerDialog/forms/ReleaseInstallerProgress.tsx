@@ -1,4 +1,4 @@
-import { FC } from 'react'
+import { FC, useEffect, useState } from 'react'
 import { EventWithProgress } from '../hooks/useInstallRelease'
 import styled from 'styled-components'
 import { Button, Toolbar } from '@ynput/ayon-react-components'
@@ -31,13 +31,16 @@ const ProgressBar = styled.div<{ $progress: number }>`
 
 interface ReleaseInstallerProgressProps {
   progress: EventWithProgress[]
-  onFinish: (restart: boolean) => void
+  onInstallFinished: () => void
+  onFinishAction: (restart: boolean) => void
 }
 
 export const ReleaseInstallerProgress: FC<ReleaseInstallerProgressProps> = ({
   progress,
-  onFinish,
+  onInstallFinished,
+  onFinishAction,
 }) => {
+  const [hasFinished, setHasFinished] = useState(false)
   // get currently installing event
   const currentInstalling = progress.find((event) => event.status === 'in_progress')
   const isFinished = progress.every((event) => event.status === 'finished')
@@ -47,7 +50,14 @@ export const ReleaseInstallerProgress: FC<ReleaseInstallerProgressProps> = ({
     return acc + event.size
   }, 0)
 
-  console.log(progress)
+  // callback when all events are finished
+  useEffect(() => {
+    if (isFinished && !hasFinished) {
+      onInstallFinished()
+      // prevent calling onFinishAction multiple times
+      setHasFinished(true)
+    }
+  }, [isFinished, hasFinished, onInstallFinished])
 
   return (
     <StyledProgress>
@@ -57,10 +67,10 @@ export const ReleaseInstallerProgress: FC<ReleaseInstallerProgressProps> = ({
         : getInstallMessage(currentInstalling)}
       {isFinished && (
         <Toolbar>
-          <Button icon="snooze" onClick={() => onFinish(false)}>
+          <Button icon="snooze" onClick={() => onFinishAction(false)}>
             Restart later (snooze)
           </Button>
-          <Button variant="filled" disabled={!isFinished} onClick={() => onFinish(true)}>
+          <Button variant="filled" disabled={!isFinished} onClick={() => onFinishAction(true)}>
             Restart now
           </Button>
         </Toolbar>
@@ -81,8 +91,6 @@ const calculateTotalProgress = (progress: EventWithProgress[], total: number): n
     if (event.status === 'finished') return acc + event.size
     return acc + ((event.progress || 0) / 100) * event.size
   }, 0)
-
-  console.log(progressTotal < total)
 
   return Math.round((progressTotal / total) * 100) / 100
 }

@@ -7,20 +7,8 @@ import { useSelector } from 'react-redux'
 import { useGetWorkfileByIdQuery } from '@queries/getWorkfiles'
 import { useGetSiteRootsQuery } from '@queries/customRoots'
 import SiteDropdown from '@containers/SiteDropdown'
+import { getCurrentPlatform } from '@helpers/platform'
 
-const getCurrentPlatform = () => {
-  const platform = window.navigator.userAgent.toLowerCase()
-
-  if (platform.includes('win')) {
-    return 'windows'
-  } else if (platform.includes('mac')) {
-    return 'darwin'
-  } else if (platform.includes('linux')) {
-    return 'linux'
-  } else {
-    return 'other'
-  }
-}
 
 const replaceRoot = (inputStr, replacements) => {
   if (!inputStr) return inputStr

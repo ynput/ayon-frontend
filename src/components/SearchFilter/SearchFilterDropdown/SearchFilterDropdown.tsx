@@ -1,5 +1,5 @@
 import { forwardRef, useMemo, useState } from 'react'
-import { Filter, Option } from '../types'
+import { Filter, FilterOperator, Option } from '../types'
 import * as Styled from './SearchFilterDropdown.styled'
 import { Button, Icon, InputSwitch, Spacer } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
@@ -23,8 +23,11 @@ export interface SearchFilterDropdownProps {
   isCustomAllowed: boolean
   isHasValueAllowed?: boolean
   isNoValueAllowed?: boolean
+  isInvertedAllowed?: boolean
+  operatorChangeable?: boolean
   onSelect: (option: Option, config?: OnSelectConfig) => void
   onInvert: (id: string) => void // invert the filter
+  onOperatorChange?: (id: string, operator: FilterOperator) => void // change the operator
   onConfirmAndClose?: (filters: Filter[], config?: OnSelectConfig) => void // close the dropdown and update the filters
   onSwitchFilter?: (direction: 'left' | 'right') => void // switch to the next filter to edit
 }
@@ -39,8 +42,11 @@ const SearchFilterDropdown = forwardRef<HTMLUListElement, SearchFilterDropdownPr
       isCustomAllowed,
       isHasValueAllowed,
       isNoValueAllowed,
+      isInvertedAllowed,
+      operatorChangeable,
       onSelect,
       onInvert,
+      onOperatorChange,
       onConfirmAndClose,
       onSwitchFilter,
     },
@@ -121,7 +127,8 @@ const SearchFilterDropdown = forwardRef<HTMLUListElement, SearchFilterDropdownPr
       const option = allOptions.find((option) => option.id === id)
       if (!option) return console.error('Option not found:', id)
 
-      const closeOptions = option.id === 'hasValue'
+      const closeOptions =
+        (option.id === 'hasValue' || option.id === 'noValue') && values.length === 0
 
       onSelect(option, { confirm: closeOptions, restart: closeOptions })
       // clear search
@@ -133,12 +140,10 @@ const SearchFilterDropdown = forwardRef<HTMLUListElement, SearchFilterDropdownPr
       if ([' ', 'Enter'].includes(event.key)) {
         event.preventDefault()
         event.stopPropagation()
-        if (event.key === 'Enter' && (event.metaKey || event.ctrlKey || event.shiftKey)) {
+        if (event.key === 'Enter') {
           //  shift + enter will confirm but keep the dropdown open
-          //  (cmd or ctrl) + enter will confirm and close dropdown
+          //  any other enter will confirm and close dropdown
           onConfirmAndClose && onConfirmAndClose(values, { restart: event.shiftKey })
-        } else {
-          handleSelectOption(event)
         }
       }
       // up arrow
@@ -293,8 +298,31 @@ const SearchFilterDropdown = forwardRef<HTMLUListElement, SearchFilterDropdownPr
                   Back
                 </Button>
                 <Spacer />
-                <span>Excludes</span>
-                <InputSwitch checked={parentFilter?.inverted} onChange={() => onInvert(parentId)} />
+                {isInvertedAllowed && (
+                  <>
+                    <span>Excludes</span>
+                    <InputSwitch
+                      checked={parentFilter?.inverted}
+                      onChange={() => onInvert(parentId)}
+                    />
+                  </>
+                )}
+                {operatorChangeable && (
+                  <Styled.Operator>
+                    {['AND', 'OR'].map((operator) => (
+                      <Button
+                        key={operator}
+                        onClick={() => {
+                          onOperatorChange && onOperatorChange(parentId, operator as FilterOperator)
+                        }}
+                        selected={parentFilter?.operator === operator}
+                        icon={parentFilter?.operator === operator ? 'check' : undefined}
+                      >
+                        {operator}
+                      </Button>
+                    ))}
+                  </Styled.Operator>
+                )}
                 <Button
                   variant="filled"
                   onClick={() => {

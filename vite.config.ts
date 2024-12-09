@@ -1,6 +1,8 @@
 import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import { fileURLToPath, URL } from 'url'
+import { federation } from '@module-federation/vite'
+import { dependencies } from './package.json'
 
 export default ({ mode }) => {
   Object.assign(process?.env, loadEnv(mode, process?.cwd(), ''))
@@ -55,7 +57,36 @@ export default ({ mode }) => {
         },
       },
     },
-    plugins: [react()],
+    plugins: [
+      federation({
+        name: 'host',
+        remotes: {},
+        exposes: {},
+        filename: 'remoteEntry.js',
+        shared: {
+          react: {
+            requiredVersion: dependencies.react,
+            singleton: true,
+          },
+          'react-dom': {
+            requiredVersion: dependencies['react-dom'],
+            singleton: true,
+          },
+          'styled-components': {
+            requiredVersion: dependencies['styled-components'],
+            singleton: true,
+          },
+          // '@ynput/ayon-react-components': {
+          //   requiredVersion: dependencies['@ynput/ayon-react-components'],
+          // },
+        },
+        runtimePlugins: ['./src/remote/custom-runtime-plugin'],
+      }),
+      react(),
+    ],
+    build: {
+      target: 'chrome89',
+    },
     resolve: {
       alias: [
         { find: '@', replacement: fileURLToPath(new URL('./src', import.meta.url)) },

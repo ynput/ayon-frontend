@@ -78,37 +78,37 @@ const ArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
 
   return (
     <DndContextWrapper>
-      <DndContext
-        collisionDetection={closestCenter}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-      >
-        <SortableContext items={items} strategy={verticalListSortingStrategy}>
-          {items.map((item, idx) => (
-            <DraggableItem id={item.id} isVisible={item.id !== draggedItemId} key={idx}>
-              <FormArrayFieldWrapper onChange={onArrayChanged(item)} item={item} />
+    <DndContext
+      collisionDetection={closestCenter}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
+      <SortableContext items={items} strategy={verticalListSortingStrategy}>
+        {items.map((item, idx) => (
+          <DraggableItem id={item.id} isVisible={item.id !== draggedItemId} key={idx}>
+            <FormArrayFieldWrapper onChange={onArrayChanged(item)} item={item} />
+          </DraggableItem>
+        ))}
+      </SortableContext>
+
+      {props.canAdd && !props.schema?.disabled && (
+        <ArrayItemControls>
+          <Button onClick={onAddItem} icon="add" />
+        </ArrayItemControls>
+      )}
+
+      {draggedItem &&
+        createPortal(
+          //class needed to inherit styling defined in settings editor sass file
+          <DragOverlay className="rjsf">
+            <DraggableItem id={draggedItem!.id} isOverlay>
+              <FormArrayFieldWrapper item={draggedItem} />
             </DraggableItem>
-          ))}
-        </SortableContext>
-
-        {props.canAdd && !props.schema?.disabled && (
-          <ArrayItemControls>
-            <Button onClick={onAddItem} icon="add" />
-          </ArrayItemControls>
+          </DragOverlay>,
+          document.body,
         )}
-
-        {draggedItem &&
-          createPortal(
-            //class needed to inherit styling defined in settings editor sass file
-            <DragOverlay className="rjsf">
-              <DraggableItem id={draggedItem!.id} isOverlay>
-                <FormArrayFieldWrapper item={draggedItem} />
-              </DraggableItem>
-            </DragOverlay>,
-            document.body,
-          )}
-      </DndContext>
-    </DndContextWrapper>
+    </DndContext>
+  </DndContextWrapper>
   )
 }
 

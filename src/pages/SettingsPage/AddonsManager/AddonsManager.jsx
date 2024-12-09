@@ -134,7 +134,7 @@ const AddonsManager = () => {
   const viewInMarket = (selected) => [
     {
       label: 'View in Market',
-      command: () => navigate(`/market?addon=${selected[0].split(' ')[0]}`),
+      command: () => navigate(`/market?selected=${selected[0].split(' ')[0]}`),
       icon: 'store',
     },
   ]

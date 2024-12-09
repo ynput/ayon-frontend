@@ -5,6 +5,7 @@
 
 import { AttributeModel, AttributeEnumItem, AttributeData } from '@api/rest/attributes'
 import { Tag } from '@api/rest/project'
+import { ALLOW_INVERTED_FILTERS, SHOW_DATE_FILTERS } from '@components/SearchFilter/featureFlags'
 import { Option } from '@components/SearchFilter/types'
 import getEntityTypeIcon from '@helpers/getEntityTypeIcon'
 import { useGetAttributeListQuery } from '@queries/attributes/getAttributes'
@@ -304,7 +305,11 @@ const useBuildFilterOptions = ({
       ? attributesByScope.filter((attribute) => data.attributes && data.attributes[attribute.name])
       : attributesByScope
 
-    attributesByValues.forEach((attribute) => {
+    const attributesWithoutDates = SHOW_DATE_FILTERS
+      ? attributesByValues
+      : attributesByValues.filter((attribute) => attribute.data.type !== 'datetime')
+
+    attributesWithoutDates.forEach((attribute) => {
       // for the attribute, get the option root
       const option = getAttributeFieldOptionRoot(attribute, true)
 
@@ -347,6 +352,7 @@ const useBuildFilterOptions = ({
       }
 
       // if the attribute type is datetime, add datetime options
+
       if (attribute.data.type === 'datetime') {
         optionValues.push(...dateOptions)
       }
@@ -434,10 +440,13 @@ const getOptionRoot = (fieldType: FilterFieldType, scope?: string) => {
         label: `${upperFirst(scope)} Type`,
         icon: getEntityTypeIcon(scope),
         inverted: false,
+        operator: 'OR',
         values: [],
         allowsCustomValues: false,
         allowHasValue: false,
         allowNoValue: false,
+        allowExcludes: ALLOW_INVERTED_FILTERS,
+        operatorChangeable: false,
       }
       break
     case 'status':
@@ -447,10 +456,13 @@ const getOptionRoot = (fieldType: FilterFieldType, scope?: string) => {
         label: 'Status',
         icon: 'arrow_circle_right',
         inverted: false,
+        operator: 'OR',
         values: [],
         allowsCustomValues: false,
         allowHasValue: false,
         allowNoValue: false,
+        allowExcludes: ALLOW_INVERTED_FILTERS,
+        operatorChangeable: false,
       }
       break
     case 'assignees':
@@ -460,10 +472,13 @@ const getOptionRoot = (fieldType: FilterFieldType, scope?: string) => {
         label: 'Assignee',
         icon: 'person',
         inverted: false,
+        operator: 'OR',
         values: [],
         allowsCustomValues: false,
         allowHasValue: true,
         allowNoValue: true,
+        allowExcludes: ALLOW_INVERTED_FILTERS,
+        operatorChangeable: true,
       }
       break
     case 'tags':
@@ -473,10 +488,13 @@ const getOptionRoot = (fieldType: FilterFieldType, scope?: string) => {
         label: 'Tags',
         icon: 'local_offer',
         inverted: false,
+        operator: 'OR',
         values: [],
         allowsCustomValues: true,
         allowHasValue: true,
         allowNoValue: true,
+        allowExcludes: ALLOW_INVERTED_FILTERS,
+        operatorChangeable: true,
       }
       break
     default:
@@ -495,10 +513,14 @@ const getAttributeFieldOptionRoot = (
   id: attribute.name,
   type: attribute.data.type,
   label: attribute.data.title || attribute.name,
+  operator: 'OR',
+  inverted: false,
   values: [],
   allowsCustomValues,
-  allowHasValue: true,
-  allowNoValue: true,
+  allowHasValue: false,
+  allowNoValue: false,
+  allowExcludes: false,
+  operatorChangeable: false,
   icon: getAttributeIcon(attribute),
   singleSelect: ['boolean', 'datetime'].includes(attribute.data.type),
 })

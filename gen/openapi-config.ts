@@ -7,7 +7,7 @@ const outputFiles = {
   market: ['marketAddonList', 'marketAddonDetail', 'marketAddonVersionDetail'],
   watchers: ['getEntityWatchers', 'setEntityWatchers'],
   inbox: ['manageInboxItem'],
-  project: ['getProject', 'listProjects', 'getProjectAnatomy'],
+  project: ['getProject', 'listProjects', 'getProjectAnatomy', 'getProjectUsers'],
   review: [
     'getReviewablesForVersion',
     'getReviewablesForProduct',

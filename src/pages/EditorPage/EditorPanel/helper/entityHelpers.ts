@@ -67,7 +67,7 @@ const getInitialForm = (
       label: 'Assignees',
       field: 'assignees',
       disabled: !types.includes('task'),
-      placeholder: `Folders Can Not Have Assignees...`,
+      placeholder: `Folders can not have assignees`,
       ...assigneesValues,
     },
     _tags: {
@@ -157,6 +157,18 @@ const getTypes = (nodes: $Any, nodeIds: string[]) => {
   return types
 }
 
+const getTypedValue = (attrib: Attrib, value?: string) => {
+  if (attrib.type == 'float') {
+    return parseFloat(value || '0')
+  }
+
+  if (attrib.type == 'integer') {
+    return parseInt(value || '0')
+  }
+
+  return value || ''
+}
+
 const getInputProps = (attrib: Attrib) => {
   const inputTypes = {
     datetime: { type: 'date' },
@@ -177,4 +189,4 @@ const getInputProps = (attrib: Attrib) => {
   return props
 }
 
-export { getInitialForm, getParentValue, getInputProps, getTypes, hasChanged }
+export { getInitialForm, getParentValue, getInputProps, getTypes, hasChanged, getTypedValue }

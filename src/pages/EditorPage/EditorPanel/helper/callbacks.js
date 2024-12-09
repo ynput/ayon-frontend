@@ -102,6 +102,7 @@ const createInitialForm = ({ nodeIds, nodes, editorNodes, attribs, changes, setT
     nameValues,
     labelValues,
     assigneesValues,
+    tagValues
   })
 
   const type = nodes[nodeIds[0]]?.data?.__entityType

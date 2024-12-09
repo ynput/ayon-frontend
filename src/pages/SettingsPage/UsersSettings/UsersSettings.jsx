@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef } from 'react'
 import { toast } from 'react-toastify'
-import { Button, Section, Toolbar, InputText, Spacer, Panel } from '@ynput/ayon-react-components'
+import { Button, Section, Toolbar, InputText, Spacer } from '@ynput/ayon-react-components'
 // Comps
 import SetPasswordDialog from './SetPasswordDialog'
 import RenameUserDialog from './RenameUserDialog'
@@ -8,7 +8,6 @@ import RenameUserDialog from './RenameUserDialog'
 import './users.scss'
 import useSearchFilter from '@hooks/useSearchFilter'
 import { useGetUsersQuery } from '@queries/user/getUsers'
-import ProjectList from '@containers/projectList'
 import UserDetail from './userDetail'
 import UserList from './UserList'
 import { useDeleteUserMutation, useUpdateUserMutation } from '@queries/user/updateUser'
@@ -21,11 +20,10 @@ import NewUser from './newUser'
 import NewServiceUser from './newServiceUser'
 import { useGetAccessGroupsQuery } from '@queries/accessGroups/getAccessGroups'
 import Shortcuts from '@containers/Shortcuts'
-import SwitchButton from '@components/SwitchButton/SwitchButton'
 import DeleteUserDialog from './DeleteUserDialog'
 
 // what to show in the access column
-const formatAccessGroups = (rowData, selectedProjects) => {
+const formatAccessGroups = (rowData) => {
   let res = {}
   // If the user is an admin, add 'admin' role
   if (rowData.isAdmin) res.admin = { cls: 'role admin' }
@@ -34,27 +32,13 @@ const formatAccessGroups = (rowData, selectedProjects) => {
   // If the user is a manager, add 'manager' role
   else if (rowData.isManager) res.manager = { cls: 'role manager' }
   // If no projects are selected, add default access groups
-  else if (!selectedProjects) {
+  else {
     // add all access groups
     for (const project in rowData.accessGroups) {
       const projectAG = rowData.accessGroups[project]
       for (const agName of projectAG) {
         // add to res if not already there
         if (!(agName in res)) res[agName] = { cls: 'role' }
-      }
-    }
-  } else {
-    // If projects are selected, add access groups for each selected project
-    const agSet = rowData.accessGroups || {}
-    for (const projectName of selectedProjects) {
-      for (const agName of agSet[projectName] || []) {
-        // If the access group is already in the result, increment its count
-        if (agName in res) res[agName].count += 1
-        // Otherwise, add the access group to the result with a count of 1
-        else res[agName] = { count: 1 }
-        // Set the class of the access group based on whether its count is equal to the number of selected projects
-        res[agName].cls =
-          res[agName].count === selectedProjects.length ? 'role all' : 'role partial'
       }
     }
   }
@@ -85,14 +69,12 @@ const UsersSettings = () => {
   }, [])
 
   // USE STATE
-  const [selectedProjects, setSelectedProjects] = useState(null)
+  const [selectedProjects] = useState(null)
   const [showNewUser, setShowNewUser] = useState(false)
   const [showNewServiceUser, setShowNewServiceUser] = useState(false)
   const [showRenameUser, setShowRenameUser] = useState(false)
   const [showDeleteUser, setShowDeleteUser] = useState(false)
   const [showSetPassword, setShowSetPassword] = useState(false)
-  // show users for selected projects
-  const [projectAccessOnly, setProjectAccessOnly] = useState(true)
 
   // get user name from redux
   const selfName = useSelector((state) => state.user.name)
@@ -115,29 +97,10 @@ const UsersSettings = () => {
   const [deleteUser] = useDeleteUserMutation()
   const [updateUser] = useUpdateUserMutation()
 
-  let filteredUserList = useMemo(() => {
-    // filter out users that are not in project if projectAccessOnly is true
-    if (selectedProjects) {
-      return userList.filter((user) => {
-        // user level not user
-        if (user.isManager || user.isAdmin || user.isService) return true
-
-        // check user has access group in selected projects
-        const agSet = user.accessGroups
-        let hasAccessGroup = selectedProjects.some((project) => agSet[project]?.length)
-
-        return hasAccessGroup
-      })
-    } else {
-      return userList
-    }
-  }, [userList, selectedProjects])
-
   const handleDisable = async (users) => {
     toastId.current = toast.info('Disabling users...')
     let i = 0
     for (const user of users) {
-
       try {
         await updateUser({
           name: user,
@@ -187,9 +150,6 @@ const UsersSettings = () => {
     if (total === 'total') {
       setSearch('')
       setSelectedUsers([])
-      if (selectedProjects) {
-        setProjectAccessOnly(true)
-      }
       return
     }
 
@@ -203,14 +163,9 @@ const UsersSettings = () => {
     setShowNewServiceUser(true)
   }
 
-  // use filteredUserList if projectAccessOnly
-  // else use userList
-
-  if (projectAccessOnly) userList = filteredUserList
-
   let userListWithAccessGroups = useMemo(
-    () => userList.map((user) => formatAccessGroups(user, selectedProjects)),
-    [userList, selectedProjects],
+    () => userList.map((user) => formatAccessGroups(user)),
+    [userList],
   )
 
   const searchableFields = [
@@ -311,36 +266,6 @@ const UsersSettings = () => {
             stateKey="users-panels"
             stateStorage="local"
           >
-            <SplitterPanel size={10} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <div style={{ display: 'flex', gap: 4 }}>
-                <Button
-                  icon="checklist"
-                  style={{ flex: 1 }}
-                  selected={!selectedProjects}
-                  onClick={() => setSelectedProjects(null)}
-                >
-                  Show all users
-                </Button>
-              </div>
-              <Panel style={{ flex: 1, gap: 0 }}>
-                <SwitchButton
-                  value={!selectedProjects ? false : projectAccessOnly}
-                  onClick={() => setProjectAccessOnly(!projectAccessOnly)}
-                  label="Filter users by project access"
-                  disabled={!selectedProjects}
-                  data-tooltip="Filter users with access to the selected projects. Turn off to see all users."
-                />
-                <Section>
-                  <ProjectList
-                    multiselect={true}
-                    selection={selectedProjects}
-                    onSelect={setSelectedProjects}
-                    style={{ maxWidth: 'unset' }}
-                    wrap
-                  />
-                </Section>
-              </Panel>
-            </SplitterPanel>
             <SplitterPanel size={50}>
               <UserList
                 userList={userList}
@@ -358,13 +283,12 @@ const UsersSettings = () => {
                 }}
               />
             </SplitterPanel>
-            <SplitterPanel size={40} style={{ minWidth: 370 }}>
+            <SplitterPanel size={20} style={{ minWidth: 370 }}>
               {selectedUsers.length ? (
                 <UserDetail
                   setShowRenameUser={setShowRenameUser}
                   selectedUsers={selectedUsers}
                   setShowSetPassword={setShowSetPassword}
-                  selectedProjects={selectedProjects}
                   setSelectedUsers={setSelectedUsers}
                   isSelfSelected={isSelfSelected}
                   selectedUserList={selectedUserList}
@@ -374,7 +298,7 @@ const UsersSettings = () => {
               ) : (
                 <UsersOverview
                   selectedProjects={selectedProjects}
-                  userList={filteredUserList}
+                  userList={userList}
                   onUserSelect={(user) => setSelectedUsers([user.name])}
                   onTotal={onTotal}
                   search={search}

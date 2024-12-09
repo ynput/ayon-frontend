@@ -46,6 +46,8 @@ const Thumbnail = ({
   const [loaded, setLoaded] = useState(false)
   useEffect(() => {
     if (url === '') {
+      setLoaded(true)
+      setError(true)
       return
     }
     // Reset loaded and error states when src changes

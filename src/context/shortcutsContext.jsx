@@ -36,7 +36,11 @@ function ShortcutsProvider(props) {
       // project settings
       {
         key: 'p+p',
-        action: () => navigate('/manageProjects/projectSettings?' + searchParams.toString()),
+        action: () => navigate('/manageProjects'),
+      },
+      {
+        key: 'p+a',
+        action: () => navigate('/manageProjects/userSettings?' + searchParams.toString()),
       },
       // project settings anatomy
       { key: 'a+a', action: () => navigate('/manageProjects/anatomy?' + searchParams.toString()) },

@@ -1,7 +1,7 @@
 import { Status } from '@api/rest/project'
 import { TaskTypeRow } from './formatTaskProgressForTable'
 import { stateOrder } from '../components/TaskStatusBar/TaskStatusBar'
-import { ProgressTableSortFunction } from './useFolderSort'
+import { ProgressTableSortFunction } from '../hooks/useFolderSort'
 
 export const taskStatusSortFunction =
   (statuses: Status[]): ProgressTableSortFunction =>
@@ -23,7 +23,7 @@ export const taskStatusSortFunction =
         }
       })
 
-      return pickedStatus || tasks[0].status
+      return pickedStatus || (tasks[0] ? tasks[0].status : -1)
     }
 
     const isParent = a.__isParent || b.__isParent

@@ -175,6 +175,9 @@ const SettingsEditor = ({
     currentId: currentId,
   }
 
+  // console.log('context? ', fullContext)
+  // console.log('schema? ', schema)
+
   return (
     <FormWrapper $currentSelection={currentId} ref={formWrapperRef}>
       <Form

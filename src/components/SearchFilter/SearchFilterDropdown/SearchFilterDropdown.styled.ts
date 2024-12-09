@@ -131,3 +131,21 @@ export const Toolbar = styled.div`
   gap: var(--base-gap-large);
   align-items: center;
 `
+
+export const Operator = styled.div`
+  display: flex;
+  border-radius: var(--border-radius-m);
+
+  .hasIcon {
+    padding-right: 16px;
+  }
+
+  button:first-child {
+    border-radius: var(--border-radius-m) 0 0 var(--border-radius-m);
+    border-right: 1px solid var(--md-sys-color-outline);
+  }
+
+  button:last-child {
+    border-radius: 0 var(--border-radius-m) var(--border-radius-m) 0;
+  }
+`

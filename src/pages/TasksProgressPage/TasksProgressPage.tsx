@@ -1,22 +1,25 @@
-import Hierarchy from '@containers/hierarchy'
+import Slicer from '@containers/Slicer'
 import TasksProgress from '@containers/TasksProgress'
 import { useGetProjectQuery } from '@queries/project/getProject'
 import { $Any } from '@types'
 import { Section } from '@ynput/ayon-react-components'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { FC } from 'react'
-import { useSelector } from 'react-redux'
+import { useAppSelector } from '@state/store'
 import TaskProgressDetailsPanel from './TaskProgressDetailsPanel'
 import { useGetAttributeConfigQuery } from '@queries/attributes/getAttributes'
 import { getPriorityOptions } from './helpers'
 import useScopedStatuses from '@hooks/useScopedStatuses'
+import { useSlicerContext } from '@context/slicerContext'
 
 const TasksProgressPage: FC = () => {
-  const projectName = useSelector((state: $Any) => state.project.name) as string
-  const isOpen = useSelector((state: $Any) => state.details.open) as boolean
-  const selectedFolders = useSelector((state: $Any) => state.context.focused.folders) as string[]
-  const selectedTasks = useSelector((state: $Any) => state.context.focused.tasks) as string[]
-  const detailsOpen = isOpen && selectedFolders.length > 0 && selectedTasks.length > 0
+  const projectName = useAppSelector((state: $Any) => state.project.name) as string
+  const progressState = useAppSelector((state) => state.progress)
+  const detailsOpen = progressState.detailsOpen && progressState.selected.ids.length > 0
+
+  // load slicer remote config
+  const { config } = useSlicerContext()
+  const taskProgressSliceFields = config?.progress?.fields
 
   //   GET PROJECT INFO FOR STATUS
   const { data: projectInfo } = useGetProjectQuery({ projectName }, { skip: !projectName })
@@ -28,9 +31,9 @@ const TasksProgressPage: FC = () => {
   return (
     <main style={{ overflow: 'hidden' }}>
       <Splitter layout="horizontal" style={{ width: '100%', height: '100%' }}>
-        <SplitterPanel size={isOpen ? 12 : 18} style={{ minWidth: 227, maxWidth: 500 }}>
+        <SplitterPanel size={detailsOpen ? 12 : 18} style={{ minWidth: 227, maxWidth: 500 }}>
           <Section wrap>
-            <Hierarchy />
+            <Slicer sliceFields={taskProgressSliceFields} persistFieldId="hierarchy" />
           </Section>
         </SplitterPanel>
         <SplitterPanel size={90} style={{ overflow: 'hidden' }}>

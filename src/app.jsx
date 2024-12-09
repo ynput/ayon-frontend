@@ -2,6 +2,7 @@ import ayonClient from '@/ayon'
 import axios from 'axios'
 import { ErrorBoundary } from 'react-error-boundary'
 import { useEffect, useState, Suspense, lazy, useMemo } from 'react'
+
 import { useSelector, useDispatch } from 'react-redux'
 import { Routes, Route, Navigate, BrowserRouter } from 'react-router-dom'
 import { QueryParamProvider } from 'use-query-params'
@@ -186,11 +187,6 @@ const App = () => {
                                 exact
                                 element={<Navigate replace to="/dashboard/tasks" />}
                               />
-                              <Route
-                                path="/manageProjects"
-                                exact
-                                element={<Navigate replace to="/manageProjects/anatomy" />}
-                              />
 
                               <Route
                                 path="/dashboard"
@@ -201,7 +197,16 @@ const App = () => {
                                 exact
                                 element={<UserDashboardPage />}
                               />
+                              <Route
+                                path="/dashboard/addon/:addonName"
+                                exact
+                                element={<UserDashboardPage />}
+                              />
 
+                              <Route
+                                path="/manageProjects"
+                                element={<ProjectManagerPage />}
+                              />
                               <Route
                                 path="/manageProjects/:module"
                                 element={<ProjectManagerPage />}
