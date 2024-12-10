@@ -301,7 +301,7 @@ const Viewer = ({ onClose }: ViewerProps) => {
           onUpload={handleUploadAction}
         />
       </Styled.FullScreenWrapper>
-      <Styled.RightToolBar>
+      <Styled.RightToolBar style={{ zIndex: 1100 }}>
         <ReviewablesSelector
           reviewables={shownOptions}
           selected={reviewableIds}
@@ -309,7 +309,7 @@ const Viewer = ({ onClose }: ViewerProps) => {
           onUpload={handleUploadAction(true)}
           projectName={projectName}
         />
-        <div id="view-annotation-tools" style={{ position: 'relative' }}></div>
+        <div id="annotation-tools" style={{ position: 'relative' }}></div>
       </Styled.RightToolBar>
       {!noVersions && <ViewerDetailsPanel versionIds={versionIds} projectName={projectName} />}
     </Styled.Container>

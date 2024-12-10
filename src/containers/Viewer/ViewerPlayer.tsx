@@ -49,7 +49,7 @@ const ViewerPlayer = ({
         aspectRatio={aspectRatio}
         autoplay={autoplay}
         onPlay={onPlay}
-        label={reviewable.label}
+        // label={reviewable.label}
       />
     )
   )

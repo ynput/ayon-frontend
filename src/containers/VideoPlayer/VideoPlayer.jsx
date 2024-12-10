@@ -6,9 +6,9 @@ import Trackbar from './Trackbar'
 import VideoPlayerControls from './VideoPlayerControls'
 import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
 import clsx from 'clsx'
-import Drawover from '@containers/TasksProgress/components/Drawover/Drawover'
-import { snakeCase } from 'lodash'
 import useGoToFrame from './hooks/useGoToFrame'
+import useLoadRemote from '@/remote/useLoadRemote'
+import { createPortal } from 'react-dom'
 
 const VideoPlayerContainer = styled.div`
   position: absolute;
@@ -56,7 +56,36 @@ const VideoPlayerContainer = styled.div`
   }
 `
 
-const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, label = '' }) => {
+const AnnotationsContainer = styled.div`
+  position: absolute;
+  inset: 0;
+`
+
+const FallbackAnnotationsProvider = ({ children }) => {
+  return <>{children}</>
+}
+
+const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay }) => {
+  // get annotation remotes
+  const [AnnotationsProvider] = useLoadRemote({
+    remote: 'annotations',
+    module: 'AnnotationsProvider',
+    fallback: FallbackAnnotationsProvider,
+  })
+  const [AnnotationsCanvas] = useLoadRemote({
+    remote: 'annotations',
+    module: 'AnnotationsCanvas',
+    fallback: null,
+  })
+  // get annotation remotes
+  const [AnnotationTools] = useLoadRemote({
+    remote: 'annotations',
+    module: 'AnnotationTools',
+    fallback: null,
+  })
+  // get annotations-tools dom element for portal
+  const annotationToolsContainer = useMemo(() => document.getElementById('annotation-tools'), [])
+
   const videoRef = useRef(null)
   const videoRowRef = useRef(null)
 
@@ -326,51 +355,57 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, label = ''
     videoRef.current.muted = value
   }
   const currentFrame = Math.floor(videoRef.current?.currentTime * frameRate) + 1
-  const numFrames = useMemo(() => Math.floor(duration * frameRate), [frameRate, duration])
 
   return (
     <VideoPlayerContainer>
-      <div
-        className={clsx('video-row video-container', { 'no-content': loadError })}
-        ref={videoRowRef}
+      <AnnotationsProvider
+        backgroundRef={videoRef}
+        containerRef={videoRowRef}
+        pageNumber={currentFrame}
       >
         <div
-          className="video-wrapper"
-          style={{
-            width: videoDimensions.width,
-            height: videoDimensions.height,
-            position: 'relative',
-          }}
+          className={clsx('video-row video-container', { 'no-content': loadError })}
+          ref={videoRowRef}
         >
-          <video
-            ref={videoRef}
-            width={videoDimensions.width}
-            height={videoDimensions.height}
-            src={actualSource}
-            onProgress={handleProgress}
-            onEnded={handleEnded}
-            onPlay={handleOnPlay}
-            onPause={handlePause}
-            onLoadedData={handleLoad}
-            onError={handleLoadError}
-            muted={muted}
-          />
-          <VideoOverlay
-            videoWidth={videoDimensions.width}
-            videoHeight={videoDimensions.height}
-            showOverlay={showOverlay}
-            showStill={showStill}
-            videoRef={videoRef}
-          />
-          <Drawover
-            range={[currentFrame, currentFrame]}
-            durationFrames={numFrames}
-            isPlaying={isPlaying}
-            videoRef={videoRef.current}
-            name={snakeCase(label)}
-          />
+          <div
+            className="video-wrapper"
+            style={{
+              width: videoDimensions.width,
+              height: videoDimensions.height,
+              position: 'relative',
+            }}
+          >
+            <video
+              ref={videoRef}
+              width={videoDimensions.width}
+              height={videoDimensions.height}
+              src={actualSource}
+              onProgress={handleProgress}
+              onEnded={handleEnded}
+              onPlay={handleOnPlay}
+              onPause={handlePause}
+              onLoadedData={handleLoad}
+              onError={handleLoadError}
+              muted={muted}
+            />
+            <VideoOverlay
+              videoWidth={videoDimensions.width}
+              videoHeight={videoDimensions.height}
+              showOverlay={showOverlay}
+              showStill={showStill}
+              videoRef={videoRef}
+            />
+            {AnnotationsCanvas && (
+              <AnnotationsContainer>
+                <AnnotationsCanvas width={videoDimensions.width} height={videoDimensions.height} />
+              </AnnotationsContainer>
+            )}
+          </div>
         </div>
-      </div>
+        {annotationToolsContainer &&
+          AnnotationTools &&
+          createPortal(<AnnotationTools />, annotationToolsContainer)}
+      </AnnotationsProvider>
 
       <div className="trackbar-row">
         <Trackbar

@@ -151,7 +151,7 @@ const useSlicerRemotes = (): { config: SlicerConfig; useExtraSlices: UseExtraSli
   const configFallback: SlicerConfig = { progress: { fields: ['hierarchy'] } }
 
   // get slicer remotes
-  const config = useLoadRemote({
+  const [config] = useLoadRemote({
     remote: 'slicer',
     module: 'config',
     fallback: configFallback,
@@ -167,7 +167,7 @@ const useSlicerRemotes = (): { config: SlicerConfig; useExtraSlices: UseExtraSli
   }
 
   // slicer transformers
-  const useExtraSlices = useLoadRemote({
+  const [useExtraSlices] = useLoadRemote({
     remote: 'slicer',
     module: 'useExtraSlices',
     fallback: useExtraSlicesDefault,
