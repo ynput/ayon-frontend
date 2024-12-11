@@ -1,17 +1,17 @@
 import ReviewableUpload from '@containers/ReviewablesList/ReviewablesUpload'
 import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
 
-import { $Any } from '@types'
-
 import ViewerPlayer from './ViewerPlayer'
 import * as Styled from './Viewer.styled'
 import { useState } from 'react'
+import { ReviewableResponse } from '@queries/review/types'
 
 interface ViewerProps {
   projectName: string | null
   productId: string | null
-  reviewables: $Any
-  selectedReviewable: $Any
+  reviewables: ReviewableResponse[]
+  selectedReviewable: ReviewableResponse | undefined
+  selectedVersionId?: string
   versionIds: string[]
   versionReviewableIds: string[]
   isFetchingReviewables: boolean
@@ -26,6 +26,7 @@ const ViewerComponent = ({
   reviewables,
   selectedReviewable,
   versionIds,
+  selectedVersionId,
   versionReviewableIds,
   noVersions,
   isFetchingReviewables,
@@ -47,6 +48,7 @@ const ViewerComponent = ({
       <ViewerPlayer
         projectName={projectName}
         reviewable={selectedReviewable}
+        selectedVersionId={selectedVersionId}
         onUpload={onUpload(true)}
         autoplay={autoPlay}
         onPlay={handlePlayReviewable}

@@ -35,7 +35,9 @@ const FilesGrid = ({
           name={file.name}
           mime={file.mime || file.type}
           size={file.size}
-          src={file.isAnnotation ? file.img : `/api/projects/${projectName}/files/${file.id}`}
+          src={
+            file.isAnnotation ? file.compositeData : `/api/projects/${projectName}/files/${file.id}`
+          }
           isAnnotation={file.isAnnotation}
           progress={file.progress}
           onRemove={onRemove ? () => onRemove(file.id, file.name, file.isAnnotation) : undefined}

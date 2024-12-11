@@ -65,9 +65,18 @@ const FallbackAnnotationsProvider = ({ children }) => {
   return <>{children}</>
 }
 
-const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay }) => {
+const VideoPlayer = ({
+  src,
+  frameRate,
+  aspectRatio,
+  autoplay,
+  onPlay,
+  reviewableId,
+  onAnnotation,
+  annotations,
+}) => {
   // get annotation remotes
-  const [AnnotationsProvider] = useLoadRemote({
+  const [AnnotationsProvider, { isLoaded: isLoadedAnnotations }] = useLoadRemote({
     remote: 'annotations',
     module: 'AnnotationsProvider',
     fallback: FallbackAnnotationsProvider,
@@ -354,6 +363,7 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay }) => {
     setMuted(value)
     videoRef.current.muted = value
   }
+
   const currentFrame = Math.floor(videoRef.current?.currentTime * frameRate) + 1
 
   return (
@@ -362,6 +372,9 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay }) => {
         backgroundRef={videoRef}
         containerRef={videoRowRef}
         pageNumber={currentFrame}
+        onAnnotationsChange={(a, d) => onAnnotation && onAnnotation(a, d)}
+        annotations={annotations}
+        id={reviewableId}
       >
         <div
           className={clsx('video-row video-container', { 'no-content': loadError })}
@@ -395,7 +408,7 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay }) => {
               showStill={showStill}
               videoRef={videoRef}
             />
-            {AnnotationsCanvas && (
+            {AnnotationsCanvas && isLoadedAnnotations && (
               <AnnotationsContainer>
                 <AnnotationsCanvas width={videoDimensions.width} height={videoDimensions.height} />
               </AnnotationsContainer>

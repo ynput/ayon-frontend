@@ -292,6 +292,7 @@ const Viewer = ({ onClose }: ViewerProps) => {
           projectName={projectName}
           productId={productId}
           reviewables={reviewables}
+          selectedVersionId={selectedVersion?.id}
           selectedReviewable={selectedReviewable}
           versionIds={versionIds}
           versionReviewableIds={versionReviewableIds}

@@ -15,7 +15,7 @@ const useAnnotationsUpload = ({ projectName, onSuccess }: Props) => {
   const uploadAnnotations = async (annotations: Annotation[]) => {
     try {
       const uploadPromises = annotations.map(async (annotation) => {
-        const img = annotation.img
+        const img = annotation.compositeData
         const blob = base64ToBlob(img)
         const file = new File([blob], annotation.name, {
           type: 'image/png',

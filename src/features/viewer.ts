@@ -25,8 +25,8 @@ export type Annotation = {
   width: number
   height: number
   range: [number, number]
-  overlay: string
-  img: string
+  annotationData: string
+  compositeData: string
   versionId: string
   reviewableId: string
 }
@@ -44,7 +44,6 @@ interface ViewerState {
   upload: boolean
   fullscreen: boolean
   annotations: { [id: string]: Annotation }
-  annotationsToRemove: string[]
   goToFrame: number | null
 }
 
@@ -55,7 +54,6 @@ const initialState: ViewerState = {
   fullscreen: false,
   quickView: false, // used to open quick view mode (reduced UI for quick view)
   annotations: {},
-  annotationsToRemove: [],
   goToFrame: null,
 }
 
@@ -132,17 +130,11 @@ const viewerSlice = createSlice({
       }
     },
     removeAnnotation: (state: ViewerState, { payload }: PayloadAction<string>) => {
+      console.log(payload)
       delete state.annotations[payload]
-      if (!state.annotationsToRemove.includes(payload)) {
-        state.annotationsToRemove.push(payload)
-      }
     },
     goToFrame: (state: ViewerState, { payload }: PayloadAction<ViewerState['goToFrame']>) => {
       state.goToFrame = payload
-    },
-    // callback from the drawover editor that the annotation has been removed
-    onAnnotationRemoved: (state: ViewerState, { payload }: PayloadAction<string>) => {
-      state.annotationsToRemove = state.annotationsToRemove.filter((id) => id !== payload)
     },
   },
 })
@@ -156,7 +148,6 @@ export const {
   toggleFullscreen,
   addAnnotation,
   removeAnnotation,
-  onAnnotationRemoved,
   goToFrame,
 } = viewerSlice.actions
 export default viewerSlice.reducer
