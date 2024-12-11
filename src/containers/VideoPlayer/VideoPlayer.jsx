@@ -74,6 +74,7 @@ const VideoPlayer = ({
   reviewableId,
   onAnnotation,
   annotations,
+  annotatedFrames,
 }) => {
   // get annotation remotes
   const [AnnotationsProvider, { isLoaded: isLoadedAnnotations }] = useLoadRemote({
@@ -409,7 +410,7 @@ const VideoPlayer = ({
               videoRef={videoRef}
             />
             {AnnotationsCanvas && isLoadedAnnotations && (
-              <AnnotationsContainer>
+              <AnnotationsContainer style={{ visibility: isPlaying ? 'hidden' : 'visible' }}>
                 <AnnotationsCanvas width={videoDimensions.width} height={videoDimensions.height} />
               </AnnotationsContainer>
             )}
@@ -428,6 +429,7 @@ const VideoPlayer = ({
           onScrub={handleScrub}
           frameRate={frameRate}
           isPlaying={isPlaying}
+          highlighted={annotatedFrames}
         />
       </div>
 

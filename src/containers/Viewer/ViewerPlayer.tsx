@@ -68,6 +68,11 @@ const ViewerPlayer = ({
     )
   }, [annotations])
 
+  const uniqueAnnotatedFrames = useMemo(() => {
+    const annotatedFrames = Object.values(annotations).flatMap((a) => a.range)
+    return Array.from(new Set(annotatedFrames))
+  }, [annotations])
+
   const handleNewAnnotation = (_annotations: Map<string, string>, data: AnnotationMetadata) => {
     if (!selectedVersionId) return
 
@@ -103,6 +108,7 @@ const ViewerPlayer = ({
         onPlay={onPlay}
         reviewableId={reviewable.activityId}
         annotations={annotationsMap}
+        annotatedFrames={uniqueAnnotatedFrames}
         onAnnotation={handleNewAnnotation}
         // label={reviewable.label}
       />
