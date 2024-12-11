@@ -1,22 +1,22 @@
 import ReviewableUpload from '@containers/ReviewablesList/ReviewablesUpload'
 import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
 
-import { $Any } from '@types'
-
 import ViewerPlayer from './ViewerPlayer'
 import * as Styled from './Viewer.styled'
 import { useState } from 'react'
+import { ReviewableResponse } from '@queries/review/types'
 
 interface ViewerProps {
-  projectName: string
-  productId: string
-  reviewables: $Any
-  selectedReviewable: $Any
+  projectName: string | null
+  productId: string | null
+  reviewables: ReviewableResponse[]
+  selectedReviewable: ReviewableResponse | undefined
+  selectedVersionId?: string
   versionIds: string[]
   versionReviewableIds: string[]
   isFetchingReviewables: boolean
   noVersions: boolean
-  quickView: boolean,
+  quickView: boolean
   onUpload: (toggleNativeFileUpload: boolean) => () => void
 }
 
@@ -26,13 +26,13 @@ const ViewerComponent = ({
   reviewables,
   selectedReviewable,
   versionIds,
+  selectedVersionId,
   versionReviewableIds,
   noVersions,
   isFetchingReviewables,
   quickView,
   onUpload,
 }: ViewerProps) => {
-
   const [autoPlay, setAutoPlay] = useState(quickView)
 
   const availability = selectedReviewable?.availability
@@ -43,11 +43,12 @@ const ViewerComponent = ({
     setAutoPlay(false)
   }
 
-  if (selectedReviewable?.mimetype.includes('video') && isPlayable) {
+  if (selectedReviewable?.mimetype.includes('video') && isPlayable && projectName) {
     return (
       <ViewerPlayer
         projectName={projectName}
         reviewable={selectedReviewable}
+        selectedVersionId={selectedVersionId}
         onUpload={onUpload(true)}
         autoplay={autoPlay}
         onPlay={handlePlayReviewable}
@@ -87,30 +88,21 @@ const ViewerComponent = ({
     if (!canUploadReviewable) {
       return (
         <Styled.EmptyPlaceholderWrapper>
-          <EmptyPlaceholder
-            icon="hide_image"
-            message={message}
-            style={placeholderStyles}
-          />
+          <EmptyPlaceholder icon="hide_image" message={message} style={placeholderStyles} />
         </Styled.EmptyPlaceholderWrapper>
       )
     }
 
     return (
-        <ReviewableUpload
-          projectName={projectName}
-          versionId={versionIds[0]}
-          productId={productId}
-          variant="large"
-          onUpload={onUpload(false)}
-        >
-
-          <EmptyPlaceholder
-            icon="hide_image"
-            message={message}
-            style={placeholderStyles}
-          />
-        </ReviewableUpload>
+      <ReviewableUpload
+        projectName={projectName}
+        versionId={versionIds[0]}
+        productId={productId}
+        variant="large"
+        onUpload={onUpload(false)}
+      >
+        <EmptyPlaceholder icon="hide_image" message={message} style={placeholderStyles} />
+      </ReviewableUpload>
     )
   }
 

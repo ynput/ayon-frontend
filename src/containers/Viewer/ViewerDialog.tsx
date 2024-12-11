@@ -1,10 +1,9 @@
 import { Dialog } from '@ynput/ayon-react-components'
-import { useDispatch, useSelector } from 'react-redux'
+import { useAppDispatch, useAppSelector } from '@state/store'
 import { closeViewer } from '@state/viewer'
 import { useEffect } from 'react'
 import Viewer from './Viewer'
 import styled from 'styled-components'
-import { $Any } from '@/types'
 import isHTMLElement from '@helpers/isHTMLElement'
 import { closeSlideOut } from '@state/details'
 
@@ -30,14 +29,14 @@ const StyledDialog = styled(Dialog)`
 `
 
 const ViewerDialog = () => {
-  const dispatch = useDispatch()
+  const dispatch = useAppDispatch()
   // check if dialog is open or not
-  const productId = useSelector((state: $Any) => state.viewer.productId)
-  const taskId = useSelector((state: $Any) => state.viewer.taskId)
-  const folderId = useSelector((state: $Any) => state.viewer.folderId)
-  const projectName = useSelector((state: $Any) => state.viewer.projectName)
-  const fullscreen = useSelector((state: $Any) => state.viewer.fullscreen)
-  const slideOut = useSelector((state: $Any) => state.details.slideOut['review'])
+  const productId = useAppSelector((state) => state.viewer.productId)
+  const taskId = useAppSelector((state) => state.viewer.taskId)
+  const folderId = useAppSelector((state) => state.viewer.folderId)
+  const projectName = useAppSelector((state) => state.viewer.projectName)
+  const fullscreen = useAppSelector((state) => state.viewer.fullscreen)
+  const slideOut = useAppSelector((state: any) => state.details.slideOut['review'])
 
   const handleClose = () => {
     // close the dialog

@@ -20,7 +20,6 @@ const VideoPlayerControls = ({
   const fullscreen = useSelector((state) => state.viewer.fullscreen)
   const frameLength = 1 / frameRate
 
-
   const handlePlayPause = () => {
     if (videoRef.current.paused) {
       videoRef.current.play()
@@ -47,7 +46,7 @@ const VideoPlayerControls = ({
     console.debug('VideoPlayerControls: Go back 1')
     const duration = videoRef.current?.duration || 0
     const nextFrame = videoRef.current.currentTime - frameLength
-    const newFrame = nextFrame < 0 ? (loop ? (duration - 0.001) : 0) : nextFrame
+    const newFrame = nextFrame < 0 ? (loop ? duration - 0.001 : 0) : nextFrame
     videoRef.current.currentTime = newFrame
     onFrameChange(newFrame)
   }
@@ -221,7 +220,12 @@ const VideoPlayerControls = ({
         data-shortcut="F"
       />
 
-      <Timecode value={videoRef.current?.duration} frameRate={frameRate} disabled tooltip={'Total frames'} />
+      <Timecode
+        value={videoRef.current?.duration}
+        frameRate={frameRate}
+        disabled
+        tooltip={'Total frames'}
+      />
     </>
   )
 }

@@ -479,8 +479,6 @@ const contextSlice = createSlice({
       state.previewFilesIndex = action.payload.index
     },
     onCommentImageIndexChange: (state, action) => {
-      console.log('on index change: ')
-      console.log(action)
       state.previewFilesIndex += action.payload.delta
     },
     onFilePreviewClose: (state) => {

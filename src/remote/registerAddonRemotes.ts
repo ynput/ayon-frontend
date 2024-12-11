@@ -2,7 +2,7 @@
 
 import { registerRemotes } from '@module-federation/enhanced/runtime'
 
-export type RemoteType = 'slicer'
+export type RemoteType = 'slicer' | 'annotations'
 type Remote = {
   remote: RemoteType
   addon?: string // if different to remote
@@ -15,6 +15,10 @@ const remotes: Remote[] = [
   //   remote: 'slicer',
   //   version: '0.0.1',
   // },
+  {
+    remote: 'annotations',
+    version: '0.0.1',
+  },
 ]
 
 const registerAddonRemotes = () => {

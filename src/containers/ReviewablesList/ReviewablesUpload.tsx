@@ -17,9 +17,9 @@ import ReviewableProgressCard, { ReviewableProgress } from '@components/Reviewab
 import * as Styled from './ReviewablesUpload.styled'
 
 interface ReviewableUploadProps {
-  projectName: string
+  projectName: string | null
   versionId: string
-  productId: string
+  productId: string | null
   variant?: 'normal' | 'large'
   onUpload?: () => void
   children?: $Any
@@ -77,6 +77,8 @@ const ReviewableUpload: FC<ReviewableUploadProps> = ({
       // patch the new data into the reviewables cache
       const data = response.data as UploadReviewableApiResponse
 
+      if (!projectName) return
+
       dispatch(
         // @ts-ignore
         reviewApi.util.updateQueryData(
@@ -93,7 +95,7 @@ const ReviewableUpload: FC<ReviewableUploadProps> = ({
       )
 
       // also invalidate the viewer cache
-      dispatch(api.util.invalidateTags([{ type: 'viewer', id: productId }]))
+      productId && dispatch(api.util.invalidateTags([{ type: 'viewer', id: productId }]))
       dispatch(api.util.invalidateTags([{ type: 'viewer', id: versionId }]))
       dispatch(api.util.invalidateTags([{ type: 'viewer', id: folderId }]))
       dispatch(api.util.invalidateTags([{ type: 'viewer', id: taskId }]))

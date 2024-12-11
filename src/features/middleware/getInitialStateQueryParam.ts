@@ -1,10 +1,10 @@
 import { isArray } from 'lodash'
 
-const getInitialStateQueryParam = (key, initial, types = []) => {
+const getInitialStateQueryParam = (key: string, initial: any, types: any[] = []): any => {
   const urlParams = new URLSearchParams(window.location.search)
 
   const isValueArray = isArray(initial) || types.some((type) => isArray(type))
-  let value = isValueArray ? urlParams.getAll(key) : urlParams.get(key)
+  let value: any = isValueArray ? urlParams.getAll(key) : urlParams.get(key)
 
   if (!value || value === 'null' || value === 'undefined') {
     return initial !== undefined ? initial : (types && types[0]) || ''

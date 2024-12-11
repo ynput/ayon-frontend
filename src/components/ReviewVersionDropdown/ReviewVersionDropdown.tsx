@@ -4,7 +4,7 @@ import { $Any } from '@/types'
 
 type ReviewVersionDropdownProps = {
   options: { value: string; label: string }[]
-  value: string
+  value: string | null
   valueIcon?: string
   onChange: (value: string) => void
   selectRef?: $Any
@@ -31,7 +31,7 @@ const ReviewVersionDropdown = ({
   return (
     <Dropdown
       options={options}
-      value={[value]}
+      value={value ? [value] : []}
       onChange={(v) => onChange(String(v[0]))}
       ref={selectRef}
       search={options.length > 20}

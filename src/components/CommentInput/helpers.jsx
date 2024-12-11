@@ -45,15 +45,15 @@ export const uploadFile = (file, projectName, onUploadProgress) => {
         'x-file-name': file.name,
       },
     }
+
     axios
       .post(`/api/projects/${projectName}/files`, file, opts)
       .then((result) => {
         resolve({ file: file, data: result.data })
       })
       .catch((error) => {
-        reject({ error: 'Upload failed' })
-        console.error('File upload:', error)
-        toast.error('Upload failed:' + JSON.stringify(error))
+        console.error(error)
+        reject({ message: 'Upload failed: ' + error.response.data.detail })
       })
   })
 }

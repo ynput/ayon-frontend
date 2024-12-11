@@ -74,3 +74,8 @@ export const EmptyPlaceholderWrapper = styled.div`
   justify-content: 'center';
   align-items: 'center';
 `
+
+export const RightToolBar = styled.div`
+  display: flex;
+  flex-direction: column;
+`
