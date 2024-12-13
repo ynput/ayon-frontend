@@ -71,5 +71,5 @@ const buildPoolsOptions = (pools: UserPoolModel[]): { value: string; label: stri
 
 // has 0 max
 const disabledPools = (pools: UserPoolModel[]): string[] => {
-  return pools.filter((pool) => pool.max === 0).map((pool) => pool.id)
+  return pools.filter((pool) => pool.max === 0 || pool.used >= pool.max).map((pool) => pool.id)
 }
