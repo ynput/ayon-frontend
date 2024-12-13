@@ -11,6 +11,7 @@ import useCreateContext from '@hooks/useCreateContext'
 import clsx from 'clsx'
 import useTableLoadingData from '@hooks/useTableLoadingData'
 import { accessGroupsSortFunction } from '@helpers/user'
+import { useGetUserPoolsQuery } from '@queries/auth/getAuth'
 
 const StyledProfileRow = styled.div`
   display: flex;
@@ -57,6 +58,9 @@ const UserList = ({
   onSelectUsers,
   isSelfSelected,
 }) => {
+  // GET LICENSE USER POOLS
+  const { data: userPools = [] } = useGetUserPoolsQuery()
+
   // Selection
   const selection = useMemo(() => {
     return userList.filter((user) => selectedUsers.includes(user.name))
@@ -139,21 +143,25 @@ const UserList = ({
           <Column field="attrib.fullName" header="Full name" sortable resizeable />
           <Column field="attrib.email" header="Email" sortable />
           <Column
-            field={'accessGroupList'}
-            header="Project access"
+            field={'accessLevel'}
+            header="Access level"
             body={(rowData) =>
-              rowData &&
-              rowData.accessGroups &&
-              [...Object.keys(rowData.accessGroups)]
-                .sort((a, b) => a.localeCompare(b))
-                .map((agName, i, arr) => (
-                  <span key={agName} className={rowData.accessGroups[agName].cls}>
-                    {agName}
-                    {i < arr.length - 1 ? ', ' : ''}
-                  </span>
-                ))
+              rowData && rowData.isAdmin
+                ? 'Admin'
+                : rowData && rowData.isManager
+                ? 'Manager'
+                : 'User'
             }
             sortFunction={accessGroupsSortFunction}
+            sortable
+            resizeable
+          />
+          <Column
+            field="userPool"
+            header="License"
+            body={(rowData) =>
+              userPools.find((p) => p.id === rowData.userPool)?.label || rowData.userPool
+            }
             sortable
             resizeable
           />

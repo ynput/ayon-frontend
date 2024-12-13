@@ -42,6 +42,7 @@ const USERS_QUERY = `
           isDeveloper
           isGuest
           active
+          userPool
           accessGroups
           defaultAccessGroups
           hasPassword
