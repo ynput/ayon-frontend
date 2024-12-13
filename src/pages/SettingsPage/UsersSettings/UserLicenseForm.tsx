@@ -14,6 +14,7 @@ interface UserLicenseFormProps {
   active: boolean
   pool: string
   isPoolMixed: boolean
+  isDisabled?: boolean
   onActiveChange: (value: boolean) => void
   onPoolChange: (value: string) => void
 }
@@ -22,6 +23,7 @@ const UserLicenseForm: FC<UserLicenseFormProps> = ({
   active,
   pool,
   isPoolMixed,
+  isDisabled,
   onActiveChange,
   onPoolChange,
 }) => {
@@ -39,6 +41,7 @@ const UserLicenseForm: FC<UserLicenseFormProps> = ({
               checked={active}
               // @ts-ignore
               onChange={(e) => onActiveChange(e.target.checked)}
+              disabled={isDisabled}
             />
           </div>
         </FormRowStyled>
@@ -48,7 +51,7 @@ const UserLicenseForm: FC<UserLicenseFormProps> = ({
               value={isPoolMixed ? [pool] : [pool]}
               options={buildPoolsOptions(userPools)}
               disabledValues={disabledPools(userPools)}
-              disabled={!active || isLoadingPools}
+              disabled={!active || isLoadingPools || isDisabled}
               isMultiple={isPoolMixed}
               data-tooltip="User requires an assigned license pool to log in"
               onChange={(value) => onPoolChange(value[0])}
@@ -71,5 +74,7 @@ const buildPoolsOptions = (pools: UserPoolModel[]): { value: string; label: stri
 
 // has 0 max
 const disabledPools = (pools: UserPoolModel[]): string[] => {
-  return pools.filter((pool) => pool.max === 0 || pool.used >= pool.max).map((pool) => pool.id)
+  return pools
+    .filter((pool) => pool.max === 0 || pool.used >= pool.max || !pool.valid)
+    .map((pool) => pool.id)
 }

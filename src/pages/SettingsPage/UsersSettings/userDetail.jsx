@@ -409,6 +409,7 @@ const UserDetail = ({
                 pool={formData.userPool}
                 isPoolMixed={formData._mixedFields.includes('userPool')}
                 onPoolChange={(value) => setFormData({ ...formData, userPool: value })}
+                isDisabled={isSelfSelected}
               />
             </Panel>
           )}
