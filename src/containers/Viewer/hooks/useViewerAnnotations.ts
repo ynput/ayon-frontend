@@ -3,7 +3,7 @@ import { useAppDispatch, useAppSelector } from '@state/store'
 import { addAnnotation, Annotation, removeAnnotation } from '@state/viewer'
 import { useMemo } from 'react'
 
-type AnnotationMetadata = {
+export type AnnotationMetadata = {
   id: string
   page: number
   operation: 'add' | 'remove'
@@ -11,6 +11,20 @@ type AnnotationMetadata = {
   height?: number
   annotationData?: string // base64 image
   compositeData?: string // base64 image
+}
+
+export type AnnotationsProviderProps = {
+  children: React.ReactNode
+  id?: string
+  backgroundRef?: React.MutableRefObject<
+    HTMLCanvasElement | HTMLImageElement | HTMLVideoElement | null
+  >
+  containerRef?: React.MutableRefObject<HTMLDivElement | null>
+  pageNumber: number
+  annotations?: Map<string, string | null> | undefined
+  onAnnotationsChange?:
+    | ((value: Map<string, string>, metadata: AnnotationMetadata) => void)
+    | undefined
 }
 
 export type ViewAnnotationsProps = {

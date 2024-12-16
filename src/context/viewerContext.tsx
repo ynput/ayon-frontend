@@ -1,25 +1,21 @@
 import useLoadRemote from '@/remote/useLoadRemote'
-import { useViewerAnnotations, ViewAnnotationsProps, ViewerAnnotations } from '@containers/Viewer'
-import React, {
-  createContext,
-  useContext,
-  ReactNode,
-  ElementType,
-  useCallback,
-  ReactPortal,
-} from 'react'
+import {
+  AnnotationsProviderProps,
+  useViewerAnnotations,
+  ViewAnnotationsProps,
+  ViewerAnnotations,
+} from '@containers/Viewer'
+import { createContext, useContext, ReactNode, ElementType, useCallback, ReactPortal } from 'react'
 import { createPortal } from 'react-dom'
 
-const FallbackAnnotationsProvider = ({ children }: { children: ReactNode }) => {
+const FallbackAnnotationsProvider = ({ children }: AnnotationsProviderProps) => {
   return <>{children}</>
 }
 
 interface ViewerContextType {
   isLoaded: boolean
   createToolbar: () => ReactPortal | null
-  AnnotationsProvider: React.FC<{
-    children: ReactNode
-  }>
+  AnnotationsProvider: ({ children }: AnnotationsProviderProps) => JSX.Element
   AnnotationsCanvas: ElementType
   state: ViewerAnnotations
 }

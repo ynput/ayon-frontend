@@ -5,6 +5,7 @@ import ViewerPlayer from './ViewerPlayer'
 import * as Styled from './Viewer.styled'
 import { useState } from 'react'
 import { ReviewableResponse } from '@queries/review/types'
+import ViewerImage from './ViewerImage'
 
 interface ViewerProps {
   projectName: string | null
@@ -58,7 +59,8 @@ const ViewerComponent = ({
 
   if (selectedReviewable?.mimetype.includes('image') && isPlayable) {
     return (
-      <Styled.Image
+      <ViewerImage
+        reviewableId={selectedReviewable.activityId}
         src={`/api/projects/${projectName}/files/${selectedReviewable.fileId}`}
         alt={selectedReviewable.label || selectedReviewable.filename}
       />
