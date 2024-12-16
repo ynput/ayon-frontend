@@ -18,6 +18,7 @@ import { getGroupedReviewables } from '../ReviewablesList/getGroupedReviewables'
 import ViewerComponent from './ViewerComponent'
 import ViewerDetailsPanel from './ViewerDetailsPanel'
 import * as Styled from './Viewer.styled'
+import { ViewerProvider } from '@context/viewerContext'
 
 interface ViewerProps {
   onClose?: () => void
@@ -265,55 +266,56 @@ const Viewer = ({ onClose }: ViewerProps) => {
 
   // todo: noVersions modal smaller
   return (
-    <Styled.Container>
-      <Styled.PlayerToolbar>
-        <VersionSelectorTool
-          versions={versionsAndReviewables}
-          selected={versionIds[0]}
-          onChange={handleVersionChange}
-        />
-        {hasMultipleProducts && (
-          <ReviewVersionDropdown
-            options={productOptions}
-            placeholder="Select a product"
-            prefix="Product: "
-            value={selectedProductId}
-            onChange={handleProductChange}
-            valueProps={{ className: 'product-dropdown' }}
-            tooltip="Select a product to view its versions reviewables"
-            shortcut={''}
-            valueIcon={selectedProduct?.icon || ''}
+    <ViewerProvider reviewable={selectedReviewable} selectedVersionId={selectedVersion?.id}>
+      <Styled.Container>
+        <Styled.PlayerToolbar>
+          <VersionSelectorTool
+            versions={versionsAndReviewables}
+            selected={versionIds[0]}
+            onChange={handleVersionChange}
           />
-        )}
-      </Styled.PlayerToolbar>
-      {onClose && <Button onClick={onClose} icon={'close'} className="close" />}
-      <Styled.FullScreenWrapper handle={handle} onChange={fullScreenChange}>
-        <ViewerComponent
-          projectName={projectName}
-          productId={productId}
-          reviewables={reviewables}
-          selectedVersionId={selectedVersion?.id}
-          selectedReviewable={selectedReviewable}
-          versionIds={versionIds}
-          versionReviewableIds={versionReviewableIds}
-          isFetchingReviewables={isFetchingReviewables}
-          noVersions={noVersions}
-          quickView={quickView}
-          onUpload={handleUploadAction}
-        />
-      </Styled.FullScreenWrapper>
-      <Styled.RightToolBar style={{ zIndex: 1100 }}>
-        <ReviewablesSelector
-          reviewables={shownOptions}
-          selected={reviewableIds}
-          onChange={handleReviewableChange}
-          onUpload={handleUploadAction(true)}
-          projectName={projectName}
-        />
-        <div id="annotation-tools" style={{ position: 'relative' }}></div>
-      </Styled.RightToolBar>
-      {!noVersions && <ViewerDetailsPanel versionIds={versionIds} projectName={projectName} />}
-    </Styled.Container>
+          {hasMultipleProducts && (
+            <ReviewVersionDropdown
+              options={productOptions}
+              placeholder="Select a product"
+              prefix="Product: "
+              value={selectedProductId}
+              onChange={handleProductChange}
+              valueProps={{ className: 'product-dropdown' }}
+              tooltip="Select a product to view its versions reviewables"
+              shortcut={''}
+              valueIcon={selectedProduct?.icon || ''}
+            />
+          )}
+        </Styled.PlayerToolbar>
+        {onClose && <Button onClick={onClose} icon={'close'} className="close" />}
+        <Styled.FullScreenWrapper handle={handle} onChange={fullScreenChange}>
+          <ViewerComponent
+            projectName={projectName}
+            productId={productId}
+            reviewables={reviewables}
+            selectedReviewable={selectedReviewable}
+            versionIds={versionIds}
+            versionReviewableIds={versionReviewableIds}
+            isFetchingReviewables={isFetchingReviewables}
+            noVersions={noVersions}
+            quickView={quickView}
+            onUpload={handleUploadAction}
+          />
+        </Styled.FullScreenWrapper>
+        <Styled.RightToolBar style={{ zIndex: 1100 }}>
+          <ReviewablesSelector
+            reviewables={shownOptions}
+            selected={reviewableIds}
+            onChange={handleReviewableChange}
+            onUpload={handleUploadAction(true)}
+            projectName={projectName}
+          />
+          <div id="annotation-tools" style={{ position: 'relative' }}></div>
+        </Styled.RightToolBar>
+        {!noVersions && <ViewerDetailsPanel versionIds={versionIds} projectName={projectName} />}
+      </Styled.Container>
+    </ViewerProvider>
   )
 }
 

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import styled from 'styled-components'
 
 import VideoOverlay from './VideoOverlay'
@@ -7,8 +7,7 @@ import VideoPlayerControls from './VideoPlayerControls'
 import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
 import clsx from 'clsx'
 import useGoToFrame from './hooks/useGoToFrame'
-import useLoadRemote from '@/remote/useLoadRemote'
-import { createPortal } from 'react-dom'
+import { useViewer } from '@context/viewerContext'
 
 const VideoPlayerContainer = styled.div`
   position: absolute;
@@ -61,40 +60,14 @@ const AnnotationsContainer = styled.div`
   inset: 0;
 `
 
-const FallbackAnnotationsProvider = ({ children }) => {
-  return <>{children}</>
-}
-
-const VideoPlayer = ({
-  src,
-  frameRate,
-  aspectRatio,
-  autoplay,
-  onPlay,
-  reviewableId,
-  onAnnotation,
-  annotations,
-  annotatedFrames,
-}) => {
-  // get annotation remotes
-  const [AnnotationsProvider, { isLoaded: isLoadedAnnotations }] = useLoadRemote({
-    remote: 'annotations',
-    module: 'AnnotationsProvider',
-    fallback: FallbackAnnotationsProvider,
-  })
-  const [AnnotationsCanvas] = useLoadRemote({
-    remote: 'annotations',
-    module: 'AnnotationsCanvas',
-    fallback: null,
-  })
-  // get annotation remotes
-  const [AnnotationTools] = useLoadRemote({
-    remote: 'annotations',
-    module: 'AnnotationTools',
-    fallback: null,
-  })
-  // get annotations-tools dom element for portal
-  const annotationToolsContainer = useMemo(() => document.getElementById('annotation-tools'), [])
+const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewableId }) => {
+  const {
+    createToolbar,
+    AnnotationsProvider,
+    AnnotationsCanvas,
+    isLoaded: isLoadedAnnotations,
+    state: { annotations, frames, addAnnotation },
+  } = useViewer()
 
   const videoRef = useRef(null)
   const videoRowRef = useRef(null)
@@ -373,7 +346,7 @@ const VideoPlayer = ({
         backgroundRef={videoRef}
         containerRef={videoRowRef}
         pageNumber={currentFrame}
-        onAnnotationsChange={(a, d) => onAnnotation && onAnnotation(a, d)}
+        onAnnotationsChange={addAnnotation}
         annotations={annotations}
         id={reviewableId}
       >
@@ -416,9 +389,7 @@ const VideoPlayer = ({
             )}
           </div>
         </div>
-        {annotationToolsContainer &&
-          AnnotationTools &&
-          createPortal(<AnnotationTools />, annotationToolsContainer)}
+        {isLoadedAnnotations && createToolbar()}
       </AnnotationsProvider>
 
       <div className="trackbar-row">
@@ -429,7 +400,7 @@ const VideoPlayer = ({
           onScrub={handleScrub}
           frameRate={frameRate}
           isPlaying={isPlaying}
-          highlighted={annotatedFrames}
+          highlighted={frames}
         />
       </div>
 

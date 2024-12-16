@@ -29,7 +29,7 @@ export default ({ mode }) => {
         },
         '/addons': {
           target: SERVER_URL,
-          changeOrigin: false,
+          changeOrigin: true,
         },
         '/graphql': {
           target: SERVER_URL,

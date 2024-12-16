@@ -31,7 +31,7 @@ export type Annotation = {
   reviewableId: string
 }
 
-interface ViewerState {
+export interface ViewerState {
   isOpen: boolean
   versionIds: string[]
   projectName: string | null

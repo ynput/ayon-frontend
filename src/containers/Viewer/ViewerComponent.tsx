@@ -26,7 +26,6 @@ const ViewerComponent = ({
   reviewables,
   selectedReviewable,
   versionIds,
-  selectedVersionId,
   versionReviewableIds,
   noVersions,
   isFetchingReviewables,
@@ -45,14 +44,15 @@ const ViewerComponent = ({
 
   if (selectedReviewable?.mimetype.includes('video') && isPlayable && projectName) {
     return (
-      <ViewerPlayer
-        projectName={projectName}
-        reviewable={selectedReviewable}
-        selectedVersionId={selectedVersionId}
-        onUpload={onUpload(true)}
-        autoplay={autoPlay}
-        onPlay={handlePlayReviewable}
-      />
+      <>
+        <ViewerPlayer
+          projectName={projectName}
+          reviewable={selectedReviewable}
+          onUpload={onUpload(true)}
+          autoplay={autoPlay}
+          onPlay={handlePlayReviewable}
+        />
+      </>
     )
   }
 
