@@ -135,9 +135,9 @@ const Trackbar = ({
         ctx.stroke()
 
         // if the frame is highlighted (like an annotation)
-        if (highlighted && highlighted.includes(i + 1)) {
+        if (highlighted && highlighted.includes(i)) {
           // Calculate progressX for the current frame
-          const progressX = (i / numFrames) * width
+          const progressX = ((i - 1) / numFrames) * width
           highlightFrame(ctx, {
             color: primaryColor,
             progressX,
