@@ -8,6 +8,18 @@ import {
 import { createContext, useContext, ReactNode, ElementType, useCallback, ReactPortal } from 'react'
 import { createPortal } from 'react-dom'
 
+type DrawHistory = {
+  canUndo: boolean
+  canRedo: boolean
+  history: any[]
+  fullHistory: Map<number, any[]>
+  undo: () => void
+  redo: () => void
+  clear: (page?: number) => void
+}
+
+export type UseDrawHistory = () => DrawHistory
+
 const FallbackAnnotationsProvider = ({ children }: AnnotationsProviderProps) => {
   return <>{children}</>
 }
@@ -18,6 +30,7 @@ interface ViewerContextType {
   AnnotationsProvider: ({ children }: AnnotationsProviderProps) => JSX.Element
   AnnotationsCanvas: ElementType
   state: ViewerAnnotations
+  useDrawHistory: UseDrawHistory | null
 }
 
 const ViewerContext = createContext<ViewerContextType | undefined>(undefined)
@@ -44,11 +57,15 @@ export const ViewerProvider = ({
     module: 'AnnotationsCanvas',
     fallback: () => null,
   })
-  // get annotation remotes
   const [AnnotationTools, { isLoaded: isLoadedTools }] = useLoadRemote({
     remote: 'annotations',
     module: 'AnnotationTools',
     fallback: () => null,
+  })
+  const [useDrawHistory] = useLoadRemote({
+    remote: 'annotations',
+    module: 'useDrawHistory',
+    fallback: null as unknown as ViewerContextType['useDrawHistory'],
   })
 
   const isLoaded = isLoadedProvider && isLoadedCanvas && isLoadedTools
@@ -72,6 +89,7 @@ export const ViewerProvider = ({
         AnnotationsProvider,
         AnnotationsCanvas,
         state,
+        useDrawHistory,
       }}
     >
       {children}

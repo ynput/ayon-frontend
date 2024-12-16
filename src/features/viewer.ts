@@ -44,6 +44,7 @@ export interface ViewerState {
   upload: boolean
   fullscreen: boolean
   annotations: { [id: string]: Annotation }
+  clearAnnotation: null | number // used to clear annotations (reset once used)
   goToFrame: number | null
 }
 
@@ -54,6 +55,7 @@ const initialState: ViewerState = {
   fullscreen: false,
   quickView: false, // used to open quick view mode (reduced UI for quick view)
   annotations: {},
+  clearAnnotation: null,
   goToFrame: null,
 }
 
@@ -130,8 +132,18 @@ const viewerSlice = createSlice({
       }
     },
     removeAnnotation: (state: ViewerState, { payload }: PayloadAction<string>) => {
-      console.log(payload)
+      if (!state.annotations[payload]) return
+      const page = state.annotations[payload].range[0]
+      // delete annotation from state
       delete state.annotations[payload]
+      // set clearAnnotation to true to trigger a reset of that frame
+
+      console.log(page)
+
+      state.clearAnnotation = page
+    },
+    clearAnnotation: (state: ViewerState, { payload }: PayloadAction<number | null>) => {
+      state.clearAnnotation = payload
     },
     goToFrame: (state: ViewerState, { payload }: PayloadAction<ViewerState['goToFrame']>) => {
       state.goToFrame = payload
@@ -148,6 +160,7 @@ export const {
   toggleFullscreen,
   addAnnotation,
   removeAnnotation,
+  clearAnnotation,
   goToFrame,
 } = viewerSlice.actions
 export default viewerSlice.reducer

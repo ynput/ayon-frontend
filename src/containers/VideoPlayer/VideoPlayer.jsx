@@ -8,6 +8,7 @@ import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
 import clsx from 'clsx'
 import useGoToFrame from './hooks/useGoToFrame'
 import { useViewer } from '@context/viewerContext'
+import ViewerHistory from '@containers/Viewer/ViewerHistory'
 
 const VideoPlayerContainer = styled.div`
   position: absolute;
@@ -67,6 +68,7 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
     AnnotationsCanvas,
     isLoaded: isLoadedAnnotations,
     state: { annotations, frames, addAnnotation },
+    useDrawHistory,
   } = useViewer()
 
   const videoRef = useRef(null)
@@ -390,6 +392,7 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
           </div>
         </div>
         {isLoadedAnnotations && createToolbar()}
+        {useDrawHistory && <ViewerHistory useHistory={useDrawHistory} />}
       </AnnotationsProvider>
 
       <div className="trackbar-row">
