@@ -39,6 +39,7 @@ const updateUser = globalApi.injectEndpoints({
       invalidatesTags: (_result, _error, { name }) => [
         { type: 'user', id: name },
         { type: 'user', id: 'LIST' },
+        { type: 'userPool', id: 'LIST' },
         'info',
       ],
     }),
@@ -52,7 +53,6 @@ const updateUser = globalApi.injectEndpoints({
             return dispatch(globalApi.endpoints.updateUser.initiate({ name, patch }))
           }),
         )
-        console.log(results)
         return results
       },
     }),
