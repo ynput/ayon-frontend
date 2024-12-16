@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, ReactNode } from 'react'
 import { ExpandedState, RowSelectionState } from '@tanstack/react-table'
 import useSlicerReduxSync from '@containers/Slicer/hooks/useSlicerReduxSync'
-import useLoadRemote from '@/remote/useLoadRemote'
+import useLoadModule from '@/remote/useLoadModule'
 import { ProjectModel } from '@api/rest/project'
 import { Assignees } from '@queries/user/getUsers'
 import { TableRow } from '@containers/Slicer/types'
@@ -151,7 +151,7 @@ const useSlicerRemotes = (): { config: SlicerConfig; useExtraSlices: UseExtraSli
   const configFallback: SlicerConfig = { progress: { fields: ['hierarchy'] } }
 
   // get slicer remotes
-  const [config] = useLoadRemote({
+  const [config] = useLoadModule({
     remote: 'slicer',
     module: 'config',
     fallback: configFallback,
@@ -167,7 +167,7 @@ const useSlicerRemotes = (): { config: SlicerConfig; useExtraSlices: UseExtraSli
   }
 
   // slicer transformers
-  const [useExtraSlices] = useLoadRemote({
+  const [useExtraSlices] = useLoadModule({
     remote: 'slicer',
     module: 'useExtraSlices',
     fallback: useExtraSlicesDefault,

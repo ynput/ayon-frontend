@@ -1,4 +1,4 @@
-import useLoadRemote from '@/remote/useLoadRemote'
+import useLoadModule from '@/remote/useLoadModule'
 import {
   AnnotationsProviderProps,
   useViewerAnnotations,
@@ -47,22 +47,22 @@ export const ViewerProvider = ({
   selectedVersionId,
 }: ViewerProviderProps) => {
   // get annotation remotes
-  const [AnnotationsProvider, { isLoaded: isLoadedProvider }] = useLoadRemote({
+  const [AnnotationsProvider, { isLoaded: isLoadedProvider }] = useLoadModule({
     remote: 'annotations',
     module: 'AnnotationsProvider',
     fallback: FallbackAnnotationsProvider,
   })
-  const [AnnotationsCanvas, { isLoaded: isLoadedCanvas }] = useLoadRemote({
+  const [AnnotationsCanvas, { isLoaded: isLoadedCanvas }] = useLoadModule({
     remote: 'annotations',
     module: 'AnnotationsCanvas',
     fallback: () => null,
   })
-  const [AnnotationTools, { isLoaded: isLoadedTools }] = useLoadRemote({
+  const [AnnotationTools, { isLoaded: isLoadedTools }] = useLoadModule({
     remote: 'annotations',
     module: 'AnnotationTools',
     fallback: () => null,
   })
-  const [useDrawHistory] = useLoadRemote({
+  const [useDrawHistory] = useLoadModule({
     remote: 'annotations',
     module: 'useDrawHistory',
     fallback: null as unknown as ViewerContextType['useDrawHistory'],

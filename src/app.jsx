@@ -66,6 +66,7 @@ import getTrialDates from '@components/TrialBanner/helpers/getTrialDates'
 import TrialEnded from '@containers/TrialEnded/TrialEnded'
 import { PiPProvider } from '@context/pip/PiPProvider'
 import DetailsPanelFloating from '@containers/DetailsPanel/DetailsPanelFloating/DetailsPanelFloating'
+import useRegisterRemotes from './remote/useRegisterRemotes'
 
 const App = () => {
   const user = useSelector((state) => state.user)
@@ -203,10 +204,7 @@ const App = () => {
                                 element={<UserDashboardPage />}
                               />
 
-                              <Route
-                                path="/manageProjects"
-                                element={<ProjectManagerPage />}
-                              />
+                              <Route path="/manageProjects" element={<ProjectManagerPage />} />
                               <Route
                                 path="/manageProjects/:module"
                                 element={<ProjectManagerPage />}
@@ -315,6 +313,9 @@ const App = () => {
     ),
     [isOnboarding, noAdminUser],
   )
+
+  // load and register remote modules
+  useRegisterRemotes({ skip: loading || !user.name })
 
   // Then use the state of the app to determine which component to render
 

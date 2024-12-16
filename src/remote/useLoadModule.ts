@@ -9,7 +9,7 @@ interface Props<T> {
   debug?: boolean
 }
 
-const useLoadRemote = <T>({
+const useLoadModule = <T>({
   remote,
   module,
   fallback,
@@ -37,4 +37,4 @@ const useLoadRemote = <T>({
   return [loadedRemote.current, { isLoaded }]
 }
 
-export default useLoadRemote
+export default useLoadModule
