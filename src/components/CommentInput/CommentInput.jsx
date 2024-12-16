@@ -107,9 +107,11 @@ const CommentInput = ({
   useEffect(() => {
     if (isOpen) {
       editorRef.current?.getEditor()?.enable()
-      editorRef.current?.focus()
+      // block autofocus if opened from an annotation
+      const blockAutoFocus = !!annotations.length && files.length === 0
+      !blockAutoFocus && editorRef.current?.focus()
     }
-  }, [isOpen, editorRef])
+  }, [isOpen, editorRef, annotations, files])
 
   mentionTypes.sort((a, b) => b.length - a.length)
 
