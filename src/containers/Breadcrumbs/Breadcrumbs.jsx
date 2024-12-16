@@ -136,7 +136,7 @@ const Breadcrumbs = () => {
     const encodedAyonEntity = urlParams.get(ayonUrlParam)
     if (encodedAyonEntity !== null) {
       const ayonEntity = decodeURIComponent(encodedAyonEntity)
-      if (ayonEntity != ctxUri && ctxUri !== '') {
+      if (ayonEntity != ctxUri) {
         navigate(ayonEntity)
       }
     }
