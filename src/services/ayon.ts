@@ -99,6 +99,7 @@ const tagTypes = [
   'viewer',
   'watchers',
   'progress',
+  'userPool',
 ]
 
 const prepareHeaders = (headers: any) => {
