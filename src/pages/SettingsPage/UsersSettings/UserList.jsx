@@ -156,15 +156,17 @@ const UserList = ({
             sortable
             resizeable
           />
-          <Column
-            field="userPool"
-            header="License"
-            body={(rowData) =>
-              userPools.find((p) => p.id === rowData.userPool)?.label || rowData.userPool
-            }
-            sortable
-            resizeable
-          />
+          {!!userPools.length && (
+            <Column
+              field="userPool"
+              header="License"
+              body={(rowData) =>
+                userPools.find((p) => p.id === rowData.userPool)?.label || rowData.userPool
+              }
+              sortable
+              resizeable
+            />
+          )}
           <Column
             header="Has password"
             body={(rowData) => (rowData.hasPassword ? 'yes' : 'no')}
