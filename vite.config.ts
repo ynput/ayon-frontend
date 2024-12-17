@@ -76,14 +76,6 @@ export default ({ mode }) => {
             requiredVersion: dependencies['styled-components'],
             singleton: true,
           },
-          sass: {
-            requiredVersion: dependencies.sass,
-            singleton: true,
-          },
-          clsx: {
-            requiredVersion: dependencies.clsx,
-            singleton: true,
-          },
           '@ynput/ayon-react-components': {
             requiredVersion: dependencies['@ynput/ayon-react-components'],
           },
