@@ -118,7 +118,7 @@ const ProjectRoots = ({ projectName, projectList, userPermissions }) => {
       {(!isLoadingProject && isError) || !userPermissions.assignedToProject(projectName) ? (
         <EmptyPlaceholder
           icon="settings_alert"
-          message="You went wrong while fetching project roots data"
+          message="Something went wrong while fetching project roots data"
         />
       ) : forms.length === 0 ? (
         <EmptyPlaceholder icon="lists" message="No sites were found" />
