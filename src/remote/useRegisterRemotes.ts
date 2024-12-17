@@ -10,32 +10,36 @@ type Module = {
   remote: string
   addon: string
   version: string
+  modules: string[]
 }
 
 const useRegisterRemotes = ({ skip }: Props) => {
-  const { data: addonModules = [], isLoading } = useListFrontendModulesQuery(undefined, { skip })
+  const { data: addonRemoteModules = [], isLoading } = useListFrontendModulesQuery(undefined, {
+    skip,
+  })
 
   useEffect(() => {
-    if (isLoading || !addonModules.length) return
+    if (isLoading || !addonRemoteModules.length) return
 
     // create a flat map of modules to load
-    const allModules: Module[] = []
+    const allRemotes: Module[] = []
 
-    addonModules.forEach((addon) => {
+    addonRemoteModules.forEach((addon) => {
       const { addonName, addonVersion, modules = {} } = addon
 
-      Object.keys(modules).forEach((remote) => {
-        allModules.push({
+      Object.entries(modules).forEach(([remote, modules]) => {
+        allRemotes.push({
           remote,
           addon: addonName,
           version: addonVersion,
+          modules,
         })
       })
     })
 
-    console.log('registerAddonRemotes', allModules)
+    console.log('registerAddonRemotes', allRemotes)
     registerRemotes(
-      allModules.map((r) => ({
+      allRemotes.map((r) => ({
         name: r.remote,
         alias: r.remote,
         entry: `/addons/${r.addon || r.remote}/${r.version}/frontend/modules/${
@@ -44,7 +48,7 @@ const useRegisterRemotes = ({ skip }: Props) => {
         type: 'module',
       })),
     )
-  }, [addonModules, isLoading])
+  }, [addonRemoteModules, isLoading])
 }
 
 export default useRegisterRemotes

@@ -1,9 +1,8 @@
 import { loadRemote } from '@module-federation/enhanced/runtime'
 import { useEffect, useRef, useState } from 'react'
-import { RemoteType } from './registerAddonRemotes'
 
 interface Props<T> {
-  remote: RemoteType
+  remote: string
   module: string
   fallback: T
   debug?: boolean

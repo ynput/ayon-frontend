@@ -153,6 +153,10 @@ const App = () => {
 
   const PROJECT_ID = 'e9c7c6ee'
 
+  // load and register remote modules
+  const loadedIndexModules = useRegisterRemotes({ skip: loading || !user.name })
+  console.log(loadedIndexModules)
+
   // DEFINE ALL HIGH LEVEL COMPONENT PAGES HERE
   const mainComponent = useMemo(
     () => (
@@ -313,9 +317,6 @@ const App = () => {
     ),
     [isOnboarding, noAdminUser],
   )
-
-  // load and register remote modules
-  useRegisterRemotes({ skip: loading || !user.name })
 
   // Then use the state of the app to determine which component to render
 
