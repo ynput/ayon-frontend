@@ -8,6 +8,9 @@ const injectedRtkApi = api.injectEndpoints({
         body: queryArg.createSessionRequest,
       }),
     }),
+    getUserPools: build.query<GetUserPoolsApiResponse, GetUserPoolsApiArg>({
+      query: () => ({ url: `/api/auth/pools` }),
+    }),
   }),
   overrideExisting: false,
 })
@@ -16,11 +19,14 @@ export type CreateSessionApiResponse = /** status 200 Successful Response */ Ses
 export type CreateSessionApiArg = {
   createSessionRequest: CreateSessionRequest
 }
+export type GetUserPoolsApiResponse = /** status 200 Successful Response */ UserPoolModel[]
+export type GetUserPoolsApiArg = void
 export type UserAttribModel = {
   fullName?: string
   email?: string
   avatarUrl?: string
   developerMode?: boolean
+  studioId?: string
 }
 export type UserModel = {
   /** Name is an unique id of the {entity_name} */
@@ -73,4 +79,14 @@ export type CreateSessionRequest = {
   userName?: string
   /** Message to log in event stream */
   message?: string
+}
+export type UserPoolModel = {
+  id: string
+  label: string
+  type: 'fixed' | 'metered'
+  valid: boolean
+  note: string
+  exp: number
+  max: number
+  used: number
 }

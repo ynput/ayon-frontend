@@ -5,6 +5,9 @@ import { logout } from '@state/user'
 const authApi = api.enhanceEndpoints({
   endpoints: {
     createSession: {},
+    getUserPools: {
+      providesTags: [{ type: 'userPool', id: 'LIST' }],
+    },
   },
 })
 
@@ -47,5 +50,10 @@ const authApiInjected = authApi.injectEndpoints({
 
 //
 
-export const { useGetInfoQuery, useLazyGetInfoQuery, useLogOutMutation, useCreateSessionMutation } =
-  authApiInjected
+export const {
+  useGetInfoQuery,
+  useLazyGetInfoQuery,
+  useLogOutMutation,
+  useCreateSessionMutation,
+  useGetUserPoolsQuery,
+} = authApiInjected

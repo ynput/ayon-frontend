@@ -294,6 +294,7 @@ const UsersSettings = () => {
                   selectedUserList={selectedUserList}
                   managerDisabled={managerDisabled}
                   accessGroupsData={accessGroupsData}
+                  isFetchingUsers={isFetching}
                 />
               ) : (
                 <UsersOverview

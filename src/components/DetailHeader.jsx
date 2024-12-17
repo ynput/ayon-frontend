@@ -38,7 +38,7 @@ const DetailHeader = ({ children, onClose, style, context, dialogTitle = '' }) =
 
   return (
     <HeaderStyled style={style}>
-      <div>{children}</div>
+      <div style={{ overflow: 'hidden' }}>{children}</div>
       {context && (
         <Button
           icon="more_vert"

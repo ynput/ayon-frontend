@@ -2,6 +2,14 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import DetailHeader from '../DetailHeader'
 import { UserImagesStacked } from '@ynput/ayon-react-components'
+import styled from 'styled-components'
+
+const SubHeader = styled.span`
+  white-space: nowrap;
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`
 
 const UserDetailsHeader = ({ users = [], onClose, subTitle = '', style = {} }) => {
   // a single user
@@ -21,7 +29,7 @@ const UserDetailsHeader = ({ users = [], onClose, subTitle = '', style = {} }) =
       />
       <div>
         <h2>{title}</h2>
-        <div>{subTitle}</div>
+        <SubHeader>{subTitle}</SubHeader>
       </div>
     </DetailHeader>
   )

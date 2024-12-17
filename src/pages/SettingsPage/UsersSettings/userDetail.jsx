@@ -18,6 +18,7 @@ import UserAccessForm from './UserAccessForm'
 import ServiceDetails from './ServiceDetails'
 import UserDetailsHeader from '@components/User/UserDetailsHeader'
 import { cloneDeep, isEqual } from 'lodash'
+import UserLicenseForm from './UserLicenseForm'
 
 const FormsStyled = styled.section`
   flex: 1;
@@ -53,6 +54,13 @@ const fields = [
     label: 'User Active',
     data: {
       type: 'boolean',
+    },
+  },
+  {
+    name: 'userPool',
+    label: 'User Pool',
+    data: {
+      type: 'string',
     },
   },
   {
@@ -104,6 +112,13 @@ const mergeMultipleUsers = (users = [], defaultForm = {}, initForm = {}) => {
     if (index !== 0 && initForm.userActive !== user.active)
       initForm.userActive = defaultForm.userActive
     else initForm.userActive = user.active
+
+    // userPool
+    if (index !== 0 && initForm.userPool !== user.userPool) {
+      if (!initForm._mixedFields.includes('userPool')) {
+        initForm._mixedFields.push('userPool')
+      }
+    } else initForm.userPool = user.userPool
 
     // isGuest
     if (index !== 0 && initForm.isGuest !== user.isGuest) initForm.isGuest = defaultForm.isGuest
@@ -180,6 +195,7 @@ const UserDetail = ({
   selectedUserList,
   managerDisabled,
   accessGroupsData,
+  isFetchingUsers,
 }) => {
   const [formData, setFormData] = useState(null)
   const [initData, setInitData] = useState({})
@@ -192,7 +208,7 @@ const UserDetail = ({
 
   useEffect(() => {
     // have the selected users changed?
-    if (selectedUsers.length === 0) return
+    if (selectedUsers.length === 0 || isFetchingUsers) return
 
     setFormUsers(selectedUserList)
 
@@ -201,7 +217,7 @@ const UserDetail = ({
     setFormData(builtFormData)
     // used to compare changes later
     setInitData(builtFormData)
-  }, [selectedUserList, selectedUsers])
+  }, [selectedUserList, selectedUsers, isFetchingUsers])
 
   // look for changes when formData changes
   useEffect(() => {
@@ -267,6 +283,7 @@ const UserDetail = ({
       data.isService = formData.userLevel === 'service'
       data.isGuest = formData.isGuest
       data.isDeveloper = formData.isDeveloper && data.isAdmin
+      data.userPool = formData.userPool
 
       const patch = {
         active: formData.userActive,
@@ -386,6 +403,18 @@ const UserDetail = ({
           )}
           {formData && (
             <Panel>
+              <UserLicenseForm
+                active={formData.userActive}
+                onActiveChange={(value) => setFormData({ ...formData, userActive: value })}
+                pool={formData.userPool}
+                isPoolMixed={formData._mixedFields.includes('userPool')}
+                onPoolChange={(value) => setFormData({ ...formData, userPool: value })}
+                isDisabled={isSelfSelected}
+              />
+            </Panel>
+          )}
+          {formData && (
+            <Panel>
               <UserAccessForm
                 formData={formData}
                 onChange={(key, value) => setFormData({ ...formData, [key]: value })}
@@ -407,8 +436,8 @@ const UserDetail = ({
           onClick={onSave}
           label="Save selected users"
           active={changesMade}
-          saving={isUpdating}
-          disabled={isUpdating}
+          saving={isUpdating || isFetchingUsers}
+          disabled={isUpdating || isFetchingUsers}
         />
       </PanelButtonsStyled>
     </Section>
