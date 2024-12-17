@@ -6,6 +6,22 @@ import { compareItems } from "@tanstack/match-sorter-utils"
 import clsx from "clsx"
 import { Icon } from "@ynput/ayon-react-components"
 import { TableRow } from "./useExtendedHierarchyTable"
+import styled from "styled-components"
+
+const DelayedShimmerWrapper = styled.div`
+  @keyframes fadeInOpacity {
+    0% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+  opacity: 0;
+  width: 100%;
+  animation: fadeInOpacity 1s 1 forwards;
+  animation-delay: 200ms;
+`
 
 // Define a custom fuzzy sort function that will sort by rank if the row has ranking information
 const fuzzySort: SortingFn<any> = (rowA, rowB, columnId) => {
@@ -38,10 +54,12 @@ type Props = {
 const ShimmerCell = ({ width }: { width: string }) => {
   return (
     <Styled.Cell style={{ width }}>
-      <span
-        className="loading shimmer-light"
-        style={{ display: 'inline-block', width: '100%', height: '20px' }}
-      />
+      <DelayedShimmerWrapper>
+        <span
+          className="loading shimmer-lightest"
+          style={{ display: 'inline-block', width: '100%', height: '20px' }}
+        />
+      </DelayedShimmerWrapper>
     </Styled.Cell>
   )
 }
@@ -61,7 +79,6 @@ const getColumns = ({
         filterFn: 'fuzzy',
         sortingFn: fuzzySort, //sort by fuzzy rank (falls back to alphanumeric)
         cell: ({ row, getValue }) => {
-          console.log('row: ', row)
           return !row.original.id ? (
             <ShimmerCell width="300px" />
           ) : (
@@ -118,7 +135,7 @@ const getColumns = ({
         filterFn: 'fuzzy',
         sortingFn: fuzzySort, //sort by fuzzy rank (falls back to alphanumeric)
         cell: ({ row, getValue }) => {
-          return !row.original.id ? (
+          return !row.original.id || rootData[row.original.id] === undefined ? (
             <ShimmerCell width="100px" />
           ) : (
             <Styled.Cell
@@ -142,7 +159,7 @@ const getColumns = ({
         filterFn: 'fuzzy',
         sortingFn: fuzzySort, //sort by fuzzy rank (falls back to alphanumeric)
         cell: ({ row, getValue }) => {
-          return !row.original.id ? (
+          return !row.original.id || rootData[row.original.id] === undefined ? (
             <ShimmerCell width="100px" />
           ) : (
             <Styled.Cell
@@ -168,7 +185,7 @@ const getColumns = ({
           filterFn: 'fuzzy' as FilterFnOption<TableRow>,
           sortingFn: fuzzySort, //sort by fuzzy rank (falls back to alphanumeric)
           cell: ({ row, getValue }: {row: $Any, getValue: $Any}) => {
-          return !row.original.id ? (
+          return !row.original.id || rootData[row.original.id] === undefined ? (
             <ShimmerCell width="100px" />
           ) : (
             <Styled.Cell
@@ -192,7 +209,7 @@ const getColumns = ({
         filterFn: 'fuzzy',
         sortingFn: fuzzySort, //sort by fuzzy rank (falls back to alphanumeric)
         cell: ({ row, getValue }) => {
-          return !row.original.id ? (
+          return !row.original.id || rootData[row.original.id] === undefined ? (
             <ShimmerCell width="100px" />
           ) : (
             <Styled.Cell
@@ -216,7 +233,7 @@ const getColumns = ({
         filterFn: 'fuzzy',
         sortingFn: fuzzySort, //sort by fuzzy rank (falls back to alphanumeric)
         cell: ({ row, getValue }) => {
-          return !row.original.id ? (
+          return !row.original.id || rootData[row.original.id] === undefined ? (
             <ShimmerCell width="100px" />
           ) : (
             <Styled.Cell
