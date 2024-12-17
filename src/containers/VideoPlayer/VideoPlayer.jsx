@@ -376,6 +376,7 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
               onLoadedData={handleLoad}
               onError={handleLoadError}
               muted={muted}
+              crossOrigin="anonymous"
             />
             <VideoOverlay
               videoWidth={videoDimensions.width}
