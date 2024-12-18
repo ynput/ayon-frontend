@@ -154,8 +154,7 @@ const App = () => {
   const PROJECT_ID = 'e9c7c6ee'
 
   // load and register remote modules
-  const loadedIndexModules = useRegisterRemotes({ skip: loading || !user.name })
-  console.log(loadedIndexModules)
+  useRegisterRemotes({ skip: loading || !user.name })
 
   // DEFINE ALL HIGH LEVEL COMPONENT PAGES HERE
   const mainComponent = useMemo(

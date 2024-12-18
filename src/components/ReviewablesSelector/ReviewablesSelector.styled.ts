@@ -6,6 +6,7 @@ export const ReviewablesSelector = styled.div`
   position: relative;
   flex: 1;
   z-index: 1000;
+  overflow: hidden;
 `
 
 export const Scrollable = styled(PerfectScrollbar)`
@@ -74,7 +75,7 @@ export const Label = styled.span`
 
 export const AddButton = styled(Button)`
   width: 62px;
-  height: 62px;
+  min-height: 62px;
   background-color: var(--md-sys-color-surface-container-high);
 
   &:hover {
