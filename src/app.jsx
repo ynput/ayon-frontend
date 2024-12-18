@@ -66,6 +66,7 @@ import getTrialDates from '@components/TrialBanner/helpers/getTrialDates'
 import TrialEnded from '@containers/TrialEnded/TrialEnded'
 import { PiPProvider } from '@context/pip/PiPProvider'
 import DetailsPanelFloating from '@containers/DetailsPanel/DetailsPanelFloating/DetailsPanelFloating'
+import useRegisterRemotes from './remote/useRegisterRemotes'
 
 const App = () => {
   const user = useSelector((state) => state.user)
@@ -87,6 +88,7 @@ const App = () => {
 
   // get subscriptions info
   const { data: ynputConnect } = useGetYnputCloudInfoQuery()
+  const { isTrialing, left } = getTrialDates(ynputConnect?.subscriptions)
 
   useEffect(() => {
     setLoading(true)
@@ -151,6 +153,10 @@ const App = () => {
 
   const PROJECT_ID = 'e9c7c6ee'
 
+  // load and register remote modules
+  const loadedIndexModules = useRegisterRemotes({ skip: loading || !user.name })
+  console.log(loadedIndexModules)
+
   // DEFINE ALL HIGH LEVEL COMPONENT PAGES HERE
   const mainComponent = useMemo(
     () => (
@@ -202,10 +208,7 @@ const App = () => {
                                 element={<UserDashboardPage />}
                               />
 
-                              <Route
-                                path="/manageProjects"
-                                element={<ProjectManagerPage />}
-                              />
+                              <Route path="/manageProjects" element={<ProjectManagerPage />} />
                               <Route
                                 path="/manageProjects/:module"
                                 element={<ProjectManagerPage />}
@@ -272,16 +275,18 @@ const App = () => {
                   </NotificationsProvider>
                 </BrowserRouter>
                 {/* TRIAL BANNER */}
-                <CustomerlyProvider appId={PROJECT_ID}>
-                  <TrialBanner />
-                </CustomerlyProvider>
+                {isTrialing && (
+                  <CustomerlyProvider appId={PROJECT_ID}>
+                    <TrialBanner />
+                  </CustomerlyProvider>
+                )}
               </PasteProvider>
             </ContextMenuProvider>
           </RestartProvider>
         </Suspense>
       </>
     ),
-    [isUser],
+    [isUser, isTrialing],
   )
 
   const loadingComponent = useMemo(() => <LoadingPage />, [])
@@ -337,8 +342,6 @@ const App = () => {
       </>
     )
   }
-
-  const { isTrialing, left } = getTrialDates(ynputConnect?.subscriptions)
 
   // Trial has finished
   if (isTrialing && left?.finished) {

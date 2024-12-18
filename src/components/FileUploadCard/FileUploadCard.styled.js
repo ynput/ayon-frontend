@@ -8,6 +8,7 @@ export const File = styled.div`
   overflow: hidden;
   background-color: var(--md-sys-color-surface-container-low);
   z-index: 0;
+  user-select: none;
 
   height: 105px;
 
@@ -172,7 +173,8 @@ export const ContentWrapper = styled.div`
 
   /* previewable styles (it can be expanded) */
   /* on hover it shows the expand icon */
-  &.isPreviewable {
+  &.isPreviewable,
+  &.isAnnotation {
     cursor: pointer;
 
     &:hover {

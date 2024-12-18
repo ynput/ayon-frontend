@@ -29,7 +29,7 @@ export default ({ mode }) => {
         },
         '/addons': {
           target: SERVER_URL,
-          changeOrigin: false,
+          changeOrigin: true,
         },
         '/graphql': {
           target: SERVER_URL,
@@ -76,9 +76,9 @@ export default ({ mode }) => {
             requiredVersion: dependencies['styled-components'],
             singleton: true,
           },
-          // '@ynput/ayon-react-components': {
-          //   requiredVersion: dependencies['@ynput/ayon-react-components'],
-          // },
+          '@ynput/ayon-react-components': {
+            requiredVersion: dependencies['@ynput/ayon-react-components'],
+          },
         },
         runtimePlugins: ['./src/remote/custom-runtime-plugin'],
       }),

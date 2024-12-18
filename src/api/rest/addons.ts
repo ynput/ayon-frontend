@@ -22,6 +22,9 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    listFrontendModules: build.query<ListFrontendModulesApiResponse, ListFrontendModulesApiArg>({
+      query: () => ({ url: `/api/frontendModules` }),
+    }),
   }),
   overrideExisting: false,
 })
@@ -43,6 +46,9 @@ export type UploadAddonZipFileApiArg = {
   addonName?: string
   addonVersion?: string
 }
+export type ListFrontendModulesApiResponse =
+  /** status 200 Successful Response */ FrontendModuleListItem[]
+export type ListFrontendModulesApiArg = void
 export type PathDefinition = {
   windows?: string
   linux?: string
@@ -115,4 +121,11 @@ export type HttpValidationError = {
 }
 export type InstallAddonResponseModel = {
   eventId: string
+}
+export type FrontendModuleListItem = {
+  addonName: string
+  addonVersion: string
+  modules: {
+    [key: string]: string[]
+  }
 }
