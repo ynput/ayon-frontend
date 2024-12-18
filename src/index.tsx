@@ -17,7 +17,6 @@ import './styles/index.scss'
 
 import short from 'short-uuid'
 import { SocketProvider } from '@context/websocketContext'
-import registerAddonRemotes from './remote/registerAddonRemotes'
 
 // generate unique session id
 declare global {
@@ -44,9 +43,6 @@ axios.interceptors.response.use(
     return Promise.reject(error)
   },
 )
-
-// register remote modules
-registerAddonRemotes()
 
 /**
  * Render Application

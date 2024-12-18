@@ -26,7 +26,7 @@ const outputFiles = {
     'saveAccessGroup',
   ],
   auth: ['createSession', 'getUserPools'],
-  addons: ['listAddons', 'deleteAddonVersion', 'uploadAddonZipFile'],
+  addons: ['listAddons', 'listFrontendModules', 'deleteAddonVersion', 'uploadAddonZipFile'],
   activities: ['deleteProjectActivity'],
   users: ['getUser', 'setFrontendPreferences'],
   releases: ['getReleases', 'getReleaseInfo'],

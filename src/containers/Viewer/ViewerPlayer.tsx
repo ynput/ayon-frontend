@@ -2,10 +2,12 @@ import { useEffect, useState } from 'react'
 import VideoPlayer from '@containers/VideoPlayer'
 import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
 import { Button } from '@ynput/ayon-react-components'
+import { ReviewableResponse } from '@queries/review/types'
 
 interface ViewerPlayerProps {
   projectName: string
-  reviewable: any
+  reviewable: ReviewableResponse
+  selectedVersionId?: string
   onUpload: () => void
   autoplay: boolean
   onPlay: () => void
@@ -25,8 +27,11 @@ const ViewerPlayer = ({
     const mediaInfo = reviewable?.mediaInfo
     if (!mediaInfo) return
     const { frameRate, width, height } = mediaInfo
-    setFrameRate(frameRate)
-    setAspectRatio(width / height)
+    // all are not undefined
+    if (frameRate !== undefined && width !== undefined && height !== undefined) {
+      setFrameRate(frameRate)
+      setAspectRatio(width / height)
+    }
   }, [reviewable])
 
   if (!reviewable)
@@ -41,16 +46,19 @@ const ViewerPlayer = ({
   const videoSrc = `/api/projects/${projectName}/files/${reviewable.fileId}`
 
   return (
-    frameRate &&
-    aspectRatio && (
-      <VideoPlayer
-        src={videoSrc}
-        frameRate={frameRate}
-        aspectRatio={aspectRatio}
-        autoplay={autoplay}
-        onPlay={onPlay}
-      />
-    )
+    <>
+      {frameRate && aspectRatio && (
+        <VideoPlayer
+          src={videoSrc}
+          frameRate={frameRate}
+          aspectRatio={aspectRatio}
+          autoplay={autoplay}
+          onPlay={onPlay}
+          reviewableId={reviewable.activityId}
+          // label={reviewable.label}
+        />
+      )}
+    </>
   )
 }
 

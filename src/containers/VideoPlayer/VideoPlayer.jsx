@@ -6,6 +6,9 @@ import Trackbar from './Trackbar'
 import VideoPlayerControls from './VideoPlayerControls'
 import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
 import clsx from 'clsx'
+import useGoToFrame from './hooks/useGoToFrame'
+import { useViewer } from '@context/viewerContext'
+import ViewerHistory from '@containers/Viewer/ViewerHistory'
 
 const VideoPlayerContainer = styled.div`
   position: absolute;
@@ -53,7 +56,21 @@ const VideoPlayerContainer = styled.div`
   }
 `
 
-const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay }) => {
+const AnnotationsContainer = styled.div`
+  position: absolute;
+  inset: 0;
+`
+
+const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewableId }) => {
+  const {
+    createToolbar,
+    AnnotationsProvider,
+    AnnotationsCanvas,
+    isLoaded: isLoadedAnnotations,
+    state: { annotations, frames, addAnnotation },
+    useDrawHistory,
+  } = useViewer()
+
   const videoRef = useRef(null)
   const videoRowRef = useRef(null)
 
@@ -77,6 +94,8 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay }) => {
     width: null,
     height: null,
   })
+
+  useGoToFrame({ setCurrentTime, frameRate, duration, videoElement: videoRef.current })
 
   //
   // Video size handling
@@ -321,38 +340,61 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay }) => {
     videoRef.current.muted = value
   }
 
+  const currentFrame = Math.floor(videoRef.current?.currentTime * frameRate) + 1
+
   return (
     <VideoPlayerContainer>
-      <div
-        className={clsx('video-row video-container', { 'no-content': loadError })}
-        ref={videoRowRef}
+      <AnnotationsProvider
+        backgroundRef={videoRef}
+        containerRef={videoRowRef}
+        pageNumber={currentFrame}
+        onAnnotationsChange={addAnnotation}
+        annotations={annotations}
+        id={reviewableId}
       >
         <div
-          className="video-wrapper"
-          style={{ width: videoDimensions.width, height: videoDimensions.height }}
+          className={clsx('video-row video-container', { 'no-content': loadError })}
+          ref={videoRowRef}
         >
-          <video
-            ref={videoRef}
-            width={videoDimensions.width}
-            height={videoDimensions.height}
-            src={actualSource}
-            onProgress={handleProgress}
-            onEnded={handleEnded}
-            onPlay={handleOnPlay}
-            onPause={handlePause}
-            onLoadedData={handleLoad}
-            onError={handleLoadError}
-            muted={muted}
-          />
-          <VideoOverlay
-            videoWidth={videoDimensions.width}
-            videoHeight={videoDimensions.height}
-            showOverlay={showOverlay}
-            showStill={showStill}
-            videoRef={videoRef}
-          />
+          <div
+            className="video-wrapper"
+            style={{
+              width: videoDimensions.width,
+              height: videoDimensions.height,
+              position: 'relative',
+            }}
+          >
+            <video
+              ref={videoRef}
+              width={videoDimensions.width}
+              height={videoDimensions.height}
+              src={actualSource}
+              onProgress={handleProgress}
+              onEnded={handleEnded}
+              onPlay={handleOnPlay}
+              onPause={handlePause}
+              onLoadedData={handleLoad}
+              onError={handleLoadError}
+              muted={muted}
+              crossOrigin="anonymous"
+            />
+            <VideoOverlay
+              videoWidth={videoDimensions.width}
+              videoHeight={videoDimensions.height}
+              showOverlay={showOverlay}
+              showStill={showStill}
+              videoRef={videoRef}
+            />
+            {AnnotationsCanvas && isLoadedAnnotations && (
+              <AnnotationsContainer style={{ visibility: isPlaying ? 'hidden' : 'visible' }}>
+                <AnnotationsCanvas width={videoDimensions.width} height={videoDimensions.height} />
+              </AnnotationsContainer>
+            )}
+          </div>
         </div>
-      </div>
+        {isLoadedAnnotations && createToolbar()}
+        {useDrawHistory && <ViewerHistory useHistory={useDrawHistory} />}
+      </AnnotationsProvider>
 
       <div className="trackbar-row">
         <Trackbar
@@ -362,6 +404,7 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay }) => {
           onScrub={handleScrub}
           frameRate={frameRate}
           isPlaying={isPlaying}
+          highlighted={frames}
         />
       </div>
 
