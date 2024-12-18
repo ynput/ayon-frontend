@@ -15,7 +15,7 @@ const authApiInjected = authApi.injectEndpoints({
   endpoints: (build) => ({
     getInfo: build.query({
       query: () => ({
-        url: '/api/info',
+        url: '/api/info?full=true',
       }),
       providesTags: ['info'],
     }),
