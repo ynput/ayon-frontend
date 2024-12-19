@@ -5,6 +5,7 @@ import useFilterBySlice from '@containers/TasksProgress/hooks/useFilterBySlice'
 import { useSlicerContext } from '@context/slicerContext'
 import { FilterFieldType } from '@hooks/useBuildFilterOptions'
 import useUserFilters from '@hooks/useUserFilters'
+import NewEditorPage from '@pages/NewEditor/NewEditorPage'
 import { Button, Section, Toolbar } from '@ynput/ayon-react-components'
 import { isEmpty } from 'lodash'
 import { FC } from 'react'
@@ -26,7 +27,7 @@ const ProjectOverviewMain: FC<ProjectOverviewMainProps> = ({ projectName }) => {
   // FILTERS vvv
   //
   //
-  const { filters, setFilters } = useUserFilters({ page: 'progress', projectName })
+  const { filters, setFilters } = useUserFilters({ page: 'overview', projectName })
 
   // filter out by slice
   const { rowSelection, sliceType, setPersistentRowSelectionData, persistentRowSelectionData } =
@@ -77,6 +78,7 @@ const ProjectOverviewMain: FC<ProjectOverviewMainProps> = ({ projectName }) => {
           disabledFilters={sliceType ? [sliceType] : []}
         />
       </Toolbar>
+      <NewEditorPage filters={filtersWithHierarchy} />
     </Section>
   )
 }

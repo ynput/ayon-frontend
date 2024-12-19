@@ -32,21 +32,28 @@ type Props = {
   projectName: string | null
   folderTypes: $Any
   taskTypes: $Any
+  selectedFolders: string[]
 }
 
-const useExtendedHierarchyTable = ({ projectName, folderTypes, taskTypes }: Props) => {
+const useExtendedHierarchyTable = ({
+  projectName,
+  folderTypes,
+  taskTypes,
+  selectedFolders,
+}: Props) => {
   const [expanded, setExpanded] = useState<ExpandedState>({})
   const [itemExpanded, setItemExpanded] = useState<string>('root')
   const [attribData, setAttribData] = useState({})
 
-  let {
-    data: branchData = [],
-  } = useGetExpandedBranchQuery({
+  let { data: branchData = [] } = useGetExpandedBranchQuery({
     projectName,
     parentId: itemExpanded,
   })
 
-  if (branchData && new Set(Object.keys(branchData)).difference(new Set(Object.keys(attribData))).size > 0) {
+  if (
+    branchData &&
+    new Set(Object.keys(branchData)).difference(new Set(Object.keys(attribData))).size > 0
+  ) {
     setAttribData({ ...attribData, ...branchData })
   }
 
@@ -55,39 +62,62 @@ const useExtendedHierarchyTable = ({ projectName, folderTypes, taskTypes }: Prop
     isLoading,
     isFetching,
   } = useGetFolderListQuery({ projectName: projectName || '' }, { skip: !projectName })
+  let foldersById = folders.reduce(function (map, obj) {
+    //@ts-ignore
+    map[obj.id] = obj
+    return map
+  }, {})
 
   // @ts-ignore
-  let {hashTable, tableData}: {hashTable: Map<string, TableRow>, tableData: TableRow[]} = useMemo(() => {
-    if (!folders.length || isLoading || isFetching) {
-      return {hashTable: {}, tableData: []}
-    }
+  const selectedPaths = selectedFolders.map((id) => foldersById[id].path)
 
-    let mappedFolders = folders.reduce(function (map, obj) {
-      //@ts-ignore
-      map[obj.id] = obj
-      return map
-    }, {})
-    const ids = Object.keys(mappedFolders)
+  const filteredFolders =
+    selectedPaths.length > 0
+      ? folders.filter((el) => {
+          for (const path of selectedPaths) {
+            if (el.path.startsWith(path)) {
+              return true
+            }
+          }
+          return false
+        })
+      : folders
 
-    for (const item of Object.values(attribData)) {
-      // @ts-ignore
-      if (!ids.includes(item.data.id)) {
-        // @ts-ignore
-        mappedFolders[item.data.id] = taskToTableRow(item)
+  // @ts-ignore
+  let { hashTable, tableData }: { hashTable: Map<string, TableRow>; tableData: TableRow[] } =
+    useMemo(() => {
+      if (!filteredFolders.length || isLoading || isFetching) {
+        return { hashTable: {}, tableData: [] }
       }
-    }
-    // @ts-ignore
-    const {hashTable, tableData} = createDataTree(Object.values(mappedFolders))
 
-    return {hashTable, tableData}
-  }, [folders, folderTypes, isLoading, isFetching, attribData])
+      let mappedFolders = filteredFolders.reduce(function (map, obj) {
+        //@ts-ignore
+        map[obj.id] = obj
+        return map
+      }, {})
+      const ids = Object.keys(mappedFolders)
+
+      /*
+      for (const item of Object.values(attribData)) {
+        // @ts-ignore
+        if (!ids.includes(item.data.id)) {
+          // @ts-ignore
+          mappedFolders[item.data.id] = taskToTableRow(item)
+        }
+      }
+        */
+      // @ts-ignore
+      const { hashTable, tableData } = createDataTree(Object.values(mappedFolders))
+
+      return { hashTable, tableData }
+    }, [filteredFolders, folderTypes, isLoading, isFetching, attribData])
 
   let children: string[] = []
   if (itemExpanded !== 'root') {
-    children = hashTable.get(itemExpanded)?.subRows.map(e => e.id) as string[]
+    children = hashTable.get(itemExpanded)?.subRows.map((e) => e.id) as string[]
   }
 
-  useGetPartialBranchQuery({ projectName: projectName, folderIds: children.slice(0, 100) })
+  useGetPartialBranchQuery({ projectName: projectName, folderIds: children.slice(0, 100) || [] })
 
   function getFolderIcon(type: string) {
     return folderTypes[type]?.icon || 'folder'
@@ -156,7 +186,7 @@ const useExtendedHierarchyTable = ({ projectName, folderTypes, taskTypes }: Prop
     items: T[],
     elementId: keyof T = 'id' as keyof T,
     parentIdKey: keyof T = 'parentId' as keyof T,
-  ): {hashTable: Map<String, TableRow>, tableData: TableRow[]} {
+  ): { hashTable: Map<String, TableRow>; tableData: TableRow[] } {
     // Use Map instead of Object.create(null)
     const hashTable = new Map<string, TableRow>()
     const dataTree: TableRow[] = []
@@ -195,7 +225,7 @@ const useExtendedHierarchyTable = ({ projectName, folderTypes, taskTypes }: Prop
       const parentId = item[parentIdKey] as string
       const row = hashTable.get(id)!
 
-      if (parentId) {
+      if (parentId && hashTable.has(parentId)) {
         const parentRow = hashTable.get(parentId)
         if (parentRow) {
           parentRow.subRows.push(row)
@@ -209,13 +239,13 @@ const useExtendedHierarchyTable = ({ projectName, folderTypes, taskTypes }: Prop
     for (const task of taskPlaceholders) {
       // @ts-ignore
       const parentId = task[parentIdKey]
-      if (hashTable.get(parentId)?.subRows.find(e => e.name == task.name)) {
+      if (hashTable.get(parentId)?.subRows.find((e) => e.name == task.name)) {
         continue
       }
       hashTable.get(parentId)?.subRows.push(task)
     }
 
-    return {hashTable, tableData: dataTree}
+    return { hashTable, tableData: dataTree }
   }
 
   return {

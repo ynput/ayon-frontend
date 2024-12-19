@@ -3,23 +3,24 @@ import { useSelector, useDispatch } from 'react-redux'
 import { Section, TablePanel } from '@ynput/ayon-react-components'
 
 import { $Any } from '@types'
-import { useUpdateEditorMutation } from '@queries/editor/updateEditor'
 import { useGetAttributeListQuery } from '@queries/attributes/getAttributes'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 
 import MyTable from './Table'
 import useExtendedHierarchyTable from './useExtendedHierarchyTable'
+import { Filter } from '@components/SearchFilter/types'
+import { useSlicerContext } from '@context/slicerContext'
 
-const NewEditorPage = () => {
+type Props = {
+  filters: Filter[]
+}
+
+const NewEditorPage = ({ filters }: Props) => {
   const project = useSelector((state: $Any) => state.project)
 
   const projectName = useSelector((state: $Any) => state.project.name)
 
-  // get nodes for tree from redux state
-  const rootDataCache = useSelector((state: $Any) => state.editor.nodes)
-
-  // used to update nodes
-  const [{ isLoading: isUpdating }] = useUpdateEditorMutation()
+  const { rowSelection, sliceType } = useSlicerContext()
 
   // @ts-ignore
   let { data: attribsData = [] } = useGetAttributeListQuery({}, { refetchOnMountOrArgChange: true })
@@ -29,23 +30,16 @@ const NewEditorPage = () => {
     a.scope.some((s: $Any) => ['folder', 'task'].includes(s)),
   )
 
-  const {
-    data,
-    setExpandedItem,
-    expanded,
-    setExpanded
-  } = useExtendedHierarchyTable({
+  const { data, setExpandedItem, expanded, setExpanded } = useExtendedHierarchyTable({
     projectName,
     folderTypes: project.folders || {},
     taskTypes: project.tasks || {},
+    selectedFolders: Object.keys(rowSelection),
   })
 
-  const handleToggleFolder = useCallback(
-    async (event: $Any, folderId: string) => {
-      setExpandedItem(folderId)
-    },
-    [rootDataCache],
-  )
+  const handleToggleFolder = useCallback(async (event: $Any, folderId: string) => {
+    setExpandedItem(folderId)
+  }, [])
 
   return (
     <main className="editor-page">
@@ -57,10 +51,11 @@ const NewEditorPage = () => {
           stateStorage="local"
         >
           <SplitterPanel size={100}>
-            <TablePanel loading={isUpdating} style={{ height: '100%' }}>
+            <TablePanel style={{ height: '100%' }}>
               <MyTable
                 attribs={attribFields}
-                rootData={rootDataCache}
+                // TODO fetch & pass attrib data using new graphql queries
+                rootData={[]}
                 tableData={data}
                 expanded={expanded}
                 setExpanded={setExpanded}
