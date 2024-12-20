@@ -376,9 +376,17 @@ const TasksProgress: FC<TasksProgressProps> = ({
   }
 
   const viewerIsOpen = useSelector((state: $Any) => state.viewer.isOpen)
-  const openInViewer = (id: string, quickView: boolean) => {
-    if (id && !viewerIsOpen) {
-      dispatch(openViewer({ taskId: id, projectName: projectName, quickView }))
+  const openInViewer = ({
+    taskId,
+    folderId,
+    quickView,
+  }: {
+    taskId?: string
+    folderId?: string
+    quickView?: boolean
+  }) => {
+    if ((taskId || folderId) && !viewerIsOpen) {
+      dispatch(openViewer({ taskId, folderId, projectName: projectName, quickView }))
     }
   }
 
@@ -444,7 +452,6 @@ const TasksProgress: FC<TasksProgressProps> = ({
               tableData={tableData}
               projectName={projectName}
               isLoading={isFetchingTasks}
-              selectedFolders={folderIdsToFetch}
               activeTask={activeTask}
               selectedAssignees={selectedAssignees}
               statuses={statuses} // status icons etc.

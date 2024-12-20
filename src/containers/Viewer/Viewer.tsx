@@ -173,9 +173,10 @@ const Viewer = ({ onClose }: ViewerProps) => {
       !isFetchingReviewables &&
       selectedVersion
     ) {
-      const firstReviewableId = selectedVersion.reviewables?.find(
-        (r) => r.availability === 'ready',
+      const firstReviewableId = selectedVersion.reviewables?.find((r) =>
+        ['ready', 'conversionRecommended'].includes(r.availability || ''),
       )?.fileId
+
       if (firstReviewableId) {
         dispatch(updateSelection({ reviewableIds: [firstReviewableId] }))
       }
