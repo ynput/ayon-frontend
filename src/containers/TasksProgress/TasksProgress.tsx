@@ -179,6 +179,7 @@ const TasksProgress: FC<TasksProgressProps> = ({
     },
     { skip: !folderIdsToFetch.length || !projectName },
   )
+  console.log({foldersTasksData, isFetchingTasks, error})
   //
   //
   // ^^^ MAIN QUERY ^^^

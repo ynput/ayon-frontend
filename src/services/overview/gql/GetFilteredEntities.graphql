@@ -1,0 +1,32 @@
+#import "./GetFilteredEntitiesFragment.graphql"
+
+query GetFilteredEntities(
+  $projectName: String!
+  $pathEx: String
+  $assignees: [String!]
+  $tags: [String!]
+  $tagsAny: [String!]
+  $statuses: [String!]
+  $folderTypes: [String!]
+  $taskTypes: [String!]
+  $attributes: [AttributeFilterInput!]
+) {
+  project(name: $projectName) {
+    name
+    folders(
+      pathEx: $pathEx
+      last: 1000
+      assignees: $assignees
+      tags: $tags
+      statuses: $statuses
+      folderTypes: $folderTypes
+      attributes: $attributes
+    ) {
+      edges {
+        node {
+          ...GetFilteredEntitiesFragment
+        }
+      }
+    }
+  }
+}
