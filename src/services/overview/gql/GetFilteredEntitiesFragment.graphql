@@ -1,6 +1,7 @@
 fragment GetFilteredEntitiesFragment on FolderNode {
   projectName
   id
+  parentId
   name
   label
   status
@@ -8,6 +9,7 @@ fragment GetFilteredEntitiesFragment on FolderNode {
   active
   hasReviewables
   tags
+  createdAt
   attrib {
     priority
     endDate
@@ -19,6 +21,7 @@ fragment GetFilteredEntitiesFragment on FolderNode {
     edges {
       node {
         id
+        folderId
         label
         name
         ownAttrib

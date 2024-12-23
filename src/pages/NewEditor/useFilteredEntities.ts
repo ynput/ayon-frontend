@@ -1,6 +1,6 @@
 import { useMemo } from "react"
 import { mapQueryFilters } from "./mappers"
-import { useGetFilteredEntitiesQuery } from "@queries/overview/gql/getFilteredEntities"
+import { useGetFilteredEntitiesQuery } from "@queries/overview/getFilteredEntities"
 import { $Any } from "@types"
 import { useSelector } from "react-redux"
 import { Filter } from "@components/SearchFilter/types"
