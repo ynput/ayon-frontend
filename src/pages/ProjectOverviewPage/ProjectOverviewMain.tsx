@@ -59,8 +59,8 @@ const ProjectOverviewMain: FC<ProjectOverviewMainProps> = ({ projectName }) => {
   // FILTERS ^^^
 
   return (
-    <Section wrap direction="column">
-      <Toolbar style={{ gap: 4 }}>
+    <Section wrap direction="column" style={{ height: '100%' }}>
+      <Toolbar style={{ gap: 4, maxHeight: '24px' }}>
         <Button icon={'add'} variant="filled">
           Create
         </Button>

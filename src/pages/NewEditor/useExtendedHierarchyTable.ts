@@ -3,9 +3,9 @@ import { useGetFolderListQuery } from '@queries/getHierarchy'
 import { useMemo, useState } from 'react'
 import { FolderListItem } from '@api/rest/folders'
 import { ExpandedState } from '@tanstack/react-table'
-import { useGetExpandedBranchQuery, useGetPartialBranchQuery } from '@queries/editor/getEditor'
 import { $Any } from '@types'
 import { TableRow } from '@ynput/ayon-react-components'
+import { useGetExpandedBranchQuery, useGetPartialBranchQuery } from '@queries/editor/getEditor'
 
 export type TableRow = {
   id: string
@@ -70,6 +70,7 @@ const useExtendedHierarchyTable = ({
 
   // @ts-ignore
   const selectedPaths = selectedFolders.map((id) => foldersById[id].path)
+  const selectedPathsPrefixed = selectedPaths.map((path: string) => '/' + path)
 
   const filteredFolders =
     selectedPaths.length > 0
@@ -254,6 +255,7 @@ const useExtendedHierarchyTable = ({
     setExpandedItem: setItemExpanded,
     expanded,
     setExpanded,
+    selectedPaths: selectedPathsPrefixed,
   }
 }
 

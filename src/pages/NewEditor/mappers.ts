@@ -1,3 +1,6 @@
+import { Filter } from '@components/SearchFilter/types'
+import formatSearchQueryFilters, { FilterQueriesData } from '@containers/TasksProgress/helpers/formatSearchQueryFilters'
+import { TaskFilterValue } from '@containers/TasksProgress/hooks/useFilterBySlice'
 import { $Any } from '@types'
 
 const getAbsoluteSelections = (selections: $Any) =>
@@ -29,5 +32,19 @@ const isSelected = (absoluteSelections: $Any, x: number, y: number) => {
 
   return false
 }
+type QueryFiltersParams = {
+  filters: Filter[],
+  sliceFilter: TaskFilterValue | null,
+  selectedPaths: string[]
+}
+const mapQueryFilters = ({filters, sliceFilter, selectedPaths = []}: QueryFiltersParams) => {
+    const queryFilters = formatSearchQueryFilters(filters, sliceFilter) as FilterQueriesData  & {pathEx: string}
+    console.log('paths: ', selectedPaths)
+    if (selectedPaths.length > 0) {
+      queryFilters.pathEx = selectedPaths.join('|')
+    }
 
-export { getAbsoluteSelections, isSelected }
+    return queryFilters
+}
+
+export { getAbsoluteSelections, isSelected, mapQueryFilters }

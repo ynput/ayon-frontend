@@ -1,15 +1,18 @@
 import { useCallback } from 'react'
-import { useSelector, useDispatch } from 'react-redux'
+import { useSelector } from 'react-redux'
+
 import { Section, TablePanel } from '@ynput/ayon-react-components'
 
 import { $Any } from '@types'
-import { useGetAttributeListQuery } from '@queries/attributes/getAttributes'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 
 import MyTable from './Table'
 import useExtendedHierarchyTable from './useExtendedHierarchyTable'
 import { Filter } from '@components/SearchFilter/types'
 import { useSlicerContext } from '@context/slicerContext'
+import useFilterBySlice from '@containers/TasksProgress/hooks/useFilterBySlice'
+import useAttributeFields from './useAttributesList'
+import useFilteredEntities from './useFilteredEntities'
 
 type Props = {
   filters: Filter[]
@@ -17,33 +20,38 @@ type Props = {
 
 const NewEditorPage = ({ filters }: Props) => {
   const project = useSelector((state: $Any) => state.project)
-
   const projectName = useSelector((state: $Any) => state.project.name)
 
-  const { rowSelection, sliceType } = useSlicerContext()
+  const { rowSelection } = useSlicerContext()
+  console.log('row selection: ', rowSelection)
 
-  // @ts-ignore
-  let { data: attribsData = [] } = useGetAttributeListQuery({}, { refetchOnMountOrArgChange: true })
+  const { attribFields } = useAttributeFields()
+  const { filter: sliceFilter } = useFilterBySlice()
 
-  //   filter out scopes
-  const attribFields = attribsData.filter((a: $Any) =>
-    a.scope.some((s: $Any) => ['folder', 'task'].includes(s)),
-  )
-
-  const { data, setExpandedItem, expanded, setExpanded } = useExtendedHierarchyTable({
+  const {
+    data: tableData,
+    setExpandedItem,
+    expanded,
+    setExpanded,
+    selectedPaths,
+  } = useExtendedHierarchyTable({
     projectName,
     folderTypes: project.folders || {},
     taskTypes: project.tasks || {},
     selectedFolders: Object.keys(rowSelection),
   })
 
-  const handleToggleFolder = useCallback(async (event: $Any, folderId: string) => {
+  const filteredEntities = useFilteredEntities({filters, sliceFilter, selectedPaths})
+  console.log('filtered entities: ', filteredEntities)
+
+  const handleToggleFolder = useCallback(async (_: $Any, folderId: string) => {
     setExpandedItem(folderId)
   }, [])
 
   return (
-    <main className="editor-page">
-      <Section>
+    <main className="editor-page" style={{height: '100%'}}
+    >
+      <Section style={{height: '100%'}}>
         <Splitter
           style={{ width: '100%', height: '100%' }}
           layout="horizontal"
@@ -56,7 +64,7 @@ const NewEditorPage = ({ filters }: Props) => {
                 attribs={attribFields}
                 // TODO fetch & pass attrib data using new graphql queries
                 rootData={[]}
-                tableData={data}
+                tableData={tableData}
                 expanded={expanded}
                 setExpanded={setExpanded}
                 toggleExpanderHandler={handleToggleFolder}

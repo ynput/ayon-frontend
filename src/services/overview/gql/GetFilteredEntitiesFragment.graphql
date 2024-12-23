@@ -1,0 +1,35 @@
+fragment GetFilteredEntitiesFragment on FolderNode {
+  projectName
+  id
+  name
+  label
+  status
+  updatedAt
+  active
+  hasReviewables
+  tags
+  attrib {
+    priority
+    endDate
+    resolutionHeight
+    resolutionWidth
+    fps
+  }
+  tasks(taskTypes: $taskTypes, tagsAny: $tagsAny) {
+    edges {
+      node {
+        id
+        label
+        name
+        ownAttrib
+        status
+        tags
+        taskType
+        type
+        updatedAt
+        active
+        assignees
+      }
+    }
+  }
+}

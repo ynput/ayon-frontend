@@ -8,7 +8,7 @@ import { TaskProgressSliceType } from '@pages/TasksProgressPage/TasksProgressPag
 
 type SliceField = Exclude<TaskProgressSliceType, 'hierarchy'>
 
-type FilterQueriesData = Pick<
+export type FilterQueriesData = Pick<
   ProjectNodeTasksArgs,
   'assignees' | 'assigneesAny' | 'tags' | 'tagsAny' | 'taskTypes' | 'statuses' | 'attributes'
 >
