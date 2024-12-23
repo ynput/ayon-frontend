@@ -1382,9 +1382,64 @@ export type GetFilteredEntitiesQueryVariables = Exact<{
 }>;
 
 
-export type GetFilteredEntitiesQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, folders: { __typename?: 'FoldersConnection', edges: Array<{ __typename?: 'FolderEdge', node: { __typename?: 'FolderNode', projectName: string, id: string, name: string, label?: string | null, status: string, updatedAt: any, active: boolean, hasReviewables: boolean, tags: Array<string>, attrib: { __typename?: 'FolderAttribType', priority?: string | null, endDate?: any | null, resolutionHeight?: number | null, resolutionWidth?: number | null, fps?: number | null }, tasks: { __typename?: 'TasksConnection', edges: Array<{ __typename?: 'TaskEdge', node: { __typename?: 'TaskNode', id: string, label?: string | null, name: string, ownAttrib: Array<string>, status: string, tags: Array<string>, taskType: string, type: string, updatedAt: any, active: boolean, assignees: Array<string> } }> } } }> } } };
+export type GetFilteredEntitiesQuery = {
+  __typename?: 'Query'
+  project: {
+    __typename?: 'ProjectNode'
+    name: string
+    folders: {
+      __typename?: 'FoldersConnection'
+      edges: Array<{
+        __typename?: 'FolderEdge'
+        node: {
+          __typename?: 'FolderNode'
+          projectName: string
+          id: string
+          parentId?: string | null
+          name: string
+          label?: string | null
+          status: string
+          updatedAt: any
+          active: boolean
+          hasReviewables: boolean
+          tags: Array<string>
+          createdAt: any
+          attrib: {
+            __typename?: 'FolderAttribType'
+            priority?: string | null
+            endDate?: any | null
+            resolutionHeight?: number | null
+            resolutionWidth?: number | null
+            fps?: number | null
+          }
+          tasks: {
+            __typename?: 'TasksConnection'
+            edges: Array<{
+              __typename?: 'TaskEdge'
+              node: {
+                __typename?: 'TaskNode'
+                id: string
+                folderId: string
+                label?: string | null
+                name: string
+                ownAttrib: Array<string>
+                status: string
+                tags: Array<string>
+                taskType: string
+                type: string
+                updatedAt: any
+                active: boolean
+                assignees: Array<string>
+              }
+            }>
+          }
+        }
+      }>
+    }
+  }
+}
 
-export type GetFilteredEntitiesFragmentFragment = { __typename?: 'FolderNode', projectName: string, id: string, name: string, label?: string | null, status: string, updatedAt: any, active: boolean, hasReviewables: boolean, tags: Array<string>, attrib: { __typename?: 'FolderAttribType', priority?: string | null, endDate?: any | null, resolutionHeight?: number | null, resolutionWidth?: number | null, fps?: number | null }, tasks: { __typename?: 'TasksConnection', edges: Array<{ __typename?: 'TaskEdge', node: { __typename?: 'TaskNode', id: string, label?: string | null, name: string, ownAttrib: Array<string>, status: string, tags: Array<string>, taskType: string, type: string, updatedAt: any, active: boolean, assignees: Array<string> } }> } };
+export type GetFilteredEntitiesFragmentFragment = { __typename?: 'FolderNode', projectName: string, id: string, parentId?: string | null, name: string, label?: string | null, status: string, updatedAt: any, active: boolean, hasReviewables: boolean, tags: Array<string>, createdAt: any, attrib: { __typename?: 'FolderAttribType', priority?: string | null, endDate?: any | null, resolutionHeight?: number | null, resolutionWidth?: number | null, fps?: number | null }, tasks: { __typename?: 'TasksConnection', edges: Array<{ __typename?: 'TaskEdge', node: { __typename?: 'TaskNode', id: string, folderId: string, label?: string | null, name: string, ownAttrib: Array<string>, status: string, tags: Array<string>, taskType: string, type: string, updatedAt: any, active: boolean, assignees: Array<string> } }> } };
 
 export type GetProjectLatestQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
@@ -1498,6 +1553,7 @@ export const GetFilteredEntitiesFragmentFragmentDoc = `
     fragment GetFilteredEntitiesFragment on FolderNode {
   projectName
   id
+  parentId
   name
   label
   status
@@ -1505,6 +1561,7 @@ export const GetFilteredEntitiesFragmentFragmentDoc = `
   active
   hasReviewables
   tags
+  createdAt
   attrib {
     priority
     endDate
@@ -1516,6 +1573,7 @@ export const GetFilteredEntitiesFragmentFragmentDoc = `
     edges {
       node {
         id
+        folderId
         label
         name
         ownAttrib
