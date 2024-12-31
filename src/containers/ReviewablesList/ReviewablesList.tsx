@@ -2,10 +2,7 @@ import { FC, MouseEvent, useState, useRef, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { $Any } from '@types'
 // queries
-import {
-  useGetReviewablesForVersionQuery,
-  useHasTranscoderQuery,
-} from '@queries/review/getReview'
+import { useGetReviewablesForVersionQuery, useHasTranscoderQuery } from '@queries/review/getReview'
 import {
   useDeleteReviewableMutation,
   useSortVersionReviewablesMutation,
@@ -288,11 +285,7 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
 
   return (
     <>
-      <ReviewableUpload
-        projectName={projectName}
-        versionId={versionId}
-        productId={productId}
-      >
+      <ReviewableUpload projectName={projectName} versionId={versionId} productId={productId}>
         {isLoading ? (
           Array.from({ length: 3 }).map((_, index) => (
             <Styled.LoadingCard key={index} className="loading" />
