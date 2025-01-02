@@ -2,6 +2,7 @@ import { useGetEntitiesByIdsQuery, useGetFilteredEntitiesByParentQuery } from "@
 import { $Any } from "@types"
 import { useSelector } from "react-redux"
 import { ExpandedState } from "@tanstack/react-table"
+import { useGetFolderListQuery } from "@queries/getHierarchy"
 
   const useFilteredEntities = ({
     rowSelection,
@@ -12,16 +13,26 @@ import { ExpandedState } from "@tanstack/react-table"
   }) => {
     const projectName = useSelector((state: $Any) => state.project.name)
 
+  const {
+    data: { folders = [] } = {},
+  } = useGetFolderListQuery({ projectName: projectName || '' }, { skip: !projectName })
+
+  let folderIds: string[] = []
+    if (Object.keys(rowSelection).length == 0) {
+      folderIds = folders.filter(el => el.parentId === null).map(el => el.id)
+    } else {
+      folderIds = Object.keys(rowSelection)
+    }
+
     const selectedRowsEntities = useGetEntitiesByIdsQuery({
       projectName,
-      folderIds: Object.keys(rowSelection) || [],
+      folderIds: folderIds
     })
 
     const entitiesByParentId = useGetFilteredEntitiesByParentQuery({
       projectName,
       parentIds: Object.keys(expanded) || [],
     })
-    console.log('ebpi', entitiesByParentId)
 
     return {
       folders: {

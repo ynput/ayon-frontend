@@ -8,6 +8,7 @@ import { Icon } from "@ynput/ayon-react-components"
 import styled from "styled-components"
 import { TableRow } from "./types"
 import { FolderNode, TaskNode } from '@api/graphql'
+import { TableCellContent } from "./Table.styled"
 
 const DelayedShimmerWrapper = styled.div`
   @keyframes fadeInOpacity {
@@ -114,15 +115,15 @@ const getColumns = ({
     () => [
       {
         accessorKey: 'folderType',
-        header: undefined,
+        header: () => 'Folder',
         filterFn: 'fuzzy',
         sortingFn: fuzzySort, //sort by fuzzy rank (falls back to alphanumeric)
         cell: ({ row, getValue }) => {
           return !row.original.id ? (
             <ShimmerCell width="300px" />
           ) : (
-            <Styled.Cell
-              className={clsx({ selected: row.getIsSelected(), loading: isLoading })}
+            <TableCellContent
+              className={clsx('large', { selected: row.getIsSelected(), loading: isLoading })}
               // onClick={(evt) => handleRowSelect(evt, row)}
               // onKeyDown={(evt) => handleRowKeyDown(evt, row)}
               style={{
@@ -164,13 +165,13 @@ const getColumns = ({
               {row.original.startContent && row.original.startContent}
               <span className="title">{getValue<boolean>()}</span>
               <span className="title">{getValue<string>()}</span>
-            </Styled.Cell>
+            </TableCellContent>
           )
         },
       },
       {
         accessorKey: 'status',
-        header: undefined,
+        header: () => 'Status',
         filterFn: 'fuzzy',
         sortingFn: fuzzySort, //sort by fuzzy rank (falls back to alphanumeric)
         cell: ({ row, getValue }) => {
@@ -178,24 +179,21 @@ const getColumns = ({
           return !row.original.id || getRawData(row) === undefined ? (
             <ShimmerCell width="100px" />
           ) : (
-            <Styled.Cell
+            <TableCellContent
               className={clsx({ selected: row.getIsSelected(), loading: isLoading })}
               // onClick={(evt) => handleRowSelect(evt, row)}
               // onKeyDown={(evt) => handleRowKeyDown(evt, row)}
-              style={{
-                width: '100px',
-              }}
               tabIndex={0}
             >
               {/* @ts-ignore */}
               {rawData?.status || 'none'}
-            </Styled.Cell>
+            </TableCellContent>
           )
         },
       },
       {
         accessorKey: 'assignees',
-        header: undefined,
+        header: () => 'Assignees',
         filterFn: 'fuzzy',
         sortingFn: fuzzySort, //sort by fuzzy rank (falls back to alphanumeric)
         cell: ({ row, getValue }) => {
@@ -204,7 +202,7 @@ const getColumns = ({
           return !row.original.id || rawData === undefined ? (
             <ShimmerCell width="100px" />
           ) : (
-            <Styled.Cell
+            <TableCellContent
               className={clsx({ selected: row.getIsSelected(), loading: isLoading })}
               // onClick={(evt) => handleRowSelect(evt, row)}
               // onKeyDown={(evt) => handleRowKeyDown(evt, row)}
@@ -215,14 +213,14 @@ const getColumns = ({
             >
               {/* @ts-ignore */}
               {rawType === 'folders' ? '' : (rawData as TaskNode).attrib?.assignees || 'None'}
-            </Styled.Cell>
+            </TableCellContent>
           )
         },
       },
       ...attribs.map((attrib: $Any) => {
         return {
           accessorKey: attrib.name,
-          header: undefined,
+          header: () => attrib.name,
           filterFn: 'fuzzy' as FilterFnOption<TableRow>,
           sortingFn: fuzzySort, //sort by fuzzy rank (falls back to alphanumeric)
           cell: ({ row, getValue }: { row: $Any; getValue: $Any }) => {
@@ -230,7 +228,7 @@ const getColumns = ({
             return !row.original.id || rawData === undefined ? (
               <ShimmerCell width="100px" />
             ) : (
-              <Styled.Cell
+              <TableCellContent
                 className={clsx({ selected: row.getIsSelected(), loading: isLoading })}
                 // onClick={(evt) => handleRowSelect(evt, row)}
                 // onKeyDown={(evt) => handleRowKeyDown(evt, row)}
@@ -240,7 +238,7 @@ const getColumns = ({
                 tabIndex={0}
               >
                 {getRowAttribValue(row, attrib.name)}
-              </Styled.Cell>
+              </TableCellContent>
             )
           },
         }
