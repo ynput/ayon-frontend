@@ -11,34 +11,23 @@ import {
 } from '@tanstack/react-table'
 
 import clsx from 'clsx'
-import styled from 'styled-components'
 
 import { $Any } from '@types'
 import { TableRow } from '@containers/Slicer/types'
-import * as Styled from '@containers/Slicer/SlicerTable.styled'
 import useHandlers, { Selection } from './handlers'
 import { getAbsoluteSelections, isSelected } from './mappers'
 import { getColumns } from './TableColumns'
-
-const TableCell = styled.td`
-  border: solid 1px;
-  border-color: rgba(255, 255, 255, 0.2);
-  border-collapse: collapse;
-  &.selected {
-    border-color: white;
-    background-color: rgba(0, 0, 255, 0.3);
-  }
-`
+import * as Styled from './Table.styled'
 
 type Props = {
   tableData: $Any[]
-  rawData: {folders: $Any, tasks: $Any}
+  rawData: { folders: $Any; tasks: $Any }
   attribs: $Any[]
   isLoading: boolean
   isExpandable: boolean
   sliceId: string
   toggleExpanderHandler: $Any
-  expanded: $Any,
+  expanded: $Any
   setExpanded: $Any
 }
 
@@ -53,7 +42,6 @@ const MyTable = ({
   expanded,
   setExpanded,
 }: Props) => {
-
   const columns = getColumns({
     tableData,
     rawData,
@@ -80,7 +68,7 @@ const MyTable = ({
     filterFns,
     state: {
       expanded,
-    }
+    },
   })
 
   const { rows } = table.getRowModel()
@@ -114,66 +102,81 @@ const MyTable = ({
   })
 
   return (
-    <Styled.TableContainer ref={tableContainerRef} style={{height: '100%'}}>
-      <table style={{borderCollapse: 'collapse'}}>
-
-      <thead>
-        {table.getHeaderGroups().map((headerGroup) => (
-          <tr key={headerGroup.id}>
-            {headerGroup.headers.map((header) => {
+    <Styled.TableContainerWrapper ref={tableContainerRef} style={{ height: '100%' }}>
+      <Styled.TableContainer ref={tableContainerRef} style={{ height: '100%' }}>
+        <table style={{ borderCollapse: 'collapse' }}>
+          <Styled.TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => {
               return (
-                <th key={header.id} colSpan={header.colSpan}>
-                  header group
-                  {header.isPlaceholder ? null : (
-                    <div>{flexRender(header.column.columnDef.header, header.getContext())}</div>
-                  )}
-                </th>
+                <tr key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => {
+                    return (
+                      <Styled.HeaderCell
+                        className={clsx({ large: header.column.id === 'folderType' })}
+                        key={header.id}
+                        colSpan={header.colSpan}
+                      >
+                        {header.isPlaceholder ? null : (
+                          <Styled.TableCellContent
+                            className={clsx('bold', { large: header.column.id === 'folderType' })}
+                          >
+                            {flexRender(header.column.columnDef.header, header.getContext())}
+                          </Styled.TableCellContent>
+                        )}
+                      </Styled.HeaderCell>
+                    )
+                  })}
+                </tr>
               )
             })}
-          </tr>
-        ))}
-      </thead>
-      <tbody style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
-        {rowVirtualizer.getVirtualItems().map((virtualRow: $Any, rowIdx) => {
-          const row = rows[virtualRow.index] as Row<TableRow>
-          return (
-            <tr
-              data-index={virtualRow.index} //needed for dynamic row height measurement
-              // @ts-ignore
-              ref={(node) => rowVirtualizer.measureElement(node)} //measure dynamic row height
-              key={row.id + rowIdx}
-              style={{
-                display: 'table-row',
-                transform: `translateY(${virtualRow.start}px)`, //this should always be a `style` as it changes on scroll
-              }}
-            >
-              {row.getVisibleCells().map((cell, colIdx) => {
-                return (
-                  <TableCell
-                    key={cell.id + colIdx}
-                    className={clsx(`pos-${rowIdx}-${colIdx}`, {
-                      notSelected: !isSelected(absoluteSelections, rowIdx, colIdx),
-                      selected: isSelected(absoluteSelections, rowIdx, colIdx),
-                    })}
-                    onMouseDown={(e) => {
-                      // @ts-ignore
-                      handleMouseDown(e, cell, rowIdx, colIdx)
-                    }}
-                    onMouseUp={(e) => {
-                      // @ts-ignore
-                      handleMouseUp(e, cell, rowIdx, colIdx)
-                    }}
-                  >
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </TableCell>
-                )
-              })}
-            </tr>
-          )
-        })}
-      </tbody>
-      </table>
-    </Styled.TableContainer>
+          </Styled.TableHeader>
+
+          <tbody style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
+            {rowVirtualizer.getVirtualItems().map((virtualRow: $Any, rowIdx) => {
+              const row = rows[virtualRow.index] as Row<TableRow>
+              return (
+                <tr
+                  data-index={virtualRow.index} //needed for dynamic row height measurement
+                  // @ts-ignore
+                  ref={(node) => rowVirtualizer.measureElement(node)} //measure dynamic row height
+                  key={row.id + rowIdx}
+                  style={{
+                    display: 'table-row',
+                    transform: `translateY(${virtualRow.start}px)`, //this should always be a `style` as it changes on scroll
+                  }}
+                >
+                  {row.getVisibleCells().map((cell, colIdx) => {
+                    return (
+                      <Styled.TableCell
+                        key={cell.id + colIdx}
+                        className={clsx(
+                          `pos-${rowIdx}-${colIdx}`,
+                          cell.column.id === 'folderType' ? 'large' : '',
+                          {
+                            notSelected: !isSelected(absoluteSelections, rowIdx, colIdx),
+                            selected: isSelected(absoluteSelections, rowIdx, colIdx),
+                          },
+                        )}
+                        onMouseDown={(e) => {
+                          // @ts-ignore
+                          handleMouseDown(e, cell, rowIdx, colIdx)
+                        }}
+                        onMouseUp={(e) => {
+                          // @ts-ignore
+                          handleMouseUp(e, cell, rowIdx, colIdx)
+                        }}
+                      >
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </Styled.TableCell>
+                    )
+                  })}
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </Styled.TableContainer>
+    </Styled.TableContainerWrapper>
   )
 }
 

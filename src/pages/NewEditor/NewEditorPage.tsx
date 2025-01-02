@@ -39,14 +39,9 @@ const NewEditorPage = ({ filters }: Props) => {
     taskTypes: project.tasks || {},
     selectedFolders: Object.keys(rowSelection),
   })
-  console.log('raw data: ', rawData )
-  console.log('expanded: ', expanded )
-  console.log('row selection: ', rowSelection )
 
   // @ts-ignore
   const { folders, tasks } = useFilteredEntities({ filters, sliceFilter, selectedPaths, expanded, rowSelection })
-  console.log('folders: ', folders)
-  console.log('tasks: ', tasks)
   const { tableData: populatedTableData } = populateTableData({
     rawData,
     folders,
@@ -54,8 +49,6 @@ const NewEditorPage = ({ filters }: Props) => {
     folderTypes: project.folders,
     taskTypes: project.tasks,
   })
-  console.log('rd: ', rawData)
-  console.log('pd: ', populatedTableData)
   const toggleHandler = handleToggleFolder(setExpandedItem)
 
   return (
