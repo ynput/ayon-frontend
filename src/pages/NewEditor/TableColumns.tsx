@@ -1,12 +1,13 @@
 import { useMemo } from "react"
 import * as Styled from '@containers/Slicer/SlicerTable.styled'
 import { $Any } from "@types"
-import { ColumnDef, FilterFnOption, SortingFn, sortingFns } from "@tanstack/react-table"
+import { ColumnDef, FilterFnOption, Row, SortingFn, sortingFns } from "@tanstack/react-table"
 import { compareItems } from "@tanstack/match-sorter-utils"
 import clsx from "clsx"
 import { Icon } from "@ynput/ayon-react-components"
-import { TableRow } from "./useExtendedHierarchyTable"
 import styled from "styled-components"
+import { TableRow } from "./types"
+import { FolderNode, TaskNode } from '@api/graphql'
 
 const DelayedShimmerWrapper = styled.div`
   @keyframes fadeInOpacity {
@@ -43,7 +44,7 @@ const fuzzySort: SortingFn<any> = (rowA, rowB, columnId) => {
 
 type Props = {
   tableData: $Any[]
-  rootData: $Any[]
+  rawData: { folders: $Any, tasks: $Any}
   attribs: $Any[]
   isLoading: boolean
   isExpandable: boolean
@@ -65,12 +66,50 @@ const ShimmerCell = ({ width }: { width: string }) => {
 }
 const getColumns = ({
   tableData,
-  rootData,
+  rawData,
   attribs,
   isLoading,
   sliceId,
   toggleExpanderHandler,
 }: Props) =>  {
+  const getRowType = (item: Row<TableRow>) => {
+    return item.original.data.type === 'folder' ? 'folders' : 'tasks'
+  }
+  const getRawData = (item: Row<TableRow>) => {
+    return rawData[getRowType(item)][item.id]
+  }
+
+  const getRawDataParentId = (row: Row<TableRow>): string => {
+    return getRowType(row) === 'folders' ? 'parentId' : 'folderId'
+
+  }
+  const getRawDataAttribValue = (rawData: FolderNode | TaskNode, attribName: string): string => {
+    if (rawData.ownAttrib === undefined) {
+      return 'bad'
+    }
+    if (rawData.ownAttrib.includes(attribName)) {
+      // @ts-ignore
+      return rawData.attrib?.[attribName] || ''
+    }
+
+    return 'foo'
+    // return getRawDataAttribValue(rawData[parentId], attribName)
+  }
+
+  const getRowAttribValue = (row: Row<TableRow>, attribName: string): string => {
+    const parentId = getRawDataParentId(row)
+    const rawData = getRawData(row)
+    if (rawData.ownAttrib === undefined) {
+      return 'bad'
+    }
+    if (rawData.ownAttrib.includes(attribName)) {
+      // @ts-ignore
+      return rawData.attrib?.[attribName] || ''
+    }
+
+    return getRawDataAttribValue(rawData[parentId], attribName)
+  }
+
   return useMemo<ColumnDef<TableRow>[]>(
     () => [
       {
@@ -135,31 +174,8 @@ const getColumns = ({
         filterFn: 'fuzzy',
         sortingFn: fuzzySort, //sort by fuzzy rank (falls back to alphanumeric)
         cell: ({ row, getValue }) => {
-          return !row.original.id || rootData[row.original.id] === undefined ? (
-            <ShimmerCell width="100px" />
-          ) : (
-            <Styled.Cell
-              className={clsx({ selected: row.getIsSelected(), loading: isLoading })}
-              // onClick={(evt) => handleRowSelect(evt, row)}
-              // onKeyDown={(evt) => handleRowKeyDown(evt, row)}
-              style={{
-                width: '100px',
-              }}
-              tabIndex={0}
-            >
-              { /* @ts-ignore */}
-              {row.original.extended?.data?.status || 'none'}
-            </Styled.Cell>
-          )
-        },
-      },
-      {
-        accessorKey: 'assignees',
-        header: undefined,
-        filterFn: 'fuzzy',
-        sortingFn: fuzzySort, //sort by fuzzy rank (falls back to alphanumeric)
-        cell: ({ row, getValue }) => {
-          return !row.original.id || rootData[row.original.id] === undefined ? (
+          const rawData = getRawData(row)
+          return !row.original.id || getRawData(row) === undefined ? (
             <ShimmerCell width="100px" />
           ) : (
             <Styled.Cell
@@ -172,85 +188,63 @@ const getColumns = ({
               tabIndex={0}
             >
               {/* @ts-ignore */}
-              {rootData[row.id]?.data.attrib.priority}
+              {rawData?.status || 'none'}
+            </Styled.Cell>
+          )
+        },
+      },
+      {
+        accessorKey: 'assignees',
+        header: undefined,
+        filterFn: 'fuzzy',
+        sortingFn: fuzzySort, //sort by fuzzy rank (falls back to alphanumeric)
+        cell: ({ row, getValue }) => {
+          const rawType = getRowType(row)
+          const rawData = getRawData(row)
+          return !row.original.id || rawData === undefined ? (
+            <ShimmerCell width="100px" />
+          ) : (
+            <Styled.Cell
+              className={clsx({ selected: row.getIsSelected(), loading: isLoading })}
+              // onClick={(evt) => handleRowSelect(evt, row)}
+              // onKeyDown={(evt) => handleRowKeyDown(evt, row)}
+              style={{
+                width: '100px',
+              }}
+              tabIndex={0}
+            >
+              {/* @ts-ignore */}
+              {rawType === 'folders' ? '' : (rawData as TaskNode).attrib?.assignees || 'None'}
             </Styled.Cell>
           )
         },
       },
       ...attribs.map((attrib: $Any) => {
-        // console.log('attrib: ', attrib)
         return {
           accessorKey: attrib.name,
           header: undefined,
           filterFn: 'fuzzy' as FilterFnOption<TableRow>,
           sortingFn: fuzzySort, //sort by fuzzy rank (falls back to alphanumeric)
-          cell: ({ row, getValue }: {row: $Any, getValue: $Any}) => {
-          return !row.original.id || rootData[row.original.id] === undefined ? (
-            <ShimmerCell width="100px" />
-          ) : (
-            <Styled.Cell
-              className={clsx({ selected: row.getIsSelected(), loading: isLoading })}
-              // onClick={(evt) => handleRowSelect(evt, row)}
-              // onKeyDown={(evt) => handleRowKeyDown(evt, row)}
-              style={{
-                width: '100px',
-              }}
-              tabIndex={0}
-            >
-              {rootData[row.id]?.data.attrib[attrib.name] || ''}
-            </Styled.Cell>
-          )
+          cell: ({ row, getValue }: { row: $Any; getValue: $Any }) => {
+            const rawData = getRawData(row)
+            return !row.original.id || rawData === undefined ? (
+              <ShimmerCell width="100px" />
+            ) : (
+              <Styled.Cell
+                className={clsx({ selected: row.getIsSelected(), loading: isLoading })}
+                // onClick={(evt) => handleRowSelect(evt, row)}
+                // onKeyDown={(evt) => handleRowKeyDown(evt, row)}
+                style={{
+                  width: '100px',
+                }}
+                tabIndex={0}
+              >
+                {getRowAttribValue(row, attrib.name)}
+              </Styled.Cell>
+            )
           },
         }
       }),
-      {
-        accessorKey: 'width',
-        header: undefined,
-        filterFn: 'fuzzy',
-        sortingFn: fuzzySort, //sort by fuzzy rank (falls back to alphanumeric)
-        cell: ({ row, getValue }) => {
-          return !row.original.id || rootData[row.original.id] === undefined ? (
-            <ShimmerCell width="100px" />
-          ) : (
-            <Styled.Cell
-              className={clsx({ selected: row.getIsSelected(), loading: isLoading })}
-              // onClick={(evt) => handleRowSelect(evt, row)}
-              // onKeyDown={(evt) => handleRowKeyDown(evt, row)}
-              style={{
-                width: '100px',
-              }}
-              tabIndex={0}
-            >
-              { /* @ts-ignore */}
-              {row.original.extended?.data?.attrib?.width || 'none'}
-            </Styled.Cell>
-          )
-        },
-      },
-      {
-        accessorKey: 'height',
-        header: undefined,
-        filterFn: 'fuzzy',
-        sortingFn: fuzzySort, //sort by fuzzy rank (falls back to alphanumeric)
-        cell: ({ row, getValue }) => {
-          return !row.original.id || rootData[row.original.id] === undefined ? (
-            <ShimmerCell width="100px" />
-          ) : (
-            <Styled.Cell
-              className={clsx({ selected: row.getIsSelected(), loading: isLoading })}
-              // onClick={(evt) => handleRowSelect(evt, row)}
-              // onKeyDown={(evt) => handleRowKeyDown(evt, row)}
-              style={{
-                width: '100px',
-              }}
-              tabIndex={0}
-            >
-              { /* @ts-ignore */}
-              {row.original.extended?.data?.attrib?.resolutionHeight || 'none'}
-            </Styled.Cell>
-          )
-        },
-      },
     ],
     [isLoading, sliceId, tableData],
   )

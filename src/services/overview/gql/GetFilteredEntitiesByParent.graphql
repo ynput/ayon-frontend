@@ -1,20 +1,19 @@
-#import "./GetFilteredEntitiesFragment.graphql"
+#import "./GetFolderPropsFragment.graphql"
+#import "./GetTaskPropsFragment.graphql"
 
-query GetFilteredEntities(
+query GetFilteredEntitiesByParent(
   $projectName: String!
-  $pathEx: String
+  $parentIds: [String!]!
   $assignees: [String!]
   $tags: [String!]
-  $tagsAny: [String!]
   $statuses: [String!]
   $folderTypes: [String!]
-  $taskTypes: [String!]
   $attributes: [AttributeFilterInput!]
 ) {
   project(name: $projectName) {
     name
     folders(
-      pathEx: $pathEx
+      parentIds: $parentIds
       last: 1000
       assignees: $assignees
       tags: $tags
@@ -24,7 +23,14 @@ query GetFilteredEntities(
     ) {
       edges {
         node {
-          ...GetFilteredEntitiesFragment
+          ...GetFolderPropsFragment
+        }
+      }
+    }
+    tasks (folderIds: $parentIds) {
+      edges {
+        node {
+          ...GetTaskPropsFragment
         }
       }
     }

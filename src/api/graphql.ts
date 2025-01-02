@@ -1369,77 +1369,32 @@ export type GetInstallEventsQueryVariables = Exact<{
 
 export type GetInstallEventsQuery = { __typename?: 'Query', events: { __typename?: 'EventsConnection', edges: Array<{ __typename?: 'EventEdge', node: { __typename?: 'EventNode', id: string, status: string, description: string } }> } };
 
-export type GetFilteredEntitiesQueryVariables = Exact<{
+export type GetEntitiesByIdsQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
-  pathEx?: InputMaybe<Scalars['String']['input']>;
+  folderIds: Array<Scalars['String']['input']> | Scalars['String']['input'];
+}>;
+
+
+export type GetEntitiesByIdsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, folders: { __typename?: 'FoldersConnection', edges: Array<{ __typename?: 'FolderEdge', node: { __typename?: 'FolderNode', id: string, projectName: string, parentId?: string | null, label?: string | null, name: string, ownAttrib: Array<string>, status: string, tags: Array<string>, folderType: string, type: string, updatedAt: any, active: boolean, hasReviewables: boolean, createdAt: any, attrib: { __typename?: 'FolderAttribType', priority?: string | null, endDate?: any | null, resolutionHeight?: number | null, resolutionWidth?: number | null, fps?: number | null } } }> }, tasks: { __typename?: 'TasksConnection', edges: Array<{ __typename?: 'TaskEdge', node: { __typename?: 'TaskNode', id: string, folderId: string, label?: string | null, name: string, ownAttrib: Array<string>, status: string, tags: Array<string>, taskType: string, type: string, updatedAt: any, active: boolean, assignees: Array<string> } }> } } };
+
+export type GetFilteredEntitiesByParentQueryVariables = Exact<{
+  projectName: Scalars['String']['input'];
+  parentIds: Array<Scalars['String']['input']> | Scalars['String']['input'];
   assignees?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
   tags?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
-  tagsAny?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
   statuses?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
   folderTypes?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
-  taskTypes?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
   attributes?: InputMaybe<Array<AttributeFilterInput> | AttributeFilterInput>;
 }>;
 
 
-export type GetFilteredEntitiesQuery = {
-  __typename?: 'Query'
-  project: {
-    __typename?: 'ProjectNode'
-    name: string
-    folders: {
-      __typename?: 'FoldersConnection'
-      edges: Array<{
-        __typename?: 'FolderEdge'
-        node: {
-          __typename?: 'FolderNode'
-          projectName: string
-          id: string
-          parentId?: string | null
-          name: string
-          label?: string | null
-          status: string
-          updatedAt: any
-          active: boolean
-          hasReviewables: boolean
-          tags: Array<string>
-          createdAt: any
-          attrib: {
-            __typename?: 'FolderAttribType'
-            priority?: string | null
-            endDate?: any | null
-            resolutionHeight?: number | null
-            resolutionWidth?: number | null
-            fps?: number | null
-          }
-          tasks: {
-            __typename?: 'TasksConnection'
-            edges: Array<{
-              __typename?: 'TaskEdge'
-              node: {
-                __typename?: 'TaskNode'
-                id: string
-                folderId: string
-                label?: string | null
-                name: string
-                ownAttrib: Array<string>
-                status: string
-                tags: Array<string>
-                taskType: string
-                type: string
-                updatedAt: any
-                active: boolean
-                assignees: Array<string>
-              }
-            }>
-          }
-        }
-      }>
-    }
-  }
-}
+export type GetFilteredEntitiesByParentQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, folders: { __typename?: 'FoldersConnection', edges: Array<{ __typename?: 'FolderEdge', node: { __typename?: 'FolderNode', id: string, projectName: string, parentId?: string | null, label?: string | null, name: string, ownAttrib: Array<string>, status: string, tags: Array<string>, folderType: string, type: string, updatedAt: any, active: boolean, hasReviewables: boolean, createdAt: any, attrib: { __typename?: 'FolderAttribType', priority?: string | null, endDate?: any | null, resolutionHeight?: number | null, resolutionWidth?: number | null, fps?: number | null } } }> }, tasks: { __typename?: 'TasksConnection', edges: Array<{ __typename?: 'TaskEdge', node: { __typename?: 'TaskNode', id: string, folderId: string, label?: string | null, name: string, ownAttrib: Array<string>, status: string, tags: Array<string>, taskType: string, type: string, updatedAt: any, active: boolean, assignees: Array<string> } }> } } };
 
 export type GetFilteredEntitiesFragmentFragment = { __typename?: 'FolderNode', projectName: string, id: string, parentId?: string | null, name: string, label?: string | null, status: string, updatedAt: any, active: boolean, hasReviewables: boolean, tags: Array<string>, createdAt: any, attrib: { __typename?: 'FolderAttribType', priority?: string | null, endDate?: any | null, resolutionHeight?: number | null, resolutionWidth?: number | null, fps?: number | null }, tasks: { __typename?: 'TasksConnection', edges: Array<{ __typename?: 'TaskEdge', node: { __typename?: 'TaskNode', id: string, folderId: string, label?: string | null, name: string, ownAttrib: Array<string>, status: string, tags: Array<string>, taskType: string, type: string, updatedAt: any, active: boolean, assignees: Array<string> } }> } };
+
+export type GetFolderPropsFragmentFragment = { __typename?: 'FolderNode', id: string, projectName: string, parentId?: string | null, label?: string | null, name: string, ownAttrib: Array<string>, status: string, tags: Array<string>, folderType: string, type: string, updatedAt: any, active: boolean, hasReviewables: boolean, createdAt: any, attrib: { __typename?: 'FolderAttribType', priority?: string | null, endDate?: any | null, resolutionHeight?: number | null, resolutionWidth?: number | null, fps?: number | null } };
+
+export type GetTaskPropsFragmentFragment = { __typename?: 'TaskNode', id: string, folderId: string, label?: string | null, name: string, ownAttrib: Array<string>, status: string, tags: Array<string>, taskType: string, type: string, updatedAt: any, active: boolean, assignees: Array<string> };
 
 export type GetProjectLatestQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
@@ -1587,6 +1542,47 @@ export const GetFilteredEntitiesFragmentFragmentDoc = `
       }
     }
   }
+}
+    `;
+export const GetFolderPropsFragmentFragmentDoc = `
+    fragment GetFolderPropsFragment on FolderNode {
+  id
+  projectName
+  parentId
+  label
+  name
+  ownAttrib
+  status
+  tags
+  folderType
+  type
+  updatedAt
+  active
+  hasReviewables
+  createdAt
+  attrib {
+    priority
+    endDate
+    resolutionHeight
+    resolutionWidth
+    fps
+  }
+}
+    `;
+export const GetTaskPropsFragmentFragmentDoc = `
+    fragment GetTaskPropsFragment on TaskNode {
+  id
+  folderId
+  label
+  name
+  ownAttrib
+  status
+  tags
+  taskType
+  type
+  updatedAt
+  active
+  assignees
 }
     `;
 export const ProgressTaskFragmentFragmentDoc = `
@@ -1746,12 +1742,34 @@ export const GetInstallEventsDocument = `
   }
 }
     `;
-export const GetFilteredEntitiesDocument = `
-    query GetFilteredEntities($projectName: String!, $pathEx: String, $assignees: [String!], $tags: [String!], $tagsAny: [String!], $statuses: [String!], $folderTypes: [String!], $taskTypes: [String!], $attributes: [AttributeFilterInput!]) {
+export const GetEntitiesByIdsDocument = `
+    query GetEntitiesByIds($projectName: String!, $folderIds: [String!]!) {
+  project(name: $projectName) {
+    name
+    folders(ids: $folderIds) {
+      edges {
+        node {
+          ...GetFolderPropsFragment
+        }
+      }
+    }
+    tasks(folderIds: $folderIds) {
+      edges {
+        node {
+          ...GetTaskPropsFragment
+        }
+      }
+    }
+  }
+}
+    ${GetFolderPropsFragmentFragmentDoc}
+${GetTaskPropsFragmentFragmentDoc}`;
+export const GetFilteredEntitiesByParentDocument = `
+    query GetFilteredEntitiesByParent($projectName: String!, $parentIds: [String!]!, $assignees: [String!], $tags: [String!], $statuses: [String!], $folderTypes: [String!], $attributes: [AttributeFilterInput!]) {
   project(name: $projectName) {
     name
     folders(
-      pathEx: $pathEx
+      parentIds: $parentIds
       last: 1000
       assignees: $assignees
       tags: $tags
@@ -1761,13 +1779,21 @@ export const GetFilteredEntitiesDocument = `
     ) {
       edges {
         node {
-          ...GetFilteredEntitiesFragment
+          ...GetFolderPropsFragment
+        }
+      }
+    }
+    tasks(folderIds: $parentIds) {
+      edges {
+        node {
+          ...GetTaskPropsFragment
         }
       }
     }
   }
 }
-    ${GetFilteredEntitiesFragmentFragmentDoc}`;
+    ${GetFolderPropsFragmentFragmentDoc}
+${GetTaskPropsFragmentFragmentDoc}`;
 export const GetProjectLatestDocument = `
     query GetProjectLatest($projectName: String!) {
   project(name: $projectName) {
@@ -1912,8 +1938,11 @@ const injectedRtkApi = RestAPI.injectEndpoints({
     GetInstallEvents: build.query<GetInstallEventsQuery, GetInstallEventsQueryVariables>({
       query: (variables) => ({ document: GetInstallEventsDocument, variables })
     }),
-    GetFilteredEntities: build.query<GetFilteredEntitiesQuery, GetFilteredEntitiesQueryVariables>({
-      query: (variables) => ({ document: GetFilteredEntitiesDocument, variables })
+    GetEntitiesByIds: build.query<GetEntitiesByIdsQuery, GetEntitiesByIdsQueryVariables>({
+      query: (variables) => ({ document: GetEntitiesByIdsDocument, variables })
+    }),
+    GetFilteredEntitiesByParent: build.query<GetFilteredEntitiesByParentQuery, GetFilteredEntitiesByParentQueryVariables>({
+      query: (variables) => ({ document: GetFilteredEntitiesByParentDocument, variables })
     }),
     GetProjectLatest: build.query<GetProjectLatestQuery, GetProjectLatestQueryVariables>({
       query: (variables) => ({ document: GetProjectLatestDocument, variables })

@@ -1,4 +1,4 @@
-import { MouseEvent } from 'react'
+import { MouseEvent, useCallback } from 'react'
 import { $Any } from '@types'
 
 export type Selection = {
@@ -64,5 +64,15 @@ const useHandlers = ({
   }
   return { handleMouseUp, handleMouseDown }
 }
+
+const handleToggleFolder = (setExpandedItem: $Any) =>
+  useCallback(
+    async (_: $Any, folderId: string) => {
+      setExpandedItem(folderId)
+    },
+    [setExpandedItem],
+  )
+
+export { handleToggleFolder }
 
 export default useHandlers

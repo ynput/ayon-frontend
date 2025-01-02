@@ -1,0 +1,23 @@
+fragment GetFolderPropsFragment on FolderNode {
+  id
+  projectName
+  parentId
+  label
+  name
+  ownAttrib
+  status
+  tags
+  folderType
+  type
+  updatedAt
+  active
+  hasReviewables
+  createdAt
+  attrib {
+    priority
+    endDate
+    resolutionHeight
+    resolutionWidth
+    fps
+  }
+}
