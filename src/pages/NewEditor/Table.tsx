@@ -32,7 +32,7 @@ const TableCell = styled.td`
 
 type Props = {
   tableData: $Any[]
-  rootData: $Any[]
+  rawData: {folders: $Any, tasks: $Any}
   attribs: $Any[]
   isLoading: boolean
   isExpandable: boolean
@@ -44,7 +44,7 @@ type Props = {
 
 const MyTable = ({
   tableData,
-  rootData,
+  rawData,
   attribs,
   isLoading,
   isExpandable,
@@ -56,7 +56,7 @@ const MyTable = ({
 
   const columns = getColumns({
     tableData,
-    rootData,
+    rawData,
     attribs,
     isLoading,
     isExpandable,
