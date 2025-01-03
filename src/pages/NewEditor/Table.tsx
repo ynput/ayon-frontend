@@ -102,7 +102,7 @@ const MyTable = ({
   })
 
   return (
-    <Styled.TableContainerWrapper ref={tableContainerRef} style={{ height: '100%' }}>
+    <Styled.TableContainerWrapper style={{ height: '100%' }}>
       <Styled.TableContainer ref={tableContainerRef} style={{ height: '100%' }}>
         <table style={{ borderCollapse: 'collapse' }}>
           <Styled.TableHeader>

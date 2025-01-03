@@ -6,7 +6,7 @@ import { $Any } from '@types'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 
 import MyTable from './Table'
-import useExtendedHierarchyTable from './useExtendedHierarchyTable'
+import useFilteredEditorEntities from './useFilteredEditorEntities'
 import { Filter } from '@components/SearchFilter/types'
 import { useSlicerContext } from '@context/slicerContext'
 import useFilterBySlice from '@containers/TasksProgress/hooks/useFilterBySlice'
@@ -33,7 +33,7 @@ const NewEditorPage = ({ filters }: Props) => {
     expanded,
     setExpanded,
     selectedPaths,
-  } = useExtendedHierarchyTable({
+  } = useFilteredEditorEntities({
     projectName,
     folderTypes: project.folders || {},
     taskTypes: project.tasks || {},

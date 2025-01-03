@@ -1,4 +1,4 @@
-fragment GetFolderPropsFragment on FolderNode {
+fragment FolderPropsFragment on FolderNode {
   id
   projectName
   parentId

@@ -1,19 +1,21 @@
-query GetFilteredEntitiesByParent(
+query GetFilteredEntities(
   $projectName: String!
-  $parentIds: [String!]!
   $assignees: [String!]
   $tags: [String!]
   $statuses: [String!]
   $folderTypes: [String!]
   $attributes: [AttributeFilterInput!]
+  $folderIds: [String!]
+  $parentFolderIds: [String!]
 ) {
   project(name: $projectName) {
     name
     folders(
-      parentIds: $parentIds
       last: 10000
       assignees: $assignees
       tags: $tags
+      ids: $folderIds
+      parentIds: $parentFolderIds
       statuses: $statuses
       folderTypes: $folderTypes
       attributes: $attributes
@@ -24,7 +26,15 @@ query GetFilteredEntitiesByParent(
         }
       }
     }
-    tasks (folderIds: $parentIds) {
+    tasks (
+      assignees: $assignees
+      tags: $tags
+      folderIds: $folderIds
+      statuses: $statuses
+      attributes: $attributes
+      last: 10000
+
+    ) {
       edges {
         node {
           ...TaskPropsFragment

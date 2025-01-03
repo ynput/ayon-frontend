@@ -1,6 +1,4 @@
-#import "./GetFilteredEntitiesFragment.graphql"
-
-query GetEntitiesByIds(
+query GetRootFolderIds(
   $projectName: String!
   $folderIds: [String!]!
 ) {
@@ -11,7 +9,7 @@ query GetEntitiesByIds(
     ) {
       edges {
         node {
-          ...GetFolderPropsFragment
+          ...FolderPropsFragment
         }
       }
     }
@@ -20,7 +18,7 @@ query GetEntitiesByIds(
     ) {
       edges {
         node {
-          ...GetTaskPropsFragment
+          ...TaskPropsFragment
         }
       }
     }

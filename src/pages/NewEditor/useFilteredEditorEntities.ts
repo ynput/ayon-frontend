@@ -2,7 +2,7 @@ import { useGetFolderListQuery } from '@queries/getHierarchy'
 import { useState } from 'react'
 import { ExpandedState } from '@tanstack/react-table'
 import { $Any } from '@types'
-import { useGetExpandedBranchQuery} from '@queries/editor/getEditor'
+import { useGetFolderHierarchyQuery } from '@queries/overview/getFolderHierarchy'
 
 type Params = {
   projectName: string | null
@@ -11,12 +11,12 @@ type Params = {
   selectedFolders: string[]
 }
 
-const useExtendedHierarchyTable = ({ projectName, selectedFolders }: Params) => {
+const useFilteredEditorEntities = ({ projectName, selectedFolders }: Params) => {
   const [expanded, setExpanded] = useState<ExpandedState>({})
   const [itemExpanded, setItemExpanded] = useState<string>('root')
   const [attribData, setAttribData] = useState({})
 
-  let { data: branchData = [] } = useGetExpandedBranchQuery({
+  let { data: branchData = [] } = useGetFolderHierarchyQuery({
     projectName,
     parentId: itemExpanded,
   })
@@ -65,4 +65,4 @@ const useExtendedHierarchyTable = ({ projectName, selectedFolders }: Params) => 
   }
 }
 
-export default useExtendedHierarchyTable
+export default useFilteredEditorEntities

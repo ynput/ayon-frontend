@@ -41,7 +41,7 @@ const isSelected = (absoluteSelections: $Any, x: number, y: number) => {
 type QueryFiltersParams = {
   filters: Filter[]
   sliceFilter: TaskFilterValue | null
-  selectedPaths: string[]
+  selectedPaths?: string[]
 }
 
 const mapQueryFilters = ({ filters, sliceFilter, selectedPaths = [] }: QueryFiltersParams) => {
@@ -68,6 +68,14 @@ const populateTableData = ({
   folderTypes: $Any
   taskTypes: $Any
 }) => {
+  console.log('populating data...')
+  console.log({
+  rawData,
+  folders,
+  tasks,
+  folderTypes,
+  taskTypes,
+  })
   let mappedRawData = {}
   rawData.forEach((element) => {
     mappedRawData[element.id] = element
@@ -82,9 +90,10 @@ const populateTableData = ({
   })
 
   let mappedFolderData = {}
+  console.log('mapping folder data: ')
   Object.values(folders).forEach((element) => {
     mappedFolderData[element.parentId] = {
-      ...mappedFolderData[element.id],
+      ...mappedFolderData[element.parentId],
       [element.id]: element,
     }
   })
@@ -94,6 +103,7 @@ const populateTableData = ({
     rawData,
     folderTypes,
     taskTypes,
+    mappedRowData: mappedRawData,
     tasks: mappedTaskData,
     folders: mappedFolderData,
   })
@@ -164,18 +174,32 @@ const placeholderToTableRow = (
 
 const createDataTree = <T extends FolderListItem>({
   rawData,
+  mappedRawData,
   folderTypes,
   taskTypes,
   folders,
   tasks,
 }): { hashedData: Map<String, TableRow>; tableData: TableRow[] } => {
+
   // Use Map instead of Object.create(null)
   const hashedData = new Map<string, TableRow>()
   const dataTree: TableRow[] = []
   const taskPlaceholders: TableRow[] = []
 
+  const matchedFolderIds = Object.keys(folders)
+  /*
+  const matchedFolderIds =
+    Object.keys(folders).length == 1 && Object.keys(folders)[0] === 'root'
+      ? Object.keys(folders.root)
+      : Object.keys(folders)
+      */
+  const matchedTaskIds = Object.keys(tasks)
+  const matchedIds = [...matchedFolderIds, ...matchedTaskIds ]
+
   // sort folders by name
-  const sortedItems = [...rawData].sort((a, b) =>
+  let sortedItems = [...rawData]
+  sortedItems = sortedItems.filter(el => matchedIds.includes(el.id))
+  sortedItems = sortedItems.sort((a, b) =>
     (a.label || a.name).localeCompare(b.label || b.name),
   )
 
@@ -194,10 +218,12 @@ const createDataTree = <T extends FolderListItem>({
       continue
     }
 
+    // TODO Review if placeholders are actually needed
+    /*
     for (const taskName of item.taskNames!) {
-      // @ts-ignore
       taskPlaceholders.push(placeholderToTableRow(taskName, item))
     }
+      */
   }
 
   let taskMap = {}
@@ -219,23 +245,29 @@ const createDataTree = <T extends FolderListItem>({
       }
     }
   }
+  console.log('folder map: ', folderMap)
 
+  console.log('looping sorted items: ', sortedItems)
   // Single pass to build relationships
   for (let i = 0; i < sortedItems.length; i++) {
+    console.log('inside loop...')
     const item = sortedItems[i]
     const id = item['id'] as string
     const parentId = item['parentId'] as string
     const row = hashedData.get(id)!
 
     if (parentId && hashedData.has(parentId)) {
+      console.log('hasdata has parent id: ', parentId)
       const parentRow = hashedData.get(parentId)
       if (parentRow) {
         parentRow.subRows.push(row)
       }
     } else {
+      console.log('no parent id?!?: ', parentId)
       dataTree.push(row)
     }
   }
+  console.log('single pass data tree:', dataTree)
 
   // Iterating tasks
   for (const task of taskPlaceholders) {

@@ -69,6 +69,10 @@ type GetFilteredEntitiesByParentResult = {
   folders: { [key: string]: Partial<FolderNode> }
   tasks: { [key: string]: Partial<TaskNode> }
 }
+type GetFilteredEntitiesResult = {
+  folders: { [key: string]: Partial<FolderNode> }
+  tasks: { [key: string]: Partial<TaskNode> }
+}
 
 type Definitions = DefinitionsFromApi<typeof api>
 type TagTypes = TagTypesFromApi<typeof api>
@@ -81,6 +85,10 @@ type UpdatedDefinitions = Omit<Definitions, 'GetFilteredEntities'> & {
     Definitions['GetFilteredEntitiesByParent'],
     GetFilteredEntitiesByParentResult
   >
+  GetFilteredEntities: OverrideResultType<
+    Definitions['GetFilteredEntitiesByParent'],
+    GetFilteredEntitiesResult
+  >
 }
 
 const enhancedApi = api.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
@@ -91,7 +99,14 @@ const enhancedApi = api.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
     GetFilteredEntitiesByParent: {
       transformResponse: transformFilteredEntitiesByParent,
     },
+    GetFilteredEntities: {
+      transformResponse: transformFilteredEntitiesByParent,
+    },
   },
 })
 
-export const { useGetEntitiesByIdsQuery, useGetFilteredEntitiesByParentQuery } = enhancedApi
+export const {
+  useGetEntitiesByIdsQuery,
+  useGetFilteredEntitiesByParentQuery,
+  useGetFilteredEntitiesQuery,
+} = enhancedApi

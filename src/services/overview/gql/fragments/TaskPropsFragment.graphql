@@ -1,4 +1,4 @@
-fragment GetTaskPropsFragment on TaskNode {
+fragment TaskPropsFragment on TaskNode {
   id
   folderId
   label

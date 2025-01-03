@@ -1,14 +1,20 @@
-import { useMemo } from "react"
+import { memo, useMemo } from 'react'
 import * as Styled from '@containers/Slicer/SlicerTable.styled'
-import { $Any } from "@types"
-import { ColumnDef, FilterFnOption, Row, SortingFn, sortingFns } from "@tanstack/react-table"
-import { compareItems } from "@tanstack/match-sorter-utils"
-import clsx from "clsx"
-import { Icon } from "@ynput/ayon-react-components"
-import styled from "styled-components"
-import { TableRow } from "./types"
+import { $Any } from '@types'
+import { ColumnDef, FilterFnOption, Row, SortingFn, sortingFns } from '@tanstack/react-table'
+import { compareItems } from '@tanstack/match-sorter-utils'
+import clsx from 'clsx'
+import { AssigneeSelect, Icon } from '@ynput/ayon-react-components'
+import styled from 'styled-components'
+import { TableRow } from './types'
 import { FolderNode, TaskNode } from '@api/graphql'
-import { TableCellContent } from "./Table.styled"
+import { EditableCellContent, TableCellContent } from './Table.styled'
+import { PriorityEnumDropdown } from '@components/ListItem/ListItem.styled'
+import { getPriorityOptions } from '@pages/TasksProgressPage/helpers'
+import { useGetAttributeConfigQuery } from '@queries/attributes/getAttributes'
+import { useGetUsersAssigneeQuery } from '@queries/user/getUsers'
+import { useSelector } from 'react-redux'
+import StatusColumn from './Cells/StatusColumn'
 
 const DelayedShimmerWrapper = styled.div`
   @keyframes fadeInOpacity {
@@ -45,7 +51,7 @@ const fuzzySort: SortingFn<any> = (rowA, rowB, columnId) => {
 
 type Props = {
   tableData: $Any[]
-  rawData: { folders: $Any, tasks: $Any}
+  rawData: { folders: $Any; tasks: $Any }
   attribs: $Any[]
   isLoading: boolean
   isExpandable: boolean
@@ -72,7 +78,12 @@ const getColumns = ({
   isLoading,
   sliceId,
   toggleExpanderHandler,
-}: Props) =>  {
+}: Props) => {
+  const { data: priorityAttrib } = useGetAttributeConfigQuery({ attributeName: 'priority' })
+  const priorities = getPriorityOptions(priorityAttrib, 'task') || []
+  const projectName = useSelector((state: $Any) => state.project.name)
+  const { data: allUsers = [] } = useGetUsersAssigneeQuery({ names: undefined, projectName })
+
   const getRowType = (item: Row<TableRow>) => {
     return item.original.data.type === 'folder' ? 'folders' : 'tasks'
   }
@@ -82,7 +93,6 @@ const getColumns = ({
 
   const getRawDataParentId = (row: Row<TableRow>): string => {
     return getRowType(row) === 'folders' ? 'parentId' : 'folderId'
-
   }
   const getRawDataAttribValue = (rawData: FolderNode | TaskNode, attribName: string): string => {
     if (rawData.ownAttrib === undefined) {
@@ -174,14 +184,89 @@ const getColumns = ({
         },
       },
       {
+        accessorKey: 'assignees',
+        header: () => 'Assignees',
+        filterFn: 'fuzzy',
+        sortingFn: fuzzySort, //sort by fuzzy rank (falls back to alphanumeric)
+        cell: ({ row, getValue }) => {
+          const rawType = getRowType(row)
+          const rawData = getRawData(row)
+          // <ShimmerCell width="150px" />
+          return (
+            <div style={{ width: '150px' }}>
+              <AssigneeSelect value={rawData?.assignees || []} options={allUsers} />
+            </div>
+          )
+          return !row.original.id || rawData === undefined ? (
+            <TableCellContent> ... </TableCellContent>
+          ) : (
+            <TableCellContent
+              className={clsx({ selected: row.getIsSelected(), loading: isLoading })}
+              // onClick={(evt) => handleRowSelect(evt, row)}
+              // onKeyDown={(evt) => handleRowKeyDown(evt, row)}
+              style={{
+                width: '150px',
+              }}
+              tabIndex={0}
+            >
+              {/* @ts-ignore */}
+              {rawType === 'folders' ? '' : (rawData as TaskNode).attrib?.assignees || 'None'}
+            </TableCellContent>
+          )
+        },
+      },
+      {
+        accessorKey: 'priority',
+        header: () => 'Priority',
+        filterFn: 'fuzzy',
+        sortingFn: fuzzySort, //sort by fuzzy rank (falls back to alphanumeric)
+        cell: ({ row, getValue }) => {
+          const rawType = getRowType(row)
+          const rawData = getRawData(row)
+          // <ShimmerCell width="150px" />
+          return (
+            <div style={{ width: '150px' }}>
+              <PriorityEnumDropdown
+                options={priorities}
+                value={['high']}
+                placeholder=""
+                style={{ width: 'max-content' }}
+              />
+            </div>
+          )
+          return !row.original.id || rawData === undefined ? (
+            <TableCellContent> ... </TableCellContent>
+          ) : (
+            <TableCellContent
+              className={clsx({ selected: row.getIsSelected(), loading: isLoading })}
+              // onClick={(evt) => handleRowSelect(evt, row)}
+              // onKeyDown={(evt) => handleRowKeyDown(evt, row)}
+              style={{
+                width: '150px',
+              }}
+              tabIndex={0}
+            >
+              {/* @ts-ignore */}
+              {rawType === 'folders' ? '' : (rawData as TaskNode).attrib?.assignees || 'None'}
+            </TableCellContent>
+          )
+        },
+      },
+      {
         accessorKey: 'status',
         header: () => 'Status',
         filterFn: 'fuzzy',
         sortingFn: fuzzySort, //sort by fuzzy rank (falls back to alphanumeric)
         cell: ({ row, getValue }) => {
           const rawData = getRawData(row)
+          // <ShimmerCell width="150px" />
+           return (
+             <div style={{ width: '150px' }}>
+               <StatusColumn status={rawData?.status || 'Not Ready'} />
+             </div>
+           )
           return !row.original.id || getRawData(row) === undefined ? (
-            <ShimmerCell width="100px" />
+            <TableCellContent> ... </TableCellContent>
           ) : (
             <TableCellContent
               className={clsx({ selected: row.getIsSelected(), loading: isLoading })}
@@ -195,61 +280,37 @@ const getColumns = ({
           )
         },
       },
-      {
-        accessorKey: 'assignees',
-        header: () => 'Assignees',
-        filterFn: 'fuzzy',
-        sortingFn: fuzzySort, //sort by fuzzy rank (falls back to alphanumeric)
-        cell: ({ row, getValue }) => {
-          const rawType = getRowType(row)
-          const rawData = getRawData(row)
-          return !row.original.id || rawData === undefined ? (
-            <ShimmerCell width="100px" />
-          ) : (
-            <TableCellContent
-              className={clsx({ selected: row.getIsSelected(), loading: isLoading })}
-              // onClick={(evt) => handleRowSelect(evt, row)}
-              // onKeyDown={(evt) => handleRowKeyDown(evt, row)}
-              style={{
-                width: '100px',
-              }}
-              tabIndex={0}
-            >
-              {/* @ts-ignore */}
-              {rawType === 'folders' ? '' : (rawData as TaskNode).attrib?.assignees || 'None'}
-            </TableCellContent>
-          )
-        },
-      },
-      ...attribs.map((attrib: $Any) => {
-        return {
-          accessorKey: attrib.name,
-          header: () => attrib.name,
-          filterFn: 'fuzzy' as FilterFnOption<TableRow>,
-          sortingFn: fuzzySort, //sort by fuzzy rank (falls back to alphanumeric)
-          cell: ({ row, getValue }: { row: $Any; getValue: $Any }) => {
-            const rawData = getRawData(row)
-            return !row.original.id || rawData === undefined ? (
-              <ShimmerCell width="100px" />
-            ) : (
-              <TableCellContent
-                className={clsx({ selected: row.getIsSelected(), loading: isLoading })}
-                // onClick={(evt) => handleRowSelect(evt, row)}
-                // onKeyDown={(evt) => handleRowKeyDown(evt, row)}
-                style={{
-                  width: '100px',
-                }}
-                tabIndex={0}
-              >
-                {getRowAttribValue(row, attrib.name)}
-              </TableCellContent>
-            )
-          },
-        }
-      }),
+      ...attribs
+        .filter((el) => {
+          // TODO better ordering/filtering for attributes list
+          return el.name !== 'priority'
+          return true
+        })
+        .map((attrib: $Any) => {
+          return {
+            accessorKey: attrib.name,
+            header: () => attrib.name,
+            filterFn: 'fuzzy' as FilterFnOption<TableRow>,
+            sortingFn: fuzzySort, //sort by fuzzy rank (falls back to alphanumeric)
+            cell: ({ row, getValue }: { row: $Any; getValue: $Any }) => {
+              const rawData = getRawData(row)
+              // <ShimmerCell width="150px" />
+              return !row.original.id || rawData === undefined ? (
+                <EditableCellContent value="..." />
+              ) : (
+                <EditableCellContent
+                  className={clsx({ selected: row.getIsSelected(), loading: isLoading })}
+                  // onClick={(evt) => handleRowSelect(evt, row)}
+                  // onKeyDown={(evt) => handleRowKeyDown(evt, row)}
+                  tabIndex={0}
+                  value={getRowAttribValue(row, attrib.name)}
+                />
+              )
+            },
+          }
+        }),
     ],
     [isLoading, sliceId, tableData],
   )
-
 }
 export { getColumns }
