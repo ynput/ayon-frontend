@@ -1819,7 +1819,7 @@ export const GetFilteredEntitiesByParentDocument = `
     name
     folders(
       parentIds: $parentIds
-      last: 1000
+      last: 10000
       assignees: $assignees
       tags: $tags
       statuses: $statuses
