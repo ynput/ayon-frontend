@@ -100,6 +100,10 @@ const getColumns = ({
   const getRowAttribValue = (row: Row<TableRow>, attribName: string): string => {
     const parentId = getRawDataParentId(row)
     const rawData = getRawData(row)
+    if (rawData.attrib[attribName] !== undefined) {
+      return rawData.attrib[attribName]
+    }
+
     if (rawData.ownAttrib === undefined) {
       return 'bad'
     }

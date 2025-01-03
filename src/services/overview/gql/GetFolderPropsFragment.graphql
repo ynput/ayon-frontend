@@ -14,10 +14,6 @@ fragment GetFolderPropsFragment on FolderNode {
   hasReviewables
   createdAt
   attrib {
-    priority
-    endDate
-    resolutionHeight
-    resolutionWidth
-    fps
+    ...FolderAttributesFragment
   }
 }
