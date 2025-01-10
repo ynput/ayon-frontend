@@ -1,10 +1,8 @@
+import { createContext, useContext, ReactNode, useEffect, useState } from 'react'
 import { registerRemotes } from '@module-federation/enhanced/runtime'
 import { useListFrontendModulesQuery } from '@queries/addons/getAddons'
-import { useEffect } from 'react'
-
-type Props = {
-  skip?: boolean
-}
+import { useAppSelector } from '@state/store'
+import { FrontendModuleListItem } from '@api/rest/addons'
 
 type Module = {
   remote: string
@@ -13,10 +11,30 @@ type Module = {
   modules: string[]
 }
 
-const useRegisterRemotes = ({ skip }: Props) => {
+type RemoteModulesContextType = {
+  isLoading: boolean
+  modules: FrontendModuleListItem[]
+  remotesInitialized: boolean
+}
+
+const RemoteModulesContext = createContext<RemoteModulesContextType>({
+  isLoading: true,
+  modules: [],
+  remotesInitialized: false,
+})
+
+type Props = {
+  children: ReactNode
+}
+
+export const RemoteModulesProvider = ({ children }: Props) => {
+  const user = useAppSelector((state) => state.user.name)
+
+  // only load if logged in
   const { data: addonRemoteModules = [], isLoading } = useListFrontendModulesQuery(undefined, {
-    skip,
+    skip: !user,
   })
+  const [remotesInitialized, setRemotesInitialized] = useState(false)
 
   useEffect(() => {
     if (isLoading || !addonRemoteModules.length) return
@@ -48,7 +66,21 @@ const useRegisterRemotes = ({ skip }: Props) => {
         type: 'module',
       })),
     )
+
+    setRemotesInitialized(true)
   }, [addonRemoteModules, isLoading])
+
+  return (
+    <RemoteModulesContext.Provider
+      value={{
+        isLoading,
+        modules: addonRemoteModules,
+        remotesInitialized,
+      }}
+    >
+      {children}
+    </RemoteModulesContext.Provider>
+  )
 }
 
-export default useRegisterRemotes
+export const useRemoteModules = () => useContext(RemoteModulesContext)

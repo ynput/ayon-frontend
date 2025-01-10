@@ -66,7 +66,7 @@ import getTrialDates from '@components/TrialBanner/helpers/getTrialDates'
 import TrialEnded from '@containers/TrialEnded/TrialEnded'
 import { PiPProvider } from '@context/pip/PiPProvider'
 import DetailsPanelFloating from '@containers/DetailsPanel/DetailsPanelFloating/DetailsPanelFloating'
-import useRegisterRemotes from './remote/useRegisterRemotes'
+import { RemoteModulesProvider } from '@context/remoteModulesContext'
 
 const App = () => {
   const user = useSelector((state) => state.user)
@@ -153,9 +153,6 @@ const App = () => {
 
   const PROJECT_ID = 'e9c7c6ee'
 
-  // load and register remote modules
-  useRegisterRemotes({ skip: loading || !user.name })
-
   // DEFINE ALL HIGH LEVEL COMPONENT PAGES HERE
   const mainComponent = useMemo(
     () => (
@@ -164,123 +161,125 @@ const App = () => {
         <WatchActivities />
         <Suspense fallback={<LoadingPage />}>
           <RestartProvider>
-            <ContextMenuProvider>
-              <GlobalContextMenu />
-              <PasteProvider>
-                <PasteModal />
-                <BrowserRouter>
-                  <NotificationsProvider>
-                    <URIProvider>
-                      <ShortcutsProvider>
-                        <PiPProvider>
-                          <QueryParamProvider
-                            adapter={ReactRouter6Adapter}
-                            options={{
-                              updateType: 'replaceIn',
-                            }}
-                          >
-                            <Header />
-                            <ShareDialog />
-                            <ViewerDialog />
-                            <ConfirmDialog />
-                            <FileUploadPreview />
-                            <ReleaseInstallerDialog />
-                            <Routes>
-                              <Route
-                                path="/"
-                                exact
-                                element={<Navigate replace to="/dashboard/tasks" />}
-                              />
+            <RemoteModulesProvider>
+              <ContextMenuProvider>
+                <GlobalContextMenu />
+                <PasteProvider>
+                  <PasteModal />
+                  <BrowserRouter>
+                    <NotificationsProvider>
+                      <URIProvider>
+                        <ShortcutsProvider>
+                          <PiPProvider>
+                            <QueryParamProvider
+                              adapter={ReactRouter6Adapter}
+                              options={{
+                                updateType: 'replaceIn',
+                              }}
+                            >
+                              <Header />
+                              <ShareDialog />
+                              <ViewerDialog />
+                              <ConfirmDialog />
+                              <FileUploadPreview />
+                              <ReleaseInstallerDialog />
+                              <Routes>
+                                <Route
+                                  path="/"
+                                  exact
+                                  element={<Navigate replace to="/dashboard/tasks" />}
+                                />
 
-                              <Route
-                                path="/dashboard"
-                                element={<Navigate replace to="/dashboard/tasks" />}
-                              />
-                              <Route
-                                path="/dashboard/:module"
-                                exact
-                                element={<UserDashboardPage />}
-                              />
-                              <Route
-                                path="/dashboard/addon/:addonName"
-                                exact
-                                element={<UserDashboardPage />}
-                              />
+                                <Route
+                                  path="/dashboard"
+                                  element={<Navigate replace to="/dashboard/tasks" />}
+                                />
+                                <Route
+                                  path="/dashboard/:module"
+                                  exact
+                                  element={<UserDashboardPage />}
+                                />
+                                <Route
+                                  path="/dashboard/addon/:addonName"
+                                  exact
+                                  element={<UserDashboardPage />}
+                                />
 
-                              <Route path="/manageProjects" element={<ProjectManagerPage />} />
-                              <Route
-                                path="/manageProjects/:module"
-                                element={<ProjectManagerPage />}
-                              />
-                              <Route
-                                path={'/projects/:projectName/:module'}
-                                element={<ProjectPage />}
-                              />
-                              <Route
-                                path={'/projects/:projectName/addon/:addonName'}
-                                element={<ProjectPage />}
-                              />
-                              <Route
-                                path="/settings"
-                                exact
-                                element={<Navigate replace to="/settings/anatomyPresets" />}
-                              />
-                              <Route path="/settings/:module" exact element={<SettingsPage />} />
-                              <Route
-                                path="/settings/addon/:addonName"
-                                exact
-                                element={<SettingsPage />}
-                              />
-                              <Route
-                                path="/services"
-                                element={
-                                  <ProtectedRoute isAllowed={!isUser} redirectPath="/">
-                                    <ServicesPage />
-                                  </ProtectedRoute>
-                                }
-                              />
-                              <Route
-                                path="/market"
-                                element={
-                                  <ProtectedRoute isAllowed={!isUser} redirectPath="/">
-                                    <MarketPage />
-                                  </ProtectedRoute>
-                                }
-                              />
+                                <Route path="/manageProjects" element={<ProjectManagerPage />} />
+                                <Route
+                                  path="/manageProjects/:module"
+                                  element={<ProjectManagerPage />}
+                                />
+                                <Route
+                                  path={'/projects/:projectName/:module'}
+                                  element={<ProjectPage />}
+                                />
+                                <Route
+                                  path={'/projects/:projectName/addon/:addonName'}
+                                  element={<ProjectPage />}
+                                />
+                                <Route
+                                  path="/settings"
+                                  exact
+                                  element={<Navigate replace to="/settings/anatomyPresets" />}
+                                />
+                                <Route path="/settings/:module" exact element={<SettingsPage />} />
+                                <Route
+                                  path="/settings/addon/:addonName"
+                                  exact
+                                  element={<SettingsPage />}
+                                />
+                                <Route
+                                  path="/services"
+                                  element={
+                                    <ProtectedRoute isAllowed={!isUser} redirectPath="/">
+                                      <ServicesPage />
+                                    </ProtectedRoute>
+                                  }
+                                />
+                                <Route
+                                  path="/market"
+                                  element={
+                                    <ProtectedRoute isAllowed={!isUser} redirectPath="/">
+                                      <MarketPage />
+                                    </ProtectedRoute>
+                                  }
+                                />
 
-                              <Route path="/inbox/:module" exact element={<InboxPage />} />
-                              <Route
-                                path="/inbox"
-                                exact
-                                element={<Navigate to="/inbox/important" />}
-                              />
+                                <Route path="/inbox/:module" exact element={<InboxPage />} />
+                                <Route
+                                  path="/inbox"
+                                  exact
+                                  element={<Navigate to="/inbox/important" />}
+                                />
 
-                              <Route path="/explorer" element={<ExplorerPage />} />
-                              <Route path="/doc/api" element={<APIDocsPage />} />
-                              <Route
-                                path="/account"
-                                exact
-                                element={<Navigate replace to="/account/profile" />}
-                              />
-                              <Route path="/account/:module" exact element={<AccountPage />} />
-                              <Route path="/events" element={<EventsPage />} />
-                              <Route element={<ErrorPage code="404" />} />
-                            </Routes>
-                            <DetailsPanelFloating />
-                          </QueryParamProvider>
-                        </PiPProvider>
-                      </ShortcutsProvider>
-                    </URIProvider>
-                  </NotificationsProvider>
-                </BrowserRouter>
-                {/* TRIAL BANNER */}
-                {isTrialing && (
-                  <CustomerlyProvider appId={PROJECT_ID}>
-                    <TrialBanner />
-                  </CustomerlyProvider>
-                )}
-              </PasteProvider>
-            </ContextMenuProvider>
+                                <Route path="/explorer" element={<ExplorerPage />} />
+                                <Route path="/doc/api" element={<APIDocsPage />} />
+                                <Route
+                                  path="/account"
+                                  exact
+                                  element={<Navigate replace to="/account/profile" />}
+                                />
+                                <Route path="/account/:module" exact element={<AccountPage />} />
+                                <Route path="/events" element={<EventsPage />} />
+                                <Route element={<ErrorPage code="404" />} />
+                              </Routes>
+                              <DetailsPanelFloating />
+                            </QueryParamProvider>
+                          </PiPProvider>
+                        </ShortcutsProvider>
+                      </URIProvider>
+                    </NotificationsProvider>
+                  </BrowserRouter>
+                  {/* TRIAL BANNER */}
+                  {isTrialing && (
+                    <CustomerlyProvider appId={PROJECT_ID}>
+                      <TrialBanner />
+                    </CustomerlyProvider>
+                  )}
+                </PasteProvider>
+              </ContextMenuProvider>
+            </RemoteModulesProvider>
           </RestartProvider>
         </Suspense>
       </>
