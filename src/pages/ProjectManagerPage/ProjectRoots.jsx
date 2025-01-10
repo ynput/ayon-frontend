@@ -13,7 +13,6 @@ import {
 import ProjectManagerPageLayout from './ProjectManagerPageLayout'
 import { toast } from 'react-toastify'
 import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
-import LoadingPage from '@pages/LoadingPage'
 
 const ProjectRootForm = ({ projectName, siteName, siteId, roots }) => {
   const [setCustomRoots, { isLoading }] = useSetCustomRootsMutation()
@@ -73,12 +72,14 @@ const ProjectRootForm = ({ projectName, siteName, siteId, roots }) => {
 
 const ProjectRoots = ({ projectName, projectList, userPermissions }) => {
   if (userPermissions && !userPermissions.assignedToProject(projectName)) {
-    return <ProjectManagerPageLayout {...{ projectList }}>
+    return (
+      <ProjectManagerPageLayout {...{ projectList }}>
         <EmptyPlaceholder
           icon="settings_alert"
           message="You don't have permission to view this project's roots"
         />
-    </ProjectManagerPageLayout>
+      </ProjectManagerPageLayout>
+    )
   }
 
   const {
@@ -86,7 +87,7 @@ const ProjectRoots = ({ projectName, projectList, userPermissions }) => {
     isLoading: isLoadingProject,
     isError,
   } = useGetProjectQuery({ projectName }, { skip: !projectName })
-  const { data: rootOverrides, isLoading: isLoadingOverrides } = useGetCustomRootsQuery({
+  const { data: rootOverrides } = useGetCustomRootsQuery({
     projectName,
   })
 
@@ -123,11 +124,13 @@ const ProjectRoots = ({ projectName, projectList, userPermissions }) => {
       ) : forms.length === 0 ? (
         <EmptyPlaceholder icon="lists" message="No sites were found" />
       ) : (
-        <Section className="invisible" style={{ maxWidth: 600 }}>
-          {forms.map((form) => (
-            <ProjectRootForm key={form.siteId} {...form} />
-          ))}
-        </Section>
+        <div style={{ height: '100%', overflow: 'auto' }}>
+          <Section className="invisible" style={{ maxWidth: 600 }}>
+            {forms.map((form) => (
+              <ProjectRootForm key={form.siteId} {...form} />
+            ))}
+          </Section>
+        </div>
       )}
     </ProjectManagerPageLayout>
   )
