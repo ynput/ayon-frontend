@@ -58,13 +58,18 @@ import { mapQueryFilters } from "./mappers"
     const matchingFolderIds = Object.values(entities.data?.folders || {}).map(el => el.id)
 
     //@ts-ignore
+    // doesn't make sense, ignoring filter for now, selected row results can't be filtered by next query
     const filteredRowFolders = Object.values(selectedRowsEntities.data?.folders || []).filter(
       (el) => {
+        return true
         return matchingFolderIds.includes(el.id)
       },
     )
 
-    const filteredRowTasks = Object.values(selectedRowsEntities.data?.tasks || []).filter(el => matchingFolderIds.includes(el.id))
+    const filteredRowTasks = Object.values(selectedRowsEntities.data?.tasks || []).filter(el => {
+      return true
+      return matchingFolderIds.includes(el.id)
+    })
 
     return {
       folders: {

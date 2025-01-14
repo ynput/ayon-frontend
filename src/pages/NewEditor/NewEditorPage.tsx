@@ -49,6 +49,8 @@ const NewEditorPage = ({ filters }: Props) => {
     folderTypes: project.folders,
     taskTypes: project.tasks,
   })
+
+  // TODO Figure out why tree is incomplete. i.e. project_a and select lib and attempt to expand sq
   const toggleHandler = handleToggleFolder(setExpandedItem)
 
   return (
