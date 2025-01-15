@@ -145,13 +145,14 @@ const optionsMap = {
 const StatusCell = ({ status }: { status: string }) => {
   const [showPlaceholder, setShowPlaceholder] = useState(true)
   const [value, setValue] = useState(status)
+  const expandClickHandler = () => {
+    setShowPlaceholder(false)
+  }
+
   return (
     <DropdownColumnWrapper
       showPreview={showPlaceholder}
-      handleExpandIconClick={() => {
-        setShowPlaceholder(false)
-        console.log('expanding?')
-      }}
+      handleExpandIconClick={expandClickHandler}
       previewValue={{
         icon: optionsMap[value].icon,
         color: optionsMap[value].color,
