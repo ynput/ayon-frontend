@@ -1,5 +1,7 @@
+import { useState } from 'react'
 import DropdownColumnWrapper from './DropdownColumnWrapper'
 import { $Any } from '@types'
+import { EnumDropdown } from '@ynput/ayon-react-components'
 
 type Props = {
   folderTypes: $Any
@@ -7,17 +9,39 @@ type Props = {
 }
 
 const FolderTypeCell: React.FC<Props> = ({ folderTypes, type }) => {
-  const icon = folderTypes[type].icon
+  const [showPlaceholder, setShowPlaceholder] = useState(true)
+  const [value, setValue] = useState(type)
+  const mappedTypes = Object.values(folderTypes).map((el: $Any) => ({
+    value: el.name,
+    label: el.name,
+    icon: el.icon,
+  }))
+
+  const expandClickHandler = () => {
+    setShowPlaceholder(false)
+  }
+
+
   return (
     <DropdownColumnWrapper
-      showPreview
+      showPreview={showPlaceholder}
+      handleExpandIconClick={expandClickHandler}
       previewValue={{
-        icon: icon,
+        icon: folderTypes[value].icon,
         color: '',
-        text: type,
+        text: value,
       }}
     >
-   ...
+      <EnumDropdown
+        onChange={(e) => {
+          setShowPlaceholder(true)
+          setValue(e[0])
+        }}
+        options={mappedTypes}
+        value={['high']}
+        placeholder=""
+        style={{ width: 'max-content' }}
+      />
     </DropdownColumnWrapper>
   )
 }
