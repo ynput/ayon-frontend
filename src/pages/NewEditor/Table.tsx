@@ -16,7 +16,7 @@ import { $Any } from '@types'
 import { TableRow } from '@containers/Slicer/types'
 import useHandlers, { Selection } from './handlers'
 import { getAbsoluteSelections, isSelected } from './mappers'
-import { getColumns } from './TableColumns'
+import { TableColumns } from './TableColumns'
 import * as Styled from './Table.styled'
 
 type Props = {
@@ -42,7 +42,7 @@ const MyTable = ({
   expanded,
   setExpanded,
 }: Props) => {
-  const columns = getColumns({
+  const columns = TableColumns({
     tableData,
     rawData,
     attribs,
@@ -104,7 +104,7 @@ const MyTable = ({
   return (
     <Styled.TableContainerWrapper style={{ height: '100%' }}>
       <Styled.TableContainer ref={tableContainerRef} style={{ height: '100%' }}>
-        <table style={{ borderCollapse: 'collapse' }}>
+        <table style={{ borderCollapse: 'collapse', userSelect: 'none' }}>
           <Styled.TableHeader>
             {table.getHeaderGroups().map((headerGroup) => {
               return (

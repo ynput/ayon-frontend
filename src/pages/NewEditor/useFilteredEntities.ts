@@ -38,21 +38,21 @@ import { mapQueryFilters } from "./mappers"
       folderIds: folderIds
     })
 
+    /*
     const entities = useGetFilteredEntitiesByParentQuery({
       projectName,
       parentIds: [...Object.keys(expanded), ...folderIds],
       ...queryFilters,
     })
+      */
 
-    /*
     const entities = useGetFilteredEntitiesQuery({
       projectName,
       // parentFolderIds: Object.keys(expanded).length > 0 ? Object.keys(expanded) : undefined,
-      parentFolderIds: [...Object.keys(expanded), ...folderIds],
-      folderIds: folderIds,
-      ...queryFilters,
+      // parentFolderIds: [...Object.keys(expanded), ...folderIds],
+      // folderIds: folderIds,
+      // ...queryFilters,
     })
-      */
 
     // @ts-ignore
     const matchingFolderIds = Object.values(entities.data?.folders || {}).map(el => el.id)
