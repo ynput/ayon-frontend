@@ -368,16 +368,6 @@ const Bundles = () => {
       action: () => setUploadOpen('package'),
     },
     {
-      key: 'S',
-      action: () => toggleBundleStatus('staging', selectedBundles[0]),
-      disabled: selectedBundles.length !== 1,
-    },
-    {
-      key: 'P',
-      action: () => toggleBundleStatus('production', selectedBundles[0]),
-      disabled: selectedBundles.length !== 1,
-    },
-    {
       key: 'D',
       action: () => handleDuplicateBundle(selectedBundles[0]),
       disabled: selectedBundles.length !== 1 && !newBundleOpen,
