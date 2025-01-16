@@ -137,33 +137,18 @@ type MarketFiltersProps = {
   onSelect: (type: FilterType, id: string) => void
   onConnection: () => void
   filterType: FilterType
-  showAllReleases: boolean
 }
 
-const MarketFilters = ({
-  onSelect,
-  selected,
-  onConnection,
-  filterType,
-  showAllReleases,
-}: MarketFiltersProps) => {
+const MarketFilters = ({ onSelect, selected, onConnection, filterType }: MarketFiltersProps) => {
   const handleSelect = (e: MouseEvent<HTMLDivElement>, type: FilterType) => {
     const target = e.target as HTMLDivElement
     onSelect(type, target.id)
   }
 
-  const filteredMarketFilters = showAllReleases
-    ? marketFilters
-    : marketFilters.map((f) =>
-        f.type === 'releases'
-          ? { ...f, filters: f.filters.filter((f) => f.id !== 'all' || showAllReleases) }
-          : f,
-      )
-
   return (
     <StyledSection>
       <StyledList>
-        {filteredMarketFilters.map((filter) => (
+        {marketFilters.map((filter) => (
           <Fragment key={filter.type}>
             <div className={clsx('title', Type.titleMedium)}>{filter.name}</div>
             {filter.filters.map((f) => (

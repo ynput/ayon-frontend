@@ -5,7 +5,7 @@ import SlicerTable from './SlicerTable'
 import useTableDataBySlice from './hooks/useTableDataBySlice'
 import SlicerSearch from './SlicerSearch'
 import clsx from 'clsx'
-import { SliceType } from '@context/slicerContext'
+import { SliceType, useSlicerContext } from '@context/slicerContext'
 
 interface SlicerProps {
   sliceFields: SliceType[]
@@ -14,6 +14,7 @@ interface SlicerProps {
 
 const Slicer: FC<SlicerProps> = ({ sliceFields = [], persistFieldId }) => {
   const [globalFilter, setGlobalFilter] = useState('')
+  const { SlicerDropdown } = useSlicerContext()
 
   const {
     sliceOptions,
@@ -26,9 +27,10 @@ const Slicer: FC<SlicerProps> = ({ sliceFields = [], persistFieldId }) => {
   return (
     <Styled.Container>
       <Styled.Header>
-        <Styled.SlicerDropdown
+        <SlicerDropdown
           options={sliceOptions || []}
           value={[sliceType]}
+          sliceTypes={sliceFields}
           onChange={(value) =>
             handleSliceTypeChange(
               value[0] as SliceType,
