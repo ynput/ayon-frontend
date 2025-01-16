@@ -1,4 +1,3 @@
-import { Dropdown } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
 export const Container = styled.div`
@@ -21,30 +20,4 @@ export const Header = styled.div`
   gap: var(--base-gap-small);
 
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
-`
-export const SlicerDropdown = styled(Dropdown)`
-  height: 28px;
-
-  .template-value {
-    border: 0;
-
-    .icon:not(.control) {
-      display: none;
-    }
-  }
-
-  &.single-option {
-    .control {
-      display: none;
-    }
-
-    .button {
-      .template-value {
-        cursor: default;
-      }
-      &:hover {
-        background-color: unset;
-      }
-    }
-  }
 `
