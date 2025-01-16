@@ -184,7 +184,7 @@ const useSlicerRemotes = () => {
   const [SlicerDropdown] = useLoadModule({
     addon: 'power-pack',
     remote: 'slicer',
-    module: 'SlicerDropdown',
+    module: 'SlicerDropdowns',
     fallback: SlicerDropdownFallback,
   })
 

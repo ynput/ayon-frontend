@@ -6,7 +6,7 @@ import ReactMarkdown from 'react-markdown'
 import MetaPanelRow from './MetaPanelRow'
 import { ReleaseListItemModel } from '@api/rest/releases'
 import { format } from 'date-fns'
-import CloudButton from '@components/CloudButton'
+import PowerpackButton from '@components/Powerpack/PowerpackButton'
 import AddonIcon from '@components/AddonIcon/AddonIcon'
 
 type ExtendedReleaseDetail = ReleaseListItemModel & {
@@ -79,13 +79,7 @@ const ReleaseDetails = ({ release, isLoading, onDownload }: ReleaseDetailsProps)
                   Install release bundle
                 </SaveButton>
               ) : (
-                <CloudButton
-                  featureId="release-installer"
-                  data-tooltip="Subscribe to Ynput Cloud to install previous releases"
-                  data-tooltip-delay={0}
-                >
-                  Install release bundle
-                </CloudButton>
+                <PowerpackButton feature="releases">Install release bundle</PowerpackButton>
               )}
             </Styled.Download>
             <Styled.MetaPanel className={clsx({ loading: isLoading })}>

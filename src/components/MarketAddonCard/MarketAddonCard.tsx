@@ -5,7 +5,7 @@ import AddonIcon from '../AddonIcon/AddonIcon'
 import { ButtonProps, Icon } from '@ynput/ayon-react-components'
 import { upperFirst } from 'lodash'
 import { HTMLAttributes } from 'react'
-import CloudButton from '@components/CloudButton'
+import PowerpackButton from '@components/Powerpack/PowerpackButton'
 
 export type ListItemType = 'addon' | 'release' | 'placeholder'
 
@@ -116,11 +116,7 @@ export const MarketAddonCard = ({
               {upperFirst(state)}
             </Styled.Tag>
           ) : (
-            <CloudButton
-              featureId="release-installer"
-              data-tooltip="Subscribe to Ynput Cloud to install previous releases"
-              data-tooltip-delay={0}
-            />
+            <PowerpackButton feature="releases" />
           )}
         </Styled.Buttons>
       )}

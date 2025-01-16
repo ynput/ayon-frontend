@@ -1,3 +1,4 @@
+import { usePowerpack } from '@context/powerpackContext'
 import { SliceType } from '@context/slicerContext'
 import { Dropdown, DropdownProps, DropdownRef } from '@ynput/ayon-react-components'
 import { forwardRef } from 'react'
@@ -36,6 +37,8 @@ export interface SlicerDropdownProps extends DropdownProps {
 
 const SlicerDropdown = forwardRef<DropdownRef, SlicerDropdownProps>(
   ({ sliceTypes, ...props }, ref) => {
+    const { setPowerpackDialog } = usePowerpack()
+
     const options = [...props.options].map((option) => {
       if (option.value === 'hierarchy') return option
       else
@@ -46,7 +49,10 @@ const SlicerDropdown = forwardRef<DropdownRef, SlicerDropdownProps>(
     })
 
     const handleOnChange: DropdownProps['onChange'] = (value, r) => {
-      if (value[0] !== 'hierarchy') return props?.onChange?.(['hierarchy'], r)
+      if (value[0] !== 'hierarchy') {
+        setPowerpackDialog('slicer')
+      }
+      props?.onChange?.(['hierarchy'], r)
     }
 
     return (
