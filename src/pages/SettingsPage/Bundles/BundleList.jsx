@@ -79,11 +79,9 @@ const BundleList = ({
     const isStatus = bundle[key]
     const label = isStatus ? unsetLabel : setLabel
     const icon = isStatus ? 'remove' : 'add'
-    let shortcut = `Shift+${status.charAt(0).toUpperCase()}`
-    if (status === 'dev') shortcut = null
     const command = () => toggleBundleStatus(status, bundle.name)
     const disabled = selectedBundles.length > 1 || disabledExtra
-    return { label, icon, shortcut, command, disabled }
+    return { label, icon, command, disabled }
   }
 
   const [ctxMenuShow] = useCreateContext([])
