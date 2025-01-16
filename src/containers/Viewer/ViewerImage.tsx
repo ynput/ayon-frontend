@@ -42,7 +42,7 @@ const ViewerImage: FC<ViewerImageProps> = ({ reviewableId, src, alt, ...props })
           <AnnotationsCanvas width={imageRef.current?.width} height={imageRef.current?.height} />
         </AnnotationsContainer>
       )}
-      {isLoadedAnnotations && createToolbar()}
+      {createToolbar()}
     </AnnotationsProvider>
   )
 }

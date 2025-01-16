@@ -392,7 +392,7 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
             )}
           </div>
         </div>
-        {isLoadedAnnotations && createToolbar()}
+        {createToolbar()}
         {useDrawHistory && <ViewerHistory useHistory={useDrawHistory} />}
       </AnnotationsProvider>
 

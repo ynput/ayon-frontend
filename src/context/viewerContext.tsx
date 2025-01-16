@@ -1,4 +1,5 @@
 import useLoadModule from '@/remote/useLoadModule'
+import AnnotationToolsFallback from '@components/AnnotationsTools/AnnotationTools'
 import {
   AnnotationsProviderProps,
   useViewerAnnotations,
@@ -63,7 +64,7 @@ export const ViewerProvider = ({
     addon: 'power-pack',
     remote: 'annotations',
     module: 'AnnotationTools',
-    fallback: () => null,
+    fallback: AnnotationToolsFallback,
   })
   const [useDrawHistory] = useLoadModule({
     addon: 'power-pack',
