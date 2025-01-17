@@ -46,6 +46,13 @@ export const ProfileRow = ({ rowData }) => {
   )
 }
 
+const getUserRole = (user) => {
+  if (user.isAdmin) return 'Admin'
+  if (user.isService) return 'Service'
+  if (user.isManager) return 'Manager'
+  return 'User'
+}
+
 const UserList = ({
   selectedProjects,
   selectedUsers,
@@ -145,13 +152,7 @@ const UserList = ({
           <Column
             field={'accessLevel'}
             header="Access level"
-            body={(rowData) =>
-              rowData && rowData.isAdmin
-                ? 'Admin'
-                : rowData && rowData.isManager
-                ? 'Manager'
-                : 'User'
-            }
+            body={(rowData) => getUserRole(rowData)}
             sortFunction={accessGroupsSortFunction}
             sortable
             resizeable
