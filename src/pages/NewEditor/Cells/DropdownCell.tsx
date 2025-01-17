@@ -1,4 +1,4 @@
-import { Icon } from '@ynput/ayon-react-components'
+import { EnumTemplate, Icon } from '@ynput/ayon-react-components'
 
 type Props = {
   icon: string
@@ -9,10 +9,20 @@ type Props = {
 }
 
 const DropdownCell = ({ icon, color, text, handleExpandIconClick }: Props) => {
+      // <Icon icon={icon} style={{ color: color, padding: '0px 4px 0 2px' }} />
+      // <span style={{ color, flexGrow: 1 }}>{text}</span>
   return (
-    <div style={{ display: 'flex' }}>
-      <Icon icon={icon} style={{ color: color, padding: '0px 4px 0 2px' }} />
-      <span style={{ color, flexGrow: 1 }}>{text}</span>
+    <div style={{display: 'flex'}}>
+      <EnumTemplate
+        option={{
+          color: color,
+          icon: icon,
+          label: text,
+          value: text,
+          // handleExpandIconClick = { handleExpandIconClick },
+        }}
+      />
+
       <Icon
       icon="expand_more"
       // @ts-ignore

@@ -1,8 +1,10 @@
-import { StatusSelect } from '@ynput/ayon-react-components'
 import DropdownColumnWrapper from './DropdownColumnWrapper'
 import { useState } from 'react'
+import { StyledEnumDropdown } from './Cell.Styled'
 const options = [
   {
+    value: 'Not ready',
+    label: 'Not ready',
     name: 'Not ready',
     shortName: 'NRD',
     state: 'not_started',
@@ -13,6 +15,8 @@ const options = [
   },
   {
     name: 'Ready to start',
+    value: 'Ready to start',
+    label: 'Ready to start',
     shortName: 'RDY',
     state: 'not_started',
     icon: 'timer',
@@ -22,6 +26,8 @@ const options = [
   },
   {
     name: 'In progress',
+    value: 'In progress',
+    label: 'In progress',
     shortName: 'PRG',
     state: 'in_progress',
     icon: 'play_arrow',
@@ -31,6 +37,8 @@ const options = [
   },
   {
     name: 'Pending review',
+    value: 'Pending review',
+    label: 'Pending review',
     shortName: 'RVW',
     state: 'in_progress',
     icon: 'visibility',
@@ -40,6 +48,8 @@ const options = [
   },
   {
     name: 'Approved',
+    value: 'Approved',
+    label: 'Approved',
     shortName: 'APP',
     state: 'done',
     icon: 'task_alt',
@@ -49,6 +59,8 @@ const options = [
   },
   {
     name: 'On hold',
+    value: 'On hold',
+    label: 'On hold',
     shortName: 'HLD',
     state: 'blocked',
     icon: 'back_hand',
@@ -58,6 +70,8 @@ const options = [
   },
   {
     name: 'Omitted',
+    value: 'Omitted',
+    label: 'Omitted',
     shortName: 'OMT',
     state: 'blocked',
     icon: 'block',
@@ -69,15 +83,8 @@ const options = [
 
 const optionsMap = {
   'Not Ready': {
-    name: 'Not ready',
-    shortName: 'NRD',
-    state: 'not_started',
-    icon: 'fiber_new',
-    color: '#434a56',
-    scope: ['product', 'version', 'representation', 'task', 'workfile'],
-    original_name: 'Not ready',
-  },
-  'Not ready': {
+    label: 'Not ready',
+    value: 'Not ready',
     name: 'Not ready',
     shortName: 'NRD',
     state: 'not_started',
@@ -87,6 +94,8 @@ const optionsMap = {
     original_name: 'Not ready',
   },
   'Ready to start': {
+    label: 'Ready to start',
+    value: 'Ready to start',
     name: 'Ready to start',
     shortName: 'RDY',
     state: 'not_started',
@@ -96,6 +105,8 @@ const optionsMap = {
     original_name: 'Ready to start',
   },
   'In progress': {
+    label: 'In progress',
+    value: 'In progress',
     name: 'In progress',
     shortName: 'PRG',
     state: 'in_progress',
@@ -105,6 +116,8 @@ const optionsMap = {
     original_name: 'In progress',
   },
   'Pending review': {
+    label: 'Pending review',
+    value: 'Pending review',
     name: 'Pending review',
     shortName: 'RVW',
     state: 'in_progress',
@@ -114,6 +127,8 @@ const optionsMap = {
     original_name: 'Pending review',
   },
   Approved: {
+    label: 'Approved',
+    value: 'Approved',
     name: 'Approved',
     shortName: 'APP',
     state: 'done',
@@ -123,6 +138,8 @@ const optionsMap = {
     original_name: 'Approved',
   },
   'On hold': {
+    label: 'On hold',
+    value: 'On hold',
     name: 'On hold',
     shortName: 'HLD',
     state: 'blocked',
@@ -132,6 +149,8 @@ const optionsMap = {
     original_name: 'On hold',
   },
   Omitted: {
+    label: 'Omitted',
+    value: 'Omitted',
     name: 'Omitted',
     shortName: 'OMT',
     state: 'blocked',
@@ -149,6 +168,17 @@ const StatusCell = ({ status }: { status: string }) => {
     setShowPlaceholder(false)
   }
 
+      return (
+      <StyledEnumDropdown
+        value={[status]}
+        options={options}
+        placeholder=''
+        onChange={(newValue) => {
+          setValue(newValue[0])
+          setShowPlaceholder(true)
+        }}
+      />
+      )
   return (
     <DropdownColumnWrapper
       showPreview={showPlaceholder}
@@ -159,7 +189,7 @@ const StatusCell = ({ status }: { status: string }) => {
         text: value,
       }}
     >
-      <StatusSelect
+      <StyledEnumDropdown
         value={[status]}
         options={options}
         onChange={(newValue) => {

@@ -1,7 +1,8 @@
 import DropdownColumnWrapper from './DropdownColumnWrapper'
 import { $Any } from '@types'
-import { PriorityEnumDropdown } from '@components/ListItem/ListItem.styled'
 import { useMemo, useState } from 'react'
+import { EnumDropdown } from '@ynput/ayon-react-components'
+import { StyledEnumDropdown } from './Cell.Styled'
 
 type Props = {
   priority: string
@@ -20,6 +21,18 @@ const PriorityCell = ({ priority, priorities }: Props) => {
   }, [value])
 
   return (
+    <StyledEnumDropdown
+      onChange={(e) => {
+        setValue(e[0])
+        setShowPlaceholder(true)
+      }}
+      options={priorities}
+      value={[priority]}
+      placeholder=""
+    />
+  )
+
+  return (
     <DropdownColumnWrapper
       showPreview={showPlaceholder}
       handleExpandIconClick={expandClickHandler}
@@ -29,7 +42,7 @@ const PriorityCell = ({ priority, priorities }: Props) => {
         text: priorityData.value,
       }}
     >
-      <PriorityEnumDropdown
+      <StyledEnumDropdown
         onChange={(e) => {
           setValue(e[0])
           setShowPlaceholder(true)

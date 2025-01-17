@@ -1,5 +1,5 @@
 import { $Any } from '@types'
-import { FC, useState } from 'react'
+import { FC, useEffect, useRef, useState } from 'react'
 import styled from 'styled-components'
 
 export const SpanCell = styled.div`
@@ -18,6 +18,11 @@ export const SpanCell = styled.div`
     background-color: var(--md-sys-color-primary-container);
   }
 `
+const StyledInput = styled.input`
+  width: 100%;
+  height: 100%;
+  display: block;
+`
 
 type Props = {
   value: string
@@ -25,10 +30,18 @@ type Props = {
 }
 
 const SimpleEditableCell: FC<HTMLElement & Props> = ({ value, updateHandler }) => {
-  const [val, setVal] = useState(value)
   const [editable, setEditable] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
 
+  useEffect(() => {
+    if (editable) {
+      inputRef.current?.focus()
+      inputRef.current?.select()
+    }
+
+  }, [editable])
   const blurHandler = (e: $Any) => {
+    updateHandler(e.target.value)
     setEditable(false)
   }
 
@@ -47,7 +60,7 @@ const SimpleEditableCell: FC<HTMLElement & Props> = ({ value, updateHandler }) =
   }
 
   return editable ? (
-    <input defaultValue={value} onBlur={blurHandler} onKeyDown={keyDownHandler} />
+    <StyledInput ref={inputRef} defaultValue={value} onBlur={blurHandler} onKeyDown={keyDownHandler} />
   ) : (
     <SpanCell
       suppressContentEditableWarning={true}

@@ -8,6 +8,7 @@ export const TableCellContent = styled(Cell)`
   &.large {
     width: 300px;
     max-width: 300px;
+    min-width: 300px;
   }
   &.bold {
     font-weight: 600;
@@ -31,6 +32,7 @@ export const TableCell = styled.td`
   border: solid 1px;
   border-color: var(--md-sys-color-surface-container-highest);
   border-collapse: collapse;
+  min-width: 150px;
   max-width: 150px;
   &.large {
     max-width: 300px;
