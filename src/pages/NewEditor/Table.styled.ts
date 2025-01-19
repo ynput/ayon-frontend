@@ -8,6 +8,7 @@ export const TableCellContent = styled(Cell)`
   &.large {
     width: 300px;
     max-width: 300px;
+    min-width: 300px;
   }
   &.bold {
     font-weight: 600;

@@ -66,6 +66,7 @@ type Props = {
   isExpandable: boolean
   sliceId: string
   toggleExpanderHandler: $Any
+  updateHandler: $Any
 }
 
 const ShimmerCell = ({ width }: { width: string }) => {
@@ -87,6 +88,7 @@ const TableColumns = ({
   isLoading,
   sliceId,
   toggleExpanderHandler,
+  updateHandler
 }: Props) => {
   const project = useSelector((state: $Any) => state.project)
 
@@ -99,7 +101,7 @@ const TableColumns = ({
     return item.original.data.type === 'folder' ? 'folders' : 'tasks'
   }
   const getRawData = (item: Row<TableRow>) => {
-    return rawData[getRowType(item)][item.id]
+    return rawData[getRowType(item)]?.[item.id]
   }
 
   const getRawDataParentId = (row: Row<TableRow>): string => {
@@ -114,8 +116,7 @@ const TableColumns = ({
       return rawData.attrib?.[attribName] || ''
     }
 
-    return 'foo'
-    // return getRawDataAttribValue(rawData[parentId], attribName)
+    return getRawDataAttribValue(rawData[parentId], attribName)
   }
 
   const getRowAttribValue = (row: Row<TableRow>, attribName: string): string => {
@@ -339,6 +340,7 @@ const TableColumns = ({
             cell: ({ row, getValue }: { row: $Any; getValue: $Any }) => {
               const rawData = getRawData(row)
               const value = getRowAttribValue(row, attrib.name)
+              const rawType = getRowType(row)
               const [val, setVal] = useState(value)
               // <ShimmerCell width="150px" />
               return (
@@ -352,6 +354,8 @@ const TableColumns = ({
                       // onKeyDown={(evt) => handleRowKeyDown(evt, row)}
                       updateHandler={(newValue: string) => {
                         setVal(newValue)
+                        const entityType = rawType === 'folders' ? 'folder' : 'task'
+                        updateHandler(rawData.id, attrib.name, newValue, entityType)
                       }}
                       tabIndex={0}
                       value={val}
@@ -366,4 +370,4 @@ const TableColumns = ({
     [isLoading, sliceId, tableData],
   )
 }
-export { TableColumns }
+export default TableColumns

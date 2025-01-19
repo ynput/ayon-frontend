@@ -142,7 +142,6 @@ const updateEntity = api.injectEndpoints({
           const currentDashNeedsUpdating = hasSomeAssignees && hasSomeProjects
 
           if (currentDashNeedsUpdating) {
-            console.log({ data })
             const [result, wasPatched] = patchKanban(
               { assignees: cacheUsers, projects: dashboardProjects },
               { newAssignees, taskId: entityId, data },
@@ -390,4 +389,4 @@ const updateEntity = api.injectEndpoints({
   overrideExisting: true,
 })
 
-export const { useUpdateEntitiesMutation } = updateEntity
+export const { useUpdateEntitiesMutation, useUpdateEntityMutation } = updateEntity

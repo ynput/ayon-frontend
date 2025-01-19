@@ -16,8 +16,11 @@ import { $Any } from '@types'
 import { TableRow } from '@containers/Slicer/types'
 import useHandlers, { Selection } from './handlers'
 import { getAbsoluteSelections, isSelected } from './mappers'
-import { TableColumns } from './TableColumns'
+import TableColumns from './TableColumns'
 import * as Styled from './Table.styled'
+import { useUpdateEntitiesMutation, useUpdateEntityMutation } from '@queries/entity/updateEntity'
+import { useSelector } from 'react-redux'
+import { toast } from 'react-toastify'
 
 type Props = {
   tableData: $Any[]
@@ -42,6 +45,47 @@ const MyTable = ({
   expanded,
   setExpanded,
 }: Props) => {
+
+  //The virtualizer needs to know the scrollable container element
+  const tableContainerRef = useRef<HTMLDivElement>(null)
+  const [selectionInProgress, setSelectionInProgress] = useState<boolean>(false)
+  const [selection, setSelection] = useState<Selection>({})
+  const [selections, setSelections] = useState<Selection[]>([])
+  const [updateEntity] = useUpdateEntityMutation()
+  const { name: projectName } = useSelector((state: $Any) => state.project)
+  // focused redux
+
+  const udpateEntityField = async (id: string, field: string, value: string, entityType: string) => {
+    if (value === null || value === undefined) {
+      return console.error('value is null or undefined')
+    }
+
+    try {
+      // build entities operations array
+      const operations = [
+        {
+          id: id,
+          projectName: projectName,
+          data: {
+            [field]: value,
+          },
+        },
+      ]
+
+      return await updateEntity({ projectName, entityId: id, entityType, data: {attrib: {[field]: value}} })
+    } catch (error) {
+      toast.error('Error updating' + 'version ')
+    }
+  }
+
+  const { handleMouseUp, handleMouseDown } = useHandlers({
+    selection,
+    setSelection,
+    selections,
+    setSelections,
+    setSelectionInProgress,
+  })
+
   const columns = TableColumns({
     tableData,
     rawData,
@@ -50,6 +94,9 @@ const MyTable = ({
     isExpandable,
     sliceId,
     toggleExpanderHandler,
+    updateHandler: (id: string, field: string, val: string, entityType: string) => {
+      udpateEntityField(id, field, val, entityType)
+    }
   })
 
   const table = useReactTable({
@@ -73,19 +120,6 @@ const MyTable = ({
 
   const { rows } = table.getRowModel()
 
-  //The virtualizer needs to know the scrollable container element
-  const tableContainerRef = useRef<HTMLDivElement>(null)
-  const [selectionInProgress, setSelectionInProgress] = useState<boolean>(false)
-  const [selection, setSelection] = useState<Selection>({})
-  const [selections, setSelections] = useState<Selection[]>([])
-
-  const { handleMouseUp, handleMouseDown } = useHandlers({
-    selection,
-    setSelection,
-    selections,
-    setSelections,
-    setSelectionInProgress,
-  })
 
   const absoluteSelections = getAbsoluteSelections(selections)
 
