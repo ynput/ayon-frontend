@@ -6,14 +6,14 @@ import { $Any } from '@types'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 
 import MyTable from './Table'
-import useFilteredEditorEntities from './useFilteredEditorEntities'
+import useFilteredEditorEntities from './hooks/useFilteredEditorEntities'
 import { Filter } from '@components/SearchFilter/types'
 import { useSlicerContext } from '@context/slicerContext'
 import useFilterBySlice from '@containers/TasksProgress/hooks/useFilterBySlice'
-import useAttributeFields from './useAttributesList'
-import useFilteredEntities from './useFilteredEntities'
+import useAttributeFields from './hooks/useAttributesList'
 import { handleToggleFolder } from './handlers'
 import { populateTableData } from './mappers'
+import useFilteredEntities from './hooks/useFilteredEntities'
 
 type Props = {
   filters: Filter[]
@@ -32,7 +32,6 @@ const NewEditorPage = ({ filters }: Props) => {
     setExpandedItem,
     expanded,
     setExpanded,
-    selectedPaths,
   } = useFilteredEditorEntities({
     projectName,
     folderTypes: project.folders || {},
@@ -40,8 +39,7 @@ const NewEditorPage = ({ filters }: Props) => {
     selectedFolders: Object.keys(rowSelection),
   })
 
-  // @ts-ignore
-  const { folders, tasks } = useFilteredEntities({ filters, sliceFilter, selectedPaths, expanded, rowSelection })
+  const { folders, tasks } = useFilteredEntities({ filters, sliceFilter, expanded, rowSelection })
   const { tableData: populatedTableData } = populateTableData({
     rawData,
     folders,

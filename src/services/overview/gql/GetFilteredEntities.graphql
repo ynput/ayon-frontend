@@ -11,7 +11,7 @@ query GetFilteredEntities(
   project(name: $projectName) {
     name
     folders(
-      last: 10000
+      last: 100
       assignees: $assignees
       tags: $tags
       ids: $folderIds
@@ -32,7 +32,7 @@ query GetFilteredEntities(
       folderIds: $folderIds
       statuses: $statuses
       attributes: $attributes
-      last: 10000
+      last: 100
 
     ) {
       edges {

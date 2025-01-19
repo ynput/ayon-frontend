@@ -1,16 +1,16 @@
+import { PropsWithChildren } from 'react';
 import DropdownCell from './DropdownCell'
 type Props = {
   previewValue: { icon: string; color: string; text: string }
   showPreview: boolean
-  handleExpandIconClick: Function
-  children: React.ReactNode
+  handleExpandIconClick: () => void
 }
 
-const DropdownColumnWrapper: React.FC<Props> = ({
+const DropdownColumnWrapper: React.FC<HTMLDivElement & PropsWithChildren<Props>> = ({
   previewValue,
   showPreview,
-  children,
   handleExpandIconClick,
+  children,
 }) => {
   if (showPreview) {
     return (
@@ -22,6 +22,7 @@ const DropdownColumnWrapper: React.FC<Props> = ({
       />
     )
   }
+
   return children
 }
 

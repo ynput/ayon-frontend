@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import * as Styled from '@containers/Slicer/SlicerTable.styled'
 import { $Any } from '@types'
 import { ColumnDef, FilterFnOption, Row, SortingFn, sortingFns } from '@tanstack/react-table'
@@ -20,7 +20,7 @@ import TaskTypeCell from './Cells/TaskTypeCell'
 
 const CellWrapper = styled.div`
   width: 150px;
-  height: 100%;
+  height: 36px;
   box-sizing: border-box;
   padding-right: 2px;
 `
@@ -88,7 +88,7 @@ const TableColumns = ({
   isLoading,
   sliceId,
   toggleExpanderHandler,
-  updateHandler
+  updateHandler,
 }: Props) => {
   const project = useSelector((state: $Any) => state.project)
 
@@ -202,10 +202,17 @@ const TableColumns = ({
         sortingFn: fuzzySort, //sort by fuzzy rank (falls back to alphanumeric)
         cell: ({ row, getValue }) => {
           const rawData = getRawData(row)
+          const rawType = getRowType(row)
           // <ShimmerCell width="150px" />
           return (
             <CellWrapper>
-                <StatusCell status={rawData?.status || 'Not Ready'} />
+              <StatusCell
+                status={rawData?.status || 'Not Ready'}
+                updateHandler={(newValue: string) => {
+                  const entityType = rawType === 'folders' ? 'folder' : 'task'
+                  updateHandler(rawData.id, 'status', newValue, entityType, false)
+                }}
+              />
             </CellWrapper>
           )
           return !row.original.id || getRawData(row) === undefined ? (
@@ -230,6 +237,7 @@ const TableColumns = ({
         sortingFn: fuzzySort, //sort by fuzzy rank (falls back to alphanumeric)
         cell: ({ row, getValue }) => {
           const rawData = getRawData(row)
+          const rawType = getRowType(row)
           // <ShimmerCell width="150px" />
           return (
             <CellWrapper>
@@ -237,6 +245,11 @@ const TableColumns = ({
                 <FolderTypeCell
                   folderTypes={project.folders}
                   type={rawData?.folderType || 'Folder'}
+                  updateHandler={(newValue: string) => {
+                    const entityType = rawType === 'folders' ? 'folder' : 'task'
+                    // TODO Propagate change to folder type column also
+                    updateHandler(rawData.id, 'folderType', newValue, entityType, false)
+                  }}
                 />
               ) : (
                 <TaskTypeCell taskTypes={project.tasks} type={rawData?.taskType || 'task'} />
@@ -299,13 +312,19 @@ const TableColumns = ({
           const rawType = getRowType(row)
           const rawData = getRawData(row)
           // <ShimmerCell width="150px" />
+          const ref = useRef<HTMLDivElement>(null)
           return (
-              <CellWrapper>
-                <PriorityCell
-                  priority={rawData?.attrib?.priority || 'normal'}
-                  priorities={priorities}
-                />
-              </CellWrapper>
+            <CellWrapper ref={ref}>
+              <PriorityCell
+                priority={rawData?.attrib?.priority || 'normal'}
+                priorities={priorities}
+                updateHandler={(newValue: string) => {
+                  const entityType = rawType === 'folders' ? 'folder' : 'task'
+                  // TODO Propagate change to folder type column also
+                  updateHandler(rawData.id, 'priority', newValue, entityType)
+                }}
+              />
+            </CellWrapper>
           )
           return !row.original.id || rawData === undefined ? (
             <TableCellContent> ... </TableCellContent>

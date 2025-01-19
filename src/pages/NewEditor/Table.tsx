@@ -55,7 +55,7 @@ const MyTable = ({
   const { name: projectName } = useSelector((state: $Any) => state.project)
   // focused redux
 
-  const udpateEntityField = async (id: string, field: string, value: string, entityType: string) => {
+  const udpateEntityField = async (id: string, field: string, value: string, entityType: string, isAttrib: boolean) => {
     if (value === null || value === undefined) {
       return console.error('value is null or undefined')
     }
@@ -72,7 +72,11 @@ const MyTable = ({
         },
       ]
 
-      return await updateEntity({ projectName, entityId: id, entityType, data: {attrib: {[field]: value}} })
+      if (isAttrib) {
+        return await updateEntity({ projectName, entityId: id, entityType, data: {attrib: {[field]: value}} })
+      } else {
+        return await updateEntity({ projectName, entityId: id, entityType, data: {[field]: value} })
+      }
     } catch (error) {
       toast.error('Error updating' + 'version ')
     }
@@ -94,8 +98,8 @@ const MyTable = ({
     isExpandable,
     sliceId,
     toggleExpanderHandler,
-    updateHandler: (id: string, field: string, val: string, entityType: string) => {
-      udpateEntityField(id, field, val, entityType)
+    updateHandler: (id: string, field: string, val: string, entityType: string, isAttrib: boolean = true) => {
+      udpateEntityField(id, field, val, entityType, isAttrib)
     }
   })
 

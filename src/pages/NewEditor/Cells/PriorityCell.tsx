@@ -1,58 +1,55 @@
 import DropdownColumnWrapper from './DropdownColumnWrapper'
 import { $Any } from '@types'
-import { useMemo, useState } from 'react'
-import { EnumDropdown } from '@ynput/ayon-react-components'
+import { useMemo } from 'react'
 import { StyledEnumDropdown } from './Cell.Styled'
+import useExplicitDropdownExpand from '../hooks/useExplicitDropdownExpand'
 
 type Props = {
   priority: string
   priorities: $Any
+  updateHandler: (newValue: string) => void
 }
-const PriorityCell = ({ priority, priorities }: Props) => {
-  const [showPlaceholder, setShowPlaceholder] = useState(true)
-  const [value, setValue] = useState(priority)
-
-  const expandClickHandler = () => {
-    setShowPlaceholder(false)
-  }
+const PriorityCell = ({ priority, priorities, updateHandler }: Props) => {
+  const {
+    showPlaceholder,
+    setShowPlaceholder,
+    value,
+    expandClickHandler,
+    changeHandler,
+    ref,
+  } = useExplicitDropdownExpand(priority, updateHandler)
 
   const priorityData = useMemo(() => {
     return priorities.find((el: $Any) => el.value === value)
   }, [value])
 
-  return (
+  const dropdownComponent = (
     <StyledEnumDropdown
+      ref={ref}
       onChange={(e) => {
-        setValue(e[0])
-        setShowPlaceholder(true)
+        changeHandler(e[0])
       }}
+      onClose={() => setShowPlaceholder(true)}
       options={priorities}
       value={[priority]}
       placeholder=""
     />
   )
 
-  return (
+  return showPlaceholder ? (
     <DropdownColumnWrapper
       showPreview={showPlaceholder}
       handleExpandIconClick={expandClickHandler}
       previewValue={{
         icon: priorityData.icon,
         color: priorityData.color,
-        text: priorityData.value,
+        text: priorityData.label,
       }}
     >
-      <StyledEnumDropdown
-        onChange={(e) => {
-          setValue(e[0])
-          setShowPlaceholder(true)
-        }}
-        options={priorities}
-        value={['high']}
-        placeholder=""
-        style={{ width: 'max-content' }}
-      />
+      {dropdownComponent}
     </DropdownColumnWrapper>
+  ) : (
+    dropdownComponent
   )
 }
 
