@@ -4,7 +4,7 @@ import { useSelector } from "react-redux"
 import { ExpandedState } from "@tanstack/react-table"
 import { useGetFolderListQuery } from "@queries/getHierarchy"
 import { Filter } from "@components/SearchFilter/types"
-import { mapQueryFilters } from "./mappers"
+import { mapQueryFilters } from "../mappers"
 
   const useFilteredEntities = ({
     filters,

@@ -1,6 +1,6 @@
 import DropdownColumnWrapper from './DropdownColumnWrapper'
-import { useState } from 'react'
 import { StyledEnumDropdown } from './Cell.Styled'
+import useExplicitDropdownExpand from '../hooks/useExplicitDropdownExpand'
 const options = [
   {
     value: 'Not ready',
@@ -82,6 +82,17 @@ const options = [
 ]
 
 const optionsMap = {
+  'Not ready': {
+    label: 'Not ready',
+    value: 'Not ready',
+    name: 'Not ready',
+    shortName: 'NRD',
+    state: 'not_started',
+    icon: 'fiber_new',
+    color: '#434a56',
+    scope: ['product', 'version', 'representation', 'task', 'workfile'],
+    original_name: 'Not ready',
+  },
   'Not Ready': {
     label: 'Not ready',
     value: 'Not ready',
@@ -160,25 +171,44 @@ const optionsMap = {
     original_name: 'Omitted',
   },
 }
+type Props = {
+  status: string
+  updateHandler: (newValue: string) => void
+}
 
-const StatusCell = ({ status }: { status: string }) => {
-  const [showPlaceholder, setShowPlaceholder] = useState(true)
-  const [value, setValue] = useState(status)
-  const expandClickHandler = () => {
-    setShowPlaceholder(false)
-  }
+const StatusCell = ({ status, updateHandler }: Props) => {
+  const { showPlaceholder, setShowPlaceholder, value, expandClickHandler, changeHandler, ref } =
+    useExplicitDropdownExpand(status, updateHandler)
 
-      return (
-      <StyledEnumDropdown
-        value={[status]}
-        options={options}
-        placeholder=''
-        onChange={(newValue) => {
-          setValue(newValue[0])
-          setShowPlaceholder(true)
-        }}
-      />
-      )
+  const dropdownComponent = (
+    <StyledEnumDropdown
+      ref={ref}
+      onChange={(e) => {
+        changeHandler(e[0])
+      }}
+      onClose={() => setShowPlaceholder(true)}
+      options={options}
+      value={[value]}
+      placeholder=""
+    />
+  )
+
+  return showPlaceholder ? (
+    <DropdownColumnWrapper
+      showPreview={showPlaceholder}
+      handleExpandIconClick={expandClickHandler}
+      previewValue={{
+        icon: optionsMap[value].icon,
+        color: optionsMap[value].color,
+        text: optionsMap[value].label,
+      }}
+    >
+      {dropdownComponent}
+    </DropdownColumnWrapper>
+  ) : (
+    dropdownComponent
+  )
+
   return (
     <DropdownColumnWrapper
       showPreview={showPlaceholder}

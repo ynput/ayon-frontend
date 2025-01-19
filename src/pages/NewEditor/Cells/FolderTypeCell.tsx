@@ -1,33 +1,35 @@
-import { useState } from 'react'
 import DropdownColumnWrapper from './DropdownColumnWrapper'
 import { $Any } from '@types'
-import { Dropdown, EnumDropdown } from '@ynput/ayon-react-components'
 import { StyledEnumDropdown } from './Cell.Styled'
+import useExplicitDropdownExpand from '../hooks/useExplicitDropdownExpand'
 
 type Props = {
   folderTypes: $Any
   type: string
+  updateHandler: (newValue: string) => void
 }
 
-const FolderTypeCell: React.FC<Props> = ({ folderTypes, type }) => {
-  const [showPlaceholder, setShowPlaceholder] = useState(true)
-  const [value, setValue] = useState(type)
+const FolderTypeCell: React.FC<Props> = ({ folderTypes, type, updateHandler }) => {
+  const {
+    showPlaceholder,
+    setShowPlaceholder,
+    value,
+    expandClickHandler,
+    changeHandler,
+    ref,
+  } = useExplicitDropdownExpand(type, updateHandler)
+
   const mappedTypes = Object.values(folderTypes).map((el: $Any) => ({
     value: el.name,
     label: el.name,
     icon: el.icon,
   }))
 
-  const expandClickHandler = () => {
-    setShowPlaceholder(false)
-  }
-
-  return (
+  const dropdownComponent = (
     <StyledEnumDropdown
-      onChange={(e) => {
-        setShowPlaceholder(true)
-        setValue(e[0])
-      }}
+      ref={ref}
+      onChange={(e) => changeHandler(e[0])}
+      onClose={() => setShowPlaceholder(true)}
       options={mappedTypes}
       value={[value]}
       placeholder=""
@@ -44,15 +46,7 @@ const FolderTypeCell: React.FC<Props> = ({ folderTypes, type }) => {
         text: value,
       }}
     >
-      <StyledEnumDropdown
-        onChange={(e) => {
-          setShowPlaceholder(true)
-          setValue(e[0])
-        }}
-        options={mappedTypes}
-        value={['high']}
-        placeholder=""
-      />
+      {dropdownComponent}
     </DropdownColumnWrapper>
   )
 }

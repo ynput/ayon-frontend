@@ -4,6 +4,7 @@ import SimpleEditableCell from './Cells/SimpleEditableCell'
 
 export const TableCellContent = styled(Cell)`
   width: 150px;
+  min-width: 150px;
   max-width: 150px;
   &.large {
     width: 300px;
@@ -21,6 +22,7 @@ export const EditableCellContent = styled(SimpleEditableCell)`
   max-width: 150px;
   &.large {
     width: 300px;
+    min-width: 300px;
     max-width: 300px;
   }
   &.bold {
@@ -35,6 +37,7 @@ export const TableCell = styled.td`
   min-width: 150px;
   max-width: 150px;
   &.large {
+    min-width: 300px;
     max-width: 300px;
   }
   &.selected {

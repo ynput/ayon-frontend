@@ -1134,6 +1134,7 @@ export type UserNode = {
   name: Scalars['String']['output'];
   tasks: TasksConnection;
   updatedAt: Scalars['DateTime']['output'];
+  userPool?: Maybe<Scalars['String']['output']>;
 };
 
 
@@ -1798,7 +1799,7 @@ export const GetFilteredEntitiesDocument = `
   project(name: $projectName) {
     name
     folders(
-      last: 10000
+      last: 100
       assignees: $assignees
       tags: $tags
       ids: $folderIds
@@ -1819,7 +1820,7 @@ export const GetFilteredEntitiesDocument = `
       folderIds: $folderIds
       statuses: $statuses
       attributes: $attributes
-      last: 10000
+      last: 100
     ) {
       edges {
         node {
