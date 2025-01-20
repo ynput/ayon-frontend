@@ -43,6 +43,8 @@ import { PasteProvider, PasteModal } from '@context/pasteContext'
 import { URIProvider } from '@context/uriContext'
 import { NotificationsProvider } from '@context/notificationsContext'
 import { CustomerlyProvider } from 'react-live-chat-customerly'
+import { PiPProvider } from '@context/pip/PiPProvider'
+import { RemoteModulesProvider } from '@/remote/remoteModulesContext'
 import { PowerpackProvider } from '@context/powerpackContext'
 
 // containers
@@ -65,10 +67,9 @@ import LauncherAuthPage from '@pages/LauncherAuthPage'
 import ReleaseInstallerDialog from '@containers/ReleaseInstallerDialog/ReleaseInstallerDialog'
 import getTrialDates from '@components/TrialBanner/helpers/getTrialDates'
 import TrialEnded from '@containers/TrialEnded/TrialEnded'
-import { PiPProvider } from '@context/pip/PiPProvider'
 import DetailsPanelFloating from '@containers/DetailsPanel/DetailsPanelFloating/DetailsPanelFloating'
-import { RemoteModulesProvider } from '@context/remoteModulesContext'
 import PowerpackDialog from '@components/Powerpack/PowerpackDialog'
+import AppRemoteLoader from './remote/Loaders/AppRemoteLoader'
 
 const App = () => {
   const user = useSelector((state) => state.user)
@@ -273,6 +274,7 @@ const App = () => {
                                 </Routes>
                                 <DetailsPanelFloating />
                                 <PowerpackDialog />
+                                <AppRemoteLoader />
                               </QueryParamProvider>
                             </PiPProvider>
                           </ShortcutsProvider>

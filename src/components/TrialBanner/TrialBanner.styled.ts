@@ -2,7 +2,6 @@ import { theme } from '@ynput/ayon-react-components'
 import styled, { keyframes } from 'styled-components'
 
 // slide up animation
-
 export const slideUp = keyframes`
     from {
       transform: translateY(100%);
@@ -10,7 +9,6 @@ export const slideUp = keyframes`
     to {
       transform: translateY(0);
     }
-
 `
 
 export const TrialBanner = styled.div`
