@@ -15,6 +15,7 @@ const AccessGroups = lazy(() => import('./AccessGroups'))
 const Attributes = lazy(() => import('./Attributes'))
 const Secrets = lazy(() => import('./Secrets'))
 const AddonsManager = lazy(() => import('./AddonsManager'))
+const ServerConfig = lazy(() => import('./ServerConfig/ServerConfig'))
 
 const SettingsPage = () => {
   const { module, addonName } = useParams()
@@ -70,6 +71,8 @@ const SettingsPage = () => {
         return <Attributes />
       case 'secrets':
         return <Secrets />
+      case 'server':
+        return <ServerConfig />
       default:
         return <Navigate to="/settings" />
     }
@@ -90,6 +93,12 @@ const SettingsPage = () => {
         module: 'bundles',
         accessLevels: ['manager'],
         shortcut: 'B+B',
+      },
+      {
+        name: 'Server',
+        path: '/settings/server',
+        module: 'server',
+        accessLevels: ['admin'],
       },
     ]
 
