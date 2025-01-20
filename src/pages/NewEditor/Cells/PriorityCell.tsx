@@ -2,7 +2,7 @@ import DropdownColumnWrapper from './DropdownColumnWrapper'
 import { $Any } from '@types'
 import { useMemo } from 'react'
 import { StyledEnumDropdown } from './Cell.Styled'
-import useExplicitDropdownExpand from '../hooks/useExplicitDropdownExpand'
+import useDropdownPlaceholderState from '../hooks/useExplicitDropdownExpand'
 
 type Props = {
   priority: string
@@ -17,7 +17,7 @@ const PriorityCell = ({ priority, priorities, updateHandler }: Props) => {
     expandClickHandler,
     changeHandler,
     ref,
-  } = useExplicitDropdownExpand(priority, updateHandler)
+  } = useDropdownPlaceholderState(priority, updateHandler)
 
   const priorityData = useMemo(() => {
     return priorities.find((el: $Any) => el.value === value)
@@ -32,7 +32,6 @@ const PriorityCell = ({ priority, priorities, updateHandler }: Props) => {
       onClose={() => setShowPlaceholder(true)}
       options={priorities}
       value={[priority]}
-      placeholder=""
     />
   )
 

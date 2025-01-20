@@ -1,6 +1,6 @@
 import DropdownColumnWrapper from './DropdownColumnWrapper'
 import { StyledEnumDropdown } from './Cell.Styled'
-import useExplicitDropdownExpand from '../hooks/useExplicitDropdownExpand'
+import useDropdownPlaceholderState from '../hooks/useExplicitDropdownExpand'
 const options = [
   {
     value: 'Not ready',
@@ -178,7 +178,7 @@ type Props = {
 
 const StatusCell = ({ status, updateHandler }: Props) => {
   const { showPlaceholder, setShowPlaceholder, value, expandClickHandler, changeHandler, ref } =
-    useExplicitDropdownExpand(status, updateHandler)
+    useDropdownPlaceholderState(status, updateHandler)
 
   const dropdownComponent = (
     <StyledEnumDropdown
@@ -189,7 +189,6 @@ const StatusCell = ({ status, updateHandler }: Props) => {
       onClose={() => setShowPlaceholder(true)}
       options={options}
       value={[value]}
-      placeholder=""
     />
   )
 
