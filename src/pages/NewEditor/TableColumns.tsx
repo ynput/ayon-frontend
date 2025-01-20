@@ -4,14 +4,13 @@ import { $Any } from '@types'
 import { ColumnDef, FilterFnOption, Row, SortingFn, sortingFns } from '@tanstack/react-table'
 import { compareItems } from '@tanstack/match-sorter-utils'
 import clsx from 'clsx'
-import { Icon } from '@ynput/ayon-react-components'
+import { AssigneeSelect, Icon } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 import { TableRow } from './types'
-import { FolderNode, TaskNode } from '@api/graphql'
+import { FolderNode, TaskNode, UserNode } from '@api/graphql'
 import { EditableCellContent, TableCellContent } from './Table.styled'
 import { getPriorityOptions } from '@pages/TasksProgressPage/helpers'
 import { useGetAttributeConfigQuery } from '@queries/attributes/getAttributes'
-import { useGetUsersAssigneeQuery } from '@queries/user/getUsers'
 import { useSelector } from 'react-redux'
 import StatusCell from './Cells/StatusCell'
 import PriorityCell from './Cells/PriorityCell'
@@ -58,16 +57,6 @@ const fuzzySort: SortingFn<any> = (rowA, rowB, columnId) => {
   return dir === 0 ? sortingFns.alphanumeric(rowA, rowB, columnId) : dir
 }
 
-type Props = {
-  tableData: $Any[]
-  rawData: { folders: $Any; tasks: $Any }
-  attribs: $Any[]
-  isLoading: boolean
-  isExpandable: boolean
-  sliceId: string
-  toggleExpanderHandler: $Any
-  updateHandler: $Any
-}
 
 const ShimmerCell = ({ width }: { width: string }) => {
   return (
@@ -81,9 +70,23 @@ const ShimmerCell = ({ width }: { width: string }) => {
     </Styled.Cell>
   )
 }
+
+type Props = {
+  tableData: $Any[]
+  rawData: { folders: $Any; tasks: $Any }
+  users: UserNode[]
+  attribs: $Any[]
+  isLoading: boolean
+  isExpandable: boolean
+  sliceId: string
+  toggleExpanderHandler: $Any
+  updateHandler: $Any
+}
+
 const TableColumns = ({
   tableData,
   rawData,
+  users,
   attribs,
   isLoading,
   sliceId,
@@ -94,8 +97,6 @@ const TableColumns = ({
 
   const { data: priorityAttrib } = useGetAttributeConfigQuery({ attributeName: 'priority' })
   const priorities = getPriorityOptions(priorityAttrib, 'task') || []
-  const projectName = useSelector((state: $Any) => state.project.name)
-  const { data: allUsers = [] } = useGetUsersAssigneeQuery({ names: undefined, projectName })
 
   const getRowType = (item: Row<TableRow>) => {
     return item.original.data.type === 'folder' ? 'folders' : 'tasks'
@@ -276,7 +277,6 @@ const TableColumns = ({
           )
         },
       },
-      /*
       {
         accessorKey: 'assignees',
         header: () => 'Assignees',
@@ -288,7 +288,7 @@ const TableColumns = ({
           // <ShimmerCell width="150px" />
           return (
             <div style={{ width: '150px' }}>
-              <AssigneeSelect value={rawData?.assignees || []} options={allUsers} />
+              <AssigneeSelect value={rawData?.assignees || []} options={users} />
             </div>
           )
           return !row.original.id || rawData === undefined ? (
@@ -308,7 +308,6 @@ const TableColumns = ({
           )
         },
       },
-      */
       {
         accessorKey: 'priority',
         header: () => 'Priority',

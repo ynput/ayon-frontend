@@ -1,4 +1,4 @@
-import DropdownColumnWrapper from './DropdownColumnWrapper'
+import DropdownCellWrapper from './DropdownCellWrapper'
 import { $Any } from '@types'
 import { useMemo } from 'react'
 import { StyledEnumDropdown } from './Cell.Styled'
@@ -36,7 +36,7 @@ const PriorityCell = ({ priority, priorities, updateHandler }: Props) => {
   )
 
   return showPlaceholder ? (
-    <DropdownColumnWrapper
+    <DropdownCellWrapper
       showPreview={showPlaceholder}
       handleExpandIconClick={expandClickHandler}
       previewValue={{
@@ -46,7 +46,7 @@ const PriorityCell = ({ priority, priorities, updateHandler }: Props) => {
       }}
     >
       {dropdownComponent}
-    </DropdownColumnWrapper>
+    </DropdownCellWrapper>
   ) : (
     dropdownComponent
   )

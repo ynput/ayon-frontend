@@ -1,4 +1,4 @@
-import DropdownColumnWrapper from './DropdownColumnWrapper'
+import DropdownCellWrapper from './DropdownCellWrapper'
 import { StyledEnumDropdown } from './Cell.Styled'
 import useDropdownPlaceholderState from '../hooks/useExplicitDropdownExpand'
 const options = [
@@ -193,7 +193,7 @@ const StatusCell = ({ status, updateHandler }: Props) => {
   )
 
   return showPlaceholder ? (
-    <DropdownColumnWrapper
+    <DropdownCellWrapper
       showPreview={showPlaceholder}
       handleExpandIconClick={expandClickHandler}
       previewValue={{
@@ -203,30 +203,9 @@ const StatusCell = ({ status, updateHandler }: Props) => {
       }}
     >
       {dropdownComponent}
-    </DropdownColumnWrapper>
+    </DropdownCellWrapper>
   ) : (
     dropdownComponent
-  )
-
-  return (
-    <DropdownColumnWrapper
-      showPreview={showPlaceholder}
-      handleExpandIconClick={expandClickHandler}
-      previewValue={{
-        icon: optionsMap[value].icon,
-        color: optionsMap[value].color,
-        text: value,
-      }}
-    >
-      <StyledEnumDropdown
-        value={[status]}
-        options={options}
-        onChange={(newValue) => {
-          setValue(newValue)
-          setShowPlaceholder(true)
-        }}
-      />
-    </DropdownColumnWrapper>
   )
 }
 

@@ -1,6 +1,6 @@
 import useDropdownPlaceholderState from '../hooks/useExplicitDropdownExpand'
 import { StyledEnumDropdown } from './Cell.Styled'
-import DropdownColumnWrapper from './DropdownColumnWrapper'
+import DropdownCellWrapper from './DropdownCellWrapper'
 import { $Any } from '@types'
 
 type Props = {
@@ -37,7 +37,7 @@ const TaskTypeCell: React.FC<Props> = ({ taskTypes, type, updateHandler }) => {
   )
 
   return (
-    <DropdownColumnWrapper
+    <DropdownCellWrapper
       showPreview={showPlaceholder}
       handleExpandIconClick={expandClickHandler}
       previewValue={{
@@ -47,7 +47,7 @@ const TaskTypeCell: React.FC<Props> = ({ taskTypes, type, updateHandler }) => {
       }}
     >
       {dropdownComponent}
-    </DropdownColumnWrapper>
+    </DropdownCellWrapper>
   )
 }
 
