@@ -165,8 +165,6 @@ function ShortcutsProvider(props) {
     [lastPressed, activeShortcuts, hovered, disabled, allowed, reviewOpen],
   )
 
-  console.log(activeShortcuts.map((s) => s.key))
-
   // Add event listeners
   useEffect(() => {
     window.addEventListener('keydown', handleKeyPress)
