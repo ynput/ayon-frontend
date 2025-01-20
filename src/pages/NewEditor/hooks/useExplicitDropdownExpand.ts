@@ -1,7 +1,7 @@
 import { DropdownRef } from '@ynput/ayon-react-components'
 import { useEffect, useRef, useState } from 'react'
 
-const useDropdownPlaceholderState = (origValue: string, updateHandler: (e: string) => void) => {
+const useDropdownPlaceholderState = (origValue: string[], updateHandler: (e: string[]) => void) => {
   const [value, setValue] = useState(origValue)
   const [showPlaceholder, setShowPlaceholder] = useState(true)
   const ref = useRef<DropdownRef>(null)
@@ -10,7 +10,7 @@ const useDropdownPlaceholderState = (origValue: string, updateHandler: (e: strin
     setShowPlaceholder(false)
   }
 
-  const changeHandler = (e: string) => {
+  const changeHandler = (e: string[]) => {
     setShowPlaceholder(true)
     setValue(e)
     updateHandler(e)
@@ -18,10 +18,8 @@ const useDropdownPlaceholderState = (origValue: string, updateHandler: (e: strin
 
   useEffect(() => {
     if (!ref.current) {
-      console.log('not defined??')
       return
     }
-    console.log('opening ??')
     ref.current?.open()
   }, [ref, showPlaceholder])
 

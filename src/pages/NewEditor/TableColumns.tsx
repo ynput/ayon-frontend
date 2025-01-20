@@ -4,7 +4,7 @@ import { $Any } from '@types'
 import { ColumnDef, FilterFnOption, Row, SortingFn, sortingFns } from '@tanstack/react-table'
 import { compareItems } from '@tanstack/match-sorter-utils'
 import clsx from 'clsx'
-import { AssigneeSelect, Icon } from '@ynput/ayon-react-components'
+import { Icon } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 import { TableRow } from './types'
 import { FolderNode, TaskNode, UserNode } from '@api/graphql'
@@ -16,6 +16,7 @@ import StatusCell from './Cells/StatusCell'
 import PriorityCell from './Cells/PriorityCell'
 import FolderTypeCell from './Cells/FolderTypeCell'
 import TaskTypeCell from './Cells/TaskTypeCell'
+import AssigneesCell from './Cells/AssigneesCell'
 
 const CellWrapper = styled.div`
   width: 150px;
@@ -287,8 +288,16 @@ const TableColumns = ({
           const rawData = getRawData(row)
           // <ShimmerCell width="150px" />
           return (
-            <div style={{ width: '150px' }}>
-              <AssigneeSelect value={rawData?.assignees || []} options={users} />
+            <div style={{ width: '150px', height: '36px' }}>
+              {rawType === 'tasks' && (
+                <AssigneesCell
+                  assignees={rawData?.assignees || []}
+                  allUsers={users}
+                  updateHandler={(newValue) => {
+                    updateHandler(rawData.id, 'assignees', newValue, 'task', false)
+                  }}
+                />
+              )}
             </div>
           )
           return !row.original.id || rawData === undefined ? (
