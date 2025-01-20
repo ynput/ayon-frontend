@@ -6,7 +6,7 @@ type Props = {
   handleExpandIconClick: () => void
 }
 
-const DropdownColumnWrapper: React.FC<HTMLDivElement & PropsWithChildren<Props>> = ({
+const DropdownCellWrapper: React.FC<HTMLDivElement & PropsWithChildren<Props>> = ({
   previewValue,
   showPreview,
   handleExpandIconClick,
@@ -26,4 +26,4 @@ const DropdownColumnWrapper: React.FC<HTMLDivElement & PropsWithChildren<Props>>
   return children
 }
 
-export default DropdownColumnWrapper
+export default DropdownCellWrapper

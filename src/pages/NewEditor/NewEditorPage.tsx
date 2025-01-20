@@ -14,6 +14,7 @@ import useAttributeFields from './hooks/useAttributesList'
 import { handleToggleFolder } from './handlers'
 import { populateTableData } from './mappers'
 import useFilteredEntities from './hooks/useFilteredEntities'
+import { useGetUsersAssigneeQuery } from '@queries/user/getUsers'
 
 type Props = {
   filters: Filter[]
@@ -22,6 +23,7 @@ type Props = {
 const NewEditorPage = ({ filters }: Props) => {
   const project = useSelector((state: $Any) => state.project)
   const projectName = useSelector((state: $Any) => state.project.name)
+  const { data: users = [] } = useGetUsersAssigneeQuery({ projectName }, { skip: !projectName })
 
   const { rowSelection } = useSlicerContext()
   const { attribFields } = useAttributeFields()
@@ -67,6 +69,7 @@ const NewEditorPage = ({ filters }: Props) => {
                 // TODO fetch & pass attrib data using new graphql queries
                 rawData={{folders, tasks}}
                 tableData={populatedTableData}
+                users={users}
                 expanded={expanded}
                 setExpanded={setExpanded}
                 toggleExpanderHandler={toggleHandler}

@@ -1,4 +1,4 @@
-import DropdownColumnWrapper from './DropdownColumnWrapper'
+import DropdownCellWrapper from './DropdownCellWrapper'
 import { $Any } from '@types'
 import { StyledEnumDropdown } from './Cell.Styled'
 import useDropdownPlaceholderState from '../hooks/useExplicitDropdownExpand'
@@ -36,7 +36,7 @@ const FolderTypeCell: React.FC<Props> = ({ folderTypes, type, updateHandler }) =
   )
 
   return (
-    <DropdownColumnWrapper
+    <DropdownCellWrapper
       showPreview={showPlaceholder}
       handleExpandIconClick={expandClickHandler}
       previewValue={{
@@ -46,7 +46,7 @@ const FolderTypeCell: React.FC<Props> = ({ folderTypes, type, updateHandler }) =
       }}
     >
       {dropdownComponent}
-    </DropdownColumnWrapper>
+    </DropdownCellWrapper>
   )
 }
 

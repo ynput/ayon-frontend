@@ -18,13 +18,15 @@ import useHandlers, { Selection } from './handlers'
 import { getAbsoluteSelections, isSelected } from './mappers'
 import TableColumns from './TableColumns'
 import * as Styled from './Table.styled'
-import { useUpdateEntitiesMutation, useUpdateEntityMutation } from '@queries/entity/updateEntity'
+import { useUpdateEntityMutation } from '@queries/entity/updateEntity'
 import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
+import { UserNode } from '@api/graphql'
 
 type Props = {
   tableData: $Any[]
   rawData: { folders: $Any; tasks: $Any }
+  users: UserNode[]
   attribs: $Any[]
   isLoading: boolean
   isExpandable: boolean
@@ -38,6 +40,7 @@ const MyTable = ({
   tableData,
   rawData,
   attribs,
+  users,
   isLoading,
   isExpandable,
   sliceId,
@@ -93,6 +96,7 @@ const MyTable = ({
   const columns = TableColumns({
     tableData,
     rawData,
+    users,
     attribs,
     isLoading,
     isExpandable,
@@ -177,7 +181,7 @@ const MyTable = ({
                   data-index={virtualRow.index} //needed for dynamic row height measurement
                   // @ts-ignore
                   ref={(node) => rowVirtualizer.measureElement(node)} //measure dynamic row height
-                  key={row.id + rowIdx}
+                  key={row.id}
                   style={{
                     display: 'table-row',
                     transform: `translateY(${virtualRow.start}px)`, //this should always be a `style` as it changes on scroll
@@ -186,7 +190,7 @@ const MyTable = ({
                   {row.getVisibleCells().map((cell, colIdx) => {
                     return (
                       <Styled.TableCell
-                        key={cell.id + colIdx}
+                        key={cell.id}
                         className={clsx(
                           `pos-${rowIdx}-${colIdx}`,
                           cell.column.id === 'folderType' ? 'large' : '',
