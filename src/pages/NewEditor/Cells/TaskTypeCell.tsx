@@ -1,4 +1,4 @@
-import useExplicitDropdownExpand from '../hooks/useExplicitDropdownExpand'
+import useDropdownPlaceholderState from '../hooks/useExplicitDropdownExpand'
 import { StyledEnumDropdown } from './Cell.Styled'
 import DropdownColumnWrapper from './DropdownColumnWrapper'
 import { $Any } from '@types'
@@ -6,9 +6,10 @@ import { $Any } from '@types'
 type Props = {
   taskTypes: $Any
   type: string
+  updateHandler: (newValue: string) => void
 }
 
-const TaskTypeCell: React.FC<Props> = ({ taskTypes, type }) => {
+const TaskTypeCell: React.FC<Props> = ({ taskTypes, type, updateHandler }) => {
 
   const mappedTypes = Object.values(taskTypes).map((el: $Any) => ({
     value: el.name,
@@ -23,7 +24,7 @@ const TaskTypeCell: React.FC<Props> = ({ taskTypes, type }) => {
     expandClickHandler,
     changeHandler,
     ref,
-  } = useExplicitDropdownExpand(type, () => {})
+  } = useDropdownPlaceholderState(type, updateHandler)
 
   const dropdownComponent = (
     <StyledEnumDropdown
@@ -32,11 +33,9 @@ const TaskTypeCell: React.FC<Props> = ({ taskTypes, type }) => {
       onClose={() => setShowPlaceholder(true)}
       options={mappedTypes}
       value={[value]}
-      placeholder=""
     />
   )
 
-  return 'foo?'
   return (
     <DropdownColumnWrapper
       showPreview={showPlaceholder}

@@ -1,7 +1,7 @@
 import DropdownColumnWrapper from './DropdownColumnWrapper'
 import { $Any } from '@types'
 import { StyledEnumDropdown } from './Cell.Styled'
-import useExplicitDropdownExpand from '../hooks/useExplicitDropdownExpand'
+import useDropdownPlaceholderState from '../hooks/useExplicitDropdownExpand'
 
 type Props = {
   folderTypes: $Any
@@ -17,7 +17,7 @@ const FolderTypeCell: React.FC<Props> = ({ folderTypes, type, updateHandler }) =
     expandClickHandler,
     changeHandler,
     ref,
-  } = useExplicitDropdownExpand(type, updateHandler)
+  } = useDropdownPlaceholderState(type, updateHandler)
 
   const mappedTypes = Object.values(folderTypes).map((el: $Any) => ({
     value: el.name,
@@ -32,7 +32,6 @@ const FolderTypeCell: React.FC<Props> = ({ folderTypes, type, updateHandler }) =
       onClose={() => setShowPlaceholder(true)}
       options={mappedTypes}
       value={[value]}
-      placeholder=""
     />
   )
 

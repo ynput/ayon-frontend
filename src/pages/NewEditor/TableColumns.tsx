@@ -252,7 +252,13 @@ const TableColumns = ({
                   }}
                 />
               ) : (
-                <TaskTypeCell taskTypes={project.tasks} type={rawData?.taskType || 'task'} />
+                <TaskTypeCell taskTypes={project.tasks} type={rawData?.taskType || 'task'} 
+                  updateHandler={(newValue: string) => {
+                    const entityType = rawType === 'folders' ? 'folder' : 'task'
+                    // TODO Propagate change to folder type column also
+                    updateHandler(rawData.id, 'taskType', newValue, entityType, false)
+                  }}
+                />
               )}
             </CellWrapper>
           )

@@ -1,7 +1,7 @@
 import { DropdownRef } from '@ynput/ayon-react-components'
 import { useEffect, useRef, useState } from 'react'
 
-const useExplicitDropdownExpand = (origValue: string, updateHandler: (e: string) => void) => {
+const useDropdownPlaceholderState = (origValue: string, updateHandler: (e: string) => void) => {
   const [value, setValue] = useState(origValue)
   const [showPlaceholder, setShowPlaceholder] = useState(true)
   const ref = useRef<DropdownRef>(null)
@@ -36,4 +36,4 @@ const useExplicitDropdownExpand = (origValue: string, updateHandler: (e: string)
   }
 }
 
-export default useExplicitDropdownExpand
+export default useDropdownPlaceholderState
