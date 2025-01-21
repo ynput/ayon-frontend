@@ -16,7 +16,7 @@ const TrialEnded: FC<TrialEndedProps> = ({ orgName }) => {
   const user = useAppSelector((state) => state.user)
   const canManage = user.data.isAdmin || user.data.isManager
   const navigate = useNavigate()
-  const { open } = useCustomerlyChat({ disabled: !canManage })
+  const { open } = useCustomerlyChat({ enabled: canManage })
 
   //   redirect to '/trialend' if not already there
   useEffect(() => {
