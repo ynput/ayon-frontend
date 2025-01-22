@@ -17,6 +17,7 @@ import PriorityCell from './Cells/PriorityCell'
 import FolderTypeCell from './Cells/FolderTypeCell'
 import TaskTypeCell from './Cells/TaskTypeCell'
 import AssigneesCell from './Cells/AssigneesCell'
+import { useStoredCustomColumnWidths } from './hooks/useCustomColumnsWidth'
 
 const CellWrapper = styled.div`
   width: 150px;
@@ -98,6 +99,7 @@ const TableColumns = ({
 
   const { data: priorityAttrib } = useGetAttributeConfigQuery({ attributeName: 'priority' })
   const priorities = getPriorityOptions(priorityAttrib, 'task') || []
+  const storedColumnSizes = useStoredCustomColumnWidths()
 
   const getRowType = (item: Row<TableRow>) => {
     return item.original.data.type === 'folder' ? 'folders' : 'tasks'
@@ -138,7 +140,9 @@ const TableColumns = ({
 
     return getRawDataAttribValue(rawData[parentId], attribName)
   }
+  
 
+  console.log('scs: ', storedColumnSizes)
   return useMemo<ColumnDef<TableRow>[]>(
     () => [
       {
@@ -146,6 +150,7 @@ const TableColumns = ({
         header: () => 'Folder',
         filterFn: 'fuzzy',
         sortingFn: fuzzySort, //sort by fuzzy rank (falls back to alphanumeric)
+        size: storedColumnSizes['folderType'] || '300',
         cell: ({ row, getValue }) => {
           return !row.original.id ? (
             <ShimmerCell width="300px" />
@@ -202,6 +207,7 @@ const TableColumns = ({
         header: () => 'Status',
         filterFn: 'fuzzy',
         sortingFn: fuzzySort, //sort by fuzzy rank (falls back to alphanumeric)
+        size: storedColumnSizes['status'] || '150',
         cell: ({ row, getValue }) => {
           const rawData = getRawData(row)
           const rawType = getRowType(row)
@@ -237,6 +243,7 @@ const TableColumns = ({
         header: () => 'Type',
         filterFn: 'fuzzy',
         sortingFn: fuzzySort, //sort by fuzzy rank (falls back to alphanumeric)
+        size: storedColumnSizes['type'] || '150',
         cell: ({ row, getValue }) => {
           const rawData = getRawData(row)
           const rawType = getRowType(row)
@@ -283,6 +290,7 @@ const TableColumns = ({
         header: () => 'Assignees',
         filterFn: 'fuzzy',
         sortingFn: fuzzySort, //sort by fuzzy rank (falls back to alphanumeric)
+        size: storedColumnSizes['assignees'] || '150',
         cell: ({ row, getValue }) => {
           const rawType = getRowType(row)
           const rawData = getRawData(row)
@@ -322,6 +330,7 @@ const TableColumns = ({
         header: () => 'Priority',
         filterFn: 'fuzzy',
         sortingFn: fuzzySort, //sort by fuzzy rank (falls back to alphanumeric)
+        size: storedColumnSizes['priority'] || '150',
         cell: ({ row, getValue }) => {
           const rawType = getRowType(row)
           const rawData = getRawData(row)
@@ -370,6 +379,7 @@ const TableColumns = ({
             header: () => attrib.name,
             filterFn: 'fuzzy' as FilterFnOption<TableRow>,
             sortingFn: fuzzySort, //sort by fuzzy rank (falls back to alphanumeric)
+            size: storedColumnSizes[attrib.name] || '150',
             cell: ({ row, getValue }: { row: $Any; getValue: $Any }) => {
               const rawData = getRawData(row)
               const value = getRowAttribValue(row, attrib.name)
