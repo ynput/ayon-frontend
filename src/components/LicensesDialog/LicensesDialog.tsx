@@ -252,6 +252,7 @@ const LicensesDialog: FC<LicensesDialogProps> = ({ onClose }) => {
         </LicensesContainer>
       ) : (
         <LicensesContainer>
+          <h3>Licenses</h3>
           {sortLicenses(licenses).map((license) => (
             <LicenseRow
               key={license.subject}
