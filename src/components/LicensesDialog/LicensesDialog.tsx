@@ -1,10 +1,11 @@
 import { useGetYnputCloudInfoQuery } from '@queries/cloud/cloud'
 import { LicenseItem, useGetLicensesQuery } from '@queries/market/getMarket'
 import { Dialog, Icon, theme } from '@ynput/ayon-react-components'
-import { FC } from 'react'
+import { FC, useEffect } from 'react'
 import styled from 'styled-components'
 import copyToClipboard from '@helpers/copyToClipboard'
 import clsx from 'clsx'
+import { YnputConnectResponseModel } from '@api/rest/cloud'
 
 const Container = styled.div`
   background-color: var(--md-sys-color-surface-container-low);
@@ -19,6 +20,7 @@ const Row = styled.div`
   padding: 0.5rem;
   border-radius: var(--base-gap-medium);
   gap: var(--base-gap-large);
+  min-height: 38px;
 
   .key {
     opacity: 0.7;
@@ -29,6 +31,11 @@ const Row = styled.div`
   .value {
     text-align: right;
     flex: 1;
+    border-radius: var(--border-radius-m);
+
+    &.loading {
+      max-width: 40%;
+    }
   }
 
   &:hover {
@@ -51,11 +58,16 @@ const Row = styled.div`
 
 const LicensesContainer = styled(Container)`
   margin-top: var(--base-gap-large);
+  overflow: auto;
 
   h3 {
     text-transform: capitalize;
     margin-bottom: var(--base-gap-small);
     opacity: 0.8;
+    &.loading {
+      max-width: 20%;
+      border-radius: var(--border-radius-m);
+    }
   }
 `
 
@@ -69,6 +81,17 @@ const LicenseRow = styled(Row)`
     flex-direction: column;
     gap: 4px;
     flex: 1;
+
+    .loading {
+      border-radius: var(--border-radius-m);
+      &:first-child {
+        max-width: 40%;
+      }
+      max-width: 30%;
+      &:last-child {
+        max-width: 20%;
+      }
+    }
   }
 
   .license-type {
@@ -101,13 +124,25 @@ const LicenseRow = styled(Row)`
   }
 `
 
+const LICENSE_COUNT_KEY = 'ayon-licenses-count'
+
 interface LicensesDialogProps {
   onClose: () => void
 }
 
 const LicensesDialog: FC<LicensesDialogProps> = ({ onClose }) => {
-  const { data: cloud } = useGetYnputCloudInfoQuery(undefined)
-  const { data: licenses = [] } = useGetLicensesQuery({})
+  const { data: cloud, isLoading: isLoadingCloud } = useGetYnputCloudInfoQuery(undefined)
+  const { data: licenses = [], isLoading: isLoadingLicenses } = useGetLicensesQuery({})
+
+  // Get saved license count or fallback to 2
+  const savedLicenseCount = Number(localStorage.getItem(LICENSE_COUNT_KEY)) || 2
+
+  // Save license count when data is loaded
+  useEffect(() => {
+    if (licenses.length > 0 && savedLicenseCount !== licenses.length) {
+      localStorage.setItem(LICENSE_COUNT_KEY, licenses.length.toString())
+    }
+  }, [licenses])
 
   const licensesBySubscription = licenses.reduce<Record<string, LicenseItem[]>>((acc, license) => {
     const sub = license.subscription
@@ -120,61 +155,97 @@ const LicensesDialog: FC<LicensesDialogProps> = ({ onClose }) => {
     return new Date(timestamp * 1000).toLocaleDateString()
   }
 
+  // Cloud loading placeholder data
+  const cloudPlaceholderFields: (keyof YnputConnectResponseModel)[] = [
+    'instanceId',
+    'instanceName',
+    'orgId',
+    'orgName',
+    'collectSaturatedMetrics',
+    'managed',
+  ]
+
   return (
     <Dialog
       isOpen
       onClose={onClose}
       size="lg"
       header="Instance and licenses"
-      style={{ maxHeight: '80vh' }}
+      style={{ maxHeight: '90vh' }}
     >
       <Container>
-        {cloud &&
-          Object.entries(cloud).map(
-            ([key, value]) =>
-              !['subscriptions'].includes(key) && (
-                <Row key={key}>
-                  <span className="key">{key}:</span>
-                  <span className="value">{value?.toString()}</span>
-                  <Icon
-                    className="copy-icon"
-                    icon="content_copy"
-                    onClick={() => copyToClipboard(value.toString(), true)}
-                  />
-                </Row>
-              ),
-          )}
+        {isLoadingCloud
+          ? cloudPlaceholderFields.map((key) => (
+              <Row key={key}>
+                <span className="key">{key}:</span>
+                <span className="value loading">placeholder</span>
+              </Row>
+            ))
+          : cloud &&
+            Object.entries(cloud).map(
+              ([key, value]) =>
+                !['subscriptions'].includes(key) && (
+                  <Row key={key}>
+                    <span className="key">{key}:</span>
+                    <span className="value">{value?.toString()}</span>
+                    <Icon
+                      className="copy-icon"
+                      icon="content_copy"
+                      onClick={() => copyToClipboard(value.toString(), true)}
+                    />
+                  </Row>
+                ),
+            )}
       </Container>
 
-      {Object.entries(licensesBySubscription).map(([subscription, subs]) => (
-        <LicensesContainer key={subscription}>
-          <h3>{subscription}</h3>
-          {subs.map((license) => (
-            <LicenseRow
-              key={license.subject}
-              className={clsx({
-                valid: license.valid,
-                invalid: !license.valid,
-              })}
-            >
+      {isLoadingLicenses ? (
+        <LicensesContainer>
+          <h3 className="loading">subscription name</h3>
+          {Array.from({ length: savedLicenseCount }, (_, i) => (
+            <LicenseRow key={i} className="loading no-shimmer">
               <div className="license-info">
-                <span>{license.label}</span>
-                <span className="license-type">
-                  <Icon icon={license.type === 'addon' ? 'extension' : 'star'} />
-                  {license.type}
+                <span className="loading">name</span>
+                <span className="license-type loading">
+                  <Icon icon={'star'} />
+                  License type
                 </span>
-                <span className="license-exp">Expires: {formatDate(license.exp)}</span>
+                <span className="license-exp loading">Expires: 01/01/2024</span>
               </div>
-              <Icon
-                className="status-icon"
-                icon={license.valid ? 'check_circle' : 'error'}
-                data-tooltip={license.note}
-                data-tooltip-delay={0}
-              />
+              <Icon className="status-icon loading" icon="check_circle" />
             </LicenseRow>
           ))}
         </LicensesContainer>
-      ))}
+      ) : (
+        Object.entries(licensesBySubscription).map(([subscription, subs]) => (
+          <LicensesContainer key={subscription}>
+            <h3>{subscription}</h3>
+            {subs.map((license) => (
+              <LicenseRow
+                key={license.subject}
+                className={clsx({
+                  valid: license.valid,
+                  invalid: !license.valid,
+                })}
+              >
+                <div className="license-info">
+                  <span>{license.label}</span>
+                  <span className="license-type">
+                    <Icon icon={license.type === 'addon' ? 'extension' : 'star'} />
+                    {license.type}
+                  </span>
+                  <span className="license-exp">Expires: {formatDate(license.exp)}</span>
+                </div>
+                <Icon
+                  className="status-icon"
+                  icon={license.valid ? 'check_circle' : 'error'}
+                  data-tooltip={license.note}
+                  data-tooltip-delay={0}
+                />
+              </LicenseRow>
+            ))}
+          </LicensesContainer>
+        ))
+      )}
     </Dialog>
   )
 }
