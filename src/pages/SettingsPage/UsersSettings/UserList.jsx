@@ -10,13 +10,19 @@ import styled from 'styled-components'
 import useCreateContext from '@hooks/useCreateContext'
 import clsx from 'clsx'
 import useTableLoadingData from '@hooks/useTableLoadingData'
-import { accessGroupsSortFunction } from '@helpers/user'
 import { useGetUserPoolsQuery } from '@queries/auth/getAuth'
+import { accessGroupsSortFunction, userPoolSortFunction } from './tableSorting'
 
 const StyledProfileRow = styled.div`
   display: flex;
   align-items: center;
   gap: var(--base-gap-large);
+`
+
+const StyledLicenseRow = styled.div`
+  &.invalid {
+    color: var(--md-sys-color-error);
+  }
 `
 
 export const ProfileRow = ({ rowData }) => {
@@ -118,6 +124,8 @@ const UserList = ({
 
   const tableData = useTableLoadingData(tableList, isLoading, 40, 'name')
 
+  const findUserPool = (poolId) => userPools.find((p) => p.id === poolId)
+
   // Render
   return (
     <Section wrap>
@@ -161,10 +169,16 @@ const UserList = ({
             <Column
               field="userPool"
               header="License"
-              body={(rowData) =>
-                userPools.find((p) => p.id === rowData.userPool)?.label || rowData.userPool
-              }
+              body={(rowData) => {
+                const pool = findUserPool(rowData.userPool)
+                return (
+                  <StyledLicenseRow className={clsx({ invalid: rowData.userPool && !pool })}>
+                    {rowData.userPool ? pool?.label || 'Invalid' : ''}
+                  </StyledLicenseRow>
+                )
+              }}
               sortable
+              sortFunction={(event) => userPoolSortFunction(event, userPools)}
               resizeable
             />
           )}
