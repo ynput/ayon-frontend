@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef } from 'react'
 import { toast } from 'react-toastify'
-import { Button, Section, Toolbar, InputText, Spacer } from '@ynput/ayon-react-components'
+import { Button, Section, Toolbar, InputText } from '@ynput/ayon-react-components'
 // Comps
 import SetPasswordDialog from './SetPasswordDialog'
 import RenameUserDialog from './RenameUserDialog'
@@ -142,22 +142,6 @@ const UsersSettings = () => {
     toast.update(toastId.current, { render: `Deleted ${i} user(s)`, type: toast.TYPE.SUCCESS })
   }
 
-  const onTotal = (total) => {
-    // if total already in search, remove it
-    if (search === total) {
-      return setSearch('')
-    }
-
-    // if "total" -> no users selected
-    if (total === 'total') {
-      setSearch('')
-      setSelectedUsers([])
-      return
-    }
-
-    setSearch(total)
-  }
-
   const openNewUser = () => {
     setShowNewUser(true)
   }
@@ -238,17 +222,17 @@ const UsersSettings = () => {
       <main>
         <Section>
           <Toolbar>
-            <form autoComplete="off" onSubmit={(e) => e.preventDefault()}>
+            <Button label="Licenses" onClick={() => setShowLicenses(true)} />
+            <UsersOverview users={userList} />
+            <form style={{ flex: 1 }} autoComplete="off" onSubmit={(e) => e.preventDefault()}>
               <InputText
-                style={{ width: '200px' }}
+                style={{ width: '100%' }}
                 placeholder="Filter users..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 autoComplete="search-users"
               />
             </form>
-            <Button label="Instance licenses" onClick={() => setShowLicenses(true)} />
-            <Spacer />
             <Button
               onClick={() => setShowDeleteUser(selectedUsers)}
               label="Delete Users"
@@ -286,8 +270,11 @@ const UsersSettings = () => {
                 }}
               />
             </SplitterPanel>
-            <SplitterPanel size={20} style={{ minWidth: 370 }}>
-              {selectedUsers.length ? (
+            <SplitterPanel
+              size={20}
+              style={{ minWidth: 370, display: selectedUsers.length ? 'block' : 'none' }}
+            >
+              {!!selectedUsers.length && (
                 <UserDetail
                   setShowRenameUser={setShowRenameUser}
                   selectedUsers={selectedUsers}
@@ -298,14 +285,6 @@ const UsersSettings = () => {
                   managerDisabled={managerDisabled}
                   accessGroupsData={accessGroupsData}
                   isFetchingUsers={isFetching}
-                />
-              ) : (
-                <UsersOverview
-                  selectedProjects={selectedProjects}
-                  userList={userList}
-                  onUserSelect={(user) => setSelectedUsers([user.name])}
-                  onTotal={onTotal}
-                  search={search}
                 />
               )}
             </SplitterPanel>
