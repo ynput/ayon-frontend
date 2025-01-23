@@ -1,11 +1,12 @@
 import { useGetYnputCloudInfoQuery } from '@queries/cloud/cloud'
-import { useGetLicensesQuery } from '@queries/market/getMarket'
+import { LicenseItem, useGetLicensesQuery } from '@queries/market/getMarket'
 import { Dialog, Icon, theme } from '@ynput/ayon-react-components'
 import { FC, useEffect } from 'react'
 import styled from 'styled-components'
 import copyToClipboard from '@helpers/copyToClipboard'
 import clsx from 'clsx'
 import { YnputConnectResponseModel } from '@api/rest/cloud'
+import { differenceInDays, differenceInHours, fromUnixTime, format } from 'date-fns'
 
 const Container = styled.div`
   background-color: var(--md-sys-color-surface-container-low);
@@ -105,6 +106,12 @@ const LicenseRow = styled(Row)`
   .license-exp {
     font-size: ${theme.labelSmall};
     opacity: 0.8;
+    &.warning {
+      color: var(--md-sys-color-warning);
+    }
+    &.error {
+      color: var(--md-sys-color-error);
+    }
   }
 
   .status-icon {
@@ -121,6 +128,11 @@ const LicenseRow = styled(Row)`
     &:hover {
       background-color: var(--md-sys-color-error-container);
     }
+  }
+
+  &.urgent {
+    border: 2px solid var(--md-sys-color-error);
+    order: -1; // Move to top
   }
 `
 
@@ -145,7 +157,37 @@ const LicensesDialog: FC<LicensesDialogProps> = ({ onClose }) => {
   }, [licenses])
 
   const formatDate = (timestamp: number) => {
-    return new Date(timestamp * 1000).toLocaleDateString()
+    return format(fromUnixTime(timestamp), 'dd/MM/yyyy')
+  }
+
+  const getTimeRemaining = (timestamp: number) => {
+    const now = new Date()
+    const exp = fromUnixTime(timestamp)
+    const days = differenceInDays(exp, now)
+    if (days > 0) return `${days} days`
+
+    const hours = differenceInHours(exp, now)
+    return `${hours} hours`
+  }
+
+  const formatExpiration = (timestamp: number) => {
+    const timeLeft = getTimeRemaining(timestamp)
+    return `${formatDate(timestamp)} - ${timeLeft} left`
+  }
+
+  const sortLicenses = (licenses: LicenseItem[]) => {
+    return [...licenses].sort((a, b) => {
+      const aHours = differenceInHours(fromUnixTime(a.exp), new Date())
+      const bHours = differenceInHours(fromUnixTime(b.exp), new Date())
+
+      // Only sort if one of the licenses is urgent (less than 24h)
+      if (aHours < 24 && bHours >= 24) return -1
+      if (bHours < 24 && aHours >= 24) return 1
+      // If both are urgent, sort by hours
+      if (aHours < 24 && bHours < 24) return aHours - bHours
+      // Keep original order for non-urgent licenses
+      return 0
+    })
   }
 
   // Cloud loading placeholder data
@@ -210,12 +252,13 @@ const LicensesDialog: FC<LicensesDialogProps> = ({ onClose }) => {
         </LicensesContainer>
       ) : (
         <LicensesContainer>
-          {licenses.map((license) => (
+          {sortLicenses(licenses).map((license) => (
             <LicenseRow
               key={license.subject}
               className={clsx({
                 valid: license.valid,
                 invalid: !license.valid,
+                urgent: differenceInHours(fromUnixTime(license.exp), new Date()) < 24,
               })}
             >
               <div className="license-info">
@@ -232,7 +275,14 @@ const LicensesDialog: FC<LicensesDialogProps> = ({ onClose }) => {
                   />
                   {license.type}
                 </span>
-                <span className="license-exp">Expires: {formatDate(license.exp)}</span>
+                <span
+                  className={clsx('license-exp', {
+                    warning: differenceInDays(fromUnixTime(license.exp), new Date()) <= 30,
+                    error: differenceInDays(fromUnixTime(license.exp), new Date()) <= 7,
+                  })}
+                >
+                  Expires: {formatExpiration(license.exp)}
+                </span>
               </div>
               <Icon
                 className="status-icon"
