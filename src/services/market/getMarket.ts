@@ -31,7 +31,10 @@ type TagTypesRest = TagTypesFromApi<typeof apiRest>
 
 type UpdatedDefinitionsRest = Omit<DefinitionsRest, 'marketAddonList'> & {
   marketAddonList: OverrideResultType<DefinitionsRest['marketAddonList'], MarketAddonList>
-  getLicenses: OverrideResultType<DefinitionsRest['getLicenses'], LicenseItem[]>
+  getLicenses: OverrideResultType<
+    DefinitionsRest['getLicenses'],
+    { syncedAt: number; licenses: LicenseItem[] }
+  >
 }
 
 export const enhancedMarketRest = apiRest.enhanceEndpoints<TagTypesRest, UpdatedDefinitionsRest>({

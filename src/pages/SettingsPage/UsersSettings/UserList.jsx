@@ -187,7 +187,7 @@ const UserList = ({
             header="Default projects access"
             sortable
             resizeable
-            body={(rowData) => rowData.defaultAccessGroups.join(', ')}
+            body={(rowData) => rowData.defaultAccessGroups?.join(', ')}
           />
           <Column
             header="Has password"
