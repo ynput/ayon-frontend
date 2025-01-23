@@ -4,7 +4,7 @@ import type { ConfigFile } from '@rtk-query/codegen-openapi'
 const outputFiles = {
   bundles: ['listBundles', 'checkBundleCompatibility', 'migrateSettingsByBundle'],
   folders: ['getFolderHierarchy', 'getFolderList'],
-  market: ['marketAddonList', 'marketAddonDetail', 'marketAddonVersionDetail'],
+  market: ['marketAddonList', 'marketAddonDetail', 'marketAddonVersionDetail', 'getLicenses'],
   watchers: ['getEntityWatchers', 'setEntityWatchers'],
   inbox: ['manageInboxItem'],
   project: ['getProject', 'listProjects', 'getProjectAnatomy', 'getProjectUsers'],

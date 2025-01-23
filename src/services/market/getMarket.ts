@@ -62,6 +62,7 @@ export const enhancedMarketRest = apiRest.enhanceEndpoints<TagTypesRest, Updated
         { type: 'marketAddon', id: 'LIST' },
       ],
     },
+    getLicenses: {},
   },
 })
 
@@ -70,6 +71,7 @@ export const {
   useMarketAddonDetailQuery,
   useLazyMarketAddonDetailQuery,
   useLazyMarketAddonVersionDetailQuery,
+  useGetLicensesQuery,
 } = enhancedMarketRest
 
 // VVV GraphQL endpoints VVV

@@ -21,6 +21,7 @@ import NewServiceUser from './newServiceUser'
 import { useGetAccessGroupsQuery } from '@queries/accessGroups/getAccessGroups'
 import Shortcuts from '@containers/Shortcuts'
 import DeleteUserDialog from './DeleteUserDialog'
+import LicensesDialog from '@components/LicensesDialog/LicensesDialog'
 
 // what to show in the access column
 const formatAccessGroups = (rowData) => {
@@ -75,6 +76,7 @@ const UsersSettings = () => {
   const [showRenameUser, setShowRenameUser] = useState(false)
   const [showDeleteUser, setShowDeleteUser] = useState(false)
   const [showSetPassword, setShowSetPassword] = useState(false)
+  const [showLicenses, setShowLicenses] = useState(false)
 
   // get user name from redux
   const selfName = useSelector((state) => state.user.name)
@@ -245,6 +247,7 @@ const UsersSettings = () => {
                 autoComplete="search-users"
               />
             </form>
+            <Button label="Instance licenses" onClick={() => setShowLicenses(true)} />
             <Spacer />
             <Button
               onClick={() => setShowDeleteUser(selectedUsers)}
@@ -334,6 +337,8 @@ const UsersSettings = () => {
             }}
           />
         )}
+
+        {showLicenses && <LicensesDialog onClose={() => setShowLicenses(false)} />}
       </main>
     </>
   )
