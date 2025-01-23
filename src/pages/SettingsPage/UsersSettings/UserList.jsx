@@ -157,14 +157,6 @@ const UserList = ({
           />
           <Column field="attrib.fullName" header="Full name" sortable resizeable />
           <Column field="attrib.email" header="Email" sortable />
-          <Column
-            field={'accessLevel'}
-            header="Access level"
-            body={(rowData) => getUserRole(rowData)}
-            sortFunction={accessGroupsSortFunction}
-            sortable
-            resizeable
-          />
           {!!userPools.length && (
             <Column
               field="userPool"
@@ -182,6 +174,21 @@ const UserList = ({
               resizeable
             />
           )}
+          <Column
+            field={'accessLevel'}
+            header="Access level"
+            body={(rowData) => getUserRole(rowData)}
+            sortFunction={accessGroupsSortFunction}
+            sortable
+            resizeable
+          />
+          <Column
+            field="defaultAccessGroups"
+            header="Default projects access"
+            sortable
+            resizeable
+            body={(rowData) => rowData.defaultAccessGroups.join(', ')}
+          />
           <Column
             header="Has password"
             body={(rowData) => (rowData.hasPassword ? 'yes' : 'no')}
