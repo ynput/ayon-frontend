@@ -1,5 +1,5 @@
 import { useGetYnputCloudInfoQuery } from '@queries/cloud/cloud'
-import { LicenseItem, useGetLicensesQuery } from '@queries/market/getMarket'
+import { useGetLicensesQuery } from '@queries/market/getMarket'
 import { Dialog, Icon, theme } from '@ynput/ayon-react-components'
 import { FC, useEffect } from 'react'
 import styled from 'styled-components'
@@ -144,13 +144,6 @@ const LicensesDialog: FC<LicensesDialogProps> = ({ onClose }) => {
     }
   }, [licenses])
 
-  const licensesBySubscription = licenses.reduce<Record<string, LicenseItem[]>>((acc, license) => {
-    const sub = license.subscription
-    if (!acc[sub]) acc[sub] = []
-    acc[sub].push(license)
-    return acc
-  }, {})
-
   const formatDate = (timestamp: number) => {
     return new Date(timestamp * 1000).toLocaleDateString()
   }
@@ -216,35 +209,40 @@ const LicensesDialog: FC<LicensesDialogProps> = ({ onClose }) => {
           ))}
         </LicensesContainer>
       ) : (
-        Object.entries(licensesBySubscription).map(([subscription, subs]) => (
-          <LicensesContainer key={subscription}>
-            <h3>{subscription}</h3>
-            {subs.map((license) => (
-              <LicenseRow
-                key={license.subject}
-                className={clsx({
-                  valid: license.valid,
-                  invalid: !license.valid,
-                })}
-              >
-                <div className="license-info">
-                  <span>{license.label}</span>
-                  <span className="license-type">
-                    <Icon icon={license.type === 'addon' ? 'extension' : 'star'} />
-                    {license.type}
-                  </span>
-                  <span className="license-exp">Expires: {formatDate(license.exp)}</span>
-                </div>
-                <Icon
-                  className="status-icon"
-                  icon={license.valid ? 'check_circle' : 'error'}
-                  data-tooltip={license.note}
-                  data-tooltip-delay={0}
-                />
-              </LicenseRow>
-            ))}
-          </LicensesContainer>
-        ))
+        <LicensesContainer>
+          {licenses.map((license) => (
+            <LicenseRow
+              key={license.subject}
+              className={clsx({
+                valid: license.valid,
+                invalid: !license.valid,
+              })}
+            >
+              <div className="license-info">
+                <span>{license.label}</span>
+                <span className="license-type">
+                  <Icon
+                    icon={
+                      license.type === 'addon'
+                        ? 'extension'
+                        : license.type === 'core'
+                        ? 'deployed_code'
+                        : 'star'
+                    }
+                  />
+                  {license.type}
+                </span>
+                <span className="license-exp">Expires: {formatDate(license.exp)}</span>
+              </div>
+              <Icon
+                className="status-icon"
+                icon={license.valid ? 'check_circle' : 'error'}
+                data-tooltip={license.note}
+                data-tooltip-delay={0}
+              />
+            </LicenseRow>
+          ))}
+        </LicensesContainer>
       )}
     </Dialog>
   )
