@@ -1,5 +1,5 @@
 import { useGetYnputCloudInfoQuery } from '@queries/cloud/cloud'
-import { useGetLicensesQuery } from '@queries/market/getMarket'
+import { LicenseItem, useGetLicensesQuery } from '@queries/market/getMarket'
 import { Dialog, Icon, theme } from '@ynput/ayon-react-components'
 import { FC } from 'react'
 import styled from 'styled-components'
@@ -109,14 +109,14 @@ const LicensesDialog: FC<LicensesDialogProps> = ({ onClose }) => {
   const { data: cloud } = useGetYnputCloudInfoQuery(undefined)
   const { data: licenses = [] } = useGetLicensesQuery({})
 
-  const licensesBySubscription = licenses.reduce((acc, license: any) => {
+  const licensesBySubscription = licenses.reduce<Record<string, LicenseItem[]>>((acc, license) => {
     const sub = license.subscription
     if (!acc[sub]) acc[sub] = []
     acc[sub].push(license)
     return acc
   }, {})
 
-  const formatDate = (timestamp) => {
+  const formatDate = (timestamp: number) => {
     return new Date(timestamp * 1000).toLocaleDateString()
   }
 
@@ -149,7 +149,7 @@ const LicensesDialog: FC<LicensesDialogProps> = ({ onClose }) => {
       {Object.entries(licensesBySubscription).map(([subscription, subs]) => (
         <LicensesContainer key={subscription}>
           <h3>{subscription}</h3>
-          {subs.map((license: any) => (
+          {subs.map((license) => (
             <LicenseRow
               key={license.subject}
               className={clsx({
