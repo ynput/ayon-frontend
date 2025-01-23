@@ -196,8 +196,6 @@ const LicensesDialog: FC<LicensesDialogProps> = ({ onClose }) => {
     'instanceName',
     'orgId',
     'orgName',
-    'collectSaturatedMetrics',
-    'managed',
   ]
 
   return (
@@ -217,20 +215,17 @@ const LicensesDialog: FC<LicensesDialogProps> = ({ onClose }) => {
               </Row>
             ))
           : cloud &&
-            Object.entries(cloud).map(
-              ([key, value]) =>
-                !['subscriptions'].includes(key) && (
-                  <Row key={key}>
-                    <span className="key">{key}:</span>
-                    <span className="value">{value?.toString()}</span>
-                    <Icon
-                      className="copy-icon"
-                      icon="content_copy"
-                      onClick={() => copyToClipboard(value.toString(), true)}
-                    />
-                  </Row>
-                ),
-            )}
+            cloudPlaceholderFields.map((key) => (
+              <Row key={key}>
+                <span className="key">{key}:</span>
+                <span className="value">{cloud[key]?.toString()}</span>
+                <Icon
+                  className="copy-icon"
+                  icon="content_copy"
+                  onClick={() => copyToClipboard(cloud[key]?.toString(), true)}
+                />
+              </Row>
+            ))}
       </Container>
 
       {isLoadingLicenses ? (
