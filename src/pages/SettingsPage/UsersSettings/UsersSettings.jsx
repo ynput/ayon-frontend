@@ -22,6 +22,7 @@ import { useGetAccessGroupsQuery } from '@queries/accessGroups/getAccessGroups'
 import Shortcuts from '@containers/Shortcuts'
 import DeleteUserDialog from './DeleteUserDialog'
 import LicensesDialog from '@components/LicensesDialog/LicensesDialog'
+import { useQueryParam } from 'use-query-params'
 
 // what to show in the access column
 const formatAccessGroups = (rowData) => {
@@ -76,7 +77,7 @@ const UsersSettings = () => {
   const [showRenameUser, setShowRenameUser] = useState(false)
   const [showDeleteUser, setShowDeleteUser] = useState(false)
   const [showSetPassword, setShowSetPassword] = useState(false)
-  const [showLicenses, setShowLicenses] = useState(false)
+  const [showLicenses, setShowLicenses] = useQueryParam('licenses', false)
 
   // get user name from redux
   const selfName = useSelector((state) => state.user.name)
@@ -226,7 +227,7 @@ const UsersSettings = () => {
             <UsersOverview users={userList} />
             <form style={{ flex: 1 }} autoComplete="off" onSubmit={(e) => e.preventDefault()}>
               <InputText
-                style={{ width: '100%' }}
+                style={{ width: '100%', minWidth: 150 }}
                 placeholder="Filter users..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -317,7 +318,7 @@ const UsersSettings = () => {
           />
         )}
 
-        {showLicenses && <LicensesDialog onClose={() => setShowLicenses(false)} />}
+        {showLicenses && <LicensesDialog onClose={() => setShowLicenses(undefined)} />}
       </main>
     </>
   )

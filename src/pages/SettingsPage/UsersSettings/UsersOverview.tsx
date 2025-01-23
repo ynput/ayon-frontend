@@ -6,6 +6,7 @@ const Totals = styled.div`
   padding: 2px;
   background-color: var(--md-sys-color-surface-container-low);
   border-radius: var(--border-radius-m);
+  overflow: hidden;
 `
 
 const Total = styled.div`
@@ -14,6 +15,8 @@ const Total = styled.div`
     background-color: var(--md-sys-color-surface-container-low-hover);
     border-radius: var(--border-radius-m);
   }
+
+  white-space: nowrap;
 `
 
 type User = {

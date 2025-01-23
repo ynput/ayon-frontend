@@ -1,7 +1,7 @@
 import { useGetYnputCloudInfoQuery } from '@queries/cloud/cloud'
 import { LicenseItem, useGetLicensesQuery } from '@queries/market/getMarket'
 import { Dialog, Icon, theme } from '@ynput/ayon-react-components'
-import { FC, useEffect } from 'react'
+import { FC, useEffect, useLayoutEffect, useState } from 'react'
 import styled from 'styled-components'
 import copyToClipboard from '@helpers/copyToClipboard'
 import clsx from 'clsx'
@@ -69,6 +69,16 @@ const LicensesContainer = styled(Container)`
       max-width: 20%;
       border-radius: var(--border-radius-m);
     }
+  }
+`
+
+const LicenseHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--base-gap-small);
+  .sync {
+    color: var(--md-sys-color-outline);
   }
 `
 
@@ -144,7 +154,24 @@ interface LicensesDialogProps {
 
 const LicensesDialog: FC<LicensesDialogProps> = ({ onClose }) => {
   const { data: cloud, isLoading: isLoadingCloud } = useGetYnputCloudInfoQuery(undefined)
-  const { data: licenses = [], isLoading: isLoadingLicenses } = useGetLicensesQuery({})
+  const {
+    data: licenses = [],
+    isLoading: isLoadingLicenses,
+    refetch,
+  } = useGetLicensesQuery({
+    refresh: true,
+  })
+  const [syncTime, setSyncTime] = useState<string>('')
+
+  // refetch every time the dialog is opened
+  useEffect(() => {
+    refetch()
+  }, [refetch])
+
+  useLayoutEffect(() => {
+    if (isLoadingLicenses) return
+    setSyncTime(new Date().toLocaleTimeString())
+  }, [isLoadingLicenses])
 
   // Get saved license count or fallback to 2
   const savedLicenseCount = Number(localStorage.getItem(LICENSE_COUNT_KEY)) || 2
@@ -247,7 +274,10 @@ const LicensesDialog: FC<LicensesDialogProps> = ({ onClose }) => {
         </LicensesContainer>
       ) : (
         <LicensesContainer>
-          <h3>Licenses</h3>
+          <LicenseHeader>
+            <h3>Licenses</h3>
+            <span className="sync">Synced: {syncTime}</span>
+          </LicenseHeader>
           {sortLicenses(licenses).map((license) => (
             <LicenseRow
               key={license.subject}
