@@ -24,6 +24,7 @@ const transformFilteredEntities = (
       parentId: node.parentId || 'root',
     }
   }
+
   for (const { node: taskNode } of response.project.tasks.edges) {
     tasks[taskNode.id] = {
       ...taskNode,
@@ -44,6 +45,7 @@ const transformFilteredEntitiesByParent = (
     return { folders: {}, tasks: {} }
   }
 
+  /*
   // Add folders
   for (const { node } of response.project.folders.edges) {
     folders[node.id] = {
@@ -51,6 +53,8 @@ const transformFilteredEntitiesByParent = (
       parentId: node.parentId || 'root',
     }
   }
+  */
+
   for (const { node: taskNode } of response.project.tasks.edges) {
     tasks[taskNode.id] = {
       ...taskNode,

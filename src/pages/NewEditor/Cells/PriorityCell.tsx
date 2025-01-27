@@ -35,7 +35,7 @@ const PriorityCell = ({ priority, priorities, updateHandler }: Props) => {
     />
   )
 
-  return showPlaceholder ? (
+  return priorityData && showPlaceholder ? (
     <DropdownCellWrapper
       showPreview={showPlaceholder}
       handleExpandIconClick={expandClickHandler}

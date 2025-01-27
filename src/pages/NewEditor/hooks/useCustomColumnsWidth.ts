@@ -7,7 +7,7 @@ import { useCallback, useEffect, useMemo } from "react"
 
 const useStoredCustomColumnWidths = () => {
   const frontendPreferences = useAppSelector((state) => state.user.data.frontendPreferences)
-  const storedColumnWidths = (frontendPreferences.columnSizes as {[key: string]: number}).overview || {}
+  const storedColumnWidths = (frontendPreferences.columnSizes as {[key: string]: number})?.overview || {}
 
   return storedColumnWidths
 }
@@ -16,7 +16,7 @@ const useCustomColumnWidths = (
   table: Table<$Any>
 ) => {
   const frontendPreferences = useAppSelector((state) => state.user.data.frontendPreferences)
-  const storedColumnWidths = (frontendPreferences.columnSizes as {[key: string]: number}).overview || {}
+  const storedColumnWidths = (frontendPreferences.columnSizes as {[key: string]: number})?.overview || {}
 
   const headers = table.getFlatHeaders()
   const columnSizingInfo = table.getState().columnSizingInfo
@@ -40,7 +40,7 @@ const useSyncCustomColumnWidths = (
 ) => {
   const userName = useAppSelector((state) => state.user.name)
   const frontendPreferences = useAppSelector((state) => state.user.data.frontendPreferences)
-  const storedColumnWidths = (frontendPreferences.columnSizes as {[key: string]: number}).overview || {}
+  const storedColumnWidths = (frontendPreferences.columnSizes as {[key: string]: number})?.overview || {}
   const [updateUserPreferences] = useSetFrontendPreferencesMutation()
 
   const debouncedUpdate = useCallback(

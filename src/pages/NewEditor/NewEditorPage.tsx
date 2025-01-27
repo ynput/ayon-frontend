@@ -30,7 +30,7 @@ const NewEditorPage = ({ filters }: Props) => {
   const { filter: sliceFilter } = useFilterBySlice()
 
   const {
-    rawData,
+    rawData: allFolders,
     setExpandedItem,
     expanded,
     setExpanded,
@@ -41,9 +41,16 @@ const NewEditorPage = ({ filters }: Props) => {
     selectedFolders: Object.keys(rowSelection),
   })
 
-  const { folders, tasks } = useFilteredEntities({ filters, sliceFilter, expanded, rowSelection })
+  const { folders, tasks } = useFilteredEntities({
+    projectName,
+    folders: allFolders,
+    // filters,
+    // sliceFilter,
+    expanded,
+    rowSelection,
+  })
   const { tableData: populatedTableData } = populateTableData({
-    rawData,
+    allFolders,
     folders,
     tasks,
     folderTypes: project.folders,

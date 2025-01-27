@@ -18,7 +18,7 @@ const useFilteredEditorEntities = ({ projectName, selectedFolders }: Params) => 
     data: { folders = [] } = {},
     isLoading,
     isFetching,
-  } = useGetFolderListQuery({ projectName: projectName || '' }, { skip: !projectName })
+  } = useGetFolderListQuery({ projectName: projectName || '', attrib: true }, { skip: !projectName })
   let foldersById = folders.reduce(function (map, obj) {
     //@ts-ignore
     map[obj.id] = obj

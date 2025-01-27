@@ -112,6 +112,9 @@ const TableColumns = ({
     return getRowType(row) === 'folders' ? 'parentId' : 'folderId'
   }
   const getRawDataAttribValue = (rawData: FolderNode | TaskNode, attribName: string): string => {
+    if (!rawData) {
+      return 'bad'
+    }
     if (rawData.ownAttrib === undefined) {
       return 'bad'
     }
@@ -126,6 +129,9 @@ const TableColumns = ({
   const getRowAttribValue = (row: Row<TableRow>, attribName: string): string => {
     const parentId = getRawDataParentId(row)
     const rawData = getRawData(row)
+    if (rawData === undefined || rawData.attrib === undefined) {
+      return ''
+    }
     if (rawData.attrib[attribName] !== undefined) {
       return rawData.attrib[attribName]
     }
@@ -140,9 +146,7 @@ const TableColumns = ({
 
     return getRawDataAttribValue(rawData[parentId], attribName)
   }
-  
 
-  console.log('scs: ', storedColumnSizes)
   return useMemo<ColumnDef<TableRow>[]>(
     () => [
       {
@@ -261,7 +265,7 @@ const TableColumns = ({
                   }}
                 />
               ) : (
-                <TaskTypeCell taskTypes={project.tasks} type={rawData?.taskType || 'task'} 
+                <TaskTypeCell taskTypes={project.tasks} type={rawData?.taskType || 'Generic'} 
                   updateHandler={(newValue: string) => {
                     const entityType = rawType === 'folders' ? 'folder' : 'task'
                     // TODO Propagate change to folder type column also

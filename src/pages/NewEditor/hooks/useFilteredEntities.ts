@@ -1,29 +1,22 @@
-import { useGetEntitiesByIdsQuery, useGetFilteredEntitiesByParentQuery, useGetFilteredEntitiesQuery } from "@queries/overview/getFilteredEntities"
-import { $Any } from "@types"
-import { useSelector } from "react-redux"
+import { useGetFilteredEntitiesByParentQuery } from "@queries/overview/getFilteredEntities"
 import { ExpandedState } from "@tanstack/react-table"
-import { useGetFolderListQuery } from "@queries/getHierarchy"
-import { Filter } from "@components/SearchFilter/types"
-import { mapQueryFilters } from "../mappers"
+import { FolderListItem } from "@api/rest/folders"
 
   const useFilteredEntities = ({
-    filters,
-    sliceFilter,
+    projectName,
+    folders,
+    // filters,
+    // sliceFilter,
     rowSelection,
     expanded,
   }: {
-    filters: Filter[]
-    sliceFilter: $Any
+    projectName: string,
+    folders: FolderListItem[]
+    // filters: Filter[]
+    // sliceFilter: $Any
     rowSelection: { [key: string]: boolean }
     expanded: ExpandedState
   }) => {
-  const projectName = useSelector((state: $Any) => state.project.name)
-  const queryFilters = mapQueryFilters({ filters, sliceFilter })
-
-  const { data: { folders = [] } = {} } = useGetFolderListQuery(
-    { projectName: projectName || '' },
-    { skip: !projectName },
-  )
 
   let folderIds: string[] = []
     if (Object.keys(rowSelection).length == 0) {
@@ -33,52 +26,18 @@ import { mapQueryFilters } from "../mappers"
       folderIds = Object.keys(rowSelection)
     }
 
-    const selectedRowsEntities = useGetEntitiesByIdsQuery({
-      projectName,
-      folderIds: folderIds
-    })
 
-    /*
     const entities = useGetFilteredEntitiesByParentQuery({
       projectName,
       parentIds: [...Object.keys(expanded), ...folderIds],
-      ...queryFilters,
-    })
-      */
-
-    const entities = useGetFilteredEntitiesQuery({
-      projectName,
-      // parentFolderIds: Object.keys(expanded).length > 0 ? Object.keys(expanded) : undefined,
-      // parentFolderIds: [...Object.keys(expanded), ...folderIds],
-      // folderIds: folderIds,
-      // ...queryFilters,
-    })
-
-    // @ts-ignore
-    const matchingFolderIds = Object.values(entities.data?.folders || {}).map(el => el.id)
-
-    //@ts-ignore
-    // doesn't make sense, ignoring filter for now, selected row results can't be filtered by next query
-    const filteredRowFolders = Object.values(selectedRowsEntities.data?.folders || []).filter(
-      (el) => {
-        return true
-        return matchingFolderIds.includes(el.id)
-      },
-    )
-
-    const filteredRowTasks = Object.values(selectedRowsEntities.data?.tasks || []).filter(el => {
-      return true
-      return matchingFolderIds.includes(el.id)
     })
 
     return {
       folders: {
-        ...entities.data?.folders,
-        ...filteredRowFolders.reduce((acc, curr) => ({ ...acc, [curr.id as string]: curr }), {}),
+        ...folders.reduce((acc, curr) => ({ ...acc, [curr.id as string]: curr }), {}),
       },
       tasks: {
         ...entities.data?.tasks,
-        ...filteredRowTasks,
       },
     }
   }

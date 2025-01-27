@@ -1395,15 +1395,10 @@ export type GetFilteredEntitiesQuery = { __typename?: 'Query', project: { __type
 export type GetFilteredEntitiesByParentQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
   parentIds: Array<Scalars['String']['input']> | Scalars['String']['input'];
-  assignees?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
-  tags?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
-  statuses?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
-  folderTypes?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
-  attributes?: InputMaybe<Array<AttributeFilterInput> | AttributeFilterInput>;
 }>;
 
 
-export type GetFilteredEntitiesByParentQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, folders: { __typename?: 'FoldersConnection', edges: Array<{ __typename?: 'FolderEdge', node: { __typename?: 'FolderNode', id: string, projectName: string, parentId?: string | null, label?: string | null, name: string, ownAttrib: Array<string>, status: string, tags: Array<string>, folderType: string, type: string, updatedAt: any, active: boolean, hasReviewables: boolean, createdAt: any, attrib: { __typename?: 'FolderAttribType', priority?: string | null, resolutionHeight?: number | null, resolutionWidth?: number | null, fps?: number | null, clipIn?: number | null, clipOut?: number | null, frameStart?: number | null, frameEnd?: number | null, handleStart?: number | null, handleEnd?: number | null, pixelAspect?: number | null, startDate?: any | null, endDate?: any | null, description?: string | null, tools?: Array<string> | null, shotgridId?: string | null, shotgridType?: string | null, ftrackId?: string | null, ftrackPath?: string | null } } }> }, tasks: { __typename?: 'TasksConnection', edges: Array<{ __typename?: 'TaskEdge', node: { __typename?: 'TaskNode', id: string, folderId: string, label?: string | null, name: string, ownAttrib: Array<string>, status: string, tags: Array<string>, taskType: string, type: string, updatedAt: any, active: boolean, assignees: Array<string>, attrib: { __typename?: 'TaskAttribType', priority?: string | null, resolutionHeight?: number | null, resolutionWidth?: number | null, fps?: number | null, clipIn?: number | null, clipOut?: number | null, frameStart?: number | null, frameEnd?: number | null, handleStart?: number | null, handleEnd?: number | null, pixelAspect?: number | null, startDate?: any | null, endDate?: any | null, description?: string | null, tools?: Array<string> | null, shotgridId?: string | null, shotgridType?: string | null, ftrackId?: string | null, ftrackPath?: string | null } } }> } } };
+export type GetFilteredEntitiesByParentQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, tasks: { __typename?: 'TasksConnection', edges: Array<{ __typename?: 'TaskEdge', node: { __typename?: 'TaskNode', id: string, folderId: string, label?: string | null, name: string, ownAttrib: Array<string>, status: string, tags: Array<string>, taskType: string, type: string, updatedAt: any, active: boolean, assignees: Array<string>, attrib: { __typename?: 'TaskAttribType', priority?: string | null, resolutionHeight?: number | null, resolutionWidth?: number | null, fps?: number | null, clipIn?: number | null, clipOut?: number | null, frameStart?: number | null, frameEnd?: number | null, handleStart?: number | null, handleEnd?: number | null, pixelAspect?: number | null, startDate?: any | null, endDate?: any | null, description?: string | null, tools?: Array<string> | null, shotgridId?: string | null, shotgridType?: string | null, ftrackId?: string | null, ftrackPath?: string | null } } }> } } };
 
 export type GetRootFolderIdsQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
@@ -1833,24 +1828,9 @@ export const GetFilteredEntitiesDocument = `
     ${FolderPropsFragmentFragmentDoc}
 ${TaskPropsFragmentFragmentDoc}`;
 export const GetFilteredEntitiesByParentDocument = `
-    query GetFilteredEntitiesByParent($projectName: String!, $parentIds: [String!]!, $assignees: [String!], $tags: [String!], $statuses: [String!], $folderTypes: [String!], $attributes: [AttributeFilterInput!]) {
+    query GetFilteredEntitiesByParent($projectName: String!, $parentIds: [String!]!) {
   project(name: $projectName) {
     name
-    folders(
-      parentIds: $parentIds
-      last: 10000
-      assignees: $assignees
-      tags: $tags
-      statuses: $statuses
-      folderTypes: $folderTypes
-      attributes: $attributes
-    ) {
-      edges {
-        node {
-          ...FolderPropsFragment
-        }
-      }
-    }
     tasks(folderIds: $parentIds) {
       edges {
         node {
@@ -1860,8 +1840,7 @@ export const GetFilteredEntitiesByParentDocument = `
     }
   }
 }
-    ${FolderPropsFragmentFragmentDoc}
-${TaskPropsFragmentFragmentDoc}`;
+    ${TaskPropsFragmentFragmentDoc}`;
 export const GetRootFolderIdsDocument = `
     query GetRootFolderIds($projectName: String!, $folderIds: [String!]!) {
   project(name: $projectName) {
