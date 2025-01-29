@@ -1,12 +1,12 @@
 import { useGetYnputCloudInfoQuery } from '@queries/cloud/cloud'
-import { LicenseItem, useGetLicensesQuery } from '@queries/market/getMarket'
+import { useGetLicensesQuery } from '@queries/market/getMarket'
 import { Dialog, Icon, theme } from '@ynput/ayon-react-components'
-import { FC, useEffect } from 'react'
+import { FC, useEffect, useMemo } from 'react'
 import styled from 'styled-components'
 import copyToClipboard from '@helpers/copyToClipboard'
 import clsx from 'clsx'
 import { YnputConnectResponseModel } from '@api/rest/cloud'
-import { differenceInDays, differenceInHours, fromUnixTime, format } from 'date-fns'
+import { fromUnixTime, format } from 'date-fns'
 
 const Container = styled.div`
   background-color: var(--md-sys-color-surface-container-low);
@@ -113,17 +113,6 @@ const LicenseRow = styled(Row)`
     gap: 4px;
   }
 
-  .license-exp {
-    font-size: ${theme.labelSmall};
-    opacity: 0.8;
-    &.warning {
-      color: var(--md-sys-color-warning);
-    }
-    &.error {
-      color: var(--md-sys-color-error);
-    }
-  }
-
   .status-icon {
     padding: var(--padding-m);
     border-radius: 50%;
@@ -138,11 +127,6 @@ const LicenseRow = styled(Row)`
     &:hover {
       background-color: var(--md-sys-color-error-container);
     }
-  }
-
-  &.urgent {
-    border: 2px solid var(--md-sys-color-error);
-    order: -1; // Move to top
   }
 `
 
@@ -177,39 +161,19 @@ const LicensesDialog: FC<LicensesDialogProps> = ({ onClose }) => {
     }
   }, [licenses])
 
-  const formatDate = (timestamp: number) => {
-    return format(fromUnixTime(timestamp), 'dd/MM/yyyy')
-  }
-
-  const getTimeRemaining = (timestamp: number) => {
-    const now = new Date()
-    const exp = fromUnixTime(timestamp)
-    const days = differenceInDays(exp, now)
-    if (days > 0) return `${days} days`
-
-    const hours = differenceInHours(exp, now)
-    return `${hours} hours`
-  }
-
-  const formatExpiration = (timestamp: number) => {
-    const timeLeft = getTimeRemaining(timestamp)
-    return `${formatDate(timestamp)} - ${timeLeft} left`
-  }
-
-  const sortLicenses = (licenses: LicenseItem[]) => {
+  const sortedLicenses = useMemo(() => {
+    const typeOrder = {
+      seats: 0,
+      addon: 1,
+      feature: 2,
+    }
     return [...licenses].sort((a, b) => {
-      const aHours = differenceInHours(fromUnixTime(a.exp), new Date())
-      const bHours = differenceInHours(fromUnixTime(b.exp), new Date())
-
-      // Only sort if one of the licenses is urgent (less than 24h)
-      if (aHours < 24 && bHours >= 24) return -1
-      if (bHours < 24 && aHours >= 24) return 1
-      // If both are urgent, sort by hours
-      if (aHours < 24 && bHours < 24) return aHours - bHours
-      // Keep original order for non-urgent licenses
-      return 0
+      return (
+        (typeOrder[a.type as keyof typeof typeOrder] || 0) -
+        (typeOrder[b.type as keyof typeof typeOrder] || 0)
+      )
     })
-  }
+  }, [licenses])
 
   // Cloud loading placeholder data
   const cloudPlaceholderFields: (keyof YnputConnectResponseModel)[] = [
@@ -259,8 +223,7 @@ const LicensesDialog: FC<LicensesDialogProps> = ({ onClose }) => {
                 <span className="license-type loading">
                   <Icon icon={'star'} />
                   License type
-                </span>
-                <span className="license-exp loading">Expires: 01/01/2024</span>
+                </span>{' '}
               </div>
               <Icon className="status-icon loading" icon="check_circle" />
             </LicenseRow>
@@ -274,13 +237,12 @@ const LicensesDialog: FC<LicensesDialogProps> = ({ onClose }) => {
               Synced: {syncedAt ? format(fromUnixTime(syncedAt), 'HH:mm:ss') : '--:--:--'}
             </span>
           </LicenseHeader>
-          {sortLicenses(licenses).map((license) => (
+          {sortedLicenses.map((license, i) => (
             <LicenseRow
-              key={license.subject}
+              key={license.subject + i}
               className={clsx({
                 valid: license.valid,
                 invalid: !license.valid,
-                urgent: differenceInHours(fromUnixTime(license.exp), new Date()) < 24,
               })}
             >
               <div className="license-info">
@@ -290,20 +252,18 @@ const LicensesDialog: FC<LicensesDialogProps> = ({ onClose }) => {
                     icon={
                       license.type === 'addon'
                         ? 'extension'
-                        : license.type === 'core'
-                        ? 'deployed_code'
+                        : license.type === 'seats'
+                        ? 'person'
                         : 'star'
                     }
                   />
-                  {license.type}
-                </span>
-                <span
-                  className={clsx('license-exp', {
-                    warning: differenceInDays(fromUnixTime(license.exp), new Date()) <= 30,
-                    error: differenceInDays(fromUnixTime(license.exp), new Date()) <= 7,
-                  })}
-                >
-                  Expires: {formatExpiration(license.exp)}
+                  {license.type === 'seats' && (
+                    <span>
+                      {license.subject === 'meteredUsers' ? 'Up to ' : ''}
+                      {license.value}
+                      {license.subject === 'eventHistory' ? ' days' : ' seats'}
+                    </span>
+                  )}
                 </span>
               </div>
               <Icon
