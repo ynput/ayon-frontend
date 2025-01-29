@@ -1,6 +1,6 @@
 import { useGetYnputCloudInfoQuery } from '@queries/cloud/cloud'
 import { useGetLicensesQuery } from '@queries/market/getMarket'
-import { Dialog, Icon, theme } from '@ynput/ayon-react-components'
+import { Button, Dialog, Icon, theme } from '@ynput/ayon-react-components'
 import { FC, useEffect, useMemo } from 'react'
 import styled from 'styled-components'
 import copyToClipboard from '@helpers/copyToClipboard'
@@ -191,6 +191,19 @@ const LicensesDialog: FC<LicensesDialogProps> = ({ onClose }) => {
       header="Instance and licenses"
       style={{ maxHeight: '90vh' }}
     >
+      <a
+        href={`https://ynput.cloud/org/${cloud?.orgName}/instances/${cloud?.instanceId}/billing`}
+        target="_blank"
+        rel="noreferrer"
+        style={{ width: 'fit-content', marginBottom: 8 }}
+      >
+        <Button
+          data-tooltip="Manage seat counts, billing information and plan options on your Ynput Cloud account."
+          data-tooltip-delay={0}
+        >
+          Manage Subscriptions
+        </Button>
+      </a>
       <Container>
         {isLoadingCloud
           ? cloudPlaceholderFields.map((key) => (
