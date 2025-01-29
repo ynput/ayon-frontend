@@ -25,6 +25,15 @@ const CellWrapper = styled.div`
   box-sizing: border-box;
   padding-right: 2px;
 `
+const PlaceholderDot = styled.div`
+  width: 150px;
+  width: 8px;
+  height: 8px;
+  align-self: center;
+  justify-self: center;
+  border-radius: 4px;
+  background-color: grey;
+`
 
 const DelayedShimmerWrapper = styled.div`
   @keyframes fadeInOpacity {
@@ -216,6 +225,10 @@ const TableColumns = ({
           const rawData = getRawData(row)
           const rawType = getRowType(row)
           // <ShimmerCell width="150px" />
+          // @ts-ignore
+          if (!row.original.matchesFilters) {
+            return <PlaceholderDot />
+          }
           return (
             <CellWrapper>
               <StatusCell
@@ -252,6 +265,10 @@ const TableColumns = ({
           const rawData = getRawData(row)
           const rawType = getRowType(row)
           // <ShimmerCell width="150px" />
+          // @ts-ignore
+          if (!row.original.matchesFilters) {
+            return <PlaceholderDot />
+          }
           return (
             <CellWrapper>
               {rawData?.folderType ? (
@@ -299,6 +316,10 @@ const TableColumns = ({
           const rawType = getRowType(row)
           const rawData = getRawData(row)
           // <ShimmerCell width="150px" />
+          // @ts-ignore
+          if (!row.original.matchesFilters) {
+            return <PlaceholderDot />
+          }
           return (
             <div style={{ width: '150px', height: '36px' }}>
               {rawType === 'tasks' && (
@@ -340,6 +361,10 @@ const TableColumns = ({
           const rawData = getRawData(row)
           // <ShimmerCell width="150px" />
           const ref = useRef<HTMLDivElement>(null)
+          // @ts-ignore
+          if (!row.original.matchesFilters) {
+            return <PlaceholderDot />
+          }
           return (
             <CellWrapper ref={ref}>
               <PriorityCell
@@ -390,6 +415,10 @@ const TableColumns = ({
               const rawType = getRowType(row)
               const [val, setVal] = useState(value)
               // <ShimmerCell width="150px" />
+          // @ts-ignore
+          if (!row.original.matchesFilters) {
+            return <PlaceholderDot />
+          }
               return (
                 <CellWrapper>
                   {!row.original.id || rawData === undefined ? (

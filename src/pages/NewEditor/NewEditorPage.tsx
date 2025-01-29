@@ -12,8 +12,7 @@ import { useSlicerContext } from '@context/slicerContext'
 import useFilterBySlice from '@containers/TasksProgress/hooks/useFilterBySlice'
 import useAttributeFields from './hooks/useAttributesList'
 import { handleToggleFolder } from './handlers'
-import { populateTableData } from './mappers'
-import useFilteredEntities from './hooks/useFilteredEntities'
+import { filterEntities, populateTableData } from './mappers'
 import { useGetUsersAssigneeQuery } from '@queries/user/getUsers'
 
 type Props = {
@@ -31,6 +30,8 @@ const NewEditorPage = ({ filters }: Props) => {
 
   const {
     rawData: allFolders,
+    folders,
+    tasks,
     setExpandedItem,
     expanded,
     setExpanded,
@@ -39,20 +40,22 @@ const NewEditorPage = ({ filters }: Props) => {
     folderTypes: project.folders || {},
     taskTypes: project.tasks || {},
     selectedFolders: Object.keys(rowSelection),
+    filters,
+    sliceFilter,
   })
 
-  const { folders, tasks } = useFilteredEntities({
-    projectName,
-    folders: allFolders,
-    // filters,
-    // sliceFilter,
-    expanded,
-    rowSelection,
-  })
-  const { tableData: populatedTableData } = populateTableData({
+  const { folders: filteredFolders, tasks: filteredTasks } = filterEntities({
     allFolders,
     folders,
     tasks,
+    filters,
+    sliceFilter,
+  })
+
+  const { tableData } = populateTableData({
+    allFolders,
+    folders: filteredFolders,
+    tasks: filteredTasks,
     folderTypes: project.folders,
     taskTypes: project.tasks,
   })
@@ -74,8 +77,8 @@ const NewEditorPage = ({ filters }: Props) => {
               <MyTable
                 attribs={attribFields}
                 // TODO fetch & pass attrib data using new graphql queries
-                rawData={{folders, tasks}}
-                tableData={populatedTableData}
+                rawData={{ folders, tasks }}
+                tableData={tableData}
                 users={users}
                 expanded={expanded}
                 setExpanded={setExpanded}

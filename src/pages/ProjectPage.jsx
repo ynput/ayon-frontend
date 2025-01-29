@@ -112,7 +112,6 @@ const ProjectPage = () => {
         uriSync: true,
       },
       { name: 'Editor', path: `/projects/${projectName}/editor`, module: 'editor', uriSync: true },
-      { name: 'New editor', path: `/projects/${projectName}/newEditor`, module: 'newEditor', uriSync: true },
       {
         name: 'Workfiles',
         path: `/projects/${projectName}/workfiles`,

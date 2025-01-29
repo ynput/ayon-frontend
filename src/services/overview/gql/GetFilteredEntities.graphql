@@ -3,29 +3,11 @@ query GetFilteredEntities(
   $assignees: [String!]
   $tags: [String!]
   $statuses: [String!]
-  $folderTypes: [String!]
   $attributes: [AttributeFilterInput!]
   $folderIds: [String!]
-  $parentFolderIds: [String!]
 ) {
   project(name: $projectName) {
     name
-    folders(
-      last: 100
-      assignees: $assignees
-      tags: $tags
-      ids: $folderIds
-      parentIds: $parentFolderIds
-      statuses: $statuses
-      folderTypes: $folderTypes
-      attributes: $attributes
-    ) {
-      edges {
-        node {
-          ...FolderPropsFragment
-        }
-      }
-    }
     tasks (
       assignees: $assignees
       tags: $tags

@@ -19,10 +19,12 @@ import { getAbsoluteSelections, isSelected } from './mappers'
 import TableColumns from './TableColumns'
 import * as Styled from './Table.styled'
 import { useUpdateEntityMutation } from '@queries/entity/updateEntity'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
-import { UserNode } from '@api/graphql'
+import { FolderNode, UserNode } from '@api/graphql'
 import { useCustomColumnWidths, useSyncCustomColumnWidths } from './hooks/useCustomColumnsWidth'
+
+import {api } from '@api/rest/folders'
 
 type Props = {
   tableData: $Any[]
@@ -56,8 +58,29 @@ const MyTable = ({
   const [selections, setSelections] = useState<Selection[]>([])
   const [updateEntity] = useUpdateEntityMutation()
   const { name: projectName } = useSelector((state: $Any) => state.project)
+  const [copyValue, setCopyValue] = useState<{[key: string]: $Any} | null>(null)
+  const dispatch = useDispatch()
 
-  const udpateEntityField = async (
+  const foldersCacheUpdate = (id: string, type: string, value: $Any, isAttrib: boolean) => {
+
+    dispatch(
+      // @ts-ignore
+      api.util.updateQueryData(
+        'getFolderList',
+        { projectName: projectName, attrib: true },
+        (draft: $Any) => {
+          const folder = draft.folders.find((folder: FolderNode) => folder.id === id)
+          if (isAttrib) {
+            folder.attrib[type] = value
+          } else {
+            folder[type] = value
+          }
+        },
+      ),
+    )
+  }
+
+  const updateEntityField = async (
     id: string,
     field: string,
     value: string,
@@ -69,7 +92,6 @@ const MyTable = ({
     }
 
     try {
-
       if (isAttrib) {
         return await updateEntity({
           projectName,
@@ -98,6 +120,54 @@ const MyTable = ({
     setSelectionInProgress,
   })
 
+  const getRowType = (item: Row<TableRow>) => {
+    // @ts-ignore
+    return item.original.data.type === 'folder' ? 'folders' : 'tasks'
+  }
+
+  const getRawData = (item: Row<TableRow>) => {
+    return rawData[getRowType(item)]?.[item.id]
+  }
+
+  const getCopyCellData = (item: Row<TableRow>, accessor: string) => {
+    const type = getRowType(item)
+    const data = getRawData(item)
+    if (accessor === 'type') {
+      return {
+        type: type === 'folders' ? 'folderType' : 'taskType',
+        value: type === 'folders' ? data.folderType : data.taskType,
+        isAttrib: false,
+      }
+    }
+    if (accessor === 'priority') {
+      return {
+        type: 'priority',
+        value: data.attrib.priority,
+        isAttrib: true,
+      }
+    }
+    if (accessor === 'status') {
+      return {
+        type: 'status',
+        value: data.status,
+        isAttrib: false,
+      }
+    }
+    if (accessor === 'assignees') {
+      return {
+        type: 'assignees',
+        value: data.assignee,
+        isAttrib: false,
+      }
+    }
+
+    return {
+      type: accessor,
+      value: data.attrib[accessor],
+      isAttrib: true,
+    }
+  }
+
   const columns = TableColumns({
     tableData,
     rawData,
@@ -114,7 +184,7 @@ const MyTable = ({
       entityType: string,
       isAttrib: boolean = true,
     ) => {
-      udpateEntityField(id, field, val, entityType, isAttrib)
+      updateEntityField(id, field, val, entityType, isAttrib)
     },
   })
 
@@ -154,10 +224,31 @@ const MyTable = ({
     overscan: 5,
   })
 
-
-
   const columnSizeVars = useCustomColumnWidths(table)
   useSyncCustomColumnWidths(table.getState().columnSizing)
+
+  const handleCopy = (cell: $Any) => {
+    const cellData = getCopyCellData(cell.row, cell.column.id)
+    setCopyValue(cellData)
+  }
+
+  const handlePaste = async (cell: $Any) => {
+    const type = getRowType(cell.row)
+    const data = getRawData(cell.row)
+    if (copyValue === undefined) {
+      return
+    }
+
+    await updateEntityField(
+      data.id,
+      copyValue!.type,
+      copyValue!.value,
+      type === 'folders' ? 'folder' : 'task',
+      copyValue!.isAttrib,
+    )
+
+    foldersCacheUpdate(data.id, copyValue!.type, copyValue!.value, copyValue!.isAttrib)
+  }
 
   const tableBody = (
     <tbody style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
@@ -177,6 +268,7 @@ const MyTable = ({
             {row.getVisibleCells().map((cell, colIdx) => {
               return (
                 <Styled.TableCell
+                  tabIndex={0}
                   key={cell.id}
                   className={clsx(
                     `pos-${rowIdx}-${colIdx}`,
@@ -187,7 +279,16 @@ const MyTable = ({
                     },
                   )}
                   style={{
+                    minWidth: '150px',
                     width: `calc(var(--col-${cell.column.id}-size) * 1px)`,
+                  }}
+                  onKeyUp={(e) => {
+                    if (e.key === 'c' && e.ctrlKey) {
+                      handleCopy(cell)
+                    }
+                    if (e.key === 'v' && e.ctrlKey) {
+                      handlePaste(cell)
+                    }
                   }}
                   onMouseDown={(e) => {
                     // @ts-ignore
@@ -231,7 +332,7 @@ const MyTable = ({
                         colSpan={header.colSpan}
                         style={{
                           position: 'relative',
-                          // minWidth: '150px',
+                          minWidth: '150px',
                           width: `calc(var(--header-${header?.id}-size) * 1px)`,
                         }}
                       >
