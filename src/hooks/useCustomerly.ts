@@ -33,6 +33,7 @@ const useCustomerlyChat = ({ position, delay, enabled, context }: UseCustomerlyC
     load({
       visible: !delay,
       position,
+      direction: 'left',
       user_id: userId,
       email: user.attrib.email ?? undefined,
       name: user.attrib.fullName ?? user.name,
