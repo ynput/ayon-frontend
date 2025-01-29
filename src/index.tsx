@@ -55,6 +55,7 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
     <ReduxProvider store={store}>
       <SocketProvider>
+        <div id="root-header" />
         <App />
         <ToastContainer
           position="bottom-right"
