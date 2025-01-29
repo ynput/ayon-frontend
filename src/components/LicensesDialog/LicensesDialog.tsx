@@ -264,6 +264,7 @@ const LicensesDialog: FC<LicensesDialogProps> = ({ onClose }) => {
                       {license.subject === 'eventHistory' ? ' days' : ' seats'}
                     </span>
                   )}
+                  {license.type !== 'seats' && <span>{license.type}</span>}
                 </span>
               </div>
               <Icon
