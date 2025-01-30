@@ -175,14 +175,14 @@ const useSlicerRemotes = () => {
 
   // slicer transformers
   const [useExtraSlices] = useLoadModule({
-    addon: 'power-pack',
+    addon: 'powerpack',
     remote: 'slicer',
     module: 'useExtraSlices',
     fallback: useExtraSlicesDefault,
   })
 
   const [SlicerDropdown] = useLoadModule({
-    addon: 'power-pack',
+    addon: 'powerpack',
     remote: 'slicer',
     module: 'SlicerDropdown',
     fallback: SlicerDropdownFallback,
