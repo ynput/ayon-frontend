@@ -31,12 +31,18 @@ const UserLicenseForm: FC<UserLicenseFormProps> = ({
   const { data: userPools = [], isLoading: isLoadingPools } = useGetUserPoolsQuery()
   const isUsingPools = !!userPools.length
 
+  const licenseActiveTooltip = `Inactive users cannot log in and will lose their assigned license.`
+  const poolSelectTooltip = `Login requires an assigned license. If none is assigned, the system will automatically assign one from an available fixed pool.  You cannot log in if no licenses are available. [License documentation](https://ayon.ynput.io/docs/admin_server_licenses)`
+
   return (
     <>
       <b>{isUsingPools ? 'License control' : 'Login control'}</b>
       <FormLayout>
         <FormRowStyled label="User active">
-          <div style={{ width: 'fit-content' }}>
+          <div
+            style={{ width: 'fit-content' }}
+            data-tooltip={isUsingPools ? licenseActiveTooltip : ''}
+          >
             <InputSwitch
               checked={active}
               // @ts-ignore
@@ -53,7 +59,8 @@ const UserLicenseForm: FC<UserLicenseFormProps> = ({
               disabledValues={disabledPools(userPools)}
               disabled={!active || isLoadingPools || isDisabled}
               isMultiple={isPoolMixed}
-              data-tooltip="User requires an assigned license pool to log in"
+              data-tooltip={poolSelectTooltip}
+              data-tooltip-as="markdown"
               onChange={(value) => onPoolChange(value[0])}
             />
           </FormRowStyled>
@@ -68,7 +75,7 @@ export default UserLicenseForm
 const buildPoolsOptions = (pools: UserPoolModel[]): { value: string; label: string }[] => {
   return pools.map((pool) => ({
     value: pool.id,
-    label: `${pool.label} (${pool.used}/${pool.max})`,
+    label: `${pool.label} (${pool.used}/${pool.max}) ${!pool.valid ? '(invalid)' : ''}`,
   }))
 }
 
