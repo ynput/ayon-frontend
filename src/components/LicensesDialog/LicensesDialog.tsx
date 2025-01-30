@@ -7,6 +7,7 @@ import copyToClipboard from '@helpers/copyToClipboard'
 import clsx from 'clsx'
 import { YnputConnectResponseModel } from '@api/rest/cloud'
 import { fromUnixTime, format } from 'date-fns'
+import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
 
 const Container = styled.div`
   background-color: var(--md-sys-color-surface-container-low);
@@ -182,6 +183,22 @@ const LicensesDialog: FC<LicensesDialogProps> = ({ onClose }) => {
     'orgId',
     'orgName',
   ]
+
+  if (!cloud && !isLoadingCloud) {
+    return (
+      <Dialog
+        isOpen
+        onClose={onClose}
+        size="lg"
+        header="Instance and licenses"
+        style={{ maxHeight: '90vh' }}
+      >
+        <Container>
+          <EmptyPlaceholder message="Connect this instance to Ynput Cloud to get license information." />
+        </Container>
+      </Dialog>
+    )
+  }
 
   return (
     <Dialog
