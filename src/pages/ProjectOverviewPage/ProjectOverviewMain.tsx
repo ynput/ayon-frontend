@@ -6,9 +6,10 @@ import { useSlicerContext } from '@context/slicerContext'
 import { FilterFieldType } from '@hooks/useBuildFilterOptions'
 import useUserFilters from '@hooks/useUserFilters'
 import NewEditorPage from '@pages/NewEditor/NewEditorPage'
-import { Button, Section, Toolbar } from '@ynput/ayon-react-components'
+import { $Any } from '@types'
+import { Button, InputSwitch, Section, Toolbar } from '@ynput/ayon-react-components'
 import { isEmpty } from 'lodash'
-import { FC } from 'react'
+import { FC, useState } from 'react'
 
 // what to search by
 const searchFilterTypes: FilterFieldType[] = [
@@ -28,6 +29,7 @@ const ProjectOverviewMain: FC<ProjectOverviewMainProps> = ({ projectName }) => {
   //
   //
   const { filters, setFilters } = useUserFilters({ page: 'overview', projectName })
+  const [showHierarchy, setShowHierarchy] = useState(false)
 
   // filter out by slice
   const { rowSelection, sliceType, setPersistentRowSelectionData, persistentRowSelectionData } =
@@ -77,8 +79,16 @@ const ProjectOverviewMain: FC<ProjectOverviewMainProps> = ({ projectName }) => {
           }}
           disabledFilters={sliceType ? [sliceType] : []}
         />
+        <span style={{ whiteSpace: 'nowrap', display: 'flex' }}>
+          Show hierarchy&nbsp;
+          <InputSwitch
+            onChange={(e: $Any) => {
+              setShowHierarchy(e.target.checked)
+            }}
+          />
+        </span>
       </Toolbar>
-      <NewEditorPage filters={filtersWithHierarchy} />
+      <NewEditorPage filters={filtersWithHierarchy} showHierarchy={showHierarchy} />
     </Section>
   )
 }

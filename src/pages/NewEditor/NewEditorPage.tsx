@@ -2,24 +2,26 @@ import { useSelector } from 'react-redux'
 
 import { Section, TablePanel } from '@ynput/ayon-react-components'
 
-import { $Any } from '@types'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 
-import MyTable from './Table'
-import useFilteredEditorEntities from './hooks/useFilteredEditorEntities'
 import { Filter } from '@components/SearchFilter/types'
-import { useSlicerContext } from '@context/slicerContext'
 import useFilterBySlice from '@containers/TasksProgress/hooks/useFilterBySlice'
+import { useSlicerContext } from '@context/slicerContext'
+import { useGetUsersAssigneeQuery } from '@queries/user/getUsers'
+import { $Any } from '@types'
+
+import useFetchAndUpdateEntityData from './hooks/useFilteredEditorEntities'
 import useAttributeFields from './hooks/useAttributesList'
 import { handleToggleFolder } from './handlers'
 import { filterEntities, populateTableData } from './mappers'
-import { useGetUsersAssigneeQuery } from '@queries/user/getUsers'
+import MyTable from './Table'
 
 type Props = {
   filters: Filter[]
+  showHierarchy: boolean
 }
 
-const NewEditorPage = ({ filters }: Props) => {
+const NewEditorPage = ({ filters, showHierarchy }: Props) => {
   const project = useSelector((state: $Any) => state.project)
   const projectName = useSelector((state: $Any) => state.project.name)
   const { data: users = [] } = useGetUsersAssigneeQuery({ projectName }, { skip: !projectName })
@@ -35,7 +37,9 @@ const NewEditorPage = ({ filters }: Props) => {
     setExpandedItem,
     expanded,
     setExpanded,
-  } = useFilteredEditorEntities({
+    updateAttribute,
+    updateEntityField,
+  } = useFetchAndUpdateEntityData({
     projectName,
     folderTypes: project.folders || {},
     taskTypes: project.tasks || {},
@@ -58,6 +62,7 @@ const NewEditorPage = ({ filters }: Props) => {
     tasks: filteredTasks,
     folderTypes: project.folders,
     taskTypes: project.tasks,
+    isFlatList: !showHierarchy,
   })
 
   // TODO Figure out why tree is incomplete. i.e. project_a and select lib and attempt to expand sq
@@ -83,6 +88,8 @@ const NewEditorPage = ({ filters }: Props) => {
                 expanded={expanded}
                 setExpanded={setExpanded}
                 toggleExpanderHandler={toggleHandler}
+                updateAttribute={updateAttribute}
+                updateEntityField={updateEntityField}
                 isLoading={false}
                 isExpandable={false}
                 sliceId={''}

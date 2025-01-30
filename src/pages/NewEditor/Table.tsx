@@ -19,12 +19,11 @@ import { getAbsoluteSelections, isSelected } from './mappers'
 import TableColumns from './TableColumns'
 import * as Styled from './Table.styled'
 import { useUpdateEntityMutation } from '@queries/entity/updateEntity'
-import { useDispatch, useSelector } from 'react-redux'
+import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
-import { FolderNode, UserNode } from '@api/graphql'
+import { UserNode } from '@api/graphql'
 import { useCustomColumnWidths, useSyncCustomColumnWidths } from './hooks/useCustomColumnsWidth'
 
-import {api } from '@api/rest/folders'
 
 type Props = {
   tableData: $Any[]
@@ -37,6 +36,7 @@ type Props = {
   toggleExpanderHandler: $Any
   expanded: $Any
   setExpanded: $Any
+  updateAttribute: (id: string, type: string, value: $Any, isAttrib: boolean) => void
 }
 
 const MyTable = ({
@@ -50,6 +50,7 @@ const MyTable = ({
   toggleExpanderHandler,
   expanded,
   setExpanded,
+  updateAttribute,
 }: Props) => {
   //The virtualizer needs to know the scrollable container element
   const tableContainerRef = useRef<HTMLDivElement>(null)
@@ -59,26 +60,6 @@ const MyTable = ({
   const [updateEntity] = useUpdateEntityMutation()
   const { name: projectName } = useSelector((state: $Any) => state.project)
   const [copyValue, setCopyValue] = useState<{[key: string]: $Any} | null>(null)
-  const dispatch = useDispatch()
-
-  const foldersCacheUpdate = (id: string, type: string, value: $Any, isAttrib: boolean) => {
-
-    dispatch(
-      // @ts-ignore
-      api.util.updateQueryData(
-        'getFolderList',
-        { projectName: projectName, attrib: true },
-        (draft: $Any) => {
-          const folder = draft.folders.find((folder: FolderNode) => folder.id === id)
-          if (isAttrib) {
-            folder.attrib[type] = value
-          } else {
-            folder[type] = value
-          }
-        },
-      ),
-    )
-  }
 
   const updateEntityField = async (
     id: string,
@@ -87,6 +68,7 @@ const MyTable = ({
     entityType: string,
     isAttrib: boolean,
   ) => {
+    console.log('updating entity field: ', id, field, value, entityType, isAttrib)
     if (value === null || value === undefined) {
       return console.error('value is null or undefined')
     }
@@ -229,13 +211,18 @@ const MyTable = ({
 
   const handleCopy = (cell: $Any) => {
     const cellData = getCopyCellData(cell.row, cell.column.id)
+    console.log('copying: ', cellData)
     setCopyValue(cellData)
   }
 
   const handlePaste = async (cell: $Any) => {
     const type = getRowType(cell.row)
     const data = getRawData(cell.row)
-    if (copyValue === undefined) {
+
+    console.log('type: ', type)
+    console.log('data: ', data)
+    console.log('cv: ', copyValue)
+    if (copyValue === null) {
       return
     }
 
@@ -247,7 +234,7 @@ const MyTable = ({
       copyValue!.isAttrib,
     )
 
-    foldersCacheUpdate(data.id, copyValue!.type, copyValue!.value, copyValue!.isAttrib)
+    updateAttribute(data.id, copyValue!.type, copyValue!.value, copyValue!.isAttrib)
   }
 
   const tableBody = (
