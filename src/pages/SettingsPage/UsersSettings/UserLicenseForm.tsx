@@ -32,7 +32,7 @@ const UserLicenseForm: FC<UserLicenseFormProps> = ({
   const isUsingPools = !!userPools.length
 
   const licenseActiveTooltip = `Inactive users cannot log in and will lose their assigned license.`
-  const poolSelectTooltip = `Login requires an assigned license. If none is assigned, the system will automatically assign one from an available pool.  You cannot log in if no licenses are available. [Read more](https://docs.ayon.io/docs/)`
+  const poolSelectTooltip = `Login requires an assigned license. If none is assigned, the system will automatically assign one from an available fixed pool.  You cannot log in if no licenses are available. [License documentation](https://ayon.ynput.io/docs/admin_server_licenses)`
 
   return (
     <>
