@@ -176,9 +176,9 @@ const MyTable = ({
   const columnSizeVars = useCustomColumnWidths(table)
   useSyncCustomColumnWidths(table.getState().columnSizing)
 
-  const handleCopy = (cell: $Any) => {
+  const handleCopy = (cell: $Any, colIdx: number) => {
     const cellData = getCopyCellData(cell.row, cell.column.id)
-    setCopyValue(cellData)
+    setCopyValue({data: cellData, colIdx})
   }
 
   const handlePaste = async (cell: $Any, rows: $Any) => {
@@ -190,22 +190,33 @@ const MyTable = ({
 
 
     let updates = []
-    for (let i = selections[0].start![0]; i <= selections[0].end![0]; i++ ) {
-      const row = rows[i]
-      const rowType = getRowType(row)
-      updates.push({
-          id: row.id,
-          type: (rowType === 'folders' ? 'folder' : 'task'),
+    for (const selection of selections) {
+      // TDOO maybe swap x/y, they might be confusing later on (row is y, col is x)
+      const xStartIdx = Math.min(selection.start![1], selection.end![1])
+      const xEndIdx = Math.max(selection.start![1], selection.end![1])
+      if (copyValue.colIdx < xStartIdx || copyValue.colIdx > xEndIdx) {
+        continue
       }
-      )
+
+      const yStartIdx = Math.min(selection.start![0], selection.end![0])
+      const yEndIdx = Math.max(selection.start![0], selection.end![0])
+
+      for (let i = yStartIdx; i <= yEndIdx; i++) {
+        const row = rows[i]
+        const rowType = getRowType(row)
+        updates.push({
+          id: row.id,
+          type: rowType === 'folders' ? 'folder' : 'task',
+        })
+      }
     }
 
       try {
         await updateEntities(
-          copyValue!.type,
-          copyValue!.value,
+          copyValue!.data.type,
+          copyValue!.data.value,
           updates,
-          copyValue!.isAttrib,
+          copyValue!.data.isAttrib,
         )
       } catch(e) {
         toast.error('Error updating entity')
@@ -247,7 +258,7 @@ const MyTable = ({
                   }}
                   onKeyUp={(e) => {
                     if (e.key === 'c' && e.ctrlKey) {
-                      handleCopy(cell)
+                      handleCopy(cell, colIdx)
                     }
                     if (e.key === 'v' && e.ctrlKey) {
                       handlePaste(cell, rows)
