@@ -109,6 +109,8 @@ const enhancedApi = api.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
   },
 })
 
+export default enhancedApi
+
 export const {
   useGetEntitiesByIdsQuery,
   useGetFilteredEntitiesByParentQuery,

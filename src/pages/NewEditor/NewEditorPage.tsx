@@ -10,7 +10,7 @@ import { useSlicerContext } from '@context/slicerContext'
 import { useGetUsersAssigneeQuery } from '@queries/user/getUsers'
 import { $Any } from '@types'
 
-import useFetchAndUpdateEntityData from './hooks/useFilteredEditorEntities'
+import useFetchAndUpdateEntityData from './hooks/useFetchEditorEntities'
 import useAttributeFields from './hooks/useAttributesList'
 import { handleToggleFolder } from './handlers'
 import { filterEntities, populateTableData } from './mappers'
@@ -37,8 +37,7 @@ const NewEditorPage = ({ filters, showHierarchy }: Props) => {
     setExpandedItem,
     expanded,
     setExpanded,
-    updateAttribute,
-    updateEntityField,
+    updateEntities,
   } = useFetchAndUpdateEntityData({
     projectName,
     folderTypes: project.folders || {},
@@ -88,8 +87,7 @@ const NewEditorPage = ({ filters, showHierarchy }: Props) => {
                 expanded={expanded}
                 setExpanded={setExpanded}
                 toggleExpanderHandler={toggleHandler}
-                updateAttribute={updateAttribute}
-                updateEntityField={updateEntityField}
+                updateEntities={updateEntities}
                 isLoading={false}
                 isExpandable={false}
                 sliceId={''}

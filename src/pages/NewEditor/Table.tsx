@@ -18,11 +18,9 @@ import useHandlers, { Selection } from './handlers'
 import { getAbsoluteSelections, isSelected } from './mappers'
 import TableColumns from './TableColumns'
 import * as Styled from './Table.styled'
-import { useUpdateEntityMutation } from '@queries/entity/updateEntity'
-import { useSelector } from 'react-redux'
-import { toast } from 'react-toastify'
 import { UserNode } from '@api/graphql'
 import { useCustomColumnWidths, useSyncCustomColumnWidths } from './hooks/useCustomColumnsWidth'
+import { toast } from 'react-toastify'
 
 
 type Props = {
@@ -36,7 +34,7 @@ type Props = {
   toggleExpanderHandler: $Any
   expanded: $Any
   setExpanded: $Any
-  updateAttribute: (id: string, type: string, value: $Any, isAttrib: boolean) => void
+  updateEntities: (type: string, value: $Any, entities: $Any, isAttrib: boolean) => void
 }
 
 const MyTable = ({
@@ -50,49 +48,14 @@ const MyTable = ({
   toggleExpanderHandler,
   expanded,
   setExpanded,
-  updateAttribute,
+  updateEntities,
 }: Props) => {
   //The virtualizer needs to know the scrollable container element
   const tableContainerRef = useRef<HTMLDivElement>(null)
   const [selectionInProgress, setSelectionInProgress] = useState<boolean>(false)
   const [selection, setSelection] = useState<Selection>({})
   const [selections, setSelections] = useState<Selection[]>([])
-  const [updateEntity] = useUpdateEntityMutation()
-  const { name: projectName } = useSelector((state: $Any) => state.project)
   const [copyValue, setCopyValue] = useState<{[key: string]: $Any} | null>(null)
-
-  const updateEntityField = async (
-    id: string,
-    field: string,
-    value: string,
-    entityType: string,
-    isAttrib: boolean,
-  ) => {
-    console.log('updating entity field: ', id, field, value, entityType, isAttrib)
-    if (value === null || value === undefined) {
-      return console.error('value is null or undefined')
-    }
-
-    try {
-      if (isAttrib) {
-        return await updateEntity({
-          projectName,
-          entityId: id,
-          entityType,
-          data: { attrib: { [field]: value } },
-        })
-      } else {
-        return await updateEntity({
-          projectName,
-          entityId: id,
-          entityType,
-          data: { [field]: value },
-        })
-      }
-    } catch (error) {
-      toast.error('Error updating' + 'version ')
-    }
-  }
 
   const { handleMouseUp, handleMouseDown } = useHandlers({
     selection,
@@ -166,7 +129,11 @@ const MyTable = ({
       entityType: string,
       isAttrib: boolean = true,
     ) => {
-      updateEntityField(id, field, val, entityType, isAttrib)
+      try {
+        updateEntities(field, val, { id, type: entityType }, isAttrib)
+      } catch (e) {
+        toast.error('Error updating entity')
+      }
     },
   })
 
@@ -215,26 +182,36 @@ const MyTable = ({
     setCopyValue(cellData)
   }
 
-  const handlePaste = async (cell: $Any) => {
+  const handlePaste = async (cell: $Any, rows: $Any) => {
     const type = getRowType(cell.row)
     const data = getRawData(cell.row)
 
-    console.log('type: ', type)
-    console.log('data: ', data)
-    console.log('cv: ', copyValue)
     if (copyValue === null) {
       return
     }
 
-    await updateEntityField(
-      data.id,
-      copyValue!.type,
-      copyValue!.value,
-      type === 'folders' ? 'folder' : 'task',
-      copyValue!.isAttrib,
-    )
 
-    updateAttribute(data.id, copyValue!.type, copyValue!.value, copyValue!.isAttrib)
+    let updates = []
+    for (let i = selections[0].start![0]; i <= selections[0].end![0]; i++ ) {
+      const row = rows[i]
+      updates.push({
+          id: row.id,
+          type: (type === 'folders' ? 'folder' : 'task'),
+      }
+      )
+    }
+
+      try {
+        await updateEntities(
+          copyValue!.type,
+          copyValue!.value,
+          updates,
+          copyValue!.isAttrib,
+        )
+      } catch(e) {
+        toast.error('Error updating entity')
+      }
+      // updateAttribute(row.id, copyValue!.type, copyValue!.value, copyValue!.isAttrib)
   }
 
   const tableBody = (
@@ -261,8 +238,8 @@ const MyTable = ({
                     `pos-${rowIdx}-${colIdx}`,
                     cell.column.id === 'folderType' ? 'large' : '',
                     {
-                      notSelected: !isSelected(absoluteSelections, rowIdx, colIdx),
-                      selected: isSelected(absoluteSelections, rowIdx, colIdx),
+                      notSelected: !isSelected(absoluteSelections, virtualRow.index, colIdx),
+                      selected: isSelected(absoluteSelections, virtualRow.index, colIdx),
                     },
                   )}
                   style={{
@@ -274,16 +251,16 @@ const MyTable = ({
                       handleCopy(cell)
                     }
                     if (e.key === 'v' && e.ctrlKey) {
-                      handlePaste(cell)
+                      handlePaste(cell, rows)
                     }
                   }}
                   onMouseDown={(e) => {
                     // @ts-ignore
-                    handleMouseDown(e, cell, rowIdx, colIdx)
+                    handleMouseDown(e, cell, virtualRow.index, colIdx)
                   }}
                   onMouseUp={(e) => {
                     // @ts-ignore
-                    handleMouseUp(e, cell, rowIdx, colIdx)
+                    handleMouseUp(e, cell, virtualRow.index, colIdx)
                   }}
                 >
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -316,7 +293,6 @@ const MyTable = ({
                       <Styled.HeaderCell
                         className={clsx({ large: header.column.id === 'folderType' })}
                         key={header.id}
-                        colSpan={header.colSpan}
                         style={{
                           position: 'relative',
                           minWidth: '150px',

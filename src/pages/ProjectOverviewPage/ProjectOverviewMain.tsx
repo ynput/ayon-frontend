@@ -9,7 +9,8 @@ import NewEditorPage from '@pages/NewEditor/NewEditorPage'
 import { $Any } from '@types'
 import { Button, InputSwitch, Section, Toolbar } from '@ynput/ayon-react-components'
 import { isEmpty } from 'lodash'
-import { FC, useState } from 'react'
+import { FC } from 'react'
+import useOverviewPreferences from './hooks/useOverviewPreferences'
 
 // what to search by
 const searchFilterTypes: FilterFieldType[] = [
@@ -28,8 +29,9 @@ const ProjectOverviewMain: FC<ProjectOverviewMainProps> = ({ projectName }) => {
   // FILTERS vvv
   //
   //
+
   const { filters, setFilters } = useUserFilters({ page: 'overview', projectName })
-  const [showHierarchy, setShowHierarchy] = useState(false)
+  const {showHierarchy, updateShowHierarchy} = useOverviewPreferences()
 
   // filter out by slice
   const { rowSelection, sliceType, setPersistentRowSelectionData, persistentRowSelectionData } =
@@ -82,13 +84,14 @@ const ProjectOverviewMain: FC<ProjectOverviewMainProps> = ({ projectName }) => {
         <span style={{ whiteSpace: 'nowrap', display: 'flex' }}>
           Show hierarchy&nbsp;
           <InputSwitch
+            checked={showHierarchy || false}
             onChange={(e: $Any) => {
-              setShowHierarchy(e.target.checked)
+              updateShowHierarchy(e.target.checked)
             }}
           />
         </span>
       </Toolbar>
-      <NewEditorPage filters={filtersWithHierarchy} showHierarchy={showHierarchy} />
+      <NewEditorPage filters={filtersWithHierarchy} showHierarchy={showHierarchy || false} />
     </Section>
   )
 }

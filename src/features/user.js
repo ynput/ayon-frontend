@@ -13,6 +13,7 @@ const userSlice = createSlice({
         expandedAccessGroups: {},
         filters: {},
         columnSizes: {},
+        pageSettings: {},
       },
       isAdmin: false,
       isManager: false,
