@@ -7,10 +7,17 @@ import { FilterFieldType } from '@hooks/useBuildFilterOptions'
 import useUserFilters from '@hooks/useUserFilters'
 import NewEditorPage from '@pages/NewEditor/NewEditorPage'
 import { $Any } from '@types'
-import { Button, InputSwitch, Section, Toolbar } from '@ynput/ayon-react-components'
+import { Button, InputSwitch, Section, SortCardType, SortingDropdown, Toolbar } from '@ynput/ayon-react-components'
 import { isEmpty } from 'lodash'
-import { FC } from 'react'
+import { FC, useState } from 'react'
 import useOverviewPreferences from './hooks/useOverviewPreferences'
+import { SortByOption } from '@pages/UserDashboardPage/UserDashboardTasks/DashboardTasksToolbar/KanBanSortByOptions'
+
+const sortByOptions: SortByOption[] = [
+  { id: 'label', fallbacks: ['name'], label: 'Task', sortOrder: true },
+  { id: 'status', label: 'Status', sortOrder: true },
+  { id: 'priority', label: 'Priority', sortOrder: true, sortByEnumOrder: true },
+]
 
 // what to search by
 const searchFilterTypes: FilterFieldType[] = [
@@ -31,6 +38,7 @@ const ProjectOverviewMain: FC<ProjectOverviewMainProps> = ({ projectName }) => {
 
   const { filters, setFilters } = useUserFilters({ page: 'overview', projectName })
   const {showHierarchy, updateShowHierarchy} = useOverviewPreferences()
+  const [sortByValue, setSortByValue] = useState<SortCardType[]>([])
 
   // filter out by slice
   const { rowSelection, sliceType, setPersistentRowSelectionData, persistentRowSelectionData } =
@@ -89,8 +97,21 @@ const ProjectOverviewMain: FC<ProjectOverviewMainProps> = ({ projectName }) => {
             }}
           />
         </span>
+        {!showHierarchy && (
+          <SortingDropdown
+            style={{ minWidth: '250px' }}
+            title="Sort by"
+            options={sortByOptions}
+            value={sortByValue}
+            onChange={setSortByValue}
+          />
+        )}
       </Toolbar>
-      <NewEditorPage filters={filtersWithHierarchy} showHierarchy={showHierarchy || false} />
+      <NewEditorPage
+        filters={filtersWithHierarchy}
+        sortBy={sortByValue}
+        showHierarchy={showHierarchy || false}
+      />
     </Section>
   )
 }

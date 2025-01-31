@@ -11,6 +11,7 @@ import { FolderNode, TaskNode } from '@api/graphql'
 import getFilterFromId from '@components/SearchFilter/getFilterFromId'
 import { match } from 'assert'
 import { matchesFilterKeys } from '@containers/SettingsEditor/FormTemplates/searchMatcher'
+import { SortByOption } from '@pages/UserDashboardPage/UserDashboardTasks/DashboardTasksToolbar/KanBanSortByOptions'
 
 const getAbsoluteSelections = (selections: $Any) =>
   selections.map((selection: $Any) => ({
@@ -63,13 +64,15 @@ const populateTableData = ({
   allFolders,
   folders,
   tasks,
+  taskList,
   folderTypes,
   taskTypes,
   isFlatList,
 }: {
   allFolders: FolderListItem[]
-  folders: $Any
-  tasks: $Any
+  folders: Map<Partial<FolderNode>>
+  tasks: Map<Partial<TaskNode>>
+  taskList: Partial<TaskNode>[]
   folderTypes: $Any
   taskTypes: $Any
   isFlatList: boolean
@@ -105,10 +108,11 @@ const populateTableData = ({
     taskTypes,
     mappedRawData,
     tasks: mappedTaskData,
+    taskList,
     folders: mappedFolderData,
     rawFolders: folders,
     rawTasks: tasks,
-    isFlatList 
+    isFlatList,
   })
 }
 
@@ -184,6 +188,7 @@ const createDataTree = <T extends FolderListItem>({
   taskTypes,
   folders,
   tasks,
+  taskList,
   rawFolders,
   rawTasks,
   isFlatList,
@@ -243,6 +248,11 @@ const createDataTree = <T extends FolderListItem>({
     }
   }
 
+  let taskTableRowList = []
+  for (const task of taskList) {
+    taskTableRowList.push(taskToTableRow(taskTypes, task, task.folderId))
+  }
+
   let folderMap = {}
   if (!isFlatList) {
     for (const parentId in folders) {
@@ -273,10 +283,9 @@ const createDataTree = <T extends FolderListItem>({
       }
     }
   } else {
-    for (const parentId in taskMap) {
-      for (const taskId in taskMap[parentId]) {
-        dataTree.push(taskMap[parentId][taskId])
-      }
+    // Bypasing original logic, organize better how and when mapping gets done
+    for (const task of taskTableRowList) {
+      dataTree.push(task)
     }
   }
 
@@ -339,15 +348,18 @@ const filterEntities = ({
   tasks,
   filters,
   sliceFilter,
+  sortBy,
 }: {
   allFolders: FolderListItem[]
   folders: { [key: string]: FolderNode }
   tasks: { [key: string]: Partial<TaskNode> }
   filters: Filter[]
   sliceFilter: TaskFilterValue | null
+  sortBy: SortByOption[]
 }): {
   folders: { [key: string]: FolderNode }
   tasks: { [key: string]: Partial<TaskNode> }
+  taskList: Partial<TaskNode>[]
 } => {
 
   const strongFilters = ['folderType', 'status', 'assignees']
@@ -490,7 +502,41 @@ const filterEntities = ({
   }
     */
 
-  const filteredTasks = getFilteredTasks(tasks, filtersMap)
+  const filteredTasksList = Object.values(getFilteredTasks(tasks, filtersMap))
+  // TODO fetch attributes and use actual project values instead of hard coded ones
+  const priorityWeight = {'low': 1, 'normal': 10, 'high': 100, 'urgent': 1000}
+  filteredTasksList.sort((a, b) => {
+    let result = 0
+    // TODO Check if statuses have cardinality also - see priorities
+    for (const sortOrder of sortBy) {
+      if (sortOrder.id === 'status') {
+        result = a.status.localeCompare(b.status) * (sortOrder.sortOrder ? 1 : -1)
+        if (result !== 0) {
+          return result
+        }
+      }
+      if (sortOrder.id === 'label') {
+        result =
+          (a.label || a.name).localeCompare(b.label || a.name) * (sortOrder.sortOrder ? 1 : -1)
+        if (result !== 0) {
+          return result
+        }
+      }
+      if (sortOrder.id === 'priority') {
+        result = (priorityWeight[b.attrib.priority] - priorityWeight[a.attrib.priority]) * (sortOrder.sortOrder ? 1 : -1)
+        if (result !== 0) {
+          return result
+        }
+      }
+    }
+
+    return result
+  })
+  const filteredTasks = filteredTasksList.reduce((acc: Map<Partial<Task>>, task) => {
+    acc.set(task.id, task)
+    return acc
+  }, new Map())
+
   for (const id in filteredTasks) {
     paths.push(folders[filteredTasks[id].folderId].path)
   }
@@ -515,7 +561,7 @@ const filterEntities = ({
     }
   }
 
-  return { folders: treeFolders, tasks: filteredTasks }
+  return { folders: treeFolders, tasks: filteredTasks, taskList: filteredTasksList  }
 }
 
 export { getAbsoluteSelections, isSelected, mapQueryFilters, populateTableData, filterEntities }

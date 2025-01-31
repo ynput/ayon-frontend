@@ -15,13 +15,15 @@ import useAttributeFields from './hooks/useAttributesList'
 import { handleToggleFolder } from './handlers'
 import { filterEntities, populateTableData } from './mappers'
 import MyTable from './Table'
+import { SortByOption } from '@pages/UserDashboardPage/UserDashboardTasks/DashboardTasksToolbar/KanBanSortByOptions'
 
 type Props = {
   filters: Filter[]
   showHierarchy: boolean
+  sortBy: SortByOption[]
 }
 
-const NewEditorPage = ({ filters, showHierarchy }: Props) => {
+const NewEditorPage = ({ filters, showHierarchy, sortBy }: Props) => {
   const project = useSelector((state: $Any) => state.project)
   const projectName = useSelector((state: $Any) => state.project.name)
   const { data: users = [] } = useGetUsersAssigneeQuery({ projectName }, { skip: !projectName })
@@ -47,18 +49,20 @@ const NewEditorPage = ({ filters, showHierarchy }: Props) => {
     sliceFilter,
   })
 
-  const { folders: filteredFolders, tasks: filteredTasks } = filterEntities({
+  const { folders: filteredFolders, tasks: filteredTasks, taskList } = filterEntities({
     allFolders,
     folders,
     tasks,
     filters,
     sliceFilter,
+    sortBy
   })
 
   const { tableData } = populateTableData({
     allFolders,
     folders: filteredFolders,
     tasks: filteredTasks,
+    taskList,
     folderTypes: project.folders,
     taskTypes: project.tasks,
     isFlatList: !showHierarchy,
