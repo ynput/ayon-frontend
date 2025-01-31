@@ -24,6 +24,16 @@ export const Left = styled.div`
   gap: 16px;
   flex: 1.5;
   min-width: 200px;
+  overflow: hidden;
+  height: 100%;
+
+  .description {
+    overflow: auto;
+    height: 100%;
+    * {
+      width: 100%;
+    }
+  }
 `
 
 // contains buttons like install, update, etc

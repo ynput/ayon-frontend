@@ -12,6 +12,8 @@ import { getSimplifiedUrl } from '@helpers/url'
 import ReactMarkdown from 'react-markdown'
 import { AddonDetail, LinkModel } from '@api/rest/market'
 import MetaPanelRow from './MetaPanelRow'
+import remarkGfm from 'remark-gfm'
+import emoji from 'remark-emoji'
 
 type ExtendedAddonDetail = AddonDetail & {
   downloadedVersions: Record<string, string>
@@ -198,7 +200,14 @@ const AddonDetails = ({ addon, isLoading, onDownload, isUpdatingAll }: AddonDeta
                 </a>
               </Styled.ErrorCard>
             )}
-            <ReactMarkdown className={clsx({ loading: isLoading })}>{description}</ReactMarkdown>
+            <div className="description">
+              <ReactMarkdown
+                className={clsx({ loading: isLoading })}
+                remarkPlugins={[remarkGfm, emoji]}
+              >
+                {description}
+              </ReactMarkdown>
+            </div>
           </Styled.Left>
           {/* RIGHT PANEL */}
           <Styled.Right className={clsx(Type.bodyMedium)}>
