@@ -37,7 +37,11 @@ const PowerpackDialog: FC<PowerpackDialogProps> = ({}) => {
           <li className="more">More coming soon!</li>
         </ul>
       </Styled.FeaturesList>
-      <a href="https://ynput.cloud/subscribe/ayon" target="_blank" rel="noreferrer">
+      <a
+        href="https://ynput.cloud/subscribe/ayon?utm_source=powerpack"
+        target="_blank"
+        rel="noreferrer"
+      >
         <Styled.MoreButton>Find out more</Styled.MoreButton>
       </a>
     </Styled.PowerpackDialog>
