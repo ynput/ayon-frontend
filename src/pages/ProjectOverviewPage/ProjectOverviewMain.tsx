@@ -15,7 +15,6 @@ import useOverviewPreferences from './hooks/useOverviewPreferences'
 // what to search by
 const searchFilterTypes: FilterFieldType[] = [
   'attributes',
-  'entitySubType',
   'status',
   'assignees',
   'tags',
