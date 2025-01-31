@@ -101,7 +101,7 @@ const MyTable = ({
     if (accessor === 'assignees') {
       return {
         type: 'assignees',
-        value: data.assignee,
+        value: data.assignees,
         isAttrib: false,
       }
     }
@@ -130,7 +130,7 @@ const MyTable = ({
       isAttrib: boolean = true,
     ) => {
       try {
-        updateEntities(field, val, { id, type: entityType }, isAttrib)
+        updateEntities(field, val, [{ id, type: entityType }], isAttrib)
       } catch (e) {
         toast.error('Error updating entity')
       }
