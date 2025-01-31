@@ -482,9 +482,13 @@ const filterEntities = ({
 
   const filteredFolders = getFilteredFolders(folders, filtersMap)
   const paths = []
+
+  // Filtering by folders disabled ... for now!
+  /*
   for (const id in filteredFolders) {
     paths.push(filteredFolders[id].path)
   }
+    */
 
   const filteredTasks = getFilteredTasks(tasks, filtersMap)
   for (const id in filteredTasks) {

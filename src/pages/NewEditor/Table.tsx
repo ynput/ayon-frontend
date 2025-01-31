@@ -178,13 +178,11 @@ const MyTable = ({
 
   const handleCopy = (cell: $Any) => {
     const cellData = getCopyCellData(cell.row, cell.column.id)
-    console.log('copying: ', cellData)
     setCopyValue(cellData)
   }
 
   const handlePaste = async (cell: $Any, rows: $Any) => {
     const type = getRowType(cell.row)
-    const data = getRawData(cell.row)
 
     if (copyValue === null) {
       return
@@ -194,9 +192,10 @@ const MyTable = ({
     let updates = []
     for (let i = selections[0].start![0]; i <= selections[0].end![0]; i++ ) {
       const row = rows[i]
+      const rowType = getRowType(row)
       updates.push({
           id: row.id,
-          type: (type === 'folders' ? 'folder' : 'task'),
+          type: (rowType === 'folders' ? 'folder' : 'task'),
       }
       )
     }
