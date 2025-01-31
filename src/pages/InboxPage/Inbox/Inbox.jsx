@@ -176,7 +176,7 @@ const Inbox = ({ filter }) => {
     listRef,
   })
 
-  const clearMessages = async (id, messagesToClear = [], projectName) => {
+  const clearMessages = async (id, messagesToClear = [], projectName, allMessages) => {
     if (selected.length) {
       // select next message in the list
       const selectedMessageIndex = groupedMessages.findIndex((m) => m.activityId === id)
@@ -189,7 +189,7 @@ const Inbox = ({ filter }) => {
     const isRead = messagesToClear.every((m) => m.read)
     const status = isActive ? 'inactive' : 'unread'
 
-    handleUpdateMessages(idsToClear, status, projectName, true, isRead)
+    handleUpdateMessages(idsToClear, status, projectName, true, isRead, allMessages)
   }
 
   const handleClearMessage = (id) => {
@@ -212,7 +212,7 @@ const Inbox = ({ filter }) => {
     let promises = []
     // for each project, clear all messages
     for (const [projectName, messages] of Object.entries(groupedByProject)) {
-      const promise = clearMessages(null, messages, projectName)
+      const promise = clearMessages(null, messages, projectName, true)
       promises.push(promise)
     }
 
