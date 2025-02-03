@@ -13,7 +13,7 @@ import { $Any } from '@types'
 import useFetchAndUpdateEntityData from './hooks/useFetchEditorEntities'
 import useAttributeFields from './hooks/useAttributesList'
 import { handleToggleFolder } from './handlers'
-import { filterEntities, populateTableData } from './mappers'
+import { getFilteredEntities, populateTableData } from './mappers'
 import MyTable from './Table'
 import { SortByOption } from '@pages/UserDashboardPage/UserDashboardTasks/DashboardTasksToolbar/KanBanSortByOptions'
 
@@ -49,13 +49,17 @@ const NewEditorPage = ({ filters, showHierarchy, sortBy }: Props) => {
     sliceFilter,
   })
 
-  const { folders: filteredFolders, tasks: filteredTasks, taskList } = filterEntities({
+  const {
+    folders: filteredFolders,
+    tasks: filteredTasks,
+    taskList,
+  } = getFilteredEntities({
     allFolders,
     folders,
     tasks,
     filters,
     sliceFilter,
-    sortBy
+    sortBy,
   })
 
   const { tableData } = populateTableData({

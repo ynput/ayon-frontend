@@ -188,8 +188,8 @@ const MyTable = ({
       return
     }
 
-
     let updates = []
+    let selectionMatches = false
     for (const selection of selections) {
       // TDOO maybe swap x/y, they might be confusing later on (row is y, col is x)
       const xStartIdx = Math.min(selection.start![1], selection.end![1])
@@ -198,6 +198,7 @@ const MyTable = ({
         continue
       }
 
+      selectionMatches = true
       const yStartIdx = Math.min(selection.start![0], selection.end![0])
       const yEndIdx = Math.max(selection.start![0], selection.end![0])
 
@@ -211,17 +212,20 @@ const MyTable = ({
       }
     }
 
-      try {
-        await updateEntities(
-          copyValue!.data.type,
-          copyValue!.data.value,
-          updates,
-          copyValue!.data.isAttrib,
-        )
-      } catch(e) {
-        toast.error('Error updating entity')
-      }
-      // updateAttribute(row.id, copyValue!.type, copyValue!.value, copyValue!.isAttrib)
+    if (!selectionMatches) {
+      toast.error("Operation failed, please paste copied value into matching column.")
+    }
+    try {
+      await updateEntities(
+        copyValue!.data.type,
+        copyValue!.data.value,
+        updates,
+        copyValue!.data.isAttrib,
+      )
+    } catch (e) {
+      toast.error('Error updating entity')
+    }
+    // updateAttribute(row.id, copyValue!.type, copyValue!.value, copyValue!.isAttrib)
   }
 
   const tableBody = (

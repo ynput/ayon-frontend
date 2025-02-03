@@ -342,7 +342,7 @@ const createDataTree = <T extends FolderListItem>({
   return { hashedData, tableData: dataTree }
 }
 
-const filterEntities = ({
+const getFilteredEntities = ({
   allFolders,
   folders,
   tasks,
@@ -361,8 +361,37 @@ const filterEntities = ({
   tasks: { [key: string]: Partial<TaskNode> }
   taskList: Partial<TaskNode>[]
 } => {
-
   const strongFilters = ['folderType', 'status', 'assignees']
+
+  const taskListSorter = (a, b) => {
+    let result = 0
+    // TODO Check if statuses have cardinality also - see priorities
+    for (const sortOrder of sortBy) {
+      if (sortOrder.id === 'status') {
+        result = a.status.localeCompare(b.status) * (sortOrder.sortOrder ? 1 : -1)
+        if (result !== 0) {
+          return result
+        }
+      }
+      if (sortOrder.id === 'label') {
+        result =
+          (a.label || a.name).localeCompare(b.label || a.name) * (sortOrder.sortOrder ? 1 : -1)
+        if (result !== 0) {
+          return result
+        }
+      }
+      if (sortOrder.id === 'priority') {
+        result =
+          (priorityWeight[b.attrib.priority] - priorityWeight[a.attrib.priority]) *
+          (sortOrder.sortOrder ? 1 : -1)
+        if (result !== 0) {
+          return result
+        }
+      }
+    }
+
+    return result
+  }
 
   const listsIntersect = (listA: string[], listB: string[]) => {
     if (listA === undefined) {
@@ -383,12 +412,16 @@ const filterEntities = ({
     return false
   }
 
-  const isMatchingFolderFilter = (folder: FolderNode, filterType: string, filterValues: string[]) => {
+  const isMatchingFolderFilter = (
+    folder: FolderNode,
+    filterType: string,
+    filterValues: string[],
+  ) => {
     if (strongFilters.includes(filterType)) {
-    // some filters are task specific and should be ignored for folders
-    if (folder[filterType] === undefined) {
-      return false
-    }
+      // some filters are task specific and should be ignored for folders
+      if (folder[filterType] === undefined) {
+        return false
+      }
       return listsIntersect(folder[filterType], filterValues)
     }
 
@@ -468,7 +501,10 @@ const filterEntities = ({
     return filteredFolders
   }
 
-  const getFilteredTasks = (tasks: TaskNode[], filtersMap: { [key: string]: string[] }): TaskNode[] => {
+  const getFilteredTasks = (
+    tasks: TaskNode[],
+    filtersMap: { [key: string]: string[] },
+  ): TaskNode[] => {
     if (!filters) {
       return tasks
     }
@@ -491,55 +527,20 @@ const filterEntities = ({
 
   const filtersMap = getFiltersMap(filters)
 
-
   const filteredFolders = getFilteredFolders(folders, filtersMap)
   const paths = []
 
-  // Filtering by folders disabled ... for now!
-  /*
-  for (const id in filteredFolders) {
-    paths.push(filteredFolders[id].path)
-  }
-    */
-
   const filteredTasksList = Object.values(getFilteredTasks(tasks, filtersMap))
   // TODO fetch attributes and use actual project values instead of hard coded ones
-  const priorityWeight = {'low': 1, 'normal': 10, 'high': 100, 'urgent': 1000}
-  filteredTasksList.sort((a, b) => {
-    let result = 0
-    // TODO Check if statuses have cardinality also - see priorities
-    for (const sortOrder of sortBy) {
-      if (sortOrder.id === 'status') {
-        result = a.status.localeCompare(b.status) * (sortOrder.sortOrder ? 1 : -1)
-        if (result !== 0) {
-          return result
-        }
-      }
-      if (sortOrder.id === 'label') {
-        result =
-          (a.label || a.name).localeCompare(b.label || a.name) * (sortOrder.sortOrder ? 1 : -1)
-        if (result !== 0) {
-          return result
-        }
-      }
-      if (sortOrder.id === 'priority') {
-        result = (priorityWeight[b.attrib.priority] - priorityWeight[a.attrib.priority]) * (sortOrder.sortOrder ? 1 : -1)
-        if (result !== 0) {
-          return result
-        }
-      }
-    }
+  const priorityWeight = { low: 1, normal: 10, high: 100, urgent: 1000 }
 
-    return result
-  })
+  filteredTasksList.sort(taskListSorter)
   const filteredTasks = filteredTasksList.reduce((acc: Map<Partial<Task>>, task) => {
     acc.set(task.id, task)
     return acc
   }, new Map())
 
-  for (const id in filteredTasks) {
-    paths.push(folders[filteredTasks[id].folderId].path)
-  }
+  filteredTasks.forEach((el, key, map) => paths.push(folders[el.folderId].path))
 
   const splitPaths = []
   for (const path of paths) {
@@ -549,6 +550,7 @@ const filterEntities = ({
       splitPaths.push(tmpPath.join('/'))
     }
   }
+
   const treeFolders = {}
   const filteredFolderIds = Object.keys(filteredFolders)
   for (const id in folders) {
@@ -556,12 +558,17 @@ const filterEntities = ({
       treeFolders[id] = {
         ...folders[id],
         matchesFilters: Object.keys(filtersMap).length == 0 || filteredFolderIds.includes(id),
-
       }
     }
   }
 
-  return { folders: treeFolders, tasks: filteredTasks, taskList: filteredTasksList  }
+  return { folders: treeFolders, tasks: filteredTasks, taskList: filteredTasksList }
 }
 
-export { getAbsoluteSelections, isSelected, mapQueryFilters, populateTableData, filterEntities }
+export {
+  getAbsoluteSelections,
+  isSelected,
+  mapQueryFilters,
+  populateTableData,
+  getFilteredEntities,
+}

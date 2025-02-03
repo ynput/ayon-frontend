@@ -6,7 +6,7 @@ import { useEffect, useState } from "react"
 const useOverviewPreferences = () => {
   const userName = useAppSelector((state) => state.user.name)
   const [updateUserPreferences] = useSetFrontendPreferencesMutation()
-  const [showHierarchy, setShowHierarchy] = useState<boolean | null>(null)
+  const [showHierarchy, setShowHierarchy] = useState<boolean>(true)
 
   const updateShowHierarchy = (newValue: boolean) => {
     // @ts-ignore

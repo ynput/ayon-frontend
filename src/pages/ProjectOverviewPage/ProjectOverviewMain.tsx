@@ -91,26 +91,24 @@ const ProjectOverviewMain: FC<ProjectOverviewMainProps> = ({ projectName }) => {
         <span style={{ whiteSpace: 'nowrap', display: 'flex' }}>
           Show hierarchy&nbsp;
           <InputSwitch
-            checked={showHierarchy || false}
+            checked={showHierarchy}
             onChange={(e: $Any) => {
               updateShowHierarchy(e.target.checked)
             }}
           />
         </span>
-        {!showHierarchy && (
-          <SortingDropdown
-            style={{ minWidth: '250px' }}
-            title="Sort by"
-            options={sortByOptions}
-            value={sortByValue}
-            onChange={setSortByValue}
-          />
-        )}
+        <SortingDropdown
+          style={{ minWidth: '250px' }}
+          title="Sort by"
+          options={sortByOptions}
+          value={sortByValue}
+          onChange={setSortByValue}
+        />
       </Toolbar>
       <NewEditorPage
         filters={filtersWithHierarchy}
         sortBy={sortByValue}
-        showHierarchy={showHierarchy || false}
+        showHierarchy={showHierarchy}
       />
     </Section>
   )
