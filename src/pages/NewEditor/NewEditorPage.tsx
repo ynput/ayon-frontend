@@ -16,6 +16,8 @@ import { handleToggleFolder } from './handlers'
 import { getFilteredEntities, populateTableData } from './mappers'
 import MyTable from './Table'
 import { SortByOption } from '@pages/UserDashboardPage/UserDashboardTasks/DashboardTasksToolbar/KanBanSortByOptions'
+import getAllProjectStatuses from '@containers/DetailsPanel/helpers/getAllProjectsStatuses'
+import { useGetProjectsInfoQuery } from '@queries/userDashboard/getUserDashboard'
 
 type Props = {
   filters: Filter[]
@@ -27,6 +29,10 @@ const NewEditorPage = ({ filters, showHierarchy, sortBy }: Props) => {
   const project = useSelector((state: $Any) => state.project)
   const projectName = useSelector((state: $Any) => state.project.name)
   const { data: users = [] } = useGetUsersAssigneeQuery({ projectName }, { skip: !projectName })
+
+  const { data: projectsInfo = {} } = useGetProjectsInfoQuery({ projects: [projectName] })
+  const projectInfo = projectsInfo[projectName] || {}
+  const allStatuses = getAllProjectStatuses({[projectName]: projectInfo})
 
   const { rowSelection } = useSlicerContext()
   const { attribFields } = useAttributeFields()
@@ -92,6 +98,7 @@ const NewEditorPage = ({ filters, showHierarchy, sortBy }: Props) => {
                 rawData={{ folders, tasks }}
                 tableData={tableData}
                 users={users}
+                statuses={allStatuses}
                 expanded={expanded}
                 setExpanded={setExpanded}
                 toggleExpanderHandler={toggleHandler}

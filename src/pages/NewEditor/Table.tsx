@@ -21,12 +21,13 @@ import * as Styled from './Table.styled'
 import { UserNode } from '@api/graphql'
 import { useCustomColumnWidths, useSyncCustomColumnWidths } from './hooks/useCustomColumnsWidth'
 import { toast } from 'react-toastify'
-
+import { Status } from '@api/rest/project'
 
 type Props = {
   tableData: $Any[]
   rawData: { folders: $Any; tasks: $Any }
   users: UserNode[]
+  statuses: Status[]
   attribs: $Any[]
   isLoading: boolean
   isExpandable: boolean
@@ -42,6 +43,7 @@ const MyTable = ({
   rawData,
   attribs,
   users,
+  statuses,
   isLoading,
   isExpandable,
   sliceId,
@@ -55,7 +57,7 @@ const MyTable = ({
   const [selectionInProgress, setSelectionInProgress] = useState<boolean>(false)
   const [selection, setSelection] = useState<Selection>({})
   const [selections, setSelections] = useState<Selection[]>([])
-  const [copyValue, setCopyValue] = useState<{[key: string]: $Any} | null>(null)
+  const [copyValue, setCopyValue] = useState<{ [key: string]: $Any } | null>(null)
 
   const { handleMouseUp, handleMouseDown } = useHandlers({
     selection,
@@ -117,6 +119,7 @@ const MyTable = ({
     tableData,
     rawData,
     users,
+    statuses,
     attribs,
     isLoading,
     isExpandable,
@@ -178,7 +181,7 @@ const MyTable = ({
 
   const handleCopy = (cell: $Any, colIdx: number) => {
     const cellData = getCopyCellData(cell.row, cell.column.id)
-    setCopyValue({data: cellData, colIdx})
+    setCopyValue({ data: cellData, colIdx })
   }
 
   const handlePaste = async (cell: $Any, rows: $Any) => {
@@ -213,7 +216,7 @@ const MyTable = ({
     }
 
     if (!selectionMatches) {
-      toast.error("Operation failed, please paste copied value into matching column.")
+      toast.error('Operation failed, please paste copied value into matching column.')
     }
     try {
       await updateEntities(

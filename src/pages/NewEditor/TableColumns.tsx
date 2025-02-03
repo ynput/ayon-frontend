@@ -18,6 +18,7 @@ import FolderTypeCell from './Cells/FolderTypeCell'
 import TaskTypeCell from './Cells/TaskTypeCell'
 import AssigneesCell from './Cells/AssigneesCell'
 import { useStoredCustomColumnWidths } from './hooks/useCustomColumnsWidth'
+import { Status } from '@api/rest/project'
 
 const CellWrapper = styled.div`
   width: 150px;
@@ -86,6 +87,7 @@ type Props = {
   tableData: $Any[]
   rawData: { folders: $Any; tasks: $Any }
   users: UserNode[]
+  statuses: Status[]
   attribs: $Any[]
   isLoading: boolean
   isExpandable: boolean
@@ -98,6 +100,7 @@ const TableColumns = ({
   tableData,
   rawData,
   users,
+  statuses,
   attribs,
   isLoading,
   sliceId,
@@ -232,10 +235,11 @@ const TableColumns = ({
           return (
             <CellWrapper>
               <StatusCell
-                status={rawData?.status || 'Not Ready'}
-                updateHandler={(newValue: string) => {
+                status={rawData?.status}
+                statuses={statuses}
+                updateHandler={(newValue: string[]) => {
                   const entityType = rawType === 'folders' ? 'folder' : 'task'
-                  updateHandler(rawData.id, 'status', newValue, entityType, false)
+                  updateHandler(rawData.id, 'status', newValue[0], entityType, false)
                 }}
               />
             </CellWrapper>
