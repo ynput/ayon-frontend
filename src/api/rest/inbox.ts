@@ -28,6 +28,8 @@ export type ManageInboxItemRequest = {
   projectName: string
   /** List of reference_ids of items to be managed */
   ids?: string[]
+  /** If true, all items will be managed */
+  all?: boolean
   /** Status to set for the items */
   status: 'unread' | 'read' | 'inactive'
 }
