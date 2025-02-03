@@ -19,7 +19,7 @@ const useUpdateInboxMessage = ({ last, isActive, isImportant }: Config) => {
     isRead = false,
     isAll = false,
   ) => {
-    if (ids.length > 0) {
+    if (ids?.length > 0 || isAll) {
       // cacheKeyArgs are not used in the patch but are used to match the cache key to a query (for optimistic updates)
       const cacheKeyArgs = {
         last,
