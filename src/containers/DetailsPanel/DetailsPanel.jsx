@@ -161,31 +161,34 @@ const DetailsPanel = ({
             segments={entityPathSegments}
             versions={entityPathVersions}
             projectName={firstProject}
+            hideProjectName={isSlideOut}
             isLoading={isFetchingEntitiesDetails || !entityPathSegments.length}
             entityType={entityType}
             scope={scope}
           />
-          <Watchers
-            entities={entitiesToQuery}
-            entityType={entityType}
-            options={projectUsers}
-            onWatchersUpdate={onWatchersUpdate && onWatchersUpdate}
-          />
-          <Button
-            icon="picture_in_picture"
-            variant={'text'}
-            data-tooltip="Picture in Picture"
-            onClick={handleOpenPip}
-          />
-
-          {onClose && (
-            <Button
-              icon="close"
-              variant={'text'}
-              onClick={() => onClose && onClose()}
-              data-shortcut={onClose ? 'Escape' : undefined}
+          <Styled.RightTools className="right-tools">
+            <Watchers
+              entities={entitiesToQuery}
+              entityType={entityType}
+              options={projectUsers}
+              onWatchersUpdate={onWatchersUpdate && onWatchersUpdate}
             />
-          )}
+            <Button
+              icon="picture_in_picture"
+              variant={'text'}
+              data-tooltip="Picture in Picture"
+              onClick={handleOpenPip}
+            />
+
+            {onClose && (
+              <Button
+                icon="close"
+                variant={'text'}
+                onClick={() => onClose && onClose()}
+                data-shortcut={onClose ? 'Escape' : undefined}
+              />
+            )}
+          </Styled.RightTools>
         </Styled.Toolbar>
 
         <DetailsPanelHeader
