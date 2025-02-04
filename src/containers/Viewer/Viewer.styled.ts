@@ -62,7 +62,7 @@ export const ViewerDetailsPanelWrapper = styled.div`
   max-width: clamp(460px, 25vw, 600px);
   min-width: clamp(460px, 25vw, 600px);
   position: relative;
-  z-index: 1000;
+  z-index: 1300;
 `
 
 export const EmptyPlaceholderWrapper = styled.div`
