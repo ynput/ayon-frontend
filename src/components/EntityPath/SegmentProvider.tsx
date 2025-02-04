@@ -17,8 +17,8 @@ interface SegmentProviderProps extends React.HTMLAttributes<HTMLDivElement> {
 const SegmentProvider = forwardRef<HTMLDivElement, SegmentProviderProps>(
   ({ children, segment, isOpen, scope, projectName, ...props }, ref) => {
     const dispatch = useDispatch()
-    // is the segment NOT a product?
-    const isLinkable = segment?.type !== 'product'
+    // is the segment NOT a product || project?
+    const isLinkable = segment?.type !== 'product' && segment?.type !== 'project'
 
     const handleClick = () => {
       if (!isLinkable) return

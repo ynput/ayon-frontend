@@ -97,7 +97,6 @@ const PresetList = ({
           rowClassName={(data) => clsx({ default: data.primary, loading: isLoading })}
         >
           <Column field="label" header="Name" />
-          <Column field="version" header="Version" style={{ maxWidth: 80 }} />
           <Column
             field="primary"
             header="Primary"

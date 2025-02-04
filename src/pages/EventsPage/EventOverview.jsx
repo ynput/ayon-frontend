@@ -1,10 +1,19 @@
 import React from 'react'
-import { Section, Panel } from '@ynput/ayon-react-components'
-import {
-  TotalsStyledPanel,
-  TotalStyledButton,
-} from '@pages/SettingsPage/UsersSettings/UsersOverview'
+import { Section, Panel, Button } from '@ynput/ayon-react-components'
 import EventTile from './EventTile'
+import styled from 'styled-components'
+
+const StyledPanel = styled(Panel)`
+  flex-direction: row;
+  flex: 4;
+  h2 {
+    width: 100%;
+  }
+`
+
+const TotalStyledButton = styled(Button)`
+  flex: 1;
+`
 
 const EventOverview = ({ events, logs, onTotal, search, setSelectedEvent, setShowLogs }) => {
   const errors = logs.filter((u) => u.topic.startsWith('log.error'))
@@ -24,7 +33,7 @@ const EventOverview = ({ events, logs, onTotal, search, setSelectedEvent, setSho
 
   return (
     <Section wrap style={{ gap: '5px', bottom: 'unset', maxHeight: '100%', overflow: 'hidden' }}>
-      <TotalsStyledPanel style={{ flexWrap: 'wrap' }}>
+      <StyledPanel style={{ flexWrap: 'wrap' }}>
         <h2>Events Overview</h2>
         <TotalStyledButton
           label={`Error - ${errors.length}`}
@@ -42,7 +51,7 @@ const EventOverview = ({ events, logs, onTotal, search, setSelectedEvent, setSho
           highlighted={search === 'entity'}
         />
 
-        <TotalsStyledPanel style={{ padding: 0 }}>
+        <StyledPanel style={{ padding: 0 }}>
           <TotalStyledButton
             label={`Product - ${events.filter((u) => u.topic.startsWith('entity.product')).length}
         `}
@@ -61,8 +70,8 @@ const EventOverview = ({ events, logs, onTotal, search, setSelectedEvent, setSho
             onClick={() => onTotal('version')}
             highlighted={search === 'version'}
           />
-        </TotalsStyledPanel>
-      </TotalsStyledPanel>
+        </StyledPanel>
+      </StyledPanel>
 
       <Panel>
         <h2>Last Error</h2>

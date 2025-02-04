@@ -61,6 +61,7 @@ const UserDashboardPage = () => {
   //   redux states
   const dispatch = useDispatch()
   //   selected projects
+  const user = useSelector((state) => state.user)
   const selectedProjects = useSelector((state) => state.dashboard.selectedProjects)
   const setSelectedProjects = (projects) => dispatch(onProjectSelected(projects))
 
@@ -118,6 +119,7 @@ const UserDashboardPage = () => {
               collapsedId="dashboard"
               styleSection={{ position: 'relative', height: '100%', minWidth: 200, maxWidth: 200 }}
               hideCode
+              hideAddProjectButton={module !== 'overview'}
               multiselect={isProjectsMultiSelect}
               selection={isProjectsMultiSelect ? selectedProjects : selectedProjects[0]}
               onSelect={(p) => setSelectedProjects(isProjectsMultiSelect ? p : [p])}
@@ -127,7 +129,9 @@ const UserDashboardPage = () => {
                 module !== 'overview' ? (projects) => setSelectedProjects(projects) : undefined
               }
               onSelectAllDisabled={!isProjectsMultiSelect}
-              isProjectManager={module === 'overview'}
+              isProjectManager={
+                module === 'overview' && (user?.data?.isManager || user?.data.isAdmin)
+              }
               onNewProject={() => setShowNewProject(true)}
               onDeleteProject={handleDeleteProject}
               onActivateProject={handleActivateProject}

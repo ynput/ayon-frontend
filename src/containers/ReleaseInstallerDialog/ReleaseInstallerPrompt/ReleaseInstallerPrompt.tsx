@@ -45,7 +45,7 @@ const ReleaseInstallerPrompt = ({ isAdmin }: Props) => {
     // go to bundles page
     navigate('/settings/bundles')
     // open menu
-    dispatch(toggleReleaseInstaller(true))
+    dispatch(toggleReleaseInstaller({ open: true }))
   }
 
   return (

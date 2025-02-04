@@ -62,7 +62,7 @@ export const ViewerDetailsPanelWrapper = styled.div`
   max-width: clamp(460px, 25vw, 600px);
   min-width: clamp(460px, 25vw, 600px);
   position: relative;
-  z-index: 1000;
+  z-index: 1300;
 `
 
 export const EmptyPlaceholderWrapper = styled.div`
@@ -73,4 +73,9 @@ export const EmptyPlaceholderWrapper = styled.div`
   display: 'flex';
   justify-content: 'center';
   align-items: 'center';
+`
+
+export const RightToolBar = styled.div`
+  display: flex;
+  flex-direction: column;
 `

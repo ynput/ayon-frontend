@@ -66,7 +66,7 @@ const SettingsPage = () => {
       case 'users':
         return <UsersSettings />
       case 'accessGroups':
-        return <AccessGroups />
+        return <AccessGroups canCreateOrDelete />
       case 'attributes':
         return <Attributes />
       case 'secrets':

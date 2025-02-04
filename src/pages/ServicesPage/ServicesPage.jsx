@@ -169,17 +169,22 @@ const ServicesPage = () => {
               if (!selectedServices.includes(e.value.name)) setSelectedServices([e.value.name])
             }}
           >
-            <Column field="name" header="Service name" />
-            <Column field="addonName" header="Addon name" />
-            <Column field="addonVersion" header="Addon version" />
-            <Column field="service" header="Service" />
-            <Column field="hostname" header="Host" />
-            <Column field="data.env.AYON_DEFAULT_SETTINGS_VARIANT" header="Settings variant" />
+            <Column field="name" header="Service name" sortable />
+            <Column field="addonName" header="Addon name" sortable />
+            <Column field="addonVersion" header="Addon version" sortable />
+            <Column field="service" header="Service" sortable />
+            <Column field="hostname" header="Host" sortable />
+            <Column
+              field="data.env.AYON_DEFAULT_SETTINGS_VARIANT"
+              header="Settings variant"
+              sortable
+            />
             <Column
               field="isRunning"
               header="Status"
               body={formatStatus}
               style={{ maxWidth: 130, textAlign: 'center' }}
+              sortable
             />
           </DataTable>
         </TablePanel>

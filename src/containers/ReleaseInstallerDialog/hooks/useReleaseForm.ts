@@ -3,6 +3,7 @@ import { BundleModel } from '@api/rest/bundles'
 import { ReleaseListItemModel } from '@api/rest/releases'
 import { useLazyListInstallersQuery } from '@queries/installers/getInstallers'
 import { guessPlatform } from '../helpers'
+import { ReleaseState } from '@state/releaseInstaller'
 
 export type ReleaseForm = {
   addons: string[]
@@ -13,11 +14,13 @@ export type ReleaseForm = {
 type Props = {
   release: ReleaseListItemModel | null
   bundle: BundleModel | null
+  inherit: ReleaseState['inherit']
 }
 
 export const useReleaseForm = ({
   release,
   bundle,
+  inherit,
 }: Props): [ReleaseForm, React.Dispatch<React.SetStateAction<ReleaseForm>>] => {
   const [releaseForm, setReleaseForm] = useState<ReleaseForm>({
     addons: [],
@@ -56,23 +59,27 @@ export const useReleaseForm = ({
   }: {
     release: ReleaseListItemModel
     bundle: BundleModel | null
+    inherit: ReleaseState['inherit']
   }) => {
     try {
       const { addons, installerVersion } = bundle || {}
 
-      const getInitialPlatforms = async (installerVersion: string | undefined) => {
-        if (installerVersion) {
-          const { installers = [] } =
-            (await getInstallers({ version: installerVersion }).unwrap()) || {}
-          return installers.map((i) => i.platform)
-        } else {
-          const guess = guessPlatform()
-          return guess ? [guess] : []
+      let platforms: string[] = []
+      if (inherit.platforms) {
+        const getInitialPlatforms = async (installerVersion: string | undefined) => {
+          if (installerVersion) {
+            const { installers = [] } =
+              (await getInstallers({ version: installerVersion }).unwrap()) || {}
+            return installers.map((i) => i.platform)
+          } else {
+            const guess = guessPlatform()
+            return guess ? [guess] : []
+          }
         }
+        platforms = await getInitialPlatforms(installerVersion)
       }
-      const platforms = await getInitialPlatforms(installerVersion)
 
-      let addonsList = getAddonsForForm(addons, release)
+      let addonsList = getAddonsForForm(inherit.addons ? addons : null, release)
 
       setReleaseForm({
         addons: addonsList,
@@ -86,8 +93,8 @@ export const useReleaseForm = ({
   useEffect(() => {
     if (!release) return
 
-    buildInitForm({ bundle, release })
-  }, [release, bundle, getInstallers, setReleaseForm])
+    buildInitForm({ bundle, release, inherit })
+  }, [release, bundle, inherit, getInstallers, setReleaseForm])
 
   return [releaseForm, setReleaseForm]
 }

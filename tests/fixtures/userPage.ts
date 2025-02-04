@@ -27,12 +27,26 @@ class UserPage {
   async deleteUser(userName) {
     await this.goto(userName)
     await this.page.getByRole('button', { name: 'person_remove Delete Users' }).click()
-    await this.page.getByTestId("delete-user-dialog-input").fill(userName)
+    await this.page.getByTestId('delete-user-dialog-input').fill(userName)
     await this.page.getByRole('button', { name: 'Delete', exact: true }).click()
     await expect(this.page.getByText('Deleted 1 user(s)')).toBeVisible()
     await expect(
       this.page.locator('span').filter({ hasText: new RegExp(`^${userName}$`) }),
     ).toBeHidden()
+  }
+
+  async assignAccessGroups(project, user, accessGroups) {
+    await this.goto(user)
+    await this.page.getByRole('button', { name: 'checklist Show all users' }).click()
+    await this.page.getByText(project).first().click()
+    for (const accessGroup of accessGroups) {
+      await this.page.getByText(`${accessGroup}chevron_right`).click();
+      await this.page
+        .getByText(project + 'Add')
+        .first()
+        .click()
+    }
+    await this.page.getByRole('button', { name: 'check Save selected users' }).click()
   }
 }
 

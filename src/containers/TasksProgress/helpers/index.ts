@@ -5,4 +5,4 @@ export {
   getPriorityChangeOperations,
 } from './operations'
 export { resolveShiftSelect } from './resolveShiftSelect'
-export { useFolderSort } from './useFolderSort'
+export { getPlaceholderMessage } from './getPlaceholderMessage'

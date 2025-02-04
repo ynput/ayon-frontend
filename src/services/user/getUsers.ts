@@ -42,6 +42,7 @@ const USERS_QUERY = `
           isDeveloper
           isGuest
           active
+          userPool
           accessGroups
           defaultAccessGroups
           hasPassword
@@ -208,6 +209,7 @@ type AssigneeNode = GetAllProjectUsersAsAssigneeQuery['users']['edges'][0]['node
 export type Assignees = {
   name: AssigneeNode['name']
   fullName: AssigneeNode['attrib']['fullName']
+  updatedAt: AssigneeNode['updatedAt']
 }[]
 
 import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
@@ -227,7 +229,11 @@ const enhancedApi = injectedApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
   endpoints: {
     GetAllProjectUsersAsAssignee: {
       transformResponse: (res: GetAllProjectUsersAsAssigneeQuery) =>
-        res.users.edges.map((e) => ({ name: e.node.name, fullName: e.node.attrib.fullName })),
+        res.users.edges.map((e) => ({
+          name: e.node.name,
+          fullName: e.node.attrib.fullName,
+          updatedAt: e.node.updatedAt,
+        })),
       providesTags: (res) =>
         res
           ? [{ type: 'user', id: 'LIST' }, ...res.map((e) => ({ type: 'user', id: e.name }))]
@@ -240,7 +246,11 @@ const enhancedApi = injectedApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
     },
     GetAllAssignees: {
       transformResponse: (res: GetAllAssigneesQuery) =>
-        res.users.edges.map((e) => ({ name: e.node.name, fullName: e.node.attrib.fullName })),
+        res.users.edges.map((e) => ({
+          name: e.node.name,
+          fullName: e.node.attrib.fullName,
+          updatedAt: e.node.updatedAt,
+        })),
       providesTags: (res) =>
         res
           ? [{ type: 'user', id: 'LIST' }, ...res.map((e) => ({ type: 'user', id: e.name }))]
@@ -258,6 +268,7 @@ export const {
   useGetMeQuery,
   useGetUserSessionsQuery,
   useGetAllProjectUsersAsAssigneeQuery,
+  useLazyGetAllProjectUsersAsAssigneeQuery,
   useGetActiveUsersCountQuery,
   useGetAllAssigneesQuery,
 } = enhancedApi

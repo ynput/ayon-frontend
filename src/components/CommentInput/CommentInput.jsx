@@ -1,26 +1,40 @@
+// React and related hooks
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import * as Styled from './CommentInput.styled'
-import { Button, Icon, SaveButton } from '@ynput/ayon-react-components'
 
-import ReactQuill, { Quill } from 'react-quill-ayon'
-var Delta = Quill.import('delta')
+// Third-party libraries
 import clsx from 'clsx'
-
 import { toast } from 'react-toastify'
+import ReactQuill, { Quill } from 'react-quill-ayon'
+
+// Components
+import { Button, Icon, SaveButton } from '@ynput/ayon-react-components'
 import CommentMentionSelect from '../CommentMentionSelect/CommentMentionSelect'
+import InputMarkdownConvert from './InputMarkdownConvert'
+import FilesGrid from '@containers/FilesGrid/FilesGrid'
+
+// Styled components
+import * as Styled from './CommentInput.styled'
+
+// Helpers and utilities
 import getMentionOptions from '@containers/Feed/mentionHelpers/getMentionOptions'
 import getMentionUsers from '@containers/Feed/mentionHelpers/getMentionUsers'
 import getMentionTasks from '@containers/Feed/mentionHelpers/getMentionTasks'
 import getMentionVersions from '@containers/Feed/mentionHelpers/getMentionVersions'
 import { convertToMarkdown } from './quillToMarkdown'
 import { handleFileDrop, parseImages, typeWithDelay } from './helpers'
+import { getModules, quillFormats } from './modules'
+
+// Hooks
 import useInitialValue from './hooks/useInitialValue'
 import useSetCursorEnd from './hooks/useSetCursorEnd'
-import InputMarkdownConvert from './InputMarkdownConvert'
-import FilesGrid from '@containers/FilesGrid/FilesGrid'
-import { getModules, quillFormats } from './modules'
-import { useGetMentionSuggestionsQuery } from '@queries/mentions/getMentions'
 import useMentionLink from './hooks/useMentionLink'
+import useAnnotationsSync from './hooks/useAnnotationsSync'
+
+// State management
+import { useGetMentionSuggestionsQuery } from '@queries/mentions/getMentions'
+import useAnnotationsUpload from './hooks/useAnnotationsUpload'
+
+var Delta = Quill.import('delta')
 
 const mentionTypes = ['@', '@@', '@@@']
 export const mentionTypeOptions = {
@@ -60,6 +74,12 @@ const CommentInput = ({
   const [filesUploading, setFilesUploading] = useState([])
   const [isDropping, setIsDropping] = useState(false)
 
+  const { annotations, removeAnnotation, goToAnnotation } = useAnnotationsSync({
+    openCommentInput: onOpen,
+    entityId: entities[0]?.id,
+    filesUploading,
+  })
+
   // MENTION STATES
   const [mention, setMention] = useState(null)
   const [mentionSelectedIndex, setMentionSelectedIndex] = useState(0)
@@ -87,9 +107,11 @@ const CommentInput = ({
   useEffect(() => {
     if (isOpen) {
       editorRef.current?.getEditor()?.enable()
-      editorRef.current?.focus()
+      // block autofocus if opened from an annotation
+      const blockAutoFocus = !!annotations.length && files.length === 0
+      !blockAutoFocus && editorRef.current?.focus()
     }
-  }, [isOpen, editorRef])
+  }, [isOpen, editorRef, annotations, files])
 
   mentionTypes.sort((a, b) => b.length - a.length)
 
@@ -335,31 +357,6 @@ const CommentInput = ({
     addTextToEditor(type)
   }
 
-  const handleSubmit = async () => {
-    try {
-      // convert to markdown
-      const [markdown] = convertToMarkdown(editorValue)
-
-      // remove img query params
-      const markdownParsed = parseImages(markdown)
-
-      if ((markdownParsed || files.length) && onSubmit) {
-        try {
-          await onSubmit(markdownParsed, files)
-          // only clear if onSubmit is successful
-          setEditorValue('')
-          setFiles([])
-        } catch (error) {
-          // error is handled in rtk query mutation
-          return
-        }
-      }
-    } catch (error) {
-      console.error(error)
-      toast.error('Something went wrong')
-    }
-  }
-
   const handleOpenClick = () => {
     if (isOpen || disabled) return
 
@@ -376,6 +373,105 @@ const CommentInput = ({
 
     // always close editor
     onClose && onClose()
+  }
+
+  const handleFileUploaded = ({ file, data }) => {
+    const newFile = {
+      id: data.id,
+      name: file.name,
+      mime: file.type,
+      size: file.size,
+      order: files.length,
+    }
+
+    setFiles((prev) => [...prev, newFile])
+    // remove from uploading
+    setFilesUploading((prev) => prev.filter((uploading) => uploading.name !== file.name))
+
+    return newFile
+  }
+
+  const handleFileRemove = (id, name, isAnnotation) => {
+    if (isAnnotation) {
+      // remove from annotations (if it's an annotation)
+      removeAnnotation(id)
+    } else {
+      // remove file from files
+      setFiles((prev) => prev.filter((file) => file.id !== id))
+      // remove from uploading
+      setFilesUploading((prev) => {
+        return prev.filter((file) => file.name !== name)
+      })
+    }
+  }
+
+  const handleFileProgress = (e, file) => {
+    const progress = Math.round((e.loaded * 100) / e.total)
+    if (progress !== 100) {
+      const uploadProgress = {
+        name: file.name,
+        progress,
+        type: file.type,
+        order: files.length + filesUploading.length,
+      }
+
+      setFilesUploading((prev) => {
+        // replace or add new progress
+        const newProgress = prev.filter((name) => name.name !== file.name)
+        return [...newProgress, uploadProgress]
+      })
+    }
+  }
+
+  // when a file is not dropped onto the comment input
+  const handleDrop = (e) => {
+    setIsDropping(false)
+    // upload file
+    handleFileDrop(e, projectName, handleFileProgress, handleFileUploaded)
+  }
+
+  const handleDragOver = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDropping(true)
+  }
+
+  const uploadAnnotations = useAnnotationsUpload({
+    projectName,
+    onSuccess: handleFileUploaded,
+  })
+
+  const handleSubmit = async () => {
+    try {
+      // upload any annotations first
+      let annotationFiles = []
+      if (annotations.length) {
+        annotationFiles = await uploadAnnotations(annotations)
+      }
+
+      // convert to markdown
+      const [markdown] = convertToMarkdown(editorValue)
+
+      // remove img query params
+      const markdownParsed = parseImages(markdown)
+
+      const uploadedFiles = [...files, ...annotationFiles]
+
+      if ((markdownParsed || uploadedFiles.length) && onSubmit) {
+        try {
+          await onSubmit(markdownParsed, uploadedFiles)
+          // only clear if onSubmit is successful
+          setEditorValue('')
+          setFiles([])
+        } catch (error) {
+          // error is handled in rtk query mutation
+          return
+        }
+      }
+    } catch (error) {
+      console.error(error)
+      toast.error('Something went wrong')
+    }
   }
 
   const handleKeyDown = (e) => {
@@ -417,61 +513,6 @@ const CommentInput = ({
     }
   }
 
-  const handleFileUpload = ({ file, data }) => {
-    const newFile = {
-      id: data.id,
-      name: file.name,
-      mime: file.type,
-      size: file.size,
-      order: files.length,
-    }
-
-    setFiles((prev) => [...prev, newFile])
-    // remove from uploading
-    setFilesUploading((prev) => prev.filter((uploading) => uploading.name !== file.name))
-  }
-
-  const handleFileRemove = (id, name) => {
-    // remove file from files
-    setFiles((prev) => prev.filter((file) => file.id !== id))
-    // remove from uploading
-    setFilesUploading((prev) => {
-      console.log(prev)
-      return prev.filter((file) => file.name !== name)
-    })
-  }
-
-  const handleFileProgress = (e, file) => {
-    const progress = Math.round((e.loaded * 100) / e.total)
-    if (progress !== 100) {
-      const uploadProgress = {
-        name: file.name,
-        progress,
-        type: file.type,
-        order: files.length + filesUploading.length,
-      }
-
-      setFilesUploading((prev) => {
-        // replace or add new progress
-        const newProgress = prev.filter((name) => name.name !== file.name)
-        return [...newProgress, uploadProgress]
-      })
-    }
-  }
-
-  // when a file is not dropped onto the comment input
-  const handleDrop = (e) => {
-    setIsDropping(false)
-    // upload file
-    handleFileDrop(e, projectName, handleFileProgress, handleFileUpload)
-  }
-
-  const handleDragOver = (e) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setIsDropping(true)
-  }
-
   let quillMinHeight = isOpen ? initHeight + 41 : 44
   if (isEditing) quillMinHeight = undefined
 
@@ -481,14 +522,16 @@ const CommentInput = ({
       getModules({
         imageUploader: {
           projectName,
-          onUpload: handleFileUpload,
+          onUpload: handleFileUploaded,
           onUploadProgress: handleFileProgress,
         },
       }),
     [projectName, setFiles, setFilesUploading],
   )
 
-  const allFiles = [...(files || []), ...filesUploading].sort((a, b) => a.order - b.order)
+  const allFiles = [...annotations, ...(files || []), ...filesUploading].sort(
+    (a, b) => a.order - b.order,
+  )
   const compactGrid = allFiles.length > 6
 
   // disable version mentions for folders
@@ -534,6 +577,7 @@ const CommentInput = ({
               onRemove={handleFileRemove}
               style={{ borderBottom: '1px solid var(--md-sys-color-outline-variant)' }}
               projectName={projectName}
+              onAnnotationClick={goToAnnotation}
             />
           )}
           {isOpen && !disabled ? (

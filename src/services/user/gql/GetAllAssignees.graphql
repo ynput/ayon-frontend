@@ -3,6 +3,7 @@ query GetAllAssignees {
     edges {
       node {
         name
+        updatedAt
         attrib {
           fullName
         }

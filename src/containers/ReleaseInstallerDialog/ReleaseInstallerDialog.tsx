@@ -17,7 +17,7 @@ const ReleaseInstallerDialog: FC = () => {
   const location = useLocation()
   const dispatch = useAppDispatch()
   // STATE
-  const closeDialog = () => dispatch(toggleReleaseInstaller(false))
+  const closeDialog = () => dispatch(toggleReleaseInstaller({ open: false }))
   const isOpen = useAppSelector((state) => state.releaseInstaller.open)
   // STATE
 

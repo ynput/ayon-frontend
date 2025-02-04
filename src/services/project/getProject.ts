@@ -1,6 +1,7 @@
-import { api } from '@api/rest/project'
+import { api, ListProjectsApiResponse } from '@api/rest/project'
 // @ts-ignore
 import { selectProject, setProjectData } from '@state/project'
+import { TagTypes, UpdatedDefinitions } from './ProjectTypes'
 
 // TODO: use graphql api and write custom types
 // We will need to inject the endpoint as it cannot be generated
@@ -55,7 +56,7 @@ const getProjectInjected = api.injectEndpoints({
 import { $Any } from '@/types'
 
 // TODO: sort out the types
-const getProjectApi = getProjectInjected.enhanceEndpoints({
+const getProjectApi = getProjectInjected.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
   endpoints: {
     getProject: {
       transformErrorResponse: (error: $Any) => error.data.detail || `Error ${error.status}`,
@@ -110,7 +111,7 @@ const getProjectApi = getProjectInjected.enhanceEndpoints({
       },
     },
     listProjects: {
-      transformResponse: (res: $Any) => res?.projects || [],
+      transformResponse: (res: ListProjectsApiResponse) => res?.projects || [],
       transformErrorResponse: (error: $Any) => error.data.detail || `Error ${error.status}`,
       // @ts-ignore
       providesTags: (_res, _error, { active }) => [

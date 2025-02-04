@@ -15,11 +15,26 @@ export interface MarketAddonItem extends MarketAddonItemRes {
 
 export type MarketAddonList = MarketAddonItem[]
 
+export type LicenseItem = {
+  label: string
+  subject: string
+  value: boolean
+  type: string
+  subscription: string
+  exp: number
+  valid: boolean
+  note: string
+}
+
 type DefinitionsRest = DefinitionsFromApi<typeof apiRest>
 type TagTypesRest = TagTypesFromApi<typeof apiRest>
 
 type UpdatedDefinitionsRest = Omit<DefinitionsRest, 'marketAddonList'> & {
   marketAddonList: OverrideResultType<DefinitionsRest['marketAddonList'], MarketAddonList>
+  getLicenses: OverrideResultType<
+    DefinitionsRest['getLicenses'],
+    { syncedAt: number; licenses: LicenseItem[] }
+  >
 }
 
 export const enhancedMarketRest = apiRest.enhanceEndpoints<TagTypesRest, UpdatedDefinitionsRest>({
@@ -62,6 +77,7 @@ export const enhancedMarketRest = apiRest.enhanceEndpoints<TagTypesRest, Updated
         { type: 'marketAddon', id: 'LIST' },
       ],
     },
+    getLicenses: {},
   },
 })
 
@@ -70,6 +86,7 @@ export const {
   useMarketAddonDetailQuery,
   useLazyMarketAddonDetailQuery,
   useLazyMarketAddonVersionDetailQuery,
+  useGetLicensesQuery,
 } = enhancedMarketRest
 
 // VVV GraphQL endpoints VVV

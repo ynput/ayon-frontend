@@ -595,11 +595,11 @@ a {
   .p-button {
     border: none;
     margin-right: 0;
+    background-color: var(--md-sys-color-surface-container-highest);
+
     &:focus {
       outline: none;
     }
-
-    background-color: var(--md-sys-color-surface-container-highest);
 
     &:hover {
       background-color: var(--md-sys-color-surface-container-highest-hover);

@@ -60,7 +60,7 @@ function URIProvider({ children }) {
     dispatch(onUriNavigate(focused))
 
     const path = window.location.pathname
-    if (!path.startsWith(`/projects/${project}`)) {
+    if (!path.startsWith(`/projects/${project}`) && !path.startsWith(`/dashboard/tasks`)) {
       navigate(`/projects/${project}/browser`)
     }
   }
@@ -79,7 +79,7 @@ function URIProvider({ children }) {
           }
           const entities = res.data[0].entities
           if (!entities.length) {
-            toast.error('No entities found')
+            // toast.error('No entities found')
             return
           }
           focusEntities(entities)

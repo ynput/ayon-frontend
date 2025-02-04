@@ -8,7 +8,7 @@ const sortByName = (a, b) => {
 
 export const parseTasksList = (tasks, userName) => {
   const parsed = tasks
-    .sort(sortByName)
+    ?.sort(sortByName)
     .map(({ node: { id, name, active, label, folder, taskType, assignees } }) => ({
       id: id,
       name: name,

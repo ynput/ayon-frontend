@@ -23,6 +23,18 @@ interface Processing extends ReviewableProcessingStatus {
 // Extend UpdatedReviewable with the new Processing type
 export interface ReviewableResponse extends Omit<ReviewableModel, 'processing'> {
   processing: Processing // Use the new Processing type here
+  mediaInfo?: {
+    codec?: string
+    duration?: number
+    frameRate?: number
+    height?: number
+    iframeOnly?: boolean
+    majorBrand?: string
+    pixelFormat?: string
+    probeVersion?: number
+    videoTrackIndex?: number
+    width?: number
+  }
 }
 
 // Extend the main response interface

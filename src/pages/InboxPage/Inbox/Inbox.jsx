@@ -22,6 +22,7 @@ import useGroupMessages from '../hooks/useGroupMessages'
 import useKeydown from '../hooks/useKeydown'
 import useUpdateInboxMessage from '../hooks/useUpdateInboxMessage'
 import useInboxRefresh from '../hooks/useInboxRefresh'
+import { useListProjectsQuery } from '@queries/project/getProject'
 
 const placeholderMessages = Array.from({ length: 100 }, (_, i) => ({
   activityId: `placeholder-${i}`,
@@ -39,6 +40,9 @@ const filters = {
 
 const Inbox = ({ filter }) => {
   const dispatch = useDispatch()
+
+  // get all project names
+  const { data: projects = [] } = useListProjectsQuery({})
 
   const user = useSelector((state) => state.user.name)
 
@@ -64,7 +68,9 @@ const Inbox = ({ filter }) => {
   const [getInboxMessages] = useLazyGetInboxMessagesQuery()
   // load more messages
   const handleLoadMore = () => {
-    if (!hasPreviousPage || isFetchingInbox) return
+    if (!hasPreviousPage || isFetchingInbox || !messages.length) return
+
+    console.log('loading more messages...')
 
     getInboxMessages({ last, active: isActive, important: isImportant, cursor: lastCursor })
   }
@@ -176,7 +182,7 @@ const Inbox = ({ filter }) => {
     listRef,
   })
 
-  const clearMessages = async (id, messagesToClear = [], projectName) => {
+  const clearMessages = async (id, messagesToClear = [], projectName, allMessages) => {
     if (selected.length) {
       // select next message in the list
       const selectedMessageIndex = groupedMessages.findIndex((m) => m.activityId === id)
@@ -185,11 +191,11 @@ const Inbox = ({ filter }) => {
       else setSelected([])
     } else setSelected([])
 
-    const idsToClear = messagesToClear.map((m) => m.referenceId)
+    const idsToClear = allMessages ? undefined : messagesToClear.map((m) => m.referenceId)
     const isRead = messagesToClear.every((m) => m.read)
     const status = isActive ? 'inactive' : 'unread'
 
-    handleUpdateMessages(idsToClear, status, projectName, true, isRead)
+    handleUpdateMessages(idsToClear, status, projectName, true, isRead, allMessages)
   }
 
   const handleClearMessage = (id) => {
@@ -202,26 +208,16 @@ const Inbox = ({ filter }) => {
   }
 
   const handleClearAll = async () => {
-    // first group messages by projectName
-    const groupedByProject = messages.reduce((acc, message) => {
-      if (!acc[message.projectName]) acc[message.projectName] = []
-      acc[message.projectName].push(message)
-      return acc
-    }, {})
-
     let promises = []
-    // for each project, clear all messages
-    for (const [projectName, messages] of Object.entries(groupedByProject)) {
-      const promise = clearMessages(null, messages, projectName)
+    // for all projects, clear all messages
+    for (const project of projects) {
+      const promise = clearMessages(null, [], project.name, true)
       promises.push(promise)
     }
 
     try {
       await Promise.all(promises)
       toast.success('All messages cleared')
-
-      // refresh the inbox to get any new messages
-      if (hasPreviousPage) handleLoadMore()
     } catch (error) {
       console.error(error)
     }
@@ -398,7 +394,7 @@ const Inbox = ({ filter }) => {
               onContextMenu={handleContextMenu}
             />
           ))}
-          {hasPreviousPage && !isLoadingInbox && (
+          {hasPreviousPage && !isLoadingInbox && !!messages.length && (
             <InView
               onChange={(inView) => inView && handleLoadMore()}
               rootMargin={'0px 0px 500px 0px'}

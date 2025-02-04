@@ -40,7 +40,7 @@ const DateTimeWidget = (props: $Any) => {
   }
 
   // @ts-ignore
-  return <InputDate selected={value || undefined} onChange={onChange} onFocus={onFocus} />
+  return <InputDate className="form-field" selected={value || undefined} onChange={onChange} onFocus={onFocus} />
 }
 
 export { DateTimeWidget }

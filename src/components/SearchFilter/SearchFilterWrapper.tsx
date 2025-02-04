@@ -2,10 +2,12 @@ import useBuildFilterOptions, { BuildFilterOptions } from '@hooks/useBuildFilter
 import { FC, useEffect, useState } from 'react'
 import SearchFilter, { SearchFilterProps } from './SearchFilter'
 import { Filter } from './types'
+import { ALLOW_GLOBAL_SEARCH, ALLOW_MULTIPLE_SAME_FILTERS } from './featureFlags'
 
 interface SearchFilterWrapperProps extends BuildFilterOptions {
   filters: SearchFilterProps['filters']
   onChange: SearchFilterProps['onChange']
+  disabledFilters?: string[]
 }
 
 const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
@@ -15,6 +17,7 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
   projectNames,
   scope,
   data,
+  disabledFilters,
 }) => {
   const options = useBuildFilterOptions({
     filterTypes,
@@ -37,6 +40,9 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
       filters={filters}
       onChange={setFilters}
       onFinish={(v) => onChange(v)} // when changes are applied
+      allowMultipleSameFilters={ALLOW_MULTIPLE_SAME_FILTERS}
+      allowGlobalSearch={ALLOW_GLOBAL_SEARCH}
+      disabledFilters={disabledFilters}
     />
   )
 }

@@ -13,7 +13,7 @@ import { SelectWidget } from './Widgets/SelectWidget'
 import { DateTimeWidget } from './Widgets/DateTimeWidget'
 import { FormWrapper } from './SettingsEditor.styled'
 
-const waitForElm = (selector, timeout = 1000) => {
+const waitForElm = (selector, timeout = 3000) => {
   return new Promise((resolve, reject) => {
     if (document.querySelector(selector)) {
       return resolve(document.querySelector(selector))
@@ -177,7 +177,6 @@ const SettingsEditor = ({
 
   // console.log('context? ', fullContext)
   // console.log('schema? ', schema)
-
 
   return (
     <FormWrapper $currentSelection={currentId} ref={formWrapperRef}>

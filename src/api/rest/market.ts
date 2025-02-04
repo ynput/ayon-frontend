@@ -15,6 +15,9 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/market/addons/${queryArg.addonName}/${queryArg.addonVersion}`,
       }),
     }),
+    getLicenses: build.query<GetLicensesApiResponse, GetLicensesApiArg>({
+      query: (queryArg) => ({ url: `/api/market/licenses`, params: { refresh: queryArg.refresh } }),
+    }),
   }),
   overrideExisting: false,
 })
@@ -30,6 +33,10 @@ export type MarketAddonVersionDetailApiResponse =
 export type MarketAddonVersionDetailApiArg = {
   addonName: string
   addonVersion: string
+}
+export type GetLicensesApiResponse = /** status 200 Successful Response */ object[]
+export type GetLicensesApiArg = {
+  refresh?: boolean
 }
 export type LinkModel = {
   type?: 'homepage' | 'github' | 'documentation' | 'license'

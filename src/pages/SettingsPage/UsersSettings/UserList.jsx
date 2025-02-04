@@ -10,12 +10,19 @@ import styled from 'styled-components'
 import useCreateContext from '@hooks/useCreateContext'
 import clsx from 'clsx'
 import useTableLoadingData from '@hooks/useTableLoadingData'
-import { accessGroupsSortFunction } from '@helpers/user'
+import { useGetUserPoolsQuery } from '@queries/auth/getAuth'
+import { accessGroupsSortFunction, userPoolSortFunction } from './tableSorting'
 
 const StyledProfileRow = styled.div`
   display: flex;
   align-items: center;
   gap: var(--base-gap-large);
+`
+
+const StyledLicenseRow = styled.div`
+  &.invalid {
+    color: var(--md-sys-color-error);
+  }
 `
 
 export const ProfileRow = ({ rowData }) => {
@@ -45,6 +52,13 @@ export const ProfileRow = ({ rowData }) => {
   )
 }
 
+const getUserRole = (user) => {
+  if (user.isAdmin) return 'Admin'
+  if (user.isService) return 'Service'
+  if (user.isManager) return 'Manager'
+  return 'User'
+}
+
 const UserList = ({
   selectedProjects,
   selectedUsers,
@@ -57,6 +71,9 @@ const UserList = ({
   onSelectUsers,
   isSelfSelected,
 }) => {
+  // GET LICENSE USER POOLS
+  const { data: userPools = [] } = useGetUserPoolsQuery()
+
   // Selection
   const selection = useMemo(() => {
     return userList.filter((user) => selectedUsers.includes(user.name))
@@ -107,6 +124,8 @@ const UserList = ({
 
   const tableData = useTableLoadingData(tableList, isLoading, 40, 'name')
 
+  const findUserPool = (poolId) => userPools.find((p) => p.id === poolId)
+
   // Render
   return (
     <Section wrap>
@@ -138,24 +157,37 @@ const UserList = ({
           />
           <Column field="attrib.fullName" header="Full name" sortable resizeable />
           <Column field="attrib.email" header="Email" sortable />
+          {!!userPools.length && (
+            <Column
+              field="userPool"
+              header="License"
+              body={(rowData) => {
+                const pool = findUserPool(rowData.userPool)
+                return (
+                  <StyledLicenseRow className={clsx({ invalid: rowData.userPool && !pool })}>
+                    {rowData.userPool ? pool?.label || 'Invalid' : ''}
+                  </StyledLicenseRow>
+                )
+              }}
+              sortable
+              sortFunction={(event) => userPoolSortFunction(event, userPools)}
+              resizeable
+            />
+          )}
           <Column
-            field={'accessGroupList'}
-            header="Project access"
-            body={(rowData) =>
-              rowData &&
-              rowData.accessGroups &&
-              [...Object.keys(rowData.accessGroups)]
-                .sort((a, b) => a.localeCompare(b))
-                .map((agName, i, arr) => (
-                  <span key={agName} className={rowData.accessGroups[agName].cls}>
-                    {agName}
-                    {i < arr.length - 1 ? ', ' : ''}
-                  </span>
-                ))
-            }
+            field={'accessLevel'}
+            header="Access level"
+            body={(rowData) => getUserRole(rowData)}
             sortFunction={accessGroupsSortFunction}
             sortable
             resizeable
+          />
+          <Column
+            field="defaultAccessGroups"
+            header="Default projects access"
+            sortable
+            resizeable
+            body={(rowData) => rowData.defaultAccessGroups?.join(', ')}
           />
           <Column
             header="Has password"

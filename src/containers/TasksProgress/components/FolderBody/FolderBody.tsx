@@ -18,6 +18,7 @@ interface FolderBodyProps {
   projectName: string
   onExpandToggle: () => void
   onFolderOpen?: (id: string) => void
+  onSpaceKey?: () => void
 }
 
 export const FolderBody: FC<FolderBodyProps> = ({
@@ -27,11 +28,20 @@ export const FolderBody: FC<FolderBodyProps> = ({
   projectName,
   onExpandToggle,
   onFolderOpen,
+  onSpaceKey,
 }) => {
   const thumbnailUrl = `/api/projects/${projectName}/folders/${folder.id}/thumbnail?updatedAt=${folder.updatedAt}`
 
+  // handle hitting enter or space on the cell
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === ' ') {
+      e.preventDefault()
+      onSpaceKey?.()
+    }
+  }
+
   return (
-    <Styled.Body className={clsx({ expanded: isExpanded })}>
+    <Styled.Body className={clsx({ expanded: isExpanded })} onKeyDown={handleKeyDown}>
       <Styled.ExpandButton
         icon={isExpanded ? 'collapse_all' : 'expand_all'}
         variant="text"

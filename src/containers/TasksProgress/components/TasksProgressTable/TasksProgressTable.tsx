@@ -39,7 +39,7 @@ import useCreateContext from '@hooks/useCreateContext'
 import useLocalStorage from '@hooks/useLocalStorage'
 
 // Helpers
-import { useFolderSort } from '../../helpers'
+import { useFolderSort } from '../../hooks'
 import { taskStatusSortFunction } from '@containers/TasksProgress/helpers/taskStatusSortFunction'
 import clsx from 'clsx'
 
@@ -60,7 +60,6 @@ interface TasksProgressTableProps
   tableData: FolderRow[]
   projectName: string
   isLoading: boolean
-  selectedFolders: string[]
   activeTask: string | null
   selectedAssignees: string[]
   statuses: Status[]
@@ -75,7 +74,15 @@ interface TasksProgressTableProps
   onCollapseRow: (folderId: string) => void
   onChange: TaskFieldChange
   onSelection: (taskId: string, meta: boolean, shift: boolean) => void
-  onOpenViewer: (taskId: string, quickView: boolean) => void
+  onOpenViewer: ({
+    taskId,
+    folderId,
+    quickView,
+  }: {
+    taskId?: string
+    folderId?: string
+    quickView?: boolean
+  }) => void
 }
 
 export const TasksProgressTable = ({
@@ -83,7 +90,6 @@ export const TasksProgressTable = ({
   tableData = [],
   projectName,
   isLoading,
-  selectedFolders = [],
   activeTask,
   selectedAssignees = [],
   statuses = [], // project statuses schema
@@ -201,7 +207,7 @@ export const TasksProgressTable = ({
         label: 'Open in viewer',
         icon: 'play_circle',
         shortcut: 'Spacebar',
-        command: () => onOpenViewer(taskId, false),
+        command: () => onOpenViewer({ taskId, quickView: true }),
       },
     ]
   }
@@ -366,6 +372,7 @@ export const TasksProgressTable = ({
               isExpanded={getIsExpanded(row.__folderId)}
               onExpandToggle={() => onExpandRow(row.__folderId)}
               onFolderOpen={handleFolderOpen}
+              onSpaceKey={() => onOpenViewer({ folderId: row.__folderId, quickView: true })}
             />
           )
         }
@@ -431,14 +438,14 @@ export const TasksProgressTable = ({
                     onSelection(task.id, e.metaKey || e.ctrlKey, e.shiftKey)
                   }
 
-                  // handle hitting enter on the cell
+                  // handle hitting enter or space on the cell
                   const handleCellKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
                     if (e.key === 'Enter') {
                       onSelection(task.id, e.metaKey || e.ctrlKey, e.shiftKey)
                     }
                     if (e.key === ' ') {
                       e.preventDefault()
-                      onOpenViewer(task.id, true)
+                      onOpenViewer({ taskId: task.id, quickView: true })
                     }
                   }
 

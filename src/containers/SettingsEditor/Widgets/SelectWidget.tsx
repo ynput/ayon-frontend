@@ -3,34 +3,32 @@ import { Dropdown } from '@ynput/ayon-react-components'
 
 import { updateChangedKeys, equiv, parseContext } from '../helpers'
 import { $Any } from '@types'
+import styled from 'styled-components'
+
+const StyledDropdown = styled(Dropdown)`
+  button > div > div:has(span) {
+    width: 0;
+  }
+`
 
 const SelectWidget = (props: $Any) => {
   const { originalValue, path } = parseContext(props)
   const [value, setValue] = useState(null)
-  const [initialized, setInitialized] = useState(false)
-
-  useEffect(() => {
-    // Initial push to formData
-    // Used when the item is a part of an array
-    // and it is newly added
-    if (!props.onChange) return
-    if (value === null) return
-    if (value === props.value) return
-    if (initialized) return
-
-    setInitialized(true)
-    if (path?.length) return
-
-    setTimeout(() => {
-      props.onChange(value)
-    }, 200)
-  }, [props.onChange, value])
 
   useEffect(() => {
     // Sync the local state with the formData
-    if (props.value === undefined) return
-    if (equiv(value, props.value)) return
-    setValue(props.value || (props.multiple ? [] : ''))
+    if (equiv(value, props.value)) {
+      return
+    }
+
+    let defaultValue
+    if (props.multiple) {
+      defaultValue = props.schema.default || []
+    } else {
+      defaultValue = props.schema.default || ''
+    }
+
+    setValue(props.value !== null && props.value !== undefined ? props.value : defaultValue)
   }, [props.value])
 
   useEffect(() => {
@@ -65,7 +63,8 @@ const SelectWidget = (props: $Any) => {
 
   let hlstyle: $Any = {}
   if (!equiv(value, props.multiple ? props.value || [] : props.value)) {
-    hlstyle.outline = '1px solid yellow'
+    // no one likes this :`-(
+    // hlstyle.outline = '1px solid yellow'
   } else if (originalValue && !equiv(props.value, originalValue)) {
     hlstyle.outline = '1px solid var(--color-changed)'
   }
@@ -80,7 +79,7 @@ const SelectWidget = (props: $Any) => {
   }
 
   return (
-    <Dropdown
+    <StyledDropdown
       widthExpand
       options={options}
       value={renderableValue}

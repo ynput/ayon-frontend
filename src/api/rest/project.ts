@@ -12,6 +12,14 @@ const injectedRtkApi = api.injectEndpoints({
         method: 'HEAD',
       }),
     }),
+    getProjectFilePayload: build.query<
+      GetProjectFilePayloadApiResponse,
+      GetProjectFilePayloadApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/files/${queryArg.fileId}/payload`,
+      }),
+    }),
     getProjectFileThumbnail: build.query<
       GetProjectFileThumbnailApiResponse,
       GetProjectFileThumbnailApiArg
@@ -32,12 +40,10 @@ const injectedRtkApi = api.injectEndpoints({
     getProjectActivity: build.query<GetProjectActivityApiResponse, GetProjectActivityApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/dashboard/activity`,
-        params: {
-          days: queryArg.days,
-        },
+        params: { days: queryArg.days },
       }),
     }),
-    getProjectUsers: build.query<GetProjectUsersApiResponse, GetProjectUsersApiArg>({
+    getProjectTeams: build.query<GetProjectTeamsApiResponse, GetProjectTeamsApiArg>({
       query: (queryArg) => ({ url: `/api/projects/${queryArg.projectName}/dashboard/users` }),
     }),
     getProjectAnatomy: build.query<GetProjectAnatomyApiResponse, GetProjectAnatomyApiArg>({
@@ -72,13 +78,12 @@ const injectedRtkApi = api.injectEndpoints({
     getProjectSiteRoots: build.query<GetProjectSiteRootsApiResponse, GetProjectSiteRootsApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/siteRoots`,
-        headers: {
-          'x-ayon-site-id': queryArg['x-ayon-site-id'],
-        },
-        params: {
-          platform: queryArg.platform,
-        },
+        headers: { 'x-ayon-site-id': queryArg['x-ayon-site-id'] },
+        params: { platform: queryArg.platform },
       }),
+    }),
+    getProjectUsers: build.query<GetProjectUsersApiResponse, GetProjectUsersApiArg>({
+      query: (queryArg) => ({ url: `/api/projects/${queryArg.projectName}/users` }),
     }),
     getProjectEntityUris: build.mutation<
       GetProjectEntityUrisApiResponse,
@@ -104,6 +109,11 @@ export type GetProjectFileHeadApiArg = {
   fileId: string
   projectName: string
 }
+export type GetProjectFilePayloadApiResponse = /** status 200 Successful Response */ any
+export type GetProjectFilePayloadApiArg = {
+  fileId: string
+  projectName: string
+}
 export type GetProjectFileThumbnailApiResponse = /** status 200 Successful Response */ any
 export type GetProjectFileThumbnailApiArg = {
   fileId: string
@@ -124,8 +134,9 @@ export type GetProjectActivityApiArg = {
   /** Number of days to retrieve activity for */
   days?: number
 }
-export type GetProjectUsersApiResponse = /** status 200 Successful Response */ UsersResponseModel
-export type GetProjectUsersApiArg = {
+export type GetProjectTeamsApiResponse =
+  /** status 200 Successful Response */ ProjectTeamsResponseModel
+export type GetProjectTeamsApiArg = {
   projectName: string
 }
 export type GetProjectAnatomyApiResponse = /** status 200 Successful Response */ ProjectAnatomy
@@ -172,6 +183,12 @@ export type GetProjectSiteRootsApiArg = {
   platform?: 'windows' | 'linux' | 'darwin'
   /** Site ID may be specified either as a query parameter (`site_id` or `site`) or in a header. */
   'x-ayon-site-id'?: string
+}
+export type GetProjectUsersApiResponse = /** status 200 Successful Response */ {
+  [key: string]: string[]
+}
+export type GetProjectUsersApiArg = {
+  projectName: string
 }
 export type GetProjectEntityUrisApiResponse = /** status 200 Successful Response */ GetUrisResponse
 export type GetProjectEntityUrisApiArg = {
@@ -238,7 +255,7 @@ export type ActivityResponseModel = {
   /** Activity per day normalized to 0-100 */
   activity: number[]
 }
-export type UsersResponseModel = {
+export type ProjectTeamsResponseModel = {
   /** Number of active team members */
   teamSizeActive?: number
   /** Total number of team members */
@@ -299,6 +316,7 @@ export type Templates = {
   others?: CustomTemplate[]
 }
 export type ProjectAttribModel = {
+  priority?: 'urgent' | 'high' | 'normal' | 'low'
   /** Frame rate */
   fps?: number
   /** Horizontal resolution */
@@ -346,6 +364,8 @@ export type Status = {
   state?: 'not_started' | 'in_progress' | 'done' | 'blocked'
   icon?: string
   color?: string
+  /** Limit the status to specific entity types. */
+  scope?: string[]
   original_name?: string
 }
 export type Tag = {
@@ -398,6 +418,7 @@ export type LinkTypeModel = {
   data?: object
 }
 export type ProjectAttribModel2 = {
+  priority?: 'urgent' | 'high' | 'normal' | 'low'
   /** Frame rate */
   fps?: number
   /** Horizontal resolution */

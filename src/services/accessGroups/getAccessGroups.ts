@@ -1,6 +1,62 @@
 import { api } from '@api/rest/accessGroups'
+import { api as projectApi } from '@api/rest/project'
+import { $Any } from '@types'
 
-const accessGroupsApi = api.enhanceEndpoints({
+export type ProjectUserData = {
+  [project: string]: {
+    [user: string]: string[]
+  }
+}
+
+export type GetProjectsUsersApiResponse = {
+  data: ProjectUserData
+}
+
+type GetProjectsUsersParams = {
+  projects: string[]
+}
+
+const accessGroupsApi = api.injectEndpoints({
+  endpoints: (build) => ({
+    getProjectsAccess: build.query<GetProjectsUsersApiResponse, GetProjectsUsersParams>({
+      async queryFn({ projects = [] }, { dispatch, forced }) {
+        try {
+          let promises = []
+          let projectUsersData: $Any = {}
+          for (const project of projects) {
+            promises.push(
+              dispatch(
+                projectApi.endpoints.getProjectUsers.initiate(
+                  { projectName: project },
+                  { forceRefetch: forced },
+                ),
+              ).then((response: $Any) => {
+                if (response.status === 'rejected') {
+                  return
+                }
+                projectUsersData = {
+                  ...projectUsersData,
+                  [project]: response.data,
+                }
+              }),
+            )
+          }
+
+          await Promise.all(promises)
+          return { data: projectUsersData, meta: undefined, error: undefined }
+        } catch (error: $Any) {
+          console.error(error)
+          return { error, meta: undefined, data: undefined }
+        }
+      },
+      providesTags: (_res, _error, { projects }) =>
+        projects.map((projectName) => ({ type: 'projectAccess', id: projectName })),
+    }),
+  }),
+  overrideExisting: true,
+})
+
+accessGroupsApi.enhanceEndpoints({
   endpoints: {
     getAccessGroups: {
       providesTags: (result) =>
@@ -21,7 +77,11 @@ const accessGroupsApi = api.enhanceEndpoints({
   },
 })
 
-export const { useGetAccessGroupsQuery, useGetAccessGroupQuery, useGetAccessGroupSchemaQuery } =
-  accessGroupsApi
+export const {
+  useGetAccessGroupsQuery,
+  useGetAccessGroupQuery,
+  useGetAccessGroupSchemaQuery,
+  useGetProjectsAccessQuery,
+} = accessGroupsApi
 
 export default accessGroupsApi

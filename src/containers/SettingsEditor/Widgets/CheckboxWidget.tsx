@@ -1,35 +1,22 @@
 import { useState, useEffect } from 'react'
 import { InputSwitch } from '@ynput/ayon-react-components'
 
-import { updateChangedKeys, parseContext } from '../helpers'
+import { updateChangedKeys, parseContext, getDefaultValue } from '../helpers'
 import { $Any } from '@types'
 
 const CheckboxWidget = function (props: $Any) {
   const { originalValue, path } = parseContext(props)
-  const [value, setValue] = useState(null)
-  const [initialized, setInitialized] = useState(false)
-
-  useEffect(() => {
-    // Initial push to formData
-    // Used when the item is a part of an array
-    // and it is newly added
-    if (!props.onChange) return
-    if (value === null) return
-    if (value === props.value) return
-    if (initialized) return
-
-    setInitialized(true)
-    if (path?.length) return
-    setTimeout(() => {
-      props.onChange(value)
-    }, 300)
-  }, [props.onChange, value])
+  const [value, setValue] = useState(props.value || getDefaultValue(props))
 
   useEffect(() => {
     // Sync the local state with the formData
-    if (props.value === undefined) return
-    if (value === props.value) return
-    setValue(props.value || false)
+    if (value === props.value) {
+      return
+    }
+
+    setValue(
+      props.value !== null && props.value !== undefined ? props.value : getDefaultValue(props),
+    )
   }, [props.value])
 
   useEffect(() => {
@@ -44,6 +31,9 @@ const CheckboxWidget = function (props: $Any) {
     if (!props.onChange) return
     if (value === null) return
     if (value === props.value) return
+    if (props.value === undefined && value === getDefaultValue(props)) {
+      return
+    }
     // this timeout must be here. idk why. if not,
     // the value will be set to the original value or smth
     props.onChange(value)
@@ -60,11 +50,10 @@ const CheckboxWidget = function (props: $Any) {
   }
 
   return (
-    <span >
+    <span>
       <InputSwitch checked={value || false} onChange={onChange} />
     </span>
   )
-
 }
 
 export { CheckboxWidget }
