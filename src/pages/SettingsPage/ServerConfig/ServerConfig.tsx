@@ -1,70 +1,45 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
 
 import SettingsEditor from '@containers/SettingsEditor'
+import { Spacer, Section, Toolbar, ScrollPanel, SaveButton } from '@ynput/ayon-react-components'
 
+// Add RTK query hooks and mutation hook imports
 import {
-  Button,
-  Spacer,
-  Section,
-  Panel,
-  Toolbar,
-  ScrollPanel,
-  SaveButton,
-} from '@ynput/ayon-react-components'
+  useGetServerConfigQuery,
+  useGetServerConfigOverridesQuery,
+  useGetServerConfigSchemaQuery,
+} from '@queries/config/getConfig'
+import { useSetServerConfigMutation } from '@queries/config/updateConfig'
+import { ServerConfigModel } from '@api/rest/config'
 
 const ServerConfig = () => {
-  // Replace with RTK from here....
+  // Use RTK query hooks instead of axios calls
+  const { data: originalData = {}, isLoading: isLoadingData } = useGetServerConfigQuery()
+  const { data: configOverrides = {}, isLoading: isLoadingOverrides } =
+    useGetServerConfigOverridesQuery()
+  const { data: configSchema = {}, isLoading: isLoadingSchema } = useGetServerConfigSchemaQuery()
 
-  const [originalData, setOriginalData] = useState(null)
-  const [configOverrides, setConfigOverrides] = useState(null)
-  const [configSchema, setConfigSchema] = useState(null)
+  const [setServerConfig] = useSetServerConfigMutation()
 
-  const loadConfig = () => {
-    axios
-      .get('/api/config/schema')
-      .then((response) => {
-        setConfigSchema(response.data)
-      })
-      .catch(console.error)
-
-    axios
-      .get('/api/config')
-      .then((response) => {
-        setOriginalData(response.data)
-      })
-      .catch(console.error)
-    axios
-      .get('/api/config/overrides')
-      .then((response) => {
-        setConfigOverrides(response.data)
-      })
-      .catch(console.error)
-  }
-
-  useEffect(() => {
-    loadConfig()
-  }, [])
-
-  const [formData, setFormData] = useState(null)
-
-  useEffect(() => {
-    if (!originalData || !configSchema || !configOverrides) return
-    setFormData(originalData)
-    setChangedKeys([])
-  }, [originalData, configSchema, configOverrides])
-
+  const [formData, setFormData] = useState<ServerConfigModel>({})
   const [changedKeys, setChangedKeys] = useState([])
 
-  const onSave = () => {
-    axios
-      .post('/api/config', formData)
-      .then(() => {
-        loadConfig()
-      })
-      .catch((error) => {
-        console.error(error)
-      })
+  useEffect(() => {
+    if (!isLoadingData && !isLoadingSchema && !isLoadingOverrides) {
+      setFormData(originalData)
+      setChangedKeys([])
+    }
+  }, [
+    isLoadingData,
+    isLoadingSchema,
+    isLoadingOverrides,
+    originalData,
+    configSchema,
+    configOverrides,
+  ])
+
+  const onSave = async () => {
+    await setServerConfig({ serverConfigModel: formData }).unwrap()
   }
 
   return (
