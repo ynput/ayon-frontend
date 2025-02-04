@@ -79,8 +79,8 @@ const SettingsPage = () => {
   }, [module, addonName, addonsData, isManager])
 
   const links = useMemo(() => {
-      const adminExtras = [
-        {
+    const adminExtras = [
+      {
         name: 'Addons',
         path: '/settings/addons',
         module: 'addons',
@@ -95,7 +95,7 @@ const SettingsPage = () => {
         shortcut: 'B+B',
       },
       {
-        name: 'Server',
+        name: 'Global settings',
         path: '/settings/server',
         module: 'server',
         accessLevels: ['admin'],
@@ -149,7 +149,7 @@ const SettingsPage = () => {
       },
     ]
     if (!isManager) {
-      result = [...adminExtras, ...result];
+      result = [...adminExtras, ...result]
     }
 
     if (!addonsData) return result
