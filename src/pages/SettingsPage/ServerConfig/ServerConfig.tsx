@@ -42,9 +42,9 @@ const ServerConfig = () => {
       .catch(console.error)
   }
 
-  useEffect(() => {loadConfig()}, [])
-
-  // ... to here
+  useEffect(() => {
+    loadConfig()
+  }, [])
 
   const [formData, setFormData] = useState(null)
 
@@ -71,14 +71,11 @@ const ServerConfig = () => {
     <main style={{ flexDirection: 'column' }}>
       <Toolbar>
         <Spacer />
-        <SaveButton 
-          active={changedKeys.length} 
-          onClick={onSave} 
-          label="Save server config"
-        />
+        <SaveButton active={!!changedKeys.length} onClick={onSave} label="Save server config" />
       </Toolbar>
       <Section>
-        <ScrollPanel style={{ flexGrow: 1, padding:8 }} className="transparent">
+        <ScrollPanel style={{ flexGrow: 1, padding: 8 }} className="transparent">
+          {/* @ts-ignore */}
           <SettingsEditor
             schema={configSchema}
             originalData={originalData}
