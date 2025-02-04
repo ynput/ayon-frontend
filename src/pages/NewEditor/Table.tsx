@@ -8,13 +8,14 @@ import {
   filterFns,
   flexRender,
   Row,
+  ExpandedState,
 } from '@tanstack/react-table'
 
 import clsx from 'clsx'
 
 import { $Any } from '@types'
 import { TableRow } from '@containers/Slicer/types'
-import useHandlers, { Selection } from './handlers'
+import useHandlers, { handleToggleFolder, Selection } from './handlers'
 import { getAbsoluteSelections, isSelected } from './mappers'
 import TableColumns from './TableColumns'
 import * as Styled from './Table.styled'
@@ -32,9 +33,6 @@ type Props = {
   isLoading: boolean
   isExpandable: boolean
   sliceId: string
-  toggleExpanderHandler: $Any
-  expanded: $Any
-  setExpanded: $Any
   updateEntities: (type: string, value: $Any, entities: $Any, isAttrib: boolean) => void
 }
 
@@ -47,9 +45,6 @@ const MyTable = ({
   isLoading,
   isExpandable,
   sliceId,
-  toggleExpanderHandler,
-  expanded,
-  setExpanded,
   updateEntities,
 }: Props) => {
   //The virtualizer needs to know the scrollable container element
@@ -66,6 +61,10 @@ const MyTable = ({
     setSelections,
     setSelectionInProgress,
   })
+
+  const [expanded, setExpanded] = useState<ExpandedState>({})
+  const [itemExpanded, setItemExpanded] = useState<string>('root')
+  const toggleExpanderHandler = handleToggleFolder(setItemExpanded)
 
   const getRowType = (item: Row<TableRow>) => {
     // @ts-ignore

@@ -12,7 +12,6 @@ import { $Any } from '@types'
 
 import useFetchAndUpdateEntityData from './hooks/useFetchEditorEntities'
 import useAttributeFields from './hooks/useAttributesList'
-import { handleToggleFolder } from './handlers'
 import { getFilteredEntities, populateTableData } from './mappers'
 import MyTable from './Table'
 import { SortByOption } from '@pages/UserDashboardPage/UserDashboardTasks/DashboardTasksToolbar/KanBanSortByOptions'
@@ -32,7 +31,7 @@ const NewEditorPage = ({ filters, showHierarchy, sortBy }: Props) => {
 
   const { data: projectsInfo = {} } = useGetProjectsInfoQuery({ projects: [projectName] })
   const projectInfo = projectsInfo[projectName] || {}
-  const allStatuses = getAllProjectStatuses({[projectName]: projectInfo})
+  const allStatuses = getAllProjectStatuses({ [projectName]: projectInfo })
 
   const { rowSelection } = useSlicerContext()
   const { attribFields } = useAttributeFields()
@@ -42,9 +41,6 @@ const NewEditorPage = ({ filters, showHierarchy, sortBy }: Props) => {
     rawData: allFolders,
     folders,
     tasks,
-    setExpandedItem,
-    expanded,
-    setExpanded,
     updateEntities,
   } = useFetchAndUpdateEntityData({
     projectName,
@@ -78,9 +74,6 @@ const NewEditorPage = ({ filters, showHierarchy, sortBy }: Props) => {
     isFlatList: !showHierarchy,
   })
 
-  // TODO Figure out why tree is incomplete. i.e. project_a and select lib and attempt to expand sq
-  const toggleHandler = handleToggleFolder(setExpandedItem)
-
   return (
     <main className="editor-page" style={{ height: '100%' }}>
       <Section style={{ height: '100%' }}>
@@ -99,9 +92,6 @@ const NewEditorPage = ({ filters, showHierarchy, sortBy }: Props) => {
                 tableData={tableData}
                 users={users}
                 statuses={allStatuses}
-                expanded={expanded}
-                setExpanded={setExpanded}
-                toggleExpanderHandler={toggleHandler}
                 updateEntities={updateEntities}
                 isLoading={false}
                 isExpandable={false}

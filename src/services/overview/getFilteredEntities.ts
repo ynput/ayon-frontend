@@ -3,13 +3,19 @@ import {
   FolderNode,
   GetEntitiesByIdsQuery,
   GetFilteredEntitiesByParentQuery,
+  GetFilteredEntitiesQuery,
+  GetFilteredEntitiesQueryVariables,
   TaskNode,
 } from '@api/graphql'
-import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
+import {
+  DefinitionsFromApi,
+  FetchBaseQueryError,
+  OverrideResultType,
+  TagTypesFromApi,
+} from '@reduxjs/toolkit/query'
+import { QueryReturnValue } from '@types'
 
-const transformFilteredEntities = (
-  response: GetEntitiesByIdsQuery,
-): GetEntitiesByIdsResult => {
+const transformFilteredEntities = (response: GetEntitiesByIdsQuery): GetEntitiesByIdsResult => {
   let folders: { [key: string]: Partial<FolderNode> } = {}
   let tasks: { [key: string]: Partial<TaskNode> } = {}
 
@@ -81,10 +87,7 @@ type GetFilteredEntitiesResult = {
 type Definitions = DefinitionsFromApi<typeof api>
 type TagTypes = TagTypesFromApi<typeof api>
 type UpdatedDefinitions = Omit<Definitions, 'GetFilteredEntities'> & {
-  GetEntitiesByIds: OverrideResultType<
-    Definitions['GetEntitiesByIds'],
-    GetEntitiesByIdsResult
-  >
+  GetEntitiesByIds: OverrideResultType<Definitions['GetEntitiesByIds'], GetEntitiesByIdsResult>
   GetFilteredEntitiesByParent: OverrideResultType<
     Definitions['GetFilteredEntitiesByParent'],
     GetFilteredEntitiesByParentResult
@@ -104,9 +107,54 @@ const enhancedApi = api.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
       transformResponse: transformFilteredEntitiesByParent,
     },
     GetFilteredEntities: {
-      transformResponse: transformFilteredEntitiesByParent,
+      // transformResponse: transformFilteredEntitiesByParent,
     },
   },
+})
+
+enhancedApi.injectEndpoints({
+  endpoints: (build) => ({
+    getPaginatedFilteredEntities: build.query<GetFilteredEntitiesQuery, GetFilteredEntitiesQueryVariables>({
+      async queryFn(
+        { projectName, first = 0 }: GetFilteredEntitiesQueryVariables,
+        { dispatch },
+      ): Promise<QueryReturnValue<GetFilteredEntitiesQuery, FetchBaseQueryError, {}>> {
+        try {
+          let cursor = '0'
+          let pageInfo = {}
+          let tasks: {node: TaskNode}[] = []
+          do {
+
+            const response = await dispatch(
+              enhancedApi.endpoints.GetFilteredEntities.initiate({
+                projectName,
+                first,
+                after: cursor,
+              }),
+            )
+
+            if (response.error) {
+              return { error: response.error }
+            }
+
+            pageInfo = response.data!.project!.tasks.pageInfo
+            cursor = pageInfo.endCursor
+            tasks = tasks.concat(response.data!.project!.tasks.edges)
+          } while (pageInfo.hasNextPage)
+
+          let mappedTasks: { [key: string]: Partial<TaskNode> } = {}
+          for (const taskNode of tasks) {
+            mappedTasks[taskNode.node.id] = {
+              ...taskNode.node,
+              folderId: taskNode.node.folderId || 'root',
+            }
+          }
+          return { data: { folders: {}, tasks: mappedTasks } }
+        } catch {}
+        return { data: {} }
+      },
+    }),
+  }),
 })
 
 export default enhancedApi
@@ -115,4 +163,6 @@ export const {
   useGetEntitiesByIdsQuery,
   useGetFilteredEntitiesByParentQuery,
   useGetFilteredEntitiesQuery,
+  // @ts-ignore
+  useGetPaginatedFilteredEntitiesQuery,
 } = enhancedApi

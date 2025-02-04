@@ -5,6 +5,8 @@ query GetFilteredEntities(
   $statuses: [String!]
   $attributes: [AttributeFilterInput!]
   $folderIds: [String!]
+  $first: Int!
+  $after: String
 ) {
   project(name: $projectName) {
     name
@@ -14,13 +16,19 @@ query GetFilteredEntities(
       folderIds: $folderIds
       statuses: $statuses
       attributes: $attributes
-      last: 1000
-
+      first: $first
+      after: $after
     ) {
       edges {
         node {
           ...TaskPropsFragment
         }
+      }
+      pageInfo {
+        endCursor
+        hasNextPage
+        hasPreviousPage
+        startCursor
       }
     }
   }

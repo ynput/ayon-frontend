@@ -1,13 +1,10 @@
 import { useGetFolderListQuery } from '@queries/getHierarchy'
-import { useState } from 'react'
-import { ExpandedState } from '@tanstack/react-table'
 import { $Any } from '@types'
 import { Filter } from '@ynput/ayon-react-components'
-import { useGetFilteredEntitiesQuery } from '@queries/overview/getFilteredEntities'
+import { useGetPaginatedFilteredEntitiesQuery } from '@queries/overview/getFilteredEntities'
 import { TaskFilterValue } from '@containers/TasksProgress/hooks/useFilterBySlice'
 // import { mapQueryFilters } from '../mappers'
 import { useUpdateEntitiesMutation } from '@queries/entity/updateEntity'
-import  api from '@queries/overview/getFilteredEntities'
 import { useDispatch } from 'react-redux'
 
 type Params = {
@@ -25,8 +22,6 @@ const useFetchEditorEntities = ({
   // filters,
   // sliceFilter,
 }: Params) => {
-  const [expanded, setExpanded] = useState<ExpandedState>({})
-  const [itemExpanded, setItemExpanded] = useState<string>('root')
   const [bulkUpdateEntities] = useUpdateEntitiesMutation()
   const dispatch = useDispatch()
 
@@ -126,22 +121,7 @@ const useFetchEditorEntities = ({
         })
       : folders
 
-  /*
-  let folderIds: string[] = []
-  if (Object.keys(selectedFolders).length == 0) {
-    // Falling back to root nodes when no sidebar selection in place
-    folderIds = folders.filter((el) => el.parentId === null).map((el) => el.id)
-  } else {
-    folderIds = selectedFolders
-  }
-  */
-
-  const entities = useGetFilteredEntitiesQuery({
-    projectName,
-    // Reintroduce queryFilters after testing is ready
-    // ...queryFilters,
-  })
-
+  const entities = useGetPaginatedFilteredEntitiesQuery({projectName, first: 500})
   const tasks = entities.data?.tasks || {}
 
   return {
@@ -149,9 +129,6 @@ const useFetchEditorEntities = ({
     folders: folders.reduce((acc, curr) => ({ ...acc, [curr.id as string]: curr }), {}),
     tasks,
     isLoading: isLoading || isFetching,
-    setExpandedItem: setItemExpanded,
-    expanded,
-    setExpanded,
     selectedPaths: selectedPathsPrefixed,
     updateEntities,
   }

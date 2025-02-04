@@ -178,8 +178,6 @@ export type FileNode = {
 
 export type FolderAttribType = {
   __typename?: 'FolderAttribType';
-  /** What car do you want? */
-  car?: Maybe<Scalars['String']['output']>;
   clipIn?: Maybe<Scalars['Int']['output']>;
   clipOut?: Maybe<Scalars['Int']['output']>;
   /** Textual description of the entity */
@@ -192,16 +190,10 @@ export type FolderAttribType = {
   frameStart?: Maybe<Scalars['Int']['output']>;
   ftrackId?: Maybe<Scalars['String']['output']>;
   ftrackPath?: Maybe<Scalars['String']['output']>;
-  /** hair */
-  hairColour?: Maybe<Scalars['String']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
   priority?: Maybe<Scalars['String']['output']>;
-  /** Percentage of shot completetion */
-  progress?: Maybe<Scalars['Int']['output']>;
-  /** Where is it on github? */
-  repo?: Maybe<Scalars['String']['output']>;
   /** Vertical resolution */
   resolutionHeight?: Maybe<Scalars['Int']['output']>;
   /** Horizontal resolution */
@@ -210,13 +202,8 @@ export type FolderAttribType = {
   shotgridId?: Maybe<Scalars['String']['output']>;
   /** The Shotgrid Type of this entity. */
   shotgridType?: Maybe<Scalars['String']['output']>;
-  sokoId?: Maybe<Scalars['String']['output']>;
-  sokoPath?: Maybe<Scalars['String']['output']>;
   /** Date and time when the project or task or asset was started */
   startDate?: Maybe<Scalars['DateTime']['output']>;
-  test?: Maybe<Scalars['String']['output']>;
-  testAttribute?: Maybe<Scalars['String']['output']>;
-  testing?: Maybe<Scalars['String']['output']>;
   tools?: Maybe<Array<Scalars['String']['output']>>;
 };
 
@@ -547,20 +534,16 @@ export type ProjectAttribType = {
   handleStart?: Maybe<Scalars['Int']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
   priority?: Maybe<Scalars['String']['output']>;
-  /** Percentage of shot completetion */
-  progress?: Maybe<Scalars['Int']['output']>;
   /** Vertical resolution */
   resolutionHeight?: Maybe<Scalars['Int']['output']>;
   /** Horizontal resolution */
   resolutionWidth?: Maybe<Scalars['Int']['output']>;
   /** The Shotgrid ID of this entity. */
   shotgridId?: Maybe<Scalars['String']['output']>;
-  /** Push changes done to this project to Shotgird. Requires the transmitter service. */
+  /** Push changes done to this project to ShotGrid. Requires the transmitter service. */
   shotgridPush?: Maybe<Scalars['Boolean']['output']>;
   /** The Shotgrid Type of this entity. */
   shotgridType?: Maybe<Scalars['String']['output']>;
-  sokoId?: Maybe<Scalars['String']['output']>;
-  sokoPath?: Maybe<Scalars['String']['output']>;
   /** Date and time when the project or task or asset was started */
   startDate?: Maybe<Scalars['DateTime']['output']>;
   tools?: Maybe<Array<Scalars['String']['output']>>;
@@ -973,8 +956,6 @@ export type RepresentationsConnection = {
 
 export type TaskAttribType = {
   __typename?: 'TaskAttribType';
-  /** What car do you want? */
-  car?: Maybe<Scalars['String']['output']>;
   clipIn?: Maybe<Scalars['Int']['output']>;
   clipOut?: Maybe<Scalars['Int']['output']>;
   /** Textual description of the entity */
@@ -987,17 +968,10 @@ export type TaskAttribType = {
   frameStart?: Maybe<Scalars['Int']['output']>;
   ftrackId?: Maybe<Scalars['String']['output']>;
   ftrackPath?: Maybe<Scalars['String']['output']>;
-  /** hair */
-  hairColour?: Maybe<Scalars['String']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
-  nightScene?: Maybe<Scalars['Boolean']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
   priority?: Maybe<Scalars['String']['output']>;
-  /** Percentage of shot completetion */
-  progress?: Maybe<Scalars['Int']['output']>;
-  /** Where is it on github? */
-  repo?: Maybe<Scalars['String']['output']>;
   /** Vertical resolution */
   resolutionHeight?: Maybe<Scalars['Int']['output']>;
   /** Horizontal resolution */
@@ -1006,13 +980,8 @@ export type TaskAttribType = {
   shotgridId?: Maybe<Scalars['String']['output']>;
   /** The Shotgrid Type of this entity. */
   shotgridType?: Maybe<Scalars['String']['output']>;
-  sokoId?: Maybe<Scalars['String']['output']>;
-  sokoPath?: Maybe<Scalars['String']['output']>;
   /** Date and time when the project or task or asset was started */
   startDate?: Maybe<Scalars['DateTime']['output']>;
-  test?: Maybe<Scalars['String']['output']>;
-  testAttribute?: Maybe<Scalars['String']['output']>;
-  testing?: Maybe<Scalars['String']['output']>;
   tools?: Maybe<Array<Scalars['String']['output']>>;
 };
 
@@ -1138,8 +1107,6 @@ export type UserAttribType = {
   developerMode?: Maybe<Scalars['Boolean']['output']>;
   email?: Maybe<Scalars['String']['output']>;
   fullName?: Maybe<Scalars['String']['output']>;
-  /** Do they live in Olympus */
-  god?: Maybe<Scalars['Boolean']['output']>;
 };
 
 export type UserEdge = {
@@ -1184,8 +1151,6 @@ export type UsersConnection = {
 
 export type VersionAttribType = {
   __typename?: 'VersionAttribType';
-  /** What car do you want? */
-  car?: Maybe<Scalars['String']['output']>;
   clipIn?: Maybe<Scalars['Int']['output']>;
   clipOut?: Maybe<Scalars['Int']['output']>;
   colorSpace?: Maybe<Scalars['String']['output']>;
@@ -1203,13 +1168,11 @@ export type VersionAttribType = {
   intent?: Maybe<Scalars['String']['output']>;
   machine?: Maybe<Scalars['String']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
-  productTypes?: Maybe<Array<Scalars['String']['output']>>;
   /** Vertical resolution */
   resolutionHeight?: Maybe<Scalars['Int']['output']>;
   /** Horizontal resolution */
   resolutionWidth?: Maybe<Scalars['Int']['output']>;
   site?: Maybe<Scalars['String']['output']>;
-  sokoId?: Maybe<Scalars['String']['output']>;
   source?: Maybe<Scalars['String']['output']>;
 };
 
@@ -1422,10 +1385,12 @@ export type GetFilteredEntitiesQueryVariables = Exact<{
   statuses?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
   attributes?: InputMaybe<Array<AttributeFilterInput> | AttributeFilterInput>;
   folderIds?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
+  first: Scalars['Int']['input'];
+  after?: InputMaybe<Scalars['String']['input']>;
 }>;
 
 
-export type GetFilteredEntitiesQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, tasks: { __typename?: 'TasksConnection', edges: Array<{ __typename?: 'TaskEdge', node: { __typename?: 'TaskNode', id: string, folderId: string, label?: string | null, name: string, ownAttrib: Array<string>, status: string, tags: Array<string>, taskType: string, type: string, updatedAt: any, active: boolean, assignees: Array<string>, attrib: { __typename?: 'TaskAttribType', priority?: string | null, resolutionHeight?: number | null, resolutionWidth?: number | null, fps?: number | null, clipIn?: number | null, clipOut?: number | null, frameStart?: number | null, frameEnd?: number | null, handleStart?: number | null, handleEnd?: number | null, pixelAspect?: number | null, startDate?: any | null, endDate?: any | null, description?: string | null, tools?: Array<string> | null, shotgridId?: string | null, shotgridType?: string | null, ftrackId?: string | null, ftrackPath?: string | null } } }> } } };
+export type GetFilteredEntitiesQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, tasks: { __typename?: 'TasksConnection', edges: Array<{ __typename?: 'TaskEdge', node: { __typename?: 'TaskNode', id: string, folderId: string, label?: string | null, name: string, ownAttrib: Array<string>, status: string, tags: Array<string>, taskType: string, type: string, updatedAt: any, active: boolean, assignees: Array<string>, attrib: { __typename?: 'TaskAttribType', priority?: string | null, resolutionHeight?: number | null, resolutionWidth?: number | null, fps?: number | null, clipIn?: number | null, clipOut?: number | null, frameStart?: number | null, frameEnd?: number | null, handleStart?: number | null, handleEnd?: number | null, pixelAspect?: number | null, startDate?: any | null, endDate?: any | null, description?: string | null, tools?: Array<string> | null, shotgridId?: string | null, shotgridType?: string | null, ftrackId?: string | null, ftrackPath?: string | null } } }>, pageInfo: { __typename?: 'PageInfo', endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean, startCursor?: string | null } } } };
 
 export type GetFilteredEntitiesByParentQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
@@ -1829,7 +1794,7 @@ export const GetEntitiesByIdsDocument = `
     ${FolderPropsFragmentFragmentDoc}
 ${TaskPropsFragmentFragmentDoc}`;
 export const GetFilteredEntitiesDocument = `
-    query GetFilteredEntities($projectName: String!, $assignees: [String!], $tags: [String!], $statuses: [String!], $attributes: [AttributeFilterInput!], $folderIds: [String!]) {
+    query GetFilteredEntities($projectName: String!, $assignees: [String!], $tags: [String!], $statuses: [String!], $attributes: [AttributeFilterInput!], $folderIds: [String!], $first: Int!, $after: String) {
   project(name: $projectName) {
     name
     tasks(
@@ -1838,12 +1803,19 @@ export const GetFilteredEntitiesDocument = `
       folderIds: $folderIds
       statuses: $statuses
       attributes: $attributes
-      last: 1000
+      first: $first
+      after: $after
     ) {
       edges {
         node {
           ...TaskPropsFragment
         }
+      }
+      pageInfo {
+        endCursor
+        hasNextPage
+        hasPreviousPage
+        startCursor
       }
     }
   }
