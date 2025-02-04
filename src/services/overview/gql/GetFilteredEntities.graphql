@@ -14,7 +14,7 @@ query GetFilteredEntities(
       folderIds: $folderIds
       statuses: $statuses
       attributes: $attributes
-      last: 100
+      last: 1000
 
     ) {
       edges {

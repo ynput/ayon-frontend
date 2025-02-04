@@ -86,18 +86,24 @@ const populateTableData = ({
   })
 
   let mappedTaskData = {}
-  Object.values(tasks).forEach((element) => {
-    mappedTaskData[element.folderId] = {
-      ...mappedTaskData[element.folderId],
-      [element.id]: element,
+  tasks.forEach((element, key, map) => {
+    mappedTaskData = {
+      ...mappedTaskData,
+      [element.folderId]: {
+        ...mappedTaskData[element.folderId],
+        [element.id]: element,
+      },
     }
   })
 
   let mappedFolderData = {}
   Object.values(folders).forEach((element) => {
-    mappedFolderData[element.parentId] = {
-      ...mappedFolderData[element.parentId],
-      [element.id]: element,
+    mappedFolderData = {
+      ...mappedFolderData,
+      [element.parentId]: {
+        ...mappedFolderData[element.parentId],
+        [element.id]: element,
+      },
     }
   })
 
@@ -193,6 +199,7 @@ const createDataTree = <T extends FolderListItem>({
   rawTasks,
   isFlatList,
 }): { hashedData: Map<String, TableRow>; tableData: TableRow[] } => {
+
   let hashedData = new Map<string, TableRow>()
   let dataTree: TableRow[] = []
   let taskPlaceholders: { [key: string]: TableRow[] } = {}

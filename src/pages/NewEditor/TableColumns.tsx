@@ -125,10 +125,10 @@ const TableColumns = ({
   }
   const getRawDataAttribValue = (rawData: FolderNode | TaskNode, attribName: string): string => {
     if (!rawData) {
-      return 'bad'
+      return 'missing value'
     }
     if (rawData.ownAttrib === undefined) {
-      return 'bad'
+      return 'missing value'
     }
     if (rawData.ownAttrib.includes(attribName)) {
       // @ts-ignore
@@ -149,7 +149,7 @@ const TableColumns = ({
     }
 
     if (rawData.ownAttrib === undefined) {
-      return 'bad'
+      return '...'
     }
     if (rawData.ownAttrib.includes(attribName)) {
       // @ts-ignore

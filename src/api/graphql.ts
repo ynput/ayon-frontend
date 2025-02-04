@@ -178,6 +178,8 @@ export type FileNode = {
 
 export type FolderAttribType = {
   __typename?: 'FolderAttribType';
+  /** What car do you want? */
+  car?: Maybe<Scalars['String']['output']>;
   clipIn?: Maybe<Scalars['Int']['output']>;
   clipOut?: Maybe<Scalars['Int']['output']>;
   /** Textual description of the entity */
@@ -190,10 +192,16 @@ export type FolderAttribType = {
   frameStart?: Maybe<Scalars['Int']['output']>;
   ftrackId?: Maybe<Scalars['String']['output']>;
   ftrackPath?: Maybe<Scalars['String']['output']>;
+  /** hair */
+  hairColour?: Maybe<Scalars['String']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
   priority?: Maybe<Scalars['String']['output']>;
+  /** Percentage of shot completetion */
+  progress?: Maybe<Scalars['Int']['output']>;
+  /** Where is it on github? */
+  repo?: Maybe<Scalars['String']['output']>;
   /** Vertical resolution */
   resolutionHeight?: Maybe<Scalars['Int']['output']>;
   /** Horizontal resolution */
@@ -202,8 +210,13 @@ export type FolderAttribType = {
   shotgridId?: Maybe<Scalars['String']['output']>;
   /** The Shotgrid Type of this entity. */
   shotgridType?: Maybe<Scalars['String']['output']>;
+  sokoId?: Maybe<Scalars['String']['output']>;
+  sokoPath?: Maybe<Scalars['String']['output']>;
   /** Date and time when the project or task or asset was started */
   startDate?: Maybe<Scalars['DateTime']['output']>;
+  test?: Maybe<Scalars['String']['output']>;
+  testAttribute?: Maybe<Scalars['String']['output']>;
+  testing?: Maybe<Scalars['String']['output']>;
   tools?: Maybe<Array<Scalars['String']['output']>>;
 };
 
@@ -534,16 +547,20 @@ export type ProjectAttribType = {
   handleStart?: Maybe<Scalars['Int']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
   priority?: Maybe<Scalars['String']['output']>;
+  /** Percentage of shot completetion */
+  progress?: Maybe<Scalars['Int']['output']>;
   /** Vertical resolution */
   resolutionHeight?: Maybe<Scalars['Int']['output']>;
   /** Horizontal resolution */
   resolutionWidth?: Maybe<Scalars['Int']['output']>;
   /** The Shotgrid ID of this entity. */
   shotgridId?: Maybe<Scalars['String']['output']>;
-  /** Push changes done to this project to ShotGrid. Requires the transmitter service. */
+  /** Push changes done to this project to Shotgird. Requires the transmitter service. */
   shotgridPush?: Maybe<Scalars['Boolean']['output']>;
   /** The Shotgrid Type of this entity. */
   shotgridType?: Maybe<Scalars['String']['output']>;
+  sokoId?: Maybe<Scalars['String']['output']>;
+  sokoPath?: Maybe<Scalars['String']['output']>;
   /** Date and time when the project or task or asset was started */
   startDate?: Maybe<Scalars['DateTime']['output']>;
   tools?: Maybe<Array<Scalars['String']['output']>>;
@@ -956,6 +973,8 @@ export type RepresentationsConnection = {
 
 export type TaskAttribType = {
   __typename?: 'TaskAttribType';
+  /** What car do you want? */
+  car?: Maybe<Scalars['String']['output']>;
   clipIn?: Maybe<Scalars['Int']['output']>;
   clipOut?: Maybe<Scalars['Int']['output']>;
   /** Textual description of the entity */
@@ -968,10 +987,17 @@ export type TaskAttribType = {
   frameStart?: Maybe<Scalars['Int']['output']>;
   ftrackId?: Maybe<Scalars['String']['output']>;
   ftrackPath?: Maybe<Scalars['String']['output']>;
+  /** hair */
+  hairColour?: Maybe<Scalars['String']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
+  nightScene?: Maybe<Scalars['Boolean']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
   priority?: Maybe<Scalars['String']['output']>;
+  /** Percentage of shot completetion */
+  progress?: Maybe<Scalars['Int']['output']>;
+  /** Where is it on github? */
+  repo?: Maybe<Scalars['String']['output']>;
   /** Vertical resolution */
   resolutionHeight?: Maybe<Scalars['Int']['output']>;
   /** Horizontal resolution */
@@ -980,8 +1006,13 @@ export type TaskAttribType = {
   shotgridId?: Maybe<Scalars['String']['output']>;
   /** The Shotgrid Type of this entity. */
   shotgridType?: Maybe<Scalars['String']['output']>;
+  sokoId?: Maybe<Scalars['String']['output']>;
+  sokoPath?: Maybe<Scalars['String']['output']>;
   /** Date and time when the project or task or asset was started */
   startDate?: Maybe<Scalars['DateTime']['output']>;
+  test?: Maybe<Scalars['String']['output']>;
+  testAttribute?: Maybe<Scalars['String']['output']>;
+  testing?: Maybe<Scalars['String']['output']>;
   tools?: Maybe<Array<Scalars['String']['output']>>;
 };
 
@@ -1107,6 +1138,8 @@ export type UserAttribType = {
   developerMode?: Maybe<Scalars['Boolean']['output']>;
   email?: Maybe<Scalars['String']['output']>;
   fullName?: Maybe<Scalars['String']['output']>;
+  /** Do they live in Olympus */
+  god?: Maybe<Scalars['Boolean']['output']>;
 };
 
 export type UserEdge = {
@@ -1151,6 +1184,8 @@ export type UsersConnection = {
 
 export type VersionAttribType = {
   __typename?: 'VersionAttribType';
+  /** What car do you want? */
+  car?: Maybe<Scalars['String']['output']>;
   clipIn?: Maybe<Scalars['Int']['output']>;
   clipOut?: Maybe<Scalars['Int']['output']>;
   colorSpace?: Maybe<Scalars['String']['output']>;
@@ -1168,11 +1203,13 @@ export type VersionAttribType = {
   intent?: Maybe<Scalars['String']['output']>;
   machine?: Maybe<Scalars['String']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
+  productTypes?: Maybe<Array<Scalars['String']['output']>>;
   /** Vertical resolution */
   resolutionHeight?: Maybe<Scalars['Int']['output']>;
   /** Horizontal resolution */
   resolutionWidth?: Maybe<Scalars['Int']['output']>;
   site?: Maybe<Scalars['String']['output']>;
+  sokoId?: Maybe<Scalars['String']['output']>;
   source?: Maybe<Scalars['String']['output']>;
 };
 
@@ -1801,7 +1838,7 @@ export const GetFilteredEntitiesDocument = `
       folderIds: $folderIds
       statuses: $statuses
       attributes: $attributes
-      last: 100
+      last: 1000
     ) {
       edges {
         node {
