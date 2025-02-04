@@ -87,24 +87,18 @@ const populateTableData = ({
 
   let mappedTaskData = {}
   tasks.forEach((element, key, map) => {
-    mappedTaskData = {
-      ...mappedTaskData,
-      [element.folderId]: {
-        ...mappedTaskData[element.folderId],
-        [element.id]: element,
-      },
+    if (mappedTaskData[element.folderId] === undefined) {
+      mappedTaskData[element.folderId] = {}
     }
+    mappedTaskData[element.folderId][element.id] = element
   })
 
   let mappedFolderData = {}
   Object.values(folders).forEach((element) => {
-    mappedFolderData = {
-      ...mappedFolderData,
-      [element.parentId]: {
-        ...mappedFolderData[element.parentId],
-        [element.id]: element,
-      },
+    if (mappedFolderData[element.parentId] === undefined) {
+      mappedFolderData[element.parentId] = {}
     }
+    mappedFolderData[element.parentId][element.id] = element
   })
 
   let mergedData = {}
@@ -264,10 +258,11 @@ const createDataTree = <T extends FolderListItem>({
   if (!isFlatList) {
     for (const parentId in folders) {
       for (const folderId in folders[parentId]) {
-        folderMap[parentId] = {
-          ...folderMap[parentId],
-          [folderId]: folderToTableRow(folderTypes, folders[parentId][folderId], parentId),
+        if (folderMap[parentId] === undefined) {
+          folderMap[parentId] = {}
         }
+
+        folderMap[parentId][folderId] = folderToTableRow(folderTypes, folders[parentId][folderId], parentId)
       }
     }
   }
@@ -547,7 +542,13 @@ const getFilteredEntities = ({
     return acc
   }, new Map())
 
-  filteredTasks.forEach((el, key, map) => paths.push(folders[el.folderId].path))
+  filteredTasks.forEach((el, key, map) => {
+    if (folders[el.folderId] === undefined) {
+      return
+    }
+
+    paths.push(folders[el.folderId].path)
+  })
 
   const splitPaths = []
   for (const path of paths) {
