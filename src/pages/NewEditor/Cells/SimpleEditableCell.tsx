@@ -6,7 +6,7 @@ export const SpanCell = styled.div`
   display: flex;
   flex-direction: column;
   justify-content: center;
-  width: 150px;
+  width: 160px;
   height: 100%;
   user-select: none;
   padding: 8px;

@@ -102,18 +102,30 @@ const populateTableData = ({
   })
 
   let mergedData = {}
-  return createDataTree({
-    allFolders,
-    folderTypes,
-    taskTypes,
-    mappedRawData,
-    tasks: mappedTaskData,
-    taskList,
-    folders: mappedFolderData,
-    rawFolders: folders,
-    rawTasks: tasks,
-    isFlatList,
-  })
+  
+  return isFlatList
+    ? createFlatList({
+        allFolders,
+        folderTypes,
+        taskTypes,
+        mappedRawData,
+        tasks: mappedTaskData,
+        taskList,
+        folders: mappedFolderData,
+        rawFolders: folders,
+        rawTasks: tasks,
+      })
+    : createDataTree({
+        allFolders,
+        folderTypes,
+        taskTypes,
+        mappedRawData,
+        tasks: mappedTaskData,
+        taskList,
+        folders: mappedFolderData,
+        rawFolders: folders,
+        rawTasks: tasks,
+      })
 }
 
 const getFolderIcon = (folderTypes: $Any, type: string) => {
@@ -181,6 +193,55 @@ const placeholderToTableRow = (
   }
 }
 
+const createFlatList = <T extends FolderListItem>({
+  allFolders,
+  mappedRawData,
+  folderTypes,
+  taskTypes,
+  folders,
+  tasks,
+  taskList,
+  rawFolders,
+  rawTasks,
+}): { hashedData: Map<String, TableRow>; tableData: TableRow[] } => {
+  let hashedData = new Map<string, TableRow>()
+  let dataTree: TableRow[] = []
+  let taskPlaceholders: { [key: string]: TableRow[] } = {}
+
+  const matchedFolderIds = Object.keys(rawFolders)
+
+  const matchedTaskIds = Object.keys(rawTasks)
+  const matchedIds = [...matchedFolderIds, ...matchedTaskIds]
+
+  // sort folders by name
+  let sortedItems = [...allFolders]
+  sortedItems = sortedItems.filter((el) => matchedIds.includes(el.id))
+  sortedItems = sortedItems.sort((a, b) => (a.label || a.name).localeCompare(b.label || b.name))
+
+  let taskMap = {}
+  for (const parentId in tasks) {
+    for (const taskId in tasks[parentId]) {
+      taskMap[parentId] = {
+        ...taskMap[parentId],
+        [taskId]: taskToTableRow(taskTypes, tasks[parentId][taskId], parentId),
+      }
+    }
+  }
+
+  let taskTableRowList = []
+  for (const task of taskList) {
+    taskTableRowList.push(taskToTableRow(taskTypes, task, task.folderId))
+  }
+
+  let folderMap = {}
+
+  for (const task of taskTableRowList) {
+    dataTree.push(task)
+  }
+
+  return { hashedData, tableData: dataTree }
+}
+
 const createDataTree = <T extends FolderListItem>({
   allFolders,
   mappedRawData,
@@ -191,9 +252,7 @@ const createDataTree = <T extends FolderListItem>({
   taskList,
   rawFolders,
   rawTasks,
-  isFlatList,
 }): { hashedData: Map<String, TableRow>; tableData: TableRow[] } => {
-
   let hashedData = new Map<string, TableRow>()
   let dataTree: TableRow[] = []
   let taskPlaceholders: { [key: string]: TableRow[] } = {}
@@ -209,26 +268,25 @@ const createDataTree = <T extends FolderListItem>({
   sortedItems = sortedItems.sort((a, b) => (a.label || a.name).localeCompare(b.label || b.name))
 
   // Single pass to create base rows and store in Map
-  if (!isFlatList) {
-    for (let i = 0; i < sortedItems.length; i++) {
-      const item = sortedItems[i]
-      const id = item['id'] as string
+  for (let i = 0; i < sortedItems.length; i++) {
+    const item = sortedItems[i]
+    const id = item['id'] as string
+    // @ts-ignore
+    const row: TableRow = {
       // @ts-ignore
-      const row: TableRow = {
-        // @ts-ignore
-        ...(item.data ? item : folderToTableRow(folderTypes, mappedRawData[id])),
-        subRows: [],
-      }
-      hashedData.set(id, row)
-      if (!item.hasTasks) {
-        continue
-      }
+      ...(item.data ? item : folderToTableRow(folderTypes, mappedRawData[id])),
+      subRows: [],
+    }
+    hashedData.set(id, row)
+    if (!item.hasTasks) {
+      continue
+    }
 
-      let sortedTaskNames = Array.from(item.taskNames)
-      sortedTaskNames = sortedTaskNames.sort((a, b) => a.localeCompare(b))
+    let sortedTaskNames = Array.from(item.taskNames)
+    sortedTaskNames = sortedTaskNames.sort((a, b) => a.localeCompare(b))
 
-      // TODO check if placeholders are actually needed (might be when fetching by parentd ID when no filters are in place)
-      /*
+    // TODO check if placeholders are actually needed (might be when fetching by parentd ID when no filters are in place)
+    /*
     for (const taskName of sortedTaskNames) {
       taskPlaceholders = {
         ...taskPlaceholders,
@@ -236,7 +294,6 @@ const createDataTree = <T extends FolderListItem>({
       }
     }
       */
-    }
   }
 
   let taskMap = {}
@@ -255,88 +312,77 @@ const createDataTree = <T extends FolderListItem>({
   }
 
   let folderMap = {}
-  if (!isFlatList) {
-    for (const parentId in folders) {
-      for (const folderId in folders[parentId]) {
-        if (folderMap[parentId] === undefined) {
-          folderMap[parentId] = {}
-        }
-
-        folderMap[parentId][folderId] = folderToTableRow(folderTypes, folders[parentId][folderId], parentId)
+  for (const parentId in folders) {
+    for (const folderId in folders[parentId]) {
+      if (folderMap[parentId] === undefined) {
+        folderMap[parentId] = {}
       }
+
+      folderMap[parentId][folderId] = folderToTableRow(
+        folderTypes,
+        folders[parentId][folderId],
+        parentId,
+      )
     }
   }
 
-  if (!isFlatList) {
-    // Single pass to build relationships
-    for (let i = 0; i < sortedItems.length; i++) {
-      const item = sortedItems[i]
-      const id = item['id'] as string
-      const parentId = item['parentId'] as string
-      const row = hashedData.get(id)!
+  // Single pass to build relationships
+  for (let i = 0; i < sortedItems.length; i++) {
+    const item = sortedItems[i]
+    const id = item['id'] as string
+    const parentId = item['parentId'] as string
+    const row = hashedData.get(id)!
+
+    if (parentId && hashedData.has(parentId)) {
+      const parentRow = hashedData.get(parentId)
+      if (parentRow) {
+        parentRow.subRows.push(row)
+      }
+    } else {
+      dataTree.push(row)
+    }
+  }
+
+  // Iterating tasks
+  for (const parentId in taskPlaceholders) {
+    // @ts-ignore
+    for (const task of taskPlaceholders[parentId]) {
+      if (hashedData.get(parentId!)?.subRows.find((e: $Any) => e.name == task.name)) {
+        continue
+      }
+      hashedData.get(parentId!)?.subRows.push(task)
+    }
+  }
+
+  for (const parentId in taskMap) {
+    for (const taskId in taskMap[parentId]) {
+      const item = taskMap[parentId][taskId]
 
       if (parentId && hashedData.has(parentId)) {
         const parentRow = hashedData.get(parentId)
         if (parentRow) {
-          parentRow.subRows.push(row)
+          parentRow.subRows = parentRow.subRows.filter((el) => el.name !== item.name)
+          parentRow.subRows.unshift(item)
+        }
+      }
+    }
+    hashedData.get(parentId)?.subRows.sort((a, b) => a.name.localeCompare(b.name))
+  }
+
+  for (const parentId in folderMap) {
+    for (const folderId in folderMap[parentId]) {
+      const item = folderMap[parentId][folderId]
+      const row = folderMap[parentId][folderId]
+
+      if (parentId && hashedData.has(parentId)) {
+        const parentRow = hashedData.get(parentId)
+        if (parentRow) {
+          const original = parentRow.subRows.find((el) => el.name === item.name)
+          parentRow.subRows = parentRow.subRows.filter((el) => el.name !== item.name)
+          parentRow.subRows.unshift({ ...row, subRows: original?.subRows })
         }
       } else {
-        dataTree.push(row)
-      }
-    }
-  } else {
-    // Bypasing original logic, organize better how and when mapping gets done
-    for (const task of taskTableRowList) {
-      dataTree.push(task)
-    }
-  }
-
-  if (!isFlatList) {
-    // Iterating tasks
-    for (const parentId in taskPlaceholders) {
-      // @ts-ignore
-      for (const task of taskPlaceholders[parentId]) {
-        if (hashedData.get(parentId!)?.subRows.find((e: $Any) => e.name == task.name)) {
-          continue
-        }
-        hashedData.get(parentId!)?.subRows.push(task)
-      }
-    }
-  }
-
-  if (!isFlatList) {
-    for (const parentId in taskMap) {
-      for (const taskId in taskMap[parentId]) {
-        const item = taskMap[parentId][taskId]
-
-        if (parentId && hashedData.has(parentId)) {
-          const parentRow = hashedData.get(parentId)
-          if (parentRow) {
-            parentRow.subRows = parentRow.subRows.filter((el) => el.name !== item.name)
-            parentRow.subRows.unshift(item)
-          }
-        }
-      }
-      hashedData.get(parentId)?.subRows.sort((a, b) => a.name.localeCompare(b.name))
-    }
-  }
-
-  if (!isFlatList) {
-    for (const parentId in folderMap) {
-      for (const folderId in folderMap[parentId]) {
-        const item = folderMap[parentId][folderId]
-        const row = folderMap[parentId][folderId]
-
-        if (parentId && hashedData.has(parentId)) {
-          const parentRow = hashedData.get(parentId)
-          if (parentRow) {
-            const original = parentRow.subRows.find((el) => el.name === item.name)
-            parentRow.subRows = parentRow.subRows.filter((el) => el.name !== item.name)
-            parentRow.subRows.unshift({ ...row, subRows: original?.subRows })
-          }
-        } else {
-          // dataTree.push(row)
-        }
+        // dataTree.push(row)
       }
     }
   }

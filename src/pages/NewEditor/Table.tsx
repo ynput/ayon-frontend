@@ -259,7 +259,7 @@ const MyTable = ({
                     },
                   )}
                   style={{
-                    minWidth: '150px',
+                    minWidth: '160px',
                     width: `calc(var(--col-${cell.column.id}-size) * 1px)`,
                   }}
                   onKeyUp={(e) => {
@@ -311,7 +311,7 @@ const MyTable = ({
                         key={header.id}
                         style={{
                           position: 'relative',
-                          minWidth: '150px',
+                          minWidth: '160px',
                           width: `calc(var(--header-${header?.id}-size) * 1px)`,
                         }}
                       >

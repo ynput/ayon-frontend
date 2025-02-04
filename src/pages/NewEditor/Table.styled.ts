@@ -39,7 +39,7 @@ export const HeaderCell = styled.div`
   display: flex;
   align-items: center;
   min-height: fit-content;
-  min-width: 150px;
+  min-width: 160px;
   &.large {
     min-width: 300px;
   }
