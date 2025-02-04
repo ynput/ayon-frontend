@@ -184,8 +184,8 @@ const BundlesAddonList = React.forwardRef(
         ref={ref}
       >
         <Column
-          header="Name"
-          field="name"
+          header="Title"
+          field="title"
           pt={{
             root: {
               style: {
