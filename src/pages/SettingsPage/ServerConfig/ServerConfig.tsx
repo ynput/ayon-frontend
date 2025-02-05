@@ -11,6 +11,18 @@ import {
 } from '@queries/config/getConfig'
 import { useSetServerConfigMutation } from '@queries/config/updateConfig'
 import { ServerConfigModel } from '@api/rest/config'
+import styled from 'styled-components'
+import { toast } from 'react-toastify'
+
+const StyledSection = styled(Section)`
+  padding: var(--padding-m);
+
+  align-items: center;
+
+  & > * {
+    max-width: 800px;
+  }
+`
 
 const ServerConfig = () => {
   // Use RTK query hooks instead of axios calls
@@ -19,7 +31,7 @@ const ServerConfig = () => {
     useGetServerConfigOverridesQuery()
   const { data: configSchema = {}, isLoading: isLoadingSchema } = useGetServerConfigSchemaQuery()
 
-  const [setServerConfig] = useSetServerConfigMutation()
+  const [setServerConfig, { isLoading: isSaving }] = useSetServerConfigMutation()
 
   const [formData, setFormData] = useState<ServerConfigModel>({})
   const [changedKeys, setChangedKeys] = useState([])
@@ -39,14 +51,23 @@ const ServerConfig = () => {
   ])
 
   const onSave = async () => {
-    await setServerConfig({ serverConfigModel: formData }).unwrap()
+    try {
+      await setServerConfig({ serverConfigModel: formData }).unwrap()
+    } catch (error) {
+      toast.error('Failed to save server config')
+    }
   }
 
   return (
-    <main style={{ flexDirection: 'column' }}>
+    <StyledSection direction="column">
       <Toolbar>
         <Spacer />
-        <SaveButton active={!!changedKeys.length} onClick={onSave} label="Save server config" />
+        <SaveButton
+          active={!!changedKeys.length}
+          onClick={onSave}
+          saving={isSaving}
+          label="Save server config"
+        />
       </Toolbar>
       <Section>
         <ScrollPanel style={{ flexGrow: 1, padding: 8 }} className="transparent">
@@ -62,7 +83,7 @@ const ServerConfig = () => {
           />
         </ScrollPanel>
       </Section>
-    </main>
+    </StyledSection>
   )
 
   /*
