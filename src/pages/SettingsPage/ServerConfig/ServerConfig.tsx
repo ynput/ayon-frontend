@@ -37,7 +37,7 @@ const StyledSection = styled(Section)`
 const ServerConfig = () => {
   const formContainerRef = useRef<HTMLDivElement>(null) // added ref for portal
   // Use RTK query hooks instead of axios calls
-  const { data: originalData = {}, isLoading: isLoadingData } = useGetServerConfigQuery()
+  const { data: originalData = {}, isLoading: isLoadingData, refetch } = useGetServerConfigQuery()
   const { data: configOverrides = {}, isLoading: isLoadingOverrides } =
     useGetServerConfigOverridesQuery()
   const { data: configSchema = {}, isLoading: isLoadingSchema } = useGetServerConfigSchemaQuery()
@@ -77,6 +77,8 @@ const ServerConfig = () => {
     }
   }
 
+  console.log(originalData)
+
   return (
     <>
       <StyledSection direction="column">
@@ -109,9 +111,23 @@ const ServerConfig = () => {
         </Section>
       </StyledSection>
       {bgFormEl &&
-        ReactDOM.createPortal(<ServerConfigUpload fileType="login_background" />, bgFormEl)}
+        ReactDOM.createPortal(
+          <ServerConfigUpload
+            fileType="login_background"
+            fileName={originalData.customization?.login_background}
+            onUploadEnd={refetch}
+          />,
+          bgFormEl,
+        )}
       {logoFormEl &&
-        ReactDOM.createPortal(<ServerConfigUpload fileType="studio_logo" />, logoFormEl)}
+        ReactDOM.createPortal(
+          <ServerConfigUpload
+            fileType="studio_logo"
+            fileName={originalData.customization?.studio_logo}
+            onUploadEnd={refetch}
+          />,
+          logoFormEl,
+        )}
     </>
   )
 

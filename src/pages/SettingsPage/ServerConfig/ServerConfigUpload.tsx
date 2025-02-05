@@ -1,41 +1,99 @@
-import { UploadServerConfigFileApiArg } from '@api/rest/config'
+import { FC, useState, useRef } from 'react'
 import axios from 'axios'
-import { FC, useState } from 'react'
+import { UploadServerConfigFileApiArg } from '@api/rest/config'
+import { Button } from '@ynput/ayon-react-components'
+import styled, { keyframes } from 'styled-components'
 
 interface ServerConfigUploadProps {
   fileType: UploadServerConfigFileApiArg['fileType']
+  fileName?: string // new prop to show currently uploaded file
+  onUploadEnd?: () => void // new prop to notify parent component
 }
 
-const ServerConfigUpload: FC<ServerConfigUploadProps> = ({ fileType }) => {
-  const [file, setFile] = useState<File | null>(null)
+const spinCCW = keyframes`
+  from {
+    transform: rotate(360deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+`
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+const UploadContainer = styled.div`
+  display: flex;
+  gap: var(--base-gap-small);
+
+  [icon='sync'] {
+    animation: ${spinCCW} 1s linear infinite;
+  }
+`
+
+const Filename = styled.div`
+  background-color: var(--md-sys-color-surface-container-high);
+  padding: 4px 8px;
+  border-radius: var(--border-radius-m);
+  flex: 1;
+
+  display: flex;
+  align-items: center;
+
+  user-select: none;
+  /* italics */
+  font-style: italic;
+
+  opacity: 0.7;
+
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+`
+
+const HiddenInput = styled.input`
+  display: none;
+`
+
+const ServerConfigUpload: FC<ServerConfigUploadProps> = ({
+  fileType,
+  fileName = '',
+  onUploadEnd,
+}) => {
+  const [loading, setLoading] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0])
+      const selectedFile = e.target.files[0]
+      setLoading(true)
+      try {
+        await axios.put(`/api/config/files/${fileType}`, selectedFile, {
+          headers: {
+            'x-file-name': selectedFile.name,
+            'content-type': selectedFile.type,
+          },
+        })
+        onUploadEnd?.() // notify parent component
+        // handle success (e.g., show a notification)
+      } catch (error) {
+        // handle error (e.g., show an error message)
+      } finally {
+        setLoading(false)
+      }
     }
   }
 
-  const handleUpload = async () => {
-    if (!file) return
-    try {
-      await axios.put(`/api/config/files/${fileType}`, file, {
-        headers: {
-          'x-file-name': file.name,
-          'content-type': file.type,
-        },
-      })
-      // handle success (e.g., show a notification)
-    } catch (error) {
-      // handle error (e.g., show an error message)
-    }
+  const handleButtonClick = () => {
+    inputRef.current?.click()
   }
 
   return (
-    <div>
-      ServerConfigUpload
-      <input type="file" onChange={handleFileChange} />
-      <button onClick={handleUpload}>Upload</button>
-    </div>
+    <UploadContainer>
+      <Filename>{fileName}</Filename>
+
+      <Button icon={loading ? 'sync' : 'upload'} onClick={handleButtonClick}>
+        Upload
+      </Button>
+      <HiddenInput ref={inputRef} type="file" onChange={handleFileChange} />
+    </UploadContainer>
   )
 }
 
