@@ -34,6 +34,17 @@ const StyledSection = styled(Section)`
   }
 `
 
+const StyledScrollPanel = styled(ScrollPanel)`
+  flex-grow: 1;
+  padding: 8px;
+  height: 100%;
+  overflow: auto;
+  & > * {
+    overflow: visible;
+    position: relative;
+  }
+`
+
 const ServerConfig = () => {
   const formContainerRef = useRef<HTMLDivElement>(null) // added ref for portal
   // Use RTK query hooks instead of axios calls
@@ -79,7 +90,7 @@ const ServerConfig = () => {
 
   return (
     <>
-      <StyledSection direction="column">
+      <StyledSection direction="column" style={{ overflow: 'hidden', paddingBottom: 0 }}>
         <Toolbar>
           <Spacer />
           <SaveButton
@@ -89,24 +100,19 @@ const ServerConfig = () => {
             label="Save server config"
           />
         </Toolbar>
-        <Section>
-          <ScrollPanel
-            style={{ flexGrow: 1, padding: 8 }}
-            className="transparent"
-            ref={formContainerRef}
-          >
-            {/* @ts-ignore */}
-            <SettingsEditor
-              schema={configSchema}
-              originalData={originalData}
-              formData={formData}
-              changedKeys={changedKeys}
-              overrides={configOverrides}
-              onChange={setFormData}
-              onSetChangedKeys={setChangedKeys}
-            />
-          </ScrollPanel>
-        </Section>
+
+        <StyledScrollPanel className="transparent" ref={formContainerRef}>
+          {/* @ts-ignore */}
+          <SettingsEditor
+            schema={configSchema}
+            originalData={originalData}
+            formData={formData}
+            changedKeys={changedKeys}
+            overrides={configOverrides}
+            onChange={setFormData}
+            onSetChangedKeys={setChangedKeys}
+          />
+        </StyledScrollPanel>
       </StyledSection>
       {bgFormEl &&
         ReactDOM.createPortal(
