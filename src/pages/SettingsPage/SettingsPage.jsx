@@ -95,7 +95,7 @@ const SettingsPage = () => {
         shortcut: 'B+B',
       },
       {
-        name: 'Global settings',
+        name: 'Global',
         path: '/settings/server',
         module: 'server',
         accessLevels: ['admin'],

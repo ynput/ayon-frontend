@@ -1,4 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import ReactDOM from 'react-dom' // added import for portal
+import ServerConfigUpload from './ServerConfigUpload' // added import for upload component
 
 import SettingsEditor from '@containers/SettingsEditor'
 import { Spacer, Section, Toolbar, ScrollPanel, SaveButton } from '@ynput/ayon-react-components'
@@ -22,9 +24,18 @@ const StyledSection = styled(Section)`
   & > * {
     max-width: 800px;
   }
+
+  /* target bg and studio logo fields and hide */
+  [data-schema-id='root_customization_login_background'],
+  [data-schema-id='root_customization_studio_logo'] {
+    .form-field {
+      display: none;
+    }
+  }
 `
 
 const ServerConfig = () => {
+  const formContainerRef = useRef<HTMLDivElement>(null) // added ref for portal
   // Use RTK query hooks instead of axios calls
   const { data: originalData = {}, isLoading: isLoadingData } = useGetServerConfigQuery()
   const { data: configOverrides = {}, isLoading: isLoadingOverrides } =
@@ -50,6 +61,14 @@ const ServerConfig = () => {
     configOverrides,
   ])
 
+  const bgFormEl = formContainerRef.current?.querySelector(
+    '[data-schema-id="root_customization_login_background"] .form-inline-field-widget',
+  )
+
+  const logoFormEl = formContainerRef.current?.querySelector(
+    '[data-schema-id="root_customization_studio_logo"] .form-inline-field-widget',
+  )
+
   const onSave = async () => {
     try {
       await setServerConfig({ serverConfigModel: formData }).unwrap()
@@ -59,31 +78,41 @@ const ServerConfig = () => {
   }
 
   return (
-    <StyledSection direction="column">
-      <Toolbar>
-        <Spacer />
-        <SaveButton
-          active={!!changedKeys.length}
-          onClick={onSave}
-          saving={isSaving}
-          label="Save server config"
-        />
-      </Toolbar>
-      <Section>
-        <ScrollPanel style={{ flexGrow: 1, padding: 8 }} className="transparent">
-          {/* @ts-ignore */}
-          <SettingsEditor
-            schema={configSchema}
-            originalData={originalData}
-            formData={formData}
-            changedKeys={changedKeys}
-            overrides={configOverrides}
-            onChange={setFormData}
-            onSetChangedKeys={setChangedKeys}
+    <>
+      <StyledSection direction="column">
+        <Toolbar>
+          <Spacer />
+          <SaveButton
+            active={!!changedKeys.length}
+            onClick={onSave}
+            saving={isSaving}
+            label="Save server config"
           />
-        </ScrollPanel>
-      </Section>
-    </StyledSection>
+        </Toolbar>
+        <Section>
+          <ScrollPanel
+            style={{ flexGrow: 1, padding: 8 }}
+            className="transparent"
+            ref={formContainerRef}
+          >
+            {/* @ts-ignore */}
+            <SettingsEditor
+              schema={configSchema}
+              originalData={originalData}
+              formData={formData}
+              changedKeys={changedKeys}
+              overrides={configOverrides}
+              onChange={setFormData}
+              onSetChangedKeys={setChangedKeys}
+            />
+          </ScrollPanel>
+        </Section>
+      </StyledSection>
+      {bgFormEl &&
+        ReactDOM.createPortal(<ServerConfigUpload fileType="login_background" />, bgFormEl)}
+      {logoFormEl &&
+        ReactDOM.createPortal(<ServerConfigUpload fileType="studio_logo" />, logoFormEl)}
+    </>
   )
 
   /*

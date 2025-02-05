@@ -26,6 +26,19 @@ const injectedRtkApi = api.injectEndpoints({
     getServerConfigFile: build.query<GetServerConfigFileApiResponse, GetServerConfigFileApiArg>({
       query: (queryArg) => ({ url: `/api/config/files/${queryArg.fileType}` }),
     }),
+    uploadServerConfigFile: build.mutation<
+      UploadServerConfigFileApiResponse,
+      UploadServerConfigFileApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/config/files/${queryArg.fileType}`,
+        method: 'PUT',
+        headers: {
+          'x-file-name': queryArg['x-file-name'],
+          'content-type': queryArg['content-type'],
+        },
+      }),
+    }),
   }),
   overrideExisting: false,
 })
@@ -43,6 +56,14 @@ export type GetServerConfigOverridesApiArg = void
 export type GetServerConfigFileApiResponse = /** status 200 Successful Response */ any
 export type GetServerConfigFileApiArg = {
   fileType: 'login_background' | 'studio_logo'
+}
+export type UploadServerConfigFileApiResponse = /** status 200 Successful Response */ any
+export type UploadServerConfigFileApiArg = {
+  /** The type of file to upload. */
+  fileType: 'login_background' | 'studio_logo'
+  /** The name of the file. */
+  'x-file-name': string
+  'content-type': string
 }
 export type ValidationError = {
   loc: (string | number)[]

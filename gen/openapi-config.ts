@@ -34,7 +34,13 @@ const outputFiles = {
   dependencyPackages: ['listDependencyPackages', 'createDependencyPackage'],
   cloud: ['getYnputCloudInfo', 'setYnputCloudKey', 'deleteYnputCloudKey'],
   attributes: ['getAttributeList', 'setAttributeList', 'getAttributeConfig'],
-  config: ['getServerConfig', 'getServerOverrides', 'getServerConfigSchema', 'setServerConfig'],
+  config: [
+    'getServerConfig',
+    'getServerOverrides',
+    'getServerConfigSchema',
+    'setServerConfig',
+    'uploadServerConfigFile',
+  ],
 }
 
 const buildOutputFiles = (files: { [name: string]: string[] }) =>
