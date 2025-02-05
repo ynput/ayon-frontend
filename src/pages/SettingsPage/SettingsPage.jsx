@@ -15,6 +15,7 @@ const AccessGroups = lazy(() => import('./AccessGroups'))
 const Attributes = lazy(() => import('./Attributes'))
 const Secrets = lazy(() => import('./Secrets'))
 const AddonsManager = lazy(() => import('./AddonsManager'))
+const ServerConfig = lazy(() => import('./ServerConfig/ServerConfig'))
 
 const SettingsPage = () => {
   const { module, addonName } = useParams()
@@ -70,14 +71,16 @@ const SettingsPage = () => {
         return <Attributes />
       case 'secrets':
         return <Secrets />
+      case 'server':
+        return <ServerConfig />
       default:
         return <Navigate to="/settings" />
     }
   }, [module, addonName, addonsData, isManager])
 
   const links = useMemo(() => {
-      const adminExtras = [
-        {
+    const adminExtras = [
+      {
         name: 'Addons',
         path: '/settings/addons',
         module: 'addons',
@@ -90,6 +93,12 @@ const SettingsPage = () => {
         module: 'bundles',
         accessLevels: ['manager'],
         shortcut: 'B+B',
+      },
+      {
+        name: 'Global',
+        path: '/settings/server',
+        module: 'server',
+        accessLevels: ['admin'],
       },
     ]
 
@@ -140,7 +149,7 @@ const SettingsPage = () => {
       },
     ]
     if (!isManager) {
-      result = [...adminExtras, ...result];
+      result = [...adminExtras, ...result]
     }
 
     if (!addonsData) return result
