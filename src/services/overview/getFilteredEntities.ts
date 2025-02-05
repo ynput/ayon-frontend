@@ -114,11 +114,12 @@ const enhancedApi = api.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
 
 enhancedApi.injectEndpoints({
   endpoints: (build) => ({
-    getPaginatedFilteredEntities: build.query<GetFilteredEntitiesQuery, GetFilteredEntitiesQueryVariables>({
+    GetPaginatedFilteredEntities: build.query<GetFilteredEntitiesQuery, GetFilteredEntitiesQueryVariables>({
       async queryFn(
-        { projectName, first = 0 }: GetFilteredEntitiesQueryVariables,
+        { projectName }: GetFilteredEntitiesQueryVariables,
         { dispatch },
       ): Promise<QueryReturnValue<GetFilteredEntitiesQuery, FetchBaseQueryError, {}>> {
+        const batches = 500
         try {
           let cursor = '0'
           let pageInfo = {}
@@ -128,7 +129,7 @@ enhancedApi.injectEndpoints({
             const response = await dispatch(
               enhancedApi.endpoints.GetFilteredEntities.initiate({
                 projectName,
-                first,
+                first: batches,
                 after: cursor,
               }),
             )

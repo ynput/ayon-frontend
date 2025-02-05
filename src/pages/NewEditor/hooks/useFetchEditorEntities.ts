@@ -61,15 +61,19 @@ const useFetchEditorEntities = ({
       await bulkUpdateEntities({ operations: operations[entityType], entityType: entityType })
       if (entityType === 'task') {
         dispatch(
-          api.util.updateQueryData('GetFilteredEntities', { projectName }, (draft: $Any) => {
-            for (const change of changes[entityType] ) {
-              if (isAttrib) {
-                draft.tasks[change.id].attrib[change.field] = change.value
-              } else {
-                draft.tasks[change.id][change.field] = change.value
+          api.util.updateQueryData(
+            'GetPaginatedFilteredEntities',
+            { projectName },
+            (draft: $Any) => {
+              for (const change of changes[entityType]) {
+                if (isAttrib) {
+                  draft.tasks[change.id].attrib[change.field] = change.value
+                } else {
+                  draft.tasks[change.id][change.field] = change.value
+                }
               }
-            }
-          }),
+            },
+          ),
         )
       }
       if (entityType === 'folder') {
@@ -121,7 +125,7 @@ const useFetchEditorEntities = ({
         })
       : folders
 
-  const entities = useGetPaginatedFilteredEntitiesQuery({projectName, first: 500})
+  const entities = useGetPaginatedFilteredEntitiesQuery({projectName})
   const tasks = entities.data?.tasks || {}
 
   return {
