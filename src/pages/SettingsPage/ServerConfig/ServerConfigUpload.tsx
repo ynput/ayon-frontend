@@ -1,4 +1,4 @@
-import { FC, useState, useRef } from 'react'
+import { FC, useState, useRef, useEffect } from 'react'
 import axios from 'axios'
 import { UploadServerConfigFileApiArg } from '@api/rest/config'
 import { Button } from '@ynput/ayon-react-components'
@@ -8,7 +8,6 @@ import { toast } from 'react-toastify'
 interface ServerConfigUploadProps {
   fileType: UploadServerConfigFileApiArg['fileType']
   fileName?: string // new prop to show currently uploaded file
-  onUploadEnd?: () => void // new prop to notify parent component
 }
 
 const spinCCW = keyframes`
@@ -53,13 +52,14 @@ const HiddenInput = styled.input`
   display: none;
 `
 
-const ServerConfigUpload: FC<ServerConfigUploadProps> = ({
-  fileType,
-  fileName = '',
-  onUploadEnd,
-}) => {
+const ServerConfigUpload: FC<ServerConfigUploadProps> = ({ fileType, fileName = '' }) => {
+  const [fileNameValue, setFileNameValue] = useState(fileName)
   const [loading, setLoading] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    setFileNameValue(fileName)
+  }, [fileName])
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -73,7 +73,7 @@ const ServerConfigUpload: FC<ServerConfigUploadProps> = ({
           },
         })
         toast.success('File uploaded successfully')
-        onUploadEnd?.() // notify parent component
+        setFileNameValue(selectedFile.name)
         // handle success (e.g., show a notification)
       } catch (error) {
         toast.error('Failed to upload file')
@@ -90,7 +90,7 @@ const ServerConfigUpload: FC<ServerConfigUploadProps> = ({
 
   return (
     <UploadContainer>
-      <Filename>{fileName}</Filename>
+      <Filename>{fileNameValue}</Filename>
 
       <Button icon={loading ? 'sync' : 'upload'} onClick={handleButtonClick}>
         Upload
