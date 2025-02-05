@@ -116,7 +116,7 @@ enhancedApi.injectEndpoints({
   endpoints: (build) => ({
     GetPaginatedFilteredEntities: build.query<GetFilteredEntitiesQuery, GetFilteredEntitiesQueryVariables>({
       async queryFn(
-        { projectName }: GetFilteredEntitiesQueryVariables,
+        { projectName, ...queryFilters }: GetFilteredEntitiesQueryVariables,
         { dispatch },
       ): Promise<QueryReturnValue<GetFilteredEntitiesQuery, FetchBaseQueryError, {}>> {
         const batches = 500
@@ -129,6 +129,7 @@ enhancedApi.injectEndpoints({
             const response = await dispatch(
               enhancedApi.endpoints.GetFilteredEntities.initiate({
                 projectName,
+                ...queryFilters,
                 first: batches,
                 after: cursor,
               }),

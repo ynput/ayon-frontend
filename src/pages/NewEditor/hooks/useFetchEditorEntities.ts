@@ -7,6 +7,7 @@ import  api from '@queries/overview/getFilteredEntities'
 // import { mapQueryFilters } from '../mappers'
 import { useUpdateEntitiesMutation } from '@queries/entity/updateEntity'
 import { useDispatch } from 'react-redux'
+import { mapQueryFilters } from '../mappers'
 
 type Params = {
   projectName: string
@@ -20,8 +21,8 @@ type Params = {
 const useFetchEditorEntities = ({
   projectName,
   selectedFolders,
-  // filters,
-  // sliceFilter,
+  filters,
+  sliceFilter,
 }: Params) => {
   const [bulkUpdateEntities] = useUpdateEntitiesMutation()
   const dispatch = useDispatch()
@@ -57,13 +58,14 @@ const useFetchEditorEntities = ({
       })
     }
 
+    const queryFilters = mapQueryFilters({ filters, sliceFilter })
     for (const entityType in operations) {
       await bulkUpdateEntities({ operations: operations[entityType], entityType: entityType })
       if (entityType === 'task') {
         dispatch(
           api.util.updateQueryData(
             'GetPaginatedFilteredEntities',
-            { projectName },
+            { projectName, ...queryFilters },
             (draft: $Any) => {
               for (const change of changes[entityType]) {
                 if (isAttrib) {
@@ -111,7 +113,7 @@ const useFetchEditorEntities = ({
   // @ts-ignore
   const selectedPaths = selectedFolders.map((id) => foldersById[id].path)
   const selectedPathsPrefixed = selectedPaths.map((path: string) => '/' + path)
-  // const queryFilters = mapQueryFilters({ filters, sliceFilter })
+  const queryFilters = mapQueryFilters({ filters, sliceFilter })
 
   const filteredFolders =
     selectedPaths.length > 0
@@ -125,7 +127,7 @@ const useFetchEditorEntities = ({
         })
       : folders
 
-  const entities = useGetPaginatedFilteredEntitiesQuery({projectName})
+  const entities = useGetPaginatedFilteredEntitiesQuery({ projectName, ...queryFilters })
   const tasks = entities.data?.tasks || {}
 
   return {
