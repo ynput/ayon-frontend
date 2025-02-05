@@ -9,14 +9,15 @@ export const LoginForm = styled.div`
   align-items: center;
   gap: 32px;
   position: relative;
-  background-color: var(--panel-background);
-  padding: 64px;
-  border-radius: 6px;
+  background-color: rgba(28, 32, 38, 0.95);
+  padding: 32px;
+  border-radius: var(--border-radius-xxl);
   box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.25);
   max-height: min(70vh, 800px);
 
   /* panel */
   & > div {
+    background-color: unset;
     align-items: center;
     padding: 32px;
     width: 350px;

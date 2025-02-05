@@ -3,6 +3,7 @@ import axios from 'axios'
 import { UploadServerConfigFileApiArg } from '@api/rest/config'
 import { Button } from '@ynput/ayon-react-components'
 import styled, { keyframes } from 'styled-components'
+import { toast } from 'react-toastify'
 
 interface ServerConfigUploadProps {
   fileType: UploadServerConfigFileApiArg['fileType']
@@ -71,9 +72,11 @@ const ServerConfigUpload: FC<ServerConfigUploadProps> = ({
             'content-type': selectedFile.type,
           },
         })
+        toast.success('File uploaded successfully')
         onUploadEnd?.() // notify parent component
         // handle success (e.g., show a notification)
       } catch (error) {
+        toast.error('Failed to upload file')
         // handle error (e.g., show an error message)
       } finally {
         setLoading(false)
