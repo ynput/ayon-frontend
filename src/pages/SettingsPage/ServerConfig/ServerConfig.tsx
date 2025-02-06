@@ -40,10 +40,8 @@ const StyledScrollPanel = styled(ScrollPanel)`
 `
 
 const ServerConfig = () => {
-  // Replace local portal logic with custom hook
   const { bgElement, logoElement, containerRef } = usePortalElements()
 
-  // Use RTK query hooks instead of axios calls
   const { data: originalData = {}, isLoading: isLoadingData } = useGetServerConfigQuery()
   const { data: configOverrides = {}, isLoading: isLoadingOverrides } =
     useGetServerConfigOverridesQuery()
@@ -53,11 +51,17 @@ const ServerConfig = () => {
 
   const [formData, setFormData] = useState<ServerConfigModel>({})
   const [changedKeys, setChangedKeys] = useState([])
+  const [backgroundFileName, setBackgroundFileName] = useState(
+    originalData?.customization?.login_background || '',
+  )
+  const [logoFileName, setLogoFileName] = useState(originalData?.customization?.studio_logo || '')
 
   useEffect(() => {
     if (!isLoadingData && !isLoadingSchema && !isLoadingOverrides) {
       setFormData(originalData)
       setChangedKeys([])
+      setBackgroundFileName(originalData?.customization?.login_background || '')
+      setLogoFileName(originalData?.customization?.studio_logo || '')
     }
   }, [
     isLoadingData,
@@ -106,7 +110,8 @@ const ServerConfig = () => {
         ReactDOM.createPortal(
           <ServerConfigUpload
             fileType="login_background"
-            fileName={originalData.customization?.login_background}
+            fileName={backgroundFileName}
+            setFileName={setBackgroundFileName}
           />,
           bgElement,
         )}
@@ -114,7 +119,8 @@ const ServerConfig = () => {
         ReactDOM.createPortal(
           <ServerConfigUpload
             fileType="studio_logo"
-            fileName={originalData.customization?.studio_logo}
+            fileName={logoFileName}
+            setFileName={setLogoFileName}
           />,
           logoElement,
         )}
