@@ -1,11 +1,8 @@
-import { useState, useEffect, useRef } from 'react'
-import ReactDOM from 'react-dom' // added import for portal
-import ServerConfigUpload from './ServerConfigUpload' // added import for upload component
-
+import { useState, useEffect } from 'react'
+import ReactDOM from 'react-dom'
+import ServerConfigUpload from './ServerConfigUpload'
 import SettingsEditor from '@containers/SettingsEditor'
 import { Spacer, Section, Toolbar, ScrollPanel, SaveButton } from '@ynput/ayon-react-components'
-
-// Add RTK query hooks and mutation hook imports
 import {
   useGetServerConfigQuery,
   useGetServerConfigOverridesQuery,
@@ -15,17 +12,14 @@ import { useSetServerConfigMutation } from '@queries/config/updateConfig'
 import { ServerConfigModel } from '@api/rest/config'
 import styled from 'styled-components'
 import { toast } from 'react-toastify'
+import usePortalElements from '@hooks/usePortalElements'
 
 const StyledSection = styled(Section)`
   padding: var(--padding-m);
-
   align-items: center;
-
   & > * {
     max-width: 800px;
   }
-
-  /* target bg and studio logo fields and hide */
   [data-schema-id='root_customization_login_background'],
   [data-schema-id='root_customization_studio_logo'] {
     .form-field {
@@ -46,7 +40,9 @@ const StyledScrollPanel = styled(ScrollPanel)`
 `
 
 const ServerConfig = () => {
-  const formContainerRef = useRef<HTMLDivElement>(null) // added ref for portal
+  // Replace local portal logic with custom hook
+  const { bgElement, logoElement, containerRef } = usePortalElements()
+
   // Use RTK query hooks instead of axios calls
   const { data: originalData = {}, isLoading: isLoadingData } = useGetServerConfigQuery()
   const { data: configOverrides = {}, isLoading: isLoadingOverrides } =
@@ -72,14 +68,6 @@ const ServerConfig = () => {
     configOverrides,
   ])
 
-  const bgFormEl = formContainerRef.current?.querySelector(
-    '[data-schema-id="root_customization_login_background"] .form-inline-field-widget',
-  )
-
-  const logoFormEl = formContainerRef.current?.querySelector(
-    '[data-schema-id="root_customization_studio_logo"] .form-inline-field-widget',
-  )
-
   const onSave = async () => {
     try {
       await setServerConfig({ serverConfigModel: formData }).unwrap()
@@ -101,7 +89,7 @@ const ServerConfig = () => {
           />
         </Toolbar>
 
-        <StyledScrollPanel className="transparent" ref={formContainerRef}>
+        <StyledScrollPanel className="transparent" ref={containerRef}>
           {/* @ts-ignore */}
           <SettingsEditor
             schema={configSchema}
@@ -114,31 +102,24 @@ const ServerConfig = () => {
           />
         </StyledScrollPanel>
       </StyledSection>
-      {bgFormEl &&
+      {bgElement &&
         ReactDOM.createPortal(
           <ServerConfigUpload
             fileType="login_background"
             fileName={originalData.customization?.login_background}
           />,
-          bgFormEl,
+          bgElement,
         )}
-      {logoFormEl &&
+      {logoElement &&
         ReactDOM.createPortal(
           <ServerConfigUpload
             fileType="studio_logo"
             fileName={originalData.customization?.studio_logo}
           />,
-          logoFormEl,
+          logoElement,
         )}
     </>
   )
-
-  /*
-  
-        onSetBreadcrumbs={onSetBreadcrumbs}
-        breadcrumbs={breadcrumbs}
-        context={context}
-  */
 }
 
 export default ServerConfig
