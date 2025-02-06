@@ -138,8 +138,6 @@ const viewerSlice = createSlice({
       delete state.annotations[payload]
       // set clearAnnotation to true to trigger a reset of that frame
 
-      console.log(page)
-
       state.clearAnnotation = page
     },
     clearAnnotation: (state: ViewerState, { payload }: PayloadAction<number | null>) => {

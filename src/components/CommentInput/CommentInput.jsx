@@ -75,7 +75,6 @@ const CommentInput = ({
   const [isDropping, setIsDropping] = useState(false)
 
   const { annotations, removeAnnotation, goToAnnotation } = useAnnotationsSync({
-    openCommentInput: onOpen,
     entityId: entities[0]?.id,
     filesUploading,
   })
