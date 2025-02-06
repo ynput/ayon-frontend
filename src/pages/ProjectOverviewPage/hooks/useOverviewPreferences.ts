@@ -1,7 +1,7 @@
-import { useSetFrontendPreferencesMutation } from "@queries/user/updateUser"
-import { useAppSelector } from "@state/store"
-import { $Any } from "@types"
-import { useEffect, useState } from "react"
+import { useSetFrontendPreferencesMutation } from '@queries/user/updateUser'
+import { useAppSelector } from '@state/store'
+import { $Any } from '@types'
+import { useEffect, useState } from 'react'
 
 const useOverviewPreferences = () => {
   const userName = useAppSelector((state) => state.user.name)
@@ -10,7 +10,7 @@ const useOverviewPreferences = () => {
 
   const updateShowHierarchy = (newValue: boolean) => {
     // @ts-ignore
-    const overviewSettings = frontendPreferences.pageSettings?.overview || {}
+    const overviewSettings = frontendPreferences?.pageSettings?.overview || {}
     const updatedFrontendPreferences = {
       ...frontendPreferences,
       pageSettings: {
@@ -27,7 +27,7 @@ const useOverviewPreferences = () => {
 
   const frontendPreferences = useAppSelector((state) => state.user.data.frontendPreferences)
   const overviewPageSettings: { showHierarchy: boolean } = (
-    frontendPreferences.pageSettings as { [key: string]: $Any }
+    frontendPreferences?.pageSettings as { [key: string]: $Any }
   )?.overview || { showHierarchy: false }
 
   overviewPageSettings.showHierarchy

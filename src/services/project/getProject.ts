@@ -48,6 +48,17 @@ const getProjectInjected = api.injectEndpoints({
       transformResponse: (res: any) => res.data?.project,
       providesTags: (_res, _error, { projectName }) => [{ type: 'project', id: projectName }],
     }),
+    getTasksFolders: build.query({
+      query: ({ projectName, query }) => ({
+        url: `/api/projects/${projectName}/tasksFolders`,
+        method: 'POST',
+        body: {
+          ...query,
+        },
+      }),
+      transformResponse: (res: any) => res.folderIds || [],
+      providesTags: (_res, _error, { projectName }) => [{ type: 'project', id: projectName }],
+    }),
   }),
   overrideExisting: true,
 })
@@ -130,6 +141,7 @@ export const {
   useListProjectsQuery,
   useGetProjectAnatomyQuery,
   useGetProjectAttribsQuery,
+  useGetTasksFoldersQuery,
 } = getProjectApi
 
 export default getProjectApi

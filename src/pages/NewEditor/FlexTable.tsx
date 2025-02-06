@@ -36,7 +36,7 @@ type Props = {
   updateEntities: (type: string, value: $Any, entities: $Any, isAttrib: boolean) => void
 }
 
-const MyTable = ({
+const FlexTable = ({
   tableData,
   rawData,
   attribs,
@@ -262,7 +262,7 @@ const MyTable = ({
                     minWidth: '160px',
                     width: `calc(var(--col-${cell.column.id}-size) * 1px)`,
                   }}
-                  onKeyUp={(e) => {
+                  onKeyDown={(e) => {
                     if (e.key === 'c' && e.ctrlKey) {
                       handleCopy(cell, colIdx)
                     }
@@ -347,4 +347,4 @@ const MyTable = ({
   )
 }
 
-export default MyTable
+export default FlexTable

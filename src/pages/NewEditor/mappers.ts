@@ -16,12 +16,12 @@ import { SortByOption } from '@pages/UserDashboardPage/UserDashboardTasks/Dashbo
 const getAbsoluteSelections = (selections: $Any) =>
   selections.map((selection: $Any) => ({
     start: [
-      Math.min(selection?.start?.[0] || -1, selection.end?.[0] || -1),
-      Math.min(selection?.start?.[1] || -1, selection.end?.[1] || -1),
+      Math.min(selection?.start?.[0]  ?? -1, selection.end?.[0] ?? -1),
+      Math.min(selection?.start?.[1] ?? -1, selection.end?.[1] ?? -1),
     ],
     end: [
-      Math.max(selection?.start?.[0] || -1, selection.end?.[0] || -1),
-      Math.max(selection?.start?.[1] || -1, selection.end?.[1] || -1),
+      Math.max(selection?.start?.[0] ?? -1, selection.end?.[0] ?? -1),
+      Math.max(selection?.start?.[1] ?? -1, selection.end?.[1] ?? -1),
     ],
   })) as Selection[]
 
@@ -102,7 +102,6 @@ const populateTableData = ({
   })
 
   let mergedData = {}
-  
   return isFlatList
     ? createFlatList({
         allFolders,
@@ -394,6 +393,7 @@ const getFilteredEntities = ({
   allFolders,
   folders,
   tasks,
+  tasksFolders = [],
   filters,
   sliceFilter,
   sortBy,
@@ -401,6 +401,7 @@ const getFilteredEntities = ({
   allFolders: FolderListItem[]
   folders: { [key: string]: FolderNode }
   tasks: { [key: string]: Partial<TaskNode> }
+  tasksFolders: string[]
   filters: Filter[]
   sliceFilter: TaskFilterValue | null
   sortBy: SortByOption[]
@@ -409,176 +410,13 @@ const getFilteredEntities = ({
   tasks: { [key: string]: Partial<TaskNode> }
   taskList: Partial<TaskNode>[]
 } => {
-  const strongFilters = ['folderType', 'status', 'assignees']
 
-  const taskListSorter = (a, b) => {
-    let result = 0
-    // TODO Check if statuses have cardinality also - see priorities
-    for (const sortOrder of sortBy) {
-      if (sortOrder.id === 'status') {
-        result = a.status.localeCompare(b.status) * (sortOrder.sortOrder ? 1 : -1)
-        if (result !== 0) {
-          return result
-        }
-      }
-      if (sortOrder.id === 'label') {
-        result =
-          (a.label || a.name).localeCompare(b.label || a.name) * (sortOrder.sortOrder ? 1 : -1)
-        if (result !== 0) {
-          return result
-        }
-      }
-      if (sortOrder.id === 'priority') {
-        result =
-          (priorityWeight[b.attrib.priority] - priorityWeight[a.attrib.priority]) *
-          (sortOrder.sortOrder ? 1 : -1)
-        if (result !== 0) {
-          return result
-        }
-      }
-    }
-
-    return result
-  }
-
-  const listsIntersect = (listA: string[], listB: string[]) => {
-    if (listA === undefined) {
-      return false
-    }
-    for (const value of listB) {
-      if (listA.includes(value)) {
-        return true
-      }
-    }
-    return false
-  }
-
-  const scalarIntersects = (value: string, listB: string[]) => {
-    if (listB.includes(value)) {
-      return true
-    }
-    return false
-  }
-
-  const isMatchingFolderFilter = (
-    folder: FolderNode,
-    filterType: string,
-    filterValues: string[],
-  ) => {
-    if (strongFilters.includes(filterType)) {
-      // some filters are task specific and should be ignored for folders
-      if (folder[filterType] === undefined) {
-        return false
-      }
-      return listsIntersect(folder[filterType], filterValues)
-    }
-
-    // some filters are task specific and should be ignored for folders
-    if (folder.attrib[filterType] === undefined) {
-      return true
-    }
-
-    return scalarIntersects(folder.attrib[filterType], filterValues)
-  }
-
-  const isMatchingFolderFilters = (folder: FolderNode, filtersMap: { [key: string]: string[] }) => {
-    for (const filter in filtersMap) {
-      if (!isMatchingFolderFilter(folder, filter, filtersMap[filter])) {
-        return false
-      }
-    }
-
-    return true
-  }
-
-  const isMatchingTaskFilter = (task: TaskNode, filterType: string, filterValues: string[]) => {
-    if (strongFilters.includes(filterType)) {
-      return listsIntersect(task[filterType], filterValues)
-    }
-
-    return scalarIntersects(task.attrib[filterType], filterValues)
-  }
-
-  const isMatchingTaskFilters = (task: TaskNode) => {
-    for (const filter in filtersMap) {
-      if (!isMatchingTaskFilter(task, filter, filtersMap[filter])) {
-        return false
-      }
-    }
-
-    return true
-  }
-
-  const getFiltersMap = (filters: Filter[]) => {
-    return filters.reduce((filtersAcc, filter: Filter) => {
-      filtersAcc[getFilterFromId(filter.id)] = filter.values.reduce((acc2, filterValue) => {
-        if (filter.type === 'integer') {
-          acc2.push(parseInt(filterValue.id))
-        }
-        if (filter.type === 'float') {
-          acc2.push(parseFloat(filterValue.id))
-        }
-        if (filter.type === 'string') {
-          acc2.push(filterValue.id)
-        }
-        if (filter.type === 'list_of_strings') {
-          acc2.push(filterValue.id)
-        }
-
-        return acc2
-      }, [])
-      return filtersAcc
-    }, {})
-  }
-
-  const getFilteredFolders = (folders: FolderNode[], filtersMap: { [key: string]: string[] }) => {
-    if (!filters) {
-      return folders
-    }
-
-    let filteredFolders = {}
-    let first = true
-    for (const id in folders) {
-      if (first) {
-        first = false
-      }
-      if (isMatchingFolderFilters(folders[id], filtersMap)) {
-        filteredFolders[id] = folders[id]
-      }
-    }
-    return filteredFolders
-  }
-
-  const getFilteredTasks = (
-    tasks: TaskNode[],
-    filtersMap: { [key: string]: string[] },
-  ): TaskNode[] => {
-    if (!filters) {
-      return tasks
-    }
-
-    let filteredTasks = {}
-    let first = true
-    for (const id in tasks) {
-      if (first) {
-        first = false
-      }
-      if (isMatchingTaskFilters(tasks[id], filtersMap)) {
-        filteredTasks[id] = {
-          ...tasks[id],
-          matchesFilters: true,
-        }
-      }
-    }
-    return filteredTasks
-  }
 
   const filtersMap = getFiltersMap(filters)
 
-  const filteredFolders = getFilteredFolders(folders, filtersMap)
-  const paths = []
+  const filteredFolders = getFilteredFolders(folders, filters, filtersMap)
 
-  const filteredTasksList = Object.values(getFilteredTasks(tasks, filtersMap))
+  const filteredTasksList = Object.values(getFilteredTasks(tasks, filters, filtersMap))
   // TODO fetch attributes and use actual project values instead of hard coded ones
   const priorityWeight = { low: 1, normal: 10, high: 100, urgent: 1000 }
 
@@ -588,13 +426,10 @@ const getFilteredEntities = ({
     return acc
   }, new Map())
 
-  filteredTasks.forEach((el, key, map) => {
-    if (folders[el.folderId] === undefined) {
-      return
-    }
-
-    paths.push(folders[el.folderId].path)
-  })
+  const paths = []
+  for (const id of tasksFolders) {
+    paths.push(folders[id].path)
+  }
 
   const splitPaths = []
   for (const path of paths) {
@@ -618,6 +453,176 @@ const getFilteredEntities = ({
 
   return { folders: treeFolders, tasks: filteredTasks, taskList: filteredTasksList }
 }
+
+const strongFilters = ['folderType', 'status', 'assignees']
+
+const getFiltersMap = (filters: Filter[]) => {
+  return filters.reduce((filtersAcc, filter: Filter) => {
+    filtersAcc[getFilterFromId(filter.id)] = filter.values.reduce((acc2, filterValue) => {
+      if (filter.type === 'integer') {
+        acc2.push(parseInt(filterValue.id))
+      }
+      if (filter.type === 'float') {
+        acc2.push(parseFloat(filterValue.id))
+      }
+      if (filter.type === 'string') {
+        acc2.push(filterValue.id)
+      }
+      if (filter.type === 'list_of_strings') {
+        acc2.push(filterValue.id)
+      }
+
+      return acc2
+    }, [])
+    return filtersAcc
+  }, {})
+}
+
+const getFilteredFolders = (
+  folders: FolderNode[],
+  filters: $Any,
+  filtersMap: { [key: string]: string[] },
+) => {
+  if (!filters) {
+    return folders
+  }
+
+  let filteredFolders = {}
+  let first = true
+  for (const id in folders) {
+    if (first) {
+      first = false
+    }
+    if (isMatchingFolderFilters(folders[id], filtersMap)) {
+      filteredFolders[id] = folders[id]
+    }
+  }
+  return filteredFolders
+}
+
+const getFilteredTasks = (
+  tasks: TaskNode[],
+  filters: $Any,
+  filtersMap: { [key: string]: string[] },
+): TaskNode[] => {
+  if (!filters) {
+    return tasks
+  }
+
+  let filteredTasks = {}
+  let first = true
+  for (const id in tasks) {
+    if (first) {
+      first = false
+    }
+    if (isMatchingTaskFilters(tasks[id], filtersMap)) {
+      filteredTasks[id] = {
+        ...tasks[id],
+        matchesFilters: true,
+      }
+    }
+  }
+  return filteredTasks
+}
+
+const taskListSorter = (a, b) => {
+  let result = 0
+  // TODO Check if statuses have cardinality also - see priorities
+  for (const sortOrder of sortBy) {
+    if (sortOrder.id === 'status') {
+      result = a.status.localeCompare(b.status) * (sortOrder.sortOrder ? 1 : -1)
+      if (result !== 0) {
+        return result
+      }
+    }
+    if (sortOrder.id === 'label') {
+      result =
+        (a.label || a.name).localeCompare(b.label || a.name) * (sortOrder.sortOrder ? 1 : -1)
+      if (result !== 0) {
+        return result
+      }
+    }
+    if (sortOrder.id === 'priority') {
+      result =
+        (priorityWeight[b.attrib.priority] - priorityWeight[a.attrib.priority]) *
+        (sortOrder.sortOrder ? 1 : -1)
+      if (result !== 0) {
+        return result
+      }
+    }
+  }
+
+  return result
+}
+
+const listsIntersect = (listA: string[], listB: string[]) => {
+  if (listA === undefined) {
+    return false
+  }
+  for (const value of listB) {
+    if (listA.includes(value)) {
+      return true
+    }
+  }
+  return false
+}
+
+const scalarIntersects = (value: string, listB: string[]) => {
+  if (listB.includes(value)) {
+    return true
+  }
+  return false
+}
+
+const isMatchingFolderFilter = (
+  folder: FolderNode,
+  filterType: string,
+  filterValues: string[],
+) => {
+  if (strongFilters.includes(filterType)) {
+    // some filters are task specific and should be ignored for folders
+    if (folder[filterType] === undefined) {
+      return false
+    }
+    return listsIntersect(folder[filterType], filterValues)
+  }
+
+  // some filters are task specific and should be ignored for folders
+  if (folder.attrib[filterType] === undefined) {
+    return true
+  }
+
+  return scalarIntersects(folder.attrib[filterType], filterValues)
+}
+
+const isMatchingFolderFilters = (folder: FolderNode, filtersMap: { [key: string]: string[] }) => {
+  for (const filter in filtersMap) {
+    if (!isMatchingFolderFilter(folder, filter, filtersMap[filter])) {
+      return false
+    }
+  }
+
+  return true
+}
+
+const isMatchingTaskFilter = (task: TaskNode, filterType: string, filterValues: string[]) => {
+  if (strongFilters.includes(filterType)) {
+    return listsIntersect(task[filterType], filterValues)
+  }
+
+  return scalarIntersects(task.attrib[filterType], filterValues)
+}
+
+const isMatchingTaskFilters = (task: TaskNode) => {
+  for (const filter in filtersMap) {
+    if (!isMatchingTaskFilter(task, filter, filtersMap[filter])) {
+      return false
+    }
+  }
+
+  return true
+}
+
 
 export {
   getAbsoluteSelections,

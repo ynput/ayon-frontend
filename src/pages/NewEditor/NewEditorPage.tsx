@@ -13,10 +13,11 @@ import { $Any } from '@types'
 import useFetchAndUpdateEntityData from './hooks/useFetchEditorEntities'
 import useAttributeFields from './hooks/useAttributesList'
 import { getFilteredEntities, populateTableData } from './mappers'
-import MyTable from './Table'
+import FlexTable from './FlexTable'
 import { SortByOption } from '@pages/UserDashboardPage/UserDashboardTasks/DashboardTasksToolbar/KanBanSortByOptions'
 import getAllProjectStatuses from '@containers/DetailsPanel/helpers/getAllProjectsStatuses'
 import { useGetProjectsInfoQuery } from '@queries/userDashboard/getUserDashboard'
+import useUpdateEditorEntities from './hooks/useUpdateEditorEntities'
 
 type Props = {
   filters: Filter[]
@@ -37,11 +38,13 @@ const NewEditorPage = ({ filters, showHierarchy, sortBy }: Props) => {
   const { attribFields } = useAttributeFields()
   const { filter: sliceFilter } = useFilterBySlice()
 
+  const { updateEntities } = useUpdateEditorEntities({ projectName, filters, sliceFilter })
+
   const {
     rawData: allFolders,
     folders,
     tasks,
-    updateEntities,
+    tasksFolders,
   } = useFetchAndUpdateEntityData({
     projectName,
     folderTypes: project.folders || {},
@@ -59,6 +62,7 @@ const NewEditorPage = ({ filters, showHierarchy, sortBy }: Props) => {
     allFolders,
     folders,
     tasks,
+    tasksFolders,
     filters,
     sliceFilter,
     sortBy,
@@ -85,7 +89,7 @@ const NewEditorPage = ({ filters, showHierarchy, sortBy }: Props) => {
         >
           <SplitterPanel size={100}>
             <TablePanel style={{ height: '100%' }}>
-              <MyTable
+              <FlexTable
                 attribs={attribFields}
                 // TODO fetch & pass attrib data using new graphql queries
                 rawData={{ folders, tasks }}
