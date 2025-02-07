@@ -1395,10 +1395,6 @@ export type GetFilteredEntitiesQuery = { __typename?: 'Query', project: { __type
 export type GetFilteredEntitiesByParentQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
   parentIds: Array<Scalars['String']['input']> | Scalars['String']['input'];
-  assignees?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
-  tags?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
-  statuses?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
-  attributes?: InputMaybe<Array<AttributeFilterInput> | AttributeFilterInput>;
 }>;
 
 
@@ -1822,16 +1818,10 @@ export const GetFilteredEntitiesDocument = `
 }
     ${TaskPropsFragmentFragmentDoc}`;
 export const GetFilteredEntitiesByParentDocument = `
-    query GetFilteredEntitiesByParent($projectName: String!, $parentIds: [String!]!, $assignees: [String!], $tags: [String!], $statuses: [String!], $attributes: [AttributeFilterInput!]) {
+    query GetFilteredEntitiesByParent($projectName: String!, $parentIds: [String!]!) {
   project(name: $projectName) {
     name
-    tasks(
-      folderIds: $parentIds
-      assignees: $assignees
-      tags: $tags
-      statuses: $statuses
-      attributes: $attributes
-    ) {
+    tasks(folderIds: $parentIds) {
       edges {
         node {
           ...TaskPropsFragment

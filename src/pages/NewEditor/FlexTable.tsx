@@ -8,7 +8,6 @@ import {
   filterFns,
   flexRender,
   Row,
-  ExpandedState,
 } from '@tanstack/react-table'
 
 import clsx from 'clsx'
@@ -23,6 +22,7 @@ import { UserNode } from '@api/graphql'
 import { useCustomColumnWidths, useSyncCustomColumnWidths } from './hooks/useCustomColumnsWidth'
 import { toast } from 'react-toastify'
 import { Status } from '@api/rest/project'
+import useOverviewPreferences from '@pages/ProjectOverviewPage/hooks/useOverviewPreferences'
 
 type Props = {
   tableData: $Any[]
@@ -62,7 +62,7 @@ const FlexTable = ({
     setSelectionInProgress,
   })
 
-  const [expanded, setExpanded] = useState<ExpandedState>({})
+  const { expanded, updateExpanded } = useOverviewPreferences()
   const [itemExpanded, setItemExpanded] = useState<string>('root')
   const toggleExpanderHandler = handleToggleFolder(setItemExpanded)
 
@@ -150,7 +150,7 @@ const FlexTable = ({
     getFilteredRowModel: getFilteredRowModel(),
     getExpandedRowModel: getExpandedRowModel(),
     filterFromLeafRows: true,
-    onExpandedChange: setExpanded,
+    onExpandedChange: updateExpanded,
     columnResizeMode: 'onChange',
     // @ts-ignore
     filterFns,

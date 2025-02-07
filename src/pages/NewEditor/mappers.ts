@@ -64,6 +64,7 @@ const populateTableData = ({
   allFolders,
   folders,
   tasks,
+  tasksFolders,
   taskList,
   folderTypes,
   taskTypes,
@@ -72,6 +73,7 @@ const populateTableData = ({
   allFolders: FolderListItem[]
   folders: Map<Partial<FolderNode>>
   tasks: Map<Partial<TaskNode>>
+  tasksFolders: string[]
   taskList: Partial<TaskNode>[]
   folderTypes: $Any
   taskTypes: $Any
@@ -120,6 +122,7 @@ const populateTableData = ({
         taskTypes,
         mappedRawData,
         tasks: mappedTaskData,
+        tasksFolders,
         taskList,
         folders: mappedFolderData,
         rawFolders: folders,
@@ -185,7 +188,7 @@ const placeholderToTableRow = (
     img: null,
     data: {
       id: parentFolder.id,
-      type: 'folder',
+      type: 'task',
       name: taskName,
       label: taskName,
     },
@@ -269,7 +272,7 @@ const createDataTree = <T extends FolderListItem>({
   // Single pass to create base rows and store in Map
   for (let i = 0; i < sortedItems.length; i++) {
     const item = sortedItems[i]
-    const id = item['id'] as string
+    const id = item.id
     // @ts-ignore
     const row: TableRow = {
       // @ts-ignore
@@ -284,15 +287,12 @@ const createDataTree = <T extends FolderListItem>({
     let sortedTaskNames = Array.from(item.taskNames)
     sortedTaskNames = sortedTaskNames.sort((a, b) => a.localeCompare(b))
 
-    // TODO check if placeholders are actually needed (might be when fetching by parentd ID when no filters are in place)
-    /*
     for (const taskName of sortedTaskNames) {
       taskPlaceholders = {
         ...taskPlaceholders,
         [item.id]: [...(taskPlaceholders[item.id] || []), placeholderToTableRow(taskName, item)],
       }
     }
-      */
   }
 
   let taskMap = {}
@@ -410,8 +410,6 @@ const getFilteredEntities = ({
   tasks: { [key: string]: Partial<TaskNode> }
   taskList: Partial<TaskNode>[]
 } => {
-
-
   const filtersMap = getFiltersMap(filters)
 
   const filteredFolders = getFilteredFolders(folders, filters, filtersMap)
@@ -420,7 +418,8 @@ const getFilteredEntities = ({
   // TODO fetch attributes and use actual project values instead of hard coded ones
   const priorityWeight = { low: 1, normal: 10, high: 100, urgent: 1000 }
 
-  filteredTasksList.sort(taskListSorter)
+  // TODO check why this is failing...
+  // filteredTasksList.sort(taskListSorter)
   const filteredTasks = filteredTasksList.reduce((acc: Map<Partial<Task>>, task) => {
     acc.set(task.id, task)
     return acc
@@ -428,6 +427,10 @@ const getFilteredEntities = ({
 
   const paths = []
   for (const id of tasksFolders) {
+    if (folders[id] === undefined) {
+      continue
+    }
+
     paths.push(folders[id].path)
   }
 
@@ -446,6 +449,7 @@ const getFilteredEntities = ({
     if (splitPaths.includes(folders[id].path)) {
       treeFolders[id] = {
         ...folders[id],
+        // TODO check if this still applies...
         matchesFilters: Object.keys(filtersMap).length == 0 || filteredFolderIds.includes(id),
       }
     }
@@ -613,7 +617,7 @@ const isMatchingTaskFilter = (task: TaskNode, filterType: string, filterValues: 
   return scalarIntersects(task.attrib[filterType], filterValues)
 }
 
-const isMatchingTaskFilters = (task: TaskNode) => {
+const isMatchingTaskFilters = (task: TaskNode, filtersMap: $Any) => {
   for (const filter in filtersMap) {
     if (!isMatchingTaskFilter(task, filter, filtersMap[filter])) {
       return false
@@ -622,7 +626,6 @@ const isMatchingTaskFilters = (task: TaskNode) => {
 
   return true
 }
-
 
 export {
   getAbsoluteSelections,

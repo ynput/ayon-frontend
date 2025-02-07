@@ -48,18 +48,8 @@ const transformFilteredEntitiesByParent = (
   let tasks: { [key: string]: Partial<TaskNode> } = {}
 
   if (!response.project) {
-    return { folders: {}, tasks: {} }
+    return { tasks: {} }
   }
-
-  /*
-  // Add folders
-  for (const { node } of response.project.folders.edges) {
-    folders[node.id] = {
-      ...node,
-      parentId: node.parentId || 'root',
-    }
-  }
-  */
 
   for (const { node: taskNode } of response.project.tasks.edges) {
     tasks[taskNode.id] = {
@@ -68,7 +58,7 @@ const transformFilteredEntitiesByParent = (
     }
   }
 
-  return { folders, tasks }
+  return { tasks }
 }
 
 type GetEntitiesByIdsResult = {
@@ -76,7 +66,6 @@ type GetEntitiesByIdsResult = {
   tasks: { [key: string]: Partial<TaskNode> }
 }
 type GetFilteredEntitiesByParentResult = {
-  folders: { [key: string]: Partial<FolderNode> }
   tasks: { [key: string]: Partial<TaskNode> }
 }
 type GetFilteredEntitiesResult = {

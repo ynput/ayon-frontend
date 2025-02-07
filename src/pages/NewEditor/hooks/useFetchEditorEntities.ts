@@ -4,6 +4,8 @@ import { Filter } from '@ynput/ayon-react-components'
 import { TaskFilterValue } from '@containers/TasksProgress/hooks/useFilterBySlice'
 import { mapQueryFilters } from '../mappers'
 import { useGetTasksFoldersQuery } from '@queries/project/getProject'
+import { useGetFilteredEntitiesByParentQuery } from '@queries/overview/getFilteredEntities'
+import useOverviewPreferences from '@pages/ProjectOverviewPage/hooks/useOverviewPreferences'
 
 type Params = {
   projectName: string
@@ -21,6 +23,8 @@ const useFetchEditorEntities = ({
   sliceFilter,
 }: Params) => {
 
+  const { expanded } = useOverviewPreferences()
+
   const {
     data: { folders = [] } = {},
     isLoading,
@@ -34,6 +38,13 @@ const useFetchEditorEntities = ({
     map[obj.id] = obj
     return map
   }, {})
+
+
+  // @ts-ignore
+  const { data: expandedFoldersTasks } = useGetFilteredEntitiesByParentQuery({
+    projectName,
+    parentIds: Object.keys(expanded),
+  })
 
   // @ts-ignore
   const selectedPaths = selectedFolders.map((id) => foldersById[id].path)
@@ -52,19 +63,18 @@ const useFetchEditorEntities = ({
         })
       : folders
 
-  // const entities = useGetPaginatedFilteredEntitiesQuery({ projectName, ...queryFilters })
-  // const tasks = entities.data?.tasks || {}
-  const tasks = {}
-
   const query = mapQFtoQ(queryFilters)
 
-  const {data: tasksFolders, isLoading: isLoadingTaskFolders }= useGetTasksFoldersQuery({ projectName, query})
+  const { data: tasksFolders, isLoading: isLoadingTaskFolders } = useGetTasksFoldersQuery({
+    projectName,
+    query,
+  })
 
 
   return {
     rawData: filteredFolders,
     folders: folders.reduce((acc, curr) => ({ ...acc, [curr.id as string]: curr }), {}),
-    tasks,
+    tasks: expandedFoldersTasks?.tasks ?? {},
     tasksFolders: tasksFolders,
     isLoading: isLoading || isFetching || isLoadingTaskFolders,
     selectedPaths: selectedPathsPrefixed,
@@ -79,38 +89,13 @@ const mapQFtoQ = (queryFilters: $Any) => {
       operator: 'or',
       conditions: [
         {
-          key: 'status',
-          operator: 'eq',
-          value: 'In progress',
-        },
-        {
           operator: 'or',
           conditions: [
-            {
-              key: 'status',
-              operator: 'eq',
-              value: 'In progress',
-            },
-            {
-              key: 'status',
-              operator: 'eq',
-              value: 'On hold',
-            },
-            {
-              key: 'status',
-              operator: 'eq',
-              value: 'Pending review',
-            },
-            {
-              key: 'status',
-              operator: 'eq',
-              value: 'Not ready',
-            },
-            {
-              key: 'status',
-              operator: 'eq',
-              value: 'Ready to start',
-            },
+            { key: 'status', operator: 'eq', value: 'In progress', },
+            // { key: 'status', operator: 'eq', value: 'On hold', },
+            // { key: 'status', operator: 'eq', value: 'Pending review', },
+            // { key: 'status', operator: 'eq', value: 'Not ready', },
+            // { key: 'status', operator: 'eq', value: 'Ready to start', },
           ],
         },
       ],

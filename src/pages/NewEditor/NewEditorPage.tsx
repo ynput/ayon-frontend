@@ -73,6 +73,7 @@ const NewEditorPage = ({ filters, showHierarchy, sortBy }: Props) => {
     folders: filteredFolders,
     tasks: filteredTasks,
     taskList,
+    tasksFolders,
     folderTypes: project.folders,
     taskTypes: project.tasks,
     isFlatList: !showHierarchy,

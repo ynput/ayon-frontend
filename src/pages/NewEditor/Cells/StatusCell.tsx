@@ -38,9 +38,9 @@ const StatusCell = ({ status, statuses, updateHandler }: Props) => {
       showPreview={showPlaceholder}
       handleExpandIconClick={expandClickHandler}
       previewValue={{
-        icon: matchingStatus.icon,
-        color: matchingStatus.color,
-        text: matchingStatus.label,
+        icon: matchingStatus?.icon ?? 'list',
+        color: matchingStatus?.color ?? 'transparent',
+        text: matchingStatus?.label ??  '',
       }}
     >
       {dropdownComponent}
