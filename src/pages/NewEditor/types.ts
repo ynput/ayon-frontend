@@ -1,3 +1,5 @@
+import { FolderNode, TaskNode } from "@api/graphql"
+
 export type TableRow = {
   id: string
   parentId?: string
@@ -18,3 +20,7 @@ export type ExtraData = {
   label?: string | null
   subType?: string | null
 }
+
+export type MatchingFolder = Partial<FolderNode> & { matchesFilters: boolean }
+export type FolderNodeMap = { [key: string]: MatchingFolder }
+export type TaskNodeMap = { [key: string]: TaskNode }

@@ -10,14 +10,17 @@ import { useSlicerContext } from '@context/slicerContext'
 import { useGetUsersAssigneeQuery } from '@queries/user/getUsers'
 import { $Any } from '@types'
 
-import useFetchAndUpdateEntityData from './hooks/useFetchEditorEntities'
-import useAttributeFields from './hooks/useAttributesList'
-import { getFilteredEntities, populateTableData } from './mappers'
-import FlexTable from './FlexTable'
 import { SortByOption } from '@pages/UserDashboardPage/UserDashboardTasks/DashboardTasksToolbar/KanBanSortByOptions'
 import getAllProjectStatuses from '@containers/DetailsPanel/helpers/getAllProjectsStatuses'
 import { useGetProjectsInfoQuery } from '@queries/userDashboard/getUserDashboard'
+import useFetchAndUpdateEntityData from './hooks/useFetchEditorEntities'
+import { getFilteredEntities } from './helpers/filters'
 import useUpdateEditorEntities from './hooks/useUpdateEditorEntities'
+import useAttributeFields from './hooks/useAttributesList'
+import { populateTableData } from './mappers/mappers'
+import { FolderNodeMap, TaskNodeMap } from './types'
+import entityToRowMappers from './mappers/entityToRowMappers'
+import FlexTable from './FlexTable'
 
 type Props = {
   filters: Filter[]
@@ -61,22 +64,21 @@ const NewEditorPage = ({ filters, showHierarchy, sortBy }: Props) => {
   } = getFilteredEntities({
     allFolders,
     folders,
-    tasks,
+    tasks: tasks as TaskNodeMap,
     tasksFolders,
     filters,
     sliceFilter,
-    sortBy,
+    // sortBy,
   })
 
   const { tableData } = populateTableData({
     allFolders,
-    folders: filteredFolders,
+    folders: filteredFolders as FolderNodeMap,
     tasks: filteredTasks,
     taskList,
     tasksFolders,
-    folderTypes: project.folders,
-    taskTypes: project.tasks,
     isFlatList: !showHierarchy,
+    entityToRowMappers: entityToRowMappers(project.folders, project.tasks),
   })
 
   return (

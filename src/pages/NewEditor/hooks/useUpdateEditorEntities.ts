@@ -4,7 +4,7 @@ import { TaskFilterValue } from '@containers/TasksProgress/hooks/useFilterBySlic
 import api from '@queries/overview/getFilteredEntities'
 import { useUpdateEntitiesMutation } from '@queries/entity/updateEntity'
 import { useDispatch } from 'react-redux'
-import { mapQueryFilters } from '../mappers'
+import { mapQueryFilters } from '../mappers/mappers'
 
 type Params = {
   projectName: string
