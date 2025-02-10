@@ -94,75 +94,16 @@ const populateTableData = ({
     mappedFolderData[element.parentId as string][element.id as string] = element as MatchingFolder
   })
 
-  return isFlatList
-    ? createFlatList({
-        allFolders,
-        tasks: mappedTaskData,
-        taskList,
-        rawFolders: folders,
-        rawTasks: tasks,
-        entityToRowMappers,
-      })
-    : createDataTree({
-        allFolders,
-        mappedRawData,
-        tasks: mappedTaskData,
-        taskList,
-        folders: mappedFolderData,
-        rawFolders: folders,
-        rawTasks: tasks,
-        entityToRowMappers,
-      })
-}
-
-const createFlatList = ({
-  allFolders,
-  tasks,
-  taskList,
-  rawFolders,
-  rawTasks,
-  entityToRowMappers,
-}: {
-  allFolders: $Any
-  tasks: $Any
-  taskList: $Any
-  rawFolders: $Any
-  rawTasks: $Any
-  entityToRowMappers: $Any
-}): { hashedData: Map<String, TableRow>; tableData: TableRow[] } => {
-  let hashedData = new Map<string, TableRow>()
-  let flatList: TableRow[] = []
-
-  const matchedFolderIds = Object.keys(rawFolders)
-
-  const matchedTaskIds = Object.keys(rawTasks)
-  const matchedIds = [...matchedFolderIds, ...matchedTaskIds]
-
-  // sort folders by name
-  let sortedItems = [...allFolders]
-  sortedItems = sortedItems.filter((el) => matchedIds.includes(el.id))
-  sortedItems = sortedItems.sort((a, b) => (a.label || a.name).localeCompare(b.label || b.name))
-
-  let taskMap: TaskNodeMap = {}
-  for (const parentId in tasks) {
-    for (const taskId in tasks[parentId]) {
-      taskMap[parentId] = {
-        ...taskMap[parentId],
-        [taskId]: entityToRowMappers.taskToTableRow(tasks[parentId][taskId], parentId),
-      }
-    }
-  }
-
-  let taskTableRowList = []
-  for (const task of taskList) {
-    taskTableRowList.push(entityToRowMappers.taskToTableRow(task, task.folderId))
-  }
-
-  for (const task of taskTableRowList) {
-    flatList.push(task)
-  }
-
-  return { hashedData, tableData: flatList }
+  return createDataTree({
+    allFolders,
+    mappedRawData,
+    tasks: mappedTaskData,
+    taskList,
+    folders: mappedFolderData,
+    rawFolders: folders,
+    rawTasks: tasks,
+    entityToRowMappers,
+  })
 }
 
 const createDataTree = ({

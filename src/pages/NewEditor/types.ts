@@ -24,3 +24,8 @@ export type ExtraData = {
 export type MatchingFolder = Partial<FolderNode> & { matchesFilters: boolean }
 export type FolderNodeMap = { [key: string]: MatchingFolder }
 export type TaskNodeMap = { [key: string]: TaskNode }
+
+export type Selection = {
+  start?: [number, number]
+  end?: [number, number]
+}

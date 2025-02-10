@@ -1,10 +1,9 @@
+import { FolderAttribType, FolderNode, TaskAttribType, TaskNode } from '@api/graphql'
 import { Filter } from '@components/SearchFilter/types'
+import getFilterFromId from '@components/SearchFilter/getFilterFromId'
 import { TaskFilterValue } from '@containers/TasksProgress/hooks/useFilterBySlice'
 import { $Any } from '@types'
-import { FolderListItem } from '@api/rest/folders'
 import { FolderNodeMap, MatchingFolder, TaskNodeMap } from '../types'
-import { FolderAttribType, FolderNode, TaskAttribType, TaskNode } from '@api/graphql'
-import getFilterFromId from '@components/SearchFilter/getFilterFromId'
 import { listsIntersect, scalarIntersects } from './listHelpers'
 
 const getFilteredEntities = ({
@@ -13,7 +12,6 @@ const getFilteredEntities = ({
   tasksFolders = [],
   filters,
 }: {
-  allFolders: FolderListItem[]
   folders: FolderNodeMap
   tasks: TaskNodeMap
   tasksFolders: string[]
@@ -25,10 +23,8 @@ const getFilteredEntities = ({
   taskList: Partial<TaskNode>[]
 } => {
   const filtersMap = getFiltersMap(filters)
-
-  const filteredFolders = getFilteredFolders(folders, filters, filtersMap)
-
-  const filteredTasksList = Object.values(getFilteredTasks(tasks, filters, filtersMap))
+  const filteredFolders = getFilteredFolders(folders, filtersMap)
+  const filteredTasksList = Object.values(getFilteredTasks(tasks, filtersMap))
 
   // TODO check why this is failing...
   // filteredTasksList.sort(taskListSorter)
@@ -99,10 +95,9 @@ const getFiltersMap = (filters: Filter[]) => {
 
 const getFilteredFolders = (
   folders: FolderNodeMap,
-  filters: $Any,
   filtersMap: { [key: string]: string[] },
 ): FolderNodeMap => {
-  if (!filters) {
+  if (Object.keys(filtersMap).length == 0) {
     return folders
   }
 
@@ -121,10 +116,9 @@ const getFilteredFolders = (
 
 const getFilteredTasks = (
   tasks: TaskNodeMap,
-  filters: $Any,
   filtersMap: { [key: string]: string[] },
 ): TaskNodeMap => {
-  if (!filters) {
+  if (Object.keys(filtersMap).length == 0) {
     return tasks
   }
 

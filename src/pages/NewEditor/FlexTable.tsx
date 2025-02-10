@@ -14,7 +14,7 @@ import clsx from 'clsx'
 
 import { $Any } from '@types'
 import { TableRow } from '@containers/Slicer/types'
-import useHandlers, { handleToggleFolder, Selection } from './handlers'
+import useHandlers, { handleToggleFolder } from './handlers'
 import { getAbsoluteSelections, isSelected } from './mappers/mappers'
 import TableColumns from './TableColumns'
 import * as Styled from './Table.styled'
@@ -23,6 +23,8 @@ import { useCustomColumnWidths, useSyncCustomColumnWidths } from './hooks/useCus
 import { toast } from 'react-toastify'
 import { Status } from '@api/rest/project'
 import useOverviewPreferences from '@pages/ProjectOverviewPage/hooks/useOverviewPreferences'
+import useCellHelper from './helpers/cellHelpers'
+import useSelectionHandler from './hooks/useSelectionHandler'
 
 type Props = {
   tableData: $Any[]
@@ -49,10 +51,16 @@ const FlexTable = ({
 }: Props) => {
   //The virtualizer needs to know the scrollable container element
   const tableContainerRef = useRef<HTMLDivElement>(null)
-  const [selectionInProgress, setSelectionInProgress] = useState<boolean>(false)
-  const [selection, setSelection] = useState<Selection>({})
-  const [selections, setSelections] = useState<Selection[]>([])
   const [copyValue, setCopyValue] = useState<{ [key: string]: $Any } | null>(null)
+
+  const {
+    selection,
+    setSelection,
+    selections,
+    setSelections,
+    setSelectionInProgress,
+    getSelectionInterval,
+  } = useSelectionHandler()
 
   const { handleMouseUp, handleMouseDown } = useHandlers({
     selection,
@@ -62,57 +70,11 @@ const FlexTable = ({
     setSelectionInProgress,
   })
 
+  const { getCopyCellData, getUpdatesList } = useCellHelper(rawData)
+
   const { expanded, updateExpanded } = useOverviewPreferences()
   const [itemExpanded, setItemExpanded] = useState<string>('root')
   const toggleExpanderHandler = handleToggleFolder(setItemExpanded)
-
-  const getRowType = (item: Row<TableRow>) => {
-    // @ts-ignore
-    return item.original.data.type === 'folder' ? 'folders' : 'tasks'
-  }
-
-  const getRawData = (item: Row<TableRow>) => {
-    return rawData[getRowType(item)]?.[item.id]
-  }
-
-  const getCopyCellData = (item: Row<TableRow>, accessor: string) => {
-    const type = getRowType(item)
-    const data = getRawData(item)
-    if (accessor === 'type') {
-      return {
-        type: type === 'folders' ? 'folderType' : 'taskType',
-        value: type === 'folders' ? data.folderType : data.taskType,
-        isAttrib: false,
-      }
-    }
-    if (accessor === 'priority') {
-      return {
-        type: 'priority',
-        value: data.attrib.priority,
-        isAttrib: true,
-      }
-    }
-    if (accessor === 'status') {
-      return {
-        type: 'status',
-        value: data.status,
-        isAttrib: false,
-      }
-    }
-    if (accessor === 'assignees') {
-      return {
-        type: 'assignees',
-        value: data.assignees,
-        isAttrib: false,
-      }
-    }
-
-    return {
-      type: accessor,
-      value: data.attrib[accessor],
-      isAttrib: true,
-    }
-  }
 
   const columns = TableColumns({
     tableData,
@@ -142,9 +104,9 @@ const FlexTable = ({
   const table = useReactTable({
     data: tableData,
     columns,
-    enableRowSelection: true, //enable row selection for all rows
+    enableRowSelection: true,
     getRowId: (row) => row.id,
-    enableSubRowSelection: false, //disable sub row selection
+    enableSubRowSelection: false,
     getSubRows: (row) => row.subRows,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
@@ -165,58 +127,45 @@ const FlexTable = ({
 
   const rowVirtualizer = useVirtualizer({
     count: rows.length,
-    estimateSize: () => 40, //estimate row height for accurate scrollbar dragging
+    overscan: 5,
+    estimateSize: () => 40, 
     getScrollElement: () => tableContainerRef.current,
-    //measure dynamic row height, except in firefox because it measures table border height incorrectly
     measureElement:
       typeof window !== 'undefined' && navigator.userAgent.indexOf('Firefox') === -1
         ? (element) => element?.getBoundingClientRect().height
         : undefined,
-    overscan: 5,
   })
 
   const columnSizeVars = useCustomColumnWidths(table)
   useSyncCustomColumnWidths(table.getState().columnSizing)
+
+  const handleKeyDown = (e: $Any, cell: $Any, colIdx: number) => {
+    if (e.key === 'c' && e.ctrlKey) {
+      handleCopy(cell, colIdx)
+    }
+    if (e.key === 'v' && e.ctrlKey) {
+      handlePaste()
+    }
+  }
 
   const handleCopy = (cell: $Any, colIdx: number) => {
     const cellData = getCopyCellData(cell.row, cell.column.id)
     setCopyValue({ data: cellData, colIdx })
   }
 
-  const handlePaste = async (cell: $Any, rows: $Any) => {
-    const type = getRowType(cell.row)
-
+  const handlePaste = async () => {
     if (copyValue === null) {
       return
     }
 
-    let updates = []
-    let selectionMatches = false
-    for (const selection of selections) {
-      // TDOO maybe swap x/y, they might be confusing later on (row is y, col is x)
-      const xStartIdx = Math.min(selection.start![1], selection.end![1])
-      const xEndIdx = Math.max(selection.start![1], selection.end![1])
-      if (copyValue.colIdx < xStartIdx || copyValue.colIdx > xEndIdx) {
-        continue
-      }
+    const matchingSets = getSelectionInterval(copyValue.colIdx)
+    const updates = getUpdatesList(matchingSets, rows)
 
-      selectionMatches = true
-      const yStartIdx = Math.min(selection.start![0], selection.end![0])
-      const yEndIdx = Math.max(selection.start![0], selection.end![0])
-
-      for (let i = yStartIdx; i <= yEndIdx; i++) {
-        const row = rows[i]
-        const rowType = getRowType(row)
-        updates.push({
-          id: row.id,
-          type: rowType === 'folders' ? 'folder' : 'task',
-        })
-      }
-    }
-
-    if (!selectionMatches) {
+    if (updates.length === 0) {
       toast.error('Operation failed, please paste copied value into matching column.')
+      return
     }
+
     try {
       await updateEntities(
         copyValue!.data.type,
@@ -258,26 +207,10 @@ const FlexTable = ({
                       selected: isSelected(absoluteSelections, virtualRow.index, colIdx),
                     },
                   )}
-                  style={{
-                    minWidth: '160px',
-                    width: `calc(var(--col-${cell.column.id}-size) * 1px)`,
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'c' && e.ctrlKey) {
-                      handleCopy(cell, colIdx)
-                    }
-                    if (e.key === 'v' && e.ctrlKey) {
-                      handlePaste(cell, rows)
-                    }
-                  }}
-                  onMouseDown={(e) => {
-                    // @ts-ignore
-                    handleMouseDown(e, cell, virtualRow.index, colIdx)
-                  }}
-                  onMouseUp={(e) => {
-                    // @ts-ignore
-                    handleMouseUp(e, cell, virtualRow.index, colIdx)
-                  }}
+                  style={{ width: `calc(var(--col-${cell.column.id}-size) * 1px)` }}
+                  onKeyDown={(e) => handleKeyDown(e, cell, colIdx)}
+                  onMouseDown={(e: $Any) => handleMouseDown(e, virtualRow.index, colIdx)}
+                  onMouseUp={(e: $Any) => handleMouseUp(e, virtualRow.index, colIdx)}
                 >
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </Styled.TableCell>

@@ -1,10 +1,6 @@
 import { MouseEvent, useCallback } from 'react'
 import { $Any } from '@types'
-
-export type Selection = {
-  start?: [number, number]
-  end?: [number, number]
-}
+import { Selection } from './types'
 
 type Props = {
   setSelectionInProgress: $Any
@@ -22,7 +18,6 @@ const useHandlers = ({
 }: Props) => {
   const handleMouseDown = (
     e: MouseEvent<HTMLTableCellElement, MouseEvent>,
-    cell: $Any,
     rowIdx: $Any,
     colIdx: $Any,
   ) => {
@@ -35,11 +30,10 @@ const useHandlers = ({
 
   const handleMouseUp = (
     e: MouseEvent<HTMLTableCellElement, MouseEvent>,
-    cell: $Any,
     rowIdx: $Any,
     colIdx: $Any,
   ) => {
-    let newSelection: Selection = {}
+    let newSelection: Selection= {}
     const lastPos: [number, number] = [rowIdx, colIdx]
     if (e.shiftKey) {
       newSelection = { start: selection.start, end: [rowIdx, colIdx] }

@@ -62,7 +62,6 @@ const NewEditorPage = ({ filters, showHierarchy, sortBy }: Props) => {
     tasks: filteredTasks,
     taskList,
   } = getFilteredEntities({
-    allFolders,
     folders,
     tasks: tasks as TaskNodeMap,
     tasksFolders,
@@ -76,7 +75,6 @@ const NewEditorPage = ({ filters, showHierarchy, sortBy }: Props) => {
     folders: filteredFolders as FolderNodeMap,
     tasks: filteredTasks,
     taskList,
-    tasksFolders,
     isFlatList: !showHierarchy,
     entityToRowMappers: entityToRowMappers(project.folders, project.tasks),
   })

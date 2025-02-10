@@ -46,6 +46,7 @@ export const HeaderCell = styled.div`
 `
 
 export const TableCell = styled.td`
+  min-width: 160px;
   box-shadow: inset 0 0 0 1px var(--md-sys-color-surface-container-highest);
   &.selected {
     border-color: white;
