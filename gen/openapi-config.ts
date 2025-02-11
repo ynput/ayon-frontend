@@ -53,7 +53,7 @@ const buildOutputFiles = (files: { [name: string]: string[] }) =>
   }, {})
 
 const config: ConfigFile = {
-  schemaFile: `https://test.ayon.dev/openapi.json`,
+  schemaFile: `http://localhost:5000/openapi.json`,
   apiFile: '../src/services/ayon.ts',
   exportName: 'api',
   apiImport: 'RestAPI',
