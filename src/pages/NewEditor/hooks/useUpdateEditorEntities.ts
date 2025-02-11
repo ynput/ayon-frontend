@@ -1,6 +1,6 @@
 import { $Any } from '@types'
 import { Filter } from '@ynput/ayon-react-components'
-import { TaskFilterValue } from '@containers/TasksProgress/hooks/useFilterBySlice'
+import useFilterBySlice  from '@containers/TasksProgress/hooks/useFilterBySlice'
 import api from '@queries/overview/getFilteredEntities'
 import { useUpdateEntitiesMutation } from '@queries/entity/updateEntity'
 import { useDispatch } from 'react-redux'
@@ -9,10 +9,10 @@ import { mapQueryFilters } from '../mappers/mappers'
 type Params = {
   projectName: string
   filters: Filter[]
-  sliceFilter: TaskFilterValue | null
 }
 
-const useUpdateEditorEntities = ({ projectName, filters, sliceFilter }: Params) => {
+const useUpdateEditorEntities = ({ projectName, filters }: Params) => {
+  const { filter: sliceFilter } = useFilterBySlice()
   const [bulkUpdateEntities] = useUpdateEntitiesMutation()
   const dispatch = useDispatch()
 

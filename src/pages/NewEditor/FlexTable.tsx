@@ -18,39 +18,45 @@ import useHandlers, { handleToggleFolder } from './handlers'
 import { getAbsoluteSelections, isSelected } from './mappers/mappers'
 import TableColumns from './TableColumns'
 import * as Styled from './Table.styled'
-import { UserNode } from '@api/graphql'
 import { useCustomColumnWidths, useSyncCustomColumnWidths } from './hooks/useCustomColumnsWidth'
 import { toast } from 'react-toastify'
-import { Status } from '@api/rest/project'
 import useOverviewPreferences from '@pages/ProjectOverviewPage/hooks/useOverviewPreferences'
 import useCellHelper from './helpers/cellHelpers'
 import useSelectionHandler from './hooks/useSelectionHandler'
+import { useGetProjectsInfoQuery } from '@queries/userDashboard/getUserDashboard'
+import { useSelector } from 'react-redux'
+import getAllProjectStatuses from '@containers/DetailsPanel/helpers/getAllProjectsStatuses'
+import useAttributeFields from './hooks/useAttributesList'
+import useUpdateEditorEntities from './hooks/useUpdateEditorEntities'
+import { useGetUsersAssigneeQuery } from '@queries/user/getUsers'
 
 type Props = {
   tableData: $Any[]
   rawData: { folders: $Any; tasks: $Any }
-  users: UserNode[]
-  statuses: Status[]
-  attribs: $Any[]
   isLoading: boolean
   isExpandable: boolean
   sliceId: string
-  updateEntities: (type: string, value: $Any, entities: $Any, isAttrib: boolean) => void
+  filters: $Any
 }
 
 const FlexTable = ({
   tableData,
   rawData,
-  attribs,
-  users,
-  statuses,
   isLoading,
   isExpandable,
   sliceId,
-  updateEntities,
+  filters,
 }: Props) => {
   //The virtualizer needs to know the scrollable container element
   const tableContainerRef = useRef<HTMLDivElement>(null)
+
+  const projectName = useSelector((state: $Any) => state.project.name)
+  const { data: projectsInfo = {} } = useGetProjectsInfoQuery({ projects: [projectName] })
+  const projectInfo = projectsInfo[projectName] || {}
+  const statuses = getAllProjectStatuses({ [projectName]: projectInfo })
+  const { attribFields: attribs } = useAttributeFields()
+  const { data: users = [] } = useGetUsersAssigneeQuery({ projectName }, { skip: !projectName })
+  const { updateEntities } = useUpdateEditorEntities({ projectName, filters })
   const [copyValue, setCopyValue] = useState<{ [key: string]: $Any } | null>(null)
 
   const {
@@ -187,7 +193,8 @@ const FlexTable = ({
           <tr
             data-index={virtualRow.index} //needed for dynamic row height measurement
             // @ts-ignore
-            ref={(node) => rowVirtualizer.measureElement(node)} //measure dynamic row height
+            // TODO it was triggering 'maximum calls exceeded' after scrolling for a while, not sure how it's used, commenting it out for now
+            // ref={(node) => rowVirtualizer.measureElement(node)} //measure dynamic row height
             key={row.id}
             style={{
               display: 'table-row',

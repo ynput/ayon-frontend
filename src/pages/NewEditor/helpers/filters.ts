@@ -1,7 +1,6 @@
 import { FolderAttribType, FolderNode, TaskAttribType, TaskNode } from '@api/graphql'
 import { Filter } from '@components/SearchFilter/types'
 import getFilterFromId from '@components/SearchFilter/getFilterFromId'
-import { TaskFilterValue } from '@containers/TasksProgress/hooks/useFilterBySlice'
 import { $Any } from '@types'
 import { FolderNodeMap, MatchingFolder, TaskNodeMap } from '../types'
 import { listsIntersect, scalarIntersects } from './listHelpers'
@@ -16,7 +15,6 @@ const getFilteredEntities = ({
   tasks: TaskNodeMap
   tasksFolders: string[]
   filters: Filter[]
-  sliceFilter: TaskFilterValue | null
 }): {
   folders: { [key: string]: Partial<FolderNode> }
   tasks: Map<string, TaskNode>

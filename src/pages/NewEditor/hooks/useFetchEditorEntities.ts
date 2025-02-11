@@ -1,29 +1,29 @@
 import { useGetFolderListQuery } from '@queries/getHierarchy'
 import { $Any } from '@types'
 import { Filter } from '@ynput/ayon-react-components'
-import { TaskFilterValue } from '@containers/TasksProgress/hooks/useFilterBySlice'
+import useFilterBySlice from '@containers/TasksProgress/hooks/useFilterBySlice'
 import { mapQueryFilters } from '../mappers/mappers'
 import { useGetTasksFoldersQuery } from '@queries/project/getProject'
 import { useGetFilteredEntitiesByParentQuery } from '@queries/overview/getFilteredEntities'
 import useOverviewPreferences from '@pages/ProjectOverviewPage/hooks/useOverviewPreferences'
+import { useSlicerContext } from '@context/slicerContext'
 
 type Params = {
   projectName: string
   folderTypes: $Any
   taskTypes: $Any
-  selectedFolders: string[]
   filters: Filter[],
-  sliceFilter: TaskFilterValue | null,
 }
 
 const useFetchEditorEntities = ({
   projectName,
-  selectedFolders,
   filters,
-  sliceFilter,
 }: Params) => {
 
   const { expanded } = useOverviewPreferences()
+  const { filter: sliceFilter } = useFilterBySlice()
+  const { rowSelection } = useSlicerContext()
+  const selectedFolders = Object.keys(rowSelection)
 
   const {
     data: { folders = [] } = {},
