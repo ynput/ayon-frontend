@@ -56,6 +56,17 @@ export const addonFilters: MarketFilter[] = [
     tooltip: 'All addons, downloaded or not',
   },
   {
+    id: 'free',
+    type: 'addons',
+    name: 'Free',
+    filter: [
+      {
+        flags: (v?: string[]) => !v?.includes('licensed'),
+      },
+    ],
+    tooltip: 'Addons free to download.',
+  },
+  {
     id: 'updates',
     type: 'addons',
     name: 'Updates Available',

@@ -58,7 +58,7 @@ const SlicerDropdown = forwardRef<DropdownRef, SlicerDropdownProps>(
     return (
       <StyledDropdown
         {...props}
-        data-tooltip="Powerpack feature - Slicer"
+        data-tooltip="Power feature - Slicer"
         data-tooltip-delay={0}
         onChange={handleOnChange}
         options={options}
