@@ -1,12 +1,12 @@
 import { FC, useEffect, useState } from 'react'
 import { ReleaseForm } from '../hooks/useReleaseForm'
-import { ReleaseAddon } from '@api/rest/releases'
+import { AddonVersionDetail } from '@api/rest/releases'
 import AddonsSelectGrid from '@components/AddonsSelectGrid/AddonsSelectGrid'
 import { Footer } from '../components'
 
 interface ReleaseInstallerAddonsProps {
   releaseForm: ReleaseForm
-  releaseAddons: ReleaseAddon[]
+  releaseAddons: AddonVersionDetail[]
   mandatoryAddons: string[]
   isLoading: boolean
   onCancel: () => void

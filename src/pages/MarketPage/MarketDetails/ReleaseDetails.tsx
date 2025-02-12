@@ -22,7 +22,7 @@ type ReleaseDetailsProps = {
 const ReleaseDetails = ({ release, isLoading, onDownload }: ReleaseDetailsProps) => {
   // latestVersion: is the latest version of the addon
   // versions: is an array of all versions DOWNLOADED of the addon
-  const { name, label, createdAt, icon, bio, isActive, addons } = release || {}
+  const { name, label, createdAt, icon, description, isActive, addons } = release || {}
 
   const verifiedString = 'Official'
   const verifiedIcon = <img src="/favicon-32x32.png" width={15} height={15} />
@@ -58,7 +58,7 @@ const ReleaseDetails = ({ release, isLoading, onDownload }: ReleaseDetailsProps)
                 </a>
               </Styled.ErrorCard>
             )}
-            <ReactMarkdown className={clsx({ loading: isLoading })}>{bio}</ReactMarkdown>
+            <ReactMarkdown className={clsx({ loading: isLoading })}>{description}</ReactMarkdown>
             <Styled.ReleaseAddons>
               {addons?.map((addon) => (
                 <Styled.ReleaseAddonLink
