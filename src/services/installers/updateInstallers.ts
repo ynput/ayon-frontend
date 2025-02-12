@@ -17,5 +17,8 @@ const updateInstallersApiInjected = updateInstallersApi.injectEndpoints({
   }),
 })
 
-export const { useCreateInstallerMutation, useUploadInstallersMutation } =
-  updateInstallersApiInjected
+export const {
+  useCreateInstallerMutation,
+  useUploadInstallersMutation,
+  useDeleteInstallerFileMutation,
+} = updateInstallersApiInjected
