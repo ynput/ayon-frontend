@@ -4,13 +4,15 @@ import {
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
+  getSortedRowModel,
+  SortingState,
   useReactTable,
 } from '@tanstack/react-table'
 import { MouseEvent, useMemo, useState } from 'react'
 import { $Any } from '@types'
 import styled from 'styled-components'
 import clsx from 'clsx'
-import { getFileSizeString } from '@ynput/ayon-react-components'
+import { getFileSizeString, Icon } from '@ynput/ayon-react-components'
 import { capitalizeFirstLetter } from '@helpers/string'
 
 const StyledTable = styled.table`
@@ -21,7 +23,7 @@ const StyledTable = styled.table`
   user-select: none;
 `
 const StyledHeadTr = styled.tr`
-    background-color: var(--md-sys-color-surface-container-lowest-dark);
+  background-color: var(--md-sys-color-surface-container-lowest-dark);
 `
 
 const StyledTr = styled.tr`
@@ -42,7 +44,7 @@ type Props = {
 
 const FilesTable: React.FC<Props> = ({ data, selection, rowClickHandler }) => {
   const [rowSelection, setRowSelection] = useState({})
-  console.log('data? ', data)
+  const [sorting, setSorting] = useState<SortingState>([])
 
   const columns = useMemo<ColumnDef<$Any>[]>(
     () => [
@@ -80,13 +82,16 @@ const FilesTable: React.FC<Props> = ({ data, selection, rowClickHandler }) => {
     columns,
     state: {
       rowSelection,
+      sorting,
     },
+    debugTable: true,
     enableRowSelection: true,
-    onRowSelectionChange: setRowSelection,
     getCoreRowModel: getCoreRowModel(),
+    onRowSelectionChange: setRowSelection,
+    getSortedRowModel: getSortedRowModel(),
+    onSortingChange: setSorting,
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    debugTable: true,
   })
 
   return (
@@ -96,10 +101,22 @@ const FilesTable: React.FC<Props> = ({ data, selection, rowClickHandler }) => {
         <thead>
           {table.getHeaderGroups().map((headerGroup) => (
             <StyledTr key={headerGroup.id}>
-              {headerGroup.headers.map((el) => (
-                <StyledTd key={el.id} colSpan={el.colSpan}>
-                  {el.isPlaceholder ? null : (
-                    <>{flexRender(el.column.columnDef.header, el.getContext())}</>
+              {headerGroup.headers.map((header) => (
+                <StyledTd
+                  key={header.id}
+                  colSpan={header.colSpan}
+                  onClick={header.column.getToggleSortingHandler()}
+                >
+                  {header.isPlaceholder ? null : (
+                    <div style={{ display: 'flex' }}>
+                      {flexRender(header.column.columnDef.header, header.getContext())}
+                      {{
+                        asc: <Icon icon="arrow_downward" />,
+                        desc: <Icon icon="arrow_upward" />,
+                      }[header.column.getIsSorted() as string] ?? (
+                        <Icon icon="arrow_upward" style={{ visibility: 'hidden' }} />
+                      )}
+                    </div>
                   )}
                 </StyledTd>
               ))}
@@ -108,7 +125,6 @@ const FilesTable: React.FC<Props> = ({ data, selection, rowClickHandler }) => {
         </thead>
         <tbody>
           {table.getRowModel().rows.map((row) => {
-            console.log(row.index)
             return (
               <StyledTr
                 key={row.id}
