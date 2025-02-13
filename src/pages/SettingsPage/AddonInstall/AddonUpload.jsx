@@ -53,6 +53,7 @@ const AddonUpload = ({
   dropOnly,
   abortController,
   onUploadStateChange,
+  manager,
   manageMode,
   setManageMode,
   ...props
@@ -294,8 +295,8 @@ const AddonUpload = ({
       // handleFiles(e.target.files)
     }
   }
-  if (manageMode) {
-    return <AddonManager manageMode={manageMode} setManageMode={setManageMode} />
+  if (manager && manageMode) {
+    return <AddonManager manager={manager} manageMode={manageMode} setManageMode={setManageMode} />
   }
   //<Button onClick={handleAddonInstall} label="Install" disabled={!files?.length} />
   const accept = type === 'addon' ? ['.zip'] : ['*']
@@ -310,6 +311,7 @@ const AddonUpload = ({
       isSuccess={isComplete}
       header={
         <UploadHeader
+          manager={manager}
           manageMode={manageMode}
           setManageMode={setManageMode}
           setFiles={setFiles}

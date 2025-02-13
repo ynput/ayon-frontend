@@ -31,7 +31,7 @@ const outputFiles = {
   users: ['getUser', 'setFrontendPreferences'],
   releases: ['getReleases', 'getReleaseInfo'],
   installers: ['listInstallers', 'createInstaller', 'deleteInstaller'],
-  dependencyPackages: ['listDependencyPackages', 'createDependencyPackage'],
+  dependencyPackages: ['listDependencyPackages', 'createDependencyPackage', 'deleteDependencyPackage'],
   cloud: ['getYnputCloudInfo', 'setYnputCloudKey', 'deleteYnputCloudKey'],
   attributes: ['getAttributeList', 'setAttributeList', 'getAttributeConfig'],
   config: [
@@ -53,7 +53,7 @@ const buildOutputFiles = (files: { [name: string]: string[] }) =>
   }, {})
 
 const config: ConfigFile = {
-  schemaFile: `https://test.ayon.dev/openapi.json`,
+  schemaFile: `http://localhost:5000/openapi.json`,
   apiFile: '../src/services/ayon.ts',
   exportName: 'api',
   apiImport: 'RestAPI',

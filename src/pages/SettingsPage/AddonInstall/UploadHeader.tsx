@@ -3,6 +3,7 @@ import AddonManager from './AddonManager'
 
 type Props = {
   type: string
+  manager: string
   manageMode: boolean
   isClearDisabled: boolean
   setManageMode: (value: boolean) => void
@@ -12,15 +13,17 @@ type Props = {
 
 const UploadHeader: React.FC<Props> = ({
   type = 'addon',
+  manager,
   manageMode,
   isClearDisabled,
   setManageMode,
   setFiles,
   handleChange,
 }) => {
-  if (manageMode) {
+  if (manager && manageMode) {
     return (
       <AddonManager
+        manager={manager}
         manageMode={manageMode}
         setManageMode={setManageMode}
       />
@@ -29,7 +32,7 @@ const UploadHeader: React.FC<Props> = ({
   const accept = type === 'addon' ? ['.zip'] : ['*']
   return (
     <>
-      <Button onClick={() => setManageMode(true)} label="Manage uploads" />
+      {manager != null && <Button onClick={() => setManageMode(true)} label="Manage uploads" />}
       <Spacer />
       <Button
         icon="delete"

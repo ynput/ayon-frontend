@@ -1,11 +1,11 @@
-import { useListInstallersQuery } from '@queries/installers/getInstallers'
 import { Button, Spacer } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 import useSelection from './hooks/useSelection'
-import useMutation from './hooks/useMutation'
+import useFileManagerMutations from './hooks/useFileManagerMutations'
 import { toast } from 'react-toastify'
 import { confirmDialog } from 'primereact/confirmdialog'
 import FilesTable from './FilesTable/FilesTable'
+import useFetchManagerData from './hooks/useFetchManagerData'
 
 const StyledHeader = styled.div`
   display: flex;
@@ -21,27 +21,36 @@ const StyledBody = styled.div`
 `
 
 type Props = {
+  manager: string
   manageMode: boolean
   setManageMode: (value: boolean) => void
 }
 
-const AddonManager: React.FC<Props> = ({ setManageMode }) => {
-  const { data  = {}} = useListInstallersQuery({})
+const AddonManager: React.FC<Props> = ({ manager, setManageMode }) => {
   const { selection, updateSelection, pushClickEvent } = useSelection([])
-  const { deleteInstallers } = useMutation()
+  const { deleteInstallers, deletePackages } = useFileManagerMutations()
+  const {installers, packages} = useFetchManagerData()
 
   const handleDeleteInstallers = () => {
     confirmDialog({
       header: 'Delete selected files',
-      message: <p>Are you sure you want to delete selected installers?</p>,
+      message: <p>Are you sure you want to delete the selected files?</p>,
       accept: async () => {
-        await deleteInstallers(selection.map((index) => data.installers![index].filename))
+        if ( manager === 'installer') {
+          await deleteInstallers(selection.map((index) => installers.installers![index].filename))
+        } else {
+          await deletePackages(selection.map((index) => packages.packages![index].filename))
+        }
         updateSelection([])
         toast.success('Operation successful')
       },
       reject: () => {},
     })
   }
+          const data =
+            manager === 'installer'
+              ? installers.installers
+              : packages.packages?.map((el) => ({ ...el, version: el.installerVersion })) ?? []
 
   return (
     <div style={{ height: '100%', overflow: 'hidden' }}>
@@ -56,7 +65,7 @@ const AddonManager: React.FC<Props> = ({ setManageMode }) => {
         />
       </StyledHeader>
 
-      <FilesTable data={data.installers} selection={selection} rowClickHandler={pushClickEvent} />
+      <FilesTable data={data} selection={selection} rowClickHandler={pushClickEvent} />
     </div>
   )
 }
