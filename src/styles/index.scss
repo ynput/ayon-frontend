@@ -60,6 +60,14 @@ strong {
 
   // table colors
   --color-table-border: hsl(210 8% 18%);
+
+  // sub colors
+  --color-sub-pro: var(--md-sys-color-tertiary);
+  --color-sub-pro-hover: var(--md-sys-color-tertiary-hover);
+  --color-on-sub-pro: var(--md-sys-color-on-tertiary);
+  --color-sub-studio: hsl(42, 100%, 50%);
+  --color-on-sub-studio: hsl(53, 100%, 11%);
+  --color-sub-studio-hover: hsl(42, 100%, 45%);
 }
 
 #root {

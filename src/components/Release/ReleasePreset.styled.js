@@ -21,7 +21,7 @@ export const Preset = styled.li`
     background-color: var(--md-sys-color-surface-container-highest-hover);
   }
 
-  .bio {
+  .description {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -34,7 +34,7 @@ export const Preset = styled.li`
       background-color: var(--md-sys-color-primary-container);
     }
 
-    .bio {
+    .description {
       white-space: normal;
     }
   }

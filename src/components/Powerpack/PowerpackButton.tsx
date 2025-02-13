@@ -1,4 +1,4 @@
-import { PowerpackFeature, powerpackFeatures, usePowerpack } from '@context/powerpackContext'
+import { PowerpackFeature, usePowerpack } from '@context/powerpackContext'
 import { Button, ButtonProps } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import { forwardRef, MouseEvent } from 'react'
@@ -48,7 +48,7 @@ const PowerpackButton = forwardRef<HTMLButtonElement, CloudButtonProps>(
         ref={ref}
         onClick={handleOnClick}
         className={clsx('cloud-button', props.className || '', { border: !!props.children })}
-        data-tooltip={`Powerpack feature: ${powerpackFeatures[feature].label}`}
+        data-tooltip={`Power feature`}
         data-tooltip-delay={0}
       >
         {props.children}

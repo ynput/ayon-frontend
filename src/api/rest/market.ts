@@ -34,7 +34,7 @@ export type MarketAddonVersionDetailApiArg = {
   addonName: string
   addonVersion: string
 }
-export type GetLicensesApiResponse = /** status 200 Successful Response */ object[]
+export type GetLicensesApiResponse = /** status 200 Successful Response */ LicenseListModel
 export type GetLicensesApiArg = {
   refresh?: boolean
 }
@@ -48,15 +48,17 @@ export type AddonListItem = {
   title: string
   /** Addon description */
   description?: string
-  /** Organization name */
   orgName?: string
-  /** Organization title */
   orgTitle?: string
   icon?: string
+  category?: string
+  tags?: string[]
   /** Latest version of the addon */
   latestVersion?: string
   /** Links to the addon's homepage and GitHub repository */
   links?: LinkModel[]
+  /** Addon is avaliable for download */
+  available?: boolean
   currentProductionVersion?: string
   currentLatestVersion?: string
   isOutdated?: boolean
@@ -74,6 +76,7 @@ export type HttpValidationError = {
 }
 export type AddonVersionListItem = {
   version: string
+  /** Required Ayon server version to run the addon */
   ayonVersion?: string
   createdAt?: string
   updatedAt?: string
@@ -89,15 +92,17 @@ export type AddonDetail = {
   title: string
   /** Addon description */
   description?: string
-  /** Organization name */
   orgName?: string
-  /** Organization title */
   orgTitle?: string
   icon?: string
+  category?: string
+  tags?: string[]
   /** Latest version of the addon */
   latestVersion?: string
   /** Links to the addon's homepage and GitHub repository */
   links?: LinkModel[]
+  /** Addon is avaliable for download */
+  available?: boolean
   currentProductionVersion?: string
   currentLatestVersion?: string
   isOutdated?: boolean
@@ -111,15 +116,17 @@ export type AddonVersionDetail = {
   title: string
   /** Addon description */
   description?: string
-  /** Organization name */
   orgName?: string
-  /** Organization title */
   orgTitle?: string
   icon?: string
+  category?: string
+  tags?: string[]
   /** Latest version of the addon */
   latestVersion?: string
   /** Links to the addon's homepage and GitHub repository */
   links?: LinkModel[]
+  /** Addon is avaliable for download */
+  available?: boolean
   currentProductionVersion?: string
   currentLatestVersion?: string
   isOutdated?: boolean
@@ -139,4 +146,8 @@ export type AddonVersionDetail = {
   isProduction?: boolean
   /** Is this version compatible? */
   isCompatible?: boolean
+}
+export type LicenseListModel = {
+  licenses?: object[]
+  syncedAt?: number
 }

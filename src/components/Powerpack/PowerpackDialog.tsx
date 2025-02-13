@@ -2,6 +2,7 @@ import { powerpackFeatures, usePowerpack } from '@context/powerpackContext'
 import * as Styled from './PowerpackDialog.styled'
 import { FC } from 'react'
 import { Icon } from '@ynput/ayon-react-components'
+import { PricingLink } from '@components/PricingLink'
 
 interface PowerpackDialogProps {}
 
@@ -37,13 +38,9 @@ const PowerpackDialog: FC<PowerpackDialogProps> = ({}) => {
           <li className="more">More coming soon!</li>
         </ul>
       </Styled.FeaturesList>
-      <a
-        href="https://ynput.cloud/subscribe/ayon?utm_source=powerpack"
-        target="_blank"
-        rel="noreferrer"
-      >
+      <PricingLink>
         <Styled.MoreButton>Find out more</Styled.MoreButton>
-      </a>
+      </PricingLink>
     </Styled.PowerpackDialog>
   )
 }
