@@ -23,7 +23,10 @@ const AppRemoteLoader: FC<AppRemoteLoaderProps> = () => {
 
               if (!isLoaded) return null
 
-              return <RemoteApp key={`${addon.addonName}-${remote}-${module}`} />
+              const id = `${addon.addonName}-${remote}-${module}`
+
+              // @ts-ignore
+              return <RemoteApp key={id} name={addon.addonName} version={addon.addonVersion} />
             }),
         ),
       )}
