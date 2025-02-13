@@ -238,3 +238,21 @@ export const ReleaseAddonLink = styled(Link)`
     border-color: transparent;
   }
 `
+
+export const Tags = styled.div`
+  display: flex;
+  gap: var(--base-gap-large);
+  flex-wrap: wrap;
+`
+
+export const BetaTag = styled.div`
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: var(--border-radius-l);
+  padding: 2px 4px;
+  color: var(--md-sys-color-outline);
+  user-select: none;
+
+  &:hover {
+    background-color: var(--md-sys-color-surface-container);
+  }
+`

@@ -201,8 +201,17 @@ const AddonDetails = ({ addon, isLoading, onDownload, isUpdatingAll }: AddonDeta
                 </span>
               </div>
             </Styled.Header>
-            {flags?.includes('licensed') && !isLoading && (
-              <SubChip includedWithPro={flags.includes('power-feature')} />
+            {(flags?.includes('licensed') || flags?.includes('beta')) && !isLoading && (
+              <Styled.Tags>
+                {flags?.includes('licensed') && (
+                  <SubChip includedWithPro={flags.includes('power-feature')} />
+                )}
+                {flags?.includes('beta') && (
+                  <Styled.BetaTag data-tooltip="This addon is in beta and may have bugs or incomplete features.">
+                    Early preview
+                  </Styled.BetaTag>
+                )}
+              </Styled.Tags>
             )}
             {isFailed && (
               <Styled.ErrorCard direction="row">
