@@ -1,11 +1,11 @@
-import { Installer } from '@api/rest/installers'
 import { useListInstallersQuery } from '@queries/installers/getInstallers'
-import { Button, getFileSizeString, Spacer } from '@ynput/ayon-react-components'
+import { Button, Spacer } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 import useSelection from './hooks/useSelection'
 import useMutation from './hooks/useMutation'
 import { toast } from 'react-toastify'
-import clsx from 'clsx'
+import { confirmDialog } from 'primereact/confirmdialog'
+import FilesTable from './FilesTable/FilesTable'
 
 const StyledHeader = styled.div`
   display: flex;
@@ -17,26 +17,7 @@ const StyledHeader = styled.div`
 const StyledBody = styled.div`
   background-color: var(--panel-background);
   height: 100%;
-`
-const StyledTable = styled.table`
-  width: 100%;
-  border-collapse: collapse;
-  cursor: pointer;
-  user-select: none;
-`
-const StyledHeadTr = styled.tr`
-    background-color: var(--md-sys-color-surface-container-lowest-dark);
-`
-
-const StyledTr = styled.tr`
-  &.selected {
-    background-color: var(--md-sys-color-primary-container);
-    outline: solid .15rem var(--focus-color)
-  }
-`
-
-const StyledTd = styled.td`
-  text-align: start;
+  overflow-y: scroll;
 `
 
 type Props = {
@@ -45,18 +26,25 @@ type Props = {
 }
 
 const AddonManager: React.FC<Props> = ({ setManageMode }) => {
-  const { isFetching, data  = {}} = useListInstallersQuery({})
-  const { selection, updateSelection } = useSelection([])
+  const { data  = {}} = useListInstallersQuery({})
+  const { selection, updateSelection, pushClickEvent } = useSelection([])
   const { deleteInstallers } = useMutation()
 
   const handleDeleteInstallers = () => {
-    deleteInstallers(selection)
-    updateSelection([])
-    toast.success('Operation successful')
+    confirmDialog({
+      header: 'Delete selected files',
+      message: <p>Are you sure you want to delete selected installers?</p>,
+      accept: async () => {
+        await deleteInstallers(selection.map((index) => data.installers![index].filename))
+        updateSelection([])
+        toast.success('Operation successful')
+      },
+      reject: () => {},
+    })
   }
 
   return (
-    <>
+    <div style={{ height: '100%', overflow: 'hidden' }}>
       <StyledHeader>
         <Button onClick={() => setManageMode(false)} label="Upload files" />
         <Spacer />
@@ -68,30 +56,8 @@ const AddonManager: React.FC<Props> = ({ setManageMode }) => {
         />
       </StyledHeader>
 
-      <StyledBody>
-        <StyledTable>
-          <StyledHeadTr>
-            <StyledTd>File name</StyledTd>
-            <StyledTd>Installer version</StyledTd>
-            <StyledTd>Platform</StyledTd>
-            <StyledTd>Size</StyledTd>
-          </StyledHeadTr>
-
-          {data?.installers?.map((installer: Installer) => (
-            <StyledTr
-              key={installer.filename}
-              onClick={() => updateSelection([installer.filename])}
-              className={clsx({ selected: selection.includes(installer.filename) })}
-            >
-              <StyledTd>{installer.filename}</StyledTd>
-              <StyledTd>{installer.version}</StyledTd>
-              <StyledTd style={{textTransform: 'capitalize'}}>{installer.platform}</StyledTd>
-              <StyledTd>{getFileSizeString(installer.size ?? 0)}</StyledTd>
-            </StyledTr>
-          ))}
-        </StyledTable>
-      </StyledBody>
-    </>
+      <FilesTable data={data.installers} selection={selection} rowClickHandler={pushClickEvent} />
+    </div>
   )
 }
 

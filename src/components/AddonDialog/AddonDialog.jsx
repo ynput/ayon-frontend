@@ -11,6 +11,11 @@ const AddonDialog = ({ uploadOpen, setUploadOpen, uploadHeader }) => {
   const abortController = useRef(new AbortController())
   const [manageMode, setManageMode] = useState(false)
 
+  const closeHandler = () => {
+    handleAddonInstallFinish()
+    setManageMode(false)
+  }
+
   const handleAddonInstallFinish = () => {
     if (!isUploading) {
       setUploadOpen(false)
@@ -45,7 +50,7 @@ const AddonDialog = ({ uploadOpen, setUploadOpen, uploadHeader }) => {
       isOpen={!!uploadOpen}
       style={{ width: manageMode ? 600: 400, height: 400, overflow: 'hidden' }}
       header={uploadHeader || 'Upload addon'}
-      onClose={handleAddonInstallFinish}
+      onClose={closeHandler}
       size="md"
     >
       {uploadOpen && (

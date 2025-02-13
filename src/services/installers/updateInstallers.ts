@@ -6,6 +6,9 @@ const updateInstallersApi = api.enhanceEndpoints({
     createInstaller: {
       invalidatesTags: ['installerList'],
     },
+    deleteInstallerFile: {
+      invalidatesTags: ['installerList'],
+    }
   },
 })
 

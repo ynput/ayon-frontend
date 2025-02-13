@@ -30,7 +30,7 @@ const outputFiles = {
   activities: ['deleteProjectActivity'],
   users: ['getUser', 'setFrontendPreferences'],
   releases: ['getReleases', 'getReleaseInfo'],
-  installers: ['listInstallers', 'createInstaller'],
+  installers: ['listInstallers', 'createInstaller', 'deleteInstaller'],
   dependencyPackages: ['listDependencyPackages', 'createDependencyPackage'],
   cloud: ['getYnputCloudInfo', 'setYnputCloudKey', 'deleteYnputCloudKey'],
   attributes: ['getAttributeList', 'setAttributeList', 'getAttributeConfig'],
