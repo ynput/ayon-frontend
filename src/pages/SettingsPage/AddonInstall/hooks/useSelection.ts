@@ -1,22 +1,23 @@
-import { $Any } from "@types"
 import { MouseEvent, useState } from "react"
 
-const useSelection = (initialSelected: number[] = []) => {
+const useSelection = (initialSelected: number[] = [], initialFocused = -1) => {
   const [selection, setSelection] = useState<number[]>(initialSelected)
+  const [focused, setFocused] = useState<number>(initialFocused)
   const [prevSelection, setPrevSelection] = useState<number | null>(null)
-
 
   const updateSelection = (newSelection: number[]) => {
     setSelection(newSelection)
   }
 
   const pushClickEvent = (e: MouseEvent, rowIdx: number) => {
+    setFocused(rowIdx)
     if (!e.metaKey && !e.shiftKey) {
       setSelection([rowIdx])
     }
     if (e.metaKey) {
       if (selection.includes(rowIdx)) {
         setSelection(selection.filter((idx) => idx !== rowIdx))
+        setFocused(-1)
       } else {
         setSelection([...selection, rowIdx])
       }
@@ -37,7 +38,7 @@ const useSelection = (initialSelected: number[] = []) => {
     setPrevSelection(rowIdx)
   }
 
-  return { selection, updateSelection, pushClickEvent }
+  return { focused, selection, updateSelection, pushClickEvent }
 }
 
 export default useSelection

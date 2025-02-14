@@ -27,7 +27,7 @@ type Props = {
 }
 
 const AddonManager: React.FC<Props> = ({ manager, setManageMode }) => {
-  const { selection, updateSelection, pushClickEvent } = useSelection([])
+  const { focused, selection, updateSelection, pushClickEvent } = useSelection([])
   const { deleteInstallers, deletePackages } = useFileManagerMutations()
   const {installers, packages} = useFetchManagerData()
 
@@ -53,7 +53,7 @@ const AddonManager: React.FC<Props> = ({ manager, setManageMode }) => {
               : packages.packages?.map((el) => ({ ...el, version: el.installerVersion })) ?? []
 
   return (
-    <div style={{ height: '100%', overflow: 'hidden' }}>
+    <div style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
       <StyledHeader>
         <Button onClick={() => setManageMode(false)} label="Upload files" />
         <Spacer />
@@ -65,7 +65,12 @@ const AddonManager: React.FC<Props> = ({ manager, setManageMode }) => {
         />
       </StyledHeader>
 
-      <FilesTable data={data} selection={selection} rowClickHandler={pushClickEvent} />
+      <FilesTable
+        data={data}
+        selection={selection}
+        focused={focused}
+        rowClickHandler={pushClickEvent}
+      />
     </div>
   )
 }
