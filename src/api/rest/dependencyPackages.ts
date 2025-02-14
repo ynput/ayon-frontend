@@ -18,6 +18,15 @@ const injectedRtkApi = api.injectEndpoints({
         params: { url: queryArg.url, overwrite: queryArg.overwrite, force: queryArg.force },
       }),
     }),
+    deleteDependencyPackage: build.mutation<
+      DeleteDependencyPackageApiResponse,
+      DeleteDependencyPackageApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/desktop/dependencyPackages/${queryArg.filename}`,
+        method: 'DELETE',
+      }),
+    }),
   }),
   overrideExisting: false,
 })
@@ -35,6 +44,10 @@ export type CreateDependencyPackageApiArg = {
   /** Force install the package if it already exists */
   force?: boolean
   dependencyPackage: DependencyPackage
+}
+export type DeleteDependencyPackageApiResponse = /** status 204 Successful Response */ void
+export type DeleteDependencyPackageApiArg = {
+  filename: string
 }
 export type SourceModel = {
   /** If set to server, the file is stored on the server. If set to http, the file is downloaded from the specified URL. */

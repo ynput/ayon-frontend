@@ -6,6 +6,9 @@ const updateInstallersApi = api.enhanceEndpoints({
     createInstaller: {
       invalidatesTags: ['installerList'],
     },
+    deleteInstallerFile: {
+      invalidatesTags: ['installerList'],
+    }
   },
 })
 
@@ -17,5 +20,8 @@ const updateInstallersApiInjected = updateInstallersApi.injectEndpoints({
   }),
 })
 
-export const { useCreateInstallerMutation, useUploadInstallersMutation } =
-  updateInstallersApiInjected
+export const {
+  useCreateInstallerMutation,
+  useUploadInstallersMutation,
+  useDeleteInstallerFileMutation,
+} = updateInstallersApiInjected

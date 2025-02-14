@@ -4,11 +4,17 @@ import AddonUpload from '@pages/SettingsPage/AddonInstall/AddonUpload'
 import { confirmDialog } from 'primereact/confirmdialog'
 import { toast } from 'react-toastify'
 
-const AddonDialog = ({ uploadOpen, setUploadOpen, uploadHeader }) => {
+const AddonDialog = ({ uploadOpen, setUploadOpen, uploadHeader, manager }) => {
   // keep track is an addon was installed
   const [isUploading, setIsUploading] = useState(false)
   const [restartRequired, setRestartRequired] = useState(false)
   const abortController = useRef(new AbortController())
+  const [manageMode, setManageMode] = useState(false)
+
+  const closeHandler = () => {
+    handleAddonInstallFinish()
+    setManageMode(false)
+  }
 
   const handleAddonInstallFinish = () => {
     if (!isUploading) {
@@ -42,9 +48,9 @@ const AddonDialog = ({ uploadOpen, setUploadOpen, uploadHeader }) => {
   return (
     <Dialog
       isOpen={!!uploadOpen}
-      style={{ width: 400, height: 400, overflow: 'hidden' }}
+      style={{ width: manageMode ? 600: 400, height: 400, overflow: 'hidden' }}
       header={uploadHeader || 'Upload addon'}
-      onClose={handleAddonInstallFinish}
+      onClose={closeHandler}
       size="md"
     >
       {uploadOpen && (
@@ -52,6 +58,9 @@ const AddonDialog = ({ uploadOpen, setUploadOpen, uploadHeader }) => {
           abortController={abortController.current}
           onClose={handleAddonInstallFinish}
           type={uploadOpen}
+          manager={manager}
+          manageMode={manageMode}
+          setManageMode={setManageMode}
           onUploadStateChange={setIsUploading}
           onInstall={(uploadOpen) => uploadOpen === 'addon' && setRestartRequired(true)}
         />

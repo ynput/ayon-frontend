@@ -19,6 +19,12 @@ const injectedRtkApi = api.injectEndpoints({
         params: { url: queryArg.url, overwrite: queryArg.overwrite, force: queryArg.force },
       }),
     }),
+    deleteInstallerFile: build.mutation<DeleteInstallerFileApiResponse, DeleteInstallerFileApiArg>({
+      query: (queryArg) => ({
+        url: `/api/desktop/installers/${queryArg.filename}`,
+        method: 'DELETE',
+      }),
+    }),
   }),
   overrideExisting: false,
 })
@@ -40,6 +46,10 @@ export type CreateInstallerApiArg = {
   /** Overwrite existing installer */
   force?: boolean
   installer: Installer
+}
+export type DeleteInstallerFileApiResponse = /** status 204 Successful Response */ void
+export type DeleteInstallerFileApiArg = {
+  filename: string
 }
 export type SourceModel = {
   /** If set to server, the file is stored on the server. If set to http, the file is downloaded from the specified URL. */

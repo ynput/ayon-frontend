@@ -1,4 +1,4 @@
-import { Button, Icon } from '@ynput/ayon-react-components'
+import { Button, getFileSizeString, Icon } from '@ynput/ayon-react-components'
 import * as Styled from './FileUploadCard.styled'
 import clsx from 'clsx'
 import { useState } from 'react'
@@ -57,12 +57,6 @@ const getIconForType = (type) => {
   return 'draft'
 }
 
-const getFileSizeString = (bytes) => {
-  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB']
-  if (bytes === 0) return '0 Byte'
-  const i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)), 10)
-  return `${parseFloat((bytes / Math.pow(1024, i)).toFixed(2))} ${sizes[i]}`
-}
 
 const FileUploadCard = ({
   name,
