@@ -39,7 +39,7 @@ export const AppMenu = ({ user, ...props }) => {
   const items = [
     {
       id: 'projectsManager',
-      link: '/manageProjects',
+      link: '/manageProjects/projectSettings',
       label: 'Projects Settings',
       icon: 'settings_applications',
       shortcut: 'P+P',
