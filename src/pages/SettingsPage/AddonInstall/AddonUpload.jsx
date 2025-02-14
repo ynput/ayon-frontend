@@ -13,7 +13,6 @@ import {
 } from '@queries/dependencyPackages/updateDependencyPackages'
 import { onUploadFinished, onUploadProgress } from '@state/context'
 import axios from 'axios'
-import UploadHeader from './UploadHeader'
 import AddonManager from './AddonManager'
 
 const StyledFooter = styled.div`
@@ -288,13 +287,6 @@ const AddonUpload = ({
   }
   // default message
 
-  const handleChange = (e) => {
-    e.preventDefault()
-    if (e.target.files && e.target.files[0]) {
-      // TODO check this out!
-      // handleFiles(e.target.files)
-    }
-  }
   if (manager && manageMode) {
     return <AddonManager manager={manager} manageMode={manageMode} setManageMode={setManageMode} />
   }
@@ -309,14 +301,8 @@ const AddonUpload = ({
       allowMultiple
       placeholder={`Drop ${typeLabel} files`}
       isSuccess={isComplete}
-      header={
-        <UploadHeader
-          manager={manager}
-          manageMode={manageMode}
-          setManageMode={setManageMode}
-          setFiles={setFiles}
-          handleChange={handleChange}
-        />
+      extraHeaderActions={
+        manager != null && <Button onClick={() => setManageMode(true)} label="Manage uploads" />
       }
       footer={
         !dropOnly && (
