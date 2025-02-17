@@ -20,6 +20,8 @@ import { getFileSizeString, Icon } from '@ynput/ayon-react-components'
 
 import { $Any } from '@types'
 import { capitalizeFirstLetter } from '@helpers/string'
+import BundleStatus from '@pages/SettingsPage/AddonsManager/BundleStatus/BundleStatus'
+import { UploadedFile } from '../hooks/useFetchManagerData'
 
 const Container = styled.div`
   background-color: var(--md-sys-color-surface-container-low);
@@ -65,7 +67,7 @@ const StyledTd = styled.td`
   padding: 8px;
 `
 interface Props extends Partial<TableOptions<any>> {
-  data: $Any
+  data: UploadedFile[]
   focused: string | null
   rowSelection: Record<string, boolean>
   setRowSelection: (rowSelection: Record<string, boolean>) => void
@@ -111,6 +113,15 @@ const FilesTable: React.FC<Props> = ({
         },
         header: () => 'Size',
       },
+      {
+        accessorKey: 'statuses',
+        cell: (info) => {
+          return <BundleStatus statuses={info.getValue() as string[]} />
+        },
+        header: () => 'Status',
+        // based on list length
+        sortingFn: (a, b) => (a.original.statuses.length > b.original.statuses.length ? 1 : -1),
+      },
     ],
     [],
   )
@@ -136,7 +147,7 @@ const FilesTable: React.FC<Props> = ({
 
   const lastRowSelected = useRef<Row<$Any> | null>(null)
 
-  const handleRowSelect = (evt: React.MouseEvent, row: Row<$Any>) => {
+  const handleRowSelect = (evt: React.MouseEvent, row: Row<File[]>) => {
     // set focused always to last clicked row
     setFocused?.(row.id)
 

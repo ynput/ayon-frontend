@@ -55,7 +55,7 @@ const AddonDialog = ({ uploadOpen, setUploadOpen, uploadHeader, manager }) => {
   return (
     <StyledDialog
       isOpen={!!uploadOpen}
-      style={{ width: manageMode ? 700 : 400, height: 400, overflow: 'hidden' }}
+      style={{ width: manageMode ? 800 : 400, height: 400, overflow: 'hidden' }}
       header={uploadHeader || 'Upload addon'}
       onClose={closeHandler}
       size="md"

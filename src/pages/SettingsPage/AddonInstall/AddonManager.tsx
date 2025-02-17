@@ -23,12 +23,7 @@ const AddonManager: React.FC<Props> = ({ manager, setManageMode }) => {
   const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({})
   const [focused, setFocused] = useState<string | null>(null)
   const { deleteInstallers, deletePackages } = useFileManagerMutations()
-  const { installers, packages } = useFetchManagerData()
-
-  const data =
-    manager === 'installer'
-      ? installers.installers ?? []
-      : packages.packages?.map((el) => ({ ...el, version: el.installerVersion })) ?? []
+  const data = useFetchManagerData(manager)
 
   const selectedIds = Object.entries(rowSelection)
     .filter(([, selected]) => selected)
