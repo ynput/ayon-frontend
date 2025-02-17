@@ -62,6 +62,7 @@ const populateTableData = ({
   taskList,
   isFlatList,
   entityToRowMappers,
+  expanded,
 }: {
   allFolders: FolderListItem[]
   folders: FolderNodeMap
@@ -69,21 +70,21 @@ const populateTableData = ({
   taskList: Partial<TaskNode>[]
   isFlatList: boolean
   entityToRowMappers: $Any
+  expanded: Record<string, boolean>
 }) => {
-  console.time('mappedRawData')
+  const foldersVisible = allFolders.filter(
+    (folder) => !folder.parentId || expanded[folder.parentId],
+  )
+  // console.time('mappedRawData')
+  // 1ms
   let mappedRawData: FolderNodeMap = {}
-  allFolders.forEach((element) => {
+  foldersVisible.forEach((element) => {
     mappedRawData[element.id] = {
       ...element,
       matchesFilters: folders[element.id]?.matchesFilters || false,
     }
   })
-  // let mappedRawData: FolderNodeMap = {}
-  // allFolders.forEach((element) => {
-  //   mappedRawData[element.id] = element as any // Cast to any to avoid type issues
-  //   mappedRawData[element.id].matchesFilters = folders[element.id]?.matchesFilters || false
-  // })
-  console.timeEnd('mappedRawData')
+  // console.timeEnd('mappedRawData')
 
   let mappedTaskData: { [key: string]: TaskNodeMap } = {}
   tasks.forEach((element) => {
@@ -114,11 +115,9 @@ const populateTableData = ({
         entityToRowMappers,
       })
     : createDataTree({
-        allFolders,
+        allFolders: foldersVisible,
         mappedRawData,
         tasks: mappedTaskData,
-        taskList,
-        folders: mappedFolderData,
         rawFolders: folders,
         rawTasks: tasks,
         entityToRowMappers,
@@ -184,18 +183,14 @@ const createFlatList = ({
 const createDataTree = ({
   allFolders,
   mappedRawData,
-  folders,
   tasks,
-  taskList,
   rawFolders,
   rawTasks,
   entityToRowMappers,
 }: {
   allFolders: $Any
   mappedRawData: $Any
-  folders: $Any
   tasks: $Any
-  taskList: $Any
   rawFolders: $Any
   rawTasks: $Any
   entityToRowMappers: $Any
@@ -205,7 +200,6 @@ const createDataTree = ({
 
   // 1. Create efficient lookup maps
   const matchedIds = new Set([...Object.keys(rawFolders), ...Object.keys(rawTasks)])
-  const folderLookup = new Map(Object.entries(folders))
   const taskLookup = new Map(Object.entries(tasks))
 
   // 2. Pre-sort and filter allFolders in one pass

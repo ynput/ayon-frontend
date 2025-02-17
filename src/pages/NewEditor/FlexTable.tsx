@@ -8,6 +8,8 @@ import {
   filterFns,
   flexRender,
   Row,
+  OnChangeFn,
+  ExpandedState,
 } from '@tanstack/react-table'
 
 import clsx from 'clsx'
@@ -22,7 +24,6 @@ import { UserNode } from '@api/graphql'
 import { useCustomColumnWidths, useSyncCustomColumnWidths } from './hooks/useCustomColumnsWidth'
 import { toast } from 'react-toastify'
 import { Status } from '@api/rest/project'
-import useOverviewPreferences from '@pages/ProjectOverviewPage/hooks/useOverviewPreferences'
 
 type Props = {
   tableData: $Any[]
@@ -34,6 +35,8 @@ type Props = {
   isExpandable: boolean
   sliceId: string
   updateEntities: (type: string, value: $Any, entities: $Any, isAttrib: boolean) => void
+  expanded: Record<string, boolean>
+  updateExpanded: OnChangeFn<ExpandedState>
 }
 
 const FlexTable = ({
@@ -46,6 +49,8 @@ const FlexTable = ({
   isExpandable,
   sliceId,
   updateEntities,
+  expanded,
+  updateExpanded,
 }: Props) => {
   //The virtualizer needs to know the scrollable container element
   const tableContainerRef = useRef<HTMLDivElement>(null)
@@ -62,7 +67,6 @@ const FlexTable = ({
     setSelectionInProgress,
   })
 
-  const { expanded, updateExpanded } = useOverviewPreferences()
   const [itemExpanded, setItemExpanded] = useState<string>('root')
   const toggleExpanderHandler = handleToggleFolder(setItemExpanded)
 
@@ -146,6 +150,7 @@ const FlexTable = ({
     getRowId: (row) => row.id,
     enableSubRowSelection: false, //disable sub row selection
     getSubRows: (row) => row.subRows,
+    getRowCanExpand: (row) => true,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getExpandedRowModel: getExpandedRowModel(),

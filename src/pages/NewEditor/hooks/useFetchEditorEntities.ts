@@ -5,7 +5,6 @@ import { TaskFilterValue } from '@containers/TasksProgress/hooks/useFilterBySlic
 import { mapQueryFilters } from '../mappers/mappers'
 import { useGetTasksFoldersQuery } from '@queries/project/getProject'
 import { useGetFilteredEntitiesByParentQuery } from '@queries/overview/getFilteredEntities'
-import useOverviewPreferences from '@pages/ProjectOverviewPage/hooks/useOverviewPreferences'
 
 type Params = {
   projectName: string
@@ -14,11 +13,16 @@ type Params = {
   selectedFolders: string[]
   filters: Filter[]
   sliceFilter: TaskFilterValue | null
+  expanded: Record<string, boolean>
 }
 
-const useFetchEditorEntities = ({ projectName, selectedFolders, filters, sliceFilter }: Params) => {
-  const { expanded } = useOverviewPreferences()
-
+const useFetchEditorEntities = ({
+  projectName,
+  selectedFolders,
+  filters,
+  sliceFilter,
+  expanded,
+}: Params) => {
   const {
     data: { folders = [] } = {},
     isLoading,
@@ -28,9 +32,7 @@ const useFetchEditorEntities = ({ projectName, selectedFolders, filters, sliceFi
     { skip: !projectName },
   )
 
-  console.time('useFetchEditorEntitiesTransforms')
-
-  console.time('folderById')
+  // console.time('folderById')
   // Folders map: 1
 
   // 3ms with 10,000
@@ -45,7 +47,7 @@ const useFetchEditorEntities = ({ projectName, selectedFolders, filters, sliceFi
   for (const folder of folders) {
     foldersById[folder.id as string] = folder
   }
-  console.timeEnd('folderById')
+  // console.timeEnd('folderById')
 
   // @ts-ignore
   const { data: expandedFoldersTasks } = useGetFilteredEntitiesByParentQuery({
@@ -54,7 +56,7 @@ const useFetchEditorEntities = ({ projectName, selectedFolders, filters, sliceFi
   })
 
   // @ts-ignore
-  const selectedPaths = selectedFolders.map((id) => foldersById[id].path)
+  const selectedPaths = selectedFolders.map((id) => foldersById[id]?.path)
   const selectedPathsPrefixed = selectedPaths.map((path: string) => '/' + path)
   const queryFilters = mapQueryFilters({ filters, sliceFilter })
 
@@ -78,14 +80,12 @@ const useFetchEditorEntities = ({ projectName, selectedFolders, filters, sliceFi
     query,
   })
 
-  console.log(folders.length)
+  console.log('Folder count:', folders.length)
 
   // console.time('foldersToObject')
   // Folders map: 3 (same as foldersById map?) 8 seconds with 10,000
   // const foldersObject = folders.reduce((acc, curr) => ({ ...acc, [curr.id as string]: curr }), {})
   // console.timeEnd('foldersToObject')
-
-  console.timeEnd('useFetchEditorEntitiesTransforms')
 
   return {
     rawData: filteredFolders,

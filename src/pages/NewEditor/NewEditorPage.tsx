@@ -21,6 +21,7 @@ import { populateTableData } from './mappers/mappers'
 import { FolderNodeMap, TaskNodeMap } from './types'
 import entityToRowMappers from './mappers/entityToRowMappers'
 import FlexTable from './FlexTable'
+import { useState } from 'react'
 
 type Props = {
   filters: Filter[]
@@ -42,10 +43,13 @@ const NewEditorPage = ({ filters, showHierarchy, sortBy }: Props) => {
   const { filter: sliceFilter } = useFilterBySlice()
 
   const { updateEntities } = useUpdateEditorEntities({ projectName, filters, sliceFilter })
+  const [expanded, updateExpanded] = useState({})
 
   console.time('dataToTable')
+  // 28.3 ms
 
   console.time('useFetchAndUpdateEntityData')
+  // 1.4ms
   const {
     rawData: allFolders,
     folders,
@@ -58,10 +62,12 @@ const NewEditorPage = ({ filters, showHierarchy, sortBy }: Props) => {
     selectedFolders: Object.keys(rowSelection),
     filters,
     sliceFilter,
+    expanded,
   })
   console.timeEnd('useFetchAndUpdateEntityData')
 
   console.time('getFilteredEntities')
+  // 8.1ms
   const {
     folders: filteredFolders,
     tasks: filteredTasks,
@@ -77,6 +83,7 @@ const NewEditorPage = ({ filters, showHierarchy, sortBy }: Props) => {
   console.timeEnd('getFilteredEntities')
 
   console.time('populateTableData')
+  // 18ms
   const { tableData } = populateTableData({
     allFolders,
     folders: filteredFolders as FolderNodeMap,
@@ -85,7 +92,10 @@ const NewEditorPage = ({ filters, showHierarchy, sortBy }: Props) => {
     tasksFolders,
     isFlatList: !showHierarchy,
     entityToRowMappers: entityToRowMappers(project.folders, project.tasks),
+    expanded,
   })
+
+  console.log(expanded)
 
   console.timeEnd('populateTableData')
 
@@ -113,6 +123,8 @@ const NewEditorPage = ({ filters, showHierarchy, sortBy }: Props) => {
                 isLoading={false}
                 isExpandable={false}
                 sliceId={''}
+                expanded={expanded}
+                updateExpanded={updateExpanded}
               />
             </TablePanel>
           </SplitterPanel>
