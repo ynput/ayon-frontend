@@ -12,7 +12,6 @@ type DeleteUserDialogProps = {
 const DeleteUserDialog = ({ onHide, selectedUsers, onDelete, onDisable }: DeleteUserDialogProps) => {
   const [value, setValue] = useState('')
 
-
   if (!selectedUsers?.length) {
     // this shouldn't happen
     onHide()
@@ -20,6 +19,7 @@ const DeleteUserDialog = ({ onHide, selectedUsers, onDelete, onDisable }: Delete
   }
 
   const selectedUsersString = selectedUsers.join(', ')
+  const confirmDeleteUsersString = selectedUsers.length > 1 ? "delete selected" : selectedUsersString
   return (
     <Dialog
       size="md"
@@ -31,7 +31,7 @@ const DeleteUserDialog = ({ onHide, selectedUsers, onDelete, onDisable }: Delete
             variant="danger"
             label="Delete"
             onClick={onDelete}
-            disabled={value !== selectedUsersString}
+            disabled={value !== confirmDeleteUsersString}
           />
         </>
       }
@@ -44,7 +44,7 @@ const DeleteUserDialog = ({ onHide, selectedUsers, onDelete, onDisable }: Delete
           message="Deleting users can have unintended consequences. Consider deactivating the user instead?"
         />
         <FormRow
-          label={`To confirm delete action, type '${selectedUsersString}' in the box below`}
+          label={`To confirm delete action, type '${confirmDeleteUsersString}' in the box below`}
           style={{ flexDirection: 'column', alignItems: 'start', marginTop: '16px' }}
           labelStyle={{ height: 'auto', lineHeight: 'auto' }}
           fieldStyle={{ display: 'block', width: '100%' }}
@@ -53,6 +53,7 @@ const DeleteUserDialog = ({ onHide, selectedUsers, onDelete, onDisable }: Delete
             style={{ width: '100%' }}
             data-testid="delete-user-dialog-input"
             value={value}
+            placeholder={confirmDeleteUsersString}
             onChange={(e) => setValue(e.target.value)}
           />
         </FormRow>
