@@ -72,6 +72,19 @@ const ServerConfig = () => {
     configOverrides,
   ])
 
+  // sync filenames with formData
+  // when a new file is uploaded, update the formData with the new filename
+  useEffect(() => {
+    setFormData((prev) => ({
+      ...prev,
+      customization: {
+        ...prev.customization,
+        login_background: backgroundFileName,
+        studio_logo: logoFileName,
+      },
+    }))
+  }, [backgroundFileName, logoFileName, setFormData])
+
   const onSave = async () => {
     try {
       await setServerConfig({ serverConfigModel: formData }).unwrap()
