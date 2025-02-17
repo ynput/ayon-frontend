@@ -56,6 +56,10 @@ const AddonList = ({
         variant,
       })
     }
+
+    // sort by addon title
+    result.sort((a, b) => a.title.localeCompare(b.title))
+
     return result
   }, [data, variant, siteSettings])
 
