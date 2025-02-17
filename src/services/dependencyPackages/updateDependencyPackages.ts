@@ -5,6 +5,9 @@ const updateDependencyPackagesApi = api.enhanceEndpoints({
     createDependencyPackage: {
       invalidatesTags: ['dependencyPackage'],
     },
+    deleteDependencyPackage: {
+      invalidatesTags: ['dependencyPackage'],
+    },
   },
 })
 
@@ -18,5 +21,8 @@ const updateDependencyPackagesApiInjected = updateDependencyPackagesApi.injectEn
   overrideExisting: true,
 })
 
-export const { useCreateDependencyPackageMutation, useUploadDependencyPackagesMutation } =
-  updateDependencyPackagesApiInjected
+export const {
+  useCreateDependencyPackageMutation,
+  useUploadDependencyPackagesMutation,
+  useDeleteDependencyPackageMutation,
+} = updateDependencyPackagesApiInjected

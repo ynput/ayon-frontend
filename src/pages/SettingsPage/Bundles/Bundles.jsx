@@ -387,6 +387,7 @@ const Bundles = () => {
         uploadOpen={uploadOpen}
         setUploadOpen={setUploadOpen}
         uploadHeader={uploadHeader}
+        manager={['installer', 'package'].includes(uploadOpen) ? uploadOpen : null}
       />
       <CopyBundleSettingsDialog
         bundle={copySettingsBundle.bundle}
