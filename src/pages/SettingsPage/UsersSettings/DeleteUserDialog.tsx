@@ -19,7 +19,7 @@ const DeleteUserDialog = ({ onHide, selectedUsers, onDelete, onDisable }: Delete
   }
 
   const selectedUsersString = selectedUsers.join(', ')
-  const confirmDeleteUsersString = selectedUsers?.length > 1 ? "delete selected" : selectedUsersString
+  const confirmDeleteUsersString = selectedUsers.length > 1 ? "delete selected" : selectedUsersString
   return (
     <Dialog
       size="md"
