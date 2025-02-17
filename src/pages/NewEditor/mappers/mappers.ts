@@ -70,6 +70,7 @@ const populateTableData = ({
   isFlatList: boolean
   entityToRowMappers: $Any
 }) => {
+  console.time('mappedRawData')
   let mappedRawData: FolderNodeMap = {}
   allFolders.forEach((element) => {
     mappedRawData[element.id] = {
@@ -77,6 +78,12 @@ const populateTableData = ({
       matchesFilters: folders[element.id]?.matchesFilters || false,
     }
   })
+  // let mappedRawData: FolderNodeMap = {}
+  // allFolders.forEach((element) => {
+  //   mappedRawData[element.id] = element as any // Cast to any to avoid type issues
+  //   mappedRawData[element.id].matchesFilters = folders[element.id]?.matchesFilters || false
+  // })
+  console.timeEnd('mappedRawData')
 
   let mappedTaskData: { [key: string]: TaskNodeMap } = {}
   tasks.forEach((element) => {
@@ -94,7 +101,10 @@ const populateTableData = ({
     mappedFolderData[element.parentId as string][element.id as string] = element as MatchingFolder
   })
 
-  return isFlatList
+  // return { hashedData: new Map<string, TableRow>(), tableData: [] }
+
+  console.time('populateTableData')
+  const tableData = isFlatList
     ? createFlatList({
         allFolders,
         tasks: mappedTaskData,
@@ -113,6 +123,12 @@ const populateTableData = ({
         rawTasks: tasks,
         entityToRowMappers,
       })
+
+  console.timeEnd('populateTableData')
+
+  // console.log(tableData)
+
+  return tableData
 }
 
 const createFlatList = ({
@@ -184,136 +200,73 @@ const createDataTree = ({
   rawTasks: $Any
   entityToRowMappers: $Any
 }): { hashedData: Map<String, TableRow>; tableData: TableRow[] } => {
-  let hashedData = new Map<string, TableRow>()
-  let dataTree: TableRow[] = []
-  let taskPlaceholders: { [key: string]: TableRow[] } = {}
+  const hashedData = new Map<string, TableRow>()
+  const dataTree: TableRow[] = []
 
-  const matchedFolderIds = Object.keys(rawFolders)
+  // 1. Create efficient lookup maps
+  const matchedIds = new Set([...Object.keys(rawFolders), ...Object.keys(rawTasks)])
+  const folderLookup = new Map(Object.entries(folders))
+  const taskLookup = new Map(Object.entries(tasks))
 
-  const matchedTaskIds = Object.keys(rawTasks)
-  const matchedIds = [...matchedFolderIds, ...matchedTaskIds]
+  // 2. Pre-sort and filter allFolders in one pass
+  const sortedItems = allFolders
+    .filter((el) => matchedIds.has(el.id))
+    .sort((a, b) => (a.label || a.name).localeCompare(b.label || b.name))
 
-  // sort folders by name
-  let sortedItems = [...allFolders]
-  sortedItems = sortedItems.filter((el) => matchedIds.includes(el.id))
-  sortedItems = sortedItems.sort((a, b) => (a.label || a.name).localeCompare(b.label || b.name))
+  // 3. Create a parentId lookup map for faster relationship building
+  const parentIdMap = new Map<string, TableRow[]>()
 
-  // Single pass to create base rows and store in Map
-  for (let i = 0; i < sortedItems.length; i++) {
-    const item = sortedItems[i]
-    const id = item.id
-    // @ts-ignore
-    const row: TableRow = {
-      // @ts-ignore
-      ...(item.data ? item : entityToRowMappers.folderToTableRow(mappedRawData[id])),
-      subRows: [],
-    }
-    hashedData.set(id, row)
-    if (!item.hasTasks) {
-      continue
-    }
+  // 4. Single pass to create base rows and organize by parentId
+  for (const item of sortedItems) {
+    const row: TableRow = item.data
+      ? item
+      : entityToRowMappers.folderToTableRow(mappedRawData[item.id])
+    row.subRows = []
+    hashedData.set(item.id, row)
 
-    let sortedTaskNames = Array.from(item.taskNames)
-    sortedTaskNames = (sortedTaskNames as string[]).sort((a, b) => a.localeCompare(b))
-
-    for (const taskName of sortedTaskNames) {
-      taskPlaceholders = {
-        ...taskPlaceholders,
-        [item.id]: [
-          ...(taskPlaceholders[item.id] || []),
-          entityToRowMappers.placeholderToTableRow(taskName, item),
-        ],
-      }
-    }
-  }
-
-  let taskMap: { [key: string]: { [key: string]: TableRow } } = {}
-  for (const parentId in tasks) {
-    for (const taskId in tasks[parentId]) {
-      taskMap[parentId] = {
-        ...taskMap[parentId],
-        [taskId]: entityToRowMappers.taskToTableRow(tasks[parentId][taskId], parentId),
-      }
-    }
-  }
-
-  let taskTableRowList = []
-  for (const task of taskList) {
-    taskTableRowList.push(entityToRowMappers.taskToTableRow(task, task.folderId))
-  }
-
-  let folderMap: { [key: string]: { [key: string]: TableRow } } = {}
-  for (const parentId in folders) {
-    for (const folderId in folders[parentId]) {
-      if (folderMap[parentId] === undefined) {
-        folderMap[parentId] = {}
-      }
-
-      folderMap[parentId][folderId] = entityToRowMappers.folderToTableRow(
-        folders[parentId][folderId],
-        parentId,
-      )
-    }
-  }
-
-  // Single pass to build relationships
-  for (let i = 0; i < sortedItems.length; i++) {
-    const item = sortedItems[i]
-    const id = item['id'] as string
-    const parentId = item['parentId'] as string
-    const row = hashedData.get(id)!
-
-    if (parentId && hashedData.has(parentId)) {
-      const parentRow = hashedData.get(parentId)
-      if (parentRow) {
-        parentRow.subRows.push(row)
-      }
+    if (item.parentId) {
+      const children = parentIdMap.get(item.parentId) || []
+      children.push(row)
+      parentIdMap.set(item.parentId, children)
     } else {
       dataTree.push(row)
     }
-  }
 
-  // Iterating tasks
-  for (const parentId in taskPlaceholders) {
-    // @ts-ignore
-    for (const task of taskPlaceholders[parentId]) {
-      if (hashedData.get(parentId!)?.subRows.find((e: $Any) => e.name == task.name)) {
-        continue
+    // Handle tasks inline if present
+    if (item.hasTasks && item.taskNames) {
+      const taskRows = new Map<string, TableRow>()
+
+      // Add placeholders
+      Array.from(item.taskNames)
+        .sort((a, b) => a.localeCompare(b))
+        .forEach((taskName) => {
+          const placeholder = entityToRowMappers.placeholderToTableRow(taskName, item)
+          taskRows.set(taskName, placeholder)
+        })
+
+      // Override with actual tasks if they exist
+      const itemTasks = taskLookup.get(item.id)
+      if (itemTasks) {
+        for (const [taskId, task] of Object.entries(itemTasks)) {
+          const taskRow = entityToRowMappers.taskToTableRow(task, item.id)
+          taskRows.set(taskRow.name, taskRow)
+        }
       }
-      hashedData.get(parentId!)?.subRows.push(task)
+
+      // Add tasks to subRows in sorted order
+      row.subRows = Array.from(taskRows.values())
     }
   }
 
-  for (const parentId in taskMap) {
-    for (const taskId in taskMap[parentId]) {
-      const item = taskMap[parentId][taskId]
+  // 5. Build relationships in a single pass using parentIdMap
+  for (const [parentId, children] of parentIdMap) {
+    const parentRow = hashedData.get(parentId)
+    if (parentRow) {
+      // Add folder children
+      parentRow.subRows.push(...children)
 
-      if (parentId && hashedData.has(parentId)) {
-        const parentRow = hashedData.get(parentId)
-        if (parentRow) {
-          parentRow.subRows = parentRow.subRows.filter((el) => el.name !== item.name)
-          parentRow.subRows.unshift(item)
-        }
-      }
-    }
-    hashedData.get(parentId)?.subRows.sort((a, b) => a.name.localeCompare(b.name))
-  }
-
-  for (const parentId in folderMap) {
-    for (const folderId in folderMap[parentId]) {
-      const item = folderMap[parentId][folderId]
-      const row = folderMap[parentId][folderId]
-
-      if (parentId && hashedData.has(parentId)) {
-        const parentRow = hashedData.get(parentId)
-        if (parentRow) {
-          const original = parentRow.subRows.find((el) => el.name === item.name)
-          parentRow.subRows = parentRow.subRows.filter((el) => el.name !== item.name)
-          parentRow.subRows.unshift({ ...row, subRows: original?.subRows || [] })
-        }
-      } else {
-        // dataTree.push(row)
-      }
+      // Sort all subRows by name
+      parentRow.subRows.sort((a, b) => a.name.localeCompare(b.name))
     }
   }
 

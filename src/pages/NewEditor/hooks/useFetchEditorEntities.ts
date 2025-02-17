@@ -12,17 +12,11 @@ type Params = {
   folderTypes: $Any
   taskTypes: $Any
   selectedFolders: string[]
-  filters: Filter[],
-  sliceFilter: TaskFilterValue | null,
+  filters: Filter[]
+  sliceFilter: TaskFilterValue | null
 }
 
-const useFetchEditorEntities = ({
-  projectName,
-  selectedFolders,
-  filters,
-  sliceFilter,
-}: Params) => {
-
+const useFetchEditorEntities = ({ projectName, selectedFolders, filters, sliceFilter }: Params) => {
   const { expanded } = useOverviewPreferences()
 
   const {
@@ -33,12 +27,25 @@ const useFetchEditorEntities = ({
     { projectName: projectName || '', attrib: true },
     { skip: !projectName },
   )
-  let foldersById = folders.reduce(function (map, obj) {
-    //@ts-ignore
-    map[obj.id] = obj
-    return map
-  }, {})
 
+  console.time('useFetchEditorEntitiesTransforms')
+
+  console.time('folderById')
+  // Folders map: 1
+
+  // 3ms with 10,000
+  // let foldersById = folders.reduce(function (map, obj) {
+  //   //@ts-ignore
+  //   map[obj.id] = obj
+  //   return map
+  // }, {})
+
+  // 1ms with 10,000
+  const foldersById: Record<string, $Any> = {}
+  for (const folder of folders) {
+    foldersById[folder.id as string] = folder
+  }
+  console.timeEnd('folderById')
 
   // @ts-ignore
   const { data: expandedFoldersTasks } = useGetFilteredEntitiesByParentQuery({
@@ -51,6 +58,7 @@ const useFetchEditorEntities = ({
   const selectedPathsPrefixed = selectedPaths.map((path: string) => '/' + path)
   const queryFilters = mapQueryFilters({ filters, sliceFilter })
 
+  // Folders map: 2
   const filteredFolders =
     selectedPaths.length > 0
       ? folders.filter((el) => {
@@ -70,10 +78,18 @@ const useFetchEditorEntities = ({
     query,
   })
 
+  console.log(folders.length)
+
+  // console.time('foldersToObject')
+  // Folders map: 3 (same as foldersById map?) 8 seconds with 10,000
+  // const foldersObject = folders.reduce((acc, curr) => ({ ...acc, [curr.id as string]: curr }), {})
+  // console.timeEnd('foldersToObject')
+
+  console.timeEnd('useFetchEditorEntitiesTransforms')
 
   return {
     rawData: filteredFolders,
-    folders: folders.reduce((acc, curr) => ({ ...acc, [curr.id as string]: curr }), {}),
+    folders: foldersById,
     tasks: expandedFoldersTasks?.tasks ?? {},
     tasksFolders: tasksFolders,
     isLoading: isLoading || isFetching || isLoadingTaskFolders,
@@ -91,7 +107,7 @@ const mapQFtoQ = (queryFilters: $Any) => {
         {
           operator: 'or',
           conditions: [
-            { key: 'status', operator: 'eq', value: 'In progress', },
+            { key: 'status', operator: 'eq', value: 'In progress' },
             // { key: 'status', operator: 'eq', value: 'On hold', },
             // { key: 'status', operator: 'eq', value: 'Pending review', },
             // { key: 'status', operator: 'eq', value: 'Not ready', },

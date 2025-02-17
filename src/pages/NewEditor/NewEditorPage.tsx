@@ -43,6 +43,9 @@ const NewEditorPage = ({ filters, showHierarchy, sortBy }: Props) => {
 
   const { updateEntities } = useUpdateEditorEntities({ projectName, filters, sliceFilter })
 
+  console.time('dataToTable')
+
+  console.time('useFetchAndUpdateEntityData')
   const {
     rawData: allFolders,
     folders,
@@ -56,13 +59,14 @@ const NewEditorPage = ({ filters, showHierarchy, sortBy }: Props) => {
     filters,
     sliceFilter,
   })
+  console.timeEnd('useFetchAndUpdateEntityData')
 
+  console.time('getFilteredEntities')
   const {
     folders: filteredFolders,
     tasks: filteredTasks,
     taskList,
   } = getFilteredEntities({
-    allFolders,
     folders,
     tasks: tasks as TaskNodeMap,
     tasksFolders,
@@ -70,7 +74,9 @@ const NewEditorPage = ({ filters, showHierarchy, sortBy }: Props) => {
     sliceFilter,
     // sortBy,
   })
+  console.timeEnd('getFilteredEntities')
 
+  console.time('populateTableData')
   const { tableData } = populateTableData({
     allFolders,
     folders: filteredFolders as FolderNodeMap,
@@ -80,6 +86,10 @@ const NewEditorPage = ({ filters, showHierarchy, sortBy }: Props) => {
     isFlatList: !showHierarchy,
     entityToRowMappers: entityToRowMappers(project.folders, project.tasks),
   })
+
+  console.timeEnd('populateTableData')
+
+  console.timeEnd('dataToTable')
 
   return (
     <main className="editor-page" style={{ height: '100%' }}>

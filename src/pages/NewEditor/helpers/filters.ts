@@ -13,7 +13,6 @@ const getFilteredEntities = ({
   tasksFolders = [],
   filters,
 }: {
-  allFolders: FolderListItem[]
   folders: FolderNodeMap
   tasks: TaskNodeMap
   tasksFolders: string[]
@@ -25,49 +24,50 @@ const getFilteredEntities = ({
   taskList: Partial<TaskNode>[]
 } => {
   const filtersMap = getFiltersMap(filters)
-
   const filteredFolders = getFilteredFolders(folders, filters, filtersMap)
-
   const filteredTasksList = Object.values(getFilteredTasks(tasks, filters, filtersMap))
+  const filteredTasks = new Map(filteredTasksList.map((task) => [task.id, task]))
 
-  // TODO check why this is failing...
-  // filteredTasksList.sort(taskListSorter)
-  const filteredTasks = filteredTasksList.reduce((acc: Map<string, Partial<TaskNode>>, task) => {
-    acc.set(task.id, task)
-    return acc
-  }, new Map())
+  // Create a Set of paths for O(1) lookups
+  const pathSet = new Set<string>()
+  const validFolders = tasksFolders.filter((id) => folders[id])
 
-  const paths: string[] = []
-  for (const id of tasksFolders) {
-    if (folders[id] === undefined) {
-      continue
-    }
+  // Pre-calculate approximate size for path arrays
+  const estimatedPathCount = validFolders.length * 5 // assuming average path depth of 5
+  const paths = new Array<string>(estimatedPathCount)
+  let pathIndex = 0
 
-    paths.push(folders[id].path!)
-  }
-
-  const splitPaths = []
-  for (const path of paths) {
-    let tmpPath = []
-    for (const pathToken of path.split('/')) {
-      tmpPath.push(pathToken)
-      splitPaths.push(tmpPath.join('/'))
-    }
-  }
-
-  const treeFolders: FolderNodeMap = {}
-  const filteredFolderIds = Object.keys(filteredFolders)
-  for (const id in folders) {
-    if (splitPaths.includes(folders[id].path!)) {
-      treeFolders[id] = {
-        ...folders[id],
-        // TODO check if this still applies...
-        matchesFilters: Object.keys(filtersMap).length == 0 || filteredFolderIds.includes(id),
+  // Build all possible paths in a single pass
+  for (const id of validFolders) {
+    const folderPath = folders[id].path!
+    let currentPath = ''
+    for (const segment of folderPath.split('/')) {
+      currentPath = currentPath ? `${currentPath}/${segment}` : segment
+      if (!pathSet.has(currentPath)) {
+        pathSet.add(currentPath)
+        paths[pathIndex++] = currentPath
       }
     }
   }
 
-  return { folders: treeFolders, tasks: filteredTasks, taskList: filteredTasksList }
+  const filteredFolderIds = new Set(Object.keys(filteredFolders))
+  const hasFilters = Object.keys(filtersMap).length > 0
+  const treeFolders: FolderNodeMap = {}
+
+  for (const id in folders) {
+    if (pathSet.has(folders[id].path!)) {
+      treeFolders[id] = {
+        ...folders[id],
+        matchesFilters: !hasFilters || filteredFolderIds.has(id),
+      }
+    }
+  }
+
+  return {
+    folders: treeFolders,
+    tasks: filteredTasks,
+    taskList: filteredTasksList,
+  }
 }
 
 const strongFilters = ['assignees']
