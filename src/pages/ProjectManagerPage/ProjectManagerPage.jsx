@@ -121,13 +121,15 @@ const ProjectManagerPage = () => {
       accessLevels: ['manager'],
     })
 
-    if (userPermissions.canViewAny(UserPermissionsEntity.access) || module === Module.projectAccess) {
+    if (
+      userPermissions.canViewAny(UserPermissionsEntity.access) ||
+      module === Module.projectAccess
+    ) {
       links.push({
         name: 'Project access',
         path: ModulePath[Module.projectAccess],
         module: Module.projectAccess,
         accessLevels: [],
-        shortcut: 'P+A',
       })
     }
   }
