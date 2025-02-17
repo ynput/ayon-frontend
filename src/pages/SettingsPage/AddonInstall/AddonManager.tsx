@@ -1,23 +1,16 @@
 import { Button, Spacer } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
-import useSelection from './hooks/useSelection'
 import useFileManagerMutations from './hooks/useFileManagerMutations'
 import { toast } from 'react-toastify'
 import { confirmDialog } from 'primereact/confirmdialog'
 import FilesTable from './FilesTable/FilesTable'
 import useFetchManagerData from './hooks/useFetchManagerData'
+import { useState } from 'react'
 
 const StyledHeader = styled.div`
   display: flex;
   flex-direction: row;
   padding-bottom: 4px;
-
-`
-
-const StyledBody = styled.div`
-  background-color: var(--panel-background);
-  height: 100%;
-  overflow-y: scroll;
 `
 
 type Props = {
@@ -27,30 +20,45 @@ type Props = {
 }
 
 const AddonManager: React.FC<Props> = ({ manager, setManageMode }) => {
-  const { focused, selection, updateSelection, pushClickEvent } = useSelection([])
+  const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({})
+  const [focused, setFocused] = useState<string | null>(null)
   const { deleteInstallers, deletePackages } = useFileManagerMutations()
-  const {installers, packages} = useFetchManagerData()
+  const { installers, packages } = useFetchManagerData()
+
+  const data =
+    manager === 'installer'
+      ? installers.installers ?? []
+      : packages.packages?.map((el) => ({ ...el, version: el.installerVersion })) ?? []
+
+  const selectedIds = Object.entries(rowSelection)
+    .filter(([, selected]) => selected)
+    .map(([id]) => id)
 
   const handleDeleteInstallers = () => {
     confirmDialog({
       header: 'Delete selected files',
-      message: <p>Are you sure you want to delete the selected files?</p>,
+      message: (
+        <>
+          <p>Are you sure you want to delete the following files?</p>
+          <ul>
+            {selectedIds.map((filename) => (
+              <li key={filename}>{filename}</li>
+            ))}
+          </ul>
+        </>
+      ),
       accept: async () => {
-        if ( manager === 'installer') {
-          await deleteInstallers(selection.map((index) => installers.installers![index].filename))
+        if (manager === 'installer') {
+          await deleteInstallers(selectedIds.map((filename) => filename))
         } else {
-          await deletePackages(selection.map((index) => packages.packages![index].filename))
+          await deletePackages(selectedIds.map((filename) => filename))
         }
-        updateSelection([])
-        toast.success('Operation successful')
+        setRowSelection({})
+        toast.success('Files deleted')
       },
       reject: () => {},
     })
   }
-          const data =
-            manager === 'installer'
-              ? installers.installers
-              : packages.packages?.map((el) => ({ ...el, version: el.installerVersion })) ?? []
 
   return (
     <div style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
@@ -60,16 +68,17 @@ const AddonManager: React.FC<Props> = ({ manager, setManageMode }) => {
         <Button
           variant="danger"
           label="Delete selected"
-          disabled={selection.length == 0}
+          disabled={Object.keys(rowSelection).length === 0}
           onClick={handleDeleteInstallers}
         />
       </StyledHeader>
 
       <FilesTable
         data={data}
-        selection={selection}
+        rowSelection={rowSelection}
+        setRowSelection={setRowSelection}
         focused={focused}
-        rowClickHandler={pushClickEvent}
+        setFocused={setFocused}
       />
     </div>
   )

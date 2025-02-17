@@ -290,19 +290,17 @@ const AddonUpload = ({
   if (manager && manageMode) {
     return <AddonManager manager={manager} manageMode={manageMode} setManageMode={setManageMode} />
   }
-  //<Button onClick={handleAddonInstall} label="Install" disabled={!files?.length} />
-  const accept = type === 'addon' ? ['.zip'] : ['*']
   return (
     <FileUpload
       files={files}
       setFiles={setFiles}
-      title={accept}
+      title={null}
       accept={type === 'addon' ? ['.zip'] : ['*']}
       allowMultiple
       placeholder={`Drop ${typeLabel} files`}
       isSuccess={isComplete}
       extraHeaderActions={
-        manager != null && <Button onClick={() => setManageMode(true)} label="Manage uploads" />
+        !!manager && <Button onClick={() => setManageMode(true)} label="Manage uploads" />
       }
       footer={
         !dropOnly && (

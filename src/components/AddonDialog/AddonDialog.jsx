@@ -3,6 +3,13 @@ import { Dialog } from '@ynput/ayon-react-components'
 import AddonUpload from '@pages/SettingsPage/AddonInstall/AddonUpload'
 import { confirmDialog } from 'primereact/confirmdialog'
 import { toast } from 'react-toastify'
+import styled from 'styled-components'
+
+const StyledDialog = styled(Dialog)`
+  &:focus-visible {
+    outline: none;
+  }
+`
 
 const AddonDialog = ({ uploadOpen, setUploadOpen, uploadHeader, manager }) => {
   // keep track is an addon was installed
@@ -46,12 +53,13 @@ const AddonDialog = ({ uploadOpen, setUploadOpen, uploadHeader, manager }) => {
   }
 
   return (
-    <Dialog
+    <StyledDialog
       isOpen={!!uploadOpen}
-      style={{ width: manageMode ? 600: 400, height: 400, overflow: 'hidden' }}
+      style={{ width: manageMode ? 700 : 400, height: 400, overflow: 'hidden' }}
       header={uploadHeader || 'Upload addon'}
       onClose={closeHandler}
       size="md"
+      tabIndex={-1}
     >
       {uploadOpen && (
         <AddonUpload
@@ -65,7 +73,7 @@ const AddonDialog = ({ uploadOpen, setUploadOpen, uploadHeader, manager }) => {
           onInstall={(uploadOpen) => uploadOpen === 'addon' && setRestartRequired(true)}
         />
       )}
-    </Dialog>
+    </StyledDialog>
   )
 }
 

@@ -5,17 +5,14 @@ const useFileManagerMutations = () => {
   const [deleteInstaller] = useDeleteInstallerFileMutation()
   const [deletePackage] = useDeleteDependencyPackageMutation()
 
-
   const deleteInstallers = async (installers: string[]) => {
-    for (const installer of installers) {
-      await deleteInstaller({ filename: installer })
-    }
+    await Promise.all(installers.map((installer) => deleteInstaller({ filename: installer })))
   }
 
   const deletePackages = async (packages: string[]) => {
-    for (const dependencyPackage of packages) {
-      await deletePackage({ filename: dependencyPackage })
-    }
+    await Promise.all(
+      packages.map((dependencyPackage) => deletePackage({ filename: dependencyPackage })),
+    )
   }
 
   return { deleteInstallers, deletePackages }
