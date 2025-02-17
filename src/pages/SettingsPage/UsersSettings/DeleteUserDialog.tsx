@@ -53,6 +53,7 @@ const DeleteUserDialog = ({ onHide, selectedUsers, onDelete, onDisable }: Delete
             style={{ width: '100%' }}
             data-testid="delete-user-dialog-input"
             value={value}
+            placeholder={confirmDeleteUsersString}
             onChange={(e) => setValue(e.target.value)}
           />
         </FormRow>
