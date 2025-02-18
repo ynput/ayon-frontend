@@ -19,6 +19,7 @@ const AddonList = ({
   changedAddonKeys = null, // List of addon keys that have changed
   projectName, // used for changed addons
   siteId, // used for changed addons
+  bundleName,
   setBundleName,
 }) => {
   const { data, isLoading, isError } = useGetAddonSettingsListQuery({
@@ -65,8 +66,9 @@ const AddonList = ({
 
   useEffect(() => {
     if (setBundleName) {
-      if (data?.bundleName && !isError) {
-        setBundleName(data?.bundleName)
+      if (!isError && data?.bundleName) {
+        if (bundleName !== data?.bundleName)
+          setBundleName(data?.bundleName)
       } else {
         setBundleName(null)
       }
