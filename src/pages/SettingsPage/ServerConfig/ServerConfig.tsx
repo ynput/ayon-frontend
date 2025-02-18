@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import ReactDOM from 'react-dom'
 import ServerConfigUpload from './ServerConfigUpload'
 import SettingsEditor from '@containers/SettingsEditor'
@@ -20,12 +20,12 @@ const StyledSection = styled(Section)`
   & > * {
     max-width: 800px;
   }
-  [data-schema-id='root_customization_login_background'],
-  [data-schema-id='root_customization_studio_logo'] {
-    .form-field {
-      display: none;
-    }
-  }
+  // [data-schema-id='root_customization_login_background'],
+  // [data-schema-id='root_customization_studio_logo'] {
+  //   .form-field {
+  //     display: none;
+  //   }
+  // }
 `
 
 const StyledScrollPanel = styled(ScrollPanel)`
@@ -58,10 +58,20 @@ const ServerConfig = () => {
 
   useEffect(() => {
     if (!isLoadingData && !isLoadingSchema && !isLoadingOverrides) {
-      setFormData(originalData)
+//      setFormData(originalData)
       setChangedKeys([])
       setBackgroundFileName(originalData?.customization?.login_background || '')
       setLogoFileName(originalData?.customization?.studio_logo || '')
+
+setFormData({
+        ...originalData,
+        customization: {
+          login_background: originalData?.customization?.login_background || '',
+          studio_logo: originalData?.customization?.studio_logo || '',
+          motd: originalData?.customization?.motd || '',
+        },
+      })
+
     }
   }, [
     isLoadingData,
@@ -74,16 +84,27 @@ const ServerConfig = () => {
 
   // sync filenames with formData
   // when a new file is uploaded, update the formData with the new filename
-  useEffect(() => {
-    setFormData((prev) => ({
-      ...prev,
-      customization: {
-        ...prev.customization,
-        login_background: backgroundFileName,
-        studio_logo: logoFileName,
-      },
-    }))
-  }, [backgroundFileName, logoFileName, setFormData])
+  // useEffect(() => {
+  //   setFormData((prev) => ({
+  //     ...prev,
+  //     customization: {
+  //       ...prev.customization,
+  //       login_background: backgroundFileName,
+  //       studio_logo: logoFileName,
+  //     },
+  //   }))
+  // }, [backgroundFileName, logoFileName, setFormData])
+
+
+  const onChange = (data: ServerConfigModel) => {
+    console.log('data', data)
+    setFormData(data)
+  }
+
+  const onSetChangedKeys = (keys: string[]) => {
+    console.log('keys', keys)
+    setChangedKeys(keys)
+  }
 
   const onSave = async () => {
     try {
@@ -92,6 +113,25 @@ const ServerConfig = () => {
       toast.error('Failed to save server config')
     }
   }
+
+
+  const settingsEditor = useMemo(() => {
+    if (isLoadingData || isLoadingSchema || isLoadingOverrides) {
+      return null
+    }
+    return (
+      <SettingsEditor
+        schema={configSchema}
+        originalData={originalData}
+        formData={formData}
+        changedKeys={changedKeys}
+        overrides={configOverrides}
+        onChange={onChange}
+        onSetChangedKeys={onSetChangedKeys}
+      />
+    )
+  }, [configSchema, formData, changedKeys, configOverrides, onChange, onSetChangedKeys])
+
 
   return (
     <>
@@ -107,18 +147,18 @@ const ServerConfig = () => {
         </Toolbar>
 
         <StyledScrollPanel className="transparent" ref={containerRef}>
-          {/* @ts-ignore */}
-          <SettingsEditor
-            schema={configSchema}
-            originalData={originalData}
-            formData={formData}
-            changedKeys={changedKeys}
-            overrides={configOverrides}
-            onChange={setFormData}
-            onSetChangedKeys={setChangedKeys}
-          />
+          {settingsEditor}
         </StyledScrollPanel>
       </StyledSection>
+
+    </>
+  )
+}
+
+export default ServerConfig
+
+
+/*
       {bgElement &&
         ReactDOM.createPortal(
           <ServerConfigUpload
@@ -137,8 +177,4 @@ const ServerConfig = () => {
           />,
           logoElement,
         )}
-    </>
-  )
-}
-
-export default ServerConfig
+*/
