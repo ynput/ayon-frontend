@@ -2022,10 +2022,10 @@
   resolved "https://registry.npmjs.org/@repeaterjs/repeater/-/repeater-3.0.6.tgz"
   integrity sha512-Javneu5lsuhwNCryN+pXH93VPQ8g0dBX7wItHFgYiwQmzE1sVdg5tWHiOgHywzL2W21XQopa7IwIEnNbmeUJYA==
 
-"@rjsf/core@^5.22.1":
-  version "5.22.4"
-  resolved "https://registry.yarnpkg.com/@rjsf/core/-/core-5.22.4.tgz#70c6f6aa2916575d06e242fceb6728a94c858942"
-  integrity sha512-0QjAVPXDi/19jR/E44ULDzOkvC4Px5zcZhpGtBFNWNWWmb9UgyjPuvJYga2obzHU46P+5maLvUQEZVAeFwDuqQ==
+"@rjsf/core@5.22.1":
+  version "5.22.1"
+  resolved "https://registry.yarnpkg.com/@rjsf/core/-/core-5.22.1.tgz#929585bf72662d07912e9043499be41d8cc4d729"
+  integrity sha512-AIdB5U/6lHJPirCf3Zhl4gPU/v8HD9yaSCFcpE/s8KHF/2+goJ1mw5FmyjPgI2KwPVur6+iPd9y1R7amMC1nwQ==
   dependencies:
     lodash "^4.17.21"
     lodash-es "^4.17.21"
@@ -2033,10 +2033,10 @@
     nanoid "^3.3.7"
     prop-types "^15.8.1"
 
-"@rjsf/utils@^5.22.1":
-  version "5.22.4"
-  resolved "https://registry.yarnpkg.com/@rjsf/utils/-/utils-5.22.4.tgz#236f7f602d4b5ab1b3f96d87463e61219b90a143"
-  integrity sha512-yQTdz5ryiYy258xCVthVPQ3DeaMzrRNrFcO8xvGHorp0/bLUxdTZ0iidXop49m3y8SaxxTZd398ZKWg2cqxiIA==
+"@rjsf/utils@5.22.1":
+  version "5.22.1"
+  resolved "https://registry.yarnpkg.com/@rjsf/utils/-/utils-5.22.1.tgz#cf71df3521807c134e6967a4e30d6557778ed9fc"
+  integrity sha512-erCJkYXuXK6nNi+JKDwkcdu3mgyePkyk4K/wIxi9JakDsSWJV/zSfdk8zJADcG3ALcPQvGWj4M+yNgb/SLqs/g==
   dependencies:
     json-schema-merge-allof "^0.8.1"
     jsonpointer "^5.0.1"
