@@ -728,6 +728,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
             setSelectedAddons={onSelectAddon}
             variant={variant}
             onAddonFocus={onAddonFocus}
+            bundleName={bundleName}
             setBundleName={setBundleName}
             changedAddonKeys={Object.keys(changedKeys || {})}
             projectName={projectName}
