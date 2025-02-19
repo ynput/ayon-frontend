@@ -13,13 +13,18 @@ export type AnnotationMetadata = {
   compositeData?: string // base64 image
 }
 
+export type AnnotationsContainerDimensions = {
+  width?: number;
+  height?: number;
+}
+
 export type AnnotationsProviderProps = {
   children: React.ReactNode
   id?: string
   backgroundRef?: React.MutableRefObject<
     HTMLCanvasElement | HTMLImageElement | HTMLVideoElement | null
   >
-  containerRef?: React.MutableRefObject<HTMLDivElement | null>
+  containerDimensions: AnnotationsContainerDimensions | null
   pageNumber: number
   annotations?: Map<string, string | null> | undefined
   onAnnotationsChange?:
