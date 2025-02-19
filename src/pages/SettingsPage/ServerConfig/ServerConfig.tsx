@@ -20,12 +20,12 @@ const StyledSection = styled(Section)`
   & > * {
     max-width: 800px;
   }
-  // [data-schema-id='root_customization_login_background'],
-  // [data-schema-id='root_customization_studio_logo'] {
-  //   .form-field {
-  //     display: none;
-  //   }
-  // }
+  [data-schema-id='root_customization_login_background'],
+  [data-schema-id='root_customization_studio_logo'] {
+    .form-field {
+      display: none;
+    }
+  }
 `
 
 const StyledScrollPanel = styled(ScrollPanel)`
@@ -58,12 +58,12 @@ const ServerConfig = () => {
 
   useEffect(() => {
     if (!isLoadingData && !isLoadingSchema && !isLoadingOverrides) {
-//      setFormData(originalData)
+      //      setFormData(originalData)
       setChangedKeys([])
       setBackgroundFileName(originalData?.customization?.login_background || '')
       setLogoFileName(originalData?.customization?.studio_logo || '')
 
-setFormData({
+      setFormData({
         ...originalData,
         customization: {
           login_background: originalData?.customization?.login_background || '',
@@ -71,7 +71,6 @@ setFormData({
           motd: originalData?.customization?.motd || '',
         },
       })
-
     }
   }, [
     isLoadingData,
@@ -84,27 +83,16 @@ setFormData({
 
   // sync filenames with formData
   // when a new file is uploaded, update the formData with the new filename
-  // useEffect(() => {
-  //   setFormData((prev) => ({
-  //     ...prev,
-  //     customization: {
-  //       ...prev.customization,
-  //       login_background: backgroundFileName,
-  //       studio_logo: logoFileName,
-  //     },
-  //   }))
-  // }, [backgroundFileName, logoFileName, setFormData])
-
-
-  const onChange = (data: ServerConfigModel) => {
-    console.log('data', data)
-    setFormData(data)
-  }
-
-  const onSetChangedKeys = (keys: string[]) => {
-    console.log('keys', keys)
-    setChangedKeys(keys)
-  }
+  useEffect(() => {
+    setFormData((prev) => ({
+      ...prev,
+      customization: {
+        ...prev.customization,
+        login_background: backgroundFileName,
+        studio_logo: logoFileName,
+      },
+    }))
+  }, [backgroundFileName, logoFileName, setFormData])
 
   const onSave = async () => {
     try {
@@ -114,24 +102,23 @@ setFormData({
     }
   }
 
-
   const settingsEditor = useMemo(() => {
     if (isLoadingData || isLoadingSchema || isLoadingOverrides) {
       return null
     }
     return (
+      // @ts-ignore
       <SettingsEditor
         schema={configSchema}
         originalData={originalData}
         formData={formData}
         changedKeys={changedKeys}
         overrides={configOverrides}
-        onChange={onChange}
-        onSetChangedKeys={onSetChangedKeys}
+        onChange={setFormData}
+        onSetChangedKeys={setChangedKeys}
       />
     )
-  }, [configSchema, formData, changedKeys, configOverrides, onChange, onSetChangedKeys])
-
+  }, [configSchema, formData, changedKeys, configOverrides, setFormData, setChangedKeys])
 
   return (
     <>
@@ -150,15 +137,6 @@ setFormData({
           {settingsEditor}
         </StyledScrollPanel>
       </StyledSection>
-
-    </>
-  )
-}
-
-export default ServerConfig
-
-
-/*
       {bgElement &&
         ReactDOM.createPortal(
           <ServerConfigUpload
@@ -177,4 +155,8 @@ export default ServerConfig
           />,
           logoElement,
         )}
-*/
+    </>
+  )
+}
+
+export default ServerConfig
