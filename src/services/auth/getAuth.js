@@ -36,6 +36,7 @@ const authApiInjected = authApi.injectEndpoints({
         localStorage.removeItem('dashboard-selectedProjects')
         localStorage.removeItem('dashboard-tasks-collapsedColumns')
         localStorage.removeItem('dashboard-tasks-assignees')
+        localStorage.removeItem('dashboard-tasks-assigneesFilter')
         localStorage.removeItem('dashboard-tasks-selected')
         // clear dashboard state
         dispatch(onClearDashboard())
