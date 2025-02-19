@@ -352,6 +352,7 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
         onAnnotationsChange={addAnnotation}
         annotations={annotations}
         id={reviewableId}
+        src={src}
       >
         <div
           className={clsx('video-row video-container', { 'no-content': loadError })}

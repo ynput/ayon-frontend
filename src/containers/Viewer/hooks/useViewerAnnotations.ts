@@ -21,6 +21,7 @@ export type AnnotationsContainerDimensions = {
 export type AnnotationsProviderProps = {
   children: React.ReactNode
   id?: string
+  src: string
   backgroundRef?: React.MutableRefObject<
     HTMLCanvasElement | HTMLImageElement | HTMLVideoElement | null
   >

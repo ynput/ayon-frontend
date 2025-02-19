@@ -34,6 +34,7 @@ const ViewerImage: FC<ViewerImageProps> = ({ reviewableId, src, alt, ...props })
       onAnnotationsChange={addAnnotation}
       annotations={annotations}
       id={reviewableId}
+      src={src}
     >
       <div style={{ position: 'relative' }}>
         <Image
