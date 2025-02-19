@@ -126,14 +126,14 @@ export const marketFilters: {
   filters: MarketFilter[]
 }[] = [
   {
-    type: 'releases',
-    name: 'Release Bundles',
-    filters: releaseFilters,
-  },
-  {
     type: 'addons',
     name: 'Addons',
     filters: addonFilters,
+  },
+  {
+    type: 'releases',
+    name: 'Release Bundles',
+    filters: releaseFilters,
   },
 ]
 
