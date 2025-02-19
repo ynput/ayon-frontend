@@ -1,7 +1,8 @@
-import { FC, useRef } from 'react'
+import { FC, useRef, useState } from 'react'
 import { Image } from './Viewer.styled'
 import { useViewer } from '@context/viewerContext'
 import styled from 'styled-components'
+import { AnnotationsContainerDimensions } from './hooks/useViewerAnnotations'
 
 const AnnotationsContainer = styled.div`
   position: absolute;
@@ -14,8 +15,8 @@ interface ViewerImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
 }
 
 const ViewerImage: FC<ViewerImageProps> = ({ reviewableId, src, alt, ...props }) => {
-  const containerRef = useRef<HTMLDivElement>(null)
   const imageRef = useRef<HTMLImageElement>(null)
+  const [containerDimensions, setContainerDimensions] = useState<AnnotationsContainerDimensions | null>(null)
 
   const {
     createToolbar,
@@ -28,18 +29,28 @@ const ViewerImage: FC<ViewerImageProps> = ({ reviewableId, src, alt, ...props })
   return (
     <AnnotationsProvider
       backgroundRef={imageRef}
-      containerRef={containerRef}
+      containerDimensions={containerDimensions}
       pageNumber={1}
       onAnnotationsChange={addAnnotation}
       annotations={annotations}
       id={reviewableId}
+      src={src}
     >
-      <div ref={containerRef} style={{ position: 'relative' }}>
-        <Image src={src} alt={alt} {...props} ref={imageRef} />
+      <div style={{ position: 'relative' }}>
+        <Image
+          ref={imageRef}
+          src={src}
+          alt={alt}
+          {...props}
+          onLoad={({ target }) => {
+            const image = target as HTMLImageElement
+            setContainerDimensions({ width: image.naturalWidth, height: image.naturalHeight });
+          }}
+        />
       </div>
-      {AnnotationsCanvas && isLoadedAnnotations && (
+      {AnnotationsCanvas && isLoadedAnnotations && containerDimensions && (
         <AnnotationsContainer>
-          <AnnotationsCanvas width={imageRef.current?.width} height={imageRef.current?.height} />
+          <AnnotationsCanvas {...containerDimensions} />
         </AnnotationsContainer>
       )}
       {createToolbar()}

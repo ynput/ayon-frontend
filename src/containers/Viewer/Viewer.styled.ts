@@ -54,6 +54,7 @@ export const Image = styled.img`
   width: auto;
   height: auto;
   object-fit: contain;
+  display: block;
 `
 
 export const ViewerDetailsPanelWrapper = styled.div`

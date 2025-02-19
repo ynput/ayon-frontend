@@ -94,6 +94,8 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
     width: null,
     height: null,
   })
+  // used to set intrinsic size for the Annotations canvas
+  const [actualVideoDimensions, setActualVideoDimensions] = useState(null)
 
   useGoToFrame({ setCurrentTime, frameRate, duration, videoElement: videoRef.current })
 
@@ -105,13 +107,8 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
     if (!videoRowRef.current || showStill) return
 
     const updateVideoDimensions = () => {
-      // DO NOT TOUCH THAT *0.95 ! IT'S AN IMPORTANT MAGIC!
-      // Screw you, magic numbers! I'm changing it to 0.999
-      //
-      // For some reason, this seems to be the sweetspot
-      // Going under 2 px behaves weird
-      const clientWidth = videoRowRef.current?.clientWidth - 2
-      const clientHeight = videoRowRef.current?.clientHeight - 2
+      const clientWidth = videoRowRef.current?.clientWidth
+      const clientHeight = videoRowRef.current?.clientHeight
 
       if (clientWidth / clientHeight > aspectRatio) {
         const width = Math.round(clientHeight * aspectRatio)
@@ -148,6 +145,10 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
       const width = videoRef.current?.clientWidth
       const height = videoRef.current?.clientHeight
       setVideoDimensions({ width, height })
+      setActualVideoDimensions({
+        width: videoRef.current?.videoWidth,
+        height: videoRef.current?.videoHeight,
+      })
       setIsPlaying(!videoRef.current?.paused)
       setBufferedRanges([])
     }
@@ -346,11 +347,12 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
     <VideoPlayerContainer>
       <AnnotationsProvider
         backgroundRef={videoRef}
-        containerRef={videoRowRef}
+        containerDimensions={actualVideoDimensions}
         pageNumber={currentFrame}
         onAnnotationsChange={addAnnotation}
         annotations={annotations}
         id={reviewableId}
+        src={src}
       >
         <div
           className={clsx('video-row video-container', { 'no-content': loadError })}
@@ -387,7 +389,7 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
             />
             {AnnotationsCanvas && isLoadedAnnotations && (
               <AnnotationsContainer style={{ visibility: isPlaying ? 'hidden' : 'visible' }}>
-                <AnnotationsCanvas width={videoDimensions.width} height={videoDimensions.height} />
+                {actualVideoDimensions && <AnnotationsCanvas width={actualVideoDimensions.width} height={actualVideoDimensions.height} />}
               </AnnotationsContainer>
             )}
           </div>
