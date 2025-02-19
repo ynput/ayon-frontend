@@ -74,6 +74,7 @@ export const TextWidget = (props: $Any) => {
 
     if (commitValue === props.value) return
     const isChanged = commitValue !== originalValue
+    console.log("COMMITTING", commitValue)
     props.onChange(commitValue)
     setTimeout(() => {
       updateChangedKeys(props, isChanged, path)

@@ -176,7 +176,12 @@ const SettingsEditor = ({
   }
 
   // console.log('context? ', fullContext)
-  // console.log('schema? ', schema)
+  // console.log('scohema? ', schema)
+  //
+  const handleChanges = (evt) => {
+    console.log('evt', evt)
+    onChange(evt.formData)
+  }
 
   return (
     <FormWrapper $currentSelection={currentId} ref={formWrapperRef}>
@@ -186,7 +191,7 @@ const SettingsEditor = ({
         formData={formData}
         formContext={fullContext}
         widgets={widgets}
-        onChange={(evt) => onChange(evt.formData)}
+        onChange={handleChanges}
         templates={{
           FieldTemplate,
           ArrayFieldTemplate,
