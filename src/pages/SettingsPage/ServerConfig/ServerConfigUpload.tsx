@@ -84,13 +84,22 @@ const ServerConfigUpload: FC<ServerConfigUploadProps> = ({ fileType, fileName, s
     inputRef.current?.click()
   }
 
+  const handleClear = () => {
+    setFileName("")
+  }
+
   return (
     <UploadContainer>
       <Filename>{fileName}</Filename>
-
-      <Button icon={loading ? 'sync' : 'upload'} onClick={handleButtonClick}>
-        Upload
-      </Button>
+      {fileName ? (
+          <Button icon='cancel' onClick={handleClear}>
+            Remove
+          </Button>
+          ): (
+          <Button icon={loading ? 'sync' : 'upload'} onClick={handleButtonClick}>
+              Upload
+          </Button>
+          )}
       <HiddenInput ref={inputRef} type="file" onChange={handleFileChange} />
     </UploadContainer>
   )
