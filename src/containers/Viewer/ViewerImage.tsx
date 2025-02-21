@@ -1,11 +1,13 @@
 import { FC, useRef, useState } from 'react'
 import { Image } from './Viewer.styled'
 import { useViewer } from '@context/viewerContext'
-import styled from 'styled-components'
-import { AnnotationsContainerDimensions } from './'
+import styled, { CSSProperties } from 'styled-components'
+import { AnnotationsContainerDimensions, ViewerOrientation } from './'
 
 const AnnotationsContainer = styled.div`
   position: absolute;
+  top: 0;
+  left: 0;
 `
 
 interface ViewerImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
@@ -16,7 +18,7 @@ interface ViewerImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
 
 const ViewerImage: FC<ViewerImageProps> = ({ reviewableId, src, alt, ...props }) => {
   const imageRef = useRef<HTMLImageElement>(null)
-  const [containerDimensions, setContainerDimensions] = useState<AnnotationsContainerDimensions | null>(null)
+  const [containerDims, setContainerDims] = useState<AnnotationsContainerDimensions | null>(null)
 
   const {
     createToolbar,
@@ -25,16 +27,28 @@ const ViewerImage: FC<ViewerImageProps> = ({ reviewableId, src, alt, ...props })
     isLoaded: isLoadedAnnotations,
   } = useViewer()
 
+  const orientation: ViewerOrientation = (containerDims?.width as number) > (containerDims?.height as number)
+    ? "landscape"
+    : "portrait";
+  const aspectRatio = `${containerDims?.width} / ${containerDims?.height}`;
+
+  const containerStyle: CSSProperties = {
+    position: 'relative',
+    aspectRatio,
+    width: orientation === "landscape" ? "100%" : "auto",
+    height: orientation === "landscape" ? "auto" : "100%",
+  };
+
   return (
     <AnnotationsEditorProvider
       backgroundRef={imageRef}
-      containerDimensions={containerDimensions}
+      containerDimensions={containerDims}
       pageNumber={1}
       id={reviewableId}
       src={src}
       mediaType="image"
     >
-      <div style={{ position: 'relative' }}>
+      <div style={containerStyle}>
         <Image
           ref={imageRef}
           src={src}
@@ -42,15 +56,15 @@ const ViewerImage: FC<ViewerImageProps> = ({ reviewableId, src, alt, ...props })
           {...props}
           onLoad={({ target }) => {
             const image = target as HTMLImageElement
-            setContainerDimensions({ width: image.naturalWidth, height: image.naturalHeight });
+            setContainerDims({ width: image.naturalWidth, height: image.naturalHeight });
           }}
         />
+        {AnnotationsCanvas && isLoadedAnnotations && containerDims && (
+          <AnnotationsContainer>
+            <AnnotationsCanvas {...containerDims} />
+          </AnnotationsContainer>
+        )}
       </div>
-      {AnnotationsCanvas && isLoadedAnnotations && containerDimensions && (
-        <AnnotationsContainer>
-          <AnnotationsCanvas {...containerDimensions} />
-        </AnnotationsContainer>
-      )}
       {createToolbar()}
     </AnnotationsEditorProvider>
   )
