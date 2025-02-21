@@ -253,10 +253,15 @@ export const Comment = styled.div`
     background-color: var(--md-sys-color-surface-container-lowest);
   }
 
-  &.isLoading {
+  &.isLoading,
+  &.isSubmitting {
     cursor: default;
     pointer-events: none;
     user-select: none;
+  }
+
+  &.isSubmitting {
+    opacity: 0.3;
   }
 
   /* toolbar styles */
