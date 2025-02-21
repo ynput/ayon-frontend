@@ -36,7 +36,7 @@ const FilesGrid = ({
           mime={file.mime || file.type}
           size={file.size}
           src={
-            file.isAnnotation ? file.compositeData : `/api/projects/${projectName}/files/${file.id}`
+            file.isAnnotation ? file.thumbnail : `/api/projects/${projectName}/files/${file.id}`
           }
           isAnnotation={file.isAnnotation}
           progress={file.progress}

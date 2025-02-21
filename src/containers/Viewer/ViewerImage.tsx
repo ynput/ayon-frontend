@@ -2,7 +2,7 @@ import { FC, useRef, useState } from 'react'
 import { Image } from './Viewer.styled'
 import { useViewer } from '@context/viewerContext'
 import styled from 'styled-components'
-import { AnnotationsContainerDimensions } from './hooks/useViewerAnnotations'
+import { AnnotationsContainerDimensions } from './'
 
 const AnnotationsContainer = styled.div`
   position: absolute;
@@ -20,21 +20,19 @@ const ViewerImage: FC<ViewerImageProps> = ({ reviewableId, src, alt, ...props })
 
   const {
     createToolbar,
-    AnnotationsProvider,
+    AnnotationsEditorProvider,
     AnnotationsCanvas,
     isLoaded: isLoadedAnnotations,
-    state: { annotations, addAnnotation },
   } = useViewer()
 
   return (
-    <AnnotationsProvider
+    <AnnotationsEditorProvider
       backgroundRef={imageRef}
       containerDimensions={containerDimensions}
       pageNumber={1}
-      onAnnotationsChange={addAnnotation}
-      annotations={annotations}
       id={reviewableId}
       src={src}
+      mediaType="image"
     >
       <div style={{ position: 'relative' }}>
         <Image
@@ -54,7 +52,7 @@ const ViewerImage: FC<ViewerImageProps> = ({ reviewableId, src, alt, ...props })
         </AnnotationsContainer>
       )}
       {createToolbar()}
-    </AnnotationsProvider>
+    </AnnotationsEditorProvider>
   )
 }
 

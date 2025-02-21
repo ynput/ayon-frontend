@@ -73,6 +73,7 @@ const CommentInput = ({
   const [files, setFiles] = useState(initFiles)
   const [filesUploading, setFilesUploading] = useState([])
   const [isDropping, setIsDropping] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const { annotations, removeAnnotation, goToAnnotation } = useAnnotationsSync({
     entityId: entities[0]?.id,
@@ -442,6 +443,7 @@ const CommentInput = ({
 
   const handleSubmit = async () => {
     try {
+      setIsSubmitting(true);
       // upload any annotations first
       let annotationFiles = []
       if (annotations.length) {
@@ -470,6 +472,8 @@ const CommentInput = ({
     } catch (error) {
       console.error(error)
       toast.error('Something went wrong')
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -559,6 +563,7 @@ const CommentInput = ({
             isDropping,
             disabled,
             isLoading,
+            isSubmitting,
           })}
           onKeyDown={handleKeyDown}
           onClick={handleOpenClick}

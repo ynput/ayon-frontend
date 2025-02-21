@@ -1,6 +1,8 @@
+import { AnnotationMetadata } from '@containers/Viewer'
 import { FEED_NEW_COMMENT, useFeed } from '@context/FeedContext'
-import { useAppDispatch, useAppSelector } from '@state/store'
-import { Annotation, goToFrame, removeAnnotation } from '@state/viewer'
+import { useViewer } from '@context/viewerContext'
+import { useAppDispatch } from '@state/store'
+import { goToFrame } from '@state/viewer'
 import { useEffect } from 'react'
 
 type Props = {
@@ -8,13 +10,13 @@ type Props = {
   filesUploading: File[]
 }
 
-type AnnotationPreview = Annotation & {
+export type AnnotationPreview = AnnotationMetadata & {
   isAnnotation: true
 }
 
 // annotations are temporary store
 export const filterEntityAnnotations = (
-  annotations: Record<string, Annotation>,
+  annotations: Record<string, AnnotationMetadata>,
   entityId: string,
   filesUploading: File[],
 ): AnnotationPreview[] => {
@@ -29,24 +31,22 @@ export const filterEntityAnnotations = (
 
 const useAnnotationsSync = ({ entityId, filesUploading }: Props) => {
   const dispatch = useAppDispatch()
-  const { editingId, setEditingId } = useFeed()
+  const { editingId, setEditingId } = useFeed();
+
   // listen to the viewer for annotations
-  const allAnnotations = useAppSelector((state) => state.viewer.annotations)
+  // later on, other hooks can be tried here to get annotations from different sources
+  const { useAnnotations } = useViewer();
+  const { annotations, removeAnnotation } = useAnnotations();
   // filter out annotations that are for this entity and are NOT uploading
-  const annotations = filterEntityAnnotations(allAnnotations, entityId, filesUploading)
+  const filteredAnnotations = filterEntityAnnotations(annotations, entityId, filesUploading)
 
   // when annotations change, update the state
-  // convert the base64 image to a file
   useEffect(() => {
     // open the comment input if there are annotations and something is not being edited already
-    if (annotations.length > 0 && !editingId) {
+    if (filteredAnnotations.length > 0 && !editingId) {
       setEditingId(FEED_NEW_COMMENT)
     }
-  }, [annotations])
-
-  const handleRemoveAnnotation = (id: string) => {
-    dispatch(removeAnnotation(id))
-  }
+  }, [filteredAnnotations])
 
   const handleGoToAnnotation = (annotation: AnnotationPreview) => {
     const firstFrame = annotation.range[0]
@@ -54,9 +54,9 @@ const useAnnotationsSync = ({ entityId, filesUploading }: Props) => {
   }
 
   return {
-    annotations,
-    removeAnnotation: handleRemoveAnnotation,
+    annotations: filteredAnnotations,
     goToAnnotation: handleGoToAnnotation,
+    removeAnnotation,
   }
 }
 

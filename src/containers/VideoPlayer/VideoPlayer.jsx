@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import styled from 'styled-components'
 
 import VideoOverlay from './VideoOverlay'
@@ -8,7 +8,6 @@ import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
 import clsx from 'clsx'
 import useGoToFrame from './hooks/useGoToFrame'
 import { useViewer } from '@context/viewerContext'
-import ViewerHistory from '@containers/Viewer/ViewerHistory'
 
 const VideoPlayerContainer = styled.div`
   position: absolute;
@@ -64,11 +63,10 @@ const AnnotationsContainer = styled.div`
 const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewableId }) => {
   const {
     createToolbar,
-    AnnotationsProvider,
+    AnnotationsEditorProvider,
     AnnotationsCanvas,
     isLoaded: isLoadedAnnotations,
-    state: { annotations, frames, addAnnotation },
-    useDrawHistory,
+    useAnnotations,
   } = useViewer()
 
   const videoRef = useRef(null)
@@ -98,6 +96,13 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
   const [actualVideoDimensions, setActualVideoDimensions] = useState(null)
 
   useGoToFrame({ setCurrentTime, frameRate, duration, videoElement: videoRef.current })
+
+  const { annotations } = useAnnotations();
+
+  const annotatedFrames = useMemo(() => {
+    const annotatedFrames = Object.values(annotations).flatMap(({ range }) => range)
+    return Array.from(new Set(annotatedFrames))
+  }, [annotations])
 
   //
   // Video size handling
@@ -345,14 +350,14 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
 
   return (
     <VideoPlayerContainer>
-      <AnnotationsProvider
+      <AnnotationsEditorProvider
         backgroundRef={videoRef}
         containerDimensions={actualVideoDimensions}
         pageNumber={currentFrame}
-        onAnnotationsChange={addAnnotation}
-        annotations={annotations}
         id={reviewableId}
         src={src}
+        mediaType="video"
+        atMediaTime={videoRef.current?.currentTime || 0}
       >
         <div
           className={clsx('video-row video-container', { 'no-content': loadError })}
@@ -395,8 +400,7 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
           </div>
         </div>
         {createToolbar()}
-        {useDrawHistory && <ViewerHistory useHistory={useDrawHistory} />}
-      </AnnotationsProvider>
+      </AnnotationsEditorProvider>
 
       <div className="trackbar-row">
         <Trackbar
@@ -406,7 +410,7 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
           onScrub={handleScrub}
           frameRate={frameRate}
           isPlaying={isPlaying}
-          highlighted={frames}
+          highlighted={annotatedFrames}
         />
       </div>
 
