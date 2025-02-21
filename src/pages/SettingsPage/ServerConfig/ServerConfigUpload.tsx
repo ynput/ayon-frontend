@@ -92,7 +92,7 @@ const ServerConfigUpload: FC<ServerConfigUploadProps> = ({ fileType, fileName, s
           <Button icon='cancel' onClick={onClear}>
             Remove
           </Button>
-          ): (
+          ) : (
           <Button icon={loading ? 'sync' : 'upload'} onClick={handleButtonClick}>
               Upload
           </Button>
