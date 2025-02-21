@@ -53,3 +53,5 @@ export type AnnotationsProviderProps = {
   versionId: string,
   children: React.ReactNode;
 }
+
+export type ViewerOrientation = "landscape" | "portrait";
