@@ -262,6 +262,7 @@ export const Comment = styled.div`
 
   &.isSubmitting {
     opacity: 0.3;
+    transition: opacity 250ms 250ms;
   }
 
   /* toolbar styles */
