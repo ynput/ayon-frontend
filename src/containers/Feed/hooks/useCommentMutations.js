@@ -83,13 +83,7 @@ const useCommentMutations = ({ projectName, entityType, entities = [], activityT
       }).unwrap()
     })
 
-    try {
-      const results = await Promise.all(promises)
-
-      return results
-    } catch (error) {
-      return []
-    }
+    await Promise.all(promises)
   }
 
   const updateComment = async (activity, value, files = []) => {
