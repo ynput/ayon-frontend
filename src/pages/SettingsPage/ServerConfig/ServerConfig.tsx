@@ -93,6 +93,24 @@ const ServerConfig = () => {
     }
   }
 
+  const handleClearUpload = async (field: 'login_background' | 'studio_logo') => {
+    try {
+      // clear the filename in the formData and update the server config
+      // local fileName state will be updated by the useEffect above
+      await setServerConfig({
+        serverConfigModel: {
+          ...formData,
+          customization: {
+            ...formData.customization,
+            [field]: '',
+          },
+        },
+      }).unwrap()
+    } catch (error) {
+      toast.error('Failed to clear upload')
+    }
+  }
+
   return (
     <>
       <StyledSection direction="column" style={{ overflow: 'hidden', paddingBottom: 0 }}>
@@ -125,6 +143,7 @@ const ServerConfig = () => {
             fileType="login_background"
             fileName={backgroundFileName}
             setFileName={setBackgroundFileName}
+            onClear={() => handleClearUpload('login_background')}
           />,
           bgElement,
         )}
@@ -134,6 +153,7 @@ const ServerConfig = () => {
             fileType="studio_logo"
             fileName={logoFileName}
             setFileName={setLogoFileName}
+            onClear={() => handleClearUpload('studio_logo')}
           />,
           logoElement,
         )}
