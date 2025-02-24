@@ -242,7 +242,7 @@ const Feed = ({
     dispatch(onCommentImageOpen({ files: previewableFiles, activityId, index, projectName }))
   }
 
-  const handleUpdate = async ({activity, value, files, refs}) => {
+  const handleUpdate = async (activity, value, files, refs) => {
     // TODO: I seem unable to get `updateComment` to error on invalid input
     await updateComment(activity, value, files, refs)
   }
