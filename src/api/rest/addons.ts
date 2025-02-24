@@ -102,6 +102,7 @@ export type AddonListItem = {
   addonType: 'server' | 'pipeline'
   /** Is the addon a system addon? */
   system?: boolean
+  allowProjectOverride?: boolean
 }
 export type AddonList = {
   /** List of available addons */

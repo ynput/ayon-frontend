@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { toast } from 'react-toastify'
-import { Toolbar, Spacer, SaveButton, Button } from '@ynput/ayon-react-components'
+import { Toolbar, Spacer, SaveButton, Button, InputSwitch } from '@ynput/ayon-react-components'
 import { useCreateBundleMutation, useUpdateBundleMutation } from '@queries/bundles/updateBundles'
 
 import BundleForm from './BundleForm'
@@ -35,6 +35,7 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isDev, developerMod
 
   const [createBundle, { isLoading: isCreating }] = useCreateBundleMutation()
   const [updateBundle, { isLoading: isUpdating }] = useUpdateBundleMutation()
+
 
   useEffect(() => {
     if (!formData || !previousFormData) {
@@ -92,13 +93,15 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isDev, developerMod
       const initForm = {
         addons: initAddons,
         isDev: developerMode || isDev,
+        isProject: false,
+        //currentProductionAddons,
         addonDevelopment: { ...initBundle.addonDevelopment, ...initAddonsDev },
         ...initBundle,
       }
 
       setFormData(initForm)
     }
-  }, [initBundle])
+  }, [initBundle]) //, currentProductionAddons])
 
   // Select addon if query search has addon=addonName
   const addonListRef = useRef()
@@ -274,6 +277,16 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isDev, developerMod
             >
               Cancel
             </Button>
+          </>
+        )}
+        {!isDev && (
+          <>
+          <InputSwitch
+            label="Project bundle"
+            checked={formData?.isProject}
+            onChange={() => setFormData({ ...formData, isProject: !formData?.isProject })}
+          />
+          {formData?.isProject ? 'project' : 'studio'}
           </>
         )}
         <SaveButton

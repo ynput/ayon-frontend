@@ -1,10 +1,11 @@
 import React, { useContext, useEffect, useMemo } from 'react'
 import { useListAddonsQuery } from '@queries/addons/getAddons'
+import { useListBundlesQuery } from '@queries/bundles/getBundles'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { SocketContext } from '@context/websocketContext'
 import { rcompare, coerce } from 'semver'
-import { InputSwitch, InputText, VersionSelect } from '@ynput/ayon-react-components'
+import { Icon, InputSwitch, InputText, VersionSelect } from '@ynput/ayon-react-components'
 import { FilePath, LatestIcon } from './Bundles.styled'
 import useCreateContext from '@hooks/useCreateContext'
 import { useNavigate } from 'react-router'
@@ -107,6 +108,13 @@ const BundlesAddonList = React.forwardRef(
       refetch()
     }, [readyState])
 
+    // get production bundle, because
+    let { data: { bundles = [] } = {} } = useListBundlesQuery({ archived: true })
+    const currentProductionAddons = useMemo(() => bundles.find((b) => b.isProduction)?.addons || {}, [bundles])
+
+
+    console.log("FormData", formData)
+
     // every time readyState changes, refetch selected addons
 
     const onSetVersion = (addonName, version, isPipeline) => {
@@ -138,7 +146,12 @@ const BundlesAddonList = React.forwardRef(
             dev: formData?.addonDevelopment?.[addon.name],
           }
         })
-        .sort((a, b) => a.title.localeCompare(b.title))
+        .sort((a, b) => {
+          if (formData.isProject && a.allowProjectOverride !== b.allowProjectOverride) {
+            return a.allowProjectOverride ? -1 : 1;
+          }
+          return a.title.localeCompare(b.title);
+        })
     }, [addons, formData])
 
     const createContextItems = (selected) => {
@@ -168,6 +181,7 @@ const BundlesAddonList = React.forwardRef(
 
       ctxMenuShow(e.originalEvent, createContextItems(contextSelection))
     }
+    
 
     return (
       <StyledDataTable
@@ -206,6 +220,7 @@ const BundlesAddonList = React.forwardRef(
           body={(addon) => {
             const isPipeline = addon.addonType === 'pipeline'
             const currentVersion = addon.version
+            const productionVersion = currentProductionAddons?.[addon.name]
             const allVersions = addon.versions
             const sortedVersions = Object.keys(allVersions).sort((a, b) => {
               const comparison = rcompare(coerce(a), coerce(b))
@@ -215,6 +230,10 @@ const BundlesAddonList = React.forwardRef(
               return comparison
             })
             const latestVersion = sortedVersions[0]
+
+            if (formData.isProject && !addon.allowProjectOverride) {
+              return <span style={{ color: "#666"}}><Icon icon="lock"/> {productionVersion || "NONE"}</span>
+            }
 
             if (readOnly && isPipeline)
               return <AddonItem latestVersion={latestVersion} currentVersion={currentVersion} />
