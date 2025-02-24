@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import styled from 'styled-components'
 
 import VideoOverlay from './VideoOverlay'
@@ -8,7 +8,6 @@ import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
 import clsx from 'clsx'
 import useGoToFrame from './hooks/useGoToFrame'
 import { useViewer } from '@context/viewerContext'
-import ViewerHistory from '@containers/Viewer/ViewerHistory'
 
 const VideoPlayerContainer = styled.div`
   position: absolute;
@@ -64,11 +63,10 @@ const AnnotationsContainer = styled.div`
 const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewableId }) => {
   const {
     createToolbar,
-    AnnotationsProvider,
+    AnnotationsEditorProvider,
     AnnotationsCanvas,
     isLoaded: isLoadedAnnotations,
-    state: { annotations, frames, addAnnotation },
-    useDrawHistory,
+    useAnnotations,
   } = useViewer()
 
   const videoRef = useRef(null)
@@ -94,8 +92,17 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
     width: null,
     height: null,
   })
+  // used to set intrinsic size for the Annotations canvas
+  const [actualVideoDimensions, setActualVideoDimensions] = useState(null)
 
   useGoToFrame({ setCurrentTime, frameRate, duration, videoElement: videoRef.current })
+
+  const { annotations } = useAnnotations();
+
+  const annotatedFrames = useMemo(() => {
+    const annotatedFrames = Object.values(annotations).flatMap(({ range }) => range)
+    return Array.from(new Set(annotatedFrames))
+  }, [annotations])
 
   //
   // Video size handling
@@ -105,13 +112,8 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
     if (!videoRowRef.current || showStill) return
 
     const updateVideoDimensions = () => {
-      // DO NOT TOUCH THAT *0.95 ! IT'S AN IMPORTANT MAGIC!
-      // Screw you, magic numbers! I'm changing it to 0.999
-      //
-      // For some reason, this seems to be the sweetspot
-      // Going under 2 px behaves weird
-      const clientWidth = videoRowRef.current?.clientWidth - 2
-      const clientHeight = videoRowRef.current?.clientHeight - 2
+      const clientWidth = videoRowRef.current?.clientWidth
+      const clientHeight = videoRowRef.current?.clientHeight
 
       if (clientWidth / clientHeight > aspectRatio) {
         const width = Math.round(clientHeight * aspectRatio)
@@ -148,6 +150,10 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
       const width = videoRef.current?.clientWidth
       const height = videoRef.current?.clientHeight
       setVideoDimensions({ width, height })
+      setActualVideoDimensions({
+        width: videoRef.current?.videoWidth,
+        height: videoRef.current?.videoHeight,
+      })
       setIsPlaying(!videoRef.current?.paused)
       setBufferedRanges([])
     }
@@ -344,13 +350,14 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
 
   return (
     <VideoPlayerContainer>
-      <AnnotationsProvider
+      <AnnotationsEditorProvider
         backgroundRef={videoRef}
-        containerRef={videoRowRef}
+        containerDimensions={actualVideoDimensions}
         pageNumber={currentFrame}
-        onAnnotationsChange={addAnnotation}
-        annotations={annotations}
         id={reviewableId}
+        src={src}
+        mediaType="video"
+        atMediaTime={videoRef.current?.currentTime || 0}
       >
         <div
           className={clsx('video-row video-container', { 'no-content': loadError })}
@@ -387,14 +394,13 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
             />
             {AnnotationsCanvas && isLoadedAnnotations && (
               <AnnotationsContainer style={{ visibility: isPlaying ? 'hidden' : 'visible' }}>
-                <AnnotationsCanvas width={videoDimensions.width} height={videoDimensions.height} />
+                {actualVideoDimensions && <AnnotationsCanvas width={actualVideoDimensions.width} height={actualVideoDimensions.height} />}
               </AnnotationsContainer>
             )}
           </div>
         </div>
         {createToolbar()}
-        {useDrawHistory && <ViewerHistory useHistory={useDrawHistory} />}
-      </AnnotationsProvider>
+      </AnnotationsEditorProvider>
 
       <div className="trackbar-row">
         <Trackbar
@@ -404,7 +410,7 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
           onScrub={handleScrub}
           frameRate={frameRate}
           isPlaying={isPlaying}
-          highlighted={frames}
+          highlighted={annotatedFrames}
         />
       </div>
 

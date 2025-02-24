@@ -2,49 +2,63 @@ import useLoadModule from '@/remote/useLoadModule'
 import AnnotationToolsFallback from '@components/AnnotationsTools/AnnotationTools'
 import {
   AnnotationsProviderProps,
-  useViewerAnnotations,
-  ViewAnnotationsProps,
-  ViewerAnnotations,
+  AnnotationsEditorProviderProps,
+  AnnotationsContextType,
 } from '@containers/Viewer'
-import { createContext, useContext, ReactNode, ElementType, useCallback, ReactPortal } from 'react'
+import { createContext, useContext, ReactNode, ElementType, useCallback, ReactPortal, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 
 type DrawHistory = {
-  canUndo: boolean
-  canRedo: boolean
-  history: any[]
-  fullHistory: Map<number, any[]>
-  undo: () => void
-  redo: () => void
   clear: (page?: number) => void
 }
 
 export type UseDrawHistory = () => DrawHistory
+export type UseAnnotations = () => AnnotationsContextType
 
 const FallbackAnnotationsProvider = ({ children }: AnnotationsProviderProps) => {
   return <>{children}</>
 }
 
+const FallbackAnnotationsEditorProvider = ({ children }: AnnotationsEditorProviderProps) => {
+  return <>{children}</>
+}
+
+const useAnnotationsFallback = (): AnnotationsContextType => ({
+  annotations: {},
+  removeAnnotation: () => {},
+  exportAnnotationComposite: async () => null,
+});
+
+const useDrawHistoryFallback = (): DrawHistory => ({ clear: () => {} });
+
 interface ViewerContextType {
   isLoaded: boolean
   createToolbar: () => ReactPortal | null
-  AnnotationsProvider: ({ children }: AnnotationsProviderProps) => JSX.Element
-  AnnotationsCanvas: ElementType
-  state: ViewerAnnotations
-  useDrawHistory: UseDrawHistory | null
+  AnnotationsEditorProvider: ({ children }: AnnotationsEditorProviderProps) => JSX.Element
+  AnnotationsCanvas: ElementType,
+  selectedVersionId?: string,
+  useAnnotations: UseAnnotations,
+  useDrawHistory: UseDrawHistory,
 }
 
-const ViewerContext = createContext<ViewerContextType | undefined>(undefined)
+const defaultViewerContext = {
+  isLoaded: false,
+  createToolbar: () => null,
+  AnnotationsEditorProvider: FallbackAnnotationsEditorProvider,
+  AnnotationsCanvas: () => null,
+  useAnnotations: useAnnotationsFallback,
+  useDrawHistory: useDrawHistoryFallback,
+};
+
+const ViewerContext = createContext<ViewerContextType>(defaultViewerContext)
 
 type ViewerProviderProps = {
   children: ReactNode
-  reviewable?: ViewAnnotationsProps['reviewable']
-  selectedVersionId?: ViewAnnotationsProps['selectedVersionId']
+  selectedVersionId?: string,
 }
 
 export const ViewerProvider = ({
   children,
-  reviewable,
   selectedVersionId,
 }: ViewerProviderProps) => {
   // get annotation remotes
@@ -54,11 +68,23 @@ export const ViewerProvider = ({
     module: 'AnnotationsProvider',
     fallback: FallbackAnnotationsProvider,
   })
+  const [AnnotationsEditorProvider, { isLoaded: isLoadedEditorProvider }] = useLoadModule({
+    addon: 'powerpack',
+    remote: 'annotations',
+    module: 'AnnotationsEditorProvider',
+    fallback: FallbackAnnotationsEditorProvider,
+  })
   const [AnnotationsCanvas, { isLoaded: isLoadedCanvas }] = useLoadModule({
     addon: 'powerpack',
     remote: 'annotations',
     module: 'AnnotationsCanvas',
     fallback: () => null,
+  })
+  const [useAnnotations, { isLoaded: isLoadedHook }] = useLoadModule({
+    addon: 'powerpack',
+    remote: 'annotations',
+    module: 'useAnnotations',
+    fallback: useAnnotationsFallback,
   })
   const [AnnotationTools, { isLoaded: isLoadedTools }] = useLoadModule({
     addon: 'powerpack',
@@ -70,10 +96,10 @@ export const ViewerProvider = ({
     addon: 'powerpack',
     remote: 'annotations',
     module: 'useDrawHistory',
-    fallback: null as unknown as ViewerContextType['useDrawHistory'],
+    fallback: useDrawHistoryFallback,
   })
 
-  const isLoaded = isLoadedProvider && isLoadedCanvas && isLoadedTools
+  const isLoaded = isLoadedProvider && isLoadedEditorProvider && isLoadedCanvas && isLoadedHook && isLoadedTools
 
   // get annotations-tools dom element for portal
   const createToolbar = useCallback(() => {
@@ -81,31 +107,23 @@ export const ViewerProvider = ({
     return container ? createPortal(<AnnotationTools />, container) : null
   }, [isLoaded])
 
-  const state = useViewerAnnotations({
-    reviewable,
-    selectedVersionId,
-  })
-
   return (
     <ViewerContext.Provider
       value={{
         isLoaded,
         createToolbar,
-        AnnotationsProvider,
+        AnnotationsEditorProvider,
         AnnotationsCanvas,
-        state,
+        useAnnotations,
         useDrawHistory,
       }}
     >
-      {children}
+      <AnnotationsProvider versionId={selectedVersionId || ''}>
+        {children}
+      </AnnotationsProvider>
     </ViewerContext.Provider>
   )
 }
 
-export const useViewer = () => {
-  const context = useContext(ViewerContext)
-  if (!context) {
-    throw new Error('useViewer must be used within a ViewerProvider')
-  }
-  return context
-}
+// This hook may be called outside of a ViewerContext.Provider
+export const useViewer = () => useContext(ViewerContext);

@@ -267,7 +267,7 @@ const Viewer = ({ onClose }: ViewerProps) => {
 
   // todo: noVersions modal smaller
   return (
-    <ViewerProvider reviewable={selectedReviewable} selectedVersionId={selectedVersion?.id}>
+    <ViewerProvider selectedVersionId={selectedVersion?.id}>
       <Styled.Container>
         <Styled.PlayerToolbar>
           <VersionSelectorTool

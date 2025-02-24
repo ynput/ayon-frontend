@@ -44,16 +44,13 @@ export const FullScreenWrapper = styled(FullScreen)`
   align-items: center;
   background-color: var(--md-sys-color-surface-container);
   z-index: 1000;
+  overflow: hidden;
 `
 
 export const Image = styled.img`
-  min-width: 300px;
-  min-height: 300px;
-  max-width: 100%;
-  max-height: 100%;
-  width: auto;
-  height: auto;
-  object-fit: contain;
+  width: 100%;
+  height: 100%;
+  display: block;
 `
 
 export const ViewerDetailsPanelWrapper = styled.div`

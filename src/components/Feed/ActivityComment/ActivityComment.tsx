@@ -31,8 +31,6 @@ import { Icon } from '@ynput/ayon-react-components'
 import ActivityStatus from '../ActivityStatus/ActivityStatus'
 import { Status } from '@api/rest/project'
 import { useFeed } from '@context/FeedContext'
-import { filterEntityAnnotations } from '@components/CommentInput/hooks/useAnnotationsSync'
-import { removeAnnotation } from '@state/viewer'
 
 type Props = {
   activity: $Any
@@ -92,9 +90,6 @@ const ActivityComment = ({
   if (statePath) menuId += '-' + statePath
   const isMenuOpen = useAppSelector((state) => state.context.menuOpen) === !!menuId
   const user = useAppSelector((state) => state.user)
-  const allAnnotations = useAppSelector((state) => state.viewer.annotations)
-  // filter out annotations that are for this entity and are NOT uploading
-  const annotations = filterEntityAnnotations(allAnnotations, entityId, [])
 
   const [deleteReactionToActivity] = useDeleteReactionToActivityMutation()
   const [createReactionToActivity] = useCreateReactionToActivityMutation()
@@ -108,8 +103,6 @@ const ActivityComment = ({
   const handleEditCancel = () => {
     // close the edit comment
     setEditingId(null)
-    // remove any annotations
-    annotations.forEach((annotation) => dispatch(removeAnnotation(annotation.id)))
   }
 
   const handleSave = async (value: $Any, files: $Any) => {
