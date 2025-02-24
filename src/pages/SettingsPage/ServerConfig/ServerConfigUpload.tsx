@@ -50,6 +50,10 @@ const Filename = styled.div`
   text-overflow: ellipsis;
 `
 
+const UploadButton = styled(Button)`
+  width: 100px;
+`
+
 const HiddenInput = styled.input`
   display: none;
 `
@@ -89,13 +93,13 @@ const ServerConfigUpload: FC<ServerConfigUploadProps> = ({ fileType, fileName, s
     <UploadContainer>
       <Filename>{fileName}</Filename>
       {fileName ? (
-          <Button icon='cancel' onClick={onClear}>
+          <UploadButton icon='cancel' onClick={onClear}>
             Remove
-          </Button>
+          </UploadButton>
         ) : (
-          <Button icon={loading ? 'sync' : 'upload'} onClick={handleButtonClick}>
+          <UploadButton icon={loading ? 'sync' : 'upload'} onClick={handleButtonClick}>
               Upload
-          </Button>
+          </UploadButton>
         )}
       <HiddenInput ref={inputRef} type="file" onChange={handleFileChange} />
     </UploadContainer>
