@@ -33,7 +33,7 @@ const patchActivities = async (
   const entries = api.util.selectInvalidatedBy(state, invalidatingTags)
 
   // now patch all the caches with the update
-  const patches = entries.forEach(({ originalArgs }) =>
+  const patches = entries.map(({ originalArgs }) =>
     dispatch(
       api.util.updateQueryData(
         'getActivities',
@@ -41,7 +41,7 @@ const patchActivities = async (
         (draft) => updateCache(draft.activities, patch, method === 'delete'),
       ),
     ),
-  ) || []
+  )
 
   try {
     await queryFulfilled
