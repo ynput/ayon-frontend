@@ -52,9 +52,6 @@ const patchActivities = async (
     for (const patchResult of patches) {
       patchResult?.undo()
     }
-
-    // Allow components to catch failure and handle it
-    throw message
   }
 }
 
