@@ -183,14 +183,6 @@ const Viewer = ({ onClose }: ViewerProps) => {
     }
   }, [reviewableIds, versionReviewableIds, isFetchingReviewables, selectedVersion, dispatch])
 
-  // disable quickView straight away (if it was enabled)
-  // NOTE: this will change with Quick View task
-  useEffect(() => {
-    if (quickView) {
-      dispatch(updateSelection({ quickView: false }))
-    }
-  }, [quickView, dispatch])
-
   const selectedReviewable = useMemo(
     // for now we only support one reviewable
     () => selectedVersion?.reviewables?.find((r) => r.fileId === reviewableIds[0]),
