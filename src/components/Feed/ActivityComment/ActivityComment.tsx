@@ -106,15 +106,8 @@ const ActivityComment = ({
   }
 
   const handleSave = async (value: $Any, files: $Any) => {
-    try {
-      const result = await onUpdate(value, files)
-      if (result.length > 0) {
-        setEditingId(null)
-      }
-      return result
-    } catch (error) {
-      return []
-    }
+    await onUpdate(value, files)
+    setEditingId(null)
   }
 
   const isEditing = editingId === activityId

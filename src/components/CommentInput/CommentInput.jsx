@@ -460,12 +460,10 @@ const CommentInput = ({
 
       if ((markdownParsed || uploadedFiles.length) && onSubmit) {
         try {
-          const result = await onSubmit(markdownParsed, uploadedFiles)
-          if (result.length > 0) {
-            // only clear if onSubmit is successful
-            setEditorValue('')
-            setFiles([])
-          }
+          await onSubmit(markdownParsed, uploadedFiles)
+          // only clear if onSubmit is successful
+          setEditorValue('')
+          setFiles([])
         } catch (error) {
           // error is handled in rtk query mutation
           return

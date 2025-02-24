@@ -268,7 +268,7 @@ const Feed = ({
                   activity={activity}
                   onCheckChange={handleCommentChecked}
                   onDelete={deleteComment}
-                  onUpdate={async (value, files, refs) => await updateComment(activity, value, files, refs)}
+                  onUpdate={(value, files, refs) => updateComment(activity, value, files, refs)}
                   projectInfo={projectInfo}
                   projectName={projectName}
                   entityType={entityType}
