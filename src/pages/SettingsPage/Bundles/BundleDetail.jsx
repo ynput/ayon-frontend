@@ -4,31 +4,46 @@ import { Toolbar, Spacer, Button } from '@ynput/ayon-react-components'
 import * as Styled from './Bundles.styled'
 import BundleForm from './BundleForm'
 import BundleDeps from './BundleDeps'
-import { upperFirst } from 'lodash'
+import { cloneDeep, upperFirst } from 'lodash'
 import BundleCompare from './BundleCompare'
 import useAddonSelection from './useAddonSelection'
 import { useUpdateBundleMutation } from '@queries/bundles/updateBundles'
+import { useListBundlesQuery } from '@queries/bundles/getBundles'
+import { current } from '@reduxjs/toolkit'
 
-const BundleDetail = ({ bundles = [], onDuplicate, installers, toggleBundleStatus, addons }) => {
+const BundleDetail = ({
+  selectedBundles = [],
+  onDuplicate,
+  installers,
+  toggleBundleStatus,
+  addons,
+}) => {
   const [selectedBundle, setSelectedBundle] = useState(null)
 
   const [formData, setFormData] = useState({})
   const [selectedAddons, setSelectedAddons] = useState([])
   const [updateBundle] = useUpdateBundleMutation()
 
+  // list of all bundles because we need production versions of addons
+  let { data: { bundles = [] } = {} } = useListBundlesQuery({ archived: true })
+  const currentProductionAddons = useMemo(
+    () => bundles.find((b) => b.isProduction)?.addons || {},
+    [bundles],
+  )
+
   // data for first selected bundle
   const bundle = useMemo(() => {
-    return bundles.find((b) => b.name === selectedBundle)
-  }, [bundles, selectedBundle])
+    return selectedBundles.find((b) => b.name === selectedBundle)
+  }, [selectedBundles, selectedBundle])
 
   const bundleStates = [
     {
       name: 'staging',
-      active: bundles.length > 1 ? false : bundle?.isStaging,
+      active: selectedBundles.length > 1 ? false : bundle?.isStaging,
     },
     {
       name: 'production',
-      active: bundles.length > 1 ? false : bundle?.isProduction,
+      active: selectedBundles.length > 1 ? false : bundle?.isProduction,
     },
   ]
 
@@ -38,15 +53,37 @@ const BundleDetail = ({ bundles = [], onDuplicate, installers, toggleBundleStatu
 
   // every time we select a new bundle, update the form data
   useEffect(() => {
-    if (bundles.length) {
-      const selectedBundleData = bundles.find((b) => b.name === selectedBundle)
+    if (selectedBundles.length) {
+      const selectedBundleData = selectedBundles.find((b) => b.name === selectedBundle)
 
       if (!selectedBundleData) {
-        setSelectedBundle(bundles[0].name)
-        setFormData(bundles[0])
+        const mbundle = cloneDeep(selectedBundles[0])
+        setSelectedBundle(selectedBundles[0].name)
+
+        if (mbundle.isProject) {
+          // if this is a project bundle, it only contains addons, that
+          // allow project-level override of the bundle. the rest of the addons
+          // is inherited from the studio bundle. so at this point, we fill
+          // formData.addons with the inherited addons from the project production
+          // in order to have working bundle checks.
+          // Inherited addons are removed upon saving server-side, so we can
+          // keep them in formData safely
+          //
+          // BundlesAddonList shows inherited addons differently
+          // ATM this does not support inheriting from the staging bundle as we'd need
+          // an additional switch somewhere to select the enviroment.
+          for (const addon of addons) {
+            const prodVersion = currentProductionAddons[addon.name]
+            if (addon.allowProjectOverride) continue // skip addons that allow project-level override
+            if (!prodVersion) continue // skip addons that are not in the production bundle
+            mbundle.addons[addon.name] = currentProductionAddons[addon.name]
+          }
+        }
+
+        setFormData(mbundle)
       }
     }
-  }, [bundles, selectedBundle])
+  }, [selectedBundles, selectedBundle, addons, currentProductionAddons])
 
   const handleAddonAutoSave = async (addon, version) => {
     try {
@@ -69,7 +106,7 @@ const BundleDetail = ({ bundles = [], onDuplicate, installers, toggleBundleStatu
               $hl={active ? name : null}
               icon={active && 'check'}
               onClick={() => toggleBundleStatus(name, bundle.name)}
-              disabled={bundles.length > 1}
+              disabled={selectedBundles.length > 1}
               data-tooltip={`${!active ? 'Set' : 'Unset'} bundle to ${name}`}
             >
               {!active ? 'Set' : ''} {upperFirst(name)}
@@ -80,13 +117,13 @@ const BundleDetail = ({ bundles = [], onDuplicate, installers, toggleBundleStatu
           label="Duplicate and edit"
           icon="edit_document"
           onClick={() => onDuplicate(bundle.name)}
-          disabled={bundles.length > 1}
+          disabled={selectedBundles.length > 1}
           data-tooltip="Creates new duplicated bundle"
           data-shortcut="shift+D"
         />
       </Toolbar>
-      {bundles.length > 1 && bundles.length < 5 ? (
-        <BundleCompare bundles={bundles} addons={addons} />
+      {selectedBundles.length > 1 && selectedBundles.length < 5 ? (
+        <BundleCompare bundles={selectedBundles} addons={addons} />
       ) : (
         <BundleForm
           isNew={false}
