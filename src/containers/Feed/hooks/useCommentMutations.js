@@ -6,6 +6,7 @@ import {
   useUpdateActivityMutation,
 } from '@queries/activities/updateActivities'
 import { useSelector } from 'react-redux'
+import { toast } from 'react-toastify'
 
 // does the body have a checklist anywhere in it
 // * [ ] or * [x]
@@ -83,13 +84,7 @@ const useCommentMutations = ({ projectName, entityType, entities = [], activityT
       }).unwrap()
     })
 
-    try {
-      const results = await Promise.all(promises)
-
-      return results
-    } catch (error) {
-      return []
-    }
+    await Promise.all(promises)
   }
 
   const updateComment = async (activity, value, files = []) => {
@@ -119,11 +114,11 @@ const useCommentMutations = ({ projectName, entityType, entities = [], activityT
         filter,
         ...argsForCachingMatching,
       }).unwrap()
-
-      return res
     } catch (error) {
       console.error(error)
-      return []
+      toast.error(error?.data?.detail)
+      // so higher level can detect the error
+      throw error
     }
   }
 

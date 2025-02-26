@@ -9,6 +9,7 @@ interface ServerConfigUploadProps {
   fileType: UploadServerConfigFileApiArg['fileType']
   fileName: string
   setFileName: (value: string) => void
+  onClear: () => Promise<void>
 }
 
 const spinCCW = keyframes`
@@ -49,11 +50,15 @@ const Filename = styled.div`
   text-overflow: ellipsis;
 `
 
+const UploadButton = styled(Button)`
+  width: 100px;
+`
+
 const HiddenInput = styled.input`
   display: none;
 `
 
-const ServerConfigUpload: FC<ServerConfigUploadProps> = ({ fileType, fileName, setFileName }) => {
+const ServerConfigUpload: FC<ServerConfigUploadProps> = ({ fileType, fileName, setFileName, onClear }) => {
   const [loading, setLoading] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -89,10 +94,15 @@ const ServerConfigUpload: FC<ServerConfigUploadProps> = ({ fileType, fileName, s
   return (
     <UploadContainer>
       <Filename>{fileName}</Filename>
-
-      <Button icon={loading ? 'sync' : 'upload'} onClick={handleButtonClick}>
-        Upload
-      </Button>
+      {fileName ? (
+          <UploadButton icon='cancel' onClick={onClear}>
+            Remove
+          </UploadButton>
+        ) : (
+          <UploadButton icon={loading ? 'sync' : 'upload'} onClick={handleButtonClick}>
+              Upload
+          </UploadButton>
+        )}
       <HiddenInput ref={inputRef} type="file" onChange={handleFileChange} />
     </UploadContainer>
   )

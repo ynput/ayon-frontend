@@ -44,7 +44,7 @@ function ShortcutsProvider(props) {
       // project settings
       {
         key: 'p+p',
-        action: () => navigate('/manageProjects/projectSettings'),
+        action: () => navigate('/manageProjects/projectSettings?' + searchParams.toString()),
       },
       // project settings anatomy
       { key: 'a+a', action: () => navigate('/manageProjects/anatomy?' + searchParams.toString()) },
@@ -82,7 +82,7 @@ function ShortcutsProvider(props) {
   const defaultShortcuts = [...navigation, ...navBar]
 
   // Separate global shortcuts from component shortcuts
-  const [globalShortcuts] = useState(defaultShortcuts)
+  const globalShortcuts = useMemo(() => defaultShortcuts, [defaultShortcuts, navigation, navBar])
   const [componentShortcuts, setComponentShortcuts] = useState(new Map())
 
   // Compute active shortcuts by combining global and component shortcuts

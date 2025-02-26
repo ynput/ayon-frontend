@@ -1,8 +1,8 @@
-import { useAppDispatch } from '@state/store'
-import { Annotation, removeAnnotation } from '@state/viewer'
 import { uploadFile } from '../helpers'
 import { $Any } from '@types'
 import { toast } from 'react-toastify'
+import { AnnotationMetadata } from '@containers/Viewer'
+import { useViewer } from '@context/viewerContext'
 
 type Props = {
   projectName: string
@@ -10,16 +10,21 @@ type Props = {
 }
 
 const useAnnotationsUpload = ({ projectName, onSuccess }: Props) => {
-  const dispatch = useAppDispatch()
+  const { useAnnotations } = useViewer();
+  const { exportAnnotationComposite, removeAnnotation } = useAnnotations();
 
-  const uploadAnnotations = async (annotations: Annotation[]) => {
+  const uploadAnnotations = async (annotations: AnnotationMetadata[]) => {
     try {
       const uploadPromises = annotations.map(async (annotation) => {
-        const img = annotation.compositeData
-        const blob = base64ToBlob(img)
+        const blob = await exportAnnotationComposite(annotation.id);
+        if (!blob) {
+          throw new Error(`Exporting composite image for annotation ${annotation.id} failed`);
+        }
+
         const file = new File([blob], annotation.name, {
           type: 'image/png',
         })
+
         return uploadFile(file, projectName, () => {})
       })
 
@@ -37,7 +42,7 @@ const useAnnotationsUpload = ({ projectName, onSuccess }: Props) => {
             (annotation) => annotation.name === result.value.file.name,
           )?.id
           if (annotationId) {
-            dispatch(removeAnnotation(annotationId))
+            removeAnnotation(annotationId)
           }
         } else {
           toast.error('Upload failed: ' + result.reason.message)

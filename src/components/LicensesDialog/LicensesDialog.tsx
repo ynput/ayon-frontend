@@ -191,7 +191,7 @@ const LicensesDialog: FC<LicensesDialogProps> = ({ onClose }) => {
         onClose={onClose}
         size="lg"
         header="Instance and licenses"
-        style={{ maxHeight: '90vh' }}
+        style={{ maxHeight: '90vh', minHeight: '50vh' }}
       >
         <Container>
           <EmptyPlaceholder message="Connect this instance to Ynput Cloud to get license information." />
