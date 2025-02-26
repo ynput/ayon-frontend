@@ -118,7 +118,18 @@ const ServerConfig = () => {
         onSetChangedKeys={setChangedKeys}
       />
     )
-  }, [configSchema, formData, changedKeys, configOverrides, setFormData, setChangedKeys])
+  }, [
+    isLoadingData,
+    isLoadingSchema,
+    isLoadingOverrides,
+    configSchema,
+    originalData,
+    formData,
+    changedKeys,
+    configOverrides,
+    setFormData,
+    setChangedKeys,
+  ])
 
   return (
     <>

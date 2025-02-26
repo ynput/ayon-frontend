@@ -155,14 +155,12 @@ const NewProjectDialog = ({ onHide }) => {
     if (esc) onHide()
   }
 
-
   const anatomyEditor = useMemo(() => {
-    if (isSchemaLoading || isOriginalAnatomyLoading || !formData){
-        return 'Loading editor...'
+    if (isSchemaLoading || isOriginalAnatomyLoading || !formData) {
+      return 'Loading editor...'
     }
-    <SettingsEditor schema={schema} formData={formData} onChange={setFormData} />
-  }, [isSchemaLoading, isOriginalAnatomyLoading, formData, schema])
-
+    return <SettingsEditor schema={schema} formData={formData} onChange={setFormData} />
+  }, [isSchemaLoading, isOriginalAnatomyLoading, formData, schema, setFormData])
 
   return (
     <Dialog

@@ -97,7 +97,6 @@ const AnatomyEditor = ({
     setFormData(newData)
   }
 
-
   const handleBreadcrumbs = (path) => {
     let uri = projectName ? `ayon+anatomy://${projectName}/` : `ayon+anatomy+preset://${preset}/`
     uri += path.join('/')
@@ -105,7 +104,6 @@ const AnatomyEditor = ({
 
     if (setBreadcrumbs) setBreadcrumbs(path)
   }
-
 
   const editor = useMemo(() => {
     if (isLoading) {
@@ -128,10 +126,20 @@ const AnatomyEditor = ({
         }}
       />
     )
-  }, [schema, originalData, breadcrumbs, formData, isLoading, preset, projectName])
+  }, [
+    schema,
+    originalData,
+    breadcrumbs,
+    formData,
+    isLoading,
+    preset,
+    projectName,
+    setFormData,
+    handleBreadcrumbs,
+    onPasteValue,
+  ])
 
   return editor
-
 }
 
 export default AnatomyEditor
