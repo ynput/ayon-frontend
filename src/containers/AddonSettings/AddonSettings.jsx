@@ -606,6 +606,12 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
         <Toolbar>
           <VariantSelector variant={variant} setVariant={setVariant} />
           {developerMode && copySettingsButton}
+          {!developerMode && projectName && (
+            <>
+              <Spacer />
+              <Button icon="settings" data-tooltip={`Change project ${variant} bundle`} />
+            </>
+          )}
         </Toolbar>
         {!developerMode && (
           <Toolbar>
@@ -683,10 +689,12 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
   }
 
   if (!bypassPermissions && !userPermissions.canViewSettings(projectName)) {
-    return <EmptyPlaceholder
-      icon="settings_alert"
-      message="You don't have permission to view the addon settings for this project"
-    />
+    return (
+      <EmptyPlaceholder
+        icon="settings_alert"
+        message="You don't have permission to view the addon settings for this project"
+      />
+    )
   }
 
   return (
