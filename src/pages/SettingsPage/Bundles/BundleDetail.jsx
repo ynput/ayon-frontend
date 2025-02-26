@@ -74,7 +74,7 @@ const BundleDetail = ({
           // an additional switch somewhere to select the enviroment.
           for (const addon of addons) {
             const prodVersion = currentProductionAddons[addon.name]
-            if (addon.allowProjectOverride) continue // skip addons that allow project-level override
+            if (addon.projectCanOverrideAddonVersion) continue // skip addons that allow project-level override
             if (!prodVersion) continue // skip addons that are not in the production bundle
             mbundle.addons[addon.name] = currentProductionAddons[addon.name]
           }

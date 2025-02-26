@@ -110,10 +110,10 @@ const BundlesAddonList = React.forwardRef(
 
     // get production bundle, because
     let { data: { bundles = [] } = {} } = useListBundlesQuery({ archived: true })
-    const currentProductionAddons = useMemo(() => bundles.find((b) => b.isProduction)?.addons || {}, [bundles])
-
-
-    console.log("FormData", formData)
+    const currentProductionAddons = useMemo(
+      () => bundles.find((b) => b.isProduction)?.addons || {},
+      [bundles],
+    )
 
     // every time readyState changes, refetch selected addons
 
@@ -147,10 +147,13 @@ const BundlesAddonList = React.forwardRef(
           }
         })
         .sort((a, b) => {
-          if (formData.isProject && a.allowProjectOverride !== b.allowProjectOverride) {
-            return a.allowProjectOverride ? -1 : 1;
+          if (
+            formData.isProject &&
+            a.projectCanOverrideAddonVersion !== b.projectCanOverrideAddonVersion
+          ) {
+            return a.projectCanOverrideAddonVersion ? -1 : 1
           }
-          return a.title.localeCompare(b.title);
+          return a.title.localeCompare(b.title)
         })
     }, [addons, formData])
 
@@ -181,7 +184,6 @@ const BundlesAddonList = React.forwardRef(
 
       ctxMenuShow(e.originalEvent, createContextItems(contextSelection))
     }
-    
 
     return (
       <StyledDataTable
@@ -231,13 +233,27 @@ const BundlesAddonList = React.forwardRef(
             })
             const latestVersion = sortedVersions[0]
 
-            if (formData.isProject && !addon.allowProjectOverride) {
-              return <span style={{ color: "#666"}}><Icon icon="lock"/> {productionVersion || "NONE"}</span>
+            if (formData.isProject && !addon.projectCanOverrideAddonVersion) {
+              return (
+                <span style={{ color: '#666' }}>
+                  <Icon icon="lock" /> {productionVersion || 'NONE'}
+                </span>
+              )
             }
 
             if (readOnly && isPipeline)
               return <AddonItem latestVersion={latestVersion} currentVersion={currentVersion} />
             // get all selected versions
+
+            const availableVersions = []
+            for (const version of Object.keys(addon?.versions || [])) {
+              // when we're editing a project bundle,
+              // we only show versions that are allowed to be overridden
+              if (formData.isProject && !addon.versions[version].projectCanOverrideAddonVersion)
+                continue
+              availableVersions.push(version)
+            }
+
             return (
               <AddonListItem
                 key={addon.name}
@@ -248,7 +264,7 @@ const BundlesAddonList = React.forwardRef(
                 setVersion={(version) =>
                   onSetVersion(addon.name, version || null, addon.addonType === 'server')
                 }
-                versions={Object.keys(addon.versions || {})}
+                versions={availableVersions}
                 isDev={isDev}
               />
             )

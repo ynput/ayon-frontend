@@ -79,6 +79,7 @@ export type VersionInfo = {
   clientSourceInfo?: (FilesystemSourceInfo | ServerSourceInfo | HttpSourceInfo)[]
   services?: object
   isBroken?: boolean
+  projectCanOverrideAddonVersion: boolean
   reason?: {
     [key: string]: string
   }
@@ -101,8 +102,8 @@ export type AddonListItem = {
   /** Type of the addon */
   addonType: 'server' | 'pipeline'
   /** Is the addon a system addon? */
-  system?: boolean
-  allowProjectOverride?: boolean
+  system: boolean
+  projectCanOverrideAddonVersion: boolean
 }
 export type AddonList = {
   /** List of available addons */
