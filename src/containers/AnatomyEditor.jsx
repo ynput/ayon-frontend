@@ -8,7 +8,7 @@
  * and dispatching breadcrumbs to the store.
  */
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
 import { useGetAnatomyPresetQuery, useGetAnatomySchemaQuery } from '@queries/anatomy/getAnatomy'
@@ -97,14 +97,6 @@ const AnatomyEditor = ({
     setFormData(newData)
   }
 
-  if (isLoading) {
-    return 'Loading...'
-  }
-
-  if (!(preset || projectName)) return 'No preset or project selected'
-  if (preset && projectName) return 'Select either preset or project'
-  if (!(schema && originalData)) return null
-
   const handleBreadcrumbs = (path) => {
     let uri = projectName ? `ayon+anatomy://${projectName}/` : `ayon+anatomy+preset://${preset}/`
     uri += path.join('/')
@@ -113,19 +105,41 @@ const AnatomyEditor = ({
     if (setBreadcrumbs) setBreadcrumbs(path)
   }
 
-  return (
-    <SettingsEditor
-      schema={schema}
-      originalData={originalData}
-      formData={formData}
-      onChange={setFormData}
-      onSetBreadcrumbs={handleBreadcrumbs}
-      breadcrumbs={breadcrumbs}
-      context={{
-        onPasteValue: onPasteValue,
-      }}
-    />
-  )
+  const editor = useMemo(() => {
+    if (isLoading) {
+      return 'Loading...'
+    }
+    if (!(preset || projectName)) return 'No preset or project selected'
+    if (preset && projectName) return 'Select either preset or project'
+    if (!(schema && originalData)) return null
+
+    return (
+      <SettingsEditor
+        schema={schema}
+        originalData={originalData}
+        formData={formData}
+        onChange={setFormData}
+        onSetBreadcrumbs={handleBreadcrumbs}
+        breadcrumbs={breadcrumbs}
+        context={{
+          onPasteValue: onPasteValue,
+        }}
+      />
+    )
+  }, [
+    schema,
+    originalData,
+    breadcrumbs,
+    formData,
+    isLoading,
+    preset,
+    projectName,
+    setFormData,
+    handleBreadcrumbs,
+    onPasteValue,
+  ])
+
+  return editor
 }
 
 export default AnatomyEditor
