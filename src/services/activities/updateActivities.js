@@ -93,9 +93,6 @@ const updateActivities = api.injectEndpoints({
         method: 'PATCH',
         body: data,
       }),
-      async onQueryStarted(args, api) {
-        patchActivities(args, api, 'update')
-      },
       // invalidate other filters that might be affected by this new activity (comments, checklists, etc)
       invalidatesTags: (result, error, { entityId, filter }) => getTags({ entityId, filter }),
     }),
