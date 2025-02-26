@@ -5,8 +5,17 @@ import {
   AnnotationsEditorProviderProps,
   AnnotationsContextType,
 } from '@containers/Viewer'
-import { createContext, useContext, ReactNode, ElementType, useCallback, ReactPortal, useMemo } from 'react'
+import {
+  createContext,
+  useContext,
+  ReactNode,
+  ElementType,
+  useCallback,
+  ReactPortal,
+  useEffect,
+} from 'react'
 import { createPortal } from 'react-dom'
+import { toast } from 'react-toastify'
 
 type DrawHistory = {
   clear: (page?: number) => void
@@ -27,18 +36,18 @@ const useAnnotationsFallback = (): AnnotationsContextType => ({
   annotations: {},
   removeAnnotation: () => {},
   exportAnnotationComposite: async () => null,
-});
+})
 
-const useDrawHistoryFallback = (): DrawHistory => ({ clear: () => {} });
+const useDrawHistoryFallback = (): DrawHistory => ({ clear: () => {} })
 
 interface ViewerContextType {
   isLoaded: boolean
   createToolbar: () => ReactPortal | null
   AnnotationsEditorProvider: ({ children }: AnnotationsEditorProviderProps) => JSX.Element
-  AnnotationsCanvas: ElementType,
-  selectedVersionId?: string,
-  useAnnotations: UseAnnotations,
-  useDrawHistory: UseDrawHistory,
+  AnnotationsCanvas: ElementType
+  selectedVersionId?: string
+  useAnnotations: UseAnnotations
+  useDrawHistory: UseDrawHistory
 }
 
 const defaultViewerContext = {
@@ -48,58 +57,72 @@ const defaultViewerContext = {
   AnnotationsCanvas: () => null,
   useAnnotations: useAnnotationsFallback,
   useDrawHistory: useDrawHistoryFallback,
-};
+}
 
 const ViewerContext = createContext<ViewerContextType>(defaultViewerContext)
 
 type ViewerProviderProps = {
   children: ReactNode
-  selectedVersionId?: string,
+  selectedVersionId?: string
 }
 
-export const ViewerProvider = ({
-  children,
-  selectedVersionId,
-}: ViewerProviderProps) => {
+export const ViewerProvider = ({ children, selectedVersionId }: ViewerProviderProps) => {
+  const minVersion = '1.0.0'
   // get annotation remotes
-  const [AnnotationsProvider, { isLoaded: isLoadedProvider }] = useLoadModule({
+  const [AnnotationsProvider, { isLoaded: isLoadedProvider, outdated }] = useLoadModule({
     addon: 'powerpack',
     remote: 'annotations',
     module: 'AnnotationsProvider',
     fallback: FallbackAnnotationsProvider,
+    minVersion,
   })
   const [AnnotationsEditorProvider, { isLoaded: isLoadedEditorProvider }] = useLoadModule({
     addon: 'powerpack',
     remote: 'annotations',
     module: 'AnnotationsEditorProvider',
     fallback: FallbackAnnotationsEditorProvider,
+    minVersion,
   })
   const [AnnotationsCanvas, { isLoaded: isLoadedCanvas }] = useLoadModule({
     addon: 'powerpack',
     remote: 'annotations',
     module: 'AnnotationsCanvas',
     fallback: () => null,
+    minVersion,
   })
   const [useAnnotations, { isLoaded: isLoadedHook }] = useLoadModule({
     addon: 'powerpack',
     remote: 'annotations',
     module: 'useAnnotations',
     fallback: useAnnotationsFallback,
+    minVersion,
   })
   const [AnnotationTools, { isLoaded: isLoadedTools }] = useLoadModule({
     addon: 'powerpack',
     remote: 'annotations',
     module: 'AnnotationTools',
     fallback: AnnotationToolsFallback,
+    minVersion,
   })
   const [useDrawHistory] = useLoadModule({
     addon: 'powerpack',
     remote: 'annotations',
     module: 'useDrawHistory',
     fallback: useDrawHistoryFallback,
+    minVersion,
   })
 
-  const isLoaded = isLoadedProvider && isLoadedEditorProvider && isLoadedCanvas && isLoadedHook && isLoadedTools
+  // show error message if annotations version is outdated
+  useEffect(() => {
+    if (outdated) {
+      toast.warning(
+        `Powerpack addon version incompatible. Required: ${outdated.required}, Current: ${outdated.current}`,
+      )
+    }
+  }, [!!outdated])
+
+  const isLoaded =
+    isLoadedProvider && isLoadedEditorProvider && isLoadedCanvas && isLoadedHook && isLoadedTools
 
   // get annotations-tools dom element for portal
   const createToolbar = useCallback(() => {
@@ -118,12 +141,10 @@ export const ViewerProvider = ({
         useDrawHistory,
       }}
     >
-      <AnnotationsProvider versionId={selectedVersionId || ''}>
-        {children}
-      </AnnotationsProvider>
+      <AnnotationsProvider versionId={selectedVersionId || ''}>{children}</AnnotationsProvider>
     </ViewerContext.Provider>
   )
 }
 
 // This hook may be called outside of a ViewerContext.Provider
-export const useViewer = () => useContext(ViewerContext);
+export const useViewer = () => useContext(ViewerContext)
