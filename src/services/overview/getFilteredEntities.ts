@@ -5,8 +5,8 @@ import {
   GetFilteredEntitiesByParentQuery,
   GetFilteredEntitiesQuery,
   GetFilteredEntitiesQueryVariables,
-  TaskNode,
 } from '@api/graphql'
+import { EditorTaskNode } from '@pages/NewEditor/types'
 import {
   DefinitionsFromApi,
   FetchBaseQueryError,
@@ -17,7 +17,7 @@ import { QueryReturnValue } from '@types'
 
 const transformFilteredEntities = (response: GetEntitiesByIdsQuery): GetEntitiesByIdsResult => {
   let folders: { [key: string]: Partial<FolderNode> } = {}
-  let tasks: { [key: string]: Partial<TaskNode> } = {}
+  let tasks: { [key: string]: Partial<EditorTaskNode> } = {}
 
   if (!response.project) {
     return { folders: {}, tasks: {} }
@@ -43,34 +43,30 @@ const transformFilteredEntities = (response: GetEntitiesByIdsQuery): GetEntities
 
 const transformFilteredEntitiesByParent = (
   response: GetFilteredEntitiesByParentQuery,
-): GetFilteredEntitiesByParentResult => {
-  let folders: { [key: string]: Partial<FolderNode> } = {}
-  let tasks: { [key: string]: Partial<TaskNode> } = {}
-
+): EditorTaskNode[] => {
   if (!response.project) {
-    return { tasks: {} }
+    return []
   }
 
+  const tasks: EditorTaskNode[] = []
   for (const { node: taskNode } of response.project.tasks.edges) {
-    tasks[taskNode.id] = {
+    tasks.push({
       ...taskNode,
       folderId: taskNode.folderId || 'root',
-    }
+    })
   }
 
-  return { tasks }
+  return tasks
 }
 
 type GetEntitiesByIdsResult = {
   folders: { [key: string]: Partial<FolderNode> }
-  tasks: { [key: string]: Partial<TaskNode> }
+  tasks: { [key: string]: Partial<EditorTaskNode> }
 }
-type GetFilteredEntitiesByParentResult = {
-  tasks: { [key: string]: Partial<TaskNode> }
-}
+
 type GetFilteredEntitiesResult = {
   folders: { [key: string]: Partial<FolderNode> }
-  tasks: { [key: string]: Partial<TaskNode> }
+  tasks: { [key: string]: Partial<EditorTaskNode> }
 }
 
 type Definitions = DefinitionsFromApi<typeof api>
@@ -79,7 +75,7 @@ type UpdatedDefinitions = Omit<Definitions, 'GetFilteredEntities'> & {
   GetEntitiesByIds: OverrideResultType<Definitions['GetEntitiesByIds'], GetEntitiesByIdsResult>
   GetFilteredEntitiesByParent: OverrideResultType<
     Definitions['GetFilteredEntitiesByParent'],
-    GetFilteredEntitiesByParentResult
+    EditorTaskNode[]
   >
   GetFilteredEntities: OverrideResultType<
     Definitions['GetFilteredEntitiesByParent'],
@@ -103,7 +99,10 @@ const enhancedApi = api.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
 
 enhancedApi.injectEndpoints({
   endpoints: (build) => ({
-    GetPaginatedFilteredEntities: build.query<GetFilteredEntitiesQuery, GetFilteredEntitiesQueryVariables>({
+    GetPaginatedFilteredEntities: build.query<
+      GetFilteredEntitiesQuery,
+      GetFilteredEntitiesQueryVariables
+    >({
       async queryFn(
         { projectName, ...queryFilters }: GetFilteredEntitiesQueryVariables,
         { dispatch },
@@ -112,9 +111,8 @@ enhancedApi.injectEndpoints({
         try {
           let cursor = '0'
           let pageInfo = {}
-          let tasks: {node: TaskNode}[] = []
+          let tasks: { node: EditorTaskNode }[] = []
           do {
-
             const response = await dispatch(
               enhancedApi.endpoints.GetFilteredEntities.initiate({
                 projectName,
@@ -133,7 +131,7 @@ enhancedApi.injectEndpoints({
             tasks = tasks.concat(response.data!.project!.tasks.edges)
           } while (pageInfo.hasNextPage)
 
-          let mappedTasks: { [key: string]: Partial<TaskNode> } = {}
+          let mappedTasks: { [key: string]: Partial<EditorTaskNode> } = {}
           for (const taskNode of tasks) {
             mappedTasks[taskNode.node.id] = {
               ...taskNode.node,

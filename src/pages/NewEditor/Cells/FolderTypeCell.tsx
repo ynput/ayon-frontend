@@ -10,14 +10,8 @@ type Props = {
 }
 
 const FolderTypeCell: React.FC<Props> = ({ folderTypes, type, updateHandler }) => {
-  const {
-    showPlaceholder,
-    setShowPlaceholder,
-    value,
-    expandClickHandler,
-    changeHandler,
-    ref,
-  } = useDropdownPlaceholderState(type, updateHandler)
+  const { showPlaceholder, setShowPlaceholder, value, expandClickHandler, changeHandler, ref } =
+    useDropdownPlaceholderState([type], updateHandler)
 
   const mappedTypes = Object.values(folderTypes).map((el: $Any) => ({
     value: el.name,
@@ -40,7 +34,6 @@ const FolderTypeCell: React.FC<Props> = ({ folderTypes, type, updateHandler }) =
       showPreview={showPlaceholder}
       handleExpandIconClick={expandClickHandler}
       previewValue={{
-        icon: folderTypes[value].icon,
         color: '',
         text: value,
       }}

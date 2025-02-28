@@ -1,7 +1,15 @@
 import { useMemo, useRef, useState } from 'react'
 import * as Styled from '@containers/Slicer/SlicerTable.styled'
 import { $Any } from '@types'
-import { ColumnDef, FilterFnOption, Row, SortingFn, sortingFns } from '@tanstack/react-table'
+import {
+  Column,
+  ColumnDef,
+  FilterFnOption,
+  Getter,
+  Row,
+  SortingFn,
+  sortingFns,
+} from '@tanstack/react-table'
 import { compareItems } from '@tanstack/match-sorter-utils'
 import clsx from 'clsx'
 import { Icon } from '@ynput/ayon-react-components'
@@ -19,6 +27,7 @@ import TaskTypeCell from './Cells/TaskTypeCell'
 import AssigneesCell from './Cells/AssigneesCell'
 import { useStoredCustomColumnWidths } from './hooks/useCustomColumnsWidth'
 import { Status } from '@api/rest/project'
+import { AttributeModel } from '@api/rest/attributes'
 
 const CellWrapper = styled.div`
   width: 150px;
@@ -69,7 +78,6 @@ const fuzzySort: SortingFn<any> = (rowA, rowB, columnId) => {
   return dir === 0 ? sortingFns.alphanumeric(rowA, rowB, columnId) : dir
 }
 
-
 const ShimmerCell = ({ width }: { width: string }) => {
   return (
     <Styled.Cell style={{ width }}>
@@ -85,10 +93,9 @@ const ShimmerCell = ({ width }: { width: string }) => {
 
 type Props = {
   tableData: $Any[]
-  rawData: { folders: $Any; tasks: $Any }
   users: UserNode[]
   statuses: Status[]
-  attribs: $Any[]
+  attribs: AttributeModel[]
   isLoading: boolean
   isExpandable: boolean
   sliceId: string
@@ -98,7 +105,6 @@ type Props = {
 
 const TableColumns = ({
   tableData,
-  rawData,
   users,
   statuses,
   attribs,
@@ -159,8 +165,23 @@ const TableColumns = ({
     return getRawDataAttribValue(rawData[parentId], attribName)
   }
 
-  return useMemo<ColumnDef<TableRow>[]>(
-    () => [
+  const getValueIdType = (
+    row: Row<TableRow>,
+    field: Column<TableRow>['id'],
+    nestedField?: string,
+  ): {
+    value: $Any
+    id: string
+    type: string
+  } => ({
+    value: nestedField ? row.original[nestedField]?.[field] : row.original[field],
+    id: row.id,
+    type: row.original.data.type,
+  })
+
+  return useMemo<ColumnDef<TableRow>[]>(() => {
+    console.time('createStaticColumns')
+    const staticColumns: ColumnDef<TableRow>[] = [
       {
         accessorKey: 'folderType',
         header: () => 'Folder',
@@ -196,7 +217,7 @@ const TableColumns = ({
                 <div style={{ display: 'inline-block', minWidth: 24 }} />
               )}
               {row.original.icon ? (
-                <Icon icon={row.original.icon} style={{ color: row.original.iconColor }} />
+                <Icon icon={row.original.icon} />
               ) : (
                 <span
                   className="loading shimmer-light"
@@ -224,22 +245,21 @@ const TableColumns = ({
         filterFn: 'fuzzy',
         sortingFn: fuzzySort, //sort by fuzzy rank (falls back to alphanumeric)
         size: storedColumnSizes['status'] || '150',
-        cell: ({ row, getValue }) => {
-          const rawData = getRawData(row)
-          const rawType = getRowType(row)
+        cell: ({ row, column }) => {
+          const { value, id, type } = getValueIdType(row, column.id)
           // <ShimmerCell width="150px" />
           // @ts-ignore
-          if (!row.original.matchesFilters) {
+          if (row.original.childOnlyMatch) {
             return <PlaceholderDot />
           }
+
           return (
             <CellWrapper>
               <StatusCell
-                status={rawData?.status}
+                status={value}
                 statuses={statuses}
                 updateHandler={(newValue: string[]) => {
-                  const entityType = rawType === 'folders' ? 'folder' : 'task'
-                  updateHandler(rawData.id, 'status', newValue[0], entityType, false)
+                  updateHandler(id, 'status', newValue[0], type, false)
                 }}
               />
             </CellWrapper>
@@ -260,37 +280,37 @@ const TableColumns = ({
         },
       },
       {
-        accessorKey: 'type',
+        accessorKey: 'subType',
         header: () => 'Type',
         filterFn: 'fuzzy',
         sortingFn: fuzzySort, //sort by fuzzy rank (falls back to alphanumeric)
         size: storedColumnSizes['type'] || '150',
-        cell: ({ row, getValue }) => {
-          const rawData = getRawData(row)
-          const rawType = getRowType(row)
+        cell: ({ row, column }) => {
+          const { value, id, type } = getValueIdType(row, column.id)
+          const subType = row.original.subType
           // <ShimmerCell width="150px" />
           // @ts-ignore
-          if (!row.original.matchesFilters) {
+          if (row.original.childOnlyMatch) {
             return <PlaceholderDot />
           }
           return (
             <CellWrapper>
-              {rawData?.folderType ? (
+              {type === 'folder' ? (
                 <FolderTypeCell
                   folderTypes={project.folders}
-                  type={rawData?.folderType || 'Folder'}
+                  type={value}
                   updateHandler={(newValue: string) => {
-                    const entityType = rawType === 'folders' ? 'folder' : 'task'
                     // TODO Propagate change to folder type column also
-                    updateHandler(rawData.id, 'folderType', newValue, entityType, false)
+                    updateHandler(id, 'folderType', newValue, subType, false)
                   }}
                 />
               ) : (
-                <TaskTypeCell taskTypes={project.tasks} type={rawData?.taskType || 'Generic'} 
+                <TaskTypeCell
+                  taskTypes={project.tasks}
+                  type={value}
                   updateHandler={(newValue: string) => {
-                    const entityType = rawType === 'folders' ? 'folder' : 'task'
                     // TODO Propagate change to folder type column also
-                    updateHandler(rawData.id, 'taskType', newValue, entityType, false)
+                    updateHandler(id, 'taskType', newValue, subType, false)
                   }}
                 />
               )}
@@ -316,22 +336,21 @@ const TableColumns = ({
         filterFn: 'fuzzy',
         sortingFn: fuzzySort, //sort by fuzzy rank (falls back to alphanumeric)
         size: storedColumnSizes['assignees'] || '150',
-        cell: ({ row, getValue }) => {
-          const rawType = getRowType(row)
-          const rawData = getRawData(row)
+        cell: ({ row, column }) => {
+          const { value, id, type } = getValueIdType(row, column.id)
           // <ShimmerCell width="150px" />
           // @ts-ignore
-          if (!row.original.matchesFilters) {
+          if (row.original.childOnlyMatch) {
             return <PlaceholderDot />
           }
           return (
             <div style={{ width: '150px', height: '36px' }}>
-              {rawType === 'tasks' && (
+              {type === 'tasks' && (
                 <AssigneesCell
-                  assignees={rawData?.assignees || []}
+                  assignees={value}
                   allUsers={users}
                   updateHandler={(newValue) => {
-                    updateHandler(rawData.id, 'assignees', newValue, 'task', false)
+                    updateHandler(id, 'assignees', newValue, 'task', false)
                   }}
                 />
               )}
@@ -354,100 +373,50 @@ const TableColumns = ({
           )
         },
       },
-      {
-        accessorKey: 'priority',
-        header: () => 'Priority',
-        filterFn: 'fuzzy',
+    ]
+    console.timeEnd('createStaticColumns')
+
+    console.time('createAttributeColumns')
+    const attributeColumns = attribs.map((attrib) => {
+      const attribColumn: ColumnDef<TableRow> = {
+        accessorKey: attrib.name,
+        header: () => attrib.data.title || attrib.name,
+        filterFn: 'fuzzy' as FilterFnOption<TableRow>,
         sortingFn: fuzzySort, //sort by fuzzy rank (falls back to alphanumeric)
-        size: storedColumnSizes['priority'] || '150',
-        cell: ({ row, getValue }) => {
-          const rawType = getRowType(row)
-          const rawData = getRawData(row)
+        size: storedColumnSizes[attrib.name] || '150',
+        cell: ({ row, column, getValue }) => {
+          const { value, id, type } = getValueIdType(row, column.id, 'attrib')
+
           // <ShimmerCell width="150px" />
-          const ref = useRef<HTMLDivElement>(null)
           // @ts-ignore
-          if (!row.original.matchesFilters) {
+          if (row.original.childOnlyMatch) {
             return <PlaceholderDot />
           }
           return (
-            <CellWrapper ref={ref}>
-              <PriorityCell
-                priority={rawData?.attrib?.priority || 'normal'}
-                priorities={priorities}
-                updateHandler={(newValue: string) => {
-                  const entityType = rawType === 'folders' ? 'folder' : 'task'
-                  // TODO Propagate change to folder type column also
-                  updateHandler(rawData.id, 'priority', newValue, entityType)
-                }}
-              />
+            <CellWrapper>
+              {!value ? (
+                <EditableCellContent value="..." />
+              ) : (
+                <EditableCellContent
+                  className={clsx({ selected: row.getIsSelected(), loading: isLoading })}
+                  // onClick={(evt) => handleRowSelect(evt, row)}
+                  // onKeyDown={(evt) => handleRowKeyDown(evt, row)}
+                  updateHandler={(newValue: string) => {
+                    updateHandler(id, attrib.name, newValue, type)
+                  }}
+                  tabIndex={0}
+                  value={value}
+                />
+              )}
             </CellWrapper>
           )
-          return !row.original.id || rawData === undefined ? (
-            <TableCellContent> ... </TableCellContent>
-          ) : (
-            <TableCellContent
-              className={clsx({ selected: row.getIsSelected(), loading: isLoading })}
-              // onClick={(evt) => handleRowSelect(evt, row)}
-              // onKeyDown={(evt) => handleRowKeyDown(evt, row)}
-              style={{
-                width: '150px',
-              }}
-              tabIndex={0}
-            >
-              {/* @ts-ignore */}
-              {rawType === 'folders' ? '' : (rawData as TaskNode).attrib?.assignees || 'None'}
-            </TableCellContent>
-          )
         },
-      },
-      ...attribs
-        .filter((el) => {
-          // TODO better ordering/filtering for attributes list
-          return el.name !== 'priority'
-          return true
-        })
-        .map((attrib: $Any) => {
-          return {
-            accessorKey: attrib.name,
-            header: () => attrib.name,
-            filterFn: 'fuzzy' as FilterFnOption<TableRow>,
-            sortingFn: fuzzySort, //sort by fuzzy rank (falls back to alphanumeric)
-            size: storedColumnSizes[attrib.name] || '150',
-            cell: ({ row, getValue }: { row: $Any; getValue: $Any }) => {
-              const rawData = getRawData(row)
-              const value = getRowAttribValue(row, attrib.name)
-              const rawType = getRowType(row)
-              const [val, setVal] = useState(value)
-              // <ShimmerCell width="150px" />
-          // @ts-ignore
-          if (!row.original.matchesFilters) {
-            return <PlaceholderDot />
-          }
-              return (
-                <CellWrapper>
-                  {!row.original.id || rawData === undefined ? (
-                    <EditableCellContent value="..." />
-                  ) : (
-                    <EditableCellContent
-                      className={clsx({ selected: row.getIsSelected(), loading: isLoading })}
-                      // onClick={(evt) => handleRowSelect(evt, row)}
-                      // onKeyDown={(evt) => handleRowKeyDown(evt, row)}
-                      updateHandler={(newValue: string) => {
-                        setVal(newValue)
-                        const entityType = rawType === 'folders' ? 'folder' : 'task'
-                        updateHandler(rawData.id, attrib.name, newValue, entityType)
-                      }}
-                      tabIndex={0}
-                      value={val}
-                    />
-                  )}
-                </CellWrapper>
-              )
-            },
-          }
-        }),
-    ],
-    [isLoading, sliceId, tableData],
-  )
+      }
+      return attribColumn
+    })
+    console.timeEnd('createAttributeColumns')
+
+    return [...staticColumns, ...attributeColumns]
+  }, [isLoading, sliceId, tableData])
 }
 export default TableColumns

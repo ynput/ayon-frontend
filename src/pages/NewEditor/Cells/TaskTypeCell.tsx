@@ -10,21 +10,14 @@ type Props = {
 }
 
 const TaskTypeCell: React.FC<Props> = ({ taskTypes, type, updateHandler }) => {
-
   const mappedTypes = Object.values(taskTypes).map((el: $Any) => ({
     value: el.name,
     label: el.name,
     icon: el.icon,
   }))
 
-  const {
-    showPlaceholder,
-    setShowPlaceholder,
-    value,
-    expandClickHandler,
-    changeHandler,
-    ref,
-  } = useDropdownPlaceholderState(type, updateHandler)
+  const { showPlaceholder, setShowPlaceholder, value, expandClickHandler, changeHandler, ref } =
+    useDropdownPlaceholderState(type, updateHandler)
 
   const dropdownComponent = (
     <StyledEnumDropdown
@@ -41,7 +34,6 @@ const TaskTypeCell: React.FC<Props> = ({ taskTypes, type, updateHandler }) => {
       showPreview={showPlaceholder}
       handleExpandIconClick={expandClickHandler}
       previewValue={{
-        icon: taskTypes[value].icon,
         color: '',
         text: value,
       }}

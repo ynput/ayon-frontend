@@ -101,23 +101,29 @@ const injectedRtkApi = api.injectEndpoints({
 export { injectedRtkApi as api }
 export type GetProjectFileApiResponse = /** status 200 Successful Response */ any
 export type GetProjectFileApiArg = {
-  fileId: string
   projectName: string
+  fileId: string
 }
 export type GetProjectFileHeadApiResponse = /** status 200 Successful Response */ any
 export type GetProjectFileHeadApiArg = {
-  fileId: string
   projectName: string
+  fileId: string
 }
 export type GetProjectFilePayloadApiResponse = /** status 200 Successful Response */ any
 export type GetProjectFilePayloadApiArg = {
-  fileId: string
   projectName: string
+  fileId: string
 }
 export type GetProjectFileThumbnailApiResponse = /** status 200 Successful Response */ any
 export type GetProjectFileThumbnailApiArg = {
-  fileId: string
   projectName: string
+  fileId: string
+}
+export type GetProjectFileStillApiResponse = /** status 200 Successful Response */ any
+export type GetProjectFileStillApiArg = {
+  projectName: string
+  fileId: string
+  t?: number
 }
 export type GetProjectEntityCountsApiResponse = /** status 200 Successful Response */ EntityCounts
 export type GetProjectEntityCountsApiArg = {
@@ -139,7 +145,7 @@ export type GetProjectTeamsApiResponse =
 export type GetProjectTeamsApiArg = {
   projectName: string
 }
-export type GetProjectAnatomyApiResponse = /** status 200 Successful Response */ ProjectAnatomy
+export type GetProjectAnatomyApiResponse = /** status 200 Successful Response */ Anatomy
 export type GetProjectAnatomyApiArg = {
   projectName: string
 }
@@ -348,6 +354,7 @@ export type FolderType = {
 export type TaskType = {
   name: string
   shortName?: string
+  color?: string
   icon?: string
   original_name?: string
 }
@@ -373,7 +380,7 @@ export type Tag = {
   color?: string
   original_name?: string
 }
-export type ProjectAnatomy = {
+export type Anatomy = {
   /** Setup root paths for the project */
   roots?: Root[]
   /** Path templates configuration */

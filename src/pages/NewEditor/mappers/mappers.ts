@@ -8,6 +8,8 @@ import { TaskFilterValue } from '@containers/TasksProgress/hooks/useFilterBySlic
 import { $Any } from '@types'
 import { FolderNodeMap, MatchingFolder, TableRow, TaskNodeMap } from '../types'
 
+// Helper function to convert relative selections to absolute coordinates
+// Returns an array of selections with absolute start/end positions
 const getAbsoluteSelections = (selections: $Any) =>
   selections.map((selection: $Any) => ({
     start: [
@@ -20,6 +22,7 @@ const getAbsoluteSelections = (selections: $Any) =>
     ],
   })) as Selection[]
 
+// Checks if a given coordinate (x,y) falls within any of the provided selections
 const isSelected = (absoluteSelections: $Any, x: number, y: number) => {
   for (const selection of absoluteSelections) {
     if (selection.start === undefined || selection.end === undefined) {
@@ -44,6 +47,8 @@ type QueryFiltersParams = {
   selectedPaths?: string[]
 }
 
+// Maps filter parameters into a query-friendly format
+// Combines user-defined filters, slice filters, and path filters
 const mapQueryFilters = ({ filters, sliceFilter, selectedPaths = [] }: QueryFiltersParams) => {
   const queryFilters = formatSearchQueryFilters(filters, sliceFilter) as FilterQueriesData & {
     pathEx: string
@@ -55,8 +60,17 @@ const mapQueryFilters = ({ filters, sliceFilter, selectedPaths = [] }: QueryFilt
   return queryFilters
 }
 
+// Main function to transform raw folder and task data into a hierarchical table structure
+// Takes raw data and mapping functions as input and returns structured table data
+// Parameters:
+// - allFolders: List of all available folders
+// - folders: Map of folder IDs to folder data that match filters
+// - tasks: Map of tasks that match filters
+// - taskList: Flat list of filtered tasks
+// - isFlatList: Whether to return flat or hierarchical structure
+// - entityToRowMappers: Functions to convert entities to table rows
+// - expanded: Record of expanded folder states
 const populateTableData = ({
-  allFolders,
   folders,
   tasks,
   taskList,
@@ -64,7 +78,6 @@ const populateTableData = ({
   entityToRowMappers,
   expanded,
 }: {
-  allFolders: FolderListItem[]
   folders: FolderNodeMap
   tasks: Map<string, Partial<TaskNode>>
   taskList: Partial<TaskNode>[]
@@ -72,42 +85,10 @@ const populateTableData = ({
   entityToRowMappers: $Any
   expanded: Record<string, boolean>
 }) => {
-  const foldersVisible = allFolders.filter(
-    (folder) => !folder.parentId || expanded[folder.parentId],
-  )
-  // console.time('mappedRawData')
-  // 1ms
-  let mappedRawData: FolderNodeMap = {}
-  foldersVisible.forEach((element) => {
-    mappedRawData[element.id] = {
-      ...element,
-      matchesFilters: folders[element.id]?.matchesFilters || false,
-    }
-  })
-  // console.timeEnd('mappedRawData')
-
-  let mappedTaskData: { [key: string]: TaskNodeMap } = {}
-  tasks.forEach((element) => {
-    if (mappedTaskData[element.folderId as string] === undefined) {
-      mappedTaskData[element.folderId as string] = {}
-    }
-    mappedTaskData[element.folderId as string][element.id as string] = element as TaskNode
-  })
-
-  let mappedFolderData: { [key: string]: FolderNodeMap } = {}
-  Object.values(folders).forEach((element) => {
-    if (mappedFolderData[element.parentId as string] === undefined) {
-      mappedFolderData[element.parentId as string] = {}
-    }
-    mappedFolderData[element.parentId as string][element.id as string] = element as MatchingFolder
-  })
-
-  // return { hashedData: new Map<string, TableRow>(), tableData: [] }
-
   console.time('populateTableData')
   const tableData = isFlatList
     ? createFlatList({
-        allFolders,
+        folders,
         tasks: mappedTaskData,
         taskList,
         rawFolders: folders,
@@ -115,7 +96,7 @@ const populateTableData = ({
         entityToRowMappers,
       })
     : createDataTree({
-        allFolders: foldersVisible,
+        folders,
         mappedRawData,
         tasks: mappedTaskData,
         rawFolders: folders,
@@ -130,6 +111,9 @@ const populateTableData = ({
   return tableData
 }
 
+// Creates a flat list representation of folders and tasks
+// Used when hierarchy view is disabled
+// Sorts items alphabetically and combines folders with their tasks
 const createFlatList = ({
   allFolders,
   tasks,
@@ -180,15 +164,18 @@ const createFlatList = ({
   return { hashedData, tableData: flatList }
 }
 
+// Creates a hierarchical tree structure of folders and tasks
+// Used when hierarchy view is enabled
+// Efficiently builds parent-child relationships and sorts items
 const createDataTree = ({
-  allFolders,
+  folders,
   mappedRawData,
   tasks,
   rawFolders,
   rawTasks,
   entityToRowMappers,
 }: {
-  allFolders: $Any
+  folders: FolderNodeMap
   mappedRawData: $Any
   tasks: $Any
   rawFolders: $Any
@@ -203,7 +190,7 @@ const createDataTree = ({
   const taskLookup = new Map(Object.entries(tasks))
 
   // 2. Pre-sort and filter allFolders in one pass
-  const sortedItems = allFolders
+  const sortedItems = folders
     .filter((el) => matchedIds.has(el.id))
     .sort((a, b) => (a.label || a.name).localeCompare(b.label || b.name))
 

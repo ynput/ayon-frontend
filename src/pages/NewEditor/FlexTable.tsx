@@ -27,9 +27,8 @@ import { Status } from '@api/rest/project'
 
 type Props = {
   tableData: $Any[]
-  rawData: { folders: $Any; tasks: $Any }
   users: UserNode[]
-  statuses: Status[]
+  statuses?: Status[]
   attribs: $Any[]
   isLoading: boolean
   isExpandable: boolean
@@ -41,10 +40,9 @@ type Props = {
 
 const FlexTable = ({
   tableData,
-  rawData,
   attribs,
   users,
-  statuses,
+  statuses = [],
   isLoading,
   isExpandable,
   sliceId,
@@ -120,7 +118,6 @@ const FlexTable = ({
 
   const columns = TableColumns({
     tableData,
-    rawData,
     users,
     statuses,
     attribs,

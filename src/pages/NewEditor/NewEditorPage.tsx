@@ -12,16 +12,15 @@ import { $Any } from '@types'
 
 import { SortByOption } from '@pages/UserDashboardPage/UserDashboardTasks/DashboardTasksToolbar/KanBanSortByOptions'
 import getAllProjectStatuses from '@containers/DetailsPanel/helpers/getAllProjectsStatuses'
-import { useGetProjectsInfoQuery } from '@queries/userDashboard/getUserDashboard'
 import useFetchAndUpdateEntityData from './hooks/useFetchEditorEntities'
-import { getFilteredEntities } from './helpers/filters'
 import useUpdateEditorEntities from './hooks/useUpdateEditorEntities'
 import useAttributeFields from './hooks/useAttributesList'
-import { populateTableData } from './mappers/mappers'
-import { FolderNodeMap, TaskNodeMap } from './types'
-import entityToRowMappers from './mappers/entityToRowMappers'
+import useFilteredEntities from './hooks/useFilteredEntities'
+import useTableTree from './hooks/useTableTree'
 import FlexTable from './FlexTable'
 import { useState } from 'react'
+import { useGetProjectQuery } from '@queries/project/getProject'
+import { useAppSelector } from '@state/store'
 
 type Props = {
   filters: Filter[]
@@ -30,13 +29,13 @@ type Props = {
 }
 
 const NewEditorPage = ({ filters, showHierarchy, sortBy }: Props) => {
-  const project = useSelector((state: $Any) => state.project)
-  const projectName = useSelector((state: $Any) => state.project.name)
+  const projectName = useAppSelector((state) => state.project.name) as unknown as string
   const { data: users = [] } = useGetUsersAssigneeQuery({ projectName }, { skip: !projectName })
 
-  const { data: projectsInfo = {} } = useGetProjectsInfoQuery({ projects: [projectName] })
-  const projectInfo = projectsInfo[projectName] || {}
-  const allStatuses = getAllProjectStatuses({ [projectName]: projectInfo })
+  const { data: { statuses, folderTypes, taskTypes } = {} } = useGetProjectQuery(
+    { projectName },
+    { skip: !projectName },
+  )
 
   const { rowSelection } = useSlicerContext()
   const { attribFields } = useAttributeFields()
@@ -46,60 +45,49 @@ const NewEditorPage = ({ filters, showHierarchy, sortBy }: Props) => {
   const [expanded, updateExpanded] = useState({})
 
   console.time('dataToTable')
-  // 28.3 ms
+  // 28.3 ms -> 6ms
 
-  console.time('useFetchAndUpdateEntityData')
+  // console.time('useFetchAndUpdateEntityData')
   // 1.4ms
-  const {
-    rawData: allFolders,
-    folders,
-    tasks,
-    tasksFolders,
-  } = useFetchAndUpdateEntityData({
+  const { foldersMap, tasksMap, tasksByFolderMap } = useFetchAndUpdateEntityData({
     projectName,
-    folderTypes: project.folders || {},
-    taskTypes: project.tasks || {},
     selectedFolders: Object.keys(rowSelection),
     filters,
     sliceFilter,
     expanded,
   })
-  console.timeEnd('useFetchAndUpdateEntityData')
+  // console.timeEnd('useFetchAndUpdateEntityData')
 
-  console.time('getFilteredEntities')
-  // 8.1ms
-  const {
-    folders: filteredFolders,
-    tasks: filteredTasks,
-    taskList,
-  } = getFilteredEntities({
-    folders,
-    tasks: tasks as TaskNodeMap,
-    tasksFolders,
-    filters,
-    sliceFilter,
-    // sortBy,
-  })
-  console.timeEnd('getFilteredEntities')
+  // console.time('getFilteredEntities')
+  // 8.1ms down to 1.6ms
+  // const {
+  //   folders: filteredFolders,
+  //   tasks: filteredTasks,
+  //   taskList,
+  // } = useFilteredEntities({
+  //   folders: foldersMap,
+  //   tasksMap,
+  //   filters,
+  //   // sliceFilter,
+  //   // // sortBy,
+  // })
+  // console.timeEnd('getFilteredEntities')
 
-  console.time('populateTableData')
-  // 18ms
-  const { tableData } = populateTableData({
-    allFolders,
-    folders: filteredFolders as FolderNodeMap,
-    tasks: filteredTasks,
-    taskList,
-    tasksFolders,
-    isFlatList: !showHierarchy,
-    entityToRowMappers: entityToRowMappers(project.folders, project.tasks),
+  // console.time('populateTableData')
+  // Use the memoized hook instead of direct function call
+  const tableData = useTableTree({
+    foldersMap,
+    tasksMap,
+    tasksByFolderMap,
     expanded,
+    folderTypes,
+    taskTypes,
   })
-
-  console.log(expanded)
-
-  console.timeEnd('populateTableData')
+  // console.timeEnd('populateTableData')
 
   console.timeEnd('dataToTable')
+
+  console.log(tableData.length && tableData[0])
 
   return (
     <main className="editor-page" style={{ height: '100%' }}>
@@ -114,11 +102,9 @@ const NewEditorPage = ({ filters, showHierarchy, sortBy }: Props) => {
             <TablePanel style={{ height: '100%' }}>
               <FlexTable
                 attribs={attribFields}
-                // TODO fetch & pass attrib data using new graphql queries
-                rawData={{ folders, tasks }}
                 tableData={tableData}
                 users={users}
-                statuses={allStatuses}
+                statuses={statuses}
                 updateEntities={updateEntities}
                 isLoading={false}
                 isExpandable={false}

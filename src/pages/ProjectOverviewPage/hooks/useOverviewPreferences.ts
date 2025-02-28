@@ -25,23 +25,6 @@ const useOverviewPreferences = () => {
     updateUserPreferences({ userName, patchData: updatedFrontendPreferences })
   }
 
-  const updateExpanded = (expandedFolders: $Any) => {
-    // @ts-ignore
-    const overviewSettings = frontendPreferences?.pageSettings?.overview || {}
-    const updatedFrontendPreferences = {
-      ...frontendPreferences,
-      pageSettings: {
-        ...frontendPreferences.pageSettings,
-        overview: {
-          ...overviewSettings,
-          expandedFolders: expandedFolders(overviewSettings.expandedFolders),
-        },
-      },
-    }
-
-    updateUserPreferences({ userName, patchData: updatedFrontendPreferences })
-  }
-
   const frontendPreferences = useAppSelector((state) => state.user.data.frontendPreferences)
   const overviewPageSettings: { showHierarchy: boolean } = (
     frontendPreferences?.pageSettings as { [key: string]: $Any }
@@ -55,9 +38,6 @@ const useOverviewPreferences = () => {
   return {
     showHierarchy,
     updateShowHierarchy,
-    // @ts-ignore
-    expanded: frontendPreferences.pageSettings.overview.expandedFolders ?? {},
-    updateExpanded,
   }
 }
 
