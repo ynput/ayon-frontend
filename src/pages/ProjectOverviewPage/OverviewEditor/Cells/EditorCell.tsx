@@ -5,6 +5,7 @@ import { CollapsedWidget, DateWidget, EnumWidget, TextWidget } from '../Widgets'
 import { useCellEditing } from '../context/CellEditingContext'
 import clsx from 'clsx'
 import { TextWidgetType } from '../Widgets/TextWidget'
+import { getCellId } from '../utils/cellUtils'
 
 const Cell = styled.div`
   position: absolute;
@@ -25,8 +26,6 @@ const Cell = styled.div`
   }
 `
 
-const getCellId = (row: string, column: string) => `cell-${row}-${column}`
-
 export type CellValue = string | number | boolean
 
 interface EditorCellProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -42,8 +41,8 @@ const EditorCellComponent = forwardRef<HTMLDivElement, EditorCellProps>(
   ({ rowId, columnId, value, attributeData, options, isCollapsed, ...props }, ref) => {
     const { type } = attributeData
 
-    const cellId = getCellId(rowId, columnId)
-    const { isEditing, setEditingCellId } = useCellEditing()
+    const { isEditing, setEditingCellId, getCellIdFromPosition } = useCellEditing()
+    const cellId = getCellIdFromPosition(rowId, columnId)
 
     const isCurrentCellEditing = isEditing(cellId)
 

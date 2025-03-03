@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useMemo, useRef, useState, useEffect } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import {
   useReactTable,
@@ -16,13 +16,13 @@ import clsx from 'clsx'
 
 import { $Any } from '@types'
 import { TableRow } from '@containers/Slicer/types'
-import useHandlers, { handleToggleFolder, Selection } from './handlers'
-import { getAbsoluteSelections, isSelected } from './mappers/mappers'
 import TableColumns, { BuiltInFieldOptions } from './TableColumns'
 import * as Styled from './Table.styled'
 import { useCustomColumnWidths, useSyncCustomColumnWidths } from './hooks/useCustomColumnsWidth'
 import { toast } from 'react-toastify'
 import { CellEditingProvider } from './context/CellEditingContext'
+import { SelectionProvider, useSelection } from './context/SelectionContext'
+import { parseCellId } from './utils/cellUtils'
 
 type Props = {
   tableData: $Any[]
@@ -34,6 +34,17 @@ type Props = {
   updateEntities: (type: string, value: $Any, entities: $Any, isAttrib: boolean) => void
   expanded: Record<string, boolean>
   updateExpanded: OnChangeFn<ExpandedState>
+}
+
+// Component to wrap with both providers
+const FlexTableWithProviders = (props: Props) => {
+  return (
+    <SelectionProvider>
+      <CellEditingProvider>
+        <FlexTable {...props} />
+      </CellEditingProvider>
+    </SelectionProvider>
+  )
 }
 
 const FlexTable = ({
@@ -49,21 +60,20 @@ const FlexTable = ({
 }: Props) => {
   //The virtualizer needs to know the scrollable container element
   const tableContainerRef = useRef<HTMLDivElement>(null)
-  const [selectionInProgress, setSelectionInProgress] = useState<boolean>(false)
-  const [selection, setSelection] = useState<Selection>({})
-  const [selections, setSelections] = useState<Selection[]>([])
   const [copyValue, setCopyValue] = useState<{ [key: string]: $Any } | null>(null)
 
-  const { handleMouseUp, handleMouseDown } = useHandlers({
-    selection,
-    setSelection,
-    selections,
-    setSelections,
-    setSelectionInProgress,
-  })
-
-  const [itemExpanded, setItemExpanded] = useState<string>('root')
-  const toggleExpanderHandler = handleToggleFolder(setItemExpanded)
+  // Selection context
+  const {
+    registerGrid,
+    isCellSelected,
+    isCellFocused,
+    startSelection,
+    extendSelection,
+    endSelection,
+    selectCell,
+    getCellIdFromPosition,
+    getCellBorderClasses,
+  } = useSelection()
 
   const getRowType = (item: Row<TableRow>) => {
     // @ts-ignore
@@ -116,7 +126,10 @@ const FlexTable = ({
     isExpandable,
     sliceId,
     options,
-    toggleExpanderHandler,
+    toggleExpanderHandler: () => {
+      // track this at some point probably
+      console.log('toggleExpanderHandler')
+    },
     updateHandler: (
       id: string,
       field: string,
@@ -155,7 +168,12 @@ const FlexTable = ({
 
   const { rows } = table.getRowModel()
 
-  const absoluteSelections = getAbsoluteSelections(selections)
+  // Register grid structure with selection context when rows or columns change
+  useEffect(() => {
+    const rowIds = rows.map((row) => row.id)
+    const colIds = table.getAllLeafColumns().map((col) => col.id)
+    registerGrid(rowIds, colIds)
+  }, [rows, table.getAllLeafColumns(), registerGrid])
 
   const rowVirtualizer = useVirtualizer({
     count: rows.length,
@@ -185,33 +203,34 @@ const FlexTable = ({
       return
     }
 
+    // This part needs to be rewritten to use selectedCells from context instead
     let updates = []
-    let selectionMatches = false
-    for (const selection of selections) {
-      // TDOO maybe swap x/y, they might be confusing later on (row is y, col is x)
-      const xStartIdx = Math.min(selection.start![1], selection.end![1])
-      const xEndIdx = Math.max(selection.start![1], selection.end![1])
-      if (copyValue.colIdx < xStartIdx || copyValue.colIdx > xEndIdx) {
-        continue
-      }
 
-      selectionMatches = true
-      const yStartIdx = Math.min(selection.start![0], selection.end![0])
-      const yEndIdx = Math.max(selection.start![0], selection.end![0])
+    // Get selected cells from the context
+    const { selectedCells } = useSelection()
 
-      for (let i = yStartIdx; i <= yEndIdx; i++) {
-        const row = rows[i]
-        const rowType = getRowType(row)
-        updates.push({
-          id: row.id,
-          type: rowType === 'folders' ? 'folder' : 'task',
-        })
-      }
+    // For each selected cell, check if it's in the same column as copyValue.colIdx
+    // and collect updates for those rows
+    for (const selectedCellId of selectedCells) {
+      const cellPosition = parseCellId(selectedCellId)
+      if (!cellPosition) continue
+
+      const rowId = cellPosition.rowId
+      const row = rows.find((r) => r.id === rowId)
+      if (!row) continue
+
+      const rowType = getRowType(row)
+      updates.push({
+        id: row.id,
+        type: rowType === 'folders' ? 'folder' : 'task',
+      })
     }
 
-    if (!selectionMatches) {
-      toast.error('Operation failed, please paste copied value into matching column.')
+    if (updates.length === 0) {
+      toast.error('No cells selected for paste operation.')
+      return
     }
+
     try {
       await updateEntities(
         copyValue!.data.type,
@@ -222,13 +241,13 @@ const FlexTable = ({
     } catch (e) {
       toast.error('Error updating entity')
     }
-    // updateAttribute(row.id, copyValue!.type, copyValue!.value, copyValue!.isAttrib)
   }
 
+  // Improved table body with cell selections and borders
   const tableBody = useMemo(
     () => (
       <tbody style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
-        {rowVirtualizer.getVirtualItems().map((virtualRow: $Any, rowIdx) => {
+        {rowVirtualizer.getVirtualItems().map((virtualRow: $Any) => {
           const row = rows[virtualRow.index] as Row<TableRow>
           return (
             <tr
@@ -241,37 +260,58 @@ const FlexTable = ({
                 transform: `translateY(${virtualRow.start}px)`, //this should always be a `style` as it changes on scroll
               }}
             >
-              {row.getVisibleCells().map((cell, colIdx) => {
+              {row.getVisibleCells().map((cell) => {
+                const cellId = getCellIdFromPosition(row.id, cell.column.id)
+                const borderClasses = getCellBorderClasses(cellId)
+
                 return (
                   <Styled.TableCell
                     tabIndex={0}
                     key={cell.id}
                     className={clsx(
-                      `pos-${rowIdx}-${colIdx}`,
                       cell.column.id === 'folderType' ? 'large' : '',
                       {
-                        notSelected: !isSelected(absoluteSelections, virtualRow.index, colIdx),
-                        selected: isSelected(absoluteSelections, virtualRow.index, colIdx),
+                        selected: isCellSelected(cellId),
+                        focused: isCellFocused(cellId),
                       },
+                      ...borderClasses,
                     )}
                     style={{
                       width: `calc(var(--col-${cell.column.id}-size) * 1px)`,
                     }}
                     onKeyDown={(e) => {
                       if (e.key === 'c' && e.ctrlKey) {
-                        handleCopy(cell, colIdx)
+                        handleCopy(
+                          cell,
+                          table
+                            .getHeaderGroups()[0]
+                            .headers.findIndex((h) => h.id === cell.column.id),
+                        )
                       }
                       if (e.key === 'v' && e.ctrlKey) {
                         handlePaste(cell, rows)
                       }
                     }}
                     onMouseDown={(e) => {
-                      // @ts-ignore
-                      handleMouseDown(e, cell, virtualRow.index, colIdx)
+                      if (e.shiftKey) {
+                        // Shift+click extends selection from anchor cell
+                        const additive = e.metaKey || e.ctrlKey
+                        selectCell(cellId, additive, true) // true for range selection
+                        e.preventDefault()
+                      } else {
+                        // Normal click starts a new selection
+                        startSelection(cellId, e.metaKey || e.ctrlKey)
+                        e.preventDefault() // Prevent text selection
+                      }
                     }}
-                    onMouseUp={(e) => {
-                      // @ts-ignore
-                      handleMouseUp(e, cell, virtualRow.index, colIdx)
+                    onMouseOver={(e) => {
+                      if (e.buttons === 1) {
+                        // Left button is pressed during mouse move - drag selection
+                        extendSelection(cellId)
+                      }
+                    }}
+                    onMouseUp={() => {
+                      endSelection(cellId)
                     }}
                   >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -286,72 +326,75 @@ const FlexTable = ({
     [
       rowVirtualizer,
       rows,
-      absoluteSelections,
-      handleMouseDown,
-      handleMouseUp,
+      startSelection,
+      extendSelection,
+      endSelection,
+      selectCell,
+      isCellSelected,
+      isCellFocused,
+      getCellIdFromPosition,
+      getCellBorderClasses,
       handleCopy,
       handlePaste,
-      isSelected,
+      table.getHeaderGroups,
     ],
   )
 
   return (
-    <CellEditingProvider>
-      <Styled.TableContainerWrapper style={{ height: '100%' }}>
-        <Styled.TableContainer ref={tableContainerRef} style={{ height: '100%' }}>
-          <table
-            style={{
-              borderCollapse: 'collapse',
-              userSelect: 'none',
-              ...columnSizeVars,
-              width: table.getTotalSize(),
-            }}
-          >
-            <Styled.TableHeader>
-              {table.getHeaderGroups().map((headerGroup) => {
-                return (
-                  <div key={headerGroup.id} style={{ display: 'flex' }}>
-                    {headerGroup.headers.map((header) => {
-                      return (
-                        <Styled.HeaderCell
-                          className={clsx({ large: header.column.id === 'folderType' })}
-                          key={header.id}
-                          style={{
-                            width: `calc(var(--header-${header?.id}-size) * 1px)`,
-                          }}
-                        >
-                          {header.isPlaceholder ? null : (
-                            <Styled.TableCellContent
-                              className={clsx('bold', {
-                                large: header.column.id === 'folderType',
-                              })}
-                            >
-                              {flexRender(header.column.columnDef.header, header.getContext())}
-                              <Styled.ResizedHandler
-                                {...{
-                                  onDoubleClick: () => header.column.resetSize(),
-                                  onMouseDown: header.getResizeHandler(),
-                                  onTouchStart: header.getResizeHandler(),
-                                  className: clsx('resize-handle', {
-                                    resizing: header.column.getIsResizing(),
-                                  }),
-                                }}
-                              />
-                            </Styled.TableCellContent>
-                          )}
-                        </Styled.HeaderCell>
-                      )
-                    })}
-                  </div>
-                )
-              })}
-            </Styled.TableHeader>
-            {tableBody}
-          </table>
-        </Styled.TableContainer>
-      </Styled.TableContainerWrapper>
-    </CellEditingProvider>
+    <Styled.TableContainerWrapper style={{ height: '100%' }}>
+      <Styled.TableContainer ref={tableContainerRef} style={{ height: '100%' }}>
+        <table
+          style={{
+            borderCollapse: 'collapse',
+            userSelect: 'none',
+            ...columnSizeVars,
+            width: table.getTotalSize(),
+          }}
+        >
+          <Styled.TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => {
+              return (
+                <div key={headerGroup.id} style={{ display: 'flex' }}>
+                  {headerGroup.headers.map((header) => {
+                    return (
+                      <Styled.HeaderCell
+                        className={clsx({ large: header.column.id === 'folderType' })}
+                        key={header.id}
+                        style={{
+                          width: `calc(var(--header-${header?.id}-size) * 1px)`,
+                        }}
+                      >
+                        {header.isPlaceholder ? null : (
+                          <Styled.TableCellContent
+                            className={clsx('bold', {
+                              large: header.column.id === 'folderType',
+                            })}
+                          >
+                            {flexRender(header.column.columnDef.header, header.getContext())}
+                            <Styled.ResizedHandler
+                              {...{
+                                onDoubleClick: () => header.column.resetSize(),
+                                onMouseDown: header.getResizeHandler(),
+                                onTouchStart: header.getResizeHandler(),
+                                className: clsx('resize-handle', {
+                                  resizing: header.column.getIsResizing(),
+                                }),
+                              }}
+                            />
+                          </Styled.TableCellContent>
+                        )}
+                      </Styled.HeaderCell>
+                    )
+                  })}
+                </div>
+              )
+            })}
+          </Styled.TableHeader>
+          {tableBody}
+        </table>
+      </Styled.TableContainer>
+    </Styled.TableContainerWrapper>
   )
 }
 
-export default FlexTable
+export default FlexTableWithProviders
