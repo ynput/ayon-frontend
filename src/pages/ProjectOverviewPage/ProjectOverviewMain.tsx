@@ -5,9 +5,16 @@ import useFilterBySlice from '@containers/TasksProgress/hooks/useFilterBySlice'
 import { useSlicerContext } from '@context/slicerContext'
 import { FilterFieldType } from '@hooks/useBuildFilterOptions'
 import useUserFilters from '@hooks/useUserFilters'
-import NewEditorPage from '@pages/NewEditor/NewEditorPage'
+import OverviewEditor from '@pages/ProjectOverviewPage/OverviewEditor/OverviewEditor'
 import { $Any } from '@types'
-import { Button, InputSwitch, Section, SortCardType, SortingDropdown, Toolbar } from '@ynput/ayon-react-components'
+import {
+  Button,
+  InputSwitch,
+  Section,
+  SortCardType,
+  SortingDropdown,
+  Toolbar,
+} from '@ynput/ayon-react-components'
 import { isEmpty } from 'lodash'
 import { FC, useState } from 'react'
 import useOverviewPreferences from './hooks/useOverviewPreferences'
@@ -20,12 +27,7 @@ const sortByOptions: SortByOption[] = [
 ]
 
 // what to search by
-const searchFilterTypes: FilterFieldType[] = [
-  'attributes',
-  'status',
-  'assignees',
-  'tags',
-]
+const searchFilterTypes: FilterFieldType[] = ['attributes', 'status', 'assignees', 'tags']
 
 interface ProjectOverviewMainProps {
   projectName: string
@@ -37,7 +39,7 @@ const ProjectOverviewMain: FC<ProjectOverviewMainProps> = ({ projectName }) => {
   //
 
   const { filters, setFilters } = useUserFilters({ page: 'overview', projectName })
-  const {showHierarchy, updateShowHierarchy} = useOverviewPreferences()
+  const { showHierarchy, updateShowHierarchy } = useOverviewPreferences()
   const [sortByValue, setSortByValue] = useState<SortCardType[]>([])
 
   // filter out by slice
@@ -105,7 +107,7 @@ const ProjectOverviewMain: FC<ProjectOverviewMainProps> = ({ projectName }) => {
           onChange={setSortByValue}
         />
       </Toolbar>
-      <NewEditorPage
+      <OverviewEditor
         filters={filtersWithHierarchy}
         sortBy={sortByValue}
         showHierarchy={showHierarchy}

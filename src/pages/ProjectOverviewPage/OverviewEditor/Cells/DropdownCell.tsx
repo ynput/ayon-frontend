@@ -3,6 +3,7 @@ import styled from 'styled-components'
 const StyledEnumTemplateWrapper = styled.div`
   display: flex;
   align-items: center;
+  justify-content: space-between;
   padding: 0 8px;
   height: 100%;
   width: 100%;
@@ -15,6 +16,7 @@ type Props = {
   handleExpandIconClick: () => void
 }
 
+//
 const DropdownCell = ({ icon, color, text, handleExpandIconClick }: Props) => {
   return (
     <StyledEnumTemplateWrapper style={{}} onDoubleClick={handleExpandIconClick}>
@@ -27,10 +29,7 @@ const DropdownCell = ({ icon, color, text, handleExpandIconClick }: Props) => {
         }}
       />
 
-      <Icon
-        icon="expand_more"
-        onClick={handleExpandIconClick}
-      />
+      <Icon icon="expand_more" onClick={handleExpandIconClick} />
     </StyledEnumTemplateWrapper>
   )
 }

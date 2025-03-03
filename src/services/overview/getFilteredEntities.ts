@@ -6,7 +6,7 @@ import {
   GetFilteredEntitiesQuery,
   GetFilteredEntitiesQueryVariables,
 } from '@api/graphql'
-import { EditorTaskNode } from '@pages/NewEditor/types'
+import { EditorTaskNode } from '@pages/ProjectOverviewPage/OverviewEditor/types'
 import {
   DefinitionsFromApi,
   FetchBaseQueryError,

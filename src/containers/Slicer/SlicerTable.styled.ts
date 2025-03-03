@@ -84,4 +84,5 @@ export const Cell = styled.div`
 export const Expander = styled(Button)`
   background-color: unset !important;
   padding: 2px !important;
+  cursor: pointer;
 `

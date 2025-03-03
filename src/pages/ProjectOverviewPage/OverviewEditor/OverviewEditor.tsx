@@ -1,26 +1,41 @@
-import { useSelector } from 'react-redux'
+import { useMemo, useState } from 'react'
 
+// UI components
 import { Section, TablePanel } from '@ynput/ayon-react-components'
-
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 
+// Types
 import { Filter } from '@components/SearchFilter/types'
-import useFilterBySlice from '@containers/TasksProgress/hooks/useFilterBySlice'
-import { useSlicerContext } from '@context/slicerContext'
-import { useGetUsersAssigneeQuery } from '@queries/user/getUsers'
-import { $Any } from '@types'
-
 import { SortByOption } from '@pages/UserDashboardPage/UserDashboardTasks/DashboardTasksToolbar/KanBanSortByOptions'
-import getAllProjectStatuses from '@containers/DetailsPanel/helpers/getAllProjectsStatuses'
-import useFetchAndUpdateEntityData from './hooks/useFetchEditorEntities'
-import useUpdateEditorEntities from './hooks/useUpdateEditorEntities'
+import { BuiltInFieldOptions } from './TableColumns'
+
+// Contexts
+import { useSlicerContext } from '@context/slicerContext'
+
+// Queries
+import { useGetProjectQuery } from '@queries/project/getProject'
+import { useGetUsersAssigneeQuery } from '@queries/user/getUsers'
+
+// Redux
+import { useAppSelector } from '@state/store'
+
+// Custom hooks
 import useAttributeFields from './hooks/useAttributesList'
+import useFetchAndUpdateEntityData from './hooks/useFetchEditorEntities'
 import useFilteredEntities from './hooks/useFilteredEntities'
 import useTableTree from './hooks/useTableTree'
+import useUpdateEditorEntities from './hooks/useUpdateEditorEntities'
+import useFilterBySlice from '@containers/TasksProgress/hooks/useFilterBySlice'
+
+// Components
 import FlexTable from './FlexTable'
-import { useState } from 'react'
-import { useGetProjectQuery } from '@queries/project/getProject'
-import { useAppSelector } from '@state/store'
+
+type User = {
+  name: string
+  attrib: {
+    fullName: string
+  }
+}
 
 type Props = {
   filters: Filter[]
@@ -28,11 +43,12 @@ type Props = {
   sortBy: SortByOption[]
 }
 
-const NewEditorPage = ({ filters, showHierarchy, sortBy }: Props) => {
+const OverviewEditor = ({ filters, showHierarchy, sortBy }: Props) => {
   const projectName = useAppSelector((state) => state.project.name) as unknown as string
-  const { data: users = [] } = useGetUsersAssigneeQuery({ projectName }, { skip: !projectName })
+  const { data: usersData = [] } = useGetUsersAssigneeQuery({ projectName }, { skip: !projectName })
+  const users = usersData as User[]
 
-  const { data: { statuses, folderTypes, taskTypes } = {} } = useGetProjectQuery(
+  const { data: { statuses = [], folderTypes = [], taskTypes = [] } = {} } = useGetProjectQuery(
     { projectName },
     { skip: !projectName },
   )
@@ -87,7 +103,27 @@ const NewEditorPage = ({ filters, showHierarchy, sortBy }: Props) => {
 
   console.timeEnd('dataToTable')
 
-  console.log(tableData.length && tableData[0])
+  console.log(tableData.length && tableData)
+
+  // for folderTypes, taskTypes, statuses and assignees, create options object
+  const options: BuiltInFieldOptions = useMemo(
+    () => ({
+      assignees: users.map(({ name, attrib }) => ({
+        value: name,
+        label: attrib?.fullName || name,
+        icon: `/api/users/${name}/avatar`,
+      })),
+      statuses: statuses.map(({ name, color, icon }) => ({
+        value: name,
+        label: name,
+        color,
+        icon,
+      })),
+      folderTypes: folderTypes.map(({ name, icon }) => ({ value: name, label: name, icon })),
+      taskTypes: taskTypes.map(({ name, icon }) => ({ value: name, label: name, icon })),
+    }),
+    [users, statuses, folderTypes, taskTypes],
+  )
 
   return (
     <main className="editor-page" style={{ height: '100%' }}>
@@ -103,8 +139,7 @@ const NewEditorPage = ({ filters, showHierarchy, sortBy }: Props) => {
               <FlexTable
                 attribs={attribFields}
                 tableData={tableData}
-                users={users}
-                statuses={statuses}
+                options={options}
                 updateEntities={updateEntities}
                 isLoading={false}
                 isExpandable={false}
@@ -120,4 +155,4 @@ const NewEditorPage = ({ filters, showHierarchy, sortBy }: Props) => {
   )
 }
 
-export default NewEditorPage
+export default OverviewEditor

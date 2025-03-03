@@ -18,17 +18,15 @@ import { $Any } from '@types'
 import { TableRow } from '@containers/Slicer/types'
 import useHandlers, { handleToggleFolder, Selection } from './handlers'
 import { getAbsoluteSelections, isSelected } from './mappers/mappers'
-import TableColumns from './TableColumns'
+import TableColumns, { BuiltInFieldOptions } from './TableColumns'
 import * as Styled from './Table.styled'
-import { UserNode } from '@api/graphql'
 import { useCustomColumnWidths, useSyncCustomColumnWidths } from './hooks/useCustomColumnsWidth'
 import { toast } from 'react-toastify'
-import { Status } from '@api/rest/project'
+import { CellEditingProvider } from './context/CellEditingContext'
 
 type Props = {
   tableData: $Any[]
-  users: UserNode[]
-  statuses?: Status[]
+  options: BuiltInFieldOptions
   attribs: $Any[]
   isLoading: boolean
   isExpandable: boolean
@@ -41,8 +39,7 @@ type Props = {
 const FlexTable = ({
   tableData,
   attribs,
-  users,
-  statuses = [],
+  options,
   isLoading,
   isExpandable,
   sliceId,
@@ -118,12 +115,11 @@ const FlexTable = ({
 
   const columns = TableColumns({
     tableData,
-    users,
-    statuses,
     attribs,
     isLoading,
     isExpandable,
     sliceId,
+    options,
     toggleExpanderHandler,
     updateHandler: (
       id: string,
@@ -261,7 +257,6 @@ const FlexTable = ({
                     },
                   )}
                   style={{
-                    minWidth: '160px',
                     width: `calc(var(--col-${cell.column.id}-size) * 1px)`,
                   }}
                   onKeyDown={(e) => {
@@ -292,60 +287,59 @@ const FlexTable = ({
   )
 
   return (
-    <Styled.TableContainerWrapper style={{ height: '100%' }}>
-      <Styled.TableContainer ref={tableContainerRef} style={{ height: '100%' }}>
-        <table
-          style={{
-            borderCollapse: 'collapse',
-            userSelect: 'none',
-            ...columnSizeVars,
-            width: table.getTotalSize(),
-          }}
-        >
-          <Styled.TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => {
-              return (
-                <div key={headerGroup.id} style={{ display: 'flex' }}>
-                  {headerGroup.headers.map((header) => {
-                    return (
-                      <Styled.HeaderCell
-                        className={clsx({ large: header.column.id === 'folderType' })}
-                        key={header.id}
-                        style={{
-                          position: 'relative',
-                          minWidth: '160px',
-                          width: `calc(var(--header-${header?.id}-size) * 1px)`,
-                        }}
-                      >
-                        {header.isPlaceholder ? null : (
-                          <Styled.TableCellContent
-                            className={clsx('bold', { large: header.column.id === 'folderType' })}
-                            style={{ paddingRight: 0 }}
-                          >
-                            {flexRender(header.column.columnDef.header, header.getContext())}
-                            <Styled.ResizedHandler
-                              {...{
-                                onDoubleClick: () => header.column.resetSize(),
-                                onMouseDown: header.getResizeHandler(),
-                                onTouchStart: header.getResizeHandler(),
-                                className: `resize-handler ${
-                                  header.column.getIsResizing() ? 'isResizing' : ''
-                                }`,
-                              }}
-                            />
-                          </Styled.TableCellContent>
-                        )}
-                      </Styled.HeaderCell>
-                    )
-                  })}
-                </div>
-              )
-            })}
-          </Styled.TableHeader>
-          {tableBody}
-        </table>
-      </Styled.TableContainer>
-    </Styled.TableContainerWrapper>
+    <CellEditingProvider>
+      <Styled.TableContainerWrapper style={{ height: '100%' }}>
+        <Styled.TableContainer ref={tableContainerRef} style={{ height: '100%' }}>
+          <table
+            style={{
+              borderCollapse: 'collapse',
+              userSelect: 'none',
+              ...columnSizeVars,
+              width: table.getTotalSize(),
+            }}
+          >
+            <Styled.TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => {
+                return (
+                  <div key={headerGroup.id} style={{ display: 'flex' }}>
+                    {headerGroup.headers.map((header) => {
+                      return (
+                        <Styled.HeaderCell
+                          className={clsx({ large: header.column.id === 'folderType' })}
+                          key={header.id}
+                          style={{
+                            width: `calc(var(--header-${header?.id}-size) * 1px)`,
+                          }}
+                        >
+                          {header.isPlaceholder ? null : (
+                            <Styled.TableCellContent
+                              className={clsx('bold', { large: header.column.id === 'folderType' })}
+                            >
+                              {flexRender(header.column.columnDef.header, header.getContext())}
+                              <Styled.ResizedHandler
+                                {...{
+                                  onDoubleClick: () => header.column.resetSize(),
+                                  onMouseDown: header.getResizeHandler(),
+                                  onTouchStart: header.getResizeHandler(),
+                                  className: `resize-handler ${
+                                    header.column.getIsResizing() ? 'isResizing' : ''
+                                  }`,
+                                }}
+                              />
+                            </Styled.TableCellContent>
+                          )}
+                        </Styled.HeaderCell>
+                      )
+                    })}
+                  </div>
+                )
+              })}
+            </Styled.TableHeader>
+            {tableBody}
+          </table>
+        </Styled.TableContainer>
+      </Styled.TableContainerWrapper>
+    </CellEditingProvider>
   )
 }
 

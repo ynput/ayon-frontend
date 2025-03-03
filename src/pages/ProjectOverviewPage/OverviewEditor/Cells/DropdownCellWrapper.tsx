@@ -1,4 +1,4 @@
-import { PropsWithChildren } from 'react';
+import { PropsWithChildren } from 'react'
 import DropdownCell from './DropdownCell'
 type Props = {
   previewValue: { icon: string; color: string; text: string }
@@ -6,6 +6,10 @@ type Props = {
   handleExpandIconClick: () => void
 }
 
+// This either renders the dropdown component or the preview component
+// depending on the showPreview prop
+// we do this to avoid rendering the dropdown component when it's not needed
+// because it's a heavy component
 const DropdownCellWrapper: React.FC<HTMLDivElement & PropsWithChildren<Props>> = ({
   previewValue,
   showPreview,

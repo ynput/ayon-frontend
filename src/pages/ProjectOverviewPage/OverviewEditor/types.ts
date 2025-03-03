@@ -17,6 +17,7 @@ export type TableRow = {
   attrib?: Record<string, $Any>
   childOnlyMatch?: boolean // when true, only children of this folder match the filter and not the folder itself (shots a dot)
   subType?: string | null
+  type: string
 }
 
 export type ExtraData = {

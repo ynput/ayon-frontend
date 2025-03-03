@@ -10,8 +10,9 @@ export const TableCellContent = styled.div`
   padding: 0px 4px;
   border-radius: var(--border-radius-m);
   user-select: none;
+  padding-right: 0;
 
-  width: 100%;
+  min-width: 300px;
   height: auto;
   &.bold {
     font-weight: 600;
@@ -35,7 +36,8 @@ export const EditableCellContent = styled(SimpleEditableCell)`
 `
 
 export const HeaderCell = styled.div`
-  box-shadow: inset 0 0 0 1px var(--md-sys-color-surface-container-highest);
+  position: relative;
+  box-shadow: inset 1px -1px 0 0 var(--md-sys-color-surface-container-highest);
   display: flex;
   align-items: center;
   min-height: fit-content;
@@ -46,10 +48,12 @@ export const HeaderCell = styled.div`
 `
 
 export const TableCell = styled.td`
-  box-shadow: inset 0 0 0 1px var(--md-sys-color-surface-container-highest);
+  position: relative;
+  box-shadow: inset 1px -1px 0 0 var(--md-sys-color-surface-container-highest);
+  min-width: 160px;
   &.selected {
-    border-color: white;
-    background-color: var(--md-sys-color-primary-container);
+    box-shadow: inset 0 0 0 2px var(--md-sys-color-primary);
+    background-color: var(--md-sys-color-secondary-container);
   }
 `
 
