@@ -104,7 +104,6 @@ function FieldTemplate(props: FieldTemplateProps) {
     model.push({
       label: 'Copy',
       command: () => {
-        console.log('Copy Field', props.formData)
         if (!props.formData || (Array.isArray(props.formData) && props.formData.length === 0)) {
           toast.warn('No data to copy')
           return
@@ -120,7 +119,7 @@ function FieldTemplate(props: FieldTemplateProps) {
     })
 
     return model
-  }, [override, path])
+  }, [override, props.formData, path])
 
   const onContextMenu = (e: $Any) => {
     e.preventDefault()

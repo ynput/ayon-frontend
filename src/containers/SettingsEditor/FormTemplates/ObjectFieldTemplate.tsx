@@ -1,4 +1,5 @@
 import clsx from 'clsx'
+import { toast } from 'react-toastify'
 import { useMemo } from 'react'
 import ReactMarkdown from 'react-markdown'
 import SettingsPanel from '../SettingsPanel'
@@ -104,7 +105,7 @@ function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
         else otherFields.push(element.content)
       }
       return (
-        <div style={{width: '100%'}}>
+        <div style={{ width: '100%' }}>
           {longDescription}
           <div className={className}>
             <div className="name-field">{nameField}</div>
@@ -118,7 +119,12 @@ function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
       )
     } // ugly layout
 
-    const matches = matchesFilterKeys(props.formContext.searchText, props.formContext.filterKeys, props.formContext.addonName, props.idSchema.$id)
+    const matches = matchesFilterKeys(
+      props.formContext.searchText,
+      props.formContext.filterKeys,
+      props.formContext.addonName,
+      props.idSchema.$id,
+    )
 
     return (
       <div
@@ -190,7 +196,14 @@ function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
     model.push(
       {
         label: 'Copy',
-        command: () => copyToClipboard(JSON.stringify(props.formData, null, 2)),
+        command: () => {
+          if (!props.formData || (Array.isArray(props.formData) && props.formData.length === 0)) {
+            console.log('No data to copy', props)
+            toast.warn('No data to copy')
+            return
+          }
+          copyToClipboard(JSON.stringify(props.formData, null, 2))
+        },
       },
       {
         label: 'Paste',
@@ -273,7 +286,12 @@ function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
     contextMenu(e, contextMenuModel)
   }
 
-  const matches = matchesFilterKeys(props.formContext.searchText, props.formContext.filterKeys, props.formContext.addonName, props.idSchema.$id)
+  const matches = matchesFilterKeys(
+    props.formContext.searchText,
+    props.formContext.filterKeys,
+    props.formContext.addonName,
+    props.idSchema.$id,
+  )
 
   return (
     <div
