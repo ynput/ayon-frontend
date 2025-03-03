@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import {
   useReactTable,
@@ -70,47 +70,43 @@ const FlexTable = ({
     return item.original.data.type === 'folder' ? 'folders' : 'tasks'
   }
 
-  const getRawData = (item: Row<TableRow>) => {
-    return rawData[getRowType(item)]?.[item.id]
-  }
-
   const getCopyCellData = (item: Row<TableRow>, accessor: string) => {
     const type = getRowType(item)
-    const data = getRawData(item)
-    if (accessor === 'type') {
-      return {
-        type: type === 'folders' ? 'folderType' : 'taskType',
-        value: type === 'folders' ? data.folderType : data.taskType,
-        isAttrib: false,
-      }
-    }
-    if (accessor === 'priority') {
-      return {
-        type: 'priority',
-        value: data.attrib.priority,
-        isAttrib: true,
-      }
-    }
-    if (accessor === 'status') {
-      return {
-        type: 'status',
-        value: data.status,
-        isAttrib: false,
-      }
-    }
-    if (accessor === 'assignees') {
-      return {
-        type: 'assignees',
-        value: data.assignees,
-        isAttrib: false,
-      }
-    }
+    // const data = getRawData(item)
+    // if (accessor === 'type') {
+    //   return {
+    //     type: type === 'folders' ? 'folderType' : 'taskType',
+    //     value: type === 'folders' ? data.folderType : data.taskType,
+    //     isAttrib: false,
+    //   }
+    // }
+    // if (accessor === 'priority') {
+    //   return {
+    //     type: 'priority',
+    //     value: data.attrib.priority,
+    //     isAttrib: true,
+    //   }
+    // }
+    // if (accessor === 'status') {
+    //   return {
+    //     type: 'status',
+    //     value: data.status,
+    //     isAttrib: false,
+    //   }
+    // }
+    // if (accessor === 'assignees') {
+    //   return {
+    //     type: 'assignees',
+    //     value: data.assignees,
+    //     isAttrib: false,
+    //   }
+    // }
 
-    return {
-      type: accessor,
-      value: data.attrib[accessor],
-      isAttrib: true,
-    }
+    // return {
+    //   type: accessor,
+    //   value: data.attrib[accessor],
+    //   isAttrib: true,
+    // }
   }
 
   const columns = TableColumns({
@@ -174,6 +170,7 @@ const FlexTable = ({
   })
 
   const columnSizeVars = useCustomColumnWidths(table)
+
   useSyncCustomColumnWidths(table.getState().columnSizing)
 
   const handleCopy = (cell: $Any, colIdx: number) => {
@@ -228,62 +225,74 @@ const FlexTable = ({
     // updateAttribute(row.id, copyValue!.type, copyValue!.value, copyValue!.isAttrib)
   }
 
-  const tableBody = (
-    <tbody style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
-      {rowVirtualizer.getVirtualItems().map((virtualRow: $Any, rowIdx) => {
-        const row = rows[virtualRow.index] as Row<TableRow>
-        return (
-          <tr
-            data-index={virtualRow.index} //needed for dynamic row height measurement
-            // @ts-ignore
-            ref={(node) => rowVirtualizer.measureElement(node)} //measure dynamic row height
-            key={row.id}
-            style={{
-              display: 'table-row',
-              transform: `translateY(${virtualRow.start}px)`, //this should always be a `style` as it changes on scroll
-            }}
-          >
-            {row.getVisibleCells().map((cell, colIdx) => {
-              return (
-                <Styled.TableCell
-                  tabIndex={0}
-                  key={cell.id}
-                  className={clsx(
-                    `pos-${rowIdx}-${colIdx}`,
-                    cell.column.id === 'folderType' ? 'large' : '',
-                    {
-                      notSelected: !isSelected(absoluteSelections, virtualRow.index, colIdx),
-                      selected: isSelected(absoluteSelections, virtualRow.index, colIdx),
-                    },
-                  )}
-                  style={{
-                    width: `calc(var(--col-${cell.column.id}-size) * 1px)`,
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'c' && e.ctrlKey) {
-                      handleCopy(cell, colIdx)
-                    }
-                    if (e.key === 'v' && e.ctrlKey) {
-                      handlePaste(cell, rows)
-                    }
-                  }}
-                  onMouseDown={(e) => {
-                    // @ts-ignore
-                    handleMouseDown(e, cell, virtualRow.index, colIdx)
-                  }}
-                  onMouseUp={(e) => {
-                    // @ts-ignore
-                    handleMouseUp(e, cell, virtualRow.index, colIdx)
-                  }}
-                >
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </Styled.TableCell>
-              )
-            })}
-          </tr>
-        )
-      })}
-    </tbody>
+  const tableBody = useMemo(
+    () => (
+      <tbody style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
+        {rowVirtualizer.getVirtualItems().map((virtualRow: $Any, rowIdx) => {
+          const row = rows[virtualRow.index] as Row<TableRow>
+          return (
+            <tr
+              data-index={virtualRow.index} //needed for dynamic row height measurement
+              // @ts-ignore
+              ref={(node) => rowVirtualizer.measureElement(node)} //measure dynamic row height
+              key={row.id}
+              style={{
+                display: 'table-row',
+                transform: `translateY(${virtualRow.start}px)`, //this should always be a `style` as it changes on scroll
+              }}
+            >
+              {row.getVisibleCells().map((cell, colIdx) => {
+                return (
+                  <Styled.TableCell
+                    tabIndex={0}
+                    key={cell.id}
+                    className={clsx(
+                      `pos-${rowIdx}-${colIdx}`,
+                      cell.column.id === 'folderType' ? 'large' : '',
+                      {
+                        notSelected: !isSelected(absoluteSelections, virtualRow.index, colIdx),
+                        selected: isSelected(absoluteSelections, virtualRow.index, colIdx),
+                      },
+                    )}
+                    style={{
+                      width: `calc(var(--col-${cell.column.id}-size) * 1px)`,
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'c' && e.ctrlKey) {
+                        handleCopy(cell, colIdx)
+                      }
+                      if (e.key === 'v' && e.ctrlKey) {
+                        handlePaste(cell, rows)
+                      }
+                    }}
+                    onMouseDown={(e) => {
+                      // @ts-ignore
+                      handleMouseDown(e, cell, virtualRow.index, colIdx)
+                    }}
+                    onMouseUp={(e) => {
+                      // @ts-ignore
+                      handleMouseUp(e, cell, virtualRow.index, colIdx)
+                    }}
+                  >
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </Styled.TableCell>
+                )
+              })}
+            </tr>
+          )
+        })}
+      </tbody>
+    ),
+    [
+      rowVirtualizer,
+      rows,
+      absoluteSelections,
+      handleMouseDown,
+      handleMouseUp,
+      handleCopy,
+      handlePaste,
+      isSelected,
+    ],
   )
 
   return (
@@ -313,7 +322,9 @@ const FlexTable = ({
                         >
                           {header.isPlaceholder ? null : (
                             <Styled.TableCellContent
-                              className={clsx('bold', { large: header.column.id === 'folderType' })}
+                              className={clsx('bold', {
+                                large: header.column.id === 'folderType',
+                              })}
                             >
                               {flexRender(header.column.columnDef.header, header.getContext())}
                               <Styled.ResizedHandler
@@ -321,9 +332,9 @@ const FlexTable = ({
                                   onDoubleClick: () => header.column.resetSize(),
                                   onMouseDown: header.getResizeHandler(),
                                   onTouchStart: header.getResizeHandler(),
-                                  className: `resize-handler ${
-                                    header.column.getIsResizing() ? 'isResizing' : ''
-                                  }`,
+                                  className: clsx('resize-handle', {
+                                    resizing: header.column.getIsResizing(),
+                                  }),
                                 }}
                               />
                             </Styled.TableCellContent>

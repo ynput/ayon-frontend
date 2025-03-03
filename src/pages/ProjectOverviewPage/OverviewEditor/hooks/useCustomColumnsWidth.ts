@@ -1,22 +1,22 @@
-import { useSetFrontendPreferencesMutation } from "@queries/user/updateUser"
-import { useAppSelector } from "@state/store"
-import { ColumnSizingState, Table } from "@tanstack/react-table"
-import { $Any } from "@types"
-import { debounce, isEqual } from "lodash"
-import { useCallback, useEffect, useMemo } from "react"
+import { useSetFrontendPreferencesMutation } from '@queries/user/updateUser'
+import { useAppSelector } from '@state/store'
+import { ColumnSizingState, Table } from '@tanstack/react-table'
+import { $Any } from '@types'
+import { debounce, isEqual } from 'lodash'
+import { useCallback, useEffect, useMemo } from 'react'
 
 const useStoredCustomColumnWidths = () => {
   const frontendPreferences = useAppSelector((state) => state.user.data.frontendPreferences)
-  const storedColumnWidths = (frontendPreferences.columnSizes as {[key: string]: number})?.overview || {}
+  const storedColumnWidths =
+    (frontendPreferences.columnSizes as { [key: string]: number })?.overview || {}
 
   return storedColumnWidths
 }
 
-const useCustomColumnWidths = (
-  table: Table<$Any>
-) => {
+const useCustomColumnWidths = (table: Table<$Any>) => {
   const frontendPreferences = useAppSelector((state) => state.user.data.frontendPreferences)
-  const storedColumnWidths = (frontendPreferences.columnSizes as {[key: string]: number})?.overview || {}
+  const storedColumnWidths =
+    (frontendPreferences.columnSizes as { [key: string]: number })?.overview || {}
 
   const headers = table.getFlatHeaders()
   const columnSizingInfo = table.getState().columnSizingInfo
@@ -30,17 +30,16 @@ const useCustomColumnWidths = (
       colSizes[`--col-${header.column.id}-size`] = header.column.getSize()
     }
     return colSizes
-  }, [columnSizingInfo, columnSizing, storedColumnWidths])
+  }, [columnSizingInfo, columnSizing, storedColumnWidths, headers])
 
   return columnSizeVars
 }
 
-const useSyncCustomColumnWidths = (
-  columnSizing: ColumnSizingState,
-) => {
+const useSyncCustomColumnWidths = (columnSizing: ColumnSizingState) => {
   const userName = useAppSelector((state) => state.user.name)
   const frontendPreferences = useAppSelector((state) => state.user.data.frontendPreferences)
-  const storedColumnWidths = (frontendPreferences.columnSizes as {[key: string]: number})?.overview || {}
+  const storedColumnWidths =
+    (frontendPreferences.columnSizes as { [key: string]: number })?.overview || {}
   const [updateUserPreferences] = useSetFrontendPreferencesMutation()
 
   const debouncedUpdate = useCallback(
@@ -57,7 +56,6 @@ const useSyncCustomColumnWidths = (
     }, 500),
     [],
   )
-
 
   useEffect(() => {
     if (isEqual(columnSizing, {})) {

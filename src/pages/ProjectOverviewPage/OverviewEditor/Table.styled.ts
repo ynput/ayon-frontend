@@ -21,11 +21,19 @@ export const TableCellContent = styled.div`
 
 export const ResizedHandler = styled.div`
   position: absolute;
-  right: -2px;
+  right: -1px;
   top: 0;
   bottom: 0;
-  width: 4px;
+  width: 6px;
   cursor: col-resize;
+  background-color: var(--md-sys-color-surface-container-high);
+
+  opacity: 0;
+
+  &.resizing {
+    background-color: var(--md-sys-color-primary);
+    opacity: 1;
+  }
 `
 
 export const EditableCellContent = styled(SimpleEditableCell)`
@@ -44,6 +52,11 @@ export const HeaderCell = styled.div`
   min-width: 160px;
   &.large {
     min-width: 300px;
+  }
+  &:hover {
+    .resize-handle {
+      opacity: 1;
+    }
   }
 `
 
