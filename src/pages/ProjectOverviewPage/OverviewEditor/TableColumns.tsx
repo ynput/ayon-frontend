@@ -11,13 +11,7 @@ import { TableCellContent } from './Table.styled'
 import { useStoredCustomColumnWidths } from './hooks/useCustomColumnsWidth'
 import { AttributeEnumItem, AttributeModel } from '@api/rest/attributes'
 import { EditorCell } from './Cells/EditorCell'
-
-const CellWrapper = styled.div`
-  width: 150px;
-  height: 36px;
-  box-sizing: border-box;
-  padding-right: 2px;
-`
+import { useCellEditing } from './context/CellEditingContext'
 
 const DelayedShimmerWrapper = styled.div`
   @keyframes fadeInOpacity {
@@ -80,7 +74,6 @@ type Props = {
   sliceId: string
   options: BuiltInFieldOptions
   toggleExpanderHandler: (e: React.MouseEvent, id: string) => void
-  updateHandler: $Any
 }
 
 const TableColumns = ({
@@ -90,26 +83,11 @@ const TableColumns = ({
   sliceId,
   options,
   toggleExpanderHandler,
-  updateHandler,
 }: Props) => {
   // Remove the editingId state, we're now using the context
   const storedColumnSizes = useStoredCustomColumnWidths() as Record<string, number>
 
-  const getValueIdType = (
-    row: Row<TableRow>,
-    field: string,
-    nestedField?: keyof TableRow,
-  ): {
-    value: $Any
-    id: string
-    type: string
-  } => ({
-    value: nestedField
-      ? (row.original[nestedField as keyof TableRow] as any)?.[field]
-      : (row.original[field as keyof TableRow] as any),
-    id: row.id,
-    type: row.original.data.type,
-  })
+  const { updateEntities } = useCellEditing()
 
   return useMemo<ColumnDef<TableRow>[]>(() => {
     const staticColumns: ColumnDef<TableRow>[] = [
@@ -163,9 +141,10 @@ const TableColumns = ({
               rowId={id}
               columnId={column.id}
               value={value}
-              attributeData={{ type: 'list_of_strings' }}
+              attributeData={{ type: 'string' }}
               options={options.statuses}
               isCollapsed={!!row.original.childOnlyMatch}
+              onChange={(value) => updateEntities(column.id, value, [{ id, type }], false)}
             />
           )
         },
@@ -178,15 +157,16 @@ const TableColumns = ({
         size: storedColumnSizes['type'] || 150,
         cell: ({ row, column }) => {
           const { value, id, type } = getValueIdType(row, column.id)
+          const fieldId = type === 'folder' ? 'folderType' : 'taskType'
           return (
             <EditorCell
               rowId={id}
               columnId={column.id}
               value={value}
-              attributeData={{ type: 'list_of_strings' }}
+              attributeData={{ type: 'string' }}
               options={type === 'folder' ? options.folderTypes : options.taskTypes}
-              onToggleEdit={updateHandler}
               isCollapsed={!!row.original.childOnlyMatch}
+              onChange={(value) => updateEntities(fieldId, value, [{ id, type }], false)}
             />
           )
         },
@@ -207,8 +187,8 @@ const TableColumns = ({
               value={value}
               attributeData={{ type: 'list_of_strings' }}
               options={options.assignees}
-              onToggleEdit={updateHandler}
               isCollapsed={!!row.original.childOnlyMatch}
+              onChange={(value) => updateEntities(column.id, value, [{ id, type }], false)}
             />
           )
         },
@@ -234,6 +214,7 @@ const TableColumns = ({
               attributeData={{ type: attrib?.data.type || 'string' }}
               options={attrib?.data.enum || []}
               isCollapsed={!!row.original.childOnlyMatch}
+              onChange={(value) => updateEntities(column.id, value, [{ id, type }], true)}
             />
           )
         },
@@ -242,7 +223,23 @@ const TableColumns = ({
     })
 
     return [...staticColumns, ...attributeColumns]
-  }, [isLoading, sliceId, tableData, options, attribs])
+  }, [isLoading, sliceId, tableData, options, attribs, updateEntities])
 }
 
 export default TableColumns
+
+const getValueIdType = (
+  row: Row<TableRow>,
+  field: string,
+  nestedField?: keyof TableRow,
+): {
+  value: $Any
+  id: string
+  type: string
+} => ({
+  value: nestedField
+    ? (row.original[nestedField as keyof TableRow] as any)?.[field]
+    : (row.original[field as keyof TableRow] as any),
+  id: row.id,
+  type: row.original.data.type,
+})

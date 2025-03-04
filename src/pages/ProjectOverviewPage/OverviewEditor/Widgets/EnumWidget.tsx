@@ -1,4 +1,4 @@
-import { AttributeEnumItem } from '@api/rest/attributes'
+import { AttributeData, AttributeEnumItem } from '@api/rest/attributes'
 import { Dropdown, DropdownRef, Icon } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import { forwardRef, useEffect, useRef } from 'react'
@@ -70,7 +70,8 @@ interface EnumWidgetProps extends Omit<React.HTMLAttributes<HTMLSpanElement>, 'o
   value: (string | number | boolean)[]
   isEditing?: boolean
   options: AttributeEnumItem[]
-  onChange: (value: string[]) => void
+  type: AttributeData['type']
+  onChange: (value: string | string[]) => void
 }
 
 const checkForImgSrc = (icon: string): boolean => {
@@ -86,7 +87,7 @@ const checkForImgSrc = (icon: string): boolean => {
 const checkAvatarImg = (src: string): boolean => src.includes('avatar')
 
 export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
-  ({ value, isEditing, options, onChange, ...props }, ref) => {
+  ({ value, isEditing, options, type, onChange }, _ref) => {
     // convert value to string array
     const valueAsStrings = value.map((v) => v?.toString())
     const selectedOptions = options.filter((option) => value.includes(option.value))
@@ -101,12 +102,21 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
     }, [isEditing, dropdownRef.current])
 
     if (isEditing) {
+      const handleChange = (value: string[]) => {
+        if (type.includes('list')) {
+          onChange(value)
+        } else {
+          // take first value as the type is not list]
+          onChange(value[0])
+        }
+      }
+
       return (
         <StyledDropdown
           options={options}
           value={valueAsStrings}
           ref={dropdownRef}
-          valueTemplate={(value, selected, isOpen) => (
+          valueTemplate={(_value, selected, isOpen) => (
             <EnumCellValue
               selectedOptions={options.filter((option) =>
                 selected.includes(option.value.toString()),
@@ -127,7 +137,8 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
             />
           )}
           widthExpand
-          onChange={onChange}
+          multiSelect={type.includes('list')}
+          onChange={handleChange}
         />
       )
     }

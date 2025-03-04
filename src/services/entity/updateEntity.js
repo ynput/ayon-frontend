@@ -61,7 +61,7 @@ const patchProgressView = ({ operations = [], state, dispatch, entityType }) => 
   // find the entries that need to be updated
   let entries = api.util.selectInvalidatedBy(state, invalidationTags)
   // if there are no entries, return
-  if (!entries.length) return
+  if (!entries.length) return []
 
   try {
     // patch each entry with updated task data

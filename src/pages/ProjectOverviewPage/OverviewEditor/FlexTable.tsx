@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, useEffect } from 'react'
+import { useMemo, useRef, useEffect } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import {
   useReactTable,
@@ -19,10 +19,9 @@ import { TableRow } from '@containers/Slicer/types'
 import TableColumns, { BuiltInFieldOptions } from './TableColumns'
 import * as Styled from './Table.styled'
 import { useCustomColumnWidths, useSyncCustomColumnWidths } from './hooks/useCustomColumnsWidth'
-import { toast } from 'react-toastify'
 import { CellEditingProvider } from './context/CellEditingContext'
 import { SelectionProvider, useSelection } from './context/SelectionContext'
-import { parseCellId } from './utils/cellUtils'
+import { getCellId } from './utils/cellUtils'
 
 type Props = {
   tableData: $Any[]
@@ -31,7 +30,6 @@ type Props = {
   isLoading: boolean
   isExpandable: boolean
   sliceId: string
-  updateEntities: (type: string, value: $Any, entities: $Any, isAttrib: boolean) => void
   expanded: Record<string, boolean>
   updateExpanded: OnChangeFn<ExpandedState>
 }
@@ -54,13 +52,11 @@ const FlexTable = ({
   isLoading,
   isExpandable,
   sliceId,
-  updateEntities,
   expanded,
   updateExpanded,
 }: Props) => {
   //The virtualizer needs to know the scrollable container element
   const tableContainerRef = useRef<HTMLDivElement>(null)
-  const [copyValue, setCopyValue] = useState<{ [key: string]: $Any } | null>(null)
 
   // Selection context
   const {
@@ -71,53 +67,8 @@ const FlexTable = ({
     extendSelection,
     endSelection,
     selectCell,
-    getCellIdFromPosition,
     getCellBorderClasses,
   } = useSelection()
-
-  const getRowType = (item: Row<TableRow>) => {
-    // @ts-ignore
-    return item.original.data.type === 'folder' ? 'folders' : 'tasks'
-  }
-
-  const getCopyCellData = (item: Row<TableRow>, accessor: string) => {
-    const type = getRowType(item)
-    // const data = getRawData(item)
-    // if (accessor === 'type') {
-    //   return {
-    //     type: type === 'folders' ? 'folderType' : 'taskType',
-    //     value: type === 'folders' ? data.folderType : data.taskType,
-    //     isAttrib: false,
-    //   }
-    // }
-    // if (accessor === 'priority') {
-    //   return {
-    //     type: 'priority',
-    //     value: data.attrib.priority,
-    //     isAttrib: true,
-    //   }
-    // }
-    // if (accessor === 'status') {
-    //   return {
-    //     type: 'status',
-    //     value: data.status,
-    //     isAttrib: false,
-    //   }
-    // }
-    // if (accessor === 'assignees') {
-    //   return {
-    //     type: 'assignees',
-    //     value: data.assignees,
-    //     isAttrib: false,
-    //   }
-    // }
-
-    // return {
-    //   type: accessor,
-    //   value: data.attrib[accessor],
-    //   isAttrib: true,
-    // }
-  }
 
   const columns = TableColumns({
     tableData,
@@ -130,19 +81,6 @@ const FlexTable = ({
       // track this at some point probably
       console.log('toggleExpanderHandler')
     },
-    updateHandler: (
-      id: string,
-      field: string,
-      val: string,
-      entityType: string,
-      isAttrib: boolean = true,
-    ) => {
-      try {
-        updateEntities(field, val, [{ id, type: entityType }], isAttrib)
-      } catch (e) {
-        toast.error('Error updating entity')
-      }
-    },
   })
 
   const table = useReactTable({
@@ -152,7 +90,7 @@ const FlexTable = ({
     getRowId: (row) => row.id,
     enableSubRowSelection: false, //disable sub row selection
     getSubRows: (row) => row.subRows,
-    getRowCanExpand: (row) => true,
+    getRowCanExpand: () => true,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getExpandedRowModel: getExpandedRowModel(),
@@ -191,58 +129,6 @@ const FlexTable = ({
 
   useSyncCustomColumnWidths(table.getState().columnSizing)
 
-  const handleCopy = (cell: $Any, colIdx: number) => {
-    const cellData = getCopyCellData(cell.row, cell.column.id)
-    setCopyValue({ data: cellData, colIdx })
-  }
-
-  const handlePaste = async (cell: $Any, rows: $Any) => {
-    const type = getRowType(cell.row)
-
-    if (copyValue === null) {
-      return
-    }
-
-    // This part needs to be rewritten to use selectedCells from context instead
-    let updates = []
-
-    // Get selected cells from the context
-    const { selectedCells } = useSelection()
-
-    // For each selected cell, check if it's in the same column as copyValue.colIdx
-    // and collect updates for those rows
-    for (const selectedCellId of selectedCells) {
-      const cellPosition = parseCellId(selectedCellId)
-      if (!cellPosition) continue
-
-      const rowId = cellPosition.rowId
-      const row = rows.find((r) => r.id === rowId)
-      if (!row) continue
-
-      const rowType = getRowType(row)
-      updates.push({
-        id: row.id,
-        type: rowType === 'folders' ? 'folder' : 'task',
-      })
-    }
-
-    if (updates.length === 0) {
-      toast.error('No cells selected for paste operation.')
-      return
-    }
-
-    try {
-      await updateEntities(
-        copyValue!.data.type,
-        copyValue!.data.value,
-        updates,
-        copyValue!.data.isAttrib,
-      )
-    } catch (e) {
-      toast.error('Error updating entity')
-    }
-  }
-
   // Improved table body with cell selections and borders
   const tableBody = useMemo(
     () => (
@@ -261,7 +147,7 @@ const FlexTable = ({
               }}
             >
               {row.getVisibleCells().map((cell) => {
-                const cellId = getCellIdFromPosition(row.id, cell.column.id)
+                const cellId = getCellId(row.id, cell.column.id)
                 const borderClasses = getCellBorderClasses(cellId)
 
                 return (
@@ -281,15 +167,15 @@ const FlexTable = ({
                     }}
                     onKeyDown={(e) => {
                       if (e.key === 'c' && e.ctrlKey) {
-                        handleCopy(
-                          cell,
-                          table
-                            .getHeaderGroups()[0]
-                            .headers.findIndex((h) => h.id === cell.column.id),
-                        )
+                        // handleCopy(
+                        //   cell,
+                        //   table
+                        //     .getHeaderGroups()[0]
+                        //     .headers.findIndex((h) => h.id === cell.column.id),
+                        // )
                       }
                       if (e.key === 'v' && e.ctrlKey) {
-                        handlePaste(cell, rows)
+                        // handlePaste(cell, rows)
                       }
                     }}
                     onMouseDown={(e) => {
@@ -297,11 +183,9 @@ const FlexTable = ({
                         // Shift+click extends selection from anchor cell
                         const additive = e.metaKey || e.ctrlKey
                         selectCell(cellId, additive, true) // true for range selection
-                        e.preventDefault()
                       } else {
                         // Normal click starts a new selection
                         startSelection(cellId, e.metaKey || e.ctrlKey)
-                        e.preventDefault() // Prevent text selection
                       }
                     }}
                     onMouseOver={(e) => {
@@ -332,10 +216,7 @@ const FlexTable = ({
       selectCell,
       isCellSelected,
       isCellFocused,
-      getCellIdFromPosition,
       getCellBorderClasses,
-      handleCopy,
-      handlePaste,
       table.getHeaderGroups,
     ],
   )

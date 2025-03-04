@@ -24,7 +24,6 @@ import useAttributeFields from './hooks/useAttributesList'
 import useFetchAndUpdateEntityData from './hooks/useFetchEditorEntities'
 import useFilteredEntities from './hooks/useFilteredEntities'
 import useTableTree from './hooks/useTableTree'
-import useUpdateEditorEntities from './hooks/useUpdateEditorEntities'
 import useFilterBySlice from '@containers/TasksProgress/hooks/useFilterBySlice'
 
 // Components
@@ -57,7 +56,6 @@ const OverviewEditor = ({ filters, showHierarchy, sortBy }: Props) => {
   const { attribFields } = useAttributeFields()
   const { filter: sliceFilter } = useFilterBySlice()
 
-  const { updateEntities } = useUpdateEditorEntities({ projectName, filters, sliceFilter })
   const [expanded, updateExpanded] = useState({})
 
   console.time('dataToTable')
@@ -103,8 +101,6 @@ const OverviewEditor = ({ filters, showHierarchy, sortBy }: Props) => {
 
   console.timeEnd('dataToTable')
 
-  console.log(tableData.length && tableData)
-
   // for folderTypes, taskTypes, statuses and assignees, create options object
   const options: BuiltInFieldOptions = useMemo(
     () => ({
@@ -140,7 +136,6 @@ const OverviewEditor = ({ filters, showHierarchy, sortBy }: Props) => {
                 attribs={attribFields}
                 tableData={tableData}
                 options={options}
-                updateEntities={updateEntities}
                 isLoading={false}
                 isExpandable={false}
                 sliceId={''}

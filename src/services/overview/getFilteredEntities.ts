@@ -90,6 +90,7 @@ const enhancedApi = api.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
     },
     GetFilteredEntitiesByParent: {
       transformResponse: transformFilteredEntitiesByParent,
+      providesTags: [{ type: 'editorTask', id: 'LIST' }],
     },
     GetFilteredEntities: {
       // transformResponse: transformFilteredEntitiesByParent,
@@ -97,7 +98,7 @@ const enhancedApi = api.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
   },
 })
 
-enhancedApi.injectEndpoints({
+const injectedApi = enhancedApi.injectEndpoints({
   endpoints: (build) => ({
     GetPaginatedFilteredEntities: build.query<
       GetFilteredEntitiesQuery,
@@ -146,7 +147,7 @@ enhancedApi.injectEndpoints({
   }),
 })
 
-export default enhancedApi
+export default injectedApi
 
 export const {
   useGetEntitiesByIdsQuery,

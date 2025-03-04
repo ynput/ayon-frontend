@@ -1,32 +1,39 @@
 import { $Any } from '@types'
-import { Filter } from '@ynput/ayon-react-components'
-import { TaskFilterValue } from '@containers/TasksProgress/hooks/useFilterBySlice'
-import api from '@queries/overview/getFilteredEntities'
+import tasksApi from '@queries/overview/getFilteredEntities'
+import hierarchyApi from '@queries/getHierarchy'
 import { useUpdateEntitiesMutation } from '@queries/entity/updateEntity'
-import { useDispatch } from 'react-redux'
-import { mapQueryFilters } from '../mappers/mappers'
+import { useDispatch, useStore } from 'react-redux'
+import { useAppSelector } from '@state/store'
+import { CellId } from '../utils/cellUtils'
+import { CellValue } from '../Cells/EditorCell'
 
-type Params = {
-  projectName: string
-  filters: Filter[]
-  sliceFilter: TaskFilterValue | null
-}
+export type UpdateTableEntities = (
+  field: string,
+  value: CellValue | CellValue[],
+  entities: { id: string; type: string }[],
+  isAttrib: boolean,
+) => Promise<void>
 
-const useUpdateEditorEntities = ({ projectName, filters, sliceFilter }: Params) => {
+export type UpdateTableEntity = (
+  cellId: CellId,
+  value: string,
+  { includeSelection }: { includeSelection: boolean },
+) => Promise<void>
+
+const useUpdateEditorEntities = () => {
+  const projectName = useAppSelector((state) => state.project.name)
   const [bulkUpdateEntities] = useUpdateEntitiesMutation()
   const dispatch = useDispatch()
+  const store = useStore()
 
-  const updateEntities = async (
-    field: string,
-    value: string,
-    entities: { id: string; type: string }[],
-    isAttrib: boolean,
-  ) => {
-    if (!entities.length) {
+  const updateEntities: UpdateTableEntities = async (field, value, entities, isAttrib) => {
+    if (!entities.length || !projectName) {
       return
     }
 
+    // operations used for updating the entities in the database
     let operations: { [key: string]: $Any[] } = {}
+    // changes used for updating the cache
     let changes: { [key: string]: $Any[] } = {}
 
     for (const entity of entities) {
@@ -47,37 +54,51 @@ const useUpdateEditorEntities = ({ projectName, filters, sliceFilter }: Params) 
       })
     }
 
-    const queryFilters = mapQueryFilters({ filters, sliceFilter })
     for (const entityType in operations) {
       bulkUpdateEntities({ operations: operations[entityType], entityType: entityType })
       if (entityType === 'task') {
-        dispatch(
-          api.util.updateQueryData(
-            'GetPaginatedFilteredEntities',
-            { projectName, ...queryFilters },
-            (draft: $Any) => {
-              for (const change of changes[entityType]) {
-                if (isAttrib) {
-                  draft.tasks[change.id].attrib[change.field] = change.value
-                } else {
-                  draft.tasks[change.id][change.field] = change.value
+        const state: any = store.getState()
+        const tags = [{ type: 'editorTask', id: 'LIST' }]
+        const entries = tasksApi.util.selectInvalidatedBy(state, tags)
+
+        console.log(entries)
+
+        for (const entry of entries) {
+          dispatch(
+            // @ts-ignore
+            tasksApi.util.updateQueryData(
+              'GetFilteredEntitiesByParent',
+              entry.originalArgs,
+              (draft) => {
+                for (const change of changes[entityType]) {
+                  const task = draft.find((task) => task.id === change.id)
+                  if (task) {
+                    if (isAttrib) {
+                      ;(task.attrib as { [key: string]: any })[change.field] = change.value
+                    } else {
+                      ;(task as { [key: string]: any })[change.field] = change.value
+                    }
+                  }
                 }
-              }
-            },
-          ),
-        )
+              },
+            ),
+          )
+        }
       }
       if (entityType === 'folder') {
         dispatch(
-          api.util.updateQueryData(
+          // @ts-ignore
+          hierarchyApi.util.updateQueryData(
             'getFolderList',
             { projectName, attrib: true },
-            (draft: $Any) => {
+            (draft) => {
               for (const change of changes[entityType]) {
-                const folder = draft.folders.find((el: $Any) => el.id === change.id)
+                const folder = draft.folders.find((el) => el.id === change.id)
                 if (isAttrib) {
+                  // @ts-ignore
                   folder.attrib[change.field] = change.value
                 } else {
+                  // @ts-ignore
                   folder[change.field] = change.value
                 }
               }

@@ -1,5 +1,5 @@
 import { TableContainer as BaseTableContainer } from '@containers/Slicer/SlicerTable.styled'
-import styled, { css } from 'styled-components'
+import styled from 'styled-components'
 import SimpleEditableCell from './Cells/SimpleEditableCell'
 
 export const TableCellContent = styled.div`

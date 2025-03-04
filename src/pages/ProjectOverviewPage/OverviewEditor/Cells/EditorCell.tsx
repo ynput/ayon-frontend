@@ -28,21 +28,22 @@ const Cell = styled.div`
 
 export type CellValue = string | number | boolean
 
-interface EditorCellProps extends React.HTMLAttributes<HTMLDivElement> {
+interface EditorCellProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onChange'> {
   rowId: string
   columnId: string
   value: CellValue | CellValue[]
   attributeData: AttributeData
   options: AttributeEnumItem[]
   isCollapsed: boolean
+  onChange: (value: CellValue | CellValue[]) => void
 }
 
 const EditorCellComponent = forwardRef<HTMLDivElement, EditorCellProps>(
-  ({ rowId, columnId, value, attributeData, options, isCollapsed, ...props }, ref) => {
+  ({ rowId, columnId, value, attributeData, options, isCollapsed, onChange, ...props }, ref) => {
     const { type } = attributeData
 
-    const { isEditing, setEditingCellId, getCellIdFromPosition } = useCellEditing()
-    const cellId = getCellIdFromPosition(rowId, columnId)
+    const { isEditing, setEditingCellId } = useCellEditing()
+    const cellId = getCellId(rowId, columnId)
 
     const isCurrentCellEditing = isEditing(cellId)
 
@@ -53,8 +54,9 @@ const EditorCellComponent = forwardRef<HTMLDivElement, EditorCellProps>(
     const widget = useMemo(() => {
       // Common props shared across all widgets
       const sharedProps = {
-        onChange: () => {
+        onChange: (value: CellValue | CellValue[]) => {
           setEditingCellId(null)
+          onChange(value)
         },
         onCancelEdit: () => setEditingCellId(null),
         isEditing: isCurrentCellEditing,
@@ -78,19 +80,17 @@ const EditorCellComponent = forwardRef<HTMLDivElement, EditorCellProps>(
 
         case !!options.length: {
           const enumValue = Array.isArray(value) ? value : [value]
-          return <EnumWidget value={enumValue} options={options} {...sharedProps} />
+          return <EnumWidget value={enumValue} options={options} {...sharedProps} type={type} />
         }
 
         case textTypes.includes(type as TextWidgetType):
-          return (
-            <TextWidget value={value as string} {...sharedProps} type={type as TextWidgetType} />
-          )
+          return <TextWidget value={value as string} {...sharedProps} />
 
         case type === 'datetime' && value !== null && value !== undefined:
           return <DateWidget value={value as string} {...sharedProps} />
 
         default:
-          return <TextWidget value={value as string} {...sharedProps} type={'string'} />
+          return <TextWidget value={value as string} {...sharedProps} />
       }
     }, [value, type, isCurrentCellEditing, options, isCollapsed, setEditingCellId])
 

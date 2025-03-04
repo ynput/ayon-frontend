@@ -44,7 +44,6 @@ interface SelectionContextType {
   clearSelection: () => void
   isCellSelected: (cellId: CellId) => boolean
   isCellFocused: (cellId: CellId) => boolean
-  getCellIdFromPosition: (rowId: RowId, colId: ColId) => CellId
   getCellPositionFromId: (cellId: CellId) => CellPosition | null
   getCellBorderClasses: (cellId: CellId) => string[]
 }
@@ -214,12 +213,6 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({ children 
   // Check if a cell is focused
   const isCellFocused = useCallback((cellId: CellId) => cellId === focusedCellId, [focusedCellId])
 
-  // Get cell ID from row and column IDs - using shared utility
-  const getCellIdFromPosition = useCallback(
-    (rowId: RowId, colId: ColId) => getCellId(rowId, colId),
-    [],
-  )
-
   // Get position from cell ID - using shared utility
   const getCellPositionFromId = useCallback((cellId: CellId) => parseCellId(cellId), [])
 
@@ -286,7 +279,6 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({ children 
       clearSelection,
       isCellSelected,
       isCellFocused,
-      getCellIdFromPosition,
       getCellPositionFromId,
       getCellBorderClasses,
     }),
@@ -304,7 +296,6 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({ children 
       clearSelection,
       isCellSelected,
       isCellFocused,
-      getCellIdFromPosition,
       getCellPositionFromId,
       getCellBorderClasses,
     ],
