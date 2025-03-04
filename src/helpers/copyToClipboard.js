@@ -1,7 +1,10 @@
 import { toast } from 'react-toastify'
 
 const copyToClipboard = (message, toastMessage = false) => {
-  if (!message) return
+  if (!message) {
+    toast.warn('Nothing to copy')
+    return
+  }
 
   try {
     if (navigator.clipboard) {

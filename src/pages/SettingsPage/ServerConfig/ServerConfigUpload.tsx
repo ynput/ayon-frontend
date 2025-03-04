@@ -67,14 +67,16 @@ const ServerConfigUpload: FC<ServerConfigUploadProps> = ({ fileType, fileName, s
       const selectedFile = e.target.files[0]
       setLoading(true)
       try {
+        // sanitize the filename
+        const filename = selectedFile.name.replace(/[^a-zA-Z0-9.]/g, '_')
         await axios.put(`/api/config/files/${fileType}`, selectedFile, {
           headers: {
-            'x-file-name': selectedFile.name,
+            'x-file-name': filename,
             'content-type': selectedFile.type,
           },
         })
         toast.success('File uploaded successfully')
-        setFileName(selectedFile.name)
+        setFileName(filename)
         // handle success (e.g., show a notification)
       } catch (error) {
         toast.error('Failed to upload file')
