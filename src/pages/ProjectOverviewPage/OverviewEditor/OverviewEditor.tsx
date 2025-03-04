@@ -141,6 +141,9 @@ const OverviewEditor = ({ filters, showHierarchy, sortBy }: Props) => {
                 sliceId={''}
                 expanded={expanded}
                 updateExpanded={updateExpanded}
+                // metadata
+                tasksMap={tasksMap}
+                foldersMap={foldersMap}
               />
             </TablePanel>
           </SplitterPanel>

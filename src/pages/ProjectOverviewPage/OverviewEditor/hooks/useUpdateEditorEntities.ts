@@ -5,7 +5,7 @@ import { OperationModel } from '@api/rest/operations'
 import { useOperationsMutation } from '@queries/overview/updateOverview'
 import { toast } from 'react-toastify'
 
-type EntityUpdate = {
+export type EntityUpdate = {
   id: string
   type: string
   field: string
@@ -44,12 +44,34 @@ const useUpdateEditorEntities = () => {
         ? { attrib: { [entity.field]: entity.value } }
         : { [entity.field]: entity.value }
 
-      operations.push({
-        entityType: entityType,
-        entityId: entity.id,
-        type: 'update',
-        data: data,
-      })
+      const existingOperationIndex = operations.findIndex(
+        (op) => op.entityId === entity.id && op.entityType === entityType,
+      )
+
+      if (existingOperationIndex !== -1) {
+        // Merge data with existing operation
+        const existingOperation = operations[existingOperationIndex]
+        let newData = { ...existingOperation.data, ...data }
+
+        // @ts-expect-error
+        if (existingOperation.data?.attrib && data.attrib) {
+          // @ts-expect-error
+          newData = { ...newData, attrib: { ...existingOperation.data.attrib, ...data.attrib } }
+        }
+
+        operations[existingOperationIndex] = {
+          ...existingOperation,
+          data: newData,
+        }
+      } else {
+        // Add new operation
+        operations.push({
+          entityType: entityType,
+          entityId: entity.id,
+          type: 'update',
+          data: data,
+        })
+      }
     }
 
     // now make api call to update all entities

@@ -21,25 +21,48 @@ import * as Styled from './Table.styled'
 import { useCustomColumnWidths, useSyncCustomColumnWidths } from './hooks/useCustomColumnsWidth'
 import { CellEditingProvider } from './context/CellEditingContext'
 import { SelectionProvider, useSelection } from './context/SelectionContext'
+import { ClipboardProvider } from './context/ClipboardContext'
 import { getCellId } from './utils/cellUtils'
+import { FolderNodeMap, TaskNodeMap } from './types'
+import { FolderType, Status, TaskType } from '@api/rest/project'
+import { AttributeEnumItem, AttributeModel } from '@api/rest/attributes'
 
 type Props = {
   tableData: $Any[]
   options: BuiltInFieldOptions
-  attribs: $Any[]
+  attribs: AttributeModel[]
   isLoading: boolean
   isExpandable: boolean
   sliceId: string
   expanded: Record<string, boolean>
   updateExpanded: OnChangeFn<ExpandedState>
+  // metadata
+  tasksMap: TaskNodeMap
+  foldersMap: FolderNodeMap
 }
 
-// Component to wrap with both providers
+// Component to wrap with all providers
 const FlexTableWithProviders = (props: Props) => {
+  // convert attribs to object
+  const attribByField = useMemo(() => {
+    return props.attribs.reduce((acc: Record<string, AttributeEnumItem[]>, attrib) => {
+      if (attrib.data?.enum?.length) {
+        acc[attrib.name] = attrib.data?.enum
+      }
+      return acc
+    }, {})
+  }, [props.attribs])
+
   return (
     <SelectionProvider>
       <CellEditingProvider>
-        <FlexTable {...props} />
+        <ClipboardProvider
+          foldersMap={props.foldersMap}
+          tasksMap={props.tasksMap}
+          columnEnums={{ ...props.options, ...attribByField }}
+        >
+          <FlexTable {...props} />
+        </ClipboardProvider>
       </CellEditingProvider>
     </SelectionProvider>
   )
@@ -122,7 +145,7 @@ const FlexTable = ({
       typeof window !== 'undefined' && navigator.userAgent.indexOf('Firefox') === -1
         ? (element) => element?.getBoundingClientRect().height
         : undefined,
-    overscan: 5,
+    overscan: 10,
   })
 
   const columnSizeVars = useCustomColumnWidths(table)
@@ -165,19 +188,6 @@ const FlexTable = ({
                     style={{
                       width: `calc(var(--col-${cell.column.id}-size) * 1px)`,
                     }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'c' && e.ctrlKey) {
-                        // handleCopy(
-                        //   cell,
-                        //   table
-                        //     .getHeaderGroups()[0]
-                        //     .headers.findIndex((h) => h.id === cell.column.id),
-                        // )
-                      }
-                      if (e.key === 'v' && e.ctrlKey) {
-                        // handlePaste(cell, rows)
-                      }
-                    }}
                     onMouseDown={(e) => {
                       if (e.shiftKey) {
                         // Shift+click extends selection from anchor cell
@@ -209,6 +219,7 @@ const FlexTable = ({
     ),
     [
       rowVirtualizer,
+      rowVirtualizer.isScrolling,
       rows,
       startSelection,
       extendSelection,

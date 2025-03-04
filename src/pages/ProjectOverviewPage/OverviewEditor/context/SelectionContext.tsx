@@ -33,6 +33,8 @@ interface SelectionContextType {
   selectionInProgress: boolean
   // Anchor point for range selections
   anchorCell: CellPosition | null
+  // Grid mapping for coordinate lookups
+  gridMap: GridMap
 
   // Methods
   registerGrid: (rows: RowId[], columns: ColId[]) => void
@@ -270,6 +272,7 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({ children 
       focusedCellId,
       selectionInProgress,
       anchorCell,
+      gridMap,
       registerGrid,
       selectCell,
       startSelection,
@@ -287,6 +290,7 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({ children 
       focusedCellId,
       selectionInProgress,
       anchorCell,
+      gridMap,
       registerGrid,
       selectCell,
       startSelection,
