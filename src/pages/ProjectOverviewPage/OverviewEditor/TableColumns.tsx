@@ -144,7 +144,7 @@ const TableColumns = ({
               attributeData={{ type: 'string' }}
               options={options.statuses}
               isCollapsed={!!row.original.childOnlyMatch}
-              onChange={(value) => updateEntities(column.id, value, [{ id, type }], false)}
+              onChange={(value) => updateEntities([{ field: column.id, value, id, type }])}
             />
           )
         },
@@ -166,7 +166,7 @@ const TableColumns = ({
               attributeData={{ type: 'string' }}
               options={type === 'folder' ? options.folderTypes : options.taskTypes}
               isCollapsed={!!row.original.childOnlyMatch}
-              onChange={(value) => updateEntities(fieldId, value, [{ id, type }], false)}
+              onChange={(value) => updateEntities([{ field: fieldId, value, id, type }])}
             />
           )
         },
@@ -188,7 +188,7 @@ const TableColumns = ({
               attributeData={{ type: 'list_of_strings' }}
               options={options.assignees}
               isCollapsed={!!row.original.childOnlyMatch}
-              onChange={(value) => updateEntities(column.id, value, [{ id, type }], false)}
+              onChange={(value) => updateEntities([{ field: column.id, value, id, type }])}
             />
           )
         },
@@ -214,7 +214,9 @@ const TableColumns = ({
               attributeData={{ type: attrib?.data.type || 'string' }}
               options={attrib?.data.enum || []}
               isCollapsed={!!row.original.childOnlyMatch}
-              onChange={(value) => updateEntities(column.id, value, [{ id, type }], true)}
+              onChange={(value) =>
+                updateEntities([{ field: column.id, value, id, type, isAttrib: true }])
+              }
             />
           )
         },

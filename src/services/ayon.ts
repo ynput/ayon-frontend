@@ -100,7 +100,7 @@ const tagTypes = [
   'watchers',
   'progress',
   'userPool',
-  'editorTask',
+  'overviewTask',
 ]
 
 const prepareHeaders = (headers: any) => {

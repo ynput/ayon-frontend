@@ -90,7 +90,7 @@ const enhancedApi = api.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
     },
     GetFilteredEntitiesByParent: {
       transformResponse: transformFilteredEntitiesByParent,
-      providesTags: [{ type: 'editorTask', id: 'LIST' }],
+      providesTags: [{ type: 'overviewTask', id: 'LIST' }],
     },
     GetFilteredEntities: {
       // transformResponse: transformFilteredEntitiesByParent,

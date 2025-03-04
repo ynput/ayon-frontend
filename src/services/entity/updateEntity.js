@@ -368,6 +368,8 @@ const updateEntity = api.injectEndpoints({
 
             // revert the progress view patches
             progressPatches.forEach((patch) => patch?.undo())
+
+            throw 'Failed to update some tasks'
           }
 
           const activityTags = []
@@ -379,7 +381,7 @@ const updateEntity = api.injectEndpoints({
           return { data: operations }
         } catch (error) {
           console.error(error)
-          return error
+          return { error }
         }
       },
       invalidatesTags: (result, error, { operations }) =>

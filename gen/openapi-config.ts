@@ -34,6 +34,7 @@ const outputFiles = {
   dependencyPackages: ['listDependencyPackages', 'createDependencyPackage'],
   cloud: ['getYnputCloudInfo', 'setYnputCloudKey', 'deleteYnputCloudKey'],
   attributes: ['getAttributeList', 'setAttributeList', 'getAttributeConfig'],
+  operations: ['operations'],
 }
 
 const buildOutputFiles = (files: { [name: string]: string[] }) =>
