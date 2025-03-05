@@ -51,6 +51,13 @@ const EditorCellComponent = forwardRef<HTMLDivElement, EditorCellProps>(
       setEditingCellId(cellId)
     }, [cellId, setEditingCellId])
 
+    const handleSingleClick = () => {
+      // clicking a cell that is not editing will close the editor on this cell
+      if (!isCurrentCellEditing) {
+        setEditingCellId(null)
+      }
+    }
+
     const widget = useMemo(() => {
       // Common props shared across all widgets
       const sharedProps = {
@@ -99,6 +106,7 @@ const EditorCellComponent = forwardRef<HTMLDivElement, EditorCellProps>(
         {...props}
         ref={ref}
         onDoubleClick={handleDoubleClick}
+        onClick={handleSingleClick}
         id={cellId}
         className={clsx({ editing: isCurrentCellEditing })}
       >
