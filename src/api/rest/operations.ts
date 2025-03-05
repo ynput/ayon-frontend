@@ -124,6 +124,7 @@ export type OperationResponseModel = {
   entityId?: string
   success: boolean
   status: number
+  errorCode?: string
   detail?: string
 }
 export type OperationsResponseModel = {
