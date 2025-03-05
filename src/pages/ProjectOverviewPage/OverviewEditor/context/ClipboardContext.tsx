@@ -179,6 +179,9 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
       const parsedData = parseClipboardText(clipboardText)
       if (!parsedData.length) return
 
+      // Determine if we have a single value in the clipboard (one row, one column)
+      const isSingleCellValue = parsedData.length === 1 && parsedData[0].values.length === 1
+
       // Organize selected cells by row
       const cellsByRow = new Map<string, Set<string>>()
 
@@ -210,12 +213,6 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
         return indexA - indexB
       })
 
-      // Validate column count matches
-      if (parsedData[0].values.length !== selectedColIds.length) {
-        clipboardError('Column count mismatch between copied and selected cells.')
-        return
-      }
-
       // First pass: validate all values for status and subType
       for (let colIndex = 0; colIndex < selectedColIds.length; colIndex++) {
         const colId = selectedColIds[colIndex]
@@ -225,11 +222,45 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
           const isFolder = foldersMap.has(rowId)
 
           // Get the appropriate value from the clipboard data
-          const pasteRowIndex = rowIndex % parsedData.length
-          const pasteValue = parsedData[pasteRowIndex].values[colIndex]
+          // If it's a single cell value, use it for all cells
+          // Otherwise use the modulo approach to repeat values
+          let pasteValue
+          if (isSingleCellValue) {
+            pasteValue = parsedData[0].values[0]
+          } else {
+            const pasteRowIndex = rowIndex % parsedData.length
+            const pasteColIndex = colIndex % parsedData[pasteRowIndex].values.length
+            pasteValue = parsedData[pasteRowIndex].values[pasteColIndex]
+          }
 
           // skip validation for empty values - these will be silently skipped later for enum fields
           if (!pasteValue) continue
+
+          // Special handling for assignees - filter out invalid values instead of canceling
+          if (colId === 'assignees') {
+            // Split assignees by comma
+            const assigneeValues = pasteValue.split(',').map((v) => v.trim())
+
+            // Get assignee options from columnEnums
+            const assigneeOptions = columnEnums['assignees'] || []
+
+            // Filter to keep only valid assignees
+            const validAssignees = assigneeValues.filter((v) =>
+              assigneeOptions.some((opt) => opt.value === v || opt.label === v),
+            )
+
+            // Update the paste value in the parsed data
+            if (isSingleCellValue) {
+              parsedData[0].values[0] = validAssignees.join(', ')
+            } else {
+              const pasteRowIndex = rowIndex % parsedData.length
+              const pasteColIndex = colIndex % parsedData[pasteRowIndex].values.length
+              parsedData[pasteRowIndex].values[pasteColIndex] = validAssignees.join(', ')
+            }
+
+            // Skip regular enum validation for assignees
+            continue
+          }
 
           // Map subType to the actual field name
           let fieldId = colId === 'subType' ? (isFolder ? 'folderType' : 'taskType') : colId
@@ -325,8 +356,16 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
           const entityType = isFolder ? 'folder' : 'task'
 
           // Get the appropriate value from the clipboard data
-          const pasteRowIndex = rowIndex % parsedData.length
-          let pasteValue = parsedData[pasteRowIndex].values[colIndex]
+          // If it's a single cell value, use it for all cells
+          // Otherwise use the modulo approach to repeat values
+          let pasteValue
+          if (isSingleCellValue) {
+            pasteValue = parsedData[0].values[0]
+          } else {
+            const pasteRowIndex = rowIndex % parsedData.length
+            const pasteColIndex = colIndex % parsedData[pasteRowIndex].values.length
+            pasteValue = parsedData[pasteRowIndex].values[pasteColIndex]
+          }
 
           let fieldToUpdate = colId.split('_').pop() || colId
           let processedValue: any
