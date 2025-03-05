@@ -138,6 +138,7 @@ export default function useTableTree({
       // Create row with minimal required properties
       const row: TableRow = {
         id: folderId,
+        type: 'folder',
         parentId: folder.parentId || undefined,
         name: folder.name || '',
         label: folder.label || folder.name || '',
@@ -179,6 +180,7 @@ export default function useTableTree({
 
             taskRows[i] = {
               id: task.id,
+              type: 'task',
               parentId: folderId,
               name: task.name || '',
               label: task.label || task.name || '',

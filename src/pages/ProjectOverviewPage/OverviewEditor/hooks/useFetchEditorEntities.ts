@@ -4,7 +4,7 @@ import { Filter } from '@ynput/ayon-react-components'
 import { TaskFilterValue } from '@containers/TasksProgress/hooks/useFilterBySlice'
 // import { mapQueryFilters } from '../mappers/mappers'
 // import { useGetTasksFoldersQuery } from '@queries/project/getProject'
-import { useGetFilteredEntitiesByParentQuery } from '@queries/overview/getFilteredEntities'
+import { useGetOverviewTasksByFoldersQuery } from '@queries/overview/getOverview'
 import { FolderNodeMap, TaskNodeMap } from '../types'
 import { useMemo } from 'react'
 
@@ -66,7 +66,7 @@ const useFetchEditorEntities = ({
     return map
   }, [folders])
 
-  const { data: expandedFoldersTasks = [] } = useGetFilteredEntitiesByParentQuery(
+  const { data: expandedFoldersTasks = [] } = useGetOverviewTasksByFoldersQuery(
     {
       projectName,
       parentIds: Object.keys(expanded),

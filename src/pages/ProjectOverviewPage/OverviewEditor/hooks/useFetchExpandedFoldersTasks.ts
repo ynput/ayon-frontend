@@ -1,4 +1,4 @@
-import { useGetFilteredEntitiesByParentQuery } from '@queries/overview/getFilteredEntities'
+import { useGetFilteredEntitiesByParentQuery } from '@queries/overview/getOverview'
 
 type Params = {
   projectName: string
@@ -6,7 +6,10 @@ type Params = {
 }
 
 const useFetchExpandedFoldersData = ({ projectName, expandedFolderIds = [] }: Params) => {
-  const { data: tasks, isLoading } = useGetFilteredEntitiesByParentQuery({ projectName, parentIds: expandedFolderIds })
+  const { data: tasks, isLoading } = useGetFilteredEntitiesByParentQuery({
+    projectName,
+    parentIds: expandedFolderIds,
+  })
 
   return { tasks: tasks }
 }

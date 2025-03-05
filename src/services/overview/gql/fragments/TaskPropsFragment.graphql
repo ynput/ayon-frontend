@@ -11,7 +11,5 @@ fragment TaskPropsFragment on TaskNode {
   updatedAt
   active
   assignees
-  attrib {
-    ...TaskAttributesFragment
-  }
+  allAttrib
 }

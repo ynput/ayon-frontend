@@ -1,5 +1,5 @@
 import { OperationModel, api as operationsApi } from '@api/rest/operations'
-import tasksApi from '@queries/overview/getFilteredEntities'
+import tasksApi from '@queries/overview/getOverview'
 import hierarchyApi from '@queries/getHierarchy'
 // these operations are dedicated to the overview page
 // this mean cache updates are custom for the overview page here
@@ -46,17 +46,21 @@ const operationsEnhanced = operationsApi.enhanceEndpoints({
         // collect patches incase we need to undo them
         const patches: any[] = []
 
-        console.log({ operationsByType, operationsRequestModel })
-
         if (operationsByType.task?.length) {
           const state = getState()
-          const tags = [{ type: 'overviewTask', id: 'LIST' }]
+          const tags = [
+            { type: 'overviewTask', id: 'LIST' },
+            ...operationsByType.task.map((op) => ({ type: 'overviewTask', id: op.entityId })),
+          ]
           const entries = tasksApi.util.selectInvalidatedBy(state, tags)
+          // console.log({ entries })
 
           for (const entry of entries) {
+            // this updates the main overview cache task
+            // it also updates any GetTasksByParent caches
             const tasksPatch = dispatch(
               tasksApi.util.updateQueryData(
-                'GetFilteredEntitiesByParent',
+                entry.endpointName as 'getOverviewTasksByFolders' | 'GetTasksByParent',
                 entry.originalArgs,
                 (draft) => {
                   // Apply each change to matching tasks in the cache

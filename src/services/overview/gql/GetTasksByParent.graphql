@@ -1,4 +1,4 @@
-query GetFilteredEntitiesByParent($projectName: String!, $parentIds: [String!]!) {
+query GetTasksByParent($projectName: String!, $parentIds: [String!]!) {
   project(name: $projectName) {
     name
     tasks(folderIds: $parentIds) {

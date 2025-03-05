@@ -1,5 +1,4 @@
-import { FolderNode, GetFilteredEntitiesByParentQuery } from '@api/graphql'
-import { $Any } from '@types'
+import { FolderNode, GetTasksByParentQuery } from '@api/graphql'
 
 export type TableRow = {
   id: string
@@ -14,7 +13,7 @@ export type TableRow = {
   data: ExtraData
   status?: string
   assignees?: string[]
-  attrib?: Record<string, $Any>
+  attrib?: Record<string, any>
   childOnlyMatch?: boolean // when true, only children of this folder match the filter and not the folder itself (shots a dot)
   subType?: string | null
   type: string
@@ -29,6 +28,7 @@ export type ExtraData = {
 
 export type MatchingFolder = FolderNode & { childOnlyMatch?: boolean }
 export type FolderNodeMap = Map<string, MatchingFolder>
-export type EditorTaskNode =
-  GetFilteredEntitiesByParentQuery['project']['tasks']['edges'][0]['node']
+export type EditorTaskNode = GetTasksByParentQuery['project']['tasks']['edges'][0]['node'] & {
+  attrib: Record<string, any>
+}
 export type TaskNodeMap = Map<string, EditorTaskNode>
