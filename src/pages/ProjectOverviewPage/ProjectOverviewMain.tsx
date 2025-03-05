@@ -74,22 +74,24 @@ const ProjectOverviewMain: FC<ProjectOverviewMainProps> = ({ projectName }) => {
   return (
     <Section wrap direction="column" style={{ height: '100%' }}>
       <Toolbar style={{ gap: 4, maxHeight: '24px' }}>
-        <Button icon={'add'} variant="filled">
+        <Button icon={'add'} variant="filled" disabled>
           Create
         </Button>
-        <SearchFilterWrapper
-          filters={filtersWithHierarchy}
-          onChange={handleFiltersChange}
-          filterTypes={searchFilterTypes}
-          projectNames={[projectName]}
-          scope="folder"
-          data={{
-            tags: [],
-            attributes: {},
-            assignees: [],
-          }}
-          disabledFilters={sliceType ? [sliceType] : []}
-        />
+        <div style={{ flex: 1, opacity: 0.5, pointerEvents: 'none' }}>
+          <SearchFilterWrapper
+            filters={filtersWithHierarchy}
+            onChange={handleFiltersChange}
+            filterTypes={searchFilterTypes}
+            projectNames={[projectName]}
+            scope="folder"
+            data={{
+              tags: [],
+              attributes: {},
+              assignees: [],
+            }}
+            disabledFilters={sliceType ? [sliceType] : []}
+          />
+        </div>
         <span style={{ whiteSpace: 'nowrap', display: 'flex' }}>
           Show hierarchy&nbsp;
           <InputSwitch
@@ -97,15 +99,16 @@ const ProjectOverviewMain: FC<ProjectOverviewMainProps> = ({ projectName }) => {
             onChange={(e: $Any) => {
               updateShowHierarchy(e.target.checked)
             }}
+            disabled
           />
         </span>
-        <SortingDropdown
+        {/* <SortingDropdown
           style={{ minWidth: '250px' }}
           title="Sort by"
           options={sortByOptions}
           value={sortByValue}
           onChange={setSortByValue}
-        />
+        /> */}
       </Toolbar>
       <OverviewEditor
         filters={filtersWithHierarchy}
