@@ -15,8 +15,8 @@ const useStoredCustomColumnWidths = () => {
 
 const useCustomColumnWidths = (table: Table<$Any>) => {
   const frontendPreferences = useAppSelector((state) => state.user.data.frontendPreferences)
-  const storedColumnWidths =
-    (frontendPreferences.columnSizes as { [key: string]: number })?.overview || {}
+  const columnSizes = (frontendPreferences.columnSizes || {}) as { [key: string]: number }
+  const storedColumnWidths = columnSizes.overview || {}
 
   const headers = table.getFlatHeaders()
   const columnSizingInfo = table.getState().columnSizingInfo
