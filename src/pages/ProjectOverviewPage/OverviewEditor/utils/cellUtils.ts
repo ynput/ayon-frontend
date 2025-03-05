@@ -38,6 +38,23 @@ export const parseCellId = (cellId: CellId): CellPosition | null => {
   return { rowId: match[1], colId: match[2] }
 }
 
+export const getCellValue = (obj: any, path: string): any => {
+  if (!obj || !path) return undefined
+
+  const parts = path.split('_')
+  let current = obj
+
+  for (const part of parts) {
+    if (current && typeof current === 'object' && part in current) {
+      current = current[part]
+    } else {
+      return undefined // Return undefined if any part of the path is invalid
+    }
+  }
+
+  return current
+}
+
 /**
  * Determines which borders to display for a selected cell
  * based on its position within the selection grid

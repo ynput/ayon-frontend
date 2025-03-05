@@ -11,6 +11,7 @@ import { useStoredCustomColumnWidths } from './hooks/useCustomColumnsWidth'
 import { AttributeData, AttributeEnumItem, AttributeModel } from '@api/rest/attributes'
 import { EditorCell } from './Cells/EditorCell'
 import { useCellEditing } from './context/CellEditingContext'
+import { getCellValue } from './utils/cellUtils'
 
 const DelayedShimmerWrapper = styled.div`
   @keyframes fadeInOpacity {
@@ -27,23 +28,6 @@ const DelayedShimmerWrapper = styled.div`
   animation-delay: 200ms;
 `
 
-const getValue = (obj: any, path: string): any => {
-  if (!obj || !path) return undefined
-
-  const parts = path.split('_')
-  let current = obj
-
-  for (const part of parts) {
-    if (current && typeof current === 'object' && part in current) {
-      current = current[part]
-    } else {
-      return undefined // Return undefined if any part of the path is invalid
-    }
-  }
-
-  return current
-}
-
 const nameSort: SortingFn<any> = (rowA, rowB) => {
   const labelA = rowA.original.label || rowA.original.name
   const labelB = rowB.original.label || rowB.original.name
@@ -54,8 +38,8 @@ const nameSort: SortingFn<any> = (rowA, rowB) => {
 type AttribSortingFn = (rowA: any, rowB: any, columnId: string, attribute?: AttributeData) => number
 // sort by the order of the enum options
 const attribSort: AttribSortingFn = (rowA, rowB, columnId, attrib) => {
-  const valueA = getValue(rowA.original, columnId)
-  const valueB = getValue(rowB.original, columnId)
+  const valueA = getCellValue(rowA.original, columnId)
+  const valueB = getCellValue(rowB.original, columnId)
   // if attrib is defined and has enum options, use them
   if (attrib && attrib.enum) {
     const indexA = attrib.enum.findIndex((o) => o.value === valueA)

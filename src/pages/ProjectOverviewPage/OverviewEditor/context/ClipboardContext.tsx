@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useCallback, useMemo, ReactNode, useEffect } from 'react'
 import { useSelection } from './SelectionContext'
 import { FolderNodeMap, TaskNodeMap } from '../types'
-import { parseCellId } from '../utils/cellUtils'
+import { getCellValue, parseCellId } from '../utils/cellUtils'
 import { useCellEditing } from './CellEditingContext'
 import { toast } from 'react-toastify'
 import { EntityUpdate } from '../hooks/useUpdateEditorEntities'
@@ -74,6 +74,8 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
       // First, organize selected cells by row
       const cellsByRow = new Map<string, Set<string>>()
 
+      console.log(selectedCells)
+
       // Parse all selected cells and organize by rowId and colId
       Array.from(selectedCells).forEach((cellId) => {
         const position = parseCellId(cellId)
@@ -118,7 +120,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
           // Determine the value based on the column ID
           let cellValue = ''
           // @ts-ignore
-          const foundValue = entity[colId] || entity.attrib?.[colId]
+          const foundValue = getCellValue(entity, colId)
           cellValue = foundValue !== undefined && foundValue !== null ? String(foundValue) : ''
 
           // Special handling for name field - include full path
@@ -152,9 +154,6 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
     // Parse clipboard text into rows and columns
     const rows = clipboardText.trim().split('\n')
     const parsedData: { values: string[]; colIds: string[] }[] = []
-
-    // Track column IDs from the copied data
-    const firstRowValues = rows[0].split('\t')
 
     // Store original column order for validation
     const origColumnOrder: string[] = []
@@ -298,11 +297,11 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
           const entity = isFolder ? foldersMap.get(firstRowId) : tasksMap.get(firstRowId)
 
           if (entity) {
-            isAttrib = !(colId in entity) && entity.attrib && colId in entity.attrib
+            isAttrib = colId.startsWith('attrib_')
 
             // Determine if field is an array and its value type
             // @ts-ignore - Check entity property or attribute
-            const fieldValue = isAttrib ? entity.attrib[colId] : entity[colId]
+            const fieldValue = getCellValue(entity, colId)
             if (Array.isArray(fieldValue)) {
               isArrayField = true
               fieldValueType = 'array'
@@ -329,7 +328,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
           const pasteRowIndex = rowIndex % parsedData.length
           let pasteValue = parsedData[pasteRowIndex].values[colIndex]
 
-          let fieldToUpdate = colId
+          let fieldToUpdate = colId.split('_').pop() || colId
           let processedValue: any
 
           // Special handling for subType (convert to folderType or taskType)
