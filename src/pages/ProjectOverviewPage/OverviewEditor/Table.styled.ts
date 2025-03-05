@@ -2,6 +2,8 @@ import { TableContainer as BaseTableContainer } from '@containers/Slicer/SlicerT
 import styled from 'styled-components'
 import SimpleEditableCell from './Cells/SimpleEditableCell'
 
+const cellMinWidth = 50
+
 export const TableCellContent = styled.div`
   display: flex;
   align-items: center;
@@ -12,7 +14,7 @@ export const TableCellContent = styled.div`
   user-select: none;
   padding-right: 0;
 
-  min-width: 300px;
+  min-width: ${cellMinWidth}px;
   height: auto;
   &.bold {
     font-weight: 600;
@@ -45,11 +47,12 @@ export const EditableCellContent = styled(SimpleEditableCell)`
 
 export const HeaderCell = styled.div`
   position: relative;
+  background-color: var(--md-sys-color-surface-container-lowest);
   box-shadow: inset 1px -1px 0 0 var(--md-sys-color-surface-container-highest);
   display: flex;
   align-items: center;
   min-height: fit-content;
-  min-width: 160px;
+  min-width: ${cellMinWidth}px;
   &.large {
     min-width: 300px;
   }
@@ -70,7 +73,7 @@ const defaultShadow = `inset 1px -1px 0 0 var(--md-sys-color-surface-container-h
 export const TableCell = styled.td`
   position: relative;
   box-shadow: ${defaultShadow};
-  min-width: 160px;
+  min-width: ${cellMinWidth}px;
 
   &.selected {
     background-color: var(--md-sys-color-secondary-container);

@@ -2,14 +2,13 @@ import { useMemo } from 'react'
 import * as Styled from '@containers/Slicer/SlicerTable.styled'
 import { $Any } from '@types'
 import { ColumnDef, FilterFnOption, Row, SortingFn, sortingFns } from '@tanstack/react-table'
-import { compareItems } from '@tanstack/match-sorter-utils'
 import clsx from 'clsx'
 import { Icon } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 import { TableRow } from './types'
 import { TableCellContent } from './Table.styled'
 import { useStoredCustomColumnWidths } from './hooks/useCustomColumnsWidth'
-import { AttributeEnumItem, AttributeModel } from '@api/rest/attributes'
+import { AttributeData, AttributeEnumItem, AttributeModel } from '@api/rest/attributes'
 import { EditorCell } from './Cells/EditorCell'
 import { useCellEditing } from './context/CellEditingContext'
 
@@ -28,22 +27,46 @@ const DelayedShimmerWrapper = styled.div`
   animation-delay: 200ms;
 `
 
-// Define a custom fuzzy sort function that will sort by rank if the row has ranking information
-const fuzzySort: SortingFn<any> = (rowA, rowB, columnId) => {
-  let dir = 0
+const getValue = (obj: any, path: string): any => {
+  if (!obj || !path) return undefined
 
-  // Only sort by rank if the column has ranking information
-  if (rowA.columnFiltersMeta[columnId]) {
-    dir = compareItems(
-      // @ts-ignore
-      rowA.columnFiltersMeta[columnId]?.itemRank!,
-      // @ts-ignore
-      rowB.columnFiltersMeta[columnId]?.itemRank!,
-    )
+  const parts = path.split('_')
+  let current = obj
+
+  for (const part of parts) {
+    if (current && typeof current === 'object' && part in current) {
+      current = current[part]
+    } else {
+      return undefined // Return undefined if any part of the path is invalid
+    }
   }
 
-  // Provide an alphanumeric fallback for when the item ranks are equal
-  return dir === 0 ? sortingFns.alphanumeric(rowA, rowB, columnId) : dir
+  return current
+}
+
+const nameSort: SortingFn<any> = (rowA, rowB) => {
+  const labelA = rowA.original.label || rowA.original.name
+  const labelB = rowB.original.label || rowB.original.name
+  // sort alphabetically by label
+  return labelA.localeCompare(labelB)
+}
+
+type AttribSortingFn = (rowA: any, rowB: any, columnId: string, attribute?: AttributeData) => number
+// sort by the order of the enum options
+const attribSort: AttribSortingFn = (rowA, rowB, columnId, attrib) => {
+  const valueA = getValue(rowA.original, columnId)
+  const valueB = getValue(rowB.original, columnId)
+  // if attrib is defined and has enum options, use them
+  if (attrib && attrib.enum) {
+    const indexA = attrib.enum.findIndex((o) => o.value === valueA)
+    const indexB = attrib.enum.findIndex((o) => o.value === valueB)
+    return indexA - indexB
+  } else if (attrib?.type === 'datetime') {
+    return sortingFns.datetime(rowA, rowB, columnId)
+  } else {
+    // default sorting
+    return sortingFns.alphanumeric(rowA, rowB, columnId)
+  }
 }
 
 const ShimmerCell = ({ width }: { width: string }) => {
@@ -95,7 +118,7 @@ const TableColumns = ({
         accessorKey: 'name',
         header: () => 'Folder',
         filterFn: 'fuzzy',
-        sortingFn: fuzzySort, //sort by fuzzy rank (falls back to alphanumeric)
+        sortingFn: nameSort, // custom sort to sort by label then name
         size: storedColumnSizes['label'] || 300,
         cell: ({ row, getValue }) => {
           return !row.original.id ? (
@@ -131,7 +154,7 @@ const TableColumns = ({
         accessorKey: 'status',
         header: () => 'Status',
         filterFn: 'fuzzy',
-        sortingFn: fuzzySort, //sort by fuzzy rank (falls back to alphanumeric)
+        sortingFn: (a, b, c) => attribSort(a, b, c, { enum: options.statuses, type: 'string' }),
         size: storedColumnSizes['status'] || 150,
         cell: ({ row, column }) => {
           const { value, id, type } = getValueIdType(row, column.id)
@@ -153,7 +176,6 @@ const TableColumns = ({
         accessorKey: 'subType',
         header: () => 'Type',
         filterFn: 'fuzzy',
-        sortingFn: fuzzySort, //sort by fuzzy rank (falls back to alphanumeric)
         size: storedColumnSizes['type'] || 150,
         cell: ({ row, column }) => {
           const { value, id, type } = getValueIdType(row, column.id)
@@ -175,7 +197,6 @@ const TableColumns = ({
         accessorKey: 'assignees',
         header: () => 'Assignees',
         filterFn: 'fuzzy',
-        sortingFn: fuzzySort, //sort by fuzzy rank (falls back to alphanumeric)
         size: storedColumnSizes['assignees'] || 150,
         cell: ({ row, column }) => {
           const { value, id, type } = getValueIdType(row, column.id)
@@ -197,25 +218,25 @@ const TableColumns = ({
 
     const attributeColumns = attribs.map((attrib) => {
       const attribColumn: ColumnDef<TableRow> = {
-        accessorKey: attrib.name,
+        accessorKey: 'attrib.' + attrib.name,
         header: () => attrib.data.title || attrib.name,
         filterFn: 'fuzzy' as FilterFnOption<TableRow>,
-        sortingFn: fuzzySort, //sort by fuzzy rank (falls back to alphanumeric)
+        sortingFn: (a, b, c) => attribSort(a, b, c, attrib.data),
         size: storedColumnSizes[attrib.name] || 150,
         cell: ({ row, column }) => {
-          const { value, id, type } = getValueIdType(row, column.id, 'attrib')
-          const attrib = attribs.find((a) => a.name === column.id)
+          const columnId = column.id.replace('attrib_', '')
+          const { value, id, type } = getValueIdType(row, columnId, 'attrib')
 
           return (
             <EditorCell
               rowId={id}
-              columnId={column.id}
+              columnId={columnId}
               value={value}
-              attributeData={{ type: attrib?.data.type || 'string' }}
-              options={attrib?.data.enum || []}
+              attributeData={{ type: attrib.data.type || 'string' }}
+              options={attrib.data.enum || []}
               isCollapsed={!!row.original.childOnlyMatch}
               onChange={(value) =>
-                updateEntities([{ field: column.id, value, id, type, isAttrib: true }])
+                updateEntities([{ field: columnId, value, id, type, isAttrib: true }])
               }
             />
           )

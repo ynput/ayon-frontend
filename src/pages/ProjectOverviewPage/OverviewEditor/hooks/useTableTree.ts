@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { FolderNodeMap, TableRow, TaskNodeMap } from '../types'
 import { FolderType, TaskType } from '@api/rest/project'
 import { TasksByFolderMap } from './useFetchEditorEntities'
+import { SortingState } from '@tanstack/react-table'
 
 type Params = {
   foldersMap: FolderNodeMap

@@ -28,6 +28,7 @@ import useFilterBySlice from '@containers/TasksProgress/hooks/useFilterBySlice'
 
 // Components
 import FlexTable from './FlexTable'
+import { SortingState } from '@tanstack/react-table'
 
 type User = {
   name: string
@@ -57,6 +58,12 @@ const OverviewEditor = ({ filters, showHierarchy, sortBy }: Props) => {
   const { filter: sliceFilter } = useFilterBySlice()
 
   const [expanded, updateExpanded] = useState({})
+  const [sorting, setSorting] = useState<SortingState>([
+    {
+      id: 'name',
+      desc: true,
+    },
+  ])
 
   console.time('dataToTable')
   // 28.3 ms -> 6ms
@@ -139,8 +146,12 @@ const OverviewEditor = ({ filters, showHierarchy, sortBy }: Props) => {
                 isLoading={false}
                 isExpandable={false}
                 sliceId={''}
+                // expanded folders
                 expanded={expanded}
                 updateExpanded={updateExpanded}
+                // sorting
+                sorting={sorting}
+                updateSorting={setSorting}
                 // metadata
                 tasksMap={tasksMap}
                 foldersMap={foldersMap}

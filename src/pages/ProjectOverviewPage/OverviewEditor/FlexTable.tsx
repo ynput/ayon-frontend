@@ -10,6 +10,8 @@ import {
   Row,
   OnChangeFn,
   ExpandedState,
+  SortingState,
+  getSortedRowModel,
 } from '@tanstack/react-table'
 
 import clsx from 'clsx'
@@ -24,7 +26,6 @@ import { SelectionProvider, useSelection } from './context/SelectionContext'
 import { ClipboardProvider } from './context/ClipboardContext'
 import { getCellId } from './utils/cellUtils'
 import { FolderNodeMap, TaskNodeMap } from './types'
-import { FolderType, Status, TaskType } from '@api/rest/project'
 import { AttributeEnumItem, AttributeModel } from '@api/rest/attributes'
 
 type Props = {
@@ -36,6 +37,8 @@ type Props = {
   sliceId: string
   expanded: Record<string, boolean>
   updateExpanded: OnChangeFn<ExpandedState>
+  sorting: SortingState
+  updateSorting: OnChangeFn<SortingState>
   // metadata
   tasksMap: TaskNodeMap
   foldersMap: FolderNodeMap
@@ -77,6 +80,8 @@ const FlexTable = ({
   sliceId,
   expanded,
   updateExpanded,
+  sorting,
+  updateSorting,
 }: Props) => {
   //The virtualizer needs to know the scrollable container element
   const tableContainerRef = useRef<HTMLDivElement>(null)
@@ -118,13 +123,19 @@ const FlexTable = ({
     getFilteredRowModel: getFilteredRowModel(),
     getExpandedRowModel: getExpandedRowModel(),
     filterFromLeafRows: true,
+    // EXPANDABLE
     onExpandedChange: updateExpanded,
+    // SORTING
+    getSortedRowModel: getSortedRowModel(),
+    onSortingChange: updateSorting,
     columnResizeMode: 'onChange',
     // @ts-ignore
     filterFns,
     state: {
       expanded,
+      sorting,
     },
+    enableSorting: true,
   })
 
   const { rows } = table.getRowModel()
@@ -229,6 +240,7 @@ const FlexTable = ({
       isCellFocused,
       getCellBorderClasses,
       table.getHeaderGroups,
+      table.getState().sorting,
     ],
   )
 
@@ -255,6 +267,7 @@ const FlexTable = ({
                         style={{
                           width: `calc(var(--header-${header?.id}-size) * 1px)`,
                         }}
+                        onClick={header.column.getToggleSortingHandler()}
                       >
                         {header.isPlaceholder ? null : (
                           <Styled.TableCellContent
@@ -263,6 +276,10 @@ const FlexTable = ({
                             })}
                           >
                             {flexRender(header.column.columnDef.header, header.getContext())}
+                            {{
+                              asc: ' 🔼',
+                              desc: ' 🔽',
+                            }[header.column.getIsSorted() as string] ?? null}
                             <Styled.ResizedHandler
                               {...{
                                 onDoubleClick: () => header.column.resetSize(),
