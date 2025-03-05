@@ -33,7 +33,7 @@ const patchActivities = async (
   const entries = api.util.selectInvalidatedBy(state, invalidatingTags)
 
   // now patch all the caches with the update
-  const patches = entries.forEach(({ originalArgs }) =>
+  const patches = entries.map(({ originalArgs }) =>
     dispatch(
       api.util.updateQueryData(
         'getActivities',
@@ -93,9 +93,6 @@ const updateActivities = api.injectEndpoints({
         method: 'PATCH',
         body: data,
       }),
-      async onQueryStarted(args, api) {
-        patchActivities(args, api, 'update')
-      },
       // invalidate other filters that might be affected by this new activity (comments, checklists, etc)
       invalidatesTags: (result, error, { entityId, filter }) => getTags({ entityId, filter }),
     }),

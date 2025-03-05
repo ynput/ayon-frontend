@@ -1,6 +1,14 @@
-import { api, FolderType, GetProjectApiResponse, Status, TaskType } from '@api/rest/project'
+import {
+  api,
+  ListProjectsApiResponse,
+  FolderType,
+  GetProjectApiResponse,
+  Status,
+  TaskType,
+} from '@api/rest/project'
 // @ts-ignore
 import { selectProject, setProjectData } from '@state/project'
+import { TagTypes, UpdatedDefinitions } from './ProjectTypes'
 
 // TODO: use graphql api and write custom types
 // We will need to inject the endpoint as it cannot be generated
@@ -135,7 +143,7 @@ const getProjectApi = getProjectInjected.enhanceEndpoints<TagTypes, UpdatedDefin
       },
     },
     listProjects: {
-      transformResponse: (res: $Any) => res?.projects || [],
+      transformResponse: (res: ListProjectsApiResponse) => res?.projects || [],
       transformErrorResponse: (error: $Any) => error.data.detail || `Error ${error.status}`,
       // @ts-ignore
       providesTags: (_res, _error, { active }) => [

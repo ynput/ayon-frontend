@@ -2,10 +2,11 @@ import clsx from 'clsx'
 import * as Styled from './MarketAddonCard.styled'
 import Type from '@/theme/typography.module.css'
 import AddonIcon from '../AddonIcon/AddonIcon'
-import { ButtonProps, Icon } from '@ynput/ayon-react-components'
+import { Button, ButtonProps, Icon } from '@ynput/ayon-react-components'
 import { upperFirst } from 'lodash'
 import { HTMLAttributes } from 'react'
-import CloudButton from '@components/CloudButton'
+import PowerpackButton from '@components/Powerpack/PowerpackButton'
+import { PricingLink } from '@components/PricingLink'
 
 export type ListItemType = 'addon' | 'release' | 'placeholder'
 
@@ -27,7 +28,9 @@ interface MarketAddonCardProps extends HTMLAttributes<HTMLDivElement> {
   isFailed?: boolean
   isFinished?: boolean
   isActive?: boolean
-  onDownload: (name: string, version?: string) => void
+  available?: boolean
+  flags?: string[]
+  onDownload?: (name: string, version?: string) => void
 }
 
 export const MarketAddonCard = ({
@@ -48,6 +51,8 @@ export const MarketAddonCard = ({
   isFailed,
   isFinished,
   isActive,
+  available,
+  flags,
   onDownload,
   ...props
 }: MarketAddonCardProps) => {
@@ -71,7 +76,7 @@ export const MarketAddonCard = ({
 
   const handleActionClick = () => {
     if (['install', 'update'].includes(state)) {
-      onDownload(name, latestVersion)
+      onDownload?.(name, latestVersion)
     }
   }
 
@@ -103,7 +108,7 @@ export const MarketAddonCard = ({
           <Styled.Author className={Type.labelMedium}>{author}</Styled.Author>
         </Styled.AuthorWrapper>
       </Styled.Content>
-      {!isPlaceholder && (
+      {!isPlaceholder && available && (
         <Styled.Buttons>
           {isActive ? (
             <Styled.Tag
@@ -116,13 +121,14 @@ export const MarketAddonCard = ({
               {upperFirst(state)}
             </Styled.Tag>
           ) : (
-            <CloudButton
-              featureId="release-installer"
-              data-tooltip="Subscribe to Ynput Cloud to install previous releases"
-              data-tooltip-delay={0}
-            />
+            <PowerpackButton feature="annotations" />
           )}
         </Styled.Buttons>
+      )}
+      {flags?.includes('licensed') && !available && !isPlaceholder && (
+        <PricingLink>
+          <Button variant="tertiary">Subscribe</Button>
+        </PricingLink>
       )}
     </Styled.Container>
   )

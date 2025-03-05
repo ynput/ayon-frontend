@@ -1,5 +1,39 @@
-import { UserModel } from '@api/rest/users'
+import { UserPoolModel } from '@api/rest/auth'
 import { ColumnSortEvent } from 'primereact/column'
+
+/**
+ * Sort function for user pool/license column
+ * Groups items into 3 categories:
+ * 1. Has pool and label found
+ * 2. Has pool but label not found (cancelled/invalid)
+ * 3. No pool (null/undefined)
+ */
+export const userPoolSortFunction = (event: ColumnSortEvent, userPools: UserPoolModel[]) => {
+  return event.data.sort((a: any, b: any) => {
+    const aPool = userPools?.find((p) => p?.id === a?.userPool)?.label
+    const bPool = userPools?.find((p) => p?.id === b?.userPool)?.label
+
+    // Create priority groups
+    const aGroup = aPool ? 1 : a?.userPool ? 2 : 3
+    const bGroup = bPool ? 1 : b?.userPool ? 2 : 3
+
+    // Sort by group first
+    if (aGroup !== bGroup) {
+      return event.order === 1 ? aGroup - bGroup : bGroup - aGroup
+    }
+
+    // If both are in group 1 (found pools), sort by label
+    if (aGroup === 1 && bGroup === 1) {
+      // @ts-ignore
+      return event.order === 1 ? aPool?.localeCompare(bPool) : bPool?.localeCompare(aPool)
+    }
+
+    // Keep original order for items in same group
+    return 0
+  })
+}
+
+import { UserModel } from '@api/rest/users'
 
 type EnrichedUserModel = UserModel & {
   isAdmin: boolean

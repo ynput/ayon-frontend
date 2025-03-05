@@ -5,7 +5,7 @@ import AttributeTable from '@containers/attributeTable'
 import { format } from 'date-fns'
 import { Button, SaveButton, Toolbar } from '@ynput/ayon-react-components'
 import * as Styled from './ProjectDetails.styled'
-import AttribForm from '@components/AttribForm/AttribForm'
+import AttribForm, { getDefaultFromType } from '@components/AttribForm/AttribForm'
 import { useGetAnatomySchemaQuery } from '@queries/anatomy/getAnatomy'
 import { isEmpty, isEqual } from 'lodash'
 import { useSelector } from 'react-redux'
@@ -42,8 +42,22 @@ const ProjectDetails = ({ projectName }) => {
   const setInitFormState = (projectData) => {
     const updatedProjectForm = { ...projectFormInit }
     for (const key in projectFormInit) {
-      updatedProjectForm[key] = projectData[key]
+      if (key === 'attrib') {
+        updatedProjectForm[key] = { ...projectData[key] }
+      } else {
+        updatedProjectForm[key] = projectData[key]
+      }
     }
+
+    // add any fields that have not been added to the form
+    for (const key in fields) {
+      if (updatedProjectForm.attrib[key] === undefined) {
+        const field = fields[key]
+        // add missing field
+        updatedProjectForm.attrib[key] = getDefaultFromType(field.type)
+      }
+    }
+
     setProjectForm(updatedProjectForm)
     // update init data to compare changes
     setInitData(updatedProjectForm)
@@ -57,7 +71,7 @@ const ProjectDetails = ({ projectName }) => {
       // update project form with only the fields we need from the projectForm init state
       setInitFormState(data)
     }
-  }, [data, isFetching])
+  }, [data, isFetching, fields])
 
   const { attrib = {}, active, code, library } = data
 
@@ -192,7 +206,7 @@ const ProjectDetails = ({ projectName }) => {
           </Styled.Header>
         )
       }
-      stylePanel={{ height: 'calc(100% - 8px)', flex: 1, overflow: 'hidden' }}
+      stylePanel={{ height: 'calc(100% - 8px)', flex: 1, overflow: 'hidden', minHeight: 'unset' }}
       style={{ height: '100%', overflow: 'hidden' }}
     >
       {editing ? (

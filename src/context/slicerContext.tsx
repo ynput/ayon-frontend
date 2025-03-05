@@ -1,10 +1,19 @@
-import { createContext, useContext, useState, ReactNode } from 'react'
+import {
+  createContext,
+  useContext,
+  useState,
+  ReactNode,
+  ForwardRefExoticComponent,
+  RefAttributes,
+} from 'react'
 import { ExpandedState, RowSelectionState } from '@tanstack/react-table'
 import useSlicerReduxSync from '@containers/Slicer/hooks/useSlicerReduxSync'
 import useLoadModule from '@/remote/useLoadModule'
 import { ProjectModel } from '@api/rest/project'
 import { Assignees } from '@queries/user/getUsers'
 import { TableRow } from '@containers/Slicer/types'
+import SlicerDropdownFallback, { SlicerDropdownProps } from '@containers/Slicer/SlicerDropdown'
+import { DropdownRef } from '@ynput/ayon-react-components'
 
 export type SliceType = 'hierarchy' | 'assignees' | 'status' | 'type' | 'taskType'
 const sliceTypes: SliceType[] = ['hierarchy', 'assignees', 'status', 'type', 'taskType']
@@ -54,6 +63,7 @@ interface SlicerContextValue {
   setPersistentRowSelectionData: React.Dispatch<React.SetStateAction<SelectionData>>
   config: SlicerConfig
   useExtraSlices: UseExtraSlices
+  SlicerDropdown: ForwardRefExoticComponent<SlicerDropdownProps & RefAttributes<DropdownRef>>
 }
 
 const SlicerContext = createContext<SlicerContextValue | undefined>(undefined)
@@ -69,8 +79,13 @@ export const SlicerProvider = ({ children }: SlicerProviderProps) => {
   const [persistentRowSelectionData, setPersistentRowSelectionData] = useState<SelectionData>({})
   const [expanded, setExpanded] = useState<ExpandedState>({})
   const [sliceType, setSliceType] = useState<SliceType>('hierarchy')
+  const config: SlicerConfig = {
+    progress: {
+      fields: ['hierarchy', 'assignees', 'status', 'taskType'],
+    },
+  }
 
-  const { config, useExtraSlices } = useSlicerRemotes()
+  const { useExtraSlices, SlicerDropdown } = useSlicerRemotes()
 
   const { onRowSelectionChange, onExpandedChange } = useSlicerReduxSync({
     setRowSelection,
@@ -140,6 +155,7 @@ export const SlicerProvider = ({ children }: SlicerProviderProps) => {
         setPersistentRowSelectionData,
         config,
         useExtraSlices,
+        SlicerDropdown,
       }}
     >
       {children}
@@ -147,19 +163,7 @@ export const SlicerProvider = ({ children }: SlicerProviderProps) => {
   )
 }
 
-const useSlicerRemotes = (): { config: SlicerConfig; useExtraSlices: UseExtraSlices } => {
-  const configFallback: SlicerConfig = {
-    progress: { fields: ['hierarchy'] },
-    overview: { fields: ['hierarchy'] },
-  }
-
-  // get slicer remotes
-  const [config] = useLoadModule({
-    remote: 'slicer',
-    module: 'config',
-    fallback: configFallback,
-  })
-
+const useSlicerRemotes = () => {
   const useExtraSlicesDefault: UseExtraSlices = () => {
     return {
       formatStatuses: () => [],
@@ -171,12 +175,20 @@ const useSlicerRemotes = (): { config: SlicerConfig; useExtraSlices: UseExtraSli
 
   // slicer transformers
   const [useExtraSlices] = useLoadModule({
+    addon: 'powerpack',
     remote: 'slicer',
     module: 'useExtraSlices',
     fallback: useExtraSlicesDefault,
   })
 
-  return { config, useExtraSlices }
+  const [SlicerDropdown] = useLoadModule({
+    addon: 'powerpack',
+    remote: 'slicer',
+    module: 'SlicerDropdown',
+    fallback: SlicerDropdownFallback,
+  })
+
+  return { useExtraSlices, SlicerDropdown: SlicerDropdown }
 }
 
 export const useSlicerContext = () => {

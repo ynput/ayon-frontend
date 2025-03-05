@@ -12,6 +12,10 @@ import { getSimplifiedUrl } from '@helpers/url'
 import ReactMarkdown from 'react-markdown'
 import { AddonDetail, LinkModel } from '@api/rest/market'
 import MetaPanelRow from './MetaPanelRow'
+import remarkGfm from 'remark-gfm'
+import emoji from 'remark-emoji'
+import SubChip from '@components/SubChip/SubChip'
+import { PricingLink } from '@components/PricingLink'
 
 type ExtendedAddonDetail = AddonDetail & {
   downloadedVersions: Record<string, string>
@@ -26,6 +30,7 @@ type ExtendedAddonDetail = AddonDetail & {
   isFinished: boolean
   isFailed: boolean
   error: string
+  flags: string[]
 }
 
 type AddonDetailsProps = {
@@ -60,6 +65,8 @@ const AddonDetails = ({ addon, isLoading, onDownload, isUpdatingAll }: AddonDeta
     isVerified,
     isOfficial,
     warning,
+    flags,
+    available,
   } = addon || {}
 
   const versionKeys = isEmpty(downloadedVersions) ? [] : Object.keys(downloadedVersions)
@@ -122,6 +129,7 @@ const AddonDetails = ({ addon, isLoading, onDownload, isUpdatingAll }: AddonDeta
   }
 
   let actionButton = null
+  const subRequired = flags?.includes('licensed') && !available
 
   // Download button (top right)
   if (isDownloading) {
@@ -154,6 +162,14 @@ const AddonDetails = ({ addon, isLoading, onDownload, isUpdatingAll }: AddonDeta
         {`Download v${latestVersion}`}
       </Button>
     )
+  } else if (subRequired) {
+    actionButton = (
+      <PricingLink style={{ width: '100%' }}>
+        <Button variant="tertiary" style={{ width: '100%' }}>
+          Subscribe
+        </Button>
+      </PricingLink>
+    )
   }
 
   const versionsOptions = useMemo(
@@ -178,13 +194,25 @@ const AddonDetails = ({ addon, isLoading, onDownload, isUpdatingAll }: AddonDeta
             <Styled.Header className={clsx({ loading: isLoading })}>
               <AddonIcon size={64} src={icon} alt={name + ' icon'} isPlaceholder={isLoading} />
               <div className="titles">
-                <h2 className={Type.headlineSmall}>{title}</h2>
+                <h2 className={Type.headlineSmall}>{title} </h2>
                 <span className={clsx(verifiedString.toLowerCase(), 'verification')}>
                   {verifiedIcon}
                   {verifiedString}
                 </span>
               </div>
             </Styled.Header>
+            {(flags?.includes('licensed') || flags?.includes('beta')) && !isLoading && (
+              <Styled.Tags>
+                {flags?.includes('licensed') && (
+                  <SubChip includedWithPro={flags.includes('power-feature')} />
+                )}
+                {flags?.includes('beta') && (
+                  <Styled.BetaTag data-tooltip="This addon is in beta and may have bugs or incomplete features.">
+                    Early preview
+                  </Styled.BetaTag>
+                )}
+              </Styled.Tags>
+            )}
             {isFailed && (
               <Styled.ErrorCard direction="row">
                 <Icon icon="error_outline" />
@@ -198,30 +226,39 @@ const AddonDetails = ({ addon, isLoading, onDownload, isUpdatingAll }: AddonDeta
                 </a>
               </Styled.ErrorCard>
             )}
-            <ReactMarkdown className={clsx({ loading: isLoading })}>{description}</ReactMarkdown>
+            <div className="description">
+              <ReactMarkdown
+                className={clsx({ loading: isLoading })}
+                remarkPlugins={[remarkGfm, emoji]}
+              >
+                {description}
+              </ReactMarkdown>
+            </div>
           </Styled.Left>
           {/* RIGHT PANEL */}
           <Styled.Right className={clsx(Type.bodyMedium)}>
             <Styled.Download className={clsx({ loading: isLoading })}>
               {actionButton}
 
-              <Styled.VersionDropdown
-                options={versionsOptions}
-                align="right"
-                value={[]}
-                widthExpand
-                onChange={(v) => handleDownload(v[0])}
-                itemStyle={{ justifyContent: 'space-between' }}
-                // @ts-expect-error
-                buttonProps={{ 'data-tooltip': 'Download a specific version' }}
-                search={versions.length > 10}
-                itemTemplate={(option) => (
-                  <Styled.VersionDropdownItem>
-                    <Icon icon={option.isDownloaded ? 'check' : 'download'} />
-                    {option.label}
-                  </Styled.VersionDropdownItem>
-                )}
-              />
+              {!!versionsOptions.length && (
+                <Styled.VersionDropdown
+                  options={versionsOptions}
+                  align="right"
+                  value={[]}
+                  widthExpand
+                  onChange={(v) => handleDownload(v[0])}
+                  itemStyle={{ justifyContent: 'space-between' }}
+                  // @ts-expect-error
+                  buttonProps={{ 'data-tooltip': 'Download a specific version' }}
+                  search={versions.length > 10}
+                  itemTemplate={(option) => (
+                    <Styled.VersionDropdownItem>
+                      <Icon icon={option.isDownloaded ? 'check' : 'download'} />
+                      {option.label}
+                    </Styled.VersionDropdownItem>
+                  )}
+                />
+              )}
             </Styled.Download>
             <Styled.MetaPanel className={clsx({ loading: isLoading })}>
               <MetaPanelRow label="Downloaded Versions">

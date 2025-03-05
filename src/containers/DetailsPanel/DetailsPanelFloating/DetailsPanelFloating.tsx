@@ -13,6 +13,7 @@ import {
   useGetProjectsInfoQuery,
 } from '@queries/userDashboard/getUserDashboard'
 import getAllProjectStatuses from '../helpers/getAllProjectsStatuses'
+import { FeedProvider } from '@context/FeedContext'
 
 type Entity = {
   id: string
@@ -121,21 +122,23 @@ const DetailsPanelFloating: FC<DetailsPanelFloatingProps> = () => {
           <AssigneeField users={users} style={{ pointerEvents: 'none' }} />
         </Styled.Row>
         <Styled.FeedContainer>
-          <Feed
-            entityType={entityType}
-            // @ts-ignore
-            entities={entitiesData}
-            activeUsers={[]}
-            // selectedTasksProjects={{}}
-            // projectInfo={firstProjectInfo}
-            projectName={projectName}
-            isMultiProjects={false}
-            scope={scope || undefined}
-            statePath={statePath || undefined}
-            readOnly
-            // @ts-ignore
-            statuses={statuses}
-          />
+          <FeedProvider>
+            <Feed
+              entityType={entityType}
+              // @ts-ignore
+              entities={entitiesData}
+              activeUsers={[]}
+              // selectedTasksProjects={{}}
+              // projectInfo={firstProjectInfo}
+              projectName={projectName}
+              isMultiProjects={false}
+              scope={scope || undefined}
+              statePath={statePath || undefined}
+              readOnly
+              // @ts-ignore
+              statuses={statuses}
+            />
+          </FeedProvider>
         </Styled.FeedContainer>
       </Styled.Container>
     </PiPWrapper>

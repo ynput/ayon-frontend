@@ -57,6 +57,16 @@ const DashboardTasksToolbar = ({ isLoading, view, setView }) => {
     setAssignees(payload)
   }
 
+  // When user does not have permission to list other users, force the
+  // assignees filter to "me" to avoid being unable to list tasks.
+  if (!isManager && assigneesFilter !== "me") {
+    console.log("Force assignees filter to 'me'")
+    setAssignees({
+      assignees: [],
+      filter: "me"
+    })
+  }
+
   return (
     <Styled.TasksToolbar>
       <SortingDropdown

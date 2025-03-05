@@ -24,6 +24,16 @@ export const Left = styled.div`
   gap: 16px;
   flex: 1.5;
   min-width: 200px;
+  overflow: hidden;
+  height: 100%;
+
+  .description {
+    overflow: auto;
+    height: 100%;
+    * {
+      width: 100%;
+    }
+  }
 `
 
 // contains buttons like install, update, etc
@@ -226,5 +236,23 @@ export const ReleaseAddonLink = styled(Link)`
 
   &.loading {
     border-color: transparent;
+  }
+`
+
+export const Tags = styled.div`
+  display: flex;
+  gap: var(--base-gap-large);
+  flex-wrap: wrap;
+`
+
+export const BetaTag = styled.div`
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: var(--border-radius-l);
+  padding: 2px 4px;
+  color: var(--md-sys-color-outline);
+  user-select: none;
+
+  &:hover {
+    background-color: var(--md-sys-color-surface-container);
   }
 `

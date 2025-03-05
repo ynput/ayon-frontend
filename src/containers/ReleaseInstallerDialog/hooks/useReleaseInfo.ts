@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useGetReleaseInfoQuery } from '@queries/releases/getReleases'
-import { ReleaseAddon, ReleaseInfoModel, ReleaseListItemModel } from '@api/rest/releases'
+import { AddonVersionDetail, ReleaseInfoModel, ReleaseListItemModel } from '@api/rest/releases'
 import { ReleaseForm } from './useReleaseForm'
 
 type Props = {
@@ -15,7 +15,7 @@ export const useReleaseInfo = ({
   release,
 }: Props): [
   ReleaseInfoModel | undefined,
-  ReleaseAddon[],
+  AddonVersionDetail[],
   {
     isError: boolean
     isLoading: boolean
@@ -29,7 +29,7 @@ export const useReleaseInfo = ({
   } = useGetReleaseInfoQuery({ releaseName: selectedRelease as string }, { skip: !selectedRelease })
   const releaseInfoError = !releaseInfo && !isLoadingReleaseInfo && !isUninitialized
 
-  const [releaseAddons, setReleaseAddons] = useState<ReleaseAddon[]>([])
+  const [releaseAddons, setReleaseAddons] = useState<AddonVersionDetail[]>([])
 
   useEffect(() => {
     if (!releaseInfo || isLoadingReleaseInfo) return

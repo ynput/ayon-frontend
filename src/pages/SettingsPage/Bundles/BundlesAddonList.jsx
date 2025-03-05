@@ -130,13 +130,15 @@ const BundlesAddonList = React.forwardRef(
     }
 
     const addonsTable = useMemo(() => {
-      return addons.map((addon) => {
-        return {
-          ...addon,
-          version: formData?.addons?.[addon.name] || 'NONE',
-          dev: formData?.addonDevelopment?.[addon.name],
-        }
-      })
+      return addons
+        .map((addon) => {
+          return {
+            ...addon,
+            version: formData?.addons?.[addon.name] || 'NONE',
+            dev: formData?.addonDevelopment?.[addon.name],
+          }
+        })
+        .sort((a, b) => a.title.localeCompare(b.title))
     }, [addons, formData])
 
     const createContextItems = (selected) => {
@@ -184,8 +186,8 @@ const BundlesAddonList = React.forwardRef(
         ref={ref}
       >
         <Column
-          header="Name"
-          field="name"
+          header="Title"
+          field="title"
           pt={{
             root: {
               style: {

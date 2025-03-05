@@ -21,17 +21,18 @@ export type GetReleaseInfoApiArg = {
 }
 export type ReleaseListItemModel = {
   name: string
-  release: string
   label: string
-  bio?: string
+  release: string
+  description?: string
   icon?: string
   createdAt: string
+  mandatoryAddons?: string[]
   isLatest: boolean
   addons: string[]
-  mandatoryAddons?: string[]
 }
 export type ReleaseListModel = {
   releases: ReleaseListItemModel[]
+  detail?: string
 }
 export type ValidationError = {
   loc: (string | number)[]
@@ -41,26 +42,46 @@ export type ValidationError = {
 export type HttpValidationError = {
   detail?: ValidationError[]
 }
-export type ReleaseAddon = {
+export type LinkModel = {
+  type?: 'homepage' | 'github' | 'documentation' | 'license'
+  label?: string
+  url: string
+}
+export type AddonVersionDetail = {
   name: string
-  title?: string
+  title: string
+  /** Addon description */
   description?: string
+  orgName?: string
+  orgTitle?: string
   icon?: string
-  preview?: string
-  features?: string[]
-  families?: string[]
   tags?: string[]
-  docs?: {
-    [key: string]: string
-  }
-  github?: string
-  discussion?: string
-  isFree?: boolean
-  version?: string
+  flags?: string[]
+  /** Latest version of the addon */
+  latestVersion?: string
+  /** Links to the addon's homepage and GitHub repository */
+  links?: LinkModel[]
+  /** Addon is avaliable for download */
+  available?: boolean
+  currentProductionVersion?: string
+  currentLatestVersion?: string
+  isOutdated?: boolean
+  version: string
   url?: string
-  /** Checksum of the zip file */
+  altUrl?: string
   checksum?: string
-  mandatory?: boolean
+  /** The version of Ayon this version is compatible with */
+  ayonVersion?: string
+  /** When this version was created */
+  createdAt?: string
+  /** When this version was last updated */
+  updatedAt?: string
+  /** Is this version installed? */
+  isInstalled?: boolean
+  /** Is this version in production? */
+  isProduction?: boolean
+  /** Is this version compatible? */
+  isCompatible?: boolean
 }
 export type SourceModel = {
   /** If set to server, the file is stored on the server. If set to http, the file is downloaded from the specified URL. */
@@ -119,8 +140,12 @@ export type DependencyPackageManifest = {
 export type ReleaseInfoModel = {
   name: string
   label: string
-  createdAt?: string
-  addons?: ReleaseAddon[]
+  release: string
+  description?: string
+  icon?: string
+  createdAt: string
+  mandatoryAddons?: string[]
+  addons?: AddonVersionDetail[]
   installers?: InstallerManifest[]
   dependencyPackages?: DependencyPackageManifest[]
 }

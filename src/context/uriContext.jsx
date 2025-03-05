@@ -79,7 +79,7 @@ function URIProvider({ children }) {
           }
           const entities = res.data[0].entities
           if (!entities.length) {
-            toast.error('No entities found')
+            // toast.error('No entities found')
             return
           }
           focusEntities(entities)

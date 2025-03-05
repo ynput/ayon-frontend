@@ -7,11 +7,11 @@ import { login } from '@state/user'
 import api from '@api'
 import AuthLink from './AuthLink'
 import { useGetInfoQuery } from '@queries/auth/getAuth'
-import ReactMarkdown from 'react-markdown'
 import LoadingPage from '../LoadingPage'
 import * as Styled from './LoginPage.styled'
 import useLocalStorage from '@hooks/useLocalStorage'
 import { isEmpty, isEqual } from 'lodash'
+import remarkGfm from 'remark-gfm'
 
 const clearQueryParams = () => {
   const url = new URL(window.location)
@@ -173,9 +173,7 @@ const LoginPage = ({ isFirstTime = false }) => {
         {motd && (
           <Panel>
             {loginPageBrand && <Styled.Logo src={loginPageBrand} />}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <ReactMarkdown>{motd}</ReactMarkdown>
-            </div>
+            <Styled.MessageMarkdown remarkPlugins={remarkGfm}>{motd}</Styled.MessageMarkdown>
           </Panel>
         )}
         <Panel>

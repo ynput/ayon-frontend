@@ -19,18 +19,6 @@ const initialStateFromQueryParams: ViewerState = Object.entries(initialStateQuer
   {} as Partial<ViewerState>,
 ) as ViewerState
 
-export type Annotation = {
-  id: string
-  name: string
-  width: number
-  height: number
-  range: [number, number]
-  annotationData: string
-  compositeData: string
-  versionId: string
-  reviewableId: string
-}
-
 export interface ViewerState {
   isOpen: boolean
   versionIds: string[]
@@ -43,8 +31,6 @@ export interface ViewerState {
   quickView: boolean
   upload: boolean
   fullscreen: boolean
-  annotations: { [id: string]: Annotation }
-  clearAnnotation: null | number // used to clear annotations (reset once used)
   goToFrame: number | null
 }
 
@@ -54,8 +40,6 @@ const initialState: ViewerState = {
   upload: false, // used to open upload file picker
   fullscreen: false,
   quickView: false, // used to open quick view mode (reduced UI for quick view)
-  annotations: {},
-  clearAnnotation: null,
   goToFrame: null,
 }
 
@@ -121,30 +105,6 @@ const viewerSlice = createSlice({
     ) => {
       state.fullscreen = payload ? payload.fullscreen : !state.fullscreen
     },
-    addAnnotation: (
-      state: ViewerState,
-      { payload }: PayloadAction<Omit<Annotation, 'reviewableId' | 'versionId'>>,
-    ) => {
-      state.annotations[payload.id] = {
-        versionId: state.versionIds[0],
-        reviewableId: state.reviewableIds[0],
-        ...payload,
-      }
-    },
-    removeAnnotation: (state: ViewerState, { payload }: PayloadAction<string>) => {
-      if (!state.annotations[payload]) return
-      const page = state.annotations[payload].range[0]
-      // delete annotation from state
-      delete state.annotations[payload]
-      // set clearAnnotation to true to trigger a reset of that frame
-
-      console.log(page)
-
-      state.clearAnnotation = page
-    },
-    clearAnnotation: (state: ViewerState, { payload }: PayloadAction<number | null>) => {
-      state.clearAnnotation = payload
-    },
     goToFrame: (state: ViewerState, { payload }: PayloadAction<ViewerState['goToFrame']>) => {
       state.goToFrame = payload
     },
@@ -158,9 +118,6 @@ export const {
   closeViewer,
   toggleUpload,
   toggleFullscreen,
-  addAnnotation,
-  removeAnnotation,
-  clearAnnotation,
   goToFrame,
 } = viewerSlice.actions
 export default viewerSlice.reducer

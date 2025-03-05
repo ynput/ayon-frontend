@@ -4,7 +4,7 @@ import type { ConfigFile } from '@rtk-query/codegen-openapi'
 const outputFiles = {
   bundles: ['listBundles', 'checkBundleCompatibility', 'migrateSettingsByBundle'],
   folders: ['getFolderHierarchy', 'getFolderList'],
-  market: ['marketAddonList', 'marketAddonDetail', 'marketAddonVersionDetail'],
+  market: ['marketAddonList', 'marketAddonDetail', 'marketAddonVersionDetail', 'getLicenses'],
   watchers: ['getEntityWatchers', 'setEntityWatchers'],
   inbox: ['manageInboxItem'],
   project: ['getProject', 'listProjects', 'getProjectAnatomy', 'getProjectUsers'],
@@ -30,10 +30,21 @@ const outputFiles = {
   activities: ['deleteProjectActivity'],
   users: ['getUser', 'setFrontendPreferences'],
   releases: ['getReleases', 'getReleaseInfo'],
-  installers: ['listInstallers', 'createInstaller'],
-  dependencyPackages: ['listDependencyPackages', 'createDependencyPackage'],
+  installers: ['listInstallers', 'createInstaller', 'deleteInstaller'],
+  dependencyPackages: [
+    'listDependencyPackages',
+    'createDependencyPackage',
+    'deleteDependencyPackage',
+  ],
   cloud: ['getYnputCloudInfo', 'setYnputCloudKey', 'deleteYnputCloudKey'],
   attributes: ['getAttributeList', 'setAttributeList', 'getAttributeConfig'],
+  config: [
+    'getServerConfig',
+    'getServerOverrides',
+    'getServerConfigSchema',
+    'setServerConfig',
+    'uploadServerConfigFile',
+  ],
   operations: ['operations'],
 }
 
@@ -47,7 +58,7 @@ const buildOutputFiles = (files: { [name: string]: string[] }) =>
   }, {})
 
 const config: ConfigFile = {
-  schemaFile: `https://test.ayon.dev/openapi.json`,
+  schemaFile: `http://localhost:5000/openapi.json`,
   apiFile: '../src/services/ayon.ts',
   exportName: 'api',
   apiImport: 'RestAPI',

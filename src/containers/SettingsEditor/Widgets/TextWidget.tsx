@@ -197,9 +197,14 @@ export const TextWidget = (props: $Any) => {
 
   const hlstyle: $Any = {}
   if (valueInitialized && value !== props.value) {
+    /* Fix #539: Disable yellow outline
+       Yellow outline is confusing most users, so we're disabling it for now.
+       However we may want to still highlight the value differences in another
+       way.
     if (!['color'].includes(props.schema.widget)) {
       hlstyle.outline = '1px solid yellow'
     }
+     */
   } else if (originalValue !== undefined && props.value !== originalValue)
     hlstyle.outline = '1px solid var(--color-changed)'
 

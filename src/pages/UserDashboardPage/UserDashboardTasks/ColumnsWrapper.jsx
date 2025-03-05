@@ -13,6 +13,7 @@ const StyledWrapper = styled(Section)`
   align-items: flex-start;
   justify-content: flex-start;
   overflow-x: auto;
+  overflow-y: hidden;
   padding: 0 8px;
 `
 

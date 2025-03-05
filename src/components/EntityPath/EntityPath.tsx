@@ -24,6 +24,7 @@ const getDropdownElements = (e: DropdownMouseEvent): [HTMLElement, string] => {
 
 interface EntityPathProps {
   projectName: string
+  hideProjectName: boolean
   segments: PathSegment[]
   isLoading: boolean
   entityType: string
@@ -33,6 +34,7 @@ interface EntityPathProps {
 
 const EntityPath: FC<EntityPathProps> = ({
   projectName,
+  hideProjectName,
   segments,
   versions = [],
   isLoading,
@@ -99,6 +101,10 @@ const EntityPath: FC<EntityPathProps> = ({
   const hiddenSegments =
     maxSegments && segments.length > maxSegments ? segments.slice(0, -maxSegments) : []
 
+  // if there is no project name, add to hidden segments
+  if (hideProjectName)
+    hiddenSegments.unshift({ type: 'project', label: projectName, id: projectName })
+
   // if the entityType is a version, separate the version
   let versionSegment
   let finalSegmentsToShow = segmentsToShow
@@ -128,11 +134,11 @@ const EntityPath: FC<EntityPathProps> = ({
 
   return (
     <Styled.Path className={clsx({ loading: isLoading })} id="entity-path" ref={containerRef}>
-      <Styled.Segment>{projectName}</Styled.Segment>
+      {!hideProjectName && <Styled.Segment>{projectName}</Styled.Segment>}
 
       {!!hiddenSegments.length && (
         <>
-          <Slash />
+          {!hideProjectName && <Slash />}
           <Styled.Segment
             className="dropdown more"
             id="more"

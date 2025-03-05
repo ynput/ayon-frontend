@@ -1,13 +1,12 @@
 import clsx from 'clsx'
-import { useMemo, useRef, useState } from 'react'
+import { useMemo, useRef } from 'react'
 import ReactMarkdown from 'react-markdown'
-import { useSelector } from 'react-redux'
+import { useAppSelector } from '@state/store'
 import emoji from 'remark-emoji'
 import remarkGfm from 'remark-gfm'
 import remarkDirective from 'remark-directive'
 import remarkDirectiveRehype from 'remark-directive-rehype'
 
-import { UserModel } from '@api/rest/users'
 import CommentInput from '@components/CommentInput/CommentInput'
 import MenuContainer from '@/components/Menu/MenuComponents/MenuContainer'
 import Reactions from '@components/ReactionContainer/Reactions'
@@ -31,6 +30,7 @@ import { mapGraphQLReactions } from './mappers'
 import { Icon } from '@ynput/ayon-react-components'
 import ActivityStatus from '../ActivityStatus/ActivityStatus'
 import { Status } from '@api/rest/project'
+import { useFeed } from '@context/FeedContext'
 
 type Props = {
   activity: $Any
@@ -88,28 +88,29 @@ const ActivityComment = ({
   if (!authorFullName) authorFullName = author?.fullName || authorName
   let menuId = `comment-${scope}-${activity.activityId}`
   if (statePath) menuId += '-' + statePath
-  const isMenuOpen = useSelector((state: $Any) => state.context.menuOpen) === menuId
-  const user = useSelector((state: $Any) => state.user) as UserModel
+  const isMenuOpen = useAppSelector((state) => state.context.menuOpen) === !!menuId
+  const user = useAppSelector((state) => state.user)
 
   const [deleteReactionToActivity] = useDeleteReactionToActivityMutation()
   const [createReactionToActivity] = useCreateReactionToActivityMutation()
 
-  // EDITING
-  const [isEditing, setIsEditing] = useState(false)
+  const { editingId, setEditingId } = useFeed()
 
   const handleEditComment = () => {
-    setIsEditing(true)
+    setEditingId(activityId)
   }
 
   const handleEditCancel = () => {
-    setIsEditing(false)
+    // close the edit comment
+    setEditingId(null)
   }
 
   const handleSave = async (value: $Any, files: $Any) => {
     await onUpdate(value, files)
-    // this won't run if the update fails
-    setIsEditing(false)
+    setEditingId(null)
   }
+
+  const isEditing = editingId === activityId
 
   const isRef = referenceType !== 'origin' || showOrigin
 
@@ -253,6 +254,7 @@ const ActivityComment = ({
                 </ReactMarkdown>
               </CommentWrapper>
               {/* file uploads */}
+              {/* @ts-ignore */}
               <FilesGrid
                 files={files}
                 isCompact={files.length > 6}

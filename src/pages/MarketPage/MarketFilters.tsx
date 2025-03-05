@@ -56,6 +56,17 @@ export const addonFilters: MarketFilter[] = [
     tooltip: 'All addons, downloaded or not',
   },
   {
+    id: 'free',
+    type: 'addons',
+    name: 'Free',
+    filter: [
+      {
+        flags: (v?: string[]) => !v?.includes('licensed'),
+      },
+    ],
+    tooltip: 'Addons free to download.',
+  },
+  {
     id: 'updates',
     type: 'addons',
     name: 'Updates Available',
@@ -115,14 +126,14 @@ export const marketFilters: {
   filters: MarketFilter[]
 }[] = [
   {
-    type: 'releases',
-    name: 'Release Bundles',
-    filters: releaseFilters,
-  },
-  {
     type: 'addons',
     name: 'Addons',
     filters: addonFilters,
+  },
+  {
+    type: 'releases',
+    name: 'Release Bundles',
+    filters: releaseFilters,
   },
 ]
 
@@ -137,33 +148,18 @@ type MarketFiltersProps = {
   onSelect: (type: FilterType, id: string) => void
   onConnection: () => void
   filterType: FilterType
-  showAllReleases: boolean
 }
 
-const MarketFilters = ({
-  onSelect,
-  selected,
-  onConnection,
-  filterType,
-  showAllReleases,
-}: MarketFiltersProps) => {
+const MarketFilters = ({ onSelect, selected, onConnection, filterType }: MarketFiltersProps) => {
   const handleSelect = (e: MouseEvent<HTMLDivElement>, type: FilterType) => {
     const target = e.target as HTMLDivElement
     onSelect(type, target.id)
   }
 
-  const filteredMarketFilters = showAllReleases
-    ? marketFilters
-    : marketFilters.map((f) =>
-        f.type === 'releases'
-          ? { ...f, filters: f.filters.filter((f) => f.id !== 'all' || showAllReleases) }
-          : f,
-      )
-
   return (
     <StyledSection>
       <StyledList>
-        {filteredMarketFilters.map((filter) => (
+        {marketFilters.map((filter) => (
           <Fragment key={filter.type}>
             <div className={clsx('title', Type.titleMedium)}>{filter.name}</div>
             {filter.filters.map((f) => (

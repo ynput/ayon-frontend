@@ -182,7 +182,7 @@ const AnatomyPresets = () => {
         </Dialog>
       )}
 
-      <Section style={{ maxWidth: 600 }}>
+      <Section style={{ maxWidth: 400, minWidth: 300 }}>
         <PresetList
           selectedPreset={selectedPreset}
           setSelectedPreset={setSelectedPreset}

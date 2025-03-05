@@ -38,7 +38,7 @@ const installersApi = api.enhanceEndpoints({
         //   return in the same shape as the original response
         return { installers: sortedInstallers }
       },
-      providesTags: () => [{ type: 'installers' }],
+      providesTags: () => [{ type: 'installerList' }],
     },
   },
 })

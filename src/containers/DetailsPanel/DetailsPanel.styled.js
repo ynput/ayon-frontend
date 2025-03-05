@@ -12,3 +12,9 @@ export const Toolbar = styled(ARCToolbar)`
     min-width: max-content;
   }
 `
+
+export const RightTools = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+`

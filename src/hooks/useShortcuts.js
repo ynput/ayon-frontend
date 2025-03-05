@@ -1,15 +1,16 @@
-import { useEffect } from 'react'
+import { useEffect, useId } from 'react'
 import { useShortcutsContext } from '@context/shortcutsContext'
 
 const useShortcuts = (shortcuts, deps = []) => {
   const { addShortcuts, removeShortcuts } = useShortcutsContext()
+  const id = useId()
 
   useEffect(() => {
-    addShortcuts(shortcuts)
+    addShortcuts(id, shortcuts)
     return () => {
-      removeShortcuts(shortcuts)
+      removeShortcuts(id)
     }
-  }, deps)
+  }, [id, shortcuts, ...deps])
 }
 
 export default useShortcuts

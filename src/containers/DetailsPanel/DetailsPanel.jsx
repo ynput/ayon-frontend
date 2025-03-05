@@ -17,6 +17,7 @@ import { isEmpty } from 'lodash'
 import useGetEntityPath from './hooks/useGetEntityPath'
 import { usePiPWindow } from '@context/pip/PiPProvider'
 import getAllProjectStatuses from './helpers/getAllProjectsStatuses'
+import { FeedProvider } from '@context/FeedContext'
 
 export const entitiesWithoutFeed = ['product', 'representation']
 
@@ -161,31 +162,34 @@ const DetailsPanel = ({
             segments={entityPathSegments}
             versions={entityPathVersions}
             projectName={firstProject}
+            hideProjectName={isSlideOut}
             isLoading={isFetchingEntitiesDetails || !entityPathSegments.length}
             entityType={entityType}
             scope={scope}
           />
-          <Watchers
-            entities={entitiesToQuery}
-            entityType={entityType}
-            options={projectUsers}
-            onWatchersUpdate={onWatchersUpdate && onWatchersUpdate}
-          />
-          <Button
-            icon="picture_in_picture"
-            variant={'text'}
-            data-tooltip="Picture in Picture"
-            onClick={handleOpenPip}
-          />
-
-          {onClose && (
-            <Button
-              icon="close"
-              variant={'text'}
-              onClick={() => onClose && onClose()}
-              data-shortcut={onClose ? 'Escape' : undefined}
+          <Styled.RightTools className="right-tools">
+            <Watchers
+              entities={entitiesToQuery}
+              entityType={entityType}
+              options={projectUsers}
+              onWatchersUpdate={onWatchersUpdate && onWatchersUpdate}
             />
-          )}
+            <Button
+              icon="picture_in_picture"
+              variant={'text'}
+              data-tooltip="Picture in Picture"
+              onClick={handleOpenPip}
+            />
+
+            {onClose && (
+              <Button
+                icon="close"
+                variant={'text'}
+                onClick={() => onClose && onClose()}
+                data-shortcut={onClose ? 'Escape' : undefined}
+              />
+            )}
+          </Styled.RightTools>
         </Styled.Toolbar>
 
         <DetailsPanelHeader
@@ -203,18 +207,20 @@ const DetailsPanel = ({
           statePath={statePath}
         />
         {selectedTab === 'feed' && !isError && (
-          <Feed
-            entityType={entityType}
-            entities={isFetchingEntitiesDetails ? entitiesToQuery : entityDetailsData}
-            activeUsers={activeProjectUsers}
-            selectedTasksProjects={selectedTasksProjects}
-            projectInfo={firstProjectInfo}
-            projectName={firstProject}
-            isMultiProjects={projectNames.length > 1}
-            scope={scope}
-            statePath={statePath}
-            statuses={allStatuses}
-          />
+          <FeedProvider>
+            <Feed
+              entityType={entityType}
+              entities={isFetchingEntitiesDetails ? entitiesToQuery : entityDetailsData}
+              activeUsers={activeProjectUsers}
+              selectedTasksProjects={selectedTasksProjects}
+              projectInfo={firstProjectInfo}
+              projectName={firstProject}
+              isMultiProjects={projectNames.length > 1}
+              scope={scope}
+              statePath={statePath}
+              statuses={allStatuses}
+            />
+          </FeedProvider>
         )}
         {selectedTab === 'files' && (
           <DetailsPanelFiles

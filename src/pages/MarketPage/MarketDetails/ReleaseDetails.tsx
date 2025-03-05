@@ -6,7 +6,7 @@ import ReactMarkdown from 'react-markdown'
 import MetaPanelRow from './MetaPanelRow'
 import { ReleaseListItemModel } from '@api/rest/releases'
 import { format } from 'date-fns'
-import CloudButton from '@components/CloudButton'
+import PowerpackButton from '@components/Powerpack/PowerpackButton'
 import AddonIcon from '@components/AddonIcon/AddonIcon'
 
 type ExtendedReleaseDetail = ReleaseListItemModel & {
@@ -22,7 +22,7 @@ type ReleaseDetailsProps = {
 const ReleaseDetails = ({ release, isLoading, onDownload }: ReleaseDetailsProps) => {
   // latestVersion: is the latest version of the addon
   // versions: is an array of all versions DOWNLOADED of the addon
-  const { name, label, createdAt, icon, bio, isActive, addons } = release || {}
+  const { name, label, createdAt, icon, description, isActive, addons } = release || {}
 
   const verifiedString = 'Official'
   const verifiedIcon = <img src="/favicon-32x32.png" width={15} height={15} />
@@ -58,7 +58,7 @@ const ReleaseDetails = ({ release, isLoading, onDownload }: ReleaseDetailsProps)
                 </a>
               </Styled.ErrorCard>
             )}
-            <ReactMarkdown className={clsx({ loading: isLoading })}>{bio}</ReactMarkdown>
+            <ReactMarkdown className={clsx({ loading: isLoading })}>{description}</ReactMarkdown>
             <Styled.ReleaseAddons>
               {addons?.map((addon) => (
                 <Styled.ReleaseAddonLink
@@ -79,13 +79,7 @@ const ReleaseDetails = ({ release, isLoading, onDownload }: ReleaseDetailsProps)
                   Install release bundle
                 </SaveButton>
               ) : (
-                <CloudButton
-                  featureId="release-installer"
-                  data-tooltip="Subscribe to Ynput Cloud to install previous releases"
-                  data-tooltip-delay={0}
-                >
-                  Install release bundle
-                </CloudButton>
+                <PowerpackButton feature="releases">Install release bundle</PowerpackButton>
               )}
             </Styled.Download>
             <Styled.MetaPanel className={clsx({ loading: isLoading })}>

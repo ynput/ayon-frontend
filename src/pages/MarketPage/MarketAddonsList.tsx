@@ -68,6 +68,7 @@ interface ExtendedMarketAddonItem extends MarketAddonItem {
   isFailed?: boolean
   isFinished?: boolean
   isActive?: boolean
+  flags?: string[]
 }
 
 export type MarketListItem = {
@@ -218,6 +219,8 @@ const MarketAddonsList = ({
                 name,
                 latestVersion,
                 icon,
+                available,
+                flags,
                 isOfficial,
                 isVerified,
                 isDownloaded,
@@ -241,6 +244,7 @@ const MarketAddonsList = ({
                     onDownload={(n, v) => onDownload(type, n, v)}
                     style={{ paddingLeft: group ? 40 : 4 }}
                     isActive={isActive || type === 'addon'}
+                    flags={flags}
                     {...{
                       title,
                       name,
@@ -255,6 +259,7 @@ const MarketAddonsList = ({
                       isDownloading,
                       isFailed,
                       isFinished,
+                      available,
                     }}
                   />,
                 )

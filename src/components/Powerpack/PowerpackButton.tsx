@@ -1,3 +1,4 @@
+import { PowerpackFeature, usePowerpack } from '@context/powerpackContext'
 import { Button, ButtonProps } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import { forwardRef, MouseEvent } from 'react'
@@ -25,14 +26,16 @@ const StyledButton = styled(Button)`
 `
 
 interface CloudButtonProps extends ButtonProps {
-  featureId: string
+  feature: PowerpackFeature
 }
 
-export const CloudButton = forwardRef<HTMLButtonElement, CloudButtonProps>(
-  ({ featureId, ...props }, ref) => {
+const PowerpackButton = forwardRef<HTMLButtonElement, CloudButtonProps>(
+  ({ feature, ...props }, ref) => {
+    const { setPowerpackDialog } = usePowerpack()
+
     const handleOnClick = (e: MouseEvent<HTMLButtonElement>) => {
       // open a dialog to subscribe to Ynput Cloud
-      window.alert(`Subscribe to Ynput Cloud to use the ${featureId} feature`)
+      setPowerpackDialog(feature)
       // Call the original onClick handler
       props.onClick?.(e)
     }
@@ -45,9 +48,13 @@ export const CloudButton = forwardRef<HTMLButtonElement, CloudButtonProps>(
         ref={ref}
         onClick={handleOnClick}
         className={clsx('cloud-button', props.className || '', { border: !!props.children })}
+        data-tooltip={`Power feature`}
+        data-tooltip-delay={0}
       >
         {props.children}
       </StyledButton>
     )
   },
 )
+
+export default PowerpackButton

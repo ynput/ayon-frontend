@@ -13,6 +13,7 @@ import {
 } from '@queries/dependencyPackages/updateDependencyPackages'
 import { onUploadFinished, onUploadProgress } from '@state/context'
 import axios from 'axios'
+import AddonManager from './AddonManager'
 
 const StyledFooter = styled.div`
   display: flex;
@@ -51,6 +52,9 @@ const AddonUpload = ({
   dropOnly,
   abortController,
   onUploadStateChange,
+  manager,
+  manageMode,
+  setManageMode,
   ...props
 }) => {
   const dispatch = useDispatch()
@@ -99,7 +103,15 @@ const AddonUpload = ({
         })
         // Use the data object here
         if (type === 'package') await createPackage({ dependencyPackage: data }).unwrap()
-        if (type === 'installer') await createInstaller({ installer: data }).unwrap()
+        if (type === 'installer') {
+          console.log('creating installer', data)
+          await createInstaller({ installer: data }).unwrap()
+          dispatch(
+            api.util.updateQueryData('listInstallers', {}, (draft) => {
+              draft.installers.push(data)
+            }),
+          )
+        }
       }
 
       console.log('finished: created ' + type)
@@ -275,23 +287,28 @@ const AddonUpload = ({
   }
   // default message
 
-  //<Button onClick={handleAddonInstall} label="Install" disabled={!files?.length} />
+  if (manager && manageMode) {
+    return <AddonManager manager={manager} manageMode={manageMode} setManageMode={setManageMode} />
+  }
   return (
     <FileUpload
       files={files}
       setFiles={setFiles}
-      title={' '}
+      title={null}
       accept={type === 'addon' ? ['.zip'] : ['*']}
       allowMultiple
       placeholder={`Drop ${typeLabel} files`}
       isSuccess={isComplete}
+      extraHeaderActions={
+        !!manager && <Button onClick={() => setManageMode(true)} label="Manage uploads" />
+      }
       footer={
         !dropOnly && (
           <StyledFooter style={{ display: 'flex', width: '100%' }}>
             {message}
             {isUploading && <StyledProgressBar $progress={progress} />}
             <div>
-              {onClose && <Button onClick={onClose} label={isComplete ? "Close" : "Cancel"} />}
+              {onClose && <Button onClick={onClose} label={isComplete ? 'Close' : 'Cancel'} />}
               <SaveButton
                 disabled={isUploading}
                 active={files.length}

@@ -7,7 +7,7 @@ import clsx from 'clsx'
 
 const ReleasePreset = ({
   label,
-  bio,
+  description,
   icon,
   name,
   createdAt,
@@ -55,7 +55,7 @@ const ReleasePreset = ({
         <Icon icon={icon} />
         <div>
           <h3 className={Type.titleLarge}>{label || name}</h3>
-          <span className="bio">{bio}</span>
+          <span className="description">{description}</span>
         </div>
       </Styled.Header>
       {isSelected && (

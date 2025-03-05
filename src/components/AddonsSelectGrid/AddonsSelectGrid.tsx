@@ -1,4 +1,4 @@
-import { ReleaseAddon } from '@api/rest/releases'
+import { AddonVersionDetail } from '@api/rest/releases'
 import AddonCard, { AddonCardProps } from '@components/AddonCard/AddonCard'
 import clsx from 'clsx'
 import { FC, HTMLAttributes } from 'react'
@@ -16,13 +16,13 @@ const Grid = styled.div`
   overflow: auto;
 `
 
-type Addon = Pick<ReleaseAddon, 'name' | 'title' | 'version'>
+type Addon = Pick<AddonVersionDetail, 'name' | 'title' | 'version'>
 
 interface AddonsSelectGridProps extends Omit<HTMLAttributes<HTMLDivElement>, 'onSelect'> {
   isLoading: boolean
   placeholderCount: number
   addons: Addon[]
-  disabledAddons: string[]
+  disabledAddons?: string[]
   selected: string[]
   onSelect: (name: string) => void
   pt?: {

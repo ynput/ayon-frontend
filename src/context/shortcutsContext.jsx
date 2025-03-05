@@ -1,4 +1,12 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  useRef,
+} from 'react'
 import { useNavigate } from 'react-router'
 import { useAppDispatch, useAppSelector } from '@state/store'
 import { toggleMenuOpen } from '@state/context'
@@ -36,11 +44,7 @@ function ShortcutsProvider(props) {
       // project settings
       {
         key: 'p+p',
-        action: () => navigate('/manageProjects'),
-      },
-      {
-        key: 'p+a',
-        action: () => navigate('/manageProjects/userSettings?' + searchParams.toString()),
+        action: () => navigate('/manageProjects/projectSettings?' + searchParams.toString()),
       },
       // project settings anatomy
       { key: 'a+a', action: () => navigate('/manageProjects/anatomy?' + searchParams.toString()) },
@@ -74,20 +78,31 @@ function ShortcutsProvider(props) {
     ],
     [navigate],
   )
-  // when these variables change, update shortcutshh
-  const deps = [searchParams]
 
   const defaultShortcuts = [...navigation, ...navBar]
+
+  // Separate global shortcuts from component shortcuts
+  const globalShortcuts = useMemo(() => defaultShortcuts, [defaultShortcuts, navigation, navBar])
+  const [componentShortcuts, setComponentShortcuts] = useState(new Map())
+
+  // Compute active shortcuts by combining global and component shortcuts
+  const activeShortcuts = useMemo(() => {
+    const allShortcuts = [...globalShortcuts]
+    componentShortcuts.forEach((shortcuts) => {
+      allShortcuts.push(...shortcuts)
+    })
+    return allShortcuts
+  }, [globalShortcuts, componentShortcuts])
 
   // keep track of what's being hovered
   const [hovered, setHovered] = useState(null)
   // start off with global shortcuts but others can be set per page
-  const [shortcuts, setShortcuts] = useState(defaultShortcuts)
+  const shortcutsRef = useRef(activeShortcuts)
 
-  // update shortcuts when these variables change
+  // Update ref whenever shortcuts change
   useEffect(() => {
-    setShortcuts(defaultShortcuts)
-  }, deps)
+    shortcutsRef.current = activeShortcuts
+  }, [activeShortcuts])
 
   const handleKeyPress = useCallback(
     (e) => {
@@ -117,10 +132,10 @@ function ShortcutsProvider(props) {
 
       // first check if the key pressed is a shortcut
       // const shortcut = shortcuts[e.key] || shortcuts[combo]
-      const shortcut = shortcuts.find((s) => s.key === combo || s.key === singleKey)
+      const shortcut = activeShortcuts.find((s) => s.key === combo || s.key === singleKey)
 
       // check if the key is part of a complex shortcut
-      const keyPartOfCombo = shortcuts.some((s) => s.key.includes(singleKey))
+      const keyPartOfCombo = activeShortcuts.some((s) => s.key.includes(singleKey))
 
       if (!keyPartOfCombo) return
 
@@ -143,7 +158,7 @@ function ShortcutsProvider(props) {
       // and run the action
       shortcut.action(hovered, isMeta, e)
     },
-    [lastPressed, shortcuts, hovered, disabled, allowed, reviewOpen],
+    [lastPressed, activeShortcuts, hovered, disabled, allowed, reviewOpen],
   )
 
   // Add event listeners
@@ -157,19 +172,21 @@ function ShortcutsProvider(props) {
 
   // create function that can be used in components to add shortcuts, when the component mounts
   // and removes them when it unmounts
-  const addShortcuts = (newShortcuts) => {
-    setShortcuts((oldShortcuts) => {
-      const oldShortcutsFiltered = oldShortcuts.filter(
-        (s) => !newShortcuts.some((n) => n.key === s.key),
-      )
-      return [...oldShortcutsFiltered, ...newShortcuts]
+  const addShortcuts = useCallback((id, newShortcuts) => {
+    setComponentShortcuts((current) => {
+      const updated = new Map(current)
+      updated.set(id, newShortcuts)
+      return updated
     })
-  }
+  }, [])
 
-  const removeShortcuts = (shortcutsToRemove) => {
-    // console.log('removing shortcuts', shortcutsToRemove)
-    setShortcuts((oldShortcuts) => oldShortcuts.filter((s) => !shortcutsToRemove.includes(s.key)))
-  }
+  const removeShortcuts = useCallback((id) => {
+    setComponentShortcuts((current) => {
+      const updated = new Map(current)
+      updated.delete(id)
+      return updated
+    })
+  }, [])
 
   const removeEventListener = () =>
     document.removeEventListener('mouseover', (e) => {
@@ -177,7 +194,7 @@ function ShortcutsProvider(props) {
     })
 
   useEffect(() => {
-    if (shortcuts.some((s) => s.closest)) {
+    if (activeShortcuts.some((s) => s.closest)) {
       document.addEventListener('mouseover', (e) => {
         setHovered(e)
       })
@@ -186,7 +203,7 @@ function ShortcutsProvider(props) {
     }
 
     return () => removeEventListener()
-  }, [shortcuts])
+  }, [activeShortcuts])
 
   return (
     <ShortcutsContext.Provider

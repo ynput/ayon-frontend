@@ -2,6 +2,22 @@ import React, { useEffect } from 'react'
 import * as Styled from './AttribForm.styled'
 import AttribFormType from './AttribFormType'
 
+export const getDefaultFromType = (type) => {
+  switch (type) {
+    case 'string':
+      return ''
+    case 'number':
+      return 0
+    case 'boolean':
+      return false
+    case 'array':
+      return []
+
+    default:
+      return undefined
+  }
+}
+
 const AttribForm = ({ form = {}, onChange, fields, isLoading }) => {
   //   we build the attrib form data based on the schema, trying to match the data types
   // we do this in case form.attrib is missing any fields

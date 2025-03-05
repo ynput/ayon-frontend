@@ -2,7 +2,7 @@ import { StudioManagementPermissions, ProjectManagementPermissions } from '@api/
 import { Module } from '@pages/ProjectManagerPage/mappers'
 import { useGetCurrentUserPermissionsQuery } from '@queries/permissions/getPermissions'
 
-type AllProjectsPremissions = {
+type AllProjectsPermissions = {
   projects: {
     [projectName: string]: {
       project: ProjectManagementPermissions
@@ -26,10 +26,10 @@ export enum UserPermissionsEntity {
 }
 
 class UserPermissions {
-  permissions: AllProjectsPremissions
+  permissions: AllProjectsPermissions
   hasElevatedPrivileges: boolean
 
-  constructor(permissions: AllProjectsPremissions, hasLimitedPermissions: boolean = false) {
+  constructor(permissions: AllProjectsPermissions, hasLimitedPermissions: boolean = false) {
     this.permissions = permissions
     this.hasElevatedPrivileges = !hasLimitedPermissions
   }

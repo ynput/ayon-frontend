@@ -24,6 +24,7 @@ import { filterItems, transformReleasesToTable } from './helpers'
 import ReleaseDetails from './MarketDetails/ReleaseDetails'
 import { useAppDispatch } from '@state/store'
 import { toggleReleaseInstaller } from '@state/releaseInstaller'
+import { useGetYnputConnectionsQuery } from '@queries/ynputConnect'
 
 const placeholders = [...Array(20)].map((_, i) => ({
   type: 'placeholder',
@@ -49,6 +50,8 @@ const MarketPage = () => {
   const { data: { addons: downloadedAddons = [] } = {}, isLoading: isLoadingDownloaded } =
     useListAddonsQuery({})
 
+  const { data: connectData } = useGetYnputConnectionsQuery({})
+
   // keep track of which addons are being downloaded
   const [downloadingAddons, setDownloadingAddons] = useState([])
   const [finishedDownloading, setFinishedDownloading] = useState([])
@@ -63,10 +66,10 @@ const MarketPage = () => {
   const [showConnectDialog, setShowConnectDialog] = useState(false)
 
   // FILTER ADDONS BY FIELDS
-  const [filterType, setFilterType] = useQueryParam('type', withDefault(StringParam, 'releases'))
+  const [filterType, setFilterType] = useQueryParam('type', withDefault(StringParam, 'addons'))
   const [selectedFilter, setSelectedFilter] = useQueryParam(
     'filter',
-    withDefault(StringParam, 'latest'),
+    withDefault(StringParam, 'all'),
   )
   const filter = useMemo(
     () => getMarketFilter(filterType, selectedFilter),
@@ -146,17 +149,18 @@ const MarketPage = () => {
   const { data: selectedAddonData = {}, isFetching: isFetchingAddon } = useMarketAddonDetailQuery(
     { addonName: selectedItemId },
     {
-      skip: !selectedItemId || filterType !== 'addons',
+      skip: !selectedItemId || filterType !== 'addons' || !connectData,
     },
   )
 
-  // // merge downloaded with market addons
-  // let marketAddons = useMemo(() => {
-  //   return mergeAddonsData(marketAddonsData, downloadedAddons)
-  // }, [marketAddonsData, downloadedAddons])
-
   let marketAddons = useMemo(() => {
     let addons = [...marketAddonsData]
+
+    // filter out addons that are for cloud only (when not on the cloud)
+    addons = addons?.filter(
+      (addon) => !!connectData?.managed || !addon?.flags?.includes('cloud-only'),
+    )
+
     // sort by isDownloaded, isOutdated, isOfficial, name
     addons?.sort(
       (a, b) =>
@@ -172,7 +176,7 @@ const MarketPage = () => {
     }
 
     return addons
-  }, [marketAddonsData, filter])
+  }, [marketAddonsData, filter, connectData])
 
   // update addon if downloadingAddons or finishedDownloading changes
   marketAddons = useMemo(() => {
@@ -400,7 +404,6 @@ const MarketPage = () => {
             onSelect={handleSelectFilter}
             selected={selectedFilter}
             onConnection={handleYnputConnect}
-            showAllReleases={hasCloudSub}
           />
 
           <MarketAddonsList

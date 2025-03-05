@@ -71,7 +71,6 @@ const BundleDetail = ({ bundles = [], onDuplicate, installers, toggleBundleStatu
               onClick={() => toggleBundleStatus(name, bundle.name)}
               disabled={bundles.length > 1}
               data-tooltip={`${!active ? 'Set' : 'Unset'} bundle to ${name}`}
-              data-shortcut={`shift+${name.charAt(0).toUpperCase()}`}
             >
               {!active ? 'Set' : ''} {upperFirst(name)}
             </Styled.BadgeButton>

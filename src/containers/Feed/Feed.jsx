@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react'
+import React, { useMemo, useRef } from 'react'
 import ActivityItem from '@components/Feed/ActivityItem'
 import CommentInput from '@components/CommentInput/CommentInput'
 import * as Styled from './Feed.styled'
@@ -21,6 +21,7 @@ import ActivityReferenceTooltip from '@components/Feed/ActivityReferenceTooltip/
 import { isFilePreviewable } from '@containers/FileUploadPreview/FileUploadPreview'
 import { useGetKanbanProjectUsersQuery } from '@queries/userDashboard/getUserDashboard'
 import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
+import { useFeed, FEED_NEW_COMMENT } from '@context/FeedContext'
 
 // number of activities to get
 export const activitiesLast = 30
@@ -38,6 +39,7 @@ const Feed = ({
   statuses = [],
 }) => {
   const dispatch = useDispatch()
+  const { editingId, setEditingId } = useFeed()
   const userName = useSelector((state) => state.user.name)
   const activityTypes = useSelector((state) => state.details[statePath][scope].activityTypes)
   const filter = useSelector((state) => state.details[statePath][scope].filter)
@@ -47,7 +49,6 @@ const Feed = ({
   const hideCommentInput = ['publishes'].includes(filter)
 
   // STATES
-  const [isCommentInputOpen, setIsCommentInputOpen] = useState(false)
 
   const entitiesToQuery = useMemo(
     () =>
@@ -141,7 +142,7 @@ const Feed = ({
   // const commentInputRef = useRef(null)
 
   // scroll by height of comment input when it opens or closes
-  useScrollOnInputOpen({ feedRef, isCommentInputOpen, height: 93 })
+  useScrollOnInputOpen({ feedRef, isCommentInputOpen: editingId === FEED_NEW_COMMENT, height: 93 })
 
   // save scroll position of a feed
   useSaveScrollPos({
@@ -267,7 +268,9 @@ const Feed = ({
                   activity={activity}
                   onCheckChange={handleCommentChecked}
                   onDelete={deleteComment}
-                  onUpdate={(value, files, refs) => updateComment(activity, value, files, refs)}
+                  onUpdate={async (value, files, refs) =>
+                    await updateComment(activity, value, files, refs)
+                  }
                   projectInfo={projectInfo}
                   projectName={projectName}
                   entityType={entityType}
@@ -310,9 +313,9 @@ const Feed = ({
           <CommentInput
             initValue={null}
             onSubmit={submitComment}
-            isOpen={isCommentInputOpen}
-            onClose={() => setIsCommentInputOpen(false)}
-            onOpen={() => setIsCommentInputOpen(true)}
+            isOpen={editingId === FEED_NEW_COMMENT}
+            onClose={() => setEditingId(null)}
+            onOpen={() => setEditingId(FEED_NEW_COMMENT)}
             projectName={projectName}
             entities={entities}
             entityType={entityType}
