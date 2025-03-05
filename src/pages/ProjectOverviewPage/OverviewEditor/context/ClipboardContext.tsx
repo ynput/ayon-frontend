@@ -1,37 +1,20 @@
-import React, { createContext, useContext, useCallback, useMemo, ReactNode, useEffect } from 'react'
+import React, { createContext, useContext, useCallback, useMemo, useEffect } from 'react'
 import { useSelection } from './SelectionContext'
-import { FolderNodeMap, TaskNodeMap } from '../types'
-import { getCellValue, parseCellId } from '../utils/cellUtils'
 import { useCellEditing } from './CellEditingContext'
-import { toast } from 'react-toastify'
+import { getCellValue, parseCellId } from '../utils/cellUtils'
 import { EntityUpdate } from '../hooks/useUpdateEditorEntities'
-import { BuiltInFieldOptions } from '../TableColumns'
-import { AttributeEnumItem } from '@api/rest/attributes'
 
-// map fieldId to enum values
-const builtInFieldMappings = {
-  status: 'statuses',
-  folderType: 'folderTypes',
-  taskType: 'taskTypes',
-}
-
-interface ColumnEnums extends BuiltInFieldOptions {
-  [attrib: string]: AttributeEnumItem[]
-}
-
-interface ClipboardContextType {
-  copyToClipboard: () => Promise<void>
-  pasteFromClipboard: () => Promise<void>
-}
+// Import from the new modular files
+import {
+  getEntityPath,
+  parseClipboardText,
+  clipboardError,
+  processFieldValue,
+} from './clipboard/clipboardUtils'
+import { validateClipboardData } from './clipboard/clipboardValidation'
+import { ClipboardContextType, ClipboardProviderProps } from './clipboard/clipboardTypes'
 
 const ClipboardContext = createContext<ClipboardContextType | undefined>(undefined)
-
-interface ClipboardProviderProps {
-  children: ReactNode
-  foldersMap: FolderNodeMap
-  tasksMap: TaskNodeMap
-  columnEnums: ColumnEnums
-}
 
 export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
   children,
@@ -43,38 +26,12 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
   const { selectedCells, gridMap } = useSelection()
   const { updateEntities } = useCellEditing()
 
-  const clipboardError = (error: string) => toast.error(error)
-
-  // Helper function to get the full path for an entity
-  const getEntityPath = useCallback(
-    (entityId: string, isFolder: boolean): string => {
-      const entity = isFolder ? foldersMap.get(entityId) : tasksMap.get(entityId)
-      if (!entity) return ''
-
-      const name = entity.name || ''
-      // @ts-ignore
-      const parentId = entity.folderId || entity.parentId
-
-      // If no parent, return just the name
-      if (!parentId) return name
-
-      // If has parent, get parent path (parents are always folders)
-      const parentPath = getEntityPath(parentId, true)
-
-      // Combine paths with " / " separator
-      return parentPath ? `${parentPath} / ${name}` : name
-    },
-    [foldersMap, tasksMap],
-  )
-
   const copyToClipboard = useCallback(async () => {
     if (!selectedCells.size) return
 
     try {
       // First, organize selected cells by row
       const cellsByRow = new Map<string, Set<string>>()
-
-      console.log(selectedCells)
 
       // Parse all selected cells and organize by rowId and colId
       Array.from(selectedCells).forEach((cellId) => {
@@ -125,7 +82,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
 
           // Special handling for name field - include full path
           if (colId === 'name') {
-            cellValue = getEntityPath(rowId, isFolder)
+            cellValue = getEntityPath(rowId, isFolder, foldersMap, tasksMap)
           }
 
           if (colId === 'subType') {
@@ -148,24 +105,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
     } catch (error) {
       console.error('Failed to copy to clipboard:', error)
     }
-  }, [selectedCells, foldersMap, tasksMap, gridMap, getEntityPath])
-
-  const parseClipboardText = useCallback((clipboardText: string) => {
-    // Parse clipboard text into rows and columns
-    const rows = clipboardText.trim().split('\n')
-    const parsedData: { values: string[]; colIds: string[] }[] = []
-
-    // Store original column order for validation
-    const origColumnOrder: string[] = []
-
-    // Parse each row into values
-    rows.forEach((row) => {
-      const rowValues = row.split('\t')
-      parsedData.push({ values: rowValues, colIds: origColumnOrder })
-    })
-
-    return parsedData
-  }, [])
+  }, [selectedCells, foldersMap, tasksMap, gridMap])
 
   const pasteFromClipboard = useCallback(async () => {
     if (!selectedCells.size) return
@@ -233,68 +173,19 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
             pasteValue = parsedData[pasteRowIndex].values[pasteColIndex]
           }
 
-          // skip validation for empty values - these will be silently skipped later for enum fields
-          if (!pasteValue) continue
-
-          // Special handling for assignees - filter out invalid values instead of canceling
-          if (colId === 'assignees') {
-            // Split assignees by comma
-            const assigneeValues = pasteValue.split(',').map((v) => v.trim())
-
-            // Get assignee options from columnEnums
-            const assigneeOptions = columnEnums['assignees'] || []
-
-            // Filter to keep only valid assignees
-            const validAssignees = assigneeValues.filter((v) =>
-              assigneeOptions.some((opt) => opt.value === v || opt.label === v),
-            )
-
-            // Update the paste value in the parsed data
-            if (isSingleCellValue) {
-              parsedData[0].values[0] = validAssignees.join(', ')
-            } else {
-              const pasteRowIndex = rowIndex % parsedData.length
-              const pasteColIndex = colIndex % parsedData[pasteRowIndex].values.length
-              parsedData[pasteRowIndex].values[pasteColIndex] = validAssignees.join(', ')
-            }
-
-            // Skip regular enum validation for assignees
-            continue
-          }
-
-          // Map subType to the actual field name
-          let fieldId = colId === 'subType' ? (isFolder ? 'folderType' : 'taskType') : colId
-          // check if fieldId has a mapping to plural enum
-          // @ts-expect-error
-          fieldId = builtInFieldMappings[fieldId] || fieldId
-
-          // Skip validation for fields that don't have enums
-          if (!(fieldId in columnEnums)) continue
-
-          // Get the enum values for this field
-          const enumOptions = columnEnums[fieldId as keyof typeof columnEnums]
-
-          // Skip if no enum options are available
-          if (!Array.isArray(enumOptions) || enumOptions.length === 0) continue
-
-          // Check if the pasted value exists in the enum options
-          const enumValues = pasteValue.split(',').map((v) => v.trim())
-          const valueExists = enumValues.every((v) =>
-            enumOptions.some((opt) => opt.value === v || opt.label === v),
+          // Validate clipboard data for this cell
+          const isValid = validateClipboardData(
+            colId,
+            isFolder,
+            pasteValue,
+            parsedData,
+            columnEnums,
+            rowIndex,
+            colIndex,
+            isSingleCellValue,
           )
 
-          if (!valueExists) {
-            // Get a display name for the field (folderType/taskType → Type)
-            const displayName =
-              fieldId === 'folderType' || fieldId === 'taskType'
-                ? `${isFolder ? 'folder' : 'task'} type`
-                : fieldId
-
-            clipboardError(
-              `Invalid ${displayName} value: "${pasteValue}". Paste operation cancelled.`,
-            )
-            return
-          }
+          if (!isValid) return
         }
       }
 
@@ -319,7 +210,6 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
         // Check if this is an attribute field by examining the first entity
         let isAttrib = false
         // Check if the field potentially contains array values
-        let isArrayField = false
         let fieldValueType: 'string' | 'number' | 'boolean' | 'array' = 'string'
 
         if (sortedRows.length > 0) {
@@ -334,7 +224,6 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
             // @ts-ignore - Check entity property or attribute
             const fieldValue = getCellValue(entity, colId)
             if (Array.isArray(fieldValue)) {
-              isArrayField = true
               fieldValueType = 'array'
             } else if (typeof fieldValue === 'number') {
               fieldValueType = 'number'
@@ -356,8 +245,6 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
           const entityType = isFolder ? 'folder' : 'task'
 
           // Get the appropriate value from the clipboard data
-          // If it's a single cell value, use it for all cells
-          // Otherwise use the modulo approach to repeat values
           let pasteValue
           if (isSingleCellValue) {
             pasteValue = parsedData[0].values[0]
@@ -368,59 +255,18 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
           }
 
           let fieldToUpdate = colId.split('_').pop() || colId
-          let processedValue: any
 
           // Special handling for subType (convert to folderType or taskType)
           if (colId === 'subType') {
             fieldToUpdate = isFolder ? 'folderType' : 'taskType'
-            processedValue = pasteValue
             isAttrib = false
 
             // Skip empty values for enum fields
             if (!pasteValue) continue
-          } else {
-            // Check if this is an enum field with empty value (validation case 2)
-            let enumFieldId =
-              builtInFieldMappings[fieldToUpdate as keyof typeof builtInFieldMappings] ||
-              fieldToUpdate
-            if (
-              !pasteValue &&
-              enumFieldId in columnEnums &&
-              Array.isArray(columnEnums[enumFieldId as keyof typeof columnEnums]) &&
-              columnEnums[enumFieldId as keyof typeof columnEnums].length > 0
-            ) {
-              continue // Skip adding this field to updates - silent skip for empty enum values
-            }
-
-            // Process value based on detected field type
-            if (isArrayField) {
-              try {
-                // Try to parse as JSON first (for copied arrays)
-                try {
-                  processedValue = JSON.parse(pasteValue)
-                } catch {
-                  // If not valid JSON, treat as comma-separated values
-                  processedValue = pasteValue.includes(',')
-                    ? pasteValue.split(',').map((v) => v.trim())
-                    : [pasteValue]
-                }
-                processedValue = Array.isArray(processedValue) ? processedValue : [processedValue]
-              } catch {
-                // Fallback to single-item array if parsing fails
-                processedValue = [pasteValue]
-              }
-            } else if (fieldValueType === 'number') {
-              processedValue = Number(pasteValue) || 0
-            } else if (fieldValueType === 'boolean') {
-              processedValue =
-                pasteValue.toLowerCase() === 'true' ||
-                pasteValue === '1' ||
-                pasteValue.toLowerCase() === 'yes'
-            } else {
-              // Default string handling
-              processedValue = pasteValue
-            }
           }
+
+          // Process the value based on its type
+          const processedValue = processFieldValue(pasteValue, fieldValueType)
 
           // Get or create entity entry in the map
           const entityKey = `${rowId}-${entityType}`
@@ -485,15 +331,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
       console.error('Failed to paste from clipboard:', error)
       clipboardError('Failed to paste data. Please try again.')
     }
-  }, [
-    selectedCells,
-    gridMap,
-    foldersMap,
-    tasksMap,
-    updateEntities,
-    parseClipboardText,
-    columnEnums,
-  ])
+  }, [selectedCells, gridMap, foldersMap, tasksMap, updateEntities, columnEnums])
 
   // Set up keyboard event listeners
   useEffect(() => {
