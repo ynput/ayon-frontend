@@ -31,7 +31,11 @@ const outputFiles = {
   users: ['getUser', 'setFrontendPreferences'],
   releases: ['getReleases', 'getReleaseInfo'],
   installers: ['listInstallers', 'createInstaller', 'deleteInstaller'],
-  dependencyPackages: ['listDependencyPackages', 'createDependencyPackage', 'deleteDependencyPackage'],
+  dependencyPackages: [
+    'listDependencyPackages',
+    'createDependencyPackage',
+    'deleteDependencyPackage',
+  ],
   cloud: ['getYnputCloudInfo', 'setYnputCloudKey', 'deleteYnputCloudKey'],
   attributes: ['getAttributeList', 'setAttributeList', 'getAttributeConfig'],
   config: [
@@ -41,6 +45,7 @@ const outputFiles = {
     'setServerConfig',
     'uploadServerConfigFile',
   ],
+  operations: ['operations'],
 }
 
 const buildOutputFiles = (files: { [name: string]: string[] }) =>

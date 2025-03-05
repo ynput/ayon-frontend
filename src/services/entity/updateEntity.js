@@ -61,7 +61,7 @@ const patchProgressView = ({ operations = [], state, dispatch, entityType }) => 
   // find the entries that need to be updated
   let entries = api.util.selectInvalidatedBy(state, invalidationTags)
   // if there are no entries, return
-  if (!entries.length) return
+  if (!entries.length) return []
 
   try {
     // patch each entry with updated task data
@@ -142,7 +142,6 @@ const updateEntity = api.injectEndpoints({
           const currentDashNeedsUpdating = hasSomeAssignees && hasSomeProjects
 
           if (currentDashNeedsUpdating) {
-            console.log({ data })
             const [result, wasPatched] = patchKanban(
               { assignees: cacheUsers, projects: dashboardProjects },
               { newAssignees, taskId: entityId, data },
@@ -369,6 +368,8 @@ const updateEntity = api.injectEndpoints({
 
             // revert the progress view patches
             progressPatches.forEach((patch) => patch?.undo())
+
+            throw 'Failed to update some tasks'
           }
 
           const activityTags = []
@@ -380,7 +381,7 @@ const updateEntity = api.injectEndpoints({
           return { data: operations }
         } catch (error) {
           console.error(error)
-          return error
+          return { error }
         }
       },
       invalidatesTags: (result, error, { operations }) =>
@@ -390,4 +391,4 @@ const updateEntity = api.injectEndpoints({
   overrideExisting: true,
 })
 
-export const { useUpdateEntitiesMutation } = updateEntity
+export const { useUpdateEntitiesMutation, useUpdateEntityMutation } = updateEntity

@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { Button, Dialog } from '@ynput/ayon-react-components'
 
 import BrowserPage from './BrowserPage'
-import EditorPage from './EditorPage'
+import ProjectOverviewPage from './ProjectOverviewPage'
 import LoadingPage from './LoadingPage'
 import ProjectAddon from './ProjectAddon'
 import WorkfilesPage from './WorkfilesPage'
@@ -17,6 +17,7 @@ import { useGetProjectAddonsQuery } from '@queries/addons/getAddons'
 import { TabPanel, TabView } from 'primereact/tabview'
 import AppNavLinks from '@containers/header/AppNavLinks'
 import { SlicerProvider } from '@context/slicerContext'
+import NewEditorPage from './ProjectOverviewPage/OverviewEditor/OverviewEditor'
 
 const ProjectContextInfo = () => {
   /**
@@ -93,6 +94,12 @@ const ProjectPage = () => {
   const links = useMemo(
     () => [
       {
+        name: 'Overview',
+        path: `/projects/${projectName}/overview`,
+        module: 'overview',
+        uriSync: true,
+      },
+      {
         name: 'Browser',
         path: `/projects/${projectName}/browser`,
         module: 'browser',
@@ -149,8 +156,11 @@ const ProjectPage = () => {
   }
 
   const getPageByModuleAndAddonData = (module, addonName, addonsData) => {
-    if (module === 'editor') {
-      return <EditorPage />
+    if (module === 'overview') {
+      return <ProjectOverviewPage />
+    }
+    if (module === 'newEditor') {
+      return <NewEditorPage />
     }
     if (module === 'tasks') {
       return <TasksProgressPage />
