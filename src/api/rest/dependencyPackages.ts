@@ -81,6 +81,9 @@ export type DependencyPackage = {
 export type DependencyPackageList = {
   packages?: DependencyPackage[]
 }
+export type InstallResponseModel = {
+  eventId?: string
+}
 export type ValidationError = {
   loc: (string | number)[]
   msg: string
@@ -88,7 +91,4 @@ export type ValidationError = {
 }
 export type HttpValidationError = {
   detail?: ValidationError[]
-}
-export type InstallResponseModel = {
-  eventId?: string
 }

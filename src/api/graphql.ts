@@ -1424,6 +1424,7 @@ export type GetRootFolderIdsQuery = { __typename?: 'Query', project: { __typenam
 export type GetTasksByParentQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
   parentIds: Array<Scalars['String']['input']> | Scalars['String']['input'];
+  filter?: InputMaybe<Scalars['String']['input']>;
 }>;
 
 
@@ -1859,10 +1860,10 @@ export const GetRootFolderIdsDocument = `
     ${FolderPropsFragmentFragmentDoc}
 ${TaskPropsFragmentFragmentDoc}`;
 export const GetTasksByParentDocument = `
-    query GetTasksByParent($projectName: String!, $parentIds: [String!]!) {
+    query GetTasksByParent($projectName: String!, $parentIds: [String!]!, $filter: String) {
   project(name: $projectName) {
     name
-    tasks(folderIds: $parentIds) {
+    tasks(folderIds: $parentIds, filter: $filter) {
       edges {
         node {
           ...TaskPropsFragment

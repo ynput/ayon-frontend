@@ -4,7 +4,7 @@
 // attributes by scope
 
 import { AttributeModel, AttributeEnumItem, AttributeData } from '@api/rest/attributes'
-import { Tag } from '@api/rest/project'
+import { FolderType, Status, Tag, TaskType } from '@api/rest/project'
 import { ALLOW_INVERTED_FILTERS, SHOW_DATE_FILTERS } from '@components/SearchFilter/featureFlags'
 import { Option } from '@components/SearchFilter/types'
 import getEntityTypeIcon from '@helpers/getEntityTypeIcon'
@@ -199,7 +199,7 @@ const useBuildFilterOptions = ({
     if (statusOption) {
       Object.values(projectsInfo).forEach((project) => {
         const statuses = project?.statuses || []
-        statuses.forEach((status) => {
+        statuses.forEach((status: Status) => {
           if (!statusOption.values?.some((value) => value.id === status.name)) {
             statusOption.values?.push({
               id: status.name,
@@ -393,7 +393,7 @@ const getSubTypes = (projectsInfo: GetProjectsInfoResponse, type: Scope): Option
     Object.values(projectsInfo).forEach((project) => {
       // for each project, get all task types and add them to the options (if they don't already exist)
       const taskTypes = project?.task_types || []
-      taskTypes.forEach((taskType) => {
+      taskTypes.forEach((taskType: TaskType) => {
         if (!options.some((option) => option.id === taskType.name)) {
           options.push({
             id: taskType.name,
@@ -411,7 +411,7 @@ const getSubTypes = (projectsInfo: GetProjectsInfoResponse, type: Scope): Option
     Object.values(projectsInfo).forEach((project) => {
       // for each project, get all folder types and add them to the options (if they don't already exist)
       const folderTypes = project?.folder_types || []
-      folderTypes.forEach((folderType) => {
+      folderTypes.forEach((folderType: FolderType) => {
         if (!options.some((option) => option.id === folderType.name)) {
           options.push({
             id: folderType.name,
@@ -510,7 +510,7 @@ const getAttributeFieldOptionRoot = (
   attribute: AttributeModel,
   allowsCustomValues: boolean = false,
 ): Option => ({
-  id: attribute.name,
+  id: `attrib.${attribute.name}`,
   type: attribute.data.type,
   label: attribute.data.title || attribute.name,
   operator: 'OR',

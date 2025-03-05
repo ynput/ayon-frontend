@@ -4,18 +4,20 @@ const injectedRtkApi = api.injectEndpoints({
     getFolderList: build.query<GetFolderListApiResponse, GetFolderListApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/folders`,
-        params: {
-          attrib: queryArg.attrib,
-        },
+        params: { attrib: queryArg.attrib },
       }),
     }),
     getFolderHierarchy: build.query<GetFolderHierarchyApiResponse, GetFolderHierarchyApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/hierarchy`,
-        params: {
-          search: queryArg.search,
-          types: queryArg.types,
-        },
+        params: { search: queryArg.search, types: queryArg.types },
+      }),
+    }),
+    queryTasksFolders: build.mutation<QueryTasksFoldersApiResponse, QueryTasksFoldersApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/tasksFolders`,
+        method: 'POST',
+        body: queryArg.tasksFoldersQuery,
       }),
     }),
   }),
@@ -35,6 +37,12 @@ export type GetFolderHierarchyApiArg = {
   search?: string
   /** Comma separated list of folder_types to show */
   types?: string
+}
+export type QueryTasksFoldersApiResponse =
+  /** status 200 Successful Response */ TasksFoldersResponse
+export type QueryTasksFoldersApiArg = {
+  projectName: string
+  tasksFoldersQuery: TasksFoldersQuery
 }
 export type FolderListItem = {
   id: string
@@ -81,4 +89,39 @@ export type HierarchyResponseModel = {
   detail: string
   projectName: string
   hierarchy: HierarchyFolderModel[]
+}
+export type TasksFoldersResponse = {
+  /** List of folder ids containing tasks matching the query */
+  folderIds?: string[]
+}
+export type QueryCondition = {
+  /** Path to the key separated by slashes */
+  key: string
+  /** Value to compare against */
+  value?: string | number | number | string[] | number[] | number[]
+  /** Comparison operator */
+  operator?:
+    | 'eq'
+    | 'lt'
+    | 'gt'
+    | 'lte'
+    | 'gte'
+    | 'ne'
+    | 'isnull'
+    | 'notnull'
+    | 'in'
+    | 'notin'
+    | 'contains'
+    | 'excludes'
+    | 'any'
+    | 'like'
+}
+export type QueryFilter = {
+  /** List of conditions to be evaluated */
+  conditions?: (QueryCondition | QueryFilter)[]
+  /** Operator to use when joining conditions */
+  operator?: 'and' | 'or'
+}
+export type TasksFoldersQuery = {
+  filter?: QueryFilter
 }

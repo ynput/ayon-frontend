@@ -1,4 +1,5 @@
 import api from '@api'
+import { api as foldersApi, QueryTasksFoldersApiArg } from '@api/rest/folders'
 import { FolderNode, GetEntitiesByIdsQuery, GetTasksByParentQuery } from '@api/graphql'
 import { EditorTaskNode } from '@pages/ProjectOverviewPage/OverviewEditor/types'
 import {
@@ -82,6 +83,7 @@ type UpdatedDefinitions = Omit<Definitions, 'GetFilteredEntities'> & {
   >
 }
 
+// GRAPHQL API
 const enhancedApi = api.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
   endpoints: {
     GetEntitiesByIds: {
@@ -107,6 +109,13 @@ const enhancedApi = api.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
   },
 })
 
+// REST FOLDERS API
+const foldersApiEnhanced = foldersApi.enhanceEndpoints({
+  endpoints: {
+    queryTasksFolders: {},
+  },
+})
+
 const injectedApi = enhancedApi.injectEndpoints({
   endpoints: (build) => ({
     // Each project has one cache for all the tasks of the expanded folders
@@ -116,9 +125,9 @@ const injectedApi = enhancedApi.injectEndpoints({
     // This also solves the pagination issue of getting all tasks in one query, splitting it up in multiple queries to avoid pagination limits
     getOverviewTasksByFolders: build.query<
       EditorTaskNode[],
-      { projectName: string; parentIds: string[] }
+      { projectName: string; parentIds: string[]; filter?: string }
     >({
-      async queryFn({ projectName, parentIds }, { dispatch }) {
+      async queryFn({ projectName, parentIds, filter }, { dispatch }) {
         try {
           // for each parentId, fetch the tasks
           const results = await Promise.all(
@@ -127,6 +136,7 @@ const injectedApi = enhancedApi.injectEndpoints({
                 enhancedApi.endpoints.GetTasksByParent.initiate({
                   projectName,
                   parentIds: [parentId],
+                  filter,
                 }),
               ),
             ),
@@ -145,14 +155,34 @@ const injectedApi = enhancedApi.injectEndpoints({
         }
       },
       // keep one cache per project
-      serializeQueryArgs: ({ queryArgs: { projectName } }) => ({
-        projectName,
+      serializeQueryArgs: ({ queryArgs: { parentIds, ...rest } }) => ({
+        ...rest,
       }),
       // Refetch when the page arg changes
       forceRefetch({ currentArg, previousArg }) {
         return !isEqual(currentArg, previousArg)
       },
       providesTags: [{ type: 'overviewTask', id: 'LIST' }],
+    }),
+    getQueryTasksFolders: build.query<string[], QueryTasksFoldersApiArg>({
+      async queryFn({ projectName, tasksFoldersQuery }, { dispatch }) {
+        try {
+          const result = await dispatch(
+            foldersApiEnhanced.endpoints.queryTasksFolders.initiate({
+              projectName,
+              tasksFoldersQuery,
+            }),
+          )
+
+          const data = result.data?.folderIds || []
+
+          return { data }
+        } catch (e: any) {
+          console.error(e)
+          const error = { status: 'FETCH_ERROR', error: e.message } as FetchBaseQueryError
+          return { error }
+        }
+      },
     }),
   }),
 })
@@ -164,4 +194,5 @@ export const {
   useGetTasksByParentQuery,
   useGetFilteredEntitiesQuery,
   useGetOverviewTasksByFoldersQuery,
+  useGetQueryTasksFoldersQuery,
 } = injectedApi

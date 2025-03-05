@@ -4,9 +4,13 @@ import { Filter } from '@ynput/ayon-react-components'
 import { TaskFilterValue } from '@containers/TasksProgress/hooks/useFilterBySlice'
 // import { mapQueryFilters } from '../mappers/mappers'
 // import { useGetTasksFoldersQuery } from '@queries/project/getProject'
-import { useGetOverviewTasksByFoldersQuery } from '@queries/overview/getOverview'
+import {
+  useGetOverviewTasksByFoldersQuery,
+  useGetQueryTasksFoldersQuery,
+} from '@queries/overview/getOverview'
 import { FolderNodeMap, TaskNodeMap } from '../types'
 import { useMemo } from 'react'
+import clientFilterToQueryFilter from '../utils/clientFilterToQueryFilter'
 
 type Params = {
   projectName: string
@@ -14,19 +18,6 @@ type Params = {
   filters: Filter[]
   sliceFilter: TaskFilterValue | null
   expanded: Record<string, boolean>
-}
-
-const filterFoldersByPath = (folders: $Any[], selectedPaths: string[]) => {
-  if (selectedPaths.length === 0) return folders
-
-  return folders.filter((el) => {
-    for (const path of selectedPaths) {
-      if (el.path.startsWith(path)) {
-        return true
-      }
-    }
-    return false
-  })
 }
 
 export type TasksByFolderMap = Map<string, string[]>
@@ -55,24 +46,82 @@ const useFetchEditorEntities = ({
     { skip: !projectName },
   )
 
-  console.log('Folder count:', folders.length)
+  // transform the task bar filters to the query format
+  // TODO: filters bar just uses the same schema as the server
+  const queryFilter = clientFilterToQueryFilter(filters)
+  const queryFilterString = JSON.stringify(queryFilter)
 
-  // create a map of folders by id for efficient lookups
-  const foldersMap: FolderNodeMap = useMemo(() => {
-    const map = new Map()
-    for (const folder of folders) {
-      map.set(folder.id as string, folder)
-    }
-    return map
-  }, [folders])
+  console.log('Folder count:', folders.length)
 
   const { data: expandedFoldersTasks = [] } = useGetOverviewTasksByFoldersQuery(
     {
       projectName,
       parentIds: Object.keys(expanded),
+      filter: filters?.length ? queryFilterString : undefined,
     },
     { skip: !Object.keys(expanded).length },
   )
+
+  // get folders that would be left if the filters were applied for tasks
+  const { data: foldersByTaskFilter, isUninitialized } = useGetQueryTasksFoldersQuery(
+    {
+      projectName,
+      tasksFoldersQuery: { filter: queryFilter },
+    },
+    {
+      skip: !(filters.length && folders.length),
+    },
+  )
+
+  // create a map of folders by id for efficient lookups
+  const foldersMap: FolderNodeMap = useMemo(() => {
+    const map = new Map()
+
+    // If we have task filters and folders to filter
+    if (!isUninitialized && foldersByTaskFilter && folders.length) {
+      // Create a set for efficient lookups of filtered folder IDs
+      const relevantFolderIds = new Set<string>()
+
+      // First pass: Add all folders from the task filter
+      for (const folderId of foldersByTaskFilter) {
+        relevantFolderIds.add(folderId)
+      }
+
+      // Create a map of folders by ID for parentId lookups
+      const foldersByIdMap = new Map<string, (typeof folders)[0]>()
+      for (const folder of folders) {
+        foldersByIdMap.set(folder.id as string, folder)
+      }
+
+      // Second pass: Add all parent folders of filtered folders
+      const addParents = (folderId: string) => {
+        const folder = foldersByIdMap.get(folderId)
+        if (folder && folder.parentId) {
+          relevantFolderIds.add(folder.parentId as string)
+          addParents(folder.parentId as string)
+        }
+      }
+
+      // Process each filtered folder to add its parents
+      for (const folderId of foldersByTaskFilter) {
+        addParents(folderId)
+      }
+
+      // Third pass: Build the final map using only relevant folders
+      for (const folder of folders) {
+        if (relevantFolderIds.has(folder.id as string)) {
+          map.set(folder.id as string, folder)
+        }
+      }
+    } else {
+      // No filtering, include all folders
+      for (const folder of folders) {
+        map.set(folder.id as string, folder)
+      }
+    }
+
+    return map
+  }, [folders, foldersByTaskFilter, isUninitialized])
 
   // tasksMaps is a map of tasks by task ID
   // tasksByFolderMap is a map of tasks by folder ID
@@ -104,27 +153,6 @@ const useFetchEditorEntities = ({
     return selectedPaths.map((path: string) => '/' + path)
   }, [selectedPaths])
 
-  // transform the filters of tasks to the query format
-  // const queryFilters = mapQueryFilters({ filters, sliceFilter })
-
-  // BROKEN (needs doing)
-  // const query = !!filters.length && mapQFtoQ(queryFilters)
-
-  // NOTE: SKIPPING AS THE QUERY IS BROKEN
-  // get folders that that would be displayed for the matching task filters. (folders for the matching tasks)
-  // const { data: tasksFolders, isLoading: isLoadingTaskFolders } = useGetTasksFoldersQuery(
-  //   {
-  //     projectName,
-  //     query,
-  //   },
-  //   { skip: !query },
-  // )
-
-  // console.time('foldersToObject')
-  // Folders map: 3 (same as foldersMap map?) 8 seconds with 10,000
-  // const foldersObject = folders.reduce((acc, curr) => ({ ...acc, [curr.id as string]: curr }), {})
-  // console.timeEnd('foldersToObject')
-
   return {
     foldersMap: foldersMap,
     tasksMap: tasksMap,
@@ -135,24 +163,3 @@ const useFetchEditorEntities = ({
 }
 
 export default useFetchEditorEntities
-
-// BROKEN!!!
-// const mapQFtoQ = (queryFilters: $Any) => {
-//   return {
-//     filter: {
-//       operator: 'or',
-//       conditions: [
-//         {
-//           operator: 'or',
-//           conditions: [
-//             { key: 'status', operator: 'eq', value: 'In progress' },
-//             // { key: 'status', operator: 'eq', value: 'On hold', },
-//             // { key: 'status', operator: 'eq', value: 'Pending review', },
-//             // { key: 'status', operator: 'eq', value: 'Not ready', },
-//             // { key: 'status', operator: 'eq', value: 'Ready to start', },
-//           ],
-//         },
-//       ],
-//     },
-//   }
-// }

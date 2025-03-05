@@ -76,21 +76,21 @@ const ProjectOverviewMain: FC<ProjectOverviewMainProps> = ({ projectName }) => {
         <Button icon={'add'} variant="filled" disabled>
           Create
         </Button>
-        <div style={{ flex: 1, opacity: 0.5, pointerEvents: 'none' }}>
-          <SearchFilterWrapper
-            filters={filtersWithHierarchy}
-            onChange={handleFiltersChange}
-            filterTypes={searchFilterTypes}
-            projectNames={[projectName]}
-            scope="folder"
-            data={{
-              tags: [],
-              attributes: {},
-              assignees: [],
-            }}
-            disabledFilters={sliceType ? [sliceType] : []}
-          />
-        </div>
+        {/* <div style={{ flex: 1, opacity: 0.5, pointerEvents: 'none' }}> */}
+        <SearchFilterWrapper
+          filters={filtersWithHierarchy}
+          onChange={handleFiltersChange}
+          filterTypes={searchFilterTypes}
+          projectNames={[projectName]}
+          scope="folder"
+          data={{
+            tags: [],
+            attributes: {},
+            assignees: [],
+          }}
+          disabledFilters={sliceType ? [sliceType] : []}
+        />
+        {/* </div> */}
         <span style={{ whiteSpace: 'nowrap', display: 'flex' }}>
           Show hierarchy&nbsp;
           <InputSwitch

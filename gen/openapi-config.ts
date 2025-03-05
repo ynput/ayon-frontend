@@ -3,7 +3,7 @@ import type { ConfigFile } from '@rtk-query/codegen-openapi'
 // Specify the endpoints you want to generate
 const outputFiles = {
   bundles: ['listBundles', 'checkBundleCompatibility', 'migrateSettingsByBundle'],
-  folders: ['getFolderHierarchy', 'getFolderList'],
+  folders: ['getFolderHierarchy', 'getFolderList', 'queryTasksFolders'],
   market: ['marketAddonList', 'marketAddonDetail', 'marketAddonVersionDetail', 'getLicenses'],
   watchers: ['getEntityWatchers', 'setEntityWatchers'],
   inbox: ['manageInboxItem'],

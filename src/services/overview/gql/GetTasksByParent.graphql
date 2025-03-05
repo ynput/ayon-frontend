@@ -1,7 +1,7 @@
-query GetTasksByParent($projectName: String!, $parentIds: [String!]!) {
+query GetTasksByParent($projectName: String!, $parentIds: [String!]!, $filter: String) {
   project(name: $projectName) {
     name
-    tasks(folderIds: $parentIds) {
+    tasks(folderIds: $parentIds, filter: $filter) {
       edges {
         node {
           ...TaskPropsFragment
