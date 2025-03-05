@@ -36,9 +36,7 @@ export const TextWidgetInput = forwardRef<HTMLInputElement, TextWidgetInputProps
       if (autoFocus && inputRef && inputRef.current) {
         inputRef.current.focus()
         // position cursor at the end of text
-        if (inputRef.current.type !== 'number') {
-          inputRef.current.selectionStart = inputRef.current.value.length
-        }
+        inputRef.current.select()
       }
     }, [autoFocus])
 
