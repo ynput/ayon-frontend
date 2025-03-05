@@ -35,13 +35,12 @@ const useCustomColumnWidths = (table: Table<$Any>) => {
 const useSyncCustomColumnWidths = (columnSizing: ColumnSizingState) => {
   const userName = useAppSelector((state) => state.user.name)
   const frontendPreferences = useAppSelector((state) => state.user.data.frontendPreferences)
-  const storedColumnWidths =
-    (frontendPreferences.columnSizes as { [key: string]: number })?.overview || {}
+  const storedColumnWidths = useStoredCustomColumnWidths()
   const [updateUserPreferences] = useSetFrontendPreferencesMutation()
 
   const debouncedUpdate = useCallback(
     debounce((columnSizing) => {
-      const storedSizes = frontendPreferences.columnSizes
+      const storedSizes = frontendPreferences.columnSizes || {}
       const updatedFrontendPreferences = {
         ...frontendPreferences,
         columnSizes: {
