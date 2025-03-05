@@ -7,17 +7,14 @@ import { useCallback, useEffect, useMemo } from 'react'
 
 const useStoredCustomColumnWidths = () => {
   const frontendPreferences = useAppSelector((state) => state.user.data.frontendPreferences)
-  const storedColumnWidths =
-    (frontendPreferences.columnSizes as { [key: string]: number })?.overview || {}
+  const columnSizes = (frontendPreferences?.columnSizes || {}) as { [key: string]: number }
+  const storedColumnWidths = columnSizes.overview || {}
 
   return storedColumnWidths
 }
 
 const useCustomColumnWidths = (table: Table<$Any>) => {
-  const frontendPreferences = useAppSelector((state) => state.user.data.frontendPreferences)
-  const columnSizes = (frontendPreferences.columnSizes || {}) as { [key: string]: number }
-  const storedColumnWidths = columnSizes.overview || {}
-
+  const storedColumnWidths = useStoredCustomColumnWidths()
   const headers = table.getFlatHeaders()
   const columnSizingInfo = table.getState().columnSizingInfo
   const columnSizing = table.getState().columnSizing

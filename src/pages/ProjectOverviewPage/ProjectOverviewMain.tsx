@@ -40,7 +40,6 @@ const ProjectOverviewMain: FC<ProjectOverviewMainProps> = ({ projectName }) => {
 
   const { filters, setFilters } = useUserFilters({ page: 'overview', projectName })
   const { showHierarchy, updateShowHierarchy } = useOverviewPreferences()
-  const [sortByValue, setSortByValue] = useState<SortCardType[]>([])
 
   // filter out by slice
   const { rowSelection, sliceType, setPersistentRowSelectionData, persistentRowSelectionData } =
@@ -110,11 +109,7 @@ const ProjectOverviewMain: FC<ProjectOverviewMainProps> = ({ projectName }) => {
           onChange={setSortByValue}
         /> */}
       </Toolbar>
-      <OverviewEditor
-        filters={filtersWithHierarchy}
-        sortBy={sortByValue}
-        showHierarchy={showHierarchy}
-      />
+      <OverviewEditor filters={filtersWithHierarchy} showHierarchy={showHierarchy} />
     </Section>
   )
 }

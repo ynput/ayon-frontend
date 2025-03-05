@@ -40,10 +40,9 @@ type User = {
 type Props = {
   filters: Filter[]
   showHierarchy: boolean
-  sortBy: SortByOption[]
 }
 
-const OverviewEditor = ({ filters, showHierarchy, sortBy }: Props) => {
+const OverviewEditor = ({ filters, showHierarchy }: Props) => {
   const projectName = useAppSelector((state) => state.project.name) as unknown as string
   const { data: usersData = [] } = useGetUsersAssigneeQuery({ projectName }, { skip: !projectName })
   const users = usersData as User[]
