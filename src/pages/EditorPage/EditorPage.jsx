@@ -967,7 +967,7 @@ const EditorPage = () => {
           })
 
           // if the error is a 409, then ask the user if they want to override
-          if (res?.operations?.some((op) => op.status === 409)) {
+          if (res?.operations?.some((op) => op.errorCode === 'delete-folder-with-children')) {
             confirmDelete({
               style: { maxWidth: 400 },
               message:
@@ -1006,11 +1006,11 @@ const EditorPage = () => {
 
             return
           } else {
-            for (const msg of messages) {
-              if (msg.includes('duplicate key value violates unique constraint')) {
+            for (const op of res.operations) {
+              if (op.errorCode === 'unique-violation') {
                 toast.error('Error: Duplicate name found in sibling entities')
               } else {
-                toast.error('Error: ' + msg)
+                toast.error('Error: ' + op.detail)
               }
             }
             setCommitUpdating(false)
