@@ -67,7 +67,7 @@ const useFetchEditorEntities = ({
       parentIds: Object.keys(expanded),
       filter: filters?.length ? queryFilterString : undefined,
     },
-    { skip: !Object.keys(expanded).length || showHierarchy },
+    { skip: !Object.keys(expanded).length || !showHierarchy },
   )
 
   // get folders that would be left if the filters were applied for tasks
@@ -77,7 +77,7 @@ const useFetchEditorEntities = ({
       tasksFoldersQuery: { filter: queryFilter },
     },
     {
-      skip: !(filters.length && folders.length) || showHierarchy,
+      skip: !(filters.length && folders.length) || !showHierarchy,
     },
   )
 
@@ -101,8 +101,6 @@ const useFetchEditorEntities = ({
       setTasksListCursor(tasksListPageInfo.endCursor)
     }
   }
-
-  console.log({ tasksList, tasksListPageInfo })
 
   // create a map of folders by id for efficient lookups
   const foldersMap: FolderNodeMap = useMemo(() => {
@@ -176,7 +174,7 @@ const useFetchEditorEntities = ({
     }
 
     return { tasksMap, tasksByFolderMap }
-  }, [expandedFoldersTasks])
+  }, [expandedFoldersTasks, showHierarchy, tasksList])
 
   const selectedPaths = useMemo(() => {
     return selectedFolders.map((id) => foldersMap.get(id)?.path!).filter(Boolean) as string[]
