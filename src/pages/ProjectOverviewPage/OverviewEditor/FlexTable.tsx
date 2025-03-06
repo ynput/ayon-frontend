@@ -1,4 +1,4 @@
-import { useMemo, useRef, useEffect, memo } from 'react'
+import { useMemo, useRef, useEffect, memo, CSSProperties } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import {
   useReactTable,
@@ -13,6 +13,7 @@ import {
   SortingState,
   getSortedRowModel,
   Cell,
+  ColumnPinningState,
 } from '@tanstack/react-table'
 
 import clsx from 'clsx'
@@ -28,10 +29,33 @@ import { ClipboardProvider } from './context/ClipboardContext'
 import { getCellId } from './utils/cellUtils'
 import { FolderNodeMap, TaskNodeMap } from './types'
 import { AttributeEnumItem, AttributeModel } from '@api/rest/attributes'
-import { Icon } from '@ynput/ayon-react-components'
+import { Button, Icon } from '@ynput/ayon-react-components'
+import { Column } from '@tanstack/react-table'
+
+//These are the important styles to make sticky column pinning work!
+//Apply styles like this using your CSS strategy of choice with this kind of logic to head cells, data cells, footer cells, etc.
+//View the index.css file for more needed styles such as border-collapse: separate
+const getCommonPinningStyles = (column: Column<TableRow>): CSSProperties => {
+  const isPinned = column.getIsPinned()
+  const isLastLeftPinnedColumn = isPinned === 'left' && column.getIsLastColumn('left')
+  const isFirstRightPinnedColumn = isPinned === 'right' && column.getIsFirstColumn('right')
+
+  const boxShadow = isLastLeftPinnedColumn
+    ? 'inset 1px -1px 0 0 var(--md-sys-color-surface-container-highest), inset -2px 0 0 0 var(--md-sys-color-surface-container-highest)'
+    : undefined
+
+  return {
+    boxShadow: boxShadow,
+    left: isPinned === 'left' ? `${column.getStart('left')}px` : undefined,
+    right: isPinned === 'right' ? `${column.getAfter('right')}px` : undefined,
+    position: isPinned ? 'sticky' : 'relative',
+    width: column.getSize(),
+    zIndex: isPinned ? 1 : 0,
+  }
+}
 
 type Props = {
-  tableData: $Any[]
+  tableData: TableRow[]
   options: BuiltInFieldOptions
   attribs: AttributeModel[]
   isLoading: boolean
@@ -41,6 +65,8 @@ type Props = {
   updateExpanded: OnChangeFn<ExpandedState>
   sorting: SortingState
   updateSorting: OnChangeFn<SortingState>
+  columnPinning: ColumnPinningState
+  updateColumnPinning: OnChangeFn<ColumnPinningState>
   // metadata
   tasksMap: TaskNodeMap
   foldersMap: FolderNodeMap
@@ -105,6 +131,7 @@ const TableCell = ({ cell, cellId }: TableCellProps) => {
         ...borderClasses,
       )}
       style={{
+        ...getCommonPinningStyles(cell.column),
         width: `calc(var(--col-${cell.column.id}-size) * 1px)`,
       }}
       onMouseDown={(e) => {
@@ -159,6 +186,8 @@ const FlexTable = ({
   updateExpanded,
   sorting,
   updateSorting,
+  columnPinning,
+  updateColumnPinning,
   fetchMoreOnBottomReached,
 }: Props) => {
   //The virtualizer needs to know the scrollable container element
@@ -203,11 +232,13 @@ const FlexTable = ({
     getSortedRowModel: getSortedRowModel(),
     onSortingChange: updateSorting,
     columnResizeMode: 'onChange',
+    onColumnPinningChange: updateColumnPinning,
     // @ts-ignore
     filterFns,
     state: {
       expanded,
       sorting,
+      columnPinning,
     },
     enableSorting: true,
   })
@@ -261,10 +292,10 @@ const FlexTable = ({
   )
 
   return (
-    <Styled.TableContainerWrapper style={{ height: '100%' }}>
+    <Styled.TableContainerWrapper style={{ height: '100%', padding: 0 }}>
       <Styled.TableContainer
         ref={tableContainerRef}
-        style={{ height: '100%' }}
+        style={{ height: '100%', padding: 0 }}
         onScroll={(e) => fetchMoreOnBottomReached(e.currentTarget)}
       >
         <table
@@ -278,38 +309,60 @@ const FlexTable = ({
           <Styled.TableHeader>
             {table.getHeaderGroups().map((headerGroup) => {
               return (
-                <div key={headerGroup.id} style={{ display: 'flex' }}>
+                <Styled.ColumnHeader key={headerGroup.id} style={{ display: 'flex' }}>
                   {headerGroup.headers.map((header) => {
+                    const { column } = header
+
                     return (
                       <Styled.HeaderCell
-                        className={clsx({ large: header.column.id === 'folderType' })}
+                        className={clsx({ large: column.id === 'folderType' })}
                         key={header.id}
                         style={{
+                          ...getCommonPinningStyles(column),
                           width: `calc(var(--header-${header?.id}-size) * 1px)`,
                         }}
                         onClick={(e) => {
                           if ((e.target as HTMLElement).className.includes('resize-handle')) return
-                          header.column.getToggleSortingHandler()?.(e)
+                          column.getToggleSortingHandler()?.(e)
                         }}
                       >
                         {header.isPlaceholder ? null : (
                           <Styled.TableCellContent
                             className={clsx('bold', {
-                              large: header.column.id === 'folderType',
+                              large: column.id === 'folderType',
                             })}
                           >
-                            {flexRender(header.column.columnDef.header, header.getContext())}
+                            {flexRender(column.columnDef.header, header.getContext())}
                             {{
                               asc: <Icon icon="sort" style={{ transform: 'scaleY(-1)' }} />,
                               desc: <Icon icon="sort" />,
-                            }[header.column.getIsSorted() as string] ?? null}
+                            }[column.getIsSorted() as string] ?? null}
+                            <Button
+                              className="pin"
+                              onClick={() => {
+                                if (header.column.getIsPinned() === 'left') {
+                                  header.column.pin(false)
+                                } else {
+                                  header.column.pin('left')
+                                }
+                              }}
+                              icon={'push_pin'}
+                              variant={'text'}
+                              selected={header.column.getIsPinned() === 'left'}
+                              style={{
+                                padding: 0,
+                                marginLeft: 'auto',
+                                marginRight: 8,
+                                opacity: header.column.getIsPinned() ? 1 : 0,
+                              }}
+                            />
                             <Styled.ResizedHandler
                               {...{
-                                onDoubleClick: () => header.column.resetSize(),
+                                onDoubleClick: () => column.resetSize(),
                                 onMouseDown: header.getResizeHandler(),
                                 onTouchStart: header.getResizeHandler(),
                                 className: clsx('resize-handle', {
-                                  resizing: header.column.getIsResizing(),
+                                  resizing: column.getIsResizing(),
                                 }),
                               }}
                             />
@@ -318,7 +371,7 @@ const FlexTable = ({
                       </Styled.HeaderCell>
                     )
                   })}
-                </div>
+                </Styled.ColumnHeader>
               )
             })}
           </Styled.TableHeader>

@@ -22,7 +22,13 @@ import useOverviewTable from './hooks/useOverviewTable'
 
 // Components
 import FlexTable from './FlexTable'
-import { ExpandedState, functionalUpdate, OnChangeFn, SortingState } from '@tanstack/react-table'
+import {
+  ColumnPinningState,
+  ExpandedState,
+  functionalUpdate,
+  OnChangeFn,
+  SortingState,
+} from '@tanstack/react-table'
 import useLocalStorage from '@hooks/useLocalStorage'
 
 type User = {
@@ -67,6 +73,15 @@ const OverviewEditor = ({ filters, showHierarchy, selectedFolders }: Props) => {
 
   const updateSorting: OnChangeFn<SortingState> = (sortingUpdater) => {
     setSorting(functionalUpdate(sortingUpdater, sorting))
+  }
+
+  const [columnPinning, setColumnPinning] = useLocalStorage<ColumnPinningState>(
+    `overview-column-pinning-${projectName}`,
+    { left: ['name'] },
+  )
+
+  const updateColumnPinning: OnChangeFn<ColumnPinningState> = (columnPinningUpdater) => {
+    setColumnPinning(functionalUpdate(columnPinningUpdater, columnPinning))
   }
 
   console.time('dataToTable')
@@ -157,6 +172,9 @@ const OverviewEditor = ({ filters, showHierarchy, selectedFolders }: Props) => {
                 // sorting
                 sorting={sorting}
                 updateSorting={updateSorting}
+                // column pinning
+                columnPinning={columnPinning}
+                updateColumnPinning={updateColumnPinning}
                 // pagination
                 fetchMoreOnBottomReached={fetchMoreOnBottomReached}
                 // metadata

@@ -9,6 +9,7 @@ export const TableCellContent = styled.div`
   align-items: center;
   gap: var(--base-gap-small);
   height: 100%;
+  width: 100%;
   padding: 0px 4px;
   border-radius: var(--border-radius-m);
   user-select: none;
@@ -45,6 +46,10 @@ export const EditableCellContent = styled(SimpleEditableCell)`
   }
 `
 
+export const ColumnHeader = styled.div`
+  background-color: var(--md-sys-color-surface-container-low);
+`
+
 export const HeaderCell = styled.div`
   position: relative;
   background-color: var(--md-sys-color-surface-container-lowest);
@@ -61,6 +66,13 @@ export const HeaderCell = styled.div`
       opacity: 1;
     }
   }
+
+  /* show pin */
+  &:hover {
+    .pin {
+      opacity: 1 !important;
+    }
+  }
 `
 
 // Create shadow mixins to make combinations work properly
@@ -74,6 +86,7 @@ export const TableCell = styled.td`
   position: relative;
   box-shadow: ${defaultShadow};
   min-width: ${cellMinWidth}px;
+  background-color: var(--md-sys-color-surface-container-low);
 
   &.selected {
     background-color: var(--md-sys-color-secondary-container);
