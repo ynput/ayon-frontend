@@ -1,4 +1,4 @@
-import { useMemo, useRef, useEffect } from 'react'
+import { useMemo, useRef, useEffect, memo } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import {
   useReactTable,
@@ -12,6 +12,7 @@ import {
   ExpandedState,
   SortingState,
   getSortedRowModel,
+  Cell,
 } from '@tanstack/react-table'
 
 import clsx from 'clsx'
@@ -71,6 +72,80 @@ const FlexTableWithProviders = (props: Props) => {
   )
 }
 
+type TableCellProps = {
+  cell: Cell<TableRow, unknown>
+  cellId: string
+}
+
+const TableCell = ({ cell, cellId }: TableCellProps) => {
+  const {
+    isCellSelected,
+    isCellFocused,
+    startSelection,
+    extendSelection,
+    endSelection,
+    selectCell,
+    getCellBorderClasses,
+  } = useSelection()
+
+  const borderClasses = getCellBorderClasses(cellId)
+
+  return (
+    <Styled.TableCell
+      tabIndex={0}
+      key={cell.id}
+      className={clsx(
+        cell.column.id === 'folderType' ? 'large' : '',
+        {
+          selected: isCellSelected(cellId),
+          focused: isCellFocused(cellId),
+        },
+        ...borderClasses,
+      )}
+      style={{
+        width: `calc(var(--col-${cell.column.id}-size) * 1px)`,
+      }}
+      onMouseDown={(e) => {
+        if (e.shiftKey) {
+          // Shift+click extends selection from anchor cell
+          const additive = e.metaKey || e.ctrlKey
+          selectCell(cellId, additive, true) // true for range selection
+        } else {
+          // Normal click starts a new selection
+          startSelection(cellId, e.metaKey || e.ctrlKey)
+        }
+      }}
+      onMouseOver={(e) => {
+        if (e.buttons === 1) {
+          // Left button is pressed during mouse move - drag selection
+          extendSelection(cellId)
+        }
+      }}
+      onMouseUp={() => {
+        endSelection(cellId)
+      }}
+    >
+      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+    </Styled.TableCell>
+  )
+}
+
+const TableCellMemo = memo(TableCell)
+
+type TableCellsProps = {
+  row: Row<TableRow>
+}
+
+const TableCells = ({ row }: TableCellsProps) => {
+  return row.getVisibleCells().map((cell) => {
+    const cellId = getCellId(row.id, cell.column.id)
+
+    return <TableCellMemo cell={cell} cellId={cellId} key={cell.id} />
+  })
+}
+
+const TableCellsMemo = memo(TableCells)
+
 const FlexTable = ({
   tableData,
   attribs,
@@ -87,16 +162,7 @@ const FlexTable = ({
   const tableContainerRef = useRef<HTMLDivElement>(null)
 
   // Selection context
-  const {
-    registerGrid,
-    isCellSelected,
-    isCellFocused,
-    startSelection,
-    extendSelection,
-    endSelection,
-    selectCell,
-    getCellBorderClasses,
-  } = useSelection()
+  const { registerGrid } = useSelection()
 
   const columns = TableColumns({
     tableData,
@@ -156,7 +222,7 @@ const FlexTable = ({
       typeof window !== 'undefined' && navigator.userAgent.indexOf('Firefox') === -1
         ? (element) => element?.getBoundingClientRect().height
         : undefined,
-    overscan: 10,
+    overscan: 20,
   })
 
   const columnSizeVars = useCustomColumnWidths(table)
@@ -164,84 +230,26 @@ const FlexTable = ({
   useSyncCustomColumnWidths(table.getState().columnSizing)
 
   // Improved table body with cell selections and borders
-  const tableBody = useMemo(
-    () => (
-      <tbody style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
-        {rowVirtualizer.getVirtualItems().map((virtualRow: $Any) => {
-          const row = rows[virtualRow.index] as Row<TableRow>
-          return (
-            <tr
-              data-index={virtualRow.index} //needed for dynamic row height measurement
-              // @ts-ignore
-              ref={(node) => rowVirtualizer.measureElement(node)} //measure dynamic row height
-              key={row.id}
-              style={{
-                display: 'table-row',
-                transform: `translateY(${virtualRow.start}px)`, //this should always be a `style` as it changes on scroll
-              }}
-            >
-              {row.getVisibleCells().map((cell) => {
-                const cellId = getCellId(row.id, cell.column.id)
-                const borderClasses = getCellBorderClasses(cellId)
-
-                return (
-                  <Styled.TableCell
-                    tabIndex={0}
-                    key={cell.id}
-                    className={clsx(
-                      cell.column.id === 'folderType' ? 'large' : '',
-                      {
-                        selected: isCellSelected(cellId),
-                        focused: isCellFocused(cellId),
-                      },
-                      ...borderClasses,
-                    )}
-                    style={{
-                      width: `calc(var(--col-${cell.column.id}-size) * 1px)`,
-                    }}
-                    onMouseDown={(e) => {
-                      if (e.shiftKey) {
-                        // Shift+click extends selection from anchor cell
-                        const additive = e.metaKey || e.ctrlKey
-                        selectCell(cellId, additive, true) // true for range selection
-                      } else {
-                        // Normal click starts a new selection
-                        startSelection(cellId, e.metaKey || e.ctrlKey)
-                      }
-                    }}
-                    onMouseOver={(e) => {
-                      if (e.buttons === 1) {
-                        // Left button is pressed during mouse move - drag selection
-                        extendSelection(cellId)
-                      }
-                    }}
-                    onMouseUp={() => {
-                      endSelection(cellId)
-                    }}
-                  >
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </Styled.TableCell>
-                )
-              })}
-            </tr>
-          )
-        })}
-      </tbody>
-    ),
-    [
-      rowVirtualizer,
-      rowVirtualizer.isScrolling,
-      rows,
-      startSelection,
-      extendSelection,
-      endSelection,
-      selectCell,
-      isCellSelected,
-      isCellFocused,
-      getCellBorderClasses,
-      table.getHeaderGroups,
-      table.getState().sorting,
-    ],
+  const tableBody = (
+    <tbody style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
+      {rowVirtualizer.getVirtualItems().map((virtualRow: $Any) => {
+        const row = rows[virtualRow.index] as Row<TableRow>
+        return (
+          <tr
+            data-index={virtualRow.index} //needed for dynamic row height measurement
+            // @ts-ignore
+            ref={(node) => rowVirtualizer.measureElement(node)} //measure dynamic row height
+            key={row.id}
+            style={{
+              display: 'table-row',
+              transform: `translateY(${virtualRow.start}px)`, //this should always be a `style` as it changes on scroll
+            }}
+          >
+            <TableCellsMemo row={row} />
+          </tr>
+        )
+      })}
+    </tbody>
   )
 
   return (
