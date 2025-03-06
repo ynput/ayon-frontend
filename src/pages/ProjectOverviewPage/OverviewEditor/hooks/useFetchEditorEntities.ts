@@ -52,6 +52,10 @@ const useFetchEditorEntities = ({
   const queryFilterString = JSON.stringify(queryFilter)
 
   console.log('Folder count:', folders.length)
+  if (filters.length) {
+    console.log('filters:', filters)
+    console.log('query filter:', queryFilter)
+  }
 
   const { data: expandedFoldersTasks = [] } = useGetOverviewTasksByFoldersQuery(
     {

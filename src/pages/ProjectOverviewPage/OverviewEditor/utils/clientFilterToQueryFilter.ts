@@ -19,18 +19,36 @@ const clientFilterToQueryFilter = (filters: Filter[]): QueryFilter => {
   }
 }
 
+// Helper function to convert values based on the filter type
+const convertValueByType = (value: string, type?: string): string | number | boolean => {
+  if (!type) return value
+
+  switch (type) {
+    case 'integer':
+      return parseInt(value, 10)
+    case 'float':
+      return parseFloat(value)
+    case 'boolean':
+      return value.toLowerCase() === 'true'
+    default:
+      return value
+  }
+}
+
 // Helper function to convert a single Filter to a QueryCondition
 const convertFilterToCondition = (filter: Filter): QueryCondition => {
   // Extract key from filter ID (split by underscore if needed)
   const key = filter.id.split('_')[0]
 
   // Handle values based on filter type
-  let value: string | number | string[] | number[] | undefined
+  let value: QueryCondition['value']
   if (filter.values && filter.values.length > 0) {
     if (filter.singleSelect) {
-      value = filter.values[0].id
+      // @ts-expect-error
+      value = convertValueByType(filter.values[0].id, filter.type)
     } else {
-      value = filter.values.map((v) => v.id)
+      // @ts-expect-error
+      value = filter.values.map((v) => convertValueByType(v.id, filter.type))
     }
   }
 
