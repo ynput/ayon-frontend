@@ -71,6 +71,7 @@ interface EnumWidgetProps extends Omit<React.HTMLAttributes<HTMLSpanElement>, 'o
   isEditing?: boolean
   options: AttributeEnumItem[]
   type?: AttributeData['type']
+  onOpen: () => void
   onChange: (value: string | string[]) => void
 }
 
@@ -87,13 +88,22 @@ const checkForImgSrc = (icon: string): boolean => {
 const checkAvatarImg = (src: string): boolean => src.includes('avatar')
 
 export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
-  ({ value, isEditing, options, type, onChange }, _ref) => {
+  ({ value, isEditing, options, type, onOpen, onChange }, _ref) => {
     // convert value to string array
     const valueAsStrings = value.map((v) => v?.toString())
     const selectedOptions = options.filter((option) => value.includes(option.value))
     const hasMultipleValues = selectedOptions.length > 1
 
     const dropdownRef = useRef<DropdownRef>(null)
+
+    const handleClosedClick = (e: React.MouseEvent<HTMLSpanElement>) => {
+      // if we click on the chevron icon, then we open the dropdown spright away (put it into editing mode)
+      if (e.target instanceof HTMLElement && e.target.closest('.expand')) {
+        onOpen()
+        // stop the event from propagating to the parent element because a single click on the cell would close the dropdown
+        e.stopPropagation()
+      }
+    }
 
     useEffect(() => {
       if (isEditing && dropdownRef.current) {
@@ -148,6 +158,7 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
         selectedOptions={selectedOptions}
         hasMultipleValues={hasMultipleValues}
         className="enum-value"
+        onClick={handleClosedClick}
       />
     )
   },
@@ -195,7 +206,11 @@ const EnumCellValue = ({
         </StyledValue>
       )}
       {!isItem && (
-        <StyledExpandIcon icon="expand_more" style={{ rotate: isOpen ? '180deg' : '0' }} />
+        <StyledExpandIcon
+          className="expand"
+          icon="expand_more"
+          style={{ rotate: isOpen ? '180deg' : '0' }}
+        />
       )}
     </StyledWidget>
   )

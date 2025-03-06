@@ -101,7 +101,15 @@ const EditorCellComponent = forwardRef<HTMLDivElement, EditorCellProps>(
 
         case !!options.length: {
           const enumValue = Array.isArray(value) ? value : [value]
-          return <EnumWidget value={enumValue} options={options} {...sharedProps} type={type} />
+          return (
+            <EnumWidget
+              value={enumValue}
+              options={options}
+              type={type}
+              onOpen={() => setEditingCellId(cellId)}
+              {...sharedProps}
+            />
+          )
         }
 
         case textTypes.includes(type as TextWidgetType):
@@ -116,7 +124,7 @@ const EditorCellComponent = forwardRef<HTMLDivElement, EditorCellProps>(
         default:
           return <TextWidget value={value as string} {...sharedProps} />
       }
-    }, [value, type, isCurrentCellEditing, options, isCollapsed, setEditingCellId])
+    }, [cellId, value, type, isCurrentCellEditing, options, isCollapsed, setEditingCellId])
 
     return (
       <Cell
