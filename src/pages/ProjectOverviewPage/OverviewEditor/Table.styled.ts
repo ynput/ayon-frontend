@@ -53,7 +53,7 @@ export const ColumnHeader = styled.div`
 export const HeaderCell = styled.div`
   position: relative;
   background-color: var(--md-sys-color-surface-container-lowest);
-  box-shadow: inset 1px -1px 0 0 var(--md-sys-color-surface-container-highest);
+  box-shadow: inset 1px -1px 0 0 var(--md-sys-color-surface-container);
   display: flex;
   align-items: center;
   min-height: fit-content;
@@ -80,7 +80,7 @@ const topShadow = `inset 0 1px 0 0 var(--md-sys-color-primary)`
 const rightShadow = `inset -1px 0 0 0 var(--md-sys-color-primary)`
 const bottomShadow = `inset 0 -1px 0 0 var(--md-sys-color-primary)`
 const leftShadow = `inset 1px 0 0 0 var(--md-sys-color-primary)`
-const defaultShadow = `inset 1px -1px 0 0 var(--md-sys-color-surface-container-highest)`
+const defaultShadow = `inset 1px -1px 0 0 var(--md-sys-color-surface-container)`
 
 export const TableCell = styled.td`
   position: relative;

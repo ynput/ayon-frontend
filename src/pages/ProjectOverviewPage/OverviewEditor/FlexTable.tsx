@@ -41,7 +41,7 @@ const getCommonPinningStyles = (column: Column<TableRow>): CSSProperties => {
   const isFirstRightPinnedColumn = isPinned === 'right' && column.getIsFirstColumn('right')
 
   const boxShadow = isLastLeftPinnedColumn
-    ? 'inset 1px -1px 0 0 var(--md-sys-color-surface-container-highest), inset -2px 0 0 0 var(--md-sys-color-surface-container-highest)'
+    ? 'inset 1px -1px 0 0 var(--md-sys-color-surface-container), inset -2px 0 0 0 var(--md-sys-color-surface-container)'
     : undefined
 
   return {
