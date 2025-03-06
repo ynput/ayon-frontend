@@ -94,11 +94,13 @@ export default function useOverviewTable({
   const visibleFolders = useMemo(() => {
     const visible = new Set<string>()
 
-    // Start with root folders
+    // Start with root folders and folders with non-existent parents
     const queue: string[] = []
     for (const folder of foldersMap.values()) {
       if (!folder.id) continue
-      if (!folder.parentId) {
+
+      // Include folders with no parent OR with a parent that doesn't exist
+      if (!folder.parentId || !foldersMap.has(folder.parentId)) {
         visible.add(folder.id)
         queue.push(folder.id)
       }
@@ -209,7 +211,8 @@ export default function useOverviewTable({
 
       rowsById.set(folderId, row)
 
-      if (!folder.parentId) {
+      // Add root rows directly to the rootRows array
+      if (!folder.parentId || !foldersMap.has(folder.parentId)) {
         rootRows.push(row)
       }
 

@@ -1402,6 +1402,7 @@ export type GetTasksByParentQuery = { __typename?: 'Query', project: { __typenam
 
 export type GetTasksListQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
+  folderIds?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
   filter?: InputMaybe<Scalars['String']['input']>;
   after?: InputMaybe<Scalars['String']['input']>;
 }>;
@@ -1708,10 +1709,10 @@ export const GetTasksByParentDocument = `
 }
     ${TaskPropsFragmentFragmentDoc}`;
 export const GetTasksListDocument = `
-    query GetTasksList($projectName: String!, $filter: String, $after: String) {
+    query GetTasksList($projectName: String!, $folderIds: [String!], $filter: String, $after: String) {
   project(name: $projectName) {
     name
-    tasks(filter: $filter, after: $after, first: 100) {
+    tasks(filter: $filter, folderIds: $folderIds, after: $after, first: 100) {
       pageInfo {
         startCursor
         endCursor

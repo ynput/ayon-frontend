@@ -159,6 +159,7 @@ const useTableDataBySlice = ({ sliceFields }: Props): TableData => {
         setIsLoading(false)
       }
     }
+
     fetchData()
   }, [sliceType, sliceFields, projectName, isLoadingData])
 

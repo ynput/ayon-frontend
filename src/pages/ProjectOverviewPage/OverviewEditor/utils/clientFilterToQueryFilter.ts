@@ -8,9 +8,9 @@ const clientFilterToQueryFilter = (filters: Filter[]): QueryFilter => {
   }
 
   // Process each filter as its own condition
-  const conditions: (QueryCondition | QueryFilter)[] = filters.map((filter) =>
-    convertFilterToCondition(filter),
-  )
+  const conditions: (QueryCondition | QueryFilter)[] = filters
+    .filter((f) => !!f.values?.length)
+    .map((filter) => convertFilterToCondition(filter))
 
   // Return the QueryFilter with all conditions combined with AND
   return {

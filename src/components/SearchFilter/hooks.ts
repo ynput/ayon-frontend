@@ -23,12 +23,14 @@ interface UseFiltersWithHierarchyProps {
   sliceFilter: TaskFilterValue | null
   persistedHierarchySelection: SelectionData | null
   filters: Filter[]
+  merge?: boolean
 }
 
 export const useFiltersWithHierarchy = ({
   sliceFilter,
   persistedHierarchySelection,
   filters,
+  merge = true,
 }: UseFiltersWithHierarchyProps) => {
   const filtersWithHierarchy = useMemo(() => {
     const buildHierarchyFilterOption = (hierarchy: SelectionData): Filter => ({
@@ -47,7 +49,11 @@ export const useFiltersWithHierarchy = ({
     })
 
     if (sliceFilter && persistedHierarchySelection) {
-      return [buildHierarchyFilterOption(persistedHierarchySelection), ...filters]
+      if (merge) {
+        return [buildHierarchyFilterOption(persistedHierarchySelection), ...filters]
+      } else {
+        return [buildHierarchyFilterOption(persistedHierarchySelection)]
+      }
     }
     return filters
   }, [sliceFilter, persistedHierarchySelection, filters])

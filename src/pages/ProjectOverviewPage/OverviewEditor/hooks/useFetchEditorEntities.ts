@@ -1,8 +1,5 @@
 import { useGetFolderListQuery } from '@queries/getHierarchy'
 import { Filter } from '@ynput/ayon-react-components'
-import { TaskFilterValue } from '@containers/TasksProgress/hooks/useFilterBySlice'
-// import { mapQueryFilters } from '../mappers/mappers'
-// import { useGetTasksFoldersQuery } from '@queries/project/getProject'
 import {
   useGetOverviewTasksByFoldersQuery,
   useGetQueryTasksFoldersQuery,
@@ -15,9 +12,8 @@ import { ExpandedState } from '@tanstack/react-table'
 
 type Params = {
   projectName: string
-  selectedFolders: string[]
-  filters: Filter[]
-  sliceFilter: TaskFilterValue | null
+  selectedFolders: string[] // folders selected in the slicer (hierarchy)
+  filters: Filter[] // filters from the filters bar or slicer (not hierarchy)
   expanded: ExpandedState
   showHierarchy: boolean
 }
@@ -29,7 +25,6 @@ type UseFetchEditorEntitiesData = {
   tasksMap: TaskNodeMap
   tasksByFolderMap: TasksByFolderMap
   isLoading: boolean
-  selectedPaths: string[]
   fetchNextPage: () => void
 }
 
@@ -37,7 +32,6 @@ const useFetchEditorEntities = ({
   projectName,
   selectedFolders,
   filters,
-  sliceFilter,
   expanded,
   showHierarchy,
 }: Params): UseFetchEditorEntitiesData => {
@@ -82,26 +76,7 @@ const useFetchEditorEntities = ({
     },
   )
 
-  const [tasksListCursor, setTasksListCursor] = useState('')
-  // get all tasks if we are viewing flat hierarchy
-  const { data: tasksListData, isFetching: isFetchingTaskList } = useGetTasksListQuery(
-    {
-      projectName,
-      filter: filters?.length ? queryFilterString : '',
-      after: tasksListCursor,
-    },
-    { skip: showHierarchy },
-  )
-
-  const tasksList = tasksListData?.tasks || []
-  const tasksListPageInfo = tasksListData?.pageInfo
-
-  const handleFetchNextPage = () => {
-    if (tasksListPageInfo?.endCursor && tasksListPageInfo.hasNextPage) {
-      console.log('fetching next page', tasksListPageInfo.endCursor)
-      setTasksListCursor(tasksListPageInfo.endCursor)
-    }
-  }
+  console.log(selectedFolders)
 
   // create a map of folders by id for efficient lookups
   const foldersMap: FolderNodeMap = useMemo(() => {
@@ -150,8 +125,70 @@ const useFetchEditorEntities = ({
       }
     }
 
+    // Filter by selected folders if needed
+    if (selectedFolders.length) {
+      const selectedPaths = selectedFolders
+        .map((id) => map.get(id)?.path)
+        .filter(Boolean) as string[]
+
+      if (selectedPaths.length) {
+        // Create a new map that only contains selected folders and their children
+        const filteredMap = new Map()
+
+        // For each folder, check if it should be included
+        map.forEach((folder, folderId) => {
+          const folderPath = folder.path as string
+
+          // Include if it's a parent or the folder itself
+          const folderPathParts = folderPath.split('/')
+          let isParentOrSelf = false
+
+          for (let i = 0; i < folderPathParts.length; i++) {
+            const partialPath = folderPathParts.slice(0, i + 1).join('/')
+            if (selectedPaths.some((p) => p === partialPath)) {
+              isParentOrSelf = true
+              break
+            }
+          }
+
+          // Include if it's a child of any selected folder
+          const isChild = selectedPaths.some((selectedPath) =>
+            folderPath.startsWith(selectedPath + '/'),
+          )
+
+          if (isParentOrSelf || isChild) {
+            filteredMap.set(folderId, folder)
+          }
+        })
+
+        return filteredMap
+      }
+    }
+
     return map
-  }, [folders, foldersByTaskFilter, isUninitialized])
+  }, [folders, foldersByTaskFilter, isUninitialized, selectedFolders])
+
+  const [tasksListCursor, setTasksListCursor] = useState('')
+  // get all tasks if we are viewing flat hierarchy
+  const { data: tasksListData, isFetching: isFetchingTaskList } = useGetTasksListQuery(
+    {
+      projectName,
+      filter: filters?.length ? queryFilterString : '',
+      folderIds: selectedFolders.length ? Array.from(foldersMap.keys()) : undefined,
+      after: tasksListCursor,
+    },
+    { skip: showHierarchy },
+  )
+
+  const tasksList = tasksListData?.tasks || []
+  const tasksListPageInfo = tasksListData?.pageInfo
+
+  const handleFetchNextPage = () => {
+    if (tasksListPageInfo?.endCursor && tasksListPageInfo.hasNextPage) {
+      console.log('fetching next page', tasksListPageInfo.endCursor)
+      setTasksListCursor(tasksListPageInfo.endCursor)
+    }
+  }
 
   // tasksMaps is a map of tasks by task ID
   // tasksByFolderMap is a map of tasks by folder ID
@@ -177,20 +214,11 @@ const useFetchEditorEntities = ({
     return { tasksMap, tasksByFolderMap }
   }, [expandedFoldersTasks, showHierarchy, tasksList])
 
-  const selectedPaths = useMemo(() => {
-    return selectedFolders.map((id) => foldersMap.get(id)?.path!).filter(Boolean) as string[]
-  }, [selectedFolders, foldersMap, showHierarchy])
-
-  const selectedPathsPrefixed = useMemo(() => {
-    return selectedPaths.map((path: string) => '/' + path)
-  }, [selectedPaths])
-
   return {
     foldersMap: foldersMap,
     tasksMap: tasksMap,
     tasksByFolderMap: tasksByFolderMap,
     isLoading: isLoading || isFetching || isFetchingTaskList,
-    selectedPaths: selectedPathsPrefixed,
     fetchNextPage: handleFetchNextPage,
   }
 }

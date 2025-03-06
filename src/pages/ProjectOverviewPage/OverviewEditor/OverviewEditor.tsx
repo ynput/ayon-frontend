@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useMemo } from 'react'
 
 // UI components
 import { Section, TablePanel } from '@ynput/ayon-react-components'
@@ -7,9 +7,6 @@ import { Splitter, SplitterPanel } from 'primereact/splitter'
 // Types
 import { Filter } from '@components/SearchFilter/types'
 import { BuiltInFieldOptions } from './TableColumns'
-
-// Contexts
-import { useSlicerContext } from '@context/slicerContext'
 
 // Queries
 import { useGetProjectQuery } from '@queries/project/getProject'
@@ -22,7 +19,6 @@ import { useAppSelector } from '@state/store'
 import useAttributeFields from './hooks/useAttributesList'
 import useFetchAndUpdateEntityData from './hooks/useFetchEditorEntities'
 import useOverviewTable from './hooks/useOverviewTable'
-import useFilterBySlice from '@containers/TasksProgress/hooks/useFilterBySlice'
 
 // Components
 import FlexTable from './FlexTable'
@@ -37,11 +33,12 @@ type User = {
 }
 
 type Props = {
-  filters: Filter[]
+  selectedFolders: string[] // folders selected in the slicer (hierarchy)
+  filters: Filter[] // filters from the filters bar or slicer (not hierarchy)
   showHierarchy: boolean
 }
 
-const OverviewEditor = ({ filters, showHierarchy }: Props) => {
+const OverviewEditor = ({ filters, showHierarchy, selectedFolders }: Props) => {
   const projectName = useAppSelector((state) => state.project.name) as unknown as string
   const { data: usersData = [] } = useGetUsersAssigneeQuery({ projectName }, { skip: !projectName })
   const users = usersData as User[]
@@ -51,9 +48,7 @@ const OverviewEditor = ({ filters, showHierarchy }: Props) => {
     { skip: !projectName },
   )
 
-  const { rowSelection } = useSlicerContext()
   const { attribFields } = useAttributeFields()
-  const { filter: sliceFilter } = useFilterBySlice()
 
   const [expanded, setExpanded] = useLocalStorage<ExpandedState>(
     `overview-expanded-${projectName}`,
@@ -82,9 +77,8 @@ const OverviewEditor = ({ filters, showHierarchy }: Props) => {
   const { foldersMap, tasksMap, tasksByFolderMap, fetchNextPage, isLoading } =
     useFetchAndUpdateEntityData({
       projectName,
-      selectedFolders: Object.keys(rowSelection),
+      selectedFolders,
       filters,
-      sliceFilter,
       expanded,
       showHierarchy,
     })

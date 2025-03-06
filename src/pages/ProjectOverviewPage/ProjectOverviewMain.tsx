@@ -6,25 +6,11 @@ import { useSlicerContext } from '@context/slicerContext'
 import { FilterFieldType } from '@hooks/useBuildFilterOptions'
 import useUserFilters from '@hooks/useUserFilters'
 import OverviewEditor from '@pages/ProjectOverviewPage/OverviewEditor/OverviewEditor'
-import { $Any } from '@types'
-import {
-  Button,
-  InputSwitch,
-  Section,
-  SortCardType,
-  SortingDropdown,
-  Toolbar,
-} from '@ynput/ayon-react-components'
+import { Button, InputSwitch, Section, Toolbar } from '@ynput/ayon-react-components'
 import { isEmpty } from 'lodash'
-import { FC, useState } from 'react'
+import { FC, useMemo } from 'react'
 import useOverviewPreferences from './hooks/useOverviewPreferences'
-import { SortByOption } from '@pages/UserDashboardPage/UserDashboardTasks/DashboardTasksToolbar/KanBanSortByOptions'
-
-const sortByOptions: SortByOption[] = [
-  { id: 'label', fallbacks: ['name'], label: 'Task', sortOrder: true },
-  { id: 'status', label: 'Status', sortOrder: true },
-  { id: 'priority', label: 'Priority', sortOrder: true, sortByEnumOrder: true },
-]
+import { RowSelectionState } from '@tanstack/react-table'
 
 // what to search by
 const searchFilterTypes: FilterFieldType[] = ['attributes', 'status', 'assignees', 'tags']
@@ -49,6 +35,12 @@ const ProjectOverviewMain: FC<ProjectOverviewMainProps> = ({ projectName }) => {
     : persistentRowSelectionData
   const { filter: sliceFilter } = useFilterBySlice()
 
+  // merge the slice filter with the user filters
+  let combinedFilters = [...filters]
+  if (sliceFilter) {
+    combinedFilters.push(sliceFilter)
+  }
+
   const handleFiltersChange = (value: Filter[]) => {
     setFilters(value)
 
@@ -65,6 +57,17 @@ const ProjectOverviewMain: FC<ProjectOverviewMainProps> = ({ projectName }) => {
     persistedHierarchySelection,
     filters,
   })
+
+  const selectedFolders: RowSelectionState = useMemo(() => {
+    if (sliceType === 'hierarchy') {
+      return rowSelection
+    } else if (persistedHierarchySelection) {
+      return Object.values(persistedHierarchySelection).reduce((acc: any, item) => {
+        acc[item.id] = !!item
+        return acc
+      }, {})
+    } else return {}
+  }, [rowSelection, persistedHierarchySelection, sliceType])
 
   //
   //
@@ -96,15 +99,14 @@ const ProjectOverviewMain: FC<ProjectOverviewMainProps> = ({ projectName }) => {
             onChange={(e) => updateShowHierarchy((e.target as HTMLInputElement).checked)}
           />
         </span>
-        {/* <SortingDropdown
-          style={{ minWidth: '250px' }}
-          title="Sort by"
-          options={sortByOptions}
-          value={sortByValue}
-          onChange={setSortByValue}
-        /> */}
       </Toolbar>
-      <OverviewEditor filters={filtersWithHierarchy} showHierarchy={showHierarchy} />
+      <OverviewEditor
+        selectedFolders={Object.entries(selectedFolders)
+          .filter(([, value]) => value)
+          .map(([id]) => id)}
+        filters={combinedFilters}
+        showHierarchy={showHierarchy}
+      />
     </Section>
   )
 }
