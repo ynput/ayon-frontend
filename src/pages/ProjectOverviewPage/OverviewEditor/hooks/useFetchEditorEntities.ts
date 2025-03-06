@@ -11,13 +11,14 @@ import {
 import { FolderNodeMap, TaskNodeMap } from '../types'
 import { useMemo, useState } from 'react'
 import clientFilterToQueryFilter from '../utils/clientFilterToQueryFilter'
+import { ExpandedState } from '@tanstack/react-table'
 
 type Params = {
   projectName: string
   selectedFolders: string[]
   filters: Filter[]
   sliceFilter: TaskFilterValue | null
-  expanded: Record<string, boolean>
+  expanded: ExpandedState
   showHierarchy: boolean
 }
 
@@ -96,7 +97,7 @@ const useFetchEditorEntities = ({
   const tasksListPageInfo = tasksListData?.pageInfo
 
   const handleFetchNextPage = () => {
-    if (tasksListPageInfo?.endCursor) {
+    if (tasksListPageInfo?.endCursor && tasksListPageInfo.hasNextPage) {
       console.log('fetching next page', tasksListPageInfo.endCursor)
       setTasksListCursor(tasksListPageInfo.endCursor)
     }

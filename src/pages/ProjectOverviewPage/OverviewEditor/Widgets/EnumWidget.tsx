@@ -70,7 +70,7 @@ interface EnumWidgetProps extends Omit<React.HTMLAttributes<HTMLSpanElement>, 'o
   value: (string | number | boolean)[]
   isEditing?: boolean
   options: AttributeEnumItem[]
-  type: AttributeData['type']
+  type?: AttributeData['type']
   onChange: (value: string | string[]) => void
 }
 
@@ -103,7 +103,7 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
 
     if (isEditing) {
       const handleChange = (value: string[]) => {
-        if (type.includes('list')) {
+        if (type?.includes('list')) {
           onChange(value)
         } else {
           // take first value as the type is not list]
@@ -137,7 +137,7 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
             />
           )}
           widthExpand
-          multiSelect={type.includes('list')}
+          multiSelect={type?.includes('list')}
           onChange={handleChange}
         />
       )

@@ -2,13 +2,13 @@ import { useMemo } from 'react'
 import { EditorTaskNode, FolderNodeMap, TableRow, TaskNodeMap } from '../types'
 import { FolderType, TaskType } from '@api/rest/project'
 import { TasksByFolderMap } from './useFetchEditorEntities'
-import { SortingState } from '@tanstack/react-table'
+import { ExpandedState } from '@tanstack/react-table'
 
 type Params = {
   foldersMap: FolderNodeMap
   tasksMap: TaskNodeMap
   tasksByFolderMap: TasksByFolderMap
-  expanded: Record<string, boolean>
+  expanded: ExpandedState
   folderTypes?: FolderType[]
   taskTypes?: TaskType[]
   showHierarchy: boolean

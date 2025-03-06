@@ -28,6 +28,7 @@ import { ClipboardProvider } from './context/ClipboardContext'
 import { getCellId } from './utils/cellUtils'
 import { FolderNodeMap, TaskNodeMap } from './types'
 import { AttributeEnumItem, AttributeModel } from '@api/rest/attributes'
+import { Icon } from '@ynput/ayon-react-components'
 
 type Props = {
   tableData: $Any[]
@@ -36,7 +37,7 @@ type Props = {
   isLoading: boolean
   isExpandable: boolean
   sliceId: string
-  expanded: Record<string, boolean>
+  expanded: ExpandedState
   updateExpanded: OnChangeFn<ExpandedState>
   sorting: SortingState
   updateSorting: OnChangeFn<SortingState>
@@ -286,7 +287,10 @@ const FlexTable = ({
                         style={{
                           width: `calc(var(--header-${header?.id}-size) * 1px)`,
                         }}
-                        onClick={header.column.getToggleSortingHandler()}
+                        onClick={(e) => {
+                          if ((e.target as HTMLElement).className.includes('resize-handle')) return
+                          header.column.getToggleSortingHandler()?.(e)
+                        }}
                       >
                         {header.isPlaceholder ? null : (
                           <Styled.TableCellContent
@@ -296,8 +300,8 @@ const FlexTable = ({
                           >
                             {flexRender(header.column.columnDef.header, header.getContext())}
                             {{
-                              asc: ' 🔼',
-                              desc: ' 🔽',
+                              asc: <Icon icon="sort" style={{ transform: 'scaleY(-1)' }} />,
+                              desc: <Icon icon="sort" />,
                             }[header.column.getIsSorted() as string] ?? null}
                             <Styled.ResizedHandler
                               {...{

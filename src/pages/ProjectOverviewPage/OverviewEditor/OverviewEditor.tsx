@@ -26,7 +26,8 @@ import useFilterBySlice from '@containers/TasksProgress/hooks/useFilterBySlice'
 
 // Components
 import FlexTable from './FlexTable'
-import { SortingState } from '@tanstack/react-table'
+import { ExpandedState, functionalUpdate, OnChangeFn, SortingState } from '@tanstack/react-table'
+import useLocalStorage from '@hooks/useLocalStorage'
 
 type User = {
   name: string
@@ -54,13 +55,24 @@ const OverviewEditor = ({ filters, showHierarchy }: Props) => {
   const { attribFields } = useAttributeFields()
   const { filter: sliceFilter } = useFilterBySlice()
 
-  const [expanded, updateExpanded] = useState({})
-  const [sorting, setSorting] = useState<SortingState>([
+  const [expanded, setExpanded] = useLocalStorage<ExpandedState>(
+    `overview-expanded-${projectName}`,
+    {},
+  )
+  const updateExpanded: OnChangeFn<ExpandedState> = (expandedUpdater) => {
+    setExpanded(functionalUpdate(expandedUpdater, expanded))
+  }
+
+  const [sorting, setSorting] = useLocalStorage<SortingState>(`overview-sorting-${projectName}`, [
     {
       id: 'name',
       desc: true,
     },
   ])
+
+  const updateSorting: OnChangeFn<SortingState> = (sortingUpdater) => {
+    setSorting(functionalUpdate(sortingUpdater, sorting))
+  }
 
   console.time('dataToTable')
   // 28.3 ms -> 6ms
@@ -81,7 +93,7 @@ const OverviewEditor = ({ filters, showHierarchy }: Props) => {
   //called on scroll and possibly on mount to fetch more data as the user scrolls and reaches bottom of table
   const fetchMoreOnBottomReached = useCallback(
     (containerRefElement?: HTMLDivElement | null) => {
-      if (containerRefElement) {
+      if (containerRefElement && !showHierarchy) {
         const { scrollHeight, scrollTop, clientHeight } = containerRefElement
         //once the user has scrolled within 1000px of the bottom of the table, fetch more data if we can
         if (scrollHeight - scrollTop - clientHeight < 1000 && !isLoading) {
@@ -89,7 +101,7 @@ const OverviewEditor = ({ filters, showHierarchy }: Props) => {
         }
       }
     },
-    [fetchNextPage, isLoading],
+    [fetchNextPage, isLoading, showHierarchy],
   )
 
   // console.time('populateTableData')
@@ -150,7 +162,7 @@ const OverviewEditor = ({ filters, showHierarchy }: Props) => {
                 updateExpanded={updateExpanded}
                 // sorting
                 sorting={sorting}
-                updateSorting={setSorting}
+                updateSorting={updateSorting}
                 // pagination
                 fetchMoreOnBottomReached={fetchMoreOnBottomReached}
                 // metadata

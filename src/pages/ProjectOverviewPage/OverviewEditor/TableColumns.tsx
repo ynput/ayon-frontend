@@ -44,7 +44,7 @@ const attribSort: AttribSortingFn = (rowA, rowB, columnId, attrib) => {
   if (attrib && attrib.enum) {
     const indexA = attrib.enum.findIndex((o) => o.value === valueA)
     const indexB = attrib.enum.findIndex((o) => o.value === valueB)
-    return indexA - indexB
+    return indexA - indexB < 0 ? 1 : -1
   } else if (attrib?.type === 'datetime') {
     return sortingFns.datetime(rowA, rowB, columnId)
   } else {
@@ -104,7 +104,7 @@ const TableColumns = ({
         filterFn: 'fuzzy',
         sortingFn: nameSort, // custom sort to sort by label then name
         size: storedColumnSizes['label'] || 300,
-        cell: ({ row, getValue }) => {
+        cell: ({ row }) => {
           return !row.original.id ? (
             <ShimmerCell width="300px" />
           ) : (
@@ -139,6 +139,7 @@ const TableColumns = ({
         header: () => 'Status',
         filterFn: 'fuzzy',
         sortingFn: (a, b, c) => attribSort(a, b, c, { enum: options.statuses, type: 'string' }),
+        sortDescFirst: true,
         size: storedColumnSizes['status'] || 150,
         cell: ({ row, column }) => {
           const { value, id, type } = getValueIdType(row, column.id)
@@ -184,7 +185,8 @@ const TableColumns = ({
         size: storedColumnSizes['assignees'] || 150,
         cell: ({ row, column }) => {
           const { value, id, type } = getValueIdType(row, column.id)
-          if (type === 'folder') return null
+          if (type === 'folder')
+            return <EditorCell rowId={id} columnId={column.id} value="" isPlaceholder />
           return (
             <EditorCell
               rowId={id}

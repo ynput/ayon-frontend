@@ -32,15 +32,29 @@ interface EditorCellProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'on
   rowId: string
   columnId: string
   value: CellValue | CellValue[]
-  attributeData: AttributeData
-  options: AttributeEnumItem[]
-  isCollapsed: boolean
-  onChange: (value: CellValue | CellValue[]) => void
+  attributeData?: AttributeData
+  options?: AttributeEnumItem[]
+  isCollapsed?: boolean
+  isPlaceholder?: boolean
+  onChange?: (value: CellValue | CellValue[]) => void
 }
 
 const EditorCellComponent = forwardRef<HTMLDivElement, EditorCellProps>(
-  ({ rowId, columnId, value, attributeData, options, isCollapsed, onChange, ...props }, ref) => {
-    const { type } = attributeData
+  (
+    {
+      rowId,
+      columnId,
+      value,
+      attributeData,
+      options = [],
+      isCollapsed,
+      isPlaceholder,
+      onChange,
+      ...props
+    },
+    ref,
+  ) => {
+    const type = attributeData?.type
 
     const { isEditing, setEditingCellId } = useCellEditing()
     const cellId = getCellId(rowId, columnId)
@@ -48,8 +62,8 @@ const EditorCellComponent = forwardRef<HTMLDivElement, EditorCellProps>(
     const isCurrentCellEditing = isEditing(cellId)
 
     const handleDoubleClick = useCallback(() => {
-      setEditingCellId(cellId)
-    }, [cellId, setEditingCellId])
+      !isPlaceholder && setEditingCellId(cellId)
+    }, [cellId, setEditingCellId, isPlaceholder])
 
     const handleSingleClick = () => {
       // clicking a cell that is not editing will close the editor on this cell
@@ -63,7 +77,7 @@ const EditorCellComponent = forwardRef<HTMLDivElement, EditorCellProps>(
       const sharedProps = {
         onChange: (value: CellValue | CellValue[]) => {
           setEditingCellId(null)
-          onChange(value)
+          onChange?.(value)
         },
         onCancelEdit: () => setEditingCellId(null),
         isEditing: isCurrentCellEditing,
@@ -76,7 +90,7 @@ const EditorCellComponent = forwardRef<HTMLDivElement, EditorCellProps>(
         // this is showing the collapsed widget (dot)
         case isCollapsed: {
           // if enum, find the first selected option and get its color
-          const firstSelectedOption = type.includes('list')
+          const firstSelectedOption = type?.includes('list')
             ? options.find((option) =>
                 Array.isArray(value) ? value.includes(option.value) : value === option.value,
               )
@@ -95,6 +109,9 @@ const EditorCellComponent = forwardRef<HTMLDivElement, EditorCellProps>(
 
         case type === 'datetime' && value !== null && value !== undefined:
           return <DateWidget value={value as string} {...sharedProps} />
+
+        case isPlaceholder:
+          return null
 
         default:
           return <TextWidget value={value as string} {...sharedProps} />
@@ -124,11 +141,11 @@ function arePropsEqual(prevProps: EditorCellProps, nextProps: EditorCellProps) {
     prevProps.columnId === nextProps.columnId &&
     prevProps.isCollapsed === nextProps.isCollapsed &&
     JSON.stringify(prevProps.value) === JSON.stringify(nextProps.value) &&
-    prevProps.attributeData.type === nextProps.attributeData.type &&
+    prevProps?.attributeData?.type === nextProps?.attributeData?.type &&
     // Only check options length for list types to avoid deep comparison
-    ((!prevProps.attributeData.type.includes('list') &&
-      !nextProps.attributeData.type.includes('list')) ||
-      prevProps.options.length === nextProps.options.length)
+    ((!prevProps?.attributeData?.type.includes('list') &&
+      !nextProps?.attributeData?.type.includes('list')) ||
+      prevProps.options?.length === nextProps.options?.length)
   )
 }
 
