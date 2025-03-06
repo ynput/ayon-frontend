@@ -43,6 +43,7 @@ type Props = {
   // metadata
   tasksMap: TaskNodeMap
   foldersMap: FolderNodeMap
+  fetchMoreOnBottomReached: (element: HTMLDivElement | null) => void
 }
 
 // Component to wrap with all providers
@@ -157,9 +158,15 @@ const FlexTable = ({
   updateExpanded,
   sorting,
   updateSorting,
+  fetchMoreOnBottomReached,
 }: Props) => {
   //The virtualizer needs to know the scrollable container element
   const tableContainerRef = useRef<HTMLDivElement>(null)
+
+  //a check on mount and after a fetch to see if the table is already scrolled to the bottom and immediately needs to fetch more data
+  useEffect(() => {
+    fetchMoreOnBottomReached(tableContainerRef.current)
+  }, [fetchMoreOnBottomReached])
 
   // Selection context
   const { registerGrid } = useSelection()
@@ -254,7 +261,11 @@ const FlexTable = ({
 
   return (
     <Styled.TableContainerWrapper style={{ height: '100%' }}>
-      <Styled.TableContainer ref={tableContainerRef} style={{ height: '100%' }}>
+      <Styled.TableContainer
+        ref={tableContainerRef}
+        style={{ height: '100%' }}
+        onScroll={(e) => fetchMoreOnBottomReached(e.currentTarget)}
+      >
         <table
           style={{
             borderCollapse: 'collapse',

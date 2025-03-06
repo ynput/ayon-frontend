@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 
 // UI components
 import { Section, TablePanel } from '@ynput/ayon-react-components'
@@ -6,7 +6,6 @@ import { Splitter, SplitterPanel } from 'primereact/splitter'
 
 // Types
 import { Filter } from '@components/SearchFilter/types'
-import { SortByOption } from '@pages/UserDashboardPage/UserDashboardTasks/DashboardTasksToolbar/KanBanSortByOptions'
 import { BuiltInFieldOptions } from './TableColumns'
 
 // Contexts
@@ -22,8 +21,7 @@ import { useAppSelector } from '@state/store'
 // Custom hooks
 import useAttributeFields from './hooks/useAttributesList'
 import useFetchAndUpdateEntityData from './hooks/useFetchEditorEntities'
-import useFilteredEntities from './hooks/useFilteredEntities'
-import useTableTree from './hooks/useTableTree'
+import useOverviewTable from './hooks/useOverviewTable'
 import useFilterBySlice from '@containers/TasksProgress/hooks/useFilterBySlice'
 
 // Components
@@ -69,39 +67,41 @@ const OverviewEditor = ({ filters, showHierarchy }: Props) => {
 
   // console.time('useFetchAndUpdateEntityData')
   // 1.4ms
-  const { foldersMap, tasksMap, tasksByFolderMap } = useFetchAndUpdateEntityData({
-    projectName,
-    selectedFolders: Object.keys(rowSelection),
-    filters,
-    sliceFilter,
-    expanded,
-  })
+  const { foldersMap, tasksMap, tasksByFolderMap, fetchNextPage, isLoading } =
+    useFetchAndUpdateEntityData({
+      projectName,
+      selectedFolders: Object.keys(rowSelection),
+      filters,
+      sliceFilter,
+      expanded,
+      showHierarchy,
+    })
   // console.timeEnd('useFetchAndUpdateEntityData')
 
-  // console.time('getFilteredEntities')
-  // 8.1ms down to 1.6ms
-  // const {
-  //   folders: filteredFolders,
-  //   tasks: filteredTasks,
-  //   taskList,
-  // } = useFilteredEntities({
-  //   folders: foldersMap,
-  //   tasksMap,
-  //   filters,
-  //   // sliceFilter,
-  //   // // sortBy,
-  // })
-  // console.timeEnd('getFilteredEntities')
+  //called on scroll and possibly on mount to fetch more data as the user scrolls and reaches bottom of table
+  const fetchMoreOnBottomReached = useCallback(
+    (containerRefElement?: HTMLDivElement | null) => {
+      if (containerRefElement) {
+        const { scrollHeight, scrollTop, clientHeight } = containerRefElement
+        //once the user has scrolled within 1000px of the bottom of the table, fetch more data if we can
+        if (scrollHeight - scrollTop - clientHeight < 1000 && !isLoading) {
+          fetchNextPage()
+        }
+      }
+    },
+    [fetchNextPage, isLoading],
+  )
 
   // console.time('populateTableData')
   // Use the memoized hook instead of direct function call
-  const tableData = useTableTree({
+  const tableData = useOverviewTable({
     foldersMap,
     tasksMap,
     tasksByFolderMap,
     expanded,
     folderTypes,
     taskTypes,
+    showHierarchy,
   })
   // console.timeEnd('populateTableData')
 
@@ -151,6 +151,8 @@ const OverviewEditor = ({ filters, showHierarchy }: Props) => {
                 // sorting
                 sorting={sorting}
                 updateSorting={setSorting}
+                // pagination
+                fetchMoreOnBottomReached={fetchMoreOnBottomReached}
                 // metadata
                 tasksMap={tasksMap}
                 foldersMap={foldersMap}

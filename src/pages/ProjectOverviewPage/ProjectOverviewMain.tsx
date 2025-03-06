@@ -76,7 +76,6 @@ const ProjectOverviewMain: FC<ProjectOverviewMainProps> = ({ projectName }) => {
         <Button icon={'add'} variant="filled" disabled>
           Create
         </Button>
-        {/* <div style={{ flex: 1, opacity: 0.5, pointerEvents: 'none' }}> */}
         <SearchFilterWrapper
           filters={filtersWithHierarchy}
           onChange={handleFiltersChange}
@@ -90,15 +89,11 @@ const ProjectOverviewMain: FC<ProjectOverviewMainProps> = ({ projectName }) => {
           }}
           disabledFilters={sliceType ? [sliceType] : []}
         />
-        {/* </div> */}
         <span style={{ whiteSpace: 'nowrap', display: 'flex' }}>
           Show hierarchy&nbsp;
           <InputSwitch
             checked={showHierarchy}
-            onChange={(e: $Any) => {
-              updateShowHierarchy(e.target.checked)
-            }}
-            disabled
+            onChange={(e) => updateShowHierarchy((e.target as HTMLInputElement).checked)}
           />
         </span>
         {/* <SortingDropdown

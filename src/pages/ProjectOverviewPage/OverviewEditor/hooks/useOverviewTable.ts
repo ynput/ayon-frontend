@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { FolderNodeMap, TableRow, TaskNodeMap } from '../types'
+import { EditorTaskNode, FolderNodeMap, TableRow, TaskNodeMap } from '../types'
 import { FolderType, TaskType } from '@api/rest/project'
 import { TasksByFolderMap } from './useFetchEditorEntities'
 import { SortingState } from '@tanstack/react-table'
@@ -11,6 +11,7 @@ type Params = {
   expanded: Record<string, boolean>
   folderTypes?: FolderType[]
   taskTypes?: TaskType[]
+  showHierarchy: boolean
 }
 
 /**
@@ -25,13 +26,14 @@ type Params = {
  * @param taskTypes - Array of task types for to add things like task icon
  * @returns An array of TableRow objects with nested subRows suitable for TanStack Table
  */
-export default function useTableTree({
+export default function useOverviewTable({
   foldersMap,
   tasksMap,
   tasksByFolderMap,
   expanded,
   folderTypes = [],
   taskTypes = [],
+  showHierarchy,
 }: Params): TableRow[] {
   // create a map of folder types by name for efficient lookups
   const folderTypesByName = useMemo(() => {
@@ -126,6 +128,53 @@ export default function useTableTree({
 
   // Final memoized result - build the table tree
   return useMemo(() => {
+    // Helper function to create a task row
+    const createTaskRow = (task: EditorTaskNode, parentId?: string): TableRow => {
+      return {
+        id: task.id,
+        type: 'task',
+        parentId: parentId || task.folderId,
+        name: task.name || '',
+        label: task.label || task.name || '',
+        icon: taskTypesByName.get(task.taskType)?.icon || null,
+        color: taskTypesByName.get(task.taskType)?.color || null,
+        status: task.status,
+        assignees: task.assignees,
+        img: null,
+        subRows: [],
+        subType: task.taskType || null,
+        attrib: task.attrib,
+        data: {
+          id: task.id,
+          type: 'task',
+          name: task.name || null,
+          label: task.label || null,
+        },
+      }
+    }
+
+    // If showHierarchy is false, create a flat list of task rows
+    if (!showHierarchy) {
+      const flatTaskRows: TableRow[] = []
+
+      // Loop through all tasks
+      for (const task of tasksMap.values()) {
+        if (!task.id) continue
+        flatTaskRows.push(createTaskRow(task))
+      }
+
+      // Sort all tasks by name
+      if (flatTaskRows.length > 1) {
+        flatTaskRows.sort((a, b) => {
+          if (a.name < b.name) return -1
+          if (a.name > b.name) return 1
+          return 0
+        })
+      }
+
+      return flatTaskRows
+    }
+
     // Use Map for O(1) lookups
     const rowsById = new Map<string, TableRow>()
     const rootRows: TableRow[] = []
@@ -176,29 +225,7 @@ export default function useTableTree({
 
           // Direct array assignment is faster than push operations
           for (let i = 0; i < folderTasks.length; i++) {
-            const task = folderTasks[i]
-
-            taskRows[i] = {
-              id: task.id,
-              type: 'task',
-              parentId: folderId,
-              name: task.name || '',
-              label: task.label || task.name || '',
-              icon: taskTypesByName.get(task.taskType)?.icon || null,
-              color: taskTypesByName.get(task.taskType)?.color || null,
-              status: task.status,
-              assignees: task.assignees,
-              img: null,
-              subRows: [],
-              subType: task.taskType || null,
-              attrib: task.attrib,
-              data: {
-                id: task.id,
-                type: 'task',
-                name: task.name || null,
-                label: task.label || null,
-              },
-            }
+            taskRows[i] = createTaskRow(folderTasks[i], folderId)
           }
 
           // Only sort if we have multiple items
@@ -267,5 +294,13 @@ export default function useTableTree({
     }
 
     return rootRows
-  }, [foldersMap, tasksMap, visibleFolders, childToParentMap, expandedFolderIds])
+  }, [
+    foldersMap,
+    tasksMap,
+    visibleFolders,
+    childToParentMap,
+    expandedFolderIds,
+    showHierarchy,
+    taskTypesByName,
+  ])
 }

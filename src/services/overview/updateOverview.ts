@@ -60,16 +60,31 @@ const operationsEnhanced = operationsApi.enhanceEndpoints({
             // it also updates any GetTasksByParent caches
             const tasksPatch = dispatch(
               tasksApi.util.updateQueryData(
-                entry.endpointName as 'getOverviewTasksByFolders' | 'GetTasksByParent',
+                entry.endpointName as
+                  | 'getOverviewTasksByFolders'
+                  | 'GetTasksByParent'
+                  | 'GetTasksList',
                 entry.originalArgs,
                 (draft) => {
+                  console.time('updateQueryData')
                   // Apply each change to matching tasks in the cache
                   for (const taskOperation of operationsByType.task) {
-                    const task = draft.find((task) => task.id === taskOperation.entityId)
-                    if (task) {
-                      updateEntityWithOperation(task, taskOperation.data)
+                    // Check if draft is an array or an object with a tasks property
+                    if (Array.isArray(draft)) {
+                      // Handle array case (like in getOverviewTasksByFolders)
+                      const task = draft.find((task) => task.id === taskOperation.entityId)
+                      if (task) {
+                        updateEntityWithOperation(task, taskOperation.data)
+                      }
+                    } else if (draft.tasks && Array.isArray(draft.tasks)) {
+                      // Handle object with tasks array case (like in GetTasksList)
+                      const task = draft.tasks.find((task) => task.id === taskOperation.entityId)
+                      if (task) {
+                        updateEntityWithOperation(task, taskOperation.data)
+                      }
                     }
                   }
+                  console.timeEnd('updateQueryData')
                 },
               ),
             )

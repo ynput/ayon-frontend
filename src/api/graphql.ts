@@ -1391,36 +1391,6 @@ export type GetInstallEventsQueryVariables = Exact<{
 
 export type GetInstallEventsQuery = { __typename?: 'Query', events: { __typename?: 'EventsConnection', edges: Array<{ __typename?: 'EventEdge', node: { __typename?: 'EventNode', id: string, status: string, description: string } }> } };
 
-export type GetEntitiesByIdsQueryVariables = Exact<{
-  projectName: Scalars['String']['input'];
-  folderIds: Array<Scalars['String']['input']> | Scalars['String']['input'];
-}>;
-
-
-export type GetEntitiesByIdsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, folders: { __typename?: 'FoldersConnection', edges: Array<{ __typename?: 'FolderEdge', node: { __typename?: 'FolderNode', id: string, projectName: string, parentId?: string | null, label?: string | null, name: string, ownAttrib: Array<string>, status: string, tags: Array<string>, folderType: string, type: string, updatedAt: any, active: boolean, hasReviewables: boolean, createdAt: any, attrib: { __typename?: 'FolderAttribType', priority?: string | null, resolutionHeight?: number | null, resolutionWidth?: number | null, fps?: number | null, clipIn?: number | null, clipOut?: number | null, frameStart?: number | null, frameEnd?: number | null, handleStart?: number | null, handleEnd?: number | null, pixelAspect?: number | null, startDate?: any | null, endDate?: any | null, description?: string | null, tools?: Array<string> | null, shotgridId?: string | null, shotgridType?: string | null, ftrackId?: string | null, ftrackPath?: string | null } } }> }, tasks: { __typename?: 'TasksConnection', edges: Array<{ __typename?: 'TaskEdge', node: { __typename?: 'TaskNode', id: string, folderId: string, label?: string | null, name: string, ownAttrib: Array<string>, status: string, tags: Array<string>, taskType: string, type: string, updatedAt: any, active: boolean, assignees: Array<string>, allAttrib: string } }> } } };
-
-export type GetFilteredEntitiesQueryVariables = Exact<{
-  projectName: Scalars['String']['input'];
-  assignees?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
-  tags?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
-  statuses?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
-  attributes?: InputMaybe<Array<AttributeFilterInput> | AttributeFilterInput>;
-  folderIds?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
-  first: Scalars['Int']['input'];
-  after?: InputMaybe<Scalars['String']['input']>;
-}>;
-
-
-export type GetFilteredEntitiesQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, tasks: { __typename?: 'TasksConnection', edges: Array<{ __typename?: 'TaskEdge', node: { __typename?: 'TaskNode', id: string, folderId: string, label?: string | null, name: string, ownAttrib: Array<string>, status: string, tags: Array<string>, taskType: string, type: string, updatedAt: any, active: boolean, assignees: Array<string>, allAttrib: string } }>, pageInfo: { __typename?: 'PageInfo', endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean, startCursor?: string | null } } } };
-
-export type GetRootFolderIdsQueryVariables = Exact<{
-  projectName: Scalars['String']['input'];
-  folderIds: Array<Scalars['String']['input']> | Scalars['String']['input'];
-}>;
-
-
-export type GetRootFolderIdsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, folders: { __typename?: 'FoldersConnection', edges: Array<{ __typename?: 'FolderEdge', node: { __typename?: 'FolderNode', id: string, projectName: string, parentId?: string | null, label?: string | null, name: string, ownAttrib: Array<string>, status: string, tags: Array<string>, folderType: string, type: string, updatedAt: any, active: boolean, hasReviewables: boolean, createdAt: any, attrib: { __typename?: 'FolderAttribType', priority?: string | null, resolutionHeight?: number | null, resolutionWidth?: number | null, fps?: number | null, clipIn?: number | null, clipOut?: number | null, frameStart?: number | null, frameEnd?: number | null, handleStart?: number | null, handleEnd?: number | null, pixelAspect?: number | null, startDate?: any | null, endDate?: any | null, description?: string | null, tools?: Array<string> | null, shotgridId?: string | null, shotgridType?: string | null, ftrackId?: string | null, ftrackPath?: string | null } } }> }, tasks: { __typename?: 'TasksConnection', edges: Array<{ __typename?: 'TaskEdge', node: { __typename?: 'TaskNode', id: string, folderId: string, label?: string | null, name: string, ownAttrib: Array<string>, status: string, tags: Array<string>, taskType: string, type: string, updatedAt: any, active: boolean, assignees: Array<string>, allAttrib: string } }> } } };
-
 export type GetTasksByParentQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
   parentIds: Array<Scalars['String']['input']> | Scalars['String']['input'];
@@ -1430,11 +1400,14 @@ export type GetTasksByParentQueryVariables = Exact<{
 
 export type GetTasksByParentQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, tasks: { __typename?: 'TasksConnection', edges: Array<{ __typename?: 'TaskEdge', node: { __typename?: 'TaskNode', id: string, folderId: string, label?: string | null, name: string, ownAttrib: Array<string>, status: string, tags: Array<string>, taskType: string, type: string, updatedAt: any, active: boolean, assignees: Array<string>, allAttrib: string } }> } } };
 
-export type FolderAttributesFragmentFragment = { __typename?: 'FolderAttribType', priority?: string | null, resolutionHeight?: number | null, resolutionWidth?: number | null, fps?: number | null, clipIn?: number | null, clipOut?: number | null, frameStart?: number | null, frameEnd?: number | null, handleStart?: number | null, handleEnd?: number | null, pixelAspect?: number | null, startDate?: any | null, endDate?: any | null, description?: string | null, tools?: Array<string> | null, shotgridId?: string | null, shotgridType?: string | null, ftrackId?: string | null, ftrackPath?: string | null };
+export type GetTasksListQueryVariables = Exact<{
+  projectName: Scalars['String']['input'];
+  filter?: InputMaybe<Scalars['String']['input']>;
+  after?: InputMaybe<Scalars['String']['input']>;
+}>;
 
-export type FolderPropsFragmentFragment = { __typename?: 'FolderNode', id: string, projectName: string, parentId?: string | null, label?: string | null, name: string, ownAttrib: Array<string>, status: string, tags: Array<string>, folderType: string, type: string, updatedAt: any, active: boolean, hasReviewables: boolean, createdAt: any, attrib: { __typename?: 'FolderAttribType', priority?: string | null, resolutionHeight?: number | null, resolutionWidth?: number | null, fps?: number | null, clipIn?: number | null, clipOut?: number | null, frameStart?: number | null, frameEnd?: number | null, handleStart?: number | null, handleEnd?: number | null, pixelAspect?: number | null, startDate?: any | null, endDate?: any | null, description?: string | null, tools?: Array<string> | null, shotgridId?: string | null, shotgridType?: string | null, ftrackId?: string | null, ftrackPath?: string | null } };
 
-export type TaskAttributesFragmentFragment = { __typename?: 'TaskAttribType', priority?: string | null, resolutionHeight?: number | null, resolutionWidth?: number | null, fps?: number | null, clipIn?: number | null, clipOut?: number | null, frameStart?: number | null, frameEnd?: number | null, handleStart?: number | null, handleEnd?: number | null, pixelAspect?: number | null, startDate?: any | null, endDate?: any | null, description?: string | null, tools?: Array<string> | null, shotgridId?: string | null, shotgridType?: string | null, ftrackId?: string | null, ftrackPath?: string | null };
+export type GetTasksListQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, tasks: { __typename?: 'TasksConnection', pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ __typename?: 'TaskEdge', cursor?: string | null, node: { __typename?: 'TaskNode', id: string, folderId: string, label?: string | null, name: string, ownAttrib: Array<string>, status: string, tags: Array<string>, taskType: string, type: string, updatedAt: any, active: boolean, assignees: Array<string>, allAttrib: string } }> } } };
 
 export type TaskPropsFragmentFragment = { __typename?: 'TaskNode', id: string, folderId: string, label?: string | null, name: string, ownAttrib: Array<string>, status: string, tags: Array<string>, taskType: string, type: string, updatedAt: any, active: boolean, assignees: Array<string>, allAttrib: string };
 
@@ -1544,73 +1517,6 @@ export const MessageFragmentFragmentDoc = `
     name
     label
   }
-}
-    `;
-export const FolderAttributesFragmentFragmentDoc = `
-    fragment FolderAttributesFragment on FolderAttribType {
-  priority
-  resolutionHeight
-  resolutionWidth
-  fps
-  clipIn
-  clipOut
-  frameStart
-  frameEnd
-  handleStart
-  handleEnd
-  pixelAspect
-  startDate
-  endDate
-  description
-  tools
-  shotgridId
-  shotgridType
-  ftrackId
-  ftrackPath
-}
-    `;
-export const FolderPropsFragmentFragmentDoc = `
-    fragment FolderPropsFragment on FolderNode {
-  id
-  projectName
-  parentId
-  label
-  name
-  ownAttrib
-  status
-  tags
-  folderType
-  type
-  updatedAt
-  active
-  hasReviewables
-  createdAt
-  attrib {
-    ...FolderAttributesFragment
-  }
-}
-    ${FolderAttributesFragmentFragmentDoc}`;
-export const TaskAttributesFragmentFragmentDoc = `
-    fragment TaskAttributesFragment on TaskAttribType {
-  priority
-  resolutionHeight
-  resolutionWidth
-  fps
-  clipIn
-  clipOut
-  frameStart
-  frameEnd
-  handleStart
-  handleEnd
-  pixelAspect
-  startDate
-  endDate
-  description
-  tools
-  shotgridId
-  shotgridType
-  ftrackId
-  ftrackPath
 }
     `;
 export const TaskPropsFragmentFragmentDoc = `
@@ -1787,84 +1693,33 @@ export const GetInstallEventsDocument = `
   }
 }
     `;
-export const GetEntitiesByIdsDocument = `
-    query GetEntitiesByIds($projectName: String!, $folderIds: [String!]!) {
-  project(name: $projectName) {
-    name
-    folders(ids: $folderIds) {
-      edges {
-        node {
-          ...FolderPropsFragment
-        }
-      }
-    }
-    tasks(folderIds: $folderIds) {
-      edges {
-        node {
-          ...TaskPropsFragment
-        }
-      }
-    }
-  }
-}
-    ${FolderPropsFragmentFragmentDoc}
-${TaskPropsFragmentFragmentDoc}`;
-export const GetFilteredEntitiesDocument = `
-    query GetFilteredEntities($projectName: String!, $assignees: [String!], $tags: [String!], $statuses: [String!], $attributes: [AttributeFilterInput!], $folderIds: [String!], $first: Int!, $after: String) {
-  project(name: $projectName) {
-    name
-    tasks(
-      assignees: $assignees
-      tags: $tags
-      folderIds: $folderIds
-      statuses: $statuses
-      attributes: $attributes
-      first: $first
-      after: $after
-    ) {
-      edges {
-        node {
-          ...TaskPropsFragment
-        }
-      }
-      pageInfo {
-        endCursor
-        hasNextPage
-        hasPreviousPage
-        startCursor
-      }
-    }
-  }
-}
-    ${TaskPropsFragmentFragmentDoc}`;
-export const GetRootFolderIdsDocument = `
-    query GetRootFolderIds($projectName: String!, $folderIds: [String!]!) {
-  project(name: $projectName) {
-    name
-    folders(ids: $folderIds) {
-      edges {
-        node {
-          ...FolderPropsFragment
-        }
-      }
-    }
-    tasks(folderIds: $folderIds) {
-      edges {
-        node {
-          ...TaskPropsFragment
-        }
-      }
-    }
-  }
-}
-    ${FolderPropsFragmentFragmentDoc}
-${TaskPropsFragmentFragmentDoc}`;
 export const GetTasksByParentDocument = `
     query GetTasksByParent($projectName: String!, $parentIds: [String!]!, $filter: String) {
   project(name: $projectName) {
     name
     tasks(folderIds: $parentIds, filter: $filter) {
       edges {
+        node {
+          ...TaskPropsFragment
+        }
+      }
+    }
+  }
+}
+    ${TaskPropsFragmentFragmentDoc}`;
+export const GetTasksListDocument = `
+    query GetTasksList($projectName: String!, $filter: String, $after: String) {
+  project(name: $projectName) {
+    name
+    tasks(filter: $filter, after: $after, first: 100) {
+      pageInfo {
+        startCursor
+        endCursor
+        hasNextPage
+        hasPreviousPage
+      }
+      edges {
+        cursor
         node {
           ...TaskPropsFragment
         }
@@ -2017,17 +1872,11 @@ const injectedRtkApi = RestAPI.injectEndpoints({
     GetInstallEvents: build.query<GetInstallEventsQuery, GetInstallEventsQueryVariables>({
       query: (variables) => ({ document: GetInstallEventsDocument, variables })
     }),
-    GetEntitiesByIds: build.query<GetEntitiesByIdsQuery, GetEntitiesByIdsQueryVariables>({
-      query: (variables) => ({ document: GetEntitiesByIdsDocument, variables })
-    }),
-    GetFilteredEntities: build.query<GetFilteredEntitiesQuery, GetFilteredEntitiesQueryVariables>({
-      query: (variables) => ({ document: GetFilteredEntitiesDocument, variables })
-    }),
-    GetRootFolderIds: build.query<GetRootFolderIdsQuery, GetRootFolderIdsQueryVariables>({
-      query: (variables) => ({ document: GetRootFolderIdsDocument, variables })
-    }),
     GetTasksByParent: build.query<GetTasksByParentQuery, GetTasksByParentQueryVariables>({
       query: (variables) => ({ document: GetTasksByParentDocument, variables })
+    }),
+    GetTasksList: build.query<GetTasksListQuery, GetTasksListQueryVariables>({
+      query: (variables) => ({ document: GetTasksListDocument, variables })
     }),
     GetProjectLatest: build.query<GetProjectLatestQuery, GetProjectLatestQueryVariables>({
       query: (variables) => ({ document: GetProjectLatestDocument, variables })

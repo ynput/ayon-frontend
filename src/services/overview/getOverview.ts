@@ -1,6 +1,6 @@
 import api from '@api'
 import { api as foldersApi, QueryTasksFoldersApiArg } from '@api/rest/folders'
-import { FolderNode, GetEntitiesByIdsQuery, GetTasksByParentQuery } from '@api/graphql'
+import { GetTasksByParentQuery, GetTasksListQuery } from '@api/graphql'
 import { EditorTaskNode } from '@pages/ProjectOverviewPage/OverviewEditor/types'
 import {
   DefinitionsFromApi,
@@ -9,32 +9,6 @@ import {
   TagTypesFromApi,
 } from '@reduxjs/toolkit/query'
 import { isEqual } from 'lodash'
-
-const transformFilteredEntities = (response: GetEntitiesByIdsQuery): GetEntitiesByIdsResult => {
-  let folders: { [key: string]: Partial<FolderNode> } = {}
-  let tasks: { [key: string]: Partial<EditorTaskNode> } = {}
-
-  if (!response.project) {
-    return { folders: {}, tasks: {} }
-  }
-
-  // Add folders
-  for (const { node } of response.project.folders.edges) {
-    folders[node.id] = {
-      ...node,
-      parentId: node.parentId || 'root',
-    }
-  }
-
-  for (const { node: taskNode } of response.project.tasks.edges) {
-    tasks[taskNode.id] = {
-      ...taskNode,
-      folderId: taskNode.folderId || 'root',
-    }
-  }
-
-  return { folders, tasks }
-}
 
 // parse attribs JSON string to object
 const parseAttribs = (allAttrib: string) => {
@@ -62,49 +36,73 @@ const transformFilteredEntitiesByParent = (response: GetTasksByParentQuery): Edi
   return tasks
 }
 
-type GetEntitiesByIdsResult = {
-  folders: { [key: string]: Partial<FolderNode> }
-  tasks: { [key: string]: Partial<EditorTaskNode> }
+const getOverviewTaskTags = (
+  result: EditorTaskNode[] | undefined,
+  parentIds?: string | string[],
+) => {
+  const taskTags = result?.map((task) => ({ type: 'overviewTask' as const, id: task.id })) || []
+
+  if (!parentIds) return taskTags
+
+  const parentTags = (Array.isArray(parentIds) ? parentIds : [parentIds]).map((id) => ({
+    type: 'overviewTask' as const,
+    id,
+  }))
+
+  return [...taskTags, ...parentTags]
 }
 
-type GetFilteredEntitiesResult = {
-  folders: { [key: string]: Partial<FolderNode> }
-  tasks: { [key: string]: Partial<EditorTaskNode> }
+type GetTasksListResult = {
+  pageInfo: GetTasksListQuery['project']['tasks']['pageInfo']
+  tasks: EditorTaskNode[]
 }
 
 type Definitions = DefinitionsFromApi<typeof api>
 type TagTypes = TagTypesFromApi<typeof api>
 type UpdatedDefinitions = Omit<Definitions, 'GetFilteredEntities'> & {
-  GetEntitiesByIds: OverrideResultType<Definitions['GetEntitiesByIds'], GetEntitiesByIdsResult>
   GetTasksByParent: OverrideResultType<Definitions['GetTasksByParent'], EditorTaskNode[]>
-  GetFilteredEntities: OverrideResultType<
-    Definitions['GetTasksByParent'],
-    GetFilteredEntitiesResult
-  >
+  GetTasksList: OverrideResultType<Definitions['GetTasksList'], GetTasksListResult>
 }
 
 // GRAPHQL API
 const enhancedApi = api.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
   endpoints: {
-    GetEntitiesByIds: {
-      transformResponse: transformFilteredEntities,
-    },
+    // This gets tasks for all parent folders provided
+    // But in this case it will only ever receive one parent folder from the getOverviewTasksByFolders query
+    // It is only used by getOverviewTasksByFolders in this file
     GetTasksByParent: {
       transformResponse: transformFilteredEntitiesByParent,
-      providesTags: (result, _e, { parentIds }) => {
-        const taskTags =
-          result?.map((task) => ({ type: 'overviewTask' as const, id: task.id })) || []
-
-        const parentTags = (Array.isArray(parentIds) ? parentIds : [parentIds]).map((id) => ({
-          type: 'overviewTask' as const,
-          id,
-        }))
-
-        return [...taskTags, ...parentTags]
-      },
+      providesTags: (result, _e, { parentIds }) => getOverviewTaskTags(result, parentIds),
     },
-    GetFilteredEntities: {
-      // transformResponse: transformFilteredEntitiesByParent,
+    GetTasksList: {
+      transformResponse: (result: GetTasksListQuery) => ({
+        tasks: transformFilteredEntitiesByParent(result),
+        pageInfo: result.project.tasks.pageInfo,
+      }),
+      providesTags: (result) => getOverviewTaskTags(result?.tasks || []),
+      serializeQueryArgs: ({ queryArgs: { after, ...rest } }) => ({ ...rest }),
+      // Refetch when the page arg changes
+      forceRefetch({ currentArg, previousArg }) {
+        return !isEqual(currentArg, previousArg)
+      },
+      merge: (currentCache: GetTasksListResult, newCache: GetTasksListResult) => {
+        const { tasks = [], pageInfo } = newCache
+        const { tasks: lastTasks = [] } = currentCache
+
+        const existingTaskIds = new Set(lastTasks.map((task) => task.id))
+        const newTasks = [...lastTasks]
+
+        for (const task of tasks) {
+          if (!existingTaskIds.has(task.id)) {
+            newTasks.push(task)
+          }
+        }
+
+        return {
+          tasks: newTasks,
+          pageInfo,
+        }
+      },
     },
   },
 })
@@ -164,6 +162,8 @@ const injectedApi = enhancedApi.injectEndpoints({
       },
       providesTags: [{ type: 'overviewTask', id: 'LIST' }],
     }),
+    // queryTasksFolders is a post so it's a bit annoying to consume
+    // we wrap it in a queryFn to make it easier to consume as a query hook
     getQueryTasksFolders: build.query<string[], QueryTasksFoldersApiArg>({
       async queryFn({ projectName, tasksFoldersQuery }, { dispatch }) {
         try {
@@ -190,9 +190,7 @@ const injectedApi = enhancedApi.injectEndpoints({
 export default injectedApi
 
 export const {
-  useGetEntitiesByIdsQuery,
-  useGetTasksByParentQuery,
-  useGetFilteredEntitiesQuery,
   useGetOverviewTasksByFoldersQuery,
   useGetQueryTasksFoldersQuery,
+  useGetTasksListQuery,
 } = injectedApi

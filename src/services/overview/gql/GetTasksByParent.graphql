@@ -1,3 +1,6 @@
+# Gets tasks by parent folder id(s) and filtering by query string
+# In reality only one parent id is passed, but it is an array to keep the same structure as GetTasksList
+# because only one parent id is passed, pagination is not needed
 query GetTasksByParent($projectName: String!, $parentIds: [String!]!, $filter: String) {
   project(name: $projectName) {
     name
