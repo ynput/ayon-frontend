@@ -29,15 +29,8 @@ const authApiInjected = authApi.injectEndpoints({
         dispatch(logout())
         // reset global state
         dispatch(api.util.resetApiState())
-        // remove some local storage items
-        localStorage.removeItem('projectMenu-pinned')
-        localStorage.removeItem('dashboard-tasks-filter')
-        localStorage.removeItem('currentProject')
-        localStorage.removeItem('dashboard-selectedProjects')
-        localStorage.removeItem('dashboard-tasks-collapsedColumns')
-        localStorage.removeItem('dashboard-tasks-assignees')
-        localStorage.removeItem('dashboard-tasks-assigneesFilter')
-        localStorage.removeItem('dashboard-tasks-selected')
+        // clear local storage
+        localStorage.clear()
         // clear dashboard state
         dispatch(onClearDashboard())
         const redirect = arg?.redirect || '/login'
