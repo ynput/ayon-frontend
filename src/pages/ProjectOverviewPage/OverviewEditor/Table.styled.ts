@@ -67,12 +67,23 @@ export const HeaderCell = styled.div`
     }
   }
 
-  /* show pin */
+  /* show action button */
   &:hover {
-    .pin {
-      opacity: 1 !important;
+    .action {
+      display: flex;
     }
   }
+`
+
+export const HeaderButtons = styled.div`
+  display: flex;
+  gap: var(--base-gap-small);
+
+  position: absolute;
+  z-index: 10;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
 `
 
 // Create shadow mixins to make combinations work properly

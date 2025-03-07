@@ -31,6 +31,7 @@ import { FolderNodeMap, TaskNodeMap } from './types'
 import { AttributeEnumItem, AttributeModel } from '@api/rest/attributes'
 import { Button, Icon } from '@ynput/ayon-react-components'
 import { Column } from '@tanstack/react-table'
+import HeaderActionButton from '../Components/HeaderActionButton'
 
 //These are the important styles to make sticky column pinning work!
 //Apply styles like this using your CSS strategy of choice with this kind of logic to head cells, data cells, footer cells, etc.
@@ -321,10 +322,6 @@ const FlexTable = ({
                           ...getCommonPinningStyles(column),
                           width: `calc(var(--header-${header?.id}-size) * 1px)`,
                         }}
-                        onClick={(e) => {
-                          if ((e.target as HTMLElement).className.includes('resize-handle')) return
-                          column.getToggleSortingHandler()?.(e)
-                        }}
                       >
                         {header.isPlaceholder ? null : (
                           <Styled.TableCellContent
@@ -333,29 +330,33 @@ const FlexTable = ({
                             })}
                           >
                             {flexRender(column.columnDef.header, header.getContext())}
-                            {{
-                              asc: <Icon icon="sort" style={{ transform: 'scaleY(-1)' }} />,
-                              desc: <Icon icon="sort" />,
-                            }[column.getIsSorted() as string] ?? null}
-                            <Button
-                              className="pin"
-                              onClick={() => {
-                                if (header.column.getIsPinned() === 'left') {
-                                  header.column.pin(false)
-                                } else {
-                                  header.column.pin('left')
-                                }
-                              }}
-                              icon={'push_pin'}
-                              variant={'text'}
-                              selected={header.column.getIsPinned() === 'left'}
-                              style={{
-                                padding: 0,
-                                marginLeft: 'auto',
-                                marginRight: 8,
-                                opacity: header.column.getIsPinned() ? 1 : 0,
-                              }}
-                            />
+
+                            <Styled.HeaderButtons>
+                              {/* COLUMN SORTING */}
+                              <HeaderActionButton
+                                icon="push_pin"
+                                selected={header.column.getIsPinned() === 'left'}
+                                onClick={() => {
+                                  if (header.column.getIsPinned() === 'left') {
+                                    header.column.pin(false)
+                                  } else {
+                                    header.column.pin('left')
+                                  }
+                                }}
+                              />
+                              {/* COLUMN PINNING */}
+                              <HeaderActionButton
+                                icon={'sort'}
+                                style={{
+                                  transform:
+                                    (column.getIsSorted() as string) === 'asc'
+                                      ? 'scaleY(-1)'
+                                      : undefined,
+                                }}
+                                onClick={column.getToggleSortingHandler()}
+                                selected={!!column.getIsSorted()}
+                              />
+                            </Styled.HeaderButtons>
                             <Styled.ResizedHandler
                               {...{
                                 onDoubleClick: () => column.resetSize(),
