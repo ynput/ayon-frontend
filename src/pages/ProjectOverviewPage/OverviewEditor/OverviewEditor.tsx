@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from 'react'
 
 // UI components
-import { Section, TablePanel } from '@ynput/ayon-react-components'
+import { Section } from '@ynput/ayon-react-components'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 
 // Types
@@ -158,30 +158,28 @@ const OverviewEditor = ({ filters, showHierarchy, selectedFolders }: Props) => {
           stateStorage="local"
         >
           <SplitterPanel size={100}>
-            <TablePanel style={{ height: '100%' }}>
-              <FlexTable
-                attribs={attribFields}
-                tableData={tableData}
-                options={options}
-                isLoading={false}
-                isExpandable={false}
-                sliceId={''}
-                // expanded folders
-                expanded={expanded}
-                updateExpanded={updateExpanded}
-                // sorting
-                sorting={sorting}
-                updateSorting={updateSorting}
-                // column pinning
-                columnPinning={columnPinning}
-                updateColumnPinning={updateColumnPinning}
-                // pagination
-                fetchMoreOnBottomReached={fetchMoreOnBottomReached}
-                // metadata
-                tasksMap={tasksMap}
-                foldersMap={foldersMap}
-              />
-            </TablePanel>
+            <FlexTable
+              attribs={attribFields}
+              tableData={tableData}
+              options={options}
+              isLoading={false}
+              isExpandable={false}
+              sliceId={''}
+              // expanded folders
+              expanded={expanded}
+              updateExpanded={updateExpanded}
+              // sorting
+              sorting={sorting}
+              updateSorting={updateSorting}
+              // column pinning
+              columnPinning={columnPinning}
+              updateColumnPinning={updateColumnPinning}
+              // pagination
+              fetchMoreOnBottomReached={fetchMoreOnBottomReached}
+              // metadata
+              tasksMap={tasksMap}
+              foldersMap={foldersMap}
+            />
           </SplitterPanel>
         </Splitter>
       </Section>

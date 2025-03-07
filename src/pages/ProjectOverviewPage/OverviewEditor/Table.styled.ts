@@ -10,7 +10,7 @@ export const TableCellContent = styled.div`
   gap: var(--base-gap-small);
   height: 100%;
   width: 100%;
-  padding: 0px 4px;
+  padding: 0px 8px;
   border-radius: var(--border-radius-m);
   user-select: none;
   padding-right: 0;
@@ -197,10 +197,15 @@ export const TableHeader = styled.div`
   background-color: var(--md-sys-color-surface-container-lowest);
 `
 
-export const TableContainer = styled(BaseTableContainer)`
-  padding-top: 0;
+export const TableWrapper = styled.div`
+  overflow: hidden;
+  position: absolute;
+  inset: 0;
+  border-radius: var(--border-radius-m);
+
+  background-color: var(--md-sys-color-surface-container-low);
 `
 
-export const TableContainerWrapper = styled.div`
-  padding: 0 4px 4px 4px;
+export const TableContainer = styled(BaseTableContainer)`
+  padding-top: 0;
 `

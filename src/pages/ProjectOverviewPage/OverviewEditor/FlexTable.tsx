@@ -293,11 +293,12 @@ const FlexTable = ({
   )
 
   return (
-    <Styled.TableContainerWrapper style={{ height: '100%', padding: 0 }}>
+    <Styled.TableWrapper>
       <Styled.TableContainer
         ref={tableContainerRef}
         style={{ height: '100%', padding: 0 }}
         onScroll={(e) => fetchMoreOnBottomReached(e.currentTarget)}
+        className="table-container"
       >
         <table
           style={{
@@ -379,7 +380,7 @@ const FlexTable = ({
           {tableBody}
         </table>
       </Styled.TableContainer>
-    </Styled.TableContainerWrapper>
+    </Styled.TableWrapper>
   )
 }
 
