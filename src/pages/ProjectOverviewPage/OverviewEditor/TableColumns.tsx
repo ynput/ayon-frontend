@@ -47,6 +47,10 @@ const attribSort: AttribSortingFn = (rowA, rowB, columnId, attrib) => {
     return indexA - indexB < 0 ? 1 : -1
   } else if (attrib?.type === 'datetime') {
     return sortingFns.datetime(rowA, rowB, columnId)
+  } else if (attrib?.type === 'boolean') {
+    const boolA = valueA === true ? 1 : 0
+    const boolB = valueB === true ? 1 : 0
+    return boolA - boolB
   } else {
     // default sorting
     return sortingFns.alphanumeric(rowA, rowB, columnId)
