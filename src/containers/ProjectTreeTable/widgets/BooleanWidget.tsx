@@ -27,10 +27,12 @@ const StyledCheckbox = styled.input`
 interface BooleanWidgetProps extends Omit<React.HTMLAttributes<HTMLInputElement>, 'onChange'> {
   value: boolean
   onChange: (value: boolean) => void
+  onCancelEdit?: () => void
+  isEditing?: boolean
 }
 
 export const BooleanWidget = forwardRef<HTMLInputElement, BooleanWidgetProps>(
-  ({ value, onChange, ...props }, ref) => {
+  ({ value, onChange, isEditing, onCancelEdit, ...props }, ref) => {
     return (
       <StyledCheckbox
         {...props}

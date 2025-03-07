@@ -1,13 +1,19 @@
 import { useMemo } from 'react'
 import * as Styled from '@containers/Slicer/SlicerTable.styled'
 import { $Any } from '@types'
-import { ColumnDef, FilterFnOption, Row, SortingFn, sortingFns } from '@tanstack/react-table'
+import {
+  ColumnDef,
+  ColumnSizingState,
+  FilterFnOption,
+  Row,
+  SortingFn,
+  sortingFns,
+} from '@tanstack/react-table'
 import clsx from 'clsx'
 import { Icon } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 import { TableRow } from './utils/types'
 import { TableCellContent } from './ProjectTreeTable.styled'
-import { useStoredCustomColumnWidths } from './hooks/useCustomColumnsWidth'
 import { AttributeData, AttributeEnumItem, AttributeModel } from '@api/rest/attributes'
 import { CellWidget } from './widgets'
 import { useCellEditing } from './context/CellEditingContext'
@@ -80,6 +86,7 @@ export type BuiltInFieldOptions = {
 type Props = {
   tableData: TableRow[]
   attribs: AttributeModel[]
+  columnSizing: ColumnSizingState
   isLoading: boolean
   isExpandable: boolean
   sliceId: string
@@ -90,14 +97,12 @@ type Props = {
 const TableColumns = ({
   tableData,
   attribs,
+  columnSizing = {},
   isLoading,
   sliceId,
   options,
   toggleExpanderHandler,
 }: Props) => {
-  // Remove the editingId state, we're now using the context
-  const storedColumnSizes = useStoredCustomColumnWidths() as Record<string, number>
-
   const { updateEntities } = useCellEditing()
 
   return useMemo<ColumnDef<TableRow>[]>(() => {
@@ -107,7 +112,7 @@ const TableColumns = ({
         header: () => 'Folder',
         filterFn: 'fuzzy',
         sortingFn: nameSort, // custom sort to sort by label then name
-        size: storedColumnSizes['label'] || 300,
+        size: columnSizing['label'] || 300,
         cell: ({ row }) => {
           return !row.original.id ? (
             <ShimmerCell width="300px" />
@@ -144,7 +149,7 @@ const TableColumns = ({
         filterFn: 'fuzzy',
         sortingFn: (a, b, c) => attribSort(a, b, c, { enum: options.statuses, type: 'string' }),
         sortDescFirst: true,
-        size: storedColumnSizes['status'] || 150,
+        size: columnSizing['status'] || 150,
         cell: ({ row, column }) => {
           const { value, id, type } = getValueIdType(row, column.id)
 
@@ -165,7 +170,7 @@ const TableColumns = ({
         accessorKey: 'subType',
         header: () => 'Type',
         filterFn: 'fuzzy',
-        size: storedColumnSizes['type'] || 150,
+        size: columnSizing['type'] || 150,
         cell: ({ row, column }) => {
           const { value, id, type } = getValueIdType(row, column.id)
           const fieldId = type === 'folder' ? 'folderType' : 'taskType'
@@ -186,7 +191,7 @@ const TableColumns = ({
         accessorKey: 'assignees',
         header: () => 'Assignees',
         filterFn: 'fuzzy',
-        size: storedColumnSizes['assignees'] || 150,
+        size: columnSizing['assignees'] || 150,
         cell: ({ row, column }) => {
           const { value, id, type } = getValueIdType(row, column.id)
           if (type === 'folder')
@@ -212,7 +217,7 @@ const TableColumns = ({
         header: () => attrib.data.title || attrib.name,
         filterFn: 'fuzzy' as FilterFnOption<TableRow>,
         sortingFn: (a, b, c) => attribSort(a, b, c, attrib.data),
-        size: storedColumnSizes[attrib.name] || 150,
+        size: columnSizing[attrib.name] || 150,
         cell: ({ row, column }) => {
           const columnId = column.id.replace('attrib_', '')
           const { value, id, type } = getValueIdType(row, columnId, 'attrib')

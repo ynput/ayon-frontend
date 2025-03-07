@@ -72,7 +72,7 @@ const useFetchEditorEntities = ({
       tasksFoldersQuery: { filter: queryFilter },
     },
     {
-      skip: !(filters.length && folders.length) || !showHierarchy,
+      skip: !filters.length || !folders.length || !showHierarchy,
     },
   )
 

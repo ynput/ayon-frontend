@@ -46,6 +46,7 @@ type Props = {
 
 const ProjectOverviewTable = ({ filters, showHierarchy, selectedFolders }: Props) => {
   const projectName = useAppSelector((state) => state.project.name) as unknown as string
+  const scope = `overview-${projectName}`
   const { data: usersData = [] } = useGetUsersAssigneeQuery({ projectName }, { skip: !projectName })
   const users = usersData as User[]
 
@@ -56,15 +57,12 @@ const ProjectOverviewTable = ({ filters, showHierarchy, selectedFolders }: Props
 
   const { attribFields } = useAttributeFields()
 
-  const [expanded, setExpanded] = useLocalStorage<ExpandedState>(
-    `overview-expanded-${projectName}`,
-    {},
-  )
+  const [expanded, setExpanded] = useLocalStorage<ExpandedState>(`expanded-${scope}`, {})
   const updateExpanded: OnChangeFn<ExpandedState> = (expandedUpdater) => {
     setExpanded(functionalUpdate(expandedUpdater, expanded))
   }
 
-  const [sorting, setSorting] = useLocalStorage<SortingState>(`overview-sorting-${projectName}`, [
+  const [sorting, setSorting] = useLocalStorage<SortingState>(`sorting-${scope}`, [
     {
       id: 'name',
       desc: true,
@@ -73,15 +71,6 @@ const ProjectOverviewTable = ({ filters, showHierarchy, selectedFolders }: Props
 
   const updateSorting: OnChangeFn<SortingState> = (sortingUpdater) => {
     setSorting(functionalUpdate(sortingUpdater, sorting))
-  }
-
-  const [columnPinning, setColumnPinning] = useLocalStorage<ColumnPinningState>(
-    `overview-column-pinning-${projectName}`,
-    { left: ['name'] },
-  )
-
-  const updateColumnPinning: OnChangeFn<ColumnPinningState> = (columnPinningUpdater) => {
-    setColumnPinning(functionalUpdate(columnPinningUpdater, columnPinning))
   }
 
   console.time('dataToTable')
@@ -159,6 +148,7 @@ const ProjectOverviewTable = ({ filters, showHierarchy, selectedFolders }: Props
         >
           <SplitterPanel size={100}>
             <ProjectTreeTable
+              scope={scope}
               attribs={attribFields}
               tableData={tableData}
               options={options}
@@ -171,9 +161,6 @@ const ProjectOverviewTable = ({ filters, showHierarchy, selectedFolders }: Props
               // sorting
               sorting={sorting}
               updateSorting={updateSorting}
-              // column pinning
-              columnPinning={columnPinning}
-              updateColumnPinning={updateColumnPinning}
               // pagination
               fetchMoreOnBottomReached={fetchMoreOnBottomReached}
               // metadata

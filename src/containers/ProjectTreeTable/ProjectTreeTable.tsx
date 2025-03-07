@@ -16,6 +16,8 @@ import {
   Cell,
   ColumnPinningState,
   Column,
+  functionalUpdate,
+  ColumnSizingState,
 } from '@tanstack/react-table'
 
 // Utility imports
@@ -38,15 +40,16 @@ import { SelectionProvider, useSelection } from './context/SelectionContext'
 import { ClipboardProvider } from './context/ClipboardContext'
 
 // Hook imports
-import { useCustomColumnWidths, useSyncCustomColumnWidths } from './hooks/useCustomColumnsWidth'
+import useCustomColumnWidthVars from './hooks/useCustomColumnWidthVars'
 
 // Utility function imports
 import { getCellId } from './utils/cellUtils'
+import useLocalStorage from '@hooks/useLocalStorage'
 
 //These are the important styles to make sticky column pinning work!
 //Apply styles like this using your CSS strategy of choice with this kind of logic to head cells, data cells, footer cells, etc.
 //View the index.css file for more needed styles such as border-collapse: separate
-const getCommonPinningStyles = (column: Column<TableRow>): CSSProperties => {
+const getCommonPinningStyles = (column: Column<TableRow, unknown>): CSSProperties => {
   const isPinned = column.getIsPinned()
   const isLastLeftPinnedColumn = isPinned === 'left' && column.getIsLastColumn('left')
   // const isFirstRightPinnedColumn = isPinned === 'right' && column.getIsFirstColumn('right')
@@ -66,6 +69,7 @@ const getCommonPinningStyles = (column: Column<TableRow>): CSSProperties => {
 }
 
 type Props = {
+  scope: string
   tableData: TableRow[]
   options: BuiltInFieldOptions
   attribs: AttributeModel[]
@@ -76,8 +80,6 @@ type Props = {
   updateExpanded: OnChangeFn<ExpandedState>
   sorting: SortingState
   updateSorting: OnChangeFn<SortingState>
-  columnPinning: ColumnPinningState
-  updateColumnPinning: OnChangeFn<ColumnPinningState>
   // metadata
   tasksMap: TaskNodeMap
   foldersMap: FolderNodeMap
@@ -114,6 +116,7 @@ const FlexTableWithProviders = (props: Props) => {
 type TableCellProps = {
   cell: Cell<TableRow, unknown>
   cellId: string
+  isPinned: boolean | string
 }
 
 const TableCell = ({ cell, cellId }: TableCellProps) => {
@@ -174,19 +177,28 @@ const TableCellMemo = memo(TableCell)
 
 type TableCellsProps = {
   row: Row<TableRow>
+  columnPinning: ColumnPinningState // purely for memoization
 }
 
 const TableCells = ({ row }: TableCellsProps) => {
   return row.getVisibleCells().map((cell) => {
     const cellId = getCellId(row.id, cell.column.id)
 
-    return <TableCellMemo cell={cell} cellId={cellId} key={cell.id} />
+    return (
+      <TableCellMemo
+        cell={cell}
+        cellId={cellId}
+        key={cell.id}
+        isPinned={cell.column.getIsPinned()}
+      />
+    )
   })
 }
 
 const TableCellsMemo = memo(TableCells)
 
 const FlexTable = ({
+  scope,
   tableData,
   attribs,
   options,
@@ -197,12 +209,30 @@ const FlexTable = ({
   updateExpanded,
   sorting,
   updateSorting,
-  columnPinning,
-  updateColumnPinning,
   fetchMoreOnBottomReached,
 }: Props) => {
   //The virtualizer needs to know the scrollable container element
   const tableContainerRef = useRef<HTMLDivElement>(null)
+
+  // COLUMN PINNING
+  const [columnPinning, setColumnPinning] = useLocalStorage<ColumnPinningState>(
+    `column-pinning-${scope}`,
+    { left: ['name'] },
+  )
+
+  const updateColumnPinning: OnChangeFn<ColumnPinningState> = (columnPinningUpdater) => {
+    setColumnPinning(functionalUpdate(columnPinningUpdater, columnPinning))
+  }
+
+  // COLUMN SIZING
+  const [columnSizing, setColumnSizing] = useLocalStorage<ColumnSizingState>(
+    `column-widths-${scope}`,
+    {},
+  )
+
+  const updateColumnSizing: OnChangeFn<ColumnSizingState> = (columnSizingUpdater) => {
+    setColumnSizing(functionalUpdate(columnSizingUpdater, columnSizing))
+  }
 
   //a check on mount and after a fetch to see if the table is already scrolled to the bottom and immediately needs to fetch more data
   useEffect(() => {
@@ -214,6 +244,7 @@ const FlexTable = ({
 
   const columns = ProjectTreeTableColumns({
     tableData,
+    columnSizing,
     attribs,
     isLoading,
     isExpandable,
@@ -244,12 +275,14 @@ const FlexTable = ({
     onSortingChange: updateSorting,
     columnResizeMode: 'onChange',
     onColumnPinningChange: updateColumnPinning,
+    onColumnSizingChange: updateColumnSizing,
     // @ts-ignore
     filterFns,
     state: {
       expanded,
       sorting,
       columnPinning,
+      columnSizing,
     },
     enableSorting: true,
   })
@@ -275,32 +308,7 @@ const FlexTable = ({
     overscan: 20,
   })
 
-  const columnSizeVars = useCustomColumnWidths(table)
-
-  useSyncCustomColumnWidths(table.getState().columnSizing)
-
-  // Improved table body with cell selections and borders
-  const tableBody = (
-    <tbody style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
-      {rowVirtualizer.getVirtualItems().map((virtualRow: $Any) => {
-        const row = rows[virtualRow.index] as Row<TableRow>
-        return (
-          <tr
-            data-index={virtualRow.index} //needed for dynamic row height measurement
-            // @ts-ignore
-            ref={(node) => rowVirtualizer.measureElement(node)} //measure dynamic row height
-            key={row.id}
-            style={{
-              display: 'table-row',
-              transform: `translateY(${virtualRow.start}px)`, //this should always be a `style` as it changes on scroll
-            }}
-          >
-            <TableCellsMemo row={row} />
-          </tr>
-        )
-      })}
-    </tbody>
-  )
+  const columnSizeVars = useCustomColumnWidthVars(table, columnSizing)
 
   return (
     <Styled.TableWrapper>
@@ -387,7 +395,25 @@ const FlexTable = ({
               )
             })}
           </Styled.TableHeader>
-          {tableBody}
+          <tbody style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
+            {rowVirtualizer.getVirtualItems().map((virtualRow: $Any) => {
+              const row = rows[virtualRow.index] as Row<TableRow>
+              return (
+                <tr
+                  data-index={virtualRow.index} //needed for dynamic row height measurement
+                  // @ts-ignore
+                  ref={(node) => rowVirtualizer.measureElement(node)} //measure dynamic row height
+                  key={row.id}
+                  style={{
+                    display: 'table-row',
+                    transform: `translateY(${virtualRow.start}px)`, //this should always be a `style` as it changes on scroll
+                  }}
+                >
+                  <TableCellsMemo row={row} columnPinning={columnPinning} />
+                </tr>
+              )
+            })}
+          </tbody>
         </table>
       </Styled.TableContainer>
     </Styled.TableWrapper>
