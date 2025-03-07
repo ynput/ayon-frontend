@@ -1,7 +1,7 @@
 import { AttributeData, AttributeEnumItem } from '@api/rest/attributes'
 import { forwardRef, useMemo, memo, useCallback } from 'react'
 import styled from 'styled-components'
-import { CollapsedWidget, DateWidget, EnumWidget, TextWidget } from '../Widgets'
+import { BooleanWidget, CollapsedWidget, DateWidget, EnumWidget, TextWidget } from '../Widgets'
 import { useCellEditing } from '../context/CellEditingContext'
 import clsx from 'clsx'
 import { TextWidgetType } from '../Widgets/TextWidget'
@@ -117,6 +117,9 @@ const EditorCellComponent = forwardRef<HTMLDivElement, EditorCellProps>(
 
         case type === 'datetime' && value !== null && value !== undefined:
           return <DateWidget value={value as string} {...sharedProps} />
+
+        case type === 'boolean':
+          return <BooleanWidget value={value as boolean} {...sharedProps} />
 
         case isPlaceholder:
           return null
