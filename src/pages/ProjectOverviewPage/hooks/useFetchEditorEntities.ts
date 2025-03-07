@@ -5,7 +5,7 @@ import {
   useGetQueryTasksFoldersQuery,
   useGetTasksListQuery,
 } from '@queries/overview/getOverview'
-import { FolderNodeMap, TaskNodeMap } from '../types'
+import { FolderNodeMap, TaskNodeMap } from '../../../containers/ProjectTreeTable/utils/types'
 import { useMemo, useState } from 'react'
 import clientFilterToQueryFilter from '../utils/clientFilterToQueryFilter'
 import { ExpandedState } from '@tanstack/react-table'

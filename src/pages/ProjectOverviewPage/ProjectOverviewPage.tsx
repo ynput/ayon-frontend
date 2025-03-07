@@ -1,6 +1,6 @@
 // libraries
 import { Splitter, SplitterPanel } from 'primereact/splitter'
-import { FC } from 'react'
+import { FC, useMemo } from 'react'
 
 // state
 import { useAppSelector } from '@state/store'
@@ -10,16 +10,82 @@ import { useSlicerContext } from '@context/slicerContext'
 import Slicer from '@containers/Slicer'
 
 // arc
-import { Section } from '@ynput/ayon-react-components'
-import ProjectOverviewMain from './ProjectOverviewMain'
-import { $Any } from '@types'
+import { Button, Filter, InputSwitch, Section, Toolbar } from '@ynput/ayon-react-components'
+import SearchFilterWrapper from '@components/SearchFilter/SearchFilterWrapper'
+import ProjectOverviewTable from './containers/ProjectOverviewTable'
+import { isEmpty } from 'lodash'
+import useLocalStorage from '@hooks/useLocalStorage'
+import useFilterBySlice from '@containers/TasksProgress/hooks/useFilterBySlice'
+import { useFiltersWithHierarchy } from '@components/SearchFilter/hooks'
+import { RowSelectionState } from '@tanstack/react-table'
+import { FilterFieldType } from '@hooks/useBuildFilterOptions'
+
+const searchFilterTypes: FilterFieldType[] = [
+  'attributes',
+  'status',
+  'assignees',
+  'tags',
+  // 'entitySubType', // current does not work correctly
+]
 
 const ProjectOverviewPage: FC = () => {
-  const projectName = useAppSelector((state: $Any) => state.project.name) as string
+  const projectName = useAppSelector((state) => state.project.name)
 
   // load slicer remote config
-  const { config } = useSlicerContext()
+  const {
+    config,
+    rowSelection,
+    sliceType,
+    setPersistentRowSelectionData,
+    persistentRowSelectionData,
+  } = useSlicerContext()
   const overviewSliceFields = config?.overview?.fields
+
+  const [filters, setFilters] = useLocalStorage<Filter[]>(`overview-filters-${projectName}`, [])
+  const [showHierarchy, updateShowHierarchy] = useLocalStorage<boolean>(
+    `overview-show-hierarchy-${projectName}`,
+    true,
+  )
+
+  // filter out by slice
+  const persistedHierarchySelection = isEmpty(persistentRowSelectionData)
+    ? null
+    : persistentRowSelectionData
+  const { filter: sliceFilter } = useFilterBySlice()
+
+  // merge the slice filter with the user filters
+  let combinedFilters = [...filters]
+  if (sliceFilter) {
+    combinedFilters.push(sliceFilter)
+  }
+
+  const handleFiltersChange = (value: Filter[]) => {
+    setFilters(value)
+
+    // check if we need to remove the hierarchy filter and clear hierarchy selection
+    if (!value.some((filter) => filter.id === 'hierarchy')) {
+      setPersistentRowSelectionData({})
+    }
+  }
+
+  // if the sliceFilter is not hierarchy and hierarchy is not empty
+  // add the hierarchy to the filters as disabled
+  const filtersWithHierarchy = useFiltersWithHierarchy({
+    sliceFilter,
+    persistedHierarchySelection,
+    filters,
+  })
+
+  const selectedFolders: RowSelectionState = useMemo(() => {
+    if (sliceType === 'hierarchy') {
+      return rowSelection
+    } else if (persistedHierarchySelection) {
+      return Object.values(persistedHierarchySelection).reduce((acc: any, item) => {
+        acc[item.id] = !!item
+        return acc
+      }, {})
+    } else return {}
+  }, [rowSelection, persistedHierarchySelection, sliceType])
 
   return (
     <main style={{ overflow: 'hidden' }}>
@@ -34,7 +100,40 @@ const ProjectOverviewPage: FC = () => {
           </Section>
         </SplitterPanel>
         <SplitterPanel size={90}>
-          <ProjectOverviewMain projectName={projectName} />
+          <Section wrap direction="column" style={{ height: '100%' }}>
+            <Toolbar style={{ gap: 4, maxHeight: '24px' }}>
+              <Button icon={'add'} variant="filled" disabled>
+                Create
+              </Button>
+              <SearchFilterWrapper
+                filters={filtersWithHierarchy}
+                onChange={handleFiltersChange}
+                filterTypes={searchFilterTypes}
+                projectNames={projectName ? [projectName] : []}
+                scope="folder"
+                data={{
+                  tags: [],
+                  attributes: {},
+                  assignees: [],
+                }}
+                disabledFilters={sliceType ? [sliceType] : []}
+              />
+              <span style={{ whiteSpace: 'nowrap', display: 'flex' }}>
+                Show hierarchy&nbsp;
+                <InputSwitch
+                  checked={showHierarchy}
+                  onChange={(e) => updateShowHierarchy((e.target as HTMLInputElement).checked)}
+                />
+              </span>
+            </Toolbar>
+            <ProjectOverviewTable
+              selectedFolders={Object.entries(selectedFolders)
+                .filter(([, value]) => value)
+                .map(([id]) => id)}
+              filters={combinedFilters}
+              showHierarchy={showHierarchy}
+            />
+          </Section>
         </SplitterPanel>
       </Splitter>
     </main>

@@ -1,10 +1,17 @@
 import { AttributeData, AttributeEnumItem } from '@api/rest/attributes'
+
 import { forwardRef, useMemo, memo, useCallback } from 'react'
 import styled from 'styled-components'
-import { BooleanWidget, CollapsedWidget, DateWidget, EnumWidget, TextWidget } from '../Widgets'
-import { useCellEditing } from '../context/CellEditingContext'
 import clsx from 'clsx'
-import { TextWidgetType } from '../Widgets/TextWidget'
+
+// Widgets
+import { BooleanWidget, CollapsedWidget, DateWidget, EnumWidget, TextWidget } from '.'
+import { TextWidgetType } from './TextWidget'
+
+// Contexts
+import { useCellEditing } from '../context/CellEditingContext'
+
+// Utils
 import { getCellId } from '../utils/cellUtils'
 
 const Cell = styled.div`
@@ -160,4 +167,4 @@ function arePropsEqual(prevProps: EditorCellProps, nextProps: EditorCellProps) {
   )
 }
 
-export const EditorCell = memo(EditorCellComponent, arePropsEqual)
+export const CellWidget = memo(EditorCellComponent, arePropsEqual)

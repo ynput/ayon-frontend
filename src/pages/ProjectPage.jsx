@@ -17,7 +17,7 @@ import { useGetProjectAddonsQuery } from '@queries/addons/getAddons'
 import { TabPanel, TabView } from 'primereact/tabview'
 import AppNavLinks from '@containers/header/AppNavLinks'
 import { SlicerProvider } from '@context/slicerContext'
-import NewEditorPage from './ProjectOverviewPage/OverviewEditor/OverviewEditor'
+import NewEditorPage from './ProjectOverviewPage/containers/ProjectOverviewTable'
 
 const ProjectContextInfo = () => {
   /**

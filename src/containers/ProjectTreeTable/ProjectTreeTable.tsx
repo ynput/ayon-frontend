@@ -1,5 +1,6 @@
 import { useMemo, useRef, useEffect, memo, CSSProperties } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
+// TanStack Table imports
 import {
   useReactTable,
   getCoreRowModel,
@@ -14,24 +15,33 @@ import {
   getSortedRowModel,
   Cell,
   ColumnPinningState,
+  Column,
 } from '@tanstack/react-table'
 
+// Utility imports
 import clsx from 'clsx'
 
+// Type imports
 import { $Any } from '@types'
 import { TableRow } from '@containers/Slicer/types'
-import TableColumns, { BuiltInFieldOptions } from './TableColumns'
-import * as Styled from './Table.styled'
-import { useCustomColumnWidths, useSyncCustomColumnWidths } from './hooks/useCustomColumnsWidth'
+import { AttributeEnumItem, AttributeModel } from '@api/rest/attributes'
+import { FolderNodeMap, TaskNodeMap } from './utils/types'
+
+// Component imports
+import ProjectTreeTableColumns, { BuiltInFieldOptions } from './ProjectTreeTableColumns'
+import * as Styled from './ProjectTreeTable.styled'
+import HeaderActionButton from './components/HeaderActionButton'
+
+// Context imports
 import { CellEditingProvider } from './context/CellEditingContext'
 import { SelectionProvider, useSelection } from './context/SelectionContext'
 import { ClipboardProvider } from './context/ClipboardContext'
+
+// Hook imports
+import { useCustomColumnWidths, useSyncCustomColumnWidths } from './hooks/useCustomColumnsWidth'
+
+// Utility function imports
 import { getCellId } from './utils/cellUtils'
-import { FolderNodeMap, TaskNodeMap } from './types'
-import { AttributeEnumItem, AttributeModel } from '@api/rest/attributes'
-import { Button, Icon } from '@ynput/ayon-react-components'
-import { Column } from '@tanstack/react-table'
-import HeaderActionButton from '../Components/HeaderActionButton'
 
 //These are the important styles to make sticky column pinning work!
 //Apply styles like this using your CSS strategy of choice with this kind of logic to head cells, data cells, footer cells, etc.
@@ -39,7 +49,7 @@ import HeaderActionButton from '../Components/HeaderActionButton'
 const getCommonPinningStyles = (column: Column<TableRow>): CSSProperties => {
   const isPinned = column.getIsPinned()
   const isLastLeftPinnedColumn = isPinned === 'left' && column.getIsLastColumn('left')
-  const isFirstRightPinnedColumn = isPinned === 'right' && column.getIsFirstColumn('right')
+  // const isFirstRightPinnedColumn = isPinned === 'right' && column.getIsFirstColumn('right')
 
   const boxShadow = isLastLeftPinnedColumn
     ? 'inset 1px -1px 0 0 var(--md-sys-color-surface-container), inset -2px 0 0 0 var(--md-sys-color-surface-container)'
@@ -202,7 +212,7 @@ const FlexTable = ({
   // Selection context
   const { registerGrid } = useSelection()
 
-  const columns = TableColumns({
+  const columns = ProjectTreeTableColumns({
     tableData,
     attribs,
     isLoading,

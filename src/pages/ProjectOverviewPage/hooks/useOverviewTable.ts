@@ -1,5 +1,10 @@
 import { useMemo } from 'react'
-import { EditorTaskNode, FolderNodeMap, TableRow, TaskNodeMap } from '../types'
+import {
+  EditorTaskNode,
+  FolderNodeMap,
+  TableRow,
+  TaskNodeMap,
+} from '../../../containers/ProjectTreeTable/utils/types'
 import { FolderType, TaskType } from '@api/rest/project'
 import { TasksByFolderMap } from './useFetchEditorEntities'
 import { ExpandedState } from '@tanstack/react-table'

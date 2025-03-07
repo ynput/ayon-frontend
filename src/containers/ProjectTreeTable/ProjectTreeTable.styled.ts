@@ -1,6 +1,5 @@
 import { TableContainer as BaseTableContainer } from '@containers/Slicer/SlicerTable.styled'
 import styled from 'styled-components'
-import SimpleEditableCell from './Cells/SimpleEditableCell'
 
 const cellMinWidth = 50
 
@@ -36,13 +35,6 @@ export const ResizedHandler = styled.div`
   &.resizing {
     background-color: var(--md-sys-color-primary);
     opacity: 1;
-  }
-`
-
-export const EditableCellContent = styled(SimpleEditableCell)`
-  color: red;
-  &.bold {
-    font-weight: 600;
   }
 `
 

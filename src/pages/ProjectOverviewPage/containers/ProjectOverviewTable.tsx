@@ -6,7 +6,7 @@ import { Splitter, SplitterPanel } from 'primereact/splitter'
 
 // Types
 import { Filter } from '@components/SearchFilter/types'
-import { BuiltInFieldOptions } from './TableColumns'
+import { BuiltInFieldOptions } from '../../../containers/ProjectTreeTable/ProjectTreeTableColumns'
 
 // Queries
 import { useGetProjectQuery } from '@queries/project/getProject'
@@ -16,12 +16,12 @@ import { useGetUsersAssigneeQuery } from '@queries/user/getUsers'
 import { useAppSelector } from '@state/store'
 
 // Custom hooks
-import useAttributeFields from './hooks/useAttributesList'
-import useFetchAndUpdateEntityData from './hooks/useFetchEditorEntities'
-import useOverviewTable from './hooks/useOverviewTable'
+import useAttributeFields from '../hooks/useAttributesList'
+import useFetchAndUpdateEntityData from '../hooks/useFetchEditorEntities'
+import useOverviewTable from '../hooks/useOverviewTable'
 
 // Components
-import FlexTable from './FlexTable'
+import ProjectTreeTable from '../../../containers/ProjectTreeTable/ProjectTreeTable'
 import {
   ColumnPinningState,
   ExpandedState,
@@ -44,7 +44,7 @@ type Props = {
   showHierarchy: boolean
 }
 
-const OverviewEditor = ({ filters, showHierarchy, selectedFolders }: Props) => {
+const ProjectOverviewTable = ({ filters, showHierarchy, selectedFolders }: Props) => {
   const projectName = useAppSelector((state) => state.project.name) as unknown as string
   const { data: usersData = [] } = useGetUsersAssigneeQuery({ projectName }, { skip: !projectName })
   const users = usersData as User[]
@@ -158,7 +158,7 @@ const OverviewEditor = ({ filters, showHierarchy, selectedFolders }: Props) => {
           stateStorage="local"
         >
           <SplitterPanel size={100}>
-            <FlexTable
+            <ProjectTreeTable
               attribs={attribFields}
               tableData={tableData}
               options={options}
@@ -187,4 +187,4 @@ const OverviewEditor = ({ filters, showHierarchy, selectedFolders }: Props) => {
   )
 }
 
-export default OverviewEditor
+export default ProjectOverviewTable

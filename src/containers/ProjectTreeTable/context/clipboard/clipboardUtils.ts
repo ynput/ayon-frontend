@@ -1,5 +1,5 @@
 import { toast } from 'react-toastify'
-import { FolderNodeMap, TaskNodeMap } from '../../types'
+import { FolderNodeMap, TaskNodeMap } from '../../utils/types'
 import { ParsedClipboardData } from './clipboardTypes'
 
 export const clipboardError = (error: string) => toast.error(error)

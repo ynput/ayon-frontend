@@ -5,11 +5,11 @@ import { ColumnDef, FilterFnOption, Row, SortingFn, sortingFns } from '@tanstack
 import clsx from 'clsx'
 import { Icon } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
-import { TableRow } from './types'
-import { TableCellContent } from './Table.styled'
+import { TableRow } from './utils/types'
+import { TableCellContent } from './ProjectTreeTable.styled'
 import { useStoredCustomColumnWidths } from './hooks/useCustomColumnsWidth'
 import { AttributeData, AttributeEnumItem, AttributeModel } from '@api/rest/attributes'
-import { EditorCell } from './Cells/EditorCell'
+import { CellWidget } from './widgets'
 import { useCellEditing } from './context/CellEditingContext'
 import { getCellValue } from './utils/cellUtils'
 
@@ -149,7 +149,7 @@ const TableColumns = ({
           const { value, id, type } = getValueIdType(row, column.id)
 
           return (
-            <EditorCell
+            <CellWidget
               rowId={id}
               columnId={column.id}
               value={value}
@@ -170,7 +170,7 @@ const TableColumns = ({
           const { value, id, type } = getValueIdType(row, column.id)
           const fieldId = type === 'folder' ? 'folderType' : 'taskType'
           return (
-            <EditorCell
+            <CellWidget
               rowId={id}
               columnId={column.id}
               value={value}
@@ -190,9 +190,9 @@ const TableColumns = ({
         cell: ({ row, column }) => {
           const { value, id, type } = getValueIdType(row, column.id)
           if (type === 'folder')
-            return <EditorCell rowId={id} columnId={column.id} value="" isPlaceholder />
+            return <CellWidget rowId={id} columnId={column.id} value="" isPlaceholder />
           return (
-            <EditorCell
+            <CellWidget
               rowId={id}
               columnId={column.id}
               value={value}
@@ -218,7 +218,7 @@ const TableColumns = ({
           const { value, id, type } = getValueIdType(row, columnId, 'attrib')
 
           return (
-            <EditorCell
+            <CellWidget
               rowId={id}
               columnId={columnId}
               value={value}

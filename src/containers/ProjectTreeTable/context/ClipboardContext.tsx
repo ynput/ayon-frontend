@@ -1,7 +1,13 @@
 import React, { createContext, useContext, useCallback, useMemo, useEffect } from 'react'
+
+// Contexts
 import { useSelection } from './SelectionContext'
 import { useCellEditing } from './CellEditingContext'
+
+// Utils
 import { getCellValue, parseCellId } from '../utils/cellUtils'
+
+// Types
 import { EntityUpdate } from '../hooks/useUpdateEditorEntities'
 
 // Import from the new modular files

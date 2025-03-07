@@ -1,6 +1,6 @@
 import { useAppSelector } from '@state/store'
 import { CellId } from '../utils/cellUtils'
-import { CellValue } from '../Cells/EditorCell'
+import { CellValue } from '../widgets/CellWidget'
 import { OperationModel } from '@api/rest/operations'
 import { useOperationsMutation } from '@queries/overview/updateOverview'
 import { toast } from 'react-toastify'
