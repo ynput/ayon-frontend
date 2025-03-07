@@ -4,13 +4,12 @@ import { Filter } from '@components/SearchFilter/types'
 import useFilterBySlice from '@containers/TasksProgress/hooks/useFilterBySlice'
 import { useSlicerContext } from '@context/slicerContext'
 import { FilterFieldType } from '@hooks/useBuildFilterOptions'
-import useUserFilters from '@hooks/useUserFilters'
 import OverviewEditor from '@pages/ProjectOverviewPage/OverviewEditor/OverviewEditor'
 import { Button, InputSwitch, Section, Toolbar } from '@ynput/ayon-react-components'
 import { isEmpty } from 'lodash'
 import { FC, useMemo } from 'react'
-import useOverviewPreferences from './hooks/useOverviewPreferences'
 import { RowSelectionState } from '@tanstack/react-table'
+import useLocalStorage from '@hooks/useLocalStorage'
 
 // what to search by
 const searchFilterTypes: FilterFieldType[] = ['attributes', 'status', 'assignees', 'tags']
@@ -24,8 +23,11 @@ const ProjectOverviewMain: FC<ProjectOverviewMainProps> = ({ projectName }) => {
   //
   //
 
-  const { filters, setFilters } = useUserFilters({ page: 'overview', projectName })
-  const { showHierarchy, updateShowHierarchy } = useOverviewPreferences()
+  const [filters, setFilters] = useLocalStorage<Filter[]>(`overview-filters-${projectName}`, [])
+  const [showHierarchy, updateShowHierarchy] = useLocalStorage<boolean>(
+    `overview-show-hierarchy-${projectName}`,
+    false,
+  )
 
   // filter out by slice
   const { rowSelection, sliceType, setPersistentRowSelectionData, persistentRowSelectionData } =
