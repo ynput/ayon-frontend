@@ -1,5 +1,4 @@
 import { useMemo } from 'react'
-import * as Styled from '@containers/Slicer/SlicerTable.styled'
 import { $Any } from '@types'
 import {
   ColumnDef,
@@ -9,30 +8,13 @@ import {
   SortingFn,
   sortingFns,
 } from '@tanstack/react-table'
-import clsx from 'clsx'
-import { Icon } from '@ynput/ayon-react-components'
-import styled from 'styled-components'
 import { TableRow } from './utils/types'
-import { TableCellContent } from './ProjectTreeTable.styled'
 import { AttributeData, AttributeEnumItem, AttributeModel } from '@api/rest/attributes'
-import { CellWidget } from './widgets'
+import { CellWidget, EntityNameWidget } from './widgets'
 import { useCellEditing } from './context/CellEditingContext'
 import { getCellValue } from './utils/cellUtils'
-
-const DelayedShimmerWrapper = styled.div`
-  @keyframes fadeInOpacity {
-    0% {
-      opacity: 0;
-    }
-    100% {
-      opacity: 1;
-    }
-  }
-  opacity: 0;
-  width: 100%;
-  animation: fadeInOpacity 1s 1 forwards;
-  animation-delay: 200ms;
-`
+import { TableCellContent } from './ProjectTreeTable.styled'
+import clsx from 'clsx'
 
 const nameSort: SortingFn<any> = (rowA, rowB) => {
   const labelA = rowA.original.label || rowA.original.name
@@ -61,19 +43,6 @@ const attribSort: AttribSortingFn = (rowA, rowB, columnId, attrib) => {
     // default sorting
     return sortingFns.alphanumeric(rowA, rowB, columnId)
   }
-}
-
-const ShimmerCell = ({ width }: { width: string }) => {
-  return (
-    <Styled.Cell style={{ width }}>
-      <DelayedShimmerWrapper>
-        <span
-          className="loading shimmer-lightest"
-          style={{ display: 'inline-block', width: '100%', height: '20px' }}
-        />
-      </DelayedShimmerWrapper>
-    </Styled.Cell>
-  )
 }
 
 export type BuiltInFieldOptions = {
@@ -105,40 +74,33 @@ const TableColumns = ({
 }: Props) => {
   const { updateEntities } = useCellEditing()
 
-  return useMemo<ColumnDef<TableRow>[]>(() => {
+  return useMemo<ColumnDef<TableRow, any>[]>(() => {
     const staticColumns: ColumnDef<TableRow>[] = [
       {
         accessorKey: 'name',
-        header: () => 'Folder',
+        header: () => 'Folder / Task',
         filterFn: 'fuzzy',
         sortingFn: nameSort, // custom sort to sort by label then name
         size: columnSizing['label'] || 300,
         cell: ({ row }) => {
-          return !row.original.id ? (
-            <ShimmerCell width="300px" />
-          ) : (
+          return (
             <TableCellContent
               className={clsx('large', { selected: row.getIsSelected(), loading: isLoading })}
               style={{
-                //  add depth padding to the cell
                 paddingLeft: `calc(${row.depth * 0.5}rem + 4px)`,
               }}
               tabIndex={0}
             >
-              {row.original.data.type === 'folder' ? (
-                <Styled.Expander
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    toggleExpanderHandler(e, row.id)
-                    row.getToggleExpandedHandler()()
-                  }}
-                  icon={row.getIsExpanded() ? 'expand_more' : 'chevron_right'}
-                />
-              ) : (
-                <div style={{ display: 'inline-block', minWidth: 24 }} />
-              )}
-              {row.original.icon && <Icon icon={row.original.icon} />}
-              <span className="label">{row.original.label || row.original.name}</span>
+              <EntityNameWidget
+                id={row.id}
+                label={row.original.label}
+                name={row.original.name}
+                icon={row.original.icon}
+                type={row.original.data.type}
+                isExpanded={row.getIsExpanded()}
+                toggleExpanderHandler={toggleExpanderHandler}
+                toggleExpanded={row.getToggleExpandedHandler()}
+              />
             </TableCellContent>
           )
         },

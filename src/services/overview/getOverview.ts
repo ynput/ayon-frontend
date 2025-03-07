@@ -125,17 +125,20 @@ const injectedApi = enhancedApi.injectEndpoints({
       EditorTaskNode[],
       { projectName: string; parentIds: string[]; filter?: string }
     >({
-      async queryFn({ projectName, parentIds, filter }, { dispatch }) {
+      async queryFn({ projectName, parentIds, filter }, { dispatch, forced }) {
         try {
           // for each parentId, fetch the tasks
           const results = await Promise.all(
             parentIds.map(async (parentId) =>
               dispatch(
-                enhancedApi.endpoints.GetTasksByParent.initiate({
-                  projectName,
-                  parentIds: [parentId],
-                  filter,
-                }),
+                enhancedApi.endpoints.GetTasksByParent.initiate(
+                  {
+                    projectName,
+                    parentIds: [parentId],
+                    filter,
+                  },
+                  { forceRefetch: forced },
+                ),
               ),
             ),
           )

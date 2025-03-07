@@ -6,7 +6,7 @@ import {
 } from '../userDashboard/userDashboardQueries'
 import PubSub from '@/pubsub'
 
-const getEntityPanel = api.injectEndpoints({
+export const getEntityPanelApi = api.injectEndpoints({
   endpoints: (build) => ({
     // TODO, move to separate file getEntityPanel
     getEntityDetailsPanel: build.query({
@@ -155,4 +155,4 @@ const getEntityPanel = api.injectEndpoints({
 })
 
 export const { useGetEntitiesDetailsPanelQuery, useLazyGetEntitiesDetailsPanelQuery } =
-  getEntityPanel
+  getEntityPanelApi

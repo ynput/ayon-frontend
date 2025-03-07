@@ -50,11 +50,6 @@ const useFetchEditorEntities = ({
   const queryFilterString = JSON.stringify(queryFilter)
 
   console.log('Folder count:', folders.length)
-  if (filters.length) {
-    console.log('filters:', filters)
-    console.log('query filter:', queryFilter)
-    console.log(JSON.stringify(queryFilterString))
-  }
 
   const { data: expandedFoldersTasks = [] } = useGetOverviewTasksByFoldersQuery(
     {
@@ -64,6 +59,8 @@ const useFetchEditorEntities = ({
     },
     { skip: !Object.keys(expanded).length || !showHierarchy },
   )
+
+  console.log(expandedFoldersTasks)
 
   // get folders that would be left if the filters were applied for tasks
   const { data: foldersByTaskFilter, isUninitialized } = useGetQueryTasksFoldersQuery(
@@ -75,8 +72,6 @@ const useFetchEditorEntities = ({
       skip: !filters.length || !folders.length || !showHierarchy,
     },
   )
-
-  console.log(selectedFolders)
 
   // create a map of folders by id for efficient lookups
   const foldersMap: FolderNodeMap = useMemo(() => {

@@ -2,18 +2,14 @@ import { useCallback, useMemo } from 'react'
 
 // UI components
 import { Section } from '@ynput/ayon-react-components'
-import { Splitter, SplitterPanel } from 'primereact/splitter'
 
 // Types
 import { Filter } from '@components/SearchFilter/types'
 import { BuiltInFieldOptions } from '../../../containers/ProjectTreeTable/ProjectTreeTableColumns'
 
 // Queries
-import { useGetProjectQuery } from '@queries/project/getProject'
 import { useGetUsersAssigneeQuery } from '@queries/user/getUsers'
-
-// Redux
-import { useAppSelector } from '@state/store'
+import { ProjectModel } from '@api/rest/project'
 
 // Custom hooks
 import useAttributeFields from '../hooks/useAttributesList'
@@ -22,13 +18,7 @@ import useOverviewTable from '../hooks/useOverviewTable'
 
 // Components
 import ProjectTreeTable from '../../../containers/ProjectTreeTable/ProjectTreeTable'
-import {
-  ColumnPinningState,
-  ExpandedState,
-  functionalUpdate,
-  OnChangeFn,
-  SortingState,
-} from '@tanstack/react-table'
+import { ExpandedState, functionalUpdate, OnChangeFn, SortingState } from '@tanstack/react-table'
 import useLocalStorage from '@hooks/useLocalStorage'
 
 type User = {
@@ -42,18 +32,22 @@ type Props = {
   selectedFolders: string[] // folders selected in the slicer (hierarchy)
   filters: Filter[] // filters from the filters bar or slicer (not hierarchy)
   showHierarchy: boolean
+  projectName: string
+  projectInfo?: ProjectModel
 }
 
-const ProjectOverviewTable = ({ filters, showHierarchy, selectedFolders }: Props) => {
-  const projectName = useAppSelector((state) => state.project.name) as unknown as string
+const ProjectOverviewTable = ({
+  filters,
+  showHierarchy,
+  selectedFolders,
+  projectName,
+  projectInfo,
+}: Props) => {
   const scope = `overview-${projectName}`
   const { data: usersData = [] } = useGetUsersAssigneeQuery({ projectName }, { skip: !projectName })
   const users = usersData as User[]
 
-  const { data: { statuses = [], folderTypes = [], taskTypes = [] } = {} } = useGetProjectQuery(
-    { projectName },
-    { skip: !projectName },
-  )
+  const { statuses = [], folderTypes = [], taskTypes = [] } = projectInfo || {}
 
   const { attribFields } = useAttributeFields()
 
@@ -138,39 +132,28 @@ const ProjectOverviewTable = ({ filters, showHierarchy, selectedFolders }: Props
   )
 
   return (
-    <main className="editor-page" style={{ height: '100%' }}>
-      <Section style={{ height: '100%' }}>
-        <Splitter
-          style={{ width: '100%', height: '100%' }}
-          layout="horizontal"
-          stateKey="editor-panels"
-          stateStorage="local"
-        >
-          <SplitterPanel size={100}>
-            <ProjectTreeTable
-              scope={scope}
-              attribs={attribFields}
-              tableData={tableData}
-              options={options}
-              isLoading={false}
-              isExpandable={false}
-              sliceId={''}
-              // expanded folders
-              expanded={expanded}
-              updateExpanded={updateExpanded}
-              // sorting
-              sorting={sorting}
-              updateSorting={updateSorting}
-              // pagination
-              fetchMoreOnBottomReached={fetchMoreOnBottomReached}
-              // metadata
-              tasksMap={tasksMap}
-              foldersMap={foldersMap}
-            />
-          </SplitterPanel>
-        </Splitter>
-      </Section>
-    </main>
+    <Section style={{ height: '100%' }}>
+      <ProjectTreeTable
+        scope={scope}
+        attribs={attribFields}
+        tableData={tableData}
+        options={options}
+        isLoading={false}
+        isExpandable={false}
+        sliceId={''}
+        // expanded folders
+        expanded={expanded}
+        updateExpanded={updateExpanded}
+        // sorting
+        sorting={sorting}
+        updateSorting={updateSorting}
+        // pagination
+        fetchMoreOnBottomReached={fetchMoreOnBottomReached}
+        // metadata
+        tasksMap={tasksMap}
+        foldersMap={foldersMap}
+      />
+    </Section>
   )
 }
 

@@ -25,9 +25,8 @@ import clsx from 'clsx'
 
 // Type imports
 import { $Any } from '@types'
-import { TableRow } from '@containers/Slicer/types'
 import { AttributeEnumItem, AttributeModel } from '@api/rest/attributes'
-import { FolderNodeMap, TaskNodeMap } from './utils/types'
+import { FolderNodeMap, TableRow, TaskNodeMap } from './utils/types'
 
 // Component imports
 import ProjectTreeTableColumns, { BuiltInFieldOptions } from './ProjectTreeTableColumns'
@@ -149,6 +148,8 @@ const TableCell = ({ cell, cellId }: TableCellProps) => {
         width: `calc(var(--col-${cell.column.id}-size) * 1px)`,
       }}
       onMouseDown={(e) => {
+        // check we are not clicking on folder/task name
+        if ((e.target as HTMLElement).closest('.name-content')) return
         if (e.shiftKey) {
           // Shift+click extends selection from anchor cell
           const additive = e.metaKey || e.ctrlKey

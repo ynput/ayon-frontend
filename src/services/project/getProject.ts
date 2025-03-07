@@ -8,7 +8,6 @@ import {
 } from '@api/rest/project'
 // @ts-ignore
 import { selectProject, setProjectData } from '@state/project'
-import { TagTypes, UpdatedDefinitions } from './ProjectTypes'
 
 // TODO: use graphql api and write custom types
 // We will need to inject the endpoint as it cannot be generated
@@ -73,7 +72,7 @@ const getProjectInjected = api.injectEndpoints({
 
 import { $Any } from '@/types'
 
-interface GetProjectApiResponseExtended extends GetProjectApiResponse {
+export interface GetProjectResponse extends GetProjectApiResponse {
   folderTypes: FolderType[]
   taskTypes: TaskType[]
   statuses: Status[]
@@ -84,7 +83,7 @@ type Definitions = DefinitionsFromApi<typeof getProjectInjected>
 type TagTypes = TagTypesFromApi<typeof getProjectInjected>
 // update the definitions to include the new types
 type UpdatedDefinitions = Omit<Definitions, 'getProject'> & {
-  getProject: OverrideResultType<Definitions['getProject'], GetProjectApiResponseExtended>
+  getProject: OverrideResultType<Definitions['getProject'], GetProjectResponse>
 }
 
 // TODO: sort out the types
