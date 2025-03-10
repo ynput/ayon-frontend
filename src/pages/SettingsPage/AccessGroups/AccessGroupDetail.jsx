@@ -89,6 +89,23 @@ const AccessGroupDetail = ({ projectName, accessGroupName }) => {
   // This conditions checks if there are any local (NOT global) project settings for user group
   const noLocalSettings = projectName && !isProjectLevel
 
+
+  const permissionsEditor = useMemo(() => {
+    return (
+        <SettingsEditor
+          schema={schema}
+          originalData={originalData}
+          formData={formData}
+          onChange={setFormData}
+          level={projectName ? 'project' : 'studio'}
+          context={{
+            headerProjectName: projectName,
+          }}
+        />
+    )
+  }, [schema, originalData, formData, projectName, setFormData])
+
+
   return (
     <Section style={{ flex: 2 }}>
       <Toolbar>
@@ -108,16 +125,7 @@ const AccessGroupDetail = ({ projectName, accessGroupName }) => {
         scrollStyle={{ padding: 0 }}
         style={{ flexGrow: 1 }}
       >
-        <SettingsEditor
-          schema={schema}
-          originalData={originalData}
-          formData={formData}
-          onChange={setFormData}
-          level={projectName ? 'project' : 'studio'}
-          context={{
-            headerProjectName: projectName,
-          }}
-        />
+        {permissionsEditor}
       </ScrollPanel>
     </Section>
   )

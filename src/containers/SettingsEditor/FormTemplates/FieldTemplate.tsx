@@ -9,6 +9,7 @@ import { $Any } from '@types'
 import { FieldTemplateProps } from '@rjsf/utils'
 import { CSS } from 'styled-components/dist/types'
 import { matchesFilterKeys } from './searchMatcher'
+import { toast } from 'react-toastify'
 
 const arrayStartsWith = (arr1: $Any, arr2: $Any) => {
   // return true, if first array starts with second array
@@ -39,7 +40,12 @@ function FieldTemplate(props: FieldTemplateProps) {
   const section = props.schema.section
 
   const divider = useMemo(() => {
-    const matches = matchesFilterKeys(props.formContext.searchText, props.formContext.filterKeys, props.formContext.addonName, props.id)
+    const matches = matchesFilterKeys(
+      props.formContext.searchText,
+      props.formContext.filterKeys,
+      props.formContext.addonName,
+      props.id,
+    )
     if (props.schema.section && matches) {
       return <Divider> {props.schema.section !== '---' && props.schema.section} </Divider>
     }
@@ -97,7 +103,13 @@ function FieldTemplate(props: FieldTemplateProps) {
 
     model.push({
       label: 'Copy',
-      command: () => copyToClipboard(JSON.stringify(props.formData, null, 2)),
+      command: () => {
+        if (!props.formData || (Array.isArray(props.formData) && props.formData.length === 0)) {
+          toast.warn('No data to copy')
+          return
+        }
+        copyToClipboard(JSON.stringify(props.formData, null, 2))
+      },
     })
 
     model.push({
@@ -107,7 +119,7 @@ function FieldTemplate(props: FieldTemplateProps) {
     })
 
     return model
-  }, [override, path])
+  }, [override, props.formData, path])
 
   const onContextMenu = (e: $Any) => {
     e.preventDefault()
@@ -135,7 +147,12 @@ function FieldTemplate(props: FieldTemplateProps) {
 
     if (!classes.includes('obj-override-edit')) classes.push(`obj-override-${overrideLevel}`)
 
-    const matches = matchesFilterKeys(props.formContext.searchText, props.formContext.filterKeys, props.formContext.addonName, props.id)
+    const matches = matchesFilterKeys(
+      props.formContext.searchText,
+      props.formContext.filterKeys,
+      props.formContext.addonName,
+      props.id,
+    )
 
     return (
       <div
@@ -181,7 +198,12 @@ function FieldTemplate(props: FieldTemplateProps) {
   // let className = `form-inline-field ${
   //   props.errors.props.errors && props.schema.widget !== 'color' ? 'error' : ''
   // }`
-  const matches = matchesFilterKeys(props.formContext.searchText, props.formContext.filterKeys, props.formContext.addonName, props.id)
+  const matches = matchesFilterKeys(
+    props.formContext.searchText,
+    props.formContext.filterKeys,
+    props.formContext.addonName,
+    props.id,
+  )
 
   return (
     <div
