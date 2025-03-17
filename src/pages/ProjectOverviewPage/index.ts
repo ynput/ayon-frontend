@@ -1,2 +1,2 @@
-import EditorPage from './ProjectOverviewPage'
-export default EditorPage
+import ProjectOverviewPage from './ProjectOverviewWithProviders'
+export default ProjectOverviewPage

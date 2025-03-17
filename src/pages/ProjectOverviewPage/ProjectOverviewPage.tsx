@@ -21,7 +21,7 @@ import { RowSelectionState } from '@tanstack/react-table'
 import { FilterFieldType } from '@hooks/useBuildFilterOptions'
 import ProjectOverviewDetailsPanel from './containers/ProjectOverviewDetailsPanel'
 import { useGetProjectQuery } from '@queries/project/getProject'
-import { EntitySelectionProvider } from '@containers/ProjectTreeTable/context/EntitySelectionContext'
+import { useEntitySelection } from '@containers/ProjectTreeTable/context/EntitySelectionContext'
 
 const searchFilterTypes: FilterFieldType[] = [
   'attributes',
@@ -33,6 +33,7 @@ const searchFilterTypes: FilterFieldType[] = [
 
 const ProjectOverviewPage: FC = () => {
   const projectName = useAppSelector((state) => state.project.name) || ''
+  const { selectedItems } = useEntitySelection()
 
   const { data: projectInfo } = useGetProjectQuery({ projectName }, { skip: !projectName })
 
@@ -93,73 +94,80 @@ const ProjectOverviewPage: FC = () => {
   }, [rowSelection, persistedHierarchySelection, sliceType])
 
   return (
-    <EntitySelectionProvider>
-      <main style={{ overflow: 'hidden' }}>
-        <Splitter
-          layout="horizontal"
-          style={{ width: '100%', height: '100%' }}
-          stateKey="overview-splitter-1"
-        >
-          <SplitterPanel size={18} style={{ minWidth: 100, maxWidth: 600 }}>
-            <Section wrap>
-              <Slicer sliceFields={overviewSliceFields} persistFieldId="hierarchy" />
-            </Section>
-          </SplitterPanel>
-          <SplitterPanel size={90}>
-            <Section wrap direction="column" style={{ height: '100%' }}>
-              <Toolbar style={{ gap: 4, maxHeight: '24px' }}>
-                <Button icon={'add'} variant="filled" disabled>
-                  Create
-                </Button>
-                <SearchFilterWrapper
-                  filters={filtersWithHierarchy}
-                  onChange={handleFiltersChange}
-                  filterTypes={searchFilterTypes}
-                  projectNames={projectName ? [projectName] : []}
-                  scope="folder"
-                  data={{
-                    tags: [],
-                    attributes: {},
-                    assignees: [],
-                  }}
-                  disabledFilters={sliceType ? [sliceType] : []}
-                />
-                <span style={{ whiteSpace: 'nowrap', display: 'flex' }}>
-                  Show hierarchy&nbsp;
-                  <InputSwitch
-                    checked={showHierarchy}
-                    onChange={(e) => updateShowHierarchy((e.target as HTMLInputElement).checked)}
+    <main style={{ overflow: 'hidden' }}>
+      <Splitter
+        layout="horizontal"
+        style={{ width: '100%', height: '100%' }}
+        stateKey="overview-splitter-1"
+        stateStorage="local"
+      >
+        <SplitterPanel size={12} minSize={2} style={{ maxWidth: 600 }}>
+          <Section wrap>
+            <Slicer sliceFields={overviewSliceFields} persistFieldId="hierarchy" />
+          </Section>
+        </SplitterPanel>
+        <SplitterPanel size={88}>
+          <Splitter
+            layout="horizontal"
+            stateKey="overview-splitter-2"
+            stateStorage="local"
+            style={{ width: '100%', height: '100%' }}
+          >
+            <SplitterPanel size={70}>
+              <Section wrap direction="column" style={{ height: '100%' }}>
+                <Toolbar style={{ gap: 4, maxHeight: '24px' }}>
+                  <Button icon={'add'} variant="filled" disabled>
+                    Create
+                  </Button>
+                  <SearchFilterWrapper
+                    filters={filtersWithHierarchy}
+                    onChange={handleFiltersChange}
+                    filterTypes={searchFilterTypes}
+                    projectNames={projectName ? [projectName] : []}
+                    scope="folder"
+                    data={{
+                      tags: [],
+                      attributes: {},
+                      assignees: [],
+                    }}
+                    disabledFilters={sliceType ? [sliceType] : []}
                   />
-                </span>
-              </Toolbar>
-              <ProjectOverviewTable
-                selectedFolders={Object.entries(selectedFolders)
-                  .filter(([, value]) => value)
-                  .map(([id]) => id)}
-                filters={combinedFilters}
-                showHierarchy={showHierarchy}
-                projectName={projectName}
-                projectInfo={projectInfo}
-              />
-            </Section>
-          </SplitterPanel>
-          {true ? (
-            <SplitterPanel
-              size={20}
-              style={{
-                minWidth: 300,
-                maxWidth: 800,
-                zIndex: 500,
-              }}
-            >
-              <ProjectOverviewDetailsPanel projectInfo={projectInfo} projectName={projectName} />
+                  <span style={{ whiteSpace: 'nowrap', display: 'flex' }}>
+                    Show hierarchy&nbsp;
+                    <InputSwitch
+                      checked={showHierarchy}
+                      onChange={(e) => updateShowHierarchy((e.target as HTMLInputElement).checked)}
+                    />
+                  </span>
+                </Toolbar>
+                <ProjectOverviewTable
+                  selectedFolders={Object.entries(selectedFolders)
+                    .filter(([, value]) => value)
+                    .map(([id]) => id)}
+                  filters={combinedFilters}
+                  showHierarchy={showHierarchy}
+                  projectName={projectName}
+                  projectInfo={projectInfo}
+                />
+              </Section>
             </SplitterPanel>
-          ) : (
-            <SplitterPanel size={0} style={{ maxWidth: 0 }}></SplitterPanel>
-          )}
-        </Splitter>
-      </main>
-    </EntitySelectionProvider>
+            {!!selectedItems.length ? (
+              <SplitterPanel
+                size={30}
+                style={{
+                  zIndex: 500,
+                  minWidth: 300,
+                }}
+              >
+                <ProjectOverviewDetailsPanel projectInfo={projectInfo} projectName={projectName} />
+              </SplitterPanel>
+            ) : (
+              <SplitterPanel style={{ maxWidth: 0 }}></SplitterPanel>
+            )}
+          </Splitter>
+        </SplitterPanel>
+      </Splitter>
+    </main>
   )
 }
 
