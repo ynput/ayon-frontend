@@ -17,7 +17,6 @@ import { useGetProjectAddonsQuery } from '@queries/addons/getAddons'
 import { TabPanel, TabView } from 'primereact/tabview'
 import AppNavLinks from '@containers/header/AppNavLinks'
 import { SlicerProvider } from '@context/slicerContext'
-import NewEditorPage from './ProjectOverviewPage/containers/ProjectOverviewTable'
 
 const ProjectContextInfo = () => {
   /**
@@ -68,7 +67,7 @@ const ProjectPage = () => {
     } else {
       // redirect to project manager
     }
-  }, [addonsLoading, addonsIsError, addonsData, projectName])
+  }, [addonsLoading, addonsIsError, addonsData, projectName, dispatch])
 
   const loadProjectData = () => {
     if (!isUninitialized && !addonsIsUninitialized && !isLoading && !addonsLoading) {
@@ -100,18 +99,17 @@ const ProjectPage = () => {
         uriSync: true,
       },
       {
-        name: 'Browser',
-        path: `/projects/${projectName}/browser`,
-        module: 'browser',
-        uriSync: true,
-      },
-      {
         name: 'Task progress',
         path: `/projects/${projectName}/tasks`,
         module: 'tasks',
         uriSync: true,
       },
-      { name: 'Editor', path: `/projects/${projectName}/editor`, module: 'editor', uriSync: true },
+      {
+        name: 'Browser',
+        path: `/projects/${projectName}/browser`,
+        module: 'browser',
+        uriSync: true,
+      },
       {
         name: 'Workfiles',
         path: `/projects/${projectName}/workfiles`,
@@ -159,18 +157,18 @@ const ProjectPage = () => {
     if (module === 'overview') {
       return <ProjectOverviewPage />
     }
-    if (module === 'newEditor') {
-      return <NewEditorPage />
-    }
     if (module === 'tasks') {
       return <TasksProgressPage />
+    }
+    if (module === 'browser') {
+      return <BrowserPage />
     }
     if (module === 'workfiles') {
       return <WorkfilesPage />
     }
 
     if (!addonName) {
-      return <BrowserPage />
+      return <ProjectOverviewPage />
     }
 
     const filteredAddons = addonsData.filter((item) => item.name === addonName)
