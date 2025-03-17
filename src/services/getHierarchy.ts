@@ -8,6 +8,7 @@ const hierarchyApi = api.enhanceEndpoints({
     getFolderList: {
       providesTags: (result) => [
         'hierarchy',
+        { type: 'folder', id: 'LIST' },
         ...(result?.folders.map(({ id }) => ({ type: 'folder', id })) || []),
       ],
     },

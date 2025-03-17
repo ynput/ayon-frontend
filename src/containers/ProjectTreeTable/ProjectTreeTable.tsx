@@ -34,7 +34,7 @@ import HeaderActionButton from './components/HeaderActionButton'
 
 // Context imports
 import { CellEditingProvider } from './context/CellEditingContext'
-import { SelectionProvider, useSelection } from './context/SelectionContext'
+import { useSelection } from './context/SelectionContext'
 import { ClipboardProvider } from './context/ClipboardContext'
 
 // Hook imports
@@ -96,17 +96,15 @@ const FlexTableWithProviders = (props: Props) => {
   }, [props.attribs])
 
   return (
-    <SelectionProvider>
-      <CellEditingProvider>
-        <ClipboardProvider
-          foldersMap={props.foldersMap}
-          tasksMap={props.tasksMap}
-          columnEnums={{ ...props.options, ...attribByField }}
-        >
-          <FlexTable {...props} />
-        </ClipboardProvider>
-      </CellEditingProvider>
-    </SelectionProvider>
+    <CellEditingProvider>
+      <ClipboardProvider
+        foldersMap={props.foldersMap}
+        tasksMap={props.tasksMap}
+        columnEnums={{ ...props.options, ...attribByField }}
+      >
+        <FlexTable {...props} />
+      </ClipboardProvider>
+    </CellEditingProvider>
   )
 }
 

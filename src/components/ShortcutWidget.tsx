@@ -1,3 +1,4 @@
+import { FC } from 'react'
 import styled from 'styled-components'
 
 export const Shortcut = styled.span`
@@ -8,7 +9,20 @@ export const Shortcut = styled.span`
   margin-left: auto;
 `
 
-const ShortcutWidget = ({ children, align, style, className = '', ...props }) => {
+interface ShortcutWidgetProps extends React.HTMLAttributes<HTMLSpanElement> {
+  children: React.ReactNode
+  align?: 'left' | 'right'
+  style?: React.CSSProperties
+  className?: string
+}
+
+const ShortcutWidget: FC<ShortcutWidgetProps> = ({
+  children,
+  align,
+  style,
+  className = '',
+  ...props
+}) => {
   const alignStyle = {
     marginLeft: align === 'right' ? 'auto' : '0',
     marginRight: align === 'left' ? 'auto' : '0',

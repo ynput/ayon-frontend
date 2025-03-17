@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useContext, useMemo } from 'react'
+import { createContext, ReactNode, useCallback, useContext, useMemo } from 'react'
 import {
   ExpandedState,
   functionalUpdate,
@@ -14,7 +14,13 @@ import { isEmpty } from 'lodash'
 import useFilterBySlice from '@containers/TasksProgress/hooks/useFilterBySlice'
 import { Filter } from '@ynput/ayon-react-components'
 import { useGetProjectQuery } from '@queries/project/getProject'
-import { FolderNodeMap, TableRow, TaskNodeMap } from '../utils/types'
+import {
+  EditorTaskNode,
+  FolderNodeMap,
+  MatchingFolder,
+  TableRow,
+  TaskNodeMap,
+} from '../utils/types'
 import { ProjectModel } from '@api/rest/project'
 import useAttributeFields from '../hooks/useAttributesList'
 import { AttributeModel } from '@api/rest/attributes'
@@ -34,6 +40,7 @@ interface ProjectTableContextProps {
   updateExpanded: OnChangeFn<ExpandedState>
   projectName: string
   attribFields: AttributeModel[]
+  getEntityById: (id: string) => MatchingFolder | EditorTaskNode | undefined
 }
 
 const ProjectTableContext = createContext<ProjectTableContextProps | undefined>(undefined)
@@ -117,6 +124,22 @@ export const ProjectTableProvider = ({ children }: ProjectTableProviderProps) =>
   })
   console.timeEnd('dataToTable')
 
+  const getEntityById = useCallback(
+    (id: string): MatchingFolder | EditorTaskNode | undefined => {
+      // Check if it's a folder
+      if (foldersMap.has(id)) {
+        return foldersMap.get(id)
+      }
+      // Check if it's a task
+      if (tasksMap.has(id)) {
+        return tasksMap.get(id)
+      }
+      // Return undefined if not found
+      return undefined
+    },
+    [foldersMap, tasksMap],
+  )
+
   return (
     <ProjectTableContext.Provider
       value={{
@@ -134,6 +157,7 @@ export const ProjectTableProvider = ({ children }: ProjectTableProviderProps) =>
         projectInfo: projectInfo,
         projectName,
         attribFields,
+        getEntityById,
       }}
     >
       {children}
