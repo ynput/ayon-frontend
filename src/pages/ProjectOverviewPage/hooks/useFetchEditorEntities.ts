@@ -60,8 +60,6 @@ const useFetchEditorEntities = ({
     { skip: !Object.keys(expanded).length || !showHierarchy },
   )
 
-  console.log(expandedFoldersTasks)
-
   // get folders that would be left if the filters were applied for tasks
   const { data: foldersByTaskFilter, isUninitialized } = useGetQueryTasksFoldersQuery(
     {

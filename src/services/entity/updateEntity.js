@@ -2,6 +2,7 @@ import api from '@api'
 import { toast } from 'react-toastify'
 import { enhancedDashboardGraphqlApi, getKanbanTasks } from '../userDashboard/getUserDashboard'
 import { isEqual } from 'lodash'
+import { patchOverviewFolders, patchOverviewTasks } from '@queries/overview/updateOverview'
 
 const patchKanban = (
   { assignees = [], projects = [] },
@@ -352,8 +353,22 @@ const updateEntity = api.injectEndpoints({
 
           let progressPatches = []
           if (entityType === 'task' || entityType === 'folder') {
-            // patch the progress for task updates
+            // patch the progress page
             progressPatches = patchProgressView({ operations, state, dispatch, entityType })
+          }
+
+          const overviewPatches = []
+          // convert id in operations to entityId
+          const operationsWithEntityId = operations.map((o) => ({ ...o, entityId: o.id }))
+          if (entityType === 'task' || entityType === 'folder') {
+            // patch the overview page
+            if (entityType === 'task') {
+              patchOverviewTasks(operationsWithEntityId, { state, dispatch }, overviewPatches)
+            }
+            if (entityType === 'folder') {
+              // patch the overview page
+              patchOverviewFolders(operationsWithEntityId, { state, dispatch }, overviewPatches)
+            }
           }
 
           // check if any of the requests failed and invalidate the tasks cache again to refetch
@@ -368,6 +383,9 @@ const updateEntity = api.injectEndpoints({
 
             // revert the progress view patches
             progressPatches.forEach((patch) => patch?.undo())
+
+            // revert the overview patches
+            overviewPatches.forEach((patch) => patch?.undo())
 
             throw 'Failed to update some tasks'
           }
@@ -386,7 +404,6 @@ const updateEntity = api.injectEndpoints({
       },
       invalidatesTags: (result, error, { operations }) => [
         ...operations.map((o) => ({ id: o.id, type: 'review' })),
-        { type: 'overviewTask', id: 'LIST' },
       ],
     }),
   }),
