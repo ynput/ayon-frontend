@@ -11,10 +11,6 @@ import {
 } from '../utils/cellUtils'
 
 // Cell range for selections
-interface CellRange {
-  startCell: CellPosition
-  endCell: CellPosition
-}
 
 // Structure to map row/column IDs to their positions in the grid
 interface GridMap {
@@ -123,31 +119,50 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({ children 
   )
 
   // Start a selection operation
-  const startSelection = useCallback((cellId: CellId, additive: boolean) => {
-    const position = parseCellId(cellId)
-    if (!position) return
+  const startSelection = useCallback(
+    (cellId: CellId, additive: boolean) => {
+      const position = parseCellId(cellId)
+      if (!position) return
 
-    setSelectionInProgress(true)
+      setSelectionInProgress(true)
 
-    if (additive) {
-      // Toggle this cell in multi-select mode
-      setSelectedCells((prev) => {
-        const newSelection = new Set(prev)
-        if (newSelection.has(cellId)) {
-          newSelection.delete(cellId)
+      if (additive) {
+        // Toggle this cell in multi-select mode
+        setSelectedCells((prev) => {
+          const newSelection = new Set(prev)
+          if (newSelection.has(cellId)) {
+            newSelection.delete(cellId)
+            // If this was the focused cell, set focus to another cell in the selection or null
+            if (focusedCellId === cellId) {
+              if (newSelection.size > 0) {
+                setFocusedCellId(Array.from(newSelection)[Array.from(newSelection).length - 1])
+              } else {
+                setFocusedCellId(null)
+              }
+            }
+          } else {
+            newSelection.add(cellId)
+            setFocusedCellId(cellId)
+          }
+          return newSelection
+        })
+      } else {
+        // Single cell selection
+        // If this cell is already the only selected cell, deselect it
+        if (selectedCells.size === 1 && selectedCells.has(cellId)) {
+          setSelectedCells(new Set())
+          setAnchorCell(null)
+          setFocusedCellId(null)
         } else {
-          newSelection.add(cellId)
+          // Otherwise, reset selection and set new anchor
+          setSelectedCells(new Set([cellId]))
+          setAnchorCell(position)
+          setFocusedCellId(cellId)
         }
-        return newSelection
-      })
-    } else {
-      // Single cell selection - reset selection and set new anchor
-      setSelectedCells(new Set([cellId]))
-      setAnchorCell(position)
-    }
-
-    setFocusedCellId(cellId)
-  }, [])
+      }
+    },
+    [selectedCells, focusedCellId],
+  )
 
   // Extend the current selection during drag
   const extendSelection = useCallback(
@@ -164,7 +179,7 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({ children 
   )
 
   // End a selection operation
-  const endSelection = useCallback((cellId: CellId) => {
+  const endSelection = useCallback(() => {
     setSelectionInProgress(false)
   }, [])
 

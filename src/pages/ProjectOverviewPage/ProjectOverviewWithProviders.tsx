@@ -1,11 +1,14 @@
 import { EntitySelectionProvider } from '@containers/ProjectTreeTable/context/EntitySelectionContext'
 import { FC } from 'react'
 import ProjectOverviewPage from './ProjectOverviewPage'
+import { ProjectTableProvider } from '@containers/ProjectTreeTable/context/ProjectTableContext'
 
-const ProjectOverviewWithProviders: FC = ({}) => {
+const ProjectOverviewWithProviders: FC = () => {
   return (
     <EntitySelectionProvider>
-      <ProjectOverviewPage />
+      <ProjectTableProvider>
+        <ProjectOverviewPage />
+      </ProjectTableProvider>
     </EntitySelectionProvider>
   )
 }

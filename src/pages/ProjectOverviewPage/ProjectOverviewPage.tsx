@@ -1,27 +1,25 @@
 // libraries
 import { Splitter, SplitterPanel } from 'primereact/splitter'
-import { FC, useMemo } from 'react'
+import { FC } from 'react'
 
 // state
-import { useAppSelector } from '@state/store'
 import { useSlicerContext } from '@context/slicerContext'
 
 // containers
 import Slicer from '@containers/Slicer'
 
 // arc
-import { Button, Filter, InputSwitch, Section, Toolbar } from '@ynput/ayon-react-components'
+import { Filter, InputSwitch, Section, Toolbar } from '@ynput/ayon-react-components'
 import SearchFilterWrapper from '@components/SearchFilter/SearchFilterWrapper'
 import ProjectOverviewTable from './containers/ProjectOverviewTable'
 import { isEmpty } from 'lodash'
-import useLocalStorage from '@hooks/useLocalStorage'
 import useFilterBySlice from '@containers/TasksProgress/hooks/useFilterBySlice'
 import { useFiltersWithHierarchy } from '@components/SearchFilter/hooks'
-import { RowSelectionState } from '@tanstack/react-table'
 import { FilterFieldType } from '@hooks/useBuildFilterOptions'
 import ProjectOverviewDetailsPanel from './containers/ProjectOverviewDetailsPanel'
-import { useGetProjectQuery } from '@queries/project/getProject'
 import { useEntitySelection } from '@containers/ProjectTreeTable/context/EntitySelectionContext'
+import NewEntity from '@components/NewEntity/NewEntity'
+import { useProjectTableContext } from '@containers/ProjectTreeTable/context/ProjectTableContext'
 
 const searchFilterTypes: FilterFieldType[] = [
   'attributes',
@@ -32,38 +30,21 @@ const searchFilterTypes: FilterFieldType[] = [
 ]
 
 const ProjectOverviewPage: FC = () => {
-  const projectName = useAppSelector((state) => state.project.name) || ''
   const { selectedItems } = useEntitySelection()
 
-  const { data: projectInfo } = useGetProjectQuery({ projectName }, { skip: !projectName })
+  const { projectName, projectInfo, filters, setFilters, showHierarchy, updateShowHierarchy } =
+    useProjectTableContext()
 
   // load slicer remote config
-  const {
-    config,
-    rowSelection,
-    sliceType,
-    setPersistentRowSelectionData,
-    persistentRowSelectionData,
-  } = useSlicerContext()
+  const { config, sliceType, setPersistentRowSelectionData, persistentRowSelectionData } =
+    useSlicerContext()
   const overviewSliceFields = config?.overview?.fields
-
-  const [filters, setFilters] = useLocalStorage<Filter[]>(`overview-filters-${projectName}`, [])
-  const [showHierarchy, updateShowHierarchy] = useLocalStorage<boolean>(
-    `overview-show-hierarchy-${projectName}`,
-    true,
-  )
 
   // filter out by slice
   const persistedHierarchySelection = isEmpty(persistentRowSelectionData)
     ? null
     : persistentRowSelectionData
   const { filter: sliceFilter } = useFilterBySlice()
-
-  // merge the slice filter with the user filters
-  let combinedFilters = [...filters]
-  if (sliceFilter) {
-    combinedFilters.push(sliceFilter)
-  }
 
   const handleFiltersChange = (value: Filter[]) => {
     setFilters(value)
@@ -81,17 +62,6 @@ const ProjectOverviewPage: FC = () => {
     persistedHierarchySelection,
     filters,
   })
-
-  const selectedFolders: RowSelectionState = useMemo(() => {
-    if (sliceType === 'hierarchy') {
-      return rowSelection
-    } else if (persistedHierarchySelection) {
-      return Object.values(persistedHierarchySelection).reduce((acc: any, item) => {
-        acc[item.id] = !!item
-        return acc
-      }, {})
-    } else return {}
-  }, [rowSelection, persistedHierarchySelection, sliceType])
 
   return (
     <main style={{ overflow: 'hidden' }}>
@@ -116,9 +86,7 @@ const ProjectOverviewPage: FC = () => {
             <SplitterPanel size={70}>
               <Section wrap direction="column" style={{ height: '100%' }}>
                 <Toolbar style={{ gap: 4, maxHeight: '24px' }}>
-                  <Button icon={'add'} variant="filled" disabled>
-                    Create
-                  </Button>
+                  <NewEntity projectInfo={projectInfo} />
                   <SearchFilterWrapper
                     filters={filtersWithHierarchy}
                     onChange={handleFiltersChange}
@@ -140,15 +108,7 @@ const ProjectOverviewPage: FC = () => {
                     />
                   </span>
                 </Toolbar>
-                <ProjectOverviewTable
-                  selectedFolders={Object.entries(selectedFolders)
-                    .filter(([, value]) => value)
-                    .map(([id]) => id)}
-                  filters={combinedFilters}
-                  showHierarchy={showHierarchy}
-                  projectName={projectName}
-                  projectInfo={projectInfo}
-                />
+                <ProjectOverviewTable />
               </Section>
             </SplitterPanel>
             {!!selectedItems.length ? (

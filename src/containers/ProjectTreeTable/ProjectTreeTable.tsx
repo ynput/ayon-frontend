@@ -10,7 +10,6 @@ import {
   flexRender,
   Row,
   OnChangeFn,
-  ExpandedState,
   SortingState,
   getSortedRowModel,
   Cell,
@@ -44,6 +43,7 @@ import useCustomColumnWidthVars from './hooks/useCustomColumnWidthVars'
 // Utility function imports
 import { getCellId } from './utils/cellUtils'
 import useLocalStorage from '@hooks/useLocalStorage'
+import { useProjectTableContext } from '@containers/ProjectTreeTable/context/ProjectTableContext'
 
 //These are the important styles to make sticky column pinning work!
 //Apply styles like this using your CSS strategy of choice with this kind of logic to head cells, data cells, footer cells, etc.
@@ -75,8 +75,6 @@ type Props = {
   isLoading: boolean
   isExpandable: boolean
   sliceId: string
-  expanded: ExpandedState
-  updateExpanded: OnChangeFn<ExpandedState>
   sorting: SortingState
   updateSorting: OnChangeFn<SortingState>
   // metadata
@@ -206,14 +204,14 @@ const FlexTable = ({
   isLoading,
   isExpandable,
   sliceId,
-  expanded,
-  updateExpanded,
   sorting,
   updateSorting,
   fetchMoreOnBottomReached,
 }: Props) => {
   //The virtualizer needs to know the scrollable container element
   const tableContainerRef = useRef<HTMLDivElement>(null)
+
+  const { expanded, updateExpanded } = useProjectTableContext()
 
   // COLUMN PINNING
   const [columnPinning, setColumnPinning] = useLocalStorage<ColumnPinningState>(
