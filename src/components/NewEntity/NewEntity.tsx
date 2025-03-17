@@ -23,6 +23,8 @@ import { useOperationsMutation } from '@queries/overview/updateOverview'
 import { OperationModel } from '@api/rest/operations'
 import { v1 as uuid1 } from 'uuid'
 import { toast } from 'react-toastify'
+import FolderSequence from '@components/FolderSequence/FolderSequence'
+import getSequence from '@helpers/getSequence'
 
 const ContentStyled = styled.div`
   display: flex;
@@ -70,9 +72,17 @@ const StyledCreateItem = styled.span`
 
 type NewEntityType = 'folder' | 'task'
 
-interface EntityData {
+interface EntityForm {
   label: string
   subType: string
+}
+
+interface SequenceForm {
+  active: boolean
+  increment: string
+  length: number
+  prefix: boolean
+  prefixDepth: number
 }
 
 interface NewEntityProps {}
@@ -110,14 +120,22 @@ const NewEntity: React.FC<NewEntityProps> = () => {
   // These are the folders to create the new entity in
   const selectedFolderIds = Array.from(new Set([...folderIdsFromFolders, ...folderIdsFromTasks]))
 
+  const isRoot = isEmpty(selectedFolderIds)
+
   const [nameFocused, setNameFocused] = useState<boolean>(false)
   const [entityType, setEntityType] = useState<NewEntityType | null>(null)
   //   build out form state
-  const initData: EntityData = { label: '', subType: '' }
-  const [entityData, setEntityData] = useState<EntityData>(initData)
+  const initData: EntityForm = { label: '', subType: '' }
+  const [entityForm, setEntityForm] = useState<EntityForm>(initData)
+  const [sequenceForm, setSequenceForm] = useState<SequenceForm>({
+    active: true,
+    increment: '',
+    length: 10,
+    prefix: false,
+    prefixDepth: 0,
+  })
 
   //   format title
-  const isRoot = isEmpty(selectedCells)
   let title = 'Add New '
   if (isRoot) title += 'Root '
   title += capitalize(entityType || '')
@@ -142,10 +160,10 @@ const NewEntity: React.FC<NewEntityProps> = () => {
   }
 
   // handlers
-  const handleChange = (value: any, id?: keyof EntityData) => {
+  const handleChange = (value: any, id?: keyof EntityForm) => {
     if (!id) return
 
-    let newState = { ...entityData }
+    let newState = { ...entityForm }
     newState[id] = value
 
     if (value && id === 'subType') {
@@ -180,7 +198,18 @@ const NewEntity: React.FC<NewEntityProps> = () => {
       newState.label = checkName(value)
     }
 
-    setEntityData(newState)
+    setEntityForm(newState)
+  }
+
+  const handleSeqChange = (value: any) => {
+    setEntityForm({ ...entityForm, label: value.base, subType: value.type })
+    setSequenceForm({
+      ...sequenceForm,
+      increment: value.increment,
+      length: value.length,
+      prefix: value.prefix,
+      prefixDepth: value.prefixDepth,
+    })
   }
 
   //   refs
@@ -202,13 +231,13 @@ const NewEntity: React.FC<NewEntityProps> = () => {
       label: generateLabel(type, firstName),
     }
 
-    setEntityData(initData)
+    setEntityForm(initData)
   }
 
   const handleClose = () => {
     // reset state
     setEntityType(null)
-    setEntityData(initData)
+    setEntityForm(initData)
   }
 
   // open dropdown - delay to wait for dialog opening
@@ -216,17 +245,70 @@ const NewEntity: React.FC<NewEntityProps> = () => {
 
   const [createEntities] = useOperationsMutation()
 
+  // Helper functions for creating operations
+  const createEntityOperation = (
+    entityType: NewEntityType,
+    subType: string,
+    name: string,
+    label: string,
+    parentId?: string,
+  ): OperationModel => {
+    return {
+      type: 'create',
+      entityType: entityType,
+      data: {
+        [`${entityType}Type`]: subType,
+        id: uuid1().replace(/-/g, ''),
+        name: name.replace(/[^a-zA-Z0-9]/g, ''),
+        label: label,
+        ...(parentId && { [entityType === 'folder' ? 'parentId' : 'folderId']: parentId }),
+      },
+    }
+  }
+
+  const createSequenceOperations = (
+    entityType: NewEntityType,
+    subType: string,
+    sequence: string[],
+    folderIds: string[],
+  ): OperationModel[] => {
+    // For root folders
+    if (folderIds.length === 0 && entityType === 'folder') {
+      return sequence.map((name) => createEntityOperation(entityType, subType, name, name))
+    }
+
+    // For folders or tasks with parent references
+    const operations: OperationModel[] = []
+    for (const folderId of folderIds) {
+      for (const name of sequence) {
+        operations.push(createEntityOperation(entityType, subType, name, name, folderId))
+      }
+    }
+    return operations
+  }
+
+  const createSingleOperations = (
+    entityType: NewEntityType,
+    subType: string,
+    label: string,
+    folderIds: string[],
+  ): OperationModel[] => {
+    const sanitizedName = label.replace(/[^a-zA-Z0-9]/g, '')
+
+    // For root folders
+    if (folderIds.length === 0 && entityType === 'folder') {
+      return [createEntityOperation(entityType, subType, sanitizedName, label)]
+    }
+
+    // For folders or tasks with parent references
+    return folderIds.map((folderId) =>
+      createEntityOperation(entityType, subType, sanitizedName, label, folderId),
+    )
+  }
+
   const handleSubmit = async (stayOpen: boolean) => {
     // first check name and entityType valid
-    if (!entityType || !entityData.label) return
-
-    // convert entityType to correct key
-    // convert name to camelCase
-    const baseData: any = {
-      [`${entityType}Type`]: entityData.subType,
-      name: entityData.label.replace(/[^a-zA-Z0-9]/g, ''),
-      label: entityData.label,
-    }
+    if (!entityType || !entityForm.label) return
 
     // If we're creating a task and there are no selected folders, show error
     if (entityType === 'task' && selectedFolderIds.length === 0) {
@@ -234,33 +316,24 @@ const NewEntity: React.FC<NewEntityProps> = () => {
       return
     }
 
-    // create an operation for each selected folder, or just one operation if no folders selected
-    let operations: OperationModel[] = []
+    let operations: OperationModel[]
 
-    if (selectedFolderIds.length === 0 && entityType === 'folder') {
-      // Create a folder without parentId when no folders are selected
-      operations = [
-        {
-          type: 'create',
-          entityType: entityType,
-          data: {
-            ...baseData,
-            id: uuid1().replace(/-/g, ''),
-            // No parentId for root folders
-          },
-        },
-      ]
+    if (sequenceForm.active) {
+      // Generate the sequence
+      const sequence = getSequence(entityForm.label, sequenceForm.increment, sequenceForm.length)
+      operations = createSequenceOperations(
+        entityType,
+        entityForm.subType,
+        sequence,
+        selectedFolderIds,
+      )
     } else {
-      // Create entities with parent/folder references
-      operations = selectedFolderIds.map((folderId) => ({
-        type: 'create',
-        entityType: entityType,
-        data: {
-          ...baseData,
-          id: uuid1().replace(/-/g, ''),
-          [entityType === 'folder' ? 'parentId' : 'folderId']: folderId,
-        },
-      }))
+      operations = createSingleOperations(
+        entityType,
+        entityForm.subType,
+        entityForm.label,
+        selectedFolderIds,
+      )
     }
 
     try {
@@ -309,7 +382,7 @@ const NewEntity: React.FC<NewEntityProps> = () => {
     }
   }
 
-  const addDisabled = !entityData.label || !entityData.subType
+  const addDisabled = !entityForm.label || !entityForm.subType
 
   return (
     <>
@@ -343,10 +416,19 @@ const NewEntity: React.FC<NewEntityProps> = () => {
           isOpen
           onClose={handleClose}
           onShow={handleShow}
-          size="sm"
-          style={{ zIndex: 999 }}
+          size={sequenceForm.active ? 'lg' : 'md'}
           footer={
-            <Toolbar onFocus={() => setNameFocused(false)}>
+            <Toolbar onFocus={() => setNameFocused(false)} style={{ width: '100%' }}>
+              <span>Sequence</span>
+              <InputSwitch
+                checked={sequenceForm.active}
+                onChange={(e) =>
+                  setSequenceForm({
+                    ...sequenceForm,
+                    active: (e.target as HTMLInputElement).checked,
+                  })
+                }
+              />
               <Spacer />
               <span>Create more</span>
               <InputSwitch
@@ -368,28 +450,50 @@ const NewEntity: React.FC<NewEntityProps> = () => {
             target.tagName !== 'INPUT' && setNameFocused(false)
           }}
         >
-          <ContentStyled>
-            <TypeEditor
-              value={[entityData.subType]}
-              onChange={(v: string) => handleChange(v, 'subType')}
-              options={typeOptions}
-              style={{ width: 160 }}
-              ref={typeSelectRef}
-              onFocus={handleTypeSelectFocus}
-              onClick={() => setNameFocused(false)}
+          {sequenceForm.active ? (
+            // @ts-ignore
+            <FolderSequence
+              base={entityForm.label}
+              type={entityForm.subType}
+              increment={sequenceForm.increment}
+              length={sequenceForm.length}
+              prefix={sequenceForm.prefix}
+              parentLabel={selectedFolders[0]?.label}
+              prefixDepth={sequenceForm.prefixDepth}
+              entityType="folder"
+              nesting={false}
+              onChange={handleSeqChange}
+              isRoot={isRoot}
+              typeSelectRef={typeSelectRef}
+              // @ts-ignore
+              onLastInputKeydown={(e) => handleKeyDown(e, true)}
+              folders={projectInfo?.folderTypes || []}
             />
-            <InputText
-              value={entityData.label}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                handleChange(e.target.value, 'label')
-              }
-              ref={labelRef}
-              onFocus={() => setNameFocused(true)}
-              onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) =>
-                handleKeyDown(e as unknown as KeyboardEvent, true)
-              }
-            />
-          </ContentStyled>
+          ) : (
+            <ContentStyled>
+              <TypeEditor
+                value={[entityForm.subType]}
+                onChange={(v: string) => handleChange(v, 'subType')}
+                options={typeOptions}
+                style={{ width: 160 }}
+                ref={typeSelectRef}
+                onFocus={handleTypeSelectFocus}
+                onClick={() => setNameFocused(false)}
+              />
+              <InputText
+                value={entityForm.label}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  handleChange(e.target.value, 'label')
+                }
+                ref={labelRef}
+                onFocus={() => setNameFocused(true)}
+                onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) =>
+                  handleKeyDown(e as unknown as KeyboardEvent, true)
+                }
+                style={{ flex: 1 }}
+              />
+            </ContentStyled>
+          )}
         </Dialog>
       )}
     </>
