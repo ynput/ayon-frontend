@@ -115,7 +115,10 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
     if (!videoRef.current) return
     const video = videoRef.current
     video.requestVideoFrameCallback(updateCurrentTime)
-  }, [videoRef.current, frameRate])
+  }, [videoRef.current])
+
+  const currentFrame = Math.round(currentTime * frameRate)
+  const frameCount = Math.round(duration * frameRate)
 
   //
   // Video size handling
@@ -172,7 +175,6 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
     }
 
     const handleCanPlay = () => {
-      //console.debug('VideoPlayer: Can play now.')
       seekPreferredInitialPosition()
       setShowStill(false)
     }
@@ -186,13 +188,16 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
       videoElement.removeEventListener('loadedmetadata', handleLoadedMetadata)
       videoElement.removeEventListener('canplay', handleCanPlay)
     }
-  }, [videoRef.current]) // Add videoRef.current as a dependency
+  }, [videoRef.current])
+
+  //
+  // Obscure the video element with a still image,
+  // so the transition to the new video is not visible
+  //
 
   useEffect(() => {
     console.debug('VideoPlayer: source changed to', src)
     if (!videoRef.current) return
-    // obscure the video element with a still image,
-    // so the transition to the new video is not visible
     setShowStill(true)
     // Give the overlay some time to show up
     setTimeout(() => setActualSource(src), 20)
@@ -229,7 +234,7 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
     if (!buffered.length) return
     const bufferedRanges = []
     for (var i = 0; i < buffered.length; i++) {
-      const r = { start: buffered.start(i), end: buffered.end(i) }
+      const r = { start: buffered.start(i) * frameRate, end: buffered.end(i) * frameRate }
       bufferedRanges.push(r)
     }
     setBufferedRanges(bufferedRanges)
@@ -279,6 +284,7 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
 
   const seekToTime = (newTime) => {
     const videoElement = videoRef.current
+    if (newTime === videoRef.current?.currentTime) return
     if (videoElement.readyState >= 3) {
       // HAVE_FUTURE_DATA
       videoElement.currentTime = newTime
@@ -289,13 +295,17 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
       }
       videoElement.addEventListener('canplay', onCanPlay)
     }
+    initialPosition.current = newTime
   }
 
-  const handleScrub = (newTime) => {
-    if (newTime === videoRef.current?.currentTime) return
-    videoRef.current?.pause()
+  const seekToFrame = (newFrame) => {
+    const newTime = newFrame / frameRate
     seekToTime(newTime)
-    initialPosition.current = newTime
+  }
+
+  const handleScrub = (newFrame) => {
+    videoRef.current?.pause()
+    seekToFrame(newFrame)
   }
 
   const handlePause = () => {
@@ -325,6 +335,14 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
     }
   }
 
+  const handlePlayPause = () => {
+    if (videoRef.current.paused) {
+      videoRef.current.play()
+    } else {
+      videoRef.current.pause()
+    }
+  }
+
   const handleLoadError = (e) => {
     // check if the video is 404
     const code = e.target.error.code
@@ -340,8 +358,6 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
     setMuted(value)
     videoRef.current.muted = value
   }
-
-  const currentFrame = Math.floor(videoRef.current?.currentTime * frameRate) + 1
 
   return (
     <VideoPlayerContainer>
@@ -404,11 +420,11 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
 
       <div className="trackbar-row">
         <Trackbar
-          currentTime={currentTime}
-          duration={duration}
-          bufferedRanges={bufferedRanges}
-          onScrub={handleScrub}
+          currentFrame={currentFrame}
+          frameCount={frameCount}
           frameRate={frameRate}
+          onScrub={handleScrub}
+          bufferedRanges={bufferedRanges}
           isPlaying={isPlaying}
           highlighted={annotatedFrames}
         />
@@ -416,13 +432,11 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
 
       <div className="controls-row">
         <VideoPlayerControls
-          videoRef={videoRef}
           isPlaying={isPlaying}
-          onFrameChange={(newFrame) => {
-            // setCurrentTime(newFrame)
-            initialPosition.current = newFrame
-          }}
-          frameRate={frameRate}
+          handlePlayPause={handlePlayPause}
+          seekToFrame={seekToFrame}
+          frameCount={frameCount}
+          currentFrame={currentFrame}
           setMuted={handleMuteToggle}
           {...{ showOverlay, setShowOverlay, loop, setLoop, muted }}
         />

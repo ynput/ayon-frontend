@@ -1,14 +1,20 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { Button, Spacer } from '@ynput/ayon-react-components'
 import Timecode from './Timecode'
 import { useDispatch, useSelector } from 'react-redux'
 import { toggleFullscreen } from '@state/viewer'
 
 const VideoPlayerControls = ({
-  videoRef,
+  /* playback controls */
   isPlaying,
-  onFrameChange,
-  frameRate,
+  handlePlayPause,
+
+  /* duration/position/seeking */
+  currentFrame,
+  seekToFrame,
+  frameCount,
+
+  /* toggles */
   showOverlay,
   setShowOverlay,
   loop,
@@ -18,59 +24,63 @@ const VideoPlayerControls = ({
 }) => {
   const dispatch = useDispatch()
   const fullscreen = useSelector((state) => state.viewer.fullscreen)
-  const frameLength = 1 / frameRate
+  const currentFrameRef = useRef(0)
+  const frameCountRef = useRef(0)
 
-  const handlePlayPause = () => {
-    if (videoRef.current.paused) {
-      videoRef.current.play()
-    } else {
-      videoRef.current.pause()
-    }
-  }
+  // Keep position and duration in refs
+  // to avoid stale values in keypress events
+
+  useEffect(() => {
+    currentFrameRef.current = currentFrame
+  }, [currentFrame])
+
+  useEffect(() => {
+    frameCountRef.current = frameCount
+  }, [frameCount])
+
+  // Navigation
 
   const handleGoToStart = () => {
-    const newFrame = 0
     console.debug('VideoPlayerControls: Go to start')
-    videoRef.current.currentTime = newFrame
-    onFrameChange(newFrame)
+    seekToFrame(0)
   }
   const handleGoToEnd = () => {
     console.debug('VideoPlayerControls: Go to end')
-    const duration = videoRef.current?.duration || 0
-    const newFrame = duration - frameLength
-    videoRef.current.currentTime = newFrame
-    onFrameChange(newFrame)
+    seekToFrame(frameCountRef.current - 1)
   }
 
   const handleGoBack1 = () => {
     console.debug('VideoPlayerControls: Go back 1')
-    const duration = videoRef.current?.duration || 0
-    const nextFrame = videoRef.current.currentTime - frameLength
-    const newFrame = nextFrame < 0 ? (loop ? duration - 0.001 : 0) : nextFrame
-    videoRef.current.currentTime = newFrame
-    onFrameChange(newFrame)
+    let prevFrame = currentFrameRef.current - 1
+    if (prevFrame < 0) {
+      prevFrame = loop ? frameCountRef.current - 1 : 0
+    }
+    seekToFrame(prevFrame)
   }
   const handleGoForward1 = () => {
     console.debug('VideoPlayerControls: Go forward 1')
-    const duration = videoRef.current?.duration || 0
-    const nextFrame = videoRef.current.currentTime + frameLength
-    const newFrame = nextFrame - frameLength > duration ? (loop ? 0 : duration) : nextFrame
-    videoRef.current.currentTime = newFrame
-    onFrameChange(newFrame)
+    let nextFrame = currentFrameRef.current + 1
+    if (nextFrame > frameCountRef.current - 1) {
+      nextFrame = loop ? 0 : frameCountRef.current - 1
+    }
+    seekToFrame(nextFrame)
   }
 
   const handleGoBack5 = () => {
     console.debug('VideoPlayerControls: Go back 5')
-    const newFrame = Math.max(0, videoRef.current.currentTime - 5 * frameLength)
-    videoRef.current.currentTime = newFrame
-    onFrameChange(newFrame)
+    let prevFrame = currentFrameRef.current - 5
+    if (prevFrame < 0) {
+      prevFrame = loop ? frameCountRef.current - prevFrame : 0
+    }
+    seekToFrame(prevFrame)
   }
   const handleGoForward5 = () => {
     console.debug('VideoPlayerControls: Go forward 5')
-    const duration = videoRef.current?.duration || 0
-    const newFrame = Math.min(duration, videoRef.current.currentTime + 5 * frameLength)
-    videoRef.current.currentTime = newFrame
-    onFrameChange(newFrame)
+    let nextFrame = currentFrameRef.current + 5
+    if (nextFrame > frameCountRef.current - 1) {
+      nextFrame = loop ? nextFrame - frameCountRef.current : frameCountRef.current - 1
+    }
+    seekToFrame(nextFrame)
   }
 
   //
@@ -129,13 +139,9 @@ const VideoPlayerControls = ({
   return (
     <>
       <Timecode
-        value={videoRef.current?.currentTime || 0}
-        frameRate={frameRate}
-        maximum={videoRef.current?.duration || 0}
-        onChange={(value) => {
-          console.debug('VideoPlayerControls: TC Input Change time to', value)
-          videoRef.current.currentTime = value
-        }}
+        value={currentFrame || 0}
+        maximum={frameCount - 1 || 0}
+        onChange={seekToFrame}
         tooltip={'Current frame'}
         offset={1}
       />
@@ -220,12 +226,7 @@ const VideoPlayerControls = ({
         data-shortcut="F"
       />
 
-      <Timecode
-        value={videoRef.current?.duration}
-        frameRate={frameRate}
-        disabled
-        tooltip={'Total frames'}
-      />
+      <Timecode value={frameCount} disabled tooltip={'Total frames'} />
     </>
   )
 }
