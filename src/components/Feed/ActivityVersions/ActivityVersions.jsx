@@ -3,6 +3,7 @@ import ActivityHeader from '../ActivityHeader/ActivityHeader'
 import * as Styled from './ActivityVersions.styled'
 import { useState } from 'react'
 import { More } from '../ActivityGroup/ActivityGroup.styled'
+import ActivityDate from '../ActivityDate'
 import { useDispatch } from 'react-redux'
 import { openViewer } from '@state/viewer'
 
@@ -44,6 +45,7 @@ const ActivityVersions = ({
               <Styled.Content>
                 <Styled.Title>
                   <span>{productName} - {name}</span>
+                  <ActivityDate date={createdAt} isExact />
                 </Styled.Title>
                 <Styled.Comment>{comment}</Styled.Comment>
               </Styled.Content>
