@@ -35,6 +35,11 @@ fragment ActivityFragment on ActivityNode {
       reaction
       timestamp
     }
+    version {
+      attrib {
+        comment
+      }
+    }
   }
 `
 
@@ -117,6 +122,7 @@ export const getTypeFields = (type) => {
             path
           }
         }
+        comment
       `
     default:
       return ''

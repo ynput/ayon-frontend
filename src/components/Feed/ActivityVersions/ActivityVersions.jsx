@@ -3,7 +3,6 @@ import ActivityHeader from '../ActivityHeader/ActivityHeader'
 import * as Styled from './ActivityVersions.styled'
 import { useState } from 'react'
 import { More } from '../ActivityGroup/ActivityGroup.styled'
-import ActivityDate from '../ActivityDate'
 import { useDispatch } from 'react-redux'
 import { openViewer } from '@state/viewer'
 
@@ -16,7 +15,6 @@ const ActivityVersions = ({
   filter,
 }) => {
   let { authorName, authorFullName, createdAt, versions = [] } = activity
-
   const [showAll, setShowAll] = useState(filter === 'publishes')
   const limit = 2
 
@@ -38,16 +36,16 @@ const ActivityVersions = ({
         entityType={entityType}
         onReferenceClick={onReferenceClick}
       />
-      {versions.flatMap(
-        ({ name, id, productId, productName, updatedAt, createdAt }, index) =>
+      {versions.flatMap((version, index) => {
+        const { name, id, productId, productName, updatedAt, comment } = version
+        return (
           (index < limit || showAll) && (
             <Styled.Card onClick={() => handleClick(id, productId)} key={id}>
               <Styled.Content>
                 <Styled.Title>
-                  <span>{productName}</span>
-                  <ActivityDate date={createdAt} isExact />
+                  <span>{productName} - {name}</span>
                 </Styled.Title>
-                <span className="version">{name}</span>
+                <Styled.Comment>{comment}</Styled.Comment>
               </Styled.Content>
               <Styled.Thumbnail
                 {...{ projectName }}
@@ -59,8 +57,9 @@ const ActivityVersions = ({
                 icon={'play_circle'}
               />
             </Styled.Card>
-          ),
-      )}
+          )
+        )
+      })}
       {filter !== 'publishes' && versions.length > limit && (
         <More onClick={() => setShowAll(!showAll)}>
           <Icon name="more" />

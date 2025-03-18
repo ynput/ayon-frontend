@@ -70,3 +70,10 @@ export const Thumbnail = styled(ThumbnailSimple)`
     object-fit: cover;
   }
 `
+
+export const Comment = styled.div`
+  margin-top: var(--base-gap-small);
+  color: var(--md-sys-color-on-surface-variant);
+  line-height: 1.25rem;
+  word-break: break-word;
+`
