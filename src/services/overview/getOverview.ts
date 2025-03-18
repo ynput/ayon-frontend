@@ -80,7 +80,7 @@ const enhancedApi = api.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
         pageInfo: result.project.tasks.pageInfo,
       }),
       providesTags: (result) => getOverviewTaskTags(result?.tasks || []),
-      serializeQueryArgs: ({ queryArgs: { after, ...rest } }) => ({ ...rest }),
+      serializeQueryArgs: ({ queryArgs: { after, before, last, first, ...rest } }) => ({ ...rest }),
       // Refetch when the page arg changes
       forceRefetch({ currentArg, previousArg }) {
         return !isEqual(currentArg, previousArg)

@@ -145,6 +145,7 @@ export const ProjectTableProvider = ({ children }: ProjectTableProviderProps) =>
       selectedFolders,
       filters,
       expanded,
+      sorting,
       showHierarchy,
     })
 

@@ -1405,6 +1405,10 @@ export type GetTasksListQueryVariables = Exact<{
   folderIds?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
   filter?: InputMaybe<Scalars['String']['input']>;
   after?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  sortBy?: InputMaybe<Scalars['String']['input']>;
 }>;
 
 
@@ -1709,10 +1713,18 @@ export const GetTasksByParentDocument = `
 }
     ${TaskPropsFragmentFragmentDoc}`;
 export const GetTasksListDocument = `
-    query GetTasksList($projectName: String!, $folderIds: [String!], $filter: String, $after: String) {
+    query GetTasksList($projectName: String!, $folderIds: [String!], $filter: String, $after: String, $first: Int, $before: String, $last: Int, $sortBy: String) {
   project(name: $projectName) {
     name
-    tasks(filter: $filter, folderIds: $folderIds, after: $after, first: 100) {
+    tasks(
+      filter: $filter
+      folderIds: $folderIds
+      after: $after
+      first: $first
+      before: $before
+      last: $last
+      sortBy: $sortBy
+    ) {
       pageInfo {
         startCursor
         endCursor

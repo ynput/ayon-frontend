@@ -6,14 +6,16 @@ import {
   useGetTasksListQuery,
 } from '@queries/overview/getOverview'
 import { FolderNodeMap, TaskNodeMap } from '../../../containers/ProjectTreeTable/utils/types'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import clientFilterToQueryFilter from '../utils/clientFilterToQueryFilter'
-import { ExpandedState } from '@tanstack/react-table'
+import { ExpandedState, SortingState } from '@tanstack/react-table'
+import { GetTasksListQueryVariables } from '@api/graphql'
 
 type Params = {
   projectName: string
   selectedFolders: string[] // folders selected in the slicer (hierarchy)
   filters: Filter[] // filters from the filters bar or slicer (not hierarchy)
+  sorting: SortingState
   expanded: ExpandedState
   showHierarchy: boolean
 }
@@ -32,6 +34,7 @@ const useFetchEditorEntities = ({
   projectName,
   selectedFolders,
   filters,
+  sorting,
   expanded,
   showHierarchy,
 }: Params): UseFetchEditorEntitiesData => {
@@ -162,24 +165,53 @@ const useFetchEditorEntities = ({
   }, [folders, foldersByTaskFilter, isUninitialized, selectedFolders])
 
   const [tasksListCursor, setTasksListCursor] = useState('')
+
+  // every time the sorting changes, reset the cursor
+  useEffect(() => {
+    if (tasksListCursor) setTasksListCursor('')
+  }, [sorting, tasksListCursor])
+
+  // build cursor based on sorting
+  const singleSort = sorting[0]
+  let queryCursor: Pick<
+    GetTasksListQueryVariables,
+    'after' | 'before' | 'first' | 'last' | 'sortBy'
+  > = {
+    after: tasksListCursor,
+    first: 100,
+  }
+  if (singleSort) {
+    queryCursor = {
+      [singleSort.desc ? 'before' : 'after']: tasksListCursor,
+      [singleSort.desc ? 'last' : 'first']: 100,
+      sortBy: singleSort.id.replace('_', '.'),
+    }
+  }
+
   // get all tasks if we are viewing flat hierarchy
   const { data: tasksListData, isFetching: isFetchingTaskList } = useGetTasksListQuery(
     {
       projectName,
       filter: filters?.length ? queryFilterString : '',
       folderIds: selectedFolders.length ? Array.from(foldersMap.keys()) : undefined,
-      after: tasksListCursor,
+      ...queryCursor,
     },
     { skip: showHierarchy },
   )
+
+  console.log('tasksListData count', tasksListData?.tasks.length)
 
   const tasksList = tasksListData?.tasks || []
   const tasksListPageInfo = tasksListData?.pageInfo
 
   const handleFetchNextPage = () => {
-    if (tasksListPageInfo?.endCursor && tasksListPageInfo.hasNextPage) {
-      console.log('fetching next page', tasksListPageInfo.endCursor)
-      setTasksListCursor(tasksListPageInfo.endCursor)
+    const hasNext = sorting[0]?.desc
+      ? tasksListPageInfo?.hasPreviousPage
+      : tasksListPageInfo?.hasNextPage
+
+    if (tasksListPageInfo?.endCursor && hasNext) {
+      console.log('fetching next page', tasksListPageInfo?.endCursor)
+      setTasksListCursor(tasksListPageInfo?.endCursor)
     }
   }
 
