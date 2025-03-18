@@ -20,6 +20,7 @@ import ProjectOverviewDetailsPanel from './containers/ProjectOverviewDetailsPane
 import { useEntitySelection } from '@containers/ProjectTreeTable/context/EntitySelectionContext'
 import NewEntity from '@components/NewEntity/NewEntity'
 import { useProjectTableContext } from '@containers/ProjectTreeTable/context/ProjectTableContext'
+import ProjectOverviewSettings from './components/ProjectOverviewSettings'
 
 const searchFilterTypes: FilterFieldType[] = [
   'attributes',
@@ -85,7 +86,7 @@ const ProjectOverviewPage: FC = () => {
           >
             <SplitterPanel size={70}>
               <Section wrap direction="column" style={{ height: '100%' }}>
-                <Toolbar style={{ gap: 4, maxHeight: '24px' }}>
+                <Toolbar style={{ gap: 8, maxHeight: '24px' }}>
                   <NewEntity />
                   <SearchFilterWrapper
                     filters={filtersWithHierarchy}
@@ -101,12 +102,13 @@ const ProjectOverviewPage: FC = () => {
                     disabledFilters={sliceType ? [sliceType] : []}
                   />
                   <span style={{ whiteSpace: 'nowrap', display: 'flex' }}>
-                    Show hierarchy&nbsp;
+                    Show hierarchy
                     <InputSwitch
                       checked={showHierarchy}
                       onChange={(e) => updateShowHierarchy((e.target as HTMLInputElement).checked)}
                     />
                   </span>
+                  <ProjectOverviewSettings />
                 </Toolbar>
                 <ProjectOverviewTable />
               </Section>

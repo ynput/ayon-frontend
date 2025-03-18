@@ -232,6 +232,8 @@ const FlexTable = ({
     sorting,
     updateSorting,
     showHierarchy,
+    columnVisibility,
+    updateColumnVisibility,
     projectInfo,
     projectName,
     getEntityById,
@@ -309,6 +311,7 @@ const FlexTable = ({
     columnResizeMode: 'onChange',
     onColumnPinningChange: updateColumnPinning,
     onColumnSizingChange: updateColumnSizing,
+    onColumnVisibilityChange: updateColumnVisibility,
     // @ts-ignore
     filterFns,
     state: {
@@ -316,6 +319,7 @@ const FlexTable = ({
       sorting,
       columnPinning,
       columnSizing,
+      columnVisibility,
     },
     enableSorting: true,
   })

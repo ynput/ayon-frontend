@@ -5,6 +5,7 @@ import {
   OnChangeFn,
   RowSelectionState,
   SortingState,
+  VisibilityState,
 } from '@tanstack/react-table'
 import useLocalStorage from '@hooks/useLocalStorage'
 import useFetchAndUpdateEntityData from '../hooks/useFetchEditorEntities'
@@ -65,6 +66,11 @@ interface ProjectTableContextProps {
   sorting: SortingState
   updateSorting: OnChangeFn<SortingState>
 
+  // Column Visibility
+  columnVisibility: VisibilityState
+  setColumnVisibility: (columnVisibility: VisibilityState) => void
+  updateColumnVisibility: OnChangeFn<VisibilityState>
+
   // Folder Relationships
   getInheritedDependents: (entities: { id: string; attribs: string[] }[]) => InheritedDependent[]
 }
@@ -104,6 +110,15 @@ export const ProjectTableProvider = ({ children }: ProjectTableProviderProps) =>
 
   const updateSorting: OnChangeFn<SortingState> = (sortingUpdater) => {
     setSorting(functionalUpdate(sortingUpdater, sorting))
+  }
+
+  const [columnVisibility, setColumnVisibility] = useLocalStorage<VisibilityState>(
+    `overview-column-visibility-${scope}`,
+    { status: false },
+  )
+
+  const updateColumnVisibility: OnChangeFn<VisibilityState> = (columnVisibilityUpdater) => {
+    setColumnVisibility(functionalUpdate(columnVisibilityUpdater, columnVisibility))
   }
 
   const { rowSelection, sliceType, persistentRowSelectionData } = useSlicerContext()
@@ -201,6 +216,9 @@ export const ProjectTableProvider = ({ children }: ProjectTableProviderProps) =>
         updateExpanded,
         sorting,
         updateSorting,
+        columnVisibility,
+        setColumnVisibility,
+        updateColumnVisibility,
         getEntityById,
         getInheritedDependents,
       }}

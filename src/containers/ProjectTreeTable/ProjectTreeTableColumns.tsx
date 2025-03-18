@@ -84,6 +84,7 @@ const TableColumns = ({
         filterFn: 'fuzzy',
         sortingFn: nameSort, // custom sort to sort by label then name
         size: columnSizing['label'] || 300,
+        enableHiding: false,
         cell: ({ row, column }) => {
           const cellId = getCellId(row.id, column.id)
           return (
