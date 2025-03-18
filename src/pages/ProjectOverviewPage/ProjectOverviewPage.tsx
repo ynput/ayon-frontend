@@ -101,7 +101,7 @@ const ProjectOverviewPage: FC = () => {
                     }}
                     disabledFilters={sliceType ? [sliceType] : []}
                   />
-                  <span style={{ whiteSpace: 'nowrap', display: 'flex' }}>
+                  <span style={{ whiteSpace: 'nowrap', display: 'flex', gap: 8 }}>
                     Show hierarchy
                     <InputSwitch
                       checked={showHierarchy}
