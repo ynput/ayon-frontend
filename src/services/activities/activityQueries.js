@@ -122,7 +122,6 @@ export const getTypeFields = (type) => {
             path
           }
         }
-        comment
       `
     default:
       return ''
