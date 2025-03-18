@@ -47,7 +47,7 @@ const ActivityVersions = ({
                   <span>{productName} - {name}</span>
                   <ActivityDate date={createdAt} isExact />
                 </Styled.Title>
-                <Styled.Comment>{comment}</Styled.Comment>
+                {comment && <Styled.Comment>{comment}</Styled.Comment>}
               </Styled.Content>
               <Styled.Thumbnail
                 {...{ projectName }}
