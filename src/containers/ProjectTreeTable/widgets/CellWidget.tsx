@@ -27,27 +27,6 @@ const Cell = styled.div`
   }
 `
 
-const StyledInheritedBadge = styled.span`
-  position: absolute;
-  top: 2px;
-  right: 2px;
-  border-radius: 3px;
-  width: 12px;
-  height: 12px;
-  background-color: var(--md-sys-color-surface-container);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-style: normal;
-  font-family: 'Courier New', Courier, monospace;
-
-  font-size: 9px;
-
-  &:hover {
-    background-color: var(--md-sys-color-surface-container-high-hover);
-  }
-`
-
 export type CellValue = string | number | boolean
 
 interface EditorCellProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onChange'> {
@@ -171,14 +150,6 @@ const EditorCellComponent = forwardRef<HTMLDivElement, EditorCellProps>(
         id={cellId}
       >
         {widget}
-        {isInherited && (
-          <StyledInheritedBadge
-            data-tooltip="This value is inherited from a parent folder"
-            className="inherited-badge"
-          >
-            I
-          </StyledInheritedBadge>
-        )}
       </Cell>
     )
   },
