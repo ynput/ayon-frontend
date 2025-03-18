@@ -1,5 +1,6 @@
 import { createContext, ReactNode, useCallback, useContext, useMemo } from 'react'
 import {
+  ColumnPinningState,
   ExpandedState,
   functionalUpdate,
   OnChangeFn,
@@ -71,6 +72,11 @@ interface ProjectTableContextProps {
   setColumnVisibility: (columnVisibility: VisibilityState) => void
   updateColumnVisibility: OnChangeFn<VisibilityState>
 
+  // Column Pinning
+  columnPinning: ColumnPinningState
+  setColumnPinning: (columnPinning: ColumnPinningState) => void
+  updateColumnPinning: OnChangeFn<ColumnPinningState>
+
   // Folder Relationships
   getInheritedDependents: (entities: { id: string; attribs: string[] }[]) => InheritedDependent[]
 }
@@ -112,6 +118,7 @@ export const ProjectTableProvider = ({ children }: ProjectTableProviderProps) =>
     setSorting(functionalUpdate(sortingUpdater, sorting))
   }
 
+  // COLUMN VISIBILITY
   const [columnVisibility, setColumnVisibility] = useLocalStorage<VisibilityState>(
     `overview-column-visibility-${scope}`,
     { status: false },
@@ -119,6 +126,16 @@ export const ProjectTableProvider = ({ children }: ProjectTableProviderProps) =>
 
   const updateColumnVisibility: OnChangeFn<VisibilityState> = (columnVisibilityUpdater) => {
     setColumnVisibility(functionalUpdate(columnVisibilityUpdater, columnVisibility))
+  }
+
+  // COLUMN PINNING
+  const [columnPinning, setColumnPinning] = useLocalStorage<ColumnPinningState>(
+    `column-pinning-${scope}`,
+    { left: ['name'] },
+  )
+
+  const updateColumnPinning: OnChangeFn<ColumnPinningState> = (columnPinningUpdater) => {
+    setColumnPinning(functionalUpdate(columnPinningUpdater, columnPinning))
   }
 
   const { rowSelection, sliceType, persistentRowSelectionData } = useSlicerContext()
@@ -208,17 +225,26 @@ export const ProjectTableProvider = ({ children }: ProjectTableProviderProps) =>
         isLoading,
         fetchNextPage,
         attribFields,
+        // filters
         filters,
         setFilters,
+        // hierarchy
         showHierarchy,
         updateShowHierarchy,
+        // expanded state
         expanded,
         updateExpanded,
+        // sorting
         sorting,
         updateSorting,
+        // column visibility
         columnVisibility,
         setColumnVisibility,
         updateColumnVisibility,
+        // column pinning
+        columnPinning,
+        setColumnPinning,
+        updateColumnPinning,
         getEntityById,
         getInheritedDependents,
       }}

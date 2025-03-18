@@ -237,17 +237,9 @@ const FlexTable = ({
     projectInfo,
     projectName,
     getEntityById,
+    columnPinning,
+    updateColumnPinning,
   } = useProjectTableContext()
-
-  // COLUMN PINNING
-  const [columnPinning, setColumnPinning] = useLocalStorage<ColumnPinningState>(
-    `column-pinning-${scope}`,
-    { left: ['name'] },
-  )
-
-  const updateColumnPinning: OnChangeFn<ColumnPinningState> = (columnPinningUpdater) => {
-    setColumnPinning(functionalUpdate(columnPinningUpdater, columnPinning))
-  }
 
   // COLUMN SIZING
   const [columnSizing, setColumnSizing] = useLocalStorage<ColumnSizingState>(

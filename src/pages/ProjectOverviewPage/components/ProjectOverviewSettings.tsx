@@ -51,7 +51,8 @@ const InvisibleDropdown = styled(Dropdown)`
 type SettingField = 'fields'
 
 const ProjectOverviewSettings: FC = ({}) => {
-  const { columnVisibility, setColumnVisibility, attribFields } = useProjectTableContext()
+  const { columnVisibility, setColumnVisibility, columnPinning, setColumnPinning, attribFields } =
+    useProjectTableContext()
 
   const [selectedSetting, setSelectedSetting] = useState<SettingField | null>(null)
 
@@ -82,7 +83,8 @@ const ProjectOverviewSettings: FC = ({}) => {
     .map((column) => column.value)
     .filter((key) => columnVisibility[key] !== false)
 
-  const columnsRef = useRef<DropdownRef>(null)
+  const fieldsRef = useRef<DropdownRef>(null)
+  const pinnedRef = useRef<DropdownRef>(null)
 
   const settingsOptions = [
     {
@@ -92,8 +94,18 @@ const ProjectOverviewSettings: FC = ({}) => {
       status: `${
         Object.keys(columnVisibility).filter((key) => columnVisibility[key]).length
       } shown`,
+      ref: fieldsRef,
+    },
+    {
+      value: 'pinned',
+      label: 'Pinned',
+      icon: 'push_pin',
+      status: `${columnPinning.left?.length || 0} pinned`,
+      ref: pinnedRef,
     },
   ]
+
+  const columnsWithName = [{ value: 'name', label: 'Name' }, ...columns]
 
   return (
     <>
@@ -118,9 +130,11 @@ const ProjectOverviewSettings: FC = ({}) => {
           </StyledSettingItem>
         )}
         onChange={(value) => {
-          setSelectedSetting(value[0] as SettingField)
+          const settingValue = value[0] as SettingField
+          setSelectedSetting(settingValue)
           //   open the dropdown
-          columnsRef.current?.open()
+          const ref = settingsOptions.find((s) => s.value === settingValue)?.ref
+          ref?.current?.open()
         }}
         onClose={() => setSelectedSetting(null)}
         widthExpand={false}
@@ -128,7 +142,7 @@ const ProjectOverviewSettings: FC = ({}) => {
       <InvisibleDropdown
         multiSelect
         options={columns}
-        ref={columnsRef}
+        ref={fieldsRef}
         value={columnVisibilityValue}
         onChange={(value) => {
           const newVisibility = columns.reduce((acc: { [key: string]: boolean }, column) => {
@@ -136,6 +150,30 @@ const ProjectOverviewSettings: FC = ({}) => {
             return acc
           }, {})
           setColumnVisibility(newVisibility)
+        }}
+        style={{ minWidth: 200 }}
+        maxHeight={600}
+        maxOptionsShown={100}
+        onClose={() => setSelectedSetting(null)}
+        multipleOverride={true}
+        itemTemplate={(option, _isActive, isSelected) => (
+          <DefaultItemTemplate
+            option={option}
+            dataKey="value"
+            labelKey="label"
+            selected={isSelected ? [option.value] : []}
+            value={isSelected ? [option.value] : []}
+            endContent={isSelected && <Icon icon="check" style={{ marginLeft: 'auto' }} />}
+          />
+        )}
+      />
+      <InvisibleDropdown
+        multiSelect
+        options={columnsWithName}
+        ref={pinnedRef}
+        value={columnPinning.left || []}
+        onChange={(value) => {
+          setColumnPinning({ left: value, right: [] })
         }}
         style={{ minWidth: 200 }}
         maxHeight={600}
