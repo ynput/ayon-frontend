@@ -97,12 +97,31 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
 
   useGoToFrame({ setCurrentTime, frameRate, duration, videoElement: videoRef.current })
 
-  const { annotations } = useAnnotations();
+  const { annotations } = useAnnotations()
 
   const annotatedFrames = useMemo(() => {
     const annotatedFrames = Object.values(annotations).flatMap(({ range }) => range)
     return Array.from(new Set(annotatedFrames))
   }, [annotations])
+
+  const updateVeryTrueFrame = (now, metadataInfo) => {
+    const actualTime = metadataInfo.mediaTime
+    setCurrentTime(actualTime)
+    // setVeryTrueFrame(Math.round(actualTime * frameRate) + 1)
+    const video = videoRef.current
+    // if (!video) {
+    //   console.log('Video lost')
+    //   return
+    // }
+    video.requestVideoFrameCallback(updateVeryTrueFrame)
+  }
+
+  useEffect(() => {
+    if (!videoRef.current) return
+    console.log('Got video')
+    const video = videoRef.current
+    video.requestVideoFrameCallback(updateVeryTrueFrame)
+  }, [videoRef.current, frameRate])
 
   //
   // Video size handling
@@ -159,7 +178,7 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
     }
 
     const handleCanPlay = () => {
-      console.debug('VideoPlayer: Can play now.')
+      //console.debug('VideoPlayer: Can play now.')
       seekPreferredInitialPosition()
       setShowStill(false)
     }
@@ -237,13 +256,13 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
       if (actualDuration !== duration) {
         setDuration(actualDuration)
       }
-      const actualTime = Math.min(videoRef.current?.currentTime || 0, actualDuration - frameLength)
-      if (isPlaying) {
-        setCurrentTime(actualTime)
-        setTimeout(() => requestAnimationFrame(updateTime), 10)
-      } else {
-        setCurrentTime(actualTime)
-      }
+      // const actualTime = Math.min(videoRef.current?.currentTime || 0, actualDuration - frameLength)
+      // if (isPlaying) {
+      //   setCurrentTime(actualTime)
+      //   setTimeout(() => requestAnimationFrame(updateTime), 10)
+      // } else {
+      //   setCurrentTime(actualTime)
+      // }
     }
     updateTime()
   }, [videoRef, isPlaying, duration])
@@ -283,12 +302,12 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
     if (videoElement.readyState >= 3) {
       // HAVE_FUTURE_DATA
       videoElement.currentTime = newTime
-      setCurrentTime(newTime)
+      // setCurrentTime(newTime)
     } else {
-      console.debug('VideoPlayer: Waiting for canplay event.')
+      //console.debug('VideoPlayer: Waiting for canplay event.')
       const onCanPlay = () => {
         videoElement.currentTime = newTime
-        setCurrentTime(newTime)
+        //setCurrentTime(newTime)
         videoElement.removeEventListener('canplay', onCanPlay)
       }
       videoElement.addEventListener('canplay', onCanPlay)
@@ -303,15 +322,15 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
   }
 
   const handlePause = () => {
-    initialPosition.current = videoRef.current?.currentTime
-    seekToTime(initialPosition.current)
-    setTimeout(() => {
-      if (videoRef.current?.paused) {
-        seekToTime(initialPosition.current)
-        console.debug('VideoPlayer: Paused')
-        setIsPlaying(false)
-      }
-    }, 10)
+    // initialPosition.current = videoRef.current?.currentTime
+    // seekToTime(initialPosition.current)
+    // setTimeout(() => {
+    //   if (videoRef.current?.paused) {
+    //     seekToTime(initialPosition.current)
+    //     console.debug('VideoPlayer: Paused')
+    //     setIsPlaying(false)
+    //   }
+    // }, 10)
   }
 
   const handleEnded = () => {
@@ -394,7 +413,12 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
             />
             {AnnotationsCanvas && isLoadedAnnotations && (
               <AnnotationsContainer style={{ visibility: isPlaying ? 'hidden' : 'visible' }}>
-                {actualVideoDimensions && <AnnotationsCanvas width={actualVideoDimensions.width} height={actualVideoDimensions.height} />}
+                {actualVideoDimensions && (
+                  <AnnotationsCanvas
+                    width={actualVideoDimensions.width}
+                    height={actualVideoDimensions.height}
+                  />
+                )}
               </AnnotationsContainer>
             )}
           </div>
@@ -419,7 +443,7 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
           videoRef={videoRef}
           isPlaying={isPlaying}
           onFrameChange={(newFrame) => {
-            setCurrentTime(newFrame)
+            // setCurrentTime(newFrame)
             initialPosition.current = newFrame
           }}
           frameRate={frameRate}

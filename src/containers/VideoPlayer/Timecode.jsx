@@ -10,7 +10,7 @@ const Timescode = styled(InputText)`
   }
 `
 
-const Timecode = ({ value, frameRate, onChange, maximum, disabled, tooltip, offset=0 }) => {
+const Timecode = ({ value, frameRate, onChange, maximum, disabled, tooltip, offset = 0 }) => {
   const [frames, setFrames] = useState(offset)
   const inputRef = useRef()
 
