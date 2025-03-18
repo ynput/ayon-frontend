@@ -11,8 +11,6 @@ import { useGetUsersAssigneeQuery } from '@queries/user/getUsers'
 
 // Components
 import ProjectTreeTable from '../../../containers/ProjectTreeTable/ProjectTreeTable'
-import { functionalUpdate, OnChangeFn, SortingState } from '@tanstack/react-table'
-import useLocalStorage from '@hooks/useLocalStorage'
 import { useProjectTableContext } from '../../../containers/ProjectTreeTable/context/ProjectTableContext'
 
 type User = {
@@ -42,17 +40,6 @@ const ProjectOverviewTable = ({}: Props) => {
   const users = usersData as User[]
 
   const { statuses = [], folderTypes = [], taskTypes = [] } = projectInfo || {}
-
-  const [sorting, setSorting] = useLocalStorage<SortingState>(`sorting-${scope}`, [
-    {
-      id: 'name',
-      desc: true,
-    },
-  ])
-
-  const updateSorting: OnChangeFn<SortingState> = (sortingUpdater) => {
-    setSorting(functionalUpdate(sortingUpdater, sorting))
-  }
 
   const options: BuiltInFieldOptions = useMemo(
     () => ({
@@ -96,9 +83,6 @@ const ProjectOverviewTable = ({}: Props) => {
         isLoading={false}
         isExpandable={false}
         sliceId={''}
-        // sorting
-        sorting={sorting}
-        updateSorting={updateSorting}
         // pagination
         fetchMoreOnBottomReached={fetchMoreOnBottomReached}
         // metadata

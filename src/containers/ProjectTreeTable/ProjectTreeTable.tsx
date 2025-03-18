@@ -10,7 +10,6 @@ import {
   flexRender,
   Row,
   OnChangeFn,
-  SortingState,
   getSortedRowModel,
   Cell,
   ColumnPinningState,
@@ -81,8 +80,6 @@ type Props = {
   isLoading: boolean
   isExpandable: boolean
   sliceId: string
-  sorting: SortingState
-  updateSorting: OnChangeFn<SortingState>
   // metadata
   tasksMap: TaskNodeMap
   foldersMap: FolderNodeMap
@@ -221,15 +218,21 @@ const FlexTable = ({
   isLoading,
   isExpandable,
   sliceId,
-  sorting,
-  updateSorting,
   fetchMoreOnBottomReached,
 }: Props) => {
   //The virtualizer needs to know the scrollable container element
   const tableContainerRef = useRef<HTMLDivElement>(null)
 
-  const { expanded, updateExpanded, showHierarchy, projectInfo, projectName, getEntityById } =
-    useProjectTableContext()
+  const {
+    expanded,
+    updateExpanded,
+    sorting,
+    updateSorting,
+    showHierarchy,
+    projectInfo,
+    projectName,
+    getEntityById,
+  } = useProjectTableContext()
 
   // COLUMN PINNING
   const [columnPinning, setColumnPinning] = useLocalStorage<ColumnPinningState>(

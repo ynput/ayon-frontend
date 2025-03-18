@@ -4,6 +4,7 @@ import {
   functionalUpdate,
   OnChangeFn,
   RowSelectionState,
+  SortingState,
 } from '@tanstack/react-table'
 import useLocalStorage from '@hooks/useLocalStorage'
 import useFetchAndUpdateEntityData from '../hooks/useFetchEditorEntities'
@@ -33,21 +34,38 @@ export type InheritedDependent = {
 }
 
 interface ProjectTableContextProps {
+  // Project Info
+  projectInfo?: ProjectModel
+  projectName: string
+
+  // Data
   tableData: TableRow[]
   tasksMap: TaskNodeMap
   foldersMap: FolderNodeMap
   isLoading: boolean
   fetchNextPage: () => void
+  getEntityById: (id: string) => MatchingFolder | EditorTaskNode | undefined
+
+  // Attributes
+  attribFields: AttributeModel[]
+
+  // Filters
   filters: Filter[]
   setFilters: (filters: Filter[]) => void
+
+  // Hierarchy
   showHierarchy: boolean
   updateShowHierarchy: (showHierarchy: boolean) => void
-  projectInfo?: ProjectModel
+
+  // Expanded state
   expanded: ExpandedState
   updateExpanded: OnChangeFn<ExpandedState>
-  projectName: string
-  attribFields: AttributeModel[]
-  getEntityById: (id: string) => MatchingFolder | EditorTaskNode | undefined
+
+  // Sorting
+  sorting: SortingState
+  updateSorting: OnChangeFn<SortingState>
+
+  // Folder Relationships
   getInheritedDependents: (entities: { id: string; attribs: string[] }[]) => InheritedDependent[]
 }
 
@@ -76,6 +94,17 @@ export const ProjectTableProvider = ({ children }: ProjectTableProviderProps) =>
     `overview-show-hierarchy-${projectName}`,
     true,
   )
+
+  const [sorting, setSorting] = useLocalStorage<SortingState>(`sorting-${scope}`, [
+    {
+      id: 'name',
+      desc: true,
+    },
+  ])
+
+  const updateSorting: OnChangeFn<SortingState> = (sortingUpdater) => {
+    setSorting(functionalUpdate(sortingUpdater, sorting))
+  }
 
   const { rowSelection, sliceType, persistentRowSelectionData } = useSlicerContext()
 
@@ -110,8 +139,6 @@ export const ProjectTableProvider = ({ children }: ProjectTableProviderProps) =>
     combinedFilters.push(sliceFilter)
   }
 
-  console.time('dataToTable')
-
   const { foldersMap, tasksMap, tasksByFolderMap, fetchNextPage, isLoading } =
     useFetchAndUpdateEntityData({
       projectName,
@@ -130,7 +157,6 @@ export const ProjectTableProvider = ({ children }: ProjectTableProviderProps) =>
     taskTypes,
     showHierarchy,
   })
-  console.timeEnd('dataToTable')
 
   const getEntityById = useCallback(
     (id: string): MatchingFolder | EditorTaskNode | undefined => {
@@ -158,20 +184,22 @@ export const ProjectTableProvider = ({ children }: ProjectTableProviderProps) =>
   return (
     <ProjectTableContext.Provider
       value={{
-        expanded,
-        updateExpanded,
+        projectInfo,
+        projectName,
         tableData,
         tasksMap,
         foldersMap,
         isLoading,
         fetchNextPage,
+        attribFields,
         filters,
         setFilters,
         showHierarchy,
         updateShowHierarchy,
-        projectInfo: projectInfo,
-        projectName,
-        attribFields,
+        expanded,
+        updateExpanded,
+        sorting,
+        updateSorting,
         getEntityById,
         getInheritedDependents,
       }}
