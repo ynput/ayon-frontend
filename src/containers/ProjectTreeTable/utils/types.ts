@@ -18,6 +18,7 @@ export type TableRow = {
   subType?: string | null
   type: string
   ownAttrib: string[]
+  path: string | null | undefined
 }
 
 export type ExtraData = {

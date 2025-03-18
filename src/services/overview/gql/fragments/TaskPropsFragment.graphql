@@ -12,4 +12,7 @@ fragment TaskPropsFragment on TaskNode {
   active
   assignees
   allAttrib
+  folder {
+    path
+  }
 }

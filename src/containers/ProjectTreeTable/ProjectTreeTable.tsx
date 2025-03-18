@@ -130,6 +130,8 @@ const TableCell = ({ cell, cellId }: TableCellProps) => {
 
   const { isEditing } = useCellEditing()
 
+  const { showHierarchy } = useProjectTableContext()
+
   const borderClasses = getCellBorderClasses(cellId)
 
   return (
@@ -148,6 +150,7 @@ const TableCell = ({ cell, cellId }: TableCellProps) => {
       style={{
         ...getCommonPinningStyles(cell.column),
         width: `calc(var(--col-${cell.column.id}-size) * 1px)`,
+        height: showHierarchy ? 36 : 40,
       }}
       onMouseDown={(e) => {
         // Only process left clicks (button 0), ignore right clicks
@@ -277,6 +280,7 @@ const FlexTable = ({
     attribs,
     isLoading,
     isExpandable,
+    showHierarchy,
     sliceId,
     options,
     toggleExpanderHandler: () => {
@@ -327,7 +331,7 @@ const FlexTable = ({
 
   const rowVirtualizer = useVirtualizer({
     count: rows.length,
-    estimateSize: () => 40, //estimate row height for accurate scrollbar dragging
+    estimateSize: () => (showHierarchy ? 36 : 40), //estimate row height for accurate scrollbar dragging
     getScrollElement: () => tableContainerRef.current,
     //measure dynamic row height, except in firefox because it measures table border height incorrectly
     measureElement:

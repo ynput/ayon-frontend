@@ -58,6 +58,7 @@ type Props = {
   columnSizing: ColumnSizingState
   isLoading: boolean
   isExpandable: boolean
+  showHierarchy: boolean
   sliceId: string
   options: BuiltInFieldOptions
   toggleExpanderHandler: (e: React.MouseEvent, id: string) => void
@@ -67,6 +68,7 @@ const TableColumns = ({
   tableData,
   attribs,
   columnSizing = {},
+  showHierarchy,
   isLoading,
   sliceId,
   options,
@@ -88,7 +90,7 @@ const TableColumns = ({
             <TableCellContent
               className={clsx('large', { selected: row.getIsSelected(), loading: isLoading })}
               style={{
-                paddingLeft: `calc(${row.depth * 0.5}rem + 4px)`,
+                paddingLeft: `calc(${row.depth * 1}rem + 8px)`,
               }}
               tabIndex={0}
               id={cellId}
@@ -97,6 +99,8 @@ const TableColumns = ({
                 id={row.id}
                 label={row.original.label}
                 name={row.original.name}
+                path={!showHierarchy ? row.original.path : undefined}
+                showHierarchy={showHierarchy}
                 icon={row.original.icon}
                 type={row.original.data.type}
                 isExpanded={row.getIsExpanded()}
@@ -207,7 +211,7 @@ const TableColumns = ({
     })
 
     return [...staticColumns, ...attributeColumns]
-  }, [isLoading, sliceId, tableData, options, attribs, updateEntities])
+  }, [isLoading, sliceId, tableData, options, attribs, showHierarchy, updateEntities])
 }
 
 export default TableColumns
