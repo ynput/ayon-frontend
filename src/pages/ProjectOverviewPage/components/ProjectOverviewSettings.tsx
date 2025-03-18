@@ -74,7 +74,7 @@ const ProjectOverviewSettings: FC = ({}) => {
       label: 'Tags',
     },
     ...attribFields.map((field) => ({
-      value: field.name,
+      value: 'attrib_' + field.name,
       label: field.data.title || field.name,
     })),
   ]
