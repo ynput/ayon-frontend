@@ -151,6 +151,7 @@ export default function useOverviewTable({
         subRows: [],
         subType: task.taskType || null,
         attrib: task.attrib,
+        ownAttrib: task.ownAttrib,
         data: {
           id: task.id,
           type: 'task',
@@ -204,6 +205,7 @@ export default function useOverviewTable({
         subRows: [],
         status: folder.status,
         subType: folder.folderType || null,
+        ownAttrib: folder.ownAttrib,
         data: {
           id: folderId,
           type: 'folder',

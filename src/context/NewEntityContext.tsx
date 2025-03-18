@@ -5,7 +5,7 @@ import { toast } from 'react-toastify'
 import getSequence from '@helpers/getSequence'
 import { ProjectModel } from '@api/rest/project'
 import { generateLabel } from '@components/NewEntity/NewEntity'
-import { useOperationsMutation } from '@queries/overview/updateOverview'
+import { useUpdateOverviewEntitiesMutation } from '@queries/overview/updateOverview'
 
 export type NewEntityType = 'folder' | 'task'
 
@@ -113,7 +113,7 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
     )
   }
 
-  const [createEntities] = useOperationsMutation()
+  const [createEntities] = useUpdateOverviewEntitiesMutation()
 
   const onCreateNew: NewEntityContextProps['onCreateNew'] = async (
     selectedFolderIds,

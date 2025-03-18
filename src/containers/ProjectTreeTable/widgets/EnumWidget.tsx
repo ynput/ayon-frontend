@@ -3,6 +3,7 @@ import { Dropdown, DropdownRef, Icon } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import { forwardRef, useEffect, useRef } from 'react'
 import styled from 'styled-components'
+import { WidgetBaseProps } from './CellWidget'
 
 const StyledWidget = styled.div`
   display: flex;
@@ -66,13 +67,13 @@ const StyledDropdown = styled(Dropdown)`
   width: 100%;
 `
 
-interface EnumWidgetProps extends Omit<React.HTMLAttributes<HTMLSpanElement>, 'onChange'> {
+interface EnumWidgetProps
+  extends Omit<React.HTMLAttributes<HTMLSpanElement>, 'onChange'>,
+    WidgetBaseProps {
   value: (string | number | boolean)[]
-  isEditing?: boolean
   options: AttributeEnumItem[]
   type?: AttributeData['type']
   onOpen: () => void
-  onChange: (value: string | string[]) => void
 }
 
 const checkForImgSrc = (icon: string): boolean => {

@@ -1,10 +1,16 @@
-import { OperationModel, api as operationsApi } from '@api/rest/operations'
+import {
+  OperationModel,
+  api as operationsApi,
+  OperationsApiArg,
+  OperationsResponseModel,
+} from '@api/rest/operations'
 import tasksApi from '@queries/overview/getOverview'
 import hierarchyApi from '@queries/getHierarchy'
 import { getEntityPanelApi } from '@queries/entity/getEntityPanel'
-import { RootState } from '@reduxjs/toolkit/query'
+import { FetchBaseQueryError, RootState } from '@reduxjs/toolkit/query'
 import { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
 import { EditorTaskNode } from '@containers/ProjectTreeTable/utils/types'
+import { InheritedDependent } from '@containers/ProjectTreeTable/context/ProjectTableContext'
 // import { current } from '@reduxjs/toolkit'
 // these operations are dedicated to the overview page
 // this mean cache updates are custom for the overview page here
@@ -24,7 +30,7 @@ const updateEntityWithOperation = (entity: any, operationData: any) => {
   Object.assign(entity, newData)
 }
 
-const getOverviewTaskTags = (tasks: OperationModel[]) => {
+const getOverviewTaskTags = (tasks: Pick<OperationModel, 'entityId'>[]) => {
   return [
     { type: 'overviewTask', id: 'LIST' },
     ...tasks.map((op) => ({ type: 'overviewTask', id: op.entityId })),
@@ -80,7 +86,7 @@ export const patchOverviewTasks = (
 }
 
 const invalidateOverviewTasks = (
-  tasks: OperationModel[],
+  tasks: Pick<OperationModel, 'entityId'>[],
   {
     dispatch,
   }: {
@@ -164,8 +170,38 @@ const splitByOpType = (operations: OperationModel[]) => {
 
 const operationsEnhanced = operationsApi.enhanceEndpoints({
   endpoints: {
-    operations: {
-      async onQueryStarted({ operationsRequestModel }, { dispatch, queryFulfilled, getState }) {
+    operations: {},
+  },
+})
+
+// enhance the argument type to include some extra fields
+interface UpdateOverviewEntitiesArg extends OperationsApiArg {
+  inheritedDependents?: InheritedDependent[]
+}
+
+const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
+  endpoints: (build) => ({
+    updateOverviewEntities: build.mutation<
+      OperationsResponseModel | undefined,
+      UpdateOverviewEntitiesArg
+    >({
+      async queryFn(arg, { dispatch }) {
+        try {
+          const result = await dispatch(operationsEnhanced.endpoints.operations.initiate(arg))
+
+          const data = result.data
+
+          return { data }
+        } catch (e: any) {
+          console.error(e)
+          const error = { status: 'FETCH_ERROR', error: e.message } as FetchBaseQueryError
+          return { error }
+        }
+      },
+      async onQueryStarted(
+        { operationsRequestModel, inheritedDependents = [] },
+        { dispatch, queryFulfilled, getState },
+      ) {
         if (!operationsRequestModel.operations?.length) return
         const { operations } = operationsRequestModel
         // we need to split the operations by entity type
@@ -192,22 +228,51 @@ const operationsEnhanced = operationsApi.enhanceEndpoints({
         if (operationsByType.task?.length) {
           // split operations by operation type
           const { create, delete: deleteOps, update } = splitByOpType(operationsByType.task)
+          // filter out updates that are in inheritedDependentsTasks
+          const updatesToPatch = update.filter(
+            (op) => !inheritedDependents.some((dep) => dep.entityId === op.entityId),
+          )
           // update existing tasks
-          patchOverviewTasks(update, { state, dispatch }, patches)
+          patchOverviewTasks(updatesToPatch, { state, dispatch }, patches)
           // invalidate the caches for tasks being created and deleted
-          invalidateOverviewTasks([...create, ...deleteOps], { dispatch })
+          invalidateOverviewTasks([...create, ...deleteOps], {
+            dispatch,
+          })
         }
 
         // patch the overview folders (any any other folders from foldersList)
         if (operationsByType.folder?.length) {
           // split operations by operation type
           const { create, delete: deleteOps, update } = splitByOpType(operationsByType.folder)
+          // filter out updates that are in inheritedDependentsTasks
+          const updatesToPatch = update.filter(
+            (op) => !inheritedDependents.some((dep) => dep.entityId === op.entityId),
+          )
           // update existing folders
-          patchOverviewFolders(update, { state, dispatch }, patches)
+          patchOverviewFolders(updatesToPatch, { state, dispatch }, patches)
           // invalidate the caches for folders being created and deleted
-          if (create.length || deleteOps.length) {
+          if (
+            create.length ||
+            deleteOps.length ||
+            inheritedDependents.some((op) => op.entityType === 'folder')
+          ) {
             dispatch(hierarchyApi.util.invalidateTags([{ type: 'folder', id: 'LIST' }]))
           }
+        }
+
+        const inheritedDependentsTasks = inheritedDependents.filter(
+          (op) => op.entityType === 'task',
+        )
+        const inheritedDependentsFolders = inheritedDependents.filter(
+          (op) => op.entityType === 'folder',
+        )
+
+        if (inheritedDependentsTasks.length) {
+          invalidateOverviewTasks(inheritedDependentsTasks, { dispatch })
+        }
+
+        if (inheritedDependentsFolders.length) {
+          dispatch(hierarchyApi.util.invalidateTags([{ type: 'folder', id: 'LIST' }]))
         }
 
         // try to patch any details panels
@@ -288,8 +353,8 @@ const operationsEnhanced = operationsApi.enhanceEndpoints({
           }
         }
       },
-    },
-  },
+    }),
+  }),
 })
 
-export const { useOperationsMutation } = operationsEnhanced
+export const { useUpdateOverviewEntitiesMutation } = operationsApiEnhancedInjected

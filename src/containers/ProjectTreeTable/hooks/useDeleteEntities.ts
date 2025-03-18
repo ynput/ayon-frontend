@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { useOperationsMutation } from '@queries/overview/updateOverview'
+import { useUpdateOverviewEntitiesMutation } from '@queries/overview/updateOverview'
 import { OperationModel } from '@api/rest/operations'
 import { useProjectTableContext } from '../context/ProjectTableContext'
 import { toast } from 'react-toastify'
@@ -12,7 +12,7 @@ type UseDeleteEntitiesProps = {
 
 const useDeleteEntities = ({ onSuccess }: UseDeleteEntitiesProps) => {
   const { getEntityById, projectName } = useProjectTableContext()
-  const [runOperations] = useOperationsMutation()
+  const [runOperations] = useUpdateOverviewEntitiesMutation()
 
   const handleDeleteEntities = useCallback(
     async (entityIds: string[]) => {

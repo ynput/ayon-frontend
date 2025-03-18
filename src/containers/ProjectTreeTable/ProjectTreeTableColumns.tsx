@@ -185,6 +185,7 @@ const TableColumns = ({
         cell: ({ row, column }) => {
           const columnIdParsed = column.id.replace('attrib_', '')
           const { value, id, type } = getValueIdType(row, columnIdParsed, 'attrib')
+          const isInherited = !row.original.ownAttrib.includes(columnIdParsed)
 
           return (
             <CellWidget
@@ -194,6 +195,7 @@ const TableColumns = ({
               attributeData={{ type: attrib.data.type || 'string' }}
               options={attrib.data.enum || []}
               isCollapsed={!!row.original.childOnlyMatch}
+              isInherited={isInherited}
               onChange={(value) =>
                 updateEntities([{ field: columnIdParsed, value, id, type, isAttrib: true }])
               }

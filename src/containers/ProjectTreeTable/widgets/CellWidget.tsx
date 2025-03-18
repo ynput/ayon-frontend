@@ -12,6 +12,7 @@ import { useCellEditing } from '../context/CellEditingContext'
 
 // Utils
 import { getCellId } from '../utils/cellUtils'
+import clsx from 'clsx'
 
 const Cell = styled.div`
   position: absolute;
@@ -19,6 +20,32 @@ const Cell = styled.div`
   padding: 4px 8px;
   display: flex;
   align-items: center;
+
+  &.inherited {
+    opacity: 0.6;
+    font-style: italic;
+  }
+`
+
+const StyledInheritedBadge = styled.span`
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  border-radius: 3px;
+  width: 12px;
+  height: 12px;
+  background-color: var(--md-sys-color-surface-container);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-style: normal;
+  font-family: 'Courier New', Courier, monospace;
+
+  font-size: 9px;
+
+  &:hover {
+    background-color: var(--md-sys-color-surface-container-high-hover);
+  }
 `
 
 export type CellValue = string | number | boolean
@@ -30,8 +57,16 @@ interface EditorCellProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'on
   attributeData?: AttributeData
   options?: AttributeEnumItem[]
   isCollapsed?: boolean
+  isInherited?: boolean
   isPlaceholder?: boolean
   onChange?: (value: CellValue | CellValue[]) => void
+}
+
+export interface WidgetBaseProps {
+  isEditing?: boolean
+  isInherited: EditorCellProps['isInherited']
+  onChange: Required<EditorCellProps>['onChange']
+  onCancelEdit: () => void
 }
 
 const EditorCellComponent = forwardRef<HTMLDivElement, EditorCellProps>(
@@ -43,6 +78,7 @@ const EditorCellComponent = forwardRef<HTMLDivElement, EditorCellProps>(
       attributeData,
       options = [],
       isCollapsed,
+      isInherited,
       isPlaceholder,
       onChange,
       ...props
@@ -69,13 +105,14 @@ const EditorCellComponent = forwardRef<HTMLDivElement, EditorCellProps>(
 
     const widget = useMemo(() => {
       // Common props shared across all widgets
-      const sharedProps = {
-        onChange: (value: CellValue | CellValue[]) => {
+      const sharedProps: WidgetBaseProps = {
+        onChange: (value) => {
           setEditingCellId(null)
           onChange?.(value)
         },
         onCancelEdit: () => setEditingCellId(null),
         isEditing: isCurrentCellEditing,
+        isInherited,
       }
 
       const textTypes: TextWidgetType[] = ['string', 'integer', 'float']
@@ -127,12 +164,21 @@ const EditorCellComponent = forwardRef<HTMLDivElement, EditorCellProps>(
     return (
       <Cell
         {...props}
+        className={clsx(props.className, { inherited: isInherited && !isCurrentCellEditing })}
         ref={ref}
         onDoubleClick={handleDoubleClick}
         onClick={handleSingleClick}
         id={cellId}
       >
         {widget}
+        {isInherited && (
+          <StyledInheritedBadge
+            data-tooltip="This value is inherited from a parent folder"
+            className="inherited-badge"
+          >
+            I
+          </StyledInheritedBadge>
+        )}
       </Cell>
     )
   },
@@ -150,7 +196,8 @@ function arePropsEqual(prevProps: EditorCellProps, nextProps: EditorCellProps) {
     // Only check options length for list types to avoid deep comparison
     ((!prevProps?.attributeData?.type.includes('list') &&
       !nextProps?.attributeData?.type.includes('list')) ||
-      prevProps.options?.length === nextProps.options?.length)
+      prevProps.options?.length === nextProps.options?.length) &&
+    prevProps.isInherited === nextProps.isInherited
   )
 }
 

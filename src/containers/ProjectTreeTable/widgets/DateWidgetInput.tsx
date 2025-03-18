@@ -1,12 +1,13 @@
 import { forwardRef, useState, useEffect, useRef } from 'react'
 import styled from 'styled-components'
 import { format, isValid, parseISO } from 'date-fns'
+import { WidgetBaseProps } from './CellWidget'
 
 interface DateWidgetInputProps
-  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'>,
+    WidgetBaseProps {
   value: string
   onCancel?: () => void
-  onChange: (value: string) => void
   autoFocus?: boolean
 }
 

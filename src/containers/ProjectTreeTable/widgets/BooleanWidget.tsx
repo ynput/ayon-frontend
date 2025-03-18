@@ -1,5 +1,6 @@
 import { forwardRef } from 'react'
 import styled from 'styled-components'
+import { WidgetBaseProps } from './CellWidget'
 
 const StyledCheckbox = styled.input`
   margin: auto;
@@ -24,11 +25,10 @@ const StyledCheckbox = styled.input`
   }
 `
 
-interface BooleanWidgetProps extends Omit<React.HTMLAttributes<HTMLInputElement>, 'onChange'> {
+interface BooleanWidgetProps
+  extends Omit<React.HTMLAttributes<HTMLInputElement>, 'onChange'>,
+    WidgetBaseProps {
   value: boolean
-  onChange: (value: boolean) => void
-  onCancelEdit?: () => void
-  isEditing?: boolean
 }
 
 export const BooleanWidget = forwardRef<HTMLInputElement, BooleanWidgetProps>(

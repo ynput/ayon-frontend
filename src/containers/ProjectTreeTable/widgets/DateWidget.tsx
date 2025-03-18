@@ -1,12 +1,12 @@
 import { format } from 'date-fns'
 import { forwardRef } from 'react'
 import { DateWidgetInput } from './DateWidgetInput'
+import { WidgetBaseProps } from './CellWidget'
 
-interface DateWidgetProps extends Omit<React.HTMLAttributes<HTMLSpanElement>, 'onChange'> {
+interface DateWidgetProps
+  extends Omit<React.HTMLAttributes<HTMLSpanElement>, 'onChange'>,
+    WidgetBaseProps {
   value: string
-  isEditing?: boolean
-  onChange: (value: string) => void
-  onCancelEdit?: () => void
 }
 
 export const DateWidget = forwardRef<HTMLSpanElement, DateWidgetProps>(

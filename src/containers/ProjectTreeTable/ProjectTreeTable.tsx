@@ -177,7 +177,6 @@ const TableCell = ({ cell, cellId }: TableCellProps) => {
         endSelection(cellId)
       }}
       onContextMenu={(e) => {
-        console.log(isCellSelected(cellId))
         e.preventDefault()
         // if the cell is not selected, select it and deselect all others
         if (!isCellSelected(cellId)) {
@@ -229,7 +228,7 @@ const FlexTable = ({
   //The virtualizer needs to know the scrollable container element
   const tableContainerRef = useRef<HTMLDivElement>(null)
 
-  const { expanded, updateExpanded, showHierarchy, projectInfo, projectName } =
+  const { expanded, updateExpanded, showHierarchy, projectInfo, projectName, getEntityById } =
     useProjectTableContext()
 
   // COLUMN PINNING
@@ -265,6 +264,9 @@ const FlexTable = ({
 
   // new entity context
   const { onOpenNew } = useNewEntityContext()
+
+  // update entity context
+  const { inheritFromParent } = useCellEditing()
 
   const columns = ProjectTreeTableColumns({
     tableData,
@@ -357,9 +359,7 @@ const FlexTable = ({
     // get the entity
     const entityId = parseCellId(id)?.rowId
     if (!entityId) return items
-    // const entity = getEntityById(entityId)
 
-    // add delete option if selecting name column
     const isColName = parseCellId(id)?.colId === 'name'
 
     if (!isColName) {
@@ -368,6 +368,48 @@ const FlexTable = ({
         icon: 'content_paste',
         shortcut: getPlatformShortcutKey('v', [KeyMode.Ctrl]),
         command: () => pasteFromClipboard(selected),
+      })
+    }
+
+    const entitiesToInherit = selected.reduce((acc, cellId) => {
+      const { rowId, colId } = parseCellId(cellId) || {}
+      if (!rowId || !colId || !colId.startsWith('attrib_')) return acc
+
+      const entity = getEntityById(rowId)
+      if (!entity) return acc
+
+      const attribName = colId.replace('attrib_', '')
+
+      // Check if this attribute is owned by the entity (not inherited)
+      if (entity.ownAttrib?.includes(attribName)) {
+        // Find existing entry or create new one
+        const existingIndex = acc.findIndex((item) => item.id === rowId)
+
+        if (existingIndex >= 0) {
+          // Add to existing entity's attribs if not already there
+          if (!acc[existingIndex].attribs.includes(attribName)) {
+            acc[existingIndex].attribs.push(attribName)
+          }
+        } else {
+          // Create new entity entry
+          acc.push({
+            id: rowId,
+            type: 'folderId' in entity ? 'task' : 'folder',
+            attribs: [attribName],
+          })
+        }
+      }
+
+      return acc
+    }, [] as { id: string; type: string; attribs: string[] }[])
+
+    // Update the inherit from parent command to use the entities we collected
+    if (entitiesToInherit.length && showHierarchy) {
+      // NOTE: This should work not in hierarchy mode, but for some reason it doesn't
+      items.push({
+        label: 'Inherit from parent',
+        icon: 'disabled_by_default',
+        command: () => inheritFromParent(entitiesToInherit),
       })
     }
 
