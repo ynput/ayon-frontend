@@ -149,7 +149,8 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({ children 
       } else {
         // Single cell selection
         // If this cell is already the only selected cell, deselect it
-        if (selectedCells.size === 1 && selectedCells.has(cellId)) {
+        // and it is from name column
+        if (selectedCells.size === 1 && selectedCells.has(cellId) && position.colId === 'name') {
           setSelectedCells(new Set())
           setAnchorCell(null)
           setFocusedCellId(null)

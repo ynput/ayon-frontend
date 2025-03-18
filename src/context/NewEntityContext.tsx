@@ -153,7 +153,9 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
         operationsRequestModel: { operations },
         projectName: projectName,
       }).unwrap()
-    } catch (error) {}
+    } catch (error) {
+      toast.error('Failed to create new entity')
+    }
   }
 
   const onOpenNew: NewEntityContextProps['onOpenNew'] = (type, projectInfo) => {

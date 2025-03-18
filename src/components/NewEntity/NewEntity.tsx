@@ -85,33 +85,41 @@ const NewEntity: React.FC<NewEntityProps> = () => {
   const { selectedCells } = useSelection()
   const { getEntityById, projectName, projectInfo } = useProjectTableContext()
 
-  const selectedRowIds = Array.from(
-    new Set(
-      Array.from(selectedCells)
-        .map((cellId) => parseCellId(cellId))
-        .filter((cell) => cell && cell?.colId === 'name')
-        .map((cell) => cell?.rowId) as string[],
-    ),
-  )
+  const { selectedFolderIds, selectedFolders } = React.useMemo(() => {
+    const selectedRowIds = Array.from(
+      new Set(
+        Array.from(selectedCells)
+          .map((cellId) => parseCellId(cellId))
+          .filter((cell) => cell && cell?.colId === 'name')
+          .map((cell) => cell?.rowId) as string[],
+      ),
+    )
 
-  const selectedEntities = selectedRowIds.map((id) => getEntityById(id))
+    const selectedEntities = selectedRowIds.map((id) => getEntityById(id))
 
-  const selectedFolders = selectedEntities.filter(
-    // @ts-ignore
-    (entity) => !entity?.folderId,
-  ) as MatchingFolder[]
-  const selectedTasks = selectedEntities.filter(
-    // @ts-ignore
-    (entity) => entity?.folderId,
-  ) as EditorTaskNode[]
+    const selectedFolders = selectedEntities
+      .filter(
+        // @ts-ignore
+        (entity) => !entity?.folderId,
+      )
+      .filter(Boolean) as MatchingFolder[]
+    const selectedTasks = selectedEntities
+      .filter(
+        // @ts-ignore
+        (entity) => entity?.folderId,
+      )
+      .filter(Boolean) as EditorTaskNode[]
 
-  // Extract folder IDs from selected folders and tasks
-  const folderIdsFromFolders = selectedFolders.map((folder) => folder.id)
-  const folderIdsFromTasks = selectedTasks.map((task) => task.folderId)
+    // Extract folder IDs from selected folders and tasks
+    const folderIdsFromFolders = selectedFolders.map((folder) => folder.id)
+    const folderIdsFromTasks = selectedTasks.map((task) => task.folderId)
 
-  // Combine and remove duplicate folder IDs
-  // These are the folders to create the new entity in
-  const selectedFolderIds = Array.from(new Set([...folderIdsFromFolders, ...folderIdsFromTasks]))
+    // Combine and remove duplicate folder IDs
+    // These are the folders to create the new entity in
+    const selectedFolderIds = Array.from(new Set([...folderIdsFromFolders, ...folderIdsFromTasks]))
+
+    return { selectedFolderIds, selectedFolders }
+  }, [selectedCells, getEntityById])
 
   const isRoot = isEmpty(selectedFolderIds)
 
@@ -189,25 +197,28 @@ const NewEntity: React.FC<NewEntityProps> = () => {
     // reset state
     setEntityType(null)
     setEntityForm(initData)
+    setSequenceForm((prev) => ({ ...prev, active: false }))
   }
 
   // open dropdown - delay to wait for dialog opening
   const handleShow = () => setTimeout(() => typeSelectRef.current?.open(), 180)
 
-  const handleSubmit = async (stayOpen: boolean) => {
-    try {
-      await onCreateNew(selectedFolderIds, projectName)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-      if (stayOpen) {
-        // focus and select the label input
-        if (labelRef.current) {
-          labelRef.current.focus()
-          labelRef.current.select()
-        }
-      } else {
-        handleClose()
+  const handleSubmit = async (stayOpen: boolean) => {
+    setIsSubmitting(true)
+    await onCreateNew(selectedFolderIds, projectName)
+    setIsSubmitting(false)
+
+    if (stayOpen) {
+      // focus and select the label input
+      if (labelRef.current) {
+        labelRef.current.focus()
+        labelRef.current.select()
       }
-    } catch (error) {}
+    } else {
+      handleClose()
+    }
   }
 
   const handleKeyDown = (e: KeyboardEvent, lastInput?: boolean) => {
@@ -273,18 +284,23 @@ const NewEntity: React.FC<NewEntityProps> = () => {
           onClose={handleClose}
           onShow={handleShow}
           size={sequenceForm.active ? 'lg' : 'md'}
+          style={{ maxWidth: sequenceForm.active ? 'unset' : 430 }}
           footer={
             <Toolbar onFocus={() => setNameFocused(false)} style={{ width: '100%' }}>
-              <span>Sequence</span>
-              <InputSwitch
-                checked={sequenceForm.active}
-                onChange={(e) =>
-                  setSequenceForm({
-                    ...sequenceForm,
-                    active: (e.target as HTMLInputElement).checked,
-                  })
-                }
-              />
+              {entityType === 'folder' && (
+                <>
+                  <span>Sequence</span>
+                  <InputSwitch
+                    checked={sequenceForm.active}
+                    onChange={(e) =>
+                      setSequenceForm({
+                        ...sequenceForm,
+                        active: (e.target as HTMLInputElement).checked,
+                      })
+                    }
+                  />
+                </>
+              )}
               <Spacer />
               <span>Create more</span>
               <InputSwitch
@@ -294,9 +310,10 @@ const NewEntity: React.FC<NewEntityProps> = () => {
               <SaveButton
                 label={`Create ${capitalize(entityType)}`}
                 onClick={() => handleSubmit(createMore)}
-                active={!addDisabled}
+                active={!addDisabled || isSubmitting}
                 title="Ctrl/Cmd + Enter"
                 data-shortcut="Ctrl/Cmd+Enter"
+                saving={isSubmitting}
               />
             </Toolbar>
           }

@@ -35,15 +35,19 @@ import HeaderActionButton from './components/HeaderActionButton'
 // Context imports
 import { CellEditingProvider } from './context/CellEditingContext'
 import { useSelection } from './context/SelectionContext'
-import { ClipboardProvider } from './context/ClipboardContext'
+import { ClipboardProvider, useClipboard } from './context/ClipboardContext'
 
 // Hook imports
 import useCustomColumnWidthVars from './hooks/useCustomColumnWidthVars'
 
 // Utility function imports
-import { getCellId } from './utils/cellUtils'
+import { getCellId, parseCellId } from './utils/cellUtils'
 import useLocalStorage from '@hooks/useLocalStorage'
 import { useProjectTableContext } from '@containers/ProjectTreeTable/context/ProjectTableContext'
+import useCreateContext from '@hooks/useCreateContext'
+import { getPlatformShortcutKey, KeyMode } from '@helpers/platform'
+import { NewEntityType, useNewEntityContext } from '@context/NewEntityContext'
+import useDeleteEntities from './hooks/useDeleteEntities'
 
 //These are the important styles to make sticky column pinning work!
 //Apply styles like this using your CSS strategy of choice with this kind of logic to head cells, data cells, footer cells, etc.
@@ -66,6 +70,8 @@ const getCommonPinningStyles = (column: Column<TableRow, unknown>): CSSPropertie
     zIndex: isPinned ? 1 : 0,
   }
 }
+
+type ContextEvent = React.MouseEvent<HTMLTableSectionElement, MouseEvent>
 
 type Props = {
   scope: string
@@ -144,6 +150,9 @@ const TableCell = ({ cell, cellId }: TableCellProps) => {
         width: `calc(var(--col-${cell.column.id}-size) * 1px)`,
       }}
       onMouseDown={(e) => {
+        // Only process left clicks (button 0), ignore right clicks
+        if (e.button !== 0) return
+
         // check we are not clicking on folder/task name
         if ((e.target as HTMLElement).closest('.name-content')) return
         if (e.shiftKey) {
@@ -163,6 +172,14 @@ const TableCell = ({ cell, cellId }: TableCellProps) => {
       }}
       onMouseUp={() => {
         endSelection(cellId)
+      }}
+      onContextMenu={(e) => {
+        console.log(isCellSelected(cellId))
+        e.preventDefault()
+        // if the cell is not selected, select it and deselect all others
+        if (!isCellSelected(cellId)) {
+          selectCell(cellId, false, false)
+        }
       }}
     >
       {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -209,7 +226,7 @@ const FlexTable = ({
   //The virtualizer needs to know the scrollable container element
   const tableContainerRef = useRef<HTMLDivElement>(null)
 
-  const { expanded, updateExpanded } = useProjectTableContext()
+  const { expanded, updateExpanded, showHierarchy, projectInfo } = useProjectTableContext()
 
   // COLUMN PINNING
   const [columnPinning, setColumnPinning] = useLocalStorage<ColumnPinningState>(
@@ -237,7 +254,13 @@ const FlexTable = ({
   }, [fetchMoreOnBottomReached])
 
   // Selection context
-  const { registerGrid } = useSelection()
+  const { registerGrid, isCellSelected, selectedCells, clearSelection } = useSelection()
+
+  // clipboard context
+  const { copyToClipboard, pasteFromClipboard } = useClipboard()
+
+  // new entity context
+  const { onOpenNew } = useNewEntityContext()
 
   const columns = ProjectTreeTableColumns({
     tableData,
@@ -306,6 +329,97 @@ const FlexTable = ({
   })
 
   const columnSizeVars = useCustomColumnWidthVars(table, columnSizing)
+
+  const deleteEntities = useDeleteEntities({})
+
+  const [cellContextMenuShow] = useCreateContext()
+
+  const cellContextMenuItems = (_e: ContextEvent, id: string, selected: string[]) => {
+    const items: {
+      label: string
+      icon: string
+      shortcut?: string
+      danger?: boolean
+      command: () => void
+    }[] = [
+      {
+        label: 'Copy',
+        icon: 'content_copy',
+        shortcut: getPlatformShortcutKey('c', [KeyMode.Ctrl]),
+        command: () => copyToClipboard(selected),
+      },
+    ]
+
+    // get the entity
+    const entityId = parseCellId(id)?.rowId
+    if (!entityId) return items
+    // const entity = getEntityById(entityId)
+
+    // add delete option if selecting name column
+    const isColName = parseCellId(id)?.colId === 'name'
+
+    if (!isColName) {
+      items.push({
+        label: 'Paste',
+        icon: 'content_paste',
+        shortcut: getPlatformShortcutKey('v', [KeyMode.Ctrl]),
+        command: () => pasteFromClipboard(selected),
+      })
+    }
+
+    const openNewEntity = (type: NewEntityType) => onOpenNew(type, projectInfo)
+
+    if (isColName) {
+      if (showHierarchy) {
+        items.push({
+          label: 'Create folder',
+          icon: 'create_new_folder',
+          command: () => openNewEntity('folder'),
+        })
+
+        items.push({
+          label: 'Create root folder',
+          icon: 'create_new_folder',
+          command: () => {
+            // deselect all
+            clearSelection()
+            openNewEntity('folder')
+          },
+        })
+
+        items.push({
+          label: 'Create task',
+          icon: 'add_task',
+          command: () => openNewEntity('task'),
+        })
+      }
+
+      items.push({
+        label: 'Delete',
+        icon: 'delete',
+        danger: true,
+        command: () => deleteEntities(selected),
+      })
+    }
+
+    return items
+  }
+
+  const handleTableBodyContextMenu = (e: ContextEvent) => {
+    const target = e.target as HTMLElement
+    const tdEl = target.closest('td')
+    // get id of first child of td
+    const cellId = tdEl?.firstElementChild?.id
+
+    if (cellId) {
+      let currentSelectedCells = Array.from(selectedCells)
+      if (!isCellSelected(cellId)) {
+        currentSelectedCells = [cellId]
+      }
+      console.log(currentSelectedCells)
+      cellContextMenuShow(e, cellContextMenuItems(e, cellId, currentSelectedCells))
+    }
+  }
 
   return (
     <Styled.TableWrapper>
@@ -392,7 +506,10 @@ const FlexTable = ({
               )
             })}
           </Styled.TableHeader>
-          <tbody style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
+          <tbody
+            style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
+            onContextMenu={handleTableBodyContextMenu}
+          >
             {rowVirtualizer.getVirtualItems().map((virtualRow: $Any) => {
               const row = rows[virtualRow.index] as Row<TableRow>
               return (

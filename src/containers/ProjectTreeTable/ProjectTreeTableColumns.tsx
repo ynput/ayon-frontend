@@ -12,7 +12,7 @@ import { TableRow } from './utils/types'
 import { AttributeData, AttributeEnumItem, AttributeModel } from '@api/rest/attributes'
 import { CellWidget, EntityNameWidget } from './widgets'
 import { useCellEditing } from './context/CellEditingContext'
-import { getCellValue } from './utils/cellUtils'
+import { getCellId, getCellValue } from './utils/cellUtils'
 import { TableCellContent } from './ProjectTreeTable.styled'
 import clsx from 'clsx'
 
@@ -82,7 +82,8 @@ const TableColumns = ({
         filterFn: 'fuzzy',
         sortingFn: nameSort, // custom sort to sort by label then name
         size: columnSizing['label'] || 300,
-        cell: ({ row }) => {
+        cell: ({ row, column }) => {
+          const cellId = getCellId(row.id, column.id)
           return (
             <TableCellContent
               className={clsx('large', { selected: row.getIsSelected(), loading: isLoading })}
@@ -90,6 +91,7 @@ const TableColumns = ({
                 paddingLeft: `calc(${row.depth * 0.5}rem + 4px)`,
               }}
               tabIndex={0}
+              id={cellId}
             >
               <EntityNameWidget
                 id={row.id}
@@ -181,19 +183,19 @@ const TableColumns = ({
         sortingFn: (a, b, c) => attribSort(a, b, c, attrib.data),
         size: columnSizing[attrib.name] || 150,
         cell: ({ row, column }) => {
-          const columnId = column.id.replace('attrib_', '')
-          const { value, id, type } = getValueIdType(row, columnId, 'attrib')
+          const columnIdParsed = column.id.replace('attrib_', '')
+          const { value, id, type } = getValueIdType(row, columnIdParsed, 'attrib')
 
           return (
             <CellWidget
               rowId={id}
-              columnId={columnId}
+              columnId={column.id}
               value={value}
               attributeData={{ type: attrib.data.type || 'string' }}
               options={attrib.data.enum || []}
               isCollapsed={!!row.original.childOnlyMatch}
               onChange={(value) =>
-                updateEntities([{ field: columnId, value, id, type, isAttrib: true }])
+                updateEntities([{ field: columnIdParsed, value, id, type, isAttrib: true }])
               }
             />
           )
