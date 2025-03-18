@@ -19,12 +19,9 @@ import { useSelection } from '@containers/ProjectTreeTable/context/SelectionCont
 import { parseCellId } from '@containers/ProjectTreeTable/utils/cellUtils'
 import { useProjectTableContext } from '@containers/ProjectTreeTable/context/ProjectTableContext'
 import { EditorTaskNode, MatchingFolder } from '@containers/ProjectTreeTable/utils/types'
-import { useOperationsMutation } from '@queries/overview/updateOverview'
-import { OperationModel } from '@api/rest/operations'
-import { v1 as uuid1 } from 'uuid'
-import { toast } from 'react-toastify'
 import FolderSequence from '@components/FolderSequence/FolderSequence'
-import getSequence from '@helpers/getSequence'
+import { EntityForm, NewEntityType, useNewEntityContext } from '@context/NewEntityContext'
+import { ProjectModel } from '@api/rest/project'
 
 const ContentStyled = styled.div`
   display: flex;
@@ -70,24 +67,20 @@ const StyledCreateItem = styled.span`
   }
 `
 
-type NewEntityType = 'folder' | 'task'
-
-interface EntityForm {
-  label: string
-  subType: string
-}
-
-interface SequenceForm {
-  active: boolean
-  increment: string
-  length: number
-  prefix: boolean
-  prefixDepth: number
-}
-
 interface NewEntityProps {}
 
 const NewEntity: React.FC<NewEntityProps> = () => {
+  const {
+    entityType,
+    setEntityType,
+    entityForm,
+    setEntityForm,
+    sequenceForm,
+    setSequenceForm,
+    onCreateNew,
+    onOpenNew,
+  } = useNewEntityContext()
+
   const [createMore, setCreateMore] = useState(false)
   const { selectedCells } = useSelection()
   const { getEntityById, projectName, projectInfo } = useProjectTableContext()
@@ -123,17 +116,8 @@ const NewEntity: React.FC<NewEntityProps> = () => {
   const isRoot = isEmpty(selectedFolderIds)
 
   const [nameFocused, setNameFocused] = useState<boolean>(false)
-  const [entityType, setEntityType] = useState<NewEntityType | null>(null)
   //   build out form state
   const initData: EntityForm = { label: '', subType: '' }
-  const [entityForm, setEntityForm] = useState<EntityForm>(initData)
-  const [sequenceForm, setSequenceForm] = useState<SequenceForm>({
-    active: true,
-    increment: '',
-    length: 10,
-    prefix: false,
-    prefixDepth: 0,
-  })
 
   //   format title
   let title = 'Add New '
@@ -143,21 +127,6 @@ const NewEntity: React.FC<NewEntityProps> = () => {
   //   entityType selector
   const typeOptions =
     (entityType === 'folder' ? projectInfo?.folderTypes : projectInfo?.taskTypes) || []
-
-  // Helper function to generate label based on entity type and selected subtype
-  const generateLabel = (type: NewEntityType | null, subType: string): string => {
-    if (!type || !subType) return ''
-
-    const typeOption = (
-      type === 'folder' ? projectInfo?.folderTypes : projectInfo?.taskTypes
-    )?.find((option) => option.name === subType)
-
-    if (!typeOption) return ''
-
-    return type === 'folder'
-      ? typeOption.shortName || typeOption.name.toLowerCase()
-      : typeOption.name.toLowerCase()
-  }
 
   // handlers
   const handleChange = (value: any, id?: keyof EntityForm) => {
@@ -185,7 +154,7 @@ const NewEntity: React.FC<NewEntityProps> = () => {
 
         if (shouldUpdateName) {
           // Use the helper function to generate the label
-          newState.label = generateLabel(entityType, value)
+          newState.label = generateLabel(entityType, value, projectInfo)
         }
       }
 
@@ -216,24 +185,6 @@ const NewEntity: React.FC<NewEntityProps> = () => {
   const typeSelectRef = useRef<DropdownRef>(null)
   const labelRef = useRef<HTMLInputElement>(null)
 
-  const handleNew = (type: NewEntityType) => {
-    // set entityType
-    setEntityType(type)
-    // set any default values
-    const typeOptions =
-      (type === 'folder' ? projectInfo?.folderTypes : projectInfo?.taskTypes) || []
-    const firstType = typeOptions[0]
-    const firstName = firstType.name || ''
-
-    // Use the helper function to generate the label
-    const initData = {
-      subType: firstName,
-      label: generateLabel(type, firstName),
-    }
-
-    setEntityForm(initData)
-  }
-
   const handleClose = () => {
     // reset state
     setEntityType(null)
@@ -243,104 +194,9 @@ const NewEntity: React.FC<NewEntityProps> = () => {
   // open dropdown - delay to wait for dialog opening
   const handleShow = () => setTimeout(() => typeSelectRef.current?.open(), 180)
 
-  const [createEntities] = useOperationsMutation()
-
-  // Helper functions for creating operations
-  const createEntityOperation = (
-    entityType: NewEntityType,
-    subType: string,
-    name: string,
-    label: string,
-    parentId?: string,
-  ): OperationModel => {
-    return {
-      type: 'create',
-      entityType: entityType,
-      data: {
-        [`${entityType}Type`]: subType,
-        id: uuid1().replace(/-/g, ''),
-        name: name.replace(/[^a-zA-Z0-9]/g, ''),
-        label: label,
-        ...(parentId && { [entityType === 'folder' ? 'parentId' : 'folderId']: parentId }),
-      },
-    }
-  }
-
-  const createSequenceOperations = (
-    entityType: NewEntityType,
-    subType: string,
-    sequence: string[],
-    folderIds: string[],
-  ): OperationModel[] => {
-    // For root folders
-    if (folderIds.length === 0 && entityType === 'folder') {
-      return sequence.map((name) => createEntityOperation(entityType, subType, name, name))
-    }
-
-    // For folders or tasks with parent references
-    const operations: OperationModel[] = []
-    for (const folderId of folderIds) {
-      for (const name of sequence) {
-        operations.push(createEntityOperation(entityType, subType, name, name, folderId))
-      }
-    }
-    return operations
-  }
-
-  const createSingleOperations = (
-    entityType: NewEntityType,
-    subType: string,
-    label: string,
-    folderIds: string[],
-  ): OperationModel[] => {
-    const sanitizedName = label.replace(/[^a-zA-Z0-9]/g, '')
-
-    // For root folders
-    if (folderIds.length === 0 && entityType === 'folder') {
-      return [createEntityOperation(entityType, subType, sanitizedName, label)]
-    }
-
-    // For folders or tasks with parent references
-    return folderIds.map((folderId) =>
-      createEntityOperation(entityType, subType, sanitizedName, label, folderId),
-    )
-  }
-
   const handleSubmit = async (stayOpen: boolean) => {
-    // first check name and entityType valid
-    if (!entityType || !entityForm.label) return
-
-    // If we're creating a task and there are no selected folders, show error
-    if (entityType === 'task' && selectedFolderIds.length === 0) {
-      toast.error('Cannot create a task without selecting a folder')
-      return
-    }
-
-    let operations: OperationModel[]
-
-    if (sequenceForm.active) {
-      // Generate the sequence
-      const sequence = getSequence(entityForm.label, sequenceForm.increment, sequenceForm.length)
-      operations = createSequenceOperations(
-        entityType,
-        entityForm.subType,
-        sequence,
-        selectedFolderIds,
-      )
-    } else {
-      operations = createSingleOperations(
-        entityType,
-        entityForm.subType,
-        entityForm.label,
-        selectedFolderIds,
-      )
-    }
-
     try {
-      await createEntities({
-        operationsRequestModel: { operations },
-        projectName: projectName,
-      }).unwrap()
+      await onCreateNew(selectedFolderIds, projectName)
 
       if (stayOpen) {
         // focus and select the label input
@@ -392,7 +248,7 @@ const NewEntity: React.FC<NewEntityProps> = () => {
           { label: 'Task', value: 'task', icon: 'add_task', shortcut: 'T' },
         ]}
         value={[]}
-        onChange={(v: string[]) => handleNew(v[0] as NewEntityType)}
+        onChange={(v: string[]) => onOpenNew(v[0] as NewEntityType, projectInfo)}
         valueTemplate={() => (
           <>
             <Icon icon="add" />
@@ -501,3 +357,22 @@ const NewEntity: React.FC<NewEntityProps> = () => {
 }
 
 export default NewEntity
+
+// Helper function to generate label based on entity type and selected subtype
+export const generateLabel = (
+  type: NewEntityType | null,
+  subType: string,
+  projectInfo: ProjectModel | undefined,
+): string => {
+  if (!type || !subType) return ''
+
+  const typeOption = (type === 'folder' ? projectInfo?.folderTypes : projectInfo?.taskTypes)?.find(
+    (option) => option.name === subType,
+  )
+
+  if (!typeOption) return ''
+
+  return type === 'folder'
+    ? typeOption.shortName || typeOption.name.toLowerCase()
+    : typeOption.name.toLowerCase()
+}

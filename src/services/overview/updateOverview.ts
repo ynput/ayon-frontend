@@ -87,7 +87,6 @@ const invalidateOverviewTasks = (
     dispatch: ThunkDispatch<any, any, UnknownAction>
   },
 ) => {
-  console.log('invalidating...', getOverviewTaskTags(tasks))
   dispatch(tasksApi.util.invalidateTags(getOverviewTaskTags(tasks)))
 }
 

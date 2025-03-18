@@ -3,13 +3,16 @@ import { FC } from 'react'
 import ProjectOverviewPage from './ProjectOverviewPage'
 import { ProjectTableProvider } from '@containers/ProjectTreeTable/context/ProjectTableContext'
 import { SelectionProvider } from '@containers/ProjectTreeTable/context/SelectionContext'
+import { NewEntityProvider } from '@context/NewEntityContext'
 
 const ProjectOverviewWithProviders: FC = () => {
   return (
     <EntitySelectionProvider>
       <ProjectTableProvider>
         <SelectionProvider>
-          <ProjectOverviewPage />
+          <NewEntityProvider>
+            <ProjectOverviewPage />
+          </NewEntityProvider>
         </SelectionProvider>
       </ProjectTableProvider>
     </EntitySelectionProvider>
