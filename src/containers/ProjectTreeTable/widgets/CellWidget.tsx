@@ -2,7 +2,6 @@ import { AttributeData, AttributeEnumItem } from '@api/rest/attributes'
 
 import { forwardRef, useMemo, memo, useCallback } from 'react'
 import styled from 'styled-components'
-import clsx from 'clsx'
 
 // Widgets
 import { BooleanWidget, CollapsedWidget, DateWidget, EnumWidget, TextWidget } from '.'
@@ -20,17 +19,6 @@ const Cell = styled.div`
   padding: 4px 8px;
   display: flex;
   align-items: center;
-
-  &.editing {
-    /* light border around the outside */
-    &::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      border: 2px solid var(--md-sys-color-secondary-container);
-      margin: -2px;
-    }
-  }
 `
 
 export type CellValue = string | number | boolean
@@ -143,7 +131,6 @@ const EditorCellComponent = forwardRef<HTMLDivElement, EditorCellProps>(
         onDoubleClick={handleDoubleClick}
         onClick={handleSingleClick}
         id={cellId}
-        className={clsx({ editing: isCurrentCellEditing })}
       >
         {widget}
       </Cell>

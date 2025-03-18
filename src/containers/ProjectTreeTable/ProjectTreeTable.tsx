@@ -33,7 +33,7 @@ import * as Styled from './ProjectTreeTable.styled'
 import HeaderActionButton from './components/HeaderActionButton'
 
 // Context imports
-import { CellEditingProvider } from './context/CellEditingContext'
+import { CellEditingProvider, useCellEditing } from './context/CellEditingContext'
 import { useSelection } from './context/SelectionContext'
 import { ClipboardProvider, useClipboard } from './context/ClipboardContext'
 
@@ -67,7 +67,7 @@ const getCommonPinningStyles = (column: Column<TableRow, unknown>): CSSPropertie
     right: isPinned === 'right' ? `${column.getAfter('right')}px` : undefined,
     position: isPinned ? 'sticky' : 'relative',
     width: column.getSize(),
-    zIndex: isPinned ? 1 : 0,
+    zIndex: isPinned ? 100 : 0,
   }
 }
 
@@ -131,6 +131,8 @@ const TableCell = ({ cell, cellId }: TableCellProps) => {
     getCellBorderClasses,
   } = useSelection()
 
+  const { isEditing } = useCellEditing()
+
   const borderClasses = getCellBorderClasses(cellId)
 
   return (
@@ -142,6 +144,7 @@ const TableCell = ({ cell, cellId }: TableCellProps) => {
         {
           selected: isCellSelected(cellId),
           focused: isCellFocused(cellId),
+          editing: isEditing(cellId),
         },
         ...borderClasses,
       )}

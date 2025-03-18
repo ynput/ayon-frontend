@@ -178,6 +178,17 @@ export const TableCell = styled.td`
     border: 2px solid var(--md-sys-color-primary);
     pointer-events: none;
   }
+
+  &.editing {
+    z-index: 10 !important;
+    /* light border around the outside */
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 2px;
+      border: 2px solid var(--md-sys-color-surface-container-low);
+    }
+  }
 `
 
 export const TableHeader = styled.div`
