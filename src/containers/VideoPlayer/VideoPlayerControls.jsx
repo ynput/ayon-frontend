@@ -37,7 +37,7 @@ const VideoPlayerControls = ({
   const handleGoToEnd = () => {
     console.debug('VideoPlayerControls: Go to end')
     const duration = videoRef.current?.duration || 0
-    const newFrame = duration
+    const newFrame = duration - frameLength
     videoRef.current.currentTime = newFrame
     onFrameChange(newFrame)
   }
@@ -54,7 +54,7 @@ const VideoPlayerControls = ({
     console.debug('VideoPlayerControls: Go forward 1')
     const duration = videoRef.current?.duration || 0
     const nextFrame = videoRef.current.currentTime + frameLength
-    const newFrame = nextFrame > duration ? (loop ? 0 : duration) : nextFrame
+    const newFrame = nextFrame - frameLength > duration ? (loop ? 0 : duration) : nextFrame
     videoRef.current.currentTime = newFrame
     onFrameChange(newFrame)
   }

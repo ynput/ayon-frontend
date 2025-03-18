@@ -104,23 +104,17 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
     return Array.from(new Set(annotatedFrames))
   }, [annotations])
 
-  const updateVeryTrueFrame = (now, metadataInfo) => {
-    const actualTime = metadataInfo.mediaTime
-    setCurrentTime(actualTime)
-    // setVeryTrueFrame(Math.round(actualTime * frameRate) + 1)
+  const updateCurrentTime = (now, metadataInfo) => {
+    setCurrentTime(metadataInfo.mediaTime)
     const video = videoRef.current
-    // if (!video) {
-    //   console.log('Video lost')
-    //   return
-    // }
-    video.requestVideoFrameCallback(updateVeryTrueFrame)
+    if (!video) return
+    video.requestVideoFrameCallback(updateCurrentTime)
   }
 
   useEffect(() => {
     if (!videoRef.current) return
-    console.log('Got video')
     const video = videoRef.current
-    video.requestVideoFrameCallback(updateVeryTrueFrame)
+    video.requestVideoFrameCallback(updateCurrentTime)
   }, [videoRef.current, frameRate])
 
   //
@@ -246,25 +240,11 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
   //
 
   useEffect(() => {
-    // CurrentTime updater
-    // HTML video onTimeUpdate doesn't update fast enough to be super sleek
-    // But we can query the currentTime much faster and have smooth timeline
     if (!videoRef.current) return
-    const frameLength = frameRate ? 1 / frameRate : 0.04
-    const updateTime = () => {
-      const actualDuration = videoRef.current?.duration
-      if (actualDuration !== duration) {
-        setDuration(actualDuration)
-      }
-      // const actualTime = Math.min(videoRef.current?.currentTime || 0, actualDuration - frameLength)
-      // if (isPlaying) {
-      //   setCurrentTime(actualTime)
-      //   setTimeout(() => requestAnimationFrame(updateTime), 10)
-      // } else {
-      //   setCurrentTime(actualTime)
-      // }
+    const actualDuration = videoRef.current?.duration
+    if (actualDuration !== duration) {
+      setDuration(actualDuration)
     }
-    updateTime()
   }, [videoRef, isPlaying, duration])
 
   const seekPreferredInitialPosition = () => {
@@ -302,12 +282,9 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
     if (videoElement.readyState >= 3) {
       // HAVE_FUTURE_DATA
       videoElement.currentTime = newTime
-      // setCurrentTime(newTime)
     } else {
-      //console.debug('VideoPlayer: Waiting for canplay event.')
       const onCanPlay = () => {
         videoElement.currentTime = newTime
-        //setCurrentTime(newTime)
         videoElement.removeEventListener('canplay', onCanPlay)
       }
       videoElement.addEventListener('canplay', onCanPlay)
@@ -322,25 +299,24 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
   }
 
   const handlePause = () => {
-    // initialPosition.current = videoRef.current?.currentTime
-    // seekToTime(initialPosition.current)
-    // setTimeout(() => {
-    //   if (videoRef.current?.paused) {
-    //     seekToTime(initialPosition.current)
-    //     console.debug('VideoPlayer: Paused')
-    //     setIsPlaying(false)
-    //   }
-    // }, 10)
+    initialPosition.current = videoRef.current?.currentTime
+    seekToTime(initialPosition.current)
+    setTimeout(() => {
+      if (videoRef.current?.paused) {
+        seekToTime(initialPosition.current)
+        console.debug('VideoPlayer: Paused')
+        setIsPlaying(false)
+      }
+    }, 10)
   }
 
   const handleEnded = () => {
     if (!isPlaying) {
-      console.debug('ended, but not playing')
-      console.debug('position: ', videoRef.current.currentTime)
+      if (loop) videoRef.current.currentTime = 0
       return
     }
     if (loop) {
-      console.debug('VideoPlayer: Ended, looping', videoRef.current.currentTime)
+      console.debug('VideoPlayer: Ended, looping')
       videoRef.current.currentTime = 0
       videoRef.current.play()
     } else {
