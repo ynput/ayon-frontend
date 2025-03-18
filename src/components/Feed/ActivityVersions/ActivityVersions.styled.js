@@ -73,7 +73,6 @@ export const Thumbnail = styled(ThumbnailSimple)`
 
 export const Comment = styled.div`
   margin-top: var(--base-gap-small);
-  color: var(--md-sys-color-on-surface-variant);
-  line-height: 1.25rem;
+  color: var(--md-sys-color-outline);
   word-break: break-word;
 `
