@@ -32,11 +32,9 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
   const { selectedCells, gridMap } = useSelection()
   const { updateEntities } = useCellEditing()
 
-  const copyToClipboard = useCallback(
-    async (selected?: string[]) => {
-      selected = selected || Array.from(selectedCells)
-      if (!selected.length) return
-
+  const getSelectionData = useCallback(
+    async (selected: string[], config?: { headers: boolean }) => {
+      const { headers } = config || {}
       try {
         // First, organize selected cells by row
         const cellsByRow = new Map<string, Set<string>>()
@@ -63,6 +61,30 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
 
         // Build clipboard text
         let clipboardText = ''
+
+        // Get the first row to determine columns
+        const firstRowId = sortedRows[0]
+        if (!firstRowId) return ''
+
+        // Get all column IDs for the first row, sorted by their index in the grid
+        const colIds = Array.from(cellsByRow.get(firstRowId) || []).sort((a, b) => {
+          const indexA = gridMap.colIdToIndex.get(a) ?? Infinity
+          const indexB = gridMap.colIdToIndex.get(b) ?? Infinity
+          return indexA - indexB
+        })
+
+        // Include headers if requested
+        if (headers && colIds.length > 0) {
+          const headerValues: string[] = []
+
+          for (const colId of colIds) {
+            // Use colId as the column name since we don't have direct access to column names
+            const columnName = colId
+            headerValues.push(`${columnName.replace(/"/g, '""')}`)
+          }
+
+          clipboardText += headerValues.join('\t') + '\n'
+        }
 
         for (const rowId of sortedRows) {
           // Determine if this is a folder or task by checking which map contains the ID
@@ -107,6 +129,24 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
           clipboardText += rowValues.join('\t') + '\n'
         }
 
+        return clipboardText
+      } catch (error) {
+        console.error('Failed to copy to clipboard:', error)
+      }
+    },
+    [selectedCells, gridMap, foldersMap, tasksMap],
+  )
+
+  const copyToClipboard = useCallback(
+    async (selected?: string[]) => {
+      selected = selected || Array.from(selectedCells)
+      if (!selected.length) return
+
+      try {
+        // Get clipboard text
+        const clipboardText = await getSelectionData(selected)
+        if (!clipboardText) return
+
         // Write to clipboard using the Clipboard API
         await navigator.clipboard.writeText(clipboardText)
         console.log('Copied to clipboard successfully', clipboardText)
@@ -115,6 +155,34 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
       }
     },
     [selectedCells, foldersMap, tasksMap, gridMap],
+  )
+
+  const exportCSV = useCallback(
+    async (selected: string[], projectName: string) => {
+      selected = selected || Array.from(selectedCells)
+      if (!selected.length) return
+
+      try {
+        // Get clipboard text with headers included for CSV export
+        const clipboardText = await getSelectionData(selected, { headers: true })
+        if (!clipboardText) return
+
+        // create a csv file and download it
+        const blob = new Blob([clipboardText], { type: 'text/csv' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        const selectedCount = selected.length
+        a.download = `${projectName}-export-${selectedCount}_cells-${new Date()
+          .toISOString()
+          .slice(0, 10)}.csv`
+        a.click()
+        URL.revokeObjectURL(url)
+      } catch (error) {
+        console.error('Failed to copy to clipboard:', error)
+      }
+    },
+    [selectedCells, foldersMap, tasksMap, gridMap, getSelectionData],
   )
 
   const pasteFromClipboard = useCallback(
@@ -371,6 +439,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
     () => ({
       copyToClipboard,
       pasteFromClipboard,
+      exportCSV,
     }),
     [copyToClipboard, pasteFromClipboard],
   )

@@ -226,7 +226,8 @@ const FlexTable = ({
   //The virtualizer needs to know the scrollable container element
   const tableContainerRef = useRef<HTMLDivElement>(null)
 
-  const { expanded, updateExpanded, showHierarchy, projectInfo } = useProjectTableContext()
+  const { expanded, updateExpanded, showHierarchy, projectInfo, projectName } =
+    useProjectTableContext()
 
   // COLUMN PINNING
   const [columnPinning, setColumnPinning] = useLocalStorage<ColumnPinningState>(
@@ -257,7 +258,7 @@ const FlexTable = ({
   const { registerGrid, isCellSelected, selectedCells, clearSelection } = useSelection()
 
   // clipboard context
-  const { copyToClipboard, pasteFromClipboard } = useClipboard()
+  const { copyToClipboard, exportCSV, pasteFromClipboard } = useClipboard()
 
   // new entity context
   const { onOpenNew } = useNewEntityContext()
@@ -367,6 +368,12 @@ const FlexTable = ({
       })
     }
 
+    items.push({
+      label: 'Export selection',
+      icon: 'download',
+      command: () => exportCSV(selected, projectName),
+    })
+
     const openNewEntity = (type: NewEntityType) => onOpenNew(type, projectInfo)
 
     if (isColName) {
@@ -416,7 +423,6 @@ const FlexTable = ({
       if (!isCellSelected(cellId)) {
         currentSelectedCells = [cellId]
       }
-      console.log(currentSelectedCells)
       cellContextMenuShow(e, cellContextMenuItems(e, cellId, currentSelectedCells))
     }
   }
