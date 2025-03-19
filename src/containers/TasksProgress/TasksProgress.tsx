@@ -43,7 +43,7 @@ import useUserFilters from '@hooks/useUserFilters'
 // what to search by
 const searchFilterTypes: FilterFieldType[] = [
   'attributes',
-  'entitySubType',
+  'taskType',
   'status',
   'assignees',
   'tags',
@@ -179,7 +179,7 @@ const TasksProgress: FC<TasksProgressProps> = ({
     },
     { skip: !folderIdsToFetch.length || !projectName },
   )
-  console.log({foldersTasksData, isFetchingTasks, error})
+  console.log({ foldersTasksData, isFetchingTasks, error })
   //
   //
   // ^^^ MAIN QUERY ^^^

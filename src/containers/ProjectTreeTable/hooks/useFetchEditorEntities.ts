@@ -181,10 +181,15 @@ const useFetchEditorEntities = ({
     first: 100,
   }
   if (singleSort) {
+    let sortId = singleSort.id
+    // convert sortby field if required
+    if (sortId === 'subType') {
+      sortId = 'taskType'
+    }
     queryCursor = {
       [singleSort.desc ? 'before' : 'after']: tasksListCursor,
       [singleSort.desc ? 'last' : 'first']: 100,
-      sortBy: singleSort.id.replace('_', '.'),
+      sortBy: sortId.replace('_', '.'),
     }
   }
 

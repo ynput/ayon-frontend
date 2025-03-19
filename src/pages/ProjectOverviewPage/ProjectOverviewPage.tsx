@@ -27,7 +27,7 @@ const searchFilterTypes: FilterFieldType[] = [
   'status',
   'assignees',
   'tags',
-  // 'entitySubType', // current does not work correctly
+  'taskType',
 ]
 
 const ProjectOverviewPage: FC = () => {

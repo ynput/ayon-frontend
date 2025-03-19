@@ -27,11 +27,12 @@ import {
   isToday,
   isYesterday,
 } from 'date-fns'
-import { isEmpty, upperFirst } from 'lodash'
+import { isEmpty } from 'lodash'
 
 type Scope = 'folder' | 'product' | 'task' | 'user'
 export type FilterFieldType =
-  | 'entitySubType'
+  | 'folderType'
+  | 'taskType'
   | ('users' | 'assignees')
   | 'attributes'
   | 'status'
@@ -177,13 +178,27 @@ const useBuildFilterOptions = ({
 
   // ADD OPTIONS
 
-  // ENTITY SUBTYPE
-  // add entitySubType option
-  if (filterTypes.includes('entitySubType') && scope !== 'user') {
-    const entitySubTypeOption = getOptionRoot('entitySubType', scope)
+  // TASK TYPE
+  // add taskType option
+  if (filterTypes.includes('taskType') && scope !== 'user') {
+    const entitySubTypeOption = getOptionRoot('taskType')
     if (entitySubTypeOption) {
       // get all subTypes for the current scope (entityType)
-      let subTypes = getSubTypes(projectsInfo, scope)
+      let subTypes = getSubTypes(projectsInfo, 'task')
+
+      entitySubTypeOption.values?.push(...subTypes)
+
+      options.push(entitySubTypeOption)
+    }
+  }
+
+  // FOLDER TYPE
+  // add folderType option
+  if (filterTypes.includes('folderType') && scope !== 'user') {
+    const entitySubTypeOption = getOptionRoot('folderType')
+    if (entitySubTypeOption) {
+      // get all subTypes for the current scope (entityType)
+      let subTypes = getSubTypes(projectsInfo, 'folder')
 
       entitySubTypeOption.values?.push(...subTypes)
 
@@ -430,15 +445,31 @@ const getSubTypes = (projectsInfo: GetProjectsInfoResponse, type: Scope): Option
   return options
 }
 
-const getOptionRoot = (fieldType: FilterFieldType, scope?: string) => {
+const getOptionRoot = (fieldType: FilterFieldType) => {
   let rootOption: Option | null = null
   switch (fieldType) {
-    case 'entitySubType':
+    case 'taskType':
       rootOption = {
-        id: `${scope}Type`,
+        id: `taskType`,
         type: 'string',
-        label: `${upperFirst(scope)} Type`,
-        icon: getEntityTypeIcon(scope),
+        label: `Task Type`,
+        icon: getEntityTypeIcon('task'),
+        inverted: false,
+        operator: 'OR',
+        values: [],
+        allowsCustomValues: false,
+        allowHasValue: false,
+        allowNoValue: false,
+        allowExcludes: ALLOW_INVERTED_FILTERS,
+        operatorChangeable: false,
+      }
+      break
+    case 'folderType':
+      rootOption = {
+        id: `folderType`,
+        type: 'string',
+        label: `Folder Type`,
+        icon: getEntityTypeIcon('folder'),
         inverted: false,
         operator: 'OR',
         values: [],
