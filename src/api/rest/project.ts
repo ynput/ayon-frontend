@@ -165,7 +165,7 @@ export type ListProjectsApiArg = {
             or its part. % character may be used as a wildcard */
   name?: string
 }
-export type GetProjectApiResponse = /** status 200 Successful Response */ ProjectMainModel
+export type GetProjectApiResponse = /** status 200 Successful Response */ ProjectModel
 export type GetProjectApiArg = {
   projectName: string
 }
@@ -448,7 +448,7 @@ export type ProjectAttribModel2 = {
   applications?: string[]
   tools?: string[]
 }
-export type ProjectMainModel = {
+export type ProjectModel = {
   /** Name is an unique id of the {entity_name} */
   name: string
   code: string
