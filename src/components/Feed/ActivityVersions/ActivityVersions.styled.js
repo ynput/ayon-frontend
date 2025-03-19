@@ -17,9 +17,6 @@ export const Container = styled.li`
 
 export const Card = styled.div`
 
-  gap: var(--base-gap-large);
-  align-items: center;
-  justify-content: space-between;
   border-radius: var(--border-radius-m);
   padding: var(--padding-m);
 
@@ -32,7 +29,6 @@ export const Card = styled.div`
 
     /* show date */
     .date {
-      float: right;
       display: inline;
     }
   }
@@ -42,7 +38,6 @@ export const Content = styled.div`
   display: flex;
   flex-direction: row;
   justify-content: space-between;
-  width: 100%;
 
   gap: var(--base-gap-small);
 `
