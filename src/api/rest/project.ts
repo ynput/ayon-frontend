@@ -165,7 +165,7 @@ export type ListProjectsApiArg = {
             or its part. % character may be used as a wildcard */
   name?: string
 }
-export type GetProjectApiResponse = /** status 200 Successful Response */ ProjectModel
+export type GetProjectApiResponse = /** status 200 Successful Response */ ProjectMainModel
 export type GetProjectApiArg = {
   projectName: string
 }
@@ -347,16 +347,16 @@ export type ProjectAttribModel = {
 }
 export type FolderType = {
   name: string
+  original_name?: string
   shortName?: string
   icon?: string
-  original_name?: string
 }
 export type TaskType = {
   name: string
+  original_name?: string
   shortName?: string
   color?: string
   icon?: string
-  original_name?: string
 }
 export type LinkType = {
   link_type: string
@@ -367,18 +367,18 @@ export type LinkType = {
 }
 export type Status = {
   name: string
+  original_name?: string
   shortName?: string
   state?: 'not_started' | 'in_progress' | 'done' | 'blocked'
   icon?: string
   color?: string
   /** Limit the status to specific entity types. */
   scope?: string[]
-  original_name?: string
 }
 export type Tag = {
   name: string
-  color?: string
   original_name?: string
+  color?: string
 }
 export type Anatomy = {
   /** Setup root paths for the project */
@@ -448,17 +448,16 @@ export type ProjectAttribModel2 = {
   applications?: string[]
   tools?: string[]
 }
-export type ProjectModel = {
+export type ProjectMainModel = {
   /** Name is an unique id of the {entity_name} */
   name: string
   code: string
   library?: boolean
-  folderTypes?: any[]
-  taskTypes?: any[]
+  folderTypes?: FolderType[]
+  taskTypes?: TaskType[]
   linkTypes?: LinkTypeModel[]
-  statuses?: any[]
-  /** List of tags available to set on entities. */
-  tags?: any[]
+  statuses?: Status[]
+  tags?: Tag[]
   config?: object
   attrib?: ProjectAttribModel2
   data?: object
