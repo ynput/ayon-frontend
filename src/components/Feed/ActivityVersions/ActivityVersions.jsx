@@ -45,12 +45,10 @@ const ActivityVersions = ({
             <Styled.Card onClick={() => handleClick(id, productId)} key={id}>
               <Styled.Content>
                 <div>
-                <Styled.Title>
-                  <div style={{ lineHeight: '' }}>
-                    <span>{productName}</span><br/>
-                  </div>
-                  <ActivityDate date={createdAt} isExact />
-                </Styled.Title>
+                  <Styled.Title>
+                    <span>{productName}</span>
+                    <ActivityDate date={createdAt} isExact />
+                  </Styled.Title>
                   <span className="version">{name}</span>
                 </div>
                 <Styled.Thumbnail
