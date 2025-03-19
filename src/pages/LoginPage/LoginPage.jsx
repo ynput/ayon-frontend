@@ -170,7 +170,7 @@ const LoginPage = ({ isFirstTime = false }) => {
     <main className="center">
       {loginPageBackground && <Styled.BG src={loginPageBackground} />}
       <Styled.LoginForm>
-        {motd && (
+        {(motd || loginPageBrand) && (
           <Panel>
             {loginPageBrand && <Styled.Logo src={loginPageBrand} />}
             <Styled.MessageMarkdown remarkPlugins={remarkGfm}>{motd}</Styled.MessageMarkdown>
