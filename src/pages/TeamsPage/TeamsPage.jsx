@@ -337,7 +337,7 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
   // HANDLE RENAME TEAM
   const handleRenameTeam = async (oldName, newName) => {
     // check it's not the oldName
-    if (oldName === newName) return
+    if (oldName === newName || !newName) return
 
     // check if name is already taken
     if (teams.some((team) => team.name.toLowerCase() === newName.toLowerCase())) {
