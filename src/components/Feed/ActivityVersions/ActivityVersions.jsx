@@ -44,20 +44,24 @@ const ActivityVersions = ({
             <Styled.Card onClick={() => handleClick(id, productId)} key={id}>
               <Styled.Content>
                 <Styled.Title>
-                  <span>{productName} - {name}</span>
+                  <div>
+                    <span>{productName}</span><br/>
+                    <span className="version">{name}</span>
+                  </div>
                   <ActivityDate date={createdAt} isExact />
                 </Styled.Title>
-                {comment && <Styled.Comment>{comment}</Styled.Comment>}
+
+                <Styled.Thumbnail
+                  {...{ projectName }}
+                  entityId={id}
+                  entityType="version"
+                  onError={() => setThumbnailError(true)}
+                  iconOnly={thumbnailError}
+                  entityUpdatedAt={updatedAt}
+                  icon={'play_circle'}
+                />
               </Styled.Content>
-              <Styled.Thumbnail
-                {...{ projectName }}
-                entityId={id}
-                entityType="version"
-                onError={() => setThumbnailError(true)}
-                iconOnly={thumbnailError}
-                entityUpdatedAt={updatedAt}
-                icon={'play_circle'}
-              />
+              {comment && <Styled.Comment>{comment}</Styled.Comment>}
             </Styled.Card>
           )
         )
