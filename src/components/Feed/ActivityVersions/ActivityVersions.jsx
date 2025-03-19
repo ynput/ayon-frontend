@@ -50,7 +50,6 @@ const ActivityVersions = ({
                   </div>
                   <ActivityDate date={createdAt} isExact />
                 </Styled.Title>
-
                 <Styled.Thumbnail
                   {...{ projectName }}
                   entityId={id}
