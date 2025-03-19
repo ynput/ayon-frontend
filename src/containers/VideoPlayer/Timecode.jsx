@@ -20,9 +20,10 @@ const Timecode = ({ value, onChange, maximum, disabled, tooltip, offset = 0 }) =
   }, [value])
 
   const submit = () => {
-    if (!onChange) return
-    if (isNaN(frames)) return
-    if (maximum < frames < 0) return
+    if (!onChange || isNaN(frames) || maximum < frames || frames < 0) {
+      setFrames(value)
+      return
+    }
     onChange(frames)
     inputRef.current.blur()
   }
@@ -34,6 +35,7 @@ const Timecode = ({ value, onChange, maximum, disabled, tooltip, offset = 0 }) =
       style={{ width: '100px', fontFamily: 'monospace' }}
       onChange={(e) => setFrames(e.target.value - offset)}
       onBlur={submit}
+      type="number"
       onKeyDown={(e) => {
         if (e.key === 'Enter') {
           submit()
