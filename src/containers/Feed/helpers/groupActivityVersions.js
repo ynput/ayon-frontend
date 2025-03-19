@@ -9,6 +9,7 @@ const activityToVersionItem = (activity = {}) => {
     createdAt,
     origin: { name, id } = {},
     activityData: { context: { productName, productType, productId } = {} } = {},
+    version
   } = activity
 
   return {
@@ -19,6 +20,7 @@ const activityToVersionItem = (activity = {}) => {
     productType,
     updatedAt,
     createdAt,
+    comment: version?.attrib?.comment || null
   }
 }
 
