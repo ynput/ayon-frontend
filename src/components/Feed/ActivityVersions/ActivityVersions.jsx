@@ -16,6 +16,7 @@ const ActivityVersions = ({
   filter,
 }) => {
   let { authorName, authorFullName, createdAt, versions = [] } = activity
+
   const [showAll, setShowAll] = useState(filter === 'publishes')
   const limit = 2
 
