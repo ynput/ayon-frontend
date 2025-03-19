@@ -10,24 +10,21 @@ const Timescode = styled(InputText)`
   }
 `
 
-const Timecode = ({ value, frameRate, onChange, maximum, disabled, tooltip, offset=0 }) => {
+const Timecode = ({ value, onChange, maximum, disabled, tooltip, offset = 0 }) => {
   const [frames, setFrames] = useState(offset)
   const inputRef = useRef()
 
   useEffect(() => {
-    const val = Math.floor(value * frameRate)
-    if (val === frames) return
-    if (isNaN(val)) return
-    setFrames(val)
-  }, [value, frameRate])
+    if (isNaN(value)) return
+    setFrames(value)
+  }, [value])
 
   const submit = () => {
-    if (!onChange) return
-    if (isNaN(frames)) return
-    if (frames < 0) return
-    const seconds = frames / frameRate
-    if (maximum && seconds >= maximum) return
-    onChange(seconds)
+    if (!onChange || isNaN(frames) || maximum < frames || frames < 0) {
+      setFrames(value)
+      return
+    }
+    onChange(frames)
     inputRef.current.blur()
   }
 
@@ -38,6 +35,7 @@ const Timecode = ({ value, frameRate, onChange, maximum, disabled, tooltip, offs
       style={{ width: '100px', fontFamily: 'monospace' }}
       onChange={(e) => setFrames(e.target.value - offset)}
       onBlur={submit}
+      type="number"
       onKeyDown={(e) => {
         if (e.key === 'Enter') {
           submit()
