@@ -58,7 +58,8 @@ export const Title = styled.div`
 
 export const Thumbnail = styled(ThumbnailSimple)`
   width: 74px;
-  height: 100%;
+  min-width: 74px;
+  height: unset;
   aspect-ratio: 1.7778;
   margin: unset;
 
