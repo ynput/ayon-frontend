@@ -81,24 +81,23 @@ const SettingsPage = () => {
   const links = useMemo(() => {
     const adminExtras = [
       {
+        name: 'Global',
+        path: '/settings/server',
+        module: 'server',
+        accessLevels: ['admin'],
+      },
+      {
         name: 'Addons',
         path: '/settings/addons',
         module: 'addons',
         accessLevels: ['manager'],
       },
-
       {
         name: 'Bundles',
         path: '/settings/bundles',
         module: 'bundles',
         accessLevels: ['manager'],
         shortcut: 'B+B',
-      },
-      {
-        name: 'Global',
-        path: '/settings/server',
-        module: 'server',
-        accessLevels: ['admin'],
       },
     ]
 
