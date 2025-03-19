@@ -39,7 +39,7 @@ const ProjectOverviewTable = ({}: Props) => {
   const { data: usersData = [] } = useGetUsersAssigneeQuery({ projectName }, { skip: !projectName })
   const users = usersData as User[]
 
-  const { statuses = [], folderTypes = [], taskTypes = [] } = projectInfo || {}
+  const { statuses = [], folderTypes = [], taskTypes = [], tags = [] } = projectInfo || {}
 
   const options: BuiltInFieldOptions = useMemo(
     () => ({
@@ -54,6 +54,7 @@ const ProjectOverviewTable = ({}: Props) => {
         color,
         icon,
       })),
+      tags: tags.map(({ name, color }) => ({ value: name, label: name, color })),
       folderTypes: folderTypes.map(({ name, icon }) => ({ value: name, label: name, icon })),
       taskTypes: taskTypes.map(({ name, icon }) => ({ value: name, label: name, icon })),
     }),

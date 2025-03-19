@@ -11,6 +11,7 @@ const StyledWidget = styled.div`
   align-items: center;
   width: 100%;
   height: 100%;
+  overflow: hidden;
   border-radius: var(--border-radius-m);
   padding: 0 2px;
   cursor: pointer;
@@ -37,6 +38,24 @@ const StyledWidget = styled.div`
   }
 `
 
+const StyledValuesContainer = styled.div`
+  display: flex;
+  gap: var(--base-gap-small);
+  align-items: center;
+  overflow: hidden;
+  border-radius: var(--border-radius-m);
+`
+
+const StyledValueWrapper = styled.div`
+  display: flex;
+  gap: var(--base-gap-small);
+  align-items: center;
+
+  overflow: hidden;
+  max-width: 100%;
+  min-width: 20px;
+`
+
 const StyledValue = styled.span`
   /* push expand icon to the end */
   flex: 1;
@@ -45,6 +64,9 @@ const StyledValue = styled.span`
   width: 100%;
   text-overflow: ellipsis;
   text-align: left;
+  border-radius: var(--border-radius-m);
+  padding: 0px 2px;
+  text-align: center;
 `
 
 const StyledImg = styled.img`
@@ -76,7 +98,7 @@ interface EnumWidgetProps
   onOpen: () => void
 }
 
-const checkForImgSrc = (icon: string): boolean => {
+const checkForImgSrc = (icon: string | undefined = ''): boolean => {
   return (
     icon.startsWith('/') ||
     icon.startsWith('./') ||
@@ -111,7 +133,7 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
         !dropdownRef.current.isOpen && dropdownRef.current?.open()
       }
     }, [isEditing, dropdownRef.current])
-
+    const isMultiSelect = !!type?.includes('list')
     if (isEditing) {
       const handleChange = (value: string[]) => {
         if (type?.includes('list')) {
@@ -135,6 +157,7 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
               hasMultipleValues={selected.length > 1}
               isOpen={isOpen}
               className="enum-dropdown-value"
+              isMultiSelect={isMultiSelect}
             />
           )}
           itemTemplate={(option, _isActive, isSelected) => (
@@ -148,7 +171,7 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
             />
           )}
           widthExpand
-          multiSelect={type?.includes('list')}
+          multiSelect={isMultiSelect}
           onChange={handleChange}
         />
       )
@@ -160,6 +183,7 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
         hasMultipleValues={hasMultipleValues}
         className="enum-value"
         onClick={handleClosedClick}
+        isMultiSelect={isMultiSelect}
       />
     )
   },
@@ -168,6 +192,7 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
 interface EnumTemplateProps extends React.HTMLAttributes<HTMLSpanElement> {
   selectedOptions: AttributeEnumItem[]
   hasMultipleValues: boolean
+  isMultiSelect?: boolean
   isOpen?: boolean
   isItem?: boolean
   isSelected?: boolean
@@ -176,36 +201,50 @@ interface EnumTemplateProps extends React.HTMLAttributes<HTMLSpanElement> {
 const EnumCellValue = ({
   selectedOptions,
   hasMultipleValues,
+  isMultiSelect,
   isOpen,
   isItem,
   isSelected,
   className,
   ...props
 }: EnumTemplateProps) => {
+  // Check if all options have icons
+  const allOptionsHaveIcon = selectedOptions.every((option) => option.icon)
+
+  // Determine if we should show labels based on the requirements
+  const showLabels = !hasMultipleValues || !allOptionsHaveIcon
+  // Show the colors be backgrounds instead of the text
+  const backgroundColor = !allOptionsHaveIcon && isMultiSelect && !isItem
+
   return (
     <StyledWidget className={clsx(className, { selected: isSelected, item: isItem })} {...props}>
-      {selectedOptions.map(
-        (option) =>
-          option.icon &&
-          (checkForImgSrc(option.icon) ? (
-            <StyledImg
-              key={option.value.toString()}
-              src={option.icon}
-              className={clsx({ avatar: checkAvatarImg(option.icon) })}
-            />
-          ) : (
-            <Icon
-              key={option.value.toString()}
-              icon={option.icon}
-              style={{ color: option.color }}
-            />
-          )),
-      )}
-      {!hasMultipleValues && selectedOptions.length === 1 && (
-        <StyledValue style={{ color: selectedOptions[0].color }}>
-          {selectedOptions[0].label}
-        </StyledValue>
-      )}
+      <StyledValuesContainer>
+        {selectedOptions.map((option) => (
+          <StyledValueWrapper key={option.value.toString()}>
+            {option.icon && checkForImgSrc(option.icon) ? (
+              <StyledImg
+                src={option.icon}
+                className={clsx({ avatar: checkAvatarImg(option.icon) })}
+              />
+            ) : option.icon ? (
+              <Icon icon={option.icon} style={{ color: option.color }} />
+            ) : null}
+
+            {(showLabels || !option.icon) && (
+              <StyledValue
+                style={{
+                  color: backgroundColor ? 'inherit' : option.color,
+                  backgroundColor: backgroundColor
+                    ? option.color || 'var(--md-sys-color-surface-container)'
+                    : 'transparent',
+                }}
+              >
+                {option.label}
+              </StyledValue>
+            )}
+          </StyledValueWrapper>
+        ))}
+      </StyledValuesContainer>
       {!isItem && (
         <StyledExpandIcon
           className="expand"

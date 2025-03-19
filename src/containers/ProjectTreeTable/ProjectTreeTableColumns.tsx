@@ -50,6 +50,7 @@ export type BuiltInFieldOptions = {
   taskTypes: AttributeEnumItem[]
   statuses: AttributeEnumItem[]
   assignees: AttributeEnumItem[]
+  tags: AttributeEnumItem[]
 }
 
 type Props = {
@@ -172,6 +173,26 @@ const TableColumns = ({
               value={value}
               attributeData={{ type: 'list_of_strings' }}
               options={options.assignees}
+              isCollapsed={!!row.original.childOnlyMatch}
+              onChange={(value) => updateEntities([{ field: column.id, value, id, type }])}
+            />
+          )
+        },
+      },
+      {
+        accessorKey: 'tags',
+        header: () => 'Tags',
+        filterFn: 'fuzzy',
+        size: columnSizing['tags'] || 150,
+        cell: ({ row, column }) => {
+          const { value, id, type } = getValueIdType(row, column.id)
+          return (
+            <CellWidget
+              rowId={id}
+              columnId={column.id}
+              value={value}
+              attributeData={{ type: 'list_of_strings' }}
+              options={options.tags}
               isCollapsed={!!row.original.childOnlyMatch}
               onChange={(value) => updateEntities([{ field: column.id, value, id, type }])}
             />

@@ -13,6 +13,7 @@ export type TableRow = {
   data: ExtraData
   status?: string
   assignees?: string[]
+  tags: string[]
   attrib?: Record<string, any>
   childOnlyMatch?: boolean // when true, only children of this folder match the filter and not the folder itself (shots a dot)
   subType?: string | null
