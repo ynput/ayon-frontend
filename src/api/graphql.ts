@@ -310,6 +310,7 @@ export type FolderNodeTasksArgs = {
   includeFolderChildren?: Scalars['Boolean']['input'];
   last?: InputMaybe<Scalars['Int']['input']>;
   names?: InputMaybe<Array<Scalars['String']['input']>>;
+  search?: InputMaybe<Scalars['String']['input']>;
   sortBy?: InputMaybe<Scalars['String']['input']>;
   statuses?: InputMaybe<Array<Scalars['String']['input']>>;
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -732,6 +733,7 @@ export type ProjectNodeTasksArgs = {
   includeFolderChildren?: Scalars['Boolean']['input'];
   last?: InputMaybe<Scalars['Int']['input']>;
   names?: InputMaybe<Array<Scalars['String']['input']>>;
+  search?: InputMaybe<Scalars['String']['input']>;
   sortBy?: InputMaybe<Scalars['String']['input']>;
   statuses?: InputMaybe<Array<Scalars['String']['input']>>;
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -878,6 +880,7 @@ export type QueryUserArgs = {
 export type QueryUsersArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
+  emails?: InputMaybe<Array<Scalars['String']['input']>>;
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
@@ -1395,6 +1398,7 @@ export type GetTasksByParentQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
   parentIds: Array<Scalars['String']['input']> | Scalars['String']['input'];
   filter?: InputMaybe<Scalars['String']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
 }>;
 
 
@@ -1404,6 +1408,7 @@ export type GetTasksListQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
   folderIds?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
   filter?: InputMaybe<Scalars['String']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
   after?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -1702,10 +1707,10 @@ export const GetInstallEventsDocument = `
 }
     `;
 export const GetTasksByParentDocument = `
-    query GetTasksByParent($projectName: String!, $parentIds: [String!]!, $filter: String) {
+    query GetTasksByParent($projectName: String!, $parentIds: [String!]!, $filter: String, $search: String) {
   project(name: $projectName) {
     name
-    tasks(folderIds: $parentIds, filter: $filter) {
+    tasks(folderIds: $parentIds, filter: $filter, search: $search) {
       edges {
         node {
           ...TaskPropsFragment
@@ -1716,11 +1721,12 @@ export const GetTasksByParentDocument = `
 }
     ${TaskPropsFragmentFragmentDoc}`;
 export const GetTasksListDocument = `
-    query GetTasksList($projectName: String!, $folderIds: [String!], $filter: String, $after: String, $first: Int, $before: String, $last: Int, $sortBy: String) {
+    query GetTasksList($projectName: String!, $folderIds: [String!], $filter: String, $search: String, $after: String, $first: Int, $before: String, $last: Int, $sortBy: String) {
   project(name: $projectName) {
     name
     tasks(
       filter: $filter
+      search: $search
       folderIds: $folderIds
       after: $after
       first: $first

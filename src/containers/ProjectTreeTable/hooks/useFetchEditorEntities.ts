@@ -51,6 +51,8 @@ const useFetchEditorEntities = ({
   // TODO: filters bar just uses the same schema as the server
   const queryFilter = clientFilterToQueryFilter(filters)
   const queryFilterString = JSON.stringify(queryFilter)
+  // extract the fuzzy search from the filters
+  const fuzzySearchFilter = filters.find((filter) => filter.id.includes('text'))?.values?.[0]?.id
 
   console.log('Folder count:', folders.length)
 
@@ -59,6 +61,7 @@ const useFetchEditorEntities = ({
       projectName,
       parentIds: Object.keys(expanded),
       filter: filters?.length ? queryFilterString : undefined,
+      search: fuzzySearchFilter,
     },
     { skip: !Object.keys(expanded).length || !showHierarchy },
   )
@@ -67,7 +70,7 @@ const useFetchEditorEntities = ({
   const { data: foldersByTaskFilter, isUninitialized } = useGetQueryTasksFoldersQuery(
     {
       projectName,
-      tasksFoldersQuery: { filter: queryFilter },
+      tasksFoldersQuery: { filter: queryFilter, search: fuzzySearchFilter },
     },
     {
       skip: !filters.length || !folders.length || !showHierarchy,
@@ -198,6 +201,7 @@ const useFetchEditorEntities = ({
     {
       projectName,
       filter: filters?.length ? queryFilterString : '',
+      search: fuzzySearchFilter,
       folderIds: selectedFolders.length ? Array.from(foldersMap.keys()) : undefined,
       ...queryCursor,
     },

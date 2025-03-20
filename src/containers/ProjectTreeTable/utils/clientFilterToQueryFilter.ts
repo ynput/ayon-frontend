@@ -10,6 +10,7 @@ const clientFilterToQueryFilter = (filters: Filter[]): QueryFilter => {
   // Process each filter as its own condition
   const conditions: (QueryCondition | QueryFilter)[] = filters
     .filter((f) => !!f.values?.length)
+    .filter((f) => !f.id.includes('text')) // remove text search filters as they are handled separately
     .map((filter) => convertFilterToCondition(filter))
 
   // Return the QueryFilter with all conditions combined with AND

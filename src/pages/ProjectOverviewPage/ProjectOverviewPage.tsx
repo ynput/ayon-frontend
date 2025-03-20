@@ -10,7 +10,7 @@ import Slicer from '@containers/Slicer'
 
 // arc
 import { Filter, InputSwitch, Section, Toolbar } from '@ynput/ayon-react-components'
-import SearchFilterWrapper from '@components/SearchFilter/SearchFilterWrapper'
+import SearchFilterWrapper from './containers/SearchFilterWrapper'
 import ProjectOverviewTable from './containers/ProjectOverviewTable'
 import { isEmpty } from 'lodash'
 import useFilterBySlice from '@containers/TasksProgress/hooks/useFilterBySlice'
@@ -33,8 +33,15 @@ const searchFilterTypes: FilterFieldType[] = [
 const ProjectOverviewPage: FC = () => {
   const { selectedItems } = useEntitySelection()
 
-  const { projectName, projectInfo, filters, setFilters, showHierarchy, updateShowHierarchy } =
-    useProjectTableContext()
+  const {
+    projectName,
+    projectInfo,
+    filters,
+    setFilters,
+    showHierarchy,
+    updateShowHierarchy,
+    tasksMap,
+  } = useProjectTableContext()
 
   // load slicer remote config
   const { config, sliceType, setPersistentRowSelectionData, persistentRowSelectionData } =
@@ -93,12 +100,8 @@ const ProjectOverviewPage: FC = () => {
                     onChange={handleFiltersChange}
                     filterTypes={searchFilterTypes}
                     projectNames={projectName ? [projectName] : []}
-                    scope="folder"
-                    data={{
-                      tags: [],
-                      attributes: {},
-                      assignees: [],
-                    }}
+                    projectInfo={projectInfo}
+                    tasksMap={tasksMap}
                     disabledFilters={sliceType ? [sliceType] : []}
                   />
                   <span style={{ whiteSpace: 'nowrap', display: 'flex', gap: 8 }}>

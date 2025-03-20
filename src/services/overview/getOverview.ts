@@ -123,9 +123,9 @@ const injectedApi = enhancedApi.injectEndpoints({
     // This also solves the pagination issue of getting all tasks in one query, splitting it up in multiple queries to avoid pagination limits
     getOverviewTasksByFolders: build.query<
       EditorTaskNode[],
-      { projectName: string; parentIds: string[]; filter?: string }
+      { projectName: string; parentIds: string[]; filter?: string; search?: string }
     >({
-      async queryFn({ projectName, parentIds, filter }, { dispatch, forced }) {
+      async queryFn({ projectName, parentIds, filter, search }, { dispatch, forced }) {
         try {
           // for each parentId, fetch the tasks
           const results = await Promise.all(
@@ -136,6 +136,7 @@ const injectedApi = enhancedApi.injectEndpoints({
                     projectName,
                     parentIds: [parentId],
                     filter,
+                    search,
                   },
                   { forceRefetch: forced },
                 ),

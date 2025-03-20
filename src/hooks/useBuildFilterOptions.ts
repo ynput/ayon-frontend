@@ -247,6 +247,7 @@ const useBuildFilterOptions = ({
           })
         }
       })
+
       // sort the assignees based on the number of times they appear in data.assignees
       assigneesOption.values?.sort((a, b) => {
         const aCount = data.assignees?.filter((assignee) => assignee === a.id).length || 0

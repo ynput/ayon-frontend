@@ -2584,10 +2584,10 @@
     busboy "^1.6.0"
     tslib "^2.6.3"
 
-"@ynput/ayon-react-components@^1.9.5":
-  version "1.9.5"
-  resolved "https://registry.yarnpkg.com/@ynput/ayon-react-components/-/ayon-react-components-1.9.5.tgz#5631bcdf9814ed6e63c0f84a31915f4d4d6dfd93"
-  integrity sha512-1EG2q3gIPC+FjHYHMs1ZgHu8zx/aYDzGZT94tLLS6suuWYjGgVY6RSTA8obd5Xsdo7YX3g+7INQTfy/ncV4eqQ==
+"@ynput/ayon-react-components@^1.10.0":
+  version "1.10.0"
+  resolved "https://registry.yarnpkg.com/@ynput/ayon-react-components/-/ayon-react-components-1.10.0.tgz#4df9b889f39e44e9ab1e3c81e54a8c82b13055c2"
+  integrity sha512-5At07/2FZXr81Y5kl3A+eSQvK9c+bjWvFnVSFBWdHanHp/7Obz5D2R4sjRgTjlesxWE/3YcwzOcQ2kNR0MFz7w==
   dependencies:
     short-uuid "^5.2.0"
 

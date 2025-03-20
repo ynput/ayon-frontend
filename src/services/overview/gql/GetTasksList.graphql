@@ -3,6 +3,7 @@ query GetTasksList(
   $projectName: String!
   $folderIds: [String!]
   $filter: String
+  $search: String
   $after: String
   $first: Int
   $before: String
@@ -13,6 +14,7 @@ query GetTasksList(
     name
     tasks(
       filter: $filter
+      search: $search
       folderIds: $folderIds
       after: $after
       first: $first

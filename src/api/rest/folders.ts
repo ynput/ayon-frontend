@@ -123,5 +123,8 @@ export type QueryFilter = {
   operator?: 'and' | 'or'
 }
 export type TasksFoldersQuery = {
+  /** Filter object used to resolve the tasks */
   filter?: QueryFilter
+  /** 'fulltext' search used to resolve the tasks */
+  search?: string
 }

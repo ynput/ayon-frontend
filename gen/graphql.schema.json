@@ -3035,8 +3035,20 @@
                 "deprecationReason": null
               },
               {
+                "name": "search",
+                "description": "Fuzzy text search filter",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "sortBy",
-                "description": "Sort by one of name, status, createdAt, updatedAt, taskType",
+                "description": "Sort by one of name, status, createdAt, updatedAt, taskType, assignees",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -3068,7 +3080,7 @@
               },
               {
                 "name": "tags",
-                "description": "List tasks with all of the provided tags.Empty list will return tasks with no tags.",
+                "description": "List tasks with all of the provided tags. Empty list will return tasks with no tags.",
                 "type": {
                   "kind": "LIST",
                   "name": null,
@@ -3088,7 +3100,7 @@
               },
               {
                 "name": "tagsAny",
-                "description": "List tasks with any of the provided tags.Empty list will return tasks with any tags.",
+                "description": "List tasks with any of the provided tags. Empty list will return tasks with any tags.",
                 "type": {
                   "kind": "LIST",
                   "name": null,
@@ -7114,8 +7126,20 @@
                 "deprecationReason": null
               },
               {
+                "name": "search",
+                "description": "Fuzzy text search filter",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "sortBy",
-                "description": "Sort by one of name, status, createdAt, updatedAt, taskType",
+                "description": "Sort by one of name, status, createdAt, updatedAt, taskType, assignees",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -7147,7 +7171,7 @@
               },
               {
                 "name": "tags",
-                "description": "List tasks with all of the provided tags.Empty list will return tasks with no tags.",
+                "description": "List tasks with all of the provided tags. Empty list will return tasks with no tags.",
                 "type": {
                   "kind": "LIST",
                   "name": null,
@@ -7167,7 +7191,7 @@
               },
               {
                 "name": "tagsAny",
-                "description": "List tasks with any of the provided tags.Empty list will return tasks with any tags.",
+                "description": "List tasks with any of the provided tags. Empty list will return tasks with any tags.",
                 "type": {
                   "kind": "LIST",
                   "name": null,
@@ -8555,6 +8579,26 @@
                   "kind": "SCALAR",
                   "name": "String",
                   "ofType": null
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "emails",
+                "description": "\nThe emails of the users to retrieve.\n",
+                "type": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "String",
+                      "ofType": null
+                    }
+                  }
                 },
                 "defaultValue": "null",
                 "isDeprecated": false,
