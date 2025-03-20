@@ -72,6 +72,7 @@ export type BundleModel = {
   isStaging?: boolean
   isArchived?: boolean
   isDev?: boolean
+  isProject?: boolean
   activeUser?: string
 }
 export type ListBundleModel = {

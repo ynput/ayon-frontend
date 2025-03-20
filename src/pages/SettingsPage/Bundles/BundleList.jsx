@@ -102,7 +102,7 @@ const BundleList = ({
     // you can only set production, staging, dev status on one bundle at a time
     const activeBundle = e?.data
     if (!activeBundle) return
-    const { name: activeBundleName, isArchived, isProduction, isStaging, isDev } = e?.data || {}
+    const { name: activeBundleName, isArchived, isProduction, isStaging, isDev, isProject } = e?.data || {}
     if (!activeBundleName) {
       return
     }
@@ -206,6 +206,11 @@ const BundleList = ({
         {rowData.isDev && (
           <Badge hl="developer" data-testid={`${rowData.name}-dev`}>
             Dev{rowData.activeUser && ` (${rowData.activeUser})`}
+          </Badge>
+        )}
+        {rowData.isProject && (
+          <Badge hl="project" data-testid={`${rowData.name}-prj`}>
+            Project
           </Badge>
         )}
       </BadgeWrapper>
