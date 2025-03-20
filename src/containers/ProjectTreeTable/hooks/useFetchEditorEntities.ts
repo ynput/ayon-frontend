@@ -32,7 +32,7 @@ type UseFetchEditorEntitiesData = {
 
 const useFetchEditorEntities = ({
   projectName,
-  selectedFolders,
+  selectedFolders, // comes from the slicer
   filters,
   sorting,
   expanded,
@@ -130,38 +130,36 @@ const useFetchEditorEntities = ({
         .map((id) => map.get(id)?.path)
         .filter(Boolean) as string[]
 
-      if (selectedPaths.length) {
-        // Create a new map that only contains selected folders and their children
-        const filteredMap = new Map()
+      // Create a new map that only contains selected folders and their children
+      const filteredMap = new Map()
 
-        // For each folder, check if it should be included
-        map.forEach((folder, folderId) => {
-          const folderPath = folder.path as string
+      // For each folder, check if it should be included
+      map.forEach((folder, folderId) => {
+        const folderPath = folder.path as string
 
-          // Include if it's a parent or the folder itself
-          const folderPathParts = folderPath.split('/')
-          let isParentOrSelf = false
+        // Include if it's a parent or the folder itself
+        const folderPathParts = folderPath.split('/')
+        let isParentOrSelf = false
 
-          for (let i = 0; i < folderPathParts.length; i++) {
-            const partialPath = folderPathParts.slice(0, i + 1).join('/')
-            if (selectedPaths.some((p) => p === partialPath)) {
-              isParentOrSelf = true
-              break
-            }
+        for (let i = 0; i < folderPathParts.length; i++) {
+          const partialPath = folderPathParts.slice(0, i + 1).join('/')
+          if (selectedPaths.some((p) => p === partialPath)) {
+            isParentOrSelf = true
+            break
           }
+        }
 
-          // Include if it's a child of any selected folder
-          const isChild = selectedPaths.some((selectedPath) =>
-            folderPath.startsWith(selectedPath + '/'),
-          )
+        // Include if it's a child of any selected folder
+        const isChild = selectedPaths.some((selectedPath) =>
+          folderPath.startsWith(selectedPath + '/'),
+        )
 
-          if (isParentOrSelf || isChild) {
-            filteredMap.set(folderId, folder)
-          }
-        })
+        if (isParentOrSelf || isChild) {
+          filteredMap.set(folderId, folder)
+        }
+      })
 
-        return filteredMap
-      }
+      return filteredMap
     }
 
     return map
