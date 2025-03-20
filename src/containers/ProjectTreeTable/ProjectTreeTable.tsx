@@ -33,7 +33,7 @@ import HeaderActionButton from './components/HeaderActionButton'
 
 // Context imports
 import { CellEditingProvider, useCellEditing } from './context/CellEditingContext'
-import { useSelection } from './context/SelectionContext'
+import { ROW_SELECTION_COLUMN_ID, useSelection } from './context/SelectionContext'
 import { ClipboardProvider, useClipboard } from './context/ClipboardContext'
 
 // Hook imports
@@ -139,6 +139,7 @@ const TableCell = ({ cell, cellId }: TableCellProps) => {
       tabIndex={0}
       key={cell.id}
       className={clsx(
+        cell.column.id,
         cell.column.id === 'folderType' ? 'large' : '',
         {
           selected: isCellSelected(cellId),
@@ -168,13 +169,23 @@ const TableCell = ({ cell, cellId }: TableCellProps) => {
         }
       }}
       onMouseOver={(e) => {
-        if (e.buttons === 1) {
+        if (e.buttons === 1 && (e.target as HTMLElement).tagName === 'TD') {
           // Left button is pressed during mouse move - drag selection
           extendSelection(cellId)
         }
       }}
       onMouseUp={() => {
         endSelection(cellId)
+      }}
+      onDoubleClick={(e) => {
+        if (cell.column.id === 'name') {
+          // select the row by selecting the row-selection cell
+          const rowSelectionCellId = getCellId(cell.row.id, ROW_SELECTION_COLUMN_ID)
+          if (!isCellSelected(rowSelectionCellId)) {
+            const additive = e.metaKey || e.ctrlKey
+            selectCell(rowSelectionCellId, additive, false)
+          }
+        }
       }}
       onContextMenu={(e) => {
         e.preventDefault()
@@ -257,7 +268,8 @@ const FlexTable = ({
   }, [fetchMoreOnBottomReached])
 
   // Selection context
-  const { registerGrid, isCellSelected, selectedCells, clearSelection } = useSelection()
+  const { registerGrid, isCellSelected, selectedCells, clearSelection, isRowSelected, selectCell } =
+    useSelection()
 
   // clipboard context
   const { copyToClipboard, exportCSV, pasteFromClipboard } = useClipboard()
@@ -309,7 +321,10 @@ const FlexTable = ({
     state: {
       expanded,
       sorting,
-      columnPinning,
+      columnPinning: {
+        left: [ROW_SELECTION_COLUMN_ID, ...(columnPinning.left || [])],
+        right: columnPinning.right,
+      },
       columnSizing,
       columnVisibility,
     },
@@ -372,6 +387,18 @@ const FlexTable = ({
         shortcut: getPlatformShortcutKey('v', [KeyMode.Ctrl]),
         command: () => pasteFromClipboard(selected),
       })
+    } else {
+      if (selected.length === 1) {
+        items.push({
+          label: 'Show details',
+          icon: 'dock_to_left',
+          shortcut: 'Double click',
+          command: () => {
+            const rowSelectionCellId = getCellId(entityId, ROW_SELECTION_COLUMN_ID)
+            selectCell(rowSelectionCellId, false, false)
+          },
+        })
+      }
     }
 
     const entitiesToInherit = selected.reduce((acc, cellId) => {
@@ -500,7 +527,7 @@ const FlexTable = ({
 
                     return (
                       <Styled.HeaderCell
-                        className={clsx({ large: column.id === 'folderType' })}
+                        className={clsx(header.id, { large: column.id === 'folderType' })}
                         key={header.id}
                         style={{
                           ...getCommonPinningStyles(column),
@@ -515,7 +542,7 @@ const FlexTable = ({
                           >
                             {flexRender(column.columnDef.header, header.getContext())}
 
-                            <Styled.HeaderButtons>
+                            <Styled.HeaderButtons className="actions">
                               {/* COLUMN HIDING */}
                               <HeaderActionButton
                                 icon="visibility_off"
@@ -575,19 +602,20 @@ const FlexTable = ({
           >
             {rowVirtualizer.getVirtualItems().map((virtualRow: $Any) => {
               const row = rows[virtualRow.index] as Row<TableRow>
+
               return (
-                <tr
+                <Styled.TR
                   data-index={virtualRow.index} //needed for dynamic row height measurement
                   // @ts-ignore
                   ref={(node) => rowVirtualizer.measureElement(node)} //measure dynamic row height
                   key={row.id}
+                  className={clsx({ selected: isRowSelected(row.id) })}
                   style={{
-                    display: 'table-row',
                     transform: `translateY(${virtualRow.start}px)`, //this should always be a `style` as it changes on scroll
                   }}
                 >
                   <TableCellsMemo row={row} columnPinning={columnPinning} />
-                </tr>
+                </Styled.TR>
               )
             })}
           </tbody>

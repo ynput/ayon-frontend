@@ -10,6 +10,8 @@ import {
   getBorderClasses,
 } from '../utils/cellUtils'
 
+export const ROW_SELECTION_COLUMN_ID = '__row_selection__' // ID for the row selection column
+
 // Cell range for selections
 
 // Structure to map row/column IDs to their positions in the grid
@@ -32,6 +34,8 @@ interface SelectionContextType {
   // Grid mapping for coordinate lookups
   gridMap: GridMap
 
+  selectedRows: string[] // Array of selected row IDs
+
   // Methods
   registerGrid: (rows: RowId[], columns: ColId[]) => void
   selectCell: (cellId: CellId, additive: boolean, range: boolean) => void
@@ -40,8 +44,10 @@ interface SelectionContextType {
   endSelection: (cellId: CellId) => void
   focusCell: (cellId: CellId | null) => void
   clearSelection: () => void
+  clearRowsSelection: () => void
   isCellSelected: (cellId: CellId) => boolean
   isCellFocused: (cellId: CellId) => boolean
+  isRowSelected: (rowId: RowId) => boolean
   getCellPositionFromId: (cellId: CellId) => CellPosition | null
   getCellBorderClasses: (cellId: CellId) => string[]
 }
@@ -60,6 +66,17 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({ children 
     indexToRowId: new Map(),
     indexToColId: new Map(),
   })
+
+  const selectedRows = useMemo(
+    () =>
+      Array.from(selectedCells)
+        .filter(
+          (cellId) =>
+            parseCellId(cellId)?.colId === ROW_SELECTION_COLUMN_ID && parseCellId(cellId)?.rowId,
+        )
+        .map((cellId) => parseCellId(cellId)?.rowId) as string[],
+    [selectedCells],
+  )
 
   // Register grid structure for range selections
   const registerGrid = useCallback((rows: RowId[], columns: ColId[]) => {
@@ -81,12 +98,29 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({ children 
     setGridMap({ rowIdToIndex, colIdToIndex, indexToRowId, indexToColId })
   }, [])
 
+  // TODO cmd selecting row-selection not working
+  // update the selection whilst properly handling the row-selection column
+  const updateSelection = (selection: Set<CellId>, position: CellPosition) => {
+    let newSelection = new Set(selection)
+    if (position.colId !== ROW_SELECTION_COLUMN_ID) {
+      // we always preserve the selection of the row-selection column
+      const rowSelection = Array.from(selectedCells).filter(
+        (id) => parseCellId(id)?.colId === ROW_SELECTION_COLUMN_ID,
+      )
+      if (rowSelection.length) {
+        newSelection = new Set([...newSelection, ...rowSelection])
+      }
+    }
+    // reset selection and set new anchor
+    setSelectedCells(newSelection)
+  }
+
   // Select cells between two points in the grid
   const selectCellRange = useCallback(
     (start: CellPosition, end: CellPosition, additive: boolean): Set<CellId> => {
       if (!additive) {
         // Clear existing selection if not additive
-        setSelectedCells(new Set())
+        updateSelection(new Set(), start)
       }
 
       const startRowIdx = gridMap.rowIdToIndex.get(start.rowId) ?? 0
@@ -150,13 +184,16 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({ children 
         // Single cell selection
         // If this cell is already the only selected cell, deselect it
         // and it is from name column
-        if (selectedCells.size === 1 && selectedCells.has(cellId) && position.colId === 'name') {
+        if (
+          selectedCells.size === 1 &&
+          selectedCells.has(cellId) &&
+          [ROW_SELECTION_COLUMN_ID, 'name'].includes(position.colId)
+        ) {
           setSelectedCells(new Set())
           setAnchorCell(null)
           setFocusedCellId(null)
         } else {
-          // Otherwise, reset selection and set new anchor
-          setSelectedCells(new Set([cellId]))
+          updateSelection(new Set([cellId]), position)
           setAnchorCell(position)
           setFocusedCellId(cellId)
         }
@@ -174,7 +211,7 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({ children 
       if (!currentPosition) return
 
       const newSelection = selectCellRange(anchorCell, currentPosition, false)
-      setSelectedCells(newSelection)
+      updateSelection(newSelection, currentPosition)
     },
     [selectionInProgress, anchorCell, selectCellRange],
   )
@@ -193,7 +230,7 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({ children 
       if (range && anchorCell) {
         // Shift+click for range selection - select cells between anchor and current
         const newSelection = selectCellRange(anchorCell, position, additive)
-        setSelectedCells(newSelection)
+        updateSelection(newSelection, position)
       } else if (additive) {
         // Ctrl/Cmd+click for toggling selection
         setSelectedCells((prev) => {
@@ -207,7 +244,7 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({ children 
         })
       } else {
         // Normal click - select just this cell and set as new anchor
-        setSelectedCells(new Set([cellId]))
+        updateSelection(new Set([cellId]), position)
         setAnchorCell(position)
       }
     },
@@ -225,11 +262,35 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({ children 
     setAnchorCell(null)
   }, [])
 
+  // clear rows selection
+  const clearRowsSelection = useCallback(() => {
+    setSelectedCells((prev) => {
+      const newSelection = new Set(prev)
+      Array.from(newSelection).forEach((cellId) => {
+        if (parseCellId(cellId)?.colId === ROW_SELECTION_COLUMN_ID) {
+          newSelection.delete(cellId)
+        }
+      })
+      return newSelection
+    })
+  }, [])
+
   // Check if a cell is selected
   const isCellSelected = useCallback((cellId: CellId) => selectedCells.has(cellId), [selectedCells])
 
   // Check if a cell is focused
   const isCellFocused = useCallback((cellId: CellId) => cellId === focusedCellId, [focusedCellId])
+
+  // check if a row is selected (using row-selection column status)
+  const isRowSelected = useCallback(
+    (rowId: RowId) => {
+      const rowSelection = Array.from(selectedCells).filter(
+        (id) => parseCellId(id)?.colId === ROW_SELECTION_COLUMN_ID,
+      )
+      return rowSelection.some((id) => parseCellId(id)?.rowId === rowId)
+    },
+    [selectedCells],
+  )
 
   // Get position from cell ID - using shared utility
   const getCellPositionFromId = useCallback((cellId: CellId) => parseCellId(cellId), [])
@@ -285,6 +346,7 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({ children 
   const value = useMemo(
     () => ({
       selectedCells,
+      selectedRows,
       focusedCellId,
       selectionInProgress,
       anchorCell,
@@ -296,17 +358,21 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({ children 
       endSelection,
       focusCell,
       clearSelection,
+      clearRowsSelection,
       isCellSelected,
       isCellFocused,
+      isRowSelected,
       getCellPositionFromId,
       getCellBorderClasses,
     }),
     [
       selectedCells,
+      selectedRows,
       focusedCellId,
       selectionInProgress,
       anchorCell,
       gridMap,
+
       registerGrid,
       selectCell,
       startSelection,
@@ -314,8 +380,10 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({ children 
       endSelection,
       focusCell,
       clearSelection,
+      clearRowsSelection,
       isCellSelected,
       isCellFocused,
+      isRowSelected,
       getCellPositionFromId,
       getCellBorderClasses,
     ],

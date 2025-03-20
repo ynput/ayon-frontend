@@ -5,27 +5,39 @@ import DetailsPanel from '@containers/DetailsPanel/DetailsPanel'
 import DetailsPanelSlideOut from '@containers/DetailsPanel/DetailsPanelSlideOut/DetailsPanelSlideOut'
 import { useGetUsersAssigneeQuery } from '@queries/user/getUsers'
 import { ProjectModel } from '@api/rest/project'
-import { useEntitySelection } from '@containers/ProjectTreeTable/context/EntitySelectionContext'
+import { useSelection } from '@containers/ProjectTreeTable/context/SelectionContext'
+import { useProjectTableContext } from '@containers/ProjectTreeTable/context/ProjectTableContext'
+import { EditorTaskNode, MatchingFolder } from '@containers/ProjectTreeTable/utils/types'
 
 type ProjectOverviewDetailsPanelProps = {
   projectInfo?: ProjectModel
   projectName: string
+  selectedRows: string[]
 }
 
 const ProjectOverviewDetailsPanel = ({
   projectInfo,
   projectName,
+  selectedRows,
 }: ProjectOverviewDetailsPanelProps) => {
   const projectsInfo = { [projectName]: projectInfo }
 
-  const { selectedItems, clearSelection } = useEntitySelection()
+  const { getEntityById } = useProjectTableContext()
+  const { clearRowsSelection } = useSelection()
 
-  const entities = selectedItems.map((item) => ({ id: item.id, projectName }))
+  const selectRowData = selectedRows.map((id) => getEntityById(id)).filter(Boolean) as (
+    | MatchingFolder
+    | EditorTaskNode
+  )[]
+  // folder types will always take priority over task types, we can only have one type at one time
+  const entityType = selectRowData.some((row) => 'parentId' in row) ? 'folder' : 'task'
+  const entities = selectRowData
+    .filter((row) => (entityType === 'folder' ? 'parentId' in row : 'folderId' in row))
+    .map((row) => ({ id: row.id, projectName }))
 
   const handleClose = () => {
-    clearSelection()
+    clearRowsSelection()
   }
-  const entityType = selectedItems[0]?.entityType
 
   const { data: users = [] } = useGetUsersAssigneeQuery({ names: undefined, projectName })
 

@@ -15,6 +15,8 @@ import { useCellEditing } from './context/CellEditingContext'
 import { getCellId, getCellValue } from './utils/cellUtils'
 import { TableCellContent } from './ProjectTreeTable.styled'
 import clsx from 'clsx'
+import { SelectionCell } from './components/SelectionCell'
+import { ROW_SELECTION_COLUMN_ID } from './context/SelectionContext'
 
 const nameSort: SortingFn<any> = (rowA, rowB) => {
   const labelA = rowA.original.label || rowA.original.name
@@ -80,6 +82,12 @@ const TableColumns = ({
   return useMemo<ColumnDef<TableRow, any>[]>(() => {
     const staticColumns: ColumnDef<TableRow>[] = [
       {
+        id: ROW_SELECTION_COLUMN_ID,
+        header: '',
+        cell: () => <SelectionCell />,
+        size: 20,
+      },
+      {
         accessorKey: 'name',
         header: () => 'Folder / Task',
         filterFn: 'fuzzy',
@@ -90,7 +98,7 @@ const TableColumns = ({
           const cellId = getCellId(row.id, column.id)
           return (
             <TableCellContent
-              className={clsx('large', { selected: row.getIsSelected(), loading: isLoading })}
+              className={clsx('large', { loading: isLoading })}
               style={{
                 paddingLeft: `calc(${row.depth * 1}rem + 8px)`,
               }}

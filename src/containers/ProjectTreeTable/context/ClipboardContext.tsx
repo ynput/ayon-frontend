@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useCallback, useMemo, useEffect } from 'react'
 
 // Contexts
-import { useSelection } from './SelectionContext'
+import { ROW_SELECTION_COLUMN_ID, useSelection } from './SelectionContext'
 import { useCellEditing } from './CellEditingContext'
 
 // Utils
@@ -39,6 +39,9 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
         // First, organize selected cells by row
         const cellsByRow = new Map<string, Set<string>>()
 
+        // Track which rows have row selection cells selected
+        const rowsWithSelectionCell = new Set<string>()
+
         // Parse all selected cells and organize by rowId and colId
         selected.forEach((cellId) => {
           const position = parseCellId(cellId)
@@ -49,7 +52,21 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
           if (!cellsByRow.has(rowId)) {
             cellsByRow.set(rowId, new Set())
           }
+
+          // Check if this is a row selection cell
+          if (colId === ROW_SELECTION_COLUMN_ID) {
+            rowsWithSelectionCell.add(rowId)
+          }
+
           cellsByRow.get(rowId)?.add(colId)
+        })
+
+        // For rows with selection cells, add all available columns
+        rowsWithSelectionCell.forEach((rowId) => {
+          const allColumns = Array.from(gridMap.colIdToIndex.keys())
+          allColumns.forEach((colId) => {
+            cellsByRow.get(rowId)?.add(colId)
+          })
         })
 
         // Get sorted row IDs based on their index in the grid
@@ -100,10 +117,13 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
             return indexA - indexB
           })
 
+          // Filter out the row selection column from the copied data
+          const filteredColIds = colIds.filter((colId) => colId !== ROW_SELECTION_COLUMN_ID)
+
           const rowValues: string[] = []
 
           // For each column in this row
-          for (const colId of colIds) {
+          for (const colId of filteredColIds) {
             // Determine the value based on the column ID
             let cellValue = ''
             // @ts-ignore

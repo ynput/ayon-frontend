@@ -1,8 +1,6 @@
 import { Icon, theme } from '@ynput/ayon-react-components'
 import { Expander } from '@containers/Slicer/SlicerTable.styled'
 import styled from 'styled-components'
-import clsx from 'clsx'
-import { useEntitySelection } from '../context/EntitySelectionContext'
 
 const StyledEntityNameWidget = styled.div`
   position: relative;
@@ -38,26 +36,13 @@ const StyledContent = styled.div`
   max-width: 100%;
   height: 100%;
 
-  &:hover {
+  /* &:hover {
     &,
     .icon,
     .path {
       color: var(--md-sys-color-primary);
     }
-  }
-
-  &.selected {
-    background-color: var(--md-sys-color-primary);
-    &,
-    .icon,
-    .path {
-      color: var(--md-sys-color-on-primary);
-    }
-
-    &:hover {
-      background-color: var(--md-sys-color-primary-hover);
-    }
-  }
+  } */
 `
 
 const StyledTextContent = styled.div`
@@ -103,8 +88,6 @@ export const EntityNameWidget = ({
   toggleExpanderHandler,
   toggleExpanded,
 }: EntityNameWidgetProps) => {
-  const { isSelected, toggleSelection } = useEntitySelection()
-
   return (
     <StyledEntityNameWidget>
       {showHierarchy ? (
@@ -123,15 +106,7 @@ export const EntityNameWidget = ({
       ) : null}
       <StyledContentWrapper style={{ height: path ? 32 : 24 }}>
         <StyledContentAbsolute>
-          <StyledContent
-            onClick={(e) => {
-              e.stopPropagation()
-              // Use metaKey (Command on Mac) or ctrlKey (Ctrl on Windows/Linux)
-              const isAdditive = e.metaKey || e.ctrlKey
-              toggleSelection(id, type, isAdditive)
-            }}
-            className={clsx('name-content', { selected: isSelected(id) })}
-          >
+          <StyledContent>
             {icon && <Icon icon={icon} />}
             <StyledTextContent>
               {path && <span className="path">{path}</span>}

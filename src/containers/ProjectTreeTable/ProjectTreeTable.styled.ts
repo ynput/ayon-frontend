@@ -1,5 +1,23 @@
-import { TableContainer as BaseTableContainer } from '@containers/Slicer/SlicerTable.styled'
 import styled from 'styled-components'
+
+// Create shadow mixins to make combinations work properly
+const topShadow = `inset 0 1px 0 0 var(--md-sys-color-primary)`
+const rightShadow = `inset -1px 0 0 0 var(--md-sys-color-primary)`
+const bottomShadow = `inset 0 -1px 0 0 var(--md-sys-color-primary)`
+const leftShadow = `inset 1px 0 0 0 var(--md-sys-color-primary)`
+const defaultShadow = `inset 1px -1px 0 0 var(--md-sys-color-surface-container)`
+
+export const TR = styled.tr`
+  display: table-row;
+  position: absolute;
+  width: 100%;
+
+  &.selected {
+    td {
+      background-color: var(--md-sys-color-surface-container-high);
+    }
+  }
+`
 
 const cellMinWidth = 50
 
@@ -65,6 +83,16 @@ export const HeaderCell = styled.div`
       display: flex;
     }
   }
+
+  /* special styles for the left selection column */
+  &.__row_selection__ {
+    min-width: unset;
+    width: 20px !important;
+
+    .actions {
+      display: none;
+    }
+  }
 `
 
 export const HeaderButtons = styled.div`
@@ -77,13 +105,6 @@ export const HeaderButtons = styled.div`
   top: 50%;
   transform: translateY(-50%);
 `
-
-// Create shadow mixins to make combinations work properly
-const topShadow = `inset 0 1px 0 0 var(--md-sys-color-primary)`
-const rightShadow = `inset -1px 0 0 0 var(--md-sys-color-primary)`
-const bottomShadow = `inset 0 -1px 0 0 var(--md-sys-color-primary)`
-const leftShadow = `inset 1px 0 0 0 var(--md-sys-color-primary)`
-const defaultShadow = `inset 1px -1px 0 0 var(--md-sys-color-surface-container)`
 
 export const TableCell = styled.td`
   position: relative;
@@ -189,6 +210,26 @@ export const TableCell = styled.td`
       border: 2px solid var(--md-sys-color-surface-container-low);
     }
   }
+
+  /* special styles for selection bar cells */
+  &.__row_selection__ {
+    width: 20px !important;
+    min-width: unset;
+
+    &.selected {
+      background-color: var(--md-sys-color-primary-container) !important;
+      box-shadow: none !important;
+      /* reveal the check mark */
+      [icon='check'] {
+        display: block;
+      }
+    }
+    &.focused {
+      &::after {
+        display: none;
+      }
+    }
+  }
 `
 
 export const TableHeader = styled.div`
@@ -209,6 +250,37 @@ export const TableWrapper = styled.div`
   background-color: var(--md-sys-color-surface-container-low);
 `
 
-export const TableContainer = styled(BaseTableContainer)`
+export const TableContainer = styled.div`
+  display: flex;
+
+  height: 100%;
+  width: 100%;
+  overflow: auto;
+  padding: 4px;
   padding-top: 0;
+
+  &.isLoading {
+    overflow: hidden;
+  }
+
+  table {
+    height: fit-content;
+    width: 100%;
+    display: grid;
+  }
+
+  thead {
+    display: none;
+  }
+
+  tbody {
+    position: relative;
+    display: grid;
+  }
+
+  td {
+    height: 34px;
+    padding: 1px 0px;
+    width: 100%;
+  }
 `

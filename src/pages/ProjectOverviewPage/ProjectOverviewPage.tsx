@@ -17,10 +17,10 @@ import useFilterBySlice from '@containers/TasksProgress/hooks/useFilterBySlice'
 import { useFiltersWithHierarchy } from '@components/SearchFilter/hooks'
 import { FilterFieldType } from '@hooks/useBuildFilterOptions'
 import ProjectOverviewDetailsPanel from './containers/ProjectOverviewDetailsPanel'
-import { useEntitySelection } from '@containers/ProjectTreeTable/context/EntitySelectionContext'
 import NewEntity from '@components/NewEntity/NewEntity'
 import { useProjectTableContext } from '@containers/ProjectTreeTable/context/ProjectTableContext'
 import ProjectOverviewSettings from './components/ProjectOverviewSettings'
+import { useSelection } from '@containers/ProjectTreeTable/context/SelectionContext'
 
 const searchFilterTypes: FilterFieldType[] = [
   'attributes',
@@ -31,7 +31,7 @@ const searchFilterTypes: FilterFieldType[] = [
 ]
 
 const ProjectOverviewPage: FC = () => {
-  const { selectedItems } = useEntitySelection()
+  const { selectedRows } = useSelection()
 
   const {
     projectName,
@@ -116,7 +116,7 @@ const ProjectOverviewPage: FC = () => {
                 <ProjectOverviewTable />
               </Section>
             </SplitterPanel>
-            {!!selectedItems.length ? (
+            {!!selectedRows.length ? (
               <SplitterPanel
                 size={30}
                 style={{
@@ -124,7 +124,11 @@ const ProjectOverviewPage: FC = () => {
                   minWidth: 300,
                 }}
               >
-                <ProjectOverviewDetailsPanel projectInfo={projectInfo} projectName={projectName} />
+                <ProjectOverviewDetailsPanel
+                  projectInfo={projectInfo}
+                  projectName={projectName}
+                  selectedRows={selectedRows}
+                />
               </SplitterPanel>
             ) : (
               <SplitterPanel style={{ maxWidth: 0 }}></SplitterPanel>
