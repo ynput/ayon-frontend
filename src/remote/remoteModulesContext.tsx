@@ -3,6 +3,7 @@ import { registerRemotes } from '@module-federation/enhanced/runtime'
 import { useListFrontendModulesQuery } from '@queries/addons/getAddons'
 import { useAppSelector } from '@state/store'
 import { FrontendModuleListItem } from '@api/rest/addons'
+import { useGetInfoQuery } from '@queries/auth/getAuth'
 
 type Module = {
   remote: string
@@ -34,10 +35,13 @@ export const RemoteModulesProvider = ({ children }: Props) => {
   const { data: addonRemoteModules = [], isLoading } = useListFrontendModulesQuery(undefined, {
     skip: !user,
   })
+
+  const { data: info = {}, isLoading: isLoadingInfo } = useGetInfoQuery({})
+
   const [remotesInitialized, setRemotesInitialized] = useState(false)
 
   useEffect(() => {
-    if (isLoading || !addonRemoteModules.length) return
+    if (isLoading || !addonRemoteModules.length || isLoadingInfo) return
 
     // create a flat map of modules to load
     const allRemotes: Module[] = []
@@ -62,13 +66,13 @@ export const RemoteModulesProvider = ({ children }: Props) => {
         alias: r.remote,
         entry: `/addons/${r.addon || r.remote}/${r.version}/frontend/modules/${
           r.remote
-        }/remoteEntry.js?date=${new Date().toISOString()}`,
+        }/remoteEntry.js?server=${info?.releaseInfo?.version}-${info?.releaseInfo?.buildDate}`,
         type: 'module',
       })),
     )
 
     setRemotesInitialized(true)
-  }, [addonRemoteModules, isLoading])
+  }, [addonRemoteModules, isLoading, isLoadingInfo])
 
   return (
     <RemoteModulesContext.Provider

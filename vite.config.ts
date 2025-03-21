@@ -76,9 +76,6 @@ export default ({ mode }) => {
             requiredVersion: dependencies['styled-components'],
             singleton: true,
           },
-          '@ynput/ayon-react-components': {
-            requiredVersion: dependencies['@ynput/ayon-react-components'],
-          },
         },
         runtimePlugins: ['./src/remote/custom-runtime-plugin'],
       }),
