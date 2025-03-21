@@ -59,10 +59,12 @@ const VideoPlayerControls = ({
   }
   const handleGoForward1 = () => {
     console.debug('VideoPlayerControls: Go forward 1')
+    console.log('Current Frame:', currentFrameRef.current)
     let nextFrame = currentFrameRef.current + 1
     if (nextFrame > frameCountRef.current - 1) {
       nextFrame = loop ? 0 : frameCountRef.current - 1
     }
+    console.log('Next Frame:', nextFrame)
     seekToFrame(nextFrame)
   }
 

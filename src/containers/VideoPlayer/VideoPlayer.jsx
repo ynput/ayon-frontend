@@ -76,6 +76,8 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
   const seekedToInitialPosition = useRef(false)
 
   const [currentTime, setCurrentTime] = useState(0) // in seconds
+  const currentTimeRef = useRef(currentTime)
+
   const [duration, setDuration] = useState(0) // in seconds
   const [bufferedRanges, setBufferedRanges] = useState([]) // here we use frames
 
@@ -243,6 +245,7 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
 
   const updateCurrentTime = (now, metadataInfo) => {
     setCurrentTime(metadataInfo.mediaTime)
+    currentTimeRef.current = metadataInfo.mediaTime
     const video = videoRef.current
     if (!video) return
     video.requestVideoFrameCallback(updateCurrentTime)
@@ -302,9 +305,13 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
     // seek to time specified in seconds.
     // this is not used directly (as we use seekToFrame)
     const videoElement = videoRef.current
-    if (newTime === videoRef.current?.currentTime) return
+    console.log('CurrentTime', videoRef.current?.currentTime)
+    console.log('CurrentTimeRef', currentTimeRef.current)
+    console.log('NewTime', newTime)
+    if (newTime === currentTimeRef.current) return
     if (videoElement.readyState >= 3) {
       // HAVE_FUTURE_DATA
+      console.log('Seeking to time:', newTime)
       videoElement.currentTime = newTime
     } else {
       const onCanPlay = () => {
