@@ -17,6 +17,52 @@ import VariantSelector from '@containers/AddonSettings/VariantSelector'
 import { useCreateServiceMutation } from '@queries/services/updateServices'
 import { useGetServiceAddonsQuery, useGetServiceHostsQuery } from '@queries/services/getServices'
 
+// Function to validate bucket name
+const validateServiceName = (name) => {
+  // Check length
+  if (name.length < 3 || name.length > 63) {
+    return 'Bucket name must be between 3 and 63 characters long'
+  }
+
+  // Check for valid characters (lowercase letters, numbers, dots, hyphens)
+  if (!/^[a-z0-9.-]+$/.test(name)) {
+    return 'Bucket name can only contain lowercase letters, numbers, dots, and hyphens'
+  }
+
+  // Check beginning and end
+  if (!/^[a-z0-9].*[a-z0-9]$/.test(name)) {
+    return 'Bucket name must begin and end with a letter or number'
+  }
+
+  // Check for adjacent periods
+  if (/\.\./.test(name)) {
+    return 'Bucket name must not contain two adjacent periods'
+  }
+
+  // Check if formatted as IP address
+  if (/^\d+\.\d+\.\d+\.\d+$/.test(name)) {
+    return 'Bucket name must not be formatted as an IP address'
+  }
+
+  return null // null means valid
+}
+
+// Function to sanitize bucket name during typing
+const sanitizeServiceName = (name) => {
+  if (!name) return ''
+
+  // Convert to lowercase
+  let sanitized = name.toLowerCase()
+
+  // Remove invalid characters
+  sanitized = sanitized.replace(/[^a-z0-9.-]/g, '')
+
+  // Remove consecutive dots
+  sanitized = sanitized.replace(/\.{2,}/g, '.')
+
+  return sanitized
+}
+
 const NewServiceDialog = ({ onHide }) => {
   const [serviceName, setServiceName] = useState('')
   const [selectedAddon, setSelectedAddon] = useState(null)
@@ -28,6 +74,13 @@ const NewServiceDialog = ({ onHide }) => {
 
   const { data: addonData = [] } = useGetServiceAddonsQuery()
   const { data: hostData = [] } = useGetServiceHostsQuery()
+
+  // Handle service name change with validation
+  const handleServiceNameChange = (e) => {
+    const rawValue = e.target.value
+    const sanitized = sanitizeServiceName(rawValue)
+    setServiceName(sanitized)
+  }
 
   const hostOptions = useMemo(() => {
     return hostData.map((h) => {
@@ -62,6 +115,13 @@ const NewServiceDialog = ({ onHide }) => {
   const [createService, { isLoading }] = useCreateServiceMutation()
 
   const submit = async () => {
+    // Validate bucket name before submitting
+    const error = validateServiceName(serviceName)
+    if (error) {
+      toast.error(`Invalid service name: ${error}`)
+      return
+    }
+
     /*
     volumes: list[str] | None = Field(None, title="Volumes", example=["/tmp:/tmp"])
     ports: list[str] | None = Field(None, title="Ports", example=["8080:8080"])
@@ -172,7 +232,7 @@ const NewServiceDialog = ({ onHide }) => {
         </FormRow>
 
         <FormRow label="Service name">
-          <InputText value={serviceName} onChange={(e) => setServiceName(e.target.value)} />
+          <InputText value={serviceName} onChange={handleServiceNameChange} />
         </FormRow>
       </FormLayout>
 
