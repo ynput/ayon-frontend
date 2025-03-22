@@ -95,6 +95,9 @@ interface EnumWidgetProps
   value: (string | number | boolean)[]
   options: AttributeEnumItem[]
   type?: AttributeData['type']
+  pt?: {
+    template?: Partial<EnumTemplateProps>
+  }
   onOpen: () => void
 }
 
@@ -111,7 +114,7 @@ const checkForImgSrc = (icon: string | undefined = ''): boolean => {
 const checkAvatarImg = (src: string): boolean => src.includes('avatar')
 
 export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
-  ({ value, isEditing, options, type, onOpen, onChange }, _ref) => {
+  ({ value, isEditing, options, type, onOpen, onChange, pt }, _ref) => {
     // convert value to string array
     const valueAsStrings = value.map((v) => v?.toString())
     const selectedOptions = options.filter((option) => value.includes(option.value))
@@ -156,8 +159,9 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
               )}
               hasMultipleValues={selected.length > 1}
               isOpen={isOpen}
-              className="enum-dropdown-value"
               isMultiSelect={isMultiSelect}
+              {...pt?.template}
+              className={clsx('enum-dropdown-value', pt?.template?.className)}
             />
           )}
           itemTemplate={(option, _isActive, isSelected) => (
@@ -167,7 +171,8 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
               isOpen={false}
               isItem
               isSelected={isSelected}
-              className="enum-dropdown-item"
+              {...pt?.template}
+              className={clsx('enum-dropdown-item', pt?.template?.className)}
             />
           )}
           widthExpand
@@ -181,9 +186,10 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
       <EnumCellValue
         selectedOptions={selectedOptions}
         hasMultipleValues={hasMultipleValues}
-        className="enum-value"
         onClick={handleClosedClick}
         isMultiSelect={isMultiSelect}
+        {...pt?.template}
+        className={clsx('enum-value', pt?.template?.className)}
       />
     )
   },

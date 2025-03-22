@@ -2,7 +2,32 @@ import React, { useEffect } from 'react'
 import * as Styled from './AttribForm.styled'
 import AttribFormType from './AttribFormType'
 
-export const getDefaultFromType = (type) => {
+type FieldType = 'string' | 'number' | 'boolean' | 'array' | string
+
+interface Field {
+  type: FieldType
+  default?: any
+  title?: string
+  format?: string
+  enumLabels?: Record<string, string>
+}
+
+type Fields = Record<string, Field>
+
+interface FormField {
+  id: string
+  key: string
+  value: any
+}
+
+interface AttribFormProps {
+  form?: Record<string, any>
+  onChange: (key: string, value: any) => void
+  fields: Fields
+  isLoading: boolean
+}
+
+export const getDefaultFromType = (type: FieldType): any => {
   switch (type) {
     case 'string':
       return ''
@@ -18,7 +43,7 @@ export const getDefaultFromType = (type) => {
   }
 }
 
-const AttribForm = ({ form = {}, onChange, fields, isLoading }) => {
+const AttribForm: React.FC<AttribFormProps> = ({ form = {}, onChange, fields, isLoading }) => {
   //   we build the attrib form data based on the schema, trying to match the data types
   // we do this in case form.attrib is missing any fields
   // and so that formData is always in the same format (we don't get uncontrolled inputs)
@@ -26,7 +51,7 @@ const AttribForm = ({ form = {}, onChange, fields, isLoading }) => {
     if (!isLoading) return
 
     // build attribs form data
-    const attribForm = {}
+    const attribForm: Record<string, any> = {}
     for (const key in fields) {
       const field = fields[key]
 
@@ -58,7 +83,7 @@ const AttribForm = ({ form = {}, onChange, fields, isLoading }) => {
   }, [form, fields, isLoading])
 
   // flatten form object
-  const formFields = []
+  const formFields: FormField[] = []
   for (const key in form) {
     const value = form[key]
     if (typeof value === 'object' && !Array.isArray(value)) {

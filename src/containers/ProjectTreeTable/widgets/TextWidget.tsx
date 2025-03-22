@@ -5,9 +5,9 @@ import { WidgetBaseProps } from './CellWidget'
 import styled from 'styled-components'
 
 const StyledBaseTextWidget = styled.span`
-  &.inherited {
-    color: red;
-  }
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 `
 
 type AttributeType = AttributeData['type']
