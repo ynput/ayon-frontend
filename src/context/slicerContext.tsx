@@ -83,6 +83,9 @@ export const SlicerProvider = ({ children }: SlicerProviderProps) => {
     progress: {
       fields: ['hierarchy', 'assignees', 'status', 'taskType'],
     },
+    overview: {
+      fields: ['hierarchy', 'assignees', 'status', 'type', 'taskType'],
+    },
   }
 
   const { useExtraSlices, SlicerDropdown } = useSlicerRemotes()

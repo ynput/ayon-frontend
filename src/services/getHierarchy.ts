@@ -1,14 +1,20 @@
 import { api } from '@api/rest/folders'
 
-const enhancedApi = api.enhanceEndpoints({
+const hierarchyApi = api.enhanceEndpoints({
   endpoints: {
     getFolderHierarchy: {
       providesTags: ['hierarchy'],
     },
     getFolderList: {
-      providesTags: ['hierarchy'],
+      providesTags: (result) => [
+        'hierarchy',
+        { type: 'folder', id: 'LIST' },
+        ...(result?.folders.map(({ id }) => ({ type: 'folder', id })) || []),
+      ],
     },
   },
 })
 
-export const { useGetFolderHierarchyQuery, useGetFolderListQuery } = enhancedApi
+export const { useGetFolderHierarchyQuery, useGetFolderListQuery } = hierarchyApi
+
+export default hierarchyApi

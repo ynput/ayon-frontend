@@ -1,6 +1,6 @@
 overwrite: true
 schema:
-  - https://test.ayon.dev/graphql:
+  - http://localhost:5000/graphql:
       headers:
         Authorization: Bearer ${TOKEN}
 documents: '../src/**/*.graphql'

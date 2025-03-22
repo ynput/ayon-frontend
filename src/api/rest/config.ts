@@ -65,18 +65,10 @@ export type UploadServerConfigFileApiArg = {
   'x-file-name': string
   'content-type': string
 }
-export type ValidationError = {
-  loc: (string | number)[]
-  msg: string
-  type: string
-}
-export type HttpValidationError = {
-  detail?: ValidationError[]
-}
 export type CustomizationModel = {
   login_background?: string
   studio_logo?: string
-  /** The message of the day that is displayed to users on the login pageMarkdown syntax is supported. */
+  /** The message that is displayed to users on the login page. Markdown syntax is supported. */
   motd?: string
 }
 export type ServerConfigModel = {
@@ -84,4 +76,12 @@ export type ServerConfigModel = {
   studio_name?: string
   /** Customization options for the login page */
   customization?: CustomizationModel
+}
+export type ValidationError = {
+  loc: (string | number)[]
+  msg: string
+  type: string
+}
+export type HttpValidationError = {
+  detail?: ValidationError[]
 }

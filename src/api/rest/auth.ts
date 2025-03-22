@@ -26,7 +26,6 @@ export type UserAttribModel = {
   email?: string
   avatarUrl?: string
   developerMode?: boolean
-  studioId?: string
 }
 export type UserModel = {
   /** Name is an unique id of the {entity_name} */
@@ -64,6 +63,7 @@ export type SessionModel = {
   created?: number
   lastUsed?: number
   isService?: boolean
+  isApiKey?: boolean
   clientInfo?: ClientInfo
 }
 export type ValidationError = {

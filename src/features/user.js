@@ -12,6 +12,8 @@ const userSlice = createSlice({
         pinnedProjects: [],
         expandedAccessGroups: {},
         filters: {},
+        columnSizes: {},
+        pageSettings: {},
       },
       isAdmin: false,
       isManager: false,

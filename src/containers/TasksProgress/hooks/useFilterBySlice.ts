@@ -2,12 +2,7 @@
 
 import { SliceDataItem, useSlicerContext } from '@context/slicerContext'
 import { AttributeModel } from '@api/rest/attributes'
-import { Filter, FilterValue } from '@components/SearchFilter/types'
-import { TaskProgressSliceType } from '@pages/TasksProgressPage/TasksProgressPage'
-
-export type TaskFilterValue = Pick<Filter, 'id' | 'type' | 'inverted' | 'operator'> & {
-  values?: Pick<FilterValue, 'id'>[]
-}
+import { FilterValue } from '@components/SearchFilter/types'
 
 interface FilterMapping {
   id: string
@@ -16,13 +11,13 @@ interface FilterMapping {
 }
 
 type FilterBySliceData = {
-  filter: TaskFilterValue | null
+  filter: FilterValue | null
 }
 
 const useFilterBySlice = (): FilterBySliceData => {
   const { sliceType, rowSelectionData } = useSlicerContext()
 
-  const sliceTypeToFilterMap: Record<TaskProgressSliceType, FilterMapping | undefined> = {
+  const sliceTypeToFilterMap: Record<string, FilterMapping | undefined> = {
     assignees: {
       id: 'assignees',
       type: 'list_of_strings',
@@ -42,8 +37,8 @@ const useFilterBySlice = (): FilterBySliceData => {
     hierarchy: undefined,
   }
 
-  const filter: TaskFilterValue | null = (() => {
-    const mapping = sliceTypeToFilterMap[sliceType as TaskProgressSliceType]
+  const filter: FilterValue | null = (() => {
+    const mapping = sliceTypeToFilterMap[sliceType]
     if (!mapping) return null
 
     const selectedItems = Object.values(rowSelectionData)
@@ -51,6 +46,7 @@ const useFilterBySlice = (): FilterBySliceData => {
 
     return {
       id: mapping.id,
+      label: mapping.id,
       type: mapping.type,
       inverted: false,
       operator: 'OR',
