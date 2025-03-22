@@ -23,7 +23,6 @@ const SortableColumnItem: FC<SortableColumnItemProps> = ({
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id,
-    disabled: isHidden, // Disable sortable for hidden items
   })
 
   const style = {

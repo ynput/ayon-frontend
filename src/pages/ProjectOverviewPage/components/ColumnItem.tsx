@@ -88,12 +88,6 @@ const Item = styled.li`
       cursor: grabbing;
     }
   }
-
-  &.hidden {
-    .drag-handle {
-      display: none;
-    }
-  }
 `
 
 const Actions = styled.div`

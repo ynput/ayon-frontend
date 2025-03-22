@@ -13,9 +13,11 @@ import {
   useSensors,
   PointerSensor,
   DragOverlay,
+  DragOverEvent,
 } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable'
 import SortableColumnItem from './SortableColumnItem'
+import { toast } from 'react-toastify'
 
 interface ColumnsSettingsProps {
   columns: ColumnItemData[]
@@ -33,6 +35,8 @@ const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns }) => {
 
   // State for the currently dragged column
   const [activeId, setActiveId] = useState<string | null>(null)
+  // State to track if a hidden column is being dragged over visible section
+  const [isHiddenOverVisible, setIsHiddenOverVisible] = useState(false)
 
   // Setup sensors for dnd-kit
   const sensors = useSensors(
@@ -44,18 +48,14 @@ const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns }) => {
   )
 
   // Separate columns into visible and hidden
-  const { visibleColumns, hiddenColumns, allColumnIds } = useMemo(() => {
+  const { visibleColumns, hiddenColumns } = useMemo(() => {
     // First filter columns by visibility
     const visible = columns.filter((col) => columnVisibility[col.value] !== false)
     const hidden = columns.filter((col) => columnVisibility[col.value] === false)
 
-    // Map all column IDs for order tracking
-    const allIds = columns.map((col) => col.value)
-
     return {
       visibleColumns: visible,
       hiddenColumns: hidden,
-      allColumnIds: allIds,
     }
   }, [columns, columnVisibility])
 
@@ -80,6 +80,12 @@ const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns }) => {
 
     return visibleCopy
   }, [visibleColumns, columnOrder])
+
+  const sortedVisibleColumnsIds = useMemo(
+    () => sortedVisibleColumns.map((col) => col.value),
+    [sortedVisibleColumns],
+  )
+  // Create a copy of visible columns
 
   // Toggle column visibility
   const toggleVisibility = (columnId: string) => {
@@ -112,8 +118,24 @@ const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns }) => {
     setActiveId(event.active.id as string)
   }
 
+  // Track when dragging over different sections
+  const handleDragOver = (event: DragOverEvent) => {
+    const { active, over } = event
+
+    if (over && active.id !== over.id) {
+      // Check if we're dragging a hidden column over a visible column
+      const isActiveHidden = columnVisibility[active.id as string] === false
+      const isOverVisible = columnVisibility[over.id as string] !== false
+
+      setIsHiddenOverVisible(isActiveHidden && isOverVisible)
+    }
+  }
+
   // When drag ends
   const handleDragEnd = (event: DragEndEvent) => {
+    // Reset hidden-over-visible state
+    setIsHiddenOverVisible(false)
+
     const { active, over } = event
 
     if (over && active.id !== over.id) {
@@ -130,9 +152,15 @@ const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns }) => {
           columnVisibility[over.id as string] !== false
         ) {
           // Update order
-          const currentOrder = columnOrder.length > 0 ? [...columnOrder] : [...allColumnIds]
+          const currentOrder = [...sortedVisibleColumnsIds]
           const oldIndex = currentOrder.indexOf(active.id as string)
           const newIndex = currentOrder.indexOf(over.id as string)
+          if (oldIndex === -1 || newIndex === -1) {
+            console.error('Invalid column order state')
+            toast.error('Invalid column order state')
+            return
+          }
+
           setColumnOrder(arrayMove(currentOrder, oldIndex, newIndex))
         }
 
@@ -147,7 +175,7 @@ const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns }) => {
           setColumnVisibility(newVisibility)
 
           // Update order to place it near the over column
-          const currentOrder = columnOrder.length > 0 ? [...columnOrder] : [...allColumnIds]
+          const currentOrder = [...sortedVisibleColumnsIds]
 
           // Add the column to order if not already there
           if (!currentOrder.includes(active.id as string)) {
@@ -173,10 +201,11 @@ const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns }) => {
       sensors={sensors}
       collisionDetection={closestCenter}
       onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
       <ColumnsContainer>
-        <Section>
+        <Section className={isHiddenOverVisible ? 'drop-target' : ''}>
           <SectionTitle>Visible Columns</SectionTitle>
           <SortableContext
             items={sortedVisibleColumns.map((col) => col.value)}
@@ -201,24 +230,19 @@ const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns }) => {
         {hiddenColumns.length > 0 && (
           <Section>
             <SectionTitle>Hidden Columns</SectionTitle>
-            <SortableContext
-              items={hiddenColumns.map((col) => col.value)}
-              strategy={verticalListSortingStrategy}
-            >
-              <Menu>
-                {hiddenColumns.map((column) => (
-                  <SortableColumnItem
-                    key={column.value}
-                    id={column.value}
-                    column={column}
-                    isPinned={columnPinning.left?.includes(column.value) || false}
-                    isHidden={true}
-                    onTogglePinning={togglePinning}
-                    onToggleVisibility={toggleVisibility}
-                  />
-                ))}
-              </Menu>
-            </SortableContext>
+            <Menu>
+              {hiddenColumns.map((column) => (
+                <SortableColumnItem
+                  key={column.value}
+                  id={column.value}
+                  column={column}
+                  isPinned={columnPinning.left?.includes(column.value) || false}
+                  isHidden={true}
+                  onTogglePinning={togglePinning}
+                  onToggleVisibility={toggleVisibility}
+                />
+              ))}
+            </Menu>
           </Section>
         )}
 
@@ -250,6 +274,13 @@ const Section = styled.section`
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  transition: background-color 0.2s ease;
+  border-radius: 4px;
+
+  &.drop-target {
+    background-color: var(--md-sys-color-surface-container);
+    box-shadow: 0 0 0 1px var(--md-sys-color-outline);
+  }
 `
 
 const SectionTitle = styled.div`
