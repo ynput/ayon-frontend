@@ -7,6 +7,8 @@ import { BooleanWidget } from '../../../../containers/ProjectTreeTable/widgets/B
 import { DateWidget } from '../../../../containers/ProjectTreeTable/widgets/DateWidget'
 import { EnumWidget } from '../../../../containers/ProjectTreeTable/widgets/EnumWidget'
 import clsx from 'clsx'
+import copyToClipboard from '@helpers/copyToClipboard'
+import { Button } from '@ynput/ayon-react-components'
 
 export type AttributeField = Omit<AttributeModel, 'position' | 'scope' | 'builtin'> & {
   readonly?: boolean
@@ -35,11 +37,24 @@ const StyledForm = styled.div`
 
 const FormRow = styled.div`
   display: grid;
-  grid-template-columns: 150px 1fr;
-  gap: 24px;
+  grid-template-columns: 150px 1fr auto;
+  gap: 0px;
   align-items: center;
   padding: 4px 0;
   min-height: 32px;
+  position: relative;
+
+  .copy-icon {
+    opacity: 0;
+
+    &:hover {
+      background-color: var(--md-sys-color-surface-container-low-hover);
+    }
+  }
+
+  &:hover .copy-icon {
+    opacity: 1;
+  }
 `
 
 const FieldLabel = styled.div`
@@ -164,6 +179,17 @@ const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps> = ({
                   handleCancelEdit,
                 )}
               </FieldValue>
+              <Button
+                className="copy-icon"
+                variant="text"
+                icon="content_copy"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  const valueToDisplay =
+                    fieldValue === null || fieldValue === undefined ? '' : fieldValue
+                  copyToClipboard(valueToDisplay.toString(), true)
+                }}
+              />
             </FormRow>
           )
         })}
