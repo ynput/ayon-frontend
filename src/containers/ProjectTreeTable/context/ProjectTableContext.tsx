@@ -1,5 +1,6 @@
 import { createContext, ReactNode, useCallback, useContext, useMemo } from 'react'
 import {
+  ColumnOrderState,
   ColumnPinningState,
   ExpandedState,
   functionalUpdate,
@@ -77,6 +78,11 @@ interface ProjectTableContextProps {
   setColumnPinning: (columnPinning: ColumnPinningState) => void
   updateColumnPinning: OnChangeFn<ColumnPinningState>
 
+  // Column Order
+  columnOrder: ColumnOrderState
+  setColumnOrder: (columnOrder: ColumnOrderState) => void
+  updateColumnOrder: OnChangeFn<ColumnOrderState>
+
   // Folder Relationships
   getInheritedDependents: (entities: { id: string; attribs: string[] }[]) => InheritedDependent[]
 }
@@ -136,6 +142,16 @@ export const ProjectTableProvider = ({ children }: ProjectTableProviderProps) =>
 
   const updateColumnPinning: OnChangeFn<ColumnPinningState> = (columnPinningUpdater) => {
     setColumnPinning(functionalUpdate(columnPinningUpdater, columnPinning))
+  }
+
+  // COLUMN ORDER
+  const [columnOrder, setColumnOrder] = useLocalStorage<ColumnOrderState>(
+    `column-order-${scope}`,
+    [],
+  )
+
+  const updateColumnOrder: OnChangeFn<ColumnOrderState> = (columnOrderUpdater) => {
+    setColumnOrder(functionalUpdate(columnOrderUpdater, columnOrder))
   }
 
   const { rowSelection, sliceType, persistentRowSelectionData } = useSlicerContext()
@@ -245,6 +261,10 @@ export const ProjectTableProvider = ({ children }: ProjectTableProviderProps) =>
         columnPinning,
         setColumnPinning,
         updateColumnPinning,
+        // column order
+        columnOrder,
+        setColumnOrder,
+        updateColumnOrder,
         getEntityById,
         getInheritedDependents,
       }}

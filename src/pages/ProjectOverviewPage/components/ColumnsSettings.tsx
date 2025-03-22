@@ -1,23 +1,85 @@
 import { useProjectTableContext } from '@containers/ProjectTreeTable/context/ProjectTableContext'
-import { FC, useMemo } from 'react'
+import { FC, useMemo, useState } from 'react'
 import styled from 'styled-components'
 import ColumnItem, { ColumnItemData } from './ColumnItem'
+
+// DND imports
+import {
+  DndContext,
+  closestCenter,
+  DragEndEvent,
+  DragStartEvent,
+  useSensor,
+  useSensors,
+  PointerSensor,
+  DragOverlay,
+} from '@dnd-kit/core'
+import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable'
+import SortableColumnItem from './SortableColumnItem'
 
 interface ColumnsSettingsProps {
   columns: ColumnItemData[]
 }
 
 const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns }) => {
-  const { columnVisibility, setColumnVisibility, columnPinning, setColumnPinning } =
-    useProjectTableContext()
+  const {
+    columnVisibility,
+    setColumnVisibility,
+    columnPinning,
+    setColumnPinning,
+    columnOrder,
+    setColumnOrder,
+  } = useProjectTableContext()
+
+  // State for the currently dragged column
+  const [activeId, setActiveId] = useState<string | null>(null)
+
+  // Setup sensors for dnd-kit
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5,
+      },
+    }),
+  )
 
   // Separate columns into visible and hidden
-  const { visibleColumns, hiddenColumns } = useMemo(() => {
+  const { visibleColumns, hiddenColumns, allColumnIds } = useMemo(() => {
+    // First filter columns by visibility
     const visible = columns.filter((col) => columnVisibility[col.value] !== false)
     const hidden = columns.filter((col) => columnVisibility[col.value] === false)
 
-    return { visibleColumns: visible, hiddenColumns: hidden }
+    // Map all column IDs for order tracking
+    const allIds = columns.map((col) => col.value)
+
+    return {
+      visibleColumns: visible,
+      hiddenColumns: hidden,
+      allColumnIds: allIds,
+    }
   }, [columns, columnVisibility])
+
+  // Sort columns based on columnOrder
+  const sortedVisibleColumns = useMemo(() => {
+    // Create a copy of visible columns
+    const visibleCopy = [...visibleColumns]
+
+    // If we have a column order, use it to sort
+    if (columnOrder.length > 0) {
+      visibleCopy.sort((a, b) => {
+        const indexA = columnOrder.indexOf(a.value)
+        const indexB = columnOrder.indexOf(b.value)
+
+        // If column is not in order array, place at end
+        if (indexA === -1) return 1
+        if (indexB === -1) return -1
+
+        return indexA - indexB
+      })
+    }
+
+    return visibleCopy
+  }, [visibleColumns, columnOrder])
 
   // Toggle column visibility
   const toggleVisibility = (columnId: string) => {
@@ -45,42 +107,134 @@ const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns }) => {
     setColumnPinning(newState)
   }
 
-  return (
-    <ColumnsContainer>
-      <Section>
-        <SectionTitle>Visible Columns</SectionTitle>
-        <Menu>
-          {visibleColumns.map((column) => (
-            <ColumnItem
-              key={column.value}
-              column={column}
-              isPinned={columnPinning.left?.includes(column.value) || false}
-              isHidden={false}
-              onTogglePinning={togglePinning}
-              onToggleVisibility={toggleVisibility}
-            />
-          ))}
-        </Menu>
-      </Section>
+  // When drag starts
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string)
+  }
 
-      {hiddenColumns.length > 0 && (
+  // When drag ends
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event
+
+    if (over && active.id !== over.id) {
+      // Find the dragged column and target column
+      const activeColumn = [...visibleColumns, ...hiddenColumns].find(
+        (col) => col.value === active.id,
+      )
+      const overColumn = [...visibleColumns, ...hiddenColumns].find((col) => col.value === over.id)
+
+      if (activeColumn && overColumn) {
+        // If we're moving a column between visible columns
+        if (
+          columnVisibility[active.id as string] !== false &&
+          columnVisibility[over.id as string] !== false
+        ) {
+          // Update order
+          const currentOrder = columnOrder.length > 0 ? [...columnOrder] : [...allColumnIds]
+          const oldIndex = currentOrder.indexOf(active.id as string)
+          const newIndex = currentOrder.indexOf(over.id as string)
+          setColumnOrder(arrayMove(currentOrder, oldIndex, newIndex))
+        }
+
+        // If we're dragging from hidden to visible
+        if (
+          columnVisibility[active.id as string] === false &&
+          columnVisibility[over.id as string] !== false
+        ) {
+          // Make the column visible
+          const newVisibility = { ...columnVisibility }
+          newVisibility[active.id as string] = true
+          setColumnVisibility(newVisibility)
+
+          // Update order to place it near the over column
+          const currentOrder = columnOrder.length > 0 ? [...columnOrder] : [...allColumnIds]
+
+          // Add the column to order if not already there
+          if (!currentOrder.includes(active.id as string)) {
+            const overIndex = currentOrder.indexOf(over.id as string)
+            currentOrder.splice(overIndex, 0, active.id as string)
+          }
+
+          setColumnOrder(currentOrder)
+        }
+      }
+    }
+
+    setActiveId(null)
+  }
+
+  // Find the active column for the drag overlay
+  const activeColumn = activeId
+    ? [...visibleColumns, ...hiddenColumns].find((col) => col.value === activeId)
+    : null
+
+  return (
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
+      <ColumnsContainer>
         <Section>
-          <SectionTitle>Hidden Columns</SectionTitle>
-          <Menu>
-            {hiddenColumns.map((column) => (
-              <ColumnItem
-                key={column.value}
-                column={column}
-                isPinned={columnPinning.left?.includes(column.value) || false}
-                isHidden={true}
-                onTogglePinning={togglePinning}
-                onToggleVisibility={toggleVisibility}
-              />
-            ))}
-          </Menu>
+          <SectionTitle>Visible Columns</SectionTitle>
+          <SortableContext
+            items={sortedVisibleColumns.map((col) => col.value)}
+            strategy={verticalListSortingStrategy}
+          >
+            <Menu>
+              {sortedVisibleColumns.map((column) => (
+                <SortableColumnItem
+                  key={column.value}
+                  id={column.value}
+                  column={column}
+                  isPinned={columnPinning.left?.includes(column.value) || false}
+                  isHidden={false}
+                  onTogglePinning={togglePinning}
+                  onToggleVisibility={toggleVisibility}
+                />
+              ))}
+            </Menu>
+          </SortableContext>
         </Section>
-      )}
-    </ColumnsContainer>
+
+        {hiddenColumns.length > 0 && (
+          <Section>
+            <SectionTitle>Hidden Columns</SectionTitle>
+            <SortableContext
+              items={hiddenColumns.map((col) => col.value)}
+              strategy={verticalListSortingStrategy}
+            >
+              <Menu>
+                {hiddenColumns.map((column) => (
+                  <SortableColumnItem
+                    key={column.value}
+                    id={column.value}
+                    column={column}
+                    isPinned={columnPinning.left?.includes(column.value) || false}
+                    isHidden={true}
+                    onTogglePinning={togglePinning}
+                    onToggleVisibility={toggleVisibility}
+                  />
+                ))}
+              </Menu>
+            </SortableContext>
+          </Section>
+        )}
+
+        {/* Drag Overlay */}
+        <DragOverlay>
+          {activeColumn && (
+            <ColumnItem
+              column={activeColumn}
+              isPinned={columnPinning.left?.includes(activeColumn.value) || false}
+              isHidden={columnVisibility[activeColumn.value] === false}
+              dragOverlay={true}
+            />
+          )}
+        </DragOverlay>
+      </ColumnsContainer>
+    </DndContext>
   )
 }
 
@@ -89,8 +243,6 @@ const ColumnsContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: var(--base-gap-large);
-  min-width: 250px;
-  max-width: 350px;
 `
 
 const Section = styled.section`

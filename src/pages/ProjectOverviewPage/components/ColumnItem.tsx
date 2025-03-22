@@ -3,44 +3,49 @@ import clsx from 'clsx'
 import { FC } from 'react'
 import styled from 'styled-components'
 
-export type ColumnItemData = {
-  value: string
+export interface ColumnItemData {
   label: string
+  value: string
+  icon?: string
 }
 
 interface ColumnItemProps {
   column: ColumnItemData
   isPinned: boolean
   isHidden: boolean
-  onTogglePinning: (columnId: string) => void
-  onToggleVisibility: (columnId: string) => void
+  dragHandleProps?: any
+  dragOverlay?: boolean
+  onTogglePinning?: (columnId: string) => void
+  onToggleVisibility?: (columnId: string) => void
 }
 
 const ColumnItem: FC<ColumnItemProps> = ({
   column,
   isPinned,
   isHidden,
+  // Dragging props
+  dragHandleProps,
+  dragOverlay = false,
+  // Callbacks
   onTogglePinning,
   onToggleVisibility,
 }) => {
   return (
-    <Item key={column.value} onClick={() => onToggleVisibility(column.value)}>
+    <Item className={clsx({ hidden: isHidden, overlay: dragOverlay })}>
+      <div {...dragHandleProps} className={'drag-handle'}>
+        <Icon icon="drag_indicator" />
+      </div>
+      {column.icon && <Icon icon={column.icon} />}
       <span>{column.label}</span>
       <Actions>
-        {!isHidden && (
-          <ActionButton
-            onClick={(e) => {
-              e.stopPropagation()
-              onTogglePinning(column.value)
-            }}
-            className={clsx('pin-action', { active: isPinned })}
-            disabled={isHidden}
-          >
-            <Icon icon="push_pin" />
-          </ActionButton>
-        )}
-        <ActionButton className={clsx('visibility-action', { active: !isHidden })}>
-          <Icon icon={isHidden ? 'visibility_off' : 'visibility'} />
+        <ActionButton
+          onClick={() => onTogglePinning?.(column.value)}
+          className={clsx({ active: isPinned })}
+        >
+          <Icon icon="push_pin" />
+        </ActionButton>
+        <ActionButton onClick={() => onToggleVisibility?.(column.value)}>
+          <Icon icon={isHidden ? 'visibility_off' : 'check'} />
         </ActionButton>
       </Actions>
     </Item>
@@ -65,6 +70,28 @@ const Item = styled.li`
 
     .pin-action {
       opacity: 1;
+    }
+  }
+
+  .drag-handle {
+    cursor: grab;
+  }
+
+  &.overlay {
+    box-shadow: 0 0 4px 1px rgba(0, 0, 0, 0.1);
+  }
+
+  &.dragging {
+    opacity: 0;
+
+    .drag-handle {
+      cursor: grabbing;
+    }
+  }
+
+  &.hidden {
+    .drag-handle {
+      display: none;
     }
   }
 `
