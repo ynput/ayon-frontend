@@ -2,35 +2,14 @@ import { AttributeModel } from '@api/rest/attributes'
 import { FC, useState } from 'react'
 import styled from 'styled-components'
 import { CellValue } from '../../../../containers/ProjectTreeTable/widgets/CellWidget'
-import { TextWidget } from '../../../../containers/ProjectTreeTable/widgets/TextWidget'
-import { BooleanWidget } from '../../../../containers/ProjectTreeTable/widgets/BooleanWidget'
-import { DateWidget } from '../../../../containers/ProjectTreeTable/widgets/DateWidget'
-import { EnumWidget } from '../../../../containers/ProjectTreeTable/widgets/EnumWidget'
 import clsx from 'clsx'
 import copyToClipboard from '@helpers/copyToClipboard'
 import { Button } from '@ynput/ayon-react-components'
-
-export type AttributeField = Omit<AttributeModel, 'position' | 'scope' | 'builtin'> & {
-  readonly?: boolean
-  hidden?: boolean
-}
-
-interface DetailsPanelAttributesEditorProps {
-  isLoading?: boolean // show loading shimmer for 20 placeholder items
-  enableEditing?: boolean // if this is false, everything is readonly
-  fields: AttributeField[] // the schema for the form
-  form: Record<
-    string,
-    string | number | boolean | Date | any[] | Record<string, any> | undefined | null
-  > // the form data
-
-  onChange?: (key: string, value: any) => void
-}
+import RenderFieldWidget from './components/RenderFieldWidget'
 
 const StyledForm = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 8px;
   overflow-y: auto;
   height: 100%;
 `
@@ -40,9 +19,9 @@ const FormRow = styled.div`
   grid-template-columns: 150px 1fr auto;
   gap: 0px;
   align-items: center;
-  padding: 4px 0;
-  min-height: 32px;
+  min-height: 37px;
   position: relative;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
 
   .copy-icon {
     opacity: 0;
@@ -68,7 +47,10 @@ const FieldLabel = styled.div`
 const FieldValue = styled.div`
   height: 32px;
   overflow: hidden;
-  width: 100%;
+  width: fit-content;
+  min-width: 160px;
+  max-width: 100%;
+  justify-self: end;
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -93,18 +75,6 @@ const FieldValue = styled.div`
   }
 `
 
-const FieldValueText = styled.div`
-  width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  text-align: right;
-
-  input {
-    text-align: right;
-  }
-`
-
 const ShimmerRow = styled(FormRow)`
   .shimmer {
     width: 100%;
@@ -113,11 +83,31 @@ const ShimmerRow = styled(FormRow)`
   }
 `
 
+// TODO: move styles to a separate file
+
+export type AttributeField = Omit<AttributeModel, 'position' | 'scope' | 'builtin'> & {
+  readonly?: boolean
+  hidden?: boolean
+}
+
+interface DetailsPanelAttributesEditorProps {
+  isLoading?: boolean // show loading shimmer for 20 placeholder items
+  enableEditing?: boolean // if this is false, everything is readonly
+  fields: AttributeField[] // the schema for the form
+  form: Record<
+    string,
+    string | number | boolean | Date | any[] | Record<string, any> | undefined | null
+  > // the form data
+  mixedFields?: string[] // when multiple entities are selected, this is a list of fields that are mixed
+  onChange?: (key: string, value: any) => void
+}
+
 const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps> = ({
   isLoading,
   form,
   fields,
   enableEditing,
+  mixedFields,
   onChange,
 }) => {
   const [editingField, setEditingField] = useState<string | null>(null)
@@ -131,6 +121,7 @@ const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps> = ({
 
   // Handler for field value changes
   const handleValueChange = (fieldName: string, value: CellValue | CellValue[]) => {
+    console.log('onChange', fieldName, value)
     setEditingField(null)
     onChange?.(fieldName, value)
   }
@@ -160,6 +151,7 @@ const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps> = ({
           const fieldValue = form[field.name]
           const isEditing = editingField === field.name
           const isReadOnly = field.readonly || !enableEditing
+          const isMixed = mixedFields?.includes(field.name) || false
 
           return (
             <FormRow key={field.name}>
@@ -170,14 +162,15 @@ const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps> = ({
                 className={clsx({ editing: isEditing, readonly: isReadOnly })}
                 onClick={() => !isEditing && handleStartEditing(field.name)}
               >
-                {renderFieldWidget(
-                  field,
-                  fieldValue,
-                  isEditing,
-                  isReadOnly,
-                  handleValueChange,
-                  handleCancelEdit,
-                )}
+                <RenderFieldWidget
+                  field={field}
+                  value={fieldValue}
+                  isEditing={isEditing}
+                  isReadOnly={isReadOnly}
+                  isMixed={isMixed}
+                  onChange={handleValueChange}
+                  onCancelEdit={handleCancelEdit}
+                />
               </FieldValue>
               <Button
                 className="copy-icon"
@@ -195,73 +188,6 @@ const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps> = ({
         })}
     </StyledForm>
   )
-}
-
-// Helper function to render the appropriate widget based on field type
-const renderFieldWidget = (
-  field: AttributeField,
-  value: any,
-  isEditing: boolean,
-  isReadOnly: boolean,
-  onChange: (fieldName: string, value: CellValue | CellValue[]) => void,
-  onCancelEdit: () => void,
-) => {
-  const { type } = field.data
-  const widgetCommonProps = {
-    isEditing: isEditing && !isReadOnly,
-    isInherited: false,
-    onChange: (newValue: CellValue | CellValue[]) => onChange(field.name, newValue),
-    onCancelEdit,
-  }
-
-  // Format the value for display
-  let displayValue = value === null || value === undefined ? '' : value
-
-  // Handle different field types
-  switch (true) {
-    case type === 'boolean':
-      return (
-        <BooleanWidget value={Boolean(displayValue)} {...widgetCommonProps} style={{ margin: 0 }} />
-      )
-
-    case type === 'datetime':
-      return (
-        <DateWidget
-          value={displayValue.toString()}
-          {...widgetCommonProps}
-          isEditing
-          style={{ width: 'fit-content' }}
-        />
-      )
-
-    case !!field.data.enum?.length: {
-      const isListType = type.includes('list')
-      const valueArray = isListType
-        ? Array.isArray(displayValue)
-          ? displayValue
-          : []
-        : [displayValue]
-
-      return (
-        <EnumWidget
-          value={valueArray}
-          options={field.data.enum || []}
-          type={type}
-          onOpen={() => !isReadOnly && onChange(field.name, displayValue)}
-          pt={{ template: { style: { height: 32, backgroundColor: 'unset' }, className: 'enum' } }}
-          {...widgetCommonProps}
-        />
-      )
-    }
-
-    case type === 'string' || type === 'integer' || type === 'float':
-    default:
-      return (
-        <FieldValueText>
-          <TextWidget value={displayValue.toString()} {...widgetCommonProps} />
-        </FieldValueText>
-      )
-  }
 }
 
 export default DetailsPanelAttributesEditor

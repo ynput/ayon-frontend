@@ -266,6 +266,7 @@ const DetailsPanelAttributes = ({ entities = [], isLoading }: DetailsPanelAttrib
       <DetailsPanelAttributesEditor
         fields={fields}
         form={formData || {}}
+        mixedFields={mixedFields}
         isLoading={isLoading}
         enableEditing={enableEditing}
       />

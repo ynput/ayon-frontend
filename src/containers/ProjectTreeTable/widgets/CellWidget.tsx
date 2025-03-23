@@ -45,7 +45,7 @@ export interface WidgetBaseProps {
   isEditing?: boolean
   isInherited: EditorCellProps['isInherited']
   onChange: Required<EditorCellProps>['onChange']
-  onCancelEdit: () => void
+  onCancelEdit?: () => void
 }
 
 const EditorCellComponent = forwardRef<HTMLDivElement, EditorCellProps>(

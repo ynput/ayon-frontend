@@ -1,5 +1,5 @@
 import { AttributeData, AttributeEnumItem } from '@api/rest/attributes'
-import { Dropdown, DropdownRef, Icon } from '@ynput/ayon-react-components'
+import { Dropdown, DropdownProps, DropdownRef, Icon } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import { forwardRef, useEffect, useRef } from 'react'
 import styled from 'styled-components'
@@ -67,6 +67,10 @@ const StyledValue = styled.span`
   border-radius: var(--border-radius-m);
   padding: 0px 2px;
   text-align: center;
+
+  &.placeholder {
+    color: var(--md-sys-color-outline);
+  }
 `
 
 const StyledImg = styled.img`
@@ -90,15 +94,16 @@ const StyledDropdown = styled(Dropdown)`
 `
 
 interface EnumWidgetProps
-  extends Omit<React.HTMLAttributes<HTMLSpanElement>, 'onChange'>,
-    WidgetBaseProps {
+  extends Omit<DropdownProps, 'onChange' | 'value'>,
+    Omit<WidgetBaseProps, 'onCancelEdit'> {
   value: (string | number | boolean)[]
   options: AttributeEnumItem[]
   type?: AttributeData['type']
+  autoOpen?: boolean
   pt?: {
     template?: Partial<EnumTemplateProps>
   }
-  onOpen: () => void
+  onOpen?: () => void
 }
 
 const checkForImgSrc = (icon: string | undefined = ''): boolean => {
@@ -114,17 +119,37 @@ const checkForImgSrc = (icon: string | undefined = ''): boolean => {
 const checkAvatarImg = (src: string): boolean => src.includes('avatar')
 
 export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
-  ({ value, isEditing, options, type, onOpen, onChange, pt }, _ref) => {
+  (
+    { value, isEditing, options, type, autoOpen = true, onOpen, onChange, pt, ...dropdownProps },
+    _ref,
+  ) => {
     // convert value to string array
-    const valueAsStrings = value.map((v) => v?.toString())
-    const selectedOptions = options.filter((option) => value.includes(option.value))
+    const valueAsStrings = value.map((v) => v?.toString()).filter((v) => !!v)
+    let selectedOptions = options.filter((option) =>
+      valueAsStrings.includes(option.value.toString()),
+    )
+
+    // Check if all values are present in options, if not, add a warning
+    valueAsStrings.forEach((val) => {
+      if (!options.find((option) => option.value === val)) {
+        selectedOptions = [
+          ...selectedOptions,
+          {
+            label: val,
+            value: val,
+            color: 'var(--md-sys-color-error)',
+            icon: 'warning',
+          },
+        ]
+      }
+    })
     const hasMultipleValues = selectedOptions.length > 1
 
     const dropdownRef = useRef<DropdownRef>(null)
 
     const handleClosedClick = (e: React.MouseEvent<HTMLSpanElement>) => {
       // if we click on the chevron icon, then we open the dropdown spright away (put it into editing mode)
-      if (e.target instanceof HTMLElement && e.target.closest('.expand')) {
+      if (e.target instanceof HTMLElement && e.target.closest('.expand') && onOpen) {
         onOpen()
         // stop the event from propagating to the parent element because a single click on the cell would close the dropdown
         e.stopPropagation()
@@ -132,10 +157,11 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
     }
 
     useEffect(() => {
-      if (isEditing && dropdownRef.current) {
+      if (isEditing && dropdownRef.current && autoOpen) {
         !dropdownRef.current.isOpen && dropdownRef.current?.open()
       }
-    }, [isEditing, dropdownRef.current])
+    }, [isEditing, dropdownRef.current, autoOpen])
+
     const isMultiSelect = !!type?.includes('list')
     if (isEditing) {
       const handleChange = (value: string[]) => {
@@ -154,13 +180,12 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
           ref={dropdownRef}
           valueTemplate={(_value, selected, isOpen) => (
             <EnumCellValue
-              selectedOptions={options.filter((option) =>
-                selected.includes(option.value.toString()),
-              )}
+              selectedOptions={selectedOptions}
               hasMultipleValues={selected.length > 1}
               isOpen={isOpen}
               isMultiSelect={isMultiSelect}
               {...pt?.template}
+              placeholder={dropdownProps.placeholder}
               className={clsx('enum-dropdown-value', pt?.template?.className)}
             />
           )}
@@ -177,6 +202,7 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
           )}
           widthExpand
           multiSelect={isMultiSelect}
+          {...dropdownProps}
           onChange={handleChange}
         />
       )
@@ -189,7 +215,8 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
         onClick={handleClosedClick}
         isMultiSelect={isMultiSelect}
         {...pt?.template}
-        className={clsx('enum-value', pt?.template?.className)}
+        placeholder={dropdownProps.placeholder}
+        className={clsx('enum-value', pt?.template?.className, dropdownProps.className)}
       />
     )
   },
@@ -197,6 +224,7 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
 
 interface EnumTemplateProps extends React.HTMLAttributes<HTMLSpanElement> {
   selectedOptions: AttributeEnumItem[]
+  placeholder?: string
   hasMultipleValues: boolean
   isMultiSelect?: boolean
   isOpen?: boolean
@@ -206,6 +234,7 @@ interface EnumTemplateProps extends React.HTMLAttributes<HTMLSpanElement> {
 
 const EnumCellValue = ({
   selectedOptions,
+  placeholder,
   hasMultipleValues,
   isMultiSelect,
   isOpen,
@@ -221,6 +250,16 @@ const EnumCellValue = ({
   const showLabels = !hasMultipleValues || !allOptionsHaveIcon
   // Show the colors be backgrounds instead of the text
   const backgroundColor = !allOptionsHaveIcon && isMultiSelect && !isItem
+
+  const isPlaceholder = !selectedOptions.length && placeholder
+  if (isPlaceholder) {
+    selectedOptions = [
+      {
+        label: placeholder,
+        value: '',
+      },
+    ]
+  }
 
   return (
     <StyledWidget className={clsx(className, { selected: isSelected, item: isItem })} {...props}>
@@ -244,6 +283,7 @@ const EnumCellValue = ({
                     ? option.color || 'var(--md-sys-color-surface-container)'
                     : 'transparent',
                 }}
+                className={clsx({ placeholder: isPlaceholder })}
               >
                 {option.label}
               </StyledValue>
