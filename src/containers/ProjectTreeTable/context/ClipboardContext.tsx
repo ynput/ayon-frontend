@@ -29,7 +29,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
   columnEnums,
 }) => {
   // Get selection information from SelectionContext
-  const { selectedCells, gridMap } = useSelection()
+  const { selectedCells, gridMap, focusedCellId } = useSelection()
   const { updateEntities } = useCellEditing()
 
   const getSelectionData = useCallback(
@@ -61,13 +61,16 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
           cellsByRow.get(rowId)?.add(colId)
         })
 
-        // For rows with selection cells, add all available columns
-        rowsWithSelectionCell.forEach((rowId) => {
-          const allColumns = Array.from(gridMap.colIdToIndex.keys())
-          allColumns.forEach((colId) => {
-            cellsByRow.get(rowId)?.add(colId)
+        if (focusedCellId && parseCellId(focusedCellId)?.colId === ROW_SELECTION_COLUMN_ID) {
+          // select the whole row
+          // For rows with selection cells, add all available columns
+          rowsWithSelectionCell.forEach((rowId) => {
+            const allColumns = Array.from(gridMap.colIdToIndex.keys())
+            allColumns.forEach((colId) => {
+              cellsByRow.get(rowId)?.add(colId)
+            })
           })
-        })
+        }
 
         // Get sorted row IDs based on their index in the grid
         const sortedRows = Array.from(cellsByRow.keys()).sort((a, b) => {
@@ -154,7 +157,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
         console.error('Failed to copy to clipboard:', error)
       }
     },
-    [selectedCells, gridMap, foldersMap, tasksMap],
+    [selectedCells, focusedCellId, gridMap, foldersMap, tasksMap],
   )
 
   const copyToClipboard = useCallback(

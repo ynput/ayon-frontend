@@ -224,11 +224,6 @@ export const TableCell = styled.td`
         display: block;
       }
     }
-    &.focused {
-      &::after {
-        display: none;
-      }
-    }
   }
 `
 
