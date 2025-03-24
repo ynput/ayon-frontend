@@ -169,7 +169,7 @@ const TableCell = ({ cell, cellId }: TableCellProps) => {
         }
       }}
       onMouseOver={(e) => {
-        if (e.buttons === 1 && (e.target as HTMLElement).tagName === 'TD') {
+        if (e.buttons === 1) {
           // Left button is pressed during mouse move - drag selection
           extendSelection(cellId)
         }

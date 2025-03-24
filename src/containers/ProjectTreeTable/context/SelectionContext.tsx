@@ -98,7 +98,6 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({ children 
     setGridMap({ rowIdToIndex, colIdToIndex, indexToRowId, indexToColId })
   }, [])
 
-  // TODO cmd selecting row-selection not working
   // update the selection whilst properly handling the row-selection column
   const updateSelection = (selection: Set<CellId>, position: CellPosition) => {
     let newSelection = new Set(selection)
@@ -372,7 +371,6 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({ children 
       selectionInProgress,
       anchorCell,
       gridMap,
-
       registerGrid,
       selectCell,
       startSelection,
