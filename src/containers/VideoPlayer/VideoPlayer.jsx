@@ -305,9 +305,9 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
     // seek to time specified in seconds.
     // this is not used directly (as we use seekToFrame)
     const videoElement = videoRef.current
-    console.log('CurrentTime', videoRef.current?.currentTime)
-    console.log('CurrentTimeRef', currentTimeRef.current)
-    console.log('NewTime', newTime)
+    // console.log('CurrentTime', videoRef.current?.currentTime)
+    // console.log('CurrentTimeRef', currentTimeRef.current)
+    // console.log('NewTime', newTime)
     if (newTime === currentTimeRef.current) return
     if (videoElement.readyState >= 3) {
       // HAVE_FUTURE_DATA
@@ -315,6 +315,7 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
       videoElement.currentTime = newTime
     } else {
       const onCanPlay = () => {
+        console.log('CAAA')
         videoElement.currentTime = newTime
         videoElement.removeEventListener('canplay', onCanPlay)
       }
@@ -326,11 +327,7 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
   const seekToFrame = (newFrame) => {
     const newTime = newFrame / frameRate
     seekToTime(newTime)
-  }
-
-  const handleScrub = (newFrame) => {
-    videoRef.current?.pause()
-    seekToFrame(newFrame)
+    videoRef.current.pause()
   }
 
   // When user pauses the video
@@ -354,7 +351,11 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
 
   const handleEnded = () => {
     if (!isPlaying) {
-      if (loop) videoRef.current.currentTime = 0
+      if (loop) {
+        console.log('Video ended (not playing)')
+        videoRef.current.currentTime = 0
+        videoRef.current.pause()
+      }
       return
     }
     if (loop) {
@@ -413,6 +414,7 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
               ref={videoRef}
               width={videoDimensions.width}
               height={videoDimensions.height}
+              loop={loop}
               src={actualSource}
               onProgress={handleProgress}
               onEnded={handleEnded}
@@ -450,7 +452,7 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
           currentFrame={currentFrame}
           frameCount={frameCount}
           frameRate={frameRate}
-          onScrub={handleScrub}
+          onScrub={seekToFrame}
           bufferedRanges={bufferedRanges}
           isPlaying={isPlaying}
           highlighted={annotatedFrames}
