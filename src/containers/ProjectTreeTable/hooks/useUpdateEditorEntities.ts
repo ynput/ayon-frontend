@@ -39,25 +39,26 @@ const useUpdateEditorEntities = () => {
       // Group operations by entity type for bulk processing
       let operations: OperationModel[] = []
       for (const entity of entities) {
+        let { id, type, field, value, isAttrib } = entity
         // Skip unsupported entity types
-        let entityType = entity.type as OperationModel['entityType']
+        let entityType = type as OperationModel['entityType']
         if (!supportedEntityTypes.includes(entityType)) {
           continue
         }
 
         // create data object for change, taking into account if it's an attribute change
-        const data: Record<string, any> = entity.isAttrib
-          ? { attrib: { [entity.field]: entity.value } }
-          : { [entity.field]: entity.value }
+        const data: Record<string, any> = isAttrib
+          ? { attrib: { [field]: value } }
+          : { [field]: value }
 
         // if the entity is an attribute get the entity data
         // then update ownAttrib to include the new value
-        if (entity.isAttrib) {
-          const entityData = getEntityById(entity.id)
+        if (isAttrib) {
+          const entityData = getEntityById(id)
           const ownAttrib = [...(entityData?.ownAttrib || [])]
           // add the new value to the ownAttrib if it doesn't already exist
-          if (!ownAttrib.includes(entity.field)) {
-            ownAttrib.push(entity.field)
+          if (!ownAttrib.includes(field)) {
+            ownAttrib.push(field)
           }
           // update the data object with the new ownAttrib
           data.ownAttrib = ownAttrib

@@ -38,6 +38,18 @@ export const DateWidgetInput = forwardRef<HTMLInputElement, DateWidgetInputProps
       }
       return ''
     })
+
+    useEffect(() => {
+      if (initialValue) {
+        const parsedDate = parseISO(initialValue)
+        if (isValid(parsedDate)) {
+          setValue(format(parsedDate, 'yyyy-MM-dd'))
+        } else {
+          setValue('')
+        }
+      }
+    }, [initialValue])
+
     const inputRef = useRef<HTMLInputElement>(null)
 
     useEffect(() => {
@@ -48,9 +60,11 @@ export const DateWidgetInput = forwardRef<HTMLInputElement, DateWidgetInputProps
 
     const handleBlur = () => {
       if (value) {
-        const parsedDate = parseISO(value)
-        if (isValid(parsedDate)) {
-          onChange(format(parsedDate, 'yyyy-MM-dd'))
+        const parsed = Date.parse(value)
+        if (isValid(parsed)) {
+          const dateWithZeroTime = new Date(parsed)
+          dateWithZeroTime.setUTCHours(0, 0, 0, 0)
+          onChange(dateWithZeroTime.toISOString())
         } else {
           onCancel?.()
         }

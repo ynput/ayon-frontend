@@ -11,11 +11,10 @@ type Props = {
 }
 
 const useHierarchyTable = ({ projectName, folderTypes }: Props) => {
-  const {
-    data: { folders = [] } = {},
-    isLoading,
-    isFetching,
-  } = useGetFolderListQuery({ projectName: projectName || '' }, { skip: !projectName })
+  const { data: { folders = [] } = {}, isLoading } = useGetFolderListQuery(
+    { projectName: projectName || '' },
+    { skip: !projectName },
+  )
 
   const getFolderIcon = (type: string) => {
     const folderType = folderTypes.find((folderType) => folderType.name === type)
@@ -83,18 +82,18 @@ const useHierarchyTable = ({ projectName, folderTypes }: Props) => {
   }
 
   const tableData: TableRow[] = useMemo(() => {
-    if (!folders.length || isLoading || isFetching) return []
+    if (!folders.length || isLoading) return []
 
     const rows = createDataTree(folders)
 
     return rows
-  }, [folders, folderTypes, isLoading, isFetching])
+  }, [folders, folderTypes, isLoading])
 
   const getHierarchyData = useCallback(async () => {
     return tableData
   }, [tableData])
 
-  return { data: tableData, getData: getHierarchyData, isLoading: isLoading || isFetching }
+  return { data: tableData, getData: getHierarchyData, isLoading: isLoading }
 }
 
 export default useHierarchyTable

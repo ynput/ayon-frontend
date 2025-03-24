@@ -69,17 +69,19 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
           {...widgetCommonProps}
           style={{ margin: 0 }}
           onClick={() => onChange(field.name, !Boolean(displayValue))}
+          isReadOnly={isReadOnly}
         />
       )
 
     case type === 'datetime':
       return (
         <DateWidget
-          value={displayValue.toString()}
+          value={displayValue}
           {...widgetCommonProps}
           isEditing
           onCancelEdit={onCancelEdit}
           style={{ width: 'fit-content' }}
+          autoFocus={false}
         />
       )
 
@@ -99,6 +101,8 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
         valueArray = [displayValue]
       }
 
+      console.log(isReadOnly)
+
       return (
         <StyledEnumWidget
           value={valueArray}
@@ -113,6 +117,7 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
           placeholder={isMixed ? `Mixed ${labelValue}` : `Select ${labelValue}...`}
           onClose={onCancelEdit}
           align="right"
+          isReadOnly={isReadOnly}
           {...widgetCommonProps}
         />
       )

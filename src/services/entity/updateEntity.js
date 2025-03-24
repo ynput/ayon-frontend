@@ -3,6 +3,7 @@ import { toast } from 'react-toastify'
 import { enhancedDashboardGraphqlApi, getKanbanTasks } from '../userDashboard/getUserDashboard'
 import { isEqual } from 'lodash'
 import { patchOverviewFolders, patchOverviewTasks } from '@queries/overview/updateOverview'
+import { current } from '@reduxjs/toolkit'
 
 const patchKanban = (
   { assignees = [], projects = [] },
@@ -22,6 +23,14 @@ const patchKanban = (
         if (data?.attrib?.priority) {
           const { priority } = patchData.attrib
           patchData = { ...patchData, priority }
+        }
+        // if the data include attrib.endDate it needs to be transformed to dueDate
+        // this is because dueDate is a top level field on kanban query
+        // NOTE TO SELF: Lets try to do these transforms after the cache the future.
+        if (data?.attrib?.endDate) {
+          const { endDate } = patchData.attrib
+          patchData = { ...patchData, dueDate: endDate }
+          delete patchData.attrib.endDate
         }
 
         if (taskIndex === -1) {
@@ -331,9 +340,19 @@ const updateEntity = api.injectEndpoints({
 
                   if (entityIndex === -1) return
                   const patchData = { ...operation.data }
+
+                  // handle updating assignees (convert to users)
                   if (patchData.assignees) {
                     patchData.users = patchData.assignees
                     delete patchData.assignees
+                  }
+
+                  // handle updating folderType or taskType
+                  if (patchData.folderType) {
+                    patchData.entitySubType = patchData.folderType
+                  }
+                  if (patchData.taskType) {
+                    patchData.entitySubType = patchData.taskType
                   }
 
                   if (patchData.attrib) {

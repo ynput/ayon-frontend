@@ -29,10 +29,11 @@ interface BooleanWidgetProps
   extends Omit<React.HTMLAttributes<HTMLInputElement>, 'onChange'>,
     WidgetBaseProps {
   value: boolean
+  isReadOnly?: boolean
 }
 
 export const BooleanWidget = forwardRef<HTMLInputElement, BooleanWidgetProps>(
-  ({ value, onChange, isEditing, onCancelEdit, ...props }, ref) => {
+  ({ value, onChange, isReadOnly, isEditing, onCancelEdit, ...props }, ref) => {
     return (
       <StyledCheckbox
         {...props}
@@ -40,6 +41,8 @@ export const BooleanWidget = forwardRef<HTMLInputElement, BooleanWidgetProps>(
         onChange={(e) => onChange((e.target as HTMLInputElement).checked)}
         ref={ref}
         type="checkbox"
+        disabled={isReadOnly}
+        readOnly={isReadOnly}
       />
     )
   },

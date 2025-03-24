@@ -112,6 +112,7 @@ const EditorCellComponent = forwardRef<HTMLDivElement, EditorCellProps>(
 
         case !!options.length: {
           const enumValue = Array.isArray(value) ? value : [value]
+          delete sharedProps.onCancelEdit
           return (
             <EnumWidget
               value={enumValue}

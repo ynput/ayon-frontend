@@ -7,10 +7,11 @@ interface DateWidgetProps
   extends Omit<React.HTMLAttributes<HTMLSpanElement>, 'onChange'>,
     WidgetBaseProps {
   value: string
+  isReadOnly?: boolean
 }
 
 export const DateWidget = forwardRef<HTMLSpanElement, DateWidgetProps>(
-  ({ value, isEditing, onChange, onCancelEdit, ...props }, ref) => {
+  ({ value, isEditing, isReadOnly, isInherited, onChange, onCancelEdit, ...props }, ref) => {
     let dateString = ''
     try {
       dateString = format(new Date(value), 'dd-MM-yyyy')
@@ -25,6 +26,8 @@ export const DateWidget = forwardRef<HTMLSpanElement, DateWidgetProps>(
           value={value}
           onChange={onChange}
           onCancel={onCancelEdit}
+          readOnly={isReadOnly}
+          disabled={isReadOnly}
           {...(props as any)}
         />
       )

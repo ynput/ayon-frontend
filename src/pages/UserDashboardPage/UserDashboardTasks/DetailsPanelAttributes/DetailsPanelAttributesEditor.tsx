@@ -90,7 +90,7 @@ export type AttributeField = Omit<AttributeModel, 'position' | 'scope' | 'builti
   hidden?: boolean
 }
 
-interface DetailsPanelAttributesEditorProps {
+export interface DetailsPanelAttributesEditorProps {
   isLoading?: boolean // show loading shimmer for 20 placeholder items
   enableEditing?: boolean // if this is false, everything is readonly
   fields: AttributeField[] // the schema for the form
@@ -121,7 +121,6 @@ const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps> = ({
 
   // Handler for field value changes
   const handleValueChange = (fieldName: string, value: CellValue | CellValue[]) => {
-    console.log('onChange', fieldName, value)
     setEditingField(null)
     onChange?.(fieldName, value)
   }

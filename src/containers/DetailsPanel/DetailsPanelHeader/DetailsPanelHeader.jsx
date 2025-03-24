@@ -7,9 +7,8 @@ import { Icon } from '@ynput/ayon-react-components'
 
 import EntityThumbnailUploader from '@components/EntityThumbnailUploader/EntityThumbnailUploader'
 import Actions from '@containers/Actions/Actions'
-import usePatchProductsListWithVersions from '@hooks/usePatchProductsListWithVersions'
+import useEntityUpdate from '@hooks/useEntityUpdate'
 import StackedThumbnails from '@components/Thumbnail/StackedThumbnails'
-import { useUpdateEntitiesMutation } from '@queries/entity/updateEntity'
 import { useGetChecklistsCountQuery } from '@queries/activities/getActivities'
 import { openViewer } from '@state/viewer'
 
@@ -103,55 +102,15 @@ const DetailsPanelHeader = ({
 
   const isMultiple = entities.length > 1
 
-  const patchProductsListWithVersions = usePatchProductsListWithVersions({
-    projectName: firstEntity?.projectName,
+  const { updateEntity } = useEntityUpdate({
+    entities,
+    entityType,
+    projectName,
   })
 
-  const patchProductsVersions = (field, value) => {
-    // patches = entitiesData but with field and value set for all entities
-    let productsPatch
-    // if the type is version and the is field is status or version, patch products list
-    // because the version status/version is also shown in the product list
-    if (entityType === 'version' && ['status'].includes(field)) {
-      const versions = entities.map((version) => ({
-        productId: version.productId,
-        versionId: version.id,
-        versionStatus: value,
-      }))
-
-      // update productsList cache with new status
-      productsPatch = patchProductsListWithVersions(versions)
-    }
-
-    return productsPatch
-  }
-
-  const [updateEntities] = useUpdateEntitiesMutation()
-  const handleUpdate = async (field, value) => {
+  const handleUpdate = (field, value) => {
     if (value === null || value === undefined) return console.error('value is null or undefined')
-
-    // if the type is version and the field is status or version, patch products list
-    // mainly used in the browser
-    const productsPatch = patchProductsVersions(field, value)
-    try {
-      // build entities operations array
-      const operations = entities.map((entity) => ({
-        id: entity.id,
-        projectName: entity.projectName,
-        data: {
-          [field]: value,
-        },
-        currentAssignees: entity.users,
-        meta: {
-          folderId: entity.folderId,
-        },
-      }))
-
-      await updateEntities({ operations, entityType })
-    } catch (error) {
-      toast.error('Error updating' + entityType)
-      productsPatch?.undo()
-    }
+    return updateEntity(field, value)
   }
 
   const handleThumbnailClick = () => {

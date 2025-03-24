@@ -3,13 +3,18 @@ import { Section } from '@ynput/ayon-react-components'
 import getMixedState from '@helpers/getMixedState'
 import { useGetProjectQuery } from '@queries/project/getProject'
 import { useGetAttributeListQuery } from '@queries/attributes/getAttributes'
-import DetailsPanelAttributesEditor, { AttributeField } from './DetailsPanelAttributesEditor'
+import DetailsPanelAttributesEditor, {
+  AttributeField,
+  DetailsPanelAttributesEditorProps,
+} from './DetailsPanelAttributesEditor'
+import useEntityUpdate from '@hooks/useEntityUpdate'
 
 type Entity = {
   id: string
   name: string
   title?: string
   subTitle?: string
+  label?: string
   tags?: string[]
   status?: string
   updatedAt?: string
@@ -76,9 +81,11 @@ const readOnlyFields: Array<keyof Entity> = [
 const fieldKeyMappings = ({ users, entitySubType, title, ...entity }: Entity) => {
   return {
     ...entity,
-    [`${entity.entityType}Type`]: entitySubType,
+    [`${entity.entityType}Type`]:
+      // @ts-ignore
+      `${entity.entityType}Type` in entity ? entity[`${entity.entityType}Type`] : entitySubType,
     assignees: entity.entityType ? users : undefined,
-    label: title,
+    label: entity.label || entity.name,
   }
 }
 
@@ -261,6 +268,42 @@ const DetailsPanelAttributes = ({ entities = [], isLoading }: DetailsPanelAttrib
     enableEditing = true
   }
 
+  const entityType = formData?.entityType || 'task'
+  const projectName = formData?.projectName || ''
+
+  // Setup entity update functionality
+  const { updateEntity } = useEntityUpdate({
+    entities: entities.map((entity) => ({
+      id: entity.id,
+      projectName: entity.projectName || '',
+      folderId: entity.folderId,
+      users: entity.users || [],
+    })),
+    entityType,
+    projectName,
+  })
+
+  const handleChange: DetailsPanelAttributesEditorProps['onChange'] = (key, value) => {
+    if (key.startsWith('attrib.')) {
+      value = {
+        [key.replace('attrib.', '')]: value,
+      }
+      key = 'attrib'
+    }
+
+    console.log('handleChange', key, value)
+
+    // update the form data
+    // @ts-ignore
+    setFormData((prev) => ({
+      ...prev,
+      [key]: value,
+    }))
+
+    // update the entity in database
+    updateEntity(key, value)
+  }
+
   return (
     <Section style={{ padding: 8, overflow: 'hidden' }}>
       <DetailsPanelAttributesEditor
@@ -269,6 +312,7 @@ const DetailsPanelAttributes = ({ entities = [], isLoading }: DetailsPanelAttrib
         mixedFields={mixedFields}
         isLoading={isLoading}
         enableEditing={enableEditing}
+        onChange={handleChange}
       />
     </Section>
   )

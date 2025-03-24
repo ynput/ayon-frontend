@@ -100,6 +100,7 @@ interface EnumWidgetProps
   options: AttributeEnumItem[]
   type?: AttributeData['type']
   autoOpen?: boolean
+  isReadOnly?: boolean
   pt?: {
     template?: Partial<EnumTemplateProps>
   }
@@ -120,7 +121,18 @@ const checkAvatarImg = (src: string): boolean => src.includes('avatar')
 
 export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
   (
-    { value, isEditing, options, type, autoOpen = true, onOpen, onChange, pt, ...dropdownProps },
+    {
+      value,
+      isEditing,
+      options,
+      type,
+      autoOpen = true,
+      isReadOnly,
+      onOpen,
+      onChange,
+      pt,
+      ...dropdownProps
+    },
     _ref,
   ) => {
     // convert value to string array
@@ -149,7 +161,7 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
 
     const handleClosedClick = (e: React.MouseEvent<HTMLSpanElement>) => {
       // if we click on the chevron icon, then we open the dropdown spright away (put it into editing mode)
-      if (e.target instanceof HTMLElement && e.target.closest('.expand') && onOpen) {
+      if (e.target instanceof HTMLElement && e.target.closest('.expand') && onOpen && !isReadOnly) {
         onOpen()
         // stop the event from propagating to the parent element because a single click on the cell would close the dropdown
         e.stopPropagation()
@@ -183,6 +195,7 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
               selectedOptions={selectedOptions}
               hasMultipleValues={selected.length > 1}
               isOpen={isOpen}
+              isReadOnly={isReadOnly}
               isMultiSelect={isMultiSelect}
               {...pt?.template}
               placeholder={dropdownProps.placeholder}
@@ -202,6 +215,8 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
           )}
           widthExpand
           multiSelect={isMultiSelect}
+          disableOpen={isReadOnly}
+          disabled={isReadOnly}
           {...dropdownProps}
           onChange={handleChange}
         />
@@ -214,6 +229,7 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
         hasMultipleValues={hasMultipleValues}
         onClick={handleClosedClick}
         isMultiSelect={isMultiSelect}
+        isReadOnly={isReadOnly}
         {...pt?.template}
         placeholder={dropdownProps.placeholder}
         className={clsx('enum-value', pt?.template?.className, dropdownProps.className)}
@@ -230,6 +246,7 @@ interface EnumTemplateProps extends React.HTMLAttributes<HTMLSpanElement> {
   isOpen?: boolean
   isItem?: boolean
   isSelected?: boolean
+  isReadOnly?: boolean
 }
 
 const EnumCellValue = ({
@@ -240,6 +257,7 @@ const EnumCellValue = ({
   isOpen,
   isItem,
   isSelected,
+  isReadOnly,
   className,
   ...props
 }: EnumTemplateProps) => {
@@ -291,7 +309,7 @@ const EnumCellValue = ({
           </StyledValueWrapper>
         ))}
       </StyledValuesContainer>
-      {!isItem && (
+      {!isItem && !isReadOnly && (
         <StyledExpandIcon
           className="expand"
           icon="expand_more"
