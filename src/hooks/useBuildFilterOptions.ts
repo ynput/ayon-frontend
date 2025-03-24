@@ -507,10 +507,10 @@ const getOptionRoot = (fieldType: FilterFieldType) => {
         operator: 'OR',
         values: [],
         allowsCustomValues: false,
-        allowHasValue: true,
-        allowNoValue: true,
+        allowHasValue: false,
+        allowNoValue: false,
         allowExcludes: ALLOW_INVERTED_FILTERS,
-        operatorChangeable: true,
+        operatorChangeable: false,
       }
       break
     case 'tags':
@@ -523,10 +523,10 @@ const getOptionRoot = (fieldType: FilterFieldType) => {
         operator: 'OR',
         values: [],
         allowsCustomValues: true,
-        allowHasValue: true,
-        allowNoValue: true,
+        allowHasValue: false,
+        allowNoValue: false,
         allowExcludes: ALLOW_INVERTED_FILTERS,
-        operatorChangeable: true,
+        operatorChangeable: false,
       }
       break
     default:

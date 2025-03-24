@@ -7,11 +7,15 @@ import { FilterValue } from '@components/SearchFilter/types'
 interface FilterMapping {
   id: string
   type: AttributeModel['data']['type']
-  mapValue: (items: SliceDataItem[]) => { id: string }[]
+  mapValue: (items: SliceDataItem[]) => { id: string; label: string }[]
+}
+
+interface SliceFilter extends FilterValue {
+  values: { id: string; label: string }[]
 }
 
 type FilterBySliceData = {
-  filter: FilterValue | null
+  filter: SliceFilter | null
 }
 
 const useFilterBySlice = (): FilterBySliceData => {
@@ -21,23 +25,26 @@ const useFilterBySlice = (): FilterBySliceData => {
     assignees: {
       id: 'assignees',
       type: 'list_of_strings',
-      mapValue: (items) => items.map((item) => ({ id: item.name || item.id })),
+      mapValue: (items) =>
+        items.map((item) => ({ id: item.name || item.id, label: item.name || '' })),
     },
     status: {
       id: 'status',
       type: 'string',
 
-      mapValue: (items) => items.map((item) => ({ id: item.name || item.id })),
+      mapValue: (items) =>
+        items.map((item) => ({ id: item.name || item.id, label: item.name || '' })),
     },
     taskType: {
       id: 'taskType',
       type: 'string',
-      mapValue: (items) => items.map((item) => ({ id: item.name || item.id })),
+      mapValue: (items) =>
+        items.map((item) => ({ id: item.name || item.id, label: item.name || '' })),
     },
     hierarchy: undefined,
   }
 
-  const filter: FilterValue | null = (() => {
+  const filter: SliceFilter | null = (() => {
     const mapping = sliceTypeToFilterMap[sliceType]
     if (!mapping) return null
 

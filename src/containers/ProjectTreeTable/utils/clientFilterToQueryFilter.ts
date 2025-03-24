@@ -53,6 +53,10 @@ const convertFilterToCondition = (filter: Filter): QueryCondition => {
     }
   }
 
+  // there is any value
+  const hasSomeValue = Array.isArray(value) && value.map((v) => v.toString())?.includes('hasValue')
+  const hasNoValue = Array.isArray(value) && value.map((v) => v.toString())?.includes('noValue')
+
   // Determine if this is likely a list field based on filter type or pattern
   const isListField =
     filter.type?.startsWith('list_of_') ||
@@ -69,8 +73,18 @@ const convertFilterToCondition = (filter: Filter): QueryCondition => {
     return { key, operator }
   }
 
+  console.log(filter)
+
   // Handle different filter types
-  if (isListField) {
+  if (hasSomeValue) {
+    // we set the value to the empty state and then say it should not be that
+    value = filter.type === 'list_of_strings' ? [] : undefined
+    operator = filter.inverted ? 'eq' : 'ne'
+  } else if (hasNoValue) {
+    // we set the value to the empty state and then say it should be that
+    value = filter.type === 'list_of_strings' ? [] : undefined
+    operator = filter.inverted ? 'ne' : 'eq'
+  } else if (isListField) {
     // For list fields, we need to use list-compatible operators
     if (Array.isArray(value)) {
       // Multiple values selected for a list field

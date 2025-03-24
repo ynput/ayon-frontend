@@ -183,7 +183,7 @@ export const ProjectTableProvider = ({ children }: ProjectTableProviderProps) =>
 
   // merge the slice filter with the user filters
   let combinedFilters = [...filters]
-  if (sliceFilter) {
+  if (sliceFilter?.values?.length) {
     combinedFilters.push(sliceFilter)
   }
 
@@ -191,7 +191,7 @@ export const ProjectTableProvider = ({ children }: ProjectTableProviderProps) =>
     useFetchAndUpdateEntityData({
       projectName,
       selectedFolders,
-      filters,
+      filters: combinedFilters,
       expanded,
       sorting,
       showHierarchy,

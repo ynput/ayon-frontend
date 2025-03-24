@@ -221,6 +221,7 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
           multiSelect={isMultiSelect}
           disableOpen={isReadOnly}
           disabled={isReadOnly}
+          sortBySelected
           {...dropdownProps}
           onChange={handleChange}
         />
