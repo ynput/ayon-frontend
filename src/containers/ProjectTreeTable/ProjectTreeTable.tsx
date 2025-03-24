@@ -340,7 +340,7 @@ const FlexTable = ({
 
   const columnSizeVars = useCustomColumnWidthVars(table, columnSizing)
 
-  const { handleTableBodyContextMenu } = useCellContextMenu()
+  const { handleTableBodyContextMenu } = useCellContextMenu({ attribs })
 
   return (
     <Styled.TableWrapper>

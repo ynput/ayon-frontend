@@ -6,11 +6,16 @@ import { useClipboard } from '../context/ClipboardContext'
 import { ROW_SELECTION_COLUMN_ID, useSelection } from '../context/SelectionContext'
 import { useProjectTableContext } from '../context/ProjectTableContext'
 import { useCellEditing } from '../context/CellEditingContext'
-import { NewEntityType, useNewEntityContext } from '@context/NewEntityContext'
+import { useNewEntityContext } from '@context/NewEntityContext'
+import { AttributeModel } from '@api/rest/attributes'
 
 type ContextEvent = React.MouseEvent<HTMLTableSectionElement, MouseEvent>
 
-const useCellContextMenu = () => {
+type CellContextMenuProps = {
+  attribs: AttributeModel[]
+}
+
+const useCellContextMenu = ({ attribs }: CellContextMenuProps) => {
   // context hooks
   const { projectInfo, projectName, showHierarchy, getEntityById } = useProjectTableContext()
   const { copyToClipboard, exportCSV, pasteFromClipboard } = useClipboard()
@@ -26,49 +31,120 @@ const useCellContextMenu = () => {
   const [cellContextMenuShow] = useCreateContext()
 
   const cellContextMenuItems = (_e: ContextEvent, id: string, selected: string[]) => {
-    const items: {
+    // Define menu item type with condition
+    type MenuItem = {
       label: string
       icon: string
       shortcut?: string
       danger?: boolean
       command: () => void
-    }[] = [
+      shouldShow: boolean
+    }
+
+    // Parse cell info
+    const { rowId: entityId, colId } = parseCellId(id) || {}
+    if (!entityId)
+      return [
+        {
+          label: 'Copy',
+          icon: 'content_copy',
+          shortcut: getPlatformShortcutKey('c', [KeyMode.Ctrl]),
+          command: () => copyToClipboard(selected),
+          shouldShow: true,
+        },
+      ]
+
+    // Define conditions
+    const isNameColumn = colId === 'name'
+    const isSingleSelection = selected.length === 1
+    const entitiesToInherit = getEntitiesToInherit(selected)
+    const canInheritFromParent = entitiesToInherit.length > 0 && showHierarchy
+
+    // Define all possible menu items with their conditions
+    const allMenuItems: MenuItem[] = [
+      // Clipboard operations
       {
         label: 'Copy',
         icon: 'content_copy',
         shortcut: getPlatformShortcutKey('c', [KeyMode.Ctrl]),
         command: () => copyToClipboard(selected),
+        shouldShow: true, // Always shown
       },
-    ]
-
-    // get the entity
-    const entityId = parseCellId(id)?.rowId
-    if (!entityId) return items
-
-    const isColName = parseCellId(id)?.colId === 'name'
-
-    if (!isColName) {
-      items.push({
+      {
         label: 'Paste',
         icon: 'content_paste',
         shortcut: getPlatformShortcutKey('v', [KeyMode.Ctrl]),
         command: () => pasteFromClipboard(selected),
-      })
-    } else {
-      if (selected.length === 1) {
-        items.push({
-          label: 'Show details',
-          icon: 'dock_to_left',
-          shortcut: 'Double click',
-          command: () => {
-            const rowSelectionCellId = getCellId(entityId, ROW_SELECTION_COLUMN_ID)
-            selectCell(rowSelectionCellId, false, false)
-          },
-        })
-      }
-    }
+        shouldShow: !isNameColumn,
+      },
+      // Entity operations
+      {
+        label: 'Show details',
+        icon: 'dock_to_left',
+        shortcut: 'Double click',
+        command: () => {
+          const rowSelectionCellId = getCellId(entityId, ROW_SELECTION_COLUMN_ID)
+          selectCell(rowSelectionCellId, false, false)
+        },
+        shouldShow: isNameColumn && isSingleSelection,
+      },
 
-    const entitiesToInherit = selected.reduce((acc, cellId) => {
+      // Attribute operations
+      {
+        label: 'Inherit from parent',
+        icon: 'disabled_by_default',
+        command: () => inheritFromParent(entitiesToInherit),
+        shouldShow: canInheritFromParent,
+      },
+
+      // Export operations
+      {
+        label: 'Export selection',
+        icon: 'download',
+        command: () => exportCSV(selected, projectName),
+        shouldShow: true, // Always shown
+      },
+
+      // Creation operations (only in name column and hierarchy mode)
+      {
+        label: 'Create folder',
+        icon: 'create_new_folder',
+        command: () => onOpenNew('folder', projectInfo),
+        shouldShow: isNameColumn && showHierarchy,
+      },
+      {
+        label: 'Create root folder',
+        icon: 'create_new_folder',
+        command: () => {
+          clearSelection()
+          onOpenNew('folder', projectInfo)
+        },
+        shouldShow: isNameColumn && showHierarchy,
+      },
+      {
+        label: 'Create task',
+        icon: 'add_task',
+        command: () => onOpenNew('task', projectInfo),
+        shouldShow: isNameColumn && showHierarchy,
+      },
+
+      // Destructive operations
+      {
+        label: 'Delete',
+        icon: 'delete',
+        danger: true,
+        command: () => deleteEntities(selected),
+        shouldShow: isNameColumn,
+      },
+    ]
+
+    // Filter items based on their conditions
+    return allMenuItems.filter((item) => item.shouldShow).map(({ shouldShow, ...item }) => item)
+  }
+
+  // Helper function to identify attributes that can be inherited
+  const getEntitiesToInherit = (selected: string[]) => {
+    return selected.reduce((acc, cellId) => {
       const { rowId, colId } = parseCellId(cellId) || {}
       if (!rowId || !colId || !colId.startsWith('attrib_')) return acc
 
@@ -76,9 +152,13 @@ const useCellContextMenu = () => {
       if (!entity) return acc
 
       const attribName = colId.replace('attrib_', '')
+      //   get attrib model
+      const attribModel = attribs.find((attrib) => attrib.name === attribName)
+      // is the attrib inheritable?
+      const isInheritable = attribModel?.data.inherit
 
       // Check if this attribute is owned by the entity (not inherited)
-      if (entity.ownAttrib?.includes(attribName)) {
+      if (entity.ownAttrib?.includes(attribName) && isInheritable) {
         // Find existing entry or create new one
         const existingIndex = acc.findIndex((item) => item.id === rowId)
 
@@ -99,59 +179,6 @@ const useCellContextMenu = () => {
 
       return acc
     }, [] as { id: string; type: string; attribs: string[] }[])
-
-    // Update the inherit from parent command to use the entities we collected
-    if (entitiesToInherit.length && showHierarchy) {
-      // NOTE: This should work not in hierarchy mode, but for some reason it doesn't
-      items.push({
-        label: 'Inherit from parent',
-        icon: 'disabled_by_default',
-        command: () => inheritFromParent(entitiesToInherit),
-      })
-    }
-
-    items.push({
-      label: 'Export selection',
-      icon: 'download',
-      command: () => exportCSV(selected, projectName),
-    })
-
-    const openNewEntity = (type: NewEntityType) => onOpenNew(type, projectInfo)
-
-    if (isColName) {
-      if (showHierarchy) {
-        items.push({
-          label: 'Create folder',
-          icon: 'create_new_folder',
-          command: () => openNewEntity('folder'),
-        })
-
-        items.push({
-          label: 'Create root folder',
-          icon: 'create_new_folder',
-          command: () => {
-            // deselect all
-            clearSelection()
-            openNewEntity('folder')
-          },
-        })
-
-        items.push({
-          label: 'Create task',
-          icon: 'add_task',
-          command: () => openNewEntity('task'),
-        })
-      }
-
-      items.push({
-        label: 'Delete',
-        icon: 'delete',
-        danger: true,
-        command: () => deleteEntities(selected),
-      })
-    }
-
-    return items
   }
 
   const handleTableBodyContextMenu = (e: ContextEvent) => {
