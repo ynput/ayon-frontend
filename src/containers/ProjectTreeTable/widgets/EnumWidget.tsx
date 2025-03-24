@@ -101,6 +101,7 @@ interface EnumWidgetProps
   type?: AttributeData['type']
   autoOpen?: boolean
   isReadOnly?: boolean
+  enableCustomValues?: boolean
   pt?: {
     template?: Partial<EnumTemplateProps>
   }
@@ -128,6 +129,7 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
       type,
       autoOpen = true,
       isReadOnly,
+      enableCustomValues,
       onOpen,
       onChange,
       pt,
@@ -149,8 +151,10 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
           {
             label: val,
             value: val,
-            color: 'var(--md-sys-color-error)',
-            icon: 'warning',
+            color: enableCustomValues
+              ? 'var(--md-sys-color-surface-container)'
+              : 'var(--md-sys-color-error)',
+            icon: enableCustomValues ? undefined : 'warning',
           },
         ]
       }

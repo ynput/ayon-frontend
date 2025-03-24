@@ -38,6 +38,7 @@ interface EditorCellProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'on
   isCollapsed?: boolean
   isInherited?: boolean
   isPlaceholder?: boolean
+  enableCustomValues?: boolean
   onChange?: (value: CellValue | CellValue[]) => void
 }
 
@@ -59,6 +60,7 @@ const EditorCellComponent = forwardRef<HTMLDivElement, EditorCellProps>(
       isCollapsed,
       isInherited,
       isPlaceholder,
+      enableCustomValues,
       onChange,
       ...props
     },
@@ -119,6 +121,7 @@ const EditorCellComponent = forwardRef<HTMLDivElement, EditorCellProps>(
               options={options}
               type={type}
               onOpen={() => setEditingCellId(cellId)}
+              enableCustomValues={enableCustomValues}
               {...sharedProps}
             />
           )
@@ -169,7 +172,8 @@ function arePropsEqual(prevProps: EditorCellProps, nextProps: EditorCellProps) {
     ((!prevProps?.attributeData?.type.includes('list') &&
       !nextProps?.attributeData?.type.includes('list')) ||
       prevProps.options?.length === nextProps.options?.length) &&
-    prevProps.isInherited === nextProps.isInherited
+    prevProps.isInherited === nextProps.isInherited &&
+    prevProps.enableCustomValues === nextProps.enableCustomValues
   )
 }
 

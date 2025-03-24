@@ -203,6 +203,7 @@ const TableColumns = ({
               options={options.tags}
               isCollapsed={!!row.original.childOnlyMatch}
               onChange={(value) => updateEntities([{ field: column.id, value, id, type }])}
+              enableCustomValues
             />
           )
         },
