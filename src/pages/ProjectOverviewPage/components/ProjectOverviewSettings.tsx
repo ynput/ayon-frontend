@@ -29,6 +29,10 @@ const ProjectOverviewSettingsContent: FC = () => {
 
   const columns = [
     {
+      value: 'name',
+      label: 'Folder / Task',
+    },
+    {
       value: 'status',
       label: 'Status',
     },
