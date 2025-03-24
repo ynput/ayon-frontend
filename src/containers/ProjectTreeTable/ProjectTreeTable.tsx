@@ -34,19 +34,16 @@ import HeaderActionButton from './components/HeaderActionButton'
 // Context imports
 import { CellEditingProvider, useCellEditing } from './context/CellEditingContext'
 import { ROW_SELECTION_COLUMN_ID, useSelection } from './context/SelectionContext'
-import { ClipboardProvider, useClipboard } from './context/ClipboardContext'
+import { ClipboardProvider } from './context/ClipboardContext'
 
 // Hook imports
 import useCustomColumnWidthVars from './hooks/useCustomColumnWidthVars'
 
 // Utility function imports
-import { getCellId, parseCellId } from './utils/cellUtils'
+import { getCellId } from './utils/cellUtils'
 import useLocalStorage from '@hooks/useLocalStorage'
 import { useProjectTableContext } from '@containers/ProjectTreeTable/context/ProjectTableContext'
-import useCreateContext from '@hooks/useCreateContext'
-import { getPlatformShortcutKey, KeyMode } from '@helpers/platform'
-import { NewEntityType, useNewEntityContext } from '@context/NewEntityContext'
-import useDeleteEntities from './hooks/useDeleteEntities'
+import useCellContextMenu from './hooks/useCellContextMenu'
 
 //These are the important styles to make sticky column pinning work!
 //Apply styles like this using your CSS strategy of choice with this kind of logic to head cells, data cells, footer cells, etc.
@@ -69,8 +66,6 @@ const getCommonPinningStyles = (column: Column<TableRow, unknown>): CSSPropertie
     zIndex: isPinned ? 100 : 0,
   }
 }
-
-type ContextEvent = React.MouseEvent<HTMLTableSectionElement, MouseEvent>
 
 type Props = {
   scope: string
@@ -245,9 +240,6 @@ const FlexTable = ({
     showHierarchy,
     columnVisibility,
     updateColumnVisibility,
-    projectInfo,
-    projectName,
-    getEntityById,
     columnPinning,
     updateColumnPinning,
     columnOrder,
@@ -270,17 +262,7 @@ const FlexTable = ({
   }, [fetchMoreOnBottomReached])
 
   // Selection context
-  const { registerGrid, isCellSelected, selectedCells, clearSelection, isRowSelected, selectCell } =
-    useSelection()
-
-  // clipboard context
-  const { copyToClipboard, exportCSV, pasteFromClipboard } = useClipboard()
-
-  // new entity context
-  const { onOpenNew } = useNewEntityContext()
-
-  // update entity context
-  const { inheritFromParent } = useCellEditing()
+  const { registerGrid, isRowSelected } = useSelection()
 
   const columns = ProjectTreeTableColumns({
     tableData,
@@ -358,153 +340,7 @@ const FlexTable = ({
 
   const columnSizeVars = useCustomColumnWidthVars(table, columnSizing)
 
-  const deleteEntities = useDeleteEntities({})
-
-  const [cellContextMenuShow] = useCreateContext()
-
-  const cellContextMenuItems = (_e: ContextEvent, id: string, selected: string[]) => {
-    const items: {
-      label: string
-      icon: string
-      shortcut?: string
-      danger?: boolean
-      command: () => void
-    }[] = [
-      {
-        label: 'Copy',
-        icon: 'content_copy',
-        shortcut: getPlatformShortcutKey('c', [KeyMode.Ctrl]),
-        command: () => copyToClipboard(selected),
-      },
-    ]
-
-    // get the entity
-    const entityId = parseCellId(id)?.rowId
-    if (!entityId) return items
-
-    const isColName = parseCellId(id)?.colId === 'name'
-
-    if (!isColName) {
-      items.push({
-        label: 'Paste',
-        icon: 'content_paste',
-        shortcut: getPlatformShortcutKey('v', [KeyMode.Ctrl]),
-        command: () => pasteFromClipboard(selected),
-      })
-    } else {
-      if (selected.length === 1) {
-        items.push({
-          label: 'Show details',
-          icon: 'dock_to_left',
-          shortcut: 'Double click',
-          command: () => {
-            const rowSelectionCellId = getCellId(entityId, ROW_SELECTION_COLUMN_ID)
-            selectCell(rowSelectionCellId, false, false)
-          },
-        })
-      }
-    }
-
-    const entitiesToInherit = selected.reduce((acc, cellId) => {
-      const { rowId, colId } = parseCellId(cellId) || {}
-      if (!rowId || !colId || !colId.startsWith('attrib_')) return acc
-
-      const entity = getEntityById(rowId)
-      if (!entity) return acc
-
-      const attribName = colId.replace('attrib_', '')
-
-      // Check if this attribute is owned by the entity (not inherited)
-      if (entity.ownAttrib?.includes(attribName)) {
-        // Find existing entry or create new one
-        const existingIndex = acc.findIndex((item) => item.id === rowId)
-
-        if (existingIndex >= 0) {
-          // Add to existing entity's attribs if not already there
-          if (!acc[existingIndex].attribs.includes(attribName)) {
-            acc[existingIndex].attribs.push(attribName)
-          }
-        } else {
-          // Create new entity entry
-          acc.push({
-            id: rowId,
-            type: 'folderId' in entity ? 'task' : 'folder',
-            attribs: [attribName],
-          })
-        }
-      }
-
-      return acc
-    }, [] as { id: string; type: string; attribs: string[] }[])
-
-    // Update the inherit from parent command to use the entities we collected
-    if (entitiesToInherit.length && showHierarchy) {
-      // NOTE: This should work not in hierarchy mode, but for some reason it doesn't
-      items.push({
-        label: 'Inherit from parent',
-        icon: 'disabled_by_default',
-        command: () => inheritFromParent(entitiesToInherit),
-      })
-    }
-
-    items.push({
-      label: 'Export selection',
-      icon: 'download',
-      command: () => exportCSV(selected, projectName),
-    })
-
-    const openNewEntity = (type: NewEntityType) => onOpenNew(type, projectInfo)
-
-    if (isColName) {
-      if (showHierarchy) {
-        items.push({
-          label: 'Create folder',
-          icon: 'create_new_folder',
-          command: () => openNewEntity('folder'),
-        })
-
-        items.push({
-          label: 'Create root folder',
-          icon: 'create_new_folder',
-          command: () => {
-            // deselect all
-            clearSelection()
-            openNewEntity('folder')
-          },
-        })
-
-        items.push({
-          label: 'Create task',
-          icon: 'add_task',
-          command: () => openNewEntity('task'),
-        })
-      }
-
-      items.push({
-        label: 'Delete',
-        icon: 'delete',
-        danger: true,
-        command: () => deleteEntities(selected),
-      })
-    }
-
-    return items
-  }
-
-  const handleTableBodyContextMenu = (e: ContextEvent) => {
-    const target = e.target as HTMLElement
-    const tdEl = target.closest('td')
-    // get id of first child of td
-    const cellId = tdEl?.firstElementChild?.id
-
-    if (cellId) {
-      let currentSelectedCells = Array.from(selectedCells)
-      if (!isCellSelected(cellId)) {
-        currentSelectedCells = [cellId]
-      }
-      cellContextMenuShow(e, cellContextMenuItems(e, cellId, currentSelectedCells))
-    }
-  }
+  const { handleTableBodyContextMenu } = useCellContextMenu()
 
   return (
     <Styled.TableWrapper>
