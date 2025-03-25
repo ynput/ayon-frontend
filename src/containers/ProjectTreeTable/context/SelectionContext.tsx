@@ -58,6 +58,9 @@ interface SelectionContextType {
   isRowSelected: (rowId: RowId) => boolean
   getCellPositionFromId: (cellId: CellId) => CellPosition | null
   getCellBorderClasses: (cellId: CellId) => string[]
+  selectAllRows: () => void
+  areAllRowsSelected: () => boolean
+  areSomeRowsSelected: () => boolean
 }
 
 // Create the context
@@ -376,6 +379,36 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({ children 
     [selectedCells, gridMap, isCellSelected],
   )
 
+  // Select all rows in the grid
+  const selectAllRows = useCallback(() => {
+    const allRowIds = Array.from(gridMap.rowIdToIndex.keys())
+    const newSelection = new Set<CellId>()
+
+    // Create cells for each row with the row selection column ID
+    allRowIds.forEach((rowId) => {
+      newSelection.add(getCellId(rowId, ROW_SELECTION_COLUMN_ID))
+    })
+
+    setSelectedCells(newSelection)
+    // If there are rows, set focus to the first one
+    if (allRowIds.length > 0) {
+      const firstCellId = getCellId(allRowIds[0], ROW_SELECTION_COLUMN_ID)
+      setFocusedCellId(firstCellId)
+      setAnchorCell(parseCellId(firstCellId))
+    }
+  }, [gridMap])
+
+  // Check if all rows are selected
+  const areAllRowsSelected = useCallback(() => {
+    const totalRows = gridMap.rowIdToIndex.size
+    return totalRows > 0 && selectedRows.length === totalRows
+  }, [gridMap, selectedRows])
+
+  // Check if some but not all rows are selected
+  const areSomeRowsSelected = useCallback(() => {
+    return selectedRows.length > 0 && !areAllRowsSelected()
+  }, [selectedRows, areAllRowsSelected])
+
   // Memoize context value to prevent unnecessary re-renders
   const value = useMemo(
     () => ({
@@ -398,6 +431,9 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({ children 
       isRowSelected,
       getCellPositionFromId,
       getCellBorderClasses,
+      selectAllRows,
+      areAllRowsSelected,
+      areSomeRowsSelected,
     }),
     [
       selectedCells,
@@ -419,6 +455,9 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({ children 
       isRowSelected,
       getCellPositionFromId,
       getCellBorderClasses,
+      selectAllRows,
+      areAllRowsSelected,
+      areSomeRowsSelected,
     ],
   )
 

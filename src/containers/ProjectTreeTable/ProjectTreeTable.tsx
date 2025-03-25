@@ -374,6 +374,7 @@ const FlexTable = ({
                 <Styled.ColumnHeader key={headerGroup.id} style={{ display: 'flex' }}>
                   {headerGroup.headers.map((header) => {
                     const { column } = header
+                    const isRowSelectionColumn = column.id === ROW_SELECTION_COLUMN_ID
 
                     return (
                       <Styled.HeaderCell
@@ -428,16 +429,18 @@ const FlexTable = ({
                                 selected={!!column.getIsSorted()}
                               />
                             </Styled.HeaderButtons>
-                            <Styled.ResizedHandler
-                              {...{
-                                onDoubleClick: () => column.resetSize(),
-                                onMouseDown: header.getResizeHandler(),
-                                onTouchStart: header.getResizeHandler(),
-                                className: clsx('resize-handle', {
-                                  resizing: column.getIsResizing(),
-                                }),
-                              }}
-                            />
+                            {!isRowSelectionColumn && (
+                              <Styled.ResizedHandler
+                                {...{
+                                  onDoubleClick: () => column.resetSize(),
+                                  onMouseDown: header.getResizeHandler(),
+                                  onTouchStart: header.getResizeHandler(),
+                                  className: clsx('resize-handle', {
+                                    resizing: column.getIsResizing(),
+                                  }),
+                                }}
+                              />
+                            )}
                           </Styled.TableCellContent>
                         )}
                       </Styled.HeaderCell>

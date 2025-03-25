@@ -16,6 +16,7 @@ import { getCellId, getCellValue } from './utils/cellUtils'
 import { TableCellContent } from './ProjectTreeTable.styled'
 import clsx from 'clsx'
 import { SelectionCell } from './components/SelectionCell'
+import RowSelectionHeader from './components/RowSelectionHeader'
 import { ROW_SELECTION_COLUMN_ID } from './context/SelectionContext'
 
 const nameSort: SortingFn<any> = (rowA, rowB) => {
@@ -67,7 +68,7 @@ type Props = {
   toggleExpanderHandler: (e: React.MouseEvent, id: string) => void
 }
 
-const TableColumns = ({
+const ProjectTreeTableColumns = ({
   tableData,
   attribs,
   columnSizing = {},
@@ -83,7 +84,7 @@ const TableColumns = ({
     const staticColumns: ColumnDef<TableRow>[] = [
       {
         id: ROW_SELECTION_COLUMN_ID,
-        header: '',
+        header: () => <RowSelectionHeader />,
         cell: () => <SelectionCell />,
         size: 20,
       },
@@ -245,7 +246,7 @@ const TableColumns = ({
   }, [isLoading, sliceId, tableData, options, attribs, showHierarchy, updateEntities])
 }
 
-export default TableColumns
+export default ProjectTreeTableColumns
 
 const getValueIdType = (
   row: Row<TableRow>,
