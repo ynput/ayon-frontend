@@ -13,18 +13,16 @@ const ActionButton = styled(Button)`
   }
 `
 
-interface HeaderActionButtonProps extends ButtonProps {
-  order: number
-}
+interface HeaderActionButtonProps extends ButtonProps {}
 
-const HeaderActionButton: FC<HeaderActionButtonProps> = ({ selected, order, style, ...props }) => {
+const HeaderActionButton: FC<HeaderActionButtonProps> = ({ selected, style, ...props }) => {
   return (
     <ActionButton
       {...props}
       selected={selected}
       className={clsx(props.className, 'action', { selected })}
       variant="text"
-      style={{ ...style, order: selected ? order : 'initial' }}
+      style={{ ...style }}
     />
   )
 }

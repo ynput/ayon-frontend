@@ -388,7 +388,6 @@ const FlexTable = ({
                                 icon="visibility_off"
                                 selected={!column.getIsVisible()}
                                 onClick={column.getToggleVisibilityHandler()}
-                                order={1}
                               />
                               {/* COLUMN SORTING */}
                               <HeaderActionButton
@@ -401,7 +400,6 @@ const FlexTable = ({
                                     header.column.pin('left')
                                   }
                                 }}
-                                order={2}
                               />
                               {/* COLUMN PINNING */}
                               <HeaderActionButton
@@ -414,7 +412,6 @@ const FlexTable = ({
                                 }}
                                 onClick={column.getToggleSortingHandler()}
                                 selected={!!column.getIsSorted()}
-                                order={3}
                               />
                             </Styled.HeaderButtons>
                             <Styled.ResizedHandler
