@@ -29,6 +29,7 @@ import { ProjectModel } from '@api/rest/project'
 import useAttributeFields from '../hooks/useAttributesList'
 import { AttributeModel } from '@api/rest/attributes'
 import useFolderRelationships from '../hooks/useFolderRelationships'
+import { RowId } from '../utils/cellUtils'
 
 export type InheritedDependent = {
   entityId: string
@@ -63,6 +64,7 @@ interface ProjectTableContextProps {
   // Expanded state
   expanded: ExpandedState
   updateExpanded: OnChangeFn<ExpandedState>
+  toggleExpandAll: (rowId: RowId[], expand?: boolean) => void
 
   // Sorting
   sorting: SortingState
@@ -291,11 +293,42 @@ export const ProjectTableProvider = ({ children }: ProjectTableProviderProps) =>
   )
 
   // get folder relationship functions
-  const { getInheritedDependents } = useFolderRelationships({
+  const { getInheritedDependents, getChildrenEntities } = useFolderRelationships({
     foldersMap,
     tasksMap,
     tasksByFolderMap,
   })
+
+  const toggleExpandAll: ProjectTableContextProps['toggleExpandAll'] = (rowIds, expandAll) => {
+    const expandedState = typeof expanded === 'object' ? expanded : {}
+
+    console.log(rowIds)
+
+    const newExpandedState = { ...expandedState }
+
+    rowIds.forEach((rowId) => {
+      // get all children of the rowId using tableData
+      const childIds = getChildrenEntities(rowId).map((child) => child.id)
+      // check if the rowId is expanded
+      const isExpanded = expandedState[rowId] || false
+
+      if (expandAll !== undefined ? !expandAll : isExpanded) {
+        // collapse all children
+        newExpandedState[rowId] = false
+        childIds.forEach((id) => {
+          newExpandedState[id] = false
+        })
+      } else {
+        // expand all children
+        newExpandedState[rowId] = true
+        childIds.forEach((id) => {
+          newExpandedState[id] = true
+        })
+      }
+    })
+
+    setExpanded(newExpandedState)
+  }
 
   return (
     <ProjectTableContext.Provider
@@ -317,6 +350,7 @@ export const ProjectTableProvider = ({ children }: ProjectTableProviderProps) =>
         // expanded state
         expanded,
         updateExpanded,
+        toggleExpandAll,
         // sorting
         sorting,
         updateSorting,

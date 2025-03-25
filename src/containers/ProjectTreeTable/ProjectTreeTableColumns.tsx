@@ -65,7 +65,7 @@ type Props = {
   showHierarchy: boolean
   sliceId: string
   options: BuiltInFieldOptions
-  toggleExpanderHandler: (e: React.MouseEvent, id: string) => void
+  toggleExpandAll: (id: string) => void
 }
 
 const ProjectTreeTableColumns = ({
@@ -76,7 +76,7 @@ const ProjectTreeTableColumns = ({
   isLoading,
   sliceId,
   options,
-  toggleExpanderHandler,
+  toggleExpandAll,
 }: Props) => {
   const { updateEntities } = useCellEditing()
 
@@ -115,7 +115,7 @@ const ProjectTreeTableColumns = ({
                 icon={row.original.icon}
                 type={row.original.data.type}
                 isExpanded={row.getIsExpanded()}
-                toggleExpanderHandler={toggleExpanderHandler}
+                toggleExpandAll={toggleExpandAll}
                 toggleExpanded={row.getToggleExpandedHandler()}
               />
             </TableCellContent>

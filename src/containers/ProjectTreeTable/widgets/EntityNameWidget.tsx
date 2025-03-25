@@ -72,7 +72,7 @@ type EntityNameWidgetProps = {
   icon: string | null
   type: string
   isExpanded: boolean
-  toggleExpanderHandler: (e: React.MouseEvent, id: string) => void
+  toggleExpandAll: (id: string) => void
   toggleExpanded: () => void
 }
 
@@ -85,7 +85,7 @@ export const EntityNameWidget = ({
   icon,
   type,
   isExpanded,
-  toggleExpanderHandler,
+  toggleExpandAll,
   toggleExpanded,
 }: EntityNameWidgetProps) => {
   return (
@@ -95,8 +95,13 @@ export const EntityNameWidget = ({
           <Expander
             onClick={(e) => {
               e.stopPropagation()
-              toggleExpanderHandler(e, id)
-              toggleExpanded()
+              if (e.altKey) {
+                // expand/collapse all children
+                toggleExpandAll(id)
+              } else {
+                // use built-in toggleExpanded function
+                toggleExpanded()
+              }
             }}
             icon={isExpanded ? 'expand_more' : 'chevron_right'}
           />

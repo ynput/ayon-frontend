@@ -17,7 +17,8 @@ type CellContextMenuProps = {
 
 const useCellContextMenu = ({ attribs }: CellContextMenuProps) => {
   // context hooks
-  const { projectInfo, projectName, showHierarchy, getEntityById } = useProjectTableContext()
+  const { projectInfo, projectName, showHierarchy, getEntityById, toggleExpandAll } =
+    useProjectTableContext()
   const { copyToClipboard, exportCSV, pasteFromClipboard } = useClipboard()
   const { isCellSelected, selectedCells, clearSelection, selectCell } = useSelection()
   const { inheritFromParent } = useCellEditing()
@@ -58,6 +59,9 @@ const useCellContextMenu = ({ attribs }: CellContextMenuProps) => {
     const isNameColumn = colId === 'name'
     const isSingleSelection = selected.length === 1
     const entitiesToInherit = getEntitiesToInherit(selected)
+    const selectedRows = selected
+      .map((cellId) => parseCellId(cellId)?.rowId)
+      .filter(Boolean) as string[]
     const canInheritFromParent = entitiesToInherit.length > 0 && showHierarchy
 
     // Define all possible menu items with their conditions
@@ -87,6 +91,22 @@ const useCellContextMenu = ({ attribs }: CellContextMenuProps) => {
           selectCell(rowSelectionCellId, false, false)
         },
         shouldShow: isNameColumn && isSingleSelection,
+      },
+
+      // Expand/collapse (all) operations - only for name column
+      {
+        label: 'Expand all',
+        icon: 'expand_all',
+        shortcut: 'Alt + click',
+        command: () => toggleExpandAll(selectedRows, true),
+        shouldShow: isNameColumn,
+      },
+      {
+        label: 'Collapse all',
+        icon: 'collapse_all',
+        shortcut: 'Alt + click',
+        command: () => toggleExpandAll(selectedRows, false),
+        shouldShow: isNameColumn,
       },
 
       // Attribute operations

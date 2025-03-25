@@ -239,6 +239,7 @@ const FlexTable = ({
   const {
     expanded,
     updateExpanded,
+    toggleExpandAll,
     sorting,
     updateSorting,
     showHierarchy,
@@ -277,10 +278,7 @@ const FlexTable = ({
     showHierarchy,
     sliceId,
     options,
-    toggleExpanderHandler: () => {
-      // track this at some point probably
-      console.log('toggleExpanderHandler')
-    },
+    toggleExpandAll: (id: string) => toggleExpandAll([id]),
   })
 
   const table = useReactTable({
