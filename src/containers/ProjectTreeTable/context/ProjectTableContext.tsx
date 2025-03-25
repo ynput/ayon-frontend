@@ -75,11 +75,13 @@ interface ProjectTableContextProps {
 
   // Column Pinning
   columnPinning: ColumnPinningState
+  setColumnPinning: (columnPinning: ColumnPinningState) => void
   updateColumnPinning: (columnPinning: ColumnPinningState) => void
   columnPinningUpdater: OnChangeFn<ColumnPinningState>
 
   // Column Order
   columnOrder: ColumnOrderState
+  setColumnOrder: (columnOrder: ColumnOrderState) => void
   updateColumnOrder: (columnOrder: ColumnOrderState) => void
   columnOrderUpdater: OnChangeFn<ColumnOrderState>
 
@@ -182,6 +184,7 @@ export const ProjectTableProvider = ({ children }: ProjectTableProviderProps) =>
   }
 
   const updateColumnPinning = (columnPinning: ColumnPinningState) => {
+    console.log('setting column pinning', columnPinning)
     setColumnPinning(columnPinning)
     // now update the column order
     updateOrderOnPinningChange(columnPinning)
@@ -299,10 +302,12 @@ export const ProjectTableProvider = ({ children }: ProjectTableProviderProps) =>
         updateColumnVisibility,
         // column pinning
         columnPinning,
+        setColumnPinning,
         updateColumnPinning,
         columnPinningUpdater,
         // column order
         columnOrder,
+        setColumnOrder,
         updateColumnOrder,
         columnOrderUpdater,
         getEntityById,

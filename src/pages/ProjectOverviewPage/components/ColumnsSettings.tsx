@@ -28,15 +28,18 @@ const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns }) => {
     columnVisibility,
     setColumnVisibility,
     columnPinning,
-    updateColumnPinning,
+    setColumnPinning,
     columnOrder,
-    updateColumnOrder,
+    setColumnOrder,
   } = useProjectTableContext()
 
   // State for the currently dragged column
   const [activeId, setActiveId] = useState<string | null>(null)
-  // State to track if a hidden column is being dragged over visible section
   const [isHiddenOverVisible, setIsHiddenOverVisible] = useState(false)
+  const [isDraggingOverPinned, setIsDraggingOverPinned] = useState(false)
+  const [isDraggingFromPinned, setIsDraggingFromPinned] = useState(false)
+  // Add a new state to track if we're hovering over the visible section
+  const [isHoveringVisibleSection, setIsHoveringVisibleSection] = useState(false)
 
   // Setup sensors for dnd-kit
   const sensors = useSensors(
@@ -47,17 +50,22 @@ const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns }) => {
     }),
   )
 
-  // Separate columns into visible and hidden
-  const { visibleColumns, hiddenColumns } = useMemo(() => {
+  // Separate columns into visible, hidden, and pinned
+  const { visibleColumns, hiddenColumns, pinnedColumns } = useMemo(() => {
     // First filter columns by visibility
     const visible = columns.filter((col) => columnVisibility[col.value] !== false)
     const hidden = columns.filter((col) => columnVisibility[col.value] === false)
 
+    // Then separate out pinned columns from visible
+    const pinned = visible.filter((col) => columnPinning.left?.includes(col.value))
+    const unpinnedVisible = visible.filter((col) => !columnPinning.left?.includes(col.value))
+
     return {
-      visibleColumns: visible,
+      visibleColumns: unpinnedVisible,
       hiddenColumns: hidden,
+      pinnedColumns: pinned,
     }
-  }, [columns, columnVisibility])
+  }, [columns, columnVisibility, columnPinning])
 
   // Sort columns based on columnOrder
   const sortedVisibleColumns = useMemo(() => {
@@ -81,11 +89,37 @@ const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns }) => {
     return visibleCopy
   }, [visibleColumns, columnOrder])
 
+  // Sort pinned columns based on columnOrder
+  const sortedPinnedColumns = useMemo(() => {
+    // Create a copy of pinned columns
+    const pinnedCopy = [...pinnedColumns]
+
+    // If we have a column order, use it to sort
+    if (columnOrder.length > 0) {
+      pinnedCopy.sort((a, b) => {
+        const indexA = columnOrder.indexOf(a.value)
+        const indexB = columnOrder.indexOf(b.value)
+
+        // If column is not in order array, place at end
+        if (indexA === -1) return 1
+        if (indexB === -1) return -1
+
+        return indexA - indexB
+      })
+    }
+
+    return pinnedCopy
+  }, [pinnedColumns, columnOrder])
+
   const sortedVisibleColumnsIds = useMemo(
     () => sortedVisibleColumns.map((col) => col.value),
     [sortedVisibleColumns],
   )
-  // Create a copy of visible columns
+
+  const sortedPinnedColumnsIds = useMemo(
+    () => sortedPinnedColumns.map((col) => col.value),
+    [sortedPinnedColumns],
+  )
 
   // Toggle column visibility
   const toggleVisibility = (columnId: string) => {
@@ -110,12 +144,14 @@ const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns }) => {
       // If column is currently unpinned, pin it
       newState.left = [...(newState.left || []), columnId]
     }
-    updateColumnPinning(newState)
+    setColumnPinning(newState)
   }
 
   // When drag starts
   const handleDragStart = (event: DragStartEvent) => {
-    setActiveId(event.active.id as string)
+    const id = event.active.id as string
+    setActiveId(id)
+    setIsDraggingFromPinned(columnPinning.left?.includes(id) || false)
   }
 
   // Track when dragging over different sections
@@ -126,64 +162,110 @@ const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns }) => {
       // Check if we're dragging a hidden column over a visible column
       const isActiveHidden = columnVisibility[active.id as string] === false
       const isOverVisible = columnVisibility[over.id as string] !== false
+      const isOverPinned = columnPinning.left?.includes(over.id as string) || false
 
-      setIsHiddenOverVisible(isActiveHidden && isOverVisible)
+      setIsHiddenOverVisible(isActiveHidden && isOverVisible && !isOverPinned)
+      setIsDraggingOverPinned(isOverVisible && isOverPinned)
+
+      // Set if we're hovering over the visible (unpinned) section
+      setIsHoveringVisibleSection(isOverVisible && !isOverPinned)
+    } else {
+      // Reset when not over any column
+      setIsHoveringVisibleSection(false)
     }
   }
 
-  // When drag ends
+  // When drag ends, reset all states
   const handleDragEnd = (event: DragEndEvent) => {
-    // Reset hidden-over-visible state
+    // Reset states
     setIsHiddenOverVisible(false)
+    setIsDraggingOverPinned(false)
+    setIsDraggingFromPinned(false)
+    setIsHoveringVisibleSection(false)
 
     const { active, over } = event
 
     if (over && active.id !== over.id) {
       // Find the dragged column and target column
-      const activeColumn = [...visibleColumns, ...hiddenColumns].find(
+      const activeColumn = [...visibleColumns, ...hiddenColumns, ...pinnedColumns].find(
         (col) => col.value === active.id,
       )
-      const overColumn = [...visibleColumns, ...hiddenColumns].find((col) => col.value === over.id)
+      const overColumn = [...visibleColumns, ...hiddenColumns, ...pinnedColumns].find(
+        (col) => col.value === over.id,
+      )
 
       if (activeColumn && overColumn) {
-        // If we're moving a column between visible columns
-        if (
-          columnVisibility[active.id as string] !== false &&
-          columnVisibility[over.id as string] !== false
-        ) {
-          // Update order
-          const currentOrder = [...sortedVisibleColumnsIds]
-          const oldIndex = currentOrder.indexOf(active.id as string)
-          const newIndex = currentOrder.indexOf(over.id as string)
+        const activeId = active.id as string
+        const overId = over.id as string
+        const isActiveVisible = columnVisibility[activeId] !== false
+        const isOverVisible = columnVisibility[overId] !== false
+        const isActivePinned = columnPinning.left?.includes(activeId) || false
+        const isOverPinned = columnPinning.left?.includes(overId) || false
+
+        // If we're moving a column between visible columns (including pinned)
+        if (isActiveVisible && isOverVisible) {
+          const newPinning = { ...columnPinning }
+          let newPinningLeft = newPinning.left || []
+          // Handle pinning/unpinning based on target section
+          if (isActivePinned !== isOverPinned && newPinningLeft) {
+            if (isActivePinned && !isOverPinned) {
+              // Moving from pinned to unpinned section
+              newPinningLeft = newPinningLeft.filter((id) => id !== activeId) || []
+            } else if (!isActivePinned && isOverPinned) {
+              // Moving from unpinned to pinned section
+              newPinningLeft = [...newPinningLeft, activeId]
+            }
+
+            setColumnPinning(newPinning)
+          }
+
+          // Update order within the appropriate section
+          const allVisibleIds = [...sortedPinnedColumnsIds, ...sortedVisibleColumnsIds]
+          const oldIndex = allVisibleIds.indexOf(activeId)
+          const newIndex = allVisibleIds.indexOf(overId)
+
           if (oldIndex === -1 || newIndex === -1) {
             console.error('Invalid column order state')
             toast.error('Invalid column order state')
             return
           }
 
-          updateColumnOrder(arrayMove(currentOrder, oldIndex, newIndex))
+          const newOrder = arrayMove(allVisibleIds, oldIndex, newIndex)
+          setColumnOrder(newOrder)
+
+          // new pinning left should be ordered by the new order
+          const newPinningLeftOrdered = newOrder.filter((id) => newPinningLeft.includes(id))
+          setColumnPinning({
+            ...newPinning,
+            left: newPinningLeftOrdered,
+          })
         }
 
         // If we're dragging from hidden to visible
-        if (
-          columnVisibility[active.id as string] === false &&
-          columnVisibility[over.id as string] !== false
-        ) {
+        if (!isActiveVisible && isOverVisible) {
           // Make the column visible
           const newVisibility = { ...columnVisibility }
-          newVisibility[active.id as string] = true
+          newVisibility[activeId] = true
           setColumnVisibility(newVisibility)
 
-          // Update order to place it near the over column
-          const currentOrder = [...sortedVisibleColumnsIds]
-
-          // Add the column to order if not already there
-          if (!currentOrder.includes(active.id as string)) {
-            const overIndex = currentOrder.indexOf(over.id as string)
-            currentOrder.splice(overIndex, 0, active.id as string)
+          // If dropping into pinned section, also pin the column
+          if (isOverPinned) {
+            console.log('Moving to pinned section 2')
+            const newPinning = { ...columnPinning }
+            newPinning.left = [...(newPinning.left || []), activeId]
+            setColumnPinning(newPinning)
           }
 
-          updateColumnOrder(currentOrder)
+          // Update order to place it near the over column
+          const allVisibleIds = [...sortedPinnedColumnsIds, ...sortedVisibleColumnsIds]
+
+          // Add the column to order if not already there
+          if (!allVisibleIds.includes(activeId)) {
+            const overIndex = allVisibleIds.indexOf(overId)
+            allVisibleIds.splice(overIndex, 0, activeId)
+          }
+
+          setColumnOrder(allVisibleIds)
         }
       }
     }
@@ -193,7 +275,7 @@ const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns }) => {
 
   // Find the active column for the drag overlay
   const activeColumn = activeId
-    ? [...visibleColumns, ...hiddenColumns].find((col) => col.value === activeId)
+    ? [...visibleColumns, ...hiddenColumns, ...pinnedColumns].find((col) => col.value === activeId)
     : null
 
   return (
@@ -205,7 +287,39 @@ const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns }) => {
       onDragEnd={handleDragEnd}
     >
       <ColumnsContainer>
-        <Section className={isHiddenOverVisible ? 'drop-target' : ''}>
+        {/* Pinned Columns Section */}
+        {pinnedColumns.length > 0 && (
+          <Section className={isDraggingOverPinned && !isDraggingFromPinned ? 'drop-target' : ''}>
+            <SectionTitle>Pinned Columns</SectionTitle>
+            <SortableContext
+              items={sortedPinnedColumns.map((col) => col.value)}
+              strategy={verticalListSortingStrategy}
+            >
+              <Menu>
+                {sortedPinnedColumns.map((column) => (
+                  <SortableColumnItem
+                    key={column.value}
+                    id={column.value}
+                    column={column}
+                    isPinned={true}
+                    isHidden={false}
+                    onTogglePinning={togglePinning}
+                    onToggleVisibility={toggleVisibility}
+                  />
+                ))}
+              </Menu>
+            </SortableContext>
+          </Section>
+        )}
+
+        {/* Visible Columns Section */}
+        <Section
+          className={
+            isHiddenOverVisible || (isDraggingFromPinned && isHoveringVisibleSection)
+              ? 'drop-target'
+              : ''
+          }
+        >
           <SectionTitle>Visible Columns</SectionTitle>
           <SortableContext
             items={sortedVisibleColumns.map((col) => col.value)}
@@ -217,7 +331,7 @@ const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns }) => {
                   key={column.value}
                   id={column.value}
                   column={column}
-                  isPinned={columnPinning.left?.includes(column.value) || false}
+                  isPinned={false}
                   isHidden={false}
                   onTogglePinning={togglePinning}
                   onToggleVisibility={toggleVisibility}
@@ -227,6 +341,7 @@ const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns }) => {
           </SortableContext>
         </Section>
 
+        {/* Hidden Columns Section */}
         {hiddenColumns.length > 0 && (
           <Section>
             <SectionTitle>Hidden Columns</SectionTitle>
