@@ -35,6 +35,11 @@ fragment ActivityFragment on ActivityNode {
       reaction
       timestamp
     }
+    version {
+      attrib {
+        comment
+      }
+    }
   }
 `
 

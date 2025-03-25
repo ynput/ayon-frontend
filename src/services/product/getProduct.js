@@ -124,7 +124,7 @@ fragment ProductVersionFragment on VersionNode {
 const PRODUCTS_LIST_QUERY = `
 query ProductsList($projectName: String!, $ids: [String!]!) {
     project(name: $projectName){
-        products(folderIds: $ids){
+        products(folderIds: $ids, first: 1000){
             edges {
                 node {
                     id

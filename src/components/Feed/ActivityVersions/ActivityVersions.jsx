@@ -38,29 +38,34 @@ const ActivityVersions = ({
         entityType={entityType}
         onReferenceClick={onReferenceClick}
       />
-      {versions.flatMap(
-        ({ name, id, productId, productName, updatedAt, createdAt }, index) =>
+      {versions.flatMap((version, index) => {
+        const { name, id, productId, productName, updatedAt, comment } = version
+        return (
           (index < limit || showAll) && (
             <Styled.Card onClick={() => handleClick(id, productId)} key={id}>
               <Styled.Content>
-                <Styled.Title>
-                  <span>{productName}</span>
-                  <ActivityDate date={createdAt} isExact />
-                </Styled.Title>
-                <span className="version">{name}</span>
+                <div>
+                  <Styled.Title>
+                    <span>{productName}</span>
+                    <ActivityDate date={createdAt} isExact />
+                  </Styled.Title>
+                  <span className="version">{name}</span>
+                </div>
+                <Styled.Thumbnail
+                  {...{ projectName }}
+                  entityId={id}
+                  entityType="version"
+                  onError={() => setThumbnailError(true)}
+                  iconOnly={thumbnailError}
+                  entityUpdatedAt={updatedAt}
+                  icon={'play_circle'}
+                />
               </Styled.Content>
-              <Styled.Thumbnail
-                {...{ projectName }}
-                entityId={id}
-                entityType="version"
-                onError={() => setThumbnailError(true)}
-                iconOnly={thumbnailError}
-                entityUpdatedAt={updatedAt}
-                icon={'play_circle'}
-              />
+              {comment && <Styled.Comment>{comment}</Styled.Comment>}
             </Styled.Card>
-          ),
-      )}
+          )
+        )
+      })}
       {filter !== 'publishes' && versions.length > limit && (
         <More onClick={() => setShowAll(!showAll)}>
           <Icon name="more" />

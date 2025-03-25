@@ -16,10 +16,7 @@ export const Container = styled.li`
 `
 
 export const Card = styled.div`
-  display: flex;
-  gap: var(--base-gap-large);
-  align-items: center;
-  justify-content: space-between;
+
   border-radius: var(--border-radius-m);
   padding: var(--padding-m);
 
@@ -39,7 +36,7 @@ export const Card = styled.div`
 
 export const Content = styled.div`
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   justify-content: space-between;
 
   gap: var(--base-gap-small);
@@ -58,7 +55,8 @@ export const Title = styled.div`
 
 export const Thumbnail = styled(ThumbnailSimple)`
   width: 74px;
-  height: 100%;
+  min-width: 74px;
+  height: unset;
   aspect-ratio: 1.7778;
   margin: unset;
 
@@ -69,4 +67,10 @@ export const Thumbnail = styled(ThumbnailSimple)`
   img {
     object-fit: cover;
   }
+`
+
+export const Comment = styled.div`
+  margin-top: var(--base-gap-small);
+  color: var(--md-sys-color-outline);
+  word-break: break-word;
 `
