@@ -15,9 +15,7 @@ import { useProjectTableContext } from '../../../containers/ProjectTreeTable/con
 
 type User = {
   name: string
-  attrib: {
-    fullName: string
-  }
+  fullName: string
 }
 
 type Props = {}
@@ -43,9 +41,9 @@ const ProjectOverviewTable = ({}: Props) => {
 
   const options: BuiltInFieldOptions = useMemo(
     () => ({
-      assignees: users.map(({ name, attrib }) => ({
+      assignees: users.map(({ name, fullName }) => ({
         value: name,
-        label: attrib?.fullName || name,
+        label: fullName || name,
         icon: `/api/users/${name}/avatar`,
       })),
       statuses: statuses.map(({ name, color, icon }) => ({
