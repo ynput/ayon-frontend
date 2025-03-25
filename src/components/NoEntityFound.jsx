@@ -1,6 +1,7 @@
 import React from 'react'
 import styled from 'styled-components'
 import { Icon } from '@ynput/ayon-react-components'
+import getEntityTypeIcon from '@helpers/getEntityTypeIcon'
 
 const StyledNoTasks = styled.div`
   position: absolute;
@@ -39,30 +40,7 @@ const StyledNoTasks = styled.div`
 `
 
 const NoEntityFound = ({ type = 'task', icon }) => {
-  let typeIcon
-
-  switch (type) {
-    case 'task':
-      typeIcon = 'check_circle'
-      break
-    case 'workfile':
-      typeIcon = 'home_repair_service'
-      break
-    case 'folder':
-      typeIcon = 'folder'
-      break
-    case 'product':
-      typeIcon = 'inventory_2'
-      break
-    case 'version':
-      typeIcon = 'layers'
-      break
-    case 'representation':
-      typeIcon = 'view_in_ar'
-      break
-    default:
-      typeIcon = 'web_asset'
-  }
+  let typeIcon = getEntityTypeIcon(type)
 
   if (icon) typeIcon = icon
 

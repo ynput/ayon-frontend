@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react'
 
 import CodeEditor from '@uiw/react-textarea-code-editor'
-import { Dialog } from 'primereact/dialog'
-import { Button, SaveButton } from '@ynput/ayon-react-components'
+import { Button, SaveButton, Dialog } from '@ynput/ayon-react-components'
 import { toast } from 'react-toastify'
 
 import styled from 'styled-components'
@@ -10,8 +9,8 @@ import styled from 'styled-components'
 import {
   useSetRawAddonSettingsOverridesMutation,
   useLazyGetRawAddonSettingsOverridesQuery,
-} from '/src/services/addonSettings'
-import copyToClipboard from '/src/helpers/copyToClipboard'
+} from '@queries/addonSettings'
+import copyToClipboard from '@helpers/copyToClipboard'
 
 const EditorWrapper = styled.div`
   position: relative;
@@ -31,6 +30,7 @@ const EditorWrapper = styled.div`
   }
   .w-tc-editor {
     flex-grow: 1;
+    overflow: unset !important;
     * {
       font-family: monospace !important;
       font-size: 12px;
@@ -126,7 +126,13 @@ const RawSettingsDialog = ({
   const footer = (
     <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'flex-end' }}>
       <Button label="Copy" icon="content_copy" onClick={() => copyToClipboard(code)} />
-      <SaveButton label="Save" icon="save" active={!warn} onClick={onSave} />
+      <SaveButton
+        style={{ marginLeft: '8px' }}
+        label="Save"
+        icon="save"
+        active={!warn}
+        onClick={onSave}
+      />
     </div>
   )
 
@@ -134,9 +140,10 @@ const RawSettingsDialog = ({
     <Dialog
       header={`${addonName} ${addonVersion} ${variant} raw settings`}
       footer={footer}
-      visible={true}
+      isOpen={true}
       style={{ width: '800px', maxWidth: '1000px' }}
-      onHide={() => onClose()}
+      onClose={() => onClose()}
+      size="lg"
     >
       {warn && (
         <Warning onClick={() => setWarn(false)}>
@@ -154,7 +161,7 @@ const RawSettingsDialog = ({
       )}
       <EditorWrapper>
         <CodeEditor
-          wrap={false}
+          wrap="false"
           value={code}
           language="json"
           placeholder="Please enter JS code."

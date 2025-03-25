@@ -1,8 +1,9 @@
 import React from 'react'
 import { useSelector } from 'react-redux'
 import styled from 'styled-components'
-import { useGetProjectDashboardActivityQuery } from '/src/services/getProjectDashboard'
+import { useGetProjectDashboardActivityQuery } from '@queries/getProjectDashboard'
 import { EntityCard } from '@ynput/ayon-react-components'
+import { productTypes } from '@state/project'
 
 const GridStyled = styled.div`
   /* 1 row, 3 columns */
@@ -13,7 +14,7 @@ const GridStyled = styled.div`
   grid-template-rows: auto;
   grid-auto-rows: 0;
   overflow-y: clip;
-  column-gap: 8px;
+  column-gap: var(--base-gap-large);
 
   /* span error message */
   & > span {
@@ -28,7 +29,7 @@ const EntityCardStyled = styled(EntityCard)`
   &.isPlaceholder {
     &::after,
     .thumbnail::after,
-    .inner-card::after {
+    .tag::after {
       display: none;
     }
 
@@ -53,7 +54,7 @@ const ProjectLatestRow = ({
   onEntityClick,
 }) => {
   const project = useSelector((state) => state.project)
-  const { productTypes, folders, tasks, statuses } = project
+  const { folders, tasks, statuses } = project
   // transform args object to graphql arguments string
   // {sortBy: "updatedAt", last: 4, statuses: ["On hold"]} => `sortBy: "updatedAt", last: 4, statuses: ["On hold"]`
   const argsString = Object.keys(args)
@@ -128,20 +129,21 @@ const ProjectLatestRow = ({
               key={`${rowIndex}-${index}`}
               title={entity.name}
               titleIcon={entity.typeIcon}
-              subTitle={entity.footer}
+              imageIcon={entity.typeIcon}
+              header={entity.footer}
               className={entity.className}
               imageUrl={
-                !isLoadingData && projectName &&
-                `/api/projects/${projectName}/${entity.thumbnailEntityType}s/${
-                  entity.thumbnailEntityId
-                }/thumbnail?updatedAt=${entity.updatedAt}`
+                !isLoadingData &&
+                projectName &&
+                entity.thumbnailId &&
+                `/api/projects/${projectName}/${entity.thumbnailEntityType}s/${entity.thumbnailEntityId}/thumbnail?updatedAt=${entity.updatedAt}`
               }
               style={{
                 minWidth: 'unset',
               }}
               isLoading={isLoadingData}
+              loadingSections={['header', 'title']}
               onClick={() => onEntityClick(entity)}
-              isFullHighlight
             />
           ),
       )}

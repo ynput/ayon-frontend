@@ -1,19 +1,63 @@
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { TablePanel, Section } from '@ynput/ayon-react-components'
-import UserImage from '/src/components/UserImage'
+import UserImage from '@components/UserImage'
 
 import './users.scss'
 
 import { useMemo } from 'react'
 import styled from 'styled-components'
-import useCreateContext from '/src/hooks/useCreateContext'
+import useCreateContext from '@hooks/useCreateContext'
+import clsx from 'clsx'
+import useTableLoadingData from '@hooks/useTableLoadingData'
+import { useGetUserPoolsQuery } from '@queries/auth/getAuth'
+import { accessGroupsSortFunction, userPoolSortFunction } from './tableSorting'
 
 const StyledProfileRow = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--base-gap-large);
 `
+
+const StyledLicenseRow = styled.div`
+  &.invalid {
+    color: var(--md-sys-color-error);
+  }
+`
+
+export const ProfileRow = ({ rowData }) => {
+  const { name, self, isMissing } = rowData
+  return (
+    <StyledProfileRow>
+      <UserImage
+        name={name}
+        size={25}
+        style={{
+          transform: 'scale(0.8)',
+          minHeight: 25,
+          minWidth: 25,
+          maxHeight: 25,
+          maxWidth: 25,
+        }}
+        highlight={self}
+      />
+      <span
+        style={{
+          color: isMissing ? 'var(--color-hl-error)' : 'inherit',
+        }}
+      >
+        {name}
+      </span>
+    </StyledProfileRow>
+  )
+}
+
+const getUserRole = (user) => {
+  if (user.isAdmin) return 'Admin'
+  if (user.isService) return 'Service'
+  if (user.isManager) return 'Manager'
+  return 'User'
+}
 
 const UserList = ({
   selectedProjects,
@@ -21,17 +65,28 @@ const UserList = ({
   userList,
   tableList,
   setShowRenameUser,
+  setShowDeleteUser,
   setShowSetPassword,
-  onDelete,
   isLoading,
   onSelectUsers,
   isSelfSelected,
 }) => {
+  // GET LICENSE USER POOLS
+  const { data: userPools = [] } = useGetUserPoolsQuery()
+
   // Selection
-  const selection = useMemo(
-    () => userList.filter((user) => selectedUsers.includes(user.name)),
-    [selectedUsers, selectedProjects, userList],
-  )
+  const selection = useMemo(() => {
+    return userList.filter((user) => selectedUsers.includes(user.name))
+  }, [selectedUsers, selectedProjects, userList])
+
+  const onContextMenu = (e) => {
+    let newSelectedUsers = [...selectedUsers]
+    if (!selectedUsers.includes(e.data.name)) {
+      newSelectedUsers = [e.data.name]
+    }
+    onSelectUsers(newSelectedUsers)
+    ctxMenuShow(e.originalEvent, ctxMenuItems(newSelectedUsers))
+  }
 
   const onSelectionChange = (e) => {
     if (!onSelectUsers) return
@@ -40,9 +95,9 @@ const UserList = ({
     onSelectUsers(result)
   }
 
-  // IDEA: Can these go into the details panel aswell?
-  const ctxMenuTableItems = useMemo(
-    () => [
+  // IDEA: Can these go into the details panel as well?
+  const ctxMenuItems = (newSelectedUsers) => {
+    return [
       {
         label: 'Set username',
         disabled: selection.length !== 1,
@@ -58,61 +113,33 @@ const UserList = ({
       {
         label: 'Delete selected',
         disabled: !selection.length || isSelfSelected,
-        command: () => onDelete(),
+        command: () => setShowDeleteUser(newSelectedUsers),
         icon: 'delete',
         danger: true,
       },
-    ],
-    [selection, isSelfSelected, setShowRenameUser, setShowSetPassword, onDelete],
-  )
-
-  const [ctxMenuTableShow] = useCreateContext(ctxMenuTableItems)
-
-  const ProfileRow = ({ rowData }) => {
-    const { name, self } = rowData
-    return (
-      <StyledProfileRow>
-        <UserImage
-          name={name}
-          size={25}
-          style={{ margin: 'auto', transform: 'scale(0.8)', maxHeight: 25, maxWidth: 25 }}
-          highlight={self}
-        />
-        <span>{self ? `${name} (me)` : name}</span>
-      </StyledProfileRow>
-    )
+    ]
   }
 
-  // create 10 dummy rows
-  const loadingData = useMemo(() => {
-    return Array.from({ length: 10 }, (_, i) => ({
-      key: i,
-      data: {},
-    }))
-  }, [])
+  const [ctxMenuShow] = useCreateContext()
 
-  if (isLoading) {
-    tableList = loadingData
-  }
+  const tableData = useTableLoadingData(tableList, isLoading, 40, 'name')
+
+  const findUserPool = (poolId) => userPools.find((p) => p.id === poolId)
+
   // Render
-
   return (
     <Section wrap>
       <TablePanel>
         <DataTable
-          value={tableList}
+          value={tableData}
           scrollable="true"
           scrollHeight="flex"
           dataKey="name"
           selectionMode="multiple"
-          className={`user-list-table ${isLoading ? 'table-loading' : ''}`}
+          className={clsx('user-list-table', { loading: isLoading })}
+          rowClassName={(rowData) => clsx({ inactive: !rowData.active, loading: isLoading })}
           onSelectionChange={onSelectionChange}
-          onContextMenu={(e) => ctxMenuTableShow(e.originalEvent)}
-          onContextMenuSelectionChange={(e) => {
-            if (!selectedUsers.includes(e.value.name)) {
-              onSelectUsers([...selection, e.value.name])
-            }
-          }}
+          onContextMenu={onContextMenu}
           selection={selection}
           columnResizeMode="expand"
           resizableColumns
@@ -125,29 +152,42 @@ const UserList = ({
             field="name"
             header="Username"
             sortable
-            body={(rowData) => ProfileRow({ rowData })}
+            body={(rowData) => !isLoading && <ProfileRow rowData={rowData} />}
             resizeable
-            style={{ width: 150 }}
           />
           <Column field="attrib.fullName" header="Full name" sortable resizeable />
           <Column field="attrib.email" header="Email" sortable />
+          {!!userPools.length && (
+            <Column
+              field="userPool"
+              header="License"
+              body={(rowData) => {
+                const pool = findUserPool(rowData.userPool)
+                return (
+                  <StyledLicenseRow className={clsx({ invalid: rowData.userPool && !pool })}>
+                    {rowData.userPool ? pool?.label || 'Invalid' : ''}
+                  </StyledLicenseRow>
+                )
+              }}
+              sortable
+              sortFunction={(event) => userPoolSortFunction(event, userPools)}
+              resizeable
+            />
+          )}
           <Column
-            field={'accessGroupList'}
-            header="Project access"
-            body={(rowData) =>
-              rowData &&
-              rowData.accessGroups &&
-              [...Object.keys(rowData.accessGroups)]
-                .sort((a, b) => a.localeCompare(b))
-                .map((agName, i, arr) => (
-                  <span key={agName} className={rowData.accessGroups[agName].cls}>
-                    {agName}
-                    {i < arr.length - 1 ? ', ' : ''}
-                  </span>
-                ))
-            }
+            field={'accessLevel'}
+            header="Access level"
+            body={(rowData) => getUserRole(rowData)}
+            sortFunction={accessGroupsSortFunction}
             sortable
             resizeable
+          />
+          <Column
+            field="defaultAccessGroups"
+            header="Default projects access"
+            sortable
+            resizeable
+            body={(rowData) => rowData.defaultAccessGroups?.join(', ')}
           />
           <Column
             header="Has password"

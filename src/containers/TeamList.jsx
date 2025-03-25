@@ -4,7 +4,9 @@ import { TablePanel, Section } from '@ynput/ayon-react-components'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { useEffect } from 'react'
-import useCreateContext from '../hooks/useCreateContext'
+import useCreateContext from '@hooks/useCreateContext'
+import clsx from 'clsx'
+import useTableLoadingData from '@hooks/useTableLoadingData'
 
 const TeamList = ({
   teams,
@@ -107,13 +109,15 @@ const TeamList = ({
   // create the ref and model
   const [tableContextMenuShow] = useCreateContext(tableContextItems)
 
+  const tableData = useTableLoadingData(teamList, isLoading, 10, 'name')
+
   return (
     <>
       <Section style={{ minWidth: 150, maxWidth: 200, ...styleSection }} className={className}>
         {footer}
-        <TablePanel loading={isLoading} onContextMenu={globalContextMenuShow}>
+        <TablePanel onContextMenu={globalContextMenuShow}>
           <DataTable
-            value={teamList}
+            value={tableData}
             scrollable="true"
             scrollHeight="flex"
             selectionMode={'multiple'}
@@ -124,6 +128,9 @@ const TeamList = ({
             onRowClick={onRowClick}
             onContextMenu={(e) => tableContextMenuShow(e.originalEvent)}
             onContextMenuSelectionChange={onContextMenuSelectionChange}
+            className={clsx({ loading: isLoading })}
+            rowClassName={(rowData) => clsx({ loading: rowData.isLoading })}
+            emptyMessage="No teams found"
           >
             <Column field="name" header="Team" style={{ minWidth: 150, ...style }} />
           </DataTable>

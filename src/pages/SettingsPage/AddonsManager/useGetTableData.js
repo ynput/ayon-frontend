@@ -12,7 +12,7 @@ const useGetTableData = (
     [addonsVersionsBundles],
   )
 
-  const [filteredVersionsMap, versionsTableData] = useMemo(
+  const [filteredVersionsMap, versionsTableData, versionSort] = useMemo(
     () => transformVersionsTable(addonsVersionsBundles, selectedAddons, deletedVersions),
     [selectedAddons, addonsVersionsBundles, deletedVersions],
   )
@@ -22,7 +22,7 @@ const useGetTableData = (
     [addonsVersionsBundles, selectedAddons, selectedVersions],
   )
 
-  return { addonsTableData, versionsTableData, bundlesTableData, filteredVersionsMap }
+  return { addonsTableData, versionsTableData, bundlesTableData, filteredVersionsMap, versionSort }
 }
 
 export default useGetTableData

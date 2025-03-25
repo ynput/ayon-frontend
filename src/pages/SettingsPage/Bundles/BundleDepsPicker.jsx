@@ -12,9 +12,10 @@ const BundleDepsPicker = ({
 }) => {
   const options = useMemo(
     () =>
-      packages
+      [...packages]
         .filter((p) => p.platform === value?.platform)
-        .map((p) => ({ label: p.filename, value: p.filename })),
+        .map((p) => ({ label: p.filename, value: p.filename }))
+        .sort((a, b) => b.label.localeCompare(a.label)),
     [packages],
   )
 

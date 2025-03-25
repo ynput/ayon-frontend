@@ -1,43 +1,76 @@
-import ayonClient from '/src/ayon'
+import ayonClient from '@/ayon'
 import axios from 'axios'
 import { ErrorBoundary } from 'react-error-boundary'
 import { useEffect, useState, Suspense, lazy, useMemo } from 'react'
+
 import { useSelector, useDispatch } from 'react-redux'
 import { Routes, Route, Navigate, BrowserRouter } from 'react-router-dom'
 import { QueryParamProvider } from 'use-query-params'
 import { ReactRouter6Adapter } from 'use-query-params/adapters/react-router-6'
-import { toast } from 'react-toastify'
 
-import Header from './containers/header'
-import LoginPage from './pages/LoginPage'
-import ErrorPage from './pages/ErrorPage'
+// pages
+import LoginPage from '@pages/LoginPage'
+import ErrorPage from '@pages/ErrorPage'
+import LoadingPage from '@pages/LoadingPage'
+import OnBoardingPage from '@pages/OnBoarding'
+const MarketPage = lazy(() => import('@pages/MarketPage'))
+const InboxPage = lazy(() => import('@pages/InboxPage'))
+const ProjectPage = lazy(() => import('@pages/ProjectPage'))
+const ProjectManagerPage = lazy(() => import('@pages/ProjectManagerPage'))
+const ExplorerPage = lazy(() => import('@pages/ExplorerPage'))
+const APIDocsPage = lazy(() => import('@pages/APIDocsPage'))
+const AccountPage = lazy(() => import('@pages/AccountPage'))
+const SettingsPage = lazy(() => import('@pages/SettingsPage'))
+const EventsPage = lazy(() => import('@pages/EventsPage'))
+const ServicesPage = lazy(() => import('@pages/ServicesPage'))
+const UserDashboardPage = lazy(() => import('@pages/UserDashboardPage'))
+const PasswordResetPage = lazy(() => import('@pages/PasswordResetPage'))
 
-const ProjectPage = lazy(() => import('./pages/ProjectPage'))
-const ProjectManagerPage = lazy(() => import('./pages/ProjectManagerPage'))
-const ExplorerPage = lazy(() => import('./pages/ExplorerPage'))
-const APIDocsPage = lazy(() => import('./pages/APIDocsPage'))
-const AccountPage = lazy(() => import('./pages/AccountPage'))
-const SettingsPage = lazy(() => import('./pages/SettingsPage'))
-const EventsPage = lazy(() => import('./pages/EventsPage'))
-const ServicesPage = lazy(() => import('./pages/ServicesPage'))
-const UserDashboardPage = lazy(() => import('./pages/UserDashboardPage'))
-const PasswordResetPage = lazy(() => import('./pages/PasswordResetPage'))
-
-import { login } from './features/user'
-import ProtectedRoute from './containers/ProtectedRoute'
-import ShareDialog from './components/ShareDialog'
-import ErrorFallback from './components/ErrorFallback'
-import { useLazyGetInfoQuery } from './services/auth/getAuth'
-import { ContextMenuProvider } from './context/contextMenuContext'
-import { ShortcutsProvider } from './context/shortcutsContext'
-import { GlobalContextMenu } from './components/GlobalContextMenu'
-import LoadingPage from './pages/LoadingPage'
+// components
+import ShareDialog from '@components/ShareDialog'
+import ErrorFallback from '@components/ErrorFallback'
+import { GlobalContextMenu } from '@components/GlobalContextMenu'
+import Favicon from '@components/Favicon/Favicon'
 import { ConfirmDialog } from 'primereact/confirmdialog'
-import OnBoardingPage from './pages/OnBoarding'
-import useTooltip from './hooks/Tooltip/useTooltip'
-import MarketPage from './pages/MarketPage'
-import { RestartProvider } from './context/restartContext'
-import { PasteProvider, PasteModal } from './context/pasteContext'
+import { toast } from 'react-toastify'
+import TrialBanner from '@components/TrialBanner/TrialBanner'
+
+// context
+import { ContextMenuProvider } from '@context/contextMenuContext'
+import { ShortcutsProvider } from '@context/shortcutsContext'
+import { RestartProvider } from '@context/restartContext'
+import { PasteProvider, PasteModal } from '@context/pasteContext'
+import { URIProvider } from '@context/uriContext'
+import { NotificationsProvider } from '@context/notificationsContext'
+import { CustomerlyProvider } from 'react-live-chat-customerly'
+import { PiPProvider } from '@context/pip/PiPProvider'
+import { RemoteModulesProvider } from '@/remote/remoteModulesContext'
+import { PowerpackProvider } from '@context/powerpackContext'
+
+// containers
+import Header from '@containers/header'
+import ProtectedRoute from '@containers/ProtectedRoute'
+import FileUploadPreview from '@containers/FileUploadPreview/FileUploadPreview'
+import { ViewerDialog } from '@containers/Viewer'
+
+// state
+import { login } from '@state/user'
+
+// queries
+import { useLazyGetInfoQuery } from '@queries/auth/getAuth'
+import { useGetYnputCloudInfoQuery } from '@queries/cloud/cloud'
+
+// hooks
+import useTooltip from '@hooks/Tooltip/useTooltip'
+import WatchActivities from './containers/WatchActivities'
+import LauncherAuthPage from '@pages/LauncherAuthPage'
+import ReleaseInstallerDialog from '@containers/ReleaseInstallerDialog/ReleaseInstallerDialog'
+import getTrialDates from '@components/TrialBanner/helpers/getTrialDates'
+import TrialEnded from '@containers/TrialEnded/TrialEnded'
+import DetailsPanelFloating from '@containers/DetailsPanel/DetailsPanelFloating/DetailsPanelFloating'
+import PowerpackDialog from '@components/Powerpack/PowerpackDialog'
+import AppRemoteLoader from './remote/Loaders/AppRemoteLoader'
+import Customerly from '@components/Customerly'
 
 const App = () => {
   const user = useSelector((state) => state.user)
@@ -66,12 +99,17 @@ const App = () => {
   // and to acquire server settings
   const [getInfo] = useLazyGetInfoQuery()
 
+  // get subscriptions info
+  const { data: ynputConnect } = useGetYnputCloudInfoQuery()
+  const { isTrialing, left } = getTrialDates(ynputConnect?.subscriptions)
+
   useEffect(() => {
     setLoading(true)
+
     getInfo()
       .unwrap()
       .then((response) => {
-        setNoAdminUser(!!response.noAdminUser)
+        setNoAdminUser(!!response?.noAdminUser)
 
         if (response.onboarding) {
           setIsOnboarding(true)
@@ -86,6 +124,9 @@ const App = () => {
               accessToken: storedAccessToken,
             }),
           )
+
+          // clear any auth-redirect-params local storage
+          localStorage.removeItem('auth-redirect-params')
 
           if (!response.attributes.length) {
             toast.error('Unable to load attributes. Something is wrong')
@@ -113,116 +154,166 @@ const App = () => {
   const [handleMouse, tooltipComponent] = useTooltip()
 
   useEffect(() => {
-    const root = document.getElementById('root')
-    const portal = document.body.lastElementChild
+    const body = document.body
 
-    // attach mouseOver event listener to root element
-    root.addEventListener('mouseover', handleMouse)
-
-    if (portal) {
-      portal.addEventListener('mouseover', handleMouse)
-    }
+    // attach mouseOver event listener to body element
+    body.addEventListener('mouseover', handleMouse)
 
     // cleanup
     return () => {
-      root.removeEventListener('mouseover', handleMouse)
-      if (portal) {
-        portal.removeEventListener('mouseover', handleMouse)
-      }
+      body.removeEventListener('mouseover', handleMouse)
     }
   }, [])
 
   const isUser = user?.data?.isUser
 
+  const PROJECT_ID = 'e9c7c6ee'
+
   // DEFINE ALL HIGH LEVEL COMPONENT PAGES HERE
   const mainComponent = useMemo(
     () => (
-      <ErrorBoundary FallbackComponent={ErrorFallback}>
+      <>
+        <Favicon />
+        <WatchActivities />
         <Suspense fallback={<LoadingPage />}>
           <RestartProvider>
-            <ContextMenuProvider>
-              <GlobalContextMenu />
-              <PasteProvider>
-                <PasteModal />
-                <BrowserRouter>
-                  <ShortcutsProvider>
-                    <QueryParamProvider
-                      adapter={ReactRouter6Adapter}
-                      options={{
-                        updateType: 'replaceIn',
-                      }}
-                    >
-                      <Header />
-                      <ShareDialog />
-                      <ConfirmDialog />
-                      <Routes>
-                        <Route
-                          path="/"
-                          exact
-                          element={<Navigate replace to="/dashboard/tasks" />}
-                        />
-                        <Route
-                          path="/manageProjects"
-                          exact
-                          element={<Navigate replace to="/manageProjects/anatomy" />}
-                        />
+            <PowerpackProvider>
+              <RemoteModulesProvider>
+                <ContextMenuProvider>
+                  <GlobalContextMenu />
+                  <PasteProvider>
+                    <PasteModal />
+                    <BrowserRouter>
+                      <NotificationsProvider>
+                        <URIProvider>
+                          <CustomerlyProvider appId={PROJECT_ID}>
+                            <ShortcutsProvider>
+                              <PiPProvider>
+                                <QueryParamProvider
+                                  adapter={ReactRouter6Adapter}
+                                  options={{
+                                    updateType: 'replaceIn',
+                                  }}
+                                >
+                                  <Header />
+                                  <ShareDialog />
+                                  <ViewerDialog />
+                                  <ConfirmDialog />
+                                  <FileUploadPreview />
+                                  <ReleaseInstallerDialog />
+                                  <Routes>
+                                    <Route
+                                      path="/"
+                                      exact
+                                      element={<Navigate replace to="/dashboard/tasks" />}
+                                    />
 
-                        <Route
-                          path="/dashboard"
-                          element={<Navigate replace to="/dashboard/tasks" />}
-                        />
-                        <Route path="/dashboard/:module" exact element={<UserDashboardPage />} />
+                                    <Route
+                                      path="/dashboard"
+                                      element={<Navigate replace to="/dashboard/tasks" />}
+                                    />
+                                    <Route
+                                      path="/dashboard/:module"
+                                      exact
+                                      element={<UserDashboardPage />}
+                                    />
+                                    <Route
+                                      path="/dashboard/addon/:addonName"
+                                      exact
+                                      element={<UserDashboardPage />}
+                                    />
 
-                        <Route path="/manageProjects/:module" element={<ProjectManagerPage />} />
-                        <Route path={'/projects/:projectName/:module'} element={<ProjectPage />} />
-                        <Route
-                          path={'/projects/:projectName/addon/:addonName'}
-                          element={<ProjectPage />}
-                        />
-                        <Route
-                          path="/settings"
-                          exact
-                          element={<Navigate replace to="/settings/anatomyPresets" />}
-                        />
-                        <Route path="/settings/:module" exact element={<SettingsPage />} />
-                        <Route path="/settings/addon/:addonName" exact element={<SettingsPage />} />
-                        <Route
-                          path="/services"
-                          element={
-                            <ProtectedRoute isAllowed={!isUser} redirectPath="/">
-                              <ServicesPage />
-                            </ProtectedRoute>
-                          }
-                        />
-                        <Route
-                          path="/market"
-                          element={
-                            <ProtectedRoute isAllowed={!isUser} redirectPath="/">
-                              <MarketPage />
-                            </ProtectedRoute>
-                          }
-                        />
-                        <Route path="/explorer" element={<ExplorerPage />} />
-                        <Route path="/doc/api" element={<APIDocsPage />} />
-                        <Route
-                          path="/account"
-                          exact
-                          element={<Navigate replace to="/account/profile" />}
-                        />
-                        <Route path="/account/:module" exact element={<AccountPage />} />
-                        <Route path="/events" element={<EventsPage />} />
-                        <Route element={<ErrorPage code="404" />} />
-                      </Routes>
-                    </QueryParamProvider>
-                  </ShortcutsProvider>
-                </BrowserRouter>
-              </PasteProvider>
-            </ContextMenuProvider>
+                                    <Route
+                                      path="/manageProjects"
+                                      element={<ProjectManagerPage />}
+                                    />
+                                    <Route
+                                      path="/manageProjects/:module"
+                                      element={<ProjectManagerPage />}
+                                    />
+                                    <Route
+                                      path={'/projects/:projectName/:module'}
+                                      element={<ProjectPage />}
+                                    />
+                                    <Route
+                                      path={'/projects/:projectName/addon/:addonName'}
+                                      element={<ProjectPage />}
+                                    />
+                                    <Route
+                                      path="/settings"
+                                      exact
+                                      element={<Navigate replace to="/settings/anatomyPresets" />}
+                                    />
+                                    <Route
+                                      path="/settings/:module"
+                                      exact
+                                      element={<SettingsPage />}
+                                    />
+                                    <Route
+                                      path="/settings/addon/:addonName"
+                                      exact
+                                      element={<SettingsPage />}
+                                    />
+                                    <Route
+                                      path="/services"
+                                      element={
+                                        <ProtectedRoute isAllowed={!isUser} redirectPath="/">
+                                          <ServicesPage />
+                                        </ProtectedRoute>
+                                      }
+                                    />
+                                    <Route
+                                      path="/market"
+                                      element={
+                                        <ProtectedRoute isAllowed={!isUser} redirectPath="/">
+                                          <MarketPage />
+                                        </ProtectedRoute>
+                                      }
+                                    />
+
+                                    <Route path="/inbox/:module" exact element={<InboxPage />} />
+                                    <Route
+                                      path="/inbox"
+                                      exact
+                                      element={<Navigate to="/inbox/important" />}
+                                    />
+
+                                    <Route path="/explorer" element={<ExplorerPage />} />
+                                    <Route path="/doc/api" element={<APIDocsPage />} />
+                                    <Route
+                                      path="/account"
+                                      exact
+                                      element={<Navigate replace to="/account/profile" />}
+                                    />
+                                    <Route
+                                      path="/account/:module"
+                                      exact
+                                      element={<AccountPage />}
+                                    />
+                                    <Route path="/events" element={<EventsPage />} />
+                                    <Route element={<ErrorPage code="404" />} />
+                                  </Routes>
+                                  <DetailsPanelFloating />
+                                  <PowerpackDialog />
+                                  <AppRemoteLoader />
+                                  <TrialBanner />
+                                </QueryParamProvider>
+                              </PiPProvider>
+                            </ShortcutsProvider>
+                            <Customerly />
+                          </CustomerlyProvider>
+                        </URIProvider>
+                      </NotificationsProvider>
+                    </BrowserRouter>
+                  </PasteProvider>
+                </ContextMenuProvider>
+              </RemoteModulesProvider>
+            </PowerpackProvider>
           </RestartProvider>
         </Suspense>
-      </ErrorBoundary>
+      </>
     ),
-    [isUser],
+    [isUser, isTrialing],
   )
 
   const loadingComponent = useMemo(() => <LoadingPage />, [])
@@ -258,6 +349,12 @@ const App = () => {
 
   if (loading) return loadingComponent
 
+  // Get authorize_url from query params
+  const urlParams = new URLSearchParams(window.location.search)
+  const authRedirect = urlParams.get('auth_redirect')
+  // return launcher auth flow
+  if (authRedirect) return <LauncherAuthPage user={user} redirect={authRedirect} />
+
   if (window.location.pathname.startsWith('/passwordReset')) {
     if (!user.name) return <PasswordResetPage />
     else window.history.replaceState({}, document.title, '/')
@@ -273,6 +370,18 @@ const App = () => {
     )
   }
 
+  // Trial has finished
+  if (isTrialing && left?.finished) {
+    return (
+      <BrowserRouter>
+        <CustomerlyProvider appId={PROJECT_ID}>
+          <TrialEnded orgName={ynputConnect.orgName} />
+        </CustomerlyProvider>
+      </BrowserRouter>
+    )
+  }
+
+  // user needs to go through onboarding
   if (isOnboarding || noAdminUser) {
     return (
       <>
@@ -298,7 +407,11 @@ const App = () => {
 
   return (
     <>
-      {mainComponent}
+      {import.meta.env.DEV && mainComponent}
+
+      {!import.meta.env.DEV && (
+        <ErrorBoundary FallbackComponent={ErrorFallback}>{mainComponent}</ErrorBoundary>
+      )}
       {tooltipComponent}
     </>
   )

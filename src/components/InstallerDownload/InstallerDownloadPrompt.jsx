@@ -1,5 +1,5 @@
 import React from 'react'
-import useLocalStorage from '/src/hooks/useLocalStorage'
+import useLocalStorage from '@hooks/useLocalStorage'
 import * as Styled from './InstallerDownloadPrompt.styled'
 import useGetInstallerDownload from './useGetInstallerDownload'
 
@@ -33,12 +33,11 @@ const InstallerDownloadPrompt = () => {
     <Styled.Container>
       {directDownload && (
         <Styled.DownloadButton icon={'install_desktop'} onClick={handleDirectDownload}>
-          Download Launcher
+          Download launcher
         </Styled.DownloadButton>
       )}
 
       <Styled.CloseButton
-        $isSpecial={true}
         icon="close"
         onClick={() => setInstallersDownloaded([...installersDownloaded, directDownload.filename])}
       />

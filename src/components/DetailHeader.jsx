@@ -1,11 +1,10 @@
 import React, { useState } from 'react'
 import PropTypes from 'prop-types'
 import styled from 'styled-components'
-import { Panel, Button } from '@ynput/ayon-react-components'
-import { Dialog } from 'primereact/dialog'
+import { Panel, Button, Dialog } from '@ynput/ayon-react-components'
 
 const HeaderStyled = styled(Panel)`
-  gap: 8px;
+  gap: var(--base-gap-large);
   align-items: center;
   flex-direction: row;
   justify-content: space-between;
@@ -20,10 +19,17 @@ const HeaderStyled = styled(Panel)`
 
   & > div {
     display: flex;
-    gap: 8px;
+    gap: var(--base-gap-large);
     align-items: center;
     flex: 1;
     overflow-x: clip;
+  }
+`
+const DialogStyled = styled(Dialog)`
+  pre {
+    white-space: pre-wrap;
+    max-width: 800px;
+    word-break: break-all;
   }
 `
 
@@ -31,35 +37,26 @@ const DetailHeader = ({ children, onClose, style, context, dialogTitle = '' }) =
   const [showContext, setShowContext] = useState(false)
 
   return (
-    <>
-      <Dialog
+    <HeaderStyled style={style}>
+      <div style={{ overflow: 'hidden' }}>{children}</div>
+      {context && (
+        <Button
+          icon="more_vert"
+          variant="text"
+          onClick={() => setShowContext(!showContext)}
+          data-tooltip="Full context data"
+        />
+      )}
+      {onClose && <Button icon="close" variant="text" onClick={onClose} />}
+      <DialogStyled
         header={dialogTitle}
-        visible={showContext}
-        onHide={() => setShowContext(false)}
-        appendTo={document.getElementById('root')}
+        isOpen={showContext}
+        onClose={() => setShowContext(false)}
+        size="full"
       >
-        <pre
-          style={{
-            whiteSpace: 'pre-wrap',
-            maxWidth: '800px',
-          }}
-        >
-          {JSON.stringify(context, null, 2)}
-        </pre>
-      </Dialog>
-      <HeaderStyled style={style}>
-        <div>{children}</div>
-        {context && (
-          <Button
-            icon="more_vert"
-            variant="text"
-            onClick={() => setShowContext(!showContext)}
-            data-tooltip="Full context data"
-          />
-        )}
-        {onClose && <Button icon="close" variant="text" onClick={onClose} />}
-      </HeaderStyled>
-    </>
+        <pre>{JSON.stringify(context, null, 2)}</pre>
+      </DialogStyled>
+    </HeaderStyled>
   )
 }
 

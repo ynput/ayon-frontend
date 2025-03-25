@@ -1,4 +1,4 @@
-import { ayonApi } from './ayon'
+import api from '@api'
 import {
   FOLDER_TILE_FRAGMENT,
   PRODUCT_TILE_FRAGMENT,
@@ -44,7 +44,7 @@ const buildActivityQuery = (entities = [], args, name) => {
   return query
 }
 
-const getProjectDashboard = ayonApi.injectEndpoints({
+const getProjectDashboard = api.injectEndpoints({
   endpoints: (build) => ({
     getProjectDashboard: build.query({
       query: ({ projectName, panel }) => ({
@@ -65,6 +65,7 @@ const getProjectDashboard = ayonApi.injectEndpoints({
       providesTags: ['folder', 'task', 'version', 'product'],
     }),
   }),
+  overrideExisting: true,
 })
 
 export const { useGetProjectDashboardQuery, useGetProjectDashboardActivityQuery } =

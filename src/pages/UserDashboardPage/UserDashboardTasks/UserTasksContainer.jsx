@@ -1,35 +1,82 @@
 import { useDispatch, useSelector } from 'react-redux'
 import {
-  useGetKanBanQuery,
-  useGetKanBanUsersQuery,
-} from '/src/services/userDashboard/getUserDashboard'
+  useGetKanbanProjectUsersQuery,
+  useGetKanbanQuery,
+} from '@queries/userDashboard/getUserDashboard'
 
 import UserDashboardKanBan from './UserDashboardKanBan'
 import { useEffect, useMemo } from 'react'
-import { onAssigneesChanged } from '/src/features/dashboard'
+import { onAssigneesChanged } from '@state/dashboard'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
-import UserDashboardDetails from './UserDashboardDetails/UserDashboardDetails'
+import DetailsPanel from '@containers/DetailsPanel/DetailsPanel'
 import { getIntersectionFields, getMergedFields } from '../util'
-import { Section } from '@ynput/ayon-react-components'
-import { setUri } from '/src/features/context'
+import { setUri } from '@state/context'
+import DetailsPanelSlideOut from '@containers/DetailsPanel/DetailsPanelSlideOut/DetailsPanelSlideOut'
+import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
+import transformKanbanTasks from './transformKanbanTasks'
+import styled from 'styled-components'
+import clsx from 'clsx'
+import { toggleDetailsPanel } from '@state/details'
+import { filterProjectStatuses } from '@hooks/useScopedStatuses'
+import { useGetAttributeConfigQuery } from '@queries/attributes/getAttributes'
+import { getPriorityOptions } from '@pages/TasksProgressPage/helpers'
 
-const getThumbnailUrl = (taskId, thumbnailId, updatedAt, projectName) => {
-  if (!projectName || (!thumbnailId && !taskId)) return null
+const StyledSplitter = styled(Splitter)`
+  .details-panel-splitter {
+    /* This is a crazy hack to prevent the cursor being out of line with the dragging card */
+    &.dragging {
+      transition: max-width 0s, min-width 0s;
+      transition-delay: 0.1s;
+    }
+  }
+`
 
-  return thumbnailId
-    ? `/api/projects/${projectName}/thumbnails/${thumbnailId}?updatedAt=${updatedAt}`
-    : `/api/projects/${projectName}/tasks/${taskId}/thumbnail?updatedAt=${updatedAt}`
+export const getThumbnailUrl = ({ entityId, entityType, thumbnailId, updatedAt, projectName }) => {
+  // If projectName is not provided or neither thumbnailId nor entityId and entityType are provided, return null
+  if (!projectName || (!thumbnailId && (!entityId || !entityType))) return null
+
+  // Construct the updatedAt query parameter if updatedAt is provided
+  const updatedAtQueryParam = updatedAt ? `?updatedAt=${updatedAt}` : ''
+
+  // If entityId and entityType are provided, construct the URL using them
+  if (entityId && entityType) {
+    const entityUrl = `/api/projects/${projectName}/${entityType}s/${entityId}/thumbnail`
+    return `${entityUrl}${updatedAtQueryParam}`
+  }
+
+  // If entityId and entityType are not provided, fallback on thumbnailId
+  const thumbnailUrl = `/api/projects/${projectName}/thumbnails/${thumbnailId}`
+  return `${thumbnailUrl}${updatedAtQueryParam}`
 }
 
 const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
   const dispatch = useDispatch()
   const selectedProjects = useSelector((state) => state.dashboard.selectedProjects)
+  const isPanelOpen = useSelector((state) => state.details.open)
   const user = useSelector((state) => state.user)
   const assigneesState = useSelector((state) => state.dashboard.tasks.assignees)
-  const assigneesIsMe = useSelector((state) => state.dashboard.tasks.assigneesIsMe)
+  const assigneesFilter = useSelector((state) => state.dashboard.tasks.assigneesFilter)
+  const draggingIds = useSelector((state) => state.dashboard.tasks.draggingIds)
+  const isDragging = draggingIds.length > 0
   // Only admins and managers can see task of other users
-  const assignees = assigneesIsMe || user?.data?.isUser ? [user?.name] : assigneesState || []
+
+  let assignees = []
+  switch (assigneesFilter) {
+    case 'me':
+      assignees = [user.name]
+      break
+    case 'all':
+      assignees = []
+      break
+    case 'users':
+      assignees = assigneesState
+      break
+    default:
+      break
+  }
+
   const selectedTasks = useSelector((state) => state.dashboard.tasks.selected) || []
+  const taskTypes = useSelector((state) => state.dashboard.tasks.types) || []
 
   // once user is loaded, set assignees to user
   useEffect(() => {
@@ -50,57 +97,40 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
     isFetching: isLoadingTasks,
     isError,
     error,
-  } = useGetKanBanQuery(
+  } = useGetKanbanQuery(
     { assignees: assignees, projects: selectedProjects },
     { skip: !assignees.length || !selectedProjects?.length },
   )
+
+  // get priority attribute so we know the colors and icons for each priority
+  const { data: priorityAttrib } = useGetAttributeConfigQuery({ attributeName: 'priority' })
+  const priorities = getPriorityOptions(priorityAttrib, 'task') || []
 
   // update the uri breadcrumbs when the selected tasks change
   useEffect(() => {
     if (selectedTasks.length && !isLoadingTasks) {
       // first find task
       const task = tasks.find((t) => t.id === selectedTasks[0])
-      if (!task) return
-      // updates the breadcrumbs
-      let uri = `ayon+entity://${task.path}?task=${task.name}`
-
-      dispatch(setUri(uri))
-    } else {
-      dispatch(setUri(null))
+      if (task) {
+        // updates the breadcrumbs
+        let uri = `ayon+entity://${task.projectName}/${task.folderPath}?task=${task.name}`
+        dispatch(setUri(uri))
+        return
+      }
     }
+    // no tasks in current project or selected tasks NOT in current project
+    dispatch(setUri(null))
   }, [selectedTasks, isLoadingTasks, tasks])
 
-  // filter out tasks that don't have a assignees
-  tasks = tasks.filter((task) => task.assignees?.some((assignee) => assignees.includes(assignee)))
-
-  // add icons to tasks and also add thumbnailUrl
-  const tasksWithIcons = tasks.map((task) => {
-    const thumbnailId = task?.thumbnailId ? task?.thumbnailId : task.latestVersionThumbnailId
-    const updatedAt = task?.thumbnailId
-      ? task.updatedAt
-      : task.latestVersionUpdatedAt ?? task.updatedAt
-
-    const thumbnailUrl = getThumbnailUrl(task.id, thumbnailId, updatedAt, task.projectName)
-
-    const updatedTask = { ...task, thumbnailUrl }
-
-    const projectInfo = projectsInfo[task.projectName]
-    if (!projectInfo?.statuses) return updatedTask
-    const findStatus = projectInfo.statuses?.find((status) => status.name === task.status)
-    if (!findStatus) return updatedTask
-    const findTaskIcon = projectInfo.task_types?.find((type) => type.name === task.taskType)
-    if (!findTaskIcon) return updatedTask
-    return {
-      ...updatedTask,
-      statusIcon: findStatus?.icon,
-      statusColor: findStatus?.color,
-      taskIcon: findTaskIcon?.icon,
-    }
-  })
+  // add extra fields to tasks like: icons, thumbnailUrl, shortPath
+  const transformedTasks = useMemo(
+    () => transformKanbanTasks(tasks, { projectsInfo, isLoadingTasks, priorities }),
+    [tasks, projectsInfo, priorities, isLoadingTasks],
+  )
 
   const selectedTasksData = useMemo(
-    () => tasksWithIcons.filter((task) => selectedTasks.includes(task.id)),
-    [selectedTasks, tasks],
+    () => transformedTasks.filter((task) => selectedTasks.includes(task.id)),
+    [selectedTasks, transformedTasks],
   )
 
   // for selected tasks, get flat list of projects
@@ -117,30 +147,42 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
     [projectsInfo, isLoadingInfo],
   )
 
-  const disabledStatuses = useMemo(
-    () =>
-      statusesOptions
-        .filter(
-          (s) =>
-            !getIntersectionFields(projectsInfo, 'statuses', selectedTasksProjects).some(
-              (s2) => s2.name === s.name,
-            ),
-        )
-        .map((s) => s.name),
-    [projectsInfo, selectedTasksProjects, statusesOptions],
+  const scopedStatusesOptions = useMemo(
+    () => filterProjectStatuses(statusesOptions, ['task']),
+    [statusesOptions, isLoadingInfo],
   )
 
-  const { data: projectUsers = [] } = useGetKanBanUsersQuery(
-    { projects: selectedProjects },
-    { skip: !selectedProjects?.length },
+  const statusesIntersection = useMemo(
+    () => getIntersectionFields(projectsInfo, 'statuses', selectedTasksProjects),
+    [projectsInfo, selectedTasksProjects],
   )
+
+  const disabledStatuses = useMemo(
+    () =>
+      scopedStatusesOptions
+        .filter((s) => !statusesIntersection.some((s2) => s2.name === s.name))
+        .map((s) => s.name),
+    [projectsInfo, selectedTasksProjects, scopedStatusesOptions],
+  )
+
+  // find the intersection of all the tags of the projects for the selected tasks
+  const tagsOptions = useMemo(
+    () => getIntersectionFields(projectsInfo, 'tags', selectedTasksProjects),
+    [projectsInfo, selectedTasksProjects],
+  )
+
+  const { data: projectUsers = [], isLoading: isLoadingProjectUsers } =
+    useGetKanbanProjectUsersQuery(
+      { projects: selectedProjects },
+      { skip: !selectedProjects?.length },
+    )
 
   // for selected projects, make sure user is on all
   const [activeProjectUsers, disabledProjectUsers] = useMemo(() => {
     if (!selectedTasksProjects?.length) return [projectUsers, []]
     return projectUsers.reduce(
       (acc, user) => {
-        if (selectedTasksProjects.every((p) => user.projects.includes(p))) {
+        if (selectedTasksProjects.every((p) => user.projects?.includes(p))) {
           acc[0].push(user)
         } else {
           acc[1].push(user)
@@ -151,26 +193,20 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
     )
   }, [selectedTasksProjects, projectUsers])
 
-  const isLoadingAll = isLoadingInfo || isLoadingTasks
-  const detailsMinWidth = 400
-  const detailsMaxWidth = '40vw'
-  const detailsMaxMaxWidth = 700
+  const handlePanelClose = () => {
+    dispatch(setUri(null))
+    dispatch(toggleDetailsPanel(false))
+  }
 
-  if (isError)
-    return (
-      <Section style={{ textAlign: 'center' }}>
-        <h2>Error: Something went wrong loading your tasks. Try refreshing the page.</h2>
-        <span>assignees: {JSON.stringify(assigneesState)}</span>
-        <span>assigneesIsMe: {JSON.stringify(assigneesIsMe)}</span>
-        <span>selectedProjects: {JSON.stringify(selectedProjects)}</span>
-        <span>selectedTasks: {JSON.stringify(selectedTasks)}</span>
-        <span>userName: {JSON.stringify(user?.name)}</span>
-        <span>error: {JSON.stringify(error)}</span>
-      </Section>
-    )
+  const isLoadingAll = isLoadingInfo || isLoadingTasks
+  let detailsMinWidth = 533
+  let detailsMaxWidth = '40vw'
+  let detailsMaxMaxWidth = 700
+
+  if (isError) return <EmptyPlaceholder error={error} />
 
   return (
-    <Splitter
+    <StyledSplitter
       layout="horizontal"
       style={{
         height: '100%',
@@ -189,37 +225,50 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
         size={4}
       >
         <UserDashboardKanBan
-          tasks={tasksWithIcons}
+          tasks={transformedTasks}
           isLoading={isLoadingAll}
           projectsInfo={projectsInfo}
           taskFields={taskFields}
-          statusesOptions={statusesOptions}
+          statusesOptions={scopedStatusesOptions}
           disabledStatuses={disabledStatuses}
           disabledProjectUsers={disabledProjectUsers}
+          priorities={priorities}
+          projectUsers={projectUsers}
+          isLoadingProjectUsers={isLoadingProjectUsers}
         />
       </SplitterPanel>
-      {selectedTasksData.length ? (
+      {selectedTasksData.length && isPanelOpen ? (
         <SplitterPanel
           size={1}
+          className={clsx('details-panel-splitter', { dragging: isDragging })}
           style={{
-            maxWidth: `clamp(${detailsMinWidth}px, ${detailsMaxWidth}, ${detailsMaxMaxWidth}px)`,
-            minWidth: detailsMinWidth,
+            maxWidth: isDragging
+              ? 0
+              : `clamp(${detailsMinWidth}px, ${detailsMaxWidth}, ${detailsMaxMaxWidth}px)`,
+            minWidth: isDragging ? 0 : detailsMinWidth,
           }}
         >
-          <UserDashboardDetails
-            tasks={tasksWithIcons}
-            statusesOptions={statusesOptions}
+          <DetailsPanel
+            onClose={handlePanelClose}
+            entitiesData={selectedTasksData}
             disabledStatuses={disabledStatuses}
+            tagsOptions={tagsOptions}
             projectUsers={projectUsers}
             activeProjectUsers={activeProjectUsers}
             disabledProjectUsers={disabledProjectUsers}
             selectedTasksProjects={selectedTasksProjects}
+            projectsInfo={projectsInfo}
+            projectNames={selectedTasksProjects}
+            entityType="task"
+            entitySubTypes={taskTypes}
+            scope="dashboard"
           />
+          <DetailsPanelSlideOut projectsInfo={projectsInfo} scope="dashboard" />
         </SplitterPanel>
       ) : (
         <SplitterPanel style={{ maxWidth: 0 }}></SplitterPanel>
       )}
-    </Splitter>
+    </StyledSplitter>
   )
 }
 

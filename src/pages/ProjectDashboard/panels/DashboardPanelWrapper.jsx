@@ -51,7 +51,7 @@ const PanelStyled = styled(Panel)`
 const ContentStyled = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--base-gap-large);
   width: 100%;
   padding: 8px;
   padding-top: 0;
@@ -68,9 +68,18 @@ const IconStyled = styled(Button)`
   min-height: unset;
 `
 
-const DashboardPanelWrapper = ({ title, children, span = 1, style, stylePanel, header, icon }) => {
+const DashboardPanelWrapper = ({
+  title,
+  children,
+  span = 1,
+  style,
+  stylePanel,
+  header,
+  icon,
+  ...props
+}) => {
   return (
-    <PanelStyled span={span} style={stylePanel}>
+    <PanelStyled span={span} style={stylePanel} {...props}>
       {title && (
         <header>
           <h1>{title}</h1>

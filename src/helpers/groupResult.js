@@ -1,6 +1,6 @@
 import isGroupable from './isGroupable'
 
-const groupResult = (data, groupBy, key = 'id') => {
+const groupResult = (data = [], groupBy, key = 'id') => {
   // Transform a list of records to a TreeTable-compatible structure
   // with grouped records.
   let result = []

@@ -1,13 +1,13 @@
 import React, { useContext, useEffect, useState } from 'react'
-import { useGetInfoQuery } from '/src/services/auth/getAuth'
+import { useGetInfoQuery } from '@queries/auth/getAuth'
 import * as Styled from './util/OnBoardingStep.styled'
 import OnBoardingProvider from './util/OnBoardingContext'
 import * as Step from './Step'
 import { Navigate, useLocation } from 'react-router'
 import StepWrapper from './util/StepWrapper'
-import { useRestartServerMutation } from '/src/services/restartServer'
-import { SocketContext } from '/src/context/websocketContext'
-import ServerRestartingPage from '/src/components/ServerRestartingPage'
+import { useRestartServerMutation } from '@queries/restartServer'
+import { SocketContext } from '@context/websocketContext'
+import ServerRestartingPage from '@components/ServerRestartingPage'
 
 const OnBoardingPage = ({ noAdminUser, onFinish, isOnboarding }) => {
   const [isFinishing, setIsFinishing] = useState(false)
@@ -58,7 +58,8 @@ const OnBoardingPage = ({ noAdminUser, onFinish, isOnboarding }) => {
           <Step.ConnectionDetails step={4} />
           <Step.ReleaseSelect step={5} />
           <Step.AddonSelectStep step={6} />
-          <Step.ProgressInstall step={7} />
+          <Step.PlatformSelectStep step={7} />
+          <Step.ProgressInstall step={8} />
         </StepWrapper>
         {isFinishing && (
           <ServerRestartingPage

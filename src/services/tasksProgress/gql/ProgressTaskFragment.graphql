@@ -1,0 +1,35 @@
+fragment ProgressTaskFragment on TaskNode {
+  projectName
+  id
+  name
+  label
+  taskType
+  status
+  assignees
+  updatedAt
+  active
+  hasReviewables
+  tags
+  attrib {
+    priority
+    endDate
+    resolutionHeight
+    resolutionWidth
+    fps
+  }
+  folder {
+    id
+    name
+    label
+    folderType
+    parents
+    status
+    updatedAt
+    parent {
+      id
+      name
+      label
+      parents
+    }
+  }
+}

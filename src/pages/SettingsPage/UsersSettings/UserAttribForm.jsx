@@ -22,16 +22,22 @@ const UserAttribForm = ({
   setPasswordConfirm,
   setPassword,
   disabled,
+  showAvatarUrl = true,
+  customFormRow,
 }) => {
   // separate custom attrib
   const [builtin, custom] = attributes.reduce(
     (acc, cur) => {
       if (!cur.builtin && cur.builtin !== undefined) {
-        // add to custo,
-        acc[1].push(cur)
+        // add to custom if not already present
+        if (!acc[1].some((item) => item.name === cur.name)) {
+          acc[1].push(cur)
+        }
       } else {
-        // builtin
-        acc[0].push(cur)
+        // add to builtin if not already present
+        if (!acc[0].some((item) => item.name === cur.name)) {
+          acc[0].push(cur)
+        }
       }
 
       return acc
@@ -39,10 +45,13 @@ const UserAttribForm = ({
     [[], []],
   )
 
+  const CustomFormRow = customFormRow !== undefined ? customFormRow : FormRow;
+
   const buildForms = (attribs) =>
     attribs.map(({ name, data, input }) => {
       let widget = null
 
+      if (name === 'avatarUrl' && !showAvatarUrl) return null
       if (name.includes('password') && setPassword) {
         widget = (
           <InputPassword
@@ -106,9 +115,9 @@ const UserAttribForm = ({
         )
       }
       return (
-        <FormRow label={data.title} key={name}>
+        <CustomFormRow label={data.title} key={name}>
           {widget}
-        </FormRow>
+        </CustomFormRow>
       )
     })
 

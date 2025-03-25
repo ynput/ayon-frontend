@@ -1,30 +1,38 @@
 import { useEffect, useRef } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { Spacer, InputSwitch } from '@ynput/ayon-react-components'
-import UserImage from '/src/components/UserImage'
+import { InputSwitch } from '@ynput/ayon-react-components'
+import UserImage from '@components/UserImage'
 
 import Breadcrumbs from '../Breadcrumbs/Breadcrumbs'
 import HeaderButton from './HeaderButton'
-import AppMenu from '../../components/Menu/Menus/AppMenu'
+import AppMenu from '@components/Menu/Menus/AppMenu'
 import ProjectMenu from '../ProjectMenu/projectMenu'
-import { useDispatch, useSelector } from 'react-redux'
-import InstallerDownloadPrompt from '../../components/InstallerDownload/InstallerDownloadPrompt'
-import { toggleMenuOpen, setMenuOpen } from '/src/features/context'
-import { HelpMenu, UserMenu } from '/src/components/Menu'
-import MenuContainer from '/src/components/Menu/MenuComponents/MenuContainer'
-import { useUpdateUserMutation } from '/src/services/user/updateUser'
+import { useAppDispatch, useAppSelector } from '@state/store'
+import InstallerDownloadPrompt from '@components/InstallerDownload/InstallerDownloadPrompt'
+import { toggleMenuOpen, setMenuOpen } from '@state/context'
+import { HelpMenu, UserMenu } from '@components/Menu'
+import MenuContainer from '@components/Menu/MenuComponents/MenuContainer'
+import { useUpdateUserMutation } from '@queries/user/updateUser'
 import { toast } from 'react-toastify'
-import { onProfileUpdate } from '/src/features/user'
+import { toggleDevMode } from '@state/user'
 import styled from 'styled-components'
-import { useRestart } from '/src/context/restartContext'
-import { classNames } from 'primereact/utils'
+import { useRestart } from '@context/restartContext'
+import clsx from 'clsx'
+import InboxNotificationIcon from './InboxNotification'
+import ReleaseInstallerPrompt from '@containers/ReleaseInstallerDialog/ReleaseInstallerPrompt/ReleaseInstallerPrompt'
+
+const FlexWrapper = styled.div`
+  display: flex;
+  gap: var(--base-gap-small);
+`
 
 const DeveloperSwitch = styled.div`
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--base-gap-small);
   border-radius: var(--border-radius-l);
   padding: 4px 4px 4px 8px;
+  margin: 4px 0;
   cursor: pointer;
   z-index: 10;
 
@@ -60,17 +68,18 @@ const StyledSwitch = styled(InputSwitch)`
       }
     }
   }
+  pointer-events: none;
 `
 
 const Header = () => {
-  const dispatch = useDispatch()
-  const menuOpen = useSelector((state) => state.context.menuOpen)
+  const dispatch = useAppDispatch()
+  const menuOpen = useAppSelector((state) => state.context.menuOpen)
   const handleToggleMenu = (menu) => dispatch(toggleMenuOpen(menu))
   const handleSetMenu = (menu) => dispatch(setMenuOpen(menu))
   const location = useLocation()
   const navigate = useNavigate()
   // get user from redux store
-  const user = useSelector((state) => state.user)
+  const user = useAppSelector((state) => state.user)
 
   // restart server notification
   const { isSnoozing } = useRestart()
@@ -114,96 +123,113 @@ const Header = () => {
   const [updateUser] = useUpdateUserMutation()
   const handleDeveloperMode = async () => {
     try {
+      const newDeveloperMode = !developerMode
+      // optimistic update the switch
+      dispatch(toggleDevMode(newDeveloperMode))
+
       await updateUser({
         name: user.name,
         patch: {
-          attrib: { developerMode: !developerMode },
+          attrib: { developerMode: newDeveloperMode },
         },
       }).unwrap()
 
-      // update redux state with new data
-      dispatch(onProfileUpdate({ developerMode: !developerMode }))
+      // if the request fails, revert the switch
     } catch (error) {
       console.error(error)
       toast.error('Unable to update developer mode: ' + error.details)
+      // reset switch on error
+      dispatch(toggleDevMode(developerMode))
     }
   }
 
+  // if on certain page, hide
+  const hiddenOnPages = ['/review']
+  if (hiddenOnPages.includes(location.pathname)) return null
+
   return (
     <nav className="primary" onClick={handleNavClick}>
-      <Link to={'/dashboard/tasks'}>
+      <FlexWrapper>
+        <Link to={'/dashboard/tasks'}>
+          <HeaderButton
+            icon="home"
+            label="Home"
+            variant="nav"
+            className={clsx({ selected: location.pathname.startsWith('/dashboard') })}
+            id="home-button"
+          />
+        </Link>
+
         <HeaderButton
-          icon="home"
-          label="Home"
+          icon="event_list"
+          label="Projects"
           variant="nav"
-          className={classNames({ selected: location.pathname.startsWith('/dashboard') })}
-          id="home-button"
+          onClick={() => handleToggleMenu('project')}
+          style={{
+            alignItems: 'center',
+            display: 'flex',
+          }}
         />
-      </Link>
 
-      <HeaderButton
-        icon="event_list"
-        label="Projects"
-        variant="nav"
-        onClick={() => handleToggleMenu('project')}
-        style={{
-          alignItems: 'center',
-          display: 'flex',
-        }}
-      />
-
-      <ProjectMenu isOpen={menuOpen === 'project'} onHide={() => handleSetMenu(false)} />
+        <ProjectMenu isOpen={menuOpen === 'project'} onHide={() => handleSetMenu(false)} />
+      </FlexWrapper>
 
       <Breadcrumbs />
-      <Spacer />
-      <InstallerDownloadPrompt />
-      {isDeveloper && (
-        <DeveloperSwitch $isChecked={developerMode} onClick={handleDeveloperMode}>
-          <span>Developer Mode</span>
-          <StyledSwitch checked={developerMode} readOnly />
-        </DeveloperSwitch>
-      )}
+      <FlexWrapper style={{ justifyContent: 'end' }} id="header-menu-right">
+        <InstallerDownloadPrompt />
+        <ReleaseInstallerPrompt isAdmin={user.data.isAdmin} />
+        {isDeveloper && (
+          <DeveloperSwitch $isChecked={developerMode} onClick={handleDeveloperMode}>
+            <span>Developer Mode</span>
+            <StyledSwitch checked={developerMode} readOnly />
+          </DeveloperSwitch>
+        )}
 
-      {/* help icon and menu vvv */}
-      <HeaderButton
-        icon="help"
-        ref={helpButtonRef}
-        onClick={() => handleToggleMenu('help')}
-        className={classNames({ active: menuOpen === 'help' })}
-        variant="text"
-      />
-      <MenuContainer id="help" target={helpButtonRef.current}>
-        <HelpMenu user={user} />
-      </MenuContainer>
-      {/* help icon and menu ^^^ */}
+        {/* help icon and menu vvv */}
+        <HeaderButton
+          icon="help"
+          ref={helpButtonRef}
+          onClick={() => handleToggleMenu('help')}
+          className={clsx({ active: menuOpen === 'help' })}
+          variant="nav"
+        />
+        <MenuContainer id="help" target={helpButtonRef.current}>
+          <HelpMenu user={user} />
+        </MenuContainer>
+        {/* help icon and menu ^^^ */}
 
-      {/* App icon and menu vvv */}
-      <HeaderButton
-        icon="apps"
-        onClick={() => handleToggleMenu('app')}
-        ref={appButtonRef}
-        variant="text"
-        className={classNames({ active: menuOpen === 'app', notification: isSnoozing })}
-      />
-      <MenuContainer id="app" target={appButtonRef.current}>
-        <AppMenu user={user} />
-      </MenuContainer>
-      {/* App icon and menu ^^^ */}
+        {/* Inbox icon */}
+        <InboxNotificationIcon />
 
-      {/* User icon and menu vvv */}
-      <HeaderButton
-        className={classNames({ active: menuOpen === 'user' })}
-        onClick={() => handleToggleMenu('user')}
-        ref={userButtonRef}
-        variant="text"
-        style={{ padding: 6 }}
-      >
-        <UserImage size={26} name={user?.name} />
-      </HeaderButton>
-      <MenuContainer id="user" target={userButtonRef.current}>
-        <UserMenu user={user} />
-      </MenuContainer>
-      {/* User icon and menu ^^^ */}
+        {/* App icon and menu vvv */}
+        <HeaderButton
+          icon="apps"
+          onClick={() => handleToggleMenu('app')}
+          ref={appButtonRef}
+          variant="nav"
+          className={clsx({ active: menuOpen === 'app', notification: isSnoozing })}
+        />
+        <MenuContainer id="app" target={appButtonRef.current}>
+          <AppMenu user={user} />
+        </MenuContainer>
+        {/* App icon and menu ^^^ */}
+
+        {/* User icon and menu vvv */}
+        <HeaderButton
+          className={clsx({ active: menuOpen === 'user' })}
+          onClick={() => handleToggleMenu('user')}
+          aria-label="User menu"
+          ref={userButtonRef}
+          variant="nav"
+          style={{ padding: 6 }}
+        >
+          <UserImage size={26} name={user?.name} />
+        </HeaderButton>
+        <MenuContainer id="user" target={userButtonRef.current}>
+          <UserMenu user={user} />
+        </MenuContainer>
+        {/* User icon and menu ^^^ */}
+      </FlexWrapper>
     </nav>
   )
 }

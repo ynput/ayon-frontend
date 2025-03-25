@@ -1,11 +1,10 @@
 import { Button as ayonButton } from '@ynput/ayon-react-components'
 import styled, { css } from 'styled-components'
-import getShimmerStyles from '/src/styles/getShimmerStyles'
 
 const buttonStyles = css`
   background-color: var(--md-sys-color-tertiary);
   color: var(--md-sys-color-on-tertiary);
-  border-radius: var(--base-input-border-radius);
+  border-radius: var(--border-radius-l);
   padding: 8px 16px;
   max-height: unset;
   display: flex;
@@ -39,47 +38,35 @@ export const HeaderButton = styled(ayonButton)`
     font-variation-settings: 'FILL' 1;
   }
 
-  /* if $darkMode show inverse colors */
-  ${({ $darkMode }) =>
-    $darkMode &&
-    css`
-      background-color: var(--md-sys-color-surface-container-lowest);
-      color: var(--md-sys-color-on-surface);
-      &:hover {
-        background-color: var(--md-sys-color-surface-container-low);
-      }
+  /* if darkMode show inverse colors */
+  &.darkMode {
+    background-color: var(--md-sys-color-surface-container-lowest);
+    color: var(--md-sys-color-on-surface);
+    &:hover {
+      background-color: var(--md-sys-color-surface-container-low);
+    }
 
-      .icon {
-        color: var(--md-sys-color-on-surface);
-      }
-    `}
+    .icon {
+      color: var(--md-sys-color-on-surface);
+    }
+  }
 
   /* when loading show shimmer */
-  ${({ $isLoading }) =>
-    $isLoading &&
-    css`
-      ${getShimmerStyles('black', 'white')}
-      opacity: 0.5;
-      .status {
-        visibility: hidden;
-      }
-    `}
 
   .more {
     transition: transform 0.3s ease;
   }
-  ${({ $isOpen }) =>
-    $isOpen &&
-    css`
-      .more {
-        transform: rotate(180deg);
-      }
-    `}
+
+  &.open {
+    .more {
+      transform: rotate(180deg);
+    }
+  }
 `
 export const Status = styled.div`
   display: flex;
   width: 100%;
-  gap: 4px;
+  gap: var(--base-gap-small);
   align-items: center;
 `
 
@@ -87,12 +74,13 @@ export const Container = styled.div`
   display: grid;
   flex-direction: column;
   align-items: center;
-  background-color: ${({ $darkMode }) =>
-    $darkMode
-      ? 'var(--md-sys-color-surface-container-lowest)'
-      : 'var(--md-sys-color-tertiary-container)'};
+  background-color: var(--md-sys-color-tertiary-container);
   border-radius: 8px;
   gap: 0;
+
+  &.darkMode {
+    background-color: var(--md-sys-color-surface-container-lowest);
+  }
 `
 
 export const DropdownContainer = styled.div`
@@ -119,7 +107,7 @@ export const Dropdown = styled.div`
   padding: 8px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--base-gap-large);
   align-items: flex-start;
   min-height: 0;
   transform: translateY(0);
@@ -131,7 +119,7 @@ export const Dropdown = styled.div`
 
 export const Footer = styled.footer`
   display: flex;
-  gap: 4px;
+  gap: var(--base-gap-small);
   width: 100%;
 `
 
@@ -140,4 +128,16 @@ export const Button = styled(ayonButton)`
   padding: 8px 16px;
   max-height: unset;
   flex: 1;
+`
+
+export const Links = styled.div`
+  width: 100%;
+  display: flex;
+  align-items: center;
+  padding: var(--padding-m);
+
+  button,
+  a {
+    width: 100%;
+  }
 `

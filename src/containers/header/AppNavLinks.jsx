@@ -3,7 +3,9 @@ import React, { useEffect } from 'react'
 import { useSelector } from 'react-redux'
 import { NavLink, useNavigate, useParams } from 'react-router-dom'
 import * as Styled from './AppNavLinks.styled'
-import Typography from '/src/theme/typography.module.css'
+import Typography from '@/theme/typography.module.css'
+import { replaceQueryParams } from '@helpers/url'
+import { ayonUrlParam } from '@/constants'
 
 const AppNavLinks = ({ links = [] }) => {
   // item = { name: 'name', path: 'path', node: node | 'spacer', accessLevel: [] }
@@ -11,6 +13,10 @@ const AppNavLinks = ({ links = [] }) => {
   const { module } = useParams()
   const isManager = useSelector((state) => state.user.data.isManager)
   const isAdmin = useSelector((state) => state.user.data.isAdmin)
+  const uri = useSelector((state) => state.context.uri)
+
+  const appendUri = (path) =>
+    uri ? replaceQueryParams(path, { [ayonUrlParam]: encodeURIComponent(uri) }) : path
 
   const access = {
     manager: isManager || isAdmin,
@@ -36,32 +42,50 @@ const AppNavLinks = ({ links = [] }) => {
   return (
     <Styled.NavBar className="secondary">
       <ul>
-        {links.map((item, idx) => {
-          // if item has restrictions, check if user has access
-          let hasAccess = true
-          if (item.accessLevels?.length) {
-            hasAccess = item.accessLevels?.every((restriction) => access[restriction])
-          }
-          if (!hasAccess) return null
+        {links.map(
+          (
+            {
+              accessLevels,
+              node,
+              shortcut,
+              path,
+              tooltip,
+              name,
+              startContent,
+              endContent,
+              uriSync,
+              ...props
+            } = {},
+            idx,
+          ) => {
+            // if item has restrictions, check if user has access
+            let hasAccess = true
+            if (accessLevels?.length) {
+              hasAccess = accessLevels?.every((restriction) => access[restriction])
+            }
+            if (!hasAccess) return null
 
-          // return spacer if item is a spacer, or just the node
-          if (item.node) {
-            // if item is a node a spacer, return spacer
-            if (item.node === 'spacer') {
-              return <Spacer key={idx} />
-            } else return <li key={idx}>{item.node}</li>
-          }
+            // return spacer if item is a spacer, or just the node
+            if (node) {
+              // if item is a node a spacer, return spacer
+              if (node === 'spacer') {
+                return <Spacer key={idx} />
+              } else return <li key={idx}>{node}</li>
+            }
 
-          return (
-            <Styled.NavItem key={idx} data-shortcut={item.shortcut}>
-              <NavLink to={item.path}>
-                <Button variant="nav" className={Typography.titleSmall} tabIndex={-1}>
-                  {item.name}
-                </Button>
-              </NavLink>
-            </Styled.NavItem>
-          )
-        })}
+            return (
+              <Styled.NavItem key={idx} data-shortcut={shortcut} data-tooltip={tooltip} {...props}>
+                <NavLink to={uriSync ? appendUri(path) : path}>
+                  <Button variant="nav" className={Typography.titleSmall} tabIndex={-1}>
+                    {startContent && startContent}
+                    {name}
+                    {endContent && endContent}
+                  </Button>
+                </NavLink>
+              </Styled.NavItem>
+            )
+          },
+        )}
       </ul>
     </Styled.NavBar>
   )

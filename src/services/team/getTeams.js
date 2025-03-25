@@ -1,6 +1,6 @@
-import { ayonApi } from '../ayon'
+import api from '@api'
 
-const getTeams = ayonApi.injectEndpoints({
+const getTeams = api.injectEndpoints({
   endpoints: (build) => ({
     getTeams: build.query({
       query: ({ projectName, showMembers = true }) => ({
@@ -15,6 +15,7 @@ const getTeams = ayonApi.injectEndpoints({
           : ['team'],
     }),
   }),
+  overrideExisting: true,
 })
 
 export const { useGetTeamsQuery } = getTeams

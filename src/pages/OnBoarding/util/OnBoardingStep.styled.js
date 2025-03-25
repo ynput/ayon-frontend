@@ -95,7 +95,7 @@ export const PresetsContainer = styled.ul`
   max-width: 470px;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: var(--base-gap-large);
   padding: 0;
   margin: 0;
   flex: 1;
@@ -105,8 +105,8 @@ export const PresetsContainer = styled.ul`
 export const AddonsContainer = styled.div`
   /* 3 column grid */
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 4px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--base-gap-small);
   width: 470px;
   max-width: 470px;
   max-height: 422px;
@@ -116,7 +116,7 @@ export const AddonsContainer = styled.div`
 
 export const Footer = styled.footer`
   display: flex;
-  gap: 8px;
+  gap: var(--base-gap-large);
   width: 100%;
   justify-content: flex-end;
   margin-top: auto;
@@ -150,7 +150,7 @@ export const Connect = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: var(--base-gap-small);
 
   button {
     width: unset;

@@ -6,8 +6,14 @@ const initialState = {
   expandedFolders: {},
   expandedProducts: {},
   expandedRepresentations: {},
+  filters: {
+    browser: {
+      productTaskTypes: [],
+    },
+  },
   focused: {
     type: null,
+    subTypes: [],
     folders: [],
     products: [],
     versions: [],
@@ -27,24 +33,31 @@ const initialState = {
   uriChanged: 0,
   uploadProgress: 0, // percentage 0 - 100
   menuOpen: false,
+  activeReactionPopup: null,
+  previewFiles: [],
+  previewFilesProjectName: '',
+  previewFilesIndex: null,
+  previewFilesActivityId: null,
 }
 
 // all the keys that are stored in local storage
+// TODO: remove focus local keys marked with // as they are not used anymore
 const localStorageKeys = [
   'expandedFolders',
   'expandedProducts',
   'expandedRepresentations',
-  'focused.type',
-  'focused.folders',
-  'focused.products',
-  'focused.versions',
-  'focused.representations',
-  'focused.tasks',
-  'focused.tasksNames',
-  'focused.workfiles',
-  'focused.editor',
-  'selectedVersions',
-  'uri',
+  'filters.browser.productTaskTypes',
+  'focused.type', //
+  'focused.subTypes', //
+  'focused.folders', //
+  'focused.products', //
+  'focused.versions', //
+  'focused.representations', //
+  'focused.tasks', //
+  'focused.tasksNames', //
+  'focused.workfiles', //
+  'focused.editor', //
+  'selectedVersions', //
 ]
 
 const initialStateWithLocalStorage = cloneDeep(initialState)
@@ -72,6 +85,9 @@ const reducers = {
     },
     'focused.type': {
       value: initialState.focused.type,
+    },
+    'focused.subTypes': {
+      value: initialState.focused.subTypes,
     },
     'focused.folders': {
       value: initialState.focused.folders,
@@ -117,8 +133,11 @@ const reducers = {
     'focused.type': {
       value: 'folder',
     },
+    'focused.subTypes': {
+      payload: 'subTypes',
+    },
     'focused.folders': {
-      payload: true,
+      payload: 'ids',
     },
     'focused.products': {
       value: [],
@@ -140,8 +159,11 @@ const reducers = {
     'focused.type': {
       value: 'product',
     },
+    'focused.subTypes': {
+      payload: 'subTypes',
+    },
     'focused.products': {
-      payload: true,
+      payload: 'ids',
     },
     'focused.versions': {
       value: [],
@@ -150,6 +172,9 @@ const reducers = {
   setFocusedTasks: {
     'focused.type': {
       value: 'task',
+    },
+    'focused.subTypes': {
+      payload: 'subTypes',
     },
     'focused.tasks': {
       payload: 'ids',
@@ -166,6 +191,9 @@ const reducers = {
     'focused.type': {
       value: 'workfile',
     },
+    'focused.subTypes': {
+      value: [],
+    },
     'focused.workfiles': {
       payload: true,
     },
@@ -173,6 +201,9 @@ const reducers = {
   setFocusedRepresentations: {
     'focused.type': {
       value: 'representation',
+    },
+    'focused.subTypes': {
+      value: [],
     },
     'focused.representations': {
       payload: true,
@@ -192,6 +223,9 @@ const reducers = {
   setFocusedVersions: {
     'focused.type': {
       value: 'version',
+    },
+    'focused.subTypes': {
+      value: [],
     },
     'focused.versions': {
       payload: true,
@@ -214,6 +248,9 @@ const reducers = {
     'focused.type': {
       value: null,
     },
+    'focused.subTypes': {
+      value: [],
+    },
     'focused.folders': {
       value: [],
     },
@@ -232,6 +269,9 @@ const reducers = {
   productSelected: {
     'focused.type': {
       value: 'version',
+    },
+    'focused.subTypes': {
+      value: [],
     },
     'focused.versions': {
       payload: 'versions',
@@ -269,6 +309,14 @@ const reducers = {
     },
     'focused.type': {
       payload: 'type',
+    },
+    'focused.subTypes': {
+      value: [],
+    },
+  },
+  updateBrowserFilters: {
+    'filters.browser.productTaskTypes': {
+      payload: 'productTaskTypes',
     },
   },
 }
@@ -366,6 +414,9 @@ const contextSlice = createSlice({
     onUriNavigate: (state, action) => {
       updateStateWithReducer(reducers.onUriNavigate, state, action)
     },
+    updateBrowserFilters: (state, action) => {
+      updateStateWithReducer(reducers.updateBrowserFilters, state, action)
+    },
     onFocusChanged: (state, action) => {
       state.focused.lastFocused = action.payload
     },
@@ -416,6 +467,27 @@ const contextSlice = createSlice({
       // else set payload
       else state.menuOpen = action.payload
     },
+    onCommentImageOpen: (state, action) => {
+      // set the preview file
+      state.previewFiles = action.payload.files
+      state.previewFilesProjectName = action.payload.projectName
+      state.previewFilesActivityId = action.payload.activityId
+      state.previewFilesIndex = action.payload.index
+    },
+    onCommentImageActivityAndIndexChange: (state, action) => {
+      state.previewFilesActivityId = action.payload.activityId
+      state.previewFilesIndex = action.payload.index
+    },
+    onCommentImageIndexChange: (state, action) => {
+      state.previewFilesIndex += action.payload.delta
+    },
+    onFilePreviewClose: (state) => {
+      // clear the preview file
+      state.previewFiles = initialState.previewFiles
+      state.previewFilesProjectName = initialState.previewFilesProjectName
+      state.previewFilesActivityId = null
+      state.previewFilesIndex = null
+    },
   }, // reducers
 })
 
@@ -447,6 +519,11 @@ export const {
   setMenuOpen,
   toggleMenuOpen,
   onUriNavigate,
+  updateBrowserFilters,
+  onCommentImageOpen,
+  onCommentImageIndexChange,
+  onCommentImageActivityAndIndexChange,
+  onFilePreviewClose,
 } = contextSlice.actions
 
 export default contextSlice.reducer
@@ -490,7 +567,5 @@ Object.entries(reducers).forEach(([reducerKey, reducerStates]) => {
   // add the middleware to the local storage items
   Object.assign(contextLocalItems, middleware)
 })
-
-console.log(contextLocalItems)
 
 export { contextLocalItems }

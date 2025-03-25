@@ -1,0 +1,15 @@
+query GetKanbanProjectUsers($projects: [String!]) {
+  users(last: 2000, projects: $projects) {
+    edges {
+      node {
+        name
+        accessGroups
+        isManager
+        isAdmin
+        attrib {
+          fullName
+        }
+      }
+    }
+  }
+}

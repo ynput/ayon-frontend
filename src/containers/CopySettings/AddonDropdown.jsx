@@ -1,15 +1,15 @@
 import { useMemo } from 'react'
 import { toast } from 'react-toastify'
 import { Dropdown } from '@ynput/ayon-react-components'
-import { useGetAddonListQuery } from '/src/services/addons/getAddons'
+import { useListAddonsQuery } from '@queries/addons/getAddons'
 
 const AddonDropdown = ({ addonName, addonVersion, setAddonVersion, disabled }) => {
-  const { data, isLoading, isError } = useGetAddonListQuery()
+  const { data: { addons = [] } = {}, isLoading, isError } = useListAddonsQuery({})
 
   const versions = useMemo(() => {
     if (isLoading || isError) return []
 
-    const addon = data.find((i) => i.name === addonName)
+    const addon = addons.find((i) => i.name === addonName)
     if (!addon) {
       toast.error(`Addon ${addonName} not found`)
       return []
@@ -21,7 +21,7 @@ const AddonDropdown = ({ addonName, addonVersion, setAddonVersion, disabled }) =
     }
 
     return result
-  }, [data, isLoading, isError, addonName])
+  }, [addons, isLoading, isError, addonName])
 
   return (
     <Dropdown

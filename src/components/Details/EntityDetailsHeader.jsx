@@ -1,40 +1,25 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import DetailHeader from '../DetailHeader'
-import StackedThumbnails from '/src/pages/EditorPage/StackedThumbnails'
-import NameField from '/src/pages/EditorPage/fields/NameField'
+import StackedThumbnails from '@pages/EditorPage/StackedThumbnails'
+import NameField from '@pages/EditorPage/fields/NameField'
 import { useSelector } from 'react-redux'
 import styled from 'styled-components'
 import { OverflowField } from '@ynput/ayon-react-components'
-import copyToClipboard from '/src/helpers/copyToClipboard'
-import getShimmerStyles from '/src/styles/getShimmerStyles'
+import copyToClipboard from '@helpers/copyToClipboard'
+import { productTypes } from '@state/project'
 
 const ToolsStyled = styled.div`
   display: flex;
-  gap: 4px;
+  gap: var(--base-gap-small);
   justify-content: end;
 
   flex: 1;
   margin-right: 1px;
 `
 
-const StyledLoading = styled.div`
-  width: 100%;
-  height: 37px;
-  border-radius: var(--border-radius-m);
-  position: relative;
-
-  ${getShimmerStyles()}
-`
-
-const EntityDetailsHeader = ({
-  values = [],
-  tools,
-  isLoading,
-  hideThumbnail,
-  onThumbnailUpload,
-}) => {
-  const { folders, tasks, productTypes } = useSelector((state) => state.project)
+const EntityDetailsHeader = ({ values = [], tools, hideThumbnail }) => {
+  const { folders, tasks } = useSelector((state) => state.project)
   const changes = useSelector((state) => state.editor.changes)
   const uri = useSelector((state) => state.context.uri)
 
@@ -87,40 +72,33 @@ const EntityDetailsHeader = ({
   return (
     <DetailHeader>
       {!hideThumbnail && (
-        <StackedThumbnails
-          thumbnails={thumbnails}
-          isLoading={isLoading}
-          onUpload={onThumbnailUpload}
-          portalId={'editor-entity-details-container'}
-        />
+        <StackedThumbnails thumbnails={thumbnails} portalId={'editor-entity-details-container'} />
       )}
-      {isLoading ? (
-        <StyledLoading />
-      ) : (
-        <div style={{ overflowX: 'clip', paddingLeft: 3, marginLeft: -3 }}>
-          {!isMultiple ? (
-            <NameField
-              node={values[0]}
-              changes={changes}
-              styled
-              tasks={tasks}
-              folders={folders}
-              productTypes={productTypes}
-              style={{ display: 'flex', gap: 4, fontWeight: 'bold' }}
-              iconStyle={{ fontSize: 19, marginRight: 0 }}
-              prefix={`${values[0]?.product?.name}`}
-            />
-          ) : (
-            <span style={{ whiteSpace: 'nowrap' }}>Multiple Selected ({values.length})</span>
-          )}
-          <OverflowField
-            value={subTitle}
-            style={{ left: -3 }}
-            align="left"
-            onClick={() => copyToClipboard(breadcrumbs.join('/'), true)}
+
+      <div style={{ overflowX: 'clip', paddingLeft: 3, marginLeft: -3 }}>
+        {!isMultiple ? (
+          <NameField
+            node={values[0]}
+            changes={changes}
+            styled
+            tasks={tasks}
+            folders={folders}
+            productTypes={productTypes}
+            style={{ display: 'flex', gap: 4, fontWeight: 'bold' }}
+            iconStyle={{ fontSize: 19, marginRight: 0 }}
+            prefix={`${values[0]?.product?.name}`}
           />
-        </div>
-      )}
+        ) : (
+          <span style={{ whiteSpace: 'nowrap' }}>Multiple Selected ({values.length})</span>
+        )}
+        <OverflowField
+          value={subTitle}
+          style={{ left: -3 }}
+          align="left"
+          onClick={() => copyToClipboard(breadcrumbs.join('/'), true)}
+        />
+      </div>
+
       {tools && <ToolsStyled>{tools}</ToolsStyled>}
     </DetailHeader>
   )

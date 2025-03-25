@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { toast } from 'react-toastify'
+import { useDispatch } from 'react-redux'
 import {
   Button,
   Section,
@@ -8,21 +9,22 @@ import {
   LockedInput,
   SaveButton,
 } from '@ynput/ayon-react-components'
-import { useUpdateUserMutation } from '/src/services/user/updateUser'
+import { useUpdateUsersMutation } from '@queries/user/updateUser'
+import { updateUserData, updateUserAttribs } from '@state/user'
 import styled from 'styled-components'
-import ayonClient from '/src/ayon'
+import ayonClient from '@/ayon'
 import UserAttribForm from './UserAttribForm'
 import UserAccessForm from './UserAccessForm'
 import ServiceDetails from './ServiceDetails'
-import UserDetailsHeader from '/src/components/User/UserDetailsHeader'
+import UserDetailsHeader from '@components/User/UserDetailsHeader'
 import { cloneDeep, isEqual } from 'lodash'
-import UserAccessGroupsForm from './UserAccessGroupsForm/UserAccessGroupsForm'
+import UserLicenseForm from './UserLicenseForm'
 
 const FormsStyled = styled.section`
   flex: 1;
   overflow-x: clip;
   overflow-y: auto;
-  gap: 4px;
+  gap: var(--base-gap-small);
   display: flex;
   flex-direction: column;
 
@@ -52,6 +54,13 @@ const fields = [
     label: 'User Active',
     data: {
       type: 'boolean',
+    },
+  },
+  {
+    name: 'userPool',
+    label: 'User Pool',
+    data: {
+      type: 'string',
     },
   },
   {
@@ -103,6 +112,13 @@ const mergeMultipleUsers = (users = [], defaultForm = {}, initForm = {}) => {
     if (index !== 0 && initForm.userActive !== user.active)
       initForm.userActive = defaultForm.userActive
     else initForm.userActive = user.active
+
+    // userPool
+    if (index !== 0 && initForm.userPool !== user.userPool) {
+      if (!initForm._mixedFields.includes('userPool')) {
+        initForm._mixedFields.push('userPool')
+      }
+    } else initForm.userPool = user.userPool
 
     // isGuest
     if (index !== 0 && initForm.isGuest !== user.isGuest) initForm.isGuest = defaultForm.isGuest
@@ -174,24 +190,25 @@ const UserDetail = ({
   setShowRenameUser,
   selectedUsers,
   setShowSetPassword,
-  selectedProjects,
   setSelectedUsers,
   isSelfSelected,
   selectedUserList,
   managerDisabled,
   accessGroupsData,
+  isFetchingUsers,
 }) => {
   const [formData, setFormData] = useState(null)
   const [initData, setInitData] = useState({})
-  const [changesMade, setChangesMade] = useState(false)
+  const [changesMade, setChangesMade] = useState([])
   const [formUsers, setFormUsers] = useState([])
   const toastId = useRef(null)
 
   const attributes = ayonClient.getAttribsByScope('user')
+  const dispatch = useDispatch()
 
   useEffect(() => {
     // have the selected users changed?
-    if (selectedUsers.length === 0) return
+    if (selectedUsers.length === 0 || isFetchingUsers) return
 
     setFormUsers(selectedUserList)
 
@@ -200,7 +217,7 @@ const UserDetail = ({
     setFormData(builtFormData)
     // used to compare changes later
     setInitData(builtFormData)
-  }, [selectedUserList, selectedUsers])
+  }, [selectedUserList, selectedUsers, isFetchingUsers])
 
   // look for changes when formData changes
   useEffect(() => {
@@ -217,20 +234,32 @@ const UserDetail = ({
       ...initDataWithoutAccessGroups
     } = initData || {}
 
-    const isDiffForm = !isEqual(formDataWithoutAccessGroups, initDataWithoutAccessGroups)
-    const isDiffAccessGroups = !isEqual(formDataAccessGroups, initDataAccessGroups)
-    const isDiffDefaultAccessGroups = !isEqual(
-      formDataDefaultAccessGroups,
-      initDataDefaultAccessGroups,
-    )
+    // Check which fields have changed
+    const changedFields = []
 
-    const isDiff =
-      isDiffForm || isDiffAccessGroups || isDiffDefaultAccessGroups || selectedUsers.length > 1
+    // Check regular fields
+    Object.keys(formDataWithoutAccessGroups).forEach((key) => {
+      if (!isEqual(formDataWithoutAccessGroups[key], initDataWithoutAccessGroups[key])) {
+        changedFields.push(key)
+      }
+    })
+
+    // Check access groups
+    if (!isEqual(formDataAccessGroups, initDataAccessGroups)) {
+      changedFields.push('accessGroups')
+    }
+
+    // Check default access groups
+    if (!isEqual(formDataDefaultAccessGroups, initDataDefaultAccessGroups)) {
+      changedFields.push('defaultAccessGroups')
+    }
+
+    const isDiff = changedFields.length > 0 || selectedUsers.length > 1
 
     if (isDiff && (!isSelfSelected || selectedUsers.length === 1)) {
-      if (!changesMade) setChangesMade(true)
+      setChangesMade(changedFields)
     } else {
-      setChangesMade(false)
+      setChangesMade([])
     }
   }, [formData, initData, selectedUsers])
 
@@ -239,54 +268,75 @@ const UserDetail = ({
   // check if any users have the userLevel of service
   const hasServiceUser = formUsers.some((user) => user.isService)
 
-  const [updateUser, { isLoading: isUpdating }] = useUpdateUserMutation()
+  const [updateUsers, { isLoading: isUpdating }] = useUpdateUsersMutation()
 
   //
   // API
   //
 
   const onSave = async () => {
-    toastId.current = toast.info('Updating user(s)...')
-    let i = 0
+    const usersString = `user${formUsers.length > 1 ? 's' : ''}`
+    toastId.current = toast.info(`Updating ${usersString}...`)
+    const updates = []
     for (const user of formUsers) {
-      const data = {
-        accessGroups: formData.accessGroups[user.name],
-        defaultAccessGroups: formData.defaultAccessGroups,
-      }
+      const data = {}
       const attrib = {}
+      const patch = {}
 
-      if (singleUserEdit) {
-        attributes.forEach(({ name }) => (attrib[name] = formData[name]))
+      // Only update changed fields
+      for (const field of changesMade) {
+        if (field === 'accessGroups') {
+          data.accessGroups = formData.accessGroups[user.name]
+        } else if (field === 'defaultAccessGroups') {
+          data.defaultAccessGroups = formData.defaultAccessGroups
+        } else if (field === 'userLevel') {
+          data.isAdmin = formData.userLevel === 'admin'
+          data.isManager = formData.userLevel === 'manager'
+          data.isService = formData.userLevel === 'service'
+        } else if (field === 'userPool') {
+          data.userPool = formData.userPool
+        } else if (field === 'userActive') {
+          patch.active = formData.userActive
+        } else if (field === 'isGuest') {
+          data.isGuest = formData.isGuest
+        } else if (field === 'isDeveloper') {
+          data.isDeveloper = formData.isDeveloper && formData.userLevel === 'admin'
+        } else if (singleUserEdit && attributes.find((a) => a.name === field)) {
+          attrib[field] = formData[field]
+        }
       }
 
-      // update user level && do access group clean-up
-      data.isAdmin = formData.userLevel === 'admin'
-      data.isManager = formData.userLevel === 'manager'
-      data.isService = formData.userLevel === 'service'
-      data.isGuest = formData.isGuest
-      data.isDeveloper = formData.isDeveloper
+      // Only include non-empty objects in the patch
+      if (Object.keys(data).length > 0) patch.data = data
+      if (Object.keys(attrib).length > 0) patch.attrib = attrib
 
-      const patch = {
-        active: formData.userActive,
-        attrib,
-        data,
+      // Only push update if there are changes
+      if (Object.keys(patch).length > 0) {
+        updates.push({ name: user.name, patch })
       }
 
-      try {
-        // Apply the patch
-        await updateUser({
-          name: user.name,
-          patch,
-        }).unwrap()
-
-        toast.update(toastId.current, { render: `Updated user: ${user.name} ` })
-        i += 1
-      } catch (error) {
-        toast.error(`Unable to update user ${user.name} `)
-        console.error(error)
+      // Update Redux state if it's the current user
+      if (user.self) {
+        if (Object.keys(data).length > 0) dispatch(updateUserData(data))
+        if (Object.keys(attrib).length > 0) dispatch(updateUserAttribs(attrib))
       }
-    } // for user
-    toast.update(toastId.current, { render: `Updated ${i} user(s) `, type: toast.TYPE.SUCCESS })
+    }
+
+    try {
+      await updateUsers(updates).unwrap()
+
+      setChangesMade([])
+      toast.update(toastId.current, {
+        render: `Updated ${usersString} successfully`,
+        type: toast.TYPE.SUCCESS,
+      })
+    } catch (error) {
+      console.error(error)
+      toast.update(toastId.current, {
+        render: `Error updating ${usersString}.`,
+        type: toast.TYPE.ERROR,
+      })
+    }
   }
 
   const onCancel = () => {
@@ -296,7 +346,7 @@ const UserDetail = ({
 
   // onclose, no users selected but check if changes made
   const onClose = () => {
-    if (changesMade && selectedUsers.length === 1) {
+    if (changesMade.length && selectedUsers.length === 1) {
       return toast.error('Changes not saved')
     }
     setSelectedUsers([])
@@ -308,9 +358,7 @@ const UserDetail = ({
 
   const headerAccessGroups = formUsers.reduce((acc, user) => {
     let accessGroups = Object.entries(user.accessGroups)
-      .map(([project, accessGroup]) =>
-        selectedProjects ? (selectedProjects?.includes(project) ? accessGroup : []) : accessGroup,
-      )
+      .map(([accessGroup]) => accessGroup)
       .flat()
 
     // if user is admin, he has also a manager role
@@ -374,21 +422,25 @@ const UserDetail = ({
           )}
           {formData && (
             <Panel>
+              <UserLicenseForm
+                active={formData.userActive}
+                onActiveChange={(value) => setFormData({ ...formData, userActive: value })}
+                pool={formData.userPool}
+                isPoolMixed={formData._mixedFields.includes('userPool')}
+                onPoolChange={(value) => setFormData({ ...formData, userPool: value })}
+                isDisabled={isSelfSelected}
+              />
+            </Panel>
+          )}
+          {formData && (
+            <Panel>
               <UserAccessForm
                 formData={formData}
                 onChange={(key, value) => setFormData({ ...formData, [key]: value })}
                 disabled={managerDisabled || isSelfSelected}
                 accessGroupsData={accessGroupsData}
-                selectedProjects={selectedProjects}
               />
             </Panel>
-          )}
-          {formData?.userLevel === 'user' && !selectedProjects && (
-            <UserAccessGroupsForm
-              value={formData.accessGroups}
-              options={accessGroupsData}
-              onChange={(value) => setFormData({ ...formData, accessGroups: value })}
-            />
           )}
         </FormsStyled>
       )}
@@ -397,13 +449,14 @@ const UserDetail = ({
           onClick={onCancel}
           label="Cancel"
           icon="clear"
-          disabled={!changesMade || selectedUsers.length > 1}
+          disabled={!changesMade.length || selectedUsers.length > 1}
         />
         <SaveButton
           onClick={onSave}
           label="Save selected users"
-          active={changesMade}
-          saving={isUpdating}
+          active
+          saving={isUpdating || isFetchingUsers}
+          disabled={isUpdating || isFetchingUsers || !changesMade.length}
         />
       </PanelButtonsStyled>
     </Section>

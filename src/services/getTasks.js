@@ -1,5 +1,5 @@
-import parseTasksList from '/src//helpers/parseTasksList'
-import { ayonApi } from './ayon'
+import parseTasksList from '@//helpers/parseTasksList'
+import api from '@api'
 
 const TASKS_QUERY = `
 query TasksByFolder($projectName: String!, $folderIds: [String!]!) {
@@ -26,7 +26,7 @@ query TasksByFolder($projectName: String!, $folderIds: [String!]!) {
 }
 `
 
-const getTasks = ayonApi.injectEndpoints({
+const getTasks = api.injectEndpoints({
   endpoints: (build) => ({
     getTasks: build.query({
       query: ({ projectName, folderIds }) => ({
@@ -43,6 +43,7 @@ const getTasks = ayonApi.injectEndpoints({
       providesTags: ['project'],
     }),
   }),
+  overrideExisting: true,
 })
 
 export const { useGetTasksQuery } = getTasks

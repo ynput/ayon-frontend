@@ -2,11 +2,11 @@ import React from 'react'
 import axios from 'axios'
 import { useMemo } from 'react'
 import { toast } from 'react-toastify'
-import { useGetEventByIdQuery } from '/src/services/events/getEvents'
+import { useGetEventByIdQuery } from '@queries/events/getEvents'
 import { Section, Panel, Button } from '@ynput/ayon-react-components'
-import DetailHeader from '/src/components/DetailHeader'
-import { TimestampField } from '/src/containers/fieldFormat'
-import UserTile from '/src/pages/SettingsPage/UsersSettings/UserTile'
+import DetailHeader from '@components/DetailHeader'
+import { TimestampField } from '@containers/fieldFormat'
+import UserTile from '@pages/SettingsPage/UsersSettings/UserTile'
 import styled from 'styled-components'
 import { Link } from 'react-router-dom'
 import EventTile from './EventTile'
@@ -64,6 +64,12 @@ const EventDetail = ({ id, setSelectedEvent, onFilter, events }) => {
 
     // get type from topic
     type = topic.split('.')[1]
+  }
+
+  let entityId = summary.entityId
+  if (topic.includes('reviewable')) {
+    type = 'version'
+    entityId = summary.versionId
   }
 
   return (
@@ -145,12 +151,18 @@ const EventDetail = ({ id, setSelectedEvent, onFilter, events }) => {
             </EventTile>
           </RowStyled>
         )}
-        {summary.entityId && (
+        {entityId && (
           <RowStyled>
             <h2>Entity</h2>
-            <EntityTile id={summary.entityId} type={type} disableHover projectName={project}>
+            <EntityTile id={entityId} type={type} disableHover projectName={project}>
               <Button
                 icon="filter_alt"
+                variant="text"
+                onClick={() => onFilter(type)}
+                data-tooltip={'Filter by ' + type}
+              />
+              <Button
+                icon="east"
                 variant="text"
                 onClick={() => onFilter(type)}
                 data-tooltip={'Filter by ' + type}

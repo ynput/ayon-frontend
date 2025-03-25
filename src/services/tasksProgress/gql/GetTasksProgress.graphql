@@ -1,0 +1,35 @@
+#import "./ProgressTaskFragment.graphql"
+
+query GetTasksProgress(
+  $projectName: String!
+  $folderIds: [String!]
+  $assignees: [String!]
+  $assigneesAny: [String!]
+  $tags: [String!]
+  $tagsAny: [String!]
+  $statuses: [String!]
+  $taskTypes: [String!]
+  $attributes: [AttributeFilterInput!]
+) {
+  project(name: $projectName) {
+    name
+    tasks(
+      folderIds: $folderIds
+      last: 1000
+      includeFolderChildren: true
+      assignees: $assignees
+      assigneesAny: $assigneesAny
+      tags: $tags
+      tagsAny: $tagsAny
+      statuses: $statuses
+      taskTypes: $taskTypes
+      attributes: $attributes
+    ) {
+      edges {
+        node {
+          ...ProgressTaskFragment
+        }
+      }
+    }
+  }
+}

@@ -1,6 +1,6 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import ProjectList from '/src/containers/projectList'
+import ProjectList from '@containers/projectList'
 
 // Wraps every page on projectManager and provides the project list
 // and other useful props
@@ -28,7 +28,7 @@ const ProjectManagerPageContainer = ({
             onDeleteProject={onDeleteProject}
             onActivateProject={onActivateProject}
             onNewProject={onNewProject}
-            isProjectManager
+            isProjectManager={!isUser}
             {...props}
           />
         ),

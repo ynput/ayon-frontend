@@ -1,7 +1,7 @@
 import { Panel, Section } from '@ynput/ayon-react-components'
 import React, { useRef, useState } from 'react'
 import BundlesAddonList from './BundlesAddonList'
-import useScrollSync from '/src/hooks/useScrollSync'
+import useScrollSync from '@hooks/useScrollSync'
 
 const BundleCompare = ({ bundles = [], addons }) => {
   // for each bundle, in addons check if the same addon has a different version in another bundle

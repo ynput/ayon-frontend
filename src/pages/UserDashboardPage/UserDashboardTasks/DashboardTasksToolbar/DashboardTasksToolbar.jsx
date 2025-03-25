@@ -6,11 +6,13 @@ import {
   onTasksFilterChanged,
   onTasksGroupByChanged,
   onTasksSortByChanged,
-} from '/src/features/dashboard'
-import MeOrUserSwitch from '/src/components/MeOrUserSwitch/MeOrUserSwitch'
+} from '@state/dashboard'
+import MeOrUserSwitch from '@components/MeOrUserSwitch/MeOrUserSwitch'
 import * as Styled from './DashboardTasksToolbar.styled'
+import sortByOptions from './KanBanSortByOptions'
+import { getGroupByOptions } from './KanBanGroupByOptions'
 
-const DashboardTasksToolbar = ({ allUsers = [], isLoadingAllUsers, view, setView }) => {
+const DashboardTasksToolbar = ({ isLoading, view, setView }) => {
   const dispatch = useDispatch()
 
   const user = useSelector((state) => state.user)
@@ -18,76 +20,51 @@ const DashboardTasksToolbar = ({ allUsers = [], isLoadingAllUsers, view, setView
 
   // ASSIGNEES SELECT
   const assignees = useSelector((state) => state.dashboard.tasks.assignees)
-  const assigneesIsMe = useSelector((state) => state.dashboard.tasks.assigneesIsMe)
+  const assigneesFilter = useSelector((state) => state.dashboard.tasks.assigneesFilter)
 
   const setAssignees = (payload) => dispatch(onAssigneesChanged(payload))
 
-  // SORT BY
-  const sortByOptions = [
-    { id: 'folderName', label: 'Folder', sortOrder: true },
-    { id: 'name', label: 'Task', sortOrder: true },
-    { id: 'status', label: 'Status', sortOrder: true },
-    { id: 'endDate', label: 'Due Date', sortOrder: true },
-  ]
   const sortByValue = useSelector((state) => state.dashboard.tasks.sortBy)
   const setSortByValue = (value) => dispatch(onTasksSortByChanged(value))
 
   // GROUP BY
-  const groupByOptions = [
-    { id: 'projectName', label: 'Project', sortOrder: true },
-    { id: 'status', label: 'Status', sortOrder: true },
-    { id: 'taskType', label: 'Type', sortOrder: true },
-    { id: 'folderName', label: 'Folder', sortOrder: true },
-  ]
-
-  const assigneesGroupBy = { id: 'assignees', label: 'Assignee', sortOrder: true }
-  if (!assigneesIsMe) {
-    groupByOptions.push(assigneesGroupBy)
-  }
+  const groupByOptions = getGroupByOptions(assigneesFilter !== 'me')
 
   const groupByValue = useSelector((state) => state.dashboard.tasks.groupBy)
 
   const setGroupByValue = (value) => dispatch(onTasksGroupByChanged(value))
 
+  const handleGroupBy = (value) => {
+    const option = groupByOptions.find((o) => o.id === value?.id)
+    if (!option) return setGroupByValue([])
+    const optionValue = { ...option, sortOrder: value.sortOrder }
+
+    // update state
+    setGroupByValue([optionValue])
+  }
+
   // FILTER
   const filterValue = useSelector((state) => state.dashboard.tasks.filter)
   const setFilterValue = (value) => dispatch(onTasksFilterChanged(value))
 
-  const handleAssigneesChange = (isMe, newAssignees = []) => {
-    if (isMe) {
-      // setting back to me
-      const payload = {
-        assigneesIsMe: true,
-        assignees: assignees,
-      }
-
-      // update assignees to me
-      setAssignees(payload)
-
-      return
-    } else if (!newAssignees.length) {
-      // assignees cleared so set back to me
-      const payload = {
-        assigneesIsMe: true,
-        assignees: [],
-      }
-
-      // update assignees to me
-      setAssignees(payload)
-
-      return
-    } else {
-      // assignees changed, set to new assignees
-      const payload = {
-        assigneesIsMe: false,
-        assignees: newAssignees,
-      }
-
-      // update assignees to new assignees and remove isMe
-      setAssignees(payload)
-
-      return
+  const handleAssigneesChange = (filter, newAssignees) => {
+    const payload = {
+      filter: filter, // me, all, users
+      assignees: newAssignees || assignees,
     }
+
+    // update state
+    setAssignees(payload)
+  }
+
+  // When user does not have permission to list other users, force the
+  // assignees filter to "me" to avoid being unable to list tasks.
+  if (!isManager && assigneesFilter !== "me") {
+    console.log("Force assignees filter to 'me'")
+    setAssignees({
+      assignees: [],
+      filter: "me"
+    })
   }
 
   return (
@@ -102,7 +79,7 @@ const DashboardTasksToolbar = ({ allUsers = [], isLoadingAllUsers, view, setView
         title="Group by"
         options={groupByOptions}
         value={groupByValue}
-        onChange={setGroupByValue}
+        onChange={(v) => handleGroupBy(v[0])}
         multiSelect={false}
       />
       <InputText
@@ -110,16 +87,13 @@ const DashboardTasksToolbar = ({ allUsers = [], isLoadingAllUsers, view, setView
         value={filterValue}
         onChange={(e) => setFilterValue(e.target.value)}
       />
-      {isManager && !isLoadingAllUsers && (
+      {isManager && !isLoading && (
         <MeOrUserSwitch
           value={assignees}
-          onAssignee={(a) => handleAssigneesChange(false, a)}
-          isMe={assigneesIsMe}
-          onMe={() => handleAssigneesChange(true)}
-          options={allUsers}
+          onChange={(state, v) => handleAssigneesChange(state, v)}
+          filter={assigneesFilter}
           align={'right'}
           placeholder="Assignees"
-          editor
           buttonStyle={{ outline: '1px solid var(--md-sys-color-outline-variant)' }}
           style={{ zIndex: 20 }}
         />

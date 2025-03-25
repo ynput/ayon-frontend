@@ -1,9 +1,9 @@
 // shows the production installers available for download for a specific platform
-import { classNames } from 'primereact/utils'
+import clsx from 'clsx'
 import * as Styled from './InstallerProdCard.styled'
-import AppleLogo from '/src/svg/AppleLogo'
-import LinuxLogo from '/src/svg/LinuxLogo'
-import WindowsLogo from '/src/svg/WindowsLogo'
+import AppleLogo from '@/svg/AppleLogo'
+import LinuxLogo from '@/svg/LinuxLogo'
+import WindowsLogo from '@/svg/WindowsLogo'
 import { Button } from '@ynput/ayon-react-components'
 
 const InstallerProdCard = ({ platform, isFeatured = false, installers = [], onInstall }) => {
@@ -28,7 +28,7 @@ const InstallerProdCard = ({ platform, isFeatured = false, installers = [], onIn
   }
 
   return (
-    <Styled.Card className={classNames({ featured: isFeatured })}>
+    <Styled.Card className={clsx({ featured: isFeatured })}>
       {icon}
       <h2>{title} Installer</h2>
       <Styled.DownloadLinks>

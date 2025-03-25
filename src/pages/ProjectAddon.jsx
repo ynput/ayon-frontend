@@ -1,11 +1,12 @@
 import { useRef, useMemo, useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
-import { Section, Button } from '@ynput/ayon-react-components'
-import { Dialog } from 'primereact/dialog'
+import { Section, Button, Dialog } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
-import Hierarchy from '/src/containers/hierarchy'
-import TaskList from '/src/containers/taskList'
+import Hierarchy from '@containers/hierarchy'
+import TaskList from '@containers/taskList'
+import useAddonContextResend from '@hooks/useAddonContextResend'
+import LoadingPage from './LoadingPage'
 
 const AddonWrapper = styled.iframe`
   flex-grow: 1;
@@ -44,11 +45,59 @@ const TaskPicker = ({ callback, multiple }) => {
   }, [errorMessage, focusedTasks])
 
   return (
-    <Dialog header="Select task" footer={footer} visible={true} onHide={() => callback(null)}>
+    <Dialog
+      header="Select task"
+      size="lg"
+      footer={footer}
+      isOpen={true}
+      onClose={() => callback(null)}
+    >
       <div style={{ display: 'flex', flexDirection: 'row', minHeight: 500, gap: 12 }}>
         <Hierarchy style={{ flex: 1, minWidth: 250, maxWidth: 500 }} />
         <TaskList style={{ flex: 0.75, minWidth: 250, maxWidth: 500 }} />
       </div>
+    </Dialog>
+  )
+}
+
+const FolderPicker = ({ callback, multiple }) => {
+  const focusedFolders = useSelector((state) => state.context.focused.folders)
+
+  const errorMessage = useMemo(() => {
+    if (multiple && !focusedFolders.length) return 'Please select at least one folder'
+  }, [focusedFolders])
+
+  const footer = useMemo(() => {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}
+      >
+        <span style={{ color: 'red' }}>{errorMessage}</span>
+        <Button
+          label="Select"
+          icon="library_add_check"
+          disabled={!focusedFolders.length}
+          onClick={() => callback(multiple ? focusedFolders : focusedFolders[0])}
+        />
+      </div>
+    )
+  }, [errorMessage, focusedFolders])
+
+  return (
+    <Dialog
+      header="Select folder"
+      size="lg"
+      footer={footer}
+      isOpen={true}
+      onClose={() => callback(null)}
+      style={{ maxHeight: 'unset' }}
+    >
+      <Hierarchy style={{ flex: 1, minWidth: 250, minHeight: 400 }} />
     </Dialog>
   )
 }
@@ -64,6 +113,9 @@ const RequestModal = ({ onClose, callback = () => {}, requestType = null, ...pro
   if (requestType === 'taskPicker') {
     return <TaskPicker {...props} callback={onSubmit} />
   }
+  if (requestType === 'folderPicker') {
+    return <FolderPicker {...props} callback={onSubmit} />
+  }
 }
 
 const ProjectAddon = ({ addonName, addonVersion, sidebar, ...props }) => {
@@ -75,7 +127,7 @@ const ProjectAddon = ({ addonName, addonVersion, sidebar, ...props }) => {
   const projectName = useSelector((state) => state.project.name)
   const userName = useSelector((state) => state.user.name)
   const focusedFolders = context.focused.folders
-  const addonUrl = `${window.location.origin}/addons/${addonName}/${addonVersion}/frontend/?type=folder&id=9e978892e50c11ed8e8f0242ac120004`
+  const addonUrl = `${window.location.origin}/addons/${addonName}/${addonVersion}/frontend`
 
   // Modals are used to display unified interface for
   // picking entities and other tasks from the addon
@@ -83,6 +135,11 @@ const ProjectAddon = ({ addonName, addonVersion, sidebar, ...props }) => {
   const modalRequest = (requestType, callback) => {
     setRequestModal({ callback, requestType })
   }
+
+  //Switching between addons didn't update the loading state which affects the rest of the logic
+  useEffect(() => {
+    setLoading(true)
+  }, [addonUrl])
 
   useEffect(() => {
     window.modalRequest = modalRequest
@@ -110,11 +167,15 @@ const ProjectAddon = ({ addonName, addonVersion, sidebar, ...props }) => {
   }
 
   // Push context on addon load and on every context change
-
   useEffect(() => {
-    if (loading) return
+    if (loading) {
+      return
+    }
     pushContext()
   }, [focusedFolders])
+
+  // Push context to addon whenever explicitly requested
+  useAddonContextResend(pushContext)
 
   // Render sidebar
   // Each addon may have a sidebar component that is rendered on the left side of the screen
@@ -138,7 +199,17 @@ const ProjectAddon = ({ addonName, addonVersion, sidebar, ...props }) => {
       {sidebarComponent}
       <Section>
         <RequestModal {...requestModal} onClose={() => setRequestModal(null)} />
-        <AddonWrapper src={addonUrl} ref={addonRef} onLoad={onAddonLoad} />
+        {loading && (
+          <div style={{ position: 'absolute', inset: 0 }}>
+            <LoadingPage style={{ position: 'absolute' }} />
+          </div>
+        )}
+        <AddonWrapper
+          style={{ opacity: loading ? 0 : 1 }}
+          src={`${addonUrl}/?id=${window.senderId}`}
+          ref={addonRef}
+          onLoad={onAddonLoad}
+        />
       </Section>
     </main>
   )

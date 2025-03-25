@@ -1,4 +1,4 @@
-import { ayonApi } from './ayon'
+import api from '@api'
 
 const apiSuffix = (projectName, siteId, variant, asVersion) => {
   const params = new URLSearchParams()
@@ -7,28 +7,36 @@ const apiSuffix = (projectName, siteId, variant, asVersion) => {
   if (projectName && projectName !== '_') {
     suffix += `/${projectName}`
     if (siteId && siteId !== '_') {
-      params.append('site', siteId);
+      params.append('site', siteId)
     }
   }
 
-  if (variant)
-    params.append('variant', variant);
+  if (variant) params.append('variant', variant)
 
-  if (asVersion)
-    params.append('as', asVersion);
+  if (asVersion) params.append('as', asVersion)
 
-  const qs = params.toString();
-  return qs ? `${suffix}?${qs}` : suffix 
+  const qs = params.toString()
+  return qs ? `${suffix}?${qs}` : suffix
 }
 
-const addonSettings = ayonApi.injectEndpoints({
+const addonSettings = api.injectEndpoints({
   endpoints: (build) => ({
     getAddonSettingsList: build.query({
-      query: ({ variant, projectName, siteId }) => ({
-        url: `/api/settings`,
-        method: 'GET',
-        params: { variant, project_name: projectName, site_id: siteId, summary: true },
-      }),
+      query: ({ variant, projectName, siteId }) => {
+        // this should prevent passing null/undefined values to the query
+        // params once and for all (until we have typescript)
+        const params = {}
+        if (variant) params.variant = variant
+        if (projectName) params.project_name = projectName
+        if (siteId) params.site_id = siteId
+
+        return {
+          url: `/api/settings`,
+          method: 'GET',
+          params,
+        }
+      },
+
       // eslint-disable-next-line no-unused-vars
       providesTags: (result, error, arg) => [
         { type: 'addonSettingsList', ...arg },
@@ -255,6 +263,7 @@ const addonSettings = ayonApi.injectEndpoints({
       transformErrorResponse: (error) => error.data.detail || `Error ${error.status}`,
     }), // setAddonSettings
   }), // endpoints
+  overrideExisting: true,
 }) // addonSettings
 
 export const {

@@ -1,7 +1,9 @@
-import ayonClient from '/src/ayon'
-import { AssigneeSelect, Icon } from '@ynput/ayon-react-components'
-import { TimestampField } from '/src/containers/fieldFormat'
+import ayonClient from '@/ayon'
+import { AssigneeSelect, EnumTemplate, Icon } from '@ynput/ayon-react-components'
+import { TimestampField } from '@containers/fieldFormat'
+import { useSelector } from 'react-redux'
 import ToolsField from './fields/ToolsField'
+import { StyledStatus } from './utils.styled'
 
 const formatAttribute = (node, changes, fieldName, styled = true) => {
   const chobj = changes[node.id]
@@ -9,7 +11,9 @@ const formatAttribute = (node, changes, fieldName, styled = true) => {
   let tooltip = null
   let className = ''
   let value = node.attrib && node.attrib[fieldName]
+  let isChanged = false
   if (chobj && fieldName in chobj) {
+    isChanged = true
     // if value is null then it inherits (default value)
     value = chobj[fieldName] || '(inherited)'
     className = 'changed'
@@ -31,7 +35,26 @@ const formatAttribute = (node, changes, fieldName, styled = true) => {
     else if (fieldType === 'datetime') return <TimestampField value={value} ddOnly />
     else if (fieldType === 'boolean')
       return !value ? '' : <Icon icon="check" className={`editor-field ${className}`} />
-    else if (fieldType === 'list_of_strings' && typeof value === 'object') {
+    else if (fieldType === 'string') {
+      const _enum = attribSettings.enum
+      if (!value?.length || !_enum) {
+        return value || ''
+      }
+
+      const option = _enum.find((item) => item.value === value)
+      const changedStyles = {
+        backgroundColor: 'var(--color-changed)',
+        borderRadius: 'var(--border-radius-m)',
+        paddingLeft: 4,
+      }
+      return (
+        <EnumTemplate
+          option={option}
+          isChanged={isChanged}
+          style={isChanged ? changedStyles : { paddingLeft: 4 }}
+        />
+      )
+    } else if (fieldType === 'list_of_strings' && typeof value === 'object') {
       if (!value?.length) return ''
       const _enum = attribSettings.enum
 
@@ -74,6 +97,31 @@ const formatType = (node, changes, styled = true) => {
   )
 }
 
+const formatStatus = (node, changes, width) => {
+  const resolveWidth = (statusWidth) => {
+    if (statusWidth < 70) return 'icon'
+    if (statusWidth < 140) return 'short'
+    return 'full'
+  }
+  const size = resolveWidth(width)
+  const updatedStatus = changes[node.id] || {}
+  const originalStatusName = node.status
+  const updatedStatusName = updatedStatus._status
+  const statusName = updatedStatusName || originalStatusName
+
+  const allStatuses = useSelector((state) => state.project.statuses)
+  const selectedStatus = allStatuses[statusName] ? allStatuses[statusName] : {}
+
+  const { name, icon, color, shortName } = selectedStatus
+
+  return (
+    <StyledStatus className="editor-field" $isUpdated={!!updatedStatusName} $color={color}>
+      {icon && <Icon icon={icon} />}
+      {size !== 'icon' && <span className="statusName">{size === 'full' ? name : shortName}</span>}
+    </StyledStatus>
+  )
+}
+
 const formatAssignees = (node, changes, allUsers) => {
   // only show for tasks
   if (node.__entityType === 'folder') return null
@@ -94,6 +142,8 @@ const formatAssignees = (node, changes, allUsers) => {
           border: '1px solid var(--md-sys-color-outline-variant)',
           overflow: 'hidden',
         }}
+        readOnly
+        align="left"
       />
     </div>
   )
@@ -115,4 +165,4 @@ const getColumns = () => {
   return cols
 }
 
-export { getColumns, formatType, formatAttribute, formatAssignees }
+export { getColumns, formatType, formatAttribute, formatAssignees, formatStatus }

@@ -1,6 +1,27 @@
 import { AssigneeSelect, Button, Toolbar, Icon } from '@ynput/ayon-react-components'
 import styled, { css } from 'styled-components'
 
+export const FormRow = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--base-gap-large);
+
+  label {
+    min-width: 120px;
+  }
+
+  .field {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: left;
+    overflow: hidden;
+    padding: 1px;
+    margin: -1px;
+  }
+`
+
 const platformColors = {
   windows: '#00a2ed',
   linux: '#f47421',
@@ -82,7 +103,7 @@ export const AddonTools = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
   grid-template-rows: 1fr 1fr;
-  gap: 8px;
+  gap: var(--base-gap-large);
   padding-top: 1px;
   padding-right: 1px;
 
@@ -111,7 +132,7 @@ export const DevSelect = styled(AssigneeSelect)`
 
 export const LatestIcon = styled(Icon)`
   color: var(--md-sys-color-outline);
-  margin-left: 8px;
+  margin-left: auto;
   &:hover {
     color: var(--md-sys-color-on-surface);
   }

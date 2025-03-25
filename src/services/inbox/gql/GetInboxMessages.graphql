@@ -1,0 +1,52 @@
+query GetInboxMessages($last: Int, $active: Boolean, $important: Boolean, $cursor: String) {
+  inbox(
+    last: $last
+    showActiveMessages: $active
+    showImportantMessages: $important
+    before: $cursor
+  ) {
+    pageInfo {
+      hasPreviousPage
+      startCursor
+      endCursor
+    }
+    edges {
+      cursor
+      node {
+        ...MessageFragment
+      }
+    }
+  }
+}
+
+fragment MessageFragment on ActivityNode {
+  projectName
+  activityId
+  activityType
+  activityData
+  referenceType
+  referenceId
+  body
+  createdAt
+  updatedAt
+  active
+  read
+  author {
+    name
+    attrib {
+      fullName
+    }
+  }
+  origin {
+    id
+    name
+    label
+    type
+    subtype
+  }
+  parents {
+    type
+    name
+    label
+  }
+}

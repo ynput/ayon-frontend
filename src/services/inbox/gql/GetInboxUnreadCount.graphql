@@ -1,0 +1,15 @@
+query GetInboxUnreadCount($important: Boolean) {
+  inbox(
+    last: 500
+    showActiveMessages: true
+    showImportantMessages: $important
+    showUnreadMessages: true
+  ) {
+    edges {
+      node {
+        referenceId
+        read
+      }
+    }
+  }
+}

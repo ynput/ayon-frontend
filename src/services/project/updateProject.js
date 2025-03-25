@@ -1,6 +1,6 @@
-import { ayonApi } from '../ayon'
+import api from '@api'
 
-const updateProject = ayonApi.injectEndpoints({
+const updateProject = api.injectEndpoints({
   endpoints: (build) => ({
     createProject: build.mutation({
       query: ({ name, code, anatomy, library }) => ({
@@ -14,27 +14,17 @@ const updateProject = ayonApi.injectEndpoints({
         },
       }),
       transformErrorResponse: (error) => error.data.detail || `Error ${error.status}`,
-      async onQueryStarted({ ...patch }, { dispatch, queryFulfilled }) {
-        const patchResult = dispatch(
-          ayonApi.util.updateQueryData('getAllProjects', undefined, (draft) => {
-            const newProject = { name: patch.name, code: patch.code, library: patch.library }
-            draft.push(newProject)
-          }),
-        )
-        try {
-          await queryFulfilled
-        } catch {
-          patchResult.undo()
-        }
-      },
-      invalidatesTags: () => ['projects'],
+      invalidatesTags: () => [
+        { type: 'projects', id: 'LIST' },
+        { type: 'kanBanTask', id: 'LIST' },
+      ],
     }),
     deleteProject: build.mutation({
       query: ({ projectName }) => ({
         url: `/api/projects/${projectName}`,
         method: 'DELETE',
       }),
-      invalidatesTags: () => ['projects'],
+      invalidatesTags: () => [{ type: 'projects', id: 'LIST' }],
     }),
     updateProjectAnatomy: build.mutation({
       query: ({ projectName, anatomy }) => ({
@@ -56,11 +46,22 @@ const updateProject = ayonApi.injectEndpoints({
           ? []
           : 'active' in update
           ? // if active is updated, invalidate all projects
-            [{ type: 'project' }]
+            ['project']
           : // if not, invalidate only the updated project
-            [{ type: 'project', id: projectName }],
+            [
+              { type: 'project', id: projectName },
+              { type: 'projects', id: 'LIST' },
+            ],
+    }),
+    updateProjectUsers: build.mutation({
+      query: ({ projectName, userName, update }) => ({
+        url: `/api/projects/${projectName}/users/${userName}`,
+        method: 'PATCH',
+        body: update,
+      }),
     }),
   }),
+  overrideExisting: true,
 })
 
 export const {
@@ -68,4 +69,5 @@ export const {
   useDeleteProjectMutation,
   useUpdateProjectAnatomyMutation,
   useUpdateProjectMutation,
+  useUpdateProjectUsersMutation
 } = updateProject

@@ -1,6 +1,13 @@
 import { createSlice } from '@reduxjs/toolkit'
 import getInitialStateLocalStorage from './middleware/getInitialStateLocalStorage'
 
+export const filterActivityTypes = {
+  activity: ['comment', 'version.publish', 'status.change', 'assignee.add', 'assignee.remove'],
+  comments: ['comment'],
+  publishes: ['version.publish'],
+  checklists: ['checklist'],
+}
+
 const dashboardSlice = createSlice({
   name: 'dashboard',
   initialState: {
@@ -8,21 +15,28 @@ const dashboardSlice = createSlice({
     prefetchedIds: [],
     tasks: {
       selected: getInitialStateLocalStorage('dashboard-tasks-selected', []),
+      types: getInitialStateLocalStorage('dashboard-tasks-types', []),
       sortBy: getInitialStateLocalStorage('dashboard-tasks-sortBy', []),
       groupBy: getInitialStateLocalStorage('dashboard-tasks-groupBy', []),
       filter: getInitialStateLocalStorage('dashboard-tasks-filter', ''),
       assignees: getInitialStateLocalStorage('dashboard-tasks-assignees', []),
-      assigneesIsMe: getInitialStateLocalStorage('dashboard-tasks-assigneesIsMe', true),
-      attributesOpen: getInitialStateLocalStorage('dashboard-tasks-attributesOpen', true),
+      assigneesFilter: getInitialStateLocalStorage('dashboard-tasks-assigneesFilter', 'me'),
       collapsedColumns: getInitialStateLocalStorage('dashboard-tasks-collapsedColumns', []),
+      draggingIds: [],
     },
   },
   reducers: {
     onProjectSelected: (state, { payload = [] }) => {
       state.selectedProjects = payload
     },
-    onTaskSelected: (state, { payload = [] }) => {
-      state.tasks.selected = payload
+    onProjectOpened: (state, { payload }) => {
+      // check if project is already selected
+      if (state.selectedProjects.includes(payload)) return
+      state.selectedProjects = [payload]
+    },
+    onTaskSelected: (state, { payload = {} }) => {
+      state.tasks.selected = payload.ids
+      state.tasks.types = payload.types
     },
     onTasksSortByChanged: (state, { payload = [] }) => {
       state.tasks.sortBy = payload
@@ -33,12 +47,9 @@ const dashboardSlice = createSlice({
     onTasksFilterChanged: (state, { payload = '' }) => {
       state.tasks.filter = payload
     },
-    onAssigneesChanged: (state, { payload: { assignees = [], assigneesIsMe = false } }) => {
+    onAssigneesChanged: (state, { payload: { assignees = [], filter } }) => {
       state.tasks.assignees = assignees
-      state.tasks.assigneesIsMe = assigneesIsMe
-    },
-    onAttributesOpenChanged: (state, { payload }) => {
-      state.tasks.attributesOpen = payload
+      state.tasks.assigneesFilter = filter
     },
     onCollapsedColumnsChanged: (state, { payload }) => {
       state.tasks.collapsedColumns = payload
@@ -54,24 +65,31 @@ const dashboardSlice = createSlice({
       state.tasks.groupBy = []
       state.tasks.filter = ''
       state.tasks.assignees = []
-      state.tasks.assigneesIsMe = true
-      state.tasks.attributesOpen = true
+      state.tasks.assigneesFilter = 'me'
       state.tasks.collapsedColumns = []
+    },
+    onDraggingStart: (state, { payload }) => {
+      state.tasks.draggingIds = payload
+    },
+    onDraggingEnd: (state) => {
+      state.tasks.draggingIds = []
     },
   },
 })
 
 export const {
   onProjectSelected,
+  onProjectOpened,
   onTaskSelected,
   onTasksSortByChanged,
   onTasksGroupByChanged,
   onTasksFilterChanged,
   onAssigneesChanged,
-  onAttributesOpenChanged,
   onCollapsedColumnsChanged,
   onPrefetchIds,
   onClearDashboard,
+  onDraggingStart,
+  onDraggingEnd,
 } = dashboardSlice.actions
 export default dashboardSlice.reducer
 
@@ -81,12 +99,13 @@ export const dashboardLocalItems = {
   'dashboard/onTasksSortByChanged': [{ key: 'dashboard-tasks-sortBy' }],
   'dashboard/onTasksGroupByChanged': [{ key: 'dashboard-tasks-groupBy' }],
   'dashboard/onTasksFilterChanged': [{ key: 'dashboard-tasks-filter' }],
-  'dashboard/onTaskSelected': [{ key: 'dashboard-tasks-selected' }],
+  'dashboard/onTaskSelected': [
+    { key: 'dashboard-tasks-selected', payload: 'ids' },
+    { key: 'dashboard-tasks-types', payload: 'types' },
+  ],
   'dashboard/onAssigneesChanged': [
     { key: 'dashboard-tasks-assignees', payload: 'assignees' },
-    { key: 'dashboard-tasks-assigneesIsMe', payload: 'assigneesIsMe' },
+    { key: 'dashboard-tasks-assigneesFilter', payload: 'filter' },
   ],
-  'dashboard/onAssigneeIsMeChanged': [{ key: 'dashboard-tasks-assigneesIsMe' }],
-  'dashboard/onAttributesOpenChanged': [{ key: 'dashboard-tasks-attributesOpen' }],
   'dashboard/onCollapsedColumnsChanged': [{ key: 'dashboard-tasks-collapsedColumns' }],
 }

@@ -1,6 +1,6 @@
 import React from 'react'
 import * as Styled from '../util/OnBoardingStep.styled'
-import YnputConnector from '/src/components/YnputCloud/YnputConnector'
+import YnputConnector from '@components/YnputCloud/YnputConnector'
 
 export const ConnectionDetails = ({ Header, Body, Footer, userForm }) => {
   return (
@@ -13,6 +13,7 @@ export const ConnectionDetails = ({ Header, Body, Footer, userForm }) => {
         styleContainer={{ width: '70%', margin: '8px 0' }}
         style={{ width: '100%' }}
         user={userForm}
+        showDisconnect={false}
       />
       <Body>Only admins can see this information and you can disconnect later.</Body>
       <Footer next="Continue" back={null} />

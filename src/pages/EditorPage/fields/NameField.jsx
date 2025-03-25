@@ -1,5 +1,6 @@
 import React from 'react'
-import { CellWithIcon } from '/src/components/icons'
+import { CellWithIcon } from '@components/icons'
+import getEntityTypeIcon from '@helpers/getEntityTypeIcon'
 
 const NameField = ({
   node,
@@ -33,15 +34,19 @@ const NameField = ({
   if (chobj && '_name' in chobj) textStyle.color = 'var(--color-changed)'
 
   if (node.__entityType === 'task') {
-    icon = tasks[chobj?._taskType || node.taskType]?.icon || 'check_circle'
+    icon = tasks[chobj?._taskType || node.taskType]?.icon || getEntityTypeIcon('task')
     // textStyle.fontStyle = 'italic'
     value = value || 'Unnamed task'
   } else if (node.__entityType === 'folder') {
-    icon = folders[chobj?._folderType || node.folderType]?.icon || 'folder'
+    icon = folders[chobj?._folderType || node.folderType]?.icon || getEntityTypeIcon('folder')
     value = value || 'Unnamed folder'
   } else if (['product', 'version'].includes(node.__entityType)) {
-    icon = productTypes[node.productType || node.product?.productType]?.icon || 'layers'
+    icon =
+      productTypes[node.productType || node.product?.productType]?.icon ||
+      getEntityTypeIcon('version')
   }
+
+  if (value === undefined) return ''
 
   return (
     <CellWithIcon

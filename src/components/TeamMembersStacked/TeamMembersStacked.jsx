@@ -1,5 +1,5 @@
 import React from 'react'
-import { useGetUsersAssigneeQuery } from '/src/services/user/getUsers'
+import { useGetUsersAssigneeQuery } from '@queries/user/getUsers'
 import { UserImagesStacked } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
@@ -8,7 +8,7 @@ const StyledTeamMembersStacked = styled(UserImagesStacked)`
   border-radius: var(--border-radius);
   cursor: pointer;
 
-  :hover {
+  &:hover {
     background-color: var(--md-sys-color-surface-container-high-hover);
   }
 `

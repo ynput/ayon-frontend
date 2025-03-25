@@ -1,7 +1,7 @@
-import ayonClient from '/src/ayon'
+import ayonClient from '@/ayon'
 import { useState, useMemo, useEffect } from 'react'
-import { useGetProjectQuery } from '../../services/project/getProject'
-import { useGetCustomRootsQuery, useSetCustomRootsMutation } from '/src/services/customRoots'
+import { useGetProjectQuery } from '@queries/project/getProject'
+import { useGetCustomRootsQuery, useSetCustomRootsMutation } from '@queries/customRoots'
 import {
   InputText,
   FormLayout,
@@ -12,6 +12,7 @@ import {
 } from '@ynput/ayon-react-components'
 import ProjectManagerPageLayout from './ProjectManagerPageLayout'
 import { toast } from 'react-toastify'
+import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
 
 const ProjectRootForm = ({ projectName, siteName, siteId, roots }) => {
   const [setCustomRoots, { isLoading }] = useSetCustomRootsMutation()
@@ -69,13 +70,24 @@ const ProjectRootForm = ({ projectName, siteName, siteId, roots }) => {
   )
 }
 
-const ProjectRoots = ({ projectName, projectList }) => {
+const ProjectRoots = ({ projectName, projectList, userPermissions }) => {
+  if (userPermissions && !userPermissions.assignedToProject(projectName)) {
+    return (
+      <ProjectManagerPageLayout {...{ projectList }}>
+        <EmptyPlaceholder
+          icon="settings_alert"
+          message="You don't have permission to view this project's roots"
+        />
+      </ProjectManagerPageLayout>
+    )
+  }
+
   const {
     data: project,
-    isLoading: projectLoading,
+    isLoading: isLoadingProject,
     isError,
   } = useGetProjectQuery({ projectName }, { skip: !projectName })
-  const { data: rootOverrides, isLoading: overridesLoading } = useGetCustomRootsQuery({
+  const { data: rootOverrides } = useGetCustomRootsQuery({
     projectName,
   })
 
@@ -102,18 +114,24 @@ const ProjectRoots = ({ projectName, projectList }) => {
     return forms
   }, [project, rootOverrides])
 
-  if (projectLoading || overridesLoading) return <>loading</>
-
-  if (isError) return <>error</>
-
-  // if (forms.length === 0) return <h1>No sites configured</h1>
   return (
     <ProjectManagerPageLayout {...{ projectList }}>
-      <Section className="invisible" style={{ maxWidth: 600 }}>
-        {forms.map((form) => (
-          <ProjectRootForm key={form.siteId} {...form} />
-        ))}
-      </Section>
+      {(!isLoadingProject && isError) || !userPermissions.assignedToProject(projectName) ? (
+        <EmptyPlaceholder
+          icon="settings_alert"
+          message="Something went wrong while fetching project roots data"
+        />
+      ) : forms.length === 0 ? (
+        <EmptyPlaceholder icon="lists" message="No sites were found" />
+      ) : (
+        <div style={{ height: '100%', overflow: 'auto' }}>
+          <Section className="invisible" style={{ maxWidth: 600 }}>
+            {forms.map((form) => (
+              <ProjectRootForm key={form.siteId} {...form} />
+            ))}
+          </Section>
+        </div>
+      )}
     </ProjectManagerPageLayout>
   )
 }

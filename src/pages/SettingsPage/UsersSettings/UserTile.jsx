@@ -1,24 +1,13 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import { Panel } from '@ynput/ayon-react-components'
-import UserImage from '/src/components/UserImage'
-
+import UserImage from '@components/UserImage'
 import styled, { css } from 'styled-components'
-import { useGetUserByNameQuery } from '/src/services/user/getUsers'
+import { useGetUserByNameQuery } from '@queries/user/getUsers'
 import { useSelector } from 'react-redux'
 import { formatDistance } from 'date-fns'
 import { isObject } from 'lodash'
-import getShimmerStyles from '/src/styles/getShimmerStyles'
-
-const StyledUserImage = styled(UserImage)`
-  /* isLoading */
-  ${({ $isLoading }) =>
-    $isLoading &&
-    css`
-      border: none;
-      z-index: 0;
-    `}
-`
+import clsx from 'clsx'
 
 // styled panel
 const PanelStyled = styled(Panel)`
@@ -26,7 +15,7 @@ const PanelStyled = styled(Panel)`
   align-items: center;
   background-color: var(--md-sys-color-surface-container-high);
   padding: 8px;
-  gap: 8px;
+  gap: var(--base-gap-large);
 
   /* if not disable hover */
   ${({ disableHover }) =>
@@ -40,17 +29,6 @@ const PanelStyled = styled(Panel)`
         background-color: var(--md-sys-color-surface-container-high-active);
       }
     `}
-
-  /* isLoading */
-  ${({ $isLoading }) =>
-    $isLoading &&
-    css`
-      ${getShimmerStyles()}
-
-      :hover {
-        background-color: var(--md-sys-color-surface-container-high);
-      }
-    `}
 `
 
 const TitleStyled = styled.span`
@@ -62,16 +40,6 @@ const TitleStyled = styled.span`
   text-overflow: ellipsis;
 
   font-weight: bold;
-`
-
-const StyledLoading = styled.div`
-  position: absolute;
-  inset: 0;
-  border-radius: var(--border-radius-m);
-  ${getShimmerStyles(
-    'var(--md-sys-color-surface-container-highest)',
-    'var(--md-sys-color-surface-container-highest-hover',
-  )}
 `
 
 const UserTile = ({
@@ -132,17 +100,21 @@ const UserTile = ({
       onClick={onClick}
       disableHover={disableHover}
       style={style}
-      $isLoading={loadingState}
+      className={clsx({ loading: loadingState }, 'HELLO')}
     >
-      <StyledUserImage name={name} highlight={isSelf} $isLoading={loadingState} />
-      <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
+      <UserImage name={name} highlight={isSelf} />
+      <div
+        style={{ flex: 1, overflow: 'hidden', position: 'relative' }}
+        className={clsx({
+          loading: loadingState,
+        })}
+      >
         <TitleStyled style={{ whiteSpace: 'nowrap' }}>
           {!loadingState && (attrib?.fullName ? `${attrib?.fullName} (${name})` : name)}
         </TitleStyled>
         <span style={{ opacity: 0.5, height: 18, display: 'block' }}>
           {!loadingState ? (rolesHeader.length ? rolesHeader.join(', ') : 'No Roles') : ''}
         </span>
-        {loadingState && <StyledLoading />}
       </div>
       {updatedAt && (
         <span style={{ textAlign: 'end', opacity: 0.5 }}>

@@ -1,15 +1,12 @@
 import { useState, useMemo, useEffect } from 'react'
-import { Dialog } from 'primereact/dialog'
+import { Dialog } from '@ynput/ayon-react-components'
 import { toast } from 'react-toastify'
 
 import { Spacer, InputText, Toolbar, SaveButton, InputSwitch } from '@ynput/ayon-react-components'
-import SettingsEditor from '/src/containers/SettingsEditor'
+import SettingsEditor from '@containers/SettingsEditor'
 import AnatomyPresetDropdown from './AnatomyPresetDropdown'
-import {
-  useGetAnatomyPresetQuery,
-  useGetAnatomySchemaQuery,
-} from '../../../services/anatomy/getAnatomy'
-import { useCreateProjectMutation } from '/src/services/project/updateProject'
+import { useGetAnatomyPresetQuery, useGetAnatomySchemaQuery } from '@queries/anatomy/getAnatomy'
+import { useCreateProjectMutation } from '@queries/project/updateProject'
 
 // allow only alphanumeric and underscorer,
 // while underscore cannot be the first or last character
@@ -138,23 +135,42 @@ const NewProjectDialog = ({ onHide }) => {
       <SaveButton
         label="Create Project"
         onClick={handleSubmit}
-        active={name && code}
+        active={name && code && !isOriginalAnatomyLoading && !isSchemaLoading}
         saving={isLoading}
         disabled={!!(nameValidationError || codeValidationError)}
       />
     </Toolbar>
   )
 
+  const handleKeyDown = (e) => {
+    e?.stopPropagation()
+    const enter = e.key === 'Enter'
+    const ctrlMeta = e.ctrlKey || e.metakey
+    const shift = e.shiftKey
+    const esc = e.key === 'Escape'
+    const isSubmitEnabeld = !(nameValidationError || codeValidationError)
+
+    if (isSubmitEnabeld && enter && ctrlMeta) handleSubmit()
+    if (isSubmitEnabeld && enter && shift) handleSubmit()
+    if (esc) onHide()
+  }
+
+  const anatomyEditor = useMemo(() => {
+    if (isSchemaLoading || isOriginalAnatomyLoading || !formData) {
+      return 'Loading editor...'
+    }
+    return <SettingsEditor schema={schema} formData={formData} onChange={setFormData} />
+  }, [isSchemaLoading, isOriginalAnatomyLoading, formData, schema, setFormData])
+
   return (
     <Dialog
       header="Create a new project"
       footer={footer}
-      visible="true"
-      onHide={onHide}
-      style={{
-        width: '50vw',
-        height: '80%',
-      }}
+      isOpen={true}
+      onClose={() => onHide()}
+      size="full"
+      style={{ height: '80%', maxHeight: 1000, zIndex: 999, maxWidth: 2000 }}
+      onKeyDown={handleKeyDown}
     >
       <div
         style={{
@@ -188,11 +204,7 @@ const NewProjectDialog = ({ onHide }) => {
             tooltip="Project anatomy preset"
           />
         </Toolbar>
-        {isSchemaLoading || isOriginalAnatomyLoading ? (
-          'Loading editor...'
-        ) : (
-          <SettingsEditor schema={schema} formData={formData} onChange={setFormData} />
-        )}
+        {anatomyEditor}
       </div>
     </Dialog>
   )

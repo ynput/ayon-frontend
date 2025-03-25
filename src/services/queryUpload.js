@@ -1,12 +1,11 @@
 import axios from 'axios'
-import { onUploadFinished, onUploadProgress } from '../features/context'
+import { onUploadFinished, onUploadProgress } from '@state/context'
 
 const queryUpload = async (arg, api, { endpoint, method = 'put', overwrite = false }) => {
   // isNameEndpoint is used to determine if the endpoint has the name of the file in the url
-  const { files, isNameEndpoint } = arg
+  const { files, isNameEndpoint, abortController } = arg
   const { dispatch } = api
 
-  const abortController = new AbortController()
   const cancelToken = axios.CancelToken
   const cancelTokenSource = cancelToken.source()
 
@@ -16,7 +15,7 @@ const queryUpload = async (arg, api, { endpoint, method = 'put', overwrite = fal
   for (const file of files) {
     try {
       const opts = {
-        signal: abortController.signal,
+        signal: abortController?.signal,
         cancelToken: cancelTokenSource.token,
         onUploadProgress: (e) =>
           dispatch(

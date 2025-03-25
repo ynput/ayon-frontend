@@ -10,7 +10,7 @@ export const NavBar = styled.nav`
     display: flex;
     flex-direction: row;
     align-items: center;
-    gap: 4px;
+    gap: var(--base-gap-small);
     /* reset defaults */
     list-style: none;
     margin: 0;

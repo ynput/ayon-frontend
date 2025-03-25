@@ -1,13 +1,13 @@
 import React from 'react'
 import { Fragment } from 'react'
 import { Link } from 'react-router-dom'
-import UserTile from '/src/pages/SettingsPage/UsersSettings/UserTile'
+import UserTile from '@pages/SettingsPage/UsersSettings/UserTile'
 import DashboardPanelWrapper from './DashboardPanelWrapper'
-import { useGetTeamsQuery } from '../../../services/team/getTeams'
+import { useGetTeamsQuery } from '@queries/team/getTeams'
 import { Button } from '@ynput/ayon-react-components'
-import getShimmerStyles from '/src/styles/getShimmerStyles'
-import styled, { css } from 'styled-components'
-import TeamMembersStacked from '/src/components/TeamMembersStacked/TeamMembersStacked'
+import clsx from 'clsx'
+import styled from 'styled-components'
+import TeamMembersStacked from '@components/TeamMembersStacked/TeamMembersStacked'
 
 const subTitle = (members, leaders) => {
   let mt = ''
@@ -24,7 +24,7 @@ const subTitle = (members, leaders) => {
 const StyledTeam = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--base-gap-large);
   padding: 8px;
   padding-top: 4px;
   border-radius: var(--border-radius);
@@ -36,12 +36,9 @@ const StyledTeam = styled.div`
     background-color: var(--md-sys-color-surface-container);
   }
 
-  ${({ $isLoading }) =>
-    $isLoading &&
-    css`
-      min-height: 100px;
-      ${getShimmerStyles()}
-    `}
+  &.loading {
+    min-height: 100px;
+  }
 `
 
 const ProjectTeams = ({ projectName }) => {
@@ -63,7 +60,7 @@ const ProjectTeams = ({ projectName }) => {
   return (
     <DashboardPanelWrapper title={`Teams - ${data.length}`}>
       {data.map((team, i) => (
-        <StyledTeam key={i} $isLoading={isFetching}>
+        <StyledTeam key={i} className={clsx({ loading: isFetching })}>
           {!isFetching && (
             <>
               <h2 style={{ position: 'relative' }}>

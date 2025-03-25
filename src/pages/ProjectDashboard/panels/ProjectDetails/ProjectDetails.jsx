@@ -1,24 +1,24 @@
 import React, { useEffect, useState } from 'react'
-import { useGetProjectQuery } from '/src/services/project/getProject'
+import { useGetProjectQuery } from '@queries/project/getProject'
 import DashboardPanelWrapper from '../DashboardPanelWrapper'
-import Thumbnail from '/src/containers/thumbnail'
-import AttributeTable from '/src/containers/attributeTable'
+import AttributeTable from '@containers/attributeTable'
 import { format } from 'date-fns'
 import { Button, SaveButton, Toolbar } from '@ynput/ayon-react-components'
 import * as Styled from './ProjectDetails.styled'
-import AttribForm from '/src/components/AttribForm/AttribForm'
-import { useGetAnatomySchemaQuery } from '/src/services/anatomy/getAnatomy'
+import AttribForm, { getDefaultFromType } from '@components/AttribForm/AttribForm'
+import { useGetAnatomySchemaQuery } from '@queries/anatomy/getAnatomy'
 import { isEmpty, isEqual } from 'lodash'
 import { useSelector } from 'react-redux'
-import { useUpdateProjectMutation } from '/src/services/project/updateProject'
+import { useUpdateProjectMutation } from '@queries/project/updateProject'
 import { toast } from 'react-toastify'
+import clsx from 'clsx'
 
 const ProjectDetails = ({ projectName }) => {
   const isUser = useSelector((state) => state.user.data.isUser)
 
   // GET DATA
   const { data = {}, isFetching, isError } = useGetProjectQuery({ projectName })
-  const { data: schema } = useGetAnatomySchemaQuery()
+  const { data: schema = {} } = useGetAnatomySchemaQuery()
   const fields = schema?.definitions?.ProjectAttribModel?.properties
 
   // UPDATE DATA
@@ -42,8 +42,22 @@ const ProjectDetails = ({ projectName }) => {
   const setInitFormState = (projectData) => {
     const updatedProjectForm = { ...projectFormInit }
     for (const key in projectFormInit) {
-      updatedProjectForm[key] = projectData[key]
+      if (key === 'attrib') {
+        updatedProjectForm[key] = { ...projectData[key] }
+      } else {
+        updatedProjectForm[key] = projectData[key]
+      }
     }
+
+    // add any fields that have not been added to the form
+    for (const key in fields) {
+      if (updatedProjectForm.attrib[key] === undefined) {
+        const field = fields[key]
+        // add missing field
+        updatedProjectForm.attrib[key] = getDefaultFromType(field.type)
+      }
+    }
+
     setProjectForm(updatedProjectForm)
     // update init data to compare changes
     setInitData(updatedProjectForm)
@@ -57,7 +71,7 @@ const ProjectDetails = ({ projectName }) => {
       // update project form with only the fields we need from the projectForm init state
       setInitFormState(data)
     }
-  }, [data, isFetching])
+  }, [data, isFetching, fields])
 
   const { attrib = {}, active, code, library } = data
 
@@ -93,7 +107,7 @@ const ProjectDetails = ({ projectName }) => {
   // Active status
   attribArray.unshift({
     value: (
-      <Styled.Active $isLoading={isFetching} $isActive={active}>
+      <Styled.Active className={clsx({ loading: isFetching, active })}>
         {active ? 'active' : ' inactive'}
       </Styled.Active>
     ),
@@ -192,12 +206,9 @@ const ProjectDetails = ({ projectName }) => {
           </Styled.Header>
         )
       }
-      stylePanel={{ height: 'calc(100% - 8px)', flex: 1, overflow: 'hidden' }}
+      stylePanel={{ height: 'calc(100% - 8px)', flex: 1, overflow: 'hidden', minHeight: 'unset' }}
       style={{ height: '100%', overflow: 'hidden' }}
     >
-      <Styled.Thumbnail>
-        <Thumbnail projectName={projectName} isLoading={isFetching} shimmer />
-      </Styled.Thumbnail>
       {editing ? (
         <AttribForm
           form={projectForm}

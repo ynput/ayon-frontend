@@ -1,14 +1,14 @@
 import { useMemo } from 'react'
-import { useGetBundleListQuery } from '/src/services/bundles'
-import { useGetInstallerListQuery } from '/src/services/installers'
+import { useListBundlesQuery } from '@queries/bundles/getBundles'
 import { coerce, rcompare } from 'semver'
-import useLocalStorage from '/src/hooks/useLocalStorage'
+import useLocalStorage from '@hooks/useLocalStorage'
 import { toast } from 'react-toastify'
+import { useListInstallersQuery } from '@queries/installers/getInstallers'
 
 const useGetInstallerDownload = () => {
-  const { data: installers = [] } = useGetInstallerListQuery()
+  const { data: { installers = [] } = {} } = useListInstallersQuery({})
 
-  const { data: bundleList = [] } = useGetBundleListQuery({ archived: true })
+  const { data: { bundles: bundleList = [] } = {} } = useListBundlesQuery({ archived: true })
   const production = useMemo(() => {
     return bundleList.find((bundle) => bundle.isProduction)
   }, [bundleList])
@@ -33,13 +33,9 @@ const useGetInstallerDownload = () => {
       })
   }, [installers])
 
-  // Filter sorted installers into production and non-production installers
+  // Filter sorted installers into production installers
   const productionInstallers = useMemo(() => {
     return sortedInstallers.filter((installer) => installer.version === installerVersion)
-  }, [sortedInstallers, installerVersion])
-
-  const nonProductionInstallers = useMemo(() => {
-    return sortedInstallers.filter((installer) => installer.version !== installerVersion)
   }, [sortedInstallers, installerVersion])
 
   // Function to group installers by platform
@@ -58,9 +54,9 @@ const useGetInstallerDownload = () => {
     () => groupInstallersBy(productionInstallers, 'platform'),
     [productionInstallers],
   )
-  const nonProductionInstallersGroupedByPlatform = useMemo(
-    () => groupInstallersBy(nonProductionInstallers, 'version'),
-    [nonProductionInstallers],
+  const allInstallersGroupedByPlatform = useMemo(
+    () => groupInstallersBy(sortedInstallers, 'version'),
+    [sortedInstallers],
   )
 
   // get operating system of user
@@ -132,9 +128,7 @@ const useGetInstallerDownload = () => {
     const serverSource = sources.find((source) => source.type === 'server')
     const urlSource = sources.find((source) => source.type === 'http')
     if (serverSource || urlSource) {
-      const url = serverSource
-        ? `/api/desktop/installers/${filename}`
-        : urlSource.url
+      const url = serverSource ? `/api/desktop/installers/${filename}` : urlSource.url
       // download the file
       downloadFromUrl(url, filename)
     } else {
@@ -144,7 +138,7 @@ const useGetInstallerDownload = () => {
 
   return {
     prodInstallers: productionInstallersGroupedByPlatform,
-    nonProdInstallers: nonProductionInstallersGroupedByPlatform,
+    allInstallers: allInstallersGroupedByPlatform,
     directDownload,
     platform: userPlatform,
     handleDownload,

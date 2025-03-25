@@ -100,7 +100,7 @@ const LineStyled = styled.hr`
   ${({ label }) =>
     label &&
     css`
-      :hover {
+      &:hover {
         scale: 1.2;
         transform-origin: center;
         z-index: 20;
@@ -117,7 +117,7 @@ const LineStyled = styled.hr`
         !animation &&
         css`
           transform-origin: ${index === 0 ? 'left' : 'right'} !important;
-          :hover {
+          &:hover {
             ::after {
               left: ${index === 0 ? '0' : '100%'};
               transform: translateX(${index === 0 ? '0' : '-100%'}) scale(1);
@@ -128,7 +128,7 @@ const LineStyled = styled.hr`
     `}
 `
 
-const ProgressBar = ({ values = [], backgroundColor, isLoading, onClick }) => {
+const ProgressBar = ({ values = [], backgroundColor, onClick }) => {
   // block all animations once played once
   const [animation, setAnimation] = useState(true)
   // add placeholder line if only one value is provided
@@ -149,20 +149,19 @@ const ProgressBar = ({ values = [], backgroundColor, isLoading, onClick }) => {
 
   return (
     <ProgressStyled style={{ backgroundColor }} onAnimationEnd={() => setAnimation(false)}>
-      {!isLoading &&
-        values.map(({ value, color, label }, i, arr) => (
-          <LineStyled
-            animation={animation}
-            color={color}
-            flex={value}
-            label={label}
-            index={i}
-            length={arr.length}
-            key={i}
-            left={arr.slice(0, i).reduce((acc, { value }) => acc + value, 0)}
-            onClick={() => onClick && onClick({ value, label })}
-          />
-        ))}
+      {values.map(({ value, color, label }, i, arr) => (
+        <LineStyled
+          animation={animation}
+          color={color}
+          flex={value}
+          label={label}
+          index={i}
+          length={arr.length}
+          key={i}
+          left={arr.slice(0, i).reduce((acc, { value }) => acc + value, 0)}
+          onClick={() => onClick && onClick({ value, label })}
+        />
+      ))}
     </ProgressStyled>
   )
 }

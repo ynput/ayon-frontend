@@ -1,7 +1,7 @@
 import PubSub from '../pubsub'
-import { ayonApi } from './ayon'
+import api from '@api'
 
-const restartServer = ayonApi.injectEndpoints({
+const restartServer = api.injectEndpoints({
   endpoints: (build) => ({
     restartServer: build.mutation({
       query: () => ({
@@ -52,7 +52,7 @@ const restartServer = ayonApi.injectEndpoints({
       }),
       async onQueryStarted({ required, reason }, { dispatch, queryFulfilled }) {
         const putResult = dispatch(
-          ayonApi.util.updateQueryData('getRestart', {}, (draft) => {
+          api.util.updateQueryData('getRestart', {}, (draft) => {
             Object.assign(draft, { required, reason })
           }),
         )
@@ -64,6 +64,7 @@ const restartServer = ayonApi.injectEndpoints({
       },
     }),
   }),
+  overrideExisting: true,
 })
 
 export const { useRestartServerMutation, usePostRestartMutation, useGetRestartQuery } =

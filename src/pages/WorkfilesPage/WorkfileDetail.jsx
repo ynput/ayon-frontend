@@ -1,26 +1,14 @@
 import { Section, Panel } from '@ynput/ayon-react-components'
-import { PathField } from '/src/containers/fieldFormat'
-import Thumbnail from '/src/containers/thumbnail'
-import AttributeTable from '/src/containers/attributeTable'
+import { PathField } from '@containers/fieldFormat'
+import Thumbnail from '@components/Thumbnail'
+import AttributeTable from '@containers/attributeTable'
 import { useState } from 'react'
 import { useSelector } from 'react-redux'
-import { useGetWorkfileByIdQuery } from '/src/services/getWorkfiles'
-import { useGetSiteRootsQuery } from '/src/services/customRoots'
-import SiteDropdown from '/src/containers/SiteDropdown'
+import { useGetWorkfileByIdQuery } from '@queries/getWorkfiles'
+import { useGetSiteRootsQuery } from '@queries/customRoots'
+import SiteDropdown from '@containers/SiteDropdown'
+import { getCurrentPlatform } from '@helpers/platform'
 
-const getCurrentPlatform = () => {
-  const platform = window.navigator.userAgent.toLowerCase()
-
-  if (platform.includes('win')) {
-    return 'windows'
-  } else if (platform.includes('mac')) {
-    return 'darwin'
-  } else if (platform.includes('linux')) {
-    return 'linux'
-  } else {
-    return 'other'
-  }
-}
 
 const replaceRoot = (inputStr, replacements) => {
   if (!inputStr) return inputStr
@@ -28,7 +16,10 @@ const replaceRoot = (inputStr, replacements) => {
     //TODO: fix eslint error
     //eslint-disable-next-line
     if (replacements.hasOwnProperty(p1)) {
-      return replacements[p1]
+      let value = replacements[p1]
+      // strip forward and back slashes from the end of the value
+      value = value.replace(/\/$/, '')
+      return value
     }
     return match
   })

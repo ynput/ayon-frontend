@@ -1,13 +1,17 @@
-import axios from 'axios'
-import { useEffect, useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { toast } from 'react-toastify'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { TablePanel, Button, Spacer, Section, Toolbar } from '@ynput/ayon-react-components'
 import NewServiceDialog from './NewServiceDialog'
-import useCreateContext from '/src/hooks/useCreateContext'
-import confirmDelete from '/src/helpers/confirmDelete'
+import useCreateContext from '@hooks/useCreateContext'
+import confirmDelete from '@helpers/confirmDelete'
 import styled from 'styled-components'
+import { useGetServicesQuery } from '@queries/services/getServices'
+import {
+  useDeleteServiceMutation,
+  useUpdateServiceMutation,
+} from '@queries/services/updateServices'
 
 const StatusBadge = styled.span`
   display: inline-block;
@@ -58,74 +62,52 @@ const formatStatus = (rowData) => {
 }
 
 const ServicesPage = () => {
-  const [services, setServices] = useState([])
   const [showNewService, setShowNewService] = useState(false)
   const [selectedServices, setSelectedServices] = useState([])
 
-  useEffect(() => {
-    //preselect the first service
-    // (to avoid empty selection, with which context menu behaves weirdly)
+  const { data: services = [] } = useGetServicesQuery(undefined, {
+    pollingInterval: 2000,
+  })
 
-    if (services?.length && !selectedServices.length) {
-      setSelectedServices([services[0].name])
-    }
-  }, [services, selectedServices])
-
-  const loadServices = () => {
-    axios.get('/api/services').then((response) => {
-      setServices(response.data.services)
-    })
-  }
+  const [deleteService] = useDeleteServiceMutation()
 
   const deleteSelected = (selected) => {
     confirmDelete({
       label: 'Services',
       accept: async () => {
         const patches = selected ? selected : selectedServices
-        for (const serviceName of patches) {
-          try {
-            await axios.delete(`/api/services/${serviceName}`)
 
-            toast.success(`${serviceName} deleted`)
-          } catch (error) {
-            toast.error(`Unable to delete ${serviceName}`)
-          }
+        const promises = patches.map((serviceName) => {
+          return deleteService({ serviceName }).unwrap()
+        })
+
+        try {
+          await Promise.all(promises)
+          toast.success(`Services deleted`)
+        } catch (error) {
+          toast.error(error.detail || 'Unable to delete services')
         }
-
-        loadServices()
       },
       showToasts: false,
     })
   }
 
-  const enableSelected = (selected) => {
-    const patches = selected ? selected : selectedServices
-    for (const serviceName of patches) {
-      axios
-        .patch(`/api/services/${serviceName}`, { shouldRun: true })
-        .then(() => toast.success(`${serviceName} enabled`))
-        .catch(() => toast.error(`Unable to enable ${serviceName}`))
-        .finally(() => loadServices())
-    }
-  }
-  const disableSelected = (selected) => {
-    const patches = selected ? selected : selectedServices
-    for (const serviceName of patches) {
-      axios
-        .patch(`/api/services/${serviceName}`, { shouldRun: false })
-        .then(() => toast.success(`${serviceName} disabled`))
-        .catch(() => toast.error(`Unable to disable ${serviceName}`))
-        .finally(() => loadServices())
-    }
-  }
+  const [updateService] = useUpdateServiceMutation()
 
-  useEffect(() => {
-    loadServices()
-    const interval = setInterval(() => {
-      loadServices()
-    }, 2000)
-    return () => clearInterval(interval)
-  }, [])
+  const toggleShouldRun = async (selected, showRun) => {
+    const patches = selected ? selected : selectedServices
+
+    const promises = patches.map((serviceName) => {
+      return updateService({ serviceName, data: { shouldRun: showRun } }).unwrap()
+    })
+
+    try {
+      await Promise.all(promises)
+      toast.success(`Services ${showRun ? 'started' : 'stopped'}`)
+    } catch (error) {
+      toast.error(error.detail || 'Unable to stop/start services')
+    }
+  }
 
   const selection = useMemo(() => {
     if (!services) return []
@@ -142,13 +124,13 @@ const ServicesPage = () => {
         {
           label: 'Start selected',
           disabled: !services.length,
-          command: () => enableSelected(services),
+          command: () => toggleShouldRun(services, true),
           icon: 'check',
         },
         {
           label: 'Stop selected',
           disabled: !services.length,
-          command: () => disableSelected(services),
+          command: () => toggleShouldRun(services, false),
           icon: 'cancel',
         },
         {
@@ -167,9 +149,7 @@ const ServicesPage = () => {
 
   return (
     <main>
-      {showNewService && (
-        <NewServiceDialog onHide={() => setShowNewService(false)} onSpawn={loadServices} />
-      )}
+      {showNewService && <NewServiceDialog onHide={() => setShowNewService(false)} />}
       <Section>
         <Toolbar>
           <Button icon="add" label="New service" onClick={() => setShowNewService(true)} />
@@ -189,17 +169,22 @@ const ServicesPage = () => {
               if (!selectedServices.includes(e.value.name)) setSelectedServices([e.value.name])
             }}
           >
-            <Column field="name" header="Service name" />
-            <Column field="addonName" header="Addon name" />
-            <Column field="addonVersion" header="Addon version" />
-            <Column field="service" header="Service" />
-            <Column field="hostname" header="Host" />
-            <Column field="data.env.AYON_DEFAULT_SETTINGS_VARIANT" header="Settings variant" />
+            <Column field="name" header="Service name" sortable />
+            <Column field="addonName" header="Addon name" sortable />
+            <Column field="addonVersion" header="Addon version" sortable />
+            <Column field="service" header="Service" sortable />
+            <Column field="hostname" header="Host" sortable />
+            <Column
+              field="data.env.AYON_DEFAULT_SETTINGS_VARIANT"
+              header="Settings variant"
+              sortable
+            />
             <Column
               field="isRunning"
               header="Status"
               body={formatStatus}
               style={{ maxWidth: 130, textAlign: 'center' }}
+              sortable
             />
           </DataTable>
         </TablePanel>

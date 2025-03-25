@@ -1,6 +1,14 @@
 node_modules/
 build/
 dist/
-yarn.lock
 yarn-error.log
 .env.local
+.env
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+
+playwright/.auth
+.__mf__temp/
+localSharedImportMap.js

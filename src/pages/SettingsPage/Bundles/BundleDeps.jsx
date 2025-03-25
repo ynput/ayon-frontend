@@ -1,10 +1,9 @@
-import { FormLayout } from '@ynput/ayon-react-components'
+import { FormLayout, Dialog } from '@ynput/ayon-react-components'
 import React, { useState } from 'react'
 import BundleDepPackage from './BundleDepPackage'
-import { useUpdateBundleMutation } from '/src/services/bundles'
+import { useUpdateBundleMutation } from '@queries/bundles/updateBundles'
 import { toast } from 'react-toastify'
-import { Dialog } from 'primereact/dialog'
-import { useGetDependencyPackageListQuery } from '/src/services/dependencyPackages'
+import { useListDependencyPackagesQuery } from '@queries/dependencyPackages/getDependencyPackages'
 import BundleDepsPicker from './BundleDepsPicker'
 
 const BundleDeps = ({ bundle, onChange }) => {
@@ -15,7 +14,7 @@ const BundleDeps = ({ bundle, onChange }) => {
   const [updatePackageForm, setUpdatePackageForm] = useState(initPackageForm)
 
   // get dep packages from server
-  const { data: packages = [] } = useGetDependencyPackageListQuery()
+  const { data: { packages = [] } = {} } = useListDependencyPackagesQuery()
 
   const [updateBundle, { isLoading: isUpdating }] = useUpdateBundleMutation()
 
@@ -71,8 +70,10 @@ const BundleDeps = ({ bundle, onChange }) => {
     <>
       <Dialog
         header={'Update Dependency Package'}
-        visible={!!updatePackageForm.platform}
-        onHide={handleCloseForm}
+        isOpen={!!updatePackageForm.platform}
+        onClose={handleCloseForm}
+        size="sm"
+        style={{ width: '500px' }}
       >
         <BundleDepsPicker
           packages={packages}

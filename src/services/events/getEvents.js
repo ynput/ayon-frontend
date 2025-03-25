@@ -1,5 +1,5 @@
-import { ayonApi } from '../ayon'
-import PubSub from '/src/pubsub'
+import api from '@api'
+import PubSub from '@/pubsub'
 
 const EVENT_FRAGMENT = `
 fragment EventFragment on EventNode {
@@ -100,7 +100,7 @@ const patchNewEvents = (type, events, draft) => {
   }
 }
 
-const getEvents = ayonApi.injectEndpoints({
+const getEvents = api.injectEndpoints({
   endpoints: (build) => ({
     getEvents: build.query({
       query: ({ last = 100, includeLogs = true, filter = '' }) => ({
@@ -134,7 +134,7 @@ const getEvents = ayonApi.injectEndpoints({
           await cacheDataLoaded
 
           const handlePubSub = (topic, message) => {
-            if (topic === 'client.connected') {
+            if (topic === 'client.connected' || topic === 'inbox.message') {
               return
             }
 
@@ -179,6 +179,7 @@ const getEvents = ayonApi.injectEndpoints({
       transformResponse: (response) => transformEvents(response?.data?.events),
     }),
   }),
+  overrideExisting: true,
 })
 
 export const {

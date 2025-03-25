@@ -1,0 +1,11 @@
+#import "./KanbanFragment.graphql"
+
+query GetKanbanTasks($projects: [String!], $taskIds: [String!], $last: Int) {
+  kanban(projects: $projects, taskIds: $taskIds, last: $last) {
+    edges {
+      node {
+        ...KanbanFragment
+      }
+    }
+  }
+}

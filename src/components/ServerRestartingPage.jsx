@@ -1,6 +1,6 @@
-import LoadingPage from '../pages/LoadingPage'
+import LoadingPage from '@pages/LoadingPage'
 import { useContext } from 'react'
-import { SocketContext } from '../context/websocketContext'
+import { SocketContext } from '@context/websocketContext'
 
 const ServerRestartingPage = ({ message, active }) => {
   const serverIsRestarting = useContext(SocketContext)?.serverRestartingVisible || false

@@ -1,0 +1,11 @@
+query GetProductVersions($projectName: String!, $productId: String!) {
+  project(name: $projectName) {
+    product(id: $productId) {
+      versionList {
+        id
+        name
+        version
+      }
+    }
+  }
+}

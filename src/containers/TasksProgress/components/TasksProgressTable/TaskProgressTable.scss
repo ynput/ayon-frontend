@@ -1,0 +1,22 @@
+.tasks-progress-table {
+  table {
+    border-collapse: collapse;
+  }
+
+  tr {
+    border-bottom: 1px solid var(--color-table-border);
+  }
+  td {
+    border-left: 0px !important;
+  }
+
+  th:last-child {
+    border-right: 0px !important;
+  }
+
+  tr.parent-row {
+    position: sticky;
+    top: 35px;
+    z-index: 200;
+  }
+}

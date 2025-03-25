@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,opsz,wght@0,6..12,400;0,6..12,700;1,6..12,400&display=swap');
-
 input {
   color: var(--md-sys-color-on-surface);
 }
@@ -35,6 +33,10 @@ body {
   }
 }
 
+strong {
+  font-weight: 800;
+}
+
 :root {
   // developer colors
   --color-hl-developer-container: hsl(272, 23%, 22%);
@@ -53,6 +55,17 @@ body {
   --color-hl-staging: hsl(357, 100%, 76%);
   --color-hl-staging-hover: hsl(357, 100%, 73%);
   --color-hl-staging-active: hsl(357, 100%, 70%);
+
+  // table colors
+  --color-table-border: hsl(210 8% 18%);
+
+  // sub colors
+  --color-sub-pro: var(--md-sys-color-tertiary);
+  --color-sub-pro-hover: var(--md-sys-color-tertiary-hover);
+  --color-on-sub-pro: var(--md-sys-color-on-tertiary);
+  --color-sub-studio: hsl(42, 100%, 50%);
+  --color-on-sub-studio: hsl(53, 100%, 11%);
+  --color-sub-studio-hover: hsl(42, 100%, 45%);
 }
 
 #root {
@@ -70,7 +83,7 @@ body {
     flex-grow: 1;
     display: flex;
     flex-direction: row;
-    gap: 8px;
+    gap: var(--base-gap-large);
     padding: 8px;
     position: relative;
 
@@ -91,7 +104,7 @@ nav.primary {
   flex-direction: row;
   align-items: center;
   position: relative;
-  gap: 4px;
+  gap: var(--base-gap-small);
 }
 
 .section-header {
@@ -124,7 +137,7 @@ h4 {
   // Hacks
   //
 
-  // Hide the ugly login autocomplete highlight
+  // Hide the ugly login autoComplete highlight
 }
 input:-webkit-autofill,
 input:-webkit-autofill:focus {
@@ -139,7 +152,7 @@ input:-webkit-autofill:focus {
   width: 32px;
   height: auto;
   transition: color 0.4s ease;
-  :hover {
+  &:hover {
     transition: color 0.4s ease;
   }
   //
@@ -464,7 +477,7 @@ a {
 }
 
 .react-datepicker-popper {
-  z-index: 1000;
+  z-index: 1000 !important;
 }
 
 // clearing a date input
@@ -474,229 +487,56 @@ a {
   }
 }
 
-// context menu
-.p-contextmenu {
-  min-width: 12.5rem;
-  width: unset;
-  padding: 0;
-
-  .p-submenu-list {
-    padding: 0;
-  }
-}
-
-@keyframes shimmerAnimation {
-  0% {
-    background-position: -1000px 0;
-  }
-  100% {
-    background-position: 1000px 0;
-  }
-}
-
-@mixin getShimmerStyles(
-  $color1: var(--md-sys-color-surface-container-low),
-  $color2: var(--md-sys-color-surface-container),
-  $speed: 1s
-) {
-  background: linear-gradient(to right, $color1 8%, $color2 18%, $color1 33%);
-  background-size: 1000px 42px;
-  animation: shimmerAnimation $speed linear infinite;
-}
-
 .p-datatable-tbody {
   padding-bottom: 60px;
 }
 
-.table-loading {
-  .p-treetable-tbody,
-  .p-datatable-tbody {
-    position: relative;
-    &::after {
-      content: '';
-      display: block;
-      position: absolute;
-      inset: 0;
-      opacity: 0.2;
-
-      @include getShimmerStyles;
-    }
-
-    tr {
-      td {
-        opacity: 0;
-      }
-    }
-    & > tr:nth-child(even) {
-      background: var(--md-sys-color-surface-container);
-      opacity: 0.25;
-    }
+.loading {
+  .p-treetable-scrollable-body,
+  .p-datatable-wrapper {
+    overflow-y: hidden !important;
   }
 }
 
-// for individual rows that are loading
-.p-treetable-tbody,
-.p-datatable-tbody {
-  tr.loading {
-    td {
-      // hide anything inside
-      > * {
-        opacity: 0;
-      }
-
-      position: relative;
-      &::after {
-        content: '';
-        display: block;
-        position: absolute;
-        inset: 4px;
-        left: 0;
-        border-radius: 3px;
-        opacity: 1;
-        z-index: 100;
-        background-color: var(--md-sys-color-surface-container);
-        @include getShimmerStyles(
-          var(--md-sys-color-surface-container),
-          var(--md-sys-color-surface-container-hover)
-        );
-      }
+// compact table rows
+.p-datatable .p-datatable-tbody > tr,
+.p-treetable .p-treetable-tbody > tr {
+  &.compact {
+    & > td {
+      padding: 1.5px 1px;
+      border-left: none;
     }
   }
 }
 
 // project list styles for collapsed
-.project-list.collapsible {
-  .p-datatable-table {
-    width: fit-content;
-  }
-  // project list project header column
-  thead {
-    .p-column-header-content {
-      width: 100%;
-    }
-
-    // header container
-    .p-column-title {
-      width: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-
-      transition: grid-template-columns 0.15s, padding 0.15s;
-      padding: 4px;
-      padding-left: 8px;
-    }
+.project-list-section {
+  .collapse-button {
+    position: absolute;
+    right: 3px;
+    z-index: 10;
   }
 
-  // title
-  .title {
-    width: 0;
-    flex: 1;
-
-    transition: flex 0.15s, opacity 0.075s;
-  }
-
-  .p-datatable-thead > tr > th {
-    padding: 0;
+  .p-datatable-thead {
+    transition: opacity 0.2s;
   }
 
   &.collapsed {
-    th {
-      min-width: 0 !important;
-      transition: min-width 0.15s !important;
+    .collapse-button {
+      right: 50%;
+      translate: 50% 0px;
     }
 
-    .p-column-title {
-      padding: 4px;
-    }
-
-    .p-datatable-wrapper {
-      overflow: hidden;
-    }
-
-    // hide title
-    .title {
+    .p-datatable-thead {
       opacity: 0;
-      flex: 0;
+      user-select: none;
+      pointer-events: none;
     }
   }
-}
 
-// remove color hover state
-.p-contextmenu .p-menuitem.p-menuitem-active > .p-menuitem-link {
-  &.p-menuitem-icon,
-  &.p-menuitem-text {
-    color: inherit;
-  }
-}
-
-.p-contextmenu .p-menuitem-link:not(.p-disabled):hover {
-  .p-menuitem-icon,
-  .p-menuitem-text {
-    color: inherit;
-  }
-}
-
-// remove some hover
-.p-contextmenu .p-menuitem-link:not(.p-disabled):hover {
-  background: inherit;
-}
-
-.p-contextmenu {
-  background-color: var(--md-sys-color-surface-container-lowest);
-  border-color: var(--md-sys-color-outline-variant);
-  .p-menuitem {
-    // when hovering
-    &.p-menuitem-active > .p-menuitem-link {
-      background-color: var(--md-sys-color-surface-container-lowest-hover);
-
-      &.p-disabled:not(.danger) {
-        background-color: var(--md-sys-color-surface-container-lowest);
-      }
-
-      &.save {
-        background-color: var(--md-sys-color-primary-hover);
-        span {
-          color: var(--md-sys-color-on-primary);
-        }
-      }
-    }
-
-    & > .p-menuitem-link {
-      padding-right: 10px;
-
-      &,
-      .icon {
-        color: var(--md-sys-color-on-surface);
-      }
-
-      &.p-disabled {
-        opacity: 0.4;
-        color: var(--md-sys-color-on-surface-variant);
-      }
-
-      &.danger {
-        background-color: var(--md-sys-color-error-container);
-        span {
-          color: var(--md-sys-color-on-error-container);
-        }
-
-        &:hover {
-          background-color: var(--md-sys-color-error-container-hover);
-        }
-        &:active {
-          background-color: var(--md-sys-color-error-container-active);
-        }
-      }
-
-      &.save {
-        background-color: var(--md-sys-color-primary);
-        &,
-        span {
-          color: var(--md-sys-color-on-primary);
-        }
-      }
-    }
+  // remove column header border
+  .p-datatable .p-datatable-thead > tr > th {
+    border: none;
   }
 }
 
@@ -731,18 +571,19 @@ a {
 
 .dashboard-tasks {
   .p-splitter-gutter {
-    z-index: 100;
+    z-index: 500;
     align-items: flex-start;
-    translate: 6px 0;
+    translate: 4px 0;
     transform-origin: left;
 
     .p-splitter-gutter-handle {
-      height: 34px;
-      background: var(--md-sys-color-outline-variant);
-      border-radius: var(--border-radius);
+      height: 100%;
+      background: transparent;
+      width: 2px;
 
-      &:hover {
-        background: var(--md-sys-color-outline);
+      &:hover,
+      &:active {
+        background: var(--md-sys-color-outline-variant);
       }
     }
   }
@@ -751,7 +592,7 @@ a {
 // confirm dialog buttons
 .p-dialog.p-confirm-dialog {
   .p-dialog-footer {
-    gap: 8px;
+    gap: var(--base-gap-large);
     display: flex;
     width: 100%;
     justify-content: flex-end;
@@ -760,11 +601,11 @@ a {
   .p-button {
     border: none;
     margin-right: 0;
+    background-color: var(--md-sys-color-surface-container-highest);
+
     &:focus {
       outline: none;
     }
-
-    background-color: var(--md-sys-color-surface-container-highest);
 
     &:hover {
       background-color: var(--md-sys-color-surface-container-highest-hover);

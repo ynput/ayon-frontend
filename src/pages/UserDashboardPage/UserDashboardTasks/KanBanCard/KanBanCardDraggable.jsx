@@ -26,6 +26,15 @@ const KanBanCardDraggable = ({
         isDragging={draggingCard}
         {...attributes}
         {...listeners}
+        onKeyDown={(e) => {
+          const passThroughKeys = [' ', 'Escape']
+          if (passThroughKeys.includes(e.key)) {
+            // forward the event to the parent
+            props.onKeyDown && props.onKeyDown(e)
+          } else {
+            listeners?.onKeyDown(e, task.id)
+          }
+        }}
       />
     ),
     [task, onClick, onKeyUp, isActive, style, props, setNodeRef, isDragging, attributes, listeners],

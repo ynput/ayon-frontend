@@ -1,0 +1,108 @@
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+//   Anything with .loading class will have the shimmer effect
+.loading:not(.no-shimmer):not(.p-treetable):not(.p-datatable),
+.p-treetable .p-treetable-tbody > tr.loading,
+.p-datatable .p-datatable-tbody > tr.loading {
+  /* Shimmer Effect Variables */
+  --shimmer-hue: 215;
+  --shimmer-saturation: 15%;
+  --shimmer-base-lightness: 15%;
+  --shimmer-highlight-lightness: 16.5%;
+
+  /* Adjustment Variable */
+  --shimmer-lightness-delta: 2%;
+
+  /* Shimmer Lightness */
+  --shimmer-lightness: var(--shimmer-base-lightness);
+  --highlight-lightness: var(--shimmer-highlight-lightness);
+
+  // remove any backgrounds
+  background-color: unset !important;
+  color: transparent !important;
+  //   disable any interaction
+  cursor: default !important;
+  user-select: none !important;
+  pointer-events: none !important;
+  user-select: none !important;
+
+  // hide everything inside
+  & > *:not(.loading):not(.loading-visible):not(td) {
+    visibility: hidden !important;
+  }
+
+  // hide td content because visibility: hidden doesn't work on td
+  & > *:not(.loading):not(.loading-visible) {
+    opacity: 0 !important;
+  }
+
+  /* Darken the Shimmer Effect */
+  &.shimmer-dark,
+  // even table rows are darkened
+  &:not(:not(tr)):not(.p-row-odd) {
+    --shimmer-lightness: calc(var(--shimmer-base-lightness) - var(--shimmer-lightness-delta));
+    --highlight-lightness: calc(
+      var(--shimmer-highlight-lightness) - var(--shimmer-lightness-delta)
+    );
+  }
+
+  /*   Lighten the Shimmer Effect */
+  &.shimmer-light {
+    --shimmer-lightness: calc(var(--shimmer-base-lightness) + var(--shimmer-lightness-delta));
+    --highlight-lightness: calc(
+      var(--shimmer-highlight-lightness) + var(--shimmer-lightness-delta) + 1%
+    );
+  }
+
+  &.shimmer-lightest {
+    --shimmer-lightness: calc(var(--shimmer-base-lightness) + 2 * var(--shimmer-lightness-delta));
+    --highlight-lightness: calc(
+      var(--shimmer-highlight-lightness) + 2 * var(--shimmer-lightness-delta) + 1%
+    );
+  }
+
+  & {
+    /* Shimmer Colors */
+    --shimmer-base: hsl(var(--shimmer-hue), var(--shimmer-saturation), var(--shimmer-lightness));
+    --shimmer-highlight: hsl(
+      var(--shimmer-hue),
+      var(--shimmer-saturation),
+      var(--highlight-lightness)
+    );
+  }
+  //  for first loading children, increase lightness
+  & > *:has(.loading) > .loading {
+    /* Shimmer Colors */
+    --shimmer-base: hsl(
+      var(--shimmer-hue),
+      var(--shimmer-saturation),
+      calc(var(--shimmer-lightness) + var(--shimmer-lightness-delta))
+    );
+    --shimmer-highlight: hsl(
+      var(--shimmer-hue),
+      var(--shimmer-saturation),
+      calc(var(--highlight-lightness) + var(--shimmer-lightness-delta))
+    );
+  }
+
+  & {
+    //   add the shimmer effect
+    background: linear-gradient(
+      to right,
+      var(--shimmer-base) 8%,
+      var(--shimmer-highlight) 18%,
+      var(--shimmer-base) 33%
+    );
+    background-size: 1000px 42px;
+    //   animation
+    animation: shimmer 1.5s infinite linear;
+    animation-delay: 0.15s;
+  }
+}

@@ -3,11 +3,11 @@ import PropTypes from 'prop-types'
 import { useState } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import { Panel, LockedInput, Icon } from '@ynput/ayon-react-components'
-import { useUpdateUserAPIKeyMutation } from '../services/user/updateUser'
+import { useUpdateUserAPIKeyMutation } from '@queries/user/updateUser'
 import { toast } from 'react-toastify'
 import styled from 'styled-components'
-import confirmDelete from '../helpers/confirmDelete'
-import copyToClipboard from '../helpers/copyToClipboard'
+import confirmDelete from '@helpers/confirmDelete'
+import copyToClipboard from '@helpers/copyToClipboard'
 
 const PanelStyled = styled(Panel)`
   flex-direction: row;
@@ -19,8 +19,18 @@ const PanelStyled = styled(Panel)`
     margin-left: auto;
   }
 `
+const PanelStyledLightBackground = styled(PanelStyled)`
+  background-color: var(--md-sys-color-surface-container-high);
+`
 
-const ApiKeyManager = ({ preview, name }) => {
+const ApiKeyManager = ({
+  preview,
+  name,
+  autosave = true,
+  onGenerate,
+  repeatGenerate = true,
+  lightBackground = false,
+}) => {
   // temp hold new key
   const [newKey, setNewKey] = useState(null)
   // loading state
@@ -38,6 +48,12 @@ const ApiKeyManager = ({ preview, name }) => {
   const createNewKey = async () => {
     setLoading(true)
     const key = uuidv4().replace(/-/g, '')
+    if (!autosave) {
+      setNewKey({ key, preview: true })
+      setLoading(false)
+      onGenerate && onGenerate(key);
+      return;
+    }
 
     // try catch to update api key using unwrap and toaste results
     try {
@@ -47,6 +63,8 @@ const ApiKeyManager = ({ preview, name }) => {
       }).unwrap()
 
       setNewKey({ key, preview: true })
+
+      onGenerate && onGenerate(key);
 
       toast.success('API Key Created')
     } catch (error) {
@@ -62,6 +80,11 @@ const ApiKeyManager = ({ preview, name }) => {
 
     // check if target is an input and do nothing
     if (e.target.tagName === 'INPUT') return
+
+    if (!autosave) {
+      setNewKey(null)
+      return
+    }
 
     confirmDelete({
       label: 'Service Key',
@@ -79,18 +102,21 @@ const ApiKeyManager = ({ preview, name }) => {
   const handleCopyKey = () => {
     copyToClipboard(newKey.key)
   }
+  const Panel = lightBackground ? PanelStyledLightBackground : PanelStyled;
 
   if (preview || newKey?.key)
     return (
       <>
-        <LockedInput
-          value={preview || newKey?.preview}
-          onEdit={handleDelete}
-          editIcon={'delete'}
-          label={'Api Key'}
-        />
+        {repeatGenerate &&
+          <LockedInput
+            value={preview || newKey?.preview}
+            onEdit={handleDelete}
+            editIcon={'delete'}
+            label={'Api Key'}
+          />
+        }
         {newKey && (
-          <PanelStyled>
+          <Panel>
             <div>
               <strong>{newKey.key}</strong>
               <br />
@@ -99,7 +125,7 @@ const ApiKeyManager = ({ preview, name }) => {
               </div>
             </div>
             <Icon onClick={handleCopyKey} icon="content_copy" />
-          </PanelStyled>
+          </Panel>
         )}
       </>
     )

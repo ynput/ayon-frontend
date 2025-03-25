@@ -9,10 +9,11 @@ import {
   InputSwitch,
   LockedInput,
   Dropdown,
+  Dialog,
 } from '@ynput/ayon-react-components'
-import EnumEditor from './enumEditor'
-import { camelCase } from 'lodash'
-import { Dialog } from 'primereact/dialog'
+import { camelCase, upperFirst } from 'lodash'
+import MinMaxField from '@components/MinMaxField/MinMaxField'
+import EnumEditor from '@components/EnumEditor/EnumEditor'
 
 const SCOPE_OPTIONS = [
   { value: 'project', label: 'Project' },
@@ -24,8 +25,12 @@ const SCOPE_OPTIONS = [
   { value: 'user', label: 'User' },
 ]
 
-// Fields used on all types
-const GLOBAL_FIELDS = ['description', 'example', 'default', 'inherit']
+const GLOBAL_FIELDS = [
+  { value: 'description', scope: null },
+  { value: 'example', scope: null },
+  { value: 'default', scope: ['project'] },
+  { value: 'inherit', scope: null },
+]
 
 const TYPE_OPTIONS = {
   string: {
@@ -108,7 +113,15 @@ const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
     </div>
   )
 
-  let dataFields = [...GLOBAL_FIELDS]
+  let dataFields = []
+
+  // add global fields, only if scope are null (all) or the scope is included
+  GLOBAL_FIELDS.forEach((field) => {
+    if (!field?.scope || field?.scope?.some((s) => formData?.scope?.includes(s))) {
+      dataFields.push(field.value)
+    }
+  })
+
   if (TYPE_OPTIONS[formData?.data.type]) {
     dataFields = [...dataFields, ...TYPE_OPTIONS[formData?.data.type].fields].filter(
       (f) => !TYPE_OPTIONS[formData?.data.type].exclude?.includes(f),
@@ -117,7 +130,12 @@ const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
 
   const customFields = {
     enum: (value = [], onChange) => (
-      <EnumEditor values={value} onChange={(value) => onChange(value)} />
+      <EnumEditor
+        values={value}
+        onChange={(value) => {
+          onChange(value)
+        }}
+      />
     ),
     inherit: (value, onChange) => (
       <InputSwitch checked={value} onChange={(e) => onChange(e.target.checked)} />
@@ -138,18 +156,20 @@ const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
 
   return (
     <Dialog
-      header={formData?.data?.title || formData?.name}
+      header={formData?.data?.title || formData?.name || 'New attribute'}
       footer={footer}
-      onHide={onHide}
-      visible={true}
-      style={{ minWidth: 400 }}
+      onClose={onHide}
+      isOpen={true}
+      style={{ width: 700, zIndex: 999 }}
+      size="full"
+      variant="dialog"
     >
       {formData && (
         <FormLayout>
-          <FormRow label={'title'} key={'title'}>
+          <FormRow label={'Title'} key={'title'}>
             <InputText value={formData?.data['title']} onChange={handleTitleChange} />
           </FormRow>
-          <FormRow label={'name'} key={'name'}>
+          <FormRow label={'Name'} key={'name'}>
             <LockedInput
               value={formData.name}
               disabled={!isNew}
@@ -157,7 +177,7 @@ const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
               label="name"
             />
           </FormRow>
-          <FormRow label="scope">
+          <FormRow label="Scope">
             <Dropdown
               options={SCOPE_OPTIONS}
               disabled={formData.builtin}
@@ -167,7 +187,7 @@ const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
               widthExpand
             />
           </FormRow>
-          <FormRow label="type">
+          <FormRow label="Type">
             <Dropdown
               value={[formData?.data?.type]}
               disabled={formData.builtin}
@@ -187,6 +207,25 @@ const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
               fieldComp = customFields['booleanDefault'](formData?.data[field], (value) =>
                 setData(field, value),
               )
+            } else if (['ge', 'gt', 'le', 'lt'].includes(field)) {
+              // ignore gt and lt
+              if (['gt', 'lt'].includes(field)) return null
+              fieldComp = (
+                <MinMaxField
+                  value={formData?.data}
+                  isMin={field === 'ge'}
+                  isFloat={formData?.data?.type === 'float'}
+                  onChange={(v) =>
+                    setFormData((d) => {
+                      const dt = { ...d.data, ...v }
+                      return { ...d, data: dt }
+                    })
+                  }
+                />
+              )
+
+              // rewrite field to min or max
+              field = field === 'ge' ? 'min' : 'max'
             } else {
               fieldComp = (
                 <InputText
@@ -198,7 +237,7 @@ const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
 
             return (
               <FormRow
-                label={field}
+                label={upperFirst(field)}
                 key={field}
                 style={{
                   alignItems: 'flex-start',

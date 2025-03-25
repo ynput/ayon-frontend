@@ -1,0 +1,10 @@
+query GetInboxHasUnread {
+  inbox(last: 1, showActiveMessages: true, showImportantMessages: true, showUnreadMessages: true) {
+    edges {
+      node {
+        referenceId
+        read
+      }
+    }
+  }
+}

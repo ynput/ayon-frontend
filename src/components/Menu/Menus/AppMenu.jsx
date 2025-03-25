@@ -1,14 +1,19 @@
 import Menu from '../MenuComponents/Menu'
-import YnputConnector from '/src/components/YnputCloud/YnputConnector'
-import { useRestartOnBoardingMutation } from '/src/services/onBoarding/onBoarding'
+import YnputConnector from '@components/YnputCloud/YnputConnector'
+import { useRestartOnBoardingMutation } from '@queries/onBoarding/onBoarding'
 import { toast } from 'react-toastify'
-import ayonClient from '/src/ayon'
-import { useRestart } from '/src/context/restartContext'
+import ayonClient from '@/ayon'
+import { useRestart } from '@context/restartContext'
+import { useAppDispatch } from '@state/store'
+import { toggleReleaseInstaller } from '@state/releaseInstaller'
 
 export const AppMenu = ({ user, ...props }) => {
+  const dispatch = useAppDispatch()
   // check if user is logged in and is manager or admin
   const isUser = user?.data?.isUser
+  const isManager = user?.data?.isManager
   const isAdmin = user?.data?.isAdmin
+  const developerMode = user?.attrib.developerMode
 
   // restart server
   const { confirmRestart, isRestartRequired } = useRestart()
@@ -26,10 +31,15 @@ export const AppMenu = ({ user, ...props }) => {
     }
   }
 
+  const handleReleaseInstaller = () => {
+    // open menu
+    dispatch(toggleReleaseInstaller({ open: true }))
+  }
+
   const items = [
     {
       id: 'projectsManager',
-      link: '/manageProjects/anatomy',
+      link: '/manageProjects/projectSettings',
       label: 'Projects Settings',
       icon: 'settings_applications',
       shortcut: 'P+P',
@@ -39,19 +49,13 @@ export const AppMenu = ({ user, ...props }) => {
   if (!isUser)
     items.unshift({
       id: 'settings',
-      link: '/settings/bundles',
+      link: '/settings/studio',
       label: 'Studio Settings',
       icon: 'settings',
       shortcut: 'S+S',
     })
 
   const managerItems = [
-    {
-      id: 'market',
-      link: '/market',
-      label: 'Addon Market',
-      icon: 'store',
-    },
     {
       id: 'events',
       link: '/events',
@@ -64,21 +68,29 @@ export const AppMenu = ({ user, ...props }) => {
       link: '/services',
       label: 'Services',
       icon: 'home_repair_service',
+      shortcut: 'V+V',
     },
   ]
 
   // add protected items if user is manager or admin
-  if (!isUser) items.push(...managerItems)
+  if (isManager || isAdmin) items.push(...managerItems)
 
   const adminItems = [
     {
       id: 'divider',
     },
     {
-      id: 'onboarding',
-      label: 'Launch Bootstrap Setup',
-      onClick: handleBootstrapLaunch,
-      icon: 'verified_user',
+      id: 'market',
+      link: '/market',
+      label: 'Market',
+      icon: 'store',
+      shortcut: 'M+M',
+    },
+    {
+      id: 'releases',
+      label: 'Update Pipeline',
+      onClick: handleReleaseInstaller,
+      icon: 'valve',
     },
     {
       id: 'restart',
@@ -93,6 +105,23 @@ export const AppMenu = ({ user, ...props }) => {
   // add protected items if user is admin
   if (isAdmin) items.push(...adminItems)
 
+  const developerItems = [
+    {
+      id: 'divider',
+    },
+    {
+      id: 'onboarding',
+      label: 'Launch Bootstrap Setup',
+      onClick: handleBootstrapLaunch,
+      icon: 'verified_user',
+      isDev: true,
+    },
+  ]
+  // if developer add dev items
+  if (developerMode) {
+    items.push(...developerItems)
+  }
+
   return (
     <>
       <Menu menu={items} {...props} footer={!isUser && ayonClient.settings?.version} />
@@ -101,7 +130,7 @@ export const AppMenu = ({ user, ...props }) => {
           redirect={location.pathname + '/appMenu'}
           smallLogo
           darkMode
-          showDisconnect={false}
+          showStudioLink
         />
       )}
     </>

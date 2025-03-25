@@ -1,10 +1,10 @@
 import axios from 'axios'
 import { useDispatch } from 'react-redux'
-import { login } from '/src/features/user'
-import { ayonApi } from '/src/services/ayon'
+import { login } from '@state/user'
+import api from '@api'
 import { toast } from 'react-toastify'
 import { useState, useMemo, useEffect } from 'react'
-import * as Styled from '/src/pages/LoginPage/LoginPage.styled'
+import * as Styled from '@pages/LoginPage/LoginPage.styled'
 import { InputText, InputPassword, Button, Panel } from '@ynput/ayon-react-components'
 
 const RequestPage = () => {
@@ -94,7 +94,7 @@ const ResetPage = ({ token }) => {
       .then((response) => {
         const data = response.data
         dispatch(login({ user: data.user, accessToken: data.token }))
-        dispatch(ayonApi.util.resetApiState())
+        dispatch(api.util.resetApiState())
         toast.success('Password reset successfully')
         window.history.replaceState({}, '', '/')
       })

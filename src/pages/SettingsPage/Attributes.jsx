@@ -11,20 +11,22 @@ import {
   Spacer,
   SaveButton,
 } from '@ynput/ayon-react-components'
-import AttributeEditor from '../../containers/attributes/attributeEditor'
-import { useGetAttributesQuery } from '/src/services/attributes/getAttributes'
-import { useUpdateAttributesMutation } from '/src/services/attributes/updateAttributes'
-import useSearchFilter from '/src/hooks/useSearchFilter'
-import useCreateContext from '/src/hooks/useCreateContext'
+import AttributeEditor from '@containers/attributes/attributeEditor'
+import { useGetAttributeListQuery } from '@queries/attributes/getAttributes'
+import { useSetAttributeListMutation } from '@queries/attributes/updateAttributes'
+import useSearchFilter from '@hooks/useSearchFilter'
+import useCreateContext from '@hooks/useCreateContext'
 import { isEqual } from 'lodash'
+import clsx from 'clsx'
+import useTableLoadingData from '@hooks/useTableLoadingData'
 
 const Attributes = () => {
   const [attributes, setAttributes] = useState([])
   const [selectedAttribute, setSelectedAttribute] = useState(null)
   const [showEditor, setShowEditor] = useState(false)
-  const { data, isLoading, isError, error, isFetching } = useGetAttributesQuery()
+  const { data, isLoading, isError, error, isFetching } = useGetAttributeListQuery()
 
-  const [updateAttributes, { isLoading: updateLoading }] = useUpdateAttributesMutation()
+  const [updateAttributes, { isLoading: updateLoading }] = useSetAttributeListMutation()
 
   // when new data is loaded come in update local state
   useEffect(() => {
@@ -53,7 +55,7 @@ const Attributes = () => {
   )
 
   const onSave = async () => {
-    await updateAttributes({ attributes, deleteMissing: true, patches: attributes })
+    await updateAttributes({ setAttributeListModel: { attributes, deleteMissing: true } })
       .unwrap()
       .then(() => {
         toast.success('Attribute set saved')
@@ -114,7 +116,7 @@ const Attributes = () => {
     'attributes',
   )
 
-  const ctxMenuTableItems = useMemo(() => [
+  const getContextMenu = (selected) => [
     {
       label: 'Edit',
       icon: 'edit',
@@ -125,10 +127,19 @@ const Attributes = () => {
       icon: 'delete',
       command: () => onDelete(),
       danger: true,
+      disabled: selected?.builtin,
     },
-  ])
+  ]
 
-  const [ctxMenuTableShow] = useCreateContext(ctxMenuTableItems)
+  const [ctxMenuTableShow] = useCreateContext([])
+
+  const handleContextSelectionChange = (e) => {
+    setSelectedAttribute(e.value)
+    console.log(e.value)
+    ctxMenuTableShow(e.originalEvent, getContextMenu(e.value))
+  }
+
+  const tableData = useTableLoadingData(filteredData, isLoading, 30, 'name')
 
   return (
     <>
@@ -176,16 +187,17 @@ const Attributes = () => {
               scrollable="true"
               scrollHeight="flex"
               dataKey="name"
-              value={filteredData}
+              value={tableData}
               reorderableRows
               onRowReorder={onRowReorder}
               selectionMode="single"
               selection={selectedAttribute}
               onSelectionChange={(e) => setSelectedAttribute(e.value)}
-              onContextMenu={(e) => ctxMenuTableShow(e.originalEvent)}
-              onContextMenuSelectionChange={(e) => setSelectedAttribute(e.value)}
+              onContextMenuSelectionChange={handleContextSelectionChange}
               onRowDoubleClick={() => !Array.isArray(selectedAttribute) && setShowEditor(true)}
               resizableColumns
+              className={clsx({ loading: isLoading })}
+              rowClassName={() => ({ loading: isLoading })}
             >
               <Column rowReorder style={{ maxWidth: 30 }} />
               <Column field="name" header="Name" style={{ maxWidth: 130 }} sortable />
@@ -200,7 +212,7 @@ const Attributes = () => {
               <Column
                 header="Scopes"
                 field="scopeLength"
-                body={(rowData) => rowData.scope.join(', ')}
+                body={(rowData) => rowData?.scope?.join(', ')}
                 style={{ maxWidth: 330 }}
                 sortable
               />

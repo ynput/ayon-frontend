@@ -1,36 +1,37 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
-import { Button } from '@ynput/ayon-react-components'
+import { Button, Dialog } from '@ynput/ayon-react-components'
 
 import BrowserPage from './BrowserPage'
 import EditorPage from './EditorPage'
 import LoadingPage from './LoadingPage'
 import ProjectAddon from './ProjectAddon'
 import WorkfilesPage from './WorkfilesPage'
+import TasksProgressPage from './TasksProgressPage'
 
-import usePubSub from '/src/hooks/usePubSub'
-import { selectProject } from '/src/features/project'
-import { useGetProjectQuery } from '../services/project/getProject'
-import { useGetProjectAddonsQuery } from '../services/addons/getAddons'
+import usePubSub from '@hooks/usePubSub'
+import { selectProject } from '@state/project'
+import { useGetProjectQuery } from '@queries/project/getProject'
+import { useGetProjectAddonsQuery } from '@queries/addons/getAddons'
 import { TabPanel, TabView } from 'primereact/tabview'
-import { Dialog } from 'primereact/dialog'
-import AppNavLinks from '../containers/header/AppNavLinks'
+import AppNavLinks from '@containers/header/AppNavLinks'
+import { SlicerProvider } from '@context/slicerContext'
 
 const ProjectContextInfo = () => {
   /**
    * Show a project context in a dialog
-   * this is for develompent only
+   * this is for development only
    */
   const context = useSelector((state) => state.context)
   const project = useSelector((state) => state.project)
   return (
-    <TabView>
-      <TabPanel header="context">
-        <pre>{JSON.stringify({ context }, null, 2)}</pre>
+    <TabView panelContainerStyle={{ justifyContent: 'flex-start' }}>
+      <TabPanel header="context" style={{ overflow: 'hidden' }}>
+        <pre style={{ whiteSpace: 'pre-wrap' }}>{JSON.stringify({ context }, null, 2)}</pre>
       </TabPanel>
-      <TabPanel header="project">
-        <pre>{JSON.stringify({ project }, null, 2)}</pre>
+      <TabPanel header="project" style={{ overflow: 'hidden' }}>
+        <pre style={{ whiteSpace: 'pre-wrap' }}>{JSON.stringify({ project }, null, 2)}</pre>
       </TabPanel>
     </TabView>
   )
@@ -91,9 +92,25 @@ const ProjectPage = () => {
 
   const links = useMemo(
     () => [
-      { name: 'Browser', path: `/projects/${projectName}/browser`, module: 'browser' },
-      { name: 'Editor', path: `/projects/${projectName}/editor`, module: 'editor' },
-      { name: 'Workfiles', path: `/projects/${projectName}/workfiles`, module: 'workfiles' },
+      {
+        name: 'Browser',
+        path: `/projects/${projectName}/browser`,
+        module: 'browser',
+        uriSync: true,
+      },
+      {
+        name: 'Task progress',
+        path: `/projects/${projectName}/tasks`,
+        module: 'tasks',
+        uriSync: true,
+      },
+      { name: 'Editor', path: `/projects/${projectName}/editor`, module: 'editor', uriSync: true },
+      {
+        name: 'Workfiles',
+        path: `/projects/${projectName}/workfiles`,
+        module: 'workfiles',
+        uriSync: true,
+      },
       ...addonsData.map((addon) => ({
         name: addon.title,
         path: `/projects/${projectName}/addon/${addon.name}`,
@@ -131,41 +148,51 @@ const ProjectPage = () => {
     return <div className="page">Project Not Found, Redirecting...</div>
   }
 
-  let child = null
-  if (module === 'editor') child = <EditorPage />
-  else if (module === 'workfiles') child = <WorkfilesPage />
-  else if (addonName) {
-    for (const addon of addonsData) {
-      if (addon.name === addonName) {
-        child = (
-          <ProjectAddon
-            addonName={addonName}
-            addonVersion={addon.version}
-            sidebar={addon.settings.sidebar}
-          />
-        )
-        break
-      }
+  const getPageByModuleAndAddonData = (module, addonName, addonsData) => {
+    if (module === 'editor') {
+      return <EditorPage />
     }
-  } else child = <BrowserPage />
+    if (module === 'tasks') {
+      return <TasksProgressPage />
+    }
+    if (module === 'workfiles') {
+      return <WorkfilesPage />
+    }
+
+    if (!addonName) {
+      return <BrowserPage />
+    }
+
+    const filteredAddons = addonsData.filter((item) => item.name === addonName)
+    if (filteredAddons.length) {
+      return (
+        <ProjectAddon
+          addonName={addonName}
+          addonVersion={filteredAddons[0].version}
+          sidebar={filteredAddons[0].settings.sidebar}
+        />
+      )
+    }
+
+    // Fallback to browser page if no addon matches addonName
+    return <BrowserPage />
+  }
+
+  const child = getPageByModuleAndAddonData(module, addonName, addonsData)
 
   return (
     <>
       <Dialog
         header="Project Context"
-        visible={showContextDialog}
-        onHide={() => setShowContextDialog(false)}
-        style={{
-          overflow: 'hidden',
-        }}
-        bodyStyle={{
-          overflow: 'auto',
-        }}
+        isOpen={showContextDialog}
+        onClose={() => setShowContextDialog(false)}
+        size="lg"
+        style={{ overflow: 'hidden', width: 800 }}
       >
         {showContextDialog && <ProjectContextInfo />}
       </Dialog>
       <AppNavLinks links={links} />
-      {child}
+      <SlicerProvider>{child}</SlicerProvider>
     </>
   )
 }

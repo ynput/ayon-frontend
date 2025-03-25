@@ -1,9 +1,9 @@
-import { Icon } from '@ynput/ayon-react-components'
+import { Icon, ShortcutTag } from '@ynput/ayon-react-components'
 import React, { forwardRef } from 'react'
 import * as Styled from './Menu.styled'
 import { isArray } from 'lodash'
 import { Link } from 'react-router-dom'
-import classNames from 'classnames'
+import clsx from 'clsx'
 
 const MenuItem = forwardRef(
   (
@@ -13,9 +13,11 @@ const MenuItem = forwardRef(
       highlighted,
       notification,
       selected,
+      danger,
       items = [],
       className,
       isLink,
+      isDev,
       shortcut,
       ...props
     },
@@ -26,12 +28,14 @@ const MenuItem = forwardRef(
     const Item = (
       <Styled.Item
         ref={ref}
-        className={classNames(
+        className={clsx(
           'menu-item',
           {
             highlighted: highlighted,
             selected: selected,
             notification: notification,
+            danger: danger,
+            dev: isDev,
           },
           className,
         )}
@@ -43,7 +47,7 @@ const MenuItem = forwardRef(
         {labelsArray.map((label, index) => (
           <span key={index}>{label}</span>
         ))}
-        {shortcut && <Styled.Shortcut>{shortcut}</Styled.Shortcut>}
+        {shortcut && <ShortcutTag align={'right'}>{shortcut}</ShortcutTag>}
         {!!items.length && <Icon icon="arrow_right" className="more" />}
       </Styled.Item>
     )

@@ -1,19 +1,28 @@
 import { toast } from 'react-toastify'
 import { useState } from 'react'
 import { ScrollPanel, SaveButton, Spacer, Button } from '@ynput/ayon-react-components'
-import { useUpdateProjectAnatomyMutation } from '/src/services/project/updateProject'
+import { useUpdateProjectAnatomyMutation } from '@queries/project/updateProject'
 import ProjectManagerPageLayout from './ProjectManagerPageLayout'
-import AnatomyEditor from '/src/containers/AnatomyEditor'
+import AnatomyEditor from '@containers/AnatomyEditor'
 
-import copyToClipboard from '/src/helpers/copyToClipboard'
-import { usePaste } from '/src/context/pasteContext'
+import copyToClipboard from '@helpers/copyToClipboard'
+import { usePaste } from '@context/pasteContext'
+import useUserProjectPermissions, { PermissionLevel } from '@hooks/useUserProjectPermissions'
+import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
+import { useSelector } from 'react-redux'
 
 const ProjectAnatomy = ({ projectName, projectList }) => {
+  const isUser = useSelector((state) => state.user.data.isUser)
+  const [updateProjectAnatomy, { isLoading: isUpdating }] = useUpdateProjectAnatomyMutation()
+  const { requestPaste } = usePaste()
+
+  const { isLoading, permissions: userPermissions } = useUserProjectPermissions(isUser)
+  const accessLevel = !isLoading && userPermissions.getAnatomyPermissionLevel(projectName)
+
   const [formData, setFormData] = useState(null)
   const [isChanged, setIsChanged] = useState(false)
 
-  const [updateProjectAnatomy, { isLoading: isUpdating }] = useUpdateProjectAnatomyMutation()
-  const { requestPaste } = usePaste()
+
 
   const saveAnatomy = () => {
     updateProjectAnatomy({ projectName, anatomy: formData })
@@ -22,7 +31,14 @@ const ProjectAnatomy = ({ projectName, projectList }) => {
         toast.info(`Anatomy saved`)
       })
       .catch((err) => {
-        toast.error(err.message)
+        console.log(err)
+        toast.error(
+          <>
+            <strong>Failed to save anatomy</strong>
+            <br />
+            {err.data.detail}
+          </>,
+        )
       })
   }
 
@@ -46,32 +62,45 @@ const ProjectAnatomy = ({ projectName, projectList }) => {
     <ProjectManagerPageLayout
       projectList={projectList}
       toolbar={
-        <>
-          <Button
-            label="Copy anatomy"
-            icon="content_copy"
-            onClick={() => {
-              copyToClipboard(JSON.stringify(formData, null, 2))
-            }}
-          />
-          <Button label="Paste anatomy" icon="content_paste" onClick={onPasteAnatomy} />
-          <Spacer />
-          <SaveButton
-            label="Save changes"
-            onClick={saveAnatomy}
-            active={isChanged}
-            saving={isUpdating}
-          />
-        </>
+        userPermissions.canViewAnatomy(projectName) && (
+          <>
+            <Button
+              label="Copy anatomy"
+              icon="content_copy"
+              onClick={() => {
+                copyToClipboard(JSON.stringify(formData, null, 2))
+              }}
+            />
+            <Button label="Paste anatomy" icon="content_paste" onClick={onPasteAnatomy} />
+            {PermissionLevel.readOnly === accessLevel && 'Read-only'}
+            <Spacer />
+            <SaveButton
+              label="Save changes"
+              data-tooltip={
+                !userPermissions.canEditAnatomy(projectName) ? "You don't have edit permissions" : undefined
+              }
+              onClick={saveAnatomy}
+              active={isChanged && PermissionLevel.readWrite === accessLevel}
+              saving={isUpdating}
+            />
+          </>
+        )
       }
     >
       <ScrollPanel style={{ flexGrow: 1 }} className="transparent">
-        <AnatomyEditor
-          projectName={projectName}
-          formData={formData}
-          setFormData={setFormData}
-          setIsChanged={setIsChanged}
-        />
+        {isLoading || userPermissions.canViewAnatomy(projectName) ? (
+          <AnatomyEditor
+            projectName={projectName}
+            formData={formData}
+            setFormData={setFormData}
+            setIsChanged={setIsChanged}
+          />
+        ) : (
+          <EmptyPlaceholder
+            icon="settings_alert"
+            message="You don't have permission to view this project's anatomy"
+          />
+        )}
       </ScrollPanel>
     </ProjectManagerPageLayout>
   )

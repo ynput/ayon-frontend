@@ -1,5 +1,5 @@
-//import { Panel } from 'primereact/panel'
-import useLocalStorage from '/src/hooks/useLocalStorage'
+import { useEffect } from 'react'
+import useLocalStorage from '@hooks/useLocalStorage'
 import { Icon } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
@@ -41,7 +41,7 @@ const PanelHeader = styled.div`
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 4px;
+    gap: var(--base-gap-small);
 
     .new-object {
       font-style: italic;
@@ -63,6 +63,8 @@ const PanelHeader = styled.div`
 `
 
 const PanelContent = styled.div`
+  width: 100%;
+  overflow: auto;
   display: flex;
   flex-direction: column;
   border-left: 1px dotted #434a56;
@@ -118,16 +120,27 @@ const SettingsPanel = ({
   className = '',
   onClick,
   onContextMenu,
+  currentId,
 }) => {
   const [expandedObjects, setExpandedObjects] = useLocalStorage('expanded-settings-keys', [])
 
   const onToggle = () => {
-    if (expandedObjects.includes(objId))
+    if (expandedObjects.includes(objId)) {
       setExpandedObjects(expandedObjects.filter((id) => id !== objId))
-    else setExpandedObjects([...expandedObjects, objId])
+    } else {
+      setExpandedObjects([...expandedObjects, objId])
+    }
   }
 
   const expanded = expandedObjects.includes(objId)
+
+  useEffect(() => {
+    if (!currentId) return
+    if (currentId.startsWith(objId + '_') && !expandedObjects.includes(objId)) {
+      console.log('expanding', objId)
+      setExpandedObjects([...expandedObjects, objId])
+    }
+  }, [currentId, objId, expandedObjects])
 
   const panelHeader = (
     <>

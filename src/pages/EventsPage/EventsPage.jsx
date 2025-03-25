@@ -1,16 +1,13 @@
 import { Section, Toolbar, InputText, InputSwitch } from '@ynput/ayon-react-components'
-import {
-  useGetEventsWithLogsQuery,
-  useLazyGetEventsWithLogsQuery,
-} from '/src/services/events/getEvents'
+import { useGetEventsWithLogsQuery, useLazyGetEventsWithLogsQuery } from '@queries/events/getEvents'
 import EventDetail from './EventDetail'
 import { useDispatch } from 'react-redux'
-import { ayonApi } from '/src/services/ayon'
+import api from '@api'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import EventList from './EventList'
-import useSearchFilter from '/src/hooks/useSearchFilter'
+import useSearchFilter from '@hooks/useSearchFilter'
 import { toast } from 'react-toastify'
-import useLocalStorage from '/src/hooks/useLocalStorage'
+import useLocalStorage from '@hooks/useLocalStorage'
 import EventOverview from './EventOverview'
 import { useMemo, useRef, useState } from 'react'
 import { useEffect } from 'react'
@@ -132,7 +129,7 @@ const EventsPage = () => {
       }
 
       dispatch(
-        ayonApi.util.updateQueryData('getEventsWithLogs', {}, (draft) => {
+        api.util.updateQueryData('getEventsWithLogs', {}, (draft) => {
           patchOldEvents('events', data.events, draft, false)
           patchOldEvents('logs', data.logs, draft, false)
           draft.hasPreviousPage = data.hasPreviousPage
@@ -161,7 +158,7 @@ const EventsPage = () => {
       })
 
       dispatch(
-        ayonApi.util.updateQueryData('getEventsWithLogs', {}, (draft) => {
+        api.util.updateQueryData('getEventsWithLogs', {}, (draft) => {
           patchOldEvents('events', data.events, draft, true)
           patchOldEvents('logs', data.logs, draft, true)
           draft.hasPreviousPage = data.hasPreviousPage
@@ -218,7 +215,7 @@ const EventsPage = () => {
               placeholder="Filter events..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              autocomplete="off"
+              autoComplete="off"
             />
           </form>
           <InputSwitch

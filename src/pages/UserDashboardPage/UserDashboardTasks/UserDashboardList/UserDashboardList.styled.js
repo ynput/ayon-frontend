@@ -19,4 +19,9 @@ export const Inner = styled.ul`
   list-style: none;
   overflow-y: auto;
   border-radius: var(--border-radius-m);
+  li span.task, li span.folder{
+    overflow: hidden;
+    width: 200px;
+    text-overflow: ellipsis;
+  }
 `

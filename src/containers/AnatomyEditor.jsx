@@ -8,26 +8,19 @@
  * and dispatching breadcrumbs to the store.
  */
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
-import {
-  useGetAnatomyPresetQuery,
-  useGetAnatomySchemaQuery,
-} from '/src/services/anatomy/getAnatomy'
+import { useGetAnatomyPresetQuery, useGetAnatomySchemaQuery } from '@queries/anatomy/getAnatomy'
 
-import { useGetProjectAnatomyQuery } from '/src/services/project/getProject'
+import { useGetProjectAnatomyQuery } from '@queries/project/getProject'
 import { isEqual } from 'lodash'
 
-import { setUri } from '/src/features/context'
-import SettingsEditor from '/src/containers/SettingsEditor'
-import {
-  getValueByPath,
-  setValueByPath,
-  sameKeysStructure,
-} from '/src/containers/AddonSettings/utils'
+import { setUri } from '@state/context'
+import SettingsEditor from '@containers/SettingsEditor'
+import { getValueByPath, setValueByPath, sameKeysStructure } from '@containers/AddonSettings/utils'
 import { cloneDeep } from 'lodash'
-import { usePaste } from '/src/context/pasteContext'
+import { usePaste } from '@context/pasteContext'
 
 const AnatomyEditor = ({
   preset,
@@ -87,25 +80,22 @@ const AnatomyEditor = ({
       toast.error('Invalid JSON')
       return
     }
-    const oldValue = getValueByPath(formData, path)
+    const oldValue = path.length === 0 ? formData : getValueByPath(formData, path)
+    if (oldValue === undefined) {
+      toast.error('No data to paste')
+      return
+    }
     if (!sameKeysStructure(oldValue, value)) {
-      toast.error('Icompatible data structure')
+      toast.error('Incompatible data structure')
+      console.log('oldValue', oldValue)
+      console.log('value', value)
       return
     }
 
     let newData = cloneDeep(formData)
-    newData = setValueByPath(formData, path, value)
-
+    newData = setValueByPath(newData, path, value)
     setFormData(newData)
   }
-
-  if (isLoading) {
-    return 'Loading...'
-  }
-
-  if (!(preset || projectName)) return 'No preset or project selected'
-  if (preset && projectName) return 'Select either preset or project'
-  if (!(schema && originalData)) return null
 
   const handleBreadcrumbs = (path) => {
     let uri = projectName ? `ayon+anatomy://${projectName}/` : `ayon+anatomy+preset://${preset}/`
@@ -115,19 +105,41 @@ const AnatomyEditor = ({
     if (setBreadcrumbs) setBreadcrumbs(path)
   }
 
-  return (
-    <SettingsEditor
-      schema={schema}
-      originalData={originalData}
-      formData={formData}
-      onChange={setFormData}
-      onSetBreadcrumbs={handleBreadcrumbs}
-      breadcrumbs={breadcrumbs}
-      context={{
-        onPasteValue: onPasteValue,
-      }}
-    />
-  )
+  const editor = useMemo(() => {
+    if (isLoading) {
+      return 'Loading...'
+    }
+    if (!(preset || projectName)) return 'No preset or project selected'
+    if (preset && projectName) return 'Select either preset or project'
+    if (!(schema && originalData)) return null
+
+    return (
+      <SettingsEditor
+        schema={schema}
+        originalData={originalData}
+        formData={formData}
+        onChange={setFormData}
+        onSetBreadcrumbs={handleBreadcrumbs}
+        breadcrumbs={breadcrumbs}
+        context={{
+          onPasteValue: onPasteValue,
+        }}
+      />
+    )
+  }, [
+    schema,
+    originalData,
+    breadcrumbs,
+    formData,
+    isLoading,
+    preset,
+    projectName,
+    setFormData,
+    handleBreadcrumbs,
+    onPasteValue,
+  ])
+
+  return editor
 }
 
 export default AnatomyEditor

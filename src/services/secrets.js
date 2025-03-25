@@ -1,6 +1,6 @@
-import { ayonApi } from './ayon'
+import api from '@api'
 
-const secrets = ayonApi.injectEndpoints({
+const secrets = api.injectEndpoints({
   endpoints: (build) => ({
     getSecrets: build.query({
       query: () => ({
@@ -23,7 +23,7 @@ const secrets = ayonApi.injectEndpoints({
 
       async onQueryStarted({ name, value }, { dispatch, queryFulfilled }) {
         const putResult = dispatch(
-          ayonApi.util.updateQueryData('getSecrets', {}, (draft) => {
+          api.util.updateQueryData('getSecrets', {}, (draft) => {
             Object.assign(draft, { [name]: value })
           }),
         )
@@ -43,6 +43,7 @@ const secrets = ayonApi.injectEndpoints({
       invalidatesTags: ['secrets'],
     }), // deleteSecret
   }), //endpoints
+  overrideExisting: true,
 })
 
 export const { useGetSecretsQuery, useSetSecretMutation, useDeleteSecretMutation } = secrets

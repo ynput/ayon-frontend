@@ -1,13 +1,16 @@
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { Section, TablePanel } from '@ynput/ayon-react-components'
-import { CellWithIcon } from '/src/components/icons'
+import { CellWithIcon } from '@components/icons'
 import { useDispatch, useSelector } from 'react-redux'
-import { useGetWorkfileListQuery } from '../../services/getWorkfiles'
-import NoEntityFound from '/src/components/NoEntityFound'
-import { setFocusedWorkfiles } from '/src/features/context'
+import { useGetWorkfileListQuery } from '@queries/getWorkfiles'
+import NoEntityFound from '@components/NoEntityFound'
+import { setFocusedWorkfiles } from '@state/context'
+import { useRef } from 'react'
+import useTableKeyboardNavigation from '@containers/Feed/hooks/useTableKeyboardNavigation'
 
 const WorkfileList = ({ style }) => {
+  const tableRef = useRef(null)
   const dispatch = useDispatch()
   const taskIds = useSelector((state) => state.context.focused.tasks)
   const pairing = useSelector((state) => state.context.pairing)
@@ -20,11 +23,6 @@ const WorkfileList = ({ style }) => {
     isError,
     error,
   } = useGetWorkfileListQuery({ projectName, taskIds }, { skip: !taskIds.length })
-
-  if (isError) {
-    console.error(error)
-    return 'Error...'
-  }
 
   const formatName = (rowData) => {
     let className = ''
@@ -58,6 +56,19 @@ const WorkfileList = ({ style }) => {
   const selectedWorkfile = focusedWorkfiles && focusedWorkfiles[0]
   const selection = data.find((workfile) => workfile.id === selectedWorkfile)
 
+  const handleTableKeyDown = useTableKeyboardNavigation({
+    tableRef,
+    treeData: data,
+    selection: { [selectedWorkfile]: true },
+    onSelectionChange: ({ array }) => handleSelectionChange({ value: { id: array[0] } }),
+    config: { multiSelect: false },
+  })
+
+  if (isError) {
+    console.error(error)
+    return 'Error...'
+  }
+
   return (
     <Section style={style}>
       <TablePanel loading={isLoading}>
@@ -65,6 +76,7 @@ const WorkfileList = ({ style }) => {
           <NoEntityFound type="workfile" />
         ) : (
           <DataTable
+            ref={tableRef}
             scrollable="true"
             scrollHeight="flex"
             selectionMode="single"
@@ -73,6 +85,8 @@ const WorkfileList = ({ style }) => {
             value={taskIds.length ? data : []}
             selection={selection}
             onSelectionChange={handleSelectionChange}
+            onKeyDown={handleTableKeyDown}
+            rowClassName={(rowData) => ({ ['id-' + rowData.id]: true })}
           >
             <Column field="name" header="Name" body={formatName} />
           </DataTable>

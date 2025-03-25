@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { useGetTeamsQuery } from '../../services/team/getTeams'
-import TeamList from '/src/containers/TeamList'
+import { useGetTeamsQuery } from '@queries/team/getTeams'
+import TeamList from '@containers/TeamList'
 import { ArrayParam, useQueryParam } from 'use-query-params'
 import {
   Button,
@@ -9,20 +9,20 @@ import {
   SaveButton,
   Section,
   Spacer,
+  Dialog,
 } from '@ynput/ayon-react-components'
 import ProjectManagerPageLayout from '../ProjectManagerPage/ProjectManagerPageLayout'
 import UserListTeams from './UserListTeams'
-import { useGetUsersQuery } from '/src/services/user/getUsers'
+import { useGetUsersQuery } from '@queries/user/getUsers'
 import TeamUsersDetails from './TeamUsersDetails'
 import TeamDetails from './TeamDetails'
-import { useDeleteTeamMutation, useUpdateTeamsMutation } from '/src/services/team/updateTeams'
+import { useDeleteTeamMutation, useUpdateTeamsMutation } from '@queries/team/updateTeams'
 import { toast } from 'react-toastify'
-import CreateNewTeam from './CreateNewTeam'
+import CreateNewTeam from './CreateNewTeam/CreateNewTeam'
 import styled from 'styled-components'
-import useSearchFilter from '/src/hooks/useSearchFilter'
+import useSearchFilter from '@hooks/useSearchFilter'
 import { useSearchParams } from 'react-router-dom'
-import { Dialog } from 'primereact/dialog'
-import confirmDelete from '/src/helpers/confirmDelete'
+import confirmDelete from '@helpers/confirmDelete'
 
 const SectionStyled = styled(Section)`
   align-items: start;
@@ -99,12 +99,12 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
   // delete team
   const [deleteTeam] = useDeleteTeamMutation()
   // update multiple teams
-  const [updateTeams] = useUpdateTeamsMutation()
+  const [updateTeams, { isLoading: isUpdatingTeams }] = useUpdateTeamsMutation()
 
   const [selectedTeams = [], setSelectedTeams] = useQueryParam(['teams'], ArrayParam)
 
   // Merge users and teams data
-  // NOTE: there is a usersObject bellow [userList, usersObject]
+  // NOTE: there is a usersObject below [userList, usersObject]
   let [userList] = useMemo(() => {
     const usersObject = {}
     const userList = []
@@ -231,7 +231,6 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
     filteredUserList,
     'users',
   )
-  filteredUserList = useMemo(() => searchedUsers, [searchedUsers])
 
   // find all roles on all teams
   const rolesList = useMemo(() => {
@@ -338,7 +337,7 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
   // HANDLE RENAME TEAM
   const handleRenameTeam = async (oldName, newName) => {
     // check it's not the oldName
-    if (oldName === newName) return
+    if (oldName === newName || !newName) return
 
     // check if name is already taken
     if (teams.some((team) => team.name.toLowerCase() === newName.toLowerCase())) {
@@ -418,10 +417,11 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
   return (
     <>
       <Dialog
-        visible={duplicateTeamNameVisible}
-        onHide={onCancelDuplicate}
+        isOpen={duplicateTeamNameVisible}
+        onClose={onCancelDuplicate}
         header={<span>Duplicate Team - {selectedTeams[0]}</span>}
         style={{ minWidth: 300 }}
+        size="sm"
       >
         <form onSubmit={(e) => onDuplicate(e, duplicateTeamName)}>
           <InputText
@@ -462,7 +462,7 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
                   placeholder="Filter users..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  autocomplete="off"
+                  autoComplete="off"
                 />
                 <InputSwitch
                   checked={showTeamUsersOnly}
@@ -495,7 +495,7 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
             selectedProjects={[projectName]}
             selectedUsers={selectedUsers}
             onSelectUsers={(users) => setSelectedUsers(users)}
-            userList={filteredUserList}
+            userList={searchedUsers}
             isLoading={isLoading}
             selectedTeams={selectedTeams}
             onShowAllUsers={() => setShowTeamUsersOnly(!showTeamUsersOnly)}
@@ -505,36 +505,31 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
           />
           {!isUser && (
             <SectionStyled>
-              {createTeamOpen ? (
-                <CreateNewTeam
-                  rolesList={rolesList}
-                  createTeamOpen={createTeamOpen}
-                  onClose={setCreateTeamOpen}
-                  selectedUsers={selectedUsers}
-                  setSelectedUsers={setSelectedUsers}
-                  allUsers={userList}
-                  onCreate={handleNewTeam}
-                />
-              ) : (
-                <>
-                  <TeamUsersDetails
-                    users={selectedUsersArray}
-                    teams={teams}
-                    selectedTeams={selectedTeams}
-                    rolesList={rolesList}
-                    onUpdateTeams={(teams) => handleUpdateTeams(teams, { noInvalidate: true })}
-                    isFetching={isUpdating || isLoading}
-                  />
-                  <TeamDetails
-                    teams={teams}
-                    selectedTeams={selectedTeams}
-                    onUpdateTeams={(teams) => handleUpdateTeams(teams, { noInvalidate: true })}
-                    roles={selectedTeamsRoles}
-                    onRenameTeam={(v) => handleRenameTeam(selectedTeams[0], v)}
-                  />
-                </>
-              )}
+              <TeamUsersDetails
+                users={selectedUsersArray}
+                teams={teams}
+                selectedTeams={selectedTeams}
+                rolesList={rolesList}
+                onUpdateTeams={(teams) => handleUpdateTeams(teams, { noInvalidate: true })}
+                isFetching={isUpdating || isLoading}
+              />
+              <TeamDetails
+                teams={teams}
+                selectedTeams={selectedTeams}
+                onUpdateTeams={(teams) => handleUpdateTeams(teams, { noInvalidate: true })}
+                roles={selectedTeamsRoles}
+                onRenameTeam={(v) => handleRenameTeam(selectedTeams[0], v)}
+              />
             </SectionStyled>
+          )}
+          {createTeamOpen && (
+            <CreateNewTeam
+              onClose={() => setCreateTeamOpen(false)}
+              users={filteredUserList}
+              {...{ projectName, selectedTeams, isLoading, rolesList }}
+              onCreate={handleNewTeam}
+              isUpdating={isUpdatingTeams}
+            />
           )}
         </Section>
       </ProjectManagerPageLayout>

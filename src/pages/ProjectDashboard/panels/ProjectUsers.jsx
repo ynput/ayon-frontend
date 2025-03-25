@@ -1,8 +1,8 @@
 import React from 'react'
 import DashboardPanelWrapper from './DashboardPanelWrapper'
-import { useGetProjectDashboardQuery } from '/src/services/getProjectDashboard'
+import { useGetProjectDashboardQuery } from '@queries/getProjectDashboard'
 import styled from 'styled-components'
-import getShimmerStyles from '/src/styles/getShimmerStyles'
+import clsx from 'clsx'
 
 const RowStyled = styled.div`
   padding-top: 8px;
@@ -12,13 +12,6 @@ const RowStyled = styled.div`
   justify-content: center;
   align-items: center;
   gap: 16px;
-`
-const StyledLoading = styled.div`
-  position: absolute;
-  inset: 8px;
-  background-color: var(--md-sys-color-surface-container-high);
-  border-radius: var(--border-radius-m);
-  ${getShimmerStyles()}
 `
 
 const ProjectUsers = ({ projectName }) => {
@@ -30,12 +23,11 @@ const ProjectUsers = ({ projectName }) => {
   const { teamSizeActive = 0, teamSizeTotal = 0, usersWithAccessTotal = 0 } = data
 
   return (
-    <DashboardPanelWrapper>
+    <DashboardPanelWrapper className={clsx({ loading: isFetching }, 'shimmer-dark')}>
       <RowStyled>
         <strong>Teams Total - {teamSizeTotal}</strong> | <strong>Active - {teamSizeActive}</strong>{' '}
         | <strong>Access - {usersWithAccessTotal}</strong>
       </RowStyled>
-      {isFetching && <StyledLoading />}
     </DashboardPanelWrapper>
   )
 }

@@ -5,7 +5,9 @@ import { Section, TablePanel } from '@ynput/ayon-react-components'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 
-import { useGetAddonSettingsListQuery } from '/src/services/addonSettings'
+import { useGetAddonSettingsListQuery } from '@queries/addonSettings'
+import clsx from 'clsx'
+import useTableLoadingData from '@hooks/useTableLoadingData'
 
 const AddonList = ({
   selectedAddons,
@@ -15,11 +17,11 @@ const AddonList = ({
   siteSettings = false, // 'settings' or 'site' - show addons with settings or site settings
   onAddonFocus = () => {}, // Triggered when selection is changed by ayon+settings:// uri change
   changedAddonKeys = null, // List of addon keys that have changed
-  projectName, // used for chaged addons
-  siteId, // used for chaged addons
+  projectName, // used for changed addons
+  siteId, // used for changed addons
   setBundleName,
 }) => {
-  const { data, loading, isError } = useGetAddonSettingsListQuery({
+  const { data, isLoading, isError } = useGetAddonSettingsListQuery({
     projectName,
     siteId,
     variant,
@@ -31,7 +33,7 @@ const AddonList = ({
   // Filter addons by variant
   // add 'version' property to each addon
   const addons = useMemo(() => {
-    if (loading) return []
+    if (isLoading) return []
     let result = []
     for (const addon of data?.addons || []) {
       if (siteSettings) {
@@ -41,7 +43,7 @@ const AddonList = ({
         if (projectName && !addon.hasProjectSiteSettings)
           // project site overrides
           continue
-      } else if (projectName && !addon.hasProjectSettings) continue
+      } else if (projectName && !addon.hasProjectSettings && !addon.isBroken) continue
       else if (!addon.hasSettings && !addon.isBroken) continue
 
       const addonKey = `${addon.name}|${addon.version}|${variant}|${siteId || '_'}|${
@@ -54,6 +56,10 @@ const AddonList = ({
         variant,
       })
     }
+
+    // sort by addon title
+    result.sort((a, b) => a.title.localeCompare(b.title))
+
     return result
   }, [data, variant, siteSettings])
 
@@ -122,19 +128,25 @@ const AddonList = ({
   }
 
   const rowDataClassNameFormatter = (rowData) => {
-    if (changedAddonKeys && changedAddonKeys.includes(rowData.key)) return 'changed'
-    if (rowData.isBroken) return 'broken-addon-row'
-    if (rowData.hasProjectSiteOverrides) return 'changed-site'
-    if (rowData.hasProjectOverrides) return 'changed-project'
-    if (rowData.hasStudioOverrides) return 'changed-studio'
-    return ''
+    return clsx({
+      changed: changedAddonKeys && changedAddonKeys.includes(rowData.key),
+      'broken-addon-row': rowData.isBroken,
+      'changed-site': rowData.hasProjectSiteOverrides,
+      'changed-project': rowData.hasProjectOverrides,
+      'changed-studio': rowData.hasStudioOverrides,
+      loading: isLoading,
+    })
   }
+
+  let tableData = useTableLoadingData(addons, isLoading, 40)
+
+  if (isError) tableData = []
 
   return (
     <Section style={{ minWidth: 250 }}>
-      <TablePanel loading={loading}>
+      <TablePanel>
         <DataTable
-          value={isError ? [] : addons}
+          value={tableData}
           selectionMode="multiple"
           scrollable="true"
           scrollHeight="flex"
@@ -142,6 +154,7 @@ const AddonList = ({
           onSelectionChange={onSelectionChange}
           onContextMenuSelectionChange={onSelectionChange}
           onContextMenu={onContextMenu}
+          className={clsx('addon-list-table', { loading: isLoading })}
           rowClassName={rowDataClassNameFormatter}
           emptyMessage={isError ? `WARNING: No bundle set to ${variant}` : 'No addons found'}
         >

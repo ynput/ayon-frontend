@@ -1,21 +1,21 @@
-export const mergeAddonWithInstalled = (market, installed = []) => {
-  const installedAddon = installed.find((i) => i.name === market.name)
+export const mergeAddonWithDownloaded = (market, downloaded = []) => {
+  const downloadedAddon = downloaded.find((i) => i.name === market.name)
   const marketAddon = {
     ...market,
     isOfficial: market.orgName === 'ynput-official',
     isVerified: false,
   }
 
-  if (!installedAddon) {
-    return { ...marketAddon, isInstalled: false, isOutdated: false }
+  if (!downloadedAddon) {
+    return { ...marketAddon, isDownloaded: false, isOutdated: false }
   }
 
   // merge
   const merge = {
-    ...installedAddon,
+    ...downloadedAddon,
     ...marketAddon,
     versions: marketAddon.versions,
-    installedVersions: installedAddon.versions,
+    downloadedVersions: downloadedAddon.versions,
   }
 
   return merge

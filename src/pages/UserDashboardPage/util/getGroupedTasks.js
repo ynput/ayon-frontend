@@ -1,51 +1,69 @@
 // groupBy = { id: 'project', sortOrder: true }
 
-export const getGroupedTasks = (tasks = [], groupBy = {}, labelsAll = {}) => {
-  const { id, sortOrder } = groupBy
+export const getGroupedTasks = (tasks = [], groupBy = {}, anatomies = {}) => {
+  const { id, sortOrder, sortByEnumOrder } = groupBy
 
   if (!id) {
     return [{ label: '', tasks: tasks }]
   }
 
-  const labels = labelsAll[id] || []
+  const anatomy = anatomies[id] || []
 
-  const groupedTasks = tasks.reduce((acc, task) => {
-    let key = task[id] || 'other'
-    if (Array.isArray(key)) {
-      key = key
-        .map((k) => {
-          const groupLabel = labels.find((l) => l.id === k) || { label: k }
-          return groupLabel.label
-        })
-        .join(', ')
-    } else {
-      const groupLabel = labels.find((l) => l.id === key) || { label: key }
-      key = groupLabel.label
-    }
-    if (!acc[key]) {
-      acc[key] = []
-    }
-    acc[key].push(task)
-    return acc
-  }, {})
+  const groupedTasks = Object.values(
+    tasks.reduce((acc, task) => {
+      let value = task[id] || 'other'
+      let label
+      let indexOrder
 
-  const groups = Object.keys(groupedTasks).map((key) => {
-    return {
-      label: key,
-      tasks: groupedTasks[key],
-    }
-  })
+      if (Array.isArray(value)) {
+        label = value
+          .map((k) => {
+            const groupLabel = anatomy.find((l) => l.value === k) || { label: k }
+            return groupLabel.label
+          })
+          .join(', ')
+        value = value.join(', ')
+        indexOrder = value.length
+      } else {
+        const groupLabel = anatomy.find((l) => l.value === value) || { label: value }
+        label = groupLabel.label
+        const enumIndex = anatomy.findIndex((l) => l.value === value)
+        indexOrder = enumIndex
+      }
 
-  groups.sort((a, b) => {
-    const order = sortOrder ? -1 : 1
-    if (a.label < b.label) {
-      return -1 * order
-    }
-    if (a.label > b.label) {
-      return 1 * order
-    }
-    return 0
-  })
+      if (!acc[value]) {
+        acc[value] = { value, label, indexOrder, tasks: [] }
+      }
+      acc[value].tasks.push(task)
+      return acc
+    }, {}),
+  )
+
+  const groups = groupedTasks
+    .sort((a, b) => {
+      let aVal = a.label || ''
+      let bVal = b.label || ''
+
+      if (sortByEnumOrder) {
+        aVal = a.indexOrder
+        bVal = b.indexOrder
+      }
+
+      const order = sortOrder ? -1 : 1
+      if (aVal < bVal) {
+        return -1 * order
+      }
+      if (aVal > bVal) {
+        return 1 * order
+      }
+      return 0
+    })
+    .map((group) => {
+      return {
+        label: group.value,
+        tasks: group.tasks,
+      }
+    })
 
   return groups
 }

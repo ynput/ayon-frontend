@@ -8,7 +8,7 @@ export const Dialog = styled.dialog`
   top: 42px;
   width: auto;
   height: auto;
-  z-index: 100;
+  z-index: 1000;
   border: none;
   background-color: unset;
   padding: 0;
@@ -39,7 +39,7 @@ const DialogOpenAnimation = keyframes`
 export const DialogContent = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--base-gap-large);
 
   /* position */
   position: absolute;
@@ -103,13 +103,13 @@ export const Menu = styled.menu`
 
   /* custom */
   flex-direction: column;
-  gap: 8px;
+  gap: var(--base-gap-large);
   padding: 8px;
 
   /* shrink the padding when compact */
   &.compact {
     padding: 4px;
-    gap: 4px;
+    gap: var(--base-gap-small);
   }
 
   /* colors */
@@ -130,7 +130,7 @@ export const Item = styled.li`
   padding: 6px 16px 6px 12px;
   justify-content: flex-start;
   align-items: center;
-  gap: 8px;
+  gap: var(--base-gap-large);
   align-self: stretch;
   border-radius: 4px;
   cursor: pointer;
@@ -141,7 +141,7 @@ export const Item = styled.li`
     display: inline-block;
   }
 
-  :hover {
+  &:hover {
     background-color: var(--md-sys-color-surface-container-highest);
   }
 
@@ -177,6 +177,33 @@ export const Item = styled.li`
     border-radius: 50%;
     background-color: var(--md-sys-color-error);
   }
+
+  &.danger {
+    &,
+    .icon {
+      color: var(--md-sys-color-error);
+    }
+
+    &:hover {
+      background-color: var(--md-sys-color-error-container);
+
+      &,
+      .icon {
+        color: var(--md-sys-color-on-error-container);
+      }
+    }
+  }
+
+  &.dev {
+    &,
+    .icon {
+      color: var(--color-hl-developer);
+    }
+
+    &:hover {
+      background-color: var(--color-hl-developer-container-hover);
+    }
+  }
 `
 
 export const Footer = styled.footer`
@@ -208,12 +235,4 @@ export const Footer = styled.footer`
       display: flex;
     }
   }
-`
-
-export const Shortcut = styled.span`
-  background-color: var(--md-sys-color-surface-container);
-  padding: 2px 4px;
-  border-radius: var(--border-radius-m);
-  font-size: 90%;
-  margin-left: auto;
 `

@@ -1,7 +1,7 @@
 import { Button, Dropdown } from '@ynput/ayon-react-components'
 import { useSelector } from 'react-redux'
 import { useMemo, useEffect } from 'react'
-import { useGetBundleListQuery } from '/src/services/bundles'
+import { useListBundlesQuery } from '@queries/bundles/getBundles'
 import styled from 'styled-components'
 
 const BundleDropdownItem = styled.div`
@@ -22,17 +22,17 @@ const DropdownBadge = styled.span`
   margin-left: 8px;
 `
 
-const DevModeSelector = ({ variant, setVariant, disabled }) => {
-  const { data } = useGetBundleListQuery({})
+const DevModeSelector = ({ variant, setVariant, disabled, style }) => {
+  const { data: { bundles = [] } = {} } = useListBundlesQuery({})
   const userName = useSelector((state) => state.user.name)
 
   const bundleList = useMemo(() => {
     return [
       { label: 'Production', name: 'production' },
       { label: 'Staging', name: 'staging' },
-      ...(data || []).filter((b) => !b?.isArchived && b?.isDev),
+      ...(bundles || []).filter((b) => !b?.isArchived && b?.isDev),
     ]
-  }, [data])
+  }, [bundles])
 
   const bundleOptions = useMemo(() => {
     return bundleList.map((b) => ({
@@ -42,6 +42,8 @@ const DevModeSelector = ({ variant, setVariant, disabled }) => {
     }))
   }, [bundleList])
 
+  const dropdownStyle = style || { flexGrow: 1 }
+
   const formatValue = (value) => {
     if (!bundleOptions.length) return ''
     if (!value.length) return ''
@@ -49,7 +51,9 @@ const DevModeSelector = ({ variant, setVariant, disabled }) => {
     if (!selectedBundle) return ''
     return (
       <BundleDropdownItem>
-        {selectedBundle.label || selectedBundle.name}
+        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {selectedBundle.label || selectedBundle.name}
+        </span>
         <span>
           {selectedBundle.active && <DropdownBadge>A</DropdownBadge>}
           {selectedBundle.value === 'staging' && (
@@ -79,7 +83,7 @@ const DevModeSelector = ({ variant, setVariant, disabled }) => {
       value={[variant]}
       onChange={(e) => setVariant(e[0])}
       disabled={disabled}
-      style={{ flexGrow: 1 }}
+      style={dropdownStyle}
       valueTemplate={formatValue}
       itemTemplate={(option) => (
         <BundleDropdownItem>
@@ -103,7 +107,7 @@ const DevModeSelector = ({ variant, setVariant, disabled }) => {
   )
 }
 
-const VariantSelector = ({ variant, setVariant, disabled }) => {
+const VariantSelector = ({ variant, setVariant, disabled = false, style }) => {
   const user = useSelector((state) => state.user)
 
   useEffect(() => {
@@ -113,7 +117,14 @@ const VariantSelector = ({ variant, setVariant, disabled }) => {
   }, [user.attrib.developerMode])
 
   if (user.attrib.developerMode) {
-    return <DevModeSelector variant={variant} setVariant={setVariant} disabled={disabled} />
+    return (
+      <DevModeSelector
+        variant={variant}
+        setVariant={setVariant}
+        disabled={disabled}
+        style={style}
+      />
+    )
   }
 
   const styleHlProd = {

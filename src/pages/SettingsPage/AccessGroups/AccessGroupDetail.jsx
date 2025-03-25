@@ -8,21 +8,20 @@ import {
   ScrollPanel,
   SaveButton,
 } from '@ynput/ayon-react-components'
-import SettingsEditor from '/src/containers/SettingsEditor'
-import { useGetAccessGroupsQuery } from '/src/services/accessGroups/getAccessGroups'
+import SettingsEditor from '@containers/SettingsEditor'
+import { useGetAccessGroupsQuery } from '@queries/accessGroups/getAccessGroups'
 import { isEqual } from 'lodash'
 import {
   useGetAccessGroupQuery,
   useGetAccessGroupSchemaQuery,
-} from '/src/services/accessGroups/getAccessGroups'
+} from '@queries/accessGroups/getAccessGroups'
 import {
   useDeleteAccessGroupMutation,
-  useUpdateAccessGroupMutation,
-} from '/src/services/accessGroups/updateAccessGroups'
-import confirmDelete from '/src/helpers/confirmDelete'
+  useSaveAccessGroupMutation,
+} from '@queries/accessGroups/updateAccessGroups'
+import confirmDelete from '@helpers/confirmDelete'
 
-
-const PROJECT_GROUP_MSG = "Clear project overrides"
+const PROJECT_GROUP_MSG = 'Clear project overrides'
 
 const AccessGroupDetail = ({ projectName, accessGroupName }) => {
   const [originalData, setOriginalData] = useState(null)
@@ -30,7 +29,7 @@ const AccessGroupDetail = ({ projectName, accessGroupName }) => {
 
   const { data } = useGetAccessGroupQuery(
     {
-      name: accessGroupName,
+      accessGroupName: accessGroupName,
       projectName: projectName || '_',
     },
     { skip: !accessGroupName },
@@ -38,7 +37,7 @@ const AccessGroupDetail = ({ projectName, accessGroupName }) => {
   const { data: schema } = useGetAccessGroupSchemaQuery()
 
   const { data: accessGroupList = [] } = useGetAccessGroupsQuery({
-    projectName,
+    projectName: projectName || '_',
   })
 
   const isProjectLevel = useMemo(() => {
@@ -47,7 +46,6 @@ const AccessGroupDetail = ({ projectName, accessGroupName }) => {
     }
   }, [accessGroupName, accessGroupList])
 
-
   useEffect(() => {
     if (!data) return
     setFormData(data)
@@ -55,7 +53,7 @@ const AccessGroupDetail = ({ projectName, accessGroupName }) => {
   }, [data])
 
   // mutations
-  const [updateAccessGroup, { isLoading: saving }] = useUpdateAccessGroupMutation()
+  const [saveAccessGroup, { isLoading: saving }] = useSaveAccessGroupMutation()
   const [deleteAccessGroup] = useDeleteAccessGroupMutation()
 
   const isChanged = useMemo(() => {
@@ -65,8 +63,8 @@ const AccessGroupDetail = ({ projectName, accessGroupName }) => {
 
   const onSave = async () => {
     try {
-      await updateAccessGroup({
-        name: accessGroupName,
+      await saveAccessGroup({
+        accessGroupName,
         projectName: projectName || '_',
         data: formData,
       }).unwrap()
@@ -77,54 +75,57 @@ const AccessGroupDetail = ({ projectName, accessGroupName }) => {
     }
   }
 
-  const onDeleteLocalGroupSettings = async () => confirmDelete({
-    header: 'Clear project overrides',
-    deleteLabel: 'Clear',
-    label: 'Project overrides',
-    accept: async () => await deleteAccessGroup({ name: accessGroupName, projectName }).unwrap(),
-    message: 'Are you sure you want to delete all project override settings for this access group?'
-  })
-
- 
+  const onDeleteLocalGroupSettings = async () =>
+    confirmDelete({
+      header: 'Clear project overrides',
+      deleteLabel: 'Clear',
+      label: 'Project overrides',
+      accept: async () => await deleteAccessGroup({ accessGroupName, projectName }).unwrap(),
+      message:
+        'Are you sure you want to delete all project override settings for this access group?',
+    })
 
   const isLocalProject = !!projectName
-  // This conditions checks if there are any local (NOT global) project settings for user group 
+  // This conditions checks if there are any local (NOT global) project settings for user group
   const noLocalSettings = projectName && !isProjectLevel
+
+
+  const permissionsEditor = useMemo(() => {
+    return (
+        <SettingsEditor
+          schema={schema}
+          originalData={originalData}
+          formData={formData}
+          onChange={setFormData}
+          level={projectName ? 'project' : 'studio'}
+          context={{
+            headerProjectName: projectName,
+          }}
+        />
+    )
+  }, [schema, originalData, formData, projectName, setFormData])
+
 
   return (
     <Section style={{ flex: 2 }}>
       <Toolbar>
         <Spacer />
-        { isLocalProject &&
+        {isLocalProject && (
           <Button
             onClick={onDeleteLocalGroupSettings}
             label={PROJECT_GROUP_MSG}
             disabled={noLocalSettings}
             icon="delete"
           />
-        }
-        <SaveButton
-          onClick={onSave}
-          label="Save Changes"
-          active={isChanged}
-          saving={saving}
-        />
+        )}
+        <SaveButton onClick={onSave} label="Save Changes" active={isChanged} saving={saving} />
       </Toolbar>
       <ScrollPanel
         className="nopad transparent"
         scrollStyle={{ padding: 0 }}
         style={{ flexGrow: 1 }}
       >
-        <SettingsEditor
-          schema={schema}
-          originalData={originalData}
-          formData={formData}
-          onChange={setFormData}
-          level={isProjectLevel ? 'project' : 'studio'}
-          context={{
-            headerProjectName: projectName,
-          }}
-        />
+        {permissionsEditor}
       </ScrollPanel>
     </Section>
   )

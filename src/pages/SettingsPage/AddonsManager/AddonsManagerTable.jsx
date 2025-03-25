@@ -2,8 +2,9 @@ import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import BundleStatus from './BundleStatus/BundleStatus'
 import { Button, Section, TablePanel } from '@ynput/ayon-react-components'
-import useCreateContext from '/src/hooks/useCreateContext'
-import confirmDelete from '/src/helpers/confirmDelete'
+import useCreateContext from '@hooks/useCreateContext'
+import confirmDelete from '@helpers/confirmDelete'
+import clsx from 'clsx'
 
 const AddonsManagerTable = ({
   title = '',
@@ -16,6 +17,9 @@ const AddonsManagerTable = ({
   onDelete,
   onDeleteSuccess,
   extraContext,
+  sortFunction,
+  emptyMessage,
+  isLoading,
   ...props
 }) => {
   const deleteLabel = isArchive ? 'Archive' : 'Uninstall'
@@ -106,11 +110,19 @@ const AddonsManagerTable = ({
           onSelectionChange={(e) => onChange(e.value?.map((d) => d && d[field]))}
           selection={tableSelection}
           onContextMenu={handleContextClick}
+          emptyMessage={emptyMessage}
+          className={clsx({ loading: isLoading })}
+          rowClassName={() => ({ loading: isLoading })}
         >
           <Column
             field={field}
             header={title}
             sortable
+            sortFunction={
+              sortFunction
+                ? (event) => event.data.sort((a, b) => sortFunction(event.order)(a, b))
+                : null
+            }
             body={(d) => (
               <span
                 data-tooltip={d?.tooltip}

@@ -1,0 +1,11 @@
+query GetInstallEvents($ids: [String!]!) {
+  events(last: 100, ids: $ids) {
+    edges {
+      node {
+        id
+        status
+        description
+      }
+    }
+  }
+}

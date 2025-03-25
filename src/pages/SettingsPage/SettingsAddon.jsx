@@ -1,7 +1,9 @@
-import { useRef, useMemo, useState } from 'react'
+import { useRef, useMemo, useState, useEffect } from 'react'
 import { useSelector } from 'react-redux'
 import { Section } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
+import useAddonContextResend from '@hooks/useAddonContextResend'
+import LoadingPage from '@pages/LoadingPage'
 
 const AddonWrapper = styled.iframe`
   flex-grow: 1;
@@ -15,9 +17,17 @@ const SettingsAddon = ({ addonName, addonVersion, sidebar }) => {
   const [loading, setLoading] = useState(true)
 
   const context = useSelector((state) => state.context)
-  const addonUrl = `${window.location.origin}/addons/${addonName}/${addonVersion}/frontend/`
+  const addonUrl = `${window.location.origin}/addons/${addonName}/${addonVersion}/frontend`
+
+  //Switching between addons didn't update the loading state which affects the rest of the logic
+  useEffect(() => {
+    setLoading(true)
+  }, [addonUrl])
 
   const pushContext = () => {
+    if (!addonRef.current) {
+      return
+    }
     const addonWnd = addonRef.current.contentWindow
     addonWnd.postMessage({
       scope: 'settings',
@@ -27,6 +37,9 @@ const SettingsAddon = ({ addonName, addonVersion, sidebar }) => {
       addonVersion,
     })
   }
+
+  // Push context to addon whenever explicitly requested
+  useAddonContextResend(pushContext)
 
   const sidebarComponent = useMemo(() => {
     if (sidebar === 'addonList') {
@@ -39,12 +52,26 @@ const SettingsAddon = ({ addonName, addonVersion, sidebar }) => {
     pushContext()
   }
 
+  useEffect(() => {
+    if (addonRef.current) {
+      pushContext()
+    }
+  }, [context])
+
   return (
     <main>
       {sidebarComponent}
       <Section>
-        {loading && <div style={{ display: 'none' }}>Loading...</div>}
-        <AddonWrapper src={addonUrl} ref={addonRef} onLoad={onAddonLoad} />
+        {loading && (
+          <div style={{ position: 'absolute', inset: 0 }}>
+            <LoadingPage style={{ position: 'absolute' }} />
+          </div>
+        )}
+        <AddonWrapper
+          src={`${addonUrl}/?id=${window.senderId}`}
+          ref={addonRef}
+          onLoad={onAddonLoad}
+        />
       </Section>
     </main>
   )

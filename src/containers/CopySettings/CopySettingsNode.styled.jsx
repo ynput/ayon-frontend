@@ -7,12 +7,16 @@ const NodePanelWrapper = styled.div`
   border-radius: 4px;
 `
 
+const NodeMessage = styled.span`
+  white-space: nowrap;
+`
+
 const NodePanelHeader = styled.div`
   padding: 4px 8px;
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 8px;
+  gap: var(--base-gap-large);
   background-color: var(--color-grey-02);
   min-height: 40px;
   max-height: 40px;
@@ -68,11 +72,21 @@ const ChangeValue = styled.span`
   background-color: var(--color-grey-04);
   color: #dddddd;
   cursor: pointer;
+  margin: 2px;
+  font-size: 0.8rem;
 
   &.dim {
     font-style: italic;
     color: #949494;
   }
+
+  ${props => props.$level === 'studio' && `
+    outline: 1px solid var(--color-hl-studio);
+  `}
+
+  ${props => props.$level === 'project' && `
+    outline: 1px solid var(--color-hl-project);
+  `}
 `
 
 const ChangesTable = styled.table`
@@ -80,7 +94,7 @@ const ChangesTable = styled.table`
   border-collapse: collapse;
 
   tr {
-    height: 24px;
+    height: 26px;
     border-bottom: 1px solid var(--color-grey-02);
 
     &:hover {
@@ -115,6 +129,7 @@ export {
   NodePanelHeader,
   NodePanelBody,
   NodePanelDirectionSelector,
+  NodeMessage,
   ChangeValue,
   ChangesTable,
 }

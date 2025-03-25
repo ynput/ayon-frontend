@@ -1,15 +1,18 @@
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { Section } from '@ynput/ayon-react-components'
+import Hierarchy from '@containers/hierarchy'
+import TaskList from '@containers/taskList'
 
-import Hierarchy from '/src/containers/hierarchy'
-import TaskList from '/src/containers/taskList'
+import Products from './Products/Products'
+import BrowserDetailsPanel from './BrowserDetailsPanel'
 
-import Products from './Products'
-import Detail from './Detail'
+const detailsMinWidth = 533
+const detailsMaxWidth = '40vw'
+const detailsMaxMaxWidth = 700
 
 const BrowserPage = () => {
   return (
-    <main>
+    <main style={{ overflow: 'hidden' }}>
       <Splitter
         layout="horizontal"
         style={{ width: '100%', height: '100%' }}
@@ -26,8 +29,14 @@ const BrowserPage = () => {
             <SplitterPanel style={{ minWidth: 500 }}>
               <Products />
             </SplitterPanel>
-            <SplitterPanel style={{ minWidth: 250, maxWidth: 480 }}>
-              <Detail />
+            <SplitterPanel
+              style={{
+                maxWidth: `clamp(${detailsMinWidth}px, ${detailsMaxWidth}, ${detailsMaxMaxWidth}px)`,
+                minWidth: detailsMinWidth,
+                zIndex: 100,
+              }}
+            >
+              <BrowserDetailsPanel />
             </SplitterPanel>
           </Splitter>
         </SplitterPanel>

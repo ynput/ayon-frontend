@@ -17,8 +17,8 @@ export const ProjectSidebar = styled(Sidebar)`
 
   h3 {
     border: none;
-    color: var(--md-sys-color-outline);
     padding-left: var(--padding-m);
+    font-weight: 700;
   }
 
   .p-sidebar-content {
@@ -26,13 +26,13 @@ export const ProjectSidebar = styled(Sidebar)`
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: var(--base-gap-large);
 
     section {
       background-color: var(--md-sys-color-surface-container-high);
       color: var(--md-sys-color-on-surface);
       border-radius: var(--border-radius-l);
-      gap: 8px;
+      gap: var(--base-gap-large);
       padding: 8px;
       overflow: hidden;
 
@@ -63,7 +63,7 @@ export const All = styled.div`
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--base-gap-small);
 
   menu {
     flex: 1;

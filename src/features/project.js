@@ -1,6 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit'
 
-const productTypes = {
+export const productTypes = {
   image: { name: 'image', icon: 'imagesmode' },
   render: { name: 'render', icon: 'photo_library' },
   plate: { name: 'plate', icon: 'camera_roll' },
@@ -15,7 +15,7 @@ const productTypes = {
   setdress: { name: 'setdress', icon: 'forest' },
   groom: { name: 'groom', icon: 'content_cut' },
   matchmove: { name: 'matchmove', icon: 'switch_video' },
-  vdb: { name: 'vdb', icon: 'local_fire_department' },
+  vdbcache: { name: 'vdbcache', icon: 'local_fire_department' },
   lightrig: { name: 'lightrig', icon: 'wb_incandescent' },
   lut: { name: 'lut', icon: 'opacity' },
   workfile: { name: 'workfile', icon: 'home_repair_service' },
@@ -33,7 +33,6 @@ const projectSlice = createSlice({
     statusesOrder: [],
     tags: {},
     tagsOrder: [],
-    productTypes: productTypes,
     attrib: {},
   },
   reducers: {
@@ -46,7 +45,6 @@ const projectSlice = createSlice({
       state.tasks = action.payload.tasks || {}
       state.statuses = action.payload.statuses || {}
       state.tags = action.payload.tags || {}
-      // state.productTypes = action.payload.productTypes || {}
       state.foldersOrder = action.payload.order?.folders || []
       state.tasksOrder = action.payload.order?.tasks || []
       state.statusesOrder = action.payload.order?.statuses || []

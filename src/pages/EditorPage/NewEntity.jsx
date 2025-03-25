@@ -3,18 +3,24 @@ import PropTypes from 'prop-types'
 import { capitalize, isEmpty } from 'lodash'
 import { useState } from 'react'
 import { useEffect } from 'react'
-import { Button, InputText, SaveButton, Spacer, Toolbar } from '@ynput/ayon-react-components'
+import {
+  Button,
+  InputText,
+  SaveButton,
+  Spacer,
+  Toolbar,
+  Dialog,
+} from '@ynput/ayon-react-components'
 import { useRef } from 'react'
 import { useSelector } from 'react-redux'
 import styled from 'styled-components'
 import TypeEditor from './TypeEditor'
-import checkName from '/src/helpers/checkName'
-import { Dialog } from 'primereact/dialog'
+import checkName from '@helpers/checkName'
 
 const ContentStyled = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--base-gap-large);
   form {
     input:first-child {
       margin-right: 8px;
@@ -37,7 +43,9 @@ const NewEntity = ({ type, currentSelection = {}, visible, onConfirm, onHide }) 
 
   //   type selector
   const tasks = useSelector((state) => state.project.tasks)
+  const tasksOrder = useSelector((state) => state.project.tasksOrder)
   const folders = useSelector((state) => state.project.folders)
+  const foldersOrder = useSelector((state) => state.project.foldersOrder)
   const typeOptions = type === 'folder' ? folders : tasks
 
   // set entity type
@@ -45,34 +53,23 @@ const NewEntity = ({ type, currentSelection = {}, visible, onConfirm, onHide }) 
     if (type !== entityType && type) {
       setEntityType(type)
       let task = {}
-      if ('Generic' in typeOptions)
+      const firstTask = tasksOrder[0]
+
+      if (firstTask in tasks) {
         task = {
-          name: 'generic',
-          label: 'generic',
-          type: 'Generic',
+          name: tasks[firstTask].name,
+          label: tasks[firstTask].name,
+          type: firstTask,
         }
+      }
 
-      let folder = ''
-      if ('Folder' in typeOptions)
+      let folder = {}
+      const firstFolder = foldersOrder[0]
+      if (firstFolder in folders) {
         folder = {
-          name: 'folder',
-          label: 'folder',
-          type: 'Folder',
-        }
-
-      // fallback to first option
-      if (isEmpty(task) && !isEmpty(typeOptions)) {
-        const firstType = Object.values(typeOptions)[0]
-        if (firstType) {
-          const name = firstType.shortName || firstType.name?.toLowerCase()
-
-          folder = {
-            type: firstType.name,
-            name: name,
-            label: name,
-          }
-
-          task = folder
+          name: folders[firstFolder].name,
+          label: folders[firstFolder].name,
+          type: firstFolder,
         }
       }
 
@@ -136,10 +133,8 @@ const NewEntity = ({ type, currentSelection = {}, visible, onConfirm, onHide }) 
   const typeSelectRef = useRef(null)
   const labelRef = useRef(null)
 
-  const handleShow = () => {
-    // open dropdown
-    typeSelectRef.current?.open()
-  }
+  // open dropdown - delay to wait for dialog opening
+  const handleShow = () => setTimeout(() => typeSelectRef.current?.open(), 180)
 
   const handleSubmit = (hide = false) => {
     // first check name and type valid
@@ -197,12 +192,12 @@ const NewEntity = ({ type, currentSelection = {}, visible, onConfirm, onHide }) 
   return (
     <Dialog
       header={title}
-      visible={visible}
-      onHide={onHide}
+      isOpen={visible}
+      onClose={onHide}
       onShow={handleShow}
-      resizable={false}
-      draggable={false}
-      appendTo={document.getElementById('root')}
+      size="sm"
+      variant="dialog"
+      style={{ zIndex: 999 }}
       footer={
         <Toolbar onFocus={() => setNameFocused(false)}>
           <Spacer />
@@ -234,6 +229,7 @@ const NewEntity = ({ type, currentSelection = {}, visible, onConfirm, onHide }) 
           ref={typeSelectRef}
           onFocus={handleTypeSelectFocus}
           onClick={() => setNameFocused(false)}
+          type={entityType}
         />
         <InputText
           value={entityData.label}

@@ -2,11 +2,11 @@ import React from 'react'
 import { format, differenceInDays } from 'date-fns'
 
 import DashboardPanelWrapper from './DashboardPanelWrapper'
-import { useGetProjectAttribsQuery } from '/src/services/project/getProject'
+import { useGetProjectAttribsQuery } from '@queries/project/getProject'
 import styled, { css, keyframes } from 'styled-components'
 import { useState } from 'react'
 import ProgressBar from './ProgressBar'
-import getShimmerStyles from '/src/styles/getShimmerStyles'
+import clsx from 'clsx'
 
 const TailsStyled = styled.div`
   border-radius: var(--panel-border-radius);
@@ -53,7 +53,7 @@ const ProgressStyled = styled.div`
       }
     `}
 
-  :hover {
+  &:hover {
     div:last-child {
       scale: 0;
     }
@@ -66,7 +66,7 @@ const ProgressStyled = styled.div`
   hr {
     border-radius: 0 !important;
 
-    :hover {
+    &:hover {
       scale: 1 !important;
 
       ::after {
@@ -110,15 +110,6 @@ const MarkerStyled = styled(TailsStyled)`
   z-index: 30;
 
   animation: ${({ left }) => MarkerAnimation(left)} 1s forwards;
-`
-
-const StyledLoading = styled.div`
-  position: absolute;
-  inset: 8px;
-  z-index: 100;
-  background-color: var(--md-sys-color-surface-container-high);
-  border-radius: var(--border-radius-m);
-  ${getShimmerStyles()}
 `
 
 const Timeline = ({ projectName }) => {
@@ -170,6 +161,7 @@ const Timeline = ({ projectName }) => {
         flex: 1,
       }}
       stylePanel={{ height: '100%' }}
+      className={clsx({ loading: isFetching }, 'shimmer-dark')}
     >
       <TailsStyled data-tooltip={'Start date'}>{startString}</TailsStyled>
       <ProgressStyled animation={animation} onAnimationEnd={() => setAnimation(false)}>
@@ -191,7 +183,6 @@ const Timeline = ({ projectName }) => {
       <TailsStyled end="true" data-tooltip={'End date'}>
         {endString}
       </TailsStyled>
-      {isFetching && <StyledLoading />}
     </DashboardPanelWrapper>
   )
 }

@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import * as Styled from './Menu.styled'
 import MenuList from './MenuList'
-import copyToClipboard from '/src/helpers/copyToClipboard'
+import copyToClipboard from '@helpers/copyToClipboard'
 import { Button } from '@ynput/ayon-react-components'
 
 const Menu = ({ menu = [], onClose, header, footer = '', ...props }) => {

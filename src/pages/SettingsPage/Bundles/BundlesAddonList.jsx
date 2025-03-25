@@ -1,13 +1,42 @@
 import React, { useContext, useEffect, useMemo } from 'react'
-import { useGetAddonListQuery } from '../../../services/addons/getAddons'
+import { useListAddonsQuery } from '@queries/addons/getAddons'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
-import { SocketContext } from '/src/context/websocketContext'
+import { SocketContext } from '@context/websocketContext'
 import { rcompare, coerce } from 'semver'
 import { InputSwitch, InputText, VersionSelect } from '@ynput/ayon-react-components'
 import { FilePath, LatestIcon } from './Bundles.styled'
-import useCreateContext from '/src/hooks/useCreateContext'
+import useCreateContext from '@hooks/useCreateContext'
 import { useNavigate } from 'react-router'
+import styled from 'styled-components'
+
+const StyledDataTable = styled(DataTable)`
+  tr {
+    display: flex;
+    flex-wrap: nowrap;
+    width: 100%;
+
+    th,
+    td {
+      &:first-child {
+        flex: 1;
+      }
+    }
+
+    td {
+      display: flex;
+      align-items: center;
+    }
+
+    .version-column {
+      width: 200px;
+    }
+
+    .path-column {
+      flex: 1;
+    }
+  }
+`
 
 const AddonListItem = ({ version, setVersion, selection, addons = [], versions }) => {
   const options = useMemo(
@@ -27,7 +56,7 @@ const AddonListItem = ({ version, setVersion, selection, addons = [], versions }
 
   return (
     <VersionSelect
-      style={{ width: 200, height: 32 }}
+      style={{ width: '100%', height: 32 }}
       buttonStyle={{ zIndex: 0 }}
       versions={options}
       value={version ? [version] : []}
@@ -37,12 +66,18 @@ const AddonListItem = ({ version, setVersion, selection, addons = [], versions }
   )
 }
 
-const AddonItem = ({currentVersion, latestVersion }) => {
+const AddonItem = ({ currentVersion, latestVersion }) => {
   const isCurrentLatest = currentVersion === latestVersion
   return (
     <>
       <span>{currentVersion}</span>
-      {!isCurrentLatest && <LatestIcon data-tooltip-delay={0} data-tooltip={latestVersion} icon="upgrade" />}
+      {!isCurrentLatest && (
+        <LatestIcon
+          data-tooltip-delay={0}
+          data-tooltip={'Latest installed version: ' + latestVersion}
+          icon="info"
+        />
+      )}
     </>
   )
 }
@@ -65,9 +100,7 @@ const BundlesAddonList = React.forwardRef(
   ) => {
     const navigate = useNavigate()
 
-    const { data: addons = [], refetch } = useGetAddonListQuery({
-      showVersions: true,
-    })
+    const { data: { addons = [] } = {}, refetch } = useListAddonsQuery({})
 
     const readyState = useContext(SocketContext).readyState
     useEffect(() => {
@@ -97,13 +130,15 @@ const BundlesAddonList = React.forwardRef(
     }
 
     const addonsTable = useMemo(() => {
-      return addons.map((addon) => {
-        return {
-          ...addon,
-          version: formData?.addons?.[addon.name] || 'NONE',
-          dev: formData?.addonDevelopment?.[addon.name],
-        }
-      })
+      return addons
+        .map((addon) => {
+          return {
+            ...addon,
+            version: formData?.addons?.[addon.name] || 'NONE',
+            dev: formData?.addonDevelopment?.[addon.name],
+          }
+        })
+        .sort((a, b) => a.title.localeCompare(b.title))
     }, [addons, formData])
 
     const createContextItems = (selected) => {
@@ -111,7 +146,7 @@ const BundlesAddonList = React.forwardRef(
         {
           label: 'View in Market',
           icon: 'store',
-          command: () => navigate(`/market/?addon=${selected.name}`),
+          command: () => navigate(`/market/?selected=${selected.name}`),
         },
       ]
 
@@ -135,7 +170,7 @@ const BundlesAddonList = React.forwardRef(
     }
 
     return (
-      <DataTable
+      <StyledDataTable
         value={addonsTable}
         scrollable
         scrollHeight="flex"
@@ -151,26 +186,38 @@ const BundlesAddonList = React.forwardRef(
         ref={ref}
       >
         <Column
-          header="Name"
-          field="name"
-          style={{ padding: '8px !important', maxWidth: isDev ? 250 : 'unset' }}
-          bodyStyle={{ height: 38 }}
+          header="Title"
+          field="title"
+          pt={{
+            root: {
+              style: {
+                height: 38,
+                maxWidth: isDev ? 250 : 'unset',
+              },
+            },
+          }}
           sortable
         />
         <Column
           sortable
           field="version"
           header="Version"
-          style={{ maxWidth: 200 }}
-          bodyStyle={{ padding: 8 }}
+          className="version-column"
           body={(addon) => {
-            const isPipeline =  addon.addonType === 'pipeline'
+            const isPipeline = addon.addonType === 'pipeline'
             const currentVersion = addon.version
             const allVersions = addon.versions
-            const sortedVersions = Object.keys(allVersions).sort((a,b) => rcompare(coerce(a), coerce(b)))
+            const sortedVersions = Object.keys(allVersions).sort((a, b) => {
+              const comparison = rcompare(coerce(a), coerce(b))
+              if (comparison === 0) {
+                return b.localeCompare(a)
+              }
+              return comparison
+            })
             const latestVersion = sortedVersions[0]
 
-            if (readOnly && isPipeline) return <AddonItem latestVersion={latestVersion} currentVersion={currentVersion} />
+            if (readOnly && isPipeline)
+              return <AddonItem latestVersion={latestVersion} currentVersion={currentVersion} />
             // get all selected versions
             return (
               <AddonListItem
@@ -192,6 +239,7 @@ const BundlesAddonList = React.forwardRef(
           <Column
             field="path"
             header="Addon directory"
+            className="path-column"
             body={(addon) => (
               <FilePath>
                 <InputSwitch
@@ -201,7 +249,7 @@ const BundlesAddonList = React.forwardRef(
                   }
                 />
                 <InputText
-                  value={addon.dev?.path}
+                  value={addon.dev?.path || ''}
                   style={{ width: '100%' }}
                   placeholder="/path/to/dev/addon..."
                   onChange={(e) =>
@@ -213,7 +261,7 @@ const BundlesAddonList = React.forwardRef(
             )}
           />
         )}
-      </DataTable>
+      </StyledDataTable>
     )
   },
 )

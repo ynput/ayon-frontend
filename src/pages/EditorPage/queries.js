@@ -1,4 +1,4 @@
-import ayonClient from '/src/ayon'
+import ayonClient from '@/ayon'
 
 const BASE_QUERY = `
   query FolderTree($projectName: String!, $parents: [String!]!) {

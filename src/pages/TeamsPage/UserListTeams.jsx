@@ -1,47 +1,14 @@
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { TablePanel, Section } from '@ynput/ayon-react-components'
-import UserImage from '/src/components/UserImage'
+import { ProfileRow } from '@pages/SettingsPage/UsersSettings/UserList'
 
 import { useMemo } from 'react'
-import styled from 'styled-components'
 import addRemoveMembers from './addRemoveMembers'
-import useCreateContext from '/src/hooks/useCreateContext'
-
-const StyledProfileRow = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  overflow: hidden;
-`
-
-const ProfileRow = ({ rowData }) => {
-  const { name, self, isMissing } = rowData
-  return (
-    <StyledProfileRow>
-      <UserImage
-        name={name}
-        size={25}
-        style={{
-          margin: 'auto',
-          transform: 'scale(0.8)',
-          minHeight: 25,
-          minWidth: 25,
-          maxHeight: 25,
-          maxWidth: 25,
-        }}
-        highlight={self}
-      />
-      <span
-        style={{
-          color: isMissing ? 'var(--color-hl-error)' : 'inherit',
-        }}
-      >
-        {name}
-      </span>
-    </StyledProfileRow>
-  )
-}
+import useCreateContext from '@hooks/useCreateContext'
+import UsersListTeamsSmall from './UsersListTeamsSmall'
+import clsx from 'clsx'
+import useTableLoadingData from '@hooks/useTableLoadingData'
 
 const UserListTeams = ({
   selectedProjects,
@@ -54,6 +21,7 @@ const UserListTeams = ({
   onShowAllUsers,
   teams = [],
   onUpdateTeams,
+  isFullSize = true,
 }) => {
   // Selection
   const selection = useMemo(
@@ -147,18 +115,6 @@ const UserListTeams = ({
   // create ref and model
   const [contextMenuShow] = useCreateContext([])
 
-  // create 10 dummy rows
-  const loadingData = useMemo(() => {
-    return Array.from({ length: 10 }, (_, i) => ({
-      key: i,
-      data: {},
-    }))
-  }, [])
-
-  if (isLoading) {
-    userList = loadingData
-  }
-
   const handleContext = (e) => {
     // we all of this to keep users in sync
     // when right clicking on a new user we need to use the event NOT selectedUsers as it is not updated yet
@@ -180,7 +136,21 @@ const UserListTeams = ({
     )
   }
 
-  // Render
+  const tableData = useTableLoadingData(userList, isLoading, 10, 'name')
+
+  if (!isFullSize)
+    return (
+      <UsersListTeamsSmall
+        handleContext={handleContext}
+        userList={tableData}
+        isLoading={isLoading}
+        onSelectionChange={onSelectionChange}
+        onContextSelectionChange={onContextSelectionChange}
+        selection={selection}
+        className={clsx('user-list-table', { loading: isLoading })}
+        rowClassName={() => clsx({ loading: isLoading })}
+      />
+    )
 
   return (
     <Section
@@ -191,12 +161,13 @@ const UserListTeams = ({
     >
       <TablePanel onContextMenu={handleContext}>
         <DataTable
-          value={userList}
+          value={tableData}
           scrollable="true"
           scrollHeight="flex"
           dataKey="name"
           selectionMode="multiple"
-          className={`user-list-table ${isLoading ? 'table-loading' : ''}`}
+          className={clsx('user-list-table', { loading: isLoading })}
+          rowClassName={() => clsx({ loading: isLoading })}
           onSelectionChange={onSelectionChange}
           onContextMenuSelectionChange={onContextSelectionChange}
           onContextMenu={handleContext}
@@ -216,7 +187,7 @@ const UserListTeams = ({
           <Column
             field="name"
             header="Username"
-            body={(rowData) => ProfileRow({ rowData })}
+            body={(rowData) => !isLoading && <ProfileRow rowData={rowData} />}
             style={{
               width: '20%',
             }}

@@ -1,0 +1,10 @@
+#import "./ProgressTaskFragment.graphql"
+
+query GetProgressTask($projectName: String!, $taskId: String!) {
+  project(name: $projectName) {
+    name
+    task(id: $taskId) {
+      ...ProgressTaskFragment
+    }
+  }
+}

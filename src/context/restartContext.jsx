@@ -1,10 +1,10 @@
 import React, { createContext, useContext, useState } from 'react'
-import { useGetRestartQuery, useRestartServerMutation } from '../services/restartServer'
-import RestartBanner from '../components/RestartBanner/RestartBanner'
+import { useGetRestartQuery, useRestartServerMutation } from '@queries/restartServer'
+import RestartBanner from '@components/RestartBanner/RestartBanner'
 import { confirmDialog } from 'primereact/confirmdialog'
-import ServerRestartingPage from '../components/ServerRestartingPage'
+import ServerRestartingPage from '@components/ServerRestartingPage'
 import { useSelector } from 'react-redux'
-import useLocalStorage from '../hooks/useLocalStorage'
+import useLocalStorage from '@hooks/useLocalStorage'
 
 const RestartContext = createContext()
 
@@ -32,7 +32,9 @@ function RestartProvider(props) {
       // icon: 'pi pi-exclamation-triangle',
       contentStyle: { display: 'none' },
       accept: () => {
-        if (callback) callback()
+        if (typeof callback === 'function') {
+          callback()
+        }
         restartServer()
         // remove snooze local storage
         localStorage.removeItem('restart-snooze')
@@ -51,7 +53,13 @@ function RestartProvider(props) {
 
   return (
     <RestartContext.Provider
-      value={{ restartRequired, confirmRestart, isRestartRequired, isSnoozing }}
+      value={{
+        restartRequired,
+        confirmRestart,
+        snoozeRestart: handleSnooze,
+        isRestartRequired,
+        isSnoozing,
+      }}
     >
       {props.children}
       {isRestartRequired && isAdmin && !isSnoozing && (

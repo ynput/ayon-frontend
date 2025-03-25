@@ -2,7 +2,7 @@ import styled from 'styled-components'
 
 export const TooltipWidget = styled.div`
   position: fixed;
-  z-index: 10000;
+  z-index: 3000;
 
   transition: opacity 300ms;
   /* how far up the tooltip us */
@@ -37,11 +37,4 @@ export const TooltipInner = styled.div`
   /* box shadow */
   box-shadow: 0 0 10px 0px rgba(0, 0, 0, 0.4);
   z-index: 1200;
-`
-
-export const Shortcut = styled.span`
-  background-color: var(--md-sys-color-surface-container-high);
-  padding: 2px 4px;
-  border-radius: var(--border-radius-m);
-  font-size: 110%;
 `

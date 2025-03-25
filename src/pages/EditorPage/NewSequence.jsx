@@ -1,13 +1,15 @@
 import React, { useRef } from 'react'
 import { useState } from 'react'
 import { useEffect } from 'react'
-import { Toolbar, Spacer, SaveButton, Button } from '@ynput/ayon-react-components'
-import { Dialog } from 'primereact/dialog'
-import FolderSequence from '/src/components/FolderSequence/FolderSequence'
-import getSequence from '/src/helpers/getSequence'
+import { Toolbar, Spacer, SaveButton, Button, Dialog } from '@ynput/ayon-react-components'
+import FolderSequence from '@components/FolderSequence/FolderSequence'
+import getSequence from '@helpers/getSequence'
 import { isEmpty } from 'lodash'
+import { useSelector } from 'react-redux'
 
 const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
+  const foldersOrder = useSelector((state) => state.project.foldersOrder)
+
   const isRoot = isEmpty(currentSelection)
   const multipleSelection = Object.keys(currentSelection).length > 1
   const examplePrefix = isRoot
@@ -23,7 +25,7 @@ const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
       base: 'Folder010',
       increment: 'Folder020',
       length: 10,
-      type: 'Folder',
+      type: foldersOrder[0],
       prefix: multipleSelection,
       prefixDepth: !isRoot ? 1 : 0,
       entityType: 'folder',
@@ -39,10 +41,8 @@ const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
   //   refs
   const typeSelectRef = useRef(null)
 
-  const handleShow = () => {
-    // open dropdown
-    typeSelectRef.current?.open()
-  }
+  // open dropdown - delay to wait for dialog opening
+  const handleShow = () => setTimeout(() => typeSelectRef.current?.open(), 180)
 
   const title = 'Add Folder Sequence'
 
@@ -75,6 +75,7 @@ const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
   }
 
   const handleKeyDown = (e, lastInput) => {
+    if (e.key === 'Escape') onHide()
     if (e.key === 'Enter') {
       if (lastInput && !e.shiftKey) {
         handleSeqSubmit(true)
@@ -92,14 +93,13 @@ const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
   return (
     <Dialog
       header={title}
-      visible={visible}
-      onHide={onHide}
+      isOpen={visible}
+      onClose={onHide}
       onShow={handleShow}
-      resizable={false}
-      draggable={false}
-      appendTo={document.getElementById('root')}
+      size="lg"
+      style={{ zIndex: 999 }}
       footer={
-        <Toolbar>
+        <Toolbar onFocus={false}>
           <Spacer />
           <Button
             label="Add"
@@ -115,7 +115,6 @@ const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
           />
         </Toolbar>
       }
-      onKeyDown={handleKeyDown}
     >
       <FolderSequence
         {...createSeq}
@@ -123,7 +122,6 @@ const NewSequence = ({ visible, onConfirm, onHide, currentSelection = {} }) => {
         onChange={handleSeqChange}
         isRoot={isRoot}
         prefixExample={createSeq.prefix ? examplePrefix : ''}
-        prefixDisabled={multipleSelection}
         typeSelectRef={typeSelectRef}
         onLastInputKeydown={(e) => handleKeyDown(e, true)}
       />

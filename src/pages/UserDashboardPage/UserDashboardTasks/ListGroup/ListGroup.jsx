@@ -1,11 +1,14 @@
 import React from 'react'
 import { useDispatch } from 'react-redux'
 
-import { useGetTaskContextMenu } from '/src/pages/UserDashboardPage/util'
+import { useGetTaskContextMenu } from '@pages/UserDashboardPage/hooks'
 import * as Styled from './ListGroup.styled'
 import { Button } from '@ynput/ayon-react-components'
-import ListItem from '/src/components/ListItem/ListItem'
+import ListItem from '@components/ListItem/ListItem'
 import { InView } from 'react-intersection-observer'
+import { useURIContext } from '@context/uriContext'
+import { getTaskRoute } from '@helpers/routes'
+import { toggleDetailsPanel } from '@state/details'
 
 const ListGroup = ({
   tasks = [],
@@ -18,18 +21,37 @@ const ListGroup = ({
   disabledStatuses = [],
   disabledProjectUsers = [],
   onUpdate,
-  assigneesIsMe,
   allUsers = [],
+  priorities,
   onCollapseChange,
   isCollapsed,
   isLoading,
   minWidths,
+  containerRef,
 }) => {
   const dispatch = useDispatch()
+  const { navigate: navigateToUri } = useURIContext()
+  const openInBrowser = (task) => navigateToUri(getTaskRoute(task))
   const column = groups[id] || {}
 
+  // OPEN DETAILS PANEL
+  const onTogglePanel = (open) => {
+    dispatch(toggleDetailsPanel(open))
+  }
+
   // CONTEXT MENU
-  const { handleContextMenu, closeContext } = useGetTaskContextMenu(tasks, dispatch)
+  const { handleContextMenu, closeContext } = useGetTaskContextMenu(tasks, dispatch, {
+    onOpenInBrowser: openInBrowser,
+  })
+
+  const handleDoubleClick = (e, task) => {
+    if (e.metaKey || e.ctrlKey) {
+      // get the task
+      openInBrowser(task)
+    } else {
+      onTogglePanel(true)
+    }
+  }
 
   return (
     <>
@@ -63,7 +85,7 @@ const ListGroup = ({
       {!isCollapsed && (
         <>
           {column?.tasks?.map((task, i, a) => (
-            <InView key={task.id} rootMargin={'50% 0px 50% 0px'}>
+            <InView key={task.id} root={containerRef?.current} rootMargin={'50% 0px 50% 0px'}>
               {({ inView, ref }) => (
                 <ListItem
                   ref={ref}
@@ -73,6 +95,9 @@ const ListGroup = ({
                   selected={selectedTasks.includes(task.id)}
                   selectedLength={selectedTasks.length}
                   onClick={(e) => {
+                    if (e && e.detail == 2) {
+                      return handleDoubleClick(e, task)
+                    }
                     closeContext()
                     onTaskSelected(e, task.id)
                   }}
@@ -82,7 +107,8 @@ const ListGroup = ({
                   disabledStatuses={disabledStatuses}
                   disabledProjectUsers={disabledProjectUsers}
                   onUpdate={onUpdate}
-                  allUsers={assigneesIsMe ? [] : allUsers}
+                  allUsers={allUsers}
+                  priorities={priorities}
                   className={'card'}
                   minWidths={minWidths}
                   inView={inView}

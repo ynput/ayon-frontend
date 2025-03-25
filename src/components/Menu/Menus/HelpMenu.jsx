@@ -36,7 +36,7 @@ export const HelpMenu = ({ user, ...props }) => {
     },
     {
       id: 'graphql',
-      label: 'Graphql Explorer',
+      label: 'GraphQL Explorer',
       link: '/explorer',
       icon: 'hub',
       target: '_blank',

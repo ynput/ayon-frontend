@@ -1,8 +1,9 @@
 import { Button, Section } from '@ynput/ayon-react-components'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
-import { useGetAddonListQuery } from '/src/services/addons/getAddons'
-import { useGetBundleListQuery, useUpdateBundleMutation } from '/src/services/bundles'
-import { useMemo } from 'react'
+import { useListAddonsQuery } from '@queries/addons/getAddons'
+import { useListBundlesQuery } from '@queries/bundles/getBundles'
+import { useUpdateBundleMutation } from '@queries/bundles/updateBundles'
+import { useMemo, useState } from 'react'
 import { transformAddonsWithBundles } from './helpers'
 import AddonsManagerTable from './AddonsManagerTable'
 import useGetTableData from './useGetTableData'
@@ -12,18 +13,22 @@ import {
   onSelectedAddons,
   onSelectedBundles,
   onSelectedVersions,
-} from '/src/features/addonsManager'
+} from '@state/addonsManager'
 import { useNavigate } from 'react-router'
-import { useDeleteAddonVersionsMutation } from '/src/services/addons/updateAddons'
-import { useRestart } from '/src/context/restartContext'
+import { useDeleteAddonVersionsMutation } from '@queries/addons/updateAddons'
+import { useRestart } from '@context/restartContext'
 import { Link } from 'react-router-dom'
-// import AddonUpload from '../AddonInstall/AddonUpload'
+import AddonDialog from '@components/AddonDialog/AddonDialog'
+import Shortcuts from '@containers/Shortcuts'
 
 const AddonsManager = () => {
   const navigate = useNavigate()
   // QUERIES
-  const { data: addons = [] } = useGetAddonListQuery()
-  const { data: bundles = [] } = useGetBundleListQuery({ archived: false })
+  const { data: { addons = [] } = {}, isLoading } = useListAddonsQuery({})
+  const { data: { bundles = [] } = {} } = useListBundlesQuery({ archived: false })
+
+  // addon upload dialog
+  const [uploadOpen, setUploadOpen] = useState('')
 
   // addonsVersionsBundles = Map<addon, Map<version, Map<bundle, bundle>>>
   const addonsVersionsBundles = useMemo(
@@ -49,7 +54,7 @@ const AddonsManager = () => {
   const setDeletedVersions = (versions) => dispatch(onDeletedVersions(versions))
 
   // different functions to transform the data for each table
-  const { addonsTableData, versionsTableData, bundlesTableData, filteredVersionsMap } =
+  let { addonsTableData, versionsTableData, bundlesTableData, filteredVersionsMap, versionSort } =
     useGetTableData(addonsVersionsBundles, selectedAddons, selectedVersions, deletedVersions)
 
   // SELECTION HANDLERS vvv
@@ -129,15 +134,38 @@ const AddonsManager = () => {
   const viewInMarket = (selected) => [
     {
       label: 'View in Market',
-      command: () => navigate(`/market?addon=${selected[0].split(' ')[0]}`),
+      command: () => navigate(`/market?selected=${selected[0].split(' ')[0]}`),
       icon: 'store',
     },
   ]
 
+  const shortcuts = [
+    {
+      key: 'a',
+      action: () => setUploadOpen('addon'),
+    },
+  ]
+
+  const loadingData = useMemo(() => {
+    return Array.from({ length: 5 }, (_, i) => ({
+      key: i,
+      data: {},
+    }))
+  }, [])
+
+  // LOADING DUMMY DATA
+  if (isLoading) {
+    addonsTableData = loadingData
+    versionsTableData = loadingData
+    bundlesTableData = loadingData
+  }
+
   return (
     <Section style={{ overflow: 'hidden' }}>
+      <Shortcuts shortcuts={shortcuts} />
       <Splitter style={{ height: '100%', padding: 8 }}>
         <SplitterPanel>
+          <AddonDialog uploadOpen={uploadOpen} setUploadOpen={setUploadOpen} />
           {/* ADDONS TABLE */}
           <AddonsManagerTable
             title="Addons"
@@ -146,11 +174,23 @@ const AddonsManager = () => {
             onChange={handleAddonsSelect}
             field={'name'}
             header={
-              <Link to="/market">
-                <Button label="Addon Market" icon="store" style={{ width: '100%' }} />
-              </Link>
+              <div style={{ display: 'flex', gap: '4px' }}>
+                <Button
+                  onClick={() => setUploadOpen('addon')}
+                  data-shortcut="A"
+                  data-tooltip="Upload addon zip files"
+                  label="Upload Addons"
+                  icon="upload"
+                  style={{ width: '100%' }}
+                />
+                <Link to="/market" style={{ width: '100%' }}>
+                  <Button label="Addon Market" icon="store" style={{ width: '100%' }} />
+                </Link>
+              </div>
             }
             extraContext={viewInMarket}
+            emptyMessage="No addons found"
+            isLoading={isLoading}
           />
         </SplitterPanel>
         <SplitterPanel>
@@ -161,9 +201,12 @@ const AddonsManager = () => {
             selection={selectedVersions}
             onChange={handleVersionSelect}
             field={'version'}
+            sortFunction={versionSort}
             onDelete={handleDeleteVersions}
             onDeleteSuccess={handleDeleteVersionsSuccess}
             extraContext={viewInMarket}
+            emptyMessage={selectedAddons.length ? 'No versions found' : 'Select an addon'}
+            isLoading={isLoading}
           />
         </SplitterPanel>
         <SplitterPanel>
@@ -183,6 +226,8 @@ const AddonsManager = () => {
                 icon: 'arrow_circle_right',
               },
             ]}
+            emptyMessage={selectedVersions.length ? 'No bundles found' : 'Select versions'}
+            isLoading={isLoading}
           />
         </SplitterPanel>
         {/* <SplitterPanel>

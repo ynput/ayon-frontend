@@ -1,51 +1,42 @@
 import Form from '@rjsf/core'
-import { useState, useMemo } from 'react'
-import styled from 'styled-components'
+import validator from '@rjsf/validator-ajv8'
 
-import { TextWidget, SelectWidget, CheckboxWidget, DateTimeWidget } from './widgets'
-import { FieldTemplate, ObjectFieldTemplate, ArrayFieldTemplate } from './fields'
+import { useState, useMemo, useEffect, useRef } from 'react'
+
+import { CheckboxWidget } from './Widgets/CheckboxWidget'
+import FieldTemplate from './FormTemplates/FieldTemplate'
+import ObjectFieldTemplate from './FormTemplates/ObjectFieldTemplate'
+import ArrayFieldTemplate from './FormTemplates/ArrayFieldTemplate'
 import './SettingsEditor.sass'
+import { TextWidget } from './Widgets/TextWidget'
+import { SelectWidget } from './Widgets/SelectWidget'
+import { DateTimeWidget } from './Widgets/DateTimeWidget'
+import { FormWrapper } from './SettingsEditor.styled'
 
-const FormWrapper = styled.div`
-  [data-fieldid='${(props) => props.currentSelection}'] {
-    // border-left: 1px solid var(--color-changed) !important;
-    border-radius: 4px;
-    background-color: rgba(0, 0, 0, 0.2);
-  }
+const waitForElm = (selector, timeout = 3000) => {
+  return new Promise((resolve, reject) => {
+    if (document.querySelector(selector)) {
+      return resolve(document.querySelector(selector))
+    }
 
-  .rjsf {
-    flex-grow: 1;
-    margin: 0;
-    padding: 0;
-
-    .form-root-field {
-      animation-name: delay-visibility;
-      animation-duration: 0.4s;
-      animation-fill-mode: forwards;
-      opacity: 0;
-
-      @keyframes delay-visibility {
-        to {
-          opacity: 1;
-        }
+    const observer = new MutationObserver(() => {
+      if (document.querySelector(selector)) {
+        observer.disconnect()
+        resolve(document.querySelector(selector))
       }
-    }
+    })
 
-    .errors {
-      display: none;
-    }
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+    })
 
-    .switch-body {
-      .slider {
-        transition-duration: 0s;
-
-        &::before {
-          transition-duration: 0s;
-        }
-      }
-    }
-  }
-`
+    setTimeout(() => {
+      observer.disconnect()
+      reject(new Error(`Element with selector "${selector}" did not appear within ${timeout}ms`))
+    }, timeout)
+  })
+}
 
 const widgets = {
   TextWidget,
@@ -107,12 +98,8 @@ const SettingsEditor = ({
   changedKeys,
   context,
 }) => {
-  if (!schema) {
-    // TODO: maybe a spinner or something?
-    return <div></div>
-  }
-
   const [localBreadcrumbs, setLocalBreadcrumbs] = useState([])
+  const formWrapperRef = useRef()
 
   const originalOverrides = useMemo(() => {
     const result = buildOverrides(originalData, true)
@@ -125,6 +112,7 @@ const SettingsEditor = ({
   }, [originalData, overrides])
 
   const formContext = useMemo(() => {
+    if (!schema) return {}
     const formOverrides = buildOverrides(formData)
 
     for (const key in formOverrides) {
@@ -158,6 +146,25 @@ const SettingsEditor = ({
   }
 
   const totallyRealBreadcrumbs = breadcrumbs === undefined ? localBreadcrumbs : breadcrumbs
+  const currentId = totallyRealBreadcrumbs?.length && `root_${totallyRealBreadcrumbs.join('_')}`
+
+  useEffect(() => {
+    if (!currentId) return
+    const wrapper = document.getElementById('settings-scroll-panel')
+    if (!wrapper) return
+
+    waitForElm(`[data-fieldid='${currentId}']`).then((el) => {
+      const rect = el.getBoundingClientRect()
+      const wrapperRect = wrapper.getBoundingClientRect()
+      if (rect.top > wrapperRect.top && rect.top < wrapperRect.bottom) return
+      el.scrollIntoView({ behavior: 'instant', block: 'start' })
+    })
+  }, [currentId])
+
+  if (!schema) {
+    // TODO: maybe a spinner or something?
+    return <div></div>
+  }
 
   const fullContext = {
     ...context,
@@ -165,23 +172,28 @@ const SettingsEditor = ({
     onSetChangedKeys: onSetChangedKeys || noop,
     onSetBreadcrumbs: setBc,
     breadcrumbs: totallyRealBreadcrumbs,
+    currentId: currentId,
   }
 
-  const currentId = totallyRealBreadcrumbs && `root_${totallyRealBreadcrumbs.join('_')}`
+  // console.log('context? ', fullContext)
+  // console.log('schema? ', schema)
 
   return (
-    <FormWrapper currentSelection={currentId}>
+    <FormWrapper $currentSelection={currentId} ref={formWrapperRef}>
       <Form
         schema={schema}
         uiSchema={uiSchema}
         formData={formData}
         formContext={fullContext}
         widgets={widgets}
-        FieldTemplate={FieldTemplate}
-        ObjectFieldTemplate={ObjectFieldTemplate}
-        ArrayFieldTemplate={ArrayFieldTemplate}
         onChange={(evt) => onChange(evt.formData)}
+        templates={{
+          FieldTemplate,
+          ArrayFieldTemplate,
+          ObjectFieldTemplate,
+        }}
         onError={(evt) => console.log('Form contains errors:', evt)}
+        validator={validator}
       >
         <div />
       </Form>

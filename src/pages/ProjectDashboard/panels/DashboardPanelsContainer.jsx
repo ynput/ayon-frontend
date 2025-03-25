@@ -1,7 +1,7 @@
 import React from 'react'
 import { useDispatch } from 'react-redux'
 import styled from 'styled-components'
-import { onShare } from '/src/features/context'
+import { onShare } from '@state/context'
 import { toPng } from 'html-to-image'
 import { useRef } from 'react'
 
@@ -9,7 +9,7 @@ import { useRef } from 'react'
 const GridStyled = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 8px;
+  gap: var(--base-gap-large);
   height: 100%;
   overflow: hidden;
 
@@ -22,7 +22,7 @@ const GridStyled = styled.div`
   & > div {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: var(--base-gap-large);
     overflow: auto;
     height: 100%;
     padding-bottom: 8px;

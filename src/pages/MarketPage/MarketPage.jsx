@@ -1,300 +1,446 @@
 import { Section } from '@ynput/ayon-react-components'
-import Type from '/src/theme/typography.module.css'
-import AddonFilters from './AddonFilters'
+import MarketFilters, { getMarketFilter } from './MarketFilters'
 import { useEffect, useMemo, useState } from 'react'
 import { StringParam, useQueryParam, withDefault } from 'use-query-params'
 
 import {
-  useGetMarketAddonQuery,
-  useGetMarketAddonsQuery,
+  useMarketAddonListQuery,
+  useMarketAddonDetailQuery,
   useGetMarketInstallEventsQuery,
-  useLazyGetMarketAddonQuery,
-} from '/src/services/market/getMarket'
+  useLazyMarketAddonDetailQuery,
+} from '@queries/market/getMarket'
 import MarketAddonsList from './MarketAddonsList'
 import 'react-perfect-scrollbar/dist/css/styles.css'
-import AddonDetails from './AddonDetails/AddonDetails'
-import { useGetAddonListQuery } from '/src/services/addons/getAddons'
-import { mergeAddonWithInstalled } from './mergeAddonsData'
+import AddonDetails from './MarketDetails/AddonDetails'
+import { useListAddonsQuery } from '@queries/addons/getAddons'
+import { mergeAddonWithDownloaded } from './mergeAddonsData'
 import { throttle } from 'lodash'
-import styled from 'styled-components'
-import useInstall from './AddonDetails/useInstall'
+import useDownload from './MarketDetails/useDownload'
 import ConnectDialog from './ConnectDialog/ConnectDialog'
-import { useRestart } from '/src/context/restartContext'
+import { useRestart } from '@context/restartContext'
+import { toast } from 'react-toastify'
+import { useGetReleasesQuery } from '@queries/releases/getReleases'
+import { filterItems, transformReleasesToTable } from './helpers'
+import ReleaseDetails from './MarketDetails/ReleaseDetails'
+import { useAppDispatch } from '@state/store'
+import { toggleReleaseInstaller } from '@state/releaseInstaller'
+import { useGetYnputConnectionsQuery } from '@queries/ynputConnect'
 
 const placeholders = [...Array(20)].map((_, i) => ({
-  name: `Addon ${i}`,
-  isPlaceholder: true,
-  orgTitle: 'Loading...',
+  type: 'placeholder',
+  group: undefined,
+  items: [
+    {
+      name: `Addon ${i}`,
+      isPlaceholder: true,
+      subTitle: 'Loading...',
+    },
+  ],
 }))
 
-const StyledHeader = styled.header`
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  padding: 0 8px;
-  max-width: 1900px;
-  width: 100%;
-  margin: auto;
-
-  h1 {
-    margin: 8px;
-  }
-`
-
 const MarketPage = () => {
+  const dispatch = useAppDispatch()
   // GET ALL ADDONS IN MARKET
   const {
     data: marketAddonsData = [],
-    isLoading: isLoadingMarket,
-    isError,
-  } = useGetMarketAddonsQuery()
+    isLoading: isLoadingAddons,
+    error: errorAddons,
+  } = useMarketAddonListQuery()
   // GET ALL INSTALLED ADDONS for addon details
-  const { data: installedAddons = [], isLoading: isLoadingInstalled } = useGetAddonListQuery()
+  const { data: { addons: downloadedAddons = [] } = {}, isLoading: isLoadingDownloaded } =
+    useListAddonsQuery({})
 
-  // keep track of which addons are being installed
-  const [installingAddons, setInstallingAddons] = useState([])
-  const [finishedInstalling, setFinishedInstalling] = useState([])
-  // updating is the same as installing really, false, true, 'finished'
+  const { data: connectData } = useGetYnputConnectionsQuery({})
+
+  // keep track of which addons are being downloaded
+  const [downloadingAddons, setDownloadingAddons] = useState([])
+  const [finishedDownloading, setFinishedDownloading] = useState([])
+  const [failedDownloading, setFailedDownloading] = useState([])
+  // updating is the same as downloading really, false, true, 'finished'
   const [isUpdatingAll, setIsUpdatingAll] = useState(false)
   const [isUpdatingAllFinished, setIsUpdatingAllFinished] = useState(false)
 
   const [isCloudConnected, setIsCloudConnected] = useState(false)
+  const [hasCloudSub, setHasCloudSub] = useState(false)
   // if the user hasn't connected to ynput cloud yet
   const [showConnectDialog, setShowConnectDialog] = useState(false)
 
-  // subscribe to install events
-  const { data: installProgress = [] } = useGetMarketInstallEventsQuery()
+  // FILTER ADDONS BY FIELDS
+  const [filterType, setFilterType] = useQueryParam('type', withDefault(StringParam, 'addons'))
+  const [selectedFilter, setSelectedFilter] = useQueryParam(
+    'filter',
+    withDefault(StringParam, 'all'),
+  )
+  const filter = useMemo(
+    () => getMarketFilter(filterType, selectedFilter),
+    [selectedFilter, filterType, getMarketFilter],
+  )
+
+  // subscribe to download events
+  const { data: downloadProgress = [] } = useGetMarketInstallEventsQuery({})
 
   // QUERY PARAMS STATE
-  const [selectedAddonId, setSelectedAddonId] = useQueryParam(
-    'addon',
+  const [selectedItemId, setSelectedItemId] = useQueryParam(
+    'selected',
     withDefault(StringParam, null),
   )
 
-  // keep track of install events and update installing addons
+  // keep track of download events and update downloading addons
   // this is used to show loading and done states on addons
   useEffect(() => {
-    if (!installProgress.length) return
+    if (!downloadProgress.length) return
 
-    // check for any addons that are still installing
-    const installing = installProgress
-      .filter((event) => event.status === 'in_progress')
+    // check for any addons that are still downloading
+    const downloading = downloadProgress
+      .filter((e) => e.status === 'in_progress')
       .map((e) => e?.summary?.name)
-    const finished = installProgress
-      .filter((event) => event.status === 'finished')
+    const finished = downloadProgress
+      .filter((e) => e.status === 'finished')
       .map((e) => e?.summary?.name)
 
-    setInstallingAddons((currentInstallingAddons) => {
-      const newInstalling = [...new Set([...currentInstallingAddons, ...installing])]
+    const failedEvents = downloadProgress.filter((e) => e.status === 'failed' && e?.summary?.name)
+    const failedMessages = failedEvents.map((e) => ({
+      name: e.summary?.name,
+      error: e?.description.replace('Failed to process event: ', ''),
+    }))
+    const failedAddons = failedEvents.map((e) => e?.summary?.name)
+
+    setDownloadingAddons((currentDownloadingAddons) => {
+      const newDownloading = [...new Set([...currentDownloadingAddons, ...downloading])]
         .filter((addon) => !finished.includes(addon))
+        .filter((addon) => !failedAddons.includes(addon))
         .filter((a) => a)
-      return newInstalling
+      return newDownloading
     })
 
-    setFinishedInstalling((f) => [...new Set([...f, ...finished])] || [])
-  }, [installProgress, setInstallingAddons, setFinishedInstalling])
+    setFinishedDownloading((f) => [...new Set([...f, ...finished])])
+
+    setFailedDownloading((f) => {
+      // check if for duplicates
+      const newFailed = failedMessages.filter((e) => !f.some((addon) => addon.name === e.name))
+      return [...f, ...newFailed]
+    })
+  }, [downloadProgress, setDownloadingAddons, setFinishedDownloading])
 
   const { restartRequired } = useRestart()
   // callback when restart is requested
   const handleRestarted = () => {
-    // reset installing addons
-    setInstallingAddons([])
-    setFinishedInstalling([])
+    // reset downloading addons
+    setDownloadingAddons([])
+    setFinishedDownloading([])
     setIsUpdatingAll(false)
     setIsUpdatingAllFinished(false)
   }
-  // once finished installing has length, show restart banner
+  // once finished downloading has length, show restart banner
   useEffect(() => {
-    if (!finishedInstalling.length || installingAddons.length) return
-    // all addons have finished installing
-    setIsUpdatingAll(false)
-    if (isUpdatingAll) setIsUpdatingAllFinished(true)
+    if ((finishedDownloading.length || failedDownloading.length) && !downloadingAddons.length) {
+      // all addons have finished downloading
+      setIsUpdatingAll(false)
+      // show all updated complete if none failed
+      if (isUpdatingAll && !failedDownloading.length) setIsUpdatingAllFinished(true)
 
-    restartRequired({ callback: () => handleRestarted })
-  }, [finishedInstalling, installingAddons])
+      if (finishedDownloading.length) {
+        restartRequired({ callback: () => handleRestarted })
+      }
+    }
+  }, [finishedDownloading, downloadingAddons])
 
   // GET SELECTED ADDON
-  const { data: selectedAddonData = {}, isFetching: isFetchingAddon } = useGetMarketAddonQuery(
-    selectedAddonId,
+  const { data: selectedAddonData = {}, isFetching: isFetchingAddon } = useMarketAddonDetailQuery(
+    { addonName: selectedItemId },
     {
-      skip: !selectedAddonId,
+      skip: !selectedItemId || filterType !== 'addons' || !connectData,
     },
   )
 
-  // FILTER ADDONS BY FIELDS
-  // [{isOutdated: true}]
-  // [{isInstalled: false}]
-  const [filter, setFilter] = useState([])
-
-  // // merge installed with market addons
-  // let marketAddons = useMemo(() => {
-  //   return mergeAddonsData(marketAddonsData, installedAddons)
-  // }, [marketAddonsData, installedAddons])
-
   let marketAddons = useMemo(() => {
-    const sortedData = [...marketAddonsData]
-    // sort by isInstalled, isOutdated, isOfficial, name
-    sortedData?.sort(
+    let addons = [...marketAddonsData]
+
+    // filter out addons that are for cloud only (when not on the cloud)
+    addons = addons?.filter(
+      (addon) => !!connectData?.managed || !addon?.flags?.includes('cloud-only'),
+    )
+
+    // sort by isDownloaded, isOutdated, isOfficial, name
+    addons?.sort(
       (a, b) =>
-        b.isInstalled - a.isInstalled ||
+        b.isDownloaded - a.isDownloaded ||
         !!b.isOutdated - !!a.isOutdated ||
         b.isOfficial - a.isOfficial ||
         a.name.localeCompare(b.name),
     )
 
+    // if there are filters, filter the addons
     if (filter.length) {
-      return sortedData.filter((addon) => {
-        return filter.every((f) => {
-          return Object.keys(f).every((key) => {
-            return typeof f[key] === 'function' ? f[key](addon[key], addon) : addon[key] == f[key]
-          })
-        })
-      })
+      addons = filterItems(addons, filter)
     }
 
-    return sortedData
-  }, [marketAddonsData, filter])
+    return addons
+  }, [marketAddonsData, filter, connectData])
 
-  // update addon if installingAddons or finishedInstalling changes
+  // update addon if downloadingAddons or finishedDownloading changes
   marketAddons = useMemo(() => {
     if (
       !marketAddons.length ||
-      (!installingAddons.length && !finishedInstalling.length && !isUpdatingAll)
-    )
+      (!downloadingAddons.length &&
+        !finishedDownloading.length &&
+        !failedDownloading.length &&
+        !isUpdatingAll)
+    ) {
       return marketAddons
+    }
     return marketAddons.map((addon) => {
-      const isWaiting = addon.isOutdated && addon.isInstalled && isUpdatingAll
-      const isInstalling = installingAddons.includes(addon.name)
-      const isFinished = finishedInstalling.includes(addon.name)
+      const isWaiting = addon.isOutdated && addon.isDownloaded && isUpdatingAll
+      const isDownloading = downloadingAddons.includes(addon.name)
+      const isFinished = finishedDownloading.includes(addon.name)
+      const error = failedDownloading.find((f) => f.name === addon.name)?.error
       return {
         ...addon,
-        isInstalling,
+        isDownloading,
         isFinished,
         isWaiting,
+        isFailed: !!error,
+        error,
       }
     })
-  }, [marketAddons, installingAddons, finishedInstalling, isUpdatingAll])
+  }, [marketAddons, downloadingAddons, finishedDownloading, failedDownloading, isUpdatingAll])
 
   // merge selected addon with found addon in marketAddons
   const selectedAddon = useMemo(() => {
-    if (!selectedAddonId || !marketAddons) return {}
-    const found = marketAddons.find((addon) => addon.name === selectedAddonId) || {}
+    if (!selectedItemId || !marketAddons) return {}
+    const found = marketAddons.find((addon) => addon.name === selectedItemId) || {}
 
     const merge =
-      mergeAddonWithInstalled(
+      mergeAddonWithDownloaded(
         {
           ...found,
           ...selectedAddonData,
         },
-        installedAddons,
+        downloadedAddons,
       ) || []
 
     return merge
   }, [selectedAddonData, marketAddons])
 
+  // GET BUNDLE RELEASES
+  const {
+    data: { releases: releasesData = [] } = {},
+    isLoading: isLoadingReleases,
+    error: errorReleases,
+  } = useGetReleasesQuery({ all: true }, { skip: filterType !== 'releases' })
+
+  // transform releases into a table list
+  const releaseItems = useMemo(
+    () => transformReleasesToTable(releasesData, hasCloudSub, filter),
+    [releasesData, hasCloudSub, filter],
+  )
+
+  // merge selected release with found release in releasesData
+  const selectedRelease = useMemo(() => {
+    if (!selectedItemId || !releasesData) return {}
+    const found = releasesData.find((release) => release.name === selectedItemId) || {}
+
+    return {
+      ...found,
+      isActive: found.isLatest || hasCloudSub,
+    }
+  }, [releasesData, selectedItemId, hasCloudSub])
+
+  // convert addons to grouping format
+  const addonsGrouped = useMemo(() => {
+    // convert to grouping format for list
+    return marketAddons.map((addon) => ({
+      type: 'addon',
+      group: undefined,
+      items: [{ ...addon, subTitle: addon.orgTitle }],
+    }))
+  }, [marketAddons])
+
+  // SELECT TABLE ITEMS
+  let tableItems
+
+  if (filterType === 'releases') {
+    if (isLoadingReleases) {
+      tableItems = placeholders
+    } else {
+      tableItems = releaseItems
+    }
+  } else {
+    if (isLoadingAddons) {
+      tableItems = placeholders
+    } else {
+      tableItems = addonsGrouped
+    }
+  }
+
   // GET SELECTED ADDON LAZY for performance (fetches on addon hover)
-  const [fetchAddonData] = useLazyGetMarketAddonQuery()
+  const [fetchAddonData] = useLazyMarketAddonDetailQuery()
 
   const [cachedIds, setCachedIds] = useState([])
   // prefetch addon
-  const handleHover = throttle(async (id) => {
-    if (isLoadingMarket) return
+  const handleHover = throttle(async (id, type) => {
+    if (!id) return
+    if (type !== 'addon') return
+    if (isLoadingAddons) return
     if (cachedIds.includes(id)) return
     setCachedIds([...cachedIds, id])
-    await fetchAddonData(id, true)
+    await fetchAddonData({ addonName: id }, true)
   }, 1000)
 
   // once addons are loaded, prefetch the first 3 addons
   useEffect(() => {
-    if (!marketAddons || isLoadingMarket) return
+    if (!marketAddons || isLoadingAddons) return
     const firstThree = marketAddons.slice(0, 3)
     firstThree.forEach((addon) => {
+      if (!addon.name) return
       setCachedIds([...cachedIds, addon.name])
-      fetchAddonData(addon.name, true)
+      fetchAddonData({ addonName: addon.name }, true)
     })
-  }, [marketAddons, isLoadingMarket, setCachedIds])
+  }, [marketAddons, isLoadingAddons, setCachedIds])
 
   // pre-fetch next addon in the list when an addon is selected
   // only if it's not already cached and we aren't fetching already
   useEffect(() => {
-    if (!selectedAddonId || isLoadingMarket || isFetchingAddon) return
-    const index = marketAddons.findIndex((addon) => addon.name === selectedAddonId)
+    if (!selectedItemId || isLoadingAddons || isFetchingAddon) return
+    const index = marketAddons.findIndex((addon) => addon.name === selectedItemId)
     for (let i = index + 1; i <= index + 3; i++) {
       const nextAddon = marketAddons[i]
       if (nextAddon && !cachedIds.includes(nextAddon.name)) {
+        if (!nextAddon.name) return
         setCachedIds([...cachedIds, nextAddon.name])
-        fetchAddonData(nextAddon.name, true)
+        fetchAddonData({ addonName: nextAddon.name }, true)
       }
     }
-  }, [selectedAddonId, isLoadingMarket, isFetchingAddon, marketAddons, cachedIds, setCachedIds])
+  }, [selectedItemId, isLoadingAddons, isFetchingAddon, marketAddons, cachedIds, setCachedIds])
 
-  const { installAddon } = useInstall((name) => setInstallingAddons((a) => [...a, name]))
+  const { downloadAddon } = useDownload((name) => setDownloadingAddons((a) => [...a, name]))
 
-  // INSTALL/UPDATE ADDON
-  const handleInstall = (name, version) => {
+  // DOWNLOAD/UPDATE ADDON/RELEASE
+  const handleAddonDownload = (name, version) => {
     if (isCloudConnected) {
-      return installAddon(name, version)
+      if (!version) return toast.error('No version found')
+      return downloadAddon(name, version)
     } else {
       return setShowConnectDialog(true)
     }
   }
 
-  const handleUpdateAll = async () => {
-    setIsUpdatingAll(true)
-    // for each outdated addon, install it
-    marketAddons.forEach((addon) => {
-      if (addon.isOutdated && addon.isInstalled) {
-        handleInstall(addon.name, addon.latestVersion)
-      }
-    })
+  const handleReleaseInstall = (name) => {
+    // open menu
+    dispatch(
+      toggleReleaseInstaller({
+        open: name,
+        release: name,
+        inherit: {
+          addons: false,
+          platforms: true,
+        },
+      }),
+    )
   }
 
-  if (isError)
-    return (
-      <Section
-        style={{
-          width: '100%',
-          height: '100%',
-          alignItems: 'center',
-          justifyContent: 'center',
-          textAlign: 'center',
-        }}
-      >
-        <span>Error loading addons...</span>
-      </Section>
-    )
+  const handleItemDownload = (type, name, version) => {
+    switch (type) {
+      case 'addon':
+        handleAddonDownload(name, version)
+        break
+      case 'release':
+        handleReleaseInstall(name)
+        break
+      default:
+        break
+    }
+  }
+
+  const handleUpdateAll = async () => {
+    setIsUpdatingAll(true)
+    // for each outdated addon, download it
+    const promises = marketAddons.map((addon) => {
+      if (addon.isOutdated && addon.isDownloaded) {
+        const res = handleAddonDownload(addon.name, addon.latestVersion)
+        return res
+      }
+    })
+
+    const responses = await Promise.all(promises).for
+
+    const errors = responses.filter((r) => r.error)
+    const success = responses.filter((r) => r.data)
+    if (errors.length) {
+      console.error(errors)
+      toast.error('Error updating addons')
+    }
+
+    if (!success.length) {
+      setIsUpdatingAll(false)
+      setIsUpdatingAllFinished(true)
+    }
+  }
+
+  const handleSelectFilter = (type, filterId) => {
+    setSelectedItemId(null)
+    setFilterType(type)
+    setSelectedFilter(filterId)
+  }
+
+  const handleYnputConnect = (isConnected, hasSubs) => {
+    if (isConnected) {
+      setIsCloudConnected(true)
+      setHasCloudSub(hasSubs)
+    }
+  }
 
   return (
     <>
       <ConnectDialog
         visible={showConnectDialog}
         onHide={() => setShowConnectDialog(false)}
-        redirect={`/market?addon=${selectedAddonId}`}
+        redirect={`/market?addon=${selectedItemId}`}
       />
       <main style={{ flexDirection: 'column', overflow: 'hidden' }}>
-        <StyledHeader>
-          <h1 className={Type.headlineSmall}>Addon Market</h1>
-        </StyledHeader>
         <Section style={{ overflow: 'hidden', flexDirection: 'row', justifyContent: 'center' }}>
-          <AddonFilters onSelect={setFilter} onConnection={(user) => setIsCloudConnected(!!user)} />
+          <MarketFilters
+            filterType={filterType}
+            onSelect={handleSelectFilter}
+            selected={selectedFilter}
+            onConnection={handleYnputConnect}
+          />
+
           <MarketAddonsList
-            addons={isLoadingMarket ? placeholders : marketAddons}
-            selected={selectedAddonId}
-            onSelect={setSelectedAddonId}
+            items={tableItems}
+            selected={selectedItemId}
+            filter={filterType + selectedFilter}
+            onSelect={setSelectedItemId}
             onHover={handleHover}
-            onInstall={handleInstall}
-            isLoading={isLoadingMarket}
+            onDownload={handleItemDownload}
+            isLoading={isLoadingAddons}
+            error={errorAddons || errorReleases}
             onUpdateAll={marketAddons.some((addon) => addon.isOutdated) && handleUpdateAll}
             isUpdatingAll={isUpdatingAll}
             isUpdatingAllFinished={isUpdatingAllFinished}
           />
-          <AddonDetails
-            addon={selectedAddon}
-            isLoading={isLoadingInstalled || isFetchingAddon}
-            setInstallingAddons={setInstallingAddons}
-            onInstall={handleInstall}
-            isUpdatingAll={isUpdatingAll}
-          />
+
+          {selectedItemId && filterType === 'releases' && (
+            <ReleaseDetails
+              release={selectedRelease}
+              isLoading={isLoadingReleases}
+              onDownload={handleReleaseInstall}
+            />
+          )}
+          {selectedItemId && filterType === 'addons' && (
+            <AddonDetails
+              addon={selectedAddon}
+              isLoading={isLoadingDownloaded || isFetchingAddon}
+              setDownloadingAddons={setDownloadingAddons}
+              onDownload={handleAddonDownload}
+              isUpdatingAll={isUpdatingAll}
+            />
+          )}
+          {!selectedItemId && (
+            <div
+              style={{ flex: 1, maxWidth: 800, minWidth: 250, padding: 'var(--padding-l)' }}
+            ></div>
+          )}
         </Section>
       </main>
     </>

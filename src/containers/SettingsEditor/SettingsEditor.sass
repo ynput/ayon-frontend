@@ -5,7 +5,7 @@ $field-gap: 8px
 
 .form-field
   flex-grow: 1
-  min-width: 150px
+  width: 100%
 
 .form-inline-field-help, .form-object-field-help
   display: none
@@ -25,7 +25,7 @@ $field-gap: 8px
     font-size: .8rem
     white-space: pre
     overflow-wrap: normal
-    overflow-x: scroll
+    overflow-x: auto
 
   // If the 'enabled' switch is in a panel header hide its label
   .form-object-header-enabled-toggler
@@ -57,17 +57,35 @@ $field-gap: 8px
     .obj-override-edit > .panel-header
         border-left: 4px solid var(--color-changed)
 
-    &.layout-compact       
+    &.layout-compact
       flex-direction: row
-      flex-grow: 1
+      align-items: flex-start
+      gap: 8px
 
       .form-object-field-item
-        flex-grow: 1
-        max-width: 300px
+
+        // .form-inline-field-widget
+        //   max-width: 300px
 
         .dropdown
           min-width: 180px
           max-width: 180px
+
+        &.widget-color .form-inline-field-widget
+          max-width: 30px
+
+        &.widget-icon .form-inline-field-widget
+          max-width: 150px
+          .dropdown
+            min-width: 150px !important
+            max-width: 150px !important
+
+        &.widget-short .form-inline-field-widget
+          max-width: 70px
+          >*
+            min-width: 70px !important
+            max-width: 70px !important
+
 
 
     &.layout-expanded
@@ -87,6 +105,24 @@ $field-gap: 8px
         gap: 8px
 
 
+  .form-object-field-item
+    display: contents
+    div[data-hidden="true"]
+      position: absolute
+      visibility: hidden
+      margin: 0
+      height: 0
+      div
+        position: absolute
+        height: 0
+        padding-top: 0
+        padding-bottom: 0
+    &:has(div[data-hidden="false"])
+      position: relative
+      visibility: visible
+    div[data-hidden="false"]
+      width: 100%
+
   .form-inline-field
     display: flex
     flex-grow: 1
@@ -98,7 +134,7 @@ $field-gap: 8px
     padding: 0 3px
 
     .form-inline-field-label
-      flex-basis: 200px
+      flex-basis: 250px
       padding-left: 4px
       cursor: pointer
       user-select: none
@@ -125,9 +161,10 @@ $field-gap: 8px
 
 
     .form-inline-field-widget
+      width: 100%
       flex-grow: 1
       display: flex
-      flex-direction: row
+      flex-direction: column
       &.left-border
         border-left: 1px dashed #434a56 !important
         padding-left: 6px

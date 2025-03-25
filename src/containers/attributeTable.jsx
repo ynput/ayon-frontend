@@ -1,8 +1,7 @@
 import styled from 'styled-components'
 import { TableRow } from '@ynput/ayon-react-components'
-import { useGetAttributesQuery } from '/src/services/attributes/getAttributes'
+import { useGetAttributeListQuery } from '@queries/attributes/getAttributes'
 import copyToClipboard from '../helpers/copyToClipboard'
-import getShimmerStyles from '../styles/getShimmerStyles'
 import { format } from 'date-fns'
 
 const AttributeTableContainer = styled.div`
@@ -21,8 +20,6 @@ const StyledLoading = styled.div`
 
   border-radius: var(--border-radius-m);
   overflow: hidden;
-
-  ${getShimmerStyles()}
 `
 
 const AttributeTable = ({
@@ -35,7 +32,7 @@ const AttributeTable = ({
   isLoading: isLoadingData,
 }) => {
   // get attrib fields
-  let { data: attribsData = [], isLoadingAttribs } = useGetAttributesQuery()
+  let { data: attribsData = [], isLoadingAttribs } = useGetAttributeListQuery()
   //   filter out scopes
   const attribFields = attribsData.filter(
     (a) => a.scope.some((s) => s === entityType) && a.name in data,
@@ -48,7 +45,7 @@ const AttributeTable = ({
     return (
       <AttributeTableContainer style={style}>
         {[...Array(10)].map((_, index) => (
-          <StyledLoading key={index} />
+          <StyledLoading key={index} className="loading" />
         ))}
       </AttributeTableContainer>
     )

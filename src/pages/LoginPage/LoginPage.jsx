@@ -3,13 +3,15 @@ import { useEffect, useState } from 'react'
 import { useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
 import { InputText, InputPassword, Button, Panel } from '@ynput/ayon-react-components'
-import { login } from '/src/features/user'
-import { ayonApi } from '../../services/ayon'
+import { login } from '@state/user'
+import api from '@api'
 import AuthLink from './AuthLink'
-import { useGetInfoQuery } from '/src/services/auth/getAuth'
-import ReactMarkdown from 'react-markdown'
+import { useGetInfoQuery } from '@queries/auth/getAuth'
 import LoadingPage from '../LoadingPage'
 import * as Styled from './LoginPage.styled'
+import useLocalStorage from '@hooks/useLocalStorage'
+import { isEmpty, isEqual } from 'lodash'
+import remarkGfm from 'remark-gfm'
 
 const clearQueryParams = () => {
   const url = new URL(window.location)
@@ -18,15 +20,46 @@ const clearQueryParams = () => {
   history.pushState({}, '', url.href)
 }
 
-const LoginPage = ({ isFirstTime }) => {
+const LoginPage = ({ isFirstTime = false }) => {
+  // get query params from url
+  const search = new URLSearchParams(window.location.search)
   const dispatch = useDispatch()
   const [name, setName] = useState('')
   const [password, setPassword] = useState('')
+
+  // which methods are featured (all others are hidden)
+  const featuredMethods = search.getAll('provider')
+
+  // if there are none [] then show all
+  const [shownProviders, setShownProviders] = useState(featuredMethods)
 
   const [isLoading, setIsLoading] = useState(false)
 
   const { data: info = {}, isLoading: isLoadingInfo } = useGetInfoQuery()
   const { motd, loginPageBrand = '', loginPageBackground = '' } = info
+
+  // we need to store the redirect in local storage to persist it across auth flows
+  const [redirectQueryParams, setRedirectQueryParams] = useLocalStorage(
+    'auth-redirect-params',
+    null,
+  )
+
+  const allowedParams = ['auth_redirect']
+  // preserve the redirect query params across auth flows
+  useEffect(() => {
+    // convert search params to object
+    const searchParams = Array.from(search.entries()).reduce((acc, [key, value]) => {
+      if (allowedParams.includes(key)) {
+        acc[key] = value
+      }
+      return acc
+    }, {})
+
+    if (isEmpty(searchParams) || isEqual(searchParams, redirectQueryParams)) return
+
+    // store the redirect in local storage
+    setRedirectQueryParams(searchParams)
+  }, [search, setRedirectQueryParams, redirectQueryParams])
 
   // OAuth2 handler after redirect from provider
   useEffect(() => {
@@ -62,7 +95,7 @@ const LoginPage = ({ isFirstTime }) => {
             toast.info(data.detail)
             dispatch(login({ user: data.user, accessToken: data.token }))
             // invalidate all rtk queries cache
-            dispatch(ayonApi.util.resetApiState())
+            dispatch(api.util.resetApiState())
           } else {
             toast.error('Unable to login using SSO')
           }
@@ -79,6 +112,13 @@ const LoginPage = ({ isFirstTime }) => {
         .finally(() => {
           // clear the query string
           clearQueryParams()
+          // replace with redirect query params
+          if (redirectQueryParams) {
+            const redirect = new URLSearchParams(redirectQueryParams)
+            // clear local storage
+            localStorage.removeItem('auth-redirect-params')
+            window.location.search = redirect.toString()
+          }
           setIsLoading(false)
         })
     }
@@ -93,6 +133,8 @@ const LoginPage = ({ isFirstTime }) => {
       .post('/api/auth/login', { name, password })
       .then((response) => {
         if (response.data.user) {
+          // clear local storage
+          localStorage.removeItem('auth-redirect-params')
           toast.info(response.data.detail)
           dispatch(
             login({
@@ -101,7 +143,7 @@ const LoginPage = ({ isFirstTime }) => {
             }),
           )
           // invalidate all rtk queries cache
-          dispatch(ayonApi.util.resetApiState())
+          dispatch(api.util.resetApiState())
         }
       })
       .catch((err) => {
@@ -112,51 +154,61 @@ const LoginPage = ({ isFirstTime }) => {
   const handleSubmit = (e) => {
     e.preventDefault()
 
-    doLogin()
+    if (!(name && password)) {
+      toast.error('Please enter username and password to login')
+    } else {
+      doLogin()
+    }
   }
 
   if (isLoading || isLoadingInfo) return isFirstTime ? null : <LoadingPage />
+
+  const showAllProviders = !shownProviders.length
+  const showPasswordLogin = showAllProviders || shownProviders.includes('password')
 
   return (
     <main className="center">
       {loginPageBackground && <Styled.BG src={loginPageBackground} />}
       <Styled.LoginForm>
-        {motd && (
+        {(motd || loginPageBrand) && (
           <Panel>
             {loginPageBrand && <Styled.Logo src={loginPageBrand} />}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <ReactMarkdown>{motd}</ReactMarkdown>
-            </div>
+            <Styled.MessageMarkdown remarkPlugins={remarkGfm}>{motd}</Styled.MessageMarkdown>
           </Panel>
         )}
         <Panel>
           <Styled.Ayon src="/AYON.svg" />
           <Styled.Methods>
-            <form onSubmit={handleSubmit}>
-              <label id="username">Username</label>
-              <InputText
-                autoFocus
-                placeholder="Enter your username"
-                name="username"
-                aria-label="Username"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-              <label id="password">Password</label>
-              <InputPassword
-                placeholder="Enter password"
-                name="password"
-                aria-label="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-              <Button label={<strong>Login</strong>} type="submit" />
-            </form>
+            {showPasswordLogin && (
+              <form onSubmit={handleSubmit}>
+                <label id="username">Username</label>
+                <InputText
+                  autoFocus
+                  placeholder="Enter your username"
+                  name="username"
+                  aria-label="Username"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+                <label id="password">Password</label>
+                <InputPassword
+                  placeholder="Enter password"
+                  name="password"
+                  aria-label="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+                <Button type="submit">
+                  <span className="label">Login with password</span>
+                </Button>
+              </form>
+            )}
 
             {
               info.ssoOptions?.length
-                ? info.ssoOptions.map(
-                    ({ name, title, url, args, redirectKey, icon, color, textColor }) => {
+                ? info.ssoOptions
+                    .filter(({ name }) => shownProviders.includes(name) || showAllProviders)
+                    .map(({ name, title, url, args, redirectKey, icon, color, textColor }) => {
                       const queryDict = { ...args }
                       const redirect_uri = `${window.location.origin}/login/${name}`
                       queryDict[redirectKey] = redirect_uri
@@ -174,12 +226,18 @@ const LoginPage = ({ isFirstTime }) => {
                           textColor={textColor}
                         />
                       )
-                    },
-                  )
+                    })
                 : null // ssoOptions.map
             }
           </Styled.Methods>
-          {info?.passwordRecoveryAvailable && <a href="/passwordReset">Reset password</a>}
+          {info?.passwordRecoveryAvailable && showPasswordLogin && (
+            <a href="/passwordReset">Reset password</a>
+          )}
+          {!showAllProviders && (
+            <Button style={{ width: '100%' }} variant="text" onClick={() => setShownProviders([])}>
+              Show all login options
+            </Button>
+          )}
         </Panel>
       </Styled.LoginForm>
     </main>

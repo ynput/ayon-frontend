@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react'
-import ContextMenuItem from '../components/ContextMenuItem'
-import { useContextMenu } from '../context/contextMenuContext'
+import ContextMenuItem from '@components/ContextMenu/ContextMenuItem'
+import { useContextMenu } from '@context/contextMenuContext'
 
 // This is used to create submenus
 const addTemplateToItems = (items, ref) => {
@@ -16,7 +16,7 @@ const addTemplateToItems = (items, ref) => {
   })
 }
 
-const useCreateContext = (menuList) => {
+const useCreateContext = (menuList = []) => {
   const { openContext, ref, isContextOpen, closeContext } = useContextMenu()
 
   const getModel = useCallback(

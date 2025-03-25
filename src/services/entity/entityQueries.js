@@ -1,179 +1,3 @@
-export const TASK_QUERY = `
-  query Tasks($projectName: String!, $ids: [String!]!) {
-      project(name: $projectName) {
-          tasks(ids: $ids) {
-              edges {
-                  node {
-                      id
-                      name
-                      label
-                      status
-                      tags
-                      taskType
-                      assignees
-                      updatedAt
-                      attrib {
-                        #ATTRS#
-                      }
-                  }
-              }
-          }
-      }
-  }
-`
-
-export const FOLDER_QUERY = `
-    query Folders($projectName: String!, $ids: [String!]!) {
-        project(name: $projectName) {
-            folders(ids: $ids) {
-                edges {
-                    node {
-                        id
-                        name
-                        label
-                        folderType
-                        path
-                        status
-                        tags
-                        updatedAt
-                        attrib {
-                          #ATTRS#
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-`
-
-export const VERSION_QUERY = `
-    query Versions($projectName: String!, $ids: [String!]!) {
-        project(name: $projectName) {
-            versions(ids: $ids) {
-                edges {
-                    node {
-                        id
-                        version
-                        name
-                        author
-                        status
-                        tags
-                        updatedAt
-                        attrib {
-                          #ATTRS#
-                        }
-                        product {
-                            name
-                            productType
-                            folder {
-                                name
-                                parents
-                            }
-                        }
-                        representations{
-                            edges {
-                                node {
-                                    id
-                                    name
-                                    fileCount
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-`
-
-export const REP_QUERY = `
-    query Representations($projectName: String!, $ids: [String!]!) {
-      project(name: $projectName) {
-        representations(ids: $ids) {
-          edges {
-            node {
-              id
-              versionId
-              name
-              status
-              tags
-              updatedAt
-              attrib {
-                #ATTRS#
-              }
-              version {
-                name
-              }
-            }
-          }
-        }
-      }
-    }
-`
-
-export const PRODUCT_QUERY = `
-query Product($projectName: String!, $ids: [String!]!, $versionOverrides: [String!]!) {
-    project(name: $projectName){
-        products(ids: $ids){
-            edges {
-                node {
-                    id
-                    name
-                    productType
-                    status
-                    createdAt
-                    updatedAt
-                    versionList{
-                      id
-                      version
-                      name
-                    }
-                    attrib {
-                      #ATTRS#
-                    }
-                    versions(ids: $versionOverrides){
-                      edges{
-                        node{
-                          id
-                          version
-                          name
-                          author
-                          createdAt
-                          taskId
-                          attrib {
-                              fps
-                              resolutionWidth
-                              resolutionHeight
-                              frameStart
-                              frameEnd
-                          }
-                        }
-                      }
-                    }
-
-                    latestVersion{
-                        id
-                        version
-                        name
-                        author
-                        createdAt
-                        taskId
-                        attrib {
-                            fps
-                            resolutionWidth
-                            resolutionHeight
-                            frameStart
-                            frameEnd
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-`
-
 export const TASK_TILE_FRAGMENT = `
 fragment taskTileFragment on TaskNode {
   id
@@ -181,6 +5,7 @@ fragment taskTileFragment on TaskNode {
   status
   icon: taskType
   thumbnailEntityId: id
+  thumbnailId
   profile: assignees
   footer: folder {
     folderType
@@ -202,6 +27,7 @@ fragment versionTileFragment on VersionNode {
     productType
   }
   thumbnailEntityId: id
+  thumbnailId
   profile: author
   footer: product {
     productType
@@ -222,8 +48,9 @@ fragment productTileFragment on ProductNode {
   name
   status
   icon: productType
-  thumbnailEntityId: latestVersion {
+  latestVersion {
     id
+    thumbnailId
   }
   footer: productType
   updatedAt
@@ -240,6 +67,7 @@ fragment folderTileFragment on FolderNode {
   status
   icon: folderType
   thumbnailEntityId: id
+  thumbnailId
   footer: folderType
   updatedAt
   path: parent {

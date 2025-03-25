@@ -11,13 +11,17 @@ import {
   useSensor,
   useSensors,
 } from '@dnd-kit/core'
-import { useUpdateTasksMutation } from '/src/services/userDashboard/updateUserDashboard'
+import { useUpdateEntitiesMutation } from '@queries/entity/updateEntity'
 import { toast } from 'react-toastify'
 
 import ColumnsWrapper from './ColumnsWrapper'
 import DashboardTasksToolbar from './DashboardTasksToolbar/DashboardTasksToolbar'
-import { useGetKanBanUsersQuery } from '/src/services/userDashboard/getUserDashboard'
-import { onCollapsedColumnsChanged, onTaskSelected } from '/src/features/dashboard'
+import {
+  onCollapsedColumnsChanged,
+  onDraggingEnd,
+  onDraggingStart,
+  onTaskSelected,
+} from '@state/dashboard'
 import KanBanCardOverlay from './KanBanCard/KanBanCardOverlay'
 import { StringParam, useQueryParam, withDefault } from 'use-query-params'
 import UserDashboardList from './UserDashboardList/UserDashboardList'
@@ -30,6 +34,9 @@ const UserDashboardKanBan = ({
   statusesOptions,
   disabledStatuses,
   disabledProjectUsers = [],
+  priorities,
+  projectUsers = [],
+  isLoadingProjectUsers,
 }) => {
   const dispatch = useDispatch()
 
@@ -39,7 +46,7 @@ const UserDashboardKanBan = ({
   const [view, setView] = useQueryParam('view', withDefault(StringParam, 'kanban'))
 
   const selectedTasks = useSelector((state) => state.dashboard.tasks.selected)
-  const setSelectedTasks = (tasks) => dispatch(onTaskSelected(tasks))
+  const setSelectedTasks = (ids, types) => dispatch(onTaskSelected({ ids, types }))
 
   const selectedProjects = useSelector((state) => state.dashboard.selectedProjects)
 
@@ -63,19 +70,13 @@ const UserDashboardKanBan = ({
   // FILTER
   const filterValue = useSelector((state) => state.dashboard.tasks.filter)
 
-  // GET ALL USERS FOR THE PROJECTS
-  const { data: allUsers = [], isLoading: isLoadingAllUsers } = useGetKanBanUsersQuery(
-    { projects: selectedProjects },
-    { skip: !selectedProjects?.length },
-  )
-
   // attach assignees data to tasks
   const tasksWithAssignees = useMemo(() => {
     return tasks.map((task) => {
-      const taskAssignees = allUsers.filter((user) => task.assignees.includes(user.name))
+      const taskAssignees = projectUsers.filter((user) => task.assignees.includes(user.name))
       return { ...task, assigneesData: taskAssignees }
     })
-  }, [tasks, allUsers])
+  }, [tasks, projectUsers])
 
   // filter out projects by selected projects and filter value
   const filteredTasks = useMemo(
@@ -85,7 +86,7 @@ const UserDashboardKanBan = ({
 
   // sort tasks by sort by values
   const sortedTasks = useMemo(
-    () => getSortedTasks(filteredTasks, sortByValue),
+    () => getSortedTasks(filteredTasks, sortByValue, { priority: priorities }),
     [filteredTasks, sortByValue],
   )
 
@@ -100,7 +101,7 @@ const UserDashboardKanBan = ({
   const mergedFields = getMergedFields(projectsInfo, splitByPlural)
 
   const [tasksColumns, fieldsColumns] = useMemo(
-    () => getTasksColumns(sortedTasks, splitBy, mergedFields, allUsers),
+    () => getTasksColumns(sortedTasks, splitBy, mergedFields, projectUsers),
     [sortedTasks, splitBy, mergedFields],
   )
 
@@ -145,8 +146,9 @@ const UserDashboardKanBan = ({
       })
     })
 
-    return groupFieldColumns
-  }, [columnGroups, fieldsColumns, collapsedColumns, tasksColumns])
+    const filterdStatusIds = statusesOptions.map((status) => status.id)
+    return groupFieldColumns.filter((item) => filterdStatusIds.includes(item.id))
+  }, [columnGroups, fieldsColumns, collapsedColumns, tasksColumns, statusesOptions])
 
   // now sort the columns by index
   groupFieldColumns.sort((a, b) => a.index - b.index)
@@ -185,20 +187,33 @@ const UserDashboardKanBan = ({
   const sensors = useSensors(pointerSensor, touchSensor, keyboardSensor)
 
   // UPDATE TASK MUTATION
-  const [updateTasks] = useUpdateTasksMutation()
+  const [updateEntities] = useUpdateEntitiesMutation()
 
   // keep track of which card is being dragged
   const [activeDraggingId, setActiveDraggingId] = useState(null)
 
   const handleDragStart = (event) => {
+    const isSelected = selectedTasks.includes(event.active.id)
+
+    let draggingTasks = []
+    // set dragging id
+    if (isSelected) draggingTasks = selectedTasks
+    else draggingTasks = [event.active.id]
+
+    dispatch(onDraggingStart(draggingTasks))
+
     setActiveDraggingId(event.active.id)
     // select card
     if (!selectedTasks.includes(event.active.id)) {
-      setSelectedTasks([event.active.id])
+      // get the task
+      const task = tasks.find((t) => t.id === event.active.id)
+      setSelectedTasks([event.active.id], [task.taskType])
     }
   }
 
   const handleDragEnd = async (event) => {
+    dispatch(onDraggingEnd())
+
     setActiveDraggingId(null)
     // first check if field can be edited on task
     if (splitByField.isEditable === false)
@@ -238,16 +253,17 @@ const UserDashboardKanBan = ({
         projectName: task.projectName,
         id: task.id,
         data: newTaskData,
+        currentAssignees: task.assignees,
       }
     })
 
-    updateTasks({ operations })
+    updateEntities({ operations, entityType: 'task' })
   }
 
   return (
     <>
       <Section style={{ height: '100%', zIndex: 10, padding: 0, overflow: 'hidden' }}>
-        <DashboardTasksToolbar {...{ view, setView, allUsers, isLoadingAllUsers }} />
+        <DashboardTasksToolbar {...{ view, setView, isLoadingProjectUsers }} />
         {view === 'kanban' && (
           <DndContext
             sensors={sensors}
@@ -256,13 +272,16 @@ const UserDashboardKanBan = ({
             autoScroll={false}
           >
             <ColumnsWrapper
+              allTasks={tasks}
               tasksColumns={tasksColumns}
               fieldsColumns={groupedOpenFieldColumns}
               groupByValue={groupByValue}
               isLoading={isLoading}
-              allUsers={allUsers}
+              projectUsers={projectUsers}
               disabledStatuses={disabledStatuses}
               onCollapsedColumnsChange={handleCollapseToggle}
+              projectsInfo={projectsInfo}
+              priorities={priorities}
             />
             <KanBanCardOverlay
               activeDraggingId={activeDraggingId}
@@ -276,12 +295,14 @@ const UserDashboardKanBan = ({
             groupedFields={fieldsColumns.length ? fieldsColumns : [{ id: 'none' }]}
             groupedTasks={tasksColumns}
             isLoading={isLoading}
-            allUsers={allUsers}
+            allUsers={projectUsers}
             mergedFields={mergedFields}
             groupByValue={groupByValue}
             statusesOptions={statusesOptions}
             disabledStatuses={disabledStatuses}
             disabledProjectUsers={disabledProjectUsers}
+            projectsInfo={projectsInfo}
+            priorities={priorities}
           />
         )}
       </Section>

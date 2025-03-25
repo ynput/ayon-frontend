@@ -1,23 +1,22 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
 import { Section, Toolbar, InputText, TablePanel } from '@ynput/ayon-react-components'
-
 import { Column } from 'primereact/column'
 import { TreeTable } from 'primereact/treetable'
 import { MultiSelect } from 'primereact/multiselect'
-
-import { CellWithIcon } from '/src/components/icons'
-import EntityDetail from '/src/containers/entityDetail'
-
-import {
-  setFocusedFolders,
-  setUri,
-  setExpandedFolders,
-  setSelectedVersions,
-} from '/src/features/context'
-import { useGetHierarchyQuery } from '/src/services/getHierarchy'
-import useCreateContext from '../hooks/useCreateContext'
+import { CellWithIcon } from '@components/icons'
+import EntityDetail from './DetailsDialog'
+import { setFocusedFolders, setUri, setExpandedFolders, setSelectedVersions } from '@state/context'
+import { useGetFolderHierarchyQuery } from '@queries/getHierarchy'
+import useCreateContext from '@hooks/useCreateContext'
+import HierarchyExpandFolders from './HierarchyExpandFolders'
+import { openViewer } from '@/features/viewer'
+import useTableKeyboardNavigation, {
+  extractIdFromClassList,
+} from './Feed/hooks/useTableKeyboardNavigation'
+import clsx from 'clsx'
+import useTableLoadingData from '@hooks/useTableLoadingData'
 
 const filterHierarchy = (text, folder, folders) => {
   let result = []
@@ -82,10 +81,10 @@ const Hierarchy = (props) => {
   // const focusedType = useSelector((state) => state.context.focused.type)
   const expandedFolders = useSelector((state) => state.context.expandedFolders)
   const focusedFolders = useSelector((state) => state.context.focused.folders)
-  const uri = useSelector((state) => state.context.uri)
 
   const dispatch = useDispatch()
   const [query, setQuery] = useState('')
+  const [newUri, setNewUri] = useState('')
   const [selectedFolderTypes, setSelectedFolderTypes] = useState([])
   const [showDetail, setShowDetail] = useState(false)
 
@@ -110,16 +109,21 @@ const Hierarchy = (props) => {
 
   // Fetch the hierarchy data from the server, when the project changes
   // or when user changes the folder types to be displayed
-  const { isError, error, data, isFetching, isSuccess } = useGetHierarchyQuery(
-    { projectName },
-    { skip: !projectName },
-  )
+  const {
+    data = {},
+    isError,
+    error,
+    isFetching,
+    isSuccess,
+  } = useGetFolderHierarchyQuery({ projectName }, { skip: !projectName })
+
+  const hierarchyData = data.hierarchy || []
 
   // We already have the data, so we can do the client-side filtering
   // and tree transformation
 
   const parents = useMemo(() => {
-    if (!data) return []
+    if (!hierarchyData) return []
 
     const result = {}
 
@@ -133,17 +137,17 @@ const Hierarchy = (props) => {
       }
     }
 
-    data.forEach((folder) => {
+    hierarchyData.forEach((folder) => {
       crawl(folder)
     })
 
     return result
-  }, [data])
+  }, [hierarchyData])
 
   let treeData = useMemo(() => {
-    if (!data) return []
-    return filterHierarchy(query, data, folders)
-  }, [data, query, isFetching])
+    if (!hierarchyData) return []
+    return filterHierarchy(query, hierarchyData, folders)
+  }, [hierarchyData, query, isFetching])
 
   function filterArray(arr = [], filter = []) {
     return arr
@@ -175,10 +179,10 @@ const Hierarchy = (props) => {
   }
 
   const hierarchyObjectData = useMemo(() => {
-    if (data) {
-      return createDataObject(data)
+    if (hierarchyData) {
+      return createDataObject(hierarchyData)
     }
-  }, [data, isFetching])
+  }, [hierarchyData, isFetching])
 
   const treeDataFlat = useMemo(() => {
     if (selectedFolderTypes.length) {
@@ -196,30 +200,6 @@ const Hierarchy = (props) => {
   // Selection
   //
 
-  // when selection changes programmatically, expand the parent folders
-  // runs every time the uri changes
-  useEffect(() => {
-    if (!focusedFolders?.length || !isSuccess) return
-
-    let toExpand = [...Object.keys(expandedFolders)]
-    for (const id of focusedFolders) {
-      toExpand = toExpand.concat(parents[id])
-    }
-    // de-duplicate toExpand and remove null/undefined
-    toExpand = [...new Set(toExpand)]
-    toExpand = toExpand.filter((x) => x)
-
-    // abort if there's no change
-    if (toExpand.length === Object.keys(expandedFolders).length) return
-
-    //create a map of the expanded folders
-    const newExpandedFolders = {}
-    for (const id of toExpand) {
-      newExpandedFolders[id] = true
-    }
-    dispatch(setExpandedFolders(newExpandedFolders))
-  }, [uri, isSuccess])
-
   // Transform the plain list of focused folder ids to a map
   // {id: true}, which is needed for the Treetable
 
@@ -233,17 +213,21 @@ const Hierarchy = (props) => {
   // Set breadcrumbs on row click (the latest selected folder,
   // will be the one that is displayed in the breadcrumbs)
 
-  const onRowClick = (event) => {
-    const node = event.node.data
-    dispatch(setUri(`ayon+entity://${projectName}/${node.parents.join('/')}/${node.name}`))
+  const onFocus = (event) => {
+    const id = extractIdFromClassList(event.target.classList)
+    if (!id) return
+    const node = hierarchyObjectData[id]
+    if (!node) return
+    setNewUri(`ayon+entity://${projectName}/${node.parents.join('/')}/${node.name}`)
   }
 
   // Update the folder selection in the project context
 
   const onSelectionChange = (event) => {
     const selection = Object.keys(event.value)
+    const subTypes = selection.map((id) => hierarchyObjectData[id].folderType)
     // set focused folders and remove any focused tasks
-    dispatch(setFocusedFolders(selection))
+    dispatch(setFocusedFolders({ ids: selection, subTypes: subTypes }))
 
     // for each selected folder, if isLeaf then set expandedFolders
     const newExpandedFolders = {}
@@ -266,11 +250,9 @@ const Hierarchy = (props) => {
 
     // update redux
     dispatch(setExpandedFolders(mergedExpandedFolders))
-  }
 
-  const onContextMenuSelectionChange = (event) => {
-    if (focusedFolders.includes(event.value)) return
-    dispatch(setFocusedFolders([event.value]))
+    //updating uri after expanded folder to avoid race condition
+    dispatch(setUri(newUri))
   }
 
   const onToggle = (event) => {
@@ -307,35 +289,78 @@ const Hierarchy = (props) => {
     dispatch(setExpandedFolders(event.value))
   }
 
+  // viewer open
+  const viewerIsOpen = useSelector((state) => state.viewer.isOpen)
+
+  const openInViewer = (id, quickView) => {
+    if (id && !viewerIsOpen) {
+      dispatch(openViewer({ folderId: id, projectName: projectName, quickView }))
+    }
+  }
+
+  const tableRef = useRef(null)
+
+  const handleTableKeyDown = useTableKeyboardNavigation({
+    tableRef,
+    treeData,
+    selection: selectedFolders,
+    onSelectionChange: ({ object }) => onSelectionChange({ value: object }),
+  })
+
+  // Separate handler for non-arrow key events
+  const handleKeyDown = (event) => {
+    const { key } = event
+
+    if (key === ' ') {
+      event.preventDefault()
+      const firstSelected = Object.keys(selectedFolders)[0]
+      openInViewer(firstSelected, true)
+      return
+    }
+
+    // if using arrow keys change selection
+    handleTableKeyDown(event)
+  }
+
   // Context Menu
   // const {openContext, useCreateContext} = useContextMenu()
   // context items
-  const contextItems = [
+  const ctxMenuItems = (selected = []) => [
+    {
+      label: 'Open in viewer',
+      icon: 'play_circle',
+      shortcut: 'Spacebar',
+      command: () => openInViewer(selected[0], false),
+    },
     {
       label: 'Detail',
       command: () => setShowDetail(true),
       icon: 'database',
     },
     {
-      label: 'View latest versions',
+      label: 'View all versions as latest',
       command: () => dispatch(setSelectedVersions({})),
       icon: 'upgrade',
     },
   ]
   // create the ref and model
-  const [ctxMenuShow] = useCreateContext(contextItems)
+  const [ctxMenuShow] = useCreateContext()
 
-  // create 10 dummy rows
-  const loadingData = useMemo(() => {
-    return Array.from({ length: 15 }, (_, i) => ({
-      key: i,
-      data: {},
-    }))
-  }, [])
+  const onContextMenu = (event) => {
+    let newFocused = [...focusedFolders]
+    const itemId = event.node.key
+    if (itemId && !focusedFolders?.includes(itemId)) {
+      newFocused = [itemId]
+      // if the selection does not include the clicked node, new selection is the clicked node
+      const subTypes = [itemId].map((id) => hierarchyObjectData[id].folderType)
+      // set focused folders and remove any focused tasks
+      dispatch(setFocusedFolders({ ids: newFocused, subTypes: subTypes }))
+    }
 
-  if (isFetching) {
-    treeData = loadingData
+    ctxMenuShow(event.originalEvent, ctxMenuItems(newFocused))
   }
+
+  treeData = useTableLoadingData(treeData, isFetching, 15)
 
   //
   // Render
@@ -344,6 +369,7 @@ const Hierarchy = (props) => {
   const table = useMemo(() => {
     return (
       <TreeTable
+        ref={tableRef}
         value={treeData}
         responsive="true"
         scrollable
@@ -354,10 +380,19 @@ const Hierarchy = (props) => {
         emptyMessage={isError && 'No Folders Found'}
         onSelectionChange={onSelectionChange}
         onToggle={onToggle}
-        onRowClick={onRowClick}
-        onContextMenu={(e) => ctxMenuShow(e.originalEvent)}
-        onContextMenuSelectionChange={onContextMenuSelectionChange}
-        className={isFetching ? 'table-loading' : undefined}
+        onContextMenu={onContextMenu}
+        className={clsx({ loading: isFetching })}
+        rowClassName={(rowData) => ({
+          ['id-' + rowData.key]: true,
+          compact: true,
+          loading: isFetching,
+        })}
+        pt={{
+          root: {
+            onFocus: onFocus,
+            onKeyDown: handleKeyDown,
+          },
+        }}
       >
         <Column header="Hierarchy" field="body" expander={true} style={{ width: '100%' }} />
       </TreeTable>
@@ -369,42 +404,50 @@ const Hierarchy = (props) => {
   }
 
   return (
-    <Section style={props.style}>
-      <Toolbar>
-        <InputText
-          style={{ flexGrow: 1, minWidth: 100 }}
-          placeholder="Filter folders..."
-          disabled={!projectName || isFetching}
-          value={query}
-          onChange={(evt) => setQuery(evt.target.value)}
-          autocomplete="off"
-        />
+    <>
+      <Section style={props.style}>
+        <Toolbar>
+          <InputText
+            style={{ flexGrow: 1, minWidth: 100 }}
+            placeholder="Filter folders..."
+            disabled={!projectName || isFetching}
+            value={query}
+            onChange={(evt) => setQuery(evt.target.value)}
+            autoComplete="off"
+          />
 
-        <MultiSelect
-          value={selectedFolderTypes}
-          options={folderTypeList}
-          placeholder="Select folder types"
-          showClear={true}
-          optionLabel="label"
-          disabled={!projectName || isFetching}
-          selectedItemTemplate={selectedTypeTemplate}
-          onChange={(e) => setSelectedFolderTypes(e.value || [])}
-          style={{ flexBasis: 150 }}
-        />
-      </Toolbar>
+          <MultiSelect
+            value={selectedFolderTypes}
+            options={folderTypeList}
+            placeholder="Select folder types"
+            showClear={true}
+            optionLabel="label"
+            disabled={!projectName || isFetching}
+            selectedItemTemplate={selectedTypeTemplate}
+            onChange={(e) => setSelectedFolderTypes(e.value || [])}
+            style={{ flexBasis: 150 }}
+          />
+        </Toolbar>
 
-      <TablePanel>
-        <EntityDetail
-          projectName={projectName}
-          entityType="folder"
-          entityIds={focusedFolders}
-          visible={showDetail}
-          onHide={() => setShowDetail(false)}
-        />
+        <TablePanel>
+          <EntityDetail
+            projectName={projectName}
+            entityType="folder"
+            entityIds={focusedFolders}
+            visible={showDetail}
+            onHide={() => setShowDetail(false)}
+          />
 
-        {table}
-      </TablePanel>
-    </Section>
+          {table}
+        </TablePanel>
+      </Section>
+      <HierarchyExpandFolders
+        parents={parents}
+        isSuccess={isSuccess}
+        focusedFolders={focusedFolders}
+        expandedFolders={expandedFolders}
+      />
+    </>
   )
 }
 

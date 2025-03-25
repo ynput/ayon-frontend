@@ -1,5 +1,5 @@
 import React from 'react'
-import ReleasePackage from '../../../components/Release/ReleasePreset'
+import ReleasePreset from '@components/Release/ReleasePreset'
 import * as Styled from '../util/OnBoardingStep.styled'
 
 export const ReleaseSelect = ({
@@ -28,13 +28,14 @@ export const ReleaseSelect = ({
       <Header>Select a Release Package</Header>
       <Styled.PresetsContainer>
         {releases.map(({ name, ...props }, i) => (
-          <ReleasePackage
+          <ReleasePreset
             index={i}
             key={name}
             name={name}
-            {...props}
             isSelected={selectedPreset === name}
+            isLoading={isLoadingReleases}
             onClick={() => setSelectedPreset(name)}
+            {...props}
           />
         ))}
       </Styled.PresetsContainer>

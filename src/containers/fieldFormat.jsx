@@ -2,7 +2,7 @@
 import styled from 'styled-components'
 import { useSelector } from 'react-redux'
 import { OverflowField } from '@ynput/ayon-react-components'
-import copyToClipboard from '../helpers/copyToClipboard'
+import copyToClipboard from '@helpers/copyToClipboard'
 
 // Attributes
 
@@ -15,7 +15,7 @@ const AttributeField = ({ value }) => {
 const TagsContainer = styled.div`
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--base-gap-large);
 `
 
 const TagsField = ({ value }) => {
@@ -59,7 +59,7 @@ const TagsField = ({ value }) => {
 const DateTimeContainer = styled.div`
   display: flex;
   flex-direction: row;
-  gap: 8px;
+  gap: var(--base-gap-large);
   align-items: center;
   > span:first-child {
     color: var(--md-sys-color-on-surface-variant);

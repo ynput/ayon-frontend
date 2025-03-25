@@ -1,8 +1,7 @@
 import styled from 'styled-components'
-import ThumbnailSimple from '/src/containers/ThumbnailSimple'
+import ThumbnailSimple from '@containers/ThumbnailSimple'
 import StatusSelect from '../status/statusSelect'
-import { AssigneeSelect, Icon } from '@ynput/ayon-react-components'
-import getShimmerStyles from '/src/styles/getShimmerStyles'
+import { AssigneeSelect, EnumDropdown } from '@ynput/ayon-react-components'
 
 export const Item = styled.li`
   /* reset defaults */
@@ -20,7 +19,7 @@ export const Item = styled.li`
   display: flex;
   padding: 5px 8px 5px 8px;
   align-items: center;
-  gap: 8px;
+  gap: var(--base-gap-large);
   align-self: stretch;
   cursor: pointer;
   user-select: none;
@@ -76,27 +75,7 @@ export const Item = styled.li`
   }
 
   &.loading {
-    ${getShimmerStyles()}
     border-color: var(--md-sys-color-surface-container-low);
-
-    &:hover {
-      background-color: var(--md-sys-color-surface-container-low);
-    }
-  }
-`
-
-export const SimpleStatus = styled(Icon)`
-  height: 22px;
-  max-width: 22px;
-  min-width: 22px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  &.icon {
-    font-size: 15px;
-    font-variation-settings: 'FILL' 1, 'wght' 300, 'GRAD' 300, 'opsz' 20;
   }
 `
 
@@ -203,6 +182,7 @@ export const ItemAssignees = styled(AssigneeSelect)`
     & > div {
       padding: 2px;
       height: unset;
+      min-width: unset;
     }
 
     background-color: unset;
@@ -225,6 +205,30 @@ export const ItemAssignees = styled(AssigneeSelect)`
 
     .user-image {
       top: 0;
+    }
+  }
+`
+
+export const PriorityEnumDropdown = styled(EnumDropdown)`
+  /* remove text and dropdown icon */
+  .value-label,
+  .control {
+    display: none;
+  }
+
+  .template-value {
+    border: none;
+    padding: 0;
+    & > div {
+      justify-content: center;
+    }
+  }
+
+  button {
+    background-color: unset;
+
+    &:hover {
+      background-color: var(--md-sys-color-surface-container-hover);
     }
   }
 `

@@ -1,16 +1,10 @@
-import { ayonApi } from '../ayon'
+import api from '@api'
 import {
-  FOLDER_QUERY,
-  PRODUCT_QUERY,
-  TASK_QUERY,
-  VERSION_QUERY,
   PRODUCT_TILE_FRAGMENT,
   FOLDER_TILE_FRAGMENT,
   VERSION_TILE_FRAGMENT,
   TASK_TILE_FRAGMENT,
-  REP_QUERY,
 } from './entityQueries'
-import ayonClient from '/src/ayon'
 
 const buildEventTileQuery = (type) => {
   return `
@@ -25,40 +19,6 @@ const buildEventTileQuery = (type) => {
     }
   }
   `
-}
-
-export const buildEntitiesQuery = (type, attribs) => {
-  let f_attribs = attribs || ''
-  if (!attribs) {
-    for (const attrib of ayonClient.settings.attributes) {
-      if (attrib.scope.includes(type)) f_attribs += `${attrib.name}\n`
-    }
-  }
-
-  let QUERY
-  switch (type) {
-    case 'task':
-      QUERY = TASK_QUERY
-      break
-    case 'folder':
-      QUERY = FOLDER_QUERY
-      break
-    case 'version':
-      QUERY = VERSION_QUERY
-      break
-    case 'product':
-      QUERY = PRODUCT_QUERY
-      break
-    case 'representation':
-      QUERY = REP_QUERY
-      break
-    default:
-      break
-  }
-
-  if (!QUERY) return null
-
-  return QUERY.replace('#ATTRS#', f_attribs)
 }
 
 const buildEntityTilesQuery = (entities) => {
@@ -138,14 +98,6 @@ export const formatEntityTiles = (project, entities) => {
     allEntities.push(...entities)
   }
 
-  // which entity type to use for thumbnail
-  const thumbnailTypes = {
-    version: 'version',
-    product: 'version',
-    folder: 'folder',
-    task: 'folder',
-  }
-
   // loop through each entity and child and if it is an array or object, use first child value as value
   for (const entity of allEntities) {
     for (const attrib in entity) {
@@ -160,41 +112,19 @@ export const formatEntityTiles = (project, entities) => {
         entity[attrib] = 'v' + entity[attrib].toString().padStart(3, '0')
       }
     }
-    entity.thumbnailEntityType = thumbnailTypes[entity.type]
+    entity.thumbnailEntityType = entity.type
+    if (entity.type === 'product') {
+      entity.thumbnailEntityId = entity.latestVersion.thumbnailEntityId
+      entity.thumbnailId = entity.latestVersion.thumbnailId
+      entity.thumbnailEntityType = 'version'
+    }
   }
 
   return allEntities
 }
 
-const getEntity = ayonApi.injectEndpoints({
+const injectedApi = api.injectEndpoints({
   endpoints: (build) => ({
-    getEntitiesDetails: build.query({
-      query: ({
-        projectName,
-        ids,
-        type,
-        versionOverrides = ['00000000000000000000000000000000'],
-        attribs,
-      }) => ({
-        url: '/graphql',
-        method: 'POST',
-        body: {
-          query: buildEntitiesQuery(type, attribs),
-          variables: { projectName, ids, versionOverrides },
-        },
-      }),
-      transformResponse: (response, meta, { type }) => response.data.project[type + 's'].edges,
-      transformErrorResponse: (error) => error.data?.detail || `Error ${error.status}`,
-      providesTags: (result, error, { type }) =>
-        result
-          ? [
-              ...result.flatMap(({ node }) => [
-                { type: type, id: node.id },
-                { type: 'detail', id: node.id },
-              ]),
-            ]
-          : [type],
-    }),
     getEventTile: build.query({
       query: ({ projectName, id, type }) => ({
         url: '/graphql',
@@ -225,12 +155,19 @@ const getEntity = ayonApi.injectEndpoints({
       providesTags: (res, error, { entityId }) => [{ type: 'entity', id: entityId }],
     }),
   }),
+  overrideExisting: true,
+})
+
+const enhancedApi = injectedApi.enhanceEndpoints({
+  endpoints: {
+    GetProductVersions: {},
+  },
 })
 
 export const {
-  useGetEntitiesDetailsQuery,
   useGetEventTileQuery,
   useGetEntityTilesQuery,
   useGetEntityQuery,
   useLazyGetEntityQuery,
-} = getEntity
+  useGetProductVersionsQuery,
+} = enhancedApi

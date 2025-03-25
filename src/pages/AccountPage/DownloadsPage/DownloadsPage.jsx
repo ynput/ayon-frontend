@@ -1,13 +1,13 @@
-import useGetInstallerDownload from '/src/components/InstallerDownload/useGetInstallerDownload'
+import useGetInstallerDownload from '@components/InstallerDownload/useGetInstallerDownload'
 import * as Styled from './DownloadsPage.styled'
 import { Button, Panel, Section } from '@ynput/ayon-react-components'
-import InstallerProdCard from '/src/components/InstallerDownload/InstallerProdCard/InstallerProdCard'
+import InstallerProdCard from '@components/InstallerDownload/InstallerProdCard/InstallerProdCard'
 
-import WindowsLogo from '/src/svg/WindowsLogo'
-import AppleLogo from '/src/svg/AppleLogo'
-import LinuxLogo from '/src/svg/LinuxLogo'
+import WindowsLogo from '@/svg/WindowsLogo'
+import AppleLogo from '@/svg/AppleLogo'
+import LinuxLogo from '@/svg/LinuxLogo'
 
-const getPlatformIcon = (platform) => {
+export const getPlatformIcon = (platform) => {
   switch (platform) {
     case 'windows':
       return <WindowsLogo />
@@ -23,12 +23,30 @@ const getPlatformIcon = (platform) => {
   }
 }
 
+export const getPlatformLabel = (platform) => {
+  switch (platform) {
+    case 'windows':
+      return 'Windows'
+
+    case 'darwin':
+      return 'macOS'
+
+    case 'linux':
+      return 'Linux'
+
+    default:
+      return platform
+  }
+}
+
 const DownloadsPage = () => {
   //  production installers grouped by platform
   //  non-production installers grouped by version
-  const { prodInstallers, nonProdInstallers, platform, handleDownload } = useGetInstallerDownload()
+  const { prodInstallers, allInstallers, platform, handleDownload } = useGetInstallerDownload()
 
   const platforms = ['windows', 'darwin', 'linux']
+
+  console.log(allInstallers)
 
   return (
     <main style={{ overflow: 'hidden' }}>
@@ -48,7 +66,7 @@ const DownloadsPage = () => {
           <Panel style={{ overflow: 'auto' }}>
             <h2>All Versions</h2>
             <Styled.All>
-              {Object.entries(nonProdInstallers).map(([version, installers]) => (
+              {Object.entries(allInstallers).map(([version, installers]) => (
                 <div key={version}>
                   <Styled.Installer variant="text">
                     <span>
@@ -60,6 +78,8 @@ const DownloadsPage = () => {
                           key={installer.filename}
                           onClick={() => handleDownload(installer.sources, installer.filename)}
                           variant="text"
+                          data-tooltip={installer.filename}
+                          data-tooltip-delay={300}
                           style={{
                             order:
                               installer.platform === 'windows'

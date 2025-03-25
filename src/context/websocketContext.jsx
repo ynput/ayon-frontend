@@ -1,12 +1,12 @@
 import { useEffect, useState, createContext } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
-import PubSub from '/src/pubsub'
-import arrayEquals from '../helpers/arrayEquals'
+import PubSub from '@/pubsub'
+import arrayEquals from '@helpers/arrayEquals'
 import useWebSocket, { ReadyState } from 'react-use-websocket'
 import { debounce } from 'lodash'
-import { ayonApi } from '../services/ayon'
-import RefreshToast from '../components/RefreshToast'
+import api from '@api'
+import RefreshToast from '@components/RefreshToast'
 
 export const SocketContext = createContext()
 
@@ -82,7 +82,7 @@ export const SocketProvider = (props) => {
 
     return (message) => {
       // If the function is called more than 100 times per second, return early.
-      const threshold = 100
+      const threshold = 1000
       if (callCount > threshold) {
         setOverloaded(true)
         return console.log(
@@ -121,7 +121,7 @@ export const SocketProvider = (props) => {
       if (serverRestartingVisible) {
         setServerRestartingVisible(false)
         // clear ayonApi
-        dispatch(ayonApi.util.resetApiState())
+        dispatch(api.util.resetApiState())
       }
       getWebSocket().onmessage = onMessage
       subscribe()

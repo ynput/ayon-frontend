@@ -1,29 +1,29 @@
-/* eslint-disable */
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
+import { isEqual } from 'lodash'
 
 import { Icon, InputSwitch } from '@ynput/ayon-react-components'
 
 import {
   useLazyGetAddonSettingsQuery,
   useLazyGetAddonSettingsOverridesQuery,
-} from '/src/services/addonSettings'
+} from '@queries/addonSettings'
 
 // TODO: move this to a common location
 import { getValueByPath } from '../AddonSettings/utils'
-import { isEqual } from 'lodash'
 
-import VariantSelector from '/src/containers/AddonSettings/VariantSelector'
-import ProjectDropdown from '/src/containers/ProjectDropdown'
-import AddonDropdown from '/src/containers/CopySettings/AddonDropdown'
+import VariantSelector from '@containers/AddonSettings/VariantSelector'
+import ProjectDropdown from '@containers/ProjectDropdown'
+import AddonDropdown from '@containers/CopySettings/AddonDropdown'
 
 import {
   NodePanelWrapper,
   NodePanelHeader,
   NodePanelBody,
+  NodeMessage,
   NodePanelDirectionSelector,
   ChangeValue,
   ChangesTable,
-} from '/src/containers/CopySettings/CopySettingsNode.styled'
+} from '@containers/CopySettings/CopySettingsNode.styled'
 
 import {
   isSimple,
@@ -31,41 +31,66 @@ import {
   isListOfSimple,
   isListOfNamedDicts,
   isCompatibleStructure,
-} from '/src/helpers/objectComparison'
+} from '@helpers/objectComparison'
 
 const FormattedPath = ({ value }) => {
   return <div className="path">{value.join(' / ')}</div>
 }
 
-const FormattedValue = ({ value }) => {
+const FormattedValue = ({ value, level }) => {
   const val = useMemo(() => {
     if (isSimple(value)) {
-      if (typeof value === 'boolean') return <ChangeValue>{value ? 'true' : 'false'}</ChangeValue>
-      if (value === '') return <ChangeValue className="dim">no value</ChangeValue>
-      return <ChangeValue>{value}</ChangeValue>
+      if (typeof value === 'boolean') {
+        return <ChangeValue $level={level}>{value ? 'true' : 'false'}</ChangeValue>
+      }
+      if (value === '')
+        return (
+          <ChangeValue className="dim" $level={level}>
+            no value
+          </ChangeValue>
+        )
+      return <ChangeValue $level={level}>{value}</ChangeValue>
     } else if (!value) {
       // evaluate this after isSimple to let booleans pass through
-      return <ChangeValue className="dim">no value</ChangeValue>
+      return (
+        <ChangeValue className="dim" $level={level}>
+          no value
+        </ChangeValue>
+      )
     } else if (isList(value)) {
-      if (value.length === 0) return <ChangeValue className="dim">empty list</ChangeValue>
+      if (value.length === 0) {
+        return (
+          <ChangeValue className="dim" $level={level}>
+            empty list
+          </ChangeValue>
+        )
+      }
 
       if (isListOfSimple(value))
-        return <ChangeValue title={value.join(', ')}>[ {value.join(', ')} ]</ChangeValue>
+        return (
+          <ChangeValue title={value.join(', ')} $level={level}>
+            [ {value.join(', ')} ]
+          </ChangeValue>
+        )
 
       const dictNames = isListOfNamedDicts(value)
       if (dictNames) {
-        return <ChangeValue title={dictNames.join(', ')}>[ {dictNames.join(', ')} ]</ChangeValue>
+        return (
+          <ChangeValue title={dictNames.join(', ')} $level={level}>
+            [ {dictNames.join(', ')} ]
+          </ChangeValue>
+        )
       }
 
       return (
-        <ChangeValue title={JSON.stringify(value, null, 2)} className="dim">
+        <ChangeValue title={JSON.stringify(value, null, 2)} className="dim" $level={level}>
           [ complex list ]
         </ChangeValue>
       )
     }
 
     return (
-      <ChangeValue className="dim" title={JSON.stringify(value, null, 2)}>
+      <ChangeValue className="dim" title={JSON.stringify(value, null, 2)} $level={level}>
         [ complex object ]
       </ChangeValue>
     )
@@ -93,6 +118,7 @@ const CopySettingsNode = ({
 
   nodeData,
   setNodeData,
+  setNodeState,
 
   forcedSourceVersion,
   forcedSourceVariant,
@@ -102,6 +128,7 @@ const CopySettingsNode = ({
   const [sourceVariant, setSourceVariant] = useState(null)
   const [sourceProjectName, setSourceProjectName] = useState(null)
   const [loading, setLoading] = useState(false)
+  const currentPromiseRef = useRef(null);
 
   const [triggerGetOverrides] = useLazyGetAddonSettingsOverridesQuery()
   const [triggerGetSettings] = useLazyGetAddonSettingsQuery()
@@ -125,7 +152,6 @@ const CopySettingsNode = ({
 
   useEffect(() => {
     if (forcedSourceProjectName && forcedSourceProjectName !== sourceProjectName) {
-      console.log('forcedSourceProjectName', forcedSourceProjectName)
       setSourceProjectName(forcedSourceProjectName)
     } else if (forcedSourceProjectName === null && sourceProjectName === null) {
       setSourceProjectName(null)
@@ -136,6 +162,7 @@ const CopySettingsNode = ({
     if (!sourceVersion || !sourceVariant) return
     if (targetProjectName && !sourceProjectName) return
     setLoading(true)
+    setNodeState('loading')
 
     if (
       sourceVersion === targetVersion &&
@@ -144,6 +171,7 @@ const CopySettingsNode = ({
     ) {
       setNodeData({ message: 'cannot copy from itself' })
       setLoading(false)
+      setNodeState('empty')
       return
     }
 
@@ -156,6 +184,14 @@ const CopySettingsNode = ({
       asVersion: targetVersion,
     })
 
+    const targetOverrides = await triggerGetOverrides({
+      addonName,
+      addonVersion: targetVersion,
+      variant: targetVariant,
+      projectName: targetProjectName,
+      asVersion: targetVersion,
+    })
+
     const sourceSettings = await triggerGetSettings({
       addonName,
       addonVersion: sourceVersion,
@@ -164,15 +200,6 @@ const CopySettingsNode = ({
       asVersion: targetVersion,
     })
 
-    // TODO: we may use this to display whether there
-    // is an override or we are replacing with a default value
-
-    // const targetOverrides = await triggerGetOverrides({
-    //   addonName,
-    //   addonVersion: targetBundleData.addons[addonName],
-    //   variant: targetVariant,
-    // })
-
     const targetSettings = await triggerGetSettings({
       addonName,
       addonVersion: targetVersion,
@@ -180,34 +207,74 @@ const CopySettingsNode = ({
       projectName: targetProjectName,
     })
 
-    for (const id in sourceOverrides.data) {
+    let sourceParentSettings = null
+    if (sourceProjectName) {
+      sourceParentSettings = await triggerGetSettings({
+        addonName,
+        addonVersion: sourceVersion,
+        variant: sourceVariant,
+        projectName: null,
+        asVersion: targetVersion,
+      })
+    }
+
+    const allIds = [
+      ...new Set([...Object.keys(sourceOverrides.data), ...Object.keys(targetOverrides.data)]),
+    ]
+
+    for (const id of allIds) {
       const sourceOverride = sourceOverrides.data[id]
-      //const targetOverride = targetOverrides.data[id]
+      const targetOverride = targetOverrides.data[id]
+      const path = sourceOverride?.path || targetOverride?.path
+      const availableScopes = sourceOverride?.scope || targetOverride?.scope || ["studio", "project"]
 
       // Remove noise
-      if (sourceOverride.inGroup || sourceOverride.type === 'branch') continue
+      if (sourceOverride?.inGroup || sourceOverride?.type === 'branch' || targetOverride?.inGroup || targetOverride?.type === 'branch') {
+        console.debug('Skipping override', path, 'because it is', sourceOverride?.inGroup ? 'in a group' : 'a branch')
+        continue
+      }
 
-      // do not attempt to copy overrides from default or studio
-      // to project level
-      if (targetProjectName && ['default', 'studio'].includes(sourceOverride.level)) continue
+      if (targetProjectName && !availableScopes.includes('project')) {
+        console.debug('Skipping override', path, 'because it is not project-scoped')
+        continue
+      } else if (!targetProjectName && !availableScopes.includes('studio')) {
+        console.debug('Skipping override', path, 'because it is not studio-scoped')
+        continue
+      }
 
-      const sourceValue = getValueByPath(sourceSettings.data, sourceOverride.path)
-      const targetValue = getValueByPath(targetSettings.data, sourceOverride.path)
+      let sourceValue = getValueByPath(sourceSettings.data, path)
+      let targetValue = getValueByPath(targetSettings.data, path)
+      let copyValue = sourceValue
+
+      if (targetProjectName && ['default', 'studio'].includes(sourceOverride?.level)) {
+        sourceValue = sourceParentSettings ? getValueByPath(sourceParentSettings.data, path) : null
+      }
 
       // do not attempt to copy if the values are the same
-      if (isEqual(sourceValue, targetValue)) continue
+      // ... or rather do copy it. we want to force pinned overrides
+      if (isEqual(sourceValue, targetValue)) {
+        if (sourceOverride?.level === targetOverride?.level) {
+          console.debug(
+            `Skipping override ${path} because it's the same:  ${sourceValue} === ${targetValue}`,
+          )
+          continue
+        }
+      }
 
-      //const compatible = sameKeysStructure(sourceValue, targetValue)
       const compatible = isCompatibleStructure(sourceValue, targetValue)
 
       const item = {
         key: id,
-        path: sourceOverride.path,
+        path: path,
+        copyValue,
         sourceValue,
         targetValue,
+        sourceLevel: sourceOverride?.level || 'default',
+        targetLevel: targetOverride?.level || 'default',
         enabled: !!compatible,
         compatible: !!compatible,
         warnings: compatible || [],
+        inGroup: sourceOverride?.inGroup || targetOverride?.inGroup,
       }
       changes.push(item)
     }
@@ -215,6 +282,7 @@ const CopySettingsNode = ({
     if (!changes.length) {
       setNodeData({ message: 'no overrides to copy', enabled: false })
       setLoading(false)
+      setNodeState('empty')
       return
     }
 
@@ -230,11 +298,30 @@ const CopySettingsNode = ({
     })
 
     setLoading(false)
+    setNodeState('loaded')
   } //loadNodeData
 
   useEffect(() => {
-    //console.log('LOAD', addonName, sourceVersion, sourceVariant, sourceProjectName)
-    loadNodeData()
+    const callLoadNodeData = async () => {
+      // Wait for the current promise to finish if it exists
+      if (currentPromiseRef.current) {
+        await currentPromiseRef.current;
+      }
+      // Create a new promise for the current loadNodeData call
+      const loadPromise = loadNodeData();
+      currentPromiseRef.current = loadPromise;
+
+      try {
+        await loadPromise;
+      } finally {
+        // Clear the reference if the promise is resolved or rejected
+        if (currentPromiseRef.current === loadPromise) {
+          currentPromiseRef.current = null;
+        }
+      }
+    };
+
+    callLoadNodeData();
   }, [sourceVersion, sourceVariant, sourceProjectName])
 
   const expanded = !!(nodeData?.available && nodeData?.enabled)
@@ -279,7 +366,7 @@ const CopySettingsNode = ({
         {nodeData?.available ? (
           <Icon icon="trending_flat" />
         ) : (
-          <span className="message">{nodeData?.message || 'Nothing to copy'}</span>
+          <NodeMessage>{nodeData?.message || 'Nothing to copy'}</NodeMessage>
         )}
       </NodePanelDirectionSelector>
       <AddonDropdown
@@ -298,58 +385,63 @@ const CopySettingsNode = ({
   )
 
   // is it a table? it is. So i'm using a table. don't judge me!
-  // i am almost 40 years old and i can use a table if i want to.
+  // i am 40 years old and i can use a table if i want to.
 
   const body = (
     <NodePanelBody>
       <ChangesTable>
+        <thead>
         <tr>
           <th className="btn">&nbsp;</th>
           <th>Path</th>
           <th className="valpvw">Current&nbsp;value</th>
           <th className="valpvw">New&nbsp;value</th>
         </tr>
-        {(nodeData?.changes || []).map((change) => (
-          <tr key={change.key}>
-            <td>
-              <InputSwitch
-                checked={change.enabled}
-                disabled={!change.compatible}
-                onChange={(e) => {
-                  setNodeData({
-                    ...nodeData,
-                    changes: nodeData.changes.map((c) => {
-                      if (c.key === change.key) {
-                        c.enabled = e.target.checked
-                      }
-                      return c
-                    }),
-                  })
-                }}
-              />
-            </td>
-            <td>
-              {' '}
-              <FormattedPath value={change.path} />{' '}
-            </td>
-            <td>
-              {' '}
-              <FormattedValue value={change.targetValue} />{' '}
-            </td>
-            <td>
-              {' '}
-              <FormattedValue value={change.sourceValue} />{' '}
-            </td>
+        </thead>
+        <tbody>
+        {(nodeData?.changes || []).map((change) => {
 
-            {/*
+          return (
+            <tr key={change.key}>
+              <td>
+                {change.inGroup && <Icon icon="folder" />}
+                <InputSwitch
+                  checked={change.enabled}
+                  disabled={!change.compatible}
+                  onChange={(e) => {
+                    setNodeData({
+                      ...nodeData,
+                      changes: nodeData.changes.map((c) => {
+                        if (c.key === change.key) {
+                          c.enabled = e.target.checked
+                        }
+                        return c
+                      }),
+                    })
+                  }}
+                />
+              </td>
+              <td>
+                <FormattedPath value={change.path} />
+              </td>
+              <td>
+                <FormattedValue value={change.targetValue} level={change.targetLevel} />
+              </td>
+              <td>
+                <FormattedValue value={change.sourceValue} level={change.sourceLevel} />
+              </td>
+
+              {/*
               <td>
                 &nbsp;
                 {!change.compatible && <Icon icon="warning" style={{ color: 'red' }} />}
                 {change.warnings.length > 0 && <Icon icon="warning" style={{ color: 'yellow' }} />}
               </td>
               */}
-          </tr>
-        ))}
+            </tr>
+          )
+        })}
+        </tbody>
       </ChangesTable>
     </NodePanelBody>
   )

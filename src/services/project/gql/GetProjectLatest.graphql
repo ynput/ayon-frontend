@@ -1,0 +1,5 @@
+query GetProjectLatest($projectName: String!) {
+  project(name: $projectName) {
+    name
+  }
+}

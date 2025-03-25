@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import * as Styled from '../util/OnBoardingStep.styled'
-import AddonCardProgress from '/src/components/AddonCard/AddonCardProgress'
+import AddonCardProgress from '@components/AddonCard/AddonCardProgress'
 
 const findLastEvent = (events = []) => {
   // sort by status, null, pending, in_progress, finished, failed
@@ -33,6 +33,7 @@ export const ProgressInstall = ({
   release = {},
   idsInstalling = [],
   selectedAddons = [],
+  selectedPlatforms = [],
   Header,
   Footer,
   onFinish,
@@ -61,6 +62,8 @@ export const ProgressInstall = ({
     const installers = []
     if (release?.installers?.length) {
       for (const installer of release.installers) {
+        // skip if platform is not selected
+        if (!selectedPlatforms.includes(installer.platform)) continue
         const sources = installer?.sources?.filter(({ type, url }) => type === 'http' && !!url)
         installers.push(
           ...sources.map(({ url }) => ({ url, name: installer?.filename, type: 'installer' })),
@@ -71,6 +74,8 @@ export const ProgressInstall = ({
     const depPackages = []
     if (release?.dependencyPackages?.length) {
       for (const depPackage of release.dependencyPackages) {
+        // skip if platform is not selected
+        if (!selectedPlatforms.includes(depPackage.platform)) continue
         const sources = depPackage.sources.filter(({ type, url }) => type === 'http' && !!url)
         depPackages.push(
           ...sources.map(({ url }) => ({ url, name: depPackage?.filename, type: 'package' })),

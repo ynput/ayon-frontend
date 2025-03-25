@@ -1,23 +1,22 @@
-import { FormLayout, FormRow, InputText, SaveButton, Spacer } from '@ynput/ayon-react-components'
+import { FormLayout, FormRow, InputText, SaveButton, Dialog } from '@ynput/ayon-react-components'
 import { useMemo, useState } from 'react'
-import { useCreateAccessGroupMutation } from '/src/services/accessGroups/updateAccessGroups'
+import { useSaveAccessGroupMutation } from '@queries/accessGroups/updateAccessGroups'
 import { toast } from 'react-toastify'
-import { Dialog } from 'primereact/dialog'
 
 const NewAccessGroup = ({ onClose, accessGroupList }) => {
   const [accessGroupName, setAccessGroupName] = useState('')
-  const [createAccessGroup] = useCreateAccessGroupMutation()
+  const [createAccessGroup] = useSaveAccessGroupMutation()
 
   const accessGroupNames = useMemo(
     () => accessGroupList.map((i) => i?.name.toLowerCase()),
     [accessGroupList],
   )
 
-  const onSubmit = async () => {
+  const onSubmit = async (close) => {
     try {
-      await createAccessGroup({ name: accessGroupName }).unwrap()
+      await createAccessGroup({ accessGroupName, projectName: '_', data: {} }).unwrap()
 
-      onClose(accessGroupName)
+      close && onClose(accessGroupName)
     } catch (error) {
       console.error(error)
 
@@ -30,22 +29,25 @@ const NewAccessGroup = ({ onClose, accessGroupList }) => {
     error = 'This access group already exists'
   else if (!accessGroupName.match('^[a-zA-Z_]{2,20}$')) error = 'Invalid access group name'
 
+  const handleKeyDown = (e) => {
+    e?.stopPropagation()
+    const isEnter = e.key === 'Enter'
+    const isEsc = e.key === 'Escape'
+    const isCtrlMeta = e.ctrlKey || e.metaKey
+    const isShift = e.shiftKey
+    if (isCtrlMeta && isEnter && !error) onSubmit(true)
+    if (isShift && isEnter && !error) onSubmit(false)
+    if (isEsc) onClose()
+  }
+
   const footer = useMemo(
     () => (
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'row',
-          justifyContent: 'flex-end',
-          marginLeft: 'auto',
-        }}
-      >
-        <Spacer />
+      <div>
         <SaveButton
           label="Create access group"
           icon="group_add"
           active={!error && accessGroupName}
-          onClick={onSubmit}
+          onClick={() => onSubmit(true)}
         />
       </div>
     ),
@@ -56,9 +58,11 @@ const NewAccessGroup = ({ onClose, accessGroupList }) => {
     <Dialog
       header="New access group"
       footer={footer}
-      onHide={onClose}
-      visible={true}
-      bodyStyle={{ width: 400, overflow: 'hidden' }}
+      onClose={() => onClose()}
+      isOpen
+      onKeyDown={handleKeyDown}
+      size="md"
+      style={{ width: 400 }}
     >
       <FormLayout>
         <FormRow label="Access group name">

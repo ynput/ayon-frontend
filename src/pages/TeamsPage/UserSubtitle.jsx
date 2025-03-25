@@ -5,7 +5,7 @@ import { OverflowField, Button } from '@ynput/ayon-react-components'
 const StyledSubtitle = styled.div`
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--base-gap-small);
   height: 20px;
 `
 

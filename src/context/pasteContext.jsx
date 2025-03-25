@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useCallback } from 'react'
-import { Button, InputTextarea } from '@ynput/ayon-react-components'
-import { Dialog } from 'primereact/dialog'
+import { Button, InputTextarea, Dialog } from '@ynput/ayon-react-components'
+
 
 const PasteContext = createContext()
 
@@ -64,18 +64,42 @@ const PasteModal = () => {
       <Button onClick={() => submit(null)} label="Cancel" />
     </div>
   )
+
+  const header = (
+    <p style={{ display: 'inline' }}>
+      Paste Data
+      <span style={{ display: 'inline-block', margin: '0px 8px' }}> - </span>
+      <span>
+        <a
+          href="https://support.google.com/chrome/answer/114662?hl=en"
+          target="_blank"
+          rel="noreferrer noopener"
+          style={{
+            textDecoration: 'underline',
+            fontSize: '14px',
+            color: 'var(--md-sys-color-outline)',
+          }}
+          data-tooltip="Ensure your browser clipboard permissions are set to 'Allow'."
+        >
+          Why is pasting not working?
+        </a>
+      </span>
+    </p>
+  )
+
   return (
     <Dialog
-      header="Paste Data"
+      header={header}
       footer={footer}
-      visible
-      onHide={() => closeModal(null)}
+      isOpen
+      size="lg"
+      onClose={() => closeModal(null)}
       style={{ width: '600px', height: '600px' }}
     >
       <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
         <InputTextarea
           value={pastedData}
-          placeholder="Clipboard API is not supported by your borwser. Please paste the data here."
+          placeholder="Clipboard API is not supported by your browser. Please paste the data here."
           onChange={(e) => setPastedData(e.target.value)}
           style={{ width: '100%', flexGrow: 1 }}
         />

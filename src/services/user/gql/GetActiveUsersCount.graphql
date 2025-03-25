@@ -1,0 +1,10 @@
+query GetActiveUsersCount {
+  users(last: 2000) {
+    edges {
+      node {
+        active
+        isGuest
+      }
+    }
+  }
+}

@@ -1,6 +1,6 @@
-import { ContextMenu } from 'primereact/contextmenu'
+import { ContextMenu } from 'primereact-context/contextmenu'
 import React from 'react'
-import { useContextMenu } from '../context/contextMenuContext'
+import { useContextMenu } from '@context/contextMenuContext'
 
 export const GlobalContextMenu = () => {
   const { model, ref, setIsContextOpen } = useContextMenu()

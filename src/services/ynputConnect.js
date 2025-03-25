@@ -1,6 +1,6 @@
-import { ayonApi } from './ayon'
+import api from '@api'
 
-const ynputConnect = ayonApi.injectEndpoints({
+const ynputConnect = api.injectEndpoints({
   endpoints: (build) => ({
     getYnputConnections: build.query({
       query: () => ({
@@ -31,6 +31,7 @@ const ynputConnect = ayonApi.injectEndpoints({
       invalidatesTags: ['connections'],
     }),
   }),
+  overrideExisting: true,
 })
 
 export const { useConnectYnputMutation, useDiscountYnputMutation, useGetYnputConnectionsQuery } =

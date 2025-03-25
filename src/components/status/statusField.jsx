@@ -22,7 +22,7 @@ const defaultStyle = css`
 const StatusStyled = styled.div`
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--base-gap-small);
   font-size: var(--base-font-size);
   position: relative;
   cursor: pointer;
@@ -38,7 +38,7 @@ const StatusStyled = styled.div`
   /* STATUS ICON */
   .status-icon {
     font-variation-settings: 'FILL' 1, 'wght' 300, 'GRAD' 300, 'opsz' 20;
-    /* always taks parents color */
+    /* always takes parents color */
     color: inherit;
   }
 
@@ -59,20 +59,20 @@ const StatusStyled = styled.div`
 
   /* Styles for highlighting changed status */
   ${({ $isChanged }) =>
-  $isChanged &&
-  css`
-    background-color: var(--md-sys-color-primary);
+    $isChanged &&
+    css`
+      background-color: var(--md-sys-color-primary);
 
-    &,
-    span,
-    .icon {
-      color: var(--md-sys-color-on-primary);
-    }
+      &,
+      span,
+      .icon {
+        color: var(--md-sys-color-on-primary);
+      }
 
-    :hover {
-      background-color: var(--md-sys-color-primary-hover);
-    }
-  `}
+      &:hover {
+        background-color: var(--md-sys-color-primary-hover);
+      }
+    `}
 
   /* selecting styles */
   ${({ $isSelecting }) =>
@@ -107,7 +107,7 @@ const StatusStyled = styled.div`
 
 
   /* sets for hover and when active whilst open (top one) */
-  :hover {
+  &:hover {
     /* ${hoverStyle} */
     filter: brightness(110%);
   }
@@ -118,27 +118,16 @@ const StatusStyled = styled.div`
     css`
       ${invertHoverStyle}
 
-      :hover {
+      &:hover {
         ${invertHoverStyle}
       }
-      [icon="expand_more"] {
+      [icon='expand_more'] {
         transform: rotate(180deg);
         ${invertHoverStyle}
       }
     `}
 
-  /* ALIGNMENT */
-  ${({ $align }) =>
-    $align === 'right' &&
-    css`
-      justify-content: end;
-
-      span {
-        order: 2;
-      }
-    `}
-
-    /* ICON ONLY STYLES */
+  /* ICON ONLY STYLES */
       ${({ $size }) =>
     $size === 'icon' &&
     css`
@@ -157,14 +146,12 @@ const StatusField = ({
   isChanging,
   isSelecting,
   size = 'full',
-  align = 'left',
   style,
   height,
   placeholder,
   statuses = {},
   invert,
   className,
-  showChevron,
   isChanged,
   ...props
 }) => {
@@ -184,7 +171,6 @@ const StatusField = ({
       $color={color}
       $isActive={isActive}
       $isSelecting={isSelecting}
-      $align={align}
       $isChanging={isChanging}
       $size={size}
       $invert={invert}
@@ -192,11 +178,12 @@ const StatusField = ({
       placeholder={!value && placeholder ? placeholder : ''}
       className={className + ' status-field'}
     >
-      <div className='status-texticon'>
-        {icon && <Icon className='status-icon' icon={icon} />}
-        <span className='status-text'>{size !== 'icon' && (size === 'full' ? shownValue : shortName)}</span>
+      <div className="status-texticon">
+        {icon && <Icon className="status-icon" icon={icon} />}
+        <span className="status-text">
+          {size !== 'icon' && (size === 'full' ? shownValue : shortName)}
+        </span>
       </div>
-      {showChevron && <Icon icon="expand_more" />}
     </StatusStyled>
   )
 }
@@ -207,7 +194,6 @@ StatusField.propTypes = {
   isChanging: PropTypes.bool,
   isSelecting: PropTypes.bool,
   size: PropTypes.oneOf(['full', 'short', 'icon']),
-  align: PropTypes.oneOf(['left', 'right']),
   onClick: PropTypes.func,
   style: PropTypes.object,
   anatomy: PropTypes.object,

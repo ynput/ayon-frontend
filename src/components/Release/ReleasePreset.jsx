@@ -2,11 +2,12 @@ import React from 'react'
 import * as Styled from './ReleasePreset.styled'
 import { Icon } from '@ynput/ayon-react-components'
 import { format, formatDistanceToNow } from 'date-fns'
-import Type from '/src/theme/typography.module.css'
+import Type from '@/theme/typography.module.css'
+import clsx from 'clsx'
 
 const ReleasePreset = ({
   label,
-  bio,
+  description,
   icon,
   name,
   createdAt,
@@ -44,8 +45,7 @@ const ReleasePreset = ({
 
   return (
     <Styled.Preset
-      $selected={isSelected}
-      $loading={isLoading}
+      className={clsx({ loading: isLoading, selected: isSelected })}
       onClick={onClick}
       {...props}
       tabIndex={0}
@@ -55,7 +55,7 @@ const ReleasePreset = ({
         <Icon icon={icon} />
         <div>
           <h3 className={Type.titleLarge}>{label || name}</h3>
-          <span className="bio">{bio}</span>
+          <span className="description">{description}</span>
         </div>
       </Styled.Header>
       {isSelected && (

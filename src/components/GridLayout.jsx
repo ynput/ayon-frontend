@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types'
 import styled from 'styled-components'
 import React from 'react'
+import clsx from 'clsx'
 
 const StyledGridLayout = styled.div`
   width: 100%;
@@ -24,6 +25,7 @@ const GridLayout = React.forwardRef(
               aspectRatio: `${ratio} / 1`,
             }}
             key={index}
+            className={clsx('grid-item', child.props.className)}
           >
             {child}
           </div>

@@ -1,49 +1,58 @@
 import * as Styled from './KanBanColumn.styled'
 import React, { Fragment, forwardRef, useEffect, useMemo, useRef, useState } from 'react'
-import { getFakeTasks, getGroupedTasks, usePrefetchTask, useTaskClick } from '../../util'
+import { getFakeTasks, getGroupedTasks } from '../../util'
+import { useGetTaskContextMenu, useTaskClick, usePrefetchEntity } from '../../hooks'
 import { useDispatch, useSelector } from 'react-redux'
 import KanBanCardDraggable from '../KanBanCard/KanBanCardDraggable'
 import KanBanCard from '../KanBanCard/KanBanCard'
 import { Button, Toolbar } from '@ynput/ayon-react-components'
 import { InView, useInView } from 'react-intersection-observer'
-import { useGetTaskContextMenu } from '../../util'
 import 'react-perfect-scrollbar/dist/css/styles.css'
 import KanBanColumnDropzone from './KanBanColumnDropzone'
+import clsx from 'clsx'
+import { toggleDetailsPanel } from '@state/details'
+import { useURIContext } from '@context/uriContext'
+import { getTaskRoute } from '@helpers/routes'
 
 const KanBanColumn = forwardRef(
   (
     {
+      allTasks = [],
       tasks = [],
       id,
       groupByValue = {},
       groupItems = [],
       column = {},
       isLoading,
-      allUsers = [],
+      projectUsers = [],
       disabledStatuses,
       sectionRect,
       sectionRef,
       onToggleCollapse,
       active,
       activeColumn,
+      projectsInfo,
+      priorities,
     },
     ref,
   ) => {
-    const assigneesIsMe = useSelector((state) => state.dashboard.tasks.assigneesIsMe)
     const dispatch = useDispatch()
 
     const tasksCount = tasks.length
 
     // create groupBy labels for assignees
-    const groupByLabels = useMemo(() => {
-      const assigneesLabels = allUsers.map(({ name }) => ({
+    const groupByAnatomy = useMemo(() => {
+      const assignees = projectUsers.map(({ name, attrib }) => ({
         img: name && `/api/users/${name}/avatar`,
+        value: name,
+        label: attrib?.fullName || name,
       }))
 
       return {
-        assignees: assigneesLabels,
+        assignees: assignees,
+        priority: priorities,
       }
-    }, [allUsers])
+    }, [projectUsers, priorities])
 
     // SELECTED TASKS
     const selectedTasks = useSelector((state) => state.dashboard.tasks.selected)
@@ -69,20 +78,39 @@ const KanBanColumn = forwardRef(
 
     // PREFETCH TASK WHEN HOVERING
     // we keep track of the ids that have been pre-fetched to avoid fetching them again
-    const handlePrefetch = usePrefetchTask(dispatch)
+    const handlePrefetch = usePrefetchEntity(dispatch, projectsInfo, 500, 'dashboard')
+
+    const { navigate: navigateToUri } = useURIContext()
+    const openInBrowser = (task) => navigateToUri(getTaskRoute(task))
 
     // CONTEXT MENU
-    const { handleContextMenu, closeContext } = useGetTaskContextMenu(tasks, dispatch)
+    const { handleContextMenu, closeContext } = useGetTaskContextMenu(tasks, dispatch, {
+      onOpenInBrowser: openInBrowser,
+    })
 
     // HANDLE TASK CLICK
-    const handleTaskClick = useTaskClick(dispatch)
+    const handleTaskClick = useTaskClick(dispatch, allTasks, closeContext)
+
+    const handleDoubleClick = (e, task) => {
+      if (e.metaKey || e.ctrlKey) {
+        // get the task
+        openInBrowser(task)
+      } else {
+        onTogglePanel(true)
+      }
+    }
+
+    // OPEN DETAILS PANEL
+    const onTogglePanel = (open) => {
+      dispatch(toggleDetailsPanel(open))
+    }
 
     // return 5 fake loading events if loading
     const loadingTasks = useMemo(() => getFakeTasks(), [])
 
     const groupedTasks = useMemo(
-      () => getGroupedTasks(tasks, groupByValue[0], groupByLabels),
-      [tasks, groupByValue, groupByLabels],
+      () => getGroupedTasks(tasks, groupByValue[0], groupByAnatomy),
+      [tasks, groupByValue, groupByAnatomy],
     )
 
     let [taskLimit, setTaskLimit] = useState(10)
@@ -100,7 +128,7 @@ const KanBanColumn = forwardRef(
             []
           ) : (
             <Fragment key={group.label}>
-              <span>{group.label}</span>
+              {group.label && <Styled.GroupHeader>{group.label}</Styled.GroupHeader>}
               {group.tasks.flatMap((task, i) => {
                 if (tasksAdded >= taskLimit) return []
                 tasksAdded++
@@ -111,14 +139,16 @@ const KanBanColumn = forwardRef(
                         <KanBanCardDraggable
                           task={task}
                           onClick={(e) => {
-                            closeContext()
-                            handleTaskClick(e, task.id)
+                            if (e.detail === 1) {
+                              handleTaskClick(e, task.id)
+                            } else handleDoubleClick(e, task)
                           }}
+                          onTitleClick={(e) => handleTaskClick(e, task.id, undefined, true)}
+                          onKeyDown={(e) => e.key === 'Escape' && onTogglePanel(true)}
                           onMouseOver={() => handlePrefetch(task)}
                           isActive={selectedTasks.includes(task.id)}
                           isDraggingActive={active}
                           className="card"
-                          assigneesIsMe={assigneesIsMe}
                           onContextMenu={handleContextMenu}
                           inView={inView || i <= numberCardsFit}
                         />
@@ -130,15 +160,7 @@ const KanBanColumn = forwardRef(
             </Fragment>
           ),
         ),
-      [
-        groupedTasks,
-        handleTaskClick,
-        handlePrefetch,
-        selectedTasks,
-        active,
-        assigneesIsMe,
-        handleContextMenu,
-      ],
+      [groupedTasks, handleTaskClick, handlePrefetch, selectedTasks, active, handleContextMenu],
     )
 
     // used to load more tasks when scrolling
@@ -154,12 +176,10 @@ const KanBanColumn = forwardRef(
     return (
       <Styled.Column ref={ref} id={id}>
         <Styled.DropColumnWrapper
-          className="dropzone"
+          className={clsx('dropzone', { 'drop-active': active })}
           style={{
             height: `calc(100vh - 32px - ${sectionRect?.top}px)`,
-            // display: 'none',
           }}
-          $active={!!active}
         >
           {active &&
             groupItems.map((item) => (
@@ -171,7 +191,7 @@ const KanBanColumn = forwardRef(
               />
             ))}
         </Styled.DropColumnWrapper>
-        <Styled.Header $color={column?.color}>
+        <Styled.Header $color={column?.color} className={clsx({ dragging: !!active })}>
           <h2
             style={{
               opacity: active ? 0 : 1,
@@ -191,10 +211,9 @@ const KanBanColumn = forwardRef(
         </Styled.Header>
 
         <Styled.Items
-          className="items"
+          className={clsx('items', { dragging: !!active })}
           ref={itemsRef}
           style={{ overflow: active && !isColumnActive && !isScrolling && 'hidden' }}
-          $active={!!active}
         >
           {allGroupedTasks}
           {!isLoading && tasksCount !== tasksAdded && !active && (
@@ -209,7 +228,7 @@ const KanBanColumn = forwardRef(
             <span>{tasksCount - tasksAdded > 0 ? `+ ${tasksCount - tasksAdded} more` : ''}</span>
           )}
           {isLoading &&
-            loadingTasks.map((task) => <KanBanCard task={task} key={task.id} isLoading={true} />)}
+            loadingTasks.map((task) => <KanBanCard task={task} key={task.id} isLoading />)}
         </Styled.Items>
       </Styled.Column>
     )

@@ -1,4 +1,4 @@
-import { ayonApi } from '../ayon'
+import api from '@api'
 
 const parseProductFps = (product) => {
   const folderFps = product.folder.attrib.fps || ''
@@ -62,8 +62,11 @@ const parseProductData = (data) => {
       versionStatus: vers.status || null,
       versionUpdatedAt: vers.updatedAt || null,
       versionAuthor: vers ? vers.author : null,
+      versionThumbnailId: vers ? vers.thumbnailId : null,
+      hasReviewables: vers ? vers.hasReviewables : false,
       taskId: vers && vers.taskId ? vers.taskId : null,
       taskName: vers && vers.task ? vers.task.name : null,
+      taskType: vers && vers.task ? vers.task.taskType : null,
       frames: parseProductFrames(product),
       createdAt: vers ? vers.createdAt : product.createdAt,
     }
@@ -87,17 +90,9 @@ const parseVersionsData = (data) =>
       versionUpdatedAt: node.updatedAt,
       versionAuthor: node.author,
       productId: node.productId,
+      hasReviewables: node.hasReviewables,
     }
   })
-
-const getProductVersionTags = (result) =>
-  result
-    ? [
-        ...result.map(({ versionId }) => ({ type: 'version', id: versionId })), // all version tags with id
-        ...result.map(({ productId }) => ({ type: 'product', id: productId })), // all product tags with id
-        { type: 'productsVersion' },
-      ]
-    : ['version', 'product', 'productsVersion']
 
 const PRODUCT_VERSION_FRAGMENT = `
 fragment ProductVersionFragment on VersionNode {
@@ -108,11 +103,14 @@ fragment ProductVersionFragment on VersionNode {
   author
   createdAt
   updatedAt
+  thumbnailId
   taskId
+  status
+  hasReviewables
   task {
     name
+    taskType
   }
-  status
   attrib {
       fps
       resolutionWidth
@@ -126,7 +124,7 @@ fragment ProductVersionFragment on VersionNode {
 const PRODUCTS_LIST_QUERY = `
 query ProductsList($projectName: String!, $ids: [String!]!) {
     project(name: $projectName){
-        products(folderIds: $ids){
+        products(folderIds: $ids, first: 1000){
             edges {
                 node {
                     id
@@ -178,25 +176,24 @@ query GetProductsVersions($projectName: String!, $ids: [String!]!) {
 ${PRODUCT_VERSION_FRAGMENT}
 `
 
-const getProduct = ayonApi.injectEndpoints({
+const getProduct = api.injectEndpoints({
   endpoints: (build) => ({
     getProductList: build.query({
-      query: ({ projectName, ids }) => ({
+      query: ({ projectName, folderIds }) => ({
         url: '/graphql',
         method: 'POST',
         body: {
           query: PRODUCTS_LIST_QUERY,
-          variables: { projectName, ids },
+          variables: { projectName, ids: folderIds },
         },
+        validateStatus: (response, result) => response.status === 200 && !result?.errors?.length,
       }),
+      transformErrorResponse: (error) => error?.data?.errors?.[0]?.message,
       transformResponse: (response) => parseProductData(response.data),
       providesTags: (result) =>
         result
-          ? [
-              ...result.map(({ id }) => ({ type: 'product', id })),
-              ...result.map(({ versionId }) => ({ type: 'version', id: versionId })),
-            ]
-          : ['product', 'version'],
+          ? [...result.map(({ id }) => ({ type: 'product', id })), { type: 'product', id: 'LIST' }]
+          : [{ type: 'product', id: 'LIST' }],
     }),
     getProductsVersions: build.query({
       query: ({ projectName, ids }) => ({
@@ -208,27 +205,20 @@ const getProduct = ayonApi.injectEndpoints({
         },
       }),
       transformResponse: (response) => parseVersionsData(response.data) || [],
-      providesTags: (result) => getProductVersionTags(result),
-    }),
-    getProductVersionsByFolder: build.query({
-      query: ({ projectName, ids }) => ({
-        url: '/graphql',
-        method: 'POST',
-        body: {
-          query: PRODUCT_VERSIONS_QUERY,
-          variables: { projectName, ids },
-        },
-      }),
-      transformResponse: (response) => parseVersionsData(response.data) || [],
-      providesTags: (result) => getProductVersionTags(result),
-      serializeQueryArgs: (args) => ({ folder: args.folderId, projectName: args.projectName }), // remove ids from query cache key
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.map(({ versionId }) => ({ type: 'version', id: versionId })), // all version tags with id
+              { type: 'version', id: 'LIST' }, // tag for all versions
+            ]
+          : [{ type: 'version', id: 'LIST' }],
     }),
   }),
+  overrideExisting: true,
 })
 
 export const {
   useGetProductListQuery,
   useLazyGetProductsVersionsQuery,
   useGetProductsVersionsQuery,
-  useLazyGetProductVersionsByFolderQuery,
 } = getProduct

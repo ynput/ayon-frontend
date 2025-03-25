@@ -14,7 +14,7 @@ import * as Styled from './Bundles.styled'
 import { upperFirst } from 'lodash'
 import InstallerSelector from './InstallerSelector'
 import { useSelector } from 'react-redux'
-import { useGetUsersQuery } from '/src/services/user/getUsers'
+import { useGetUsersQuery } from '@queries/user/getUsers'
 
 const StyledColumns = styled.div`
   display: flex;
@@ -61,18 +61,22 @@ const BundleForm = ({
   return (
     <Panel style={{ flexGrow: 1, overflow: 'hidden' }}>
       <FormLayout style={{ gap: 8, paddingTop: 1, maxWidth: 900 }}>
-        <FormRow label="Name">
-          {isNew ? (
-            <InputText
-              value={formData?.name || ''}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              style={showNameError ? { outline: '1px solid var(--color-hl-error)' } : {}}
-              disabled={!formData || isDev}
-            />
-          ) : (
-            <h2 style={{ margin: 0 }}>{formData?.name}</h2>
-          )}
-        </FormRow>
+        <Styled.FormRow>
+          <label htmlFor="bundle-name">Bundle name</label>
+          <div className="field">
+            {isNew ? (
+              <InputText
+                value={formData?.name || ''}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                style={showNameError ? { outline: '1px solid var(--color-hl-error)' } : {}}
+                disabled={!formData || isDev}
+                id={'bundle-name'}
+              />
+            ) : (
+              <h2 style={{ margin: 0 }}>{formData?.name}</h2>
+            )}
+          </div>
+        </Styled.FormRow>
         <FormRow label="Launcher version">
           {isNew ? (
             <InstallerSelector
@@ -86,8 +90,8 @@ const BundleForm = ({
               <h2 style={{ margin: 0, marginRight: 32 }}>{formData?.installerVersion || 'NONE'}</h2>
               <>
                 {!!installerPlatforms?.length &&
-                  installerPlatforms.map((platform) => (
-                    <Styled.PlatformTag key={platform} $platform={platform}>
+                  installerPlatforms.map((platform, i) => (
+                    <Styled.PlatformTag key={platform + '-' + i} $platform={platform}>
                       {upperFirst(platform === 'darwin' ? 'macOS' : platform)}
                     </Styled.PlatformTag>
                   ))}
@@ -154,7 +158,16 @@ const BundleForm = ({
             />
           </section>
         </section>
-        <Section style={{ overflow: 'hidden', alignItems: 'flex-start', flex: 'none' }}>
+        <Section
+          style={{
+            overflow: 'hidden',
+            alignItems: 'flex-start',
+            minWidth: 'clamp(300px, 25vw, 400px)',
+            maxWidth: 'clamp(300px, 25vw, 400px)',
+            height: '100%',
+            flexGrow: 'unset',
+          }}
+        >
           {children}
         </Section>
       </StyledColumns>

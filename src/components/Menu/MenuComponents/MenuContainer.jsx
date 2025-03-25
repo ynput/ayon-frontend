@@ -1,11 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { setMenuOpen } from '/src/features/context'
+import { setMenuOpen } from '@state/context'
 import * as Styled from './Menu.styled'
 import { useNavigate } from 'react-router'
 import { createPortal } from 'react-dom'
 
-const MenuContainer = ({ id, target, targetId, children, ...props }) => {
+const MenuContainer = ({ id, target, targetId = '', children, ...props }) => {
   const dispatch = useDispatch()
   const navigate = useNavigate()
   const isOpen = useSelector((state) => state.context.menuOpen) === id
@@ -68,6 +68,8 @@ const MenuInner = ({ handleClose, handleNavigate, target, targetId, children, ..
       if (targetElement) {
         setPos(calculatePos(targetElement))
       }
+    } else {
+      console.log('no target or targetId')
     }
   }, [target, targetId])
 
@@ -85,7 +87,7 @@ const MenuInner = ({ handleClose, handleNavigate, target, targetId, children, ..
     if (e.target.id === 'dialog') handleClose()
   }
 
-  if (!pos) return null
+  if (!pos) return
 
   return createPortal(
     <Styled.Dialog

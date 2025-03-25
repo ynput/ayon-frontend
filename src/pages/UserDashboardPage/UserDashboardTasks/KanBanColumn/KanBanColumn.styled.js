@@ -1,4 +1,4 @@
-import styled, { css, keyframes } from 'styled-components'
+import styled, { keyframes } from 'styled-components'
 import PerfectScrollbar from 'react-perfect-scrollbar'
 import { Button } from '@ynput/ayon-react-components'
 
@@ -11,11 +11,9 @@ export const DropColumnWrapper = styled.div`
   flex-direction: column;
   overflow: hidden;
 
-  ${({ $active }) =>
-    $active &&
-    css`
-      z-index: 100;
-    `}
+  &.drop-active {
+    z-index: 100;
+  }
 `
 
 const FadeInAnimation = keyframes`
@@ -61,8 +59,22 @@ export const DropColumn = styled.div`
     position: absolute;
     inset: 0;
     background-color: ${({ $color }) => $color};
-    opacity: ${({ $active }) => ($active ? 0.5 : 0.08)};
+    opacity: 0.08;
     transition: opacity 0.2s ease;
+  }
+
+  &.source {
+    &:before {
+      opacity: 1;
+    }
+
+    opacity: 0.4;
+  }
+
+  &.drop-active {
+    &::before {
+      opacity: 0.5;
+    }
   }
 `
 
@@ -116,13 +128,17 @@ export const Header = styled.header`
   border-color: ${({ $color }) => $color};
   margin-bottom: 8px;
 
+  &.dragging {
+    border: none;
+  }
+
   /* toolbar */
   nav {
     position: absolute;
     inset: 0;
     justify-content: flex-end;
     padding: 0 6px;
-    gap: 4px;
+    gap: var(--base-gap-small);
 
     button {
       /* toolbar is only revealed on hover */
@@ -154,6 +170,13 @@ export const Header = styled.header`
   }
 `
 
+export const GroupHeader = styled.span`
+  overflow: hidden;
+  word-break: break-all;
+  padding: 0 4px;
+  min-height: 20px;
+`
+
 export const MenuButton = styled(Button)`
   padding: 4px;
   border-radius: var(--border-radius-xl);
@@ -170,18 +193,16 @@ export const Items = styled(PerfectScrollbar)`
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: var(--base-gap-large);
   width: 100%;
 
   padding-bottom: ${({ $isScrolling }) => ($isScrolling ? '30px' : '16px')};
 
-  ${({ $active }) =>
-    $active &&
-    css`
-      .ps__rail-y {
-        visibility: hidden;
-      }
-    `}
+  &.dragging {
+    .ps__rail-y {
+      visibility: hidden;
+    }
+  }
 
   .ps__rail-y {
     z-index: 1000;
@@ -224,7 +245,7 @@ export const Collapsed = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--base-gap-medium);
+  gap: var(--base-gap-large);
   position: relative;
 
   border-top: solid 1px ${({ $color }) => $color};

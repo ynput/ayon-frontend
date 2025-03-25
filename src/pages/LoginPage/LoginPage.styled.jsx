@@ -1,23 +1,28 @@
+import Markdown from 'react-markdown'
 import styled from 'styled-components'
+import { markdownStyle } from './markdown'
 
 export const LoginForm = styled.div`
   display: flex;
   flex-direction: row;
   justify-content: center;
-  align-items: flex-start;
-  gap: 64px;
+  align-items: center;
+  gap: 32px;
   position: relative;
-  background-color: var(--panel-background);
-  padding: 64px;
-  border-radius: 6px;
+  background-color: rgba(28, 32, 38, 0.95);
+  padding: 32px;
+  border-radius: var(--border-radius-xxl);
   box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.25);
+  max-height: min(70vh, 800px);
 
   /* panel */
   & > div {
+    background-color: unset;
     align-items: center;
     padding: 32px;
-    gap: 32px;
     width: 350px;
+    overflow: hidden;
+    max-height: 100%;
 
     p {
       margin: 0;
@@ -50,7 +55,7 @@ export const LoginForm = styled.div`
       width: 24px;
     }
 
-    span {
+    .icon {
       font-size: 24px !important;
     }
   }
@@ -61,7 +66,7 @@ export const LoginForm = styled.div`
     flex-direction: column;
     align-items: center;
     width: 100%;
-    gap: 8px;
+    gap: var(--base-gap-large);
 
     & > * {
       width: 100%;
@@ -72,6 +77,7 @@ export const LoginForm = styled.div`
 export const Methods = styled.div`
   display: flex;
   flex-direction: column;
+  overflow: auto;
   align-items: center;
   padding: 0px;
   gap: 16px;
@@ -88,7 +94,10 @@ export const Ayon = styled.img`
   height: 60px;
 `
 export const Logo = styled.img`
-  height: 60px;
+  max-height: 100%;
+  width: 100%;
+  object-fit: contain;
+  overflow: hidden;
 `
 
 export const BG = styled.img`
@@ -97,4 +106,12 @@ export const BG = styled.img`
   object-fit: cover;
   width: 100vw;
   height: 100vh;
+`
+
+export const MessageMarkdown = styled(Markdown)`
+  max-width: 100%;
+  height: 100%;
+  overflow: auto;
+
+  ${markdownStyle}
 `

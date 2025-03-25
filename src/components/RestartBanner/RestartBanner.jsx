@@ -1,7 +1,7 @@
 import React from 'react'
 import * as Styled from './RestartBanner.styled'
 import { Button } from '@ynput/ayon-react-components'
-import Type from '/src/theme/typography.module.css'
+import Type from '@/theme/typography.module.css'
 
 const RestartBanner = ({ message = 'Restart server to apply changes.', onRestart, onSnooze }) => {
   return (

@@ -1,24 +1,5 @@
-import styled, { css } from 'styled-components'
-import getShimmerStyles from '/src/styles/getShimmerStyles'
+import styled from 'styled-components'
 import { Toolbar } from '@ynput/ayon-react-components'
-
-export const Thumbnail = styled.div`
-  width: 100%;
-  height: auto;
-  position: relative;
-  aspect-ratio: 16 / 9;
-  min-height: auto;
-  & > div {
-    width: 100%;
-    height: 100%;
-    max-width: unset;
-    aspect-ratio: 16 / 9;
-
-    img {
-      object-fit: cover;
-    }
-  }
-`
 
 export const Code = styled.span`
   background-color: var(--md-sys-color-surface-container-lowest);
@@ -34,22 +15,10 @@ export const Active = styled.span`
   display: flex;
   align-items: center;
 
-  ${({ $isActive }) =>
-    $isActive &&
-    css`
-      background-color: var(--md-sys-color-tertiary);
-      color: var(--md-sys-color-on-tertiary);
-    `}
-
-  ${({ $isLoading }) =>
-    $isLoading &&
-    css`
-      color: transparent;
-      background-color: unset;
-      width: 100%;
-
-      ${getShimmerStyles()}
-    `}
+  &.active {
+    background-color: var(--md-sys-color-tertiary);
+    color: var(--md-sys-color-on-tertiary);
+  }
 `
 
 export const Header = styled(Toolbar)`

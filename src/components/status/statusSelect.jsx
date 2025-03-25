@@ -29,7 +29,6 @@ const StatusSelect = ({
   options,
   invert = false,
   isChanged,
-  isChevron = false,
   ...props
 }) => {
   const statusesObject = options
@@ -65,17 +64,11 @@ const StatusSelect = ({
   const dropdownValue = Array.isArray(value) ? uniq(value) : [value]
   const isMixed = dropdownValue.length > 1
 
-  // Hide chevron for mixed values and if isChevron is false
-  const resolveChevronVisibility = (isChevron, isActive) => {
-    if (!isChevron) return false
-    if (isChevron && isMixed) return false
-    return isActive
-  }
-
   return (
     <StyledDropdown
       {...props}
       message={!disableMessage && multipleSelected > 1 && `${multipleSelected} Selected`}
+      messageOverButton
       widthExpand={widthExpand}
       onOpen={onOpen}
       align={align}
@@ -86,7 +79,6 @@ const StatusSelect = ({
       valueTemplate={() => (
         <StatusField
           value={isMixed ? `Mixed Statuses` : dropdownValue[0]}
-          align={align}
           size={size}
           style={{ maxWidth, ...style }}
           height={height}
@@ -94,7 +86,6 @@ const StatusSelect = ({
           statuses={statusesObject}
           invert={invert}
           className={'value'}
-          showChevron={isChevron}
           isChanged={isChanged}
         />
       )}
@@ -106,10 +97,8 @@ const StatusSelect = ({
             value={status.name}
             isSelecting
             isActive={isActive}
-            align={align}
             height={height}
             statuses={statusesObject}
-            showChevron={resolveChevronVisibility(isChevron,isActive)}
           />
         )
       }

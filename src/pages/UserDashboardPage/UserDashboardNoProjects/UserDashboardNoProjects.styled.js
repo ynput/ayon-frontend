@@ -32,10 +32,13 @@ export const Container = styled.div`
   }
 
   button {
-    margin-top: 40px;
-    padding: 16px 16px;
+    position: relative;
+    top: 80px;
     font-size: var(--md-sys-typescale-title-medium-font-size);
     z-index: 20;
     border-radius: var(--border-radius-xxl);
+    &.hasIcon {
+      padding: 16px 24px;
+    }
   }
 `

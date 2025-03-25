@@ -7,7 +7,7 @@ const StyledFormRow = styled(FormRow)`
     flex-direction: row;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--base-gap-large);
 
     & > span {
       flex: 1;

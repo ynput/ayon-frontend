@@ -1,0 +1,13 @@
+query GetAllProjectUsersAsAssignee($projectName: String) {
+  users(last: 2000, projectName: $projectName) {
+    edges {
+      node {
+        name
+        updatedAt
+        attrib {
+          fullName
+        }
+      }
+    }
+  }
+}
