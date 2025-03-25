@@ -15,9 +15,9 @@ export interface ColumnEnums extends BuiltInFieldOptions {
 }
 
 export interface ClipboardContextType {
-  copyToClipboard: (selected?: string[]) => Promise<void>
+  copyToClipboard: (selected?: string[], fullRow?: boolean) => Promise<void>
   pasteFromClipboard: (selected?: string[]) => Promise<void>
-  exportCSV: (selected: string[], projectName: string) => void
+  exportCSV: (selected: string[], projectName: string, fullRow?: boolean) => void
 }
 
 export interface ClipboardProviderProps {

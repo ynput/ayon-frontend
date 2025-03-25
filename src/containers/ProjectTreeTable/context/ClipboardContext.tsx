@@ -33,14 +33,11 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
   const { updateEntities } = useCellEditing()
 
   const getSelectionData = useCallback(
-    async (selected: string[], config?: { headers: boolean }) => {
-      const { headers } = config || {}
+    async (selected: string[], config?: { headers?: boolean; fullRow?: boolean }) => {
+      const { headers, fullRow } = config || {}
       try {
         // First, organize selected cells by row
         const cellsByRow = new Map<string, Set<string>>()
-
-        // Track which rows have row selection cells selected
-        const rowsWithSelectionCell = new Set<string>()
 
         // Parse all selected cells and organize by rowId and colId
         selected.forEach((cellId) => {
@@ -49,22 +46,32 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
 
           const { rowId, colId } = position
 
+          // do not include row selection column
+          if (colId === ROW_SELECTION_COLUMN_ID) return
+
           if (!cellsByRow.has(rowId)) {
             cellsByRow.set(rowId, new Set())
-          }
-
-          // Check if this is a row selection cell
-          if (colId === ROW_SELECTION_COLUMN_ID) {
-            rowsWithSelectionCell.add(rowId)
           }
 
           cellsByRow.get(rowId)?.add(colId)
         })
 
-        if (focusedCellId && parseCellId(focusedCellId)?.colId === ROW_SELECTION_COLUMN_ID) {
+        if (fullRow) {
+          const selectedRows = selected
+            .filter(
+              (cellId) =>
+                parseCellId(cellId)?.rowId &&
+                parseCellId(cellId)?.colId === ROW_SELECTION_COLUMN_ID,
+            )
+            .map((cellId) => parseCellId(cellId)?.rowId) as string[]
+
           // select the whole row
           // For rows with selection cells, add all available columns
-          rowsWithSelectionCell.forEach((rowId) => {
+          selectedRows.forEach((rowId) => {
+            // add the rowId if it doesn't exist
+            if (!cellsByRow.has(rowId)) {
+              cellsByRow.set(rowId, new Set())
+            }
             const allColumns = Array.from(gridMap.colIdToIndex.keys())
             allColumns.forEach((colId) => {
               cellsByRow.get(rowId)?.add(colId)
@@ -160,14 +167,14 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
     [selectedCells, focusedCellId, gridMap, foldersMap, tasksMap],
   )
 
-  const copyToClipboard = useCallback(
-    async (selected?: string[]) => {
+  const copyToClipboard: ClipboardContextType['copyToClipboard'] = useCallback(
+    async (selected, fullRow) => {
       selected = selected || Array.from(selectedCells)
       if (!selected.length) return
 
       try {
         // Get clipboard text
-        const clipboardText = await getSelectionData(selected)
+        const clipboardText = await getSelectionData(selected, { fullRow })
         if (!clipboardText) return
 
         // Write to clipboard using the Clipboard API
@@ -180,14 +187,14 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
     [selectedCells, foldersMap, tasksMap, gridMap],
   )
 
-  const exportCSV = useCallback(
-    async (selected: string[], projectName: string) => {
+  const exportCSV: ClipboardContextType['exportCSV'] = useCallback(
+    async (selected, projectName, fullRow) => {
       selected = selected || Array.from(selectedCells)
       if (!selected.length) return
 
       try {
         // Get clipboard text with headers included for CSV export
-        const clipboardText = await getSelectionData(selected, { headers: true })
+        const clipboardText = await getSelectionData(selected, { headers: true, fullRow })
         if (!clipboardText) return
 
         // create a csv file and download it
@@ -208,8 +215,8 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
     [selectedCells, foldersMap, tasksMap, gridMap, getSelectionData],
   )
 
-  const pasteFromClipboard = useCallback(
-    async (selected?: string[]) => {
+  const pasteFromClipboard: ClipboardContextType['pasteFromClipboard'] = useCallback(
+    async (selected) => {
       selected = selected || Array.from(selectedCells)
       if (!selected.length) return
 

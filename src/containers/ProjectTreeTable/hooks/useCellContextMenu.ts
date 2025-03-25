@@ -59,9 +59,15 @@ const useCellContextMenu = ({ attribs }: CellContextMenuProps) => {
     const isNameColumn = colId === 'name'
     const isSingleSelection = selected.length === 1
     const entitiesToInherit = getEntitiesToInherit(selected)
-    const selectedRows = selected
-      .map((cellId) => parseCellId(cellId)?.rowId)
-      .filter(Boolean) as string[]
+
+    // from the selected cells, get the rows they are selected in
+    const selectedCellRows = Array.from(
+      new Set(selected.map((cellId) => parseCellId(cellId)?.rowId).filter(Boolean) as string[]),
+    )
+    // get selected rows ids
+    const selectedRowCells = Array.from(selectedCells).filter(
+      (cellId) => parseCellId(cellId)?.colId === ROW_SELECTION_COLUMN_ID,
+    )
     const canInheritFromParent = entitiesToInherit.length > 0 && showHierarchy
 
     // Define all possible menu items with their conditions
@@ -73,6 +79,14 @@ const useCellContextMenu = ({ attribs }: CellContextMenuProps) => {
         shortcut: getPlatformShortcutKey('c', [KeyMode.Ctrl]),
         command: () => copyToClipboard(selected),
         shouldShow: true, // Always shown
+      },
+      {
+        label: `Copy row${selectedRowCells.length > 1 ? 's' : ''}`,
+        icon: 'content_copy',
+        command: () => copyToClipboard(selectedRowCells, true),
+        shouldShow:
+          isNameColumn &&
+          selectedRowCells.some((cellId) => parseCellId(cellId)?.rowId === parseCellId(id)?.rowId),
       },
       {
         label: 'Paste',
@@ -98,14 +112,14 @@ const useCellContextMenu = ({ attribs }: CellContextMenuProps) => {
         label: 'Expand all',
         icon: 'expand_all',
         shortcut: 'Alt + click',
-        command: () => toggleExpandAll(selectedRows, true),
+        command: () => toggleExpandAll(selectedCellRows, true),
         shouldShow: isNameColumn,
       },
       {
         label: 'Collapse all',
         icon: 'collapse_all',
         shortcut: 'Alt + click',
-        command: () => toggleExpandAll(selectedRows, false),
+        command: () => toggleExpandAll(selectedCellRows, false),
         shouldShow: isNameColumn,
       },
 
