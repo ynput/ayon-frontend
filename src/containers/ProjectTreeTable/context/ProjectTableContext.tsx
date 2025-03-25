@@ -75,13 +75,13 @@ interface ProjectTableContextProps {
 
   // Column Pinning
   columnPinning: ColumnPinningState
-  setColumnPinning: (columnPinning: ColumnPinningState) => void
-  updateColumnPinning: OnChangeFn<ColumnPinningState>
+  updateColumnPinning: (columnPinning: ColumnPinningState) => void
+  columnPinningUpdater: OnChangeFn<ColumnPinningState>
 
   // Column Order
   columnOrder: ColumnOrderState
-  setColumnOrder: (columnOrder: ColumnOrderState) => void
-  updateColumnOrder: OnChangeFn<ColumnOrderState>
+  updateColumnOrder: (columnOrder: ColumnOrderState) => void
+  columnOrderUpdater: OnChangeFn<ColumnOrderState>
 
   // Folder Relationships
   getInheritedDependents: (entities: { id: string; attribs: string[] }[]) => InheritedDependent[]
@@ -134,24 +134,64 @@ export const ProjectTableProvider = ({ children }: ProjectTableProviderProps) =>
     setColumnVisibility(functionalUpdate(columnVisibilityUpdater, columnVisibility))
   }
 
-  // COLUMN PINNING
-  const [columnPinning, setColumnPinning] = useLocalStorage<ColumnPinningState>(
-    `column-pinning-${scope}`,
-    { left: ['name'] },
-  )
-
-  const updateColumnPinning: OnChangeFn<ColumnPinningState> = (columnPinningUpdater) => {
-    setColumnPinning(functionalUpdate(columnPinningUpdater, columnPinning))
-  }
-
   // COLUMN ORDER
   const [columnOrder, setColumnOrder] = useLocalStorage<ColumnOrderState>(
     `column-order-${scope}`,
     [],
   )
 
-  const updateColumnOrder: OnChangeFn<ColumnOrderState> = (columnOrderUpdater) => {
+  // COLUMN PINNING
+  const [columnPinning, setColumnPinning] = useLocalStorage<ColumnPinningState>(
+    `column-pinning-${scope}`,
+    { left: ['name'] },
+  )
+
+  const updatePinningOrderOnOrderChange = (columnOrder: ColumnOrderState) => {
+    // ensure that the column pinning is in the order of the column order
+    const newPinning = { ...columnPinning }
+    const pinnedColumns = newPinning.left || []
+    const pinnedColumnsOrder = columnOrder.filter((col) => pinnedColumns.includes(col))
+    setColumnPinning({
+      ...newPinning,
+      left: pinnedColumnsOrder,
+    })
+  }
+
+  const columnOrderUpdater: OnChangeFn<ColumnOrderState> = (columnOrderUpdater) => {
     setColumnOrder(functionalUpdate(columnOrderUpdater, columnOrder))
+    // now update the column pinning
+    updatePinningOrderOnOrderChange(columnOrder)
+  }
+
+  const updateColumnOrder = (columnOrder: ColumnOrderState) => {
+    setColumnOrder(columnOrder)
+    // now update the column pinning
+    updatePinningOrderOnOrderChange(columnOrder)
+  }
+
+  // COLUMN PINNING
+  const updateOrderOnPinningChange = (columnPinning: ColumnPinningState) => {
+    // we resort the column order based on the pinning
+    const newOrder = [...columnOrder].sort((a, b) => {
+      const aPinned = columnPinning.left?.includes(a) ? 1 : 0
+      const bPinned = columnPinning.left?.includes(b) ? 1 : 0
+
+      return bPinned - aPinned
+    })
+    setColumnOrder(newOrder)
+  }
+
+  const updateColumnPinning = (columnPinning: ColumnPinningState) => {
+    setColumnPinning(columnPinning)
+    // now update the column order
+    updateOrderOnPinningChange(columnPinning)
+  }
+
+  const columnPinningUpdater: OnChangeFn<ColumnPinningState> = (columnPinningUpdater) => {
+    const newPinning = functionalUpdate(columnPinningUpdater, columnPinning)
+    setColumnPinning(newPinning)
+    // now update the column order
+    updateOrderOnPinningChange(newPinning)
   }
 
   const { rowSelection, sliceType, persistentRowSelectionData } = useSlicerContext()
@@ -259,12 +299,12 @@ export const ProjectTableProvider = ({ children }: ProjectTableProviderProps) =>
         updateColumnVisibility,
         // column pinning
         columnPinning,
-        setColumnPinning,
         updateColumnPinning,
+        columnPinningUpdater,
         // column order
         columnOrder,
-        setColumnOrder,
         updateColumnOrder,
+        columnOrderUpdater,
         getEntityById,
         getInheritedDependents,
       }}

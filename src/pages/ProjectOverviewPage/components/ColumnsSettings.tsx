@@ -28,9 +28,9 @@ const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns }) => {
     columnVisibility,
     setColumnVisibility,
     columnPinning,
-    setColumnPinning,
+    updateColumnPinning,
     columnOrder,
-    setColumnOrder,
+    updateColumnOrder,
   } = useProjectTableContext()
 
   // State for the currently dragged column
@@ -110,7 +110,7 @@ const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns }) => {
       // If column is currently unpinned, pin it
       newState.left = [...(newState.left || []), columnId]
     }
-    setColumnPinning(newState)
+    updateColumnPinning(newState)
   }
 
   // When drag starts
@@ -161,7 +161,7 @@ const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns }) => {
             return
           }
 
-          setColumnOrder(arrayMove(currentOrder, oldIndex, newIndex))
+          updateColumnOrder(arrayMove(currentOrder, oldIndex, newIndex))
         }
 
         // If we're dragging from hidden to visible
@@ -183,7 +183,7 @@ const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns }) => {
             currentOrder.splice(overIndex, 0, active.id as string)
           }
 
-          setColumnOrder(currentOrder)
+          updateColumnOrder(currentOrder)
         }
       }
     }
