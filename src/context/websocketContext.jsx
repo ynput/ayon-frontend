@@ -7,7 +7,7 @@ import useWebSocket, { ReadyState } from 'react-use-websocket'
 import { debounce } from 'lodash'
 import api from '@api'
 import RefreshToast from '@components/RefreshToast'
-import { useLogOutMutation } from '@queries/auth/getAuth'
+import { useLazyGetInfoQuery, useLogOutMutation } from '@queries/auth/getAuth'
 
 export const SocketContext = createContext()
 
@@ -21,6 +21,7 @@ export const SocketProvider = (props) => {
   const [serverRestartingVisible, setServerRestartingVisible] = useState(false)
   const [topics, setTopics] = useState([])
   const [logout] = useLogOutMutation()
+  const [getInfo] = useLazyGetInfoQuery()
 
   const wsOpts = {
     shouldReconnect: () => {
@@ -33,6 +34,10 @@ export const SocketProvider = (props) => {
         } catch (error) {
           console.error('Logout error', error)
         }
+      } else {
+        // test if the token is valid
+        // if it's not then this will automatically log out the user
+        getInfo()
       }
       return true
     },
