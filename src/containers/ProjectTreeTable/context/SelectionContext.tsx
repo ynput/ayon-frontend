@@ -1,4 +1,12 @@
-import React, { createContext, useContext, useState, useCallback, useMemo, ReactNode } from 'react'
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useMemo,
+  ReactNode,
+  useRef,
+} from 'react'
 import {
   CellId,
   RowId,
@@ -40,7 +48,7 @@ interface SelectionContextType {
   registerGrid: (rows: RowId[], columns: ColId[]) => void
   selectCell: (cellId: CellId, additive: boolean, range: boolean) => void
   startSelection: (cellId: CellId, additive: boolean) => void
-  extendSelection: (cellId: CellId) => void
+  extendSelection: (cellId: CellId, isRowSelectionColumn?: boolean) => void
   endSelection: (cellId: CellId) => void
   focusCell: (cellId: CellId | null) => void
   clearSelection: () => void
@@ -66,6 +74,8 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({ children 
     indexToRowId: new Map(),
     indexToColId: new Map(),
   })
+  // Track whether we're selecting or unselecting during drag
+  const initialCellSelected = useRef<boolean>(false)
 
   const selectedRows = useMemo(
     () =>
@@ -158,6 +168,8 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({ children 
       if (!position) return
 
       setSelectionInProgress(true)
+      // Store whether the initial cell was selected to determine drag behavior
+      initialCellSelected.current = selectedCells.has(cellId)
 
       if (additive) {
         // Toggle this cell in multi-select mode
@@ -176,6 +188,7 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({ children 
           } else {
             newSelection.add(cellId)
             setFocusedCellId(cellId)
+            setAnchorCell(position)
           }
           return newSelection
         })
@@ -203,14 +216,36 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({ children 
 
   // Extend the current selection during drag
   const extendSelection = useCallback(
-    (cellId: CellId) => {
+    (cellId: CellId, isRowSelectionColumn?: boolean) => {
       if (!selectionInProgress || !anchorCell) return
 
       const currentPosition = parseCellId(cellId)
       if (!currentPosition) return
 
-      const newSelection = selectCellRange(anchorCell, currentPosition, false)
-      updateSelection(newSelection, currentPosition)
+      if (isRowSelectionColumn) {
+        // Handle row selection column differently during drag
+        setSelectedCells((prev) => {
+          const newSelection = new Set(prev)
+          const position = parseCellId(cellId)
+
+          if (!position) return newSelection
+
+          // We're either selecting or unselecting based on the initial cell's state
+          if (initialCellSelected.current) {
+            // If we started on a selected cell, we're removing cells during drag
+            newSelection.delete(cellId)
+          } else {
+            // If we started on an unselected cell, we're adding cells during drag
+            newSelection.add(cellId)
+          }
+
+          return newSelection
+        })
+      } else {
+        // For normal cells, use the range selection behavior
+        const newSelection = selectCellRange(anchorCell, currentPosition, false)
+        updateSelection(newSelection, currentPosition)
+      }
     },
     [selectionInProgress, anchorCell, selectCellRange],
   )

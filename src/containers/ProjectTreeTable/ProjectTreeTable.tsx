@@ -125,6 +125,7 @@ const TableCell = ({ cell, cellId, className, ...props }: TableCellProps) => {
 
   const isPinned = cell.column.getIsPinned()
   const isLastLeftPinnedColumn = isPinned === 'left' && cell.column.getIsLastColumn('left')
+  const isRowSelectionColumn = cell.column.id === ROW_SELECTION_COLUMN_ID
 
   return (
     <Styled.TableCell
@@ -155,19 +156,19 @@ const TableCell = ({ cell, cellId, className, ...props }: TableCellProps) => {
 
         // check we are not clicking on folder/task name
         if ((e.target as HTMLElement).closest('.name-content')) return
+        const additive = e.metaKey || e.ctrlKey || isRowSelectionColumn
         if (e.shiftKey) {
           // Shift+click extends selection from anchor cell
-          const additive = e.metaKey || e.ctrlKey
           selectCell(cellId, additive, true) // true for range selection
         } else {
           // Normal click starts a new selection
-          startSelection(cellId, e.metaKey || e.ctrlKey)
+          startSelection(cellId, additive)
         }
       }}
       onMouseOver={(e) => {
         if (e.buttons === 1) {
           // Left button is pressed during mouse move - drag selection
-          extendSelection(cellId)
+          extendSelection(cellId, isRowSelectionColumn)
         }
       }}
       onMouseUp={() => {
