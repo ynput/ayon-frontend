@@ -179,16 +179,21 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
     }, [isEditing, dropdownRef.current, autoOpen])
 
     const isMultiSelect = !!type?.includes('list')
-    if (isEditing) {
-      const handleChange = (value: string[]) => {
-        if (type?.includes('list')) {
-          onChange(value)
-        } else {
-          // take first value as the type is not list]
-          onChange(value[0])
-        }
-      }
 
+    const handleChange = (value: string[]) => {
+      const filteredValue = enableCustomValues
+        ? value
+        : value.filter((v) => options.find((o) => o.value === v))
+
+      if (type?.includes('list')) {
+        onChange(filteredValue)
+      } else {
+        // take first value as the type is not list]
+        onChange(filteredValue[0])
+      }
+    }
+
+    if (isEditing) {
       return (
         <StyledDropdown
           options={options}
