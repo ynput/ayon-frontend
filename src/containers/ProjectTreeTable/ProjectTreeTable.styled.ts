@@ -5,18 +5,17 @@ const topShadow = `inset 0 1px 0 0 var(--md-sys-color-primary)`
 const rightShadow = `inset -1px 0 0 0 var(--md-sys-color-primary)`
 const bottomShadow = `inset 0 -1px 0 0 var(--md-sys-color-primary)`
 const leftShadow = `inset 1px 0 0 0 var(--md-sys-color-primary)`
-const defaultShadow = `inset 1px -1px 0 0 var(--md-sys-color-surface-container)`
+
+const getDefaultShadow = (isLastPinned: boolean) => {
+  const defaultShadow = `inset 1px -1px 0 0 var(--md-sys-color-surface-container)`
+  const defaultShadowLastPinned = `inset -2px -1px 0 0 var(--md-sys-color-surface-container), inset 1px 0 0 0 var(--md-sys-color-surface-container)`
+  return isLastPinned ? defaultShadowLastPinned : defaultShadow
+}
 
 export const TR = styled.tr`
   display: table-row;
   position: absolute;
   width: 100%;
-
-  &.selected {
-    td {
-      background-color: var(--md-sys-color-surface-container-high);
-    }
-  }
 `
 
 const cellMinWidth = 50
@@ -84,6 +83,12 @@ export const HeaderCell = styled.div`
     }
   }
 
+  /* Styling for the last pinned left column */
+  &.last-pinned-left {
+    box-shadow: inset 1px -1px 0 0 var(--md-sys-color-surface-container),
+      inset -2px 0 0 0 var(--md-sys-color-surface-container);
+  }
+
   /* special styles for the left selection column */
   &.__row_selection__ {
     min-width: unset;
@@ -106,11 +111,19 @@ export const HeaderButtons = styled.div`
   transform: translateY(-50%);
 `
 
-export const TableCell = styled.td`
+type TableCellProps = {
+  $isLastPinned?: boolean
+}
+
+export const TableCell = styled.td<TableCellProps>`
   position: relative;
-  box-shadow: ${defaultShadow};
+  box-shadow: ${getDefaultShadow(false)};
   min-width: ${cellMinWidth}px;
   background-color: var(--md-sys-color-surface-container-low);
+
+  &.selected-row {
+    background-color: var(--md-sys-color-surface-container-high);
+  }
 
   &.selected {
     background-color: var(--md-sys-color-secondary-container);
@@ -118,68 +131,86 @@ export const TableCell = styled.td`
     z-index: 1;
   }
 
+  /* Styling for the last pinned left column */
+  /* extra border on the right */
+  &.last-pinned-left {
+    box-shadow: inset 1px -1px 0 0 var(--md-sys-color-surface-container),
+      inset -2px 0 0 0 var(--md-sys-color-surface-container);
+  }
+
   /* Shadow combinations - single side */
   &.shadow-top:not(.shadow-right):not(.shadow-bottom):not(.shadow-left) {
-    box-shadow: ${topShadow}, ${defaultShadow};
+    box-shadow: ${topShadow}, ${({ $isLastPinned }) => getDefaultShadow($isLastPinned || false)};
   }
 
   &.shadow-right:not(.shadow-top):not(.shadow-bottom):not(.shadow-left) {
-    box-shadow: ${rightShadow}, ${defaultShadow};
+    box-shadow: ${rightShadow}, ${({ $isLastPinned }) => getDefaultShadow($isLastPinned || false)};
   }
 
   &.shadow-bottom:not(.shadow-top):not(.shadow-right):not(.shadow-left) {
-    box-shadow: ${bottomShadow}, ${defaultShadow};
+    box-shadow: ${bottomShadow}, ${({ $isLastPinned }) => getDefaultShadow($isLastPinned || false)};
   }
 
   &.shadow-left:not(.shadow-top):not(.shadow-right):not(.shadow-bottom) {
-    box-shadow: ${leftShadow}, ${defaultShadow};
+    box-shadow: ${leftShadow}, ${({ $isLastPinned }) => getDefaultShadow($isLastPinned || false)};
   }
 
   /* Two sides */
   &.shadow-top.shadow-right:not(.shadow-bottom):not(.shadow-left) {
-    box-shadow: ${topShadow}, ${rightShadow}, ${defaultShadow};
+    box-shadow: ${topShadow}, ${rightShadow},
+      ${({ $isLastPinned }) => getDefaultShadow($isLastPinned || false)};
   }
 
   &.shadow-top.shadow-bottom:not(.shadow-right):not(.shadow-left) {
-    box-shadow: ${topShadow}, ${bottomShadow}, ${defaultShadow};
+    box-shadow: ${topShadow}, ${bottomShadow},
+      ${({ $isLastPinned }) => getDefaultShadow($isLastPinned || false)};
   }
 
   &.shadow-top.shadow-left:not(.shadow-right):not(.shadow-bottom) {
-    box-shadow: ${topShadow}, ${leftShadow}, ${defaultShadow};
+    box-shadow: ${topShadow}, ${leftShadow},
+      ${({ $isLastPinned }) => getDefaultShadow($isLastPinned || false)};
   }
 
   &.shadow-right.shadow-bottom:not(.shadow-top):not(.shadow-left) {
-    box-shadow: ${rightShadow}, ${bottomShadow}, ${defaultShadow};
+    box-shadow: ${rightShadow}, ${bottomShadow},
+      ${({ $isLastPinned }) => getDefaultShadow($isLastPinned || false)};
   }
 
   &.shadow-right.shadow-left:not(.shadow-top):not(.shadow-bottom) {
-    box-shadow: ${rightShadow}, ${leftShadow}, ${defaultShadow};
+    box-shadow: ${rightShadow}, ${leftShadow},
+      ${({ $isLastPinned }) => getDefaultShadow($isLastPinned || false)};
   }
 
   &.shadow-bottom.shadow-left:not(.shadow-top):not(.shadow-right) {
-    box-shadow: ${bottomShadow}, ${leftShadow}, ${defaultShadow};
+    box-shadow: ${bottomShadow}, ${leftShadow},
+      ${({ $isLastPinned }) => getDefaultShadow($isLastPinned || false)};
   }
 
   /* Three sides */
   &.shadow-top.shadow-right.shadow-bottom:not(.shadow-left) {
-    box-shadow: ${topShadow}, ${rightShadow}, ${bottomShadow}, ${defaultShadow};
+    box-shadow: ${topShadow}, ${rightShadow}, ${bottomShadow},
+      ${({ $isLastPinned }) => getDefaultShadow($isLastPinned || false)};
   }
 
   &.shadow-top.shadow-right.shadow-left:not(.shadow-bottom) {
-    box-shadow: ${topShadow}, ${rightShadow}, ${leftShadow}, ${defaultShadow};
+    box-shadow: ${topShadow}, ${rightShadow}, ${leftShadow},
+      ${({ $isLastPinned }) => getDefaultShadow($isLastPinned || false)};
   }
 
   &.shadow-top.shadow-bottom.shadow-left:not(.shadow-right) {
-    box-shadow: ${topShadow}, ${bottomShadow}, ${leftShadow}, ${defaultShadow};
+    box-shadow: ${topShadow}, ${bottomShadow}, ${leftShadow},
+      ${({ $isLastPinned }) => getDefaultShadow($isLastPinned || false)};
   }
 
   &.shadow-right.shadow-bottom.shadow-left:not(.shadow-top) {
-    box-shadow: ${rightShadow}, ${bottomShadow}, ${leftShadow}, ${defaultShadow};
+    box-shadow: ${rightShadow}, ${bottomShadow}, ${leftShadow},
+      ${({ $isLastPinned }) => getDefaultShadow($isLastPinned || false)};
   }
 
   /* All four sides */
   &.shadow-top.shadow-right.shadow-bottom.shadow-left {
-    box-shadow: ${topShadow}, ${rightShadow}, ${bottomShadow}, ${leftShadow}, ${defaultShadow};
+    box-shadow: ${topShadow}, ${rightShadow}, ${bottomShadow}, ${leftShadow},
+      ${({ $isLastPinned }) => getDefaultShadow($isLastPinned || false)};
   }
 
   /* Focus styling */

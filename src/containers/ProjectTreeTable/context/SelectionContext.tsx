@@ -294,7 +294,7 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({ children 
   // Get position from cell ID - using shared utility
   const getCellPositionFromId = useCallback((cellId: CellId) => parseCellId(cellId), [])
 
-  // Completely rewritten cell border calculation with improved edge detection
+  //  Get border classes for a cell based on its selection state and neighbors
   const getCellBorderClasses = useCallback(
     (cellId: CellId): string[] => {
       if (!isCellSelected(cellId)) return []

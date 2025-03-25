@@ -50,15 +50,8 @@ import useCellContextMenu from './hooks/useCellContextMenu'
 //View the index.css file for more needed styles such as border-collapse: separate
 const getCommonPinningStyles = (column: Column<TableRow, unknown>): CSSProperties => {
   const isPinned = column.getIsPinned()
-  const isLastLeftPinnedColumn = isPinned === 'left' && column.getIsLastColumn('left')
-  // const isFirstRightPinnedColumn = isPinned === 'right' && column.getIsFirstColumn('right')
-
-  const boxShadow = isLastLeftPinnedColumn
-    ? 'inset 1px -1px 0 0 var(--md-sys-color-surface-container), inset -2px 0 0 0 var(--md-sys-color-surface-container)'
-    : undefined
 
   return {
-    boxShadow: boxShadow,
     left: isPinned === 'left' ? `${column.getStart('left')}px` : undefined,
     right: isPinned === 'right' ? `${column.getAfter('right')}px` : undefined,
     position: isPinned ? 'sticky' : 'relative',
@@ -106,13 +99,14 @@ const FlexTableWithProviders = (props: Props) => {
   )
 }
 
-type TableCellProps = {
+interface TableCellProps {
   cell: Cell<TableRow, unknown>
   cellId: string
   isPinned: boolean | string
+  className?: string
 }
 
-const TableCell = ({ cell, cellId }: TableCellProps) => {
+const TableCell = ({ cell, cellId, className, ...props }: TableCellProps) => {
   const {
     isCellSelected,
     isCellFocused,
@@ -129,10 +123,15 @@ const TableCell = ({ cell, cellId }: TableCellProps) => {
 
   const borderClasses = getCellBorderClasses(cellId)
 
+  const isPinned = cell.column.getIsPinned()
+  const isLastLeftPinnedColumn = isPinned === 'left' && cell.column.getIsLastColumn('left')
+
   return (
     <Styled.TableCell
+      {...props}
       tabIndex={0}
       key={cell.id}
+      $isLastPinned={isLastLeftPinnedColumn} // is this column the last pinned column? Custom styling for borders.
       className={clsx(
         cell.column.id,
         cell.column.id === 'folderType' ? 'large' : '',
@@ -140,7 +139,9 @@ const TableCell = ({ cell, cellId }: TableCellProps) => {
           selected: isCellSelected(cellId),
           focused: isCellFocused(cellId),
           editing: isEditing(cellId),
+          'last-pinned-left': isLastLeftPinnedColumn,
         },
+        className,
         ...borderClasses,
       )}
       style={{
@@ -199,10 +200,11 @@ const TableCellMemo = memo(TableCell)
 
 type TableCellsProps = {
   row: Row<TableRow>
+  isRowSelected: boolean
   columnPinning: ColumnPinningState // purely for memoization
 }
 
-const TableCells = ({ row }: TableCellsProps) => {
+const TableCells = ({ row, isRowSelected }: TableCellsProps) => {
   return row.getVisibleCells().map((cell) => {
     const cellId = getCellId(row.id, cell.column.id)
 
@@ -212,6 +214,7 @@ const TableCells = ({ row }: TableCellsProps) => {
         cellId={cellId}
         key={cell.id}
         isPinned={cell.column.getIsPinned()}
+        className={clsx({ ['selected-row']: isRowSelected })}
       />
     )
   })
@@ -323,8 +326,14 @@ const FlexTable = ({
   useEffect(() => {
     const rowIds = rows.map((row) => row.id)
     const colIds = table.getAllLeafColumns().map((col) => col.id)
-    registerGrid(rowIds, colIds)
-  }, [rows, table.getAllLeafColumns(), registerGrid])
+    const colIdsSortedByPinning = [...colIds].sort((a, b) => {
+      const colA = columnPinning.left?.includes(a) ? 0 : 1
+      const colB = columnPinning.left?.includes(b) ? 0 : 1
+      return colA - colB
+    })
+
+    registerGrid(rowIds, colIdsSortedByPinning)
+  }, [rows, table.getAllLeafColumns(), columnPinning, registerGrid])
 
   const rowVirtualizer = useVirtualizer({
     count: rows.length,
@@ -367,7 +376,11 @@ const FlexTable = ({
 
                     return (
                       <Styled.HeaderCell
-                        className={clsx(header.id, { large: column.id === 'folderType' })}
+                        className={clsx(header.id, {
+                          large: column.id === 'folderType',
+                          'last-pinned-left':
+                            column.getIsPinned() === 'left' && column.getIsLastColumn('left'),
+                        })}
                         key={header.id}
                         style={{
                           ...getCommonPinningStyles(column),
@@ -446,12 +459,15 @@ const FlexTable = ({
                   // @ts-ignore
                   ref={(node) => rowVirtualizer.measureElement(node)} //measure dynamic row height
                   key={row.id}
-                  className={clsx({ selected: isRowSelected(row.id) })}
                   style={{
                     transform: `translateY(${virtualRow.start}px)`, //this should always be a `style` as it changes on scroll
                   }}
                 >
-                  <TableCellsMemo row={row} columnPinning={columnPinning} />
+                  <TableCellsMemo
+                    row={row}
+                    isRowSelected={isRowSelected(row.id)}
+                    columnPinning={columnPinning}
+                  />
                 </Styled.TR>
               )
             })}
