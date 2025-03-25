@@ -44,8 +44,11 @@ const ColumnItem: FC<ColumnItemProps> = ({
         >
           <Icon icon="push_pin" />
         </ActionButton>
-        <ActionButton onClick={() => onToggleVisibility?.(column.value)}>
-          <Icon icon={isHidden ? 'visibility_off' : 'check'} />
+        <ActionButton
+          onClick={() => onToggleVisibility?.(column.value)}
+          className={clsx({ active: !isHidden })}
+        >
+          <Icon icon={isHidden ? 'visibility_off' : 'visibility'} />
         </ActionButton>
       </Actions>
     </Item>
