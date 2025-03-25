@@ -132,7 +132,7 @@ export const ProjectTableProvider = ({ children }: ProjectTableProviderProps) =>
   // COLUMN VISIBILITY
   const [columnVisibility, setColumnVisibility] = useLocalStorage<VisibilityState>(
     `overview-column-visibility-${scope}`,
-    { status: false },
+    {},
   )
 
   // COLUMN ORDER
@@ -301,8 +301,6 @@ export const ProjectTableProvider = ({ children }: ProjectTableProviderProps) =>
 
   const toggleExpandAll: ProjectTableContextProps['toggleExpandAll'] = (rowIds, expandAll) => {
     const expandedState = typeof expanded === 'object' ? expanded : {}
-
-    console.log(rowIds)
 
     const newExpandedState = { ...expandedState }
 
