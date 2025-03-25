@@ -71,7 +71,8 @@ interface ProjectTableContextProps {
   // Column Visibility
   columnVisibility: VisibilityState
   setColumnVisibility: (columnVisibility: VisibilityState) => void
-  updateColumnVisibility: OnChangeFn<VisibilityState>
+  updateColumnVisibility: (columnVisibility: VisibilityState) => void
+  columnVisibilityUpdater: OnChangeFn<VisibilityState>
 
   // Column Pinning
   columnPinning: ColumnPinningState
@@ -132,10 +133,6 @@ export const ProjectTableProvider = ({ children }: ProjectTableProviderProps) =>
     { status: false },
   )
 
-  const updateColumnVisibility: OnChangeFn<VisibilityState> = (columnVisibilityUpdater) => {
-    setColumnVisibility(functionalUpdate(columnVisibilityUpdater, columnVisibility))
-  }
-
   // COLUMN ORDER
   const [columnOrder, setColumnOrder] = useLocalStorage<ColumnOrderState>(
     `column-order-${scope}`,
@@ -147,6 +144,33 @@ export const ProjectTableProvider = ({ children }: ProjectTableProviderProps) =>
     `column-pinning-${scope}`,
     { left: ['name'] },
   )
+
+  const togglePinningOnVisibilityChange = (visibility: VisibilityState) => {
+    // ensure that any columns that are now hidden are removed from the pinning
+    const newPinning = { ...columnPinning }
+    const pinnedColumns = newPinning.left || []
+    const visibleColumns = Object.keys(visibility).filter((col) => visibility[col])
+    const newPinnedColumns = pinnedColumns.filter((col) => visibleColumns.includes(col))
+    const newColumnPinning = {
+      ...newPinning,
+      left: newPinnedColumns,
+    }
+    setColumnPinning(newColumnPinning)
+  }
+
+  // COLUMN VISIBILITY
+  const columnVisibilityUpdater: OnChangeFn<VisibilityState> = (columnVisibilityUpdater) => {
+    setColumnVisibility(functionalUpdate(columnVisibilityUpdater, columnVisibility))
+    // side effects
+    togglePinningOnVisibilityChange(columnVisibility)
+  }
+
+  // update the column visibility
+  const updateColumnVisibility = (visibility: VisibilityState) => {
+    setColumnVisibility(visibility)
+    // side effects
+    togglePinningOnVisibilityChange(visibility)
+  }
 
   const updatePinningOrderOnOrderChange = (columnOrder: ColumnOrderState) => {
     // ensure that the column pinning is in the order of the column order
@@ -300,6 +324,7 @@ export const ProjectTableProvider = ({ children }: ProjectTableProviderProps) =>
         columnVisibility,
         setColumnVisibility,
         updateColumnVisibility,
+        columnVisibilityUpdater,
         // column pinning
         columnPinning,
         setColumnPinning,

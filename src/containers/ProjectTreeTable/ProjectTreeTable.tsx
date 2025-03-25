@@ -242,7 +242,7 @@ const FlexTable = ({
     updateSorting,
     showHierarchy,
     columnVisibility,
-    updateColumnVisibility,
+    columnVisibilityUpdater,
     columnPinning,
     columnPinningUpdater,
     columnOrder,
@@ -302,7 +302,7 @@ const FlexTable = ({
     columnResizeMode: 'onChange',
     onColumnPinningChange: columnPinningUpdater,
     onColumnSizingChange: updateColumnSizing,
-    onColumnVisibilityChange: updateColumnVisibility,
+    onColumnVisibilityChange: columnVisibilityUpdater,
     onColumnOrderChange: columnOrderUpdater,
     // @ts-ignore
     filterFns,
