@@ -151,8 +151,8 @@ export const ProjectTableProvider = ({ children }: ProjectTableProviderProps) =>
     // ensure that any columns that are now hidden are removed from the pinning
     const newPinning = { ...columnPinning }
     const pinnedColumns = newPinning.left || []
-    const visibleColumns = Object.keys(visibility).filter((col) => visibility[col])
-    const newPinnedColumns = pinnedColumns.filter((col) => visibleColumns.includes(col))
+    const hiddenColumns = Object.keys(visibility).filter((col) => visibility[col] === false)
+    const newPinnedColumns = pinnedColumns.filter((col) => !hiddenColumns.includes(col))
     const newColumnPinning = {
       ...newPinning,
       left: newPinnedColumns,
@@ -210,7 +210,6 @@ export const ProjectTableProvider = ({ children }: ProjectTableProviderProps) =>
   }
 
   const updateColumnPinning = (columnPinning: ColumnPinningState) => {
-    console.log('setting column pinning', columnPinning)
     setColumnPinning(columnPinning)
     // now update the column order
     updateOrderOnPinningChange(columnPinning)
