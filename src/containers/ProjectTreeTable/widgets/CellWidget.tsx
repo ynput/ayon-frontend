@@ -13,6 +13,7 @@ import { useCellEditing } from '../context/CellEditingContext'
 // Utils
 import { getCellId } from '../utils/cellUtils'
 import clsx from 'clsx'
+import { useSelection } from '../context/SelectionContext'
 
 const Cell = styled.div`
   position: absolute;
@@ -38,6 +39,7 @@ interface EditorCellProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'on
   isCollapsed?: boolean
   isInherited?: boolean
   isPlaceholder?: boolean
+  isFocused?: boolean
   enableCustomValues?: boolean
   onChange?: (value: CellValue | CellValue[]) => void
 }
@@ -69,9 +71,11 @@ const EditorCellComponent = forwardRef<HTMLDivElement, EditorCellProps>(
     const type = attributeData?.type
 
     const { isEditing, setEditingCellId } = useCellEditing()
+    const { isCellFocused } = useSelection()
     const cellId = getCellId(rowId, columnId)
 
     const isCurrentCellEditing = isEditing(cellId)
+    const isCurrentCellFocused = isCellFocused(cellId)
 
     const handleDoubleClick = useCallback(() => {
       !isPlaceholder && setEditingCellId(cellId)
@@ -152,6 +156,10 @@ const EditorCellComponent = forwardRef<HTMLDivElement, EditorCellProps>(
         onDoubleClick={handleDoubleClick}
         onClick={handleSingleClick}
         id={cellId}
+        data-tooltip={
+          isInherited && !isCurrentCellEditing && isCurrentCellFocused ? 'Inherited' : undefined
+        }
+        data-tooltip-delay={200}
       >
         {widget}
       </Cell>
