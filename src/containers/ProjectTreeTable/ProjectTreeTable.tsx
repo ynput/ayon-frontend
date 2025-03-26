@@ -103,7 +103,6 @@ const FlexTableWithProviders = (props: Props) => {
 interface TableCellProps {
   cell: Cell<TableRow, unknown>
   cellId: string
-  isPinned: boolean | string
   className?: string
 }
 
@@ -215,7 +214,6 @@ const TableCells = ({ row, isRowSelected }: TableCellsProps) => {
         cell={cell}
         cellId={cellId}
         key={cell.id}
-        isPinned={cell.column.getIsPinned()}
         className={clsx({ ['selected-row']: isRowSelected })}
       />
     )

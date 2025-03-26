@@ -8,6 +8,7 @@ interface DateWidgetProps
     WidgetBaseProps {
   value: string
   isReadOnly?: boolean
+  isInherited?: boolean
 }
 
 export const DateWidget = forwardRef<HTMLSpanElement, DateWidgetProps>(

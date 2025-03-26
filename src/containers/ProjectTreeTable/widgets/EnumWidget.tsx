@@ -292,8 +292,8 @@ const EnumCellValue = ({
   return (
     <StyledWidget className={clsx(className, { selected: isSelected, item: isItem })} {...props}>
       <StyledValuesContainer>
-        {selectedOptions.map((option) => (
-          <StyledValueWrapper key={option.value.toString()}>
+        {selectedOptions.map((option, i) => (
+          <StyledValueWrapper key={option.value.toString() + i}>
             {option.icon && checkForImgSrc(option.icon) ? (
               <StyledImg
                 src={option.icon}

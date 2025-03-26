@@ -46,7 +46,6 @@ interface EditorCellProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'on
 
 export interface WidgetBaseProps {
   isEditing?: boolean
-  isInherited: EditorCellProps['isInherited']
   onChange: Required<EditorCellProps>['onChange']
   onCancelEdit?: () => void
 }
@@ -97,7 +96,6 @@ const EditorCellComponent = forwardRef<HTMLDivElement, EditorCellProps>(
         },
         onCancelEdit: () => setEditingCellId(null),
         isEditing: isCurrentCellEditing,
-        isInherited,
       }
 
       const textTypes: TextWidgetType[] = ['string', 'integer', 'float']
@@ -135,7 +133,7 @@ const EditorCellComponent = forwardRef<HTMLDivElement, EditorCellProps>(
           return <TextWidget value={value as string} {...sharedProps} />
 
         case type === 'datetime' && value !== null && value !== undefined:
-          return <DateWidget value={value as string} {...sharedProps} />
+          return <DateWidget value={value as string} isInherited={isInherited} {...sharedProps} />
 
         case type === 'boolean':
           return <BooleanWidget value={value as boolean} {...sharedProps} />
@@ -144,6 +142,7 @@ const EditorCellComponent = forwardRef<HTMLDivElement, EditorCellProps>(
           return null
 
         default:
+          // if the type is not recognized, fall back to the TextWidget
           return <TextWidget value={value as string} {...sharedProps} />
       }
     }, [cellId, value, type, isCurrentCellEditing, options, isCollapsed, setEditingCellId])
