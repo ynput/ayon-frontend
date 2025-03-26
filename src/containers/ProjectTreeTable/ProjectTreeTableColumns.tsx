@@ -25,6 +25,12 @@ const nameSort: SortingFn<any> = (rowA, rowB) => {
   // sort alphabetically by label
   return labelA.localeCompare(labelB)
 }
+const pathSort: SortingFn<any> = (rowA, rowB) => {
+  const labelA = rowA.original.path || rowA.original.name
+  const labelB = rowB.original.path || rowB.original.name
+  // sort alphabetically by label
+  return labelA.localeCompare(labelB)
+}
 
 type AttribSortingFn = (rowA: any, rowB: any, columnId: string, attribute?: AttributeData) => number
 // sort by the order of the enum options
@@ -92,7 +98,7 @@ const ProjectTreeTableColumns = ({
         accessorKey: 'name',
         header: () => 'Folder / Task',
         filterFn: 'fuzzy',
-        sortingFn: nameSort, // custom sort to sort by label then name
+        sortingFn: showHierarchy ? nameSort : pathSort, // custom sort to sort by label then name
         size: columnSizing['label'] || 300,
         enableHiding: false,
         cell: ({ row, column }) => {

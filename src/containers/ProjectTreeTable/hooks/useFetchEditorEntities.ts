@@ -167,7 +167,11 @@ const useFetchEditorEntities = ({
   }, [sorting, tasksListCursor])
 
   // build cursor based on sorting
-  const singleSort = sorting[0]
+  const singleSort = { ...sorting[0] }
+  // if task list and sorting by name, sort by path instead
+  const sortByPath = singleSort?.id === 'name' && !showHierarchy
+  if (sortByPath) singleSort.id = 'path'
+
   let queryCursor: Pick<
     GetTasksListQueryVariables,
     'after' | 'before' | 'first' | 'last' | 'sortBy'
