@@ -127,28 +127,40 @@ const injectedApi = enhancedApi.injectEndpoints({
     >({
       async queryFn({ projectName, parentIds, filter, search }, { dispatch, forced }) {
         try {
-          // for each parentId, fetch the tasks
-          const results = await Promise.all(
-            parentIds.map(async (parentId) =>
-              dispatch(
-                enhancedApi.endpoints.GetTasksByParent.initiate(
-                  {
-                    projectName,
-                    parentIds: [parentId],
-                    filter,
-                    search,
-                  },
-                  { forceRefetch: forced },
+          // Process parent IDs in sequential batches
+          const BATCH_SIZE = 20 // Process x parentIds at a time
+          const allTasks: EditorTaskNode[] = []
+
+          // Process batches one after another
+          for (let i = 0; i < parentIds.length; i += BATCH_SIZE) {
+            const batchParentIds = parentIds.slice(i, i + BATCH_SIZE)
+
+            // Process this batch in parallel
+            const batchResults = await Promise.all(
+              batchParentIds.map(async (parentId) =>
+                dispatch(
+                  enhancedApi.endpoints.GetTasksByParent.initiate(
+                    {
+                      projectName,
+                      parentIds: [parentId],
+                      filter,
+                      search,
+                    },
+                    { forceRefetch: forced },
+                  ),
                 ),
               ),
-            ),
-          )
+            )
 
-          const tasks = results
-            .filter((r) => !!r.data)
-            .flatMap((result) => result.data) as EditorTaskNode[]
+            // Add the results from this batch to our accumulated results
+            const batchTasks = batchResults
+              .filter((r) => !!r.data)
+              .flatMap((result) => result.data as EditorTaskNode[])
 
-          return { data: tasks }
+            allTasks.push(...batchTasks)
+          }
+
+          return { data: allTasks }
         } catch (e: any) {
           // handle errors appropriately
           console.error(e)

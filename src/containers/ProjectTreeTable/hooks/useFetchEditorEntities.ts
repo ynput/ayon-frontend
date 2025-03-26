@@ -55,17 +55,19 @@ const useFetchEditorEntities = ({
   const fuzzySearchFilter = filters.find((filter) => filter.id.includes('text'))?.values?.[0]?.id
 
   console.log('Folder count:', folders.length)
+  const expandedParentIds = Object.entries(expanded)
+    .filter(([, isExpanded]) => isExpanded)
+    .map(([id]) => id)
 
   const { data: expandedFoldersTasks = [] } = useGetOverviewTasksByFoldersQuery(
     {
       projectName,
-      parentIds: Object.keys(expanded),
+      parentIds: expandedParentIds,
       filter: filters?.length ? queryFilterString : undefined,
       search: fuzzySearchFilter,
     },
-    { skip: !Object.keys(expanded).length || !showHierarchy },
+    { skip: !expandedParentIds.length || !showHierarchy },
   )
-
   // get folders that would be left if the filters were applied for tasks
   const { data: foldersByTaskFilter, isUninitialized } = useGetQueryTasksFoldersQuery(
     {
