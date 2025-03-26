@@ -103,6 +103,7 @@ export const EntityNameWidget = ({
                 toggleExpanded()
               }
             }}
+            className="expander"
             icon={isExpanded ? 'expand_more' : 'chevron_right'}
           />
         ) : (
