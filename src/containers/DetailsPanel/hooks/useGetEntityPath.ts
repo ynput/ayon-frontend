@@ -20,7 +20,7 @@ const useGetEntityPath = ({
 }: Props): [PathSegment[], PathSegment[]] => {
   // get the folders list for the project
   const { data: { folders: projectFolders = [] } = {}, isFetching } = useGetFolderListQuery(
-    { projectName: projectName },
+    { projectName: projectName, attrib: true },
     { skip: !projectName || isLoading },
   )
 

@@ -12,7 +12,7 @@ type Props = {
 
 const useHierarchyTable = ({ projectName, folderTypes }: Props) => {
   const { data: { folders = [] } = {}, isLoading } = useGetFolderListQuery(
-    { projectName: projectName || '' },
+    { projectName: projectName || '', attrib: true },
     { skip: !projectName },
   )
 
