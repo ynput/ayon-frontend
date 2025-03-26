@@ -2,12 +2,11 @@ import { useGetFolderListQuery } from '@queries/getHierarchy'
 import {
   useGetOverviewTasksByFoldersQuery,
   useGetQueryTasksFoldersQuery,
-  useGetTasksListQuery,
+  useGetTasksListInfiniteInfiniteQuery,
 } from '@queries/overview/getOverview'
 import { FolderNodeMap, TaskNodeMap } from '../../../containers/ProjectTreeTable/utils/types'
 import { useEffect, useMemo, useState } from 'react'
 import { ExpandedState, SortingState } from '@tanstack/react-table'
-import { GetTasksListQueryVariables } from '@api/graphql'
 import { ProjectTableContextProps } from '../context/ProjectTableContext'
 
 type Params = {
@@ -166,57 +165,46 @@ const useFetchEditorEntities = ({
     if (tasksListCursor) setTasksListCursor('')
   }, [sorting, tasksListCursor])
 
-  // build cursor based on sorting
+  // Create sort params for infinite query
   const singleSort = { ...sorting[0] }
   // if task list and sorting by name, sort by path instead
   const sortByPath = singleSort?.id === 'name' && !showHierarchy
-  if (sortByPath) singleSort.id = 'path'
+  const sortId = sortByPath ? 'path' : singleSort?.id === 'subType' ? 'taskType' : singleSort?.id
 
-  let queryCursor: Pick<
-    GetTasksListQueryVariables,
-    'after' | 'before' | 'first' | 'last' | 'sortBy'
-  > = {
-    after: tasksListCursor,
-    first: 100,
-  }
-  if (singleSort) {
-    let sortId = singleSort.id
-    // convert sortby field if required
-    if (sortId === 'subType') {
-      sortId = 'taskType'
-    }
-    queryCursor = {
-      [singleSort.desc ? 'before' : 'after']: tasksListCursor,
-      [singleSort.desc ? 'last' : 'first']: 100,
-      sortBy: sortId.replace('_', '.'),
-    }
-  }
-
-  // get all tasks if we are viewing flat hierarchy
-  const { data: tasksListData, isFetching: isFetchingTaskList } = useGetTasksListQuery(
+  // Use the new infinite query hook for tasks list with correct name
+  const {
+    data: tasksListInfiniteData,
+    isFetching: isFetchingTaskList,
+    fetchNextPage,
+    hasNextPage,
+  } = useGetTasksListInfiniteInfiniteQuery(
     {
       projectName,
       filter: queryFilters.filterString,
       search: queryFilters.search,
       folderIds: selectedFolders.length ? Array.from(foldersMap.keys()) : undefined,
-      ...queryCursor,
+      sortBy: sortId ? sortId.replace('_', '.') : undefined,
+      desc: !!singleSort?.desc,
     },
-    { skip: showHierarchy },
+    {
+      skip: showHierarchy,
+      initialPageParam: {
+        cursor: '',
+        desc: !!singleSort?.desc,
+      },
+    },
   )
 
-  console.log('tasksListData count', tasksListData?.tasks.length)
-
-  const tasksList = tasksListData?.tasks || []
-  const tasksListPageInfo = tasksListData?.pageInfo
+  // Extract tasks from infinite query data correctly
+  const tasksList = useMemo(() => {
+    if (!tasksListInfiniteData?.pages) return []
+    return tasksListInfiniteData.pages.flatMap((page) => page.tasks || [])
+  }, [tasksListInfiniteData?.pages])
 
   const handleFetchNextPage = () => {
-    const hasNext = sorting[0]?.desc
-      ? tasksListPageInfo?.hasPreviousPage
-      : tasksListPageInfo?.hasNextPage
-
-    if (tasksListPageInfo?.endCursor && hasNext) {
-      console.log('fetching next page', tasksListPageInfo?.endCursor)
-      setTasksListCursor(tasksListPageInfo?.endCursor)
+    if (hasNextPage) {
+      console.log('fetching next page')
+      fetchNextPage()
     }
   }
 

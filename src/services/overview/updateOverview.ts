@@ -52,36 +52,57 @@ export const patchOverviewTasks = (
   const taskEntries = tasksApi.util.selectInvalidatedBy(state, tags)
 
   for (const entry of taskEntries) {
-    // this updates the main overview cache task
-    // it also updates any GetTasksByParent caches
-    const tasksPatch = dispatch(
-      tasksApi.util.updateQueryData(
-        entry.endpointName as 'getOverviewTasksByFolders' | 'GetTasksByParent' | 'GetTasksList',
-        entry.originalArgs,
-        (draft) => {
-          // Apply each change to matching tasks in the cache
+    if (entry.endpointName === 'getTasksListInfinite') {
+      // patch getTasksListInfinite
+      const tasksPatch = dispatch(
+        tasksApi.util.updateQueryData('getTasksListInfinite', entry.originalArgs, (draft) => {
+          // Apply each change to matching tasks in all pages
           for (const taskOperation of tasks) {
-            const patchTask = (tasksArrayDraft: EditorTaskNode[]) => {
-              const task = tasksArrayDraft.find((task) => task.id === taskOperation.entityId)
+            // Iterate through all pages in the infinite query
+            for (const page of draft.pages) {
+              const task = page.tasks.find((task) => task.id === taskOperation.entityId)
               if (task) {
                 updateEntityWithOperation(task, taskOperation.data)
               }
             }
-
-            // Check if draft is an array or an object with a tasks property
-            if (Array.isArray(draft)) {
-              patchTask(draft)
-            } else if (draft.tasks && Array.isArray(draft.tasks)) {
-              // Handle object with tasks array case (like in GetTasksList)
-              const draftArray = draft.tasks
-              patchTask(draftArray)
-            }
           }
-        },
-      ),
-    )
-    // add the patch to the list of patches
-    patches?.push(tasksPatch)
+        }),
+      )
+
+      // add the patch to the list of patches
+      patches?.push(tasksPatch)
+    } else {
+      // this updates the main overview cache task
+      // it also updates any GetTasksByParent caches
+      const tasksPatch = dispatch(
+        tasksApi.util.updateQueryData(
+          entry.endpointName as 'getOverviewTasksByFolders' | 'GetTasksByParent' | 'GetTasksList',
+          entry.originalArgs,
+          (draft) => {
+            // Apply each change to matching tasks in the cache
+            for (const taskOperation of tasks) {
+              const patchTask = (tasksArrayDraft: EditorTaskNode[]) => {
+                const task = tasksArrayDraft.find((task) => task.id === taskOperation.entityId)
+                if (task) {
+                  updateEntityWithOperation(task, taskOperation.data)
+                }
+              }
+
+              // Check if draft is an array or an object with a tasks property
+              if (Array.isArray(draft)) {
+                patchTask(draft)
+              } else if (draft.tasks && Array.isArray(draft.tasks)) {
+                // Handle object with tasks array case (like in GetTasksList)
+                const draftArray = draft.tasks
+                patchTask(draftArray)
+              }
+            }
+          },
+        ),
+      )
+      // add the patch to the list of patches
+      patches?.push(tasksPatch)
+    }
   }
 }
 

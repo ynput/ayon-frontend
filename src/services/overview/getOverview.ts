@@ -57,6 +57,12 @@ type GetTasksListResult = {
   tasks: EditorTaskNode[]
 }
 
+// Define the page param type for infinite query
+type TasksListPageParam = {
+  cursor: string
+  desc?: boolean
+}
+
 type Definitions = DefinitionsFromApi<typeof api>
 type TagTypes = TagTypesFromApi<typeof api>
 type UpdatedDefinitions = Omit<Definitions, 'GetFilteredEntities'> & {
@@ -80,29 +86,6 @@ const enhancedApi = api.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
         pageInfo: result.project.tasks.pageInfo,
       }),
       providesTags: (result) => getOverviewTaskTags(result?.tasks || []),
-      serializeQueryArgs: ({ queryArgs: { after, before, last, first, ...rest } }) => ({ ...rest }),
-      // Refetch when the page arg changes
-      forceRefetch({ currentArg, previousArg }) {
-        return !isEqual(currentArg, previousArg)
-      },
-      merge: (currentCache: GetTasksListResult, newCache: GetTasksListResult) => {
-        const { tasks = [], pageInfo } = newCache
-        const { tasks: lastTasks = [] } = currentCache
-
-        const existingTaskIds = new Set(lastTasks.map((task) => task.id))
-        const newTasks = [...lastTasks]
-
-        for (const task of tasks) {
-          if (!existingTaskIds.has(task.id)) {
-            newTasks.push(task)
-          }
-        }
-
-        return {
-          tasks: newTasks,
-          pageInfo,
-        }
-      },
     },
   },
 })
@@ -200,6 +183,91 @@ const injectedApi = enhancedApi.injectEndpoints({
         }
       },
     }),
+    // Add new infinite query endpoint for tasks list
+    getTasksListInfinite: build.infiniteQuery<
+      GetTasksListResult,
+      {
+        projectName: string
+        filter?: string
+        search?: string
+        folderIds?: string[]
+        desc?: boolean
+        sortBy?: string
+      },
+      TasksListPageParam
+    >({
+      infiniteQueryOptions: {
+        initialPageParam: { cursor: '', desc: false },
+        // Calculate the next page param based on current page response and params
+        getNextPageParam: (lastPage, _allPages, lastPageParam, _allPageParams) => {
+          // Use the endCursor from the query as the next page param
+          const pageInfo = lastPage.pageInfo
+          const desc = lastPageParam.desc
+          const hasNextPage = desc ? pageInfo.hasPreviousPage : pageInfo.hasNextPage
+
+          if (!hasNextPage || !pageInfo.endCursor) return undefined
+
+          return {
+            cursor: pageInfo.endCursor,
+            desc: lastPageParam.desc,
+          }
+        },
+      },
+      queryFn: async ({ queryArg, pageParam }, api, extraOptions) => {
+        try {
+          const { projectName, filter, search, folderIds, sortBy, desc } = queryArg
+          const { cursor } = pageParam
+
+          // Build the query parameters for GetTasksList
+          const queryParams: any = {
+            projectName,
+            filter,
+            search,
+            folderIds,
+          }
+
+          // Add cursor-based pagination
+          if (sortBy) {
+            queryParams.sortBy = sortBy
+            if (desc) {
+              queryParams.before = cursor || undefined
+              queryParams.last = 100
+            } else {
+              queryParams.after = cursor || undefined
+              queryParams.first = 100
+            }
+          } else {
+            queryParams.after = cursor || undefined
+            queryParams.first = 100
+          }
+
+          // Call the existing GetTasksList endpoint
+          const result = await api.dispatch(
+            enhancedApi.endpoints.GetTasksList.initiate(queryParams, extraOptions),
+          )
+
+          if (result.error) throw result.error
+          const fallback = {
+            tasks: [],
+            pageInfo: {
+              hasNextPage: false,
+              endCursor: null,
+              startCursor: null,
+              hasPreviousPage: false,
+            },
+          }
+
+          // Return the tasks directly as required by the infinite query format
+          return {
+            data: result.data || fallback,
+          }
+        } catch (e: any) {
+          console.error('Error in getTasksListInfinite queryFn:', e)
+          return { error: { status: 'FETCH_ERROR', error: e.message } as FetchBaseQueryError }
+        }
+      },
+      providesTags: (result) => getOverviewTaskTags(result?.pages.flatMap((p) => p.tasks) || []),
+    }),
   }),
 })
 
@@ -209,5 +277,6 @@ export const {
   useGetOverviewTasksByFoldersQuery,
   useGetQueryTasksFoldersQuery,
   useGetTasksListQuery,
+  useGetTasksListInfiniteInfiniteQuery, // Fix the export name
   useLazyGetTasksByParentQuery,
 } = injectedApi
