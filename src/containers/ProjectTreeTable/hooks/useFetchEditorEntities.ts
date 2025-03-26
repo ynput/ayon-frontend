@@ -1,5 +1,4 @@
 import { useGetFolderListQuery } from '@queries/getHierarchy'
-import { Filter } from '@ynput/ayon-react-components'
 import {
   useGetOverviewTasksByFoldersQuery,
   useGetQueryTasksFoldersQuery,
@@ -7,14 +6,14 @@ import {
 } from '@queries/overview/getOverview'
 import { FolderNodeMap, TaskNodeMap } from '../../../containers/ProjectTreeTable/utils/types'
 import { useEffect, useMemo, useState } from 'react'
-import clientFilterToQueryFilter from '../utils/clientFilterToQueryFilter'
 import { ExpandedState, SortingState } from '@tanstack/react-table'
 import { GetTasksListQueryVariables } from '@api/graphql'
+import { ProjectTableContextProps } from '../context/ProjectTableContext'
 
 type Params = {
   projectName: string
   selectedFolders: string[] // folders selected in the slicer (hierarchy)
-  filters: Filter[] // filters from the filters bar or slicer (not hierarchy)
+  queryFilters: ProjectTableContextProps['queryFilters'] // filters from the filters bar or slicer (not hierarchy)
   sorting: SortingState
   expanded: ExpandedState
   showHierarchy: boolean
@@ -33,7 +32,7 @@ type UseFetchEditorEntitiesData = {
 const useFetchEditorEntities = ({
   projectName,
   selectedFolders, // comes from the slicer
-  filters,
+  queryFilters,
   sorting,
   expanded,
   showHierarchy,
@@ -47,13 +46,6 @@ const useFetchEditorEntities = ({
     { skip: !projectName },
   )
 
-  // transform the task bar filters to the query format
-  // TODO: filters bar just uses the same schema as the server
-  const queryFilter = clientFilterToQueryFilter(filters)
-  const queryFilterString = JSON.stringify(queryFilter)
-  // extract the fuzzy search from the filters
-  const fuzzySearchFilter = filters.find((filter) => filter.id.includes('text'))?.values?.[0]?.id
-
   console.log('Folder count:', folders.length)
   const expandedParentIds = Object.entries(expanded)
     .filter(([, isExpanded]) => isExpanded)
@@ -63,8 +55,8 @@ const useFetchEditorEntities = ({
     {
       projectName,
       parentIds: expandedParentIds,
-      filter: filters?.length ? queryFilterString : undefined,
-      search: fuzzySearchFilter,
+      filter: queryFilters.filterString,
+      search: queryFilters.search,
     },
     { skip: !expandedParentIds.length || !showHierarchy },
   )
@@ -72,10 +64,10 @@ const useFetchEditorEntities = ({
   const { data: foldersByTaskFilter, isUninitialized } = useGetQueryTasksFoldersQuery(
     {
       projectName,
-      tasksFoldersQuery: { filter: queryFilter, search: fuzzySearchFilter },
+      tasksFoldersQuery: { filter: queryFilters.filter, search: queryFilters.search },
     },
     {
-      skip: !filters.length || !folders.length || !showHierarchy,
+      skip: !queryFilters.filterString || !folders.length || !showHierarchy,
     },
   )
 
@@ -200,8 +192,8 @@ const useFetchEditorEntities = ({
   const { data: tasksListData, isFetching: isFetchingTaskList } = useGetTasksListQuery(
     {
       projectName,
-      filter: filters?.length ? queryFilterString : '',
-      search: fuzzySearchFilter,
+      filter: queryFilters.filterString,
+      search: queryFilters.search,
       folderIds: selectedFolders.length ? Array.from(foldersMap.keys()) : undefined,
       ...queryCursor,
     },

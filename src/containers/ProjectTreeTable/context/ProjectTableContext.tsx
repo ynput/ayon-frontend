@@ -30,6 +30,8 @@ import useAttributeFields from '../hooks/useAttributesList'
 import { AttributeModel } from '@api/rest/attributes'
 import useFolderRelationships from '../hooks/useFolderRelationships'
 import { RowId } from '../utils/cellUtils'
+import clientFilterToQueryFilter from '../utils/clientFilterToQueryFilter'
+import { QueryTasksFoldersApiArg } from '@api/rest/folders'
 
 export type InheritedDependent = {
   entityId: string
@@ -37,7 +39,7 @@ export type InheritedDependent = {
   inheritedAttribs: string[]
 }
 
-interface ProjectTableContextProps {
+export interface ProjectTableContextProps {
   // Project Info
   projectInfo?: ProjectModel
   projectName: string
@@ -56,6 +58,11 @@ interface ProjectTableContextProps {
   // Filters
   filters: Filter[]
   setFilters: (filters: Filter[]) => void
+  queryFilters: {
+    filter: QueryTasksFoldersApiArg['tasksFoldersQuery']['filter']
+    filterString?: string
+    search: QueryTasksFoldersApiArg['tasksFoldersQuery']['search']
+  }
 
   // Hierarchy
   showHierarchy: boolean
@@ -117,6 +124,28 @@ export const ProjectTableProvider = ({ children }: ProjectTableProviderProps) =>
     `overview-show-hierarchy-${projectName}`,
     true,
   )
+
+  const { filter: sliceFilter } = useFilterBySlice()
+
+  // merge the slice filter with the user filters
+  let combinedFilters = [...filters]
+  if (sliceFilter?.values?.length) {
+    combinedFilters.push(sliceFilter)
+  }
+
+  // transform the task bar filters to the query format
+  // TODO: filters bar just uses the same schema as the server
+  const queryFilter = clientFilterToQueryFilter(combinedFilters)
+  const queryFilterString = filters.length ? JSON.stringify(queryFilter) : ''
+  // extract the fuzzy search from the filters
+  const fuzzySearchFilter = combinedFilters.find((filter) => filter.id.includes('text'))
+    ?.values?.[0]?.id
+
+  const queryFilters = {
+    filterString: queryFilterString,
+    filter: queryFilter,
+    search: fuzzySearchFilter,
+  }
 
   const [sorting, setSorting] = useLocalStorage<SortingState>(`sorting-${scope}`, [
     {
@@ -247,19 +276,11 @@ export const ProjectTableProvider = ({ children }: ProjectTableProviderProps) =>
       .map(([id]) => id)
   }, [rowSelection, persistedHierarchySelection, sliceType])
 
-  const { filter: sliceFilter } = useFilterBySlice()
-
-  // merge the slice filter with the user filters
-  let combinedFilters = [...filters]
-  if (sliceFilter?.values?.length) {
-    combinedFilters.push(sliceFilter)
-  }
-
   const { foldersMap, tasksMap, tasksByFolderMap, fetchNextPage, isLoading } =
     useFetchAndUpdateEntityData({
       projectName,
       selectedFolders,
-      filters: combinedFilters,
+      queryFilters,
       expanded,
       sorting,
       showHierarchy,
@@ -341,6 +362,7 @@ export const ProjectTableProvider = ({ children }: ProjectTableProviderProps) =>
         // filters
         filters,
         setFilters,
+        queryFilters,
         // hierarchy
         showHierarchy,
         updateShowHierarchy,

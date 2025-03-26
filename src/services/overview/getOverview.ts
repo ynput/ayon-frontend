@@ -209,4 +209,5 @@ export const {
   useGetOverviewTasksByFoldersQuery,
   useGetQueryTasksFoldersQuery,
   useGetTasksListQuery,
+  useLazyGetTasksByParentQuery,
 } = injectedApi

@@ -99,7 +99,7 @@ const ProjectTreeTableColumns = ({
           const cellId = getCellId(row.id, column.id)
           return (
             <TableCellContent
-              className={clsx('large', { loading: isLoading })}
+              className={clsx('large', row.original.data.type, { loading: isLoading })}
               style={{
                 paddingLeft: `calc(${row.depth * 1}rem + 8px)`,
               }}

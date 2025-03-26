@@ -40,10 +40,11 @@ import { ClipboardProvider } from './context/ClipboardContext'
 import useCustomColumnWidthVars from './hooks/useCustomColumnWidthVars'
 
 // Utility function imports
-import { getCellId } from './utils/cellUtils'
+import { getCellId, parseCellId } from './utils/cellUtils'
 import useLocalStorage from '@hooks/useLocalStorage'
 import { useProjectTableContext } from '@containers/ProjectTreeTable/context/ProjectTableContext'
 import useCellContextMenu from './hooks/useCellContextMenu'
+import { useLazyGetTasksByParentQuery } from '@queries/overview/getOverview'
 
 //These are the important styles to make sticky column pinning work!
 //Apply styles like this using your CSS strategy of choice with this kind of logic to head cells, data cells, footer cells, etc.
@@ -249,6 +250,8 @@ const FlexTable = ({
     columnPinningUpdater,
     columnOrder,
     columnOrderUpdater,
+    queryFilters,
+    projectName,
   } = useProjectTableContext()
 
   // COLUMN SIZING
@@ -349,6 +352,34 @@ const FlexTable = ({
   const columnSizeVars = useCustomColumnWidthVars(table, columnSizing)
 
   const { handleTableBodyContextMenu } = useCellContextMenu({ attribs })
+
+  const [fetchFolderTasks] = useLazyGetTasksByParentQuery()
+
+  const handlePreFetchTasks = (e: React.MouseEvent<HTMLTableSectionElement>) => {
+    const target = e.target as HTMLTableCellElement
+    const td = target.closest('td')
+    // hovering td?
+    if (!td) return
+    // first div child of td id
+    const cell = td.firstElementChild as HTMLDivElement
+    const cellId = cell?.id
+    if (!cellId) return
+    // cell colId is name
+    const { colId, rowId } = parseCellId(cellId) || {}
+    if (colId !== 'name' || !rowId) return
+    // check if the cell is a folder (classname contains folder)
+    const isFolder = cell.className.includes('folder')
+    if (!isFolder) return
+    fetchFolderTasks(
+      {
+        projectName,
+        parentIds: [rowId],
+        filter: queryFilters.filterString,
+        search: queryFilters.search,
+      },
+      true,
+    )
+  }
 
   return (
     <Styled.TableWrapper>
@@ -451,10 +482,12 @@ const FlexTable = ({
           <tbody
             style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
             onContextMenu={handleTableBodyContextMenu}
+            onMouseOver={(e) => {
+              handlePreFetchTasks(e)
+            }}
           >
             {rowVirtualizer.getVirtualItems().map((virtualRow: $Any) => {
               const row = rows[virtualRow.index] as Row<TableRow>
-
               return (
                 <Styled.TR
                   data-index={virtualRow.index} //needed for dynamic row height measurement
