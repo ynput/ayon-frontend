@@ -97,6 +97,8 @@ const foldersApiEnhanced = foldersApi.enhanceEndpoints({
   },
 })
 
+export const TASKS_INFINITE_QUERY_COUNT = 100 // Number of items to fetch per page
+
 const injectedApi = enhancedApi.injectEndpoints({
   endpoints: (build) => ({
     // Each project has one cache for all the tasks of the expanded folders
@@ -231,14 +233,14 @@ const injectedApi = enhancedApi.injectEndpoints({
             queryParams.sortBy = sortBy
             if (desc) {
               queryParams.before = cursor || undefined
-              queryParams.last = 100
+              queryParams.last = TASKS_INFINITE_QUERY_COUNT
             } else {
               queryParams.after = cursor || undefined
-              queryParams.first = 100
+              queryParams.first = TASKS_INFINITE_QUERY_COUNT
             }
           } else {
             queryParams.after = cursor || undefined
-            queryParams.first = 100
+            queryParams.first = TASKS_INFINITE_QUERY_COUNT
           }
 
           // Call the existing GetTasksList endpoint

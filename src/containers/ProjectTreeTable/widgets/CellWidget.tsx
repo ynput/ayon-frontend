@@ -26,6 +26,12 @@ const Cell = styled.div`
     opacity: 0.6;
     font-style: italic;
   }
+
+  &.loading {
+    inset: 4px;
+    border-radius: 4px;
+    opacity: 1;
+  }
 `
 
 export type CellValue = string | number | boolean

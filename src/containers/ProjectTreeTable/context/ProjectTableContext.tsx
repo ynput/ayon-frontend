@@ -32,6 +32,7 @@ import useFolderRelationships from '../hooks/useFolderRelationships'
 import { RowId } from '../utils/cellUtils'
 import clientFilterToQueryFilter from '../utils/clientFilterToQueryFilter'
 import { QueryTasksFoldersApiArg } from '@api/rest/folders'
+import { useGetUsersAssigneeQuery } from '@queries/user/getUsers'
 
 export type InheritedDependent = {
   entityId: string
@@ -39,16 +40,23 @@ export type InheritedDependent = {
   inheritedAttribs: string[]
 }
 
+type User = {
+  name: string
+  fullName: string
+}
+
 export interface ProjectTableContextProps {
+  isInitialized: boolean
+  isLoading: boolean
   // Project Info
   projectInfo?: ProjectModel
   projectName: string
+  users: User[]
 
   // Data
   tableData: TableRow[]
   tasksMap: TaskNodeMap
   foldersMap: FolderNodeMap
-  isLoading: boolean
   fetchNextPage: () => void
   getEntityById: (id: string) => MatchingFolder | EditorTaskNode | undefined
 
@@ -109,10 +117,25 @@ export const ProjectTableProvider = ({ children }: ProjectTableProviderProps) =>
   const projectName = useAppSelector((state) => state.project.name) || ''
   const scope = `overview-${projectName}`
 
-  const { data: projectInfo } = useGetProjectQuery({ projectName }, { skip: !projectName })
+  // GET PROJECT DATA
+  const {
+    data: projectInfo,
+    isSuccess: isSuccessProject,
+    isFetching: isFetchingProject,
+  } = useGetProjectQuery({ projectName }, { skip: !projectName })
   const { folderTypes = [], taskTypes = [] } = projectInfo || {}
 
-  const { attribFields } = useAttributeFields()
+  const {
+    attribFields,
+    isSuccess: isSuccessAttribs,
+    isFetching: isFetchingAttribs,
+  } = useAttributeFields()
+
+  const isInitialized =
+    isSuccessProject && isSuccessAttribs && !isFetchingProject && !isFetchingAttribs
+
+  const { data: usersData = [] } = useGetUsersAssigneeQuery({ projectName }, { skip: !projectName })
+  const users = usersData as User[]
 
   const [expanded, setExpanded] = useLocalStorage<ExpandedState>(`expanded-${scope}`, {})
   const updateExpanded: OnChangeFn<ExpandedState> = (expandedUpdater) => {
@@ -276,16 +299,25 @@ export const ProjectTableProvider = ({ children }: ProjectTableProviderProps) =>
       .map(([id]) => id)
   }, [rowSelection, persistedHierarchySelection, sliceType])
 
-  const { foldersMap, tasksMap, tasksByFolderMap, fetchNextPage, isLoading } =
-    useFetchAndUpdateEntityData({
-      projectName,
-      selectedFolders,
-      queryFilters,
-      expanded,
-      sorting,
-      showHierarchy,
-    })
+  // DATA FETCHING
+  const {
+    foldersMap,
+    tasksMap,
+    tasksByFolderMap,
+    fetchNextPage,
+    isLoadingAll,
+    isLoadingMore,
+    loadingTasks,
+  } = useFetchAndUpdateEntityData({
+    projectName,
+    selectedFolders,
+    queryFilters,
+    expanded,
+    sorting,
+    showHierarchy,
+  })
 
+  // DATA TO TABLE
   const tableData = useOverviewTable({
     foldersMap,
     tasksMap,
@@ -294,6 +326,8 @@ export const ProjectTableProvider = ({ children }: ProjectTableProviderProps) =>
     folderTypes,
     taskTypes,
     showHierarchy,
+    loadingTasks,
+    isLoadingMore,
   })
 
   const getEntityById = useCallback(
@@ -351,14 +385,16 @@ export const ProjectTableProvider = ({ children }: ProjectTableProviderProps) =>
   return (
     <ProjectTableContext.Provider
       value={{
+        isInitialized,
+        isLoading: isLoadingAll,
         projectInfo,
+        attribFields,
+        users,
         projectName,
         tableData,
         tasksMap,
         foldersMap,
-        isLoading,
         fetchNextPage,
-        attribFields,
         // filters
         filters,
         setFilters,

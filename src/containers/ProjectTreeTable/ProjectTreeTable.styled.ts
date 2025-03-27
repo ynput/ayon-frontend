@@ -36,6 +36,17 @@ export const TableCellContent = styled.div`
   &.bold {
     font-weight: 600;
   }
+
+  &.loading {
+    margin: 0px 5px;
+    padding: 0 !important;
+    width: calc(100% - 10px);
+    height: 28px;
+
+    &:not(.hierarchy) {
+      height: 32px;
+    }
+  }
 `
 
 export const ResizedHandler = styled.div`

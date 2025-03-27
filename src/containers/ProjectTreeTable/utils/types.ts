@@ -1,4 +1,5 @@
-import { FolderNode, GetTasksByParentQuery } from '@api/graphql'
+import { GetTasksByParentQuery } from '@api/graphql'
+import { FolderListItem } from '@api/rest/folders'
 
 export type TableRow = {
   id: string
@@ -20,6 +21,7 @@ export type TableRow = {
   type: string
   ownAttrib: string[]
   path: string | null | undefined
+  isLoading?: boolean
 }
 
 export type ExtraData = {
@@ -29,7 +31,7 @@ export type ExtraData = {
   label?: string | null
 }
 
-export type MatchingFolder = FolderNode & { childOnlyMatch?: boolean }
+export type MatchingFolder = FolderListItem & { childOnlyMatch?: boolean }
 export type FolderNodeMap = Map<string, MatchingFolder>
 export type EditorTaskNode = GetTasksByParentQuery['project']['tasks']['edges'][0]['node'] & {
   attrib: Record<string, any>

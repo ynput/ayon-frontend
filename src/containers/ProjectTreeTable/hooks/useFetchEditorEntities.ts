@@ -8,6 +8,20 @@ import { FolderNodeMap, TaskNodeMap } from '../../../containers/ProjectTreeTable
 import { useEffect, useMemo, useState } from 'react'
 import { ExpandedState, SortingState } from '@tanstack/react-table'
 import { ProjectTableContextProps } from '../context/ProjectTableContext'
+import { determineLoadingTaskFolders } from '../utils/loadingUtils'
+
+export type TasksByFolderMap = Map<string, string[]>
+export type LoadingTasks = Record<string, number> // show number of loading tasks per folder or root
+
+type UseFetchEditorEntitiesData = {
+  foldersMap: FolderNodeMap
+  tasksMap: TaskNodeMap
+  tasksByFolderMap: TasksByFolderMap
+  isLoadingAll: boolean // the whole table is a loading state
+  isLoadingMore: boolean // loading more tasks
+  loadingTasks: LoadingTasks // show number of loading tasks per folder or root
+  fetchNextPage: () => void
+}
 
 type Params = {
   projectName: string
@@ -16,16 +30,6 @@ type Params = {
   sorting: SortingState
   expanded: ExpandedState
   showHierarchy: boolean
-}
-
-export type TasksByFolderMap = Map<string, string[]>
-
-type UseFetchEditorEntitiesData = {
-  foldersMap: FolderNodeMap
-  tasksMap: TaskNodeMap
-  tasksByFolderMap: TasksByFolderMap
-  isLoading: boolean
-  fetchNextPage: () => void
 }
 
 const useFetchEditorEntities = ({
@@ -39,7 +43,7 @@ const useFetchEditorEntities = ({
   const {
     data: { folders = [] } = {},
     isLoading,
-    isFetching,
+    isFetching: isFetchingFolders,
   } = useGetFolderListQuery(
     { projectName: projectName || '', attrib: true },
     { skip: !projectName },
@@ -50,17 +54,22 @@ const useFetchEditorEntities = ({
     .filter(([, isExpanded]) => isExpanded)
     .map(([id]) => id)
 
-  const { data: expandedFoldersTasks = [] } = useGetOverviewTasksByFoldersQuery(
-    {
-      projectName,
-      parentIds: expandedParentIds,
-      filter: queryFilters.filterString,
-      search: queryFilters.search,
-    },
-    { skip: !expandedParentIds.length || !showHierarchy },
-  )
+  const { data: expandedFoldersTasks = [], isFetching: isFetchingExpandedFoldersTasks } =
+    useGetOverviewTasksByFoldersQuery(
+      {
+        projectName,
+        parentIds: expandedParentIds,
+        filter: queryFilters.filterString,
+        search: queryFilters.search,
+      },
+      { skip: !expandedParentIds.length || !showHierarchy },
+    )
   // get folders that would be left if the filters were applied for tasks
-  const { data: foldersByTaskFilter, isUninitialized } = useGetQueryTasksFoldersQuery(
+  const {
+    data: foldersByTaskFilter,
+    isUninitialized,
+    isFetching: isFetchingTasksFolders,
+  } = useGetQueryTasksFoldersQuery(
     {
       projectName,
       tasksFoldersQuery: { filter: queryFilters.filter, search: queryFilters.search },
@@ -158,6 +167,17 @@ const useFetchEditorEntities = ({
     return map
   }, [folders, foldersByTaskFilter, isUninitialized, selectedFolders])
 
+  // calculate partial loading states
+  const loadingTasksForParents = useMemo(() => {
+    if (isFetchingExpandedFoldersTasks) {
+      return determineLoadingTaskFolders({
+        expandedFoldersTasks,
+        expandedParentIds,
+        foldersMap,
+      })
+    } else return {}
+  }, [isFetchingExpandedFoldersTasks, expandedFoldersTasks, expandedParentIds, foldersMap])
+
   const [tasksListCursor, setTasksListCursor] = useState('')
 
   // every time the sorting changes, reset the cursor
@@ -174,9 +194,10 @@ const useFetchEditorEntities = ({
   // Use the new infinite query hook for tasks list with correct name
   const {
     data: tasksListInfiniteData,
-    isFetching: isFetchingTaskList,
+    isFetching: isFetchingTasksList,
     fetchNextPage,
     hasNextPage,
+    isFetchingNextPage: isFetchingNextPageTasksList,
   } = useGetTasksListInfiniteInfiniteQuery(
     {
       projectName,
@@ -236,7 +257,13 @@ const useFetchEditorEntities = ({
     foldersMap: foldersMap,
     tasksMap: tasksMap,
     tasksByFolderMap: tasksByFolderMap,
-    isLoading: isLoading || isFetching || isFetchingTaskList,
+    isLoadingAll:
+      isLoading ||
+      isFetchingFolders ||
+      (isFetchingTasksList && !isFetchingNextPageTasksList) ||
+      isFetchingTasksFolders, // these all show a full loading state
+    isLoadingMore: isFetchingNextPageTasksList,
+    loadingTasks: loadingTasksForParents,
     fetchNextPage: handleFetchNextPage,
   }
 }

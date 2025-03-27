@@ -6,8 +6,10 @@ import {
   TaskNodeMap,
 } from '../../../containers/ProjectTreeTable/utils/types'
 import { FolderType, TaskType } from '@api/rest/project'
-import { TasksByFolderMap } from './useFetchEditorEntities'
+import { LoadingTasks, TasksByFolderMap } from './useFetchEditorEntities'
 import { ExpandedState } from '@tanstack/react-table'
+import { generateLoadingRows } from '../utils/loadingUtils'
+import { TASKS_INFINITE_QUERY_COUNT } from '@queries/overview/getOverview'
 
 type Params = {
   foldersMap: FolderNodeMap
@@ -17,6 +19,8 @@ type Params = {
   folderTypes?: FolderType[]
   taskTypes?: TaskType[]
   showHierarchy: boolean
+  loadingTasks: LoadingTasks
+  isLoadingMore?: boolean
 }
 
 /**
@@ -29,6 +33,9 @@ type Params = {
  * @param expanded - Object with folder IDs as keys to indicate expanded folders
  * @param folderTypes - Array of folder types for to add things like folder icon
  * @param taskTypes - Array of task types for to add things like task icon
+ * @param showHierarchy - Boolean to indicate if the hierarchy should be shown
+ * @param loadingTasks - Object with folder IDs as keys to indicate loading tasks
+ * @param isLoadingMore - Boolean to indicate if more tasks are being loaded
  * @returns An array of TableRow objects with nested subRows suitable for TanStack Table
  */
 export default function useOverviewTable({
@@ -39,6 +46,8 @@ export default function useOverviewTable({
   folderTypes = [],
   taskTypes = [],
   showHierarchy,
+  loadingTasks = {},
+  isLoadingMore = false,
 }: Params): TableRow[] {
   // create a map of folder types by name for efficient lookups
   const folderTypesByName = useMemo(() => {
@@ -182,6 +191,23 @@ export default function useOverviewTable({
         })
       }
 
+      // if we are loading more tasks, add loading rows
+      if (isLoadingMore) {
+        const firstTaskAttrib = tasksMap.entries().next()?.value?.[1]?.attrib || {}
+        const loadingAttribs = Object.keys(firstTaskAttrib).map((key) => ({
+          name: key,
+        }))
+        // number of tasks we loading with the infinite query
+        const count = TASKS_INFINITE_QUERY_COUNT
+        if (count > 0) {
+          const loadingTaskRows = generateLoadingRows(loadingAttribs, count, {
+            type: 'task',
+          })
+
+          flatTaskRows.push(...loadingTaskRows)
+        }
+      }
+
       return flatTaskRows
     }
 
@@ -206,9 +232,9 @@ export default function useOverviewTable({
         img: null,
         subRows: [],
         status: folder.status,
-        tags: folder.tags,
+        tags: folder.tags || [],
         subType: folder.folderType || null,
-        ownAttrib: folder.ownAttrib,
+        ownAttrib: folder.ownAttrib || [],
         path: folder.path,
         data: {
           id: folderId,
@@ -233,7 +259,8 @@ export default function useOverviewTable({
         // we can directly get the tasks for the current folder
         const folderTaskIds = tasksByFolderMap.get(folderId) || []
         const folderTasks = folderTaskIds.flatMap((taskId) => tasksMap.get(taskId) || [])
-        if (folderTasks.length) {
+
+        if (folderTasks.length || loadingTasks[folderId]) {
           // Use array literal with known length for better performance
           const taskRows = new Array<TableRow>(folderTasks.length)
 
@@ -242,6 +269,22 @@ export default function useOverviewTable({
             taskRows[i] = createTaskRow(folderTasks[i], folderId)
           }
 
+          // Add loading rows if applicable
+          if (loadingTasks[folderId]) {
+            const firstTaskAttrib = tasksMap.entries().next()?.value?.[1]?.attrib || {}
+            const loadingAttribs = Object.keys(firstTaskAttrib).map((key) => ({
+              name: key,
+            }))
+            const count = loadingTasks[folderId]
+            if (count > 0) {
+              const loadingTaskRows = generateLoadingRows(loadingAttribs, count, {
+                type: 'task',
+                parentId: folderId,
+              })
+
+              taskRows.push(...loadingTaskRows)
+            }
+          }
           // Only sort if we have multiple items
           if (taskRows.length > 1) {
             // Use a more efficient string comparison for sorting
@@ -316,5 +359,7 @@ export default function useOverviewTable({
     expandedFolderIds,
     showHierarchy,
     taskTypesByName,
+    loadingTasks,
+    isLoadingMore,
   ])
 }

@@ -6,26 +6,20 @@ import { Section } from '@ynput/ayon-react-components'
 // Types
 import { BuiltInFieldOptions } from '../../../containers/ProjectTreeTable/ProjectTreeTableColumns'
 
-// Queries
-import { useGetUsersAssigneeQuery } from '@queries/user/getUsers'
-
 // Components
 import ProjectTreeTable from '../../../containers/ProjectTreeTable/ProjectTreeTable'
 import { useProjectTableContext } from '../../../containers/ProjectTreeTable/context/ProjectTableContext'
-
-type User = {
-  name: string
-  fullName: string
-}
 
 type Props = {}
 
 const ProjectOverviewTable = ({}: Props) => {
   // the heavy lifting is done in ProjectTableContext and is where the data is fetched
   const {
+    isInitialized,
     projectName,
     projectInfo,
     attribFields,
+    users,
     tableData,
     tasksMap,
     foldersMap,
@@ -34,8 +28,6 @@ const ProjectOverviewTable = ({}: Props) => {
     fetchNextPage,
   } = useProjectTableContext()
   const scope = `overview-${projectName}`
-  const { data: usersData = [] } = useGetUsersAssigneeQuery({ projectName }, { skip: !projectName })
-  const users = usersData as User[]
 
   const { statuses = [], folderTypes = [], taskTypes = [], tags = [] } = projectInfo || {}
 
@@ -79,8 +71,8 @@ const ProjectOverviewTable = ({}: Props) => {
         attribs={attribFields}
         tableData={tableData}
         options={options}
-        isLoading={false}
-        isExpandable={false}
+        isLoading={isLoading}
+        isInitialized={isInitialized}
         sliceId={''}
         // pagination
         fetchMoreOnBottomReached={fetchMoreOnBottomReached}

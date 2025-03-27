@@ -45,6 +45,8 @@ import useLocalStorage from '@hooks/useLocalStorage'
 import { useProjectTableContext } from '@containers/ProjectTreeTable/context/ProjectTableContext'
 import useCellContextMenu from './hooks/useCellContextMenu'
 import usePrefetchFolderTasks from './hooks/usePrefetchFolderTasks'
+import { generateLoadingRows, generateDummyAttributes } from './utils/loadingUtils'
+import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
 
 //These are the important styles to make sticky column pinning work!
 //Apply styles like this using your CSS strategy of choice with this kind of logic to head cells, data cells, footer cells, etc.
@@ -67,7 +69,7 @@ type Props = {
   options: BuiltInFieldOptions
   attribs: AttributeModel[]
   isLoading: boolean
-  isExpandable: boolean
+  isInitialized: boolean
   sliceId: string
   // metadata
   tasksMap: TaskNodeMap
@@ -227,9 +229,9 @@ const FlexTable = ({
   tableData,
   attribs,
   options,
-  isLoading,
-  isExpandable,
   sliceId,
+  isLoading,
+  isInitialized,
   fetchMoreOnBottomReached,
 }: Props) => {
   //The virtualizer needs to know the scrollable container element
@@ -250,6 +252,9 @@ const FlexTable = ({
     columnOrderUpdater,
   } = useProjectTableContext()
 
+  // Selection context
+  const { registerGrid, isRowSelected } = useSelection()
+
   // COLUMN SIZING
   const [columnSizing, setColumnSizing] = useLocalStorage<ColumnSizingState>(
     `column-widths-${scope}`,
@@ -265,15 +270,25 @@ const FlexTable = ({
     fetchMoreOnBottomReached(tableContainerRef.current)
   }, [fetchMoreOnBottomReached])
 
-  // Selection context
-  const { registerGrid, isRowSelected } = useSelection()
+  // generate loading attrib and rows
+  const { loadingAttrib, loadingRows } = useMemo(() => {
+    // count the number of children in tbody
+    const tableRowsCount = tableContainerRef.current?.querySelectorAll('tbody tr').length || 0
+    const loadingAttrib = generateDummyAttributes()
+    const loadingRows = generateLoadingRows(
+      attribs,
+      showHierarchy && tableData.length > 0 ? Math.min(tableRowsCount, 50) : 50,
+    )
+    return { loadingAttrib, loadingRows }
+  }, [attribs, tableData, showHierarchy, tableContainerRef.current])
+
+  const showLoadingRows = !isInitialized || isLoading
 
   const columns = ProjectTreeTableColumns({
-    tableData,
+    tableData: showLoadingRows ? loadingRows : tableData,
     columnSizing,
-    attribs,
-    isLoading,
-    isExpandable,
+    attribs: isInitialized ? attribs : loadingAttrib,
+    isLoading: !isInitialized,
     showHierarchy,
     sliceId,
     options,
@@ -281,7 +296,7 @@ const FlexTable = ({
   })
 
   const table = useReactTable({
-    data: tableData,
+    data: showLoadingRows ? loadingRows : tableData,
     columns,
     enableRowSelection: true, //enable row selection for all rows
     getRowId: (row) => row.id,
@@ -377,7 +392,8 @@ const FlexTable = ({
 
                     return (
                       <Styled.HeaderCell
-                        className={clsx(header.id, {
+                        className={clsx(header.id, 'shimmer-dark', {
+                          loading: !isInitialized,
                           large: column.id === 'folderType',
                           'last-pinned-left':
                             column.getIsPinned() === 'left' && column.getIsLastColumn('left'),
@@ -449,34 +465,38 @@ const FlexTable = ({
               )
             })}
           </Styled.TableHeader>
-          <tbody
-            style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
-            onContextMenu={handleTableBodyContextMenu}
-            onMouseOver={(e) => {
-              handlePreFetchTasks(e)
-            }}
-          >
-            {rowVirtualizer.getVirtualItems().map((virtualRow: $Any) => {
-              const row = rows[virtualRow.index] as Row<TableRow>
-              return (
-                <Styled.TR
-                  data-index={virtualRow.index} //needed for dynamic row height measurement
-                  // @ts-ignore
-                  ref={(node) => rowVirtualizer.measureElement(node)} //measure dynamic row height
-                  key={row.id}
-                  style={{
-                    transform: `translateY(${virtualRow.start}px)`, //this should always be a `style` as it changes on scroll
-                  }}
-                >
-                  <TableCellsMemo
-                    row={row}
-                    isRowSelected={isRowSelected(row.id)}
-                    columnPinning={columnPinning}
-                  />
-                </Styled.TR>
-              )
-            })}
-          </tbody>
+          {rowVirtualizer.getVirtualItems().length ? (
+            <tbody
+              style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
+              onContextMenu={handleTableBodyContextMenu}
+              onMouseOver={(e) => {
+                handlePreFetchTasks(e)
+              }}
+            >
+              {rowVirtualizer.getVirtualItems().map((virtualRow: $Any) => {
+                const row = rows[virtualRow.index] as Row<TableRow>
+                return (
+                  <Styled.TR
+                    data-index={virtualRow.index} //needed for dynamic row height measurement
+                    // @ts-ignore
+                    ref={(node) => rowVirtualizer.measureElement(node)} //measure dynamic row height
+                    key={row.id}
+                    style={{
+                      transform: `translateY(${virtualRow.start}px)`, //this should always be a `style` as it changes on scroll
+                    }}
+                  >
+                    <TableCellsMemo
+                      row={row}
+                      isRowSelected={isRowSelected(row.id)}
+                      columnPinning={columnPinning}
+                    />
+                  </Styled.TR>
+                )
+              })}
+            </tbody>
+          ) : (
+            <EmptyPlaceholder message="No folders or tasks found" />
+          )}
         </table>
       </Styled.TableContainer>
     </Styled.TableWrapper>

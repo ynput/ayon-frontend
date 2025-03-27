@@ -19,6 +19,18 @@ import { SelectionCell } from './components/SelectionCell'
 import RowSelectionHeader from './components/RowSelectionHeader'
 import { ROW_SELECTION_COLUMN_ID } from './context/SelectionContext'
 
+// Wrapper function for sorting that pushes isLoading rows to the bottom
+const withLoadingStateSort = (sortFn: SortingFn<any>): SortingFn<any> => {
+  return (rowA, rowB, ...args) => {
+    // If row loading states differ, prioritize non-loading rows
+    if (rowA.original.isLoading !== rowB.original.isLoading) {
+      return rowA.original.isLoading ? 1 : -1
+    }
+    // Otherwise, use the original sort function
+    return sortFn(rowA, rowB, ...args)
+  }
+}
+
 const nameSort: SortingFn<any> = (rowA, rowB) => {
   const labelA = rowA.original.label || rowA.original.name
   const labelB = rowB.original.label || rowB.original.name
@@ -67,7 +79,6 @@ type Props = {
   attribs: AttributeModel[]
   columnSizing: ColumnSizingState
   isLoading: boolean
-  isExpandable: boolean
   showHierarchy: boolean
   sliceId: string
   options: BuiltInFieldOptions
@@ -98,19 +109,20 @@ const ProjectTreeTableColumns = ({
         accessorKey: 'name',
         header: () => 'Folder / Task',
         filterFn: 'fuzzy',
-        sortingFn: showHierarchy ? nameSort : pathSort, // custom sort to sort by label then name
-        size: columnSizing['label'] || 300,
-        enableHiding: false,
+        sortingFn: withLoadingStateSort(showHierarchy ? nameSort : pathSort),
         cell: ({ row, column }) => {
           const cellId = getCellId(row.id, column.id)
           return (
             <TableCellContent
-              className={clsx('large', row.original.data.type, { loading: isLoading })}
+              id={cellId}
+              className={clsx('large', row.original.data.type, {
+                loading: row.original.isLoading,
+                hierarchy: showHierarchy,
+              })}
               style={{
                 paddingLeft: `calc(${row.depth * 1}rem + 8px)`,
               }}
               tabIndex={0}
-              id={cellId}
             >
               <EntityNameWidget
                 id={row.id}
@@ -132,7 +144,9 @@ const ProjectTreeTableColumns = ({
         accessorKey: 'status',
         header: () => 'Status',
         filterFn: 'fuzzy',
-        sortingFn: (a, b, c) => attribSort(a, b, c, { enum: options.statuses, type: 'string' }),
+        sortingFn: withLoadingStateSort((a, b, c) =>
+          attribSort(a, b, c, { enum: options.statuses, type: 'string' }),
+        ),
         sortDescFirst: true,
         size: columnSizing['status'] || 150,
         cell: ({ row, column }) => {
@@ -141,6 +155,7 @@ const ProjectTreeTableColumns = ({
           return (
             <CellWidget
               rowId={id}
+              className={clsx('status', { loading: row.original.isLoading })}
               columnId={column.id}
               value={value}
               attributeData={{ type: 'string' }}
@@ -162,6 +177,7 @@ const ProjectTreeTableColumns = ({
           return (
             <CellWidget
               rowId={id}
+              className={clsx('subType', { loading: row.original.isLoading })}
               columnId={column.id}
               value={value}
               attributeData={{ type: 'string' }}
@@ -180,10 +196,19 @@ const ProjectTreeTableColumns = ({
         cell: ({ row, column }) => {
           const { value, id, type } = getValueIdType(row, column.id)
           if (type === 'folder')
-            return <CellWidget rowId={id} columnId={column.id} value="" isPlaceholder />
+            return (
+              <CellWidget
+                rowId={id}
+                className={clsx('assignees', { loading: row.original.isLoading })}
+                columnId={column.id}
+                value=""
+                isPlaceholder
+              />
+            )
           return (
             <CellWidget
               rowId={id}
+              className={clsx('assignees', { loading: row.original.isLoading })}
               columnId={column.id}
               value={value}
               attributeData={{ type: 'list_of_strings' }}
@@ -204,6 +229,7 @@ const ProjectTreeTableColumns = ({
           return (
             <CellWidget
               rowId={id}
+              className={clsx('tags', { loading: row.original.isLoading })}
               columnId={column.id}
               value={value}
               attributeData={{ type: 'list_of_strings' }}
@@ -222,8 +248,7 @@ const ProjectTreeTableColumns = ({
         accessorKey: 'attrib.' + attrib.name,
         header: () => attrib.data.title || attrib.name,
         filterFn: 'fuzzy' as FilterFnOption<TableRow>,
-        sortingFn: (a, b, c) => attribSort(a, b, c, attrib.data),
-        size: columnSizing[attrib.name] || 150,
+        sortingFn: withLoadingStateSort((a, b, c) => attribSort(a, b, c, attrib.data)),
         cell: ({ row, column }) => {
           const columnIdParsed = column.id.replace('attrib_', '')
           const { value, id, type } = getValueIdType(row, columnIdParsed, 'attrib')
@@ -232,6 +257,7 @@ const ProjectTreeTableColumns = ({
           return (
             <CellWidget
               rowId={id}
+              className={clsx('attrib', { loading: row.original.isLoading })}
               columnId={column.id}
               value={value}
               attributeData={{ type: attrib.data.type || 'string' }}
