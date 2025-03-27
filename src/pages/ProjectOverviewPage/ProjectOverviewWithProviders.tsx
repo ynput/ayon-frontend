@@ -5,17 +5,20 @@ import { ProjectTableProvider } from '@containers/ProjectTreeTable/context/Proje
 import { SelectionProvider } from '@containers/ProjectTreeTable/context/SelectionContext'
 import { NewEntityProvider } from '@context/NewEntityContext'
 import { SettingsPanelProvider } from './contexts/SettingsPanelContext'
+import { SelectedRowsProvider } from '@containers/ProjectTreeTable/context/SelectedRowsContext'
 
 const ProjectOverviewWithProviders: FC = () => {
   return (
     <EntitySelectionProvider>
       <ProjectTableProvider>
         <SelectionProvider>
-          <NewEntityProvider>
-            <SettingsPanelProvider>
-              <ProjectOverviewPage />
-            </SettingsPanelProvider>
-          </NewEntityProvider>
+          <SelectedRowsProvider>
+            <NewEntityProvider>
+              <SettingsPanelProvider>
+                <ProjectOverviewPage />
+              </SettingsPanelProvider>
+            </NewEntityProvider>
+          </SelectedRowsProvider>
         </SelectionProvider>
       </ProjectTableProvider>
     </EntitySelectionProvider>

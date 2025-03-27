@@ -16,7 +16,7 @@ export const generateLoadingRows = (
 ): TableRow[] => {
   return new Array(count).fill(0).map(
     (_, index): TableRow => ({
-      id: `loading-${type}-${index}`,
+      id: `loading-${type}-${index}-${parentId}`,
       name: 'Loading...',
       parentId: parentId,
       isLoading: true,

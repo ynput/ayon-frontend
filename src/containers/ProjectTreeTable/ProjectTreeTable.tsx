@@ -35,6 +35,8 @@ import HeaderActionButton from './components/HeaderActionButton'
 import { CellEditingProvider, useCellEditing } from './context/CellEditingContext'
 import { ROW_SELECTION_COLUMN_ID, useSelection } from './context/SelectionContext'
 import { ClipboardProvider } from './context/ClipboardContext'
+import { useSelectedRows } from './context/SelectedRowsContext'
+import { useProjectTableContext } from '@containers/ProjectTreeTable/context/ProjectTableContext'
 
 // Hook imports
 import useCustomColumnWidthVars from './hooks/useCustomColumnWidthVars'
@@ -42,7 +44,6 @@ import useCustomColumnWidthVars from './hooks/useCustomColumnWidthVars'
 // Utility function imports
 import { getCellId } from './utils/cellUtils'
 import useLocalStorage from '@hooks/useLocalStorage'
-import { useProjectTableContext } from '@containers/ProjectTreeTable/context/ProjectTableContext'
 import useCellContextMenu from './hooks/useCellContextMenu'
 import usePrefetchFolderTasks from './hooks/usePrefetchFolderTasks'
 import { generateLoadingRows, generateDummyAttributes } from './utils/loadingUtils'
@@ -253,7 +254,8 @@ const FlexTable = ({
   } = useProjectTableContext()
 
   // Selection context
-  const { registerGrid, isRowSelected } = useSelection()
+  const { registerGrid } = useSelection()
+  const { isRowSelected } = useSelectedRows()
 
   // COLUMN SIZING
   const [columnSizing, setColumnSizing] = useLocalStorage<ColumnSizingState>(
@@ -357,7 +359,7 @@ const FlexTable = ({
       typeof window !== 'undefined' && navigator.userAgent.indexOf('Firefox') === -1
         ? (element) => element?.getBoundingClientRect().height
         : undefined,
-    overscan: 20,
+    overscan: 5,
   })
 
   const columnSizeVars = useCustomColumnWidthVars(table, columnSizing)

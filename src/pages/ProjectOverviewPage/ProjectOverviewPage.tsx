@@ -20,7 +20,7 @@ import ProjectOverviewDetailsPanel from './containers/ProjectOverviewDetailsPane
 import NewEntity from '@components/NewEntity/NewEntity'
 import { useProjectTableContext } from '@containers/ProjectTreeTable/context/ProjectTableContext'
 import ProjectOverviewSettings, { CustomizeButton } from './components/ProjectOverviewSettings'
-import { useSelection } from '@containers/ProjectTreeTable/context/SelectionContext'
+import { useSelectedRows } from '@containers/ProjectTreeTable/context/SelectedRowsContext'
 import { useSettingsPanel } from './contexts/SettingsPanelContext'
 
 const searchFilterTypes: FilterFieldType[] = [
@@ -32,7 +32,7 @@ const searchFilterTypes: FilterFieldType[] = [
 ]
 
 const ProjectOverviewPage: FC = () => {
-  const { selectedRows } = useSelection()
+  const { selectedRows } = useSelectedRows()
 
   const {
     projectName,
@@ -122,7 +122,7 @@ const ProjectOverviewPage: FC = () => {
                   stateKey="overview-splitter-details"
                   stateStorage="local"
                   style={{ width: '100%', height: '100%' }}
-                  gutterSize={!selectedRows.length ? 0 : 4}
+                  // gutterSize={!selectedRows.length ? 0 : 4}
                 >
                   <SplitterPanel size={70}>
                     <ProjectOverviewTable />
@@ -138,7 +138,6 @@ const ProjectOverviewPage: FC = () => {
                       <ProjectOverviewDetailsPanel
                         projectInfo={projectInfo}
                         projectName={projectName}
-                        selectedRows={selectedRows}
                       />
                     </SplitterPanel>
                   ) : (

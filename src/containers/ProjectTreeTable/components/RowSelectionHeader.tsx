@@ -1,7 +1,7 @@
-import React from 'react'
-import { useSelection } from '../context/SelectionContext'
+import React, { memo } from 'react'
 import styled from 'styled-components'
 import { Icon } from '@ynput/ayon-react-components'
+import { useSelectedRows } from '../context/SelectedRowsContext'
 
 const SelectionHeaderCell = styled.div`
   position: absolute;
@@ -18,7 +18,7 @@ const SelectionHeaderCell = styled.div`
 
 const RowSelectionHeader: React.FC = () => {
   const { areAllRowsSelected, areSomeRowsSelected, selectAllRows, clearRowsSelection } =
-    useSelection()
+    useSelectedRows()
 
   const allSelected = areAllRowsSelected()
   const someSelected = areSomeRowsSelected()
@@ -47,4 +47,4 @@ const RowSelectionHeader: React.FC = () => {
   )
 }
 
-export default RowSelectionHeader
+export default memo(RowSelectionHeader)

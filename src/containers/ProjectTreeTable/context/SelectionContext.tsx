@@ -44,6 +44,10 @@ interface SelectionContextType {
 
   selectedRows: string[] // Array of selected row IDs
 
+  // State setters
+  setSelectedCells: React.Dispatch<React.SetStateAction<Set<CellId>>>
+  setFocusedCellId: React.Dispatch<React.SetStateAction<CellId | null>>
+  setAnchorCell: React.Dispatch<React.SetStateAction<CellPosition | null>>
   // Methods
   registerGrid: (rows: RowId[], columns: ColId[]) => void
   selectCell: (cellId: CellId, additive: boolean, range: boolean) => void
@@ -52,15 +56,10 @@ interface SelectionContextType {
   endSelection: (cellId: CellId) => void
   focusCell: (cellId: CellId | null) => void
   clearSelection: () => void
-  clearRowsSelection: () => void
   isCellSelected: (cellId: CellId) => boolean
   isCellFocused: (cellId: CellId) => boolean
-  isRowSelected: (rowId: RowId) => boolean
   getCellPositionFromId: (cellId: CellId) => CellPosition | null
   getCellBorderClasses: (cellId: CellId) => string[]
-  selectAllRows: () => void
-  areAllRowsSelected: () => boolean
-  areSomeRowsSelected: () => boolean
 }
 
 // Create the context
@@ -299,35 +298,11 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({ children 
     setAnchorCell(null)
   }, [])
 
-  // clear rows selection
-  const clearRowsSelection = useCallback(() => {
-    setSelectedCells((prev) => {
-      const newSelection = new Set(prev)
-      Array.from(newSelection).forEach((cellId) => {
-        if (parseCellId(cellId)?.colId === ROW_SELECTION_COLUMN_ID) {
-          newSelection.delete(cellId)
-        }
-      })
-      return newSelection
-    })
-  }, [])
-
   // Check if a cell is selected
   const isCellSelected = useCallback((cellId: CellId) => selectedCells.has(cellId), [selectedCells])
 
   // Check if a cell is focused
   const isCellFocused = useCallback((cellId: CellId) => cellId === focusedCellId, [focusedCellId])
-
-  // check if a row is selected (using row-selection column status)
-  const isRowSelected = useCallback(
-    (rowId: RowId) => {
-      const rowSelection = Array.from(selectedCells).filter(
-        (id) => parseCellId(id)?.colId === ROW_SELECTION_COLUMN_ID,
-      )
-      return rowSelection.some((id) => parseCellId(id)?.rowId === rowId)
-    },
-    [selectedCells],
-  )
 
   // Get position from cell ID - using shared utility
   const getCellPositionFromId = useCallback((cellId: CellId) => parseCellId(cellId), [])
@@ -379,36 +354,6 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({ children 
     [selectedCells, gridMap, isCellSelected],
   )
 
-  // Select all rows in the grid
-  const selectAllRows = useCallback(() => {
-    const allRowIds = Array.from(gridMap.rowIdToIndex.keys())
-    const newSelection = new Set<CellId>()
-
-    // Create cells for each row with the row selection column ID
-    allRowIds.forEach((rowId) => {
-      newSelection.add(getCellId(rowId, ROW_SELECTION_COLUMN_ID))
-    })
-
-    setSelectedCells(newSelection)
-    // If there are rows, set focus to the first one
-    if (allRowIds.length > 0) {
-      const firstCellId = getCellId(allRowIds[0], ROW_SELECTION_COLUMN_ID)
-      setFocusedCellId(firstCellId)
-      setAnchorCell(parseCellId(firstCellId))
-    }
-  }, [gridMap])
-
-  // Check if all rows are selected
-  const areAllRowsSelected = useCallback(() => {
-    const totalRows = gridMap.rowIdToIndex.size
-    return totalRows > 0 && selectedRows.length === totalRows
-  }, [gridMap, selectedRows])
-
-  // Check if some but not all rows are selected
-  const areSomeRowsSelected = useCallback(() => {
-    return selectedRows.length > 0 && !areAllRowsSelected()
-  }, [selectedRows, areAllRowsSelected])
-
   // Memoize context value to prevent unnecessary re-renders
   const value = useMemo(
     () => ({
@@ -418,6 +363,9 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({ children 
       selectionInProgress,
       anchorCell,
       gridMap,
+      setSelectedCells,
+      setFocusedCellId,
+      setAnchorCell,
       registerGrid,
       selectCell,
       startSelection,
@@ -425,15 +373,10 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({ children 
       endSelection,
       focusCell,
       clearSelection,
-      clearRowsSelection,
       isCellSelected,
       isCellFocused,
-      isRowSelected,
       getCellPositionFromId,
       getCellBorderClasses,
-      selectAllRows,
-      areAllRowsSelected,
-      areSomeRowsSelected,
     }),
     [
       selectedCells,
@@ -442,6 +385,9 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({ children 
       selectionInProgress,
       anchorCell,
       gridMap,
+      setSelectedCells,
+      setFocusedCellId,
+      setAnchorCell,
       registerGrid,
       selectCell,
       startSelection,
@@ -449,15 +395,10 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({ children 
       endSelection,
       focusCell,
       clearSelection,
-      clearRowsSelection,
       isCellSelected,
       isCellFocused,
-      isRowSelected,
       getCellPositionFromId,
       getCellBorderClasses,
-      selectAllRows,
-      areAllRowsSelected,
-      areSomeRowsSelected,
     ],
   )
 
