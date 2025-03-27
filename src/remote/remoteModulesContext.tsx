@@ -3,7 +3,7 @@ import { registerRemotes } from '@module-federation/enhanced/runtime'
 import { useListFrontendModulesQuery } from '@queries/addons/getAddons'
 import { useAppSelector } from '@state/store'
 import { FrontendModuleListItem } from '@api/rest/addons'
-import { useGetInfoQuery } from '@queries/auth/getAuth'
+import { useGetSiteInfoQuery } from '@queries/auth/getAuth'
 
 type Module = {
   remote: string
@@ -36,7 +36,7 @@ export const RemoteModulesProvider = ({ children }: Props) => {
     skip: !user,
   })
 
-  const { data: info = {}, isLoading: isLoadingInfo } = useGetInfoQuery({})
+  const { data: info = {}, isLoading: isLoadingInfo } = useGetSiteInfoQuery({ full: true })
 
   const [remotesInitialized, setRemotesInitialized] = useState(false)
 

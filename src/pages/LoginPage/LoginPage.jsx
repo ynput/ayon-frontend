@@ -6,7 +6,7 @@ import { InputText, InputPassword, Button, Panel } from '@ynput/ayon-react-compo
 import { login } from '@state/user'
 import api from '@api'
 import AuthLink from './AuthLink'
-import { useGetInfoQuery } from '@queries/auth/getAuth'
+import { useGetSiteInfoQuery } from '@queries/auth/getAuth'
 import LoadingPage from '../LoadingPage'
 import * as Styled from './LoginPage.styled'
 import useLocalStorage from '@hooks/useLocalStorage'
@@ -35,7 +35,7 @@ const LoginPage = ({ isFirstTime = false }) => {
 
   const [isLoading, setIsLoading] = useState(false)
 
-  const { data: info = {}, isLoading: isLoadingInfo } = useGetInfoQuery()
+  const { data: info = {}, isLoading: isLoadingInfo } = useGetSiteInfoQuery({ full: true })
   const { motd, loginPageBrand = '', loginPageBackground = '' } = info
 
   // we need to store the redirect in local storage to persist it across auth flows

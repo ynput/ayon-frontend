@@ -4,6 +4,9 @@ import { logout } from '@state/user'
 
 const authApi = api.enhanceEndpoints({
   endpoints: {
+    getSiteInfo: {
+      providesTags: ['info'],
+    },
     createSession: {},
     getUserPools: {
       providesTags: [{ type: 'userPool', id: 'LIST' }],
@@ -13,12 +16,6 @@ const authApi = api.enhanceEndpoints({
 
 const authApiInjected = authApi.injectEndpoints({
   endpoints: (build) => ({
-    getInfo: build.query({
-      query: () => ({
-        url: '/api/info?full=true',
-      }),
-      providesTags: ['info'],
-    }),
     logOut: build.mutation({
       query: () => ({
         url: '/api/auth/logout',
@@ -45,8 +42,8 @@ const authApiInjected = authApi.injectEndpoints({
 //
 
 export const {
-  useGetInfoQuery,
-  useLazyGetInfoQuery,
+  useGetSiteInfoQuery,
+  useLazyGetSiteInfoQuery,
   useLogOutMutation,
   useCreateSessionMutation,
   useGetUserPoolsQuery,
