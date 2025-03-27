@@ -12,12 +12,10 @@ import {
 import useLocalStorage from '@hooks/useLocalStorage'
 import useFetchAndUpdateEntityData from '../hooks/useFetchEditorEntities'
 import useOverviewTable from '../hooks/useOverviewTable'
-import { useAppSelector } from '@state/store'
 import { useSlicerContext } from '@context/slicerContext'
 import { isEmpty } from 'lodash'
 import useFilterBySlice from '@containers/TasksProgress/hooks/useFilterBySlice'
 import { Filter } from '@ynput/ayon-react-components'
-import { useGetProjectQuery } from '@queries/project/getProject'
 import {
   EditorTaskNode,
   FolderNodeMap,
@@ -25,14 +23,11 @@ import {
   TableRow,
   TaskNodeMap,
 } from '../utils/types'
-import { ProjectModel } from '@api/rest/project'
-import useAttributeFields from '../hooks/useAttributesList'
-import { AttributeModel } from '@api/rest/attributes'
 import useFolderRelationships from '../hooks/useFolderRelationships'
 import { RowId } from '../utils/cellUtils'
 import clientFilterToQueryFilter from '../utils/clientFilterToQueryFilter'
 import { QueryTasksFoldersApiArg } from '@api/rest/folders'
-import { useGetUsersAssigneeQuery } from '@queries/user/getUsers'
+import { useProjectDataContext } from './ProjectDataContext'
 
 export type InheritedDependent = {
   entityId: string
@@ -40,18 +35,13 @@ export type InheritedDependent = {
   inheritedAttribs: string[]
 }
 
-type User = {
-  name: string
-  fullName: string
-}
-
 export interface ProjectTableContextProps {
   isInitialized: boolean
   isLoading: boolean
   // Project Info
-  projectInfo?: ProjectModel
+  projectInfo?: any
   projectName: string
-  users: User[]
+  users: any[]
 
   // Data
   tableData: TableRow[]
@@ -61,7 +51,7 @@ export interface ProjectTableContextProps {
   getEntityById: (id: string) => MatchingFolder | EditorTaskNode | undefined
 
   // Attributes
-  attribFields: AttributeModel[]
+  attribFields: any[]
 
   // Filters
   filters: Filter[]
@@ -78,6 +68,7 @@ export interface ProjectTableContextProps {
 
   // Expanded state
   expanded: ExpandedState
+  toggleExpanded: (id: string) => void
   updateExpanded: OnChangeFn<ExpandedState>
   toggleExpandAll: (rowId: RowId[], expand?: boolean) => void
 
@@ -114,32 +105,31 @@ interface ProjectTableProviderProps {
 }
 
 export const ProjectTableProvider = ({ children }: ProjectTableProviderProps) => {
-  const projectName = useAppSelector((state) => state.project.name) || ''
+  // Get project data from the new context
+  const {
+    projectName,
+    projectInfo,
+    attribFields,
+    users,
+    isInitialized,
+    isLoading: isLoadingData,
+  } = useProjectDataContext()
+
   const scope = `overview-${projectName}`
 
-  // GET PROJECT DATA
-  const {
-    data: projectInfo,
-    isSuccess: isSuccessProject,
-    isFetching: isFetchingProject,
-  } = useGetProjectQuery({ projectName }, { skip: !projectName })
   const { folderTypes = [], taskTypes = [] } = projectInfo || {}
-
-  const {
-    attribFields,
-    isSuccess: isSuccessAttribs,
-    isFetching: isFetchingAttribs,
-  } = useAttributeFields()
-
-  const isInitialized =
-    isSuccessProject && isSuccessAttribs && !isFetchingProject && !isFetchingAttribs
-
-  const { data: usersData = [] } = useGetUsersAssigneeQuery({ projectName }, { skip: !projectName })
-  const users = usersData as User[]
 
   const [expanded, setExpanded] = useLocalStorage<ExpandedState>(`expanded-${scope}`, {})
   const updateExpanded: OnChangeFn<ExpandedState> = (expandedUpdater) => {
     setExpanded(functionalUpdate(expandedUpdater, expanded))
+  }
+
+  const toggleExpanded = (id: string) => {
+    if (typeof expanded === 'boolean') return
+    setExpanded({
+      ...expanded,
+      [id]: !expanded[id],
+    })
   }
 
   const [filters, setFilters] = useLocalStorage<Filter[]>(`overview-filters-${projectName}`, [])
@@ -353,40 +343,43 @@ export const ProjectTableProvider = ({ children }: ProjectTableProviderProps) =>
     tasksByFolderMap,
   })
 
-  const toggleExpandAll: ProjectTableContextProps['toggleExpandAll'] = (rowIds, expandAll) => {
-    const expandedState = typeof expanded === 'object' ? expanded : {}
+  const toggleExpandAll: ProjectTableContextProps['toggleExpandAll'] = useCallback(
+    (rowIds, expandAll) => {
+      const expandedState = typeof expanded === 'object' ? expanded : {}
 
-    const newExpandedState = { ...expandedState }
+      const newExpandedState = { ...expandedState }
 
-    rowIds.forEach((rowId) => {
-      // get all children of the rowId using tableData
-      const childIds = getChildrenEntities(rowId).map((child) => child.id)
-      // check if the rowId is expanded
-      const isExpanded = expandedState[rowId] || false
+      rowIds.forEach((rowId) => {
+        // get all children of the rowId using tableData
+        const childIds = getChildrenEntities(rowId).map((child) => child.id)
+        // check if the rowId is expanded
+        const isExpanded = expandedState[rowId] || false
 
-      if (expandAll !== undefined ? !expandAll : isExpanded) {
-        // collapse all children
-        newExpandedState[rowId] = false
-        childIds.forEach((id) => {
-          newExpandedState[id] = false
-        })
-      } else {
-        // expand all children
-        newExpandedState[rowId] = true
-        childIds.forEach((id) => {
-          newExpandedState[id] = true
-        })
-      }
-    })
+        if (expandAll !== undefined ? !expandAll : isExpanded) {
+          // collapse all children
+          newExpandedState[rowId] = false
+          childIds.forEach((id) => {
+            newExpandedState[id] = false
+          })
+        } else {
+          // expand all children
+          newExpandedState[rowId] = true
+          childIds.forEach((id) => {
+            newExpandedState[id] = true
+          })
+        }
+      })
 
-    setExpanded(newExpandedState)
-  }
+      setExpanded(newExpandedState)
+    },
+    [expanded, getChildrenEntities, setExpanded],
+  )
 
   return (
     <ProjectTableContext.Provider
       value={{
         isInitialized,
-        isLoading: isLoadingAll,
+        isLoading: isLoadingAll || isLoadingData,
         projectInfo,
         attribFields,
         users,
@@ -404,6 +397,7 @@ export const ProjectTableProvider = ({ children }: ProjectTableProviderProps) =>
         updateShowHierarchy,
         // expanded state
         expanded,
+        toggleExpanded,
         updateExpanded,
         toggleExpandAll,
         // sorting

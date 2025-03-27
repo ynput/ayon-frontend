@@ -83,6 +83,7 @@ type Props = {
   sliceId: string
   options: BuiltInFieldOptions
   toggleExpandAll: (id: string) => void
+  toggleExpanded: (id: string) => void
 }
 
 const ProjectTreeTableColumns = ({
@@ -94,6 +95,7 @@ const ProjectTreeTableColumns = ({
   sliceId,
   options,
   toggleExpandAll,
+  toggleExpanded,
 }: Props) => {
   const { updateEntities } = useCellEditing()
 
@@ -134,7 +136,7 @@ const ProjectTreeTableColumns = ({
                 type={row.original.data.type}
                 isExpanded={row.getIsExpanded()}
                 toggleExpandAll={toggleExpandAll}
-                toggleExpanded={row.getToggleExpandedHandler()}
+                toggleExpanded={() => toggleExpanded(row.id)}
               />
             </TableCellContent>
           )

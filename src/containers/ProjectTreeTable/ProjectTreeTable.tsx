@@ -157,8 +157,8 @@ const TableCell = ({ cell, cellId, className, ...props }: TableCellProps) => {
         // Only process left clicks (button 0), ignore right clicks
         if (e.button !== 0) return
 
-        // check we are not clicking on folder/task name
-        if ((e.target as HTMLElement).closest('.name-content')) return
+        // check we are not clicking on expander
+        if ((e.target as HTMLElement).closest('.expander')) return
         const additive = e.metaKey || e.ctrlKey || isRowSelectionColumn
         if (e.shiftKey) {
           // Shift+click extends selection from anchor cell
@@ -241,6 +241,7 @@ const FlexTable = ({
   const {
     expanded,
     updateExpanded,
+    toggleExpanded,
     toggleExpandAll,
     sorting,
     updateSorting,
@@ -295,6 +296,7 @@ const FlexTable = ({
     sliceId,
     options,
     toggleExpandAll: (id: string) => toggleExpandAll([id]),
+    toggleExpanded: (id: string) => toggleExpanded(id),
   })
 
   const table = useReactTable({

@@ -65,7 +65,7 @@ export const SelectedRowsProvider = ({ children }: SelectedRowsProviderProps) =>
       newSelection.add(getCellId(rowId, ROW_SELECTION_COLUMN_ID))
     })
 
-    //   setSelectedCells(newSelection)
+    setSelectedCells(newSelection)
     // If there are rows, set focus to the first one
     if (allRowIds.length > 0) {
       const firstCellId = getCellId(allRowIds[0], ROW_SELECTION_COLUMN_ID)
