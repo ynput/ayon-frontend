@@ -4,13 +4,18 @@ const injectedRtkApi = api.injectEndpoints({
     getFolderList: build.query<GetFolderListApiResponse, GetFolderListApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/folders`,
-        params: { attrib: queryArg.attrib },
+        params: {
+          attrib: queryArg.attrib,
+        },
       }),
     }),
     getFolderHierarchy: build.query<GetFolderHierarchyApiResponse, GetFolderHierarchyApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/hierarchy`,
-        params: { search: queryArg.search, types: queryArg.types },
+        params: {
+          search: queryArg.search,
+          types: queryArg.types,
+        },
       }),
     }),
     queryTasksFolders: build.mutation<QueryTasksFoldersApiResponse, QueryTasksFoldersApiArg>({
@@ -27,6 +32,7 @@ export { injectedRtkApi as api }
 export type GetFolderListApiResponse = /** status 200 Successful Response */ FolderListModel
 export type GetFolderListApiArg = {
   projectName: string
+  /** Include folder attributes */
   attrib?: boolean
 }
 export type GetFolderHierarchyApiResponse =
@@ -55,6 +61,7 @@ export type FolderListItem = {
   hasTasks?: boolean
   hasChildren?: boolean
   taskNames?: string[]
+  tags?: string[]
   status: string
   attrib?: object
   ownAttrib?: string[]
