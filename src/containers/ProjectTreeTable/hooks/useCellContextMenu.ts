@@ -8,6 +8,7 @@ import { useProjectTableContext } from '../context/ProjectTableContext'
 import { useCellEditing } from '../context/CellEditingContext'
 import { useNewEntityContext } from '@context/NewEntityContext'
 import { AttributeModel } from '@api/rest/attributes'
+import { InheritFromParentEntity } from './useUpdateEditorEntities'
 
 type ContextEvent = React.MouseEvent<HTMLTableSectionElement, MouseEvent>
 
@@ -177,7 +178,7 @@ const useCellContextMenu = ({ attribs }: CellContextMenuProps) => {
   }
 
   // Helper function to identify attributes that can be inherited
-  const getEntitiesToInherit = (selected: string[]) => {
+  const getEntitiesToInherit = (selected: string[]): InheritFromParentEntity[] => {
     return selected.reduce((acc, cellId) => {
       const { rowId, colId } = parseCellId(cellId) || {}
       if (!rowId || !colId || !colId.startsWith('attrib_')) return acc
@@ -194,7 +195,7 @@ const useCellContextMenu = ({ attribs }: CellContextMenuProps) => {
       // Check if this attribute is owned by the entity (not inherited)
       if (entity.ownAttrib?.includes(attribName) && isInheritable) {
         // Find existing entry or create new one
-        const existingIndex = acc.findIndex((item) => item.id === rowId)
+        const existingIndex = acc.findIndex((item) => item.entityId === rowId)
 
         if (existingIndex >= 0) {
           // Add to existing entity's attribs if not already there
@@ -204,15 +205,18 @@ const useCellContextMenu = ({ attribs }: CellContextMenuProps) => {
         } else {
           // Create new entity entry
           acc.push({
-            id: rowId,
-            type: 'folderId' in entity ? 'task' : 'folder',
+            entityId: rowId,
+            entityType: 'folderId' in entity ? 'task' : 'folder',
             attribs: [attribName],
+            ownAttrib: entity.ownAttrib || [],
+            // @ts-expect-error
+            folderId: entity.parentId ?? entity.folderId,
           })
         }
       }
 
       return acc
-    }, [] as { id: string; type: string; attribs: string[] }[])
+    }, [] as InheritFromParentEntity[])
   }
 
   const handleTableBodyContextMenu = (e: ContextEvent) => {

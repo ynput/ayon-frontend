@@ -23,17 +23,16 @@ import {
   TableRow,
   TaskNodeMap,
 } from '../utils/types'
-import useFolderRelationships from '../hooks/useFolderRelationships'
+import useFolderRelationships, {
+  FindInheritedValueFromAncestors,
+  GetAncestorsOf,
+  GetInheritedDependents,
+  FindNonInheritedValues,
+} from '../hooks/useFolderRelationships'
 import { RowId } from '../utils/cellUtils'
 import clientFilterToQueryFilter from '../utils/clientFilterToQueryFilter'
 import { QueryTasksFoldersApiArg } from '@api/rest/folders'
 import { useProjectDataContext } from './ProjectDataContext'
-
-export type InheritedDependent = {
-  entityId: string
-  entityType: 'task' | 'folder'
-  inheritedAttribs: string[]
-}
 
 export interface ProjectTableContextProps {
   isInitialized: boolean
@@ -95,7 +94,10 @@ export interface ProjectTableContextProps {
   columnOrderUpdater: OnChangeFn<ColumnOrderState>
 
   // Folder Relationships
-  getInheritedDependents: (entities: { id: string; attribs: string[] }[]) => InheritedDependent[]
+  getInheritedDependents: GetInheritedDependents
+  findInheritedValueFromAncestors: FindInheritedValueFromAncestors
+  findNonInheritedValues: FindNonInheritedValues
+  getAncestorsOf: GetAncestorsOf
 }
 
 const ProjectTableContext = createContext<ProjectTableContextProps | undefined>(undefined)
@@ -337,10 +339,17 @@ export const ProjectTableProvider = ({ children }: ProjectTableProviderProps) =>
   )
 
   // get folder relationship functions
-  const { getInheritedDependents, getChildrenEntities } = useFolderRelationships({
+  const {
+    getInheritedDependents,
+    getChildrenEntities,
+    findInheritedValueFromAncestors,
+    findNonInheritedValues,
+    getAncestorsOf,
+  } = useFolderRelationships({
     foldersMap,
     tasksMap,
     tasksByFolderMap,
+    getEntityById,
   })
 
   const toggleExpandAll: ProjectTableContextProps['toggleExpandAll'] = useCallback(
@@ -419,7 +428,11 @@ export const ProjectTableProvider = ({ children }: ProjectTableProviderProps) =>
         updateColumnOrder,
         columnOrderUpdater,
         getEntityById,
+        // folder relationships
         getInheritedDependents,
+        findInheritedValueFromAncestors,
+        findNonInheritedValues,
+        getAncestorsOf,
       }}
     >
       {children}

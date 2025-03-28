@@ -148,7 +148,7 @@ export default function useOverviewTable({
     const createTaskRow = (task: EditorTaskNode, parentId?: string): TableRow => {
       return {
         id: task.id,
-        type: 'task',
+        entityType: 'task',
         parentId: parentId || task.folderId,
         name: task.name || '',
         label: task.label || task.name || '',
@@ -223,7 +223,7 @@ export default function useOverviewTable({
       // Create row with minimal required properties
       const row: TableRow = {
         id: folderId,
-        type: 'folder',
+        entityType: 'folder',
         parentId: folder.parentId || undefined,
         name: folder.name || '',
         label: folder.label || folder.name || '',

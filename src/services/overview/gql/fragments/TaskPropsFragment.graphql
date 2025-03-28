@@ -7,7 +7,6 @@ fragment TaskPropsFragment on TaskNode {
   status
   tags
   taskType
-  type
   updatedAt
   active
   assignees

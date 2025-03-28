@@ -11,29 +11,23 @@ export type TableRow = {
   img: string | null
   startContent?: JSX.Element
   subRows: TableRow[]
-  data: ExtraData
   status?: string
   assignees?: string[]
   tags: string[]
   attrib?: Record<string, any>
   childOnlyMatch?: boolean // when true, only children of this folder match the filter and not the folder itself (shots a dot)
   subType?: string | null
-  type: string
+  entityType: string
   ownAttrib: string[]
   path: string | null | undefined
   isLoading?: boolean
 }
 
-export type ExtraData = {
-  type: string
-  id: string
-  name?: string | null
-  label?: string | null
-}
-
-export type MatchingFolder = FolderListItem & { childOnlyMatch?: boolean }
+export type MatchingFolder = FolderListItem & { childOnlyMatch?: boolean; entityType?: 'folder' }
 export type FolderNodeMap = Map<string, MatchingFolder>
-export type EditorTaskNode = GetTasksByParentQuery['project']['tasks']['edges'][0]['node'] & {
+type TaskNode = GetTasksByParentQuery['project']['tasks']['edges'][0]['node']
+export type EditorTaskNode = TaskNode & {
   attrib: Record<string, any>
+  entityType?: 'task'
 }
 export type TaskNodeMap = Map<string, EditorTaskNode>

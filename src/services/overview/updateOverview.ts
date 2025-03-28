@@ -10,7 +10,6 @@ import { getEntityPanelApi } from '@queries/entity/getEntityPanel'
 import { FetchBaseQueryError, RootState } from '@reduxjs/toolkit/query'
 import { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
 import { EditorTaskNode } from '@containers/ProjectTreeTable/utils/types'
-import { InheritedDependent } from '@containers/ProjectTreeTable/context/ProjectTableContext'
 // import { current } from '@reduxjs/toolkit'
 // these operations are dedicated to the overview page
 // this mean cache updates are custom for the overview page here
@@ -37,8 +36,10 @@ const getOverviewTaskTags = (tasks: Pick<OperationModel, 'entityId'>[]) => {
   ]
 }
 
+export type PatchOperation = Pick<OperationModel, 'entityId' | 'entityType' | 'data'>
+
 export const patchOverviewTasks = (
-  tasks: OperationModel[],
+  tasks: PatchOperation[],
   {
     state,
     dispatch,
@@ -107,18 +108,19 @@ export const patchOverviewTasks = (
 }
 
 const invalidateOverviewTasks = (
-  tasks: Pick<OperationModel, 'entityId'>[],
+  tasks: PatchOperation[],
   {
     dispatch,
   }: {
     dispatch: ThunkDispatch<any, any, UnknownAction>
   },
 ) => {
+  if (!tasks.length) return
   dispatch(tasksApi.util.invalidateTags(getOverviewTaskTags(tasks)))
 }
 
 export const patchOverviewFolders = (
-  folders: OperationModel[],
+  folders: PatchOperation[],
   {
     state,
     dispatch,
@@ -155,7 +157,7 @@ export const patchOverviewFolders = (
   }
 }
 
-const patchDetailsPanelEntity = (operations: OperationModel[] = [], draft: any) => {
+const patchDetailsPanelEntity = (operations: PatchOperation[] = [], draft: any) => {
   // find the entity we are updating from the draft
   const data = operations.find(
     // @ts-ignore - we know draft has an id
@@ -197,7 +199,7 @@ const operationsEnhanced = operationsApi.enhanceEndpoints({
 
 // enhance the argument type to include some extra fields
 interface UpdateOverviewEntitiesArg extends OperationsApiArg {
-  inheritedDependents?: InheritedDependent[]
+  patchOperations?: PatchOperation[] // extra entities to patch
 }
 
 const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
@@ -220,7 +222,7 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
         }
       },
       async onQueryStarted(
-        { operationsRequestModel, inheritedDependents = [] },
+        { operationsRequestModel, patchOperations = [] },
         { dispatch, queryFulfilled, getState },
       ) {
         if (!operationsRequestModel.operations?.length) return
@@ -249,9 +251,9 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
         if (operationsByType.task?.length) {
           // split operations by operation type
           const { create, delete: deleteOps, update } = splitByOpType(operationsByType.task)
-          // filter out updates that are in inheritedDependentsTasks
+          // filter out updates that are in updateToPatch as we patch them later on
           const updatesToPatch = update.filter(
-            (op) => !inheritedDependents.some((dep) => dep.entityId === op.entityId),
+            (op) => !patchOperations.some((dep) => dep.entityId === op.entityId),
           )
           // update existing tasks
           patchOverviewTasks(updatesToPatch, { state, dispatch }, patches)
@@ -265,35 +267,29 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
         if (operationsByType.folder?.length) {
           // split operations by operation type
           const { create, delete: deleteOps, update } = splitByOpType(operationsByType.folder)
-          // filter out updates that are in inheritedDependentsTasks
+          // filter out updates that are in updateToPatch as we patch them later on
           const updatesToPatch = update.filter(
-            (op) => !inheritedDependents.some((dep) => dep.entityId === op.entityId),
+            (op) => !patchOperations.some((dep) => dep.entityId === op.entityId),
           )
           // update existing folders
           patchOverviewFolders(updatesToPatch, { state, dispatch }, patches)
           // invalidate the caches for folders being created and deleted
-          if (
-            create.length ||
-            deleteOps.length ||
-            inheritedDependents.some((op) => op.entityType === 'folder')
-          ) {
+          if (create.length || deleteOps.length) {
             dispatch(hierarchyApi.util.invalidateTags([{ type: 'folder', id: 'LIST' }]))
           }
         }
 
-        const inheritedDependentsTasks = inheritedDependents.filter(
-          (op) => op.entityType === 'task',
-        )
-        const inheritedDependentsFolders = inheritedDependents.filter(
-          (op) => op.entityType === 'folder',
-        )
+        const patchExtraTasks = patchOperations.filter((op) => op.entityType === 'task')
+        const patchExtraFolders = patchOperations.filter((op) => op.entityType === 'folder')
 
-        if (inheritedDependentsTasks.length) {
-          invalidateOverviewTasks(inheritedDependentsTasks, { dispatch })
+        if (patchExtraTasks.length) {
+          // often used for updating inherited dependents
+          patchOverviewTasks(patchExtraTasks, { state, dispatch }, patches)
         }
 
-        if (inheritedDependentsFolders.length) {
-          dispatch(hierarchyApi.util.invalidateTags([{ type: 'folder', id: 'LIST' }]))
+        if (patchExtraFolders.length) {
+          // often used for updating inherited dependents
+          patchOverviewFolders(patchExtraFolders, { state, dispatch }, patches)
         }
 
         // try to patch any details panels

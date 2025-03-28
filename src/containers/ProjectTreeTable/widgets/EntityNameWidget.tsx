@@ -107,7 +107,7 @@ export const EntityNameWidget = ({
             icon={isExpanded ? 'expand_more' : 'chevron_right'}
           />
         ) : (
-          <div style={{ display: 'inline-block', minWidth: 24 }} />
+          <div style={{ display: 'inline-block', minWidth: 8 }} />
         )
       ) : null}
       <StyledContentWrapper style={{ height: path ? 32 : 24 }}>

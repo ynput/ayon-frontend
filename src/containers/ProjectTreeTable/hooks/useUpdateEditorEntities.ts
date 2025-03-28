@@ -1,10 +1,11 @@
 import { CellId } from '../utils/cellUtils'
 import { CellValue } from '../widgets/CellWidget'
 import { OperationModel } from '@api/rest/operations'
-import { useUpdateOverviewEntitiesMutation } from '@queries/overview/updateOverview'
+import { PatchOperation, useUpdateOverviewEntitiesMutation } from '@queries/overview/updateOverview'
 import { toast } from 'react-toastify'
 import { useProjectTableContext } from '../context/ProjectTableContext'
 import { useCallback } from 'react'
+import { InheritedDependent } from './useFolderRelationships'
 
 export type EntityUpdate = {
   id: string
@@ -15,9 +16,14 @@ export type EntityUpdate = {
 }
 export type UpdateTableEntities = (entities: EntityUpdate[]) => Promise<void>
 
-export type InheritFromParent = (
-  entities: { id: string; type: string; attribs: string[] }[],
-) => Promise<void>
+export type InheritFromParentEntity = {
+  entityId: string
+  entityType: string
+  attribs: string[]
+  ownAttrib: string[]
+  folderId: string
+}
+export type InheritFromParent = (entities: InheritFromParentEntity[]) => Promise<void>
 
 export type UpdateTableEntity = (
   cellId: CellId,
@@ -26,7 +32,13 @@ export type UpdateTableEntity = (
 ) => Promise<void>
 
 const useUpdateEditorEntities = () => {
-  const { getEntityById, projectName, getInheritedDependents } = useProjectTableContext()
+  const {
+    getEntityById,
+    projectName,
+    getInheritedDependents,
+    findInheritedValueFromAncestors,
+    findNonInheritedValues,
+  } = useProjectTableContext()
   const [postOperations] = useUpdateOverviewEntitiesMutation()
 
   const updateEntities = useCallback<UpdateTableEntities>(
@@ -94,30 +106,32 @@ const useUpdateEditorEntities = () => {
         }
       }
 
-      const folderAttribEntities = operations
-        .filter(
-          (op) =>
-            !!op.entityId &&
-            op.type === 'update' &&
-            op.entityType === 'folder' &&
-            op.data &&
-            'attrib' in op.data,
-        )
+      const folderAttribEntities: InheritedDependent[] = operations
+        .filter((op) => !!op.entityId && op.type === 'update' && op.data && 'attrib' in op.data)
         .map((op) => ({
-          id: op.entityId as string,
-          attribs: Object.keys((op.data as { attrib: Record<string, unknown> }).attrib || {}),
+          entityId: op.entityId as string,
+          entityType: op.entityType as 'folder' | 'task',
+          attrib:
+            op.data && 'attrib' in op.data ? (op.data?.attrib as InheritedDependent['attrib']) : {},
         }))
 
       const inheritedDependents = getInheritedDependents(folderAttribEntities)
 
-      console.log({ inheritedDependents })
+      // convert to operations
+      const inheritedDependentsOperations: PatchOperation[] = inheritedDependents.map((op) => ({
+        entityId: op.entityId,
+        entityType: op.entityType,
+        data: {
+          attrib: op.attrib,
+        },
+      }))
 
       // now make api call to update all entities
       try {
         await postOperations({
           operationsRequestModel: { operations },
           projectName,
-          inheritedDependents,
+          patchOperations: inheritedDependentsOperations,
         }).unwrap()
       } catch (error) {
         toast.error('Failed to update entities')
@@ -137,13 +151,15 @@ const useUpdateEditorEntities = () => {
 
       const supportedEntityTypes: OperationModel['entityType'][] = ['task', 'folder']
       // Group operations by entity type for bulk processing
-      let operations: OperationModel[] = []
+      const operations: OperationModel[] = [] // operations sent to the server
+      const entitiesToPatch: InheritFromParentEntity[] = []
       for (const entity of entities) {
         // Skip unsupported entity types
-        let entityType = entity.type as OperationModel['entityType']
+        let entityType = entity.entityType as OperationModel['entityType']
         if (!supportedEntityTypes.includes(entityType)) {
           continue
         }
+        entityType = entityType as 'task' | 'folder'
 
         // Create data object with null values for each attrib to inherit
         const attribData: Record<string, null> = {}
@@ -151,42 +167,134 @@ const useUpdateEditorEntities = () => {
           attribData[attrib] = null
         })
 
-        // Add new operation
+        // Add new operation this is what's sent to the server and is actually updated in the DB
         operations.push({
           entityType: entityType,
-          entityId: entity.id,
+          entityId: entity.entityId,
           type: 'update',
           data: {
             attrib: attribData,
           },
         })
+
+        // check if this entity has a folderId that is in entities
+        // if so we check their intersection attrib names
+        const findTopFolder = () => {
+          // For each entity, we need to find the top-most folder in the hierarchy
+          const folderId = entity.folderId
+
+          // Find all ancestor folders that are in our entities list
+          const ancestorChain: InheritFromParentEntity[] = []
+          let currentFolderId = folderId
+          let currentFolder = entities.find((e) => e.entityId === currentFolderId)
+
+          // Climb up the folder hierarchy to build the chain of ancestors
+          while (currentFolder) {
+            ancestorChain.push(currentFolder)
+            currentFolderId = currentFolder.folderId
+            currentFolder = entities.find((e) => e.entityId === currentFolderId)
+          }
+
+          // The top folder is the last one in our ancestor chain (if any)
+          const topFolder =
+            ancestorChain.length > 0 ? ancestorChain[ancestorChain.length - 1] : null
+
+          return topFolder
+        }
+
+        const topFolder = findTopFolder()
+        const folderAttribs = topFolder?.attribs || []
+        const entityAttribsIntersection = entity.attribs.filter((attrib) =>
+          folderAttribs.includes(attrib),
+        )
+        const entityAttribsRemoved = entity.attribs.filter(
+          (attrib) => !folderAttribs.includes(attrib),
+        )
+
+        // only add to patch operations if there are attribs left
+        if (entityAttribsRemoved.length > 0)
+          entitiesToPatch.push({
+            ...entity,
+            attribs: entityAttribsRemoved,
+          })
+
+        if (topFolder && entityAttribsIntersection.length > 0) {
+          entitiesToPatch.push({
+            ...entity,
+            attribs: entityAttribsIntersection,
+            folderId: topFolder.folderId,
+          })
+        }
       }
 
-      const folderAttribEntities = operations
-        .filter(
-          (op) =>
-            !!op.entityId &&
-            op.type === 'update' &&
-            op.entityType === 'folder' &&
-            op.data &&
-            'attrib' in op.data,
+      const patchOperations: PatchOperation[] = [] // operations only for patching the cache
+      for (const entity of entitiesToPatch) {
+        const entityType = entity.entityType as 'task' | 'folder'
+        // we also need to update ownAttrib to remove the inherited attribs
+        const ownAttrib = [...(entity.ownAttrib || [])].filter(
+          (attrib) => !entity.attribs.includes(attrib),
         )
-        .map((op) => ({
-          id: op.entityId as string,
-          attribs: Object.keys((op.data as { attrib: Record<string, unknown> }).attrib || {}),
+
+        // now we must calculate all the entities that need to be updated in the cache
+        // first we need to find the the ancestor folder to inherit from
+        const ancestorAttrib = findNonInheritedValues(entity.folderId, entity.attribs)
+
+        const entityPatch = {
+          entityId: entity.entityId,
+          entityType: entityType,
+          data: {
+            attrib: ancestorAttrib,
+            ownAttrib: ownAttrib,
+          },
+        }
+
+        // create new patch operation for the entity
+        patchOperations.push(entityPatch)
+
+        // now find any dependent that also need updating
+        const inheritedDependents = getInheritedDependents([
+          { entityId: entity.entityId, entityType: entityType, attrib: ancestorAttrib },
+        ])
+
+        // convert to operations
+        const inheritedDependentsOperations: PatchOperation[] = inheritedDependents.map((op) => ({
+          entityId: op.entityId,
+          entityType: op.entityType,
+          data: {
+            attrib: op.attrib,
+          },
         }))
 
-      const inheritedDependents = getInheritedDependents(folderAttribEntities)
+        // try to add to patch operations
+        // if it already exists then merge the attribs
+        for (const inheritedDependent of inheritedDependentsOperations) {
+          const existingOperationIndex = patchOperations.findIndex(
+            (op) => op.entityId === inheritedDependent.entityId,
+          )
 
-      // add itself to inherited dependents
-      for (const op of operations) {
-        inheritedDependents.push({
-          entityId: op.entityId as string,
-          entityType: op.entityType as 'folder' | 'task',
-          inheritedAttribs: Object.keys(
-            (op.data as { attrib: Record<string, unknown> }).attrib || {},
-          ),
-        })
+          if (existingOperationIndex !== -1) {
+            // Merge attribs with existing operation
+            const existingOperation = patchOperations[existingOperationIndex]
+            let newAttrib = {
+              // @ts-expect-error
+              ...(existingOperation.data?.attrib || {}),
+              // @ts-expect-error
+              ...(inheritedDependent.data?.attrib || {}),
+            }
+
+            patchOperations[existingOperationIndex] = {
+              ...existingOperation,
+              data: { attrib: newAttrib },
+            }
+          } else {
+            // Add new operation
+            patchOperations.push({
+              entityId: inheritedDependent.entityId,
+              entityType: inheritedDependent.entityType,
+              data: inheritedDependent.data,
+            })
+          }
+        }
       }
 
       // now make api call to update all entities
@@ -194,13 +302,13 @@ const useUpdateEditorEntities = () => {
         await postOperations({
           operationsRequestModel: { operations },
           projectName,
-          inheritedDependents,
+          patchOperations: patchOperations,
         }).unwrap()
       } catch (error) {
         toast.error('Failed to update entities')
       }
     },
-    [projectName, postOperations, getInheritedDependents],
+    [projectName, postOperations, getInheritedDependents, findInheritedValueFromAncestors],
   )
 
   return { updateEntities, inheritFromParent }

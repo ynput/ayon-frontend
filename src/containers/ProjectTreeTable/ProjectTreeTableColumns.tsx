@@ -117,7 +117,7 @@ const ProjectTreeTableColumns = ({
           return (
             <TableCellContent
               id={cellId}
-              className={clsx('large', row.original.data.type, {
+              className={clsx('large', row.original.entityType, {
                 loading: row.original.isLoading,
                 hierarchy: showHierarchy,
               })}
@@ -133,7 +133,7 @@ const ProjectTreeTableColumns = ({
                 path={!showHierarchy ? row.original.path : undefined}
                 showHierarchy={showHierarchy}
                 icon={row.original.icon}
-                type={row.original.data.type}
+                type={row.original.entityType}
                 isExpanded={row.getIsExpanded()}
                 toggleExpandAll={toggleExpandAll}
                 toggleExpanded={() => toggleExpanded(row.id)}
@@ -295,5 +295,5 @@ const getValueIdType = (
     ? (row.original[nestedField as keyof TableRow] as any)?.[field]
     : (row.original[field as keyof TableRow] as any),
   id: row.id,
-  type: row.original.data.type,
+  type: row.original.entityType,
 })
