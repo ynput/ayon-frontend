@@ -1,6 +1,17 @@
 import { upperFirst } from 'lodash'
-import { confirmDialog } from 'primereact/confirmdialog'
+import { confirmDialog, ConfirmDialogOptions } from 'primereact/confirmdialog'
 import { toast } from 'react-toastify'
+
+interface ConfirmDeleteOptions extends Omit<ConfirmDialogOptions, 'accept'> {
+  label?: string
+  message?: string
+  deleteLabel?: string
+  accept?: () => Promise<any>
+  showToasts?: boolean
+  isArchive?: boolean
+  onSuccess?: () => void
+  onError?: (error: any) => void
+}
 
 const confirmDelete = ({
   label = '',
@@ -12,7 +23,7 @@ const confirmDelete = ({
   onSuccess,
   onError,
   ...props
-}) => {
+}: ConfirmDeleteOptions): ReturnType<typeof confirmDialog> => {
   deleteLabel = deleteLabel || (isArchive ? 'Archive' : 'Delete')
   const deleteLabelPresent = isArchive ? 'archiving' : 'deleting'
   const deleteLabelPast = isArchive ? 'archived' : 'deleted'
@@ -30,6 +41,7 @@ const confirmDelete = ({
         await accept()
 
         showToasts &&
+          toastId &&
           toast.update(toastId, {
             render: `${label} ${deleteLabelPast}`,
             type: toast.TYPE.SUCCESS,
@@ -38,13 +50,14 @@ const confirmDelete = ({
           })
 
         onSuccess && onSuccess()
-      } catch (error) {
+      } catch (error: any) {
         const errorMessage =
           typeof error === 'string'
             ? error
             : error.message || `Error ${deleteLabelPresent} ${label}`
 
         showToasts &&
+          toastId &&
           toast.update(toastId, {
             render: errorMessage,
             type: toast.TYPE.ERROR,

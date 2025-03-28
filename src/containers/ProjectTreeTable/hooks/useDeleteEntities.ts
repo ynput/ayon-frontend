@@ -23,19 +23,19 @@ const useDeleteEntities = ({ onSuccess }: UseDeleteEntitiesProps) => {
         .map((id) => getEntityById(parseCellId(id)?.rowId || ''))
         .filter(Boolean)
 
-      const operations: OperationModel[] = []
-      for (const e of fullEntities) {
-        if (!e) continue
-        operations.push({
-          entityType: 'folderId' in e ? 'task' : 'folder',
-          type: 'delete',
-          entityId: e.id,
-        })
-      }
+      if (fullEntities.length === 0) return
 
-      if (operations.length === 0) return
-
-      const deleteEntities = async () => {
+      const deleteEntities = async (force = false) => {
+        const operations: OperationModel[] = []
+        for (const e of fullEntities) {
+          if (!e) continue
+          operations.push({
+            entityType: 'folderId' in e ? 'task' : 'folder',
+            type: 'delete',
+            entityId: e.id,
+            force,
+          })
+        }
         try {
           await runOperations({ operationsRequestModel: { operations }, projectName }).unwrap()
           if (onSuccess) {
@@ -44,7 +44,7 @@ const useDeleteEntities = ({ onSuccess }: UseDeleteEntitiesProps) => {
         } catch (error: any) {
           const message = error?.error || 'Failed to delete entities'
           console.error(`Failed to delete entities:`, error)
-          throw message
+          throw { message, ...error }
         }
       }
 
@@ -52,8 +52,19 @@ const useDeleteEntities = ({ onSuccess }: UseDeleteEntitiesProps) => {
         label: 'folders and tasks',
         message: `Are you sure you want to delete ${entityIds.length} entities?`,
         accept: deleteEntities,
-        onError: () => {},
-        onSuccess: () => {},
+        onError: (error: any) => {
+          const FOLDER_WITH_CHILDREN_CODE = 'delete-folder-with-children'
+          // check if the error is because of child tasks, products
+          if (error?.errorCodes?.includes(FOLDER_WITH_CHILDREN_CODE)) {
+            // try again but with force
+            confirmDelete({
+              label: 'folders and tasks',
+              message: `This folder has child tasks or products that will also be deleted. Are you sure you want to delete ${entityIds.length} entities and all of it's dependencies?`,
+              accept: () => deleteEntities(true),
+              deleteLabel: 'Delete all (dangerous)',
+            })
+          }
+        },
         deleteLabel: 'Delete',
       })
     },

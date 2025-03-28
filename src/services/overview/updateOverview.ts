@@ -221,10 +221,14 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
           const data = result.data
           // check for any errors in the result
           const uniqueErrors = new Set()
+          const uniqueErrorCodes = new Set()
           for (const op of data?.operations || []) {
             if (op.success === false && op.detail) {
               if (!uniqueErrors.has(op.detail)) {
                 uniqueErrors.add(op.detail)
+              }
+              if (!uniqueErrorCodes.has(op.errorCode)) {
+                uniqueErrorCodes.add(op.errorCode)
               }
             }
           }
@@ -233,6 +237,7 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
             const error = {
               status: 'FETCH_ERROR',
               error: Array.from(uniqueErrors).join(', '),
+              errorCodes: Array.from(uniqueErrorCodes),
             } as FetchBaseQueryError
             return { error }
           } else {
