@@ -41,6 +41,7 @@ export const TableCellContent = styled.div`
     padding: 0 !important;
     width: calc(100% - 10px);
     height: 28px;
+    margin-top: 3px;
 
     &:not(.hierarchy) {
       height: 32px;
