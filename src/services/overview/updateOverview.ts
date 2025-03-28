@@ -142,9 +142,15 @@ export const patchOverviewFolders = (
         entry.endpointName as 'getFolderList',
         entry.originalArgs,
         (draft) => {
-          // Apply each change to matching folders in the cache
+          // Create a Map for O(1) folder lookups
+          const folderMap = new Map()
+          draft.folders.forEach((folder) => {
+            folderMap.set(folder.id, folder)
+          })
+
           for (const folderOperation of folders) {
-            const folder = draft.folders.find((el) => el.id === folderOperation.entityId)
+            const folder = folderMap.get(folderOperation.entityId)
+
             if (folder) {
               updateEntityWithOperation(folder, folderOperation.data)
             }
@@ -226,6 +232,7 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
         { dispatch, queryFulfilled, getState },
       ) {
         if (!operationsRequestModel.operations?.length) return
+        console.time('updateOverviewEntities')
         const { operations } = operationsRequestModel
         // we need to split the operations by entity type
         const operationsByType = operations.reduce(
@@ -282,15 +289,19 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
         const patchExtraTasks = patchOperations.filter((op) => op.entityType === 'task')
         const patchExtraFolders = patchOperations.filter((op) => op.entityType === 'folder')
 
+        console.time('patchExtraTasks')
         if (patchExtraTasks.length) {
           // often used for updating inherited dependents
           patchOverviewTasks(patchExtraTasks, { state, dispatch }, patches)
         }
+        console.timeEnd('patchExtraTasks')
 
+        console.time('patchExtraFolders') //500ms
         if (patchExtraFolders.length) {
           // often used for updating inherited dependents
           patchOverviewFolders(patchExtraFolders, { state, dispatch }, patches)
         }
+        console.timeEnd('patchExtraFolders')
 
         // try to patch any details panels
         // first we patch the individual entities
@@ -354,6 +365,8 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
           // add the patch to the list of patches
           patches.push(entitiesDetailsResult)
         }
+
+        console.timeEnd('updateOverviewEntities')
 
         try {
           await queryFulfilled

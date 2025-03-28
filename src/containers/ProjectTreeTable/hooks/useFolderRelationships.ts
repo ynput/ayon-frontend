@@ -183,6 +183,7 @@ export default function useFolderRelationships({
   // Optimized implementation of getInheritedDependents
   const getInheritedDependents: GetInheritedDependents = useCallback(
     (entities) => {
+      // console.time('getInheritedDependents') // 40ms - TODO improve this
       if (!entities.length) return []
 
       // Process all entities in one batch for efficiency
@@ -267,6 +268,8 @@ export default function useFolderRelationships({
           }
         }
       }
+
+      // console.timeEnd('getInheritedDependents')
 
       return result
     },
