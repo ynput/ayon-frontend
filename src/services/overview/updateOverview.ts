@@ -29,14 +29,36 @@ const updateEntityWithOperation = (entity: any, operationData: any) => {
   Object.assign(entity, newData)
 }
 
-const getOverviewTaskTags = (tasks: Pick<OperationModel, 'entityId'>[]) => {
+const getOverviewTaskTags = (tasks: Pick<OperationModel, 'entityId' | 'data'>[]) => {
   return [
     { type: 'overviewTask', id: 'LIST' },
     ...tasks.map((op) => ({ type: 'overviewTask', id: op.entityId })),
+    // we also add the projectName so that tasks that do not exist in the cache can still invalidate
+    ...tasks
+      .filter((op) => op.data?.projectName)
+      .map((op) => ({
+        type: 'overviewTask',
+        id: op.data?.projectName,
+      })),
   ]
 }
 
-export type PatchOperation = Pick<OperationModel, 'entityId' | 'entityType' | 'data'>
+const getOverviewFolderTags = (folders: Pick<OperationModel, 'entityId' | 'data'>[]) => {
+  return [
+    ...folders.map((op) => ({ type: 'folder', id: op.entityId })),
+    // we also add the projectName so that tasks that do not exist in the cache can still invalidate
+    ...folders
+      .filter((op) => op.data?.projectName)
+      .map((op) => ({
+        type: 'folder',
+        id: op.data?.projectName,
+      })),
+  ]
+}
+
+export type PatchOperation = Pick<OperationModel, 'entityId' | 'entityType' | 'data'> & {
+  type?: OperationModel['type']
+}
 
 export const patchOverviewTasks = (
   tasks: PatchOperation[],
@@ -59,11 +81,17 @@ export const patchOverviewTasks = (
         tasksApi.util.updateQueryData('getTasksListInfinite', entry.originalArgs, (draft) => {
           // Apply each change to matching tasks in all pages
           for (const taskOperation of tasks) {
-            // Iterate through all pages in the infinite query
-            for (const page of draft.pages) {
-              const task = page.tasks.find((task) => task.id === taskOperation.entityId)
-              if (task) {
-                updateEntityWithOperation(task, taskOperation.data)
+            if (taskOperation.type === 'create' && taskOperation.data) {
+              // push operation data to first page
+              // @ts-expect-error
+              draft.pages[0].tasks.push(taskOperation.data)
+            } else {
+              // Iterate through all pages in the infinite query
+              for (const page of draft.pages) {
+                const task = page.tasks.find((task) => task.id === taskOperation.entityId)
+                if (task) {
+                  updateEntityWithOperation(task, taskOperation.data)
+                }
               }
             }
           }
@@ -82,20 +110,40 @@ export const patchOverviewTasks = (
           (draft) => {
             // Apply each change to matching tasks in the cache
             for (const taskOperation of tasks) {
-              const patchTask = (tasksArrayDraft: EditorTaskNode[]) => {
-                const task = tasksArrayDraft.find((task) => task.id === taskOperation.entityId)
-                if (task) {
-                  updateEntityWithOperation(task, taskOperation.data)
+              if (
+                taskOperation.type === 'create' &&
+                taskOperation.data &&
+                entry.originalArgs.parentIds.includes(taskOperation.data.folderId)
+              ) {
+                const patchTask = (tasksArrayDraft: EditorTaskNode[]) => {
+                  // @ts-expect-error
+                  tasksArrayDraft.push(taskOperation.data)
                 }
-              }
 
-              // Check if draft is an array or an object with a tasks property
-              if (Array.isArray(draft)) {
-                patchTask(draft)
-              } else if (draft.tasks && Array.isArray(draft.tasks)) {
-                // Handle object with tasks array case (like in GetTasksList)
-                const draftArray = draft.tasks
-                patchTask(draftArray)
+                // Check if draft is an array or an object with a tasks property
+                if (Array.isArray(draft)) {
+                  patchTask(draft)
+                } else if (draft.tasks && Array.isArray(draft.tasks)) {
+                  // Handle object with tasks array case (like in GetTasksList)
+                  const draftArray = draft.tasks
+                  patchTask(draftArray)
+                }
+              } else {
+                const patchTask = (tasksArrayDraft: EditorTaskNode[]) => {
+                  const task = tasksArrayDraft.find((task) => task.id === taskOperation.entityId)
+                  if (task) {
+                    updateEntityWithOperation(task, taskOperation.data)
+                  }
+                }
+
+                // Check if draft is an array or an object with a tasks property
+                if (Array.isArray(draft)) {
+                  patchTask(draft)
+                } else if (draft.tasks && Array.isArray(draft.tasks)) {
+                  // Handle object with tasks array case (like in GetTasksList)
+                  const draftArray = draft.tasks
+                  patchTask(draftArray)
+                }
               }
             }
           },
@@ -131,10 +179,7 @@ export const patchOverviewFolders = (
   patches?: any[],
 ) => {
   const folderEntries = hierarchyApi.util
-    .selectInvalidatedBy(
-      state,
-      folders.map((op) => ({ type: 'folder', id: op.entityId })),
-    )
+    .selectInvalidatedBy(state, getOverviewFolderTags(folders))
     .filter((entry) => entry.endpointName === 'getFolderList')
   for (const entry of folderEntries) {
     const folderPatch = dispatch(
@@ -149,10 +194,16 @@ export const patchOverviewFolders = (
           })
 
           for (const folderOperation of folders) {
-            const folder = folderMap.get(folderOperation.entityId)
+            if (folderOperation.type === 'create' && folderOperation.data) {
+              // push operation data to first page
+              // @ts-expect-error
+              draft.folders.push(folderOperation.data)
+            } else {
+              const folder = folderMap.get(folderOperation.entityId)
 
-            if (folder) {
-              updateEntityWithOperation(folder, folderOperation.data)
+              if (folder) {
+                updateEntityWithOperation(folder, folderOperation.data)
+              }
             }
           }
         },
@@ -278,7 +329,7 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
         // patch the overview tasks
         if (operationsByType.task?.length) {
           // split operations by operation type
-          const { create, delete: deleteOps, update } = splitByOpType(operationsByType.task)
+          const { delete: deleteOps, update } = splitByOpType(operationsByType.task)
           // filter out updates that are in updateToPatch as we patch them later on
           const updatesToPatch = update.filter(
             (op) => !patchOperations.some((dep) => dep.entityId === op.entityId),
@@ -286,15 +337,15 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
           // update existing tasks
           patchOverviewTasks(updatesToPatch, { state, dispatch }, patches)
           // invalidate the caches for tasks being created and deleted
-          invalidateOverviewTasks([...create, ...deleteOps], {
+          invalidateOverviewTasks([...deleteOps], {
             dispatch,
           })
         }
 
-        // patch the overview folders (any any other folders from foldersList)
+        // patch the overview folders (any other folders from foldersList)
         if (operationsByType.folder?.length) {
           // split operations by operation type
-          const { create, delete: deleteOps, update } = splitByOpType(operationsByType.folder)
+          const { delete: deleteOps, update } = splitByOpType(operationsByType.folder)
           // filter out updates that are in updateToPatch as we patch them later on
           const updatesToPatch = update.filter(
             (op) => !patchOperations.some((dep) => dep.entityId === op.entityId),
@@ -302,7 +353,7 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
           // update existing folders
           patchOverviewFolders(updatesToPatch, { state, dispatch }, patches)
           // invalidate the caches for folders being created and deleted
-          if (create.length || deleteOps.length) {
+          if (deleteOps.length) {
             dispatch(hierarchyApi.util.invalidateTags([{ type: 'folder', id: 'LIST' }]))
           }
         }

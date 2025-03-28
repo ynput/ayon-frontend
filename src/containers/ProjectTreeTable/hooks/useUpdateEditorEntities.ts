@@ -85,9 +85,7 @@ const useUpdateEditorEntities = () => {
           const existingOperation = operations[existingOperationIndex]
           let newData = { ...existingOperation.data, ...data }
 
-          // @ts-expect-error
           if (existingOperation.data?.attrib && data.attrib) {
-            // @ts-expect-error
             newData = { ...newData, attrib: { ...existingOperation.data.attrib, ...data.attrib } }
           }
 
@@ -276,9 +274,7 @@ const useUpdateEditorEntities = () => {
             // Merge attribs with existing operation
             const existingOperation = patchOperations[existingOperationIndex]
             let newAttrib = {
-              // @ts-expect-error
               ...(existingOperation.data?.attrib || {}),
-              // @ts-expect-error
               ...(inheritedDependent.data?.attrib || {}),
             }
 

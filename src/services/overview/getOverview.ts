@@ -38,18 +38,19 @@ const transformFilteredEntitiesByParent = (response: GetTasksByParentQuery): Edi
 
 const getOverviewTaskTags = (
   result: EditorTaskNode[] | undefined,
+  projectName: string,
   parentIds?: string | string[],
 ) => {
-  const taskTags = result?.map((task) => ({ type: 'overviewTask' as const, id: task.id })) || []
+  const taskTags = result?.map((task) => ({ type: 'overviewTask', id: task.id })) || []
 
   if (!parentIds) return taskTags
 
   const parentTags = (Array.isArray(parentIds) ? parentIds : [parentIds]).map((id) => ({
-    type: 'overviewTask' as const,
+    type: 'overviewTask',
     id,
   }))
 
-  return [...taskTags, ...parentTags]
+  return [...taskTags, ...parentTags, { type: 'overviewTask', id: projectName }]
 }
 
 type GetTasksListResult = {
@@ -78,14 +79,16 @@ const enhancedApi = api.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
     // It is only used by getOverviewTasksByFolders in this file
     GetTasksByParent: {
       transformResponse: transformFilteredEntitiesByParent,
-      providesTags: (result, _e, { parentIds }) => getOverviewTaskTags(result, parentIds),
+      providesTags: (result, _e, { parentIds, projectName }) =>
+        getOverviewTaskTags(result, projectName, parentIds),
     },
     GetTasksList: {
       transformResponse: (result: GetTasksListQuery) => ({
         tasks: transformFilteredEntitiesByParent(result),
         pageInfo: result.project.tasks.pageInfo,
       }),
-      providesTags: (result) => getOverviewTaskTags(result?.tasks || []),
+      providesTags: (result, _e, { projectName }) =>
+        getOverviewTaskTags(result?.tasks || [], projectName),
     },
   },
 })
@@ -268,7 +271,8 @@ const injectedApi = enhancedApi.injectEndpoints({
           return { error: { status: 'FETCH_ERROR', error: e.message } as FetchBaseQueryError }
         }
       },
-      providesTags: (result) => getOverviewTaskTags(result?.pages.flatMap((p) => p.tasks) || []),
+      providesTags: (result, _e, { projectName }) =>
+        getOverviewTaskTags(result?.pages.flatMap((p) => p.tasks) || [], projectName),
     }),
   }),
 })
