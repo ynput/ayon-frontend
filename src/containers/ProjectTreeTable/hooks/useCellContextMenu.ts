@@ -62,14 +62,28 @@ const useCellContextMenu = ({ attribs }: CellContextMenuProps) => {
     const entitiesToInherit = getEntitiesToInherit(selected)
 
     // from the selected cells, get the rows they are selected in
-    const selectedCellRows = Array.from(
-      new Set(selected.map((cellId) => parseCellId(cellId)?.rowId).filter(Boolean) as string[]),
-    )
+    const selectedCellRows = new Set<string>()
+    const selectedCellColumns = new Set<string>()
+
+    for (const cellId of selected) {
+      const parsed = parseCellId(cellId)
+      if (parsed) {
+        if (parsed.rowId) selectedCellRows.add(parsed.rowId)
+        if (parsed.colId) selectedCellColumns.add(parsed.colId)
+      }
+    }
+
+    const selectedCellRowsArray = Array.from(selectedCellRows)
     // get selected rows ids
     const selectedRowCells = Array.from(selectedCells).filter(
       (cellId) => parseCellId(cellId)?.colId === ROW_SELECTION_COLUMN_ID,
     )
-    const canInheritFromParent = entitiesToInherit.length > 0 && showHierarchy
+    // is the selection a grid (multiple rows and columns)
+    const isMultipleRows = selectedCellRows.size > 1
+    const isMultipleColumns = selectedCellColumns.size > 1
+    const isGridSelection = isMultipleRows && isMultipleColumns
+
+    const canInheritFromParent = entitiesToInherit.length > 0 && showHierarchy && !isGridSelection
 
     // Define all possible menu items with their conditions
     const allMenuItems: MenuItem[] = [
@@ -113,14 +127,14 @@ const useCellContextMenu = ({ attribs }: CellContextMenuProps) => {
         label: 'Expand all',
         icon: 'expand_all',
         shortcut: 'Alt + click',
-        command: () => toggleExpandAll(selectedCellRows, true),
+        command: () => toggleExpandAll(selectedCellRowsArray, true),
         shouldShow: isNameColumn,
       },
       {
         label: 'Collapse all',
         icon: 'collapse_all',
         shortcut: 'Alt + click',
-        command: () => toggleExpandAll(selectedCellRows, false),
+        command: () => toggleExpandAll(selectedCellRowsArray, false),
         shouldShow: isNameColumn,
       },
 
