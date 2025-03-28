@@ -2,7 +2,6 @@ import { useCallback } from 'react'
 import { useUpdateOverviewEntitiesMutation } from '@queries/overview/updateOverview'
 import { OperationModel } from '@api/rest/operations'
 import { useProjectTableContext } from '../context/ProjectTableContext'
-import { toast } from 'react-toastify'
 import { parseCellId } from '../utils/cellUtils'
 import confirmDelete from '@helpers/confirmDelete'
 
@@ -42,9 +41,10 @@ const useDeleteEntities = ({ onSuccess }: UseDeleteEntitiesProps) => {
           if (onSuccess) {
             onSuccess()
           }
-        } catch (error) {
+        } catch (error: any) {
+          const message = error?.error || 'Failed to delete entities'
           console.error(`Failed to delete entities:`, error)
-          toast.error('Failed to delete entities')
+          throw message
         }
       }
 

@@ -39,11 +39,14 @@ const confirmDelete = ({
 
         onSuccess && onSuccess()
       } catch (error) {
-        console.error(error)
+        const errorMessage =
+          typeof error === 'string'
+            ? error
+            : error.message || `Error ${deleteLabelPresent} ${label}`
 
         showToasts &&
           toast.update(toastId, {
-            render: `Error ${deleteLabelPresent} ${label}`,
+            render: errorMessage,
             type: toast.TYPE.ERROR,
             autoClose: 5000,
             isLoading: false,

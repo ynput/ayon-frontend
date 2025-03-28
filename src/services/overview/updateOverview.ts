@@ -219,8 +219,25 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
           const result = await dispatch(operationsEnhanced.endpoints.operations.initiate(arg))
 
           const data = result.data
+          // check for any errors in the result
+          const uniqueErrors = new Set()
+          for (const op of data?.operations || []) {
+            if (op.success === false && op.detail) {
+              if (!uniqueErrors.has(op.detail)) {
+                uniqueErrors.add(op.detail)
+              }
+            }
+          }
 
-          return { data }
+          if (uniqueErrors.size > 0) {
+            const error = {
+              status: 'FETCH_ERROR',
+              error: Array.from(uniqueErrors).join(', '),
+            } as FetchBaseQueryError
+            return { error }
+          } else {
+            return { data }
+          }
         } catch (e: any) {
           console.error(e)
           const error = { status: 'FETCH_ERROR', error: e.message } as FetchBaseQueryError
@@ -232,7 +249,6 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
         { dispatch, queryFulfilled, getState },
       ) {
         if (!operationsRequestModel.operations?.length) return
-        console.time('updateOverviewEntities')
         const { operations } = operationsRequestModel
         // we need to split the operations by entity type
         const operationsByType = operations.reduce(
@@ -289,19 +305,15 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
         const patchExtraTasks = patchOperations.filter((op) => op.entityType === 'task')
         const patchExtraFolders = patchOperations.filter((op) => op.entityType === 'folder')
 
-        console.time('patchExtraTasks')
         if (patchExtraTasks.length) {
           // often used for updating inherited dependents
           patchOverviewTasks(patchExtraTasks, { state, dispatch }, patches)
         }
-        console.timeEnd('patchExtraTasks')
 
-        console.time('patchExtraFolders') //500ms
         if (patchExtraFolders.length) {
           // often used for updating inherited dependents
           patchOverviewFolders(patchExtraFolders, { state, dispatch }, patches)
         }
-        console.timeEnd('patchExtraFolders')
 
         // try to patch any details panels
         // first we patch the individual entities
@@ -365,8 +377,6 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
           // add the patch to the list of patches
           patches.push(entitiesDetailsResult)
         }
-
-        console.timeEnd('updateOverviewEntities')
 
         try {
           await queryFulfilled
