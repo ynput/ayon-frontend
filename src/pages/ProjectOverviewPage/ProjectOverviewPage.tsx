@@ -122,7 +122,7 @@ const ProjectOverviewPage: FC = () => {
                   stateKey="overview-splitter-details"
                   stateStorage="local"
                   style={{ width: '100%', height: '100%' }}
-                  // gutterSize={!selectedRows.length ? 0 : 4}
+                  gutterSize={!selectedRows.length ? 0 : 4}
                 >
                   <SplitterPanel size={70}>
                     <ProjectOverviewTable />

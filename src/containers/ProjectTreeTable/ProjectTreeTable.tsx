@@ -1,5 +1,5 @@
 import { useMemo, useRef, useEffect, memo, CSSProperties } from 'react'
-import { useVirtualizer } from '@tanstack/react-virtual'
+import { useVirtualizer, VirtualItem, Virtualizer } from '@tanstack/react-virtual'
 // TanStack Table imports
 import {
   useReactTable,
@@ -12,17 +12,18 @@ import {
   OnChangeFn,
   getSortedRowModel,
   Cell,
-  ColumnPinningState,
   Column,
   functionalUpdate,
   ColumnSizingState,
+  Table,
+  Header,
+  HeaderGroup,
 } from '@tanstack/react-table'
 
 // Utility imports
 import clsx from 'clsx'
 
 // Type imports
-import { $Any } from '@types'
 import { AttributeEnumItem, AttributeModel } from '@api/rest/attributes'
 import { FolderNodeMap, TableRow, TaskNodeMap } from './utils/types'
 
@@ -30,6 +31,7 @@ import { FolderNodeMap, TableRow, TaskNodeMap } from './utils/types'
 import ProjectTreeTableColumns, { BuiltInFieldOptions } from './ProjectTreeTableColumns'
 import * as Styled from './ProjectTreeTable.styled'
 import HeaderActionButton from './components/HeaderActionButton'
+import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
 
 // Context imports
 import { CellEditingProvider, useCellEditing } from './context/CellEditingContext'
@@ -40,14 +42,14 @@ import { useProjectTableContext } from '@containers/ProjectTreeTable/context/Pro
 
 // Hook imports
 import useCustomColumnWidthVars from './hooks/useCustomColumnWidthVars'
+import usePrefetchFolderTasks from './hooks/usePrefetchFolderTasks'
+import useLocalStorage from '@hooks/useLocalStorage'
+import useCellContextMenu from './hooks/useCellContextMenu'
+import useColumnVirtualization from './hooks/useColumnVirtualization'
 
 // Utility function imports
 import { getCellId } from './utils/cellUtils'
-import useLocalStorage from '@hooks/useLocalStorage'
-import useCellContextMenu from './hooks/useCellContextMenu'
-import usePrefetchFolderTasks from './hooks/usePrefetchFolderTasks'
 import { generateLoadingRows, generateDummyAttributes } from './utils/loadingUtils'
-import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
 
 //These are the important styles to make sticky column pinning work!
 //Apply styles like this using your CSS strategy of choice with this kind of logic to head cells, data cells, footer cells, etc.
@@ -103,128 +105,6 @@ const FlexTableWithProviders = (props: Props) => {
   )
 }
 
-interface TableCellProps {
-  cell: Cell<TableRow, unknown>
-  cellId: string
-  className?: string
-}
-
-const TableCell = ({ cell, cellId, className, ...props }: TableCellProps) => {
-  const {
-    isCellSelected,
-    isCellFocused,
-    startSelection,
-    extendSelection,
-    endSelection,
-    selectCell,
-    getCellBorderClasses,
-  } = useSelection()
-
-  const { isEditing } = useCellEditing()
-
-  const { showHierarchy } = useProjectTableContext()
-
-  const borderClasses = getCellBorderClasses(cellId)
-
-  const isPinned = cell.column.getIsPinned()
-  const isLastLeftPinnedColumn = isPinned === 'left' && cell.column.getIsLastColumn('left')
-  const isRowSelectionColumn = cell.column.id === ROW_SELECTION_COLUMN_ID
-
-  return (
-    <Styled.TableCell
-      {...props}
-      tabIndex={0}
-      key={cell.id}
-      $isLastPinned={isLastLeftPinnedColumn} // is this column the last pinned column? Custom styling for borders.
-      className={clsx(
-        cell.column.id,
-        cell.column.id === 'folderType' ? 'large' : '',
-        {
-          selected: isCellSelected(cellId),
-          focused: isCellFocused(cellId),
-          editing: isEditing(cellId),
-          'last-pinned-left': isLastLeftPinnedColumn,
-        },
-        className,
-        ...borderClasses,
-      )}
-      style={{
-        ...getCommonPinningStyles(cell.column),
-        width: `calc(var(--col-${cell.column.id}-size) * 1px)`,
-        height: showHierarchy ? 36 : 40,
-      }}
-      onMouseDown={(e) => {
-        // Only process left clicks (button 0), ignore right clicks
-        if (e.button !== 0) return
-
-        // check we are not clicking on expander
-        if ((e.target as HTMLElement).closest('.expander')) return
-        const additive = e.metaKey || e.ctrlKey || isRowSelectionColumn
-        if (e.shiftKey) {
-          // Shift+click extends selection from anchor cell
-          selectCell(cellId, additive, true) // true for range selection
-        } else {
-          // Normal click starts a new selection
-          startSelection(cellId, additive)
-        }
-      }}
-      onMouseOver={(e) => {
-        if (e.buttons === 1) {
-          // Left button is pressed during mouse move - drag selection
-          extendSelection(cellId, isRowSelectionColumn)
-        }
-      }}
-      onMouseUp={() => {
-        endSelection(cellId)
-      }}
-      onDoubleClick={(e) => {
-        if (cell.column.id === 'name') {
-          // select the row by selecting the row-selection cell
-          const rowSelectionCellId = getCellId(cell.row.id, ROW_SELECTION_COLUMN_ID)
-          if (!isCellSelected(rowSelectionCellId)) {
-            const additive = e.metaKey || e.ctrlKey
-            selectCell(rowSelectionCellId, additive, false)
-          }
-        }
-      }}
-      onContextMenu={(e) => {
-        e.preventDefault()
-        // if the cell is not selected, select it and deselect all others
-        if (!isCellSelected(cellId)) {
-          selectCell(cellId, false, false)
-        }
-      }}
-    >
-      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-    </Styled.TableCell>
-  )
-}
-
-const TableCellMemo = memo(TableCell)
-
-type TableCellsProps = {
-  row: Row<TableRow>
-  isRowSelected: boolean
-  columnPinning: ColumnPinningState // purely for memoization
-}
-
-const TableCells = ({ row, isRowSelected }: TableCellsProps) => {
-  return row.getVisibleCells().map((cell) => {
-    const cellId = getCellId(row.id, cell.column.id)
-
-    return (
-      <TableCellMemo
-        cell={cell}
-        cellId={cellId}
-        key={cell.id}
-        className={clsx({ ['selected-row']: isRowSelected })}
-      />
-    )
-  })
-}
-
-const TableCellsMemo = memo(TableCells)
-
 const FlexTable = ({
   scope,
   tableData,
@@ -256,7 +136,6 @@ const FlexTable = ({
 
   // Selection context
   const { registerGrid } = useSelection()
-  const { isRowSelected } = useSelectedRows()
 
   // COLUMN SIZING
   const [columnSizing, setColumnSizing] = useLocalStorage<ColumnSizingState>(
@@ -352,23 +231,16 @@ const FlexTable = ({
     registerGrid(rowIds, colIdsSortedByPinning)
   }, [rows, table.getAllLeafColumns(), columnPinning, registerGrid])
 
-  const rowVirtualizer = useVirtualizer({
-    count: rows.length,
-    estimateSize: () => (showHierarchy ? 36 : 40), //estimate row height for accurate scrollbar dragging
-    getScrollElement: () => tableContainerRef.current,
-    //measure dynamic row height, except in firefox because it measures table border height incorrectly
-    measureElement:
-      typeof window !== 'undefined' && navigator.userAgent.indexOf('Firefox') === -1
-        ? (element) => element?.getBoundingClientRect().height
-        : undefined,
-    overscan: 5,
+  const visibleColumns = table.getVisibleLeafColumns()
+
+  // Use the column virtualization hook
+  const { columnVirtualizer, virtualPaddingLeft, virtualPaddingRight } = useColumnVirtualization({
+    visibleColumns,
+    tableContainerRef,
+    columnPinning,
   })
 
   const columnSizeVars = useCustomColumnWidthVars(table, columnSizing)
-
-  const { handleTableBodyContextMenu } = useCellContextMenu({ attribs })
-
-  const { handlePreFetchTasks } = usePrefetchFolderTasks()
 
   return (
     <Styled.TableWrapper>
@@ -380,131 +252,397 @@ const FlexTable = ({
       >
         <table
           style={{
+            display: 'grid',
             borderCollapse: 'collapse',
             userSelect: 'none',
             ...columnSizeVars,
             width: table.getTotalSize(),
           }}
         >
-          <Styled.TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => {
-              return (
-                <Styled.ColumnHeader key={headerGroup.id} style={{ display: 'flex' }}>
-                  {headerGroup.headers.map((header) => {
-                    const { column } = header
-                    const isRowSelectionColumn = column.id === ROW_SELECTION_COLUMN_ID
-
-                    return (
-                      <Styled.HeaderCell
-                        className={clsx(header.id, 'shimmer-dark', {
-                          loading: !isInitialized,
-                          large: column.id === 'folderType',
-                          'last-pinned-left':
-                            column.getIsPinned() === 'left' && column.getIsLastColumn('left'),
-                        })}
-                        key={header.id}
-                        style={{
-                          ...getCommonPinningStyles(column),
-                          width: `calc(var(--header-${header?.id}-size) * 1px)`,
-                        }}
-                      >
-                        {header.isPlaceholder ? null : (
-                          <Styled.TableCellContent
-                            className={clsx('bold', {
-                              large: column.id === 'folderType',
-                            })}
-                          >
-                            {flexRender(column.columnDef.header, header.getContext())}
-
-                            <Styled.HeaderButtons className="actions">
-                              {/* COLUMN HIDING */}
-                              <HeaderActionButton
-                                icon="visibility_off"
-                                selected={!column.getIsVisible()}
-                                onClick={column.getToggleVisibilityHandler()}
-                              />
-                              {/* COLUMN SORTING */}
-                              <HeaderActionButton
-                                icon="push_pin"
-                                selected={header.column.getIsPinned() === 'left'}
-                                onClick={() => {
-                                  if (header.column.getIsPinned() === 'left') {
-                                    header.column.pin(false)
-                                  } else {
-                                    header.column.pin('left')
-                                  }
-                                }}
-                              />
-                              {/* COLUMN PINNING */}
-                              <HeaderActionButton
-                                icon={'sort'}
-                                style={{
-                                  transform:
-                                    (column.getIsSorted() as string) === 'asc'
-                                      ? 'scaleY(-1)'
-                                      : undefined,
-                                }}
-                                onClick={column.getToggleSortingHandler()}
-                                selected={!!column.getIsSorted()}
-                              />
-                            </Styled.HeaderButtons>
-                            {!isRowSelectionColumn && (
-                              <Styled.ResizedHandler
-                                {...{
-                                  onDoubleClick: () => column.resetSize(),
-                                  onMouseDown: header.getResizeHandler(),
-                                  onTouchStart: header.getResizeHandler(),
-                                  className: clsx('resize-handle', {
-                                    resizing: column.getIsResizing(),
-                                  }),
-                                }}
-                              />
-                            )}
-                          </Styled.TableCellContent>
-                        )}
-                      </Styled.HeaderCell>
-                    )
-                  })}
-                </Styled.ColumnHeader>
-              )
-            })}
-          </Styled.TableHeader>
-          {rowVirtualizer.getVirtualItems().length ? (
-            <tbody
-              style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
-              onContextMenu={handleTableBodyContextMenu}
-              onMouseOver={(e) => {
-                handlePreFetchTasks(e)
-              }}
-            >
-              {rowVirtualizer.getVirtualItems().map((virtualRow: $Any) => {
-                const row = rows[virtualRow.index] as Row<TableRow>
-                return (
-                  <Styled.TR
-                    data-index={virtualRow.index} //needed for dynamic row height measurement
-                    // @ts-ignore
-                    ref={(node) => rowVirtualizer.measureElement(node)} //measure dynamic row height
-                    key={row.id}
-                    style={{
-                      transform: `translateY(${virtualRow.start}px)`, //this should always be a `style` as it changes on scroll
-                    }}
-                  >
-                    <TableCellsMemo
-                      row={row}
-                      isRowSelected={isRowSelected(row.id)}
-                      columnPinning={columnPinning}
-                    />
-                  </Styled.TR>
-                )
-              })}
-            </tbody>
-          ) : (
-            <EmptyPlaceholder message="No folders or tasks found" />
-          )}
+          <TableHead
+            columnVirtualizer={columnVirtualizer}
+            table={table}
+            virtualPaddingLeft={virtualPaddingLeft}
+            virtualPaddingRight={virtualPaddingRight}
+            isLoading={isLoading}
+          />
+          <TableBody
+            columnVirtualizer={columnVirtualizer}
+            table={table}
+            tableContainerRef={tableContainerRef}
+            virtualPaddingLeft={virtualPaddingLeft}
+            virtualPaddingRight={virtualPaddingRight}
+            showHierarchy={showHierarchy}
+            attribs={attribs}
+          />
         </table>
       </Styled.TableContainer>
     </Styled.TableWrapper>
   )
 }
+
+interface TableHeadProps {
+  columnVirtualizer: Virtualizer<HTMLDivElement, HTMLTableCellElement>
+  table: Table<TableRow>
+  virtualPaddingLeft: number | undefined
+  virtualPaddingRight: number | undefined
+  isLoading: boolean
+}
+
+const TableHead = ({
+  columnVirtualizer,
+  table,
+  virtualPaddingLeft,
+  virtualPaddingRight,
+  isLoading,
+}: TableHeadProps) => {
+  return (
+    <Styled.TableHeader>
+      {table.getHeaderGroups().map((headerGroup) => (
+        <TableHeadRow
+          key={headerGroup.id}
+          columnVirtualizer={columnVirtualizer}
+          headerGroup={headerGroup}
+          virtualPaddingLeft={virtualPaddingLeft}
+          virtualPaddingRight={virtualPaddingRight}
+          isLoading={isLoading}
+        />
+      ))}
+    </Styled.TableHeader>
+  )
+}
+
+interface TableHeadRowProps {
+  columnVirtualizer: Virtualizer<HTMLDivElement, HTMLTableCellElement>
+  headerGroup: HeaderGroup<TableRow>
+  virtualPaddingLeft: number | undefined
+  virtualPaddingRight: number | undefined
+  isLoading: boolean
+}
+
+const TableHeadRow = ({
+  columnVirtualizer,
+  headerGroup,
+  virtualPaddingLeft,
+  virtualPaddingRight,
+  isLoading,
+}: TableHeadRowProps) => {
+  const virtualColumns = columnVirtualizer.getVirtualItems()
+  return (
+    <Styled.ColumnHeader key={headerGroup.id} style={{ display: 'flex' }}>
+      {virtualPaddingLeft ? (
+        //fake empty column to the left for virtualization scroll padding
+        <th style={{ display: 'flex', width: virtualPaddingLeft }} />
+      ) : null}
+      {virtualColumns.map((virtualColumn) => {
+        const header = headerGroup.headers[virtualColumn.index]
+        return <TableHeadCell key={header.id} header={header} isLoading={isLoading} />
+      })}
+      {virtualPaddingRight ? (
+        //fake empty column to the right for virtualization scroll padding
+        <th style={{ display: 'flex', width: virtualPaddingRight }} />
+      ) : null}
+    </Styled.ColumnHeader>
+  )
+}
+
+interface TableHeadCellProps {
+  header: Header<TableRow, unknown>
+  isLoading: boolean
+}
+
+const TableHeadCell = ({ header, isLoading }: TableHeadCellProps) => {
+  const { column } = header
+  const isRowSelectionColumn = column.id === ROW_SELECTION_COLUMN_ID
+
+  return (
+    <Styled.HeaderCell
+      className={clsx(header.id, 'shimmer-dark', {
+        loading: isLoading,
+        large: column.id === 'folderType',
+        'last-pinned-left': column.getIsPinned() === 'left' && column.getIsLastColumn('left'),
+      })}
+      key={header.id}
+      style={{
+        ...getCommonPinningStyles(column),
+        width: `calc(var(--header-${header?.id}-size) * 1px)`,
+      }}
+    >
+      {header.isPlaceholder ? null : (
+        <Styled.TableCellContent
+          className={clsx('bold', {
+            large: column.id === 'folderType',
+          })}
+        >
+          {flexRender(column.columnDef.header, header.getContext())}
+
+          <Styled.HeaderButtons className="actions">
+            {/* COLUMN HIDING */}
+            <HeaderActionButton
+              icon="visibility_off"
+              selected={!column.getIsVisible()}
+              onClick={column.getToggleVisibilityHandler()}
+            />
+            {/* COLUMN SORTING */}
+            <HeaderActionButton
+              icon="push_pin"
+              selected={header.column.getIsPinned() === 'left'}
+              onClick={() => {
+                if (header.column.getIsPinned() === 'left') {
+                  header.column.pin(false)
+                } else {
+                  header.column.pin('left')
+                }
+              }}
+            />
+            {/* COLUMN PINNING */}
+            <HeaderActionButton
+              icon={'sort'}
+              style={{
+                transform: (column.getIsSorted() as string) === 'asc' ? 'scaleY(-1)' : undefined,
+              }}
+              onClick={column.getToggleSortingHandler()}
+              selected={!!column.getIsSorted()}
+            />
+          </Styled.HeaderButtons>
+          {!isRowSelectionColumn && (
+            <Styled.ResizedHandler
+              {...{
+                onDoubleClick: () => column.resetSize(),
+                onMouseDown: header.getResizeHandler(),
+                onTouchStart: header.getResizeHandler(),
+                className: clsx('resize-handle', {
+                  resizing: column.getIsResizing(),
+                }),
+              }}
+            />
+          )}
+        </Styled.TableCellContent>
+      )}
+    </Styled.HeaderCell>
+  )
+}
+
+interface TableBodyProps {
+  columnVirtualizer: Virtualizer<HTMLDivElement, HTMLTableCellElement>
+  table: Table<TableRow>
+  tableContainerRef: React.RefObject<HTMLDivElement>
+  showHierarchy: boolean
+  virtualPaddingLeft: number | undefined
+  virtualPaddingRight: number | undefined
+  attribs: AttributeModel[]
+}
+
+const TableBody = ({
+  columnVirtualizer,
+  table,
+  tableContainerRef,
+  showHierarchy,
+  virtualPaddingLeft,
+  virtualPaddingRight,
+  attribs,
+}: TableBodyProps) => {
+  const { handleTableBodyContextMenu } = useCellContextMenu({ attribs })
+
+  const { handlePreFetchTasks } = usePrefetchFolderTasks()
+
+  const { rows } = table.getRowModel()
+
+  const rowVirtualizer = useVirtualizer<HTMLDivElement, HTMLTableRowElement>({
+    count: rows.length,
+    estimateSize: () => (showHierarchy ? 36 : 40), //estimate row height for accurate scrollbar dragging
+    getScrollElement: () => tableContainerRef.current,
+    //measure dynamic row height, except in firefox because it measures table border height incorrectly
+    measureElement:
+      typeof window !== 'undefined' && navigator.userAgent.indexOf('Firefox') === -1
+        ? (element) => element?.getBoundingClientRect().height
+        : undefined,
+    overscan: 5,
+  })
+
+  const virtualRows = rowVirtualizer.getVirtualItems()
+
+  return virtualRows.length ? (
+    <tbody
+      style={{
+        height: `${rowVirtualizer.getTotalSize()}px`,
+        position: 'relative',
+        display: 'grid',
+      }}
+      onContextMenu={handleTableBodyContextMenu}
+      onMouseOver={(e) => {
+        handlePreFetchTasks(e)
+      }}
+    >
+      {virtualRows.map((virtualRow) => {
+        const row = rows[virtualRow.index] as Row<TableRow>
+        return (
+          <TableBodyRow
+            key={row.id}
+            columnVirtualizer={columnVirtualizer}
+            row={row}
+            rowVirtualizer={rowVirtualizer}
+            virtualPaddingLeft={virtualPaddingLeft}
+            virtualPaddingRight={virtualPaddingRight}
+            virtualRow={virtualRow}
+          />
+        )
+      })}
+    </tbody>
+  ) : (
+    <EmptyPlaceholder message="No folders or tasks found" />
+  )
+}
+
+interface TableBodyRowProps {
+  columnVirtualizer: Virtualizer<HTMLDivElement, HTMLTableCellElement>
+  row: Row<TableRow>
+  rowVirtualizer: Virtualizer<HTMLDivElement, HTMLTableRowElement>
+  virtualPaddingLeft: number | undefined
+  virtualPaddingRight: number | undefined
+  virtualRow: VirtualItem
+}
+
+const TableBodyRow = ({
+  columnVirtualizer,
+  row,
+  rowVirtualizer,
+  virtualPaddingLeft,
+  virtualPaddingRight,
+  virtualRow,
+}: TableBodyRowProps) => {
+  // We should do this so that we don't re-render every time anything in projectTableContext changes
+  const visibleCells = row.getVisibleCells()
+  const virtualColumns = columnVirtualizer.getVirtualItems()
+
+  return (
+    <Styled.TR
+      data-index={virtualRow.index} //needed for dynamic row height measurement
+      ref={(node) => rowVirtualizer.measureElement(node)} //measure dynamic row height
+      key={row.id}
+      style={{
+        transform: `translateY(${virtualRow.start}px)`, //this should always be a `style` as it changes on scroll
+      }}
+    >
+      {virtualPaddingLeft ? (
+        //fake empty column to the left for virtualization scroll padding
+        <td style={{ display: 'flex', width: virtualPaddingLeft }} />
+      ) : null}
+      {virtualColumns.map((vc) => {
+        const cell = visibleCells[vc.index]
+        const cellId = getCellId(row.id, cell.column.id)
+        return <TableCellMemo cell={cell} cellId={cellId} rowId={row.id} key={cell.id} />
+      })}
+
+      {virtualPaddingRight ? (
+        //fake empty column to the right for virtualization scroll padding
+        <td style={{ display: 'flex', width: virtualPaddingRight }} />
+      ) : null}
+    </Styled.TR>
+  )
+}
+
+interface TableCellProps {
+  cell: Cell<TableRow, unknown>
+  cellId: string
+  rowId: string
+  className?: string
+}
+
+const TableCell = ({ cell, rowId, cellId, className, ...props }: TableCellProps) => {
+  const {
+    isCellSelected,
+    isCellFocused,
+    startSelection,
+    extendSelection,
+    endSelection,
+    selectCell,
+    getCellBorderClasses,
+  } = useSelection()
+
+  const { isRowSelected } = useSelectedRows()
+
+  const { isEditing } = useCellEditing()
+
+  const { showHierarchy } = useProjectTableContext()
+
+  const borderClasses = getCellBorderClasses(cellId)
+
+  const isPinned = cell.column.getIsPinned()
+  const isLastLeftPinnedColumn = isPinned === 'left' && cell.column.getIsLastColumn('left')
+  const isRowSelectionColumn = cell.column.id === ROW_SELECTION_COLUMN_ID
+
+  return (
+    <Styled.TableCell
+      {...props}
+      tabIndex={0}
+      key={cell.id}
+      $isLastPinned={isLastLeftPinnedColumn} // is this column the last pinned column? Custom styling for borders.
+      className={clsx(
+        cell.column.id,
+        cell.column.id === 'folderType' ? 'large' : '',
+        {
+          selected: isCellSelected(cellId),
+          focused: isCellFocused(cellId),
+          editing: isEditing(cellId),
+          'last-pinned-left': isLastLeftPinnedColumn,
+          'selected-row': isRowSelected(rowId),
+        },
+        className,
+        ...borderClasses,
+      )}
+      style={{
+        ...getCommonPinningStyles(cell.column),
+        width: `calc(var(--col-${cell.column.id}-size) * 1px)`,
+        height: showHierarchy ? 36 : 40,
+      }}
+      onMouseDown={(e) => {
+        // Only process left clicks (button 0), ignore right clicks
+        if (e.button !== 0) return
+
+        // check we are not clicking on expander
+        if ((e.target as HTMLElement).closest('.expander')) return
+        const additive = e.metaKey || e.ctrlKey || isRowSelectionColumn
+        if (e.shiftKey) {
+          // Shift+click extends selection from anchor cell
+          selectCell(cellId, additive, true) // true for range selection
+        } else {
+          // Normal click starts a new selection
+          startSelection(cellId, additive)
+        }
+      }}
+      onMouseOver={(e) => {
+        if (e.buttons === 1) {
+          // Left button is pressed during mouse move - drag selection
+          extendSelection(cellId, isRowSelectionColumn)
+        }
+      }}
+      onMouseUp={() => {
+        endSelection(cellId)
+      }}
+      onDoubleClick={(e) => {
+        if (cell.column.id === 'name') {
+          // select the row by selecting the row-selection cell
+          const rowSelectionCellId = getCellId(cell.row.id, ROW_SELECTION_COLUMN_ID)
+          if (!isCellSelected(rowSelectionCellId)) {
+            const additive = e.metaKey || e.ctrlKey
+            selectCell(rowSelectionCellId, additive, false)
+          }
+        }
+      }}
+      onContextMenu={(e) => {
+        e.preventDefault()
+        // if the cell is not selected, select it and deselect all others
+        if (!isCellSelected(cellId)) {
+          selectCell(cellId, false, false)
+        }
+      }}
+    >
+      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+    </Styled.TableCell>
+  )
+}
+
+const TableCellMemo = memo(TableCell)
 
 export default FlexTableWithProviders

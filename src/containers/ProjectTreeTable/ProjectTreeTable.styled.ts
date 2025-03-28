@@ -13,7 +13,7 @@ const getDefaultShadow = (isLastPinned: boolean) => {
 }
 
 export const TR = styled.tr`
-  display: table-row;
+  display: flex;
   position: absolute;
   width: 100%;
 `
@@ -32,7 +32,6 @@ export const TableCellContent = styled.div`
   padding-right: 0;
 
   min-width: ${cellMinWidth}px;
-  height: auto;
   &.bold {
     font-weight: 600;
   }
@@ -66,11 +65,11 @@ export const ResizedHandler = styled.div`
   }
 `
 
-export const ColumnHeader = styled.div`
+export const ColumnHeader = styled.tr`
   background-color: var(--md-sys-color-surface-container-low);
 `
 
-export const HeaderCell = styled.div`
+export const HeaderCell = styled.th`
   position: relative;
   background-color: var(--md-sys-color-surface-container-lowest);
   box-shadow: inset 1px -1px 0 0 var(--md-sys-color-surface-container);
@@ -269,7 +268,7 @@ export const TableCell = styled.td<TableCellProps>`
   }
 `
 
-export const TableHeader = styled.div`
+export const TableHeader = styled.thead`
   display: grid !important;
   position: sticky;
   top: 0;

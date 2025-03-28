@@ -8,6 +8,7 @@ const StyledSelectionCell = styled.div`
   justify-content: center;
   /* This is super important as it prevents onMouseOver incorrectly firing when Icon is added/removed */
   pointer-events: none;
+  height: 100%;
 
   /* default hidden. Shown with styles in ProjectTreeTable.styled */
   [icon='check'] {
