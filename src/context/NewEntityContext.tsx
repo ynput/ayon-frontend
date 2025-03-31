@@ -3,7 +3,6 @@ import { OperationModel } from '@api/rest/operations'
 import { v1 as uuid1 } from 'uuid'
 import { toast } from 'react-toastify'
 import getSequence from '@helpers/getSequence'
-import { ProjectModel } from '@api/rest/project'
 import { generateLabel } from '@components/NewEntity/NewEntity'
 import { PatchOperation, useUpdateOverviewEntitiesMutation } from '@queries/overview/updateOverview'
 import { useProjectTableContext } from '@containers/ProjectTreeTable/context/ProjectTableContext'
@@ -33,7 +32,7 @@ interface NewEntityContextProps {
   sequenceForm: SequenceForm
   setSequenceForm: React.Dispatch<React.SetStateAction<SequenceForm>>
   onCreateNew: (selectedFolderIds: string[]) => Promise<void>
-  onOpenNew: (type: NewEntityType, projectInfo: ProjectModel | undefined) => void
+  onOpenNew: (type: NewEntityType, config?: { isSequence?: boolean }) => void
 }
 
 export const NewEntityContext = createContext<NewEntityContextProps | undefined>(undefined)
@@ -326,7 +325,7 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
     }
   }
 
-  const onOpenNew: NewEntityContextProps['onOpenNew'] = (type, projectInfo) => {
+  const onOpenNew: NewEntityContextProps['onOpenNew'] = (type, config) => {
     // set entityType
     setEntityType(type)
     // set any default values
@@ -339,6 +338,16 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
     const initData = {
       subType: firstName,
       label: generateLabel(type, firstName, projectInfo),
+    }
+
+    console.log(config)
+
+    // if sequence, set sequenceForm active
+    if (config?.isSequence) {
+      setSequenceForm((prev) => ({
+        ...prev,
+        active: true,
+      }))
     }
 
     setEntityForm(initData)

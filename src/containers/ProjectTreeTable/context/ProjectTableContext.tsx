@@ -32,15 +32,17 @@ import useFolderRelationships, {
 import { RowId } from '../utils/cellUtils'
 import clientFilterToQueryFilter from '../utils/clientFilterToQueryFilter'
 import { QueryTasksFoldersApiArg } from '@api/rest/folders'
-import { useProjectDataContext } from './ProjectDataContext'
+import { ProjectDataContextProps, useProjectDataContext } from './ProjectDataContext'
 
 export interface ProjectTableContextProps {
   isInitialized: boolean
   isLoading: boolean
   // Project Info
-  projectInfo?: any
+  projectInfo?: ProjectDataContextProps['projectInfo']
   projectName: string
-  users: any[]
+  users: ProjectDataContextProps['users']
+  // Attributes
+  attribFields: ProjectDataContextProps['attribFields']
 
   // Data
   tableData: TableRow[]
@@ -48,9 +50,6 @@ export interface ProjectTableContextProps {
   foldersMap: FolderNodeMap
   fetchNextPage: () => void
   getEntityById: (id: string) => MatchingFolder | EditorTaskNode | undefined
-
-  // Attributes
-  attribFields: any[]
 
   // Filters
   filters: Filter[]

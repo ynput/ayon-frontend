@@ -83,7 +83,7 @@ const NewEntity: React.FC<NewEntityProps> = () => {
 
   const [createMore, setCreateMore] = useState(false)
   const { selectedCells } = useSelection()
-  const { getEntityById, projectName, projectInfo } = useProjectTableContext()
+  const { getEntityById, projectInfo } = useProjectTableContext()
 
   const { selectedFolderIds, selectedFolders } = React.useMemo(() => {
     const selectedRowIds = Array.from(
@@ -207,7 +207,7 @@ const NewEntity: React.FC<NewEntityProps> = () => {
 
   const handleSubmit = async (stayOpen: boolean) => {
     setIsSubmitting(true)
-    await onCreateNew(selectedFolderIds, projectName)
+    await onCreateNew(selectedFolderIds)
     setIsSubmitting(false)
 
     if (stayOpen) {
@@ -249,17 +249,42 @@ const NewEntity: React.FC<NewEntityProps> = () => {
     }
   }
 
+  const options: {
+    label: string
+    value: string
+    type: NewEntityType
+    icon: string
+    shortcut?: string
+    isSequence?: boolean
+  }[] = [
+    { label: 'Folder', value: 'folder', type: 'folder', icon: 'create_new_folder', shortcut: 'N' },
+    {
+      label: 'Folder sequence',
+      value: 'sequence',
+      type: 'folder',
+      icon: 'topic',
+      shortcut: 'M',
+      isSequence: true,
+    },
+    { label: 'Task', value: 'task', type: 'task', icon: 'add_task', shortcut: 'T' },
+  ]
+
+  const handleOpenFromMenu = (value: string) => {
+    // get the full option object
+    const selectedOption = options.find((option) => option.value === value)
+    if (selectedOption) {
+      onOpenNew(selectedOption.type, { isSequence: selectedOption.isSequence })
+    }
+  }
+
   const addDisabled = !entityForm.label || !entityForm.subType
 
   return (
     <>
       <StyledCreateButton
-        options={[
-          { label: 'Folder', value: 'folder', icon: 'create_new_folder', shortcut: 'N' },
-          { label: 'Task', value: 'task', icon: 'add_task', shortcut: 'T' },
-        ]}
+        options={options}
         value={[]}
-        onChange={(v: string[]) => onOpenNew(v[0] as NewEntityType, projectInfo)}
+        onChange={(v: string[]) => handleOpenFromMenu(v[0])}
         valueTemplate={() => (
           <>
             <Icon icon="add" />
