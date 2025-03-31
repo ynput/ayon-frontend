@@ -31,7 +31,7 @@ export default function useFolderRelationships({
   tasksByFolderMap,
   getEntityById,
 }: UseFolderRelationshipsProps) {
-  const { projectInfo } = useProjectDataContext()
+  const { projectInfo, attribFields } = useProjectDataContext()
   const { attrib: projectAttrib = {} } = projectInfo || {}
   // Pre-compute folder-children relationships
   const folderChildrenMap = useMemo(() => {
@@ -211,7 +211,9 @@ export default function useFolderRelationships({
         for (const child of filteredChildren) {
           // Find which attributes would be inherited by this child
           const inheritedAttribs = attribEntries.filter(
-            ([attribName]) => !child.ownAttrib?.includes(attribName),
+            ([attribName]) =>
+              !child.ownAttrib?.includes(attribName) &&
+              attribFields.find((a) => a.name === attribName)?.data?.inherit,
           )
 
           // Record attributes that child owns (has its own value for)
