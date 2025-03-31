@@ -1,11 +1,12 @@
 import { forwardRef, KeyboardEvent, useState, useEffect, useRef } from 'react'
 import styled from 'styled-components'
+import { WidgetBaseProps } from './CellWidget'
 
 interface TextWidgetInputProps
   extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
   value: string
   onCancel?: () => void
-  onChange: (value: string, editNext?: boolean) => void
+  onChange: WidgetBaseProps['onChange']
   autoFocus?: boolean
 }
 
@@ -44,7 +45,7 @@ export const TextWidgetInput = forwardRef<HTMLInputElement, TextWidgetInputProps
     const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
       if (e.key === 'Enter') {
         e.preventDefault()
-        onChange(value, true)
+        onChange(value, 'Enter')
       } else if (e.key === 'Escape') {
         e.preventDefault()
         e.stopPropagation()
@@ -59,7 +60,7 @@ export const TextWidgetInput = forwardRef<HTMLInputElement, TextWidgetInputProps
       }
 
       if (!escapePressed.current) {
-        onChange(value)
+        onChange(value, 'Click')
       }
 
       // Reset the flag

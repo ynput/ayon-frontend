@@ -51,7 +51,7 @@ interface EditorCellProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'on
   isPlaceholder?: boolean
   isFocused?: boolean
   enableCustomValues?: boolean
-  onChange?: (value: CellValue | CellValue[], editNext?: boolean) => void
+  onChange?: (value: CellValue | CellValue[], key?: 'Enter' | 'Click' | 'Escape') => void
 }
 
 export interface WidgetBaseProps {
@@ -109,14 +109,16 @@ const EditorCellComponent = forwardRef<HTMLDivElement, EditorCellProps>(
       }
     }
 
-    const handleOnChange: WidgetBaseProps['onChange'] = (value, editNext) => {
+    const handleOnChange: WidgetBaseProps['onChange'] = (newValue, key) => {
       setEditingCellId(null)
-      // forward the value to the parent
-      onChange?.(value)
       // refocus on the td parent
       refocusTdCell()
       // move to the next cell row
-      editNext && moveToNextRow()
+      key === 'Enter' && moveToNextRow()
+      // make change if the value is different or if the key is 'Enter'
+      if (newValue !== value || key === 'Enter') {
+        onChange?.(newValue, key)
+      }
     }
 
     const handleChancel = () => {

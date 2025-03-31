@@ -204,10 +204,10 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
         : value.filter((v) => options.find((o) => o.value === v))
 
       if (type?.includes('list')) {
-        onChange(filteredValue)
+        onChange(filteredValue, 'Click')
       } else {
         // take first value as the type is not list]
-        onChange(filteredValue[0])
+        onChange(filteredValue[0], 'Click')
       }
     }
 

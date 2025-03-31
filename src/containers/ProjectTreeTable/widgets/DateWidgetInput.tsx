@@ -76,13 +76,13 @@ export const DateWidgetInput = forwardRef<HTMLInputElement, DateWidgetInputProps
       }
     }
 
-    const handleDateSubmit = () => {
+    const handleDateSubmit = (event?: 'Click' | 'Enter') => {
       if (value) {
         const parsed = Date.parse(value)
         if (isValid(parsed)) {
           const dateWithZeroTime = new Date(parsed)
           dateWithZeroTime.setUTCHours(0, 0, 0, 0)
-          onChange(dateWithZeroTime.toISOString(), true)
+          onChange(dateWithZeroTime.toISOString(), event)
           return true
         }
       }
@@ -90,7 +90,7 @@ export const DateWidgetInput = forwardRef<HTMLInputElement, DateWidgetInputProps
     }
 
     const handleBlur = () => {
-      if (!handleDateSubmit()) {
+      if (!handleDateSubmit('Click')) {
         onCancel?.()
       }
     }
@@ -98,7 +98,7 @@ export const DateWidgetInput = forwardRef<HTMLInputElement, DateWidgetInputProps
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
       if (e.key === 'Enter') {
         e.preventDefault()
-        handleDateSubmit()
+        handleDateSubmit('Enter')
         inputRef.current?.blur()
       } else if (e.key === 'Escape') {
         e.preventDefault()
