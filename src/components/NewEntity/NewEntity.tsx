@@ -22,6 +22,7 @@ import { EditorTaskNode, MatchingFolder } from '@containers/ProjectTreeTable/uti
 import FolderSequence from '@components/FolderSequence/FolderSequence'
 import { EntityForm, NewEntityType, useNewEntityContext } from '@context/NewEntityContext'
 import { ProjectModel } from '@api/rest/project'
+import useCreateEntityShortcuts from '@hooks/useCreateEntityShortcuts'
 
 const ContentStyled = styled.div`
   display: flex;
@@ -268,6 +269,9 @@ const NewEntity: React.FC<NewEntityProps> = () => {
     },
     { label: 'Task', value: 'task', type: 'task', icon: 'add_task', shortcut: 'T' },
   ]
+
+  // Use the keyboard shortcuts hook
+  useCreateEntityShortcuts({ options, onOpenNew })
 
   const handleOpenFromMenu = (value: string) => {
     // get the full option object
