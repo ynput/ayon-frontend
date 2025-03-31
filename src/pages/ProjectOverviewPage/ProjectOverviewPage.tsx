@@ -131,7 +131,7 @@ const ProjectOverviewPage: FC = () => {
                     <SplitterPanel
                       size={30}
                       style={{
-                        zIndex: 500,
+                        zIndex: 300,
                         minWidth: 300,
                       }}
                     >
