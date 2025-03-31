@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { toast } from 'react-toastify'
-import { rcompare } from 'semver'
+import { compareBuild } from 'semver'
 import { Dialog, Dropdown } from '@ynput/ayon-react-components'
 import {
   FormLayout,
@@ -45,7 +45,7 @@ const NewServiceDialog = ({ onHide }) => {
     if (!selectedAddon) return []
     return Object.keys(selectedAddon.versions)
       .filter((v) => Object.keys(selectedAddon.versions[v].services || []).length)
-      .sort((a, b) => rcompare(a, b))
+      .sort((a, b) => -1 * compareBuild(a, b))
       .map((v) => {
         return { value: v, label: `${selectedAddon.title} ${v}` }
       })
