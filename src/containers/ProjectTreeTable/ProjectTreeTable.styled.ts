@@ -47,6 +47,10 @@ export const TableCellContent = styled.div`
       height: 32px;
     }
   }
+
+  &:focus-visible {
+    outline: none;
+  }
 `
 
 export const ResizedHandler = styled.div`
@@ -140,6 +144,11 @@ export const TableCell = styled.td<TableCellProps>`
     background-color: var(--md-sys-color-secondary-container);
     position: relative;
     z-index: 1;
+  }
+
+  /* remove default focus style */
+  &:focus-visible {
+    outline: none;
   }
 
   /* Styling for the last pinned left column */

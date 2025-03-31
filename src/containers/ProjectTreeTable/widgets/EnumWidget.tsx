@@ -1,7 +1,7 @@
 import { AttributeData, AttributeEnumItem } from '@api/rest/attributes'
 import { Dropdown, DropdownProps, DropdownRef, Icon } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
-import { forwardRef, useEffect, useRef } from 'react'
+import { forwardRef, useEffect, useRef, useState } from 'react'
 import styled from 'styled-components'
 import { WidgetBaseProps } from './CellWidget'
 
@@ -93,9 +93,7 @@ const StyledDropdown = styled(Dropdown)`
   width: 100%;
 `
 
-interface EnumWidgetProps
-  extends Omit<DropdownProps, 'onChange' | 'value'>,
-    Omit<WidgetBaseProps, 'onCancelEdit'> {
+interface EnumWidgetProps extends Omit<DropdownProps, 'onChange' | 'value'>, WidgetBaseProps {
   value: (string | number | boolean)[]
   options: AttributeEnumItem[]
   type?: AttributeData['type']
@@ -106,6 +104,7 @@ interface EnumWidgetProps
     template?: Partial<EnumTemplateProps>
   }
   onOpen?: () => void
+  onNext?: () => void
 }
 
 const checkForImgSrc = (icon: string | undefined = ''): boolean => {
@@ -132,6 +131,8 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
       enableCustomValues,
       onOpen,
       onChange,
+      onCancelEdit,
+      onNext,
       pt,
       ...dropdownProps
     },
@@ -172,11 +173,28 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
       }
     }
 
+    const [dropdownOpen, setDropdownOpen] = useState(false)
     useEffect(() => {
       if (isEditing && dropdownRef.current && autoOpen) {
         !dropdownRef.current.isOpen && dropdownRef.current?.open()
+        setDropdownOpen(true)
+      } else {
+        setDropdownOpen(false)
       }
     }, [isEditing, dropdownRef.current, autoOpen])
+
+    // when the dropdown is open, focus the first item
+    useEffect(() => {
+      if (dropdownOpen) {
+        const optionsUlEl = dropdownRef.current?.getOptions() as HTMLUListElement
+        const firstItem = optionsUlEl?.querySelector('li')
+        if (firstItem) {
+          firstItem.focus()
+          // set style of li to have no outline (no focus ring)
+          firstItem.style.outline = 'none'
+        }
+      }
+    }, [dropdownOpen])
 
     const isMultiSelect = !!type?.includes('list')
 
@@ -229,6 +247,7 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
           sortBySelected
           {...dropdownProps}
           onChange={handleChange}
+          onClose={onCancelEdit}
         />
       )
     }

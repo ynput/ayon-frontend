@@ -18,8 +18,7 @@ type CellContextMenuProps = {
 
 const useCellContextMenu = ({ attribs }: CellContextMenuProps) => {
   // context hooks
-  const { projectInfo, projectName, showHierarchy, getEntityById, toggleExpandAll } =
-    useProjectTableContext()
+  const { projectName, showHierarchy, getEntityById, toggleExpandAll } = useProjectTableContext()
   const { copyToClipboard, exportCSV, pasteFromClipboard } = useClipboard()
   const { isCellSelected, selectedCells, clearSelection, selectCell } = useSelection()
   const { inheritFromParent } = useCellEditing()
@@ -158,7 +157,7 @@ const useCellContextMenu = ({ attribs }: CellContextMenuProps) => {
       {
         label: 'Create folder',
         icon: 'create_new_folder',
-        command: () => onOpenNew('folder', projectInfo),
+        command: () => onOpenNew('folder'),
         shouldShow: isNameColumn && showHierarchy,
       },
       {
@@ -166,14 +165,14 @@ const useCellContextMenu = ({ attribs }: CellContextMenuProps) => {
         icon: 'create_new_folder',
         command: () => {
           clearSelection()
-          onOpenNew('folder', projectInfo)
+          onOpenNew('folder')
         },
         shouldShow: isNameColumn && showHierarchy,
       },
       {
         label: 'Create task',
         icon: 'add_task',
-        command: () => onOpenNew('task', projectInfo),
+        command: () => onOpenNew('task'),
         shouldShow: isNameColumn && showHierarchy,
       },
 

@@ -1,6 +1,6 @@
 import { AttributeData, AttributeEnumItem } from '@api/rest/attributes'
 
-import { forwardRef, useMemo, memo, useCallback } from 'react'
+import { forwardRef, useMemo, memo, useCallback, useRef } from 'react'
 import styled from 'styled-components'
 
 // Widgets
@@ -21,6 +21,10 @@ const Cell = styled.div`
   padding: 4px 8px;
   display: flex;
   align-items: center;
+
+  &:focus-visible {
+    outline: none;
+  }
 
   &.inherited {
     opacity: 0.6;
@@ -47,7 +51,7 @@ interface EditorCellProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'on
   isPlaceholder?: boolean
   isFocused?: boolean
   enableCustomValues?: boolean
-  onChange?: (value: CellValue | CellValue[]) => void
+  onChange?: (value: CellValue | CellValue[], editNext?: boolean) => void
 }
 
 export interface WidgetBaseProps {
@@ -57,26 +61,24 @@ export interface WidgetBaseProps {
 }
 
 const EditorCellComponent = forwardRef<HTMLDivElement, EditorCellProps>(
-  (
-    {
-      rowId,
-      columnId,
-      value,
-      attributeData,
-      options = [],
-      isCollapsed,
-      isInherited,
-      isPlaceholder,
-      enableCustomValues,
-      onChange,
-      ...props
-    },
-    ref,
-  ) => {
+  ({
+    rowId,
+    columnId,
+    value,
+    attributeData,
+    options = [],
+    isCollapsed,
+    isInherited,
+    isPlaceholder,
+    enableCustomValues,
+    onChange,
+    ...props
+  }) => {
+    const ref = useRef<HTMLDivElement>(null)
     const type = attributeData?.type
 
     const { isEditing, setEditingCellId } = useCellEditing()
-    const { isCellFocused } = useSelection()
+    const { isCellFocused, gridMap, selectCell, focusCell } = useSelection()
     const cellId = getCellId(rowId, columnId)
 
     const isCurrentCellEditing = isEditing(cellId)
@@ -86,6 +88,8 @@ const EditorCellComponent = forwardRef<HTMLDivElement, EditorCellProps>(
       !isPlaceholder && setEditingCellId(cellId)
     }, [cellId, setEditingCellId, isPlaceholder])
 
+    const refocusTdCell = () => ref.current?.closest('td')?.focus()
+
     const handleSingleClick = () => {
       // clicking a cell that is not editing will close the editor on this cell
       if (!isCurrentCellEditing) {
@@ -93,14 +97,39 @@ const EditorCellComponent = forwardRef<HTMLDivElement, EditorCellProps>(
       }
     }
 
+    const moveToNextRow = () => {
+      const rowIndex = gridMap.rowIdToIndex.get(rowId)
+      if (rowIndex === undefined) return
+      const newRowId = gridMap.indexToRowId.get(rowIndex + 1)
+      if (newRowId) {
+        const newCellId = getCellId(newRowId, columnId)
+        selectCell(newCellId, false, false)
+        focusCell(newCellId)
+        setEditingCellId(newCellId)
+      }
+    }
+
+    const handleOnChange: WidgetBaseProps['onChange'] = (value, editNext) => {
+      setEditingCellId(null)
+      // forward the value to the parent
+      onChange?.(value)
+      // refocus on the td parent
+      refocusTdCell()
+      // move to the next cell row
+      editNext && moveToNextRow()
+    }
+
+    const handleChancel = () => {
+      setEditingCellId(null)
+      // refocus on the td parent
+      refocusTdCell()
+    }
+
     const widget = useMemo(() => {
       // Common props shared across all widgets
       const sharedProps: WidgetBaseProps = {
-        onChange: (value) => {
-          setEditingCellId(null)
-          onChange?.(value)
-        },
-        onCancelEdit: () => setEditingCellId(null),
+        onChange: handleOnChange,
+        onCancelEdit: handleChancel,
         isEditing: isCurrentCellEditing,
       }
 
@@ -122,7 +151,6 @@ const EditorCellComponent = forwardRef<HTMLDivElement, EditorCellProps>(
 
         case !!options.length: {
           const enumValue = Array.isArray(value) ? value : [value]
-          delete sharedProps.onCancelEdit
           return (
             <EnumWidget
               value={enumValue}
@@ -151,7 +179,16 @@ const EditorCellComponent = forwardRef<HTMLDivElement, EditorCellProps>(
           // if the type is not recognized, fall back to the TextWidget
           return <TextWidget value={value as string} {...sharedProps} />
       }
-    }, [cellId, value, type, isCurrentCellEditing, options, isCollapsed, setEditingCellId])
+    }, [
+      cellId,
+      value,
+      type,
+      isCurrentCellEditing,
+      options,
+      isCollapsed,
+      handleOnChange,
+      handleChancel,
+    ])
 
     return (
       <Cell

@@ -46,6 +46,7 @@ import usePrefetchFolderTasks from './hooks/usePrefetchFolderTasks'
 import useLocalStorage from '@hooks/useLocalStorage'
 import useCellContextMenu from './hooks/useCellContextMenu'
 import useColumnVirtualization from './hooks/useColumnVirtualization'
+import useKeyboardNavigation from './hooks/useKeyboardNavigation'
 
 // Utility function imports
 import { getCellId } from './utils/cellUtils'
@@ -463,6 +464,8 @@ const TableBody = ({
 
   const virtualRows = rowVirtualizer.getVirtualItems()
 
+  const { handleKeyDown } = useKeyboardNavigation()
+
   return virtualRows.length ? (
     <tbody
       style={{
@@ -474,6 +477,8 @@ const TableBody = ({
       onMouseOver={(e) => {
         handlePreFetchTasks(e)
       }}
+      onKeyDown={handleKeyDown}
+      tabIndex={-1} // Make the tbody focusable for keyboard events
     >
       {virtualRows.map((virtualRow) => {
         const row = rows[virtualRow.index] as Row<TableRow>

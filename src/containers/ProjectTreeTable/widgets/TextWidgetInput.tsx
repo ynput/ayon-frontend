@@ -5,7 +5,7 @@ interface TextWidgetInputProps
   extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
   value: string
   onCancel?: () => void
-  onChange: (value: string) => void
+  onChange: (value: string, editNext?: boolean) => void
   autoFocus?: boolean
 }
 
@@ -30,6 +30,7 @@ export const TextWidgetInput = forwardRef<HTMLInputElement, TextWidgetInputProps
     // Local state to manage input value
     const [value, setValue] = useState(initialValue)
     const inputRef = useRef<HTMLInputElement>(null)
+    const escapePressed = useRef(false)
 
     // Set focus on the input when component mounts
     useEffect(() => {
@@ -43,11 +44,26 @@ export const TextWidgetInput = forwardRef<HTMLInputElement, TextWidgetInputProps
     const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
       if (e.key === 'Enter') {
         e.preventDefault()
-        onChange(value)
+        onChange(value, true)
       } else if (e.key === 'Escape') {
         e.preventDefault()
+        e.stopPropagation()
+        escapePressed.current = true
         onCancel?.()
       }
+    }
+
+    const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+      if (e.relatedTarget?.tagName === 'INPUT') {
+        return
+      }
+
+      if (!escapePressed.current) {
+        onChange(value)
+      }
+
+      // Reset the flag
+      escapePressed.current = false
     }
 
     return (
@@ -57,7 +73,7 @@ export const TextWidgetInput = forwardRef<HTMLInputElement, TextWidgetInputProps
         value={value}
         onChange={(e) => setValue(e.target.value)}
         onKeyDown={handleKeyDown}
-        onBlur={() => onChange(value)}
+        onBlur={handleBlur}
       />
     )
   },

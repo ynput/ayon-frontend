@@ -55,20 +55,53 @@ export const DateWidgetInput = forwardRef<HTMLInputElement, DateWidgetInputProps
     useEffect(() => {
       if (autoFocus && inputRef.current) {
         inputRef.current.focus()
+        // Delay showPicker call until after focus to ensure it's tied to user interaction
+        setTimeout(() => {
+          try {
+            inputRef.current?.showPicker()
+          } catch (error) {
+            console.debug('Date picker could not be shown automatically:', error)
+          }
+        }, 100)
       }
     }, [autoFocus])
 
-    const handleBlur = () => {
+    // Ensure the picker opens when clicked directly
+    const handleClick = (e: React.MouseEvent<HTMLInputElement>) => {
+      e.preventDefault() // Prevent default to ensure our handler takes precedence
+      try {
+        inputRef.current?.showPicker()
+      } catch (error) {
+        console.debug('Date picker could not be shown on click:', error)
+      }
+    }
+
+    const handleDateSubmit = () => {
       if (value) {
         const parsed = Date.parse(value)
         if (isValid(parsed)) {
           const dateWithZeroTime = new Date(parsed)
           dateWithZeroTime.setUTCHours(0, 0, 0, 0)
-          onChange(dateWithZeroTime.toISOString())
-        } else {
-          onCancel?.()
+          onChange(dateWithZeroTime.toISOString(), true)
+          return true
         }
-      } else {
+      }
+      return false
+    }
+
+    const handleBlur = () => {
+      if (!handleDateSubmit()) {
+        onCancel?.()
+      }
+    }
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Enter') {
+        e.preventDefault()
+        handleDateSubmit()
+        inputRef.current?.blur()
+      } else if (e.key === 'Escape') {
+        e.preventDefault()
         onCancel?.()
       }
     }
@@ -81,6 +114,8 @@ export const DateWidgetInput = forwardRef<HTMLInputElement, DateWidgetInputProps
         value={value}
         onChange={(e) => setValue(e.target.value)}
         onBlur={handleBlur}
+        onKeyDown={handleKeyDown}
+        onClick={handleClick}
       />
     )
   },
