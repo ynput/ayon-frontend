@@ -8,7 +8,7 @@ import { useProjectTableContext } from '../context/ProjectTableContext'
 import { useCellEditing } from '../context/CellEditingContext'
 import { useNewEntityContext } from '@context/NewEntityContext'
 import { AttributeModel } from '@api/rest/attributes'
-import { InheritFromParentEntity } from './useUpdateEditorEntities'
+import { InheritFromParentEntity } from './useUpdateOverview'
 
 type ContextEvent = React.MouseEvent<HTMLTableSectionElement, MouseEvent>
 

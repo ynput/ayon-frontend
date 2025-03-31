@@ -1,9 +1,9 @@
 import React, { createContext, useContext, useState, useCallback, useMemo, ReactNode } from 'react'
 import { CellId } from '../utils/cellUtils'
-import useUpdateEditorEntities, {
+import useUpdateOverview, {
   InheritFromParent,
   UpdateTableEntities,
-} from '../hooks/useUpdateEditorEntities'
+} from '../hooks/useUpdateOverview'
 
 interface CellEditingContextType {
   editingCellId: CellId | null
@@ -21,7 +21,7 @@ export const CellEditingProvider: React.FC<{ children: ReactNode }> = ({ childre
   // Memoize these functions to prevent unnecessary re-renders
   const isEditing = useCallback((id: CellId) => id === editingCellId, [editingCellId])
 
-  const { updateEntities, inheritFromParent } = useUpdateEditorEntities()
+  const { updateEntities, inheritFromParent } = useUpdateOverview()
 
   const value = useMemo(
     () => ({

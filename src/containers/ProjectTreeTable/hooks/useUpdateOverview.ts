@@ -31,7 +31,7 @@ export type UpdateTableEntity = (
   { includeSelection }: { includeSelection: boolean },
 ) => Promise<void>
 
-const useUpdateEditorEntities = () => {
+const useUpdateOverview = () => {
   const {
     getEntityById,
     projectName,
@@ -310,4 +310,4 @@ const useUpdateEditorEntities = () => {
   return { updateEntities, inheritFromParent }
 }
 
-export default useUpdateEditorEntities
+export default useUpdateOverview
