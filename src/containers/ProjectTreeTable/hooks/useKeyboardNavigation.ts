@@ -1,22 +1,26 @@
-import { useCallback } from 'react'
+import { useCallback, useEffect } from 'react'
 import { useSelection } from '../context/SelectionContext'
 import { useCellEditing } from '../context/CellEditingContext'
 import { parseCellId, getCellId } from '../utils/cellUtils'
 
 export default function useKeyboardNavigation() {
-  const { focusedCellId, gridMap, selectCell, focusCell, clearSelection } = useSelection()
+  const { focusedCellId, gridMap, selectCell, focusCell, clearSelection, setFocusedCellId } =
+    useSelection()
 
   const { setEditingCellId, editingCellId } = useCellEditing()
 
   const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
+    (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement
+      if (!target?.closest('table')) return
+
       // Skip if event target is an input element or contentEditable
       if (
-        e.target instanceof HTMLElement &&
-        (e.target.tagName === 'INPUT' ||
-          e.target.tagName === 'TEXTAREA' ||
-          e.target.isContentEditable ||
-          e.target.getAttribute('role') === 'textbox')
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.isContentEditable ||
+        target.getAttribute('role') === 'textbox' ||
+        target.tagName === 'LI'
       ) {
         return
       }
@@ -87,6 +91,14 @@ export default function useKeyboardNavigation() {
           setEditingCellId(focusedCellId)
           break
         }
+        case 'Escape': {
+          e.preventDefault()
+          // Clear selection and stop editing
+          clearSelection()
+          setEditingCellId(null)
+          setFocusedCellId(null)
+          break
+        }
         case 'Tab': {
           e.preventDefault()
           // Move to next cell (right if no shift, left if shift)
@@ -132,5 +144,32 @@ export default function useKeyboardNavigation() {
     ],
   )
 
-  return { handleKeyDown }
+  // Attach the keydown event handler to the document
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyDown)
+
+    // Cleanup the event listener on component unmount
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [
+    handleKeyDown,
+    focusedCellId,
+    gridMap,
+    selectCell,
+    focusCell,
+    clearSelection,
+    setEditingCellId,
+    editingCellId,
+  ])
+  return {
+    handleKeyDown,
+    focusedCellId,
+    gridMap,
+    selectCell,
+    focusCell,
+    clearSelection,
+    setEditingCellId,
+    editingCellId,
+  }
 }

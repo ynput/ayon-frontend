@@ -464,7 +464,7 @@ const TableBody = ({
 
   const virtualRows = rowVirtualizer.getVirtualItems()
 
-  const { handleKeyDown } = useKeyboardNavigation()
+  useKeyboardNavigation()
 
   return virtualRows.length ? (
     <tbody
@@ -477,7 +477,6 @@ const TableBody = ({
       onMouseOver={(e) => {
         handlePreFetchTasks(e)
       }}
-      onKeyDown={handleKeyDown}
       tabIndex={-1} // Make the tbody focusable for keyboard events
     >
       {virtualRows.map((virtualRow) => {

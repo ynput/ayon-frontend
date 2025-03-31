@@ -88,8 +88,6 @@ const EditorCellComponent = forwardRef<HTMLDivElement, EditorCellProps>(
       !isPlaceholder && setEditingCellId(cellId)
     }, [cellId, setEditingCellId, isPlaceholder])
 
-    const refocusTdCell = () => ref.current?.closest('td')?.focus()
-
     const handleSingleClick = () => {
       // clicking a cell that is not editing will close the editor on this cell
       if (!isCurrentCellEditing) {
@@ -111,8 +109,6 @@ const EditorCellComponent = forwardRef<HTMLDivElement, EditorCellProps>(
 
     const handleOnChange: WidgetBaseProps['onChange'] = (newValue, key) => {
       setEditingCellId(null)
-      // refocus on the td parent
-      refocusTdCell()
       // move to the next cell row
       key === 'Enter' && moveToNextRow()
       // make change if the value is different or if the key is 'Enter'
@@ -123,8 +119,6 @@ const EditorCellComponent = forwardRef<HTMLDivElement, EditorCellProps>(
 
     const handleChancel = () => {
       setEditingCellId(null)
-      // refocus on the td parent
-      refocusTdCell()
     }
 
     const widget = useMemo(() => {
