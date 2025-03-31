@@ -4,7 +4,7 @@ import {
   useGetQueryTasksFoldersQuery,
   useGetTasksListInfiniteInfiniteQuery,
 } from '@queries/overview/getOverview'
-import { FolderNodeMap, TaskNodeMap } from '../../../containers/ProjectTreeTable/utils/types'
+import { FolderNodeMap, TaskNodeMap } from '../utils/types'
 import { useEffect, useMemo, useState } from 'react'
 import { ExpandedState, SortingState } from '@tanstack/react-table'
 import { ProjectTableContextProps } from '../context/ProjectTableContext'
@@ -13,7 +13,7 @@ import { determineLoadingTaskFolders } from '../utils/loadingUtils'
 export type TasksByFolderMap = Map<string, string[]>
 export type LoadingTasks = Record<string, number> // show number of loading tasks per folder or root
 
-type UseFetchEditorEntitiesData = {
+type useFetchOverviewDataData = {
   foldersMap: FolderNodeMap
   tasksMap: TaskNodeMap
   tasksByFolderMap: TasksByFolderMap
@@ -32,14 +32,14 @@ type Params = {
   showHierarchy: boolean
 }
 
-const useFetchEditorEntities = ({
+const useFetchOverviewData = ({
   projectName,
   selectedFolders, // comes from the slicer
   queryFilters,
   sorting,
   expanded,
   showHierarchy,
-}: Params): UseFetchEditorEntitiesData => {
+}: Params): useFetchOverviewDataData => {
   const {
     data: { folders = [] } = {},
     isLoading,
@@ -268,4 +268,4 @@ const useFetchEditorEntities = ({
   }
 }
 
-export default useFetchEditorEntities
+export default useFetchOverviewData

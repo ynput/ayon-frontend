@@ -1,7 +1,7 @@
 import { TableRow } from './types'
 import { AttributeModel } from '@api/rest/attributes'
 import { FolderNodeMap } from '../utils/types'
-import { LoadingTasks } from '../hooks/useFetchEditorEntities'
+import { LoadingTasks } from '../hooks/useFetchOverviewData'
 
 /**
  * Generates an array of placeholder rows for loading state

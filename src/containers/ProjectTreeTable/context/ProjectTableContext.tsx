@@ -10,7 +10,7 @@ import {
   VisibilityState,
 } from '@tanstack/react-table'
 import useLocalStorage from '@hooks/useLocalStorage'
-import useFetchAndUpdateEntityData from '../hooks/useFetchEditorEntities'
+import useFetchOverviewData from '../hooks/useFetchOverviewData'
 import useOverviewTable from '../hooks/useOverviewTable'
 import { useSlicerContext } from '@context/slicerContext'
 import { isEmpty } from 'lodash'
@@ -299,7 +299,7 @@ export const ProjectTableProvider = ({ children }: ProjectTableProviderProps) =>
     isLoadingAll,
     isLoadingMore,
     loadingTasks,
-  } = useFetchAndUpdateEntityData({
+  } = useFetchOverviewData({
     projectName,
     selectedFolders,
     queryFilters,

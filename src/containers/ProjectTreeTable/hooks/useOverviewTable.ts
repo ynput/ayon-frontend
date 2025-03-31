@@ -6,7 +6,7 @@ import {
   TaskNodeMap,
 } from '../../../containers/ProjectTreeTable/utils/types'
 import { FolderType, TaskType } from '@api/rest/project'
-import { LoadingTasks, TasksByFolderMap } from './useFetchEditorEntities'
+import { LoadingTasks, TasksByFolderMap } from './useFetchOverviewData'
 import { ExpandedState } from '@tanstack/react-table'
 import { generateLoadingRows } from '../utils/loadingUtils'
 import { TASKS_INFINITE_QUERY_COUNT } from '@queries/overview/getOverview'
