@@ -1,8 +1,10 @@
 import React from 'react'
 import Menu from '../MenuComponents/Menu'
+import { useHelp } from '@/feedback/HelpContext'
 
 export const HelpMenu = ({ user, ...props }) => {
   const isUser = user.data.isUser
+  const { buildUrl } = useHelp()
 
   const items = [
     {
@@ -20,10 +22,10 @@ export const HelpMenu = ({ user, ...props }) => {
       target: '_blank',
     },
     {
-      id: 'bug',
-      label: 'Report a Bug',
-      link: 'https://github.com/ynput/ayon-frontend/issues/new',
-      icon: 'bug_report',
+      id: 'feedback',
+      label: 'Leave Feedback',
+      link: buildUrl(true),
+      icon: 'feedback',
       target: '_blank',
     },
     { id: 'divider' },
