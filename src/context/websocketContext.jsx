@@ -25,6 +25,7 @@ export const SocketProvider = (props) => {
 
   const wsOpts = {
     shouldReconnect: () => {
+      if (!user.name) return false
       // check if there is a token
       const accessToken = localStorage.getItem('accessToken')
       // if not, log out user
