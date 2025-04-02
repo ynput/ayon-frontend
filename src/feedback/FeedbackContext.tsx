@@ -1,7 +1,13 @@
+import { useListAddonsQuery } from '@queries/addons/getAddons'
 import { useGetFeedbackVerificationQuery } from '@queries/cloud/cloud'
 import { useAppSelector } from '@state/store'
+import { upperFirst } from 'lodash'
 import React, { createContext, useContext, ReactNode, useEffect, useRef } from 'react'
 import { toast } from 'react-toastify'
+
+const addonNameMappings = {
+  powerpack: 'Power Features',
+}
 
 type FeedbackContextType = {
   openChangelog: () => void
@@ -23,6 +29,15 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
   const scriptLoaded = useRef(false)
 
   const { data: verification } = useGetFeedbackVerificationQuery(undefined, { skip: !user.name })
+  const { data: { addons = [] } = {}, isLoading: isLoadingAddons } = useListAddonsQuery({})
+
+  const addonCategories = addons
+    .filter((addon) => !!addon.productionVersion)
+    .map((addon) =>
+      addonNameMappings.hasOwnProperty(addon.name)
+        ? addonNameMappings[addon.name as keyof typeof addonNameMappings]
+        : `${upperFirst(addon.name)} Addon`,
+    )
 
   const loadScript = () => {
     if (!scriptLoaded.current) {
@@ -47,7 +62,6 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
 
   const identifyUser = () => {
     if (!user.name || !verification) return
-    console.log(verification)
     const win = window as any
     win.Featurebase('identify', verification, (err: any) => {
       // Callback function. Called when identify completed.
@@ -59,7 +73,13 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
     })
   }
 
-  const initializeChangelog = (): boolean => {
+  const initializeChangelog = (addons: string[]): boolean => {
+    const extraCategories: string[] = []
+    if (user.data.isAdmin) {
+      const adminCategories = ['Server']
+      extraCategories.push(...adminCategories)
+    }
+
     const win = window as any
     if (typeof win.Featurebase === 'function') {
       win.Featurebase(
@@ -74,6 +94,7 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
             usersName: user.attrib?.fullName,
             autoOpenForNewUpdates: true,
           },
+          category: ['Production Tracking', ...addons, ...extraCategories],
           theme: 'dark',
         },
         (_error: any, data: any) => {
@@ -138,7 +159,7 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
   }
 
   useEffect(() => {
-    if (!user.name || !verification) return
+    if (!user.name || !verification || isLoadingAddons) return
     // Load the Featurebase script
     loadScript()
 
@@ -149,14 +170,14 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
     identifyUser()
 
     // Initialize changelog widget
-    initializeChangelog()
+    initializeChangelog(addonCategories)
 
     // Initialize feedback widget
     initializeFeedbackWidget()
 
     // Initialize portal widget
     initializePortalWidget()
-  }, [user.name, verification])
+  }, [user.name, verification, isLoadingAddons, addonCategories])
 
   const openChangelog = () => {
     const win = window as any
