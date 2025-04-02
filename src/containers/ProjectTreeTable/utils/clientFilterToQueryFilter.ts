@@ -11,6 +11,7 @@ const clientFilterToQueryFilter = (filters: Filter[]): QueryFilter => {
   const conditions: (QueryCondition | QueryFilter)[] = filters
     .filter((f) => !!f.values?.length)
     .filter((f) => !f.id.includes('text')) // remove text search filters as they are handled separately
+    .filter((f) => f.id !== 'hierarchy') // remove hierarchy filter as it is handled separately
     .map((filter) => convertFilterToCondition(filter))
 
   // Return the QueryFilter with all conditions combined with AND
@@ -72,8 +73,6 @@ const convertFilterToCondition = (filter: Filter): QueryCondition => {
     operator = filter.inverted ? 'notnull' : 'isnull'
     return { key, operator }
   }
-
-  console.log(filter)
 
   // Handle different filter types
   if (hasSomeValue) {

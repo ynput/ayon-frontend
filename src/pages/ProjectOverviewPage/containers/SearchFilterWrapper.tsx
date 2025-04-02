@@ -50,7 +50,9 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
 
   // update filters when it changes
   useEffect(() => {
-    setFilters(_filters)
+    setFilters(
+      _filters.filter((filter, index, self) => self.findIndex((f) => f.id === filter.id) === index),
+    )
   }, [_filters, setFilters])
 
   return (
