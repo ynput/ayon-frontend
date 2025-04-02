@@ -134,7 +134,6 @@ const EditorPanel = ({
       {!noSelection && (
         <>
           <EntityThumbnailUploaderRow
-            isCompact
             projectName={projectName}
             entityType={entityType}
             onUpload={(id, updatedAt) =>
