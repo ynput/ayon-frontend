@@ -478,7 +478,6 @@ const TableBody = ({
       onMouseOver={(e) => {
         handlePreFetchTasks(e)
       }}
-      tabIndex={-1} // Make the tbody focusable for keyboard events
     >
       {virtualRows.map((virtualRow) => {
         const row = rows[virtualRow.index] as Row<TableRow>
