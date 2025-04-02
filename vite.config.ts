@@ -65,19 +65,14 @@ export default ({ mode }) => {
         filename: 'remoteEntry.js',
         shared: {
           react: {
-            requiredVersion: dependencies.react,
             singleton: true,
+            requiredVersion: dependencies.react,
           },
           'react-dom': {
+            singleton: true,
             requiredVersion: dependencies['react-dom'],
-            singleton: true,
-          },
-          'styled-components': {
-            requiredVersion: dependencies['styled-components'],
-            singleton: true,
           },
         },
-        runtimePlugins: ['./src/remote/custom-runtime-plugin'],
       }),
       react(),
     ],
