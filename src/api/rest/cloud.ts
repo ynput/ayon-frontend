@@ -14,21 +14,28 @@ const injectedRtkApi = api.injectEndpoints({
     deleteYnputCloudKey: build.mutation<DeleteYnputCloudKeyApiResponse, DeleteYnputCloudKeyApiArg>({
       query: () => ({ url: `/api/connect`, method: 'DELETE' }),
     }),
+    getFeedbackVerification: build.query<
+      GetFeedbackVerificationApiResponse,
+      GetFeedbackVerificationApiArg
+    >({
+      query: () => ({ url: `/api/connect/feedback` }),
+    }),
   }),
   overrideExisting: false,
 })
 export { injectedRtkApi as api }
-export type GetYnputCloudInfoApiResponse =
-  /** status 200 Successful Response */ YnputConnectResponseModel
+export type GetYnputCloudInfoApiResponse = /** status 200 Successful Response */ YnputCloudInfoModel
 export type GetYnputCloudInfoApiArg = void
-export type SetYnputCloudKeyApiResponse =
-  /** status 200 Successful Response */ YnputConnectResponseModel
+export type SetYnputCloudKeyApiResponse = /** status 200 Successful Response */ YnputCloudInfoModel
 export type SetYnputCloudKeyApiArg = {
   ynputConnectRequestModel: YnputConnectRequestModel
 }
 export type DeleteYnputCloudKeyApiResponse = /** status 200 Successful Response */ any
 export type DeleteYnputCloudKeyApiArg = void
-export type YnputConnectSubscriptionModel = {
+export type GetFeedbackVerificationApiResponse =
+  /** status 200 Successful Response */ UserVerificationResponse
+export type GetFeedbackVerificationApiArg = void
+export type YnputCloudSubscriptionModel = {
   /** Name of the subscription */
   name: string
   /** Type of the subscription */
@@ -36,12 +43,12 @@ export type YnputConnectSubscriptionModel = {
   /** End date of the trial */
   trialEnd?: string
 }
-export type YnputConnectResponseModel = {
-  /** ID of the instance */
+export type YnputCloudInfoModel = {
+  /** Ynput cloud instance ID */
   instanceId: string
   /** Name of the instance */
   instanceName: string
-  /** ID of the organization */
+  /** Organization ID */
   orgId: string
   /** Name of the organization */
   orgName: string
@@ -50,7 +57,7 @@ export type YnputConnectResponseModel = {
   /** Is the instance managed by Ynput Cloud? */
   managed?: boolean
   /** List of subscriptions */
-  subscriptions?: YnputConnectSubscriptionModel[]
+  subscriptions?: YnputCloudSubscriptionModel[]
 }
 export type ValidationError = {
   loc: (string | number)[]
@@ -63,4 +70,17 @@ export type HttpValidationError = {
 export type YnputConnectRequestModel = {
   /** Ynput cloud key */
   key: string
+}
+export type UserCustomFields = {
+  orgId?: string
+  instanceId?: string
+  verifiedUser?: string
+}
+export type UserVerificationResponse = {
+  name: string
+  email: string
+  userId: string
+  userHash: string
+  profilePicture?: string
+  customFields: UserCustomFields
 }

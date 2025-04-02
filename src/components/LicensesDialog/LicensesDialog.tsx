@@ -5,7 +5,7 @@ import { FC, useEffect, useMemo } from 'react'
 import styled from 'styled-components'
 import copyToClipboard from '@helpers/copyToClipboard'
 import clsx from 'clsx'
-import { YnputConnectResponseModel } from '@api/rest/cloud'
+import { YnputCloudInfoModel } from '@api/rest/cloud'
 import { fromUnixTime, format } from 'date-fns'
 import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
 
@@ -177,7 +177,7 @@ const LicensesDialog: FC<LicensesDialogProps> = ({ onClose }) => {
   }, [licenses])
 
   // Cloud loading placeholder data
-  const cloudPlaceholderFields: (keyof YnputConnectResponseModel)[] = [
+  const cloudPlaceholderFields: (keyof YnputCloudInfoModel)[] = [
     'instanceId',
     'instanceName',
     'orgId',

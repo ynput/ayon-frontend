@@ -1,8 +1,8 @@
-import { YnputConnectSubscriptionModel } from '@api/rest/cloud'
+import { YnputCloudSubscriptionModel } from '@api/rest/cloud'
 import { differenceInDays, differenceInHours, formatDistanceToNow, isBefore } from 'date-fns'
 
 const getTrialDates = (
-  subscriptions?: YnputConnectSubscriptionModel[],
+  subscriptions?: YnputCloudSubscriptionModel[],
 ): {
   isTrialing: boolean
   left?: {

@@ -36,7 +36,12 @@ const outputFiles = {
     'createDependencyPackage',
     'deleteDependencyPackage',
   ],
-  cloud: ['getYnputCloudInfo', 'setYnputCloudKey', 'deleteYnputCloudKey'],
+  cloud: [
+    'getYnputCloudInfo',
+    'setYnputCloudKey',
+    'deleteYnputCloudKey',
+    'getFeedbackVerification',
+  ],
   attributes: ['getAttributeList', 'setAttributeList', 'getAttributeConfig'],
   config: [
     'getServerConfig',
@@ -58,7 +63,7 @@ const buildOutputFiles = (files: { [name: string]: string[] }) =>
   }, {})
 
 const config: ConfigFile = {
-  schemaFile: `http://localhost:5000/openapi.json`,
+  schemaFile: `http://localhost:3000/openapi.json`,
   apiFile: '../src/services/ayon.ts',
   exportName: 'api',
   apiImport: 'RestAPI',

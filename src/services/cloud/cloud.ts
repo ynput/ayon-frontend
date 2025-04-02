@@ -11,6 +11,7 @@ const cloudApi = api.enhanceEndpoints({
     deleteYnputCloudKey: {
       invalidatesTags: ['connections'],
     },
+    getFeedbackVerification: {},
   },
 })
 
@@ -18,4 +19,5 @@ export const {
   useGetYnputCloudInfoQuery,
   useSetYnputCloudKeyMutation,
   useDeleteYnputCloudKeyMutation,
+  useGetFeedbackVerificationQuery,
 } = cloudApi
