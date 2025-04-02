@@ -18,7 +18,13 @@ interface ThumbnailUploaderProps extends HTMLAttributes<HTMLDivElement> {
   entities: Entity[]
 }
 
-const ThumbnailUploader = ({ onFinish, entities, onUploadInProgress, inputRef, ...props }: ThumbnailUploaderProps) => {
+const ThumbnailUploader = ({
+  onFinish,
+  entities,
+  onUploadInProgress,
+  inputRef,
+  ...props
+}: ThumbnailUploaderProps) => {
   const [uploadingFile, setUploadingFile] = useState<null | File>()
   const [uploadingPreview, setUploadingPreview] = useState<null | string>()
   const [progress, setProgress] = useState(0)

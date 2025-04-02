@@ -1,5 +1,5 @@
 import { api, ListInstallersApiResponse } from '@api/rest/installers'
-import { coerce, rcompare } from 'semver'
+import { coerce, compareBuild } from 'semver'
 
 const installersApi = api.enhanceEndpoints({
   endpoints: {
@@ -16,7 +16,7 @@ const installersApi = api.enhanceEndpoints({
         const sortedInstallers = installers
           .sort((a, b) => {
             if (a.semver && b.semver) {
-              const semverComparison = rcompare(a.semver, b.semver)
+              const semverComparison = -1 * compareBuild(a.semver, b.semver)
               if (semverComparison === 0) {
                 return b.version.localeCompare(a.version)
               } else {

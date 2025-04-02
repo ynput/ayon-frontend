@@ -5,7 +5,7 @@ import Type from '@/theme/typography.module.css'
 import clsx from 'clsx'
 import { capitalize, isEmpty } from 'lodash'
 import AddonIcon from '@components/AddonIcon/AddonIcon'
-import { rcompare } from 'semver'
+import { compareBuild } from 'semver'
 import useUninstall from './useUninstall'
 import { Link } from 'react-router-dom'
 import { getSimplifiedUrl } from '@helpers/url'
@@ -83,7 +83,7 @@ const AddonDetails = ({ addon, isLoading, onDownload, isUpdatingAll }: AddonDeta
 
   const [showAllVersions, setShowAllVersions] = useState(false)
 
-  const versionKeysSorted = downloaded.sort((a, b) => rcompare(a, b))
+  const versionKeysSorted = downloaded.sort((a, b) => -1 * compareBuild(a, b))
   const versionsToShow = versionKeysSorted.length
     ? showAllVersions
       ? versionKeysSorted

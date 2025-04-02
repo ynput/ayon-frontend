@@ -54,6 +54,7 @@ const AppNavLinks = ({ links = [] }) => {
               startContent,
               endContent,
               uriSync,
+              module,
               ...props
             } = {},
             idx,
