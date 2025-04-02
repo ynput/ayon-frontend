@@ -31,7 +31,10 @@ const TrialBanner: FC<TrialBannerProps> = ({}) => {
   const isSnoozing = getIsSnoozing()
 
   // get the number of users currently active
-  const { data: activeUsersCount = 10 } = useGetActiveUsersCountQuery({})
+  const { data: activeUsersCount = 10 } = useGetActiveUsersCountQuery(
+    {},
+    { skip: !isTrialing || !canManage },
+  )
 
   const { show, hide } = useCustomerly()
 
