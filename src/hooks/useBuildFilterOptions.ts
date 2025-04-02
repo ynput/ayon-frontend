@@ -8,7 +8,7 @@ import { FolderType, Status, Tag, TaskType } from '@api/rest/project'
 import { ALLOW_INVERTED_FILTERS, SHOW_DATE_FILTERS } from '@components/SearchFilter/featureFlags'
 import { Option } from '@components/SearchFilter/types'
 import getEntityTypeIcon from '@helpers/getEntityTypeIcon'
-import { useGetAttributeListQuery } from '@queries/attributes/getAttributes'
+import { useGetSiteInfoQuery } from '@queries/auth/getAuth'
 import {
   GetProjectsInfoResponse,
   useGetKanbanProjectUsersQuery,
@@ -169,9 +169,11 @@ const useBuildFilterOptions = ({
     },
   )
 
-  const { data: attributes = [] } = useGetAttributeListQuery(undefined, {
-    skip: !filterTypes.includes('attributes'),
-  })
+  const { data: info } = useGetSiteInfoQuery(
+    { full: true },
+    { skip: !filterTypes.includes('attributes') },
+  )
+  const { attributes = [] } = info || {}
   //
   //
   // QUERIES

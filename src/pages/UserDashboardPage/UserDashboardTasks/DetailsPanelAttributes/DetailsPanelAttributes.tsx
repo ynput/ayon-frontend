@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Section } from '@ynput/ayon-react-components'
 import getMixedState from '@helpers/getMixedState'
 import { useGetProjectQuery } from '@queries/project/getProject'
-import { useGetAttributeListQuery } from '@queries/attributes/getAttributes'
+import { useGetSiteInfoQuery } from '@queries/auth/getAuth'
 import DetailsPanelAttributesEditor, {
   AttributeField,
   DetailsPanelAttributesEditorProps,
@@ -155,7 +155,8 @@ const DetailsPanelAttributes = ({ entities = [], isLoading }: DetailsPanelAttrib
   )
   const { folderTypes = [], taskTypes = [], statuses = [], tags = [] } = projectData || {}
 
-  const { data: attributes = [] } = useGetAttributeListQuery()
+  const { data: info } = useGetSiteInfoQuery({ full: true })
+  const { attributes = [] } = info || {}
 
   // build the fields array for defining the schema
   const fields: AttributeField[] = useMemo(() => {
