@@ -51,6 +51,7 @@ import useKeyboardNavigation from './hooks/useKeyboardNavigation'
 // Utility function imports
 import { getCellId } from './utils/cellUtils'
 import { generateLoadingRows, generateDummyAttributes } from './utils/loadingUtils'
+import { createPortal } from 'react-dom'
 
 //These are the important styles to make sticky column pinning work!
 //Apply styles like this using your CSS strategy of choice with this kind of logic to head cells, data cells, footer cells, etc.
@@ -495,7 +496,11 @@ const TableBody = ({
       })}
     </tbody>
   ) : (
-    <EmptyPlaceholder message="No folders or tasks found" />
+    tableContainerRef.current &&
+      createPortal(
+        <EmptyPlaceholder message="No folders or tasks found" />,
+        tableContainerRef.current,
+      )
   )
 }
 
