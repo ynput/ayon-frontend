@@ -52,6 +52,8 @@ export type YnputCloudInfoModel = {
   orgId: string
   /** Name of the organization */
   orgName: string
+  /** Name of the organization */
+  orgTitle: string
   /** Collect saturated metrics */
   collectSaturatedMetrics?: boolean
   /** Is the instance managed by Ynput Cloud? */
@@ -72,15 +74,22 @@ export type YnputConnectRequestModel = {
   key: string
 }
 export type UserCustomFields = {
-  orgId?: string
+  level?: string
   instanceId?: string
   verifiedUser?: string
 }
+export type CompanyInfo = {
+  id: string
+  name: string
+  subscriptions?: string
+}
 export type UserVerificationResponse = {
+  organization?: string
   name: string
   email: string
   userId: string
   userHash: string
   profilePicture?: string
   customFields: UserCustomFields
+  companies: CompanyInfo[]
 }

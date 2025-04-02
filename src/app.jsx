@@ -46,6 +46,7 @@ import { CustomerlyProvider } from 'react-live-chat-customerly'
 import { PiPProvider } from '@context/pip/PiPProvider'
 import { RemoteModulesProvider } from '@/remote/remoteModulesContext'
 import { PowerpackProvider } from '@context/powerpackContext'
+import { FeedbackProvider } from './feedback/FeedbackContext'
 
 // containers
 import Header from '@containers/header'
@@ -71,7 +72,6 @@ import DetailsPanelFloating from '@containers/DetailsPanel/DetailsPanelFloating/
 import PowerpackDialog from '@components/Powerpack/PowerpackDialog'
 import AppRemoteLoader from './remote/Loaders/AppRemoteLoader'
 import Customerly from '@components/Customerly'
-import { HelpProvider } from './feedback/HelpContext'
 
 const App = () => {
   const user = useSelector((state) => state.user)
@@ -166,7 +166,7 @@ const App = () => {
         <WatchActivities />
         <Suspense fallback={<LoadingPage />}>
           <RestartProvider>
-            <HelpProvider>
+            <FeedbackProvider>
               <PowerpackProvider>
                 <RemoteModulesProvider>
                   <ContextMenuProvider>
@@ -299,7 +299,7 @@ const App = () => {
                   </ContextMenuProvider>
                 </RemoteModulesProvider>
               </PowerpackProvider>
-            </HelpProvider>
+            </FeedbackProvider>
           </RestartProvider>
         </Suspense>
       </>
