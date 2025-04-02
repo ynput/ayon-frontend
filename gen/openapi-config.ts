@@ -31,8 +31,17 @@ const outputFiles = {
   users: ['getUser', 'setFrontendPreferences'],
   releases: ['getReleases', 'getReleaseInfo'],
   installers: ['listInstallers', 'createInstaller', 'deleteInstaller'],
-  dependencyPackages: ['listDependencyPackages', 'createDependencyPackage', 'deleteDependencyPackage'],
-  cloud: ['getYnputCloudInfo', 'setYnputCloudKey', 'deleteYnputCloudKey'],
+  dependencyPackages: [
+    'listDependencyPackages',
+    'createDependencyPackage',
+    'deleteDependencyPackage',
+  ],
+  cloud: [
+    'getYnputCloudInfo',
+    'setYnputCloudKey',
+    'deleteYnputCloudKey',
+    'getFeedbackVerification',
+  ],
   attributes: ['getAttributeList', 'setAttributeList', 'getAttributeConfig'],
   config: [
     'getServerConfig',

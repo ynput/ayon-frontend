@@ -1,10 +1,37 @@
 import React from 'react'
 import Menu from '../MenuComponents/Menu'
+import { useFeedback } from '@/feedback/FeedbackContext'
 
 export const HelpMenu = ({ user, ...props }) => {
   const isUser = user.data.isUser
+  const { openChangelog, openFeedback, openPortal } = useFeedback()
 
   const items = [
+    {
+      id: 'help',
+      label: 'Help center',
+      onClick: () => openPortal('HelpView'),
+      icon: 'help',
+    },
+    {
+      id: 'feedback',
+      label: 'Submit Feedback',
+      onClick: openFeedback,
+      icon: 'feedback',
+    },
+    {
+      id: 'changelog',
+      label: 'Latest changes',
+      onClick: openChangelog,
+      icon: 'track_changes',
+    },
+    {
+      id: 'changelog',
+      label: 'Upcoming features',
+      onClick: () => openPortal('RoadmapView'),
+      icon: 'construction',
+    },
+    { id: 'divider' },
     {
       id: 'documentation',
       label: 'Documentation',
@@ -17,13 +44,6 @@ export const HelpMenu = ({ user, ...props }) => {
       label: 'Community Forum',
       link: 'https://community.ynput.io/',
       icon: 'forum',
-      target: '_blank',
-    },
-    {
-      id: 'bug',
-      label: 'Report a Bug',
-      link: 'https://github.com/ynput/ayon-frontend/issues/new',
-      icon: 'bug_report',
       target: '_blank',
     },
     { id: 'divider' },
