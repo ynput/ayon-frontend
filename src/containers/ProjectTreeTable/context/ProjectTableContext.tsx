@@ -150,7 +150,7 @@ export const ProjectTableProvider = ({ children }: ProjectTableProviderProps) =>
   // transform the task bar filters to the query format
   // TODO: filters bar just uses the same schema as the server
   const queryFilter = clientFilterToQueryFilter(combinedFilters)
-  const queryFilterString = filters.length ? JSON.stringify(queryFilter) : ''
+  const queryFilterString = combinedFilters.length ? JSON.stringify(queryFilter) : ''
   // extract the fuzzy search from the filters
   const fuzzySearchFilter = combinedFilters.find((filter) => filter.id.includes('text'))
     ?.values?.[0]?.id
