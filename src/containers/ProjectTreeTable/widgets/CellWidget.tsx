@@ -174,16 +174,7 @@ const EditorCellComponent: FC<EditorCellProps> = ({
         // if the type is not recognized, fall back to the TextWidget
         return <TextWidget value={value as string} {...sharedProps} />
     }
-  }, [
-    cellId,
-    value,
-    type,
-    isCurrentCellEditing,
-    options,
-    isCollapsed,
-    handleOnChange,
-    handleChancel,
-  ])
+  }, [cellId, value, type, isCurrentCellEditing, options, isCollapsed])
 
   return (
     <Cell
