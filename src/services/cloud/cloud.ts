@@ -11,7 +11,9 @@ const cloudApi = api.enhanceEndpoints({
     deleteYnputCloudKey: {
       invalidatesTags: ['connections'],
     },
-    getFeedbackVerification: {},
+    getFeedbackVerification: {
+      providesTags: [{ type: 'feedback', id: 'LIST' }],
+    },
   },
 })
 

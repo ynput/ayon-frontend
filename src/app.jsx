@@ -72,6 +72,7 @@ import DetailsPanelFloating from '@containers/DetailsPanel/DetailsPanelFloating/
 import PowerpackDialog from '@components/Powerpack/PowerpackDialog'
 import AppRemoteLoader from './remote/Loaders/AppRemoteLoader'
 import Customerly from '@components/Customerly'
+import CompleteProfilePrompt from '@components/CompleteProfilePrompt/CompleteProfilePrompt'
 
 const App = () => {
   const user = useSelector((state) => state.user)
@@ -191,6 +192,7 @@ const App = () => {
                                     <ConfirmDialog />
                                     <FileUploadPreview />
                                     <ReleaseInstallerDialog />
+                                    <CompleteProfilePrompt />
                                     <Routes>
                                       <Route
                                         path="/"
