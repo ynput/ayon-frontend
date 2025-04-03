@@ -59,11 +59,24 @@ const NewProjectDialog = ({ onHide }) => {
       })
   }
 
-  const createCode = (name) => {
-    if (codeRegex) {
-      const match = name.match(codeRegex)
-      return match ? match[0] : ''
-    } else return ''
+  const createCode = (name, regexPattern) => {
+    if (!regexPattern) return ''
+
+    // Always create a new RegExp from the string pattern
+    try {
+      // Add 'g' flag to match all occurrences
+      const regex = new RegExp(regexPattern, 'g')
+
+      // Use matchAll instead of match for global patterns
+      const matches = [...name.matchAll(regex)]
+      if (!matches.length) return ''
+
+      // Extract the first capture group from each match
+      return matches.map((match) => match[1]).join('')
+    } catch (error) {
+      console.warn('Invalid regex pattern for project code', error)
+      return ''
+    }
   }
 
   const handleNameChange = (e) => {
@@ -71,9 +84,8 @@ const NewProjectDialog = ({ onHide }) => {
     const name = e.target.value.replace(/\s/g, '_')
     setName(name)
     if (!codeSet || code === '') {
-      const code = createCode(name)
-
-      setCode(code)
+      const newCode = createCode(name, codeRegex)
+      setCode(newCode)
     }
   }
 
