@@ -1,7 +1,7 @@
 import { useListAddonsQuery } from '@queries/addons/getAddons'
 import { useGetFeedbackVerificationQuery, useGetYnputCloudInfoQuery } from '@queries/cloud/cloud'
 import { useAppSelector } from '@state/store'
-import { upperFirst } from 'lodash'
+import { cloneDeep, upperFirst } from 'lodash'
 import React, { createContext, useContext, ReactNode, useEffect, useRef } from 'react'
 import { toast } from 'react-toastify'
 
@@ -68,8 +68,22 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
 
   const identifyUser = () => {
     if (!user.name || !verification) return
+    const verificationData = cloneDeep(verification)
+    // delete any undefined/null properties
+    const cleanObject = (obj: any) => {
+      Object.keys(obj).forEach((key) => {
+        if (obj[key] && typeof obj[key] === 'object') {
+          cleanObject(obj[key])
+        } else if (obj[key] === undefined || obj[key] === null) {
+          delete obj[key]
+        }
+      })
+    }
+
+    cleanObject(verificationData)
+
     const win = window as any
-    win.Featurebase('identify', verification, (err: any) => {
+    win.Featurebase('identify', verificationData, (err: any) => {
       // Callback function. Called when identify completed.
       if (err) {
         console.error(err)
@@ -88,29 +102,19 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
 
     const win = window as any
     if (typeof win.Featurebase === 'function') {
-      win.Featurebase(
-        'init_changelog_widget',
-        {
-          organization: 'ayon',
-          dropdown: {
-            enabled: true,
-          },
-          popup: {
-            enabled: true,
-            usersName: user.attrib?.fullName,
-            autoOpenForNewUpdates: true,
-          },
-          category: ['Production Tracking', ...addons, ...extraCategories],
-          theme: 'dark',
+      win.Featurebase('init_changelog_widget', {
+        organization: 'ayon',
+        dropdown: {
+          enabled: true,
         },
-        (_error: any, data: any) => {
-          // This never runs
-          console.log('Featurebase changelog widget initialized')
-          if (data?.action === 'unreadChangelogsCountChanged') {
-            console.log('unreadChangelogsCountChanged', data.unreadCount)
-          }
+        popup: {
+          enabled: true,
+          usersName: user.attrib?.fullName,
+          autoOpenForNewUpdates: true,
         },
-      )
+        category: ['Production Tracking', ...addons, ...extraCategories],
+        theme: 'dark',
+      })
     }
     return false
   }
@@ -126,12 +130,11 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
           email: user.attrib.email,
           metadata: {},
         },
-        (error: any, data: any) => {
+        (error: any) => {
           if (error) {
             console.error('Error initializing feedback widget:', error)
             toast.error('Error initializing feedback widget')
           } else {
-            console.log('Featurebase feedback widget initialized', data)
           }
         },
       )
@@ -149,13 +152,12 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
           fullScreen: true,
           initialPage: 'MainView',
         },
-        (error: any, data: any) => {
+        (error: any) => {
           if (error) {
             console.error('Error initializing portal widget:', error)
             toast.error('Error initializing portal widget')
             return false
           } else {
-            console.log('Featurebase portal widget initialized', data)
             return true
           }
         },
