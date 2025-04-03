@@ -38,6 +38,7 @@ const outputFiles = {
     'getServerConfig',
     'getServerOverrides',
     'getServerConfigSchema',
+    'getConfigValue',
     'setServerConfig',
     'uploadServerConfigFile',
   ],

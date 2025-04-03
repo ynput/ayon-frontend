@@ -7,6 +7,7 @@ import SettingsEditor from '@containers/SettingsEditor'
 import AnatomyPresetDropdown from './AnatomyPresetDropdown'
 import { useGetAnatomyPresetQuery, useGetAnatomySchemaQuery } from '@queries/anatomy/getAnatomy'
 import { useCreateProjectMutation } from '@queries/project/updateProject'
+import { useGetConfigValueQuery } from '@queries/config/getConfig'
 
 // allow only alphanumeric and underscorer,
 // while underscore cannot be the first or last character
@@ -32,6 +33,10 @@ const NewProjectDialog = ({ onHide }) => {
     { skip: !selectedPreset },
   )
 
+  // Code regex from server config
+  const { data: projectOptions } = useGetConfigValueQuery({ key: 'project_options' })
+  const { project_code_regex: codeRegex } = projectOptions || {}
+
   // Logic
   //
   const [createProject, { isLoading }] = useCreateProjectMutation()
@@ -55,30 +60,11 @@ const NewProjectDialog = ({ onHide }) => {
   }
 
   const createCode = (name) => {
-    if (name.length <= 4) return name.toLowerCase()
-    let code = name.toLowerCase()
-    if (name.includes('_')) {
-      const subwords = name.split('_')
-      code = subwords
-        .map((subword) => subword.charAt(0))
-        .join('')
-        .slice(0, 4)
-    } else {
-      const vowels = ['a', 'e', 'i', 'o', 'u']
-      const filteredWord = name
-        .split('')
-        .filter((char) => !vowels.includes(char))
-        .join('')
-      code = filteredWord.slice(0, 4)
-    }
-
-    // if there is a number at the end of the name, add it to the code
-    const lastChar = name.charAt(name.length - 1)
-    if (!isNaN(lastChar)) {
-      code += lastChar
-    }
-
-    return code
+    if (codeRegex) {
+      return name
+        .match(codeRegex) // Apply the user-defined regex
+        ?.join('') // Apply regex and return the matched portion
+    } else return ''
   }
 
   const handleNameChange = (e) => {
@@ -197,6 +183,7 @@ const NewProjectDialog = ({ onHide }) => {
             onChange={handleCodeChange}
             title={codeValidationError}
             className={codeValidationError ? 'error' : ''}
+            data-tooltip={'Regex: ' + codeRegex}
           />
           <AnatomyPresetDropdown
             selectedPreset={selectedPreset}
