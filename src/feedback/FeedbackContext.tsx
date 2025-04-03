@@ -168,8 +168,8 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
   }
 
   useEffect(() => {
-    // if not logged in, do not load the script
-    if (!user.name || isLoadingAddons) return
+    // if not logged in or not connected to Ynput, do not load the script
+    if (!user.name || !connect || isLoadingAddons) return
 
     // if already loaded, do not load again
     if (scriptLoaded) return
@@ -187,7 +187,7 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
 
     // Initialize portal widget
     initializePortalWidget()
-  }, [user.name, isLoadingAddons, addonCategories, scriptLoaded])
+  }, [user.name, connect?.instanceId, isLoadingAddons, addonCategories, scriptLoaded])
 
   // verify user
   useEffect(() => {
