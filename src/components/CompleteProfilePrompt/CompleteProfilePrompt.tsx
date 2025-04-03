@@ -27,13 +27,6 @@ const StyledDialog = styled(Dialog)`
     ${theme.titleLarge}
     padding-bottom: 0
   }
-
-  .body {
-    padding-top: 0;
-    p {
-      margin-top: 4px;
-    }
-  }
 `
 
 const StyledRow = styled.div`
@@ -125,7 +118,7 @@ const CompleteProfilePrompt: FC<CompleteProfilePromptProps> = () => {
   return (
     <StyledDialog
       onClose={() => {}}
-      header="Complete Your Profile"
+      header="Complete your profile"
       hideCancelButton
       footer={
         <Toolbar>
@@ -141,8 +134,6 @@ const CompleteProfilePrompt: FC<CompleteProfilePromptProps> = () => {
       size="sm"
       isOpen={isOpen}
     >
-      <p style={{ marginBottom: '16px' }}>This is important for account recovery.</p>
-
       <AvatarContainer>
         {user && <Avatar user={user} />}
         <span
