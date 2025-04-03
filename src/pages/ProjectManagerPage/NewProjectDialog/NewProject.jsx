@@ -61,9 +61,11 @@ const NewProjectDialog = ({ onHide }) => {
 
   const createCode = (name) => {
     if (codeRegex) {
-      return name
-        .match(codeRegex) // Apply the user-defined regex
-        ?.join('') // Apply regex and return the matched portion
+      return (
+        name
+          .match(codeRegex) // Apply the user-defined regex
+          ?.join('') || ''
+      ) // Apply regex and return the matched portion
     } else return ''
   }
 
