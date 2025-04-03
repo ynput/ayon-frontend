@@ -2,7 +2,7 @@ import { useListAddonsQuery } from '@queries/addons/getAddons'
 import { useGetFeedbackVerificationQuery, useGetYnputCloudInfoQuery } from '@queries/cloud/cloud'
 import { useAppSelector } from '@state/store'
 import { cloneDeep, upperFirst } from 'lodash'
-import React, { createContext, useContext, ReactNode, useEffect, useRef } from 'react'
+import React, { createContext, useContext, ReactNode, useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
 
 const addonNameMappings = {
@@ -10,6 +10,7 @@ const addonNameMappings = {
 }
 
 type FeedbackContextType = {
+  loaded: boolean
   openChangelog: () => void
   openFeedback: () => void
   openPortal: (
@@ -26,7 +27,7 @@ type FeedbackProviderProps = {
 
 export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) => {
   const user = useAppSelector((state) => state.user)
-  const scriptLoaded = useRef(false)
+  const [scriptLoaded, setScriptLoaded] = useState(false)
 
   const { data: connect } = useGetYnputCloudInfoQuery(undefined, { skip: !user.name })
   const { data: verification } = useGetFeedbackVerificationQuery(undefined, {
@@ -46,13 +47,13 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
     )
 
   const loadScript = () => {
-    if (!scriptLoaded.current) {
+    if (!scriptLoaded) {
       const script = document.createElement('script')
       script.src = 'https://do.featurebase.app/js/sdk.js'
       script.id = 'featurebase-sdk'
       script.async = true
       document.body.appendChild(script)
-      scriptLoaded.current = true
+      setScriptLoaded(true)
     }
   }
 
@@ -167,7 +168,11 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
   }
 
   useEffect(() => {
-    if (!user.name || !verification || isLoadingAddons) return
+    // if not logged in, do not load the script
+    if (!user.name || isLoadingAddons) return
+
+    // if already loaded, do not load again
+    if (scriptLoaded) return
     // Load the Featurebase script
     loadScript()
 
@@ -182,10 +187,14 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
 
     // Initialize portal widget
     initializePortalWidget()
+  }, [user.name, isLoadingAddons, addonCategories, scriptLoaded])
 
+  // verify user
+  useEffect(() => {
+    if (!user.name || !connect || !verification) return
     // Identify the user
     identifyUser()
-  }, [user.name, verification, isLoadingAddons, addonCategories])
+  }, [user.name, connect?.instanceId, verification?.userHash])
 
   const openChangelog = () => {
     const win = window as any
@@ -228,7 +237,9 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
   }
 
   return (
-    <FeedbackContext.Provider value={{ openChangelog, openFeedback, openPortal }}>
+    <FeedbackContext.Provider
+      value={{ openChangelog, openFeedback, openPortal, loaded: scriptLoaded }}
+    >
       {children}
     </FeedbackContext.Provider>
   )

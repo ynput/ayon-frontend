@@ -4,34 +4,9 @@ import { useFeedback } from '@/feedback/FeedbackContext'
 
 export const HelpMenu = ({ user, ...props }) => {
   const isUser = user.data.isUser
-  const { openChangelog, openFeedback, openPortal } = useFeedback()
+  const { openChangelog, openFeedback, openPortal, loaded } = useFeedback()
 
   const items = [
-    {
-      id: 'help',
-      label: 'Help center',
-      onClick: () => openPortal('HelpView'),
-      icon: 'help',
-    },
-    {
-      id: 'feedback',
-      label: 'Submit Feedback',
-      onClick: openFeedback,
-      icon: 'feedback',
-    },
-    {
-      id: 'changelog',
-      label: 'Latest changes',
-      onClick: openChangelog,
-      icon: 'track_changes',
-    },
-    {
-      id: 'changelog',
-      label: 'Upcoming features',
-      onClick: () => openPortal('RoadmapView'),
-      icon: 'construction',
-    },
-    { id: 'divider' },
     {
       id: 'documentation',
       label: 'Documentation',
@@ -62,6 +37,36 @@ export const HelpMenu = ({ user, ...props }) => {
       target: '_blank',
     },
   ]
+
+  const feedback = [
+    {
+      id: 'help',
+      label: 'Help center',
+      onClick: () => openPortal('HelpView'),
+      icon: 'help',
+    },
+    {
+      id: 'feedback',
+      label: 'Submit Feedback',
+      onClick: openFeedback,
+      icon: 'feedback',
+    },
+    {
+      id: 'changelog',
+      label: 'Latest changes',
+      onClick: openChangelog,
+      icon: 'track_changes',
+    },
+    {
+      id: 'changelog',
+      label: 'Upcoming features',
+      onClick: () => openPortal('RoadmapView'),
+      icon: 'construction',
+    },
+    { id: 'divider' },
+  ]
+
+  if (loaded) items.unshift(...feedback)
 
   const managers = [
     {
