@@ -1,5 +1,5 @@
 import { useListAddonsQuery } from '@queries/addons/getAddons'
-import { useGetFeedbackVerificationQuery } from '@queries/cloud/cloud'
+import { useGetFeedbackVerificationQuery, useGetYnputCloudInfoQuery } from '@queries/cloud/cloud'
 import { useAppSelector } from '@state/store'
 import { upperFirst } from 'lodash'
 import React, { createContext, useContext, ReactNode, useEffect, useRef } from 'react'
@@ -28,8 +28,14 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
   const user = useAppSelector((state) => state.user)
   const scriptLoaded = useRef(false)
 
-  const { data: verification } = useGetFeedbackVerificationQuery(undefined, { skip: !user.name })
-  const { data: { addons = [] } = {}, isLoading: isLoadingAddons } = useListAddonsQuery({})
+  const { data: connect } = useGetYnputCloudInfoQuery(undefined, { skip: !user.name })
+  const { data: verification } = useGetFeedbackVerificationQuery(undefined, {
+    skip: !user.name || !connect,
+  })
+  const { data: { addons = [] } = {}, isLoading: isLoadingAddons } = useListAddonsQuery(
+    {},
+    { skip: !user.name || !connect },
+  )
 
   const addonCategories = addons
     .filter((addon) => !!addon.productionVersion)
@@ -166,9 +172,6 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
     // Initialize Featurebase
     initialize()
 
-    // Identify the user
-    identifyUser()
-
     // Initialize changelog widget
     initializeChangelog(addonCategories)
 
@@ -177,6 +180,9 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
 
     // Initialize portal widget
     initializePortalWidget()
+
+    // Identify the user
+    identifyUser()
   }, [user.name, verification, isLoadingAddons, addonCategories])
 
   const openChangelog = () => {
