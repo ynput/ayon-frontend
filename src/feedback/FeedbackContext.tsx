@@ -191,10 +191,10 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
 
   // verify user
   useEffect(() => {
-    if (!user.name || !connect || !verification) return
+    if (!user.name || !connect || !verification || !scriptLoaded) return
     // Identify the user
     identifyUser()
-  }, [user.name, connect?.instanceId, verification?.userHash])
+  }, [user.name, connect?.instanceId, verification?.userHash, scriptLoaded])
 
   const openChangelog = () => {
     const win = window as any
