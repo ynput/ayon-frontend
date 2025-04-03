@@ -68,7 +68,7 @@ const NewProjectDialog = ({ onHide }) => {
       const regex = new RegExp(regexPattern, 'g')
 
       // Use matchAll instead of match for global patterns
-      const matches = [...name.matchAll(regex)]
+      const matches = [...name.replaceAll('_', ' ').matchAll(regex)]
       if (!matches.length) return ''
 
       // Extract the first capture group from each match
