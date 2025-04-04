@@ -13,7 +13,7 @@ type Props = {
 
 export const useRootFolders = ({ sliceType, projectName }: Props): string[] => {
   const { data: { folders = [] } = {} } = useGetFolderListQuery(
-    { projectName: projectName || '' },
+    { projectName: projectName || '', attrib: true },
     { skip: !projectName || sliceType === 'hierarchy' },
   )
 

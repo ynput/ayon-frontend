@@ -26,7 +26,7 @@ const modeMappings = {
 }
 
 const getModeMapping = (mode: KeyMode): string => {
-  const platform = getCurrentPlatform();
+  const platform = getCurrentPlatform()
   return modeMappings[mode][platform] || modeMappings[mode].other
 }
 
@@ -44,13 +44,13 @@ const getCurrentPlatform = () => {
   }
 }
 
-const getPlatformShortcutKey = (
-  key: string,
-  modes: KeyMode[],
-): string => {
-  return modes.length > 0
-    ? [...modes.map((mode) => getModeMapping(mode)), key.toUpperCase()].join('+')
-    : key.toUpperCase()
+const getPlatformShortcutKey = (key: string, modes: KeyMode[], prefix?: string): string => {
+  const shortcut =
+    modes.length > 0
+      ? [...modes.map((mode) => getModeMapping(mode)), key.toUpperCase()].join('+')
+      : key.toUpperCase()
+
+  return prefix ? `${prefix}+${shortcut}` : shortcut
 }
 
 export { getCurrentPlatform, getPlatformShortcutKey }

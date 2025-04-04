@@ -101,6 +101,7 @@ const tagTypes = [
   'progress',
   'userPool',
   'config',
+  'overviewTask',
 ]
 
 const prepareHeaders = (headers: any) => {

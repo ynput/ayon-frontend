@@ -4,11 +4,11 @@
 // attributes by scope
 
 import { AttributeModel, AttributeEnumItem, AttributeData } from '@api/rest/attributes'
-import { Tag } from '@api/rest/project'
+import { FolderType, Status, Tag, TaskType } from '@api/rest/project'
 import { ALLOW_INVERTED_FILTERS, SHOW_DATE_FILTERS } from '@components/SearchFilter/featureFlags'
 import { Option } from '@components/SearchFilter/types'
 import getEntityTypeIcon from '@helpers/getEntityTypeIcon'
-import { useGetAttributeListQuery } from '@queries/attributes/getAttributes'
+import { useGetSiteInfoQuery } from '@queries/auth/getAuth'
 import {
   GetProjectsInfoResponse,
   useGetKanbanProjectUsersQuery,
@@ -27,11 +27,12 @@ import {
   isToday,
   isYesterday,
 } from 'date-fns'
-import { isEmpty, upperFirst } from 'lodash'
+import { isEmpty } from 'lodash'
 
 type Scope = 'folder' | 'product' | 'task' | 'user'
 export type FilterFieldType =
-  | 'entitySubType'
+  | 'folderType'
+  | 'taskType'
   | ('users' | 'assignees')
   | 'attributes'
   | 'status'
@@ -168,22 +169,38 @@ const useBuildFilterOptions = ({
     },
   )
 
-  const { data: attributes = [] } = useGetAttributeListQuery(undefined, {
-    skip: !filterTypes.includes('attributes'),
-  })
+  const { data: info } = useGetSiteInfoQuery(
+    { full: true },
+    { skip: !filterTypes.includes('attributes') },
+  )
+  const { attributes = [] } = info || {}
   //
   //
   // QUERIES
 
   // ADD OPTIONS
 
-  // ENTITY SUBTYPE
-  // add entitySubType option
-  if (filterTypes.includes('entitySubType') && scope !== 'user') {
-    const entitySubTypeOption = getOptionRoot('entitySubType', scope)
+  // TASK TYPE
+  // add taskType option
+  if (filterTypes.includes('taskType') && scope !== 'user') {
+    const entitySubTypeOption = getOptionRoot('taskType')
     if (entitySubTypeOption) {
       // get all subTypes for the current scope (entityType)
-      let subTypes = getSubTypes(projectsInfo, scope)
+      let subTypes = getSubTypes(projectsInfo, 'task')
+
+      entitySubTypeOption.values?.push(...subTypes)
+
+      options.push(entitySubTypeOption)
+    }
+  }
+
+  // FOLDER TYPE
+  // add folderType option
+  if (filterTypes.includes('folderType') && scope !== 'user') {
+    const entitySubTypeOption = getOptionRoot('folderType')
+    if (entitySubTypeOption) {
+      // get all subTypes for the current scope (entityType)
+      let subTypes = getSubTypes(projectsInfo, 'folder')
 
       entitySubTypeOption.values?.push(...subTypes)
 
@@ -199,7 +216,7 @@ const useBuildFilterOptions = ({
     if (statusOption) {
       Object.values(projectsInfo).forEach((project) => {
         const statuses = project?.statuses || []
-        statuses.forEach((status) => {
+        statuses.forEach((status: Status) => {
           if (!statusOption.values?.some((value) => value.id === status.name)) {
             statusOption.values?.push({
               id: status.name,
@@ -232,6 +249,7 @@ const useBuildFilterOptions = ({
           })
         }
       })
+
       // sort the assignees based on the number of times they appear in data.assignees
       assigneesOption.values?.sort((a, b) => {
         const aCount = data.assignees?.filter((assignee) => assignee === a.id).length || 0
@@ -393,7 +411,7 @@ const getSubTypes = (projectsInfo: GetProjectsInfoResponse, type: Scope): Option
     Object.values(projectsInfo).forEach((project) => {
       // for each project, get all task types and add them to the options (if they don't already exist)
       const taskTypes = project?.task_types || []
-      taskTypes.forEach((taskType) => {
+      taskTypes.forEach((taskType: TaskType) => {
         if (!options.some((option) => option.id === taskType.name)) {
           options.push({
             id: taskType.name,
@@ -411,7 +429,7 @@ const getSubTypes = (projectsInfo: GetProjectsInfoResponse, type: Scope): Option
     Object.values(projectsInfo).forEach((project) => {
       // for each project, get all folder types and add them to the options (if they don't already exist)
       const folderTypes = project?.folder_types || []
-      folderTypes.forEach((folderType) => {
+      folderTypes.forEach((folderType: FolderType) => {
         if (!options.some((option) => option.id === folderType.name)) {
           options.push({
             id: folderType.name,
@@ -430,15 +448,31 @@ const getSubTypes = (projectsInfo: GetProjectsInfoResponse, type: Scope): Option
   return options
 }
 
-const getOptionRoot = (fieldType: FilterFieldType, scope?: string) => {
+const getOptionRoot = (fieldType: FilterFieldType) => {
   let rootOption: Option | null = null
   switch (fieldType) {
-    case 'entitySubType':
+    case 'taskType':
       rootOption = {
-        id: `${scope}Type`,
+        id: `taskType`,
         type: 'string',
-        label: `${upperFirst(scope)} Type`,
-        icon: getEntityTypeIcon(scope),
+        label: `Task Type`,
+        icon: getEntityTypeIcon('task'),
+        inverted: false,
+        operator: 'OR',
+        values: [],
+        allowsCustomValues: false,
+        allowHasValue: false,
+        allowNoValue: false,
+        allowExcludes: ALLOW_INVERTED_FILTERS,
+        operatorChangeable: false,
+      }
+      break
+    case 'folderType':
+      rootOption = {
+        id: `folderType`,
+        type: 'string',
+        label: `Folder Type`,
+        icon: getEntityTypeIcon('folder'),
         inverted: false,
         operator: 'OR',
         values: [],
@@ -475,10 +509,10 @@ const getOptionRoot = (fieldType: FilterFieldType, scope?: string) => {
         operator: 'OR',
         values: [],
         allowsCustomValues: false,
-        allowHasValue: true,
-        allowNoValue: true,
+        allowHasValue: false,
+        allowNoValue: false,
         allowExcludes: ALLOW_INVERTED_FILTERS,
-        operatorChangeable: true,
+        operatorChangeable: false,
       }
       break
     case 'tags':
@@ -491,10 +525,10 @@ const getOptionRoot = (fieldType: FilterFieldType, scope?: string) => {
         operator: 'OR',
         values: [],
         allowsCustomValues: true,
-        allowHasValue: true,
-        allowNoValue: true,
+        allowHasValue: false,
+        allowNoValue: false,
         allowExcludes: ALLOW_INVERTED_FILTERS,
-        operatorChangeable: true,
+        operatorChangeable: false,
       }
       break
     default:
@@ -510,7 +544,7 @@ const getAttributeFieldOptionRoot = (
   attribute: AttributeModel,
   allowsCustomValues: boolean = false,
 ): Option => ({
-  id: attribute.name,
+  id: `attrib.${attribute.name}`,
   type: attribute.data.type,
   label: attribute.data.title || attribute.name,
   operator: 'OR',

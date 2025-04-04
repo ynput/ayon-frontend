@@ -31,7 +31,7 @@ const TasksProgressPage: FC = () => {
   return (
     <main style={{ overflow: 'hidden' }}>
       <Splitter layout="horizontal" style={{ width: '100%', height: '100%' }}>
-        <SplitterPanel size={detailsOpen ? 12 : 18} style={{ minWidth: 227, maxWidth: 500 }}>
+        <SplitterPanel size={detailsOpen ? 12 : 18} style={{ minWidth: 100, maxWidth: 500 }}>
           <Section wrap>
             <Slicer sliceFields={taskProgressSliceFields} persistFieldId="hierarchy" />
           </Section>

@@ -90,13 +90,16 @@ export const Path = styled.span`
 
   cursor: pointer;
   &:hover {
-    background-color: var(--md-sys-color-surface-container-hover);
+    color: var(--md-sys-color-primary);
   }
 
   &.selected {
-    background-color: var(--md-sys-color-primary-container);
-    color: var(--md-sys-color-on-primary-container);
-    border-color: var(--md-sys-color-primary);
+    background-color: var(--md-sys-color-primary);
+    color: var(--md-sys-color-on-primary);
+
+    &:hover {
+      background-color: var(--md-sys-color-primary-hover);
+    }
   }
 `
 

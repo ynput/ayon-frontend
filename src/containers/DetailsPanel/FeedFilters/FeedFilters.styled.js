@@ -8,7 +8,3 @@ export const FiltersToolbar = styled(Toolbar)`
 
   z-index: 100;
 `
-export const FilterButton = styled(Button)`
-  box-shadow: 0 0 4px 0 rgba(0, 0, 0, 0.1);
-  padding: 4px 12px;
-`

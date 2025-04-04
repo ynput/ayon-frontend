@@ -1,13 +1,13 @@
 import { expect, test as base } from '@playwright/test'
 import type { Page } from '@playwright/test'
 
-const getTaskName = prefix => (browser) => prefix + '_' + browser
+const getTaskName = (prefix) => (browser) => prefix + '_' + browser
 
 class TaskPage {
   constructor(public readonly page: Page) {}
 
   async goto(projectName) {
-    await this.page.goto(`/projects/${projectName}/editor`)
+    await this.page.goto(`/projects/${projectName}/overview`)
   }
 
   async createTask(projectName, folderName, taskName) {
@@ -29,9 +29,9 @@ class TaskPage {
   }
 
   async deleteTask(projectName, folderName, taskName) {
-    // Minor hack: Double navigation to actually load the editor page, it was giving inconsistent results without it.
+    // Minor hack: Double navigation to actually load the overview page, it was giving inconsistent results without it.
     // await this.page.goto(`/`)
-    // await this.page.goto(`/projects/${projectName}/editor`)
+    // await this.page.goto(`/projects/${projectName}/overview`)
 
     var folderLocator = this.page.locator('.p-treetable-scrollable-body span').getByText(folderName)
     expect(folderLocator).toBeVisible()

@@ -2,6 +2,8 @@ import api from '@api'
 import { toast } from 'react-toastify'
 import { enhancedDashboardGraphqlApi, getKanbanTasks } from '../userDashboard/getUserDashboard'
 import { isEqual } from 'lodash'
+import { patchOverviewFolders, patchOverviewTasks } from '@queries/overview/updateOverview'
+import { current } from '@reduxjs/toolkit'
 
 const patchKanban = (
   { assignees = [], projects = [] },
@@ -21,6 +23,14 @@ const patchKanban = (
         if (data?.attrib?.priority) {
           const { priority } = patchData.attrib
           patchData = { ...patchData, priority }
+        }
+        // if the data include attrib.endDate it needs to be transformed to dueDate
+        // this is because dueDate is a top level field on kanban query
+        // NOTE TO SELF: Lets try to do these transforms after the cache the future.
+        if (data?.attrib?.endDate) {
+          const { endDate } = patchData.attrib
+          patchData = { ...patchData, dueDate: endDate }
+          delete patchData.attrib.endDate
         }
 
         if (taskIndex === -1) {
@@ -61,7 +71,7 @@ const patchProgressView = ({ operations = [], state, dispatch, entityType }) => 
   // find the entries that need to be updated
   let entries = api.util.selectInvalidatedBy(state, invalidationTags)
   // if there are no entries, return
-  if (!entries.length) return
+  if (!entries.length) return []
 
   try {
     // patch each entry with updated task data
@@ -142,7 +152,6 @@ const updateEntity = api.injectEndpoints({
           const currentDashNeedsUpdating = hasSomeAssignees && hasSomeProjects
 
           if (currentDashNeedsUpdating) {
-            console.log({ data })
             const [result, wasPatched] = patchKanban(
               { assignees: cacheUsers, projects: dashboardProjects },
               { newAssignees, taskId: entityId, data },
@@ -331,9 +340,19 @@ const updateEntity = api.injectEndpoints({
 
                   if (entityIndex === -1) return
                   const patchData = { ...operation.data }
+
+                  // handle updating assignees (convert to users)
                   if (patchData.assignees) {
                     patchData.users = patchData.assignees
                     delete patchData.assignees
+                  }
+
+                  // handle updating folderType or taskType
+                  if (patchData.folderType) {
+                    patchData.entitySubType = patchData.folderType
+                  }
+                  if (patchData.taskType) {
+                    patchData.entitySubType = patchData.taskType
                   }
 
                   if (patchData.attrib) {
@@ -353,8 +372,22 @@ const updateEntity = api.injectEndpoints({
 
           let progressPatches = []
           if (entityType === 'task' || entityType === 'folder') {
-            // patch the progress for task updates
+            // patch the progress page
             progressPatches = patchProgressView({ operations, state, dispatch, entityType })
+          }
+
+          const overviewPatches = []
+          // convert id in operations to entityId
+          const operationsWithEntityId = operations.map((o) => ({ ...o, entityId: o.id }))
+          if (entityType === 'task' || entityType === 'folder') {
+            // patch the overview page
+            if (entityType === 'task') {
+              patchOverviewTasks(operationsWithEntityId, { state, dispatch }, overviewPatches)
+            }
+            if (entityType === 'folder') {
+              // patch the overview page
+              patchOverviewFolders(operationsWithEntityId, { state, dispatch }, overviewPatches)
+            }
           }
 
           // check if any of the requests failed and invalidate the tasks cache again to refetch
@@ -369,6 +402,11 @@ const updateEntity = api.injectEndpoints({
 
             // revert the progress view patches
             progressPatches.forEach((patch) => patch?.undo())
+
+            // revert the overview patches
+            overviewPatches.forEach((patch) => patch?.undo())
+
+            throw 'Failed to update some tasks'
           }
 
           const activityTags = []
@@ -380,14 +418,15 @@ const updateEntity = api.injectEndpoints({
           return { data: operations }
         } catch (error) {
           console.error(error)
-          return error
+          return { error }
         }
       },
-      invalidatesTags: (result, error, { operations }) =>
-        operations.map((o) => ({ id: o.id, type: 'review' })),
+      invalidatesTags: (result, error, { operations }) => [
+        ...operations.map((o) => ({ id: o.id, type: 'review' })),
+      ],
     }),
   }),
   overrideExisting: true,
 })
 
-export const { useUpdateEntitiesMutation } = updateEntity
+export const { useUpdateEntitiesMutation, useUpdateEntityMutation } = updateEntity

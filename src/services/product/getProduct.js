@@ -176,7 +176,7 @@ query GetProductsVersions($projectName: String!, $ids: [String!]!) {
 ${PRODUCT_VERSION_FRAGMENT}
 `
 
-const getProduct = api.injectEndpoints({
+export const getProductApi = api.injectEndpoints({
   endpoints: (build) => ({
     getProductList: build.query({
       query: ({ projectName, folderIds }) => ({
@@ -221,4 +221,4 @@ export const {
   useGetProductListQuery,
   useLazyGetProductsVersionsQuery,
   useGetProductsVersionsQuery,
-} = getProduct
+} = getProductApi

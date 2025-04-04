@@ -57,7 +57,7 @@ import { ViewerDialog } from '@containers/Viewer'
 import { login } from '@state/user'
 
 // queries
-import { useLazyGetInfoQuery } from '@queries/auth/getAuth'
+import { useLazyGetSiteInfoQuery } from '@queries/auth/getAuth'
 import { useGetYnputCloudInfoQuery } from '@queries/cloud/cloud'
 
 // hooks
@@ -88,7 +88,7 @@ const App = () => {
 
   // Call /api/info to check whether the user is logged in
   // and to acquire server settings
-  const [getInfo] = useLazyGetInfoQuery()
+  const [getInfo] = useLazyGetSiteInfoQuery()
 
   // get subscriptions info
   const { data: ynputConnect } = useGetYnputCloudInfoQuery()
@@ -97,7 +97,7 @@ const App = () => {
   useEffect(() => {
     setLoading(true)
 
-    getInfo()
+    getInfo({ full: true })
       .unwrap()
       .then((response) => {
         setNoAdminUser(!!response?.noAdminUser)

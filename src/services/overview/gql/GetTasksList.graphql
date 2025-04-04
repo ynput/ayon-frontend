@@ -1,0 +1,39 @@
+# Gets all tasks with pagination and filtering by query string
+query GetTasksList(
+  $projectName: String!
+  $folderIds: [String!]
+  $filter: String
+  $search: String
+  $after: String
+  $first: Int
+  $before: String
+  $last: Int
+  $sortBy: String
+) {
+  project(name: $projectName) {
+    name
+    tasks(
+      filter: $filter
+      search: $search
+      folderIds: $folderIds
+      after: $after
+      first: $first
+      before: $before
+      last: $last
+      sortBy: $sortBy
+    ) {
+      pageInfo {
+        startCursor
+        endCursor
+        hasNextPage
+        hasPreviousPage
+      }
+      edges {
+        cursor
+        node {
+          ...TaskPropsFragment
+        }
+      }
+    }
+  }
+}

@@ -1,7 +1,13 @@
-import { api, ListProjectsApiResponse } from '@api/rest/project'
+import {
+  api,
+  ListProjectsApiResponse,
+  FolderType,
+  GetProjectApiResponse,
+  Status,
+  TaskType,
+} from '@api/rest/project'
 // @ts-ignore
 import { selectProject, setProjectData } from '@state/project'
-import { TagTypes, UpdatedDefinitions } from './ProjectTypes'
 
 // TODO: use graphql api and write custom types
 // We will need to inject the endpoint as it cannot be generated
@@ -49,11 +55,36 @@ const getProjectInjected = api.injectEndpoints({
       transformResponse: (res: any) => res.data?.project,
       providesTags: (_res, _error, { projectName }) => [{ type: 'project', id: projectName }],
     }),
+    getTasksFolders: build.query({
+      query: ({ projectName, query }) => ({
+        url: `/api/projects/${projectName}/tasksFolders`,
+        method: 'POST',
+        body: {
+          ...query,
+        },
+      }),
+      transformResponse: (res: any) => res.folderIds || [],
+      providesTags: (_res, _error, { projectName }) => [{ type: 'project', id: projectName }],
+    }),
   }),
   overrideExisting: true,
 })
 
 import { $Any } from '@/types'
+
+export interface GetProjectResponse extends GetProjectApiResponse {
+  folderTypes: FolderType[]
+  taskTypes: TaskType[]
+  statuses: Status[]
+}
+
+import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
+type Definitions = DefinitionsFromApi<typeof getProjectInjected>
+type TagTypes = TagTypesFromApi<typeof getProjectInjected>
+// update the definitions to include the new types
+type UpdatedDefinitions = Omit<Definitions, 'getProject'> & {
+  getProject: OverrideResultType<Definitions['getProject'], GetProjectResponse>
+}
 
 // TODO: sort out the types
 const getProjectApi = getProjectInjected.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
@@ -131,6 +162,7 @@ export const {
   useListProjectsQuery,
   useGetProjectAnatomyQuery,
   useGetProjectAttribsQuery,
+  useGetTasksFoldersQuery,
 } = getProjectApi
 
 export default getProjectApi

@@ -3,7 +3,7 @@ import type { ConfigFile } from '@rtk-query/codegen-openapi'
 // Specify the endpoints you want to generate
 const outputFiles = {
   bundles: ['listBundles', 'checkBundleCompatibility', 'migrateSettingsByBundle'],
-  folders: ['getFolderHierarchy', 'getFolderList'],
+  folders: ['getFolderHierarchy', 'getFolderList', 'queryTasksFolders'],
   market: ['marketAddonList', 'marketAddonDetail', 'marketAddonVersionDetail', 'getLicenses'],
   watchers: ['getEntityWatchers', 'setEntityWatchers'],
   inbox: ['manageInboxItem'],
@@ -25,13 +25,17 @@ const outputFiles = {
     'deleteAccessGroup',
     'saveAccessGroup',
   ],
-  auth: ['createSession', 'getUserPools'],
+  auth: ['createSession', 'getUserPools', 'getSiteInfo'],
   addons: ['listAddons', 'listFrontendModules', 'deleteAddonVersion', 'uploadAddonZipFile'],
   activities: ['deleteProjectActivity'],
   users: ['getUser', 'setFrontendPreferences'],
   releases: ['getReleases', 'getReleaseInfo'],
   installers: ['listInstallers', 'createInstaller', 'deleteInstaller'],
-  dependencyPackages: ['listDependencyPackages', 'createDependencyPackage', 'deleteDependencyPackage'],
+  dependencyPackages: [
+    'listDependencyPackages',
+    'createDependencyPackage',
+    'deleteDependencyPackage',
+  ],
   cloud: ['getYnputCloudInfo', 'setYnputCloudKey', 'deleteYnputCloudKey'],
   attributes: ['getAttributeList', 'setAttributeList', 'getAttributeConfig'],
   config: [
@@ -41,6 +45,7 @@ const outputFiles = {
     'setServerConfig',
     'uploadServerConfigFile',
   ],
+  operations: ['operations'],
 }
 
 const buildOutputFiles = (files: { [name: string]: string[] }) =>
