@@ -7,6 +7,7 @@ import SettingsEditor from '@containers/SettingsEditor'
 import AnatomyPresetDropdown from './AnatomyPresetDropdown'
 import { useGetAnatomyPresetQuery, useGetAnatomySchemaQuery } from '@queries/anatomy/getAnatomy'
 import { useCreateProjectMutation } from '@queries/project/updateProject'
+import { useGetConfigValueQuery } from '@queries/config/getConfig'
 
 // allow only alphanumeric and underscorer,
 // while underscore cannot be the first or last character
@@ -32,6 +33,10 @@ const NewProjectDialog = ({ onHide }) => {
     { skip: !selectedPreset },
   )
 
+  // Code regex from server config
+  const { data: projectOptions } = useGetConfigValueQuery({ key: 'project_options' })
+  const { project_code_regex: codeRegex } = projectOptions || {}
+
   // Logic
   //
   const [createProject, { isLoading }] = useCreateProjectMutation()
@@ -54,31 +59,24 @@ const NewProjectDialog = ({ onHide }) => {
       })
   }
 
-  const createCode = (name) => {
-    if (name.length <= 4) return name.toLowerCase()
-    let code = name.toLowerCase()
-    if (name.includes('_')) {
-      const subwords = name.split('_')
-      code = subwords
-        .map((subword) => subword.charAt(0))
-        .join('')
-        .slice(0, 4)
-    } else {
-      const vowels = ['a', 'e', 'i', 'o', 'u']
-      const filteredWord = name
-        .split('')
-        .filter((char) => !vowels.includes(char))
-        .join('')
-      code = filteredWord.slice(0, 4)
-    }
+  const createCode = (name, regexPattern) => {
+    if (!regexPattern) return ''
 
-    // if there is a number at the end of the name, add it to the code
-    const lastChar = name.charAt(name.length - 1)
-    if (!isNaN(lastChar)) {
-      code += lastChar
-    }
+    // Always create a new RegExp from the string pattern
+    try {
+      // Add 'g' flag to match all occurrences
+      const regex = new RegExp(regexPattern, 'g')
 
-    return code
+      // Use matchAll instead of match for global patterns
+      const matches = [...name.replaceAll('_', ' ').matchAll(regex)]
+      if (!matches.length) return ''
+
+      // Extract the first capture group from each match
+      return matches.map((match) => match[1]).join('')
+    } catch (error) {
+      console.warn('Invalid regex pattern for project code', error)
+      return ''
+    }
   }
 
   const handleNameChange = (e) => {
@@ -86,9 +84,8 @@ const NewProjectDialog = ({ onHide }) => {
     const name = e.target.value.replace(/\s/g, '_')
     setName(name)
     if (!codeSet || code === '') {
-      const code = createCode(name)
-
-      setCode(code)
+      const newCode = createCode(name, codeRegex)
+      setCode(newCode)
     }
   }
 
@@ -197,6 +194,7 @@ const NewProjectDialog = ({ onHide }) => {
             onChange={handleCodeChange}
             title={codeValidationError}
             className={codeValidationError ? 'error' : ''}
+            data-tooltip={'Regex: ' + codeRegex}
           />
           <AnatomyPresetDropdown
             selectedPreset={selectedPreset}

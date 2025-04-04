@@ -29,8 +29,6 @@ const AnatomyPresetDropdown = ({ selectedPreset, setSelectedPreset }) => {
     })),
   ]
 
-  console.log(selectedPreset)
-
   return (
     <Dropdown
       options={options}

@@ -9,6 +9,7 @@ export const getConfigApi = api.enhanceEndpoints({
       providesTags: ['config'],
     },
     getServerConfigSchema: {},
+    getConfigValue: {},
   },
 })
 
@@ -16,4 +17,5 @@ export const {
   useGetServerConfigQuery,
   useGetServerConfigOverridesQuery,
   useGetServerConfigSchemaQuery,
+  useGetConfigValueQuery,
 } = getConfigApi
