@@ -54,8 +54,9 @@ export const HelpMenu = ({ user, ...props }) => {
     {
       id: 'changelog',
       label: 'Latest changes',
-      onClick: openChangelog,
+      link: 'https://feedback.ayon.app/changelog',
       icon: 'track_changes',
+      target: '_blank',
     },
     {
       id: 'changelog',

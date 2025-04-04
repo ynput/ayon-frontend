@@ -1,13 +1,8 @@
-import { useListAddonsQuery } from '@queries/addons/getAddons'
 import { useGetFeedbackVerificationQuery, useGetYnputCloudInfoQuery } from '@queries/cloud/cloud'
 import { useAppSelector } from '@state/store'
-import { cloneDeep, upperFirst } from 'lodash'
+import { cloneDeep } from 'lodash'
 import React, { createContext, useContext, ReactNode, useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
-
-const addonNameMappings = {
-  powerpack: 'Power Features',
-}
 
 type FeedbackContextType = {
   loaded: boolean
@@ -33,18 +28,6 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
   const { data: verification } = useGetFeedbackVerificationQuery(undefined, {
     skip: !user.name || !connect,
   })
-  const { data: { addons = [] } = {}, isLoading: isLoadingAddons } = useListAddonsQuery(
-    {},
-    { skip: !user.name || !connect },
-  )
-
-  const addonCategories = addons
-    .filter((addon) => !!addon.productionVersion)
-    .map((addon) =>
-      addonNameMappings.hasOwnProperty(addon.name)
-        ? addonNameMappings[addon.name as keyof typeof addonNameMappings]
-        : `${upperFirst(addon.name)} Addon`,
-    )
 
   const loadScript = () => {
     if (!scriptLoaded) {
@@ -94,11 +77,14 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
     })
   }
 
-  const initializeChangelog = (addons: string[]): boolean => {
-    const extraCategories: string[] = []
+  const initializeChangelog = (): boolean => {
+    // everyone sees highlights
+    const categories: string[] = ['Highlights']
+
     if (user.data.isAdmin) {
-      const adminCategories = ['Server']
-      extraCategories.push(...adminCategories)
+      // admins see everything
+      const adminCategories = ['Server', 'Addon', 'Pipeline']
+      categories.push(...adminCategories)
     }
 
     const win = window as any
@@ -113,7 +99,7 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
           usersName: user.attrib?.fullName,
           autoOpenForNewUpdates: true,
         },
-        category: ['Production Tracking', ...addons, ...extraCategories],
+        category: categories,
         theme: 'dark',
       })
     }
@@ -168,8 +154,8 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
   }
 
   useEffect(() => {
-    // if not logged in or not connected to Ynput, do not load the script
-    if (!user.name || !connect || isLoadingAddons) return
+    // if not logged in, do not load the script
+    if (!user.name) return
 
     // if already loaded, do not load again
     if (scriptLoaded) return
@@ -180,14 +166,14 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
     initialize()
 
     // Initialize changelog widget
-    initializeChangelog(addonCategories)
+    initializeChangelog()
 
     // Initialize feedback widget
     initializeFeedbackWidget()
 
     // Initialize portal widget
     initializePortalWidget()
-  }, [user.name, connect?.instanceId, isLoadingAddons, addonCategories, scriptLoaded])
+  }, [user.name, scriptLoaded])
 
   // verify user
   useEffect(() => {
