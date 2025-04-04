@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { useListBundlesQuery } from '@queries/bundles/getBundles'
-import { coerce, rcompare } from 'semver'
+import { coerce, compareBuild } from 'semver'
 import useLocalStorage from '@hooks/useLocalStorage'
 import { toast } from 'react-toastify'
 import { useListInstallersQuery } from '@queries/installers/getInstallers'
@@ -29,7 +29,7 @@ const useGetInstallerDownload = () => {
           return -1
         }
         // If both have valid versions, compare them
-        return rcompare(a.semver?.version, b.semver?.version) || b.version.localeCompare(a.version)
+        return (-1 * compareBuild(a.semver?.version, b.semver?.version)) || b.version.localeCompare(a.version)
       })
   }, [installers])
 
