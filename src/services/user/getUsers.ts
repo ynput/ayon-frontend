@@ -185,15 +185,6 @@ const injectedApi = api.injectEndpoints({
             ]
           : [{ type: 'user', id: 'LIST' }],
     }),
-    getMe: build.query({
-      query: () => ({
-        url: '/api/users/me',
-      }),
-      providesTags: (res) => [
-        { type: 'user', id: res?.name },
-        { type: 'user', id: 'LIST' },
-      ],
-    }),
     getUserSessions: build.query({
       query: ({ name }) => ({
         url: `/api/users/${name}/sessions`,
@@ -265,7 +256,6 @@ export const {
   useGetUserQuery,
   useLazyGetUserQuery,
   useGetUsersAssigneeQuery,
-  useGetMeQuery,
   useGetUserSessionsQuery,
   useGetAllProjectUsersAsAssigneeQuery,
   useLazyGetAllProjectUsersAsAssigneeQuery,

@@ -11,6 +11,9 @@ const injectedRtkApi = api.injectEndpoints({
     getUserPools: build.query<GetUserPoolsApiResponse, GetUserPoolsApiArg>({
       query: () => ({ url: `/api/auth/pools` }),
     }),
+    getCurrentUser: build.query<GetCurrentUserApiResponse, GetCurrentUserApiArg>({
+      query: () => ({ url: `/api/users/me` }),
+    }),
   }),
   overrideExisting: false,
 })
@@ -21,6 +24,8 @@ export type CreateSessionApiArg = {
 }
 export type GetUserPoolsApiResponse = /** status 200 Successful Response */ UserPoolModel[]
 export type GetUserPoolsApiArg = void
+export type GetCurrentUserApiResponse = /** status 200 Successful Response */ UserModel
+export type GetCurrentUserApiArg = void
 export type UserAttribModel = {
   fullName?: string
   email?: string
@@ -64,6 +69,7 @@ export type SessionModel = {
   created?: number
   lastUsed?: number
   isService?: boolean
+  isApiKey?: boolean
   clientInfo?: ClientInfo
 }
 export type ValidationError = {
@@ -89,4 +95,8 @@ export type UserPoolModel = {
   exp: number
   max: number
   used: number
+}
+export type ErrorResponse = {
+  code: number
+  detail: string
 }

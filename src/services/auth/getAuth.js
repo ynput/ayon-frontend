@@ -8,6 +8,9 @@ const authApi = api.enhanceEndpoints({
     getUserPools: {
       providesTags: [{ type: 'userPool', id: 'LIST' }],
     },
+    getCurrentUser: {
+      providesTags: [{ type: 'user', id: 'LIST' }],
+    },
   },
 })
 
@@ -57,4 +60,5 @@ export const {
   useLogOutMutation,
   useCreateSessionMutation,
   useGetUserPoolsQuery,
+  useGetCurrentUserQuery,
 } = authApiInjected

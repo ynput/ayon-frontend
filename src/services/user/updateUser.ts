@@ -40,6 +40,7 @@ const updateUser = globalApi.injectEndpoints({
         { type: 'user', id: name },
         { type: 'user', id: 'LIST' },
         { type: 'userPool', id: 'LIST' },
+        { type: 'feedback', id: 'LIST' },
         'info',
       ],
     }),

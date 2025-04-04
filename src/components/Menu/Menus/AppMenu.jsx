@@ -124,7 +124,7 @@ export const AppMenu = ({ user, ...props }) => {
 
   return (
     <>
-      <Menu menu={items} {...props} footer={!isUser && ayonClient.settings?.version} />
+      <Menu menu={items} {...props} footer={ayonClient.settings?.version} />
       {isAdmin && (
         <YnputConnector
           redirect={location.pathname + '/appMenu'}
