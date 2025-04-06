@@ -152,7 +152,7 @@ export const createBundleFromRelease = (
     bundleDepPackages[depPackage.platform] = depPackage.filename
   }
 
-  const name = getNewBundleName(release.name, bundleList)
+  const name = getNewBundleName(release.release, bundleList)
 
   // check if there is already a production bundles
   const hasProduction = bundleList.some((bundle) => bundle?.isProduction)
