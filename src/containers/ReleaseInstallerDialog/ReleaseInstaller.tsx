@@ -28,6 +28,7 @@ import { ReleaseFormType, switchDialog } from '@state/releaseInstaller'
 import { useRestart } from '@context/restartContext'
 import { useCreateBundleMutation } from '@queries/bundles/updateBundles'
 import { useNavigate } from 'react-router'
+import { useGetConfigValueQuery } from '@queries/config/getConfig'
 
 interface ReleaseInstallerProps {
   onFinish: () => void
@@ -53,6 +54,8 @@ const ReleaseInstaller: FC<ReleaseInstallerProps> = ({ onFinish }) => {
   const { data: { bundles = [] } = {}, isLoading: isLoadingBundles } = useListBundlesQuery({
     archived: false,
   })
+
+  const { data: studioName } = useGetConfigValueQuery({ key: 'studio_name' })
 
   // QUERIES
 
@@ -120,6 +123,7 @@ const ReleaseInstaller: FC<ReleaseInstallerProps> = ({ onFinish }) => {
       releaseForm.addons,
       releaseForm.platforms,
       bundles,
+      studioName,
     )
 
     // then create the bundle
