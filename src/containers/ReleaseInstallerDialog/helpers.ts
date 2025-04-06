@@ -130,7 +130,6 @@ export const createBundleFromRelease = (
   selectedAddons: string[],
   selectedPlatforms: string[],
   bundleList: BundleModel[],
-  studioName?: string,
 ) => {
   const { installers = [], dependencyPackages = [] } = release
 
@@ -153,7 +152,7 @@ export const createBundleFromRelease = (
     bundleDepPackages[depPackage.platform] = depPackage.filename
   }
 
-  const name = getNewBundleName(studioName, bundleList)
+  const name = getNewBundleName(release.release, bundleList)
 
   // check if there is already a production bundles
   const hasProduction = bundleList.some((bundle) => bundle?.isProduction)
