@@ -2,8 +2,11 @@ import { useCallback, useEffect } from 'react'
 import { useSelection } from '../context/SelectionContext'
 import { useCellEditing } from '../context/CellEditingContext'
 import { parseCellId, getCellId } from '../utils/cellUtils'
+import { useProjectDataContext } from '../context/ProjectDataContext'
 
 export default function useKeyboardNavigation() {
+  const { attribFields } = useProjectDataContext()
+
   const { focusedCellId, gridMap, selectCell, focusCell, clearSelection, setFocusedCellId } =
     useSelection()
 
@@ -38,6 +41,10 @@ export default function useKeyboardNavigation() {
       const colIndex = gridMap.colIdToIndex.get(colId)
 
       if (rowIndex === undefined || colIndex === undefined) return
+
+      const isReadOnly =
+        colId.startsWith('attrib_') &&
+        attribFields.find((a) => a.name === colId.replace('attrib_', ''))?.readOnly
 
       // Handle different keys
       switch (e.key) {
@@ -87,6 +94,7 @@ export default function useKeyboardNavigation() {
         }
         case 'Enter': {
           e.preventDefault()
+          if (isReadOnly) return
           // Start editing the currently focused cell
           setEditingCellId(focusedCellId)
           break

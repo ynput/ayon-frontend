@@ -1,51 +1,53 @@
 import type { ConfigFile } from '@rtk-query/codegen-openapi'
+import { permission } from 'process'
 
 // Specify the endpoints you want to generate
 const outputFiles = {
-  bundles: ['listBundles', 'checkBundleCompatibility', 'migrateSettingsByBundle'],
-  folders: ['getFolderHierarchy', 'getFolderList', 'queryTasksFolders'],
-  market: ['marketAddonList', 'marketAddonDetail', 'marketAddonVersionDetail', 'getLicenses'],
-  watchers: ['getEntityWatchers', 'setEntityWatchers'],
-  inbox: ['manageInboxItem'],
-  project: ['getProject', 'listProjects', 'getProjectAnatomy', 'getProjectUsers'],
-  review: [
-    'getReviewablesForVersion',
-    'getReviewablesForProduct',
-    'getReviewablesForTask',
-    'getReviewablesForFolder',
-    'sortVersionReviewables',
-    'updateReviewable',
-    'uploadReviewable',
-  ],
-  actions: ['listAvailableActionsForContext', 'executeAction'],
-  accessGroups: [
-    'getAccessGroupSchema',
-    'getAccessGroups',
-    'getAccessGroup',
-    'deleteAccessGroup',
-    'saveAccessGroup',
-  ],
-  auth: ['createSession', 'getUserPools', 'getSiteInfo'],
-  addons: ['listAddons', 'listFrontendModules', 'deleteAddonVersion', 'uploadAddonZipFile'],
-  activities: ['deleteProjectActivity'],
-  users: ['getUser', 'setFrontendPreferences'],
-  releases: ['getReleases', 'getReleaseInfo'],
-  installers: ['listInstallers', 'createInstaller', 'deleteInstaller'],
-  dependencyPackages: [
-    'listDependencyPackages',
-    'createDependencyPackage',
-    'deleteDependencyPackage',
-  ],
-  cloud: ['getYnputCloudInfo', 'setYnputCloudKey', 'deleteYnputCloudKey'],
-  attributes: ['getAttributeList', 'setAttributeList', 'getAttributeConfig'],
-  config: [
-    'getServerConfig',
-    'getServerOverrides',
-    'getServerConfigSchema',
-    'setServerConfig',
-    'uploadServerConfigFile',
-  ],
-  operations: ['operations'],
+  // bundles: ['listBundles', 'checkBundleCompatibility', 'migrateSettingsByBundle'],
+  // folders: ['getFolderHierarchy', 'getFolderList', 'queryTasksFolders'],
+  // market: ['marketAddonList', 'marketAddonDetail', 'marketAddonVersionDetail', 'getLicenses'],
+  // watchers: ['getEntityWatchers', 'setEntityWatchers'],
+  // inbox: ['manageInboxItem'],
+  // project: ['getProject', 'listProjects', 'getProjectAnatomy', 'getProjectUsers'],
+  // review: [
+  //   'getReviewablesForVersion',
+  //   'getReviewablesForProduct',
+  //   'getReviewablesForTask',
+  //   'getReviewablesForFolder',
+  //   'sortVersionReviewables',
+  //   'updateReviewable',
+  //   'uploadReviewable',
+  // ],
+  // actions: ['listAvailableActionsForContext', 'executeAction'],
+  // accessGroups: [
+  //   'getAccessGroupSchema',
+  //   'getAccessGroups',
+  //   'getAccessGroup',
+  //   'deleteAccessGroup',
+  //   'saveAccessGroup',
+  // ],
+  // auth: ['createSession', 'getUserPools', 'getSiteInfo'],
+  // addons: ['listAddons', 'listFrontendModules', 'deleteAddonVersion', 'uploadAddonZipFile'],
+  // activities: ['deleteProjectActivity'],
+  // users: ['getUser', 'setFrontendPreferences'],
+  // releases: ['getReleases', 'getReleaseInfo'],
+  // installers: ['listInstallers', 'createInstaller', 'deleteInstaller'],
+  // dependencyPackages: [
+  //   'listDependencyPackages',
+  //   'createDependencyPackage',
+  //   'deleteDependencyPackage',
+  // ],
+  // cloud: ['getYnputCloudInfo', 'setYnputCloudKey', 'deleteYnputCloudKey'],
+  // attributes: ['getAttributeList', 'setAttributeList', 'getAttributeConfig'],
+  // config: [
+  //   'getServerConfig',
+  //   'getServerOverrides',
+  //   'getServerConfigSchema',
+  //   'setServerConfig',
+  //   'uploadServerConfigFile',
+  // ],
+  // operations: ['operations'],
+  permissions: ['getCurrentUserPermissions', 'getCurrentUserProjectPermissions'],
 }
 
 const buildOutputFiles = (files: { [name: string]: string[] }) =>
@@ -58,7 +60,7 @@ const buildOutputFiles = (files: { [name: string]: string[] }) =>
   }, {})
 
 const config: ConfigFile = {
-  schemaFile: `http://localhost:5000/openapi.json`,
+  schemaFile: `http://localhost:3000/openapi.json`,
   apiFile: '../src/services/ayon.ts',
   exportName: 'api',
   apiImport: 'RestAPI',

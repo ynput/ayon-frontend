@@ -3,8 +3,7 @@ import { useAppSelector } from '@state/store'
 import { useGetProjectQuery } from '@queries/project/getProject'
 import { ProjectModel } from '@api/rest/project'
 import { useGetUsersAssigneeQuery } from '@queries/user/getUsers'
-import useAttributeFields from '../hooks/useAttributesList'
-import { AttributeModel } from '@api/rest/attributes'
+import useAttributeFields, { AttributeWithPermissions } from '../hooks/useAttributesList'
 
 type User = {
   name: string
@@ -19,7 +18,7 @@ export interface ProjectDataContextProps {
   projectName: string
   users: User[]
   // Attributes
-  attribFields: AttributeModel[]
+  attribFields: AttributeWithPermissions[]
 }
 
 const ProjectDataContext = createContext<ProjectDataContextProps | undefined>(undefined)
@@ -42,7 +41,7 @@ export const ProjectDataProvider = ({ children }: ProjectDataProviderProps) => {
     attribFields,
     isSuccess: isSuccessAttribs,
     isFetching: isFetchingAttribs,
-  } = useAttributeFields()
+  } = useAttributeFields({ projectName })
 
   const isInitialized =
     isSuccessProject && isSuccessAttribs && !isFetchingProject && !isFetchingAttribs

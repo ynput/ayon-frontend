@@ -24,8 +24,9 @@ import {
 import clsx from 'clsx'
 
 // Type imports
-import { AttributeEnumItem, AttributeModel } from '@api/rest/attributes'
-import { FolderNodeMap, TableRow, TaskNodeMap } from './utils/types'
+import type { AttributeEnumItem } from '@api/rest/attributes'
+import type { FolderNodeMap, TableRow, TaskNodeMap } from './utils/types'
+import type { AttributeWithPermissions } from './hooks/useAttributesList'
 
 // Component imports
 import ProjectTreeTableColumns, { BuiltInFieldOptions } from './ProjectTreeTableColumns'
@@ -52,6 +53,7 @@ import useKeyboardNavigation from './hooks/useKeyboardNavigation'
 import { getCellId } from './utils/cellUtils'
 import { generateLoadingRows, generateDummyAttributes } from './utils/loadingUtils'
 import { createPortal } from 'react-dom'
+import { Icon } from '@ynput/ayon-react-components'
 
 //These are the important styles to make sticky column pinning work!
 //Apply styles like this using your CSS strategy of choice with this kind of logic to head cells, data cells, footer cells, etc.
@@ -72,7 +74,7 @@ type Props = {
   scope: string
   tableData: TableRow[]
   options: BuiltInFieldOptions
-  attribs: AttributeModel[]
+  attribs: AttributeWithPermissions[]
   isLoading: boolean
   isInitialized: boolean
   sliceId: string
@@ -100,6 +102,9 @@ const FlexTableWithProviders = (props: Props) => {
         foldersMap={props.foldersMap}
         tasksMap={props.tasksMap}
         columnEnums={{ ...props.options, ...attribByField }}
+        columnReadOnly={props.attribs
+          .filter((attrib) => attrib.readOnly)
+          .map((attrib) => attrib.name)}
       >
         <FlexTable {...props} />
       </ClipboardProvider>
@@ -244,6 +249,10 @@ const FlexTable = ({
   })
 
   const columnSizeVars = useCustomColumnWidthVars(table, columnSizing)
+  const readOnlyColumns = useMemo(
+    () => attribs.filter((attrib) => attrib.readOnly).map((attrib) => 'attrib_' + attrib.name),
+    [attribs],
+  )
 
   return (
     <Styled.TableWrapper>
@@ -268,6 +277,7 @@ const FlexTable = ({
             virtualPaddingLeft={virtualPaddingLeft}
             virtualPaddingRight={virtualPaddingRight}
             isLoading={isLoading}
+            readOnlyColumns={readOnlyColumns}
           />
           <TableBody
             columnVirtualizer={columnVirtualizer}
@@ -290,6 +300,7 @@ interface TableHeadProps {
   virtualPaddingLeft: number | undefined
   virtualPaddingRight: number | undefined
   isLoading: boolean
+  readOnlyColumns?: string[]
 }
 
 const TableHead = ({
@@ -298,6 +309,7 @@ const TableHead = ({
   virtualPaddingLeft,
   virtualPaddingRight,
   isLoading,
+  readOnlyColumns,
 }: TableHeadProps) => {
   return (
     <Styled.TableHeader>
@@ -309,6 +321,7 @@ const TableHead = ({
           virtualPaddingLeft={virtualPaddingLeft}
           virtualPaddingRight={virtualPaddingRight}
           isLoading={isLoading}
+          readOnlyColumns={readOnlyColumns}
         />
       ))}
     </Styled.TableHeader>
@@ -321,6 +334,7 @@ interface TableHeadRowProps {
   virtualPaddingLeft: number | undefined
   virtualPaddingRight: number | undefined
   isLoading: boolean
+  readOnlyColumns?: string[]
 }
 
 const TableHeadRow = ({
@@ -329,6 +343,7 @@ const TableHeadRow = ({
   virtualPaddingLeft,
   virtualPaddingRight,
   isLoading,
+  readOnlyColumns,
 }: TableHeadRowProps) => {
   const virtualColumns = columnVirtualizer.getVirtualItems()
   return (
@@ -339,7 +354,14 @@ const TableHeadRow = ({
       ) : null}
       {virtualColumns.map((virtualColumn) => {
         const header = headerGroup.headers[virtualColumn.index]
-        return <TableHeadCell key={header.id} header={header} isLoading={isLoading} />
+        return (
+          <TableHeadCell
+            key={header.id}
+            header={header}
+            isLoading={isLoading}
+            isReadOnly={readOnlyColumns?.includes(header.id)}
+          />
+        )
       })}
       {virtualPaddingRight ? (
         //fake empty column to the right for virtualization scroll padding
@@ -352,9 +374,10 @@ const TableHeadRow = ({
 interface TableHeadCellProps {
   header: Header<TableRow, unknown>
   isLoading: boolean
+  isReadOnly?: boolean
 }
 
-const TableHeadCell = ({ header, isLoading }: TableHeadCellProps) => {
+const TableHeadCell = ({ header, isLoading, isReadOnly }: TableHeadCellProps) => {
   const { column } = header
   const isRowSelectionColumn = column.id === ROW_SELECTION_COLUMN_ID
 
@@ -378,6 +401,9 @@ const TableHeadCell = ({ header, isLoading }: TableHeadCellProps) => {
           })}
         >
           {flexRender(column.columnDef.header, header.getContext())}
+          {isReadOnly && (
+            <Icon icon="lock" data-tooltip={'You only have permission to read this column.'} />
+          )}
 
           <Styled.HeaderButtons className="actions">
             {/* COLUMN HIDING */}
@@ -433,7 +459,7 @@ interface TableBodyProps {
   showHierarchy: boolean
   virtualPaddingLeft: number | undefined
   virtualPaddingRight: number | undefined
-  attribs: AttributeModel[]
+  attribs: AttributeWithPermissions[]
 }
 
 const TableBody = ({

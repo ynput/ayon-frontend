@@ -24,7 +24,7 @@ export const generateLoadingRows = (
       color: null,
       icon: null,
       img: null,
-      type: type,
+      entityType: type,
       ownAttrib: [],
       tags: [],
       subRows: [],
@@ -33,7 +33,6 @@ export const generateLoadingRows = (
         acc[attrib.name] = null
         return acc
       }, {}),
-      data: { type: type, id: `loading-${index}` },
     }),
   )
 }

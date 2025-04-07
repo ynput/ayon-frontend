@@ -9,7 +9,8 @@ import {
   sortingFns,
 } from '@tanstack/react-table'
 import { TableRow } from './utils/types'
-import { AttributeData, AttributeEnumItem, AttributeModel } from '@api/rest/attributes'
+import { AttributeData, AttributeEnumItem } from '@api/rest/attributes'
+import { AttributeWithPermissions } from './hooks/useAttributesList'
 import { CellWidget, EntityNameWidget } from './widgets'
 import { useCellEditing } from './context/CellEditingContext'
 import { getCellId, getCellValue } from './utils/cellUtils'
@@ -76,7 +77,7 @@ export type BuiltInFieldOptions = {
 
 type Props = {
   tableData: TableRow[]
-  attribs: AttributeModel[]
+  attribs: AttributeWithPermissions[]
   columnSizing: ColumnSizingState
   isLoading: boolean
   showHierarchy: boolean
@@ -266,6 +267,7 @@ const ProjectTreeTableColumns = ({
               options={attrib.data.enum || []}
               isCollapsed={!!row.original.childOnlyMatch}
               isInherited={isInherited}
+              isReadOnly={attrib.readOnly}
               onChange={(value) =>
                 updateEntities([{ field: columnIdParsed, value, id, type, isAttrib: true }])
               }

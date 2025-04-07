@@ -25,6 +25,7 @@ export interface ClipboardProviderProps {
   foldersMap: FolderNodeMap
   tasksMap: TaskNodeMap
   columnEnums: ColumnEnums
+  columnReadOnly: string[]
 }
 
 export interface ParsedClipboardData {

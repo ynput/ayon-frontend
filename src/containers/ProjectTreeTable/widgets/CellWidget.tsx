@@ -50,6 +50,7 @@ interface EditorCellProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'on
   isInherited?: boolean
   isPlaceholder?: boolean
   isFocused?: boolean
+  isReadOnly?: boolean
   enableCustomValues?: boolean
   onChange?: (value: CellValue | CellValue[], key?: 'Enter' | 'Click' | 'Escape') => void
 }
@@ -69,6 +70,7 @@ const EditorCellComponent: FC<EditorCellProps> = ({
   isCollapsed,
   isInherited,
   isPlaceholder,
+  isReadOnly,
   enableCustomValues,
   onChange,
   ...props
@@ -84,7 +86,8 @@ const EditorCellComponent: FC<EditorCellProps> = ({
   const isCurrentCellFocused = isCellFocused(cellId)
 
   const handleDoubleClick = useCallback(() => {
-    !isPlaceholder && setEditingCellId(cellId)
+    if (isPlaceholder || isReadOnly) return
+    setEditingCellId(cellId)
   }, [cellId, setEditingCellId, isPlaceholder])
 
   const handleSingleClick = () => {
@@ -108,6 +111,7 @@ const EditorCellComponent: FC<EditorCellProps> = ({
 
   const handleOnChange: WidgetBaseProps['onChange'] = (newValue, key) => {
     setEditingCellId(null)
+    if (isReadOnly) return
     // move to the next cell row
     key === 'Enter' && moveToNextRow()
     // make change if the value is different or if the key is 'Enter'
@@ -116,7 +120,7 @@ const EditorCellComponent: FC<EditorCellProps> = ({
     }
   }
 
-  const handleChancel = () => {
+  const handleCancel = () => {
     setEditingCellId(null)
   }
 
@@ -124,7 +128,7 @@ const EditorCellComponent: FC<EditorCellProps> = ({
     // Common props shared across all widgets
     const sharedProps: WidgetBaseProps = {
       onChange: handleOnChange,
-      onCancelEdit: handleChancel,
+      onCancelEdit: handleCancel,
       isEditing: isCurrentCellEditing,
     }
 
@@ -151,7 +155,7 @@ const EditorCellComponent: FC<EditorCellProps> = ({
             value={enumValue}
             options={options}
             type={type}
-            onOpen={() => setEditingCellId(cellId)}
+            onOpen={() => !isReadOnly && setEditingCellId(cellId)}
             enableCustomValues={enableCustomValues}
             {...sharedProps}
           />
@@ -208,7 +212,11 @@ function arePropsEqual(prevProps: EditorCellProps, nextProps: EditorCellProps) {
       !nextProps?.attributeData?.type.includes('list')) ||
       prevProps.options?.length === nextProps.options?.length) &&
     prevProps.isInherited === nextProps.isInherited &&
-    prevProps.enableCustomValues === nextProps.enableCustomValues
+    prevProps.enableCustomValues === nextProps.enableCustomValues &&
+    prevProps.isReadOnly === nextProps.isReadOnly &&
+    prevProps.isPlaceholder === nextProps.isPlaceholder &&
+    prevProps.isFocused === nextProps.isFocused &&
+    prevProps.isCollapsed === nextProps.isCollapsed
   )
 }
 

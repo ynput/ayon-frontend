@@ -2,18 +2,37 @@ import { ColumnEnums, builtInFieldMappings, ParsedClipboardData } from './clipbo
 import { clipboardError } from './clipboardUtils'
 
 // Validate clipboard data for enum fields and handle special cases
-export const validateClipboardData = (
-  colId: string,
-  isFolder: boolean,
-  pasteValue: string,
-  parsedData: ParsedClipboardData[],
-  columnEnums: ColumnEnums,
-  rowIndex: number,
-  colIndex: number,
-  isSingleCellValue: boolean,
-): boolean => {
+export const validateClipboardData = (params: {
+  colId: string
+  isFolder: boolean
+  pasteValue: string
+  parsedData: ParsedClipboardData[]
+  columnEnums: ColumnEnums
+  columnReadOnly: string[]
+  rowIndex: number
+  colIndex: number
+  isSingleCellValue: boolean
+}): boolean => {
+  const {
+    colId,
+    isFolder,
+    pasteValue,
+    parsedData,
+    columnEnums,
+    columnReadOnly,
+    rowIndex,
+    colIndex,
+    isSingleCellValue,
+  } = params
+
   // Skip validation for empty values
   if (!pasteValue) return true
+
+  // Check if the column is read-only
+  if (colId.startsWith('attrib_') && columnReadOnly.includes(colId.replace('attrib_', ''))) {
+    clipboardError(`This column is read-only: "${colId}". Paste operation cancelled.`)
+    return false
+  }
 
   // Special handling for assignees - filter out invalid values instead of canceling
   if (colId === 'assignees') {

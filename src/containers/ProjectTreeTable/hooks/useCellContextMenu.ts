@@ -7,13 +7,13 @@ import { ROW_SELECTION_COLUMN_ID, useSelection } from '../context/SelectionConte
 import { useProjectTableContext } from '../context/ProjectTableContext'
 import { useCellEditing } from '../context/CellEditingContext'
 import { useNewEntityContext } from '@context/NewEntityContext'
-import { AttributeModel } from '@api/rest/attributes'
+import { AttributeWithPermissions } from './useAttributesList'
 import { InheritFromParentEntity } from './useUpdateOverview'
 
 type ContextEvent = React.MouseEvent<HTMLTableSectionElement, MouseEvent>
 
 type CellContextMenuProps = {
-  attribs: AttributeModel[]
+  attribs: AttributeWithPermissions[]
 }
 
 const useCellContextMenu = ({ attribs }: CellContextMenuProps) => {
@@ -40,10 +40,16 @@ const useCellContextMenu = ({ attribs }: CellContextMenuProps) => {
       danger?: boolean
       command: () => void
       shouldShow: boolean
+      disabled?: boolean
     }
 
     // Parse cell info
     const { rowId: entityId, colId } = parseCellId(id) || {}
+    // get full attrib details
+    const attrib = attribs.find((attrib) => attrib.name === colId?.replace('attrib_', ''))
+
+    console.log(attrib)
+
     if (!entityId)
       return [
         {
@@ -108,6 +114,7 @@ const useCellContextMenu = ({ attribs }: CellContextMenuProps) => {
         shortcut: getPlatformShortcutKey('v', [KeyMode.Ctrl]),
         command: () => pasteFromClipboard(selected),
         shouldShow: !isNameColumn,
+        disabled: attrib?.readOnly,
       },
       // Entity operations
       {

@@ -27,6 +27,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
   foldersMap,
   tasksMap,
   columnEnums,
+  columnReadOnly,
 }) => {
   // Get selection information from SelectionContext
   const { selectedCells, gridMap, focusedCellId } = useSelection()
@@ -284,16 +285,17 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
             }
 
             // Validate clipboard data for this cell
-            const isValid = validateClipboardData(
+            const isValid = validateClipboardData({
               colId,
               isFolder,
               pasteValue,
               parsedData,
               columnEnums,
+              columnReadOnly,
               rowIndex,
               colIndex,
               isSingleCellValue,
-            )
+            })
 
             if (!isValid) return
           }
