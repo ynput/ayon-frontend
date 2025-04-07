@@ -111,7 +111,7 @@ const EditorCellComponent: FC<EditorCellProps> = ({
 
   const handleOnChange: WidgetBaseProps['onChange'] = (newValue, key) => {
     setEditingCellId(null)
-    if (isReadOnly) return
+    // if (isReadOnly) return
     // move to the next cell row
     key === 'Enter' && moveToNextRow()
     // make change if the value is different or if the key is 'Enter'
