@@ -9,7 +9,9 @@ export const getConfigApi = api.enhanceEndpoints({
       providesTags: ['config'],
     },
     getServerConfigSchema: {},
-    getConfigValue: {},
+    getConfigValue: {
+      providesTags: ['config'],
+    },
   },
 })
 
