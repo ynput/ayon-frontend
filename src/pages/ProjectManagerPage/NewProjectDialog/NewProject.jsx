@@ -71,8 +71,14 @@ const NewProjectDialog = ({ onHide }) => {
       const matches = [...name.replaceAll('_', ' ').matchAll(regex)]
       if (!matches.length) return ''
 
-      // Extract the first capture group from each match
-      return matches.map((match) => match[1]).join('')
+      // Check if the regex has capture groups
+      if (matches[0].length > 1) {
+        // Extract the first capture group from each match
+        return matches.map((match) => match[1]).join('')
+      } else {
+        // If no capture groups, use the full match
+        return matches.map((match) => match[0]).join('')
+      }
     } catch (error) {
       console.warn('Invalid regex pattern for project code', error)
       return ''
