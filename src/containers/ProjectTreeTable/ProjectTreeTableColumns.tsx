@@ -67,12 +67,16 @@ const attribSort: AttribSortingFn = (rowA, rowB, columnId, attrib) => {
   }
 }
 
+interface EnumOption extends AttributeEnumItem {
+  scope?: string[]
+}
+
 export type BuiltInFieldOptions = {
-  folderTypes: AttributeEnumItem[]
-  taskTypes: AttributeEnumItem[]
-  statuses: AttributeEnumItem[]
-  assignees: AttributeEnumItem[]
-  tags: AttributeEnumItem[]
+  folderTypes: EnumOption[]
+  taskTypes: EnumOption[]
+  statuses: EnumOption[]
+  assignees: EnumOption[]
+  tags: EnumOption[]
 }
 
 type Props = {
@@ -162,7 +166,7 @@ const ProjectTreeTableColumns = ({
               columnId={column.id}
               value={value}
               attributeData={{ type: 'string' }}
-              options={options.statuses}
+              options={options.statuses.filter((s) => s.scope?.includes(type))}
               isCollapsed={!!row.original.childOnlyMatch}
               onChange={(value) => updateEntities([{ field: column.id, value, id, type }])}
             />

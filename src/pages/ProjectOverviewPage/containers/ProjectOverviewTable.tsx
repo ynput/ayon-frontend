@@ -38,12 +38,17 @@ const ProjectOverviewTable = ({}: Props) => {
         label: fullName || name,
         icon: `/api/users/${name}/avatar`,
       })),
-      statuses: statuses.map(({ name, color, icon }) => ({
-        value: name,
-        label: name,
-        color,
-        icon,
-      })),
+      statuses: statuses
+        .filter(
+          (status) => !status.scope || ['folder', 'task'].some((s) => status.scope?.includes(s)),
+        )
+        .map(({ name, color, icon, scope }) => ({
+          value: name,
+          label: name,
+          color,
+          icon,
+          scope,
+        })),
       tags: tags.map(({ name, color }) => ({ value: name, label: name, color })),
       folderTypes: folderTypes.map(({ name, icon }) => ({ value: name, label: name, icon })),
       taskTypes: taskTypes.map(({ name, icon }) => ({ value: name, label: name, icon })),
