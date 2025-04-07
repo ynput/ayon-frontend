@@ -4,7 +4,7 @@ import MenuList from './MenuList'
 import copyToClipboard from '@helpers/copyToClipboard'
 import { Button } from '@ynput/ayon-react-components'
 
-const Menu = ({ menu = [], onClose, header, footer = '', ...props }) => {
+const Menu = ({ menu = [], onClose, header, footer = '' }) => {
   const [subMenus, setSubMenus] = useState([])
   //   When a menu item is clicked, the following happens:
   const handleClick = (e, onClick, url, disableClose) => {
@@ -54,7 +54,7 @@ const Menu = ({ menu = [], onClose, header, footer = '', ...props }) => {
 
   return (
     <>
-      <Styled.Section {...props}>
+      <Styled.Section>
         {header && header}
         <MenuList items={menu} handleClick={handleClick} onSubMenu={handleSubMenu} level={0} />
         {footer && (

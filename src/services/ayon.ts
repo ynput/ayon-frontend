@@ -101,6 +101,7 @@ const tagTypes = [
   'progress',
   'userPool',
   'config',
+  'feedback',
   'overviewTask',
 ]
 

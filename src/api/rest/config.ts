@@ -23,6 +23,9 @@ const injectedRtkApi = api.injectEndpoints({
     >({
       query: () => ({ url: `/api/config/overrides` }),
     }),
+    getConfigValue: build.query<GetConfigValueApiResponse, GetConfigValueApiArg>({
+      query: (queryArg) => ({ url: `/api/config/value/${queryArg.key}` }),
+    }),
     getServerConfigFile: build.query<GetServerConfigFileApiResponse, GetServerConfigFileApiArg>({
       query: (queryArg) => ({ url: `/api/config/files/${queryArg.fileType}` }),
     }),
@@ -53,6 +56,11 @@ export type SetServerConfigApiArg = {
 }
 export type GetServerConfigOverridesApiResponse = /** status 200 Successful Response */ object
 export type GetServerConfigOverridesApiArg = void
+export type GetConfigValueApiResponse = /** status 200 Successful Response */ any
+export type GetConfigValueApiArg = {
+  /** The key of the configuration value to retrieve */
+  key: string
+}
 export type GetServerConfigFileApiResponse = /** status 200 Successful Response */ any
 export type GetServerConfigFileApiArg = {
   fileType: 'login_background' | 'studio_logo'
@@ -71,11 +79,16 @@ export type CustomizationModel = {
   /** The message that is displayed to users on the login page. Markdown syntax is supported. */
   motd?: string
 }
+export type ProjectOptionsModel = {
+  /** A regular expression that is used to create project code from the project name. */
+  project_code_regex?: string
+}
 export type ServerConfigModel = {
   /** The name of the studio */
   studio_name?: string
   /** Customization options for the login page */
   customization?: CustomizationModel
+  project_options?: ProjectOptionsModel
 }
 export type ValidationError = {
   loc: (string | number)[]

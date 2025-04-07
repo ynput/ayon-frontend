@@ -19,6 +19,9 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    getCurrentUser: build.query<GetCurrentUserApiResponse, GetCurrentUserApiArg>({
+      query: () => ({ url: `/api/users/me` }),
+    }),
   }),
   overrideExisting: false,
 })
@@ -34,6 +37,8 @@ export type GetSiteInfoApiArg = {
   /** Include frontend-related information */
   full?: boolean
 }
+export type GetCurrentUserApiResponse = /** status 200 Successful Response */ UserModel
+export type GetCurrentUserApiArg = void
 export type UserAttribModel = {
   fullName?: string
   email?: string
@@ -210,4 +215,8 @@ export type InfoResponseModel = {
   sites?: SiteInfo[]
   ssoOptions?: SsoOption[]
   extras?: string
+}
+export type ErrorResponse = {
+  code: number
+  detail: string
 }

@@ -39,7 +39,6 @@ const MenuItem = forwardRef(
           },
           className,
         )}
-        icon={icon}
         {...props}
         label={labelsArray.join(', ')}
       >

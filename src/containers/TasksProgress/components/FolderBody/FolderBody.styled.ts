@@ -78,14 +78,12 @@ export const Path = styled.span`
   padding: var(--padding-s);
   border-radius: var(--border-radius-m);
   border: 1px solid transparent;
+  flex: 1;
 
   /* first child ellipses */
   & > :first-child {
     white-space: nowrap;
     overflow: hidden;
-
-    display: flex;
-    justify-content: flex-end;
   }
 
   cursor: pointer;
