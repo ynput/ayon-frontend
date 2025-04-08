@@ -16,7 +16,10 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/operations/activities`,
         method: 'POST',
         body: queryArg.activityOperationsRequestModel,
-        headers: { 'x-sender': queryArg['x-sender'], 'x-sender-type': queryArg['x-sender-type'] },
+        headers: {
+          'x-sender': queryArg['x-sender'],
+          'x-sender-type': queryArg['x-sender-type'],
+        },
       }),
     }),
     operations: build.mutation<OperationsApiResponse, OperationsApiArg>({
@@ -24,7 +27,10 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/operations`,
         method: 'POST',
         body: queryArg.operationsRequestModel,
-        headers: { 'x-sender': queryArg['x-sender'], 'x-sender-type': queryArg['x-sender-type'] },
+        headers: {
+          'x-sender': queryArg['x-sender'],
+          'x-sender-type': queryArg['x-sender-type'],
+        },
       }),
     }),
   }),
@@ -66,6 +72,7 @@ export type QueryCondition = {
   /** Comparison operator */
   operator?:
     | 'eq'
+    | 'like'
     | 'lt'
     | 'gt'
     | 'lte'
@@ -75,10 +82,12 @@ export type QueryCondition = {
     | 'notnull'
     | 'in'
     | 'notin'
-    | 'contains'
+    | 'includes'
     | 'excludes'
-    | 'any'
-    | 'like'
+    | 'includesall'
+    | 'excludesall'
+    | 'includesany'
+    | 'excludesany'
 }
 export type QueryFilter = {
   /** List of conditions to be evaluated */
@@ -136,7 +145,7 @@ export type OperationModel = {
   type: 'create' | 'update' | 'delete'
   entityType: 'folder' | 'product' | 'version' | 'representation' | 'task' | 'workfile'
   entityId?: string
-  data?: Record<string, any>
+  data?: object
   force?: boolean
   asUser?: string
 }

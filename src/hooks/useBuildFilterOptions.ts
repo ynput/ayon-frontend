@@ -5,8 +5,6 @@
 
 import { AttributeModel, AttributeEnumItem, AttributeData } from '@api/rest/attributes'
 import { FolderType, Status, Tag, TaskType } from '@api/rest/project'
-import { ALLOW_INVERTED_FILTERS, SHOW_DATE_FILTERS } from '@components/SearchFilter/featureFlags'
-import { Option } from '@components/SearchFilter/types'
 import getEntityTypeIcon from '@helpers/getEntityTypeIcon'
 import { useGetSiteInfoQuery } from '@queries/auth/getAuth'
 import {
@@ -15,6 +13,8 @@ import {
   useGetProjectsInfoQuery,
 } from '@queries/userDashboard/getUserDashboard'
 import { productTypes } from '@state/project'
+import { ColumnOrderState } from '@tanstack/react-table'
+import { Option } from '@ynput/ayon-react-components'
 import {
   addMonths,
   addWeeks,
@@ -127,6 +127,12 @@ const dateOptions: (Option & { id: DateOptionType })[] = [
   },
 ]
 
+type FilterConfig = {
+  enableExcludes?: boolean
+  enableOperatorChange?: boolean
+  enableRelativeValues?: boolean
+}
+
 export type BuildFilterOptions = {
   filterTypes: FilterFieldType[]
   projectNames: string[]
@@ -136,6 +142,8 @@ export type BuildFilterOptions = {
     attributes?: Record<string, AttributeDataValue[]>
     assignees?: string[]
   }
+  columnOrder?: ColumnOrderState
+  config?: FilterConfig
 }
 
 const useBuildFilterOptions = ({
@@ -143,6 +151,8 @@ const useBuildFilterOptions = ({
   projectNames,
   scope,
   data,
+  config,
+  columnOrder = [],
 }: BuildFilterOptions): Option[] => {
   let options: Option[] = []
 
@@ -183,7 +193,10 @@ const useBuildFilterOptions = ({
   // TASK TYPE
   // add taskType option
   if (filterTypes.includes('taskType') && scope !== 'user') {
-    const entitySubTypeOption = getOptionRoot('taskType')
+    const entitySubTypeOption = getOptionRoot('taskType', {
+      ...config,
+      enableOperatorChange: false,
+    })
     if (entitySubTypeOption) {
       // get all subTypes for the current scope (entityType)
       let subTypes = getSubTypes(projectsInfo, 'task')
@@ -197,7 +210,10 @@ const useBuildFilterOptions = ({
   // FOLDER TYPE
   // add folderType option
   if (filterTypes.includes('folderType') && scope !== 'user') {
-    const entitySubTypeOption = getOptionRoot('folderType')
+    const entitySubTypeOption = getOptionRoot('folderType', {
+      ...config,
+      enableOperatorChange: false,
+    })
     if (entitySubTypeOption) {
       // get all subTypes for the current scope (entityType)
       let subTypes = getSubTypes(projectsInfo, 'folder')
@@ -211,7 +227,7 @@ const useBuildFilterOptions = ({
   // STATUS
   // add status option
   if (filterTypes.includes('status')) {
-    const statusOption = getOptionRoot('status')
+    const statusOption = getOptionRoot('status', { ...config, enableOperatorChange: false })
 
     if (statusOption) {
       Object.values(projectsInfo).forEach((project) => {
@@ -235,7 +251,7 @@ const useBuildFilterOptions = ({
   // ASSIGNEES
   // add users/assignees option
   if (filterTypes.includes('assignees')) {
-    const assigneesOption = getOptionRoot('assignees')
+    const assigneesOption = getOptionRoot('assignees', config)
 
     if (assigneesOption) {
       // add every user for the projects (skip duplicates)
@@ -264,7 +280,7 @@ const useBuildFilterOptions = ({
   // TAGS
   // add tags options
   if (filterTypes.includes('tags')) {
-    const tagsOption = getOptionRoot('tags')
+    const tagsOption = getOptionRoot('tags', config)
 
     if (tagsOption) {
       // reduce projectsInfo to get all tags
@@ -323,16 +339,30 @@ const useBuildFilterOptions = ({
       ? attributesByScope.filter((attribute) => data.attributes && data.attributes[attribute.name])
       : attributesByScope
 
-    const attributesWithoutDates = SHOW_DATE_FILTERS
+    const attributesWithoutDates = config?.enableRelativeValues
       ? attributesByValues
       : attributesByValues.filter((attribute) => attribute.data.type !== 'datetime')
 
     attributesWithoutDates.forEach((attribute) => {
-      // for the attribute, get the option root
-      const option = getAttributeFieldOptionRoot(attribute, true)
-
       const realData = data.attributes && data.attributes[attribute.name]
       const enums = attribute.data.enum
+      const type = attribute.data.type
+
+      const isListOf = [
+        'list_of_strings',
+        'list_of_integers',
+        'list_of_any',
+        'list_of_submodels',
+      ].includes(type)
+      const enableOperatorChange = isListOf ? config?.enableOperatorChange : false
+      const enableRelativeValues = isListOf ? config?.enableRelativeValues : false
+      // for the attribute, get the option root
+      const option = getAttributeFieldOptionRoot(attribute, {
+        ...config,
+        allowsCustomValues: true,
+        enableOperatorChange: enableOperatorChange,
+        enableRelativeValues: enableRelativeValues,
+      })
 
       const suggestValuesForTypes: AttributeData['type'][] = [
         'string',
@@ -345,13 +375,13 @@ const useBuildFilterOptions = ({
       const optionValues: Option[] = []
 
       // if the attribute type is in the suggestValuesForTypes, get the options based on real values
-      if (suggestValuesForTypes.includes(attribute.data.type)) {
-        const options = getAttributeOptions(realData, enums, attribute.data.type)
+      if (suggestValuesForTypes.includes(type)) {
+        const options = getAttributeOptions(realData, enums, type)
         optionValues.push(...options)
       }
 
       // if the attribute type is boolean, add yes/no options
-      if (attribute.data.type === 'boolean') {
+      if (type === 'boolean') {
         const options = [
           {
             id: 'true',
@@ -371,7 +401,7 @@ const useBuildFilterOptions = ({
 
       // if the attribute type is datetime, add datetime options
 
-      if (attribute.data.type === 'datetime') {
+      if (type === 'datetime') {
         optionValues.push(...dateOptions)
       }
 
@@ -383,7 +413,10 @@ const useBuildFilterOptions = ({
     })
   }
 
-  return options
+  // order options by columnOrder
+  if (columnOrder) {
+    return sortOptionsBasedOnColumns(options, columnOrder)
+  } else return options
 }
 
 export default useBuildFilterOptions
@@ -448,7 +481,7 @@ const getSubTypes = (projectsInfo: GetProjectsInfoResponse, type: Scope): Option
   return options
 }
 
-const getOptionRoot = (fieldType: FilterFieldType) => {
+const getOptionRoot = (fieldType: FilterFieldType, config?: FilterConfig) => {
   let rootOption: Option | null = null
   switch (fieldType) {
     case 'taskType':
@@ -463,7 +496,7 @@ const getOptionRoot = (fieldType: FilterFieldType) => {
         allowsCustomValues: false,
         allowHasValue: false,
         allowNoValue: false,
-        allowExcludes: ALLOW_INVERTED_FILTERS,
+        allowExcludes: config?.enableExcludes,
         operatorChangeable: false,
       }
       break
@@ -479,7 +512,7 @@ const getOptionRoot = (fieldType: FilterFieldType) => {
         allowsCustomValues: false,
         allowHasValue: false,
         allowNoValue: false,
-        allowExcludes: ALLOW_INVERTED_FILTERS,
+        allowExcludes: config?.enableExcludes,
         operatorChangeable: false,
       }
       break
@@ -495,7 +528,7 @@ const getOptionRoot = (fieldType: FilterFieldType) => {
         allowsCustomValues: false,
         allowHasValue: false,
         allowNoValue: false,
-        allowExcludes: ALLOW_INVERTED_FILTERS,
+        allowExcludes: config?.enableExcludes,
         operatorChangeable: false,
       }
       break
@@ -509,10 +542,10 @@ const getOptionRoot = (fieldType: FilterFieldType) => {
         operator: 'OR',
         values: [],
         allowsCustomValues: false,
-        allowHasValue: false,
-        allowNoValue: false,
-        allowExcludes: ALLOW_INVERTED_FILTERS,
-        operatorChangeable: false,
+        allowHasValue: config?.enableRelativeValues,
+        allowNoValue: config?.enableRelativeValues,
+        allowExcludes: config?.enableExcludes,
+        operatorChangeable: config?.enableOperatorChange,
       }
       break
     case 'tags':
@@ -525,10 +558,10 @@ const getOptionRoot = (fieldType: FilterFieldType) => {
         operator: 'OR',
         values: [],
         allowsCustomValues: true,
-        allowHasValue: false,
-        allowNoValue: false,
-        allowExcludes: ALLOW_INVERTED_FILTERS,
-        operatorChangeable: false,
+        allowHasValue: config?.enableRelativeValues,
+        allowNoValue: config?.enableRelativeValues,
+        allowExcludes: config?.enableExcludes,
+        operatorChangeable: config?.enableOperatorChange,
       }
       break
     default:
@@ -542,7 +575,7 @@ const getOptionRoot = (fieldType: FilterFieldType) => {
 
 const getAttributeFieldOptionRoot = (
   attribute: AttributeModel,
-  allowsCustomValues: boolean = false,
+  config: FilterConfig & { allowsCustomValues: boolean },
 ): Option => ({
   id: `attrib.${attribute.name}`,
   type: attribute.data.type,
@@ -550,11 +583,11 @@ const getAttributeFieldOptionRoot = (
   operator: 'OR',
   inverted: false,
   values: [],
-  allowsCustomValues,
+  allowsCustomValues: config?.allowsCustomValues,
   allowHasValue: false,
   allowNoValue: false,
-  allowExcludes: false,
-  operatorChangeable: false,
+  allowExcludes: config?.enableExcludes,
+  operatorChangeable: config?.enableOperatorChange,
   icon: getAttributeIcon(attribute),
   singleSelect: ['boolean', 'datetime'].includes(attribute.data.type),
 })
@@ -683,4 +716,33 @@ const getAttributeOptions = (
 
   // enum options first, then the rest
   return [...enumOptions, ...options]
+}
+
+const sortOptionsBasedOnColumns = (options: Option[], columnOrder: ColumnOrderState) => {
+  const columnOrderWithSubTypes = columnOrder.flatMap((col) => {
+    if (col === 'subType') {
+      return ['taskType', 'folderType']
+    }
+    return col
+  })
+  return [...options].sort((a, b) => {
+    const aIndex = columnOrderWithSubTypes.indexOf(a.id.replace('.', '_'))
+    const bIndex = columnOrderWithSubTypes.indexOf(b.id.replace('.', '_'))
+
+    // If both options are in columnOrder, sort them based on their index in columnOrder
+    if (aIndex !== -1 && bIndex !== -1) {
+      return aIndex - bIndex
+    }
+
+    // If only one of the options is in columnOrder, sort the one in columnOrder first
+    if (aIndex !== -1) {
+      return -1
+    }
+    if (bIndex !== -1) {
+      return 1
+    }
+
+    // If neither option is in columnOrder, keep their original order
+    return 0
+  })
 }

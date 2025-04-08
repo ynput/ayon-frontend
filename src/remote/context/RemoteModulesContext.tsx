@@ -41,7 +41,7 @@ export const RemoteModulesProvider = ({ children }: Props) => {
   const [remotesInitialized, setRemotesInitialized] = useState(false)
 
   useEffect(() => {
-    if (isLoading || !addonRemoteModules.length || isLoadingInfo) return
+    if (isLoading || !addonRemoteModules.length || isLoadingInfo || remotesInitialized) return
 
     // create a flat map of modules to load
     const allRemotes: Module[] = []
@@ -72,7 +72,7 @@ export const RemoteModulesProvider = ({ children }: Props) => {
     )
 
     setRemotesInitialized(true)
-  }, [addonRemoteModules, isLoading, isLoadingInfo])
+  }, [addonRemoteModules, isLoading, isLoadingInfo, remotesInitialized])
 
   return (
     <RemoteModulesContext.Provider

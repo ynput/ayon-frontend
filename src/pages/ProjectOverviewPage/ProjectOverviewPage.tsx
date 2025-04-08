@@ -42,6 +42,7 @@ const ProjectOverviewPage: FC = () => {
     showHierarchy,
     updateShowHierarchy,
     tasksMap,
+    columnOrder,
   } = useProjectTableContext()
 
   const { isPanelOpen } = useSettingsPanel()
@@ -99,6 +100,7 @@ const ProjectOverviewPage: FC = () => {
                 projectInfo={projectInfo}
                 tasksMap={tasksMap}
                 disabledFilters={sliceType ? [sliceType] : []}
+                columnOrder={columnOrder}
               />
               <span style={{ whiteSpace: 'nowrap', display: 'flex', gap: 8 }}>
                 Show hierarchy

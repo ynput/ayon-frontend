@@ -12,28 +12,12 @@ const clientFilterToQueryFilter = (filters: Filter[]): QueryFilter => {
     .filter((f) => !!f.values?.length)
     .filter((f) => !f.id.includes('text')) // remove text search filters as they are handled separately
     .filter((f) => f.id !== 'hierarchy') // remove hierarchy filter as it is handled separately
-    .map((filter) => convertFilterToCondition(filter))
+    .flatMap((filter) => convertFilterToCondition(filter))
 
   // Return the QueryFilter with all conditions combined with AND
   return {
     conditions,
     operator: 'and',
-  }
-}
-
-// Helper function to convert values based on the filter type
-const convertValueByType = (value: string, type?: string): string | number | boolean => {
-  if (!type) return value
-
-  switch (type) {
-    case 'integer':
-      return parseInt(value, 10)
-    case 'float':
-      return parseFloat(value)
-    case 'boolean':
-      return value.toLowerCase() === 'true'
-    default:
-      return value
   }
 }
 
@@ -58,12 +42,9 @@ const convertFilterToCondition = (filter: Filter): QueryCondition => {
   const hasSomeValue = Array.isArray(value) && value.map((v) => v.toString())?.includes('hasValue')
   const hasNoValue = Array.isArray(value) && value.map((v) => v.toString())?.includes('noValue')
 
-  // Determine if this is likely a list field based on filter type or pattern
+  // Determine if this is likely a list field based on filter type
   const isListField =
-    filter.type?.startsWith('list_of_') ||
-    key.includes('tags') ||
-    key.includes('assignees') ||
-    !filter.singleSelect
+    filter.type?.startsWith('list_of_') || key.includes('tags') || key.includes('assignees')
 
   // Determine the appropriate operator based on filter properties and type
   let operator: QueryCondition['operator'] = 'eq'
@@ -77,37 +58,41 @@ const convertFilterToCondition = (filter: Filter): QueryCondition => {
   // Handle different filter types
   if (hasSomeValue) {
     // we set the value to the empty state and then say it should not be that
-    value = filter.type === 'list_of_strings' ? [] : undefined
+    value = isListField ? [] : undefined
     operator = filter.inverted ? 'eq' : 'ne'
   } else if (hasNoValue) {
     // we set the value to the empty state and then say it should be that
-    value = filter.type === 'list_of_strings' ? [] : undefined
+    value = isListField ? [] : undefined
     operator = filter.inverted ? 'ne' : 'eq'
   } else if (isListField) {
-    // For list fields, we need to use list-compatible operators
-    if (Array.isArray(value)) {
-      // Multiple values selected for a list field
-      operator = filter.inverted ? 'notin' : 'in'
-      if (key.includes('tags') || key.includes('assignees')) {
-        // Special handling for tags and assignees which typically use "any" operator
-        operator = filter.inverted ? 'excludes' : 'any'
-      }
+    if (filter.inverted) {
+      operator = filter.operator === 'AND' ? 'excludesall' : 'excludesany'
     } else {
-      // Single value for a list field
-      operator = filter.inverted ? 'excludes' : 'contains'
+      operator = filter.operator === 'AND' ? 'includesall' : 'includesany'
     }
   } else {
+    // DEFAULT
     // For scalar fields
-    operator = filter.inverted ? 'ne' : 'eq'
-
-    // For numeric fields, more operators could be used based on UI needs
-    if (filter.type === 'integer' || filter.type === 'float') {
-      // Use appropriate operator, but sticking with eq/ne for now
-      // Could extend with lt, gt, lte, gte based on UI controls
-    }
+    operator = filter.inverted ? 'notin' : 'in'
   }
 
   return { key, value, operator }
+}
+
+// Helper function to convert values based on the filter type
+const convertValueByType = (value: string, type?: string): string | number | boolean => {
+  if (!type) return value
+
+  switch (type) {
+    case 'integer':
+      return parseInt(value, 10)
+    case 'float':
+      return parseFloat(value)
+    case 'boolean':
+      return value.toLowerCase() === 'true'
+    default:
+      return value
+  }
 }
 
 export default clientFilterToQueryFilter

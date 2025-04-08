@@ -107,7 +107,6 @@ export const SelectedRowsProvider = ({ children }: SelectedRowsProviderProps) =>
   }, [selectedRows, areAllRowsSelected])
 
   const value = useMemo(() => {
-    console.log('SelectedRowsContext value updated')
     return {
       selectedRows,
       selectAllRows,

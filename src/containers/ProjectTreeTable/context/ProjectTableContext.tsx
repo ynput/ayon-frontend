@@ -144,7 +144,7 @@ export const ProjectTableProvider = ({ children }: ProjectTableProviderProps) =>
   // merge the slice filter with the user filters
   let combinedFilters = [...filters]
   if (sliceFilter?.values?.length) {
-    combinedFilters.push(sliceFilter)
+    combinedFilters.push(sliceFilter as Filter)
   }
 
   // transform the task bar filters to the query format
@@ -154,6 +154,8 @@ export const ProjectTableProvider = ({ children }: ProjectTableProviderProps) =>
   // extract the fuzzy search from the filters
   const fuzzySearchFilter = combinedFilters.find((filter) => filter.id.includes('text'))
     ?.values?.[0]?.id
+
+  console.log(queryFilter)
 
   const queryFilters = {
     filterString: queryFilterString,

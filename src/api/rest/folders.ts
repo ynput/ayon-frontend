@@ -109,6 +109,7 @@ export type QueryCondition = {
   /** Comparison operator */
   operator?:
     | 'eq'
+    | 'like'
     | 'lt'
     | 'gt'
     | 'lte'
@@ -118,10 +119,12 @@ export type QueryCondition = {
     | 'notnull'
     | 'in'
     | 'notin'
-    | 'contains'
+    | 'includes'
     | 'excludes'
-    | 'any'
-    | 'like'
+    | 'includesall'
+    | 'excludesall'
+    | 'includesany'
+    | 'excludesany'
 }
 export type QueryFilter = {
   /** List of conditions to be evaluated */

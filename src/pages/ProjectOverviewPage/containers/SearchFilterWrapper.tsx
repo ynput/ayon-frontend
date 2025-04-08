@@ -1,8 +1,12 @@
 import useBuildFilterOptions, { BuildFilterOptions } from '@hooks/useBuildFilterOptions'
 import { FC, useEffect, useMemo, useState } from 'react'
-import { Filter, SearchFilter, SearchFilterProps } from '@ynput/ayon-react-components'
+import { Filter, Icon, SearchFilter, SearchFilterProps } from '@ynput/ayon-react-components'
 import { ProjectModel } from '@api/rest/project'
 import { EditorTaskNode, TaskNodeMap } from '@containers/ProjectTreeTable/utils/types'
+import { usePower } from '@/remote/context/PowerLicenseContext'
+import AdvancedFiltersPlaceholder from '@components/SearchFilter/AdvancedFiltersPlaceholder'
+import { usePowerpack } from '@context/powerpackContext'
+import { ColumnOrderState } from '@tanstack/react-table'
 
 interface SearchFilterWrapperProps extends Omit<BuildFilterOptions, 'scope' | 'data'> {
   filters: SearchFilterProps['filters']
@@ -10,6 +14,7 @@ interface SearchFilterWrapperProps extends Omit<BuildFilterOptions, 'scope' | 'd
   disabledFilters?: string[]
   projectInfo?: ProjectModel
   tasksMap?: TaskNodeMap
+  columnOrder?: ColumnOrderState
 }
 
 const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
@@ -20,6 +25,7 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
   disabledFilters,
   projectInfo,
   tasksMap,
+  columnOrder,
 }) => {
   // create a flat list of all the assignees (string[]) on all tasks (duplicated)
   // this is used to rank what assignees are shown in the filter first
@@ -38,11 +44,20 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
     // TODO: find a way of getting all attribute values when all tasks are not loaded
   }
 
+  const { setPowerpackDialog } = usePowerpack()
+  const handlePowerClick = () => {
+    setPowerpackDialog('advancedFilters')
+    return false
+  }
+  const power = usePower()
+
   const options = useBuildFilterOptions({
     filterTypes,
     projectNames,
     scope: 'task',
     data,
+    columnOrder,
+    config: { enableExcludes: power, enableOperatorChange: power, enableRelativeValues: true },
   })
 
   // keeps track of the filters whilst adding/removing filters
@@ -55,6 +70,8 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
     )
   }, [_filters, setFilters])
 
+  const relativeIds = ['noValue', 'hasValue']
+  const handleRelativeClick = () => (power ? true : handlePowerClick())
   return (
     <SearchFilter
       options={options}
@@ -67,6 +84,29 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
         label: 'Folder / Task',
       }}
       disabledFilters={disabledFilters}
+      pt={{
+        dropdown: {
+          operationsTemplate: power ? undefined : (
+            <AdvancedFiltersPlaceholder onClick={handlePowerClick} />
+          ),
+          pt: {
+            item: {
+              onClick: (event) => {
+                const id = (event.target as HTMLLIElement).closest('li')?.id
+                if (id && relativeIds.includes(id)) {
+                  return handleRelativeClick()
+                } else return true
+              },
+            },
+            hasNoOption: {
+              contentAfter: power ? undefined : <Icon icon="bolt" />,
+            },
+            hasSomeOption: {
+              contentAfter: power ? undefined : <Icon icon="bolt" />,
+            },
+          },
+        },
+      }}
     />
   )
 }

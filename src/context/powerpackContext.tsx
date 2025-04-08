@@ -1,6 +1,6 @@
 import { createContext, useContext, ReactNode, useState } from 'react'
 
-export type PowerpackFeature = 'slicer' | 'annotations' | 'releases'
+export type PowerpackFeature = 'slicer' | 'annotations' | 'releases' | 'advancedFilters'
 type PowerpackDialog = {
   label: string
   description: string
@@ -24,6 +24,11 @@ export const powerpackFeatures: {
     label: 'Release History',
     description: 'Access and download the complete archive of releases',
     bullet: 'Full release archive access',
+  },
+  advancedFilters: {
+    label: 'Advanced Filters',
+    description: 'Customize your view and find your data with powerful filtering options',
+    bullet: 'Advanced filtering options',
   },
 }
 type PowerpackContextType = {
