@@ -92,6 +92,11 @@ const SelectWidget = (props: $Any) => {
       multiSelect={props.multiple}
       style={hlstyle}
       disabled={props.schema?.disabled}
+      onSelectAll={
+        props.multiple && props.options.enumOptions.length > 10
+          ? () => setValue(props.options.enumOptions.map((opt: $Any) => opt.value))
+          : undefined
+      }
     />
   )
 }
