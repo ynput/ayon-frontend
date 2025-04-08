@@ -40,13 +40,13 @@ const CheckboxWidget = function (props: $Any) {
     setTimeout(() => {
       const isChanged = value !== originalValue
       updateChangedKeys(props, isChanged, path)
-      props.formContext?.onSetBreadcrumbs(path)
     }, 100)
   }, [value])
 
   const onChange = (e: $Any) => {
     const newValue = e.target.checked
     setValue(newValue)
+    props.formContext?.onSetBreadcrumbs(path)
   }
 
   return (
