@@ -14,7 +14,7 @@ const useCustomerlyChat = ({ position, delay, enabled, context }: UseCustomerlyC
   const user = useAppSelector((state) => state.user)
   const userLevel = user.data.isAdmin ? 'admin' : user.data.isManager ? 'manager' : 'user'
   // get subscriptions info
-  const { data: connect } = useGetYnputCloudInfoQuery()
+  const { data: connect } = useGetYnputCloudInfoQuery(undefined, { skip: !user.name })
   const ayonSubscription = connect?.subscriptions?.find((s) => s.productType === 'ayon')
 
   const { load, ...rest } = useCustomerly()

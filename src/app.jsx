@@ -93,7 +93,7 @@ const App = () => {
   const [getInfo] = useLazyGetSiteInfoQuery()
 
   // get subscriptions info
-  const { data: ynputConnect } = useGetYnputCloudInfoQuery()
+  const { data: ynputConnect } = useGetYnputCloudInfoQuery(undefined, { skip: !user.name })
   const { isTrialing, left } = getTrialDates(ynputConnect?.subscriptions)
 
   useEffect(() => {

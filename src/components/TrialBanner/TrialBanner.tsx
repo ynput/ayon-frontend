@@ -19,7 +19,7 @@ const TrialBanner: FC<TrialBannerProps> = ({}) => {
 
   const [snooze, setSnooze] = useLocalStorage<number | null>('trialBannerSnooze', null)
 
-  const { data: connect } = useGetYnputCloudInfoQuery()
+  const { data: connect } = useGetYnputCloudInfoQuery(undefined, { skip: !user.name })
   const { isTrialing, left } = getTrialDates(connect?.subscriptions)
   const { formatted, oneDay, oneHour } = left || {}
 
