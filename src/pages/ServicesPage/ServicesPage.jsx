@@ -7,11 +7,8 @@ import NewServiceDialog from './NewServiceDialog'
 import useCreateContext from '@hooks/useCreateContext'
 import confirmDelete from '@helpers/confirmDelete'
 import styled from 'styled-components'
-import { useGetServicesQuery } from '@queries/services/getServices'
-import {
-  useDeleteServiceMutation,
-  useUpdateServiceMutation,
-} from '@queries/services/updateServices'
+import { useListServicesQuery } from '@queries/services/getServices'
+import { useDeleteServiceMutation, usePatchServiceMutation } from '@queries/services/updateServices'
 
 const StatusBadge = styled.span`
   display: inline-block;
@@ -65,9 +62,10 @@ const ServicesPage = () => {
   const [showNewService, setShowNewService] = useState(false)
   const [selectedServices, setSelectedServices] = useState([])
 
-  const { data: services = [] } = useGetServicesQuery(undefined, {
+  const { data: servicesData } = useListServicesQuery(undefined, {
     pollingInterval: 2000,
   })
+  const { services = [] } = servicesData || {}
 
   const [deleteService] = useDeleteServiceMutation()
 
@@ -78,34 +76,34 @@ const ServicesPage = () => {
         const patches = selected ? selected : selectedServices
 
         const promises = patches.map((serviceName) => {
-          return deleteService({ serviceName }).unwrap()
+          return deleteService({ name: serviceName }).unwrap()
         })
 
         try {
           await Promise.all(promises)
           toast.success(`Services deleted`)
         } catch (error) {
-          toast.error(error.detail || 'Unable to delete services')
+          toast.error(error.data?.detail || 'Unable to delete services')
         }
       },
       showToasts: false,
     })
   }
 
-  const [updateService] = useUpdateServiceMutation()
+  const [patchService] = usePatchServiceMutation()
 
-  const toggleShouldRun = async (selected, showRun) => {
+  const toggleShouldRun = async (selected, shouldRun) => {
     const patches = selected ? selected : selectedServices
 
     const promises = patches.map((serviceName) => {
-      return updateService({ serviceName, data: { shouldRun: showRun } }).unwrap()
+      return patchService({ serviceName, patchServiceRequestModel: { shouldRun } }).unwrap()
     })
 
     try {
       await Promise.all(promises)
-      toast.success(`Services ${showRun ? 'started' : 'stopped'}`)
+      toast.success(`Services ${shouldRun ? 'started' : 'stopped'}`)
     } catch (error) {
-      toast.error(error.detail || 'Unable to stop/start services')
+      toast.error(error.data?.detail || 'Unable to stop/start services')
     }
   }
 

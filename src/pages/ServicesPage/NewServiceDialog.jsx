@@ -14,8 +14,8 @@ import {
   Toolbar,
 } from '@ynput/ayon-react-components'
 import VariantSelector from '@containers/AddonSettings/VariantSelector'
-import { useCreateServiceMutation } from '@queries/services/updateServices'
-import { useGetServiceAddonsQuery, useGetServiceHostsQuery } from '@queries/services/getServices'
+import { useSpawnServiceMutation } from '@queries/services/updateServices'
+import { useGetServiceAddonsQuery, useListHostsQuery } from '@queries/services/getServices'
 
 // Function to validate bucket name
 const validateServiceName = (name) => {
@@ -72,8 +72,9 @@ const NewServiceDialog = ({ onHide }) => {
   const [settingsVariant, setSettingsVariant] = useState('production')
   const [storages, setStorages] = useState('')
 
-  const { data: addonData = [] } = useGetServiceAddonsQuery()
-  const { data: hostData = [] } = useGetServiceHostsQuery()
+  const { data: addonData = [] } = useGetServiceAddonsQuery({})
+  const { data: hostsData } = useListHostsQuery()
+  const { hosts = [] } = hostsData || {}
 
   // Handle service name change with validation
   const handleServiceNameChange = (e) => {
@@ -83,10 +84,10 @@ const NewServiceDialog = ({ onHide }) => {
   }
 
   const hostOptions = useMemo(() => {
-    return hostData.map((h) => {
+    return hosts.map((h) => {
       return { value: h.name, label: h.name }
     })
-  }, [hostData])
+  }, [hosts])
 
   const addonOptions = useMemo(() => {
     return addonData.map((ad) => {
@@ -112,7 +113,7 @@ const NewServiceDialog = ({ onHide }) => {
     })
   }, [selectedVersion, selectedAddon?.name])
 
-  const [createService, { isLoading }] = useCreateServiceMutation()
+  const [spawnService, { isLoading }] = useSpawnServiceMutation()
 
   const submit = async () => {
     // Validate bucket name before submitting
@@ -154,14 +155,14 @@ const NewServiceDialog = ({ onHide }) => {
     }
 
     try {
-      await createService({ serviceName, data: serviceData }).unwrap()
+      await spawnService({ name: serviceName, spawnServiceRequestModel: serviceData }).unwrap()
 
       onHide()
 
       toast.success(`Service spawned`)
     } catch (error) {
       console.log(error)
-      toast.error(`Unable to spawn service: ${error.detail}`)
+      toast.error(`Unable to spawn service: ${error.data?.detail}`)
     }
   }
 
@@ -224,7 +225,7 @@ const NewServiceDialog = ({ onHide }) => {
             value={[selectedService]}
             onChange={(e) => {
               setSelectedService(e[0])
-              setServiceName(e[0])
+              setServiceName(sanitizeServiceName(e[0]))
             }}
             disabled={!selectedVersion}
             placeholder="Select a service..."
