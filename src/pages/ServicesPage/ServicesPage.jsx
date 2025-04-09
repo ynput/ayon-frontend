@@ -4,13 +4,14 @@ import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { TablePanel, Button, Spacer, Section, Toolbar } from '@ynput/ayon-react-components'
-import NewServiceDialog from './NewServiceDialog'
+import ServiceDialog from './NewServiceDialog'
 import ServiceDetailsPanel from './ServiceDetailsPanel'
 import useCreateContext from '@hooks/useCreateContext'
 import confirmDelete from '@helpers/confirmDelete'
 import styled from 'styled-components'
 import { useListServicesQuery } from '@queries/services/getServices'
 import { useDeleteServiceMutation, usePatchServiceMutation } from '@queries/services/updateServices'
+import { confirmDialog } from 'primereact/confirmdialog'
 
 const StatusBadge = styled.span`
   display: inline-block;
@@ -65,7 +66,8 @@ const detailsMaxWidth = '40vw'
 const detailsMaxMaxWidth = 700
 
 const ServicesPage = () => {
-  const [showNewService, setShowNewService] = useState(false)
+  const [showServiceDialog, setShowServiceDialog] = useState(false)
+  const [editingService, setEditingService] = useState(null)
   const [selectedServices, setSelectedServices] = useState([])
 
   const { data: servicesData } = useListServicesQuery(undefined, {
@@ -113,6 +115,47 @@ const ServicesPage = () => {
     }
   }
 
+  const handleEditService = (service) => {
+    // Check if the service is running (shouldRun is true)
+    if (service.shouldRun) {
+      confirmDialog({
+        message: 'The service must be stopped before editing. Do you want to stop it now?',
+        header: 'Stop Service',
+        acceptLabel: 'Yes, stop service',
+        rejectLabel: 'No, cancel',
+        accept: async () => {
+          try {
+            // Stop the service
+            await patchService({
+              serviceName: service.name,
+              patchServiceRequestModel: { shouldRun: false },
+            }).unwrap()
+
+            toast.success('Service stopped')
+
+            // Set small timeout to ensure service has time to update its status
+            setEditingService({ ...service, shouldRun: false })
+            setShowServiceDialog(true)
+          } catch (error) {
+            toast.error(`Unable to stop service: ${error.data?.detail || error.message}`)
+          }
+        },
+        reject: () => {
+          // Do nothing, dialog will close
+        },
+      })
+    } else {
+      // If service is already stopped, open edit dialog directly
+      setEditingService(service)
+      setShowServiceDialog(true)
+    }
+  }
+
+  const handleCloseDialog = () => {
+    setShowServiceDialog(false)
+    setEditingService(null)
+  }
+
   const selection = useMemo(() => {
     if (!services) return []
     return services.filter((i) => selectedServices.includes(i.name))
@@ -128,6 +171,12 @@ const ServicesPage = () => {
       const serviceName = data?.name
 
       const services = selectedServices.includes(serviceName) ? selectedServices : [serviceName]
+      const isSingleService = services.length === 1
+      const singleService = isSingleService ? services[0] : null
+
+      const serviceObj = isSingleService
+        ? servicesData?.services?.find((s) => s.name === singleService)
+        : null
 
       return [
         {
@@ -143,6 +192,12 @@ const ServicesPage = () => {
           icon: 'cancel',
         },
         {
+          label: 'Edit service',
+          disabled: !isSingleService,
+          command: () => handleEditService(serviceObj),
+          icon: 'edit',
+        },
+        {
           label: 'Delete selected',
           disabled: !services.length,
           command: () => deleteSelected(services),
@@ -151,17 +206,26 @@ const ServicesPage = () => {
         },
       ]
     },
-    [selectedServices],
+    [selectedServices, servicesData?.services],
   )
 
   const [ctxMenuShow] = useCreateContext([])
 
   return (
     <main style={{ overflow: 'hidden' }}>
-      {showNewService && <NewServiceDialog onHide={() => setShowNewService(false)} />}
+      {showServiceDialog && (
+        <ServiceDialog onHide={handleCloseDialog} editService={editingService} />
+      )}
       <Section>
         <Toolbar>
-          <Button icon="add" label="New service" onClick={() => setShowNewService(true)} />
+          <Button
+            icon="add"
+            label="New service"
+            onClick={() => {
+              setEditingService(null)
+              setShowServiceDialog(true)
+            }}
+          />
           <Spacer />
         </Toolbar>
         <Splitter
@@ -210,6 +274,7 @@ const ServicesPage = () => {
               <ServiceDetailsPanel
                 service={selectedService}
                 onClose={() => setSelectedServices([])}
+                onEdit={handleEditService}
               />
             </SplitterPanel>
           ) : (

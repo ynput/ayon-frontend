@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { toast } from 'react-toastify'
 import { compareBuild } from 'semver'
 import { Dialog, Dropdown } from '@ynput/ayon-react-components'
@@ -14,8 +14,9 @@ import {
   Toolbar,
 } from '@ynput/ayon-react-components'
 import VariantSelector from '@containers/AddonSettings/VariantSelector'
-import { useSpawnServiceMutation } from '@queries/services/updateServices'
+import { useSpawnServiceMutation, usePatchServiceMutation } from '@queries/services/updateServices'
 import { useGetServiceAddonsQuery, useListHostsQuery } from '@queries/services/getServices'
+import { confirmDialog } from 'primereact/confirmdialog'
 
 // Function to validate bucket name
 const validateServiceName = (name) => {
@@ -63,7 +64,8 @@ const sanitizeServiceName = (name) => {
   return sanitized
 }
 
-const NewServiceDialog = ({ onHide }) => {
+const ServiceDialog = ({ onHide, editService = null }) => {
+  const isEditMode = !!editService
   const [serviceName, setServiceName] = useState('')
   const [selectedAddon, setSelectedAddon] = useState(null)
   const [selectedVersion, setSelectedVersion] = useState(null)
@@ -75,6 +77,32 @@ const NewServiceDialog = ({ onHide }) => {
   const { data: addonData = [] } = useGetServiceAddonsQuery({})
   const { data: hostsData } = useListHostsQuery()
   const { hosts = [] } = hostsData || {}
+
+  // Initialize form with existing service data when in edit mode
+  useEffect(() => {
+    if (isEditMode) {
+      setServiceName(editService.name)
+      setSelectedHost(editService.hostname)
+
+      // Find the addon object that matches the editService.addonName
+      const addon = addonData.find((ad) => ad.name === editService.addonName)
+      if (addon) {
+        setSelectedAddon(addon)
+        setSelectedVersion(editService.addonVersion)
+        setSelectedService(editService.service)
+      }
+
+      // Set settings variant if available
+      const variant = editService.data?.env?.AYON_DEFAULT_SETTINGS_VARIANT
+      if (variant) setSettingsVariant(variant)
+
+      // Set storages if available
+      const volumes = editService.data?.volumes
+      if (volumes && volumes.length) {
+        setStorages(volumes.join('\n'))
+      }
+    }
+  }, [isEditMode, editService, addonData])
 
   // Handle service name change with validation
   const handleServiceNameChange = (e) => {
@@ -113,7 +141,10 @@ const NewServiceDialog = ({ onHide }) => {
     })
   }, [selectedVersion, selectedAddon?.name])
 
-  const [spawnService, { isLoading }] = useSpawnServiceMutation()
+  const [spawnService, { isLoading: isCreating }] = useSpawnServiceMutation()
+  const [patchService, { isLoading: isUpdating }] = usePatchServiceMutation()
+
+  const isLoading = isCreating || isUpdating
 
   const submit = async () => {
     // Validate bucket name before submitting
@@ -122,14 +153,6 @@ const NewServiceDialog = ({ onHide }) => {
       toast.error(`Invalid service name: ${error}`)
       return
     }
-
-    /*
-    volumes: list[str] | None = Field(None, title="Volumes", example=["/tmp:/tmp"])
-    ports: list[str] | None = Field(None, title="Ports", example=["8080:8080"])
-    mem_limit: str | None = Field(None, title="Memory Limit", example="1g")
-    user: str | None = Field(None, title="User", example="1000")
-    env: dict[str, Any] = Field(default_factory=dict)
-    */
 
     const serviceConfig = {
       volumes: [],
@@ -155,32 +178,82 @@ const NewServiceDialog = ({ onHide }) => {
     }
 
     try {
-      await spawnService({ name: serviceName, spawnServiceRequestModel: serviceData }).unwrap()
+      if (isEditMode) {
+        // Update existing service
+        await patchService({
+          serviceName: editService.name,
+          patchServiceRequestModel: {
+            hostname: selectedHost,
+            ...serviceConfig,
+          },
+        }).unwrap()
 
-      onHide()
+        // hide dialog
+        onHide()
 
-      toast.success(`Service spawned`)
+        // If service was previously running, ask if user wants to start it again
+        if (editService.shouldRun === false) {
+          confirmDialog({
+            message: 'Do you want to start the service now?',
+            header: 'Start Service',
+            acceptLabel: 'Yes, start service',
+            rejectLabel: 'No, keep stopped',
+            accept: async () => {
+              try {
+                await patchService({
+                  serviceName: editService.name,
+                  patchServiceRequestModel: { shouldRun: true },
+                }).unwrap()
+                toast.success('Service started')
+              } catch (error) {
+                toast.error(`Unable to start service: ${error.data?.detail || error.message}`)
+              }
+            },
+            reject: () => {
+              // Do nothing, service remains stopped
+            },
+          })
+        } else {
+          toast.success(`Service updated`)
+          onHide()
+        }
+      } else {
+        // Create new service
+        await spawnService({ name: serviceName, spawnServiceRequestModel: serviceData }).unwrap()
+        toast.success(`Service spawned`)
+        onHide()
+      }
     } catch (error) {
       console.log(error)
-      toast.error(`Unable to spawn service: ${error.data?.detail}`)
+      toast.error(`Unable to ${isEditMode ? 'update' : 'spawn'} service: ${error.data?.detail}`)
     }
   }
 
-  const canSubmit =
-    selectedAddon?.name && selectedVersion && selectedService && selectedHost && serviceName?.length
+  const canSubmit = isEditMode
+    ? !!selectedHost
+    : selectedAddon?.name &&
+      selectedVersion &&
+      selectedService &&
+      selectedHost &&
+      serviceName?.length
 
   const footer = (
     <Toolbar>
       <Spacer />
       <Button label="Cancel" onClick={onHide} variant="text" />
-      <SaveButton label="Spawn" active={canSubmit} saving={isLoading} onClick={submit} />
+      <SaveButton
+        label={isEditMode ? 'Update' : 'Spawn'}
+        active={canSubmit}
+        saving={isLoading}
+        onClick={submit}
+      />
     </Toolbar>
   )
 
   return (
     <Dialog
       isOpen={true}
-      header="Spawn a new service"
+      header={isEditMode ? 'Edit service' : 'Spawn a new service'}
       onClose={onHide}
       footer={footer}
       style={{ width: 550, maxHeight: '600px', zIndex: 999 }}
@@ -196,45 +269,55 @@ const NewServiceDialog = ({ onHide }) => {
           />
         </FormRow>
 
-        <FormRow label="Addon name">
-          <Dropdown
-            options={addonOptions}
-            value={[selectedAddon]}
-            onChange={(e) => {
-              setSelectedAddon(e[0])
-              setSelectedVersion(null)
-              setSelectedService(null)
-              setServiceName('')
-            }}
-            placeholder="Select an addon..."
-          />
-        </FormRow>
+        {!isEditMode && (
+          <>
+            <FormRow label="Addon name">
+              <Dropdown
+                options={addonOptions}
+                value={[selectedAddon]}
+                onChange={(e) => {
+                  setSelectedAddon(e[0])
+                  setSelectedVersion(null)
+                  setSelectedService(null)
+                  setServiceName('')
+                }}
+                placeholder="Select an addon..."
+              />
+            </FormRow>
 
-        <FormRow label="Addon version">
-          <Dropdown
-            options={versionOptions}
-            value={[selectedVersion]}
-            onChange={(e) => setSelectedVersion(e[0])}
-            placeholder="Select a version..."
-          />
-        </FormRow>
+            <FormRow label="Addon version">
+              <Dropdown
+                options={versionOptions}
+                value={[selectedVersion]}
+                onChange={(e) => setSelectedVersion(e[0])}
+                placeholder="Select a version..."
+              />
+            </FormRow>
 
-        <FormRow label="Service">
-          <Dropdown
-            options={serviceOptions}
-            value={[selectedService]}
-            onChange={(e) => {
-              setSelectedService(e[0])
-              setServiceName(sanitizeServiceName(e[0]))
-            }}
-            disabled={!selectedVersion}
-            placeholder="Select a service..."
-          />
-        </FormRow>
+            <FormRow label="Service">
+              <Dropdown
+                options={serviceOptions}
+                value={[selectedService]}
+                onChange={(e) => {
+                  setSelectedService(e[0])
+                  setServiceName(sanitizeServiceName(e[0]))
+                }}
+                disabled={!selectedVersion}
+                placeholder="Select a service..."
+              />
+            </FormRow>
 
-        <FormRow label="Service name">
-          <InputText value={serviceName} onChange={handleServiceNameChange} />
-        </FormRow>
+            <FormRow label="Service name">
+              <InputText value={serviceName} onChange={handleServiceNameChange} />
+            </FormRow>
+          </>
+        )}
+
+        {isEditMode && (
+          <FormRow label="Service name">
+            <InputText value={serviceName} disabled />
+          </FormRow>
+        )}
       </FormLayout>
 
       <Divider>Advanced settings</Divider>
@@ -262,4 +345,4 @@ const NewServiceDialog = ({ onHide }) => {
   )
 }
 
-export default NewServiceDialog
+export default ServiceDialog

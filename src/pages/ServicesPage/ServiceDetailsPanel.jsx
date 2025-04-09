@@ -1,11 +1,19 @@
+import { useState } from 'react'
 import { Button, Panel, Section } from '@ynput/ayon-react-components'
+import { format } from 'date-fns'
 import styled from 'styled-components'
+import ServiceDialog from './NewServiceDialog'
 
 const Header = styled.header`
   display: flex;
   justify-content: space-between;
   align-items: center;
   width: 100%;
+`
+
+const ButtonGroup = styled.div`
+  display: flex;
+  gap: 8px;
 `
 
 const DetailRow = styled.div`
@@ -42,13 +50,17 @@ const JsonDisplay = styled.pre`
   white-space: break-spaces;
 `
 
-const ServiceDetailsPanel = ({ service, onClose }) => {
+const ServiceDetailsPanel = ({ service, onClose, onEdit }) => {
   return (
     <Section style={{ height: '100%' }}>
       <Panel style={{ height: '100%', overflowY: 'auto' }}>
         <Header>
           <h2>{service.name}</h2>
-          <Button icon={'close'} variant="text" onClick={onClose} />
+
+          <ButtonGroup>
+            <Button icon="edit" variant="text" onClick={() => onEdit(service)} />
+            <Button icon="close" variant="text" onClick={onClose} />
+          </ButtonGroup>
         </Header>
         <DetailRow>
           <Label>Host:</Label>
@@ -77,7 +89,7 @@ const ServiceDetailsPanel = ({ service, onClose }) => {
         {service.lastSeen && (
           <DetailRow>
             <Label>Last Seen:</Label>
-            <Value>{service.lastSeen}</Value>
+            <Value>{format(service.lastSeen, 'dd/MM/yy hh:mm')}</Value>
           </DetailRow>
         )}
         {service.data && (
