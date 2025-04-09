@@ -51,6 +51,7 @@ const outputFiles = {
     'setServerConfig',
     'uploadServerConfigFile',
   ],
+  services: ['listServices', 'listHosts', 'spawnService', 'patchService', 'deleteService'],
 }
 
 const buildOutputFiles = (files: { [name: string]: string[] }) =>
