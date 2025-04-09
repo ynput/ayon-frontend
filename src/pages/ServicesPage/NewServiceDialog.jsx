@@ -149,7 +149,7 @@ const ServiceDialog = ({ onHide, editService = null }) => {
   const submit = async () => {
     // Validate bucket name before submitting
     const error = validateServiceName(serviceName)
-    if (error) {
+    if (error && !isEditMode) {
       toast.error(`Invalid service name: ${error}`)
       return
     }
