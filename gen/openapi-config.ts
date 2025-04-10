@@ -46,6 +46,7 @@ const outputFiles = {
     'setServerConfig',
     'uploadServerConfigFile',
   ],
+  services: ['listServices', 'listHosts', 'spawnService', 'patchService', 'deleteService'],
   operations: ['operations'],
   permissions: ['getCurrentUserPermissions', 'getCurrentUserProjectPermissions'],
 }
