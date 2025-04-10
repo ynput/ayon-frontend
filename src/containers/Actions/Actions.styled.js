@@ -11,6 +11,7 @@ export const FeaturedAction = styled(Button)`
   padding: 6px;
   user-select: none;
   position: relative;
+  max-width: 32px;
   img {
     width: 20px;
     height: 20px;

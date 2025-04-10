@@ -21,6 +21,7 @@ const ActionsDropdown = ({ options, isLoading, onAction }) => {
       disabled={isLoading}
       className={clsx('more', { loading: isLoading })}
       options={options}
+      maxOptionsShown={100}
       value={[]}
       placeholder=""
       itemTemplate={(option) => <ActionsDropdownItem {...option} />}

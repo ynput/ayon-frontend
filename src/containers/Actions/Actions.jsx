@@ -7,6 +7,8 @@ import { useExecuteActionMutation, useGetActionsFromContextQuery } from '@/servi
 import ActionsDropdown from '@/components/ActionsDropdown/ActionsDropdown'
 import ActionIcon from './ActionIcon'
 import customProtocolCheck from 'custom-protocol-check'
+import { useLocation, useNavigate } from 'react-router'
+import useActionTriggers from '@/hooks/useActionTriggers'
 
 const placeholder = {
   identifier: 'placeholder',
@@ -15,6 +17,9 @@ const placeholder = {
 }
 
 const Actions = ({ entities, entityType, entitySubTypes, isLoadingEntity }) => {
+  // special triggers the actions can make to perform stuff on the client
+  const { handleActionPayload } = useActionTriggers()
+
   const context = useMemo(() => {
     if (!entities.length) return null
     if (!entities[0].projectName) return null
@@ -166,6 +171,11 @@ const Actions = ({ entities, entityType, entitySubTypes, isLoadingEntity }) => {
           () => {},
           2000,
         )
+      }
+
+      // Use the new hook to handle payload
+      if (response?.payload) {
+        handleActionPayload(response.payload)
       }
     } catch (error) {
       console.warn('Error executing action', error)
