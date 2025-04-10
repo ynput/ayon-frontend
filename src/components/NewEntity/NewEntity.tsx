@@ -47,6 +47,8 @@ const StyledCreateButton = styled(Dropdown)`
     .icon {
       color: var(--md-sys-color-on-primary);
     }
+    min-width: 100px;
+    justify-content: center;
 
     &:hover {
       background-color: var(--md-sys-color-primary-hover);

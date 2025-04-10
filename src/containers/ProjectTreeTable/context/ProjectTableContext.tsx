@@ -155,8 +155,6 @@ export const ProjectTableProvider = ({ children }: ProjectTableProviderProps) =>
   const fuzzySearchFilter = combinedFilters.find((filter) => filter.id.includes('text'))
     ?.values?.[0]?.id
 
-  console.log(queryFilter)
-
   const queryFilters = {
     filterString: queryFilterString,
     filter: queryFilter,

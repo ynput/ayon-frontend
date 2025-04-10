@@ -59,7 +59,9 @@ const ProjectOverviewPage: FC = () => {
   const { filter: sliceFilter } = useFilterBySlice()
 
   const handleFiltersChange = (value: Filter[]) => {
-    setFilters(value)
+    // make sure to remove the hierarchy filter from the new value
+    const newValue = value.filter((filter) => filter.id !== 'hierarchy')
+    setFilters(newValue)
 
     // check if we need to remove the hierarchy filter and clear hierarchy selection
     if (!value.some((filter) => filter.id === 'hierarchy')) {
