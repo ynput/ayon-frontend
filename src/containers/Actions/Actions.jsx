@@ -163,7 +163,6 @@ const Actions = ({ entities, entityType, entitySubTypes, isLoadingEntity }) => {
 
       if (!response.success) throw new Error('Error executing action')
 
-      toast.success(response?.message || 'Action executed successfully')
       if (response?.uri) {
         customProtocolCheck(
           response.uri,
@@ -172,6 +171,7 @@ const Actions = ({ entities, entityType, entitySubTypes, isLoadingEntity }) => {
           2000,
         )
       }
+      toast.success(response?.message || 'Action executed successfully', { autoClose: 2000 })
 
       // Use the new hook to handle payload
       if (response?.payload) {
