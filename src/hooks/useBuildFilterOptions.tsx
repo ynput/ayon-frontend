@@ -1,8 +1,3 @@
-// entityType
-// users
-// status by scope
-// attributes by scope
-
 import { AttributeModel, AttributeEnumItem, AttributeData } from '@api/rest/attributes'
 import { FolderType, Status, Tag, TaskType } from '@api/rest/project'
 import getEntityTypeIcon from '@helpers/getEntityTypeIcon'
@@ -14,19 +9,8 @@ import {
 } from '@queries/userDashboard/getUserDashboard'
 import { productTypes } from '@state/project'
 import { ColumnOrderState } from '@tanstack/react-table'
-import { Option } from '@ynput/ayon-react-components'
-import {
-  addMonths,
-  addWeeks,
-  addYears,
-  isAfter,
-  isBefore,
-  isSameMonth,
-  isSameWeek,
-  isSameYear,
-  isToday,
-  isYesterday,
-} from 'date-fns'
+import { Icon, Option } from '@ynput/ayon-react-components'
+import { dateOptions } from '@helpers/filterDates'
 import { isEmpty } from 'lodash'
 
 type Scope = 'folder' | 'product' | 'task' | 'user'
@@ -49,84 +33,6 @@ type AttributeType =
 
 type AttributeDataValue = AttributeType | null | undefined
 
-export const filterDateFunctions = {
-  today: (date: Date) => isToday(date),
-  yesterday: (date: Date) => isYesterday(date),
-  ['after-now']: (date: Date) => isAfter(date, new Date()),
-  ['before-now']: (date: Date) => isBefore(new Date(), date),
-  ['this-week']: (date: Date) => isSameWeek(date, new Date()),
-  ['last-week']: (date: Date) => isSameWeek(date, addWeeks(new Date(), -1)),
-  ['this-month']: (date: Date) => isSameMonth(date, new Date()),
-  ['last-month']: (date: Date) => isSameMonth(date, addMonths(new Date(), -1)),
-  ['this-year']: (date: Date) => isSameYear(date, new Date()),
-  ['last-year']: (date: Date) => isSameYear(date, addYears(new Date(), -1)),
-}
-
-type DateOptionType = keyof typeof filterDateFunctions
-
-const dateOptions: (Option & { id: DateOptionType })[] = [
-  {
-    id: 'today',
-    label: 'Today',
-    values: [],
-    icon: 'today',
-  },
-  {
-    id: 'yesterday',
-    label: 'Yesterday',
-    values: [],
-    icon: 'date_range',
-  },
-  {
-    id: 'after-now',
-    label: 'After Now',
-    values: [],
-    icon: 'event_upcoming',
-  },
-  {
-    id: 'before-now',
-    label: 'Before Now',
-    values: [],
-    icon: 'event_busy',
-  },
-  {
-    id: 'this-week',
-    label: 'This Week',
-    values: [],
-    icon: 'date_range',
-  },
-  {
-    id: 'last-week',
-    label: 'Last Week',
-    values: [],
-    icon: 'date_range',
-  },
-  {
-    id: 'this-month',
-    label: 'This Month',
-    values: [],
-    icon: 'calendar_month',
-  },
-  {
-    id: 'last-month',
-    label: 'Last Month',
-    values: [],
-    icon: 'calendar_month',
-  },
-  {
-    id: 'this-year',
-    label: 'This Year',
-    values: [],
-    icon: 'calendar_month',
-  },
-  {
-    id: 'last-year',
-    label: 'Last Year',
-    values: [],
-    icon: 'calendar_month',
-  },
-]
-
 type FilterConfig = {
   enableExcludes?: boolean
   enableOperatorChange?: boolean
@@ -144,6 +50,7 @@ export type BuildFilterOptions = {
   }
   columnOrder?: ColumnOrderState
   config?: FilterConfig
+  power: boolean
 }
 
 const useBuildFilterOptions = ({
@@ -153,6 +60,7 @@ const useBuildFilterOptions = ({
   data,
   config,
   columnOrder = [],
+  power,
 }: BuildFilterOptions): Option[] => {
   let options: Option[] = []
 
@@ -354,8 +262,9 @@ const useBuildFilterOptions = ({
         'list_of_any',
         'list_of_submodels',
       ].includes(type)
+      const isDate = type === 'datetime'
       const enableOperatorChange = isListOf ? config?.enableOperatorChange : false
-      const enableRelativeValues = isListOf ? config?.enableRelativeValues : false
+      const enableRelativeValues = isListOf || isDate ? config?.enableRelativeValues : false
       // for the attribute, get the option root
       const option = getAttributeFieldOptionRoot(attribute, {
         ...config,
@@ -401,8 +310,13 @@ const useBuildFilterOptions = ({
 
       // if the attribute type is datetime, add datetime options
 
-      if (type === 'datetime') {
-        optionValues.push(...dateOptions)
+      if (isDate) {
+        optionValues.push(
+          ...dateOptions.map((o) => ({
+            ...o,
+            contentAfter: power ? undefined : <Icon icon="bolt" />,
+          })),
+        )
       }
 
       // add option to the list of options
@@ -584,8 +498,8 @@ const getAttributeFieldOptionRoot = (
   inverted: false,
   values: [],
   allowsCustomValues: config?.allowsCustomValues,
-  allowHasValue: false,
-  allowNoValue: false,
+  allowHasValue: config.enableRelativeValues,
+  allowNoValue: config.enableRelativeValues,
   allowExcludes: config?.enableExcludes,
   operatorChangeable: config?.enableOperatorChange,
   icon: getAttributeIcon(attribute),

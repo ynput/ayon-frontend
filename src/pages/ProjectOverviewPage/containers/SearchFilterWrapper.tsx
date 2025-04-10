@@ -58,6 +58,7 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
     data,
     columnOrder,
     config: { enableExcludes: power, enableOperatorChange: power, enableRelativeValues: true },
+    power,
   })
 
   // keeps track of the filters whilst adding/removing filters
@@ -70,8 +71,6 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
     )
   }, [_filters, setFilters])
 
-  const relativeIds = ['noValue', 'hasValue']
-  const handleRelativeClick = () => (power ? true : handlePowerClick())
   return (
     <SearchFilter
       options={options}
@@ -92,9 +91,9 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
           pt: {
             item: {
               onClick: (event) => {
-                const id = (event.target as HTMLLIElement).closest('li')?.id
-                if (id && relativeIds.includes(id)) {
-                  return handleRelativeClick()
+                const listItem = (event.target as HTMLLIElement).closest('li')
+                if (listItem?.querySelector('span[icon="bolt"]')) {
+                  return handlePowerClick()
                 } else return true
               },
             },
