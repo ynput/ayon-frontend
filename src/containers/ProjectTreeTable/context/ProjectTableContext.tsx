@@ -50,6 +50,7 @@ export interface ProjectTableContextProps {
   foldersMap: FolderNodeMap
   fetchNextPage: () => void
   getEntityById: (id: string) => MatchingFolder | EditorTaskNode | undefined
+  reloadTableData: () => void
 
   // Filters
   filters: Filter[]
@@ -296,6 +297,7 @@ export const ProjectTableProvider = ({ children }: ProjectTableProviderProps) =>
     tasksMap,
     tasksByFolderMap,
     fetchNextPage,
+    reloadTableData,
     isLoadingAll,
     isLoadingMore,
     loadingTasks,
@@ -396,6 +398,7 @@ export const ProjectTableProvider = ({ children }: ProjectTableProviderProps) =>
         tasksMap,
         foldersMap,
         fetchNextPage,
+        reloadTableData,
         // filters
         filters,
         setFilters,

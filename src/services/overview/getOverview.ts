@@ -218,7 +218,7 @@ const injectedApi = enhancedApi.injectEndpoints({
           }
         },
       },
-      queryFn: async ({ queryArg, pageParam }, api, extraOptions) => {
+      queryFn: async ({ queryArg, pageParam }, api) => {
         try {
           const { projectName, filter, search, folderIds, sortBy, desc } = queryArg
           const { cursor } = pageParam
@@ -248,7 +248,7 @@ const injectedApi = enhancedApi.injectEndpoints({
 
           // Call the existing GetTasksList endpoint
           const result = await api.dispatch(
-            enhancedApi.endpoints.GetTasksList.initiate(queryParams, extraOptions),
+            enhancedApi.endpoints.GetTasksList.initiate(queryParams, { forceRefetch: true }),
           )
 
           if (result.error) throw result.error

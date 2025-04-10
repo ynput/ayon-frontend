@@ -22,6 +22,7 @@ import { useProjectTableContext } from '@containers/ProjectTreeTable/context/Pro
 import ProjectOverviewSettings, { CustomizeButton } from './components/ProjectOverviewSettings'
 import { useSelectedRows } from '@containers/ProjectTreeTable/context/SelectedRowsContext'
 import { useSettingsPanel } from './contexts/SettingsPanelContext'
+import ReloadButton from './components/ReloadButton'
 
 const searchFilterTypes: FilterFieldType[] = [
   'attributes',
@@ -104,6 +105,7 @@ const ProjectOverviewPage: FC = () => {
                 disabledFilters={sliceType ? [sliceType] : []}
                 columnOrder={columnOrder}
               />
+              <ReloadButton />
               <span style={{ whiteSpace: 'nowrap', display: 'flex', gap: 8 }}>
                 Show hierarchy
                 <InputSwitch

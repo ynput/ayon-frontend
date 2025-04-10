@@ -21,6 +21,7 @@ type useFetchOverviewDataData = {
   isLoadingMore: boolean // loading more tasks
   loadingTasks: LoadingTasks // show number of loading tasks per folder or root
   fetchNextPage: () => void
+  reloadTableData: () => void
 }
 
 type Params = {
@@ -44,6 +45,8 @@ const useFetchOverviewData = ({
     data: { folders = [] } = {},
     isLoading,
     isFetching: isFetchingFolders,
+    isUninitialized: isUninitializedFolders,
+    refetch: refetchFolders,
   } = useGetFolderListQuery(
     { projectName: projectName || '', attrib: true },
     { skip: !projectName },
@@ -54,21 +57,27 @@ const useFetchOverviewData = ({
     .filter(([, isExpanded]) => isExpanded)
     .map(([id]) => id)
 
-  const { data: expandedFoldersTasks = [], isFetching: isFetchingExpandedFoldersTasks } =
-    useGetOverviewTasksByFoldersQuery(
-      {
-        projectName,
-        parentIds: expandedParentIds,
-        filter: queryFilters.filterString,
-        search: queryFilters.search,
-      },
-      { skip: !expandedParentIds.length || !showHierarchy },
-    )
+  const {
+    data: expandedFoldersTasks = [],
+    isFetching: isFetchingExpandedFoldersTasks,
+    refetch: refetchExpandedFoldersTasks,
+    isUninitialized: isUninitializedExpandedFoldersTasks,
+  } = useGetOverviewTasksByFoldersQuery(
+    {
+      projectName,
+      parentIds: expandedParentIds,
+      filter: queryFilters.filterString,
+      search: queryFilters.search,
+    },
+    { skip: !expandedParentIds.length || !showHierarchy },
+  )
   // get folders that would be left if the filters were applied for tasks
   const {
     data: foldersByTaskFilter,
     isUninitialized,
     isFetching: isFetchingTasksFolders,
+    isUninitialized: isUninitializedTasksFolders,
+    refetch: refetchTasksFolders,
   } = useGetQueryTasksFoldersQuery(
     {
       projectName,
@@ -198,6 +207,8 @@ const useFetchOverviewData = ({
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage: isFetchingNextPageTasksList,
+    isUninitialized: isUninitializedTasksList,
+    refetch: refetchTasksList,
   } = useGetTasksListInfiniteInfiniteQuery(
     {
       projectName,
@@ -253,6 +264,15 @@ const useFetchOverviewData = ({
     return { tasksMap, tasksByFolderMap }
   }, [expandedFoldersTasks, showHierarchy, tasksList])
 
+  // reload all data for all queries
+  const reloadTableData = () => {
+    // only reload if there is data
+    if (!isUninitializedFolders) refetchFolders()
+    if (!isUninitializedExpandedFoldersTasks) refetchExpandedFoldersTasks()
+    if (!isUninitializedTasksFolders) refetchTasksFolders()
+    if (!isUninitializedTasksList) refetchTasksList()
+  }
+
   return {
     foldersMap: foldersMap,
     tasksMap: tasksMap,
@@ -265,6 +285,7 @@ const useFetchOverviewData = ({
     isLoadingMore: isFetchingNextPageTasksList,
     loadingTasks: loadingTasksForParents,
     fetchNextPage: handleFetchNextPage,
+    reloadTableData,
   }
 }
 

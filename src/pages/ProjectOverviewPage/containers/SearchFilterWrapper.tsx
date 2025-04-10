@@ -8,7 +8,7 @@ import AdvancedFiltersPlaceholder from '@components/SearchFilter/AdvancedFilters
 import { usePowerpack } from '@context/powerpackContext'
 import { ColumnOrderState } from '@tanstack/react-table'
 
-interface SearchFilterWrapperProps extends Omit<BuildFilterOptions, 'scope' | 'data'> {
+interface SearchFilterWrapperProps extends Omit<BuildFilterOptions, 'scope' | 'data' | 'power'> {
   filters: SearchFilterProps['filters']
   onChange: SearchFilterProps['onChange']
   disabledFilters?: string[]
@@ -83,7 +83,13 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
         label: 'Folder / Task',
       }}
       disabledFilters={disabledFilters}
+      style={{ overflow: 'hidden' }}
       pt={{
+        searchBar: {
+          style: {
+            paddingRight: 28,
+          },
+        },
         dropdown: {
           operationsTemplate: power ? undefined : (
             <AdvancedFiltersPlaceholder onClick={handlePowerClick} />
