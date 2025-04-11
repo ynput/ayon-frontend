@@ -149,7 +149,7 @@ const MarketPage = () => {
   const { data: selectedAddonData = {}, isFetching: isFetchingAddon } = useMarketAddonDetailQuery(
     { addonName: selectedItemId },
     {
-      skip: !selectedItemId || filterType !== 'addons' || !connectData,
+      skip: !selectedItemId || filterType !== 'addons' || !connectData?.connected,
     },
   )
 
