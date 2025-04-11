@@ -1,5 +1,5 @@
 import { useCallback, useEffect } from 'react'
-import { useSelection } from '../context/SelectionContext'
+import { useSelectionContext } from '../context/SelectionContext'
 import { useCellEditing } from '../context/CellEditingContext'
 import { parseCellId, getCellId } from '../utils/cellUtils'
 import { useProjectDataContext } from '../context/ProjectDataContext'
@@ -8,7 +8,7 @@ export default function useKeyboardNavigation() {
   const { attribFields } = useProjectDataContext()
 
   const { focusedCellId, gridMap, selectCell, focusCell, clearSelection, setFocusedCellId } =
-    useSelection()
+    useSelectionContext()
 
   const { setEditingCellId, editingCellId } = useCellEditing()
 

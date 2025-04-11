@@ -18,9 +18,8 @@ import { useFiltersWithHierarchy } from '@components/SearchFilter/hooks'
 import { FilterFieldType } from '@hooks/useBuildFilterOptions'
 import ProjectOverviewDetailsPanel from './containers/ProjectOverviewDetailsPanel'
 import NewEntity from '@components/NewEntity/NewEntity'
-import { useProjectTableContext } from '@containers/ProjectTreeTable/context/ProjectTableContext'
+import { useProjectTableContext, useSelectedRowsContext } from '@containers/ProjectTreeTable'
 import ProjectOverviewSettings, { CustomizeButton } from './components/ProjectOverviewSettings'
-import { useSelectedRows } from '@containers/ProjectTreeTable/context/SelectedRowsContext'
 import { useSettingsPanel } from './contexts/SettingsPanelContext'
 import ReloadButton from './components/ReloadButton'
 
@@ -33,7 +32,7 @@ const searchFilterTypes: FilterFieldType[] = [
 ]
 
 const ProjectOverviewPage: FC = () => {
-  const { selectedRows } = useSelectedRows()
+  const { selectedRows } = useSelectedRowsContext()
 
   const {
     projectName,

@@ -23,14 +23,14 @@ export const ROW_SELECTION_COLUMN_ID = '__row_selection__' // ID for the row sel
 // Cell range for selections
 
 // Structure to map row/column IDs to their positions in the grid
-interface GridMap {
+export interface GridMap {
   rowIdToIndex: Map<RowId, number>
   colIdToIndex: Map<ColId, number>
   indexToRowId: Map<number, RowId>
   indexToColId: Map<number, ColId>
 }
 
-interface SelectionContextType {
+export interface SelectionContextType {
   // Selected cells
   selectedCells: Set<CellId>
   // Focused cell (single cell that has focus)
@@ -405,10 +405,10 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({ children 
   return <SelectionContext.Provider value={value}>{children}</SelectionContext.Provider>
 }
 
-export const useSelection = (): SelectionContextType => {
+export const useSelectionContext = (): SelectionContextType => {
   const context = useContext(SelectionContext)
   if (context === undefined) {
-    throw new Error('useSelection must be used within a SelectionProvider')
+    throw new Error('useSelectionContext must be used within a SelectionProvider')
   }
   return context
 }

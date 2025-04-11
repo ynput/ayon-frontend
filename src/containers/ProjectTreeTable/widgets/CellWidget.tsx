@@ -13,7 +13,7 @@ import { useCellEditing } from '../context/CellEditingContext'
 // Utils
 import { getCellId } from '../utils/cellUtils'
 import clsx from 'clsx'
-import { useSelection } from '../context/SelectionContext'
+import { useSelectionContext } from '../context/SelectionContext'
 
 const Cell = styled.div`
   position: absolute;
@@ -79,7 +79,7 @@ const EditorCellComponent: FC<EditorCellProps> = ({
   const type = attributeData?.type
 
   const { isEditing, setEditingCellId } = useCellEditing()
-  const { isCellFocused, gridMap, selectCell, focusCell } = useSelection()
+  const { isCellFocused, gridMap, selectCell, focusCell } = useSelectionContext()
   const cellId = getCellId(rowId, columnId)
 
   const isCurrentCellEditing = isEditing(cellId)

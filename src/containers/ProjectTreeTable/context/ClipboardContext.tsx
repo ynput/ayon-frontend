@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useCallback, useMemo, useEffect } from 'react'
 
 // Contexts
-import { ROW_SELECTION_COLUMN_ID, useSelection } from './SelectionContext'
+import { ROW_SELECTION_COLUMN_ID, useSelectionContext } from './SelectionContext'
 import { useCellEditing } from './CellEditingContext'
 
 // Utils
@@ -30,7 +30,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
   columnReadOnly,
 }) => {
   // Get selection information from SelectionContext
-  const { selectedCells, gridMap, focusedCellId } = useSelection()
+  const { selectedCells, gridMap, focusedCellId } = useSelectionContext()
   const { updateEntities } = useCellEditing()
 
   const getSelectionData = useCallback(

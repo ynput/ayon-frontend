@@ -7,8 +7,8 @@ import { Section } from '@ynput/ayon-react-components'
 import { BuiltInFieldOptions } from '../../../containers/ProjectTreeTable/ProjectTreeTableColumns'
 
 // Components
-import ProjectTreeTable from '../../../containers/ProjectTreeTable/ProjectTreeTable'
-import { useProjectTableContext } from '../../../containers/ProjectTreeTable/context/ProjectTableContext'
+import ProjectTreeTable from '../../../containers/ProjectTreeTable'
+import { useProjectTableContext } from '../../../containers/ProjectTreeTable'
 
 type Props = {}
 

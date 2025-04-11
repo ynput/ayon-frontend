@@ -1,8 +1,8 @@
 import { createContext, ReactNode, useCallback, useContext, useMemo, useRef } from 'react'
-import { ROW_SELECTION_COLUMN_ID, useSelection } from './SelectionContext'
+import { ROW_SELECTION_COLUMN_ID, useSelectionContext } from './SelectionContext'
 import { CellId, getCellId, parseCellId, RowId } from '../utils/cellUtils'
 
-interface SelectedRowsContextProps {
+export interface SelectedRowsContextProps {
   selectedRows: string[]
   isRowSelected: (rowId: string) => boolean
   clearRowsSelection: () => void
@@ -19,7 +19,7 @@ interface SelectedRowsProviderProps {
 
 export const SelectedRowsProvider = ({ children }: SelectedRowsProviderProps) => {
   const { selectedCells, gridMap, setSelectedCells, setFocusedCellId, setAnchorCell } =
-    useSelection()
+    useSelectionContext()
   const prevSelectedRowsRef = useRef<string[]>([])
 
   // Calculate the current selected rows
@@ -120,10 +120,10 @@ export const SelectedRowsProvider = ({ children }: SelectedRowsProviderProps) =>
   return <SelectedRowsContext.Provider value={value}>{children}</SelectedRowsContext.Provider>
 }
 
-export const useSelectedRows = () => {
+export const useSelectedRowsContext = () => {
   const context = useContext(SelectedRowsContext)
   if (!context) {
-    throw new Error('useSelectedRows must be used within a SelectedRowsProvider')
+    throw new Error('useSelectedRowsContext must be used within a SelectedRowsProvider')
   }
   return context
 }

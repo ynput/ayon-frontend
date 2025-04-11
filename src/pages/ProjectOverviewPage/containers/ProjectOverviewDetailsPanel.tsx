@@ -5,9 +5,8 @@ import DetailsPanel from '@containers/DetailsPanel/DetailsPanel'
 import DetailsPanelSlideOut from '@containers/DetailsPanel/DetailsPanelSlideOut/DetailsPanelSlideOut'
 import { useGetUsersAssigneeQuery } from '@queries/user/getUsers'
 import { ProjectModel } from '@api/rest/project'
-import { useProjectTableContext } from '@containers/ProjectTreeTable/context/ProjectTableContext'
+import { useProjectTableContext, useSelectedRowsContext } from '@containers/ProjectTreeTable'
 import { EditorTaskNode, MatchingFolder } from '@containers/ProjectTreeTable/utils/types'
-import { useSelectedRows } from '@containers/ProjectTreeTable/context/SelectedRowsContext'
 
 type ProjectOverviewDetailsPanelProps = {
   projectInfo?: ProjectModel
@@ -21,7 +20,7 @@ const ProjectOverviewDetailsPanel = ({
   const projectsInfo = { [projectName]: projectInfo }
 
   const { getEntityById } = useProjectTableContext()
-  const { selectedRows, clearRowsSelection } = useSelectedRows()
+  const { selectedRows, clearRowsSelection } = useSelectedRowsContext()
 
   const selectRowData = selectedRows.map((id) => getEntityById(id)).filter(Boolean) as (
     | MatchingFolder

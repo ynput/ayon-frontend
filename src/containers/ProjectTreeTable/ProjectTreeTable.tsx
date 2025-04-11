@@ -36,10 +36,10 @@ import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
 
 // Context imports
 import { CellEditingProvider, useCellEditing } from './context/CellEditingContext'
-import { ROW_SELECTION_COLUMN_ID, useSelection } from './context/SelectionContext'
+import { ROW_SELECTION_COLUMN_ID, useSelectionContext } from './context/SelectionContext'
 import { ClipboardProvider } from './context/ClipboardContext'
-import { useSelectedRows } from './context/SelectedRowsContext'
-import { useProjectTableContext } from '@containers/ProjectTreeTable/context/ProjectTableContext'
+import { useSelectedRowsContext } from './context/SelectedRowsContext'
+import { useProjectTableContext } from '@containers/ProjectTreeTable'
 
 // Hook imports
 import useCustomColumnWidthVars from './hooks/useCustomColumnWidthVars'
@@ -142,7 +142,7 @@ const FlexTable = ({
   } = useProjectTableContext()
 
   // Selection context
-  const { registerGrid } = useSelection()
+  const { registerGrid } = useSelectionContext()
 
   // COLUMN SIZING
   const [columnSizing, setColumnSizing] = useLocalStorage<ColumnSizingState>(
@@ -593,9 +593,9 @@ const TableCell = ({ cell, rowId, cellId, className, ...props }: TableCellProps)
     endSelection,
     selectCell,
     getCellBorderClasses,
-  } = useSelection()
+  } = useSelectionContext()
 
-  const { isRowSelected } = useSelectedRows()
+  const { isRowSelected } = useSelectedRowsContext()
 
   const { isEditing } = useCellEditing()
 
