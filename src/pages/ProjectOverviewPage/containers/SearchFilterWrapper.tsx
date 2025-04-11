@@ -83,7 +83,6 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
         label: 'Folder / Task',
       }}
       disabledFilters={disabledFilters}
-      style={{ overflow: 'hidden' }}
       pt={{
         searchBar: {
           style: {

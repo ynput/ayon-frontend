@@ -50,7 +50,7 @@ export type BuildFilterOptions = {
   }
   columnOrder?: ColumnOrderState
   config?: FilterConfig
-  power: boolean
+  power?: boolean
 }
 
 const useBuildFilterOptions = ({
