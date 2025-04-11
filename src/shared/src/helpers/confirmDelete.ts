@@ -13,7 +13,7 @@ interface ConfirmDeleteOptions extends Omit<ConfirmDialogOptions, 'accept'> {
   onError?: (error: any) => void
 }
 
-const confirmDelete = ({
+export const confirmDelete = ({
   label = '',
   message = 'Are you sure? This cannot be undone',
   deleteLabel,
@@ -44,7 +44,7 @@ const confirmDelete = ({
           toastId &&
           toast.update(toastId, {
             render: `${label} ${deleteLabelPast}`,
-            type: toast.TYPE.SUCCESS,
+            type: 'success',
             autoClose: 5000,
             isLoading: false,
           })
@@ -60,7 +60,7 @@ const confirmDelete = ({
           toastId &&
           toast.update(toastId, {
             render: errorMessage,
-            type: toast.TYPE.ERROR,
+            type: 'error',
             autoClose: 5000,
             isLoading: false,
           })
@@ -76,5 +76,3 @@ const confirmDelete = ({
     ...props,
   })
 }
-
-export default confirmDelete

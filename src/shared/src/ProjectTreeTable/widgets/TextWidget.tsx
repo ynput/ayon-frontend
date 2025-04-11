@@ -1,8 +1,8 @@
 import { forwardRef } from 'react'
 import { TextWidgetInput } from './TextWidgetInput'
-import { AttributeData } from '@api/rest/attributes'
 import { WidgetBaseProps } from './CellWidget'
 import styled from 'styled-components'
+import { AttributeData } from '../types'
 
 const StyledBaseTextWidget = styled.span`
   overflow: hidden;

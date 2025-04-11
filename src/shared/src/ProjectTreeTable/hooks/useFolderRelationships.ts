@@ -1,6 +1,7 @@
 import { useCallback, useMemo } from 'react'
-import { EditorTaskNode, FolderNodeMap, MatchingFolder, TaskNodeMap } from '../utils/types'
-import { useProjectDataContext } from '../context/ProjectDataContext'
+import { EditorTaskNode, FolderNodeMap, MatchingFolder, TaskNodeMap } from '../types/table'
+import { ProjectAttribModel2 } from '../types/project'
+import { AttributeWithPermissions } from '../types'
 
 export interface InheritedDependent {
   entityId: string
@@ -23,6 +24,8 @@ interface UseFolderRelationshipsProps {
   tasksMap: TaskNodeMap
   tasksByFolderMap: Map<string, string[]>
   getEntityById: (id: string) => any
+  projectAttrib: ProjectAttribModel2 | undefined
+  attribFields: AttributeWithPermissions[] | undefined
 }
 
 export default function useFolderRelationships({
@@ -30,9 +33,9 @@ export default function useFolderRelationships({
   tasksMap,
   tasksByFolderMap,
   getEntityById,
+  projectAttrib,
+  attribFields,
 }: UseFolderRelationshipsProps) {
-  const { projectInfo, attribFields } = useProjectDataContext()
-  const { attrib: projectAttrib = {} } = projectInfo || {}
   // Pre-compute folder-children relationships
   const folderChildrenMap = useMemo(() => {
     const map = new Map<string, string[]>()
@@ -142,7 +145,7 @@ export default function useFolderRelationships({
         if (!folder || !currentId) {
           // use the project attrib
           for (const attribName of pendingAttribs) {
-            if (attribName in projectAttrib) {
+            if (projectAttrib && attribName in projectAttrib) {
               // @ts-ignore
               result[attribName] = projectAttrib[attribName]
               pendingAttribs.delete(attribName)
@@ -213,7 +216,7 @@ export default function useFolderRelationships({
           const inheritedAttribs = attribEntries.filter(
             ([attribName]) =>
               !child.ownAttrib?.includes(attribName) &&
-              attribFields.find((a) => a.name === attribName)?.data?.inherit,
+              attribFields?.find((a) => a.name === attribName)?.data?.inherit,
           )
 
           // Record attributes that child owns (has its own value for)

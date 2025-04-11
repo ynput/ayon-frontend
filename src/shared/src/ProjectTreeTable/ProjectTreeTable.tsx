@@ -18,42 +18,47 @@ import {
   Table,
   Header,
   HeaderGroup,
+  ExpandedState,
+  SortingState,
 } from '@tanstack/react-table'
 
 // Utility imports
 import clsx from 'clsx'
 
 // Type imports
-import type { AttributeEnumItem } from '@api/rest/attributes'
-import type { FolderNodeMap, TableRow, TaskNodeMap } from './utils/types'
-import type { AttributeWithPermissions } from './hooks/useAttributesList'
+import type { FolderNodeMap, TableRow, TaskNodeMap } from './types/table'
 
 // Component imports
 import ProjectTreeTableColumns, { BuiltInFieldOptions } from './ProjectTreeTableColumns'
 import * as Styled from './ProjectTreeTable.styled'
 import HeaderActionButton from './components/HeaderActionButton'
-import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
+import EmptyPlaceholder from '../EmptyPlaceholder'
 
 // Context imports
 import { CellEditingProvider, useCellEditing } from './context/CellEditingContext'
 import { ROW_SELECTION_COLUMN_ID, useSelectionContext } from './context/SelectionContext'
 import { ClipboardProvider } from './context/ClipboardContext'
 import { useSelectedRowsContext } from './context/SelectedRowsContext'
-import { useProjectTableContext } from '@shared/ProjectTreeTable'
+import { useColumnSettings } from './context/ColumnSettingsContext'
 
 // Hook imports
 import useCustomColumnWidthVars from './hooks/useCustomColumnWidthVars'
 import usePrefetchFolderTasks from './hooks/usePrefetchFolderTasks'
-import useLocalStorage from '@hooks/useLocalStorage'
+import { useLocalStorage } from '../hooks'
 import useCellContextMenu from './hooks/useCellContextMenu'
 import useColumnVirtualization from './hooks/useColumnVirtualization'
 import useKeyboardNavigation from './hooks/useKeyboardNavigation'
 
 // Utility function imports
 import { getCellId } from './utils/cellUtils'
-import { generateLoadingRows, generateDummyAttributes } from './utils/loadingUtils'
+import {
+  generateLoadingRows,
+  generateDummyAttributes,
+} from '../../../pages/ProjectOverviewPage/utils/loadingUtils'
 import { createPortal } from 'react-dom'
 import { Icon } from '@ynput/ayon-react-components'
+import { AttributeEnumItem, AttributeWithPermissions } from './types'
+import { useProjectTableContext } from './context/ProjectTableContext'
 
 //These are the important styles to make sticky column pinning work!
 //Apply styles like this using your CSS strategy of choice with this kind of logic to head cells, data cells, footer cells, etc.
@@ -71,17 +76,16 @@ const getCommonPinningStyles = (column: Column<TableRow, unknown>): CSSPropertie
 }
 
 type Props = {
+  projectName: string
   scope: string
-  tableData: TableRow[]
   options: BuiltInFieldOptions
   attribs: AttributeWithPermissions[]
-  isLoading: boolean
-  isInitialized: boolean
   sliceId: string
   // metadata
   tasksMap: TaskNodeMap
   foldersMap: FolderNodeMap
   fetchMoreOnBottomReached: (element: HTMLDivElement | null) => void
+  onOpenNew: (type: 'folder' | 'task') => void
 }
 
 // Component to wrap with all providers
@@ -114,32 +118,36 @@ const FlexTableWithProviders = (props: Props) => {
 
 const FlexTable = ({
   scope,
-  tableData,
   attribs,
   options,
   sliceId,
-  isLoading,
-  isInitialized,
   fetchMoreOnBottomReached,
+  onOpenNew,
 }: Props) => {
-  //The virtualizer needs to know the scrollable container element
-  const tableContainerRef = useRef<HTMLDivElement>(null)
-
   const {
-    expanded,
-    updateExpanded,
-    toggleExpanded,
-    toggleExpandAll,
-    sorting,
-    updateSorting,
-    showHierarchy,
     columnVisibility,
     columnVisibilityUpdater,
     columnPinning,
     columnPinningUpdater,
     columnOrder,
     columnOrderUpdater,
+  } = useColumnSettings()
+
+  const {
+    tableData,
+    isLoading,
+    isInitialized,
+    expanded,
+    updateExpanded,
+    toggleExpandAll,
+    toggleExpanded,
+    sorting,
+    updateSorting,
+    showHierarchy,
   } = useProjectTableContext()
+
+  //The virtualizer needs to know the scrollable container element
+  const tableContainerRef = useRef<HTMLDivElement>(null)
 
   // Selection context
   const { registerGrid } = useSelectionContext()
@@ -287,6 +295,7 @@ const FlexTable = ({
             virtualPaddingRight={virtualPaddingRight}
             showHierarchy={showHierarchy}
             attribs={attribs}
+            onOpenNew={onOpenNew}
           />
         </table>
       </Styled.TableContainer>
@@ -460,6 +469,7 @@ interface TableBodyProps {
   virtualPaddingLeft: number | undefined
   virtualPaddingRight: number | undefined
   attribs: AttributeWithPermissions[]
+  onOpenNew: (type: 'folder' | 'task') => void
 }
 
 const TableBody = ({
@@ -470,8 +480,9 @@ const TableBody = ({
   virtualPaddingLeft,
   virtualPaddingRight,
   attribs,
+  onOpenNew,
 }: TableBodyProps) => {
-  const { handleTableBodyContextMenu } = useCellContextMenu({ attribs })
+  const { handleTableBodyContextMenu } = useCellContextMenu({ attribs, onOpenNew })
 
   const { handlePreFetchTasks } = usePrefetchFolderTasks()
 
@@ -516,6 +527,7 @@ const TableBody = ({
             virtualPaddingLeft={virtualPaddingLeft}
             virtualPaddingRight={virtualPaddingRight}
             virtualRow={virtualRow}
+            showHierarchy={showHierarchy}
           />
         )
       })}
@@ -536,6 +548,7 @@ interface TableBodyRowProps {
   virtualPaddingLeft: number | undefined
   virtualPaddingRight: number | undefined
   virtualRow: VirtualItem
+  showHierarchy: boolean
 }
 
 const TableBodyRow = ({
@@ -545,6 +558,7 @@ const TableBodyRow = ({
   virtualPaddingLeft,
   virtualPaddingRight,
   virtualRow,
+  showHierarchy,
 }: TableBodyRowProps) => {
   // We should do this so that we don't re-render every time anything in projectTableContext changes
   const visibleCells = row.getVisibleCells()
@@ -566,7 +580,15 @@ const TableBodyRow = ({
       {virtualColumns.map((vc) => {
         const cell = visibleCells[vc.index]
         const cellId = getCellId(row.id, cell.column.id)
-        return <TableCellMemo cell={cell} cellId={cellId} rowId={row.id} key={cell.id} />
+        return (
+          <TableCellMemo
+            cell={cell}
+            cellId={cellId}
+            rowId={row.id}
+            key={cell.id}
+            showHierarchy={showHierarchy}
+          />
+        )
       })}
 
       {virtualPaddingRight ? (
@@ -582,9 +604,10 @@ interface TableCellProps {
   cellId: string
   rowId: string
   className?: string
+  showHierarchy: boolean
 }
 
-const TableCell = ({ cell, rowId, cellId, className, ...props }: TableCellProps) => {
+const TableCell = ({ cell, rowId, cellId, className, showHierarchy, ...props }: TableCellProps) => {
   const {
     isCellSelected,
     isCellFocused,
@@ -598,8 +621,6 @@ const TableCell = ({ cell, rowId, cellId, className, ...props }: TableCellProps)
   const { isRowSelected } = useSelectedRowsContext()
 
   const { isEditing } = useCellEditing()
-
-  const { showHierarchy } = useProjectTableContext()
 
   const borderClasses = getCellBorderClasses(cellId)
 

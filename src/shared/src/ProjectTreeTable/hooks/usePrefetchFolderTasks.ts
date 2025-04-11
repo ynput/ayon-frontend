@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { useLazyGetTasksByParentQuery } from '@queries/overview/getOverview'
 import { parseCellId } from '../utils/cellUtils'
-import { useProjectTableContext } from '@shared/ProjectTreeTable'
+import { useProjectTableQueriesContext } from '../context/ProjectTableQueriesContext'
+import { useProjectTableContext } from '../context/ProjectTableContext'
 
 export const usePrefetchFolderTasks = () => {
-  const [fetchFolderTasks] = useLazyGetTasksByParentQuery()
+  const { getFoldersTasks } = useProjectTableQueriesContext()
+
   const [prefetchedIds, setPrefetchedIds] = useState<string[]>([])
 
   const { projectName, queryFilters } = useProjectTableContext()
@@ -29,9 +30,8 @@ export const usePrefetchFolderTasks = () => {
     if (prefetchedIds.includes(rowId)) return
     setPrefetchedIds((prev) => [...prev, rowId])
 
-    fetchFolderTasks(
+    getFoldersTasks(
       {
-        projectName,
         parentIds: [rowId],
         filter: queryFilters.filterString,
         search: queryFilters.search,

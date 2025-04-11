@@ -40,7 +40,7 @@ import { usePaste } from '@context/pasteContext'
 import styled from 'styled-components'
 
 import SettingsListHeader from './SettingsListHeader'
-import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
+import EmptyPlaceholder from '@shared/EmptyPlaceholder/EmptyPlaceholder'
 import { attachLabels } from './searchTools'
 import useUserProjectPermissions from '@hooks/useUserProjectPermissions'
 import LoadingPage from '@pages/LoadingPage'
@@ -683,10 +683,12 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
   }
 
   if (!bypassPermissions && !userPermissions.canViewSettings(projectName)) {
-    return <EmptyPlaceholder
-      icon="settings_alert"
-      message="You don't have permission to view the addon settings for this project"
-    />
+    return (
+      <EmptyPlaceholder
+        icon="settings_alert"
+        message="You don't have permission to view the addon settings for this project"
+      />
+    )
   }
 
   return (

@@ -3,6 +3,8 @@ import resolve from '@rollup/plugin-node-resolve'
 import commonjs from '@rollup/plugin-commonjs'
 import babel from '@rollup/plugin-babel'
 import typescript from '@rollup/plugin-typescript'
+import alias from '@rollup/plugin-alias'
+import path from 'path'
 
 const packageJson = require('./package.json')
 
@@ -31,6 +33,9 @@ export default {
       extensions: ['.js', '.jsx', '.ts', '.tsx'],
       babelHelpers: 'bundled',
     }),
+    alias({
+      entries: [{ find: '@frontend', replacement: path.resolve(__dirname, '../../') }],
+    }),
   ],
-  external: ['react', 'react-dom'], // Ensure React and ReactDOM are not bundled
+  external: Object.keys(packageJson.peerDependencies), // Important: Don't bundle peerDependencies
 }

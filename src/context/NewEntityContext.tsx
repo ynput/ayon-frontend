@@ -5,7 +5,7 @@ import { toast } from 'react-toastify'
 import getSequence from '@helpers/getSequence'
 import { generateLabel } from '@components/NewEntity/NewEntity'
 import { PatchOperation, useUpdateOverviewEntitiesMutation } from '@queries/overview/updateOverview'
-import { useProjectTableContext, useProjectDataContext } from '@shared/ProjectTreeTable'
+import { useProjectTableContext } from '@shared/ProjectTreeTable'
 import { EditorTaskNode, MatchingFolder } from '@shared/ProjectTreeTable/utils/types'
 
 export type NewEntityType = 'folder' | 'task'
@@ -41,8 +41,8 @@ interface NewEntityProviderProps {
 }
 
 export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }) => {
-  const { findNonInheritedValues, projectName } = useProjectTableContext()
-  const { attribFields, projectInfo } = useProjectDataContext()
+  const { findNonInheritedValues, projectName, attribFields, projectInfo } =
+    useProjectTableContext()
   const { attrib: projectAttrib = {}, statuses } = projectInfo || {}
 
   const firstStatusForTask =

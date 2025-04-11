@@ -1,28 +1,27 @@
-import useCreateContext from '@hooks/useCreateContext'
+import useCreateContext from '../../../../hooks/useCreateContext'
 import useDeleteEntities from './useDeleteEntities'
-import { getPlatformShortcutKey, KeyMode } from '@helpers/platform'
+import { getPlatformShortcutKey, KeyMode } from '../../helpers/platform'
 import { getCellId, parseCellId } from '../utils/cellUtils'
 import { useClipboard } from '../context/ClipboardContext'
 import { ROW_SELECTION_COLUMN_ID, useSelectionContext } from '../context/SelectionContext'
 import { useProjectTableContext } from '../context/ProjectTableContext'
 import { useCellEditing } from '../context/CellEditingContext'
-import { useNewEntityContext } from '@context/NewEntityContext'
-import { AttributeWithPermissions } from './useAttributesList'
 import { InheritFromParentEntity } from './useUpdateOverview'
+import { AttributeWithPermissions } from '../types'
 
 type ContextEvent = React.MouseEvent<HTMLTableSectionElement, MouseEvent>
 
 type CellContextMenuProps = {
   attribs: AttributeWithPermissions[]
+  onOpenNew: (type: 'folder' | 'task') => void
 }
 
-const useCellContextMenu = ({ attribs }: CellContextMenuProps) => {
+const useCellContextMenu = ({ attribs, onOpenNew }: CellContextMenuProps) => {
   // context hooks
   const { projectName, showHierarchy, getEntityById, toggleExpandAll } = useProjectTableContext()
   const { copyToClipboard, exportCSV, pasteFromClipboard } = useClipboard()
   const { isCellSelected, selectedCells, clearSelection, selectCell } = useSelectionContext()
   const { inheritFromParent } = useCellEditing()
-  const { onOpenNew } = useNewEntityContext()
 
   // update entity context
 
@@ -229,7 +228,7 @@ const useCellContextMenu = ({ attribs }: CellContextMenuProps) => {
             entityType: 'folderId' in entity ? 'task' : 'folder',
             attribs: [attribName],
             ownAttrib: entity.ownAttrib || [],
-            // @ts-expect-error
+            // @ts-ignore
             folderId: entity.parentId ?? entity.folderId,
           })
         }

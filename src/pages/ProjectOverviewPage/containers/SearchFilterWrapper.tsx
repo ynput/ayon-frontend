@@ -6,7 +6,7 @@ import { EditorTaskNode, TaskNodeMap } from '@shared/ProjectTreeTable/utils/type
 import { usePower } from '@/remote/context/PowerLicenseContext'
 import AdvancedFiltersPlaceholder from '@components/SearchFilter/AdvancedFiltersPlaceholder'
 import { usePowerpack } from '@context/powerpackContext'
-import { ColumnOrderState } from '@tanstack/react-table'
+import { useColumnSettings } from '@shared/ProjectTreeTable'
 
 interface SearchFilterWrapperProps extends Omit<BuildFilterOptions, 'scope' | 'data' | 'power'> {
   filters: SearchFilterProps['filters']
@@ -14,7 +14,6 @@ interface SearchFilterWrapperProps extends Omit<BuildFilterOptions, 'scope' | 'd
   disabledFilters?: string[]
   projectInfo?: ProjectModel
   tasksMap?: TaskNodeMap
-  columnOrder?: ColumnOrderState
 }
 
 const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
@@ -25,8 +24,9 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
   disabledFilters,
   projectInfo,
   tasksMap,
-  columnOrder,
 }) => {
+  const { columnOrder } = useColumnSettings()
+
   // create a flat list of all the assignees (string[]) on all tasks (duplicated)
   // this is used to rank what assignees are shown in the filter first
   const allAssignees: string[] = useMemo(

@@ -1,6 +1,5 @@
 import React from 'react'
-import Typography from '@/theme/typography.module.css'
-import { Icon } from '@ynput/ayon-react-components'
+import { Icon, theme } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
 export const Placeholder = styled.div`
@@ -18,6 +17,7 @@ export const Placeholder = styled.div`
 
   h3 {
     text-align: center;
+    ${theme.titleLarge}
   }
 
   .placeholder-icon {
@@ -56,19 +56,12 @@ interface EmptyPlaceholderProps extends React.HTMLAttributes<HTMLDivElement> {
   }
 }
 
-const EmptyPlaceholder = ({
-  icon,
-  message,
-  error,
-  children,
-  pt,
-  ...props
-}: EmptyPlaceholderProps) => {
+export default ({ icon, message, error, children, pt, ...props }: EmptyPlaceholderProps) => {
   if (error) {
     return (
       <Placeholder className={'isError'} {...props}>
         <Icon icon="error" className="placeholder-icon" />
-        <h3 className={Typography.titleLarge}>Something went wrong.</h3>
+        <h3>Something went wrong.</h3>
         <span className="error-message" {...pt?.error}>
           ERROR: {JSON.stringify(error)}
         </span>
@@ -81,12 +74,8 @@ const EmptyPlaceholder = ({
   return (
     <Placeholder {...props}>
       <Icon icon={icon || 'info'} className="placeholder-icon" />
-      <h3 className={Typography.titleLarge}>
-        {typeof message === 'object' ? JSON.stringify(message) : message}
-      </h3>
+      <h3>{typeof message === 'object' ? JSON.stringify(message) : message}</h3>
       {children}
     </Placeholder>
   )
 }
-
-export default EmptyPlaceholder

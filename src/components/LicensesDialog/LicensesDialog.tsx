@@ -7,7 +7,7 @@ import copyToClipboard from '@helpers/copyToClipboard'
 import clsx from 'clsx'
 import { YnputConnectResponseModel } from '@api/rest/cloud'
 import { fromUnixTime, format } from 'date-fns'
-import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
+import EmptyPlaceholder from '@shared/EmptyPlaceholder/EmptyPlaceholder'
 
 const Container = styled.div`
   background-color: var(--md-sys-color-surface-container-low);

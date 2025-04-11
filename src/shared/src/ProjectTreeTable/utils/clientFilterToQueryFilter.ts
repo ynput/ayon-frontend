@@ -1,8 +1,8 @@
-import { QueryFilter, QueryCondition } from '@api/rest/folders'
-import { NO_DATE } from '@helpers/filterDates'
 import { Filter } from '@ynput/ayon-react-components'
+import { QueryCondition, QueryFilter } from '../types/operations'
 
-const clientFilterToQueryFilter = (filters: Filter[]): QueryFilter => {
+const NO_DATE = 'no_date'
+export const clientFilterToQueryFilter = (filters: Filter[]): QueryFilter => {
   // If there are no filters, return an empty filter
   if (!filters || filters.length === 0) {
     return {}

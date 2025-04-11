@@ -1,20 +1,6 @@
 import { createContext, ReactNode, useCallback, useContext, useMemo } from 'react'
-import {
-  ColumnOrderState,
-  ColumnPinningState,
-  ExpandedState,
-  functionalUpdate,
-  OnChangeFn,
-  RowSelectionState,
-  SortingState,
-  VisibilityState,
-} from '@tanstack/react-table'
-import useLocalStorage from '@hooks/useLocalStorage'
-import useFetchOverviewData from '../hooks/useFetchOverviewData'
+import { ExpandedState, OnChangeFn, SortingState } from '@tanstack/react-table'
 import useOverviewTable from '../hooks/useOverviewTable'
-import { useSlicerContext } from '@context/slicerContext'
-import { isEmpty } from 'lodash'
-import useFilterBySlice from '@containers/TasksProgress/hooks/useFilterBySlice'
 import { Filter } from '@ynput/ayon-react-components'
 import {
   EditorTaskNode,
@@ -22,7 +8,8 @@ import {
   MatchingFolder,
   TableRow,
   TaskNodeMap,
-} from '../utils/types'
+  TasksByFolderMap,
+} from '../types/table'
 import useFolderRelationships, {
   FindInheritedValueFromAncestors,
   GetAncestorsOf,
@@ -30,68 +17,52 @@ import useFolderRelationships, {
   FindNonInheritedValues,
 } from '../hooks/useFolderRelationships'
 import { RowId } from '../utils/cellUtils'
-import clientFilterToQueryFilter from '../utils/clientFilterToQueryFilter'
-import { QueryTasksFoldersApiArg } from '@api/rest/folders'
-import { ProjectDataContextProps, useProjectDataContext } from './ProjectDataContext'
+import { ProjectModel } from '../types/project'
+import { AttributeWithPermissions, LoadingTasks } from '../types'
+import { QueryFilter } from '../types/folders'
+import { OperationModel, OperationsRequestModel } from '../types/operations'
+
+type User = {
+  name: string
+  fullName: string
+}
 
 export interface ProjectTableContextProps {
-  isInitialized: boolean
-  isLoading: boolean
+  isInitialized: ProjectTableProviderProps['isInitialized']
+  isLoading: ProjectTableProviderProps['isLoading']
   // Project Info
-  projectInfo?: ProjectDataContextProps['projectInfo']
-  projectName: string
-  users: ProjectDataContextProps['users']
+  projectInfo: ProjectTableProviderProps['projectInfo']
+  projectName: ProjectTableProviderProps['projectName']
+  users: ProjectTableProviderProps['users']
   // Attributes
-  attribFields: ProjectDataContextProps['attribFields']
+  attribFields: ProjectTableProviderProps['attribFields']
 
   // Data
   tableData: TableRow[]
-  tasksMap: TaskNodeMap
-  foldersMap: FolderNodeMap
-  fetchNextPage: () => void
+  tasksMap: ProjectTableProviderProps['tasksMap']
+  foldersMap: ProjectTableProviderProps['foldersMap']
+  fetchNextPage: ProjectTableProviderProps['fetchNextPage']
+  reloadTableData: ProjectTableProviderProps['reloadTableData']
   getEntityById: (id: string) => MatchingFolder | EditorTaskNode | undefined
-  reloadTableData: () => void
 
   // Filters
-  filters: Filter[]
-  setFilters: (filters: Filter[]) => void
-  queryFilters: {
-    filter: QueryTasksFoldersApiArg['tasksFoldersQuery']['filter']
-    filterString?: string
-    search: QueryTasksFoldersApiArg['tasksFoldersQuery']['search']
-  }
+  filters: ProjectTableProviderProps['filters']
+  setFilters: ProjectTableProviderProps['setFilters']
+  queryFilters: ProjectTableProviderProps['queryFilters']
 
   // Hierarchy
-  showHierarchy: boolean
-  updateShowHierarchy: (showHierarchy: boolean) => void
+  showHierarchy: ProjectTableProviderProps['showHierarchy']
+  updateShowHierarchy: ProjectTableProviderProps['updateShowHierarchy']
 
   // Expanded state
-  expanded: ExpandedState
-  toggleExpanded: (id: string) => void
-  updateExpanded: OnChangeFn<ExpandedState>
+  expanded: ProjectTableProviderProps['expanded']
+  toggleExpanded: ProjectTableProviderProps['toggleExpanded']
+  updateExpanded: ProjectTableProviderProps['updateExpanded']
   toggleExpandAll: (rowId: RowId[], expand?: boolean) => void
 
   // Sorting
-  sorting: SortingState
-  updateSorting: OnChangeFn<SortingState>
-
-  // Column Visibility
-  columnVisibility: VisibilityState
-  setColumnVisibility: (columnVisibility: VisibilityState) => void
-  updateColumnVisibility: (columnVisibility: VisibilityState) => void
-  columnVisibilityUpdater: OnChangeFn<VisibilityState>
-
-  // Column Pinning
-  columnPinning: ColumnPinningState
-  setColumnPinning: (columnPinning: ColumnPinningState) => void
-  updateColumnPinning: (columnPinning: ColumnPinningState) => void
-  columnPinningUpdater: OnChangeFn<ColumnPinningState>
-
-  // Column Order
-  columnOrder: ColumnOrderState
-  setColumnOrder: (columnOrder: ColumnOrderState) => void
-  updateColumnOrder: (columnOrder: ColumnOrderState) => void
-  columnOrderUpdater: OnChangeFn<ColumnOrderState>
+  sorting: ProjectTableProviderProps['sorting']
+  updateSorting: ProjectTableProviderProps['updateSorting']
 
   // Folder Relationships
   getInheritedDependents: GetInheritedDependents
@@ -104,211 +75,79 @@ const ProjectTableContext = createContext<ProjectTableContextProps | undefined>(
 
 interface ProjectTableProviderProps {
   children: ReactNode
+  isInitialized: boolean
+
+  // loading
+  isLoading: boolean
+  isLoadingMore: boolean
+  loadingTasks: LoadingTasks
+  // Project Info
+  projectInfo?: ProjectModel
+  projectName: string
+  users: User[]
+  // Attributes
+  attribFields: AttributeWithPermissions[]
+
+  // data
+  tasksMap: TaskNodeMap
+  foldersMap: FolderNodeMap
+  tasksByFolderMap: TasksByFolderMap
+  // data functions
+  fetchNextPage: () => void
+  reloadTableData: () => void
+
+  // Filters
+  filters: Filter[]
+  setFilters: (filters: Filter[]) => void
+  queryFilters: {
+    filter: QueryFilter | undefined
+    filterString?: string
+    search: string | undefined
+  }
+
+  // Hierarchy
+  showHierarchy: boolean
+  updateShowHierarchy: (showHierarchy: boolean) => void
+
+  // Expanded state
+  expanded: ExpandedState
+  toggleExpanded: (id: string) => void
+  updateExpanded: OnChangeFn<ExpandedState>
+  setExpanded: (expanded: ExpandedState) => void
+
+  // Sorting
+  sorting: SortingState
+  updateSorting: OnChangeFn<SortingState>
 }
 
-export const ProjectTableProvider = ({ children }: ProjectTableProviderProps) => {
-  // Get project data from the new context
-  const {
-    projectName,
-    projectInfo,
-    attribFields,
-    users,
-    isInitialized,
-    isLoading: isLoadingData,
-  } = useProjectDataContext()
-
-  const scope = `overview-${projectName}`
-
-  const { folderTypes = [], taskTypes = [] } = projectInfo || {}
-
-  const [expanded, setExpanded] = useLocalStorage<ExpandedState>(`expanded-${scope}`, {})
-  const updateExpanded: OnChangeFn<ExpandedState> = (expandedUpdater) => {
-    setExpanded(functionalUpdate(expandedUpdater, expanded))
-  }
-
-  const toggleExpanded = (id: string) => {
-    if (typeof expanded === 'boolean') return
-    setExpanded({
-      ...expanded,
-      [id]: !expanded[id],
-    })
-  }
-
-  const [filters, setFilters] = useLocalStorage<Filter[]>(`overview-filters-${projectName}`, [])
-  const [showHierarchy, updateShowHierarchy] = useLocalStorage<boolean>(
-    `overview-show-hierarchy-${projectName}`,
-    true,
-  )
-
-  const { filter: sliceFilter } = useFilterBySlice()
-
-  // merge the slice filter with the user filters
-  let combinedFilters = [...filters]
-  if (sliceFilter?.values?.length) {
-    combinedFilters.push(sliceFilter as Filter)
-  }
-
-  // transform the task bar filters to the query format
-  // TODO: filters bar just uses the same schema as the server
-  const queryFilter = clientFilterToQueryFilter(combinedFilters)
-  const queryFilterString = combinedFilters.length ? JSON.stringify(queryFilter) : ''
-  // extract the fuzzy search from the filters
-  const fuzzySearchFilter = combinedFilters.find((filter) => filter.id.includes('text'))
-    ?.values?.[0]?.id
-
-  const queryFilters = {
-    filterString: queryFilterString,
-    filter: queryFilter,
-    search: fuzzySearchFilter,
-  }
-
-  const [sorting, setSorting] = useLocalStorage<SortingState>(`sorting-${scope}`, [
-    {
-      id: 'name',
-      desc: true,
-    },
-  ])
-
-  const updateSorting: OnChangeFn<SortingState> = (sortingUpdater) => {
-    setSorting(functionalUpdate(sortingUpdater, sorting))
-  }
-
-  // COLUMN VISIBILITY
-  const [columnVisibility, setColumnVisibility] = useLocalStorage<VisibilityState>(
-    `overview-column-visibility-${scope}`,
-    {},
-  )
-
-  // COLUMN ORDER
-  const [columnOrder, setColumnOrder] = useLocalStorage<ColumnOrderState>(
-    `column-order-${scope}`,
-    [],
-  )
-
-  // COLUMN PINNING
-  const [columnPinning, setColumnPinning] = useLocalStorage<ColumnPinningState>(
-    `column-pinning-${scope}`,
-    { left: ['name'] },
-  )
-
-  const togglePinningOnVisibilityChange = (visibility: VisibilityState) => {
-    // ensure that any columns that are now hidden are removed from the pinning
-    const newPinning = { ...columnPinning }
-    const pinnedColumns = newPinning.left || []
-    const hiddenColumns = Object.keys(visibility).filter((col) => visibility[col] === false)
-    const newPinnedColumns = pinnedColumns.filter((col) => !hiddenColumns.includes(col))
-    const newColumnPinning = {
-      ...newPinning,
-      left: newPinnedColumns,
-    }
-    setColumnPinning(newColumnPinning)
-  }
-
-  // COLUMN VISIBILITY
-  const columnVisibilityUpdater: OnChangeFn<VisibilityState> = (columnVisibilityUpdater) => {
-    setColumnVisibility(functionalUpdate(columnVisibilityUpdater, columnVisibility))
-    // side effects
-    togglePinningOnVisibilityChange(columnVisibility)
-  }
-
-  // update the column visibility
-  const updateColumnVisibility = (visibility: VisibilityState) => {
-    setColumnVisibility(visibility)
-    // side effects
-    togglePinningOnVisibilityChange(visibility)
-  }
-
-  const updatePinningOrderOnOrderChange = (columnOrder: ColumnOrderState) => {
-    // ensure that the column pinning is in the order of the column order
-    const newPinning = { ...columnPinning }
-    const pinnedColumns = newPinning.left || []
-    const pinnedColumnsOrder = columnOrder.filter((col) => pinnedColumns.includes(col))
-    setColumnPinning({
-      ...newPinning,
-      left: pinnedColumnsOrder,
-    })
-  }
-
-  const columnOrderUpdater: OnChangeFn<ColumnOrderState> = (columnOrderUpdater) => {
-    setColumnOrder(functionalUpdate(columnOrderUpdater, columnOrder))
-    // now update the column pinning
-    updatePinningOrderOnOrderChange(columnOrder)
-  }
-
-  const updateColumnOrder = (columnOrder: ColumnOrderState) => {
-    setColumnOrder(columnOrder)
-    // now update the column pinning
-    updatePinningOrderOnOrderChange(columnOrder)
-  }
-
-  // COLUMN PINNING
-  const updateOrderOnPinningChange = (columnPinning: ColumnPinningState) => {
-    // we resort the column order based on the pinning
-    const newOrder = [...columnOrder].sort((a, b) => {
-      const aPinned = columnPinning.left?.includes(a) ? 1 : 0
-      const bPinned = columnPinning.left?.includes(b) ? 1 : 0
-
-      return bPinned - aPinned
-    })
-    setColumnOrder(newOrder)
-  }
-
-  const updateColumnPinning = (columnPinning: ColumnPinningState) => {
-    setColumnPinning(columnPinning)
-    // now update the column order
-    updateOrderOnPinningChange(columnPinning)
-  }
-
-  const columnPinningUpdater: OnChangeFn<ColumnPinningState> = (columnPinningUpdater) => {
-    const newPinning = functionalUpdate(columnPinningUpdater, columnPinning)
-    setColumnPinning(newPinning)
-    // now update the column order
-    updateOrderOnPinningChange(newPinning)
-  }
-
-  const { rowSelection, sliceType, persistentRowSelectionData } = useSlicerContext()
-
-  // filter out by slice
-  const persistedHierarchySelection = isEmpty(persistentRowSelectionData)
-    ? null
-    : persistentRowSelectionData
-
-  const selectedFolders = useMemo(() => {
-    let selection: RowSelectionState = {}
-
-    if (sliceType === 'hierarchy') {
-      selection = rowSelection
-    } else if (persistedHierarchySelection) {
-      selection = Object.values(persistedHierarchySelection).reduce((acc: any, item) => {
-        acc[item.id] = !!item
-        return acc
-      }, {})
-    }
-
-    // Process the selection inside useMemo
-    return Object.entries(selection)
-      .filter(([, value]) => value)
-      .map(([id]) => id)
-  }, [rowSelection, persistedHierarchySelection, sliceType])
-
-  // DATA FETCHING
-  const {
-    foldersMap,
-    tasksMap,
-    tasksByFolderMap,
-    fetchNextPage,
-    reloadTableData,
-    isLoadingAll,
-    isLoadingMore,
-    loadingTasks,
-  } = useFetchOverviewData({
-    projectName,
-    selectedFolders,
-    queryFilters,
-    expanded,
-    sorting,
-    showHierarchy,
-  })
+export const ProjectTableProvider = ({
+  children,
+  foldersMap,
+  tasksMap,
+  tasksByFolderMap,
+  expanded,
+  projectInfo,
+  showHierarchy,
+  loadingTasks,
+  isLoadingMore,
+  isLoading,
+  isInitialized,
+  projectName,
+  users,
+  attribFields,
+  filters,
+  setFilters,
+  queryFilters,
+  updateShowHierarchy,
+  toggleExpanded,
+  updateExpanded,
+  sorting,
+  updateSorting,
+  fetchNextPage,
+  reloadTableData,
+  setExpanded,
+}: ProjectTableProviderProps) => {
+  const { folderTypes, taskTypes } = projectInfo || {}
 
   // DATA TO TABLE
   const tableData = useOverviewTable({
@@ -351,6 +190,8 @@ export const ProjectTableProvider = ({ children }: ProjectTableProviderProps) =>
     tasksMap,
     tasksByFolderMap,
     getEntityById,
+    projectAttrib: projectInfo?.attrib,
+    attribFields: attribFields,
   })
 
   const toggleExpandAll: ProjectTableContextProps['toggleExpandAll'] = useCallback(
@@ -388,13 +229,15 @@ export const ProjectTableProvider = ({ children }: ProjectTableProviderProps) =>
   return (
     <ProjectTableContext.Provider
       value={{
+        // from this context
+        tableData,
+        // forwarded on
         isInitialized,
-        isLoading: isLoadingAll || isLoadingData,
+        isLoading,
         projectInfo,
         attribFields,
         users,
         projectName,
-        tableData,
         tasksMap,
         foldersMap,
         fetchNextPage,
@@ -414,21 +257,6 @@ export const ProjectTableProvider = ({ children }: ProjectTableProviderProps) =>
         // sorting
         sorting,
         updateSorting,
-        // column visibility
-        columnVisibility,
-        setColumnVisibility,
-        updateColumnVisibility,
-        columnVisibilityUpdater,
-        // column pinning
-        columnPinning,
-        setColumnPinning,
-        updateColumnPinning,
-        columnPinningUpdater,
-        // column order
-        columnOrder,
-        setColumnOrder,
-        updateColumnOrder,
-        columnOrderUpdater,
         getEntityById,
         // folder relationships
         getInheritedDependents,

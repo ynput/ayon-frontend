@@ -6,7 +6,7 @@ import { Panel, LockedInput, Icon } from '@ynput/ayon-react-components'
 import { useUpdateUserAPIKeyMutation } from '@queries/user/updateUser'
 import { toast } from 'react-toastify'
 import styled from 'styled-components'
-import confirmDelete from '@helpers/confirmDelete'
+import { confirmDelete } from '@shared/helpers'
 import copyToClipboard from '@helpers/copyToClipboard'
 
 const PanelStyled = styled(Panel)`
@@ -51,8 +51,8 @@ const ApiKeyManager = ({
     if (!autosave) {
       setNewKey({ key, preview: true })
       setLoading(false)
-      onGenerate && onGenerate(key);
-      return;
+      onGenerate && onGenerate(key)
+      return
     }
 
     // try catch to update api key using unwrap and toaste results
@@ -64,7 +64,7 @@ const ApiKeyManager = ({
 
       setNewKey({ key, preview: true })
 
-      onGenerate && onGenerate(key);
+      onGenerate && onGenerate(key)
 
       toast.success('API Key Created')
     } catch (error) {
@@ -102,19 +102,19 @@ const ApiKeyManager = ({
   const handleCopyKey = () => {
     copyToClipboard(newKey.key)
   }
-  const Panel = lightBackground ? PanelStyledLightBackground : PanelStyled;
+  const Panel = lightBackground ? PanelStyledLightBackground : PanelStyled
 
   if (preview || newKey?.key)
     return (
       <>
-        {repeatGenerate &&
+        {repeatGenerate && (
           <LockedInput
             value={preview || newKey?.preview}
             onEdit={handleDelete}
             editIcon={'delete'}
             label={'Api Key'}
           />
-        }
+        )}
         {newKey && (
           <Panel>
             <div>

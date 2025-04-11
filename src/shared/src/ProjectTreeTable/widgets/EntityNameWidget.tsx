@@ -1,6 +1,11 @@
-import { Icon, theme } from '@ynput/ayon-react-components'
-import { Expander } from '@containers/Slicer/SlicerTable.styled'
+import { Button, Icon, theme } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
+
+const Expander = styled(Button)`
+  background-color: unset;
+  padding: 2px !important;
+  cursor: pointer;
+`
 
 const StyledEntityNameWidget = styled.div`
   position: relative;

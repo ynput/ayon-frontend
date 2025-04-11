@@ -9,24 +9,26 @@ import { BuiltInFieldOptions } from '@shared/ProjectTreeTable/ProjectTreeTableCo
 // Components
 import ProjectTreeTable from '@shared/ProjectTreeTable'
 import { useProjectTableContext } from '@shared/ProjectTreeTable'
+import { useNewEntityContext } from '@context/NewEntityContext'
 
 type Props = {}
 
 const ProjectOverviewTable = ({}: Props) => {
   // the heavy lifting is done in ProjectTableContext and is where the data is fetched
   const {
-    isInitialized,
     projectName,
     projectInfo,
     attribFields,
     users,
-    tableData,
     tasksMap,
     foldersMap,
     showHierarchy,
     isLoading,
     fetchNextPage,
   } = useProjectTableContext()
+
+  const { onOpenNew } = useNewEntityContext()
+
   const scope = `overview-${projectName}`
 
   const { statuses = [], folderTypes = [], taskTypes = [], tags = [] } = projectInfo || {}
@@ -72,18 +74,17 @@ const ProjectOverviewTable = ({}: Props) => {
   return (
     <Section style={{ height: '100%' }}>
       <ProjectTreeTable
+        projectName={projectName}
         scope={scope}
         attribs={attribFields}
-        tableData={tableData}
         options={options}
-        isLoading={isLoading}
-        isInitialized={isInitialized}
         sliceId={''}
         // pagination
         fetchMoreOnBottomReached={fetchMoreOnBottomReached}
         // metadata
         tasksMap={tasksMap}
         foldersMap={foldersMap}
+        onOpenNew={onOpenNew}
       />
     </Section>
   )

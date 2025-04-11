@@ -2,7 +2,7 @@ import { useProjectTableContext } from '@shared/ProjectTreeTable'
 import { Button } from '@ynput/ayon-react-components'
 import { FC } from 'react'
 import styled from 'styled-components'
-import { useSettingsPanel } from '../contexts/SettingsPanelContext'
+import { useSettingsPanel } from '../context/SettingsPanelContext'
 import { SettingsPanel, SettingConfig } from './SettingsPanel'
 import ColumnsSettings from './ColumnsSettings'
 

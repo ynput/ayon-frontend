@@ -1,9 +1,13 @@
-import { useProjectTableContext } from '@shared/ProjectTreeTable'
+// React and Styling imports
 import { FC, useMemo, useState } from 'react'
 import styled from 'styled-components'
-import ColumnItem, { ColumnItemData } from './ColumnItem'
 
-// DND imports
+// Context and Components imports
+import { useColumnSettings } from '@shared/ProjectTreeTable/context/ColumnSettingsContext'
+import ColumnItem, { ColumnItemData } from './ColumnItem'
+import SortableColumnItem from './SortableColumnItem'
+
+// DND (Drag and Drop) imports
 import {
   DndContext,
   closestCenter,
@@ -16,7 +20,8 @@ import {
   DragOverEvent,
 } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable'
-import SortableColumnItem from './SortableColumnItem'
+
+// Notification imports
 import { toast } from 'react-toastify'
 
 interface ColumnsSettingsProps {
@@ -32,7 +37,7 @@ const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns }) => {
     updateColumnPinning,
     columnOrder,
     setColumnOrder,
-  } = useProjectTableContext()
+  } = useColumnSettings()
 
   // State for the currently dragged column
   const [activeId, setActiveId] = useState<string | null>(null)

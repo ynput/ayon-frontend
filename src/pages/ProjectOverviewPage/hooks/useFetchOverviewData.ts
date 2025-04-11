@@ -4,14 +4,13 @@ import {
   useGetQueryTasksFoldersQuery,
   useGetTasksListInfiniteInfiniteQuery,
 } from '@queries/overview/getOverview'
-import { FolderNodeMap, TaskNodeMap } from '../utils/types'
+import { FolderNodeMap, TaskNodeMap } from '@shared/ProjectTreeTable/utils/types'
 import { useEffect, useMemo, useState } from 'react'
 import { ExpandedState, SortingState } from '@tanstack/react-table'
-import { ProjectTableContextProps } from '../context/ProjectTableContext'
+import { ProjectOverviewContextProps } from '../context/ProjectOverviewContext'
 import { determineLoadingTaskFolders } from '../utils/loadingUtils'
-
-export type TasksByFolderMap = Map<string, string[]>
-export type LoadingTasks = Record<string, number> // show number of loading tasks per folder or root
+import { LoadingTasks } from '@shared/ProjectTreeTable/utils/dataTypes'
+import { TasksByFolderMap } from '@shared/ProjectTreeTable/utils'
 
 type useFetchOverviewDataData = {
   foldersMap: FolderNodeMap
@@ -27,7 +26,7 @@ type useFetchOverviewDataData = {
 type Params = {
   projectName: string
   selectedFolders: string[] // folders selected in the slicer (hierarchy)
-  queryFilters: ProjectTableContextProps['queryFilters'] // filters from the filters bar or slicer (not hierarchy)
+  queryFilters: ProjectOverviewContextProps['queryFilters'] // filters from the filters bar or slicer (not hierarchy)
   sorting: SortingState
   expanded: ExpandedState
   showHierarchy: boolean

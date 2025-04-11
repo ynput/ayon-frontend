@@ -1,11 +1,12 @@
 import { CellId } from '../utils/cellUtils'
 import { CellValue } from '../widgets/CellWidget'
-import { OperationModel } from '@api/rest/operations'
-import { PatchOperation, useUpdateOverviewEntitiesMutation } from '@queries/overview/updateOverview'
 import { toast } from 'react-toastify'
-import { useProjectTableContext } from '../context/ProjectTableContext'
+import { useProjectTableQueriesContext } from '../context/ProjectTableQueriesContext'
 import { useCallback } from 'react'
 import { InheritedDependent } from './useFolderRelationships'
+import { useProjectTableContext } from '../context/ProjectTableContext'
+import { OperationModel } from '../types/operations'
+import { PatchOperation } from '../types'
 
 export type EntityUpdate = {
   id: string
@@ -39,9 +40,9 @@ const useUpdateOverview = () => {
     findInheritedValueFromAncestors,
     findNonInheritedValues,
   } = useProjectTableContext()
-  const [postOperations] = useUpdateOverviewEntitiesMutation()
+  const { updateEntities } = useProjectTableQueriesContext()
 
-  const updateEntities = useCallback<UpdateTableEntities>(
+  const handleUpdateEntities = useCallback<UpdateTableEntities>(
     async (entities = []) => {
       if (!entities.length || !projectName) {
         return
@@ -85,7 +86,11 @@ const useUpdateOverview = () => {
           const existingOperation = operations[existingOperationIndex]
           let newData = { ...existingOperation.data, ...data }
 
+          // @ts-ignore
+
           if (existingOperation.data?.attrib && data.attrib) {
+            // @ts-ignore
+
             newData = { ...newData, attrib: { ...existingOperation.data.attrib, ...data.attrib } }
           }
 
@@ -126,16 +131,15 @@ const useUpdateOverview = () => {
 
       // now make api call to update all entities
       try {
-        await postOperations({
-          operationsRequestModel: { operations },
-          projectName,
+        await updateEntities({
+          operations,
           patchOperations: inheritedDependentsOperations,
-        }).unwrap()
+        })
       } catch (error) {
         toast.error('Failed to update entities')
       }
     },
-    [projectName, postOperations, getEntityById, getInheritedDependents],
+    [projectName, updateEntities, getEntityById, getInheritedDependents],
   )
 
   // set the attrib fields to be inherited from the parent
@@ -274,7 +278,9 @@ const useUpdateOverview = () => {
             // Merge attribs with existing operation
             const existingOperation = patchOperations[existingOperationIndex]
             let newAttrib = {
+              // @ts-ignore
               ...(existingOperation.data?.attrib || {}),
+              // @ts-ignore
               ...(inheritedDependent.data?.attrib || {}),
             }
 
@@ -295,19 +301,18 @@ const useUpdateOverview = () => {
 
       // now make api call to update all entities
       try {
-        await postOperations({
-          operationsRequestModel: { operations },
-          projectName,
-          patchOperations: patchOperations,
-        }).unwrap()
+        await updateEntities({
+          operations,
+          patchOperations,
+        })
       } catch (error) {
         toast.error('Failed to update entities')
       }
     },
-    [projectName, postOperations, getInheritedDependents, findInheritedValueFromAncestors],
+    [projectName, updateEntities, getInheritedDependents, findInheritedValueFromAncestors],
   )
 
-  return { updateEntities, inheritFromParent }
+  return { updateEntities: handleUpdateEntities, inheritFromParent }
 }
 
 export default useUpdateOverview

@@ -1,7 +1,7 @@
 import ayonClient from '@/ayon'
 import { useMemo, useEffect } from 'react'
 import { Dropdown } from '@ynput/ayon-react-components'
-import useLocalStorage from '@hooks/useLocalStorage'
+import { useLocalStorage } from '@shared/hooks'
 
 const SiteDropdown = ({ value, onChange, disabled, multiselect = false, allowNull = false }) => {
   const [preferredSite, setPreferredSite] = useLocalStorage('prefferedSite', null)

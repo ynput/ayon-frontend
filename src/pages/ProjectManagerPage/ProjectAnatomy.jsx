@@ -8,7 +8,7 @@ import AnatomyEditor from '@containers/AnatomyEditor'
 import copyToClipboard from '@helpers/copyToClipboard'
 import { usePaste } from '@context/pasteContext'
 import useUserProjectPermissions, { PermissionLevel } from '@hooks/useUserProjectPermissions'
-import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
+import EmptyPlaceholder from '@shared/EmptyPlaceholder/EmptyPlaceholder'
 import { useSelector } from 'react-redux'
 
 const ProjectAnatomy = ({ projectName, projectList }) => {
@@ -21,8 +21,6 @@ const ProjectAnatomy = ({ projectName, projectList }) => {
 
   const [formData, setFormData] = useState(null)
   const [isChanged, setIsChanged] = useState(false)
-
-
 
   const saveAnatomy = () => {
     updateProjectAnatomy({ projectName, anatomy: formData })
@@ -77,7 +75,9 @@ const ProjectAnatomy = ({ projectName, projectList }) => {
             <SaveButton
               label="Save changes"
               data-tooltip={
-                !userPermissions.canEditAnatomy(projectName) ? "You don't have edit permissions" : undefined
+                !userPermissions.canEditAnatomy(projectName)
+                  ? "You don't have edit permissions"
+                  : undefined
               }
               onClick={saveAnatomy}
               active={isChanged && PermissionLevel.readWrite === accessLevel}

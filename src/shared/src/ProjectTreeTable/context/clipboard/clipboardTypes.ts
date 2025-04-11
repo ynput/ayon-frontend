@@ -1,7 +1,7 @@
 import { ReactNode } from 'react'
-import { FolderNodeMap, TaskNodeMap } from '../../utils/types'
-import { AttributeEnumItem } from '@api/rest/attributes'
-import { BuiltInFieldOptions } from '../../../../containers/ProjectTreeTable/ProjectTreeTableColumns'
+import { FolderNodeMap, TaskNodeMap } from '../../types/table'
+import { AttributeEnumItem } from '../../types'
+import { BuiltInFieldOptions } from '../../../ProjectTreeTable/ProjectTreeTableColumns'
 
 // Constants for field mappings
 export const builtInFieldMappings = {

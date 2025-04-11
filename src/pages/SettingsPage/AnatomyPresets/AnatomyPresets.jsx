@@ -25,7 +25,7 @@ import {
   useUpdatePresetMutation,
   useUpdatePrimaryPresetMutation,
 } from '@queries/anatomy/updateAnatomy'
-import confirmDelete from '@helpers/confirmDelete'
+import { confirmDelete } from '@shared/helpers'
 
 const AnatomyPresets = () => {
   const [formData, setFormData] = useState(null)

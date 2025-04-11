@@ -1,5 +1,4 @@
 import { useMemo } from 'react'
-import { $Any } from '@types'
 import {
   ColumnDef,
   ColumnSizingState,
@@ -8,9 +7,8 @@ import {
   SortingFn,
   sortingFns,
 } from '@tanstack/react-table'
-import { TableRow } from './utils/types'
-import { AttributeData, AttributeEnumItem } from '@api/rest/attributes'
-import { AttributeWithPermissions } from './hooks/useAttributesList'
+import { TableRow } from './types/table'
+import { AttributeData, AttributeEnumItem, AttributeWithPermissions } from './types'
 import { CellWidget, EntityNameWidget } from './widgets'
 import { useCellEditing } from './context/CellEditingContext'
 import { getCellId, getCellValue } from './utils/cellUtils'
@@ -115,7 +113,6 @@ const ProjectTreeTableColumns = ({
       {
         accessorKey: 'name',
         header: () => 'Folder / Task',
-        filterFn: 'fuzzy',
         sortingFn: withLoadingStateSort(showHierarchy ? nameSort : pathSort),
         cell: ({ row, column }) => {
           const cellId = getCellId(row.id, column.id)
@@ -150,7 +147,6 @@ const ProjectTreeTableColumns = ({
       {
         accessorKey: 'status',
         header: () => 'Status',
-        filterFn: 'fuzzy',
         sortingFn: withLoadingStateSort((a, b, c) =>
           attribSort(a, b, c, { enum: options.statuses, type: 'string' }),
         ),
@@ -176,7 +172,6 @@ const ProjectTreeTableColumns = ({
       {
         accessorKey: 'subType',
         header: () => 'Type',
-        filterFn: 'fuzzy',
         size: columnSizing['type'] || 150,
         cell: ({ row, column }) => {
           const { value, id, type } = getValueIdType(row, column.id)
@@ -198,7 +193,6 @@ const ProjectTreeTableColumns = ({
       {
         accessorKey: 'assignees',
         header: () => 'Assignees',
-        filterFn: 'fuzzy',
         size: columnSizing['assignees'] || 150,
         cell: ({ row, column }) => {
           const { value, id, type } = getValueIdType(row, column.id)
@@ -229,7 +223,6 @@ const ProjectTreeTableColumns = ({
       {
         accessorKey: 'tags',
         header: () => 'Tags',
-        filterFn: 'fuzzy',
         size: columnSizing['tags'] || 150,
         cell: ({ row, column }) => {
           const { value, id, type } = getValueIdType(row, column.id)
@@ -293,7 +286,7 @@ const getValueIdType = (
   field: string,
   nestedField?: keyof TableRow,
 ): {
-  value: $Any
+  value: any
   id: string
   type: string
 } => ({

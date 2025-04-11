@@ -1,5 +1,3 @@
-import { AttributeData, AttributeEnumItem } from '@api/rest/attributes'
-
 import { useMemo, memo, useCallback, useRef, FC } from 'react'
 import styled from 'styled-components'
 
@@ -14,6 +12,7 @@ import { useCellEditing } from '../context/CellEditingContext'
 import { getCellId } from '../utils/cellUtils'
 import clsx from 'clsx'
 import { useSelectionContext } from '../context/SelectionContext'
+import { AttributeData, AttributeEnumItem } from '../types'
 
 const Cell = styled.div`
   position: absolute;

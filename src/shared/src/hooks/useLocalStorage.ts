@@ -16,7 +16,7 @@ const parseJSONString = (value: string | null, fallback: any = null) => {
   }
 }
 
-export default function useLocalStorage<T>(key: string, defaultValue: T): [T, (value: T) => void] {
+export function useLocalStorage<T>(key: string, defaultValue: T): [T, (value: T) => void] {
   const item = localStorage.getItem(key)
   const [value, setValue] = useState(() => parseJSONString(item, defaultValue))
 

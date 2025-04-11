@@ -49,7 +49,7 @@ import ProjectUserAccesAccessGroupPanel from './ProjectUserAccessAccessGroupPane
 import {
   EmptyPlaceholderFlex,
   EmptyPlaceholderFlexWrapper,
-} from '@components/EmptyPlaceholder/EmptyPlaceholderFlex.styled'
+} from '@shared/EmptyPlaceholder/EmptyPlaceholderFlex.styled'
 
 const StyledButton = styled(Button)`
   .shortcut {

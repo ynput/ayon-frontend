@@ -1,6 +1,6 @@
 import { ColumnSizingState, Table } from '@tanstack/react-table'
 import { useMemo } from 'react'
-import { TableRow } from '../utils/types'
+import { TableRow } from '../types/table'
 
 // convert column sizing state to CSS variables
 const useCustomColumnWidthVars = (table: Table<TableRow>, columnSizing: ColumnSizingState) => {

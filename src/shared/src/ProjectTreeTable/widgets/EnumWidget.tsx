@@ -1,9 +1,9 @@
-import { AttributeData, AttributeEnumItem } from '@api/rest/attributes'
 import { Dropdown, DropdownProps, DropdownRef, Icon } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import { forwardRef, useEffect, useRef, useState } from 'react'
 import styled from 'styled-components'
 import { WidgetBaseProps } from './CellWidget'
+import { AttributeData, AttributeEnumItem } from '../types'
 
 const StyledWidget = styled.div`
   display: flex;

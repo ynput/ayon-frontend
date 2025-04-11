@@ -7,7 +7,7 @@ import { TablePanel, Button, Spacer, Section, Toolbar } from '@ynput/ayon-react-
 import ServiceDialog from './NewServiceDialog'
 import ServiceDetailsPanel from './ServiceDetailsPanel'
 import useCreateContext from '@hooks/useCreateContext'
-import confirmDelete from '@helpers/confirmDelete'
+import { confirmDelete } from '@shared/helpers'
 import styled from 'styled-components'
 import { useListServicesQuery } from '@queries/services/getServices'
 import { useDeleteServiceMutation, usePatchServiceMutation } from '@queries/services/updateServices'

@@ -20,7 +20,7 @@ import ProjectOverviewDetailsPanel from './containers/ProjectOverviewDetailsPane
 import NewEntity from '@components/NewEntity/NewEntity'
 import { useProjectTableContext, useSelectedRowsContext } from '@shared/ProjectTreeTable'
 import ProjectOverviewSettings, { CustomizeButton } from './components/ProjectOverviewSettings'
-import { useSettingsPanel } from './contexts/SettingsPanelContext'
+import { useSettingsPanel } from './context/SettingsPanelContext'
 import ReloadButton from './components/ReloadButton'
 
 const searchFilterTypes: FilterFieldType[] = [
@@ -42,7 +42,6 @@ const ProjectOverviewPage: FC = () => {
     showHierarchy,
     updateShowHierarchy,
     tasksMap,
-    columnOrder,
   } = useProjectTableContext()
 
   const { isPanelOpen } = useSettingsPanel()
@@ -102,7 +101,6 @@ const ProjectOverviewPage: FC = () => {
                 projectInfo={projectInfo}
                 tasksMap={tasksMap}
                 disabledFilters={sliceType ? [sliceType] : []}
-                columnOrder={columnOrder}
               />
               <ReloadButton />
               <span style={{ whiteSpace: 'nowrap', display: 'flex', gap: 8 }}>

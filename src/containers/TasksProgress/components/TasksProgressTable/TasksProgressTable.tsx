@@ -36,7 +36,7 @@ import { AttributeEnumItem } from '@api/rest/attributes'
 import { useEffect, useState, type KeyboardEvent, type MouseEvent } from 'react'
 import { InView } from 'react-intersection-observer'
 import useCreateContext from '@hooks/useCreateContext'
-import useLocalStorage from '@hooks/useLocalStorage'
+import { useLocalStorage } from '@shared/hooks'
 
 // Helpers
 import { useFolderSort } from '../../hooks'

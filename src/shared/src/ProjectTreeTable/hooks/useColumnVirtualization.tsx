@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { Column } from '@tanstack/react-table'
-import { TableRow } from '../utils/types'
+import { TableRow } from '../types/table'
 
 interface UseColumnVirtualizationProps {
   visibleColumns: Column<TableRow, unknown>[]

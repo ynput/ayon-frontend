@@ -4,12 +4,13 @@ import {
   FolderNodeMap,
   TableRow,
   TaskNodeMap,
-} from '../../../containers/ProjectTreeTable/utils/types'
-import { FolderType, TaskType } from '@api/rest/project'
-import { LoadingTasks, TasksByFolderMap } from './useFetchOverviewData'
+  TasksByFolderMap,
+} from '../types/table'
 import { ExpandedState } from '@tanstack/react-table'
-import { generateLoadingRows } from '../utils/loadingUtils'
-import { TASKS_INFINITE_QUERY_COUNT } from '@queries/overview/getOverview'
+import { generateLoadingRows } from '../../../../pages/ProjectOverviewPage/utils/loadingUtils'
+const TASKS_INFINITE_QUERY_COUNT = 100
+import { LoadingTasks } from '../types'
+import { FolderType, TaskType } from '../types/project'
 
 type Params = {
   foldersMap: FolderNodeMap
@@ -163,12 +164,6 @@ export default function useOverviewTable({
         attrib: task.attrib,
         ownAttrib: task.ownAttrib,
         path: task.folder.path,
-        data: {
-          id: task.id,
-          type: 'task',
-          name: task.name || null,
-          label: task.label || null,
-        },
       }
     }
 
@@ -236,12 +231,6 @@ export default function useOverviewTable({
         subType: folder.folderType || null,
         ownAttrib: folder.ownAttrib || [],
         path: folder.path,
-        data: {
-          id: folderId,
-          type: 'folder',
-          name: folder.name || null,
-          label: folder.label || null,
-        },
         attrib: folder.attrib || {},
         childOnlyMatch: folder.childOnlyMatch || false,
       }
@@ -321,15 +310,15 @@ export default function useOverviewTable({
 
       // Process only folders that have both task rows and folder children
       const hasTasksAndFolders =
-        row.subRows.some((r) => r.data?.type === 'task') &&
-        row.subRows.some((r) => r.data?.type === 'folder')
+        row.subRows.some((r) => r.entityType === 'task') &&
+        row.subRows.some((r) => r.entityType === 'folder')
 
       if (hasTasksAndFolders) {
         // More efficient sort using type as primary key to reduce comparisons
         row.subRows.sort((a, b) => {
           // Type first (tasks before folders)
-          const typeA = a.data?.type === 'task' ? 0 : 1
-          const typeB = b.data?.type === 'task' ? 0 : 1
+          const typeA = a.entityType === 'task' ? 0 : 1
+          const typeB = b.entityType === 'task' ? 0 : 1
 
           if (typeA !== typeB) return typeA - typeB
 

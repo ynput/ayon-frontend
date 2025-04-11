@@ -6,7 +6,7 @@ import { Button, TablePanel, Section, Toolbar, Spacer } from '@ynput/ayon-react-
 import { useGetAccessGroupsQuery } from '@queries/accessGroups/getAccessGroups'
 import { useDeleteAccessGroupMutation } from '@queries/accessGroups/updateAccessGroups'
 import NewAccessGroup from './NewAccessGroup'
-import confirmDelete from '@helpers/confirmDelete'
+import { confirmDelete } from '@shared/helpers'
 import clsx from 'clsx'
 import useTableLoadingData from '@hooks/useTableLoadingData'
 

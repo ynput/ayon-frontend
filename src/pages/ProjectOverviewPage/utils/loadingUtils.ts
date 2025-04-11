@@ -1,7 +1,7 @@
-import { TableRow } from './types'
+import { TableRow } from '../../../shared/src/ProjectTreeTable/types/table'
 import { AttributeModel } from '@api/rest/attributes'
-import { FolderNodeMap } from '../utils/types'
-import { LoadingTasks } from '../hooks/useFetchOverviewData'
+import { FolderNodeMap } from '../../../shared/src/ProjectTreeTable/types/table'
+import { LoadingTasks } from '@shared/ProjectTreeTable/utils/dataTypes'
 
 /**
  * Generates an array of placeholder rows for loading state

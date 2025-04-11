@@ -1,5 +1,4 @@
 import { createContext, ReactNode, useContext } from 'react'
-import { useAppSelector } from '@state/store'
 import { useGetProjectQuery } from '@queries/project/getProject'
 import { ProjectModel } from '@api/rest/project'
 import { useGetUsersAssigneeQuery } from '@queries/user/getUsers'
@@ -25,11 +24,10 @@ const ProjectDataContext = createContext<ProjectDataContextProps | undefined>(un
 
 interface ProjectDataProviderProps {
   children: ReactNode
+  projectName: string
 }
 
-export const ProjectDataProvider = ({ children }: ProjectDataProviderProps) => {
-  const projectName = useAppSelector((state) => state.project.name) || ''
-
+export const ProjectDataProvider = ({ children, projectName }: ProjectDataProviderProps) => {
   // GET PROJECT DATA
   const {
     data: projectInfo,

@@ -6,7 +6,7 @@ import { CellWithIcon } from '@components/icons'
 import { TimestampField } from '@containers/fieldFormat'
 import usePubSub from '@hooks/usePubSub'
 import groupResult from '@helpers/groupResult'
-import useLocalStorage from '@hooks/useLocalStorage'
+import { useLocalStorage } from '@shared/hooks'
 import {
   setFocusedVersions,
   setFocusedProducts,

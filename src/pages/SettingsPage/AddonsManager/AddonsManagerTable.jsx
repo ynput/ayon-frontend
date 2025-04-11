@@ -3,7 +3,7 @@ import { Column } from 'primereact/column'
 import BundleStatus from './BundleStatus/BundleStatus'
 import { Button, Section, TablePanel } from '@ynput/ayon-react-components'
 import useCreateContext from '@hooks/useCreateContext'
-import confirmDelete from '@helpers/confirmDelete'
+import { confirmDelete } from '@shared/helpers'
 import clsx from 'clsx'
 
 const AddonsManagerTable = ({

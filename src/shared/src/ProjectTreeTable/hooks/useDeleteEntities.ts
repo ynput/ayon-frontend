@@ -1,17 +1,19 @@
 import { useCallback } from 'react'
-import { useUpdateOverviewEntitiesMutation } from '@queries/overview/updateOverview'
-import { OperationModel } from '@api/rest/operations'
-import { useProjectTableContext } from '../context/ProjectTableContext'
+import { useProjectTableQueriesContext } from '../context/ProjectTableQueriesContext'
 import { parseCellId } from '../utils/cellUtils'
-import confirmDelete from '@helpers/confirmDelete'
+// TODO: confirmDelete uses prime react, so we should find a different solution
+import { confirmDelete } from '../../helpers'
+import { useProjectTableContext } from '..'
+import { OperationModel } from '../types/operations'
 
 type UseDeleteEntitiesProps = {
   onSuccess?: () => void
 }
 
 const useDeleteEntities = ({ onSuccess }: UseDeleteEntitiesProps) => {
-  const { getEntityById, projectName } = useProjectTableContext()
-  const [runOperations] = useUpdateOverviewEntitiesMutation()
+  const { updateEntities } = useProjectTableQueriesContext()
+
+  const { getEntityById } = useProjectTableContext()
 
   const handleDeleteEntities = useCallback(
     async (entityIds: string[]) => {
@@ -37,7 +39,7 @@ const useDeleteEntities = ({ onSuccess }: UseDeleteEntitiesProps) => {
           })
         }
         try {
-          await runOperations({ operationsRequestModel: { operations }, projectName }).unwrap()
+          await updateEntities?.({ operations })
           if (onSuccess) {
             onSuccess()
           }
@@ -68,7 +70,7 @@ const useDeleteEntities = ({ onSuccess }: UseDeleteEntitiesProps) => {
         deleteLabel: 'Delete',
       })
     },
-    [projectName, getEntityById, runOperations, onSuccess],
+    [getEntityById, updateEntities, onSuccess],
   )
 
   return handleDeleteEntities

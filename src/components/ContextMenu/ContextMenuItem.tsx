@@ -1,9 +1,32 @@
-import React from 'react'
-import PropTypes from 'prop-types'
+import React, { RefObject } from 'react'
 import { Icon, ShortcutTag } from '@ynput/ayon-react-components'
 import './ContextMenu.scss'
 
-const ContextMenuItem = ({
+interface CommandEvent {
+  originalEvent: React.MouseEvent
+  item: {
+    label: string
+    command: (event: CommandEvent) => void
+    shortcut?: string
+  }
+}
+
+export interface ContextMenuItemProps {
+  icon?: string
+  label?: string
+  shortcut?: string
+  command?: (event: CommandEvent) => void
+  children?: React.ReactNode
+  contextMenuRef: RefObject<{ hide: () => void }>
+  disabled?: boolean
+  items?: any[]
+  isSave?: boolean
+  danger?: boolean
+  style?: React.CSSProperties
+  [key: string]: any // For any additional props
+}
+
+const ContextMenuItem: React.FC<ContextMenuItemProps> = ({
   icon,
   label,
   shortcut,
@@ -16,16 +39,16 @@ const ContextMenuItem = ({
   danger,
   ...props
 }) => {
-  const onCommand = (e) => {
+  const onCommand = (e: React.MouseEvent) => {
     // hide the context menu
     contextMenuRef.current?.hide()
 
-    command({
+    command?.({
       originalEvent: e,
       item: {
-        label: label,
-        command: command,
-        shortcut: shortcut,
+        label: label || '',
+        command: command || (() => {}),
+        shortcut,
       },
     })
   }
@@ -73,18 +96,6 @@ const ContextMenuItem = ({
       )}
     </a>
   )
-}
-
-ContextMenuItem.propTypes = {
-  icon: PropTypes.string,
-  label: PropTypes.string,
-  shortcut: PropTypes.string,
-  children: PropTypes.node,
-  command: PropTypes.func,
-  contextMenuRef: PropTypes.object.isRequired,
-  disabled: PropTypes.bool,
-  items: PropTypes.array,
-  isSave: PropTypes.bool,
 }
 
 export default ContextMenuItem
