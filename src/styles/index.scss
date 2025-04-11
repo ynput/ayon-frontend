@@ -155,68 +155,8 @@ input:-webkit-autofill:focus {
   &:hover {
     transition: color 0.4s ease;
   }
-  //
-  // Editor
-  //
-}
-.editor-field {
-  &.changed {
-    outline: 1px solid var(--color-changed);
-    background-color: var(--color-changed);
-    color: var(--md-sys-color-on-primary);
-    border-radius: var(--border-radius-m);
-  }
-  &.inherited {
-    color: var(--md-ref-palette-neutral-variant60);
-    font-style: italic;
-  }
 }
 
-// always keep avatar text white
-.user-image span {
-  color: var(--md-sys-color-on-surface) !important;
-}
-
-.p-treetable .p-treetable-tbody > tr.changed {
-  border-left: 4px solid var(--color-changed) !important;
-}
-
-.p-treetable .p-treetable-tbody > tr.new {
-  border-left: 4px solid var(--color-changed);
-  span:not(.changed) {
-    color: var(--color-changed) !important;
-  }
-
-  // dates
-  td > div > span {
-    color: var(--color-changed) !important;
-  }
-}
-
-.table-editor {
-  margin: 0;
-  .p-inputwrapper {
-    width: 100%;
-    input {
-      width: 100%;
-      border: 1px solid var(--md-sys-color-primary);
-    }
-  }
-}
-
-// Label on name field in editor
-.editor-page {
-  .p-treetable td *.material-symbols-outlined,
-  .p-datatable td *.material-symbols-outlined {
-    &.label {
-      font-variation-settings: 'FILL' 1, 'wght' 100, 'GRAD' 0, 'opsz' 18;
-    }
-  }
-}
-.form-error-text {
-  color: var(--color-hl-error);
-  font-style: italic;
-}
 //
 // Bread crumbs
 //
@@ -263,12 +203,6 @@ input:-webkit-autofill:focus {
   //
   // Highlights
   //
-
-  // Fade the row - used for inherited values in the editor
-}
-.faded {
-  color: rgba(234, 240, 246, 0.3);
-  font-style: italic;
 }
 
 p strong {
@@ -397,82 +331,6 @@ a {
   }
   .p-tabview-panel {
     border: 0;
-  }
-}
-
-.editor-form {
-  overflow-x: clip;
-  margin: 0 -1px;
-  padding: 0 1px;
-  .field {
-    position: relative;
-
-    margin: 0 -1px;
-    padding: 0 1px;
-    overflow-x: clip;
-  }
-
-  &.disabled {
-    .field {
-      cursor: not-allowed;
-    }
-  }
-
-  input::placeholder {
-    transition: color 0.1s;
-  }
-
-  &:not(.disabled):not(.inherited) {
-    input:not(:focus) {
-      &::placeholder {
-        color: white;
-      }
-    }
-  }
-
-  // &.inherited {
-  //   .field {
-  //     &::before {
-  //       content: 'inherited';
-  //       display: block;
-  //       position: absolute;
-  //       right: 30px;
-  //       top: 50%;
-  //       translate: 0 -50%;
-  //       opacity: 0.5;
-  //     }
-  //     &::after {
-  //       opacity: 0.5;
-  //     }
-  //   }
-  // }
-
-  .p-dropdown {
-    span {
-      min-width: unset;
-    }
-  }
-
-  .p-dropdown .p-dropdown-label.p-placeholder {
-    color: white;
-  }
-
-  .p-disabled,
-  .p-component:disabled {
-    font-style: italic;
-  }
-
-  &.datetime.isMultiple:not(.isChanged) {
-    .field {
-      &::after {
-        content: 'Mixed';
-        display: block;
-        position: absolute;
-        left: 8px;
-        top: 52%;
-        translate: 0 -50%;
-      }
-    }
   }
 }
 

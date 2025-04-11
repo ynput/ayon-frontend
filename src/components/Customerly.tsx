@@ -5,10 +5,12 @@ import { FC } from 'react'
 import getTrialDates from './TrialBanner/helpers/getTrialDates'
 import { useListAddonsQuery } from '@queries/addons/getAddons'
 import { AddonListItem } from '@api/rest/addons'
+import { useAppSelector } from '@state/store'
 
 interface CustomerlyProps {}
 
 const Customerly: FC<CustomerlyProps> = ({}) => {
+  const user = useAppSelector((state) => state.user)
   const [snooze, _setSnooze] = useLocalStorage<number | null>('trialBannerSnooze', null)
 
   //   get if the server is playground
@@ -17,7 +19,7 @@ const Customerly: FC<CustomerlyProps> = ({}) => {
     return addons.some((addon) => addon.name === 'playground' && addon.productionVersion)
   }
 
-  const { data: connect } = useGetYnputCloudInfoQuery()
+  const { data: connect } = useGetYnputCloudInfoQuery(undefined, { skip: !user.name })
   const { isTrialing, left } = getTrialDates(connect?.subscriptions)
   const { oneDay, oneHour } = left || {}
 

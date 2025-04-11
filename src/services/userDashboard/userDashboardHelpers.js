@@ -80,6 +80,8 @@ export const transformEntityData = ({ entity = {}, entityType, projectName, proj
 
   baseDetailsData['projectName'] = projectName
   baseDetailsData['entityType'] = entityType
+  baseDetailsData['label'] = entity.label
+  baseDetailsData['name'] = entity.name
 
   switch (entityType) {
     case 'task': {
@@ -93,7 +95,6 @@ export const transformEntityData = ({ entity = {}, entityType, projectName, proj
 
       return {
         ...baseDetailsData,
-        name: entity.name,
         title: entity?.folder?.label || entity?.folder?.name || 'Unknown Folder',
         subTitle: entity.label || entity.name,
         users: entity.assignees,
@@ -113,7 +114,6 @@ export const transformEntityData = ({ entity = {}, entityType, projectName, proj
 
       return {
         ...baseDetailsData,
-        name: entity.name,
         title: entity?.product?.name || 'Unknown Product',
         subTitle: entity.name || entity.version,
         users: entity.author ? [entity.author] : [],
@@ -134,7 +134,6 @@ export const transformEntityData = ({ entity = {}, entityType, projectName, proj
       const icon = folders.find((folder) => folder.name === entitySubType)?.icon
       return {
         ...baseDetailsData,
-        name: entity.name,
         title: entity.label || entity.name || 'Unknown Folder',
         subTitle: path.split('/').slice(-2)[0],
         users: [],
@@ -159,7 +158,6 @@ export const transformEntityData = ({ entity = {}, entityType, projectName, proj
 
       return {
         ...baseDetailsData,
-        name: entity.name,
         title: entity.version?.name || 'Unknown Version',
         subTitle: entity.name || 'Unknown Representation',
         users: entity.version?.author ? [entity.version?.author] : [],
@@ -185,7 +183,6 @@ export const taskProvideTags = (result, type = 'task', entityType = 'task') =>
         { type: `kanBan${upperFirst(entityType)}`, id: upperCase(entityType) + 'S' },
       ]
     : [{ type, id: upperCase(entityType) + 'S' }]
-
 
 export const getEntityDetailsData = ({
   entities,

@@ -1,7 +1,7 @@
 import * as Styled from './FeedFilters.styled'
 import { useDispatch, useSelector } from 'react-redux'
 import { updateDetailsPanelTab, updateFeedFilter } from '@state/details'
-import { Spacer } from '@ynput/ayon-react-components'
+import { Button, Spacer } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import { entitiesWithoutFeed } from '../DetailsPanel'
 
@@ -58,7 +58,7 @@ const FeedFilters = ({
     <Styled.FiltersToolbar {...props} className={clsx(className, { loading: isLoading })}>
       {!hideActivityFilters &&
         filtersLeft.map((filter) => (
-          <Styled.FilterButton
+          <Button
             key={filter.id}
             selected={filter.id === selectedFilter && selectedTab === 'feed'}
             onClick={() => setFeedFilter(filter.id)}
@@ -70,7 +70,7 @@ const FeedFilters = ({
         ))}
       <Spacer />
       {entityType === 'version' && (
-        <Styled.FilterButton
+        <Button
           icon="order_play"
           onClick={() => setTab('files')}
           selected={selectedTab === 'files'}
@@ -78,13 +78,13 @@ const FeedFilters = ({
           data-tooltip-delay={0}
         />
       )}
-      <Styled.FilterButton
-        icon="segment"
+      <Button
         onClick={() => setTab('attribs')}
         selected={selectedTab === 'attribs'}
-        data-tooltip="Attributes"
-        data-tooltip-delay={0}
-      />
+        style={{ padding: '6px 8px' }}
+      >
+        Attributes
+      </Button>
     </Styled.FiltersToolbar>
   )
 }

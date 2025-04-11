@@ -1,17 +1,15 @@
 import { useEffect, useState } from 'react'
 
-import SearchFilter from '@components/SearchFilter/SearchFilter'
 import { Filter } from '@components/SearchFilter/types'
 import { useGetAccessGroupsQuery } from '@queries/accessGroups/getAccessGroups'
 import { $Any } from '@types'
 import { getProjectAccessSearchFilterBuiler } from './mappers'
-
-
+import { SearchFilter } from '@ynput/ayon-react-components'
 
 type Props = {
-  filters: $Any,
-  projects: $Any,
-  users: $Any,
+  filters: $Any
+  projects: $Any
+  users: $Any
   onChange: $Any
 }
 
@@ -52,7 +50,6 @@ const ProjectUserAccessSearchFilterWrapper = ({
     <SearchFilter
       options={options}
       filters={filters}
-      disableSearch
       onChange={setFilters}
       onFinish={(v) => onChange(v)}
     />
