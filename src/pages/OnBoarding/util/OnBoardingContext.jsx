@@ -72,7 +72,7 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
 
   // when connected reset isConnecting, and go to next step
   useEffect(() => {
-    if (ynputConnect && isConnecting) {
+    if (ynputConnect?.connected && isConnecting) {
       setIsConnecting(false)
       nextStep()
     }

@@ -22,11 +22,11 @@ const ReleaseInstallerDialog: FC = () => {
   // STATE
 
   // check ynput cloud is connected before showing dialog
-  const { isError } = useGetYnputConnectionsQuery({})
+  const { data: connectData, isError } = useGetYnputConnectionsQuery({})
 
   if (!isOpen) return null
 
-  if (isError) {
+  if (isError || !connectData?.connected) {
     return <ConnectDialog redirect={location.pathname} visible onHide={closeDialog} />
   }
 

@@ -74,7 +74,7 @@ const YnputConnector = ({
 
   useEffect(() => {
     if (!isLoading && onConnection) {
-      if (!isError && connectData && onConnection) {
+      if (!isError && connectData?.connected && onConnection) {
         onConnection(true, hasActiveSub(connectData.subscriptions))
       } else {
         onConnection(false, false)
@@ -95,7 +95,7 @@ const YnputConnector = ({
       </Section>
     )
 
-  const isConnected = (connectData && !isError) || user
+  const isConnected = (connectData?.connected && !isError) || user
 
   if (isConnected && hideSignOut) return null
 
