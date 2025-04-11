@@ -37,6 +37,7 @@ const ContentStyled = styled.div`
 
 const StyledCreateButton = styled(Dropdown)`
   overflow: visible;
+  min-width: fit-content;
   .button {
     display: flex;
     align-items: center;
