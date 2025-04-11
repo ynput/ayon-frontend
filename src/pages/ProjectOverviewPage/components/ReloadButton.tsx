@@ -1,4 +1,4 @@
-import { useProjectTableContext } from '@containers/ProjectTreeTable'
+import { useProjectTableContext } from '@shared/ProjectTreeTable'
 import { Button } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import { FC } from 'react'

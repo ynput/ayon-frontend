@@ -5,7 +5,7 @@ import {
   SelectionProvider,
   SelectedRowsProvider,
   ProjectDataProvider,
-} from '@containers/ProjectTreeTable'
+} from '@shared/ProjectTreeTable'
 import { NewEntityProvider } from '@context/NewEntityContext'
 import { SettingsPanelProvider } from './contexts/SettingsPanelContext'
 

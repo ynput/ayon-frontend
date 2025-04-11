@@ -2,7 +2,7 @@ import useBuildFilterOptions, { BuildFilterOptions } from '@hooks/useBuildFilter
 import { FC, useEffect, useMemo, useState } from 'react'
 import { Filter, Icon, SearchFilter, SearchFilterProps } from '@ynput/ayon-react-components'
 import { ProjectModel } from '@api/rest/project'
-import { EditorTaskNode, TaskNodeMap } from '@containers/ProjectTreeTable/utils/types'
+import { EditorTaskNode, TaskNodeMap } from '@shared/ProjectTreeTable/utils/types'
 import { usePower } from '@/remote/context/PowerLicenseContext'
 import AdvancedFiltersPlaceholder from '@components/SearchFilter/AdvancedFiltersPlaceholder'
 import { usePowerpack } from '@context/powerpackContext'

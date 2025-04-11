@@ -39,7 +39,7 @@ import { CellEditingProvider, useCellEditing } from './context/CellEditingContex
 import { ROW_SELECTION_COLUMN_ID, useSelectionContext } from './context/SelectionContext'
 import { ClipboardProvider } from './context/ClipboardContext'
 import { useSelectedRowsContext } from './context/SelectedRowsContext'
-import { useProjectTableContext } from '@containers/ProjectTreeTable'
+import { useProjectTableContext } from '@shared/ProjectTreeTable'
 
 // Hook imports
 import useCustomColumnWidthVars from './hooks/useCustomColumnWidthVars'

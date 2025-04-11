@@ -5,8 +5,8 @@ import { toast } from 'react-toastify'
 import getSequence from '@helpers/getSequence'
 import { generateLabel } from '@components/NewEntity/NewEntity'
 import { PatchOperation, useUpdateOverviewEntitiesMutation } from '@queries/overview/updateOverview'
-import { useProjectTableContext, useProjectDataContext } from '@containers/ProjectTreeTable'
-import { EditorTaskNode, MatchingFolder } from '@containers/ProjectTreeTable/utils/types'
+import { useProjectTableContext, useProjectDataContext } from '@shared/ProjectTreeTable'
+import { EditorTaskNode, MatchingFolder } from '@shared/ProjectTreeTable/utils/types'
 
 export type NewEntityType = 'folder' | 'task'
 

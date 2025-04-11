@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useLazyGetTasksByParentQuery } from '@queries/overview/getOverview'
 import { parseCellId } from '../utils/cellUtils'
-import { useProjectTableContext } from '@containers/ProjectTreeTable'
+import { useProjectTableContext } from '@shared/ProjectTreeTable'
 
 export const usePrefetchFolderTasks = () => {
   const [fetchFolderTasks] = useLazyGetTasksByParentQuery()

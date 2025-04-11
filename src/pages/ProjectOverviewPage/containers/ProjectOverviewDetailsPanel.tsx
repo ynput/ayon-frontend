@@ -5,8 +5,8 @@ import DetailsPanel from '@containers/DetailsPanel/DetailsPanel'
 import DetailsPanelSlideOut from '@containers/DetailsPanel/DetailsPanelSlideOut/DetailsPanelSlideOut'
 import { useGetUsersAssigneeQuery } from '@queries/user/getUsers'
 import { ProjectModel } from '@api/rest/project'
-import { useProjectTableContext, useSelectedRowsContext } from '@containers/ProjectTreeTable'
-import { EditorTaskNode, MatchingFolder } from '@containers/ProjectTreeTable/utils/types'
+import { useProjectTableContext, useSelectedRowsContext } from '@shared/ProjectTreeTable'
+import { EditorTaskNode, MatchingFolder } from '@shared/ProjectTreeTable/utils/types'
 
 type ProjectOverviewDetailsPanelProps = {
   projectInfo?: ProjectModel

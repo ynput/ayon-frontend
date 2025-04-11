@@ -1,7 +1,7 @@
 import api from '@api'
 import { api as foldersApi, QueryTasksFoldersApiArg } from '@api/rest/folders'
 import { GetTasksByParentQuery, GetTasksListQuery } from '@api/graphql'
-import { EditorTaskNode } from '@containers/ProjectTreeTable/utils/types'
+import { EditorTaskNode } from '@shared/ProjectTreeTable/utils/types'
 import {
   DefinitionsFromApi,
   FetchBaseQueryError,

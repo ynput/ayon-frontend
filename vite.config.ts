@@ -104,6 +104,10 @@ export default ({ mode }) => {
         { find: '@context', replacement: fileURLToPath(new URL('./src/context', import.meta.url)) },
         { find: '@state', replacement: fileURLToPath(new URL('./src/features', import.meta.url)) },
         { find: '@helpers', replacement: fileURLToPath(new URL('./src/helpers', import.meta.url)) },
+        {
+          find: '@shared',
+          replacement: fileURLToPath(new URL('./src/shared/src', import.meta.url)),
+        },
       ],
     },
   })

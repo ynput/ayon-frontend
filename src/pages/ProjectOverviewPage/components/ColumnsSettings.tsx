@@ -1,4 +1,4 @@
-import { useProjectTableContext } from '@containers/ProjectTreeTable'
+import { useProjectTableContext } from '@shared/ProjectTreeTable'
 import { FC, useMemo, useState } from 'react'
 import styled from 'styled-components'
 import ColumnItem, { ColumnItemData } from './ColumnItem'
