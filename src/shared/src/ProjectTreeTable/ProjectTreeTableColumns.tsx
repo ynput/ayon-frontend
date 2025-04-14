@@ -8,7 +8,7 @@ import {
   sortingFns,
 } from '@tanstack/react-table'
 import { TableRow } from './types/table'
-import { AttributeData, AttributeEnumItem, AttributeWithPermissions } from './types'
+import { AttributeData, AttributeWithPermissions, BuiltInFieldOptions } from './types'
 import { CellWidget, EntityNameWidget } from './widgets'
 import { useCellEditing } from './context/CellEditingContext'
 import { getCellId, getCellValue } from './utils/cellUtils'
@@ -63,18 +63,6 @@ const attribSort: AttribSortingFn = (rowA, rowB, columnId, attrib) => {
     // default sorting
     return sortingFns.alphanumeric(rowA, rowB, columnId)
   }
-}
-
-interface EnumOption extends AttributeEnumItem {
-  scope?: string[]
-}
-
-export type BuiltInFieldOptions = {
-  folderTypes: EnumOption[]
-  taskTypes: EnumOption[]
-  statuses: EnumOption[]
-  assignees: EnumOption[]
-  tags: EnumOption[]
 }
 
 type Props = {

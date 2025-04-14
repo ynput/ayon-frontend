@@ -16,7 +16,7 @@ import type { FolderNodeMap, TaskNodeMap, TasksByFolderMap } from '@shared/Proje
 import { clientFilterToQueryFilter } from '@shared/ProjectTreeTable/utils'
 import { QueryTasksFoldersApiArg } from '@api/rest/folders'
 import { ProjectDataContextProps, useProjectDataContext } from './ProjectDataContext'
-import { LoadingTasks } from '@shared/ProjectTreeTable/utils/dataTypes'
+import { LoadingTasks } from '@shared/ProjectTreeTable'
 
 export interface ProjectOverviewContextProps {
   isInitialized: boolean

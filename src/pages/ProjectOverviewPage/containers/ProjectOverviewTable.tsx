@@ -4,11 +4,10 @@ import { useCallback, useMemo } from 'react'
 import { Section } from '@ynput/ayon-react-components'
 
 // Types
-import { BuiltInFieldOptions } from '@shared/ProjectTreeTable/ProjectTreeTableColumns'
+import { BuiltInFieldOptions } from '@shared/ProjectTreeTable'
 
 // Components
-import ProjectTreeTable from '@shared/ProjectTreeTable'
-import { useProjectTableContext } from '@shared/ProjectTreeTable'
+import { useProjectTableContext, ProjectTreeTable } from '@shared/ProjectTreeTable'
 import { useNewEntityContext } from '@context/NewEntityContext'
 
 type Props = {}

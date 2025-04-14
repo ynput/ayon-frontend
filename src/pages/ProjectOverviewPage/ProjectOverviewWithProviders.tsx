@@ -27,14 +27,14 @@ const ProjectOverviewWithProviders: FC = () => {
     <ProjectDataProvider projectName={projectName}>
       <ProjectOverviewProvider>
         <SettingsPanelProvider>
-          <ProjectOverWithTableProviders />
+          <ProjectOverviewWithTableProviders />
         </SettingsPanelProvider>
       </ProjectOverviewProvider>
     </ProjectDataProvider>
   )
 }
 
-const ProjectOverWithTableProviders: FC = () => {
+const ProjectOverviewWithTableProviders: FC = () => {
   const props = useProjectOverviewContext()
   const [entityOperations] = useUpdateOverviewEntitiesMutation()
 

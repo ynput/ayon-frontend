@@ -13,7 +13,7 @@ type ContextEvent = React.MouseEvent<HTMLTableSectionElement, MouseEvent>
 
 type CellContextMenuProps = {
   attribs: AttributeWithPermissions[]
-  onOpenNew: (type: 'folder' | 'task') => void
+  onOpenNew?: (type: 'folder' | 'task') => void
 }
 
 const useCellContextMenu = ({ attribs, onOpenNew }: CellContextMenuProps) => {
@@ -46,8 +46,6 @@ const useCellContextMenu = ({ attribs, onOpenNew }: CellContextMenuProps) => {
     const { rowId: entityId, colId } = parseCellId(id) || {}
     // get full attrib details
     const attrib = attribs.find((attrib) => attrib.name === colId?.replace('attrib_', ''))
-
-    console.log(attrib)
 
     if (!entityId)
       return [
@@ -163,23 +161,23 @@ const useCellContextMenu = ({ attribs, onOpenNew }: CellContextMenuProps) => {
       {
         label: 'Create folder',
         icon: 'create_new_folder',
-        command: () => onOpenNew('folder'),
-        shouldShow: isNameColumn && showHierarchy,
+        command: () => onOpenNew?.('folder'),
+        shouldShow: isNameColumn && showHierarchy && !!onOpenNew,
       },
       {
         label: 'Create root folder',
         icon: 'create_new_folder',
         command: () => {
           clearSelection()
-          onOpenNew('folder')
+          onOpenNew?.('folder')
         },
-        shouldShow: isNameColumn && showHierarchy,
+        shouldShow: isNameColumn && showHierarchy && !!onOpenNew,
       },
       {
         label: 'Create task',
         icon: 'add_task',
-        command: () => onOpenNew('task'),
-        shouldShow: isNameColumn && showHierarchy,
+        command: () => onOpenNew?.('task'),
+        shouldShow: isNameColumn && showHierarchy && !!onOpenNew,
       },
 
       // Destructive operations

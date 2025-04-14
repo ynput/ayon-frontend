@@ -24,7 +24,7 @@ import { OperationModel, OperationsRequestModel } from '../types/operations'
 
 type User = {
   name: string
-  fullName: string
+  fullName?: string
 }
 
 export interface ProjectTableContextProps {
@@ -73,7 +73,7 @@ export interface ProjectTableContextProps {
 
 const ProjectTableContext = createContext<ProjectTableContextProps | undefined>(undefined)
 
-interface ProjectTableProviderProps {
+export interface ProjectTableProviderProps {
   children: ReactNode
   isInitialized: boolean
 

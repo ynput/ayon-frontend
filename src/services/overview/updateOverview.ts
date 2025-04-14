@@ -9,7 +9,7 @@ import hierarchyApi from '@queries/getHierarchy'
 import { getEntityPanelApi } from '@queries/entity/getEntityPanel'
 import { FetchBaseQueryError, RootState } from '@reduxjs/toolkit/query'
 import { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
-import { EditorTaskNode } from '@shared/ProjectTreeTable/utils/types'
+import { EditorTaskNode } from '@shared/ProjectTreeTable'
 // import { current } from '@reduxjs/toolkit'
 // these operations are dedicated to the overview page
 // this mean cache updates are custom for the overview page here

@@ -1,5 +1,5 @@
-import Table from './ProjectTreeTable'
-export default Table
+import ProjectTreeTable from './ProjectTreeTable'
+export { ProjectTreeTable }
 
 // context providers
 export {
@@ -24,4 +24,6 @@ export type { SelectedRowsContextProps } from './context/SelectedRowsContext'
 export { ColumnSettingsProvider, useColumnSettings } from './context/ColumnSettingsContext'
 export type { ColumnSettingsContextType } from './context/ColumnSettingsContext'
 
-export * from 'util'
+export * from './utils'
+export * from './types'
+export * from './context'

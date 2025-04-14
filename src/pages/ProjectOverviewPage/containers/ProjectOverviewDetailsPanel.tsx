@@ -6,7 +6,7 @@ import DetailsPanelSlideOut from '@containers/DetailsPanel/DetailsPanelSlideOut/
 import { useGetUsersAssigneeQuery } from '@queries/user/getUsers'
 import { ProjectModel } from '@api/rest/project'
 import { useProjectTableContext, useSelectedRowsContext } from '@shared/ProjectTreeTable'
-import { EditorTaskNode, MatchingFolder } from '@shared/ProjectTreeTable/utils/types'
+import { EditorTaskNode, MatchingFolder } from '@shared/ProjectTreeTable'
 
 type ProjectOverviewDetailsPanelProps = {
   projectInfo?: ProjectModel

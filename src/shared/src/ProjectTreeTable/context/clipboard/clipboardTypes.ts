@@ -1,7 +1,6 @@
 import { ReactNode } from 'react'
 import { FolderNodeMap, TaskNodeMap } from '../../types/table'
-import { AttributeEnumItem } from '../../types'
-import { BuiltInFieldOptions } from '../../../ProjectTreeTable/ProjectTreeTableColumns'
+import { AttributeEnumItem, BuiltInFieldOptions } from '../../types'
 
 // Constants for field mappings
 export const builtInFieldMappings = {

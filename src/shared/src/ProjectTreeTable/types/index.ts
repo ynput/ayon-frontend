@@ -1,3 +1,5 @@
+export * from './table'
+
 import { OperationModel } from './operations'
 
 export type AttributeEnumItem = {
@@ -67,4 +69,16 @@ export type LoadingTasks = Record<string, number> // show number of loading task
 
 export type PatchOperation = Pick<OperationModel, 'entityId' | 'entityType' | 'data'> & {
   type?: OperationModel['type']
+}
+
+interface EnumOption extends AttributeEnumItem {
+  scope?: string[]
+}
+
+export type BuiltInFieldOptions = {
+  folderTypes: EnumOption[]
+  taskTypes: EnumOption[]
+  statuses: EnumOption[]
+  assignees: EnumOption[]
+  tags: EnumOption[]
 }

@@ -5,7 +5,7 @@ import useUpdateOverview, {
   UpdateTableEntities,
 } from '../hooks/useUpdateOverview'
 
-interface CellEditingContextType {
+export interface CellEditingContextType {
   editingCellId: CellId | null
   setEditingCellId: (id: CellId | null) => void
   isEditing: (id: CellId) => boolean

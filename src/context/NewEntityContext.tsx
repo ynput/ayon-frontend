@@ -6,7 +6,7 @@ import getSequence from '@helpers/getSequence'
 import { generateLabel } from '@components/NewEntity/NewEntity'
 import { PatchOperation, useUpdateOverviewEntitiesMutation } from '@queries/overview/updateOverview'
 import { useProjectTableContext } from '@shared/ProjectTreeTable'
-import { EditorTaskNode, MatchingFolder } from '@shared/ProjectTreeTable/utils/types'
+import { EditorTaskNode, MatchingFolder } from '@shared/ProjectTreeTable'
 
 export type NewEntityType = 'folder' | 'task'
 

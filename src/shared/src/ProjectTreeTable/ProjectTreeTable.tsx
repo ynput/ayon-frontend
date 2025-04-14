@@ -29,7 +29,7 @@ import clsx from 'clsx'
 import type { FolderNodeMap, TableRow, TaskNodeMap } from './types/table'
 
 // Component imports
-import ProjectTreeTableColumns, { BuiltInFieldOptions } from './ProjectTreeTableColumns'
+import ProjectTreeTableColumns from './ProjectTreeTableColumns'
 import * as Styled from './ProjectTreeTable.styled'
 import HeaderActionButton from './components/HeaderActionButton'
 import EmptyPlaceholder from '../EmptyPlaceholder'
@@ -54,7 +54,7 @@ import { getCellId } from './utils/cellUtils'
 import { generateLoadingRows, generateDummyAttributes } from './utils/loadingUtils'
 import { createPortal } from 'react-dom'
 import { Icon } from '@ynput/ayon-react-components'
-import { AttributeEnumItem, AttributeWithPermissions } from './types'
+import { AttributeEnumItem, AttributeWithPermissions, BuiltInFieldOptions } from './types'
 import { useProjectTableContext } from './context/ProjectTableContext'
 
 //These are the important styles to make sticky column pinning work!
@@ -82,7 +82,7 @@ type Props = {
   tasksMap: TaskNodeMap
   foldersMap: FolderNodeMap
   fetchMoreOnBottomReached: (element: HTMLDivElement | null) => void
-  onOpenNew: (type: 'folder' | 'task') => void
+  onOpenNew?: (type: 'folder' | 'task') => void
 }
 
 // Component to wrap with all providers
@@ -466,7 +466,7 @@ interface TableBodyProps {
   virtualPaddingLeft: number | undefined
   virtualPaddingRight: number | undefined
   attribs: AttributeWithPermissions[]
-  onOpenNew: (type: 'folder' | 'task') => void
+  onOpenNew?: (type: 'folder' | 'task') => void
 }
 
 const TableBody = ({
