@@ -1,5 +1,6 @@
 import React from 'react'
 import * as Styled from './Actions.styled'
+import { useState } from 'react'
 import clsx from 'clsx'
 import { toast } from 'react-toastify'
 import { useMemo } from 'react'
@@ -9,6 +10,7 @@ import ActionIcon from './ActionIcon'
 import customProtocolCheck from 'custom-protocol-check'
 import { useLocation, useNavigate } from 'react-router'
 import useActionTriggers from '@/hooks/useActionTriggers'
+import ActionConfigDialog from './ActionConfigDialog'
 
 const placeholder = {
   identifier: 'placeholder',
@@ -19,6 +21,7 @@ const placeholder = {
 const Actions = ({ entities, entityType, entitySubTypes, isLoadingEntity }) => {
   // special triggers the actions can make to perform stuff on the client
   const { handleActionPayload } = useActionTriggers()
+  const [actionBeingConfigured, setActionBeingConfigured] = useState(null)
 
   const context = useMemo(() => {
     if (!entities.length) return null
@@ -97,6 +100,7 @@ const Actions = ({ entities, entityType, entitySubTypes, isLoadingEntity }) => {
         value: action.identifier,
         label: action.label,
         icon: action.icon,
+        hasConfig: !!action.configFields,
       }))
 
       options.push(...groupOptions)
@@ -166,8 +170,8 @@ const Actions = ({ entities, entityType, entitySubTypes, isLoadingEntity }) => {
       if (response?.uri) {
         customProtocolCheck(
           response.uri,
-          () => {},
-          () => {},
+          () => { },
+          () => { },
           2000,
         )
       }
@@ -181,6 +185,12 @@ const Actions = ({ entities, entityType, entitySubTypes, isLoadingEntity }) => {
       console.warn('Error executing action', error)
       toast.error(error || 'Error executing action')
     }
+  }
+
+  const handleConfigureAction = (identifier) => {
+    const action = actions.find((data) => data.identifier === identifier)
+    if (!action) return
+    setActionBeingConfigured(action)
   }
 
   const loadingActions = [placeholder, placeholder, placeholder]
@@ -208,6 +218,12 @@ const Actions = ({ entities, entityType, entitySubTypes, isLoadingEntity }) => {
         options={dropdownOptions}
         isLoading={isLoading}
         onAction={handleExecuteAction}
+        onConfig={handleConfigureAction}
+      />
+      <ActionConfigDialog
+        action={actionBeingConfigured}
+        context={context}
+        onClose={() => setActionBeingConfigured(null)}
       />
     </Styled.Actions>
   )
