@@ -9,6 +9,7 @@ import {
   FormRow,
   InputText,
   InputSwitch,
+  Dropdown,
 } from '@ynput/ayon-react-components'
 
 const getDefaults = (fields, values) => {
@@ -16,8 +17,8 @@ const getDefaults = (fields, values) => {
   fields.forEach((item) => {
     if (item.name in values) {
       defaults[item.name] = values[item.name]
-    } else if (item.default) {
-      defaults[item.name] = item.default
+    } else if (item.value) {
+      defaults[item.name] = item.value
     } else if (item.type === 'checkbox') {
       defaults[item.name] = false
     } else if (item.type === 'integer') {
@@ -64,6 +65,19 @@ const FormItem = ({ item, value, onChange }) => {
       />
     )
   }
+
+  if (item.type === 'select') {
+    return (
+      <Dropdown
+        widthExpand
+        options={item.options || []}
+        value={value ? [value] : []}
+        onSelectionChange={(e) => onChange(e[0])}
+        className={`form-field`}
+        multiSelect={false}
+      />
+    )
+  }
 }
 
 const SimpleFormDialog = ({ fields, values, onClose, onSubmit, isOpen, header }) => {
@@ -94,30 +108,30 @@ const SimpleFormDialog = ({ fields, values, onClose, onSubmit, isOpen, header })
       footer={footer}
       style={{ minHeight: 400, minWidth: 500 }}
     >
-        <ScrollPanel style={{ flexGrow: 1, background: 'transparent' }}>
-          <FormLayout style={{ width: '95%' }}>
-            {fields.map((item, index) => {
-              if (item.type === 'label') {
-                return <h2 key={index}>{item.text}</h2>
-              }
+      <ScrollPanel style={{ flexGrow: 1, background: 'transparent' }}>
+        <FormLayout style={{ width: '95%' }}>
+          {fields.map((item, index) => {
+            if (item.type === 'label') {
+              return <h2 key={index}>{item.text}</h2>
+            }
 
-              return (
-                <FormRow key={index} label={item.label || ''}>
-                  <FormItem
-                    item={item}
-                    value={formData[item.name]}
-                    onChange={(value) => {
-                      setFormData((prev) => ({
-                        ...prev,
-                        [item.name]: value,
-                      }))
-                    }}
-                  />
-                </FormRow>
-              )
-            })}
-          </FormLayout>
-        </ScrollPanel>
+            return (
+              <FormRow key={index} label={item.label || ''}>
+                <FormItem
+                  item={item}
+                  value={formData[item.name]}
+                  onChange={(value) => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      [item.name]: value,
+                    }))
+                  }}
+                />
+              </FormRow>
+            )
+          })}
+        </FormLayout>
+      </ScrollPanel>
     </Dialog>
   )
 }
