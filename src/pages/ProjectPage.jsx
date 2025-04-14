@@ -9,6 +9,7 @@ import LoadingPage from './LoadingPage'
 import ProjectAddon from './ProjectAddon'
 import WorkfilesPage from './WorkfilesPage'
 import TasksProgressPage from './TasksProgressPage'
+import SchedulerPage from './SchedulerPage/SchedulerPage'
 
 import usePubSub from '@hooks/usePubSub'
 import { selectProject } from '@state/project'
@@ -111,10 +112,9 @@ const ProjectPage = () => {
         uriSync: true,
       },
       {
-        name: 'Workfiles',
-        path: `/projects/${projectName}/workfiles`,
-        module: 'workfiles',
-        uriSync: true,
+        name: 'Scheduler',
+        path: `/projects/${projectName}/scheduler`,
+        module: 'scheduler',
       },
       ...addonsData.map((addon) => ({
         name: addon.title,
@@ -165,6 +165,9 @@ const ProjectPage = () => {
     }
     if (module === 'workfiles') {
       return <WorkfilesPage />
+    }
+    if (module === 'scheduler') {
+      return <SchedulerPage />
     }
 
     if (!addonName) {
