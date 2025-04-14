@@ -7,7 +7,7 @@ import {
   TasksByFolderMap,
 } from '../types/table'
 import { ExpandedState } from '@tanstack/react-table'
-import { generateLoadingRows } from '../../../../pages/ProjectOverviewPage/utils/loadingUtils'
+import { generateLoadingRows } from '../utils/loadingUtils'
 const TASKS_INFINITE_QUERY_COUNT = 100
 import { LoadingTasks } from '../types'
 import { FolderType, TaskType } from '../types/project'

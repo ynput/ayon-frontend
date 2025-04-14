@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react'
 import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 
-import useCreateContext from '@hooks/useCreateContext'
+import useCreateContextMenu from '@shared/ContextMenu/useCreateContextMenu'
 
 import {
   Button,
@@ -553,7 +553,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
 
   // Addon list context menu
 
-  const [addonListContextMenu] = useCreateContext([])
+  const [addonListContextMenu] = useCreateContextMenu([])
   const showAddonListContextMenu = (e) => {
     setTimeout(() => {
       const menuItems = [

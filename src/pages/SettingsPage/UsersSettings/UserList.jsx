@@ -7,7 +7,7 @@ import './users.scss'
 
 import { useMemo } from 'react'
 import styled from 'styled-components'
-import useCreateContext from '@hooks/useCreateContext'
+import useCreateContextMenu from '@shared/ContextMenu/useCreateContextMenu'
 import clsx from 'clsx'
 import useTableLoadingData from '@hooks/useTableLoadingData'
 import { useGetUserPoolsQuery } from '@queries/auth/getAuth'
@@ -120,7 +120,7 @@ const UserList = ({
     ]
   }
 
-  const [ctxMenuShow] = useCreateContext()
+  const [ctxMenuShow] = useCreateContextMenu()
 
   const tableData = useTableLoadingData(tableList, isLoading, 40, 'name')
 

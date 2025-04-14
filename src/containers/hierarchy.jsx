@@ -9,7 +9,7 @@ import { CellWithIcon } from '@components/icons'
 import EntityDetail from './DetailsDialog'
 import { setFocusedFolders, setUri, setExpandedFolders, setSelectedVersions } from '@state/context'
 import { useGetFolderHierarchyQuery } from '@queries/getHierarchy'
-import useCreateContext from '@hooks/useCreateContext'
+import useCreateContextMenu from '@shared/ContextMenu/useCreateContextMenu'
 import HierarchyExpandFolders from './HierarchyExpandFolders'
 import { openViewer } from '@/features/viewer'
 import useTableKeyboardNavigation, {
@@ -323,7 +323,7 @@ const Hierarchy = (props) => {
   }
 
   // Context Menu
-  // const {openContext, useCreateContext} = useContextMenu()
+  // const {openContext, useCreateContextMenu} = useContextMenu()
   // context items
   const ctxMenuItems = (selected = []) => [
     {
@@ -344,7 +344,7 @@ const Hierarchy = (props) => {
     },
   ]
   // create the ref and model
-  const [ctxMenuShow] = useCreateContext()
+  const [ctxMenuShow] = useCreateContextMenu()
 
   const onContextMenu = (event) => {
     let newFocused = [...focusedFolders]

@@ -15,7 +15,7 @@ import AttributeEditor from '@containers/attributes/attributeEditor'
 import { useGetAttributeListQuery } from '@queries/attributes/getAttributes'
 import { useSetAttributeListMutation } from '@queries/attributes/updateAttributes'
 import useSearchFilter from '@hooks/useSearchFilter'
-import useCreateContext from '@hooks/useCreateContext'
+import useCreateContextMenu from '@shared/ContextMenu/useCreateContextMenu'
 import { isEqual } from 'lodash'
 import clsx from 'clsx'
 import useTableLoadingData from '@hooks/useTableLoadingData'
@@ -131,7 +131,7 @@ const Attributes = () => {
     },
   ]
 
-  const [ctxMenuTableShow] = useCreateContext([])
+  const [ctxMenuTableShow] = useCreateContextMenu([])
 
   const handleContextSelectionChange = (e) => {
     setSelectedAttribute(e.value)

@@ -1,7 +1,7 @@
-import { createContext, useState } from "react"
+import { createContext, useState } from 'react'
 
-import useCreateContext from "@hooks/useCreateContext"
-import { $Any } from "@types"
+import useCreateContextMenu from '@shared/ContextMenu/useCreateContextMenu'
+import { $Any } from '@types'
 
 const ThumbnailUploadContext = createContext<{
   onContextMenu?: Function
@@ -12,17 +12,13 @@ const ThumbnailUploadContext = createContext<{
 type Props = {
   handleThumbnailUpload: (thumbnails: $Any[]) => {}
   entities: $Any
-  inputRef: $Any;
-  children?: JSX.Element|JSX.Element[];
+  inputRef: $Any
+  children?: JSX.Element | JSX.Element[]
 }
 
-const ThumbnailUploadProvider = ({
-  children = [],
-  inputRef,
-}: Props) => {
-
+const ThumbnailUploadProvider = ({ children = [], inputRef }: Props) => {
   const [_, setFileUploadInProgress] = useState(false)
-  const [ctxMenuShow] = useCreateContext()
+  const [ctxMenuShow] = useCreateContextMenu()
   const resetFileUploadState = () => setFileUploadInProgress(false)
 
   const ctxMenuItems = () => [
@@ -31,7 +27,7 @@ const ThumbnailUploadProvider = ({
       icon: 'add_photo_alternate',
       command: () => {
         if (inputRef) {
-          inputRef.current!.click();
+          inputRef.current!.click()
         }
         return setFileUploadInProgress(true)
       },
@@ -49,4 +45,4 @@ const ThumbnailUploadProvider = ({
   )
 }
 
-export {ThumbnailUploadProvider, ThumbnailUploadContext}
+export { ThumbnailUploadProvider, ThumbnailUploadContext }

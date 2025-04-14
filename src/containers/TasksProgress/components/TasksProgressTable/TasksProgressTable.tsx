@@ -35,7 +35,7 @@ import { AttributeEnumItem } from '@api/rest/attributes'
 // Hooks
 import { useEffect, useState, type KeyboardEvent, type MouseEvent } from 'react'
 import { InView } from 'react-intersection-observer'
-import useCreateContext from '@hooks/useCreateContext'
+import useCreateContextMenu from '@shared/ContextMenu/useCreateContextMenu'
 import { useLocalStorage } from '@shared/hooks'
 
 // Helpers
@@ -212,7 +212,7 @@ export const TasksProgressTable = ({
     ]
   }
 
-  const [ctxMenuShow] = useCreateContext()
+  const [ctxMenuShow] = useCreateContextMenu()
 
   const handleContextMenu = (e: MouseEvent<HTMLDivElement>, taskId: string) => {
     // check if the click is within selection already

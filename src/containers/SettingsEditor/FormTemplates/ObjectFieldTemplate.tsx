@@ -3,7 +3,7 @@ import { toast } from 'react-toastify'
 import { useMemo } from 'react'
 import ReactMarkdown from 'react-markdown'
 import SettingsPanel from '../SettingsPanel'
-import useCreateContext from '@hooks/useCreateContext'
+import useCreateContextMenu from '@shared/ContextMenu/useCreateContextMenu'
 
 import { Badge, BadgeWrapper } from '@components/Badge'
 import copyToClipboard from '@helpers/copyToClipboard'
@@ -22,7 +22,7 @@ const arrayStartsWith = (arr1: $Any, arr2: $Any) => {
 }
 
 function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
-  const [contextMenu] = useCreateContext([])
+  const [contextMenu] = useCreateContextMenu([])
   let className = 'form-object-field'
   if (props.schema.layout) className += ` layout-${props.schema.layout}`
 

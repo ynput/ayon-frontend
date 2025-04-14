@@ -2,8 +2,11 @@ import { useMemo, memo, useCallback, useRef, FC } from 'react'
 import styled from 'styled-components'
 
 // Widgets
-import { BooleanWidget, CollapsedWidget, DateWidget, EnumWidget, TextWidget } from '.'
-import { TextWidgetType } from './TextWidget'
+import { BooleanWidget } from './BooleanWidget'
+import { CollapsedWidget } from './CollapsedWidget'
+import { DateWidget } from './DateWidget'
+import { EnumWidget } from './EnumWidget'
+import { TextWidget, TextWidgetType } from './TextWidget'
 
 // Contexts
 import { useCellEditing } from '../context/CellEditingContext'

@@ -17,7 +17,7 @@ import { Button, Spacer } from '@ynput/ayon-react-components'
 import EnableNotifications from '@components/EnableNotifications'
 import EmptyPlaceholder from '@shared/EmptyPlaceholder/EmptyPlaceholder'
 // Hooks
-import useCreateContext from '@hooks/useCreateContext'
+import useCreateContextMenu from '@shared/ContextMenu/useCreateContextMenu'
 import useGroupMessages from '../hooks/useGroupMessages'
 import useKeydown from '../hooks/useKeydown'
 import useUpdateInboxMessage from '../hooks/useUpdateInboxMessage'
@@ -293,7 +293,7 @@ const Inbox = ({ filter }) => {
     ]
   }
 
-  const [ctxMenuShow] = useCreateContext([])
+  const [ctxMenuShow] = useCreateContextMenu([])
 
   const handleContextMenu = (e) => {
     // get id from the target

@@ -1,6 +1,6 @@
 import { useCallback, useMemo, MouseEvent, RefObject } from 'react'
-import ContextMenuItem, { ContextMenuItemProps } from '@components/ContextMenu/ContextMenuItem'
-import { useContextMenu } from '@context/contextMenuContext'
+import ContextMenuItem, { ContextMenuItemProps } from './ContextMenuItem'
+import { useContextMenu } from './ContextMenuContext'
 
 // Extend the item type based on the ContextMenuItemProps
 export interface ContextMenuItemType extends Omit<ContextMenuItemProps, 'contextMenuRef'> {
@@ -33,7 +33,9 @@ type UseCreateContextReturn = [
   RefObject<{ hide: () => void }>,
 ]
 
-const useCreateContext = (menuList: ContextMenuItemType[] = []): UseCreateContextReturn => {
+export const useCreateContextMenu = (
+  menuList: ContextMenuItemType[] = [],
+): UseCreateContextReturn => {
   const { openContext, ref, isContextOpen, closeContext } = useContextMenu()
 
   const getModel = useCallback(
@@ -66,4 +68,4 @@ const useCreateContext = (menuList: ContextMenuItemType[] = []): UseCreateContex
   return [handleOpen, closeContext, isContextOpen, ref]
 }
 
-export default useCreateContext
+export default useCreateContextMenu

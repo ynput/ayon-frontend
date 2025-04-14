@@ -10,7 +10,7 @@ import { CellWithIcon } from '@components/icons'
 import { setFocusedTasks, setPairing, setUri, updateBrowserFilters } from '@state/context'
 import { toast } from 'react-toastify'
 import { useGetTasksQuery } from '@queries/getTasks'
-import useCreateContext from '@hooks/useCreateContext'
+import useCreateContextMenu from '@shared/ContextMenu/useCreateContextMenu'
 import NoEntityFound from '@components/NoEntityFound'
 import { openViewer } from '@/features/viewer'
 import useTableKeyboardNavigation, {
@@ -164,7 +164,7 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
     },
   ]
 
-  const [ctxMenuShow] = useCreateContext()
+  const [ctxMenuShow] = useCreateContextMenu()
 
   const onContextMenu = (event) => {
     let newFocused = [...focusedTasks]

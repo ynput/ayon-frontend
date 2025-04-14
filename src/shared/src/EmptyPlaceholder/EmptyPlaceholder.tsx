@@ -47,7 +47,7 @@ export const Placeholder = styled.div`
   }
 `
 
-interface EmptyPlaceholderProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface EmptyPlaceholderProps extends React.HTMLAttributes<HTMLDivElement> {
   icon?: string
   message?: string
   error?: any

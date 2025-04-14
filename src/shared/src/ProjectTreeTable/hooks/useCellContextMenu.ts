@@ -1,4 +1,4 @@
-import useCreateContext from '../../../../hooks/useCreateContext'
+import { useCreateContextMenu } from '../../ContextMenu/useCreateContextMenu'
 import useDeleteEntities from './useDeleteEntities'
 import { getPlatformShortcutKey, KeyMode } from '../../helpers/platform'
 import { getCellId, parseCellId } from '../utils/cellUtils'
@@ -28,7 +28,7 @@ const useCellContextMenu = ({ attribs, onOpenNew }: CellContextMenuProps) => {
   // data mutations
   const deleteEntities = useDeleteEntities({})
 
-  const [cellContextMenuShow] = useCreateContext()
+  const [cellContextMenuShow] = useCreateContextMenu()
 
   const cellContextMenuItems = (_e: ContextEvent, id: string, selected: string[]) => {
     // Define menu item type with condition

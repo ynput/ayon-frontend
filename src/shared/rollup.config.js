@@ -3,8 +3,8 @@ import resolve from '@rollup/plugin-node-resolve'
 import commonjs from '@rollup/plugin-commonjs'
 import babel from '@rollup/plugin-babel'
 import typescript from '@rollup/plugin-typescript'
-import alias from '@rollup/plugin-alias'
-import path from 'path'
+import scss from 'rollup-plugin-scss'
+import styles from 'rollup-plugin-styles'
 
 const packageJson = require('./package.json')
 
@@ -24,17 +24,33 @@ export default {
   ],
   plugins: [
     peerDepsExternal(),
-    resolve(),
+    resolve({
+      extensions: ['.js', '.jsx', '.ts', '.tsx'], // Add extensions here
+    }),
     commonjs(),
-    typescript({ tsconfig: './tsconfig.json' }),
+    // Place typescript before babel
+    typescript({
+      tsconfig: './tsconfig.json',
+      sourceMap: true,
+      inlineSources: true,
+    }),
     babel({
       exclude: 'node_modules/**',
-      presets: ['@babel/preset-env', '@babel/preset-react'],
+      presets: [
+        '@babel/preset-env',
+        '@babel/preset-react',
+        '@babel/preset-typescript', // Add TypeScript preset
+      ],
       extensions: ['.js', '.jsx', '.ts', '.tsx'],
       babelHelpers: 'bundled',
     }),
-    alias({
-      entries: [{ find: '@frontend', replacement: path.resolve(__dirname, '../../') }],
+    scss({
+      // Add rollup-plugin-scss
+      // You can add options here if needed (e.g., outputStyle)
+    }),
+    styles({
+      // Add rollup-plugin-styles
+      mode: 'inject', // Or 'extract' for separate CSS files
     }),
   ],
   external: Object.keys(packageJson.peerDependencies), // Important: Don't bundle peerDependencies

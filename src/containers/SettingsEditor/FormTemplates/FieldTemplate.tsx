@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { Divider } from '@ynput/ayon-react-components'
 import SettingsPanel from '../SettingsPanel'
-import useCreateContext from '@hooks/useCreateContext'
+import useCreateContextMenu from '@shared/ContextMenu/useCreateContextMenu'
 
 import { isEqual } from 'lodash'
 import copyToClipboard from '@helpers/copyToClipboard'
@@ -26,7 +26,7 @@ const arrayContainsArray = (arr1: $Any, arr2: $Any) => {
 }
 
 function FieldTemplate(props: FieldTemplateProps) {
-  const [contextMenu] = useCreateContext([])
+  const [contextMenu] = useCreateContextMenu([])
 
   // Do not render the field if it belongs to a different scope (studio/project/local) or if it is hidden
 

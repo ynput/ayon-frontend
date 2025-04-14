@@ -27,7 +27,7 @@ import useSearchFilter, { filterByFieldsAndValues } from '@hooks/useSearchFilter
 import useColumnResize from '@hooks/useColumnResize'
 import { useUpdateEntitiesMutation } from '@queries/entity/updateEntity'
 import api from '@api'
-import useCreateContext from '@hooks/useCreateContext'
+import useCreateContextMenu from '@shared/ContextMenu/useCreateContextMenu'
 import ViewModeToggle from './ViewModeToggle'
 import ProductsList from './ProductsList'
 import ProductsGrid from './ProductsGrid'
@@ -484,7 +484,7 @@ const Products = () => {
 
   // create empty context menu model
   // we will populate it later
-  const [showTableContextMenu] = useCreateContext([])
+  const [showTableContextMenu] = useCreateContextMenu([])
 
   // context menu model for hiding columns
   const createTableHeaderModel = useCallback(
@@ -617,7 +617,7 @@ const Products = () => {
     },
   ]
 
-  const [ctxMenuShow] = useCreateContext([])
+  const [ctxMenuShow] = useCreateContextMenu([])
 
   const handleContextMenu = (e, id) => {
     ctxMenuShow(e, ctxMenuItems(id))

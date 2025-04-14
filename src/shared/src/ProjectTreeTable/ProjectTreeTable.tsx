@@ -51,10 +51,7 @@ import useKeyboardNavigation from './hooks/useKeyboardNavigation'
 
 // Utility function imports
 import { getCellId } from './utils/cellUtils'
-import {
-  generateLoadingRows,
-  generateDummyAttributes,
-} from '../../../pages/ProjectOverviewPage/utils/loadingUtils'
+import { generateLoadingRows, generateDummyAttributes } from './utils/loadingUtils'
 import { createPortal } from 'react-dom'
 import { Icon } from '@ynput/ayon-react-components'
 import { AttributeEnumItem, AttributeWithPermissions } from './types'

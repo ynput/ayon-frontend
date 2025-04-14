@@ -3,7 +3,7 @@ import { Column } from 'primereact/column'
 
 import { Badge, BadgeWrapper } from '@components/Badge'
 import { TablePanel } from '@ynput/ayon-react-components'
-import useCreateContext from '@hooks/useCreateContext'
+import useCreateContextMenu from '@shared/ContextMenu/useCreateContextMenu'
 import { useDeleteBundleMutation, useUpdateBundleMutation } from '@queries/bundles/updateBundles'
 import { useMemo } from 'react'
 import { confirmDelete } from '@shared/helpers'
@@ -84,7 +84,7 @@ const BundleList = ({
     return { label, icon, command, disabled }
   }
 
-  const [ctxMenuShow] = useCreateContext([])
+  const [ctxMenuShow] = useCreateContextMenu([])
 
   const onContextMenu = (e) => {
     // get selection and if it's changed or not

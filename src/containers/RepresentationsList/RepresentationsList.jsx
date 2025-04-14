@@ -7,7 +7,7 @@ import { Column } from 'primereact/column'
 
 import { setExpandedReps, setFocusedRepresentations, setUri } from '@state/context'
 import groupResult from '@helpers/groupResult'
-import useCreateContext from '@hooks/useCreateContext'
+import useCreateContextMenu from '@shared/ContextMenu/useCreateContextMenu'
 import DetailsDialog from '../DetailsDialog'
 import versionsToRepresentations from './versionsToRepresentations'
 
@@ -76,7 +76,7 @@ const RepresentationList = ({ entities = [] }) => {
     },
   ]
 
-  const [ctxMenuShow] = useCreateContext([])
+  const [ctxMenuShow] = useCreateContextMenu([])
 
   const handleContextMenu = (e) => {
     const id = e.node.data.id

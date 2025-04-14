@@ -3,7 +3,7 @@ import { useProjectTableQueriesContext } from '../context/ProjectTableQueriesCon
 import { parseCellId } from '../utils/cellUtils'
 // TODO: confirmDelete uses prime react, so we should find a different solution
 import { confirmDelete } from '../../helpers'
-import { useProjectTableContext } from '..'
+import { useProjectTableContext } from '../context/ProjectTableContext'
 import { OperationModel } from '../types/operations'
 
 type UseDeleteEntitiesProps = {

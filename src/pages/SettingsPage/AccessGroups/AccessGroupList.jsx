@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import useCreateContext from '@hooks/useCreateContext'
+import useCreateContextMenu from '@shared/ContextMenu/useCreateContextMenu'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { Button, TablePanel, Section, Toolbar, Spacer } from '@ynput/ayon-react-components'
@@ -105,7 +105,7 @@ const AccessGroupList = ({
     return menuItems
   }
 
-  const [ctxMenuShow] = useCreateContext([])
+  const [ctxMenuShow] = useCreateContextMenu([])
 
   const tableData = useTableLoadingData(accessGroupList, isLoading, 5, 'name')
 

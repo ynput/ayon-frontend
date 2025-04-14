@@ -39,7 +39,7 @@ import { openViewer, toggleUpload } from '@state/viewer'
 
 // utils
 import { getGroupedReviewables } from './getGroupedReviewables'
-import useCreateContext from '@hooks/useCreateContext'
+import useCreateContextMenu from '@shared/ContextMenu/useCreateContextMenu'
 import { confirmDelete } from '@shared/helpers'
 import EditReviewableDialog from './EditReviewableDialog'
 import ReviewableUpload from './ReviewablesUpload'
@@ -232,7 +232,7 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
   }
 
   // create the ref and model
-  const [ctxMenuShow] = useCreateContext()
+  const [ctxMenuShow] = useCreateContextMenu()
 
   const handleContextMenu = (event: MouseEvent<HTMLDivElement>) => {
     // get the reviewable by id

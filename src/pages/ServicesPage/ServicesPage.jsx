@@ -6,7 +6,7 @@ import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { TablePanel, Button, Spacer, Section, Toolbar } from '@ynput/ayon-react-components'
 import ServiceDialog from './NewServiceDialog'
 import ServiceDetailsPanel from './ServiceDetailsPanel'
-import useCreateContext from '@hooks/useCreateContext'
+import useCreateContextMenu from '@shared/ContextMenu/useCreateContextMenu'
 import { confirmDelete } from '@shared/helpers'
 import styled from 'styled-components'
 import { useListServicesQuery } from '@queries/services/getServices'
@@ -209,7 +209,7 @@ const ServicesPage = () => {
     [selectedServices, servicesData?.services],
   )
 
-  const [ctxMenuShow] = useCreateContext([])
+  const [ctxMenuShow] = useCreateContextMenu([])
 
   return (
     <main style={{ overflow: 'hidden' }}>

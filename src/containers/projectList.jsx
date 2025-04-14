@@ -6,7 +6,7 @@ import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { useListProjectsQuery } from '@queries/project/getProject'
 import { useEffect } from 'react'
-import useCreateContext from '@hooks/useCreateContext'
+import useCreateContextMenu from '@shared/ContextMenu/useCreateContextMenu'
 import { useLocalStorage } from '@shared/hooks'
 import CollapseButton from '@components/CollapseButton'
 import styled, { css } from 'styled-components'
@@ -363,7 +363,7 @@ const ProjectList = ({
   }
 
   // create the ref and model
-  const [tableContextMenuShow, closeContextMenu] = useCreateContext([])
+  const [tableContextMenuShow, closeContextMenu] = useCreateContextMenu([])
 
   // When right clicking on the already selected node, we don't want to change the selection
   const onContextMenu = (event) => {

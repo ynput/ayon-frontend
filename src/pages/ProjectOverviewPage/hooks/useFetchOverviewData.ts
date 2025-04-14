@@ -4,12 +4,12 @@ import {
   useGetQueryTasksFoldersQuery,
   useGetTasksListInfiniteInfiniteQuery,
 } from '@queries/overview/getOverview'
-import { FolderNodeMap, TaskNodeMap } from '@shared/ProjectTreeTable/utils/types'
+import { FolderNodeMap, TaskNodeMap } from '@shared/ProjectTreeTable/types/table'
 import { useEffect, useMemo, useState } from 'react'
 import { ExpandedState, SortingState } from '@tanstack/react-table'
 import { ProjectOverviewContextProps } from '../context/ProjectOverviewContext'
-import { determineLoadingTaskFolders } from '../utils/loadingUtils'
-import { LoadingTasks } from '@shared/ProjectTreeTable/utils/dataTypes'
+import { determineLoadingTaskFolders } from '@shared/ProjectTreeTable/utils/loadingUtils'
+import { LoadingTasks } from '@shared/ProjectTreeTable/types'
 import { TasksByFolderMap } from '@shared/ProjectTreeTable/utils'
 
 type useFetchOverviewDataData = {

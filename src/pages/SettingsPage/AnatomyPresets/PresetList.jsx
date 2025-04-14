@@ -4,7 +4,7 @@ import { Column } from 'primereact/column'
 
 import { Icon, TablePanel } from '@ynput/ayon-react-components'
 
-import useCreateContext from '@hooks/useCreateContext'
+import useCreateContextMenu from '@shared/ContextMenu/useCreateContextMenu'
 import styled from 'styled-components'
 import clsx from 'clsx'
 import useTableLoadingData from '@hooks/useTableLoadingData'
@@ -60,7 +60,7 @@ const PresetList = ({
 
   const ctxMenuItems = useMemo(() => getCtxMenuItems(), [])
 
-  const [ctxMenuShow] = useCreateContext(ctxMenuItems)
+  const [ctxMenuShow] = useCreateContextMenu(ctxMenuItems)
   // add built-in presets to the start of the list
   let presetListWithBuiltIn = useMemo(() => {
     const noPrimary = presetList.every((preset) => !preset.primary)
