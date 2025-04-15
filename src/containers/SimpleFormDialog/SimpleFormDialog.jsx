@@ -21,7 +21,7 @@ const getDefaults = (fields, values) => {
       defaults[item.name] = values[item.name]
     } else if (item.value) {
       defaults[item.name] = item.value
-    } else if (item.type === 'checkbox') {
+    } else if (item.type === 'boolean') {
       defaults[item.name] = false
     } else if (item.type === 'integer') {
       defaults[item.name] = 0
@@ -83,7 +83,7 @@ const FormItem = ({ item, value, onChange }) => {
       />
     )
   }
-  if (item.type === 'checkbox') {
+  if (item.type === 'boolean') {
     return <InputSwitch checked={value} onChange={(e) => onChange(e.target.checked)} />
   }
   if (item.type === 'integer') {
