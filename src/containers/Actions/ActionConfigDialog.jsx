@@ -1,11 +1,13 @@
-import axios from 'axios'
 import { useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
 import SimpleFormDialog from '@/containers/SimpleFormDialog/SimpleFormDialog'
+import {
+  useGetActionConfigQuery,
+  useSetActionConfigMutation,
+} from '@/services/actions/actions'
 
 const ActionConfigDialog = ({ action, onClose, context }) => {
   const { configFields } = action || {}
-  const [initValues, setInitValues] = useState(null)
 
   const params = action && {
     addonName: action.addonName,
@@ -14,38 +16,21 @@ const ActionConfigDialog = ({ action, onClose, context }) => {
     identifier: action.identifier,
   }
 
-  useEffect(() => {
-    if (!(action && context)) {
-      setInitValues(null)
-      return
-    }
+  const [configureAction] = useSetActionConfigMutation()
 
-    // sending the context without value returns the current config
-    axios
-      .post(`/api/actions/config`, { ...context }, { params })
-      .then((response) => { setInitValues(response.data) })
-      .catch((error) => { 
-        toast.error('Error fetching action config')
-        console.error('Error fetching action config', error)
-      })
-  }, [action, context])
+  const { data: initValues } = useGetActionConfigQuery(
+    { mode: 'simple', actionConfig: context, ...(params || {}) },
+    { skip: !(context && action) },
+  )
+
+  if (!initValues) {
+    return null
+  }
 
   if (!action) return null
 
-  const handleSubmit = (data) => {
-    // Sorry. Prototyping with axios. don't judge me.
-    console.log('Submitting action config', data)
-
-    axios
-      .post(`/api/actions/config`, { ...context, value: data }, { params })
-      .then((response) => {
-        toast.success('Action config saved')
-      })
-      .catch((error) => {
-        toast.error('Error saving action config')
-        console.error('Error saving action config', error)
-      })
-
+  const handleSubmit = async (data) => {
+    await configureAction({actionConfig: { ...context, value: data }, ...params}).unwrap()
     onClose()
   }
 
