@@ -14,37 +14,9 @@ import {
   Dropdown,
 } from '@ynput/ayon-react-components'
 
-type SimpleFormFieldType =
-  | 'text'
-  | 'boolean'
-  | 'integer'
-  | 'float'
-  | 'select'
-  | 'label'
-  | 'hidden'
-  | 'multiselect'
-type SimpleFormHighlightType = 'info' | 'warning' | 'error'
+import type { SimpleFormField } from '@api/rest/actions'
 
 
-interface SimpleFormFieldOption {
-  value: string
-  label: string
-}
-
-
-interface SimpleFormField {
-  type: SimpleFormFieldType
-  text?: string
-  name: string
-  label?: string
-  placeholder?: any
-  value?: string
-  regex?: string
-  required?: boolean
-  multiline?: boolean
-  options?: SimpleFormFieldOption[]
-  highlight?: SimpleFormHighlightType
-}
 
 const getDefaults = (fields: SimpleFormField[], values: Record<string, any>) => {
   const defaults: Record<string, any> = {}
@@ -95,9 +67,11 @@ type FormLabelProps = {
 }
 
 const FormLabel = ({ field }: FormLabelProps) => {
+  const text = typeof field.value === 'string' ? field.value : 'Invalid label value'
+
   return (
     <LabelContainer className={field.highlight || 'normal'}>
-      <ReactMarkdown>{field.text || ''}</ReactMarkdown>
+      <ReactMarkdown>{text}</ReactMarkdown>
     </LabelContainer>
   )
 }
