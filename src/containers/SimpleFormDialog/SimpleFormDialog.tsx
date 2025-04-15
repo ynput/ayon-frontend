@@ -16,10 +16,12 @@ import {
 
 import type { SimpleFormField } from '@api/rest/actions'
 
+type SimpleFormValue = string | number | boolean | string[] | null | undefined
+type SimpleFormValueDict = Record<string, SimpleFormValue>
 
 
-const getDefaults = (fields: SimpleFormField[], values: Record<string, any>) => {
-  const defaults: Record<string, any> = {}
+const getDefaults = (fields: SimpleFormField[], values: SimpleFormValueDict) => {
+  const defaults: SimpleFormValueDict = {}
   fields.forEach((field) => {
     if (field.name in values) {
       defaults[field.name] = values[field.name]
@@ -78,21 +80,23 @@ const FormLabel = ({ field }: FormLabelProps) => {
 
 type FormFieldProps = {
   field: SimpleFormField
-  value: any
-  onChange: (value: any) => void
+  value: SimpleFormValue
+  onChange: (value: SimpleFormValue) => void
 }
 
 const FormField = ({ field, value, onChange }: FormFieldProps) => {
   if (field.type === 'text') {
+    const parsedValue = typeof value === 'string' ? value : ''
     return (
       <InputText
-        value={value || ''}
+        value={parsedValue}
         onChange={(e) => onChange(e.target.value)}
         placeholder={field.placeholder || ''}
       />
     )
   }
   if (field.type === 'boolean') {
+    const parsedValue = typeof value === 'boolean' ? value : false
 
     const handleCheckboxEvent = (
       event: React.ChangeEvent<HTMLInputElement> | React.KeyboardEvent<HTMLInputElement>
@@ -104,25 +108,27 @@ const FormField = ({ field, value, onChange }: FormFieldProps) => {
 
     return (
       <InputSwitch
-        checked={value}
+        checked={parsedValue}
         onChange={handleCheckboxEvent}
       />
     )
   }
   if (field.type === 'integer') {
+    const parsedValue = typeof value === 'number' ? value : 0
     return (
       <InputNumber
-        value={value || 0}
+        value={parsedValue}
         onChange={(e) => onChange(parseInt(e.target.value))}
         placeholder={field.placeholder || ''}
       />
     )
   }
   if (field.type === 'float') {
+    const parsedValue = typeof value === 'number' ? value : 0.0
     return (
       <InputNumber
         type="number"
-        value={value || 0.0}
+        value={parsedValue}
         onChange={(e) => onChange(parseFloat(e.target.value))}
         placeholder={field.placeholder || ''}
       />
@@ -130,11 +136,12 @@ const FormField = ({ field, value, onChange }: FormFieldProps) => {
   }
 
   if (field.type === 'select') {
+    const parsedValue = typeof value === 'string' ? value : ''
     return (
       <Dropdown
         widthExpand
         options={field.options || []}
-        value={value ? [value] : []}
+        value={parsedValue ? [parsedValue] : []}
         onSelectionChange={(e) => onChange(e[0])}
         className={`form-field`}
         multiSelect={false}
@@ -145,16 +152,16 @@ const FormField = ({ field, value, onChange }: FormFieldProps) => {
 
 interface SimpleFormDialogProps {
   fields: SimpleFormField[]
-  values?: Record<string, any>
+  values?: SimpleFormValueDict
   onClose: () => void
-  onSubmit: (values: Record<string, any>) => void
+  onSubmit: (values: SimpleFormValueDict) => void
   isOpen: boolean
   header?: string
 }
 
 
 const SimpleFormDialog = ({ fields, values, onClose, onSubmit, isOpen, header }:SimpleFormDialogProps) => {
-  const [formData, setFormData] = useState<Record<string, any> | null>(null)
+  const [formData, setFormData] = useState<SimpleFormValueDict | null>(null)
 
   useEffect(() => {
     if (isOpen) {
