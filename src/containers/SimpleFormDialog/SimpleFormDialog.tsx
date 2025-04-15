@@ -8,6 +8,7 @@ import {
   Dialog,
   FormLayout,
   FormRow,
+  InputNumber,
   InputText,
   InputSwitch,
   Dropdown,
@@ -136,8 +137,7 @@ const FormField = ({ field, value, onChange }: FormFieldProps) => {
   }
   if (field.type === 'integer') {
     return (
-      <InputText
-        type="number"
+      <InputNumber
         value={value || 0}
         onChange={(e) => onChange(parseInt(e.target.value))}
         placeholder={field.placeholder || ''}
@@ -146,7 +146,7 @@ const FormField = ({ field, value, onChange }: FormFieldProps) => {
   }
   if (field.type === 'float') {
     return (
-      <InputText
+      <InputNumber
         type="number"
         value={value || 0.0}
         onChange={(e) => onChange(parseFloat(e.target.value))}
