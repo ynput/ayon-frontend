@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import ReactMarkdown from 'react-markdown'
 import {
   ScrollPanel,
@@ -118,10 +118,19 @@ const FormField = ({ field, value, onChange }: FormFieldProps) => {
     )
   }
   if (field.type === 'boolean') {
+
+    const handleCheckboxEvent = (
+      event: React.ChangeEvent<HTMLInputElement> | React.KeyboardEvent<HTMLInputElement>
+    ) => {
+      if ('target' in event && 'checked' in event.target) {
+        onChange((event.target as HTMLInputElement).checked);
+      }
+    };
+
     return (
       <InputSwitch
         checked={value}
-        onChange={(e) => onChange((e.target as React.HTMLElement).checked)}
+        onChange={handleCheckboxEvent}
       />
     )
   }
