@@ -18,8 +18,6 @@ import {
   Table,
   Header,
   HeaderGroup,
-  ExpandedState,
-  SortingState,
 } from '@tanstack/react-table'
 
 // Utility imports
@@ -72,21 +70,28 @@ const getCommonPinningStyles = (column: Column<TableRow, unknown>): CSSPropertie
   }
 }
 
-type Props = {
+interface Props extends React.HTMLAttributes<HTMLDivElement> {
   projectName: string
   scope: string
   options: BuiltInFieldOptions
   attribs: AttributeWithPermissions[]
   sliceId: string
+  fetchMoreOnBottomReached: (element: HTMLDivElement | null) => void
+  onOpenNew?: (type: 'folder' | 'task') => void
+  pt?: {
+    container?: React.HTMLAttributes<HTMLDivElement>
+    head?: Partial<TableHeadProps>
+  }
+}
+
+interface PropsWithProviders extends Props {
   // metadata
   tasksMap: TaskNodeMap
   foldersMap: FolderNodeMap
-  fetchMoreOnBottomReached: (element: HTMLDivElement | null) => void
-  onOpenNew?: (type: 'folder' | 'task') => void
 }
 
 // Component to wrap with all providers
-const FlexTableWithProviders = (props: Props) => {
+const FlexTableWithProviders = ({ foldersMap, tasksMap, ...props }: PropsWithProviders) => {
   // convert attribs to object
   const attribByField = useMemo(() => {
     return props.attribs.reduce((acc: Record<string, AttributeEnumItem[]>, attrib) => {
@@ -100,8 +105,8 @@ const FlexTableWithProviders = (props: Props) => {
   return (
     <CellEditingProvider>
       <ClipboardProvider
-        foldersMap={props.foldersMap}
-        tasksMap={props.tasksMap}
+        foldersMap={foldersMap}
+        tasksMap={tasksMap}
         columnEnums={{ ...props.options, ...attribByField }}
         columnReadOnly={props.attribs
           .filter((attrib) => attrib.readOnly)
@@ -114,12 +119,15 @@ const FlexTableWithProviders = (props: Props) => {
 }
 
 const FlexTable = ({
+  projectName,
   scope,
   attribs,
   options,
   sliceId,
   fetchMoreOnBottomReached,
   onOpenNew,
+  pt,
+  ...props
 }: Props) => {
   const {
     columnVisibility,
@@ -260,12 +268,13 @@ const FlexTable = ({
   )
 
   return (
-    <Styled.TableWrapper>
+    <Styled.TableWrapper {...props}>
       <Styled.TableContainer
         ref={tableContainerRef}
         style={{ height: '100%', padding: 0 }}
         onScroll={(e) => fetchMoreOnBottomReached(e.currentTarget)}
-        className="table-container"
+        {...pt?.container}
+        className={clsx('table-container', pt?.container?.className)}
       >
         <table
           style={{
@@ -283,6 +292,7 @@ const FlexTable = ({
             virtualPaddingRight={virtualPaddingRight}
             isLoading={isLoading}
             readOnlyColumns={readOnlyColumns}
+            {...pt?.head}
           />
           <TableBody
             columnVirtualizer={columnVirtualizer}
@@ -300,7 +310,7 @@ const FlexTable = ({
   )
 }
 
-interface TableHeadProps {
+interface TableHeadProps extends React.HTMLAttributes<HTMLTableSectionElement> {
   columnVirtualizer: Virtualizer<HTMLDivElement, HTMLTableCellElement>
   table: Table<TableRow>
   virtualPaddingLeft: number | undefined
@@ -316,9 +326,10 @@ const TableHead = ({
   virtualPaddingRight,
   isLoading,
   readOnlyColumns,
+  ...props
 }: TableHeadProps) => {
   return (
-    <Styled.TableHeader>
+    <Styled.TableHeader {...props}>
       {table.getHeaderGroups().map((headerGroup) => (
         <TableHeadRow
           key={headerGroup.id}
@@ -487,7 +498,7 @@ const TableBody = ({
 
   const rowVirtualizer = useVirtualizer<HTMLDivElement, HTMLTableRowElement>({
     count: rows.length,
-    estimateSize: () => (showHierarchy ? 36 : 40), //estimate row height for accurate scrollbar dragging
+    estimateSize: () => 40, //estimate row height for accurate scrollbar dragging
     getScrollElement: () => tableContainerRef.current,
     //measure dynamic row height, except in firefox because it measures table border height incorrectly
     measureElement:
@@ -647,7 +658,7 @@ const TableCell = ({ cell, rowId, cellId, className, showHierarchy, ...props }: 
       style={{
         ...getCommonPinningStyles(cell.column),
         width: `calc(var(--col-${cell.column.id}-size) * 1px)`,
-        height: showHierarchy ? 36 : 40,
+        height: 40,
       }}
       onMouseDown={(e) => {
         // Only process left clicks (button 0), ignore right clicks
