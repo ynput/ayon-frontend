@@ -37,7 +37,6 @@ const ActionConfigDialog = ({ action, onClose, context }) => {
   return (
     <SimpleFormDialog
       isOpen
-      title={action.label}
       header={`Configure action ${action.label}`}
       fields={configFields}
       values={initValues}
