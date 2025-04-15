@@ -32,19 +32,23 @@ const ColumnSettingsContext = createContext<ColumnSettingsContextType | undefine
 
 interface ColumnSettingsProviderProps {
   children: ReactNode
-  projectName: string
+  scope: string
+  config?: {
+    visibility?: {
+      initValue?: VisibilityState
+    }
+  }
 }
 
 export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
   children,
-  projectName,
+  scope,
+  config,
 }) => {
-  const scope = `overview-${projectName}`
-
   // COLUMN VISIBILITY
   const [columnVisibility, setColumnVisibility] = useLocalStorage<VisibilityState>(
     `overview-column-visibility-${scope}`,
-    {},
+    config?.visibility?.initValue || {},
   )
 
   // COLUMN ORDER

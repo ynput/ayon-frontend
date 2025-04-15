@@ -68,7 +68,7 @@ const ProjectOverviewWithTableProviders: FC = () => {
         <NewEntityProvider>
           <SelectionProvider>
             <SelectedRowsProvider>
-              <ColumnSettingsProvider projectName={props.projectName}>
+              <ColumnSettingsProvider scope={`overview-${props.projectName}`}>
                 <ProjectOverviewPage />
               </ColumnSettingsProvider>
             </SelectedRowsProvider>
