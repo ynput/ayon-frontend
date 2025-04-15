@@ -1,5 +1,7 @@
 import { useMemo } from 'react'
 import SimpleFormDialog from '@/containers/SimpleFormDialog/SimpleFormDialog'
+import type { SimpleFormValueDict } from '@containers/SimpleFormDialog/SimpleFormDialog'
+
 import {
   useGetActionConfigQuery,
   useSetActionConfigMutation,
@@ -24,9 +26,8 @@ interface ActionConfigRequestQueryParams {
 
 
 const ActionConfigDialog = ({ action, onClose, context }:ActionConfigDialogProps) => {
-  const { configFields } = action 
 
-  const requestParams = useMemo<ActionConfigRequestQueryParams | null>(() => {
+  const requestParams: ActionConfigRequestQueryParams | null = useMemo<ActionConfigRequestQueryParams | null>(() => {
     if (!action) return null
     if (!(action.addonName && action.addonVersion)) return null // this should never happen
     return {
@@ -39,15 +40,16 @@ const ActionConfigDialog = ({ action, onClose, context }:ActionConfigDialogProps
 
   const [configureAction] = useSetActionConfigMutation()
 
-  const { data: initValues } = useGetActionConfigQuery(
-    { actionConfig: context, ...requestParams },
-    { skip: !requestParams },
-  )
+  // make typescript happily unknowing about the type
+  // because even if we pass skip, arguments are still required in the right type. that's cursed
+  const qp: any = {actionConfig: context, ...(requestParams || {})}
+  const { data: initValues } = useGetActionConfigQuery(qp, { skip: !requestParams })
 
-  if (!(initValues && configFields && action)) {
+  // it would be sooo cool if i could do this BEFORE the query and ommit that
+  // qp thing, but i can't. because it would change the hook order. ffs
+  if (!(initValues && action?.configFields && action && requestParams)) {
     return null
   }
-
 
   const handleSubmit = async (data:ConfigData) => {
     await configureAction({actionConfig: { ...context, value: data }, ...requestParams}).unwrap()
@@ -58,8 +60,8 @@ const ActionConfigDialog = ({ action, onClose, context }:ActionConfigDialogProps
     <SimpleFormDialog
       isOpen
       header={`Configure action ${action.label}`}
-      fields={configFields}
-      values={initValues}
+      fields={action.configFields}
+      values={initValues as SimpleFormValueDict}
       onClose={onClose}
       onSubmit={handleSubmit}
     />

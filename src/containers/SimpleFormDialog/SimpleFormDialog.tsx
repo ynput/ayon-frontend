@@ -16,8 +16,8 @@ import {
 
 import type { SimpleFormField } from '@api/rest/actions'
 
-type SimpleFormValue = string | number | boolean | string[] | null | undefined
-type SimpleFormValueDict = Record<string, SimpleFormValue>
+export type SimpleFormValue = string | number | boolean | string[] | null | undefined
+export type SimpleFormValueDict = Record<string, SimpleFormValue>
 
 
 const getDefaults = (fields: SimpleFormField[], values: SimpleFormValueDict) => {
