@@ -188,7 +188,6 @@ const Actions = ({ entities, entityType, entitySubTypes, isLoadingEntity }) => {
           2000,
         )
       }
-      toast.success(response?.message || 'Action executed successfully', { autoClose: 2000 })
 
       // Use the new hook to handle payload
       if (response?.payload) {
@@ -201,13 +200,14 @@ const Actions = ({ entities, entityType, entitySubTypes, isLoadingEntity }) => {
           // as it need contexts and the dialog
           const intf = {
             fields: response.payload['__form'],
-            identifier
+            identifier,
+            header: response?.message || action.label,
           }
-          console.log('Interactive form', intf)
           setInteractiveForm(intf)
 
         } else {
           // normal hooks
+          toast.success(response?.message || 'Action executed successfully', { autoClose: 2000 })
           handleActionPayload(response.payload, context)
         }
       }

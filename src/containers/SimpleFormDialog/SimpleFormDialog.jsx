@@ -1,4 +1,6 @@
+import styled from 'styled-components'
 import { useState, useEffect } from 'react'
+import ReactMarkdown from 'react-markdown'
 import {
   ScrollPanel,
   Button,
@@ -31,6 +33,45 @@ const getDefaults = (fields, values) => {
   })
   return defaults
 }
+
+
+const LabelContainer = styled.div`
+
+  &.normal {
+    // maybe something here
+  }
+
+  &.info, &.warning, &.error {
+    padding: 0.5rem;
+    text-align: center;
+    font-weight: bold;
+  }
+
+  &.info {
+    background-color: var(--md-sys-color-on-secondary-dark);
+  }
+  &.warning {
+    background-color: var(--md-sys-color-warning-container-dark);
+  }
+  &.error {
+    background-color: var(--md-sys-color-on-error-dark);
+  }
+`
+
+
+const FormLabel = ({ label }) => {
+
+  return (
+    <LabelContainer className={label.highlight || 'normal'}>
+      <ReactMarkdown>
+        {label.text || ''}
+      </ReactMarkdown> 
+    </LabelContainer>
+  )
+
+
+}
+
 
 const FormItem = ({ item, value, onChange }) => {
   if (item.type === 'text') {
@@ -112,7 +153,7 @@ const SimpleFormDialog = ({ fields, values, onClose, onSubmit, isOpen, header })
         <FormLayout style={{ width: '95%' }}>
           {fields.map((item, index) => {
             if (item.type === 'label') {
-              return <h2 key={index}>{item.text}</h2>
+              return <FormLabel key={index} label={item} />
             }
 
             return (

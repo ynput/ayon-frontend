@@ -12,7 +12,7 @@ const InteractiveActionDialog = ({ interactiveForm, onClose, onSubmit }) => {
   return (
     <SimpleFormDialog
       isOpen
-      header={`Interactive ${interactiveForm.identifier}`}
+      header={`${interactiveForm.header}`}
       fields={interactiveForm.fields}
       onClose={onClose}
       onSubmit={handleSubmit}
