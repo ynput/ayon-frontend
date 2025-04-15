@@ -14,6 +14,19 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    configureAction: build.mutation<ConfigureActionApiResponse, ConfigureActionApiArg>({
+      query: (queryArg) => ({
+        url: `/api/actions/config`,
+        method: 'POST',
+        body: queryArg.actionConfig,
+        params: {
+          addonName: queryArg.addonName,
+          addonVersion: queryArg.addonVersion,
+          variant: queryArg.variant,
+          identifier: queryArg.identifier,
+        },
+      }),
+    }),
     executeAction: build.mutation<ExecuteActionApiResponse, ExecuteActionApiArg>({
       query: (queryArg) => ({
         url: `/api/actions/execute`,
@@ -36,6 +49,14 @@ export type ListAvailableActionsForContextApiResponse =
 export type ListAvailableActionsForContextApiArg = {
   mode?: 'simple' | 'dynamic' | 'all'
   actionContext: ActionContext
+}
+export type ConfigureActionApiResponse = /** status 200 Successful Response */ object
+export type ConfigureActionApiArg = {
+  addonName: string
+  addonVersion: string
+  variant?: string
+  identifier: string
+  actionConfig: ActionConfig
 }
 export type ExecuteActionApiResponse = /** status 200 Successful Response */ ExecuteResponseModel
 export type ExecuteActionApiArg = {
@@ -121,6 +142,20 @@ export type ActionContext = {
   entityIds?: string[]
   /** The data from the form */
   formData?: object
+}
+export type ActionConfig = {
+  /** The name of the project. If not provided, use global actions, the rest of the fields are ignored. */
+  projectName?: string
+  /** The type of the entity. If not specified, project-lever or global actions are used. */
+  entityType?: 'folder' | 'product' | 'version' | 'representation' | 'task' | 'workfile'
+  /** List of subtypes present in the entity list */
+  entitySubtypes?: string[]
+  /** The IDs of the entities */
+  entityIds?: string[]
+  /** The data from the form */
+  formData?: object
+  /** The configuration of the action within the given context */
+  value?: object
 }
 export type ExecuteResponseModel = {
   /** The type of response */
