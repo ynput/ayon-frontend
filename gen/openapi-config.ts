@@ -18,7 +18,7 @@ const outputFiles = {
     'updateReviewable',
     'uploadReviewable',
   ],
-  actions: ['listAvailableActionsForContext', 'executeAction'],
+  actions: ['listAvailableActionsForContext', 'executeAction', 'configureAction'],
   accessGroups: [
     'getAccessGroupSchema',
     'getAccessGroups',

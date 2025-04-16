@@ -50,6 +50,7 @@ export const buildOperations = (ids: string[], type: string, data: any) =>
 
 const tagTypes = [
   'accessGroup',
+  'actionConfig',
   'addonList',
   'addonSettings',
   'addonSettingsList',
