@@ -52,17 +52,21 @@ const VideoPlayerControls = ({
   const handleGoBack1 = () => {
     console.debug('VideoPlayerControls: Go back 1')
     let prevFrame = currentFrameRef.current - 1
+    console.log('Current Frame:', currentFrameRef.current)
     if (prevFrame < 0) {
       prevFrame = loop ? frameCountRef.current - 1 : 0
     }
+    console.log('Next Frame:', prevFrame)
     seekToFrame(prevFrame)
   }
   const handleGoForward1 = () => {
     console.debug('VideoPlayerControls: Go forward 1')
+    console.log('Current Frame:', currentFrameRef.current)
     let nextFrame = currentFrameRef.current + 1
     if (nextFrame > frameCountRef.current - 1) {
       nextFrame = loop ? 0 : frameCountRef.current - 1
     }
+    console.log('Next Frame:', nextFrame)
     seekToFrame(nextFrame)
   }
 
