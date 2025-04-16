@@ -15,10 +15,9 @@ import styled from 'styled-components'
 import TypeEditor from './TypeEditor'
 import checkName from '@helpers/checkName'
 import ShortcutWidget from '@components/ShortcutWidget'
-import { useSelection } from '@containers/ProjectTreeTable/context/SelectionContext'
-import { parseCellId } from '@containers/ProjectTreeTable/utils/cellUtils'
-import { useProjectTableContext } from '@containers/ProjectTreeTable/context/ProjectTableContext'
-import { EditorTaskNode, MatchingFolder } from '@containers/ProjectTreeTable/utils/types'
+import { useSelectionContext, useProjectTableContext } from '@shared/ProjectTreeTable'
+import { parseCellId } from '@shared/ProjectTreeTable/utils/cellUtils'
+import { EditorTaskNode, MatchingFolder } from '@shared/ProjectTreeTable'
 import FolderSequence from '@components/FolderSequence/FolderSequence'
 import { EntityForm, NewEntityType, useNewEntityContext } from '@context/NewEntityContext'
 import { ProjectModel } from '@api/rest/project'
@@ -86,7 +85,7 @@ const NewEntity: React.FC<NewEntityProps> = () => {
   } = useNewEntityContext()
 
   const [createMore, setCreateMore] = useState(false)
-  const { selectedCells } = useSelection()
+  const { selectedCells } = useSelectionContext()
   const { getEntityById, projectInfo } = useProjectTableContext()
 
   const { selectedFolderIds, selectedFolders } = React.useMemo(() => {

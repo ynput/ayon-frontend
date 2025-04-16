@@ -1,4 +1,4 @@
-import useCreateContext from '@hooks/useCreateContext'
+import useCreateContextMenu from '@shared/ContextMenu/useCreateContextMenu'
 import copyToClipboard from '@helpers/copyToClipboard'
 import { onTaskSelected } from '@state/dashboard'
 import { useSelector } from 'react-redux'
@@ -47,7 +47,7 @@ export const useGetTaskContextMenu = (tasks, dispatch, { onOpenInBrowser } = {})
     ]
   }
 
-  const [showContextMenu, closeContext] = useCreateContext([])
+  const [showContextMenu, closeContext] = useCreateContextMenu([])
 
   const handleContextMenu = (e) => {
     // find the parent with className card

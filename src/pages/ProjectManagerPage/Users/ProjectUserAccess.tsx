@@ -3,11 +3,10 @@ import styled from 'styled-components'
 import { useSelector } from 'react-redux'
 import { useEffect, useMemo, useState } from 'react'
 import { $Any } from '@types'
-import { Button, Toolbar } from '@ynput/ayon-react-components'
-import { Filter } from '@components/SearchFilter/types'
+import { Button, Filter, Toolbar } from '@ynput/ayon-react-components'
 import Shortcuts from '@containers/Shortcuts'
 import { useShortcutsContext } from '@context/shortcutsContext'
-import useCreateContext from '@hooks/useCreateContext'
+import useCreateContextMenu from '@shared/ContextMenu/useCreateContextMenu'
 import useUserProjectPermissions from '@hooks/useUserProjectPermissions'
 import { useGetAccessGroupsQuery } from '@queries/accessGroups/getAccessGroups'
 import { useGetUsersQuery } from '@queries/user/getUsers'
@@ -49,7 +48,7 @@ import ProjectUserAccesAccessGroupPanel from './ProjectUserAccessAccessGroupPane
 import {
   EmptyPlaceholderFlex,
   EmptyPlaceholderFlexWrapper,
-} from '@components/EmptyPlaceholder/EmptyPlaceholderFlex.styled'
+} from '@shared/EmptyPlaceholder/EmptyPlaceholderFlex.styled'
 
 const StyledButton = styled(Button)`
   .shortcut {
@@ -143,7 +142,7 @@ const ProjectUserAccess = () => {
     filters.filter((filter: Filter) => filter.label === 'Access Group'),
   )
 
-  const [ctxMenuShow] = useCreateContext([])
+  const [ctxMenuShow] = useCreateContextMenu([])
 
   const handleUserFilterUpdate = (actionedUsers: string[]) => {
     const otherFilters = filters.filter((filter: Filter) => filter.label !== 'User')

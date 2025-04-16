@@ -4,7 +4,7 @@ import { TablePanel, Section } from '@ynput/ayon-react-components'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { useEffect } from 'react'
-import useCreateContext from '@hooks/useCreateContext'
+import useCreateContextMenu from '@shared/ContextMenu/useCreateContextMenu'
 import clsx from 'clsx'
 import useTableLoadingData from '@hooks/useTableLoadingData'
 
@@ -81,7 +81,7 @@ const TeamList = ({
     [onNewTeam],
   )
   // create the ref and model
-  const [globalContextMenuShow] = useCreateContext(globalContextItems)
+  const [globalContextMenuShow] = useCreateContextMenu(globalContextItems)
 
   // TABLE CONTEXT MENU
   const tableContextItems = useMemo(
@@ -107,7 +107,7 @@ const TeamList = ({
     [teams, selection],
   )
   // create the ref and model
-  const [tableContextMenuShow] = useCreateContext(tableContextItems)
+  const [tableContextMenuShow] = useCreateContextMenu(tableContextItems)
 
   const tableData = useTableLoadingData(teamList, isLoading, 10, 'name')
 

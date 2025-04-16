@@ -18,10 +18,9 @@ import { useFiltersWithHierarchy } from '@components/SearchFilter/hooks'
 import { FilterFieldType } from '@hooks/useBuildFilterOptions'
 import ProjectOverviewDetailsPanel from './containers/ProjectOverviewDetailsPanel'
 import NewEntity from '@components/NewEntity/NewEntity'
-import { useProjectTableContext } from '@containers/ProjectTreeTable/context/ProjectTableContext'
+import { useProjectTableContext, useSelectedRowsContext } from '@shared/ProjectTreeTable'
 import ProjectOverviewSettings, { CustomizeButton } from './components/ProjectOverviewSettings'
-import { useSelectedRows } from '@containers/ProjectTreeTable/context/SelectedRowsContext'
-import { useSettingsPanel } from './contexts/SettingsPanelContext'
+import { useSettingsPanel } from './context/SettingsPanelContext'
 import ReloadButton from './components/ReloadButton'
 
 const searchFilterTypes: FilterFieldType[] = [
@@ -33,7 +32,7 @@ const searchFilterTypes: FilterFieldType[] = [
 ]
 
 const ProjectOverviewPage: FC = () => {
-  const { selectedRows } = useSelectedRows()
+  const { selectedRows } = useSelectedRowsContext()
 
   const {
     projectName,
@@ -43,7 +42,6 @@ const ProjectOverviewPage: FC = () => {
     showHierarchy,
     updateShowHierarchy,
     tasksMap,
-    columnOrder,
   } = useProjectTableContext()
 
   const { isPanelOpen } = useSettingsPanel()
@@ -103,7 +101,6 @@ const ProjectOverviewPage: FC = () => {
                 projectInfo={projectInfo}
                 tasksMap={tasksMap}
                 disabledFilters={sliceType ? [sliceType] : []}
-                columnOrder={columnOrder}
               />
               <ReloadButton />
               <span style={{ whiteSpace: 'nowrap', display: 'flex', gap: 8 }}>

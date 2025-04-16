@@ -1,4 +1,4 @@
-import useLocalStorage from '@hooks/useLocalStorage'
+import { useLocalStorage } from '@shared/hooks'
 
 const useColumnResize = (name) => {
   // use local storage hook to save

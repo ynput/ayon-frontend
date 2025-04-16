@@ -1,5 +1,5 @@
 import React from 'react'
-import useLocalStorage from '@hooks/useLocalStorage'
+import { useLocalStorage } from '@shared/hooks'
 import * as Styled from './InstallerDownloadPrompt.styled'
 import useGetInstallerDownload from './useGetInstallerDownload'
 

@@ -1,7 +1,7 @@
 import { Button } from '@ynput/ayon-react-components'
 import { FC, ReactNode } from 'react'
 import styled from 'styled-components'
-import { SettingField, useSettingsPanel } from '../contexts/SettingsPanelContext'
+import { SettingField, useSettingsPanel } from '../context/SettingsPanelContext'
 
 // Side panel styled components
 const SidePanel = styled.div<{ open: boolean }>`

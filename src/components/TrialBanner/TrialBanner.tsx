@@ -7,7 +7,7 @@ import { useGetYnputCloudInfoQuery } from '@queries/cloud/cloud'
 import { useAppSelector } from '@state/store'
 import { Button, Icon } from '@ynput/ayon-react-components'
 import { useGetActiveUsersCountQuery } from '@queries/user/getUsers'
-import useLocalStorage from '@hooks/useLocalStorage'
+import { useLocalStorage } from '@shared/hooks'
 import { createPortal } from 'react-dom'
 import { useCustomerly } from 'react-live-chat-customerly'
 

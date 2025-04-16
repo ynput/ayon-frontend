@@ -4,8 +4,8 @@ import MenuList from '@components/Menu/MenuComponents/MenuList'
 import { useListProjectsQuery } from '@queries/project/getProject'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { InputText, Section } from '@ynput/ayon-react-components'
-import useCreateContext from '@hooks/useCreateContext'
-import useLocalStorage from '@/hooks/useLocalStorage'
+import useCreateContextMenu from '@shared/ContextMenu/useCreateContextMenu'
+import { useLocalStorage } from '@shared/hooks'
 import ProjectButton from '@components/ProjectButton/ProjectButton'
 import { createPortal } from 'react-dom'
 import { useShortcutsContext } from '@context/shortcutsContext'
@@ -56,7 +56,7 @@ const ProjectMenu = ({ isOpen, onHide }) => {
 
   const { data: projects = [] } = useListProjectsQuery({ active: true })
 
-  const [showContext] = useCreateContext([])
+  const [showContext] = useCreateContextMenu([])
   const [handleProjectSelectionDispatches] = useProjectSelectDispatcher([])
 
   const [updateUserPreferences] = useSetFrontendPreferencesMutation()

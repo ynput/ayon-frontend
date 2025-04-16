@@ -5,6 +5,7 @@ import {
   GetProjectApiResponse,
   Status,
   TaskType,
+  ListProjectsItemModel,
 } from '@api/rest/project'
 // @ts-ignore
 import { selectProject, setProjectData } from '@state/project'
@@ -84,6 +85,7 @@ type TagTypes = TagTypesFromApi<typeof getProjectInjected>
 // update the definitions to include the new types
 type UpdatedDefinitions = Omit<Definitions, 'getProject'> & {
   getProject: OverrideResultType<Definitions['getProject'], GetProjectResponse>
+  listProjects: OverrideResultType<Definitions['listProjects'], ListProjectsItemModel[]>
 }
 
 // TODO: sort out the types

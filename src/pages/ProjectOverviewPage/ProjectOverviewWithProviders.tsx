@@ -1,30 +1,81 @@
-import { EntitySelectionProvider } from '@containers/ProjectTreeTable/context/EntitySelectionContext'
 import { FC } from 'react'
 import ProjectOverviewPage from './ProjectOverviewPage'
-import { ProjectTableProvider } from '@containers/ProjectTreeTable/context/ProjectTableContext'
-import { SelectionProvider } from '@containers/ProjectTreeTable/context/SelectionContext'
+import {
+  ProjectTableProvider,
+  SelectionProvider,
+  SelectedRowsProvider,
+  ColumnSettingsProvider,
+} from '@shared/ProjectTreeTable'
 import { NewEntityProvider } from '@context/NewEntityContext'
-import { SettingsPanelProvider } from './contexts/SettingsPanelContext'
-import { SelectedRowsProvider } from '@containers/ProjectTreeTable/context/SelectedRowsContext'
-import { ProjectDataProvider } from '@containers/ProjectTreeTable/context/ProjectDataContext'
+import { SettingsPanelProvider } from './context/SettingsPanelContext'
+import { useAppSelector } from '@state/store'
+import {
+  ProjectOverviewProvider,
+  useProjectOverviewContext,
+} from './context/ProjectOverviewContext'
+import { ProjectDataProvider } from './context/ProjectDataContext'
+import { useUpdateOverviewEntitiesMutation } from '@queries/overview/updateOverview'
+import {
+  ProjectTableQueriesProvider,
+  ProjectTableQueriesProviderProps,
+} from '@shared/ProjectTreeTable/context/ProjectTableQueriesContext'
+import { useLazyGetTasksByParentQuery } from '@queries/overview/getOverview'
 
 const ProjectOverviewWithProviders: FC = () => {
+  const projectName = useAppSelector((state) => state.project.name) || ''
   return (
-    <EntitySelectionProvider>
-      <ProjectDataProvider>
-        <ProjectTableProvider>
+    <ProjectDataProvider projectName={projectName}>
+      <ProjectOverviewProvider>
+        <SettingsPanelProvider>
+          <ProjectOverviewWithTableProviders />
+        </SettingsPanelProvider>
+      </ProjectOverviewProvider>
+    </ProjectDataProvider>
+  )
+}
+
+const ProjectOverviewWithTableProviders: FC = () => {
+  const props = useProjectOverviewContext()
+  const [entityOperations] = useUpdateOverviewEntitiesMutation()
+
+  const updateEntities: ProjectTableQueriesProviderProps['updateEntities'] = async ({
+    operations,
+    patchOperations,
+  }) => {
+    return await entityOperations({
+      operationsRequestModel: { operations },
+      patchOperations,
+      projectName: props.projectName,
+    }).unwrap()
+  }
+  const [fetchFolderTasks] = useLazyGetTasksByParentQuery()
+  const getFoldersTasks: ProjectTableQueriesProviderProps['getFoldersTasks'] = async (
+    args,
+    force,
+  ) => {
+    return await fetchFolderTasks(
+      {
+        projectName: props.projectName,
+        ...args,
+      },
+      force,
+    ).unwrap()
+  }
+
+  return (
+    <ProjectTableQueriesProvider {...{ updateEntities, getFoldersTasks }}>
+      <ProjectTableProvider {...props}>
+        <NewEntityProvider>
           <SelectionProvider>
             <SelectedRowsProvider>
-              <NewEntityProvider>
-                <SettingsPanelProvider>
-                  <ProjectOverviewPage />
-                </SettingsPanelProvider>
-              </NewEntityProvider>
+              <ColumnSettingsProvider projectName={props.projectName}>
+                <ProjectOverviewPage />
+              </ColumnSettingsProvider>
             </SelectedRowsProvider>
           </SelectionProvider>
-        </ProjectTableProvider>
-      </ProjectDataProvider>
-    </EntitySelectionProvider>
+        </NewEntityProvider>
+      </ProjectTableProvider>
+    </ProjectTableQueriesProvider>
   )
 }
 

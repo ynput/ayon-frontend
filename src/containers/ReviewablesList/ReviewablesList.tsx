@@ -2,10 +2,7 @@ import { FC, MouseEvent, useState, useRef, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { $Any } from '@types'
 // queries
-import {
-  useGetReviewablesForVersionQuery,
-  useHasTranscoderQuery,
-} from '@queries/review/getReview'
+import { useGetReviewablesForVersionQuery, useHasTranscoderQuery } from '@queries/review/getReview'
 import {
   useDeleteReviewableMutation,
   useSortVersionReviewablesMutation,
@@ -42,8 +39,8 @@ import { openViewer, toggleUpload } from '@state/viewer'
 
 // utils
 import { getGroupedReviewables } from './getGroupedReviewables'
-import useCreateContext from '@hooks/useCreateContext'
-import confirmDelete from '@helpers/confirmDelete'
+import useCreateContextMenu from '@shared/ContextMenu/useCreateContextMenu'
+import { confirmDelete } from '@shared/helpers'
 import EditReviewableDialog from './EditReviewableDialog'
 import ReviewableUpload from './ReviewablesUpload'
 
@@ -235,7 +232,7 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
   }
 
   // create the ref and model
-  const [ctxMenuShow] = useCreateContext()
+  const [ctxMenuShow] = useCreateContextMenu()
 
   const handleContextMenu = (event: MouseEvent<HTMLDivElement>) => {
     // get the reviewable by id
@@ -288,11 +285,7 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
 
   return (
     <>
-      <ReviewableUpload
-        projectName={projectName}
-        versionId={versionId}
-        productId={productId}
-      >
+      <ReviewableUpload projectName={projectName} versionId={versionId} productId={productId}>
         {isLoading ? (
           Array.from({ length: 3 }).map((_, index) => (
             <Styled.LoadingCard key={index} className="loading" />

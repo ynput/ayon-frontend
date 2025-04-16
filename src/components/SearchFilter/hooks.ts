@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from 'react'
-import { Option, Filter } from './types'
-import { SelectionData } from '@context/slicerContext'
 import { TaskFilterValue } from '@containers/TasksProgress/hooks/useFilterBySlice'
+import { Filter, Option } from '@ynput/ayon-react-components'
+import { SelectionData } from '@shared/Slicer'
 
 type UseFocusOptions = {
   ref: React.RefObject<HTMLUListElement>

@@ -6,7 +6,7 @@ import { InputText } from '@ynput/ayon-react-components'
 import { Tag } from '@components/MarketAddonCard/MarketAddonCard.styled'
 import { MarketAddonItem } from '@queries/market/getMarket'
 import { ListItemType } from '@components/MarketAddonCard/MarketAddonCard'
-import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
+import EmptyPlaceholder from '@shared/EmptyPlaceholder/EmptyPlaceholder'
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import { useExpandedGroups } from './hooks'
 

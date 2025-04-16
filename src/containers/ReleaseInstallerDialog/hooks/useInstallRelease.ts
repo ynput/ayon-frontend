@@ -14,7 +14,7 @@ import {
   InstallMessage,
   useGetInstallEventsQuery,
 } from '@queries/releases/getReleases'
-import useLocalStorage from '@hooks/useLocalStorage'
+import { useLocalStorage } from '@shared/hooks'
 
 type Props = {
   releaseInfo: GetReleaseInfoApiResponse | undefined

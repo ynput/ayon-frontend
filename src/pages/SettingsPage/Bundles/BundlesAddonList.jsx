@@ -6,7 +6,7 @@ import { SocketContext } from '@context/websocketContext'
 import { compareBuild, coerce } from 'semver'
 import { InputSwitch, InputText, VersionSelect } from '@ynput/ayon-react-components'
 import { FilePath, LatestIcon } from './Bundles.styled'
-import useCreateContext from '@hooks/useCreateContext'
+import useCreateContextMenu from '@shared/ContextMenu/useCreateContextMenu'
 import { useNavigate } from 'react-router'
 import styled from 'styled-components'
 
@@ -153,7 +153,7 @@ const BundlesAddonList = React.forwardRef(
       return items
     }
 
-    const [ctxMenuShow] = useCreateContext([])
+    const [ctxMenuShow] = useCreateContextMenu([])
 
     const handleContextClick = (e) => {
       let contextSelection = []

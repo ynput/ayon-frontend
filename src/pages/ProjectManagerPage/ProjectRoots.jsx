@@ -12,7 +12,7 @@ import {
 } from '@ynput/ayon-react-components'
 import ProjectManagerPageLayout from './ProjectManagerPageLayout'
 import { toast } from 'react-toastify'
-import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
+import EmptyPlaceholder from '@shared/EmptyPlaceholder/EmptyPlaceholder'
 
 const ProjectRootForm = ({ projectName, siteName, siteId, roots }) => {
   const [setCustomRoots, { isLoading }] = useSetCustomRootsMutation()

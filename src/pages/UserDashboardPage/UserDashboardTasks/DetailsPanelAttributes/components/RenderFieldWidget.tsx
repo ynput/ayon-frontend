@@ -1,10 +1,10 @@
 import { FC } from 'react'
 import styled from 'styled-components'
-import { CellValue } from '../../../../../containers/ProjectTreeTable/widgets/CellWidget'
-import { TextWidget } from '../../../../../containers/ProjectTreeTable/widgets/TextWidget'
-import { BooleanWidget } from '../../../../../containers/ProjectTreeTable/widgets/BooleanWidget'
-import { DateWidget } from '../../../../../containers/ProjectTreeTable/widgets/DateWidget'
-import { EnumWidget } from '../../../../../containers/ProjectTreeTable/widgets/EnumWidget'
+import { CellValue } from '@shared/ProjectTreeTable/widgets/CellWidget'
+import { TextWidget } from '@shared/ProjectTreeTable/widgets/TextWidget'
+import { BooleanWidget } from '@shared/ProjectTreeTable/widgets/BooleanWidget'
+import { DateWidget } from '@shared/ProjectTreeTable/widgets/DateWidget'
+import { EnumWidget } from '@shared/ProjectTreeTable/widgets/EnumWidget'
 import { AttributeField } from '../DetailsPanelAttributesEditor'
 
 const FieldValueText = styled.div`

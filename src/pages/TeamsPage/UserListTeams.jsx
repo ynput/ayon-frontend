@@ -5,7 +5,7 @@ import { ProfileRow } from '@pages/SettingsPage/UsersSettings/UserList'
 
 import { useMemo } from 'react'
 import addRemoveMembers from './addRemoveMembers'
-import useCreateContext from '@hooks/useCreateContext'
+import useCreateContextMenu from '@shared/ContextMenu/useCreateContextMenu'
 import UsersListTeamsSmall from './UsersListTeamsSmall'
 import clsx from 'clsx'
 import useTableLoadingData from '@hooks/useTableLoadingData'
@@ -113,7 +113,7 @@ const UserListTeams = ({
   }
 
   // create ref and model
-  const [contextMenuShow] = useCreateContext([])
+  const [contextMenuShow] = useCreateContextMenu([])
 
   const handleContext = (e) => {
     // we all of this to keep users in sync

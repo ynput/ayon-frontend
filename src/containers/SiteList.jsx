@@ -3,7 +3,7 @@ import { useMemo, useEffect } from 'react'
 import { Section, TablePanel } from '@ynput/ayon-react-components'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
-import useLocalStorage from '@hooks/useLocalStorage'
+import { useLocalStorage } from '@shared/hooks'
 
 const SiteList = ({ value, onChange, style, multiselect = false }) => {
   const [preferredSite, setPreferredSite] = useLocalStorage('prefferedSite', null)

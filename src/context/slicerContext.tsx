@@ -14,18 +14,7 @@ import { Assignees } from '@queries/user/getUsers'
 import { TableRow } from '@containers/Slicer/types'
 import SlicerDropdownFallback, { SlicerDropdownProps } from '@containers/Slicer/SlicerDropdown'
 import { DropdownRef } from '@ynput/ayon-react-components'
-
-export type SliceType = 'hierarchy' | 'assignees' | 'status' | 'type' | 'taskType'
-const sliceTypes: SliceType[] = ['hierarchy', 'assignees', 'status', 'type', 'taskType']
-
-export type SliceDataItem = {
-  id: string
-  name?: string | null
-  label?: string | null
-  subType?: string | null
-}
-
-export type SelectionData = Record<string, SliceDataItem>
+import { SelectionData, SliceType } from '@shared/Slicer'
 
 export type OnSliceTypeChange = (
   sliceType: SliceType,
@@ -116,7 +105,7 @@ export const SlicerProvider = ({ children }: SlicerProviderProps) => {
     leavePersistentSlice,
     returnToPersistentSlice,
   ) => {
-    if (!sliceTypes.includes(sliceType)) return console.log('Invalid slice type')
+    if (!sliceType.includes(sliceType)) return console.log('Invalid slice type')
     // reset selection
     setRowSelection({})
     // set slice type

@@ -4,13 +4,13 @@ import clsx from 'clsx'
 import { FormLayout, Dialog, Button, Icon, Spacer, ShortcutTag } from '@ynput/ayon-react-components'
 import { $Any } from '@types'
 import Shortcuts from '@containers/Shortcuts'
-import { getPlatformShortcutKey, KeyMode } from '@helpers/platform'
+import { getPlatformShortcutKey, KeyMode } from '@shared/helpers'
 import { mapInitialAccessGroupStates } from './mappers'
 import { AccessGroupUsers, SelectionStatus } from './types'
 import * as Styled from './ProjectUserAccessAssignDialog.styled'
 import { ProjectUserData } from '@queries/accessGroups/getAccessGroups'
 
-const icons: {[key in SelectionStatus] : string | undefined} = {
+const icons: { [key in SelectionStatus]: string | undefined } = {
   [SelectionStatus.None]: 'add',
   [SelectionStatus.Mixed]: 'remove',
   [SelectionStatus.All]: 'check',
@@ -38,25 +38,36 @@ const ProjectUserAccessAssignDialog = ({
   onSave,
   onClose,
 }: Props) => {
-  const initialStates = mapInitialAccessGroupStates(accessGroups, users, projectUsers, userAccessGroups)
-  const initialStatesList = Object.keys(initialStates).map(agName => ({name: agName, status: initialStates[agName]}))
+  const initialStates = mapInitialAccessGroupStates(
+    accessGroups,
+    users,
+    projectUsers,
+    userAccessGroups,
+  )
+  const initialStatesList = Object.keys(initialStates).map((agName) => ({
+    name: agName,
+    status: initialStates[agName],
+  }))
 
   const [accessGroupItems, setAccessGroupItems] = useState<AccessGroupItem[]>(initialStatesList)
-  const allSelected = accessGroupItems.find(item => item.status !== SelectionStatus.All) === undefined
-
+  const allSelected =
+    accessGroupItems.find((item) => item.status !== SelectionStatus.All) === undefined
 
   const toggleAccessGroup = (accessGroup: AccessGroupItem) => {
     const newStatus =
       SelectionStatus.All === accessGroup.status ? SelectionStatus.None : SelectionStatus.All
     setAccessGroupItems((prev: AccessGroupItem[]) => {
       const idx = prev.findIndex((item) => item.name === accessGroup.name)
-      return [...prev.slice(0, idx), {...accessGroup, status: newStatus}, ...prev.slice(idx + 1)]
+      return [...prev.slice(0, idx), { ...accessGroup, status: newStatus }, ...prev.slice(idx + 1)]
     })
   }
 
   const handleToggleAll = (value: boolean) => {
     setAccessGroupItems((prev: AccessGroupItem[]) => {
-      return prev.map(item => ({...item, status: value ? SelectionStatus.All : SelectionStatus.None}))
+      return prev.map((item) => ({
+        ...item,
+        status: value ? SelectionStatus.All : SelectionStatus.None,
+      }))
     })
   }
 
@@ -65,7 +76,7 @@ const ProjectUserAccessAssignDialog = ({
   }
 
   const handleSave = () => {
-    const changes = accessGroupItems.filter(item => initialStates[item.name] !== item.status)
+    const changes = accessGroupItems.filter((item) => initialStates[item.name] !== item.status)
     onSave(users, changes)
     onClose()
   }
@@ -86,8 +97,6 @@ const ProjectUserAccessAssignDialog = ({
         </span>
       </span>
     )
-
-
   }
 
   const shortcuts = useMemo(

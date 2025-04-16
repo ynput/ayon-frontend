@@ -1,4 +1,4 @@
-import useLocalStorage from '@hooks/useLocalStorage'
+import { useLocalStorage } from '@shared/hooks'
 import * as Styled from './ReleaseInstallerPrompt.styled'
 import { useNavigate } from 'react-router'
 import { useAppDispatch } from '@state/store'

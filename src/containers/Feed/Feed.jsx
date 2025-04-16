@@ -20,7 +20,7 @@ import { toast } from 'react-toastify'
 import ActivityReferenceTooltip from '@components/Feed/ActivityReferenceTooltip/ActivityReferenceTooltip'
 import { isFilePreviewable } from '@containers/FileUploadPreview/FileUploadPreview'
 import { useGetKanbanProjectUsersQuery } from '@queries/userDashboard/getUserDashboard'
-import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
+import EmptyPlaceholder from '@shared/EmptyPlaceholder/EmptyPlaceholder'
 import { useFeed, FEED_NEW_COMMENT } from '@context/FeedContext'
 
 // number of activities to get

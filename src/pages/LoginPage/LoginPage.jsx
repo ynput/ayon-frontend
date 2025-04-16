@@ -9,7 +9,7 @@ import AuthLink from './AuthLink'
 import { useGetSiteInfoQuery } from '@queries/auth/getAuth'
 import LoadingPage from '../LoadingPage'
 import * as Styled from './LoginPage.styled'
-import useLocalStorage from '@hooks/useLocalStorage'
+import { useLocalStorage } from '@shared/hooks'
 import { isEmpty, isEqual } from 'lodash'
 import remarkGfm from 'remark-gfm'
 

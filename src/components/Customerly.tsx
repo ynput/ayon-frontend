@@ -1,5 +1,5 @@
 import useCustomerlyChat from '@hooks/useCustomerly'
-import useLocalStorage from '@hooks/useLocalStorage'
+import { useLocalStorage } from '@shared/hooks'
 import { useGetYnputCloudInfoQuery } from '@queries/cloud/cloud'
 import { FC } from 'react'
 import getTrialDates from './TrialBanner/helpers/getTrialDates'
