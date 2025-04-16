@@ -33,7 +33,7 @@
       "@context/*": ["./context/*"],
       "@state/*": ["./features/*"],
       "@helpers/*": ["./helpers/*"],
-      "@shared/*": ["./shared/src/*"],
+      "@shared/*": ["../shared/src/*"],
       "@/*": ["./*"]
     }
   },

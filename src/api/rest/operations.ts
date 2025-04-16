@@ -145,7 +145,7 @@ export type OperationModel = {
   type: 'create' | 'update' | 'delete'
   entityType: 'folder' | 'product' | 'version' | 'representation' | 'task' | 'workfile'
   entityId?: string
-  data?: object
+  data?: Record<string, any>
   force?: boolean
   asUser?: string
 }

@@ -106,7 +106,7 @@ export default ({ mode }) => {
         { find: '@helpers', replacement: fileURLToPath(new URL('./src/helpers', import.meta.url)) },
         {
           find: '@shared',
-          replacement: fileURLToPath(new URL('./src/shared/src', import.meta.url)),
+          replacement: fileURLToPath(new URL('./shared/src', import.meta.url)),
         },
       ],
     },
