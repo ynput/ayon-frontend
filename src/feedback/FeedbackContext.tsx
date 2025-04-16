@@ -79,12 +79,16 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
 
   const initializeChangelog = (): boolean => {
     // everyone sees highlights
-    const categories: string[] = ['Highlights']
+    const categories: string[] = []
 
     if (user.data.isAdmin) {
       // admins see everything
       const adminCategories = ['Server', 'Addon', 'Pipeline']
       categories.push(...adminCategories)
+    } else {
+      // users only see highlights
+      // admins do not see highlights as it is a subset of the other categories
+      categories.push('Highlights')
     }
 
     const win = window as any
