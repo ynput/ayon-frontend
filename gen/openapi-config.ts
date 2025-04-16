@@ -1,9 +1,10 @@
 import type { ConfigFile } from '@rtk-query/codegen-openapi'
+import { permission } from 'process'
 
 // Specify the endpoints you want to generate
 const outputFiles = {
   bundles: ['listBundles', 'checkBundleCompatibility', 'migrateSettingsByBundle'],
-  folders: ['getFolderHierarchy', 'getFolderList'],
+  folders: ['getFolderHierarchy', 'getFolderList', 'queryTasksFolders'],
   market: ['marketAddonList', 'marketAddonDetail', 'marketAddonVersionDetail', 'getLicenses'],
   watchers: ['getEntityWatchers', 'setEntityWatchers'],
   inbox: ['manageInboxItem'],
@@ -25,7 +26,7 @@ const outputFiles = {
     'deleteAccessGroup',
     'saveAccessGroup',
   ],
-  auth: ['createSession', 'getUserPools', 'getCurrentUser'],
+  auth: ['createSession', 'getUserPools', 'getSiteInfo'],
   addons: ['listAddons', 'listFrontendModules', 'deleteAddonVersion', 'uploadAddonZipFile'],
   activities: ['deleteProjectActivity'],
   users: ['getUser', 'setFrontendPreferences'],
@@ -36,22 +37,18 @@ const outputFiles = {
     'createDependencyPackage',
     'deleteDependencyPackage',
   ],
-  cloud: [
-    'getYnputCloudInfo',
-    'setYnputCloudKey',
-    'deleteYnputCloudKey',
-    'getFeedbackVerification',
-  ],
+  cloud: ['getYnputCloudInfo', 'setYnputCloudKey', 'deleteYnputCloudKey'],
   attributes: ['getAttributeList', 'setAttributeList', 'getAttributeConfig'],
   config: [
     'getServerConfig',
     'getServerOverrides',
     'getServerConfigSchema',
-    'getConfigValue',
     'setServerConfig',
     'uploadServerConfigFile',
   ],
   services: ['listServices', 'listHosts', 'spawnService', 'patchService', 'deleteService'],
+  operations: ['operations'],
+  permissions: ['getCurrentUserPermissions', 'getCurrentUserProjectPermissions'],
 }
 
 const buildOutputFiles = (files: { [name: string]: string[] }) =>
@@ -64,7 +61,7 @@ const buildOutputFiles = (files: { [name: string]: string[] }) =>
   }, {})
 
 const config: ConfigFile = {
-  schemaFile: `http://localhost:5000/openapi.json`,
+  schemaFile: `http://localhost:3000/openapi.json`,
   apiFile: '../src/services/ayon.ts',
   exportName: 'api',
   apiImport: 'RestAPI',

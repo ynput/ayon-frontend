@@ -1,4 +1,4 @@
-type SortByOption = {
+export type SortByOption = {
   id: string
   label: string
   sortOrder: boolean

@@ -136,9 +136,7 @@ const useTableDataBySlice = ({ sliceFields }: Props): TableData => {
     if (isLoadingData) return
 
     // check if slice field is enabled
-    if (!sliceFields.includes(sliceType)) {
-      return
-    }
+    if (!sliceFields.includes(sliceType)) return
 
     const fetchData = async () => {
       try {
@@ -161,6 +159,7 @@ const useTableDataBySlice = ({ sliceFields }: Props): TableData => {
         setIsLoading(false)
       }
     }
+
     fetchData()
   }, [sliceType, sliceFields, projectName, isLoadingData])
 

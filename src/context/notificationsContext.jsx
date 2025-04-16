@@ -81,6 +81,8 @@ function NotificationsProvider(props) {
       // only show notifications for important messages
       if (!message.summary?.isImportant) return
 
+      console.log('IMPORTANT MESSAGE:', message)
+
       if (notificationSound && !document.hasFocus()) {
         // play a notification sound
         soundRef.current?.play()

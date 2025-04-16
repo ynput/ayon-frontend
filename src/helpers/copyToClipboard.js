@@ -15,7 +15,7 @@ const copyToClipboard = (message, toastMessage = false) => {
           if (toastMessage) {
             toastText += `: ${message}`
           }
-          toast.success(toastText)
+          toast.success(toastText, { autoClose: 1000 })
         })
         .catch((err) => {
           console.error('Could not copy text: ', err)
@@ -42,7 +42,9 @@ const fallbackCopyTextToClipboard = (text, toastMessage = false) => {
     if (toastMessage) {
       toastText += `: "${text}"`
     }
-    toast.success(toastText)
+    toast.success(toastText, {
+      autoClose: 100,
+    })
   } catch (ex) {
     console.warn('Copy to clipboard failed.', ex)
     toast.error('Could not copy text')

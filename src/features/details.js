@@ -32,6 +32,13 @@ const initialStatePinned = {
   tab: 'feed', // feed | attribs | files,
 }
 
+const initialExtra = {
+  overview: {
+    selectedEntityIds: [],
+    entityType: null,
+  },
+}
+
 const initialTooltip = {
   id: null,
   type: '',
@@ -40,7 +47,7 @@ const initialTooltip = {
   pos: {},
 }
 
-const scopes = ['dashboard', 'project', 'inbox', 'review', 'progress']
+const scopes = ['dashboard', 'project', 'inbox', 'review', 'progress', 'overview']
 
 const detailsSlice = createSlice({
   name: 'details',
@@ -50,7 +57,8 @@ const detailsSlice = createSlice({
       highlighted: getInitialStateQueryParam('highlighted', []),
       // scoped
       ...scopes.reduce((acc, scope) => {
-        acc[scope] = initialStatePinned
+        const initialScope = initialExtra[scope] || {}
+        acc[scope] = { ...initialStatePinned, ...initialScope }
         return acc
       }, {}),
     },
@@ -102,6 +110,7 @@ const detailsSlice = createSlice({
         // set highlighted activity
         state.slideOut.highlighted = [payload.activityId]
       }
+
       // hide tooltip
       state.refTooltip = initialTooltip
     },
@@ -133,6 +142,13 @@ const detailsSlice = createSlice({
         state.open = !state.open
       }
     },
+    selectEntities: (state, { payload: { entityIds, entityType, scope } }) => {
+      //   if there is a scope, set the selectedEntityIds
+      if (scope && state.pinned[scope]?.selectedEntityIds) {
+        state.pinned[scope].selectedEntityIds = entityIds
+        state.pinned[scope].entityType = entityType
+      }
+    },
     openPip: (state, { payload }) => {
       state.pip = payload
     },
@@ -152,6 +168,7 @@ export const {
   showRefTooltip,
   hideRefTooltip,
   toggleDetailsPanel,
+  selectEntities,
   openPip,
   closePip,
 } = detailsSlice.actions

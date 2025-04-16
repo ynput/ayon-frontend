@@ -171,6 +171,7 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
     const itemId = event.node.data.id
     if (itemId && !focusedTasks?.includes(itemId)) {
       // if the selection does not include the clicked node, new selection is the clicked node
+      newFocused = [itemId]
       const subType = event.node.data.taskType
       const name = event.node.data.name
       // update selection state

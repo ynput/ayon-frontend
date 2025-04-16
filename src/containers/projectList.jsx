@@ -227,7 +227,8 @@ const ProjectList = ({
 
   const [updateUserPreferences] = useSetFrontendPreferencesMutation()
 
-  const { isLoading: userPermissionsLoading, permissions: userPermissions } = useUserProjectPermissions(user?.data?.isUser || true)
+  const { isLoading: userPermissionsLoading, permissions: userPermissions } =
+    useUserProjectPermissions(user?.data?.isUser || true)
 
   const handlePinProjects = async (sel, isPinning) => {
     try {
@@ -279,7 +280,7 @@ const ProjectList = ({
     const projectName = sel[0]
     handleProjectSelectionDispatches(projectName)
 
-    const link = `/projects/${projectName}/browser`
+    const link = `/projects/${projectName}/overview`
     setTimeout(() => dispatch((_, getState) => navigate(getState)(link)), 0)
   }
 
@@ -412,7 +413,8 @@ const ProjectList = ({
           disabled={onSelectAllDisabled}
         />
       )}
-      {!hideAddProjectButton && (isProjectManager || (!userPermissionsLoading && userPermissions.canCreateProject())) ? (
+      {!hideAddProjectButton &&
+      (isProjectManager || (!userPermissionsLoading && userPermissions.canCreateProject())) ? (
         <StyledAddButton onClick={onNewProject} $isOpen={!collapsed}>
           {/* <div className="spacer" /> */}
           <div className="content">

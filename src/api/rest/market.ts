@@ -51,8 +51,8 @@ export type AddonListItem = {
   orgName?: string
   orgTitle?: string
   icon?: string
-  category?: string
   tags?: string[]
+  flags?: string[]
   /** Latest version of the addon */
   latestVersion?: string
   /** Links to the addon's homepage and GitHub repository */
@@ -65,14 +65,6 @@ export type AddonListItem = {
 }
 export type AddonList = {
   addons?: AddonListItem[]
-}
-export type ValidationError = {
-  loc: (string | number)[]
-  msg: string
-  type: string
-}
-export type HttpValidationError = {
-  detail?: ValidationError[]
 }
 export type AddonVersionListItem = {
   version: string
@@ -95,8 +87,8 @@ export type AddonDetail = {
   orgName?: string
   orgTitle?: string
   icon?: string
-  category?: string
   tags?: string[]
+  flags?: string[]
   /** Latest version of the addon */
   latestVersion?: string
   /** Links to the addon's homepage and GitHub repository */
@@ -111,6 +103,14 @@ export type AddonDetail = {
   /** A warning message to display to the user */
   warning?: string
 }
+export type ValidationError = {
+  loc: (string | number)[]
+  msg: string
+  type: string
+}
+export type HttpValidationError = {
+  detail?: ValidationError[]
+}
 export type AddonVersionDetail = {
   name: string
   title: string
@@ -119,8 +119,8 @@ export type AddonVersionDetail = {
   orgName?: string
   orgTitle?: string
   icon?: string
-  category?: string
   tags?: string[]
+  flags?: string[]
   /** Latest version of the addon */
   latestVersion?: string
   /** Links to the addon's homepage and GitHub repository */

@@ -4,7 +4,7 @@ import DetailsPanelHeader from './DetailsPanelHeader/DetailsPanelHeader'
 import { useAppDispatch, useAppSelector } from '@state/store'
 import Feed from '@containers/Feed/Feed'
 import { useGetEntitiesDetailsPanelQuery } from '@queries/entity/getEntityPanel'
-import TaskAttributes from '@pages/UserDashboardPage/UserDashboardTasks/TaskAttributes/TaskAttributes'
+import DetailsPanelAttributes from '@pages/UserDashboardPage/UserDashboardTasks/DetailsPanelAttributes/DetailsPanelAttributes'
 import { getEntityDetailsData } from '@queries/userDashboard/userDashboardHelpers'
 import DetailsPanelFiles from './DetailsPanelFiles'
 import { closeSlideOut, openPip, updateDetailsPanelTab } from '@state/details'
@@ -230,7 +230,7 @@ const DetailsPanel = ({
           />
         )}
         {selectedTab === 'attribs' && (
-          <TaskAttributes
+          <DetailsPanelAttributes
             entityType={entityType}
             entities={entityDetailsData}
             isLoading={isFetchingEntitiesDetails}

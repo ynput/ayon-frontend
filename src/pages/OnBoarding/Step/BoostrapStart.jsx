@@ -25,6 +25,7 @@ export const BootstrapStart = ({
         </Body>
         <Styled.Connect>
           <Body>Fast and Automated setup with</Body>
+          <Body>Fast, automated and 100% free setup with</Body>
           {ynputConnect?.connected ? (
             <YnputConnect.HeaderButton
               active

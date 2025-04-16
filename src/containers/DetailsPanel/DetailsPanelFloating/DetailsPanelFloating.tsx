@@ -1,7 +1,7 @@
 import { FC, useMemo } from 'react'
 import * as Styled from './DetailsPanelFloating.styled'
 import getThumbnails from '../helpers/getThumbnails'
-import StackedThumbnails from '@pages/EditorPage/StackedThumbnails'
+import StackedThumbnails from '@components/Thumbnail/StackedThumbnails'
 import { upperFirst } from 'lodash'
 import { AssigneeField, Icon } from '@ynput/ayon-react-components'
 import Feed from '@containers/Feed/Feed'

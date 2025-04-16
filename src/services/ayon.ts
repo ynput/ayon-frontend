@@ -102,6 +102,7 @@ const tagTypes = [
   'userPool',
   'config',
   'feedback',
+  'overviewTask',
 ]
 
 const prepareHeaders = (headers: any) => {

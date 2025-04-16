@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { Button, Dialog } from '@ynput/ayon-react-components'
 
 import BrowserPage from './BrowserPage'
-import EditorPage from './EditorPage'
+import ProjectOverviewPage from './ProjectOverviewPage'
 import LoadingPage from './LoadingPage'
 import ProjectAddon from './ProjectAddon'
 import WorkfilesPage from './WorkfilesPage'
@@ -67,7 +67,7 @@ const ProjectPage = () => {
     } else {
       // redirect to project manager
     }
-  }, [addonsLoading, addonsIsError, addonsData, projectName])
+  }, [addonsLoading, addonsIsError, addonsData, projectName, dispatch])
 
   const loadProjectData = () => {
     if (!isUninitialized && !addonsIsUninitialized && !isLoading && !addonsLoading) {
@@ -93,9 +93,9 @@ const ProjectPage = () => {
   const links = useMemo(
     () => [
       {
-        name: 'Browser',
-        path: `/projects/${projectName}/browser`,
-        module: 'browser',
+        name: 'Overview',
+        path: `/projects/${projectName}/overview`,
+        module: 'overview',
         uriSync: true,
       },
       {
@@ -104,7 +104,12 @@ const ProjectPage = () => {
         module: 'tasks',
         uriSync: true,
       },
-      { name: 'Editor', path: `/projects/${projectName}/editor`, module: 'editor', uriSync: true },
+      {
+        name: 'Browser',
+        path: `/projects/${projectName}/browser`,
+        module: 'browser',
+        uriSync: true,
+      },
       {
         name: 'Workfiles',
         path: `/projects/${projectName}/workfiles`,
@@ -149,18 +154,21 @@ const ProjectPage = () => {
   }
 
   const getPageByModuleAndAddonData = (module, addonName, addonsData) => {
-    if (module === 'editor') {
-      return <EditorPage />
+    if (module === 'overview') {
+      return <ProjectOverviewPage />
     }
     if (module === 'tasks') {
       return <TasksProgressPage />
+    }
+    if (module === 'browser') {
+      return <BrowserPage />
     }
     if (module === 'workfiles') {
       return <WorkfilesPage />
     }
 
     if (!addonName) {
-      return <BrowserPage />
+      return <ProjectOverviewPage />
     }
 
     const filteredAddons = addonsData.filter((item) => item.name === addonName)
