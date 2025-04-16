@@ -6,7 +6,6 @@ import {
   OnChangeFn,
   VisibilityState,
 } from '@tanstack/react-table'
-import { useLocalStorage } from '../../hooks'
 
 export interface ColumnSettingsContextType {
   // Column Visibility
@@ -26,112 +25,132 @@ export interface ColumnSettingsContextType {
   setColumnOrder: (columnOrder: ColumnOrderState) => void
   updateColumnOrder: (columnOrder: ColumnOrderState) => void
   columnOrderUpdater: OnChangeFn<ColumnOrderState>
+
+  // Global change
+  setColumnsConfig: (config: ColumnsConfig) => void
 }
 
 const ColumnSettingsContext = createContext<ColumnSettingsContextType | undefined>(undefined)
 
+export type ColumnsConfig = {
+  columnVisibility: VisibilityState
+  columnOrder: ColumnOrderState
+  columnPinning: ColumnPinningState
+}
+
 interface ColumnSettingsProviderProps {
   children: ReactNode
-  projectName: string
+  config: Record<string, any>
+  onChange: (config: ColumnsConfig) => void
 }
 
 export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
   children,
-  projectName,
+  config,
+  onChange,
 }) => {
-  const scope = `overview-${projectName}`
+  const columnsConfig = config as ColumnsConfig
+  const { columnOrder = [], columnPinning = {}, columnVisibility = {} } = columnsConfig
 
-  // COLUMN VISIBILITY
-  const [columnVisibility, setColumnVisibility] = useLocalStorage<VisibilityState>(
-    `overview-column-visibility-${scope}`,
-    {},
-  )
+  // DIRECT STATE UPDATES - no side effects
+  const setColumnVisibility = (visibility: VisibilityState) => {
+    onChange({
+      ...columnsConfig,
+      columnVisibility: visibility,
+    })
+  }
 
-  // COLUMN ORDER
-  const [columnOrder, setColumnOrder] = useLocalStorage<ColumnOrderState>(
-    `column-order-${scope}`,
-    [],
-  )
+  const setColumnOrder = (order: ColumnOrderState) => {
+    onChange({
+      ...columnsConfig,
+      columnOrder: order,
+    })
+  }
 
-  // COLUMN PINNING
-  const [columnPinning, setColumnPinning] = useLocalStorage<ColumnPinningState>(
-    `column-pinning-${scope}`,
-    { left: ['name'] },
-  )
+  const setColumnPinning = (pinning: ColumnPinningState) => {
+    onChange({
+      ...columnsConfig,
+      columnPinning: pinning,
+    })
+  }
 
+  // SIDE EFFECT UTILITIES
   const togglePinningOnVisibilityChange = (visibility: VisibilityState) => {
     // ensure that any columns that are now hidden are removed from the pinning
     const newPinning = { ...columnPinning }
     const pinnedColumns = newPinning.left || []
     const hiddenColumns = Object.keys(visibility).filter((col) => visibility[col] === false)
     const newPinnedColumns = pinnedColumns.filter((col) => !hiddenColumns.includes(col))
-    const newColumnPinning = {
+
+    return {
       ...newPinning,
       left: newPinnedColumns,
     }
-    setColumnPinning(newColumnPinning)
   }
 
-  // COLUMN VISIBILITY
-  const columnVisibilityUpdater: OnChangeFn<VisibilityState> = (columnVisibilityUpdater) => {
-    setColumnVisibility(functionalUpdate(columnVisibilityUpdater, columnVisibility))
-    // side effects
-    togglePinningOnVisibilityChange(columnVisibility)
-  }
-
-  // update the column visibility
-  const updateColumnVisibility = (visibility: VisibilityState) => {
-    setColumnVisibility(visibility)
-    // side effects
-    togglePinningOnVisibilityChange(visibility)
-  }
-
-  const updatePinningOrderOnOrderChange = (columnOrder: ColumnOrderState) => {
+  const updatePinningOrderOnOrderChange = (order: ColumnOrderState) => {
     // ensure that the column pinning is in the order of the column order
     const newPinning = { ...columnPinning }
     const pinnedColumns = newPinning.left || []
-    const pinnedColumnsOrder = columnOrder.filter((col) => pinnedColumns.includes(col))
-    setColumnPinning({
+    const pinnedColumnsOrder = order.filter((col) => pinnedColumns.includes(col))
+
+    return {
       ...newPinning,
       left: pinnedColumnsOrder,
+    }
+  }
+
+  const updateOrderOnPinningChange = (pinning: ColumnPinningState) => {
+    // we resort the column order based on the pinning
+    return [...columnOrder].sort((a, b) => {
+      const aPinned = pinning.left?.includes(a) ? 1 : 0
+      const bPinned = pinning.left?.includes(b) ? 1 : 0
+      return bPinned - aPinned
     })
+  }
+
+  // UPDATE METHODS WITH SIDE EFFECTS
+  const updateColumnVisibility = (visibility: VisibilityState) => {
+    const newPinning = togglePinningOnVisibilityChange(visibility)
+    onChange({
+      ...columnsConfig,
+      columnVisibility: visibility,
+      columnPinning: newPinning,
+    })
+  }
+
+  const updateColumnOrder = (order: ColumnOrderState) => {
+    const newPinning = updatePinningOrderOnOrderChange(order)
+    onChange({
+      ...columnsConfig,
+      columnOrder: order,
+      columnPinning: newPinning,
+    })
+  }
+
+  const updateColumnPinning = (pinning: ColumnPinningState) => {
+    const newOrder = updateOrderOnPinningChange(pinning)
+    onChange({
+      ...columnsConfig,
+      columnOrder: newOrder,
+      columnPinning: pinning,
+    })
+  }
+
+  // UPDATER FUNCTIONS
+  const columnVisibilityUpdater: OnChangeFn<VisibilityState> = (columnVisibilityUpdater) => {
+    const newVisibility = functionalUpdate(columnVisibilityUpdater, columnVisibility)
+    updateColumnVisibility(newVisibility)
   }
 
   const columnOrderUpdater: OnChangeFn<ColumnOrderState> = (columnOrderUpdater) => {
-    setColumnOrder(functionalUpdate(columnOrderUpdater, columnOrder))
-    // now update the column pinning
-    updatePinningOrderOnOrderChange(columnOrder)
-  }
-
-  const updateColumnOrder = (columnOrder: ColumnOrderState) => {
-    setColumnOrder(columnOrder)
-    // now update the column pinning
-    updatePinningOrderOnOrderChange(columnOrder)
-  }
-
-  // COLUMN PINNING
-  const updateOrderOnPinningChange = (columnPinning: ColumnPinningState) => {
-    // we resort the column order based on the pinning
-    const newOrder = [...columnOrder].sort((a, b) => {
-      const aPinned = columnPinning.left?.includes(a) ? 1 : 0
-      const bPinned = columnPinning.left?.includes(b) ? 1 : 0
-
-      return bPinned - aPinned
-    })
-    setColumnOrder(newOrder)
-  }
-
-  const updateColumnPinning = (columnPinning: ColumnPinningState) => {
-    setColumnPinning(columnPinning)
-    // now update the column order
-    updateOrderOnPinningChange(columnPinning)
+    const newOrder = functionalUpdate(columnOrderUpdater, columnOrder)
+    updateColumnOrder(newOrder)
   }
 
   const columnPinningUpdater: OnChangeFn<ColumnPinningState> = (columnPinningUpdater) => {
     const newPinning = functionalUpdate(columnPinningUpdater, columnPinning)
-    setColumnPinning(newPinning)
-    // now update the column order
-    updateOrderOnPinningChange(newPinning)
+    updateColumnPinning(newPinning)
   }
 
   return (
@@ -152,6 +171,8 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
         setColumnOrder,
         updateColumnOrder,
         columnOrderUpdater,
+        // global change
+        setColumnsConfig: onChange,
       }}
     >
       {children}

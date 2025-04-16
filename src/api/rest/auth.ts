@@ -49,7 +49,7 @@ export type UserModel = {
   /** Name is an unique id of the {entity_name} */
   name: string
   attrib?: UserAttribModel
-  data?: object
+  data?: Record<string, any>
   /** Whether the user is active */
   active?: boolean
   ownAttrib?: string[]
