@@ -7,6 +7,7 @@ import { generateLabel } from '@components/NewEntity/NewEntity'
 import { PatchOperation, useUpdateOverviewEntitiesMutation } from '@queries/overview/updateOverview'
 import { useProjectTableContext } from '@shared/ProjectTreeTable'
 import { EditorTaskNode, MatchingFolder } from '@shared/ProjectTreeTable'
+import checkName from '@helpers/checkName'
 
 export type NewEntityType = 'folder' | 'task'
 
@@ -71,7 +72,6 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
     entityType: NewEntityType,
     subType: string,
     name: string,
-    label: string,
     parentId?: string,
   ): NewEntityOperation => {
     return {
@@ -80,8 +80,7 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
       data: {
         [`${entityType}Type`]: subType,
         id: uuid1().replace(/-/g, ''),
-        name: name.replace(/[^a-zA-Z0-9]/g, ''),
-        label: label,
+        name: checkName(name),
         ...(parentId && { [entityType === 'folder' ? 'parentId' : 'folderId']: parentId }),
       },
     }
@@ -95,14 +94,14 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
   ): NewEntityOperation[] => {
     // For root folders
     if (folderIds.length === 0 && entityType === 'folder') {
-      return sequence.map((name) => createEntityOperation(entityType, subType, name, name))
+      return sequence.map((name) => createEntityOperation(entityType, subType, name))
     }
 
     // For folders or tasks with parent references
     const operations: NewEntityOperation[] = []
     for (const folderId of folderIds) {
       for (const name of sequence) {
-        operations.push(createEntityOperation(entityType, subType, name, name, folderId))
+        operations.push(createEntityOperation(entityType, subType, name, folderId))
       }
     }
     return operations
@@ -114,17 +113,13 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
     label: string,
     folderIds: string[],
   ): NewEntityOperation[] => {
-    const sanitizedName = label.replace(/[^a-zA-Z0-9]/g, '')
-
     // For root folders
     if (folderIds.length === 0 && entityType === 'folder') {
-      return [createEntityOperation(entityType, subType, sanitizedName, label)]
+      return [createEntityOperation(entityType, subType, label)]
     }
 
     // For folders or tasks with parent references
-    return folderIds.map((folderId) =>
-      createEntityOperation(entityType, subType, sanitizedName, label, folderId),
-    )
+    return folderIds.map((folderId) => createEntityOperation(entityType, subType, label, folderId))
   }
 
   type PatchNewTaskOperation = PatchOperation & {
@@ -138,7 +133,6 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
     data: {
       id: string
       name: string
-      label: string
       folderId?: string
       parentId?: string
       folderType?: string
