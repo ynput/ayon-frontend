@@ -166,11 +166,11 @@ export const ProjectTableProvider = ({
     (id: string): MatchingFolder | EditorTaskNode | undefined => {
       // Check if it's a folder
       if (foldersMap.has(id)) {
-        return foldersMap.get(id)
+        return { ...foldersMap.get(id), entityType: 'folder' } as MatchingFolder
       }
       // Check if it's a task
       if (tasksMap.has(id)) {
-        return tasksMap.get(id)
+        return { ...tasksMap.get(id), entityType: 'task' } as EditorTaskNode
       }
       // Return undefined if not found
       return undefined

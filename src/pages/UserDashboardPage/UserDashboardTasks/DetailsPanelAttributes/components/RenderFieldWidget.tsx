@@ -101,8 +101,6 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
         valueArray = [displayValue]
       }
 
-      console.log(isReadOnly)
-
       return (
         <StyledEnumWidget
           value={valueArray}

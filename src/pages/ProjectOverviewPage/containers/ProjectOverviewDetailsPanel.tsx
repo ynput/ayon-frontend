@@ -26,10 +26,10 @@ const ProjectOverviewDetailsPanel = ({
     | MatchingFolder
     | EditorTaskNode
   )[]
-  // folder types will always take priority over task types, we can only have one type at one time
-  const entityType = selectRowData.some((row) => 'parentId' in row) ? 'folder' : 'task'
+  // task types will always take priority over folder types, we can only have one type at one time
+  const entityType = selectRowData.some((row) => row.entityType === 'task') ? 'task' : 'folder'
   const entities = selectRowData
-    .filter((row) => (entityType === 'folder' ? 'parentId' in row : 'folderId' in row))
+    .filter((row) => entityType === row.entityType)
     .map((row) => ({ id: row.id, projectName }))
 
   const handleClose = () => {
