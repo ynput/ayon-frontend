@@ -40,7 +40,7 @@ export type ColumnsConfig = {
 
 interface ColumnSettingsProviderProps {
   children: ReactNode
-  config: ColumnsConfig
+  config: Record<string, any>
   onChange: (config: ColumnsConfig) => void
 }
 
@@ -49,26 +49,27 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
   config,
   onChange,
 }) => {
-  const { columnOrder, columnPinning, columnVisibility } = config
+  const columnsConfig = config as ColumnsConfig
+  const { columnOrder = [], columnPinning = {}, columnVisibility = {} } = columnsConfig
 
   // DIRECT STATE UPDATES - no side effects
   const setColumnVisibility = (visibility: VisibilityState) => {
     onChange({
-      ...config,
+      ...columnsConfig,
       columnVisibility: visibility,
     })
   }
 
   const setColumnOrder = (order: ColumnOrderState) => {
     onChange({
-      ...config,
+      ...columnsConfig,
       columnOrder: order,
     })
   }
 
   const setColumnPinning = (pinning: ColumnPinningState) => {
     onChange({
-      ...config,
+      ...columnsConfig,
       columnPinning: pinning,
     })
   }
@@ -112,7 +113,7 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
   const updateColumnVisibility = (visibility: VisibilityState) => {
     const newPinning = togglePinningOnVisibilityChange(visibility)
     onChange({
-      ...config,
+      ...columnsConfig,
       columnVisibility: visibility,
       columnPinning: newPinning,
     })
@@ -121,7 +122,7 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
   const updateColumnOrder = (order: ColumnOrderState) => {
     const newPinning = updatePinningOrderOnOrderChange(order)
     onChange({
-      ...config,
+      ...columnsConfig,
       columnOrder: order,
       columnPinning: newPinning,
     })
@@ -130,7 +131,7 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
   const updateColumnPinning = (pinning: ColumnPinningState) => {
     const newOrder = updateOrderOnPinningChange(pinning)
     onChange({
-      ...config,
+      ...columnsConfig,
       columnOrder: newOrder,
       columnPinning: pinning,
     })

@@ -20,18 +20,16 @@ import {
   ProjectTableQueriesProviderProps,
 } from '@shared/ProjectTreeTable/context/ProjectTableQueriesContext'
 import { useLazyGetTasksByParentQuery } from '@queries/overview/getOverview'
-import { ColumnsConfigProvider, useColumnsConfigContext } from './context/ColumnsConfigContext'
+import { useUsersPageConfig } from './hooks/useUserPageConfig'
 
 const ProjectOverviewWithProviders: FC = () => {
   const projectName = useAppSelector((state) => state.project.name) || ''
   return (
     <ProjectDataProvider projectName={projectName}>
       <ProjectOverviewProvider>
-        <ColumnsConfigProvider projectName={projectName}>
-          <SettingsPanelProvider>
-            <ProjectOverviewWithTableProviders />
-          </SettingsPanelProvider>
-        </ColumnsConfigProvider>
+        <SettingsPanelProvider>
+          <ProjectOverviewWithTableProviders />
+        </SettingsPanelProvider>
       </ProjectOverviewProvider>
     </ProjectDataProvider>
   )
@@ -39,11 +37,11 @@ const ProjectOverviewWithProviders: FC = () => {
 
 const ProjectOverviewWithTableProviders: FC = () => {
   const props = useProjectOverviewContext()
-  const {
-    columnsConfig,
-    updateColumnsConfig,
-    isInitialized: userInitialized,
-  } = useColumnsConfigContext()
+  const [pageConfig, updatePageConfig] = useUsersPageConfig({
+    page: 'overview',
+    projectName: props.projectName,
+  })
+
   const [entityOperations] = useUpdateOverviewEntitiesMutation()
 
   const updateEntities: ProjectTableQueriesProviderProps['updateEntities'] = async ({
@@ -72,11 +70,11 @@ const ProjectOverviewWithTableProviders: FC = () => {
 
   return (
     <ProjectTableQueriesProvider {...{ updateEntities, getFoldersTasks }}>
-      <ProjectTableProvider {...props} isInitialized={props.isInitialized && userInitialized}>
+      <ProjectTableProvider {...props}>
         <NewEntityProvider>
           <SelectionProvider>
             <SelectedRowsProvider>
-              <ColumnSettingsProvider config={columnsConfig} onChange={updateColumnsConfig}>
+              <ColumnSettingsProvider config={pageConfig} onChange={updatePageConfig}>
                 <ProjectOverviewPage />
               </ColumnSettingsProvider>
             </SelectedRowsProvider>

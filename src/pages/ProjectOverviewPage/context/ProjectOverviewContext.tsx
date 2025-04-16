@@ -77,6 +77,8 @@ export const ProjectOverviewProvider = ({ children }: ProjectOverviewProviderPro
     users,
     isInitialized,
     isLoading: isLoadingData,
+    columnSorting,
+    setColumnSorting,
   } = useProjectDataContext()
 
   const scope = `overview-${projectName}`
@@ -122,15 +124,9 @@ export const ProjectOverviewProvider = ({ children }: ProjectOverviewProviderPro
     search: fuzzySearchFilter,
   }
 
-  const [sorting, setSorting] = useLocalStorage<SortingState>(`sorting-${scope}`, [
-    {
-      id: 'name',
-      desc: true,
-    },
-  ])
-
+  // update in user preferences
   const updateSorting: OnChangeFn<SortingState> = (sortingUpdater) => {
-    setSorting(functionalUpdate(sortingUpdater, sorting))
+    setColumnSorting(functionalUpdate(sortingUpdater, columnSorting))
   }
 
   const { rowSelection, sliceType, persistentRowSelectionData } = useSlicerContext()
@@ -173,7 +169,7 @@ export const ProjectOverviewProvider = ({ children }: ProjectOverviewProviderPro
     selectedFolders,
     queryFilters,
     expanded,
-    sorting,
+    sorting: columnSorting,
     showHierarchy,
   })
 
@@ -206,7 +202,7 @@ export const ProjectOverviewProvider = ({ children }: ProjectOverviewProviderPro
         updateExpanded,
         setExpanded,
         // sorting
-        sorting,
+        sorting: columnSorting,
         updateSorting,
       }}
     >
