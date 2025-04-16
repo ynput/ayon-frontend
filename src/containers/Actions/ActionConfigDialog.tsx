@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { toast } from 'react-toastify'
 import SimpleFormDialog from '@/containers/SimpleFormDialog/SimpleFormDialog'
 import type { SimpleFormValueDict } from '@containers/SimpleFormDialog/SimpleFormDialog'
 
@@ -52,8 +53,13 @@ const ActionConfigDialog = ({ action, onClose, context }:ActionConfigDialogProps
   }
 
   const handleSubmit = async (data:ConfigData) => {
-    await configureAction({actionConfig: { ...context, value: data }, ...requestParams}).unwrap()
-    onClose()
+    try {
+      await configureAction({actionConfig: { ...context, value: data }, ...requestParams}).unwrap()
+      onClose()
+    } catch (error) {
+      console.warn('Error configuring action', error)
+      toast.error("Unable to set the action configuration")
+    }
   }
 
   return (

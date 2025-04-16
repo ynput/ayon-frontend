@@ -39,11 +39,8 @@ const injectedActionsApi = actionsApi.injectEndpoints({
     }),
 
     // Action configuration
-    
-    getActionConfig: build.query<
-      ConfigureActionApiResponse,
-      ConfigureActionApiArg
-    >({
+
+    getActionConfig: build.query<ConfigureActionApiResponse, ConfigureActionApiArg>({
       queryFn: async (args, { dispatch }) => {
         // get the data from the rest api
         const res = await dispatch(api.endpoints.configureAction.initiate(args))
@@ -53,18 +50,10 @@ const injectedActionsApi = actionsApi.injectEndpoints({
         return { data: res.data }
       },
 
-      providesTags: (result, _error, args) => {
-        return [{type: 'actionConfig', id: 'LIST'}]
-      },
-
-
+      providesTags: [{ type: 'actionConfig', id: 'LIST' }],
     }),
 
-    setActionConfig: build.mutation<
-      ConfigureActionApiResponse,
-      ConfigureActionApiArg
-    >({
-
+    setActionConfig: build.mutation<ConfigureActionApiResponse, ConfigureActionApiArg>({
       queryFn: async (args, { dispatch }) => {
         // get the data from the rest api
         const res = await dispatch(api.endpoints.configureAction.initiate(args))
@@ -73,21 +62,16 @@ const injectedActionsApi = actionsApi.injectEndpoints({
         }
         return { data: res.data }
       },
-
-      invalidatesTags: (result, _error, args) => ([{type:"actionConfig", id: "LIST"}]),
-
+      invalidatesTags: [{ type: 'actionConfig', id: 'LIST' }],
     }),
-      
-
 
     // End of endpoints
   }),
 })
 
-
-export const { 
-  useGetActionsFromContextQuery, 
-  useExecuteActionMutation, 
+export const {
+  useGetActionsFromContextQuery,
+  useExecuteActionMutation,
   useGetActionConfigQuery,
   useSetActionConfigMutation,
 } = injectedActionsApi
