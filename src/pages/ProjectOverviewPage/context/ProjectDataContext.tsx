@@ -44,6 +44,7 @@ export const ProjectDataProvider = ({ children, projectName }: ProjectDataProvid
   const isInitialized =
     isSuccessProject && isSuccessAttribs && !isFetchingProject && !isFetchingAttribs
 
+  // GET USERS
   const { data: usersData = [] } = useGetUsersAssigneeQuery({ projectName }, { skip: !projectName })
   const users = usersData as User[]
 

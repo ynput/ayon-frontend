@@ -1,12 +1,15 @@
 import { updateUserPreferences } from '@/features/user'
 import globalApi from '@api'
 import { api } from '@api/rest/users'
+import { authApi } from '@queries/auth/getAuth'
 import { $Any } from '@types'
 
 const updateUserApi = api.enhanceEndpoints({
   endpoints: {
     setFrontendPreferences: {
-      invalidatesTags: (_result, _error, { userName }) => [{ type: 'user', id: userName }, 'info'],
+      // @ts-expect-error - disableInvalidations is not in the api
+      invalidatesTags: (_result, _error, { userName, disableInvalidations }) =>
+        !disableInvalidations ? [{ type: 'user', id: userName }, 'info'] : [],
       async onQueryStarted({ patchData }, { dispatch, queryFulfilled, getState }) {
         // get current preferences
         // @ts-ignore
@@ -14,6 +17,15 @@ const updateUserApi = api.enhanceEndpoints({
 
         // update redux store with new preferences
         dispatch(updateUserPreferences(patchData))
+
+        // optimistic update the user cache
+        dispatch(
+          authApi.util.updateQueryData('getCurrentUser', undefined, (draft) => {
+            if (draft?.data) {
+              draft.data.frontendPreferences = { ...draft.data.frontendPreferences, ...patchData }
+            }
+          }),
+        )
         try {
           await queryFulfilled
         } catch {

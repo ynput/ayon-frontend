@@ -20,15 +20,18 @@ import {
   ProjectTableQueriesProviderProps,
 } from '@shared/ProjectTreeTable/context/ProjectTableQueriesContext'
 import { useLazyGetTasksByParentQuery } from '@queries/overview/getOverview'
+import { ColumnsConfigProvider, useColumnsConfigContext } from './context/ColumnsConfigContext'
 
 const ProjectOverviewWithProviders: FC = () => {
   const projectName = useAppSelector((state) => state.project.name) || ''
   return (
     <ProjectDataProvider projectName={projectName}>
       <ProjectOverviewProvider>
-        <SettingsPanelProvider>
-          <ProjectOverviewWithTableProviders />
-        </SettingsPanelProvider>
+        <ColumnsConfigProvider projectName={projectName}>
+          <SettingsPanelProvider>
+            <ProjectOverviewWithTableProviders />
+          </SettingsPanelProvider>
+        </ColumnsConfigProvider>
       </ProjectOverviewProvider>
     </ProjectDataProvider>
   )
@@ -36,6 +39,11 @@ const ProjectOverviewWithProviders: FC = () => {
 
 const ProjectOverviewWithTableProviders: FC = () => {
   const props = useProjectOverviewContext()
+  const {
+    columnsConfig,
+    updateColumnsConfig,
+    isInitialized: userInitialized,
+  } = useColumnsConfigContext()
   const [entityOperations] = useUpdateOverviewEntitiesMutation()
 
   const updateEntities: ProjectTableQueriesProviderProps['updateEntities'] = async ({
@@ -64,11 +72,11 @@ const ProjectOverviewWithTableProviders: FC = () => {
 
   return (
     <ProjectTableQueriesProvider {...{ updateEntities, getFoldersTasks }}>
-      <ProjectTableProvider {...props}>
+      <ProjectTableProvider {...props} isInitialized={props.isInitialized && userInitialized}>
         <NewEntityProvider>
           <SelectionProvider>
             <SelectedRowsProvider>
-              <ColumnSettingsProvider projectName={props.projectName}>
+              <ColumnSettingsProvider config={columnsConfig} onChange={updateColumnsConfig}>
                 <ProjectOverviewPage />
               </ColumnSettingsProvider>
             </SelectedRowsProvider>
