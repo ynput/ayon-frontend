@@ -3,7 +3,7 @@ import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { FC } from 'react'
 
 // state
-import { useSlicerContext } from '@context/slicerContext'
+import { useSlicerContext } from '@context/SlicerContext'
 
 // containers
 import Slicer from '@containers/Slicer'

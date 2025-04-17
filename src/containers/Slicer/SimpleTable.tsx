@@ -1,5 +1,5 @@
-import { FC, useEffect, useMemo, useRef, useState } from 'react'
-import * as Styled from './SlicerTable.styled'
+import { FC, useMemo, useRef } from 'react'
+import * as Styled from './SimpleTable.styled'
 import {
   useReactTable,
   getCoreRowModel,
@@ -18,11 +18,9 @@ import { Icon } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import useRowSelection from './hooks/useRowSelection'
 import useRowKeydown from './hooks/useRowKeydown'
-import usePlaceholderData from './hooks/usePlaceholderData'
 
 import { RankingInfo, rankItem, compareItems } from '@tanstack/match-sorter-utils'
-import { useSlicerContext } from '@context/slicerContext'
-import { SlicerTableProps, TableRow } from './types'
+import { useSimpleTableContext } from './context/SimpleTableContext'
 
 declare module '@tanstack/react-table' {
   //add fuzzy filter to the filterFns
@@ -64,26 +62,63 @@ const fuzzySort: SortingFn<any> = (rowA, rowB, columnId) => {
   return dir === 0 ? sortingFns.alphanumeric(rowA, rowB, columnId) : dir
 }
 
-const SlicerTable: FC<SlicerTableProps> = ({
+export type RowItemData = {
+  id: string
+  name?: string | null
+  label?: string | null
+  subType?: string | null
+}
+
+export type SimpleTableRow = {
+  id: string
+  parentId?: string
+  name: string
+  label: string
+  icon?: string | null
+  iconColor?: string
+  img?: string | null
+  startContent?: JSX.Element
+  endContent?: JSX.Element
+  subRows: SimpleTableRow[]
+  data: RowItemData
+}
+
+export interface SimpleTableProps {
+  data: SimpleTableRow[]
+  isLoading: boolean
+  isExpandable?: boolean // show expand/collapse icons
+  forceUpdateTable?: any
+  globalFilter: string
+}
+
+const SimpleTable: FC<SimpleTableProps> = ({
   data = [],
   isLoading,
   isExpandable,
-  sliceId,
+  forceUpdateTable,
   globalFilter,
 }) => {
+  const { rowSelection, expanded, setExpanded, onExpandedChange } = useSimpleTableContext()
+
   // stable data reference
-  const [tableData, setTableData] = useState(data)
+  const tableData = useMemo(() => {
+    if (!isLoading || data.length) return data
 
-  useEffect(() => {
-    setTableData(data)
-  }, [data, isLoading])
+    // show loading placeholders
+    return Array.from({ length: 10 }, (_, i) => ({
+      id: `placeholder-${i}`,
+      name: `placeholder-${i}`,
+      label: `placeholder-${i}`,
+      icon: null,
+      img: null,
+      subRows: [],
+      data: {
+        id: `placeholder-${i}`,
+      },
+    }))
+  }, [data, forceUpdateTable])
 
-  // show loading placeholders
-  usePlaceholderData({ data: tableData, isLoading, setTableData })
-
-  const { rowSelection, expanded, setExpanded, onExpandedChange } = useSlicerContext()
-
-  const columns = useMemo<ColumnDef<TableRow>[]>(
+  const columns = useMemo<ColumnDef<SimpleTableRow>[]>(
     () => [
       {
         accessorKey: 'label',
@@ -118,11 +153,12 @@ const SlicerTable: FC<SlicerTableProps> = ({
               <Icon icon={row.original.icon} style={{ color: row.original.iconColor }} />
             )}
             <span className="title">{getValue<boolean>()}</span>
+            {row.original.endContent && row.original.endContent}
           </Styled.Cell>
         ),
       },
     ],
-    [isLoading, sliceId, tableData, rowSelection],
+    [isLoading, forceUpdateTable, tableData, rowSelection],
   )
 
   const table = useReactTable({
@@ -140,7 +176,7 @@ const SlicerTable: FC<SlicerTableProps> = ({
     getRowId: (row) => row.id,
     enableSubRowSelection: false, //disable sub row selection
     onExpandedChange: (updater) => {
-      setExpanded((old) => {
+      setExpanded?.((old) => {
         const newExpanded = updater instanceof Function ? updater(old) : updater
         onExpandedChange?.(newExpanded)
         return newExpanded
@@ -173,8 +209,8 @@ const SlicerTable: FC<SlicerTableProps> = ({
 
   // handles all of the selection logic
   const { handleRowSelect } = useRowSelection({
-    rows,
     table,
+    rows,
   })
 
   const { handleRowKeyDown } = useRowKeydown({ handleRowSelect })
@@ -182,28 +218,13 @@ const SlicerTable: FC<SlicerTableProps> = ({
   return (
     <Styled.TableContainer ref={tableContainerRef} className={clsx({ isLoading })}>
       <table>
-        <thead>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <tr key={headerGroup.id}>
-              {headerGroup.headers.map((header) => {
-                return (
-                  <th key={header.id} colSpan={header.colSpan}>
-                    {header.isPlaceholder ? null : (
-                      <div>{flexRender(header.column.columnDef.header, header.getContext())}</div>
-                    )}
-                  </th>
-                )
-              })}
-            </tr>
-          ))}
-        </thead>
         <tbody
           style={{
             height: `${rowVirtualizer.getTotalSize()}px`, //tells scrollbar how big the table is
           }}
         >
           {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-            const row = rows[virtualRow.index] as Row<TableRow>
+            const row = rows[virtualRow.index] as Row<SimpleTableRow>
             return (
               <tr
                 data-index={virtualRow.index} //needed for dynamic row height measurement
@@ -229,4 +250,4 @@ const SlicerTable: FC<SlicerTableProps> = ({
   )
 }
 
-export default SlicerTable
+export default SimpleTable

@@ -3,12 +3,13 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { Button, Dialog } from '@ynput/ayon-react-components'
 
-import BrowserPage from './BrowserPage'
 import ProjectOverviewPage from './ProjectOverviewPage'
+import TasksProgressPage from './TasksProgressPage'
+import BrowserPage from './BrowserPage'
+import ProjectListsPage from './ProjectListsPage'
 import LoadingPage from './LoadingPage'
 import ProjectAddon from './ProjectAddon'
 import WorkfilesPage from './WorkfilesPage'
-import TasksProgressPage from './TasksProgressPage'
 
 import usePubSub from '@hooks/usePubSub'
 import { selectProject } from '@state/project'
@@ -16,7 +17,7 @@ import { useGetProjectQuery } from '@queries/project/getProject'
 import { useGetProjectAddonsQuery } from '@queries/addons/getAddons'
 import { TabPanel, TabView } from 'primereact/tabview'
 import AppNavLinks from '@containers/header/AppNavLinks'
-import { SlicerProvider } from '@context/slicerContext'
+import { SlicerProvider } from '@context/SlicerContext'
 
 const ProjectContextInfo = () => {
   /**
@@ -111,6 +112,12 @@ const ProjectPage = () => {
         uriSync: true,
       },
       {
+        name: 'Lists',
+        path: `/projects/${projectName}/lists`,
+        module: 'lists',
+        uriSync: true,
+      },
+      {
         name: 'Workfiles',
         path: `/projects/${projectName}/workfiles`,
         module: 'workfiles',
@@ -162,6 +169,9 @@ const ProjectPage = () => {
     }
     if (module === 'browser') {
       return <BrowserPage />
+    }
+    if (module === 'lists') {
+      return <ProjectListsPage />
     }
     if (module === 'workfiles') {
       return <WorkfilesPage />

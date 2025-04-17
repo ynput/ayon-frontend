@@ -1,4 +1,4 @@
-import { UseExtraSlices } from '@context/slicerContext'
+import { UseExtraSlices } from '@context/SlicerContext'
 import { useGetProjectQuery } from '@queries/project/getProject'
 
 type Props = {
