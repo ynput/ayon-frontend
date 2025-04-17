@@ -136,6 +136,10 @@ export const TableCell = styled.td<TableCellProps>`
   min-width: ${cellMinWidth}px;
   background-color: var(--md-sys-color-surface-container-low);
 
+  &.task {
+    background-color: hsl(216 15% 11.5% / 1);
+  }
+
   &.selected-row {
     background-color: var(--md-sys-color-surface-container-high);
   }

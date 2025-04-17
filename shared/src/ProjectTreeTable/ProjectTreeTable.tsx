@@ -640,6 +640,7 @@ const TableCell = ({ cell, rowId, cellId, className, showHierarchy, ...props }: 
           editing: isEditing(cellId),
           'last-pinned-left': isLastLeftPinnedColumn,
           'selected-row': isRowSelected(rowId),
+          task: cell.row.original.entityType === 'task',
         },
         className,
         ...borderClasses,
