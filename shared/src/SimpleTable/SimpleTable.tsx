@@ -16,8 +16,8 @@ import { useVirtualizer } from '@tanstack/react-virtual'
 
 import { Icon } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
-import useRowSelection from './hooks/useRowSelection'
-import useRowKeydown from './hooks/useRowKeydown'
+import useRowSelection from '../../../src/containers/Slicer/hooks/useRowSelection'
+import useRowKeydown from '../../../src/containers/Slicer/hooks/useRowKeydown'
 
 import { RankingInfo, rankItem, compareItems } from '@tanstack/match-sorter-utils'
 import { useSimpleTableContext } from './context/SimpleTableContext'

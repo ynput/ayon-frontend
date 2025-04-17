@@ -1,13 +1,13 @@
 import { FC, useState } from 'react'
 import * as Styled from './Slicer.styled'
-import SlicerTable from './SimpleTable'
+import SlicerTable from '@shared/SimpleTable'
 
 import useTableDataBySlice from './hooks/useTableDataBySlice'
 import SlicerSearch from './SlicerSearch'
 import clsx from 'clsx'
 import { useSlicerContext } from '@context/SlicerContext'
 import { SliceType } from '@shared/Slicer'
-import { SimpleTableProvider } from './context/SimpleTableContext'
+import { SimpleTableProvider } from '@shared/SimpleTable'
 
 interface SlicerProps {
   sliceFields: SliceType[]

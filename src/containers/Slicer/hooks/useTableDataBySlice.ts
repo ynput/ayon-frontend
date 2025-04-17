@@ -5,7 +5,7 @@ import useUsersTable from './useUsersTable'
 import useProjectAnatomySlices from './useProjectAnatomySlices'
 import { useSlicerContext } from '@context/SlicerContext'
 import { Slice, SliceData, SliceOption, TableData } from '../types'
-import { SimpleTableRow } from '../SimpleTable'
+import { SimpleTableRow } from '@shared/SimpleTable'
 import { SliceType } from '@shared/Slicer'
 
 interface Props {
