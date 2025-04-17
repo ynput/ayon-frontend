@@ -1,6 +1,5 @@
 import { FC, useState } from 'react'
-import * as Styled from './Slicer.styled'
-import SlicerTable from '@shared/SimpleTable'
+import SlicerTable, { Container, Header } from '@shared/SimpleTable'
 
 import useTableDataBySlice from './hooks/useTableDataBySlice'
 import SlicerSearch from './SlicerSearch'
@@ -35,8 +34,8 @@ const Slicer: FC<SlicerProps> = ({ sliceFields = [], persistFieldId }) => {
   } = useTableDataBySlice({ sliceFields })
 
   return (
-    <Styled.Container>
-      <Styled.Header>
+    <Container>
+      <Header>
         <SlicerDropdown
           options={sliceOptions || []}
           value={[sliceType]}
@@ -52,7 +51,7 @@ const Slicer: FC<SlicerProps> = ({ sliceFields = [], persistFieldId }) => {
           disableOpen={sliceOptions.length === 1}
         />
         <SlicerSearch value={globalFilter} onChange={setGlobalFilter} />
-      </Styled.Header>
+      </Header>
       <SimpleTableProvider
         {...{
           rowSelection,
@@ -71,7 +70,7 @@ const Slicer: FC<SlicerProps> = ({ sliceFields = [], persistFieldId }) => {
           globalFilter={globalFilter}
         />
       </SimpleTableProvider>
-    </Styled.Container>
+    </Container>
   )
 }
 

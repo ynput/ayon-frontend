@@ -1,5 +1,4 @@
 import type { ConfigFile } from '@rtk-query/codegen-openapi'
-import { permission } from 'process'
 
 // Specify the endpoints you want to generate
 const outputFiles = {
@@ -49,6 +48,7 @@ const outputFiles = {
   services: ['listServices', 'listHosts', 'spawnService', 'patchService', 'deleteService'],
   operations: ['operations'],
   permissions: ['getCurrentUserPermissions', 'getCurrentUserProjectPermissions'],
+  lists: ['createEntityList'],
 }
 
 const buildOutputFiles = (files: { [name: string]: string[] }) =>

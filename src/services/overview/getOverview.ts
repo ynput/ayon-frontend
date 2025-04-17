@@ -283,6 +283,6 @@ export const {
   useGetOverviewTasksByFoldersQuery,
   useGetQueryTasksFoldersQuery,
   useGetTasksListQuery,
-  useGetTasksListInfiniteInfiniteQuery, // Fix the export name
+  useGetTasksListInfiniteInfiniteQuery,
   useLazyGetTasksByParentQuery,
 } = injectedApi

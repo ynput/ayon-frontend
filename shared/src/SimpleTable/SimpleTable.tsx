@@ -14,13 +14,13 @@ import {
 } from '@tanstack/react-table'
 import { useVirtualizer } from '@tanstack/react-virtual'
 
-import { Icon } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import useRowSelection from '../../../src/containers/Slicer/hooks/useRowSelection'
 import useRowKeydown from '../../../src/containers/Slicer/hooks/useRowKeydown'
 
 import { RankingInfo, rankItem, compareItems } from '@tanstack/match-sorter-utils'
 import { useSimpleTableContext } from './context/SimpleTableContext'
+import { SimpleTableCellTemplate, SimpleTableCellTemplateProps } from './SimpleTableRowTemplate'
 
 declare module '@tanstack/react-table' {
   //add fuzzy filter to the filterFns
@@ -67,6 +67,7 @@ export type RowItemData = {
   name?: string | null
   label?: string | null
   subType?: string | null
+  [key: string]: any
 }
 
 export type SimpleTableRow = {
@@ -88,7 +89,8 @@ export interface SimpleTableProps {
   isLoading: boolean
   isExpandable?: boolean // show expand/collapse icons
   forceUpdateTable?: any
-  globalFilter: string
+  globalFilter?: string
+  template?: (props: SimpleTableCellTemplateProps, row: Row<SimpleTableRow>) => JSX.Element
 }
 
 const SimpleTable: FC<SimpleTableProps> = ({
@@ -97,6 +99,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
   isExpandable,
   forceUpdateTable,
   globalFilter,
+  template,
 }) => {
   const { rowSelection, expanded, setExpanded, onExpandedChange } = useSimpleTableContext()
 
@@ -125,37 +128,26 @@ const SimpleTable: FC<SimpleTableProps> = ({
         header: undefined,
         filterFn: 'fuzzy',
         sortingFn: fuzzySort, //sort by fuzzy rank (falls back to alphanumeric)
-        cell: ({ row, getValue }) => (
-          <Styled.Cell
-            className={clsx({ selected: row.getIsSelected(), loading: isLoading })}
-            onClick={(evt) => handleRowSelect(evt, row)}
-            onKeyDown={(evt) => handleRowKeyDown(evt, row)}
-            style={{
-              //  add depth padding to the cell
-              paddingLeft: `calc(${row.depth * 0.5}rem + 4px)`,
-            }}
-            tabIndex={0}
-          >
-            {row.getCanExpand() ? (
-              <Styled.Expander
-                onClick={(e) => {
-                  e.stopPropagation()
-                  row.getToggleExpandedHandler()()
-                }}
-                icon={row.getIsExpanded() ? 'expand_more' : 'chevron_right'}
-                style={{ cursor: 'pointer' }}
-              />
-            ) : (
-              isExpandable && <div style={{ display: 'inline-block', minWidth: 24 }} />
-            )}
-            {row.original.startContent && row.original.startContent}
-            {row.original.icon && (
-              <Icon icon={row.original.icon} style={{ color: row.original.iconColor }} />
-            )}
-            <span className="title">{getValue<boolean>()}</span>
-            {row.original.endContent && row.original.endContent}
-          </Styled.Cell>
-        ),
+        cell: ({ row, getValue }) => {
+          const props: SimpleTableCellTemplateProps = {
+            className: clsx({ selected: row.getIsSelected(), loading: isLoading }),
+            onClick: (e) => handleRowSelect(e, row),
+            onKeyDown: (e) => handleRowKeyDown(e, row),
+            depth: row.depth,
+            tabIndex: 0,
+            value: getValue<string>(),
+            icon: row.original.icon || undefined,
+            iconColor: row.original.iconColor,
+            isRowExpandable: row.getCanExpand(),
+            isRowExpanded: row.getIsExpanded(),
+            isTableExpandable: isExpandable,
+            onExpandClick: row.getToggleExpandedHandler(),
+            startContent: row.original.startContent,
+            endContent: row.original.endContent,
+          }
+
+          return template ? template(props, row) : <SimpleTableCellTemplate {...props} />
+        },
       },
     ],
     [isLoading, forceUpdateTable, tableData, rowSelection],

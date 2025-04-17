@@ -56,7 +56,7 @@ export const Cell = styled.div`
 
   border-radius: var(--border-radius-m);
 
-  .title {
+  .value {
     width: 100%;
     white-space: nowrap;
     overflow: hidden;
@@ -85,4 +85,46 @@ export const Expander = styled(Button)`
   background-color: unset;
   padding: 2px !important;
   cursor: pointer;
+`
+
+// utility styles for wrapping the table
+export const Container = styled.div`
+  border-radius: var(--border-radius-m);
+  overflow: hidden;
+  background-color: var(--md-sys-color-surface-container-low);
+  flex: 1;
+
+  display: flex;
+  flex-direction: column;
+`
+
+export const Header = styled.div`
+  padding: 2px;
+  width: 100%;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+
+  display: flex;
+  gap: var(--base-gap-small);
+
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+`
+
+export const HeaderButton = styled(Button)`
+  background-color: unset;
+  z-index: 110;
+  position: relative;
+
+  &.hasIcon {
+    padding: 4px;
+  }
+
+  &.open {
+    background-color: unset !important;
+  }
+
+  &:hover {
+    background-color: var(--md-sys-color-surface-container-hover);
+  }
 `
