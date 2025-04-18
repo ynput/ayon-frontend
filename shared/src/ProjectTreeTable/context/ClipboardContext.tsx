@@ -172,17 +172,21 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
     async (selected, fullRow) => {
       selected = selected || Array.from(selectedCells)
       if (!selected.length) return
-
+      const clipboardText = await getSelectionData(selected, { fullRow })
+      if (!clipboardText) return
+      if (!navigator.clipboard) {
+        clipboardError('Clipboard API not supported in this browser.')
+        return
+      }
+      if (!window.isSecureContext) {
+        clipboardError('Clipboard operations require a secure HTTPS context.')
+        return
+      }
       try {
-        // Get clipboard text
-        const clipboardText = await getSelectionData(selected, { fullRow })
-        if (!clipboardText) return
-
-        // Write to clipboard using the Clipboard API
         await navigator.clipboard.writeText(clipboardText)
         console.log('Copied to clipboard successfully', clipboardText)
-      } catch (error) {
-        console.error('Failed to copy to clipboard:', error)
+      } catch (error: any) {
+        clipboardError(`Failed to copy to clipboard: ${error.message}`)
       }
     },
     [selectedCells, foldersMap, tasksMap, gridMap],
@@ -220,228 +224,235 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
     async (selected) => {
       selected = selected || Array.from(selectedCells)
       if (!selected.length) return
-
+      if (!navigator.clipboard) {
+        clipboardError('Clipboard API not supported in this browser.')
+        return
+      }
+      if (!window.isSecureContext) {
+        clipboardError('Clipboard operations require a secure HTTPS context.')
+        return
+      }
+      let clipboardText: string
       try {
-        // Get text from clipboard
-        const clipboardText = await navigator.clipboard.readText()
-        if (!clipboardText.trim()) return
+        clipboardText = await navigator.clipboard.readText()
+      } catch (error: any) {
+        clipboardError(`Failed to read from clipboard: ${error.message}`)
+        return
+      }
+      if (!clipboardText.trim()) return
 
-        // Parse the clipboard text
-        const parsedData = parseClipboardText(clipboardText)
-        if (!parsedData.length) return
+      // Parse the clipboard text
+      const parsedData = parseClipboardText(clipboardText)
+      if (!parsedData.length) return
 
-        // Determine if we have a single value in the clipboard (one row, one column)
-        const isSingleCellValue = parsedData.length === 1 && parsedData[0].values.length === 1
+      // Determine if we have a single value in the clipboard (one row, one column)
+      const isSingleCellValue = parsedData.length === 1 && parsedData[0].values.length === 1
 
-        // Organize selected cells by row
-        const cellsByRow = new Map<string, Set<string>>()
+      // Organize selected cells by row
+      const cellsByRow = new Map<string, Set<string>>()
 
-        // Parse all selected cells and organize by rowId and colId
-        Array.from(selected).forEach((cellId) => {
-          const position = parseCellId(cellId)
-          if (!position) return
+      // Parse all selected cells and organize by rowId and colId
+      Array.from(selected).forEach((cellId) => {
+        const position = parseCellId(cellId)
+        if (!position) return
 
-          const { rowId, colId } = position
+        const { rowId, colId } = position
 
-          if (!cellsByRow.has(rowId)) {
-            cellsByRow.set(rowId, new Set())
-          }
-          cellsByRow.get(rowId)?.add(colId)
-        })
-
-        // Get sorted row IDs based on their index in the grid
-        const sortedRows = Array.from(cellsByRow.keys()).sort((a, b) => {
-          const indexA = gridMap.rowIdToIndex.get(a) ?? Infinity
-          const indexB = gridMap.rowIdToIndex.get(b) ?? Infinity
-          return indexA - indexB
-        })
-
-        // For each row, get the sorted column IDs
-        const firstRow = sortedRows[0]
-        const selectedColIds = Array.from(cellsByRow.get(firstRow) || []).sort((a, b) => {
-          const indexA = gridMap.colIdToIndex.get(a) ?? Infinity
-          const indexB = gridMap.colIdToIndex.get(b) ?? Infinity
-          return indexA - indexB
-        })
-
-        // First pass: validate all values for status and subType
-        for (let colIndex = 0; colIndex < selectedColIds.length; colIndex++) {
-          const colId = selectedColIds[colIndex]
-
-          for (let rowIndex = 0; rowIndex < sortedRows.length; rowIndex++) {
-            const rowId = sortedRows[rowIndex]
-            const isFolder = foldersMap.has(rowId)
-
-            // Get the appropriate value from the clipboard data
-            // If it's a single cell value, use it for all cells
-            // Otherwise use the modulo approach to repeat values
-            let pasteValue
-            if (isSingleCellValue) {
-              pasteValue = parsedData[0].values[0]
-            } else {
-              const pasteRowIndex = rowIndex % parsedData.length
-              const pasteColIndex = colIndex % parsedData[pasteRowIndex].values.length
-              pasteValue = parsedData[pasteRowIndex].values[pasteColIndex]
-            }
-
-            // Validate clipboard data for this cell
-            const isValid = validateClipboardData({
-              colId,
-              isFolder,
-              pasteValue,
-              parsedData,
-              columnEnums,
-              columnReadOnly,
-              rowIndex,
-              colIndex,
-              isSingleCellValue,
-            })
-
-            if (!isValid) return
-          }
+        if (!cellsByRow.has(rowId)) {
+          cellsByRow.set(rowId, new Set())
         }
+        cellsByRow.get(rowId)?.add(colId)
+      })
 
-        // Create a map to consolidate updates for the same entity
-        const entitiesMap = new Map<
-          string,
-          {
-            id: string
-            type: string
-            fields: Record<string, any>
-            attrib: Record<string, any>
-          }
-        >()
+      // Get sorted row IDs based on their index in the grid
+      const sortedRows = Array.from(cellsByRow.keys()).sort((a, b) => {
+        const indexA = gridMap.rowIdToIndex.get(a) ?? Infinity
+        const indexB = gridMap.rowIdToIndex.get(b) ?? Infinity
+        return indexA - indexB
+      })
 
-        // For each column, prepare updates
-        for (let colIndex = 0; colIndex < selectedColIds.length; colIndex++) {
-          const colId = selectedColIds[colIndex]
+      // For each row, get the sorted column IDs
+      const firstRow = sortedRows[0]
+      const selectedColIds = Array.from(cellsByRow.get(firstRow) || []).sort((a, b) => {
+        const indexA = gridMap.colIdToIndex.get(a) ?? Infinity
+        const indexB = gridMap.colIdToIndex.get(b) ?? Infinity
+        return indexA - indexB
+      })
 
-          // Skip special handling for 'name' which we don't want to paste
-          if (colId === 'name') continue
+      // First pass: validate all values for status and subType
+      for (let colIndex = 0; colIndex < selectedColIds.length; colIndex++) {
+        const colId = selectedColIds[colIndex]
 
-          // Check if this is an attribute field by examining the first entity
-          let isAttrib = false
-          // Check if the field potentially contains array values
-          let fieldValueType: 'string' | 'number' | 'boolean' | 'array' = 'string'
+        for (let rowIndex = 0; rowIndex < sortedRows.length; rowIndex++) {
+          const rowId = sortedRows[rowIndex]
+          const isFolder = foldersMap.has(rowId)
 
-          if (sortedRows.length > 0) {
-            const firstRowId = sortedRows[0]
-            const isFolder = foldersMap.has(firstRowId)
-            const entity = isFolder ? foldersMap.get(firstRowId) : tasksMap.get(firstRowId)
-
-            if (entity) {
-              isAttrib = colId.startsWith('attrib_')
-
-              // Determine if field is an array and its value type
-              // @ts-ignore - Check entity property or attribute
-              const fieldValue = getCellValue(entity, colId)
-              if (Array.isArray(fieldValue)) {
-                fieldValueType = 'array'
-              } else if (typeof fieldValue === 'number') {
-                fieldValueType = 'number'
-              } else if (typeof fieldValue === 'boolean') {
-                fieldValueType = 'boolean'
-              }
-
-              // Special case for subType
-              if (colId === 'subType') {
-                isAttrib = false
-              }
-            }
+          // Get the appropriate value from the clipboard data
+          // If it's a single cell value, use it for all cells
+          // Otherwise use the modulo approach to repeat values
+          let pasteValue
+          if (isSingleCellValue) {
+            pasteValue = parsedData[0].values[0]
+          } else {
+            const pasteRowIndex = rowIndex % parsedData.length
+            const pasteColIndex = colIndex % parsedData[pasteRowIndex].values.length
+            pasteValue = parsedData[pasteRowIndex].values[pasteColIndex]
           }
 
-          // Process each row individually
-          for (let rowIndex = 0; rowIndex < sortedRows.length; rowIndex++) {
-            const rowId = sortedRows[rowIndex]
-            const isFolder = foldersMap.has(rowId)
-            const entityType = isFolder ? 'folder' : 'task'
+          // Validate clipboard data for this cell
+          const isValid = validateClipboardData({
+            colId,
+            isFolder,
+            pasteValue,
+            parsedData,
+            columnEnums,
+            columnReadOnly,
+            rowIndex,
+            colIndex,
+            isSingleCellValue,
+          })
 
-            // Get the appropriate value from the clipboard data
-            let pasteValue
-            if (isSingleCellValue) {
-              pasteValue = parsedData[0].values[0]
-            } else {
-              const pasteRowIndex = rowIndex % parsedData.length
-              const pasteColIndex = colIndex % parsedData[pasteRowIndex].values.length
-              pasteValue = parsedData[pasteRowIndex].values[pasteColIndex]
+          if (!isValid) return
+        }
+      }
+
+      // Create a map to consolidate updates for the same entity
+      const entitiesMap = new Map<
+        string,
+        {
+          id: string
+          type: string
+          fields: Record<string, any>
+          attrib: Record<string, any>
+        }
+      >()
+
+      // For each column, prepare updates
+      for (let colIndex = 0; colIndex < selectedColIds.length; colIndex++) {
+        const colId = selectedColIds[colIndex]
+
+        // Skip special handling for 'name' which we don't want to paste
+        if (colId === 'name') continue
+
+        // Check if this is an attribute field by examining the first entity
+        let isAttrib = false
+        // Check if the field potentially contains array values
+        let fieldValueType: 'string' | 'number' | 'boolean' | 'array' = 'string'
+
+        if (sortedRows.length > 0) {
+          const firstRowId = sortedRows[0]
+          const isFolder = foldersMap.has(firstRowId)
+          const entity = isFolder ? foldersMap.get(firstRowId) : tasksMap.get(firstRowId)
+
+          if (entity) {
+            isAttrib = colId.startsWith('attrib_')
+
+            // Determine if field is an array and its value type
+            // @ts-ignore - Check entity property or attribute
+            const fieldValue = getCellValue(entity, colId)
+            if (Array.isArray(fieldValue)) {
+              fieldValueType = 'array'
+            } else if (typeof fieldValue === 'number') {
+              fieldValueType = 'number'
+            } else if (typeof fieldValue === 'boolean') {
+              fieldValueType = 'boolean'
             }
 
-            let fieldToUpdate = colId.split('_').pop() || colId
-
-            // Special handling for subType (convert to folderType or taskType)
+            // Special case for subType
             if (colId === 'subType') {
-              fieldToUpdate = isFolder ? 'folderType' : 'taskType'
               isAttrib = false
-
-              // Skip empty values for enum fields
-              if (!pasteValue) continue
-            }
-
-            // Process the value based on its type
-            const processedValue = processFieldValue(pasteValue, fieldValueType)
-
-            // Get or create entity entry in the map
-            const entityKey = `${rowId}-${entityType}`
-            if (!entitiesMap.has(entityKey)) {
-              entitiesMap.set(entityKey, {
-                id: rowId,
-                type: entityType,
-                fields: {},
-                attrib: {},
-              })
-            }
-
-            const entityData = entitiesMap.get(entityKey)!
-
-            // Add the field to the appropriate place
-            if (isAttrib) {
-              entityData.attrib[fieldToUpdate] = processedValue
-            } else {
-              entityData.fields[fieldToUpdate] = processedValue
             }
           }
         }
 
-        // Convert the consolidated map to EntityUpdate array
-        const allEntityUpdates: EntityUpdate[] = []
+        // Process each row individually
+        for (let rowIndex = 0; rowIndex < sortedRows.length; rowIndex++) {
+          const rowId = sortedRows[rowIndex]
+          const isFolder = foldersMap.has(rowId)
+          const entityType = isFolder ? 'folder' : 'task'
 
-        entitiesMap.forEach((entity) => {
-          // For regular fields, create one update per field
-          Object.entries(entity.fields).forEach(([field, value]) => {
-            allEntityUpdates.push({
-              id: entity.id,
-              type: entity.type,
-              field,
-              value,
-            })
-          })
+          // Get the appropriate value from the clipboard data
+          let pasteValue
+          if (isSingleCellValue) {
+            pasteValue = parsedData[0].values[0]
+          } else {
+            const pasteRowIndex = rowIndex % parsedData.length
+            const pasteColIndex = colIndex % parsedData[pasteRowIndex].values.length
+            pasteValue = parsedData[pasteRowIndex].values[pasteColIndex]
+          }
 
-          // For attributes, create one update per attribute
-          Object.entries(entity.attrib).forEach(([field, value]) => {
-            allEntityUpdates.push({
-              id: entity.id,
-              type: entity.type,
-              field,
-              value,
-              isAttrib: true,
+          let fieldToUpdate = colId.split('_').pop() || colId
+
+          // Special handling for subType (convert to folderType or taskType)
+          if (colId === 'subType') {
+            fieldToUpdate = isFolder ? 'folderType' : 'taskType'
+            isAttrib = false
+
+            // Skip empty values for enum fields
+            if (!pasteValue) continue
+          }
+
+          // Process the value based on its type
+          const processedValue = processFieldValue(pasteValue, fieldValueType)
+
+          // Get or create entity entry in the map
+          const entityKey = `${rowId}-${entityType}`
+          if (!entitiesMap.has(entityKey)) {
+            entitiesMap.set(entityKey, {
+              id: rowId,
+              type: entityType,
+              fields: {},
+              attrib: {},
             })
+          }
+
+          const entityData = entitiesMap.get(entityKey)!
+
+          // Add the field to the appropriate place
+          if (isAttrib) {
+            entityData.attrib[fieldToUpdate] = processedValue
+          } else {
+            entityData.fields[fieldToUpdate] = processedValue
+          }
+        }
+      }
+
+      // Convert the consolidated map to EntityUpdate array
+      const allEntityUpdates: EntityUpdate[] = []
+
+      entitiesMap.forEach((entity) => {
+        // For regular fields, create one update per field
+        Object.entries(entity.fields).forEach(([field, value]) => {
+          allEntityUpdates.push({
+            id: entity.id,
+            type: entity.type,
+            field,
+            value,
           })
         })
 
-        // Make a single call to update all entities
-        if (allEntityUpdates.length > 0) {
-          try {
-            await updateEntities(allEntityUpdates)
-          } catch (error) {
-            console.error('Error updating entities:', error)
-            clipboardError(
-              `Failed to update: ${error instanceof Error ? error.message : 'Unknown error'}`,
-            )
-          }
+        // For attributes, create one update per attribute
+        Object.entries(entity.attrib).forEach(([field, value]) => {
+          allEntityUpdates.push({
+            id: entity.id,
+            type: entity.type,
+            field,
+            value,
+            isAttrib: true,
+          })
+        })
+      })
+
+      // Make a single call to update all entities
+      if (allEntityUpdates.length > 0) {
+        try {
+          await updateEntities(allEntityUpdates)
+        } catch (error) {
+          console.error('Error updating entities:', error)
+          clipboardError(
+            `Failed to update: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          )
         }
-      } catch (error) {
-        console.error('Failed to paste from clipboard:', error)
-        clipboardError('Failed to paste data. Please try again.')
       }
     },
     [selectedCells, gridMap, foldersMap, tasksMap, updateEntities, columnEnums],
