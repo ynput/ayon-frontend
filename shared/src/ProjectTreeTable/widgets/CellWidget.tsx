@@ -40,13 +40,15 @@ const Cell = styled.div`
   }
 `
 
+type WidgetAttributeData = Pick<AttributeData, 'type'>
+
 export type CellValue = string | number | boolean
 
 interface EditorCellProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onChange'> {
   rowId: string
   columnId: string
   value: CellValue | CellValue[]
-  attributeData?: AttributeData
+  attributeData?: WidgetAttributeData
   options?: AttributeEnumItem[]
   isCollapsed?: boolean
   isInherited?: boolean
