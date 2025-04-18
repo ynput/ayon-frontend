@@ -22,6 +22,7 @@ import FolderSequence from '@components/FolderSequence/FolderSequence'
 import { EntityForm, NewEntityType, useNewEntityContext } from '@context/NewEntityContext'
 import { ProjectModel } from '@api/rest/project'
 import useCreateEntityShortcuts from '@hooks/useCreateEntityShortcuts'
+import { useSlicerContext } from '@context/slicerContext'
 
 const ContentStyled = styled.div`
   display: flex;
@@ -88,9 +89,10 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled }) => {
 
   const [createMore, setCreateMore] = useState(false)
   const { selectedCells } = useSelectionContext()
+  const { rowSelection: slicerSelection, sliceType } = useSlicerContext()
   const { getEntityById, projectInfo } = useProjectTableContext()
 
-  const { selectedFolderIds, selectedFolders } = React.useMemo(() => {
+  const selectedFolderIds = React.useMemo(() => {
     const selectedRowIds = Array.from(
       new Set(
         Array.from(selectedCells)
@@ -103,28 +105,30 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled }) => {
     const selectedEntities = selectedRowIds.map((id) => getEntityById(id))
 
     const selectedFolders = selectedEntities
-      .filter(
-        // @ts-ignore
-        (entity) => !entity?.folderId,
-      )
+      .filter((entity) => entity?.entityType === 'folder')
       .filter(Boolean) as MatchingFolder[]
     const selectedTasks = selectedEntities
-      .filter(
-        // @ts-ignore
-        (entity) => entity?.folderId,
-      )
+      .filter((entity) => entity?.entityType === 'task')
       .filter(Boolean) as EditorTaskNode[]
 
     // Extract folder IDs from selected folders and tasks
     const folderIdsFromFolders = selectedFolders.map((folder) => folder.id)
+    // get parent folder ids from tasks
     const folderIdsFromTasks = selectedTasks.map((task) => task.folderId)
 
     // Combine and remove duplicate folder IDs
     // These are the folders to create the new entity in
     const selectedFolderIds = Array.from(new Set([...folderIdsFromFolders, ...folderIdsFromTasks]))
 
-    return { selectedFolderIds, selectedFolders }
-  }, [selectedCells, getEntityById])
+    // if no folders or tasks are selected, try to get the selected folder from the slicer
+    if (!selectedFolderIds.length && sliceType === 'hierarchy') {
+      // add the selected folder ids from the slicer
+      const selectedFolderIdsFromSlicer = Object.keys(slicerSelection)
+      selectedFolderIds.push(...selectedFolderIdsFromSlicer)
+    }
+
+    return selectedFolderIds
+  }, [selectedCells, slicerSelection, sliceType, getEntityById])
 
   const isRoot = isEmpty(selectedFolderIds)
 
@@ -366,7 +370,6 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled }) => {
               increment={sequenceForm.increment}
               length={sequenceForm.length}
               prefix={sequenceForm.prefix}
-              parentLabel={selectedFolders[0]?.label}
               prefixDepth={sequenceForm.prefixDepth}
               entityType="folder"
               nesting={false}
