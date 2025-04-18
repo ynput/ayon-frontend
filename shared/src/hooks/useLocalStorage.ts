@@ -31,9 +31,6 @@ export function useLocalStorage<T>(key: string, defaultValue: T): [T, (value: T)
     const currentItem = localStorage.getItem(key)
     setValue(parseJSONString(currentItem, defaultValueRef.current))
 
-    if (key.startsWith('overview-')) {
-      console.log('key', { key })
-    }
     if (!currentItem) {
       localStorage.setItem(key, JSON.stringify(defaultValueRef.current))
     }
