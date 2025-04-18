@@ -8,6 +8,8 @@ import { PatchOperation, useUpdateOverviewEntitiesMutation } from '@queries/over
 import { useProjectTableContext } from '@shared/ProjectTreeTable'
 import { EditorTaskNode, MatchingFolder } from '@shared/ProjectTreeTable'
 import checkName from '@helpers/checkName'
+import { useSlicerContext } from './slicerContext'
+import { isEmpty } from 'lodash'
 
 export type NewEntityType = 'folder' | 'task'
 
@@ -46,6 +48,8 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
     useProjectTableContext()
   const { attrib: projectAttrib = {}, statuses } = projectInfo || {}
 
+  const { rowSelection, sliceType } = useSlicerContext()
+
   const firstStatusForTask =
     statuses?.filter((status) => status.scope?.includes('task'))?.[0]?.name ||
     statuses?.[0]?.name ||
@@ -74,6 +78,21 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
     name: string,
     parentId?: string,
   ): NewEntityOperation => {
+    // add extra data from slicer
+    const slicerData: Record<string, any> = {}
+    if (sliceType !== 'hierarchy' && !isEmpty(rowSelection) && entityType === 'task') {
+      switch (sliceType) {
+        case 'assignees':
+          slicerData.assignees = Object.keys(rowSelection)
+          break
+        case 'status':
+          slicerData.status = Object.keys(rowSelection)[0]
+          break
+        default:
+          break
+      }
+    }
+
     return {
       type: 'create',
       entityType: entityType,
@@ -82,6 +101,7 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
         id: uuid1().replace(/-/g, ''),
         name: checkName(name),
         ...(parentId && { [entityType === 'folder' ? 'parentId' : 'folderId']: parentId }),
+        ...slicerData,
       },
     }
   }
@@ -239,9 +259,9 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
               taskType: (operation.data as any).taskType,
               folderId: (operation.data as any).folderId,
               active: true,
-              assignees: [],
+              assignees: operation.data.assignees || [],
               projectName,
-              status: firstStatusForTask,
+              status: operation.data.status || firstStatusForTask,
               folder: {
                 path: '', // TODO add real path somehow
               },
