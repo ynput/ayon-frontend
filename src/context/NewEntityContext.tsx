@@ -44,7 +44,7 @@ interface NewEntityProviderProps {
 }
 
 export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }) => {
-  const { findNonInheritedValues, projectName, attribFields, projectInfo } =
+  const { findNonInheritedValues, projectName, attribFields, projectInfo, getEntityById } =
     useProjectTableContext()
   const { attrib: projectAttrib = {}, statuses } = projectInfo || {}
 
@@ -162,6 +162,7 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
 
   const createPatchOperations = (
     operations: NewEntityOperation[],
+    paths: Record<string, string> = {},
   ): (PatchNewTaskOperation | PatchNewFolderOperation)[] => {
     // split operations by folderId or parentId (convert parentId to folderId)
     const folderIds = new Set<string>()
@@ -242,7 +243,9 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
               updatedAt: new Date().toISOString(),
               status: firstStatusForFolder,
               ownAttrib: [],
-              path: '', // TODO add real path somehow
+              path: operation.data.parentId
+                ? paths[operation.data.parentId] + '/' + operation.data.name
+                : '',
               tags: [],
               attrib: filteredAttribs,
             } as MatchingFolder,
@@ -263,7 +266,7 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
               projectName,
               status: operation.data.status || firstStatusForTask,
               folder: {
-                path: '', // TODO add real path somehow
+                path: operation.data.folderId ? paths[operation.data.folderId] : '',
               },
               tags: [],
               ownAttrib: [],
@@ -324,8 +327,16 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
       )
     }
 
-    const patchOperations = createPatchOperations(operations)
-    console.log(patchOperations)
+    // get all the paths for the selected folders
+    const paths: Record<string, string> = {}
+    for (const folderId of selectedFolderIds) {
+      const entity = getEntityById(folderId)
+      if (entity?.entityType === 'folder') {
+        paths[folderId] = entity.path
+      }
+    }
+
+    const patchOperations = createPatchOperations(operations, paths)
 
     try {
       await createEntities({
