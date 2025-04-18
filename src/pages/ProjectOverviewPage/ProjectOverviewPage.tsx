@@ -92,7 +92,7 @@ const ProjectOverviewPage: FC = () => {
         <SplitterPanel size={88}>
           <Section wrap direction="column" style={{ height: '100%' }}>
             <Toolbar style={{ gap: 8 }}>
-              <NewEntity />
+              <NewEntity disabled={!showHierarchy} />
               <SearchFilterWrapper
                 filters={filtersWithHierarchy}
                 onChange={handleFiltersChange}

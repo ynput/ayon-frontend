@@ -70,9 +70,11 @@ const StyledCreateItem = styled.span`
   }
 `
 
-interface NewEntityProps {}
+interface NewEntityProps {
+  disabled?: boolean
+}
 
-const NewEntity: React.FC<NewEntityProps> = () => {
+const NewEntity: React.FC<NewEntityProps> = ({ disabled }) => {
   const {
     entityType,
     setEntityType,
@@ -307,6 +309,8 @@ const NewEntity: React.FC<NewEntityProps> = () => {
         itemStyle={{
           paddingRight: 16,
         }}
+        disabled={disabled}
+        data-tooltip={disabled ? 'Enable hierarchy to create new entity' : 'Create new entity'}
       />
       {entityType && (
         <Dialog
