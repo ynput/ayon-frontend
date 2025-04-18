@@ -233,6 +233,9 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
 
         // Create entity-specific patch operation with the correct type casting
         if (entityType === 'folder') {
+          let path = operation.data.parentId && paths[operation.data.parentId]
+          path = path ? path + '/' + operation.data.name : ''
+
           const folderPatch: PatchNewFolderOperation = {
             type: 'create',
             entityType: 'folder',
@@ -246,9 +249,7 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
               updatedAt: new Date().toISOString(),
               status: firstStatusForFolder,
               ownAttrib: [],
-              path: operation.data.parentId
-                ? paths[operation.data.parentId] + '/' + operation.data.name
-                : '',
+              path: path,
               tags: [],
               attrib: filteredAttribs,
             } as MatchingFolder,

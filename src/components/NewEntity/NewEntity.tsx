@@ -124,10 +124,10 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled }) => {
     if (!selectedFolderIds.length && sliceType === 'hierarchy') {
       // add the selected folder ids from the slicer
       const selectedFolderIdsFromSlicer = Object.keys(slicerSelection)
-      selectedFolderIds.push(...selectedFolderIdsFromSlicer)
+      return selectedFolderIdsFromSlicer
+    } else {
+      return selectedFolderIds
     }
-
-    return selectedFolderIds
   }, [selectedCells, slicerSelection, sliceType, getEntityById])
 
   const isRoot = isEmpty(selectedFolderIds)
