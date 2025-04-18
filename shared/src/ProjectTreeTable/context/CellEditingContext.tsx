@@ -69,6 +69,7 @@ export const CellEditingProvider: React.FC<{ children: ReactNode }> = ({ childre
         }, {} as Record<keyof AttributeData, number>)
 
         const { ge, gt, le, lt, minLength, maxLength, minItems, maxItems } = validationValues
+        const pattern = attribute.data.regex
 
         if (typeof value === 'number') {
           if (ge != null && value < ge) throw new Error(`“${field}” must be ≥ ${ge}`)
@@ -80,6 +81,8 @@ export const CellEditingProvider: React.FC<{ children: ReactNode }> = ({ childre
             throw new Error(`“${field}” length must be ≥ ${minLength}`)
           if (maxLength != null && value.length > maxLength)
             throw new Error(`“${field}” length must be ≤ ${maxLength}`)
+          if (pattern && !new RegExp(pattern).test(value))
+            throw new Error(`“${field}” must match pattern ${pattern}`)
         } else if (Array.isArray(value)) {
           if (minItems != null && value.length < minItems)
             throw new Error(`“${field}” items must be ≥ ${minItems}`)
