@@ -81,12 +81,15 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
     // add extra data from slicer
     const slicerData: Record<string, any> = {}
     if (sliceType !== 'hierarchy' && !isEmpty(rowSelection) && entityType === 'task') {
+      const selection = Object.keys(rowSelection).filter(
+        (key) => !['hasValue', 'noValue'].includes(key),
+      )
       switch (sliceType) {
         case 'assignees':
-          slicerData.assignees = Object.keys(rowSelection)
+          slicerData.assignees = selection
           break
         case 'status':
-          slicerData.status = Object.keys(rowSelection)[0]
+          slicerData.status = selection[0]
           break
         default:
           break
