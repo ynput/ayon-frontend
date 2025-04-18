@@ -387,6 +387,15 @@ const updateEntity = api.injectEndpoints({
             if (entityType === 'folder') {
               // patch the overview page
               patchOverviewFolders(operationsWithEntityId, { state, dispatch }, overviewPatches)
+              console.log('invalidate overview folders')
+              // invalidate overview folders query
+              dispatch(api.util.invalidateTags([{ type: 'folder', id: 'LIST' }]))
+              // invalidate overview tasks with folder as a parent
+              dispatch(
+                api.util.invalidateTags(
+                  operationsWithEntityId.map((o) => ({ type: 'overviewTask', id: o.entityId })),
+                ),
+              )
             }
           }
 
