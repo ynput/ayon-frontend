@@ -81,9 +81,11 @@ export const ProjectOverviewProvider = ({ children }: ProjectOverviewProviderPro
     setColumnSorting,
   } = useProjectDataContext()
 
-  const scope = `overview-${projectName}`
+  const getLocalKey = (page: string, key: string) => `${page}-${key}-${projectName}`
 
-  const [expanded, setExpanded] = useLocalStorage<ExpandedState>(`expanded-${scope}`, {})
+  const page = 'overview'
+
+  const [expanded, setExpanded] = useLocalStorage<ExpandedState>(getLocalKey(page, 'expanded'), {})
   const updateExpanded: OnChangeFn<ExpandedState> = (expandedUpdater) => {
     setExpanded(functionalUpdate(expandedUpdater, expanded))
   }
@@ -96,9 +98,9 @@ export const ProjectOverviewProvider = ({ children }: ProjectOverviewProviderPro
     })
   }
 
-  const [filters, setFilters] = useLocalStorage<Filter[]>(`overview-filters-${projectName}`, [])
+  const [filters, setFilters] = useLocalStorage<Filter[]>(getLocalKey(page, 'filters'), [])
   const [showHierarchy, updateShowHierarchy] = useLocalStorage<boolean>(
-    `overview-show-hierarchy-${projectName}`,
+    getLocalKey(page, 'showHierarchy'),
     true,
   )
 

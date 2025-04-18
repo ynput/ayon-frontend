@@ -69,7 +69,7 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
     setFilters(
       _filters.filter((filter, index, self) => self.findIndex((f) => f.id === filter.id) === index),
     )
-  }, [_filters, setFilters])
+  }, [_filters, setFilters, projectNames])
 
   return (
     <SearchFilter

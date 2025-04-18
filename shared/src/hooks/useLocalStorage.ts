@@ -5,7 +5,7 @@
  *  - Also value will be updated everywhere, when value updated (via `storage` event)
  */
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 const parseJSONString = (value: string | null, fallback: any = null) => {
   if (!value) return fallback
@@ -17,19 +17,32 @@ const parseJSONString = (value: string | null, fallback: any = null) => {
 }
 
 export function useLocalStorage<T>(key: string, defaultValue: T): [T, (value: T) => void] {
-  const item = localStorage.getItem(key)
-  const [value, setValue] = useState(() => parseJSONString(item, defaultValue))
+  // Use a ref to hold the defaultValue to avoid dependency changes
+  const defaultValueRef = useRef(defaultValue)
+  defaultValueRef.current = defaultValue
+
+  const [value, setValue] = useState(() => {
+    const item = localStorage.getItem(key)
+    return parseJSONString(item, defaultValue)
+  })
 
   useEffect(() => {
-    if (!item) {
-      localStorage.setItem(key, JSON.stringify(defaultValue))
+    // Read the latest value from localStorage whenever key changes
+    const currentItem = localStorage.getItem(key)
+    setValue(parseJSONString(currentItem, defaultValueRef.current))
+
+    if (key.startsWith('overview-')) {
+      console.log('key', { key })
+    }
+    if (!currentItem) {
+      localStorage.setItem(key, JSON.stringify(defaultValueRef.current))
     }
 
     function handler(e: StorageEvent) {
       if (e.key !== key) return
 
       const lsi = localStorage.getItem(key)
-      setValue(parseJSONString(lsi, defaultValue))
+      setValue(parseJSONString(lsi, defaultValueRef.current))
     }
 
     window.addEventListener('storage', handler)
@@ -37,7 +50,7 @@ export function useLocalStorage<T>(key: string, defaultValue: T): [T, (value: T)
     return () => {
       window.removeEventListener('storage', handler)
     }
-  }, [])
+  }, [key]) // Remove defaultValue from dependencies
 
   const setValueWrap = (value: T) => {
     try {

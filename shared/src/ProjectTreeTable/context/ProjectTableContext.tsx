@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useCallback, useContext, useMemo } from 'react'
+import { createContext, ReactNode, useCallback, useContext } from 'react'
 import { ExpandedState, OnChangeFn, SortingState } from '@tanstack/react-table'
 import useOverviewTable from '../hooks/useOverviewTable'
 import { Filter } from '@ynput/ayon-react-components'
@@ -20,7 +20,6 @@ import { RowId } from '../utils/cellUtils'
 import { ProjectModel } from '../types/project'
 import { AttributeWithPermissions, LoadingTasks } from '../types'
 import { QueryFilter } from '../types/folders'
-import { OperationModel, OperationsRequestModel } from '../types/operations'
 
 type User = {
   name: string
