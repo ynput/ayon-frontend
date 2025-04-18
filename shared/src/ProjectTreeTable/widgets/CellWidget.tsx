@@ -167,7 +167,7 @@ const EditorCellComponent: FC<EditorCellProps> = ({
       }
 
       case textTypes.includes(type as TextWidgetType):
-        return <TextWidget value={value as string} {...sharedProps} />
+        return <TextWidget value={value as string} isInherited={isInherited} {...sharedProps} />
 
       case type === 'datetime' && value !== null && value !== undefined:
         return <DateWidget value={value as string} isInherited={isInherited} {...sharedProps} />

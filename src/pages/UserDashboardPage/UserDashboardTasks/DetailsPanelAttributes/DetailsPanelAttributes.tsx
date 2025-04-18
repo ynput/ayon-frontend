@@ -8,6 +8,7 @@ import DetailsPanelAttributesEditor, {
   DetailsPanelAttributesEditorProps,
 } from './DetailsPanelAttributesEditor'
 import useEntityUpdate from '@hooks/useEntityUpdate'
+import { upperFirst } from 'lodash'
 
 type Entity = {
   id: string
@@ -69,10 +70,10 @@ const visibleFields: Array<keyof EntityForm> = [
 
 const readOnlyFields: Array<keyof Entity> = [
   'id',
-  'name',
   'entityType',
   'projectName',
   'path',
+  'name',
   'createdAt',
   'updatedAt',
 ]
@@ -241,13 +242,13 @@ const DetailsPanelAttributes = ({ entities = [], isLoading }: DetailsPanelAttrib
       readonly: true,
       data: {
         type: 'string',
-        title: field,
+        title: upperFirst(field),
       },
     }))
 
     // Combine custom fields with API attributes
     const allFieldsData = [...customFieldsData, ...apiAttributesData, ...readOnlyFieldsData]
-    const sortToTop = ['name', 'entityType', 'path']
+    const sortToTop = ['path', 'name']
     const sortedFieldsData = [...allFieldsData].sort((a, b) => {
       const aIndex = sortToTop.indexOf(a.name)
       const bIndex = sortToTop.indexOf(b.name)

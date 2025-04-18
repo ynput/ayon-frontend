@@ -17,10 +17,11 @@ interface TextWidgetProps
   extends Omit<React.HTMLAttributes<HTMLSpanElement>, 'onChange'>,
     WidgetBaseProps {
   value: string
+  isInherited?: boolean
 }
 
 export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
-  ({ value, isEditing, onChange, onCancelEdit, ...props }, ref) => {
+  ({ value, isEditing, isInherited, onChange, onCancelEdit, ...props }, ref) => {
     if (isEditing) {
       return (
         <TextWidgetInput value={value} onChange={onChange} onCancel={onCancelEdit} type={'text'} />
