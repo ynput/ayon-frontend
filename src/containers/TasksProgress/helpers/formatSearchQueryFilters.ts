@@ -2,7 +2,7 @@
 
 import { AttributeFilterInput, ProjectNodeTasksArgs } from '@api/graphql'
 import getFilterFromId from '@components/SearchFilter/getFilterFromId'
-import { Filter } from '@components/SearchFilter/types'
+import { Filter } from '@ynput/ayon-react-components'
 import { TaskFilterValue } from '../hooks/useFilterBySlice'
 import { TaskProgressSliceType } from '@pages/TasksProgressPage/TasksProgressPage'
 
