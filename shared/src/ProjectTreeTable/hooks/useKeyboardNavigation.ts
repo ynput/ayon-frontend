@@ -1,6 +1,6 @@
 import { useCallback, useEffect } from 'react'
 import { useSelectionContext } from '../context/SelectionContext'
-import { useCellEditing } from '../context/CellEditingContext'
+import { useCellEditing } from '../context/CellEditingContext' // keep for editingCellId/setEditingCellId
 import { parseCellId, getCellId } from '../utils/cellUtils'
 import { useProjectTableContext } from '../context/ProjectTableContext'
 

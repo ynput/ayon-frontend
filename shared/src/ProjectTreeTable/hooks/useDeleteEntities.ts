@@ -52,7 +52,7 @@ const useDeleteEntities = ({ onSuccess }: UseDeleteEntitiesProps) => {
 
       confirmDelete({
         label: 'folders and tasks',
-        message: `Are you sure you want to delete ${entityIds.length} entities?`,
+        message: `Are you sure you want to delete ${entityIds.length} entities? This action cannot be undone.`,
         accept: deleteEntities,
         onError: (error: any) => {
           const FOLDER_WITH_CHILDREN_CODE = 'delete-folder-with-children'
@@ -67,7 +67,7 @@ const useDeleteEntities = ({ onSuccess }: UseDeleteEntitiesProps) => {
             })
           }
         },
-        deleteLabel: 'Delete',
+        deleteLabel: 'Delete forever',
       })
     },
     [getEntityById, updateEntities, onSuccess],

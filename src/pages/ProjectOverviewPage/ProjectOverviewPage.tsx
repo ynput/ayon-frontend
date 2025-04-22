@@ -9,7 +9,7 @@ import { useSlicerContext } from '@context/slicerContext'
 import Slicer from '@containers/Slicer'
 
 // arc
-import { Filter, InputSwitch, Section, Toolbar } from '@ynput/ayon-react-components'
+import { Filter, Section, SwitchButton, Toolbar } from '@ynput/ayon-react-components'
 import SearchFilterWrapper from './containers/SearchFilterWrapper'
 import ProjectOverviewTable from './containers/ProjectOverviewTable'
 import { isEmpty } from 'lodash'
@@ -22,6 +22,7 @@ import { useProjectTableContext, useSelectedRowsContext } from '@shared/ProjectT
 import ProjectOverviewSettings, { CustomizeButton } from './components/ProjectOverviewSettings'
 import { useSettingsPanel } from './context/SettingsPanelContext'
 import ReloadButton from './components/ReloadButton'
+import OverviewActions from './components/OverviewActions'
 
 const searchFilterTypes: FilterFieldType[] = [
   'attributes',
@@ -93,6 +94,7 @@ const ProjectOverviewPage: FC = () => {
           <Section wrap direction="column" style={{ height: '100%' }}>
             <Toolbar style={{ gap: 8 }}>
               <NewEntity disabled={!showHierarchy} />
+              <OverviewActions />
               <SearchFilterWrapper
                 filters={filtersWithHierarchy}
                 onChange={handleFiltersChange}
@@ -103,13 +105,11 @@ const ProjectOverviewPage: FC = () => {
                 disabledFilters={sliceType ? [sliceType] : []}
               />
               <ReloadButton />
-              <span style={{ whiteSpace: 'nowrap', display: 'flex', gap: 8 }}>
-                Show hierarchy
-                <InputSwitch
-                  checked={showHierarchy}
-                  onChange={(e) => updateShowHierarchy((e.target as HTMLInputElement).checked)}
-                />
-              </span>
+              <SwitchButton
+                value={showHierarchy}
+                onClick={() => updateShowHierarchy(!showHierarchy)}
+                label="Show hierarchy"
+              />
               <CustomizeButton />
             </Toolbar>
             <Splitter

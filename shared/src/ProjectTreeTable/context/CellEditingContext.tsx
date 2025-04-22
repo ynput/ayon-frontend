@@ -1,12 +1,20 @@
-import React, { createContext, useContext, useState, useCallback, useMemo, ReactNode } from 'react'
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useMemo,
+  useEffect,
+  ReactNode,
+} from 'react'
 import { CellId } from '../utils/cellUtils'
 import useUpdateOverview, {
   InheritFromParent,
   UpdateTableEntities,
 } from '../hooks/useUpdateOverview'
-import { useProjectTableContext } from './ProjectTableContext'
-import { AttributeData } from '../types'
 import { toast } from 'react-toastify'
+import useValidateUpdates from '../hooks/useValidateUpdates'
+import useHistory from '../hooks/useHistory'
 
 export interface CellEditingContextType {
   editingCellId: CellId | null
@@ -14,6 +22,11 @@ export interface CellEditingContextType {
   isEditing: (id: CellId) => boolean
   updateEntities: UpdateTableEntities
   inheritFromParent: InheritFromParent
+  // Add history functions to context
+  undo: () => Promise<void>
+  redo: () => Promise<void>
+  canUndo: boolean
+  canRedo: boolean
 }
 
 const CellEditingContext = createContext<CellEditingContextType | undefined>(undefined)
@@ -24,79 +37,67 @@ export const CellEditingProvider: React.FC<{ children: ReactNode }> = ({ childre
   // Memoize these functions to prevent unnecessary re-renders
   const isEditing = useCallback((id: CellId) => id === editingCellId, [editingCellId])
 
-  const { updateEntities, inheritFromParent } = useUpdateOverview()
-  const { attribFields } = useProjectTableContext()
-  const validateUpdateEntities: UpdateTableEntities = async (entities = []) => {
+  // Get history functions
+  const { pushHistory, undo: undoHistory, redo: redoHistory, canUndo, canRedo } = useHistory()
+
+  const { updateEntities: updateOverviewEntities, inheritFromParent } = useUpdateOverview({
+    pushHistory,
+  })
+
+  const validateUpdateEntities = useValidateUpdates()
+
+  const handleUpdateEntities: UpdateTableEntities = async (entities = [], pushToHistory = true) => {
     try {
-      // first validate the values are correct
-      for (const { isAttrib, value: rawValue, field } of entities) {
-        if (!isAttrib) continue
-        const attribute = attribFields.find((attr) => attr.name === field)
-        if (!attribute) continue
+      // validate the entities before updating
+      validateUpdateEntities(entities)
 
-        // coerce numeric strings into numbers for integer/float types or fail
-        let value: any = rawValue
-        const { type } = attribute.data
-        if (type === 'integer' || type === 'float') {
-          if (typeof rawValue === 'string') {
-            // empty or non‑numeric strings are invalid
-            if (rawValue.trim() === '' || isNaN(Number(rawValue))) {
-              throw new Error(`“${field}” must be a valid number`)
-            }
-            value = type === 'integer' ? parseInt(rawValue, 10) : parseFloat(rawValue)
-          } else if (typeof rawValue !== 'number') {
-            // any other type is invalid
-            throw new Error(`“${field}” must be a valid number`)
-          }
-        }
-
-        // collect numeric rules from attribute.data
-        const validationKeys: (keyof AttributeData)[] = [
-          'ge',
-          'gt',
-          'le',
-          'lt',
-          'minLength',
-          'maxLength',
-          'minItems',
-          'maxItems',
-        ]
-        const validationValues = (
-          Object.entries(attribute.data) as [keyof AttributeData, any][]
-        ).reduce((acc, [key, v]) => {
-          if (validationKeys.includes(key)) acc[key] = v as number
-          return acc
-        }, {} as Record<keyof AttributeData, number>)
-
-        const { ge, gt, le, lt, minLength, maxLength, minItems, maxItems } = validationValues
-        const pattern = attribute.data.regex
-
-        if (typeof value === 'number') {
-          if (ge != null && value < ge) throw new Error(`“${field}” must be ≥ ${ge}`)
-          if (gt != null && value <= gt) throw new Error(`“${field}” must be > ${gt}`)
-          if (le != null && value > le) throw new Error(`“${field}” must be ≤ ${le}`)
-          if (lt != null && value >= lt) throw new Error(`“${field}” must be < ${lt}`)
-        } else if (typeof value === 'string') {
-          if (minLength != null && value.length < minLength)
-            throw new Error(`“${field}” length must be ≥ ${minLength}`)
-          if (maxLength != null && value.length > maxLength)
-            throw new Error(`“${field}” length must be ≤ ${maxLength}`)
-          if (pattern && !new RegExp(pattern).test(value))
-            throw new Error(`“${field}” must match pattern ${pattern}`)
-        } else if (Array.isArray(value)) {
-          if (minItems != null && value.length < minItems)
-            throw new Error(`“${field}” items must be ≥ ${minItems}`)
-          if (maxItems != null && value.length > maxItems)
-            throw new Error(`“${field}” items must be ≤ ${maxItems}`)
-        }
-      }
+      // if validation passes, update the entities
+      return await updateOverviewEntities(entities, pushToHistory)
     } catch (error: any) {
       // if validation fails, show a toast and return
       toast.error(error.message)
-      return Promise.resolve()
+
+      return Promise.reject(error)
     }
-    // all good – forward to the real updater
-    return updateEntities(entities)
+  }
+
+  // Handle undo
+  const handleUndo = async () => {
+    const [entitiesToUndo, entitiesToInherit] = undoHistory() || []
+
+    if (entitiesToUndo && entitiesToUndo.length > 0) {
+      try {
+        await handleUpdateEntities(entitiesToUndo, false)
+      } catch (error) {
+        toast.error('Failed to undo changes')
+      }
+    }
+    if (entitiesToInherit && entitiesToInherit.length > 0) {
+      try {
+        await inheritFromParent(entitiesToInherit, false)
+      } catch (error) {
+        toast.error('Failed to inherit changes')
+      }
+    }
+  }
+
+  // Handle redo
+  const handleRedo = async () => {
+    const [entitiesToRedo, entitiesToInherit] = redoHistory() || []
+    if (entitiesToRedo && entitiesToRedo.length > 0) {
+      try {
+        await handleUpdateEntities(entitiesToRedo, false)
+      } catch (error) {
+        toast.error('Failed to redo changes')
+      }
+    }
+    if (entitiesToInherit && entitiesToInherit.length > 0) {
+      try {
+        await inheritFromParent(entitiesToInherit, false)
+      } catch (error) {
+        toast.error('Failed to inherit changes')
+      }
+    }
   }
 
   const value = useMemo(
@@ -104,11 +105,65 @@ export const CellEditingProvider: React.FC<{ children: ReactNode }> = ({ childre
       editingCellId,
       setEditingCellId,
       isEditing,
-      updateEntities: validateUpdateEntities,
+      updateEntities: handleUpdateEntities,
       inheritFromParent,
+      undo: handleUndo,
+      redo: handleRedo,
+      canUndo,
+      canRedo,
     }),
-    [editingCellId, isEditing, updateEntities],
+    [
+      editingCellId,
+      isEditing,
+      handleUpdateEntities,
+      inheritFromParent,
+      handleUndo,
+      handleRedo,
+      canUndo,
+      canRedo,
+    ],
   )
+
+  // Listen for global undo/redo shortcuts and invoke context handlers
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement
+      if (
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.isContentEditable ||
+        target.getAttribute('role') === 'textbox' ||
+        target.tagName === 'LI'
+      ) {
+        return
+      }
+
+      const isMac =
+        typeof navigator !== 'undefined' &&
+        // @ts-expect-error
+        ((navigator.userAgentData &&
+          // @ts-expect-error
+          navigator.userAgentData.platform.toUpperCase().includes('MAC')) ||
+          navigator.userAgent.toUpperCase().includes('MAC'))
+      const ctrlKey = isMac ? e.metaKey : e.ctrlKey
+
+      if (ctrlKey && e.key === 'z') {
+        e.preventDefault()
+        if (canUndo) handleUndo()
+      }
+      if (
+        (ctrlKey && e.key === 'y') ||
+        (ctrlKey && e.shiftKey && e.key === 'z') ||
+        (ctrlKey && e.key === 'Z')
+      ) {
+        e.preventDefault()
+        if (canRedo) handleRedo()
+      }
+    }
+
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [canUndo, canRedo, handleUndo, handleRedo])
 
   return <CellEditingContext.Provider value={value}>{children}</CellEditingContext.Provider>
 }
