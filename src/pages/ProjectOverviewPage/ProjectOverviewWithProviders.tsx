@@ -5,6 +5,7 @@ import {
   SelectionProvider,
   SelectedRowsProvider,
   ColumnSettingsProvider,
+  CellEditingProvider,
 } from '@shared/ProjectTreeTable'
 import { NewEntityProvider } from '@context/NewEntityContext'
 import { SettingsPanelProvider } from './context/SettingsPanelContext'
@@ -75,7 +76,9 @@ const ProjectOverviewWithTableProviders: FC = () => {
           <SelectionProvider>
             <SelectedRowsProvider>
               <ColumnSettingsProvider config={pageConfig} onChange={updatePageConfig}>
-                <ProjectOverviewPage />
+                <CellEditingProvider>
+                  <ProjectOverviewPage />
+                </CellEditingProvider>
               </ColumnSettingsProvider>
             </SelectedRowsProvider>
           </SelectionProvider>

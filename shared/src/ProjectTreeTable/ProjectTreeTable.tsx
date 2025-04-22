@@ -98,18 +98,16 @@ const FlexTableWithProviders = (props: Props) => {
   }, [props.attribs])
 
   return (
-    <CellEditingProvider>
-      <ClipboardProvider
-        foldersMap={props.foldersMap}
-        tasksMap={props.tasksMap}
-        columnEnums={{ ...props.options, ...attribByField }}
-        columnReadOnly={props.attribs
-          .filter((attrib) => attrib.readOnly)
-          .map((attrib) => attrib.name)}
-      >
-        <FlexTable {...props} />
-      </ClipboardProvider>
-    </CellEditingProvider>
+    <ClipboardProvider
+      foldersMap={props.foldersMap}
+      tasksMap={props.tasksMap}
+      columnEnums={{ ...props.options, ...attribByField }}
+      columnReadOnly={props.attribs
+        .filter((attrib) => attrib.readOnly)
+        .map((attrib) => attrib.name)}
+    >
+      <FlexTable {...props} />
+    </ClipboardProvider>
   )
 }
 
