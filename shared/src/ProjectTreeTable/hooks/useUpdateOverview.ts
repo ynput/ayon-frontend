@@ -7,6 +7,7 @@ import { InheritedDependent } from './useFolderRelationships'
 import { useProjectTableContext } from '../context/ProjectTableContext'
 import { OperationModel } from '../types/operations'
 import { PatchOperation } from '../types'
+import { HistoryEntityUpdate, UseHistoryReturn } from './useHistory'
 
 export type EntityUpdate = {
   id: string
@@ -24,7 +25,10 @@ export type InheritFromParentEntity = {
   ownAttrib: string[]
   folderId: string
 }
-export type InheritFromParent = (entities: InheritFromParentEntity[]) => Promise<void>
+export type InheritFromParent = (
+  entities: InheritFromParentEntity[],
+  pushHistory?: boolean,
+) => Promise<void>
 
 export type UpdateTableEntity = (
   cellId: CellId,
@@ -33,7 +37,7 @@ export type UpdateTableEntity = (
 ) => Promise<void>
 
 interface UseUpdateOverviewProps {
-  pushHistory?: (undo: EntityUpdate[], redo: EntityUpdate[]) => void
+  pushHistory?: UseHistoryReturn['pushHistory']
 }
 
 const useUpdateOverview = (props?: UseUpdateOverviewProps) => {
@@ -55,14 +59,46 @@ const useUpdateOverview = (props?: UseUpdateOverviewProps) => {
 
       // Record history of previous values before applying update
       if (pushHistory && pushToHistory) {
-        const inverseEntities: EntityUpdate[] = entities.map(({ id, type, field, isAttrib }) => {
-          const entityData = getEntityById(id) as Record<string, any>
-          const oldValue = isAttrib
-            ? (entityData.attrib as Record<string, any>)?.[field] ?? null
-            : entityData[field] ?? null
-          return { id, type, field, value: oldValue, isAttrib }
-        })
-        pushHistory(inverseEntities, entities)
+        const inverseEntities: HistoryEntityUpdate[] = entities.map(
+          ({ id, type, field, isAttrib }) => {
+            const entityData = getEntityById(id) as Record<string, any>
+            const oldValue = isAttrib
+              ? (entityData.attrib as Record<string, any>)?.[field] ?? null
+              : entityData[field] ?? null
+
+            // Check if the field was inherited (not in ownAttrib)
+            const ownAttrib = entityData?.ownAttrib || []
+            const wasInherited = isAttrib && !ownAttrib.includes(field)
+
+            return {
+              id,
+              type,
+              field,
+              value: oldValue,
+              isAttrib,
+              wasInherited, // Track inheritance status for undo
+              ownAttrib: ownAttrib,
+              folderId: entityData?.folderId,
+            }
+          },
+        )
+        const historyEntities: HistoryEntityUpdate[] = entities.flatMap(
+          ({ id, type, field, value, isAttrib }) => {
+            const entityData = getEntityById(id)
+            if (!entityData) return []
+
+            return {
+              id,
+              type,
+              field,
+              value,
+              isAttrib,
+              ownAttrib: entityData?.ownAttrib || [],
+              folderId: 'folderId' in entityData ? entityData.folderId : entityData?.parentId,
+            }
+          },
+        )
+        pushHistory(inverseEntities, historyEntities)
       }
 
       const supportedEntityTypes: OperationModel['entityType'][] = ['task', 'folder']
@@ -161,9 +197,55 @@ const useUpdateOverview = (props?: UseUpdateOverviewProps) => {
   // (remove the field from the ownAttrib array)
   // invalidate the cache for the folder/task so that it can be re-fetched with inherited values
   const inheritFromParent = useCallback<InheritFromParent>(
-    async (entities) => {
+    async (entities, pushToHistory = true) => {
       if (!entities.length || !projectName) {
         return
+      }
+
+      // Record history for the inheritance operation
+      if (pushToHistory && pushHistory) {
+        // Create undo entities (restore explicit values)
+        const undoEntities: HistoryEntityUpdate[] = []
+
+        // For each entity and attribute being inherited, record current values
+        for (const entity of entities) {
+          const entityData = getEntityById(entity.entityId) as Record<string, any>
+
+          // For each attribute that will be inherited, record its current value
+          for (const attrib of entity.attribs) {
+            if (entityData?.attrib && attrib in entityData.attrib) {
+              undoEntities.push({
+                id: entity.entityId,
+                type: entity.entityType,
+                field: attrib,
+                value: (entityData.attrib as Record<string, any>)[attrib],
+                isAttrib: true,
+                wasInherited: false, // Mark as not inherited
+                ownAttrib: entityData?.ownAttrib || [],
+                folderId: entityData?.folderId,
+              })
+            }
+          }
+        }
+
+        // Create redo entities (to re-inherit)
+        const redoEntities: HistoryEntityUpdate[] = entities.flatMap((entity) =>
+          entity.attribs.map((attrib) => ({
+            id: entity.entityId,
+            type: entity.entityType,
+            field: attrib,
+            value: null,
+            isAttrib: true,
+            wasInherited: true, // Mark as inherited
+            ownAttrib: entity.ownAttrib,
+            folderId: entity.folderId,
+          })),
+        )
+
+        // Push to history if we have changes to record
+        if (undoEntities.length > 0) {
+          pushHistory(undoEntities, redoEntities)
+        }
       }
 
       const supportedEntityTypes: OperationModel['entityType'][] = ['task', 'folder']
@@ -324,7 +406,13 @@ const useUpdateOverview = (props?: UseUpdateOverviewProps) => {
         toast.error('Failed to update entities')
       }
     },
-    [projectName, updateEntities, getInheritedDependents, findInheritedValueFromAncestors],
+    [
+      projectName,
+      updateEntities,
+      getInheritedDependents,
+      findInheritedValueFromAncestors,
+      pushHistory,
+    ],
   )
 
   return { updateEntities: handleUpdateEntities, inheritFromParent }

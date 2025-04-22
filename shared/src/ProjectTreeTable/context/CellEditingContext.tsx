@@ -63,25 +63,39 @@ export const CellEditingProvider: React.FC<{ children: ReactNode }> = ({ childre
 
   // Handle undo
   const handleUndo = async () => {
-    const entitiesToUndo = undoHistory()
-    if (entitiesToUndo) {
+    const [entitiesToUndo, entitiesToInherit] = undoHistory() || []
+
+    if (entitiesToUndo && entitiesToUndo.length > 0) {
       try {
         await handleUpdateEntities(entitiesToUndo, false)
-        console.log('undo complete')
       } catch (error) {
         toast.error('Failed to undo changes')
+      }
+    }
+    if (entitiesToInherit && entitiesToInherit.length > 0) {
+      try {
+        await inheritFromParent(entitiesToInherit, false)
+      } catch (error) {
+        toast.error('Failed to inherit changes')
       }
     }
   }
 
   // Handle redo
   const handleRedo = async () => {
-    const entitiesToRedo = redoHistory()
-    if (entitiesToRedo) {
+    const [entitiesToRedo, entitiesToInherit] = redoHistory() || []
+    if (entitiesToRedo && entitiesToRedo.length > 0) {
       try {
         await handleUpdateEntities(entitiesToRedo, false)
       } catch (error) {
         toast.error('Failed to redo changes')
+      }
+    }
+    if (entitiesToInherit && entitiesToInherit.length > 0) {
+      try {
+        await inheritFromParent(entitiesToInherit, false)
+      } catch (error) {
+        toast.error('Failed to inherit changes')
       }
     }
   }
