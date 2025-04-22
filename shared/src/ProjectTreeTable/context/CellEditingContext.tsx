@@ -147,11 +147,15 @@ export const CellEditingProvider: React.FC<{ children: ReactNode }> = ({ childre
           navigator.userAgent.toUpperCase().includes('MAC'))
       const ctrlKey = isMac ? e.metaKey : e.ctrlKey
 
-      if (ctrlKey && e.key === 'z' && !e.shiftKey) {
+      if (ctrlKey && e.key === 'z') {
         e.preventDefault()
         if (canUndo) handleUndo()
       }
-      if ((ctrlKey && e.key === 'y') || (ctrlKey && e.shiftKey && e.key === 'z')) {
+      if (
+        (ctrlKey && e.key === 'y') ||
+        (ctrlKey && e.shiftKey && e.key === 'z') ||
+        (ctrlKey && e.key === 'Z')
+      ) {
         e.preventDefault()
         if (canRedo) handleRedo()
       }
