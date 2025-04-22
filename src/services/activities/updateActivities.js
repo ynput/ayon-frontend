@@ -36,7 +36,7 @@ const patchActivities = async (
   const patches = entries.map(({ originalArgs }) =>
     dispatch(
       api.util.updateQueryData(
-        'getActivities',
+        'GetActivities',
         { projectName, entityIds: originalArgs.entityIds, activityTypes, filter },
         (draft) => updateCache(draft.activities, patch, method === 'delete'),
       ),

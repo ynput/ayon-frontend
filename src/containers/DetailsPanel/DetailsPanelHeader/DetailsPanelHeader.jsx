@@ -9,7 +9,7 @@ import EntityThumbnailUploader from '@components/EntityThumbnailUploader/EntityT
 import Actions from '@containers/Actions/Actions'
 import useEntityUpdate from '@hooks/useEntityUpdate'
 import StackedThumbnails from '@components/Thumbnail/StackedThumbnails'
-import { useGetChecklistsCountQuery } from '@queries/activities/getActivities'
+import { useGetEntitiesChecklistsQuery } from '@queries/activities/getActivities'
 import { openViewer } from '@state/viewer'
 
 import FeedFilters from '../FeedFilters/FeedFilters'
@@ -66,7 +66,7 @@ const DetailsPanelHeader = ({
     .map((entity) => entity.id)
 
   // get checklists count
-  const { data: checklistCount = {} } = useGetChecklistsCountQuery(
+  const { data: checklistCount = {} } = useGetEntitiesChecklistsQuery(
     {
       projectName: firstEntity?.projectName,
       entityIds,

@@ -30,7 +30,7 @@ import { mapGraphQLReactions } from './mappers'
 import { Icon } from '@ynput/ayon-react-components'
 import ActivityStatus from '../ActivityStatus/ActivityStatus'
 import { Status } from '@api/rest/project'
-import { useFeed } from '@context/FeedContext'
+import { useFeedContext } from '@context/FeedContext'
 
 type Props = {
   activity: $Any
@@ -94,7 +94,7 @@ const ActivityComment = ({
   const [deleteReactionToActivity] = useDeleteReactionToActivityMutation()
   const [createReactionToActivity] = useCreateReactionToActivityMutation()
 
-  const { editingId, setEditingId } = useFeed()
+  const { editingId, setEditingId } = useFeedContext()
 
   const handleEditComment = () => {
     setEditingId(activityId)

@@ -1,16 +1,17 @@
 import { api } from '@api/rest/activities'
-import apiRest from '@api'
 import { ActivityNode } from '@api/graphql'
+import { getActivitiesGQLApi } from '@queries/activities/getActivities'
 
 // @ts-ignore
 const patchActivity = ({ activityId, userName, reaction }, { getState, dispatch }, action) => {
   const invalidatingTags = [{ type: 'activity', id: activityId }]
-  const entries = api.util.selectInvalidatedBy(getState(), invalidatingTags)
+  const entries = getActivitiesGQLApi.util.selectInvalidatedBy(getState(), invalidatingTags)
 
   return entries.map((cacheArgs) => {
     return dispatch(
       // @ts-ignore
-      apiRest.util.updateQueryData('getActivities', cacheArgs.originalArgs, (draft) => {
+      getActivitiesGQLApi.util.updateQueryData('GetActivities', cacheArgs.originalArgs, (draft) => {
+        console.log('patchActivity', action, activityId, userName, reaction)
         // @ts-ignore
         const index = draft.activities.findIndex((a: ActivityNode) => a.activityId === activityId)
         if (index === -1) {
@@ -20,7 +21,7 @@ const patchActivity = ({ activityId, userName, reaction }, { getState, dispatch 
         if (action === 'create') {
           // @ts-ignore
           draft.activities[index].reactions = [
-          // @ts-ignore
+            // @ts-ignore
             ...(draft.activities[index].reactions || []),
             {
               reaction,

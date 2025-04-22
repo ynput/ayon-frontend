@@ -21,10 +21,24 @@ import ActivityReferenceTooltip from '@components/Feed/ActivityReferenceTooltip/
 import { isFilePreviewable } from '@containers/FileUploadPreview/FileUploadPreview'
 import { useGetKanbanProjectUsersQuery } from '@queries/userDashboard/getUserDashboard'
 import EmptyPlaceholder from '@shared/EmptyPlaceholder/EmptyPlaceholder'
-import { useFeed, FEED_NEW_COMMENT } from '@context/FeedContext'
+import { useFeedContext, FEED_NEW_COMMENT } from '@context/FeedContext'
+import { Status } from '@shared/ProjectTreeTable/types/project'
 
 // number of activities to get
 export const activitiesLast = 30
+
+export type FeedProps = {
+  entities: any[]
+  activeUsers: any[]
+  projectInfo: any
+  projectName: string
+  entityType: string
+  isMultiProjects: boolean
+  scope: string
+  statePath: string
+  readOnly: boolean
+  statuses: Status[]
+}
 
 const Feed = ({
   entities = [],
@@ -37,9 +51,9 @@ const Feed = ({
   statePath = 'pinned',
   readOnly,
   statuses = [],
-}) => {
+}: FeedProps) => {
   const dispatch = useDispatch()
-  const { editingId, setEditingId } = useFeed()
+  const { editingId, setEditingId } = useFeedContext()
   const userName = useSelector((state) => state.user.name)
   const activityTypes = useSelector((state) => state.details[statePath][scope].activityTypes)
   const filter = useSelector((state) => state.details[statePath][scope].filter)
@@ -64,7 +78,6 @@ const Feed = ({
     entityIds: entityIds,
     projectName: projectName,
     last: activitiesLast,
-    currentUser: userName,
     referenceTypes: ['origin', 'mention', 'relation'],
     activityTypes: activityTypes,
     filter,
@@ -130,11 +143,13 @@ const Feed = ({
   // do any transformation on activities data
   // 1. status change activities, attach status data based on projectName
   // 2. reverse the order
+  // 3. is this activity from the current user?
   const transformedActivitiesData = useTransformActivities(
     activitiesData,
     projectUsers,
     projectInfo,
     entityType,
+    userName,
   )
 
   // REFS

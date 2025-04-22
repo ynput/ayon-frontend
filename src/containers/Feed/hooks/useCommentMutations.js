@@ -33,7 +33,6 @@ const useCommentMutations = ({ projectName, entityType, entities = [], activityT
       authorName: name,
       authorFullName: attrib.fullName,
       createdAt: formatISO(new Date()),
-      isOwner: true,
       files: files,
       reactions: [],
       origin: {

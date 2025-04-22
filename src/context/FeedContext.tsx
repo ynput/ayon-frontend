@@ -20,4 +20,4 @@ export const FeedProvider = ({ children }: { children: React.ReactNode }) => {
   return <FeedContext.Provider value={{ editingId, setEditingId }}>{children}</FeedContext.Provider>
 }
 
-export const useFeed = () => useContext(FeedContext)
+export const useFeedContext = () => useContext(FeedContext)

@@ -5,7 +5,7 @@ import groupMinorActivities from '../helpers/groupMinorActivities'
 import mergeSimilarActivities from '../helpers/mergeSimilarActivities'
 
 // Define the types of activities that are considered minor
-const minorActivityTypes = [ 'status.change', 'assignee.add', 'assignee.remove']
+const minorActivityTypes = ['status.change', 'assignee.add', 'assignee.remove']
 
 const getStatusActivityIcon = (activities = [], projectInfo = {}) => {
   return activities.map((activity) => {
@@ -34,17 +34,31 @@ const filterOutRelations = (activities = [], entityTypes = [], entityType) => {
     : activities.filter((activity) => activity.referenceType !== 'relation')
 }
 
-const useTransformActivities = (activities = [], users = [], projectInfo = {}, entityType) => {
+const useTransformActivities = (
+  activities = [],
+  users = [],
+  projectInfo = {},
+  entityType,
+  userName,
+) => {
   // 1. add status icons and data for status change activities
   const activitiesWithIcons = useMemo(
     () => getStatusActivityIcon(activities, projectInfo),
     [activities],
   )
 
+  // add any extra meta data to the activities
+  const activitiesWithMeta = useMemo(() => {
+    return activitiesWithIcons.map((activity) => {
+      const newActivity = { ...activity, isOwner: userName === activity.authorName }
+      return newActivity
+    })
+  }, [activitiesWithIcons, userName])
+
   // 2. versions should not have relations shown (comments posted on parent task)
   const activitiesWithoutRelations = useMemo(
-    () => filterOutRelations(activitiesWithIcons, ['version'], entityType),
-    [activitiesWithIcons, projectInfo],
+    () => filterOutRelations(activitiesWithMeta, ['version'], entityType),
+    [activitiesWithMeta, projectInfo],
   )
 
   // 3. sort createdAt oldest first (because we are using flex: column-reverse)

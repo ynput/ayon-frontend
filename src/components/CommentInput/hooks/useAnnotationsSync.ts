@@ -1,5 +1,5 @@
 import { AnnotationMetadata } from '@containers/Viewer'
-import { FEED_NEW_COMMENT, useFeed } from '@context/FeedContext'
+import { FEED_NEW_COMMENT, useFeedContext } from '@context/FeedContext'
 import { useViewer } from '@context/viewerContext'
 import { useAppDispatch } from '@state/store'
 import { goToFrame } from '@state/viewer'
@@ -31,12 +31,12 @@ export const filterEntityAnnotations = (
 
 const useAnnotationsSync = ({ entityId, filesUploading }: Props) => {
   const dispatch = useAppDispatch()
-  const { editingId, setEditingId } = useFeed();
+  const { editingId, setEditingId } = useFeedContext()
 
   // listen to the viewer for annotations
   // later on, other hooks can be tried here to get annotations from different sources
-  const { useAnnotations } = useViewer();
-  const { annotations, removeAnnotation } = useAnnotations();
+  const { useAnnotations } = useViewer()
+  const { annotations, removeAnnotation } = useAnnotations()
   // filter out annotations that are for this entity and are NOT uploading
   const filteredAnnotations = filterEntityAnnotations(annotations, entityId, filesUploading)
 

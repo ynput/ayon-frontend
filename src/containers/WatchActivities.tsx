@@ -3,7 +3,7 @@ import api from '@api'
 import { FC } from 'react'
 import { useDispatch, useSelector, useStore } from 'react-redux'
 import { $Any } from '@/types'
-import { useLazyGetActivityForEntitiesQuery } from '@/services/activities/getActivities'
+import { useLazyGetActivitiesByIdQuery } from '@/services/activities/getActivities'
 import { bodyHasChecklist } from './Feed/hooks/useCommentMutations'
 type ActivityMessage = {
   [key: string]: any
@@ -30,7 +30,7 @@ const WatchActivities: FC<WatchActivitiesProps> = ({}) => {
 
   const store = useStore()
 
-  const [getActivity] = useLazyGetActivityForEntitiesQuery()
+  const [getActivity] = useLazyGetActivitiesByIdQuery()
 
   //   subscribe to inbox.message topic
   usePubSub(
@@ -61,7 +61,7 @@ const WatchActivities: FC<WatchActivitiesProps> = ({}) => {
           // remove the activity from the cache using originalArguments
           dispatch(
             // @ts-ignore
-            api.util.updateQueryData('getActivities', entry.originalArgs, (draft: $Any) => {
+            api.util.updateQueryData('GetActivities', entry.originalArgs, (draft: $Any) => {
               //   find the activity and remove it
               const index = draft?.activities?.findIndex(
                 (activity: $Any) => activity.activityId === activityId,
@@ -84,7 +84,6 @@ const WatchActivities: FC<WatchActivitiesProps> = ({}) => {
             activityIds: [activityId],
             entityIds,
             activityTypes: [activityType],
-            currentUser: userName,
           }).unwrap()
           const newActivities = res.activities || []
 
@@ -107,14 +106,14 @@ const WatchActivities: FC<WatchActivitiesProps> = ({}) => {
             (entry) =>
               entry.originalArgs?.activityTypes?.some((type: string) =>
                 activityTypes.includes(type),
-              ) && entry.endpointName === 'getActivities',
+              ) && entry.endpointName === 'GetActivities',
           )
 
           // now update the caches
           for (const entry of entriesToPatch) {
             dispatch(
               // @ts-ignore
-              api.util.updateQueryData('getActivities', entry.originalArgs, (draft: $Any) => {
+              api.util.updateQueryData('GetActivities', entry.originalArgs, (draft: $Any) => {
                 const activitiesToPatchIn = newActivities.filter((activity: $Any) =>
                   entry.originalArgs.entityIds?.includes(activity.entityId),
                 )
