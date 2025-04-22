@@ -1,13 +1,20 @@
-import React, { createContext, useContext, useState, useCallback, useMemo, ReactNode } from 'react'
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useMemo,
+  useEffect,
+  ReactNode,
+} from 'react'
 import { CellId } from '../utils/cellUtils'
 import useUpdateOverview, {
   InheritFromParent,
   UpdateTableEntities,
 } from '../hooks/useUpdateOverview'
-import { useProjectTableContext } from './ProjectTableContext'
-import { AttributeData } from '../types'
 import { toast } from 'react-toastify'
 import useValidateUpdates from '../hooks/useValidateUpdates'
+import useHistory from '../hooks/useHistory'
 
 export interface CellEditingContextType {
   editingCellId: CellId | null
@@ -15,6 +22,11 @@ export interface CellEditingContextType {
   isEditing: (id: CellId) => boolean
   updateEntities: UpdateTableEntities
   inheritFromParent: InheritFromParent
+  // Add history functions to context
+  undo: () => Promise<void>
+  redo: () => Promise<void>
+  canUndo: boolean
+  canRedo: boolean
 }
 
 const CellEditingContext = createContext<CellEditingContextType | undefined>(undefined)
@@ -25,22 +37,52 @@ export const CellEditingProvider: React.FC<{ children: ReactNode }> = ({ childre
   // Memoize these functions to prevent unnecessary re-renders
   const isEditing = useCallback((id: CellId) => id === editingCellId, [editingCellId])
 
-  const { updateEntities, inheritFromParent } = useUpdateOverview()
+  // Get history functions
+  const { pushHistory, undo: undoHistory, redo: redoHistory, canUndo, canRedo } = useHistory()
+
+  const { updateEntities: updateOverviewEntities, inheritFromParent } = useUpdateOverview({
+    pushHistory,
+  })
 
   const validateUpdateEntities = useValidateUpdates()
 
-  const handleUpdateEntities: UpdateTableEntities = async (entities = []) => {
+  const handleUpdateEntities: UpdateTableEntities = async (entities = [], pushToHistory = true) => {
     try {
       // validate the entities before updating
       validateUpdateEntities(entities)
 
       // if validation passes, update the entities
-      return await updateEntities(entities)
+      return await updateOverviewEntities(entities, pushToHistory)
     } catch (error: any) {
       // if validation fails, show a toast and return
       toast.error(error.message)
 
       return Promise.reject(error)
+    }
+  }
+
+  // Handle undo
+  const handleUndo = async () => {
+    const entitiesToUndo = undoHistory()
+    if (entitiesToUndo) {
+      try {
+        await handleUpdateEntities(entitiesToUndo, false)
+        console.log('undo complete')
+      } catch (error) {
+        toast.error('Failed to undo changes')
+      }
+    }
+  }
+
+  // Handle redo
+  const handleRedo = async () => {
+    const entitiesToRedo = redoHistory()
+    if (entitiesToRedo) {
+      try {
+        await handleUpdateEntities(entitiesToRedo, false)
+      } catch (error) {
+        toast.error('Failed to redo changes')
+      }
     }
   }
 
@@ -51,9 +93,59 @@ export const CellEditingProvider: React.FC<{ children: ReactNode }> = ({ childre
       isEditing,
       updateEntities: handleUpdateEntities,
       inheritFromParent,
+      undo: handleUndo,
+      redo: handleRedo,
+      canUndo,
+      canRedo,
     }),
-    [editingCellId, isEditing, updateEntities],
+    [
+      editingCellId,
+      isEditing,
+      handleUpdateEntities,
+      inheritFromParent,
+      handleUndo,
+      handleRedo,
+      canUndo,
+      canRedo,
+    ],
   )
+
+  // Listen for global undo/redo shortcuts and invoke context handlers
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement
+      if (
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.isContentEditable ||
+        target.getAttribute('role') === 'textbox' ||
+        target.tagName === 'LI'
+      ) {
+        return
+      }
+
+      const isMac =
+        typeof navigator !== 'undefined' &&
+        // @ts-expect-error
+        ((navigator.userAgentData &&
+          // @ts-expect-error
+          navigator.userAgentData.platform.toUpperCase().includes('MAC')) ||
+          navigator.userAgent.toUpperCase().includes('MAC'))
+      const ctrlKey = isMac ? e.metaKey : e.ctrlKey
+
+      if (ctrlKey && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault()
+        if (canUndo) handleUndo()
+      }
+      if ((ctrlKey && e.key === 'y') || (ctrlKey && e.shiftKey && e.key === 'z')) {
+        e.preventDefault()
+        if (canRedo) handleRedo()
+      }
+    }
+
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [canUndo, canRedo, handleUndo, handleRedo])
 
   return <CellEditingContext.Provider value={value}>{children}</CellEditingContext.Provider>
 }

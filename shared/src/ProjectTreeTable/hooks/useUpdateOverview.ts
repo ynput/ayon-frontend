@@ -12,10 +12,10 @@ export type EntityUpdate = {
   id: string
   type: string
   field: string
-  value: CellValue | CellValue[]
+  value: CellValue | CellValue[] | null
   isAttrib?: boolean
 }
-export type UpdateTableEntities = (entities: EntityUpdate[]) => Promise<void>
+export type UpdateTableEntities = (entities: EntityUpdate[], pushHistory?: boolean) => Promise<void>
 
 export type InheritFromParentEntity = {
   entityId: string
@@ -32,7 +32,12 @@ export type UpdateTableEntity = (
   { includeSelection }: { includeSelection: boolean },
 ) => Promise<void>
 
-const useUpdateOverview = () => {
+interface UseUpdateOverviewProps {
+  pushHistory?: (undo: EntityUpdate[], redo: EntityUpdate[]) => void
+}
+
+const useUpdateOverview = (props?: UseUpdateOverviewProps) => {
+  const { pushHistory } = props || {}
   const {
     getEntityById,
     projectName,
@@ -43,9 +48,21 @@ const useUpdateOverview = () => {
   const { updateEntities } = useProjectTableQueriesContext()
 
   const handleUpdateEntities = useCallback<UpdateTableEntities>(
-    async (entities = []) => {
+    async (entities = [], pushToHistory = true) => {
       if (!entities.length || !projectName) {
         return
+      }
+
+      // Record history of previous values before applying update
+      if (pushHistory && pushToHistory) {
+        const inverseEntities: EntityUpdate[] = entities.map(({ id, type, field, isAttrib }) => {
+          const entityData = getEntityById(id) as Record<string, any>
+          const oldValue = isAttrib
+            ? (entityData.attrib as Record<string, any>)?.[field] ?? null
+            : entityData[field] ?? null
+          return { id, type, field, value: oldValue, isAttrib }
+        })
+        pushHistory(inverseEntities, entities)
       }
 
       const supportedEntityTypes: OperationModel['entityType'][] = ['task', 'folder']
@@ -87,10 +104,8 @@ const useUpdateOverview = () => {
           let newData = { ...existingOperation.data, ...data }
 
           // @ts-ignore
-
           if (existingOperation.data?.attrib && data.attrib) {
             // @ts-ignore
-
             newData = { ...newData, attrib: { ...existingOperation.data.attrib, ...data.attrib } }
           }
 
@@ -139,7 +154,7 @@ const useUpdateOverview = () => {
         toast.error('Failed to update entities')
       }
     },
-    [projectName, updateEntities, getEntityById, getInheritedDependents],
+    [projectName, updateEntities, getEntityById, getInheritedDependents, pushHistory],
   )
 
   // set the attrib fields to be inherited from the parent
