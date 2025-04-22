@@ -76,6 +76,19 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({ children 
     indexToRowId: new Map(),
     indexToColId: new Map(),
   })
+  const mapToString = (map: Map<any, any>) => {
+    return JSON.stringify(Array.from(map.entries()))
+  }
+
+  const stableGridMap = useMemo(
+    () => gridMap,
+    [
+      mapToString(gridMap.rowIdToIndex),
+      mapToString(gridMap.colIdToIndex),
+      mapToString(gridMap.indexToRowId),
+      mapToString(gridMap.indexToColId),
+    ],
+  )
   // Track whether we're selecting or unselecting during drag
   const initialCellSelected = useRef<boolean>(false)
 
@@ -111,20 +124,20 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({ children 
   }, [])
 
   // update the selection whilst properly handling the row-selection column
-  const updateSelection = (selection: Set<CellId>, position: CellPosition) => {
-    let newSelection = new Set(selection)
-    if (position.colId !== ROW_SELECTION_COLUMN_ID) {
-      // we always preserve the selection of the row-selection column
-      const rowSelection = Array.from(selectedCells).filter(
-        (id) => parseCellId(id)?.colId === ROW_SELECTION_COLUMN_ID,
-      )
-      if (rowSelection.length) {
-        newSelection = new Set([...newSelection, ...rowSelection])
+  const updateSelection = useCallback((selection: Set<CellId>, position: CellPosition) => {
+    setSelectedCells((prevSelectedCells) => {
+      let newSelection = new Set(selection)
+      if (position.colId !== ROW_SELECTION_COLUMN_ID) {
+        const rowSelection = Array.from(prevSelectedCells).filter(
+          (id) => parseCellId(id)?.colId === ROW_SELECTION_COLUMN_ID,
+        )
+        if (rowSelection.length) {
+          newSelection = new Set([...newSelection, ...rowSelection])
+        }
       }
-    }
-    // reset selection and set new anchor
-    setSelectedCells(newSelection)
-  }
+      return newSelection
+    })
+  }, [])
 
   // Select cells between two points in the grid
   const selectCellRange = useCallback(
@@ -134,10 +147,10 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({ children 
         updateSelection(new Set(), start)
       }
 
-      const startRowIdx = gridMap.rowIdToIndex.get(start.rowId) ?? 0
-      const startColIdx = gridMap.colIdToIndex.get(start.colId) ?? 0
-      const endRowIdx = gridMap.rowIdToIndex.get(end.rowId) ?? 0
-      const endColIdx = gridMap.colIdToIndex.get(end.colId) ?? 0
+      const startRowIdx = stableGridMap.rowIdToIndex.get(start.rowId) ?? 0
+      const startColIdx = stableGridMap.colIdToIndex.get(start.colId) ?? 0
+      const endRowIdx = stableGridMap.rowIdToIndex.get(end.rowId) ?? 0
+      const endColIdx = stableGridMap.colIdToIndex.get(end.colId) ?? 0
 
       const minRowIdx = Math.min(startRowIdx, endRowIdx)
       const maxRowIdx = Math.max(startRowIdx, endRowIdx)
@@ -147,11 +160,11 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({ children 
       const newSelection = new Set(additive ? selectedCells : [])
 
       for (let r = minRowIdx; r <= maxRowIdx; r++) {
-        const rowId = gridMap.indexToRowId.get(r)
+        const rowId = stableGridMap.indexToRowId.get(r)
         if (!rowId) continue
 
         for (let c = minColIdx; c <= maxColIdx; c++) {
-          const colId = gridMap.indexToColId.get(c)
+          const colId = stableGridMap.indexToColId.get(c)
           if (!colId) continue
 
           newSelection.add(getCellId(rowId, colId))
@@ -160,7 +173,7 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({ children 
 
       return newSelection
     },
-    [gridMap, selectedCells],
+    [stableGridMap, selectedCells],
   )
 
   // Start a selection operation
@@ -315,16 +328,16 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({ children 
       const position = parseCellId(cellId)
       if (!position) return []
 
-      const rowIndex = gridMap.rowIdToIndex.get(position.rowId)
-      const colIndex = gridMap.colIdToIndex.get(position.colId)
+      const rowIndex = stableGridMap.rowIdToIndex.get(position.rowId)
+      const colIndex = stableGridMap.colIdToIndex.get(position.colId)
 
       if (rowIndex === undefined || colIndex === undefined) return []
 
       // Check if the cell's neighbors in all four directions are selected
-      const top = gridMap.indexToRowId.get(rowIndex - 1)
-      const right = gridMap.indexToColId.get(colIndex + 1)
-      const bottom = gridMap.indexToRowId.get(rowIndex + 1)
-      const left = gridMap.indexToColId.get(colIndex - 1)
+      const top = stableGridMap.indexToRowId.get(rowIndex - 1)
+      const right = stableGridMap.indexToColId.get(colIndex + 1)
+      const bottom = stableGridMap.indexToRowId.get(rowIndex + 1)
+      const left = stableGridMap.indexToColId.get(colIndex - 1)
 
       // Default to no borders
       let borderPos = BorderPosition.None
@@ -351,7 +364,7 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({ children 
 
       return getBorderClasses(borderPos)
     },
-    [selectedCells, gridMap, isCellSelected],
+    [selectedCells, stableGridMap, isCellSelected],
   )
 
   // Memoize context value to prevent unnecessary re-renders
@@ -362,7 +375,7 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({ children 
       focusedCellId,
       selectionInProgress,
       anchorCell,
-      gridMap,
+      gridMap: stableGridMap,
       setSelectedCells,
       setFocusedCellId,
       setAnchorCell,
@@ -384,21 +397,21 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({ children 
       focusedCellId,
       selectionInProgress,
       anchorCell,
-      gridMap,
-      setSelectedCells,
-      setFocusedCellId,
-      setAnchorCell,
-      registerGrid,
-      selectCell,
-      startSelection,
-      extendSelection,
-      endSelection,
-      focusCell,
-      clearSelection,
-      isCellSelected,
-      isCellFocused,
-      getCellPositionFromId,
-      getCellBorderClasses,
+      stableGridMap,
+      // setSelectedCells,
+      // setFocusedCellId,
+      // setAnchorCell,
+      // registerGrid,
+      // selectCell,
+      // startSelection,
+      // extendSelection,
+      // endSelection,
+      // focusCell,
+      // clearSelection,
+      // isCellSelected,
+      // isCellFocused,
+      // getCellPositionFromId,
+      // getCellBorderClasses,
     ],
   )
 
