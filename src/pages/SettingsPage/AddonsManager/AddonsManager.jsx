@@ -222,7 +222,7 @@ const AddonsManager = () => {
             extraContext={(sel) => [
               {
                 label: 'View bundle',
-                command: () => navigate(`/settings/bundles?selected=${sel[0]}`),
+                command: () => navigate(`/settings/bundles?bundle=${sel[0]}`),
                 icon: 'arrow_circle_right',
               },
             ]}
