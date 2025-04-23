@@ -1,4 +1,3 @@
-import { isEqual } from 'lodash'
 import api from '@api'
 import { taskProvideTags } from '../userDashboard/userDashboardHelpers'
 import {
@@ -10,10 +9,16 @@ import {
 // import PubSub from '@/pubsub'
 import { ENTITY_TOOLTIP, EntityTooltipQuery } from './activityQueries'
 
-import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
+import {
+  DefinitionsFromApi,
+  FetchBaseQueryError,
+  OverrideResultType,
+  TagTypesFromApi,
+} from '@reduxjs/toolkit/query'
 import {
   GetActivitiesByIdQuery,
   GetActivitiesQuery,
+  GetActivitiesQueryVariables,
   GetEntitiesChecklistsQuery,
 } from '@api/graphql'
 import { ChecklistCount } from './types'
@@ -53,39 +58,6 @@ const enhanceActivitiesApi = api.enhanceEndpoints<TagTypes, UpdatedDefinitions>(
               })),
             ]
           : [{ type: 'activity', id: 'LIST' }],
-      // don't include the name or cursor in the query args cache key
-      serializeQueryArgs: ({ queryArgs: { projectName, entityIds, activityTypes } }) => ({
-        projectName,
-        entityIds,
-        activityTypes,
-      }),
-      // Always merge incoming data to the cache entry
-      merge: (currentCache, newCache) => {
-        const { activities = [], pageInfo } = newCache
-        const { activities: lastActivities = [] } = currentCache
-
-        const messagesMap = new Map()
-
-        ;[lastActivities, activities].forEach((arr) =>
-          arr.forEach((m) => messagesMap.set(m.referenceId, m)),
-        )
-
-        const uniqueMessages = Array.from(messagesMap.values())
-
-        // sort the messages by date with the newest first
-        uniqueMessages.sort(
-          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-        )
-
-        return {
-          activities: uniqueMessages,
-          pageInfo,
-        }
-      },
-      // Refetch when the page arg changes
-      forceRefetch({ currentArg, previousArg }) {
-        return !isEqual(currentArg, previousArg)
-      },
     },
     GetActivitiesById: {
       transformResponse: (res: GetActivitiesByIdQuery) =>
@@ -108,8 +80,93 @@ const enhanceActivitiesApi = api.enhanceEndpoints<TagTypes, UpdatedDefinitions>(
   },
 })
 
+const ACTIVITIES_INFINITE_QUERY_COUNT = 10
+
 export const getActivitiesGQLApi = enhanceActivitiesApi.injectEndpoints({
   endpoints: (build) => ({
+    getActivitiesInfinite: build.infiniteQuery<
+      ActivitiesResult,
+      Omit<GetActivitiesQueryVariables, 'last' | 'first' | 'cursor'> & { filter?: string },
+      { cursor: string; first?: number; last?: number }
+    >({
+      infiniteQueryOptions: {
+        initialPageParam: { cursor: '', last: ACTIVITIES_INFINITE_QUERY_COUNT },
+        // Calculate the next page param based on current page response and params
+        getNextPageParam: (lastPage) => {
+          const pageInfo = lastPage.pageInfo
+          const hasPreviousPage = pageInfo.hasPreviousPage
+
+          if (!hasPreviousPage || !pageInfo.endCursor) return undefined
+
+          return {
+            cursor: pageInfo.endCursor,
+            last: ACTIVITIES_INFINITE_QUERY_COUNT,
+          }
+        },
+      },
+      queryFn: async ({ queryArg, pageParam }, api) => {
+        try {
+          const { filter, ...args } = queryArg
+          // Build the query parameters for GetActivities
+          const queryParams: GetActivitiesQueryVariables = {
+            ...args,
+            before: pageParam?.cursor,
+            last: pageParam?.last,
+          }
+
+          // Call the existing GetActivities endpoint
+          const result = await api.dispatch(
+            enhanceActivitiesApi.endpoints.GetActivities.initiate(queryParams, {
+              forceRefetch: true,
+            }),
+          )
+
+          if (result.error) throw result.error
+          const fallback = {
+            activities: [],
+            pageInfo: {
+              hasNextPage: false,
+              endCursor: null,
+              startCursor: null,
+              hasPreviousPage: false,
+            },
+          }
+
+          // Return the activities directly as required by the infinite query format
+          return {
+            data: result.data || fallback,
+          }
+        } catch (e: any) {
+          console.error('Error in getActivitiesInfinite queryFn:', e)
+          return { error: { status: 'FETCH_ERROR', error: e.message } as FetchBaseQueryError }
+        }
+      },
+      providesTags: (result, _e, { entityIds, activityTypes, filter }) =>
+        result
+          ? [
+              ...result.pages
+                .flatMap((page) => page.activities)
+                .map((a) => ({ type: 'activity', id: a.activityId })),
+              { type: 'activity', id: 'LIST' },
+              ...(Array.isArray(entityIds) ? entityIds : [entityIds]).filter(Boolean).map((id) => ({
+                type: 'entityActivities',
+                id: id as string,
+              })),
+              { type: 'entityActivities', id: 'LIST' },
+              ...(Array.isArray(activityTypes) ? activityTypes : [activityTypes])
+                ?.filter(Boolean)
+                .map((type) => ({
+                  type: 'entityActivities',
+                  id: type as string,
+                })),
+              // filter is used when a comment is made, to refetch the activities of other filters
+              ...(Array.isArray(entityIds) ? entityIds : [entityIds]).filter(Boolean).map((id) => ({
+                type: 'entityActivities',
+                id: `${id}-${filter}`,
+              })),
+            ]
+          : [{ type: 'activity', id: 'LIST' }],
+    }),
     // get data for a reference tooltip based on type,id and projectName
     getEntityTooltip: build.query({
       query: ({ projectName, entityId, entityType }) => ({
@@ -128,12 +185,9 @@ export const getActivitiesGQLApi = enhanceActivitiesApi.injectEndpoints({
   overrideExisting: true,
 })
 
-//
-
 export const {
-  useGetActivitiesQuery,
-  useLazyGetActivitiesQuery,
   useGetEntityTooltipQuery,
   useLazyGetActivitiesByIdQuery,
   useGetEntitiesChecklistsQuery,
+  useGetActivitiesInfiniteInfiniteQuery,
 } = getActivitiesGQLApi

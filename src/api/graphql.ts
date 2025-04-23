@@ -1449,7 +1449,9 @@ export type GetActivitiesByIdQuery = { __typename?: 'Query', project: { __typena
 export type GetActivitiesQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
   entityIds: Array<Scalars['String']['input']> | Scalars['String']['input'];
-  cursor?: InputMaybe<Scalars['String']['input']>;
+  after?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   referenceTypes?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
   activityTypes?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
@@ -1791,13 +1793,15 @@ export const GetActivitiesByIdDocument = `
 }
     ${ActivityFragmentFragmentDoc}`;
 export const GetActivitiesDocument = `
-    query GetActivities($projectName: String!, $entityIds: [String!]!, $cursor: String, $last: Int, $referenceTypes: [String!], $activityTypes: [String!]) {
+    query GetActivities($projectName: String!, $entityIds: [String!]!, $after: String, $first: Int, $before: String, $last: Int, $referenceTypes: [String!], $activityTypes: [String!]) {
   project(name: $projectName) {
     name
     activities(
       entityIds: $entityIds
+      after: $after
+      first: $first
+      before: $before
       last: $last
-      before: $cursor
       referenceTypes: $referenceTypes
       activityTypes: $activityTypes
     ) {

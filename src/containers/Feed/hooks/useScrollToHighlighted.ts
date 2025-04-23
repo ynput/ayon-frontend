@@ -1,34 +1,49 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, RefObject } from 'react'
 
-const useScrollToHighlighted = ({ feedRef, highlighted = [], isLoading, loadMore, pageInfo }) => {
-  const scrollComplete = useRef([])
+interface UseScrollToHighlightedProps {
+  feedRef: RefObject<HTMLElement>
+  highlighted?: string[]
+  isLoading: boolean
+  loadNextPage: () => Promise<any>
+  hasNextPage: boolean
+}
 
-  const getHighlightedElement = async (newPageInfo, reloadCount = 0) => {
+const useScrollToHighlighted = ({
+  feedRef,
+  highlighted = [],
+  isLoading,
+  loadNextPage,
+  hasNextPage,
+}: UseScrollToHighlightedProps): void => {
+  const scrollComplete = useRef<string[]>([])
+
+  const getHighlightedElement = async (reloadCount = 0): Promise<HTMLElement | null> => {
     // find the first li element with classes containing isHighlighted
-    const foundEl = feedRef.current.querySelector('li.isHighlighted')
+    const foundEl = feedRef.current?.querySelector('li.isHighlighted') as HTMLElement | null
 
     if (foundEl) return foundEl
 
     reloadCount++
-
-    // there are no more items to load
-    if (!newPageInfo.hasPreviousPage) return null
 
     // if we've reloaded more than 10 times give up
     // prevents infinite loop
     if (reloadCount > 10) return null
 
     // if no highlighted element is found, load more items
-    const pageInfo = await loadMore(newPageInfo)
+    const result = await loadNextPage()
+    if (!result) return null
+    const hasNextPage = result.hasNextPage
+    if (!hasNextPage) return null
 
     // check again for the highlighted element
-    return getHighlightedElement(pageInfo, reloadCount)
+    return getHighlightedElement(reloadCount)
   }
 
-  const highlightItems = async () => {
+  const highlightItems = async (): Promise<void> => {
+    if (!hasNextPage) return
     // set the scroll complete flag so we don't scroll again
     // even if some other dependency changes
-    const highlightedElement = await getHighlightedElement(pageInfo)
+    const highlightedElement = await getHighlightedElement()
 
     scrollComplete.current = highlighted
 
@@ -41,7 +56,7 @@ const useScrollToHighlighted = ({ feedRef, highlighted = [], isLoading, loadMore
     // get the coordinates of the highlighted element
     const top = highlightedElement.offsetTop
     const height = highlightedElement.offsetHeight
-    const feedHeight = feedRef.current?.offsetHeight
+    const feedHeight = feedRef.current?.offsetHeight || 0
     const padding = 64
 
     const commentTallerThanFeed = height + padding > feedHeight
@@ -62,7 +77,7 @@ const useScrollToHighlighted = ({ feedRef, highlighted = [], isLoading, loadMore
 
     console.log('trying to scroll to highlighted...')
     highlightItems()
-  }, [feedRef, highlighted, isLoading, loadMore, scrollComplete, pageInfo])
+  }, [feedRef, highlighted, isLoading, loadNextPage, scrollComplete, hasNextPage])
 }
 
 export default useScrollToHighlighted

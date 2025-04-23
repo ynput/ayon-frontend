@@ -1,12 +1,12 @@
-import React, { useMemo, useRef } from 'react'
+import { useMemo, useRef } from 'react'
 import ActivityItem from '@components/Feed/ActivityItem'
 import CommentInput from '@components/CommentInput/CommentInput'
 import * as Styled from './Feed.styled'
-import { useGetActivitiesQuery, useLazyGetActivitiesQuery } from '@queries/activities/getActivities'
+import { useGetActivitiesInfiniteInfiniteQuery } from '@queries/activities/getActivities'
 import useCommentMutations from './hooks/useCommentMutations'
 import useTransformActivities from './hooks/useTransformActivities'
 import { InView } from 'react-intersection-observer'
-import { useDispatch, useSelector } from 'react-redux'
+import { useAppSelector, useAppDispatch } from '@state/store'
 import { openSlideOut } from '@state/details'
 import useSaveScrollPos from './hooks/useSaveScrollPos'
 import useScrollOnInputOpen from './hooks/useScrollOnInputOpen'
@@ -16,7 +16,6 @@ import { Icon } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import { isEqual, union } from 'lodash'
 import useScrollToHighlighted from './hooks/useScrollToHighlighted'
-import { toast } from 'react-toastify'
 import ActivityReferenceTooltip from '@components/Feed/ActivityReferenceTooltip/ActivityReferenceTooltip'
 import { isFilePreviewable } from '@containers/FileUploadPreview/FileUploadPreview'
 import { useGetKanbanProjectUsersQuery } from '@queries/userDashboard/getUserDashboard'
@@ -52,12 +51,12 @@ const Feed = ({
   readOnly,
   statuses = [],
 }: FeedProps) => {
-  const dispatch = useDispatch()
+  const dispatch = useAppDispatch()
   const { editingId, setEditingId } = useFeedContext()
-  const userName = useSelector((state) => state.user.name)
-  const activityTypes = useSelector((state) => state.details[statePath][scope].activityTypes)
-  const filter = useSelector((state) => state.details[statePath][scope].filter)
-  const highlighted = useSelector((state) => state.details[statePath].highlighted) || []
+  const userName = useAppSelector((state) => state.user.name)
+  const activityTypes = useAppSelector((state) => state.details[statePath][scope].activityTypes)
+  const filter = useAppSelector((state) => state.details[statePath][scope].filter)
+  const highlighted = useAppSelector((state) => state.details[statePath].highlighted) || []
 
   // hide comment input for specific filters
   const hideCommentInput = ['publishes'].includes(filter)
@@ -77,50 +76,48 @@ const Feed = ({
   const queryArgs = {
     entityIds: entityIds,
     projectName: projectName,
-    last: activitiesLast,
     referenceTypes: ['origin', 'mention', 'relation'],
     activityTypes: activityTypes,
     filter,
-    cursor: null,
   }
 
   let {
-    data: { activities: activitiesData = [], pageInfo = {} } = {},
-    isFetching: isFetchingActivities,
+    data: activitiesInfiniteData,
+    isLoading: isFetchingActivities,
+    isFetchingNextPage,
     currentData,
-  } = useGetActivitiesQuery(queryArgs, { skip: skip })
+    fetchNextPage,
+    hasNextPage,
+  } = useGetActivitiesInfiniteInfiniteQuery(queryArgs, { skip: skip })
 
-  const [getActivitiesData, { isFetching: isFetchingMore }] = useLazyGetActivitiesQuery()
-  const selectedProjects = useSelector((state) => state.dashboard.selectedProjects)
+  // Extract tasks from infinite query data correctly
+  const activitiesList = useMemo(() => {
+    if (!activitiesInfiniteData?.pages) return []
+    return activitiesInfiniteData.pages.flatMap((page) => page.activities || [])
+  }, [activitiesInfiniteData?.pages])
+
+  // get last page info
+  const pageInfo = useMemo(() => {
+    if (!activitiesInfiniteData?.pages) return {}
+    const lastPage = activitiesInfiniteData.pages[activitiesInfiniteData.pages.length - 1]
+    return lastPage.pageInfo
+  }, [activitiesInfiniteData?.pages])
+
+  const selectedProjects = useAppSelector((state) => state.dashboard.selectedProjects)
   const { data: projectUsers = [] } = useGetKanbanProjectUsersQuery(
     { projects: selectedProjects },
     { skip: !selectedProjects?.length },
   )
 
-  const { hasPreviousPage, endCursor } = pageInfo
-  // when we scroll to the top of the feed, fetch more activities
-  const handleLoadMore = async (info) => {
-    const endCursorValue = info?.endCursor || endCursor
-    const hasPreviousPageValue = info ? info.hasPreviousPage : hasPreviousPage
-
-    console.log(info)
-
-    // get cursor of last activity and if there is a next page
-    if (!hasPreviousPageValue) return console.log('No more activities to load')
-    if (!endCursorValue) return console.log('No cursor found')
-    console.log('fetching more activities...', endCursorValue)
-
-    try {
-      const res = await getActivitiesData({
-        ...queryArgs,
-        cursor: endCursorValue,
-      }).unwrap()
-      // return if there is next page to get
-      return res?.pageInfo
-    } catch (error) {
-      console.error(error)
-      toast.error('Failed to load more activities')
+  const loadNextPage = async () => {
+    if (!hasNextPage) {
+      console.log('No more activities to load')
+      return undefined
     }
+    console.log('loading next page...')
+    const result = await fetchNextPage()
+
+    return result
   }
 
   // check if currentData matches all the entityIds
@@ -136,7 +133,6 @@ const Feed = ({
   }, [currentData, entityIds, isFetchingActivities])
 
   if (skip) {
-    activitiesData = []
     isFetchingActivities = true
   }
 
@@ -145,7 +141,7 @@ const Feed = ({
   // 2. reverse the order
   // 3. is this activity from the current user?
   const transformedActivitiesData = useTransformActivities(
-    activitiesData,
+    activitiesList,
     projectUsers,
     projectInfo,
     entityType,
@@ -173,8 +169,8 @@ const Feed = ({
     feedRef,
     highlighted,
     isLoading: isLoadingNew,
-    loadMore: handleLoadMore,
-    pageInfo,
+    loadNextPage,
+    hasNextPage,
   })
 
   // comment mutations here!
@@ -312,14 +308,14 @@ const Feed = ({
           {transformedActivitiesData.length === 1 && filter === 'publishes' && !isLoadingNew && (
             <EmptyPlaceholder message="No versions published yet" icon="layers" />
           )}
-          {hasPreviousPage && (
+          {hasNextPage && (
             <InView
               root={feedRef.current}
-              onChange={(inView) => inView && handleLoadMore()}
+              onChange={(inView) => inView && loadNextPage()}
               rootMargin={'400px 0px 0px 0px'}
             >
-              <Styled.LoadMore style={{ height: 0 }} onClick={() => handleLoadMore()}>
-                {isFetchingMore ? 'Loading more...' : 'Click to load more'}
+              <Styled.LoadMore style={{ height: 0 }} onClick={() => loadNextPage()}>
+                {isFetchingNextPage ? 'Loading more...' : 'Click to load more'}
               </Styled.LoadMore>
             </InView>
           )}

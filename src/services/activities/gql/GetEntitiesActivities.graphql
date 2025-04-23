@@ -1,7 +1,9 @@
 query GetActivities(
   $projectName: String!
   $entityIds: [String!]!
-  $cursor: String
+  $after: String
+  $first: Int
+  $before: String
   $last: Int
   $referenceTypes: [String!]
   $activityTypes: [String!]
@@ -10,8 +12,10 @@ query GetActivities(
     name
     activities(
       entityIds: $entityIds
+      after: $after
+      first: $first
+      before: $before
       last: $last
-      before: $cursor
       referenceTypes: $referenceTypes
       activityTypes: $activityTypes
     ) {
