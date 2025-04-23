@@ -1,6 +1,5 @@
 import { v1 as uuid1 } from 'uuid'
 import { formatISO } from 'date-fns'
-import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 import { useFeedContext } from '@context/FeedContext'
 
@@ -74,9 +73,14 @@ const useCommentMutations = ({
   activityTypes,
   filter,
 }: CommentMutationsProps) => {
-  const { createEntityActivity, updateActivity, deleteActivity, isUpdatingActivity } =
-    useFeedContext()
-  const { name, attrib = {} } = useSelector((state: any) => state.user)
+  const {
+    createEntityActivity,
+    updateActivity,
+    deleteActivity,
+    isUpdatingActivity,
+    userName,
+    userFullName,
+  } = useFeedContext()
   const entityIds = entities.map((entity) => entity.id)
 
   const createPatch = ({
@@ -92,8 +96,8 @@ const useCommentMutations = ({
       activityId: newId,
       entityId: entityId,
       referenceType: 'origin',
-      authorName: name,
-      authorFullName: attrib.fullName,
+      authorName: userName,
+      authorFullName: userFullName,
       createdAt: formatISO(new Date()),
       files: files,
       reactions: [],

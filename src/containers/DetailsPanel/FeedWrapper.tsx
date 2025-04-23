@@ -30,7 +30,9 @@ interface FeedWrapperProps {
 // handles all redux states and dispatching
 // forwards any props
 const FeedWrapper: FC<FeedWrapperProps> = ({ scope = 'dashboard', statePath, ...props }) => {
-  const userName = useAppSelector((state) => state.user.name)
+  const user = useAppSelector((state) => state.user)
+  const userName = user?.name || ''
+  const userFullName = user?.attrib?.fullName || ''
   //   @ts-ignore
   const activityTypes = useAppSelector((state) => state.details[statePath][scope].activityTypes)
   //   @ts-ignore
@@ -97,7 +99,7 @@ const FeedWrapper: FC<FeedWrapperProps> = ({ scope = 'dashboard', statePath, ...
 
   return (
     <FeedProvider
-      {...{ scope, statePath, filter, userName }}
+      {...{ scope, statePath, filter, userName, userFullName }}
       {...queryProps}
       {...activitiesDataProps}
     >

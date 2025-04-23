@@ -20,6 +20,7 @@ export type FeedContextProps = {
   statePath: string
   filter: string
   userName: string
+  userFullName: string
   createEntityActivity: (args: any) => Promise<any>
   updateActivity: (args: any) => Promise<any>
   deleteActivity: (args: any) => Promise<any>
