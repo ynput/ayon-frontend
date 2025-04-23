@@ -51,6 +51,7 @@ const Feed = ({
     isLoadingNew,
     isLoadingNextPage,
     loadNextPage,
+    hasNextPage,
     onOpenSlideOut,
     onOpenImage,
   } = useFeedContext()
@@ -233,7 +234,7 @@ const Feed = ({
           {transformedActivitiesData.length === 1 && filter === 'publishes' && !isLoadingNew && (
             <EmptyPlaceholder message="No versions published yet" icon="layers" />
           )}
-          {!!loadNextPage && (
+          {hasNextPage && loadNextPage && (
             <InView
               root={feedRef.current}
               onChange={(inView) => inView && loadNextPage()}

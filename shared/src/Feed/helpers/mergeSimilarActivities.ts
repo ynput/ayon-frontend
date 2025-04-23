@@ -35,8 +35,11 @@ const mergeSimilarActivities = (activities: any[], type: string, oldKey: string 
       if (isSameAuthor && isWithinSeconds && isSameEntity) {
         // Continue the sequence, update the newValue from the current activity
         currentActivity[oldKey] = activity[oldKey]
-        // also update newValue
-        currentActivity.activityData.oldValue = activity.activityData.oldValue
+        // Create a new activityData object instead of modifying the existing one
+        currentActivity.activityData = {
+          ...currentActivity.activityData,
+          oldValue: activity.activityData.oldValue,
+        }
         currentActivity.hasPreviousPage = activity.hasPreviousPage
         currentActivity.cursor = activity.cursor
       } else {

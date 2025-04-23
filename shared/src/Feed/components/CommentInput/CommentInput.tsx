@@ -76,7 +76,11 @@ const CommentInput: FC<CommentInputProps> = ({
   const { projectName, entities, projectInfo, scope, filter, mentionSuggestionsData } =
     useFeedContext()
 
-  const { mentionUsers, mentionVersions, mentionTasks } = mentionSuggestionsData || {}
+  const {
+    users: mentionUsers,
+    versions: mentionVersions,
+    tasks: mentionTasks,
+  } = mentionSuggestionsData || {}
 
   const [initHeight, setInitHeight] = useState(88)
   const [editorValue, setEditorValue] = useState('')

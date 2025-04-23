@@ -4,7 +4,6 @@ import getThumbnails from '../helpers/getThumbnails'
 import StackedThumbnails from '@components/Thumbnail/StackedThumbnails'
 import { upperFirst } from 'lodash'
 import { AssigneeField, Icon } from '@ynput/ayon-react-components'
-import Feed from '@shared/Feed/Feed'
 import PiPWrapper from '@context/pip/PiPWrapper'
 import { useGetEntitiesDetailsPanelQuery } from '@queries/entity/getEntityPanel'
 import { useAppSelector } from '@state/store'
@@ -13,7 +12,7 @@ import {
   useGetProjectsInfoQuery,
 } from '@queries/userDashboard/getUserDashboard'
 import getAllProjectStatuses from '../helpers/getAllProjectsStatuses'
-import { FeedProvider } from '@context/FeedContext'
+import FeedWrapper from '../FeedWrapper'
 
 type Entity = {
   id: string
@@ -122,23 +121,21 @@ const DetailsPanelFloating: FC<DetailsPanelFloatingProps> = () => {
           <AssigneeField users={users} style={{ pointerEvents: 'none' }} />
         </Styled.Row>
         <Styled.FeedContainer>
-          <FeedProvider>
-            <Feed
-              entityType={entityType}
-              // @ts-ignore
-              entities={entitiesData}
-              activeUsers={[]}
-              // selectedTasksProjects={{}}
-              // projectInfo={firstProjectInfo}
-              projectName={projectName}
-              isMultiProjects={false}
-              scope={scope || undefined}
-              statePath={statePath || undefined}
-              readOnly
-              // @ts-ignore
-              statuses={statuses}
-            />
-          </FeedProvider>
+          <FeedWrapper
+            entityType={entityType}
+            // @ts-ignore
+            entities={entitiesData}
+            activeUsers={[]}
+            // selectedTasksProjects={{}}
+            projectInfo={projectsInfo[projectName]}
+            projectName={projectName}
+            isMultiProjects={false}
+            scope={scope}
+            statePath={statePath}
+            readOnly
+            // @ts-ignore
+            statuses={statuses}
+          />
         </Styled.FeedContainer>
       </Styled.Container>
     </PiPWrapper>

@@ -87,6 +87,7 @@ const useGetFeedActivitiesData = ({
     isLoadingActivities: isFetchingActivities,
     isLoadingNew,
     isLoadingNextPage: isFetchingNextPage,
+    hasNextPage,
     loadNextPage,
   }
 }

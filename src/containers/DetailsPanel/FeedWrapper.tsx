@@ -15,13 +15,14 @@ import useGetFeedActivitiesData from './useGetFeedActivitiesData'
 import { Status } from '@api/rest/project'
 import { useViewer } from '@context/viewerContext'
 import { goToFrame, openViewer } from '@state/viewer'
-import { useGetMentionSuggestionsQuery } from '@queries/mentions/getMentions'
+import { useGetEntityMentionsQuery } from '@queries/mentions/getMentions'
 import {
   useCreateReactionToActivityMutation,
   useDeleteReactionToActivityMutation,
 } from '@queries/reaction/updateReaction'
 import { EditingState, RefTooltip } from '@shared/Feed/context/FeedContext'
 import { useGetEntityTooltipQuery } from '@queries/activities/getActivities'
+import { SuggestRequest } from '@api/rest/activities'
 
 interface FeedWrapperProps {
   entities: any[]
@@ -143,10 +144,12 @@ const FeedWrapper: FC<FeedWrapperProps> = ({
 
   const [editingId, setEditingId] = useState<EditingState>(null)
   // get all versions that can be mentioned
-  const { data: mentionSuggestionsData } = useGetMentionSuggestionsQuery(
+  const { data: mentionSuggestionsData } = useGetEntityMentionsQuery(
     {
-      entityIds: entities.map((entity) => entity.id),
-      entityType: entityType,
+      suggestRequest: {
+        entityType: entityType as SuggestRequest['entityType'],
+        entityId: entities[0]?.id,
+      },
       projectName: projectName,
     },
     { skip: !editingId },

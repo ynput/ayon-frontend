@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { InputSwitch } from '@ynput/ayon-react-components'
-import UserImage from '@components/UserImage'
+import UserImage from '@shared/UserImage'
 
 import Breadcrumbs from '../Breadcrumbs/Breadcrumbs'
 import HeaderButton from './HeaderButton'

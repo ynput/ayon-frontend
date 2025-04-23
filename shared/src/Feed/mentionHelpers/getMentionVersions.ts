@@ -2,8 +2,8 @@ import { productTypes } from '../../'
 import { getFuzzyDate } from '../components/ActivityDate'
 import { getEntityTypeIcon } from '../../helpers'
 
-const getMentionVersions = (versions: any[]) => {
-  return versions.map((v) => {
+const getMentionVersions = (versions?: any[]) => {
+  return versions?.map((v) => {
     const productType = productTypes[v?.parent?.productType]
     const icon = productType?.icon || getEntityTypeIcon('version')
     const context = v.parent?.name

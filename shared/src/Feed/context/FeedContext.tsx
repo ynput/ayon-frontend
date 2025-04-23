@@ -46,11 +46,12 @@ export type FeedContextProps = {
   isLoadingActivities: boolean
   isLoadingNew: boolean
   isLoadingNextPage: boolean
+  hasNextPage: boolean
+  loadNextPage?: () => Promise<any>
   // mentions data
   mentionSuggestionsData: any
   entityTooltipData: any
   isFetchingTooltip: boolean
-  loadNextPage?: () => Promise<any>
   onOpenSlideOut?: (args: any) => void
   onOpenImage?: (args: any) => void
   onGoToFrame?: (frame: number) => void

@@ -1,5 +1,5 @@
 import * as Styled from './UserMenu.styled'
-import UserImage from '@components/UserImage'
+import UserImage from '@shared/UserImage'
 import Font from '@/theme/typography.module.css'
 import { NavLink } from 'react-router-dom'
 

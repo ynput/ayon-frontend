@@ -110,7 +110,8 @@ export type EntityTooltip = {
 type TransformTaskTooltip = (data: BaseTypes & TaskTypes) => EntityTooltip
 
 const transformTaskTooltip: TransformTaskTooltip = (data) => {
-  const { id, label, name, status, thumbnailId, assignees, taskType, updatedAt, folder } = data
+  const { id, label, name, status, thumbnailId, assignees, taskType, updatedAt, folder } =
+    data || {}
   const tooltip = {
     id,
     name,

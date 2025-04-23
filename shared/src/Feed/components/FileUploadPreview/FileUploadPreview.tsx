@@ -70,8 +70,7 @@ const FileUploadPreview: React.FC<FileUploadPreviewProps> = ({
     navigateDown,
     navigateLeft,
     navigateRight,
-    // @ts-expect-error
-  } = useAttachmentNavigation({ files, index, activityId })
+  } = useAttachmentNavigation({ files, index, activityId, onNavigate })
   const file = { ...getByIndexActivity(activityId, index), projectName }
   const { id, mime, extension, name } = file
 
