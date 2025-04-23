@@ -1,6 +1,6 @@
 import styled, { css } from 'styled-components'
 
-export const Reference = styled.span`
+export const Reference = styled.span<{ $variant: 'surface' | 'filled' | 'text' }>`
   gap: 2px;
   display: inline-flex;
   border-radius: var(--border-radius-m);

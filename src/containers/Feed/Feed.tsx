@@ -182,13 +182,13 @@ const Feed = ({
     onOpenSlideOut?.({ entityId, entityType, projectName, activityId })
   }
 
-  const handleFileExpand = ({ index, activityId }) => {
+  const handleFileExpand = ({ index, activityId }: { index: number; activityId: string }) => {
     const previewableFiles = Object.values(transformedActivitiesData)
       .reverse()
       .filter((a) => a.activityType == 'comment')
       .map((a) => ({
         id: a.activityId,
-        files: a.files.filter((file) => isFilePreviewable(file.mime, file.ext)),
+        files: a.files.filter((file: any) => isFilePreviewable(file.mime, file.ext)),
       }))
       .filter((a) => a.files.length > 0)
 
@@ -222,14 +222,14 @@ const Feed = ({
                   activity={activity}
                   onCheckChange={handleCommentChecked}
                   onDelete={deleteComment}
-                  onUpdate={async (value, files, refs) =>
-                    await updateComment(activity, value, files, refs)
+                  onUpdate={async (value, files, _refs) =>
+                    await updateComment(activity, value, files)
                   }
                   projectInfo={projectInfo}
                   projectName={projectName}
                   entityType={entityType}
                   onReferenceClick={handleRefClick}
-                  createdAt={entities.map((e) => e.createdAt)}
+                  createdAts={entities.map((e) => e.createdAt)}
                   onFileExpand={handleFileExpand}
                   showOrigin={entities.length > 1}
                   filter={filter}
@@ -268,6 +268,7 @@ const Feed = ({
             onClose={() => setEditingId(null)}
             onOpen={() => setEditingId(FEED_NEW_COMMENT)}
             projectName={projectName}
+            // @ts-expect-error - CommentInput still needs to be converted to TS
             entities={entities}
             entityType={entityType}
             projectInfo={projectInfo}

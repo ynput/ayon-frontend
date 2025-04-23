@@ -1,15 +1,37 @@
+import React, { useState } from 'react'
 import { Icon } from '@ynput/ayon-react-components'
 import ActivityHeader from '../ActivityHeader/ActivityHeader'
 import * as Styled from './ActivityVersions.styled'
-import { useState } from 'react'
 import { More } from '../ActivityGroup/ActivityGroup.styled'
 import ActivityDate from '../ActivityDate'
 import { useDispatch } from 'react-redux'
 import { openViewer } from '@state/viewer'
 
-const ActivityVersions = ({
+interface Version {
+  name: string
+  id: string
+  productId: string
+  productName: string
+  updatedAt: string
+  comment?: string
+}
+
+interface ActivityVersionsProps {
+  activity: {
+    authorName?: string
+    authorFullName?: string
+    createdAt?: string
+    versions?: Version[]
+    [key: string]: any
+  }
+  projectName: string
+  entityType?: string
+  onReferenceClick?: (ref: any) => void
+  filter?: string
+}
+
+const ActivityVersions: React.FC<ActivityVersionsProps> = ({
   activity,
-  projectInfo,
   projectName,
   entityType,
   onReferenceClick,
@@ -23,7 +45,7 @@ const ActivityVersions = ({
   const [thumbnailError, setThumbnailError] = useState(false)
 
   const dispatch = useDispatch()
-  const handleClick = (versionId, productId) =>
+  const handleClick = (versionId: string, productId: string) =>
     dispatch(openViewer({ versionIds: [versionId], productId, projectName }))
 
   return (
@@ -33,7 +55,6 @@ const ActivityVersions = ({
         fullName={authorFullName || authorName}
         date={createdAt}
         activity={activity}
-        projectInfo={projectInfo}
         projectName={projectName}
         entityType={entityType}
         onReferenceClick={onReferenceClick}
@@ -68,7 +89,7 @@ const ActivityVersions = ({
       })}
       {filter !== 'publishes' && versions.length > limit && (
         <More onClick={() => setShowAll(!showAll)}>
-          <Icon name="more" />
+          <Icon icon="more" />
           <span>{showAll ? `Show less` : `Show ${versions.length - limit} more versions`}</span>
         </More>
       )}

@@ -3,33 +3,42 @@ import ActivityComment from './ActivityComment/ActivityComment'
 import ActivityStatusChange from './ActivityStatusChange/ActivityStatusChange'
 import ActivityAssigneeChange from './ActivityAssigneeChange/ActivityAssigneeChange'
 import ActivityGroup from './ActivityGroup/ActivityGroup'
-import styled from 'styled-components'
 import ActivityVersions from './ActivityVersions/ActivityVersions'
-import ActivityDate from './ActivityDate'
-import { upperFirst } from 'lodash'
+import { Status } from '@api/rest/project'
 
-const FeedEnd = styled.div`
-  padding: 0 10px;
-  color: var(--md-sys-color-outline);
-  font-size: 12px;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--base-gap-small);
-  user-select: none;
-  overflow: hidden;
-  white-space: nowrap;
-`
+interface ActivityItemProps {
+  activity: {
+    activityType: string
+    items?: any[]
+    [key: string]: any
+  }
+  fromGroup?: boolean
+  projectInfo: Record<string, any>
+  createdAts?: string[]
+  editProps?: Record<string, any>
+  filter: string
+  readOnly: boolean
+  statuses: Status[]
+  projectName: string
+  entityType: string
+  onReferenceClick?: (arg: any) => void
+  onFileExpand?: (arg: any) => void
+  showOrigin?: boolean
+  isHighlighted?: boolean
+  onCheckChange?: (e: React.ChangeEvent<HTMLInputElement>, activity: any) => void
+  onDelete?: (activityId: string, entityId: string, refs: any) => Promise<void>
+  onUpdate?: (value: any, files: any, refs?: any) => Promise<void>
+}
 
-const ActivityItem = ({
-  activity = {},
+const ActivityItem: React.FC<ActivityItemProps> = ({
+  activity,
   fromGroup,
-  projectInfo = {},
-  createdAts = [],
+  projectInfo,
+  createdAts,
   editProps,
   filter,
   readOnly,
-  statuses = [],
+  statuses,
   ...props
 }) => {
   switch (activity.activityType) {

@@ -16,7 +16,6 @@ import { isEmpty } from 'lodash'
 import useGetEntityPath from './hooks/useGetEntityPath'
 import { usePiPWindow } from '@context/pip/PiPProvider'
 import getAllProjectStatuses from './helpers/getAllProjectsStatuses'
-import { FeedProvider } from '@context/FeedContext'
 import FeedWrapper from './FeedWrapper'
 
 export const entitiesWithoutFeed = ['product', 'representation']
@@ -207,19 +206,17 @@ const DetailsPanel = ({
           statePath={statePath}
         />
         {selectedTab === 'feed' && !isError && (
-          <FeedProvider>
-            <FeedWrapper
-              entityType={entityType}
-              entities={isFetchingEntitiesDetails ? entitiesToQuery : entityDetailsData}
-              activeUsers={activeProjectUsers}
-              projectInfo={firstProjectInfo}
-              projectName={firstProject}
-              isMultiProjects={projectNames.length > 1}
-              scope={scope}
-              statePath={statePath}
-              statuses={allStatuses}
-            />
-          </FeedProvider>
+          <FeedWrapper
+            entityType={entityType}
+            entities={isFetchingEntitiesDetails ? entitiesToQuery : entityDetailsData}
+            activeUsers={activeProjectUsers}
+            projectInfo={firstProjectInfo}
+            projectName={firstProject}
+            isMultiProjects={projectNames.length > 1}
+            scope={scope}
+            statePath={statePath}
+            statuses={allStatuses}
+          />
         )}
         {selectedTab === 'files' && (
           <DetailsPanelFiles

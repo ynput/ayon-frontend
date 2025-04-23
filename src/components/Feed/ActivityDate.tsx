@@ -22,8 +22,8 @@ const DateStyled = styled.span`
   align-items: center;
 `
 
-export const getFuzzyDate = (date) => {
-  let fuzzyDate = formatDistanceToNow(new Date(date), { addSuffix: true })
+export const getFuzzyDate = (date: Date) => {
+  let fuzzyDate = formatDistanceToNow(date, { addSuffix: true })
 
   // remove 'about' from the string
   fuzzyDate = fuzzyDate.replace('about', '')
@@ -34,13 +34,19 @@ export const getFuzzyDate = (date) => {
   fuzzyDate = fuzzyDate.replace(' ago', '')
 
   // if date is less than a minute ago, return 'Just now'
-  if (isSameMinute(new Date(date), new Date())) fuzzyDate = 'Just now'
+  if (isSameMinute(date, new Date())) fuzzyDate = 'Just now'
 
   return fuzzyDate
 }
 
-const ActivityDate = ({ date, isExact, ...props }) => {
+interface ActivityDateProps extends React.HTMLAttributes<HTMLElement> {
+  date?: string
+  isExact?: boolean
+}
+
+const ActivityDate = ({ date, isExact, ...props }: ActivityDateProps) => {
   const [isFuzzy, setIsFuzzy] = useState(true)
+  if (!date) return null
   const dateObj = new Date(date)
   if (!isValid(dateObj)) return null
 

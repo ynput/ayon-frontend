@@ -10,9 +10,9 @@ import { useGetKanbanProjectUsersQuery } from '@queries/userDashboard/getUserDas
 import { onCommentImageOpen } from '@state/context'
 import { openSlideOut } from '@state/details'
 import { useAppDispatch, useAppSelector } from '@state/store'
-import { Status } from '@ynput/ayon-react-components'
 import { FC } from 'react'
 import useGetFeedActivitiesData from './useGetFeedActivitiesData'
+import { Status } from '@api/rest/project'
 
 interface FeedWrapperProps {
   entities: any[]
@@ -22,7 +22,7 @@ interface FeedWrapperProps {
   entityType: string
   isMultiProjects: boolean
   statePath: string
-  readOnly?: boolean
+  readOnly: boolean
   statuses: Status[]
   scope: string
 }

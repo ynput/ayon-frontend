@@ -1,5 +1,20 @@
+import React from 'react'
 import styled from 'styled-components'
 import { Icon } from '@ynput/ayon-react-components'
+
+interface ThumbnailSimpleProps extends React.HTMLAttributes<HTMLDivElement> {
+  projectName: string
+  entityType: string
+  entityId: string
+  icon?: string
+  entityUpdatedAt: string | number
+  isLoading?: boolean
+  disabled?: boolean
+  src?: string
+  onLoad?: React.ReactEventHandler<HTMLImageElement>
+  onError?: React.ReactEventHandler<HTMLImageElement>
+  iconOnly?: boolean
+}
 
 const ThumbnailStyled = styled.div`
   position: relative;
@@ -37,7 +52,7 @@ const ImageStyled = styled.img`
   inset: 0;
 `
 
-const ThumbnailSimple = ({
+const ThumbnailSimple: React.FC<ThumbnailSimpleProps> = ({
   projectName,
   entityType,
   entityId,

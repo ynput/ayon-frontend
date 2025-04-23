@@ -27,23 +27,22 @@ import ActivityStatus from '../ActivityStatus/ActivityStatus'
 import { Status } from '@api/rest/project'
 import { useFeedContext } from '@context/FeedContext'
 import { confirmDelete } from '@shared/helpers'
-import ActivityHeader from '../ActivityHeader/ActivityHeader'
+import ActivityHeader, { ActivityHeaderProps } from '../ActivityHeader/ActivityHeader'
 
 type Props = {
   activity: $Any
-  onCheckChange: Function
+  onCheckChange?: Function
   onDelete?: (activityId: string, entityId: string, refs: $Any) => Promise<void>
-  onUpdate: Function
+  onUpdate?: Function
   projectInfo: $Any
-  editProps: Object
+  editProps?: Object
   projectName: string
   entityType: string
-  onReferenceClick: Function
-  onFileExpand: Function
-  showOrigin: boolean
-  isHighlighted: boolean
-  dispatch: Function
-  readOnly: boolean
+  onReferenceClick?: ActivityHeaderProps['onReferenceClick']
+  onFileExpand?: Function
+  showOrigin?: boolean
+  isHighlighted?: boolean
+  readOnly?: boolean
   statuses: Status[]
 }
 
@@ -98,7 +97,7 @@ const ActivityComment = ({
   }
 
   const handleSave = async (value: $Any, files: $Any) => {
-    await onUpdate(value, files)
+    await onUpdate?.(value, files)
     setEditingId(null)
   }
 

@@ -1,43 +1,44 @@
-import { useRef } from 'react'
+import React, { useRef } from 'react'
 import * as Styled from './ActivityReference.styled'
 import { Icon } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import getEntityTypeIcon from '@helpers/getEntityTypeIcon'
 import { usePiPWindow } from '@context/pip/PiPProvider'
 
-// variants = filled, text
+interface ActivityReferenceProps extends Omit<React.HTMLAttributes<HTMLElement>, 'onMouseEnter'> {
+  id: string
+  type: string
+  variant?: 'surface' | 'filled' | 'text'
+  isEntity?: boolean
+  disabled?: boolean
+  onMouseEnter?: (e: React.MouseEvent<HTMLElement>, pos: { left: number; top: number }) => void
+}
 
-const ActivityReference = ({
+const ActivityReference: React.FC<ActivityReferenceProps> = ({
   id,
   type,
   variant = 'surface',
   isEntity,
   disabled,
   onMouseEnter,
+  children,
   ...props
 }) => {
   const { pipWindow } = usePiPWindow()
-
   const icon = type === 'user' ? 'alternate_email' : getEntityTypeIcon(type, 'link')
+  const ref = useRef<HTMLDivElement>(null)
 
-  const ref = useRef(null)
-
-  const handleMouseEnter = (e) => {
-    // check we are not in a pip
+  const handleMouseEnter = (e: React.MouseEvent<HTMLElement>) => {
     if (pipWindow) return
-
-    // get the center of the reference
-    const { x, y, width } = ref.current.getBoundingClientRect()
-    const pos = { left: x + width / 2, top: y }
-
-    onMouseEnter && onMouseEnter(e, pos)
+    const rect = ref.current?.getBoundingClientRect()
+    if (!rect) return
+    const pos = { left: rect.x + rect.width / 2, top: rect.y }
+    onMouseEnter?.(e, pos)
   }
 
   return (
     <Styled.Reference
       {...props}
-      variant={variant}
-      icon={icon}
       $variant={variant}
       ref={ref}
       onMouseEnter={handleMouseEnter}
@@ -45,7 +46,7 @@ const ActivityReference = ({
       id={`ref-${id}`}
     >
       <Icon icon={icon} />
-      {props.children}
+      {children}
     </Styled.Reference>
   )
 }
