@@ -1,30 +1,92 @@
 import { v1 as uuid1 } from 'uuid'
 import { formatISO } from 'date-fns'
-import {
-  useCreateEntityActivityMutation,
-  useDeleteActivityMutation,
-  useUpdateActivityMutation,
-} from '@queries/activities/updateActivities'
 import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
+import { useFeedContext } from '@context/FeedContext'
+
+// Type definitions
+interface Entity {
+  id: string
+  subTitle?: string
+}
+
+interface File {
+  id: string
+  [key: string]: any
+}
+
+export interface Activity {
+  activityId: string
+  entityId: string
+  body: string
+  files: File[]
+  [key: string]: any
+}
+
+interface CommentPatch {
+  body: string
+  activityType: string
+  activityId: string
+  entityId: string
+  referenceType: string
+  authorName: string
+  authorFullName?: string
+  createdAt: string
+  files: File[]
+  reactions: any[]
+  origin: {
+    id: string
+    type: string
+    name?: string
+  }
+  author: {
+    active: boolean
+    deleted: boolean
+  }
+}
+
+interface CommentMutationsProps {
+  projectName: string
+  entityType: string
+  entities: Entity[]
+  activityTypes: string[]
+  filter: any
+}
+
+interface CommentPayload {
+  entityId: string
+  newId: string
+  subTitle?: string
+  value: string
+  files?: File[]
+}
 
 // does the body have a checklist anywhere in it
 // * [ ] or * [x]
-export const bodyHasChecklist = (body) => {
+export const bodyHasChecklist = (body: string): boolean => {
   return body.includes('* [ ]') || body.includes('* [x]')
 }
 
-const useCommentMutations = ({ projectName, entityType, entities = [], activityTypes, filter }) => {
-  const { name, attrib = {} } = useSelector((state) => state.user)
+const useCommentMutations = ({
+  projectName,
+  entityType,
+  entities = [],
+  activityTypes,
+  filter,
+}: CommentMutationsProps) => {
+  const { createEntityActivity, updateActivity, deleteActivity, isUpdatingActivity } =
+    useFeedContext()
+  const { name, attrib = {} } = useSelector((state: any) => state.user)
   const entityIds = entities.map((entity) => entity.id)
 
-  // used to create and update activities (comments)
-  const [createEntityActivity, { isLoading: isLoadingCreate }] = useCreateEntityActivityMutation()
-  const [updateActivity, { isLoading: isLoadingUpdate }] = useUpdateActivityMutation()
-  const [deleteActivity] = useDeleteActivityMutation()
-
-  const createPatch = ({ entityId, newId, subTitle, value, files = [] }) => {
-    const patch = {
+  const createPatch = ({
+    entityId,
+    newId,
+    subTitle,
+    value,
+    files = [],
+  }: CommentPayload): CommentPatch => {
+    const patch: CommentPatch = {
       body: value,
       activityType: 'comment',
       activityId: newId,
@@ -49,11 +111,11 @@ const useCommentMutations = ({ projectName, entityType, entities = [], activityT
     return patch
   }
 
-  const getActivityId = () => uuid1().replace(/-/g, '')
+  const getActivityId = (): string => uuid1().replace(/-/g, '')
 
-  const submitComment = async (value, files = []) => {
+  const submitComment = async (value: string, files: File[] = []): Promise<void> => {
     // map over all the entities and create a new comment for each
-    let patchId = null
+    let patchId: string | null = null
     const promises = entities.map(({ id: entityId, subTitle }) => {
       const newId = getActivityId()
       if (!patchId) patchId = newId
@@ -80,13 +142,17 @@ const useCommentMutations = ({ projectName, entityType, entities = [], activityT
         patch,
         filter,
         ...argsForCachingMatching,
-      }).unwrap()
+      })
     })
 
     await Promise.all(promises)
   }
 
-  const updateComment = async (activity, value, files = []) => {
+  const updateComment = async (
+    activity: Activity,
+    value: string,
+    files: File[] = [],
+  ): Promise<void> => {
     const fileIds = files.map((file) => file.id)
 
     const updatedActivity = {
@@ -104,7 +170,7 @@ const useCommentMutations = ({ projectName, entityType, entities = [], activityT
     const argsForCachingMatching = { entityType, entityIds, activityTypes }
 
     try {
-      const res = await updateActivity({
+      await updateActivity({
         projectName,
         data: updatedActivity,
         activityId: activity.activityId,
@@ -112,8 +178,8 @@ const useCommentMutations = ({ projectName, entityType, entities = [], activityT
         patch,
         filter,
         ...argsForCachingMatching,
-      }).unwrap()
-    } catch (error) {
+      })
+    } catch (error: any) {
       console.error(error)
       toast.error(error?.data?.detail)
       // so higher level can detect the error
@@ -121,7 +187,7 @@ const useCommentMutations = ({ projectName, entityType, entities = [], activityT
     }
   }
 
-  const deleteComment = async (id, entityId, refs = []) => {
+  const deleteComment = async (id: string, entityId: string, refs: any[] = []): Promise<void> => {
     // we only need these args to update the cache of the original query
     const argsForCachingMatching = { entityType, entityIds, activityTypes }
 
@@ -136,7 +202,7 @@ const useCommentMutations = ({ projectName, entityType, entities = [], activityT
         patch: { activityId: id },
         refs,
         ...argsForCachingMatching,
-      }).unwrap()
+      })
     } catch (error) {
       // error is handled in the mutation
     }
@@ -146,7 +212,7 @@ const useCommentMutations = ({ projectName, entityType, entities = [], activityT
     submitComment,
     updateComment,
     deleteComment,
-    isSaving: isLoadingCreate || isLoadingUpdate,
+    isSaving: isUpdatingActivity,
   }
 }
 

@@ -1,27 +1,22 @@
 import clsx from 'clsx'
-import { useMemo, useRef } from 'react'
+import { useMemo } from 'react'
 import ReactMarkdown from 'react-markdown'
-import { useAppSelector } from '@state/store'
 import emoji from 'remark-emoji'
 import remarkGfm from 'remark-gfm'
 import remarkDirective from 'remark-directive'
 import remarkDirectiveRehype from 'remark-directive-rehype'
 
 import CommentInput from '@components/CommentInput/CommentInput'
-import MenuContainer from '@/components/Menu/MenuComponents/MenuContainer'
 import Reactions from '@components/ReactionContainer/Reactions'
 import { Reaction } from '@components/ReactionContainer/types'
 import useReferenceTooltip from '@containers/Feed/hooks/useReferenceTooltip'
 import FilesGrid from '@containers/FilesGrid/FilesGrid'
-import { toggleMenuOpen } from '@/features/context'
 import {
   useCreateReactionToActivityMutation,
   useDeleteReactionToActivityMutation,
 } from '@queries/reaction/updateReaction'
 import { $Any } from '@types'
 
-import ActivityCommentMenu from '../ActivityCommentMenu/ActivityCommentMenu'
-import ActivityHeader from '../ActivityHeader/ActivityHeader'
 import { getTextRefs } from '../../CommentInput/quillToMarkdown'
 import * as Styled from './ActivityComment.styled'
 import CommentWrapper from './CommentWrapper'
@@ -31,11 +26,13 @@ import { Icon } from '@ynput/ayon-react-components'
 import ActivityStatus from '../ActivityStatus/ActivityStatus'
 import { Status } from '@api/rest/project'
 import { useFeedContext } from '@context/FeedContext'
+import { confirmDelete } from '@shared/helpers'
+import ActivityHeader from '../ActivityHeader/ActivityHeader'
 
 type Props = {
   activity: $Any
   onCheckChange: Function
-  onDelete: Function
+  onDelete?: (activityId: string, entityId: string, refs: $Any) => Promise<void>
   onUpdate: Function
   projectInfo: $Any
   editProps: Object
@@ -46,8 +43,6 @@ type Props = {
   showOrigin: boolean
   isHighlighted: boolean
   dispatch: Function
-  scope: string
-  statePath: string
   readOnly: boolean
   statuses: Status[]
 }
@@ -65,12 +60,11 @@ const ActivityComment = ({
   onFileExpand,
   showOrigin,
   isHighlighted,
-  dispatch,
-  scope,
-  statePath,
   readOnly,
   statuses = [],
 }: Props) => {
+  const { scope, statePath, userName } = useFeedContext()
+
   let {
     body,
     authorName,
@@ -88,8 +82,6 @@ const ActivityComment = ({
   if (!authorFullName) authorFullName = author?.fullName || authorName
   let menuId = `comment-${scope}-${activity.activityId}`
   if (statePath) menuId += '-' + statePath
-  const isMenuOpen = useAppSelector((state) => state.context.menuOpen) === !!menuId
-  const user = useAppSelector((state) => state.user)
 
   const [deleteReactionToActivity] = useDeleteReactionToActivityMutation()
   const [createReactionToActivity] = useCreateReactionToActivityMutation()
@@ -114,7 +106,7 @@ const ActivityComment = ({
 
   const isRef = referenceType !== 'origin' || showOrigin
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     const refs = getTextRefs(body)
 
     // if the comment is a reference, (it's origin is not the entity)
@@ -125,16 +117,23 @@ const ActivityComment = ({
     }
 
     // note: body is used to match other refs to delete
-    onDelete && onDelete(activityId, entityId, refs)
+    onDelete && (await onDelete(activityId, entityId, refs))
   }
 
-  const handleToggleMenu = (menu: $Any) => dispatch(toggleMenuOpen(menu))
-  const moreRef = useRef<HTMLDivElement>(null)
+  const deleteConfirmation = () => {
+    confirmDelete({
+      title: 'Delete comment',
+      message: 'Are you sure you want to delete this comment?',
+      accept: async () => {
+        await handleDelete()
+      },
+    })
+  }
 
-  const [, setRefTooltip] = useReferenceTooltip({ dispatch })
+  const [, setRefTooltip] = useReferenceTooltip()
 
   const mappedReactions = useMemo(
-    () => mapGraphQLReactions(activity.reactions, user.name),
+    () => mapGraphQLReactions(activity.reactions, userName),
     [[...(activity.reactions || [])]],
   )
 
@@ -142,8 +141,8 @@ const ActivityComment = ({
     if (reaction.isActive) {
       createReactionToActivity({
         projectName: projectName,
-        // @ts-ignore exposed endpoint doesn't need the username, we still need to pass it for the optismistic update
-        userName: user.name,
+        // @ts-ignore exposed endpoint doesn't need the username, we still need to pass it for the optimistic update
+        userName: userName,
         activityId: activityId,
         createReactionModel: {
           reaction: reaction.type,
@@ -152,8 +151,8 @@ const ActivityComment = ({
     } else {
       deleteReactionToActivity({
         projectName: projectName,
-        // @ts-ignore exposed endpoint doesn't need the username, we still need to pass it for the optismistic update
-        userName: user.name,
+        // @ts-ignore exposed endpoint doesn't need the username, we still need to pass it for the optimistic update
+        userName: userName,
         activityId: activityId,
         reaction: reaction.type,
       })
@@ -163,7 +162,7 @@ const ActivityComment = ({
   return (
     <>
       <Styled.Comment
-        className={clsx('comment', { isOwner, isMenuOpen, isEditing, isHighlighted })}
+        className={clsx('comment', { isOwner, isEditing, isHighlighted })}
         id={activityId}
       >
         <ActivityHeader
@@ -181,16 +180,16 @@ const ActivityComment = ({
         />
         <Styled.Body className={clsx('comment-body', { isEditing })}>
           {!readOnly && (
-            <Styled.Tools className={'tools'} ref={moreRef}>
+            <Styled.Tools className={'tools'}>
+              {isOwner && onDelete && (
+                <Styled.ToolButton
+                  icon="delete"
+                  onClick={deleteConfirmation}
+                  tooltip="Delete comment"
+                />
+              )}
               {isOwner && handleEditComment && (
                 <Styled.ToolButton icon="edit_square" onClick={handleEditComment} />
-              )}
-              {isOwner && (
-                <Styled.ToolButton
-                  icon="more_horiz"
-                  className="more"
-                  onClick={() => handleToggleMenu(menuId)}
-                />
               )}
             </Styled.Tools>
           )}
@@ -267,11 +266,6 @@ const ActivityComment = ({
             </>
           )}
 
-          {!readOnly && (
-            <MenuContainer id={menuId} target={moreRef.current}>
-              <ActivityCommentMenu onDelete={() => isOwner && handleDelete()} />
-            </MenuContainer>
-          )}
           {!isEditing && (
             <div style={{ marginTop: '16px' }}>
               {mappedReactions && (

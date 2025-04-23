@@ -33,6 +33,7 @@ import useAnnotationsSync from './hooks/useAnnotationsSync'
 // State management
 import { useGetMentionSuggestionsQuery } from '@queries/mentions/getMentions'
 import useAnnotationsUpload from './hooks/useAnnotationsUpload'
+import { useFeedContext } from '@context/FeedContext'
 
 var Delta = Quill.import('delta')
 
@@ -62,11 +63,10 @@ const CommentInput = ({
   entityType,
   projectInfo,
   isEditing,
-  filter,
   disabled,
   isLoading,
-  scope,
 }) => {
+  const { scope, filter } = useFeedContext()
   const [initHeight, setInitHeight] = useState(88)
   const [editorValue, setEditorValue] = useState('')
   // file uploads
@@ -443,7 +443,7 @@ const CommentInput = ({
 
   const handleSubmit = async () => {
     try {
-      setIsSubmitting(true);
+      setIsSubmitting(true)
       // upload any annotations first
       let annotationFiles = []
       if (annotations.length) {
@@ -473,7 +473,7 @@ const CommentInput = ({
       console.error(error)
       toast.error('Something went wrong')
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
   }
 

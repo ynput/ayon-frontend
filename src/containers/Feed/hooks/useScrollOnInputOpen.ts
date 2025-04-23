@@ -1,6 +1,12 @@
-import { useEffect } from 'react'
+import { useEffect, MutableRefObject } from 'react'
 
-const useScrollOnInputOpen = ({ feedRef, isInputOpen, height }) => {
+type UseScrollOnInputOpenProps = {
+  feedRef: MutableRefObject<HTMLElement | null>
+  isInputOpen: boolean
+  height: number
+}
+
+const useScrollOnInputOpen = ({ feedRef, isInputOpen, height }: UseScrollOnInputOpenProps) => {
   // scroll by height of comment input when it opens or closes
   // for now use hard coded value
   useEffect(() => {
@@ -13,7 +19,7 @@ const useScrollOnInputOpen = ({ feedRef, isInputOpen, height }) => {
       if (isInputOpen) feedRef.current.scrollBy(0, heightDiff)
       else feedRef.current.scrollBy(0, -heightDiff)
     }
-  }, [isInputOpen, feedRef.current])
+  }, [isInputOpen, feedRef, height])
 }
 
 export default useScrollOnInputOpen

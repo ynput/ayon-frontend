@@ -50,21 +50,6 @@ const ActivityItem = ({
       return (
         !fromGroup && <ActivityGroup editProps={editProps} activities={activity.items} {...props} />
       )
-    case 'end':
-      if (filter === 'activity') {
-        return (
-          <FeedEnd>
-            <>
-              {`${upperFirst(props.entityType)}${createdAts.length > 1 ? 's' : ''} created:`}
-              {createdAts.map((c, i) => (
-                <ActivityDate date={c} key={i} style={{ margin: 0 }} />
-              ))}
-            </>
-          </FeedEnd>
-        )
-      } else {
-        return null
-      }
     default:
       return null
   }

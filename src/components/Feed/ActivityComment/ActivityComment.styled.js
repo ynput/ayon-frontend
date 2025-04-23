@@ -22,10 +22,9 @@ export const Comment = styled.li`
   /* hide date and show tools */
   &.isOwner {
     /* by default hide menu */
-    &:not(.isMenuOpen) {
-      .tools {
-        opacity: 0;
-      }
+
+    .tools {
+      opacity: 0;
     }
 
     .isEditing {
@@ -34,17 +33,11 @@ export const Comment = styled.li`
 
     :not(.isEditing) {
       /* on hover show menu and hide date */
-      &:hover,
-      &.isMenuOpen {
+      &:hover {
         .tools {
           opacity: 1;
         }
       }
-    }
-
-    /* when project menu open set button background */
-    &.isMenuOpen .more {
-      background-color: var(--md-sys-color-surface-container-highest-hover);
     }
   }
 

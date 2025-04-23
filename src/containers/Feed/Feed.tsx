@@ -3,10 +3,10 @@ import ActivityItem from '@components/Feed/ActivityItem'
 import CommentInput from '@components/CommentInput/CommentInput'
 import * as Styled from './Feed.styled'
 import { useGetActivitiesInfiniteInfiniteQuery } from '@queries/activities/getActivities'
-import useCommentMutations from './hooks/useCommentMutations'
+import useCommentMutations, { Activity } from './hooks/useCommentMutations'
 import useTransformActivities from './hooks/useTransformActivities'
 import { InView } from 'react-intersection-observer'
-import { useAppSelector, useAppDispatch } from '@state/store'
+import { useAppSelector } from '@state/store'
 import { openSlideOut } from '@state/details'
 import useSaveScrollPos from './hooks/useSaveScrollPos'
 import useScrollOnInputOpen from './hooks/useScrollOnInputOpen'
@@ -33,10 +33,23 @@ export type FeedProps = {
   projectName: string
   entityType: string
   isMultiProjects: boolean
-  scope: string
-  statePath: string
   readOnly: boolean
   statuses: Status[]
+  activityTypes: string[]
+  highlighted: string[]
+  selectedProjects: string[]
+  onOpenSlideOut?: (args: {
+    entityId: any
+    entityType: any
+    projectName: string
+    activityId: string
+  }) => void
+  onOpenImage?: (args: {
+    files: any[]
+    activityId: string
+    index: number
+    projectName: string
+  }) => void
 }
 
 const Feed = ({
@@ -46,22 +59,18 @@ const Feed = ({
   projectName,
   entityType,
   isMultiProjects,
-  scope = 'dashboard',
-  statePath = 'pinned',
   readOnly,
   statuses = [],
+  activityTypes,
+  selectedProjects,
+  highlighted = [],
+  onOpenSlideOut,
+  onOpenImage,
 }: FeedProps) => {
-  const dispatch = useAppDispatch()
-  const { editingId, setEditingId } = useFeedContext()
-  const userName = useAppSelector((state) => state.user.name)
-  const activityTypes = useAppSelector((state) => state.details[statePath][scope].activityTypes)
-  const filter = useAppSelector((state) => state.details[statePath][scope].filter)
-  const highlighted = useAppSelector((state) => state.details[statePath].highlighted) || []
+  const { editingId, setEditingId, filter, userName } = useFeedContext()
 
   // hide comment input for specific filters
   const hideCommentInput = ['publishes'].includes(filter)
-
-  // STATES
 
   const entitiesToQuery = useMemo(
     () =>
@@ -90,20 +99,19 @@ const Feed = ({
     hasNextPage,
   } = useGetActivitiesInfiniteInfiniteQuery(queryArgs, { skip: skip })
 
+  console.log(entities, filter, activityTypes, projectName)
+
   // Extract tasks from infinite query data correctly
   const activitiesList = useMemo(() => {
     if (!activitiesInfiniteData?.pages) return []
     return activitiesInfiniteData.pages.flatMap((page) => page.activities || [])
   }, [activitiesInfiniteData?.pages])
 
-  // get last page info
-  const pageInfo = useMemo(() => {
-    if (!activitiesInfiniteData?.pages) return {}
-    const lastPage = activitiesInfiniteData.pages[activitiesInfiniteData.pages.length - 1]
-    return lastPage.pageInfo
-  }, [activitiesInfiniteData?.pages])
+  const currentActivitiesList = useMemo(() => {
+    if (!currentData?.pages) return []
+    return currentData.pages.flatMap((page) => page.activities || [])
+  }, [currentData?.pages])
 
-  const selectedProjects = useAppSelector((state) => state.dashboard.selectedProjects)
   const { data: projectUsers = [] } = useGetKanbanProjectUsersQuery(
     { projects: selectedProjects },
     { skip: !selectedProjects?.length },
@@ -126,11 +134,11 @@ const Feed = ({
     if (!isFetchingActivities) return false
 
     const currentEntityIds = union(
-      currentData?.activities?.flatMap((activity) => (activity.entityId ? activity.entityId : [])),
+      currentActivitiesList?.flatMap((activity) => (activity.entityId ? activity.entityId : [])),
     )
 
     return !isEqual(currentEntityIds, entityIds)
-  }, [currentData, entityIds, isFetchingActivities])
+  }, [currentActivitiesList, entityIds, isFetchingActivities])
 
   if (skip) {
     isFetchingActivities = true
@@ -153,14 +161,14 @@ const Feed = ({
   // const commentInputRef = useRef(null)
 
   // scroll by height of comment input when it opens or closes
-  useScrollOnInputOpen({ feedRef, isCommentInputOpen: editingId === FEED_NEW_COMMENT, height: 93 })
+  useScrollOnInputOpen({ feedRef, isInputOpen: editingId === FEED_NEW_COMMENT, height: 93 })
 
   // save scroll position of a feed
   useSaveScrollPos({
     entities,
     feedRef,
     filter,
-    disabled: highlighted.length,
+    disabled: !!highlighted.length,
     isLoading: isLoadingNew,
   })
 
@@ -184,61 +192,64 @@ const Feed = ({
 
   // When a checkbox is clicked, update the body to add/remove "x" in [ ] markdown
   // Then update comment with new body
-  const handleCommentChecked = (e, activity) => {
+  const handleCommentChecked = (e: React.ChangeEvent<HTMLInputElement>, activity: Activity) => {
     const target = e?.target
     if (!target || !activity) return console.log('no target or activity')
 
     // the value that it's changing to
-    const checked = target.checked
-    const currentMarkdown = checked ? '[ ]' : '[x]'
-    const newMarkdown = checked ? '[x]' : '[ ]'
+    const checked: boolean = target.checked
+    const currentMarkdown: string = checked ? '[ ]' : '[x]'
+    const newMarkdown: string = checked ? '[x]' : '[ ]'
 
     const { body } = activity
 
     // based on all li elements in the whole className 'comment-body' with className 'task-list-item'
     // find the index of the task that was checked
-    const taskIndex = Array.from(
-      target.closest('.comment-body').querySelectorAll('.task-list-item'),
-    ).findIndex((li) => li === target.closest('li'))
+    const taskIndex: number = Array.from(
+      target.closest('.comment-body')?.querySelectorAll('.task-list-item') || [],
+    ).findIndex((li: Element) => li === target.closest('li'))
 
-    let replaceIndex = taskIndex
+    let replaceIndex: number = taskIndex
 
     // count the number of current markdowns in the body
-    const allMarkdowns = body.match(/\[.\]/g) || []
+    const allMarkdowns: string[] = body.match(/\[.\]/g) || []
 
-    allMarkdowns.forEach((markdown, index) => {
+    allMarkdowns.forEach((markdown: string, index: number) => {
       // does it match the current markdown?
       if (markdown !== currentMarkdown && index < taskIndex) replaceIndex--
     })
 
     // now find the indexes of the current markdown to replace
-    const indexesOfCurrentMarkdownInBody = []
-    let index
+    const indexesOfCurrentMarkdownInBody: number[] = []
+    let index: number = -1
     while ((index = body.indexOf(currentMarkdown, index + 1)) > -1) {
       indexesOfCurrentMarkdownInBody.push(index)
     }
 
-    const indexToReplaceInBody = indexesOfCurrentMarkdownInBody[replaceIndex]
-    const endReplaceIndex = indexToReplaceInBody + currentMarkdown.length
+    const indexToReplaceInBody: number | undefined = indexesOfCurrentMarkdownInBody[replaceIndex]
+    if (indexToReplaceInBody === undefined) return
+
+    const endReplaceIndex: number = indexToReplaceInBody + currentMarkdown.length
 
     // replace the current markdown with the new markdown
-    const newBody = body.slice(0, indexToReplaceInBody) + newMarkdown + body.slice(endReplaceIndex)
+    const newBody: string =
+      body.slice(0, indexToReplaceInBody) + newMarkdown + body.slice(endReplaceIndex)
 
     if (!newBody) return
 
     updateComment(activity, newBody, activity.files)
   }
 
-  const handleRefClick = (ref = {}) => {
+  const handleRefClick = (ref: { entityId: string; entityType: string; activityId: string }) => {
     const { entityId, entityType, activityId } = ref
     const supportedTypes = ['version', 'task', 'folder']
 
-    if (!supportedTypes.includes(entityType)) return console.log('Entity type not supported yet')
+    if (!entityType || !supportedTypes.includes(entityType))
+      return console.log('Entity type not supported yet')
 
     if (!entityId || !entityType || !projectName) return console.log('No entity id or type found')
 
-    // open slide out panel
-    dispatch(openSlideOut({ entityId, entityType, projectName, scope, activityId }))
+    onOpenSlideOut?.({ entityId, entityType, projectName, activityId })
   }
 
   const handleFileExpand = ({ index, activityId }) => {
@@ -250,7 +261,9 @@ const Feed = ({
         files: a.files.filter((file) => isFilePreviewable(file.mime, file.ext)),
       }))
       .filter((a) => a.files.length > 0)
-    dispatch(onCommentImageOpen({ files: previewableFiles, activityId, index, projectName }))
+
+    // open image callback
+    onOpenImage?.({ files: previewableFiles, activityId, index, projectName })
   }
 
   const loadingPlaceholders = useMemo(() => getLoadingPlaceholders(10), [])
@@ -286,7 +299,7 @@ const Feed = ({
                   projectName={projectName}
                   entityType={entityType}
                   onReferenceClick={handleRefClick}
-                  createdAts={entities.map((e) => e.createdAt)}
+                  createdAt={entities.map((e) => e.createdAt)}
                   onFileExpand={handleFileExpand}
                   showOrigin={entities.length > 1}
                   filter={filter}
@@ -297,9 +310,6 @@ const Feed = ({
                     entityType,
                   }}
                   isHighlighted={highlighted.includes(activity.activityId)}
-                  dispatch={dispatch}
-                  scope={scope}
-                  statePath={statePath}
                   readOnly={readOnly}
                   statuses={statuses}
                 />
@@ -331,14 +341,11 @@ const Feed = ({
             entities={entities}
             entityType={entityType}
             projectInfo={projectInfo}
-            filter={filter}
             disabled={isMultiProjects}
             isLoading={isLoadingNew || !entities.length || isSaving}
-            scope={scope}
           />
         )}
       </Styled.FeedContainer>
-      <ActivityReferenceTooltip {...{ dispatch, projectName, projectInfo }} />
     </>
   )
 }
