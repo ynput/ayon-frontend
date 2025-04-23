@@ -33,10 +33,10 @@ import ProductsList from './ProductsList'
 import ProductsGrid from './ProductsGrid'
 import NoProducts from './NoProducts'
 import { toast } from 'react-toastify'
-import { productTypes } from '@state/project'
+import productTypes from '@shared/productTypes'
 import * as Styled from './Products.styled'
 import { openViewer } from '@state/viewer'
-import { extractIdFromClassList } from '@containers/Feed/hooks/useTableKeyboardNavigation'
+import { extractIdFromClassList } from '@shared/Feed/hooks/useTableKeyboardNavigation'
 import useScopedStatuses from '@hooks/useScopedStatuses'
 
 const Products = () => {

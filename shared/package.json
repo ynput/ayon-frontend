@@ -37,6 +37,9 @@
     "primeicons": "^7.0.0",
     "primereact": "9.6.2",
     "primereact-context": "npm:primereact@9.2.3",
-    "react-toastify": "^11.0.5"
+    "quill-magic-url": "^4.2.0",
+    "react-quill-ayon": "^2.0.2",
+    "react-toastify": "^11.0.5",
+    "turndown": "^7.2.0"
   }
 }

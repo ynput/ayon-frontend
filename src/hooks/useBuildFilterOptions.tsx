@@ -1,13 +1,13 @@
 import { AttributeModel, AttributeEnumItem, AttributeData } from '@api/rest/attributes'
 import { FolderType, Status, Tag, TaskType } from '@api/rest/project'
-import getEntityTypeIcon from '@helpers/getEntityTypeIcon'
+import { getEntityTypeIcon } from '@shared/helpers'
 import { useGetSiteInfoQuery } from '@queries/auth/getAuth'
 import {
   GetProjectsInfoResponse,
   useGetKanbanProjectUsersQuery,
   useGetProjectsInfoQuery,
 } from '@queries/userDashboard/getUserDashboard'
-import { productTypes } from '@state/project'
+import productTypes from '@shared/productTypes'
 import { ColumnOrderState } from '@tanstack/react-table'
 import { Icon, Option } from '@ynput/ayon-react-components'
 import { dateOptions } from '@helpers/filterDates'

@@ -14,7 +14,7 @@ import HierarchyExpandFolders from './HierarchyExpandFolders'
 import { openViewer } from '@/features/viewer'
 import useTableKeyboardNavigation, {
   extractIdFromClassList,
-} from './Feed/hooks/useTableKeyboardNavigation'
+} from '../../shared/src/Feed/hooks/useTableKeyboardNavigation'
 import clsx from 'clsx'
 import useTableLoadingData from '@hooks/useTableLoadingData'
 

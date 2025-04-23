@@ -53,7 +53,7 @@ import { FeedbackProvider } from './feedback/FeedbackContext'
 // containers
 import Header from '@containers/header'
 import ProtectedRoute from '@containers/ProtectedRoute'
-import FileUploadPreview from '@containers/FileUploadPreview/FileUploadPreview'
+import FileUploadPreviewContainer from '@containers/FileUploadPreviewContainer'
 import { ViewerDialog } from '@containers/Viewer'
 
 // state
@@ -193,7 +193,7 @@ const App = () => {
                                       <ShareDialog />
                                       <ViewerDialog />
                                       <ConfirmDialog />
-                                      <FileUploadPreview />
+                                      <FileUploadPreviewContainer />
                                       <ReleaseInstallerDialog />
                                       <CompleteProfilePrompt />
                                       <Routes>

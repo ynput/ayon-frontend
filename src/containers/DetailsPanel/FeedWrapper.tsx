@@ -1,6 +1,6 @@
-import ActivityReferenceTooltip from '@components/Feed/ActivityReferenceTooltip/ActivityReferenceTooltip'
-import Feed, { FeedProps } from '@containers/Feed/Feed'
-import { FeedContextProps, FeedProvider } from '@context/FeedContext'
+import ActivityReferenceTooltip from '@shared/Feed/components/ActivityReferenceTooltip/ActivityReferenceTooltip'
+import Feed from '@shared/Feed/Feed'
+import { FeedContextProps, FeedProvider } from '@shared/Feed'
 import {
   useCreateEntityActivityMutation,
   useDeleteActivityMutation,
@@ -10,9 +10,18 @@ import { useGetKanbanProjectUsersQuery } from '@queries/userDashboard/getUserDas
 import { onCommentImageOpen } from '@state/context'
 import { openSlideOut } from '@state/details'
 import { useAppDispatch, useAppSelector } from '@state/store'
-import { FC } from 'react'
+import { FC, useState } from 'react'
 import useGetFeedActivitiesData from './useGetFeedActivitiesData'
 import { Status } from '@api/rest/project'
+import { useViewer } from '@context/viewerContext'
+import { goToFrame, openViewer } from '@state/viewer'
+import { useGetMentionSuggestionsQuery } from '@queries/mentions/getMentions'
+import {
+  useCreateReactionToActivityMutation,
+  useDeleteReactionToActivityMutation,
+} from '@queries/reaction/updateReaction'
+import { EditingState, RefTooltip } from '@shared/Feed/context/FeedContext'
+import { useGetEntityTooltipQuery } from '@queries/activities/getActivities'
 
 interface FeedWrapperProps {
   entities: any[]
@@ -29,7 +38,15 @@ interface FeedWrapperProps {
 
 // handles all redux states and dispatching
 // forwards any props
-const FeedWrapper: FC<FeedWrapperProps> = ({ scope = 'dashboard', statePath, ...props }) => {
+const FeedWrapper: FC<FeedWrapperProps> = ({
+  scope = 'dashboard',
+  statePath,
+  entities,
+  entityType,
+  projectName,
+  projectInfo,
+  ...props
+}) => {
   const user = useAppSelector((state) => state.user)
   const userName = user?.name || ''
   const userFullName = user?.attrib?.fullName || ''
@@ -53,20 +70,37 @@ const FeedWrapper: FC<FeedWrapperProps> = ({ scope = 'dashboard', statePath, ...
     projectUsers,
   }
 
+  // listen to the viewer for annotations
+  // later on, other hooks can be tried here to get annotations from different sources
+  const { useAnnotations } = useViewer()
+  const { annotations, removeAnnotation, exportAnnotationComposite } = useAnnotations()
+
+  const annotationsProps = { annotations, removeAnnotation, exportAnnotationComposite }
+
   //   handlers
   const dispatch = useAppDispatch()
-  const onOpenSlideOut: FeedProps['onOpenSlideOut'] = (args) => {
+  const onOpenSlideOut: FeedContextProps['onOpenSlideOut'] = (args) => {
     // open slide out panel
     dispatch(openSlideOut({ ...args, scope }))
   }
 
-  const onOpenImage: FeedProps['onOpenImage'] = (args) => {
+  const onOpenImage: FeedContextProps['onOpenImage'] = (args) => {
     dispatch(onCommentImageOpen(args))
+  }
+
+  const onGoToFrame = (frame: number) => {
+    dispatch(goToFrame(frame))
+  }
+
+  const onOpenViewer: FeedContextProps['onOpenViewer'] = (args) => {
+    dispatch(openViewer(args))
   }
 
   const handlerProps = {
     onOpenSlideOut,
     onOpenImage,
+    onGoToFrame,
+    onOpenViewer,
   }
   //   queries
   const [createEntityActivityMutation, { isLoading: isLoadingCreate }] =
@@ -82,29 +116,71 @@ const FeedWrapper: FC<FeedWrapperProps> = ({ scope = 'dashboard', statePath, ...
   const deleteActivity: FeedContextProps['deleteActivity'] = async (args) =>
     await deleteActivityMutation(args).unwrap()
 
+  const [createReactionToActivity] = useCreateReactionToActivityMutation()
+  const [deleteReactionToActivity] = useDeleteReactionToActivityMutation()
+
+  const createReaction: FeedContextProps['createReaction'] = async (args) =>
+    await createReactionToActivity(args).unwrap()
+  const deleteReaction: FeedContextProps['deleteReaction'] = async (args) =>
+    await deleteReactionToActivity(args).unwrap()
+
   const queryProps = {
     createEntityActivity,
     updateActivity,
     deleteActivity,
     isUpdatingActivity,
+    deleteReaction,
+    createReaction,
   }
 
   const activitiesDataProps = useGetFeedActivitiesData({
-    entities: props.entities,
+    entities: entities,
     filter,
     activityTypes,
-    projectName: props.projectName,
-    entityType: props.entityType,
+    projectName: projectName,
+    entityType: entityType,
   })
+
+  const [editingId, setEditingId] = useState<EditingState>(null)
+  // get all versions that can be mentioned
+  const { data: mentionSuggestionsData } = useGetMentionSuggestionsQuery(
+    {
+      entityIds: entities.map((entity) => entity.id),
+      entityType: entityType,
+      projectName: projectName,
+    },
+    { skip: !editingId },
+  )
+
+  const [refTooltip, setRefTooltip] = useState<RefTooltip | null>(null)
+  const skip = !projectName || !refTooltip?.id
+  const { data: entityTooltipData, isFetching: isFetchingTooltip } = useGetEntityTooltipQuery(
+    { entityType: entityType, entityId: refTooltip?.id, projectName },
+    { skip: skip },
+  )
 
   return (
     <FeedProvider
-      {...{ scope, statePath, filter, userName, userFullName }}
+      {...{
+        scope,
+        statePath,
+        entities,
+        projectName,
+        entityType,
+        projectInfo,
+        filter,
+        userName,
+        userFullName,
+      }}
       {...queryProps}
       {...activitiesDataProps}
+      {...handlerProps}
+      {...annotationsProps}
+      {...{ mentionSuggestionsData, entityTooltipData, isFetchingTooltip }}
+      {...{ editingId, setEditingId, refTooltip, setRefTooltip }}
     >
-      <Feed {...props} {...reduxStateProps} {...handlerProps} {...reduxDataProps} />
-      <ActivityReferenceTooltip projectName={props.projectName} projectInfo={props.projectInfo} />
+      <Feed {...props} {...reduxStateProps} {...reduxDataProps} />
+      <ActivityReferenceTooltip />
     </FeedProvider>
   )
 }

@@ -3,7 +3,7 @@ import DashboardPanelWrapper from './DashboardPanelWrapper'
 import ListStatsTile from './ListStatsTile'
 import copyToClipboard from '@helpers/copyToClipboard'
 import { useGetProjectDashboardQuery } from '@queries/getProjectDashboard'
-import getEntityTypeIcon from '@helpers/getEntityTypeIcon'
+import { getEntityTypeIcon } from '@shared/helpers'
 
 const ProjectStats = ({ projectName, share, position }) => {
   const {

@@ -7,7 +7,7 @@ import {
   getActivitiesGQLApi,
   useLazyGetActivitiesByIdQuery,
 } from '@/services/activities/getActivities'
-import { bodyHasChecklist } from './Feed/hooks/useCommentMutations'
+import { bodyHasChecklist } from '../../shared/src/Feed/hooks/useCommentMutations'
 
 type ActivityMessage = {
   [key: string]: any
