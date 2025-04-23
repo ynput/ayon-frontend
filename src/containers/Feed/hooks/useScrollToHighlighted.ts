@@ -4,7 +4,7 @@ interface UseScrollToHighlightedProps {
   feedRef: RefObject<HTMLElement>
   highlighted?: string[]
   isLoading: boolean
-  loadNextPage: () => Promise<any>
+  loadNextPage?: () => Promise<any>
   hasNextPage: boolean
 }
 
@@ -18,6 +18,8 @@ const useScrollToHighlighted = ({
   const scrollComplete = useRef<string[]>([])
 
   const getHighlightedElement = async (reloadCount = 0): Promise<HTMLElement | null> => {
+    if (!loadNextPage) return null
+
     // find the first li element with classes containing isHighlighted
     const foundEl = feedRef.current?.querySelector('li.isHighlighted') as HTMLElement | null
 
@@ -70,7 +72,7 @@ const useScrollToHighlighted = ({
   }
 
   useEffect(() => {
-    if (!highlighted.length || !feedRef.current || isLoading) return
+    if (!highlighted.length || !feedRef.current || isLoading || !loadNextPage) return
 
     // if highlighted is the same as scrollComplete array, don't scroll
     if (highlighted.every((id) => scrollComplete.current?.includes(id))) return

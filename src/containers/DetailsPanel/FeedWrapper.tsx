@@ -6,11 +6,13 @@ import {
   useDeleteActivityMutation,
   useUpdateActivityMutation,
 } from '@queries/activities/updateActivities'
+import { useGetKanbanProjectUsersQuery } from '@queries/userDashboard/getUserDashboard'
 import { onCommentImageOpen } from '@state/context'
 import { openSlideOut } from '@state/details'
 import { useAppDispatch, useAppSelector } from '@state/store'
 import { Status } from '@ynput/ayon-react-components'
 import { FC } from 'react'
+import useGetFeedActivitiesData from './useGetFeedActivitiesData'
 
 interface FeedWrapperProps {
   entities: any[]
@@ -36,11 +38,18 @@ const FeedWrapper: FC<FeedWrapperProps> = ({ scope = 'dashboard', statePath, ...
   //   @ts-ignore
   const highlighted = useAppSelector((state) => state.details[statePath].highlighted) || []
 
+  const reduxStateProps = { activityTypes, highlighted }
+
   const selectedProjects = useAppSelector((state) => state.dashboard.selectedProjects)
 
-  console.log({ filter })
+  const { data: projectUsers = [] } = useGetKanbanProjectUsersQuery(
+    { projects: selectedProjects },
+    { skip: !selectedProjects?.length },
+  )
 
-  const reduxStateProps = { activityTypes, highlighted, selectedProjects }
+  const reduxDataProps = {
+    projectUsers,
+  }
 
   //   handlers
   const dispatch = useAppDispatch()
@@ -78,9 +87,21 @@ const FeedWrapper: FC<FeedWrapperProps> = ({ scope = 'dashboard', statePath, ...
     isUpdatingActivity,
   }
 
+  const activitiesDataProps = useGetFeedActivitiesData({
+    entities: props.entities,
+    filter,
+    activityTypes,
+    projectName: props.projectName,
+    entityType: props.entityType,
+  })
+
   return (
-    <FeedProvider {...{ scope, statePath, filter, userName }} {...queryProps}>
-      <Feed {...props} {...reduxStateProps} {...handlerProps} />
+    <FeedProvider
+      {...{ scope, statePath, filter, userName }}
+      {...queryProps}
+      {...activitiesDataProps}
+    >
+      <Feed {...props} {...reduxStateProps} {...handlerProps} {...reduxDataProps} />
       <ActivityReferenceTooltip projectName={props.projectName} projectInfo={props.projectInfo} />
     </FeedProvider>
   )

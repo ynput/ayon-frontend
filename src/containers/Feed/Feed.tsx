@@ -2,23 +2,16 @@ import { useMemo, useRef } from 'react'
 import ActivityItem from '@components/Feed/ActivityItem'
 import CommentInput from '@components/CommentInput/CommentInput'
 import * as Styled from './Feed.styled'
-import { useGetActivitiesInfiniteInfiniteQuery } from '@queries/activities/getActivities'
 import useCommentMutations, { Activity } from './hooks/useCommentMutations'
 import useTransformActivities from './hooks/useTransformActivities'
 import { InView } from 'react-intersection-observer'
-import { useAppSelector } from '@state/store'
-import { openSlideOut } from '@state/details'
 import useSaveScrollPos from './hooks/useSaveScrollPos'
 import useScrollOnInputOpen from './hooks/useScrollOnInputOpen'
 import { getLoadingPlaceholders } from './feedHelpers'
-import { onCommentImageOpen } from '@state/context'
 import { Icon } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
-import { isEqual, union } from 'lodash'
 import useScrollToHighlighted from './hooks/useScrollToHighlighted'
-import ActivityReferenceTooltip from '@components/Feed/ActivityReferenceTooltip/ActivityReferenceTooltip'
 import { isFilePreviewable } from '@containers/FileUploadPreview/FileUploadPreview'
-import { useGetKanbanProjectUsersQuery } from '@queries/userDashboard/getUserDashboard'
 import EmptyPlaceholder from '@shared/EmptyPlaceholder/EmptyPlaceholder'
 import { useFeedContext, FEED_NEW_COMMENT } from '@context/FeedContext'
 import { Status } from '@shared/ProjectTreeTable/types/project'
@@ -37,7 +30,7 @@ export type FeedProps = {
   statuses: Status[]
   activityTypes: string[]
   highlighted: string[]
-  selectedProjects: string[]
+  projectUsers: any[]
   onOpenSlideOut?: (args: {
     entityId: any
     entityType: any
@@ -62,94 +55,31 @@ const Feed = ({
   readOnly,
   statuses = [],
   activityTypes,
-  selectedProjects,
   highlighted = [],
+  projectUsers = [],
   onOpenSlideOut,
   onOpenImage,
 }: FeedProps) => {
-  const { editingId, setEditingId, filter, userName } = useFeedContext()
+  const {
+    editingId,
+    setEditingId,
+    filter,
+    userName,
+    activitiesData,
+    isLoadingNew,
+    isLoadingNextPage,
+    loadNextPage,
+  } = useFeedContext()
 
   // hide comment input for specific filters
   const hideCommentInput = ['publishes'].includes(filter)
-
-  const entitiesToQuery = useMemo(
-    () =>
-      entities.map((entity) => ({ id: entity.id, projectName: entity.projectName, entityType })),
-    [entities],
-  )
-  const entityIds = entitiesToQuery.map((entity) => entity.id)
-
-  const skip = !entities.length || !filter || !activityTypes || !projectName
-  // QUERY MADE TO GET ACTIVITIES
-
-  const queryArgs = {
-    entityIds: entityIds,
-    projectName: projectName,
-    referenceTypes: ['origin', 'mention', 'relation'],
-    activityTypes: activityTypes,
-    filter,
-  }
-
-  let {
-    data: activitiesInfiniteData,
-    isLoading: isFetchingActivities,
-    isFetchingNextPage,
-    currentData,
-    fetchNextPage,
-    hasNextPage,
-  } = useGetActivitiesInfiniteInfiniteQuery(queryArgs, { skip: skip })
-
-  console.log(entities, filter, activityTypes, projectName)
-
-  // Extract tasks from infinite query data correctly
-  const activitiesList = useMemo(() => {
-    if (!activitiesInfiniteData?.pages) return []
-    return activitiesInfiniteData.pages.flatMap((page) => page.activities || [])
-  }, [activitiesInfiniteData?.pages])
-
-  const currentActivitiesList = useMemo(() => {
-    if (!currentData?.pages) return []
-    return currentData.pages.flatMap((page) => page.activities || [])
-  }, [currentData?.pages])
-
-  const { data: projectUsers = [] } = useGetKanbanProjectUsersQuery(
-    { projects: selectedProjects },
-    { skip: !selectedProjects?.length },
-  )
-
-  const loadNextPage = async () => {
-    if (!hasNextPage) {
-      console.log('No more activities to load')
-      return undefined
-    }
-    console.log('loading next page...')
-    const result = await fetchNextPage()
-
-    return result
-  }
-
-  // check if currentData matches all the entityIds
-  // if not, this means we are loading new entity
-  const isLoadingNew = useMemo(() => {
-    if (!isFetchingActivities) return false
-
-    const currentEntityIds = union(
-      currentActivitiesList?.flatMap((activity) => (activity.entityId ? activity.entityId : [])),
-    )
-
-    return !isEqual(currentEntityIds, entityIds)
-  }, [currentActivitiesList, entityIds, isFetchingActivities])
-
-  if (skip) {
-    isFetchingActivities = true
-  }
 
   // do any transformation on activities data
   // 1. status change activities, attach status data based on projectName
   // 2. reverse the order
   // 3. is this activity from the current user?
   const transformedActivitiesData = useTransformActivities(
-    activitiesList,
+    activitiesData,
     projectUsers,
     projectInfo,
     entityType,
@@ -178,7 +108,7 @@ const Feed = ({
     highlighted,
     isLoading: isLoadingNew,
     loadNextPage,
-    hasNextPage,
+    hasNextPage: !!loadNextPage,
   })
 
   // comment mutations here!
@@ -318,14 +248,14 @@ const Feed = ({
           {transformedActivitiesData.length === 1 && filter === 'publishes' && !isLoadingNew && (
             <EmptyPlaceholder message="No versions published yet" icon="layers" />
           )}
-          {hasNextPage && (
+          {!!loadNextPage && (
             <InView
               root={feedRef.current}
               onChange={(inView) => inView && loadNextPage()}
               rootMargin={'400px 0px 0px 0px'}
             >
               <Styled.LoadMore style={{ height: 0 }} onClick={() => loadNextPage()}>
-                {isFetchingNextPage ? 'Loading more...' : 'Click to load more'}
+                {isLoadingNextPage ? 'Loading more...' : 'Click to load more'}
               </Styled.LoadMore>
             </InView>
           )}

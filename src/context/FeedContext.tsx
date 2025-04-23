@@ -1,3 +1,4 @@
+import { FeedActivity } from '@queries/activities/types'
 import React, { createContext, useContext, useState } from 'react'
 
 export const FEED_NEW_COMMENT = '__new__' as const
@@ -23,19 +24,18 @@ export type FeedContextProps = {
   updateActivity: (args: any) => Promise<any>
   deleteActivity: (args: any) => Promise<any>
   isUpdatingActivity: boolean
+  // activities data props
+  activitiesData: FeedActivity[]
+  isLoadingActivities: boolean
+  isLoadingNew: boolean
+  isLoadingNextPage: boolean
+  loadNextPage?: () => Promise<any>
 }
 
-interface FeedContextType {
+interface FeedContextType extends Omit<FeedContextProps, 'children'> {
+  // editingId state and functions
   editingId: EditingState
   setEditingId: (id: EditingState) => void
-  scope: FeedContextProps['scope']
-  statePath: FeedContextProps['statePath']
-  filter: FeedContextProps['filter']
-  userName: FeedContextProps['userName']
-  createEntityActivity: FeedContextProps['createEntityActivity']
-  updateActivity: FeedContextProps['updateActivity']
-  deleteActivity: FeedContextProps['deleteActivity']
-  isUpdatingActivity: FeedContextProps['isUpdatingActivity']
   // refTooltip state and functions
   refTooltip: RefTooltip | null
   setRefTooltip: (tooltip: RefTooltip | null) => void
