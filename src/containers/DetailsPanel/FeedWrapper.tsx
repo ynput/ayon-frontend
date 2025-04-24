@@ -1,4 +1,4 @@
-import Feed, { ActivityReferenceTooltip, FeedProvider } from '@shared/containers/Feed'
+import { Feed, ActivityReferenceTooltip, FeedProvider } from '@shared/containers/Feed'
 import type { FeedContextProps, EditingState, RefTooltip } from '@shared/containers/Feed'
 import {
   useCreateEntityActivityMutation,

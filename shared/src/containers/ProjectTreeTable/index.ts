@@ -1,6 +1,4 @@
-import ProjectTreeTable from './ProjectTreeTable'
-export { ProjectTreeTable }
-export default ProjectTreeTable
+export * from './ProjectTreeTable'
 
 // context providers
 export {

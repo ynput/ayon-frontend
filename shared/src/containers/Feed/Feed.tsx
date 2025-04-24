@@ -27,7 +27,7 @@ export type FeedProps = {
   highlighted: string[]
 }
 
-const Feed = ({
+export const Feed = ({
   isMultiProjects,
   readOnly,
   statuses = [],
@@ -257,5 +257,3 @@ const Feed = ({
     </>
   )
 }
-
-export default Feed

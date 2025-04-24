@@ -697,4 +697,4 @@ const TableCell = ({ cell, rowId, cellId, className, showHierarchy, ...props }: 
 
 const TableCellMemo = memo(TableCell)
 
-export default FlexTableWithProviders
+export { FlexTableWithProviders as ProjectTreeTable }

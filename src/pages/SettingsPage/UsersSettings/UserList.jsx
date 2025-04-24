@@ -7,7 +7,7 @@ import './users.scss'
 
 import { useMemo } from 'react'
 import styled from 'styled-components'
-import useCreateContextMenu from '@shared/containers/ContextMenu'
+import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import clsx from 'clsx'
 import useTableLoadingData from '@hooks/useTableLoadingData'
 import { useGetUserPoolsQuery } from '@queries/auth/getAuth'

@@ -5,7 +5,7 @@ import { ProfileRow } from '@pages/SettingsPage/UsersSettings/UserList'
 
 import { useMemo } from 'react'
 import addRemoveMembers from './addRemoveMembers'
-import useCreateContextMenu from '@shared/containers/ContextMenu'
+import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import UsersListTeamsSmall from './UsersListTeamsSmall'
 import clsx from 'clsx'
 import useTableLoadingData from '@hooks/useTableLoadingData'

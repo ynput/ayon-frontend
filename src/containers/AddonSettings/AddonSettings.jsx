@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react'
 import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 
-import useCreateContextMenu from '@shared/containers/ContextMenu'
+import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 
 import {
   Button,

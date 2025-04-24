@@ -4,7 +4,7 @@ import { classNames } from 'primereact/utils'
 import { PathSegment } from './EntityPath'
 import { useDispatch } from 'react-redux'
 import { openSlideOut } from '@state/details'
-import useCreateContextMenu from '@shared/containers/ContextMenu'
+import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import copyToClipboard from '@helpers/copyToClipboard'
 
 interface SegmentProviderProps extends React.HTMLAttributes<HTMLDivElement> {

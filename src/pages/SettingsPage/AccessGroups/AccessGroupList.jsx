@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import useCreateContextMenu from '@shared/containers/ContextMenu'
+import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { Button, TablePanel, Section, Toolbar, Spacer } from '@ynput/ayon-react-components'

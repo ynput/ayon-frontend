@@ -39,7 +39,7 @@ import { openViewer, toggleUpload } from '@state/viewer'
 
 // utils
 import { getGroupedReviewables } from './getGroupedReviewables'
-import useCreateContextMenu from '@shared/containers/ContextMenu'
+import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import { confirmDelete } from '@shared/util'
 import EditReviewableDialog from './EditReviewableDialog'
 import ReviewableUpload from './ReviewablesUpload'

@@ -8,7 +8,10 @@ export default defineConfig({
   plugins: [
     react(),
     dts({
-      insertTypesEntry: true, // Create a separate index.d.ts
+      insertTypesEntry: true,
+      include: ['src/**/*.ts', 'src/**/*.tsx'],
+      exclude: ['**/*.test.*', '**/*.stories.*', 'node_modules/**'],
+      outDir: 'dist/types',
     }),
   ],
   resolve: {
