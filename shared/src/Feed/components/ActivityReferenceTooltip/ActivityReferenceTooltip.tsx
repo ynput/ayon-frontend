@@ -39,7 +39,7 @@ const ActivityReferenceTooltip: React.FC<ActivityReferenceTooltipProps> = () => 
   if (!id) return null
 
   return createPortal(
-    type === 'user' ? (
+    type === 'user' && pos ? (
       <UserTooltip name={name} label={label} pos={pos} />
     ) : (
       <EntityTooltip {...{ type, label, name, pos, id }} />

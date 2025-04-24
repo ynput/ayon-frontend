@@ -1,5 +1,5 @@
+import ThumbnailSimple from '@/ThumbnailSimple'
 import styled from 'styled-components'
-import ThumbnailSimple from '@containers/ThumbnailSimple'
 
 export const Container = styled.li`
   /* reset default */
@@ -16,7 +16,6 @@ export const Container = styled.li`
 `
 
 export const Card = styled.div`
-
   border-radius: var(--border-radius-m);
   padding: var(--padding-m);
 

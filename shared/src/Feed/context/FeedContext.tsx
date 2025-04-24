@@ -11,7 +11,10 @@ export interface RefTooltip {
   type: string
   name: string
   label: string
-  pos: Record<string, any>
+  pos: {
+    top: number
+    left: number
+  }
 }
 
 export type FeedContextProps = {

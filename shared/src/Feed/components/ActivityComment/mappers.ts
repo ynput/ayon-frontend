@@ -1,8 +1,5 @@
-import {
-  allReactionsTypes,
-  getSortedReactions,
-} from '@shared/Feed/components/ReactionContainer/helpers'
-import { Reaction, ReactionType } from '@shared/Feed/components/ReactionContainer/types'
+import { allReactionsTypes, getSortedReactions } from '../ReactionContainer/helpers'
+import { Reaction, ReactionType } from '../ReactionContainer/types'
 
 type GraphQLActivityReaction = {
   fullName: string

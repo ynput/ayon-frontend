@@ -2,7 +2,7 @@ import React from 'react'
 import styled from 'styled-components'
 import { Icon } from '@ynput/ayon-react-components'
 
-interface ThumbnailSimpleProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface ThumbnailSimpleProps extends React.HTMLAttributes<HTMLDivElement> {
   projectName: string
   entityType: string
   entityId: string

@@ -26,8 +26,8 @@ const useMentionLink = ({ projectName, projectInfo, scope }: MentionLinkOptions)
 
       const node = super.create(value)
       // check if this is a mention url
-      const valueMentionType = value.split(':').shift()
-      const valueMentionId = value.split(':').pop()
+      const valueMentionType = value.split(':').shift() as string
+      const valueMentionId = value.split(':').pop() as string
 
       node.classList.add('mention')
       node.classList.add(valueMentionType)
@@ -66,8 +66,6 @@ const useMentionLink = ({ projectName, projectInfo, scope }: MentionLinkOptions)
           type: valueMentionType,
           label,
           pos,
-          projectName,
-          projectInfo,
         })
       })
 

@@ -12,6 +12,7 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
+      '@': path.resolve(__dirname, 'src'), // Alias for src directory
       '@api': path.resolve(__dirname, 'src/api'),
       '@graphql': path.resolve(__dirname, 'src/api/graphql.ts'),
     },
