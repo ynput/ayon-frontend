@@ -1,3 +1,4 @@
+import { useListsContext } from '@pages/ProjectListsPage/context/ListsContext'
 import { Header, HeaderButton } from '@shared/SimpleTable'
 import { theme } from '@ynput/ayon-react-components'
 import { FC } from 'react'
@@ -19,13 +20,20 @@ const StyledButtons = styled.div`
 interface ListsTableHeaderProps {}
 
 const ListsTableHeader: FC<ListsTableHeaderProps> = ({}) => {
+  const { openNewList } = useListsContext()
+
   return (
     <Header>
       <StyledTitle>Lists</StyledTitle>
 
       <StyledButtons>
         <HeaderButton icon={'delete'} />
-        <HeaderButton icon={'add'} />
+        <HeaderButton
+          icon={'add'}
+          data-tooltip={'Create new list'}
+          data-shortcut={'N'}
+          onClick={() => openNewList()}
+        />
         <HeaderButton icon={'filter_list'} />
       </StyledButtons>
     </Header>

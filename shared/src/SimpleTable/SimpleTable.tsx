@@ -21,6 +21,7 @@ import useRowKeydown from '../../../src/containers/Slicer/hooks/useRowKeydown'
 import { RankingInfo, rankItem, compareItems } from '@tanstack/match-sorter-utils'
 import { useSimpleTableContext } from './context/SimpleTableContext'
 import { SimpleTableCellTemplate, SimpleTableCellTemplateProps } from './SimpleTableRowTemplate'
+import { EmptyPlaceholder } from '@shared/components'
 
 declare module '@tanstack/react-table' {
   //add fuzzy filter to the filterFns
@@ -87,6 +88,7 @@ export type SimpleTableRow = {
 export interface SimpleTableProps {
   data: SimpleTableRow[]
   isLoading: boolean
+  error?: string
   isExpandable?: boolean // show expand/collapse icons
   forceUpdateTable?: any
   globalFilter?: string
@@ -96,6 +98,7 @@ export interface SimpleTableProps {
 const SimpleTable: FC<SimpleTableProps> = ({
   data = [],
   isLoading,
+  error,
   isExpandable,
   forceUpdateTable,
   globalFilter,
@@ -119,7 +122,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
         id: `placeholder-${i}`,
       },
     }))
-  }, [data, forceUpdateTable])
+  }, [isLoading, data, forceUpdateTable])
 
   const columns = useMemo<ColumnDef<SimpleTableRow>[]>(
     () => [
@@ -209,35 +212,38 @@ const SimpleTable: FC<SimpleTableProps> = ({
 
   return (
     <Styled.TableContainer ref={tableContainerRef} className={clsx({ isLoading })}>
-      <table>
-        <tbody
-          style={{
-            height: `${rowVirtualizer.getTotalSize()}px`, //tells scrollbar how big the table is
-          }}
-        >
-          {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-            const row = rows[virtualRow.index] as Row<SimpleTableRow>
-            return (
-              <tr
-                data-index={virtualRow.index} //needed for dynamic row height measurement
-                ref={(node) => rowVirtualizer.measureElement(node)} //measure dynamic row height
-                key={row.id}
-                style={{
-                  transform: `translateY(${virtualRow.start}px)`, //this should always be a `style` as it changes on scroll
-                }}
-              >
-                {row.getVisibleCells().map((cell) => {
-                  return (
-                    <td key={cell.id}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </td>
-                  )
-                })}
-              </tr>
-            )
-          })}
-        </tbody>
-      </table>
+      {!error && (
+        <table>
+          <tbody
+            style={{
+              height: `${rowVirtualizer.getTotalSize()}px`, //tells scrollbar how big the table is
+            }}
+          >
+            {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+              const row = rows[virtualRow.index] as Row<SimpleTableRow>
+              return (
+                <tr
+                  data-index={virtualRow.index} //needed for dynamic row height measurement
+                  ref={(node) => rowVirtualizer.measureElement(node)} //measure dynamic row height
+                  key={row.id}
+                  style={{
+                    transform: `translateY(${virtualRow.start}px)`, //this should always be a `style` as it changes on scroll
+                  }}
+                >
+                  {row.getVisibleCells().map((cell) => {
+                    return (
+                      <td key={cell.id}>
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </td>
+                    )
+                  })}
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      )}
+      {!!error && <EmptyPlaceholder error={error} />}
     </Styled.TableContainer>
   )
 }

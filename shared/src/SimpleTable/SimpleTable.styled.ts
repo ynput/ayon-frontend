@@ -1,4 +1,4 @@
-import { Button } from '@ynput/ayon-react-components'
+import { Button, theme } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
 export const TableContainer = styled.div`
@@ -12,6 +12,19 @@ export const TableContainer = styled.div`
 
   &.isLoading {
     overflow: hidden;
+  }
+
+  /* make error icon smaller */
+  .empty-placeholder {
+    width: 100%;
+    padding: 8px;
+    max-width: 240px;
+    .icon {
+      font-size: 32px;
+    }
+    h3 {
+      ${theme.titleMedium}
+    }
   }
 
   table {

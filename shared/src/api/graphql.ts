@@ -124,6 +124,74 @@ export type BaseNodeLinksArgs = {
   names?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
+export type EntityListEdge = {
+  __typename?: 'EntityListEdge';
+  cursor?: Maybe<Scalars['String']['output']>;
+  /** The entity list node */
+  node: EntityListNode;
+};
+
+export type EntityListItemEdge = {
+  __typename?: 'EntityListItemEdge';
+  Entity?: Maybe<BaseNode>;
+  attrib: Scalars['String']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  createdBy?: Maybe<Scalars['String']['output']>;
+  cursor?: Maybe<Scalars['String']['output']>;
+  data: Scalars['String']['output'];
+  entityId: Scalars['String']['output'];
+  entityType: Scalars['String']['output'];
+  id: Scalars['String']['output'];
+  /** Item node */
+  node: BaseNode;
+  position: Scalars['Int']['output'];
+  projectName: Scalars['String']['output'];
+  /** Summary */
+  summary: EntityListSummary;
+  tags: Array<Scalars['String']['output']>;
+  updatedAt: Scalars['DateTime']['output'];
+  updatedBy?: Maybe<Scalars['String']['output']>;
+};
+
+export type EntityListItemsConnection = {
+  __typename?: 'EntityListItemsConnection';
+  edges: Array<EntityListItemEdge>;
+  /** Pagination information */
+  pageInfo: PageInfo;
+};
+
+export type EntityListNode = {
+  __typename?: 'EntityListNode';
+  active: Scalars['Boolean']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  entityListType: Scalars['String']['output'];
+  entityType: Scalars['String']['output'];
+  id: Scalars['String']['output'];
+  items: EntityListItemsConnection;
+  label: Scalars['String']['output'];
+  projectName: Scalars['String']['output'];
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+
+export type EntityListNodeItemsArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  first?: Scalars['Int']['input'];
+  sortBy?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type EntityListSummary = {
+  __typename?: 'EntityListSummary';
+  count: Scalars['Int']['output'];
+};
+
+export type EntityListsConnection = {
+  __typename?: 'EntityListsConnection';
+  edges: Array<EntityListEdge>;
+  /** Pagination information */
+  pageInfo: PageInfo;
+};
+
 export type EventEdge = {
   __typename?: 'EventEdge';
   cursor?: Maybe<Scalars['String']['output']>;
@@ -328,20 +396,6 @@ export enum HasLinksFilter {
   None = 'NONE',
   Out = 'OUT'
 }
-
-export type InboxConnection = {
-  __typename?: 'InboxConnection';
-  edges: Array<InboxEdge>;
-  /** Pagination information */
-  pageInfo: PageInfo;
-};
-
-export type InboxEdge = {
-  __typename?: 'InboxEdge';
-  cursor?: Maybe<Scalars['String']['output']>;
-  /** The inbox node */
-  node: ActivityNode;
-};
 
 export type KanbanConnection = {
   __typename?: 'KanbanConnection';
@@ -571,6 +625,9 @@ export type ProjectNode = {
   createdAt: Scalars['DateTime']['output'];
   data?: Maybe<Scalars['String']['output']>;
   /** Return a folder node based on its ID */
+  entityList: EntityListNode;
+  entityLists: EntityListsConnection;
+  /** Return a folder node based on its ID */
   folder?: Maybe<FolderNode>;
   /** List of project's folder types */
   folderTypes: Array<FolderType>;
@@ -625,6 +682,20 @@ export type ProjectNodeActivitiesArgs = {
   last?: InputMaybe<Scalars['Int']['input']>;
   referenceTypes?: InputMaybe<Array<Scalars['String']['input']>>;
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
+
+export type ProjectNodeEntityListArgs = {
+  id: Scalars['String']['input'];
+};
+
+
+export type ProjectNodeEntityListsArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  ids?: InputMaybe<Array<Scalars['String']['input']>>;
+  last?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -797,7 +868,7 @@ export type Query = {
   /** Get a list of recorded events */
   events: EventsConnection;
   /** Get user inbox */
-  inbox: InboxConnection;
+  inbox: ActivitiesConnection;
   /** Get kanban board */
   kanban: KanbanConnection;
   /** Current user */
@@ -1394,7 +1465,7 @@ export type GetProductVersionsQuery = { __typename?: 'Query', project: { __typen
 export type GetInboxHasUnreadQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetInboxHasUnreadQuery = { __typename?: 'Query', inbox: { __typename?: 'InboxConnection', edges: Array<{ __typename?: 'InboxEdge', node: { __typename?: 'ActivityNode', referenceId: string, read: boolean } }> } };
+export type GetInboxHasUnreadQuery = { __typename?: 'Query', inbox: { __typename?: 'ActivitiesConnection', edges: Array<{ __typename?: 'ActivityEdge', node: { __typename?: 'ActivityNode', referenceId: string, read: boolean } }> } };
 
 export type GetInboxMessagesQueryVariables = Exact<{
   last?: InputMaybe<Scalars['Int']['input']>;
@@ -1404,7 +1475,7 @@ export type GetInboxMessagesQueryVariables = Exact<{
 }>;
 
 
-export type GetInboxMessagesQuery = { __typename?: 'Query', inbox: { __typename?: 'InboxConnection', pageInfo: { __typename?: 'PageInfo', hasPreviousPage: boolean, startCursor?: string | null, endCursor?: string | null }, edges: Array<{ __typename?: 'InboxEdge', cursor?: string | null, node: { __typename?: 'ActivityNode', projectName: string, activityId: string, activityType: string, activityData: string, referenceType: string, referenceId: string, body: string, createdAt: any, updatedAt: any, active: boolean, read: boolean, author?: { __typename?: 'UserNode', name: string, attrib: { __typename?: 'UserAttribType', fullName?: string | null } } | null, origin?: { __typename?: 'ActivityOriginNode', id: string, name: string, label?: string | null, type: string, subtype?: string | null } | null, parents: Array<{ __typename?: 'ActivityOriginNode', type: string, name: string, label?: string | null }> } }> } };
+export type GetInboxMessagesQuery = { __typename?: 'Query', inbox: { __typename?: 'ActivitiesConnection', pageInfo: { __typename?: 'PageInfo', hasPreviousPage: boolean, startCursor?: string | null, endCursor?: string | null }, edges: Array<{ __typename?: 'ActivityEdge', cursor?: string | null, node: { __typename?: 'ActivityNode', projectName: string, activityId: string, activityType: string, activityData: string, referenceType: string, referenceId: string, body: string, createdAt: any, updatedAt: any, active: boolean, read: boolean, author?: { __typename?: 'UserNode', name: string, attrib: { __typename?: 'UserAttribType', fullName?: string | null } } | null, origin?: { __typename?: 'ActivityOriginNode', id: string, name: string, label?: string | null, type: string, subtype?: string | null } | null, parents: Array<{ __typename?: 'ActivityOriginNode', type: string, name: string, label?: string | null }> } }> } };
 
 export type MessageFragmentFragment = { __typename?: 'ActivityNode', projectName: string, activityId: string, activityType: string, activityData: string, referenceType: string, referenceId: string, body: string, createdAt: any, updatedAt: any, active: boolean, read: boolean, author?: { __typename?: 'UserNode', name: string, attrib: { __typename?: 'UserAttribType', fullName?: string | null } } | null, origin?: { __typename?: 'ActivityOriginNode', id: string, name: string, label?: string | null, type: string, subtype?: string | null } | null, parents: Array<{ __typename?: 'ActivityOriginNode', type: string, name: string, label?: string | null }> };
 
@@ -1413,7 +1484,16 @@ export type GetInboxUnreadCountQueryVariables = Exact<{
 }>;
 
 
-export type GetInboxUnreadCountQuery = { __typename?: 'Query', inbox: { __typename?: 'InboxConnection', edges: Array<{ __typename?: 'InboxEdge', node: { __typename?: 'ActivityNode', referenceId: string, read: boolean } }> } };
+export type GetInboxUnreadCountQuery = { __typename?: 'Query', inbox: { __typename?: 'ActivitiesConnection', edges: Array<{ __typename?: 'ActivityEdge', node: { __typename?: 'ActivityNode', referenceId: string, read: boolean } }> } };
+
+export type GetListsQueryVariables = Exact<{
+  projectName: Scalars['String']['input'];
+  first: Scalars['Int']['input'];
+  after?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+
+export type GetListsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', entityLists: { __typename?: 'EntityListsConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, edges: Array<{ __typename?: 'EntityListEdge', node: { __typename?: 'EntityListNode', id: string, label: string, entityListType: string, active: boolean, createdAt: any, items: { __typename?: 'EntityListItemsConnection', edges: Array<{ __typename?: 'EntityListItemEdge', node: { __typename?: 'FolderNode', id: string } | { __typename?: 'ProductNode', id: string } | { __typename?: 'RepresentationNode', id: string } | { __typename?: 'TaskNode', id: string } | { __typename?: 'VersionNode', id: string } | { __typename?: 'WorkfileNode', id: string } }> } } }> } } };
 
 export type GetMarketInstallEventsQueryVariables = Exact<{ [key: string]: never; }>;
 

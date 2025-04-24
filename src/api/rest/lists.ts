@@ -1,11 +1,25 @@
 import { RestAPI as api } from '../../services/ayon'
 const injectedRtkApi = api.injectEndpoints({
   endpoints: (build) => ({
+    createEntityListItem: build.mutation<
+      CreateEntityListItemApiResponse,
+      CreateEntityListItemApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/lists/${queryArg.listId}/items`,
+        method: 'POST',
+        body: queryArg.entityListItemPostModel,
+        headers: {
+          'x-sender': queryArg['x-sender'],
+          'x-sender-type': queryArg['x-sender-type'],
+        },
+      }),
+    }),
     createEntityList: build.mutation<CreateEntityListApiResponse, CreateEntityListApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/lists`,
         method: 'POST',
-        body: queryArg.entityListModel,
+        body: queryArg.entityListPostModel,
         headers: {
           'x-sender': queryArg['x-sender'],
           'x-sender-type': queryArg['x-sender-type'],
@@ -16,24 +30,20 @@ const injectedRtkApi = api.injectEndpoints({
   overrideExisting: false,
 })
 export { injectedRtkApi as api }
+export type CreateEntityListItemApiResponse = /** status 201 Successful Response */ any
+export type CreateEntityListItemApiArg = {
+  listId: string
+  projectName: string
+  'x-sender'?: string
+  'x-sender-type'?: string
+  entityListItemPostModel: EntityListItemPostModel
+}
 export type CreateEntityListApiResponse = /** status 201 Successful Response */ EntityListSummary
 export type CreateEntityListApiArg = {
   projectName: string
   'x-sender'?: string
   'x-sender-type'?: string
-  entityListModel: EntityListModel
-}
-export type EntityListSummary = {
-  id: string
-  /** Type of the entity list */
-  entityListType?: string
-  label: string
-  folders?: number
-  tasks?: number
-  products?: number
-  versions?: number
-  representations?: number
-  workfiles?: number
+  entityListPostModel: EntityListPostModel
 }
 export type ValidationError = {
   loc: (string | number)[]
@@ -43,55 +53,52 @@ export type ValidationError = {
 export type HttpValidationError = {
   detail?: ValidationError[]
 }
-export type ListAccessLevel = 10 | 20 | 30 | 40
-export type EntityListItemModel = {
+export type EntityListItemPostModel = {
   id?: string
+  /** ID of the entity in the list */
+  entityId: string
   /** Position of the item in the list */
-  position?: number
+  position: number
   /** Label of the item */
   label?: string
   /** Overrides of the listed entity attributes */
-  attrib?: Record<string, any>
+  attrib?: object
   /** Additional data associated with the item */
-  data?: Record<string, any>
+  data?: object
   /** Tags associated with the item */
   tags?: string[]
-  /** Name of the user who created the item */
-  createdBy?: string
-  /** Name of the user who last updated the item */
-  updatedBy?: string
-  /** Timestamp of when the item was created */
-  createdAt?: string
-  /** Timestamp of when the item was last updated */
-  updatedAt?: string
-  /** Type of the list item entity */
-  entityType: 'folder' | 'product' | 'version' | 'representation' | 'task' | 'workfile'
-  /** ID of the list item entity */
-  entityId: string
 }
-export type EntityListConfig = {
-  /** Entity types that can be included in the list */
-  entityTypes?: ('folder' | 'product' | 'version' | 'representation' | 'task' | 'workfile')[]
-}
-export type EntityListModel = {
+export type EntityListSummary = {
   id?: string
-  /** Type of the entity list */
-  entityListType?: string
-  label?: string
-  tags?: string[]
-  /** Access control for the list.  be specified for individual users or teams. */
-  access?: {
+  /** Type of the list */
+  entityListType: string
+  /** Type of the entity that can be included in the list */
+  entityType: 'folder' | 'product' | 'version' | 'representation' | 'task' | 'workfile'
+  label: string
+  count?: number
+}
+export type ListAccessLevel = 10 | 20 | 30 | 40
+export type EntityListPostModel = {
+  id?: string
+  /** Type of the list */
+  entityListType: string
+  /** Type of the entity that can be included in the list */
+  entityType: 'folder' | 'product' | 'version' | 'representation' | 'task' | 'workfile'
+  label: string
+  /** Access control for the list. Can be specified for users or teams. */
+  access: {
     [key: string]: ListAccessLevel
   }
+  /** List attributes */
   attrib?: object
+  /** Additional data associated with the list */
   data?: object
   template?: object
+  /** List tags */
+  tags?: string[]
   /** Name of the user who created the list */
   owner?: string
-  items?: EntityListItemModel[]
-  config?: EntityListConfig
-  /** Name of the user who created the list */
-  createdBy?: string
-  /** Name of the user who updated the list */
-  updatedBy?: string
+  /** Whether the list is active or not */
+  active?: boolean
+  items?: EntityListItemPostModel[]
 }

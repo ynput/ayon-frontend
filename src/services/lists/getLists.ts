@@ -100,9 +100,9 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
         }
       },
       providesTags: (result) => [
-        { type: 'EntityList', id: 'LIST' },
+        { type: 'entityList', id: 'LIST' },
         ...(result?.pages.flatMap((page) => page.lists) || []).map((list) => ({
-          type: 'EntityList' as const,
+          type: 'entityList' as const,
           id: list.id,
         })),
       ],

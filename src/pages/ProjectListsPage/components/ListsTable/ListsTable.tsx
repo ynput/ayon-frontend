@@ -5,30 +5,36 @@ import { SimpleTableCellTemplate } from '@shared/SimpleTable/SimpleTableRowTempl
 import { FC } from 'react'
 import * as Styled from './ListsTable.styled'
 import ListsTableHeader from './ListsTableHeader'
+import NewListDialogContainer from '../NewListDialog/NewListDialogContainer'
 
 interface ListsTableProps {}
 
 const ListsTable: FC<ListsTableProps> = ({}) => {
-  const { ...states } = useListsContext()
-  const { listsTableData, isLoadingAll, isLoadingMore, handleFetchNextPage } = useListsDataContext()
+  const { expanded, setExpanded, rowSelection, setRowSelection } = useListsContext()
+  const { listsTableData, isLoadingAll, isLoadingMore, isError, handleFetchNextPage } =
+    useListsDataContext()
 
   return (
-    <SimpleTableProvider {...states}>
-      <Container>
-        <ListsTableHeader />
-        <SimpleTable
-          data={listsTableData}
-          isExpandable={false}
-          isLoading={isLoadingAll}
-          template={(props, row) => (
-            <SimpleTableCellTemplate
-              {...props}
-              endContent={<Styled.ListCount>{row.original.data.count}</Styled.ListCount>}
-            />
-          )}
-        />
-      </Container>
-    </SimpleTableProvider>
+    <>
+      <SimpleTableProvider {...{ expanded, setExpanded, rowSelection, setRowSelection }}>
+        <Container>
+          <ListsTableHeader />
+          <SimpleTable
+            data={listsTableData}
+            isExpandable={false}
+            isLoading={isLoadingAll}
+            error={isError ? 'Error loading lists' : undefined}
+            template={(props, row) => (
+              <SimpleTableCellTemplate
+                {...props}
+                endContent={<Styled.ListCount>{row.original.data.count}</Styled.ListCount>}
+              />
+            )}
+          />
+        </Container>
+      </SimpleTableProvider>
+      <NewListDialogContainer />
+    </>
   )
 }
 

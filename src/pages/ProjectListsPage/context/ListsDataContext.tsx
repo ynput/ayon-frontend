@@ -1,4 +1,4 @@
-import { createContext, useContext, ReactNode, useMemo } from 'react'
+import { createContext, useContext, ReactNode, useMemo, useState } from 'react'
 import { EntityListItem, useGetListsInfiniteInfiniteQuery } from '@queries/lists/getLists'
 import { useProjectDataContext } from '@pages/ProjectOverviewPage/context/ProjectDataContext'
 import { SimpleTableRow } from '@shared/SimpleTable'
@@ -9,6 +9,7 @@ interface ListsDataContextValue {
   handleFetchNextPage: () => void
   isLoadingAll: boolean
   isLoadingMore: boolean
+  isError?: boolean
 }
 
 const ListsDataContext = createContext<ListsDataContextValue | undefined>(undefined)
@@ -21,12 +22,16 @@ interface ListsDataProviderProps {
 export const ListsDataProvider = ({ children }: ListsDataProviderProps) => {
   const { projectName } = useProjectDataContext()
 
+  const [previousProjectName, setPreviousProjectName] = useState(projectName)
+
   const {
     data: listsInfiniteData,
+    isLoading,
     isFetching,
     isFetchingNextPage,
     fetchNextPage,
     hasNextPage,
+    isError,
   } = useGetListsInfiniteInfiniteQuery(
     {
       projectName,
@@ -35,6 +40,15 @@ export const ListsDataProvider = ({ children }: ListsDataProviderProps) => {
       initialPageParam: { cursor: '' },
     },
   )
+
+  // Detect when projectName changes to track fetching due to project change
+  const isFetchingNewProject = useMemo(() => {
+    const isProjectChanged = previousProjectName !== projectName
+    if (isProjectChanged && !isLoading) {
+      setPreviousProjectName(projectName)
+    }
+    return isFetching && isProjectChanged
+  }, [isFetching, isLoading, previousProjectName, projectName])
 
   const handleFetchNextPage = () => {
     if (hasNextPage) {
@@ -71,8 +85,9 @@ export const ListsDataProvider = ({ children }: ListsDataProviderProps) => {
         listsData,
         handleFetchNextPage,
         listsTableData,
-        isLoadingAll: isFetching,
+        isLoadingAll: isFetchingNewProject,
         isLoadingMore: isFetchingNextPage,
+        isError,
       }}
     >
       {children}
