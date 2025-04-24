@@ -1,6 +1,7 @@
 import clsx from 'clsx'
 import { $Any } from '@types'
-import UserImage from '@components/UserImage'
+import UserImage from '@shared/components/UserImage'
+
 import * as Styled from './ProjectUserAccess.styled'
 
 type Props = {

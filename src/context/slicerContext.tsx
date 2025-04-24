@@ -14,7 +14,7 @@ import { Assignees } from '@queries/user/getUsers'
 import { TableRow } from '@containers/Slicer/types'
 import SlicerDropdownFallback, { SlicerDropdownProps } from '@containers/Slicer/SlicerDropdown'
 import { DropdownRef } from '@ynput/ayon-react-components'
-import { SelectionData, SliceType } from '@shared/Slicer'
+import { SelectionData, SliceType } from '@shared/containers/Slicer'
 
 export type OnSliceTypeChange = (
   sliceType: SliceType,

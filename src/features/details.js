@@ -39,14 +39,6 @@ const initialExtra = {
   },
 }
 
-const initialTooltip = {
-  id: null,
-  type: '',
-  name: '',
-  label: '',
-  pos: {},
-}
-
 const scopes = ['dashboard', 'project', 'inbox', 'review', 'progress', 'overview']
 
 const detailsSlice = createSlice({
@@ -71,7 +63,6 @@ const detailsSlice = createSlice({
       }, {}),
     },
     pip: initialPip,
-    refTooltip: initialTooltip,
   },
   reducers: {
     updateDetailsPanelTab: (state, { payload }) => {
@@ -110,9 +101,6 @@ const detailsSlice = createSlice({
         // set highlighted activity
         state.slideOut.highlighted = [payload.activityId]
       }
-
-      // hide tooltip
-      state.refTooltip = initialTooltip
     },
     closeSlideOut: (state) => {
       for (const scope of scopes) {
@@ -126,14 +114,6 @@ const detailsSlice = createSlice({
     clearHighlights: (state, { payload: { statePath = 'pinned' } = {} }) => {
       const location = statePath
       state[location].highlighted = []
-    },
-    showRefTooltip: (state, { payload }) => {
-      // open tooltip
-      state.refTooltip = payload
-    },
-    hideRefTooltip: (state) => {
-      // hide tooltip
-      state.refTooltip = initialTooltip
     },
     toggleDetailsPanel: (state, { payload }) => {
       if (payload !== undefined) {
@@ -165,8 +145,6 @@ export const {
   closeSlideOut,
   highlightActivity,
   clearHighlights,
-  showRefTooltip,
-  hideRefTooltip,
   toggleDetailsPanel,
   selectEntities,
   openPip,

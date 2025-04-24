@@ -12,11 +12,15 @@ import { useSlicerContext } from '@context/slicerContext'
 import { isEmpty } from 'lodash'
 import useFilterBySlice from '@containers/TasksProgress/hooks/useFilterBySlice'
 import { Filter } from '@ynput/ayon-react-components'
-import type { FolderNodeMap, TaskNodeMap, TasksByFolderMap } from '@shared/ProjectTreeTable/utils'
-import { clientFilterToQueryFilter } from '@shared/ProjectTreeTable/utils'
+import type {
+  FolderNodeMap,
+  TaskNodeMap,
+  TasksByFolderMap,
+} from '@shared/containers/ProjectTreeTable/utils'
+import { clientFilterToQueryFilter } from '@shared/containers/ProjectTreeTable/utils'
 import { QueryTasksFoldersApiArg } from '@api/rest/folders'
 import { ProjectDataContextProps, useProjectDataContext } from './ProjectDataContext'
-import { LoadingTasks } from '@shared/ProjectTreeTable'
+import { LoadingTasks } from '@shared/containers/ProjectTreeTable'
 
 export interface ProjectOverviewContextProps {
   isInitialized: boolean

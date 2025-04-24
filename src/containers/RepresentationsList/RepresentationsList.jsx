@@ -7,7 +7,7 @@ import { Column } from 'primereact/column'
 
 import { setExpandedReps, setFocusedRepresentations, setUri } from '@state/context'
 import groupResult from '@helpers/groupResult'
-import useCreateContextMenu from '@shared/ContextMenu/useCreateContextMenu'
+import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import DetailsDialog from '../DetailsDialog'
 import versionsToRepresentations from './versionsToRepresentations'
 

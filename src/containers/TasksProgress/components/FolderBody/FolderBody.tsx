@@ -2,7 +2,7 @@ import { FC } from 'react'
 import * as Styled from './FolderBody.styled'
 import clsx from 'clsx'
 import { EntityCard } from '@ynput/ayon-react-components'
-import getEntityTypeIcon from '@helpers/getEntityTypeIcon'
+import { getEntityTypeIcon } from '@shared/util'
 import { Status } from '@api/rest/project'
 
 interface FolderBodyProps {

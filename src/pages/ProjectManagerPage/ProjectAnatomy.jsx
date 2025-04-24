@@ -8,7 +8,7 @@ import AnatomyEditor from '@containers/AnatomyEditor'
 import copyToClipboard from '@helpers/copyToClipboard'
 import { usePaste } from '@context/pasteContext'
 import useUserProjectPermissions, { PermissionLevel } from '@hooks/useUserProjectPermissions'
-import EmptyPlaceholder from '@shared/EmptyPlaceholder/EmptyPlaceholder'
+import EmptyPlaceholder from '@shared/components/EmptyPlaceholder'
 import { useSelector } from 'react-redux'
 
 const ProjectAnatomy = ({ projectName, projectList }) => {

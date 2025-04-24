@@ -2,8 +2,8 @@ import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import BundleStatus from './BundleStatus/BundleStatus'
 import { Button, Section, TablePanel } from '@ynput/ayon-react-components'
-import useCreateContextMenu from '@shared/ContextMenu/useCreateContextMenu'
-import { confirmDelete } from '@shared/helpers'
+import { useCreateContextMenu } from '@shared/containers/ContextMenu'
+import { confirmDelete } from '@shared/util'
 import clsx from 'clsx'
 
 const AddonsManagerTable = ({

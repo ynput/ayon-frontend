@@ -15,9 +15,9 @@ import { useGetProjectsInfoQuery } from '@queries/userDashboard/getUserDashboard
 // Components
 import { Button, Spacer } from '@ynput/ayon-react-components'
 import EnableNotifications from '@components/EnableNotifications'
-import EmptyPlaceholder from '@shared/EmptyPlaceholder/EmptyPlaceholder'
+import EmptyPlaceholder from '@shared/components/EmptyPlaceholder'
 // Hooks
-import useCreateContextMenu from '@shared/ContextMenu/useCreateContextMenu'
+import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import useGroupMessages from '../hooks/useGroupMessages'
 import useKeydown from '../hooks/useKeydown'
 import useUpdateInboxMessage from '../hooks/useUpdateInboxMessage'

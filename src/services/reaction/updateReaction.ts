@@ -1,49 +1,55 @@
 import { api } from '@api/rest/activities'
-import apiRest from '@api'
 import { ActivityNode } from '@api/graphql'
+import { getActivitiesGQLApi } from '@queries/activities/getActivities'
 
 // @ts-ignore
 const patchActivity = ({ activityId, userName, reaction }, { getState, dispatch }, action) => {
   const invalidatingTags = [{ type: 'activity', id: activityId }]
-  const entries = api.util.selectInvalidatedBy(getState(), invalidatingTags)
+  const entries = getActivitiesGQLApi.util.selectInvalidatedBy(getState(), invalidatingTags)
 
   return entries.map((cacheArgs) => {
     return dispatch(
       // @ts-ignore
-      apiRest.util.updateQueryData('getActivities', cacheArgs.originalArgs, (draft) => {
-        // @ts-ignore
-        const index = draft.activities.findIndex((a: ActivityNode) => a.activityId === activityId)
-        if (index === -1) {
-          return
-        }
+      getActivitiesGQLApi.util.updateQueryData(
+        'getActivitiesInfinite',
+        cacheArgs.originalArgs,
+        (draft) => {
+          console.log('patchActivity', action, activityId, userName, reaction)
 
-        if (action === 'create') {
-          // @ts-ignore
-          draft.activities[index].reactions = [
-          // @ts-ignore
-            ...(draft.activities[index].reactions || []),
-            {
-              reaction,
-              userName,
-              fullName: '',
-              timeStamp: '',
-            },
-          ]
-        }
+          // Handle paginated structure
+          for (const page of draft.pages) {
+            const index = page.activities.findIndex(
+              (a: ActivityNode) => a.activityId === activityId,
+            )
+            if (index === -1) continue
 
-        if (action === 'delete') {
-          // @ts-ignore
-          for (const idx in draft.activities[index].reactions) {
-            // @ts-ignore
-            const item = draft.activities[index].reactions[idx]
-            if (item.userName == userName && item.reaction == reaction) {
-              // @ts-ignore
-              draft.activities[index].reactions.splice(idx, 1)
-              break
+            if (action === 'create') {
+              page.activities[index].reactions = [
+                ...(page.activities[index].reactions || []),
+                {
+                  reaction,
+                  userName,
+                  fullName: '',
+                  timeStamp: '',
+                },
+              ]
             }
+
+            if (action === 'delete') {
+              for (const idx in page.activities[index].reactions) {
+                const item = page.activities[index].reactions[idx]
+                if (item.userName == userName && item.reaction == reaction) {
+                  page.activities[index].reactions.splice(idx, 1)
+                  break
+                }
+              }
+            }
+
+            // Found and updated the activity, no need to check other pages
+            return
           }
-        }
-      }),
+        },
+      ),
     )
   })
 }

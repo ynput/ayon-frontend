@@ -5,6 +5,12 @@ schema:
         Authorization: Bearer ${TOKEN}
 documents: '../src/**/*.graphql'
 generates:
+  # Generate types only in a separate file
+  ../shared/src/api/graphql.ts:
+    plugins:
+      - typescript
+      - typescript-operations
+  # Generate types + RTK Query hooks
   ../src/api/graphql.ts:
     plugins:
       - typescript

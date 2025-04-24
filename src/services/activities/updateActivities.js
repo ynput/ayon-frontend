@@ -3,16 +3,34 @@ import { toast } from 'react-toastify'
 import { filterActivityTypes } from '@state/dashboard'
 
 const updateCache = (activitiesDraft, patch = {}, isDelete) => {
-  // find the index of the activity to update
-  const index = activitiesDraft.findIndex((a) => a.activityId === patch.activityId)
-  if (index === -1) {
-    // add to the end of the list
-    activitiesDraft.unshift(patch)
-  } else if (isDelete) {
-    activitiesDraft.splice(index, 1)
+  // Handle paginated structure
+  if (isDelete) {
+    // Remove from any page where it exists
+    for (const page of activitiesDraft.pages) {
+      const index = page.activities.findIndex((a) => a.activityId === patch.activityId)
+      if (index !== -1) {
+        page.activities.splice(index, 1)
+        return
+      }
+    }
   } else {
-    // update the activity
-    activitiesDraft[index] = { ...activitiesDraft[index], ...patch }
+    // Try to update existing activity
+    let activityFound = false
+
+    for (const page of activitiesDraft.pages) {
+      const index = page.activities.findIndex((a) => a.activityId === patch.activityId)
+      if (index !== -1) {
+        // Update the activity
+        page.activities[index] = { ...page.activities[index], ...patch }
+        activityFound = true
+        break
+      }
+    }
+
+    // If activity doesn't exist and this is not a delete operation, add to first page
+    if (!activityFound && activitiesDraft.pages.length > 0) {
+      activitiesDraft.pages[0].activities.unshift(patch)
+    }
   }
 }
 
@@ -35,10 +53,8 @@ const patchActivities = async (
   // now patch all the caches with the update
   const patches = entries.map(({ originalArgs }) =>
     dispatch(
-      api.util.updateQueryData(
-        'getActivities',
-        { projectName, entityIds: originalArgs.entityIds, activityTypes, filter },
-        (draft) => updateCache(draft.activities, patch, method === 'delete'),
+      api.util.updateQueryData('getActivitiesInfinite', originalArgs, (draft) =>
+        updateCache(draft, patch, method === 'delete'),
       ),
     ),
   )
@@ -93,6 +109,9 @@ const updateActivities = api.injectEndpoints({
         method: 'PATCH',
         body: data,
       }),
+      async onQueryStarted(args, api) {
+        patchActivities(args, api)
+      },
       // invalidate other filters that might be affected by this new activity (comments, checklists, etc)
       invalidatesTags: (result, error, { entityId, filter }) => getTags({ entityId, filter }),
     }),
