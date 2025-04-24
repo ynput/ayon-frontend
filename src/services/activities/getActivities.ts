@@ -80,7 +80,7 @@ const enhanceActivitiesApi = api.enhanceEndpoints<TagTypes, UpdatedDefinitions>(
   },
 })
 
-const ACTIVITIES_INFINITE_QUERY_COUNT = 10
+const ACTIVITIES_INFINITE_QUERY_COUNT = 30
 
 export const getActivitiesGQLApi = enhanceActivitiesApi.injectEndpoints({
   endpoints: (build) => ({
