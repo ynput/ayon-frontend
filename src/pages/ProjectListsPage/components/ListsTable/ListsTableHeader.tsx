@@ -1,4 +1,5 @@
 import { useListsContext } from '@pages/ProjectListsPage/context/ListsContext'
+import { useListsDataContext } from '@pages/ProjectListsPage/context/ListsDataContext'
 import { Header, HeaderButton } from '@shared/SimpleTable'
 import { theme } from '@ynput/ayon-react-components'
 import { FC } from 'react'
@@ -20,14 +21,32 @@ const StyledButtons = styled.div`
 interface ListsTableHeaderProps {}
 
 const ListsTableHeader: FC<ListsTableHeaderProps> = ({}) => {
-  const { openNewList } = useListsContext()
+  const { listsData } = useListsDataContext()
+  const { openNewList, deleteList, rowSelection } = useListsContext()
+
+  const handleDelete = () => {
+    // get all selected list items
+    const selectedListItems = Object.keys(rowSelection)
+      .map((key) => {
+        const listItem = listsData.find((item) => item.id === key)
+        return listItem ? { id: listItem.id, label: listItem.label } : null
+      })
+      .filter((item) => item !== null)
+    // delete selected list items
+    deleteList(selectedListItems)
+  }
 
   return (
     <Header>
       <StyledTitle>Lists</StyledTitle>
 
       <StyledButtons>
-        <HeaderButton icon={'delete'} />
+        <HeaderButton
+          icon={'delete'}
+          disabled={Object.keys(rowSelection).length === 0}
+          onClick={handleDelete}
+          data-tooltip="Delete selected lists"
+        />
         <HeaderButton
           icon={'add'}
           data-tooltip={'Create new list'}

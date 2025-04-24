@@ -53,7 +53,7 @@ const outputFiles = {
   // services: ['listServices', 'listHosts', 'spawnService', 'patchService', 'deleteService'],
   // operations: ['operations'],
   // permissions: ['getCurrentUserPermissions', 'getCurrentUserProjectPermissions'],
-  lists: ['createEntityList'],
+  lists: ['createEntityList', 'deleteEntityList'],
 }
 
 const buildOutputFiles = (files: { [name: string]: string[] }) =>

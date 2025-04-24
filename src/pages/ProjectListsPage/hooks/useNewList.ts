@@ -7,6 +7,7 @@ export interface NewListForm extends EntityListPostModel {}
 
 export interface UseNewListProps {
   onCreateNewList: (list: EntityListPostModel) => Promise<EntityListSummary>
+  onCreated?: (list: EntityListSummary) => void
 }
 
 export interface UseNewListReturn {
@@ -17,7 +18,7 @@ export interface UseNewListReturn {
   createNewList: () => Promise<EntityListSummary>
 }
 
-const useNewList = ({ onCreateNewList }: UseNewListProps): UseNewListReturn => {
+const useNewList = ({ onCreateNewList, onCreated }: UseNewListProps): UseNewListReturn => {
   const [newList, setNewList] = useState<V['newList']>(null)
   const openNewList: V['openNewList'] = (init) => {
     // generate default name based on date and time
@@ -41,6 +42,7 @@ const useNewList = ({ onCreateNewList }: UseNewListProps): UseNewListReturn => {
       // close the dialog
       closeNewList()
 
+      onCreated?.(res)
       return res
     } catch (error: any) {
       toast.error(`Failed to create list: ${error.data?.detail}`)

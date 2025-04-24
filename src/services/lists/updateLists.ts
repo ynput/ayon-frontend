@@ -5,7 +5,10 @@ const updateListsEnhancedApi = api.enhanceEndpoints({
     createEntityList: {
       invalidatesTags: [{ type: 'entityList', id: 'LIST' }],
     },
+    deleteEntityList: {
+      invalidatesTags: [{ type: 'entityList', id: 'LIST' }],
+    },
   },
 })
 
-export const { useCreateEntityListMutation } = updateListsEnhancedApi
+export const { useCreateEntityListMutation, useDeleteEntityListMutation } = updateListsEnhancedApi

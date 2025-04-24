@@ -55,8 +55,6 @@ export const NewListDialog = forwardRef<HTMLDivElement, NewListDialogProps>(
       })
     }
 
-    console.log(form.entityType)
-
     return (
       <Dialog
         {...props}

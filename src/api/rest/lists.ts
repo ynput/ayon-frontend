@@ -15,6 +15,19 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    deleteEntityListItem: build.mutation<
+      DeleteEntityListItemApiResponse,
+      DeleteEntityListItemApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/lists/${queryArg.listId}/items/${queryArg.listItemId}`,
+        method: 'DELETE',
+        headers: {
+          'x-sender': queryArg['x-sender'],
+          'x-sender-type': queryArg['x-sender-type'],
+        },
+      }),
+    }),
     createEntityList: build.mutation<CreateEntityListApiResponse, CreateEntityListApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/lists`,
@@ -24,6 +37,12 @@ const injectedRtkApi = api.injectEndpoints({
           'x-sender': queryArg['x-sender'],
           'x-sender-type': queryArg['x-sender-type'],
         },
+      }),
+    }),
+    deleteEntityList: build.mutation<DeleteEntityListApiResponse, DeleteEntityListApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/lists/${queryArg.listId}`,
+        method: 'DELETE',
       }),
     }),
   }),
@@ -38,12 +57,25 @@ export type CreateEntityListItemApiArg = {
   'x-sender-type'?: string
   entityListItemPostModel: EntityListItemPostModel
 }
+export type DeleteEntityListItemApiResponse = /** status 200 Successful Response */ any
+export type DeleteEntityListItemApiArg = {
+  listId: string
+  listItemId: string
+  projectName: string
+  'x-sender'?: string
+  'x-sender-type'?: string
+}
 export type CreateEntityListApiResponse = /** status 201 Successful Response */ EntityListSummary
 export type CreateEntityListApiArg = {
   projectName: string
   'x-sender'?: string
   'x-sender-type'?: string
   entityListPostModel: EntityListPostModel
+}
+export type DeleteEntityListApiResponse = /** status 200 Successful Response */ any
+export type DeleteEntityListApiArg = {
+  listId: string
+  projectName: string
 }
 export type ValidationError = {
   loc: (string | number)[]
