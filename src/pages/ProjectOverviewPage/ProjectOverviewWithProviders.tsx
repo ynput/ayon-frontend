@@ -5,7 +5,8 @@ import {
   SelectionProvider,
   SelectedRowsProvider,
   ColumnSettingsProvider,
-} from '@shared/ProjectTreeTable'
+  CellEditingProvider,
+} from '@shared/containers/ProjectTreeTable'
 import { NewEntityProvider } from '@context/NewEntityContext'
 import { SettingsPanelProvider } from './context/SettingsPanelContext'
 import { useAppSelector } from '@state/store'
@@ -18,7 +19,7 @@ import { useUpdateOverviewEntitiesMutation } from '@queries/overview/updateOverv
 import {
   ProjectTableQueriesProvider,
   ProjectTableQueriesProviderProps,
-} from '@shared/ProjectTreeTable/context/ProjectTableQueriesContext'
+} from '@shared/containers/ProjectTreeTable/context/ProjectTableQueriesContext'
 import { useLazyGetTasksByParentQuery } from '@queries/overview/getOverview'
 import { useUsersPageConfig } from './hooks/useUserPageConfig'
 
@@ -75,7 +76,9 @@ const ProjectOverviewWithTableProviders: FC = () => {
           <SelectionProvider>
             <SelectedRowsProvider>
               <ColumnSettingsProvider config={pageConfig} onChange={updatePageConfig}>
-                <ProjectOverviewPage />
+                <CellEditingProvider>
+                  <ProjectOverviewPage />
+                </CellEditingProvider>
               </ColumnSettingsProvider>
             </SelectedRowsProvider>
           </SelectionProvider>

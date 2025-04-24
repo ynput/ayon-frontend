@@ -6,9 +6,49 @@
   "module": "dist/index.es.js",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
       "import": "./dist/index.es.js",
-      "require": "./dist/index.cjs.js"
+      "require": "./dist/index.cjs.js",
+      "types": "./dist/types/index.d.ts"
+    },
+    "./components": {
+      "import": "./dist/components.es.js",
+      "require": "./dist/components.cjs.js",
+      "types": "./dist/types/components/index.d.ts"
+    },
+    "./api": {
+      "import": "./dist/api.es.js",
+      "require": "./dist/api.cjs.js",
+      "types": "./dist/types/api/index.d.ts"
+    },
+    "./hooks": {
+      "import": "./dist/hooks.es.js",
+      "require": "./dist/hooks.cjs.js",
+      "types": "./dist/types/hooks/index.d.ts"
+    },
+    "./ContextMenu": {
+      "import": "./dist/ContextMenu.es.js",
+      "require": "./dist/ContextMenu.cjs.js",
+      "types": "./dist/types/containers/ContextMenu/index.d.ts"
+    },
+    "./Feed": {
+      "import": "./dist/Feed.es.js",
+      "require": "./dist/Feed.cjs.js",
+      "types": "./dist/types/containers/Feed/index.d.ts"
+    },
+    "./ProjectTreeTable": {
+      "import": "./dist/ProjectTreeTable.es.js",
+      "require": "./dist/ProjectTreeTable.cjs.js",
+      "types": "./dist/types/containers/ProjectTreeTable/index.d.ts"
+    },
+    "./Slicer": {
+      "import": "./dist/Slicer.es.js",
+      "require": "./dist/Slicer.cjs.js",
+      "types": "./dist/types/containers/Slicer/index.d.ts"
+    },
+    "./util": {
+      "import": "./dist/util.es.js",
+      "require": "./dist/util.cjs.js",
+      "types": "./dist/types/util/index.d.ts"
     }
   },
   "scripts": {
@@ -37,6 +77,9 @@
     "primeicons": "^7.0.0",
     "primereact": "9.6.2",
     "primereact-context": "npm:primereact@9.2.3",
-    "react-toastify": "^11.0.5"
+    "quill-magic-url": "^4.2.0",
+    "react-quill-ayon": "^2.0.2",
+    "react-toastify": "^11.0.5",
+    "turndown": "^7.2.0"
   }
 }

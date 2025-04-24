@@ -13,7 +13,7 @@ import { ProjectModel } from '@api/rest/project'
 import { Assignees } from '@queries/user/getUsers'
 import SlicerDropdownFallback, { SlicerDropdownProps } from '@containers/Slicer/SlicerDropdown'
 import { DropdownRef } from '@ynput/ayon-react-components'
-import { SelectionData, SliceDataItem, SliceType } from '@shared/Slicer'
+import { SelectionData, SliceDataItem, SliceType } from '@shared/containers/Slicer'
 import { SimpleTableRow } from '@shared/SimpleTable'
 
 export type OnSliceTypeChange = (

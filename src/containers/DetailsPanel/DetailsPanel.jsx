@@ -2,7 +2,6 @@ import { Button, Panel } from '@ynput/ayon-react-components'
 import React, { useEffect, useMemo } from 'react'
 import DetailsPanelHeader from './DetailsPanelHeader/DetailsPanelHeader'
 import { useAppDispatch, useAppSelector } from '@state/store'
-import Feed from '@containers/Feed/Feed'
 import { useGetEntitiesDetailsPanelQuery } from '@queries/entity/getEntityPanel'
 import DetailsPanelAttributes from '@pages/UserDashboardPage/UserDashboardTasks/DetailsPanelAttributes/DetailsPanelAttributes'
 import { getEntityDetailsData } from '@queries/userDashboard/userDashboardHelpers'
@@ -17,7 +16,7 @@ import { isEmpty } from 'lodash'
 import useGetEntityPath from './hooks/useGetEntityPath'
 import { usePiPWindow } from '@context/pip/PiPProvider'
 import getAllProjectStatuses from './helpers/getAllProjectsStatuses'
-import { FeedProvider } from '@context/FeedContext'
+import FeedWrapper from './FeedWrapper'
 
 export const entitiesWithoutFeed = ['product', 'representation']
 
@@ -207,20 +206,17 @@ const DetailsPanel = ({
           statePath={statePath}
         />
         {selectedTab === 'feed' && !isError && (
-          <FeedProvider>
-            <Feed
-              entityType={entityType}
-              entities={isFetchingEntitiesDetails ? entitiesToQuery : entityDetailsData}
-              activeUsers={activeProjectUsers}
-              selectedTasksProjects={selectedTasksProjects}
-              projectInfo={firstProjectInfo}
-              projectName={firstProject}
-              isMultiProjects={projectNames.length > 1}
-              scope={scope}
-              statePath={statePath}
-              statuses={allStatuses}
-            />
-          </FeedProvider>
+          <FeedWrapper
+            entityType={entityType}
+            entities={isFetchingEntitiesDetails ? entitiesToQuery : entityDetailsData}
+            activeUsers={activeProjectUsers}
+            projectInfo={firstProjectInfo}
+            projectName={firstProject}
+            isMultiProjects={projectNames.length > 1}
+            scope={scope}
+            statePath={statePath}
+            statuses={allStatuses}
+          />
         )}
         {selectedTab === 'files' && (
           <DetailsPanelFiles

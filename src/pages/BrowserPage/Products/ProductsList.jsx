@@ -3,7 +3,7 @@ import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 import { useDispatch, useSelector } from 'react-redux'
 import { setExpandedProducts } from '@state/context'
-import useTableKeyboardNavigation from '@containers/Feed/hooks/useTableKeyboardNavigation'
+import { useTableKeyboardNavigation } from '@shared/containers/Feed'
 import clsx from 'clsx'
 import useTableLoadingData from '@hooks/useTableLoadingData'
 

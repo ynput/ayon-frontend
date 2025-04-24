@@ -112,7 +112,6 @@ const Bundles = () => {
     }
 
     // delete
-    searchParams.delete('bundle')
     searchParams.delete('duplicate')
     setSearchParams(searchParams)
   }, [searchParams, isLoading, bundleList])

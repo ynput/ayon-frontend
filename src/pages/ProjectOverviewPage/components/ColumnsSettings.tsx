@@ -3,7 +3,7 @@ import { FC, useMemo, useState } from 'react'
 import styled from 'styled-components'
 
 // Context and Components imports
-import { useColumnSettings } from '@shared/ProjectTreeTable/context/ColumnSettingsContext'
+import { useColumnSettings } from '@shared/containers/ProjectTreeTable/context/ColumnSettingsContext'
 import ColumnItem, { ColumnItemData } from './ColumnItem'
 import SortableColumnItem from './SortableColumnItem'
 

@@ -1,8 +1,8 @@
 // filters the tasks and folder rows by the slice type and slice value
 
 import { useSlicerContext } from '@context/SlicerContext'
-import { FilterBySliceData } from '@shared/Slicer'
-import { createFilterFromSlicer } from '@shared/Slicer/createFilterFromSlicer'
+import { FilterBySliceData } from '@shared/containers/Slicer'
+import { createFilterFromSlicer } from '@shared/containers/Slicer'
 
 const useFilterBySlice = (): FilterBySliceData => {
   const { sliceType, rowSelectionData } = useSlicerContext()

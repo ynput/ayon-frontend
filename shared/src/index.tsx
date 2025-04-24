@@ -1,7 +1,5 @@
-export * from './ProjectTreeTable'
-export * from './hooks'
-export * from './helpers'
-export * from './EmptyPlaceholder'
-export * from './ContextMenu'
-export * from './Slicer'
-export * from './SimpleTable'
+// Only expose the main components
+
+// components
+import { EmptyPlaceholder, ThumbnailSimple, UserImage } from './components'
+export { EmptyPlaceholder, ThumbnailSimple, UserImage }

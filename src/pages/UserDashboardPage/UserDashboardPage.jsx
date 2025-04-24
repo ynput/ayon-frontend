@@ -12,7 +12,7 @@ import UserDashboardNoProjects from './UserDashboardNoProjects/UserDashboardNoPr
 import ProjectDashboard from '../ProjectDashboard'
 import NewProjectDialog from '../ProjectManagerPage/NewProjectDialog'
 import { useDeleteProjectMutation, useUpdateProjectMutation } from '@queries/project/updateProject'
-import { confirmDelete } from '@shared/helpers'
+import { confirmDelete } from '@shared/util'
 import { useGetDashboardAddonsQuery } from '@queries/addons/getAddons'
 import DashboardAddon from '@pages/ProjectDashboard/DashboardAddon'
 

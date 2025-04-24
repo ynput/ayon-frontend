@@ -1,13 +1,13 @@
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { TablePanel, Section } from '@ynput/ayon-react-components'
-import UserImage from '@components/UserImage'
+import UserImage from '@shared/components/UserImage'
 
 import './users.scss'
 
 import { useMemo } from 'react'
 import styled from 'styled-components'
-import useCreateContextMenu from '@shared/ContextMenu/useCreateContextMenu'
+import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import clsx from 'clsx'
 import useTableLoadingData from '@hooks/useTableLoadingData'
 import { useGetUserPoolsQuery } from '@queries/auth/getAuth'

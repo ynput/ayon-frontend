@@ -7,7 +7,7 @@ import UserAttribForm from './UserAttribForm'
 import UserAccessForm from './UserAccessForm'
 
 import styled from 'styled-components'
-import useUserMutations from '@containers/Feed/hooks/useUserMutations'
+import useUserMutations from '@pages/SettingsPage/UsersSettings/useUserMutations'
 import callbackOnKeyDown from '@helpers/callbackOnKeyDown'
 
 const DividerSmallStyled = styled(Divider)`

@@ -22,7 +22,7 @@ import { toast } from 'react-toastify'
 import { Button, Filter, Section, ShortcutTag, Spacer, Toolbar } from '@ynput/ayon-react-components'
 import Shortcuts from '@containers/Shortcuts'
 import { openViewer } from '@state/viewer'
-import EmptyPlaceholder from '@shared/EmptyPlaceholder/EmptyPlaceholder'
+import EmptyPlaceholder from '@shared/components/EmptyPlaceholder'
 import './styles.scss'
 import { AttributeEnumItem } from '@api/rest/attributes'
 import SearchFilterWrapper from '@components/SearchFilter/SearchFilterWrapper'
@@ -38,7 +38,7 @@ import { isEmpty } from 'lodash'
 import { RowSelectionState } from '@tanstack/react-table'
 import { useFiltersWithHierarchy } from '@components/SearchFilter/hooks'
 import useUserFilters from '@hooks/useUserFilters'
-import { SelectionData, SliceType } from '@shared/Slicer'
+import { SelectionData, SliceType } from '@shared/containers/Slicer'
 
 // what to search by
 const searchFilterTypes: FilterFieldType[] = [

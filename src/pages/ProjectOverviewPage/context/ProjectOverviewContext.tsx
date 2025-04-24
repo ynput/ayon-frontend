@@ -12,11 +12,15 @@ import { useSlicerContext } from '@context/SlicerContext'
 import { isEmpty } from 'lodash'
 import useFilterBySlice from '@containers/TasksProgress/hooks/useFilterBySlice'
 import { Filter } from '@ynput/ayon-react-components'
-import type { FolderNodeMap, TaskNodeMap, TasksByFolderMap } from '@shared/ProjectTreeTable/utils'
-import { clientFilterToQueryFilter } from '@shared/ProjectTreeTable/utils'
+import type {
+  FolderNodeMap,
+  TaskNodeMap,
+  TasksByFolderMap,
+} from '@shared/containers/ProjectTreeTable/utils'
+import { clientFilterToQueryFilter } from '@shared/containers/ProjectTreeTable/utils'
 import { QueryTasksFoldersApiArg } from '@api/rest/folders'
 import { ProjectDataContextProps, useProjectDataContext } from './ProjectDataContext'
-import { LoadingTasks } from '@shared/ProjectTreeTable'
+import { LoadingTasks } from '@shared/containers/ProjectTreeTable'
 
 export interface ProjectOverviewContextProps {
   isInitialized: boolean
@@ -81,9 +85,11 @@ export const ProjectOverviewProvider = ({ children }: ProjectOverviewProviderPro
     setColumnSorting,
   } = useProjectDataContext()
 
-  const scope = `overview-${projectName}`
+  const getLocalKey = (page: string, key: string) => `${page}-${key}-${projectName}`
 
-  const [expanded, setExpanded] = useLocalStorage<ExpandedState>(`expanded-${scope}`, {})
+  const page = 'overview'
+
+  const [expanded, setExpanded] = useLocalStorage<ExpandedState>(getLocalKey(page, 'expanded'), {})
   const updateExpanded: OnChangeFn<ExpandedState> = (expandedUpdater) => {
     setExpanded(functionalUpdate(expandedUpdater, expanded))
   }
@@ -96,9 +102,9 @@ export const ProjectOverviewProvider = ({ children }: ProjectOverviewProviderPro
     })
   }
 
-  const [filters, setFilters] = useLocalStorage<Filter[]>(`overview-filters-${projectName}`, [])
+  const [filters, setFilters] = useLocalStorage<Filter[]>(getLocalKey(page, 'filters'), [])
   const [showHierarchy, updateShowHierarchy] = useLocalStorage<boolean>(
-    `overview-show-hierarchy-${projectName}`,
+    getLocalKey(page, 'showHierarchy'),
     true,
   )
 
