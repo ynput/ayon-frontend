@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux'
 import styled from 'styled-components'
 import { useGetProjectDashboardActivityQuery } from '@queries/getProjectDashboard'
 import { EntityCard } from '@ynput/ayon-react-components'
-import productTypes from '@shared/productTypes'
+import { productTypes } from '@shared/util'
 
 const GridStyled = styled.div`
   /* 1 row, 3 columns */

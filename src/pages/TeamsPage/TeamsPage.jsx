@@ -22,7 +22,7 @@ import CreateNewTeam from './CreateNewTeam/CreateNewTeam'
 import styled from 'styled-components'
 import useSearchFilter from '@hooks/useSearchFilter'
 import { useSearchParams } from 'react-router-dom'
-import { confirmDelete } from '@shared/helpers'
+import { confirmDelete } from '@shared/util'
 
 const SectionStyled = styled(Section)`
   align-items: start;

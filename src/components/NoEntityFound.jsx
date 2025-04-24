@@ -1,7 +1,7 @@
 import React from 'react'
 import styled from 'styled-components'
 import { Icon } from '@ynput/ayon-react-components'
-import { getEntityTypeIcon } from '@shared/helpers'
+import { getEntityTypeIcon } from '@shared/util'
 
 const StyledNoTasks = styled.div`
   position: absolute;

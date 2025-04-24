@@ -1,6 +1,5 @@
-import ActivityReferenceTooltip from '@shared/Feed/components/ActivityReferenceTooltip/ActivityReferenceTooltip'
-import Feed from '@shared/Feed/Feed'
-import { FeedContextProps, FeedProvider } from '@shared/Feed'
+import Feed, { ActivityReferenceTooltip, FeedProvider } from '@shared/containers/Feed'
+import type { FeedContextProps, EditingState, RefTooltip } from '@shared/containers/Feed'
 import {
   useCreateEntityActivityMutation,
   useDeleteActivityMutation,
@@ -20,7 +19,6 @@ import {
   useCreateReactionToActivityMutation,
   useDeleteReactionToActivityMutation,
 } from '@queries/reaction/updateReaction'
-import { EditingState, RefTooltip } from '@shared/Feed/context/FeedContext'
 import { useGetEntityTooltipQuery } from '@queries/activities/getActivities'
 import { SuggestRequest } from '@api/rest/activities'
 

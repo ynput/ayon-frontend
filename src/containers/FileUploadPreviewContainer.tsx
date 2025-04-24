@@ -4,7 +4,7 @@ import {
   onCommentImageIndexChange,
 } from '@state/context'
 
-import FileUploadPreview from '@shared/Feed/components/FileUploadPreview'
+import { FileUploadPreview } from '@shared/containers/Feed'
 import { useAppDispatch, useAppSelector } from '@state/store'
 
 const FileUploadPreviewContainer = () => {

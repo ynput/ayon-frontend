@@ -4,7 +4,7 @@ import { classNames } from 'primereact/utils'
 import { PathSegment } from './EntityPath'
 import { useDispatch } from 'react-redux'
 import { openSlideOut } from '@state/details'
-import useCreateContextMenuMenu from '@shared/ContextMenu/useCreateContextMenu'
+import useCreateContextMenu from '@shared/containers/ContextMenu'
 import copyToClipboard from '@helpers/copyToClipboard'
 
 interface SegmentProviderProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -43,7 +43,7 @@ const SegmentProvider = forwardRef<HTMLDivElement, SegmentProviderProps>(
       },
     ]
 
-    const [contextMenuShow] = useCreateContextMenuMenu()
+    const [contextMenuShow] = useCreateContextMenu()
 
     const handleOnContext = (e: MouseEvent<HTMLDivElement>) => {
       if (!segment) return

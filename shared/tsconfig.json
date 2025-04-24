@@ -12,9 +12,7 @@
     "isolatedModules": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"],
-      "@api/*": ["src/api/*"],
-      "@graphql": ["src/api/graphql.ts"]
+      "@shared/*": ["src/*"]
     }
   },
   "include": ["src"],

@@ -6,7 +6,7 @@ import {
   SelectedRowsProvider,
   ColumnSettingsProvider,
   CellEditingProvider,
-} from '@shared/ProjectTreeTable'
+} from '@shared/containers/ProjectTreeTable'
 import { NewEntityProvider } from '@context/NewEntityContext'
 import { SettingsPanelProvider } from './context/SettingsPanelContext'
 import { useAppSelector } from '@state/store'
@@ -19,7 +19,7 @@ import { useUpdateOverviewEntitiesMutation } from '@queries/overview/updateOverv
 import {
   ProjectTableQueriesProvider,
   ProjectTableQueriesProviderProps,
-} from '@shared/ProjectTreeTable/context/ProjectTableQueriesContext'
+} from '@shared/containers/ProjectTreeTable/context/ProjectTableQueriesContext'
 import { useLazyGetTasksByParentQuery } from '@queries/overview/getOverview'
 import { useUsersPageConfig } from './hooks/useUserPageConfig'
 

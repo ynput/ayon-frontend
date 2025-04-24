@@ -10,12 +10,10 @@ import { CellWithIcon } from '@components/icons'
 import { setFocusedTasks, setPairing, setUri, updateBrowserFilters } from '@state/context'
 import { toast } from 'react-toastify'
 import { useGetTasksQuery } from '@queries/getTasks'
-import useCreateContextMenu from '@shared/ContextMenu/useCreateContextMenu'
+import useCreateContextMenu from '@shared/containers/ContextMenu'
 import NoEntityFound from '@components/NoEntityFound'
 import { openViewer } from '@/features/viewer'
-import useTableKeyboardNavigation, {
-  extractIdFromClassList,
-} from '../../shared/src/Feed/hooks/useTableKeyboardNavigation'
+import { useTableKeyboardNavigation, extractIdFromClassList } from '@shared/containers/Feed'
 import clsx from 'clsx'
 import useTableLoadingData from '@hooks/useTableLoadingData'
 

@@ -1,6 +1,6 @@
 import clsx from 'clsx'
 import { $Any } from '@types'
-import UserImage from '@shared/UserImage'
+import UserImage from '@shared/components/UserImage'
 
 import * as Styled from './ProjectUserAccess.styled'
 

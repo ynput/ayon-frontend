@@ -2,6 +2,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 import dts from 'vite-plugin-dts'
+import { resolve } from 'path'
 
 export default defineConfig({
   plugins: [
@@ -12,14 +13,23 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, 'src'), // Alias for src directory
-      '@api': path.resolve(__dirname, 'src/api'),
-      '@graphql': path.resolve(__dirname, 'src/api/graphql.ts'),
+      '@shared': path.resolve(__dirname, 'src'), // Alias for src directory
     },
   },
   build: {
     lib: {
-      entry: path.resolve(__dirname, 'src/index.tsx'), // Entry point of your library
+      entry: {
+        index: resolve(__dirname, 'src/index.js'),
+        api: resolve(__dirname, 'src/api/index.js'),
+        components: resolve(__dirname, 'src/components/index.js'),
+        util: resolve(__dirname, 'src/util/index.js'),
+        hooks: resolve(__dirname, 'src/hooks/index.js'),
+        // containers
+        ContextMenu: resolve(__dirname, 'src/containers/ContextMenu/index.js'),
+        Feed: resolve(__dirname, 'src/containers/Feed/index.js'),
+        ProjectTreeTable: resolve(__dirname, 'src/containers/ProjectTreeTable/index.js'),
+        Slicer: resolve(__dirname, 'src/containers/Slicer/index.js'),
+      },
       name: 'AyonFrontendShared', // The name of your library (used for UMD and iife formats)
       formats: ['es', 'cjs'], // Output formats (es = ESM, cjs = CommonJS)
       fileName: (format) => `index.${format}.js`, // Output file name pattern

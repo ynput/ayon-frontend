@@ -9,12 +9,10 @@ import { CellWithIcon } from '@components/icons'
 import EntityDetail from './DetailsDialog'
 import { setFocusedFolders, setUri, setExpandedFolders, setSelectedVersions } from '@state/context'
 import { useGetFolderHierarchyQuery } from '@queries/getHierarchy'
-import useCreateContextMenu from '@shared/ContextMenu/useCreateContextMenu'
+import useCreateContextMenu from '@shared/containers/ContextMenu'
 import HierarchyExpandFolders from './HierarchyExpandFolders'
 import { openViewer } from '@/features/viewer'
-import useTableKeyboardNavigation, {
-  extractIdFromClassList,
-} from '../../shared/src/Feed/hooks/useTableKeyboardNavigation'
+import { useTableKeyboardNavigation, extractIdFromClassList } from '@shared/containers/Feed'
 import clsx from 'clsx'
 import useTableLoadingData from '@hooks/useTableLoadingData'
 

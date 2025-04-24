@@ -11,7 +11,7 @@ import ReviewablesSelector from '@components/ReviewablesSelector'
 import { useGetViewerReviewablesQuery } from '@queries/review/getReview'
 import { GetReviewablesResponse } from '@queries/review/types'
 import { updateDetailsPanelTab } from '@state/details'
-import productTypes from '@shared/productTypes'
+import { productTypes } from '@shared/util'
 import { toggleFullscreen, toggleUpload, updateSelection, updateProduct } from '@state/viewer'
 
 import { getGroupedReviewables } from '../ReviewablesList/getGroupedReviewables'

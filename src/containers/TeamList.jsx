@@ -4,7 +4,7 @@ import { TablePanel, Section } from '@ynput/ayon-react-components'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { useEffect } from 'react'
-import useCreateContextMenu from '@shared/ContextMenu/useCreateContextMenu'
+import useCreateContextMenu from '@shared/containers/ContextMenu'
 import clsx from 'clsx'
 import useTableLoadingData from '@hooks/useTableLoadingData'
 

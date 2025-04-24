@@ -3,7 +3,7 @@ import { onPrefetchIds } from '@state/dashboard'
 import { useLazyGetEntitiesDetailsPanelQuery } from '@queries/entity/getEntityPanel'
 import { getActivitiesGQLApi } from '@queries/activities/getActivities'
 import { throttle } from 'lodash'
-import { activitiesLast } from '@shared/Feed/Feed'
+import { activitiesLast } from '@shared/containers/Feed'
 
 // prefetch the entity details and activities
 export const usePrefetchEntity = (dispatch, projectsInfo, throttleTime, scope) => {

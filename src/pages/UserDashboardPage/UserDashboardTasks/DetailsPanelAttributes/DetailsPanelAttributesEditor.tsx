@@ -1,7 +1,7 @@
 import { AttributeModel } from '@api/rest/attributes'
 import { FC, useState } from 'react'
 import styled from 'styled-components'
-import { CellValue } from '@shared/ProjectTreeTable/widgets/CellWidget'
+import { CellValue } from '@shared/containers/ProjectTreeTable/widgets/CellWidget'
 import clsx from 'clsx'
 import copyToClipboard from '@helpers/copyToClipboard'
 import { Button } from '@ynput/ayon-react-components'

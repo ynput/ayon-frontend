@@ -3,7 +3,7 @@ import { toast } from 'react-toastify'
 import { useMemo } from 'react'
 import ReactMarkdown from 'react-markdown'
 import SettingsPanel from '../SettingsPanel'
-import useCreateContextMenu from '@shared/ContextMenu/useCreateContextMenu'
+import useCreateContextMenu from '@shared/containers/ContextMenu'
 
 import { Badge, BadgeWrapper } from '@components/Badge'
 import copyToClipboard from '@helpers/copyToClipboard'

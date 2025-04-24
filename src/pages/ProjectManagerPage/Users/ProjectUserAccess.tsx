@@ -6,7 +6,7 @@ import { $Any } from '@types'
 import { Button, Filter, Toolbar } from '@ynput/ayon-react-components'
 import Shortcuts from '@containers/Shortcuts'
 import { useShortcutsContext } from '@context/shortcutsContext'
-import useCreateContextMenu from '@shared/ContextMenu/useCreateContextMenu'
+import useCreateContextMenu from '@shared/containers/ContextMenu'
 import useUserProjectPermissions from '@hooks/useUserProjectPermissions'
 import { useGetAccessGroupsQuery } from '@queries/accessGroups/getAccessGroups'
 import { useGetUsersQuery } from '@queries/user/getUsers'
@@ -48,7 +48,7 @@ import ProjectUserAccesAccessGroupPanel from './ProjectUserAccessAccessGroupPane
 import {
   EmptyPlaceholderFlex,
   EmptyPlaceholderFlexWrapper,
-} from '@shared/EmptyPlaceholder/EmptyPlaceholderFlex.styled'
+} from '@shared/components/EmptyPlaceholder'
 
 const StyledButton = styled(Button)`
   .shortcut {

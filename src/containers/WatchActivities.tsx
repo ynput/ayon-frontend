@@ -7,7 +7,7 @@ import {
   getActivitiesGQLApi,
   useLazyGetActivitiesByIdQuery,
 } from '@/services/activities/getActivities'
-import { bodyHasChecklist } from '../../shared/src/Feed/hooks/useCommentMutations'
+import { bodyHasChecklist } from '@shared/containers/Feed/hooks/useCommentMutations'
 
 type ActivityMessage = {
   [key: string]: any
@@ -40,7 +40,7 @@ const WatchActivities: FC<WatchActivitiesProps> = ({}) => {
     'activity',
     async (topic: string, message: ActivityMessage) => {
       // first find caches that contain this activityId
-      const activityId = message.summary?.activity_id
+      const activityId = message.summary?.activity_id as string
 
       const state: any = store.getState()
 
@@ -50,7 +50,7 @@ const WatchActivities: FC<WatchActivitiesProps> = ({}) => {
 
       // entries could include caches for checklists, versions, reviews that don't contain comments for example
       // check that this activity is relevant to the cache
-      const activityType = message.summary?.activity_type
+      const activityType = message.summary?.activity_type as string
 
       // get all caches that this activity is referenced by
       const tags = entityIds.map((entityId) => ({ type: 'entityActivities', id: entityId }))
@@ -91,7 +91,6 @@ const WatchActivities: FC<WatchActivitiesProps> = ({}) => {
             projectName: projectName,
             activityIds: [activityId],
             entityIds,
-            activityTypes: [activityType],
           }).unwrap()
           const newActivities = res.activities || []
 

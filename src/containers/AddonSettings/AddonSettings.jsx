@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react'
 import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 
-import useCreateContextMenu from '@shared/ContextMenu/useCreateContextMenu'
+import useCreateContextMenu from '@shared/containers/ContextMenu'
 
 import {
   Button,
@@ -40,7 +40,7 @@ import { usePaste } from '@context/pasteContext'
 import styled from 'styled-components'
 
 import SettingsListHeader from './SettingsListHeader'
-import EmptyPlaceholder from '@shared/EmptyPlaceholder/EmptyPlaceholder'
+import EmptyPlaceholder from '@shared/components/EmptyPlaceholder'
 import { attachLabels } from './searchTools'
 import useUserProjectPermissions from '@hooks/useUserProjectPermissions'
 import LoadingPage from '@pages/LoadingPage'

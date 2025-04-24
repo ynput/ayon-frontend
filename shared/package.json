@@ -6,9 +6,40 @@
   "module": "dist/index.es.js",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
       "import": "./dist/index.es.js",
       "require": "./dist/index.cjs.js"
+    },
+    "./components": {
+      "import": "./dist/components.es.js",
+      "require": "./dist/components.cjs.js"
+    },
+    "./api": {
+      "import": "./dist/api.es.js",
+      "require": "./dist/api.cjs.js"
+    },
+    "./hooks": {
+      "import": "./dist/hooks.es.js",
+      "require": "./dist/hooks.cjs.js"
+    },
+    "./ContextMenu": {
+      "import": "./dist/ContextMenu.es.js",
+      "require": "./dist/ContextMenu.cjs.js"
+    },
+    "./Feed": {
+      "import": "./dist/Feed.es.js",
+      "require": "./dist/Feed.cjs.js"
+    },
+    "./ProjectTreeTable": {
+      "import": "./dist/ProjectTreeTable.es.js",
+      "require": "./dist/ProjectTreeTable.cjs.js"
+    },
+    "./Slicer": {
+      "import": "./dist/Slicer.es.js",
+      "require": "./dist/Slicer.cjs.js"
+    },
+    "./util": {
+      "import": "./dist/util.es.js",
+      "require": "./dist/util.cjs.js"
     }
   },
   "scripts": {

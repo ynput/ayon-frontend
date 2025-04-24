@@ -1,5 +1,5 @@
 import ReviewableUpload from '@containers/ReviewablesList/ReviewablesUpload'
-import EmptyPlaceholder from '@shared/EmptyPlaceholder/EmptyPlaceholder'
+import EmptyPlaceholder from '@shared/components/EmptyPlaceholder'
 
 import ViewerPlayer from './ViewerPlayer'
 import * as Styled from './Viewer.styled'

@@ -2,11 +2,11 @@ import useBuildFilterOptions, { BuildFilterOptions } from '@hooks/useBuildFilter
 import { FC, useEffect, useMemo, useState } from 'react'
 import { Filter, Icon, SearchFilter, SearchFilterProps } from '@ynput/ayon-react-components'
 import { ProjectModel } from '@api/rest/project'
-import { EditorTaskNode, TaskNodeMap } from '@shared/ProjectTreeTable'
+import { EditorTaskNode, TaskNodeMap } from '@shared/containers/ProjectTreeTable'
 import { usePower } from '@/remote/context/PowerLicenseContext'
 import AdvancedFiltersPlaceholder from '@components/SearchFilter/AdvancedFiltersPlaceholder'
 import { usePowerpack } from '@context/powerpackContext'
-import { useColumnSettings } from '@shared/ProjectTreeTable'
+import { useColumnSettings } from '@shared/containers/ProjectTreeTable'
 
 interface SearchFilterWrapperProps extends Omit<BuildFilterOptions, 'scope' | 'data' | 'power'> {
   filters: SearchFilterProps['filters']
