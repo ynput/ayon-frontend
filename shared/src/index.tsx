@@ -11,3 +11,6 @@ export * from './UserImage'
 export * from './Feed'
 
 export { productTypes, Feed }
+
+// API exports
+export * from './api'

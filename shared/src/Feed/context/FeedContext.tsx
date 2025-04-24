@@ -1,3 +1,4 @@
+import { ProjectUser } from '@api/activities'
 import React, { createContext, useContext, useState } from 'react'
 
 export const FEED_NEW_COMMENT = '__new__' as const
@@ -50,8 +51,12 @@ export type FeedContextProps = {
   loadNextPage?: () => Promise<any>
   // mentions data
   mentionSuggestionsData: any
+  // tooltip data
   entityTooltipData: any
   isFetchingTooltip: boolean
+  // users data
+  projectUsersData: ProjectUser[]
+  // redux callback actions
   onOpenSlideOut?: (args: any) => void
   onOpenImage?: (args: any) => void
   onGoToFrame?: (frame: number) => void

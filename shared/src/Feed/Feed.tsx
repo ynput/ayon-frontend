@@ -20,23 +20,19 @@ import { Status } from '../ProjectTreeTable/types/project'
 export const activitiesLast = 30
 
 export type FeedProps = {
-  activeUsers: any[]
   isMultiProjects: boolean
   readOnly: boolean
   statuses: Status[]
   activityTypes: string[]
   highlighted: string[]
-  projectUsers: any[]
 }
 
 const Feed = ({
-  activeUsers,
   isMultiProjects,
   readOnly,
   statuses = [],
   activityTypes,
   highlighted = [],
-  projectUsers = [],
 }: FeedProps) => {
   const {
     projectName,
@@ -54,6 +50,7 @@ const Feed = ({
     hasNextPage,
     onOpenSlideOut,
     onOpenImage,
+    projectUsersData,
   } = useFeedContext()
 
   // hide comment input for specific filters
@@ -66,7 +63,7 @@ const Feed = ({
   const transformedActivitiesData = useTransformActivities(
     // @ts-ignore
     activitiesData,
-    projectUsers,
+    projectUsersData,
     projectInfo,
     entityType,
     userName,
@@ -220,7 +217,6 @@ const Feed = ({
                   showOrigin={entities.length > 1}
                   filter={filter}
                   editProps={{
-                    activeUsers,
                     projectName,
                     entities: entities,
                     entityType,

@@ -62,14 +62,10 @@ const FeedWrapper: FC<FeedWrapperProps> = ({
 
   const selectedProjects = useAppSelector((state) => state.dashboard.selectedProjects)
 
-  const { data: projectUsers = [] } = useGetKanbanProjectUsersQuery(
+  const { data: projectUsersData = [] } = useGetKanbanProjectUsersQuery(
     { projects: selectedProjects },
     { skip: !selectedProjects?.length },
   )
-
-  const reduxDataProps = {
-    projectUsers,
-  }
 
   // listen to the viewer for annotations
   // later on, other hooks can be tried here to get annotations from different sources
@@ -179,10 +175,10 @@ const FeedWrapper: FC<FeedWrapperProps> = ({
       {...activitiesDataProps}
       {...handlerProps}
       {...annotationsProps}
-      {...{ mentionSuggestionsData, entityTooltipData, isFetchingTooltip }}
+      {...{ mentionSuggestionsData, entityTooltipData, isFetchingTooltip, projectUsersData }}
       {...{ editingId, setEditingId, refTooltip, setRefTooltip }}
     >
-      <Feed {...props} {...reduxStateProps} {...reduxDataProps} />
+      <Feed {...props} {...reduxStateProps} />
       <ActivityReferenceTooltip />
     </FeedProvider>
   )

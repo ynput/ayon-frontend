@@ -10,6 +10,12 @@ export default defineConfig({
       insertTypesEntry: true, // Create a separate index.d.ts
     }),
   ],
+  resolve: {
+    alias: {
+      '@api': path.resolve(__dirname, 'src/api'),
+      '@graphql': path.resolve(__dirname, 'src/api/graphql.ts'),
+    },
+  },
   build: {
     lib: {
       entry: path.resolve(__dirname, 'src/index.tsx'), // Entry point of your library
