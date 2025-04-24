@@ -1505,7 +1505,7 @@ export type GetListsQueryVariables = Exact<{
 }>;
 
 
-export type GetListsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', entityLists: { __typename?: 'EntityListsConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, edges: Array<{ __typename?: 'EntityListEdge', node: { __typename?: 'EntityListNode', id: string, label: string, entityListType: string, active: boolean, createdAt: any, items: { __typename?: 'EntityListItemsConnection', edges: Array<{ __typename?: 'EntityListItemEdge', node: { __typename?: 'FolderNode', id: string } | { __typename?: 'ProductNode', id: string } | { __typename?: 'RepresentationNode', id: string } | { __typename?: 'TaskNode', id: string } | { __typename?: 'VersionNode', id: string } | { __typename?: 'WorkfileNode', id: string } }> } } }> } } };
+export type GetListsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', entityLists: { __typename?: 'EntityListsConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, edges: Array<{ __typename?: 'EntityListEdge', node: { __typename?: 'EntityListNode', id: string, label: string, entityListType: string, entityType: string, active: boolean, createdAt: any, items: { __typename?: 'EntityListItemsConnection', edges: Array<{ __typename?: 'EntityListItemEdge', node: { __typename?: 'FolderNode', id: string } | { __typename?: 'ProductNode', id: string } | { __typename?: 'RepresentationNode', id: string } | { __typename?: 'TaskNode', id: string } | { __typename?: 'VersionNode', id: string } | { __typename?: 'WorkfileNode', id: string } }> } } }> } } };
 
 export type GetMarketInstallEventsQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -1931,6 +1931,7 @@ export const GetListsDocument = `
           id
           label
           entityListType
+          entityType
           active
           createdAt
           items {

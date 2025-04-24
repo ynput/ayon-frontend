@@ -2,6 +2,7 @@ import { createContext, useContext, ReactNode, useMemo, useState } from 'react'
 import { EntityListItem, useGetListsInfiniteInfiniteQuery } from '@queries/lists/getLists'
 import { useProjectDataContext } from '@pages/ProjectOverviewPage/context/ProjectDataContext'
 import { SimpleTableRow } from '@shared/SimpleTable'
+import { getEntityTypeIcon } from '@shared/util'
 
 interface ListsDataContextValue {
   listsData: EntityListItem[]
@@ -69,6 +70,7 @@ export const ListsDataProvider = ({ children }: ListsDataProviderProps) => {
       id: list.id,
       name: list.label,
       label: list.label,
+      icon: getEntityTypeIcon(list.entityType),
       subRows: [],
       data: {
         id: list.id,

@@ -10,6 +10,7 @@ query GetLists($projectName: String!, $first: Int!, $after: String) {
           id
           label
           entityListType
+          entityType
           active
           createdAt
           items {
