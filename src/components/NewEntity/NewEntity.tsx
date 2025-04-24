@@ -22,7 +22,7 @@ import FolderSequence from '@components/FolderSequence/FolderSequence'
 import { EntityForm, NewEntityType, useNewEntityContext } from '@context/NewEntityContext'
 import { ProjectModel } from '@api/rest/project'
 import useCreateEntityShortcuts from '@hooks/useCreateEntityShortcuts'
-import { useSlicerContext } from '@context/slicerContext'
+import { useSlicerContext } from '@context/SlicerContext'
 
 const ContentStyled = styled.div`
   display: flex;

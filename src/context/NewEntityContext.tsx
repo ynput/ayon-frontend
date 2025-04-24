@@ -8,7 +8,7 @@ import { PatchOperation, useUpdateOverviewEntitiesMutation } from '@queries/over
 import { useProjectTableContext } from '@shared/containers/ProjectTreeTable'
 import { EditorTaskNode, MatchingFolder } from '@shared/containers/ProjectTreeTable'
 import checkName from '@helpers/checkName'
-import { useSlicerContext } from './slicerContext'
+import { useSlicerContext } from './SlicerContext'
 import { isEmpty } from 'lodash'
 
 export type NewEntityType = 'folder' | 'task'
