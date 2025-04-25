@@ -2,7 +2,7 @@ import React, { RefObject } from 'react'
 import { Icon, ShortcutTag } from '@ynput/ayon-react-components'
 import './ContextMenu.scss'
 
-interface CommandEvent {
+export interface CommandEvent {
   originalEvent: React.MouseEvent
   item: {
     label: string
@@ -42,6 +42,7 @@ const ContextMenuItem: React.FC<ContextMenuItemProps> = ({
   const onCommand = (e: React.MouseEvent) => {
     // hide the context menu
     contextMenuRef.current?.hide()
+    e.preventDefault()
 
     command?.({
       originalEvent: e,

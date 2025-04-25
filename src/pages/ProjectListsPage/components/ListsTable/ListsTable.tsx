@@ -6,8 +6,8 @@ import ListRow from '../ListRow/ListRow'
 import ListsTableHeader from './ListsTableHeader'
 import NewListDialogContainer from '../NewListDialog/NewListDialogContainer'
 import { SimpleTableCellTemplateProps } from '@shared/SimpleTable/SimpleTableRowTemplate'
-import { Row, RowSelectionState } from '@tanstack/react-table'
-import { useCreateContextMenu } from '@shared/containers/ContextMenu'
+import { Row } from '@tanstack/react-table'
+import useListContextMenu from '@pages/ProjectListsPage/hooks/useListContextMenu'
 
 interface ListsTableProps {}
 
@@ -21,7 +21,6 @@ const ListsTable: FC<ListsTableProps> = ({}) => {
     closeRenameList,
     submitRenameList,
     renamingList,
-    openDetailsPanel,
   } = useListsContext()
   const { listsTableData, isLoadingAll, isError } = useListsDataContext()
 
@@ -36,32 +35,7 @@ const ListsTable: FC<ListsTableProps> = ({}) => {
     [openRenameList],
   )
 
-  // create the ref and model
-  const [ctxMenuShow] = useCreateContextMenu()
-
-  const handleRowContext = (e: React.MouseEvent<HTMLElement>) => {
-    e.preventDefault()
-
-    let newSelection: RowSelectionState = { ...rowSelection }
-    // if we are selecting a row outside of the selection (or none), set the selection to the row
-    if (!newSelection[e.currentTarget.id]) {
-      newSelection = { [e.currentTarget.id]: true }
-      setRowSelection(newSelection)
-    }
-    const firstSelectedRow = Object.keys(newSelection)[0]
-    const multipleSelected = Object.keys(newSelection).length > 1
-
-    const menuItems: any[] = [
-      {
-        label: 'Info',
-        icon: 'info',
-        command: () => openDetailsPanel(firstSelectedRow),
-        disabled: multipleSelected,
-      },
-    ]
-
-    ctxMenuShow(e, menuItems)
-  }
+  const handleRowContext = useListContextMenu()
 
   // Memoize the render function for the row (definition remains the same)
   const renderListRow = useCallback<

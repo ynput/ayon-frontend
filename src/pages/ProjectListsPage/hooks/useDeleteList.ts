@@ -1,18 +1,26 @@
 import { confirmDelete } from '@shared/util'
 import { toast } from 'react-toastify'
+import { useListsDataContext } from '../context/ListsDataContext'
 
 interface UseDeleteListProps {
   onDeleteList: (listId: string) => Promise<void>
 }
 
 export interface UseDeleteListReturn {
-  deleteList: (lists: { id: string; label: string }[]) => Promise<void>
+  deleteLists: (lists: string[], config?: { force?: boolean }) => Promise<void>
 }
 
 const useDeleteList = ({ onDeleteList }: UseDeleteListProps): UseDeleteListReturn => {
-  const deleteList: UseDeleteListReturn['deleteList'] = async (lists) => {
+  const { listsMap } = useListsDataContext()
+
+  const deleteLists: UseDeleteListReturn['deleteLists'] = async (ids, config) => {
+    const lists = ids.map((id) => listsMap.get(id)).filter((list) => list !== undefined)
     try {
-      if (lists.length === 1) {
+      if (config?.force) {
+        // Force delete all lists without confirmation
+        await Promise.all(lists.map(({ id }) => onDeleteList(id)))
+        toast.success('Deleted lists successfully')
+      } else if (lists.length === 1) {
         // Single list deletion
         const { id, label } = lists[0]
         confirmDelete({
@@ -39,7 +47,7 @@ const useDeleteList = ({ onDeleteList }: UseDeleteListProps): UseDeleteListRetur
     }
   }
 
-  return { deleteList }
+  return { deleteLists }
 }
 
 export default useDeleteList

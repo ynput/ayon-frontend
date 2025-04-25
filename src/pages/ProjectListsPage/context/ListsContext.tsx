@@ -31,7 +31,7 @@ export interface ListsContextValue {
   closeRenameList: UseUpdateListReturn['closeRenameList']
   submitRenameList: UseUpdateListReturn['submitRenameList']
   // Deleting lists
-  deleteList: UseDeleteListReturn['deleteList']
+  deleteLists: UseDeleteListReturn['deleteLists']
   // Info dialog
   infoDialogData: null | EntityListItem
   setInfoDialogData: (list: EntityListItem | null) => void
@@ -82,7 +82,7 @@ export const ListsProvider = ({ children }: ListsProviderProps) => {
   const [deleteListMutation] = useDeleteEntityListMutation()
   const onDeleteList = async (listId: string) =>
     await deleteListMutation({ listId, projectName }).unwrap()
-  const { deleteList } = useDeleteList({ onDeleteList })
+  const { deleteLists } = useDeleteList({ onDeleteList })
 
   return (
     <ListsContext.Provider
@@ -93,7 +93,7 @@ export const ListsProvider = ({ children }: ListsProviderProps) => {
         setExpanded,
         ...newListProps,
         ...useUpdateListProps,
-        deleteList,
+        deleteLists,
         infoDialogData,
         setInfoDialogData,
         openDetailsPanel,
