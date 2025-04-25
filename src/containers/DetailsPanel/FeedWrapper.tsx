@@ -10,7 +10,6 @@ import { onCommentImageOpen } from '@state/context'
 import { openSlideOut } from '@state/details'
 import { useAppDispatch, useAppSelector } from '@state/store'
 import { FC, useState } from 'react'
-import useGetFeedActivitiesData from './useGetFeedActivitiesData'
 import { Status } from '@api/rest/project'
 import { useViewer } from '@context/viewerContext'
 import { goToFrame, openViewer } from '@state/viewer'
@@ -19,7 +18,10 @@ import {
   useCreateReactionToActivityMutation,
   useDeleteReactionToActivityMutation,
 } from '@queries/reaction/updateReaction'
-import { useGetEntityTooltipQuery } from '@queries/activities/getActivities'
+import {
+  useGetActivitiesInfiniteInfiniteQuery,
+  useGetEntityTooltipQuery,
+} from '@queries/activities/getActivities'
 import { SuggestRequest } from '@api/rest/activities'
 
 interface FeedWrapperProps {
@@ -128,14 +130,6 @@ const FeedWrapper: FC<FeedWrapperProps> = ({
     createReaction,
   }
 
-  const activitiesDataProps = useGetFeedActivitiesData({
-    entities: entities,
-    filter,
-    activityTypes,
-    projectName: projectName,
-    entityType: entityType,
-  })
-
   const [editingId, setEditingId] = useState<EditingState>(null)
   // get all versions that can be mentioned
   const { data: mentionSuggestionsData } = useGetEntityMentionsQuery(
@@ -147,13 +141,6 @@ const FeedWrapper: FC<FeedWrapperProps> = ({
       projectName: projectName,
     },
     { skip: !editingId },
-  )
-
-  const [refTooltip, setRefTooltip] = useState<RefTooltip | null>(null)
-  const skip = !projectName || !refTooltip?.id
-  const { data: entityTooltipData, isFetching: isFetchingTooltip } = useGetEntityTooltipQuery(
-    { entityType: entityType, entityId: refTooltip?.id, projectName },
-    { skip: skip },
   )
 
   return (
@@ -168,13 +155,15 @@ const FeedWrapper: FC<FeedWrapperProps> = ({
         filter,
         userName,
         userFullName,
+        activityTypes,
+        useGetActivitiesInfiniteInfiniteQuery,
+        useGetEntityTooltipQuery,
       }}
       {...queryProps}
-      {...activitiesDataProps}
       {...handlerProps}
       {...annotationsProps}
-      {...{ mentionSuggestionsData, entityTooltipData, isFetchingTooltip, projectUsersData }}
-      {...{ editingId, setEditingId, refTooltip, setRefTooltip }}
+      {...{ mentionSuggestionsData, projectUsersData }}
+      {...{ editingId, setEditingId }}
     >
       <Feed {...props} {...reduxStateProps} />
       <ActivityReferenceTooltip />
