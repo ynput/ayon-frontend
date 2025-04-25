@@ -42,7 +42,7 @@ export const NewListDialog = forwardRef<HTMLDivElement, NewListDialogProps>(
       if (!form) return
       inputRef.current?.focus()
       inputRef.current?.select()
-    }, [form])
+    }, [!!form])
 
     if (!form) return null
     const handleChange = <K extends keyof NewListForm>(value: NewListForm[K], field: K) => {

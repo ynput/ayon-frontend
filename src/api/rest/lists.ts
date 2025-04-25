@@ -184,7 +184,7 @@ export type EntityListPostModel = {
   entityType: 'folder' | 'product' | 'version' | 'representation' | 'task' | 'workfile'
   label: string
   /** Access control for the list. Can be specified for users or teams. */
-  access: {
+  access?: {
     [key: string]: ListAccessLevel
   }
   /** List attributes */
@@ -229,7 +229,7 @@ export type EntityListModel = {
   entityType: 'folder' | 'product' | 'version' | 'representation' | 'task' | 'workfile'
   label: string
   /** Access control for the list. Can be specified for users or teams. */
-  access: {
+  access?: {
     [key: string]: ListAccessLevel
   }
   /** List attributes */
@@ -252,7 +252,7 @@ export type EntityListModel = {
 export type EntityListPatchModel = {
   label?: string
   /** Access control for the list. Can be specified for users or teams. */
-  access: {
+  access?: {
     [key: string]: ListAccessLevel
   }
   /** List attributes */
