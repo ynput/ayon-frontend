@@ -1,6 +1,6 @@
 import { forwardRef, useEffect, useState } from 'react'
 import * as Styled from './ListRow.styled'
-import { Icon, InputText } from '@ynput/ayon-react-components'
+import { Icon, InputText, Spacer } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 
 export interface SimpleTableCellTemplateProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -57,7 +57,13 @@ const ListRow = forwardRef<HTMLDivElement, SimpleTableCellTemplateProps>(
             {value}
           </span>
         )}
-        {!isRenaming && <Styled.ListCount>{count}</Styled.ListCount>}
+
+        {!isRenaming && (
+          <>
+            <Spacer className="spacer" />
+            <Styled.ListCount>{count}</Styled.ListCount>
+          </>
+        )}
       </Styled.Cell>
     )
   },

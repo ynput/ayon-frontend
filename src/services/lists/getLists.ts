@@ -7,6 +7,7 @@ export const LISTS_PER_PAGE = 20
 
 // Define the type for our transformed lists data
 type QueryEntityListItem = GetListsQuery['project']['entityLists']['edges'][number]['node']
+export type EntityListItem = QueryEntityListItem
 
 // Define the result type for our query
 export type GetListsResult = {
@@ -14,7 +15,7 @@ export type GetListsResult = {
     hasNextPage: boolean
     endCursor?: string | null
   }
-  lists: QueryEntityListItem[]
+  lists: EntityListItem[]
 }
 
 // Define the page param type for infinite query

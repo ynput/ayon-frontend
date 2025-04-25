@@ -14,7 +14,6 @@ export const Cell = styled.div`
   border-radius: var(--border-radius-m);
 
   .value {
-    width: 100%;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;

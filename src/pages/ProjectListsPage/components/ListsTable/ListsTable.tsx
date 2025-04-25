@@ -6,7 +6,8 @@ import ListRow from '../ListRow/ListRow'
 import ListsTableHeader from './ListsTableHeader'
 import NewListDialogContainer from '../NewListDialog/NewListDialogContainer'
 import { SimpleTableCellTemplateProps } from '@shared/SimpleTable/SimpleTableRowTemplate'
-import { Row } from '@tanstack/react-table'
+import { Row, RowSelectionState } from '@tanstack/react-table'
+import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 
 interface ListsTableProps {}
 
@@ -20,8 +21,9 @@ const ListsTable: FC<ListsTableProps> = ({}) => {
     closeRenameList,
     submitRenameList,
     renamingList,
+    openDetailsPanel,
   } = useListsContext()
-  const { listsTableData, isLoadingAll, isError } = useListsDataContext() // Removed unused vars
+  const { listsTableData, isLoadingAll, isError } = useListsDataContext()
 
   // Define stable event handlers using useCallback
   const handleValueDoubleClick = useCallback(
@@ -34,6 +36,33 @@ const ListsTable: FC<ListsTableProps> = ({}) => {
     [openRenameList],
   )
 
+  // create the ref and model
+  const [ctxMenuShow] = useCreateContextMenu()
+
+  const handleRowContext = (e: React.MouseEvent<HTMLElement>) => {
+    e.preventDefault()
+
+    let newSelection: RowSelectionState = { ...rowSelection }
+    // if we are selecting a row outside of the selection (or none), set the selection to the row
+    if (!newSelection[e.currentTarget.id]) {
+      newSelection = { [e.currentTarget.id]: true }
+      setRowSelection(newSelection)
+    }
+    const firstSelectedRow = Object.keys(newSelection)[0]
+    const multipleSelected = Object.keys(newSelection).length > 1
+
+    const menuItems: any[] = [
+      {
+        label: 'Info',
+        icon: 'info',
+        command: () => openDetailsPanel(firstSelectedRow),
+        disabled: multipleSelected,
+      },
+    ]
+
+    ctxMenuShow(e, menuItems)
+  }
+
   // Memoize the render function for the row (definition remains the same)
   const renderListRow = useCallback<
     (props: SimpleTableCellTemplateProps, row: Row<SimpleTableRow>) => JSX.Element
@@ -43,7 +72,6 @@ const ListsTable: FC<ListsTableProps> = ({}) => {
 
       return (
         <ListRow
-          // Pass stable props directly
           key={listId}
           id={listId}
           className={props.className}
@@ -53,20 +81,18 @@ const ListsTable: FC<ListsTableProps> = ({}) => {
           icon={props.icon}
           count={row.original.data.count}
           isRenaming={listId === renamingList}
-          onSubmitRename={(v) => submitRenameList(v)} // Renamed prop
-          onCancelRename={closeRenameList} // Renamed prop
-          // Pass stable handlers via pt prop
+          onSubmitRename={(v) => submitRenameList(v)}
+          onCancelRename={closeRenameList}
+          onContextMenu={handleRowContext}
           pt={{
             value: {
-              // Pass id to the handler
               onClick: (e) => handleValueDoubleClick(e, listId),
             },
           }}
         />
       )
     },
-    // Dependencies: renamingList state and the stable handlers
-    [renamingList, handleValueDoubleClick, closeRenameList, submitRenameList], // Added submitRenameList
+    [renamingList, handleValueDoubleClick, closeRenameList, submitRenameList],
   )
 
   return (
@@ -79,10 +105,6 @@ const ListsTable: FC<ListsTableProps> = ({}) => {
             isExpandable={false}
             isLoading={isLoadingAll}
             error={isError ? 'Error loading lists' : undefined}
-            // Remove renderRow prop
-            // renderRow={renderListRow}
-            enableVirtualizer={false}
-            // Pass the render function as children
           >
             {renderListRow}
           </SimpleTable>

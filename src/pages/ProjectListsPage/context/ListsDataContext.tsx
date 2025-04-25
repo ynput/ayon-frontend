@@ -4,9 +4,12 @@ import { useProjectDataContext } from '@pages/ProjectOverviewPage/context/Projec
 import { SimpleTableRow } from '@shared/SimpleTable'
 import { getEntityTypeIcon } from '@shared/util'
 
+export type ListsMap = Map<string, EntityListItem>
+
 interface ListsDataContextValue {
   listsData: EntityListItem[]
   listsTableData: SimpleTableRow[]
+  listsMap: ListsMap
   handleFetchNextPage: () => void
   isLoadingAll: boolean
   isLoadingMore: boolean
@@ -64,6 +67,11 @@ export const ListsDataProvider = ({ children }: ListsDataProviderProps) => {
     return listsInfiniteData.pages.flatMap((page) => page.lists || [])
   }, [listsInfiniteData?.pages])
 
+  // convert to a Map for easier access
+  const listsMap: ListsMap = useMemo(() => {
+    return new Map(listsData.map((list) => [list.id, list]))
+  }, [listsData])
+
   // convert listsData into tableData
   const listsTableData = useMemo(() => {
     const tableRows: SimpleTableRow[] = listsData.map((list) => ({
@@ -88,6 +96,7 @@ export const ListsDataProvider = ({ children }: ListsDataProviderProps) => {
         listsData,
         handleFetchNextPage,
         listsTableData,
+        listsMap,
         isLoadingAll: isFetchingNewProject,
         isLoadingMore: isFetchingNextPage,
         isError,

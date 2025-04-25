@@ -10,6 +10,8 @@ import { EntityListPatchModel, EntityListPostModel } from '@api/rest/lists'
 import { useProjectDataContext } from '@pages/ProjectOverviewPage/context/ProjectDataContext'
 import useDeleteList, { UseDeleteListReturn } from '../hooks/useDeleteList'
 import useUpdateList, { UseUpdateListReturn } from '../hooks/useUpdateList'
+import { EntityListItem } from '@queries/lists/getLists'
+import { useListsDataContext } from './ListsDataContext'
 
 export interface ListsContextValue {
   rowSelection: RowSelectionState
@@ -30,6 +32,10 @@ export interface ListsContextValue {
   submitRenameList: UseUpdateListReturn['submitRenameList']
   // Deleting lists
   deleteList: UseDeleteListReturn['deleteList']
+  // Info dialog
+  infoDialogData: null | EntityListItem
+  setInfoDialogData: (list: EntityListItem | null) => void
+  openDetailsPanel: (id: string) => void
 }
 
 const ListsContext = createContext<ListsContextValue | undefined>(undefined)
@@ -40,8 +46,17 @@ interface ListsProviderProps {
 
 export const ListsProvider = ({ children }: ListsProviderProps) => {
   const { projectName } = useProjectDataContext()
+  const { listsMap } = useListsDataContext()
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
   const [expanded, setExpanded] = useState<ExpandedState>({})
+  const [infoDialogData, setInfoDialogData] = useState<ListsContextValue['infoDialogData']>(null)
+  const openDetailsPanel = (id: string) => {
+    // get the list from the map
+    const list = listsMap.get(id)
+    if (list) {
+      setInfoDialogData(list)
+    }
+  }
 
   // CREATE NEW LIST
   const [createNewListMutation, { isLoading: isCreatingList }] = useCreateEntityListMutation()
@@ -79,6 +94,9 @@ export const ListsProvider = ({ children }: ListsProviderProps) => {
         ...newListProps,
         ...useUpdateListProps,
         deleteList,
+        infoDialogData,
+        setInfoDialogData,
+        openDetailsPanel,
       }}
     >
       {children}

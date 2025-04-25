@@ -6,6 +6,7 @@ import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { Section, Toolbar } from '@ynput/ayon-react-components'
 import { ListsDataProvider } from './context/ListsDataContext'
 import ListsTable from './components/ListsTable/ListsTable'
+import ListInfoDialog from './components/ListInfoDialog/ListInfoDialog'
 
 const ProjectListsWithProviders: FC = () => {
   const projectName = useAppSelector((state) => state.project.name) || ''
@@ -84,6 +85,7 @@ const ProjectListsPage: FC = () => {
           </Section>
         </SplitterPanel>
       </Splitter>
+      <ListInfoDialog />
     </main>
   )
 }
