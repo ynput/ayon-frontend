@@ -1,4 +1,4 @@
-import { FC, useMemo, useRef } from 'react'
+import { FC, useMemo, useRef, memo } from 'react'
 import * as Styled from './SimpleTable.styled'
 import {
   useReactTable,
@@ -22,6 +22,47 @@ import { RankingInfo, rankItem, compareItems } from '@tanstack/match-sorter-util
 import { useSimpleTableContext } from './context/SimpleTableContext'
 import { SimpleTableCellTemplate, SimpleTableCellTemplateProps } from './SimpleTableRowTemplate'
 import { EmptyPlaceholder } from '@shared/components'
+
+export const MemoizedCellTemplate = memo(
+  ({
+    template,
+    props,
+    row,
+  }: {
+    template?: (props: SimpleTableCellTemplateProps, row: Row<SimpleTableRow>) => JSX.Element
+    props: SimpleTableCellTemplateProps
+    row: Row<SimpleTableRow>
+  }) => {
+    return template ? template(props, row) : <SimpleTableCellTemplate {...props} />
+  },
+  (prevProps, nextProps) => {
+    // Custom comparison function to optimize re-renders
+    // Only re-render if strictly necessary
+    // Important: If the row contains an actively edited input,
+    // we want to keep that cell's identity stable
+
+    const prevIsRenaming =
+      prevProps.row.original.id === (prevProps.row.original.data.renamingId || '')
+    const nextIsRenaming =
+      nextProps.row.original.id === (nextProps.row.original.data.renamingId || '')
+
+    // Always re-render if renaming status changes
+    if (prevIsRenaming !== nextIsRenaming) return false
+
+    // If this is the row being edited, compare more carefully
+    if (prevIsRenaming && nextIsRenaming) {
+      // Keep stability for the renaming row
+      return true
+    }
+
+    // For other rows, normal shallow comparison is fine
+    return (
+      prevProps.row.id === nextProps.row.id &&
+      prevProps.template === nextProps.template &&
+      prevProps.props.className === nextProps.props.className
+    )
+  },
+)
 
 declare module '@tanstack/react-table' {
   //add fuzzy filter to the filterFns
@@ -134,8 +175,16 @@ const SimpleTable: FC<SimpleTableProps> = ({
         cell: ({ row, getValue }) => {
           const props: SimpleTableCellTemplateProps = {
             className: clsx({ selected: row.getIsSelected(), loading: isLoading }),
-            onClick: (e) => handleRowSelect(e, row),
-            onKeyDown: (e) => handleRowKeyDown(e, row),
+            onClick: (e) => {
+              // check we are not clicking on an input
+              if (e.target instanceof HTMLInputElement) return
+              handleRowSelect(e, row)
+            },
+            onKeyDown: (e) => {
+              // check we are not clicking on an input
+              if (e.target instanceof HTMLInputElement) return
+              handleRowKeyDown(e, row)
+            },
             depth: row.depth,
             tabIndex: 0,
             value: getValue<string>(),
@@ -149,11 +198,12 @@ const SimpleTable: FC<SimpleTableProps> = ({
             endContent: row.original.endContent,
           }
 
-          return template ? template(props, row) : <SimpleTableCellTemplate {...props} />
+          // Use the memoized cell template with a stable key
+          return <MemoizedCellTemplate key={row.id} template={template} props={props} row={row} />
         },
       },
     ],
-    [isLoading, forceUpdateTable, tableData, rowSelection],
+    [isLoading, forceUpdateTable, template, tableData, rowSelection],
   )
 
   const table = useReactTable({
