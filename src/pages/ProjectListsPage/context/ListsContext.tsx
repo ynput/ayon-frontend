@@ -4,10 +4,12 @@ import useNewList, { UseNewListReturn } from '../hooks/useNewList'
 import {
   useCreateEntityListMutation,
   useDeleteEntityListMutation,
+  useUpdateEntityListMutation,
 } from '@queries/lists/updateLists'
-import { EntityListPostModel } from '@api/rest/lists'
+import { EntityListPatchModel, EntityListPostModel } from '@api/rest/lists'
 import { useProjectDataContext } from '@pages/ProjectOverviewPage/context/ProjectDataContext'
 import useDeleteList, { UseDeleteListReturn } from '../hooks/useDeleteList'
+import useUpdateList, { UseUpdateListReturn } from '../hooks/useUpdateList'
 
 export interface ListsContextValue {
   rowSelection: RowSelectionState
@@ -21,6 +23,11 @@ export interface ListsContextValue {
   closeNewList: UseNewListReturn['closeNewList']
   createNewList: UseNewListReturn['createNewList']
   isCreatingList: boolean
+  // Updating lists
+  renamingList: UseUpdateListReturn['renamingList']
+  openRenameList: UseUpdateListReturn['openRenameList']
+  closeRenameList: UseUpdateListReturn['closeRenameList']
+  submitRenameList: UseUpdateListReturn['submitRenameList']
   // Deleting lists
   deleteList: UseDeleteListReturn['deleteList']
 }
@@ -50,6 +57,12 @@ export const ListsProvider = ({ children }: ListsProviderProps) => {
     isCreatingList,
   }
 
+  // UPDATE/EDIT LIST
+  const [updateListMutation] = useUpdateEntityListMutation()
+  const onUpdateList = async (listId: string, list: EntityListPatchModel) =>
+    await updateListMutation({ listId, entityListPatchModel: list, projectName }).unwrap()
+  const useUpdateListProps = useUpdateList({ setRowSelection, onUpdateList })
+
   // DELETE LIST
   const [deleteListMutation] = useDeleteEntityListMutation()
   const onDeleteList = async (listId: string) =>
@@ -64,6 +77,7 @@ export const ListsProvider = ({ children }: ListsProviderProps) => {
         expanded,
         setExpanded,
         ...newListProps,
+        ...useUpdateListProps,
         deleteList,
       }}
     >

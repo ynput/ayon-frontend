@@ -53,6 +53,9 @@ const useNewList = ({ onCreateNewList, onCreated }: UseNewListProps): UseNewList
   //   open new list with n key shortcut
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      // check we are not in an input field
+      if (event.target instanceof HTMLInputElement) return
+
       if (event.key === 'n' && !newList) {
         event.preventDefault()
         openNewList()

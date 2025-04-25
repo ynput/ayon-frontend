@@ -74,7 +74,8 @@ export const ListsDataProvider = ({ children }: ListsDataProviderProps) => {
       subRows: [],
       data: {
         id: list.id,
-        count: list.items.length,
+        count: list.count,
+        owner: list.owner,
       },
     }))
 

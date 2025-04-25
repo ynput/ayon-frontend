@@ -23,47 +23,6 @@ import { useSimpleTableContext } from './context/SimpleTableContext'
 import { SimpleTableCellTemplate, SimpleTableCellTemplateProps } from './SimpleTableRowTemplate'
 import { EmptyPlaceholder } from '@shared/components'
 
-export const MemoizedCellTemplate = memo(
-  ({
-    template,
-    props,
-    row,
-  }: {
-    template?: (props: SimpleTableCellTemplateProps, row: Row<SimpleTableRow>) => JSX.Element
-    props: SimpleTableCellTemplateProps
-    row: Row<SimpleTableRow>
-  }) => {
-    return template ? template(props, row) : <SimpleTableCellTemplate {...props} />
-  },
-  (prevProps, nextProps) => {
-    // Custom comparison function to optimize re-renders
-    // Only re-render if strictly necessary
-    // Important: If the row contains an actively edited input,
-    // we want to keep that cell's identity stable
-
-    const prevIsRenaming =
-      prevProps.row.original.id === (prevProps.row.original.data.renamingId || '')
-    const nextIsRenaming =
-      nextProps.row.original.id === (nextProps.row.original.data.renamingId || '')
-
-    // Always re-render if renaming status changes
-    if (prevIsRenaming !== nextIsRenaming) return false
-
-    // If this is the row being edited, compare more carefully
-    if (prevIsRenaming && nextIsRenaming) {
-      // Keep stability for the renaming row
-      return true
-    }
-
-    // For other rows, normal shallow comparison is fine
-    return (
-      prevProps.row.id === nextProps.row.id &&
-      prevProps.template === nextProps.template &&
-      prevProps.props.className === nextProps.props.className
-    )
-  },
-)
-
 declare module '@tanstack/react-table' {
   //add fuzzy filter to the filterFns
   interface FilterFns {
@@ -133,7 +92,11 @@ export interface SimpleTableProps {
   isExpandable?: boolean // show expand/collapse icons
   forceUpdateTable?: any
   globalFilter?: string
-  template?: (props: SimpleTableCellTemplateProps, row: Row<SimpleTableRow>) => JSX.Element
+  // Remove renderRow prop
+  // renderRow?: (props: SimpleTableCellTemplateProps, row: Row<SimpleTableRow>) => JSX.Element
+  // Add children prop as a function
+  children?: (props: SimpleTableCellTemplateProps, row: Row<SimpleTableRow>) => JSX.Element
+  enableVirtualizer?: boolean // controls whether to use virtualization
 }
 
 const SimpleTable: FC<SimpleTableProps> = ({
@@ -143,7 +106,9 @@ const SimpleTable: FC<SimpleTableProps> = ({
   isExpandable,
   forceUpdateTable,
   globalFilter,
-  template,
+  // Destructure children instead of renderRow
+  children,
+  enableVirtualizer = true, // default to true for backward compatibility
 }) => {
   const { rowSelection, expanded, setExpanded, onExpandedChange } = useSimpleTableContext()
 
@@ -198,12 +163,12 @@ const SimpleTable: FC<SimpleTableProps> = ({
             endContent: row.original.endContent,
           }
 
-          // Use the memoized cell template with a stable key
-          return <MemoizedCellTemplate key={row.id} template={template} props={props} row={row} />
+          // Use children function if provided, otherwise default to SimpleTableCellTemplate
+          return children ? children(props, row) : <SimpleTableCellTemplate {...props} />
         },
       },
     ],
-    [isLoading, forceUpdateTable, template, tableData, rowSelection],
+    [isLoading, forceUpdateTable, children, tableData, rowSelection, isExpandable],
   )
 
   const table = useReactTable({
@@ -240,17 +205,19 @@ const SimpleTable: FC<SimpleTableProps> = ({
   //The virtualizer needs to know the scrollable container element
   const tableContainerRef = useRef<HTMLDivElement>(null)
 
-  const rowVirtualizer = useVirtualizer({
-    count: rows.length,
-    estimateSize: () => 40, //estimate row height for accurate scrollbar dragging
-    getScrollElement: () => tableContainerRef.current,
-    //measure dynamic row height, except in firefox because it measures table border height incorrectly
-    measureElement:
-      typeof window !== 'undefined' && navigator.userAgent.indexOf('Firefox') === -1
-        ? (element) => element?.getBoundingClientRect().height
-        : undefined,
-    overscan: 5,
-  })
+  const rowVirtualizer = enableVirtualizer
+    ? useVirtualizer({
+        count: rows.length,
+        estimateSize: () => 40, //estimate row height for accurate scrollbar dragging
+        getScrollElement: () => tableContainerRef.current,
+        //measure dynamic row height, except in firefox because it measures table border height incorrectly
+        measureElement:
+          typeof window !== 'undefined' && navigator.userAgent.indexOf('Firefox') === -1
+            ? (element) => element?.getBoundingClientRect().height
+            : undefined,
+        overscan: 5,
+      })
+    : null
 
   // handles all of the selection logic
   const { handleRowSelect } = useRowSelection({
@@ -265,31 +232,47 @@ const SimpleTable: FC<SimpleTableProps> = ({
       {!error && (
         <table>
           <tbody
-            style={{
-              height: `${rowVirtualizer.getTotalSize()}px`, //tells scrollbar how big the table is
-            }}
+            style={
+              enableVirtualizer
+                ? {
+                    height: `${rowVirtualizer?.getTotalSize()}px`, //tells scrollbar how big the table is
+                  }
+                : undefined
+            }
           >
-            {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-              const row = rows[virtualRow.index] as Row<SimpleTableRow>
-              return (
-                <tr
-                  data-index={virtualRow.index} //needed for dynamic row height measurement
-                  ref={(node) => rowVirtualizer.measureElement(node)} //measure dynamic row height
-                  key={row.id}
-                  style={{
-                    transform: `translateY(${virtualRow.start}px)`, //this should always be a `style` as it changes on scroll
-                  }}
-                >
-                  {row.getVisibleCells().map((cell) => {
-                    return (
-                      <td key={cell.id}>
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </td>
-                    )
-                  })}
-                </tr>
-              )
-            })}
+            {enableVirtualizer
+              ? rowVirtualizer?.getVirtualItems().map((virtualRow) => {
+                  const row = rows[virtualRow.index] as Row<SimpleTableRow>
+                  return (
+                    <tr
+                      data-index={virtualRow.index} //needed for dynamic row height measurement
+                      ref={(node) => rowVirtualizer.measureElement(node)} //measure dynamic row height
+                      key={row.id}
+                      style={{
+                        transform: `translateY(${virtualRow.start}px)`, //this should always be a `style` as it changes on scroll
+                      }}
+                    >
+                      {row.getVisibleCells().map((cell) => {
+                        return (
+                          <td key={cell.id}>
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </td>
+                        )
+                      })}
+                    </tr>
+                  )
+                })
+              : rows.map((row) => (
+                  <tr key={row.id}>
+                    {row.getVisibleCells().map((cell) => {
+                      return (
+                        <td key={cell.id}>
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </td>
+                      )
+                    })}
+                  </tr>
+                ))}
           </tbody>
         </table>
       )}

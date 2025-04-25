@@ -7,10 +7,6 @@ export const LISTS_PER_PAGE = 20
 
 // Define the type for our transformed lists data
 type QueryEntityListItem = GetListsQuery['project']['entityLists']['edges'][number]['node']
-type QueryEntityListEntity = QueryEntityListItem['items']['edges'][number]['node']
-export interface EntityListItem extends Omit<QueryEntityListItem, 'items'> {
-  items: QueryEntityListEntity[]
-}
 
 // Define the result type for our query
 export type GetListsResult = {
@@ -18,7 +14,7 @@ export type GetListsResult = {
     hasNextPage: boolean
     endCursor?: string | null
   }
-  lists: EntityListItem[]
+  lists: QueryEntityListItem[]
 }
 
 // Define the page param type for infinite query
@@ -39,10 +35,7 @@ const getListsGqlApiEnhanced = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefiniti
     GetLists: {
       transformResponse: (response: GetListsQuery): GetListsResult => {
         return {
-          lists: response.project.entityLists.edges.map((edge) => ({
-            ...edge.node,
-            items: edge.node.items.edges.map((item) => item.node),
-          })),
+          lists: response.project.entityLists.edges.map((edge) => edge.node),
           pageInfo: response.project.entityLists.pageInfo,
         }
       },
@@ -50,7 +43,7 @@ const getListsGqlApiEnhanced = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefiniti
   },
 })
 
-const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
+export const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
   endpoints: (build) => ({
     getListsInfinite: build.infiniteQuery<GetListsResult, { projectName: string }, ListsPageParam>({
       infiniteQueryOptions: {

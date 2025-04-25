@@ -13,13 +13,9 @@ query GetLists($projectName: String!, $first: Int!, $after: String) {
           entityType
           active
           createdAt
-          items {
-            edges {
-              node {
-                id
-              }
-            }
-          }
+          active
+          owner
+          count
         }
       }
     }

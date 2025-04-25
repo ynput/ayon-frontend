@@ -158,8 +158,6 @@ export type EntityListItemEdge = {
   node: BaseNode;
   position: Scalars['Int']['output'];
   projectName: Scalars['String']['output'];
-  /** Summary */
-  summary: EntityListSummary;
   tags: Array<Scalars['String']['output']>;
   updatedAt: Scalars['DateTime']['output'];
   updatedBy?: Maybe<Scalars['String']['output']>;
@@ -175,14 +173,19 @@ export type EntityListItemsConnection = {
 export type EntityListNode = {
   __typename?: 'EntityListNode';
   active: Scalars['Boolean']['output'];
+  count: Scalars['Int']['output'];
   createdAt: Scalars['DateTime']['output'];
+  createdBy?: Maybe<Scalars['String']['output']>;
   entityListType: Scalars['String']['output'];
   entityType: Scalars['String']['output'];
   id: Scalars['String']['output'];
   items: EntityListItemsConnection;
   label: Scalars['String']['output'];
+  owner?: Maybe<Scalars['String']['output']>;
   projectName: Scalars['String']['output'];
+  tags: Array<Scalars['String']['output']>;
   updatedAt: Scalars['DateTime']['output'];
+  updatedBy?: Maybe<Scalars['String']['output']>;
 };
 
 
@@ -190,11 +193,6 @@ export type EntityListNodeItemsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   first?: Scalars['Int']['input'];
   sortBy?: InputMaybe<Scalars['String']['input']>;
-};
-
-export type EntityListSummary = {
-  __typename?: 'EntityListSummary';
-  count: Scalars['Int']['output'];
 };
 
 export type EntityListsConnection = {
@@ -1505,7 +1503,7 @@ export type GetListsQueryVariables = Exact<{
 }>;
 
 
-export type GetListsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', entityLists: { __typename?: 'EntityListsConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, edges: Array<{ __typename?: 'EntityListEdge', node: { __typename?: 'EntityListNode', id: string, label: string, entityListType: string, entityType: string, active: boolean, createdAt: any, items: { __typename?: 'EntityListItemsConnection', edges: Array<{ __typename?: 'EntityListItemEdge', node: { __typename?: 'FolderNode', id: string } | { __typename?: 'ProductNode', id: string } | { __typename?: 'RepresentationNode', id: string } | { __typename?: 'TaskNode', id: string } | { __typename?: 'VersionNode', id: string } | { __typename?: 'WorkfileNode', id: string } }> } } }> } } };
+export type GetListsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', entityLists: { __typename?: 'EntityListsConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, edges: Array<{ __typename?: 'EntityListEdge', node: { __typename?: 'EntityListNode', id: string, label: string, entityListType: string, entityType: string, active: boolean, createdAt: any, owner?: string | null, count: number } }> } } };
 
 export type GetMarketInstallEventsQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -1934,13 +1932,9 @@ export const GetListsDocument = `
           entityType
           active
           createdAt
-          items {
-            edges {
-              node {
-                id
-              }
-            }
-          }
+          active
+          owner
+          count
         }
       }
     }

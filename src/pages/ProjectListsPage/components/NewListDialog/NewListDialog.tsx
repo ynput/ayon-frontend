@@ -11,13 +11,11 @@ import type { NewListForm } from '@pages/ProjectListsPage/hooks/useNewList'
 import * as Styled from './NewListDialog.styled'
 import { getEntityTypeIcon } from '@shared/util'
 
-const options = ['folder', 'product', 'version', 'representation', 'task', 'workfile'].map(
-  (type) => ({
-    label: type.charAt(0).toUpperCase() + type.slice(1),
-    value: type,
-    icon: getEntityTypeIcon(type),
-  }),
-)
+const options = ['folder', 'product', 'version', 'task'].map((type) => ({
+  label: type.charAt(0).toUpperCase() + type.slice(1),
+  value: type,
+  icon: getEntityTypeIcon(type),
+}))
 
 interface NewListDialogProps extends Omit<DialogProps, 'onChange'> {
   form?: NewListForm | null
@@ -39,13 +37,12 @@ export const NewListDialog = forwardRef<HTMLDivElement, NewListDialogProps>(
     },
     ref,
   ) => {
-    // new: ref for input
     const inputRef = useRef<HTMLInputElement>(null)
-    // new: focus and select on mount
     useEffect(() => {
+      if (!form) return
       inputRef.current?.focus()
       inputRef.current?.select()
-    }, [])
+    }, [form])
 
     if (!form) return null
     const handleChange = <K extends keyof NewListForm>(value: NewListForm[K], field: K) => {
@@ -77,6 +74,8 @@ export const NewListDialog = forwardRef<HTMLDivElement, NewListDialogProps>(
         <Styled.Form
           onSubmit={(e) => {
             e.preventDefault()
+          }}
+          onKeyDown={(e) => {
             if (
               e.nativeEvent instanceof KeyboardEvent &&
               (e.nativeEvent.metaKey || e.nativeEvent.ctrlKey) &&
@@ -89,15 +88,13 @@ export const NewListDialog = forwardRef<HTMLDivElement, NewListDialogProps>(
           <Styled.Row>
             <label htmlFor="label">List label</label>
             <InputText
-              ref={inputRef} // new: attach ref
+              ref={inputRef}
               type="text"
               id="label"
               name="label"
               value={form.label}
               required
               onChange={(e) => handleChange(e.target.value, 'label')}
-              autoFocus
-              onFocus={(e) => e.target.select()}
               autoComplete="off"
             />
           </Styled.Row>
