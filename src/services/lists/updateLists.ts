@@ -8,29 +8,44 @@ const updateListsEnhancedApi = api.enhanceEndpoints({
     },
     updateEntityList: {
       async onQueryStarted(
-        { listId, projectName, entityListPatchModel },
-        { dispatch, queryFulfilled },
+        { listId, entityListPatchModel },
+        { dispatch, queryFulfilled, getState },
       ) {
-        const patchResult = dispatch(
-          gqlApi.util.updateQueryData('getListsInfinite', { projectName }, (draft) => {
-            for (const page of draft.pages) {
-              const listIndex = page.lists.findIndex((list) => list.id === listId)
-              if (listIndex !== -1) {
-                const list = page.lists[listIndex]
-                // Update the list with the new data
-                Object.assign(list, entityListPatchModel)
-                break
+        const state = getState()
+        // Find all caches that are invalidated by this mutation
+        const tags = [{ type: 'entityList', id: listId }]
+        const infiniteEntries = gqlApi.util
+          .selectInvalidatedBy(state, tags)
+          .filter((e) => e.endpointName === 'getListsInfinite')
+
+        let patchResults: any[] = []
+        for (const entry of infiniteEntries) {
+          const patchResult = dispatch(
+            gqlApi.util.updateQueryData('getListsInfinite', entry.originalArgs, (draft) => {
+              for (const page of draft.pages) {
+                const listIndex = page.lists.findIndex((list) => list.id === listId)
+                if (listIndex !== -1) {
+                  const list = page.lists[listIndex]
+                  // Update the list with the new data
+                  Object.assign(list, entityListPatchModel)
+                  break
+                }
               }
-            }
-          }),
-        )
+            }),
+          )
+          // Store the patch result to undo it later if needed
+          patchResults.push(patchResult)
+        }
         try {
           await queryFulfilled
         } catch {
-          patchResult.undo()
+          patchResults.forEach((patchResult) => {
+            // Undo the optimistic update if the mutation fails
+            patchResult.undo()
+          })
         }
       },
-      invalidatesTags: [{ type: 'entityList', id: 'LIST' }],
+      invalidatesTags: (_s, _e, { listId }) => [{ type: 'entityList', id: listId }],
     },
     deleteEntityList: {
       invalidatesTags: [{ type: 'entityList', id: 'LIST' }],

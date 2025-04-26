@@ -32,7 +32,6 @@ const ListsFiltersDialog: FC<ListsFiltersDialogProps> = ({}) => {
 
   useEffect(() => {
     if (listsFiltersOpen && filtersRef.current) {
-      console.log('open')
       filtersRef.current.open()
     }
   }, [listsFiltersOpen, filtersRef])

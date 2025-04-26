@@ -32,8 +32,6 @@ interface ListsDataProviderProps {
 export const ListsDataProvider = ({ children }: ListsDataProviderProps) => {
   const { projectName } = useProjectDataContext()
 
-  // const [listsFilters, setListsFilters] = useState<Filter[]>([])
-
   const [pageConfig, updatePageConfig, { isSuccess: columnsConfigReady }] = useUsersPageConfig({
     page: 'overview',
     projectName: projectName,
@@ -70,11 +68,11 @@ export const ListsDataProvider = ({ children }: ListsDataProviderProps) => {
   // Detect when projectName changes to track fetching due to project change
   const isFetchingNewProject = useMemo(() => {
     const isProjectChanged = previousProjectName !== projectName
-    if (isProjectChanged && !isLoading) {
+    if (isProjectChanged && !isFetching) {
       setPreviousProjectName(projectName)
     }
     return isFetching && isProjectChanged
-  }, [isFetching, isLoading, previousProjectName, projectName])
+  }, [isFetching, isFetching, previousProjectName, projectName])
 
   const handleFetchNextPage = () => {
     if (hasNextPage) {
@@ -119,7 +117,7 @@ export const ListsDataProvider = ({ children }: ListsDataProviderProps) => {
         handleFetchNextPage,
         listsTableData,
         listsMap,
-        isLoadingAll: isFetchingNewProject && !columnsConfigReady,
+        isLoadingAll: isLoading || isFetchingNewProject || !columnsConfigReady,
         isLoadingMore: isFetchingNextPage,
         isError,
         // filters

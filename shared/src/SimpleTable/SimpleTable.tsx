@@ -108,7 +108,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
 
   // stable data reference
   const tableData = useMemo(() => {
-    if (!isLoading || data.length) return data
+    if (!isLoading) return data
 
     // show loading placeholders
     return Array.from({ length: 10 }, (_, i) => ({

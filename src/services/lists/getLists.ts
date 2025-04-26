@@ -3,7 +3,7 @@ import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import { GetListsQuery } from '@api/graphql'
 
 // Define the LISTS_PER_PAGE constant for pagination
-export const LISTS_PER_PAGE = 20
+export const LISTS_PER_PAGE = 100
 
 // Define the type for our transformed lists data
 type QueryEntityListItem = GetListsQuery['project']['entityLists']['edges'][number]['node']
