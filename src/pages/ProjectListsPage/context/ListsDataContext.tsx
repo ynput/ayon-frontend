@@ -1,11 +1,11 @@
-import { createContext, useContext, ReactNode, useMemo, useState } from 'react'
-import { EntityListItem, useGetListsInfiniteInfiniteQuery } from '@queries/lists/getLists'
+import { createContext, useContext, ReactNode, useMemo } from 'react'
+import { EntityListItem } from '@queries/lists/getLists'
 import { useProjectDataContext } from '@pages/ProjectOverviewPage/context/ProjectDataContext'
 import { SimpleTableRow } from '@shared/SimpleTable'
 import { getEntityTypeIcon } from '@shared/util'
 import { Filter } from '@ynput/ayon-react-components'
-import { clientFilterToQueryFilter } from '@shared/containers/ProjectTreeTable'
 import { useUsersPageConfig } from '@pages/ProjectOverviewPage/hooks/useUserPageConfig'
+import useGetListsData from '../hooks/useGetListsData'
 
 export type ListsMap = Map<string, EntityListItem>
 
@@ -13,7 +13,7 @@ interface ListsDataContextValue {
   listsData: EntityListItem[]
   listsTableData: SimpleTableRow[]
   listsMap: ListsMap
-  handleFetchNextPage: () => void
+  fetchNextPage: () => void
   isLoadingAll: boolean
   isLoadingMore: boolean
   isError?: boolean
@@ -42,50 +42,16 @@ export const ListsDataProvider = ({ children }: ListsDataProviderProps) => {
     await updatePageConfig({ listsFilters: filters })
   }
 
-  const [previousProjectName, setPreviousProjectName] = useState(projectName)
-
-  const queryFilter = clientFilterToQueryFilter(listsFilters)
-  const queryFilterString = listsFilters.length ? JSON.stringify(queryFilter) : ''
-
   const {
-    data: listsInfiniteData,
+    data: listsData,
     isLoading,
-    isFetching,
     isFetchingNextPage,
-    fetchNextPage,
-    hasNextPage,
     isError,
-  } = useGetListsInfiniteInfiniteQuery(
-    {
-      projectName,
-      filter: queryFilterString,
-    },
-    {
-      initialPageParam: { cursor: '' },
-    },
-  )
-
-  // Detect when projectName changes to track fetching due to project change
-  const isFetchingNewProject = useMemo(() => {
-    const isProjectChanged = previousProjectName !== projectName
-    if (isProjectChanged && !isFetching) {
-      setPreviousProjectName(projectName)
-    }
-    return isFetching && isProjectChanged
-  }, [isFetching, isFetching, previousProjectName, projectName])
-
-  const handleFetchNextPage = () => {
-    if (hasNextPage) {
-      console.log('fetching next page')
-      fetchNextPage()
-    }
-  }
-
-  // Extract tasks from infinite query data correctly
-  const listsData = useMemo(() => {
-    if (!listsInfiniteData?.pages) return []
-    return listsInfiniteData.pages.flatMap((page) => page.lists || [])
-  }, [listsInfiniteData?.pages])
+    fetchNextPage,
+  } = useGetListsData({
+    projectName,
+    filters: listsFilters,
+  })
 
   // convert to a Map for easier access
   const listsMap: ListsMap = useMemo(() => {
@@ -114,12 +80,12 @@ export const ListsDataProvider = ({ children }: ListsDataProviderProps) => {
     <ListsDataContext.Provider
       value={{
         listsData,
-        handleFetchNextPage,
         listsTableData,
         listsMap,
-        isLoadingAll: isLoading || isFetchingNewProject || !columnsConfigReady,
+        isLoadingAll: isLoading || !columnsConfigReady,
         isLoadingMore: isFetchingNextPage,
         isError,
+        fetchNextPage,
         // filters
         listsFilters,
         setListsFilters,
