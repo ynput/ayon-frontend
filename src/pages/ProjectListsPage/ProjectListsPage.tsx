@@ -7,6 +7,7 @@ import { Section, Toolbar } from '@ynput/ayon-react-components'
 import { ListsDataProvider } from './context/ListsDataContext'
 import ListsTable from './components/ListsTable/ListsTable'
 import ListInfoDialog from './components/ListInfoDialog/ListInfoDialog'
+import ListsFiltersDialog from './components/ListsFiltersDialog/ListsFiltersDialog'
 
 const ProjectListsWithProviders: FC = () => {
   const projectName = useAppSelector((state) => state.project.name) || ''
@@ -86,6 +87,7 @@ const ProjectListsPage: FC = () => {
         </SplitterPanel>
       </Splitter>
       <ListInfoDialog />
+      <ListsFiltersDialog />
     </main>
   )
 }

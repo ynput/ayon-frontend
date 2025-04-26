@@ -1,4 +1,4 @@
-import { api as gqlApi } from '@api/graphql'
+import { GetListsQueryVariables, api as gqlApi } from '@api/graphql'
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import { GetListsQuery } from '@api/graphql'
 
@@ -46,7 +46,11 @@ const getListsGqlApiEnhanced = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefiniti
 
 export const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
   endpoints: (build) => ({
-    getListsInfinite: build.infiniteQuery<GetListsResult, { projectName: string }, ListsPageParam>({
+    getListsInfinite: build.infiniteQuery<
+      GetListsResult,
+      Omit<GetListsQueryVariables, 'first' | 'after' | 'before'>,
+      ListsPageParam
+    >({
       infiniteQueryOptions: {
         initialPageParam: { cursor: '' },
         getNextPageParam: (lastPage) => {
@@ -60,12 +64,13 @@ export const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
       },
       queryFn: async ({ queryArg, pageParam }, api) => {
         try {
-          const { projectName } = queryArg
+          const { projectName, filter } = queryArg
           const { cursor } = pageParam
 
           // Build the query parameters for GetLists
           const queryParams = {
             projectName,
+            filter,
             first: LISTS_PER_PAGE,
             after: cursor || undefined,
           }

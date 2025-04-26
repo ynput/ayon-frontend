@@ -3,6 +3,9 @@ import { EntityListItem, useGetListsInfiniteInfiniteQuery } from '@queries/lists
 import { useProjectDataContext } from '@pages/ProjectOverviewPage/context/ProjectDataContext'
 import { SimpleTableRow } from '@shared/SimpleTable'
 import { getEntityTypeIcon } from '@shared/util'
+import { Filter } from '@ynput/ayon-react-components'
+import { clientFilterToQueryFilter } from '@shared/containers/ProjectTreeTable'
+import { useUsersPageConfig } from '@pages/ProjectOverviewPage/hooks/useUserPageConfig'
 
 export type ListsMap = Map<string, EntityListItem>
 
@@ -14,6 +17,9 @@ interface ListsDataContextValue {
   isLoadingAll: boolean
   isLoadingMore: boolean
   isError?: boolean
+  // filters
+  listsFilters: Filter[]
+  setListsFilters: (filters: Filter[]) => Promise<void>
 }
 
 const ListsDataContext = createContext<ListsDataContextValue | undefined>(undefined)
@@ -26,7 +32,22 @@ interface ListsDataProviderProps {
 export const ListsDataProvider = ({ children }: ListsDataProviderProps) => {
   const { projectName } = useProjectDataContext()
 
+  // const [listsFilters, setListsFilters] = useState<Filter[]>([])
+
+  const [pageConfig, updatePageConfig, { isSuccess: columnsConfigReady }] = useUsersPageConfig({
+    page: 'overview',
+    projectName: projectName,
+  })
+
+  const listsFilters = pageConfig?.listsFilters || ([] as Filter[])
+  const setListsFilters = async (filters: Filter[]) => {
+    await updatePageConfig({ listsFilters: filters })
+  }
+
   const [previousProjectName, setPreviousProjectName] = useState(projectName)
+
+  const queryFilter = clientFilterToQueryFilter(listsFilters)
+  const queryFilterString = listsFilters.length ? JSON.stringify(queryFilter) : ''
 
   const {
     data: listsInfiniteData,
@@ -39,6 +60,7 @@ export const ListsDataProvider = ({ children }: ListsDataProviderProps) => {
   } = useGetListsInfiniteInfiniteQuery(
     {
       projectName,
+      filter: queryFilterString,
     },
     {
       initialPageParam: { cursor: '' },
@@ -97,9 +119,12 @@ export const ListsDataProvider = ({ children }: ListsDataProviderProps) => {
         handleFetchNextPage,
         listsTableData,
         listsMap,
-        isLoadingAll: isFetchingNewProject,
+        isLoadingAll: isFetchingNewProject && !columnsConfigReady,
         isLoadingMore: isFetchingNextPage,
         isError,
+        // filters
+        listsFilters,
+        setListsFilters,
       }}
     >
       {children}

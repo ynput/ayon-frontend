@@ -11,7 +11,7 @@ import type { NewListForm } from '@pages/ProjectListsPage/hooks/useNewList'
 import * as Styled from './NewListDialog.styled'
 import { getEntityTypeIcon } from '@shared/util'
 
-const options = ['folder', 'product', 'version', 'task'].map((type) => ({
+export const entityTypeOptions = ['folder', 'product', 'version', 'task'].map((type) => ({
   label: type.charAt(0).toUpperCase() + type.slice(1),
   value: type,
   icon: getEntityTypeIcon(type),
@@ -103,7 +103,7 @@ export const NewListDialog = forwardRef<HTMLDivElement, NewListDialogProps>(
             <Dropdown
               value={[form.entityType]}
               onChange={(e) => handleChange(e[0] as NewListForm['entityType'], 'entityType')}
-              options={options}
+              options={entityTypeOptions}
               valueIcon={getEntityTypeIcon(form.entityType)}
             />
           </Styled.Row>

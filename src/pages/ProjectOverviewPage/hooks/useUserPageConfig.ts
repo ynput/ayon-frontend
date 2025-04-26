@@ -18,6 +18,7 @@ export const useUsersPageConfig = ({ projectName, page }: Props): Result => {
   const { data: user, isSuccess } = useGetCurrentUserQuery()
   // extract out columns config for project
   const { data: { frontendPreferences: preferences = {} } = {} } = user || {}
+  // frontendPreferences[page][projectName]
   const pageConfig = preferences?.[page] || {}
   const pageProjectConfig = pageConfig?.[projectName] || {}
 

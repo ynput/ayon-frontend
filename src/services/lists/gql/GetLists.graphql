@@ -1,6 +1,6 @@
-query GetLists($projectName: String!, $first: Int!, $after: String) {
+query GetLists($projectName: String!, $first: Int!, $after: String, $filter: String) {
   project(name: $projectName) {
-    entityLists(first: $first, after: $after) {
+    entityLists(first: $first, after: $after, filter: $filter) {
       pageInfo {
         hasNextPage
         endCursor

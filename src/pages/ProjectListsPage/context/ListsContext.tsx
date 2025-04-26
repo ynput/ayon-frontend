@@ -36,6 +36,9 @@ export interface ListsContextValue {
   infoDialogData: null | EntityListItem
   setInfoDialogData: (list: EntityListItem | null) => void
   openDetailsPanel: (id: string) => void
+  // Lists filters dialog
+  listsFiltersOpen: boolean
+  setListsFiltersOpen: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 const ListsContext = createContext<ListsContextValue | undefined>(undefined)
@@ -49,6 +52,10 @@ export const ListsProvider = ({ children }: ListsProviderProps) => {
   const { listsMap } = useListsDataContext()
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
   const [expanded, setExpanded] = useState<ExpandedState>({})
+
+  // dialogs
+  const [listsFiltersOpen, setListsFiltersOpen] = useState(false)
+
   const [infoDialogData, setInfoDialogData] = useState<ListsContextValue['infoDialogData']>(null)
   const openDetailsPanel = (id: string) => {
     // get the list from the map
@@ -94,9 +101,13 @@ export const ListsProvider = ({ children }: ListsProviderProps) => {
         ...newListProps,
         ...useUpdateListProps,
         deleteLists,
+        // info dialog
         infoDialogData,
         setInfoDialogData,
         openDetailsPanel,
+        // lists filters dialog
+        listsFiltersOpen,
+        setListsFiltersOpen,
       }}
     >
       {children}

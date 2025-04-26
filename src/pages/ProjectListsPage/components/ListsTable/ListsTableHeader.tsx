@@ -3,6 +3,7 @@ import { Header, HeaderButton } from '@shared/SimpleTable'
 import { theme } from '@ynput/ayon-react-components'
 import { FC } from 'react'
 import styled from 'styled-components'
+import { ListsFiltersButton } from './ListsFiltersButton'
 
 const StyledTitle = styled.span`
   display: flex;
@@ -44,7 +45,7 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({}) => {
           data-shortcut={'N'}
           onClick={() => openNewList()}
         />
-        <HeaderButton icon={'filter_list'} />
+        <ListsFiltersButton />
       </StyledButtons>
     </Header>
   )

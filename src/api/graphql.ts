@@ -146,6 +146,7 @@ export type EntityListEdge = {
 export type EntityListItemEdge = {
   __typename?: 'EntityListItemEdge';
   Entity?: Maybe<BaseNode>;
+  Forbidden: Scalars['Boolean']['output'];
   attrib: Scalars['String']['output'];
   createdAt: Scalars['DateTime']['output'];
   createdBy?: Maybe<Scalars['String']['output']>;
@@ -155,7 +156,7 @@ export type EntityListItemEdge = {
   entityType: Scalars['String']['output'];
   id: Scalars['String']['output'];
   /** Item node */
-  node: BaseNode;
+  node?: Maybe<BaseNode>;
   position: Scalars['Int']['output'];
   projectName: Scalars['String']['output'];
   tags: Array<Scalars['String']['output']>;
@@ -190,6 +191,7 @@ export type EntityListNode = {
 
 
 export type EntityListNodeItemsArgs = {
+  accessibleOnly?: Scalars['Boolean']['input'];
   after?: InputMaybe<Scalars['String']['input']>;
   first?: Scalars['Int']['input'];
   sortBy?: InputMaybe<Scalars['String']['input']>;
@@ -1502,6 +1504,7 @@ export type GetListsQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
   first: Scalars['Int']['input'];
   after?: InputMaybe<Scalars['String']['input']>;
+  filter?: InputMaybe<Scalars['String']['input']>;
 }>;
 
 
@@ -1919,9 +1922,9 @@ export const GetInboxUnreadCountDocument = `
 }
     `;
 export const GetListsDocument = `
-    query GetLists($projectName: String!, $first: Int!, $after: String) {
+    query GetLists($projectName: String!, $first: Int!, $after: String, $filter: String) {
   project(name: $projectName) {
-    entityLists(first: $first, after: $after) {
+    entityLists(first: $first, after: $after, filter: $filter) {
       pageInfo {
         hasNextPage
         endCursor
