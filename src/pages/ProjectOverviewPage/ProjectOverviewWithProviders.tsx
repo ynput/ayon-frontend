@@ -71,7 +71,19 @@ const ProjectOverviewWithTableProviders: FC = () => {
 
   return (
     <ProjectTableQueriesProvider {...{ updateEntities, getFoldersTasks }}>
-      <ProjectTableProvider {...props}>
+      <ProjectTableProvider
+        {...props}
+        contextMenuItems={[
+          'copy-paste',
+          'show-details',
+          'expand-collapse',
+          'inherit',
+          'export',
+          'create-folder',
+          'create-task',
+          'delete',
+        ]}
+      >
         <NewEntityProvider>
           <SelectionProvider>
             <SelectedRowsProvider>

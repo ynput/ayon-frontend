@@ -19,6 +19,7 @@ export interface ContextMenuItemProps {
   children?: React.ReactNode
   contextMenuRef: RefObject<{ hide: () => void }>
   disabled?: boolean
+  hidden?: boolean
   items?: any[]
   isSave?: boolean
   danger?: boolean
@@ -34,11 +35,14 @@ const ContextMenuItem: React.FC<ContextMenuItemProps> = ({
   children,
   contextMenuRef,
   disabled,
+  hidden,
   items,
   isSave,
   danger,
   ...props
 }) => {
+  if (hidden) return null
+
   const onCommand = (e: React.MouseEvent) => {
     // hide the context menu
     contextMenuRef.current?.hide()

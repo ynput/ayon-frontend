@@ -20,6 +20,7 @@ import { RowId } from '../utils/cellUtils'
 import { ProjectModel } from '../types/project'
 import { AttributeWithPermissions, LoadingTasks } from '../types'
 import { QueryFilter } from '../types/folders'
+import { ContextMenuItemConstructors } from '../hooks/useCellContextMenu'
 
 type User = {
   name: string
@@ -68,6 +69,9 @@ export interface ProjectTableContextProps {
   findInheritedValueFromAncestors: FindInheritedValueFromAncestors
   findNonInheritedValues: FindNonInheritedValues
   getAncestorsOf: GetAncestorsOf
+
+  // Context menu
+  contextMenuItems: ProjectTableProviderProps['contextMenuItems']
 }
 
 const ProjectTableContext = createContext<ProjectTableContextProps | undefined>(undefined)
@@ -117,6 +121,9 @@ export interface ProjectTableProviderProps {
   // Sorting
   sorting: SortingState
   updateSorting: OnChangeFn<SortingState>
+
+  // context menu
+  contextMenuItems: ContextMenuItemConstructors
 }
 
 export const ProjectTableProvider = ({
@@ -145,6 +152,7 @@ export const ProjectTableProvider = ({
   fetchNextPage,
   reloadTableData,
   setExpanded,
+  contextMenuItems,
 }: ProjectTableProviderProps) => {
   const { folderTypes, taskTypes } = projectInfo || {}
 
@@ -262,6 +270,8 @@ export const ProjectTableProvider = ({
         findInheritedValueFromAncestors,
         findNonInheritedValues,
         getAncestorsOf,
+        // context menu
+        contextMenuItems,
       }}
     >
       {children}
