@@ -15,6 +15,7 @@ import { openViewer } from '@/features/viewer'
 import { useTableKeyboardNavigation, extractIdFromClassList } from '@shared/containers/Feed'
 import clsx from 'clsx'
 import useTableLoadingData from '@hooks/useTableLoadingData'
+import { useEntityListsContext } from '@pages/ProjectListsPage/context/EntityListsContext'
 
 const filterHierarchy = (text, folder, folders) => {
   let result = []
@@ -320,6 +321,8 @@ const Hierarchy = (props) => {
     handleTableKeyDown(event)
   }
 
+  const { buildAddToListMenu, buildListMenuItem, folders: foldersList } = useEntityListsContext()
+
   // Context Menu
   // const {openContext, useCreateContextMenu} = useContextMenu()
   // context items
@@ -330,6 +333,14 @@ const Hierarchy = (props) => {
       shortcut: 'Spacebar',
       command: () => openInViewer(selected[0], false),
     },
+    buildAddToListMenu(
+      foldersList.data.map((list) =>
+        buildListMenuItem(
+          list,
+          selected.map((id) => ({ id, entityType: 'folder' })),
+        ),
+      ),
+    ),
     {
       label: 'Detail',
       command: () => setShowDetail(true),

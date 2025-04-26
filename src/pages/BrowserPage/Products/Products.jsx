@@ -38,6 +38,7 @@ import * as Styled from './Products.styled'
 import { openViewer } from '@state/viewer'
 import { extractIdFromClassList } from '@shared/containers/Feed'
 import useScopedStatuses from '@hooks/useScopedStatuses'
+import { useEntityListsContext } from '@pages/ProjectListsPage/context/EntityListsContext'
 
 const Products = () => {
   const dispatch = useDispatch()
@@ -567,14 +568,6 @@ const Products = () => {
     dispatch(productSelected({ products, versions }))
   }
 
-  const onContextMenuSelectionChange = (event) => {
-    if (focusedProducts.includes(event.value)) return
-    const productId = event.value
-    const versionId = listData.find((s) => s.id === productId).versionId
-    dispatch(setFocusedProducts([productId]))
-    dispatch(setFocusedVersions([versionId]))
-  }
-
   // viewer open
   const viewerIsOpen = useSelector((state) => state.viewer.isOpen)
 
@@ -598,13 +591,38 @@ const Products = () => {
     }
   }
 
-  const ctxMenuItems = (id) => [
+  const {
+    buildAddToListMenu,
+    buildListMenuItem,
+    products: productsLists,
+    versions: versionsLists,
+  } = useEntityListsContext()
+
+  const ctxMenuItems = (id, selectedProducts, selectedVersions) => [
     {
       label: 'Open in viewer',
       command: () => handleOpenViewer(id),
       icon: 'play_circle',
       shortcut: 'Spacebar',
     },
+    buildAddToListMenu(
+      productsLists.data.map((list) =>
+        buildListMenuItem(
+          list,
+          selectedProducts.map((id) => ({ id, entityType: 'product' })),
+        ),
+      ),
+      { label: 'Add to list (product)' },
+    ),
+    buildAddToListMenu(
+      versionsLists.data.map((list) =>
+        buildListMenuItem(
+          list,
+          selectedVersions.map((id) => ({ id, entityType: 'version' })),
+        ),
+      ),
+      { label: 'Add to list (version)' },
+    ),
     {
       label: 'Product detail',
       command: () => setShowDetail('product'),
@@ -620,7 +638,22 @@ const Products = () => {
   const [ctxMenuShow] = useCreateContextMenu([])
 
   const handleContextMenu = (e, id) => {
-    ctxMenuShow(e, ctxMenuItems(id))
+    // If the product isn't in the current selection, update selection to just this product
+    let selectedProducts = [...focusedProducts],
+      selectedVersions = [...focusedVersions]
+    if (!selectedProducts.includes(id)) {
+      const productId = id
+      const versionId = listData.find((s) => s.id === productId).versionId
+      dispatch(setFocusedProducts([productId]))
+      dispatch(setFocusedVersions([versionId]))
+
+      selectedProducts = [productId]
+      selectedVersions = [versionId]
+    }
+
+    // Use the full selection (either the existing selection if id was part of it,
+    // or just the single item that was just selected)
+    ctxMenuShow(e, ctxMenuItems(id, selectedProducts, selectedVersions))
   }
 
   const handleKeyDown = (e) => {
@@ -694,7 +727,6 @@ const Products = () => {
             onItemClick={updateUri}
             onSelectionChange={onSelectionChange}
             onContext={handleContextMenu}
-            onContextMenuSelectionChange={onContextMenuSelectionChange}
             selection={selection}
             productTypes={productTypes}
             statuses={statusesObject}
@@ -711,7 +743,6 @@ const Products = () => {
             onSelectionChange={onSelectionChange}
             onFocus={onRowFocusChange}
             ctxMenuShow={handleContextMenu}
-            onContextMenuSelectionChange={onContextMenuSelectionChange}
             setColumnWidths={setColumnWidths}
             columns={columns}
             columnsWidths={columnsWidths}

@@ -42,6 +42,7 @@ import { useLocalStorage } from '@shared/hooks'
 import { useFolderSort } from '../../hooks'
 import { taskStatusSortFunction } from '@containers/TasksProgress/helpers/taskStatusSortFunction'
 import clsx from 'clsx'
+import { useEntityListsContext } from '@pages/ProjectListsPage/context/EntityListsContext'
 
 export const Cells = styled.div`
   display: flex;
@@ -195,7 +196,9 @@ export const TasksProgressTable = ({
     dispatch(toggleDetailsOpen(open))
   }
 
-  const buildContextMenu = (_selection: string[], taskId: string) => {
+  const { buildAddToListMenu, buildListMenuItem, tasks: tasksLists } = useEntityListsContext()
+
+  const buildContextMenu = (selection: string[], taskId: string) => {
     return [
       {
         label: detailsOpen ? 'Hide details' : 'Show details',
@@ -209,6 +212,14 @@ export const TasksProgressTable = ({
         shortcut: 'Spacebar',
         command: () => onOpenViewer({ taskId, quickView: true }),
       },
+      buildAddToListMenu(
+        tasksLists.data.map((list) =>
+          buildListMenuItem(
+            list,
+            selection.map((id) => ({ id, entityType: 'task' })),
+          ),
+        ),
+      ),
     ]
   }
 

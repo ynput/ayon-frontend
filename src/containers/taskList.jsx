@@ -16,6 +16,7 @@ import { openViewer } from '@/features/viewer'
 import { useTableKeyboardNavigation, extractIdFromClassList } from '@shared/containers/Feed'
 import clsx from 'clsx'
 import useTableLoadingData from '@hooks/useTableLoadingData'
+import { useEntityListsContext } from '@pages/ProjectListsPage/context/EntityListsContext'
 
 const TaskList = ({ style = {}, autoSelect = false }) => {
   const tasksTypes = useSelector((state) => state.project.tasks)
@@ -142,6 +143,8 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
     handleTableKeyDown(event)
   }
 
+  const { buildAddToListMenu, buildListMenuItem, tasks: tasksLists } = useEntityListsContext()
+
   // CONTEXT MENU
   const ctxMenuItems = (selected = []) => [
     {
@@ -155,6 +158,14 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
       icon: 'filter_list',
       command: () => handleFilterProductsBySelected(selected),
     },
+    buildAddToListMenu(
+      tasksLists.data.map((list) =>
+        buildListMenuItem(
+          list,
+          selected.map((id) => ({ id, entityType: 'task' })),
+        ),
+      ),
+    ),
     {
       label: 'Detail',
       command: () => setShowDetail(true),

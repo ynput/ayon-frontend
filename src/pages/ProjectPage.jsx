@@ -18,6 +18,8 @@ import { useGetProjectAddonsQuery } from '@queries/addons/getAddons'
 import { TabPanel, TabView } from 'primereact/tabview'
 import AppNavLinks from '@containers/header/AppNavLinks'
 import { SlicerProvider } from '@context/SlicerContext'
+import { EntityListsProvider } from './ProjectListsPage/context/EntityListsContext'
+import { listEntityTypes } from './ProjectListsPage/components/NewListDialog/NewListDialog'
 
 const ProjectContextInfo = () => {
   /**
@@ -210,7 +212,9 @@ const ProjectPage = () => {
         {showContextDialog && <ProjectContextInfo />}
       </Dialog>
       <AppNavLinks links={links} />
-      <SlicerProvider>{child}</SlicerProvider>
+      <EntityListsProvider {...{ projectName, entityTypes: listEntityTypes }}>
+        <SlicerProvider>{child}</SlicerProvider>
+      </EntityListsProvider>
     </>
   )
 }

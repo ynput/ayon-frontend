@@ -33,7 +33,7 @@ export const ListsDataProvider = ({ children }: ListsDataProviderProps) => {
   const { projectName } = useProjectDataContext()
 
   const [pageConfig, updatePageConfig, { isSuccess: columnsConfigReady }] = useUsersPageConfig({
-    page: 'overview',
+    page: 'lists',
     projectName: projectName,
   })
 

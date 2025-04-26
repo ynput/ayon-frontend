@@ -11,7 +11,7 @@ import { AttributeWithPermissions } from '../types'
 
 type ContextEvent = React.MouseEvent<HTMLTableSectionElement, MouseEvent>
 
-type TableCellContextData = {
+export type TableCellContextData = {
   id: string
   columnId: string
   rowId: string
@@ -27,7 +27,7 @@ type DefaultMenuItem =
   | 'export'
   | 'create-folder'
   | 'create-task'
-type ContextMenuItemConstructor = (
+export type ContextMenuItemConstructor = (
   e: ContextEvent,
   cell: TableCellContextData,
   selectedCells: TableCellContextData[],

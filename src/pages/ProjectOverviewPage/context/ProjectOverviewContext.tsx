@@ -21,6 +21,8 @@ import { clientFilterToQueryFilter } from '@shared/containers/ProjectTreeTable/u
 import { QueryTasksFoldersApiArg } from '@api/rest/folders'
 import { ProjectDataContextProps, useProjectDataContext } from './ProjectDataContext'
 import { LoadingTasks } from '@shared/containers/ProjectTreeTable'
+import { useEntityListsContext } from '@pages/ProjectListsPage/context/EntityListsContext'
+import { ContextMenuItemConstructors } from '@shared/containers/ProjectTreeTable/hooks/useCellContextMenu'
 
 export interface ProjectOverviewContextProps {
   isInitialized: boolean
@@ -64,6 +66,9 @@ export interface ProjectOverviewContextProps {
   // Sorting
   sorting: SortingState
   updateSorting: OnChangeFn<SortingState>
+
+  // context menu items
+  contextMenuItems: ContextMenuItemConstructors
 }
 
 const ProjectOverviewContext = createContext<ProjectOverviewContextProps | undefined>(undefined)
@@ -84,6 +89,22 @@ export const ProjectOverviewProvider = ({ children }: ProjectOverviewProviderPro
     columnSorting,
     setColumnSorting,
   } = useProjectDataContext()
+
+  // lists data
+  const { menuItems: addToListItems } = useEntityListsContext()
+
+  // inject in custom add to list context menu items
+  const contextMenuItems: ContextMenuItemConstructors = [
+    'copy-paste',
+    'show-details',
+    'expand-collapse',
+    addToListItems,
+    'inherit',
+    'export',
+    'create-folder',
+    'create-task',
+    'delete',
+  ]
 
   const getLocalKey = (page: string, key: string) => `${page}-${key}-${projectName}`
 
@@ -210,6 +231,8 @@ export const ProjectOverviewProvider = ({ children }: ProjectOverviewProviderPro
         // sorting
         sorting: columnSorting,
         updateSorting,
+        // context menu item
+        contextMenuItems,
       }}
     >
       {children}

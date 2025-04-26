@@ -1,14 +1,14 @@
 import { EntityListItem, useGetListsInfiniteInfiniteQuery } from '@queries/lists/getLists'
-import { clientFilterToQueryFilter } from '@shared/containers/ProjectTreeTable'
-import { Filter } from '@ynput/ayon-react-components'
+import { clientFilterToQueryFilter, FilterForQuery } from '@shared/containers/ProjectTreeTable'
 import { useMemo, useState } from 'react'
 
 interface UseGetListsDataProps {
   projectName: string
-  filters: Filter[]
+  filters: FilterForQuery[]
+  skip?: boolean
 }
 
-interface UseGetListsDataReturn {
+export interface UseGetListsDataReturn {
   data: EntityListItem[]
   isLoading: boolean
   isFetchingNextPage: boolean
@@ -16,7 +16,11 @@ interface UseGetListsDataReturn {
   fetchNextPage: () => void
 }
 
-const useGetListsData = ({ projectName, filters }: UseGetListsDataProps): UseGetListsDataReturn => {
+const useGetListsData = ({
+  projectName,
+  filters,
+  skip,
+}: UseGetListsDataProps): UseGetListsDataReturn => {
   const queryFilter = clientFilterToQueryFilter(filters)
   const queryFilterString = filters.length ? JSON.stringify(queryFilter) : ''
 
@@ -35,6 +39,7 @@ const useGetListsData = ({ projectName, filters }: UseGetListsDataProps): UseGet
     },
     {
       initialPageParam: { cursor: '' },
+      skip: !projectName || skip,
     },
   )
   const [previousProjectName, setPreviousProjectName] = useState(projectName)

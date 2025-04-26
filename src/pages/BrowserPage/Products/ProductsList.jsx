@@ -13,7 +13,6 @@ const ProductsList = ({
   onSelectionChange,
   onFocus,
   ctxMenuShow,
-  onContextMenuSelectionChange,
   setColumnWidths,
   columnsWidths,
   columns,
@@ -92,7 +91,6 @@ const ProductsList = ({
         }
       }}
       onContextMenu={(e) => ctxMenuShow(e.originalEvent, e.node.data.id)}
-      onContextMenuSelectionChange={onContextMenuSelectionChange}
       onColumnResizeEnd={setColumnWidths}
       reorderableColumns
       onColReorder={handleColumnReorder}

@@ -3,6 +3,7 @@ import gqlApi from './getLists'
 
 const updateListsEnhancedApi = api.enhanceEndpoints({
   endpoints: {
+    // LIST MUTATIONS
     createEntityList: {
       invalidatesTags: [{ type: 'entityList', id: 'LIST' }],
     },
@@ -50,11 +51,18 @@ const updateListsEnhancedApi = api.enhanceEndpoints({
     deleteEntityList: {
       invalidatesTags: [{ type: 'entityList', id: 'LIST' }],
     },
+    // LIST ITEM MUTATIONS
+    createEntityListItem: {
+      invalidatesTags: (_s, _e, { listId }) => [{ type: 'entityList', id: listId }],
+    },
   },
 })
 
 export const {
+  // LIST MUTATIONS
   useCreateEntityListMutation,
   useUpdateEntityListMutation,
   useDeleteEntityListMutation,
+  // LIST ITEM MUTATIONS
+  useCreateEntityListItemMutation,
 } = updateListsEnhancedApi
