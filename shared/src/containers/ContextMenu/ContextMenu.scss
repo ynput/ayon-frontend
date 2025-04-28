@@ -74,6 +74,17 @@
         }
       }
 
+      &.developer {
+        background-color: var(--color-hl-developer-container);
+        span {
+          color: var(--color-hl-developer);
+        }
+
+        &:hover {
+          background-color: var(--color-hl-developer-container-hover);
+        }
+      }
+
       &.save {
         background-color: var(--md-sys-color-primary);
         &,
