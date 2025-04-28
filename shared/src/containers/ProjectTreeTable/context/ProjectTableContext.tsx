@@ -48,6 +48,8 @@ export interface ProjectTableProviderProps {
   foldersMap: FolderNodeMap
   entitiesMap: EntitiesMap
   tasksByFolderMap: TasksByFolderMap
+  tableRows?: TableRow[] // any extra rows that we want to add to the table
+
   // data functions
   fetchNextPage: () => void
   reloadTableData: () => void
@@ -132,6 +134,7 @@ const ProjectTableContext = createContext<ProjectTableContextProps | undefined>(
 export const ProjectTableProvider = ({
   children,
   foldersMap,
+  tableRows,
   tasksMap,
   entitiesMap,
   tasksByFolderMap,
@@ -158,16 +161,14 @@ export const ProjectTableProvider = ({
   setExpanded,
   contextMenuItems,
 }: ProjectTableProviderProps) => {
-  const { folderTypes, taskTypes } = projectInfo || {}
-
   // DATA TO TABLE
   const tableData = useOverviewTable({
     foldersMap,
     tasksMap,
+    rows: tableRows,
     tasksByFolderMap,
     expanded,
-    folderTypes,
-    taskTypes,
+    projectInfo,
     showHierarchy,
     loadingTasks,
     isLoadingMore,

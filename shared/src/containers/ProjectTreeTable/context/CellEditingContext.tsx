@@ -8,10 +8,10 @@ import React, {
   ReactNode,
 } from 'react'
 import { CellId } from '../utils/cellUtils'
-import useUpdateOverview, {
+import useUpdateTableData, {
   InheritFromParent,
   UpdateTableEntities,
-} from '../hooks/useUpdateOverview'
+} from '../hooks/useUpdateTableData'
 import { toast } from 'react-toastify'
 import useValidateUpdates from '../hooks/useValidateUpdates'
 import useHistory from '../hooks/useHistory'
@@ -40,7 +40,7 @@ export const CellEditingProvider: React.FC<{ children: ReactNode }> = ({ childre
   // Get history functions
   const { pushHistory, undo: undoHistory, redo: redoHistory, canUndo, canRedo } = useHistory()
 
-  const { updateEntities: updateOverviewEntities, inheritFromParent } = useUpdateOverview({
+  const { updateEntities: updateOverviewEntities, inheritFromParent } = useUpdateTableData({
     pushHistory,
   })
 

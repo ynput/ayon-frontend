@@ -1,10 +1,7 @@
-import { useCallback, useMemo } from 'react'
+import { useCallback } from 'react'
 
 // UI components
 import { Section } from '@ynput/ayon-react-components'
-
-// Types
-import { BuiltInFieldOptions } from '@shared/containers/ProjectTreeTable'
 
 // Components
 import { useProjectTableContext, ProjectTreeTable } from '@shared/containers/ProjectTreeTable'
@@ -14,47 +11,11 @@ type Props = {}
 
 const ProjectOverviewTable = ({}: Props) => {
   // the heavy lifting is done in ProjectTableContext and is where the data is fetched
-  const {
-    projectName,
-    projectInfo,
-    attribFields,
-    users,
-    entitiesMap,
-    showHierarchy,
-    isLoading,
-    fetchNextPage,
-  } = useProjectTableContext()
+  const { projectName, showHierarchy, isLoading, fetchNextPage } = useProjectTableContext()
 
   const { onOpenNew } = useNewEntityContext()
 
   const scope = `overview-${projectName}`
-
-  const { statuses = [], folderTypes = [], taskTypes = [], tags = [] } = projectInfo || {}
-
-  const options: BuiltInFieldOptions = useMemo(
-    () => ({
-      assignees: users.map(({ name, fullName }) => ({
-        value: name,
-        label: fullName || name,
-        icon: `/api/users/${name}/avatar`,
-      })),
-      statuses: statuses
-        .filter(
-          (status) => !status.scope || ['folder', 'task'].some((s) => status.scope?.includes(s)),
-        )
-        .map(({ name, color, icon, scope }) => ({
-          value: name,
-          label: name,
-          color,
-          icon,
-          scope,
-        })),
-      tags: tags.map(({ name, color }) => ({ value: name, label: name, color })),
-      folderTypes: folderTypes.map(({ name, icon }) => ({ value: name, label: name, icon })),
-      taskTypes: taskTypes.map(({ name, icon }) => ({ value: name, label: name, icon })),
-    }),
-    [users, statuses, folderTypes, taskTypes],
-  )
 
   const fetchMoreOnBottomReached = useCallback(
     (containerRefElement?: HTMLDivElement | null) => {
@@ -72,15 +33,11 @@ const ProjectOverviewTable = ({}: Props) => {
   return (
     <Section style={{ height: '100%' }}>
       <ProjectTreeTable
-        projectName={projectName}
         scope={scope}
-        attribs={attribFields}
-        options={options}
         sliceId={''}
         // pagination
         fetchMoreOnBottomReached={fetchMoreOnBottomReached}
         // metadata
-        entitiesMap={entitiesMap}
         onOpenNew={onOpenNew}
       />
     </Section>

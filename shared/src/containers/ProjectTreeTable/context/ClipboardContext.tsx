@@ -8,7 +8,7 @@ import { useCellEditing } from './CellEditingContext'
 import { getCellValue, getEntityDataById, parseCellId } from '../utils/cellUtils'
 
 // Types
-import { EntityUpdate } from '../hooks/useUpdateOverview'
+import { EntityUpdate } from '../hooks/useUpdateTableData'
 
 // Import from the new modular files
 import {

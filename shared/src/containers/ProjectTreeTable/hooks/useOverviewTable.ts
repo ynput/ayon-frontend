@@ -10,63 +10,33 @@ import { ExpandedState } from '@tanstack/react-table'
 import { generateLoadingRows } from '../utils/loadingUtils'
 const TASKS_INFINITE_QUERY_COUNT = 100
 import { LoadingTasks } from '../types'
-import { FolderType, TaskType } from '../types/project'
+import { ProjectModel } from '../types/project'
+import useGetEntityTypeData from './useGetEntityTypeData'
 
 type Params = {
   foldersMap: FolderNodeMap
   tasksMap: TaskNodeMap
   tasksByFolderMap: TasksByFolderMap
+  rows?: TableRow[]
   expanded: ExpandedState
-  folderTypes?: FolderType[]
-  taskTypes?: TaskType[]
+  projectInfo?: ProjectModel
   showHierarchy: boolean
   loadingTasks: LoadingTasks
   isLoadingMore?: boolean
 }
 
-/**
- * React hook that creates a hierarchical tree structure from folders and tasks for use with TanStack Table
- * Uses memoization to avoid unnecessary recalculations on re-render
- *
- * @param foldersMap - Map of folders organized by folder ID
- * @param tasksMap - Map of tasks organized by task ID
- * @param tasksByFolderMap - Map of tasks organized by folder ID
- * @param expanded - Object with folder IDs as keys to indicate expanded folders
- * @param folderTypes - Array of folder types for to add things like folder icon
- * @param taskTypes - Array of task types for to add things like task icon
- * @param showHierarchy - Boolean to indicate if the hierarchy should be shown
- * @param loadingTasks - Object with folder IDs as keys to indicate loading tasks
- * @param isLoadingMore - Boolean to indicate if more tasks are being loaded
- * @returns An array of TableRow objects with nested subRows suitable for TanStack Table
- */
 export default function useOverviewTable({
   foldersMap,
   tasksMap,
+  rows,
   tasksByFolderMap,
   expanded,
-  folderTypes = [],
-  taskTypes = [],
+  projectInfo,
   showHierarchy,
   loadingTasks = {},
   isLoadingMore = false,
 }: Params): TableRow[] {
-  // create a map of folder types by name for efficient lookups
-  const folderTypesByName = useMemo(() => {
-    const map: Map<string, FolderType> = new Map()
-    for (const folderType of folderTypes) {
-      map.set(folderType.name, folderType)
-    }
-    return map
-  }, [folderTypes])
-
-  // create a map of task types by name for efficient lookups
-  const taskTypesByName = useMemo(() => {
-    const map: Map<string, TaskType> = new Map()
-    for (const taskType of taskTypes) {
-      map.set(taskType.name, taskType)
-    }
-    return map
-  }, [taskTypes])
+  const getEntityTypeData = useGetEntityTypeData({ projectInfo })
 
   // Convert expanded object to a stable string for memoization comparison
   const expandedKey = useMemo(() => JSON.stringify(expanded), [expanded])
@@ -87,7 +57,7 @@ export default function useOverviewTable({
 
     // Construct relationship maps in a single pass
     for (const folder of foldersMap.values()) {
-      if (!folder.id) continue
+      if (!folder?.id) continue
 
       const parentId = folder.parentId
       if (parentId) {
@@ -112,7 +82,7 @@ export default function useOverviewTable({
     // Start with root folders and folders with non-existent parents
     const queue: string[] = []
     for (const folder of foldersMap.values()) {
-      if (!folder.id) continue
+      if (!folder?.id) continue
 
       // Include folders with no parent OR with a parent that doesn't exist
       if (!folder.parentId || !foldersMap.has(folder.parentId)) {
@@ -147,14 +117,15 @@ export default function useOverviewTable({
   return useMemo(() => {
     // Helper function to create a task row
     const createTaskRow = (task: EditorTaskNode, parentId?: string): TableRow => {
+      const typeData = getEntityTypeData('task', task.taskType)
       return {
         id: task.id,
         entityType: 'task',
         parentId: parentId || task.folderId,
         name: task.name || '',
         label: task.label || task.name || '',
-        icon: taskTypesByName.get(task.taskType)?.icon || null,
-        color: taskTypesByName.get(task.taskType)?.color || null,
+        icon: typeData?.icon || null,
+        color: typeData?.color || null,
         status: task.status,
         assignees: task.assignees,
         tags: task.tags,
@@ -169,17 +140,22 @@ export default function useOverviewTable({
 
     // If showHierarchy is false, create a flat list of task rows
     if (!showHierarchy) {
-      const flatTaskRows: TableRow[] = []
+      const flatRows: TableRow[] = []
 
       // Loop through all tasks
       for (const task of tasksMap.values()) {
         if (!task.id) continue
-        flatTaskRows.push(createTaskRow(task))
+        flatRows.push(createTaskRow(task))
+      }
+
+      // Loop through all extra rows
+      for (const row of rows || []) {
+        flatRows.push(row)
       }
 
       // Sort all tasks by name
-      if (flatTaskRows.length > 1) {
-        flatTaskRows.sort((a, b) => {
+      if (flatRows.length > 1) {
+        flatRows.sort((a, b) => {
           if (a.name < b.name) return -1
           if (a.name > b.name) return 1
           return 0
@@ -199,11 +175,11 @@ export default function useOverviewTable({
             type: 'task',
           })
 
-          flatTaskRows.push(...loadingTaskRows)
+          flatRows.push(...loadingTaskRows)
         }
       }
 
-      return flatTaskRows
+      return flatRows
     }
 
     // Use Map for O(1) lookups
@@ -222,7 +198,7 @@ export default function useOverviewTable({
         parentId: folder.parentId || undefined,
         name: folder.name || '',
         label: folder.label || folder.name || '',
-        icon: folderTypesByName.get(folder.folderType)?.icon || null,
+        icon: getEntityTypeData('folder', folder.folderType)?.icon || null,
         color: null,
         img: null,
         subRows: [],
@@ -330,6 +306,11 @@ export default function useOverviewTable({
       }
     }
 
+    // Add any extra rows to the root rows
+    for (const row of rows || []) {
+      rootRows.push(row)
+    }
+
     // Sort root rows
     if (rootRows.length > 1) {
       rootRows.sort((a, b) => {
@@ -343,11 +324,11 @@ export default function useOverviewTable({
   }, [
     foldersMap,
     tasksMap,
+    rows,
     visibleFolders,
     childToParentMap,
     expandedFolderIds,
     showHierarchy,
-    taskTypesByName,
     loadingTasks,
     isLoadingMore,
   ])

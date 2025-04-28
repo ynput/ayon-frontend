@@ -9,6 +9,7 @@ import {
   ColumnSettingsProvider,
   ProjectTableProvider,
   ProjectTableQueriesProvider,
+  ProjectTreeTable,
   SelectedRowsProvider,
   SelectionProvider,
 } from '@shared/containers/ProjectTreeTable'
@@ -20,7 +21,8 @@ const ListItemsTable: FC<ListItemsTableProps> = ({}) => {
   const { rowSelection } = useListsContext()
   const selectedListsIds = Object.entries(rowSelection).filter(([_, isSelected]) => isSelected)
   const isMultipleSelected = selectedListsIds.length > 1
-  const { listItemsData, isError } = useListItemsDataContext()
+  const { isError, projectName } = useListItemsDataContext()
+  const scope = `lists-${projectName}`
 
   if (!selectedListsIds.length) return <EmptyPlaceholder message="Start by selecting a list." />
 
@@ -29,7 +31,16 @@ const ListItemsTable: FC<ListItemsTableProps> = ({}) => {
 
   if (isError) return <EmptyPlaceholder message="Error loading list items." />
 
-  return listItemsData.map((item) => <div key={item.id}>{item.name}</div>)
+  return (
+    <ProjectTreeTable
+      scope={scope}
+      sliceId={''}
+      // pagination
+      fetchMoreOnBottomReached={() => {
+        console.log('REACHED BOTTOM: Doing nothing...')
+      }}
+    />
+  )
 }
 
 const ListItemsTableWithProviders: FC<ListItemsTableProps> = () => {
@@ -52,6 +63,13 @@ const ListItemsTableWithProviders: FC<ListItemsTableProps> = () => {
           attribFields={props.attribFields}
           projectInfo={props.projectInfo}
           users={props.users}
+          entitiesMap={props.listItemsMap}
+          foldersMap={props.foldersMap}
+          tasksMap={props.tasksMap}
+          tableRows={props.listItemsTableData}
+          expanded={{}}
+          isInitialized={true}
+          showHierarchy={false}
         >
           <SelectionProvider>
             <SelectedRowsProvider>

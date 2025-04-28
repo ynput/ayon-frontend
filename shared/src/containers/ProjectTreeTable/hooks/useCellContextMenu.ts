@@ -6,7 +6,7 @@ import { useClipboard } from '../context/ClipboardContext'
 import { ROW_SELECTION_COLUMN_ID, useSelectionContext } from '../context/SelectionContext'
 import { useProjectTableContext } from '../context/ProjectTableContext'
 import { useCellEditing } from '../context/CellEditingContext'
-import { InheritFromParentEntity } from './useUpdateOverview'
+import { InheritFromParentEntity } from './useUpdateTableData'
 import { AttributeWithPermissions } from '../types'
 
 type ContextEvent = React.MouseEvent<HTMLTableSectionElement, MouseEvent>

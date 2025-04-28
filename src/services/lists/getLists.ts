@@ -27,18 +27,47 @@ export type GetListsResult = {
 type ListsPageParam = {
   cursor: string
 }
+
+// Extra types from the query
 type QueryEntityListItemEdge =
   GetListItemsQuery['project']['entityLists']['edges'][number]['node']['items']['edges'][number]
-type QueryEntityListItemNode = QueryEntityListItemEdge['node']
+
+type ItemNodeData = {
+  name: string
+  status: string
+  allAttrib: string
+  tags: string[]
+  ownAttrib?: string[]
+  taskType?: string
+  folderType?: string
+  productType?: string
+  // different paths to folder
+  path?: string
+  folder?: {
+    path: string
+  }
+  product?: {
+    folder: {
+      path: string
+    }
+  }
+  task?: {
+    name: string
+  }
+}
+
+type QueryEntityListItemNode = QueryEntityListItemEdge['node'] & ItemNodeData
+
 export type EntityListItem = NonNullable<QueryEntityListItemNode> &
-  Omit<QueryEntityListItemEdge, 'node'>
+  Omit<QueryEntityListItemEdge, 'node'> & { attrib: Record<string, unknown> }
 // Define the result type for items query
 export type GetListItemsResult = {
   pageInfo: {
     hasNextPage: boolean
     endCursor?: string | null
   }
-  items: (QueryEntityListItemNode & Omit<QueryEntityListItemEdge, 'node'>)[]
+  items: (QueryEntityListItemNode &
+    Omit<QueryEntityListItemEdge, 'node'> & { attrib: Record<string, unknown> })[]
 }
 
 type ListItemsPageParam = {
@@ -46,6 +75,7 @@ type ListItemsPageParam = {
 }
 
 import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
+import { parseAllAttribs } from '@queries/overview/getOverview'
 type Definitions = DefinitionsFromApi<typeof gqlApi>
 type TagTypes = TagTypesFromApi<typeof gqlApi>
 // update the definitions to include the new types
@@ -68,9 +98,14 @@ const getListsGqlApiEnhanced = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefiniti
       transformResponse: (response: GetListItemsQuery): GetListItemsResult => {
         return {
           items: response.project.entityLists.edges.flatMap((listEdge) =>
-            listEdge.node.items.edges.map(
-              ({ node, ...edge }) => ({ ...node, ...edge } as GetListItemsResult['items'][number]),
-            ),
+            listEdge.node.items.edges.map(({ node, ...edge }) => {
+              const nodeWithNode = node as QueryEntityListItemNode
+              return {
+                ...node,
+                ...edge,
+                attrib: parseAllAttribs(nodeWithNode.allAttrib),
+              } as GetListItemsResult['items'][number]
+            }),
           ),
           pageInfo: response.project.entityLists.edges[0].node.items.pageInfo,
         }

@@ -26,3 +26,6 @@ export type { ColumnSettingsContextType } from './context/ColumnSettingsContext'
 export * from './utils'
 export * from './types'
 export * from './context'
+
+import useGetEntityTypeData from './hooks/useGetEntityTypeData'
+export { useGetEntityTypeData }

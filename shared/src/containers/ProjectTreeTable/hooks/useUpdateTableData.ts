@@ -36,11 +36,11 @@ export type UpdateTableEntity = (
   { includeSelection }: { includeSelection: boolean },
 ) => Promise<void>
 
-interface UseUpdateOverviewProps {
+interface UseUpdateTableDataProps {
   pushHistory?: UseHistoryReturn['pushHistory']
 }
 
-const useUpdateOverview = (props?: UseUpdateOverviewProps) => {
+const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
   const { pushHistory } = props || {}
   const {
     getEntityById,
@@ -418,4 +418,4 @@ const useUpdateOverview = (props?: UseUpdateOverviewProps) => {
   return { updateEntities: handleUpdateEntities, inheritFromParent }
 }
 
-export default useUpdateOverview
+export default useUpdateTableData

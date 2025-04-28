@@ -4,12 +4,16 @@ import {
   ProjectDataContextProps,
   useProjectDataContext,
 } from '@pages/ProjectOverviewPage/context/ProjectDataContext'
-import { SimpleTableRow } from '@shared/SimpleTable'
 import { Filter } from '@ynput/ayon-react-components'
 import { useUsersPageConfig } from '@pages/ProjectOverviewPage/hooks/useUserPageConfig'
 import useGetListItemsData from '../hooks/useGetListItemsData'
 import { useListsContext } from './ListsContext'
-import { FolderNodeMap, TaskNodeMap } from '@shared/containers/ProjectTreeTable'
+import {
+  FolderNodeMap,
+  TableRow,
+  TaskNodeMap,
+  useGetEntityTypeData,
+} from '@shared/containers/ProjectTreeTable'
 
 export type ListItemsMap = Map<string, EntityListItem>
 
@@ -23,7 +27,7 @@ interface ListItemsDataContextValue {
 
   // LIST ITEMS DATA
   listItemsData: EntityListItem[]
-  listItemsTableData: SimpleTableRow[]
+  listItemsTableData: TableRow[]
   listItemsMap: ListItemsMap
   fetchNextPage: () => void
   isLoadingAll: boolean
@@ -32,6 +36,9 @@ interface ListItemsDataContextValue {
   // filters
   listItemsFilters: Filter[]
   setListItemsFilters: (filters: Filter[]) => Promise<void>
+  // folders data
+  foldersMap: FolderNodeMap
+  tasksMap: TaskNodeMap
 }
 
 const ListItemsDataContext = createContext<ListItemsDataContextValue | undefined>(undefined)
@@ -53,6 +60,8 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     columnSorting,
     setColumnSorting,
   } = useProjectDataContext()
+
+  const getEntityTypeData = useGetEntityTypeData({ projectInfo })
 
   const { rowSelection } = useListsContext()
   const selectedListsIds = Object.entries(rowSelection)
@@ -88,26 +97,63 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     return new Map(listItemsData.map((item) => [item.id, item]))
   }, [listItemsData])
 
+  const extractPath = (item: EntityListItem, entityType: string): string => {
+    switch (entityType) {
+      case 'folder':
+        return item.path || ''
+      case 'task':
+        return item.folder?.path || ''
+      case 'product':
+        return item.folder?.path || ''
+      case 'version':
+        return item.product?.folder?.path || '' + item.task?.name || ''
+      default:
+        return ''
+    }
+  }
+
+  const extractSubType = (item: EntityListItem, entityType?: string): string | undefined => {
+    switch (entityType) {
+      case 'folder':
+        return item.folderType
+      case 'task':
+        return item.taskType
+      case 'product':
+        return item.productType || ''
+      case 'version':
+        return undefined
+      default:
+        return undefined
+    }
+  }
+
   // convert listItemsData into tableData
   const listItemsTableData = useMemo(() => {
-    const tableRows: SimpleTableRow[] = listItemsData.map((list) => ({
+    const tableRows: TableRow[] = listItemsData.map((list) => ({
       id: list.id,
       name: list.name,
       label: list.name,
+      entityType: list.entityType,
+      attrib: list.attrib,
+      ownAttrib: list.ownAttrib || Object.keys(list.attrib),
+      icon: getEntityTypeData(list.entityType, extractSubType(list, list.entityType))?.icon,
+      path: extractPath(list, list.entityType),
+      tags: list.tags,
+      status: list.status,
       subRows: [],
-      data: {
-        id: list.id,
-        // count: list.count,
-        // owner: list.owner,
-      },
     }))
 
     return tableRows
   }, [listItemsData])
 
-  const foldersMap = new Map<string, FolderNodeMap>()
-  const tasksMap = new Map<string, TaskNodeMap>()
-  const itemsMap = new Map<string, any>()
+  console.log(listItemsData)
+  console.log(listItemsTableData)
+
+  const foldersMap: FolderNodeMap = new Map(
+    // @ts-ignore
+    listItemsData.filter((item) => item.entityType === 'folder'),
+  )
+  const tasksMap: TaskNodeMap = new Map()
 
   return (
     <ListItemsDataContext.Provider
@@ -127,6 +173,9 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
         // filters
         listItemsFilters,
         setListItemsFilters,
+        // folders data
+        foldersMap,
+        tasksMap,
       }}
     >
       {children}

@@ -1509,7 +1509,7 @@ export type GetListItemsQueryVariables = Exact<{
 }>;
 
 
-export type GetListItemsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', entityLists: { __typename?: 'EntityListsConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, edges: Array<{ __typename?: 'EntityListEdge', node: { __typename?: 'EntityListNode', id: string, active: boolean, items: { __typename?: 'EntityListItemsConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, edges: Array<{ __typename?: 'EntityListItemEdge', id: string, entityId: string, entityType: string, node?: { __typename?: 'FolderNode', active: boolean, name: string } | { __typename?: 'ProductNode', active: boolean, name: string } | { __typename?: 'RepresentationNode', active: boolean, name: string } | { __typename?: 'TaskNode', active: boolean, name: string } | { __typename?: 'VersionNode', active: boolean, name: string } | { __typename?: 'WorkfileNode', active: boolean, name: string } | null }> } } }> } } };
+export type GetListItemsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', entityLists: { __typename?: 'EntityListsConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, edges: Array<{ __typename?: 'EntityListEdge', node: { __typename?: 'EntityListNode', id: string, active: boolean, items: { __typename?: 'EntityListItemsConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, edges: Array<{ __typename?: 'EntityListItemEdge', id: string, entityId: string, entityType: string, node?: { __typename?: 'FolderNode', active: boolean, name: string, status: string, tags: Array<string>, folderType: string, allAttrib: string, ownAttrib: Array<string>, path?: string | null } | { __typename?: 'ProductNode', active: boolean, name: string, status: string, tags: Array<string>, productType: string, allAttrib: string, folder: { __typename?: 'FolderNode', path?: string | null } } | { __typename?: 'RepresentationNode', active: boolean, name: string } | { __typename?: 'TaskNode', active: boolean, name: string, status: string, tags: Array<string>, taskType: string, allAttrib: string, ownAttrib: Array<string>, folder: { __typename?: 'FolderNode', path?: string | null } } | { __typename?: 'VersionNode', active: boolean, name: string, status: string, tags: Array<string>, allAttrib: string, product: { __typename?: 'ProductNode', folder: { __typename?: 'FolderNode', path?: string | null } }, task?: { __typename?: 'TaskNode', name: string } | null } | { __typename?: 'WorkfileNode', active: boolean, name: string } | null }> } } }> } } };
 
 export type GetListsQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
@@ -1520,6 +1520,20 @@ export type GetListsQueryVariables = Exact<{
 
 
 export type GetListsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', entityLists: { __typename?: 'EntityListsConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, edges: Array<{ __typename?: 'EntityListEdge', node: { __typename?: 'EntityListNode', id: string, label: string, entityListType: string, entityType: string, active: boolean, createdAt: any, owner?: string | null, count: number } }> } } };
+
+type ListItemFragment_FolderNode_Fragment = { __typename?: 'FolderNode', name: string, status: string, tags: Array<string>, folderType: string, allAttrib: string, ownAttrib: Array<string>, path?: string | null };
+
+type ListItemFragment_ProductNode_Fragment = { __typename?: 'ProductNode', name: string, status: string, tags: Array<string>, productType: string, allAttrib: string, folder: { __typename?: 'FolderNode', path?: string | null } };
+
+type ListItemFragment_RepresentationNode_Fragment = { __typename?: 'RepresentationNode' };
+
+type ListItemFragment_TaskNode_Fragment = { __typename?: 'TaskNode', name: string, status: string, tags: Array<string>, taskType: string, allAttrib: string, ownAttrib: Array<string>, folder: { __typename?: 'FolderNode', path?: string | null } };
+
+type ListItemFragment_VersionNode_Fragment = { __typename?: 'VersionNode', name: string, status: string, tags: Array<string>, allAttrib: string, product: { __typename?: 'ProductNode', folder: { __typename?: 'FolderNode', path?: string | null } }, task?: { __typename?: 'TaskNode', name: string } | null };
+
+type ListItemFragment_WorkfileNode_Fragment = { __typename?: 'WorkfileNode' };
+
+export type ListItemFragmentFragment = ListItemFragment_FolderNode_Fragment | ListItemFragment_ProductNode_Fragment | ListItemFragment_RepresentationNode_Fragment | ListItemFragment_TaskNode_Fragment | ListItemFragment_VersionNode_Fragment | ListItemFragment_WorkfileNode_Fragment;
 
 export type GetMarketInstallEventsQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -1709,6 +1723,54 @@ export const MessageFragmentFragmentDoc = `
     type
     name
     label
+  }
+}
+    `;
+export const ListItemFragmentFragmentDoc = `
+    fragment ListItemFragment on BaseNode {
+  ... on TaskNode {
+    name
+    status
+    tags
+    taskType
+    allAttrib
+    ownAttrib
+    folder {
+      path
+    }
+  }
+  ... on FolderNode {
+    name
+    status
+    tags
+    folderType
+    allAttrib
+    ownAttrib
+    path
+  }
+  ... on ProductNode {
+    name
+    status
+    tags
+    productType
+    allAttrib
+    folder {
+      path
+    }
+  }
+  ... on VersionNode {
+    name
+    status
+    tags
+    allAttrib
+    product {
+      folder {
+        path
+      }
+    }
+    task {
+      name
+    }
   }
 }
     `;
@@ -1956,6 +2018,7 @@ export const GetListItemsDocument = `
               node {
                 active
                 name
+                ...ListItemFragment
               }
             }
           }
@@ -1964,7 +2027,7 @@ export const GetListItemsDocument = `
     }
   }
 }
-    `;
+    ${ListItemFragmentFragmentDoc}`;
 export const GetListsDocument = `
     query GetLists($projectName: String!, $first: Int!, $after: String, $filter: String) {
   project(name: $projectName) {

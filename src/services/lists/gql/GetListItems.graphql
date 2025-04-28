@@ -27,6 +27,7 @@ query GetListItems(
               node {
                 active
                 name
+                ...ListItemFragment
               }
             }
           }

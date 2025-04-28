@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { EntityUpdate, InheritFromParentEntity } from './useUpdateOverview'
+import { EntityUpdate, InheritFromParentEntity } from './useUpdateTableData'
 
 export interface HistoryEntityUpdate extends EntityUpdate {
   ownAttrib: string[]

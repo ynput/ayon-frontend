@@ -48,23 +48,23 @@ export type GetTasksByParentQuery = {
 
 export type TableRow = {
   id: string
-  parentId?: string
+  entityType: string
   name: string
   label: string
-  icon: string | null
-  color: string | null
-  img: string | null
-  startContent?: JSX.Element
-  subRows: TableRow[]
-  status?: string
-  assignees?: string[]
+  path: string | null | undefined
+  ownAttrib: string[]
   tags: string[]
+  status: string
+  parentId?: string
+  subRows: TableRow[]
+  icon?: string | null
+  color?: string | null
+  img?: string | null
+  startContent?: JSX.Element
+  assignees?: string[]
   attrib?: Record<string, any>
   childOnlyMatch?: boolean // when true, only children of this folder match the filter and not the folder itself (shots a dot)
   subType?: string | null
-  entityType: string
-  ownAttrib: string[]
-  path: string | null | undefined
   isLoading?: boolean
 }
 

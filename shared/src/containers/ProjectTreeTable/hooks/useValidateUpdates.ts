@@ -1,7 +1,7 @@
 import { toast } from 'react-toastify'
 import { useProjectTableContext } from '../context'
 import { AttributeData } from '../types'
-import { EntityUpdate } from './useUpdateOverview'
+import { EntityUpdate } from './useUpdateTableData'
 
 const useValidateUpdates = () => {
   const { attribFields } = useProjectTableContext()

@@ -59,7 +59,7 @@ const ProjectListsPage: FC = () => {
                   <SplitterPanel size={70}>
                     <ListItemsTable />
                   </SplitterPanel>
-                  {!!true ? (
+                  {!!false ? (
                     <SplitterPanel
                       size={30}
                       style={{
@@ -74,7 +74,7 @@ const ProjectListsPage: FC = () => {
                   )}
                 </Splitter>
               </SplitterPanel>
-              {true ? (
+              {false ? (
                 <SplitterPanel
                   size={18}
                   style={{
