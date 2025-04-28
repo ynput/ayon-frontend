@@ -216,7 +216,7 @@ export const TasksProgressTable = ({
         tasksLists.data.map((list) =>
           buildListMenuItem(
             list,
-            selection.map((id) => ({ id, entityType: 'task' })),
+            selection.map((id) => ({ entityId: id, entityType: 'task' })),
           ),
         ),
       ),

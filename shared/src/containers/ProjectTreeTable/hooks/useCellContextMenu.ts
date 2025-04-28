@@ -12,9 +12,9 @@ import { AttributeWithPermissions } from '../types'
 type ContextEvent = React.MouseEvent<HTMLTableSectionElement, MouseEvent>
 
 export type TableCellContextData = {
-  id: string
+  entityId: string
+  cellId: string
   columnId: string
-  rowId: string
   entityType: 'folder' | 'task' | undefined
   attribField: AttributeWithPermissions | undefined
 }
@@ -123,7 +123,7 @@ const useCellContextMenu = ({ attribs, onOpenNew }: CellContextMenuProps) => {
         hidden:
           cell.columnId !== 'name' ||
           !config.selectedFullRows.some(
-            (cellId) => parseCellId(cellId)?.rowId === parseCellId(cell.id)?.rowId,
+            (cellId) => parseCellId(cellId)?.rowId === parseCellId(cell.cellId)?.rowId,
           ),
       },
       {
@@ -142,7 +142,7 @@ const useCellContextMenu = ({ attribs, onOpenNew }: CellContextMenuProps) => {
     icon: 'dock_to_left',
     shortcut: 'Double click',
     command: () => {
-      const rowSelectionCellId = getCellId(cell.rowId, ROW_SELECTION_COLUMN_ID)
+      const rowSelectionCellId = getCellId(cell.entityId, ROW_SELECTION_COLUMN_ID)
       // select the row to open the details
       selectCell(rowSelectionCellId, false, false)
     },
@@ -238,9 +238,9 @@ const useCellContextMenu = ({ attribs, onOpenNew }: CellContextMenuProps) => {
     const cellEntityData = getEntityById(rowId)
     const attribField = attribs.find((attrib) => attrib.name === colId?.replace('attrib_', ''))
     return {
-      id: cellId,
+      cellId: cellId,
       columnId: colId,
-      rowId: rowId,
+      entityId: rowId,
       entityType: cellEntityData?.entityType,
       attribField: attribField,
     }
@@ -271,11 +271,11 @@ const useCellContextMenu = ({ attribs, onOpenNew }: CellContextMenuProps) => {
     const selectedCellRows: string[] = []
     const selectedCellColumns: string[] = []
     const selectedCellFullRows: string[] = []
-    for (const { rowId, columnId } of selectedCellsData) {
-      if (rowId && !selectedCellRows.includes(rowId)) selectedCellRows.push(rowId)
+    for (const { entityId, columnId } of selectedCellsData) {
+      if (entityId && !selectedCellRows.includes(entityId)) selectedCellRows.push(entityId)
       if (columnId && !selectedCellColumns.includes(columnId)) selectedCellColumns.push(columnId)
-      if (columnId === ROW_SELECTION_COLUMN_ID && !selectedCellFullRows.includes(rowId))
-        selectedCellFullRows.push(rowId)
+      if (columnId === ROW_SELECTION_COLUMN_ID && !selectedCellFullRows.includes(entityId))
+        selectedCellFullRows.push(entityId)
     }
 
     const constructedMenuItems = contextMenuItems.flatMap((constructor) =>

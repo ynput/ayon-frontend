@@ -162,7 +162,7 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
       tasksLists.data.map((list) =>
         buildListMenuItem(
           list,
-          selected.map((id) => ({ id, entityType: 'task' })),
+          selected.map((id) => ({ entityId: id, entityType: 'task' })),
         ),
       ),
     ),

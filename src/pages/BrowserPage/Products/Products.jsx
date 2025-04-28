@@ -609,7 +609,7 @@ const Products = () => {
       productsLists.data.map((list) =>
         buildListMenuItem(
           list,
-          selectedProducts.map((id) => ({ id, entityType: 'product' })),
+          selectedProducts.map((id) => ({ entityId: id, entityType: 'product' })),
         ),
       ),
       { label: 'Add to list (product)' },
@@ -618,7 +618,7 @@ const Products = () => {
       versionsLists.data.map((list) =>
         buildListMenuItem(
           list,
-          selectedVersions.map((id) => ({ id, entityType: 'version' })),
+          selectedVersions.map((id) => ({ entityId: id, entityType: 'version' })),
         ),
       ),
       { label: 'Add to list (version)' },

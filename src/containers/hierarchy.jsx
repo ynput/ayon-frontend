@@ -337,7 +337,7 @@ const Hierarchy = (props) => {
       foldersList.data.map((list) =>
         buildListMenuItem(
           list,
-          selected.map((id) => ({ id, entityType: 'folder' })),
+          selected.map((id) => ({ entityId: id, entityType: 'folder' })),
         ),
       ),
     ),

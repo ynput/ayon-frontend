@@ -27,12 +27,12 @@ export interface EntityListsContextValue {
   addToList: (
     listId: string,
     entityType: string,
-    entities: { id: string; entityType: string | undefined }[],
+    entities: { entityId: string; entityType: string | undefined }[],
   ) => Promise<void>
   menuItems: ContextMenuItemConstructor
   buildListMenuItem: (
     list: EntityListItem,
-    selected: { id: string; entityType: string | undefined }[],
+    selected: { entityId: string; entityType: string | undefined }[],
     showIcon?: boolean,
   ) => ListSubMenuItem
   buildAddToListMenu: (
@@ -111,7 +111,7 @@ export const EntityListsProvider = ({
             listId,
             projectName,
             entityListItemPostModel: {
-              entityId: entity.id,
+              entityId: entity.entityId,
               position: index,
             },
           }).unwrap(),
@@ -156,7 +156,7 @@ export const EntityListsProvider = ({
       addToList(
         list.id,
         list.entityType,
-        selected.map((i) => ({ id: i.id, entityType: i.entityType })),
+        selected.map((i) => ({ entityId: i.entityId, entityType: i.entityType })),
       ),
   })
 
