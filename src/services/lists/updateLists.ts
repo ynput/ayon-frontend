@@ -60,6 +60,7 @@ const updateListsEnhancedApi = api.enhanceEndpoints({
       invalidatesTags: (_s, _e, { listId, entityListMultiPatchModel: { items } }) => {
         const tags = [
           { type: 'entityList', id: listId },
+          { type: 'entityListItem', id: listId },
           ...(items || []).flatMap((i) =>
             (i.id ? [{ type: 'entityListItem', id: i.id }] : []).concat(
               i.entityId ? [{ type: 'entityListItem', id: i.entityId }] : [],
@@ -70,7 +71,10 @@ const updateListsEnhancedApi = api.enhanceEndpoints({
       },
     },
     createEntityListItem: {
-      invalidatesTags: (_s, _e, { listId }) => [{ type: 'entityList', id: listId }],
+      invalidatesTags: (_s, _e, { listId }) => [
+        { type: 'entityList', id: listId },
+        { type: 'entityListItem', id: listId },
+      ],
     },
   },
 })
