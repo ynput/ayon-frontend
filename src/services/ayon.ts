@@ -67,6 +67,7 @@ const tagTypes = [
   'dependencyPackage',
   'entity',
   'entityList',
+  'entityListItem',
   'entities',
   'folder',
   'hierarchy',

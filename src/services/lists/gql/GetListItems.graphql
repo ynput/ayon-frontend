@@ -1,0 +1,35 @@
+query GetListItems(
+  $projectName: String!
+  $listId: String!
+  $first: Int!
+  $after: String
+  $sortBy: String
+) {
+  project(name: $projectName) {
+    entityLists(ids: [$listId]) {
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+      edges {
+        node {
+          id
+          active
+          items(first: $first, after: $after, sortBy: $sortBy) {
+            pageInfo {
+              hasNextPage
+              endCursor
+            }
+            edges {
+              node {
+                id
+                active
+                name
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

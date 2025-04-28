@@ -1,5 +1,5 @@
 import { createContext, useContext, ReactNode, useMemo } from 'react'
-import { EntityListItem } from '@queries/lists/getLists'
+import { EntityList } from '@queries/lists/getLists'
 import { useProjectDataContext } from '@pages/ProjectOverviewPage/context/ProjectDataContext'
 import { SimpleTableRow } from '@shared/SimpleTable'
 import { getEntityTypeIcon } from '@shared/util'
@@ -7,10 +7,10 @@ import { Filter } from '@ynput/ayon-react-components'
 import { useUsersPageConfig } from '@pages/ProjectOverviewPage/hooks/useUserPageConfig'
 import useGetListsData from '../hooks/useGetListsData'
 
-export type ListsMap = Map<string, EntityListItem>
+export type ListsMap = Map<string, EntityList>
 
 interface ListsDataContextValue {
-  listsData: EntityListItem[]
+  listsData: EntityList[]
   listsTableData: SimpleTableRow[]
   listsMap: ListsMap
   fetchNextPage: () => void

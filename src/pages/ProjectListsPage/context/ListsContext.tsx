@@ -10,7 +10,7 @@ import { EntityListPatchModel, EntityListPostModel } from '@api/rest/lists'
 import { useProjectDataContext } from '@pages/ProjectOverviewPage/context/ProjectDataContext'
 import useDeleteList, { UseDeleteListReturn } from '../hooks/useDeleteList'
 import useUpdateList, { UseUpdateListReturn } from '../hooks/useUpdateList'
-import { EntityListItem } from '@queries/lists/getLists'
+import { EntityList } from '@queries/lists/getLists'
 import { useListsDataContext } from './ListsDataContext'
 
 export interface ListsContextValue {
@@ -33,8 +33,8 @@ export interface ListsContextValue {
   // Deleting lists
   deleteLists: UseDeleteListReturn['deleteLists']
   // Info dialog
-  infoDialogData: null | EntityListItem
-  setInfoDialogData: (list: EntityListItem | null) => void
+  infoDialogData: null | EntityList
+  setInfoDialogData: (list: EntityList | null) => void
   openDetailsPanel: (id: string) => void
   // Lists filters dialog
   listsFiltersOpen: boolean

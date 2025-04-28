@@ -8,6 +8,8 @@ import { ListsDataProvider } from './context/ListsDataContext'
 import ListsTable from './components/ListsTable/ListsTable'
 import ListInfoDialog from './components/ListInfoDialog/ListInfoDialog'
 import ListsFiltersDialog from './components/ListsFiltersDialog/ListsFiltersDialog'
+import { ListItemsDataProvider } from './context/ListItemsDataContext'
+import ListItemsTable from './components/ListItemsTable/ListItemsTable'
 
 const ProjectListsWithProviders: FC = () => {
   const projectName = useAppSelector((state) => state.project.name) || ''
@@ -15,7 +17,9 @@ const ProjectListsWithProviders: FC = () => {
     <ProjectDataProvider projectName={projectName}>
       <ListsDataProvider>
         <ListsProvider>
-          <ProjectListsPage />
+          <ListItemsDataProvider>
+            <ProjectListsPage />
+          </ListItemsDataProvider>
         </ListsProvider>
       </ListsDataProvider>
     </ProjectDataProvider>
@@ -53,7 +57,7 @@ const ProjectListsPage: FC = () => {
                   style={{ width: '100%', height: '100%' }}
                 >
                   <SplitterPanel size={70}>
-                    <div>Table</div>
+                    <ListItemsTable />
                   </SplitterPanel>
                   {!!true ? (
                     <SplitterPanel

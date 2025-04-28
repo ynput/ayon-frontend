@@ -1,4 +1,9 @@
-import { GetListsQueryVariables, api as gqlApi } from '@api/graphql'
+import {
+  GetListItemsQuery,
+  GetListItemsQueryVariables,
+  GetListsQueryVariables,
+  api as gqlApi,
+} from '@api/graphql'
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import { GetListsQuery } from '@api/graphql'
 
@@ -6,16 +11,16 @@ import { GetListsQuery } from '@api/graphql'
 export const LISTS_PER_PAGE = 100
 
 // Define the type for our transformed lists data
-type QueryEntityListItem = GetListsQuery['project']['entityLists']['edges'][number]['node']
-export type EntityListItem = QueryEntityListItem
+type QueryEntityList = GetListsQuery['project']['entityLists']['edges'][number]['node']
+export type EntityList = QueryEntityList
 
-// Define the result type for our query
+// Define the result type for lists query
 export type GetListsResult = {
   pageInfo: {
     hasNextPage: boolean
     endCursor?: string | null
   }
-  lists: EntityListItem[]
+  lists: EntityList[]
 }
 
 // Define the page param type for infinite query
@@ -23,12 +28,29 @@ type ListsPageParam = {
   cursor: string
 }
 
+type QueryEntityListItem =
+  GetListItemsQuery['project']['entityLists']['edges'][number]['node']['items']['edges'][number]['node']
+export type EntityListItem = NonNullable<QueryEntityListItem>
+// Define the result type for items query
+export type GetListItemsResult = {
+  pageInfo: {
+    hasNextPage: boolean
+    endCursor?: string | null
+  }
+  items: QueryEntityListItem[]
+}
+
+type ListItemsPageParam = {
+  cursor: string
+}
+
 import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
 type Definitions = DefinitionsFromApi<typeof gqlApi>
 type TagTypes = TagTypesFromApi<typeof gqlApi>
 // update the definitions to include the new types
-type UpdatedDefinitions = Omit<Definitions, 'GetLists'> & {
+type UpdatedDefinitions = Omit<Definitions, 'GetLists' | 'GetListItems'> & {
   GetLists: OverrideResultType<Definitions['GetLists'], GetListsResult>
+  GetListItems: OverrideResultType<Definitions['GetListItems'], GetListItemsResult>
 }
 
 const getListsGqlApiEnhanced = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
@@ -38,6 +60,16 @@ const getListsGqlApiEnhanced = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefiniti
         return {
           lists: response.project.entityLists.edges.map((edge) => edge.node),
           pageInfo: response.project.entityLists.pageInfo,
+        }
+      },
+    },
+    GetListItems: {
+      transformResponse: (response: GetListItemsQuery): GetListItemsResult => {
+        return {
+          items: response.project.entityLists.edges.flatMap((listEdge) =>
+            listEdge.node.items.edges.map((itemEdge) => itemEdge.node),
+          ),
+          pageInfo: response.project.entityLists.edges[0].node.items.pageInfo,
         }
       },
     },
@@ -64,13 +96,11 @@ export const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
       },
       queryFn: async ({ queryArg, pageParam }, api) => {
         try {
-          const { projectName, filter } = queryArg
           const { cursor } = pageParam
 
           // Build the query parameters for GetLists
           const queryParams = {
-            projectName,
-            filter,
+            ...queryArg,
             first: LISTS_PER_PAGE,
             after: cursor || undefined,
           }
@@ -106,9 +136,72 @@ export const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
         })),
       ],
     }),
+    getListItemsInfinite: build.infiniteQuery<
+      GetListItemsResult,
+      Omit<GetListItemsQueryVariables, 'first' | 'after' | 'before'>,
+      ListItemsPageParam
+    >({
+      infiniteQueryOptions: {
+        initialPageParam: { cursor: '' },
+        getNextPageParam: (lastPage) => {
+          const { pageInfo } = lastPage
+          if (!pageInfo.hasNextPage || !pageInfo.endCursor) return undefined
+
+          return {
+            cursor: pageInfo.endCursor,
+          }
+        },
+      },
+      queryFn: async ({ queryArg, pageParam }, api) => {
+        try {
+          const { cursor } = pageParam
+
+          // Build the query parameters for GetLists
+          const queryParams = {
+            ...queryArg,
+            first: LISTS_PER_PAGE,
+            after: cursor || undefined,
+          }
+
+          // Call the existing GetLists endpoint
+          const result = await api.dispatch(
+            getListsGqlApiEnhanced.endpoints.GetListItems.initiate(queryParams, {
+              forceRefetch: true,
+            }),
+          )
+
+          if (result.error) throw result.error
+
+          return {
+            data: result.data || {
+              items: [],
+              pageInfo: {
+                hasNextPage: false,
+                endCursor: null,
+                startCursor: null,
+                hasPreviousPage: false,
+              },
+            },
+          }
+        } catch (e: any) {
+          console.error('Error in getListsInfinite queryFn:', e)
+          return { error: { status: 'FETCH_ERROR', error: e.message } as FetchBaseQueryError }
+        }
+      },
+      providesTags: (result) => [
+        { type: 'entityListItem', id: 'LIST' },
+        ...(result?.pages.flatMap((page) => page.items) || [])
+          .filter((i) => !!i)
+          .map((item) => ({
+            type: 'entityListItem' as const,
+            id: item.id,
+          })),
+      ],
+    }),
   }),
 })
 
 export default getListsGqlApiInjected
 
-export const { useGetListsInfiniteInfiniteQuery } = getListsGqlApiInjected
+export const { useGetListsInfiniteInfiniteQuery, useGetListItemsInfiniteInfiniteQuery } =
+  getListsGqlApiInjected

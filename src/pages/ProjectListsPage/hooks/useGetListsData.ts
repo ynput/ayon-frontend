@@ -1,4 +1,4 @@
-import { EntityListItem, useGetListsInfiniteInfiniteQuery } from '@queries/lists/getLists'
+import { EntityList, useGetListsInfiniteInfiniteQuery } from '@queries/lists/getLists'
 import { clientFilterToQueryFilter, FilterForQuery } from '@shared/containers/ProjectTreeTable'
 import { useMemo, useState } from 'react'
 
@@ -9,7 +9,7 @@ interface UseGetListsDataProps {
 }
 
 export interface UseGetListsDataReturn {
-  data: EntityListItem[]
+  data: EntityList[]
   isLoading: boolean
   isFetchingNextPage: boolean
   isError: boolean

@@ -1488,6 +1488,17 @@ export type GetInboxUnreadCountQueryVariables = Exact<{
 
 export type GetInboxUnreadCountQuery = { __typename?: 'Query', inbox: { __typename?: 'ActivitiesConnection', edges: Array<{ __typename?: 'ActivityEdge', node: { __typename?: 'ActivityNode', referenceId: string, read: boolean } }> } };
 
+export type GetListItemsQueryVariables = Exact<{
+  projectName: Scalars['String']['input'];
+  listId: Scalars['String']['input'];
+  first: Scalars['Int']['input'];
+  after?: InputMaybe<Scalars['String']['input']>;
+  sortBy?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+
+export type GetListItemsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', entityLists: { __typename?: 'EntityListsConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, edges: Array<{ __typename?: 'EntityListEdge', node: { __typename?: 'EntityListNode', id: string, active: boolean, items: { __typename?: 'EntityListItemsConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, edges: Array<{ __typename?: 'EntityListItemEdge', node?: { __typename?: 'FolderNode', id: string, active: boolean, name: string } | { __typename?: 'ProductNode', id: string, active: boolean, name: string } | { __typename?: 'RepresentationNode', id: string, active: boolean, name: string } | { __typename?: 'TaskNode', id: string, active: boolean, name: string } | { __typename?: 'VersionNode', id: string, active: boolean, name: string } | { __typename?: 'WorkfileNode', id: string, active: boolean, name: string } | null }> } } }> } } };
+
 export type GetListsQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
   first: Scalars['Int']['input'];

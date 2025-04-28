@@ -3,7 +3,7 @@ import useGetListsData, { UseGetListsDataReturn } from '../hooks/useGetListsData
 import { ListEntityType, listEntityTypes } from '../components/NewListDialog/NewListDialog'
 import { toast } from 'react-toastify'
 import { getEntityTypeIcon } from '@shared/util'
-import { EntityListItem } from '@queries/lists/getLists'
+import { EntityList } from '@queries/lists/getLists'
 import { ContextMenuItemConstructor } from '@shared/containers/ProjectTreeTable/hooks/useCellContextMenu'
 import { useCreateEntityListItemMutation } from '@queries/lists/updateLists'
 
@@ -31,7 +31,7 @@ export interface EntityListsContextValue {
   ) => Promise<void>
   menuItems: ContextMenuItemConstructor
   buildListMenuItem: (
-    list: EntityListItem,
+    list: EntityList,
     selected: { entityId: string; entityType: string | undefined }[],
     showIcon?: boolean,
   ) => ListSubMenuItem
