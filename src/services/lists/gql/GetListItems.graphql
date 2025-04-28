@@ -21,8 +21,10 @@ query GetListItems(
               endCursor
             }
             edges {
+              id
+              entityId
+              entityType
               node {
-                id
                 active
                 name
               }

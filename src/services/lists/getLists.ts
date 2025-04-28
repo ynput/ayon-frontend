@@ -27,17 +27,18 @@ export type GetListsResult = {
 type ListsPageParam = {
   cursor: string
 }
-
-type QueryEntityListItem =
-  GetListItemsQuery['project']['entityLists']['edges'][number]['node']['items']['edges'][number]['node']
-export type EntityListItem = NonNullable<QueryEntityListItem>
+type QueryEntityListItemEdge =
+  GetListItemsQuery['project']['entityLists']['edges'][number]['node']['items']['edges'][number]
+type QueryEntityListItemNode = QueryEntityListItemEdge['node']
+export type EntityListItem = NonNullable<QueryEntityListItemNode> &
+  Omit<QueryEntityListItemEdge, 'node'>
 // Define the result type for items query
 export type GetListItemsResult = {
   pageInfo: {
     hasNextPage: boolean
     endCursor?: string | null
   }
-  items: QueryEntityListItem[]
+  items: (QueryEntityListItemNode & Omit<QueryEntityListItemEdge, 'node'>)[]
 }
 
 type ListItemsPageParam = {
@@ -67,7 +68,9 @@ const getListsGqlApiEnhanced = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefiniti
       transformResponse: (response: GetListItemsQuery): GetListItemsResult => {
         return {
           items: response.project.entityLists.edges.flatMap((listEdge) =>
-            listEdge.node.items.edges.map((itemEdge) => itemEdge.node),
+            listEdge.node.items.edges.map(
+              ({ node, ...edge }) => ({ ...node, ...edge } as GetListItemsResult['items'][number]),
+            ),
           ),
           pageInfo: response.project.entityLists.edges[0].node.items.pageInfo,
         }
