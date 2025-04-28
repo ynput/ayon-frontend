@@ -40,6 +40,7 @@ export interface ProjectOverviewContextProps {
   // Data
   tasksMap: TaskNodeMap
   foldersMap: FolderNodeMap
+  entitiesMap: FolderNodeMap & TaskNodeMap
   tasksByFolderMap: TasksByFolderMap
   fetchNextPage: () => void
   reloadTableData: () => void
@@ -200,6 +201,21 @@ export const ProjectOverviewProvider = ({ children }: ProjectOverviewProviderPro
     showHierarchy,
   })
 
+  // combine foldersMap and itemsMap into a single map
+  const entitiesMap = useMemo(() => {
+    const combined: FolderNodeMap & TaskNodeMap = new Map()
+
+    foldersMap.forEach((folder) => {
+      combined.set(folder.id, folder)
+    })
+
+    tasksMap.forEach((task) => {
+      combined.set(task.id, task)
+    })
+
+    return combined
+  }, [foldersMap, tasksMap])
+
   return (
     <ProjectOverviewContext.Provider
       value={{
@@ -213,6 +229,7 @@ export const ProjectOverviewProvider = ({ children }: ProjectOverviewProviderPro
         projectName,
         tasksMap,
         foldersMap,
+        entitiesMap,
         tasksByFolderMap,
         fetchNextPage,
         reloadTableData,

@@ -75,5 +75,46 @@ export type EditorTaskNode = TaskNode & {
   attrib: Record<string, any>
   entityType?: 'task'
 }
+
+type EditorVersionNode = {
+  id: string
+  entityType: 'version'
+  folderId: string
+  label?: string | null
+  name: string
+  ownAttrib: Array<string>
+  status: string
+  tags: Array<string>
+  taskType: string
+  updatedAt: any
+  active: boolean
+  assignees: Array<string>
+  allAttrib: string
+}
+
+type EditorProductNode = {
+  id: string
+  entityType: 'product'
+  folderId: string
+  label?: string | null
+  name: string
+  ownAttrib: Array<string>
+  status: string
+  tags: Array<string>
+  taskType: string
+  updatedAt: any
+  active: boolean
+  assignees: Array<string>
+  allAttrib: string
+}
+
 export type TaskNodeMap = Map<string, EditorTaskNode>
+export type EntitiesMap = Map<string, EditorTaskNode | MatchingFolder | EditorVersionNode>
+export type EMapResult<T extends 'folder' | 'task' | 'product' | 'version'> = T extends 'folder'
+  ? MatchingFolder
+  : T extends 'task'
+  ? EditorTaskNode
+  : T extends 'product'
+  ? EditorProductNode
+  : EditorVersionNode
 export type TasksByFolderMap = Map<string, string[]>

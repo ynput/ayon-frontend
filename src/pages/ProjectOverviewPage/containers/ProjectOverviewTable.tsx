@@ -19,8 +19,7 @@ const ProjectOverviewTable = ({}: Props) => {
     projectInfo,
     attribFields,
     users,
-    tasksMap,
-    foldersMap,
+    entitiesMap,
     showHierarchy,
     isLoading,
     fetchNextPage,
@@ -81,8 +80,7 @@ const ProjectOverviewTable = ({}: Props) => {
         // pagination
         fetchMoreOnBottomReached={fetchMoreOnBottomReached}
         // metadata
-        tasksMap={tasksMap}
-        foldersMap={foldersMap}
+        entitiesMap={entitiesMap}
         onOpenNew={onOpenNew}
       />
     </Section>

@@ -26,7 +26,7 @@ import {
 import clsx from 'clsx'
 
 // Type imports
-import type { FolderNodeMap, TableRow, TaskNodeMap } from './types/table'
+import type { EntitiesMap, FolderNodeMap, TableRow, TaskNodeMap } from './types/table'
 
 // Component imports
 import ProjectTreeTableColumns from './ProjectTreeTableColumns'
@@ -79,8 +79,7 @@ type Props = {
   attribs: AttributeWithPermissions[]
   sliceId: string
   // metadata
-  tasksMap: TaskNodeMap
-  foldersMap: FolderNodeMap
+  entitiesMap: EntitiesMap
   fetchMoreOnBottomReached: (element: HTMLDivElement | null) => void
   onOpenNew?: (type: 'folder' | 'task') => void
 }
@@ -99,8 +98,7 @@ const FlexTableWithProviders = (props: Props) => {
 
   return (
     <ClipboardProvider
-      foldersMap={props.foldersMap}
-      tasksMap={props.tasksMap}
+      entitiesMap={props.entitiesMap}
       columnEnums={{ ...props.options, ...attribByField }}
       columnReadOnly={props.attribs
         .filter((attrib) => attrib.readOnly)

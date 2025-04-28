@@ -1,6 +1,17 @@
 import { useListItemsDataContext } from '@pages/ProjectListsPage/context/ListItemsDataContext'
 import { useListsContext } from '@pages/ProjectListsPage/context/ListsContext'
+import { SettingsPanelProvider } from '@pages/ProjectOverviewPage/context/SettingsPanelContext'
+import useTableQueriesHelper from '@pages/ProjectOverviewPage/hooks/useTableQueriesHelper'
+import { useUsersPageConfig } from '@pages/ProjectOverviewPage/hooks/useUserPageConfig'
 import { EmptyPlaceholder } from '@shared/components'
+import {
+  CellEditingProvider,
+  ColumnSettingsProvider,
+  ProjectTableProvider,
+  ProjectTableQueriesProvider,
+  SelectedRowsProvider,
+  SelectionProvider,
+} from '@shared/containers/ProjectTreeTable'
 import { FC } from 'react'
 
 interface ListItemsTableProps {}
@@ -18,13 +29,43 @@ const ListItemsTable: FC<ListItemsTableProps> = ({}) => {
 
   if (isError) return <EmptyPlaceholder message="Error loading list items." />
 
+  return listItemsData.map((item) => <div key={item.id}>{item.name}</div>)
+}
+
+const ListItemsTableWithProviders: FC<ListItemsTableProps> = () => {
+  const { projectName, ...props } = useListItemsDataContext()
+
+  const [pageConfig, updatePageConfig] = useUsersPageConfig({
+    page: 'lists',
+    projectName: projectName,
+  })
+
+  const { updateEntities, getFoldersTasks } = useTableQueriesHelper({
+    projectName: projectName,
+  })
+
   return (
-    <div>
-      {listItemsData.map((item) => (
-        <div key={item.id}>{item.name}</div>
-      ))}
-    </div>
+    <SettingsPanelProvider>
+      <ProjectTableQueriesProvider {...{ updateEntities, getFoldersTasks }}>
+        <ProjectTableProvider
+          projectName={projectName}
+          attribFields={props.attribFields}
+          projectInfo={props.projectInfo}
+          users={props.users}
+        >
+          <SelectionProvider>
+            <SelectedRowsProvider>
+              <ColumnSettingsProvider config={pageConfig} onChange={updatePageConfig}>
+                <CellEditingProvider>
+                  <ListItemsTable />
+                </CellEditingProvider>
+              </ColumnSettingsProvider>
+            </SelectedRowsProvider>
+          </SelectionProvider>
+        </ProjectTableProvider>
+      </ProjectTableQueriesProvider>
+    </SettingsPanelProvider>
   )
 }
 
-export default ListItemsTable
+export default ListItemsTableWithProviders

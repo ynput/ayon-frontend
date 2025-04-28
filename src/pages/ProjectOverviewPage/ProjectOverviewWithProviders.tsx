@@ -15,13 +15,9 @@ import {
   useProjectOverviewContext,
 } from './context/ProjectOverviewContext'
 import { ProjectDataProvider } from './context/ProjectDataContext'
-import { useUpdateOverviewEntitiesMutation } from '@queries/overview/updateOverview'
-import {
-  ProjectTableQueriesProvider,
-  ProjectTableQueriesProviderProps,
-} from '@shared/containers/ProjectTreeTable/context/ProjectTableQueriesContext'
-import { useLazyGetTasksByParentQuery } from '@queries/overview/getOverview'
+import { ProjectTableQueriesProvider } from '@shared/containers/ProjectTreeTable/context/ProjectTableQueriesContext'
 import { useUsersPageConfig } from './hooks/useUserPageConfig'
+import useTableQueriesHelper from './hooks/useTableQueriesHelper'
 
 const ProjectOverviewWithProviders: FC = () => {
   const projectName = useAppSelector((state) => state.project.name) || ''
@@ -43,31 +39,9 @@ const ProjectOverviewWithTableProviders: FC = () => {
     projectName: props.projectName,
   })
 
-  const [entityOperations] = useUpdateOverviewEntitiesMutation()
-
-  const updateEntities: ProjectTableQueriesProviderProps['updateEntities'] = async ({
-    operations,
-    patchOperations,
-  }) => {
-    return await entityOperations({
-      operationsRequestModel: { operations },
-      patchOperations,
-      projectName: props.projectName,
-    }).unwrap()
-  }
-  const [fetchFolderTasks] = useLazyGetTasksByParentQuery()
-  const getFoldersTasks: ProjectTableQueriesProviderProps['getFoldersTasks'] = async (
-    args,
-    force,
-  ) => {
-    return await fetchFolderTasks(
-      {
-        projectName: props.projectName,
-        ...args,
-      },
-      force,
-    ).unwrap()
-  }
+  const { updateEntities, getFoldersTasks } = useTableQueriesHelper({
+    projectName: props.projectName,
+  })
 
   return (
     <ProjectTableQueriesProvider {...{ updateEntities, getFoldersTasks }}>
