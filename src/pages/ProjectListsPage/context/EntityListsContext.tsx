@@ -5,7 +5,7 @@ import { toast } from 'react-toastify'
 import { getEntityTypeIcon } from '@shared/util'
 import { EntityList } from '@queries/lists/getLists'
 import { ContextMenuItemConstructor } from '@shared/containers/ProjectTreeTable/hooks/useCellContextMenu'
-import { useCreateEntityListItemMutation } from '@queries/lists/updateLists'
+import { useUpdateEntityListItemsMutation } from '@queries/lists/updateLists'
 
 interface EntityListsContextProps {
   entityTypes: ListEntityType[]
@@ -87,7 +87,7 @@ export const EntityListsProvider = ({
     skip: !entityTypes.includes('version'),
   })
 
-  const [createEntityListItem] = useCreateEntityListItemMutation()
+  const [updateEntityListItems] = useUpdateEntityListItemsMutation()
 
   const addToList: EntityListsContextValue['addToList'] = async (listId, entityType, entities) => {
     // check the entity type is valid
@@ -104,38 +104,19 @@ export const EntityListsProvider = ({
       return Promise.reject(new Error('No entities to add'))
     }
 
+    const entitiesToAdd = filteredEntities.map((entity) => ({ entityId: entity.entityId }))
+
     try {
-      const results = await Promise.allSettled(
-        filteredEntities.map((entity, index) =>
-          createEntityListItem({
-            listId,
-            projectName,
-            entityListItemPostModel: {
-              entityId: entity.entityId,
-              position: index,
-            },
-          }).unwrap(),
-        ),
-      )
+      await updateEntityListItems({
+        listId,
+        projectName,
+        entityListMultiPatchModel: {
+          items: entitiesToAdd,
+          mode: 'merge',
+        },
+      })
 
-      const errors = results.filter((result) => result.status === 'rejected')
-
-      if (errors.length > 0) {
-        if (errors.length === results.length) {
-          const error = errors[0]
-          if (error.status === 'rejected') {
-            toast.error('Error adding to list: ' + error.reason.data.detail)
-          }
-          return Promise.reject(new Error('Error adding to list'))
-        }
-        toast.warn('Some items were not added to the list')
-        const error = errors[0]
-        if (error.status === 'rejected') {
-          toast.error('Error adding to list: ' + error.reason.data.detail)
-        }
-      }
-
-      toast.success(`Item${results.length > 1 ? 's' : ''} added to list`)
+      toast.success(`Item${entitiesToAdd.length > 1 ? 's' : ''} added to list`)
 
       return Promise.resolve()
     } catch (error) {

@@ -191,14 +191,22 @@ export const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
           return { error: { status: 'FETCH_ERROR', error: e.message } as FetchBaseQueryError }
         }
       },
-      providesTags: (result) => [
+      providesTags: (result, _e, { listId, projectName }) => [
         { type: 'entityListItem', id: 'LIST' },
+        { type: 'entityListItem', id: listId },
+        { type: 'entityListItem', id: projectName },
         ...(result?.pages.flatMap((page) => page.items) || [])
           .filter((i) => !!i)
-          .map((item) => ({
-            type: 'entityListItem' as const,
-            id: item.id,
-          })),
+          .flatMap((item) => [
+            {
+              type: 'entityListItem',
+              id: item.id,
+            },
+            {
+              type: 'entityListItem',
+              id: item.entityId,
+            },
+          ]),
       ],
     }),
   }),
@@ -206,5 +214,8 @@ export const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
 
 export default getListsGqlApiInjected
 
-export const { useGetListsInfiniteInfiniteQuery, useGetListItemsInfiniteInfiniteQuery } =
-  getListsGqlApiInjected
+export const {
+  useGetListsInfiniteInfiniteQuery,
+  useGetListItemsInfiniteInfiniteQuery,
+  useLazyGetListItemsQuery,
+} = getListsGqlApiInjected

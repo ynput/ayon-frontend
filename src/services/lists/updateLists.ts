@@ -46,12 +46,29 @@ const updateListsEnhancedApi = api.enhanceEndpoints({
           })
         }
       },
-      invalidatesTags: (_s, _e, { listId }) => [{ type: 'entityList', id: listId }],
+      invalidatesTags: (_s, _e, { listId }) => {
+        const tags = [{ type: 'entityList', id: listId }]
+        console.log('invalidatesTags', tags)
+        return tags
+      },
     },
     deleteEntityList: {
       invalidatesTags: [{ type: 'entityList', id: 'LIST' }],
     },
     // LIST ITEM MUTATIONS
+    updateEntityListItems: {
+      invalidatesTags: (_s, _e, { listId, entityListMultiPatchModel: { items } }) => {
+        const tags = [
+          { type: 'entityList', id: listId },
+          ...(items || []).flatMap((i) =>
+            (i.id ? [{ type: 'entityListItem', id: i.id }] : []).concat(
+              i.entityId ? [{ type: 'entityListItem', id: i.entityId }] : [],
+            ),
+          ),
+        ]
+        return tags
+      },
+    },
     createEntityListItem: {
       invalidatesTags: (_s, _e, { listId }) => [{ type: 'entityList', id: listId }],
     },
@@ -64,5 +81,6 @@ export const {
   useUpdateEntityListMutation,
   useDeleteEntityListMutation,
   // LIST ITEM MUTATIONS
+  useUpdateEntityListItemsMutation,
   useCreateEntityListItemMutation,
 } = updateListsEnhancedApi

@@ -2,10 +2,18 @@ import { RowSelectionState } from '@tanstack/react-table'
 import { useListsContext } from '../context/ListsContext'
 import { CommandEvent, useCreateContextMenu } from '@shared/containers/ContextMenu'
 import { useCallback } from 'react'
+import { useAppSelector } from '@state/store'
+import useClearListItems from './useClearListItems'
+import { useProjectDataContext } from '@pages/ProjectOverviewPage/context/ProjectDataContext'
 
 const useListContextMenu = () => {
+  const user = useAppSelector((state) => state.user)
+  const developerMode = user?.attrib.developerMode
+  const { projectName } = useProjectDataContext()
   const { rowSelection, setRowSelection, openRenameList, openDetailsPanel, deleteLists } =
     useListsContext()
+
+  const { clearListItems } = useClearListItems({ projectName })
 
   // create the ref and model
   const [ctxMenuShow] = useCreateContextMenu()
@@ -36,6 +44,13 @@ const useListContextMenu = () => {
           icon: 'info',
           command: () => openDetailsPanel(firstSelectedRow),
           disabled: multipleSelected,
+        },
+        {
+          label: 'Clear list',
+          icon: 'close',
+          developer: true,
+          command: () => clearListItems(firstSelectedRow),
+          hidden: !developerMode || multipleSelected,
         },
         {
           label: 'Delete',

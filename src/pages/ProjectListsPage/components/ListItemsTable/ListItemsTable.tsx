@@ -16,7 +16,7 @@ const ListItemsTable: FC<ListItemsTableProps> = ({}) => {
   if (isMultipleSelected)
     return <EmptyPlaceholder message="Please select one list to view its items." />
 
-  if (isError) return <EmptyPlaceholder message="Error loading list items" />
+  if (isError) return <EmptyPlaceholder message="Error loading list items." />
 
   return (
     <div>

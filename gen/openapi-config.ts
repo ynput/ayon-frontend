@@ -58,6 +58,7 @@ const outputFiles = {
     'getEntityList',
     'deleteEntityList',
     'updateEntityList',
+    'updateEntityListItems',
     'createEntityListItem',
     'deleteEntityListItem',
     'updateEntityListItem',

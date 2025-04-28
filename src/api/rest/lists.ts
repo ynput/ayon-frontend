@@ -15,6 +15,20 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    updateEntityListItems: build.mutation<
+      UpdateEntityListItemsApiResponse,
+      UpdateEntityListItemsApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/lists/${queryArg.listId}/items`,
+        method: 'PATCH',
+        body: queryArg.entityListMultiPatchModel,
+        headers: {
+          'x-sender': queryArg['x-sender'],
+          'x-sender-type': queryArg['x-sender-type'],
+        },
+      }),
+    }),
     deleteEntityListItem: build.mutation<
       DeleteEntityListItemApiResponse,
       DeleteEntityListItemApiArg
@@ -87,6 +101,14 @@ export type CreateEntityListItemApiArg = {
   'x-sender-type'?: string
   entityListItemPostModel: EntityListItemPostModel
 }
+export type UpdateEntityListItemsApiResponse = /** status 200 Successful Response */ any
+export type UpdateEntityListItemsApiArg = {
+  listId: string
+  projectName: string
+  'x-sender'?: string
+  'x-sender-type'?: string
+  entityListMultiPatchModel: EntityListMultiPatchModel
+}
 export type DeleteEntityListItemApiResponse = /** status 200 Successful Response */ any
 export type DeleteEntityListItemApiArg = {
   listId: string
@@ -142,7 +164,7 @@ export type EntityListItemPostModel = {
   /** ID of the entity in the list */
   entityId: string
   /** Position of the item in the list */
-  position: number
+  position?: number
   /** Label of the item */
   label?: string
   /** Overrides of the listed entity attributes */
@@ -151,6 +173,26 @@ export type EntityListItemPostModel = {
   data?: object
   /** Tags associated with the item */
   tags?: string[]
+}
+export type EntityListMultiPatchItemModel = {
+  id?: string
+  /** ID of the entity in the list */
+  entityId?: string
+  /** Position of the item in the list */
+  position?: number
+  /** Label of the item */
+  label?: string
+  /** Overrides of the listed entity attributes */
+  attrib?: object
+  /** Additional data associated with the item */
+  data?: object
+  /** Tags associated with the item */
+  tags?: string[]
+}
+export type EntityListMultiPatchModel = {
+  items?: EntityListMultiPatchItemModel[]
+  /** The mode of the operation. `replace` will replace all items with the provided ones. `merge` will merge the provided items with the existing ones.`delete` will delete items with matching ids from the list. */
+  mode?: 'replace' | 'merge' | 'delete'
 }
 export type EntityListItemPatchModel = {
   /** ID of the entity in the list */
