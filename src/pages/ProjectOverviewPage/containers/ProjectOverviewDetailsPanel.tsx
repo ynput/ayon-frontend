@@ -21,22 +21,26 @@ const ProjectOverviewDetailsPanel = ({
 
   const { getEntityById } = useProjectTableContext()
   const { selectedRows, clearRowsSelection } = useSelectedRowsContext()
+  const { data: users = [] } = useGetUsersAssigneeQuery({ names: undefined, projectName })
 
-  const selectRowData = selectedRows.map((id) => getEntityById(id)).filter(Boolean) as (
-    | MatchingFolder
-    | EditorTaskNode
-  )[]
+  const selectRowData = selectedRows.map((id) => getEntityById(id)).filter(Boolean) as
+    | (MatchingFolder | EditorTaskNode)[]
+    | undefined
+
+  if (!selectRowData || !selectRowData.length) return null
   // task types will always take priority over folder types, we can only have one type at one time
-  const entityType = selectRowData.some((row) => row.entityType === 'task') ? 'task' : 'folder'
+  const entityType = selectRowData.every((row) => row.entityType === selectRowData[0].entityType)
+    ? selectRowData[0].entityType
+    : selectRowData.some((row) => row.entityType === 'task')
+    ? 'task'
+    : 'folder'
   const entities = selectRowData
     .filter((row) => entityType === row.entityType)
-    .map((row) => ({ id: row.id, projectName }))
+    .map((row) => ({ id: row.entityId || row.id, projectName }))
 
   const handleClose = () => {
     clearRowsSelection()
   }
-
-  const { data: users = [] } = useGetUsersAssigneeQuery({ names: undefined, projectName })
 
   if (!entities.length || !entityType) return null
 

@@ -1,4 +1,7 @@
-import { ProjectDataProvider } from '@pages/ProjectOverviewPage/context/ProjectDataContext'
+import {
+  ProjectDataProvider,
+  useProjectDataContext,
+} from '@pages/ProjectOverviewPage/context/ProjectDataContext'
 import { useAppSelector } from '@state/store'
 import { FC } from 'react'
 import { ListsProvider, useListsContext } from './context/ListsContext'
@@ -27,7 +30,9 @@ import {
   ProjectTableQueriesProvider,
   SelectedRowsProvider,
   SelectionProvider,
+  useSelectedRowsContext,
 } from '@shared/containers/ProjectTreeTable'
+import ProjectOverviewDetailsPanel from '@pages/ProjectOverviewPage/containers/ProjectOverviewDetailsPanel'
 
 const ProjectListsWithOuterProviders: FC = () => {
   const projectName = useAppSelector((state) => state.project.name) || ''
@@ -90,8 +95,10 @@ const ProjectListsWithInnerProviders: FC = () => {
 }
 
 const ProjectListsPage: FC = () => {
+  const { projectName, projectInfo } = useProjectDataContext()
   const { isPanelOpen } = useSettingsPanel()
   const { selectedList } = useListsContext()
+  const { selectedRows } = useSelectedRowsContext()
 
   return (
     <main style={{ overflow: 'hidden', gap: 4 }}>
@@ -131,7 +138,7 @@ const ProjectListsPage: FC = () => {
                     {/* ITEMS TABLE */}
                     <ListItemsTable />
                   </SplitterPanel>
-                  {false ? (
+                  {!!selectedRows.length ? (
                     <SplitterPanel
                       size={30}
                       style={{
@@ -139,7 +146,10 @@ const ProjectListsPage: FC = () => {
                         minWidth: 300,
                       }}
                     >
-                      <div>Panel</div>
+                      <ProjectOverviewDetailsPanel
+                        projectInfo={projectInfo}
+                        projectName={projectName}
+                      />
                     </SplitterPanel>
                   ) : (
                     <SplitterPanel style={{ maxWidth: 0 }}></SplitterPanel>
