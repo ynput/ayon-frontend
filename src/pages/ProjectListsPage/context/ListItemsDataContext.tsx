@@ -141,12 +141,16 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     [attribFields],
   )
 
+  console.log(listItemsData)
+
   // convert listItemsData into tableData
   const listItemsTableData = useMemo(() => {
     const tableRows: TableRow[] = listItemsData.map((list) => ({
       id: list.id,
       name: list.name,
-      label: list.name,
+      label:
+        (list.entityType === 'version' ? `${list.product?.name} - ` : '') +
+        (list.label || list.name),
       entityId: list.entityId,
       entityType: list.entityType,
       assignees: list.assignees || [],

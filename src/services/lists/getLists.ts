@@ -42,12 +42,14 @@ type ItemNodeData = {
   folderType?: string
   productType?: string
   assignees?: string[]
+  label?: string
   // different paths to folder
   path?: string
   folder?: {
     path: string
   }
   product?: {
+    name: string
     folder: {
       path: string
     }

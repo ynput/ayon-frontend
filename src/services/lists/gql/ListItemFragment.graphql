@@ -1,6 +1,7 @@
 fragment ListItemFragment on BaseNode {
   ... on TaskNode {
     name
+    label
     status
     tags
     taskType
@@ -13,6 +14,7 @@ fragment ListItemFragment on BaseNode {
   }
   ... on FolderNode {
     name
+    label
     status
     tags
     folderType
@@ -36,6 +38,7 @@ fragment ListItemFragment on BaseNode {
     tags
     allAttrib
     product {
+      name
       folder {
         path
       }
