@@ -14,7 +14,7 @@ export const getReadOnlyLists = (
     // If 'attrib' is in the readonly columns, all attributes are read-only
     readOnlyAttribs = attribFields.filter((a) => a.builtin).map((attrib) => attrib.name) // Mark all attributes as readOnly if they are builtin
     readOnlyColumnsSet = new Set([
-      ...attribFields.map((attrib) => 'attrib_' + attrib.name), // Add all attribute columns to the readOnly set
+      ...attribFields.filter((a) => a.builtin).map((attrib) => 'attrib_' + attrib.name), // Add all attribute columns to the readOnly set
       ...(extra || []), // Add any other specified readOnly columns
     ])
   } else {

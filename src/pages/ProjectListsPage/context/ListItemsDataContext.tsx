@@ -141,8 +141,6 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     [attribFields],
   )
 
-  console.log(listItemsData)
-
   // convert listItemsData into tableData
   const listItemsTableData = useMemo(() => {
     const tableRows: TableRow[] = listItemsData.map((list) => ({

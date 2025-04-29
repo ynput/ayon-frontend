@@ -269,9 +269,10 @@ const ProjectTreeTableColumns = ({
               attributeData={{ type: attrib.data.type || 'string' }}
               options={attrib.data.enum || []}
               isCollapsed={!!row.original.childOnlyMatch}
-              isInherited={isInherited}
+              isInherited={isInherited && ['folder', 'task'].includes(type)}
               isReadOnly={
-                attrib.readOnly || readonly?.some((id) => id === columnIdParsed || id === 'attrib')
+                attrib.readOnly ||
+                readonly?.some((id) => id === columnIdParsed || (id === 'attrib' && attrib.builtin))
               }
               onChange={(value) =>
                 updateEntities([{ field: columnIdParsed, value, id, type, isAttrib: true }])
