@@ -62,6 +62,7 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
         const inverseEntities: HistoryEntityUpdate[] = entities.map(
           ({ id, type, field, isAttrib }) => {
             const entityData = getEntityById(id) as Record<string, any>
+            const entityId = entityData?.entityId || id
             const oldValue = isAttrib
               ? (entityData.attrib as Record<string, any>)?.[field] ?? null
               : entityData[field] ?? null
@@ -71,7 +72,7 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
             const wasInherited = isAttrib && !ownAttrib.includes(field)
 
             return {
-              id,
+              id: entityId,
               type,
               field,
               value: oldValue,
@@ -85,10 +86,12 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
         const historyEntities: HistoryEntityUpdate[] = entities.flatMap(
           ({ id, type, field, value, isAttrib }) => {
             const entityData = getEntityById(id)
+            const entityId = entityData?.entityId || id
+
             if (!entityData) return []
 
             return {
-              id,
+              id: entityId,
               type,
               field,
               value,
@@ -106,6 +109,8 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
       let operations: OperationModel[] = []
       for (const entity of entities) {
         let { id, type, field, value, isAttrib } = entity
+        const entityData = getEntityById(id)
+        const entityId = entityData?.entityId || id
         // Skip unsupported entity types
         let entityType = type as OperationModel['entityType']
         if (!supportedEntityTypes.includes(entityType)) {
@@ -120,7 +125,6 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
         // if the entity is an attribute get the entity data
         // then update ownAttrib to include the new value
         if (isAttrib) {
-          const entityData = getEntityById(id)
           const ownAttrib = [...(entityData?.ownAttrib || [])]
           // add the new value to the ownAttrib if it doesn't already exist
           if (!ownAttrib.includes(field)) {
@@ -131,7 +135,7 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
         }
 
         const existingOperationIndex = operations.findIndex(
-          (op) => op.entityId === entity.id && op.entityType === entityType,
+          (op) => op.entityId === entityId && op.entityType === entityType,
         )
 
         if (existingOperationIndex !== -1) {
@@ -153,7 +157,7 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
           // Add new operation
           operations.push({
             entityType: entityType,
-            entityId: entity.id,
+            entityId: entityId,
             type: 'update',
             data: data,
           })
@@ -186,8 +190,9 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
           operations,
           patchOperations: inheritedDependentsOperations,
         })
-      } catch (error) {
-        toast.error('Failed to update entities')
+      } catch (error: any) {
+        console.error('Error updating entities:', error)
+        toast.error('Failed to update entities: ' + error?.error)
       }
     },
     [projectName, updateEntities, getEntityById, getInheritedDependents, pushHistory],

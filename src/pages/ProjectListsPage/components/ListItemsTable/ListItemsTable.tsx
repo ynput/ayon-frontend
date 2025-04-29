@@ -68,8 +68,9 @@ const ListItemsTableWithProviders: FC<ListItemsTableProps> = () => {
           tasksMap={props.tasksMap}
           tableRows={props.listItemsTableData}
           expanded={{}}
-          isInitialized={true}
+          isInitialized={props.isInitialized}
           showHierarchy={false}
+          isLoading={props.isLoadingAll}
         >
           <SelectionProvider>
             <SelectedRowsProvider>

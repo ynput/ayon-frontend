@@ -1,4 +1,8 @@
-import { EntityListItem, useGetListItemsInfiniteInfiniteQuery } from '@queries/lists/getLists'
+import {
+  EntityListItem,
+  GetListItemsResult,
+  useGetListItemsInfiniteInfiniteQuery,
+} from '@queries/lists/getLists'
 import { clientFilterToQueryFilter, FilterForQuery } from '@shared/containers/ProjectTreeTable'
 import { useMemo, useState } from 'react'
 import { v4 as uuidv4 } from 'uuid'
@@ -67,17 +71,23 @@ const useGetListItemsData = ({
     }
   }
 
-  const buildPrivateItem = (): EntityListItem => ({
+  const buildPrivateItem = (i: GetListItemsResult['items'][number]): EntityListItem => ({
     active: true,
     name: 'private',
     id: 'private' + uuidv4().replace(/-/g, ''),
+    entityId: i.entityId,
+    entityType: 'unknown',
+    allAttrib: '',
+    attrib: {},
+    status: 'private',
+    tags: [],
   })
 
   // Extract tasks from infinite query data correctly
   const data = useMemo(() => {
     if (!itemsInfiniteData?.pages) return []
     return itemsInfiniteData.pages.flatMap(
-      (page) => page.items?.map((i) => (i ? i : buildPrivateItem())) || [],
+      (page) => page.items?.map((i) => (i ? i : buildPrivateItem(i))) || [],
     )
   }, [itemsInfiniteData?.pages])
 

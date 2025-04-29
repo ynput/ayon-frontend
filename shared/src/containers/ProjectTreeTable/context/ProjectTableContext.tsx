@@ -3,10 +3,9 @@ import { ExpandedState, OnChangeFn, SortingState } from '@tanstack/react-table'
 import useOverviewTable from '../hooks/useOverviewTable'
 import { Filter } from '@ynput/ayon-react-components'
 import {
-  EditorTaskNode,
   EntitiesMap,
+  EntityMap,
   FolderNodeMap,
-  MatchingFolder,
   TableRow,
   TaskNodeMap,
   TasksByFolderMap,
@@ -98,7 +97,7 @@ export interface ProjectTableContextProps {
   entitiesMap: ProjectTableProviderProps['entitiesMap']
   fetchNextPage: ProjectTableProviderProps['fetchNextPage']
   reloadTableData: ProjectTableProviderProps['reloadTableData']
-  getEntityById: (id: string) => MatchingFolder | EditorTaskNode | undefined
+  getEntityById: (id: string) => EntityMap | undefined
 
   // Filters
   filters: ProjectTableProviderProps['filters']
@@ -175,19 +174,19 @@ export const ProjectTableProvider = ({
   })
 
   const getEntityById = useCallback(
-    (id: string): MatchingFolder | EditorTaskNode | undefined => {
-      // Check if it's a folder
+    (id: string): EntityMap | undefined => {
       if (foldersMap.has(id)) {
-        return { ...foldersMap.get(id), entityType: 'folder' } as MatchingFolder
+        return foldersMap.get(id)
+      } else if (tasksMap.has(id)) {
+        return tasksMap.get(id)
+      } else if (entitiesMap.has(id)) {
+        return entitiesMap.get(id)
       }
-      // Check if it's a task
-      if (tasksMap.has(id)) {
-        return { ...tasksMap.get(id), entityType: 'task' } as EditorTaskNode
-      }
+
       // Return undefined if not found
       return undefined
     },
-    [foldersMap, tasksMap],
+    [foldersMap, tasksMap, entitiesMap],
   )
 
   // get folder relationship functions

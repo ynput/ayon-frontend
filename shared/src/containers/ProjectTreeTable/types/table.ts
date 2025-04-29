@@ -48,6 +48,7 @@ export type GetTasksByParentQuery = {
 
 export type TableRow = {
   id: string
+  entityId?: string
   entityType: string
   name: string
   label: string
@@ -68,16 +69,22 @@ export type TableRow = {
   isLoading?: boolean
 }
 
-export type MatchingFolder = FolderListItem & { childOnlyMatch?: boolean; entityType?: 'folder' }
+export type MatchingFolder = FolderListItem & {
+  childOnlyMatch?: boolean
+  entityId: string
+  entityType: 'folder'
+}
 export type FolderNodeMap = Map<string, MatchingFolder>
 type TaskNode = GetTasksByParentQuery['project']['tasks']['edges'][0]['node']
 export type EditorTaskNode = TaskNode & {
   attrib: Record<string, any>
-  entityType?: 'task'
+  entityId: string
+  entityType: 'task'
 }
 
 type EditorVersionNode = {
   id: string
+  entityId: string
   entityType: 'version'
   folderId: string
   label?: string | null
@@ -94,6 +101,7 @@ type EditorVersionNode = {
 
 type EditorProductNode = {
   id: string
+  entityId: string
   entityType: 'product'
   folderId: string
   label?: string | null
@@ -109,7 +117,8 @@ type EditorProductNode = {
 }
 
 export type TaskNodeMap = Map<string, EditorTaskNode>
-export type EntitiesMap = Map<string, EditorTaskNode | MatchingFolder | EditorVersionNode>
+export type EntityMap = EditorTaskNode | MatchingFolder | EditorVersionNode | EditorProductNode
+export type EntitiesMap = Map<string, EntityMap>
 export type EMapResult<T extends 'folder' | 'task' | 'product' | 'version'> = T extends 'folder'
   ? MatchingFolder
   : T extends 'task'

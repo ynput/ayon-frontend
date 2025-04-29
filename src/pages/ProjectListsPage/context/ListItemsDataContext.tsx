@@ -33,6 +33,7 @@ interface ListItemsDataContextValue {
   isLoadingAll: boolean
   isLoadingMore: boolean
   isError?: boolean
+  isInitialized: boolean
   // filters
   listItemsFilters: Filter[]
   setListItemsFilters: (filters: Filter[]) => Promise<void>
@@ -133,6 +134,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
       id: list.id,
       name: list.name,
       label: list.name,
+      entityId: list.entityId,
       entityType: list.entityType,
       attrib: list.attrib,
       ownAttrib: list.ownAttrib || Object.keys(list.attrib),
@@ -145,9 +147,6 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
 
     return tableRows
   }, [listItemsData])
-
-  console.log(listItemsData)
-  console.log(listItemsTableData)
 
   const foldersMap: FolderNodeMap = new Map(
     // @ts-ignore
@@ -166,7 +165,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
         listItemsData,
         listItemsTableData,
         listItemsMap,
-        isLoadingAll: isLoading || !columnsConfigReady,
+        isLoadingAll: isLoading || !columnsConfigReady || isLoadingData,
         isLoadingMore: isFetchingNextPage,
         isError,
         fetchNextPage,
@@ -176,6 +175,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
         // folders data
         foldersMap,
         tasksMap,
+        isInitialized,
       }}
     >
       {children}
