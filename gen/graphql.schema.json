@@ -2425,6 +2425,18 @@
             "deprecationReason": null
           },
           {
+            "name": "folderOnly",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "fps",
             "description": "Frame rate",
             "args": [],
@@ -4857,6 +4869,18 @@
           },
           {
             "name": "productGroup",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "productOnly",
             "description": null,
             "args": [],
             "type": {
@@ -10580,6 +10604,18 @@
             "deprecationReason": null
           },
           {
+            "name": "taskOnly",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "tools",
             "description": null,
             "args": [],
@@ -12568,6 +12604,18 @@
           },
           {
             "name": "source",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "versionOnly",
             "description": null,
             "args": [],
             "type": {

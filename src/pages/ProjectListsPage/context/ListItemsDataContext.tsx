@@ -14,6 +14,7 @@ import {
   TaskNodeMap,
   useGetEntityTypeData,
 } from '@shared/containers/ProjectTreeTable'
+import { SortingState } from '@tanstack/react-table'
 
 export type ListItemsMap = Map<string, EntityListItem>
 
@@ -40,6 +41,9 @@ interface ListItemsDataContextValue {
   // folders data
   foldersMap: FolderNodeMap
   tasksMap: TaskNodeMap
+  // column sorting
+  columnSorting: SortingState
+  setColumnSorting: (columnSorting: SortingState) => void
 }
 
 const ListItemsDataContext = createContext<ListItemsDataContextValue | undefined>(undefined)
@@ -64,7 +68,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
 
   const getEntityTypeData = useGetEntityTypeData({ projectInfo })
 
-  const { rowSelection } = useListsContext()
+  const { rowSelection, selectedEntityType } = useListsContext()
   const selectedListsIds = Object.entries(rowSelection)
     .filter(([_, isSelected]) => isSelected)
     .map(([id]) => id)
@@ -128,6 +132,15 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     }
   }
 
+  // filter out attribFields by scope
+  const scopedAttribFields = useMemo(
+    () =>
+      attribFields.filter((field) =>
+        [selectedEntityType].some((s: any) => field.scope?.includes(s)),
+      ),
+    [attribFields],
+  )
+
   // convert listItemsData into tableData
   const listItemsTableData = useMemo(() => {
     const tableRows: TableRow[] = listItemsData.map((list) => ({
@@ -136,6 +149,8 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
       label: list.name,
       entityId: list.entityId,
       entityType: list.entityType,
+      assignees: list.assignees || [],
+      subType: extractSubType(list, list.entityType),
       attrib: list.attrib,
       ownAttrib: list.ownAttrib || Object.keys(list.attrib),
       icon: getEntityTypeData(list.entityType, extractSubType(list, list.entityType))?.icon,
@@ -159,7 +174,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
       value={{
         projectName,
         projectInfo,
-        attribFields,
+        attribFields: scopedAttribFields,
         users,
         // list items
         listItemsData,
@@ -176,6 +191,9 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
         foldersMap,
         tasksMap,
         isInitialized,
+        // column sorting
+        columnSorting,
+        setColumnSorting,
       }}
     >
       {children}

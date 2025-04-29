@@ -30,7 +30,7 @@ interface ListsDataProviderProps {
 
 // fetch all lists and provide methods to update the lists
 export const ListsDataProvider = ({ children }: ListsDataProviderProps) => {
-  const { projectName } = useProjectDataContext()
+  const { projectName, isInitialized, isLoading: isLoadingProject } = useProjectDataContext()
 
   const [pageConfig, updatePageConfig, { isSuccess: columnsConfigReady }] = useUsersPageConfig({
     page: 'lists',
@@ -44,7 +44,7 @@ export const ListsDataProvider = ({ children }: ListsDataProviderProps) => {
 
   const {
     data: listsData,
-    isLoading,
+    isLoading: isLoadingLists,
     isFetchingNextPage,
     isError,
     fetchNextPage,
@@ -82,7 +82,7 @@ export const ListsDataProvider = ({ children }: ListsDataProviderProps) => {
         listsData,
         listsTableData,
         listsMap,
-        isLoadingAll: isLoading || !columnsConfigReady,
+        isLoadingAll: isLoadingLists || !columnsConfigReady || isLoadingProject || !isInitialized,
         isLoadingMore: isFetchingNextPage,
         isError,
         fetchNextPage,

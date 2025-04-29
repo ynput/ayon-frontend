@@ -10,6 +10,7 @@ import ListInfoDialog from './components/ListInfoDialog/ListInfoDialog'
 import ListsFiltersDialog from './components/ListsFiltersDialog/ListsFiltersDialog'
 import { ListItemsDataProvider } from './context/ListItemsDataContext'
 import ListItemsTable from './components/ListItemsTable/ListItemsTable'
+import ListItemsFilter from './components/ListItemsFilter/ListItemsFilter'
 
 const ProjectListsWithProviders: FC = () => {
   const projectName = useAppSelector((state) => state.project.name) || ''
@@ -42,7 +43,9 @@ const ProjectListsPage: FC = () => {
         </SplitterPanel>
         <SplitterPanel size={88}>
           <Section wrap direction="column" style={{ height: '100%' }}>
-            <Toolbar style={{ gap: 8 }}></Toolbar>
+            <Toolbar>
+              <ListItemsFilter />
+            </Toolbar>
             <Splitter
               layout="horizontal"
               stateKey="overview-splitter-settings"
@@ -57,6 +60,7 @@ const ProjectListsPage: FC = () => {
                   style={{ width: '100%', height: '100%' }}
                 >
                   <SplitterPanel size={70}>
+                    {/* ITEMS TABLE */}
                     <ListItemsTable />
                   </SplitterPanel>
                   {!!false ? (

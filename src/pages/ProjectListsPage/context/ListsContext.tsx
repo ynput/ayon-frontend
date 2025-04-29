@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode } from 'react'
+import { createContext, useContext, useState, ReactNode, useMemo } from 'react'
 import { ExpandedState, RowSelectionState } from '@tanstack/react-table'
 import useNewList, { UseNewListReturn } from '../hooks/useNewList'
 import {
@@ -39,6 +39,7 @@ export interface ListsContextValue {
   setRowSelection: React.Dispatch<React.SetStateAction<RowSelectionState>>
   expanded: ExpandedState
   setExpanded: React.Dispatch<React.SetStateAction<ExpandedState>>
+  selectedEntityType: 'folder' | 'task' | 'product' | 'version' | string | undefined // first selected list entity type
   // Creating new lists
   newList: UseNewListReturn['newList']
   setNewList: UseNewListReturn['setNewList']
@@ -76,6 +77,11 @@ export const ListsProvider = ({ children }: ListsProviderProps) => {
     withDefault(RowSelectionParam, {}),
   )
   const [expanded, setExpanded] = useState<ExpandedState>({})
+
+  const selectedEntityType = useMemo(
+    () => listsMap.get(Object.keys(rowSelection)[0])?.entityType,
+    [rowSelection, listsMap],
+  )
 
   // dialogs
   const [listsFiltersOpen, setListsFiltersOpen] = useState(false)
@@ -122,6 +128,7 @@ export const ListsProvider = ({ children }: ListsProviderProps) => {
         setRowSelection,
         expanded,
         setExpanded,
+        selectedEntityType,
         ...newListProps,
         ...useUpdateListProps,
         deleteLists,

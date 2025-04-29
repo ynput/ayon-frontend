@@ -6,6 +6,7 @@ fragment ListItemFragment on BaseNode {
     taskType
     allAttrib
     ownAttrib
+    assignees
     folder {
       path
     }

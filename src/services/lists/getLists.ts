@@ -41,6 +41,7 @@ type ItemNodeData = {
   taskType?: string
   folderType?: string
   productType?: string
+  assignees?: string[]
   // different paths to folder
   path?: string
   folder?: {

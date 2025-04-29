@@ -91,6 +91,13 @@ export const ProjectOverviewProvider = ({ children }: ProjectOverviewProviderPro
     setColumnSorting,
   } = useProjectDataContext()
 
+  // filter out attribFields by scope
+  const scopedAttribFields = useMemo(
+    () =>
+      attribFields.filter((field) => ['task', 'folder'].some((s: any) => field.scope?.includes(s))),
+    [attribFields],
+  )
+
   // lists data
   const { menuItems: addToListItems } = useEntityListsContext()
 
@@ -226,7 +233,7 @@ export const ProjectOverviewProvider = ({ children }: ProjectOverviewProviderPro
         isLoadingMore,
         loadingTasks,
         projectInfo,
-        attribFields,
+        attribFields: scopedAttribFields,
         users,
         projectName,
         tasksMap,

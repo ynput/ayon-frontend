@@ -255,6 +255,7 @@ export type FolderAttribType = {
   distances?: Maybe<Array<Scalars['String']['output']>>;
   /** Deadline date and time */
   endDate?: Maybe<Scalars['DateTime']['output']>;
+  folderOnly?: Maybe<Scalars['String']['output']>;
   /** Frame rate */
   fps?: Maybe<Scalars['Float']['output']>;
   frameEnd?: Maybe<Scalars['Int']['output']>;
@@ -486,6 +487,7 @@ export type ProductAttribType = {
   /** Textual description of the entity */
   description?: Maybe<Scalars['String']['output']>;
   productGroup?: Maybe<Scalars['String']['output']>;
+  productOnly?: Maybe<Scalars['String']['output']>;
 };
 
 export type ProductEdge = {
@@ -1087,6 +1089,7 @@ export type TaskAttribType = {
   shotgridType?: Maybe<Scalars['String']['output']>;
   /** Date and time when the project or task or asset was started */
   startDate?: Maybe<Scalars['DateTime']['output']>;
+  taskOnly?: Maybe<Scalars['String']['output']>;
   tools?: Maybe<Array<Scalars['String']['output']>>;
 };
 
@@ -1281,6 +1284,7 @@ export type VersionAttribType = {
   resolutionWidth?: Maybe<Scalars['Int']['output']>;
   site?: Maybe<Scalars['String']['output']>;
   source?: Maybe<Scalars['String']['output']>;
+  versionOnly?: Maybe<Scalars['String']['output']>;
 };
 
 export type VersionEdge = {
@@ -1509,7 +1513,7 @@ export type GetListItemsQueryVariables = Exact<{
 }>;
 
 
-export type GetListItemsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', entityLists: { __typename?: 'EntityListsConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, edges: Array<{ __typename?: 'EntityListEdge', node: { __typename?: 'EntityListNode', id: string, active: boolean, items: { __typename?: 'EntityListItemsConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, edges: Array<{ __typename?: 'EntityListItemEdge', id: string, entityId: string, entityType: string, node?: { __typename?: 'FolderNode', active: boolean, name: string, status: string, tags: Array<string>, folderType: string, allAttrib: string, ownAttrib: Array<string>, path?: string | null } | { __typename?: 'ProductNode', active: boolean, name: string, status: string, tags: Array<string>, productType: string, allAttrib: string, folder: { __typename?: 'FolderNode', path?: string | null } } | { __typename?: 'RepresentationNode', active: boolean, name: string } | { __typename?: 'TaskNode', active: boolean, name: string, status: string, tags: Array<string>, taskType: string, allAttrib: string, ownAttrib: Array<string>, folder: { __typename?: 'FolderNode', path?: string | null } } | { __typename?: 'VersionNode', active: boolean, name: string, status: string, tags: Array<string>, allAttrib: string, product: { __typename?: 'ProductNode', folder: { __typename?: 'FolderNode', path?: string | null } }, task?: { __typename?: 'TaskNode', name: string } | null } | { __typename?: 'WorkfileNode', active: boolean, name: string } | null }> } } }> } } };
+export type GetListItemsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', entityLists: { __typename?: 'EntityListsConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, edges: Array<{ __typename?: 'EntityListEdge', node: { __typename?: 'EntityListNode', id: string, active: boolean, items: { __typename?: 'EntityListItemsConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, edges: Array<{ __typename?: 'EntityListItemEdge', id: string, entityId: string, entityType: string, node?: { __typename?: 'FolderNode', active: boolean, name: string, status: string, tags: Array<string>, folderType: string, allAttrib: string, ownAttrib: Array<string>, path?: string | null } | { __typename?: 'ProductNode', active: boolean, name: string, status: string, tags: Array<string>, productType: string, allAttrib: string, folder: { __typename?: 'FolderNode', path?: string | null } } | { __typename?: 'RepresentationNode', active: boolean, name: string } | { __typename?: 'TaskNode', active: boolean, name: string, status: string, tags: Array<string>, taskType: string, allAttrib: string, ownAttrib: Array<string>, assignees: Array<string>, folder: { __typename?: 'FolderNode', path?: string | null } } | { __typename?: 'VersionNode', active: boolean, name: string, status: string, tags: Array<string>, allAttrib: string, product: { __typename?: 'ProductNode', folder: { __typename?: 'FolderNode', path?: string | null } }, task?: { __typename?: 'TaskNode', name: string } | null } | { __typename?: 'WorkfileNode', active: boolean, name: string } | null }> } } }> } } };
 
 export type GetListsQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
@@ -1527,7 +1531,7 @@ type ListItemFragment_ProductNode_Fragment = { __typename?: 'ProductNode', name:
 
 type ListItemFragment_RepresentationNode_Fragment = { __typename?: 'RepresentationNode' };
 
-type ListItemFragment_TaskNode_Fragment = { __typename?: 'TaskNode', name: string, status: string, tags: Array<string>, taskType: string, allAttrib: string, ownAttrib: Array<string>, folder: { __typename?: 'FolderNode', path?: string | null } };
+type ListItemFragment_TaskNode_Fragment = { __typename?: 'TaskNode', name: string, status: string, tags: Array<string>, taskType: string, allAttrib: string, ownAttrib: Array<string>, assignees: Array<string>, folder: { __typename?: 'FolderNode', path?: string | null } };
 
 type ListItemFragment_VersionNode_Fragment = { __typename?: 'VersionNode', name: string, status: string, tags: Array<string>, allAttrib: string, product: { __typename?: 'ProductNode', folder: { __typename?: 'FolderNode', path?: string | null } }, task?: { __typename?: 'TaskNode', name: string } | null };
 
@@ -1735,6 +1739,7 @@ export const ListItemFragmentFragmentDoc = `
     taskType
     allAttrib
     ownAttrib
+    assignees
     folder {
       path
     }

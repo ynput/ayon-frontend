@@ -29,7 +29,7 @@ import clsx from 'clsx'
 import type { EntitiesMap, FolderNodeMap, TableRow, TaskNodeMap } from './types/table'
 
 // Component imports
-import ProjectTreeTableColumns from './ProjectTreeTableColumns'
+import ProjectTreeTableColumns, { ProjectTreeTableColumnsProps } from './ProjectTreeTableColumns'
 import * as Styled from './ProjectTreeTable.styled'
 import HeaderActionButton from './components/HeaderActionButton'
 import EmptyPlaceholder from '../../components/EmptyPlaceholder'
@@ -56,7 +56,7 @@ import { createPortal } from 'react-dom'
 import { Icon } from '@ynput/ayon-react-components'
 import { AttributeEnumItem, AttributeWithPermissions, BuiltInFieldOptions } from './types'
 import { useProjectTableContext } from './context/ProjectTableContext'
-import { getTableFieldOptions } from './utils'
+import { getReadOnlyLists, getTableFieldOptions } from './utils'
 
 //These are the important styles to make sticky column pinning work!
 //Apply styles like this using your CSS strategy of choice with this kind of logic to head cells, data cells, footer cells, etc.
@@ -78,6 +78,9 @@ type Props = {
   sliceId: string
   fetchMoreOnBottomReached: (element: HTMLDivElement | null) => void
   onOpenNew?: (type: 'folder' | 'task') => void
+  pt?: {
+    columns?: Partial<ProjectTreeTableColumnsProps>
+  }
 }
 
 export const ProjectTreeTable = ({
@@ -85,6 +88,7 @@ export const ProjectTreeTable = ({
   sliceId,
   fetchMoreOnBottomReached,
   onOpenNew,
+  pt,
 }: Props) => {
   const {
     columnVisibility,
@@ -170,6 +174,7 @@ export const ProjectTreeTable = ({
     options,
     toggleExpandAll: (id: string) => toggleExpandAll([id]),
     toggleExpanded: (id: string) => toggleExpanded(id),
+    ...pt?.columns,
   })
 
   const table = useReactTable({
@@ -236,9 +241,11 @@ export const ProjectTreeTable = ({
   })
 
   const columnSizeVars = useCustomColumnWidthVars(table, columnSizing)
-  const readOnlyColumns = useMemo(
-    () => attribFields.filter((attrib) => attrib.readOnly).map((attrib) => 'attrib_' + attrib.name),
-    [attribFields],
+
+  // Format readonly columns and attributes
+  const { readOnlyColumns, readOnlyAttribs } = useMemo(
+    () => getReadOnlyLists(attribFields, pt?.columns?.readonly),
+    [attribFields, pt?.columns?.readonly],
   )
 
   const attribByField = useMemo(() => {
@@ -254,7 +261,7 @@ export const ProjectTreeTable = ({
     <ClipboardProvider
       entitiesMap={entitiesMap}
       columnEnums={{ ...options, ...attribByField }}
-      columnReadOnly={attribFields.filter((attrib) => attrib.readOnly).map((attrib) => attrib.name)}
+      columnReadOnly={readOnlyAttribs}
     >
       <Styled.TableWrapper>
         <Styled.TableContainer

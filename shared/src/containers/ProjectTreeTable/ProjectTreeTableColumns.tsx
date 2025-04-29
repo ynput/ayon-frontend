@@ -65,7 +65,9 @@ const attribSort: AttribSortingFn = (rowA, rowB, columnId, attrib) => {
   }
 }
 
-type Props = {
+type DefaultColumns = 'name' | 'status' | 'subType' | 'assignees' | 'tags'
+
+export type ProjectTreeTableColumnsProps = {
   tableData: TableRow[]
   attribs: AttributeWithPermissions[]
   columnSizing: ColumnSizingState
@@ -73,6 +75,8 @@ type Props = {
   showHierarchy: boolean
   sliceId: string
   options: BuiltInFieldOptions
+  hidden?: (DefaultColumns | string)[]
+  readonly?: (DefaultColumns | string)[]
   toggleExpandAll: (id: string) => void
   toggleExpanded: (id: string) => void
 }
@@ -85,9 +89,11 @@ const ProjectTreeTableColumns = ({
   isLoading,
   sliceId,
   options,
+  hidden,
+  readonly,
   toggleExpandAll,
   toggleExpanded,
-}: Props) => {
+}: ProjectTreeTableColumnsProps) => {
   const { updateEntities } = useCellEditing()
 
   return useMemo<ColumnDef<TableRow, any>[]>(() => {
@@ -99,6 +105,7 @@ const ProjectTreeTableColumns = ({
         size: 20,
       },
       {
+        id: 'name',
         accessorKey: 'name',
         header: () => 'Folder / Task',
         sortingFn: withLoadingStateSort(showHierarchy ? nameSort : pathSort),
@@ -133,6 +140,7 @@ const ProjectTreeTableColumns = ({
         },
       },
       {
+        id: 'status',
         accessorKey: 'status',
         header: () => 'Status',
         sortingFn: withLoadingStateSort((a, b, c) =>
@@ -153,11 +161,13 @@ const ProjectTreeTableColumns = ({
               options={options.statuses.filter((s) => s.scope?.includes(type))}
               isCollapsed={!!row.original.childOnlyMatch}
               onChange={(value) => updateEntities([{ field: column.id, value, id, type }])}
+              isReadOnly={readonly?.includes(column.id)}
             />
           )
         },
       },
       {
+        id: 'subType',
         accessorKey: 'subType',
         header: () => 'Type',
         size: columnSizing['type'] || 150,
@@ -171,14 +181,18 @@ const ProjectTreeTableColumns = ({
               columnId={column.id}
               value={value}
               attributeData={{ type: 'string' }}
-              options={type === 'folder' ? options.folderTypes : options.taskTypes}
+              options={
+                type === 'folder' ? options.folderTypes : type === 'task' ? options.taskTypes : []
+              }
               isCollapsed={!!row.original.childOnlyMatch}
               onChange={(value) => updateEntities([{ field: fieldId, value, id, type }])}
+              isReadOnly={readonly?.includes(column.id)}
             />
           )
         },
       },
       {
+        id: 'assignees',
         accessorKey: 'assignees',
         header: () => 'Assignees',
         size: columnSizing['assignees'] || 150,
@@ -204,11 +218,13 @@ const ProjectTreeTableColumns = ({
               options={options.assignees}
               isCollapsed={!!row.original.childOnlyMatch}
               onChange={(value) => updateEntities([{ field: column.id, value, id, type }])}
+              isReadOnly={readonly?.includes(column.id)}
             />
           )
         },
       },
       {
+        id: 'tags',
         accessorKey: 'tags',
         header: () => 'Tags',
         size: columnSizing['tags'] || 150,
@@ -224,6 +240,7 @@ const ProjectTreeTableColumns = ({
               options={options.tags}
               isCollapsed={!!row.original.childOnlyMatch}
               onChange={(value) => updateEntities([{ field: column.id, value, id, type }])}
+              isReadOnly={readonly?.includes(column.id)}
               enableCustomValues
             />
           )
@@ -233,6 +250,7 @@ const ProjectTreeTableColumns = ({
 
     const attributeColumns = attribs.map((attrib) => {
       const attribColumn: ColumnDef<TableRow> = {
+        id: 'attrib_' + attrib.name,
         accessorKey: 'attrib.' + attrib.name,
         header: () => attrib.data.title || attrib.name,
         filterFn: 'fuzzy' as FilterFnOption<TableRow>,
@@ -252,7 +270,9 @@ const ProjectTreeTableColumns = ({
               options={attrib.data.enum || []}
               isCollapsed={!!row.original.childOnlyMatch}
               isInherited={isInherited}
-              isReadOnly={attrib.readOnly}
+              isReadOnly={
+                attrib.readOnly || readonly?.some((id) => id === columnIdParsed || id === 'attrib')
+              }
               onChange={(value) =>
                 updateEntities([{ field: columnIdParsed, value, id, type, isAttrib: true }])
               }
@@ -263,8 +283,22 @@ const ProjectTreeTableColumns = ({
       return attribColumn
     })
 
-    return [...staticColumns, ...attributeColumns]
-  }, [isLoading, sliceId, tableData, options, attribs, showHierarchy, updateEntities])
+    const allColumns = [...staticColumns, ...attributeColumns].filter(
+      (column) => !hidden?.includes(column.id as string),
+    )
+
+    return allColumns
+  }, [
+    isLoading,
+    sliceId,
+    tableData,
+    options,
+    attribs,
+    showHierarchy,
+    updateEntities,
+    hidden,
+    readonly,
+  ])
 }
 
 export default ProjectTreeTableColumns

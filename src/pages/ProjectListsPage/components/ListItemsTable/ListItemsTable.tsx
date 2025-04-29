@@ -1,5 +1,6 @@
 import { useListItemsDataContext } from '@pages/ProjectListsPage/context/ListItemsDataContext'
 import { useListsContext } from '@pages/ProjectListsPage/context/ListsContext'
+import { getColumnConfigFromType } from '@pages/ProjectListsPage/util'
 import { SettingsPanelProvider } from '@pages/ProjectOverviewPage/context/SettingsPanelContext'
 import useTableQueriesHelper from '@pages/ProjectOverviewPage/hooks/useTableQueriesHelper'
 import { useUsersPageConfig } from '@pages/ProjectOverviewPage/hooks/useUserPageConfig'
@@ -18,11 +19,13 @@ import { FC } from 'react'
 interface ListItemsTableProps {}
 
 const ListItemsTable: FC<ListItemsTableProps> = ({}) => {
-  const { rowSelection } = useListsContext()
+  const { rowSelection, selectedEntityType } = useListsContext()
   const selectedListsIds = Object.entries(rowSelection).filter(([_, isSelected]) => isSelected)
   const isMultipleSelected = selectedListsIds.length > 1
   const { isError, projectName } = useListItemsDataContext()
   const scope = `lists-${projectName}`
+
+  const [hiddenColumns, readOnly] = getColumnConfigFromType(selectedEntityType)
 
   if (!selectedListsIds.length) return <EmptyPlaceholder message="Start by selecting a list." />
 
@@ -38,6 +41,12 @@ const ListItemsTable: FC<ListItemsTableProps> = ({}) => {
       // pagination
       fetchMoreOnBottomReached={() => {
         console.log('REACHED BOTTOM: Doing nothing...')
+      }}
+      pt={{
+        columns: {
+          hidden: hiddenColumns,
+          readonly: readOnly,
+        },
       }}
     />
   )
