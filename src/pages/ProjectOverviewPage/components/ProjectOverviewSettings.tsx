@@ -1,5 +1,5 @@
 import { useProjectTableContext } from '@shared/containers/ProjectTreeTable'
-import { Button } from '@ynput/ayon-react-components'
+import { Button, ButtonProps } from '@ynput/ayon-react-components'
 import { FC } from 'react'
 import styled from 'styled-components'
 import { useSettingsPanel } from '../context/SettingsPanelContext'
@@ -10,7 +10,9 @@ const StyledCustomizeButton = styled(Button)`
   min-width: 120px;
 `
 
-export const CustomizeButton = () => {
+interface Props extends ButtonProps {}
+
+export const CustomizeButton = ({ ...props }: Props) => {
   const { togglePanel, isPanelOpen } = useSettingsPanel()
 
   return (
@@ -18,6 +20,7 @@ export const CustomizeButton = () => {
       onClick={() => togglePanel('columns')}
       icon="settings"
       selected={isPanelOpen}
+      {...props}
     >
       Customize
     </StyledCustomizeButton>

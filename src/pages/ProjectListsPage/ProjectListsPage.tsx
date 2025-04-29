@@ -91,6 +91,7 @@ const ProjectListsWithInnerProviders: FC = () => {
 
 const ProjectListsPage: FC = () => {
   const { isPanelOpen } = useSettingsPanel()
+  const { selectedList } = useListsContext()
 
   return (
     <main style={{ overflow: 'hidden', gap: 4 }}>
@@ -107,10 +108,12 @@ const ProjectListsPage: FC = () => {
         </SplitterPanel>
         <SplitterPanel size={88}>
           <Section wrap direction="column" style={{ height: '100%' }}>
-            <Toolbar>
-              <ListItemsFilter />
-              <CustomizeButton />
-            </Toolbar>
+            {selectedList && (
+              <Toolbar>
+                <ListItemsFilter />
+                <CustomizeButton />
+              </Toolbar>
+            )}
             <Splitter
               layout="horizontal"
               stateKey="overview-splitter-settings"
