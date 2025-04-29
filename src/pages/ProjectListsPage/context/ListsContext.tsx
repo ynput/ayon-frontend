@@ -12,6 +12,27 @@ import useDeleteList, { UseDeleteListReturn } from '../hooks/useDeleteList'
 import useUpdateList, { UseUpdateListReturn } from '../hooks/useUpdateList'
 import { EntityList } from '@queries/lists/getLists'
 import { useListsDataContext } from './ListsDataContext'
+import { useQueryParam, withDefault, QueryParamConfig } from 'use-query-params'
+
+// Custom param for RowSelectionState
+const RowSelectionParam: QueryParamConfig<RowSelectionState> = {
+  encode: (rowSelection: RowSelectionState | null | undefined) => {
+    if (!rowSelection || Object.keys(rowSelection).length === 0) return undefined
+    // Convert to array of selected row ids
+    const selectedIds = Object.entries(rowSelection)
+      .filter(([_, selected]) => selected)
+      .map(([id]) => id)
+    return selectedIds.join(',')
+  },
+  decode: (input: string | (string | null)[] | null | undefined) => {
+    const str = Array.isArray(input) ? input[0] : input
+    if (!str) return {}
+
+    // Convert comma-separated string back to object
+    const selectedIds = str.split(',')
+    return selectedIds.reduce((acc, id) => ({ ...acc, [id]: true }), {})
+  },
+}
 
 export interface ListsContextValue {
   rowSelection: RowSelectionState
@@ -50,7 +71,10 @@ interface ListsProviderProps {
 export const ListsProvider = ({ children }: ListsProviderProps) => {
   const { projectName } = useProjectDataContext()
   const { listsMap } = useListsDataContext()
-  const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
+  const [rowSelection, setRowSelection] = useQueryParam<RowSelectionState>(
+    'list',
+    withDefault(RowSelectionParam, {}),
+  )
   const [expanded, setExpanded] = useState<ExpandedState>({})
 
   // dialogs
