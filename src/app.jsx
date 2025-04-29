@@ -168,15 +168,15 @@ const App = () => {
         <WatchActivities />
         <Suspense fallback={<LoadingPage />}>
           <RestartProvider>
-            <FeedbackProvider>
-              <PowerpackProvider>
-                <RemoteModulesProvider>
-                  <PowerLicenseProvider>
-                    <ContextMenuProvider>
-                      <GlobalContextMenu />
-                      <PasteProvider>
-                        <PasteModal />
-                        <BrowserRouter>
+            <PowerpackProvider>
+              <RemoteModulesProvider>
+                <PowerLicenseProvider>
+                  <ContextMenuProvider>
+                    <GlobalContextMenu />
+                    <PasteProvider>
+                      <PasteModal />
+                      <BrowserRouter>
+                        <FeedbackProvider>
                           <NotificationsProvider>
                             <URIProvider>
                               <CustomerlyProvider appId={PROJECT_ID}>
@@ -304,13 +304,13 @@ const App = () => {
                               </CustomerlyProvider>
                             </URIProvider>
                           </NotificationsProvider>
-                        </BrowserRouter>
-                      </PasteProvider>
-                    </ContextMenuProvider>
-                  </PowerLicenseProvider>
-                </RemoteModulesProvider>
-              </PowerpackProvider>
-            </FeedbackProvider>
+                        </FeedbackProvider>
+                      </BrowserRouter>
+                    </PasteProvider>
+                  </ContextMenuProvider>
+                </PowerLicenseProvider>
+              </RemoteModulesProvider>
+            </PowerpackProvider>
           </RestartProvider>
         </Suspense>
       </>
