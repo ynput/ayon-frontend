@@ -1,25 +1,43 @@
 import { ProjectDataProvider } from '@pages/ProjectOverviewPage/context/ProjectDataContext'
 import { useAppSelector } from '@state/store'
 import { FC } from 'react'
-import { ListsProvider } from './context/ListsContext'
+import { ListsProvider, useListsContext } from './context/ListsContext'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { Section, Toolbar } from '@ynput/ayon-react-components'
 import { ListsDataProvider } from './context/ListsDataContext'
 import ListsTable from './components/ListsTable/ListsTable'
 import ListInfoDialog from './components/ListInfoDialog/ListInfoDialog'
 import ListsFiltersDialog from './components/ListsFiltersDialog/ListsFiltersDialog'
-import { ListItemsDataProvider } from './context/ListItemsDataContext'
+import { ListItemsDataProvider, useListItemsDataContext } from './context/ListItemsDataContext'
 import ListItemsTable from './components/ListItemsTable/ListItemsTable'
 import ListItemsFilter from './components/ListItemsFilter/ListItemsFilter'
+import ProjectOverviewSettings, {
+  CustomizeButton,
+} from '@pages/ProjectOverviewPage/components/ProjectOverviewSettings'
+import {
+  SettingsPanelProvider,
+  useSettingsPanel,
+} from '@pages/ProjectOverviewPage/context/SettingsPanelContext'
+import { useUsersPageConfig } from '@pages/ProjectOverviewPage/hooks/useUserPageConfig'
+import useTableQueriesHelper from '@pages/ProjectOverviewPage/hooks/useTableQueriesHelper'
+import {
+  CellEditingProvider,
+  ColumnSettingsProvider,
+  ProjectTableProvider,
+  ProjectTableQueriesProvider,
+  SelectedRowsProvider,
+  SelectionProvider,
+} from '@shared/containers/ProjectTreeTable'
 
-const ProjectListsWithProviders: FC = () => {
+const ProjectListsWithOuterProviders: FC = () => {
   const projectName = useAppSelector((state) => state.project.name) || ''
+
   return (
     <ProjectDataProvider projectName={projectName}>
       <ListsDataProvider>
         <ListsProvider>
           <ListItemsDataProvider>
-            <ProjectListsPage />
+            <ProjectListsWithInnerProviders />
           </ListItemsDataProvider>
         </ListsProvider>
       </ListsDataProvider>
@@ -27,7 +45,53 @@ const ProjectListsWithProviders: FC = () => {
   )
 }
 
+const ProjectListsWithInnerProviders: FC = () => {
+  const { projectName, ...props } = useListItemsDataContext()
+  const { selectedList } = useListsContext()
+
+  const [pageConfig, updatePageConfig] = useUsersPageConfig({
+    selectors: ['lists', projectName, selectedList?.label],
+  })
+
+  const { updateEntities, getFoldersTasks } = useTableQueriesHelper({
+    projectName: projectName,
+  })
+
+  return (
+    <SettingsPanelProvider>
+      <ProjectTableQueriesProvider {...{ updateEntities, getFoldersTasks }}>
+        <ProjectTableProvider
+          projectName={projectName}
+          attribFields={props.attribFields}
+          projectInfo={props.projectInfo}
+          users={props.users}
+          entitiesMap={props.listItemsMap}
+          foldersMap={props.foldersMap}
+          tasksMap={props.tasksMap}
+          tableRows={props.listItemsTableData}
+          expanded={{}}
+          isInitialized={props.isInitialized}
+          showHierarchy={false}
+          isLoading={props.isLoadingAll}
+        >
+          <SelectionProvider>
+            <SelectedRowsProvider>
+              <ColumnSettingsProvider config={pageConfig} onChange={updatePageConfig}>
+                <CellEditingProvider>
+                  <ProjectListsPage />
+                </CellEditingProvider>
+              </ColumnSettingsProvider>
+            </SelectedRowsProvider>
+          </SelectionProvider>
+        </ProjectTableProvider>
+      </ProjectTableQueriesProvider>
+    </SettingsPanelProvider>
+  )
+}
+
 const ProjectListsPage: FC = () => {
+  const { isPanelOpen } = useSettingsPanel()
+
   return (
     <main style={{ overflow: 'hidden', gap: 4 }}>
       <Splitter
@@ -45,6 +109,7 @@ const ProjectListsPage: FC = () => {
           <Section wrap direction="column" style={{ height: '100%' }}>
             <Toolbar>
               <ListItemsFilter />
+              <CustomizeButton />
             </Toolbar>
             <Splitter
               layout="horizontal"
@@ -63,7 +128,7 @@ const ProjectListsPage: FC = () => {
                     {/* ITEMS TABLE */}
                     <ListItemsTable />
                   </SplitterPanel>
-                  {!!false ? (
+                  {false ? (
                     <SplitterPanel
                       size={30}
                       style={{
@@ -78,14 +143,14 @@ const ProjectListsPage: FC = () => {
                   )}
                 </Splitter>
               </SplitterPanel>
-              {false ? (
+              {isPanelOpen ? (
                 <SplitterPanel
                   size={18}
                   style={{
                     zIndex: 500,
                   }}
                 >
-                  <div>Table settings</div>
+                  <ProjectOverviewSettings />
                 </SplitterPanel>
               ) : (
                 <SplitterPanel style={{ maxWidth: 0 }}></SplitterPanel>
@@ -100,4 +165,4 @@ const ProjectListsPage: FC = () => {
   )
 }
 
-export default ProjectListsWithProviders
+export default ProjectListsWithOuterProviders

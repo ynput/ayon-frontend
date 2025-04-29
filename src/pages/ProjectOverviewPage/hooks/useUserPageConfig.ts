@@ -1,10 +1,11 @@
 import { useGetCurrentUserQuery } from '@queries/auth/getAuth'
 import { useSetFrontendPreferencesMutation } from '@queries/user/updateUser'
+import { camelCase } from 'lodash'
 import { toast } from 'react-toastify'
 
 type Props = {
-  projectName: string
-  page: string
+  selectors?: (string | undefined | null)[]
+  init?: any
 }
 
 type Result = [
@@ -13,14 +14,22 @@ type Result = [
   { isSuccess: boolean },
 ]
 
-export const useUsersPageConfig = ({ projectName, page }: Props): Result => {
+export const useUsersPageConfig = ({ selectors = [], init }: Props): Result => {
   // GET CURRENT USER
   const { data: user, isSuccess } = useGetCurrentUserQuery()
   // extract out columns config for project
   const { data: { frontendPreferences: preferences = {} } = {} } = user || {}
-  // frontendPreferences[page][projectName]
-  const pageConfig = preferences?.[page] || {}
-  const pageProjectConfig = pageConfig?.[projectName] || {}
+
+  const configPath = selectors
+    .filter((selector) => selector !== undefined && selector !== null)
+    .map((selector) => camelCase(selector))
+  // Start with the root preferences
+  let userConfig = preferences
+  for (const selector of configPath) {
+    userConfig = userConfig?.[selector]
+  }
+
+  userConfig = userConfig || init || {}
 
   const [updateUserPreferences] = useSetFrontendPreferencesMutation()
 
@@ -28,9 +37,26 @@ export const useUsersPageConfig = ({ projectName, page }: Props): Result => {
   const updateProjectConfig = async (config: Record<string, any>) => {
     try {
       if (!user?.name) throw { data: { detail: 'User not found' } }
-      const updatedPageProjectConfig = { ...pageProjectConfig, ...config }
-      const updatedPageConfig = { ...pageConfig, [projectName]: updatedPageProjectConfig }
-      const updatedPreferences = { ...preferences, [page]: updatedPageConfig }
+
+      // Set the updated config at the correct nested path using only selectors
+      let updatedPreferences = { ...preferences }
+
+      // Helper function to set nested value
+      const setNestedValue = (obj: any, path: string[], value: any): any => {
+        if (path.length === 0) return { ...obj, ...value }
+
+        const [first, ...rest] = path
+        const nestedObj = obj?.[first] || {}
+
+        return {
+          ...obj,
+          [first]: setNestedValue(nestedObj, rest, value),
+        }
+      }
+
+      // Use the helper to set the value at the correct path
+      updatedPreferences = setNestedValue(updatedPreferences, configPath, config)
+
       await updateUserPreferences({
         userName: user.name,
         patchData: updatedPreferences,
@@ -43,5 +69,5 @@ export const useUsersPageConfig = ({ projectName, page }: Props): Result => {
     }
   }
 
-  return [pageProjectConfig, updateProjectConfig, { isSuccess: isSuccess }]
+  return [userConfig, updateProjectConfig, { isSuccess: isSuccess }]
 }

@@ -68,15 +68,14 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
 
   const getEntityTypeData = useGetEntityTypeData({ projectInfo })
 
-  const { rowSelection, selectedEntityType } = useListsContext()
+  const { rowSelection, selectedList } = useListsContext()
   const selectedListsIds = Object.entries(rowSelection)
     .filter(([_, isSelected]) => isSelected)
     .map(([id]) => id)
   const selectedListId = selectedListsIds.length === 1 ? selectedListsIds[0] : undefined
 
   const [pageConfig, updatePageConfig, { isSuccess: columnsConfigReady }] = useUsersPageConfig({
-    page: 'lists',
-    projectName: projectName,
+    selectors: ['lists', projectName, selectedList?.label],
   })
 
   const listItemsFilters = pageConfig?.listItemsFilters || ([] as Filter[])
@@ -136,7 +135,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
   const scopedAttribFields = useMemo(
     () =>
       attribFields.filter((field) =>
-        [selectedEntityType].some((s: any) => field.scope?.includes(s)),
+        [selectedList?.entityType].some((s: any) => field.scope?.includes(s)),
       ),
     [attribFields],
   )

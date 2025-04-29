@@ -35,8 +35,7 @@ const ProjectOverviewWithProviders: FC = () => {
 const ProjectOverviewWithTableProviders: FC = () => {
   const props = useProjectOverviewContext()
   const [pageConfig, updatePageConfig] = useUsersPageConfig({
-    page: 'overview',
-    projectName: props.projectName,
+    selectors: ['overview', props.projectName],
   })
 
   const { updateEntities, getFoldersTasks } = useTableQueriesHelper({

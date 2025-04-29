@@ -535,10 +535,7 @@ const TableBody = ({
     </tbody>
   ) : (
     tableContainerRef.current &&
-      createPortal(
-        <EmptyPlaceholder message="No folders or tasks found" />,
-        tableContainerRef.current,
-      )
+      createPortal(<EmptyPlaceholder message="No items found" />, tableContainerRef.current)
   )
 }
 

@@ -39,7 +39,7 @@ export interface ListsContextValue {
   setRowSelection: React.Dispatch<React.SetStateAction<RowSelectionState>>
   expanded: ExpandedState
   setExpanded: React.Dispatch<React.SetStateAction<ExpandedState>>
-  selectedEntityType: 'folder' | 'task' | 'product' | 'version' | string | undefined // first selected list entity type
+  selectedList: EntityList | undefined
   // Creating new lists
   newList: UseNewListReturn['newList']
   setNewList: UseNewListReturn['setNewList']
@@ -78,10 +78,11 @@ export const ListsProvider = ({ children }: ListsProviderProps) => {
   )
   const [expanded, setExpanded] = useState<ExpandedState>({})
 
-  const selectedEntityType = useMemo(
-    () => listsMap.get(Object.keys(rowSelection)[0])?.entityType,
-    [rowSelection, listsMap],
-  )
+  const selectedList = useMemo(() => {
+    const selected = Object.entries(rowSelection).filter(([_k, v]) => v)
+    const selectedId = selected[0]?.[0]
+    return listsMap.get(selectedId)
+  }, [rowSelection, listsMap, rowSelection])
 
   // dialogs
   const [listsFiltersOpen, setListsFiltersOpen] = useState(false)
@@ -128,7 +129,7 @@ export const ListsProvider = ({ children }: ListsProviderProps) => {
         setRowSelection,
         expanded,
         setExpanded,
-        selectedEntityType,
+        selectedList,
         ...newListProps,
         ...useUpdateListProps,
         deleteLists,

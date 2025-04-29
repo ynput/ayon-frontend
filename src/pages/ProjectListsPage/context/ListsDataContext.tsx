@@ -33,8 +33,12 @@ export const ListsDataProvider = ({ children }: ListsDataProviderProps) => {
   const { projectName, isInitialized, isLoading: isLoadingProject } = useProjectDataContext()
 
   const [pageConfig, updatePageConfig, { isSuccess: columnsConfigReady }] = useUsersPageConfig({
-    page: 'lists',
-    projectName: projectName,
+    selectors: ['lists', projectName],
+    init: {
+      columnOrder: [],
+      columnPinning: {},
+      columnVisibility: {},
+    },
   })
 
   const listsFilters = pageConfig?.listsFilters || ([] as Filter[])

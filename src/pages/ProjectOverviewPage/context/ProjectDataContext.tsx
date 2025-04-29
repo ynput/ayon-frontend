@@ -48,9 +48,9 @@ export const ProjectDataProvider = ({ children, projectName }: ProjectDataProvid
 
   // Get column sorting
   const [pageConfig, updatePageConfig, { isSuccess: columnsConfigReady }] = useUsersPageConfig({
-    page: 'overview',
-    projectName: projectName,
+    selectors: ['project', projectName],
   })
+
   const { columnSorting = [] } = pageConfig as {
     columnSorting: SortingState
   }
