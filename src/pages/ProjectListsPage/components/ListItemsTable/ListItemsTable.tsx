@@ -22,7 +22,7 @@ const ListItemsTable: FC<ListItemsTableProps> = ({}) => {
   const { rowSelection, selectedEntityType } = useListsContext()
   const selectedListsIds = Object.entries(rowSelection).filter(([_, isSelected]) => isSelected)
   const isMultipleSelected = selectedListsIds.length > 1
-  const { isError, projectName } = useListItemsDataContext()
+  const { isError, projectName, fetchNextPage } = useListItemsDataContext()
   const scope = `lists-${projectName}`
 
   const [hiddenColumns, readOnly] = getColumnConfigFromType(selectedEntityType)
@@ -39,9 +39,7 @@ const ListItemsTable: FC<ListItemsTableProps> = ({}) => {
       scope={scope}
       sliceId={''}
       // pagination
-      fetchMoreOnBottomReached={() => {
-        console.log('REACHED BOTTOM: Doing nothing...')
-      }}
+      fetchMoreOnBottomReached={fetchNextPage}
       pt={{
         columns: {
           hidden: hiddenColumns,
