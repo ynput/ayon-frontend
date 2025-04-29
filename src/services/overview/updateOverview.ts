@@ -5,6 +5,7 @@ import {
   OperationsResponseModel,
 } from '@api/rest/operations'
 import tasksApi from '@queries/overview/getOverview'
+import listsApi from '@queries/lists/getLists'
 import hierarchyApi from '@queries/getHierarchy'
 import { getEntityPanelApi } from '@queries/entity/getEntityPanel'
 import { FetchBaseQueryError, RootState } from '@reduxjs/toolkit/query'
@@ -116,20 +117,6 @@ export const patchOverviewTasks = (
                 entry.originalArgs.parentIds.includes(taskOperation.data.folderId)
               ) {
                 const patchTask = (tasksArrayDraft: EditorTaskNode[]) => {
-                  // @ts-expect-error
-                  tasksArrayDraft.push(taskOperation.data)
-                }
-
-                // Check if draft is an array or an object with a tasks property
-                if (Array.isArray(draft)) {
-                  patchTask(draft)
-                } else if (draft.tasks && Array.isArray(draft.tasks)) {
-                  // Handle object with tasks array case (like in GetTasksList)
-                  const draftArray = draft.tasks
-                  patchTask(draftArray)
-                }
-              } else {
-                const patchTask = (tasksArrayDraft: EditorTaskNode[]) => {
                   const task = tasksArrayDraft.find((task) => task.id === taskOperation.entityId)
                   if (task) {
                     updateEntityWithOperation(task, taskOperation.data)
@@ -232,6 +219,45 @@ const patchDetailsPanelEntity = (operations: PatchOperation[] = [], draft: any) 
 
   // patch the entity
   updateEntityWithOperation(draft, data)
+}
+
+const patchListItems = (
+  entities: PatchOperation[],
+  {
+    state,
+    dispatch,
+  }: {
+    state: RootState<any, any, 'restApi'>
+    dispatch: ThunkDispatch<any, any, UnknownAction>
+  },
+  patches?: any[],
+) => {
+  const tags = entities.map((op) => ({ type: 'entityListItem', id: op.entityId }))
+  const entries = listsApi.util.selectInvalidatedBy(state, tags)
+
+  for (const entry of entries) {
+    if (entry.endpointName === 'getListItemsInfinite') {
+      const listItemsPatch = dispatch(
+        listsApi.util.updateQueryData('getListItemsInfinite', entry.originalArgs, (draft) => {
+          // Apply each change to matching tasks in all pages
+          for (const listOperation of entities) {
+            if (listOperation.type === 'update' && listOperation.data) {
+              // Iterate through all pages in the infinite query
+              for (const page of draft.pages) {
+                const item = page.items.find((item) => item.entityId === listOperation.entityId)
+                if (item) {
+                  updateEntityWithOperation(item, listOperation.data)
+                }
+              }
+            }
+          }
+        }),
+      )
+
+      // add the patch to the list of patches
+      patches?.push(listItemsPatch)
+    }
+  }
 }
 
 const splitByOpType = (operations: OperationModel[]) => {
@@ -370,6 +396,9 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
           // often used for updating inherited dependents
           patchOverviewFolders(patchExtraFolders, { state, dispatch }, patches)
         }
+
+        // patch the list items
+        patchListItems([...operations, ...patchOperations], { state, dispatch }, patches)
 
         // try to patch any details panels
         // first we patch the individual entities

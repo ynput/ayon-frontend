@@ -104,7 +104,12 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
         pushHistory(inverseEntities, historyEntities)
       }
 
-      const supportedEntityTypes: OperationModel['entityType'][] = ['task', 'folder']
+      const supportedEntityTypes: OperationModel['entityType'][] = [
+        'task',
+        'folder',
+        'product',
+        'version',
+      ]
       // Group operations by entity type for bulk processing
       let operations: OperationModel[] = []
       for (const entity of entities) {
