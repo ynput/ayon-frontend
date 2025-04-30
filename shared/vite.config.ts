@@ -31,6 +31,7 @@ export default defineConfig({
         components: resolve(__dirname, 'src/components/index.ts'),
         util: resolve(__dirname, 'src/util/index.ts'),
         hooks: resolve(__dirname, 'src/hooks/index.ts'),
+        context: resolve(__dirname, 'src/context/index.ts'),
         // containers
         ContextMenu: resolve(__dirname, 'src/containers/ContextMenu/index.ts'),
         Feed: resolve(__dirname, 'src/containers/Feed/index.ts'),

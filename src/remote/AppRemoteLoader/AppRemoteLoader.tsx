@@ -1,6 +1,6 @@
 import { FC } from 'react'
-import { useRemoteModules } from '@/remote/context/RemoteModulesContext'
-import useLoadModule from '@/remote/useLoadModule'
+import { useRemoteModules } from '@shared/context'
+import { useLoadModule } from '@shared/hooks'
 
 interface AppRemoteLoaderProps {}
 

@@ -90,4 +90,12 @@ export const RemoteModulesProvider = ({ children, skip }: Props) => {
   )
 }
 
-export const useRemoteModules = () => useContext(RemoteModulesContext)
+export const useRemoteModules = () => {
+  const context = useContext(RemoteModulesContext)
+
+  if (context === undefined) {
+    throw new Error('useRemoteModules must be used within a RemoteModulesProvider')
+  }
+
+  return context
+}

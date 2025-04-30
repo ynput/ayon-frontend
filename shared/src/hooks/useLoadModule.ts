@@ -1,4 +1,4 @@
-import { useRemoteModules } from '@/remote/context/RemoteModulesContext'
+import { useRemoteModules } from '@shared/context/RemoteModulesContext'
 import { loadRemote } from '@module-federation/enhanced/runtime'
 import { useEffect, useRef, useState } from 'react'
 import semver from 'semver'
@@ -12,7 +12,7 @@ interface Props<T> {
   minVersion?: string // minimum version required for this module
 }
 
-const useLoadModule = <T>({
+export const useLoadModule = <T>({
   addon,
   remote,
   module,
@@ -83,5 +83,3 @@ const useLoadModule = <T>({
     },
   ]
 }
-
-export default useLoadModule

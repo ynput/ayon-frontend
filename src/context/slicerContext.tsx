@@ -8,7 +8,7 @@ import {
 } from 'react'
 import { ExpandedState, RowSelectionState } from '@tanstack/react-table'
 import useSlicerReduxSync from '@containers/Slicer/hooks/useSlicerReduxSync'
-import useLoadModule from '@/remote/useLoadModule'
+import { useLoadModule } from '@shared/hooks/useLoadModule'
 import { ProjectModel } from '@api/rest/project'
 import { Assignees } from '@queries/user/getUsers'
 import { TableRow } from '@containers/Slicer/types'
