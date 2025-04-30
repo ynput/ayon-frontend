@@ -169,17 +169,21 @@ const Actions = ({ entities, entityType, entitySubTypes, isLoadingEntity }) => {
       identifier: action.identifier,
     }
 
-    const actionContext = {...context}
+    const actionContext = { ...context }
     if (formData) {
       actionContext.formData = formData
     }
-    
+
 
     try {
       const response = await executeAction({ actionContext, ...params }).unwrap()
+    } catch (error) {
+      console.error('Error executing action', error)
+      toast.error(error?.data?.detail || "Error executing action")
+      return
+    }
 
-      if (!response.success) throw new Error('Error executing action')
-
+    try {
       if (response?.uri) {
         customProtocolCheck(
           response.uri,
@@ -188,6 +192,12 @@ const Actions = ({ entities, entityType, entitySubTypes, isLoadingEntity }) => {
           2000,
         )
       }
+
+      // Even if response?.success is false, we still want to handle the payload
+      // as it may contain useful information - complex error messages in form,
+      // redirect to another page etc. If the action just needs to abort,
+      // it raises exception instead of returning a response with success: false
+
 
       // Use the new hook to handle payload
       if (response?.payload) {
@@ -206,14 +216,22 @@ const Actions = ({ entities, entityType, entitySubTypes, isLoadingEntity }) => {
           setInteractiveForm(intf)
 
         } else {
-          // normal hooks
-          toast.success(response?.message || 'Action executed successfully', { autoClose: 2000 })
+
+          // Toast the message if it is available
+          if (response?.message) {
+            if (response?.success) {
+              toast.success(response.message, { autoClose: 2000 })
+            } else {
+              toast.error(response.message, { autoClose: 2000 })
+            }
+          }
+
           handleActionPayload(response.payload, context)
         }
       }
     } catch (error) {
-      console.warn('Error executing action', error)
-      toast.error(error || 'Error executing action')
+      console.warn('Error during action response processing', error)
+      toast.error('Error occured during action processing')
     }
   }
 

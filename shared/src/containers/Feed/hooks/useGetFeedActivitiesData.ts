@@ -1,6 +1,18 @@
-import { useGetActivitiesInfiniteInfiniteQuery } from '@queries/activities/getActivities'
+import { GetActivitiesQueryVariables, PageInfo } from '@shared/api'
 import { isEqual, union } from 'lodash'
 import { useMemo } from 'react'
+
+export type UseGetActivitiesInfiniteInfiniteQuery = (
+  queryArgs: Omit<GetActivitiesQueryVariables, 'last' | 'first' | 'cursor'> & { filter?: string },
+  options: { skip: boolean },
+) => {
+  data: { pages: { activities: any[] }[] } & { pageInfo: PageInfo }
+  isLoading: boolean
+  isFetchingNextPage: boolean
+  currentData: ({ pages: { activities: any[] }[] } & { pageInfo: PageInfo }) | undefined
+  fetchNextPage: () => Promise<any>
+  hasNextPage: boolean
+}
 
 type Props = {
   entities: Array<{ id: string; projectName: string }>
@@ -8,6 +20,7 @@ type Props = {
   activityTypes: string[]
   projectName: string
   entityType: string
+  useGetActivitiesInfiniteInfiniteQuery: UseGetActivitiesInfiniteInfiniteQuery
 }
 
 const useGetFeedActivitiesData = ({
@@ -16,6 +29,7 @@ const useGetFeedActivitiesData = ({
   activityTypes,
   projectName,
   entityType,
+  useGetActivitiesInfiniteInfiniteQuery,
 }: Props) => {
   const entitiesToQuery = useMemo(
     () =>

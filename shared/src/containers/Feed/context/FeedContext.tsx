@@ -1,5 +1,6 @@
 import { ProjectUser } from '@shared/api/activities'
 import React, { createContext, useContext, useState } from 'react'
+import useGetFeedActivitiesData from '../hooks/useGetFeedActivitiesData'
 
 export const FEED_NEW_COMMENT = '__new__' as const
 
@@ -21,6 +22,7 @@ export type FeedContextProps = {
   children: React.ReactNode
   projectName: string
   entityType: string
+  activityTypes: string[]
   entities: any[]
   projectInfo: any
   scope: string
@@ -42,21 +44,10 @@ export type FeedContextProps = {
   // editingId state and functions
   editingId: EditingState
   setEditingId: (id: EditingState) => void
-  // refTooltip state and functions
-  refTooltip: RefTooltip | null
-  setRefTooltip: (tooltip: RefTooltip | null) => void
-  // activities data props
-  activitiesData: any[]
-  isLoadingActivities: boolean
-  isLoadingNew: boolean
-  isLoadingNextPage: boolean
-  hasNextPage: boolean
-  loadNextPage?: () => Promise<any>
+
   // mentions data
   mentionSuggestionsData: any
-  // tooltip data
-  entityTooltipData: any
-  isFetchingTooltip: boolean
+
   // users data
   projectUsersData: ProjectUser[]
   // redux callback actions
@@ -66,15 +57,61 @@ export type FeedContextProps = {
   onOpenViewer?: (args: any) => void
 }
 
-interface FeedContextType extends Omit<FeedContextProps, 'children'> {}
+type FeedContextQueryProps = {
+  // redux queries
+  useGetActivitiesInfiniteInfiniteQuery: any
+  useGetEntityTooltipQuery: any
+}
+
+interface FeedContextType extends Omit<FeedContextProps, 'children'> {
+  // activities data props
+  activitiesData: any[]
+  isLoadingActivities: boolean
+  isLoadingNew: boolean
+  isLoadingNextPage: boolean
+  hasNextPage: boolean
+  loadNextPage?: () => Promise<any>
+  // refTooltip state and functions
+  refTooltip: RefTooltip | null
+  setRefTooltip: (tooltip: RefTooltip | null) => void
+  // tooltip data
+  entityTooltipData: any
+  isFetchingTooltip: boolean
+}
 
 const FeedContext = createContext<FeedContextType | undefined>(undefined)
 
-export const FeedProvider = ({ children, ...props }: FeedContextProps) => {
+export const FeedProvider = ({
+  children,
+  useGetActivitiesInfiniteInfiniteQuery,
+  useGetEntityTooltipQuery,
+  ...props
+}: FeedContextProps & FeedContextQueryProps) => {
+  const activitiesDataProps = useGetFeedActivitiesData({
+    entities: props.entities,
+    filter: props.filter,
+    activityTypes: props.activityTypes,
+    projectName: props.projectName,
+    entityType: props.entityType,
+    useGetActivitiesInfiniteInfiniteQuery: useGetActivitiesInfiniteInfiniteQuery,
+  })
+
+  const [refTooltip, setRefTooltip] = useState<RefTooltip | null>(null)
+  const skip = !props.projectName || !refTooltip?.id
+  const { data: entityTooltipData, isFetching: isFetchingTooltip } = useGetEntityTooltipQuery(
+    { entityType: props.entityType, entityId: refTooltip?.id, projectName: props.projectName },
+    { skip: skip },
+  )
+
   return (
     <FeedContext.Provider
       value={{
         ...props,
+        ...activitiesDataProps,
+        entityTooltipData,
+        isFetchingTooltip,
+        refTooltip,
+        setRefTooltip,
       }}
     >
       {children}
