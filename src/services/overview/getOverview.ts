@@ -1,4 +1,4 @@
-import api from '@api'
+import api from '@shared/api'
 import { api as foldersApi, QueryTasksFoldersApiArg } from '@api/rest/folders'
 import { GetTasksByParentQuery, GetTasksListQuery } from '@api/graphql'
 import { EditorTaskNode } from '@shared/containers/ProjectTreeTable'

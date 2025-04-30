@@ -90,9 +90,7 @@ export const {
 } = enhancedMarketRest
 
 // VVV GraphQL endpoints VVV
-import apiGQL from '@api'
-
-import { GetMarketInstallEventsQuery } from '@/api/graphql'
+import apiGQL, { GetMarketInstallEventsQuery } from '@shared/api'
 
 type MarketAddonInstallEvent = GetMarketInstallEventsQuery['events']['edges'][0]['node']
 

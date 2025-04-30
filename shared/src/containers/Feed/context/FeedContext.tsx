@@ -1,4 +1,3 @@
-import { ProjectUser } from '@shared/api'
 import React, { createContext, useContext, useState } from 'react'
 import useGetFeedActivitiesData from '../hooks/useGetFeedActivitiesData'
 
@@ -11,6 +10,7 @@ import {
   useDeleteReactionToActivityMutation,
 } from '@shared/api'
 import { useGetEntityTooltipQuery } from '@shared/api'
+import { ActivityUser } from '../helpers/groupMinorActivities'
 
 export const FEED_NEW_COMMENT = '__new__' as const
 
@@ -53,7 +53,7 @@ export type FeedContextProps = {
   mentionSuggestionsData: any
 
   // users data
-  projectUsersData: ProjectUser[]
+  projectUsersData: ActivityUser[]
   // redux callback actions
   onOpenSlideOut?: (args: any) => void
   onOpenImage?: (args: any) => void

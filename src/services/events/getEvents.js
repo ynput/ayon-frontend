@@ -1,4 +1,4 @@
-import api from '@api'
+import api from '@shared/api'
 import PubSub from '@/pubsub'
 
 const EVENT_FRAGMENT = `

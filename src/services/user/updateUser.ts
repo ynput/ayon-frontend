@@ -1,5 +1,5 @@
 import { updateUserPreferences } from '@/features/user'
-import globalApi from '@api'
+import globalApi from '@shared/api'
 import { api } from '@api/rest/users'
 import { authApi } from '@shared/api'
 import { $Any } from '@types'

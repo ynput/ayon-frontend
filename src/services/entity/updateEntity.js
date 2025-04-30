@@ -1,4 +1,4 @@
-import api from '@api'
+import api from '@shared/api'
 import { toast } from 'react-toastify'
 import { enhancedDashboardGraphqlApi, getKanbanTasks } from '../userDashboard/getUserDashboard'
 import { isEqual } from 'lodash'

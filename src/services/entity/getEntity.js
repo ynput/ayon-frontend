@@ -1,4 +1,4 @@
-import api from '@api'
+import api from '@shared/api'
 import {
   PRODUCT_TILE_FRAGMENT,
   FOLDER_TILE_FRAGMENT,

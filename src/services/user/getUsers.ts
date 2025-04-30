@@ -1,4 +1,4 @@
-import api from '@api'
+import api from '@shared/api'
 import ayonClient from '@/ayon'
 import { $Any } from '@types'
 import {

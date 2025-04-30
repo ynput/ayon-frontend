@@ -1,5 +1,5 @@
 import axios, { AxiosProgressEvent, AxiosResponse } from 'axios'
-import api from '@api'
+import api from '@shared/api'
 import { toast } from 'react-toastify'
 import { FC, useState, DragEvent, ChangeEvent, useRef, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'

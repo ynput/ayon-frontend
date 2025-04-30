@@ -3,7 +3,7 @@
 import { compareAsc, isValid } from 'date-fns'
 import { useMemo } from 'react'
 import groupActivityVersions from '../helpers/groupActivityVersions'
-import groupMinorActivities from '../helpers/groupMinorActivities'
+import groupMinorActivities, { ActivityUser } from '../helpers/groupMinorActivities'
 import mergeSimilarActivities from '../helpers/mergeSimilarActivities'
 
 // Define the types of activities that are considered minor
@@ -38,7 +38,7 @@ const filterOutRelations = (activities = [], entityTypes = [], entityType) => {
 
 const useTransformActivities = (
   activities = [],
-  users = [],
+  users: ActivityUser[] = [],
   projectInfo = {},
   entityType,
   userName,

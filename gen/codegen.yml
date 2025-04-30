@@ -3,15 +3,10 @@ schema:
   - http://localhost:5000/graphql:
       headers:
         Authorization: Bearer ${TOKEN}
-documents: '../src/**/*.graphql'
+documents: '../**/*.graphql'
 generates:
-  # Generate types only in a separate file
-  ../shared/src/api/graphql.ts:
-    plugins:
-      - typescript
-      - typescript-operations
   # Generate types + RTK Query hooks
-  ../src/api/graphql.ts:
+  ../shared/src/client/graphql.ts:
     plugins:
       - typescript
       - add:
@@ -29,7 +24,7 @@ generates:
              */
       - typescript-operations
       - typescript-rtk-query:
-          importBaseApiFrom: '../services/ayon'
+          importBaseApiFrom: './client'
           importBaseApiAlternateName: 'RestAPI'
   ./graphql.schema.json:
     plugins:

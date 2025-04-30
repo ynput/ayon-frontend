@@ -1,7 +1,10 @@
+import api from '../client'
+
 // re-export the base api and graphql api
 export * from '../client'
 // re-export the base api and graphql api and override api exports from generated files that also export api
 export { api } from '../client'
+export default api
 // export all rest api slices and queries
 export * from './activities'
 export { api as activitiesApi } from './activities'

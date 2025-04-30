@@ -1,4 +1,4 @@
-import api from '@api'
+import api from '@shared/api'
 import { buildOperations } from '../../shared/src/api/client'
 
 const updateProducts = api.injectEndpoints({

@@ -1,6 +1,6 @@
 // @ts-ignore
 import PubSub from '@/pubsub'
-import api from '@api'
+import api from '@shared/api'
 import { $Any } from '@types'
 import {
   GetInboxHasUnreadQuery,

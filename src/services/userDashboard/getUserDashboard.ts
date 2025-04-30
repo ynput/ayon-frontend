@@ -1,6 +1,6 @@
 import { GetKanbanProjectUsersQuery, GetKanbanQuery } from '@/api/graphql'
 import { $Any } from '@/types'
-import api from '@api'
+import api from '@shared/api'
 import getProjectApi from '@queries/project/getProject'
 import PubSub from '@/pubsub'
 import convertAccessGroupsData, { AccessGroups } from '@/helpers/convertAccessGroupsData'

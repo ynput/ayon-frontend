@@ -2,7 +2,7 @@
 
 import PubSub from '@/pubsub'
 import { $Any } from '@types'
-import api from '@api'
+import api from '@shared/api'
 import { GetProgressTaskQuery, GetTasksProgressQuery } from '@api/graphql'
 
 export type ProgressTask = GetTasksProgressQuery['project']['tasks']['edges'][0]['node']

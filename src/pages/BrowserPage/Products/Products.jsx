@@ -26,7 +26,7 @@ import usePatchProductsListWithVersions from '@hooks/usePatchProductsListWithVer
 import useSearchFilter, { filterByFieldsAndValues } from '@hooks/useSearchFilter'
 import useColumnResize from '@hooks/useColumnResize'
 import { useUpdateEntitiesMutation } from '@queries/entity/updateEntity'
-import api from '@api'
+import api from '@shared/api'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import ViewModeToggle from './ViewModeToggle'
 import ProductsList from './ProductsList'
