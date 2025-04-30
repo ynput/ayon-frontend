@@ -1,8 +1,7 @@
 import { createContext, useContext, ReactNode, useEffect, useState } from 'react'
 import { registerRemotes } from '@module-federation/enhanced/runtime'
-import { useListFrontendModulesQuery } from '@queries/addons/getAddons'
 import { useAppSelector } from '@state/store'
-import { FrontendModuleListItem } from '@api/rest/addons'
+import { FrontendModuleListItem, useListFrontendModulesQuery } from '@shared/api'
 import { useGetSiteInfoQuery } from '@queries/auth/getAuth'
 
 type Module = {

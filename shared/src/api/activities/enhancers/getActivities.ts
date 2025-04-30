@@ -1,4 +1,5 @@
-import api, {
+import {
+  api,
   GetActivitiesByIdQuery,
   GetActivitiesQuery,
   GetActivitiesQueryVariables,

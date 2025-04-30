@@ -5,7 +5,6 @@ const addonsApi = api.enhanceEndpoints({
     listAddons: {
       providesTags: ['addonList'],
     },
-    listFrontendModules: {},
   },
 })
 
@@ -95,11 +94,7 @@ const addonsApiInjected = addonsApi.injectEndpoints({
   overrideExisting: true,
 })
 
-export const {
-  useGetProjectAddonsQuery,
-  useGetSettingsAddonsQuery,
-  useGetDashboardAddonsQuery,
-  useListFrontendModulesQuery,
-} = addonsApiInjected
+export const { useGetProjectAddonsQuery, useGetSettingsAddonsQuery, useGetDashboardAddonsQuery } =
+  addonsApiInjected
 
 export default addonsApiInjected

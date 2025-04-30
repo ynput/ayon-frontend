@@ -2,13 +2,20 @@ import { RestAPI as api } from '@shared/api'
 const injectedRtkApi = api.injectEndpoints({
   endpoints: (build) => ({
     listAddons: build.query<ListAddonsApiResponse, ListAddonsApiArg>({
-      query: (queryArg) => ({ url: `/api/addons`, params: { details: queryArg.details } }),
+      query: (queryArg) => ({
+        url: `/api/addons`,
+        params: {
+          details: queryArg.details,
+        },
+      }),
     }),
     deleteAddonVersion: build.mutation<DeleteAddonVersionApiResponse, DeleteAddonVersionApiArg>({
       query: (queryArg) => ({
         url: `/api/addons/${queryArg.addonName}/${queryArg.addonVersion}`,
         method: 'DELETE',
-        params: { purge: queryArg.purge },
+        params: {
+          purge: queryArg.purge,
+        },
       }),
     }),
     uploadAddonZipFile: build.mutation<UploadAddonZipFileApiResponse, UploadAddonZipFileApiArg>({
@@ -21,9 +28,6 @@ const injectedRtkApi = api.injectEndpoints({
           addonVersion: queryArg.addonVersion,
         },
       }),
-    }),
-    listFrontendModules: build.query<ListFrontendModulesApiResponse, ListFrontendModulesApiArg>({
-      query: () => ({ url: `/api/frontendModules` }),
     }),
   }),
   overrideExisting: false,
@@ -46,9 +50,6 @@ export type UploadAddonZipFileApiArg = {
   addonName?: string
   addonVersion?: string
 }
-export type ListFrontendModulesApiResponse =
-  /** status 200 Successful Response */ FrontendModuleListItem[]
-export type ListFrontendModulesApiArg = void
 export type PathDefinition = {
   windows?: string
   linux?: string
@@ -82,6 +83,7 @@ export type VersionInfo = {
   reason?: {
     [key: string]: string
   }
+  projectCanOverrideAddonVersion?: boolean
 }
 export type AddonListItem = {
   /** Machine friendly name of the addon */
@@ -102,6 +104,8 @@ export type AddonListItem = {
   addonType: 'server' | 'pipeline'
   /** Is the addon a system addon? */
   system?: boolean
+  /** Allow project override */
+  projectCanOverrideAddonVersion?: boolean
 }
 export type AddonList = {
   /** List of available addons */
@@ -121,11 +125,4 @@ export type HttpValidationError = {
 }
 export type InstallAddonResponseModel = {
   eventId: string
-}
-export type FrontendModuleListItem = {
-  addonName: string
-  addonVersion: string
-  modules: {
-    [key: string]: string[]
-  }
 }
