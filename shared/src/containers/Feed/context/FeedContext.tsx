@@ -8,6 +8,7 @@ import {
   useUpdateActivityMutation,
   useCreateReactionToActivityMutation,
   useDeleteReactionToActivityMutation,
+  useGetActivityUsersQuery,
 } from '@shared/api'
 import { useGetEntityTooltipQuery } from '@shared/api'
 import { ActivityUser } from '../helpers/groupMinorActivities'
@@ -52,8 +53,6 @@ export type FeedContextProps = {
   // mentions data
   mentionSuggestionsData: any
 
-  // users data
-  projectUsersData: ActivityUser[]
   // redux callback actions
   onOpenSlideOut?: (args: any) => void
   onOpenImage?: (args: any) => void
@@ -82,11 +81,15 @@ interface FeedContextType extends Omit<FeedContextProps, 'children'> {
   createReaction: (args: any) => Promise<any>
   deleteReaction: (args: any) => Promise<any>
   isUpdatingActivity: boolean
+  // users data
+  users: ActivityUser[]
 }
 
 const FeedContext = createContext<FeedContextType | undefined>(undefined)
 
 export const FeedProvider = ({ children, ...props }: FeedContextProps) => {
+  const { data: users = [] } = useGetActivityUsersQuery({ projects: [props.projectName] })
+
   //   queries
   const [createEntityActivityMutation, { isLoading: isLoadingCreate }] =
     useCreateEntityActivityMutation()
@@ -129,6 +132,7 @@ export const FeedProvider = ({ children, ...props }: FeedContextProps) => {
       value={{
         ...props,
         ...activitiesDataProps,
+        users,
         isUpdatingActivity,
         entityTooltipData,
         isFetchingTooltip,

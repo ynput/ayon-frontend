@@ -3,6 +3,7 @@ import {
   GetActivitiesByIdQuery,
   GetActivitiesQuery,
   GetActivitiesQueryVariables,
+  GetActivityUsersQuery,
   GetEntitiesChecklistsQuery,
 } from '@shared/api'
 import { taskProvideTags } from '../util/activitiesHelpers'
@@ -22,6 +23,9 @@ import {
   TagTypesFromApi,
 } from '@reduxjs/toolkit/query'
 import { ChecklistCount } from '../types'
+
+type ActivityUserNode = GetActivityUsersQuery['users']['edges'][0]['node']
+
 type Definitions = DefinitionsFromApi<typeof api>
 type TagTypes = TagTypesFromApi<typeof api>
 // update the definitions to include the new types
@@ -29,6 +33,7 @@ type UpdatedDefinitions = Omit<Definitions, 'GetActivitiesById'> & {
   GetActivitiesById: OverrideResultType<Definitions['GetActivitiesById'], ActivitiesResult>
   GetActivities: OverrideResultType<Definitions['GetActivities'], ActivitiesResult>
   GetEntitiesChecklists: OverrideResultType<Definitions['GetEntitiesChecklists'], ChecklistCount>
+  GetActivityUsers: OverrideResultType<Definitions['GetActivityUsers'], ActivityUserNode[]>
 }
 
 const enhanceActivitiesApi = api.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
@@ -76,6 +81,18 @@ const enhanceActivitiesApi = api.enhanceEndpoints<TagTypes, UpdatedDefinitions>(
               })),
             ]
           : [{ type: 'activity', id: 'LIST' }],
+    },
+    GetActivityUsers: {
+      transformResponse: (res: GetActivityUsersQuery) => res.users.edges.map((edge) => edge.node),
+      // @ts-ignore
+      providesTags: (result: ActivityUserNode[]) => {
+        return result?.length
+          ? [
+              { type: 'user', id: 'LIST' },
+              ...result.map(({ name }) => ({ type: 'user', id: name })),
+            ]
+          : [{ type: 'user', id: 'LIST' }]
+      },
     },
   },
 })
@@ -190,4 +207,5 @@ export const {
   useLazyGetActivitiesByIdQuery,
   useGetEntitiesChecklistsQuery,
   useGetActivitiesInfiniteInfiniteQuery,
+  useGetActivityUsersQuery,
 } = getActivitiesGQLApi

@@ -50,7 +50,7 @@ export const Feed = ({
     hasNextPage,
     onOpenSlideOut,
     onOpenImage,
-    projectUsersData,
+    users,
   } = useFeedContext()
 
   // hide comment input for specific filters
@@ -63,7 +63,7 @@ export const Feed = ({
   const transformedActivitiesData = useTransformActivities(
     // @ts-ignore
     activitiesData,
-    projectUsersData,
+    users,
     projectInfo,
     entityType,
     userName,

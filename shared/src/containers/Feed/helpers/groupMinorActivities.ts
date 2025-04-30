@@ -5,7 +5,7 @@ import { minorActivityTypes } from '../hooks/useTransformActivities'
 export type ActivityUser = {
   name: string
   attrib: {
-    fullName?: string
+    fullName?: string | null
   }
 }
 // To keep the feed clean, we group minor activities.map((a) => a.activityData.assignee)].join(', '),

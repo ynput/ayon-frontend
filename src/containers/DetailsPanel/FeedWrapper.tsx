@@ -1,7 +1,6 @@
 import { Feed, ActivityReferenceTooltip, FeedProvider } from '@shared/containers/Feed'
 import type { FeedContextProps, EditingState } from '@shared/containers/Feed'
 
-import { useGetKanbanProjectUsersQuery } from '@queries/userDashboard/getUserDashboard'
 import { onCommentImageOpen } from '@state/context'
 import { openSlideOut } from '@state/details'
 import { useAppDispatch, useAppSelector } from '@state/store'
@@ -47,13 +46,6 @@ const FeedWrapper: FC<FeedWrapperProps> = ({
   const highlighted = useAppSelector((state) => state.details[statePath].highlighted) || []
 
   const reduxStateProps = { activityTypes, highlighted }
-
-  const selectedProjects = useAppSelector((state) => state.dashboard.selectedProjects)
-
-  const { data: projectUsersData = [] } = useGetKanbanProjectUsersQuery(
-    { projects: selectedProjects },
-    { skip: !selectedProjects?.length },
-  )
 
   // listen to the viewer for annotations
   // later on, other hooks can be tried here to get annotations from different sources
@@ -117,7 +109,7 @@ const FeedWrapper: FC<FeedWrapperProps> = ({
       }}
       {...handlerProps}
       {...annotationsProps}
-      {...{ mentionSuggestionsData, projectUsersData }}
+      {...{ mentionSuggestionsData }}
       {...{ editingId, setEditingId }}
     >
       <Feed {...props} {...reduxStateProps} />

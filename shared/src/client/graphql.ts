@@ -1450,6 +1450,13 @@ export type GetActivitiesByIdQueryVariables = Exact<{
 
 export type GetActivitiesByIdQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, activities: { __typename?: 'ActivitiesConnection', pageInfo: { __typename?: 'PageInfo', hasPreviousPage: boolean, hasNextPage: boolean, startCursor?: string | null, endCursor?: string | null }, edges: Array<{ __typename?: 'ActivityEdge', cursor?: string | null, node: { __typename?: 'ActivityNode', activityId: string, activityType: string, activityData: string, referenceType: string, referenceId: string, entityId?: string | null, body: string, createdAt: any, updatedAt: any, author?: { __typename?: 'UserNode', name: string, deleted: boolean, active: boolean, attrib: { __typename?: 'UserAttribType', fullName?: string | null } } | null, files: Array<{ __typename?: 'ActivityFileNode', id: string, name?: string | null, size: string, mime?: string | null }>, origin?: { __typename?: 'ActivityOriginNode', id: string, name: string, label?: string | null, type: string } | null, reactions: Array<{ __typename?: 'ActivityReactionNode', fullName?: string | null, userName: string, reaction: string, timestamp: any }>, version?: { __typename?: 'VersionNode', attrib: { __typename?: 'VersionAttribType', comment?: string | null } } | null } }> } } };
 
+export type GetActivityUsersQueryVariables = Exact<{
+  projects?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
+}>;
+
+
+export type GetActivityUsersQuery = { __typename?: 'Query', users: { __typename?: 'UsersConnection', edges: Array<{ __typename?: 'UserEdge', node: { __typename?: 'UserNode', name: string, attrib: { __typename?: 'UserAttribType', fullName?: string | null } } }> } };
+
 export type GetActivitiesQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
   entityIds: Array<Scalars['String']['input']> | Scalars['String']['input'];
@@ -1796,6 +1803,20 @@ export const GetActivitiesByIdDocument = `
   }
 }
     ${ActivityFragmentFragmentDoc}`;
+export const GetActivityUsersDocument = `
+    query GetActivityUsers($projects: [String!]) {
+  users(last: 2000, projects: $projects) {
+    edges {
+      node {
+        name
+        attrib {
+          fullName
+        }
+      }
+    }
+  }
+}
+    `;
 export const GetActivitiesDocument = `
     query GetActivities($projectName: String!, $entityIds: [String!]!, $after: String, $first: Int, $before: String, $last: Int, $referenceTypes: [String!], $activityTypes: [String!]) {
   project(name: $projectName) {
@@ -2114,6 +2135,9 @@ const injectedRtkApi = RestAPI.injectEndpoints({
   endpoints: (build) => ({
     GetActivitiesById: build.query<GetActivitiesByIdQuery, GetActivitiesByIdQueryVariables>({
       query: (variables) => ({ document: GetActivitiesByIdDocument, variables })
+    }),
+    GetActivityUsers: build.query<GetActivityUsersQuery, GetActivityUsersQueryVariables | void>({
+      query: (variables) => ({ document: GetActivityUsersDocument, variables })
     }),
     GetActivities: build.query<GetActivitiesQuery, GetActivitiesQueryVariables>({
       query: (variables) => ({ document: GetActivitiesDocument, variables })
