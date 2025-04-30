@@ -5,7 +5,7 @@ import type {
   SuggestEntityMentionApiResponse,
 } from '@shared/api/activities'
 
-const enhancedMentionsApi = activitiesApi.enhanceEndpoints({
+export const enhancedMentionsApi = activitiesApi.enhanceEndpoints({
   endpoints: {
     suggestEntityMention: {},
   },

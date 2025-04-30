@@ -8,8 +8,6 @@ import { FC, useState } from 'react'
 import { Status } from '@api/rest/project'
 import { useViewer } from '@context/viewerContext'
 import { goToFrame, openViewer } from '@state/viewer'
-import { useGetEntityMentionsQuery } from '@queries/mentions/getMentions'
-import { SuggestRequest } from '@shared/api/activities'
 
 interface FeedWrapperProps {
   entities: any[]
@@ -81,17 +79,6 @@ const FeedWrapper: FC<FeedWrapperProps> = ({
   }
 
   const [editingId, setEditingId] = useState<EditingState>(null)
-  // get all versions that can be mentioned
-  const { data: mentionSuggestionsData } = useGetEntityMentionsQuery(
-    {
-      suggestRequest: {
-        entityType: entityType as SuggestRequest['entityType'],
-        entityId: entities[0]?.id,
-      },
-      projectName: projectName,
-    },
-    { skip: !editingId },
-  )
 
   return (
     <FeedProvider
@@ -109,7 +96,6 @@ const FeedWrapper: FC<FeedWrapperProps> = ({
       }}
       {...handlerProps}
       {...annotationsProps}
-      {...{ mentionSuggestionsData }}
       {...{ editingId, setEditingId }}
     >
       <Feed {...props} {...reduxStateProps} />

@@ -9,8 +9,10 @@ import {
   useCreateReactionToActivityMutation,
   useDeleteReactionToActivityMutation,
   useGetActivityUsersQuery,
+  useGetEntityMentionsQuery,
+  useGetEntityTooltipQuery,
 } from '@shared/api'
-import { useGetEntityTooltipQuery } from '@shared/api'
+import type { SuggestRequest, SuggestResponse } from '@shared/api'
 import { ActivityUser } from '../helpers/groupMinorActivities'
 
 export const FEED_NEW_COMMENT = '__new__' as const
@@ -49,10 +51,6 @@ export type FeedContextProps = {
   // editingId state and functions
   editingId: EditingState
   setEditingId: (id: EditingState) => void
-
-  // mentions data
-  mentionSuggestionsData: any
-
   // redux callback actions
   onOpenSlideOut?: (args: any) => void
   onOpenImage?: (args: any) => void
@@ -83,6 +81,8 @@ interface FeedContextType extends Omit<FeedContextProps, 'children'> {
   isUpdatingActivity: boolean
   // users data
   users: ActivityUser[]
+  // mentions data
+  mentionSuggestionsData: SuggestResponse
 }
 
 const FeedContext = createContext<FeedContextType | undefined>(undefined)
@@ -127,11 +127,24 @@ export const FeedProvider = ({ children, ...props }: FeedContextProps) => {
     { skip: skip },
   )
 
+  // get all versions that can be mentioned
+  const { data: mentionSuggestionsData = {} } = useGetEntityMentionsQuery(
+    {
+      suggestRequest: {
+        entityType: props.entityType as SuggestRequest['entityType'],
+        entityId: props.entities[0]?.id,
+      },
+      projectName: props.projectName,
+    },
+    { skip: !props.editingId },
+  )
+
   return (
     <FeedContext.Provider
       value={{
         ...props,
         ...activitiesDataProps,
+        mentionSuggestionsData,
         users,
         isUpdatingActivity,
         entityTooltipData,
