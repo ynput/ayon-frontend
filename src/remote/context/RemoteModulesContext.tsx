@@ -1,8 +1,10 @@
 import { createContext, useContext, ReactNode, useEffect, useState } from 'react'
 import { registerRemotes } from '@module-federation/enhanced/runtime'
-import { useAppSelector } from '@state/store'
-import { FrontendModuleListItem, useListFrontendModulesQuery } from '@shared/api'
-import { useGetSiteInfoQuery } from '@queries/auth/getAuth'
+import {
+  FrontendModuleListItem,
+  useListFrontendModulesQuery,
+  useGetSiteInfoQuery,
+} from '@shared/api'
 
 type Module = {
   remote: string
@@ -25,17 +27,19 @@ const RemoteModulesContext = createContext<RemoteModulesContextType>({
 
 type Props = {
   children: ReactNode
+  skip?: boolean
 }
 
-export const RemoteModulesProvider = ({ children }: Props) => {
-  const user = useAppSelector((state) => state.user.name)
-
+export const RemoteModulesProvider = ({ children, skip }: Props) => {
   // only load if logged in
   const { data: addonRemoteModules = [], isLoading } = useListFrontendModulesQuery(undefined, {
-    skip: !user,
+    skip,
   })
 
-  const { data: info = {}, isLoading: isLoadingInfo } = useGetSiteInfoQuery({ full: true })
+  const { data: info = {}, isLoading: isLoadingInfo } = useGetSiteInfoQuery(
+    { full: true },
+    { skip },
+  )
 
   const [remotesInitialized, setRemotesInitialized] = useState(false)
 

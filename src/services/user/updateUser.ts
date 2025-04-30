@@ -1,7 +1,7 @@
 import { updateUserPreferences } from '@/features/user'
 import globalApi from '@api'
 import { api } from '@api/rest/users'
-import { authApi } from '@queries/auth/getAuth'
+import { authApi } from '@shared/api'
 import { $Any } from '@types'
 
 const updateUserApi = api.enhanceEndpoints({

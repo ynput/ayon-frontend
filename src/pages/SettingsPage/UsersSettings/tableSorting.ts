@@ -1,4 +1,4 @@
-import { UserPoolModel } from '@api/rest/auth'
+import { UserPoolModel } from '@shared/api'
 import { ColumnSortEvent } from 'primereact/column'
 
 /**

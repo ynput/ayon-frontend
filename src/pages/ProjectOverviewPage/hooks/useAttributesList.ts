@@ -1,5 +1,4 @@
-import { AttributeModel } from '@api/rest/auth'
-import { useGetSiteInfoQuery } from '@queries/auth/getAuth'
+import { useGetSiteInfoQuery, AttributeModel } from '@shared/api'
 import { useGetCurrentUserProjectPermissionsQuery } from '@queries/permissions/getPermissions'
 
 export interface AttributeWithPermissions extends AttributeModel {

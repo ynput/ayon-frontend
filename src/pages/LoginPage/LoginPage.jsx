@@ -6,7 +6,7 @@ import { InputText, InputPassword, Button, Panel } from '@ynput/ayon-react-compo
 import { login } from '@state/user'
 import api from '@api'
 import AuthLink from './AuthLink'
-import { useGetSiteInfoQuery } from '@queries/auth/getAuth'
+import { useGetSiteInfoQuery } from '@shared/api'
 import LoadingPage from '../LoadingPage'
 import * as Styled from './LoginPage.styled'
 import { useLocalStorage } from '@shared/hooks'

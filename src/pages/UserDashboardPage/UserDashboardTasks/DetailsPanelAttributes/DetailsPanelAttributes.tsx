@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Section } from '@ynput/ayon-react-components'
 import getMixedState from '@helpers/getMixedState'
 import { useGetProjectQuery } from '@queries/project/getProject'
-import { useGetSiteInfoQuery } from '@queries/auth/getAuth'
+import { useGetSiteInfoQuery } from '@shared/api'
 import DetailsPanelAttributesEditor, {
   AttributeField,
   DetailsPanelAttributesEditorProps,

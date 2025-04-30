@@ -1,6 +1,6 @@
 import UserMenuHeader from './UserMenuHeader'
 import Menu from '../../MenuComponents/Menu'
-import { useLogOutMutation } from '@queries/auth/getAuth'
+import { useLogOutMutation } from '@queries/auth/logout'
 
 export const UserMenu = ({ user, ...props }) => {
   const fullName = user?.attrib?.fullName

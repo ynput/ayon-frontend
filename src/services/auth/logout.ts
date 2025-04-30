@@ -1,23 +1,8 @@
-import { api } from '@api/rest/auth'
+import api from '@shared/client'
 import { onClearDashboard } from '@state/dashboard'
 import { logout } from '@state/user'
 
-export const authApi = api.enhanceEndpoints({
-  endpoints: {
-    getSiteInfo: {
-      providesTags: ['info'],
-    },
-    createSession: {},
-    getUserPools: {
-      providesTags: [{ type: 'userPool', id: 'LIST' }],
-    },
-    getCurrentUser: {
-      providesTags: [{ type: 'user', id: 'LIST' }],
-    },
-  },
-})
-
-const authApiInjected = authApi.injectEndpoints({
+const authApiInjected = api.injectEndpoints({
   endpoints: (build) => ({
     logOut: build.mutation({
       query: () => ({
@@ -42,13 +27,4 @@ const authApiInjected = authApi.injectEndpoints({
   overrideExisting: true,
 })
 
-//
-
-export const {
-  useGetSiteInfoQuery,
-  useLazyGetSiteInfoQuery,
-  useLogOutMutation,
-  useCreateSessionMutation,
-  useGetUserPoolsQuery,
-  useGetCurrentUserQuery,
-} = authApiInjected
+export const { useLogOutMutation } = authApiInjected

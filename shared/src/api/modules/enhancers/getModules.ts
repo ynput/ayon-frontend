@@ -1,6 +1,6 @@
-import { enhancedApi } from '../modules'
+import { api } from '../modules'
 
-export const getModulesApi = enhancedApi.enhanceEndpoints({
+export const getModulesApi = api.enhanceEndpoints({
   endpoints: {
     listFrontendModules: {},
   },

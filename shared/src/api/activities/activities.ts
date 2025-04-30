@@ -54,7 +54,7 @@ const injectedRtkApi = api.injectEndpoints({
   }),
   overrideExisting: false,
 })
-export { injectedRtkApi as activitiesApi }
+export { injectedRtkApi as api }
 export type DeleteProjectActivityApiResponse = /** status 200 Successful Response */ any
 export type DeleteProjectActivityApiArg = {
   projectName: string

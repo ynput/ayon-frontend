@@ -7,7 +7,8 @@ import useWebSocket, { ReadyState } from 'react-use-websocket'
 import { debounce } from 'lodash'
 import api from '@api'
 import RefreshToast from '@components/RefreshToast'
-import { useLazyGetSiteInfoQuery, useLogOutMutation } from '@queries/auth/getAuth'
+import { useLogOutMutation } from '@queries/auth/logout'
+import { useLazyGetSiteInfoQuery } from '@shared/api'
 
 export const SocketContext = createContext()
 

@@ -1,5 +1,6 @@
 import LoginPage from '@pages/LoginPage'
-import { useCreateSessionMutation, useLogOutMutation } from '@queries/auth/getAuth'
+import { useCreateSessionMutation } from '@shared/api'
+import { useLogOutMutation } from '@queries/auth/logout'
 import { Button, Panel, SaveButton, theme, Toolbar } from '@ynput/ayon-react-components'
 import { FC } from 'react'
 import { toast } from 'react-toastify'

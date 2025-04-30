@@ -1,13 +1,13 @@
 import {
-  activitiesApi,
+  api as activitiesApi,
   DeleteProjectActivityApiResponse,
   DeleteProjectActivityApiArg,
 } from '@shared/api/activities'
-import api from './getReview'
+import getReviewApi from './getReview'
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import { ReviewableResponse } from './types'
 
-const injectedEndpoints = api.injectEndpoints({
+const injectedEndpoints = getReviewApi.injectEndpoints({
   endpoints: (build) => ({
     deleteReviewable: build.mutation<DeleteProjectActivityApiResponse, DeleteProjectActivityApiArg>(
       {
@@ -41,7 +41,7 @@ const enhancedEndpoints = injectedEndpoints.enhanceEndpoints({
         { dispatch, queryFulfilled },
       ) {
         const patchResult = dispatch(
-          api.util.updateQueryData(
+          getReviewApi.util.updateQueryData(
             'getReviewablesForVersion',
             { projectName, versionId },
             (draft) => {

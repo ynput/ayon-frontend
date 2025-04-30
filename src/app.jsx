@@ -59,7 +59,7 @@ import { ViewerDialog } from '@containers/Viewer'
 import { login } from '@state/user'
 
 // queries
-import { useLazyGetSiteInfoQuery } from '@queries/auth/getAuth'
+import { useLazyGetSiteInfoQuery } from '@shared/api'
 import { useGetYnputCloudInfoQuery } from '@queries/cloud/cloud'
 
 // hooks
@@ -169,7 +169,7 @@ const App = () => {
         <Suspense fallback={<LoadingPage />}>
           <RestartProvider>
             <PowerpackProvider>
-              <RemoteModulesProvider>
+              <RemoteModulesProvider skip={!user.name}>
                 <PowerLicenseProvider>
                   <ContextMenuProvider>
                     <GlobalContextMenu />

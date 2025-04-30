@@ -1,4 +1,4 @@
-import { activitiesApi } from '../activities'
+import { api } from '../activities'
 import { ActivityNode } from '@shared/api'
 import { getActivitiesGQLApi } from '@shared/api'
 
@@ -57,7 +57,7 @@ const patchActivity = ({ activityId, userName, reaction }, { getState, dispatch 
   })
 }
 
-const enhancedApi = activitiesApi.enhanceEndpoints({
+export const updateReactionApi = api.enhanceEndpoints({
   endpoints: {
     createReactionToActivity: {
       async onQueryStarted(args, { getState, dispatch, queryFulfilled }) {
@@ -103,4 +103,4 @@ const enhancedApi = activitiesApi.enhanceEndpoints({
 })
 
 export const { useCreateReactionToActivityMutation, useDeleteReactionToActivityMutation } =
-  enhancedApi
+  updateReactionApi

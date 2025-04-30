@@ -7,7 +7,7 @@ const injectedRtkApi = api.injectEndpoints({
   }),
   overrideExisting: false,
 })
-export { injectedRtkApi as enhancedApi }
+export { injectedRtkApi as api }
 export type ListFrontendModulesApiResponse =
   /** status 200 Successful Response */ FrontendModuleListItem[]
 export type ListFrontendModulesApiArg = void

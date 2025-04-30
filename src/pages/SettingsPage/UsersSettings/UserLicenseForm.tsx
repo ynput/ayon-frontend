@@ -1,5 +1,4 @@
-import { UserPoolModel } from '@api/rest/auth'
-import { useGetUserPoolsQuery } from '@queries/auth/getAuth'
+import { useGetUserPoolsQuery, UserPoolModel } from '@shared/api'
 import { Dropdown, FormLayout, FormRow, InputSwitch } from '@ynput/ayon-react-components'
 import { FC } from 'react'
 import styled from 'styled-components'

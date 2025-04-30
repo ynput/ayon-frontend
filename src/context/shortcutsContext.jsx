@@ -10,7 +10,7 @@ import React, {
 import { useNavigate } from 'react-router'
 import { useAppDispatch, useAppSelector } from '@state/store'
 import { toggleMenuOpen } from '@state/context'
-import { useLogOutMutation } from '@queries/auth/getAuth'
+import { useLogOutMutation } from '@queries/auth/logout'
 import { useSearchParams } from 'react-router-dom'
 
 const ShortcutsContext = createContext()

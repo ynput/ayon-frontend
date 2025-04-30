@@ -1,7 +1,7 @@
 import { AttributeModel, AttributeEnumItem, AttributeData } from '@api/rest/attributes'
 import { FolderType, Status, Tag, TaskType } from '@api/rest/project'
 import { getEntityTypeIcon } from '@shared/util'
-import { useGetSiteInfoQuery } from '@queries/auth/getAuth'
+import { useGetSiteInfoQuery } from '@shared/api'
 import {
   GetProjectsInfoResponse,
   useGetKanbanProjectUsersQuery,
