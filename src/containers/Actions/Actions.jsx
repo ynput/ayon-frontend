@@ -174,9 +174,10 @@ const Actions = ({ entities, entityType, entitySubTypes, isLoadingEntity }) => {
       actionContext.formData = formData
     }
 
+    let response = null
 
     try {
-      const response = await executeAction({ actionContext, ...params }).unwrap()
+      response = await executeAction({ actionContext, ...params }).unwrap()
     } catch (error) {
       console.error('Error executing action', error)
       toast.error(error?.data?.detail || "Error executing action")
