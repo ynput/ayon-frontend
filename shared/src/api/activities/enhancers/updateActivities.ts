@@ -1,13 +1,13 @@
-import api from '@api'
+import { getActivitiesGQLApi } from './getActivities'
 import { toast } from 'react-toastify'
-import { filterActivityTypes } from '@state/dashboard'
+import { filterActivityTypes } from '../util/activitiesHelpers'
 
-const updateCache = (activitiesDraft, patch = {}, isDelete) => {
+const updateCache = (activitiesDraft: any, patch: any, isDelete: boolean) => {
   // Handle paginated structure
   if (isDelete) {
     // Remove from any page where it exists
     for (const page of activitiesDraft.pages) {
-      const index = page.activities.findIndex((a) => a.activityId === patch.activityId)
+      const index = page.activities.findIndex((a: any) => a.activityId === patch.activityId)
       if (index !== -1) {
         page.activities.splice(index, 1)
         return
@@ -18,7 +18,7 @@ const updateCache = (activitiesDraft, patch = {}, isDelete) => {
     let activityFound = false
 
     for (const page of activitiesDraft.pages) {
-      const index = page.activities.findIndex((a) => a.activityId === patch.activityId)
+      const index = page.activities.findIndex((a: any) => a.activityId === patch.activityId)
       if (index !== -1) {
         // Update the activity
         page.activities[index] = { ...page.activities[index], ...patch }
@@ -35,11 +35,11 @@ const updateCache = (activitiesDraft, patch = {}, isDelete) => {
 }
 
 const patchActivities = async (
-  { projectName, patch, entityIds = [], activityTypes = [], filter, refs = [] },
-  { dispatch, queryFulfilled, getState },
-  method,
+  { patch, entityIds = [], filter, refs = [] }: any,
+  { dispatch, queryFulfilled, getState }: any,
+  method: 'create' | 'update' | 'delete',
 ) => {
-  const refIds = refs.map((ref) => ref.id) || []
+  const refIds = refs.map((ref: any) => ref.id) || []
   // build tags that would be affected by this activity
   const invalidatingTags = [...entityIds, ...refIds].map((id) => ({
     type: 'entityActivities',
@@ -48,12 +48,12 @@ const patchActivities = async (
 
   const state = getState()
   // get caches that would be affected by this activity
-  const entries = api.util.selectInvalidatedBy(state, invalidatingTags)
+  const entries = getActivitiesGQLApi.util.selectInvalidatedBy(state, invalidatingTags)
 
   // now patch all the caches with the update
   const patches = entries.map(({ originalArgs }) =>
     dispatch(
-      api.util.updateQueryData('getActivitiesInfinite', originalArgs, (draft) =>
+      getActivitiesGQLApi.util.updateQueryData('getActivitiesInfinite', originalArgs, (draft) =>
         updateCache(draft, patch, method === 'delete'),
       ),
     ),
@@ -61,7 +61,7 @@ const patchActivities = async (
 
   try {
     await queryFulfilled
-  } catch (error) {
+  } catch (error: any) {
     const message = `Error: ${error?.error?.data?.detail || `Failed to ${method} activity`}`
     console.error(message, error)
     toast.error(message)
@@ -72,7 +72,7 @@ const patchActivities = async (
 }
 
 // get tags for other filter types
-const getTags = ({ entityId, filter }) => {
+const getTags = ({ entityId, filter }: { entityId: string; filter: string }) => {
   const invalidateFilters = Object.keys(filterActivityTypes).filter((key) => key !== filter)
 
   const tags = invalidateFilters.map((filter) => ({
@@ -87,7 +87,7 @@ const getTags = ({ entityId, filter }) => {
   return tags
 }
 
-const updateActivities = api.injectEndpoints({
+export const updateActivitiesApi = getActivitiesGQLApi.injectEndpoints({
   endpoints: (build) => ({
     createEntityActivity: build.mutation({
       query: ({ projectName, entityType, entityId, data = {} }) => ({
@@ -110,7 +110,7 @@ const updateActivities = api.injectEndpoints({
         body: data,
       }),
       async onQueryStarted(args, api) {
-        patchActivities(args, api)
+        patchActivities(args, api, 'update')
       },
       // invalidate other filters that might be affected by this new activity (comments, checklists, etc)
       invalidatesTags: (result, error, { entityId, filter }) => getTags({ entityId, filter }),
@@ -134,4 +134,4 @@ export const {
   useCreateEntityActivityMutation,
   useDeleteActivityMutation,
   useUpdateActivityMutation,
-} = updateActivities
+} = updateActivitiesApi

@@ -1,13 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit'
 import getInitialStateLocalStorage from './middleware/getInitialStateLocalStorage'
 import getInitialStateQueryParam from './middleware/getInitialStateQueryParam'
-
-export const filterActivityTypes = {
-  activity: ['comment', 'version.publish', 'status.change', 'assignee.add', 'assignee.remove'],
-  comments: ['comment'],
-  publishes: ['version.publish'],
-  checklists: ['checklist'],
-}
+import { filterActivityTypes } from '@shared/api/activities'
 
 const initialStateSlideOut = {
   entityType: '',

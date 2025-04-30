@@ -1,10 +1,6 @@
 import { Feed, ActivityReferenceTooltip, FeedProvider } from '@shared/containers/Feed'
 import type { FeedContextProps, EditingState } from '@shared/containers/Feed'
-import {
-  useCreateEntityActivityMutation,
-  useDeleteActivityMutation,
-  useUpdateActivityMutation,
-} from '@queries/activities/updateActivities'
+
 import { useGetKanbanProjectUsersQuery } from '@queries/userDashboard/getUserDashboard'
 import { onCommentImageOpen } from '@state/context'
 import { openSlideOut } from '@state/details'
@@ -14,15 +10,7 @@ import { Status } from '@api/rest/project'
 import { useViewer } from '@context/viewerContext'
 import { goToFrame, openViewer } from '@state/viewer'
 import { useGetEntityMentionsQuery } from '@queries/mentions/getMentions'
-import {
-  useCreateReactionToActivityMutation,
-  useDeleteReactionToActivityMutation,
-} from '@queries/reaction/updateReaction'
-import {
-  useGetActivitiesInfiniteInfiniteQuery,
-  useGetEntityTooltipQuery,
-} from '@queries/activities/getActivities'
-import { SuggestRequest } from '@api/rest/activities'
+import { SuggestRequest } from '@shared/api/activities'
 
 interface FeedWrapperProps {
   entities: any[]
@@ -99,36 +87,6 @@ const FeedWrapper: FC<FeedWrapperProps> = ({
     onGoToFrame,
     onOpenViewer,
   }
-  //   queries
-  const [createEntityActivityMutation, { isLoading: isLoadingCreate }] =
-    useCreateEntityActivityMutation()
-  const [updateActivityMutation, { isLoading: isLoadingUpdate }] = useUpdateActivityMutation()
-  const [deleteActivityMutation, { isLoading: isLoadingDelete }] = useDeleteActivityMutation()
-  const isUpdatingActivity = isLoadingCreate || isLoadingUpdate || isLoadingDelete
-
-  const createEntityActivity: FeedContextProps['createEntityActivity'] = async (args) =>
-    await createEntityActivityMutation(args).unwrap()
-  const updateActivity: FeedContextProps['updateActivity'] = async (args) =>
-    await updateActivityMutation(args).unwrap()
-  const deleteActivity: FeedContextProps['deleteActivity'] = async (args) =>
-    await deleteActivityMutation(args).unwrap()
-
-  const [createReactionToActivity] = useCreateReactionToActivityMutation()
-  const [deleteReactionToActivity] = useDeleteReactionToActivityMutation()
-
-  const createReaction: FeedContextProps['createReaction'] = async (args) =>
-    await createReactionToActivity(args).unwrap()
-  const deleteReaction: FeedContextProps['deleteReaction'] = async (args) =>
-    await deleteReactionToActivity(args).unwrap()
-
-  const queryProps = {
-    createEntityActivity,
-    updateActivity,
-    deleteActivity,
-    isUpdatingActivity,
-    deleteReaction,
-    createReaction,
-  }
 
   const [editingId, setEditingId] = useState<EditingState>(null)
   // get all versions that can be mentioned
@@ -156,10 +114,7 @@ const FeedWrapper: FC<FeedWrapperProps> = ({
         userName,
         userFullName,
         activityTypes,
-        useGetActivitiesInfiniteInfiniteQuery,
-        useGetEntityTooltipQuery,
       }}
-      {...queryProps}
       {...handlerProps}
       {...annotationsProps}
       {...{ mentionSuggestionsData, projectUsersData }}

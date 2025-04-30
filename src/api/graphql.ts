@@ -9,7 +9,7 @@
  * for this file to be re-created
  */
 
-import { RestAPI } from '../../shared/src/api/client'
+import { RestAPI } from '@shared/api'
 export type Maybe<T> = T | null
 export type InputMaybe<T> = Maybe<T>
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] }

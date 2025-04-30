@@ -1,4 +1,4 @@
-import { RestAPI as api } from '@shared/api/client'
+import { RestAPI as api } from '@shared/api'
 const injectedRtkApi = api.injectEndpoints({
   endpoints: (build) => ({
     manageInboxItem: build.mutation<ManageInboxItemApiResponse, ManageInboxItemApiArg>({

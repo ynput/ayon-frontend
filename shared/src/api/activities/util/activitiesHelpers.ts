@@ -1,6 +1,11 @@
-import { ActivityFragmentFragment, GetEntitiesChecklistsQuery, PageInfo } from '@api/graphql'
-import { ChecklistCount, FeedActivity, FeedActivityData } from './types'
-import { BaseTypes, EntityTooltipQuery, TaskTypes, VersionTypes } from './activityQueries'
+import { ActivityFragmentFragment, GetEntitiesChecklistsQuery, PageInfo } from '@shared/api'
+import { ChecklistCount, FeedActivity, FeedActivityData } from '../types'
+import {
+  BaseTypes,
+  EntityTooltipQuery,
+  TaskTypes,
+  VersionTypes,
+} from '../enhancers/activityQueries'
 
 // Helper function to get a nested property of an object using a string path
 const getNestedProperty = <T extends Record<string, any>, R = any>(
@@ -189,4 +194,25 @@ export const countChecklists: CountCheckLists = (data) => {
   }, 0)
 
   return { total: unChecked + checked, checked, unChecked, ids }
+}
+
+type Task = { id: string }
+
+export const taskProvideTags = (result: Task[], type = 'task', entityType = 'task') =>
+  result?.length
+    ? [
+        ...result.map(({ id }: Task) => ({ type, id })),
+        { type, id: entityType.toUpperCase() + 'S' },
+        {
+          type: `kanBan${entityType.charAt(0).toUpperCase() + entityType.slice(1)}`,
+          id: entityType.toUpperCase() + 'S',
+        },
+      ]
+    : [{ type, id: entityType.toUpperCase() + 'S' }]
+
+export const filterActivityTypes = {
+  activity: ['comment', 'version.publish', 'status.change', 'assignee.add', 'assignee.remove'],
+  comments: ['comment'],
+  publishes: ['version.publish'],
+  checklists: ['checklist'],
 }

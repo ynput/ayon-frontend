@@ -1,4 +1,4 @@
-import { RestAPI as api } from '@shared/api/client'
+import { RestAPI as api } from '@shared/api'
 const injectedRtkApi = api.injectEndpoints({
   endpoints: (build) => ({
     deleteProjectActivity: build.mutation<
@@ -54,7 +54,7 @@ const injectedRtkApi = api.injectEndpoints({
   }),
   overrideExisting: false,
 })
-export { injectedRtkApi as api }
+export { injectedRtkApi as activitiesApi }
 export type DeleteProjectActivityApiResponse = /** status 200 Successful Response */ any
 export type DeleteProjectActivityApiArg = {
   projectName: string

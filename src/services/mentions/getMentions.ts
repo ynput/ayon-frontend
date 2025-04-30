@@ -1,11 +1,11 @@
-import { api } from '@api/rest/activities'
+import { activitiesApi } from '@shared/api'
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import type {
   SuggestEntityMentionApiArg,
   SuggestEntityMentionApiResponse,
-} from '@/api/rest/activities'
+} from '@shared/api/activities'
 
-const enhancedMentionsApi = api.enhanceEndpoints({
+const enhancedMentionsApi = activitiesApi.enhanceEndpoints({
   endpoints: {
     suggestEntityMention: {},
   },

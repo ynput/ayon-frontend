@@ -1,11 +1,16 @@
-import api from '@api'
-import { taskProvideTags } from '../userDashboard/userDashboardHelpers'
+import api, {
+  GetActivitiesByIdQuery,
+  GetActivitiesQuery,
+  GetActivitiesQueryVariables,
+  GetEntitiesChecklistsQuery,
+} from '@shared/api'
+import { taskProvideTags } from '../util/activitiesHelpers'
 import {
   ActivitiesResult,
   countChecklists,
   transformActivityData,
   transformTooltipData,
-} from './activitiesHelpers'
+} from '../util/activitiesHelpers'
 // import PubSub from '@/pubsub'
 import { ENTITY_TOOLTIP, EntityTooltipQuery } from './activityQueries'
 
@@ -15,13 +20,7 @@ import {
   OverrideResultType,
   TagTypesFromApi,
 } from '@reduxjs/toolkit/query'
-import {
-  GetActivitiesByIdQuery,
-  GetActivitiesQuery,
-  GetActivitiesQueryVariables,
-  GetEntitiesChecklistsQuery,
-} from '@api/graphql'
-import { ChecklistCount } from './types'
+import { ChecklistCount } from '../types'
 type Definitions = DefinitionsFromApi<typeof api>
 type TagTypes = TagTypesFromApi<typeof api>
 // update the definitions to include the new types
@@ -179,7 +178,7 @@ export const getActivitiesGQLApi = enhanceActivitiesApi.injectEndpoints({
       }),
       transformResponse: (res: EntityTooltipQuery, _m, { entityType }) =>
         transformTooltipData(res?.data?.project, entityType),
-      providesTags: (res, _e, { entityType }) => taskProvideTags([res], 'task', entityType),
+      providesTags: (res: any, _e, { entityType }) => taskProvideTags([res], 'task', entityType),
     }),
   }),
   overrideExisting: true,

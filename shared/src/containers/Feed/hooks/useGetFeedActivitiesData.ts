@@ -1,4 +1,5 @@
 import { GetActivitiesQueryVariables, PageInfo } from '@shared/api'
+import { useGetActivitiesInfiniteInfiniteQuery } from '@shared/api'
 import { isEqual, union } from 'lodash'
 import { useMemo } from 'react'
 
@@ -20,7 +21,6 @@ type Props = {
   activityTypes: string[]
   projectName: string
   entityType: string
-  useGetActivitiesInfiniteInfiniteQuery: UseGetActivitiesInfiniteInfiniteQuery
 }
 
 const useGetFeedActivitiesData = ({
@@ -29,7 +29,6 @@ const useGetFeedActivitiesData = ({
   activityTypes,
   projectName,
   entityType,
-  useGetActivitiesInfiniteInfiniteQuery,
 }: Props) => {
   const entitiesToQuery = useMemo(
     () =>

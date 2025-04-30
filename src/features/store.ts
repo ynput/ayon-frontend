@@ -14,7 +14,7 @@ import releaseInstallerReducer, { releaseInstallerLocalItems } from '@state/rele
 import progressReducer from '@state/progress'
 
 // API
-import { RestAPI } from '@shared/api/client'
+import { RestAPI } from '@shared/api'
 
 // Middleware
 import localStorageMiddleware from './middleware/localStorageMiddleware'

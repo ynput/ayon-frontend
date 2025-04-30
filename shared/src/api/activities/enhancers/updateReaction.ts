@@ -1,6 +1,6 @@
-import { api } from '@api/rest/activities'
-import { ActivityNode } from '@api/graphql'
-import { getActivitiesGQLApi } from '@queries/activities/getActivities'
+import { activitiesApi } from '../activities'
+import { ActivityNode } from '@shared/api'
+import { getActivitiesGQLApi } from '@shared/api'
 
 // @ts-ignore
 const patchActivity = ({ activityId, userName, reaction }, { getState, dispatch }, action) => {
@@ -19,6 +19,7 @@ const patchActivity = ({ activityId, userName, reaction }, { getState, dispatch 
           // Handle paginated structure
           for (const page of draft.pages) {
             const index = page.activities.findIndex(
+              // @ts-ignore
               (a: ActivityNode) => a.activityId === activityId,
             )
             if (index === -1) continue
@@ -30,6 +31,7 @@ const patchActivity = ({ activityId, userName, reaction }, { getState, dispatch 
                   reaction,
                   userName,
                   fullName: '',
+                  // @ts-ignore
                   timeStamp: '',
                 },
               ]
@@ -39,6 +41,7 @@ const patchActivity = ({ activityId, userName, reaction }, { getState, dispatch 
               for (const idx in page.activities[index].reactions) {
                 const item = page.activities[index].reactions[idx]
                 if (item.userName == userName && item.reaction == reaction) {
+                  // @ts-ignore
                   page.activities[index].reactions.splice(idx, 1)
                   break
                 }
@@ -54,7 +57,7 @@ const patchActivity = ({ activityId, userName, reaction }, { getState, dispatch 
   })
 }
 
-const enhancedApi = api.enhanceEndpoints({
+const enhancedApi = activitiesApi.enhanceEndpoints({
   endpoints: {
     createReactionToActivity: {
       async onQueryStarted(args, { getState, dispatch, queryFulfilled }) {

@@ -9,7 +9,7 @@ import EntityThumbnailUploader from '@components/EntityThumbnailUploader/EntityT
 import Actions from '@containers/Actions/Actions'
 import useEntityUpdate from '@hooks/useEntityUpdate'
 import StackedThumbnails from '@components/Thumbnail/StackedThumbnails'
-import { useGetEntitiesChecklistsQuery } from '@queries/activities/getActivities'
+import { useGetEntitiesChecklistsQuery } from '@shared/api/activities'
 import { openViewer } from '@state/viewer'
 
 import FeedFilters from '../FeedFilters/FeedFilters'

@@ -1,8 +1,8 @@
 import {
-  api as activitiesApi,
+  activitiesApi,
   DeleteProjectActivityApiResponse,
   DeleteProjectActivityApiArg,
-} from '@/api/rest/activities'
+} from '@shared/api/activities'
 import api from './getReview'
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import { ReviewableResponse } from './types'

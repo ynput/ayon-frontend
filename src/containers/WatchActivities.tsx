@@ -3,10 +3,7 @@ import usePubSub from '@hooks/usePubSub'
 import { FC } from 'react'
 import { useDispatch, useStore } from 'react-redux'
 import { $Any } from '@/types'
-import {
-  getActivitiesGQLApi,
-  useLazyGetActivitiesByIdQuery,
-} from '@/services/activities/getActivities'
+import { getActivitiesGQLApi, useLazyGetActivitiesByIdQuery } from '@shared/api/activities'
 import { bodyHasChecklist } from '@shared/containers/Feed/hooks/useCommentMutations'
 
 type ActivityMessage = {
