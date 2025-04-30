@@ -605,15 +605,15 @@ const Products = () => {
       icon: 'play_circle',
       shortcut: 'Spacebar',
     },
-    buildAddToListMenu(
-      productsLists.data.map((list) =>
-        buildListMenuItem(
-          list,
-          selectedProducts.map((id) => ({ entityId: id, entityType: 'product' })),
-        ),
-      ),
-      { label: 'Add to list (product)' },
-    ),
+    // buildAddToListMenu(
+    //   productsLists.data.map((list) =>
+    //     buildListMenuItem(
+    //       list,
+    //       selectedProducts.map((id) => ({ entityId: id, entityType: 'product' })),
+    //     ),
+    //   ),
+    //   { label: 'Add to list (product)' },
+    // ),
     buildAddToListMenu(
       versionsLists.data.map((list) =>
         buildListMenuItem(

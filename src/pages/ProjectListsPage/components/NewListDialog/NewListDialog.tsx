@@ -11,7 +11,7 @@ import type { NewListForm } from '@pages/ProjectListsPage/hooks/useNewList'
 import * as Styled from './NewListDialog.styled'
 import { getEntityTypeIcon } from '@shared/util'
 
-export const listEntityTypes = ['folder', 'product', 'version', 'task'] as const
+export const listEntityTypes = ['folder', 'version', 'task'] as const
 export type ListEntityType = (typeof listEntityTypes)[number]
 
 export const entityTypeOptions = listEntityTypes.map((type) => ({

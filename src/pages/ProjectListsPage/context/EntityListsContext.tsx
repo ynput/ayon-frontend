@@ -78,6 +78,7 @@ export const EntityListsProvider = ({
   const products = useGetListsData({
     projectName,
     filters: getFilter('product'),
+    // @ts-expect-error - product is not a valid entityType
     skip: !entityTypes.includes('product'),
   })
   //VERSIONS
