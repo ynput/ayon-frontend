@@ -1,5 +1,5 @@
 import api from '@api'
-import { buildOperations } from './ayon'
+import { buildOperations } from '../../shared/src/api/client'
 
 const updateProducts = api.injectEndpoints({
   endpoints: (build) => ({

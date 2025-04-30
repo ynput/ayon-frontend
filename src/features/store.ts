@@ -14,7 +14,7 @@ import releaseInstallerReducer, { releaseInstallerLocalItems } from '@state/rele
 import progressReducer from '@state/progress'
 
 // API
-import { RestAPI } from '@queries/ayon'
+import { RestAPI } from '@shared/api/client'
 
 // Middleware
 import localStorageMiddleware from './middleware/localStorageMiddleware'

@@ -1,4 +1,4 @@
-import { RestAPI as api } from '../../services/ayon'
+import { RestAPI as api } from '@shared/api/client'
 const injectedRtkApi = api.injectEndpoints({
   endpoints: (build) => ({
     getUserStudioPermissions: build.query<
@@ -46,7 +46,8 @@ export type GetUserProjectPermissionsApiArg = {
   projectName: string
   userName: string
 }
-export type GetUserApiResponse = /** status 200 Successful Response */
+export type GetUserApiResponse =
+  /** status 200 Successful Response */
   | UserModel
   | {
       [key: string]: string

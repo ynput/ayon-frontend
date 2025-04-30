@@ -1,4 +1,4 @@
-import { RestAPI as api } from '../../services/ayon'
+import { RestAPI as api } from '@shared/api/client'
 const injectedRtkApi = api.injectEndpoints({
   endpoints: (build) => ({
     getProjectFile: build.query<GetProjectFileApiResponse, GetProjectFileApiArg>({

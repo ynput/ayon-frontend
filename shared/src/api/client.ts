@@ -8,7 +8,12 @@ import type {
   FetchBaseQueryError,
 } from '@reduxjs/toolkit/query'
 import { GraphQLClient } from 'graphql-request'
-import type { BaseQueryArg, BaseQueryError, BaseQueryExtraOptions, BaseQueryResult } from '@types'
+import type {
+  BaseQueryArg,
+  BaseQueryError,
+  BaseQueryExtraOptions,
+  BaseQueryResult,
+} from './baseQueryTypes'
 
 // https://github.com/reduxjs/redux-toolkit/discussions/3161
 const combineBaseQueries =

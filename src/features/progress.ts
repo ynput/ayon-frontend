@@ -1,6 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit'
 
-interface ProgressState {
+export interface ProgressState {
   selected: {
     ids: string[]
     type: 'task' | 'folder'
@@ -16,7 +16,7 @@ const initialState = {
   detailsOpen: false,
 } satisfies ProgressState as ProgressState
 
-const counterSlice = createSlice({
+const progressSlice = createSlice({
   name: 'progress',
   initialState,
   reducers: {
@@ -29,5 +29,5 @@ const counterSlice = createSlice({
   },
 })
 
-export const { selectProgress, toggleDetailsOpen } = counterSlice.actions
-export default counterSlice.reducer
+export const { selectProgress, toggleDetailsOpen } = progressSlice.actions
+export default progressSlice.reducer
