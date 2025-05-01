@@ -5,7 +5,7 @@ import {
   GetActivitiesQueryVariables,
   GetActivityUsersQuery,
   GetEntitiesChecklistsQuery,
-} from '@shared/api'
+} from '../../../client/graphql'
 import { taskProvideTags } from '../util/activitiesHelpers'
 import {
   ActivitiesResult,

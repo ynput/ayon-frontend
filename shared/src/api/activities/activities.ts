@@ -1,4 +1,4 @@
-import { BaseAPI as api } from '@shared/api'
+import { BaseAPI as api } from '@shared/client'
 const injectedRtkApi = api.injectEndpoints({
   endpoints: (build) => ({
     deleteProjectActivity: build.mutation<
