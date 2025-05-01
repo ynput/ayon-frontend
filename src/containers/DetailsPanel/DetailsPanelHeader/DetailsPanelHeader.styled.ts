@@ -1,9 +1,9 @@
 import styled from 'styled-components'
-import StatusSelectComponent from '@components/status/statusSelect'
 import {
   Button,
   AssigneeSelect as AssigneeSelectComponent,
   TagsSelect as TagsSelectComponent,
+  StatusSelect as StatusSelectComponent,
   EnumDropdown,
 } from '@ynput/ayon-react-components'
 

@@ -9,7 +9,7 @@ import {
 } from '@reduxjs/toolkit/query'
 
 // parse attribs JSON string to object
-const parseAttribs = (allAttrib: string) => {
+export const parseAttribs = (allAttrib: string) => {
   try {
     return JSON.parse(allAttrib)
   } catch (e) {

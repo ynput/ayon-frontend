@@ -1,6 +1,4 @@
 import { useMemo } from 'react'
-import { useDispatch } from 'react-redux'
-import { toast } from 'react-toastify'
 import { union, upperFirst } from 'lodash'
 import clsx from 'clsx'
 import { Icon } from '@ynput/ayon-react-components'
@@ -10,7 +8,6 @@ import Actions from '@containers/Actions/Actions'
 import useEntityUpdate from '@hooks/useEntityUpdate'
 import StackedThumbnails from '@components/Thumbnail/StackedThumbnails'
 import { useGetEntitiesChecklistsQuery } from '@shared/api/activities'
-import { openViewer } from '@state/viewer'
 
 import FeedFilters from '../FeedFilters/FeedFilters'
 import * as Styled from './DetailsPanelHeader.styled'
@@ -18,6 +15,30 @@ import getThumbnails from '../helpers/getThumbnails'
 import useScopedStatuses from '@hooks/useScopedStatuses'
 import { useGetAttributeConfigQuery } from '@queries/attributes/getAttributes'
 import { getPriorityOptions } from '@pages/TasksProgressPage/helpers'
+import { DetailsPanelEntityData } from '@queries/entity/transformDetailsPanelData'
+import { buildDetailsPanelTitles } from '../helpers/buildDetailsPanelTitles'
+
+export type EntityTypeIcons = {
+  folder: Record<string, string>
+  task: Record<string, string>
+  product: Record<string, string>
+}
+
+type DetailsPanelHeaderProps = {
+  entityType: 'folder' | 'task' | 'version' | 'representation'
+  entitySubTypes: string[]
+  entities: DetailsPanelEntityData[]
+  disabledAssignees?: any[]
+  users?: any[]
+  disabledStatuses?: string[]
+  tagsOptions?: any[]
+  isFetching?: boolean
+  isCompact?: boolean
+  scope: string
+  statePath: string
+  onOpenViewer: (args: any) => void
+  entityTypeIcons: EntityTypeIcons
+}
 
 const DetailsPanelHeader = ({
   entityType,
@@ -31,17 +52,23 @@ const DetailsPanelHeader = ({
   isCompact = false,
   scope,
   statePath,
-}) => {
-  const dispatch = useDispatch()
-
+  entityTypeIcons,
+  onOpenViewer,
+}: DetailsPanelHeaderProps) => {
   const statuses = useScopedStatuses(
     entities.map((entity) => entity.projectName),
     [entityType],
   )
 
   // for selected entities, get flat list of assignees
-  const entityAssignees = useMemo(
-    () => union(...entities.map((entity) => entity.users)),
+  const entityUsers: string[] = useMemo(
+    () =>
+      union(
+        ...entities.flatMap((entity) => [
+          entity.task?.assignees || [],
+          entity.version?.author || [],
+        ]),
+      ),
     [entities],
   )
 
@@ -52,21 +79,27 @@ const DetailsPanelHeader = ({
   if (!firstEntity) {
     firstEntity = {
       id: 'placeholder',
+      name: 'loading...',
+      label: 'loading...',
       entityType,
-      icon: 'sync',
-      title: 'loading...',
-      subTitle: 'loading...',
+      status: 'loading',
+      projectName: 'loading...',
+      tags: [],
+      hasReviewables: false,
+      attrib: {},
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     }
   }
 
-  const projectName = entities.length > 1 ? null : firstEntity?.projectName
+  const projectName = entities.length > 1 ? undefined : firstEntity?.projectName
 
   const entityIds = entities
     .filter((e) => e.projectName === firstEntity?.projectName && e.id)
     .map((entity) => entity.id)
 
   // get checklists count
-  const { data: checklistCount = {} } = useGetEntitiesChecklistsQuery(
+  const { data: checklistCount } = useGetEntitiesChecklistsQuery(
     {
       projectName: firstEntity?.projectName,
       entityIds,
@@ -74,7 +107,7 @@ const DetailsPanelHeader = ({
     { skip: !firstEntity?.projectName || !entityIds.length },
   )
   let checklistsLabel
-  if (checklistCount.total > 0) {
+  if (checklistCount?.total && checklistCount.total > 0) {
     checklistsLabel = `${checklistCount.checked}/${checklistCount.total}`
   }
 
@@ -83,14 +116,17 @@ const DetailsPanelHeader = ({
   const { data: priorityAttrib } = useGetAttributeConfigQuery({ attributeName: 'priority' })
   const priorities = getPriorityOptions(priorityAttrib, entityType)
 
-  const thumbnails = useMemo(() => getThumbnails(entities, entityType), [entities, entityType])
+  const thumbnails = useMemo(
+    () => getThumbnails(entities, entityType, entityTypeIcons),
+    [entities, entityType, entityTypeIcons],
+  )
 
   // we need to get the intersection of all the statuses of the projects for the selected entities
   // this means that if we have 2 entities from 2 different projects, we need to get the intersection of the statuses of those 2 projects
   //  and it prevents us from showing statuses that are not available for the selected entities
   const statusesValue = useMemo(() => entities.map((t) => t.status), [entities])
   const priorityValues = useMemo(() => entities.map((t) => t.attrib?.priority), [entities])
-  const tagsValues = useMemo(() => entities.map((t) => t.tags), [entities])
+  const tagsValues: string[][] = useMemo(() => entities.map((t) => t.tags), [entities])
   const tagsOptionsObject = useMemo(
     () =>
       tagsOptions.reduce((acc, tag) => {
@@ -103,12 +139,18 @@ const DetailsPanelHeader = ({
   const isMultiple = entities.length > 1
 
   const { updateEntity } = useEntityUpdate({
-    entities,
+    entities: entities.map((e) => ({
+      id: e.id,
+      projectName: e.projectName,
+      users: e.task?.assignees || [],
+      folderId: e.folder?.id,
+      productId: e.product?.id,
+    })),
     entityType,
     projectName,
   })
 
-  const handleUpdate = (field, value) => {
+  const handleUpdate = (field: string, value: any) => {
     if (value === null || value === undefined) return console.error('value is null or undefined')
     return updateEntity(field, value)
   }
@@ -118,36 +160,37 @@ const DetailsPanelHeader = ({
       id = firstEntity.id,
       entityTypeKey = entityType + 'Id'
 
-    if (entityType === 'version') {
+    if (entityType === 'version' && firstEntity.product?.id) {
       versionIds = [firstEntity.id]
-      id = firstEntity.productId
+      id = firstEntity.product?.id
       entityTypeKey = 'productId'
     }
 
     if (id) {
-      dispatch(
-        openViewer({
-          [entityTypeKey]: id,
-          projectName,
-          versionIds,
-        }),
-      )
+      onOpenViewer({
+        [entityTypeKey]: id,
+        projectName,
+        versionIds,
+      })
     }
   }
 
   const hasUser =
     ['task', 'version', 'representation'].includes(entityType) &&
-    (entityAssignees.length > 0 || entityType === 'task')
+    (entityUsers.length > 0 || entityType === 'task')
 
   const usersOptions = users.map((u) => u)
   if (hasUser) {
     // check if all users are in options, otherwise add them
     const allUsers = users.map((u) => u.name)
-    const usersToAdd = entityAssignees.filter((u) => !allUsers.includes(u))
+    const usersToAdd = entityUsers.filter((u) => !allUsers.includes(u))
     if (usersToAdd.length) {
       usersOptions.push(...usersToAdd.map((u) => ({ name: u, fullName: u })))
     }
   }
+
+  // Get title and subtitle from the imported function
+  const { title, subTitle } = buildDetailsPanelTitles(entities, entityType)
 
   return (
     <Styled.HeaderContainer>
@@ -165,7 +208,6 @@ const DetailsPanelHeader = ({
                 isLoading={isLoading}
                 shimmer={isLoading}
                 thumbnails={thumbnails}
-                projectName={projectName}
                 onClick={thumbnails.length === 1 ? handleThumbnailClick : undefined}
                 hoverIcon={'play_circle'}
               />
@@ -177,29 +219,28 @@ const DetailsPanelHeader = ({
             </div>
             <Styled.Content className={clsx({ loading: isLoading })}>
               <Styled.Title>
-                <h2>{!isMultiple ? firstEntity?.title : `${entities.length} ${entityType}s`}</h2>
+                <h2>{title}</h2>
                 <Styled.TagsSelect
                   value={union(...tagsValues)}
                   tags={tagsOptionsObject}
+                  options={[]}
                   editable
                   editor
                   onChange={(value) => handleUpdate('tags', value)}
                   align="right"
-                  styleDropdown={{ display: isLoading && 'none' }}
+                  styleDropdown={{ display: isLoading ? 'none' : 'unset' }}
                   className="tags-select"
                 />
               </Styled.Title>
               <div className="sub-title">
                 <span className="entity-type">{upperFirst(entityType)} - </span>
-                <h3>
-                  {!isMultiple ? firstEntity?.subTitle : entities.map((t) => t.title).join(', ')}
-                </h3>
+                <h3>{subTitle}</h3>
               </div>
             </Styled.Content>
           </Styled.Header>
           <Styled.StatusSelect
             value={statusesValue}
-            options={statuses}
+            options={statuses || []}
             disabledValues={disabledStatuses}
             invert
             style={{ maxWidth: 'unset' }}
@@ -212,21 +253,17 @@ const DetailsPanelHeader = ({
               <div></div>
             ) : (
               <Styled.AssigneeSelect
-                value={entityAssignees}
+                value={entityUsers}
                 options={usersOptions}
                 disabledValues={disabledAssignees.map((u) => u.name)}
-                isMultiple={isMultiple && entityAssignees.length > 1 && entityType === 'task'}
+                isMultiple={isMultiple && entityUsers.length > 1 && entityType === 'task'}
                 readOnly={entityType !== 'task'}
                 emptyMessage={entityType === 'task' ? 'Assign user' : ''}
                 align="right"
                 onChange={(value) => handleUpdate('assignees', value)}
                 className="assignee-select"
                 data-tooltip={
-                  entityAssignees.length
-                    ? entityType === 'task'
-                      ? 'Assigned users'
-                      : 'Author'
-                    : ''
+                  entityUsers.length ? (entityType === 'task' ? 'Assigned users' : 'Author') : ''
                 }
               />
             ))}

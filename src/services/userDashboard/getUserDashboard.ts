@@ -1,7 +1,7 @@
-import { GetKanbanProjectUsersQuery, GetKanbanQuery } from '@/api/graphql'
+import { GetKanbanProjectUsersQuery, GetKanbanQuery } from '@shared/api'
 import { $Any } from '@/types'
 import api from '@shared/api'
-import getProjectApi from '@queries/project/getProject'
+import { api as getProjectApi, ProjectModel } from '@api/rest/project'
 import PubSub from '@/pubsub'
 import convertAccessGroupsData, { AccessGroups } from '@/helpers/convertAccessGroupsData'
 
@@ -19,7 +19,6 @@ export type GetKanbanProjectUsersResponse = KanbanProjectUserNode[]
 import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
 import getUserProjectsAccess from './getUserProjectsAccess'
 import { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
-import { Anatomy } from '@api/rest/project'
 
 type Definitions = DefinitionsFromApi<typeof api>
 type TagTypes = TagTypesFromApi<typeof api>
@@ -233,22 +232,22 @@ type GetProjectsInfoParams = {
   projects: string[]
 }
 
-export type GetProjectsInfoResponse = { [projectName: string]: Anatomy | undefined }
+export type GetProjectsInfoResponse = { [projectName: string]: ProjectModel | undefined }
 
 const injectedDashboardRestApi = api.injectEndpoints({
   endpoints: (build) => ({
     getProjectsInfo: build.query<GetProjectsInfoResponse, GetProjectsInfoParams>({
-      async queryFn({ projects = [] }, { dispatch, forced }) {
+      async queryFn({ projects = [] }, { dispatch }) {
         try {
           // get project info for each project
-          const projectInfo: $Any = {}
+          const projectInfo: Record<string, ProjectModel | undefined> = {}
           for (const project of projects) {
             // hopefully this will be cached
             // it also allows for different combination of projects but still use the cache
             const response = await dispatch(
-              getProjectApi.endpoints.getProjectAnatomy.initiate(
+              getProjectApi.endpoints.getProject.initiate(
                 { projectName: project },
-                { forceRefetch: forced },
+                { forceRefetch: true },
               ),
             )
 

@@ -1,6 +1,7 @@
 // data for entity kanban card and details panel
 
 import ayonClient from '@/ayon'
+import { DetailsPanelEntityType } from '@queries/entity/transformDetailsPanelData'
 
 // the extra attribs are for the entity details panel only
 const TASK_FRAGMENT = () => `
@@ -180,9 +181,8 @@ export const REP_QUERY = (attribs: string[] = []) => `
 `
 
 export const entityDetailsTypesSupported = ['task', 'version', 'folder', 'representation']
-type EntityDetailsTypes = 'task' | 'version' | 'folder' | 'representation'
 // this is used for getting the correct query for the details panel
-export const buildDetailsQuery = (entityType: EntityDetailsTypes) => {
+export const buildDetailsQuery = (entityType: DetailsPanelEntityType) => {
   // first get all attribs for the entity
   const attribs: string[] = []
   for (const attrib of ayonClient.settings.attributes) {

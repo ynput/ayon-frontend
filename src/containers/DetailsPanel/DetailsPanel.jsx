@@ -4,7 +4,6 @@ import DetailsPanelHeader from './DetailsPanelHeader/DetailsPanelHeader'
 import { useAppDispatch, useAppSelector } from '@state/store'
 import { useGetEntitiesDetailsPanelQuery } from '@queries/entity/getEntityPanel'
 import DetailsPanelAttributes from '@pages/UserDashboardPage/UserDashboardTasks/DetailsPanelAttributes/DetailsPanelAttributes'
-import { getEntityDetailsData } from '@queries/userDashboard/userDashboardHelpers'
 import DetailsPanelFiles from './DetailsPanelFiles'
 import { closeSlideOut, openPip, updateDetailsPanelTab } from '@state/details'
 import { entityDetailsTypesSupported } from '@/services/userDashboard/userDashboardQueries'
@@ -17,6 +16,9 @@ import useGetEntityPath from './hooks/useGetEntityPath'
 import { usePiPWindow } from '@context/pip/PiPProvider'
 import getAllProjectStatuses from './helpers/getAllProjectsStatuses'
 import FeedWrapper from './FeedWrapper'
+import { openViewer } from '@state/viewer'
+import mergeProjectInfo from './helpers/mergeProjectInfo'
+import { productTypes } from '@shared/util'
 
 export const entitiesWithoutFeed = ['product', 'representation']
 
@@ -46,6 +48,31 @@ const DetailsPanel = ({
   let selectedTab = useAppSelector((state) => state.details[statePath][scope].tab)
   const dispatch = useAppDispatch()
 
+  // reduce projectsInfo to selected projects and into one
+  const projectInfo = useMemo(
+    () => mergeProjectInfo(projectsInfo, projectNames),
+    [projectsInfo, projectNames],
+  )
+
+  // build icons for entity types
+  const entityTypeIcons = useMemo(
+    () => ({
+      task: projectInfo.taskTypes
+        .filter((task) => !!task.icon)
+        .reduce((acc, task) => ({ ...acc, [task.name]: task.icon }), {}),
+      folder: projectInfo.folderTypes
+        .filter((folder) => !!folder.icon)
+        .reduce((acc, folder) => ({ ...acc, [folder.name]: folder.icon }), {}),
+      product: Object.entries(productTypes).reduce(
+        (acc, [key, product]) => ({ ...acc, [key]: product.icon }),
+        {},
+      ),
+    }),
+    [projectInfo],
+  )
+
+  const handleOpenViewer = (args) => dispatch(openViewer(args))
+
   // if the entity type is product or representation, we show the attribs tab only
   if (entitiesWithoutFeed.includes(entityType)) selectedTab = 'attribs'
 
@@ -69,7 +96,7 @@ const DetailsPanel = ({
   entitiesToQuery = entitiesToQuery.filter((entity) => entity.id)
 
   const {
-    data: detailsData = [],
+    data: entityDetailsData = [],
     isFetching: isFetchingEntitiesDetails,
     isSuccess,
     isError,
@@ -80,6 +107,7 @@ const DetailsPanel = ({
       skip: !entitiesToQuery.length || !entityDetailsTypesSupported.includes(entityType),
     },
   )
+
   // the entity changes then we close the slide out
   useEffect(() => {
     if (!isSlideOut) {
@@ -87,15 +115,7 @@ const DetailsPanel = ({
     }
   }, [originalArgs])
 
-  // merge current entities data with fresh details data
-  const entityDetailsData = getEntityDetailsData({
-    entities,
-    entityType,
-    projectsInfo,
-    detailsData,
-    isSuccess,
-    isError,
-  })
+  // TODO:  merge current entities data with fresh details data
 
   const allStatuses = getAllProjectStatuses(projectsInfo)
 
@@ -165,6 +185,7 @@ const DetailsPanel = ({
             isLoading={isFetchingEntitiesDetails || !entityPathSegments.length}
             entityType={entityType}
             scope={scope}
+            entityTypeIcons={entityTypeIcons}
           />
           <Styled.RightTools className="right-tools">
             <Watchers
@@ -204,6 +225,7 @@ const DetailsPanel = ({
           isCompact={isCompact}
           scope={scope}
           statePath={statePath}
+          entityTypeIcons={entityTypeIcons}
         />
         {selectedTab === 'feed' && !isError && (
           <FeedWrapper

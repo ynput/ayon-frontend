@@ -1,0 +1,5 @@
+fragment DetailsPanelProductFragment on ProductNode {
+  id
+  name
+  productType
+}

@@ -1,6 +1,4 @@
-import axios from 'axios'
-import { ChangeEvent } from 'react'
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import clsx from 'clsx'
 
 import ThumbnailUploader from '@components/ThumbnailUploader/ThumbnailUploader'
@@ -13,17 +11,17 @@ import { ThumbnailUploadProvider } from './ThumbnailUploaderProvider'
 
 type Operation = {
   id: string
-  projectName: string,
-  currentAssignees: $Any[],
+  projectName: string
+  currentAssignees: $Any[]
   data: { updatedAt: string }
 }
 type Props = {
   entityType: string
   entities: $Any[]
-  isCompact: boolean
+  isCompact?: boolean
   projectName: any
-  children?: JSX.Element|JSX.Element[];
-  onUploaded: (operations: Operation[]) => void
+  children?: JSX.Element | JSX.Element[]
+  onUploaded?: (operations: Operation[]) => void
   resetFileUploadState?: () => void
 }
 
@@ -80,6 +78,7 @@ const EntityThumbnailUploader = ({
       versionPatches.push(versionPatch)
     }
 
+    // @ts-ignore
     let productsPatch = patchProductsListWithVersions(versionPatches)
     try {
       await updateEntities({ operations, entityType })
@@ -102,9 +101,7 @@ const EntityThumbnailUploader = ({
         onDragEnter={() => setIsDraggingFile(true)}
       >
         <ThumbnailWrapper>
-          <div>
-            {children}
-          </div>
+          <div>{children}</div>
         </ThumbnailWrapper>
         <ThumbnailUploader
           entities={entities}

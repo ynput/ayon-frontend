@@ -65,6 +65,7 @@ const Thumbnail = ({
           throw new Error('Image not OK')
         }
       } catch (error) {
+        console.log(error)
         setError(true) // Handle error (e.g., set error state)
         setLoaded(true)
       }

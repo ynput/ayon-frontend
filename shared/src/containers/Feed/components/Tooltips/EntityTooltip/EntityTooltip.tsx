@@ -70,9 +70,9 @@ const EntityTooltip: React.FC<EntityTooltipProps> = ({
     status,
   } = entityTooltipData || {}
 
-  const { task_types = [], statuses = [] } = projectInfo
+  const { taskTypes = [], statuses = [] } = projectInfo
 
-  const taskIcon = task_types.find((type: any) => type.name === taskType)?.icon
+  const taskIcon = taskTypes.find((type: any) => type.name === taskType)?.icon
   const statusObject = statuses.find((s: Status) => s.name === status)
   const thumbnailUrl = getThumbnailUrl({
     entityId: id,

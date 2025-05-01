@@ -136,7 +136,7 @@ const CommentInput: FC<CommentInputProps> = ({
         {
           '@': () => getMentionUsers(mentionUsers),
           '@@': () => getMentionVersions(mentionVersions),
-          '@@@': () => getMentionTasks(mentionTasks, projectInfo.task_types),
+          '@@@': () => getMentionTasks(mentionTasks, projectInfo.taskTypes),
         },
         mention?.search,
       ),

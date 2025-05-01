@@ -1,57 +1,132 @@
-import api from '@shared/client'
-import { transformEntityData } from '../userDashboard/userDashboardHelpers'
-import {
-  buildDetailsQuery,
-  entityDetailsTypesSupported,
-} from '../userDashboard/userDashboardQueries'
+import api, {
+  GetDetailsPanelFolderQuery,
+  GetDetailsPanelRepresentationQuery,
+  GetDetailsPanelTaskQuery,
+  GetDetailsPanelVersionQuery,
+} from '@shared/client'
+import { entityDetailsTypesSupported } from '../userDashboard/userDashboardQueries'
 import PubSub from '@/pubsub'
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
+import {
+  DetailsPanelEntityData,
+  DetailsPanelEntityType,
+  transformDetailsPanelQueriesData,
+} from './transformDetailsPanelData'
 
-export const getEntityPanelApi = api.injectEndpoints({
-  endpoints: (build) => ({
-    getEntityDetailsPanel: build.query({
-      query: ({ projectName, entityId, entityType }) => ({
-        url: '/graphql',
-        method: 'POST',
-        body: {
-          query: buildDetailsQuery(entityType),
-          variables: { projectName, entityId },
-        },
-      }),
-      transformResponse: (response: any, _meta, { entityType, projectName, projectInfo }) =>
-        transformEntityData({
-          projectName: projectName,
-          entity: response?.data?.project && response?.data?.project[entityType],
-          entityType,
-          projectInfo,
-        }),
-      serializeQueryArgs: ({ queryArgs: { projectName, entityId, entityType } }) => ({
-        projectName,
-        entityId,
-        entityType,
-      }),
-      providesTags: (res, _error, { entityId, entityType }) =>
-        res
-          ? [
-              { type: entityType, id: entityId },
-              { type: entityType, id: 'LIST' },
-            ]
-          : [{ type: entityType, id: 'LIST' }],
-    }),
-  }),
-  overrideExisting: true,
+import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
+type Definitions = DefinitionsFromApi<typeof api>
+type TagTypes = TagTypesFromApi<typeof api>
+// update the definitions to include the new types
+type UpdatedDefinitions = Omit<
+  Definitions,
+  | 'GetDetailsPanelFolder'
+  | 'GetDetailsPanelTask'
+  | 'GetDetailsPanelVersion'
+  | 'GetDetailsPanelRepresentation'
+> & {
+  GetDetailsPanelFolder: OverrideResultType<
+    Definitions['GetDetailsPanelFolder'],
+    DetailsPanelEntityData | null
+  >
+  GetDetailsPanelTask: OverrideResultType<
+    Definitions['GetDetailsPanelTask'],
+    DetailsPanelEntityData | null
+  >
+  GetDetailsPanelVersion: OverrideResultType<
+    Definitions['GetDetailsPanelVersion'],
+    DetailsPanelEntityData | null
+  >
+  GetDetailsPanelRepresentation: OverrideResultType<
+    Definitions['GetDetailsPanelRepresentation'],
+    DetailsPanelEntityData | null
+  >
+}
+
+const enhancedDetailsApi = api.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
+  endpoints: {
+    GetDetailsPanelFolder: {
+      transformResponse: (response: GetDetailsPanelFolderQuery, _meta, args) => {
+        const { projectName } = args
+        const entity = response?.project?.folder
+        if (!entity) return null
+        return transformDetailsPanelQueriesData({
+          projectName,
+          entity,
+          entityType: 'folder',
+        })
+      },
+    },
+    GetDetailsPanelTask: {
+      transformResponse: (response: GetDetailsPanelTaskQuery, _meta, args) => {
+        const { projectName } = args
+        const entity = response?.project?.task
+        if (!entity) return null
+        return transformDetailsPanelQueriesData({
+          projectName,
+          entity,
+          entityType: 'task',
+        })
+      },
+    },
+    GetDetailsPanelVersion: {
+      transformResponse: (response: GetDetailsPanelVersionQuery, _meta, args) => {
+        const { projectName } = args
+        const entity = response?.project?.version
+        if (!entity) return null
+        return transformDetailsPanelQueriesData({
+          projectName,
+          entity,
+          entityType: 'version',
+        })
+      },
+    },
+    GetDetailsPanelRepresentation: {
+      transformResponse: (response: GetDetailsPanelRepresentationQuery, _meta, args) => {
+        const { projectName } = args
+        const entity = response?.project?.representation
+        if (!entity) return null
+        return transformDetailsPanelQueriesData({
+          projectName,
+          entity,
+          entityType: 'representation',
+        })
+      },
+    },
+  },
 })
 
 type GetEntitiesDetailsPanelArgs = {
   entities: { id: string; projectName: string }[]
-  entityType: string
+  entityType: DetailsPanelEntityType
   projectsInfo: Record<string, any>
 }
 
-const getEntityPanelApi2 = getEntityPanelApi.injectEndpoints({
+type QueryNameType =
+  | 'GetDetailsPanelTask'
+  | 'GetDetailsPanelVersion'
+  | 'GetDetailsPanelFolder'
+  | 'GetDetailsPanelRepresentation'
+
+const getEntityTypeQueryName = (entityType: DetailsPanelEntityType): QueryNameType => {
+  switch (entityType) {
+    case 'task':
+      return 'GetDetailsPanelTask'
+
+    case 'version':
+      return 'GetDetailsPanelVersion'
+
+    case 'folder':
+      return 'GetDetailsPanelFolder'
+
+    case 'representation':
+      return 'GetDetailsPanelRepresentation'
+  }
+}
+
+const getEntityPanelApi2 = enhancedDetailsApi.injectEndpoints({
   endpoints: (build) => ({
-    getEntitiesDetailsPanel: build.query<any, GetEntitiesDetailsPanelArgs>({
-      async queryFn({ entities = [], entityType, projectsInfo = {} }, { dispatch }) {
+    getEntitiesDetailsPanel: build.query<DetailsPanelEntityData[], GetEntitiesDetailsPanelArgs>({
+      async queryFn({ entities = [], entityType }, { dispatch }) {
         if (!entityDetailsTypesSupported.includes(entityType)) {
           return {
             error: {
@@ -62,40 +137,32 @@ const getEntityPanelApi2 = getEntityPanelApi.injectEndpoints({
         }
 
         try {
-          const promises = entities.map((entity: any) =>
-            dispatch(
-              getEntityPanelApi.endpoints.getEntityDetailsPanel.initiate(
+          const promises = entities.map((entity) => {
+            return dispatch(
+              enhancedDetailsApi.endpoints[getEntityTypeQueryName(entityType)].initiate(
                 {
                   projectName: entity.projectName,
                   entityId: entity.id,
-                  entityType,
-                  projectInfo: projectsInfo[entity.projectName],
                 },
-                { forceRefetch: false },
+                { forceRefetch: true },
               ),
-            ),
-          )
+            )
+          })
 
           const res = await Promise.all(promises)
 
-          const entitiesDetails = []
-          for (const response of res) {
-            if (response.status === 'rejected' || !response.data) {
-              console.error('No entity found')
-              continue
-            }
+          const entitiesData = res
+            .filter((res) => !!res.data)
+            .map((res) => res.data) as DetailsPanelEntityData[]
 
-            entitiesDetails.push(response.data)
-          }
-
-          return { data: entitiesDetails }
+          return { data: entitiesData }
         } catch (e: any) {
           console.error(e)
           return { error: { status: 'FETCH_ERROR', error: e.message } as FetchBaseQueryError }
         }
       },
       async onCacheEntryAdded(
-        { entities = [], entityType, projectsInfo },
+        { entities, entityType },
         { updateCachedData, cacheDataLoaded, cacheEntryRemoved, dispatch },
       ) {
         let token
@@ -105,19 +172,17 @@ const getEntityPanelApi2 = getEntityPanelApi.injectEndpoints({
 
           const handlePubSub = async (_topic: string, message: any) => {
             const messageEntityId = message.summary?.entityId
-            const matchedEntity = entities.find((entity: any) => entity.id === messageEntityId)
+            const matchedEntity = entities.find((entity) => entity.id === messageEntityId)
             // check if the message is relevant to the current query
             if (!matchedEntity) return
 
             try {
               // get the new data for the entity
               const res = await dispatch(
-                getEntityPanelApi.endpoints.getEntityDetailsPanel.initiate(
+                enhancedDetailsApi.endpoints[getEntityTypeQueryName(entityType)].initiate(
                   {
                     projectName: matchedEntity.projectName,
                     entityId: matchedEntity.id,
-                    entityType,
-                    projectInfo: projectsInfo[matchedEntity.projectName],
                   },
                   { forceRefetch: true },
                 ),
@@ -129,7 +194,12 @@ const getEntityPanelApi2 = getEntityPanelApi.injectEndpoints({
                 return
               }
 
-              const updatedEntity: any = res.data
+              const updatedEntity = res.data
+
+              if (!updatedEntity) {
+                console.error('No entity found')
+                return
+              }
 
               updateCachedData((draft) => {
                 // find the entity in the cache
@@ -173,3 +243,4 @@ const getEntityPanelApi2 = getEntityPanelApi.injectEndpoints({
 
 export const { useGetEntitiesDetailsPanelQuery, useLazyGetEntitiesDetailsPanelQuery } =
   getEntityPanelApi2
+export { getEntityPanelApi2 as getEntityPanelApi }

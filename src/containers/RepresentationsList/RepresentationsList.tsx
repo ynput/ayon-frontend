@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
+import { useAppDispatch, useAppSelector } from '@state/store'
 import { TablePanel } from '@ynput/ayon-react-components'
 
 import { TreeTable } from 'primereact/treetable'
@@ -10,6 +10,7 @@ import groupResult from '@helpers/groupResult'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import DetailsDialog from '../DetailsDialog'
 import versionsToRepresentations from './versionsToRepresentations'
+import { DetailsPanelEntityData } from '@queries/entity/transformDetailsPanelData'
 
 const columns = [
   {
@@ -35,27 +36,31 @@ const columns = [
   },
 ]
 
-const RepresentationList = ({ entities = [] }) => {
+type Props = {
+  entities: DetailsPanelEntityData[]
+}
+
+const RepresentationList = ({ entities = [] }: Props) => {
   // merge all entities data into one array of entities
   const representations = useMemo(() => versionsToRepresentations(entities) || [], [entities])
 
-  const [showDetail, setShowDetail] = useState(false)
+  const [showDetail, setShowDetail] = useState<false | string>(false)
   const showDetailProjectName = representations.find((rep) => rep.id === showDetail)?.projectName
 
-  const dispatch = useDispatch()
-  const focusedRepresentations = useSelector((state) => state.context.focused.representations)
-  const expandedRepresentations = useSelector((state) => state.context.expandedRepresentations)
+  const dispatch = useAppDispatch()
+  const focusedRepresentations = useAppSelector((state) => state.context.focused.representations)
+  const expandedRepresentations = useAppSelector((state) => state.context.expandedRepresentations)
 
   const data = useMemo(() => {
     return groupResult(representations, 'name')
   }, [representations])
 
-  const onRepSelectionChange = (entityId) => {
+  const onRepSelectionChange = (entityId: string) => {
     // set focused state
     dispatch(setFocusedRepresentations([entityId]))
   }
 
-  const onRowClick = (e) => {
+  const onRowClick = (e: any) => {
     const projectName = e.node.data.projectName
 
     let uri = `ayon+entity://${projectName}/`
@@ -65,10 +70,10 @@ const RepresentationList = ({ entities = [] }) => {
     uri += `&representation=${e.node.data.name}`
     dispatch(setUri(uri))
 
-    onRepSelectionChange(e.node.data.id, projectName)
+    onRepSelectionChange(e.node.data.id)
   }
 
-  const ctxMenuItems = (id) => [
+  const ctxMenuItems = (id: string) => [
     {
       label: 'Representation detail',
       command: () => setShowDetail(id),
@@ -78,19 +83,18 @@ const RepresentationList = ({ entities = [] }) => {
 
   const [ctxMenuShow] = useCreateContextMenu([])
 
-  const handleContextMenu = (e) => {
+  const handleContextMenu = (e: any) => {
     const id = e.node.data.id
-    const projectName = e.node.data.projectName
 
     if (id) {
       // update focused representations
       onRepSelectionChange(id)
       // open context menu
-      ctxMenuShow(e.originalEvent, ctxMenuItems(id, projectName))
+      ctxMenuShow(e.originalEvent, ctxMenuItems(id))
     }
   }
 
-  const handleToggle = (e) => {
+  const handleToggle = (e: any) => {
     dispatch(setExpandedReps(e.value))
   }
 
@@ -98,7 +102,7 @@ const RepresentationList = ({ entities = [] }) => {
     <>
       <TablePanel>
         <TreeTable
-          scrollable="true"
+          scrollable
           scrollHeight="100%"
           value={data}
           emptyMessage="No representation found"

@@ -2,7 +2,7 @@
 // add icons
 // add thumbnailUrl
 
-import { KanbanNode } from '@/api/graphql'
+import { KanbanNode } from '@shared/api'
 import { GetKanbanResponse } from '@queries/userDashboard/getUserDashboard'
 import { $Any } from '@/types'
 import { Status, TaskType } from '@api/rest/project'
@@ -36,7 +36,7 @@ const transformKanbanTasks = (
   return tasks.map((task) => {
     const projectInfo = projectsInfo[task.projectName]
 
-    const taskInfo: TaskType = projectInfo?.task_types?.find(
+    const taskInfo: TaskType = projectInfo?.taskTypes?.find(
       (type: $Any) => type.name === task.taskType,
     )
 

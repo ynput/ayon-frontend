@@ -19,6 +19,8 @@ const DetailsPanelSlideOut = ({ projectsInfo, scope }) => {
 
   const handleClose = () => dispatch(closeSlideOut())
 
+  console.log('DetailsPanelSlideOut', projectsInfo)
+
   return (
     <Styled.SlideOut>
       <DetailsPanel

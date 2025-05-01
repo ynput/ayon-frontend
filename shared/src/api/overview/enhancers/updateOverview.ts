@@ -10,6 +10,10 @@ import { getEntityPanelApi } from '../../../../../src/services/entity/getEntityP
 import { FetchBaseQueryError, RootState } from '@reduxjs/toolkit/query'
 import { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
 import { EditorTaskNode } from '@shared/containers/ProjectTreeTable'
+import {
+  DetailsPanelEntityData,
+  DetailsPanelEntityType,
+} from '../../../../../src/services/entity/transformDetailsPanelData'
 // import { current } from '@reduxjs/toolkit'
 // these operations are dedicated to the overview page
 // this mean cache updates are custom for the overview page here
@@ -214,24 +218,119 @@ export const patchOverviewFolders = (
   }
 }
 
-const patchDetailsPanelEntity = (operations: PatchOperation[] = [], draft: any) => {
+type DeepPartial<T> = T extends object
+  ? {
+      [P in keyof T]?: DeepPartial<T[P]>
+    }
+  : T
+
+const operationDataToDetailsData = (
+  data: Record<string, any>,
+  entityType: DetailsPanelEntityType,
+): DeepPartial<DetailsPanelEntityData> => {
+  switch (entityType) {
+    case 'task':
+      return {
+        name: data.name,
+        attrib: data.attrib,
+        status: data.status,
+        tags: data.tags,
+        label: data.label,
+        task: {
+          assignees: data.assignees,
+          label: data.label,
+          name: data.name,
+          taskType: data.taskType,
+        },
+      }
+    case 'folder':
+      return {
+        name: data.name,
+        attrib: data.attrib,
+        status: data.status,
+        tags: data.tags,
+        label: data.label,
+        folder: {
+          id: data.id,
+          name: data.name,
+          label: data.label,
+          folderType: data.folderType,
+        },
+      }
+    case 'version':
+      return {
+        name: data.name,
+        attrib: data.attrib,
+        status: data.status,
+        tags: data.tags,
+        label: data.label,
+        version: {
+          id: data.id,
+          name: data.name,
+        },
+      }
+    case 'representation':
+      return {
+        name: data.name,
+        attrib: data.attrib,
+        status: data.status,
+        tags: data.tags,
+        label: data.label,
+      }
+  }
+}
+
+const patchDetailsPanelEntity = (
+  operations: PatchOperation[] = [],
+  draft: DetailsPanelEntityData,
+) => {
   // find the entity we are updating from the draft
-  const data = operations.find(
-    // @ts-ignore - we know draft has an id
-    (op) => op.entityId === draft?.id,
-  )?.data as any
+  const operation = operations.find((op) => op.entityId === draft.id)
+  const operationData = operation?.data
 
-  if (!data) return
+  if (!operationData || operation.entityType === 'product' || operation.entityType === 'workfile')
+    return
 
-  // if the data has an assignees field, convert it to users field for the details panel
-  // Why did we (luke) call it users on the details panel???
-  if (data?.assignees) {
-    data.users = data.assignees
-    delete data.assignees
+  // transform the data to match the details panel entity data
+  const detailsPanelData = operationDataToDetailsData(operationData, operation.entityType)
+
+  // helper to deep‐clean undefined values
+  function cleanUndefined(obj: any): void {
+    Object.entries(obj).forEach(([key, val]) => {
+      if (val === undefined) {
+        delete obj[key]
+      } else if (val !== null && typeof val === 'object') {
+        cleanUndefined(val)
+      }
+    })
   }
 
-  // patch the entity
-  updateEntityWithOperation(draft, data)
+  // remove all undefineds at root and nested levels
+  cleanUndefined(detailsPanelData as Record<string, any>)
+
+  const newData: DeepPartial<DetailsPanelEntityData> = {
+    ...detailsPanelData,
+    ...operationData,
+    attrib: {
+      ...detailsPanelData.attrib,
+      ...(operationData?.attrib || {}),
+    },
+    folder: {
+      ...detailsPanelData.folder,
+      ...(operationData?.folder || {}),
+    },
+    task: {
+      ...detailsPanelData.task,
+      ...(operationData?.task || {}),
+    },
+    version: {
+      ...detailsPanelData.version,
+      ...(operationData?.version || {}),
+    },
+  }
+
+  // patch data onto the entity
+  Object.assign(draft, newData)
 }
 
 const splitByOpType = (operations: OperationModel[]) => {
@@ -393,22 +492,6 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
           state,
           entityTags,
         )
-
-        for (const entry of detailsPanelEntityCaches) {
-          // only patch the getEntityDetailsPanel cache
-          if (entry.endpointName !== 'getEntityDetailsPanel') continue
-          const entityDetailsResult = dispatch(
-            getEntityPanelApi.util.updateQueryData(
-              'getEntityDetailsPanel',
-              entry.originalArgs,
-              (draft) => {
-                patchDetailsPanelEntity(operations, draft)
-              },
-            ),
-          )
-          // add the patch to the list of patches
-          patches.push(entityDetailsResult)
-        }
 
         // the cache for the whole details panel
         const detailsPanelEntitiesCaches = getEntityPanelApi.util.selectInvalidatedBy(

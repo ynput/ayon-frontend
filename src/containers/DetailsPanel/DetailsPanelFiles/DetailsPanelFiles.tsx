@@ -1,8 +1,8 @@
-import { $Any } from '@/types'
 import { FC } from 'react'
 import styled from 'styled-components'
 import RepresentationsList from '@containers/RepresentationsList/RepresentationsList'
 import ReviewablesList from '@/containers/ReviewablesList'
+import { DetailsPanelEntityData } from '@queries/entity/transformDetailsPanelData'
 
 const StyledContainer = styled.div`
   display: flex;
@@ -29,7 +29,7 @@ const StyledSection = styled.div`
 `
 
 interface DetailsPanelFilesProps {
-  entities: $Any[]
+  entities: DetailsPanelEntityData[]
   scope: string
   isLoadingVersion: boolean
 }
@@ -44,7 +44,8 @@ const DetailsPanelFiles: FC<DetailsPanelFilesProps> = ({
   if (!firstVersion) return null
 
   let reviewablesTitle = 'Reviewables'
-  if (entities.length > 1) reviewablesTitle += ` (${firstVersion.title})`
+  if (entities.length > 1) reviewablesTitle += ` (${firstVersion.name})`
+  if (entities.some((e) => e.entityType !== 'version')) return null
 
   return (
     <StyledContainer>
@@ -52,7 +53,8 @@ const DetailsPanelFiles: FC<DetailsPanelFilesProps> = ({
         <h4>{reviewablesTitle}</h4>
         <ReviewablesList
           projectName={firstVersion.projectName}
-          productId={firstVersion.productId}
+          // @ts-expect-error - entityType is a version and will have a product
+          productId={firstVersion.product?.id}
           versionId={firstVersion.id}
           isLoadingVersion={isLoadingVersion}
           scope={scope}

@@ -1,12 +1,4 @@
-import {
-  api,
-  ListProjectsApiResponse,
-  FolderType,
-  GetProjectApiResponse,
-  Status,
-  TaskType,
-  ListProjectsItemModel,
-} from '@api/rest/project'
+import { api, ListProjectsApiResponse, ListProjectsItemModel } from '@api/rest/project'
 // @ts-ignore
 import { selectProject, setProjectData } from '@state/project'
 
@@ -73,18 +65,11 @@ const getProjectInjected = api.injectEndpoints({
 
 import { $Any } from '@/types'
 
-export interface GetProjectResponse extends GetProjectApiResponse {
-  folderTypes: FolderType[]
-  taskTypes: TaskType[]
-  statuses: Status[]
-}
-
 import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
 type Definitions = DefinitionsFromApi<typeof getProjectInjected>
 type TagTypes = TagTypesFromApi<typeof getProjectInjected>
 // update the definitions to include the new types
 type UpdatedDefinitions = Omit<Definitions, 'getProject'> & {
-  getProject: OverrideResultType<Definitions['getProject'], GetProjectResponse>
   listProjects: OverrideResultType<Definitions['listProjects'], ListProjectsItemModel[]>
 }
 
