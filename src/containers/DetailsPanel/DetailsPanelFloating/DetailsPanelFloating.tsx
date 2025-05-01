@@ -13,6 +13,10 @@ import {
 } from '@queries/userDashboard/getUserDashboard'
 import getAllProjectStatuses from '../helpers/getAllProjectsStatuses'
 import FeedWrapper from '../FeedWrapper'
+import mergeProjectInfo from '../helpers/mergeProjectInfo'
+import { buildDetailsPanelTitles } from '../helpers/buildDetailsPanelTitles'
+import { DetailsPanelEntityType } from '@queries/entity/transformDetailsPanelData'
+import { productTypes } from '@shared/util'
 
 type Entity = {
   id: string
@@ -32,7 +36,9 @@ type Entity = {
 export interface DetailsPanelFloatingProps {}
 
 const DetailsPanelFloating: FC<DetailsPanelFloatingProps> = () => {
-  const { entities, entityType, scope, statePath } = useAppSelector((state) => state.details.pip)
+  const { scope, statePath, ...pip } = useAppSelector((state) => state.details.pip)
+  const entityType = pip.entityType as DetailsPanelEntityType
+  const entities = pip.entities as Entity[]
   const isOpen = entities.length > 0 && !!entityType
 
   const projects: string[] = entities.map((e: any) => e.projectName)
@@ -52,27 +58,49 @@ const DetailsPanelFloating: FC<DetailsPanelFloatingProps> = () => {
     [projectsInfo, projects],
   )
 
-  const { data = [], isFetching: isFetchingEntitiesDetails } = useGetEntitiesDetailsPanelQuery(
-    { entityType, entities: entities, projectsInfo },
-    {
-      skip: !isOpen || isFetchingInfo,
-    },
+  const { data: entitiesData = [], isFetching: isFetchingEntitiesDetails } =
+    useGetEntitiesDetailsPanelQuery(
+      { entityType, entities: entities },
+      {
+        skip: !isOpen || isFetchingInfo,
+      },
+    )
+
+  // reduce projectsInfo to selected projects and into one
+  const projectInfo = useMemo(
+    () => mergeProjectInfo(projectsInfo, projects),
+    [projectsInfo, projects],
   )
-  const entitiesData: Entity[] = data.filter((e: Entity | null) => !!e)
+
+  // build icons for entity types
+  const entityTypeIcons = useMemo(
+    () => ({
+      task: projectInfo.taskTypes
+        .filter((task) => !!task.icon)
+        .reduce((acc, task) => ({ ...acc, [task.name]: task.icon }), {}),
+      folder: projectInfo.folderTypes
+        .filter((folder) => !!folder.icon)
+        .reduce((acc, folder) => ({ ...acc, [folder.name]: folder.icon }), {}),
+      product: Object.entries(productTypes).reduce(
+        (acc, [key, product]) => ({ ...acc, [key]: product.icon }),
+        {},
+      ),
+    }),
+    [projectInfo],
+  )
 
   const thumbnails = useMemo(
-    () => getThumbnails(entitiesData, entityType),
+    () => getThumbnails(entitiesData, entityType, entityTypeIcons),
     [entitiesData, entityType],
   )
 
   // users for assignee field, find in all users
   const users = useMemo(() => {
     return allUsers
-      .filter((u) => entitiesData.some((e) => e?.users?.includes(u.name)))
+      .filter((u) => entitiesData.some((e) => e?.task?.assignees?.includes(u.name)))
       .map((u) => ({ ...u, avatarUrl: `/api/users/${u.name}/avatar` }))
   }, [allUsers, entities])
 
-  const isMultiple = entitiesData.length > 1
   const firstEntity = entitiesData[0]
   if (!entitiesData.length || !firstEntity) return null
 
@@ -96,20 +124,19 @@ const DetailsPanelFloating: FC<DetailsPanelFloatingProps> = () => {
         name: 'None',
       }
 
+  // Get title and subtitle from the imported function
+  const { title, subTitle } = buildDetailsPanelTitles(entitiesData, entityType)
+
   return (
     <PiPWrapper>
       <Styled.Container>
         <Styled.Header>
           <StackedThumbnails thumbnails={thumbnails} projectName={projectName} />
           <Styled.Content>
-            <h2>
-              {!isMultiple ? firstEntity?.title : `${entitiesData.length} ${entityType}s selected`}
-            </h2>
+            <h2>{title}</h2>
             <div className="sub-title">
               <span>{upperFirst(entityType)} - </span>
-              <h3>
-                {!isMultiple ? firstEntity?.subTitle : entitiesData.map((t) => t.title).join(', ')}
-              </h3>
+              <h3>{subTitle}</h3>
             </div>
           </Styled.Content>
         </Styled.Header>

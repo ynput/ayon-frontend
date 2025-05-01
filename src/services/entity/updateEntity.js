@@ -1,4 +1,4 @@
-import api from '@shared/api'
+import api, { patchDetailsPanelEntity } from '@shared/api'
 import { toast } from 'react-toastify'
 import { enhancedDashboardGraphqlApi, getKanbanTasks } from '../userDashboard/getUserDashboard'
 import { isEqual } from 'lodash'
@@ -133,12 +133,12 @@ const updateEntity = api.injectEndpoints({
         { projectName, entityId, data, currentAssignees, entityType },
         { dispatch, queryFulfilled, getState },
       ) {
+        const state = getState()
         const patchResults = []
 
         let invalidationTagsAfterComplete = []
         // if task, patch the GetKanban query
         if (entityType === 'task') {
-          const state = getState()
           const dashboardProjects = getState().dashboard.selectedProjects
           const dashboardUsers = getState().dashboard.tasks.assignees
           const dashboardAssigneesIsMe = getState().dashboard.tasks.assigneesFilter === 'me'
@@ -263,29 +263,28 @@ const updateEntity = api.injectEndpoints({
           invalidationTagsAfterComplete.push(...invalidationTags)
         }
 
-        // patch any entity details panels in dashboard
-        let entityDetailsResult = dispatch(
-          api.util.updateQueryData(
-            'getEntityDetailsPanel',
-            { entityId, entityType, projectName },
-            (draft) => {
-              // convert assignees to users
-              const patchData = { ...data }
-              if (patchData.assignees) {
-                patchData.users = patchData.assignees
-                delete patchData.assignees
-              }
-              if (patchData.attrib) {
-                const newAttrib = { ...draft.attrib, ...patchData.attrib }
-                patchData.attrib = newAttrib
-              }
-              const newData = { ...draft, ...patchData }
-              Object.assign(draft, newData)
-            },
-          ),
-        )
+        // get all details panel caches that would be affected by this update
+        const detailsPanelTags = [
+          {
+            type: 'entities',
+            id: entityId,
+          },
+        ]
 
-        patchResults.push(entityDetailsResult)
+        const detailsPanelEntries = api.util.selectInvalidatedBy(state, detailsPanelTags)
+
+        for (const entry of detailsPanelEntries) {
+          // patch any entity details panels in dashboard
+          let entityDetailsResult = dispatch(
+            api.util.updateQueryData('getEntitiesDetailsPanel', entry.originalArgs, (draft) => {
+              for (const entity of draft) {
+                patchDetailsPanelEntity([{ entityId, data, entityType }], entity)
+              }
+            }),
+          )
+
+          patchResults.push(entityDetailsResult)
+        }
 
         try {
           await queryFulfilled
@@ -304,6 +303,7 @@ const updateEntity = api.injectEndpoints({
     updateEntities: build.mutation({
       async queryFn({ operations = [], entityType }, { dispatch, getState }) {
         try {
+          const state = getState()
           const promises = []
           for (const { projectName, data, id, currentAssignees = [] } of operations) {
             const promise = dispatch(
@@ -317,58 +317,6 @@ const updateEntity = api.injectEndpoints({
             )
             promises.push(promise)
           }
-
-          // invalidate any entities queries (multi entity selection) to force refetch
-          // but because we just updated the getEntityDetails cache it should be instant
-          dispatch(api.util.invalidateTags(operations.map((o) => ({ type: 'entities', id: o.id }))))
-
-          // update the getEntitiesDetails query with new data
-          // this is the current details panel we are looking at right now
-          // other details panel caches are invalidated above
-          const entitiesArg = operations.map((o) => ({
-            id: o.id,
-            projectName: o.projectName,
-          }))
-          dispatch(
-            api.util.updateQueryData(
-              'getEntitiesDetailsPanel',
-              { entities: entitiesArg, entityType },
-              (draft) => {
-                operations.forEach((operation) => {
-                  // find entity in the cache
-                  const entityIndex = draft.findIndex((entity) => entity.id === operation.id)
-
-                  if (entityIndex === -1) return
-                  const patchData = { ...operation.data }
-
-                  // handle updating assignees (convert to users)
-                  if (patchData.assignees) {
-                    patchData.users = patchData.assignees
-                    delete patchData.assignees
-                  }
-
-                  // handle updating folderType or taskType
-                  if (patchData.folderType) {
-                    patchData.entitySubType = patchData.folderType
-                  }
-                  if (patchData.taskType) {
-                    patchData.entitySubType = patchData.taskType
-                  }
-
-                  if (patchData.attrib) {
-                    const newAttrib = { ...draft[entityIndex].attrib, ...patchData.attrib }
-                    patchData.attrib = newAttrib
-                  }
-
-                  // merge the new data into the entity
-                  const newData = { ...draft[entityIndex], ...patchData }
-
-                  draft[entityIndex] = newData
-                })
-              },
-            ),
-          )
-          const state = getState()
 
           let progressPatches = []
           if (entityType === 'task' || entityType === 'folder') {

@@ -8,7 +8,7 @@ import { getOverviewApi } from './getOverview'
 import { hierarchyApi } from '../../folders'
 import { getEntityPanelApi } from '../../../../../src/services/entity/getEntityPanel'
 import { FetchBaseQueryError, RootState } from '@reduxjs/toolkit/query'
-import { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
+import { current, ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
 import { EditorTaskNode } from '@shared/containers/ProjectTreeTable'
 import {
   DetailsPanelEntityData,
@@ -280,7 +280,7 @@ const operationDataToDetailsData = (
   }
 }
 
-const patchDetailsPanelEntity = (
+export const patchDetailsPanelEntity = (
   operations: PatchOperation[] = [],
   draft: DetailsPanelEntityData,
 ) => {
@@ -289,7 +289,7 @@ const patchDetailsPanelEntity = (
   const operationData = operation?.data
 
   if (!operationData || operation.entityType === 'product' || operation.entityType === 'workfile')
-    return
+    return console.warn('No operation data found or entity type not supported')
 
   // transform the data to match the details panel entity data
   const detailsPanelData = operationDataToDetailsData(operationData, operation.entityType)

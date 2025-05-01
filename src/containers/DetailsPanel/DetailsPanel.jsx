@@ -102,7 +102,7 @@ const DetailsPanel = ({
     isError,
     originalArgs,
   } = useGetEntitiesDetailsPanelQuery(
-    { entityType, entities: entitiesToQuery, projectsInfo },
+    { entityType, entities: entitiesToQuery },
     {
       skip: !entitiesToQuery.length || !detailsPanelEntityTypes.includes(entityType),
     },
@@ -177,6 +177,7 @@ const DetailsPanel = ({
         className="details-panel"
       >
         <Styled.Toolbar>
+          {/* TODO FIX PATH */}
           <EntityPath
             segments={entityPathSegments}
             versions={entityPathVersions}

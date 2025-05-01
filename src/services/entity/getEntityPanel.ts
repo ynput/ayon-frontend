@@ -97,7 +97,6 @@ const enhancedDetailsApi = api.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
 type GetEntitiesDetailsPanelArgs = {
   entities: { id: string; projectName: string }[]
   entityType: DetailsPanelEntityType
-  projectsInfo: Record<string, any>
 }
 
 type QueryNameType =
@@ -230,10 +229,6 @@ const getEntityPanelApi2 = enhancedDetailsApi.injectEndpoints({
         // perform cleanup steps once the `cacheEntryRemoved` promise resolves
         PubSub.unsubscribe(token)
       },
-      serializeQueryArgs: ({ queryArgs: { entities, entityType } }) => ({
-        entities,
-        entityType,
-      }),
       providesTags: (_res, _error, { entities }) =>
         entities.map(({ id }: { id: string }) => ({ id, type: 'entities' })),
     }),

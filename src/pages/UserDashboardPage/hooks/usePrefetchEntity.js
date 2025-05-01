@@ -25,7 +25,7 @@ export const usePrefetchEntity = (dispatch, projectsInfo, throttleTime, scope) =
     const entityIds = [id]
 
     // pre-fetch the entity details
-    getEntitiesDetails({ entities: entities, entityType, projectsInfo })
+    getEntitiesDetails({ entities: entities, entityType })
   }
 
   const throttledPrefetchEntity = throttleTime

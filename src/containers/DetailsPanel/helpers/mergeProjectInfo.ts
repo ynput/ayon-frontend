@@ -1,3 +1,4 @@
+import { ProjectModel } from '@api/rest/project'
 import {
   FolderType,
   TaskType,
@@ -17,7 +18,7 @@ type ProjectInfo = {
 // takes multiple project infos from different projects and merges them into a single object
 // based on the projects provided
 const mergeProjectInfo = (
-  projectsInfo: Record<string, ProjectInfo>,
+  projectsInfo: Record<string, ProjectModel | undefined>,
   projects: string[],
 ): ProjectInfo => {
   // If there are no project infos or project names, return empty object
@@ -33,7 +34,14 @@ const mergeProjectInfo = (
 
   // If there's only one project name, return its info directly
   if (projects.length === 1) {
-    return projectsInfo[projects[0]]
+    const model = projectsInfo[projects[0]]
+    return {
+      folderTypes: model?.folderTypes || [],
+      taskTypes: model?.taskTypes || [],
+      statuses: model?.statuses || [],
+      tags: model?.tags || [],
+      linkTypes: model?.linkTypes || [],
+    }
   }
 
   // Start with an empty result object
