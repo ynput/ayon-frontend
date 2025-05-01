@@ -174,7 +174,7 @@ const baseQueryWithRedirect: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQ
 }
 
 // Define the REST API and Graphql API
-export const RestAPI = createApi({
+export const BaseAPI = createApi({
   reducerPath: 'restApi',
   baseQuery: baseQueryWithRedirect,
   endpoints: () => ({}),

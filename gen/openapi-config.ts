@@ -69,7 +69,7 @@ const config: ConfigFile = {
   schemaFile: `http://localhost:3000/openapi.json`,
   apiFile: '@shared/api',
   exportName: 'api',
-  apiImport: 'RestAPI',
+  apiImport: 'BaseAPI',
   outputFiles: buildOutputFiles(outputFiles),
   endpointOverrides: [
     {

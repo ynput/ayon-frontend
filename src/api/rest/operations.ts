@@ -1,4 +1,4 @@
-import { RestAPI as api } from '@shared/api'
+import { BaseAPI as api } from '@shared/api'
 const injectedRtkApi = api.injectEndpoints({
   endpoints: (build) => ({
     eventOperations: build.mutation<EventOperationsApiResponse, EventOperationsApiArg>({

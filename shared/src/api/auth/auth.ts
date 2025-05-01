@@ -1,4 +1,4 @@
-import { RestAPI as api } from '@shared/client'
+import { BaseAPI as api } from '@shared/client'
 const injectedRtkApi = api.injectEndpoints({
   endpoints: (build) => ({
     createSession: build.mutation<CreateSessionApiResponse, CreateSessionApiArg>({
