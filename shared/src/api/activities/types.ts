@@ -1,4 +1,4 @@
-import { GetKanbanProjectUsersQuery } from '@shared/api/graphql'
+import { GetKanbanProjectUsersQuery } from '@shared/api'
 
 type AccessGroups = {
   [key: string]: string[]

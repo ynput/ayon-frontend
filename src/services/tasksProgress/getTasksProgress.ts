@@ -1,6 +1,6 @@
 // What data do we need?
 
-import PubSub from '@/pubsub'
+import { PubSub } from '@shared/util'
 import { $Any } from '@types'
 import api from '@shared/api'
 import { GetProgressTaskQuery, GetTasksProgressQuery } from '@shared/api'

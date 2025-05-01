@@ -1,5 +1,5 @@
 import api from '@shared/api'
-import PubSub from '@/pubsub'
+import { PubSub } from '@shared/util'
 
 const EVENT_FRAGMENT = `
 fragment EventFragment on EventNode {

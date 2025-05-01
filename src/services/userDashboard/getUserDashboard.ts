@@ -2,7 +2,7 @@ import { GetKanbanProjectUsersQuery, GetKanbanQuery } from '@shared/api'
 import { $Any } from '@/types'
 import api from '@shared/api'
 import { api as getProjectApi, ProjectModel } from '@api/rest/project'
-import PubSub from '@/pubsub'
+import { PubSub } from '@shared/util'
 import convertAccessGroupsData, { AccessGroups } from '@/helpers/convertAccessGroupsData'
 
 // GetKanban response type

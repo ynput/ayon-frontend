@@ -13,7 +13,6 @@ import {
   transformActivityData,
   transformTooltipData,
 } from '../util/activitiesHelpers'
-// import PubSub from '@/pubsub'
 import { ENTITY_TOOLTIP, EntityTooltipQuery } from './activityQueries'
 
 import {

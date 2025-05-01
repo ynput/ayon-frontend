@@ -1,5 +1,5 @@
 // @ts-ignore
-import PubSub from '@/pubsub'
+import { PubSub } from '@shared/util'
 import api from '@shared/api'
 import { $Any } from '@types'
 import {

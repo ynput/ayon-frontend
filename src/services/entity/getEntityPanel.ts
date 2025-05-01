@@ -4,14 +4,13 @@ import api, {
   GetDetailsPanelTaskQuery,
   GetDetailsPanelVersionQuery,
 } from '@shared/client'
-import { entityDetailsTypesSupported } from '../userDashboard/userDashboardQueries'
-import PubSub from '@/pubsub'
+import { PubSub } from '@shared/util'
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import {
-  DetailsPanelEntityData,
-  DetailsPanelEntityType,
+  detailsPanelEntityTypes,
   transformDetailsPanelQueriesData,
 } from './transformDetailsPanelData'
+import type { DetailsPanelEntityData, DetailsPanelEntityType } from './transformDetailsPanelData'
 
 import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
 type Definitions = DefinitionsFromApi<typeof api>
@@ -127,7 +126,7 @@ const getEntityPanelApi2 = enhancedDetailsApi.injectEndpoints({
   endpoints: (build) => ({
     getEntitiesDetailsPanel: build.query<DetailsPanelEntityData[], GetEntitiesDetailsPanelArgs>({
       async queryFn({ entities = [], entityType }, { dispatch }) {
-        if (!entityDetailsTypesSupported.includes(entityType)) {
+        if (!detailsPanelEntityTypes.includes(entityType)) {
           return {
             error: {
               status: 'CUSTOM_ERROR',

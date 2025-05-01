@@ -9,6 +9,8 @@
  * for this file to be re-created
  */
 
+// @ts-nocheck
+
 import { BaseAPI } from './client';
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;

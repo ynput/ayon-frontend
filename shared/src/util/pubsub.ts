@@ -4,6 +4,7 @@
  *
  * https://github.com/mroderick/PubSubJS
  */
+// @ts-nocheck
 
 ;(function (root, factory) {
   'use strict'

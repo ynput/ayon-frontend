@@ -1,4 +1,4 @@
-import PubSub from '@/pubsub'
+import { PubSub } from '@shared/util'
 import { $Any } from '@types'
 import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
 

@@ -1,6 +1,6 @@
 import { api } from '@api/rest/releases'
 import graphqlApi, { GetInstallEventsQuery } from '@shared/api'
-import PubSub from '@/pubsub'
+import { PubSub } from '@shared/util'
 import { $Any } from '@types'
 
 const releasesApi = api.enhanceEndpoints({

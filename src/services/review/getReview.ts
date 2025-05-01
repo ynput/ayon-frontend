@@ -1,4 +1,4 @@
-import PubSub from '@/pubsub'
+import { PubSub } from '@shared/util'
 import { $Any } from '@/types'
 import { api, ReviewableModel, VersionReviewablesModel } from '@api/rest/review'
 import { api as addonsApi } from '@api/rest/addons'

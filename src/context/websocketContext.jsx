@@ -1,7 +1,7 @@
 import { useEffect, useState, createContext } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
-import PubSub from '@/pubsub'
+import { PubSub } from '@shared/util'
 import arrayEquals from '@helpers/arrayEquals'
 import useWebSocket, { ReadyState } from 'react-use-websocket'
 import { debounce } from 'lodash'

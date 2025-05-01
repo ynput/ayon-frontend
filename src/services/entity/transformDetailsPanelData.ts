@@ -18,7 +18,8 @@ type DetailsPanelRepresentation = NonNullable<
 type DetailsPanelVersion = NonNullable<GetDetailsPanelVersionQuery['project']['version']>
 type DetailsPanelFolder = NonNullable<GetDetailsPanelFolderQuery['project']['folder']>
 
-export type DetailsPanelEntityType = 'task' | 'version' | 'folder' | 'representation'
+export const detailsPanelEntityTypes = ['task', 'version', 'folder', 'representation'] as const
+export type DetailsPanelEntityType = (typeof detailsPanelEntityTypes)[number]
 
 type TransformEntityDataArgs = {
   entity: DetailsPanelRepresentation | DetailsPanelTask | DetailsPanelVersion | DetailsPanelFolder

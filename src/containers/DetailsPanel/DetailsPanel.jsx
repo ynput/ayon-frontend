@@ -6,7 +6,6 @@ import { useGetEntitiesDetailsPanelQuery } from '@queries/entity/getEntityPanel'
 import DetailsPanelAttributes from '@pages/UserDashboardPage/UserDashboardTasks/DetailsPanelAttributes/DetailsPanelAttributes'
 import DetailsPanelFiles from './DetailsPanelFiles'
 import { closeSlideOut, openPip, updateDetailsPanelTab } from '@state/details'
-import { entityDetailsTypesSupported } from '@/services/userDashboard/userDashboardQueries'
 import * as Styled from './DetailsPanel.styled'
 import EntityPath from '@components/EntityPath'
 import { Watchers } from '@containers/Watchers/Watchers'
@@ -19,6 +18,7 @@ import FeedWrapper from './FeedWrapper'
 import { openViewer } from '@state/viewer'
 import mergeProjectInfo from './helpers/mergeProjectInfo'
 import { productTypes } from '@shared/util'
+import { detailsPanelEntityTypes } from '@queries/entity/transformDetailsPanelData'
 
 export const entitiesWithoutFeed = ['product', 'representation']
 
@@ -104,7 +104,7 @@ const DetailsPanel = ({
   } = useGetEntitiesDetailsPanelQuery(
     { entityType, entities: entitiesToQuery, projectsInfo },
     {
-      skip: !entitiesToQuery.length || !entityDetailsTypesSupported.includes(entityType),
+      skip: !entitiesToQuery.length || !detailsPanelEntityTypes.includes(entityType),
     },
   )
 
