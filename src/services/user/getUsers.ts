@@ -5,7 +5,7 @@ import {
   GetActiveUsersCountQuery,
   GetAllAssigneesQuery,
   GetAllProjectUsersAsAssigneeQuery,
-} from '@api/graphql'
+} from '@shared/api'
 
 const USER_BY_NAME_QUERY = `
   query UserList($name:String!) {

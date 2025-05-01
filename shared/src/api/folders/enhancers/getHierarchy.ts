@@ -1,4 +1,4 @@
-import { api } from '@api/rest/folders'
+import { api } from '../folders'
 
 const hierarchyApi = api.enhanceEndpoints({
   endpoints: {
@@ -17,5 +17,4 @@ const hierarchyApi = api.enhanceEndpoints({
 })
 
 export const { useGetFolderHierarchyQuery, useGetFolderListQuery } = hierarchyApi
-
-export default hierarchyApi
+export { hierarchyApi }

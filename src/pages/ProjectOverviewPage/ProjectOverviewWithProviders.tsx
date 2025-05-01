@@ -15,12 +15,11 @@ import {
   useProjectOverviewContext,
 } from './context/ProjectOverviewContext'
 import { ProjectDataProvider } from './context/ProjectDataContext'
-import { useUpdateOverviewEntitiesMutation } from '@queries/overview/updateOverview'
+import { useUpdateOverviewEntitiesMutation, useLazyGetTasksByParentQuery } from '@shared/api'
 import {
   ProjectTableQueriesProvider,
   ProjectTableQueriesProviderProps,
 } from '@shared/containers/ProjectTreeTable/context/ProjectTableQueriesContext'
-import { useLazyGetTasksByParentQuery } from '@queries/overview/getOverview'
 import { useUsersPageConfig } from './hooks/useUserPageConfig'
 
 const ProjectOverviewWithProviders: FC = () => {

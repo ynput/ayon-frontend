@@ -1,14 +1,14 @@
-import api from '@shared/api'
+import api from '@shared/client'
 import { transformEntityData } from '../userDashboard/userDashboardHelpers'
 import {
   buildDetailsQuery,
   entityDetailsTypesSupported,
 } from '../userDashboard/userDashboardQueries'
 import PubSub from '@/pubsub'
+import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 
 export const getEntityPanelApi = api.injectEndpoints({
   endpoints: (build) => ({
-    // TODO, move to separate file getEntityPanel
     getEntityDetailsPanel: build.query({
       query: ({ projectName, entityId, entityType }) => ({
         url: '/graphql',
@@ -18,7 +18,7 @@ export const getEntityPanelApi = api.injectEndpoints({
           variables: { projectName, entityId },
         },
       }),
-      transformResponse: (response, meta, { entityType, projectName, projectInfo }) =>
+      transformResponse: (response: any, _meta, { entityType, projectName, projectInfo }) =>
         transformEntityData({
           projectName: projectName,
           entity: response?.data?.project && response?.data?.project[entityType],
@@ -30,7 +30,7 @@ export const getEntityPanelApi = api.injectEndpoints({
         entityId,
         entityType,
       }),
-      providesTags: (res, error, { entityId, entityType }) =>
+      providesTags: (res, _error, { entityId, entityType }) =>
         res
           ? [
               { type: entityType, id: entityId },
@@ -38,15 +38,33 @@ export const getEntityPanelApi = api.injectEndpoints({
             ]
           : [{ type: entityType, id: 'LIST' }],
     }),
-    getEntitiesDetailsPanel: build.query({
+  }),
+  overrideExisting: true,
+})
+
+type GetEntitiesDetailsPanelArgs = {
+  entities: { id: string; projectName: string }[]
+  entityType: string
+  projectsInfo: Record<string, any>
+}
+
+const getEntityPanelApi2 = getEntityPanelApi.injectEndpoints({
+  endpoints: (build) => ({
+    getEntitiesDetailsPanel: build.query<any, GetEntitiesDetailsPanelArgs>({
       async queryFn({ entities = [], entityType, projectsInfo = {} }, { dispatch }) {
-        if (!entityDetailsTypesSupported.includes(entityType))
-          return { error: 'Entity type not supported' }
+        if (!entityDetailsTypesSupported.includes(entityType)) {
+          return {
+            error: {
+              status: 'CUSTOM_ERROR',
+              error: 'Entity type not supported',
+            } as FetchBaseQueryError,
+          }
+        }
 
         try {
-          const promises = entities.map((entity) =>
+          const promises = entities.map((entity: any) =>
             dispatch(
-              api.endpoints.getEntityDetailsPanel.initiate(
+              getEntityPanelApi.endpoints.getEntityDetailsPanel.initiate(
                 {
                   projectName: entity.projectName,
                   entityId: entity.id,
@@ -71,9 +89,9 @@ export const getEntityPanelApi = api.injectEndpoints({
           }
 
           return { data: entitiesDetails }
-        } catch (error) {
-          console.error(error)
-          return error
+        } catch (e: any) {
+          console.error(e)
+          return { error: { status: 'FETCH_ERROR', error: e.message } as FetchBaseQueryError }
         }
       },
       async onCacheEntryAdded(
@@ -85,16 +103,16 @@ export const getEntityPanelApi = api.injectEndpoints({
           // wait for the initial query to resolve before proceeding
           await cacheDataLoaded
 
-          const handlePubSub = async (topic, message) => {
+          const handlePubSub = async (_topic: string, message: any) => {
             const messageEntityId = message.summary?.entityId
-            const matchedEntity = entities.find((entity) => entity.id === messageEntityId)
+            const matchedEntity = entities.find((entity: any) => entity.id === messageEntityId)
             // check if the message is relevant to the current query
             if (!matchedEntity) return
 
             try {
               // get the new data for the entity
               const res = await dispatch(
-                api.endpoints.getEntityDetailsPanel.initiate(
+                getEntityPanelApi.endpoints.getEntityDetailsPanel.initiate(
                   {
                     projectName: matchedEntity.projectName,
                     entityId: matchedEntity.id,
@@ -111,11 +129,11 @@ export const getEntityPanelApi = api.injectEndpoints({
                 return
               }
 
-              const updatedEntity = res.data
+              const updatedEntity: any = res.data
 
               updateCachedData((draft) => {
                 // find the entity in the cache
-                const entityIndex = draft.findIndex((entity) => entity.id === updatedEntity.id)
+                const entityIndex = draft.findIndex((entity: any) => entity.id === updatedEntity.id)
 
                 if (entityIndex === -1) {
                   console.error('Entity not found in cache')
@@ -147,12 +165,11 @@ export const getEntityPanelApi = api.injectEndpoints({
         entities,
         entityType,
       }),
-      providesTags: (res, error, { entities }) =>
-        entities.map(({ id }) => ({ id, type: 'entities' })),
+      providesTags: (_res, _error, { entities }) =>
+        entities.map(({ id }: { id: string }) => ({ id, type: 'entities' })),
     }),
   }),
-  overrideExisting: true,
 })
 
 export const { useGetEntitiesDetailsPanelQuery, useLazyGetEntitiesDetailsPanelQuery } =
-  getEntityPanelApi
+  getEntityPanelApi2

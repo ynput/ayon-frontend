@@ -6,7 +6,7 @@ import {
   GetInboxHasUnreadQuery,
   GetInboxMessagesQuery,
   GetInboxUnreadCountQuery,
-} from '@api/graphql'
+} from '@shared/api'
 import { TagTypesFromApi } from '@reduxjs/toolkit/query'
 import { TransformedInboxMessages, transformInboxMessages } from './inboxTransform'
 import { DefinitionsFromApi, OverrideResultType } from '@reduxjs/toolkit/query'

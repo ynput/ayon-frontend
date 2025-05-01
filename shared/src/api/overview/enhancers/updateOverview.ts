@@ -3,10 +3,10 @@ import {
   api as operationsApi,
   OperationsApiArg,
   OperationsResponseModel,
-} from '@api/rest/operations'
-import tasksApi from '@queries/overview/getOverview'
-import hierarchyApi from '@queries/getHierarchy'
-import { getEntityPanelApi } from '@queries/entity/getEntityPanel'
+} from '../../operations'
+import { getOverviewApi } from './getOverview'
+import { hierarchyApi } from '../../folders'
+import { getEntityPanelApi } from '../../../../../src/services/entity/getEntityPanel'
 import { FetchBaseQueryError, RootState } from '@reduxjs/toolkit/query'
 import { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
 import { EditorTaskNode } from '@shared/containers/ProjectTreeTable'
@@ -72,13 +72,13 @@ export const patchOverviewTasks = (
   patches?: any[],
 ) => {
   const tags = getOverviewTaskTags(tasks)
-  const taskEntries = tasksApi.util.selectInvalidatedBy(state, tags)
+  const taskEntries = getOverviewApi.util.selectInvalidatedBy(state, tags)
 
   for (const entry of taskEntries) {
     if (entry.endpointName === 'getTasksListInfinite') {
       // patch getTasksListInfinite
       const tasksPatch = dispatch(
-        tasksApi.util.updateQueryData('getTasksListInfinite', entry.originalArgs, (draft) => {
+        getOverviewApi.util.updateQueryData('getTasksListInfinite', entry.originalArgs, (draft) => {
           // Apply each change to matching tasks in all pages
           for (const taskOperation of tasks) {
             if (taskOperation.type === 'create' && taskOperation.data) {
@@ -104,7 +104,7 @@ export const patchOverviewTasks = (
       // this updates the main overview cache task
       // it also updates any GetTasksByParent caches
       const tasksPatch = dispatch(
-        tasksApi.util.updateQueryData(
+        getOverviewApi.util.updateQueryData(
           entry.endpointName as 'getOverviewTasksByFolders' | 'GetTasksByParent' | 'GetTasksList',
           entry.originalArgs,
           (draft) => {
@@ -164,7 +164,7 @@ const invalidateOverviewTasks = (
   },
 ) => {
   if (!tasks.length) return
-  dispatch(tasksApi.util.invalidateTags(getOverviewTaskTags(tasks)))
+  dispatch(getOverviewApi.util.invalidateTags(getOverviewTaskTags(tasks)))
 }
 
 export const patchOverviewFolders = (

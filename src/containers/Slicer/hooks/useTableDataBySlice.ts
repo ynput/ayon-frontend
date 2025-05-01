@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import useHierarchyTable from './useHierarchyTable'
 import useUsersTable from './useUsersTable'
 import useProjectAnatomySlices from './useProjectAnatomySlices'
-import { SliceType, useSlicerContext } from '@context/slicerContext'
+import { SliceType, useSlicerContext } from '@context/SlicerContext'
 import { Slice, SliceData, SliceOption, TableData, TableRow } from '../types'
 
 interface Props {

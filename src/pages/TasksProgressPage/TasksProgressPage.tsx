@@ -10,7 +10,7 @@ import TaskProgressDetailsPanel from './TaskProgressDetailsPanel'
 import { useGetAttributeConfigQuery } from '@queries/attributes/getAttributes'
 import { getPriorityOptions } from './helpers'
 import useScopedStatuses from '@hooks/useScopedStatuses'
-import { useSlicerContext } from '@context/slicerContext'
+import { useSlicerContext } from '@context/SlicerContext'
 
 const TasksProgressPage: FC = () => {
   const projectName = useAppSelector((state: $Any) => state.project.name) as string

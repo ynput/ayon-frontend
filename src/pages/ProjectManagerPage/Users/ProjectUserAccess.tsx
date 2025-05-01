@@ -40,7 +40,7 @@ import {
 } from './ProjectUserAccess.styled'
 import SplitterContainerThreePanes from './SplitterThreePanes'
 import SplitterContainerTwoPanes from './SplitterTwoPanes'
-import { ProjectNode, UserNode } from '@api/graphql'
+import { ProjectNode, UserNode } from '@shared/api'
 import LoadingPage from '@pages/LoadingPage'
 import { useQueryParam } from 'use-query-params'
 import { uuid } from 'short-uuid'

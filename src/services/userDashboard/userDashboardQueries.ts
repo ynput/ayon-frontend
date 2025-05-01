@@ -37,7 +37,7 @@ const TASK_FRAGMENT = () => `
   }
 `
 
-export const PROJECT_TASKS_QUERY = (attribs = []) => `
+export const PROJECT_TASKS_QUERY = (attribs: string[] = []) => `
 query KanBan($assignees: [String!], $projectName: String!) {
   project(name: $projectName) {
         projectName
@@ -57,7 +57,7 @@ query KanBan($assignees: [String!], $projectName: String!) {
 ${TASK_FRAGMENT()}
 `
 
-export const TASK_DETAILS = (attribs = []) => `
+export const TASK_DETAILS = (attribs: string[] = []) => `
 query GetTaskDetails($projectName: String!, $entityId: String!) {
   project(name: $projectName) {
     projectName
@@ -87,7 +87,7 @@ query KanbanProjectAssignees($projectName: String) {
   }
 }`
 
-export const VERSION_DETAILS_QUERY = (attribs = []) => `
+export const VERSION_DETAILS_QUERY = (attribs: string[] = []) => `
     query VersionsDetails($projectName: String!, $entityId: String!) {
         project(name: $projectName) {
             projectName
@@ -131,7 +131,7 @@ export const VERSION_DETAILS_QUERY = (attribs = []) => `
     }
 `
 
-export const FOLDER_DETAILS_QUERY = (attribs = []) => `
+export const FOLDER_DETAILS_QUERY = (attribs: string[] = []) => `
 query FolderDetails($projectName: String!, $entityId: String!) {
   project(name: $projectName) {
       projectName
@@ -155,7 +155,7 @@ query FolderDetails($projectName: String!, $entityId: String!) {
   }
 }`
 
-export const REP_QUERY = (attribs) => `
+export const REP_QUERY = (attribs: string[] = []) => `
     query RepresentationDetails($projectName: String!, $entityId: String!) {
       project(name: $projectName) {
         representation(id: $entityId) {
@@ -180,11 +180,13 @@ export const REP_QUERY = (attribs) => `
 `
 
 export const entityDetailsTypesSupported = ['task', 'version', 'folder', 'representation']
+type EntityDetailsTypes = 'task' | 'version' | 'folder' | 'representation'
 // this is used for getting the correct query for the details panel
-export const buildDetailsQuery = (entityType) => {
+export const buildDetailsQuery = (entityType: EntityDetailsTypes) => {
   // first get all attribs for the entity
-  const attribs = []
+  const attribs: string[] = []
   for (const attrib of ayonClient.settings.attributes) {
+    // @ts-expect-error
     if (attrib.scope.includes(entityType)) attribs.push(attrib.name)
   }
 

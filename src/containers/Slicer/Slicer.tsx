@@ -5,7 +5,7 @@ import SlicerTable from './SlicerTable'
 import useTableDataBySlice from './hooks/useTableDataBySlice'
 import SlicerSearch from './SlicerSearch'
 import clsx from 'clsx'
-import { SliceType, useSlicerContext } from '@context/slicerContext'
+import { SliceType, useSlicerContext } from '@context/SlicerContext'
 
 interface SlicerProps {
   sliceFields: SliceType[]

@@ -1,6 +1,5 @@
-import api from '@shared/api'
-import { api as foldersApi, QueryTasksFoldersApiArg } from '@api/rest/folders'
-import { GetTasksByParentQuery, GetTasksListQuery } from '@api/graphql'
+import { api, GetTasksByParentQuery, GetTasksListQuery } from '@shared/client'
+import { QueryTasksFoldersApiArg, api as foldersApi } from '../../folders'
 import { EditorTaskNode } from '@shared/containers/ProjectTreeTable'
 import {
   DefinitionsFromApi,
@@ -8,7 +7,6 @@ import {
   OverrideResultType,
   TagTypesFromApi,
 } from '@reduxjs/toolkit/query'
-import { isEqual } from 'lodash'
 
 // parse attribs JSON string to object
 const parseAttribs = (allAttrib: string) => {
@@ -167,7 +165,7 @@ const injectedApi = enhancedApi.injectEndpoints({
       }),
       // Refetch when the page arg changes
       forceRefetch({ currentArg, previousArg }) {
-        return !isEqual(currentArg, previousArg)
+        return JSON.stringify(currentArg) !== JSON.stringify(previousArg)
       },
       providesTags: (result, _e, { parentIds, projectName }) =>
         getOverviewTaskTags(result, projectName, parentIds),
@@ -283,7 +281,7 @@ const injectedApi = enhancedApi.injectEndpoints({
   }),
 })
 
-export default injectedApi
+export { injectedApi as getOverviewApi }
 
 export const {
   useGetOverviewTasksByFoldersQuery,

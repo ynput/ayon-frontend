@@ -2,7 +2,7 @@ import api from '@shared/api'
 import { toast } from 'react-toastify'
 import { enhancedDashboardGraphqlApi, getKanbanTasks } from '../userDashboard/getUserDashboard'
 import { isEqual } from 'lodash'
-import { patchOverviewFolders, patchOverviewTasks } from '@queries/overview/updateOverview'
+import { patchOverviewFolders, patchOverviewTasks } from '@shared/api'
 import { current } from '@reduxjs/toolkit'
 
 const patchKanban = (

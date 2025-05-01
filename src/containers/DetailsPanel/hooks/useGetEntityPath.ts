@@ -1,4 +1,4 @@
-import { useGetFolderListQuery } from '@queries/getHierarchy'
+import { useGetFolderListQuery } from '@shared/api'
 import { PathSegment } from '@components/EntityPath/EntityPath'
 import { $Any } from '@types'
 import { useMemo } from 'react'

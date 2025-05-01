@@ -1,9 +1,10 @@
-import { useGetFolderListQuery } from '@queries/getHierarchy'
 import {
+  useGetFolderListQuery,
   useGetOverviewTasksByFoldersQuery,
   useGetQueryTasksFoldersQuery,
   useGetTasksListInfiniteInfiniteQuery,
-} from '@queries/overview/getOverview'
+} from '@shared/api'
+
 import { FolderNodeMap, TaskNodeMap } from '@shared/containers/ProjectTreeTable/types/table'
 import { useEffect, useMemo, useState } from 'react'
 import { ExpandedState, SortingState } from '@tanstack/react-table'
