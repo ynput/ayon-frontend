@@ -1,12 +1,10 @@
 import { Feed, ActivityReferenceTooltip, FeedProvider } from '@shared/containers/Feed'
-import type { FeedContextProps, EditingState } from '@shared/containers/Feed'
+import type { EditingState } from '@shared/containers/Feed'
 
-import { onCommentImageOpen } from '@state/context'
-import { useAppDispatch, useAppSelector } from '@state/store'
 import { FC, useState } from 'react'
 import { Status } from '@api/rest/project'
 import { useViewer } from '@context/viewerContext'
-import { goToFrame, openViewer } from '@state/viewer'
+import { useDetailsPanelContext } from '@shared/context'
 
 interface FeedWrapperProps {
   entities: any[]
@@ -30,10 +28,6 @@ const FeedWrapper: FC<FeedWrapperProps> = ({
   projectInfo,
   ...props
 }) => {
-  const user = useAppSelector((state) => state.user)
-  const userName = user?.name || ''
-  const userFullName = user?.attrib?.fullName || ''
-
   // listen to the viewer for annotations
   // later on, other hooks can be tried here to get annotations from different sources
   const { useAnnotations } = useViewer()
@@ -41,20 +35,10 @@ const FeedWrapper: FC<FeedWrapperProps> = ({
 
   const annotationsProps = { annotations, removeAnnotation, exportAnnotationComposite }
 
-  //   handlers
-  const dispatch = useAppDispatch()
+  const { onOpenImage, onGoToFrame, onOpenViewer, user } = useDetailsPanelContext()
 
-  const onOpenImage: FeedContextProps['onOpenImage'] = (args) => {
-    dispatch(onCommentImageOpen(args))
-  }
-
-  const onGoToFrame = (frame: number) => {
-    dispatch(goToFrame(frame))
-  }
-
-  const onOpenViewer: FeedContextProps['onOpenViewer'] = (args) => {
-    dispatch(openViewer(args))
-  }
+  const userName = user.name || ''
+  const userFullName = user.attrib?.fullName || ''
 
   const handlerProps = {
     onOpenImage,

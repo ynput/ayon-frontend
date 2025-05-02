@@ -27,8 +27,18 @@ export interface TabStateByScope {
   [scope: string]: DetailsPanelTab
 }
 
+// these props get forwarded to the details panel value
+// it's mainly redux callbacks that cannot be used in shared library
+export interface DetailsPanelContextProps {
+  user: { name: string; attrib: { fullName?: string } }
+  // redux callback actions
+  onOpenImage?: (args: any) => void
+  onGoToFrame?: (frame: number) => void
+  onOpenViewer?: (args: any) => void
+}
+
 // Interface for our simplified context
-export interface DetailsPanelContextType {
+export interface DetailsPanelContextType extends DetailsPanelContextProps {
   // Open state for the panel by scope
   panelOpenByScope: OpenStateByScope
   getOpenForScope: (scope: string) => boolean
@@ -59,7 +69,7 @@ export interface DetailsPanelContextType {
 const DetailsPanelContext = createContext<DetailsPanelContextType | undefined>(undefined)
 
 // Provider component
-export interface DetailsPanelProviderProps {
+export interface DetailsPanelProviderProps extends DetailsPanelContextProps {
   children: ReactNode
   defaultTab?: DetailsPanelTab
 }
@@ -67,6 +77,7 @@ export interface DetailsPanelProviderProps {
 export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
   children,
   defaultTab = 'activity',
+  ...forwardedProps
 }) => {
   // keep track of the currently open panel by scope
   const [panelOpenByScope, setPanelOpenByScope] = useState<OpenStateByScope>({})
@@ -141,6 +152,7 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
   // close the slide out
   const closeSlideOut = useCallback(() => {
     setSlideOut(null)
+    setHighlightedActivities([])
   }, [])
 
   const [pip, setPip] = useState<DetailsPanelPip | null>(null)
@@ -175,6 +187,7 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
     pip,
     openPip,
     closePip,
+    ...forwardedProps,
   }
 
   return <DetailsPanelContext.Provider value={value}>{children}</DetailsPanelContext.Provider>

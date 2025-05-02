@@ -31,6 +31,7 @@ const DetailsPanelSlideOut = ({ projectsInfo, scope }: DetailsPanelSlideOutProps
     <Styled.SlideOut>
       <DetailsPanel
         entityType={entityType}
+        entitySubTypes={[]}
         entities={[{ id: entityId, projectName }]}
         projectsInfo={{ [projectName]: projectInfo }}
         projectNames={[projectName]}

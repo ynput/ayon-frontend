@@ -8,7 +8,6 @@ import * as Styled from './DetailsPanel.styled'
 import EntityPath from '@components/EntityPath'
 import { Watchers } from '@containers/Watchers/Watchers'
 import Shortcuts from '@containers/Shortcuts'
-import { isEmpty } from 'lodash'
 import useGetEntityPath from './hooks/useGetEntityPath'
 import { usePiPWindow } from '@context/pip/PiPProvider'
 import getAllProjectStatuses from './helpers/getAllProjectsStatuses'
@@ -28,7 +27,7 @@ type User = { avatarUrl: string; name: string; fullName?: string }
 
 export type DetailsPanelProps = {
   entityType: DetailsPanelEntityType
-  entitySubTypes: string[]
+  entitySubTypes: string[] // used to get actions before the entity has loaded
   entitiesData?: { id: string; label: string; type: DetailsPanelEntityType }[]
   entities?: { id: string; projectName: string }[]
   tagsOptions?: Tag[]
@@ -179,8 +178,6 @@ const DetailsPanel = ({
     requestPipWindow(500, 500)
   }
 
-  if (!firstEntityData || isEmpty(firstEntityData)) return null
-
   return (
     <>
       {/* @ts-expect-error - Shortcuts is not TS yet */}
@@ -238,12 +235,11 @@ const DetailsPanel = ({
         <DetailsPanelHeader
           entityType={entityType}
           entitySubTypes={entitySubTypes}
-          entities={isFetchingEntitiesDetails ? entitiesToQuery : entityDetailsData}
+          entities={entityDetailsData}
           users={projectUsers}
           disabledAssignees={disabledProjectUsers}
           disabledStatuses={disabledStatuses}
           tagsOptions={tagsOptions}
-          isMultipleProjects={projectNames.length > 1}
           isFetching={isFetchingEntitiesDetails}
           isCompact={isCompact}
           currentTab={currentTab}
@@ -254,13 +250,14 @@ const DetailsPanel = ({
         {isFeed && !isError && (
           <FeedWrapper
             entityType={entityType}
-            entities={isFetchingEntitiesDetails ? entitiesToQuery : entityDetailsData}
-            activeUsers={activeProjectUsers}
+            entities={entityDetailsData}
+            activeUsers={activeProjectUsers || []}
             projectInfo={firstProjectInfo}
             projectName={firstProject}
             isMultiProjects={projectNames.length > 1}
             scope={scope}
             statuses={allStatuses}
+            readOnly={false}
           />
         )}
         {currentTab === 'files' && (
@@ -272,7 +269,6 @@ const DetailsPanel = ({
         )}
         {currentTab === 'attribs' && (
           <DetailsPanelAttributes
-            entityType={entityType}
             entities={entityDetailsData}
             isLoading={isFetchingEntitiesDetails}
           />

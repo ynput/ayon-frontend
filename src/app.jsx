@@ -3,7 +3,7 @@ import axios from 'axios'
 import { ErrorBoundary } from 'react-error-boundary'
 import { useEffect, useState, Suspense, lazy, useMemo } from 'react'
 
-import { useSelector, useDispatch } from 'react-redux'
+import { useAppDispatch, useAppSelector } from '@state/store'
 import { Routes, Route, Navigate, BrowserRouter } from 'react-router-dom'
 import { QueryParamProvider } from 'use-query-params'
 import { ReactRouter6Adapter } from 'use-query-params/adapters/react-router-6'
@@ -75,12 +75,31 @@ import Customerly from '@components/Customerly'
 import CompleteProfilePrompt from '@components/CompleteProfilePrompt/CompleteProfilePrompt'
 
 const App = () => {
-  const user = useSelector((state) => state.user)
-  const dispatch = useDispatch()
+  const user = useAppSelector((state) => state.user)
+  const dispatch = useAppDispatch()
   const [loading, setLoading] = useState(false)
   const [serverError, setServerError] = useState(false)
   const [isOnboarding, setIsOnboarding] = useState(false)
   const [noAdminUser, setNoAdminUser] = useState(false)
+
+  //   handlers for details panel
+  const onOpenImage = (args) => {
+    dispatch(onCommentImageOpen(args))
+  }
+
+  const onGoToFrame = (frame) => {
+    dispatch(goToFrame(frame))
+  }
+
+  const onOpenViewer = (args) => {
+    dispatch(openViewer(args))
+  }
+
+  const handlerProps = {
+    onOpenImage,
+    onGoToFrame,
+    onOpenViewer,
+  }
 
   const storedAccessToken = localStorage.getItem('accessToken')
   if (storedAccessToken) {
@@ -171,7 +190,7 @@ const App = () => {
               <RemoteModulesProvider skip={!user.name}>
                 <PowerLicenseProvider>
                   <ContextMenuProvider>
-                    <DetailsPanelProvider>
+                    <DetailsPanelProvider {...handlerProps} user={user}>
                       <GlobalContextMenu />
                       <PasteProvider>
                         <PasteModal />

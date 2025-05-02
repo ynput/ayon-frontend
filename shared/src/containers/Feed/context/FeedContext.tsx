@@ -51,10 +51,6 @@ export type FeedContextProps = {
   // editingId state and functions
   editingId: EditingState
   setEditingId: (id: EditingState) => void
-  // redux callback actions
-  onOpenImage?: (args: any) => void
-  onGoToFrame?: (frame: number) => void
-  onOpenViewer?: (args: any) => void
 }
 
 interface FeedContextType extends Omit<FeedContextProps, 'children'> {

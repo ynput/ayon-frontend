@@ -9,29 +9,7 @@ import DetailsPanelAttributesEditor, {
 } from './DetailsPanelAttributesEditor'
 import useEntityUpdate from '@hooks/useEntityUpdate'
 import { upperFirst } from 'lodash'
-
-type Entity = {
-  id: string
-  name: string
-  title?: string
-  subTitle?: string
-  label?: string
-  tags?: string[]
-  status?: string
-  updatedAt?: string
-  createdAt: string
-  attrib?: Record<string, any>
-  projectName?: string
-  entityType: 'folder' | 'task' | 'product' | 'version'
-  entitySubType: string
-  // add subtypes
-  folderType: string
-  taskType: string
-  users?: any[]
-  path: string
-  folderId?: string
-  icon?: string
-}
+import { DetailsPanelEntityData } from '@queries/entity/transformDetailsPanelData'
 
 type EntityForm = {
   id: string
@@ -68,7 +46,7 @@ const visibleFields: Array<keyof EntityForm> = [
   'path',
 ]
 
-const readOnlyFields: Array<keyof Entity> = [
+const readOnlyFields: Array<keyof EntityForm> = [
   'id',
   'entityType',
   'projectName',
@@ -78,20 +56,8 @@ const readOnlyFields: Array<keyof Entity> = [
   'updatedAt',
 ]
 
-// some field keys need to be mapped to the actual field names
-const fieldKeyMappings = ({ users, entitySubType, title, ...entity }: Entity) => {
-  return {
-    ...entity,
-    [`${entity.entityType}Type`]:
-      // @ts-ignore
-      `${entity.entityType}Type` in entity ? entity[`${entity.entityType}Type`] : entitySubType,
-    assignees: entity.entityType ? users : undefined,
-    label: entity.label || entity.name,
-  }
-}
-
 type DetailsPanelAttributesProps = {
-  entities: Entity[]
+  entities: DetailsPanelEntityData[]
   isLoading: boolean
 }
 
@@ -107,11 +73,25 @@ const DetailsPanelAttributes = ({ entities = [], isLoading }: DetailsPanelAttrib
     const mixedFieldsSet = new Set<string>()
 
     entities.forEach((entity) => {
-      const mappedEntity = fieldKeyMappings(entity)
+      const mappedEntity: EntityForm = {
+        id: entity.id,
+        name: entity.name,
+        label: entity.label,
+        entityType: entity.entityType as 'folder' | 'task' | 'product' | 'version',
+        createdAt: entity.createdAt,
+        updatedAt: entity.updatedAt,
+        projectName: entity.projectName,
+        status: entity.status,
+        tags: entity.tags || [],
+        path: entity.folder?.path || '',
+        folderType: entity.folder?.folderType,
+        productType: entity.product?.productType,
+        taskType: entity.task?.taskType,
+      }
 
       // Process regular fields
       Object.keys(mappedEntity).forEach((key) => {
-        if (visibleFields.includes(key as keyof Entity)) {
+        if (visibleFields.includes(key as keyof EntityForm)) {
           valuesByField[key] = valuesByField[key] || []
           valuesByField[key].push((mappedEntity as any)[key])
         }
@@ -238,11 +218,11 @@ const DetailsPanelAttributes = ({ entities = [], isLoading }: DetailsPanelAttrib
       : []
 
     const readOnlyFieldsData: AttributeField[] = readOnlyFields.map((field) => ({
-      name: field,
+      name: field as string,
       readonly: true,
       data: {
         type: 'string',
-        title: upperFirst(field),
+        title: upperFirst(field as string),
       },
     }))
 
@@ -278,8 +258,8 @@ const DetailsPanelAttributes = ({ entities = [], isLoading }: DetailsPanelAttrib
     entities: entities.map((entity) => ({
       id: entity.id,
       projectName: entity.projectName || '',
-      folderId: entity.folderId,
-      users: entity.users || [],
+      folderId: entity.folder?.id,
+      users: entity.task?.assignees || [],
     })),
     entityType,
     projectName,
