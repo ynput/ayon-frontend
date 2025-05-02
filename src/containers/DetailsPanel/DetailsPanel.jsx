@@ -132,6 +132,8 @@ const DetailsPanel = ({
     isLoading: isFetchingEntitiesDetails,
   })
 
+  console.log(entityPathSegments)
+
   const shortcuts = useMemo(
     () => [
       {

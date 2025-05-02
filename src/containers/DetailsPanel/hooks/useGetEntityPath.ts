@@ -1,13 +1,16 @@
 import { useGetFolderListQuery } from '@shared/api'
 import { PathSegment } from '@components/EntityPath/EntityPath'
-import { $Any } from '@types'
 import { useMemo } from 'react'
 import getEntityPathData from '../helpers/getEntityPathData'
 import { useGetProductVersionsQuery } from '@queries/entity/getEntity'
+import {
+  DetailsPanelEntityData,
+  DetailsPanelEntityType,
+} from '@queries/entity/transformDetailsPanelData'
 
 type Props = {
-  entity: $Any
-  entityType: string
+  entity: DetailsPanelEntityData
+  entityType: DetailsPanelEntityType
   projectName: string
   isLoading: boolean
 }
@@ -26,13 +29,13 @@ const useGetEntityPath = ({
 
   // if the entityType is version, get sibling versions
   const { data: versionsData } = useGetProductVersionsQuery(
-    { productId: entity.productId, projectName },
-    { skip: entityType !== 'version' || !entity.productId },
+    { productId: entity.product?.id || '', projectName },
+    { skip: entityType !== 'version' || !entity.product?.id },
   )
 
   const versions = useMemo(
     () =>
-      !versionsData
+      !versionsData?.project.product?.versionList
         ? []
         : [...versionsData.project.product.versionList]
             .sort((a, b) => {

@@ -1,6 +1,6 @@
-import { FolderListItem } from '@api/rest/folders'
 import { PathSegment } from '@components/EntityPath/EntityPath'
-import { $Any } from '@types'
+import { DetailsPanelEntityData } from '@queries/entity/transformDetailsPanelData'
+import { FolderListItem } from '@shared/api'
 
 type FoldersMap = Map<string, FolderListItem>
 
@@ -23,11 +23,11 @@ const getAllParents = (
   return parents
 }
 
-const getEntityPathData = (entity: $Any, folders: FoldersMap) => {
+const getEntityPathData = (entity: DetailsPanelEntityData, folders: FoldersMap) => {
   const segments: PathSegment[] = []
 
   //   add parent folders
-  let firstParentFolder = folders.get(entity.folderId || '')
+  let firstParentFolder = folders.get(entity.folder?.id || '')
 
   // get all parent folders by looking up the parent id in the folders map
   const allParents = firstParentFolder ? getAllParents(firstParentFolder, folders) : []
