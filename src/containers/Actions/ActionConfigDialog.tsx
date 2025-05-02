@@ -65,11 +65,15 @@ const ActionConfigDialog = ({ action, onClose, context }:ActionConfigDialogProps
   return (
     <SimpleFormDialog
       isOpen
-      header={`Configure action ${action.label}`}
+      title={`Configure action ${action.label}`}
       fields={action.configFields}
       values={initValues as SimpleFormValueDict}
       onClose={onClose}
       onSubmit={handleSubmit}
+      submitLabel="Save action config"
+      cancelLabel="Cancel"
+      submitIcon="check"
+      cancelIcon="close"
     />
   )
 }

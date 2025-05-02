@@ -7,7 +7,6 @@ import { useMemo, useEffect } from 'react'
 import { useExecuteActionMutation, useGetActionsFromContextQuery } from '@/services/actions/actions'
 import ActionsDropdown from '@/components/ActionsDropdown/ActionsDropdown'
 import ActionIcon from './ActionIcon'
-import customProtocolCheck from 'custom-protocol-check'
 import { useLocation, useNavigate } from 'react-router'
 import useActionTriggers from '@/hooks/useActionTriggers'
 import ActionConfigDialog from './ActionConfigDialog'
@@ -184,14 +183,15 @@ const Actions = ({ entities, entityType, entitySubTypes, isLoadingEntity }) => {
       return
     }
 
+
     try {
-      if (response?.uri) {
-        customProtocolCheck(
-          response.uri,
-          () => { },
-          () => { },
-          2000,
-        )
+      // Toast the message if it is available
+      if (response?.message) {
+        if (response?.success) {
+          toast.success(response.message, { autoClose: 2000 })
+        } else {
+          toast.error(response.message, { autoClose: 2000 })
+        }
       }
 
       // Even if response?.success is false, we still want to handle the payload
@@ -199,38 +199,32 @@ const Actions = ({ entities, entityType, entitySubTypes, isLoadingEntity }) => {
       // redirect to another page etc. If the action just needs to abort,
       // it raises exception instead of returning a response with success: false
 
-
       // Use the new hook to handle payload
       if (response?.payload) {
 
-        if ("__form" in response.payload) {
+        if (response.type === "form") {
           // action requests additional information from the user.
           // we show a dialog with the form and when the user submits it we call the action again
 
           // It probably does not make sense to move to the useActionTriggers hook
           // as it need contexts and the dialog
           const intf = {
-            fields: response.payload['__form'],
             identifier,
-            header: response?.message || action.label,
+            title: response.payload['title'],
+            fields: response.payload['fields'],
+            submitLabel: response.payload['submit_label'],
+            cancelLabel: response.payload['cancel_label'],
+            submitIcon: response.payload['submit_icon'],
+            cancelIcon: response.payload['cancel_icon'],
           }
           setInteractiveForm(intf)
 
         } else {
-
-          // Toast the message if it is available
-          if (response?.message) {
-            if (response?.success) {
-              toast.success(response.message, { autoClose: 2000 })
-            } else {
-              toast.error(response.message, { autoClose: 2000 })
-            }
-          }
-
-          handleActionPayload(response.payload, context)
+          handleActionPayload(response.type, response.payload, context)
         }
       }
     } catch (error) {
+      // got response, but failed to process it
       console.warn('Error during action response processing', error)
       toast.error('Error occured during action processing')
     }
