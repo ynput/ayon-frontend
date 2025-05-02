@@ -220,7 +220,7 @@ const Actions = ({ entities, entityType, entitySubTypes, isLoadingEntity }) => {
           setInteractiveForm(intf)
 
         } else {
-          handleActionPayload(response.type, response.payload, context)
+          handleActionPayload(response.type, response.payload)
         }
       }
     } catch (error) {

@@ -39,10 +39,10 @@ const useActionTriggers = () => {
       })
 
       if (!isValid) {
-        throw new Error('Invalid payload: __queryParams')
+        throw new Error('Invalid payload: query')
       } else {
         // Add query params to URL
-        for (const [key, value] of Object.entries(payload.__queryParams as QueryParams)) {
+        for (const [key, value] of Object.entries(payload.query as QueryParams)) {
           searchParams.set(key, value)
         }
         setSearchParams(searchParams)
@@ -55,7 +55,7 @@ const useActionTriggers = () => {
         throw new Error('Invalid payload: navigate')
       } else {
         // Navigate to the specified page
-        navigate(payload.__navigate)
+        navigate(payload.uri)
       }
     }
 
