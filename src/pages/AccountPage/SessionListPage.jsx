@@ -4,7 +4,7 @@ import { TablePanel, Section, Button } from '@ynput/ayon-react-components'
 
 import { TimestampField } from '@containers/fieldFormat'
 import { useGetUserSessionsQuery } from '@queries/user/getUsers'
-import { useInvalidateUserSessionMutation } from '@queries/user/updateUser'
+import { useInvalidateUserSessionMutation } from '@shared/api/user/updateUser'
 
 const SessionList = ({ userName }) => {
   const {

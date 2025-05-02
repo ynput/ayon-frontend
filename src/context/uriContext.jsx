@@ -18,7 +18,6 @@ function URIProvider({ children }) {
       folders: [],
       products: [],
       versions: [],
-      representations: [],
       tasks: [],
       workfiles: [],
     }
@@ -32,7 +31,6 @@ function URIProvider({ children }) {
       if (entity.folderId) focused.folders.push(entity.folderId)
       if (entity.productId) focused.products.push(entity.productId)
       if (entity.versionId) focused.versions.push(entity.versionId)
-      if (entity.representationId) focused.representations.push(entity.representationId)
       if (entity.taskId) focused.tasks.push(entity.taskId)
       if (entity.workfileId) focused.workfiles.push(entity.workfileId)
 

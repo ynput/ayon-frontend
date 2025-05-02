@@ -1,6 +1,6 @@
 import { Section, Panel } from '@ynput/ayon-react-components'
 import { PathField } from '@containers/fieldFormat'
-import Thumbnail from '@components/Thumbnail'
+import Thumbnail from '@shared/components/Thumbnail'
 import AttributeTable from '@containers/attributeTable'
 import { useState } from 'react'
 import { useSelector } from 'react-redux'

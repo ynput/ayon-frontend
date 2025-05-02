@@ -6,14 +6,14 @@ import {
 } from '../../operations'
 import { getOverviewApi } from './getOverview'
 import { hierarchyApi } from '../../folders'
-import { getEntityPanelApi } from '../../../../../src/services/entity/getEntityPanel'
+import { getEntityPanelApi } from '../../entities/enhancers/getEntityPanel'
 import { FetchBaseQueryError, RootState } from '@reduxjs/toolkit/query'
 import { current, ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
 import { EditorTaskNode } from '@shared/containers/ProjectTreeTable'
 import {
   DetailsPanelEntityData,
   DetailsPanelEntityType,
-} from '../../../../../src/services/entity/transformDetailsPanelData'
+} from '../../entities/enhancers/transformDetailsPanelData'
 // import { current } from '@reduxjs/toolkit'
 // these operations are dedicated to the overview page
 // this mean cache updates are custom for the overview page here

@@ -1,6 +1,6 @@
 import styled, { css } from 'styled-components'
 import { Button } from '@ynput/ayon-react-components'
-import Thumbnail from '@components/Thumbnail'
+import Thumbnail from '@shared/components/Thumbnail'
 
 const showClearButton = css`
   &.clearable {

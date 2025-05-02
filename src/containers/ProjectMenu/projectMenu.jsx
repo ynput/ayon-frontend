@@ -10,7 +10,7 @@ import ProjectButton from '@components/ProjectButton/ProjectButton'
 import { createPortal } from 'react-dom'
 import { useShortcutsContext } from '@context/shortcutsContext'
 import clsx from 'clsx'
-import { useSetFrontendPreferencesMutation } from '@/services/user/updateUser'
+import { useSetFrontendPreferencesMutation } from '@shared/api/user/updateUser'
 import useAyonNavigate from '@hooks/useAyonNavigate'
 import { useProjectSelectDispatcher } from './hooks/useProjectSelectDispatcher'
 

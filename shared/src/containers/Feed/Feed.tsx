@@ -16,7 +16,7 @@ import EmptyPlaceholder from '@shared/components/EmptyPlaceholder'
 import { useFeedContext, FEED_NEW_COMMENT } from './context/FeedContext'
 import { Status } from '../ProjectTreeTable/types/project'
 import { useDetailsPanelContext } from '@shared/context'
-import { DetailsPanelEntityType } from '../../../../src/services/entity/transformDetailsPanelData'
+import { DetailsPanelEntityType } from '../../api/entities/enhancers/transformDetailsPanelData'
 
 // number of activities to get
 export const activitiesLast = 30

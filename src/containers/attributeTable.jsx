@@ -1,7 +1,7 @@
 import styled from 'styled-components'
 import { TableRow } from '@ynput/ayon-react-components'
 import { useGetAttributeListQuery } from '@queries/attributes/getAttributes'
-import copyToClipboard from '../helpers/copyToClipboard'
+import copyToClipboard from '../../shared/src/util/copyToClipboard'
 import { format } from 'date-fns'
 
 const AttributeTableContainer = styled.div`

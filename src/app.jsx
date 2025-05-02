@@ -42,7 +42,7 @@ import { PasteProvider, PasteModal } from '@context/pasteContext'
 import { URIProvider } from '@context/uriContext'
 import { NotificationsProvider } from '@context/notificationsContext'
 import { CustomerlyProvider } from 'react-live-chat-customerly'
-import { PiPProvider } from '@context/pip/PiPProvider'
+import { PiPProvider } from '@shared/context/pip/PiPProvider'
 import { RemoteModulesProvider, DetailsPanelProvider } from '@shared/context'
 import { PowerLicenseProvider } from './remote/context/PowerLicenseContext'
 import { PowerpackProvider } from '@context/powerpackContext'
@@ -73,9 +73,12 @@ import PowerpackDialog from '@components/Powerpack/PowerpackDialog'
 import AppRemoteLoader from './remote/AppRemoteLoader/AppRemoteLoader'
 import Customerly from '@components/Customerly'
 import CompleteProfilePrompt from '@components/CompleteProfilePrompt/CompleteProfilePrompt'
+import { goToFrame, openViewer } from '@state/viewer'
+import { onCommentImageOpen } from '@state/context'
 
 const App = () => {
   const user = useAppSelector((state) => state.user)
+  const viewer = useAppSelector((state) => state.viewer) || []
   const dispatch = useAppDispatch()
   const [loading, setLoading] = useState(false)
   const [serverError, setServerError] = useState(false)
@@ -190,7 +193,12 @@ const App = () => {
               <RemoteModulesProvider skip={!user.name}>
                 <PowerLicenseProvider>
                   <ContextMenuProvider>
-                    <DetailsPanelProvider {...handlerProps} user={user}>
+                    <DetailsPanelProvider
+                      {...handlerProps}
+                      user={user}
+                      viewer={viewer}
+                      dispatch={dispatch}
+                    >
                       <GlobalContextMenu />
                       <PasteProvider>
                         <PasteModal />

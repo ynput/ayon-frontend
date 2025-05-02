@@ -17,7 +17,26 @@ export { api as foldersApi } from './folders'
 export * from './operations'
 export { api as operationsApi } from './operations'
 export * from './overview'
+export * from './entities'
+export * from './review'
+export * from './userDashboard'
+export * from './project'
+export * from './attributes'
+export * from './actions'
+export * from './users'
 
 // explicit type exports
+export type {
+  AgentInfo,
+  ClientInfo,
+  ErrorResponse,
+  LocationInfo,
+  UserAttribModel,
+  UserModel,
+} from './auth'
+
+export type { FolderType, TaskType } from './project'
+export type { KanbanNode } from '../client'
 export type { QueryCondition, QueryFilter } from './folders'
 export type { HttpValidationError, ValidationError } from './activities'
+export type { AttributeData, AttributeEnumItem, AttributeModel } from './attributes'

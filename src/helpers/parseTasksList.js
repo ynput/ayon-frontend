@@ -1,4 +1,4 @@
-import groupResult from './groupResult'
+import groupResult from '../../shared/src/util/groupResult'
 
 const sortByName = (a, b) => {
   const labelA = a.node.label || a.node.name

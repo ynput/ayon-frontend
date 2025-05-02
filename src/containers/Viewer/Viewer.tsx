@@ -13,7 +13,7 @@ import { GetReviewablesResponse } from '@queries/review/types'
 import { productTypes } from '@shared/util'
 import { toggleFullscreen, toggleUpload, updateSelection, updateProduct } from '@state/viewer'
 
-import { getGroupedReviewables } from '../ReviewablesList/getGroupedReviewables'
+import { getGroupedReviewables } from '../../../shared/src/components/ReviewablesList/getGroupedReviewables'
 import ViewerComponent from './ViewerComponent'
 import ViewerDetailsPanel from './ViewerDetailsPanel'
 import * as Styled from './Viewer.styled'
