@@ -14,6 +14,8 @@ import {
 } from '@shared/api'
 import type { SuggestRequest, SuggestResponse } from '@shared/api'
 import { ActivityUser } from '../helpers/groupMinorActivities'
+import { DetailsPanelTab, useScopedDetailsPanel } from '@shared/context'
+import { getFilterActivityTypes } from '@shared/api/activities/util/activitiesHelpers'
 
 export const FEED_NEW_COMMENT = '__new__' as const
 
@@ -35,12 +37,10 @@ export type FeedContextProps = {
   children: React.ReactNode
   projectName: string
   entityType: string
-  activityTypes: string[]
+  activityTypes?: string[] | null
   entities: any[]
   projectInfo: any
   scope: string
-  statePath: string
-  filter: string
   userName: string
   userFullName: string
 
@@ -52,13 +52,13 @@ export type FeedContextProps = {
   editingId: EditingState
   setEditingId: (id: EditingState) => void
   // redux callback actions
-  onOpenSlideOut?: (args: any) => void
   onOpenImage?: (args: any) => void
   onGoToFrame?: (frame: number) => void
   onOpenViewer?: (args: any) => void
 }
 
 interface FeedContextType extends Omit<FeedContextProps, 'children'> {
+  currentTab: DetailsPanelTab
   // activities data props
   activitiesData: any[]
   isLoadingActivities: boolean
@@ -89,6 +89,7 @@ const FeedContext = createContext<FeedContextType | undefined>(undefined)
 
 export const FeedProvider = ({ children, ...props }: FeedContextProps) => {
   const { data: users = [] } = useGetActivityUsersQuery({ projects: [props.projectName] })
+  const { currentTab } = useScopedDetailsPanel(props.scope)
 
   //   queries
   const [createEntityActivityMutation, { isLoading: isLoadingCreate }] =
@@ -112,10 +113,12 @@ export const FeedProvider = ({ children, ...props }: FeedContextProps) => {
   const deleteReaction: FeedContextType['deleteReaction'] = async (args) =>
     await deleteReactionToActivity(args).unwrap()
 
+  const activityTypes = getFilterActivityTypes(currentTab)
+
   const activitiesDataProps = useGetFeedActivitiesData({
     entities: props.entities,
-    filter: props.filter,
-    activityTypes: props.activityTypes,
+    filter: currentTab,
+    activityTypes: activityTypes,
     projectName: props.projectName,
     entityType: props.entityType,
   })
@@ -150,6 +153,8 @@ export const FeedProvider = ({ children, ...props }: FeedContextProps) => {
         entityTooltipData,
         isFetchingTooltip,
         refTooltip,
+        activityTypes,
+        currentTab,
         setRefTooltip,
         // Query functions
         createEntityActivity,

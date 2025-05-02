@@ -2,10 +2,9 @@ import { forwardRef, MouseEvent } from 'react'
 import { ActiveSegment } from './EntityPath.styled'
 import { classNames } from 'primereact/utils'
 import { PathSegment } from './EntityPath'
-import { useDispatch } from 'react-redux'
-import { openSlideOut } from '@state/details'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import copyToClipboard from '@helpers/copyToClipboard'
+import { useDetailsPanelContext } from '@shared/context'
 
 interface SegmentProviderProps extends React.HTMLAttributes<HTMLDivElement> {
   segment?: PathSegment
@@ -16,7 +15,7 @@ interface SegmentProviderProps extends React.HTMLAttributes<HTMLDivElement> {
 
 const SegmentProvider = forwardRef<HTMLDivElement, SegmentProviderProps>(
   ({ children, segment, isOpen, scope, projectName, ...props }, ref) => {
-    const dispatch = useDispatch()
+    const { openSlideOut } = useDetailsPanelContext()
     // is the segment NOT a product || project?
     const isLinkable = segment?.type !== 'product' && segment?.type !== 'project'
 
@@ -25,14 +24,13 @@ const SegmentProvider = forwardRef<HTMLDivElement, SegmentProviderProps>(
 
       const { type: entityType, id: entityId } = segment || {}
 
-      dispatch(
-        openSlideOut({
-          scope,
-          entityType,
-          entityId,
-          projectName,
-        }),
-      )
+      if (!entityType || !entityId) return
+
+      openSlideOut({
+        entityType,
+        entityId,
+        projectName,
+      })
     }
 
     const buildContextMenu = (id: string) => [

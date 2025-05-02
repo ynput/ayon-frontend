@@ -1,11 +1,9 @@
 import { Button, Panel } from '@ynput/ayon-react-components'
 import React, { useEffect, useMemo } from 'react'
 import DetailsPanelHeader from './DetailsPanelHeader/DetailsPanelHeader'
-import { useAppDispatch, useAppSelector } from '@state/store'
 import { useGetEntitiesDetailsPanelQuery } from '@queries/entity/getEntityPanel'
 import DetailsPanelAttributes from '@pages/UserDashboardPage/UserDashboardTasks/DetailsPanelAttributes/DetailsPanelAttributes'
 import DetailsPanelFiles from './DetailsPanelFiles'
-import { closeSlideOut, openPip, updateDetailsPanelTab } from '@state/details'
 import * as Styled from './DetailsPanel.styled'
 import EntityPath from '@components/EntityPath'
 import { Watchers } from '@containers/Watchers/Watchers'
@@ -15,12 +13,39 @@ import useGetEntityPath from './hooks/useGetEntityPath'
 import { usePiPWindow } from '@context/pip/PiPProvider'
 import getAllProjectStatuses from './helpers/getAllProjectsStatuses'
 import FeedWrapper from './FeedWrapper'
-import { openViewer } from '@state/viewer'
 import mergeProjectInfo from './helpers/mergeProjectInfo'
 import { productTypes } from '@shared/util'
-import { detailsPanelEntityTypes } from '@queries/entity/transformDetailsPanelData'
+import {
+  DetailsPanelEntityType,
+  detailsPanelEntityTypes,
+} from '@queries/entity/transformDetailsPanelData'
+import { ProjectModel, Tag } from '@api/rest/project'
+import { useDetailsPanelContext, useScopedDetailsPanel } from '@shared/context'
 
 export const entitiesWithoutFeed = ['product', 'representation']
+
+type User = { avatarUrl: string; name: string; fullName?: string }
+
+export type DetailsPanelProps = {
+  entityType: DetailsPanelEntityType
+  entitySubTypes: string[]
+  entitiesData?: { id: string; label: string; type: DetailsPanelEntityType }[]
+  entities?: { id: string; projectName: string }[]
+  tagsOptions?: Tag[]
+  disabledStatuses?: string[]
+  projectUsers?: User[]
+  disabledProjectUsers?: string[]
+  activeProjectUsers?: string[]
+  projectsInfo?: Record<string, ProjectModel>
+  projectNames?: string[]
+  isSlideOut?: boolean
+  style?: React.CSSProperties
+  scope: string
+  isCompact?: boolean
+  onClose?: () => void
+  onWatchersUpdate?: (added: any[], removed: any[]) => void
+  onOpenViewer?: (entity: any) => void
+}
 
 const DetailsPanel = ({
   entityType,
@@ -34,19 +59,25 @@ const DetailsPanel = ({
   projectUsers,
   disabledProjectUsers,
   activeProjectUsers,
-  selectedTasksProjects,
   projectsInfo = {},
   projectNames = [],
-  onClose,
   isSlideOut = false,
-  statePath = 'pinned',
   style = {},
   scope,
   isCompact = false,
+  onClose,
   onWatchersUpdate,
-}) => {
-  let selectedTab = useAppSelector((state) => state.details[statePath][scope].tab)
-  const dispatch = useAppDispatch()
+  onOpenViewer,
+}: DetailsPanelProps) => {
+  const { closeSlideOut, openPip } = useDetailsPanelContext()
+  const { currentTab, setTab, isFeed } = useScopedDetailsPanel(scope)
+
+  // Force attribs tab for specific entity types
+  useEffect(() => {
+    if (entitiesWithoutFeed.includes(entityType) && currentTab !== 'attribs') {
+      setTab('attribs')
+    }
+  }, [entityType, currentTab, setTab])
 
   // reduce projectsInfo to selected projects and into one
   const projectInfo = useMemo(
@@ -71,34 +102,29 @@ const DetailsPanel = ({
     [projectInfo],
   )
 
-  const handleOpenViewer = (args) => dispatch(openViewer(args))
-
-  // if the entity type is product or representation, we show the attribs tab only
-  if (entitiesWithoutFeed.includes(entityType)) selectedTab = 'attribs'
-
   // check if tab needs to be updated when entity type changes
   // for example when switching from version to task, task doesn't have reps tab
   // if reps tab was selected, set default to feed
   useEffect(() => {
-    if (selectedTab === 'files') {
+    if (currentTab === 'files') {
       // check entity type is still version
       if (entityType !== 'version') {
-        dispatch(updateDetailsPanelTab({ statePath, tab: 'feed', scope }))
+        setTab('activity')
       }
     }
-  }, [entityType, selectedTab])
+  }, [entityType, currentTab, scope])
 
   // now we get the full details data for selected entities
   let entitiesToQuery = entities.length
     ? entities.map((entity) => ({ id: entity.id, projectName: entity.projectName }))
-    : entitiesData.map((entity) => ({ id: entity.id, projectName: entity.projectName }))
+    : // @ts-expect-error = not sure what's going on with entitiesData, we should try and remove it
+      entitiesData.map((entity) => ({ id: entity.id, projectName: entity.projectName }))
 
   entitiesToQuery = entitiesToQuery.filter((entity) => entity.id)
 
   const {
     data: entityDetailsData = [],
     isFetching: isFetchingEntitiesDetails,
-    isSuccess,
     isError,
     originalArgs,
   } = useGetEntitiesDetailsPanelQuery(
@@ -111,9 +137,9 @@ const DetailsPanel = ({
   // the entity changes then we close the slide out
   useEffect(() => {
     if (!isSlideOut) {
-      dispatch(closeSlideOut())
+      closeSlideOut()
     }
-  }, [originalArgs])
+  }, [originalArgs, isSlideOut])
 
   // TODO:  merge current entities data with fresh details data
 
@@ -132,8 +158,6 @@ const DetailsPanel = ({
     isLoading: isFetchingEntitiesDetails,
   })
 
-  console.log(entityPathSegments)
-
   const shortcuts = useMemo(
     () => [
       {
@@ -147,17 +171,11 @@ const DetailsPanel = ({
   const { requestPipWindow } = usePiPWindow()
 
   const handleOpenPip = () => {
-    // set pip state
-    dispatch(
-      openPip({
-        entityType: entityType,
-        entities: entitiesToQuery,
-        scope: scope,
-        statePath: statePath,
-      }),
-    )
-
-    // open pip
+    openPip({
+      entityType: entityType,
+      entities: entitiesToQuery,
+      scope: scope,
+    })
     requestPipWindow(500, 500)
   }
 
@@ -165,6 +183,7 @@ const DetailsPanel = ({
 
   return (
     <>
+      {/* @ts-expect-error - Shortcuts is not TS yet */}
       <Shortcuts shortcuts={shortcuts || []} deps={[]} />
 
       <Panel
@@ -188,13 +207,14 @@ const DetailsPanel = ({
             isLoading={isFetchingEntitiesDetails || !entityPathSegments.length}
             entityType={entityType}
             scope={scope}
+            // @ts-ignore
             entityTypeIcons={entityTypeIcons}
           />
           <Styled.RightTools className="right-tools">
             <Watchers
               entities={entitiesToQuery}
               entityType={entityType}
-              options={projectUsers}
+              options={projectUsers || []}
               onWatchersUpdate={onWatchersUpdate && onWatchersUpdate}
             />
             <Button
@@ -209,7 +229,7 @@ const DetailsPanel = ({
                 icon="close"
                 variant={'text'}
                 onClick={() => onClose && onClose()}
-                data-shortcut={onClose ? 'Escape' : undefined}
+                data-shortcut={'Escape'}
               />
             )}
           </Styled.RightTools>
@@ -226,11 +246,12 @@ const DetailsPanel = ({
           isMultipleProjects={projectNames.length > 1}
           isFetching={isFetchingEntitiesDetails}
           isCompact={isCompact}
-          scope={scope}
-          statePath={statePath}
+          currentTab={currentTab}
+          onTabChange={setTab}
           entityTypeIcons={entityTypeIcons}
+          onOpenViewer={(args) => onOpenViewer?.(args)}
         />
-        {selectedTab === 'feed' && !isError && (
+        {isFeed && !isError && (
           <FeedWrapper
             entityType={entityType}
             entities={isFetchingEntitiesDetails ? entitiesToQuery : entityDetailsData}
@@ -239,18 +260,17 @@ const DetailsPanel = ({
             projectName={firstProject}
             isMultiProjects={projectNames.length > 1}
             scope={scope}
-            statePath={statePath}
             statuses={allStatuses}
           />
         )}
-        {selectedTab === 'files' && (
+        {currentTab === 'files' && (
           <DetailsPanelFiles
             entities={entityDetailsData}
             scope={scope}
             isLoadingVersion={isFetchingEntitiesDetails}
           />
         )}
-        {selectedTab === 'attribs' && (
+        {currentTab === 'attribs' && (
           <DetailsPanelAttributes
             entityType={entityType}
             entities={entityDetailsData}

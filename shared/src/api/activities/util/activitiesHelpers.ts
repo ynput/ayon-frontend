@@ -6,6 +6,7 @@ import {
   TaskTypes,
   VersionTypes,
 } from '../enhancers/activityQueries'
+import { DetailsPanelTab, FeedFilters } from '@shared/context'
 
 // Helper function to get a nested property of an object using a string path
 const getNestedProperty = <T extends Record<string, any>, R = any>(
@@ -210,9 +211,19 @@ export const taskProvideTags = (result: Task[], type = 'task', entityType = 'tas
       ]
     : [{ type, id: entityType.toUpperCase() + 'S' }]
 
-export const filterActivityTypes = {
+export const filterActivityTypes: Record<FeedFilters, string[]> = {
   activity: ['comment', 'version.publish', 'status.change', 'assignee.add', 'assignee.remove'],
   comments: ['comment'],
-  publishes: ['version.publish'],
+  versions: ['version.publish'],
   checklists: ['checklist'],
+}
+
+export const getFilterActivityTypes = (tab: DetailsPanelTab): string[] | null => {
+  // check if the tab is in the filterActivityTypes object1
+  if (tab in filterActivityTypes) {
+    // @ts-expect-error
+    return filterActivityTypes[tab]
+  }
+  // if not, return null
+  return null
 }

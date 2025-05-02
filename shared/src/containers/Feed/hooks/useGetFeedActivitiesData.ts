@@ -18,7 +18,7 @@ export type UseGetActivitiesInfiniteInfiniteQuery = (
 type Props = {
   entities: Array<{ id: string; projectName: string }>
   filter: string
-  activityTypes: string[]
+  activityTypes?: string[] | null
   projectName: string
   entityType: string
 }

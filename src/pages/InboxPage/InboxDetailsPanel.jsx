@@ -6,12 +6,17 @@ import { useGetUsersAssigneeQuery } from '@queries/user/getUsers'
 import DetailsPanelSlideOut from '@containers/DetailsPanel/DetailsPanelSlideOut/DetailsPanelSlideOut'
 import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
+import { useAppDispatch } from '@state/store'
+import { openViewer } from '@state/viewer'
 
 const InboxDetailsPanel = ({ messages = [], selected = [], projectsInfo = {}, onClose }) => {
   const user = useSelector((state) => state.user.name)
   const selectedMessage = useMemo(() => {
     return messages.find((m) => m.activityId === selected[0]) || {}
   }, [messages, selected])
+
+  const dispatch = useAppDispatch()
+  const handleOpenViewer = (args) => dispatch(openViewer(args))
 
   const { projectName, entityType, entityId, entitySubType } = selectedMessage
 
@@ -42,6 +47,7 @@ const InboxDetailsPanel = ({ messages = [], selected = [], projectsInfo = {}, on
           }
         }}
         style={{ boxShadow: 'none', borderRadius: 4, overflow: 'hidden' }}
+        onOpenViewer={handleOpenViewer}
       />
       <DetailsPanelSlideOut projectsInfo={projectsInfo} scope="inbox" />
     </div>

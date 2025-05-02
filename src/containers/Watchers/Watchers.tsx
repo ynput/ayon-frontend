@@ -5,7 +5,7 @@ import { forwardRef } from 'react'
 import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 
-interface WatchersProps extends Omit<WatcherSelectProps, 'currentUser'> {
+interface WatchersProps extends Omit<WatcherSelectProps, 'currentUser' | 'value'> {
   entities: { id: string; projectName: string }[]
   entityType: string
   onWatchersUpdate?: (added: any[], removed: any[]) => void

@@ -17,6 +17,7 @@ import { useGetAttributeConfigQuery } from '@queries/attributes/getAttributes'
 import { getPriorityOptions } from '@pages/TasksProgressPage/helpers'
 import { DetailsPanelEntityData } from '@queries/entity/transformDetailsPanelData'
 import { buildDetailsPanelTitles } from '../helpers/buildDetailsPanelTitles'
+import { DetailsPanelTab } from '@shared/context'
 
 export type EntityTypeIcons = {
   folder: Record<string, string>
@@ -34,8 +35,8 @@ type DetailsPanelHeaderProps = {
   tagsOptions?: any[]
   isFetching?: boolean
   isCompact?: boolean
-  scope: string
-  statePath: string
+  currentTab: DetailsPanelTab
+  onTabChange: (tab: DetailsPanelTab) => void
   onOpenViewer: (args: any) => void
   entityTypeIcons: EntityTypeIcons
 }
@@ -50,8 +51,8 @@ const DetailsPanelHeader = ({
   tagsOptions = [],
   isFetching,
   isCompact = false,
-  scope,
-  statePath,
+  currentTab,
+  onTabChange,
   entityTypeIcons,
   onOpenViewer,
 }: DetailsPanelHeaderProps) => {
@@ -293,8 +294,8 @@ const DetailsPanelHeader = ({
                 label: checklistsLabel,
               },
             }}
-            scope={scope}
-            statePath={statePath}
+            currentTab={currentTab}
+            onTabChange={onTabChange}
           />
         </Styled.Grid>
       </EntityThumbnailUploader>

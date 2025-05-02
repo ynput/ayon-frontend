@@ -6,7 +6,6 @@ import { upperFirst } from 'lodash'
 import { AssigneeField, Icon } from '@ynput/ayon-react-components'
 import PiPWrapper from '@context/pip/PiPWrapper'
 import { useGetEntitiesDetailsPanelQuery } from '@queries/entity/getEntityPanel'
-import { useAppSelector } from '@state/store'
 import {
   useGetKanbanProjectUsersQuery,
   useGetProjectsInfoQuery,
@@ -17,6 +16,7 @@ import mergeProjectInfo from '../helpers/mergeProjectInfo'
 import { buildDetailsPanelTitles } from '../helpers/buildDetailsPanelTitles'
 import { DetailsPanelEntityType } from '@queries/entity/transformDetailsPanelData'
 import { productTypes } from '@shared/util'
+import { useDetailsPanelContext } from '@shared/context'
 
 type Entity = {
   id: string
@@ -36,9 +36,11 @@ type Entity = {
 export interface DetailsPanelFloatingProps {}
 
 const DetailsPanelFloating: FC<DetailsPanelFloatingProps> = () => {
-  const { scope, statePath, ...pip } = useAppSelector((state) => state.details.pip)
-  const entityType = pip.entityType as DetailsPanelEntityType
-  const entities = pip.entities as Entity[]
+  // TODO: fix this
+  const { pip } = useDetailsPanelContext()
+  const entityType = pip?.entityType
+  const entities = pip?.entities || []
+  const scope = pip?.scope || ''
   const isOpen = entities.length > 0 && !!entityType
 
   const projects: string[] = entities.map((e: any) => e.projectName)
@@ -60,7 +62,8 @@ const DetailsPanelFloating: FC<DetailsPanelFloatingProps> = () => {
 
   const { data: entitiesData = [], isFetching: isFetchingEntitiesDetails } =
     useGetEntitiesDetailsPanelQuery(
-      { entityType, entities: entities },
+      // @ts-expect-error - if entityType is not set, this will be skipped
+      { entityType: entityType || '', entities: entities },
       {
         skip: !isOpen || isFetchingInfo,
       },
@@ -90,7 +93,7 @@ const DetailsPanelFloating: FC<DetailsPanelFloatingProps> = () => {
   )
 
   const thumbnails = useMemo(
-    () => getThumbnails(entitiesData, entityType, entityTypeIcons),
+    () => (entityType ? getThumbnails(entitiesData, entityType, entityTypeIcons) : []),
     [entitiesData, entityType],
   )
 
@@ -123,6 +126,8 @@ const DetailsPanelFloating: FC<DetailsPanelFloatingProps> = () => {
         color: '',
         name: 'None',
       }
+
+  if (!entityType) return null
 
   // Get title and subtitle from the imported function
   const { title, subTitle } = buildDetailsPanelTitles(entitiesData, entityType)
@@ -158,7 +163,6 @@ const DetailsPanelFloating: FC<DetailsPanelFloatingProps> = () => {
             projectName={projectName}
             isMultiProjects={false}
             scope={scope}
-            statePath={statePath}
             readOnly
             // @ts-ignore
             statuses={statuses}

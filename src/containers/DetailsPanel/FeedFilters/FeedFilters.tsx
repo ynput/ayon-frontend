@@ -1,49 +1,55 @@
 import * as Styled from './FeedFilters.styled'
-import { useDispatch, useSelector } from 'react-redux'
-import { updateDetailsPanelTab, updateFeedFilter } from '@state/details'
 import { Button, Spacer } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import { entitiesWithoutFeed } from '../DetailsPanel'
+import { DetailsPanelEntityType } from '@queries/entity/transformDetailsPanelData'
+import { DetailsPanelTab } from '@shared/context'
+
+const filtersLeft: {
+  id: DetailsPanelTab
+  label?: string
+  tooltip: string
+  icon: string
+}[] = [
+  {
+    id: 'activity',
+    tooltip: 'All activity',
+    icon: 'forum',
+  },
+  {
+    id: 'comments',
+    tooltip: 'Comments',
+    icon: 'chat',
+  },
+  {
+    id: 'versions',
+    tooltip: 'Published versions',
+    icon: 'layers',
+  },
+  {
+    id: 'checklists',
+    tooltip: 'Checklists',
+    icon: 'checklist',
+  },
+]
+
+export interface FeedFiltersProps extends React.HTMLAttributes<HTMLDivElement> {
+  isLoading?: boolean
+  entityType: DetailsPanelEntityType
+  overrides?: Record<string, any>
+  currentTab: DetailsPanelTab
+  onTabChange: (tab: DetailsPanelTab) => void
+}
 
 const FeedFilters = ({
   isLoading,
   entityType,
   className,
   overrides = {},
-  scope,
-  statePath,
+  currentTab,
+  onTabChange,
   ...props
-}) => {
-  const dispatch = useDispatch()
-  const setFeedFilter = (value) => dispatch(updateFeedFilter({ value, statePath, scope }))
-  const setTab = (tab) => dispatch(updateDetailsPanelTab({ statePath, tab, scope }))
-
-  const selectedFilter = useSelector((state) => state.details[statePath][scope].filter)
-  const selectedTab = useSelector((state) => state.details[statePath][scope].tab)
-
-  const filtersLeft = [
-    {
-      id: 'activity',
-      tooltip: 'All activity',
-      icon: 'forum',
-    },
-    {
-      id: 'comments',
-      tooltip: 'Comments',
-      icon: 'chat',
-    },
-    {
-      id: 'publishes',
-      tooltip: 'Published versions',
-      icon: 'layers',
-    },
-    {
-      id: 'checklists',
-      tooltip: 'Checklists',
-      icon: 'checklist',
-    },
-  ]
-
+}: FeedFiltersProps) => {
   // for each override, find the filter and update it
   Object.entries(overrides).forEach(([id, override]) => {
     const index = filtersLeft.findIndex((filter) => filter.id === id)
@@ -60,8 +66,8 @@ const FeedFilters = ({
         filtersLeft.map((filter) => (
           <Button
             key={filter.id}
-            selected={filter.id === selectedFilter && selectedTab === 'feed'}
-            onClick={() => setFeedFilter(filter.id)}
+            selected={filter.id === currentTab}
+            onClick={() => onTabChange(filter.id)}
             label={filter.label}
             icon={filter.icon}
             data-tooltip={filter.tooltip}
@@ -72,15 +78,15 @@ const FeedFilters = ({
       {entityType === 'version' && (
         <Button
           icon="order_play"
-          onClick={() => setTab('files')}
-          selected={selectedTab === 'files'}
+          onClick={() => onTabChange('files')}
+          selected={currentTab === 'files'}
           data-tooltip="Version files"
           data-tooltip-delay={0}
         />
       )}
       <Button
-        onClick={() => setTab('attribs')}
-        selected={selectedTab === 'attribs'}
+        onClick={() => onTabChange('attribs')}
+        selected={currentTab === 'attribs'}
         style={{ padding: '6px 8px' }}
       >
         Attributes

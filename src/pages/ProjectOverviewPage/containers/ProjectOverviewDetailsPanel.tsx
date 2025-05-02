@@ -7,6 +7,8 @@ import { useGetUsersAssigneeQuery } from '@queries/user/getUsers'
 import { ProjectModel } from '@api/rest/project'
 import { useProjectTableContext, useSelectedRowsContext } from '@shared/containers/ProjectTreeTable'
 import { EditorTaskNode, MatchingFolder } from '@shared/containers/ProjectTreeTable'
+import { useAppDispatch } from '@state/store'
+import { openViewer } from '@state/viewer'
 
 type ProjectOverviewDetailsPanelProps = {
   projectInfo?: ProjectModel
@@ -18,6 +20,9 @@ const ProjectOverviewDetailsPanel = ({
   projectName,
 }: ProjectOverviewDetailsPanelProps) => {
   const projectsInfo = { [projectName]: projectInfo }
+
+  const dispatch = useAppDispatch()
+  const handleOpenViewer = (args: any) => dispatch(openViewer(args))
 
   const { getEntityById } = useProjectTableContext()
   const { selectedRows, clearRowsSelection } = useSelectedRowsContext()
@@ -56,6 +61,7 @@ const ProjectOverviewDetailsPanel = ({
         style={{ boxShadow: 'none' }}
         scope="overview"
         onClose={handleClose}
+        onOpenViewer={handleOpenViewer}
       />
       <DetailsPanelSlideOut projectsInfo={projectsInfo} scope="overview" />
     </>

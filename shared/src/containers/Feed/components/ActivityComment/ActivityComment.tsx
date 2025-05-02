@@ -60,7 +60,7 @@ const ActivityComment = ({
   readOnly,
   statuses = [],
 }: Props) => {
-  const { scope, statePath, userName, createReaction, deleteReaction } = useFeedContext()
+  const { userName, createReaction, deleteReaction } = useFeedContext()
 
   let {
     body,
@@ -77,8 +77,6 @@ const ActivityComment = ({
   } = activity
   if (!authorName) authorName = author?.name || ''
   if (!authorFullName) authorFullName = author?.fullName || authorName
-  let menuId = `comment-${scope}-${activity.activityId}`
-  if (statePath) menuId += '-' + statePath
 
   const { editingId, setEditingId } = useFeedContext()
 

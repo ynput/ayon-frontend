@@ -2,7 +2,6 @@ import { Feed, ActivityReferenceTooltip, FeedProvider } from '@shared/containers
 import type { FeedContextProps, EditingState } from '@shared/containers/Feed'
 
 import { onCommentImageOpen } from '@state/context'
-import { openSlideOut } from '@state/details'
 import { useAppDispatch, useAppSelector } from '@state/store'
 import { FC, useState } from 'react'
 import { Status } from '@api/rest/project'
@@ -16,7 +15,6 @@ interface FeedWrapperProps {
   projectName: string
   entityType: string
   isMultiProjects: boolean
-  statePath: string
   readOnly: boolean
   statuses: Status[]
   scope: string
@@ -26,7 +24,6 @@ interface FeedWrapperProps {
 // forwards any props
 const FeedWrapper: FC<FeedWrapperProps> = ({
   scope = 'dashboard',
-  statePath,
   entities,
   entityType,
   projectName,
@@ -36,14 +33,6 @@ const FeedWrapper: FC<FeedWrapperProps> = ({
   const user = useAppSelector((state) => state.user)
   const userName = user?.name || ''
   const userFullName = user?.attrib?.fullName || ''
-  //   @ts-ignore
-  const activityTypes = useAppSelector((state) => state.details[statePath][scope].activityTypes)
-  //   @ts-ignore
-  const filter = useAppSelector((state) => state.details[statePath][scope].filter)
-  //   @ts-ignore
-  const highlighted = useAppSelector((state) => state.details[statePath].highlighted) || []
-
-  const reduxStateProps = { activityTypes, highlighted }
 
   // listen to the viewer for annotations
   // later on, other hooks can be tried here to get annotations from different sources
@@ -54,10 +43,6 @@ const FeedWrapper: FC<FeedWrapperProps> = ({
 
   //   handlers
   const dispatch = useAppDispatch()
-  const onOpenSlideOut: FeedContextProps['onOpenSlideOut'] = (args) => {
-    // open slide out panel
-    dispatch(openSlideOut({ ...args, scope }))
-  }
 
   const onOpenImage: FeedContextProps['onOpenImage'] = (args) => {
     dispatch(onCommentImageOpen(args))
@@ -72,7 +57,6 @@ const FeedWrapper: FC<FeedWrapperProps> = ({
   }
 
   const handlerProps = {
-    onOpenSlideOut,
     onOpenImage,
     onGoToFrame,
     onOpenViewer,
@@ -84,21 +68,18 @@ const FeedWrapper: FC<FeedWrapperProps> = ({
     <FeedProvider
       {...{
         scope,
-        statePath,
         entities,
         projectName,
         entityType,
         projectInfo,
-        filter,
         userName,
         userFullName,
-        activityTypes,
       }}
       {...handlerProps}
       {...annotationsProps}
       {...{ editingId, setEditingId }}
     >
-      <Feed {...props} {...reduxStateProps} />
+      <Feed {...props} />
       <ActivityReferenceTooltip />
     </FeedProvider>
   )

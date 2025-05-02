@@ -11,7 +11,7 @@ type TitleResult = { title: string; subTitle: string }
  */
 export const buildDetailsPanelTitles = (
   entities: DetailsPanelEntityData[],
-  entityType: DetailsPanelEntityType,
+  entityType?: DetailsPanelEntityType,
 ): TitleResult => {
   const isMultiple = entities.length > 1
   const firstEntity = entities[0]

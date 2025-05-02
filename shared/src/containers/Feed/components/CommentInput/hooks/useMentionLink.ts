@@ -1,18 +1,16 @@
 import { Quill } from 'react-quill-ayon'
-import { useFeedContext } from '../../../context/FeedContext'
 import useReferenceTooltip from '../../../hooks/useReferenceTooltip'
+import { useDetailsPanelContext } from '@shared/context'
 
 const Inline = Quill.import('blots/inline')
 
 interface MentionLinkOptions {
   projectName: string
-  projectInfo: any
-  scope: string
 }
 
 // custom mention links
-const useMentionLink = ({ projectName, projectInfo, scope }: MentionLinkOptions) => {
-  const { onOpenSlideOut } = useFeedContext()
+const useMentionLink = ({ projectName }: MentionLinkOptions) => {
+  const { openSlideOut } = useDetailsPanelContext()
   const [, setRefTooltip] = useReferenceTooltip()
 
   // special link for mentions
@@ -44,11 +42,10 @@ const useMentionLink = ({ projectName, projectInfo, scope }: MentionLinkOptions)
         e.preventDefault()
         if (valueMentionType === 'user') return
 
-        onOpenSlideOut?.({
+        openSlideOut({
           entityId: valueMentionId,
           entityType: valueMentionType,
           projectName,
-          scope,
         })
       })
 

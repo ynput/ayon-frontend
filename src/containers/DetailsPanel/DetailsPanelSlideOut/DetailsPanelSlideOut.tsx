@@ -1,26 +1,32 @@
 import * as Styled from './DetailsPanelSlideOut.styled'
-import { useDispatch, useSelector } from 'react-redux'
-import DetailsPanel from '../DetailsPanel'
+import { useAppDispatch } from '@state/store'
 import { useGetUsersAssigneeQuery } from '@queries/user/getUsers'
-import { closeSlideOut } from '@state/details'
+import DetailsPanel from '../DetailsPanel'
+import { openViewer } from '@state/viewer'
+import { useDetailsPanelContext } from '@shared/context'
+import { ProjectModel } from '@api/rest/project'
 
-const DetailsPanelSlideOut = ({ projectsInfo, scope }) => {
-  const dispatch = useDispatch()
-  const slideOut = useSelector((state) => state.details.slideOut[scope])
+type DetailsPanelSlideOutProps = {
+  projectsInfo: Record<string, ProjectModel>
+  scope: string
+}
+
+const DetailsPanelSlideOut = ({ projectsInfo, scope }: DetailsPanelSlideOutProps) => {
+  const dispatch = useAppDispatch()
+  const { slideOut } = useDetailsPanelContext()
   const { entityType, entityId, projectName } = slideOut || {}
   const isSlideOutOpen = !!entityType && !!entityId && !!projectName
 
   const { data: users } = useGetUsersAssigneeQuery({ projectName }, { skip: !projectName })
 
-  const projectInfo = projectsInfo[projectName] || {}
+  const projectInfo = projectsInfo[projectName || ''] || {}
   const { tags = [] } = projectInfo
 
+  const { closeSlideOut } = useDetailsPanelContext()
+  const handleClose = () => closeSlideOut()
+  const handleOpenViewer = (args: any) => dispatch(openViewer(args))
+
   if (!isSlideOutOpen) return null
-
-  const handleClose = () => dispatch(closeSlideOut())
-
-  console.log('DetailsPanelSlideOut', projectsInfo)
-
   return (
     <Styled.SlideOut>
       <DetailsPanel
@@ -32,9 +38,9 @@ const DetailsPanelSlideOut = ({ projectsInfo, scope }) => {
         projectUsers={users}
         activeProjectUsers={users}
         isSlideOut
-        statePath="slideOut"
         scope={scope}
         onClose={handleClose}
+        onOpenViewer={handleOpenViewer}
       />
     </Styled.SlideOut>
   )

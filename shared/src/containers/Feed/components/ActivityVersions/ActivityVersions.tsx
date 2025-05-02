@@ -39,7 +39,7 @@ const ActivityVersions: React.FC<ActivityVersionsProps> = ({
   const { onOpenViewer } = useFeedContext()
   let { authorName, authorFullName, createdAt, versions = [] } = activity
 
-  const [showAll, setShowAll] = useState(filter === 'publishes')
+  const [showAll, setShowAll] = useState(filter === 'versions')
   const limit = 2
 
   const [thumbnailError, setThumbnailError] = useState(false)
@@ -86,7 +86,7 @@ const ActivityVersions: React.FC<ActivityVersionsProps> = ({
           )
         )
       })}
-      {filter !== 'publishes' && versions.length > limit && (
+      {filter !== 'versions' && versions.length > limit && (
         <More onClick={() => setShowAll(!showAll)}>
           <Icon icon="more" />
           <span>{showAll ? `Show less` : `Show ${versions.length - limit} more versions`}</span>

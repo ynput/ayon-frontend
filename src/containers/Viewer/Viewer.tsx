@@ -10,7 +10,6 @@ import ReviewVersionDropdown from '@/components/ReviewVersionDropdown'
 import ReviewablesSelector from '@components/ReviewablesSelector'
 import { useGetViewerReviewablesQuery } from '@queries/review/getReview'
 import { GetReviewablesResponse } from '@queries/review/types'
-import { updateDetailsPanelTab } from '@state/details'
 import { productTypes } from '@shared/util'
 import { toggleFullscreen, toggleUpload, updateSelection, updateProduct } from '@state/viewer'
 
@@ -19,6 +18,7 @@ import ViewerComponent from './ViewerComponent'
 import ViewerDetailsPanel from './ViewerDetailsPanel'
 import * as Styled from './Viewer.styled'
 import { ViewerProvider } from '@context/viewerContext'
+import { useDetailsPanelContext } from '@shared/context'
 
 interface ViewerProps {
   onClose?: () => void
@@ -217,11 +217,13 @@ const Viewer = ({ onClose }: ViewerProps) => {
     dispatch(updateSelection({ reviewableIds: [reviewableId] }))
   }
 
+  const { setTab } = useDetailsPanelContext()
+
   const handleUploadAction =
     (toggleNativeFileUpload = false) =>
     () => {
       // switch to files tab
-      dispatch(updateDetailsPanelTab({ scope: 'review', tab: 'files', statePath: 'pinned' }))
+      setTab('review', 'files')
       // open the file dialog
       if (toggleNativeFileUpload) {
         dispatch(toggleUpload(true))

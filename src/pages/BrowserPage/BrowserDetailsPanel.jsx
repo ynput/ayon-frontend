@@ -7,9 +7,14 @@ import DetailsPanelSlideOut from '@containers/DetailsPanel/DetailsPanelSlideOut/
 import { useGetUsersAssigneeQuery } from '@queries/user/getUsers'
 import { useGetProjectsInfoQuery } from '@queries/userDashboard/getUserDashboard'
 import useFocusedEntities from '@hooks/useFocused'
+import { useAppDispatch } from '@state/store'
+import { openViewer } from '@state/viewer'
 
 const BrowserDetailsPanel = () => {
   const projectName = useSelector((state) => state.project.name)
+
+  const dispatch = useAppDispatch()
+  const handleOpenViewer = (args) => dispatch(openViewer(args))
 
   const { data: projectsInfo = {} } = useGetProjectsInfoQuery({ projects: [projectName] })
   const projectInfo = projectsInfo[projectName] || {}
@@ -34,6 +39,7 @@ const BrowserDetailsPanel = () => {
         activeProjectUsers={users}
         style={{ boxShadow: 'none' }}
         scope="project"
+        onOpenViewer={handleOpenViewer}
       />
       <DetailsPanelSlideOut projectsInfo={projectsInfo} scope="project" />
     </>
