@@ -1,4 +1,4 @@
-import Thumbnail from '@shared/components/Thumbnail'
+import { Thumbnail } from '@shared/components/Thumbnail'
 import { Button, StatusField } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 

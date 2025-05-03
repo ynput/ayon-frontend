@@ -1,6 +1,6 @@
 import ayonClient from '@/ayon'
 import { useState, useMemo, useEffect } from 'react'
-import { useGetProjectQuery } from '@queries/project/getProject'
+import { useGetProjectQuery } from '@shared/api'
 import { useGetCustomRootsQuery, useSetCustomRootsMutation } from '@queries/customRoots'
 import {
   InputText,

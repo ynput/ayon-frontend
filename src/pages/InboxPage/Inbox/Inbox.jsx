@@ -10,7 +10,7 @@ import { toast } from 'react-toastify'
 import { compareAsc } from 'date-fns'
 // Queries
 import { useGetInboxMessagesQuery, useLazyGetInboxMessagesQuery } from '@queries/inbox/getInbox'
-import { useGetProjectsInfoQuery } from '@queries/userDashboard/getUserDashboard'
+import { useGetProjectsInfoQuery } from '@shared/api'
 // Components
 import { Button, Spacer } from '@ynput/ayon-react-components'
 import EnableNotifications from '@components/EnableNotifications'
@@ -21,7 +21,7 @@ import useGroupMessages from '../hooks/useGroupMessages'
 import useKeydown from '../hooks/useKeydown'
 import useUpdateInboxMessage from '../hooks/useUpdateInboxMessage'
 import useInboxRefresh from '../hooks/useInboxRefresh'
-import { useListProjectsQuery } from '@queries/project/getProject'
+import { useListProjectsQuery } from '@shared/api'
 import { useDetailsPanelContext } from '@shared/context'
 
 const placeholderMessages = Array.from({ length: 100 }, (_, i) => ({

@@ -5,7 +5,7 @@ import { useAppDispatch, useAppSelector } from '@state/store'
 import { switchDialog } from '@state/releaseInstaller'
 import { useCreateInstallerMutation } from '@queries/installers/updateInstallers'
 import { useCreateDependencyPackageMutation } from '@queries/dependencyPackages/updateDependencyPackages'
-import { DownloadAddonsApiResponse, useDownloadAddonsMutation } from '@queries/addons/updateAddons'
+import { DownloadAddonsApiResponse, useDownloadAddonsMutation } from '@shared/api'
 import { InstallResponseModel } from '@api/rest/installers'
 import { useEffect, useState } from 'react'
 import {

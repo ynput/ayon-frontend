@@ -1,4 +1,4 @@
-import { BaseAPI as api } from '@shared/api'
+import { BaseAPI as api } from '../../client'
 const injectedRtkApi = api.injectEndpoints({
   endpoints: (build) => ({
     getEntityWatchers: build.query<GetEntityWatchersApiResponse, GetEntityWatchersApiArg>({

@@ -1,15 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Section } from '@ynput/ayon-react-components'
-import getMixedState from '@helpers/getMixedState'
-import { useGetProjectQuery } from '@queries/project/getProject'
-import { useGetSiteInfoQuery } from '@shared/api'
-import DetailsPanelAttributesEditor, {
+import { getMixedState } from '@shared/util'
+import { useGetSiteInfoQuery, useGetProjectQuery } from '@shared/api'
+import {
+  DetailsPanelAttributesEditor,
   AttributeField,
   DetailsPanelAttributesEditorProps,
 } from './DetailsPanelAttributesEditor'
-import useEntityUpdate from '@hooks/useEntityUpdate'
+import { useEntityUpdate } from '@shared/hooks'
 import { upperFirst } from 'lodash'
-import { DetailsPanelEntityData } from '@queries/entity/transformDetailsPanelData'
+import type { DetailsPanelEntityData } from '@shared/api'
 
 type EntityForm = {
   id: string
@@ -56,12 +56,15 @@ const readOnlyFields: Array<keyof EntityForm> = [
   'updatedAt',
 ]
 
-type DetailsPanelAttributesProps = {
+export type DetailsPanelAttributesProps = {
   entities: DetailsPanelEntityData[]
   isLoading: boolean
 }
 
-const DetailsPanelAttributes = ({ entities = [], isLoading }: DetailsPanelAttributesProps) => {
+export const DetailsPanelAttributes = ({
+  entities = [],
+  isLoading,
+}: DetailsPanelAttributesProps) => {
   // form for project data
   const [mixedFields, setMixedFields] = useState<string[]>([])
   const [formData, setFormData] = useState<EntityForm | null>(null)
@@ -262,7 +265,6 @@ const DetailsPanelAttributes = ({ entities = [], isLoading }: DetailsPanelAttrib
       users: entity.task?.assignees || [],
     })),
     entityType,
-    projectName,
   })
 
   const handleChange: DetailsPanelAttributesEditorProps['onChange'] = (key, value) => {
@@ -299,5 +301,3 @@ const DetailsPanelAttributes = ({ entities = [], isLoading }: DetailsPanelAttrib
     </Section>
   )
 }
-
-export default DetailsPanelAttributes

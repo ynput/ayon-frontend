@@ -1,9 +1,9 @@
-import { AttributeModel } from '@api/rest/attributes'
+import type { AttributeModel } from '@shared/api'
+import { copyToClipboard } from '@shared/util'
 import { FC, useState } from 'react'
 import styled from 'styled-components'
 import { CellValue } from '@shared/containers/ProjectTreeTable/widgets/CellWidget'
 import clsx from 'clsx'
-import copyToClipboard from '@helpers/copyToClipboard'
 import { Button } from '@ynput/ayon-react-components'
 import RenderFieldWidget from './components/RenderFieldWidget'
 
@@ -102,7 +102,7 @@ export interface DetailsPanelAttributesEditorProps {
   onChange?: (key: string, value: any) => void
 }
 
-const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps> = ({
+export const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps> = ({
   isLoading,
   form,
   fields,
@@ -188,5 +188,3 @@ const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps> = ({
     </StyledForm>
   )
 }
-
-export default DetailsPanelAttributesEditor

@@ -1,4 +1,4 @@
-import { api } from '@shared/client'
+import { api } from '../../client'
 const injectedRtkApi = api.injectEndpoints({
   endpoints: (build) => ({
     eventOperations: build.mutation<EventOperationsApiResponse, EventOperationsApiArg>({

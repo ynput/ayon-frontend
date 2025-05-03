@@ -1,10 +1,9 @@
 // this is a wrapper around the DetailsPanel
 // we do this so that focused changes do not re-render the entire page
 
-import DetailsPanel from '@containers/DetailsPanel/DetailsPanel'
-import DetailsPanelSlideOut from '@containers/DetailsPanel/DetailsPanelSlideOut/DetailsPanelSlideOut'
-import { useGetUsersAssigneeQuery } from '@queries/user/getUsers'
-import { ProjectModel } from '@api/rest/project'
+import { DetailsPanel, DetailsPanelSlideOut } from '@shared/containers'
+import { useGetUsersAssigneeQuery } from '@shared/api'
+import type { ProjectModel } from '@shared/api'
 import { useProjectTableContext, useSelectedRowsContext } from '@shared/containers/ProjectTreeTable'
 import { EditorTaskNode, MatchingFolder } from '@shared/containers/ProjectTreeTable'
 import { useAppDispatch } from '@state/store'

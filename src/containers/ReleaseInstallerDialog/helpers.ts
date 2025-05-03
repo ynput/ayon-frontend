@@ -6,7 +6,7 @@ import { Installer } from '@api/rest/installers'
 import { formatDistance } from 'date-fns'
 import { ReleaseForm } from './hooks/useReleaseForm'
 import { DependencyPackage } from '@api/rest/dependencyPackages'
-import { DownloadAddonsApiArg } from '@queries/addons/updateAddons'
+import { DownloadAddonsApiArg } from '@shared/api'
 import getNewBundleName from '@pages/SettingsPage/Bundles/getNewBundleName'
 
 export const createReleaseSubtitle = (

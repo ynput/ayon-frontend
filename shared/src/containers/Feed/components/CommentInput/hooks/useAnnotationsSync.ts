@@ -29,7 +29,7 @@ const useAnnotationsSync = ({ entityId, filesUploading }: Props) => {
   const { editingId, setEditingId, annotations, removeAnnotation, onGoToFrame } = useFeedContext()
 
   // filter out annotations that are for this entity and are NOT uploading
-  const filteredAnnotations = filterEntityAnnotations(annotations, entityId, filesUploading)
+  const filteredAnnotations = filterEntityAnnotations(annotations || [], entityId, filesUploading)
 
   // when annotations change, update the state
   useEffect(() => {

@@ -1,6 +1,6 @@
 import { useSelector } from 'react-redux'
 import { onPrefetchIds } from '@state/dashboard'
-import { useLazyGetEntitiesDetailsPanelQuery } from '@queries/entity/getEntityPanel'
+import { useLazyGetEntitiesDetailsPanelQuery } from '@shared/api'
 import { getActivitiesGQLApi } from '@shared/api/activities'
 import { throttle } from 'lodash'
 import { activitiesLast } from '@shared/containers/Feed'

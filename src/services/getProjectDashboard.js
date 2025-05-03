@@ -4,8 +4,8 @@ import {
   PRODUCT_TILE_FRAGMENT,
   TASK_TILE_FRAGMENT,
   VERSION_TILE_FRAGMENT,
-} from '../../shared/src/api/entities/enhancers/entityQueries'
-import { formatEntityTiles } from '../../shared/src/api/entities/enhancers/getEntity'
+} from '@shared/api/entities/enhancers/entityQueries'
+import { formatEntityTiles } from '@shared/api/entities/enhancers/getEntity'
 
 const buildEntitiesQuery = (entities = [], arg = '') => {
   return entities

@@ -24,6 +24,8 @@ export * from './project'
 export * from './attributes'
 export * from './actions'
 export * from './users'
+export * from './addons'
+export * from './watchers'
 
 // explicit type exports
 export type {

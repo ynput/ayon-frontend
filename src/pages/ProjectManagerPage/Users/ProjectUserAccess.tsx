@@ -9,8 +9,8 @@ import { useShortcutsContext } from '@context/shortcutsContext'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import useUserProjectPermissions from '@hooks/useUserProjectPermissions'
 import { useGetAccessGroupsQuery } from '@queries/accessGroups/getAccessGroups'
-import { useGetUsersQuery } from '@queries/user/getUsers'
-import { useListProjectsQuery } from '@queries/project/getProject'
+import { useGetUsersQuery } from '@shared/api'
+import { useListProjectsQuery } from '@shared/api'
 
 import ProjectManagerPageLayout from '../ProjectManagerPageLayout'
 import {

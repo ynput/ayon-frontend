@@ -1,6 +1,6 @@
 import { Button } from '@ynput/ayon-react-components'
 import { useNotifications } from '@context/notificationsContext'
-import { useSetFrontendPreferencesMutation } from '@shared/api/user/updateUser'
+import { useSetFrontendPreferencesMutation } from '@shared/api'
 import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 import { useState } from 'react'

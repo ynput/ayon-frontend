@@ -1,9 +1,8 @@
+import { FC, useState } from 'react'
+
 import { Feed, ActivityReferenceTooltip, FeedProvider } from '@shared/containers/Feed'
 import type { EditingState } from '@shared/containers/Feed'
-
-import { FC, useState } from 'react'
-import { Status } from '@api/rest/project'
-import { useViewer } from '@context/viewerContext'
+import type { Status } from '@shared/api'
 import { useDetailsPanelContext } from '@shared/context'
 
 interface FeedWrapperProps {
@@ -16,6 +15,9 @@ interface FeedWrapperProps {
   readOnly: boolean
   statuses: Status[]
   scope: string
+  annotations?: any
+  removeAnnotation?: (id: string) => void
+  exportAnnotationComposite?: (id: string) => Promise<Blob | null>
 }
 
 // forwards any props
@@ -25,13 +27,11 @@ const FeedWrapper: FC<FeedWrapperProps> = ({
   entityType,
   projectName,
   projectInfo,
+  annotations,
+  removeAnnotation,
+  exportAnnotationComposite,
   ...props
 }) => {
-  // listen to the viewer for annotations
-  // later on, other hooks can be tried here to get annotations from different sources
-  const { useAnnotations } = useViewer()
-  const { annotations, removeAnnotation, exportAnnotationComposite } = useAnnotations()
-
   const annotationsProps = { annotations, removeAnnotation, exportAnnotationComposite }
 
   const { onOpenImage, onGoToFrame, onOpenViewer, user } = useDetailsPanelContext()

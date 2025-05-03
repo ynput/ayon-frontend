@@ -5,7 +5,7 @@ import * as Styled from './TrialEnded.styled'
 import useCustomerlyChat from '@hooks/useCustomerly'
 import { useNavigate } from 'react-router'
 import { useAppSelector } from '@state/store'
-import { useGetActiveUsersCountQuery } from '@queries/user/getUsers'
+import { useGetActiveUsersCountQuery } from '@shared/api'
 import { useLogOutMutation } from '@queries/auth/logout'
 
 interface TrialEndedProps {

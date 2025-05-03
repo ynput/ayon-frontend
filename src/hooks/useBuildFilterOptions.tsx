@@ -1,12 +1,19 @@
-import { AttributeModel, AttributeEnumItem, AttributeData } from '@api/rest/attributes'
-import { FolderType, Status, Tag, TaskType } from '@api/rest/project'
 import { getEntityTypeIcon } from '@shared/util'
-import { useGetSiteInfoQuery } from '@shared/api'
 import {
-  GetProjectsInfoResponse,
+  useGetSiteInfoQuery,
   useGetKanbanProjectUsersQuery,
   useGetProjectsInfoQuery,
-} from '@queries/userDashboard/getUserDashboard'
+} from '@shared/api'
+import type {
+  GetProjectsInfoResponse,
+  FolderType,
+  Status,
+  Tag,
+  TaskType,
+  AttributeModel,
+  AttributeEnumItem,
+  AttributeData,
+} from '@shared/api'
 import { productTypes } from '@shared/util'
 import { ColumnOrderState } from '@tanstack/react-table'
 import { Icon, Option } from '@ynput/ayon-react-components'

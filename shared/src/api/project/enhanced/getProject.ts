@@ -1,10 +1,8 @@
-import { api, ListProjectsApiResponse, ListProjectsItemModel } from '@api/rest/project'
-// @ts-ignore
-import { selectProject, setProjectData } from '@state/project'
+import { api, ListProjectsApiResponse, ListProjectsItemModel } from '../project'
 
 // TODO: use graphql api and write custom types
 // We will need to inject the endpoint as it cannot be generated
-const createProjectQuery = (attribs: $Any, fields: $Any) => {
+const createProjectQuery = (attribs: any, fields: any) => {
   const attribFragment = `
   fragment AttribFragment on ProjectAttribType {
     ${attribs.join(' ')}
@@ -63,8 +61,6 @@ const getProjectInjected = api.injectEndpoints({
   overrideExisting: true,
 })
 
-import { $Any } from '@/types'
-
 import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
 type Definitions = DefinitionsFromApi<typeof getProjectInjected>
 type TagTypes = TagTypesFromApi<typeof getProjectInjected>
@@ -77,60 +73,12 @@ type UpdatedDefinitions = Omit<Definitions, 'getProject'> & {
 const getProjectApi = getProjectInjected.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
   endpoints: {
     getProject: {
-      transformErrorResponse: (error: $Any) => error.data.detail || `Error ${error.status}`,
+      transformErrorResponse: (error: any) => error.data.detail || `Error ${error.status}`,
       providesTags: (_res, _error, { projectName }) => [{ type: 'project', id: projectName }],
-      async onCacheEntryAdded(arg, { cacheDataLoaded, getCacheEntry, dispatch }) {
-        try {
-          // set redux project state name
-          dispatch(selectProject(arg.projectName))
-          // wait for the initial query to resolve before proceeding
-          await cacheDataLoaded
-          // get redux project state
-          const project = getCacheEntry().data as $Any
-          // an array of strings for the order of each list type
-          const order: {
-            tasks: string[]
-            folders: string[]
-            statuses: string[]
-            tags: string[]
-          } = {
-            tasks: [],
-            folders: [],
-            statuses: [],
-            tags: [],
-          }
-
-          type OrderType = keyof typeof order
-
-          // function: transforms and array into an object with the array item's name as the key using for loop
-          const transformArrayToObject = (array: $Any[], type: OrderType) => {
-            const initialValue = {}
-            return array.reduce((obj, item: $Any) => {
-              order[type].push(item.name)
-              return {
-                ...obj,
-                [item.name]: item,
-              }
-            }, initialValue)
-          }
-
-          const tasks = transformArrayToObject(project?.taskTypes, 'tasks')
-          const folders = transformArrayToObject(project?.folderTypes, 'folders')
-          const statuses = transformArrayToObject(project?.statuses, 'statuses')
-          const tags = transformArrayToObject(project?.tags, 'tags')
-          const attrib = project?.attrib || {}
-          // set project state
-          dispatch(setProjectData({ tasks, folders, statuses, tags, order, attrib }))
-        } catch (error) {
-          console.error(error)
-          // no-op in case `cacheEntryRemoved` resolves before `cacheDataLoaded`,
-          // in which case `cacheDataLoaded` will throw
-        }
-      },
     },
     listProjects: {
       transformResponse: (res: ListProjectsApiResponse) => res?.projects || [],
-      transformErrorResponse: (error: $Any) => error.data.detail || `Error ${error.status}`,
+      transformErrorResponse: (error: any) => error.data.detail || `Error ${error.status}`,
       // @ts-ignore
       providesTags: (_res, _error, { active }) => [
         { type: 'project' },

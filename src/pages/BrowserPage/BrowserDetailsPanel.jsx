@@ -2,13 +2,12 @@
 // we do this so that focused changes do not re-render the entire page
 
 import { useSelector } from 'react-redux'
-import DetailsPanel from '@containers/DetailsPanel/DetailsPanel'
-import DetailsPanelSlideOut from '@containers/DetailsPanel/DetailsPanelSlideOut/DetailsPanelSlideOut'
-import { useGetUsersAssigneeQuery } from '@queries/user/getUsers'
-import { useGetProjectsInfoQuery } from '@queries/userDashboard/getUserDashboard'
 import useFocusedEntities from '@hooks/useFocused'
 import { useAppDispatch } from '@state/store'
 import { openViewer } from '@state/viewer'
+// shared
+import { DetailsPanel, DetailsPanelSlideOut } from '@shared/containers'
+import { useGetUsersAssigneeQuery, useGetProjectsInfoQuery } from '@shared/api'
 
 const BrowserDetailsPanel = () => {
   const projectName = useSelector((state) => state.project.name)

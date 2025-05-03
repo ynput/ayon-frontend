@@ -1,7 +1,7 @@
 import { FC, useEffect, useState } from 'react'
 import { Button, Dialog, InputText, SaveButton, theme, Toolbar } from '@ynput/ayon-react-components'
 import { toast } from 'react-toastify'
-import { useUpdateUserMutation } from '@shared/api/user/updateUser'
+import { useUpdateUserMutation } from '@shared/api'
 import { updateUserAttribs } from '@state/user'
 import { useAppDispatch, useAppSelector } from '@state/store'
 import { useLocation } from 'react-router-dom'

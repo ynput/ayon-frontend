@@ -9,7 +9,7 @@ import {
   LockedInput,
   SaveButton,
 } from '@ynput/ayon-react-components'
-import { useUpdateUsersMutation } from '@shared/api/user/updateUser'
+import { useUpdateUsersMutation } from '@shared/api'
 import { updateUserData, updateUserAttribs } from '@state/user'
 import styled from 'styled-components'
 import ayonClient from '@/ayon'

@@ -1,5 +1,5 @@
 import { useGetCurrentUserQuery } from '@shared/api'
-import { useSetFrontendPreferencesMutation } from '@shared/api/user/updateUser'
+import { useSetFrontendPreferencesMutation } from '@shared/api'
 import { toast } from 'react-toastify'
 
 type Props = {

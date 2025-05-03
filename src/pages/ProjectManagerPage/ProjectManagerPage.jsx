@@ -10,7 +10,7 @@ import ProjectRoots from './ProjectRoots'
 import NewProjectDialog from './NewProjectDialog'
 
 import { selectProject } from '@state/context'
-import { useDeleteProjectMutation, useUpdateProjectMutation } from '@queries/project/updateProject'
+import { useDeleteProjectMutation, useUpdateProjectMutation } from '@shared/api'
 import TeamsPage from '../TeamsPage'
 import ProjectManagerPageContainer from './ProjectManagerPageContainer'
 import ProjectManagerPageLayout from './ProjectManagerPageLayout'

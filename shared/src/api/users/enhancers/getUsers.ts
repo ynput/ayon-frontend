@@ -21,7 +21,7 @@ const USER_BY_NAME_QUERY = `
           accessGroups
           defaultAccessGroups
           hasPassword
-          allAttribs
+          allAttrib
         }
       }
     }
@@ -46,7 +46,7 @@ const USERS_QUERY = `
           createdAt
           updatedAt
           apiKeyPreview
-          allAttribs
+          allAttrib
         }
       }
     }
@@ -102,7 +102,7 @@ const injectedApi = api.injectEndpoints({
           self: e.node.name === selfName,
           avatarUrl: `/api/users/${e.node.name}/avatar`,
           accessGroups: e.node.accessGroups ? JSON.parse(e.node.accessGroups) : {},
-          attrib: parseAttribs(e.node.allAttribs),
+          attrib: parseAttribs(e.node.allAttrib),
         }))
       },
       providesTags: (users) =>
@@ -132,7 +132,7 @@ const injectedApi = api.injectEndpoints({
         res?.data?.users.edges.map((e: any) => ({
           ...e.node,
           avatarUrl: `/api/users/${e.node?.name}/avatar`,
-          attrib: parseAttribs(e.node.allAttribs),
+          attrib: parseAttribs(e.node.allAttrib),
         })),
       providesTags: (res) =>
         res

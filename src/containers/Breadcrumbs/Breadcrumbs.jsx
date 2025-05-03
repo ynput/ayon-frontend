@@ -5,7 +5,7 @@ import { Button, InputText } from '@ynput/ayon-react-components'
 import * as Styled from './Breadcrumbs.styled'
 
 import { upperFirst } from 'lodash'
-import copyToClipboard from '@helpers/copyToClipboard'
+import { copyToClipboard } from '@shared/util'
 import { useURIContext } from '@context/uriContext'
 import { ayonUrlParam } from '@/constants'
 import clsx from 'clsx'

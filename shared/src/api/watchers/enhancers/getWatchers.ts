@@ -1,6 +1,5 @@
-import { api, GetEntityWatchersApiArg } from '@api/rest/watchers'
+import { api, GetEntityWatchersApiArg } from '../watchers'
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
-import { $Any } from '@types'
 
 const enhancedApi = api.enhanceEndpoints({
   endpoints: {
@@ -116,7 +115,7 @@ const injectedApi2 = injectedApi.injectEndpoints({
           })
 
           await queryFulfilled
-        } catch (error: $Any) {
+        } catch (error: any) {
           const message = `Error: ${error?.error?.data?.detail}` as any
           console.error(message, error)
           patches.forEach((patch) => patch?.undo())
@@ -130,5 +129,7 @@ const injectedApi2 = injectedApi.injectEndpoints({
     }),
   }),
 })
+
+export { injectedApi2 as watchersApi }
 
 export const { useGetEntitiesWatchersQuery, useSetEntitiesWatchersMutation } = injectedApi2

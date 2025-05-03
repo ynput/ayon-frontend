@@ -3,11 +3,11 @@ import PropTypes from 'prop-types'
 import { useState } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import { Panel, LockedInput, Icon } from '@ynput/ayon-react-components'
-import { useUpdateUserAPIKeyMutation } from '@shared/api/user/updateUser'
+import { useUpdateUserAPIKeyMutation } from '@shared/api'
 import { toast } from 'react-toastify'
 import styled from 'styled-components'
 import { confirmDelete } from '@shared/util'
-import copyToClipboard from '@helpers/copyToClipboard'
+import { copyToClipboard } from '@shared/util'
 
 const PanelStyled = styled(Panel)`
   flex-direction: row;

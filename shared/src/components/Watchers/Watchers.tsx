@@ -1,5 +1,4 @@
-import { useGetEntitiesWatchersQuery, useSetEntitiesWatchersMutation } from '@queries/watchers'
-import { $Any } from '@types'
+import { useGetEntitiesWatchersQuery, useSetEntitiesWatchersMutation } from '@shared/api'
 import { DropdownRef, WatcherSelect, WatcherSelectProps } from '@ynput/ayon-react-components'
 import { forwardRef } from 'react'
 import { useSelector } from 'react-redux'
@@ -13,7 +12,7 @@ interface WatchersProps extends Omit<WatcherSelectProps, 'currentUser' | 'value'
 
 export const Watchers = forwardRef<DropdownRef, WatchersProps>(
   ({ entities, entityType, onWatchersUpdate, ...props }, ref) => {
-    const user = useSelector((state: $Any) => state.user.name)
+    const user = useSelector((state: any) => state.user.name)
 
     const entitiesQuery = entities.map((entity) => ({
       entityId: entity.id,

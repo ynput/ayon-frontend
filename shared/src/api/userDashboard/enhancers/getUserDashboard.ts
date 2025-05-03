@@ -1,5 +1,4 @@
-import { GetKanbanProjectUsersQuery, GetKanbanQuery } from '@shared/api'
-import api from '@shared/api'
+import api, { GetKanbanProjectUsersQuery, GetKanbanQuery } from '../../../client'
 import { api as getProjectApi, ProjectModel } from '../../project'
 import { PubSub } from '@shared/util'
 import convertAccessGroupsData, { AccessGroups } from './convertAccessGroupsData'

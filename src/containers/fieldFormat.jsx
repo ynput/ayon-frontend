@@ -2,7 +2,7 @@
 import styled from 'styled-components'
 import { useSelector } from 'react-redux'
 import { OverflowField } from '@ynput/ayon-react-components'
-import copyToClipboard from '@helpers/copyToClipboard'
+import { copyToClipboard } from '@shared/util'
 
 // Attributes
 

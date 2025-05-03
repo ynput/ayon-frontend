@@ -1,6 +1,6 @@
 import Slicer from '@containers/Slicer'
 import TasksProgress from '@containers/TasksProgress'
-import { useGetProjectQuery } from '@queries/project/getProject'
+import { useGetProjectQuery } from '@shared/api'
 import { Section } from '@ynput/ayon-react-components'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { FC } from 'react'

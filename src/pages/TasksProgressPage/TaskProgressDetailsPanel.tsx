@@ -2,9 +2,8 @@
 // we do this so that focused changes do not re-render the entire page
 
 import { useAppDispatch, useAppSelector } from '@state/store'
-import DetailsPanel from '@containers/DetailsPanel/DetailsPanel'
-import DetailsPanelSlideOut from '@containers/DetailsPanel/DetailsPanelSlideOut/DetailsPanelSlideOut'
-import { useGetUsersAssigneeQuery } from '@queries/user/getUsers'
+import { DetailsPanel, DetailsPanelSlideOut } from '@shared/containers'
+import { useGetUsersAssigneeQuery } from '@shared/api'
 import { $Any } from '@types'
 import { openViewer } from '@state/viewer'
 import { useScopedDetailsPanel } from '@shared/context'

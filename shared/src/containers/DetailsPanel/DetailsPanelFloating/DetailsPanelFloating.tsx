@@ -14,24 +14,9 @@ import { buildDetailsPanelTitles } from '../helpers/buildDetailsPanelTitles'
 import { productTypes } from '@shared/util'
 import { useDetailsPanelContext } from '@shared/context'
 
-type Entity = {
-  id: string
-  name: string
-  label: string
-  title: string
-  subTitle: string
-  icon: string
-  updatedAt: string
-  entityType: string
-  users: string[]
-  tags: string[]
-  status: string
-  projectName: string
-}
-
 export interface DetailsPanelFloatingProps {}
 
-const DetailsPanelFloating: FC<DetailsPanelFloatingProps> = () => {
+export const DetailsPanelFloating: FC<DetailsPanelFloatingProps> = () => {
   // TODO: fix this
   const { pip } = useDetailsPanelContext()
   const entityType = pip?.entityType

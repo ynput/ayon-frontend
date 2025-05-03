@@ -1,4 +1,4 @@
-import { api, GetTasksByParentQuery, GetTasksListQuery } from '@shared/client'
+import { api, GetTasksByParentQuery, GetTasksListQuery } from '../../../client'
 import { QueryTasksFoldersApiArg, api as foldersApi } from '../../folders'
 import { EditorTaskNode } from '@shared/containers/ProjectTreeTable'
 import {

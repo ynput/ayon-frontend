@@ -2,11 +2,14 @@
 // add icons
 // add thumbnailUrl
 
-import { KanbanNode } from '@shared/api'
-import { GetKanbanResponse } from '@queries/userDashboard/getUserDashboard'
+import type {
+  GetKanbanResponse,
+  KanbanNode,
+  Status,
+  TaskType,
+  AttributeEnumItem,
+} from '@shared/api'
 import { $Any } from '@/types'
-import { Status, TaskType } from '@api/rest/project'
-import { AttributeEnumItem } from '@api/rest/attributes'
 
 type ProjectsInfo = {
   [key: string]: $Any

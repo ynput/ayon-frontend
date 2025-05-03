@@ -1,9 +1,8 @@
 // mainly just a wrapper for data fetching
 
 import { useMemo } from 'react'
-import DetailsPanel from '@containers/DetailsPanel/DetailsPanel'
-import { useGetUsersAssigneeQuery } from '@queries/user/getUsers'
-import DetailsPanelSlideOut from '@containers/DetailsPanel/DetailsPanelSlideOut/DetailsPanelSlideOut'
+import { DetailsPanel, DetailsPanelSlideOut } from '@shared/containers'
+import { useGetUsersAssigneeQuery } from '@shared/api'
 import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 import { useAppDispatch } from '@state/store'

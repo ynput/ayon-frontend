@@ -45,9 +45,9 @@ export type FeedContextProps = {
   userFullName: string
 
   // annotations
-  annotations: Record<string, any>
-  removeAnnotation: (id: string) => void
-  exportAnnotationComposite: (id: string) => Promise<Blob | null>
+  annotations?: Record<string, any>
+  removeAnnotation?: (id: string) => void
+  exportAnnotationComposite?: (id: string) => Promise<Blob | null>
   // editingId state and functions
   editingId: EditingState
   setEditingId: (id: EditingState) => void

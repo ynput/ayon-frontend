@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { toast } from 'react-toastify'
 import { InputText, FormLayout, FormRow, Dialog, SaveButton } from '@ynput/ayon-react-components'
-import { useUpdateUserNameMutation } from '@shared/api/user/updateUser'
+import { useUpdateUserNameMutation } from '@shared/api'
 import InfoMessage from '@components/InfoMessage'
 
 type RenameUserDialogProps = {

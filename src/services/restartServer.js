@@ -1,4 +1,4 @@
-import PubSub from '../../shared/src/util/pubsub'
+import { PubSub } from '@shared/util'
 import api from '@shared/api'
 
 const restartServer = api.injectEndpoints({

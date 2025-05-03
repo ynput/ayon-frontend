@@ -1,6 +1,6 @@
 import { Button, Icon, theme } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
-import { FileThumbnail } from '@shared/components'
+import { FileThumbnail } from '../FileThumbnail'
 
 export const Card = styled.div`
   display: flex;

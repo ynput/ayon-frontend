@@ -3,8 +3,8 @@ import { Column } from 'primereact/column'
 import { TablePanel, Section, Button } from '@ynput/ayon-react-components'
 
 import { TimestampField } from '@containers/fieldFormat'
-import { useGetUserSessionsQuery } from '@queries/user/getUsers'
-import { useInvalidateUserSessionMutation } from '@shared/api/user/updateUser'
+import { useGetUserSessionsQuery } from '@shared/api'
+import { useInvalidateUserSessionMutation } from '@shared/api'
 
 const SessionList = ({ userName }) => {
   const {

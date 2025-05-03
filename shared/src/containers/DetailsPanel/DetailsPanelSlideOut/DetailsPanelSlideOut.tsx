@@ -1,15 +1,15 @@
 import * as Styled from './DetailsPanelSlideOut.styled'
 import { useGetUsersAssigneeQuery } from '@shared/api'
-import DetailsPanel from '../DetailsPanel'
+import { DetailsPanel } from '../DetailsPanel'
 import { useDetailsPanelContext } from '@shared/context'
 import type { ProjectModel } from '@shared/api'
 
-type DetailsPanelSlideOutProps = {
+export type DetailsPanelSlideOutProps = {
   projectsInfo: Record<string, ProjectModel>
   scope: string
 }
 
-const DetailsPanelSlideOut = ({ projectsInfo, scope }: DetailsPanelSlideOutProps) => {
+export const DetailsPanelSlideOut = ({ projectsInfo, scope }: DetailsPanelSlideOutProps) => {
   const { slideOut, onOpenViewer } = useDetailsPanelContext()
   const { entityType, entityId, projectName } = slideOut || {}
   const isSlideOutOpen = !!entityType && !!entityId && !!projectName
@@ -43,5 +43,3 @@ const DetailsPanelSlideOut = ({ projectsInfo, scope }: DetailsPanelSlideOutProps
     </Styled.SlideOut>
   )
 }
-
-export default DetailsPanelSlideOut

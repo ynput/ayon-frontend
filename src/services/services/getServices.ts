@@ -1,4 +1,4 @@
-import { AddonList } from '@api/rest/addons'
+import type { AddonList } from '@shared/api'
 import { api } from '@api/rest/services'
 
 const enhancedServicesApi = api.enhanceEndpoints({

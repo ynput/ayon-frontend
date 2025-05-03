@@ -23,14 +23,12 @@ import { selectProgress } from '@state/progress'
 import { setFocusedTasks } from '@state/context'
 
 // Types
-import type { Status, TaskType } from '@api/rest/project'
 import type {
   FolderRow,
   TaskTypeRow,
   TaskTypeStatusBar,
 } from '../../helpers/formatTaskProgressForTable'
-import type { Assignees } from '@queries/user/getUsers'
-import { AttributeEnumItem } from '@api/rest/attributes'
+import type { Assignees, Status, TaskType, AttributeEnumItem } from '@shared/api'
 
 // Hooks
 import { useEffect, useState, type KeyboardEvent, type MouseEvent } from 'react'

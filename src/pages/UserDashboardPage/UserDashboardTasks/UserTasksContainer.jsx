@@ -2,25 +2,24 @@ import { useDispatch, useSelector } from 'react-redux'
 import {
   useGetKanbanProjectUsersQuery,
   useGetKanbanQuery,
-} from '@queries/userDashboard/getUserDashboard'
+  useGetAttributeConfigQuery,
+} from '@shared/api'
+import { DetailsPanel, DetailsPanelSlideOut } from '@shared/containers'
+import { filterProjectStatuses } from '@shared/hooks'
+import { getPriorityOptions } from '@shared/util'
+import { useScopedDetailsPanel } from '@shared/context'
+import { EmptyPlaceholder } from '@shared/components'
 
 import UserDashboardKanBan from './UserDashboardKanBan'
 import { useEffect, useMemo } from 'react'
 import { onAssigneesChanged } from '@state/dashboard'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
-import DetailsPanel from '@containers/DetailsPanel/DetailsPanel'
 import { getIntersectionFields, getMergedFields } from '../util'
 import { setUri } from '@state/context'
-import DetailsPanelSlideOut from '@containers/DetailsPanel/DetailsPanelSlideOut/DetailsPanelSlideOut'
-import EmptyPlaceholder from '@shared/components/EmptyPlaceholder'
 import transformKanbanTasks from './transformKanbanTasks'
 import styled from 'styled-components'
 import clsx from 'clsx'
-import { filterProjectStatuses } from '@hooks/useScopedStatuses'
-import { useGetAttributeConfigQuery } from '@queries/attributes/getAttributes'
-import { getPriorityOptions } from '@pages/TasksProgressPage/helpers'
 import { openViewer } from '@state/viewer'
-import { useScopedDetailsPanel } from '@shared/context'
 
 const StyledSplitter = styled(Splitter)`
   .details-panel-splitter {

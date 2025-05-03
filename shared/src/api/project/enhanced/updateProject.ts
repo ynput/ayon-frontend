@@ -1,6 +1,8 @@
-import api from '@shared/api'
+// @ts-nocheck
 
-const updateProject = api.injectEndpoints({
+import api from './getProject'
+
+export const projectApi = api.injectEndpoints({
   endpoints: (build) => ({
     createProject: build.mutation({
       query: ({ name, code, anatomy, library }) => ({
@@ -70,4 +72,4 @@ export const {
   useUpdateProjectAnatomyMutation,
   useUpdateProjectMutation,
   useUpdateProjectUsersMutation,
-} = updateProject
+} = projectApi

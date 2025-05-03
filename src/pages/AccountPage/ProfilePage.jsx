@@ -9,10 +9,7 @@ import {
   InputText,
   InputSwitch,
 } from '@ynput/ayon-react-components'
-import {
-  useUpdateUserMutation,
-  useSetFrontendPreferencesMutation,
-} from '@shared/api/user/updateUser'
+import { useUpdateUserMutation, useSetFrontendPreferencesMutation } from '@shared/api'
 import Avatar from '@components/Avatar/Avatar'
 import styled from 'styled-components'
 import UserAttribForm from '../SettingsPage/UsersSettings/UserAttribForm'

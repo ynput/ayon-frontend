@@ -1,5 +1,5 @@
 import { Filter } from '@components/SearchFilter/types'
-import { useSetFrontendPreferencesMutation } from '@shared/api/user/updateUser'
+import { useSetFrontendPreferencesMutation } from '@shared/api'
 import { useAppSelector } from '@state/store'
 
 interface UseUserFiltersProps {

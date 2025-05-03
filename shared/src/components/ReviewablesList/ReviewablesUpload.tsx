@@ -13,7 +13,7 @@ import { ReviewableProgress, ReviewableProgressCard } from '@shared/components'
 import * as Styled from './ReviewablesUpload.styled'
 import { useDetailsPanelContext } from '@shared/context'
 
-interface ReviewableUploadProps {
+export interface ReviewableUploadProps {
   projectName: string | null
   versionId: string
   productId: string | null
@@ -22,7 +22,7 @@ interface ReviewableUploadProps {
   children?: any
 }
 
-const ReviewableUpload: FC<ReviewableUploadProps> = ({
+export const ReviewableUpload: FC<ReviewableUploadProps> = ({
   projectName,
   versionId,
   productId,

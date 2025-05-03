@@ -2,7 +2,7 @@ import { useGetFolderListQuery } from '@shared/api'
 import { PathSegment } from '@components/EntityPath/EntityPath'
 import { useMemo } from 'react'
 import getEntityPathData from '../helpers/getEntityPathData'
-import { useGetProductVersionsQuery } from '@queries/entity/getEntity'
+import { useGetProductVersionsQuery } from '@shared/api'
 import {
   DetailsPanelEntityData,
   DetailsPanelEntityType,

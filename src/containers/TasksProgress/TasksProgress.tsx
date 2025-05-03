@@ -11,20 +11,20 @@ import {
   getPlaceholderMessage,
 } from './helpers'
 import { useRootFolders } from './hooks'
-import { useGetAllProjectUsersAsAssigneeQuery } from '@queries/user/getUsers'
-import { FolderType, Status, TaskType } from '@api/rest/project'
+// shared
+import { useGetAllProjectUsersAsAssigneeQuery, useUpdateEntitiesMutation } from '@shared/api'
+import type { FolderType, Status, TaskType, AttributeEnumItem } from '@shared/api'
+import { EmptyPlaceholder } from '@shared/components'
+import { SelectionData, SliceType } from '@shared/containers'
 import { TaskFieldChange, TasksProgressTable } from './components'
 // state
 import { setFocusedTasks } from '@state/context'
 import { useAppDispatch } from '@state/store'
-import { useUpdateEntitiesMutation } from '@queries/entity/updateEntity'
 import { toast } from 'react-toastify'
 import { Button, Filter, Section, ShortcutTag, Spacer, Toolbar } from '@ynput/ayon-react-components'
 import Shortcuts from '@containers/Shortcuts'
 import { openViewer } from '@state/viewer'
-import EmptyPlaceholder from '@shared/components/EmptyPlaceholder'
 import './styles.scss'
-import { AttributeEnumItem } from '@api/rest/attributes'
 import SearchFilterWrapper from '@components/SearchFilter/SearchFilterWrapper'
 import formatFilterAttributesData from './helpers/formatFilterAttributesData'
 import formatFilterTagsData from './helpers/formatFilterTagsData'
@@ -38,7 +38,6 @@ import { isEmpty } from 'lodash'
 import { RowSelectionState } from '@tanstack/react-table'
 import { useFiltersWithHierarchy } from '@components/SearchFilter/hooks'
 import useUserFilters from '@hooks/useUserFilters'
-import { SelectionData, SliceType } from '@shared/containers/Slicer'
 
 // what to search by
 const searchFilterTypes: FilterFieldType[] = [

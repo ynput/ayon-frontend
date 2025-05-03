@@ -1,5 +1,5 @@
 import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
-import { api, ListProjectsApiResponse } from '@api/rest/project'
+import { api, ListProjectsApiResponse } from '../project'
 
 type listProjectsResult = NonNullable<ListProjectsApiResponse['projects']>
 

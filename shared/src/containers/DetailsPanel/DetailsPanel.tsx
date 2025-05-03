@@ -1,25 +1,21 @@
 import { Button, Panel } from '@ynput/ayon-react-components'
 import React, { useEffect, useMemo } from 'react'
-import DetailsPanelHeader from './DetailsPanelHeader/DetailsPanelHeader'
-import { useGetEntitiesDetailsPanelQuery } from '@queries/entity/getEntityPanel'
-import DetailsPanelAttributes from '@pages/UserDashboardPage/UserDashboardTasks/DetailsPanelAttributes/DetailsPanelAttributes'
-import DetailsPanelFiles from './DetailsPanelFiles'
 import * as Styled from './DetailsPanel.styled'
-import EntityPath from '@components/EntityPath'
-import { Watchers } from '@containers/Watchers/Watchers'
-import Shortcuts from '@containers/Shortcuts'
-import useGetEntityPath from './hooks/useGetEntityPath'
+
+// shared
+import { useGetEntitiesDetailsPanelQuery, detailsPanelEntityTypes } from '@shared/api'
+import type { ProjectModel, Tag, DetailsPanelEntityType } from '@shared/api'
+import { DetailsPanelAttributes, EntityPath, Watchers } from '@shared/components'
 import { usePiPWindow } from '@shared/context/pip/PiPProvider'
+import { productTypes } from '@shared/util'
+import { useDetailsPanelContext, useScopedDetailsPanel } from '@shared/context'
+
+import DetailsPanelHeader from './DetailsPanelHeader/DetailsPanelHeader'
+import DetailsPanelFiles from './DetailsPanelFiles'
+import useGetEntityPath from './hooks/useGetEntityPath'
 import getAllProjectStatuses from './helpers/getAllProjectsStatuses'
 import FeedWrapper from './FeedWrapper'
 import mergeProjectInfo from './helpers/mergeProjectInfo'
-import { productTypes } from '@shared/util'
-import {
-  DetailsPanelEntityType,
-  detailsPanelEntityTypes,
-} from '@queries/entity/transformDetailsPanelData'
-import { ProjectModel, Tag } from '@api/rest/project'
-import { useDetailsPanelContext, useScopedDetailsPanel } from '@shared/context'
 
 export const entitiesWithoutFeed = ['product', 'representation']
 
@@ -44,9 +40,13 @@ export type DetailsPanelProps = {
   onClose?: () => void
   onWatchersUpdate?: (added: any[], removed: any[]) => void
   onOpenViewer?: (entity: any) => void
+  // annotations
+  annotations?: any
+  removeAnnotation?: (id: string) => void
+  exportAnnotationComposite?: (id: string) => Promise<Blob | null>
 }
 
-const DetailsPanel = ({
+export const DetailsPanel = ({
   entityType,
   entitySubTypes,
   // entities is data we already have from kanban
@@ -67,6 +67,10 @@ const DetailsPanel = ({
   onClose,
   onWatchersUpdate,
   onOpenViewer,
+  // annotations
+  annotations,
+  removeAnnotation,
+  exportAnnotationComposite,
 }: DetailsPanelProps) => {
   const { closeSlideOut, openPip } = useDetailsPanelContext()
   const { currentTab, setTab, isFeed } = useScopedDetailsPanel(scope)
@@ -157,15 +161,21 @@ const DetailsPanel = ({
     isLoading: isFetchingEntitiesDetails,
   })
 
-  const shortcuts = useMemo(
-    () => [
-      {
-        key: 'Escape',
-        action: () => onClose && onClose(),
-      },
-    ],
-    [onClose],
-  )
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger if we're in an input element
+      const target = e.target as HTMLElement
+      const isInputElement =
+        ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName) || target.isContentEditable
+
+      if (e.key === 'Escape' && !isInputElement && onClose) {
+        onClose()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [onClose])
 
   const { requestPipWindow } = usePiPWindow()
 
@@ -180,9 +190,6 @@ const DetailsPanel = ({
 
   return (
     <>
-      {/* @ts-expect-error - Shortcuts is not TS yet */}
-      <Shortcuts shortcuts={shortcuts || []} deps={[]} />
-
       <Panel
         style={{
           gap: 0,
@@ -258,6 +265,9 @@ const DetailsPanel = ({
             scope={scope}
             statuses={allStatuses}
             readOnly={false}
+            annotations={annotations}
+            removeAnnotation={removeAnnotation}
+            exportAnnotationComposite={exportAnnotationComposite}
           />
         )}
         {currentTab === 'files' && (
@@ -277,5 +287,3 @@ const DetailsPanel = ({
     </>
   )
 }
-
-export default DetailsPanel

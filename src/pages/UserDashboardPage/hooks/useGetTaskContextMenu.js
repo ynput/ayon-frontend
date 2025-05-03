@@ -1,5 +1,5 @@
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
-import copyToClipboard from '@helpers/copyToClipboard'
+import { copyToClipboard } from '@shared/util'
 import { onTaskSelected } from '@state/dashboard'
 import { useSelector } from 'react-redux'
 import useOpenTaskInViewer from './useOpenTaskInViewer'

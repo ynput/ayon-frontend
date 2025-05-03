@@ -1,5 +1,5 @@
 import { api } from '@api/rest/accessGroups'
-import { api as projectApi } from '@api/rest/project'
+import { projectApi } from '@shared/api'
 import { $Any } from '@types'
 
 export type ProjectUserData = {

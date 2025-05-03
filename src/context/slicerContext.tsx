@@ -8,13 +8,12 @@ import {
 } from 'react'
 import { ExpandedState, RowSelectionState } from '@tanstack/react-table'
 import useSlicerReduxSync from '@containers/Slicer/hooks/useSlicerReduxSync'
-import { useLoadModule } from '@shared/hooks/useLoadModule'
-import { ProjectModel } from '@api/rest/project'
-import { Assignees } from '@queries/user/getUsers'
+import { useLoadModule } from '@shared/hooks'
+import type { ProjectModel, Assignees } from '@shared/api'
+import { SelectionData, SliceType } from '@shared/containers'
 import { TableRow } from '@containers/Slicer/types'
 import SlicerDropdownFallback, { SlicerDropdownProps } from '@containers/Slicer/SlicerDropdown'
 import { DropdownRef } from '@ynput/ayon-react-components'
-import { SelectionData, SliceType } from '@shared/containers/Slicer'
 
 export type OnSliceTypeChange = (
   sliceType: SliceType,
