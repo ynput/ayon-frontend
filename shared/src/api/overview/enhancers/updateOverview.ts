@@ -309,25 +309,27 @@ export const patchDetailsPanelEntity = (
   cleanUndefined(detailsPanelData as Record<string, any>)
 
   const newData: DeepPartial<DetailsPanelEntityData> = {
+    ...draft,
     ...detailsPanelData,
-    ...operationData,
     attrib: {
+      ...(draft?.attrib || {}),
       ...detailsPanelData.attrib,
-      ...(operationData?.attrib || {}),
     },
     folder: {
+      ...(draft?.folder || {}),
       ...detailsPanelData.folder,
-      ...(operationData?.folder || {}),
     },
     task: {
+      ...(draft?.task || {}),
       ...detailsPanelData.task,
-      ...(operationData?.task || {}),
     },
     version: {
+      ...(draft?.version || {}),
       ...detailsPanelData.version,
-      ...(operationData?.version || {}),
     },
   }
+
+  console.log(current(draft), newData)
 
   // patch data onto the entity
   Object.assign(draft, newData)

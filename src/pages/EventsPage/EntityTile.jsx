@@ -4,7 +4,7 @@ import { Panel } from '@ynput/ayon-react-components'
 import styled, { css } from 'styled-components'
 import StatusField from '@components/status/statusField'
 import { useGetEventTileQuery } from '@shared/api'
-import { useGetProjectQuery } from '@shared/api'
+import { useGetProjectQuery } from '@queries/project/enhancedProject'
 import { formatDistance } from 'date-fns'
 import { useSelector } from 'react-redux'
 

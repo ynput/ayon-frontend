@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { useGetProjectQuery, useUpdateProjectMutation } from '@shared/api'
+import { useUpdateProjectMutation } from '@shared/api'
+import { useGetProjectQuery } from '@queries/project/enhancedProject'
 import DashboardPanelWrapper from '../DashboardPanelWrapper'
 import AttributeTable from '@containers/attributeTable'
 import { format } from 'date-fns'

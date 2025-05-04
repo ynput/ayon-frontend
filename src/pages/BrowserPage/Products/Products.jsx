@@ -679,7 +679,7 @@ const Products = () => {
         onContextMenu={handleTablePanelContext}
         onKeyDown={handleKeyDown}
       >
-        <EntityDetail
+        <DetailsDialog
           projectName={projectName}
           entityType={showDetail || 'product'}
           entityIds={showDetail === 'product' ? focusedProducts : focusedVersions}

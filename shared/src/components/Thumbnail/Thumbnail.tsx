@@ -4,9 +4,9 @@ import clsx from 'clsx'
 import * as Styled from './Thumbnail.styled'
 
 export interface ThumbnailProps extends HTMLAttributes<HTMLDivElement> {
-  projectName: string
-  entityType: string
-  entityId: string
+  projectName?: string
+  entityType?: string
+  entityId?: string
   icon?: string | null
   entityUpdatedAt?: string
   isLoading?: boolean
@@ -19,9 +19,9 @@ export interface ThumbnailProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 export const Thumbnail = ({
-  projectName,
-  entityType,
-  entityId,
+  projectName = '',
+  entityType = '',
+  entityId = '',
   icon,
   entityUpdatedAt,
   isLoading,

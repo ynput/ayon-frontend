@@ -46,11 +46,19 @@ const StackedStyled = styled.div<StackedStyledProps>`
   }
 `
 
+type Thumbnail = {
+  id?: string
+  type?: string
+  projectName?: string
+  icon?: string
+  updatedAt?: string
+  src?: string
+}
+
 export interface StackedThumbnailsProps
   extends Omit<ThumbnailProps, 'entityType' | 'entityId' | 'projectName'> {
-  thumbnails?: any[]
+  thumbnails?: Thumbnail[]
   isLoading?: boolean
-  projectName?: string
   className?: string
   style?: React.CSSProperties
 }
@@ -58,7 +66,6 @@ export interface StackedThumbnailsProps
 export const StackedThumbnails = ({
   thumbnails = [],
   isLoading,
-  projectName,
   className,
   style,
   ...props
@@ -68,7 +75,7 @@ export const StackedThumbnails = ({
   thumbnails = thumbnails.slice(0, 5)
   const isStacking = thumbnails.length > 1
 
-  if (!thumbnails.length || !projectName) return null
+  if (!thumbnails.length) return null
 
   return (
     <StackedStyled
@@ -78,7 +85,7 @@ export const StackedThumbnails = ({
       {thumbnails.map((thumb, i) =>
         thumb ? (
           <Thumbnail
-            projectName={thumb.projectName || projectName}
+            projectName={thumb.projectName}
             entityType={thumb.type}
             entityId={thumb.id}
             icon={thumb.icon}

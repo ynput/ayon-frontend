@@ -2,7 +2,7 @@ import React, { Fragment } from 'react'
 import { useSelector } from 'react-redux'
 import DashboardPanelWrapper from './DashboardPanelWrapper'
 import ProjectLatestRow from './ProjectLatestRow'
-import { useGetProjectQuery } from '@shared/api'
+import { useGetProjectQuery } from '@queries/project/enhancedProject'
 import { useURIContext } from '@context/uriContext'
 
 const ProjectLatest = ({ projectName }) => {

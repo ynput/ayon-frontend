@@ -268,7 +268,7 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
   return (
     <Section style={style}>
       <TablePanel>
-        <EntityDetail
+        <DetailsDialog
           projectName={projectName}
           entityType="task"
           entityIds={focusedTasks}

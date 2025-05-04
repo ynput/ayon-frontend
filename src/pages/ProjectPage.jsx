@@ -12,7 +12,7 @@ import TasksProgressPage from './TasksProgressPage'
 
 import usePubSub from '@hooks/usePubSub'
 import { selectProject } from '@state/project'
-import { useGetProjectQuery } from '@shared/api'
+import { useGetProjectQuery } from '@queries/project/enhancedProject'
 import { useGetProjectAddonsQuery } from '@shared/api'
 import { TabPanel, TabView } from 'primereact/tabview'
 import AppNavLinks from '@containers/header/AppNavLinks'
