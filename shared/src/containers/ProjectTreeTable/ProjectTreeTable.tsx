@@ -18,8 +18,6 @@ import {
   Table,
   Header,
   HeaderGroup,
-  ExpandedState,
-  SortingState,
 } from '@tanstack/react-table'
 
 // Utility imports
@@ -35,7 +33,7 @@ import HeaderActionButton from './components/HeaderActionButton'
 import EmptyPlaceholder from '../../components/EmptyPlaceholder'
 
 // Context imports
-import { CellEditingProvider, useCellEditing } from './context/CellEditingContext'
+import { useCellEditing } from './context/CellEditingContext'
 import { ROW_SELECTION_COLUMN_ID, useSelectionContext } from './context/SelectionContext'
 import { ClipboardProvider } from './context/ClipboardContext'
 import { useSelectedRowsContext } from './context/SelectedRowsContext'
@@ -72,7 +70,7 @@ const getCommonPinningStyles = (column: Column<TableRow, unknown>): CSSPropertie
   }
 }
 
-type Props = {
+interface Props extends React.HTMLAttributes<HTMLDivElement> {
   projectName: string
   scope: string
   options: BuiltInFieldOptions
@@ -83,6 +81,11 @@ type Props = {
   foldersMap: FolderNodeMap
   fetchMoreOnBottomReached: (element: HTMLDivElement | null) => void
   onOpenNew?: (type: 'folder' | 'task') => void
+  // pass through props
+  pt?: {
+    container?: React.HTMLAttributes<HTMLDivElement>
+    head?: Partial<TableHeadProps>
+  }
 }
 
 // Component to wrap with all providers
@@ -118,6 +121,8 @@ const FlexTable = ({
   sliceId,
   fetchMoreOnBottomReached,
   onOpenNew,
+  pt,
+  ...props
 }: Props) => {
   const {
     columnVisibility,
@@ -258,12 +263,13 @@ const FlexTable = ({
   )
 
   return (
-    <Styled.TableWrapper>
+    <Styled.TableWrapper {...props}>
       <Styled.TableContainer
         ref={tableContainerRef}
         style={{ height: '100%', padding: 0 }}
         onScroll={(e) => fetchMoreOnBottomReached(e.currentTarget)}
-        className="table-container"
+        {...pt?.container}
+        className={clsx('table-container', pt?.container?.className)}
       >
         <table
           style={{
@@ -281,6 +287,7 @@ const FlexTable = ({
             virtualPaddingRight={virtualPaddingRight}
             isLoading={isLoading}
             readOnlyColumns={readOnlyColumns}
+            {...pt?.head}
           />
           <TableBody
             columnVirtualizer={columnVirtualizer}
@@ -298,7 +305,7 @@ const FlexTable = ({
   )
 }
 
-interface TableHeadProps {
+interface TableHeadProps extends React.HTMLAttributes<HTMLTableSectionElement> {
   columnVirtualizer: Virtualizer<HTMLDivElement, HTMLTableCellElement>
   table: Table<TableRow>
   virtualPaddingLeft: number | undefined
@@ -314,9 +321,10 @@ const TableHead = ({
   virtualPaddingRight,
   isLoading,
   readOnlyColumns,
+  ...props
 }: TableHeadProps) => {
   return (
-    <Styled.TableHeader>
+    <Styled.TableHeader {...props}>
       {table.getHeaderGroups().map((headerGroup) => (
         <TableHeadRow
           key={headerGroup.id}
