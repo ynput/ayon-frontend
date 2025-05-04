@@ -4,7 +4,7 @@ import { Column } from 'primereact/column'
 
 import { Icon, TablePanel } from '@ynput/ayon-react-components'
 
-import useCreateContextMenu from '@shared/ContextMenu/useCreateContextMenu'
+import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import styled from 'styled-components'
 import clsx from 'clsx'
 import useTableLoadingData from '@hooks/useTableLoadingData'

@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import axios from 'axios'
 import { toast } from 'react-toastify'
-import UserImage from '@components/UserImage'
+import UserImage from '@shared/components/UserImage'
 import * as Styled from './Avatar.styled'
 
 const Avatar = ({ user }) => {

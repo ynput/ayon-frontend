@@ -1,14 +1,17 @@
 import React from 'react'
 import * as Styled from './Actions.styled'
+import { useState } from 'react'
 import clsx from 'clsx'
 import { toast } from 'react-toastify'
-import { useMemo } from 'react'
+import { useMemo, useEffect } from 'react'
 import { useExecuteActionMutation, useGetActionsFromContextQuery } from '@/services/actions/actions'
 import ActionsDropdown from '@/components/ActionsDropdown/ActionsDropdown'
 import ActionIcon from './ActionIcon'
 import customProtocolCheck from 'custom-protocol-check'
 import { useLocation, useNavigate } from 'react-router'
 import useActionTriggers from '@/hooks/useActionTriggers'
+import ActionConfigDialog from './ActionConfigDialog'
+import InteractiveActionDialog from './InteractiveActionDialog'
 
 const placeholder = {
   identifier: 'placeholder',
@@ -19,6 +22,8 @@ const placeholder = {
 const Actions = ({ entities, entityType, entitySubTypes, isLoadingEntity }) => {
   // special triggers the actions can make to perform stuff on the client
   const { handleActionPayload } = useActionTriggers()
+  const [actionBeingConfigured, setActionBeingConfigured] = useState(null)
+  const [interactiveForm, setInteractiveForm] = useState(null)
 
   const context = useMemo(() => {
     if (!entities.length) return null
@@ -42,6 +47,11 @@ const Actions = ({ entities, entityType, entitySubTypes, isLoadingEntity }) => {
       entitySubtypes: entitySubTypesToUse,
     }
   }, [entities, entityType])
+
+
+  useEffect(() => {
+    setInteractiveForm(null)
+  }, [context])
 
   const { data, isFetching: isFetchingActions } = useGetActionsFromContextQuery(
     { mode: 'simple', actionContext: context },
@@ -97,6 +107,7 @@ const Actions = ({ entities, entityType, entitySubTypes, isLoadingEntity }) => {
         value: action.identifier,
         label: action.label,
         icon: action.icon,
+        hasConfig: !!action.configFields,
       }))
 
       options.push(...groupOptions)
@@ -147,7 +158,7 @@ const Actions = ({ entities, entityType, entitySubTypes, isLoadingEntity }) => {
     useExecuteActionMutation()
   const executingAction = isLoadingExecution && originalArgs?.identifier
 
-  const handleExecuteAction = async (identifier, e) => {
+  const handleExecuteAction = async (identifier, e, formData) => {
     e?.preventDefault()
     const action = actions.find((option) => option.identifier === identifier)
 
@@ -158,30 +169,65 @@ const Actions = ({ entities, entityType, entitySubTypes, isLoadingEntity }) => {
       identifier: action.identifier,
     }
 
+    const actionContext = {...context}
+    if (formData) {
+      actionContext.formData = formData
+    }
+    
+
     try {
-      const response = await executeAction({ actionContext: context, ...params }).unwrap()
+      const response = await executeAction({ actionContext, ...params }).unwrap()
 
       if (!response.success) throw new Error('Error executing action')
 
       if (response?.uri) {
         customProtocolCheck(
           response.uri,
-          () => {},
-          () => {},
+          () => { },
+          () => { },
           2000,
         )
       }
-      toast.success(response?.message || 'Action executed successfully', { autoClose: 2000 })
 
       // Use the new hook to handle payload
       if (response?.payload) {
-        handleActionPayload(response.payload)
+
+        if ("__form" in response.payload) {
+          // action requests additional information from the user.
+          // we show a dialog with the form and when the user submits it we call the action again
+
+          // It probably does not make sense to move to the useActionTriggers hook
+          // as it need contexts and the dialog
+          const intf = {
+            fields: response.payload['__form'],
+            identifier,
+            header: response?.message || action.label,
+          }
+          setInteractiveForm(intf)
+
+        } else {
+          // normal hooks
+          toast.success(response?.message || 'Action executed successfully', { autoClose: 2000 })
+          handleActionPayload(response.payload, context)
+        }
       }
     } catch (error) {
       console.warn('Error executing action', error)
       toast.error(error || 'Error executing action')
     }
   }
+
+  const handleConfigureAction = (identifier) => {
+    const action = actions.find((data) => data.identifier === identifier)
+    if (!action) return
+    setActionBeingConfigured(action)
+  }
+
+
+  const handleSubmitInteractiveForm = async (identifier, formData) => {
+    handleExecuteAction(identifier, null, formData)
+  }
+
 
   const loadingActions = [placeholder, placeholder, placeholder]
 
@@ -208,6 +254,17 @@ const Actions = ({ entities, entityType, entitySubTypes, isLoadingEntity }) => {
         options={dropdownOptions}
         isLoading={isLoading}
         onAction={handleExecuteAction}
+        onConfig={handleConfigureAction}
+      />
+      <ActionConfigDialog
+        action={actionBeingConfigured}
+        context={context}
+        onClose={() => setActionBeingConfigured(null)}
+      />
+      <InteractiveActionDialog
+        interactiveForm={interactiveForm}
+        onClose={() => setInteractiveForm(null)}
+        onSubmit={handleSubmitInteractiveForm}
       />
     </Styled.Actions>
   )

@@ -7,7 +7,7 @@ import { useGetWorkfileListQuery } from '@queries/getWorkfiles'
 import NoEntityFound from '@components/NoEntityFound'
 import { setFocusedWorkfiles } from '@state/context'
 import { useRef } from 'react'
-import useTableKeyboardNavigation from '@containers/Feed/hooks/useTableKeyboardNavigation'
+import { useTableKeyboardNavigation } from '@shared/containers/Feed'
 
 const WorkfileList = ({ style }) => {
   const tableRef = useRef(null)

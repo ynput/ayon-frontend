@@ -1,0 +1,36 @@
+query GetActivities(
+  $projectName: String!
+  $entityIds: [String!]!
+  $after: String
+  $first: Int
+  $before: String
+  $last: Int
+  $referenceTypes: [String!]
+  $activityTypes: [String!]
+) {
+  project(name: $projectName) {
+    name
+    activities(
+      entityIds: $entityIds
+      after: $after
+      first: $first
+      before: $before
+      last: $last
+      referenceTypes: $referenceTypes
+      activityTypes: $activityTypes
+    ) {
+      pageInfo {
+        hasPreviousPage
+        hasNextPage
+        startCursor
+        endCursor
+      }
+      edges {
+        cursor
+        node {
+          ...ActivityFragment
+        }
+      }
+    }
+  }
+}

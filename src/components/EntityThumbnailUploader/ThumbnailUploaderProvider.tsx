@@ -1,6 +1,6 @@
 import { createContext, useState } from 'react'
 
-import useCreateContextMenu from '@shared/ContextMenu/useCreateContextMenu'
+import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import { $Any } from '@types'
 
 const ThumbnailUploadContext = createContext<{

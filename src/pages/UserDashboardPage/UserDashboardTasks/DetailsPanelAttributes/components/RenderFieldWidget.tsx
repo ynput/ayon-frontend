@@ -1,10 +1,10 @@
 import { FC } from 'react'
 import styled from 'styled-components'
-import { CellValue } from '@shared/ProjectTreeTable/widgets/CellWidget'
-import { TextWidget } from '@shared/ProjectTreeTable/widgets/TextWidget'
-import { BooleanWidget } from '@shared/ProjectTreeTable/widgets/BooleanWidget'
-import { DateWidget } from '@shared/ProjectTreeTable/widgets/DateWidget'
-import { EnumWidget } from '@shared/ProjectTreeTable/widgets/EnumWidget'
+import { CellValue } from '@shared/containers/ProjectTreeTable/widgets/CellWidget'
+import { TextWidget } from '@shared/containers/ProjectTreeTable/widgets/TextWidget'
+import { BooleanWidget } from '@shared/containers/ProjectTreeTable/widgets/BooleanWidget'
+import { DateWidget } from '@shared/containers/ProjectTreeTable/widgets/DateWidget'
+import { EnumWidget } from '@shared/containers/ProjectTreeTable/widgets/EnumWidget'
 import { AttributeField } from '../DetailsPanelAttributesEditor'
 
 const FieldValueText = styled.div`
@@ -100,8 +100,6 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
         // For single values, wrap in array for EnumWidget
         valueArray = [displayValue]
       }
-
-      console.log(isReadOnly)
 
       return (
         <StyledEnumWidget

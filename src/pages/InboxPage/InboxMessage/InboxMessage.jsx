@@ -4,13 +4,14 @@ import { Icon } from '@ynput/ayon-react-components'
 import { isValid } from 'date-fns'
 import { isToday } from 'date-fns'
 import { format } from 'date-fns'
-import UserImage from '@components/UserImage'
+import UserImage from '@shared/components/UserImage'
+
 import InboxMessageStatus from './InboxMessageStatus/InboxMessageStatus'
-import { getFuzzyDate } from '@components/Feed/ActivityDate'
+import { getFuzzyDate } from '@shared/containers/Feed/components/ActivityDate'
 import { useMemo } from 'react'
 import RemoveMarkdown from 'remove-markdown'
 import Typography from '@/theme/typography.module.css'
-import getEntityTypeIcon from '@helpers/getEntityTypeIcon'
+import { getEntityTypeIcon } from '@shared/util'
 
 const getMessageBody = (messages = []) => {
   const unreadMessages = messages.filter((m) => !m.isRead)

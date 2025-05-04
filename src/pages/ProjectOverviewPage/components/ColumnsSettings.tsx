@@ -3,7 +3,7 @@ import { FC, useMemo, useState } from 'react'
 import styled from 'styled-components'
 
 // Context and Components imports
-import { useColumnSettings } from '@shared/ProjectTreeTable/context/ColumnSettingsContext'
+import { useColumnSettings } from '@shared/containers/ProjectTreeTable/context/ColumnSettingsContext'
 import ColumnItem, { ColumnItemData } from './ColumnItem'
 import SortableColumnItem from './SortableColumnItem'
 
@@ -33,10 +33,9 @@ const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns }) => {
     columnVisibility,
     updateColumnVisibility,
     columnPinning,
-    setColumnPinning,
     updateColumnPinning,
     columnOrder,
-    setColumnOrder,
+    setColumnsConfig,
   } = useColumnSettings()
 
   // State for the currently dragged column
@@ -222,21 +221,26 @@ const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns }) => {
         const isOverPinned = columnPinning.left?.includes(overId) || false
         const isOverHidden = columnVisibility[overId] === false
 
+        // Create a new config object that we'll update and apply at the end
+        const newConfig = {
+          columnVisibility: { ...columnVisibility },
+          columnOrder: [...columnOrder],
+          columnPinning: { ...columnPinning },
+        }
+
         // If we're moving a column between visible columns (including pinned)
         if (isActiveVisible && isOverVisible) {
-          const newPinning = { ...columnPinning }
-          let newPinningLeft = newPinning.left || []
+          let newPinningLeft = [...(newConfig.columnPinning.left || [])]
+
           // Handle pinning/unpinning based on target section
-          if (isActivePinned !== isOverPinned && newPinningLeft) {
+          if (isActivePinned !== isOverPinned) {
             if (isActivePinned && !isOverPinned) {
               // Moving from pinned to unpinned section
-              newPinningLeft = newPinningLeft.filter((id) => id !== activeId) || []
+              newPinningLeft = newPinningLeft.filter((id) => id !== activeId)
             } else if (!isActivePinned && isOverPinned) {
               // Moving from unpinned to pinned section
               newPinningLeft = [...newPinningLeft, activeId]
             }
-
-            setColumnPinning(newPinning)
           }
 
           // Update order within the appropriate section
@@ -251,29 +255,30 @@ const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns }) => {
           }
 
           const newOrder = arrayMove(allVisibleIds, oldIndex, newIndex)
-          setColumnOrder(newOrder)
 
           // new pinning left should be ordered by the new order
           const newPinningLeftOrdered = newOrder.filter((id) => newPinningLeft.includes(id))
-          setColumnPinning({
-            ...newPinning,
+
+          // Update config object
+          newConfig.columnOrder = newOrder
+          newConfig.columnPinning = {
+            ...newConfig.columnPinning,
             left: newPinningLeftOrdered,
-          })
+          }
+
+          // Apply all changes at once
+          setColumnsConfig(newConfig)
         }
 
         // If we're dragging from hidden to visible
-        if (!isActiveVisible && isOverVisible) {
+        else if (!isActiveVisible && isOverVisible) {
           // Make the column visible
-          const newVisibility = { ...columnVisibility }
-          newVisibility[activeId] = true
-          updateColumnVisibility(newVisibility)
+          newConfig.columnVisibility[activeId] = true
 
           // If dropping into pinned section, also pin the column
           if (isOverPinned) {
-            console.log('Moving to pinned section 2')
-            const newPinning = { ...columnPinning }
-            newPinning.left = [...(newPinning.left || []), activeId]
-            setColumnPinning(newPinning)
+            const newPinningLeft = [...(newConfig.columnPinning.left || []), activeId]
+            newConfig.columnPinning.left = newPinningLeft
           }
 
           // Update order to place it near the over column
@@ -285,22 +290,27 @@ const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns }) => {
             allVisibleIds.splice(overIndex, 0, activeId)
           }
 
-          setColumnOrder(allVisibleIds)
+          newConfig.columnOrder = allVisibleIds
+
+          // Apply all changes at once
+          setColumnsConfig(newConfig)
         }
 
         // If we're dragging from visible to hidden
-        if (isActiveVisible && isOverHidden) {
+        else if (isActiveVisible && isOverHidden) {
           // Make the active column hidden
-          const newVisibility = { ...columnVisibility }
-          newVisibility[activeId] = false
-          updateColumnVisibility(newVisibility)
+          newConfig.columnVisibility[activeId] = false
 
           // If the column was pinned, remove it from pinned
           if (isActivePinned) {
-            const newPinning = { ...columnPinning }
-            newPinning.left = newPinning.left?.filter((id) => id !== activeId) || []
-            setColumnPinning(newPinning)
+            const newPinningLeft = (newConfig.columnPinning.left || []).filter(
+              (id) => id !== activeId,
+            )
+            newConfig.columnPinning.left = newPinningLeft
           }
+
+          // Apply all changes at once
+          setColumnsConfig(newConfig)
         }
       }
     }

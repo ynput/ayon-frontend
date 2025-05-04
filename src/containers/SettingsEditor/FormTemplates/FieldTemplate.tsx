@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { Divider } from '@ynput/ayon-react-components'
 import SettingsPanel from '../SettingsPanel'
-import useCreateContextMenu from '@shared/ContextMenu/useCreateContextMenu'
+import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 
 import { isEqual } from 'lodash'
 import copyToClipboard from '@helpers/copyToClipboard'

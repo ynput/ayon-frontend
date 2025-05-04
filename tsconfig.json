@@ -13,6 +13,7 @@
     "noEmit": true,
     "jsx": "react-jsx",
     "allowJs": true,
+    "declaration": true,
 
     /* Linting */
     "strict": true,
@@ -33,7 +34,7 @@
       "@context/*": ["./context/*"],
       "@state/*": ["./features/*"],
       "@helpers/*": ["./helpers/*"],
-      "@shared/*": ["./shared/src/*"],
+      "@shared/*": ["../shared/src/*"],
       "@/*": ["./*"]
     }
   },

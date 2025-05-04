@@ -7,7 +7,7 @@ import { useSelector } from 'react-redux'
 import { useGetWorkfileByIdQuery } from '@queries/getWorkfiles'
 import { useGetSiteRootsQuery } from '@queries/customRoots'
 import SiteDropdown from '@containers/SiteDropdown'
-import { getCurrentPlatform } from '@shared/helpers'
+import { getCurrentPlatform } from '@shared/util'
 
 const replaceRoot = (inputStr, replacements) => {
   if (!inputStr) return inputStr

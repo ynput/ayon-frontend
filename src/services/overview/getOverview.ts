@@ -1,7 +1,7 @@
 import api from '@api'
 import { api as foldersApi, QueryTasksFoldersApiArg } from '@api/rest/folders'
 import { GetTasksByParentQuery, GetTasksListQuery } from '@api/graphql'
-import { EditorTaskNode } from '@shared/ProjectTreeTable'
+import { EditorTaskNode } from '@shared/containers/ProjectTreeTable'
 import {
   DefinitionsFromApi,
   FetchBaseQueryError,
@@ -50,7 +50,12 @@ const getOverviewTaskTags = (
     id,
   }))
 
-  return [...taskTags, ...parentTags, { type: 'overviewTask', id: projectName }]
+  return [
+    ...taskTags,
+    ...parentTags,
+    { type: 'overviewTask', id: projectName },
+    { type: 'overviewTask', id: 'LIST' },
+  ]
 }
 
 type GetTasksListResult = {
@@ -164,7 +169,8 @@ const injectedApi = enhancedApi.injectEndpoints({
       forceRefetch({ currentArg, previousArg }) {
         return !isEqual(currentArg, previousArg)
       },
-      providesTags: [{ type: 'overviewTask', id: 'LIST' }],
+      providesTags: (result, _e, { parentIds, projectName }) =>
+        getOverviewTaskTags(result, projectName, parentIds),
     }),
     // queryTasksFolders is a post so it's a bit annoying to consume
     // we wrap it in a queryFn to make it easier to consume as a query hook

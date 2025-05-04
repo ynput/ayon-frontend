@@ -35,7 +35,7 @@ import { AttributeEnumItem } from '@api/rest/attributes'
 // Hooks
 import { useEffect, useState, type KeyboardEvent, type MouseEvent } from 'react'
 import { InView } from 'react-intersection-observer'
-import useCreateContextMenu from '@shared/ContextMenu/useCreateContextMenu'
+import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import { useLocalStorage } from '@shared/hooks'
 
 // Helpers

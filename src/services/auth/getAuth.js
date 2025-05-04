@@ -2,7 +2,7 @@ import { api } from '@api/rest/auth'
 import { onClearDashboard } from '@state/dashboard'
 import { logout } from '@state/user'
 
-const authApi = api.enhanceEndpoints({
+export const authApi = api.enhanceEndpoints({
   endpoints: {
     getSiteInfo: {
       providesTags: ['info'],

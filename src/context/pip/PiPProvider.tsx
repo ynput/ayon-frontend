@@ -80,6 +80,17 @@ export function PiPProvider({ children }: PiPProviderProps) {
 
         style.textContent = cssRules
         pipWindow?.document.head.appendChild(style)
+
+        // add height 100% to html and body
+        const rootStyles = document.createElement('style')
+        rootStyles.textContent = `
+          html, body, .pipRoot {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+      }`
+        pipWindow?.document.head.appendChild(rootStyles)
       } catch (e) {
         const link = document.createElement('link')
         if (styleSheet.href == null) {

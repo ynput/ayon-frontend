@@ -1,5 +1,5 @@
 import { FC } from 'react'
-import EmptyPlaceholder from '@shared/EmptyPlaceholder/EmptyPlaceholder'
+import EmptyPlaceholder from '@shared/components/EmptyPlaceholder'
 import { Button } from '@ynput/ayon-react-components'
 
 interface ReleaseInstallerErrorProps {

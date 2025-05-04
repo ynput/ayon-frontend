@@ -5,7 +5,8 @@ import {
   SelectionProvider,
   SelectedRowsProvider,
   ColumnSettingsProvider,
-} from '@shared/ProjectTreeTable'
+  CellEditingProvider,
+} from '@shared/containers/ProjectTreeTable'
 import { NewEntityProvider } from '@context/NewEntityContext'
 import { SettingsPanelProvider } from './context/SettingsPanelContext'
 import { useAppSelector } from '@state/store'
@@ -18,8 +19,9 @@ import { useUpdateOverviewEntitiesMutation } from '@queries/overview/updateOverv
 import {
   ProjectTableQueriesProvider,
   ProjectTableQueriesProviderProps,
-} from '@shared/ProjectTreeTable/context/ProjectTableQueriesContext'
+} from '@shared/containers/ProjectTreeTable/context/ProjectTableQueriesContext'
 import { useLazyGetTasksByParentQuery } from '@queries/overview/getOverview'
+import { useUsersPageConfig } from './hooks/useUserPageConfig'
 
 const ProjectOverviewWithProviders: FC = () => {
   const projectName = useAppSelector((state) => state.project.name) || ''
@@ -36,6 +38,11 @@ const ProjectOverviewWithProviders: FC = () => {
 
 const ProjectOverviewWithTableProviders: FC = () => {
   const props = useProjectOverviewContext()
+  const [pageConfig, updatePageConfig] = useUsersPageConfig({
+    page: 'overview',
+    projectName: props.projectName,
+  })
+
   const [entityOperations] = useUpdateOverviewEntitiesMutation()
 
   const updateEntities: ProjectTableQueriesProviderProps['updateEntities'] = async ({
@@ -68,8 +75,10 @@ const ProjectOverviewWithTableProviders: FC = () => {
         <NewEntityProvider>
           <SelectionProvider>
             <SelectedRowsProvider>
-              <ColumnSettingsProvider scope={`overview-${props.projectName}`}>
-                <ProjectOverviewPage />
+              <ColumnSettingsProvider config={pageConfig} onChange={updatePageConfig}>
+                <CellEditingProvider>
+                  <ProjectOverviewPage />
+                </CellEditingProvider>
               </ColumnSettingsProvider>
             </SelectedRowsProvider>
           </SelectionProvider>

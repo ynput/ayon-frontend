@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 import { Section, TablePanel, Button } from '@ynput/ayon-react-components'
-import useCreateContextMenu from '@shared/ContextMenu/useCreateContextMenu'
+import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import { Badge, BadgeWrapper } from '@components/Badge'
 import { useURIContext } from '@context/uriContext'
 

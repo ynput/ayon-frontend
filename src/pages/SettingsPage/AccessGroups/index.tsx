@@ -5,7 +5,7 @@ import { AccessGroupObject } from '@api/rest/accessGroups'
 import {
   EmptyPlaceholderFlex,
   EmptyPlaceholderFlexWrapper,
-} from '@shared/EmptyPlaceholder/EmptyPlaceholderFlex.styled'
+} from '@shared/components/EmptyPlaceholder'
 
 type Props = {
   projectName?: string

@@ -1,0 +1,42 @@
+fragment ActivityFragment on ActivityNode {
+  activityId
+  activityType
+  activityData
+  referenceType
+  referenceId
+  entityId
+  body
+  createdAt
+  updatedAt
+  author {
+    name
+    deleted
+    active
+    attrib {
+      fullName
+    }
+  }
+  files {
+    id
+    name
+    size
+    mime
+  }
+  origin {
+    id
+    name
+    label
+    type
+  }
+  reactions {
+    fullName
+    userName
+    reaction
+    timestamp
+  }
+  version {
+    attrib {
+      comment
+    }
+  }
+}

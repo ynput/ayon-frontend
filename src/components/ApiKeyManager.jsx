@@ -6,7 +6,7 @@ import { Panel, LockedInput, Icon } from '@ynput/ayon-react-components'
 import { useUpdateUserAPIKeyMutation } from '@queries/user/updateUser'
 import { toast } from 'react-toastify'
 import styled from 'styled-components'
-import { confirmDelete } from '@shared/helpers'
+import { confirmDelete } from '@shared/util'
 import copyToClipboard from '@helpers/copyToClipboard'
 
 const PanelStyled = styled(Panel)`

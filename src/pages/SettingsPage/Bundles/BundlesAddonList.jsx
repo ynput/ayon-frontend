@@ -6,7 +6,7 @@ import { SocketContext } from '@context/websocketContext'
 import { compareBuild, coerce } from 'semver'
 import { InputSwitch, InputText, VersionSelect } from '@ynput/ayon-react-components'
 import { FilePath, LatestIcon } from './Bundles.styled'
-import useCreateContextMenu from '@shared/ContextMenu/useCreateContextMenu'
+import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import { useNavigate } from 'react-router'
 import styled from 'styled-components'
 

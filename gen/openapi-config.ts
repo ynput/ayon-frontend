@@ -18,7 +18,7 @@ const outputFiles = {
     'updateReviewable',
     'uploadReviewable',
   ],
-  actions: ['listAvailableActionsForContext', 'executeAction'],
+  actions: ['listAvailableActionsForContext', 'executeAction', 'configureAction'],
   accessGroups: [
     'getAccessGroupSchema',
     'getAccessGroups',
@@ -28,7 +28,12 @@ const outputFiles = {
   ],
   auth: ['createSession', 'getUserPools', 'getSiteInfo'],
   addons: ['listAddons', 'listFrontendModules', 'deleteAddonVersion', 'uploadAddonZipFile'],
-  activities: ['deleteProjectActivity'],
+  activities: [
+    'deleteProjectActivity',
+    'createReactionToActivity',
+    'deleteReactionToActivity',
+    'suggestEntityMention',
+  ],
   users: ['getUser', 'setFrontendPreferences'],
   releases: ['getReleases', 'getReleaseInfo'],
   installers: ['listInstallers', 'createInstaller', 'deleteInstaller'],

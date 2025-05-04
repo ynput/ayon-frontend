@@ -5,8 +5,11 @@ import { toast } from 'react-toastify'
 import getSequence from '@helpers/getSequence'
 import { generateLabel } from '@components/NewEntity/NewEntity'
 import { PatchOperation, useUpdateOverviewEntitiesMutation } from '@queries/overview/updateOverview'
-import { useProjectTableContext } from '@shared/ProjectTreeTable'
-import { EditorTaskNode, MatchingFolder } from '@shared/ProjectTreeTable'
+import { useProjectTableContext } from '@shared/containers/ProjectTreeTable'
+import { EditorTaskNode, MatchingFolder } from '@shared/containers/ProjectTreeTable'
+import checkName from '@helpers/checkName'
+import { useSlicerContext } from './slicerContext'
+import { isEmpty } from 'lodash'
 
 export type NewEntityType = 'folder' | 'task'
 
@@ -41,9 +44,11 @@ interface NewEntityProviderProps {
 }
 
 export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }) => {
-  const { findNonInheritedValues, projectName, attribFields, projectInfo } =
+  const { findNonInheritedValues, projectName, attribFields, projectInfo, getEntityById } =
     useProjectTableContext()
   const { attrib: projectAttrib = {}, statuses } = projectInfo || {}
+
+  const { rowSelection, sliceType } = useSlicerContext()
 
   const firstStatusForTask =
     statuses?.filter((status) => status.scope?.includes('task'))?.[0]?.name ||
@@ -71,18 +76,35 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
     entityType: NewEntityType,
     subType: string,
     name: string,
-    label: string,
     parentId?: string,
   ): NewEntityOperation => {
+    // add extra data from slicer
+    const slicerData: Record<string, any> = {}
+    if (sliceType !== 'hierarchy' && !isEmpty(rowSelection) && entityType === 'task') {
+      const selection = Object.keys(rowSelection).filter(
+        (key) => !['hasValue', 'noValue'].includes(key),
+      )
+      switch (sliceType) {
+        case 'assignees':
+          slicerData.assignees = selection
+          break
+        case 'status':
+          slicerData.status = selection[0]
+          break
+        default:
+          break
+      }
+    }
+
     return {
       type: 'create',
       entityType: entityType,
       data: {
         [`${entityType}Type`]: subType,
         id: uuid1().replace(/-/g, ''),
-        name: name.replace(/[^a-zA-Z0-9]/g, ''),
-        label: label,
+        name: checkName(name),
         ...(parentId && { [entityType === 'folder' ? 'parentId' : 'folderId']: parentId }),
+        ...slicerData,
       },
     }
   }
@@ -95,14 +117,14 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
   ): NewEntityOperation[] => {
     // For root folders
     if (folderIds.length === 0 && entityType === 'folder') {
-      return sequence.map((name) => createEntityOperation(entityType, subType, name, name))
+      return sequence.map((name) => createEntityOperation(entityType, subType, name))
     }
 
     // For folders or tasks with parent references
     const operations: NewEntityOperation[] = []
     for (const folderId of folderIds) {
       for (const name of sequence) {
-        operations.push(createEntityOperation(entityType, subType, name, name, folderId))
+        operations.push(createEntityOperation(entityType, subType, name, folderId))
       }
     }
     return operations
@@ -114,17 +136,13 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
     label: string,
     folderIds: string[],
   ): NewEntityOperation[] => {
-    const sanitizedName = label.replace(/[^a-zA-Z0-9]/g, '')
-
     // For root folders
     if (folderIds.length === 0 && entityType === 'folder') {
-      return [createEntityOperation(entityType, subType, sanitizedName, label)]
+      return [createEntityOperation(entityType, subType, label)]
     }
 
     // For folders or tasks with parent references
-    return folderIds.map((folderId) =>
-      createEntityOperation(entityType, subType, sanitizedName, label, folderId),
-    )
+    return folderIds.map((folderId) => createEntityOperation(entityType, subType, label, folderId))
   }
 
   type PatchNewTaskOperation = PatchOperation & {
@@ -138,7 +156,6 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
     data: {
       id: string
       name: string
-      label: string
       folderId?: string
       parentId?: string
       folderType?: string
@@ -148,6 +165,7 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
 
   const createPatchOperations = (
     operations: NewEntityOperation[],
+    paths: Record<string, string> = {},
   ): (PatchNewTaskOperation | PatchNewFolderOperation)[] => {
     // split operations by folderId or parentId (convert parentId to folderId)
     const folderIds = new Set<string>()
@@ -215,6 +233,9 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
 
         // Create entity-specific patch operation with the correct type casting
         if (entityType === 'folder') {
+          let path = operation.data.parentId && paths[operation.data.parentId]
+          path = path ? path + '/' + operation.data.name : ''
+
           const folderPatch: PatchNewFolderOperation = {
             type: 'create',
             entityType: 'folder',
@@ -228,7 +249,7 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
               updatedAt: new Date().toISOString(),
               status: firstStatusForFolder,
               ownAttrib: [],
-              path: '', // TODO add real path somehow
+              path: path,
               tags: [],
               attrib: filteredAttribs,
             } as MatchingFolder,
@@ -245,11 +266,11 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
               taskType: (operation.data as any).taskType,
               folderId: (operation.data as any).folderId,
               active: true,
-              assignees: [],
+              assignees: operation.data.assignees || [],
               projectName,
-              status: firstStatusForTask,
+              status: operation.data.status || firstStatusForTask,
               folder: {
-                path: '', // TODO add real path somehow
+                path: operation.data.folderId ? paths[operation.data.folderId] : '',
               },
               tags: [],
               ownAttrib: [],
@@ -310,8 +331,16 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
       )
     }
 
-    const patchOperations = createPatchOperations(operations)
-    console.log(patchOperations)
+    // get all the paths for the selected folders
+    const paths: Record<string, string> = {}
+    for (const folderId of selectedFolderIds) {
+      const entity = getEntityById(folderId)
+      if (entity?.entityType === 'folder') {
+        paths[folderId] = entity.path
+      }
+    }
+
+    const patchOperations = createPatchOperations(operations, paths)
 
     try {
       await createEntities({

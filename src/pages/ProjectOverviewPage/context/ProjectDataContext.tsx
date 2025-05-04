@@ -1,8 +1,10 @@
-import { createContext, ReactNode, useContext } from 'react'
+import { createContext, ReactNode, useContext, useMemo } from 'react'
 import { useGetProjectQuery } from '@queries/project/getProject'
 import { ProjectModel } from '@api/rest/project'
 import { useGetUsersAssigneeQuery } from '@queries/user/getUsers'
 import useAttributeFields, { AttributeWithPermissions } from '../hooks/useAttributesList'
+import { useUsersPageConfig } from '../hooks/useUserPageConfig'
+import { SortingState } from '@tanstack/react-table'
 
 type User = {
   name: string
@@ -18,6 +20,9 @@ export interface ProjectDataContextProps {
   users: User[]
   // Attributes
   attribFields: AttributeWithPermissions[]
+  // column sorting
+  columnSorting: SortingState
+  setColumnSorting: (columnSorting: SortingState) => void
 }
 
 const ProjectDataContext = createContext<ProjectDataContextProps | undefined>(undefined)
@@ -41,26 +46,54 @@ export const ProjectDataProvider = ({ children, projectName }: ProjectDataProvid
     isFetching: isFetchingAttribs,
   } = useAttributeFields({ projectName })
 
-  const isInitialized =
-    isSuccessProject && isSuccessAttribs && !isFetchingProject && !isFetchingAttribs
+  // Get column sorting
+  const [pageConfig, updatePageConfig, { isSuccess: columnsConfigReady }] = useUsersPageConfig({
+    page: 'overview',
+    projectName: projectName,
+  })
+  const { columnSorting = [] } = pageConfig as {
+    columnSorting: SortingState
+  }
+  const setColumnSorting = async (sorting: SortingState) => {
+    await updatePageConfig({ columnSorting: sorting })
+  }
 
+  // GET USERS
   const { data: usersData = [] } = useGetUsersAssigneeQuery({ projectName }, { skip: !projectName })
   const users = usersData as User[]
 
-  return (
-    <ProjectDataContext.Provider
-      value={{
-        isInitialized,
-        isLoading: isFetchingProject || isFetchingAttribs,
-        projectInfo,
-        projectName,
-        users,
-        attribFields,
-      }}
-    >
-      {children}
-    </ProjectDataContext.Provider>
+  const isInitialized =
+    isSuccessProject &&
+    isSuccessAttribs &&
+    !isFetchingProject &&
+    !isFetchingAttribs &&
+    columnsConfigReady
+
+  const value = useMemo(
+    () => ({
+      isInitialized,
+      isLoading: isFetchingProject || isFetchingAttribs,
+      projectInfo,
+      projectName,
+      users,
+      attribFields,
+      columnSorting,
+      setColumnSorting,
+    }),
+    [
+      isInitialized,
+      isFetchingProject,
+      isFetchingAttribs,
+      projectInfo,
+      projectName,
+      users,
+      attribFields,
+      columnSorting,
+      setColumnSorting,
+    ],
   )
+
+  return <ProjectDataContext.Provider value={value}>{children}</ProjectDataContext.Provider>
 }
 
 export const useProjectDataContext = () => {

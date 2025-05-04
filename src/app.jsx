@@ -29,14 +29,13 @@ const PasswordResetPage = lazy(() => import('@pages/PasswordResetPage'))
 // components
 import ShareDialog from '@components/ShareDialog'
 import ErrorFallback from '@components/ErrorFallback'
-import { GlobalContextMenu } from '@shared/ContextMenu/GlobalContextMenu'
+import { GlobalContextMenu, ContextMenuProvider } from '@shared/containers/ContextMenu'
 import Favicon from '@components/Favicon/Favicon'
 import { ConfirmDialog } from 'primereact/confirmdialog'
 import { toast } from 'react-toastify'
 import TrialBanner from '@components/TrialBanner/TrialBanner'
 
 // context
-import { ContextMenuProvider } from '@shared/ContextMenu/ContextMenuContext'
 import { ShortcutsProvider } from '@context/shortcutsContext'
 import { RestartProvider } from '@context/restartContext'
 import { PasteProvider, PasteModal } from '@context/pasteContext'
@@ -53,7 +52,7 @@ import { FeedbackProvider } from './feedback/FeedbackContext'
 // containers
 import Header from '@containers/header'
 import ProtectedRoute from '@containers/ProtectedRoute'
-import FileUploadPreview from '@containers/FileUploadPreview/FileUploadPreview'
+import FileUploadPreviewContainer from '@containers/FileUploadPreviewContainer'
 import { ViewerDialog } from '@containers/Viewer'
 
 // state
@@ -169,15 +168,15 @@ const App = () => {
         <WatchActivities />
         <Suspense fallback={<LoadingPage />}>
           <RestartProvider>
-            <FeedbackProvider>
-              <PowerpackProvider>
-                <RemoteModulesProvider>
-                  <PowerLicenseProvider>
-                    <ContextMenuProvider>
-                      <GlobalContextMenu />
-                      <PasteProvider>
-                        <PasteModal />
-                        <BrowserRouter>
+            <PowerpackProvider>
+              <RemoteModulesProvider>
+                <PowerLicenseProvider>
+                  <ContextMenuProvider>
+                    <GlobalContextMenu />
+                    <PasteProvider>
+                      <PasteModal />
+                      <BrowserRouter>
+                        <FeedbackProvider>
                           <NotificationsProvider>
                             <URIProvider>
                               <CustomerlyProvider appId={PROJECT_ID}>
@@ -193,7 +192,7 @@ const App = () => {
                                       <ShareDialog />
                                       <ViewerDialog />
                                       <ConfirmDialog />
-                                      <FileUploadPreview />
+                                      <FileUploadPreviewContainer />
                                       <ReleaseInstallerDialog />
                                       <CompleteProfilePrompt />
                                       <Routes>
@@ -305,13 +304,13 @@ const App = () => {
                               </CustomerlyProvider>
                             </URIProvider>
                           </NotificationsProvider>
-                        </BrowserRouter>
-                      </PasteProvider>
-                    </ContextMenuProvider>
-                  </PowerLicenseProvider>
-                </RemoteModulesProvider>
-              </PowerpackProvider>
-            </FeedbackProvider>
+                        </FeedbackProvider>
+                      </BrowserRouter>
+                    </PasteProvider>
+                  </ContextMenuProvider>
+                </PowerLicenseProvider>
+              </RemoteModulesProvider>
+            </PowerpackProvider>
           </RestartProvider>
         </Suspense>
       </>
