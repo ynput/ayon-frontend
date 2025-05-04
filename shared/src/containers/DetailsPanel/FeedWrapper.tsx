@@ -34,16 +34,10 @@ const FeedWrapper: FC<FeedWrapperProps> = ({
 }) => {
   const annotationsProps = { annotations, removeAnnotation, exportAnnotationComposite }
 
-  const { onOpenImage, onGoToFrame, onOpenViewer, user } = useDetailsPanelContext()
+  const { user } = useDetailsPanelContext()
 
   const userName = user.name || ''
   const userFullName = user.attrib?.fullName || ''
-
-  const handlerProps = {
-    onOpenImage,
-    onGoToFrame,
-    onOpenViewer,
-  }
 
   const [editingId, setEditingId] = useState<EditingState>(null)
 
@@ -58,7 +52,6 @@ const FeedWrapper: FC<FeedWrapperProps> = ({
         userName,
         userFullName,
       }}
-      {...handlerProps}
       {...annotationsProps}
       {...{ editingId, setEditingId }}
     >

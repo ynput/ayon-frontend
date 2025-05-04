@@ -117,7 +117,7 @@ export const DetailsPanelFloating: FC<DetailsPanelFloatingProps> = () => {
     <PiPWrapper>
       <Styled.Container>
         <Styled.Header>
-          <StackedThumbnails thumbnails={thumbnails} projectName={projectName} />
+          <StackedThumbnails thumbnails={thumbnails} />
           <Styled.Content>
             <h2>{title}</h2>
             <div className="sub-title">

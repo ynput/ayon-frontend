@@ -41,12 +41,12 @@ export const Feed = ({ isMultiProjects, readOnly, statuses = [] }: FeedProps) =>
     isLoadingNextPage,
     loadNextPage,
     hasNextPage,
-    onOpenImage,
     users,
     currentTab,
   } = useFeedContext()
 
-  const { openSlideOut, highlightedActivities, setHighlightedActivities } = useDetailsPanelContext()
+  const { openSlideOut, highlightedActivities, setHighlightedActivities, onOpenImage } =
+    useDetailsPanelContext()
 
   // hide comment input for specific filters
   const hideCommentInput = ['versions'].includes(currentTab)

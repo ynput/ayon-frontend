@@ -4,7 +4,7 @@ import ActivityHeader from '../ActivityHeader/ActivityHeader'
 import * as Styled from './ActivityVersions.styled'
 import { More } from '../ActivityGroup/ActivityGroup.styled'
 import ActivityDate from '../ActivityDate'
-import { useFeedContext } from '../../context/FeedContext'
+import { useDetailsPanelContext } from '@shared/context'
 
 interface Version {
   name: string
@@ -36,7 +36,7 @@ const ActivityVersions: React.FC<ActivityVersionsProps> = ({
   onReferenceClick,
   filter,
 }) => {
-  const { onOpenViewer } = useFeedContext()
+  const { onOpenViewer } = useDetailsPanelContext()
   let { authorName, authorFullName, createdAt, versions = [] } = activity
 
   const [showAll, setShowAll] = useState(filter === 'versions')

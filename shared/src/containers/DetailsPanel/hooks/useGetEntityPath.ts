@@ -1,12 +1,9 @@
-import { useGetFolderListQuery } from '@shared/api'
-import { PathSegment } from '@components/EntityPath/EntityPath'
 import { useMemo } from 'react'
 import getEntityPathData from '../helpers/getEntityPathData'
-import { useGetProductVersionsQuery } from '@shared/api'
-import {
-  DetailsPanelEntityData,
-  DetailsPanelEntityType,
-} from '@queries/entity/transformDetailsPanelData'
+// shared
+import { PathSegment } from '@shared/components'
+import { useGetProductVersionsQuery, useGetFolderListQuery } from '@shared/api'
+import type { DetailsPanelEntityData, DetailsPanelEntityType } from '@shared/api'
 
 type Props = {
   entity: DetailsPanelEntityData
@@ -44,7 +41,7 @@ const useGetEntityPath = ({
               return b.name.localeCompare(a.name)
             })
             .map((version) => ({
-              type: 'version',
+              type: 'version' as const,
               label: version.name,
               id: version.id,
             })),

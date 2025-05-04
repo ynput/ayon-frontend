@@ -1,4 +1,4 @@
-import { DetailsPanelEntityData } from '@queries/entity/transformDetailsPanelData'
+import type { DetailsPanelEntityData } from '@shared/api'
 
 const versionsToRepresentations = (entities: DetailsPanelEntityData[] = []) => {
   let representations = []

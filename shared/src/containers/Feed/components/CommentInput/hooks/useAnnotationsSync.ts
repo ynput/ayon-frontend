@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { FEED_NEW_COMMENT, useFeedContext } from '../../../context/FeedContext'
+import { useDetailsPanelContext } from '@shared/context'
 
 type Props = {
   entityId: string
@@ -26,7 +27,8 @@ export const filterEntityAnnotations = (
 }
 
 const useAnnotationsSync = ({ entityId, filesUploading }: Props) => {
-  const { editingId, setEditingId, annotations, removeAnnotation, onGoToFrame } = useFeedContext()
+  const { editingId, setEditingId, annotations, removeAnnotation } = useFeedContext()
+  const { onGoToFrame } = useDetailsPanelContext()
 
   // filter out annotations that are for this entity and are NOT uploading
   const filteredAnnotations = filterEntityAnnotations(annotations || [], entityId, filesUploading)

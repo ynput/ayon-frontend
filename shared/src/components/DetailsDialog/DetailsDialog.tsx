@@ -3,7 +3,7 @@ import { useGetEntityQuery } from '@shared/api'
 import { Dialog } from '@ynput/ayon-react-components'
 
 export interface DetailsDialogProps {
-  projectName: string
+  projectName?: string
   entityType: string
   entityIds: string[]
   visible: boolean

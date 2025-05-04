@@ -5,6 +5,7 @@ import { useRef } from 'react'
 import { upperFirst } from 'lodash'
 import ActionIcon from '../ActionIcon'
 import styled from 'styled-components'
+import { IconModel } from '@shared/api'
 
 const ActionItemContainer = styled.div`
   display: flex;
@@ -29,7 +30,7 @@ const ActionItemContainer = styled.div`
 type ActionsDropdownItemProps = {
   value: string
   label: string
-  icon: string
+  icon: IconModel
   header?: boolean
   hasConfig?: boolean
   onConfig?: (value: string) => void

@@ -33,9 +33,12 @@ export default defineConfig({
         hooks: resolve(__dirname, 'src/hooks/index.ts'),
         context: resolve(__dirname, 'src/context/index.ts'),
         // containers
+        Actions: resolve(__dirname, 'src/containers/Actions/index.ts'),
         ContextMenu: resolve(__dirname, 'src/containers/ContextMenu/index.ts'),
+        DetailsPanel: resolve(__dirname, 'src/containers/DetailsPanel/index.ts'),
         Feed: resolve(__dirname, 'src/containers/Feed/index.ts'),
         ProjectTreeTable: resolve(__dirname, 'src/containers/ProjectTreeTable/index.ts'),
+        RepresentationsList: resolve(__dirname, 'src/containers/RepresentationsList/index.ts'),
         Slicer: resolve(__dirname, 'src/containers/Slicer/index.ts'),
       },
       name: 'AyonFrontendShared',

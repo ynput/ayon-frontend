@@ -30,10 +30,25 @@
       "import": "./dist/shared.es.js",
       "require": "./dist/shared.cjs.js"
     },
+    "./util": {
+      "types": "./dist/types/util/index.d.ts",
+      "import": "./dist/util.es.js",
+      "require": "./dist/util.cjs.js"
+    },
+    "./Actions": {
+      "types": "./dist/types/containers/Actions/index.d.ts",
+      "import": "./dist/Actions.es.js",
+      "require": "./dist/Actions.cjs.js"
+    },
     "./ContextMenu": {
       "types": "./dist/types/containers/ContextMenu/index.d.ts",
       "import": "./dist/ContextMenu.es.js",
       "require": "./dist/ContextMenu.cjs.js"
+    },
+    "./DetailsPanel": {
+      "types": "./dist/types/containers/DetailsPanel/index.d.ts",
+      "import": "./dist/DetailsPanel.es.js",
+      "require": "./dist/DetailsPanel.cjs.js"
     },
     "./Feed": {
       "types": "./dist/types/containers/Feed/index.d.ts",
@@ -45,15 +60,15 @@
       "import": "./dist/ProjectTreeTable.es.js",
       "require": "./dist/ProjectTreeTable.cjs.js"
     },
+    "./RepresentationsList": {
+      "types": "./dist/types/containers/RepresentationsList/index.d.ts",
+      "import": "./dist/RepresentationsList.es.js",
+      "require": "./dist/RepresentationsList.cjs.js"
+    },
     "./Slicer": {
       "types": "./dist/types/containers/Slicer/index.d.ts",
       "import": "./dist/Slicer.es.js",
       "require": "./dist/Slicer.cjs.js"
-    },
-    "./util": {
-      "types": "./dist/types/util/index.d.ts",
-      "import": "./dist/util.es.js",
-      "require": "./dist/util.cjs.js"
     }
   },
   "files": [
