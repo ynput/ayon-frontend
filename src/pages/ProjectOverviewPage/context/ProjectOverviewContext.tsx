@@ -18,7 +18,7 @@ import type {
   TasksByFolderMap,
 } from '@shared/containers/ProjectTreeTable/utils'
 import { clientFilterToQueryFilter } from '@shared/containers/ProjectTreeTable/utils'
-import { QueryTasksFoldersApiArg } from '@api/rest/folders'
+import type { QueryTasksFoldersApiArg } from '@shared/api'
 import { ProjectDataContextProps, useProjectDataContext } from './ProjectDataContext'
 import { LoadingTasks } from '@shared/containers/ProjectTreeTable'
 

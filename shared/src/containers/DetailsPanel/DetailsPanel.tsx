@@ -23,7 +23,7 @@ type User = { avatarUrl: string; name: string; fullName?: string }
 
 export type DetailsPanelProps = {
   entityType: DetailsPanelEntityType
-  entitySubTypes: string[] // used to get actions before the entity has loaded
+  entitySubTypes?: string[] // used to get actions before the entity has loaded
   entitiesData?: { id: string; label: string; type: DetailsPanelEntityType }[]
   entities?: { id: string; projectName: string }[]
   tagsOptions?: Tag[]
@@ -48,7 +48,7 @@ export type DetailsPanelProps = {
 
 export const DetailsPanel = ({
   entityType,
-  entitySubTypes,
+  entitySubTypes = [],
   // entities is data we already have from kanban
   entitiesData = [],
   // entityIds are used to get the full details data for the entities

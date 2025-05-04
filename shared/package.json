@@ -25,6 +25,11 @@
       "import": "./dist/hooks.es.js",
       "require": "./dist/hooks.cjs.js"
     },
+    "./context": {
+      "types": "./dist/types/context/index.d.ts",
+      "import": "./dist/context.es.js",
+      "require": "./dist/context.cjs.js"
+    },
     "./shared": {
       "types": "./dist/types/shared/index.d.ts",
       "import": "./dist/shared.es.js",

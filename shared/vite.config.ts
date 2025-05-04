@@ -69,7 +69,7 @@ export default defineConfig({
     },
     sourcemap: true,
     emptyOutDir: true,
-    minify: true,
+    minify: false, // TODO: set to true for production builds
     cssCodeSplit: true,
   },
 })

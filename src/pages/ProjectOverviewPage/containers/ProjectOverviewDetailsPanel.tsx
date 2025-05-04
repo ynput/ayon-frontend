@@ -18,8 +18,6 @@ const ProjectOverviewDetailsPanel = ({
   projectInfo,
   projectName,
 }: ProjectOverviewDetailsPanelProps) => {
-  const projectsInfo = { [projectName]: projectInfo }
-
   const dispatch = useAppDispatch()
   const handleOpenViewer = (args: any) => dispatch(openViewer(args))
 
@@ -42,18 +40,18 @@ const ProjectOverviewDetailsPanel = ({
 
   const { data: users = [] } = useGetUsersAssigneeQuery({ names: undefined, projectName })
 
-  if (!entities.length || !entityType) return null
+  if (!entities.length || !entityType || !projectName || !projectInfo) return null
+
+  const projectsInfo = { [projectName]: projectInfo }
 
   return (
     // @ts-nocheck
     <>
       <DetailsPanel
-        // entitySubTypes={subTypes}
         entityType={entityType}
         entities={entities as any}
         projectsInfo={projectsInfo}
         projectNames={[projectName] as any}
-        // @ts-ignore
         tagsOptions={projectInfo?.tags || []}
         projectUsers={users}
         activeProjectUsers={users}
