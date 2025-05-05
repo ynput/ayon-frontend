@@ -269,7 +269,7 @@ const DetailsPanelHeader = ({
             entities={entities}
             entityType={entityType}
             entitySubTypes={entitySubTypes}
-            isLoadingEntity={isFetching || isLoading}
+            isLoadingEntity={!!isFetching || !!isLoading}
           />
           {priorities ? (
             <Styled.PriorityEnumDropdown

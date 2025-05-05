@@ -228,14 +228,22 @@ const operationDataToDetailsData = (
   data: Record<string, any>,
   entityType: DetailsPanelEntityType,
 ): DeepPartial<DetailsPanelEntityData> => {
+  const sharedData: DeepPartial<DetailsPanelEntityData> = {
+    name: data.name,
+    attrib: data.attrib,
+    status: data.status,
+    tags: data.tags,
+    label: data.label,
+    updatedAt: data.updatedAt,
+    createdAt: data.createdAt,
+    hasReviewables: data.hasReviewables,
+    thumbnailId: data.thumbnailId,
+  }
+
   switch (entityType) {
     case 'task':
       return {
-        name: data.name,
-        attrib: data.attrib,
-        status: data.status,
-        tags: data.tags,
-        label: data.label,
+        ...sharedData,
         task: {
           assignees: data.assignees,
           label: data.label,
@@ -245,11 +253,7 @@ const operationDataToDetailsData = (
       }
     case 'folder':
       return {
-        name: data.name,
-        attrib: data.attrib,
-        status: data.status,
-        tags: data.tags,
-        label: data.label,
+        ...sharedData,
         folder: {
           id: data.id,
           name: data.name,
@@ -259,11 +263,7 @@ const operationDataToDetailsData = (
       }
     case 'version':
       return {
-        name: data.name,
-        attrib: data.attrib,
-        status: data.status,
-        tags: data.tags,
-        label: data.label,
+        ...sharedData,
         version: {
           id: data.id,
           name: data.name,
@@ -271,11 +271,7 @@ const operationDataToDetailsData = (
       }
     case 'representation':
       return {
-        name: data.name,
-        attrib: data.attrib,
-        status: data.status,
-        tags: data.tags,
-        label: data.label,
+        ...sharedData,
       }
   }
 }
@@ -328,8 +324,6 @@ export const patchDetailsPanelEntity = (
       ...detailsPanelData.version,
     },
   }
-
-  console.log(current(draft), newData)
 
   // patch data onto the entity
   Object.assign(draft, newData)
