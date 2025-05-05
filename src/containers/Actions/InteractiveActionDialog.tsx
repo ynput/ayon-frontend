@@ -2,9 +2,13 @@ import SimpleFormDialog from '@/containers/SimpleFormDialog/SimpleFormDialog'
 import { SimpleFormField } from '@api/rest/actions'
 
 interface InteractiveForm {
-  fields: SimpleFormField[]
-  header: string
   identifier: string
+  title: string
+  fields: SimpleFormField[]
+  submitLabel?: string
+  cancelLabel?: string
+  submitIcon?: string
+  cancelIcon?: string
 }
 
 interface InteractiveActionDialogProps {
@@ -24,8 +28,12 @@ const InteractiveActionDialog = ({ interactiveForm, onClose, onSubmit }:Interact
   return (
     <SimpleFormDialog
       isOpen
-      header={`${interactiveForm.header}`}
+      title={`${interactiveForm.title}`}
       fields={interactiveForm.fields}
+      submitLabel={interactiveForm.submitLabel}
+      cancelLabel={interactiveForm.cancelLabel}
+      submitIcon={interactiveForm.submitIcon}
+      cancelIcon={interactiveForm.cancelIcon}
       onClose={onClose}
       onSubmit={handleSubmit}
     />
