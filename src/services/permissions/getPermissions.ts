@@ -2,15 +2,14 @@ import { permissionsApi } from '@shared/api'
 
 const enhancedApi = permissionsApi.enhanceEndpoints({
   endpoints: {
-    getCurrentUserPermissions: {
+    getMyPermissions: {
       providesTags: (_result) => [{ type: 'userPermissions' }],
     },
-    getCurrentUserProjectPermissions: {
+    getMyProjectPermissions: {
       providesTags: (_result, _err, _args) => [{ type: 'userProjectPermissions' }],
     },
   },
 })
 
-export const { useGetCurrentUserPermissionsQuery, useGetCurrentUserProjectPermissionsQuery } =
-  enhancedApi
+export const { useGetMyPermissionsQuery, useGetMyProjectPermissionsQuery } = enhancedApi
 export default enhancedApi

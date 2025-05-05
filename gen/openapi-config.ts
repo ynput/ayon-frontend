@@ -25,7 +25,7 @@ const outputFiles = {
     'deleteAccessGroup',
     'saveAccessGroup',
   ],
-  auth: ['createSession', 'getUserPools', 'getSiteInfo'],
+  auth: ['createSession', 'getUserPools', 'getSiteInfo', 'getCurrentUser'],
   addons: ['listAddons', 'deleteAddonVersion', 'uploadAddonZipFile'],
   modules: ['listFrontendModules'],
   activities: [
@@ -42,7 +42,12 @@ const outputFiles = {
     'createDependencyPackage',
     'deleteDependencyPackage',
   ],
-  cloud: ['getYnputCloudInfo', 'setYnputCloudKey', 'deleteYnputCloudKey'],
+  cloud: [
+    'getYnputCloudInfo',
+    'setYnputCloudKey',
+    'deleteYnputCloudKey',
+    'getFeedbackVerification',
+  ],
   attributes: ['getAttributeList', 'setAttributeList', 'getAttributeConfig'],
   config: [
     'getServerConfig',
@@ -50,10 +55,11 @@ const outputFiles = {
     'getServerConfigSchema',
     'setServerConfig',
     'uploadServerConfigFile',
+    'getConfigValue',
   ],
   services: ['listServices', 'listHosts', 'spawnService', 'patchService', 'deleteService'],
   operations: ['operations'],
-  permissions: ['getCurrentUserPermissions', 'getCurrentUserProjectPermissions'],
+  permissions: ['getMyPermissions', 'getMyProjectPermissions'],
 }
 
 const buildOutputFiles = (files: { [name: string]: string[] }) =>

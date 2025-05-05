@@ -155,7 +155,7 @@ export type AttributeData = {
   maxItems?: number
   /** Only for string types. The value must match this regex. */
   regex?: string
-  /** List of enum items used for displaying select/multiselect widgets */
+  /** List of enum items used for displaying select widgets */
   enum?: AttributeEnumItem[]
   /** Inherit the attribute value from the parent entity. */
   inherit?: boolean
@@ -215,8 +215,4 @@ export type InfoResponseModel = {
   sites?: SiteInfo[]
   ssoOptions?: SsoOption[]
   extras?: string
-}
-export type ErrorResponse = {
-  code: number
-  detail: string
 }
