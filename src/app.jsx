@@ -84,8 +84,17 @@ const App = () => {
   const [noAdminUser, setNoAdminUser] = useState(false)
 
   const storedAccessToken = localStorage.getItem('accessToken')
+  
+  // we still need to have the accessToken in localStorage because of 
+  // the way websocket authentication works
+
+  // extract access token from accessToken cookie
+  // const cookies = document.cookie.split(';')
+  // const accessTokenCookie = (cookies || []).find((cookie) => cookie.includes('accessToken'))
+  // const storedAccessToken = accessTokenCookie?.split('=')[1]
+
   if (storedAccessToken) {
-    axios.defaults.headers.common['Authorization'] = `Bearer ${storedAccessToken}`
+    document.cookie = `accessToken=${storedAccessToken}; path=/; max-age=86400`
   }
   axios.defaults.headers.common['X-Sender'] = window.senderId
 
@@ -131,6 +140,9 @@ const App = () => {
             sites: response.sites,
             version: response.version,
           }
+
+          // extend stored cookie validity
+          document.cookie = `accessToken=${storedAccessToken}; path=/; max-age=86400`
         }
       })
       .catch((err) => {
