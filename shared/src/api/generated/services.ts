@@ -94,7 +94,15 @@ export type SpawnServiceRequestModel = {
   config?: ServiceConfigModel
 }
 export type PatchServiceRequestModel = {
+  volumes?: string[]
+  ports?: string[]
+  memLimit?: string
+  user?: string
+  env?: object
+  storagePath?: string
   shouldRun?: boolean
+  hostname?: string
+  /** Deprecated, use top level fields instead */
   config?: ServiceConfigModel
 }
 export type HostHealthModel = {

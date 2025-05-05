@@ -15,7 +15,11 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/desktop/dependencyPackages`,
         method: 'POST',
         body: queryArg.dependencyPackage,
-        params: { url: queryArg.url, overwrite: queryArg.overwrite, force: queryArg.force },
+        params: {
+          url: queryArg.url,
+          overwrite: queryArg.overwrite,
+          force: queryArg.force,
+        },
       }),
     }),
     deleteDependencyPackage: build.mutation<
@@ -45,7 +49,7 @@ export type CreateDependencyPackageApiArg = {
   force?: boolean
   dependencyPackage: DependencyPackage
 }
-export type DeleteDependencyPackageApiResponse = /** status 204 Successful Response */ void
+export type DeleteDependencyPackageApiResponse = unknown
 export type DeleteDependencyPackageApiArg = {
   filename: string
 }

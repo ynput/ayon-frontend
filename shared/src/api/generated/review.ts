@@ -25,6 +25,7 @@ const injectedRtkApi = api.injectEndpoints({
           'content-type': queryArg['content-type'],
           'x-file-name': queryArg['x-file-name'],
           'x-sender': queryArg['x-sender'],
+          'x-sender-type': queryArg['x-sender-type'],
         },
         params: {
           label: queryArg.label,
@@ -89,6 +90,7 @@ export type UploadReviewableApiArg = {
   'content-type': string
   'x-file-name': string
   'x-sender'?: string
+  'x-sender-type'?: string
 }
 export type SortVersionReviewablesApiResponse = /** status 200 Successful Response */ any
 export type SortVersionReviewablesApiArg = {

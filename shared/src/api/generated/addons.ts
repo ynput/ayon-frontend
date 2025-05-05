@@ -111,10 +111,6 @@ export type AddonList = {
   /** List of available addons */
   addons: AddonListItem[]
 }
-export type ErrorResponse = {
-  code: number
-  detail: string
-}
 export type ValidationError = {
   loc: (string | number)[]
   msg: string

@@ -81,11 +81,14 @@ export { api as watchersApi } from './watchers'
 export type {
   AgentInfo,
   ClientInfo,
-  ErrorResponse,
   LocationInfo,
   UserAttribModel,
   UserModel,
+  GetUserPoolsApiArg,
+  GetUserPoolsApiResponse,
+  UserPoolModel,
 } from './auth'
+export type { ErrorResponse } from './permissions'
 export type { InstallResponseModel } from './installers'
 export type { FolderType, TaskType } from './project'
 export type { KanbanNode } from './graphql'
@@ -95,12 +98,13 @@ export type { AttributeData, AttributeEnumItem, AttributeModel } from './attribu
 export type { SourceModel } from './dependencyPackages'
 export type { AddonList, AddonListItem } from './addons'
 export type {
-  AttributeAccessList,
   EndpointsAccessList,
   FolderAccess,
   FolderAccessList,
   Permissions,
   ProjectManagementPermissions,
   StudioManagementPermissions,
+  AttributeReadAccessList,
+  AttributeWriteAccessList,
 } from './accessGroups'
 export type { AddonVersionDetail, LinkModel } from './market'

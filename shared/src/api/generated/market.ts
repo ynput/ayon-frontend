@@ -16,7 +16,12 @@ const injectedRtkApi = api.injectEndpoints({
       }),
     }),
     getLicenses: build.query<GetLicensesApiResponse, GetLicensesApiArg>({
-      query: (queryArg) => ({ url: `/api/market/licenses`, params: { refresh: queryArg.refresh } }),
+      query: (queryArg) => ({
+        url: `/api/market/licenses`,
+        params: {
+          refresh: queryArg.refresh,
+        },
+      }),
     }),
   }),
   overrideExisting: false,

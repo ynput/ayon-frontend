@@ -16,7 +16,11 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/desktop/installers`,
         method: 'POST',
         body: queryArg.installer,
-        params: { url: queryArg.url, overwrite: queryArg.overwrite, force: queryArg.force },
+        params: {
+          url: queryArg.url,
+          overwrite: queryArg.overwrite,
+          force: queryArg.force,
+        },
       }),
     }),
     deleteInstallerFile: build.mutation<DeleteInstallerFileApiResponse, DeleteInstallerFileApiArg>({
@@ -47,7 +51,7 @@ export type CreateInstallerApiArg = {
   force?: boolean
   installer: Installer
 }
-export type DeleteInstallerFileApiResponse = /** status 204 Successful Response */ void
+export type DeleteInstallerFileApiResponse = unknown
 export type DeleteInstallerFileApiArg = {
   filename: string
 }

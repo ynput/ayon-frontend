@@ -1,6 +1,12 @@
 import { api } from '@shared/api/base'
 const injectedRtkApi = api.injectEndpoints({
   endpoints: (build) => ({
+    getUserPools: build.query<GetUserPoolsApiResponse, GetUserPoolsApiArg>({
+      query: () => ({ url: `/api/auth/pools` }),
+    }),
+    getUserApiKeys: build.query<GetUserApiKeysApiResponse, GetUserApiKeysApiArg>({
+      query: (queryArg) => ({ url: `/api/users/${queryArg.userName}/apikeys` }),
+    }),
     getUserStudioPermissions: build.query<
       GetUserStudioPermissionsApiResponse,
       GetUserStudioPermissionsApiArg
@@ -35,6 +41,12 @@ const injectedRtkApi = api.injectEndpoints({
   overrideExisting: false,
 })
 export { injectedRtkApi as api }
+export type GetUserPoolsApiResponse = /** status 200 Successful Response */ UserPoolModel[]
+export type GetUserPoolsApiArg = void
+export type GetUserApiKeysApiResponse = /** status 200 Successful Response */ ApiKeyModel[]
+export type GetUserApiKeysApiArg = {
+  userName: string
+}
 export type GetUserStudioPermissionsApiResponse =
   /** status 200 Successful Response */ StudioPermissions
 export type GetUserStudioPermissionsApiArg = {
@@ -46,8 +58,7 @@ export type GetUserProjectPermissionsApiArg = {
   projectName: string
   userName: string
 }
-export type GetUserApiResponse =
-  /** status 200 Successful Response */
+export type GetUserApiResponse = /** status 200 Successful Response */
   | UserModel
   | {
       [key: string]: string
@@ -65,18 +76,22 @@ export type SetFrontendPreferencesApiArg = {
   userName: string
   patchData: object
 }
-export type StudioManagementPermissions = {
-  /** Allow users to create new projects */
-  create_projects?: boolean
-  /** Allow users to list all users in the studio */
-  list_all_users?: boolean
+export type UserPoolModel = {
+  id: string
+  label: string
+  type: 'fixed' | 'metered'
+  valid: boolean
+  note: string
+  exp: number
+  max: number
+  used: number
 }
-export type StudioPermissions = {
-  studio?: StudioManagementPermissions
-}
-export type ErrorResponse = {
-  code: number
-  detail: string
+export type ApiKeyModel = {
+  id: string
+  label: string
+  preview: string
+  created: number
+  expires?: number
 }
 export type ValidationError = {
   loc: (string | number)[]
@@ -85,6 +100,15 @@ export type ValidationError = {
 }
 export type HttpValidationError = {
   detail?: ValidationError[]
+}
+export type StudioManagementPermissions = {
+  /** Allow users to create new projects */
+  create_projects?: boolean
+  /** Allow users to list all users in the studio */
+  list_all_users?: boolean
+}
+export type StudioPermissions = {
+  studio?: StudioManagementPermissions
 }
 export type ProjectManagementPermissions = {
   /** Allow users to view or edit the project anatomy */
@@ -103,7 +127,11 @@ export type FolderAccessList = {
   enabled?: boolean
   access_list?: FolderAccess[]
 }
-export type AttributeAccessList = {
+export type AttributeReadAccessList = {
+  enabled?: boolean
+  attributes?: string[]
+}
+export type AttributeWriteAccessList = {
   enabled?: boolean
   attributes?: string[]
 }
@@ -124,9 +152,9 @@ export type ProjectPermissions = {
   /** Whitelist folders a user can delete */
   delete?: FolderAccessList
   /** Whitelist attributes a user can read */
-  attrib_read?: AttributeAccessList
+  attrib_read?: AttributeReadAccessList
   /** Whitelist attributes a user can write */
-  attrib_write?: AttributeAccessList
+  attrib_write?: AttributeWriteAccessList
   /** Whitelist REST endpoints a user can access */
   endpoints?: EndpointsAccessList
 }
@@ -135,8 +163,7 @@ export type UserAttribModel = {
   email?: string
   avatarUrl?: string
   developerMode?: boolean
-  /** Do they live in Olympus */
-  god?: boolean
+  studioId?: string
 }
 export type UserModel = {
   /** Name is an unique id of the {entity_name} */

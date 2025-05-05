@@ -13,6 +13,7 @@ const injectedRtkApi = api.injectEndpoints({
         body: queryArg.watchersModel,
         headers: {
           'x-sender': queryArg['x-sender'],
+          'x-sender-type': queryArg['x-sender-type'],
         },
       }),
     }),
@@ -32,6 +33,7 @@ export type SetEntityWatchersApiArg = {
   entityType: string
   entityId: string
   'x-sender'?: string
+  'x-sender-type'?: string
   watchersModel: WatchersModel
 }
 export type WatchersModel = {

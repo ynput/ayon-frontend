@@ -28,6 +28,14 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/files/${queryArg.fileId}/thumbnail`,
       }),
     }),
+    getProjectFileStill: build.query<GetProjectFileStillApiResponse, GetProjectFileStillApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/files/${queryArg.fileId}/still`,
+        params: {
+          t: queryArg.t,
+        },
+      }),
+    }),
     getProjectEntityCounts: build.query<
       GetProjectEntityCountsApiResponse,
       GetProjectEntityCountsApiArg
@@ -40,7 +48,9 @@ const injectedRtkApi = api.injectEndpoints({
     getProjectActivity: build.query<GetProjectActivityApiResponse, GetProjectActivityApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/dashboard/activity`,
-        params: { days: queryArg.days },
+        params: {
+          days: queryArg.days,
+        },
       }),
     }),
     getProjectTeams: build.query<GetProjectTeamsApiResponse, GetProjectTeamsApiArg>({
@@ -78,8 +88,12 @@ const injectedRtkApi = api.injectEndpoints({
     getProjectSiteRoots: build.query<GetProjectSiteRootsApiResponse, GetProjectSiteRootsApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/siteRoots`,
-        headers: { 'x-ayon-site-id': queryArg['x-ayon-site-id'] },
-        params: { platform: queryArg.platform },
+        headers: {
+          'x-ayon-site-id': queryArg['x-ayon-site-id'],
+        },
+        params: {
+          platform: queryArg.platform,
+        },
       }),
     }),
     getProjectUsers: build.query<GetProjectUsersApiResponse, GetProjectUsersApiArg>({
@@ -344,6 +358,16 @@ export type ProjectAttribModel = {
   description?: string
   applications?: string[]
   tools?: string[]
+  ftrackId?: string
+  ftrackPath?: string
+  /** The Shotgrid ID of this entity. */
+  shotgridId?: string
+  /** The Shotgrid Type of this entity. */
+  shotgridType?: string
+  /** Push changes done to this project to Shotgird. Requires the transmitter service. */
+  shotgridPush?: boolean
+  sokoId?: string
+  sokoPath?: string
 }
 export type FolderType = {
   name: string
@@ -447,6 +471,16 @@ export type ProjectAttribModel2 = {
   description?: string
   applications?: string[]
   tools?: string[]
+  ftrackId?: string
+  ftrackPath?: string
+  /** The Shotgrid ID of this entity. */
+  shotgridId?: string
+  /** The Shotgrid Type of this entity. */
+  shotgridType?: string
+  /** Push changes done to this project to Shotgird. Requires the transmitter service. */
+  shotgridPush?: boolean
+  sokoId?: string
+  sokoPath?: string
 }
 export type ProjectModel = {
   /** Name is an unique id of the {entity_name} */

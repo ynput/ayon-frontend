@@ -11,7 +11,6 @@ generates:
       - typescript
       - add:
           content: >
-            /* @ts-nocheck */
             /* eslint-disable */
             /**
              *
@@ -23,6 +22,7 @@ generates:
              *
              * for this file to be re-created
              */
+            // @ts-nocheck
       - typescript-operations
       - typescript-rtk-query:
           importBaseApiFrom: '@shared/api/base'

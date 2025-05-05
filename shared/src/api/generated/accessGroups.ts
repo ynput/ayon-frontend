@@ -40,13 +40,13 @@ export type GetAccessGroupApiArg = {
   accessGroupName: string
   projectName: string
 }
-export type SaveAccessGroupApiResponse = /** status 204 Successful Response */ void
+export type SaveAccessGroupApiResponse = unknown
 export type SaveAccessGroupApiArg = {
   accessGroupName: string
   projectName: string
   data: Permissions
 }
-export type DeleteAccessGroupApiResponse = /** status 204 Successful Response */ void
+export type DeleteAccessGroupApiResponse = unknown
 export type DeleteAccessGroupApiArg = {
   accessGroupName: string
   projectName: string
@@ -88,7 +88,11 @@ export type FolderAccessList = {
   enabled?: boolean
   access_list?: FolderAccess[]
 }
-export type AttributeAccessList = {
+export type AttributeReadAccessList = {
+  enabled?: boolean
+  attributes?: string[]
+}
+export type AttributeWriteAccessList = {
   enabled?: boolean
   attributes?: string[]
 }
@@ -110,9 +114,9 @@ export type Permissions = {
   /** Whitelist folders a user can delete */
   delete?: FolderAccessList
   /** Whitelist attributes a user can read */
-  attrib_read?: AttributeAccessList
+  attrib_read?: AttributeReadAccessList
   /** Whitelist attributes a user can write */
-  attrib_write?: AttributeAccessList
+  attrib_write?: AttributeWriteAccessList
   /** Whitelist REST endpoints a user can access */
   endpoints?: EndpointsAccessList
 }

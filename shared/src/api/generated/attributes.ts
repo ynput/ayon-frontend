@@ -21,7 +21,7 @@ export { injectedRtkApi as api }
 export type GetAttributeListApiResponse =
   /** status 200 Successful Response */ GetAttributeListModel
 export type GetAttributeListApiArg = void
-export type SetAttributeListApiResponse = /** status 204 Successful Response */ void
+export type SetAttributeListApiResponse = unknown
 export type SetAttributeListApiArg = {
   setAttributeListModel: SetAttributeListModel
 }
@@ -67,7 +67,7 @@ export type AttributeData = {
   maxItems?: number
   /** Only for string types. The value must match this regex. */
   regex?: string
-  /** List of enum items used for displaying select/multiselect widgets */
+  /** List of enum items used for displaying select widgets */
   enum?: AttributeEnumItem[]
   /** Inherit the attribute value from the parent entity. */
   inherit?: boolean

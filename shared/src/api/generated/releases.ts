@@ -2,7 +2,12 @@ import { api } from '@shared/api/base'
 const injectedRtkApi = api.injectEndpoints({
   endpoints: (build) => ({
     getReleases: build.query<GetReleasesApiResponse, GetReleasesApiArg>({
-      query: (queryArg) => ({ url: `/api/market/releases`, params: { all: queryArg.all } }),
+      query: (queryArg) => ({
+        url: `/api/market/releases`,
+        params: {
+          all: queryArg.all,
+        },
+      }),
     }),
     getReleaseInfo: build.query<GetReleaseInfoApiResponse, GetReleaseInfoApiArg>({
       query: (queryArg) => ({ url: `/api/market/releases/${queryArg.releaseName}` }),
