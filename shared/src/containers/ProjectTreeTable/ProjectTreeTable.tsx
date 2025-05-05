@@ -71,7 +71,6 @@ const getCommonPinningStyles = (column: Column<TableRow, unknown>): CSSPropertie
 }
 
 interface Props extends React.HTMLAttributes<HTMLDivElement> {
-  projectName: string
   scope: string
   options: BuiltInFieldOptions
   attribs: AttributeWithPermissions[]

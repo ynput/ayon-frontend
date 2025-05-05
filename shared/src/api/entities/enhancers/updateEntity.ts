@@ -144,12 +144,12 @@ const updateEntity = api.injectEndpoints({
         let invalidationTagsAfterComplete = []
         // if task, patch the GetKanban query
         if (entityType === 'task') {
-          const dashboardProjects = getState().dashboard.selectedProjects
-          const dashboardUsers = getState().dashboard.tasks.assignees
-          const dashboardAssigneesIsMe = getState().dashboard.tasks.assigneesFilter === 'me'
+          const dashboardProjects = getState().dashboard?.selectedProjects || []
+          const dashboardUsers = getState().dashboard?.tasks.assignees || []
+          const dashboardAssigneesIsMe = getState().dashboard?.tasks.assigneesFilter === 'me'
           const newAssignees = data.assignees
 
-          const cacheUsers = dashboardAssigneesIsMe ? [getState().user.name] : dashboardUsers
+          const cacheUsers = dashboardAssigneesIsMe ? [getState().user?.name] : dashboardUsers
 
           const entityAssignees = [...new Set([...currentAssignees, ...(newAssignees || [])])]
           const hasSomeAssignees = entityAssignees.some((assignee) => cacheUsers.includes(assignee))
