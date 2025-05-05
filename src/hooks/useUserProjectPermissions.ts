@@ -1,4 +1,4 @@
-import { StudioManagementPermissions, ProjectManagementPermissions } from '@api/rest/users'
+import { StudioManagementPermissions, ProjectManagementPermissions } from '@shared/api'
 import { Module } from '@pages/ProjectManagerPage/mappers'
 import { useGetCurrentUserPermissionsQuery } from '@queries/permissions/getPermissions'
 
@@ -186,10 +186,10 @@ class UserPermissions {
 
 const useUserProjectPermissions = (
   hasLimitedPermissions?: boolean,
-): {isLoading: boolean, permissions: UserPermissions | undefined} => {
+): { isLoading: boolean; permissions: UserPermissions | undefined } => {
   const { data: permissions, isLoading } = useGetCurrentUserPermissionsQuery()
 
-  return {isLoading, permissions: new UserPermissions(permissions, hasLimitedPermissions)}
+  return { isLoading, permissions: new UserPermissions(permissions, hasLimitedPermissions) }
 }
 
 export { UserPermissions, PermissionLevel }

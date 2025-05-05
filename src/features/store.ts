@@ -13,7 +13,7 @@ import releaseInstallerReducer, { releaseInstallerLocalItems } from '@state/rele
 import progressReducer from '@state/progress'
 
 // API
-import { BaseAPI } from '@shared/client'
+import { api } from '@shared/api'
 
 // Middleware
 import localStorageMiddleware from './middleware/localStorageMiddleware'
@@ -29,11 +29,11 @@ const store = configureStore({
     viewer: viewerReducer,
     releaseInstaller: releaseInstallerReducer,
     progress: progressReducer,
-    [BaseAPI.reducerPath]: BaseAPI.reducer,
+    [api.reducerPath]: api.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
-      .concat(BaseAPI.middleware)
+      .concat(api.middleware)
       .concat(
         localStorageMiddleware({
           ...dashboardLocalItems,

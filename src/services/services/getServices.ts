@@ -1,7 +1,7 @@
+import { servicesApi } from '@shared/api'
 import type { AddonList } from '@shared/api'
-import { api } from '@api/rest/services'
 
-const enhancedServicesApi = api.enhanceEndpoints({
+const enhancedServicesApi = servicesApi.enhanceEndpoints({
   endpoints: {
     listServices: {
       providesTags: () => ['service'],

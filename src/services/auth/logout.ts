@@ -1,4 +1,4 @@
-import api from '@shared/client'
+import { api } from '@shared/api'
 import { onClearDashboard } from '@state/dashboard'
 import { logout } from '@state/user'
 

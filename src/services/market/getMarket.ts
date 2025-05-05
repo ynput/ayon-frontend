@@ -1,9 +1,8 @@
 import { PubSub } from '@shared/util'
-import { $Any } from '@types'
 import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
 
 // VVV REST endpoints VVV
-import { api as apiRest, MarketAddonListApiResponse } from '@api/rest/market'
+import { marketApi, MarketAddonListApiResponse } from '@shared/api'
 
 type MarketAddonItemRes = NonNullable<MarketAddonListApiResponse['addons']>[0]
 export interface MarketAddonItem extends MarketAddonItemRes {
@@ -26,8 +25,8 @@ export type LicenseItem = {
   note: string
 }
 
-type DefinitionsRest = DefinitionsFromApi<typeof apiRest>
-type TagTypesRest = TagTypesFromApi<typeof apiRest>
+type DefinitionsRest = DefinitionsFromApi<typeof marketApi>
+type TagTypesRest = TagTypesFromApi<typeof marketApi>
 
 type UpdatedDefinitionsRest = Omit<DefinitionsRest, 'marketAddonList'> & {
   marketAddonList: OverrideResultType<DefinitionsRest['marketAddonList'], MarketAddonList>
@@ -37,11 +36,11 @@ type UpdatedDefinitionsRest = Omit<DefinitionsRest, 'marketAddonList'> & {
   >
 }
 
-export const enhancedMarketRest = apiRest.enhanceEndpoints<TagTypesRest, UpdatedDefinitionsRest>({
+export const enhancedMarketRest = marketApi.enhanceEndpoints<TagTypesRest, UpdatedDefinitionsRest>({
   endpoints: {
     marketAddonList: {
-      providesTags: (addons: $Any) => [
-        ...(addons?.map(({ id }: $Any) => ({ type: 'marketAddon', id })) || []),
+      providesTags: (addons: any) => [
+        ...(addons?.map(({ id }: any) => ({ type: 'marketAddon', id })) || []),
         {
           type: 'marketAddon',
           id: 'LIST',
@@ -49,7 +48,7 @@ export const enhancedMarketRest = apiRest.enhanceEndpoints<TagTypesRest, Updated
       ],
       transformResponse: (response: MarketAddonListApiResponse) =>
         [...(response?.addons || [])]
-          .map((addon: $Any) => {
+          .map((addon: any) => {
             const isDownloaded = !!addon.currentLatestVersion
             const isOfficial = addon.orgName === 'ynput-official'
             const isProductionOutdated =
@@ -90,14 +89,14 @@ export const {
 } = enhancedMarketRest
 
 // VVV GraphQL endpoints VVV
-import apiGQL, { GetMarketInstallEventsQuery } from '@shared/api'
+import { gqlApi, GetMarketInstallEventsQuery } from '@shared/api'
 
 type MarketAddonInstallEvent = GetMarketInstallEventsQuery['events']['edges'][0]['node']
 
 export type MarketAddonInstallEventList = MarketAddonInstallEvent[]
 
-type DefinitionsGQL = DefinitionsFromApi<typeof apiGQL>
-type TagTypesGQL = TagTypesFromApi<typeof apiGQL>
+type DefinitionsGQL = DefinitionsFromApi<typeof gqlApi>
+type TagTypesGQL = TagTypesFromApi<typeof gqlApi>
 
 type UpdatedDefinitionsGQL = Omit<DefinitionsGQL, 'marketAddonList'> & {
   GetMarketInstallEvents: OverrideResultType<
@@ -106,7 +105,7 @@ type UpdatedDefinitionsGQL = Omit<DefinitionsGQL, 'marketAddonList'> & {
   >
 }
 
-export const enhancedMarketGQL = apiGQL.enhanceEndpoints<TagTypesGQL, UpdatedDefinitionsGQL>({
+export const enhancedMarketGQL = gqlApi.enhanceEndpoints<TagTypesGQL, UpdatedDefinitionsGQL>({
   endpoints: {
     GetMarketInstallEvents: {
       transformResponse: (response: GetMarketInstallEventsQuery) =>
@@ -114,7 +113,7 @@ export const enhancedMarketGQL = apiGQL.enhanceEndpoints<TagTypesGQL, UpdatedDef
       async onCacheEntryAdded(_args, { updateCachedData, cacheEntryRemoved }) {
         let subscriptions = []
         try {
-          const handlePubSub = (topic: string, message: $Any) => {
+          const handlePubSub = (topic: string, message: any) => {
             if (topic === 'client.connected') {
               return
             }

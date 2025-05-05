@@ -1,6 +1,6 @@
-import { api } from '@api/rest/config'
+import { configApi } from '@shared/api'
 
-export const getConfigApi = api.enhanceEndpoints({
+export const getConfigApi = configApi.enhanceEndpoints({
   endpoints: {
     getServerConfig: {
       providesTags: ['config'],

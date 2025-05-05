@@ -3,7 +3,7 @@ import usePubSub from '@hooks/usePubSub'
 import { FC } from 'react'
 import { useDispatch, useStore } from 'react-redux'
 import { $Any } from '@/types'
-import { getActivitiesGQLApi, useLazyGetActivitiesByIdQuery } from '@shared/api/activities'
+import { activitiesQueries, useLazyGetActivitiesByIdQuery } from '@shared/api'
 import { bodyHasChecklist } from '@shared/containers/Feed/hooks/useCommentMutations'
 
 type ActivityMessage = {
@@ -51,7 +51,7 @@ const WatchActivities: FC<WatchActivitiesProps> = ({}) => {
 
       // get all caches that this activity is referenced by
       const tags = entityIds.map((entityId) => ({ type: 'entityActivities', id: entityId }))
-      const entries = getActivitiesGQLApi.util.selectInvalidatedBy(state, tags)
+      const entries = activitiesQueries.util.selectInvalidatedBy(state, tags)
 
       // add to the invalidateTags as we go and then invalidate all at the end
       const invalidateTags = []
@@ -61,7 +61,7 @@ const WatchActivities: FC<WatchActivitiesProps> = ({}) => {
           // remove the activity from the cache using originalArguments
           dispatch(
             // @ts-ignore
-            getActivitiesGQLApi.util.updateQueryData(
+            activitiesQueries.util.updateQueryData(
               'getActivitiesInfinite',
               entry.originalArgs,
               (draft: $Any) => {
@@ -117,7 +117,7 @@ const WatchActivities: FC<WatchActivitiesProps> = ({}) => {
           for (const entry of entriesToPatch) {
             dispatch(
               // @ts-ignore
-              getActivitiesGQLApi.util.updateQueryData(
+              activitiesQueries.util.updateQueryData(
                 'getActivitiesInfinite',
                 entry.originalArgs,
                 (draft: $Any) => {
@@ -154,7 +154,7 @@ const WatchActivities: FC<WatchActivitiesProps> = ({}) => {
         } catch (error) {
           // invalidate the activity feed for all those entities
           dispatch(
-            getActivitiesGQLApi.util.invalidateTags(
+            activitiesQueries.util.invalidateTags(
               entityIds.map((entityId) => ({ type: 'entityActivities', id: entityId })),
             ),
           )
@@ -172,8 +172,7 @@ const WatchActivities: FC<WatchActivitiesProps> = ({}) => {
       }
 
       //   invalidate the tags
-      if (invalidateTags.length > 0)
-        dispatch(getActivitiesGQLApi.util.invalidateTags(invalidateTags))
+      if (invalidateTags.length > 0) dispatch(activitiesQueries.util.invalidateTags(invalidateTags))
     },
     null,
     {

@@ -1,5 +1,5 @@
 import { toast } from 'react-toastify'
-import { api, ManageInboxItemApiArg } from '@api/rest/inbox'
+import { api, ManageInboxItemApiArg } from '@shared/api'
 import { $Any } from '@types'
 import { current } from '@reduxjs/toolkit'
 import { enhancedInboxGraphql } from './getInbox'

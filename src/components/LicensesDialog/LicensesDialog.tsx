@@ -5,7 +5,7 @@ import { FC, useEffect, useMemo } from 'react'
 import styled from 'styled-components'
 import { copyToClipboard } from '@shared/util'
 import clsx from 'clsx'
-import { YnputCloudInfoModel } from '@api/rest/cloud'
+import { YnputCloudInfoModel } from '@shared/api'
 import { fromUnixTime, format } from 'date-fns'
 import EmptyPlaceholder from '@shared/components/EmptyPlaceholder'
 

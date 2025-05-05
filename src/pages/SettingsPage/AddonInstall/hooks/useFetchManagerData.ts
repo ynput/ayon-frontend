@@ -1,6 +1,4 @@
-import { BundleModel } from '@api/rest/bundles'
-import { DependencyPackage } from '@api/rest/dependencyPackages'
-import { Installer } from '@api/rest/installers'
+import type { BundleModel, DependencyPackage, Installer } from '@shared/api'
 import { useListBundlesQuery } from '@queries/bundles/getBundles'
 import { useListDependencyPackagesQuery } from '@queries/dependencyPackages/getDependencyPackages'
 import { useListInstallersQuery } from '@queries/installers/getInstallers'

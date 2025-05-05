@@ -1,6 +1,6 @@
-import { api } from '@api/rest/cloud'
+import { cloudApi } from '@shared/api'
 
-const cloudApi = api.enhanceEndpoints({
+const enhancedApi = cloudApi.enhanceEndpoints({
   endpoints: {
     getYnputCloudInfo: {
       providesTags: ['connections'],
@@ -22,4 +22,4 @@ export const {
   useSetYnputCloudKeyMutation,
   useDeleteYnputCloudKeyMutation,
   useGetFeedbackVerificationQuery,
-} = cloudApi
+} = enhancedApi

@@ -1,16 +1,17 @@
 overwrite: true
 schema:
-  - http://localhost:5000/graphql:
+  - http://localhost:3000/graphql:
       headers:
         Authorization: Bearer ${TOKEN}
 documents: '../**/*.graphql'
 generates:
   # Generate types + RTK Query hooks
-  ../shared/src/client/graphql.ts:
+  ../shared/src/api/generated/graphql.ts:
     plugins:
       - typescript
       - add:
           content: >
+            /* @ts-nocheck */
             /* eslint-disable */
             /**
              *
@@ -24,8 +25,8 @@ generates:
              */
       - typescript-operations
       - typescript-rtk-query:
-          importBaseApiFrom: './client'
-          importBaseApiAlternateName: 'BaseAPI'
+          importBaseApiFrom: '@shared/api/base'
+          importBaseApiAlternateName: 'api'
   ./graphql.schema.json:
     plugins:
       - 'introspection'

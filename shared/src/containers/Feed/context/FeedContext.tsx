@@ -15,7 +15,7 @@ import {
 import type { SuggestRequest, SuggestResponse } from '@shared/api'
 import { ActivityUser } from '../helpers/groupMinorActivities'
 import { DetailsPanelTab, useScopedDetailsPanel } from '@shared/context'
-import { getFilterActivityTypes } from '@shared/api/activities/util/activitiesHelpers'
+import { getFilterActivityTypes } from '@shared/api'
 
 export const FEED_NEW_COMMENT = '__new__' as const
 

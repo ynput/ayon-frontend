@@ -114,3 +114,4 @@ export const {
   usePromoteBundleMutation,
   useMigrateSettingsByBundleMutation,
 } = updateBundles
+export { updateBundles as bundlesQueries }

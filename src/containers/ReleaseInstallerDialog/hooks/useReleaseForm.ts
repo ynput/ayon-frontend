@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { BundleModel } from '@api/rest/bundles'
-import { ReleaseListItemModel } from '@api/rest/releases'
+import { BundleModel, ReleaseListItemModel } from '@shared/api'
 import { useLazyListInstallersQuery } from '@queries/installers/getInstallers'
 import { guessPlatform } from '../helpers'
 import { ReleaseState } from '@state/releaseInstaller'
@@ -70,7 +69,7 @@ export const useReleaseForm = ({
           if (installerVersion) {
             const { installers = [] } =
               (await getInstallers({ version: installerVersion }).unwrap()) || {}
-            return installers.map((i) => i.platform)
+            return installers.map((i: any) => i.platform)
           } else {
             const guess = guessPlatform()
             return guess ? [guess] : []

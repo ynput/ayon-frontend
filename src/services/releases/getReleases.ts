@@ -1,9 +1,8 @@
-import { api } from '@api/rest/releases'
-import graphqlApi, { GetInstallEventsQuery } from '@shared/api'
+import { releasesApi, gqlApi } from '@shared/api'
+import type { GetInstallEventsQuery } from '@shared/api'
 import { PubSub } from '@shared/util'
-import { $Any } from '@types'
 
-const releasesApi = api.enhanceEndpoints({
+const enhancedApi = releasesApi.enhanceEndpoints({
   endpoints: {
     getReleases: {},
     getReleaseInfo: {},
@@ -11,7 +10,7 @@ const releasesApi = api.enhanceEndpoints({
 })
 
 export const { useGetReleasesQuery, useGetReleaseInfoQuery, useLazyGetReleaseInfoQuery } =
-  releasesApi
+  enhancedApi
 
 export type InstallMessage = {
   id: string
@@ -38,20 +37,20 @@ export type GetInstallEvent = InstallEventNode | InstallMessage
 export type GetInstallEventsResult = GetInstallEvent[]
 
 import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
-type Definitions = DefinitionsFromApi<typeof graphqlApi>
-type TagTypes = TagTypesFromApi<typeof graphqlApi>
+type Definitions = DefinitionsFromApi<typeof gqlApi>
+type TagTypes = TagTypesFromApi<typeof gqlApi>
 // update the definitions to include the new types
 type UpdatedDefinitions = Omit<Definitions, 'GetInstallEvents'> & {
   GetInstallEvents: OverrideResultType<Definitions['GetInstallEvents'], GetInstallEventsResult>
 }
 
-const releasesGqlApi = graphqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
+const releasesGqlApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
   endpoints: {
     GetInstallEvents: {
       transformResponse: (response: GetInstallEventsQuery) =>
         response.events.edges.map(({ node }) => node),
       async onCacheEntryAdded({ ids = [] }, { updateCachedData, cacheEntryRemoved }) {
-        let subscriptions: $Any = []
+        let subscriptions: any[] = []
 
         const topics = [
           'addon.install_from_url',
@@ -94,7 +93,7 @@ const releasesGqlApi = graphqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>
         }
         await cacheEntryRemoved
         // unsubscribe from all topics
-        subscriptions.forEach((sub: $Any) => PubSub.unsubscribe(sub))
+        subscriptions.forEach((sub: any) => PubSub.unsubscribe(sub))
       },
     },
   },
