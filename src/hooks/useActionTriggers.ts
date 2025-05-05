@@ -10,7 +10,7 @@ interface ActionPayload {
   uri?: string // navigates to a different page
   new_tab?: boolean // opens a new tab
   extra_download?: string // triggers a file download from a URL
-  extra_copy?: string // copies string content to clipboard
+  extra_clipboard?: string // copies string content to clipboard
   [key: string]: any
 }
 
@@ -97,13 +97,13 @@ const useActionTriggers = () => {
       }
     }
 
-    if ('extra_copy' in payload) {
+    if ('extra_clipboard' in payload) {
       // Validate it is a string
-      if (typeof payload.extra_copy !== 'string') {
-        throw new Error('Invalid payload: extra_copy')
+      if (typeof payload.extra_clipboard !== 'string') {
+        throw new Error('Invalid payload: extra_clipboard')
       } else {
         // Copy content to clipboard
-        navigator.clipboard.writeText(payload.extra_copy).catch((err) => {
+        navigator.clipboard.writeText(payload.extra_clipboard).catch((err) => {
           console.error('Failed to copy text to clipboard:', err)
         })
       }
