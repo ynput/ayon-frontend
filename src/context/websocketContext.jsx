@@ -7,7 +7,7 @@ import useWebSocket, { ReadyState } from 'react-use-websocket'
 import { debounce } from 'lodash'
 import api from '@shared/api'
 import RefreshToast from '@components/RefreshToast'
-import { useLogOutMutation } from '@queries/auth/logout'
+import { useLogoutMutation } from '@queries/auth/logout'
 import { useLazyGetSiteInfoQuery } from '@shared/api'
 
 export const SocketContext = createContext()
@@ -21,7 +21,7 @@ export const SocketProvider = (props) => {
   // get user logged in
   const [serverRestartingVisible, setServerRestartingVisible] = useState(false)
   const [topics, setTopics] = useState([])
-  const [logout] = useLogOutMutation()
+  const [logout] = useLogoutMutation()
   const [getInfo] = useLazyGetSiteInfoQuery()
 
   const wsOpts = {

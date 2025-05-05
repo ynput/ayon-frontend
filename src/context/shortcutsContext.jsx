@@ -10,7 +10,7 @@ import React, {
 import { useNavigate } from 'react-router'
 import { useAppDispatch, useAppSelector } from '@state/store'
 import { toggleMenuOpen } from '@state/context'
-import { useLogOutMutation } from '@queries/auth/logout'
+import { useLogoutMutation } from '@queries/auth/logout'
 import { useSearchParams } from 'react-router-dom'
 
 const ShortcutsContext = createContext()
@@ -24,7 +24,7 @@ function ShortcutsProvider(props) {
   const reviewOpen = useAppSelector((state) => state.viewer.isOpen)
 
   // logout
-  const [logout] = useLogOutMutation()
+  const [logout] = useLogoutMutation()
 
   // keep track of the last key pressed
   const [lastPressed, setLastPressed] = useState(null)

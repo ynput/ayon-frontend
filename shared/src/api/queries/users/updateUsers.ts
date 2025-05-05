@@ -1,5 +1,4 @@
 import { usersApi } from '@shared/api/generated'
-import { authApi } from '@shared/api/generated'
 
 const updateUserApi = usersApi.enhanceEndpoints({
   endpoints: {
@@ -12,7 +11,7 @@ const updateUserApi = usersApi.enhanceEndpoints({
 
         // optimistic update the user cache
         const patch = dispatch(
-          authApi.util.updateQueryData('getCurrentUser', undefined, (draft) => {
+          usersApi.util.updateQueryData('getCurrentUser', undefined, (draft) => {
             if (draft?.data) {
               draft.data.frontendPreferences = { ...draft.data.frontendPreferences, ...patchData }
             }
@@ -123,7 +122,7 @@ export const {
   useUpdateUserNameMutation,
   useUpdateUserPasswordMutation,
   useAddUserMutation,
-  useDeleteUserMutation,
+  useDeleteUserMutation, // move to enhanced
   useUpdateUserAPIKeyMutation,
   useInvalidateUserSessionMutation,
   useSetFrontendPreferencesMutation,

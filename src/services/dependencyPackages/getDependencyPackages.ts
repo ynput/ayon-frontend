@@ -1,6 +1,6 @@
-import { dependencyPackagesApi } from '@shared/api'
+import { desktopApi } from '@shared/api'
 
-const enhancedApi = dependencyPackagesApi.enhanceEndpoints({
+const enhancedApi = desktopApi.enhanceEndpoints({
   endpoints: {
     listDependencyPackages: {
       providesTags: ['dependencyPackage'],

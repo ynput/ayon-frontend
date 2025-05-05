@@ -14,6 +14,9 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    listAllActions: build.query<ListAllActionsApiResponse, ListAllActionsApiArg>({
+      query: () => ({ url: `/api/actions/manage` }),
+    }),
     configureAction: build.mutation<ConfigureActionApiResponse, ConfigureActionApiArg>({
       query: (queryArg) => ({
         url: `/api/actions/config`,
@@ -40,6 +43,16 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    takeAction: build.query<TakeActionApiResponse, TakeActionApiArg>({
+      query: (queryArg) => ({ url: `/api/actions/take/${queryArg.token}` }),
+    }),
+    abortAction: build.mutation<AbortActionApiResponse, AbortActionApiArg>({
+      query: (queryArg) => ({
+        url: `/api/actions/abort/${queryArg.token}`,
+        method: 'POST',
+        body: queryArg.abortRequestModel,
+      }),
+    }),
   }),
   overrideExisting: false,
 })
@@ -50,6 +63,8 @@ export type ListAvailableActionsForContextApiArg = {
   mode?: 'simple' | 'dynamic' | 'all'
   actionContext: ActionContext
 }
+export type ListAllActionsApiResponse = /** status 200 Successful Response */ BaseActionManifest[]
+export type ListAllActionsApiArg = void
 export type ConfigureActionApiResponse = /** status 200 Successful Response */ object
 export type ConfigureActionApiArg = {
   addonName: string
@@ -65,6 +80,15 @@ export type ExecuteActionApiArg = {
   variant?: string
   identifier: string
   actionContext: ActionContext
+}
+export type TakeActionApiResponse = /** status 200 Successful Response */ TakeResponseModel
+export type TakeActionApiArg = {
+  token: string
+}
+export type AbortActionApiResponse = /** status 200 Successful Response */ any
+export type AbortActionApiArg = {
+  token: string
+  abortRequestModel: AbortRequestModel
 }
 export type IconModel = {
   type?: 'material-symbols' | 'url'
@@ -159,13 +183,25 @@ export type ActionConfig = {
 }
 export type ExecuteResponseModel = {
   /** The type of response */
-  type: 'launcher' | 'server'
-  /** Whether the action was successful */
+  type?: 'form' | 'launcher' | 'navigate' | 'query' | 'redirect' | 'simple'
+  /** Payload is still parsed even if the action failed, but the message is highlighted as an error.If the action execution is broken beyond repair, Raise an exception instead of returning a response. */
   success?: boolean
   /** The message to display */
   message?: string
-  /** The uri to call from the browser */
-  uri?: string
-  /** The payload of the request */
+  /** The payload of the response. Payload model is parsed by the client and its schema, is based on the type of action. */
   payload?: object
+}
+export type TakeResponseModel = {
+  eventId: string
+  actionIdentifier: string
+  args?: string[]
+  context: ActionContext
+  addonName: string
+  addonVersion: string
+  variant: string
+  /** The user who initiated the action */
+  userName: string
+}
+export type AbortRequestModel = {
+  message?: string
 }

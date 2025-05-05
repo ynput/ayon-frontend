@@ -1,5 +1,7 @@
 import api from './getProject'
 
+// TODO: move endpoints to enhanced
+
 const projectApi = api.injectEndpoints({
   endpoints: (build) => ({
     createProject: build.mutation({

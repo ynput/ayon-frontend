@@ -1,9 +1,9 @@
 import {
-  activitiesApi,
+  activityFeedApi,
   DeleteProjectActivityApiResponse,
   DeleteProjectActivityApiArg,
 } from '@shared/api/generated'
-import { getReviewApi } from './getReview'
+import getReviewApi from './getReview'
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import { ReviewableResponse } from './types'
 
@@ -14,7 +14,9 @@ const injectedEndpoints = getReviewApi.injectEndpoints({
         queryFn: async (args, { dispatch }) => {
           try {
             // delete reviewable activity
-            const res = await dispatch(activitiesApi.endpoints.deleteProjectActivity.initiate(args))
+            const res = await dispatch(
+              activityFeedApi.endpoints.deleteProjectActivity.initiate(args),
+            )
 
             if (res.error) {
               return { error: res.error as FetchBaseQueryError }
@@ -91,3 +93,4 @@ export const {
   useSortVersionReviewablesMutation,
   useUpdateReviewableMutation,
 } = enhancedEndpoints
+export { enhancedEndpoints as reviewablesQueries }

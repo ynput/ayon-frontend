@@ -43,8 +43,8 @@ export const DetailsPanelFloating: FC<DetailsPanelFloatingProps> = () => {
 
   const { data: entitiesData = [], isFetching: isFetchingEntitiesDetails } =
     useGetEntitiesDetailsPanelQuery(
-      // @ts-expect-error - if entityType is not set, this will be skipped
-      { entityType: entityType || '', entities: entities },
+      // @ts-expect-error
+      { entityType: entityType, entities: entities },
       {
         skip: !isOpen || isFetchingInfo,
       },

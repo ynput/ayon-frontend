@@ -110,7 +110,7 @@ const updateBundles = enhancedUpdateBundles.injectEndpoints({
 export const {
   useDeleteBundleMutation,
   useCreateBundleMutation,
-  useUpdateBundleMutation,
+  useUpdateBundleMutation, // migrated to enhanced api
   usePromoteBundleMutation,
   useMigrateSettingsByBundleMutation,
 } = updateBundles

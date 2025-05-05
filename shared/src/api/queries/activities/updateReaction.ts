@@ -1,4 +1,4 @@
-import { activitiesApi } from '@shared/api/generated'
+import { activityFeedApi } from '@shared/api/generated'
 import { ActivityNode } from '../../generated/graphql'
 import getActivitiesGQLApi from './getActivities'
 
@@ -57,7 +57,7 @@ const patchActivity = ({ activityId, userName, reaction }, { getState, dispatch 
   })
 }
 
-const updateReactionApi = activitiesApi.enhanceEndpoints({
+const updateReactionApi = activityFeedApi.enhanceEndpoints({
   endpoints: {
     createReactionToActivity: {
       async onQueryStarted(args, { getState, dispatch, queryFulfilled }) {

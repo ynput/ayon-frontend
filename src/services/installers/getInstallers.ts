@@ -1,7 +1,7 @@
-import { installersApi, ListInstallersApiResponse } from '@shared/api'
+import { desktopApi, ListInstallersApiResponse } from '@shared/api'
 import { coerce, compareBuild } from 'semver'
 
-const enhancedApi = installersApi.enhanceEndpoints({
+const enhancedApi = desktopApi.enhanceEndpoints({
   endpoints: {
     listInstallers: {
       transformResponse: (res: ListInstallersApiResponse) => {

@@ -12,7 +12,7 @@ const SessionList = ({ userName }) => {
     isLoading,
     isUninitialized,
     refetch,
-  } = useGetUserSessionsQuery({ name: userName }, { skip: !userName })
+  } = useGetUserSessionsQuery({ userName }, { skip: !userName })
 
   const [invalidateToken] = useInvalidateUserSessionMutation()
 

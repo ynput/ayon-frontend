@@ -1,6 +1,5 @@
 import { toast } from 'react-toastify'
-import { api, ManageInboxItemApiArg } from '@shared/api'
-import { $Any } from '@types'
+import { inboxApi, ManageInboxItemApiArg } from '@shared/api'
 import { current } from '@reduxjs/toolkit'
 import { enhancedInboxGraphql } from './getInbox'
 
@@ -14,7 +13,7 @@ export interface Arg extends ManageInboxItemApiArg {
 }
 
 // When reading a message, we need to update the unread count
-const patchUnreadCount = (dispatch: $Any, count: number | 'all', important: boolean) => {
+const patchUnreadCount = (dispatch: any, count: number | 'all', important: boolean) => {
   dispatch(
     enhancedInboxGraphql.util.updateQueryData('GetInboxUnreadCount', { important }, (draft) => {
       // console.log('updating unread count: ', draft - count, count)
@@ -23,7 +22,7 @@ const patchUnreadCount = (dispatch: $Any, count: number | 'all', important: bool
   )
 }
 
-const enhancedRest = api.enhanceEndpoints({
+const enhancedRest = inboxApi.enhanceEndpoints({
   endpoints: {
     manageInboxItem: {
       async onQueryStarted(
@@ -56,7 +55,7 @@ const enhancedRest = api.enhanceEndpoints({
 
         let patchResult
 
-        let messages: $Any[] = []
+        let messages: any[] = []
 
         let tagsToInvalidate = [{ type: 'inbox', id: 'hasUnread' }]
 
@@ -160,10 +159,10 @@ const enhancedRest = api.enhanceEndpoints({
 
           // invalidate tags AFTER the query is fulfilled and for ALL apis
           if (tagsToInvalidate.length) {
-            dispatch(api.util.invalidateTags(tagsToInvalidate))
-            dispatch(api.util.invalidateTags(tagsToInvalidate))
+            dispatch(inboxApi.util.invalidateTags(tagsToInvalidate))
+            dispatch(inboxApi.util.invalidateTags(tagsToInvalidate))
           }
-        } catch (error: $Any) {
+        } catch (error: any) {
           const message = `Error: ${error?.error?.data?.detail}`
           console.error(message, error)
           toast.error(message)
@@ -175,3 +174,4 @@ const enhancedRest = api.enhanceEndpoints({
 })
 
 export const { useManageInboxItemMutation } = enhancedRest
+export { enhancedRest as inboxQueries }

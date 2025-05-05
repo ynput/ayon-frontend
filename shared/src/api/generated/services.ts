@@ -24,6 +24,13 @@ const injectedRtkApi = api.injectEndpoints({
     listHosts: build.query<ListHostsApiResponse, ListHostsApiArg>({
       query: () => ({ url: `/api/hosts` }),
     }),
+    hostHeartbeat: build.mutation<HostHeartbeatApiResponse, HostHeartbeatApiArg>({
+      query: (queryArg) => ({
+        url: `/api/hosts/heartbeat`,
+        method: 'POST',
+        body: queryArg.heartbeatRequestModel,
+      }),
+    }),
   }),
   overrideExisting: false,
 })
@@ -46,6 +53,10 @@ export type PatchServiceApiArg = {
 }
 export type ListHostsApiResponse = /** status 200 Successful Response */ HostListResponseModel
 export type ListHostsApiArg = void
+export type HostHeartbeatApiResponse = /** status 200 Successful Response */ HeartbeatResponseModel
+export type HostHeartbeatApiArg = {
+  heartbeatRequestModel: HeartbeatRequestModel
+}
 export type ServiceDataModel = {
   volumes?: string[]
   ports?: string[]
@@ -117,4 +128,12 @@ export type HostModel = {
 export type HostListResponseModel = {
   /** List of registered hosts */
   hosts?: HostModel[]
+}
+export type HeartbeatResponseModel = {
+  services?: ServiceModel[]
+}
+export type HeartbeatRequestModel = {
+  hostname: string
+  health: HostHealthModel
+  services?: string[]
 }

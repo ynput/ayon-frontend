@@ -1,4 +1,4 @@
-import { projectApi, accessGroupsApi } from '@shared/api'
+import { projectsApi, accessApi } from '@shared/api'
 
 export type ProjectUserData = {
   [project: string]: {
@@ -14,7 +14,7 @@ type GetProjectsUsersParams = {
   projects: string[]
 }
 
-const enhancedApi = accessGroupsApi.injectEndpoints({
+const enhancedApi = accessApi.injectEndpoints({
   endpoints: (build) => ({
     getProjectsAccess: build.query<GetProjectsUsersApiResponse, GetProjectsUsersParams>({
       async queryFn({ projects = [] }, { dispatch, forced }) {
@@ -24,7 +24,7 @@ const enhancedApi = accessGroupsApi.injectEndpoints({
           for (const project of projects) {
             promises.push(
               dispatch(
-                projectApi.endpoints.getProjectUsers.initiate(
+                projectsApi.endpoints.getProjectUsers.initiate(
                   { projectName: project },
                   { forceRefetch: forced },
                 ),

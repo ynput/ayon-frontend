@@ -1,10 +1,10 @@
 // enhanced the project query so it can be added to redux store
 // We need to do this outside of shared
 
-import { projectApi } from '@shared/api'
+import { projectsApi } from '@shared/api'
 import { selectProject, setProjectData } from '@state/project'
 
-projectApi.enhanceEndpoints({
+projectsApi.enhanceEndpoints({
   endpoints: {
     getProject: {
       async onCacheEntryAdded(arg, { cacheDataLoaded, getCacheEntry, dispatch }) {
@@ -59,4 +59,4 @@ projectApi.enhanceEndpoints({
   },
 })
 
-export const { useGetProjectQuery } = projectApi
+export const { useGetProjectQuery } = projectsApi

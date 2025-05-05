@@ -1,4 +1,4 @@
-import { projectApi, ListProjectsApiResponse, ListProjectsItemModel } from '@shared/api/generated'
+import { projectsApi, ListProjectsApiResponse, ListProjectsItemModel } from '@shared/api/generated'
 
 // TODO: use graphql api and write custom types
 // We will need to inject the endpoint as it cannot be generated
@@ -32,7 +32,7 @@ const createProjectQuery = (attribs: any, fields: any) => {
   `
 }
 
-const getProjectInjected = projectApi.injectEndpoints({
+const getProjectInjected = projectsApi.injectEndpoints({
   endpoints: (build) => ({
     getProjectAttribs: build.query({
       query: ({ projectName, attribs = [], fields = [] }) => ({

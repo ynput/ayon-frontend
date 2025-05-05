@@ -120,7 +120,7 @@ export type ActivityOperationModel = {
   /** ID of the activity. None for create */
   activityId?: string
   /** Data to be used for create or update. Ignored for delete.See create/patch activity endpoint for details */
-  data?: object
+  data?: Record<string, any>
 }
 export type ActivityOperationsRequestModel = {
   operations?: ActivityOperationModel[]

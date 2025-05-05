@@ -1,6 +1,6 @@
-import { permissionsApi } from '@shared/api'
+import { usersApi } from '@shared/api'
 
-const enhancedApi = permissionsApi.enhanceEndpoints({
+const enhancedApi = usersApi.enhanceEndpoints({
   endpoints: {
     getMyPermissions: {
       providesTags: (_result) => [{ type: 'userPermissions' }],
@@ -12,4 +12,4 @@ const enhancedApi = permissionsApi.enhanceEndpoints({
 })
 
 export const { useGetMyPermissionsQuery, useGetMyProjectPermissionsQuery } = enhancedApi
-export default enhancedApi
+export { enhancedApi as permissionsQueries }

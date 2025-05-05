@@ -7,12 +7,12 @@ export type Summary = {
 
 import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
 import {
-  api,
+  reviewablesApi,
   ReviewableModel,
   ReviewableProcessingStatus,
   GetReviewablesForVersionApiResponse,
   VersionReviewablesModel,
-} from '../review'
+} from '@shared/api/generated'
 
 // UPDATE GetReviewablesForVersionApiResponse to include the new processing type
 // Define a type alias for Processing to extend it correctly
@@ -59,8 +59,8 @@ export interface UpdatedGetReviewablesForVersionApiResponse
 }
 
 //   Update the definitions and tag types
-type Definitions = DefinitionsFromApi<typeof api>
-export type TagTypes = TagTypesFromApi<typeof api>
+type Definitions = DefinitionsFromApi<typeof reviewablesApi>
+export type TagTypes = TagTypesFromApi<typeof reviewablesApi>
 // update the definitions to include the new types
 export type UpdatedDefinitions = Omit<Definitions, 'getReviewablesForVersion'> & {
   getReviewablesForVersion: OverrideResultType<

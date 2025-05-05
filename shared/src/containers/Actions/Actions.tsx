@@ -224,7 +224,6 @@ export const Actions = ({
 
       // Use the new hook to handle payload
       if (response?.payload) {
-        // @ts-expect-error - we need to update the api types
         if (response.type === 'form') {
           // action requests additional information from the user.
           // we show a dialog with the form and when the user submits it we call the action again
@@ -233,22 +232,22 @@ export const Actions = ({
           // as it need contexts and the dialog
           const intf = {
             identifier,
-            // @ts-expect-error - we need to update the api types
+            // @ts-expect-error
             title: response.payload['title'],
-            // @ts-expect-error - we need to update the api types
+            // @ts-expect-error
             fields: response.payload['fields'],
-            // @ts-expect-error - we need to update the api types
+            // @ts-expect-error
             submitLabel: response.payload['submit_label'],
-            // @ts-expect-error - we need to update the api types
+            // @ts-expect-error
             cancelLabel: response.payload['cancel_label'],
-            // @ts-expect-error - we need to update the api types
+            // @ts-expect-error
             submitIcon: response.payload['submit_icon'],
-            // @ts-expect-error - we need to update the api types
+            // @ts-expect-error
             cancelIcon: response.payload['cancel_icon'],
           }
           setInteractiveForm(intf)
         } else {
-          handleActionPayload(response.type, response.payload)
+          handleActionPayload(response.type as string, response.payload)
         }
       }
     } catch (error) {

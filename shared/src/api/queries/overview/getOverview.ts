@@ -2,7 +2,7 @@ import {
   gqlApi,
   GetTasksByParentQuery,
   GetTasksListQuery,
-  foldersApi,
+  tasksApi,
   QueryTasksFoldersApiArg,
 } from '@shared/api/generated'
 import { EditorTaskNode } from '@shared/containers/ProjectTreeTable'
@@ -102,7 +102,7 @@ const enhancedApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
 })
 
 // REST FOLDERS API
-const foldersApiEnhanced = foldersApi.enhanceEndpoints({
+const foldersApiEnhanced = tasksApi.enhanceEndpoints({
   endpoints: {
     queryTasksFolders: {},
   },

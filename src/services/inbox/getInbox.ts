@@ -1,4 +1,3 @@
-// @ts-ignore
 import { PubSub } from '@shared/util'
 import { gqlApi } from '@shared/api'
 import type {

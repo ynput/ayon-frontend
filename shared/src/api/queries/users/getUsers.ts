@@ -1,4 +1,4 @@
-import { gqlApi } from '@shared/api/generated'
+import { gqlApi, usersApi } from '@shared/api/generated'
 import { parseAttribs } from '@shared/api'
 import {
   GetActiveUsersCountQuery,
@@ -80,6 +80,18 @@ query Assignees($projectName: String) {
 }
 }`
 
+const enhancedApi = usersApi.enhanceEndpoints({
+  endpoints: {
+    getCurrentUser: {
+      providesTags: [{ type: 'user', id: 'LIST' }],
+    },
+    getUserSessions: {
+      transformResponse: (res: any) => res?.sessions,
+      providesTags: (_res, _g, { userName }) => [{ type: 'session', id: userName }],
+    },
+  },
+})
+
 const injectedApi = gqlApi.injectEndpoints({
   endpoints: (build) => ({
     getUsers: build.query({
@@ -109,15 +121,6 @@ const injectedApi = gqlApi.injectEndpoints({
         users
           ? [...users.map((e: any) => ({ type: 'user', id: e.name })), { type: 'user', id: 'LIST' }]
           : [{ type: 'user', id: 'LIST' }],
-    }),
-    getUser: build.query({
-      query: ({ name }) => ({
-        url: `/api/users/${name}`,
-      }),
-      providesTags: (_res, _g, { name }) => [
-        { type: 'user', id: name },
-        { type: 'user', id: 'LIST' },
-      ],
     }),
     getUserByName: build.query({
       query: ({ name }) => ({
@@ -172,8 +175,6 @@ const injectedApi = gqlApi.injectEndpoints({
       query: ({ name }) => ({
         url: `/api/users/${name}/sessions`,
       }),
-      transformResponse: (res: any) => res?.sessions,
-      providesTags: (_res, _g, { token }) => [{ type: 'session', id: token }],
     }),
   }),
   overrideExisting: true,
@@ -199,7 +200,7 @@ type UpdatedDefinitions = Omit<Definitions, 'GetAllProjectUsersAsAssignee'> & {
   GetAllAssignees: OverrideResultType<Definitions['GetAllAssignees'], Assignees>
 }
 
-const getUsersApi = injectedApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
+const gqlUsers = injectedApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
   endpoints: {
     GetAllProjectUsersAsAssignee: {
       transformResponse: (res: GetAllProjectUsersAsAssigneeQuery) =>
@@ -234,15 +235,14 @@ const getUsersApi = injectedApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
 })
 
 export const {
-  useGetUsersQuery,
-  useGetUserByNameQuery,
-  useGetUserQuery,
-  useLazyGetUserQuery,
-  useGetUsersAssigneeQuery,
-  useGetUserSessionsQuery,
   useGetAllProjectUsersAsAssigneeQuery,
   useLazyGetAllProjectUsersAsAssigneeQuery,
   useGetActiveUsersCountQuery,
   useGetAllAssigneesQuery,
-} = getUsersApi
-export default getUsersApi
+  useGetUsersQuery,
+  useGetUserByNameQuery,
+  useGetUsersAssigneeQuery,
+} = gqlUsers
+
+export const { useGetUserSessionsQuery, useGetCurrentUserQuery } = enhancedApi
+export default injectedApi

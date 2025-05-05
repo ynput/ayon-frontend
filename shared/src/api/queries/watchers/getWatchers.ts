@@ -1,7 +1,7 @@
-import { watchersApi, GetEntityWatchersApiArg } from '@shared/api/generated'
+import { activityFeedApi, GetEntityWatchersApiArg } from '@shared/api/generated'
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 
-const enhancedApi = watchersApi.enhanceEndpoints({
+const enhancedApi = activityFeedApi.enhanceEndpoints({
   endpoints: {
     getEntityWatchers: {},
     setEntityWatchers: {},

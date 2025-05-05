@@ -14,6 +14,16 @@ const injectedRtkApi = api.injectEndpoints({
     getAttributeConfig: build.query<GetAttributeConfigApiResponse, GetAttributeConfigApiArg>({
       query: (queryArg) => ({ url: `/api/attributes/${queryArg.attributeName}` }),
     }),
+    setAttributeConfig: build.mutation<SetAttributeConfigApiResponse, SetAttributeConfigApiArg>({
+      query: (queryArg) => ({
+        url: `/api/attributes/${queryArg.attributeName}`,
+        method: 'PUT',
+        body: queryArg.attributePutModel,
+      }),
+    }),
+    deleteAttribute: build.mutation<DeleteAttributeApiResponse, DeleteAttributeApiArg>({
+      query: (queryArg) => ({ url: `/api/attributes/${queryArg.attributeName}`, method: 'DELETE' }),
+    }),
   }),
   overrideExisting: false,
 })
@@ -27,6 +37,15 @@ export type SetAttributeListApiArg = {
 }
 export type GetAttributeConfigApiResponse = /** status 200 Successful Response */ AttributeModel
 export type GetAttributeConfigApiArg = {
+  attributeName: string
+}
+export type SetAttributeConfigApiResponse = unknown
+export type SetAttributeConfigApiArg = {
+  attributeName: string
+  attributePutModel: AttributePutModel
+}
+export type DeleteAttributeApiResponse = unknown
+export type DeleteAttributeApiArg = {
   attributeName: string
 }
 export type AttributeEnumItem = {
@@ -100,4 +119,16 @@ export type SetAttributeListModel = {
   attributes?: AttributeModel[]
   /** Delete custom attributes not includedin the payload from the database. */
   deleteMissing?: boolean
+}
+export type AttributePutModel = {
+  /** Default order */
+  position: number
+  /** List of entity types the attribute is available on */
+  scope?: (
+    | ('folder' | 'product' | 'version' | 'representation' | 'task' | 'workfile')
+    | ('project' | 'user')
+  )[]
+  /** Is attribute builtin. Built-in attributes cannot be removed. */
+  builtin?: boolean
+  data: AttributeData
 }

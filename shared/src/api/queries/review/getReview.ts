@@ -1,5 +1,5 @@
 import { PubSub } from '@shared/util'
-import { reviewApi, ReviewableModel, VersionReviewablesModel } from '@shared/api/generated'
+import { reviewablesApi, ReviewableModel, VersionReviewablesModel } from '@shared/api/generated'
 import { addonsQueries } from '@shared/api/queries/addons'
 import {
   Summary,
@@ -101,7 +101,7 @@ const getViewerReviewablesTags = (
   return tags
 }
 
-const enhancedApi = reviewApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
+const enhancedApi = reviewablesApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
   endpoints: {
     getReviewablesForVersion: {
       keepUnusedDataFor: 1,
@@ -161,14 +161,18 @@ const enhancedApi = reviewApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
                 summary.versionId,
               )
               // get data for this new reviewable
-              dispatch(reviewApi.util.invalidateTags([{ type: 'review', id: summary.versionId }]))
+              dispatch(
+                reviewablesApi.util.invalidateTags([{ type: 'review', id: summary.versionId }]),
+              )
 
               // if it's finished, also invalidate viewer
               if (message.status === 'finished') {
                 // also invalidate the viewer cache
                 if (cache.data?.productId) {
                   dispatch(
-                    reviewApi.util.invalidateTags([{ type: 'viewer', id: cache.data?.productId }]),
+                    reviewablesApi.util.invalidateTags([
+                      { type: 'viewer', id: cache.data?.productId },
+                    ]),
                   )
                 }
               }
@@ -190,7 +194,7 @@ const enhancedApi = reviewApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
   },
 })
 
-export const getReviewApi = enhancedApi.injectEndpoints({
+const getReviewApi = enhancedApi.injectEndpoints({
   endpoints: (build) => ({
     // custom endpoint to get reviewables from product/task/folder
     // utilizes getReviewablesForProduct, getReviewablesForTask, getReviewablesForFolder
@@ -199,7 +203,7 @@ export const getReviewApi = enhancedApi.injectEndpoints({
         let query: any
 
         if (productId) {
-          query = reviewApi.endpoints.getReviewablesForProduct.initiate(
+          query = reviewablesApi.endpoints.getReviewablesForProduct.initiate(
             {
               productId,
               projectName,
@@ -207,12 +211,12 @@ export const getReviewApi = enhancedApi.injectEndpoints({
             { forceRefetch: true },
           )
         } else if (taskId) {
-          query = reviewApi.endpoints.getReviewablesForTask.initiate(
+          query = reviewablesApi.endpoints.getReviewablesForTask.initiate(
             { taskId, projectName },
             { forceRefetch: true },
           )
         } else if (folderId) {
-          query = reviewApi.endpoints.getReviewablesForFolder.initiate(
+          query = reviewablesApi.endpoints.getReviewablesForFolder.initiate(
             {
               folderId,
               projectName,
@@ -221,7 +225,7 @@ export const getReviewApi = enhancedApi.injectEndpoints({
           )
 
           const result = await dispatch(
-            reviewApi.endpoints.getReviewablesForFolder.initiate(
+            reviewablesApi.endpoints.getReviewablesForFolder.initiate(
               { folderId, projectName },
               { forceRefetch: true },
             ),
@@ -276,7 +280,7 @@ export const getReviewApi = enhancedApi.injectEndpoints({
               // "838977a81dab11ef95ad0242ac180005"
               if (id) {
                 // get data for this new reviewable (invalidate self)
-                dispatch(reviewApi.util.invalidateTags([{ type: 'review', id: id }]))
+                dispatch(reviewablesApi.util.invalidateTags([{ type: 'review', id: id }]))
               }
             }
           }
@@ -316,3 +320,4 @@ export const {
   useGetReviewablesForVersionQuery,
   useHasTranscoderQuery,
 } = getReviewApi
+export default getReviewApi

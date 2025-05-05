@@ -1,4 +1,4 @@
-import { getServicesApi } from './getServices'
+import getServicesApi from './getServices'
 
 const enhancedServicesApi = getServicesApi.enhanceEndpoints({
   endpoints: {
@@ -16,3 +16,4 @@ const enhancedServicesApi = getServicesApi.enhanceEndpoints({
 
 export const { useSpawnServiceMutation, usePatchServiceMutation, useDeleteServiceMutation } =
   enhancedServicesApi
+export { enhancedServicesApi as servicesQueries }

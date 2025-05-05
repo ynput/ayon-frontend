@@ -12,7 +12,7 @@ const enhancedServicesApi = servicesApi.enhanceEndpoints({
   },
 })
 
-export const getServicesApi = enhancedServicesApi.injectEndpoints({
+const getServicesApi = enhancedServicesApi.injectEndpoints({
   endpoints: (build) => ({
     getServiceAddons: build.query({
       query: () => ({
@@ -32,3 +32,4 @@ export const getServicesApi = enhancedServicesApi.injectEndpoints({
 })
 
 export const { useListServicesQuery, useGetServiceAddonsQuery, useListHostsQuery } = getServicesApi
+export default getServicesApi

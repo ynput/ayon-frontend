@@ -1,6 +1,6 @@
-import { cloudApi } from '@shared/api'
+import { ynputCloudApi } from '@shared/api'
 
-const enhancedApi = cloudApi.enhanceEndpoints({
+const enhancedApi = ynputCloudApi.enhanceEndpoints({
   endpoints: {
     getYnputCloudInfo: {
       providesTags: ['connections'],

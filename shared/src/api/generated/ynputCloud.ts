@@ -14,6 +14,14 @@ const injectedRtkApi = api.injectEndpoints({
     deleteYnputCloudKey: build.mutation<DeleteYnputCloudKeyApiResponse, DeleteYnputCloudKeyApiArg>({
       query: () => ({ url: `/api/connect`, method: 'DELETE' }),
     }),
+    connectToYnputCloud: build.query<ConnectToYnputCloudApiResponse, ConnectToYnputCloudApiArg>({
+      query: (queryArg) => ({
+        url: `/api/connect/authorize`,
+        params: {
+          origin_url: queryArg.originUrl,
+        },
+      }),
+    }),
     getFeedbackVerification: build.query<
       GetFeedbackVerificationApiResponse,
       GetFeedbackVerificationApiArg
@@ -32,6 +40,10 @@ export type SetYnputCloudKeyApiArg = {
 }
 export type DeleteYnputCloudKeyApiResponse = /** status 200 Successful Response */ any
 export type DeleteYnputCloudKeyApiArg = void
+export type ConnectToYnputCloudApiResponse = /** status 200 Successful Response */ any
+export type ConnectToYnputCloudApiArg = {
+  originUrl: string
+}
 export type GetFeedbackVerificationApiResponse =
   /** status 200 Successful Response */ UserVerificationResponse
 export type GetFeedbackVerificationApiArg = void

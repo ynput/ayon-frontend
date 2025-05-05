@@ -1,8 +1,8 @@
-import { releasesApi, gqlApi } from '@shared/api'
+import { marketApi, gqlApi } from '@shared/api'
 import type { GetInstallEventsQuery } from '@shared/api'
 import { PubSub } from '@shared/util'
 
-const enhancedApi = releasesApi.enhanceEndpoints({
+const enhancedApi = marketApi.enhanceEndpoints({
   endpoints: {
     getReleases: {},
     getReleaseInfo: {},

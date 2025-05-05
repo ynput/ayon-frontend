@@ -5,7 +5,7 @@ import clsx from 'clsx'
 
 import { Icon } from '@ynput/ayon-react-components'
 
-import api, { getReviewApi } from '@shared/api'
+import api, { reviewablesQueries } from '@shared/api'
 import type { UploadReviewableApiResponse } from '@shared/api'
 
 // components
@@ -68,7 +68,7 @@ export const ReviewableUpload: FC<ReviewableUploadProps> = ({
 
       dispatch(
         // @ts-ignore
-        getReviewApi.util.updateQueryData(
+        reviewablesQueries.util.updateQueryData(
           'getReviewablesForVersion',
           { projectName, versionId },
           (draft) => {

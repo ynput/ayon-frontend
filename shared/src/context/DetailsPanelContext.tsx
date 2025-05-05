@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useCallback, ReactNode, useState } from 'react'
 import { useLocalStorage } from '@shared/hooks'
-import { DetailsPanelEntityType } from '../api/entities/enhancers/transformDetailsPanelData'
+import { DetailsPanelEntityType } from '@shared/api'
 import type { UserModel } from '@shared/api'
 
 export type FeedFilters = 'activity' | 'comments' | 'versions' | 'checklists'

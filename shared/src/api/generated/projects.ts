@@ -1,9 +1,28 @@
 import { api } from '@shared/api/base'
 const injectedRtkApi = api.injectEndpoints({
   endpoints: (build) => ({
+    deleteProjectActivity: build.mutation<
+      DeleteProjectActivityApiResponse,
+      DeleteProjectActivityApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/activities/${queryArg.activityId}`,
+        method: 'DELETE',
+        headers: {
+          'x-sender': queryArg['x-sender'],
+          'x-sender-type': queryArg['x-sender-type'],
+        },
+      }),
+    }),
     getProjectFile: build.query<GetProjectFileApiResponse, GetProjectFileApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/files/${queryArg.fileId}`,
+      }),
+    }),
+    deleteProjectFile: build.mutation<DeleteProjectFileApiResponse, DeleteProjectFileApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/files/${queryArg.fileId}`,
+        method: 'DELETE',
       }),
     }),
     getProjectFileHead: build.mutation<GetProjectFileHeadApiResponse, GetProjectFileHeadApiArg>({
@@ -59,6 +78,28 @@ const injectedRtkApi = api.injectEndpoints({
     getProjectAnatomy: build.query<GetProjectAnatomyApiResponse, GetProjectAnatomyApiArg>({
       query: (queryArg) => ({ url: `/api/projects/${queryArg.projectName}/anatomy` }),
     }),
+    setProjectAnatomy: build.mutation<SetProjectAnatomyApiResponse, SetProjectAnatomyApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/anatomy`,
+        method: 'POST',
+        body: queryArg.anatomy,
+        headers: {
+          'x-sender': queryArg['x-sender'],
+          'x-sender-type': queryArg['x-sender-type'],
+        },
+      }),
+    }),
+    setProjectBundle: build.mutation<SetProjectBundleApiResponse, SetProjectBundleApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/bundles`,
+        method: 'POST',
+        body: queryArg.projectBundleModel,
+        headers: {
+          'x-sender': queryArg['x-sender'],
+          'x-sender-type': queryArg['x-sender-type'],
+        },
+      }),
+    }),
     listProjects: build.query<ListProjectsApiResponse, ListProjectsApiArg>({
       query: (queryArg) => ({
         url: `/api/projects`,
@@ -73,8 +114,47 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    deployProject: build.mutation<DeployProjectApiResponse, DeployProjectApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects`,
+        method: 'POST',
+        body: queryArg.deployProjectRequestModel,
+      }),
+    }),
     getProject: build.query<GetProjectApiResponse, GetProjectApiArg>({
       query: (queryArg) => ({ url: `/api/projects/${queryArg.projectName}` }),
+    }),
+    createProject: build.mutation<CreateProjectApiResponse, CreateProjectApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}`,
+        method: 'PUT',
+        body: queryArg.projectPostModel,
+        headers: {
+          'x-sender': queryArg['x-sender'],
+          'x-sender-type': queryArg['x-sender-type'],
+        },
+      }),
+    }),
+    deleteProject: build.mutation<DeleteProjectApiResponse, DeleteProjectApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}`,
+        method: 'DELETE',
+        headers: {
+          'x-sender': queryArg['x-sender'],
+          'x-sender-type': queryArg['x-sender-type'],
+        },
+      }),
+    }),
+    updateProject: build.mutation<UpdateProjectApiResponse, UpdateProjectApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}`,
+        method: 'PATCH',
+        body: queryArg.projectPatchModel,
+        headers: {
+          'x-sender': queryArg['x-sender'],
+          'x-sender-type': queryArg['x-sender-type'],
+        },
+      }),
     }),
     getProjectStats: build.query<GetProjectStatsApiResponse, GetProjectStatsApiArg>({
       query: (queryArg) => ({ url: `/api/projects/${queryArg.projectName}/stats` }),
@@ -84,6 +164,16 @@ const injectedRtkApi = api.injectEndpoints({
       GetProjectRootsOverridesApiArg
     >({
       query: (queryArg) => ({ url: `/api/projects/${queryArg.projectName}/roots` }),
+    }),
+    setProjectRootsOverrides: build.mutation<
+      SetProjectRootsOverridesApiResponse,
+      SetProjectRootsOverridesApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/roots/${queryArg.siteId}`,
+        method: 'PUT',
+        body: queryArg.payload,
+      }),
     }),
     getProjectSiteRoots: build.query<GetProjectSiteRootsApiResponse, GetProjectSiteRootsApiArg>({
       query: (queryArg) => ({
@@ -99,6 +189,13 @@ const injectedRtkApi = api.injectEndpoints({
     getProjectUsers: build.query<GetProjectUsersApiResponse, GetProjectUsersApiArg>({
       query: (queryArg) => ({ url: `/api/projects/${queryArg.projectName}/users` }),
     }),
+    updateProjectUser: build.mutation<UpdateProjectUserApiResponse, UpdateProjectUserApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/users/${queryArg.userName}`,
+        method: 'PATCH',
+        body: queryArg.accessGroups,
+      }),
+    }),
     getProjectEntityUris: build.mutation<
       GetProjectEntityUrisApiResponse,
       GetProjectEntityUrisApiArg
@@ -113,8 +210,20 @@ const injectedRtkApi = api.injectEndpoints({
   overrideExisting: false,
 })
 export { injectedRtkApi as api }
+export type DeleteProjectActivityApiResponse = /** status 200 Successful Response */ any
+export type DeleteProjectActivityApiArg = {
+  projectName: string
+  activityId: string
+  'x-sender'?: string
+  'x-sender-type'?: string
+}
 export type GetProjectFileApiResponse = /** status 200 Successful Response */ any
 export type GetProjectFileApiArg = {
+  projectName: string
+  fileId: string
+}
+export type DeleteProjectFileApiResponse = /** status 200 Successful Response */ any
+export type DeleteProjectFileApiArg = {
   projectName: string
   fileId: string
 }
@@ -163,6 +272,20 @@ export type GetProjectAnatomyApiResponse = /** status 200 Successful Response */
 export type GetProjectAnatomyApiArg = {
   projectName: string
 }
+export type SetProjectAnatomyApiResponse = unknown
+export type SetProjectAnatomyApiArg = {
+  projectName: string
+  'x-sender'?: string
+  'x-sender-type'?: string
+  anatomy: Anatomy
+}
+export type SetProjectBundleApiResponse = unknown
+export type SetProjectBundleApiArg = {
+  projectName: string
+  'x-sender'?: string
+  'x-sender-type'?: string
+  projectBundleModel: ProjectBundleModel
+}
 export type ListProjectsApiResponse =
   /** status 200 Successful Response */ ListProjectsResponseModel
 export type ListProjectsApiArg = {
@@ -179,9 +302,33 @@ export type ListProjectsApiArg = {
             or its part. % character may be used as a wildcard */
   name?: string
 }
+export type DeployProjectApiResponse = /** status 201 Successful Response */ any
+export type DeployProjectApiArg = {
+  deployProjectRequestModel: DeployProjectRequestModel
+}
 export type GetProjectApiResponse = /** status 200 Successful Response */ ProjectModel
 export type GetProjectApiArg = {
   projectName: string
+}
+export type CreateProjectApiResponse = /** status 201 Successful Response */ any
+export type CreateProjectApiArg = {
+  projectName: string
+  'x-sender'?: string
+  'x-sender-type'?: string
+  projectPostModel: ProjectPostModel
+}
+export type DeleteProjectApiResponse = unknown
+export type DeleteProjectApiArg = {
+  projectName: string
+  'x-sender'?: string
+  'x-sender-type'?: string
+}
+export type UpdateProjectApiResponse = unknown
+export type UpdateProjectApiArg = {
+  projectName: string
+  'x-sender'?: string
+  'x-sender-type'?: string
+  projectPatchModel: ProjectPatchModel
 }
 export type GetProjectStatsApiResponse = /** status 200 Successful Response */ any
 export type GetProjectStatsApiArg = {
@@ -194,6 +341,14 @@ export type GetProjectRootsOverridesApiResponse = /** status 200 Successful Resp
 }
 export type GetProjectRootsOverridesApiArg = {
   projectName: string
+}
+export type SetProjectRootsOverridesApiResponse = /** status 200 Successful Response */ any
+export type SetProjectRootsOverridesApiArg = {
+  siteId: string
+  projectName: string
+  payload: {
+    [key: string]: string
+  }
 }
 export type GetProjectSiteRootsApiResponse = /** status 200 Successful Response */ {
   [key: string]: string
@@ -209,6 +364,14 @@ export type GetProjectUsersApiResponse = /** status 200 Successful Response */ {
 }
 export type GetProjectUsersApiArg = {
   projectName: string
+}
+export type UpdateProjectUserApiResponse = /** status 200 Successful Response */ {
+  [key: string]: string[]
+}
+export type UpdateProjectUserApiArg = {
+  projectName: string
+  userName: string
+  accessGroups: string[]
 }
 export type GetProjectEntityUrisApiResponse = /** status 200 Successful Response */ GetUrisResponse
 export type GetProjectEntityUrisApiArg = {
@@ -356,18 +519,6 @@ export type ProjectAttribModel = {
   endDate?: string
   /** Textual description of the entity */
   description?: string
-  applications?: string[]
-  tools?: string[]
-  ftrackId?: string
-  ftrackPath?: string
-  /** The Shotgrid ID of this entity. */
-  shotgridId?: string
-  /** The Shotgrid Type of this entity. */
-  shotgridType?: string
-  /** Push changes done to this project to Shotgird. Requires the transmitter service. */
-  shotgridPush?: boolean
-  sokoId?: string
-  sokoPath?: string
 }
 export type FolderType = {
   name: string
@@ -422,6 +573,10 @@ export type Anatomy = {
   /** Tags configuration */
   tags?: Tag[]
 }
+export type ProjectBundleModel = {
+  production?: string
+  staging?: string
+}
 export type ListProjectsItemModel = {
   name: string
   code: string
@@ -436,6 +591,18 @@ export type ListProjectsResponseModel = {
   /** List of projects */
   projects?: ListProjectsItemModel[]
 }
+export type DeployProjectRequestModel = {
+  /** Project name */
+  name: string
+  /** Project code */
+  code: string
+  /** Project anatomy */
+  anatomy: Anatomy
+  /** Library project */
+  library?: boolean
+  /** Assign default users to the project */
+  assignUsers?: boolean
+}
 export type LinkTypeModel = {
   /** Name of the link type */
   name: string
@@ -446,7 +613,7 @@ export type LinkTypeModel = {
   /** Output entity type */
   outputType: string
   /** Additional link type data */
-  data?: object
+  data?: Record<string, any>
 }
 export type ProjectAttribModel2 = {
   priority?: 'urgent' | 'high' | 'normal' | 'low'
@@ -469,18 +636,6 @@ export type ProjectAttribModel2 = {
   endDate?: string
   /** Textual description of the entity */
   description?: string
-  applications?: string[]
-  tools?: string[]
-  ftrackId?: string
-  ftrackPath?: string
-  /** The Shotgrid ID of this entity. */
-  shotgridId?: string
-  /** The Shotgrid Type of this entity. */
-  shotgridType?: string
-  /** Push changes done to this project to Shotgird. Requires the transmitter service. */
-  shotgridPush?: boolean
-  sokoId?: string
-  sokoPath?: string
 }
 export type ProjectModel = {
   /** Name is an unique id of the {entity_name} */
@@ -494,7 +649,7 @@ export type ProjectModel = {
   tags?: Tag[]
   config?: object
   attrib?: ProjectAttribModel2
-  data?: object
+  data?: Record<string, any>
   /** Whether the project is active */
   active?: boolean
   ownAttrib?: string[]
@@ -502,6 +657,34 @@ export type ProjectModel = {
   createdAt?: string
   /** Time of last update */
   updatedAt?: string
+}
+export type ProjectPostModel = {
+  code: string
+  library?: boolean
+  folderTypes?: FolderType[]
+  taskTypes?: TaskType[]
+  linkTypes?: LinkTypeModel[]
+  statuses?: Status[]
+  tags?: Tag[]
+  config?: object
+  attrib?: ProjectAttribModel2
+  data?: Record<string, any>
+  /** Whether the project is active */
+  active?: boolean
+}
+export type ProjectPatchModel = {
+  code?: string
+  library?: boolean
+  folderTypes?: FolderType[]
+  taskTypes?: TaskType[]
+  linkTypes?: LinkTypeModel[]
+  statuses?: Status[]
+  tags?: Tag[]
+  config?: object
+  attrib?: ProjectAttribModel2
+  data?: Record<string, any>
+  /** Whether the project is active */
+  active?: boolean
 }
 export type UriResponseItem = {
   id: string
