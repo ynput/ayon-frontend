@@ -145,12 +145,16 @@ const FormField = ({ field, value, onChange }: FormFieldProps) => {
 }
 
 export interface SimpleFormDialogProps {
+  title: string
   fields: SimpleFormField[]
   values?: SimpleFormValueDict
+  submitLabel?: string
+  cancelLabel?: string
+  submitIcon?: string
+  cancelIcon?: string
   onClose: () => void
   onSubmit: (values: SimpleFormValueDict) => void
   isOpen: boolean
-  header?: string
 }
 
 export const SimpleFormDialog = ({
@@ -159,7 +163,11 @@ export const SimpleFormDialog = ({
   onClose,
   onSubmit,
   isOpen,
-  header,
+  title,
+  submitLabel,
+  cancelLabel,
+  submitIcon,
+  cancelIcon,
 }: SimpleFormDialogProps) => {
   const [formData, setFormData] = useState<SimpleFormValueDict | null>(null)
 
@@ -174,9 +182,19 @@ export const SimpleFormDialog = ({
   if (!formData) return null
 
   const footer = (
-    <div style={{ display: 'flex', flexDirection: 'row' }}>
+    <div style={{ display: 'flex', flexDirection: 'row', gap: 8 }}>
       <Spacer />
-      <Button onClick={() => onSubmit(formData)} icon="checklist" label="Submit" variant="filled" />
+      {cancelLabel && (
+        <Button onClick={() => onSubmit(formData)} label={cancelLabel} icon={cancelIcon} />
+      )}
+      {submitLabel && (
+        <Button
+          onClick={() => onSubmit(formData)}
+          label={submitLabel}
+          icon={submitIcon}
+          variant="filled"
+        />
+      )}
     </div>
   )
 
@@ -184,7 +202,7 @@ export const SimpleFormDialog = ({
     <Dialog
       isOpen={isOpen}
       onClose={onClose}
-      header={header}
+      header={title}
       footer={footer}
       style={{ minHeight: 400, minWidth: 500 }}
     >

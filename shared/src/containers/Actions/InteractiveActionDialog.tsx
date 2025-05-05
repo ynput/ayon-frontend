@@ -1,19 +1,23 @@
 import { SimpleFormDialog } from '@shared/components'
 import type { SimpleFormField } from '@shared/api'
 
-interface InteractiveForm {
-  fields: SimpleFormField[]
-  header: string
+export interface InteractiveForm {
   identifier: string
+  title: string
+  fields: SimpleFormField[]
+  submitLabel?: string
+  cancelLabel?: string
+  submitIcon?: string
+  cancelIcon?: string
 }
 
-interface InteractiveActionDialogProps {
+export interface InteractiveActionDialogProps {
   interactiveForm: InteractiveForm | null
   onClose: () => void
   onSubmit: (identifier: string, formData: Record<string, any>) => void
 }
 
-const InteractiveActionDialog = ({
+export const InteractiveActionDialog = ({
   interactiveForm,
   onClose,
   onSubmit,
@@ -28,12 +32,14 @@ const InteractiveActionDialog = ({
   return (
     <SimpleFormDialog
       isOpen
-      header={`${interactiveForm.header}`}
+      title={`${interactiveForm.title}`}
       fields={interactiveForm.fields}
+      submitLabel={interactiveForm.submitLabel}
+      cancelLabel={interactiveForm.cancelLabel}
+      submitIcon={interactiveForm.submitIcon}
+      cancelIcon={interactiveForm.cancelIcon}
       onClose={onClose}
       onSubmit={handleSubmit}
     />
   )
 }
-
-export default InteractiveActionDialog

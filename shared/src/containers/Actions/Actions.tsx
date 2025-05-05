@@ -1,29 +1,27 @@
-// @ts-nocheck - this needs converting someday, but it's friday
-
 import * as Styled from './Actions.styled'
-import { useState } from 'react'
+import { MouseEvent, useState } from 'react'
 import clsx from 'clsx'
 import { toast } from 'react-toastify'
 import { useMemo, useEffect } from 'react'
-import { useExecuteActionMutation, useGetActionsFromContextQuery } from '@shared/api'
+import { ActionContext, useExecuteActionMutation, useGetActionsFromContextQuery } from '@shared/api'
 import { ActionsDropdown } from './ActionsDropdown'
 import ActionIcon from './ActionIcon'
-import customProtocolCheck from 'custom-protocol-check'
 import { useActionTriggers } from '@shared/hooks'
-import ActionConfigDialog from './ActionConfigDialog'
-import InteractiveActionDialog from './InteractiveActionDialog'
+import { ActionConfigDialog } from './ActionConfigDialog'
+import { InteractiveActionDialog, InteractiveForm } from './InteractiveActionDialog'
 
 const placeholder = {
   identifier: 'placeholder',
   label: 'Featured action slot',
   isPlaceholder: true,
+  icon: { type: 'material-symbols', name: 'sync' },
 }
 
-export type ActionsProps = {
+type ActionsProps = {
   entities: any[]
-  entityType: string
+  entityType: ActionContext['entityType']
   entitySubTypes?: string[]
-  isLoadingEntity?: boolean
+  isLoadingEntity: boolean
 }
 
 export const Actions = ({
@@ -34,10 +32,10 @@ export const Actions = ({
 }: ActionsProps) => {
   // special triggers the actions can make to perform stuff on the client
   const { handleActionPayload } = useActionTriggers()
-  const [actionBeingConfigured, setActionBeingConfigured] = useState(null)
-  const [interactiveForm, setInteractiveForm] = useState(null)
+  const [actionBeingConfigured, setActionBeingConfigured] = useState<any>(null)
+  const [interactiveForm, setInteractiveForm] = useState<any>(null)
 
-  const context = useMemo(() => {
+  const context: ActionContext | null = useMemo(() => {
     if (!entities.length) return null
     if (!entities[0].projectName) return null
 
@@ -50,7 +48,7 @@ export const Actions = ({
     const entitySubTypesToUse = entitySubTypes || entitySubtypesLoaded || []
 
     // all types except version should have subtypes
-    if (!entitySubTypesToUse?.length && entityType !== 'version') return
+    if (!entitySubTypesToUse?.length && entityType !== 'version') return null
 
     return {
       projectName: entities[0].projectName,
@@ -65,7 +63,7 @@ export const Actions = ({
   }, [context])
 
   const { data, isFetching: isFetchingActions } = useGetActionsFromContextQuery(
-    { mode: 'simple', actionContext: context },
+    { mode: 'simple', actionContext: context as ActionContext },
     { skip: !context },
   )
   const actions = data?.actions || []
@@ -75,11 +73,12 @@ export const Actions = ({
   // sort by hardcoded category, this will changing the future
   const groupedActions = useMemo(() => {
     // Step 1: Group actions by category
-    const grouped = actions.reduce((acc, action) => {
-      if (!acc[action.category]) {
-        acc[action.category] = []
+    const grouped = actions.reduce((acc: { [key: string]: any[] }, action) => {
+      const category = action.category || 'uncategorized'
+      if (!acc[category]) {
+        acc[category] = []
       }
-      acc[action.category].push(action)
+      acc[category].push(action)
       return acc
     }, {})
 
@@ -146,7 +145,7 @@ export const Actions = ({
     // Filter and sort to get initial featured actions
     let tempFeaturedActions = actions
       .filter((action) => action.featured)
-      .sort((a, b) => a.order - b.order)
+      .sort((a, b) => (a.order || 0) - (b.order || 0))
       .slice(0, featuredNumber)
 
     // Check if we need to add more actions to reach featuredNumber
@@ -172,13 +171,23 @@ export const Actions = ({
     useExecuteActionMutation()
   const executingAction = isLoadingExecution && originalArgs?.identifier
 
-  const handleExecuteAction = async (identifier, e, formData) => {
+  const handleExecuteAction = async (
+    identifier: string,
+    e?: MouseEvent<HTMLElement> | null,
+    formData?: InteractiveForm,
+  ) => {
     e?.preventDefault()
     const action = actions.find((option) => option.identifier === identifier)
 
+    if (!action) {
+      toast.error('Action not found')
+      console.warn('Action not found', identifier)
+      return
+    }
+
     const params = {
-      addonName: action.addonName,
-      addonVersion: action.addonVersion,
+      addonName: action.addonName as string,
+      addonVersion: action.addonVersion as string,
       variant: action.variant,
       identifier: action.identifier,
     }
@@ -188,53 +197,74 @@ export const Actions = ({
       actionContext.formData = formData
     }
 
+    let response = null
+
     try {
-      const response = await executeAction({ actionContext, ...params }).unwrap()
+      response = await executeAction({ actionContext, ...params }).unwrap()
+    } catch (error: any) {
+      console.error('Error executing action', error)
+      toast.error(error?.data?.detail || 'Error executing action')
+      return
+    }
 
-      if (!response.success) throw new Error('Error executing action')
-
-      if (response?.uri) {
-        customProtocolCheck(
-          response.uri,
-          () => {},
-          () => {},
-          2000,
-        )
+    try {
+      // Toast the message if it is available
+      if (response?.message) {
+        if (response?.success) {
+          toast.success(response.message, { autoClose: 2000 })
+        } else {
+          toast.error(response.message, { autoClose: 2000 })
+        }
       }
+
+      // Even if response?.success is false, we still want to handle the payload
+      // as it may contain useful information - complex error messages in form,
+      // redirect to another page etc. If the action just needs to abort,
+      // it raises exception instead of returning a response with success: false
 
       // Use the new hook to handle payload
       if (response?.payload) {
-        if ('__form' in response.payload) {
+        // @ts-expect-error - we need to update the api types
+        if (response.type === 'form') {
           // action requests additional information from the user.
           // we show a dialog with the form and when the user submits it we call the action again
 
           // It probably does not make sense to move to the useActionTriggers hook
           // as it need contexts and the dialog
           const intf = {
-            fields: response.payload['__form'],
             identifier,
-            header: response?.message || action.label,
+            // @ts-expect-error - we need to update the api types
+            title: response.payload['title'],
+            // @ts-expect-error - we need to update the api types
+            fields: response.payload['fields'],
+            // @ts-expect-error - we need to update the api types
+            submitLabel: response.payload['submit_label'],
+            // @ts-expect-error - we need to update the api types
+            cancelLabel: response.payload['cancel_label'],
+            // @ts-expect-error - we need to update the api types
+            submitIcon: response.payload['submit_icon'],
+            // @ts-expect-error - we need to update the api types
+            cancelIcon: response.payload['cancel_icon'],
           }
           setInteractiveForm(intf)
         } else {
-          // normal hooks
-          toast.success(response?.message || 'Action executed successfully', { autoClose: 2000 })
-          handleActionPayload(response.payload, context)
+          handleActionPayload(response.type, response.payload)
         }
       }
     } catch (error) {
-      console.warn('Error executing action', error)
-      toast.error(error || 'Error executing action')
+      // got response, but failed to process it
+      console.warn('Error during action response processing', error)
+      toast.error('Error occured during action processing')
     }
   }
 
-  const handleConfigureAction = (identifier) => {
+  const handleConfigureAction = (identifier: string) => {
     const action = actions.find((data) => data.identifier === identifier)
     if (!action) return
     setActionBeingConfigured(action)
   }
 
-  const handleSubmitInteractiveForm = async (identifier, formData) => {
+  const handleSubmitInteractiveForm = async (identifier: string, formData: InteractiveForm) => {
     handleExecuteAction(identifier, null, formData)
   }
 
@@ -250,12 +280,15 @@ export const Actions = ({
           key={action.identifier + '-' + i}
           className={clsx('action', {
             loading: isLoading,
+            // @ts-expect-error
             isPlaceholder: action.isPlaceholder,
           })}
           data-tooltip={action.label}
+          // @ts-expect-error
           disabled={action.isPlaceholder}
           onClick={(e) => handleExecuteAction(action.identifier, e)}
         >
+          {/* @ts-ignore */}
           <ActionIcon icon={action.icon} isExecuting={executingAction === action.identifier} />
         </Styled.FeaturedAction>
       ))}
@@ -267,12 +300,14 @@ export const Actions = ({
       />
       <ActionConfigDialog
         action={actionBeingConfigured}
+        // @ts-expect-error
         context={context}
         onClose={() => setActionBeingConfigured(null)}
       />
       <InteractiveActionDialog
         interactiveForm={interactiveForm}
         onClose={() => setInteractiveForm(null)}
+        // @ts-expect-error
         onSubmit={handleSubmitInteractiveForm}
       />
     </Styled.Actions>

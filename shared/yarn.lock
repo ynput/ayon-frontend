@@ -1682,6 +1682,11 @@ csstype@^3.0.2:
   resolved "https://registry.yarnpkg.com/csstype/-/csstype-3.1.3.tgz#d80ff294d114fb0e6ac500fbf85b60137d7eff81"
   integrity sha512-M1uQkMl8rQK/szD0LNhtqxIPLpimGm8sOBwU7lLnCpSbTyY3yeU1Vc7l4KT5zT4s/yOxHH5O7tIuuLOCnLADRw==
 
+custom-protocol-check@^1.4.0:
+  version "1.4.0"
+  resolved "https://registry.yarnpkg.com/custom-protocol-check/-/custom-protocol-check-1.4.0.tgz#87b579f6519d48adf55f539d774f7e026bae35e7"
+  integrity sha512-eMTyp8AKnE5eo+mKNqG3743eb5ZND5LhBgf9F8BN2tVdhSBnOCHH7me7iTcv0BUDhUW2dBQiHWLWMy776yZW1A==
+
 date-fns@^4.1.0:
   version "4.1.0"
   resolved "https://registry.yarnpkg.com/date-fns/-/date-fns-4.1.0.tgz#64b3d83fff5aa80438f5b1a633c2e83b8a1c2d14"

@@ -30,7 +30,7 @@ const ActionItemContainer = styled.div`
 type ActionsDropdownItemProps = {
   value: string
   label: string
-  icon: IconModel
+  icon?: IconModel
   header?: boolean
   hasConfig?: boolean
   onConfig?: (value: string) => void

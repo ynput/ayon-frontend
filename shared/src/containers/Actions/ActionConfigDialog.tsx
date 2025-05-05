@@ -21,7 +21,7 @@ interface ActionConfigRequestQueryParams {
   identifier: string
 }
 
-const ActionConfigDialog = ({ action, onClose, context }: ActionConfigDialogProps) => {
+export const ActionConfigDialog = ({ action, onClose, context }: ActionConfigDialogProps) => {
   const requestParams: ActionConfigRequestQueryParams | null =
     useMemo<ActionConfigRequestQueryParams | null>(() => {
       if (!action) return null
@@ -63,13 +63,15 @@ const ActionConfigDialog = ({ action, onClose, context }: ActionConfigDialogProp
   return (
     <SimpleFormDialog
       isOpen
-      header={`Configure action ${action.label}`}
+      title={`Configure action ${action.label}`}
       fields={action.configFields}
       values={initValues as SimpleFormValueDict}
       onClose={onClose}
       onSubmit={handleSubmit}
+      submitLabel="Save action config"
+      cancelLabel="Cancel"
+      submitIcon="check"
+      cancelIcon="close"
     />
   )
 }
-
-export default ActionConfigDialog
