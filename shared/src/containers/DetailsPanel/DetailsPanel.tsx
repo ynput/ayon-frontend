@@ -72,7 +72,7 @@ export const DetailsPanel = ({
   removeAnnotation,
   exportAnnotationComposite,
 }: DetailsPanelProps) => {
-  const { closeSlideOut, openPip } = useDetailsPanelContext()
+  const { closeSlideOut, openPip, user } = useDetailsPanelContext()
   const { currentTab, setTab, isFeed } = useScopedDetailsPanel(scope)
 
   // Force attribs tab for specific entity types
@@ -220,6 +220,7 @@ export const DetailsPanel = ({
               entityType={entityType}
               options={projectUsers || []}
               onWatchersUpdate={onWatchersUpdate && onWatchersUpdate}
+              userName={user.name}
             />
             <Button
               icon="picture_in_picture"

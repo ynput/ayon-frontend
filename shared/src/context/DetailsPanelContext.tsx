@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useCallback, ReactNode, useState } from 'react'
 import { useLocalStorage } from '@shared/hooks'
 import { DetailsPanelEntityType } from '../api/entities/enhancers/transformDetailsPanelData'
+import type { UserModel } from '@shared/api'
 
 export type FeedFilters = 'activity' | 'comments' | 'versions' | 'checklists'
 
@@ -27,22 +28,12 @@ export interface TabStateByScope {
   [scope: string]: DetailsPanelTab
 }
 
-type User = {
-  name: string
-  attrib: {
-    fullName?: string
-  }
-  data?: {
-    isUser: boolean
-  }
-}
-
 // these props get forwarded to the details panel value
 // it's mainly redux callbacks that cannot be used in shared library
 export interface DetailsPanelContextProps {
-  dispatch: any // this is a redux dispatch function and it's quite annoying we need to do this
-  user: User
-  viewer: {
+  dispatch?: any // this is a redux dispatch function and it's quite annoying we need to do this
+  user: UserModel
+  viewer?: {
     reviewableIds: string[]
     taskId?: string
     folderId?: string

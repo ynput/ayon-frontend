@@ -1,19 +1,17 @@
 import { useGetEntitiesWatchersQuery, useSetEntitiesWatchersMutation } from '@shared/api'
 import { DropdownRef, WatcherSelect, WatcherSelectProps } from '@ynput/ayon-react-components'
 import { forwardRef } from 'react'
-import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 
 interface WatchersProps extends Omit<WatcherSelectProps, 'currentUser' | 'value'> {
   entities: { id: string; projectName: string }[]
   entityType: string
   onWatchersUpdate?: (added: any[], removed: any[]) => void
+  userName: string
 }
 
 export const Watchers = forwardRef<DropdownRef, WatchersProps>(
-  ({ entities, entityType, onWatchersUpdate, ...props }, ref) => {
-    const user = useSelector((state: any) => state.user.name)
-
+  ({ entities, entityType, onWatchersUpdate, userName, ...props }, ref) => {
     const entitiesQuery = entities.map((entity) => ({
       entityId: entity.id,
       entityType,
@@ -66,7 +64,7 @@ export const Watchers = forwardRef<DropdownRef, WatchersProps>(
         align="right"
         {...props}
         value={uniqueWatchers}
-        currentUser={user}
+        currentUser={userName}
         onChange={handleChange}
         ref={ref}
         // @ts-expect-error

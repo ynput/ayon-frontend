@@ -34,7 +34,7 @@ import EmptyPlaceholder from '../../components/EmptyPlaceholder'
 
 // Context imports
 import { useCellEditing } from './context/CellEditingContext'
-import { ROW_SELECTION_COLUMN_ID, useSelectionContext } from './context/SelectionContext'
+import { ROW_SELECTION_COLUMN_ID, useSelectionCellsContext } from './context/SelectionCellsContext'
 import { ClipboardProvider } from './context/ClipboardContext'
 import { useSelectedRowsContext } from './context/SelectedRowsContext'
 import { useColumnSettings } from './context/ColumnSettingsContext'
@@ -77,8 +77,6 @@ interface Props extends React.HTMLAttributes<HTMLDivElement> {
   attribs: AttributeWithPermissions[]
   sliceId: string
   // metadata
-  tasksMap: TaskNodeMap
-  foldersMap: FolderNodeMap
   fetchMoreOnBottomReached: (element: HTMLDivElement | null) => void
   onOpenNew?: (type: 'folder' | 'task') => void
   // pass through props
@@ -90,25 +88,8 @@ interface Props extends React.HTMLAttributes<HTMLDivElement> {
 
 // Component to wrap with all providers
 const FlexTableWithProviders = (props: Props) => {
-  // convert attribs to object
-  const attribByField = useMemo(() => {
-    return props.attribs.reduce((acc: Record<string, AttributeEnumItem[]>, attrib) => {
-      if (attrib.data?.enum?.length) {
-        acc[attrib.name] = attrib.data?.enum
-      }
-      return acc
-    }, {})
-  }, [props.attribs])
-
   return (
-    <ClipboardProvider
-      foldersMap={props.foldersMap}
-      tasksMap={props.tasksMap}
-      columnEnums={{ ...props.options, ...attribByField }}
-      columnReadOnly={props.attribs
-        .filter((attrib) => attrib.readOnly)
-        .map((attrib) => attrib.name)}
-    >
+    <ClipboardProvider options={props.options}>
       <FlexTable {...props} />
     </ClipboardProvider>
   )
@@ -150,7 +131,7 @@ const FlexTable = ({
   const tableContainerRef = useRef<HTMLDivElement>(null)
 
   // Selection context
-  const { registerGrid } = useSelectionContext()
+  const { registerGrid } = useSelectionCellsContext()
 
   // COLUMN SIZING
   const [columnSizing, setColumnSizing] = useLocalStorage<ColumnSizingState>(
@@ -619,7 +600,7 @@ const TableCell = ({ cell, rowId, cellId, className, showHierarchy, ...props }: 
     endSelection,
     selectCell,
     getCellBorderClasses,
-  } = useSelectionContext()
+  } = useSelectionCellsContext()
 
   const { isRowSelected } = useSelectedRowsContext()
 

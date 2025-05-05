@@ -1,5 +1,5 @@
 import { getPlatformShortcutKey, KeyMode } from '@shared/util'
-import { useCellEditing, useSelectionContext } from '@shared/containers/ProjectTreeTable'
+import { useCellEditing, useSelectionCellsContext } from '@shared/containers/ProjectTreeTable'
 import useDeleteEntities from '@shared/containers/ProjectTreeTable/hooks/useDeleteEntities'
 import { Button } from '@ynput/ayon-react-components'
 import { FC } from 'react'
@@ -21,7 +21,7 @@ const ActionButton = styled(Button)`
 interface OverviewActionsProps {}
 
 const OverviewActions: FC<OverviewActionsProps> = ({}) => {
-  const { selectedCells } = useSelectionContext()
+  const { selectedCells } = useSelectionCellsContext()
   const { canUndo, canRedo, undo, redo } = useCellEditing()
   const deleteEntities = useDeleteEntities({})
 

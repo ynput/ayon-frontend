@@ -67,7 +67,7 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
   const { data: hasTranscoder } = useHasTranscoderQuery(undefined)
 
   // are we currently looking at review? (is it selected in the viewer)
-  const reviewableIds = viewer.reviewableIds
+  const reviewableIds = viewer?.reviewableIds || []
   const userName = user.name
   const currentIsUser = user.data?.isUser
 

@@ -121,6 +121,10 @@
     "react-markdown": "^10.1.0",
     "react-quill-ayon": "^2.0.2",
     "react-toastify": "^11.0.5",
+    "remark-directive": "^4.0.0",
+    "remark-directive-rehype": "^0.4.2",
+    "remark-emoji": "^5.0.1",
+    "remark-gfm": "^4.0.1",
     "short-uuid": "^5.2.0",
     "turndown": "^7.2.0"
   }

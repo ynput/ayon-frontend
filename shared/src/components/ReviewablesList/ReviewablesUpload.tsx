@@ -32,8 +32,8 @@ export const ReviewableUpload: FC<ReviewableUploadProps> = ({
 }) => {
   const { viewer, dispatch } = useDetailsPanelContext()
 
-  const taskId = viewer.taskId
-  const folderId = viewer.folderId
+  const taskId = viewer?.taskId
+  const folderId = viewer?.folderId
 
   // are we dragging a file over?
   const [isDraggingFile, setIsDraggingFile] = useState(false)

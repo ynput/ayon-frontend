@@ -30,7 +30,7 @@ export interface GridMap {
   indexToColId: Map<number, ColId>
 }
 
-export interface SelectionContextType {
+export interface SelectionCellsContextType {
   // Selected cells
   selectedCells: Set<CellId>
   // Focused cell (single cell that has focus)
@@ -63,9 +63,9 @@ export interface SelectionContextType {
 }
 
 // Create the context
-const SelectionContext = createContext<SelectionContextType | undefined>(undefined)
+const SelectionCellsContext = createContext<SelectionCellsContextType | undefined>(undefined)
 
-export const SelectionProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const SelectionCellsProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [selectedCells, setSelectedCells] = useState<Set<CellId>>(new Set())
   const [focusedCellId, setFocusedCellId] = useState<CellId | null>(null)
   const [selectionInProgress, setSelectionInProgress] = useState<boolean>(false)
@@ -398,30 +398,30 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({ children 
       selectionInProgress,
       anchorCell,
       stableGridMap,
-      // setSelectedCells,
-      // setFocusedCellId,
-      // setAnchorCell,
-      // registerGrid,
-      // selectCell,
-      // startSelection,
-      // extendSelection,
-      // endSelection,
-      // focusCell,
-      // clearSelection,
-      // isCellSelected,
-      // isCellFocused,
-      // getCellPositionFromId,
-      // getCellBorderClasses,
+      setSelectedCells,
+      setFocusedCellId,
+      setAnchorCell,
+      registerGrid,
+      selectCell,
+      startSelection,
+      extendSelection,
+      endSelection,
+      focusCell,
+      clearSelection,
+      isCellSelected,
+      isCellFocused,
+      getCellPositionFromId,
+      getCellBorderClasses,
     ],
   )
 
-  return <SelectionContext.Provider value={value}>{children}</SelectionContext.Provider>
+  return <SelectionCellsContext.Provider value={value}>{children}</SelectionCellsContext.Provider>
 }
 
-export const useSelectionContext = (): SelectionContextType => {
-  const context = useContext(SelectionContext)
+export const useSelectionCellsContext = (): SelectionCellsContextType => {
+  const context = useContext(SelectionCellsContext)
   if (context === undefined) {
-    throw new Error('useSelectionContext must be used within a SelectionProvider')
+    throw new Error('useSelectionCellsContext must be used within a SelectionCellsProvider')
   }
   return context
 }
