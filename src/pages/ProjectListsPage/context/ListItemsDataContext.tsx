@@ -15,6 +15,8 @@ import {
   useGetEntityTypeData,
 } from '@shared/containers/ProjectTreeTable'
 import { SortingState } from '@tanstack/react-table'
+import useDeleteListItems, { UseDeleteListItemsReturn } from '../hooks/useDeleteListItems'
+import { ContextMenuItemConstructors } from '@shared/containers/ProjectTreeTable/hooks/useCellContextMenu'
 
 export type ListItemsMap = Map<string, EntityListItem>
 
@@ -23,6 +25,7 @@ interface ListItemsDataContextValue {
   projectInfo?: ProjectDataContextProps['projectInfo']
   projectName: string
   users: ProjectDataContextProps['users']
+  selectedListId?: string
   // Attributes
   attribFields: ProjectDataContextProps['attribFields']
 
@@ -44,6 +47,10 @@ interface ListItemsDataContextValue {
   // column sorting
   columnSorting: SortingState
   setColumnSorting: (columnSorting: SortingState) => void
+  // actions
+  contextMenuItems: ContextMenuItemConstructors
+  // mutations
+  deleteListItems: UseDeleteListItemsReturn['deleteListItems']
 }
 
 const ListItemsDataContext = createContext<ListItemsDataContextValue | undefined>(undefined)
@@ -170,11 +177,25 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
   )
   const tasksMap: TaskNodeMap = new Map()
 
+  // delete lists
+  const { deleteListItems, deleteListItemMenuItem } = useDeleteListItems({
+    projectName: projectName,
+    listId: selectedListId,
+  })
+
+  // inject in custom add to list context menu items
+  const contextMenuItems: ContextMenuItemConstructors = [
+    'copy-paste',
+    'show-details',
+    deleteListItemMenuItem,
+  ]
+
   return (
     <ListItemsDataContext.Provider
       value={{
         projectName,
         projectInfo,
+        selectedListId,
         attribFields: scopedAttribFields,
         users,
         // list items
@@ -195,6 +216,10 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
         // column sorting
         columnSorting,
         setColumnSorting,
+        // actions
+        contextMenuItems,
+        // mutations
+        deleteListItems,
       }}
     >
       {children}

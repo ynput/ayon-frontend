@@ -51,7 +51,7 @@ const ProjectListsWithOuterProviders: FC = () => {
 }
 
 const ProjectListsWithInnerProviders: FC = () => {
-  const { projectName, ...props } = useListItemsDataContext()
+  const { projectName, selectedListId, contextMenuItems, ...props } = useListItemsDataContext()
   const { selectedList } = useListsContext()
 
   const [pageConfig, updatePageConfig] = useUsersPageConfig({
@@ -78,6 +78,7 @@ const ProjectListsWithInnerProviders: FC = () => {
           isInitialized={props.isInitialized}
           showHierarchy={false}
           isLoading={props.isLoadingAll}
+          contextMenuItems={contextMenuItems}
         >
           <SelectionProvider>
             <SelectedRowsProvider>

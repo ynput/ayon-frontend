@@ -1,4 +1,4 @@
-import { api } from '@api/rest/lists'
+import { api } from '@api/rest/entityLists'
 import gqlApi from './getLists'
 
 const updateListsEnhancedApi = api.enhanceEndpoints({
@@ -76,6 +76,12 @@ const updateListsEnhancedApi = api.enhanceEndpoints({
         { type: 'entityListItem', id: listId },
       ],
     },
+    deleteEntityListItem: {
+      invalidatesTags: (_s, _e, { listId }) => [
+        { type: 'entityList', id: listId },
+        { type: 'entityListItem', id: listId },
+      ],
+    },
   },
 })
 
@@ -87,4 +93,5 @@ export const {
   // LIST ITEM MUTATIONS
   useUpdateEntityListItemsMutation,
   useCreateEntityListItemMutation,
+  useDeleteEntityListItemMutation,
 } = updateListsEnhancedApi
