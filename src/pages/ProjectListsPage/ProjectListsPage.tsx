@@ -33,6 +33,7 @@ import {
   useSelectedRowsContext,
 } from '@shared/containers/ProjectTreeTable'
 import ProjectOverviewDetailsPanel from '@pages/ProjectOverviewPage/containers/ProjectOverviewDetailsPanel'
+import OverviewActions from '@pages/ProjectOverviewPage/components/OverviewActions'
 
 const ProjectListsWithOuterProviders: FC = () => {
   const projectName = useAppSelector((state) => state.project.name) || ''
@@ -70,6 +71,7 @@ const ProjectListsWithInnerProviders: FC = () => {
           attribFields={props.attribFields}
           projectInfo={props.projectInfo}
           users={props.users}
+          // @ts-ignore
           entitiesMap={props.listItemsMap}
           foldersMap={props.foldersMap}
           tasksMap={props.tasksMap}
@@ -100,6 +102,7 @@ const ProjectListsPage: FC = () => {
   const { isPanelOpen } = useSettingsPanel()
   const { selectedList } = useListsContext()
   const { selectedRows } = useSelectedRowsContext()
+  const { deleteListItemAction } = useListItemsDataContext()
 
   return (
     <main style={{ overflow: 'hidden', gap: 4 }}>
@@ -118,6 +121,7 @@ const ProjectListsPage: FC = () => {
           <Section wrap direction="column" style={{ height: '100%' }}>
             {selectedList && (
               <Toolbar>
+                <OverviewActions items={['undo', 'redo', deleteListItemAction]} />
                 <ListItemsFilter />
                 <CustomizeButton />
               </Toolbar>

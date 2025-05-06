@@ -1,3 +1,4 @@
+import { TableActionConstructor } from '@pages/ProjectOverviewPage/components/OverviewActions'
 import { useUpdateEntityListItemsMutation } from '@queries/lists/updateLists'
 import { ContextMenuItemConstructor } from '@shared/containers/ProjectTreeTable/hooks/useCellContextMenu'
 import { parseCellId } from '@shared/containers/ProjectTreeTable/utils/cellUtils'
@@ -10,13 +11,19 @@ type UseDeleteListItemsProps = {
   listId?: string
 }
 
-type DeleteListItems = (itemIds: string[]) => Promise<void>
+type DeleteListItems = (itemIds: string[], force?: boolean) => Promise<void>
 type DeleteListItemsWithConfirmation = (itemIds: string[]) => Promise<ConfirmDialogReturn>
 
 export type UseDeleteListItemsReturn = {
   deleteListItems: DeleteListItems
-  deleteListItemsWithConfirmation: DeleteListItemsWithConfirmation
   deleteListItemMenuItem: ContextMenuItemConstructor
+  deleteListItemAction: TableActionConstructor
+}
+
+const deleteItemLabel = {
+  icon: 'remove',
+  label: 'Remove from list',
+  shortcut: getPlatformShortcutKey('Backspace', [KeyMode.Ctrl]),
 }
 
 const useDeleteListItems = ({
@@ -25,7 +32,7 @@ const useDeleteListItems = ({
 }: UseDeleteListItemsProps): UseDeleteListItemsReturn => {
   const [updateEntityListItems] = useUpdateEntityListItemsMutation()
 
-  const deleteListItems: DeleteListItems = async (itemIds) => {
+  const onDeleteListItems: DeleteListItems = async (itemIds) => {
     try {
       if (!listId) throw { data: { detail: 'No listId provided' } }
 
@@ -52,14 +59,23 @@ const useDeleteListItems = ({
     confirmDelete({
       label: `remove ${itemIds.length} item${itemIds.length > 1 ? 's' : ''} from list`,
       deleteLabel: 'Remove',
-      accept: async () => deleteListItems(itemIds),
+      accept: async () => onDeleteListItems(itemIds),
+      showToasts: false,
     })
 
+  const deleteListItems: DeleteListItems = async (itemIds, force) => {
+    if (force) {
+      await onDeleteListItems(itemIds)
+    } else {
+      await deleteListItemsWithConfirmation(itemIds)
+    }
+  }
+
   const deleteListItemMenuItem: ContextMenuItemConstructor = (_e, _cell, selectedCells) => ({
-    label: 'Remove from list',
-    icon: 'close',
+    label: deleteItemLabel.label,
+    icon: deleteItemLabel.icon,
+    shortcut: deleteItemLabel.shortcut,
     danger: true,
-    shortcut: getPlatformShortcutKey('Backspace', [KeyMode.Ctrl]),
     command: async () => {
       const selectedListItems = selectedCells
         .map((cell) => parseCellId(cell.cellId)?.rowId)
@@ -69,10 +85,24 @@ const useDeleteListItems = ({
     },
   })
 
+  const deleteListItemAction: TableActionConstructor = (selection) => ({
+    icon: deleteItemLabel.icon,
+    ['data-tooltip']: deleteItemLabel.label,
+    ['data-shortcut']: deleteItemLabel.shortcut,
+    disabled: !selection.selectedCells.size,
+    onClick: () => {
+      // convert selection to a list of ids
+      const selectedListItems = Array.from(selection.selectedCells)
+        .map((cell) => parseCellId(cell)?.rowId)
+        .filter(Boolean)
+      deleteListItemsWithConfirmation(selectedListItems as string[])
+    },
+  })
+
   return {
     deleteListItems,
-    deleteListItemsWithConfirmation,
     deleteListItemMenuItem,
+    deleteListItemAction,
   }
 }
 

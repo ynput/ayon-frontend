@@ -49,8 +49,9 @@ interface ListItemsDataContextValue {
   setColumnSorting: (columnSorting: SortingState) => void
   // actions
   contextMenuItems: ContextMenuItemConstructors
-  // mutations
+  // delete (remove) from list
   deleteListItems: UseDeleteListItemsReturn['deleteListItems']
+  deleteListItemAction: UseDeleteListItemsReturn['deleteListItemAction']
 }
 
 const ListItemsDataContext = createContext<ListItemsDataContextValue | undefined>(undefined)
@@ -178,7 +179,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
   const tasksMap: TaskNodeMap = new Map()
 
   // delete lists
-  const { deleteListItems, deleteListItemMenuItem } = useDeleteListItems({
+  const { deleteListItems, deleteListItemMenuItem, deleteListItemAction } = useDeleteListItems({
     projectName: projectName,
     listId: selectedListId,
   })
@@ -218,8 +219,9 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
         setColumnSorting,
         // actions
         contextMenuItems,
-        // mutations
+        // delete (remove) from list
         deleteListItems,
+        deleteListItemAction,
       }}
     >
       {children}
