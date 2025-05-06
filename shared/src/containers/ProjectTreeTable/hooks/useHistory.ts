@@ -8,20 +8,26 @@ export interface HistoryEntityUpdate extends EntityUpdate {
 }
 
 interface HistoryEntry {
-  undo: HistoryEntityUpdate[]
-  redo: HistoryEntityUpdate[]
+  undo: (HistoryEntityUpdate | HistoryCustomCallback)[]
+  redo: (HistoryEntityUpdate | HistoryCustomCallback)[]
   timestamp: number
 }
 
-type SplitEntitiesByInherited = [EntityUpdate[], InheritFromParentEntity[]]
+type SplitEntitiesByInherited = [EntityUpdate[], InheritFromParentEntity[], HistoryCustomCallback[]]
+
+type HistoryCustomCallback = () => void
 
 export interface UseHistoryReturn {
-  pushHistory: (undo: HistoryEntityUpdate[], redo: HistoryEntityUpdate[]) => void
+  pushHistory: (
+    undo: (HistoryEntityUpdate | HistoryCustomCallback)[],
+    redo: (HistoryEntityUpdate | HistoryCustomCallback)[],
+  ) => void
   undo: () => SplitEntitiesByInherited | null
   redo: () => SplitEntitiesByInherited | null
   canUndo: boolean
   canRedo: boolean
   clearHistory: () => void
+  removeHistoryEntries: (count: number) => void
 }
 
 const useHistory = (maxHistorySize = 50): UseHistoryReturn => {
@@ -42,11 +48,15 @@ const useHistory = (maxHistorySize = 50): UseHistoryReturn => {
     [maxHistorySize],
   )
 
-  // undoing back to inherited uses a different update function
-  const splitActionsByInherited = (entities: HistoryEntityUpdate[]): SplitEntitiesByInherited => {
+  // Process actions by type: regular updates, inheritance, and custom callbacks
+  const processHistoryActions = (
+    entities: (HistoryEntityUpdate | HistoryCustomCallback)[],
+  ): SplitEntitiesByInherited => {
     return entities.reduce(
       (acc, entity) => {
-        if (entity.wasInherited && entity.folderId) {
+        if (typeof entity === 'function') {
+          acc[2].push(entity)
+        } else if (entity.wasInherited && entity.folderId) {
           acc[1].push({
             entityId: entity.id,
             entityType: entity.type,
@@ -59,7 +69,7 @@ const useHistory = (maxHistorySize = 50): UseHistoryReturn => {
         }
         return acc
       },
-      [[], []] as SplitEntitiesByInherited,
+      [[], [], []] as SplitEntitiesByInherited,
     )
   }
 
@@ -70,7 +80,7 @@ const useHistory = (maxHistorySize = 50): UseHistoryReturn => {
     setPast(newPast)
     setFuture((f) => [...f, last])
 
-    return splitActionsByInherited(last.undo)
+    return processHistoryActions(last.undo)
   }, [past])
 
   const redo = useCallback(() => {
@@ -79,8 +89,14 @@ const useHistory = (maxHistorySize = 50): UseHistoryReturn => {
     const next = newFuture.pop()!
     setFuture(newFuture)
     setPast((p) => [...p, next])
-    return splitActionsByInherited(next.redo)
+    return processHistoryActions(next.redo)
   }, [future])
+
+  // function to remove x number of entries from the history undo/redo stacks
+  const removeHistoryEntries = useCallback((count: number) => {
+    setPast((prev) => prev.slice(0, Math.max(0, prev.length - count)))
+    setFuture((prev) => prev.slice(0, Math.max(0, prev.length - count)))
+  }, [])
 
   const clearHistory = useCallback(() => {
     setPast([])
@@ -94,6 +110,7 @@ const useHistory = (maxHistorySize = 50): UseHistoryReturn => {
     canUndo: past.length > 0,
     canRedo: future.length > 0,
     clearHistory,
+    removeHistoryEntries,
   }
 }
 

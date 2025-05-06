@@ -20,7 +20,7 @@ import { ContextMenuItemConstructors } from '@shared/containers/ProjectTreeTable
 
 export type ListItemsMap = Map<string, EntityListItem>
 
-interface ListItemsDataContextValue {
+export interface ListItemsDataContextValue {
   // Project Info
   projectInfo?: ProjectDataContextProps['projectInfo']
   projectName: string
@@ -182,6 +182,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
   const { deleteListItems, deleteListItemMenuItem, deleteListItemAction } = useDeleteListItems({
     projectName: projectName,
     listId: selectedListId,
+    listItemsMap,
   })
 
   // inject in custom add to list context menu items

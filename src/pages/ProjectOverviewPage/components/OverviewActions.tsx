@@ -48,7 +48,8 @@ const OverviewActions: FC<OverviewActionsProps> = ({ items }) => {
   const selection = useSelectionContext()
   const { selectedCells } = selection
   const editing = useCellEditing()
-  const { canUndo, canRedo, undo, redo } = editing
+  const { history, undo, redo } = editing
+  const { canUndo, canRedo } = history
   const deleteEntities = useDeleteEntities({})
 
   const builtInActions: Record<ActionType, ActionItem> = {

@@ -1,22 +1,29 @@
-import { useSelectionContext } from '@shared/containers/ProjectTreeTable'
+import { useCellEditing, useSelectionContext } from '@shared/containers/ProjectTreeTable'
 import { FC, useEffect } from 'react'
 import { useListItemsDataContext } from '../context/ListItemsDataContext'
 import { parseCellId } from '@shared/containers/ProjectTreeTable/utils/cellUtils'
+import { DeleteListItem } from '../hooks/useDeleteListItems'
 
 interface ListTableShortcutsProps {}
 
 const ListItemsShortcuts: FC<ListTableShortcutsProps> = ({}) => {
   const { selectedCells } = useSelectionContext()
-  const { deleteListItems } = useListItemsDataContext()
+  const { deleteListItems, listItemsMap } = useListItemsDataContext()
+  const { history } = useCellEditing()
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Backspace' && (event.ctrlKey || event.metaKey)) {
-        event.preventDefault()
-        const selectedListItems = Array.from(selectedCells)
-          .map((cell) => parseCellId(cell)?.rowId)
-          .filter(Boolean)
+        // convert selection to a list of ids
+        const selectedListItems: DeleteListItem[] = []
 
-        deleteListItems(selectedListItems as string[])
+        Array.from(selectedCells).forEach((cell) => {
+          const itemId = parseCellId(cell)?.rowId
+          if (!itemId) return
+          const entityId = listItemsMap.get(itemId)?.entityId
+          if (!entityId) return
+          selectedListItems.push({ id: itemId, entityId })
+        })
+        deleteListItems(selectedListItems, history, true)
       }
     }
 
@@ -25,7 +32,7 @@ const ListItemsShortcuts: FC<ListTableShortcutsProps> = ({}) => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [selectedCells, deleteListItems])
+  }, [selectedCells, deleteListItems, history, listItemsMap])
   return null
 }
 

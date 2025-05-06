@@ -8,6 +8,7 @@ import { useProjectTableContext } from '../context/ProjectTableContext'
 import { useCellEditing } from '../context/CellEditingContext'
 import { InheritFromParentEntity } from './useUpdateTableData'
 import { AttributeWithPermissions } from '../types'
+import { UseHistoryReturn } from './useHistory'
 
 type ContextEvent = React.MouseEvent<HTMLTableSectionElement, MouseEvent>
 
@@ -15,7 +16,7 @@ export type TableCellContextData = {
   entityId: string
   cellId: string
   columnId: string
-  entityType: 'folder' | 'task' | undefined
+  entityType: 'folder' | 'task' | 'product' | 'version' | undefined
   attribField: AttributeWithPermissions | undefined
 }
 type DefaultMenuItem =
@@ -37,6 +38,9 @@ export type ContextMenuItemConstructor = (
     selectedColumns: string[]
     selectedFullRows: string[] // if the full row is selected
   },
+  context: {
+    history: UseHistoryReturn
+  },
 ) => ContextMenuItemType | ContextMenuItemType[] | undefined
 export type ContextMenuItemConstructors = (DefaultMenuItem | ContextMenuItemConstructor)[]
 
@@ -56,7 +60,7 @@ const useCellContextMenu = ({ attribs, onOpenNew }: CellContextMenuProps) => {
   } = useProjectTableContext()
   const { copyToClipboard, exportCSV, pasteFromClipboard } = useClipboard()
   const { selectedCells, clearSelection, selectCell, focusCell } = useSelectionContext()
-  const { inheritFromParent } = useCellEditing()
+  const { inheritFromParent, history } = useCellEditing()
 
   // update entity context
 
@@ -240,7 +244,7 @@ const useCellContextMenu = ({ attribs, onOpenNew }: CellContextMenuProps) => {
     return {
       cellId: cellId,
       columnId: colId,
-      entityId: rowId,
+      entityId: cellEntityData?.entityId || rowId,
       entityType: cellEntityData?.entityType,
       attribField: attribField,
     }
@@ -280,18 +284,32 @@ const useCellContextMenu = ({ attribs, onOpenNew }: CellContextMenuProps) => {
 
     const constructedMenuItems = contextMenuItems.flatMap((constructor) =>
       typeof constructor === 'function'
-        ? constructor(e, cellData, selectedCellsData, {
-            selectedCells: currentSelectedCells, // all selected cells
-            selectedRows: selectedCellRows,
-            selectedColumns: selectedCellColumns,
-            selectedFullRows: selectedCellFullRows,
-          })
-        : builtInMenuItems[constructor]?.(e, cellData, selectedCellsData, {
-            selectedCells: currentSelectedCells, // all selected cells
-            selectedRows: selectedCellRows,
-            selectedColumns: selectedCellColumns,
-            selectedFullRows: selectedCellFullRows,
-          }),
+        ? constructor(
+            e,
+            cellData,
+            selectedCellsData,
+            {
+              selectedCells: currentSelectedCells, // all selected cells
+              selectedRows: selectedCellRows,
+              selectedColumns: selectedCellColumns,
+              selectedFullRows: selectedCellFullRows,
+            },
+            {
+              history,
+            },
+          )
+        : builtInMenuItems[constructor]?.(
+            e,
+            cellData,
+            selectedCellsData,
+            {
+              selectedCells: currentSelectedCells, // all selected cells
+              selectedRows: selectedCellRows,
+              selectedColumns: selectedCellColumns,
+              selectedFullRows: selectedCellFullRows,
+            },
+            { history },
+          ),
     )
 
     cellContextMenuShow(e, constructedMenuItems)
