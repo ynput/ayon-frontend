@@ -36,16 +36,16 @@ import { toast } from 'react-toastify'
 import TrialBanner from '@components/TrialBanner/TrialBanner'
 
 // context
-import { ShortcutsProvider } from '@context/shortcutsContext'
-import { RestartProvider } from '@context/restartContext'
-import { PasteProvider, PasteModal } from '@context/pasteContext'
-import { URIProvider } from '@context/uriContext'
-import { NotificationsProvider } from '@context/notificationsContext'
+import { ShortcutsProvider } from '@context/ShortcutsContext'
+import { RestartProvider } from '@context/RestartContext'
+import { PasteProvider, PasteModal } from '@context/PasteContext'
+import { URIProvider } from '@context/UriContext'
+import { NotificationsProvider } from '@context/NotificationsContext'
 import { CustomerlyProvider } from 'react-live-chat-customerly'
 import { PiPProvider } from '@shared/context/pip/PiPProvider'
 import { RemoteModulesProvider, DetailsPanelProvider } from '@shared/context'
 import { PowerLicenseProvider } from './remote/context/PowerLicenseContext'
-import { PowerpackProvider } from '@context/powerpackContext'
+import { PowerpackProvider } from '@context/PowerpackContext'
 import { FeedbackProvider } from './feedback/FeedbackContext'
 
 // containers

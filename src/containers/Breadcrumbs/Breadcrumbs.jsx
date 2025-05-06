@@ -6,7 +6,7 @@ import * as Styled from './Breadcrumbs.styled'
 
 import { upperFirst } from 'lodash'
 import { copyToClipboard } from '@shared/util'
-import { useURIContext } from '@context/uriContext'
+import { useURIContext } from '@context/UriContext'
 import { ayonUrlParam } from '@/constants'
 import clsx from 'clsx'
 

@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux'
 import DashboardPanelWrapper from './DashboardPanelWrapper'
 import ProjectLatestRow from './ProjectLatestRow'
 import { useGetProjectQuery } from '@queries/project/enhancedProject'
-import { useURIContext } from '@context/uriContext'
+import { useURIContext } from '@context/UriContext'
 
 const ProjectLatest = ({ projectName }) => {
   // project

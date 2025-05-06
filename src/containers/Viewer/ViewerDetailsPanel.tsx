@@ -5,7 +5,7 @@ import { useGetUsersAssigneeQuery } from '@shared/api'
 import { DetailsPanelSlideOut } from '@shared/containers'
 import { useGetProjectsInfoQuery } from '@shared/api'
 import { ViewerDetailsPanelWrapper } from './Viewer.styled'
-import { useViewer } from '@context/viewerContext'
+import { useViewer } from '@context/ViewerContext'
 
 type Props = {
   versionIds: string[]
