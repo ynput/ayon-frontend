@@ -1,11 +1,11 @@
-import {
+import { gqlApi } from '@shared/api/generated'
+import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
+import type {
   GetListItemsQuery,
   GetListItemsQueryVariables,
+  GetListsQuery,
   GetListsQueryVariables,
-  api as gqlApi,
-} from '@api/graphql'
-import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
-import { GetListsQuery } from '@api/graphql'
+} from '@shared/api/generated'
 
 // Define the LISTS_PER_PAGE constant for pagination
 export const LISTS_PER_PAGE = 100
@@ -91,8 +91,8 @@ type ListItemMessage = {
 }
 
 import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
-import { parseAllAttribs } from '@queries/overview/getOverview'
-import PubSub from '@/pubsub'
+import { parseAllAttribs } from '../overview'
+import { PubSub } from '@shared/util'
 type Definitions = DefinitionsFromApi<typeof gqlApi>
 type TagTypes = TagTypesFromApi<typeof gqlApi>
 // update the definitions to include the new types
@@ -131,7 +131,7 @@ const getListsGqlApiEnhanced = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefiniti
   },
 })
 
-export const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
+const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
   endpoints: (build) => ({
     getListsInfinite: build.infiniteQuery<
       GetListsResult,

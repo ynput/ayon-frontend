@@ -1,4 +1,4 @@
-import { EntityList, useGetListsInfiniteInfiniteQuery } from '@queries/lists/getLists'
+import { EntityList, useGetListsInfiniteInfiniteQuery } from '@shared/api'
 import { clientFilterToQueryFilter, FilterForQuery } from '@shared/containers/ProjectTreeTable'
 import { useMemo, useState } from 'react'
 

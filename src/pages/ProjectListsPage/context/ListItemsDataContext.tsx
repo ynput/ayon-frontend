@@ -1,5 +1,5 @@
 import { createContext, useContext, ReactNode, useMemo } from 'react'
-import { EntityListItem } from '@queries/lists/getLists'
+import { EntityListItem } from '@shared/api'
 import {
   ProjectDataContextProps,
   useProjectDataContext,

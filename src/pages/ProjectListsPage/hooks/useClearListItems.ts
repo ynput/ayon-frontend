@@ -1,5 +1,4 @@
-import { useLazyGetListItemsQuery } from '@queries/lists/getLists'
-import { useUpdateEntityListItemsMutation } from '@queries/lists/updateLists'
+import { useLazyGetListItemsQuery, useUpdateEntityListItemsMutation } from '@shared/api'
 import { toast } from 'react-toastify'
 
 type Props = { projectName: string }

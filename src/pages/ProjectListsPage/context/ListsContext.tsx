@@ -5,12 +5,11 @@ import {
   useCreateEntityListMutation,
   useDeleteEntityListMutation,
   useUpdateEntityListMutation,
-} from '@queries/lists/updateLists'
-import { EntityListPatchModel, EntityListPostModel } from '@api/rest/lists'
+} from '@shared/api'
+import type { EntityListPatchModel, EntityListPostModel, EntityList } from '@shared/api'
 import { useProjectDataContext } from '@pages/ProjectOverviewPage/context/ProjectDataContext'
 import useDeleteList, { UseDeleteListReturn } from '../hooks/useDeleteList'
 import useUpdateList, { UseUpdateListReturn } from '../hooks/useUpdateList'
-import { EntityList } from '@queries/lists/getLists'
 import { useListsDataContext } from './ListsDataContext'
 import { useQueryParam, withDefault, QueryParamConfig } from 'use-query-params'
 

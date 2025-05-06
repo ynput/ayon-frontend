@@ -1,7 +1,7 @@
-import { api } from '@api/rest/entityLists'
+import { entityListsApi } from '@shared/api/generated'
 import gqlApi from './getLists'
 
-const updateListsEnhancedApi = api.enhanceEndpoints({
+const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
   endpoints: {
     // LIST MUTATIONS
     createEntityList: {
@@ -95,3 +95,4 @@ export const {
   useCreateEntityListItemMutation,
   useDeleteEntityListItemMutation,
 } = updateListsEnhancedApi
+export { updateListsEnhancedApi as entityListsQueriesRest, gqlApi as entityListsQueriesGql }

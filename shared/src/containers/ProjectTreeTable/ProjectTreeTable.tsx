@@ -297,7 +297,7 @@ export const ProjectTreeTable = ({
               virtualPaddingLeft={virtualPaddingLeft}
               virtualPaddingRight={virtualPaddingRight}
               showHierarchy={showHierarchy}
-              attribs={attribs}
+              attribs={attribFields}
               onOpenNew={onOpenNew}
             />
           </table>

@@ -37,8 +37,6 @@ import NoProducts from './NoProducts'
 import { toast } from 'react-toastify'
 import * as Styled from './Products.styled'
 import { openViewer } from '@state/viewer'
-import { extractIdFromClassList } from '@shared/containers/Feed'
-import useScopedStatuses from '@hooks/useScopedStatuses'
 import { useEntityListsContext } from '@pages/ProjectListsPage/context/EntityListsContext'
 
 const Products = () => {

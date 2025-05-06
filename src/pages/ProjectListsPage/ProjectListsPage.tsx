@@ -29,7 +29,7 @@ import {
   ProjectTableProvider,
   ProjectTableQueriesProvider,
   SelectedRowsProvider,
-  SelectionProvider,
+  SelectionCellsProvider,
   useSelectedRowsContext,
 } from '@shared/containers/ProjectTreeTable'
 import ProjectOverviewDetailsPanel from '@pages/ProjectOverviewPage/containers/ProjectOverviewDetailsPanel'
@@ -84,7 +84,7 @@ const ProjectListsWithInnerProviders: FC = () => {
           sorting={props.sorting}
           updateSorting={props.updateSorting}
         >
-          <SelectionProvider>
+          <SelectionCellsProvider>
             <SelectedRowsProvider>
               <ColumnSettingsProvider config={pageConfig} onChange={updatePageConfig}>
                 <CellEditingProvider>
@@ -92,7 +92,7 @@ const ProjectListsWithInnerProviders: FC = () => {
                 </CellEditingProvider>
               </ColumnSettingsProvider>
             </SelectedRowsProvider>
-          </SelectionProvider>
+          </SelectionCellsProvider>
         </ProjectTableProvider>
       </ProjectTableQueriesProvider>
     </SettingsPanelProvider>

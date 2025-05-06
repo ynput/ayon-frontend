@@ -1,5 +1,5 @@
 import { createContext, useContext, ReactNode, useMemo } from 'react'
-import { EntityList } from '@queries/lists/getLists'
+import { EntityList } from '@shared/api'
 import { useProjectDataContext } from '@pages/ProjectOverviewPage/context/ProjectDataContext'
 import { SimpleTableRow } from '@shared/SimpleTable'
 import { getEntityTypeIcon } from '@shared/util'

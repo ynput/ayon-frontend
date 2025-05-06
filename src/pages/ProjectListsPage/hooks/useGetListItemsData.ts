@@ -1,8 +1,5 @@
-import {
-  EntityListItem,
-  GetListItemsResult,
-  useGetListItemsInfiniteInfiniteQuery,
-} from '@queries/lists/getLists'
+import { useGetListItemsInfiniteInfiniteQuery } from '@shared/api'
+import type { EntityListItem, GetListItemsResult } from '@shared/api'
 import { clientFilterToQueryFilter, FilterForQuery } from '@shared/containers/ProjectTreeTable'
 import { SortingState } from '@tanstack/react-table'
 import { useMemo, useState } from 'react'

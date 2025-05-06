@@ -2608,6 +2608,58 @@ export const DetailsPanelVersionFragmentFragmentDoc = `
   author
 }
     `
+export const ListItemFragmentFragmentDoc = `
+    fragment ListItemFragment on BaseNode {
+  ... on TaskNode {
+    name
+    label
+    status
+    tags
+    taskType
+    allAttrib
+    ownAttrib
+    assignees
+    folder {
+      path
+    }
+  }
+  ... on FolderNode {
+    name
+    label
+    status
+    tags
+    folderType
+    allAttrib
+    ownAttrib
+    path
+  }
+  ... on ProductNode {
+    name
+    status
+    tags
+    productType
+    allAttrib
+    folder {
+      path
+    }
+  }
+  ... on VersionNode {
+    name
+    status
+    tags
+    allAttrib
+    product {
+      name
+      folder {
+        path
+      }
+    }
+    task {
+      name
+    }
+  }
+}
+    `
 export const TaskPropsFragmentFragmentDoc = `
     fragment TaskPropsFragment on TaskNode {
   id

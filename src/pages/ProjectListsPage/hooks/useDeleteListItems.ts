@@ -1,5 +1,5 @@
 import { TableActionConstructor } from '@pages/ProjectOverviewPage/components/OverviewActions'
-import { useUpdateEntityListItemsMutation } from '@queries/lists/updateLists'
+import { useUpdateEntityListItemsMutation } from '@shared/api'
 import { ContextMenuItemConstructor } from '@shared/containers/ProjectTreeTable/hooks/useCellContextMenu'
 import { UseHistoryReturn } from '@shared/containers/ProjectTreeTable/hooks/useHistory'
 import { parseCellId } from '@shared/containers/ProjectTreeTable/utils/cellUtils'

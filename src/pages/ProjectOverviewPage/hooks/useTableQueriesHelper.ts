@@ -1,5 +1,4 @@
-import { useLazyGetTasksByParentQuery } from '@queries/overview/getOverview'
-import { useUpdateOverviewEntitiesMutation } from '@queries/overview/updateOverview'
+import { useLazyGetTasksByParentQuery, useUpdateOverviewEntitiesMutation } from '@shared/api'
 import { ProjectTableQueriesProviderProps } from '@shared/containers/ProjectTreeTable'
 
 type Props = {

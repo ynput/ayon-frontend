@@ -3,9 +3,8 @@ import useGetListsData, { UseGetListsDataReturn } from '../hooks/useGetListsData
 import { ListEntityType, listEntityTypes } from '../components/NewListDialog/NewListDialog'
 import { toast } from 'react-toastify'
 import { getEntityTypeIcon } from '@shared/util'
-import { EntityList } from '@queries/lists/getLists'
 import { ContextMenuItemConstructor } from '@shared/containers/ProjectTreeTable/hooks/useCellContextMenu'
-import { useUpdateEntityListItemsMutation } from '@queries/lists/updateLists'
+import { useUpdateEntityListItemsMutation, EntityList } from '@shared/api'
 
 interface EntityListsContextProps {
   entityTypes: ListEntityType[]

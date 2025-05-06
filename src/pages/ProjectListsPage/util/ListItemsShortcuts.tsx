@@ -1,4 +1,4 @@
-import { useCellEditing, useSelectionContext } from '@shared/containers/ProjectTreeTable'
+import { useCellEditing, useSelectionCellsContext } from '@shared/containers/ProjectTreeTable'
 import { FC, useEffect } from 'react'
 import { useListItemsDataContext } from '../context/ListItemsDataContext'
 import { parseCellId } from '@shared/containers/ProjectTreeTable/utils/cellUtils'
@@ -7,7 +7,7 @@ import { DeleteListItem } from '../hooks/useDeleteListItems'
 interface ListTableShortcutsProps {}
 
 const ListItemsShortcuts: FC<ListTableShortcutsProps> = ({}) => {
-  const { selectedCells } = useSelectionContext()
+  const { selectedCells } = useSelectionCellsContext()
   const { deleteListItems, listItemsMap } = useListItemsDataContext()
   const { history } = useCellEditing()
   useEffect(() => {
