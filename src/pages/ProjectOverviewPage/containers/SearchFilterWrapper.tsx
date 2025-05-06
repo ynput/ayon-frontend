@@ -5,7 +5,7 @@ import type { ProjectModel } from '@shared/api'
 import { EditorTaskNode, TaskNodeMap } from '@shared/containers/ProjectTreeTable'
 import { usePower } from '@/remote/context/PowerLicenseContext'
 import AdvancedFiltersPlaceholder from '@components/SearchFilter/AdvancedFiltersPlaceholder'
-import { usePowerpack } from '@context/powerpackContext'
+import { usePowerpack } from '@context/PowerpackContext'
 import { useColumnSettings } from '@shared/containers/ProjectTreeTable'
 
 interface SearchFilterWrapperProps extends Omit<BuildFilterOptions, 'scope' | 'data' | 'power'> {
