@@ -16,7 +16,7 @@ import { TableCellContent } from './ProjectTreeTable.styled'
 import clsx from 'clsx'
 import { SelectionCell } from './components/SelectionCell'
 import RowSelectionHeader from './components/RowSelectionHeader'
-import { ROW_SELECTION_COLUMN_ID } from './context/SelectionContext'
+import { ROW_SELECTION_COLUMN_ID } from './context/SelectionCellsContext'
 
 // Wrapper function for sorting that pushes isLoading rows to the bottom
 const withLoadingStateSort = (sortFn: SortingFn<any>): SortingFn<any> => {

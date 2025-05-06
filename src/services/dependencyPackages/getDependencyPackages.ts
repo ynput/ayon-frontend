@@ -1,12 +1,12 @@
-import { api } from '@api/rest/dependencyPackages'
+import { desktopApi } from '@shared/api'
 
-const dependencyPackagesApi = api.enhanceEndpoints({
+const enhancedApi = desktopApi.enhanceEndpoints({
   endpoints: {
     listDependencyPackages: {
       providesTags: ['dependencyPackage'],
     },
   },
 })
-export const { useListDependencyPackagesQuery } = dependencyPackagesApi
+export const { useListDependencyPackagesQuery } = enhancedApi
 
-export default dependencyPackagesApi
+export default enhancedApi

@@ -1,8 +1,10 @@
 import { useSelector } from 'react-redux'
 import { onTaskSelected } from '@state/dashboard'
-import { toggleDetailsPanel } from '@state/details'
+import { useScopedDetailsPanel } from '@shared/context'
 
 export const useTaskClick = (dispatch, tasks = [], closeContext) => {
+  const { setOpen } = useScopedDetailsPanel('dashboard')
+
   const selectedTasks = useSelector((state) => state.dashboard.tasks.selected)
   const setSelectedTasks = (ids, types) => dispatch(onTaskSelected({ ids, types }))
   // HANDLE TASK CLICK
@@ -49,7 +51,7 @@ export const useTaskClick = (dispatch, tasks = [], closeContext) => {
     setSelectedTasks(newSelection, taskTypes)
 
     if (openPanel) {
-      dispatch(toggleDetailsPanel(true))
+      setOpen(true)
     }
   }
 

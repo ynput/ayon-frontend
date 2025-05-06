@@ -81,7 +81,7 @@ export type ActivityOperationModel = {
   /** ID of the activity. None for create */
   activityId?: string
   /** Data to be used for create or update. Ignored for delete.See create/patch activity endpoint for details */
-  data?: object
+  data?: Record<string, any>
 }
 export type ActivityOperationsRequestModel = {
   operations?: ActivityOperationModel[]
@@ -106,7 +106,7 @@ export type OperationModel = {
   type: 'create' | 'update' | 'delete'
   entityType: 'folder' | 'product' | 'version' | 'representation' | 'task' | 'workfile'
   entityId?: string
-  data?: object
+  data?: Record<string, any>
   force?: boolean
   asUser?: string
 }

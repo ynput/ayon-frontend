@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { useGetProjectQuery } from '@queries/project/getProject'
+import { useUpdateProjectMutation } from '@shared/api'
+import { useGetProjectQuery } from '@queries/project/enhancedProject'
 import DashboardPanelWrapper from '../DashboardPanelWrapper'
 import AttributeTable from '@containers/attributeTable'
 import { format } from 'date-fns'
@@ -9,7 +10,6 @@ import AttribForm, { getDefaultFromType } from '@components/AttribForm/AttribFor
 import { useGetAnatomySchemaQuery } from '@queries/anatomy/getAnatomy'
 import { isEmpty, isEqual } from 'lodash'
 import { useSelector } from 'react-redux'
-import { useUpdateProjectMutation } from '@queries/project/updateProject'
 import { toast } from 'react-toastify'
 import clsx from 'clsx'
 

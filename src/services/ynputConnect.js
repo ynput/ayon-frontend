@@ -1,4 +1,4 @@
-import api from '@api'
+import api from '@shared/api'
 
 const ynputConnect = api.injectEndpoints({
   endpoints: (build) => ({

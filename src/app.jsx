@@ -3,7 +3,7 @@ import axios from 'axios'
 import { ErrorBoundary } from 'react-error-boundary'
 import { useEffect, useState, Suspense, lazy, useMemo } from 'react'
 
-import { useSelector, useDispatch } from 'react-redux'
+import { useAppDispatch, useAppSelector } from '@state/store'
 import { Routes, Route, Navigate, BrowserRouter } from 'react-router-dom'
 import { QueryParamProvider } from 'use-query-params'
 import { ReactRouter6Adapter } from 'use-query-params/adapters/react-router-6'
@@ -42,10 +42,9 @@ import { PasteProvider, PasteModal } from '@context/pasteContext'
 import { URIProvider } from '@context/uriContext'
 import { NotificationsProvider } from '@context/notificationsContext'
 import { CustomerlyProvider } from 'react-live-chat-customerly'
-import { PiPProvider } from '@context/pip/PiPProvider'
-import { RemoteModulesProvider } from './remote/context/RemoteModulesContext'
+import { PiPProvider } from '@shared/context/pip/PiPProvider'
+import { RemoteModulesProvider, DetailsPanelProvider } from '@shared/context'
 import { PowerLicenseProvider } from './remote/context/PowerLicenseContext'
-
 import { PowerpackProvider } from '@context/powerpackContext'
 import { FeedbackProvider } from './feedback/FeedbackContext'
 
@@ -59,7 +58,7 @@ import { ViewerDialog } from '@containers/Viewer'
 import { login } from '@state/user'
 
 // queries
-import { useLazyGetSiteInfoQuery } from '@queries/auth/getAuth'
+import { useLazyGetSiteInfoQuery } from '@shared/api'
 import { useGetYnputCloudInfoQuery } from '@queries/cloud/cloud'
 
 // hooks
@@ -69,19 +68,41 @@ import LauncherAuthPage from '@pages/LauncherAuthPage'
 import ReleaseInstallerDialog from '@containers/ReleaseInstallerDialog/ReleaseInstallerDialog'
 import getTrialDates from '@components/TrialBanner/helpers/getTrialDates'
 import TrialEnded from '@containers/TrialEnded/TrialEnded'
-import DetailsPanelFloating from '@containers/DetailsPanel/DetailsPanelFloating/DetailsPanelFloating'
+import { DetailsPanelFloating } from '@shared/containers'
 import PowerpackDialog from '@components/Powerpack/PowerpackDialog'
-import AppRemoteLoader from './remote/Loaders/AppRemoteLoader'
+import AppRemoteLoader from './remote/AppRemoteLoader/AppRemoteLoader'
 import Customerly from '@components/Customerly'
 import CompleteProfilePrompt from '@components/CompleteProfilePrompt/CompleteProfilePrompt'
+import { goToFrame, openViewer } from '@state/viewer'
+import { onCommentImageOpen } from '@state/context'
 
 const App = () => {
-  const user = useSelector((state) => state.user)
-  const dispatch = useDispatch()
+  const user = useAppSelector((state) => state.user)
+  const viewer = useAppSelector((state) => state.viewer) || []
+  const dispatch = useAppDispatch()
   const [loading, setLoading] = useState(false)
   const [serverError, setServerError] = useState(false)
   const [isOnboarding, setIsOnboarding] = useState(false)
   const [noAdminUser, setNoAdminUser] = useState(false)
+
+  //   handlers for details panel
+  const onOpenImage = (args) => {
+    dispatch(onCommentImageOpen(args))
+  }
+
+  const onGoToFrame = (frame) => {
+    dispatch(goToFrame(frame))
+  }
+
+  const onOpenViewer = (args) => {
+    dispatch(openViewer(args))
+  }
+
+  const handlerProps = {
+    onOpenImage,
+    onGoToFrame,
+    onOpenViewer,
+  }
 
   const storedAccessToken = localStorage.getItem('accessToken')
   if (storedAccessToken) {
@@ -169,144 +190,151 @@ const App = () => {
         <Suspense fallback={<LoadingPage />}>
           <RestartProvider>
             <PowerpackProvider>
-              <RemoteModulesProvider>
+              <RemoteModulesProvider skip={!user.name}>
                 <PowerLicenseProvider>
                   <ContextMenuProvider>
-                    <GlobalContextMenu />
-                    <PasteProvider>
-                      <PasteModal />
-                      <BrowserRouter>
-                        <FeedbackProvider>
-                          <NotificationsProvider>
-                            <URIProvider>
-                              <CustomerlyProvider appId={PROJECT_ID}>
-                                <ShortcutsProvider>
-                                  <PiPProvider>
-                                    <QueryParamProvider
-                                      adapter={ReactRouter6Adapter}
-                                      options={{
-                                        updateType: 'replaceIn',
-                                      }}
-                                    >
-                                      <Header />
-                                      <ShareDialog />
-                                      <ViewerDialog />
-                                      <ConfirmDialog />
-                                      <FileUploadPreviewContainer />
-                                      <ReleaseInstallerDialog />
-                                      <CompleteProfilePrompt />
-                                      <Routes>
-                                        <Route
-                                          path="/"
-                                          exact
-                                          element={<Navigate replace to="/dashboard/tasks" />}
-                                        />
+                    <DetailsPanelProvider
+                      {...handlerProps}
+                      user={user}
+                      viewer={viewer}
+                      dispatch={dispatch}
+                    >
+                      <GlobalContextMenu />
+                      <PasteProvider>
+                        <PasteModal />
+                        <BrowserRouter>
+                          <FeedbackProvider>
+                            <NotificationsProvider>
+                              <URIProvider>
+                                <CustomerlyProvider appId={PROJECT_ID}>
+                                  <ShortcutsProvider>
+                                    <PiPProvider>
+                                      <QueryParamProvider
+                                        adapter={ReactRouter6Adapter}
+                                        options={{
+                                          updateType: 'replaceIn',
+                                        }}
+                                      >
+                                        <Header />
+                                        <ShareDialog />
+                                        <ViewerDialog />
+                                        <ConfirmDialog />
+                                        <FileUploadPreviewContainer />
+                                        <ReleaseInstallerDialog />
+                                        <CompleteProfilePrompt />
+                                        <Routes>
+                                          <Route
+                                            path="/"
+                                            exact
+                                            element={<Navigate replace to="/dashboard/tasks" />}
+                                          />
 
-                                        <Route
-                                          path="/dashboard"
-                                          element={<Navigate replace to="/dashboard/tasks" />}
-                                        />
-                                        <Route
-                                          path="/dashboard/:module"
-                                          exact
-                                          element={<UserDashboardPage />}
-                                        />
-                                        <Route
-                                          path="/dashboard/addon/:addonName"
-                                          exact
-                                          element={<UserDashboardPage />}
-                                        />
+                                          <Route
+                                            path="/dashboard"
+                                            element={<Navigate replace to="/dashboard/tasks" />}
+                                          />
+                                          <Route
+                                            path="/dashboard/:module"
+                                            exact
+                                            element={<UserDashboardPage />}
+                                          />
+                                          <Route
+                                            path="/dashboard/addon/:addonName"
+                                            exact
+                                            element={<UserDashboardPage />}
+                                          />
 
-                                        <Route
-                                          path="/manageProjects"
-                                          element={<ProjectManagerPage />}
-                                        />
-                                        <Route
-                                          path="/manageProjects/:module"
-                                          element={<ProjectManagerPage />}
-                                        />
-                                        <Route
-                                          path={'/projects/:projectName/:module'}
-                                          element={<ProjectPage />}
-                                        />
-                                        <Route
-                                          path={'/projects/:projectName/addon/:addonName'}
-                                          element={<ProjectPage />}
-                                        />
-                                        <Route
-                                          path="/settings"
-                                          exact
-                                          element={
-                                            <Navigate replace to="/settings/anatomyPresets" />
-                                          }
-                                        />
-                                        <Route
-                                          path="/settings/:module"
-                                          exact
-                                          element={<SettingsPage />}
-                                        />
-                                        <Route
-                                          path="/settings/addon/:addonName"
-                                          exact
-                                          element={<SettingsPage />}
-                                        />
-                                        <Route
-                                          path="/services"
-                                          element={
-                                            <ProtectedRoute isAllowed={!isUser} redirectPath="/">
-                                              <ServicesPage />
-                                            </ProtectedRoute>
-                                          }
-                                        />
-                                        <Route
-                                          path="/market"
-                                          element={
-                                            <ProtectedRoute isAllowed={!isUser} redirectPath="/">
-                                              <MarketPage />
-                                            </ProtectedRoute>
-                                          }
-                                        />
+                                          <Route
+                                            path="/manageProjects"
+                                            element={<ProjectManagerPage />}
+                                          />
+                                          <Route
+                                            path="/manageProjects/:module"
+                                            element={<ProjectManagerPage />}
+                                          />
+                                          <Route
+                                            path={'/projects/:projectName/:module'}
+                                            element={<ProjectPage />}
+                                          />
+                                          <Route
+                                            path={'/projects/:projectName/addon/:addonName'}
+                                            element={<ProjectPage />}
+                                          />
+                                          <Route
+                                            path="/settings"
+                                            exact
+                                            element={
+                                              <Navigate replace to="/settings/anatomyPresets" />
+                                            }
+                                          />
+                                          <Route
+                                            path="/settings/:module"
+                                            exact
+                                            element={<SettingsPage />}
+                                          />
+                                          <Route
+                                            path="/settings/addon/:addonName"
+                                            exact
+                                            element={<SettingsPage />}
+                                          />
+                                          <Route
+                                            path="/services"
+                                            element={
+                                              <ProtectedRoute isAllowed={!isUser} redirectPath="/">
+                                                <ServicesPage />
+                                              </ProtectedRoute>
+                                            }
+                                          />
+                                          <Route
+                                            path="/market"
+                                            element={
+                                              <ProtectedRoute isAllowed={!isUser} redirectPath="/">
+                                                <MarketPage />
+                                              </ProtectedRoute>
+                                            }
+                                          />
 
-                                        <Route
-                                          path="/inbox/:module"
-                                          exact
-                                          element={<InboxPage />}
-                                        />
-                                        <Route
-                                          path="/inbox"
-                                          exact
-                                          element={<Navigate to="/inbox/important" />}
-                                        />
+                                          <Route
+                                            path="/inbox/:module"
+                                            exact
+                                            element={<InboxPage />}
+                                          />
+                                          <Route
+                                            path="/inbox"
+                                            exact
+                                            element={<Navigate to="/inbox/important" />}
+                                          />
 
-                                        <Route path="/explorer" element={<ExplorerPage />} />
-                                        <Route path="/doc/api" element={<APIDocsPage />} />
-                                        <Route
-                                          path="/account"
-                                          exact
-                                          element={<Navigate replace to="/account/profile" />}
-                                        />
-                                        <Route
-                                          path="/account/:module"
-                                          exact
-                                          element={<AccountPage />}
-                                        />
-                                        <Route path="/events" element={<EventsPage />} />
-                                        <Route element={<ErrorPage code="404" />} />
-                                      </Routes>
-                                      <DetailsPanelFloating />
-                                      <PowerpackDialog />
-                                      <AppRemoteLoader />
-                                      <TrialBanner />
-                                    </QueryParamProvider>
-                                  </PiPProvider>
-                                </ShortcutsProvider>
-                                <Customerly />
-                              </CustomerlyProvider>
-                            </URIProvider>
-                          </NotificationsProvider>
-                        </FeedbackProvider>
-                      </BrowserRouter>
-                    </PasteProvider>
+                                          <Route path="/explorer" element={<ExplorerPage />} />
+                                          <Route path="/doc/api" element={<APIDocsPage />} />
+                                          <Route
+                                            path="/account"
+                                            exact
+                                            element={<Navigate replace to="/account/profile" />}
+                                          />
+                                          <Route
+                                            path="/account/:module"
+                                            exact
+                                            element={<AccountPage />}
+                                          />
+                                          <Route path="/events" element={<EventsPage />} />
+                                          <Route element={<ErrorPage code="404" />} />
+                                        </Routes>
+                                        <DetailsPanelFloating />
+                                        <PowerpackDialog />
+                                        <AppRemoteLoader />
+                                        <TrialBanner />
+                                      </QueryParamProvider>
+                                    </PiPProvider>
+                                  </ShortcutsProvider>
+                                  <Customerly />
+                                </CustomerlyProvider>
+                              </URIProvider>
+                            </NotificationsProvider>
+                          </FeedbackProvider>
+                        </BrowserRouter>
+                      </PasteProvider>
+                    </DetailsPanelProvider>
                   </ContextMenuProvider>
                 </PowerLicenseProvider>
               </RemoteModulesProvider>

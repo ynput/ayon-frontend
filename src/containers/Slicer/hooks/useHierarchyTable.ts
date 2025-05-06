@@ -1,9 +1,8 @@
 // create table data for the hierarchy
-import { useGetFolderListQuery } from '@queries/getHierarchy'
 import { SimpleTableRow } from '@shared/SimpleTable'
+import { useGetFolderListQuery } from '@shared/api'
+import type { FolderType, FolderListItem } from '@shared/api'
 import { useCallback, useMemo } from 'react'
-import { FolderListItem } from '@api/rest/folders'
-import { FolderType } from '@api/rest/project'
 
 type Props = {
   projectName: string | null

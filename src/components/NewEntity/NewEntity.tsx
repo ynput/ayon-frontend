@@ -15,12 +15,15 @@ import styled from 'styled-components'
 import TypeEditor from './TypeEditor'
 import checkName from '@helpers/checkName'
 import ShortcutWidget from '@components/ShortcutWidget'
-import { useSelectionContext, useProjectTableContext } from '@shared/containers/ProjectTreeTable'
+import {
+  useSelectionCellsContext,
+  useProjectTableContext,
+} from '@shared/containers/ProjectTreeTable'
 import { parseCellId } from '@shared/containers/ProjectTreeTable/utils/cellUtils'
 import { EditorTaskNode, MatchingFolder } from '@shared/containers/ProjectTreeTable'
+import type { ProjectModel } from '@shared/api'
 import FolderSequence from '@components/FolderSequence/FolderSequence'
 import { EntityForm, NewEntityType, useNewEntityContext } from '@context/NewEntityContext'
-import { ProjectModel } from '@api/rest/project'
 import useCreateEntityShortcuts from '@hooks/useCreateEntityShortcuts'
 import { useSlicerContext } from '@context/SlicerContext'
 
@@ -88,7 +91,7 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled }) => {
   } = useNewEntityContext()
 
   const [createMore, setCreateMore] = useState(false)
-  const { selectedCells } = useSelectionContext()
+  const { selectedCells } = useSelectionCellsContext()
   const { rowSelection: slicerSelection, sliceType } = useSlicerContext()
   const { getEntityById, projectInfo } = useProjectTableContext()
 

@@ -1,4 +1,4 @@
-import { useLazyGetAllProjectUsersAsAssigneeQuery } from '@queries/user/getUsers'
+import { useLazyGetAllProjectUsersAsAssigneeQuery } from '@shared/api'
 import { UseExtraSlices } from '@context/SlicerContext'
 
 type Props = {

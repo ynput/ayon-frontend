@@ -2,8 +2,14 @@
 
 import { minorActivityTypes } from '../hooks/useTransformActivities'
 
+export type ActivityUser = {
+  name: string
+  attrib: {
+    fullName?: string | null
+  }
+}
 // To keep the feed clean, we group minor activities.map((a) => a.activityData.assignee)].join(', '),
-const groupMinorActivities = (activities, users) => {
+const groupMinorActivities = (activities, users: ActivityUser[]) => {
   let mappedUsers = {}
   users.reduce((acc, currVal) => {
     acc[currVal.name] = currVal

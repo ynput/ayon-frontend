@@ -1,5 +1,6 @@
 import LoginPage from '@pages/LoginPage'
-import { useCreateSessionMutation, useLogOutMutation } from '@queries/auth/getAuth'
+import { useCreateSessionMutation } from '@shared/api'
+import { useLogoutMutation } from '@queries/auth/logout'
 import { Button, Panel, SaveButton, theme, Toolbar } from '@ynput/ayon-react-components'
 import { FC } from 'react'
 import { toast } from 'react-toastify'
@@ -72,10 +73,11 @@ const LauncherAuthPage: FC<LauncherAuthPageProps> = ({ user, redirect }) => {
     }
   }
 
-  const [logout] = useLogOutMutation()
+  const [logout] = useLogoutMutation()
 
   const handleSwitch = () => {
     try {
+      // @ts-expect-error - no args are defined
       logout({ redirect: window.location.href })
     } catch (error) {
       console.error(error)

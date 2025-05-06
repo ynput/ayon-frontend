@@ -3,7 +3,7 @@ import useDeleteEntities from './useDeleteEntities'
 import { getPlatformShortcutKey, KeyMode } from '../../../util/platform'
 import { getCellId, parseCellId } from '../utils/cellUtils'
 import { useClipboard } from '../context/ClipboardContext'
-import { ROW_SELECTION_COLUMN_ID, useSelectionContext } from '../context/SelectionContext'
+import { ROW_SELECTION_COLUMN_ID, useSelectionCellsContext } from '../context/SelectionCellsContext'
 import { useProjectTableContext } from '../context/ProjectTableContext'
 import { useCellEditing } from '../context/CellEditingContext'
 import { InheritFromParentEntity } from './useUpdateTableData'
@@ -59,7 +59,7 @@ const useCellContextMenu = ({ attribs, onOpenNew }: CellContextMenuProps) => {
     contextMenuItems = [],
   } = useProjectTableContext()
   const { copyToClipboard, exportCSV, pasteFromClipboard } = useClipboard()
-  const { selectedCells, clearSelection, selectCell, focusCell } = useSelectionContext()
+  const { selectedCells, clearSelection, selectCell, focusCell } = useSelectionCellsContext()
   const { inheritFromParent, history } = useCellEditing()
 
   // update entity context

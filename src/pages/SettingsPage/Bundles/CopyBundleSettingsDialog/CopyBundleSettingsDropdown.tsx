@@ -1,4 +1,4 @@
-import { BundleModel } from '@api/rest/bundles'
+import { BundleModel } from '@shared/api'
 import {
   BundleDropdownItem,
   BundleOption,

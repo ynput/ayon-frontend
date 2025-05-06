@@ -1,12 +1,13 @@
 // this is a wrapper around the DetailsPanel
 // we do this so that focused changes do not re-render the entire page
 
-import DetailsPanel from '@containers/DetailsPanel/DetailsPanel'
-import DetailsPanelSlideOut from '@containers/DetailsPanel/DetailsPanelSlideOut/DetailsPanelSlideOut'
-import { useGetUsersAssigneeQuery } from '@queries/user/getUsers'
-import { ProjectModel } from '@api/rest/project'
+import { DetailsPanel, DetailsPanelSlideOut } from '@shared/containers'
+import { useGetUsersAssigneeQuery } from '@shared/api'
+import type { ProjectModel } from '@shared/api'
 import { useProjectTableContext, useSelectedRowsContext } from '@shared/containers/ProjectTreeTable'
 import { EditorTaskNode, MatchingFolder } from '@shared/containers/ProjectTreeTable'
+import { useAppDispatch } from '@state/store'
+import { openViewer } from '@state/viewer'
 
 type ProjectOverviewDetailsPanelProps = {
   projectInfo?: ProjectModel
@@ -17,11 +18,11 @@ const ProjectOverviewDetailsPanel = ({
   projectInfo,
   projectName,
 }: ProjectOverviewDetailsPanelProps) => {
-  const projectsInfo = { [projectName]: projectInfo }
+  const dispatch = useAppDispatch()
+  const handleOpenViewer = (args: any) => dispatch(openViewer(args))
 
   const { getEntityById } = useProjectTableContext()
   const { selectedRows, clearRowsSelection } = useSelectedRowsContext()
-  const { data: users = [] } = useGetUsersAssigneeQuery({ names: undefined, projectName })
 
   const selectRowData = selectedRows.map((id) => getEntityById(id)).filter(Boolean) as
     | (MatchingFolder | EditorTaskNode)[]
@@ -42,24 +43,27 @@ const ProjectOverviewDetailsPanel = ({
     clearRowsSelection()
   }
 
-  if (!entities.length || !entityType) return null
+  const { data: users = [] } = useGetUsersAssigneeQuery({ names: undefined, projectName })
+
+  if (!entities.length || !entityType || !projectName || !projectInfo) return null
+
+  const projectsInfo = { [projectName]: projectInfo }
 
   return (
     // @ts-nocheck
     <>
       <DetailsPanel
-        // entitySubTypes={subTypes}
         entityType={entityType}
         entities={entities as any}
         projectsInfo={projectsInfo}
         projectNames={[projectName] as any}
-        // @ts-ignore
         tagsOptions={projectInfo?.tags || []}
         projectUsers={users}
         activeProjectUsers={users}
         style={{ boxShadow: 'none' }}
         scope="overview"
         onClose={handleClose}
+        onOpenViewer={handleOpenViewer}
       />
       <DetailsPanelSlideOut projectsInfo={projectsInfo} scope="overview" />
     </>

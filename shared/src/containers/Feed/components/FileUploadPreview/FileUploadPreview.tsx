@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { getFileURL } from './fileUtils'
 import ImageMime from './Mimes/ImageMime'
 import TextMime from './Mimes/TextMime'
 import clsx from 'clsx'
@@ -39,9 +40,6 @@ export const isFilePreviewable = (mime = '', ext = '') =>
   Object.values(expandableMimeTypes).some(({ mimeTypes = [] }) =>
     mimeTypes.some((type) => (mime || ext)?.includes(type)),
   )
-
-export const getFileURL = (id: string, projectName: string) =>
-  `/api/projects/${projectName}/files/${id}`
 
 interface FileUploadPreviewProps {
   files: any[] // replace with correct type
@@ -95,7 +93,7 @@ const FileUploadPreview: React.FC<FileUploadPreviewProps> = ({
   )
 
   // @ts-ignore
-  const { component: MimeComponent, id: typeId, callback } = previewable || {}
+  const { component: MimeComponent, id: typeId, callback, fullPreviews } = previewable || {}
 
   // if there is a callback, run it and return null
   // mainly for pdfs
@@ -156,7 +154,7 @@ const FileUploadPreview: React.FC<FileUploadPreviewProps> = ({
       />
 
       <div style={{ zIndex: zIndex + 1 }}>
-        <MimeComponent file={file} />
+        <MimeComponent file={file} fullPreviews={fullPreviews} />
       </div>
 
       <Icon

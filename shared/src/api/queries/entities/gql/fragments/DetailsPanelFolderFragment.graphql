@@ -1,0 +1,7 @@
+fragment DetailsPanelFolderFragment on FolderNode {
+  id
+  name
+  label
+  path
+  folderType
+}

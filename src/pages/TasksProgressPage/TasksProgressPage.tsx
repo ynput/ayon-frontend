@@ -1,21 +1,20 @@
 import Slicer from '@containers/Slicer'
 import TasksProgress from '@containers/TasksProgress'
-import { useGetProjectQuery } from '@queries/project/getProject'
-import { $Any } from '@types'
+import { useGetProjectQuery } from '@queries/project/enhancedProject'
 import { Section } from '@ynput/ayon-react-components'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { FC } from 'react'
 import { useAppSelector } from '@state/store'
 import TaskProgressDetailsPanel from './TaskProgressDetailsPanel'
-import { useGetAttributeConfigQuery } from '@queries/attributes/getAttributes'
-import { getPriorityOptions } from './helpers'
-import useScopedStatuses from '@hooks/useScopedStatuses'
+import { useGetAttributeConfigQuery } from '@shared/api'
+import { getPriorityOptions } from '@shared/util'
+import { useScopedStatuses } from '@shared/hooks'
 import { useSlicerContext } from '@context/SlicerContext'
+import { useScopedDetailsPanel } from '@shared/context'
 
 const TasksProgressPage: FC = () => {
-  const projectName = useAppSelector((state: $Any) => state.project.name) as string
-  const progressState = useAppSelector((state) => state.progress)
-  const detailsOpen = progressState.detailsOpen && progressState.selected.ids.length > 0
+  const projectName = useAppSelector((state: any) => state.project.name) as string
+  const { isOpen: detailsOpen } = useScopedDetailsPanel('progress')
 
   // load slicer remote config
   const { config } = useSlicerContext()

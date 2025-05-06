@@ -18,8 +18,6 @@ import {
   Table,
   Header,
   HeaderGroup,
-  ExpandedState,
-  SortingState,
 } from '@tanstack/react-table'
 
 // Utility imports
@@ -35,8 +33,8 @@ import HeaderActionButton from './components/HeaderActionButton'
 import EmptyPlaceholder from '../../components/EmptyPlaceholder'
 
 // Context imports
-import { CellEditingProvider, useCellEditing } from './context/CellEditingContext'
-import { ROW_SELECTION_COLUMN_ID, useSelectionContext } from './context/SelectionContext'
+import { useCellEditing } from './context/CellEditingContext'
+import { ROW_SELECTION_COLUMN_ID, useSelectionCellsContext } from './context/SelectionCellsContext'
 import { ClipboardProvider } from './context/ClipboardContext'
 import { useSelectedRowsContext } from './context/SelectedRowsContext'
 import { useColumnSettings } from './context/ColumnSettingsContext'
@@ -73,13 +71,15 @@ const getCommonPinningStyles = (column: Column<TableRow, unknown>): CSSPropertie
   }
 }
 
-type Props = {
+interface Props extends React.HTMLAttributes<HTMLDivElement> {
   scope: string
   sliceId: string
   fetchMoreOnBottomReached: (element: HTMLDivElement | null) => void
   onOpenNew?: (type: 'folder' | 'task') => void
   pt?: {
     columns?: Partial<ProjectTreeTableColumnsProps>
+    container?: React.HTMLAttributes<HTMLDivElement>
+    head?: Partial<TableHeadProps>
   }
 }
 
@@ -89,6 +89,7 @@ export const ProjectTreeTable = ({
   fetchMoreOnBottomReached,
   onOpenNew,
   pt,
+  ...props
 }: Props) => {
   const {
     columnVisibility,
@@ -133,7 +134,7 @@ export const ProjectTreeTable = ({
   const tableContainerRef = useRef<HTMLDivElement>(null)
 
   // Selection context
-  const { registerGrid } = useSelectionContext()
+  const { registerGrid } = useSelectionCellsContext()
 
   // COLUMN SIZING
   const [columnSizing, setColumnSizing] = useLocalStorage<ColumnSizingState>(
@@ -263,12 +264,13 @@ export const ProjectTreeTable = ({
       columnEnums={{ ...options, ...attribByField }}
       columnReadOnly={readOnlyAttribs}
     >
-      <Styled.TableWrapper>
+      <Styled.TableWrapper {...props}>
         <Styled.TableContainer
           ref={tableContainerRef}
           style={{ height: '100%', padding: 0 }}
           onScroll={(e) => fetchMoreOnBottomReached(e.currentTarget)}
-          className="table-container"
+          {...pt?.container}
+          className={clsx('table-container', pt?.container?.className)}
         >
           <table
             style={{
@@ -286,6 +288,7 @@ export const ProjectTreeTable = ({
               virtualPaddingRight={virtualPaddingRight}
               isLoading={isLoading}
               readOnlyColumns={readOnlyColumns}
+              {...pt?.head}
             />
             <TableBody
               columnVirtualizer={columnVirtualizer}
@@ -294,7 +297,7 @@ export const ProjectTreeTable = ({
               virtualPaddingLeft={virtualPaddingLeft}
               virtualPaddingRight={virtualPaddingRight}
               showHierarchy={showHierarchy}
-              attribs={attribFields}
+              attribs={attribs}
               onOpenNew={onOpenNew}
             />
           </table>
@@ -304,7 +307,7 @@ export const ProjectTreeTable = ({
   )
 }
 
-interface TableHeadProps {
+interface TableHeadProps extends React.HTMLAttributes<HTMLTableSectionElement> {
   columnVirtualizer: Virtualizer<HTMLDivElement, HTMLTableCellElement>
   table: Table<TableRow>
   virtualPaddingLeft: number | undefined
@@ -320,9 +323,10 @@ const TableHead = ({
   virtualPaddingRight,
   isLoading,
   readOnlyColumns,
+  ...props
 }: TableHeadProps) => {
   return (
-    <Styled.TableHeader>
+    <Styled.TableHeader {...props}>
       {table.getHeaderGroups().map((headerGroup) => (
         <TableHeadRow
           key={headerGroup.id}
@@ -614,7 +618,7 @@ const TableCell = ({ cell, rowId, cellId, className, showHierarchy, ...props }: 
     endSelection,
     selectCell,
     getCellBorderClasses,
-  } = useSelectionContext()
+  } = useSelectionCellsContext()
 
   const { isRowSelected } = useSelectedRowsContext()
 

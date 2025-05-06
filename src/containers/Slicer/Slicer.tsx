@@ -4,9 +4,9 @@ import SlicerTable, { Container, Header } from '@shared/SimpleTable'
 import useTableDataBySlice from './hooks/useTableDataBySlice'
 import SlicerSearch from './SlicerSearch'
 import clsx from 'clsx'
-import { useSlicerContext } from '@context/SlicerContext'
-import { SliceType } from '@shared/Slicer'
+import { SliceType } from '@shared/containers/Slicer'
 import { SimpleTableProvider } from '@shared/SimpleTable'
+import { useSlicerContext } from '@context/SlicerContext'
 
 interface SlicerProps {
   sliceFields: SliceType[]

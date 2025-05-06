@@ -1,5 +1,5 @@
 import { UseExtraSlices } from '@context/SlicerContext'
-import { useGetProjectQuery } from '@queries/project/getProject'
+import { useGetProjectQuery } from '@queries/project/enhancedProject'
 
 type Props = {
   projectName: string | null

@@ -1,9 +1,10 @@
-import { useGetFolderListQuery } from '@queries/getHierarchy'
 import {
+  useGetFolderListQuery,
   useGetOverviewTasksByFoldersQuery,
   useGetQueryTasksFoldersQuery,
   useGetTasksListInfiniteInfiniteQuery,
-} from '@queries/overview/getOverview'
+} from '@shared/api'
+import type { FolderListItem } from '@shared/api'
 import {
   EditorTaskNode,
   FolderNodeMap,
@@ -16,7 +17,6 @@ import { ProjectOverviewContextProps } from '../context/ProjectOverviewContext'
 import { determineLoadingTaskFolders } from '@shared/containers/ProjectTreeTable/utils/loadingUtils'
 import { LoadingTasks } from '@shared/containers/ProjectTreeTable/types'
 import { TasksByFolderMap } from '@shared/containers/ProjectTreeTable/utils'
-import { FolderListItem } from '@api/rest/folders'
 
 type useFetchOverviewDataData = {
   foldersMap: FolderNodeMap

@@ -5,7 +5,7 @@ import { useInitializeUserMutation } from '@queries/onBoarding/onBoarding'
 import { useNavigate } from 'react-router'
 import { useDispatch } from 'react-redux'
 import { login } from '@state/user'
-import api from '@api'
+import api from '@shared/api'
 import { upperFirst } from 'lodash'
 import Type from '@/theme/typography.module.css'
 

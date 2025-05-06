@@ -1,13 +1,14 @@
 import { useEffect, useState, createContext } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
-import PubSub from '@/pubsub'
+import { PubSub } from '@shared/util'
 import arrayEquals from '@helpers/arrayEquals'
 import useWebSocket, { ReadyState } from 'react-use-websocket'
 import { debounce } from 'lodash'
-import api from '@api'
+import api from '@shared/api'
 import RefreshToast from '@components/RefreshToast'
-import { useLazyGetSiteInfoQuery, useLogOutMutation } from '@queries/auth/getAuth'
+import { useLogoutMutation } from '@queries/auth/logout'
+import { useLazyGetSiteInfoQuery } from '@shared/api'
 
 export const SocketContext = createContext()
 
@@ -20,7 +21,7 @@ export const SocketProvider = (props) => {
   // get user logged in
   const [serverRestartingVisible, setServerRestartingVisible] = useState(false)
   const [topics, setTopics] = useState([])
-  const [logout] = useLogOutMutation()
+  const [logout] = useLogoutMutation()
   const [getInfo] = useLazyGetSiteInfoQuery()
 
   const wsOpts = {

@@ -1,5 +1,5 @@
 import { ReactNode } from 'react'
-import { EntitiesMap, FolderNodeMap, TaskNodeMap } from '../../types/table'
+import { EntitiesMap } from '../../types/table'
 import { AttributeEnumItem, BuiltInFieldOptions } from '../../types'
 
 // Constants for field mappings

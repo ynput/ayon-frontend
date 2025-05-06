@@ -1,5 +1,4 @@
-import { useGetCurrentUserQuery } from '@queries/auth/getAuth'
-import { useSetFrontendPreferencesMutation } from '@queries/user/updateUser'
+import { useGetCurrentUserQuery, useSetFrontendPreferencesMutation } from '@shared/api'
 import { camelCase } from 'lodash'
 import { toast } from 'react-toastify'
 

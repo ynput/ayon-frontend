@@ -2,7 +2,7 @@ import { FC } from 'react'
 import ProjectOverviewPage from './ProjectOverviewPage'
 import {
   ProjectTableProvider,
-  SelectionProvider,
+  SelectionCellsProvider,
   SelectedRowsProvider,
   ColumnSettingsProvider,
   CellEditingProvider,
@@ -46,7 +46,7 @@ const ProjectOverviewWithTableProviders: FC = () => {
     <ProjectTableQueriesProvider {...{ updateEntities, getFoldersTasks }}>
       <ProjectTableProvider {...props}>
         <NewEntityProvider>
-          <SelectionProvider>
+          <SelectionCellsProvider>
             <SelectedRowsProvider>
               <ColumnSettingsProvider config={pageConfig} onChange={updatePageConfig}>
                 <CellEditingProvider>
@@ -54,7 +54,7 @@ const ProjectOverviewWithTableProviders: FC = () => {
                 </CellEditingProvider>
               </ColumnSettingsProvider>
             </SelectedRowsProvider>
-          </SelectionProvider>
+          </SelectionCellsProvider>
         </NewEntityProvider>
       </ProjectTableProvider>
     </ProjectTableQueriesProvider>
