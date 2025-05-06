@@ -7,14 +7,13 @@ import userReducer from '@state/user'
 import contextReducer, { contextLocalItems } from '@state/context'
 import projectReducer from '@state/project'
 import dashboardReducer, { dashboardLocalItems } from '@state/dashboard'
-import detailsReducer, { detailsLocalItems } from '@state/details'
 import addonsManagerReducer from '@state/addonsManager'
 import viewerReducer, { viewerSearchParams } from '@state/viewer'
 import releaseInstallerReducer, { releaseInstallerLocalItems } from '@state/releaseInstaller'
 import progressReducer from '@state/progress'
 
 // API
-import { RestAPI } from '@queries/ayon'
+import { api } from '@shared/api'
 
 // Middleware
 import localStorageMiddleware from './middleware/localStorageMiddleware'
@@ -26,21 +25,19 @@ const store = configureStore({
     context: contextReducer,
     project: projectReducer,
     dashboard: dashboardReducer,
-    details: detailsReducer,
     addonsManager: addonsManagerReducer,
     viewer: viewerReducer,
     releaseInstaller: releaseInstallerReducer,
     progress: progressReducer,
-    [RestAPI.reducerPath]: RestAPI.reducer,
+    [api.reducerPath]: api.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
-      .concat(RestAPI.middleware)
+      .concat(api.middleware)
       .concat(
         localStorageMiddleware({
           ...dashboardLocalItems,
           ...contextLocalItems,
-          ...detailsLocalItems,
           ...releaseInstallerLocalItems,
         }),
       )

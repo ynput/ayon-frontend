@@ -1,4 +1,4 @@
-import api from '@api'
+import api from '@shared/api'
 
 const apiSuffix = (projectName, siteId, variant, asVersion) => {
   const params = new URLSearchParams()

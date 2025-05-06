@@ -13,7 +13,7 @@ import {
 } from '@ynput/ayon-react-components'
 import ProjectManagerPageLayout from '../ProjectManagerPage/ProjectManagerPageLayout'
 import UserListTeams from './UserListTeams'
-import { useGetUsersQuery } from '@queries/user/getUsers'
+import { useGetUsersQuery } from '@shared/api'
 import TeamUsersDetails from './TeamUsersDetails'
 import TeamDetails from './TeamDetails'
 import { useDeleteTeamMutation, useUpdateTeamsMutation } from '@queries/team/updateTeams'

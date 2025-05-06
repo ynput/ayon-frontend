@@ -1,12 +1,19 @@
-import { AttributeModel, AttributeEnumItem, AttributeData } from '@api/rest/attributes'
-import { FolderType, Status, Tag, TaskType } from '@api/rest/project'
 import { getEntityTypeIcon } from '@shared/util'
-import { useGetSiteInfoQuery } from '@queries/auth/getAuth'
 import {
-  GetProjectsInfoResponse,
+  useGetSiteInfoQuery,
   useGetKanbanProjectUsersQuery,
   useGetProjectsInfoQuery,
-} from '@queries/userDashboard/getUserDashboard'
+} from '@shared/api'
+import type {
+  GetProjectsInfoResponse,
+  FolderType,
+  Status,
+  Tag,
+  TaskType,
+  AttributeModel,
+  AttributeEnumItem,
+  AttributeData,
+} from '@shared/api'
 import { productTypes } from '@shared/util'
 import { ColumnOrderState } from '@tanstack/react-table'
 import { Icon, Option } from '@ynput/ayon-react-components'
@@ -357,7 +364,7 @@ const getSubTypes = (projectsInfo: GetProjectsInfoResponse, type: Scope): Option
   } else if (type === 'task') {
     Object.values(projectsInfo).forEach((project) => {
       // for each project, get all task types and add them to the options (if they don't already exist)
-      const taskTypes = project?.task_types || []
+      const taskTypes = project?.taskTypes || []
       taskTypes.forEach((taskType: TaskType) => {
         if (!options.some((option) => option.id === taskType.name)) {
           options.push({
@@ -375,7 +382,7 @@ const getSubTypes = (projectsInfo: GetProjectsInfoResponse, type: Scope): Option
   } else if (type === 'folder') {
     Object.values(projectsInfo).forEach((project) => {
       // for each project, get all folder types and add them to the options (if they don't already exist)
-      const folderTypes = project?.folder_types || []
+      const folderTypes = project?.folderTypes || []
       folderTypes.forEach((folderType: FolderType) => {
         if (!options.some((option) => option.id === folderType.name)) {
           options.push({

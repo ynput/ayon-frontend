@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Button, FileUpload, SaveButton } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
-import api from '@api'
+import api from '@shared/api'
 import { useDispatch, useSelector } from 'react-redux'
 import {
   useCreateInstallerMutation,

@@ -1,18 +1,16 @@
-// @ts-ignore
-import PubSub from '@/pubsub'
-import api from '@api'
-import { $Any } from '@types'
-import {
+import { PubSub } from '@shared/util'
+import { gqlApi } from '@shared/api'
+import type {
   GetInboxHasUnreadQuery,
   GetInboxMessagesQuery,
   GetInboxUnreadCountQuery,
-} from '@api/graphql'
+} from '@shared/api'
 import { TagTypesFromApi } from '@reduxjs/toolkit/query'
 import { TransformedInboxMessages, transformInboxMessages } from './inboxTransform'
 import { DefinitionsFromApi, OverrideResultType } from '@reduxjs/toolkit/query'
 
-type Definitions = DefinitionsFromApi<typeof api>
-type TagTypes = TagTypesFromApi<typeof api>
+type Definitions = DefinitionsFromApi<typeof gqlApi>
+type TagTypes = TagTypesFromApi<typeof gqlApi>
 
 type UpdatedDefinitions = Omit<
   Definitions,
@@ -23,7 +21,7 @@ type UpdatedDefinitions = Omit<
   GetInboxHasUnread: OverrideResultType<Definitions['GetInboxHasUnread'], boolean>
 }
 
-export const enhancedInboxGraphql = api.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
+export const enhancedInboxGraphql = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
   endpoints: {
     GetInboxMessages: {
       transformResponse: (res: GetInboxMessagesQuery, _meta, args) =>
@@ -78,7 +76,7 @@ export const enhancedInboxGraphql = api.enhanceEndpoints<TagTypes, UpdatedDefini
           // wait for the initial query to resolve before proceeding
           await cacheDataLoaded
 
-          const handlePubSub = (topic: string, message: $Any) => {
+          const handlePubSub = (topic: string, message: any) => {
             if (topic !== 'inbox.message') return
             const isImportant = message?.summary?.isImportant
             if (isImportant) {
@@ -89,13 +87,13 @@ export const enhancedInboxGraphql = api.enhanceEndpoints<TagTypes, UpdatedDefini
             // invalidate the getInbox cache
             // invalidate the getInboxUnreadCount cache
             dispatch(
-              api.util.invalidateTags([
+              gqlApi.util.invalidateTags([
                 { type: 'inbox', id: `important=${isImportant}` },
                 { type: 'inbox', id: `count-${isImportant}` },
               ]),
             )
             dispatch(
-              api.util.invalidateTags([
+              gqlApi.util.invalidateTags([
                 { type: 'inbox', id: `important=${isImportant}` },
                 { type: 'inbox', id: `count-${isImportant}` },
               ]),

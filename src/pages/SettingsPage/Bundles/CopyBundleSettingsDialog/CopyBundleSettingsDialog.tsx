@@ -11,7 +11,7 @@ import { useListBundlesQuery } from '@queries/bundles/getBundles'
 import { useMigrateSettingsByBundleMutation } from '@queries/bundles/updateBundles'
 
 // API imports
-import { BundleModel } from '@api/rest/bundles'
+import { BundleModel } from '@shared/api'
 
 // Other imports
 import { toast } from 'react-toastify'

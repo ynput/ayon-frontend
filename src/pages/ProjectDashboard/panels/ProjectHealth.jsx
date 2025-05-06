@@ -1,9 +1,9 @@
 import React from 'react'
 import DashboardPanelWrapper from './DashboardPanelWrapper'
 import ProgressTile from './ProgressTile'
-import { useGetProjectAnatomyQuery } from '@queries/project/getProject'
+import { useGetProjectAnatomyQuery } from '@shared/api'
 import { useGetProjectDashboardQuery } from '@queries/getProjectDashboard'
-import copyToClipboard from '@helpers/copyToClipboard'
+import { copyToClipboard } from '@shared/util'
 import { useSelector } from 'react-redux'
 
 // format complete data

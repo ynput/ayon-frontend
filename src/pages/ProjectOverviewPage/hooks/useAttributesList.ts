@@ -1,6 +1,5 @@
-import { AttributeModel } from '@api/rest/auth'
-import { useGetSiteInfoQuery } from '@queries/auth/getAuth'
-import { useGetCurrentUserProjectPermissionsQuery } from '@queries/permissions/getPermissions'
+import { useGetSiteInfoQuery, AttributeModel } from '@shared/api'
+import { useGetMyProjectPermissionsQuery } from '@queries/permissions/getPermissions'
 
 export interface AttributeWithPermissions extends AttributeModel {
   readOnly?: boolean
@@ -10,7 +9,7 @@ const useAttributeFields = ({ projectName }: { projectName: string }) => {
   const { data: info, isSuccess, isFetching } = useGetSiteInfoQuery({ full: true })
   const { attributes = [] } = info || {}
 
-  const { data: projectPermissions } = useGetCurrentUserProjectPermissionsQuery(
+  const { data: projectPermissions } = useGetMyProjectPermissionsQuery(
     { projectName },
     { skip: !projectName },
   )
@@ -20,7 +19,6 @@ const useAttributeFields = ({ projectName }: { projectName: string }) => {
 
   //   filter out scopes and filter out attributes that do not have read access
   const attribFields: AttributeWithPermissions[] = attributes
-    .filter((a) => a.scope!.some((s) => ['folder', 'task'].includes(s)))
     .filter((a) => !attribReadEnabled || attribReadAttributes?.includes(a.name))
     .map((a) => ({
       ...a,

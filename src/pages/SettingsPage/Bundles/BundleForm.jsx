@@ -14,7 +14,7 @@ import * as Styled from './Bundles.styled'
 import { upperFirst } from 'lodash'
 import InstallerSelector from './InstallerSelector'
 import { useSelector } from 'react-redux'
-import { useGetUsersQuery } from '@queries/user/getUsers'
+import { useGetUsersQuery } from '@shared/api'
 
 const StyledColumns = styled.div`
   display: flex;

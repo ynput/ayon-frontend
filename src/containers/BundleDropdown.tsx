@@ -4,7 +4,7 @@ import { DefaultValueTemplate, Dropdown, DropdownProps } from '@ynput/ayon-react
 
 import { useListBundlesQuery } from '@queries/bundles/getBundles'
 import styled from 'styled-components'
-import { BundleModel } from '@api/rest/bundles'
+import { BundleModel } from '@shared/api'
 import { $Any } from '@types'
 import clsx from 'clsx'
 

@@ -1,6 +1,4 @@
-import { api } from '@api/rest/accessGroups'
-import { api as projectApi } from '@api/rest/project'
-import { $Any } from '@types'
+import { projectsApi, accessApi } from '@shared/api'
 
 export type ProjectUserData = {
   [project: string]: {
@@ -16,21 +14,21 @@ type GetProjectsUsersParams = {
   projects: string[]
 }
 
-const accessGroupsApi = api.injectEndpoints({
+const enhancedApi = accessApi.injectEndpoints({
   endpoints: (build) => ({
     getProjectsAccess: build.query<GetProjectsUsersApiResponse, GetProjectsUsersParams>({
       async queryFn({ projects = [] }, { dispatch, forced }) {
         try {
           let promises = []
-          let projectUsersData: $Any = {}
+          let projectUsersData: any = {}
           for (const project of projects) {
             promises.push(
               dispatch(
-                projectApi.endpoints.getProjectUsers.initiate(
+                projectsApi.endpoints.getProjectUsers.initiate(
                   { projectName: project },
                   { forceRefetch: forced },
                 ),
-              ).then((response: $Any) => {
+              ).then((response: any) => {
                 if (response.status === 'rejected') {
                   return
                 }
@@ -44,7 +42,7 @@ const accessGroupsApi = api.injectEndpoints({
 
           await Promise.all(promises)
           return { data: projectUsersData, meta: undefined, error: undefined }
-        } catch (error: $Any) {
+        } catch (error: any) {
           console.error(error)
           return { error, meta: undefined, data: undefined }
         }
@@ -56,7 +54,7 @@ const accessGroupsApi = api.injectEndpoints({
   overrideExisting: true,
 })
 
-accessGroupsApi.enhanceEndpoints({
+enhancedApi.enhanceEndpoints({
   endpoints: {
     getAccessGroups: {
       providesTags: (result) =>
@@ -82,6 +80,6 @@ export const {
   useGetAccessGroupQuery,
   useGetAccessGroupSchemaQuery,
   useGetProjectsAccessQuery,
-} = accessGroupsApi
+} = enhancedApi
 
-export default accessGroupsApi
+export default enhancedApi

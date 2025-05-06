@@ -1,4 +1,4 @@
-import useLoadModule from '@/remote/useLoadModule'
+import { useLoadModule } from '@shared/hooks/useLoadModule'
 import AnnotationToolsFallback from '@components/AnnotationsTools/AnnotationTools'
 import {
   AnnotationsProviderProps,

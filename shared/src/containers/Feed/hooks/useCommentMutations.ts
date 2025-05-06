@@ -48,7 +48,6 @@ interface CommentMutationsProps {
   projectName: string
   entityType: string
   entities: Entity[]
-  activityTypes: string[]
   filter: any
 }
 
@@ -70,7 +69,6 @@ const useCommentMutations = ({
   projectName,
   entityType,
   entities = [],
-  activityTypes,
   filter,
 }: CommentMutationsProps) => {
   const {
@@ -80,6 +78,7 @@ const useCommentMutations = ({
     isUpdatingActivity,
     userName,
     userFullName,
+    activityTypes,
   } = useFeedContext()
   const entityIds = entities.map((entity) => entity.id)
 

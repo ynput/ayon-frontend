@@ -22,7 +22,7 @@ import ActivityStatus from '../ActivityStatus/ActivityStatus'
 import { useFeedContext } from '../../context/FeedContext'
 import { confirmDelete } from '../../../../util'
 import ActivityHeader, { ActivityHeaderProps } from '../ActivityHeader/ActivityHeader'
-import { Status } from '../../../ProjectTreeTable/types/project'
+import type { Status } from '../../../ProjectTreeTable/types/project'
 
 type Props = {
   activity: any
@@ -60,7 +60,7 @@ const ActivityComment = ({
   readOnly,
   statuses = [],
 }: Props) => {
-  const { scope, statePath, userName, createReaction, deleteReaction } = useFeedContext()
+  const { userName, createReaction, deleteReaction } = useFeedContext()
 
   let {
     body,
@@ -77,8 +77,6 @@ const ActivityComment = ({
   } = activity
   if (!authorName) authorName = author?.name || ''
   if (!authorFullName) authorFullName = author?.fullName || authorName
-  let menuId = `comment-${scope}-${activity.activityId}`
-  if (statePath) menuId += '-' + statePath
 
   const { editingId, setEditingId } = useFeedContext()
 

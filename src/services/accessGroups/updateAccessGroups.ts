@@ -1,4 +1,3 @@
-import { $Any } from '@types'
 import api from './getAccessGroups'
 
 const setAccessGroups = api.injectEndpoints({
@@ -19,8 +18,8 @@ const setAccessGroups = api.injectEndpoints({
             // @ts-ignore
             'getProjectsAccess',
             { projects: selectedProjects },
-            (draft: $Any) => {
-              let updatedData: $Any = {}
+            (draft: any) => {
+              let updatedData: any = {}
               for (const user of Object.keys(payload)) {
                 for (const project of Object.keys(payload[user])) {
                   updatedData = {
@@ -77,3 +76,4 @@ const updateAccessGroupsApi = api.enhanceEndpoints({
 })
 
 export const { useSaveAccessGroupMutation, useDeleteAccessGroupMutation } = updateAccessGroupsApi
+export { updateAccessGroupsApi as accessQueries }

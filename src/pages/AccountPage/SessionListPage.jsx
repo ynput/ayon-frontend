@@ -3,8 +3,8 @@ import { Column } from 'primereact/column'
 import { TablePanel, Section, Button } from '@ynput/ayon-react-components'
 
 import { TimestampField } from '@containers/fieldFormat'
-import { useGetUserSessionsQuery } from '@queries/user/getUsers'
-import { useInvalidateUserSessionMutation } from '@queries/user/updateUser'
+import { useGetUserSessionsQuery } from '@shared/api'
+import { useInvalidateUserSessionMutation } from '@shared/api'
 
 const SessionList = ({ userName }) => {
   const {
@@ -12,7 +12,7 @@ const SessionList = ({ userName }) => {
     isLoading,
     isUninitialized,
     refetch,
-  } = useGetUserSessionsQuery({ name: userName }, { skip: !userName })
+  } = useGetUserSessionsQuery({ userName }, { skip: !userName })
 
   const [invalidateToken] = useInvalidateUserSessionMutation()
 

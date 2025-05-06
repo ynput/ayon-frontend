@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import AccessGroupList from './AccessGroupList'
 import AccessGroupDetail from './AccessGroupDetail'
-import { AccessGroupObject } from '@api/rest/accessGroups'
+import { AccessGroupObject } from '@shared/api'
 import {
   EmptyPlaceholderFlex,
   EmptyPlaceholderFlexWrapper,

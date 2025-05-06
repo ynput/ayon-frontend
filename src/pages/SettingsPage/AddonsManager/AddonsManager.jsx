@@ -1,6 +1,6 @@
 import { Button, Section } from '@ynput/ayon-react-components'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
-import { useListAddonsQuery } from '@queries/addons/getAddons'
+import { useListAddonsQuery } from '@shared/api'
 import { useListBundlesQuery } from '@queries/bundles/getBundles'
 import { useUpdateBundleMutation } from '@queries/bundles/updateBundles'
 import { useMemo, useState } from 'react'
@@ -15,7 +15,7 @@ import {
   onSelectedVersions,
 } from '@state/addonsManager'
 import { useNavigate } from 'react-router'
-import { useDeleteAddonVersionsMutation } from '@queries/addons/updateAddons'
+import { useDeleteAddonVersionsMutation } from '@shared/api'
 import { useRestart } from '@context/restartContext'
 import { Link } from 'react-router-dom'
 import AddonDialog from '@components/AddonDialog/AddonDialog'

@@ -6,7 +6,7 @@ import SettingsPanel from '../SettingsPanel'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 
 import { Badge, BadgeWrapper } from '@components/Badge'
-import copyToClipboard from '@helpers/copyToClipboard'
+import { copyToClipboard } from '@shared/util'
 import { $Any } from '@types'
 import { ObjectFieldTemplateProps } from '@rjsf/utils'
 import { matchesFilterKeys } from './searchMatcher'

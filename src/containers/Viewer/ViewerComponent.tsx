@@ -1,10 +1,9 @@
-import ReviewableUpload from '@containers/ReviewablesList/ReviewablesUpload'
-import EmptyPlaceholder from '@shared/components/EmptyPlaceholder'
+import { ReviewableUpload, EmptyPlaceholder } from '@shared/components'
+import type { ReviewableResponse } from '@shared/api'
 
 import ViewerPlayer from './ViewerPlayer'
 import * as Styled from './Viewer.styled'
 import { useState } from 'react'
-import { ReviewableResponse } from '@queries/review/types'
 import ViewerImage from './ViewerImage'
 
 interface ViewerProps {

@@ -12,7 +12,7 @@ import {
 import MarketAddonsList from './MarketAddonsList'
 import 'react-perfect-scrollbar/dist/css/styles.css'
 import AddonDetails from './MarketDetails/AddonDetails'
-import { useListAddonsQuery } from '@queries/addons/getAddons'
+import { useListAddonsQuery } from '@shared/api'
 import { mergeAddonWithDownloaded } from './mergeAddonsData'
 import { throttle } from 'lodash'
 import useDownload from './MarketDetails/useDownload'

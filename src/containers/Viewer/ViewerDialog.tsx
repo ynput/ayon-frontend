@@ -5,7 +5,7 @@ import { useEffect } from 'react'
 import Viewer from './Viewer'
 import styled from 'styled-components'
 import isHTMLElement from '@helpers/isHTMLElement'
-import { closeSlideOut } from '@state/details'
+import { useDetailsPanelContext } from '@shared/context'
 
 const StyledDialog = styled(Dialog)`
   /* dnd overlay must offset this 64px by 32px */
@@ -29,6 +29,8 @@ const StyledDialog = styled(Dialog)`
 `
 
 const ViewerDialog = () => {
+  const { closeSlideOut, slideOut: slideOut } = useDetailsPanelContext()
+
   const dispatch = useAppDispatch()
   // check if dialog is open or not
   const productId = useAppSelector((state) => state.viewer.productId)
@@ -36,7 +38,6 @@ const ViewerDialog = () => {
   const folderId = useAppSelector((state) => state.viewer.folderId)
   const projectName = useAppSelector((state) => state.viewer.projectName)
   const fullscreen = useAppSelector((state) => state.viewer.fullscreen)
-  const slideOut = useAppSelector((state: any) => state.details.slideOut['review'])
 
   const handleClose = () => {
     // close the dialog
@@ -55,9 +56,8 @@ const ViewerDialog = () => {
 
       if (e.key === 'Escape' && !fullscreen) {
         // first check if slideOut is open
-        if (slideOut.entityId) {
-          // close the slideOut
-          dispatch(closeSlideOut())
+        if (slideOut?.entityId) {
+          closeSlideOut()
         } else {
           // close the dialog
           handleClose()
@@ -67,7 +67,7 @@ const ViewerDialog = () => {
 
     document.addEventListener('keydown', handleEscape)
     return () => document.removeEventListener('keydown', handleEscape)
-  }, [productId, fullscreen, slideOut.entityId])
+  }, [productId, fullscreen, slideOut?.entityId])
 
   if ((!productId && !taskId && !folderId) || !projectName) {
     return null

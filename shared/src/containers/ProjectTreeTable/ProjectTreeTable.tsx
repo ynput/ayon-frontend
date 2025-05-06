@@ -18,25 +18,23 @@ import {
   Table,
   Header,
   HeaderGroup,
-  ExpandedState,
-  SortingState,
 } from '@tanstack/react-table'
 
 // Utility imports
 import clsx from 'clsx'
 
 // Type imports
-import type { FolderNodeMap, TableRow, TaskNodeMap } from './types/table'
+import type { TableRow } from './types/table'
 
 // Component imports
-import ProjectTreeTableColumns from './ProjectTreeTableColumns'
+import buildTreeTableColumns, { buildTreeTableColumnsProps } from './buildTreeTableColumns'
 import * as Styled from './ProjectTreeTable.styled'
 import HeaderActionButton from './components/HeaderActionButton'
 import EmptyPlaceholder from '../../components/EmptyPlaceholder'
 
 // Context imports
-import { CellEditingProvider, useCellEditing } from './context/CellEditingContext'
-import { ROW_SELECTION_COLUMN_ID, useSelectionContext } from './context/SelectionContext'
+import { useCellEditing } from './context/CellEditingContext'
+import { ROW_SELECTION_COLUMN_ID, useSelectionCellsContext } from './context/SelectionCellsContext'
 import { ClipboardProvider } from './context/ClipboardContext'
 import { useSelectedRowsContext } from './context/SelectedRowsContext'
 import { useColumnSettings } from './context/ColumnSettingsContext'
@@ -56,6 +54,16 @@ import { createPortal } from 'react-dom'
 import { Icon } from '@ynput/ayon-react-components'
 import { AttributeEnumItem, AttributeWithPermissions, BuiltInFieldOptions } from './types'
 import { useProjectTableContext } from './context/ProjectTableContext'
+import { getReadOnlyLists, getTableFieldOptions } from './utils'
+
+// define which columns should show different actions
+type ColumnHeaderWidget = 'visibility_off' | 'push_pin' | 'sort' | 'locked'
+type ColumnHeaderConfig = {
+  visibility: string[]
+  sorting: string[]
+  pinning: string[]
+  locked: string[]
+}
 
 //These are the important styles to make sticky column pinning work!
 //Apply styles like this using your CSS strategy of choice with this kind of logic to head cells, data cells, footer cells, etc.
@@ -72,52 +80,25 @@ const getCommonPinningStyles = (column: Column<TableRow, unknown>): CSSPropertie
   }
 }
 
-type Props = {
-  projectName: string
+interface Props extends React.HTMLAttributes<HTMLDivElement> {
   scope: string
-  options: BuiltInFieldOptions
-  attribs: AttributeWithPermissions[]
   sliceId: string
-  // metadata
-  tasksMap: TaskNodeMap
-  foldersMap: FolderNodeMap
   fetchMoreOnBottomReached: (element: HTMLDivElement | null) => void
   onOpenNew?: (type: 'folder' | 'task') => void
+  pt?: {
+    columns?: Partial<buildTreeTableColumnsProps>
+    container?: React.HTMLAttributes<HTMLDivElement>
+    head?: Partial<TableHeadProps>
+  }
 }
 
-// Component to wrap with all providers
-const FlexTableWithProviders = (props: Props) => {
-  // convert attribs to object
-  const attribByField = useMemo(() => {
-    return props.attribs.reduce((acc: Record<string, AttributeEnumItem[]>, attrib) => {
-      if (attrib.data?.enum?.length) {
-        acc[attrib.name] = attrib.data?.enum
-      }
-      return acc
-    }, {})
-  }, [props.attribs])
-
-  return (
-    <ClipboardProvider
-      foldersMap={props.foldersMap}
-      tasksMap={props.tasksMap}
-      columnEnums={{ ...props.options, ...attribByField }}
-      columnReadOnly={props.attribs
-        .filter((attrib) => attrib.readOnly)
-        .map((attrib) => attrib.name)}
-    >
-      <FlexTable {...props} />
-    </ClipboardProvider>
-  )
-}
-
-const FlexTable = ({
+export const ProjectTreeTable = ({
   scope,
-  attribs,
-  options,
   sliceId,
   fetchMoreOnBottomReached,
   onOpenNew,
+  pt,
+  ...props
 }: Props) => {
   const {
     columnVisibility,
@@ -129,7 +110,11 @@ const FlexTable = ({
   } = useColumnSettings()
 
   const {
+    projectInfo,
     tableData,
+    attribFields,
+    entitiesMap,
+    users,
     isLoading,
     isInitialized,
     expanded,
@@ -141,11 +126,24 @@ const FlexTable = ({
     showHierarchy,
   } = useProjectTableContext()
 
+  const { statuses = [], folderTypes = [], taskTypes = [], tags = [] } = projectInfo || {}
+  const options: BuiltInFieldOptions = useMemo(
+    () =>
+      getTableFieldOptions({
+        users,
+        statuses,
+        folderTypes,
+        taskTypes,
+        tags,
+      }),
+    [users, statuses, folderTypes, taskTypes],
+  )
+
   //The virtualizer needs to know the scrollable container element
   const tableContainerRef = useRef<HTMLDivElement>(null)
 
   // Selection context
-  const { registerGrid } = useSelectionContext()
+  const { registerGrid } = useSelectionCellsContext()
 
   // COLUMN SIZING
   const [columnSizing, setColumnSizing] = useLocalStorage<ColumnSizingState>(
@@ -168,25 +166,60 @@ const FlexTable = ({
     const tableRowsCount = tableContainerRef.current?.querySelectorAll('tbody tr').length || 0
     const loadingAttrib = generateDummyAttributes()
     const loadingRows = generateLoadingRows(
-      attribs,
+      attribFields,
       showHierarchy && tableData.length > 0 ? Math.min(tableRowsCount, 50) : 50,
     )
     return { loadingAttrib, loadingRows }
-  }, [attribs, tableData, showHierarchy, tableContainerRef.current])
+  }, [attribFields, tableData, showHierarchy, tableContainerRef.current])
 
   const showLoadingRows = !isInitialized || isLoading
 
-  const columns = ProjectTreeTableColumns({
-    tableData: showLoadingRows ? loadingRows : tableData,
-    columnSizing,
-    attribs: isInitialized ? attribs : loadingAttrib,
-    isLoading: !isInitialized,
-    showHierarchy,
-    sliceId,
-    options,
-    toggleExpandAll: (id: string) => toggleExpandAll([id]),
-    toggleExpanded: (id: string) => toggleExpanded(id),
-  })
+  // Format readonly columns and attributes
+  const { readOnlyColumns, readOnlyAttribs } = useMemo(
+    () => getReadOnlyLists(attribFields, pt?.columns?.readonly),
+    [attribFields, pt?.columns?.readonly],
+  )
+  const columnHeaderConfig: ColumnHeaderConfig = {
+    visibility: [],
+    pinning: [],
+    sorting: [],
+    locked: readOnlyColumns,
+  }
+
+  const { updateEntities } = useCellEditing()
+
+  const columns = useMemo(
+    () =>
+      buildTreeTableColumns({
+        tableData: showLoadingRows ? loadingRows : tableData,
+        columnSizing,
+        attribs: isInitialized ? attribFields : loadingAttrib,
+        isLoading: !isInitialized,
+        showHierarchy,
+        sliceId,
+        options,
+        toggleExpandAll: (id: string) => toggleExpandAll([id]),
+        toggleExpanded: (id: string) => toggleExpanded(id),
+        updateEntities,
+        ...pt?.columns,
+      }),
+    [
+      tableData,
+      showLoadingRows,
+      loadingAttrib,
+      loadingRows,
+      attribFields,
+      columnSizing,
+      isInitialized,
+      showHierarchy,
+      sliceId,
+      options,
+      toggleExpandAll,
+      toggleExpanded,
+      updateEntities,
+      pt?.columns,
+    ],
+  )
 
   const table = useReactTable({
     data: showLoadingRows ? loadingRows : tableData,
@@ -252,53 +285,66 @@ const FlexTable = ({
   })
 
   const columnSizeVars = useCustomColumnWidthVars(table, columnSizing)
-  const readOnlyColumns = useMemo(
-    () => attribs.filter((attrib) => attrib.readOnly).map((attrib) => 'attrib_' + attrib.name),
-    [attribs],
-  )
+
+  const attribByField = useMemo(() => {
+    return attribFields.reduce((acc: Record<string, AttributeEnumItem[]>, attrib) => {
+      if (attrib.data?.enum?.length) {
+        acc[attrib.name] = attrib.data?.enum
+      }
+      return acc
+    }, {})
+  }, [attribFields])
 
   return (
-    <Styled.TableWrapper>
-      <Styled.TableContainer
-        ref={tableContainerRef}
-        style={{ height: '100%', padding: 0 }}
-        onScroll={(e) => fetchMoreOnBottomReached(e.currentTarget)}
-        className="table-container"
-      >
-        <table
-          style={{
-            display: 'grid',
-            borderCollapse: 'collapse',
-            userSelect: 'none',
-            ...columnSizeVars,
-            width: table.getTotalSize(),
-          }}
+    <ClipboardProvider
+      entitiesMap={entitiesMap}
+      columnEnums={{ ...options, ...attribByField }}
+      columnReadOnly={readOnlyAttribs}
+    >
+      <Styled.TableWrapper {...props}>
+        <Styled.TableContainer
+          ref={tableContainerRef}
+          style={{ height: '100%', padding: 0 }}
+          onScroll={(e) => fetchMoreOnBottomReached(e.currentTarget)}
+          {...pt?.container}
+          className={clsx('table-container', pt?.container?.className)}
         >
-          <TableHead
-            columnVirtualizer={columnVirtualizer}
-            table={table}
-            virtualPaddingLeft={virtualPaddingLeft}
-            virtualPaddingRight={virtualPaddingRight}
-            isLoading={isLoading}
-            readOnlyColumns={readOnlyColumns}
-          />
-          <TableBody
-            columnVirtualizer={columnVirtualizer}
-            table={table}
-            tableContainerRef={tableContainerRef}
-            virtualPaddingLeft={virtualPaddingLeft}
-            virtualPaddingRight={virtualPaddingRight}
-            showHierarchy={showHierarchy}
-            attribs={attribs}
-            onOpenNew={onOpenNew}
-          />
-        </table>
-      </Styled.TableContainer>
-    </Styled.TableWrapper>
+          <table
+            style={{
+              display: 'grid',
+              borderCollapse: 'collapse',
+              userSelect: 'none',
+              ...columnSizeVars,
+              width: table.getTotalSize(),
+            }}
+          >
+            <TableHead
+              columnVirtualizer={columnVirtualizer}
+              table={table}
+              virtualPaddingLeft={virtualPaddingLeft}
+              virtualPaddingRight={virtualPaddingRight}
+              isLoading={isLoading}
+              readOnlyColumns={readOnlyColumns}
+              {...pt?.head}
+            />
+            <TableBody
+              columnVirtualizer={columnVirtualizer}
+              table={table}
+              tableContainerRef={tableContainerRef}
+              virtualPaddingLeft={virtualPaddingLeft}
+              virtualPaddingRight={virtualPaddingRight}
+              showHierarchy={showHierarchy}
+              attribs={attribFields}
+              onOpenNew={onOpenNew}
+            />
+          </table>
+        </Styled.TableContainer>
+      </Styled.TableWrapper>
+    </ClipboardProvider>
   )
 }
 
-interface TableHeadProps {
+interface TableHeadProps extends React.HTMLAttributes<HTMLTableSectionElement> {
   columnVirtualizer: Virtualizer<HTMLDivElement, HTMLTableCellElement>
   table: Table<TableRow>
   virtualPaddingLeft: number | undefined
@@ -314,9 +360,10 @@ const TableHead = ({
   virtualPaddingRight,
   isLoading,
   readOnlyColumns,
+  ...props
 }: TableHeadProps) => {
   return (
-    <Styled.TableHeader>
+    <Styled.TableHeader {...props}>
       {table.getHeaderGroups().map((headerGroup) => (
         <TableHeadRow
           key={headerGroup.id}
@@ -529,10 +576,7 @@ const TableBody = ({
     </tbody>
   ) : (
     tableContainerRef.current &&
-      createPortal(
-        <EmptyPlaceholder message="No folders or tasks found" />,
-        tableContainerRef.current,
-      )
+      createPortal(<EmptyPlaceholder message="No items found" />, tableContainerRef.current)
   )
 }
 
@@ -611,7 +655,7 @@ const TableCell = ({ cell, rowId, cellId, className, showHierarchy, ...props }: 
     endSelection,
     selectCell,
     getCellBorderClasses,
-  } = useSelectionContext()
+  } = useSelectionCellsContext()
 
   const { isRowSelected } = useSelectedRowsContext()
 
@@ -696,5 +740,3 @@ const TableCell = ({ cell, rowId, cellId, className, showHierarchy, ...props }: 
 }
 
 const TableCellMemo = memo(TableCell)
-
-export { FlexTableWithProviders as ProjectTreeTable }

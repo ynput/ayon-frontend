@@ -1,15 +1,15 @@
 import { toast } from 'react-toastify'
 import { useState } from 'react'
 import { ScrollPanel, SaveButton, Spacer, Button } from '@ynput/ayon-react-components'
-import { useUpdateProjectAnatomyMutation } from '@queries/project/updateProject'
 import ProjectManagerPageLayout from './ProjectManagerPageLayout'
 import AnatomyEditor from '@containers/AnatomyEditor'
-
-import copyToClipboard from '@helpers/copyToClipboard'
 import { usePaste } from '@context/pasteContext'
 import useUserProjectPermissions, { PermissionLevel } from '@hooks/useUserProjectPermissions'
-import EmptyPlaceholder from '@shared/components/EmptyPlaceholder'
 import { useSelector } from 'react-redux'
+// shared
+import { useUpdateProjectAnatomyMutation } from '@shared/api'
+import { copyToClipboard } from '@shared/util'
+import { EmptyPlaceholder } from '@shared/components'
 
 const ProjectAnatomy = ({ projectName, projectList }) => {
   const isUser = useSelector((state) => state.user.data.isUser)

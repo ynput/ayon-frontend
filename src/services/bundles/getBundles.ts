@@ -1,6 +1,6 @@
-import { api } from '@api/rest/bundles'
+import { bundlesApi } from '@shared/api'
 
-const getBundles = api.enhanceEndpoints({
+const getBundles = bundlesApi.enhanceEndpoints({
   endpoints: {
     listBundles: {
       providesTags: () => [{ type: 'bundleList' }],

@@ -1,5 +1,5 @@
 import parseTasksList from '@//helpers/parseTasksList'
-import api from '@api'
+import api from '@shared/api'
 
 const TASKS_QUERY = `
 query TasksByFolder($projectName: String!, $folderIds: [String!]!) {

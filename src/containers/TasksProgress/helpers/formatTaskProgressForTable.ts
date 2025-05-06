@@ -1,4 +1,4 @@
-import type { FolderType, Status } from '@api/rest/project'
+import type { FolderType, Status } from '@shared/api'
 import {
   FolderGroup,
   ProgressTask,

@@ -1,8 +1,17 @@
-import { Filter } from '@ynput/ayon-react-components'
 import { QueryCondition, QueryFilter } from '../types/operations'
 
+// New type that cherry picks only the needed fields from Filter
+export type FilterForQuery = {
+  id: string
+  values?: { id: string; values?: { id: string }[] }[]
+  type?: string
+  singleSelect?: boolean
+  inverted?: boolean
+  operator?: string
+}
+
 const NO_DATE = 'no_date'
-export const clientFilterToQueryFilter = (filters: Filter[]): QueryFilter => {
+export const clientFilterToQueryFilter = (filters: FilterForQuery[]): QueryFilter => {
   // If there are no filters, return an empty filter
   if (!filters || filters.length === 0) {
     return {}
@@ -15,8 +24,6 @@ export const clientFilterToQueryFilter = (filters: Filter[]): QueryFilter => {
     .filter((f) => f.id !== 'hierarchy') // remove hierarchy filter as it is handled separately
     .flatMap((filter) => convertFilterToCondition(filter))
 
-  console.log(conditions)
-
   // Return the QueryFilter with all conditions combined with AND
   return {
     conditions,
@@ -25,7 +32,7 @@ export const clientFilterToQueryFilter = (filters: Filter[]): QueryFilter => {
 }
 
 // Helper function to convert a single Filter to a QueryCondition
-const convertFilterToCondition = (filter: Filter): QueryCondition => {
+const convertFilterToCondition = (filter: FilterForQuery): QueryCondition => {
   // Extract key from filter ID (split by underscore if needed)
   const key = filter.id.split('_')[0]
 
@@ -93,30 +100,32 @@ const convertFilterToCondition = (filter: Filter): QueryCondition => {
     // For date filters, we need to return a complete query filter with conditions
     if (filter.values && filter.values.length > 0) {
       // Create a flat list of all date conditions from all filter values
-      const dateConditions: QueryCondition[] = filter.values.flatMap((filterValue: Filter) => {
-        const conditions: QueryCondition[] = []
-        const dateValues = filterValue.values
+      const dateConditions: QueryCondition[] = filter.values.flatMap(
+        (filterValue: FilterForQuery) => {
+          const conditions: QueryCondition[] = []
+          const dateValues = filterValue.values
 
-        // First value is greater than (start date)
-        if (dateValues?.[0] !== undefined && dateValues?.[0].id !== NO_DATE) {
-          conditions.push({
-            key,
-            operator: filter.inverted ? 'lte' : 'gte',
-            value: dateValues[0].id,
-          })
-        }
+          // First value is greater than (start date)
+          if (dateValues?.[0] !== undefined && dateValues?.[0].id !== NO_DATE) {
+            conditions.push({
+              key,
+              operator: filter.inverted ? 'lte' : 'gte',
+              value: dateValues[0].id,
+            })
+          }
 
-        // Second value is less than (end date)
-        if (dateValues?.[1] !== undefined && dateValues?.[1].id !== NO_DATE) {
-          conditions.push({
-            key,
-            operator: filter.inverted ? 'gte' : 'lte',
-            value: dateValues[1].id,
-          })
-        }
+          // Second value is less than (end date)
+          if (dateValues?.[1] !== undefined && dateValues?.[1].id !== NO_DATE) {
+            conditions.push({
+              key,
+              operator: filter.inverted ? 'gte' : 'lte',
+              value: dateValues[1].id,
+            })
+          }
 
-        return conditions
-      })
+          return conditions
+        },
+      )
 
       // If we have date conditions, return them as a nested filter instead of continuing
       if (dateConditions.length > 0) {

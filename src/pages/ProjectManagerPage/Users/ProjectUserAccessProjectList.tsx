@@ -5,9 +5,8 @@ import clsx from 'clsx'
 import useTableLoadingData from '@hooks/useTableLoadingData'
 import { $Any } from '@types'
 import { TablePanel } from '@ynput/ayon-react-components'
-import { ProjectNode } from '@api/graphql'
+import { ProjectNode } from '@shared/api'
 import { UserPermissions, UserPermissionsEntity } from '@hooks/useUserProjectPermissions'
-
 
 const StyledProjectName = styled.div`
   /* use grid to stack items on top of each other */
@@ -54,7 +53,13 @@ type Props = {
   onSelectionChange: (selection: $Any) => void
 }
 
-const ProjectUserAccessProjectList = ({ projects, isLoading, selection, userPermissions, onSelectionChange }: Props) => {
+const ProjectUserAccessProjectList = ({
+  projects,
+  isLoading,
+  selection,
+  userPermissions,
+  onSelectionChange,
+}: Props) => {
   const tableData = useTableLoadingData(projects, isLoading, 10, 'name')
   const selected = tableData.filter((project: ProjectNode) => selection.includes(project.name))
 

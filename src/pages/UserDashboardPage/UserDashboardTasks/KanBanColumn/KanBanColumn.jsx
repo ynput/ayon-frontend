@@ -10,9 +10,9 @@ import { InView, useInView } from 'react-intersection-observer'
 import 'react-perfect-scrollbar/dist/css/styles.css'
 import KanBanColumnDropzone from './KanBanColumnDropzone'
 import clsx from 'clsx'
-import { toggleDetailsPanel } from '@state/details'
 import { useURIContext } from '@context/uriContext'
 import { getTaskRoute } from '@helpers/routes'
+import { useScopedDetailsPanel } from '@shared/context'
 
 const KanBanColumn = forwardRef(
   (
@@ -100,9 +100,11 @@ const KanBanColumn = forwardRef(
       }
     }
 
+    const { setOpen } = useScopedDetailsPanel('dashboard')
+
     // OPEN DETAILS PANEL
     const onTogglePanel = (open) => {
-      dispatch(toggleDetailsPanel(open))
+      setOpen(open)
     }
 
     // return 5 fake loading events if loading

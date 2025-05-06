@@ -1,5 +1,5 @@
 import { useDispatch } from 'react-redux'
-import api from '@api'
+import api from '@shared/api'
 import { selectProject as selectProjectContext, setUri } from '@state/context'
 import { selectProject } from '@state/project'
 import { onProjectOpened } from '@state/dashboard'

@@ -4,7 +4,7 @@ import SettingsPanel from '../SettingsPanel'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 
 import { isEqual } from 'lodash'
-import copyToClipboard from '@helpers/copyToClipboard'
+import { copyToClipboard } from '@shared/util'
 import { $Any } from '@types'
 import { FieldTemplateProps } from '@rjsf/utils'
 import { CSS } from 'styled-components/dist/types'

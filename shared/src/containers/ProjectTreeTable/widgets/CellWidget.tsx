@@ -14,7 +14,7 @@ import { useCellEditing } from '../context/CellEditingContext'
 // Utils
 import { getCellId } from '../utils/cellUtils'
 import clsx from 'clsx'
-import { useSelectionContext } from '../context/SelectionContext'
+import { useSelectionCellsContext } from '../context/SelectionCellsContext'
 import { AttributeData, AttributeEnumItem } from '../types'
 
 const Cell = styled.div`
@@ -83,7 +83,7 @@ const EditorCellComponent: FC<EditorCellProps> = ({
   const type = attributeData?.type
 
   const { isEditing, setEditingCellId } = useCellEditing()
-  const { isCellFocused, gridMap, selectCell, focusCell } = useSelectionContext()
+  const { isCellFocused, gridMap, selectCell, focusCell } = useSelectionCellsContext()
   const cellId = getCellId(rowId, columnId)
 
   const isCurrentCellEditing = isEditing(cellId)
@@ -154,6 +154,7 @@ const EditorCellComponent: FC<EditorCellProps> = ({
 
       case !!options.length: {
         const enumValue = Array.isArray(value) ? value : [value]
+        if (isReadOnly) return <TextWidget value={enumValue.join(', ')} {...sharedProps} />
         return (
           <EnumWidget
             value={enumValue}

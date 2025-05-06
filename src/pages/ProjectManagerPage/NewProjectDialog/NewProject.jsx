@@ -6,7 +6,7 @@ import { Spacer, InputText, Toolbar, SaveButton, InputSwitch } from '@ynput/ayon
 import SettingsEditor from '@containers/SettingsEditor'
 import AnatomyPresetDropdown from './AnatomyPresetDropdown'
 import { useGetAnatomyPresetQuery, useGetAnatomySchemaQuery } from '@queries/anatomy/getAnatomy'
-import { useCreateProjectMutation } from '@queries/project/updateProject'
+import { useCreateProjectMutation } from '@shared/api'
 import { useGetConfigValueQuery } from '@queries/config/getConfig'
 
 // allow only alphanumeric and underscorer,

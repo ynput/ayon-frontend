@@ -1,17 +1,12 @@
 overwrite: true
 schema:
-  - http://localhost:5000/graphql:
+  - http://localhost:3000/graphql:
       headers:
         Authorization: Bearer ${TOKEN}
-documents: '../src/**/*.graphql'
+documents: '../**/*.graphql'
 generates:
-  # Generate types only in a separate file
-  ../shared/src/api/graphql.ts:
-    plugins:
-      - typescript
-      - typescript-operations
   # Generate types + RTK Query hooks
-  ../src/api/graphql.ts:
+  ../shared/src/api/generated/graphql.ts:
     plugins:
       - typescript
       - add:
@@ -27,10 +22,11 @@ generates:
              *
              * for this file to be re-created
              */
+            // @ts-nocheck
       - typescript-operations
       - typescript-rtk-query:
-          importBaseApiFrom: '../services/ayon'
-          importBaseApiAlternateName: 'RestAPI'
+          importBaseApiFrom: '@shared/api/base'
+          importBaseApiAlternateName: 'api'
   ./graphql.schema.json:
     plugins:
       - 'introspection'

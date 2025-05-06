@@ -7,7 +7,7 @@ import {
   createReleaseSubtitle,
 } from '../helpers'
 import { ReleaseFormType } from '@state/releaseInstaller'
-import { ReleaseListItemModel } from '@api/rest/releases'
+import { ReleaseListItemModel } from '@shared/api'
 import { ReleaseForm } from '../hooks/useReleaseForm'
 import { Error } from '../ReleaseInstaller.styled'
 import { Icon } from '@ynput/ayon-react-components'

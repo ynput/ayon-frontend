@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react'
-import { useGetSiteInfoQuery } from '@queries/auth/getAuth'
+import { useGetSiteInfoQuery } from '@shared/api'
 import * as Styled from './util/OnBoardingStep.styled'
 import OnBoardingProvider from './util/OnBoardingContext'
 import * as Step from './Step'

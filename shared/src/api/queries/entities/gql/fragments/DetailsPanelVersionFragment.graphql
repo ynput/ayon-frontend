@@ -1,0 +1,10 @@
+fragment DetailsPanelVersionFragment on VersionNode {
+  id
+  thumbnailId
+  name
+  updatedAt
+  createdAt
+  productId
+  version
+  author
+}

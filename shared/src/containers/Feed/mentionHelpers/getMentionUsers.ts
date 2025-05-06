@@ -1,6 +1,6 @@
-// @ts-nocheck
+import { UserSuggestionItem } from '@shared/api'
 
-const getMentionUsers = (users = []) =>
+const getMentionUsers = (users: UserSuggestionItem[] = []) =>
   users.map((user) => ({
     type: 'user',
     id: user.name,

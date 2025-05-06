@@ -3,7 +3,7 @@ import { Section } from '@ynput/ayon-react-components'
 
 import clsx from 'clsx'
 import { $Any } from '@types'
-import { UserNode } from '@api/graphql'
+import { UserNode } from '@shared/api'
 import { CompactPlaceholder, DataTable } from './ProjectUserAccess.styled'
 import UserCell from './UserCell'
 import AccessGroupsCell from './AccessGroupsCell'

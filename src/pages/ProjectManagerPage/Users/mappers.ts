@@ -1,6 +1,6 @@
 import { AccessGroupUsers, ListingError, SelectedAccessGroupUsers, SelectionStatus } from './types'
 import { Filter, FilterValue, Option } from '@components/SearchFilter/types'
-import { ProjectNode, UserNode } from '@api/graphql'
+import { ProjectNode, UserNode } from '@shared/api'
 import { UserPermissions, UserPermissionsEntity } from '@hooks/useUserProjectPermissions'
 import { $Any } from '@types'
 import { matchSorter } from 'match-sorter'
@@ -262,7 +262,7 @@ const getUserAccessGroups = (
 
     let accessGroupsList = []
     for (const project of projects) {
-      accessGroupsList.push(...projectUsersData?.[project]?.[userName] || [])
+      accessGroupsList.push(...(projectUsersData?.[project]?.[userName] || []))
     }
 
     return Array.from(new Set(accessGroupsList))
@@ -353,5 +353,5 @@ export {
   mapInitialAccessGroupStates,
   getErrorInfo,
   getUserAccessGroups,
-  getProjectAccessSearchFilterBuiler
+  getProjectAccessSearchFilterBuiler,
 }

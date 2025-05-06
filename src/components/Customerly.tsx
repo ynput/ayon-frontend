@@ -3,8 +3,8 @@ import { useLocalStorage } from '@shared/hooks'
 import { useGetYnputCloudInfoQuery } from '@queries/cloud/cloud'
 import { FC } from 'react'
 import getTrialDates from './TrialBanner/helpers/getTrialDates'
-import { useListAddonsQuery } from '@queries/addons/getAddons'
-import { AddonListItem } from '@api/rest/addons'
+import { useListAddonsQuery } from '@shared/api'
+import type { AddonListItem } from '@shared/api'
 import { useAppSelector } from '@state/store'
 
 interface CustomerlyProps {}

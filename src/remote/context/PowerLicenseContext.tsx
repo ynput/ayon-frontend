@@ -1,5 +1,5 @@
 import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react'
-import useLoadModule from '@/remote/useLoadModule'
+import { useLoadModule } from '@shared/hooks/useLoadModule'
 
 // Define the type for the license check function
 type CheckPowerLicenseFunction = () => Promise<boolean>

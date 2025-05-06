@@ -15,6 +15,8 @@ import { isFilePreviewable } from './components/FileUploadPreview/FileUploadPrev
 import EmptyPlaceholder from '@shared/components/EmptyPlaceholder'
 import { useFeedContext, FEED_NEW_COMMENT } from './context/FeedContext'
 import { Status } from '../ProjectTreeTable/types/project'
+import { useDetailsPanelContext } from '@shared/context'
+import { DetailsPanelEntityType } from '@shared/api'
 
 // number of activities to get
 export const activitiesLast = 30
@@ -23,17 +25,9 @@ export type FeedProps = {
   isMultiProjects: boolean
   readOnly: boolean
   statuses: Status[]
-  activityTypes: string[]
-  highlighted: string[]
 }
 
-export const Feed = ({
-  isMultiProjects,
-  readOnly,
-  statuses = [],
-  activityTypes,
-  highlighted = [],
-}: FeedProps) => {
+export const Feed = ({ isMultiProjects, readOnly, statuses = [] }: FeedProps) => {
   const {
     projectName,
     entities,
@@ -41,20 +35,21 @@ export const Feed = ({
     editingId,
     projectInfo,
     setEditingId,
-    filter,
     userName,
     activitiesData,
     isLoadingNew,
     isLoadingNextPage,
     loadNextPage,
     hasNextPage,
-    onOpenSlideOut,
-    onOpenImage,
-    projectUsersData,
+    users,
+    currentTab,
   } = useFeedContext()
 
+  const { openSlideOut, highlightedActivities, setHighlightedActivities, onOpenImage } =
+    useDetailsPanelContext()
+
   // hide comment input for specific filters
-  const hideCommentInput = ['publishes'].includes(filter)
+  const hideCommentInput = ['versions'].includes(currentTab)
 
   // do any transformation on activities data
   // 1. status change activities, attach status data based on projectName
@@ -63,7 +58,7 @@ export const Feed = ({
   const transformedActivitiesData = useTransformActivities(
     // @ts-ignore
     activitiesData,
-    projectUsersData,
+    users,
     projectInfo,
     entityType,
     userName,
@@ -80,15 +75,15 @@ export const Feed = ({
   useSaveScrollPos({
     entities,
     feedRef,
-    filter,
-    disabled: !!highlighted.length,
+    filter: currentTab,
+    disabled: !!highlightedActivities.length,
     isLoading: isLoadingNew,
   })
 
-  // try and scroll to highlighted activity
+  // try and scroll to highlightedActivities activity
   useScrollToHighlighted({
     feedRef,
-    highlighted,
+    highlighted: highlightedActivities,
     isLoading: isLoadingNew,
     loadNextPage,
     hasNextPage: !!loadNextPage,
@@ -99,8 +94,7 @@ export const Feed = ({
     projectName,
     entityType: entityType,
     entities,
-    activityTypes,
-    filter,
+    filter: currentTab,
   })
 
   // When a checkbox is clicked, update the body to add/remove "x" in [ ] markdown
@@ -153,7 +147,11 @@ export const Feed = ({
     updateComment(activity, newBody, activity.files)
   }
 
-  const handleRefClick = (ref: { entityId: string; entityType: string; activityId: string }) => {
+  const handleRefClick = (ref: {
+    entityId: string
+    entityType: DetailsPanelEntityType
+    activityId: string
+  }) => {
     const { entityId, entityType, activityId } = ref
     const supportedTypes = ['version', 'task', 'folder']
 
@@ -162,7 +160,10 @@ export const Feed = ({
 
     if (!entityId || !entityType || !projectName) return console.log('No entity id or type found')
 
-    onOpenSlideOut?.({ entityId, entityType, projectName, activityId })
+    // open the slide out
+    openSlideOut({ entityId, entityType, projectName })
+    // set highlighted activity
+    setHighlightedActivities([activityId])
   }
 
   const handleFileExpand = ({ index, activityId }: { index: number; activityId: string }) => {
@@ -215,19 +216,19 @@ export const Feed = ({
                   createdAts={entities.map((e) => e.createdAt)}
                   onFileExpand={handleFileExpand}
                   showOrigin={entities.length > 1}
-                  filter={filter}
+                  filter={currentTab}
                   editProps={{
                     projectName,
                     entities: entities,
                     entityType,
                   }}
-                  isHighlighted={highlighted.includes(activity.activityId)}
+                  isHighlighted={highlightedActivities.includes(activity.activityId)}
                   readOnly={readOnly}
                   statuses={statuses}
                 />
               ))}
           {/* message when no versions published */}
-          {transformedActivitiesData.length === 1 && filter === 'publishes' && !isLoadingNew && (
+          {transformedActivitiesData.length === 1 && currentTab === 'versions' && !isLoadingNew && (
             <EmptyPlaceholder message="No versions published yet" icon="layers" />
           )}
           {hasNextPage && loadNextPage && (

@@ -2,11 +2,11 @@
 // we do this so that focused changes do not re-render the entire page
 
 import { useAppDispatch, useAppSelector } from '@state/store'
-import DetailsPanel from '@containers/DetailsPanel/DetailsPanel'
-import DetailsPanelSlideOut from '@containers/DetailsPanel/DetailsPanelSlideOut/DetailsPanelSlideOut'
-import { useGetUsersAssigneeQuery } from '@queries/user/getUsers'
-import { toggleDetailsOpen } from '@state/progress'
+import { DetailsPanel, DetailsPanelSlideOut } from '@shared/containers'
+import { useGetUsersAssigneeQuery } from '@shared/api'
 import { $Any } from '@types'
+import { openViewer } from '@state/viewer'
+import { useScopedDetailsPanel } from '@shared/context'
 
 type TaskProgressDetailsPanelProps = {
   projectInfo: $Any
@@ -16,6 +16,9 @@ type TaskProgressDetailsPanelProps = {
 const TaskProgressDetailsPanel = ({ projectInfo, projectName }: TaskProgressDetailsPanelProps) => {
   const selected = useAppSelector((state) => state.progress.selected)
   const dispatch = useAppDispatch()
+  const handleOpenViewer = (args: any) => dispatch(openViewer(args))
+  const { setOpen } = useScopedDetailsPanel('progress')
+
   const projectsInfo = { [projectName]: projectInfo }
 
   const entities = selected.ids.map((id) => ({ id, projectName }))
@@ -38,7 +41,8 @@ const TaskProgressDetailsPanel = ({ projectInfo, projectName }: TaskProgressDeta
         activeProjectUsers={users}
         style={{ boxShadow: 'none' }}
         scope="progress"
-        onClose={() => dispatch(toggleDetailsOpen(false))}
+        onClose={() => setOpen(false)}
+        onOpenViewer={handleOpenViewer}
       />
       <DetailsPanelSlideOut projectsInfo={projectsInfo} scope="progress" />
     </>

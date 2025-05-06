@@ -1,7 +1,7 @@
 import useBuildFilterOptions, { BuildFilterOptions } from '@hooks/useBuildFilterOptions'
 import { FC, useEffect, useMemo, useState } from 'react'
 import { Filter, Icon, SearchFilter, SearchFilterProps } from '@ynput/ayon-react-components'
-import { ProjectModel } from '@api/rest/project'
+import type { ProjectModel } from '@shared/api'
 import { EditorTaskNode, TaskNodeMap } from '@shared/containers/ProjectTreeTable'
 import { usePower } from '@/remote/context/PowerLicenseContext'
 import AdvancedFiltersPlaceholder from '@components/SearchFilter/AdvancedFiltersPlaceholder'

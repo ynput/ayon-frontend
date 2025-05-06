@@ -4,7 +4,7 @@ import { Panel } from '@ynput/ayon-react-components'
 import UserImage from '@shared/components/UserImage'
 
 import styled, { css } from 'styled-components'
-import { useGetUserByNameQuery } from '@queries/user/getUsers'
+import { useGetUserByNameQuery } from '@shared/api'
 import { useSelector } from 'react-redux'
 import { formatDistance } from 'date-fns'
 import { isObject } from 'lodash'

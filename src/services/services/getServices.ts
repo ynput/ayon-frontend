@@ -1,7 +1,7 @@
-import { AddonList } from '@api/rest/addons'
-import { api } from '@api/rest/services'
+import { servicesApi } from '@shared/api'
+import type { AddonList } from '@shared/api'
 
-const enhancedServicesApi = api.enhanceEndpoints({
+const enhancedServicesApi = servicesApi.enhanceEndpoints({
   endpoints: {
     listServices: {
       providesTags: () => ['service'],
@@ -12,7 +12,7 @@ const enhancedServicesApi = api.enhanceEndpoints({
   },
 })
 
-export const getServicesApi = enhancedServicesApi.injectEndpoints({
+const getServicesApi = enhancedServicesApi.injectEndpoints({
   endpoints: (build) => ({
     getServiceAddons: build.query({
       query: () => ({
@@ -32,3 +32,4 @@ export const getServicesApi = enhancedServicesApi.injectEndpoints({
 })
 
 export const { useListServicesQuery, useGetServiceAddonsQuery, useListHostsQuery } = getServicesApi
+export default getServicesApi

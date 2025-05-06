@@ -1,0 +1,5 @@
+fragment DetailsPanelRepresentationFragment on RepresentationNode {
+  id
+  name
+  fileCount
+}

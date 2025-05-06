@@ -1,7 +1,6 @@
-import { FolderType, TaskType } from '@api/rest/project'
+import { FolderType, TaskType } from '@shared/api'
 import { Dropdown, DropdownRef } from '@ynput/ayon-react-components'
 import { forwardRef, CSSProperties } from 'react'
-import { useSelector } from 'react-redux'
 
 interface TypeEditorProps {
   value: string

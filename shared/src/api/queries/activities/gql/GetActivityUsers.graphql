@@ -1,0 +1,12 @@
+query GetActivityUsers($projects: [String!]) {
+  users(last: 2000, projects: $projects) {
+    edges {
+      node {
+        name
+        attrib {
+          fullName
+        }
+      }
+    }
+  }
+}

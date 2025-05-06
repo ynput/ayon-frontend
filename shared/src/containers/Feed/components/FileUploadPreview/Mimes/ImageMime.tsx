@@ -1,4 +1,4 @@
-import { expandableMimeTypes, getFileURL } from '../FileUploadPreview'
+import { getFileURL } from '../fileUtils'
 import * as Styled from '../FileUploadPreview.styled'
 
 interface ImageMimeProps {
@@ -7,15 +7,17 @@ interface ImageMimeProps {
     projectName: string
     mime: string
   }
+  fullPreviews?: string[]
 }
 
-const ImageMime = ({ file }: ImageMimeProps) => {
-  const { id, projectName, mime } = file || {}
+const ImageMime = ({
+  file,
+  fullPreviews = ['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp'],
+}: ImageMimeProps) => {
+  const { id, projectName, mime } = file
   let imgURL = getFileURL(id, projectName)
-  const useFullPreview = expandableMimeTypes?.image?.fullPreviews?.some((ext) => mime.includes(ext))
-  // if the file is NOT png, jpg, jpeg, gif, or svg, we use preview image
+  const useFullPreview = fullPreviews.some((ext) => mime.includes(ext))
   if (!useFullPreview) imgURL += '/thumbnail'
-
   return <Styled.Image src={imgURL} autoFocus />
 }
 

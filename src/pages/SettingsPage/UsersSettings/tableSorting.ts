@@ -1,4 +1,4 @@
-import { UserPoolModel } from '@api/rest/auth'
+import { UserPoolModel } from '@shared/api'
 import { ColumnSortEvent } from 'primereact/column'
 
 /**
@@ -33,7 +33,7 @@ export const userPoolSortFunction = (event: ColumnSortEvent, userPools: UserPool
   })
 }
 
-import { UserModel } from '@api/rest/users'
+import { UserModel } from '@shared/api'
 
 type EnrichedUserModel = UserModel & {
   isAdmin: boolean

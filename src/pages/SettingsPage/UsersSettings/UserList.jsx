@@ -10,7 +10,7 @@ import styled from 'styled-components'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import clsx from 'clsx'
 import useTableLoadingData from '@hooks/useTableLoadingData'
-import { useGetUserPoolsQuery } from '@queries/auth/getAuth'
+import { useGetUserPoolsQuery } from '@shared/api'
 import { accessGroupsSortFunction, userPoolSortFunction } from './tableSorting'
 
 const StyledProfileRow = styled.div`
