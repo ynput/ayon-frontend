@@ -200,7 +200,13 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
         toast.error('Failed to update entities: ' + error?.error)
       }
     },
-    [projectName, updateEntities, getEntityById, getInheritedDependents, pushHistory],
+    [
+      projectName,
+      updateEntities, //
+      getEntityById,
+      getInheritedDependents,
+      pushHistory,
+    ],
   )
 
   // set the attrib fields to be inherited from the parent

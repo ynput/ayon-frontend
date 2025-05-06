@@ -24,10 +24,10 @@ import {
 import clsx from 'clsx'
 
 // Type imports
-import type { EntitiesMap, FolderNodeMap, TableRow, TaskNodeMap } from './types/table'
+import type { TableRow } from './types/table'
 
 // Component imports
-import ProjectTreeTableColumns, { ProjectTreeTableColumnsProps } from './ProjectTreeTableColumns'
+import buildTreeTableColumns, { buildTreeTableColumnsProps } from './buildTreeTableColumns'
 import * as Styled from './ProjectTreeTable.styled'
 import HeaderActionButton from './components/HeaderActionButton'
 import EmptyPlaceholder from '../../components/EmptyPlaceholder'
@@ -56,6 +56,15 @@ import { AttributeEnumItem, AttributeWithPermissions, BuiltInFieldOptions } from
 import { useProjectTableContext } from './context/ProjectTableContext'
 import { getReadOnlyLists, getTableFieldOptions } from './utils'
 
+// define which columns should show different actions
+type ColumnHeaderWidget = 'visibility_off' | 'push_pin' | 'sort' | 'locked'
+type ColumnHeaderConfig = {
+  visibility: string[]
+  sorting: string[]
+  pinning: string[]
+  locked: string[]
+}
+
 //These are the important styles to make sticky column pinning work!
 //Apply styles like this using your CSS strategy of choice with this kind of logic to head cells, data cells, footer cells, etc.
 //View the index.css file for more needed styles such as border-collapse: separate
@@ -77,7 +86,7 @@ interface Props extends React.HTMLAttributes<HTMLDivElement> {
   fetchMoreOnBottomReached: (element: HTMLDivElement | null) => void
   onOpenNew?: (type: 'folder' | 'task') => void
   pt?: {
-    columns?: Partial<ProjectTreeTableColumnsProps>
+    columns?: Partial<buildTreeTableColumnsProps>
     container?: React.HTMLAttributes<HTMLDivElement>
     head?: Partial<TableHeadProps>
   }
@@ -165,18 +174,52 @@ export const ProjectTreeTable = ({
 
   const showLoadingRows = !isInitialized || isLoading
 
-  const columns = ProjectTreeTableColumns({
-    tableData: showLoadingRows ? loadingRows : tableData,
-    columnSizing,
-    attribs: isInitialized ? attribFields : loadingAttrib,
-    isLoading: !isInitialized,
-    showHierarchy,
-    sliceId,
-    options,
-    toggleExpandAll: (id: string) => toggleExpandAll([id]),
-    toggleExpanded: (id: string) => toggleExpanded(id),
-    ...pt?.columns,
-  })
+  // Format readonly columns and attributes
+  const { readOnlyColumns, readOnlyAttribs } = useMemo(
+    () => getReadOnlyLists(attribFields, pt?.columns?.readonly),
+    [attribFields, pt?.columns?.readonly],
+  )
+  const columnHeaderConfig: ColumnHeaderConfig = {
+    visibility: [],
+    pinning: [],
+    sorting: [],
+    locked: readOnlyColumns,
+  }
+
+  const { updateEntities } = useCellEditing()
+
+  const columns = useMemo(
+    () =>
+      buildTreeTableColumns({
+        tableData: showLoadingRows ? loadingRows : tableData,
+        columnSizing,
+        attribs: isInitialized ? attribFields : loadingAttrib,
+        isLoading: !isInitialized,
+        showHierarchy,
+        sliceId,
+        options,
+        toggleExpandAll: (id: string) => toggleExpandAll([id]),
+        toggleExpanded: (id: string) => toggleExpanded(id),
+        updateEntities,
+        ...pt?.columns,
+      }),
+    [
+      tableData,
+      showLoadingRows,
+      loadingAttrib,
+      loadingRows,
+      attribFields,
+      columnSizing,
+      isInitialized,
+      showHierarchy,
+      sliceId,
+      options,
+      toggleExpandAll,
+      toggleExpanded,
+      updateEntities,
+      pt?.columns,
+    ],
+  )
 
   const table = useReactTable({
     data: showLoadingRows ? loadingRows : tableData,
@@ -242,12 +285,6 @@ export const ProjectTreeTable = ({
   })
 
   const columnSizeVars = useCustomColumnWidthVars(table, columnSizing)
-
-  // Format readonly columns and attributes
-  const { readOnlyColumns, readOnlyAttribs } = useMemo(
-    () => getReadOnlyLists(attribFields, pt?.columns?.readonly),
-    [attribFields, pt?.columns?.readonly],
-  )
 
   const attribByField = useMemo(() => {
     return attribFields.reduce((acc: Record<string, AttributeEnumItem[]>, attrib) => {

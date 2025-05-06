@@ -13,8 +13,10 @@ import useUpdateTableData, {
   UpdateTableEntities,
 } from '../hooks/useUpdateTableData'
 import { toast } from 'react-toastify'
-import useValidateUpdates from '../hooks/useValidateUpdates'
+import useValidateUpdates from '../utils/validateUpdateEntities'
 import useHistory, { UseHistoryReturn } from '../hooks/useHistory'
+import validateUpdateEntities from '../utils/validateUpdateEntities'
+import { useProjectTableContext } from './ProjectTableContext'
 
 export interface CellEditingContextType {
   editingCellId: CellId | null
@@ -43,23 +45,25 @@ export const CellEditingProvider: React.FC<{ children: ReactNode }> = ({ childre
   const { updateEntities: updateOverviewEntities, inheritFromParent } = useUpdateTableData({
     pushHistory,
   })
+  const { attribFields } = useProjectTableContext()
 
-  const validateUpdateEntities = useValidateUpdates()
+  const handleUpdateEntities: UpdateTableEntities = useCallback(
+    async (entities = [], pushToHistory = true) => {
+      try {
+        // validate the entities before updating
+        validateUpdateEntities(entities, attribFields)
 
-  const handleUpdateEntities: UpdateTableEntities = async (entities = [], pushToHistory = true) => {
-    try {
-      // validate the entities before updating
-      validateUpdateEntities(entities)
+        // if validation passes, update the entities
+        return await updateOverviewEntities(entities, pushToHistory)
+      } catch (error: any) {
+        // if validation fails, show a toast and return
+        toast.error(error.message)
 
-      // if validation passes, update the entities
-      return await updateOverviewEntities(entities, pushToHistory)
-    } catch (error: any) {
-      // if validation fails, show a toast and return
-      toast.error(error.message)
-
-      return Promise.reject(error)
-    }
-  }
+        return Promise.reject(error)
+      }
+    },
+    [updateOverviewEntities, attribFields],
+  )
 
   // Handle undo
   const handleUndo = async () => {

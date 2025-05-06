@@ -162,22 +162,23 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
 
   // convert listItemsData into tableData
   const listItemsTableData = useMemo(() => {
-    const tableRows: TableRow[] = listItemsData.map((list) => ({
-      id: list.id,
-      name: list.name,
+    const tableRows: TableRow[] = listItemsData.map((item) => ({
+      id: item.id,
+      name: item.name,
       label:
-        (list.entityType === 'version' ? `${list.product?.name} - ` : '') +
-        (list.label || list.name),
-      entityId: list.entityId,
-      entityType: list.entityType,
-      assignees: list.assignees || [],
-      subType: extractSubType(list, list.entityType),
-      attrib: list.attrib,
-      ownAttrib: list.ownAttrib || Object.keys(list.attrib),
-      icon: getEntityTypeData(list.entityType, extractSubType(list, list.entityType))?.icon,
-      path: extractPath(list, list.entityType),
-      tags: list.tags,
-      status: list.status,
+        (item.entityType === 'version' ? `${item.product?.name} - ` : '') +
+        (item.label || item.name),
+      entityId: item.entityId,
+      entityType: item.entityType,
+      assignees: item.assignees || [],
+      subType: extractSubType(item, item.entityType),
+      updatedAt: item.updatedAt,
+      attrib: item.attrib,
+      ownAttrib: item.ownAttrib || Object.keys(item.attrib),
+      icon: getEntityTypeData(item.entityType, extractSubType(item, item.entityType))?.icon,
+      path: extractPath(item, item.entityType),
+      tags: item.tags,
+      status: item.status,
       subRows: [],
     }))
 

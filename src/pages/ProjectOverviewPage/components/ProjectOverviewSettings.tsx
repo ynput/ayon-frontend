@@ -32,6 +32,10 @@ const ProjectOverviewSettingsContent: FC = () => {
 
   const columns = [
     {
+      value: 'thumbnail',
+      label: 'Thumbnail',
+    },
+    {
       value: 'name',
       label: 'Folder / Task',
     },

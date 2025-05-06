@@ -135,6 +135,7 @@ export default function useOverviewTable({
         attrib: task.attrib,
         ownAttrib: task.ownAttrib,
         path: task.folder.path,
+        updatedAt: task.updatedAt,
       }
     }
 
@@ -209,6 +210,7 @@ export default function useOverviewTable({
         path: folder.path,
         attrib: folder.attrib || {},
         childOnlyMatch: folder.childOnlyMatch || false,
+        updatedAt: folder.updatedAt,
       }
 
       rowsById.set(folderId, row)

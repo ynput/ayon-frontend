@@ -56,6 +56,7 @@ export type TableRow = {
   ownAttrib: string[]
   tags: string[]
   status: string
+  updatedAt?: string
   parentId?: string
   subRows: TableRow[]
   icon?: string | null

@@ -5,7 +5,7 @@ import type {
   GetListItemsQueryVariables,
   GetListsQuery,
   GetListsQueryVariables,
-} from '@shared/api/generated'
+} from '@shared/api'
 
 // Define the LISTS_PER_PAGE constant for pagination
 export const LISTS_PER_PAGE = 100

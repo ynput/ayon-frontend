@@ -86,6 +86,7 @@ const useGetListItemsData = ({
     attrib: {},
     status: 'private',
     tags: [],
+    updatedAt: '',
   })
 
   // Extract tasks from infinite query data correctly

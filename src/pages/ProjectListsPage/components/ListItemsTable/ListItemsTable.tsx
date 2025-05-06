@@ -4,6 +4,7 @@ import { getColumnConfigFromType } from '@pages/ProjectListsPage/util'
 import ListItemsShortcuts from '@pages/ProjectListsPage/util/ListItemsShortcuts'
 import { EmptyPlaceholder } from '@shared/components'
 import { ProjectTreeTable } from '@shared/containers/ProjectTreeTable'
+import { ThumbnailWidget } from '@shared/containers/ProjectTreeTable/widgets'
 import { FC } from 'react'
 
 interface ListItemsTableProps {}
@@ -35,6 +36,7 @@ const ListItemsTable: FC<ListItemsTableProps> = ({}) => {
           columns: {
             hidden: hiddenColumns,
             readonly: readOnly,
+            extraColumns: [],
           },
         }}
       />
