@@ -147,6 +147,7 @@ export type EntityListItemEdge = {
   __typename?: 'EntityListItemEdge';
   Entity?: Maybe<BaseNode>;
   Forbidden: Scalars['Boolean']['output'];
+  allAttrib: Scalars['String']['output'];
   attrib: Scalars['String']['output'];
   createdAt: Scalars['DateTime']['output'];
   createdBy?: Maybe<Scalars['String']['output']>;
@@ -157,6 +158,7 @@ export type EntityListItemEdge = {
   id: Scalars['String']['output'];
   /** Item node */
   node?: Maybe<BaseNode>;
+  ownAttrib: Array<Scalars['String']['output']>;
   position: Scalars['Int']['output'];
   projectName: Scalars['String']['output'];
   tags: Array<Scalars['String']['output']>;
@@ -174,9 +176,11 @@ export type EntityListItemsConnection = {
 export type EntityListNode = {
   __typename?: 'EntityListNode';
   active: Scalars['Boolean']['output'];
+  attributes: Scalars['String']['output'];
   count: Scalars['Int']['output'];
   createdAt: Scalars['DateTime']['output'];
   createdBy?: Maybe<Scalars['String']['output']>;
+  data: Scalars['String']['output'];
   entityListType: Scalars['String']['output'];
   entityType: Scalars['String']['output'];
   id: Scalars['String']['output'];
@@ -193,7 +197,9 @@ export type EntityListNode = {
 export type EntityListNodeItemsArgs = {
   accessibleOnly?: Scalars['Boolean']['input'];
   after?: InputMaybe<Scalars['String']['input']>;
-  first?: Scalars['Int']['input'];
+  before?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
   sortBy?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -1507,8 +1513,10 @@ export type GetInboxUnreadCountQuery = { __typename?: 'Query', inbox: { __typena
 export type GetListItemsQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
   listId: Scalars['String']['input'];
-  first: Scalars['Int']['input'];
+  first?: InputMaybe<Scalars['Int']['input']>;
   after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
   sortBy?: InputMaybe<Scalars['String']['input']>;
 }>;
 
@@ -2003,7 +2011,7 @@ export const GetInboxUnreadCountDocument = `
 }
     `;
 export const GetListItemsDocument = `
-    query GetListItems($projectName: String!, $listId: String!, $first: Int!, $after: String, $sortBy: String) {
+    query GetListItems($projectName: String!, $listId: String!, $first: Int, $after: String, $before: String, $last: Int, $sortBy: String) {
   project(name: $projectName) {
     entityLists(ids: [$listId]) {
       pageInfo {
@@ -2014,7 +2022,13 @@ export const GetListItemsDocument = `
         node {
           id
           active
-          items(first: $first, after: $after, sortBy: $sortBy) {
+          items(
+            first: $first
+            after: $after
+            before: $before
+            last: $last
+            sortBy: $sortBy
+          ) {
             pageInfo {
               hasNextPage
               endCursor

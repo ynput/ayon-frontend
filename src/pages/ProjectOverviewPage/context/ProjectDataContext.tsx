@@ -3,8 +3,6 @@ import { useGetProjectQuery } from '@queries/project/getProject'
 import { ProjectModel } from '@api/rest/project'
 import { useGetUsersAssigneeQuery } from '@queries/user/getUsers'
 import useAttributeFields, { AttributeWithPermissions } from '../hooks/useAttributesList'
-import { useUsersPageConfig } from '../hooks/useUserPageConfig'
-import { SortingState } from '@tanstack/react-table'
 
 type User = {
   name: string
@@ -20,9 +18,6 @@ export interface ProjectDataContextProps {
   users: User[]
   // Attributes
   attribFields: AttributeWithPermissions[]
-  // column sorting
-  columnSorting: SortingState
-  setColumnSorting: (columnSorting: SortingState) => void
 }
 
 const ProjectDataContext = createContext<ProjectDataContextProps | undefined>(undefined)
@@ -46,28 +41,12 @@ export const ProjectDataProvider = ({ children, projectName }: ProjectDataProvid
     isFetching: isFetchingAttribs,
   } = useAttributeFields({ projectName })
 
-  // Get column sorting
-  const [pageConfig, updatePageConfig, { isSuccess: columnsConfigReady }] = useUsersPageConfig({
-    selectors: ['project', projectName],
-  })
-
-  const { columnSorting = [] } = pageConfig as {
-    columnSorting: SortingState
-  }
-  const setColumnSorting = async (sorting: SortingState) => {
-    await updatePageConfig({ columnSorting: sorting })
-  }
-
   // GET USERS
   const { data: usersData = [] } = useGetUsersAssigneeQuery({ projectName }, { skip: !projectName })
   const users = usersData as User[]
 
   const isInitialized =
-    isSuccessProject &&
-    isSuccessAttribs &&
-    !isFetchingProject &&
-    !isFetchingAttribs &&
-    columnsConfigReady
+    isSuccessProject && isSuccessAttribs && !isFetchingProject && !isFetchingAttribs
 
   const value = useMemo(
     () => ({
@@ -77,8 +56,6 @@ export const ProjectDataProvider = ({ children, projectName }: ProjectDataProvid
       projectName,
       users,
       attribFields,
-      columnSorting,
-      setColumnSorting,
     }),
     [
       isInitialized,
@@ -88,8 +65,6 @@ export const ProjectDataProvider = ({ children, projectName }: ProjectDataProvid
       projectName,
       users,
       attribFields,
-      columnSorting,
-      setColumnSorting,
     ],
   )
 

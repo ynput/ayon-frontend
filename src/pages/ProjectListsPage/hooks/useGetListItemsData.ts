@@ -4,13 +4,14 @@ import {
   useGetListItemsInfiniteInfiniteQuery,
 } from '@queries/lists/getLists'
 import { clientFilterToQueryFilter, FilterForQuery } from '@shared/containers/ProjectTreeTable'
+import { SortingState } from '@tanstack/react-table'
 import { useMemo, useState } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 
 interface UseGetListItemsDataProps {
   projectName: string
   listId?: string
-  sortBy?: string
+  sorting: SortingState
   filters?: FilterForQuery[]
   skip?: boolean
 }
@@ -26,12 +27,18 @@ export interface UseGetListItemsDataReturn {
 const useGetListItemsData = ({
   projectName,
   listId,
-  sortBy,
+  sorting,
   filters = [],
   skip,
 }: UseGetListItemsDataProps): UseGetListItemsDataReturn => {
   const queryFilter = clientFilterToQueryFilter(filters)
   const queryFilterString = filters.length ? JSON.stringify(queryFilter) : ''
+
+  // Create sort params for infinite query
+  const singleSort = { ...sorting[0] }
+  // if task list and sorting by name, sort by path instead
+  const sortByPath = singleSort?.id === 'name'
+  const sortId = sortByPath ? 'path' : singleSort?.id
 
   const {
     data: itemsInfiniteData,
@@ -45,7 +52,8 @@ const useGetListItemsData = ({
     {
       projectName,
       listId: listId || '',
-      sortBy: sortBy,
+      sortBy: sortId,
+      desc: singleSort?.desc,
       // filter: queryFilterString,
     },
     {

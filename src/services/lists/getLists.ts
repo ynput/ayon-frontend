@@ -238,7 +238,7 @@ export const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
     }),
     getListItemsInfinite: build.infiniteQuery<
       GetListItemsResult,
-      Omit<GetListItemsQueryVariables, 'first' | 'after' | 'before'>,
+      Omit<GetListItemsQueryVariables, 'first' | 'after' | 'before' | 'last'> & { desc?: boolean },
       ListItemsPageParam
     >({
       infiniteQueryOptions: {
@@ -254,13 +254,28 @@ export const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
       },
       queryFn: async ({ queryArg, pageParam }, api) => {
         try {
+          const { sortBy, desc, ...rest } = queryArg
           const { cursor } = pageParam
 
           // Build the query parameters for GetLists
-          const queryParams = {
-            ...queryArg,
+          const queryParams: GetListItemsQueryVariables = {
+            ...rest,
             first: LISTS_PER_PAGE,
             after: cursor || undefined,
+          }
+
+          // Add cursor-based pagination
+          queryParams.after = cursor || undefined
+          queryParams.first = LISTS_PER_PAGE
+
+          if (sortBy) {
+            queryParams.sortBy = sortBy
+            if (desc) {
+              queryParams.before = cursor || undefined
+              queryParams.after = undefined
+              queryParams.last = LISTS_PER_PAGE
+              queryParams.first = undefined
+            }
           }
 
           // Call the existing GetLists endpoint

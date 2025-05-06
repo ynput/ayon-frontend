@@ -14,7 +14,7 @@ import {
   TaskNodeMap,
   useGetEntityTypeData,
 } from '@shared/containers/ProjectTreeTable'
-import { SortingState } from '@tanstack/react-table'
+import { functionalUpdate, OnChangeFn, SortingState } from '@tanstack/react-table'
 import useDeleteListItems, { UseDeleteListItemsReturn } from '../hooks/useDeleteListItems'
 import { ContextMenuItemConstructors } from '@shared/containers/ProjectTreeTable/hooks/useCellContextMenu'
 
@@ -45,8 +45,8 @@ export interface ListItemsDataContextValue {
   foldersMap: FolderNodeMap
   tasksMap: TaskNodeMap
   // column sorting
-  columnSorting: SortingState
-  setColumnSorting: (columnSorting: SortingState) => void
+  sorting: SortingState
+  updateSorting: OnChangeFn<SortingState>
   // actions
   contextMenuItems: ContextMenuItemConstructors
   // delete (remove) from list
@@ -70,8 +70,6 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     users,
     isInitialized,
     isLoading: isLoadingData,
-    columnSorting,
-    setColumnSorting,
   } = useProjectDataContext()
 
   const getEntityTypeData = useGetEntityTypeData({ projectInfo })
@@ -82,13 +80,27 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     .map(([id]) => id)
   const selectedListId = selectedListsIds.length === 1 ? selectedListsIds[0] : undefined
 
+  const selectors = ['lists', projectName, selectedList?.label]
+
   const [pageConfig, updatePageConfig, { isSuccess: columnsConfigReady }] = useUsersPageConfig({
-    selectors: ['lists', projectName, selectedList?.label],
+    selectors,
   })
 
   const listItemsFilters = pageConfig?.listItemsFilters || ([] as Filter[])
   const setListItemsFilters = async (filters: Filter[]) => {
     await updatePageConfig({ items: { filters } })
+  }
+
+  const { columnSorting = [] } = pageConfig as {
+    columnSorting: SortingState
+  }
+  const setColumnSorting = async (sorting: SortingState) => {
+    await updatePageConfig({ columnSorting: sorting })
+  }
+
+  // update in user preferences
+  const updateSorting: OnChangeFn<SortingState> = (sortingUpdater) => {
+    setColumnSorting(functionalUpdate(sortingUpdater, columnSorting))
   }
 
   const {
@@ -100,7 +112,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
   } = useGetListItemsData({
     projectName,
     listId: selectedListId,
-    sortBy: undefined,
+    sorting: columnSorting,
     filters: listItemsFilters,
   })
 
@@ -215,9 +227,9 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
         foldersMap,
         tasksMap,
         isInitialized,
-        // column sorting
-        columnSorting,
-        setColumnSorting,
+        // sorting
+        sorting: columnSorting,
+        updateSorting,
         // actions
         contextMenuItems,
         // delete (remove) from list

@@ -81,6 +81,8 @@ const ProjectListsWithInnerProviders: FC = () => {
           showHierarchy={false}
           isLoading={props.isLoadingAll}
           contextMenuItems={contextMenuItems}
+          sorting={props.sorting}
+          updateSorting={props.updateSorting}
         >
           <SelectionProvider>
             <SelectedRowsProvider>

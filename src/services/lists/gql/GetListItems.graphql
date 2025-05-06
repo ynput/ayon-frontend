@@ -1,8 +1,10 @@
 query GetListItems(
   $projectName: String!
   $listId: String!
-  $first: Int!
+  $first: Int
   $after: String
+  $before: String
+  $last: Int
   $sortBy: String
 ) {
   project(name: $projectName) {
@@ -15,7 +17,7 @@ query GetListItems(
         node {
           id
           active
-          items(first: $first, after: $after, sortBy: $sortBy) {
+          items(first: $first, after: $after, before: $before, last: $last, sortBy: $sortBy) {
             pageInfo {
               hasNextPage
               endCursor

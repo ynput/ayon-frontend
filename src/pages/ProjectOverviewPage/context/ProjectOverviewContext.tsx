@@ -23,6 +23,7 @@ import { ProjectDataContextProps, useProjectDataContext } from './ProjectDataCon
 import { LoadingTasks } from '@shared/containers/ProjectTreeTable'
 import { useEntityListsContext } from '@pages/ProjectListsPage/context/EntityListsContext'
 import { ContextMenuItemConstructors } from '@shared/containers/ProjectTreeTable/hooks/useCellContextMenu'
+import { useUsersPageConfig } from '../hooks/useUserPageConfig'
 
 export interface ProjectOverviewContextProps {
   isInitialized: boolean
@@ -87,8 +88,6 @@ export const ProjectOverviewProvider = ({ children }: ProjectOverviewProviderPro
     users,
     isInitialized,
     isLoading: isLoadingData,
-    columnSorting,
-    setColumnSorting,
   } = useProjectDataContext()
 
   // filter out attribFields by scope
@@ -122,6 +121,11 @@ export const ProjectOverviewProvider = ({ children }: ProjectOverviewProviderPro
   const updateExpanded: OnChangeFn<ExpandedState> = (expandedUpdater) => {
     setExpanded(functionalUpdate(expandedUpdater, expanded))
   }
+
+  // Get column sorting
+  const [pageConfig, updatePageConfig, { isSuccess: isConfigReady }] = useUsersPageConfig({
+    selectors: ['overview', projectName],
+  })
 
   const toggleExpanded = (id: string) => {
     if (typeof expanded === 'boolean') return
@@ -157,6 +161,13 @@ export const ProjectOverviewProvider = ({ children }: ProjectOverviewProviderPro
     filterString: queryFilterString,
     filter: queryFilter,
     search: fuzzySearchFilter,
+  }
+
+  const { columnSorting = [] } = pageConfig as {
+    columnSorting: SortingState
+  }
+  const setColumnSorting = async (sorting: SortingState) => {
+    await updatePageConfig({ columnSorting: sorting })
   }
 
   // update in user preferences
@@ -228,7 +239,7 @@ export const ProjectOverviewProvider = ({ children }: ProjectOverviewProviderPro
   return (
     <ProjectOverviewContext.Provider
       value={{
-        isInitialized,
+        isInitialized: isInitialized && isConfigReady,
         isLoading: isLoadingAll || isLoadingData,
         isLoadingMore,
         loadingTasks,
