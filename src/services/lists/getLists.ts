@@ -77,8 +77,22 @@ type ListItemsPageParam = {
   cursor: string
 }
 
+// websocket message summary
+type ListItemMessage = {
+  project: string
+  summary: {
+    count: number
+    entity_list_type: string
+    entity_type: string
+    id?: string
+    entityId?: string
+    label: string
+  }
+}
+
 import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
 import { parseAllAttribs } from '@queries/overview/getOverview'
+import PubSub from '@/pubsub'
 type Definitions = DefinitionsFromApi<typeof gqlApi>
 type TagTypes = TagTypesFromApi<typeof gqlApi>
 // update the definitions to include the new types
@@ -176,6 +190,51 @@ export const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
           id: list.id,
         })),
       ],
+      async onCacheEntryAdded(
+        _args,
+        { cacheDataLoaded, cacheEntryRemoved, dispatch, updateCachedData },
+      ) {
+        let token
+        try {
+          // wait for the initial query to resolve before proceeding
+          await cacheDataLoaded
+
+          const handlePubSub = (topic: string, message: ListItemMessage) => {
+            if (topic !== 'entity_list.changed') return
+            const summary = message.summary
+            const id = summary.id
+            if (!id) return
+
+            // We have all the data we need to update the cache
+            updateCachedData((draft) => {
+              const list = draft.pages.flatMap((page) => page.lists).find((l) => l.id === id)
+              if (!list) return
+              const newList = {
+                ...list,
+                label: summary.label,
+                entityType: summary.entity_type,
+                entityListType: summary.entity_list_type,
+                count: summary.count,
+              }
+
+              Object.assign(list, newList)
+            })
+            // NOTE: We have to invalidate here as we don't know if other fields are updated not included in the updateCachedData
+            // invalidates lists list cache
+            dispatch(gqlApi.util.invalidateTags([{ type: 'entityList', id: `LIST` }]))
+          }
+
+          // sub to websocket topic
+          token = PubSub.subscribe('entity_list.changed', handlePubSub)
+        } catch {
+          // no-op in case `cacheEntryRemoved` resolves before `cacheDataLoaded`,
+          // in which case `cacheDataLoaded` will throw
+        }
+        // cacheEntryRemoved will resolve when the cache subscription is no longer active
+        await cacheEntryRemoved
+        // perform cleanup steps once the `cacheEntryRemoved` promise resolves
+        PubSub.unsubscribe(token)
+      },
     }),
     getListItemsInfinite: build.infiniteQuery<
       GetListItemsResult,
@@ -246,6 +305,53 @@ export const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
             },
           ]),
       ],
+      async onCacheEntryAdded(_args, { cacheDataLoaded, cacheEntryRemoved, dispatch }) {
+        let token, token2
+        try {
+          // wait for the initial query to resolve before proceeding
+          const cache = await cacheDataLoaded
+          const pages = cache.data.pages
+          const items = pages.flatMap((page) => page.items)
+          // get entityType of first item
+          const entityType = items[0]?.entityType
+
+          const listTopic = `entity_list.changed`
+          const entityTypeTopic = `entity.${entityType}`
+
+          const invalidateListItems = (id: string) => {
+            dispatch(gqlApi.util.invalidateTags([{ type: 'entityListItem', id: id }]))
+          }
+
+          const handleListMessage = (topic: string, message: ListItemMessage) => {
+            if (topic !== listTopic) return
+            const summary = message.summary
+            const id = summary.id
+            if (!id) return
+            invalidateListItems(id)
+          }
+
+          const handleEntityMessage = (topic: string, message: ListItemMessage) => {
+            if (!topic.startsWith(entityTypeTopic)) return
+            const summary = message.summary
+            const id = summary.entityId
+            // check for id
+            if (!id) return
+            invalidateListItems(id)
+          }
+
+          // sub to websocket topic
+          token = PubSub.subscribe(listTopic, handleListMessage)
+          if (entityType) token2 = PubSub.subscribe(entityTypeTopic, handleEntityMessage)
+        } catch {
+          // no-op in case `cacheEntryRemoved` resolves before `cacheDataLoaded`,
+          // in which case `cacheDataLoaded` will throw
+        }
+        // cacheEntryRemoved will resolve when the cache subscription is no longer active
+        await cacheEntryRemoved
+        // perform cleanup steps once the `cacheEntryRemoved` promise resolves
+        PubSub.unsubscribe(token)
+        PubSub.unsubscribe(token2)
+      },
     }),
   }),
 })
