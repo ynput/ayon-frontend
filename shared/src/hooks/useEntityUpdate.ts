@@ -1,5 +1,7 @@
 import { toast } from 'react-toastify'
 import { useUpdateEntitiesMutation } from '@shared/api'
+import { useContext } from 'react'
+import { useDetailsPanelContext } from '@shared/context'
 
 interface Entity {
   id: string
@@ -19,6 +21,7 @@ export interface UseEntityUpdateParams {
  */
 export const useEntityUpdate = ({ entities, entityType }: UseEntityUpdateParams) => {
   const [updateEntities] = useUpdateEntitiesMutation()
+  const { onUpdateEntity } = useDetailsPanelContext()
 
   /**
    * Updates entities with the specified field and value
@@ -47,6 +50,7 @@ export const useEntityUpdate = ({ entities, entityType }: UseEntityUpdateParams)
       }))
 
       await updateEntities({ operations, entityType })
+      onUpdateEntity?.({ operations, entityType })
     } catch (error) {
       toast.error(`Error updating ${entityType}`)
     }
