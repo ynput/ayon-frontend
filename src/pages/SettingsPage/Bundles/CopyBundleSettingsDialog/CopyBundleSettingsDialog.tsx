@@ -142,8 +142,8 @@ const CopyBundleSettingsDialog = ({
         migrateBundleSettingsRequest: {
           sourceBundle: sourceBundle,
           targetBundle: bundle.name,
-          sourceVariant: sourceVariant,
-          targetVariant: envTarget,
+          sourceVariant: ['production', 'staging'].includes(sourceVariant) ? sourceVariant : sourceBundle,
+          targetVariant: ['production', 'staging'].includes(envTarget) ? envTarget : bundle.name,
         },
       }).unwrap()
       toast.success(`Settings copied from ${sourceBundle} successfully`)
