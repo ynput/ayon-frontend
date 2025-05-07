@@ -75,7 +75,6 @@ const ActionsDropdown = ({ options, isLoading, onAction, onConfig }) => {
       valueTemplate={() => <DefaultValueTemplate placeholder="" />}
       onChange={(v) => onAction(v[0])}
       buttonProps={{ ['data-tooltip']: 'All actions' }}
-      searchFields={['label']}
     />
   )
 }
