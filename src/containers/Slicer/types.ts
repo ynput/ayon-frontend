@@ -1,4 +1,4 @@
-import { OnSliceTypeChange, SliceDataItem, SliceType } from '@context/slicerContext'
+import { OnSliceTypeChange, SliceDataItem, SliceType } from '@context/SlicerContext'
 
 export interface SliceOption {
   value: SliceType

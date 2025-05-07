@@ -13,14 +13,14 @@ import { useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
 import { useGetAnatomyPresetQuery, useGetAnatomySchemaQuery } from '@queries/anatomy/getAnatomy'
 
-import { useGetProjectAnatomyQuery } from '@queries/project/getProject'
+import { useGetProjectAnatomyQuery } from '@shared/api'
 import { isEqual } from 'lodash'
 
 import { setUri } from '@state/context'
 import SettingsEditor from '@containers/SettingsEditor'
 import { getValueByPath, setValueByPath, sameKeysStructure } from '@containers/AddonSettings/utils'
 import { cloneDeep } from 'lodash'
-import { usePaste } from '@context/pasteContext'
+import { usePaste } from '@context/PasteContext'
 
 const AnatomyEditor = ({
   preset,

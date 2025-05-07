@@ -8,7 +8,7 @@ import {
 } from '@tanstack/react-table'
 import { useLocalStorage } from '@shared/hooks'
 import useFetchOverviewData from '../hooks/useFetchOverviewData'
-import { useSlicerContext } from '@context/slicerContext'
+import { useSlicerContext } from '@context/SlicerContext'
 import { isEmpty } from 'lodash'
 import useFilterBySlice from '@containers/TasksProgress/hooks/useFilterBySlice'
 import { Filter } from '@ynput/ayon-react-components'
@@ -18,7 +18,7 @@ import type {
   TasksByFolderMap,
 } from '@shared/containers/ProjectTreeTable/utils'
 import { clientFilterToQueryFilter } from '@shared/containers/ProjectTreeTable/utils'
-import { QueryTasksFoldersApiArg } from '@api/rest/folders'
+import type { QueryTasksFoldersApiArg } from '@shared/api'
 import { ProjectDataContextProps, useProjectDataContext } from './ProjectDataContext'
 import { LoadingTasks } from '@shared/containers/ProjectTreeTable'
 

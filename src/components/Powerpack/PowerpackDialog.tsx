@@ -1,4 +1,4 @@
-import { powerpackFeatures, usePowerpack } from '@context/powerpackContext'
+import { powerpackFeatures, usePowerpack } from '@context/PowerpackContext'
 import * as Styled from './PowerpackDialog.styled'
 import { FC } from 'react'
 import { Icon } from '@ynput/ayon-react-components'

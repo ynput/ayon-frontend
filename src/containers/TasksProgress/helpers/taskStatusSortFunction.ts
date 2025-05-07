@@ -1,4 +1,4 @@
-import { Status } from '@api/rest/project'
+import type { Status } from '@shared/api'
 import { TaskTypeRow } from './formatTaskProgressForTable'
 import { stateOrder } from '../components/TaskStatusBar/TaskStatusBar'
 import { ProgressTableSortFunction } from '../hooks/useFolderSort'

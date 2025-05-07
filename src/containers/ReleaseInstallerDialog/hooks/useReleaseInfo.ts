@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useGetReleaseInfoQuery } from '@queries/releases/getReleases'
-import { AddonVersionDetail, ReleaseInfoModel, ReleaseListItemModel } from '@api/rest/releases'
+import { AddonVersionDetail, ReleaseInfoModel, ReleaseListItemModel } from '@shared/api'
 import { ReleaseForm } from './useReleaseForm'
 
 type Props = {

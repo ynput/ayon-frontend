@@ -21,7 +21,7 @@ import useRowKeydown from './hooks/useRowKeydown'
 import usePlaceholderData from './hooks/usePlaceholderData'
 
 import { RankingInfo, rankItem, compareItems } from '@tanstack/match-sorter-utils'
-import { useSlicerContext } from '@context/slicerContext'
+import { useSlicerContext } from '@context/SlicerContext'
 import { SlicerTableProps, TableRow } from './types'
 
 declare module '@tanstack/react-table' {

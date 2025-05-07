@@ -9,7 +9,7 @@ import {
   InputText,
   InputSwitch,
 } from '@ynput/ayon-react-components'
-import { useUpdateUserMutation, useSetFrontendPreferencesMutation } from '@queries/user/updateUser'
+import { useUpdateUserMutation, useSetFrontendPreferencesMutation } from '@shared/api'
 import Avatar from '@components/Avatar/Avatar'
 import styled from 'styled-components'
 import UserAttribForm from '../SettingsPage/UsersSettings/UserAttribForm'
@@ -18,7 +18,7 @@ import ayonClient from '../../ayon'
 import Type from '@/theme/typography.module.css'
 import { updateUserAttribs, updateUserPreferences } from '@state/user'
 import { useDispatch } from 'react-redux'
-import { useNotifications } from '@context/notificationsContext'
+import { useNotifications } from '@context/NotificationsContext'
 import clsx from 'clsx'
 
 const FormsStyled = styled.section`

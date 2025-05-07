@@ -1,4 +1,4 @@
-import { GetInboxMessagesQuery, GetInboxMessagesQueryVariables } from '@api/graphql'
+import { GetInboxMessagesQuery, GetInboxMessagesQueryVariables } from '@shared/api'
 
 type MessageNode = GetInboxMessagesQuery['inbox']['edges'][0]['node']
 export interface InboxMessage extends MessageNode {

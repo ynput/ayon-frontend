@@ -18,8 +18,6 @@ import {
   Table,
   Header,
   HeaderGroup,
-  ExpandedState,
-  SortingState,
 } from '@tanstack/react-table'
 
 // Utility imports
@@ -35,8 +33,8 @@ import HeaderActionButton from './components/HeaderActionButton'
 import EmptyPlaceholder from '../../components/EmptyPlaceholder'
 
 // Context imports
-import { CellEditingProvider, useCellEditing } from './context/CellEditingContext'
-import { ROW_SELECTION_COLUMN_ID, useSelectionContext } from './context/SelectionContext'
+import { useCellEditing } from './context/CellEditingContext'
+import { ROW_SELECTION_COLUMN_ID, useSelectionCellsContext } from './context/SelectionCellsContext'
 import { ClipboardProvider } from './context/ClipboardContext'
 import { useSelectedRowsContext } from './context/SelectedRowsContext'
 import { useColumnSettings } from './context/ColumnSettingsContext'
@@ -72,40 +70,25 @@ const getCommonPinningStyles = (column: Column<TableRow, unknown>): CSSPropertie
   }
 }
 
-type Props = {
-  projectName: string
+interface Props extends React.HTMLAttributes<HTMLDivElement> {
   scope: string
   options: BuiltInFieldOptions
   attribs: AttributeWithPermissions[]
   sliceId: string
   // metadata
-  tasksMap: TaskNodeMap
-  foldersMap: FolderNodeMap
   fetchMoreOnBottomReached: (element: HTMLDivElement | null) => void
   onOpenNew?: (type: 'folder' | 'task') => void
+  // pass through props
+  pt?: {
+    container?: React.HTMLAttributes<HTMLDivElement>
+    head?: Partial<TableHeadProps>
+  }
 }
 
 // Component to wrap with all providers
 const FlexTableWithProviders = (props: Props) => {
-  // convert attribs to object
-  const attribByField = useMemo(() => {
-    return props.attribs.reduce((acc: Record<string, AttributeEnumItem[]>, attrib) => {
-      if (attrib.data?.enum?.length) {
-        acc[attrib.name] = attrib.data?.enum
-      }
-      return acc
-    }, {})
-  }, [props.attribs])
-
   return (
-    <ClipboardProvider
-      foldersMap={props.foldersMap}
-      tasksMap={props.tasksMap}
-      columnEnums={{ ...props.options, ...attribByField }}
-      columnReadOnly={props.attribs
-        .filter((attrib) => attrib.readOnly)
-        .map((attrib) => attrib.name)}
-    >
+    <ClipboardProvider options={props.options}>
       <FlexTable {...props} />
     </ClipboardProvider>
   )
@@ -118,6 +101,8 @@ const FlexTable = ({
   sliceId,
   fetchMoreOnBottomReached,
   onOpenNew,
+  pt,
+  ...props
 }: Props) => {
   const {
     columnVisibility,
@@ -145,7 +130,7 @@ const FlexTable = ({
   const tableContainerRef = useRef<HTMLDivElement>(null)
 
   // Selection context
-  const { registerGrid } = useSelectionContext()
+  const { registerGrid } = useSelectionCellsContext()
 
   // COLUMN SIZING
   const [columnSizing, setColumnSizing] = useLocalStorage<ColumnSizingState>(
@@ -258,12 +243,13 @@ const FlexTable = ({
   )
 
   return (
-    <Styled.TableWrapper>
+    <Styled.TableWrapper {...props}>
       <Styled.TableContainer
         ref={tableContainerRef}
         style={{ height: '100%', padding: 0 }}
         onScroll={(e) => fetchMoreOnBottomReached(e.currentTarget)}
-        className="table-container"
+        {...pt?.container}
+        className={clsx('table-container', pt?.container?.className)}
       >
         <table
           style={{
@@ -281,6 +267,7 @@ const FlexTable = ({
             virtualPaddingRight={virtualPaddingRight}
             isLoading={isLoading}
             readOnlyColumns={readOnlyColumns}
+            {...pt?.head}
           />
           <TableBody
             columnVirtualizer={columnVirtualizer}
@@ -298,7 +285,7 @@ const FlexTable = ({
   )
 }
 
-interface TableHeadProps {
+interface TableHeadProps extends React.HTMLAttributes<HTMLTableSectionElement> {
   columnVirtualizer: Virtualizer<HTMLDivElement, HTMLTableCellElement>
   table: Table<TableRow>
   virtualPaddingLeft: number | undefined
@@ -314,9 +301,10 @@ const TableHead = ({
   virtualPaddingRight,
   isLoading,
   readOnlyColumns,
+  ...props
 }: TableHeadProps) => {
   return (
-    <Styled.TableHeader>
+    <Styled.TableHeader {...props}>
       {table.getHeaderGroups().map((headerGroup) => (
         <TableHeadRow
           key={headerGroup.id}
@@ -611,7 +599,7 @@ const TableCell = ({ cell, rowId, cellId, className, showHierarchy, ...props }: 
     endSelection,
     selectCell,
     getCellBorderClasses,
-  } = useSelectionContext()
+  } = useSelectionCellsContext()
 
   const { isRowSelected } = useSelectedRowsContext()
 

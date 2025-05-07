@@ -2,7 +2,7 @@ import { FC } from 'react'
 import ProjectOverviewPage from './ProjectOverviewPage'
 import {
   ProjectTableProvider,
-  SelectionProvider,
+  SelectionCellsProvider,
   SelectedRowsProvider,
   ColumnSettingsProvider,
   CellEditingProvider,
@@ -15,12 +15,11 @@ import {
   useProjectOverviewContext,
 } from './context/ProjectOverviewContext'
 import { ProjectDataProvider } from './context/ProjectDataContext'
-import { useUpdateOverviewEntitiesMutation } from '@queries/overview/updateOverview'
+import { useUpdateOverviewEntitiesMutation, useLazyGetTasksByParentQuery } from '@shared/api'
 import {
   ProjectTableQueriesProvider,
   ProjectTableQueriesProviderProps,
 } from '@shared/containers/ProjectTreeTable/context/ProjectTableQueriesContext'
-import { useLazyGetTasksByParentQuery } from '@queries/overview/getOverview'
 import { useUsersPageConfig } from './hooks/useUserPageConfig'
 
 const ProjectOverviewWithProviders: FC = () => {
@@ -73,7 +72,7 @@ const ProjectOverviewWithTableProviders: FC = () => {
     <ProjectTableQueriesProvider {...{ updateEntities, getFoldersTasks }}>
       <ProjectTableProvider {...props}>
         <NewEntityProvider>
-          <SelectionProvider>
+          <SelectionCellsProvider>
             <SelectedRowsProvider>
               <ColumnSettingsProvider config={pageConfig} onChange={updatePageConfig}>
                 <CellEditingProvider>
@@ -81,7 +80,7 @@ const ProjectOverviewWithTableProviders: FC = () => {
                 </CellEditingProvider>
               </ColumnSettingsProvider>
             </SelectedRowsProvider>
-          </SelectionProvider>
+          </SelectionCellsProvider>
         </NewEntityProvider>
       </ProjectTableProvider>
     </ProjectTableQueriesProvider>

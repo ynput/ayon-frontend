@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useCallback, useMemo, useEffect } from 'react'
 
 // Contexts
-import { ROW_SELECTION_COLUMN_ID, useSelectionContext } from './SelectionContext'
+import { ROW_SELECTION_COLUMN_ID, useSelectionCellsContext } from './SelectionCellsContext'
 import { useCellEditing } from './CellEditingContext'
 
 // Utils
@@ -19,19 +19,32 @@ import {
 } from './clipboard/clipboardUtils'
 import { validateClipboardData } from './clipboard/clipboardValidation'
 import { ClipboardContextType, ClipboardProviderProps } from './clipboard/clipboardTypes'
+import { useProjectTableContext } from './ProjectTableContext'
+import { AttributeEnumItem } from '@shared/api'
 
 const ClipboardContext = createContext<ClipboardContextType | undefined>(undefined)
 
-export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
-  children,
-  foldersMap,
-  tasksMap,
-  columnEnums,
-  columnReadOnly,
-}) => {
-  // Get selection information from SelectionContext
-  const { selectedCells, gridMap, focusedCellId } = useSelectionContext()
+export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({ children, options }) => {
+  const { foldersMap, tasksMap, attribFields } = useProjectTableContext()
+  // Get selection information from SelectionCellsContext
+  const { selectedCells, gridMap, focusedCellId } = useSelectionCellsContext()
   const { updateEntities } = useCellEditing()
+
+  // convert attribs to object
+  const attribByField = useMemo(() => {
+    return attribFields.reduce((acc: Record<string, AttributeEnumItem[]>, attrib) => {
+      if (attrib.data?.enum?.length) {
+        acc[attrib.name] = attrib.data?.enum
+      }
+      return acc
+    }, {})
+  }, [attribFields])
+
+  const columnEnums = useMemo(() => ({ ...options, ...attribByField }), [attribByField])
+
+  const columnReadOnly = attribFields
+    .filter((attrib) => attrib.readOnly)
+    .map((attrib) => attrib.name)
 
   const getSelectionData = useCallback(
     async (selected: string[], config?: { headers?: boolean; fullRow?: boolean }) => {

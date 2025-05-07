@@ -2,11 +2,11 @@ export * from './ProjectTreeTable'
 
 // context providers
 export {
-  SelectionProvider,
-  useSelectionContext,
+  SelectionCellsProvider,
+  useSelectionCellsContext,
   ROW_SELECTION_COLUMN_ID,
-} from './context/SelectionContext'
-export type { GridMap, SelectionContextType } from './context/SelectionContext'
+} from './context/SelectionCellsContext'
+export type { GridMap, SelectionCellsContextType } from './context/SelectionCellsContext'
 
 export { ProjectTableProvider, useProjectTableContext } from './context/ProjectTableContext'
 export type { ProjectTableContextProps } from './context/ProjectTableContext'

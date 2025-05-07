@@ -1,4 +1,4 @@
-import { ReleaseListItemModel } from '@api/rest/releases'
+import { ReleaseListItemModel } from '@shared/api'
 import { MarketListItem } from '../MarketAddonsList'
 import { createReleaseSubtitle } from '@containers/ReleaseInstallerDialog/helpers'
 import { FilterCriteria, filterItems } from './filterItems'

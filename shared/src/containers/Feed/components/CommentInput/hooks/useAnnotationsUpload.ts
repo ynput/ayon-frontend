@@ -13,7 +13,7 @@ const useAnnotationsUpload = ({ projectName, onSuccess }: Props) => {
   const uploadAnnotations = async (annotations: any[]) => {
     try {
       const uploadPromises = annotations.map(async (annotation) => {
-        const blob = await exportAnnotationComposite(annotation.id)
+        const blob = await exportAnnotationComposite?.(annotation.id)
         if (!blob) {
           throw new Error(`Exporting composite image for annotation ${annotation.id} failed`)
         }
@@ -39,7 +39,7 @@ const useAnnotationsUpload = ({ projectName, onSuccess }: Props) => {
             (annotation) => annotation.name === result.value.file.name,
           )?.id
           if (annotationId) {
-            removeAnnotation(annotationId)
+            removeAnnotation?.(annotationId)
           }
         } else {
           toast.error('Upload failed: ' + result.reason.message)

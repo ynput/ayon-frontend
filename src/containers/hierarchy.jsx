@@ -6,13 +6,13 @@ import { Column } from 'primereact/column'
 import { TreeTable } from 'primereact/treetable'
 import { MultiSelect } from 'primereact/multiselect'
 import { CellWithIcon } from '@components/icons'
-import EntityDetail from './DetailsDialog'
-import { setFocusedFolders, setUri, setExpandedFolders, setSelectedVersions } from '@state/context'
-import { useGetFolderHierarchyQuery } from '@queries/getHierarchy'
+import { DetailsDialog } from '@shared/components'
+import { useGetFolderHierarchyQuery } from '@shared/api'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
+import { useTableKeyboardNavigation, extractIdFromClassList } from '@shared/containers/Feed'
+import { setFocusedFolders, setUri, setExpandedFolders, setSelectedVersions } from '@state/context'
 import HierarchyExpandFolders from './HierarchyExpandFolders'
 import { openViewer } from '@/features/viewer'
-import { useTableKeyboardNavigation, extractIdFromClassList } from '@shared/containers/Feed'
 import clsx from 'clsx'
 import useTableLoadingData from '@hooks/useTableLoadingData'
 
@@ -428,7 +428,7 @@ const Hierarchy = (props) => {
         </Toolbar>
 
         <TablePanel>
-          <EntityDetail
+          <DetailsDialog
             projectName={projectName}
             entityType="folder"
             entityIds={focusedFolders}

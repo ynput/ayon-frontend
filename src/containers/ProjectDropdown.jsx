@@ -1,4 +1,4 @@
-import { useListProjectsQuery } from '@queries/project/getProject'
+import { useListProjectsQuery } from '@shared/api'
 import { useMemo } from 'react'
 import { Dropdown } from '@ynput/ayon-react-components'
 

@@ -21,10 +21,7 @@ export interface ClipboardContextType {
 
 export interface ClipboardProviderProps {
   children: ReactNode
-  foldersMap: FolderNodeMap
-  tasksMap: TaskNodeMap
-  columnEnums: ColumnEnums
-  columnReadOnly: string[]
+  options: BuiltInFieldOptions
 }
 
 export interface ParsedClipboardData {

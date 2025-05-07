@@ -1,6 +1,6 @@
 import { FC, useEffect, useState } from 'react'
 import { ReleaseForm } from '../hooks/useReleaseForm'
-import { InstallerManifest } from '@api/rest/releases'
+import { InstallerManifest } from '@shared/api'
 import PlatformSelect from '@components/PlatformSelect/PlatformSelect'
 import { Footer } from '../components'
 

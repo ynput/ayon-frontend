@@ -1,7 +1,7 @@
 // Syncs the redux store with selection and expanded rows used in legacy hierarchy table
 // This will be removed once the hierarchy table is refactored to use the new slicer table
 
-import { SliceType } from '@context/slicerContext'
+import { SliceType } from '@context/SlicerContext'
 import { setExpandedFolders, setFocusedFolders } from '@state/context'
 import { useAppSelector } from '@state/store'
 import { ExpandedState, RowSelectionState } from '@tanstack/react-table'

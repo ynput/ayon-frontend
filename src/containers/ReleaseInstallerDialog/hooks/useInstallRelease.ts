@@ -1,12 +1,15 @@
-import { GetReleaseInfoApiResponse } from '@api/rest/releases'
+import { useDownloadAddonsMutation } from '@shared/api'
+import type {
+  GetReleaseInfoApiResponse,
+  InstallResponseModel,
+  DownloadAddonsApiResponse,
+} from '@shared/api'
 import { ReleaseForm } from './useReleaseForm'
 import { getReleaseInstallUrls } from '../helpers'
 import { useAppDispatch, useAppSelector } from '@state/store'
 import { switchDialog } from '@state/releaseInstaller'
 import { useCreateInstallerMutation } from '@queries/installers/updateInstallers'
 import { useCreateDependencyPackageMutation } from '@queries/dependencyPackages/updateDependencyPackages'
-import { DownloadAddonsApiResponse, useDownloadAddonsMutation } from '@queries/addons/updateAddons'
-import { InstallResponseModel } from '@api/rest/installers'
 import { useEffect, useState } from 'react'
 import {
   GetInstallEventsResult,
@@ -45,7 +48,7 @@ export const useInstallRelease = ({
   const [downloadAddons] = useDownloadAddonsMutation()
 
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [events, setEvents] = useLocalStorage('install-progress-event-ids', [])
+  const [events, setEvents] = useLocalStorage<Event[]>('install-progress-event-ids', [])
   const eventIds: string[] = events.map((event: any) => event.id)
   const [error, setError] = useState<null | string>(null)
 

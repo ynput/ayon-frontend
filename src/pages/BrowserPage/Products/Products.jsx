@@ -1,12 +1,17 @@
 import { useState, useMemo, useCallback } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { InputText, TablePanel, Section, Toolbar, Spacer } from '@ynput/ayon-react-components'
-import EntityDetail from '@containers/DetailsDialog'
 import { CellWithIcon } from '@components/icons'
 import { TimestampField } from '@containers/fieldFormat'
 import usePubSub from '@hooks/usePubSub'
-import groupResult from '@helpers/groupResult'
-import { useLocalStorage } from '@shared/hooks'
+// shared
+import { DetailsDialog } from '@shared/components'
+import { useLocalStorage, useScopedStatuses } from '@shared/hooks'
+import api, { useUpdateEntitiesMutation } from '@shared/api'
+import { useCreateContextMenu } from '@shared/containers/ContextMenu'
+import { productTypes, groupResult } from '@shared/util'
+import { extractIdFromClassList } from '@shared/containers/Feed'
+
 import {
   setFocusedVersions,
   setFocusedProducts,
@@ -25,19 +30,13 @@ import {
 import usePatchProductsListWithVersions from '@hooks/usePatchProductsListWithVersions'
 import useSearchFilter, { filterByFieldsAndValues } from '@hooks/useSearchFilter'
 import useColumnResize from '@hooks/useColumnResize'
-import { useUpdateEntitiesMutation } from '@queries/entity/updateEntity'
-import api from '@api'
-import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import ViewModeToggle from './ViewModeToggle'
 import ProductsList from './ProductsList'
 import ProductsGrid from './ProductsGrid'
 import NoProducts from './NoProducts'
 import { toast } from 'react-toastify'
-import { productTypes } from '@shared/util'
 import * as Styled from './Products.styled'
 import { openViewer } from '@state/viewer'
-import { extractIdFromClassList } from '@shared/containers/Feed'
-import useScopedStatuses from '@hooks/useScopedStatuses'
 
 const Products = () => {
   const dispatch = useDispatch()
@@ -680,7 +679,7 @@ const Products = () => {
         onContextMenu={handleTablePanelContext}
         onKeyDown={handleKeyDown}
       >
-        <EntityDetail
+        <DetailsDialog
           projectName={projectName}
           entityType={showDetail || 'product'}
           entityIds={showDetail === 'product' ? focusedProducts : focusedVersions}

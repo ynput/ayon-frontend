@@ -8,13 +8,13 @@ import { useUpdateBundleMutation } from '@queries/bundles/updateBundles'
 import getNewBundleName from './getNewBundleName'
 import NewBundle from './NewBundle'
 import { useListInstallersQuery } from '@queries/installers/getInstallers'
-import { useListAddonsQuery } from '@queries/addons/getAddons'
+import { useListAddonsQuery } from '@shared/api'
 import { upperFirst } from 'lodash'
 import { toast } from 'react-toastify'
 import AddonDialog from '@components/AddonDialog/AddonDialog'
 import { useGetAddonSettingsQuery } from '@queries/addonSettings'
 import getLatestSemver from './getLatestSemver'
-import { api as bundlesApi } from '@api/rest/bundles'
+import { bundlesQueries } from '@queries/bundles/updateBundles'
 import { useDispatch, useSelector } from 'react-redux'
 import { useLocalStorage } from '@shared/hooks'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
@@ -298,7 +298,7 @@ const Bundles = () => {
           try {
             const patchOld = { ...oldBundle, [statusKey]: false }
             patchResult = dispatch(
-              bundlesApi.util.updateQueryData('listBundles', { archived: true }, (draft) => {
+              bundlesQueries.util.updateQueryData('listBundles', { archived: true }, (draft) => {
                 const bundleIndex = draft.bundles.findIndex(
                   (bundle) => bundle.name === oldBundle.name,
                 )

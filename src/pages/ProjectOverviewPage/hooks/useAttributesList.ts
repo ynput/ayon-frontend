@@ -1,6 +1,5 @@
-import { AttributeModel } from '@api/rest/auth'
-import { useGetSiteInfoQuery } from '@queries/auth/getAuth'
-import { useGetCurrentUserProjectPermissionsQuery } from '@queries/permissions/getPermissions'
+import { useGetSiteInfoQuery, AttributeModel } from '@shared/api'
+import { useGetMyProjectPermissionsQuery } from '@queries/permissions/getPermissions'
 
 export interface AttributeWithPermissions extends AttributeModel {
   readOnly?: boolean
@@ -10,7 +9,7 @@ const useAttributeFields = ({ projectName }: { projectName: string }) => {
   const { data: info, isSuccess, isFetching } = useGetSiteInfoQuery({ full: true })
   const { attributes = [] } = info || {}
 
-  const { data: projectPermissions } = useGetCurrentUserProjectPermissionsQuery(
+  const { data: projectPermissions } = useGetMyProjectPermissionsQuery(
     { projectName },
     { skip: !projectName },
   )

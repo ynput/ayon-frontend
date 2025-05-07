@@ -36,7 +36,7 @@ import { confirmDialog } from 'primereact/confirmdialog'
 import { getValueByPath, setValueByPath, sameKeysStructure, compareObjects } from './utils'
 import arrayEquals from '@helpers/arrayEquals'
 import { cloneDeep } from 'lodash'
-import { usePaste } from '@context/pasteContext'
+import { usePaste } from '@context/PasteContext'
 import styled from 'styled-components'
 
 import SettingsListHeader from './SettingsListHeader'

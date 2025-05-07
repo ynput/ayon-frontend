@@ -1,6 +1,7 @@
 import { KeyboardEvent, MouseEvent, useCallback, useRef } from 'react'
 import { Row, RowSelectionState, Table } from '@tanstack/react-table'
-import { SliceDataItem, useSlicerContext } from '@context/slicerContext'
+import { useSlicerContext } from '@context/SlicerContext'
+import type { SliceDataItem } from '@shared/containers'
 
 interface UseRowSelectionProps<T> {
   rows: Row<T>[]

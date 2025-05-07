@@ -1,6 +1,6 @@
-import { getConfigApi } from './getConfig'
+import getConfigApi from './getConfig'
 
-export const updateConfigApi = getConfigApi.enhanceEndpoints({
+const updateConfigApi = getConfigApi.enhanceEndpoints({
   endpoints: {
     setServerConfig: {
       invalidatesTags: ['config'],
@@ -9,3 +9,4 @@ export const updateConfigApi = getConfigApi.enhanceEndpoints({
 })
 
 export const { useSetServerConfigMutation } = updateConfigApi
+export { updateConfigApi as configurationQueries }

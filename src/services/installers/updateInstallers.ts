@@ -8,7 +8,7 @@ const updateInstallersApi = api.enhanceEndpoints({
     },
     deleteInstallerFile: {
       invalidatesTags: ['installerList'],
-    }
+    },
   },
 })
 
@@ -25,3 +25,4 @@ export const {
   useUploadInstallersMutation,
   useDeleteInstallerFileMutation,
 } = updateInstallersApiInjected
+export { updateInstallersApiInjected as installersQueries }
