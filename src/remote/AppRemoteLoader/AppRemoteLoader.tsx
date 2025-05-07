@@ -66,7 +66,14 @@ const AppRemoteLoader: FC<AppRemoteLoaderProps> = () => {
     Object.entries(addon.modules).map(([remote, modulesList]) =>
       modulesList
         .filter((m) => m.includes('App'))
-        .map((module) => <ModuleApp module={module} remote={remote} addon={addon} />),
+        .map((module, i) => (
+          <ModuleApp
+            key={module + remote + i.toString()}
+            module={module}
+            remote={remote}
+            addon={addon}
+          />
+        )),
     ),
   )
 }
