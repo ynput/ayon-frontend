@@ -43,6 +43,18 @@ export const Segment = styled.span`
   }
 `
 
+export const FinalSegmentLabel = styled.span`
+  /*
+    ensures the segment doesn't grow too long,
+    which could affect the panel's width
+  */
+  max-width: 10ch;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  display: inline-block;
+  white-space: nowrap;
+`
+
 const NotClickableHover = css`
   background-color: var(--md-sys-color-surface-container);
   &,

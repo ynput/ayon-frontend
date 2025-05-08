@@ -191,7 +191,9 @@ export const EntityPath: FC<EntityPathProps> = ({
               isOpen={dropdownOpen === 'versions'}
             >
               <Styled.Segment>
-                <span className="label">{versionSegment.label}</span>
+                <Styled.FinalSegmentLabel className="label">
+                  {versionSegment.label}
+                </Styled.FinalSegmentLabel>
                 <Icon icon="expand_more" />
               </Styled.Segment>
             </SegmentProvider>
