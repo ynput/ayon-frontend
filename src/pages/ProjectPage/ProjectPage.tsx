@@ -1,14 +1,14 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { useDispatch, useSelector } from 'react-redux'
+import { useAppDispatch, useAppSelector } from '@state/store'
 import { Button, Dialog } from '@ynput/ayon-react-components'
 
-import BrowserPage from './BrowserPage'
-import ProjectOverviewPage from './ProjectOverviewPage'
-import LoadingPage from './LoadingPage'
-import ProjectAddon from './ProjectAddon'
-import WorkfilesPage from './WorkfilesPage'
-import TasksProgressPage from './TasksProgressPage'
+import BrowserPage from '../BrowserPage'
+import ProjectOverviewPage from '../ProjectOverviewPage'
+import LoadingPage from '../LoadingPage'
+import ProjectAddon from '../ProjectAddon'
+import WorkfilesPage from '../WorkfilesPage'
+import TasksProgressPage from '../TasksProgressPage'
 
 import usePubSub from '@hooks/usePubSub'
 import { selectProject } from '@state/project'
@@ -17,14 +17,15 @@ import { useGetProjectAddonsQuery } from '@shared/api'
 import { TabPanel, TabView } from 'primereact/tabview'
 import AppNavLinks from '@containers/header/AppNavLinks'
 import { SlicerProvider } from '@context/SlicerContext'
+import useLoadRemoteProjectPages from './hooks/useLoadRemoteProjectPages'
 
 const ProjectContextInfo = () => {
   /**
    * Show a project context in a dialog
    * this is for development only
    */
-  const context = useSelector((state) => state.context)
-  const project = useSelector((state) => state.project)
+  const context = useAppSelector((state) => state.context)
+  const project = useAppSelector((state) => state.project)
   return (
     <TabView panelContainerStyle={{ justifyContent: 'flex-start' }}>
       <TabPanel header="context" style={{ overflow: 'hidden' }}>
@@ -46,10 +47,10 @@ const ProjectPage = () => {
 
   const navigate = useNavigate()
   const { projectName, module, addonName } = useParams()
-  const dispatch = useDispatch()
+  const dispatch = useAppDispatch()
   const [showContextDialog, setShowContextDialog] = useState(false)
   const { isLoading, isError, isUninitialized, refetch } = useGetProjectQuery(
-    { projectName },
+    { projectName: projectName || '' },
     { skip: !projectName },
   )
 
@@ -76,7 +77,11 @@ const ProjectPage = () => {
     }
   }
 
-  const handlePubSub = async (topic, message) => {
+  const remotePages = useLoadRemoteProjectPages({})
+
+  // get remote project module pages
+
+  const handlePubSub = async (topic: string, message: any) => {
     if (topic === 'client.connected') {
       console.log('ProjectPage: client.connected. Reloading project data')
       loadProjectData()
@@ -116,6 +121,11 @@ const ProjectPage = () => {
         module: 'workfiles',
         uriSync: true,
       },
+      ...remotePages.map((remote) => ({
+        name: remote.name,
+        module: remote.module,
+        path: `/projects/${projectName}/${remote.module}`,
+      })),
       ...addonsData.map((addon) => ({
         name: addon.title,
         path: `/projects/${projectName}/addon/${addon.name}`,
@@ -134,7 +144,7 @@ const ProjectPage = () => {
         ),
       },
     ],
-    [addonsData, projectName],
+    [addonsData, projectName, remotePages],
   )
 
   //
@@ -153,7 +163,13 @@ const ProjectPage = () => {
     return <div className="page">Project Not Found, Redirecting...</div>
   }
 
-  const getPageByModuleAndAddonData = (module, addonName, addonsData) => {
+  // TODO: return 404
+  if (!module) return <div className="page">Module not found</div>
+
+  const getPageByModuleAndAddonData = (module: string, addonName?: string) => {
+    if (!module) {
+      return <ProjectOverviewPage />
+    }
     if (module === 'overview') {
       return <ProjectOverviewPage />
     }
@@ -167,26 +183,28 @@ const ProjectPage = () => {
       return <WorkfilesPage />
     }
 
-    if (!addonName) {
-      return <ProjectOverviewPage />
-    }
-
-    const filteredAddons = addonsData.filter((item) => item.name === addonName)
-    if (filteredAddons.length) {
+    const foundAddon = addonsData?.find((item) => item.name === addonName)
+    if (foundAddon) {
       return (
         <ProjectAddon
           addonName={addonName}
-          addonVersion={filteredAddons[0].version}
-          sidebar={filteredAddons[0].settings.sidebar}
+          addonVersion={foundAddon.version}
+          sidebar={foundAddon.settings.sidebar}
         />
       )
     }
 
+    const foundRemotePage = remotePages.find((item) => item.module === module)
+    if (foundRemotePage) {
+      const RemotePage = foundRemotePage.component
+      return <RemotePage projectName={projectName} />
+    }
+
     // Fallback to browser page if no addon matches addonName
-    return <BrowserPage />
+    return <div className="page">Module component not found</div>
   }
 
-  const child = getPageByModuleAndAddonData(module, addonName, addonsData)
+  const child = getPageByModuleAndAddonData(module, addonName)
 
   return (
     <>
@@ -199,6 +217,7 @@ const ProjectPage = () => {
       >
         {showContextDialog && <ProjectContextInfo />}
       </Dialog>
+      {/* @ts-expect-error - AppNavLinks is jsx */}
       <AppNavLinks links={links} />
       <SlicerProvider>{child}</SlicerProvider>
     </>
