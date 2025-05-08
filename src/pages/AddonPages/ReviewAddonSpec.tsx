@@ -7,7 +7,8 @@ const ReviewAddon: FC<ReviewAddonProps> = ({}) => {
 }
 
 export default {
+  id: 'review',
   name: 'Review',
-  module: 'review',
+  module: 'reviews',
   component: ReviewAddon,
 }
