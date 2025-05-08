@@ -1,7 +1,8 @@
 import { FC } from 'react'
 import { useRemoteModules } from '@shared/context'
-import { ModuleSpec, useLoadModule, useLoadModules } from '@shared/hooks'
+import { ModuleSpec, useLoadModules } from '@shared/hooks'
 import { Location, NavigateFunction, SetURLSearchParams } from 'react-router-dom'
+import LoadingPage from '@pages/LoadingPage'
 
 type RemoteAppProps = {
   projectName: string
@@ -15,20 +16,21 @@ type RemoteAppProps = {
 
 type RemoteAppNode = FC<Partial<RemoteAppProps>>
 
-type ModulePageProps = {
-  addon: {
-    addonName: string
-    addonVersion: string
-  }
-  remote: string
+type PermanentAddon = 'review'
+
+type LoadedPage = {
+  name: string
   module: string
-  fallback?: RemoteAppNode
+  component: RemoteAppNode
 }
 
-interface ProjectRemoteLoaderProps {}
+export type Fallbacks = Map<PermanentAddon, LoadedPage>
+interface ProjectRemoteLoaderProps {
+  fallbacks: Fallbacks
+}
 
-const useLoadRemoteProjectPages = ({}: ProjectRemoteLoaderProps) => {
-  const { modules } = useRemoteModules()
+const useLoadRemoteProjectPages = ({ fallbacks }: ProjectRemoteLoaderProps) => {
+  const { modules, isLoading: isLoadingModules } = useRemoteModules()
   const projectPageModules: ModuleSpec<RemoteAppNode>[] = []
   for (const addon of modules) {
     for (const remote in addon.modules) {
@@ -40,27 +42,43 @@ const useLoadRemoteProjectPages = ({}: ProjectRemoteLoaderProps) => {
           addon: addon.addonName,
           remote,
           module,
+          fallback: fallbacks.get(module as PermanentAddon)?.component,
         }
         projectPageModules.push(moduleSpec)
       }
     }
   }
 
-  //   const location = useLocation()
-  // const navigate = useNavigate()
-  // const [searchParams, setSearchParams] = useSearchParams()
+  const { modules: modulesData, isLoading: isLoadingModulePages } =
+    useLoadModules(projectPageModules)
 
-  const results = useLoadModules(projectPageModules)
-  console.log('PP: results', results)
+  console.log('PP: modules', modules)
+  console.log('PP: loading modules', isLoadingModulePages)
 
-  const loadedPages: { name: string; module: string; component: RemoteAppNode }[] = []
-  for (const result of results) {
+  const loadedPages: LoadedPage[] = []
+  for (const result of modulesData) {
     if (result[1].isLoaded && result[1].module === 'Project') {
       // add to loadedPages
       loadedPages.push({
         name: result[0].name || result[1].remote,
         module: result[0].module || result[1].remote,
         component: result[0].component,
+      })
+    }
+  }
+
+  // for each fallback, check if we are currently loading the modules
+  for (const [key, fallback] of fallbacks.entries()) {
+    const isLoaded = loadedPages.some((page) => page.module === key)
+    if (!isLoaded) {
+      const showLoadingPage =
+        isLoadingModules || (isLoadingModulePages && modules.find((m) => m.addonName === key))
+      // modules has not been loaded yet (or ever)
+      // if we are loading, then add a loading page
+      loadedPages.push({
+        name: fallback.name || key,
+        module: fallback.module || key,
+        component: showLoadingPage ? LoadingPage : fallback.component,
       })
     }
   }

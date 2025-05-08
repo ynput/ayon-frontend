@@ -17,7 +17,8 @@ import { useGetProjectAddonsQuery } from '@shared/api'
 import { TabPanel, TabView } from 'primereact/tabview'
 import AppNavLinks from '@containers/header/AppNavLinks'
 import { SlicerProvider } from '@context/SlicerContext'
-import useLoadRemoteProjectPages from './hooks/useLoadRemoteProjectPages'
+import useLoadRemoteProjectPages, { Fallbacks } from './hooks/useLoadRemoteProjectPages'
+import ReviewAddonSpec from '@pages/AddonPages/ReviewAddonSpec'
 
 const ProjectContextInfo = () => {
   /**
@@ -77,7 +78,10 @@ const ProjectPage = () => {
     }
   }
 
-  const remotePages = useLoadRemoteProjectPages({})
+  // permanent addon pages that show a fallback when not loaded
+  const permanentAddons: Fallbacks = new Map([['review', ReviewAddonSpec]])
+
+  const remotePages = useLoadRemoteProjectPages({ fallbacks: permanentAddons })
 
   // get remote project module pages
 

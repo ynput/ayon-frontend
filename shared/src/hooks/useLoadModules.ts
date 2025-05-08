@@ -29,7 +29,7 @@ type ModuleResult<T> = [
 
 export const useLoadModules = <T extends any[]>(
   moduleSpecs: ModuleSpec<T[number]>[],
-): ModuleResult<T[number]>[] => {
+): { modules: ModuleResult<T[number]>[]; isLoading: boolean } => {
   const { remotesInitialized, modules } = useRemoteModules()
 
   // Use a ref to track which modules have been processed
@@ -39,6 +39,7 @@ export const useLoadModules = <T extends any[]>(
   const [results, setResults] = useState<ModuleResult<T[number]>[]>(() =>
     initializeResults(moduleSpecs),
   )
+  const [isLoading, setIsLoading] = useState(true)
 
   // Reset and reinitialize when moduleSpecs change
   useEffect(() => {
@@ -49,10 +50,29 @@ export const useLoadModules = <T extends any[]>(
     setResults(initializeResults(moduleSpecs))
   }, [JSON.stringify(moduleSpecs)])
 
+  const loadModule = async (
+    remote: string,
+    module: string,
+    addon: string,
+    fallback: T[number] | undefined,
+    minVersion?: string,
+  ) => {
+    try {
+      const result = await loadRemote<{ default: T[number] }>(`${remote}/${module}`, {
+        from: 'runtime',
+      })
+      updateResultWithLoaded(addon, remote, module, result?.default || fallback, minVersion)
+    } catch (error) {
+      console.error('Error loading remote module', remote, module, error)
+      throw error
+    }
+  }
+
   // Load modules when remotes are initialized
   useEffect(() => {
     if (!remotesInitialized) return
 
+    const promises: Promise<void>[] = []
     moduleSpecs.forEach((spec, index) => {
       const { addon, remote, module, fallback, minVersion } = spec
 
@@ -101,35 +121,37 @@ export const useLoadModules = <T extends any[]>(
         return
       }
 
-      // Load the module
-      loadRemote<{ default: T[number] }>(`${remote}/${module}`, { from: 'runtime' })
-        .then((remoteModule) => {
-          console.log('Loaded remote module', module)
-          updateResultWithLoaded(
-            addon,
-            remote,
-            module,
-            remoteModule?.default || fallback,
-            minVersion,
-          )
-        })
-        .catch((e) => console.error('Error loading remote', remote, module, e))
+      promises.push(loadModule(remote, module, addon, fallback, minVersion))
     })
+
+    // Wait for all promises to resolve
+    setIsLoading(true)
+    Promise.all(promises)
+      .then(() => {
+        // all modules loaded
+        setIsLoading(false)
+      })
+      .catch((error) => {
+        console.error('Error loading modules', error)
+        setIsLoading(false)
+      })
   }, [remotesInitialized, modules, moduleSpecs, JSON.stringify(moduleSpecs)])
 
   // Helper function to initialize results
-  function initializeResults(specs: ModuleSpec<T[number]>[]) {
-    return specs.map(({ addon = '', remote = '', module = '', fallback, minVersion }) => [
-      fallback,
-      {
-        isLoaded: false,
-        addon,
-        remote,
-        module,
-        minVersion,
-        outdated: undefined,
-      },
-    ])
+  function initializeResults(specs: ModuleSpec<T[number]>[]): ModuleResult<T[number]>[] {
+    return specs.map(
+      ({ addon = '', remote = '', module = '', fallback, minVersion }): ModuleResult<T[number]> => [
+        fallback as T[number],
+        {
+          isLoaded: false,
+          addon,
+          remote,
+          module,
+          minVersion,
+          outdated: undefined,
+        },
+      ],
+    )
   }
 
   // Helper to update a result with outdated status
@@ -196,5 +218,5 @@ export const useLoadModules = <T extends any[]>(
     })
   }
 
-  return results
+  return { modules: results, isLoading }
 }
