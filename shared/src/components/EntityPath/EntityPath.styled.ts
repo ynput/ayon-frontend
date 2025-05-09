@@ -25,7 +25,9 @@ export const Segment = styled.span`
   position: relative;
   padding: 0px 2px;
   border-radius: var(--border-radius-m);
-  transition: color 0.2s, background-color 0.2s;
+  transition:
+    color 0.2s,
+    background-color 0.2s;
   min-width: max-content;
 
   display: flex;
@@ -41,6 +43,13 @@ export const Segment = styled.span`
       color: var(--md-sys-color-on-surface);
     }
   }
+`
+
+export const FinalSegmentLabel = styled.span`
+  text-overflow: ellipsis;
+  overflow: hidden;
+  display: inline-block;
+  white-space: nowrap;
 `
 
 const NotClickableHover = css`
