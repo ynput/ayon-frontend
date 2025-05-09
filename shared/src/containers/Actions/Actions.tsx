@@ -15,6 +15,7 @@ const placeholder = {
   label: 'Featured action slot',
   isPlaceholder: true,
   icon: { type: 'material-symbols', name: 'sync' },
+  groupLabel: '',
 }
 
 type ActionsProps = {
@@ -291,7 +292,7 @@ export const Actions = ({
             // @ts-expect-error
             isPlaceholder: action.isPlaceholder,
           })}
-          data-tooltip={action.groupLabel ? action.groupLabel + ' ' + action.label: action.label}
+          data-tooltip={action.groupLabel ? action.groupLabel + ' ' + action.label : action.label}
           // @ts-expect-error
           disabled={action.isPlaceholder}
           onClick={(e) => handleExecuteAction(action.identifier, e)}
