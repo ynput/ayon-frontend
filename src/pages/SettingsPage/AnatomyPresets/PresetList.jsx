@@ -37,7 +37,6 @@ const PresetList = ({
       // empty string is default preset
       const isDefault = !('primary' in data)
       const isBuiltIn = data.name === '_'
-      console.log(data)
 
       const items = [
         {
