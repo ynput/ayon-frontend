@@ -26,7 +26,7 @@ import {
   useDeletePresetMutation,
   useUpdatePresetMutation,
   useUpdatePrimaryPresetMutation,
-  useRenamePresetMutation,
+  useRenameAnatomyPresetMutation,
 } from '@queries/anatomy/updateAnatomy'
 import { confirmDelete } from '@shared/util'
 
@@ -78,7 +78,7 @@ const AnatomyPresets = () => {
   // RTK Query updateAnatomy.js mutations
   const [updatePreset, { isLoading: isUpdating }] = useUpdatePresetMutation()
   const [deletePreset] = useDeletePresetMutation()
-  const [renamePreset] = useRenamePresetMutation()
+  const [renamePreset] = useRenameAnatomyPresetMutation()
   const [updatePrimaryPreset] = useUpdatePrimaryPresetMutation()
 
   // SAVE PRESET
@@ -170,7 +170,7 @@ const AnatomyPresets = () => {
       placeholder: 'New preset name',
       initialValue: currentName,
       onSubmit: (newName) => {
-        renamePreset({ name: currentName, newName })
+        renamePreset({ presetName: currentName, renamePresetModel:{name: newName} })
           .unwrap()
           .then(() => {
             setSelectedPreset(newName)

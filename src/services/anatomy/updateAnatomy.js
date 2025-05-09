@@ -1,5 +1,20 @@
 import api from '@shared/api'
 
+import { anatomyApi } from '@shared/api'
+
+const enhancedApi = anatomyApi.enhanceEndpoints({
+  endpoints: {
+    renameAnatomyPreset: {
+      invalidatesTags: (result, error, { presetName }) => [
+        { type: 'anatomyPresets', id: presetName },
+        { type: 'anatomyPresets', id: 'LIST' },
+      ],
+    },
+  },
+})
+
+
+
 const getAnatomy = api.injectEndpoints({
   endpoints: (build) => ({
     updatePreset: build.mutation({
@@ -17,17 +32,6 @@ const getAnatomy = api.injectEndpoints({
       query: ({ name }) => ({
         url: `/api/anatomy/presets/${name}`,
         method: 'DELETE',
-      }),
-      invalidatesTags: (result, error, { name }) => [
-        { type: 'anatomyPresets', id: name },
-        { type: 'anatomyPresets', id: 'LIST' },
-      ],
-    }),
-    renamePreset: build.mutation({
-      query: ({ name, newName }) => ({
-        url: `/api/anatomy/presets/${name}/rename`,
-        method: 'POST',
-        body: { name: newName },
       }),
       invalidatesTags: (result, error, { name }) => [
         { type: 'anatomyPresets', id: name },
@@ -61,7 +65,9 @@ const getAnatomy = api.injectEndpoints({
 export const {
   useUpdatePresetMutation,
   useDeletePresetMutation,
-  useRenamePresetMutation,
   useUpdatePrimaryPresetMutation,
   useUnsetPrimaryPresetMutation,
 } = getAnatomy
+
+export const { useRenameAnatomyPresetMutation } = enhancedApi
+export { enhancedApi as anatomyApi }
