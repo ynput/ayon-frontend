@@ -23,6 +23,17 @@ const getAnatomy = api.injectEndpoints({
         { type: 'anatomyPresets', id: 'LIST' },
       ],
     }),
+    renamePreset: build.mutation({
+      query: ({ name, newName }) => ({
+        url: `/api/anatomy/presets/${name}/rename`,
+        method: 'POST',
+        body: { name: newName },
+      }),
+      invalidatesTags: (result, error, { name }) => [
+        { type: 'anatomyPresets', id: name },
+        { type: 'anatomyPresets', id: 'LIST' },
+      ],
+    }),
     updatePrimaryPreset: build.mutation({
       query: ({ name }) => ({
         url: `/api/anatomy/presets/${name}/primary`,
@@ -50,6 +61,7 @@ const getAnatomy = api.injectEndpoints({
 export const {
   useUpdatePresetMutation,
   useDeletePresetMutation,
+  useRenamePresetMutation,
   useUpdatePrimaryPresetMutation,
   useUnsetPrimaryPresetMutation,
 } = getAnatomy

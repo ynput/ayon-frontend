@@ -36,6 +36,7 @@ const PresetList = ({
     (data = {}) => {
       // empty string is default preset
       const isDefault = !('primary' in data)
+      const isBuiltIn = data.name === '_'
       console.log(data)
 
       const items = [
@@ -43,18 +44,18 @@ const PresetList = ({
           label: 'Set as primary',
           icon: 'flag',
           command: () => onSetPrimary(isDefault ? '_' : data.name),
-          disabled: data.primary || isDefault,
+          disabled: data.primary || isDefault || isBuiltIn,
         },
         {
           label: 'Rename',
           icon: 'edit',
-          disabled: isDefault,
+          disabled: isDefault || isBuiltIn,
           command: () => onRename(data.name),
         },
         {
           label: 'Delete',
           icon: 'delete',
-          disabled: isDefault,
+          disabled: isDefault || isBuiltIn,
           command: () => onDelete(data.name, data.primary),
           danger: true,
         },
