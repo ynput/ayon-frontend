@@ -2,11 +2,11 @@ import { useMemo, memo, useCallback, useRef, FC } from 'react'
 import styled from 'styled-components'
 
 // Widgets
-import { BooleanWidget } from './BooleanWidget'
+import { BooleanWidget, BooleanWidgetProps } from './BooleanWidget'
 import { CollapsedWidget } from './CollapsedWidget'
-import { DateWidget } from './DateWidget'
-import { EnumWidget } from './EnumWidget'
-import { TextWidget, TextWidgetType } from './TextWidget'
+import { DateWidget, DateWidgetProps } from './DateWidget'
+import { EnumWidget, EnumWidgetProps } from './EnumWidget'
+import { TextWidget, TextWidgetProps, TextWidgetType } from './TextWidget'
 
 // Contexts
 import { useCellEditing } from '../context/CellEditingContext'
@@ -57,6 +57,13 @@ interface EditorCellProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'on
   isReadOnly?: boolean
   enableCustomValues?: boolean
   onChange?: (value: CellValue | CellValue[], key?: 'Enter' | 'Click' | 'Escape') => void
+  // options passthrough props
+  pt?: {
+    enum?: Partial<EnumWidgetProps>
+    text?: Partial<TextWidgetProps>
+    date?: Partial<DateWidgetProps>
+    boolean?: Partial<BooleanWidgetProps>
+  }
 }
 
 export interface WidgetBaseProps {
@@ -77,6 +84,7 @@ const EditorCellComponent: FC<EditorCellProps> = ({
   isReadOnly,
   enableCustomValues,
   onChange,
+  pt,
   ...props
 }) => {
   const ref = useRef<HTMLDivElement>(null)
@@ -162,25 +170,40 @@ const EditorCellComponent: FC<EditorCellProps> = ({
             onOpen={() => !isReadOnly && setEditingCellId(cellId)}
             enableCustomValues={enableCustomValues}
             {...sharedProps}
+            {...pt?.enum}
           />
         )
       }
 
       case textTypes.includes(type as TextWidgetType):
-        return <TextWidget value={value as string} isInherited={isInherited} {...sharedProps} />
+        return (
+          <TextWidget
+            value={value as string}
+            isInherited={isInherited}
+            {...sharedProps}
+            {...pt?.text}
+          />
+        )
 
       case type === 'datetime' && value !== null && value !== undefined:
-        return <DateWidget value={value as string} isInherited={isInherited} {...sharedProps} />
+        return (
+          <DateWidget
+            value={value as string}
+            isInherited={isInherited}
+            {...sharedProps}
+            {...pt?.date}
+          />
+        )
 
       case type === 'boolean':
-        return <BooleanWidget value={value as boolean} {...sharedProps} />
+        return <BooleanWidget value={value as boolean} {...sharedProps} {...pt?.boolean} />
 
       case isPlaceholder:
         return null
 
       default:
         // if the type is not recognized, fall back to the TextWidget
-        return <TextWidget value={value as string} {...sharedProps} />
+        return <TextWidget value={value as string} {...sharedProps} {...pt?.text} />
     }
   }, [cellId, value, type, isCurrentCellEditing, options, isCollapsed])
 

@@ -25,7 +25,7 @@ const StyledCheckbox = styled.input`
   }
 `
 
-interface BooleanWidgetProps
+export interface BooleanWidgetProps
   extends Omit<React.HTMLAttributes<HTMLInputElement>, 'onChange'>,
     WidgetBaseProps {
   value: boolean

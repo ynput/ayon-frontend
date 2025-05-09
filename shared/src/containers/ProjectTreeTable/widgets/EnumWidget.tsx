@@ -93,7 +93,9 @@ const StyledDropdown = styled(Dropdown)`
   width: 100%;
 `
 
-interface EnumWidgetProps extends Omit<DropdownProps, 'onChange' | 'value'>, WidgetBaseProps {
+export interface EnumWidgetProps
+  extends Omit<DropdownProps, 'onChange' | 'value'>,
+    WidgetBaseProps {
   value: (string | number | boolean)[]
   options: AttributeEnumItem[]
   type?: AttributeData['type']
@@ -343,6 +345,13 @@ const EnumCellValue = ({
           className="expand"
           icon="expand_more"
           style={{ rotate: isOpen ? '180deg' : '0' }}
+        />
+      )}
+      {isItem && isSelected && (
+        <Icon
+          icon="close"
+          style={{ marginLeft: 'auto', marginRight: 4 }}
+          aria-label="Deselect item"
         />
       )}
     </StyledWidget>
