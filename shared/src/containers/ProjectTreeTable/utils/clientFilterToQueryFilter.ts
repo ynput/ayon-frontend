@@ -108,7 +108,6 @@ const convertFilterToCondition = (filter: Filter): QueryCondition => {
 
         // Second value is less than (end date)
         if (dateValues?.[1] !== undefined && dateValues?.[1].id !== NO_DATE) {
-          console.log('pushing second value')
           conditions.push({
             key,
             operator: filter.inverted ? 'gte' : 'lte',
