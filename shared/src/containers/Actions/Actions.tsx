@@ -127,7 +127,7 @@ export const Actions = ({
 
       const groupOptions = groupedActions[category].map((action) => ({
         value: action.identifier,
-        label: action.label,
+        label: action.groupLabel ? action.groupLabel + ' ' + action.label : action.label,
         icon: action.icon,
         hasConfig: !!action.configFields,
       }))
@@ -291,7 +291,7 @@ export const Actions = ({
             // @ts-expect-error
             isPlaceholder: action.isPlaceholder,
           })}
-          data-tooltip={action.label}
+          data-tooltip={action.groupLabel ? action.groupLabel + ' ' + action.label: action.label}
           // @ts-expect-error
           disabled={action.isPlaceholder}
           onClick={(e) => handleExecuteAction(action.identifier, e)}
