@@ -109,6 +109,13 @@ const AnatomyPresets = () => {
     })
   }
 
+  // RENAME PRESET
+  
+  const handleRenamePreset = (name) => {
+    // open dialog to rename preset
+  }
+
+
   // SET PRIMARY PRESET
   const setPrimaryPreset = (name = '_') => {
     // if name is not provided, set primary preset to "_"
@@ -188,6 +195,7 @@ const AnatomyPresets = () => {
           setSelectedPreset={setSelectedPreset}
           onSetPrimary={setPrimaryPreset}
           onDelete={handleDeletePreset}
+          onRename={handleRenamePreset}
           isLoading={isLoading}
           presetList={presetList}
         />

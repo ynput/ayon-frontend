@@ -28,6 +28,7 @@ const PresetList = ({
   setSelectedPreset,
   onSetPrimary,
   onDelete,
+  onRename,
   presetList,
   isLoading,
 }) => {
@@ -35,20 +36,26 @@ const PresetList = ({
     (data = {}) => {
       // empty string is default preset
       const isDefault = !('primary' in data)
-      const primarySelected = data.primary === 'PRIMARY'
+      console.log(data)
 
       const items = [
         {
           label: 'Set as primary',
           icon: 'flag',
           command: () => onSetPrimary(isDefault ? '_' : data.name),
-          disabled: primarySelected || isDefault,
+          disabled: data.primary || isDefault,
+        },
+        {
+          label: 'Rename',
+          icon: 'edit',
+          disabled: isDefault,
+          command: () => onRename(data.name),
         },
         {
           label: 'Delete',
           icon: 'delete',
           disabled: isDefault,
-          command: () => onDelete(data.name, primarySelected),
+          command: () => onDelete(data.name, data.primary),
           danger: true,
         },
       ]
