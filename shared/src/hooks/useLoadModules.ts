@@ -2,6 +2,7 @@ import { useRemoteModules } from '@shared/context/RemoteModulesContext'
 import { loadRemote } from '@module-federation/enhanced/runtime'
 import { useEffect, useRef, useState } from 'react'
 import semver from 'semver'
+import { FrontendModuleListItem } from '@shared/api'
 
 export interface ModuleSpec<T> {
   addon: string
@@ -29,9 +30,9 @@ type ModuleResult<T> = [
 
 export const useLoadModules = <T extends any[]>(
   moduleSpecs: ModuleSpec<T[number]>[],
+  modules: FrontendModuleListItem[],
+  skip: boolean,
 ): { modules: ModuleResult<T[number]>[]; isLoading: boolean } => {
-  const { remotesInitialized, modules } = useRemoteModules()
-
   // Use a ref to track which modules have been processed
   const processedModules = useRef<Set<string>>(new Set())
 
@@ -43,12 +44,13 @@ export const useLoadModules = <T extends any[]>(
 
   // Reset and reinitialize when moduleSpecs change
   useEffect(() => {
+    if (skip) return
     // Reset the processed modules tracker
     processedModules.current = new Set()
 
     // Initialize results with proper structure
     setResults(initializeResults(moduleSpecs))
-  }, [JSON.stringify(moduleSpecs)])
+  }, [JSON.stringify(moduleSpecs), skip])
 
   const loadModule = async (
     remote: string,
@@ -70,7 +72,9 @@ export const useLoadModules = <T extends any[]>(
 
   // Load modules when remotes are initialized
   useEffect(() => {
-    if (!remotesInitialized) return
+    if (skip) return
+
+    console.log('loading modules')
 
     const promises: Promise<void>[] = []
     moduleSpecs.forEach((spec, index) => {
@@ -129,13 +133,14 @@ export const useLoadModules = <T extends any[]>(
     Promise.all(promises)
       .then(() => {
         // all modules loaded
+        console.log('all modules loaded')
         setIsLoading(false)
       })
       .catch((error) => {
         console.error('Error loading modules', error)
         setIsLoading(false)
       })
-  }, [remotesInitialized, modules, moduleSpecs, JSON.stringify(moduleSpecs)])
+  }, [skip, modules, JSON.stringify(moduleSpecs)])
 
   // Helper function to initialize results
   function initializeResults(specs: ModuleSpec<T[number]>[]): ModuleResult<T[number]>[] {

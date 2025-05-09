@@ -10,15 +10,15 @@ import ProjectAddon from '../ProjectAddon'
 import WorkfilesPage from '../WorkfilesPage'
 import TasksProgressPage from '../TasksProgressPage'
 
-import usePubSub from '@hooks/usePubSub'
 import { selectProject } from '@state/project'
 import { useGetProjectQuery } from '@queries/project/enhancedProject'
 import { useGetProjectAddonsQuery } from '@shared/api'
 import { TabPanel, TabView } from 'primereact/tabview'
 import AppNavLinks from '@containers/header/AppNavLinks'
 import { SlicerProvider } from '@context/SlicerContext'
-import useLoadRemoteProjectPages, { Fallbacks } from './hooks/useLoadRemoteProjectPages'
+import useLoadRemoteProjectPages, { Fallbacks } from '../../remote/useLoadRemotePages'
 import ReviewAddonSpec from '@pages/AddonPages/ReviewAddonSpec'
+import ProjectPubSub from './ProjectPubSub'
 
 const ProjectContextInfo = () => {
   /**
@@ -78,26 +78,17 @@ const ProjectPage = () => {
     }
   }
 
+  type ModuleData = { name: string; module: string }
   // permanent addon pages that show a fallback when not loaded
-  const permanentAddons: Fallbacks = new Map([['review', ReviewAddonSpec]])
+  const permanentAddons: Fallbacks<ModuleData> = new Map([['review', ReviewAddonSpec]])
 
-  const remotePages = useLoadRemoteProjectPages({ fallbacks: permanentAddons })
+  const remotePages = useLoadRemoteProjectPages<ModuleData>({
+    fallbacks: permanentAddons,
+    moduleKey: 'Project',
+    skip: !projectName || !addonsData || addonsLoading || isLoading,
+  })
 
   // get remote project module pages
-
-  const handlePubSub = async (topic: string, message: any) => {
-    if (topic === 'client.connected') {
-      console.log('ProjectPage: client.connected. Reloading project data')
-      loadProjectData()
-    } else if (topic === 'entity.project.changed' && message.project === projectName) {
-      loadProjectData()
-    } else {
-      console.log('ProjectPage: Unhandled pubsub message', topic, message)
-    }
-  }
-
-  usePubSub('client.connected', handlePubSub)
-  usePubSub('entity.project', handlePubSub)
 
   const links = useMemo(
     () => [
@@ -126,9 +117,9 @@ const ProjectPage = () => {
         uriSync: true,
       },
       ...remotePages.map((remote) => ({
-        name: remote.name,
-        module: remote.module,
-        path: `/projects/${projectName}/${remote.module}`,
+        name: remote.data.name,
+        module: remote.data.module,
+        path: `/projects/${projectName}/${remote.data.module}`,
       })),
       ...addonsData.map((addon) => ({
         name: addon.title,
@@ -198,10 +189,15 @@ const ProjectPage = () => {
       )
     }
 
-    const foundRemotePage = remotePages.find((item) => item.module === module)
+    const foundRemotePage = remotePages.find((item) => item.data.module === module)
     if (foundRemotePage) {
       const RemotePage = foundRemotePage.component
-      return <RemotePage projectName={projectName} />
+      const props = foundRemotePage.isFallback
+        ? {}
+        : {
+            projectName,
+          }
+      return <RemotePage {...props} />
     }
 
     // Fallback to browser page if no addon matches addonName
@@ -224,6 +220,7 @@ const ProjectPage = () => {
       {/* @ts-expect-error - AppNavLinks is jsx */}
       <AppNavLinks links={links} />
       <SlicerProvider>{child}</SlicerProvider>
+      <ProjectPubSub projectName={projectName} onReload={loadProjectData} />
     </>
   )
 }
