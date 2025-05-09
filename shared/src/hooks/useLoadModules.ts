@@ -133,7 +133,6 @@ export const useLoadModules = <T extends any[]>(
     Promise.all(promises)
       .then(() => {
         // all modules loaded
-        console.log('all modules loaded')
         setIsLoading(false)
       })
       .catch((error) => {

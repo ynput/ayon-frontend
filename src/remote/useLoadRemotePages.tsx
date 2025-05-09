@@ -27,7 +27,7 @@ type LoadedPage<T = DataType> = {
 
 export type Fallbacks<T = DataType> = Map<PermanentAddon, LoadedPage<T>>
 interface ProjectRemoteLoaderProps<T = DataType> {
-  fallbacks: Fallbacks<T>
+  fallbacks?: Fallbacks<T>
   moduleKey: 'Project' | 'Route'
   skip?: boolean
 }
@@ -51,7 +51,7 @@ const useLoadRemotePages = <T extends DataType>({
             addon: addon.addonName,
             remote,
             module,
-            fallback: fallbacks.get(module as PermanentAddon)?.component,
+            fallback: fallbacks?.get(module as PermanentAddon)?.component,
           }
           pageModules.push(moduleSpec)
         }
@@ -77,7 +77,7 @@ const useLoadRemotePages = <T extends DataType>({
         isFallback: false,
       }))
 
-    const fallbackPages = Array.from(fallbacks.entries())
+    const fallbackPages = Array.from(fallbacks?.entries() || [])
       .filter(([key]) => !modulesPages.some((page) => page.id === key))
       .map(([key, fallback]) => {
         const showLoadingPage =

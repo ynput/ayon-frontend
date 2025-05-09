@@ -17,7 +17,8 @@ import { TabPanel, TabView } from 'primereact/tabview'
 import AppNavLinks from '@containers/header/AppNavLinks'
 import { SlicerProvider } from '@context/SlicerContext'
 import useLoadRemoteProjectPages, { Fallbacks } from '../../remote/useLoadRemotePages'
-import ReviewAddonSpec from '@pages/AddonPages/ReviewAddonSpec'
+import { Navigate } from 'react-router-dom'
+// import ReviewAddonSpec from '@pages/AddonPages/ReviewAddon'
 import ProjectPubSub from './ProjectPubSub'
 
 const ProjectContextInfo = () => {
@@ -47,7 +48,7 @@ const ProjectPage = () => {
    */
 
   const navigate = useNavigate()
-  const { projectName, module, addonName } = useParams()
+  const { projectName, module = '', addonName } = useParams()
   const dispatch = useAppDispatch()
   const [showContextDialog, setShowContextDialog] = useState(false)
   const { isLoading, isError, isUninitialized, refetch } = useGetProjectQuery(
@@ -80,10 +81,10 @@ const ProjectPage = () => {
 
   type ModuleData = { name: string; module: string }
   // permanent addon pages that show a fallback when not loaded
-  const permanentAddons: Fallbacks<ModuleData> = new Map([['review', ReviewAddonSpec]])
+  // const permanentAddons: Fallbacks<ModuleData> = new Map([['review', ReviewAddonSpec]])
 
   const remotePages = useLoadRemoteProjectPages<ModuleData>({
-    fallbacks: permanentAddons,
+    // fallbacks: permanentAddons,
     moduleKey: 'Project',
     skip: !projectName || !addonsData || addonsLoading || isLoading,
   })
@@ -158,12 +159,9 @@ const ProjectPage = () => {
     return <div className="page">Project Not Found, Redirecting...</div>
   }
 
-  // TODO: return 404
-  if (!module) return <div className="page">Module not found</div>
-
   const getPageByModuleAndAddonData = (module: string, addonName?: string) => {
     if (!module) {
-      return <ProjectOverviewPage />
+      return <Navigate to={`/projects/${projectName}/overview`} />
     }
     if (module === 'overview') {
       return <ProjectOverviewPage />
@@ -201,7 +199,7 @@ const ProjectPage = () => {
     }
 
     // Fallback to browser page if no addon matches addonName
-    return <div className="page">Module component not found</div>
+    return <Navigate to={`/projects/${projectName}/overview`} />
   }
 
   const child = getPageByModuleAndAddonData(module, addonName)
