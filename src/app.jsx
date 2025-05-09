@@ -253,7 +253,7 @@ const App = () => {
                                             element={<ProjectManagerPage />}
                                           />
                                           <Route
-                                            path={'/projects/:projectName/:module'}
+                                            path={'/projects/:projectName/:module/*'}
                                             element={<ProjectPage />}
                                           />
                                           <Route
