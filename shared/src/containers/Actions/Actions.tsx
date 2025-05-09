@@ -18,7 +18,7 @@ const placeholder = {
 }
 
 type ActionsProps = {
-  entities: any[]
+  entities: { id: string; projectName: string; entitySubType?: string }[]
   entityType: ActionContext['entityType']
   entitySubTypes?: string[]
   isLoadingEntity: boolean
@@ -41,14 +41,22 @@ export const Actions = ({
 
     // get a list of unique entity subtypes from loaded data
     const entitySubtypesLoaded = entities
-      .map((entity) => entity.entitySubType)
+      .filter((entity) => entity.entitySubType)
+      .map((entity) => entity.entitySubType as string)
       .filter((value, index, self) => self.indexOf(value) === index && value)
 
     // try and use the passed in entitySubTypes, if not use the loaded ones
-    const entitySubTypesToUse = entitySubTypes || entitySubtypesLoaded || []
+    const entitySubTypesToUse = entitySubTypes?.length ? entitySubTypes : entitySubtypesLoaded
 
-    // all types except version should have subtypes
-    if (!entitySubTypesToUse?.length && entityType !== 'version') return null
+    // all types except version/representation should have subtypes
+    if (
+      !entitySubTypesToUse?.length &&
+      entityType !== 'version' &&
+      entityType !== 'representation'
+    ) {
+      console.warn('No entity subtypes found')
+      return null
+    }
 
     return {
       projectName: entities[0].projectName,
@@ -66,6 +74,7 @@ export const Actions = ({
     { mode: 'simple', actionContext: context as ActionContext },
     { skip: !context },
   )
+
   const actions = data?.actions || []
 
   const categoryOrder = ['application', 'admin', 'workflow']
