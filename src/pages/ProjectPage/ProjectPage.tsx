@@ -160,9 +160,6 @@ const ProjectPage = () => {
   }
 
   const getPageByModuleAndAddonData = (module: string, addonName?: string) => {
-    if (!module) {
-      return <Navigate to={`/projects/${projectName}/overview`} />
-    }
     if (module === 'overview') {
       return <ProjectOverviewPage />
     }
