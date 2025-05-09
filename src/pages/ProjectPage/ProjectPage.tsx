@@ -1,30 +1,33 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { useDispatch, useSelector } from 'react-redux'
+import { useAppDispatch, useAppSelector } from '@state/store'
 import { Button, Dialog } from '@ynput/ayon-react-components'
 
-import BrowserPage from './BrowserPage'
-import ProjectOverviewPage from './ProjectOverviewPage'
-import LoadingPage from './LoadingPage'
-import ProjectAddon from './ProjectAddon'
-import WorkfilesPage from './WorkfilesPage'
-import TasksProgressPage from './TasksProgressPage'
+import BrowserPage from '../BrowserPage'
+import ProjectOverviewPage from '../ProjectOverviewPage'
+import LoadingPage from '../LoadingPage'
+import ProjectAddon from '../ProjectAddon'
+import WorkfilesPage from '../WorkfilesPage'
+import TasksProgressPage from '../TasksProgressPage'
 
-import usePubSub from '@hooks/usePubSub'
 import { selectProject } from '@state/project'
 import { useGetProjectQuery } from '@queries/project/enhancedProject'
 import { useGetProjectAddonsQuery } from '@shared/api'
 import { TabPanel, TabView } from 'primereact/tabview'
 import AppNavLinks from '@containers/header/AppNavLinks'
 import { SlicerProvider } from '@context/SlicerContext'
+import useLoadRemoteProjectPages, { Fallbacks } from '../../remote/useLoadRemotePages'
+import { Navigate } from 'react-router-dom'
+// import ReviewAddonSpec from '@pages/AddonPages/ReviewAddon'
+import ProjectPubSub from './ProjectPubSub'
 
 const ProjectContextInfo = () => {
   /**
    * Show a project context in a dialog
    * this is for development only
    */
-  const context = useSelector((state) => state.context)
-  const project = useSelector((state) => state.project)
+  const context = useAppSelector((state) => state.context)
+  const project = useAppSelector((state) => state.project)
   return (
     <TabView panelContainerStyle={{ justifyContent: 'flex-start' }}>
       <TabPanel header="context" style={{ overflow: 'hidden' }}>
@@ -45,11 +48,11 @@ const ProjectPage = () => {
    */
 
   const navigate = useNavigate()
-  const { projectName, module, addonName } = useParams()
-  const dispatch = useDispatch()
+  const { projectName, module = '', addonName } = useParams()
+  const dispatch = useAppDispatch()
   const [showContextDialog, setShowContextDialog] = useState(false)
   const { isLoading, isError, isUninitialized, refetch } = useGetProjectQuery(
-    { projectName },
+    { projectName: projectName || '' },
     { skip: !projectName },
   )
 
@@ -76,19 +79,17 @@ const ProjectPage = () => {
     }
   }
 
-  const handlePubSub = async (topic, message) => {
-    if (topic === 'client.connected') {
-      console.log('ProjectPage: client.connected. Reloading project data')
-      loadProjectData()
-    } else if (topic === 'entity.project.changed' && message.project === projectName) {
-      loadProjectData()
-    } else {
-      console.log('ProjectPage: Unhandled pubsub message', topic, message)
-    }
-  }
+  type ModuleData = { name: string; module: string }
+  // permanent addon pages that show a fallback when not loaded
+  // const permanentAddons: Fallbacks<ModuleData> = new Map([['review', ReviewAddonSpec]])
 
-  usePubSub('client.connected', handlePubSub)
-  usePubSub('entity.project', handlePubSub)
+  const remotePages = useLoadRemoteProjectPages<ModuleData>({
+    // fallbacks: permanentAddons,
+    moduleKey: 'Project',
+    skip: !projectName || !addonsData || addonsLoading || isLoading,
+  })
+
+  // get remote project module pages
 
   const links = useMemo(
     () => [
@@ -116,6 +117,11 @@ const ProjectPage = () => {
         module: 'workfiles',
         uriSync: true,
       },
+      ...remotePages.map((remote) => ({
+        name: remote.data.name,
+        module: remote.data.module,
+        path: `/projects/${projectName}/${remote.data.module}`,
+      })),
       ...addonsData.map((addon) => ({
         name: addon.title,
         path: `/projects/${projectName}/addon/${addon.name}`,
@@ -134,7 +140,7 @@ const ProjectPage = () => {
         ),
       },
     ],
-    [addonsData, projectName],
+    [addonsData, projectName, remotePages],
   )
 
   //
@@ -153,7 +159,10 @@ const ProjectPage = () => {
     return <div className="page">Project Not Found, Redirecting...</div>
   }
 
-  const getPageByModuleAndAddonData = (module, addonName, addonsData) => {
+  const getPageByModuleAndAddonData = (module: string, addonName?: string) => {
+    if (!module) {
+      return <Navigate to={`/projects/${projectName}/overview`} />
+    }
     if (module === 'overview') {
       return <ProjectOverviewPage />
     }
@@ -167,26 +176,33 @@ const ProjectPage = () => {
       return <WorkfilesPage />
     }
 
-    if (!addonName) {
-      return <ProjectOverviewPage />
-    }
-
-    const filteredAddons = addonsData.filter((item) => item.name === addonName)
-    if (filteredAddons.length) {
+    const foundAddon = addonsData?.find((item) => item.name === addonName)
+    if (foundAddon) {
       return (
         <ProjectAddon
           addonName={addonName}
-          addonVersion={filteredAddons[0].version}
-          sidebar={filteredAddons[0].settings.sidebar}
+          addonVersion={foundAddon.version}
+          sidebar={foundAddon.settings.sidebar}
         />
       )
     }
 
+    const foundRemotePage = remotePages.find((item) => item.data.module === module)
+    if (foundRemotePage) {
+      const RemotePage = foundRemotePage.component
+      const props = foundRemotePage.isFallback
+        ? {}
+        : {
+            projectName,
+          }
+      return <RemotePage {...props} />
+    }
+
     // Fallback to browser page if no addon matches addonName
-    return <BrowserPage />
+    return <Navigate to={`/projects/${projectName}/overview`} />
   }
 
-  const child = getPageByModuleAndAddonData(module, addonName, addonsData)
+  const child = getPageByModuleAndAddonData(module, addonName)
 
   return (
     <>
@@ -199,8 +215,10 @@ const ProjectPage = () => {
       >
         {showContextDialog && <ProjectContextInfo />}
       </Dialog>
+      {/* @ts-expect-error - AppNavLinks is jsx */}
       <AppNavLinks links={links} />
       <SlicerProvider>{child}</SlicerProvider>
+      <ProjectPubSub projectName={projectName} onReload={loadProjectData} />
     </>
   )
 }

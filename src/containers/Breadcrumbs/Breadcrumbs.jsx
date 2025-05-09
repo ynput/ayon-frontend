@@ -1,6 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
 import { useSelector } from 'react-redux'
-import { useLocation } from 'react-router-dom'
 import { Button, InputText } from '@ynput/ayon-react-components'
 import * as Styled from './Breadcrumbs.styled'
 
@@ -65,7 +64,7 @@ const uri2crumbs = (uri = '', pathname) => {
 }
 
 const Breadcrumbs = () => {
-  const location = useLocation()
+  const location = window.location
 
   const [localUri, setLocalUri] = useState('')
   const [editMode, setEditMode] = useState(false)
