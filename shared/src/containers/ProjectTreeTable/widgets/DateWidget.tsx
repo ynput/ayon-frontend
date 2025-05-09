@@ -3,7 +3,7 @@ import { forwardRef } from 'react'
 import { DateWidgetInput } from './DateWidgetInput'
 import { WidgetBaseProps } from './CellWidget'
 
-export interface DateWidgetProps
+interface DateWidgetProps
   extends Omit<React.HTMLAttributes<HTMLSpanElement>, 'onChange'>,
     WidgetBaseProps {
   value: string

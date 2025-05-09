@@ -203,17 +203,7 @@ const ProjectTreeTableColumns = ({
               attributeData={{ type: 'list_of_strings' }}
               options={options.assignees}
               isCollapsed={!!row.original.childOnlyMatch}
-              onChange={(value) => {
-                console.log(value)
-                updateEntities([{ field: column.id, value, id, type }])
-              }}
-              pt={{
-                enum: {
-                  multiSelectClose: value?.length === 0, // close the dropdown on first assignment
-                  search: true, // enable search at all times
-                  multipleOverride: false,
-                },
-              }}
+              onChange={(value) => updateEntities([{ field: column.id, value, id, type }])}
             />
           )
         },
