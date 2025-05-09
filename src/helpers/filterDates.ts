@@ -14,6 +14,7 @@ import {
   startOfYear,
   endOfYear,
   subYears,
+  setHours,
 } from 'date-fns'
 
 export const NO_DATE = 'no-date'
@@ -44,7 +45,7 @@ export const filterDateFunctions = {
   ['after-now']: () => {
     const now = new Date()
     return [
-      { label: 'After now', id: now.toISOString() },
+      { label: 'After today', id: setHours(now, 24).toISOString() },
       { id: NO_DATE, label: NO_DATE },
     ]
   },
@@ -52,7 +53,7 @@ export const filterDateFunctions = {
     const now = new Date()
     return [
       { id: NO_DATE, label: NO_DATE },
-      { label: 'Before now', id: now.toISOString() },
+      { label: 'Before today', id: setHours(now, 0).toISOString() },
     ]
   },
   ['this-week']: () => {
@@ -136,49 +137,49 @@ export const dateOptions: (Option & { id: DateOptionType })[] = [
   },
   {
     id: 'after-now',
-    label: 'After Now',
+    label: 'After today',
     values: filterDateFunctions['after-now'](),
     icon: 'event_upcoming',
   },
   {
     id: 'before-now',
-    label: 'Before Now',
+    label: 'Before today',
     values: filterDateFunctions['before-now'](),
     icon: 'event_busy',
   },
   {
     id: 'this-week',
-    label: 'This Week',
+    label: 'This week',
     values: filterDateFunctions['this-week'](),
     icon: 'date_range',
   },
   {
     id: 'last-week',
-    label: 'Last Week',
+    label: 'Last week',
     values: filterDateFunctions['last-week'](),
     icon: 'date_range',
   },
   {
     id: 'this-month',
-    label: 'This Month',
+    label: 'This month',
     values: filterDateFunctions['this-month'](),
     icon: 'calendar_month',
   },
   {
     id: 'last-month',
-    label: 'Last Month',
+    label: 'Last month',
     values: filterDateFunctions['last-month'](),
     icon: 'calendar_month',
   },
   {
     id: 'this-year',
-    label: 'This Year',
+    label: 'This year',
     values: filterDateFunctions['this-year'](),
     icon: 'calendar_month',
   },
   {
     id: 'last-year',
-    label: 'Last Year',
+    label: 'Last year',
     values: filterDateFunctions['last-year'](),
     icon: 'calendar_month',
   },
