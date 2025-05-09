@@ -347,7 +347,13 @@ const EnumCellValue = ({
           style={{ rotate: isOpen ? '180deg' : '0' }}
         />
       )}
-      {isItem && isSelected && <Icon icon="close" style={{ marginLeft: 'auto', marginRight: 4 }} />}
+      {isItem && isSelected && (
+        <Icon
+          icon="close"
+          style={{ marginLeft: 'auto', marginRight: 4 }}
+          aria-label="Deselect item"
+        />
+      )}
     </StyledWidget>
   )
 }
