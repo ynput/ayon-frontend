@@ -1,6 +1,6 @@
 import { Filter } from '@ynput/ayon-react-components'
 import { QueryCondition, QueryFilter } from '../types/operations'
-import { NO_DATE } from '@helpers/filterDates'
+const NO_DATE = 'no-date'
 
 export const clientFilterToQueryFilter = (filters: Filter[]): QueryFilter => {
   // If there are no filters, return an empty filter
@@ -108,6 +108,7 @@ const convertFilterToCondition = (filter: Filter): QueryCondition => {
 
         // Second value is less than (end date)
         if (dateValues?.[1] !== undefined && dateValues?.[1].id !== NO_DATE) {
+          console.log('pushing second value')
           conditions.push({
             key,
             operator: filter.inverted ? 'gte' : 'lte',
