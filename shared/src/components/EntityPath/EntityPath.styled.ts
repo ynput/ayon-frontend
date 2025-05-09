@@ -25,7 +25,9 @@ export const Segment = styled.span`
   position: relative;
   padding: 0px 2px;
   border-radius: var(--border-radius-m);
-  transition: color 0.2s, background-color 0.2s;
+  transition:
+    color 0.2s,
+    background-color 0.2s;
   min-width: max-content;
 
   display: flex;
@@ -44,11 +46,6 @@ export const Segment = styled.span`
 `
 
 export const FinalSegmentLabel = styled.span`
-  /*
-    ensures the segment doesn't grow too long,
-    which could affect the panel's width
-  */
-  max-width: 10ch;
   text-overflow: ellipsis;
   overflow: hidden;
   display: inline-block;

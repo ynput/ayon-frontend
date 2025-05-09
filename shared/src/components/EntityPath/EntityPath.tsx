@@ -47,6 +47,7 @@ export const EntityPath: FC<EntityPathProps> = ({
   // defaults to whole path
   const [maxSegments, setMaxSegments] = useState<null | number>(null)
   const [calcMaxWidth, setCalcMaxWidth] = useState(false)
+  const finalSegmentRef = useRef<HTMLSpanElement>(null)
 
   useLayoutEffect(() => {
     setMaxSegments(null)
@@ -95,6 +96,27 @@ export const EntityPath: FC<EntityPathProps> = ({
     setMaxSegments(newMaxSegments)
     setCalcMaxWidth(false)
   }, [containerRef.current, calcMaxWidth])
+
+  // Ensure that, even if the collapsed segments still aren't
+  // enough to fit the path within the available space,
+  // we fit everything in by truncating the last segment's label.
+  // This segment is typically the product + version name,
+  // which is typically also shown in much larger font below,
+  // so there's no reason to always show it in full.
+  useLayoutEffect(() => {
+    if (!containerRef.current || !finalSegmentRef.current || !maxSegments) return
+    const container = containerRef.current
+
+    // The amount of truncation is exactly the difference between the container's width
+    // and the maximum available width.
+    const maxWidth = getPathMaxWidth(container) ?? Infinity
+    const diff = container.clientWidth - maxWidth
+    if (diff <= 0) return
+
+    // Reduce the segment's width by the difference
+    const newWidth = `${finalSegmentRef.current.clientWidth - diff}px`
+    finalSegmentRef.current.style.width = newWidth
+  }, [maxSegments])
 
   // Check if there are fewer than or equal to maxSegments segments
   const segmentsToShow =
@@ -191,7 +213,7 @@ export const EntityPath: FC<EntityPathProps> = ({
               isOpen={dropdownOpen === 'versions'}
             >
               <Styled.Segment>
-                <Styled.FinalSegmentLabel className="label">
+                <Styled.FinalSegmentLabel ref={finalSegmentRef} className="label">
                   {versionSegment.label}
                 </Styled.FinalSegmentLabel>
                 <Icon icon="expand_more" />
