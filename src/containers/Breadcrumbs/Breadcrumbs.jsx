@@ -26,9 +26,6 @@ const uri2crumbs = (uri = '', pathname) => {
     crumbs.unshift(settingsScope)
   } else if (scope?.includes('ayon+entity')) {
     crumbs.unshift('Project')
-  } else if (scope?.includes('ayon+anatomy')) {
-    if (scope === 'ayon+anatomy') crumbs.unshift('Project anatomy')
-    else crumbs.unshift('Anatomy preset')
   } else {
     // anything that doesn't have a uri
     let pageTitle = pathname.split('/')[1]

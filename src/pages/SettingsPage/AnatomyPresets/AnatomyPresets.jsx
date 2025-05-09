@@ -32,7 +32,6 @@ const AnatomyPresets = () => {
   const [selectedPreset, setSelectedPreset] = useState('_')
   const [showNameDialog, setShowNameDialog] = useState(false)
   const [newPresetName, setNewPresetName] = useState('')
-  const [breadcrumbs, setBreadcrumbs] = useState([])
   const [isChanged, setIsChanged] = useState(false)
 
   const nameInputRef = useRef(null)
@@ -127,10 +126,6 @@ const AnatomyPresets = () => {
         toast.error(err.message)
       })
   }
-
-  useEffect(() => {
-    // TODO
-  }, [breadcrumbs])
 
   const onPasteAnatomy = async () => {
     const pastedContent = await requestPaste()
@@ -241,8 +236,6 @@ const AnatomyPresets = () => {
             formData={formData}
             setFormData={setFormData}
             preset={selectedPreset}
-            breadcrumbs={breadcrumbs}
-            setBreadcrumbs={setBreadcrumbs}
             setIsChanged={setIsChanged}
           />
         </ScrollPanel>
