@@ -82,8 +82,6 @@ export const RepresentationsList = ({ entities = [] }: Props) => {
     }
   }
 
-  if (!showDetail) return
-
   return (
     <>
       <TablePanel>
@@ -110,13 +108,16 @@ export const RepresentationsList = ({ entities = [] }: Props) => {
           })}
         </TreeTable>
       </TablePanel>
-      <DetailsDialog
-        projectName={showDetailProjectName}
-        entityType={'representation'}
-        entityIds={[showDetail]}
-        visible={!!showDetail}
-        onHide={() => setShowDetail(false)}
-      />
+
+      {showDetail && (
+        <DetailsDialog
+          projectName={showDetailProjectName}
+          entityType={'representation'}
+          entityIds={[showDetail]}
+          visible={!!showDetail}
+          onHide={() => setShowDetail(false)}
+        />
+      )}
     </>
   )
 }

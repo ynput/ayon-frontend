@@ -90,7 +90,12 @@ const StyledBanner = styled.div`
   }
 `
 
-const LoadingPage = ({ message, children, ...props }) => {
+type LoadingPageProps = {
+  message?: string
+  children?: React.ReactNode
+} & React.HTMLProps<HTMLDivElement>
+
+const LoadingPage = ({ message, children, ...props }: LoadingPageProps) => {
   return (
     <StyledLoader {...props}>
       <svg

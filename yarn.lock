@@ -1858,10 +1858,10 @@
     fs-extra "9.1.0"
     resolve "1.22.8"
 
-"@module-federation/vite@^1.2.6":
-  version "1.2.6"
-  resolved "https://registry.yarnpkg.com/@module-federation/vite/-/vite-1.2.6.tgz#56524c55317122fb60018707d0d12fea375e91ec"
-  integrity sha512-JG1AXzr5m3LqkKAJ2YeFj/kizvzIAQgHYnjDn3zzij3L0qntqBx3d7YOp8JjAekSCfYlCx2zn550UyJlfdaXDg==
+"@module-federation/vite@^1.2.7":
+  version "1.2.7"
+  resolved "https://registry.yarnpkg.com/@module-federation/vite/-/vite-1.2.7.tgz#15d934076f40fbee467909f5d887a369e319be57"
+  integrity sha512-r/kyUGgqkOgjtRiGV9+nmBv7PKzLRCnkB2g5Jr56pywaAbUtyaV0cYphBRo6Z4R2u+T/vs9rbyZH7Tg2TraPOQ==
   dependencies:
     "@module-federation/runtime" "^0.8.0"
     "@rollup/pluginutils" "^5.1.0"

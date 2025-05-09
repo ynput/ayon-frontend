@@ -22,15 +22,7 @@ import { getValueByPath, setValueByPath, sameKeysStructure } from '@containers/A
 import { cloneDeep } from 'lodash'
 import { usePaste } from '@context/PasteContext'
 
-const AnatomyEditor = ({
-  preset,
-  projectName,
-  formData,
-  setFormData,
-  breadcrumbs,
-  setBreadcrumbs,
-  setIsChanged,
-}) => {
+const AnatomyEditor = ({ preset, projectName, formData, setFormData, setIsChanged }) => {
   const [originalData, setOriginalData] = useState(null)
   const { requestPaste } = usePaste()
   const { data: schema } = useGetAnatomySchemaQuery()
@@ -97,14 +89,6 @@ const AnatomyEditor = ({
     setFormData(newData)
   }
 
-  const handleBreadcrumbs = (path) => {
-    let uri = projectName ? `ayon+anatomy://${projectName}/` : `ayon+anatomy+preset://${preset}/`
-    uri += path.join('/')
-    dispatch(setUri(uri))
-
-    if (setBreadcrumbs) setBreadcrumbs(path)
-  }
-
   const editor = useMemo(() => {
     if (isLoading) {
       return 'Loading...'
@@ -119,25 +103,12 @@ const AnatomyEditor = ({
         originalData={originalData}
         formData={formData}
         onChange={setFormData}
-        onSetBreadcrumbs={handleBreadcrumbs}
-        breadcrumbs={breadcrumbs}
         context={{
           onPasteValue: onPasteValue,
         }}
       />
     )
-  }, [
-    schema,
-    originalData,
-    breadcrumbs,
-    formData,
-    isLoading,
-    preset,
-    projectName,
-    setFormData,
-    handleBreadcrumbs,
-    onPasteValue,
-  ])
+  }, [schema, originalData, formData, isLoading, preset, projectName, setFormData, onPasteValue])
 
   return editor
 }

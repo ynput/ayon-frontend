@@ -125,10 +125,6 @@ const AnatomyPresets = () => {
       })
   }
 
-  useEffect(() => {
-    // TODO
-  }, [breadcrumbs])
-
   const onPasteAnatomy = async () => {
     const pastedContent = await requestPaste()
     if (!pastedContent) {
@@ -261,8 +257,6 @@ const AnatomyPresets = () => {
             formData={formData}
             setFormData={setFormData}
             preset={selectedPreset}
-            breadcrumbs={breadcrumbs}
-            setBreadcrumbs={setBreadcrumbs}
             setIsChanged={setIsChanged}
           />
         </ScrollPanel>

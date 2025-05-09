@@ -69,7 +69,9 @@ export const RemoteModulesProvider = ({ children, skip }: Props) => {
         alias: r.remote,
         entry: `/addons/${r.addon || r.remote}/${r.version}/frontend/modules/${
           r.remote
-        }/remoteEntry.js?server=${info?.releaseInfo?.version}-${info?.releaseInfo?.buildDate}`,
+        }/remoteEntry.js?server=${info?.releaseInfo?.version || info?.releaseInfo}-${
+          info?.releaseInfo?.buildDate
+        }-${new Date().getTime()}`,
         type: 'module',
       })),
     )
