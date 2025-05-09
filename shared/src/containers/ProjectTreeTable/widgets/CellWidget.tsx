@@ -169,8 +169,9 @@ const EditorCellComponent: FC<EditorCellProps> = ({
       case textTypes.includes(type as TextWidgetType):
         return <TextWidget value={value as string} isInherited={isInherited} {...sharedProps} />
 
-      case type === 'datetime' && value !== null && value !== undefined:
-        return <DateWidget value={value as string} isInherited={isInherited} {...sharedProps} />
+      //case type === 'datetime' && value !== null && value !== undefined:
+      case type === 'datetime':
+        return <DateWidget value={value ? value as string : undefined} isInherited={isInherited} {...sharedProps} />
 
       case type === 'boolean':
         return <BooleanWidget value={value as boolean} {...sharedProps} />
@@ -179,13 +180,14 @@ const EditorCellComponent: FC<EditorCellProps> = ({
         return null
 
       default:
-        console.warn(`Unrecognized type "${type}" for cell ${cellId}.`)
         // TODO: We should not allow editing unrecognized types
         // At this point, only list_of_strings without proper options is unrecognized
         // (tags if not tags are specified in anatomy) and in that case, validation
         // on the server fails with a string value. Unless we have a widget that 
         // accepts a string value AND options at the same time we shouldn't show
         // any edit widget
+
+        //console.log(`Unrecognized type "${type}" for cell ${cellId}.`)
         return null
         // if the type is not recognized, fall back to the TextWidget
         //return <TextWidget value={value as string} {...sharedProps} />
