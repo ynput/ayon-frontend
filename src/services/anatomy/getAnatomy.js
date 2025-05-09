@@ -17,7 +17,7 @@ const getAnatomy = api.injectEndpoints({
       query: () => ({
         url: `/api/anatomy/presets`,
       }),
-      transformResponse: (result) => [{ type: 'anatomyPresets', id: 'LIST' }],
+      transformResponse: (response) => response.presets,
       providesTags: (result) => [
         ...result.map(({ name }) => ({ type: 'anatomyPresets', id: name })),
         { type: 'anatomyPresets', id: 'LIST' },
