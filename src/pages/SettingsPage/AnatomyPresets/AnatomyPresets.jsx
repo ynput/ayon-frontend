@@ -165,7 +165,7 @@ const AnatomyPresets = () => {
       placeholder: 'New preset name',
       initialValue: currentName,
       onSubmit: (newName) => {
-        renamePreset({ presetName: currentName, renamePresetModel:{name: newName} })
+        renamePreset({ presetName: currentName, renamePresetModel: { name: newName } })
           .unwrap()
           .then(() => {
             setSelectedPreset(newName)
