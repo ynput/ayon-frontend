@@ -83,7 +83,7 @@ const ProjectPage = () => {
   // permanent addon pages that show a fallback when not loaded
   // const permanentAddons: Fallbacks<ModuleData> = new Map([['review', ReviewAddonSpec]])
 
-  const remotePages = useLoadRemoteProjectPages<ModuleData>({
+  const { remotePages, isLoading: isLoadingModules } = useLoadRemoteProjectPages<ModuleData>({
     // fallbacks: permanentAddons,
     moduleKey: 'Project',
     skip: !projectName || !addonsData || addonsLoading || isLoading,
@@ -147,7 +147,7 @@ const ProjectPage = () => {
   // Render page
   //
 
-  if (isLoading || !projectName || addonsLoading) {
+  if (isLoading || !projectName || addonsLoading || isLoadingModules) {
     return <LoadingPage />
   }
 

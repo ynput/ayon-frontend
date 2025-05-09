@@ -94,7 +94,7 @@ const useLoadRemotePages = <T extends DataType>({
     return [...modulesPages, ...fallbackPages]
   }, [modulesData, fallbacks, remotesInitialized, isLoadingModulePages, modules])
 
-  return loadedPages
+  return { remotePages: loadedPages, isLoading: isLoadingModulePages }
 }
 
 export default useLoadRemotePages
