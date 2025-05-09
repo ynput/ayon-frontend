@@ -179,8 +179,16 @@ const EditorCellComponent: FC<EditorCellProps> = ({
         return null
 
       default:
+        console.warn(`Unrecognized type "${type}" for cell ${cellId}.`)
+        // TODO: We should not allow editing unrecognized types
+        // At this point, only list_of_strings without proper options is unrecognized
+        // (tags if not tags are specified in anatomy) and in that case, validation
+        // on the server fails with a string value. Unless we have a widget that 
+        // accepts a string value AND options at the same time we shouldn't show
+        // any edit widget
+        return null
         // if the type is not recognized, fall back to the TextWidget
-        return <TextWidget value={value as string} {...sharedProps} />
+        //return <TextWidget value={value as string} {...sharedProps} />
     }
   }, [cellId, value, type, isCurrentCellEditing, options, isCollapsed])
 

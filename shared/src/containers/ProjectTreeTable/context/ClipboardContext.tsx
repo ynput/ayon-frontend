@@ -252,12 +252,13 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({ children, 
         clipboardError(`Failed to read from clipboard: ${error.message}`)
         return
       }
+
+      // we can have empty text in the clipboard
       //if (!clipboardText.trim()) return
 
       // Parse the clipboard text
       const parsedData = parseClipboardText(clipboardText)
       if (!parsedData.length) return
-      console.log('Parsed clipboard data:', parsedData)
 
       // Determine if we have a single value in the clipboard (one row, one column)
       const isSingleCellValue = parsedData.length === 1 && parsedData[0].values.length === 1
