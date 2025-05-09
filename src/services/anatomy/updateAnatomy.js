@@ -1,73 +1,44 @@
-import api from '@shared/api'
 
 import { anatomyApi } from '@shared/api'
 
 const enhancedApi = anatomyApi.enhanceEndpoints({
   endpoints: {
+    updateAnatomyPreset: {
+      invalidatesTags: (result, error, { presetName }) => [
+        { type: 'anatomyPresets', id: presetName },
+        { type: 'anatomyPresets', id: 'LIST' },
+      ],
+    }, // updateAnatomyPreset
+
     renameAnatomyPreset: {
       invalidatesTags: (result, error, { presetName }) => [
         { type: 'anatomyPresets', id: presetName },
         { type: 'anatomyPresets', id: 'LIST' },
       ],
-    },
+    }, // renameAnatomyPreset
+
+    deleteAnatomyPreset: {
+      invalidatesTags: (result, error, { presetName }) => [
+        { type: 'anatomyPresets', id: presetName },
+        { type: 'anatomyPresets', id: 'LIST' },
+      ],
+    }, // deleteAnatomyPreset
+
+    setPrimaryPreset: {
+      invalidatesTags: (result, error, { presetName }) => [
+        { type: 'anatomyPresets', id: presetName },
+        { type: 'anatomyPresets', id: 'LIST' },
+      ],
+    }, // setPrimaryPreset
   },
 })
 
 
-
-const getAnatomy = api.injectEndpoints({
-  endpoints: (build) => ({
-    updatePreset: build.mutation({
-      query: ({ name, data }) => ({
-        url: `/api/anatomy/presets/${name}`,
-        method: 'PUT',
-        body: data,
-      }),
-      invalidatesTags: (result, error, { name }) => [
-        { type: 'anatomyPresets', id: name },
-        { type: 'anatomyPresets', id: 'LIST' },
-      ],
-    }),
-    deletePreset: build.mutation({
-      query: ({ name }) => ({
-        url: `/api/anatomy/presets/${name}`,
-        method: 'DELETE',
-      }),
-      invalidatesTags: (result, error, { name }) => [
-        { type: 'anatomyPresets', id: name },
-        { type: 'anatomyPresets', id: 'LIST' },
-      ],
-    }),
-    updatePrimaryPreset: build.mutation({
-      query: ({ name }) => ({
-        url: `/api/anatomy/presets/${name}/primary`,
-        method: 'POST',
-      }),
-      invalidatesTags: (result, error, { name }) => [
-        { type: 'anatomyPresets', id: name },
-        { type: 'anatomyPresets', id: 'LIST' },
-      ],
-    }),
-    unsetPrimaryPreset: build.mutation({
-      query: ({ name }) => ({
-        url: `/api/anatomy/presets/${name}/primary`,
-        method: 'DELETE',
-      }),
-      invalidatesTags: (result, error, { name }) => [
-        { type: 'anatomyPresets', id: name },
-        { type: 'anatomyPresets', id: 'LIST' },
-      ],
-    }),
-  }),
-  overrideExisting: true,
-})
-
 export const {
-  useUpdatePresetMutation,
-  useDeletePresetMutation,
-  useUpdatePrimaryPresetMutation,
-  useUnsetPrimaryPresetMutation,
-} = getAnatomy
+  useUpdateAnatomyPresetMutation,
+  useRenameAnatomyPresetMutation,
+  useDeleteAnatomyPresetMutation,
+  useSetPrimaryPresetMutation,
+} = enhancedApi
 
-export const { useRenameAnatomyPresetMutation } = enhancedApi
 export { enhancedApi as anatomyApi }

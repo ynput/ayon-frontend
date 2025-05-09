@@ -23,10 +23,10 @@ import { useGetAnatomyPresetsQuery } from '@queries/anatomy/getAnatomy'
 import PresetList from './PresetList'
 import AnatomyEditor from '@containers/AnatomyEditor'
 import {
-  useDeletePresetMutation,
-  useUpdatePresetMutation,
-  useUpdatePrimaryPresetMutation,
+  useDeleteAnatomyPresetMutation,
+  useUpdateAnatomyPresetMutation,
   useRenameAnatomyPresetMutation,
+  useSetPrimaryPresetMutation,
 } from '@queries/anatomy/updateAnatomy'
 import { confirmDelete } from '@shared/util'
 
@@ -76,18 +76,18 @@ const AnatomyPresets = () => {
   //
 
   // RTK Query updateAnatomy.js mutations
-  const [updatePreset, { isLoading: isUpdating }] = useUpdatePresetMutation()
-  const [deletePreset] = useDeletePresetMutation()
+  const [updatePreset, { isLoading: isUpdating }] = useUpdateAnatomyPresetMutation()
+  const [deletePreset] = useDeleteAnatomyPresetMutation()
   const [renamePreset] = useRenameAnatomyPresetMutation()
-  const [updatePrimaryPreset] = useUpdatePrimaryPresetMutation()
+  const [updatePrimaryPreset] = useSetPrimaryPresetMutation()
 
   // SAVE PRESET
-  const savePreset = (name) => {
-    updatePreset({ name, data: formData })
+  const savePreset = (presetName) => {
+    updatePreset({ presetName, anatomy: formData })
       .unwrap()
       .then(() => {
-        setSelectedPreset(name)
-        toast.info(`Preset ${name} saved`)
+        setSelectedPreset(presetName)
+        toast.info(`Preset ${presetName} saved`)
       })
       .catch((err) => {
         toast.error(err.message)
@@ -95,12 +95,11 @@ const AnatomyPresets = () => {
   }
 
   // DELETE PRESET
-  const handleDeletePreset = (name, isPrimary) => {
-    console.log('handleDeletePreset')
+  const handleDeletePreset = (presetName, isPrimary) => {
     confirmDelete({
-      label: `Preset: ${name}`,
+      label: `Preset: ${presetName}`,
       accept: async () => {
-        await deletePreset({ name }).unwrap()
+        await deletePreset({ presetName }).unwrap()
         if (isPrimary) {
           setSelectedPreset('_')
         }
@@ -109,14 +108,14 @@ const AnatomyPresets = () => {
   }
 
   // SET PRIMARY PRESET
-  const setPrimaryPreset = (name = '_') => {
+  const setPrimaryPreset = (presetName = '_') => {
     // if name is not provided, set primary preset to "_"
     // this is used to unset the primary preset
-    updatePrimaryPreset({ name })
+    updatePrimaryPreset({ presetName })
       .unwrap()
       .then(() => {
-        if (name !== '_') {
-          toast.info(`Preset ${name} set as primary`)
+        if (presetName !== '_') {
+          toast.info(`Preset ${presetName} set as primary`)
         } else {
           toast.info(`Preset set to built in default`)
         }
