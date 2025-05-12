@@ -5,6 +5,7 @@ import { parseCellId } from '../utils/cellUtils'
 import { confirmDelete } from '../../../util'
 import { useProjectTableContext } from '../context/ProjectTableContext'
 import { OperationModel } from '../types/operations'
+import { toast } from 'react-toastify'
 
 type UseDeleteEntitiesProps = {
   onSuccess?: () => void
@@ -18,6 +19,7 @@ const useDeleteEntities = ({ onSuccess }: UseDeleteEntitiesProps) => {
   const handleDeleteEntities = useCallback(
     async (entityIds: string[]) => {
       if (!entityIds || entityIds.length === 0) {
+        toast.error('No entities selected')
         return
       }
 
@@ -25,7 +27,10 @@ const useDeleteEntities = ({ onSuccess }: UseDeleteEntitiesProps) => {
         .map((id) => getEntityById(parseCellId(id)?.rowId || ''))
         .filter(Boolean)
 
-      if (fullEntities.length === 0) return
+      if (fullEntities.length === 0) {
+        toast.error('No entities found')
+        return
+      }
 
       const deleteEntities = async (force = false) => {
         const operations: OperationModel[] = []

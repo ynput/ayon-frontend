@@ -174,7 +174,7 @@ const useCellContextMenu = ({ attribs, onOpenNew }: CellContextMenuProps) => {
     label: 'Delete',
     icon: 'delete',
     danger: true,
-    command: () => deleteEntities(meta.selectedRows),
+    command: () => deleteEntities(meta.selectedCells),
     hidden: cell.columnId !== 'name',
   })
 
