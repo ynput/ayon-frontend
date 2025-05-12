@@ -19,8 +19,8 @@ import { FilterFieldType } from '@hooks/useBuildFilterOptions'
 import ProjectOverviewDetailsPanel from './containers/ProjectOverviewDetailsPanel'
 import NewEntity from '@components/NewEntity/NewEntity'
 import { useProjectTableContext, useSelectedRowsContext } from '@shared/containers/ProjectTreeTable'
-import ProjectOverviewSettings, { CustomizeButton } from './components/ProjectOverviewSettings'
-import { useSettingsPanel } from './context/SettingsPanelContext'
+import { ProjectTableSettings, CustomizeButton } from '@shared/components'
+import { useSettingsPanel } from '@shared/context'
 import ReloadButton from './components/ReloadButton'
 import OverviewActions from './components/OverviewActions'
 
@@ -156,7 +156,7 @@ const ProjectOverviewPage: FC = () => {
                     zIndex: 500,
                   }}
                 >
-                  <ProjectOverviewSettings />
+                  <ProjectTableSettings />
                 </SplitterPanel>
               ) : (
                 <SplitterPanel style={{ maxWidth: 0 }}></SplitterPanel>

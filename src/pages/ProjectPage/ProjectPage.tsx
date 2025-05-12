@@ -227,7 +227,6 @@ const ProjectPage = () => {
       <EntityListsProvider {...{ projectName, entityTypes: ['folder', 'task', 'version'] }}>
         <SlicerProvider>{child}</SlicerProvider>
       </EntityListsProvider>
-      <SlicerProvider>{child}</SlicerProvider>
       <ProjectPubSub projectName={projectName} onReload={loadProjectData} />
     </>
   )

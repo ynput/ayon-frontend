@@ -14,13 +14,8 @@ import ListsFiltersDialog from './components/ListsFiltersDialog/ListsFiltersDial
 import { ListItemsDataProvider, useListItemsDataContext } from './context/ListItemsDataContext'
 import ListItemsTable from './components/ListItemsTable/ListItemsTable'
 import ListItemsFilter from './components/ListItemsFilter/ListItemsFilter'
-import ProjectOverviewSettings, {
-  CustomizeButton,
-} from '@pages/ProjectOverviewPage/components/ProjectOverviewSettings'
-import {
-  SettingsPanelProvider,
-  useSettingsPanel,
-} from '@pages/ProjectOverviewPage/context/SettingsPanelContext'
+import { ProjectTableSettings, CustomizeButton } from '@shared/components'
+import { SettingsPanelProvider, useSettingsPanel } from '@shared/context'
 import { useUsersPageConfig } from '@pages/ProjectOverviewPage/hooks/useUserPageConfig'
 import useTableQueriesHelper from '@pages/ProjectOverviewPage/hooks/useTableQueriesHelper'
 import {
@@ -177,7 +172,7 @@ const ProjectListsPage: FC = () => {
                     zIndex: 500,
                   }}
                 >
-                  <ProjectOverviewSettings extraColumns={extraColumnsSettings} />
+                  <ProjectTableSettings extraColumns={extraColumnsSettings} />
                 </SplitterPanel>
               ) : (
                 <SplitterPanel style={{ maxWidth: 0 }}></SplitterPanel>

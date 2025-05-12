@@ -2,8 +2,8 @@ import { useProjectTableContext } from '@shared/containers/ProjectTreeTable'
 import { Button, ButtonProps } from '@ynput/ayon-react-components'
 import { FC } from 'react'
 import styled from 'styled-components'
-import { useSettingsPanel } from '../context/SettingsPanelContext'
-import { SettingsPanel, SettingConfig } from './SettingsPanel'
+import { useSettingsPanel } from '@shared/context'
+import { SettingsPanel, SettingConfig } from '@shared/components/SettingsPanel'
 import ColumnsSettings from './ColumnsSettings'
 
 const StyledCustomizeButton = styled(Button)`
@@ -27,13 +27,11 @@ export const CustomizeButton = ({ ...props }: Props) => {
   )
 }
 
-type ProjectOverviewSettingsContentProps = {
+type ProjectTableSettingsProps = {
   extraColumns?: { value: string; label: string }[]
 }
 
-const ProjectOverviewSettingsContent: FC<ProjectOverviewSettingsContentProps> = ({
-  extraColumns = [],
-}) => {
+export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({ extraColumns = [] }) => {
   const { attribFields } = useProjectTableContext()
 
   const columns = [
@@ -78,9 +76,3 @@ const ProjectOverviewSettingsContent: FC<ProjectOverviewSettingsContentProps> = 
 
   return <SettingsPanel settings={settings} />
 }
-
-const ProjectOverviewSettings: FC<ProjectOverviewSettingsContentProps> = (props) => {
-  return <ProjectOverviewSettingsContent {...props} />
-}
-
-export default ProjectOverviewSettings

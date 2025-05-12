@@ -8,7 +8,7 @@ import {
   CellEditingProvider,
 } from '@shared/containers/ProjectTreeTable'
 import { NewEntityProvider } from '@context/NewEntityContext'
-import { SettingsPanelProvider } from './context/SettingsPanelContext'
+import { SettingsPanelProvider } from '@shared/context'
 import { useAppSelector } from '@state/store'
 import {
   ProjectOverviewProvider,

@@ -1,5 +1,5 @@
 import { KeyboardEvent, MouseEvent, useCallback, useRef } from 'react'
-import { useSimpleTableContext } from '../../../../shared/src/SimpleTable/context/SimpleTableContext'
+import { useSimpleTableContext } from '@shared/SimpleTable/context/SimpleTableContext'
 import { Row, Table } from '@tanstack/react-table'
 
 interface UseRowSelectionProps<T> {
