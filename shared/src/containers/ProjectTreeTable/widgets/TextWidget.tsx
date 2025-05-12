@@ -13,7 +13,7 @@ const StyledBaseTextWidget = styled.span`
 type AttributeType = AttributeData['type']
 export type TextWidgetType = Extract<AttributeType, 'string' | 'integer' | 'float'>
 
-interface TextWidgetProps
+export interface TextWidgetProps
   extends Omit<React.HTMLAttributes<HTMLSpanElement>, 'onChange'>,
     WidgetBaseProps {
   value: string
