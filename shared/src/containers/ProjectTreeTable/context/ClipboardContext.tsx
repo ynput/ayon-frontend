@@ -252,7 +252,9 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({ children, 
         clipboardError(`Failed to read from clipboard: ${error.message}`)
         return
       }
-      if (!clipboardText.trim()) return
+
+      // we can have empty text in the clipboard
+      //if (!clipboardText.trim()) return
 
       // Parse the clipboard text
       const parsedData = parseClipboardText(clipboardText)

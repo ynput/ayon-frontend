@@ -6,7 +6,7 @@ import { WidgetBaseProps } from './CellWidget'
 export interface DateWidgetProps
   extends Omit<React.HTMLAttributes<HTMLSpanElement>, 'onChange'>,
     WidgetBaseProps {
-  value: string
+  value?: string
   isReadOnly?: boolean
   isInherited?: boolean
 }
@@ -14,11 +14,13 @@ export interface DateWidgetProps
 export const DateWidget = forwardRef<HTMLSpanElement, DateWidgetProps>(
   ({ value, isEditing, isReadOnly, isInherited, onChange, onCancelEdit, ...props }, ref) => {
     let dateString = ''
-    try {
-      dateString = format(new Date(value), 'dd-MM-yyyy')
-    } catch (error) {
-      console.error('Invalid date value:', value)
-      dateString = 'Invalid Date'
+    if (value) {
+      try {
+          dateString = format(new Date(value), 'dd-MM-yyyy')
+      } catch (error) {
+        console.error('Invalid date value:', value)
+        dateString = 'Invalid Date'
+      }
     }
 
     if (isEditing) {
