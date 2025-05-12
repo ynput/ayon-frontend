@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { ListsContextValue as V } from '../context/ListsContext'
-import { EntityListPostModel, EntityListSummary } from '@api/rest/lists'
+import type { EntityListPostModel, EntityListSummary } from '@shared/api'
 import { toast } from 'react-toastify'
 
 export interface NewListForm extends EntityListPostModel {}

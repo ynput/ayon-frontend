@@ -86,9 +86,9 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     selectors,
   })
 
-  const listItemsFilters = pageConfig?.listItemsFilters || ([] as Filter[])
+  const listItemsFilters = pageConfig?.filters || ([] as Filter[])
   const setListItemsFilters = async (filters: Filter[]) => {
-    await updatePageConfig({ items: { filters } })
+    await updatePageConfig({ filters })
   }
 
   const { columnSorting = [] } = pageConfig as {

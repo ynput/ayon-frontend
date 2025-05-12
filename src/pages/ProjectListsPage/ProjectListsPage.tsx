@@ -124,7 +124,8 @@ const ProjectListsPage: FC = () => {
             {selectedList && (
               <Toolbar>
                 <OverviewActions items={['undo', 'redo', deleteListItemAction]} />
-                <ListItemsFilter />
+                {/*@ts-expect-error - we do not support product right now*/}
+                <ListItemsFilter entityType={selectedList.entityType} projectName={projectName} />
                 <CustomizeButton />
               </Toolbar>
             )}

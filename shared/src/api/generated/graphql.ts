@@ -199,6 +199,7 @@ export type EntityListNodeItemsArgs = {
   accessibleOnly?: Scalars['Boolean']['input'];
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
+  filter?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   sortBy?: InputMaybe<Scalars['String']['input']>;
@@ -1544,6 +1545,7 @@ export type GetListItemsQueryVariables = Exact<{
   before?: InputMaybe<Scalars['String']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   sortBy?: InputMaybe<Scalars['String']['input']>;
+  filter?: InputMaybe<Scalars['String']['input']>;
 }>;
 
 
@@ -2191,7 +2193,7 @@ export const GetProductVersionsDocument = `
 }
     `;
 export const GetListItemsDocument = `
-    query GetListItems($projectName: String!, $listId: String!, $first: Int, $after: String, $before: String, $last: Int, $sortBy: String) {
+    query GetListItems($projectName: String!, $listId: String!, $first: Int, $after: String, $before: String, $last: Int, $sortBy: String, $filter: String) {
   project(name: $projectName) {
     entityLists(ids: [$listId]) {
       pageInfo {
@@ -2208,6 +2210,7 @@ export const GetListItemsDocument = `
             before: $before
             last: $last
             sortBy: $sortBy
+            filter: $filter
           ) {
             pageInfo {
               hasNextPage

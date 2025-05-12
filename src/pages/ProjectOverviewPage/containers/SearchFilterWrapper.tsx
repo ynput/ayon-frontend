@@ -8,12 +8,12 @@ import AdvancedFiltersPlaceholder from '@components/SearchFilter/AdvancedFilters
 import { usePowerpack } from '@context/powerpackContext'
 import { useColumnSettings } from '@shared/containers/ProjectTreeTable'
 
-interface SearchFilterWrapperProps extends Omit<BuildFilterOptions, 'scope' | 'data' | 'power'> {
-  filters: SearchFilterProps['filters']
-  onChange: SearchFilterProps['onChange']
-  disabledFilters?: string[]
+interface SearchFilterWrapperProps
+  extends Omit<BuildFilterOptions, 'scope' | 'data' | 'power'>,
+    Omit<SearchFilterProps, 'options' | 'onFinish'> {
   projectInfo?: ProjectModel
   tasksMap?: TaskNodeMap
+  scope: BuildFilterOptions['scope']
 }
 
 const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
@@ -24,6 +24,10 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
   disabledFilters,
   projectInfo,
   tasksMap,
+  scope = 'task',
+  config,
+  pt,
+  ...props
 }) => {
   const { columnOrder } = useColumnSettings()
 
@@ -54,10 +58,16 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
   const options = useBuildFilterOptions({
     filterTypes,
     projectNames,
-    scope: 'task',
+    scope,
     data,
     columnOrder,
-    config: { enableExcludes: power, enableOperatorChange: power, enableRelativeValues: true },
+    config: {
+      enableExcludes: power,
+      enableOperatorChange: power,
+      enableRelativeValues: true,
+      prefixes: { attributes: 'attrib.' },
+      ...config,
+    },
     power,
   })
 
@@ -70,6 +80,8 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
       _filters.filter((filter, index, self) => self.findIndex((f) => f.id === filter.id) === index),
     )
   }, [_filters, setFilters])
+
+  const { dropdown, searchBar, ...ptRest } = pt || {}
 
   return (
     <SearchFilter
@@ -88,6 +100,7 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
           style: {
             paddingRight: 28,
           },
+          ...searchBar,
         },
         dropdown: {
           operationsTemplate: power ? undefined : (
@@ -109,8 +122,11 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
               contentAfter: power ? undefined : <Icon icon="bolt" />,
             },
           },
+          ...dropdown,
         },
+        ...ptRest,
       }}
+      {...props}
     />
   )
 }

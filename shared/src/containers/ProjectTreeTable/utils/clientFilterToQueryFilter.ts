@@ -1,3 +1,4 @@
+import { FILTER_SEPARATOR, getFilterFromId } from '@ynput/ayon-react-components'
 import { QueryCondition, QueryFilter } from '../types/operations'
 
 // New type that cherry picks only the needed fields from Filter
@@ -34,7 +35,7 @@ export const clientFilterToQueryFilter = (filters: FilterForQuery[]): QueryFilte
 // Helper function to convert a single Filter to a QueryCondition
 const convertFilterToCondition = (filter: FilterForQuery): QueryCondition => {
   // Extract key from filter ID (split by underscore if needed)
-  const key = filter.id.split('_')[0]
+  const key = getFilterFromId(filter.id)
 
   // Handle values based on filter type
   let value: QueryCondition['value']
@@ -59,6 +60,7 @@ const convertFilterToCondition = (filter: FilterForQuery): QueryCondition => {
   const isListField =
     filter.type?.startsWith('list_of_') || key.includes('tags') || key.includes('assignees')
   const isDateField = filter.type === 'datetime'
+  const isBooleanField = filter.type === 'boolean'
 
   // Determine the appropriate operator based on filter properties and type
   let operator: QueryCondition['operator'] = 'eq'
@@ -139,9 +141,10 @@ const convertFilterToCondition = (filter: FilterForQuery): QueryCondition => {
 
     // If no date conditions were created, fall back to a basic equality check
     operator = filter.inverted ? 'ne' : 'eq'
+  } else if (isBooleanField) {
+    operator = filter.inverted ? 'ne' : 'eq'
   } else {
-    // DEFAULT
-    // For scalar fields
+    // DEFAULT for other scalar fields
     operator = filter.inverted ? 'notin' : 'in'
   }
 

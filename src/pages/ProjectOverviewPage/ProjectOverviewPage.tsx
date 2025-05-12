@@ -99,6 +99,7 @@ const ProjectOverviewPage: FC = () => {
                 filters={filtersWithHierarchy}
                 onChange={handleFiltersChange}
                 filterTypes={searchFilterTypes}
+                scope="task"
                 projectNames={projectName ? [projectName] : []}
                 projectInfo={projectInfo}
                 tasksMap={tasksMap}

@@ -20,10 +20,11 @@ import { Icon, Option } from '@ynput/ayon-react-components'
 import { dateOptions } from '@helpers/filterDates'
 import { isEmpty } from 'lodash'
 
-type Scope = 'folder' | 'product' | 'task' | 'user'
+type Scope = 'folder' | 'product' | 'task' | 'user' | 'version'
 export type FilterFieldType =
   | 'folderType'
   | 'taskType'
+  | 'productType'
   | ('users' | 'assignees')
   | 'attributes'
   | 'status'
@@ -44,6 +45,7 @@ type FilterConfig = {
   enableExcludes?: boolean
   enableOperatorChange?: boolean
   enableRelativeValues?: boolean
+  prefixes?: Partial<Record<FilterFieldType, string>> // Changed to Partial
 }
 
 export type BuildFilterOptions = {
@@ -135,6 +137,21 @@ const useBuildFilterOptions = ({
 
       entitySubTypeOption.values?.push(...subTypes)
 
+      options.push(entitySubTypeOption)
+    }
+  }
+
+  // PRODUCT TYPE
+  // add productType option
+  if (filterTypes.includes('productType') && scope !== 'user') {
+    const entitySubTypeOption = getOptionRoot('productType', {
+      ...config,
+      enableOperatorChange: false,
+    })
+    if (entitySubTypeOption) {
+      // get all subTypes for the current scope (entityType)
+      let subTypes = getSubTypes(projectsInfo, 'product')
+      entitySubTypeOption.values?.push(...subTypes)
       options.push(entitySubTypeOption)
     }
   }
@@ -402,12 +419,25 @@ const getSubTypes = (projectsInfo: GetProjectsInfoResponse, type: Scope): Option
   return options
 }
 
+const getIdWithPrefix = (
+  base: string,
+  fieldType: FilterFieldType,
+  prefixes?: FilterConfig['prefixes'],
+) => {
+  if (!prefixes) return base
+  if (fieldType in prefixes) {
+    return `${prefixes[fieldType]}${base}`
+  } else return base
+}
+
 const getOptionRoot = (fieldType: FilterFieldType, config?: FilterConfig) => {
+  const getRootIdWithPrefix = (base: string) => getIdWithPrefix(base, fieldType, config?.prefixes)
+
   let rootOption: Option | null = null
   switch (fieldType) {
     case 'taskType':
       rootOption = {
-        id: `taskType`,
+        id: getRootIdWithPrefix(`taskType`),
         type: 'string',
         label: `Task Type`,
         icon: getEntityTypeIcon('task'),
@@ -423,7 +453,7 @@ const getOptionRoot = (fieldType: FilterFieldType, config?: FilterConfig) => {
       break
     case 'folderType':
       rootOption = {
-        id: `folderType`,
+        id: getRootIdWithPrefix(`folderType`),
         type: 'string',
         label: `Folder Type`,
         icon: getEntityTypeIcon('folder'),
@@ -437,9 +467,25 @@ const getOptionRoot = (fieldType: FilterFieldType, config?: FilterConfig) => {
         operatorChangeable: false,
       }
       break
+    case 'productType':
+      rootOption = {
+        id: getRootIdWithPrefix(`productType`),
+        type: 'string',
+        label: `Product Type`,
+        icon: getEntityTypeIcon('product'),
+        inverted: false,
+        operator: 'OR',
+        values: [],
+        allowsCustomValues: false,
+        allowHasValue: false,
+        allowNoValue: false,
+        allowExcludes: config?.enableExcludes,
+        operatorChangeable: false,
+      }
+      break
     case 'status':
       rootOption = {
-        id: 'status',
+        id: getRootIdWithPrefix('status'),
         type: 'string',
         label: 'Status',
         icon: 'arrow_circle_right',
@@ -455,7 +501,7 @@ const getOptionRoot = (fieldType: FilterFieldType, config?: FilterConfig) => {
       break
     case 'assignees':
       rootOption = {
-        id: 'assignees',
+        id: getRootIdWithPrefix('assignees'),
         type: 'list_of_strings',
         label: 'Assignee',
         icon: 'person',
@@ -471,7 +517,7 @@ const getOptionRoot = (fieldType: FilterFieldType, config?: FilterConfig) => {
       break
     case 'tags':
       rootOption = {
-        id: 'tags',
+        id: getRootIdWithPrefix('tags'),
         type: 'list_of_strings',
         label: 'Tags',
         icon: 'local_offer',
@@ -498,7 +544,7 @@ const getAttributeFieldOptionRoot = (
   attribute: AttributeModel,
   config: FilterConfig & { allowsCustomValues: boolean },
 ): Option => ({
-  id: `attrib.${attribute.name}`,
+  id: getIdWithPrefix(attribute.name, 'attributes', config?.prefixes),
   type: attribute.data.type,
   label: attribute.data.title || attribute.name,
   operator: 'OR',

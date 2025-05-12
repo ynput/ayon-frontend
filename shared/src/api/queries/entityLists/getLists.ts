@@ -12,7 +12,7 @@ export const LISTS_PER_PAGE = 100
 
 // Define the type for our transformed lists data
 type QueryEntityList = GetListsQuery['project']['entityLists']['edges'][number]['node']
-export type EntityList = QueryEntityList
+export type EntityList = QueryEntityList & { entityType: 'folder' | 'version' | 'task' | 'product' }
 
 // Define the result type for lists query
 export type GetListsResult = {
@@ -106,6 +106,7 @@ const getListsGqlApiEnhanced = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefiniti
     GetLists: {
       transformResponse: (response: GetListsQuery): GetListsResult => {
         return {
+          // @ts-expect-error - entityType is string
           lists: response.project.entityLists.edges.map((edge) => edge.node),
           pageInfo: response.project.entityLists.pageInfo,
         }

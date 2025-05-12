@@ -237,8 +237,6 @@ export const ProjectTableProvider = ({
     [expanded, getChildrenEntities, setExpanded],
   )
 
-  console.log(tableData)
-
   return (
     <ProjectTableContext.Provider
       value={{

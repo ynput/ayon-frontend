@@ -1,19 +1,63 @@
-import { useListsDataContext } from '@pages/ProjectListsPage/context/ListsDataContext'
-import { SearchFilter } from '@ynput/ayon-react-components'
 import { FC } from 'react'
+import SearchFilterWrapper from '@pages/ProjectOverviewPage/containers/SearchFilterWrapper'
+import { ListEntityType } from '../NewListDialog/NewListDialog'
+import { BuildFilterOptions } from '@hooks/useBuildFilterOptions'
+import { useListItemsDataContext } from '@pages/ProjectListsPage/context/ListItemsDataContext'
 
-interface ListItemsFilterProps {}
+interface ListItemsFilterProps {
+  entityType: ListEntityType
+  projectName: string
+}
 
-const ListItemsFilter: FC<ListItemsFilterProps> = ({}) => {
-  const { listsFilters } = useListsDataContext()
+const ListItemsFilter: FC<ListItemsFilterProps> = ({ entityType, projectName }) => {
+  const { listItemsFilters, setListItemsFilters, projectInfo } = useListItemsDataContext()
+
   return (
-    <SearchFilter
-      filters={listsFilters}
-      onChange={() => {}}
-      options={[]}
-      style={{ opacity: 0.7, pointerEvents: 'none' }}
+    <SearchFilterWrapper
+      filters={listItemsFilters}
+      onChange={setListItemsFilters}
+      scope={entityType}
+      projectNames={[projectName]}
+      projectInfo={projectInfo}
+      filterTypes={getFilterTypesByScope(entityType)}
+      enableGlobalSearch={false}
+      config={{
+        prefixes: {
+          assignees: 'entity_',
+          tags: 'entity_',
+          status: 'entity_',
+          taskType: 'entity_',
+          folderType: 'entity_',
+          attributes: 'attrib.',
+        },
+      }}
     />
   )
 }
 
 export default ListItemsFilter
+
+const getFilterTypesByScope = (entityType: ListEntityType): BuildFilterOptions['filterTypes'] => {
+  const base: BuildFilterOptions['filterTypes'] = ['status', 'tags', 'attributes']
+  switch (entityType) {
+    case 'folder':
+      return [...base, 'folderType']
+    case 'task':
+      return [
+        ...base,
+        'taskType',
+        // 'folderType',
+        'assignees',
+      ]
+    case 'version':
+      return [
+        ...base,
+        // 'taskType',
+        // 'productType',
+        // 'folderType'
+      ]
+
+    default:
+      return []
+  }
+}

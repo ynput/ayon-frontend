@@ -1,5 +1,4 @@
 import { useGetCurrentUserQuery, useSetFrontendPreferencesMutation } from '@shared/api'
-import { camelCase } from 'lodash'
 import { toast } from 'react-toastify'
 
 type Props = {
@@ -21,7 +20,7 @@ export const useUsersPageConfig = ({ selectors = [], init }: Props): Result => {
 
   const configPath = selectors
     .filter((selector) => selector !== undefined && selector !== null)
-    .map((selector) => camelCase(selector))
+    .map((selector) => selector.replace(/\s/g, ''))
   // Start with the root preferences
   let userConfig = preferences
   for (const selector of configPath) {

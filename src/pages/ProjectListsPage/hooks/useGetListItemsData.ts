@@ -51,7 +51,7 @@ const useGetListItemsData = ({
       listId: listId || '',
       sortBy: sortId,
       desc: singleSort?.desc,
-      // filter: queryFilterString,
+      filter: queryFilterString,
     },
     {
       initialPageParam: { cursor: '' },
