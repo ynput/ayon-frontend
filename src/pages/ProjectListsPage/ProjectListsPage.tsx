@@ -34,6 +34,7 @@ import {
 } from '@shared/containers/ProjectTreeTable'
 import ProjectOverviewDetailsPanel from '@pages/ProjectOverviewPage/containers/ProjectOverviewDetailsPanel'
 import OverviewActions from '@pages/ProjectOverviewPage/components/OverviewActions'
+import useExtraColumns from './hooks/useExtraColumns'
 
 const ProjectListsWithOuterProviders: FC = () => {
   const projectName = useAppSelector((state) => state.project.name) || ''
@@ -106,6 +107,11 @@ const ProjectListsPage: FC = () => {
   const { selectedRows } = useSelectedRowsContext()
   const { deleteListItemAction } = useListItemsDataContext()
 
+  const { extraColumns, extraColumnsSettings } = useExtraColumns({
+    // @ts-expect-error - we do not support product right now
+    entityType: selectedList?.entityType,
+  })
+
   return (
     <main style={{ overflow: 'hidden', gap: 4 }}>
       <Splitter
@@ -144,7 +150,7 @@ const ProjectListsPage: FC = () => {
                 >
                   <SplitterPanel size={70}>
                     {/* ITEMS TABLE */}
-                    <ListItemsTable />
+                    <ListItemsTable extraColumns={extraColumns} />
                   </SplitterPanel>
                   {!!selectedRows.length ? (
                     <SplitterPanel
@@ -171,7 +177,7 @@ const ProjectListsPage: FC = () => {
                     zIndex: 500,
                   }}
                 >
-                  <ProjectOverviewSettings />
+                  <ProjectOverviewSettings extraColumns={extraColumnsSettings} />
                 </SplitterPanel>
               ) : (
                 <SplitterPanel style={{ maxWidth: 0 }}></SplitterPanel>

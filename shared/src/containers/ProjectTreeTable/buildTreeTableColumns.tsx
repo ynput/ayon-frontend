@@ -10,7 +10,6 @@ import {
 import { TableRow } from './types/table'
 import { AttributeData, AttributeWithPermissions, BuiltInFieldOptions } from './types'
 import { CellWidget, EntityNameWidget, ThumbnailWidget } from './widgets'
-import { useCellEditing } from './context/CellEditingContext'
 import { getCellId, getCellValue } from './utils/cellUtils'
 import { TableCellContent } from './ProjectTreeTable.styled'
 import clsx from 'clsx'
@@ -66,9 +65,25 @@ const attribSort: AttribSortingFn = (rowA, rowB, columnId, attrib) => {
   }
 }
 
-type DefaultColumns = 'name' | 'status' | 'subType' | 'assignees' | 'tags'
+type DefaultColumns =
+  | typeof ROW_SELECTION_COLUMN_ID
+  | 'thumbnail'
+  | 'name'
+  | 'status'
+  | 'subType'
+  | 'assignees'
+  | 'tags'
 
-export type buildTreeTableColumnsProps = {
+export type TreeTableExtraColumn = { column: ColumnDef<TableRow>; position?: number }
+export type TreeTableExtraColumnsConstructor = ({
+  options,
+  updateEntities,
+}: {
+  options: BuiltInFieldOptions
+  updateEntities: UpdateTableEntities
+}) => TreeTableExtraColumn[]
+
+export type BuildTreeTableColumnsProps = {
   tableData: TableRow[]
   attribs: AttributeWithPermissions[]
   columnSizing: ColumnSizingState
@@ -76,9 +91,9 @@ export type buildTreeTableColumnsProps = {
   showHierarchy: boolean
   sliceId: string
   options: BuiltInFieldOptions
-  hidden?: (DefaultColumns | string)[]
+  excluded?: (DefaultColumns | string)[]
   readonly?: (DefaultColumns | string)[]
-  extraColumns?: { column: ColumnDef<TableRow>; position?: number }[]
+  extraColumns?: TreeTableExtraColumnsConstructor
   toggleExpandAll: (id: string) => void
   toggleExpanded: (id: string) => void
   updateEntities: UpdateTableEntities
@@ -89,23 +104,33 @@ const buildTreeTableColumns = ({
   columnSizing = {},
   showHierarchy,
   options,
-  hidden,
+  excluded,
   readonly,
   extraColumns,
   toggleExpandAll,
   toggleExpanded,
   updateEntities,
-}: buildTreeTableColumnsProps) => {
-  const staticColumns: ColumnDef<TableRow>[] = [
-    {
+}: BuildTreeTableColumnsProps) => {
+  const staticColumns: ColumnDef<TableRow>[] = []
+
+  // Helper to check if a column should be included
+  const isIncluded = (id: DefaultColumns | string) => !excluded?.includes(id)
+
+  // Conditionally add static columns
+  if (isIncluded(ROW_SELECTION_COLUMN_ID)) {
+    staticColumns.push({
       id: ROW_SELECTION_COLUMN_ID,
       header: () => <RowSelectionHeader />,
       cell: () => <SelectionCell />,
       size: 20,
-    },
-    {
+    })
+  }
+
+  if (isIncluded('thumbnail')) {
+    staticColumns.push({
       id: 'thumbnail',
       header: '',
+      size: 63,
       minSize: 64,
       enableResizing: true,
       enableSorting: false,
@@ -120,8 +145,11 @@ const buildTreeTableColumns = ({
           />
         )
       },
-    },
-    {
+    })
+  }
+
+  if (isIncluded('name')) {
+    staticColumns.push({
       id: 'name',
       accessorKey: 'name',
       header: () => 'Folder / Task',
@@ -159,13 +187,16 @@ const buildTreeTableColumns = ({
           </TableCellContent>
         )
       },
-    },
-    {
+    })
+  }
+
+  if (isIncluded('status')) {
+    staticColumns.push({
       id: 'status',
       accessorKey: 'status',
       header: () => 'Status',
       sortingFn: withLoadingStateSort((a, b, c) =>
-        attribSort(a, b, c, { enum: options.statuses, type: 'string' }),
+        attribSort(a, b, c, { enum: options.status, type: 'string' }),
       ),
       sortDescFirst: true,
       size: columnSizing['status'] || 150,
@@ -183,15 +214,18 @@ const buildTreeTableColumns = ({
             columnId={column.id}
             value={value}
             attributeData={{ type: 'string' }}
-            options={options.statuses.filter((s) => s.scope?.includes(type))}
+            options={options.status.filter((s) => s.scope?.includes(type))}
             isCollapsed={!!row.original.childOnlyMatch}
             onChange={(value) => updateEntities([{ field: column.id, value, id, type }])}
             isReadOnly={readonly?.includes(column.id)}
           />
         )
       },
-    },
-    {
+    })
+  }
+
+  if (isIncluded('subType')) {
+    staticColumns.push({
       id: 'subType',
       accessorKey: 'subType',
       header: () => 'Type',
@@ -211,7 +245,7 @@ const buildTreeTableColumns = ({
             value={value}
             attributeData={{ type: 'string' }}
             options={
-              type === 'folder' ? options.folderTypes : type === 'task' ? options.taskTypes : []
+              type === 'folder' ? options.folderType : type === 'task' ? options.taskType : []
             }
             isCollapsed={!!row.original.childOnlyMatch}
             onChange={(value) => updateEntities([{ field: fieldId, value, id, type }])}
@@ -219,8 +253,11 @@ const buildTreeTableColumns = ({
           />
         )
       },
-    },
-    {
+    })
+  }
+
+  if (isIncluded('assignees')) {
+    staticColumns.push({
       id: 'assignees',
       accessorKey: 'assignees',
       header: () => 'Assignees',
@@ -248,15 +285,18 @@ const buildTreeTableColumns = ({
             columnId={column.id}
             value={value}
             attributeData={{ type: 'list_of_strings' }}
-            options={options.assignees}
+            options={options.assignee}
             isCollapsed={!!row.original.childOnlyMatch}
             onChange={(value) => updateEntities([{ field: column.id, value, id, type }])}
             isReadOnly={readonly?.includes(column.id)}
           />
         )
       },
-    },
-    {
+    })
+  }
+
+  if (isIncluded('tags')) {
+    staticColumns.push({
       id: 'tags',
       accessorKey: 'tags',
       header: () => 'Tags',
@@ -274,7 +314,7 @@ const buildTreeTableColumns = ({
             columnId={column.id}
             value={value}
             attributeData={{ type: 'list_of_strings' }}
-            options={options.tags}
+            options={options.tag}
             isCollapsed={!!row.original.childOnlyMatch}
             onChange={(value) => updateEntities([{ field: column.id, value, id, type }])}
             isReadOnly={readonly?.includes(column.id)}
@@ -282,56 +322,63 @@ const buildTreeTableColumns = ({
           />
         )
       },
-    },
-  ]
+    })
+  }
 
-  const attributeColumns = attribs.map((attrib) => {
-    const attribColumn: ColumnDef<TableRow> = {
-      id: 'attrib_' + attrib.name,
-      accessorKey: 'attrib.' + attrib.name,
-      header: () => attrib.data.title || attrib.name,
-      filterFn: 'fuzzy' as FilterFnOption<TableRow>,
-      sortingFn: withLoadingStateSort((a, b, c) => attribSort(a, b, c, attrib.data)),
-      enableSorting: true,
-      enableResizing: true,
-      enablePinning: true,
-      enableHiding: true,
-      cell: ({ row, column }) => {
-        const columnIdParsed = column.id.replace('attrib_', '')
-        const { value, id, type } = getValueIdType(row, columnIdParsed, 'attrib')
-        const isInherited = !row.original.ownAttrib.includes(columnIdParsed)
+  const attributeColumns: ColumnDef<TableRow>[] = attribs
+    .filter((attrib) => {
+      const columnId = 'attrib_' + attrib.name
+      // Check if the specific attribute column is excluded
+      // or if all built-in attributes are excluded and this is a built-in attribute
+      if (excluded?.includes(columnId)) return false
+      if (attrib.builtin && excluded?.includes('attrib')) return false
+      return true
+    })
+    .map((attrib) => {
+      const attribColumn: ColumnDef<TableRow> = {
+        id: 'attrib_' + attrib.name,
+        accessorKey: 'attrib.' + attrib.name,
+        header: () => attrib.data.title || attrib.name,
+        filterFn: 'fuzzy' as FilterFnOption<TableRow>,
+        sortingFn: withLoadingStateSort((a, b, c) => attribSort(a, b, c, attrib.data)),
+        enableSorting: true,
+        enableResizing: true,
+        enablePinning: true,
+        enableHiding: true,
+        cell: ({ row, column }) => {
+          const columnIdParsed = column.id.replace('attrib_', '')
+          const { value, id, type } = getValueIdType(row, columnIdParsed, 'attrib')
+          const isInherited = !row.original.ownAttrib.includes(columnIdParsed)
 
-        return (
-          <CellWidget
-            rowId={id}
-            className={clsx('attrib', { loading: row.original.isLoading })}
-            columnId={column.id}
-            value={value}
-            attributeData={{ type: attrib.data.type || 'string' }}
-            options={attrib.data.enum || []}
-            isCollapsed={!!row.original.childOnlyMatch}
-            isInherited={isInherited && ['folder', 'task'].includes(type)}
-            isReadOnly={
-              attrib.readOnly ||
-              readonly?.some((id) => id === columnIdParsed || (id === 'attrib' && attrib.builtin))
-            }
-            onChange={(value) =>
-              updateEntities([{ field: columnIdParsed, value, id, type, isAttrib: true }])
-            }
-          />
-        )
-      },
-    }
-    return attribColumn
-  })
+          return (
+            <CellWidget
+              rowId={id}
+              className={clsx('attrib', { loading: row.original.isLoading })}
+              columnId={column.id}
+              value={value}
+              attributeData={{ type: attrib.data.type || 'string' }}
+              options={attrib.data.enum || []}
+              isCollapsed={!!row.original.childOnlyMatch}
+              isInherited={isInherited && ['folder', 'task'].includes(type)}
+              isReadOnly={
+                attrib.readOnly ||
+                readonly?.some((id) => id === columnIdParsed || (id === 'attrib' && attrib.builtin))
+              }
+              onChange={(value) =>
+                updateEntities([{ field: columnIdParsed, value, id, type, isAttrib: true }])
+              }
+            />
+          )
+        },
+      }
+      return attribColumn
+    })
 
-  const allColumns = [...staticColumns, ...attributeColumns].filter(
-    (column) => !hidden?.includes(column.id as string),
-  )
+  const allColumns = [...staticColumns, ...attributeColumns]
 
   // Add extra columns if provided
   if (extraColumns) {
-    extraColumns.forEach(({ column, position = 0 }) => {
+    extraColumns({ options, updateEntities }).forEach(({ column, position = 0 }) => {
       if (position >= 0 && position < allColumns.length) {
         allColumns.splice(position, 0, column)
       } else {
@@ -345,7 +392,7 @@ const buildTreeTableColumns = ({
 
 export default buildTreeTableColumns
 
-const getValueIdType = (
+export const getValueIdType = (
   row: Row<TableRow>,
   field: string,
   nestedField?: keyof TableRow,

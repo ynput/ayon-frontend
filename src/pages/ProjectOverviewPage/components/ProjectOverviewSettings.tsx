@@ -27,7 +27,13 @@ export const CustomizeButton = ({ ...props }: Props) => {
   )
 }
 
-const ProjectOverviewSettingsContent: FC = () => {
+type ProjectOverviewSettingsContentProps = {
+  extraColumns?: { value: string; label: string }[]
+}
+
+const ProjectOverviewSettingsContent: FC<ProjectOverviewSettingsContentProps> = ({
+  extraColumns = [],
+}) => {
   const { attribFields } = useProjectTableContext()
 
   const columns = [
@@ -59,6 +65,7 @@ const ProjectOverviewSettingsContent: FC = () => {
       value: 'attrib_' + field.name,
       label: field.data.title || field.name,
     })),
+    ...extraColumns,
   ]
 
   const settings: SettingConfig[] = [
@@ -72,8 +79,8 @@ const ProjectOverviewSettingsContent: FC = () => {
   return <SettingsPanel settings={settings} />
 }
 
-const ProjectOverviewSettings: FC = () => {
-  return <ProjectOverviewSettingsContent />
+const ProjectOverviewSettings: FC<ProjectOverviewSettingsContentProps> = (props) => {
+  return <ProjectOverviewSettingsContent {...props} />
 }
 
 export default ProjectOverviewSettings

@@ -3,12 +3,14 @@ import { useListsContext } from '@pages/ProjectListsPage/context/ListsContext'
 import { getColumnConfigFromType } from '@pages/ProjectListsPage/util'
 import ListItemsShortcuts from '@pages/ProjectListsPage/util/ListItemsShortcuts'
 import { EmptyPlaceholder } from '@shared/components'
-import { ProjectTreeTable } from '@shared/containers/ProjectTreeTable'
+import { BuildTreeTableColumnsProps, ProjectTreeTable } from '@shared/containers/ProjectTreeTable'
 import { FC } from 'react'
 
-interface ListItemsTableProps {}
+interface ListItemsTableProps {
+  extraColumns: BuildTreeTableColumnsProps['extraColumns']
+}
 
-const ListItemsTable: FC<ListItemsTableProps> = ({}) => {
+const ListItemsTable: FC<ListItemsTableProps> = ({ extraColumns }) => {
   const { rowSelection, selectedList } = useListsContext()
   const selectedListsIds = Object.entries(rowSelection).filter(([_, isSelected]) => isSelected)
   const isMultipleSelected = selectedListsIds.length > 1
@@ -33,9 +35,9 @@ const ListItemsTable: FC<ListItemsTableProps> = ({}) => {
         fetchMoreOnBottomReached={fetchNextPage}
         pt={{
           columns: {
-            hidden: hiddenColumns,
+            excluded: hiddenColumns,
             readonly: readOnly,
-            extraColumns: [],
+            extraColumns: extraColumns,
           },
         }}
       />

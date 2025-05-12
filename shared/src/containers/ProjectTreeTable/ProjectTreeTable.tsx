@@ -27,7 +27,7 @@ import clsx from 'clsx'
 import type { TableRow } from './types/table'
 
 // Component imports
-import buildTreeTableColumns, { buildTreeTableColumnsProps } from './buildTreeTableColumns'
+import buildTreeTableColumns, { BuildTreeTableColumnsProps } from './buildTreeTableColumns'
 import * as Styled from './ProjectTreeTable.styled'
 import HeaderActionButton from './components/HeaderActionButton'
 import EmptyPlaceholder from '../../components/EmptyPlaceholder'
@@ -42,7 +42,6 @@ import { useColumnSettings } from './context/ColumnSettingsContext'
 // Hook imports
 import useCustomColumnWidthVars from './hooks/useCustomColumnWidthVars'
 import usePrefetchFolderTasks from './hooks/usePrefetchFolderTasks'
-import { useLocalStorage } from '../../hooks'
 import useCellContextMenu from './hooks/useCellContextMenu'
 import useColumnVirtualization from './hooks/useColumnVirtualization'
 import useKeyboardNavigation from './hooks/useKeyboardNavigation'
@@ -86,7 +85,7 @@ interface Props extends React.HTMLAttributes<HTMLDivElement> {
   fetchMoreOnBottomReached: (element: HTMLDivElement | null) => void
   onOpenNew?: (type: 'folder' | 'task') => void
   pt?: {
-    columns?: Partial<buildTreeTableColumnsProps>
+    columns?: Partial<BuildTreeTableColumnsProps>
     container?: React.HTMLAttributes<HTMLDivElement>
     head?: Partial<TableHeadProps>
   }
@@ -107,6 +106,8 @@ export const ProjectTreeTable = ({
     columnPinningUpdater,
     columnOrder,
     columnOrderUpdater,
+    columnSizing,
+    columnSizingUpdater,
   } = useColumnSettings()
 
   const {
@@ -144,16 +145,6 @@ export const ProjectTreeTable = ({
 
   // Selection context
   const { registerGrid } = useSelectionCellsContext()
-
-  // COLUMN SIZING
-  const [columnSizing, setColumnSizing] = useLocalStorage<ColumnSizingState>(
-    `column-widths-${scope}`,
-    {},
-  )
-
-  const updateColumnSizing: OnChangeFn<ColumnSizingState> = (columnSizingUpdater) => {
-    setColumnSizing(functionalUpdate(columnSizingUpdater, columnSizing))
-  }
 
   //a check on mount and after a fetch to see if the table is already scrolled to the bottom and immediately needs to fetch more data
   useEffect(() => {
@@ -240,7 +231,7 @@ export const ProjectTreeTable = ({
     onSortingChange: updateSorting,
     columnResizeMode: 'onChange',
     onColumnPinningChange: columnPinningUpdater,
-    onColumnSizingChange: updateColumnSizing,
+    onColumnSizingChange: columnSizingUpdater,
     onColumnVisibilityChange: columnVisibilityUpdater,
     onColumnOrderChange: columnOrderUpdater,
     // @ts-ignore
@@ -436,7 +427,6 @@ const TableHeadCell = ({ header, isLoading, isReadOnly }: TableHeadCellProps) =>
     <Styled.HeaderCell
       className={clsx(header.id, 'shimmer-dark', {
         loading: isLoading,
-        large: column.id === 'folderType',
         'last-pinned-left': column.getIsPinned() === 'left' && column.getIsLastColumn('left'),
       })}
       key={header.id}
@@ -446,11 +436,7 @@ const TableHeadCell = ({ header, isLoading, isReadOnly }: TableHeadCellProps) =>
       }}
     >
       {header.isPlaceholder ? null : (
-        <Styled.TableCellContent
-          className={clsx('bold', {
-            large: column.id === 'folderType',
-          })}
-        >
+        <Styled.TableCellContent className={clsx('bold')}>
           {flexRender(column.columnDef.header, header.getContext())}
           {isReadOnly && (
             <Icon icon="lock" data-tooltip={'You only have permission to read this column.'} />
@@ -675,7 +661,6 @@ const TableCell = ({ cell, rowId, cellId, className, showHierarchy, ...props }: 
       $isLastPinned={isLastLeftPinnedColumn} // is this column the last pinned column? Custom styling for borders.
       className={clsx(
         cell.column.id,
-        cell.column.id === 'folderType' ? 'large' : '',
         {
           selected: isCellSelected(cellId),
           focused: isCellFocused(cellId),

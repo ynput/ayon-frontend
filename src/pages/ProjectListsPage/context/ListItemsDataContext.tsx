@@ -136,18 +136,35 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     }
   }
 
-  const extractSubType = (item: EntityListItem, entityType?: string): string | undefined => {
+  const extractSubTypes = (
+    item: EntityListItem,
+    entityType?: string,
+  ): {
+    subType?: string
+    folderType?: string
+    taskType?: string
+    productType?: string
+  } => {
     switch (entityType) {
       case 'folder':
-        return item.folderType
+        return { subType: item.folderType, folderType: item.folderType }
       case 'task':
-        return item.taskType
+        return {
+          subType: item.taskType,
+          taskType: item.taskType,
+          folderType: item.folder?.folderType,
+        }
       case 'product':
-        return item.productType || ''
+        return { subType: item.productType || '', folderType: item.folder?.folderType }
       case 'version':
-        return undefined
+        return {
+          subType: undefined,
+          productType: item.product?.productType,
+          folderType: item.product?.folder?.folderType,
+          taskType: item.task?.taskType,
+        }
       default:
-        return undefined
+        return {}
     }
   }
 
@@ -171,11 +188,12 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
       entityId: item.entityId,
       entityType: item.entityType,
       assignees: item.assignees || [],
-      subType: extractSubType(item, item.entityType),
+      ...extractSubTypes(item, item.entityType), // subType, folderType, taskType, productType
       updatedAt: item.updatedAt,
       attrib: item.attrib,
       ownAttrib: item.ownAttrib || Object.keys(item.attrib),
-      icon: getEntityTypeData(item.entityType, extractSubType(item, item.entityType))?.icon,
+      icon: getEntityTypeData(item.entityType, extractSubTypes(item, item.entityType).subType)
+        ?.icon,
       path: extractPath(item, item.entityType),
       tags: item.tags,
       status: item.status,

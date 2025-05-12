@@ -10,6 +10,7 @@ fragment ListItemFragment on BaseNode {
     assignees
     folder {
       path
+      folderType
     }
   }
   ... on FolderNode {
@@ -30,6 +31,7 @@ fragment ListItemFragment on BaseNode {
     allAttrib
     folder {
       path
+      folderType
     }
   }
   ... on VersionNode {
@@ -39,12 +41,15 @@ fragment ListItemFragment on BaseNode {
     allAttrib
     product {
       name
+      productType
       folder {
         path
+        folderType
       }
     }
     task {
       name
+      taskType
     }
   }
 }

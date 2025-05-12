@@ -3,7 +3,10 @@ import { FC, useMemo, useState } from 'react'
 import styled from 'styled-components'
 
 // Context and Components imports
-import { useColumnSettings } from '@shared/containers/ProjectTreeTable/context/ColumnSettingsContext'
+import {
+  ColumnsConfig,
+  useColumnSettings,
+} from '@shared/containers/ProjectTreeTable/context/ColumnSettingsContext'
 import ColumnItem, { ColumnItemData } from './ColumnItem'
 import SortableColumnItem from './SortableColumnItem'
 
@@ -36,6 +39,7 @@ const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns }) => {
     updateColumnPinning,
     columnOrder,
     setColumnsConfig,
+    columnSizing,
   } = useColumnSettings()
 
   // State for the currently dragged column
@@ -222,10 +226,11 @@ const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns }) => {
         const isOverHidden = columnVisibility[overId] === false
 
         // Create a new config object that we'll update and apply at the end
-        const newConfig = {
+        const newConfig: ColumnsConfig = {
           columnVisibility: { ...columnVisibility },
           columnOrder: [...columnOrder],
           columnPinning: { ...columnPinning },
+          columnSizing: { ...columnSizing },
         }
 
         // If we're moving a column between visible columns (including pinned)

@@ -1,3 +1,4 @@
+import { productTypes } from '@shared/util'
 import { BuiltInFieldOptions } from '../types'
 import { FolderType, Status, Tag, TaskType } from '../types/project'
 
@@ -19,12 +20,12 @@ export const getTableFieldOptions = ({
   taskTypes,
   tags,
 }: Params): BuiltInFieldOptions => ({
-  assignees: users.map(({ name, fullName }) => ({
+  assignee: users.map(({ name, fullName }) => ({
     value: name,
     label: fullName || name,
     icon: `/api/users/${name}/avatar`,
   })),
-  statuses: statuses
+  status: statuses
     .filter((status) => !status.scope || ['folder', 'task'].some((s) => status.scope?.includes(s)))
     .map(({ name, color, icon, scope }) => ({
       value: name,
@@ -33,7 +34,12 @@ export const getTableFieldOptions = ({
       icon,
       scope,
     })),
-  tags: tags.map(({ name, color }) => ({ value: name, label: name, color })),
-  folderTypes: folderTypes.map(({ name, icon }) => ({ value: name, label: name, icon })),
-  taskTypes: taskTypes.map(({ name, icon }) => ({ value: name, label: name, icon })),
+  tag: tags.map(({ name, color }) => ({ value: name, label: name, color })),
+  folderType: folderTypes.map(({ name, icon }) => ({ value: name, label: name, icon })),
+  taskType: taskTypes.map(({ name, icon }) => ({ value: name, label: name, icon })),
+  productType: Object.entries(productTypes).map(([key, value]) => ({
+    value: key,
+    label: value.name,
+    icon: value.icon,
+  })),
 })

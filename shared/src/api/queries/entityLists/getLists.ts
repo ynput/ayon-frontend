@@ -47,15 +47,19 @@ type ItemNodeData = {
   path?: string
   folder?: {
     path: string
+    folderType: string
   }
   product?: {
     name: string
+    productType: string
     folder: {
       path: string
+      folderType: string
     }
   }
   task?: {
     name: string
+    taskType: string
   }
 }
 

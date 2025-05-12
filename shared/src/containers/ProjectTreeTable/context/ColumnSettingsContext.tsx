@@ -5,6 +5,7 @@ import {
   functionalUpdate,
   OnChangeFn,
   VisibilityState,
+  ColumnSizingState,
 } from '@tanstack/react-table'
 
 export interface ColumnSettingsContextType {
@@ -26,6 +27,11 @@ export interface ColumnSettingsContextType {
   updateColumnOrder: (columnOrder: ColumnOrderState) => void
   columnOrderUpdater: OnChangeFn<ColumnOrderState>
 
+  // Column Sizing
+  columnSizing: ColumnSizingState
+  setColumnSizing: (columnSizing: ColumnSizingState) => void
+  columnSizingUpdater: OnChangeFn<ColumnSizingState>
+
   // Global change
   setColumnsConfig: (config: ColumnsConfig) => void
 }
@@ -36,6 +42,7 @@ export type ColumnsConfig = {
   columnVisibility: VisibilityState
   columnOrder: ColumnOrderState
   columnPinning: ColumnPinningState
+  columnSizing: ColumnSizingState // Add this
 }
 
 interface ColumnSettingsProviderProps {
@@ -50,7 +57,12 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
   onChange,
 }) => {
   const columnsConfig = config as ColumnsConfig
-  const { columnOrder = [], columnPinning = {}, columnVisibility = {} } = columnsConfig
+  const {
+    columnOrder = [],
+    columnPinning = {},
+    columnVisibility = {},
+    columnSizing = {},
+  } = columnsConfig
 
   // DIRECT STATE UPDATES - no side effects
   const setColumnVisibility = (visibility: VisibilityState) => {
@@ -71,6 +83,13 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     onChange({
       ...columnsConfig,
       columnPinning: pinning,
+    })
+  }
+
+  const setColumnSizing = (sizing: ColumnSizingState) => {
+    onChange({
+      ...columnsConfig,
+      columnSizing: sizing,
     })
   }
 
@@ -153,6 +172,11 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     updateColumnPinning(newPinning)
   }
 
+  const columnSizingUpdater: OnChangeFn<ColumnSizingState> = (sizingUpdater) => {
+    const newSizing = functionalUpdate(sizingUpdater, columnSizing)
+    setColumnSizing(newSizing)
+  }
+
   return (
     <ColumnSettingsContext.Provider
       value={{
@@ -171,6 +195,10 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
         setColumnOrder,
         updateColumnOrder,
         columnOrderUpdater,
+        // column sizing
+        columnSizing,
+        setColumnSizing,
+        columnSizingUpdater,
         // global change
         setColumnsConfig: onChange,
       }}

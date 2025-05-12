@@ -4,14 +4,14 @@ type FunctionType = (entityType?: string) => StringStringArray
 export const getColumnConfigFromType: FunctionType = (entityType) => {
   switch (entityType) {
     case 'product':
-      return [['assignees'], ['attrib', 'subType']] as StringStringArray
+      return [['assignees', 'subType'], ['attrib']] as StringStringArray
     case 'version':
       return [['assignees', 'subType'], ['attrib']] as StringStringArray
     case 'folder':
-      return [['assignees'], []] as StringStringArray
+      return [['assignees', 'subType'], []] as StringStringArray
     case 'task':
-      return [[], []] as StringStringArray
+      return [['subType'], []] as StringStringArray
     default:
-      return [[], []] as StringStringArray
+      return [['subType'], []] as StringStringArray
   }
 }

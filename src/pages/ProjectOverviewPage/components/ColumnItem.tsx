@@ -78,6 +78,7 @@ const Item = styled.li`
 
   .drag-handle {
     cursor: grab;
+    height: 20px;
   }
 
   &.overlay {
