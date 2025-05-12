@@ -15,10 +15,11 @@ const placeholder = {
   label: 'Featured action slot',
   isPlaceholder: true,
   icon: { type: 'material-symbols', name: 'sync' },
+  groupLabel: '',
 }
 
 type ActionsProps = {
-  entities: any[]
+  entities: { id: string; projectName: string; entitySubType?: string }[]
   entityType: ActionContext['entityType']
   entitySubTypes?: string[]
   isLoadingEntity: boolean
@@ -41,14 +42,22 @@ export const Actions = ({
 
     // get a list of unique entity subtypes from loaded data
     const entitySubtypesLoaded = entities
-      .map((entity) => entity.entitySubType)
+      .filter((entity) => entity.entitySubType)
+      .map((entity) => entity.entitySubType as string)
       .filter((value, index, self) => self.indexOf(value) === index && value)
 
     // try and use the passed in entitySubTypes, if not use the loaded ones
-    const entitySubTypesToUse = entitySubTypes || entitySubtypesLoaded || []
+    const entitySubTypesToUse = entitySubTypes?.length ? entitySubTypes : entitySubtypesLoaded
 
-    // all types except version should have subtypes
-    if (!entitySubTypesToUse?.length && entityType !== 'version') return null
+    // all types except version/representation should have subtypes
+    if (
+      !entitySubTypesToUse?.length &&
+      entityType !== 'version' &&
+      entityType !== 'representation'
+    ) {
+      console.warn('No entity subtypes found')
+      return null
+    }
 
     return {
       projectName: entities[0].projectName,
@@ -66,6 +75,7 @@ export const Actions = ({
     { mode: 'simple', actionContext: context as ActionContext },
     { skip: !context },
   )
+
   const actions = data?.actions || []
 
   const categoryOrder = ['application', 'admin', 'workflow']
@@ -118,7 +128,7 @@ export const Actions = ({
 
       const groupOptions = groupedActions[category].map((action) => ({
         value: action.identifier,
-        label: action.label,
+        label: action.groupLabel ? action.groupLabel + ' ' + action.label : action.label,
         icon: action.icon,
         hasConfig: !!action.configFields,
       }))
@@ -282,7 +292,7 @@ export const Actions = ({
             // @ts-expect-error
             isPlaceholder: action.isPlaceholder,
           })}
-          data-tooltip={action.label}
+          data-tooltip={action.groupLabel ? action.groupLabel + ' ' + action.label : action.label}
           // @ts-expect-error
           disabled={action.isPlaceholder}
           onClick={(e) => handleExecuteAction(action.identifier, e)}

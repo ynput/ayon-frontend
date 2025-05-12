@@ -43,6 +43,7 @@ export type DetailsPanelEntityData = {
   thumbnailId?: string | null | undefined
   // extra metadata
   entityType: string
+  entitySubType?: string
   projectName: string
   // type specific
   task?: DetailsPanelTaskFragmentFragment
@@ -63,6 +64,7 @@ export const transformDetailsPanelQueriesData = ({
       const task = entity as DetailsPanelTask
       return {
         entityType: 'task',
+        entitySubType: task.taskType,
         projectName: projectName,
         id: task.id,
         name: task.name,
@@ -89,6 +91,7 @@ export const transformDetailsPanelQueriesData = ({
       const version = entity as DetailsPanelVersion
       return {
         entityType: 'version',
+        entitySubType: undefined,
         projectName: projectName,
         id: version.id,
         name: version.name,
@@ -112,6 +115,7 @@ export const transformDetailsPanelQueriesData = ({
       const folder = entity as DetailsPanelFolder
       return {
         entityType: 'folder',
+        entitySubType: folder.folderType,
         projectName: projectName,
         id: folder.id,
         name: folder.name,
@@ -137,6 +141,7 @@ export const transformDetailsPanelQueriesData = ({
       const representation = entity as DetailsPanelRepresentation
       return {
         entityType: 'representation',
+        entitySubType: undefined,
         projectName: projectName,
         id: representation.id,
         name: representation.name,

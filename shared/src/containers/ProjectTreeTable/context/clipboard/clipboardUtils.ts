@@ -47,6 +47,9 @@ export const processFieldValue = (
 ): any => {
   if (fieldValueType === 'array') {
     try {
+      if (value === '') {
+        return []
+      }
       // Try to parse as JSON first (for copied arrays)
       try {
         const parsed = JSON.parse(value)

@@ -1,4 +1,4 @@
-import { PowerpackFeature, usePowerpack } from '@context/powerpackContext'
+import { PowerpackFeature, usePowerpack } from '@context/PowerpackContext'
 import { Button, ButtonProps } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import { forwardRef, MouseEvent } from 'react'

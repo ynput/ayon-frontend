@@ -10,7 +10,7 @@ import { toggleFullscreen, toggleUpload, updateSelection, updateProduct } from '
 import ViewerComponent from './ViewerComponent'
 import ViewerDetailsPanel from './ViewerDetailsPanel'
 import * as Styled from './Viewer.styled'
-import { ViewerProvider } from '@context/viewerContext'
+import { ViewerProvider } from '@context/ViewerContext'
 
 // shared
 import { useGetViewerReviewablesQuery } from '@shared/api'

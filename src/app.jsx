@@ -15,7 +15,7 @@ import LoadingPage from '@pages/LoadingPage'
 import OnBoardingPage from '@pages/OnBoarding'
 const MarketPage = lazy(() => import('@pages/MarketPage'))
 const InboxPage = lazy(() => import('@pages/InboxPage'))
-const ProjectPage = lazy(() => import('@pages/ProjectPage'))
+const ProjectPage = lazy(() => import('@pages/ProjectPage/ProjectPage'))
 const ProjectManagerPage = lazy(() => import('@pages/ProjectManagerPage'))
 const ExplorerPage = lazy(() => import('@pages/ExplorerPage'))
 const APIDocsPage = lazy(() => import('@pages/APIDocsPage'))
@@ -36,16 +36,16 @@ import { toast } from 'react-toastify'
 import TrialBanner from '@components/TrialBanner/TrialBanner'
 
 // context
-import { ShortcutsProvider } from '@context/shortcutsContext'
-import { RestartProvider } from '@context/restartContext'
-import { PasteProvider, PasteModal } from '@context/pasteContext'
-import { URIProvider } from '@context/uriContext'
-import { NotificationsProvider } from '@context/notificationsContext'
+import { ShortcutsProvider } from '@context/ShortcutsContext'
+import { RestartProvider } from '@context/RestartContext'
+import { PasteProvider, PasteModal } from '@context/PasteContext'
+import { URIProvider } from '@context/UriContext'
+import { NotificationsProvider } from '@context/NotificationsContext'
 import { CustomerlyProvider } from 'react-live-chat-customerly'
 import { PiPProvider } from '@shared/context/pip/PiPProvider'
 import { RemoteModulesProvider, DetailsPanelProvider } from '@shared/context'
-import { PowerLicenseProvider } from './remote/context/PowerLicenseContext'
-import { PowerpackProvider } from '@context/powerpackContext'
+import { PowerLicenseProvider } from './remote/PowerLicenseContext'
+import { PowerpackProvider } from '@context/PowerpackContext'
 import { FeedbackProvider } from './feedback/FeedbackContext'
 
 // containers
@@ -70,7 +70,7 @@ import getTrialDates from '@components/TrialBanner/helpers/getTrialDates'
 import TrialEnded from '@containers/TrialEnded/TrialEnded'
 import { DetailsPanelFloating } from '@shared/containers'
 import PowerpackDialog from '@components/Powerpack/PowerpackDialog'
-import AppRemoteLoader from './remote/AppRemoteLoader/AppRemoteLoader'
+import AppRemoteLoader from './remote/AppRemoteLoader'
 import Customerly from '@components/Customerly'
 import CompleteProfilePrompt from '@components/CompleteProfilePrompt/CompleteProfilePrompt'
 import { goToFrame, openViewer } from '@state/viewer'
@@ -253,7 +253,11 @@ const App = () => {
                                             element={<ProjectManagerPage />}
                                           />
                                           <Route
-                                            path={'/projects/:projectName/:module'}
+                                            path={'/projects/:projectName'}
+                                            element={<ProjectPage />}
+                                          />
+                                          <Route
+                                            path={'/projects/:projectName/:module/*'}
                                             element={<ProjectPage />}
                                           />
                                           <Route

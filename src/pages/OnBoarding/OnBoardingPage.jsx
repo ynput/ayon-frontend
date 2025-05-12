@@ -6,7 +6,7 @@ import * as Step from './Step'
 import { Navigate, useLocation } from 'react-router'
 import StepWrapper from './util/StepWrapper'
 import { useRestartServerMutation } from '@queries/restartServer'
-import { SocketContext } from '@context/websocketContext'
+import { SocketContext } from '@context/WebsocketContext'
 import ServerRestartingPage from '@components/ServerRestartingPage'
 
 const OnBoardingPage = ({ noAdminUser, onFinish, isOnboarding }) => {

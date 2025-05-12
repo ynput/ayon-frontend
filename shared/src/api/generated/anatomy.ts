@@ -29,6 +29,19 @@ const injectedRtkApi = api.injectEndpoints({
         method: 'POST',
       }),
     }),
+    unsetPrimaryPreset: build.mutation<UnsetPrimaryPresetApiResponse, UnsetPrimaryPresetApiArg>({
+      query: (queryArg) => ({
+        url: `/api/anatomy/presets/${queryArg.presetName}/primary`,
+        method: 'DELETE',
+      }),
+    }),
+    renameAnatomyPreset: build.mutation<RenameAnatomyPresetApiResponse, RenameAnatomyPresetApiArg>({
+      query: (queryArg) => ({
+        url: `/api/anatomy/presets/${queryArg.presetName}/rename`,
+        method: 'POST',
+        body: queryArg.renamePresetModel,
+      }),
+    }),
   }),
   overrideExisting: false,
 })
@@ -54,6 +67,15 @@ export type DeleteAnatomyPresetApiArg = {
 export type SetPrimaryPresetApiResponse = unknown
 export type SetPrimaryPresetApiArg = {
   presetName: string
+}
+export type UnsetPrimaryPresetApiResponse = unknown
+export type UnsetPrimaryPresetApiArg = {
+  presetName: string
+}
+export type RenameAnatomyPresetApiResponse = unknown
+export type RenameAnatomyPresetApiArg = {
+  presetName: string
+  renamePresetModel: RenamePresetModel
 }
 export type AnatomyPresetListItem = {
   name: string
@@ -132,6 +154,21 @@ export type ProjectAttribModel = {
   endDate?: string
   /** Textual description of the entity */
   description?: string
+  ftrackId?: string
+  ftrackPath?: string
+  /** The Shotgrid ID of this entity. */
+  shotgridId?: string
+  /** The Shotgrid Type of this entity. */
+  shotgridType?: string
+  inheritableString?: string
+  /** Push changes done to this project to Shotgrid. Requires the transmitter service. */
+  shotgridPush?: boolean
+  tools?: string[]
+  applications?: string[]
+  sokoId?: string
+  booo?: boolean
+  sokoPath?: string
+  myAdvancedEnum?: 'first' | 'second'
 }
 export type FolderType = {
   name: string
@@ -193,4 +230,8 @@ export type ValidationError = {
 }
 export type HttpValidationError = {
   detail?: ValidationError[]
+}
+export type RenamePresetModel = {
+  /** The new name of the anatomy preset. */
+  name: string
 }

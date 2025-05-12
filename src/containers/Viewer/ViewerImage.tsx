@@ -1,6 +1,6 @@
 import { FC, useRef, useState } from 'react'
 import { Image } from './Viewer.styled'
-import { useViewer } from '@context/viewerContext'
+import { useViewer } from '@context/ViewerContext'
 import styled, { CSSProperties } from 'styled-components'
 import { AnnotationsContainerDimensions, ViewerOrientation } from './'
 

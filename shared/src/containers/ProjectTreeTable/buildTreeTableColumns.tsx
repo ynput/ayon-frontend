@@ -289,6 +289,13 @@ const buildTreeTableColumns = ({
             isCollapsed={!!row.original.childOnlyMatch}
             onChange={(value) => updateEntities([{ field: column.id, value, id, type }])}
             isReadOnly={readonly?.includes(column.id)}
+            pt={{
+              enum: {
+                multiSelectClose: value?.length === 0, // close the dropdown on first assignment
+                search: true, // enable search at all times
+                multipleOverride: false,
+              },
+            }}
           />
         )
       },

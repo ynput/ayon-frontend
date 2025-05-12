@@ -1,11 +1,13 @@
 import { useEffect, useState, useMemo, useRef } from 'react'
 
 import { copyToClipboard } from '@shared/util'
-import { usePaste } from '@context/pasteContext'
+import { usePaste } from '@context/PasteContext'
 
 import { InputText } from 'primereact/inputtext'
 
 import { toast } from 'react-toastify'
+
+import PresetNameDialog from './PresetNameDialog'
 
 import {
   Spacer,
@@ -21,22 +23,28 @@ import { useGetAnatomyPresetsQuery } from '@queries/anatomy/getAnatomy'
 import PresetList from './PresetList'
 import AnatomyEditor from '@containers/AnatomyEditor'
 import {
-  useDeletePresetMutation,
-  useUpdatePresetMutation,
-  useUpdatePrimaryPresetMutation,
+  useDeleteAnatomyPresetMutation,
+  useUpdateAnatomyPresetMutation,
+  useRenameAnatomyPresetMutation,
+  useSetPrimaryPresetMutation,
 } from '@queries/anatomy/updateAnatomy'
 import { confirmDelete } from '@shared/util'
 
 const AnatomyPresets = () => {
   const [formData, setFormData] = useState(null)
   const [selectedPreset, setSelectedPreset] = useState('_')
-  const [showNameDialog, setShowNameDialog] = useState(false)
-  const [newPresetName, setNewPresetName] = useState('')
   const [breadcrumbs, setBreadcrumbs] = useState([])
   const [isChanged, setIsChanged] = useState(false)
 
-  const nameInputRef = useRef(null)
   const { requestPaste } = usePaste()
+
+  const [dialogConfig, setDialogConfig] = useState({
+    isOpen: false,
+    title: '',
+    placeholder: '',
+    initialValue: '',
+    onSubmit: () => {},
+  })
 
   //
   // Hooks
@@ -60,35 +68,26 @@ const AnatomyPresets = () => {
   const isSelectedPrimary = useMemo(() => {
     // find preset in list
     const preset = presetList.find((p) => p.name === selectedPreset)
-    return preset && preset.primary === 'PRIMARY'
+    return preset && preset.primary
   }, [selectedPreset, presetList])
-
-  useEffect(() => {
-    // focus input when dialog is shown
-    if (showNameDialog && nameInputRef.current) {
-      setTimeout(() => {
-        nameInputRef.current.focus()
-      }, 100)
-    }
-  }, [showNameDialog, nameInputRef])
 
   //
   // Actions
   //
 
   // RTK Query updateAnatomy.js mutations
-  const [updatePreset, { isLoading: isUpdating }] = useUpdatePresetMutation()
-  const [deletePreset] = useDeletePresetMutation()
-  const [updatePrimaryPreset] = useUpdatePrimaryPresetMutation()
+  const [updatePreset, { isLoading: isUpdating }] = useUpdateAnatomyPresetMutation()
+  const [deletePreset] = useDeleteAnatomyPresetMutation()
+  const [renamePreset] = useRenameAnatomyPresetMutation()
+  const [updatePrimaryPreset] = useSetPrimaryPresetMutation()
 
   // SAVE PRESET
-  const savePreset = (name) => {
-    updatePreset({ name, data: formData })
+  const savePreset = (presetName) => {
+    updatePreset({ presetName, anatomy: formData })
       .unwrap()
       .then(() => {
-        setSelectedPreset(name)
-        setShowNameDialog(false)
-        toast.info(`Preset ${name} saved`)
+        setSelectedPreset(presetName)
+        toast.info(`Preset ${presetName} saved`)
       })
       .catch((err) => {
         toast.error(err.message)
@@ -96,12 +95,11 @@ const AnatomyPresets = () => {
   }
 
   // DELETE PRESET
-  const handleDeletePreset = (name, isPrimary) => {
-    console.log('handleDeletePreset')
+  const handleDeletePreset = (presetName, isPrimary) => {
     confirmDelete({
-      label: `Preset: ${name}`,
+      label: `Preset: ${presetName}`,
       accept: async () => {
-        await deletePreset({ name }).unwrap()
+        await deletePreset({ presetName }).unwrap()
         if (isPrimary) {
           setSelectedPreset('_')
         }
@@ -110,15 +108,14 @@ const AnatomyPresets = () => {
   }
 
   // SET PRIMARY PRESET
-  const setPrimaryPreset = (name = '_') => {
+  const setPrimaryPreset = (presetName = '_') => {
     // if name is not provided, set primary preset to "_"
     // this is used to unset the primary preset
-
-    updatePrimaryPreset({ name })
+    updatePrimaryPreset({ presetName })
       .unwrap()
       .then(() => {
-        if (name !== '_') {
-          toast.info(`Preset ${name} set as primary`)
+        if (presetName !== '_') {
+          toast.info(`Preset ${presetName} set as primary`)
         } else {
           toast.info(`Preset set to built in default`)
         }
@@ -127,10 +124,6 @@ const AnatomyPresets = () => {
         toast.error(err.message)
       })
   }
-
-  useEffect(() => {
-    // TODO
-  }, [breadcrumbs])
 
   const onPasteAnatomy = async () => {
     const pastedContent = await requestPaste()
@@ -150,37 +143,62 @@ const AnatomyPresets = () => {
   }
 
   //
+  // Dialog name dialog
+  //
+
+  const openCreatePresetDialog = () => {
+    setDialogConfig({
+      isOpen: true,
+      title: 'Create New Preset',
+      placeholder: 'Preset name',
+      initialValue: '',
+      onSubmit: (name) => {
+        savePreset(name)
+      },
+    })
+  }
+
+  const openRenamePresetDialog = (currentName) => {
+    setDialogConfig({
+      isOpen: true,
+      title: 'Rename Preset',
+      placeholder: 'New preset name',
+      initialValue: currentName,
+      onSubmit: (newName) => {
+        renamePreset({ presetName: currentName, renamePresetModel: { name: newName } })
+          .unwrap()
+          .then(() => {
+            setSelectedPreset(newName)
+            toast.info(`Preset renamed to ${newName}`)
+          })
+          .catch(() => {
+            toast.error('Unable to rename preset')
+          })
+      },
+    })
+  }
+
+  const closeDialog = () => {
+    setDialogConfig((prev) => ({ ...prev, isOpen: false }))
+  }
+
+  //
   // Render
   //
 
   return (
     <main>
-      {showNameDialog && (
-        <Dialog
-          header="Preset name"
-          isOpen={true}
-          onClose={() => setShowNameDialog(false)}
-          size="sm"
-          footer={
-            <SaveButton
-              label="Create New Preset"
-              onClick={() => savePreset(newPresetName)}
-              active={newPresetName}
-              style={{ marginLeft: 'auto' }}
-            />
-          }
-        >
-          <InputText
-            value={newPresetName}
-            ref={nameInputRef}
-            onChange={(e) => setNewPresetName(e.target.value)}
-            placeholder="Preset name"
-            style={{
-              width: '100%',
-            }}
-          />
-        </Dialog>
-      )}
+      <PresetNameDialog
+        isOpen={dialogConfig.isOpen}
+        title={dialogConfig.title}
+        placeholder={dialogConfig.placeholder}
+        initialValue={dialogConfig.initialValue}
+        onSubmit={(value) => {
+          dialogConfig.onSubmit(value)
+          closeDialog()
+        }}
+        onClose={closeDialog}
+      />
 
       <Section style={{ maxWidth: 400, minWidth: 300 }}>
         <PresetList
@@ -188,6 +206,7 @@ const AnatomyPresets = () => {
           setSelectedPreset={setSelectedPreset}
           onSetPrimary={setPrimaryPreset}
           onDelete={handleDeletePreset}
+          onRename={(name) => openRenamePresetDialog(name)}
           isLoading={isLoading}
           presetList={presetList}
         />
@@ -220,10 +239,7 @@ const AnatomyPresets = () => {
           <Button
             label="Save as a new preset"
             icon="add"
-            onClick={() => {
-              setNewPresetName('')
-              setShowNameDialog(true)
-            }}
+            onClick={openCreatePresetDialog}
             variant={selectedPreset === '_' ? 'filled' : 'surface'}
           />
 
@@ -241,8 +257,6 @@ const AnatomyPresets = () => {
             formData={formData}
             setFormData={setFormData}
             preset={selectedPreset}
-            breadcrumbs={breadcrumbs}
-            setBreadcrumbs={setBreadcrumbs}
             setIsChanged={setIsChanged}
           />
         </ScrollPanel>

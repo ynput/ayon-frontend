@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { ScrollPanel, SaveButton, Spacer, Button } from '@ynput/ayon-react-components'
 import ProjectManagerPageLayout from './ProjectManagerPageLayout'
 import AnatomyEditor from '@containers/AnatomyEditor'
-import { usePaste } from '@context/pasteContext'
+import { usePaste } from '@context/PasteContext'
 import useUserProjectPermissions, { PermissionLevel } from '@hooks/useUserProjectPermissions'
 import { useSelector } from 'react-redux'
 // shared

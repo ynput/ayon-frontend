@@ -42,6 +42,7 @@ export interface DetailsPanelContextProps {
   onOpenImage?: (args: any) => void
   onGoToFrame?: (frame: number) => void
   onOpenViewer?: (args: any) => void
+  onUpdateEntity?: (data: { operations: any[], entityType: string }) => void
 }
 
 // Interface for our simplified context

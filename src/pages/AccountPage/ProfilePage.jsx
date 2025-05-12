@@ -18,7 +18,7 @@ import ayonClient from '../../ayon'
 import Type from '@/theme/typography.module.css'
 import { updateUserAttribs, updateUserPreferences } from '@state/user'
 import { useDispatch } from 'react-redux'
-import { useNotifications } from '@context/notificationsContext'
+import { useNotifications } from '@context/NotificationsContext'
 import clsx from 'clsx'
 
 const FormsStyled = styled.section`
