@@ -10,20 +10,24 @@ import { PatchOperation } from '../types'
 import { HistoryEntityUpdate, UseHistoryReturn } from './useHistory'
 
 export type EntityUpdate = {
+  rowId: string
   id: string
   type: string
   field: string
   value: CellValue | CellValue[] | null
   isAttrib?: boolean
+  meta?: Record<string, any>
 }
 export type UpdateTableEntities = (entities: EntityUpdate[], pushHistory?: boolean) => Promise<void>
 
 export type InheritFromParentEntity = {
+  rowId: string
   entityId: string
   entityType: string
   attribs: string[]
   ownAttrib: string[]
   folderId: string
+  meta?: Record<string, any>
 }
 export type InheritFromParent = (
   entities: InheritFromParentEntity[],
@@ -35,6 +39,8 @@ export type UpdateTableEntity = (
   value: string,
   { includeSelection }: { includeSelection: boolean },
 ) => Promise<void>
+
+export type OperationWithRowId = OperationModel & { rowId: string; meta?: Record<string, any> }
 
 interface UseUpdateTableDataProps {
   pushHistory?: UseHistoryReturn['pushHistory']
@@ -60,7 +66,7 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
       // Record history of previous values before applying update
       if (pushHistory && pushToHistory) {
         const inverseEntities: HistoryEntityUpdate[] = entities.map(
-          ({ id, type, field, isAttrib }) => {
+          ({ rowId, id, type, field, isAttrib, meta }) => {
             const entityData = getEntityById(id) as Record<string, any>
             const entityId = entityData?.entityId || id
             const oldValue = isAttrib
@@ -72,6 +78,7 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
             const wasInherited = isAttrib && !ownAttrib.includes(field)
 
             return {
+              rowId: rowId,
               id: entityId,
               type,
               field,
@@ -80,17 +87,19 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
               wasInherited, // Track inheritance status for undo
               ownAttrib: ownAttrib,
               folderId: entityData?.folderId,
+              meta,
             }
           },
         )
         const historyEntities: HistoryEntityUpdate[] = entities.flatMap(
-          ({ id, type, field, value, isAttrib }) => {
+          ({ rowId, id, type, field, value, isAttrib, meta }) => {
             const entityData = getEntityById(id)
             const entityId = entityData?.entityId || id
 
             if (!entityData) return []
 
             return {
+              rowId: rowId,
               id: entityId,
               type,
               field,
@@ -98,6 +107,7 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
               isAttrib,
               ownAttrib: entityData?.ownAttrib || [],
               folderId: 'folderId' in entityData ? entityData.folderId : entityData?.parentId,
+              meta,
             }
           },
         )
@@ -111,9 +121,9 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
         'version',
       ]
       // Group operations by entity type for bulk processing
-      let operations: OperationModel[] = []
+      let operations: OperationWithRowId[] = []
       for (const entity of entities) {
-        let { id, type, field, value, isAttrib } = entity
+        let { id, type, field, value, isAttrib, meta } = entity
         const entityData = getEntityById(id)
         const entityId = entityData?.entityId || id
         // Skip unsupported entity types
@@ -161,10 +171,12 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
         } else {
           // Add new operation
           operations.push({
+            rowId: entity.rowId,
             entityType: entityType,
             entityId: entityId,
             type: 'update',
             data: data,
+            meta: meta,
           })
         }
       }
@@ -231,6 +243,7 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
           for (const attrib of entity.attribs) {
             if (entityData?.attrib && attrib in entityData.attrib) {
               undoEntities.push({
+                rowId: entity.rowId,
                 id: entity.entityId,
                 type: entity.entityType,
                 field: attrib,
@@ -239,6 +252,7 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
                 wasInherited: false, // Mark as not inherited
                 ownAttrib: entityData?.ownAttrib || [],
                 folderId: entityData?.folderId,
+                meta: entityData.meta,
               })
             }
           }
@@ -247,6 +261,7 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
         // Create redo entities (to re-inherit)
         const redoEntities: HistoryEntityUpdate[] = entities.flatMap((entity) =>
           entity.attribs.map((attrib) => ({
+            rowId: entity.rowId,
             id: entity.entityId,
             type: entity.entityType,
             field: attrib,
@@ -255,6 +270,7 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
             wasInherited: true, // Mark as inherited
             ownAttrib: entity.ownAttrib,
             folderId: entity.folderId,
+            meta: entity.meta,
           })),
         )
 
@@ -266,7 +282,7 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
 
       const supportedEntityTypes: OperationModel['entityType'][] = ['task', 'folder']
       // Group operations by entity type for bulk processing
-      const operations: OperationModel[] = [] // operations sent to the server
+      const operations: OperationWithRowId[] = [] // operations sent to the server
       const entitiesToPatch: InheritFromParentEntity[] = []
       for (const entity of entities) {
         // Skip unsupported entity types
@@ -284,12 +300,14 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
 
         // Add new operation this is what's sent to the server and is actually updated in the DB
         operations.push({
+          rowId: entity.rowId,
           entityType: entityType,
           entityId: entity.entityId,
           type: 'update',
           data: {
             attrib: attribData,
           },
+          meta: entity.meta,
         })
 
         // check if this entity has a folderId that is in entities

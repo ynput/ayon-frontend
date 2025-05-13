@@ -5,8 +5,6 @@ fragment ListItemFragment on BaseNode {
     status
     tags
     taskType
-    allAttrib
-    ownAttrib
     assignees
     folder {
       path
@@ -19,8 +17,6 @@ fragment ListItemFragment on BaseNode {
     status
     tags
     folderType
-    allAttrib
-    ownAttrib
     path
   }
   ... on ProductNode {
@@ -28,7 +24,6 @@ fragment ListItemFragment on BaseNode {
     status
     tags
     productType
-    allAttrib
     folder {
       path
       folderType
@@ -38,7 +33,6 @@ fragment ListItemFragment on BaseNode {
     name
     status
     tags
-    allAttrib
     product {
       name
       productType

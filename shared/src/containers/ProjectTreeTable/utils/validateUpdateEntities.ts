@@ -1,10 +1,11 @@
-import { AttributeData, AttributeWithPermissions } from '../types'
+import { AttributeData, ProjectTableAttribute } from '../types'
 import { EntityUpdate } from '../hooks/useUpdateTableData'
 
 const validateUpdateEntities = (
   entities: EntityUpdate[] = [],
-  attribFields: AttributeWithPermissions[],
+  attribFields: ProjectTableAttribute[],
 ) => {
+  console.log(entities)
   // first validate the values are correct
   for (const { isAttrib, value: rawValue, field } of entities) {
     if (!isAttrib) continue

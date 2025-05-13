@@ -8,7 +8,7 @@ import {
   sortingFns,
 } from '@tanstack/react-table'
 import { TableRow } from './types/table'
-import { AttributeData, AttributeWithPermissions, BuiltInFieldOptions } from './types'
+import { AttributeData, ProjectTableAttribute, BuiltInFieldOptions } from './types'
 import { CellWidget, EntityNameWidget, ThumbnailWidget } from './widgets'
 import { getCellId, getCellValue } from './utils/cellUtils'
 import { TableCellContent } from './ProjectTreeTable.styled'
@@ -85,7 +85,7 @@ export type TreeTableExtraColumnsConstructor = ({
 
 export type BuildTreeTableColumnsProps = {
   tableData: TableRow[]
-  attribs: AttributeWithPermissions[]
+  attribs: ProjectTableAttribute[]
   columnSizing: ColumnSizingState
   isLoading: boolean
   showHierarchy: boolean
@@ -216,7 +216,7 @@ const buildTreeTableColumns = ({
             attributeData={{ type: 'string' }}
             options={options.status.filter((s) => s.scope?.includes(type))}
             isCollapsed={!!row.original.childOnlyMatch}
-            onChange={(value) => updateEntities([{ field: column.id, value, id, type }])}
+            onChange={(value) => updateEntities([{ field: column.id, value, id, type, rowId: id }])}
             isReadOnly={readonly?.includes(column.id)}
           />
         )
@@ -248,7 +248,9 @@ const buildTreeTableColumns = ({
               type === 'folder' ? options.folderType : type === 'task' ? options.taskType : []
             }
             isCollapsed={!!row.original.childOnlyMatch}
-            onChange={(value) => updateEntities([{ field: fieldId, value, id, type }])}
+            onChange={(value) =>
+              updateEntities([{ field: fieldId, value, id, type, rowId: row.id }])
+            }
             isReadOnly={readonly?.includes(column.id)}
           />
         )
@@ -287,7 +289,9 @@ const buildTreeTableColumns = ({
             attributeData={{ type: 'list_of_strings' }}
             options={options.assignee}
             isCollapsed={!!row.original.childOnlyMatch}
-            onChange={(value) => updateEntities([{ field: column.id, value, id, type }])}
+            onChange={(value) =>
+              updateEntities([{ field: column.id, value, id, type, rowId: row.id }])
+            }
             isReadOnly={readonly?.includes(column.id)}
             pt={{
               enum: {
@@ -323,7 +327,9 @@ const buildTreeTableColumns = ({
             attributeData={{ type: 'list_of_strings' }}
             options={options.tag}
             isCollapsed={!!row.original.childOnlyMatch}
-            onChange={(value) => updateEntities([{ field: column.id, value, id, type }])}
+            onChange={(value) =>
+              updateEntities([{ field: column.id, value, id, type, rowId: row.id }])
+            }
             isReadOnly={readonly?.includes(column.id)}
             enableCustomValues
           />
@@ -372,7 +378,9 @@ const buildTreeTableColumns = ({
                 readonly?.some((id) => id === columnIdParsed || (id === 'attrib' && attrib.builtin))
               }
               onChange={(value) =>
-                updateEntities([{ field: columnIdParsed, value, id, type, isAttrib: true }])
+                updateEntities([
+                  { field: columnIdParsed, value, id, type, isAttrib: true, rowId: row.id },
+                ])
               }
             />
           )
@@ -385,7 +393,7 @@ const buildTreeTableColumns = ({
 
   // Add extra columns if provided
   if (extraColumns) {
-    extraColumns({ options, updateEntities }).forEach(({ column, position = 0 }) => {
+    extraColumns({ options, updateEntities }).forEach(({ column, position = -1 }) => {
       if (position >= 0 && position < allColumns.length) {
         allColumns.splice(position, 0, column)
       } else {

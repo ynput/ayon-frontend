@@ -1,7 +1,7 @@
 import { useGetSiteInfoQuery, AttributeModel } from '@shared/api'
 import { useGetMyProjectPermissionsQuery } from '@queries/permissions/getPermissions'
 
-export interface AttributeWithPermissions extends AttributeModel {
+export interface ProjectTableAttribute extends AttributeModel {
   readOnly?: boolean
 }
 
@@ -18,7 +18,7 @@ const useAttributeFields = ({ projectName }: { projectName: string }) => {
   const { enabled: attribWriteEnabled, attributes: attribWriteAttributes } = attrib_write || {}
 
   //   filter out scopes and filter out attributes that do not have read access
-  const attribFields: AttributeWithPermissions[] = attributes
+  const attribFields: ProjectTableAttribute[] = attributes
     .filter((a) => !attribReadEnabled || attribReadAttributes?.includes(a.name))
     .map((a) => ({
       ...a,

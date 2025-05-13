@@ -2,7 +2,7 @@ import { createContext, ReactNode, useContext, useMemo } from 'react'
 import { useGetUsersAssigneeQuery } from '@shared/api'
 import { useGetProjectQuery } from '@queries/project/enhancedProject'
 import type { ProjectModel } from '@shared/api'
-import useAttributeFields, { AttributeWithPermissions } from '../hooks/useAttributesList'
+import useAttributeFields, { ProjectTableAttribute } from '../hooks/useAttributesList'
 
 type User = {
   name: string
@@ -17,7 +17,7 @@ export interface ProjectDataContextProps {
   projectName: string
   users: User[]
   // Attributes
-  attribFields: AttributeWithPermissions[]
+  attribFields: ProjectTableAttribute[]
 }
 
 const ProjectDataContext = createContext<ProjectDataContextProps | undefined>(undefined)

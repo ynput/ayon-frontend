@@ -25,9 +25,7 @@ type QueryEntityListItemEdge =
 type ItemNodeData = {
   name: string
   status: string
-  allAttrib: string
   tags: string[]
-  ownAttrib?: string[]
   taskType?: string
   folderType?: string
   productType?: string

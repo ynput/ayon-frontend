@@ -18,7 +18,7 @@ import useFolderRelationships, {
 } from '../hooks/useFolderRelationships'
 import { RowId } from '../utils/cellUtils'
 import { ProjectModel } from '../types/project'
-import { AttributeWithPermissions, LoadingTasks } from '../types'
+import { ProjectTableAttribute, LoadingTasks } from '../types'
 import { QueryFilter } from '../types/folders'
 import { ContextMenuItemConstructors } from '../hooks/useCellContextMenu'
 
@@ -34,13 +34,13 @@ export interface ProjectTableProviderProps {
   // loading
   isLoading: boolean
   isLoadingMore: boolean
-  loadingTasks: LoadingTasks
+  loadingTasks?: LoadingTasks
   // Project Info
   projectInfo?: ProjectModel
   projectName: string
   users: User[]
   // Attributes
-  attribFields: AttributeWithPermissions[]
+  attribFields: ProjectTableAttribute[]
 
   // data
   tasksMap: TaskNodeMap

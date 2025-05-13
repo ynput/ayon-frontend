@@ -8,7 +8,7 @@ import {
   TaskNodeMap,
 } from '../types/table'
 import { ProjectAttribModel2 } from '../types/project'
-import { AttributeWithPermissions } from '../types'
+import { ProjectTableAttribute } from '../types'
 import { getEntityDataById } from '../utils/cellUtils'
 
 export interface InheritedDependent {
@@ -28,12 +28,12 @@ export type FindNonInheritedValues = (
 ) => Record<string, any>
 export type GetAncestorsOf = (id: string) => string[]
 interface UseFolderRelationshipsProps {
-  tasksMap: TaskNodeMap
-  entitiesMap: EntitiesMap
-  tasksByFolderMap: Map<string, string[]>
+  tasksMap?: TaskNodeMap
+  entitiesMap?: EntitiesMap
+  tasksByFolderMap?: Map<string, string[]>
   getEntityById: (id: string) => any
   projectAttrib: ProjectAttribModel2 | undefined
-  attribFields: AttributeWithPermissions[] | undefined
+  attribFields: ProjectTableAttribute[] | undefined
 }
 
 export default function useFolderRelationships({
@@ -47,6 +47,7 @@ export default function useFolderRelationships({
   // Pre-compute folder-children relationships
   const folderChildrenMap = useMemo(() => {
     const map = new Map<string, string[]>()
+    if (!entitiesMap) return map
     for (const folder of entitiesMap.values()) {
       // Skip if not a folder
       if (folder.entityType !== 'folder') continue
@@ -74,14 +75,14 @@ export default function useFolderRelationships({
         visited.add(currentId)
 
         // Skip adding the root folder to descendants
-        if (currentId !== id) {
+        if (currentId !== id && entitiesMap) {
           const folder = getEntityDataById<'folder'>(currentId, entitiesMap)
           if (folder) descendants.push({ ...folder, entityType: 'folder' })
         }
 
         // Add tasks efficiently with a single lookup
-        const taskIds = tasksByFolderMap.get(currentId)
-        if (taskIds?.length) {
+        const taskIds = tasksByFolderMap?.get(currentId)
+        if (taskIds?.length && entitiesMap) {
           for (const taskId of taskIds) {
             const task = getEntityDataById<'task'>(taskId, entitiesMap)
             if (task) descendants.push({ ...task, entityType: 'task' })
@@ -107,7 +108,7 @@ export default function useFolderRelationships({
       let currentId = id
 
       while (true) {
-        const entity = getEntityDataById<'folder'>(currentId, entitiesMap)
+        const entity = entitiesMap && getEntityDataById<'folder'>(currentId, entitiesMap)
         if (!entity || !entity.parentId) break
 
         ancestors.push(entity.parentId)
@@ -122,7 +123,7 @@ export default function useFolderRelationships({
   // Helper function to get all folder ancestors of a task
   const getTaskAncestors = useCallback(
     (taskId: string): string[] => {
-      const task = tasksMap.get(taskId) as EMapResult<'task'>
+      const task = tasksMap?.get(taskId) as EMapResult<'task'>
       if (!task || !task.folderId) return []
 
       // Start with the direct parent folder

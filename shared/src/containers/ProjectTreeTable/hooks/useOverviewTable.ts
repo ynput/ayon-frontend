@@ -21,7 +21,7 @@ type Params = {
   expanded: ExpandedState
   projectInfo?: ProjectModel
   showHierarchy: boolean
-  loadingTasks: LoadingTasks
+  loadingTasks?: LoadingTasks
   isLoadingMore?: boolean
 }
 

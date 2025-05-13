@@ -101,6 +101,7 @@ const useGetListItemsData = ({
     entityType: 'unknown',
     allAttrib: '',
     attrib: {},
+    ownAttrib: [],
     status: 'private',
     tags: [],
     updatedAt: '',

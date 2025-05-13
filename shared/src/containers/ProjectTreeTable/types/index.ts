@@ -61,7 +61,7 @@ export type AttributeModel = {
   data: AttributeData
 }
 
-export interface AttributeWithPermissions extends AttributeModel {
+export interface ProjectTableAttribute extends Omit<AttributeModel, 'position'> {
   readOnly?: boolean
 }
 

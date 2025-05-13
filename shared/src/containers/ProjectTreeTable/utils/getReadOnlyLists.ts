@@ -1,9 +1,6 @@
-import { AttributeWithPermissions } from '../types'
+import { ProjectTableAttribute } from '../types'
 
-export const getReadOnlyLists = (
-  attribFields: AttributeWithPermissions[],
-  extra: string[] = [],
-) => {
+export const getReadOnlyLists = (attribFields: ProjectTableAttribute[], extra: string[] = []) => {
   let readOnlyAttribs: string[] = attribFields
     .filter((attrib) => attrib.readOnly) // Filter attributes that are explicitly readOnly
     .map((attrib) => attrib.name) // Extract the names of the readOnly attributes

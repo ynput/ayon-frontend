@@ -1,5 +1,6 @@
 import { entityListsApi } from '@shared/api/generated'
 import gqlApi from './getLists'
+import { current } from '@reduxjs/toolkit'
 
 const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
   endpoints: {
@@ -70,6 +71,53 @@ const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
         return tags
       },
     },
+    updateEntityListItem: {
+      async onQueryStarted(
+        { listItemId, entityListItemPatchModel },
+        { dispatch, queryFulfilled, getState },
+      ) {
+        const state = getState()
+        // Find all caches that are invalidated by this mutation
+        const tags = [{ type: 'entityListItem', id: listItemId }]
+        const infiniteEntries = gqlApi.util
+          .selectInvalidatedBy(state, tags)
+          .filter((e) => e.endpointName === 'getListItemsInfinite')
+
+        let patchResults: any[] = []
+        for (const entry of infiniteEntries) {
+          const patchResult = dispatch(
+            gqlApi.util.updateQueryData('getListItemsInfinite', entry.originalArgs, (draft) => {
+              for (const page of draft.pages) {
+                const listIndex = page.items.findIndex((list) => list.id === listItemId)
+                if (listIndex !== -1) {
+                  const list = page.items[listIndex]
+                  const newListItem = {
+                    ...list,
+                    attrib: {
+                      ...list.attrib,
+                      ...entityListItemPatchModel.attrib,
+                    },
+                  }
+                  // Update the list with the new data
+                  Object.assign(list, newListItem)
+                  break
+                }
+              }
+            }),
+          )
+          // Store the patch result to undo it later if needed
+          patchResults.push(patchResult)
+        }
+        try {
+          await queryFulfilled
+        } catch {
+          patchResults.forEach((patchResult) => {
+            // Undo the optimistic update if the mutation fails
+            patchResult.undo()
+          })
+        }
+      },
+    },
     createEntityListItem: {
       invalidatesTags: (_s, _e, { listId }) => [
         { type: 'entityList', id: listId },
@@ -92,6 +140,7 @@ export const {
   useDeleteEntityListMutation,
   // LIST ITEM MUTATIONS
   useUpdateEntityListItemsMutation,
+  useUpdateEntityListItemMutation,
   useCreateEntityListItemMutation,
   useDeleteEntityListItemMutation,
 } = updateListsEnhancedApi

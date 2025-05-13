@@ -51,7 +51,7 @@ import { getCellId } from './utils/cellUtils'
 import { generateLoadingRows, generateDummyAttributes } from './utils/loadingUtils'
 import { createPortal } from 'react-dom'
 import { Icon } from '@ynput/ayon-react-components'
-import { AttributeEnumItem, AttributeWithPermissions, BuiltInFieldOptions } from './types'
+import { AttributeEnumItem, ProjectTableAttribute, BuiltInFieldOptions } from './types'
 import { useProjectTableContext } from './context/ProjectTableContext'
 import { getReadOnlyLists, getTableFieldOptions } from './utils'
 
@@ -496,7 +496,7 @@ interface TableBodyProps {
   showHierarchy: boolean
   virtualPaddingLeft: number | undefined
   virtualPaddingRight: number | undefined
-  attribs: AttributeWithPermissions[]
+  attribs: ProjectTableAttribute[]
   onOpenNew?: (type: 'folder' | 'task') => void
 }
 

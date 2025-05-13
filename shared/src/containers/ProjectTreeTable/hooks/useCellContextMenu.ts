@@ -7,7 +7,7 @@ import { ROW_SELECTION_COLUMN_ID, useSelectionCellsContext } from '../context/Se
 import { useProjectTableContext } from '../context/ProjectTableContext'
 import { useCellEditing } from '../context/CellEditingContext'
 import { InheritFromParentEntity } from './useUpdateTableData'
-import { AttributeWithPermissions } from '../types'
+import { ProjectTableAttribute } from '../types'
 import { UseHistoryReturn } from './useHistory'
 
 type ContextEvent = React.MouseEvent<HTMLTableSectionElement, MouseEvent>
@@ -17,7 +17,7 @@ export type TableCellContextData = {
   cellId: string
   columnId: string
   entityType: 'folder' | 'task' | 'product' | 'version' | undefined
-  attribField: AttributeWithPermissions | undefined
+  attribField: ProjectTableAttribute | undefined
 }
 type DefaultMenuItem =
   | 'copy-paste'
@@ -45,7 +45,7 @@ export type ContextMenuItemConstructor = (
 export type ContextMenuItemConstructors = (DefaultMenuItem | ContextMenuItemConstructor)[]
 
 type CellContextMenuProps = {
-  attribs: AttributeWithPermissions[]
+  attribs: ProjectTableAttribute[]
   onOpenNew?: (type: 'folder' | 'task') => void
 }
 

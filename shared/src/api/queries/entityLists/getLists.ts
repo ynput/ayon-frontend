@@ -19,7 +19,6 @@ import {
   ListItemMessage,
   ListItemsPageParam,
   ListsPageParam,
-  QueryEntityListItemNode,
 } from './types'
 
 // GRAPHQL API (getLists and getListItems)
@@ -50,11 +49,10 @@ const getListsGqlApiEnhanced = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefiniti
         return {
           items: response.project.entityLists.edges.flatMap((listEdge) =>
             listEdge.node.items.edges.map(({ node, ...edge }) => {
-              const nodeWithNode = node as QueryEntityListItemNode
               return {
                 ...node,
                 ...edge,
-                attrib: parseAllAttribs(nodeWithNode.allAttrib),
+                attrib: parseAllAttribs(edge.allAttrib),
               } as GetListItemsResult['items'][number]
             }),
           ),

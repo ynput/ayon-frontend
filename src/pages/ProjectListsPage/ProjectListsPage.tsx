@@ -3,7 +3,7 @@ import {
   useProjectDataContext,
 } from '@pages/ProjectOverviewPage/context/ProjectDataContext'
 import { useAppSelector } from '@state/store'
-import { FC } from 'react'
+import { FC, useMemo } from 'react'
 import { ListsProvider, useListsContext } from './context/ListsContext'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { Section, Toolbar } from '@ynput/ayon-react-components'
@@ -35,6 +35,7 @@ import ProjectOverviewDetailsPanel from '@pages/ProjectOverviewPage/containers/P
 import OverviewActions from '@pages/ProjectOverviewPage/components/OverviewActions'
 import useExtraColumns from './hooks/useExtraColumns'
 import { ListsAttributesSettings } from './components/ListsAttributesSettings'
+import useUpdateListItems from './hooks/useUpdateListItems'
 
 const ProjectListsWithOuterProviders: FC = () => {
   const projectName = useAppSelector((state) => state.project.name) || ''
@@ -55,8 +56,19 @@ const ProjectListsWithOuterProviders: FC = () => {
 }
 
 const ProjectListsWithInnerProviders: FC = () => {
-  const { projectName, selectedListId, contextMenuItems, ...props } = useListItemsDataContext()
+  const { projectName, selectedListId, contextMenuItems, attribFields, ...props } =
+    useListItemsDataContext()
   const { selectedList } = useListsContext()
+  const { listAttributes } = useListsAttributesContext()
+
+  // merge attribFields with listAttributes
+  const mergedAttribFields = useMemo(
+    () => [
+      ...listAttributes.map((a) => ({ ...a, scopes: [selectedList?.entityType] })),
+      ...attribFields,
+    ],
+    [listAttributes, attribFields, selectedList],
+  )
 
   const [pageConfig, updatePageConfig] = useUsersPageConfig({
     selectors: ['lists', projectName, selectedList?.label],
@@ -65,13 +77,16 @@ const ProjectListsWithInnerProviders: FC = () => {
   const { updateEntities, getFoldersTasks } = useTableQueriesHelper({
     projectName: projectName,
   })
+  const { updateListItems } = useUpdateListItems({
+    updateEntities,
+  })
 
   return (
     <SettingsPanelProvider>
-      <ProjectTableQueriesProvider {...{ updateEntities, getFoldersTasks }}>
+      <ProjectTableQueriesProvider {...{ updateEntities: updateListItems, getFoldersTasks }}>
         <ProjectTableProvider
           projectName={projectName}
-          attribFields={props.attribFields}
+          attribFields={mergedAttribFields}
           projectInfo={props.projectInfo}
           users={props.users}
           // @ts-ignore

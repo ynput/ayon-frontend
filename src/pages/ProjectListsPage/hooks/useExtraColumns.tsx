@@ -9,6 +9,16 @@ import { CellWidget } from '@shared/containers/ProjectTreeTable/widgets'
 import clsx from 'clsx'
 import { useCallback } from 'react'
 import { ListEntityType } from '../components/NewListDialog/NewListDialog'
+import { useListsAttributesContext } from '../context/ListsAttributesContext'
+
+const typeColumns: Record<
+  TreeTableSubType,
+  { value: TreeTableSubType; label: string; position?: number; readonly?: boolean }
+> = {
+  productType: { value: 'productType', label: 'Product Type' },
+  folderType: { value: 'folderType', label: 'Folder Type' },
+  taskType: { value: 'taskType', label: 'Task Type' },
+}
 
 interface useExtraColumnsProps {
   entityType?: ListEntityType
@@ -16,15 +26,7 @@ interface useExtraColumnsProps {
 
 const useExtraColumns = ({ entityType }: useExtraColumnsProps) => {
   const { columnSizing } = useColumnSettingsContext()
-
-  const typeColumns: Record<
-    TreeTableSubType,
-    { value: TreeTableSubType; label: string; position?: number; readonly?: boolean }
-  > = {
-    productType: { value: 'productType', label: 'Product Type' },
-    folderType: { value: 'folderType', label: 'Folder Type' },
-    taskType: { value: 'taskType', label: 'Task Type' },
-  }
+  const { listAttributes } = useListsAttributesContext()
 
   const extraTypeColumns: (typeof typeColumns)['folderType'][] = []
   switch (entityType) {
@@ -47,6 +49,11 @@ const useExtraColumns = ({ entityType }: useExtraColumnsProps) => {
     default:
       break
   }
+
+  const extraAttributeColumns = listAttributes.map((attribute) => ({
+    value: attribute.name,
+    label: attribute.data.title || attribute.name,
+  }))
 
   const extraColumns = useCallback<TreeTableExtraColumnsConstructor>(
     ({ options, updateEntities }) => [
@@ -73,7 +80,7 @@ const useExtraColumns = ({ entityType }: useExtraColumnsProps) => {
                   attributeData={{ type: 'string' }}
                   isReadOnly={typeColumn.readonly}
                   onChange={(value) =>
-                    updateEntities([{ field: typeColumn.value, value, id, type }])
+                    updateEntities([{ field: typeColumn.value, value, id, type, rowId: row.id }])
                   }
                 />
               )
@@ -82,11 +89,53 @@ const useExtraColumns = ({ entityType }: useExtraColumnsProps) => {
           position: typeColumn.position,
         }),
       ),
+      ...listAttributes.map(
+        (attribute): TreeTableExtraColumn => ({
+          column: {
+            id: attribute.name,
+            accessorKey: attribute.name,
+            header: attribute.data.title || attribute.name,
+            size: columnSizing[attribute.name] || 150,
+            enableSorting: true,
+            enableResizing: true,
+            enablePinning: true,
+            enableHiding: true,
+            cell: ({ row, column }) => {
+              const { value, id, type } = getValueIdType(row, column.id, 'attrib')
+              return (
+                <CellWidget
+                  rowId={id}
+                  className={clsx(attribute.name, { loading: row.original.isLoading })}
+                  columnId={column.id}
+                  value={value}
+                  options={attribute.data.enum}
+                  attributeData={attribute.data}
+                  onChange={(value) =>
+                    updateEntities([
+                      {
+                        field: attribute.name,
+                        value,
+                        id,
+                        type,
+                        rowId: row.id,
+                        isAttrib: true,
+                        meta: {
+                          isCustom: true,
+                        },
+                      },
+                    ])
+                  }
+                />
+              )
+            },
+          },
+        }),
+      ),
     ],
     [extraTypeColumns],
   )
 
-  const extraColumnsSettings = [...extraTypeColumns]
+  const extraColumnsSettings = [...extraTypeColumns, ...extraAttributeColumns]
 
   return {
     extraColumns,

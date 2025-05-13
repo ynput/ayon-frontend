@@ -63,6 +63,7 @@ const useHistory = (maxHistorySize = 50): UseHistoryReturn => {
             folderId: entity.folderId,
             attribs: [entity.field],
             ownAttrib: entity.ownAttrib,
+            rowId: entity.rowId,
           })
         } else {
           acc[0].push(entity)

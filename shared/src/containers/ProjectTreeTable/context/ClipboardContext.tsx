@@ -320,6 +320,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
       const entitiesToUpdateMap = new Map<
         string,
         {
+          rowId: string
           id: string
           type: string
           fields: Record<string, any>
@@ -397,6 +398,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
           const entityKey = `${rowId}-${entityType}`
           if (!entitiesToUpdateMap.has(entityKey) && entityType) {
             entitiesToUpdateMap.set(entityKey, {
+              rowId,
               id: rowId,
               type: entityType,
               fields: {},
@@ -422,6 +424,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
         // For regular fields, create one update per field
         Object.entries(entity.fields).forEach(([field, value]) => {
           allEntityUpdates.push({
+            rowId: entity.rowId,
             id: entity.id,
             type: entity.type,
             field,
@@ -432,6 +435,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
         // For attributes, create one update per attribute
         Object.entries(entity.attrib).forEach(([field, value]) => {
           allEntityUpdates.push({
+            rowId: entity.rowId,
             id: entity.id,
             type: entity.type,
             field,
