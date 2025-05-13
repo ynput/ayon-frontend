@@ -143,14 +143,15 @@ export const ListsAttributesProvider = ({ children }: ListsAttributesProviderPro
 
   const handleDeleteAttribute = async (name: string, force?: boolean) => {
     if (force) {
-      await deleteAttribute(name)
+      return await deleteAttribute(name)
     } else {
       confirmDelete({
         title: 'attribute',
         message: `Are you sure you want to delete the attribute "${name}"?`,
         accept: async () => {
-          await deleteAttribute(name)
+          return await deleteAttribute(name)
         },
+        showToasts: false,
       })
     }
   }

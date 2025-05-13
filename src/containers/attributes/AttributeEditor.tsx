@@ -10,6 +10,7 @@ import {
   LockedInput,
   Dropdown,
   Dialog,
+  Button,
 } from '@ynput/ayon-react-components'
 import { camelCase, upperFirst } from 'lodash'
 import MinMaxField from '@components/MinMaxField/MinMaxField'
@@ -164,6 +165,7 @@ export interface AttributeEditorProps {
   excludes?: Excludes
   onHide: () => void
   onEdit: (attribute: AttributeForm) => void
+  onDelete?: () => void
 }
 
 const AttributeEditor: FC<AttributeEditorProps> = ({
@@ -174,6 +176,7 @@ const AttributeEditor: FC<AttributeEditorProps> = ({
   excludes = [],
   onHide,
   onEdit,
+  onDelete,
 }) => {
   const initForm = buildInitFormData(excludes, { position: existingNames.length })
   const [formData, setFormData] = useState<AttributeForm | null>(attribute || initForm)
@@ -225,6 +228,15 @@ const AttributeEditor: FC<AttributeEditorProps> = ({
 
   const footer = (
     <div style={{ display: 'flex', width: '100%', flexDirection: 'row' }}>
+      {onDelete && (
+        <Button
+          variant="danger"
+          label={'Delete attribute'}
+          icon={'delete'}
+          disabled={isUpdating}
+          onClick={onDelete}
+        />
+      )}
       <Spacer />
       <SaveButton
         label={isNew ? 'Create Attribute' : 'Save Attribute'}

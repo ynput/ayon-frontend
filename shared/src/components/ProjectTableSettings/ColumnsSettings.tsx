@@ -1,5 +1,5 @@
 // React and Styling imports
-import { FC, useMemo, useState } from 'react'
+import { FC, useEffect, useMemo, useRef, useState } from 'react'
 import styled from 'styled-components'
 
 // Context and Components imports
@@ -27,12 +27,14 @@ import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-ki
 // Notification imports
 import { toast } from 'react-toastify'
 import { SettingsPanelItem } from '../SettingsPanel/SettingsPanelItemTemplate'
+import { SettingHighlightedId } from '@shared/context'
 
 interface ColumnsSettingsProps {
   columns: SettingsPanelItem[]
+  highlighted?: SettingHighlightedId
 }
 
-const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns }) => {
+const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns, highlighted }) => {
   const {
     columnVisibility,
     updateColumnVisibility,
@@ -61,6 +63,21 @@ const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns }) => {
       },
     }),
   )
+
+  const menuRef = useRef<HTMLUListElement | null>(null)
+
+  // if highlighted is set, scroll to the highlighted column
+  useEffect(() => {
+    if (menuRef.current && highlighted) {
+      const highlightedElement = menuRef.current.querySelector(`#column-settings-${highlighted}`)
+      if (highlightedElement) {
+        highlightedElement.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+        })
+      }
+    }
+  }, [highlighted])
 
   // Separate columns into visible, hidden, and pinned
   const { visibleColumns, hiddenColumns, pinnedColumns } = useMemo(() => {
@@ -329,6 +346,7 @@ const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns }) => {
     ? [...visibleColumns, ...hiddenColumns, ...pinnedColumns].find((col) => col.value === activeId)
     : null
 
+  console.log(highlighted)
   return (
     <DndContext
       sensors={sensors}
@@ -354,6 +372,7 @@ const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns }) => {
                     column={column}
                     isPinned={true}
                     isHidden={false}
+                    isHighlighted={highlighted === column.value}
                     onTogglePinning={togglePinning}
                     onToggleVisibility={toggleVisibility}
                   />
@@ -384,6 +403,7 @@ const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns }) => {
                   column={column}
                   isPinned={false}
                   isHidden={false}
+                  isHighlighted={highlighted === column.value}
                   onTogglePinning={togglePinning}
                   onToggleVisibility={toggleVisibility}
                 />
@@ -396,7 +416,7 @@ const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns }) => {
         {hiddenColumns.length > 0 && (
           <Section className={isDraggingOverHidden ? 'drop-target' : ''}>
             <SectionTitle>Hidden Columns</SectionTitle>
-            <Menu>
+            <Menu ref={menuRef}>
               {hiddenColumns.map((column) => (
                 <SortableColumnItem
                   key={column.value}
@@ -404,6 +424,7 @@ const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns }) => {
                   column={column}
                   isPinned={columnPinning.left?.includes(column.value) || false}
                   isHidden={true}
+                  isHighlighted={highlighted === column.value}
                   onTogglePinning={togglePinning}
                   onToggleVisibility={toggleVisibility}
                 />
@@ -419,6 +440,7 @@ const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns }) => {
               column={activeColumn}
               isPinned={columnPinning.left?.includes(activeColumn.value) || false}
               isHidden={columnVisibility[activeColumn.value] === false}
+              isHighlighted={highlighted === activeColumn.value}
               dragOverlay={true}
             />
           )}

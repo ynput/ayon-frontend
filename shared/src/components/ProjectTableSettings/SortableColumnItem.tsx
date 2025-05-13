@@ -1,14 +1,16 @@
 import { FC } from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import ColumnItem, { ColumnItemData } from './ColumnItem'
+import ColumnItem from './ColumnItem'
 import styled from 'styled-components'
+import { SettingsPanelItem } from '../SettingsPanel'
 
 interface SortableColumnItemProps {
   id: string
-  column: ColumnItemData
+  column: SettingsPanelItem
   isPinned: boolean
   isHidden: boolean
+  isHighlighted?: boolean
   onTogglePinning: (columnId: string) => void
   onToggleVisibility: (columnId: string) => void
 }
@@ -18,6 +20,7 @@ const SortableColumnItem: FC<SortableColumnItemProps> = ({
   column,
   isPinned,
   isHidden,
+  isHighlighted,
   onTogglePinning,
   onToggleVisibility,
 }) => {
@@ -31,11 +34,17 @@ const SortableColumnItem: FC<SortableColumnItemProps> = ({
   }
 
   return (
-    <SortableItemWrapper ref={setNodeRef} style={style} className={isDragging ? 'dragging' : ''}>
+    <SortableItemWrapper
+      ref={setNodeRef}
+      style={style}
+      className={isDragging ? 'dragging' : ''}
+      id={`column-settings-${id}`}
+    >
       <ColumnItem
         column={column}
         isPinned={isPinned}
         isHidden={isHidden}
+        isHighlighted={isHighlighted}
         onTogglePinning={onTogglePinning}
         onToggleVisibility={onToggleVisibility}
         dragHandleProps={{ ...attributes, ...listeners }}

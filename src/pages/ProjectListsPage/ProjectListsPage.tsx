@@ -119,7 +119,7 @@ const ProjectListsWithInnerProviders: FC = () => {
 
 const ProjectListsPage: FC = () => {
   const { projectName, projectInfo } = useProjectDataContext()
-  const { isPanelOpen } = useSettingsPanel()
+  const { isPanelOpen, selectSetting, highlightedSetting } = useSettingsPanel()
   const { selectedList } = useListsContext()
   const { selectedRows } = useSelectedRowsContext()
   const { deleteListItemAction } = useListItemsDataContext()
@@ -129,6 +129,11 @@ const ProjectListsPage: FC = () => {
     // @ts-expect-error - we do not support product right now
     entityType: selectedList?.entityType,
   })
+
+  const handleGoToCustomAttrib = (attrib: string) => {
+    // open settings panel and highlig the attribute
+    selectSetting('columns', attrib)
+  }
 
   return (
     <main style={{ overflow: 'hidden', gap: 4 }}>
@@ -199,13 +204,14 @@ const ProjectListsPage: FC = () => {
                 >
                   <ProjectTableSettings
                     extraColumns={extraColumnsSettings}
+                    highlighted={highlightedSetting}
                     settings={[
                       {
                         id: 'list_attributes',
                         title: 'List attributes',
                         icon: 'text_fields',
                         preview: listAttributes.length,
-                        component: <ListsAttributesSettings />,
+                        component: <ListsAttributesSettings onGoTo={handleGoToCustomAttrib} />,
                       },
                     ]}
                   />

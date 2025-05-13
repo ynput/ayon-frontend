@@ -8,9 +8,11 @@ import { Button } from '@ynput/ayon-react-components'
 import { getAttributeIcon, getPlatformShortcutKey, KeyMode } from '@shared/util'
 import AttributeEditor, { AttributeForm } from '@containers/attributes/AttributeEditor'
 
-export interface ListsAttributesSettingsProps {}
+export interface ListsAttributesSettingsProps {
+  onGoTo: (name: string) => void
+}
 
-export const ListsAttributesSettings: FC<ListsAttributesSettingsProps> = ({}) => {
+export const ListsAttributesSettings: FC<ListsAttributesSettingsProps> = ({ onGoTo }) => {
   const {
     listAttributes,
     entityAttribFields,
@@ -36,9 +38,26 @@ export const ListsAttributesSettings: FC<ListsAttributesSettingsProps> = ({}) =>
     }
   }
 
-  const handleDeleteAttribute = (e: React.MouseEvent<HTMLButtonElement>, name: string) => {
-    e.stopPropagation()
-    deleteAttribute(name, e.ctrlKey || e.metaKey)
+  const handleDeleteAttribute = async (
+    e: React.MouseEvent<HTMLButtonElement> | undefined,
+    name: string,
+  ) => {
+    e?.stopPropagation()
+    try {
+      await deleteAttribute(name, e?.ctrlKey || e?.metaKey)
+
+      // if the editor is open, close it
+      if (attributeFormOpen?.name === name) {
+        setAttributeFormOpen(undefined)
+      }
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  const handleGoTo = (e: React.MouseEvent<HTMLButtonElement> | undefined, name: string) => {
+    e?.stopPropagation()
+    onGoTo(name)
   }
 
   return (
@@ -68,13 +87,18 @@ export const ListsAttributesSettings: FC<ListsAttributesSettingsProps> = ({}) =>
                     {
                       icon: 'delete',
                       variant: 'danger',
-                      onClick: (e) => handleDeleteAttribute(e, attribute.name),
-                      // @ts-expect-error
-                      ['data-tooltip']: `Delete without confirmation`,
+                      ['data-tooltip']: `To delete without confirmation hold`,
                       ['data-shortcut']: getPlatformShortcutKey('', [KeyMode.Ctrl]),
+                      onClick: (e) => handleDeleteAttribute(e, attribute.name),
                     },
                     {
                       icon: 'edit',
+                      ['data-tooltip']: `Edit`,
+                    },
+                    {
+                      icon: 'arrow_forward',
+                      ['data-tooltip']: `Go to in list`,
+                      onClick: (e) => handleGoTo(e, attribute.name),
                     },
                   ]}
                   onClick={() => setAttributeFormOpen(attribute)}
@@ -101,6 +125,9 @@ export const ListsAttributesSettings: FC<ListsAttributesSettingsProps> = ({}) =>
           onEdit={handleUpdateAttribute}
           isUpdating={isUpdating}
           error={attributesUpdateError}
+          onDelete={() =>
+            attributeFormOpen && handleDeleteAttribute(undefined, attributeFormOpen?.name)
+          }
         />
       )}
     </>

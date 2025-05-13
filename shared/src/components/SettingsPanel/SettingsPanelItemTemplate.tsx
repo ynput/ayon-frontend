@@ -23,6 +23,15 @@ const Item = styled.li`
     text-overflow: ellipsis;
   }
 
+  &.highlighted {
+    background-color: var(--md-sys-color-secondary-container);
+    color: var(--md-sys-color-on-secondary-container);
+
+    &:hover {
+      background-color: var(--md-sys-color-secondary-container-hover);
+    }
+  }
+
   &:hover {
     background-color: var(--md-sys-color-surface-container-high);
   }
@@ -51,6 +60,8 @@ const ActionButton = styled(Button)`
 
 interface Action extends ButtonProps {
   active?: boolean
+  ['data-tooltip']?: string
+  ['data-shortcut']?: string
 }
 
 export type SettingsPanelItem = {
@@ -61,15 +72,20 @@ export type SettingsPanelItem = {
 
 export interface SettingsPanelItemTemplateProps extends React.HTMLAttributes<HTMLLIElement> {
   item: SettingsPanelItem
+  isHighlighted?: boolean
   startContent?: React.ReactNode
   endContent?: React.ReactNode
   actions?: Action[]
 }
 
 export const SettingsPanelItemTemplate = forwardRef<HTMLLIElement, SettingsPanelItemTemplateProps>(
-  ({ item, actions, startContent, endContent, className, ...props }, ref) => {
+  ({ item, actions, startContent, endContent, isHighlighted, className, ...props }, ref) => {
     return (
-      <Item className={clsx('setting-item', className)} {...props} ref={ref}>
+      <Item
+        className={clsx('setting-item', className, { highlighted: isHighlighted })}
+        {...props}
+        ref={ref}
+      >
         {startContent}
         {item.icon && <Icon icon={item.icon} />}
         <span className="label">{item.label}</span>

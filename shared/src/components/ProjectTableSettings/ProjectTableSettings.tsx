@@ -5,7 +5,7 @@ import {
 import { Button, ButtonProps } from '@ynput/ayon-react-components'
 import { FC } from 'react'
 import styled from 'styled-components'
-import { useSettingsPanel } from '@shared/context'
+import { SettingHighlightedId, useSettingsPanel } from '@shared/context'
 import { SettingsPanel, SettingConfig } from '@shared/components/SettingsPanel'
 import ColumnsSettings from './ColumnsSettings'
 
@@ -35,11 +35,13 @@ export const CustomizeButton = ({ defaultSelected = 'columns', ...props }: Props
 type ProjectTableSettingsProps = {
   settings?: SettingConfig[]
   extraColumns?: { value: string; label: string }[]
+  highlighted?: SettingHighlightedId
 }
 
 export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
   settings = [],
   extraColumns = [],
+  highlighted,
 }) => {
   const { attribFields } = useProjectTableContext()
   const { columnVisibility } = useColumnSettingsContext()
@@ -86,7 +88,7 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
       title: 'Columns',
       icon: 'view_column',
       preview: `${visibleCount}/${columns.length}`,
-      component: <ColumnsSettings columns={columns} />,
+      component: <ColumnsSettings columns={columns} highlighted={highlighted} />,
     },
   ]
 
