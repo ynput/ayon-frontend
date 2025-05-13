@@ -5,9 +5,9 @@ import styled from 'styled-components'
 // Context and Components imports
 import {
   ColumnsConfig,
-  useColumnSettings,
+  useColumnSettingsContext,
 } from '@shared/containers/ProjectTreeTable/context/ColumnSettingsContext'
-import ColumnItem, { ColumnItemData } from './ColumnItem'
+import ColumnItem from './ColumnItem'
 import SortableColumnItem from './SortableColumnItem'
 
 // DND (Drag and Drop) imports
@@ -26,9 +26,10 @@ import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-ki
 
 // Notification imports
 import { toast } from 'react-toastify'
+import { SettingsPanelItem } from '../SettingsPanel/SettingsPanelItemTemplate'
 
 interface ColumnsSettingsProps {
-  columns: ColumnItemData[]
+  columns: SettingsPanelItem[]
 }
 
 const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns }) => {
@@ -40,7 +41,7 @@ const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns }) => {
     columnOrder,
     setColumnsConfig,
     columnSizing,
-  } = useColumnSettings()
+  } = useColumnSettingsContext()
 
   // State for the currently dragged column
   const [activeId, setActiveId] = useState<string | null>(null)

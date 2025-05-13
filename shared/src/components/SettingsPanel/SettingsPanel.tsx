@@ -1,4 +1,4 @@
-import { Button } from '@ynput/ayon-react-components'
+import { Button, Icon } from '@ynput/ayon-react-components'
 import { FC, ReactNode } from 'react'
 import styled from 'styled-components'
 import { SettingField, useSettingsPanel } from '@shared/context'
@@ -48,12 +48,24 @@ export const SettingOption = styled(Button)`
   justify-content: flex-start;
   margin-bottom: 8px;
   text-align: left;
+  display: flex;
+  gap: var(--base-gap-small);
+
+  .title {
+    flex: 1;
+  }
+
+  .preview {
+    color: var(--md-sys-color-outline);
+  }
 `
 
 export interface SettingConfig {
   id: SettingField
   title: string
   component: ReactNode
+  icon?: string
+  preview?: string
 }
 
 export interface SettingsPanelProps {
@@ -81,7 +93,9 @@ export const SettingsPanel: FC<SettingsPanelProps> = ({ settings }) => {
               onClick={() => selectSetting(setting.id)}
               variant="text"
             >
-              {setting.title}
+              {setting.icon && <Icon icon={setting.icon} />}
+              <span className="title">{setting.title}</span>
+              {setting.preview && <span className="preview">{setting.preview}</span>}
             </SettingOption>
           ))}
         </>

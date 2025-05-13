@@ -208,10 +208,10 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
   )
 }
 
-export const useColumnSettings = (): ColumnSettingsContextType => {
+export const useColumnSettingsContext = (): ColumnSettingsContextType => {
   const context = useContext(ColumnSettingsContext)
   if (!context) {
-    throw new Error('useColumnSettings must be used within a ColumnSettingsProvider')
+    throw new Error('useColumnSettingsContext must be used within a ColumnSettingsProvider')
   }
   return context
 }

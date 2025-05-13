@@ -37,7 +37,7 @@ import { useCellEditing } from './context/CellEditingContext'
 import { ROW_SELECTION_COLUMN_ID, useSelectionCellsContext } from './context/SelectionCellsContext'
 import { ClipboardProvider } from './context/ClipboardContext'
 import { useSelectedRowsContext } from './context/SelectedRowsContext'
-import { useColumnSettings } from './context/ColumnSettingsContext'
+import { useColumnSettingsContext } from './context/ColumnSettingsContext'
 
 // Hook imports
 import useCustomColumnWidthVars from './hooks/useCustomColumnWidthVars'
@@ -108,7 +108,7 @@ export const ProjectTreeTable = ({
     columnOrderUpdater,
     columnSizing,
     columnSizingUpdater,
-  } = useColumnSettings()
+  } = useColumnSettingsContext()
 
   const {
     projectInfo,

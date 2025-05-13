@@ -3,7 +3,7 @@ import {
   TreeTableExtraColumn,
   TreeTableExtraColumnsConstructor,
   TreeTableSubType,
-  useColumnSettings,
+  useColumnSettingsContext,
 } from '@shared/containers'
 import { CellWidget } from '@shared/containers/ProjectTreeTable/widgets'
 import clsx from 'clsx'
@@ -15,7 +15,7 @@ interface useExtraColumnsProps {
 }
 
 const useExtraColumns = ({ entityType }: useExtraColumnsProps) => {
-  const { columnSizing } = useColumnSettings()
+  const { columnSizing } = useColumnSettingsContext()
 
   const typeColumns: Record<
     TreeTableSubType,

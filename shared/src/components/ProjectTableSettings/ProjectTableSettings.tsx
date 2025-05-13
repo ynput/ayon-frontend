@@ -1,4 +1,7 @@
-import { useProjectTableContext } from '@shared/containers/ProjectTreeTable'
+import {
+  useColumnSettingsContext,
+  useProjectTableContext,
+} from '@shared/containers/ProjectTreeTable'
 import { Button, ButtonProps } from '@ynput/ayon-react-components'
 import { FC } from 'react'
 import styled from 'styled-components'
@@ -10,14 +13,16 @@ const StyledCustomizeButton = styled(Button)`
   min-width: 120px;
 `
 
-interface Props extends ButtonProps {}
+interface Props extends ButtonProps {
+  defaultSelected?: string | null
+}
 
-export const CustomizeButton = ({ ...props }: Props) => {
+export const CustomizeButton = ({ defaultSelected = 'columns', ...props }: Props) => {
   const { togglePanel, isPanelOpen } = useSettingsPanel()
 
   return (
     <StyledCustomizeButton
-      onClick={() => togglePanel('columns')}
+      onClick={() => togglePanel(defaultSelected)}
       icon="settings"
       selected={isPanelOpen}
       {...props}
@@ -28,11 +33,16 @@ export const CustomizeButton = ({ ...props }: Props) => {
 }
 
 type ProjectTableSettingsProps = {
+  settings?: SettingConfig[]
   extraColumns?: { value: string; label: string }[]
 }
 
-export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({ extraColumns = [] }) => {
+export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
+  settings = [],
+  extraColumns = [],
+}) => {
   const { attribFields } = useProjectTableContext()
+  const { columnVisibility } = useColumnSettingsContext()
 
   const columns = [
     {
@@ -66,13 +76,21 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({ extraColum
     ...extraColumns,
   ]
 
-  const settings: SettingConfig[] = [
+  const visibleCount = columns.filter(
+    (column) => !(column.value in columnVisibility) || columnVisibility[column.value],
+  ).length
+
+  const defaultSettings: SettingConfig[] = [
     {
       id: 'columns',
       title: 'Columns',
+      icon: 'view_column',
+      preview: `${visibleCount}/${columns.length}`,
       component: <ColumnsSettings columns={columns} />,
     },
   ]
 
-  return <SettingsPanel settings={settings} />
+  settings.forEach((setting) => defaultSettings.push(setting))
+
+  return <SettingsPanel settings={defaultSettings} />
 }

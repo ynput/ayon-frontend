@@ -24,7 +24,7 @@ export type AttributeData = {
 
 export type NormalizedData = {
   label: string
-  value: string
+  value: string | number | boolean
   color?: string
   icon?: string
 }
@@ -58,7 +58,7 @@ const denormalize = (data: NormalizedData[]): AttributeData[] => {
       id: uniqueId(),
       isExpanded: false,
       label,
-      value,
+      value: value.toString(),
       icon: icon,
       color: color,
       isLabelFocused: false,
@@ -152,7 +152,7 @@ const EnumEditor = ({ values, onChange }: Props) => {
         <Button
           icon="add"
           variant="text"
-          onClick={() => handleAddItem({isNewAttribute: true})}
+          onClick={() => handleAddItem({ isNewAttribute: true })}
           style={{ display: 'flex', justifyContent: 'start' }}
         >
           Add new item

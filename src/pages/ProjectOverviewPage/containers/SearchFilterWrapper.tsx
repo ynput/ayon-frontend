@@ -6,7 +6,7 @@ import { EditorTaskNode, TaskNodeMap } from '@shared/containers/ProjectTreeTable
 import { usePower } from '@/remote/PowerLicenseContext'
 import AdvancedFiltersPlaceholder from '@components/SearchFilter/AdvancedFiltersPlaceholder'
 import { usePowerpack } from '@context/PowerpackContext'
-import { useColumnSettings } from '@shared/containers/ProjectTreeTable'
+import { useColumnSettingsContext } from '@shared/containers/ProjectTreeTable'
 
 interface SearchFilterWrapperProps
   extends Omit<BuildFilterOptions, 'scope' | 'data' | 'power'>,
@@ -29,7 +29,7 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
   pt,
   ...props
 }) => {
-  const { columnOrder } = useColumnSettings()
+  const { columnOrder } = useColumnSettingsContext()
 
   // create a flat list of all the assignees (string[]) on all tasks (duplicated)
   // this is used to rank what assignees are shown in the filter first

@@ -1,13 +1,13 @@
 import { createContext, useState, useContext, FC, ReactNode } from 'react'
 
-export type SettingField = 'columns'
+export type SettingField = 'columns' | string
 
 interface SettingsPanelContextType {
   isPanelOpen: boolean
   selectedSetting: SettingField | null
   openPanel: () => void
   closePanel: () => void
-  togglePanel: (setting?: SettingField) => void
+  togglePanel: (setting?: SettingField | null) => void
   selectSetting: (setting: SettingField | null) => void
   backToMainMenu: () => void
 }
@@ -36,6 +36,8 @@ export const SettingsPanelProvider: FC<SettingsPanelProviderProps> = ({ children
     // If a setting is provided, select it
     if (setting && !isPanelOpen) {
       setSelectedSetting(setting)
+    } else {
+      setSelectedSetting(null)
     }
   }
 

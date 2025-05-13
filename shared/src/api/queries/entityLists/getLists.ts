@@ -1,102 +1,31 @@
 import { gqlApi } from '@shared/api/generated'
-import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
+import {
+  FetchBaseQueryError,
+  DefinitionsFromApi,
+  OverrideResultType,
+  TagTypesFromApi,
+} from '@reduxjs/toolkit/query'
 import type {
   GetListItemsQuery,
   GetListItemsQueryVariables,
   GetListsQuery,
   GetListsQueryVariables,
 } from '@shared/api'
+import { parseAllAttribs } from '../overview'
+import { PubSub } from '@shared/util'
+import {
+  GetListItemsResult,
+  GetListsResult,
+  ListItemMessage,
+  ListItemsPageParam,
+  ListsPageParam,
+  QueryEntityListItemNode,
+} from './types'
 
+// GRAPHQL API (getLists and getListItems)
 // Define the LISTS_PER_PAGE constant for pagination
 export const LISTS_PER_PAGE = 100
 
-// Define the type for our transformed lists data
-type QueryEntityList = GetListsQuery['project']['entityLists']['edges'][number]['node']
-export type EntityList = QueryEntityList & { entityType: 'folder' | 'version' | 'task' | 'product' }
-
-// Define the result type for lists query
-export type GetListsResult = {
-  pageInfo: {
-    hasNextPage: boolean
-    endCursor?: string | null
-  }
-  lists: EntityList[]
-}
-
-// Define the page param type for infinite query
-type ListsPageParam = {
-  cursor: string
-}
-
-// Extra types from the query
-type QueryEntityListItemEdge =
-  GetListItemsQuery['project']['entityLists']['edges'][number]['node']['items']['edges'][number]
-
-type ItemNodeData = {
-  name: string
-  status: string
-  allAttrib: string
-  tags: string[]
-  ownAttrib?: string[]
-  taskType?: string
-  folderType?: string
-  productType?: string
-  assignees?: string[]
-  label?: string
-  // different paths to folder
-  path?: string
-  folder?: {
-    path: string
-    folderType: string
-  }
-  product?: {
-    name: string
-    productType: string
-    folder: {
-      path: string
-      folderType: string
-    }
-  }
-  task?: {
-    name: string
-    taskType: string
-  }
-}
-
-type QueryEntityListItemNode = QueryEntityListItemEdge['node'] & ItemNodeData
-
-export type EntityListItem = NonNullable<QueryEntityListItemNode> &
-  Omit<QueryEntityListItemEdge, 'node'> & { attrib: Record<string, unknown> }
-// Define the result type for items query
-export type GetListItemsResult = {
-  pageInfo: {
-    hasNextPage: boolean
-    endCursor?: string | null
-  }
-  items: (QueryEntityListItemNode &
-    Omit<QueryEntityListItemEdge, 'node'> & { attrib: Record<string, unknown> })[]
-}
-
-type ListItemsPageParam = {
-  cursor: string
-}
-
-// websocket message summary
-type ListItemMessage = {
-  project: string
-  summary: {
-    count: number
-    entity_list_type: string
-    entity_type: string
-    id?: string
-    entityId?: string
-    label: string
-  }
-}
-
-import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
-import { parseAllAttribs } from '../overview'
-import { PubSub } from '@shared/util'
 type Definitions = DefinitionsFromApi<typeof gqlApi>
 type TagTypes = TagTypesFromApi<typeof gqlApi>
 // update the definitions to include the new types

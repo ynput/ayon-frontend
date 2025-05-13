@@ -1,4 +1,4 @@
-import { getEntityTypeIcon } from '@shared/util'
+import { getAttributeIcon, getEntityTypeIcon } from '@shared/util'
 import {
   useGetSiteInfoQuery,
   useGetKanbanProjectUsersQuery,
@@ -555,54 +555,9 @@ const getAttributeFieldOptionRoot = (
   allowNoValue: config.enableRelativeValues,
   allowExcludes: config?.enableExcludes,
   operatorChangeable: config?.enableOperatorChange,
-  icon: getAttributeIcon(attribute),
+  icon: getAttributeIcon(attribute.name, attribute.data.type, !!attribute.data.enum?.length),
   singleSelect: ['boolean', 'datetime'].includes(attribute.data.type),
 })
-
-const getAttributeIcon = (attribute: AttributeModel): string => {
-  let icon = 'format_list_bulleted'
-  // some attributes have custom icons
-  const customIcons: {
-    [key: string]: string
-  } = {
-    priority: 'keyboard_double_arrow_up',
-    fps: '30fps_select',
-    resolutionWidth: 'settings_overscan',
-    resolutionHeight: 'settings_overscan',
-    pixelAspect: 'stop',
-    clipIn: 'line_start_diamond',
-    clipOut: 'line_end_diamond',
-    frameStart: 'line_start_circle',
-    frameEnd: 'line_end_circle',
-    handleStart: 'line_start_square',
-    handleEnd: 'line_end_square',
-    fullName: 'id_card',
-    email: 'alternate_email',
-    developerMode: 'code',
-    productGroup: 'inventory_2',
-    machine: 'computer',
-    comment: 'comment',
-    colorSpace: 'palette',
-    description: 'description',
-  }
-
-  const typeIcons: {
-    [key: string]: string
-  } = {
-    integer: 'pin',
-    float: 'pin',
-    boolean: 'radio_button_checked',
-    datetime: 'calendar_month',
-  }
-
-  if (customIcons[attribute.name]) {
-    icon = customIcons[attribute.name]
-  } else if (typeIcons[attribute.data.type]) {
-    icon = typeIcons[attribute.data.type]
-  }
-
-  return icon
-}
 
 const getAttributeOptions = (
   values?: AttributeDataValue[],

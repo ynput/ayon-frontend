@@ -1,5 +1,5 @@
 import { Button, InputNumber } from '@ynput/ayon-react-components'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, ChangeEvent, RefObject } from 'react'
 import styled from 'styled-components'
 
 const Field = styled.div`
@@ -14,15 +14,29 @@ const Field = styled.div`
   }
 `
 
-const MinMaxField = ({ value = {}, isMin, isFloat = false, onChange }) => {
+interface ValueObject {
+  le?: number
+  lt?: number
+  ge?: number
+  gt?: number
+}
+
+interface MinMaxFieldProps {
+  value?: ValueObject
+  isMin: boolean
+  isFloat?: boolean
+  onChange: (newValue: ValueObject) => void
+}
+
+const MinMaxField = ({ value = {}, isMin, isFloat = false, onChange }: MinMaxFieldProps) => {
   const { le, lt, ge, gt } = value
   const min = ge ?? gt
   const max = le ?? lt
-  const inputRef = useRef()
+  const inputRef: RefObject<HTMLInputElement> = useRef(null)
 
   const fieldValue = isMin ? min : max
   const fieldKey = isMin ? 'g' : 'l'
-  const equalsKey = fieldKey + 'e'
+  const equalsKey = (fieldKey + 'e') as 'ge' | 'le'
   const moreThanKey = fieldKey + 't'
 
   const [isEqual, setIsEqual] = useState(value[equalsKey] != undefined || !isFloat)
@@ -32,27 +46,34 @@ const MinMaxField = ({ value = {}, isMin, isFloat = false, onChange }) => {
   // convert all values to integers
   useEffect(() => {
     if (!isFloat) {
-      onChange({ [equalsKey]: parseInt(fieldValue)?.toString(), [moreThanKey]: undefined })
+      onChange({ [equalsKey]: parseInt(String(fieldValue))?.toString(), [moreThanKey]: undefined })
       setIsEqual(true)
     } else {
+      // When switching to float, if there's a value, ensure it's set with 'equals'
+      // and it's a string for the input.
+      if (fieldValue !== undefined) {
+        onChange({ [equalsKey]: String(fieldValue), [moreThanKey]: undefined })
+      }
       setIsEqual(true)
     }
   }, [isFloat])
 
-  const handleOnChange = (e) => {
-    const value = e.target.value
+  const handleOnChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const inputValue = e.target.value
     if (isFloat) {
       if (isEqual) {
-        onChange({ [equalsKey]: value, [moreThanKey]: undefined })
+        onChange({ [equalsKey]: inputValue, [moreThanKey]: undefined })
       } else {
-        onChange({ [equalsKey]: undefined, [moreThanKey]: value })
+        onChange({ [equalsKey]: undefined, [moreThanKey]: inputValue })
       }
     } else {
-      onChange({ [equalsKey]: value, [moreThanKey]: undefined })
+      onChange({ [equalsKey]: inputValue, [moreThanKey]: undefined })
     }
 
     // clear custom validity
-    inputRef.current.setCustomValidity('')
+    if (inputRef.current) {
+      inputRef.current.setCustomValidity('')
+    }
   }
 
   const handleEqualsSwitch = () => {
@@ -75,7 +96,7 @@ const MinMaxField = ({ value = {}, isMin, isFloat = false, onChange }) => {
   return (
     <Field>
       <InputNumber
-        value={fieldValue}
+        value={fieldValue === undefined ? '' : fieldValue}
         onChange={handleOnChange}
         step={isFloat ? 'any' : 1}
         min={isMin ? undefined : min}

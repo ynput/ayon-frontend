@@ -12,6 +12,7 @@ import ListsTable from './components/ListsTable/ListsTable'
 import ListInfoDialog from './components/ListInfoDialog/ListInfoDialog'
 import ListsFiltersDialog from './components/ListsFiltersDialog/ListsFiltersDialog'
 import { ListItemsDataProvider, useListItemsDataContext } from './context/ListItemsDataContext'
+import { ListsAttributesProvider } from './context/ListsAttributesContext'
 import ListItemsTable from './components/ListItemsTable/ListItemsTable'
 import ListItemsFilter from './components/ListItemsFilter/ListItemsFilter'
 import { ProjectTableSettings, CustomizeButton } from '@shared/components'
@@ -30,6 +31,7 @@ import {
 import ProjectOverviewDetailsPanel from '@pages/ProjectOverviewPage/containers/ProjectOverviewDetailsPanel'
 import OverviewActions from '@pages/ProjectOverviewPage/components/OverviewActions'
 import useExtraColumns from './hooks/useExtraColumns'
+import { ListsAttributesSettings } from './components/ListsAttributesSettings'
 
 const ProjectListsWithOuterProviders: FC = () => {
   const projectName = useAppSelector((state) => state.project.name) || ''
@@ -39,7 +41,9 @@ const ProjectListsWithOuterProviders: FC = () => {
       <ListsDataProvider>
         <ListsProvider>
           <ListItemsDataProvider>
-            <ProjectListsWithInnerProviders />
+            <ListsAttributesProvider>
+              <ProjectListsWithInnerProviders />
+            </ListsAttributesProvider>
           </ListItemsDataProvider>
         </ListsProvider>
       </ListsDataProvider>
@@ -127,7 +131,7 @@ const ProjectListsPage: FC = () => {
                 <OverviewActions items={['undo', 'redo', deleteListItemAction]} />
                 {/*@ts-expect-error - we do not support product right now*/}
                 <ListItemsFilter entityType={selectedList.entityType} projectName={projectName} />
-                <CustomizeButton />
+                <CustomizeButton defaultSelected={null} />
               </Toolbar>
             )}
             <Splitter
@@ -172,7 +176,17 @@ const ProjectListsPage: FC = () => {
                     zIndex: 500,
                   }}
                 >
-                  <ProjectTableSettings extraColumns={extraColumnsSettings} />
+                  <ProjectTableSettings
+                    extraColumns={extraColumnsSettings}
+                    settings={[
+                      {
+                        id: 'list_attributes',
+                        title: 'List attributes',
+                        icon: 'text_fields',
+                        component: <ListsAttributesSettings />,
+                      },
+                    ]}
+                  />
                 </SplitterPanel>
               ) : (
                 <SplitterPanel style={{ maxWidth: 0 }}></SplitterPanel>
