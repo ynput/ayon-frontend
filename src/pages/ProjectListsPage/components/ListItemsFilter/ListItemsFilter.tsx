@@ -26,9 +26,14 @@ const ListItemsFilter: FC<ListItemsFilterProps> = ({ entityType, projectName }) 
           assignees: 'entity_',
           tags: 'entity_',
           status: 'entity_',
-          taskType: 'entity_',
-          folderType: 'entity_',
           attributes: 'attrib.',
+        },
+        keys: {
+          taskType: entityType.startsWith('task') ? 'entity_taskType' : 'parentTaskType',
+          folderType: entityType.startsWith('folder') ? 'entity_folderType' : 'parentFolderType',
+          productType: entityType.startsWith('product')
+            ? 'entity_productType'
+            : 'parentProductType',
         },
       }}
     />
@@ -43,19 +48,9 @@ const getFilterTypesByScope = (entityType: ListEntityType): BuildFilterOptions['
     case 'folder':
       return [...base, 'folderType']
     case 'task':
-      return [
-        ...base,
-        'taskType',
-        // 'folderType',
-        'assignees',
-      ]
+      return [...base, 'taskType', 'folderType', 'assignees']
     case 'version':
-      return [
-        ...base,
-        // 'taskType',
-        // 'productType',
-        // 'folderType'
-      ]
+      return [...base, 'taskType', 'productType', 'folderType']
 
     default:
       return []

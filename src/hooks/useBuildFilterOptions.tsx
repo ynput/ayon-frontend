@@ -45,7 +45,8 @@ type FilterConfig = {
   enableExcludes?: boolean
   enableOperatorChange?: boolean
   enableRelativeValues?: boolean
-  prefixes?: Partial<Record<FilterFieldType, string>> // Changed to Partial
+  prefixes?: Partial<Record<FilterFieldType, string>> // strings that will be prepended to the id of the option
+  keys?: Partial<Record<FilterFieldType, string>> // replaces the default keys for the filter
 }
 
 export type BuildFilterOptions = {
@@ -419,19 +420,17 @@ const getSubTypes = (projectsInfo: GetProjectsInfoResponse, type: Scope): Option
   return options
 }
 
-const getIdWithPrefix = (
-  base: string,
-  fieldType: FilterFieldType,
-  prefixes?: FilterConfig['prefixes'],
-) => {
-  if (!prefixes) return base
-  if (fieldType in prefixes) {
+const getFormattedId = (base: string, fieldType: FilterFieldType, config?: FilterConfig) => {
+  const { prefixes, keys } = config || {}
+  if (keys && fieldType in keys) {
+    return `${keys[fieldType]}`
+  } else if (prefixes && fieldType in prefixes) {
     return `${prefixes[fieldType]}${base}`
   } else return base
 }
 
 const getOptionRoot = (fieldType: FilterFieldType, config?: FilterConfig) => {
-  const getRootIdWithPrefix = (base: string) => getIdWithPrefix(base, fieldType, config?.prefixes)
+  const getRootIdWithPrefix = (base: string) => getFormattedId(base, fieldType, config)
 
   let rootOption: Option | null = null
   switch (fieldType) {
@@ -544,7 +543,7 @@ const getAttributeFieldOptionRoot = (
   attribute: AttributeModel,
   config: FilterConfig & { allowsCustomValues: boolean },
 ): Option => ({
-  id: getIdWithPrefix(attribute.name, 'attributes', config?.prefixes),
+  id: getFormattedId(attribute.name, 'attributes', config),
   type: attribute.data.type,
   label: attribute.data.title || attribute.name,
   operator: 'OR',

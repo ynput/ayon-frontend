@@ -110,7 +110,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
       filters: [],
       columnSorting: [],
     })
-  }, [])
+  }, [pageConfig, updatePageConfig])
 
   const {
     data: listItemsData,
@@ -120,6 +120,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     fetchNextPage,
   } = useGetListItemsData({
     projectName,
+    entityType: selectedList?.entityType,
     listId: selectedListId,
     sorting: columnSorting,
     filters: listItemsFilters,

@@ -11,6 +11,7 @@ interface UseGetListItemsDataProps {
   sorting: SortingState
   filters?: FilterForQuery[]
   skip?: boolean
+  entityType?: string
 }
 
 export interface UseGetListItemsDataReturn {
@@ -24,6 +25,7 @@ export interface UseGetListItemsDataReturn {
 const useGetListItemsData = ({
   projectName,
   listId,
+  entityType,
   sorting,
   filters = [],
   skip,
@@ -36,13 +38,14 @@ const useGetListItemsData = ({
   const parseSorting = (sorting?: string): string | undefined => {
     if (!sorting) return undefined
     let sortId = sorting
-    if (singleSort?.id === 'name') {
-      // TODO: this does not work right now
-      // sortId = 'path'
-    }
-    if (sortId.startsWith('attrib') && sortId.includes('_')) {
+    if (singleSort?.id === 'name' && entityType === 'version') {
+      sortId = 'entity_version'
+    } else if (sortId.startsWith('attrib') && sortId.includes('_')) {
       // convert attrib sorting to query format
       sortId = sortId.replace('_', '.')
+    } else if (sortId.endsWith('Type') && entityType && !sortId.startsWith(entityType)) {
+      // if the type is not native to the entity, add the parent prefix
+      sortId = 'parent' + sortId[0].toUpperCase() + sortId.slice(1)
     } else {
       // add entity prefix to entity fields
       sortId = `entity_${sortId}`
@@ -65,7 +68,7 @@ const useGetListItemsData = ({
       listId: listId || '',
       sortBy: parseSorting(singleSort?.id),
       desc: singleSort?.desc,
-      filter: queryFilterString,
+      filter: queryFilterString || undefined,
     },
     {
       initialPageParam: { cursor: '' },
