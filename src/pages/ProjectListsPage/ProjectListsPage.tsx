@@ -143,7 +143,7 @@ const ProjectListsPage: FC = () => {
               stateKey="overview-splitter-settings"
               stateStorage="local"
               style={{ width: '100%', height: '100%', overflow: 'hidden' }}
-              gutterSize={!isPanelOpen ? 0 : 4}
+              gutterSize={isPanelOpen && selectedList ? 4 : 0}
             >
               <SplitterPanel size={82}>
                 <Splitter
@@ -175,7 +175,7 @@ const ProjectListsPage: FC = () => {
                   )}
                 </Splitter>
               </SplitterPanel>
-              {isPanelOpen ? (
+              {isPanelOpen && selectedList ? (
                 <SplitterPanel
                   size={18}
                   style={{

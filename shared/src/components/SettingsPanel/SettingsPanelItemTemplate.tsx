@@ -50,7 +50,7 @@ const ActionButton = styled(Button)`
 `
 
 interface Action extends ButtonProps {
-  active: boolean
+  active?: boolean
 }
 
 export type SettingsPanelItem = {

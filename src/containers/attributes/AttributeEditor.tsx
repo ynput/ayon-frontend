@@ -177,7 +177,6 @@ const AttributeEditor: FC<AttributeEditorProps> = ({
 }) => {
   const initForm = buildInitFormData(excludes, { position: existingNames.length })
   const [formData, setFormData] = useState<AttributeForm | null>(attribute || initForm)
-  console.log(formData)
 
   useEffect(() => {
     if (!!attribute) setFormData(attribute)

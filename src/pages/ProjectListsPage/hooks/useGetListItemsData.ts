@@ -51,8 +51,6 @@ const useGetListItemsData = ({
     return sortId
   }
 
-  console.log(singleSort)
-
   const {
     data: itemsInfiniteData,
     isLoading,

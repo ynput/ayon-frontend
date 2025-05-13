@@ -2,16 +2,17 @@ import {
   ListsAttributesContextValue,
   useListsAttributesContext,
 } from '@pages/ProjectListsPage/context/ListsAttributesContext'
-import { FC, useState } from 'react'
+import React, { FC, useState } from 'react'
 import * as Styled from './ListsAttributesSettings.styled'
-import { Button, Icon } from '@ynput/ayon-react-components'
-import { getAttributeIcon } from '@shared/util'
+import { Button } from '@ynput/ayon-react-components'
+import { getAttributeIcon, getPlatformShortcutKey, KeyMode } from '@shared/util'
 import AttributeEditor, { AttributeForm } from '@containers/attributes/AttributeEditor'
 
 export interface ListsAttributesSettingsProps {}
 
 export const ListsAttributesSettings: FC<ListsAttributesSettingsProps> = ({}) => {
-  const { listAttributes, updateAttribute, isUpdating } = useListsAttributesContext()
+  const { listAttributes, updateAttribute, deleteAttribute, isUpdating, isLoadingNewList } =
+    useListsAttributesContext()
 
   const [attributeFormOpen, setAttributeFormOpen] = useState<undefined | AttributeForm | null>()
   const [attributesUpdateError, setAttributesUpdateError] = useState<string | undefined>(undefined)
@@ -29,27 +30,60 @@ export const ListsAttributesSettings: FC<ListsAttributesSettingsProps> = ({}) =>
     }
   }
 
+  const handleDeleteAttribute = (e: React.MouseEvent<HTMLButtonElement>, name: string) => {
+    e.stopPropagation()
+    deleteAttribute(name, e.ctrlKey || e.metaKey)
+  }
+
   return (
     <>
       <Styled.Container>
-        <Button icon={'add'} label="Add attribute" onClick={() => setAttributeFormOpen(null)} />
+        <Button
+          icon={'add'}
+          label="Add attribute"
+          onClick={() => setAttributeFormOpen(null)}
+          disabled={isLoadingNewList}
+        />
         <Styled.Items>
-          {listAttributes?.map((attribute) => (
-            <Styled.SettingsPanelItemTemplate
-              key={attribute.name}
-              item={{
-                value: attribute.name,
-                label: attribute.data.title || attribute.name,
-                icon: getAttributeIcon(
-                  attribute.name,
-                  attribute.data.type,
-                  !!attribute.data.enum?.length,
-                ),
-              }}
-              endContent={<Icon icon="edit" />}
-              onClick={() => setAttributeFormOpen(attribute)}
-            />
-          ))}
+          {!isLoadingNewList
+            ? listAttributes?.map((attribute) => (
+                <Styled.SettingsPanelItemTemplate
+                  key={attribute.name}
+                  item={{
+                    value: attribute.name,
+                    label: attribute.data.title || attribute.name,
+                    icon: getAttributeIcon(
+                      attribute.name,
+                      attribute.data.type,
+                      !!attribute.data.enum?.length,
+                    ),
+                  }}
+                  actions={[
+                    {
+                      icon: 'delete',
+                      variant: 'danger',
+                      onClick: (e) => handleDeleteAttribute(e, attribute.name),
+                      // @ts-expect-error
+                      ['data-tooltip']: `Delete without confirmation`,
+                      ['data-shortcut']: getPlatformShortcutKey('', [KeyMode.Ctrl]),
+                    },
+                    {
+                      icon: 'edit',
+                    },
+                  ]}
+                  onClick={() => setAttributeFormOpen(attribute)}
+                />
+              ))
+            : Array.from({ length: 5 }).map((_, index) => (
+                <Styled.SettingsPanelItemTemplate
+                  key={index}
+                  item={{
+                    value: 'loading...',
+                    label: 'loading...',
+                  }}
+                  className="loading"
+                />
+              ))}
         </Styled.Items>
       </Styled.Container>
       {attributeFormOpen !== undefined && (
