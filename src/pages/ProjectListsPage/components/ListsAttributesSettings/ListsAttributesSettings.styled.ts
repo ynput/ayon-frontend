@@ -1,3 +1,4 @@
+import { SettingsPanelItemTemplate as SettingsPanelItemTemplateComponent } from '@shared/components'
 import styled from 'styled-components'
 
 export const Container = styled.div`
@@ -14,4 +15,20 @@ export const Items = styled.ul`
   list-style-type: none;
   margin: 0;
   padding: 0;
+`
+
+export const SettingsPanelItemTemplate = styled(SettingsPanelItemTemplateComponent)`
+  cursor: pointer;
+
+  /* hide edit icon by default */
+  [icon='edit'] {
+    opacity: 0;
+    margin-right: 4px;
+  }
+  &:hover {
+    /* show edit icon on hover */
+    [icon='edit'] {
+      opacity: 1;
+    }
+  }
 `

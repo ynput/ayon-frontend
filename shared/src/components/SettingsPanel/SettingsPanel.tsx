@@ -65,7 +65,7 @@ export interface SettingConfig {
   title: string
   component: ReactNode
   icon?: string
-  preview?: string
+  preview?: string | number
 }
 
 export interface SettingsPanelProps {
@@ -95,7 +95,7 @@ export const SettingsPanel: FC<SettingsPanelProps> = ({ settings }) => {
             >
               {setting.icon && <Icon icon={setting.icon} />}
               <span className="title">{setting.title}</span>
-              {setting.preview && <span className="preview">{setting.preview}</span>}
+              {!!setting.preview?.toString() && <span className="preview">{setting.preview}</span>}
             </SettingOption>
           ))}
         </>

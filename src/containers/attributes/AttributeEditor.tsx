@@ -83,13 +83,85 @@ const TYPE_OPTIONS: TypeOptionsMap = {
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
 type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
 export type AttributeForm = PartialBy<AttributeModel, 'scope' | 'position'>
+type Excludes = (keyof Omit<AttributeModel, 'data'> | keyof AttributeData)[]
+
+const initFormData: AttributeForm = {
+  name: '',
+  scope: ['folder', 'task'],
+  builtin: false,
+  position: 0,
+  data: {
+    type: 'string',
+    title: '',
+    description: '',
+    example: '',
+    default: undefined,
+    enum: [],
+    minLength: undefined,
+    maxLength: undefined,
+    regex: '',
+    minItems: undefined,
+    maxItems: undefined,
+    ge: undefined,
+    gt: undefined,
+    le: undefined,
+    lt: undefined,
+  },
+}
+
+// build the form data based on excludes and to update any data
+const buildInitFormData = (excludes: Excludes, data?: Partial<AttributeForm>) => {
+  // Create a deep clone of init form data
+  const formData = JSON.parse(JSON.stringify(initFormData)) as AttributeForm
+
+  // Filter out top-level excludes if not in required
+  const required = ['name']
+  Object.keys(formData).forEach((key) => {
+    if (
+      !required.includes(key) &&
+      excludes.includes(key as keyof Omit<AttributeModel, 'data'>) &&
+      key !== 'data'
+    ) {
+      delete formData[key as keyof AttributeForm]
+    }
+  })
+
+  // Filter out data field excludes if not in in required
+  const requiredData = ['title']
+  if (formData.data) {
+    Object.keys(formData.data).forEach((key) => {
+      if (!requiredData.includes(key) && excludes.includes(key as keyof AttributeData)) {
+        delete formData.data[key as keyof AttributeData]
+      }
+    })
+  }
+
+  // Merge with provided data if any
+  if (data) {
+    // Merge top-level fields
+    Object.keys(data).forEach((key) => {
+      const typedKey = key as keyof AttributeForm
+      if (typedKey !== 'data' && excludes.includes(typedKey)) return
+
+      if (typedKey === 'data' && data.data && formData.data) {
+        // Deep merge of data fields
+        formData.data = { ...formData.data, ...data.data }
+      } else if (data[typedKey] !== undefined) {
+        // @ts-ignore - We know these properties exist
+        formData[typedKey] = data[typedKey]
+      }
+    })
+  }
+
+  return formData
+}
 
 export interface AttributeEditorProps {
   attribute: AttributeForm | null
   existingNames: string[]
   error?: string
   isUpdating?: boolean
-  excludes?: (keyof Omit<AttributeModel, 'data'> | keyof AttributeData)[]
+  excludes?: Excludes
   onHide: () => void
   onEdit: (attribute: AttributeForm) => void
 }
@@ -103,21 +175,13 @@ const AttributeEditor: FC<AttributeEditorProps> = ({
   onHide,
   onEdit,
 }) => {
-  const [formData, setFormData] = useState<AttributeForm | null>(attribute)
+  const initForm = buildInitFormData(excludes, { position: existingNames.length })
+  const [formData, setFormData] = useState<AttributeForm | null>(attribute || initForm)
+  console.log(formData)
 
-  useEffect(
-    () =>
-      setFormData(
-        attribute || {
-          name: '',
-          builtin: false,
-          scope: ['folder', 'task'],
-          position: existingNames.length,
-          data: { type: 'string' },
-        },
-      ),
-    [attribute],
-  )
+  useEffect(() => {
+    if (!!attribute) setFormData(attribute)
+  }, [attribute])
 
   const isNew = !attribute
 
@@ -305,13 +369,26 @@ const AttributeEditor: FC<AttributeEditorProps> = ({
                   value={formData?.data}
                   isMin={field === 'ge'}
                   isFloat={formData?.data?.type === 'float'}
-                  onChange={(v) =>
+                  onChange={(v) => {
+                    const geValue = v.ge !== undefined ? Number(v.ge) : undefined
+                    const leValue = v.le !== undefined ? Number(v.le) : undefined
+
+                    if (
+                      // @ts-expect-error
+                      (v.ge !== undefined && isNaN(geValue)) ||
+                      // @ts-expect-error
+                      (v.le !== undefined && isNaN(leValue))
+                    ) {
+                      // Do not update the form if the value is not a valid number
+                      return
+                    }
+
                     setFormData((d) => {
                       if (!d || !d.data) return d
                       const dt = { ...d.data, ...v }
                       return { ...d, data: dt }
                     })
-                  }
+                  }}
                 />
               )
 

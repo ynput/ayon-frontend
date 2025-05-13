@@ -5,26 +5,8 @@ import {
 import { FC, useState } from 'react'
 import * as Styled from './ListsAttributesSettings.styled'
 import { Button, Icon } from '@ynput/ayon-react-components'
-import { SettingsPanelItemTemplate } from '@shared/components'
 import { getAttributeIcon } from '@shared/util'
-import styled from 'styled-components'
 import AttributeEditor, { AttributeForm } from '@containers/attributes/AttributeEditor'
-
-const SettingsPanelItemTemplateStyled = styled(SettingsPanelItemTemplate)`
-  cursor: pointer;
-
-  /* hide edit icon by default */
-  [icon='edit'] {
-    opacity: 0;
-    margin-right: 4px;
-  }
-  &:hover {
-    /* show edit icon on hover */
-    [icon='edit'] {
-      opacity: 1;
-    }
-  }
-`
 
 export interface ListsAttributesSettingsProps {}
 
@@ -53,7 +35,7 @@ export const ListsAttributesSettings: FC<ListsAttributesSettingsProps> = ({}) =>
         <Button icon={'add'} label="Add attribute" onClick={() => setAttributeFormOpen(null)} />
         <Styled.Items>
           {listAttributes?.map((attribute) => (
-            <SettingsPanelItemTemplateStyled
+            <Styled.SettingsPanelItemTemplate
               key={attribute.name}
               item={{
                 value: attribute.name,
@@ -74,7 +56,7 @@ export const ListsAttributesSettings: FC<ListsAttributesSettingsProps> = ({}) =>
         <AttributeEditor
           attribute={attributeFormOpen}
           existingNames={listAttributes.map((a) => a.name)}
-          excludes={['scope', 'name']}
+          excludes={['scope', 'name', 'builtin', 'position']}
           onHide={() => setAttributeFormOpen(undefined)}
           onEdit={handleUpdateAttribute}
           isUpdating={isUpdating}

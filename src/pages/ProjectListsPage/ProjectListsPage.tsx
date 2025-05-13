@@ -12,7 +12,10 @@ import ListsTable from './components/ListsTable/ListsTable'
 import ListInfoDialog from './components/ListInfoDialog/ListInfoDialog'
 import ListsFiltersDialog from './components/ListsFiltersDialog/ListsFiltersDialog'
 import { ListItemsDataProvider, useListItemsDataContext } from './context/ListItemsDataContext'
-import { ListsAttributesProvider } from './context/ListsAttributesContext'
+import {
+  ListsAttributesProvider,
+  useListsAttributesContext,
+} from './context/ListsAttributesContext'
 import ListItemsTable from './components/ListItemsTable/ListItemsTable'
 import ListItemsFilter from './components/ListItemsFilter/ListItemsFilter'
 import { ProjectTableSettings, CustomizeButton } from '@shared/components'
@@ -105,6 +108,7 @@ const ProjectListsPage: FC = () => {
   const { selectedList } = useListsContext()
   const { selectedRows } = useSelectedRowsContext()
   const { deleteListItemAction } = useListItemsDataContext()
+  const { listAttributes } = useListsAttributesContext()
 
   const { extraColumns, extraColumnsSettings } = useExtraColumns({
     // @ts-expect-error - we do not support product right now
@@ -183,6 +187,7 @@ const ProjectListsPage: FC = () => {
                         id: 'list_attributes',
                         title: 'List attributes',
                         icon: 'text_fields',
+                        preview: listAttributes.length,
                         component: <ListsAttributesSettings />,
                       },
                     ]}
