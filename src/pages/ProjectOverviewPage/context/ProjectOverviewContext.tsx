@@ -200,7 +200,6 @@ export const ProjectOverviewProvider = ({ children }: ProjectOverviewProviderPro
       .map(([id]) => id)
   }, [rowSelection, persistedHierarchySelection, sliceType])
 
-  console.time('useFetchOverviewData')
   // DATA FETCHING
   const {
     foldersMap,
@@ -219,7 +218,6 @@ export const ProjectOverviewProvider = ({ children }: ProjectOverviewProviderPro
     sorting: columnSorting,
     showHierarchy,
   })
-  console.timeEnd('useFetchOverviewData')
 
   // combine foldersMap and itemsMap into a single map
   const entitiesMap = useMemo(() => {

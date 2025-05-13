@@ -33,9 +33,25 @@ const useGetListItemsData = ({
 
   // Create sort params for infinite query
   const singleSort = { ...sorting[0] }
-  // if task list and sorting by name, sort by path instead
-  const sortByPath = singleSort?.id === 'name'
-  const sortId = sortByPath ? 'path' : singleSort?.id
+  const parseSorting = (sorting?: string): string | undefined => {
+    if (!sorting) return undefined
+    let sortId = sorting
+    if (singleSort?.id === 'name') {
+      // TODO: this does not work right now
+      // sortId = 'path'
+    }
+    if (sortId.startsWith('attrib') && sortId.includes('_')) {
+      // convert attrib sorting to query format
+      sortId = sortId.replace('_', '.')
+    } else {
+      // add entity prefix to entity fields
+      sortId = `entity_${sortId}`
+    }
+
+    return sortId
+  }
+
+  console.log(singleSort)
 
   const {
     data: itemsInfiniteData,
@@ -49,7 +65,7 @@ const useGetListItemsData = ({
     {
       projectName,
       listId: listId || '',
-      sortBy: sortId,
+      sortBy: parseSorting(singleSort?.id),
       desc: singleSort?.desc,
       filter: queryFilterString,
     },
