@@ -8,9 +8,11 @@ import type { EntityListAttributeDefinition } from '@shared/api'
 import { useProjectDataContext } from '@pages/ProjectOverviewPage/context/ProjectDataContext'
 import { toast } from 'react-toastify'
 import { confirmDelete } from '@shared/util'
+import { ListEntityType } from '../components/NewListDialog/NewListDialog'
 
 export interface ListsAttributesContextValue {
   listAttributes: EntityListAttributeDefinition[]
+  entityAttribFields: string[]
   isLoading: boolean
   isUpdating: boolean
   isLoadingNewList: boolean
@@ -25,18 +27,38 @@ interface ListsAttributesProviderProps {
 }
 
 export const ListsAttributesProvider = ({ children }: ListsAttributesProviderProps) => {
-  const { projectName } = useProjectDataContext()
+  const { projectName, attribFields } = useProjectDataContext()
   const { selectedList } = useListsContext()
 
   const [isLoadingNewList, setIsLoadingNewList] = useState(false)
   const previousListIdRef = useRef<string | null>(null)
 
-  const { data: listAttributes = [], isFetching } = useGetEntityListAttributesDefinitionQuery(
+  const { data: listAttributesData = [], isFetching } = useGetEntityListAttributesDefinitionQuery(
     {
       listId: selectedList?.id || '',
       projectName,
     },
     { skip: !selectedList?.id },
+  )
+  // filter out attributes that are "overrides" (i.e. in attributes fields based on scope)
+  const scopedAttribFields = attribFields
+    .filter((field) => field.scope?.includes(selectedList?.entityType as ListEntityType))
+    .map((field) => field.name)
+  const highLevelAttribs = [
+    'name',
+    'label',
+    'status',
+    'tags',
+    'assignees',
+    'subType',
+    'folderType',
+    'productType',
+    'taskType',
+  ]
+  const entityAttribFields = [...scopedAttribFields, ...highLevelAttribs]
+
+  const listAttributes = listAttributesData.filter(
+    (attribute) => !entityAttribFields.includes(attribute.name),
   )
 
   // Track loading state when list changes and reset when fetch completes
@@ -137,6 +159,7 @@ export const ListsAttributesProvider = ({ children }: ListsAttributesProviderPro
     <ListsAttributesContext.Provider
       value={{
         listAttributes,
+        entityAttribFields,
         isLoading: isFetching,
         isUpdating,
         isLoadingNewList,

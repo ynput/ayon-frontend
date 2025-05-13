@@ -11,8 +11,14 @@ import AttributeEditor, { AttributeForm } from '@containers/attributes/Attribute
 export interface ListsAttributesSettingsProps {}
 
 export const ListsAttributesSettings: FC<ListsAttributesSettingsProps> = ({}) => {
-  const { listAttributes, updateAttribute, deleteAttribute, isUpdating, isLoadingNewList } =
-    useListsAttributesContext()
+  const {
+    listAttributes,
+    entityAttribFields,
+    updateAttribute,
+    deleteAttribute,
+    isUpdating,
+    isLoadingNewList,
+  } = useListsAttributesContext()
 
   const [attributeFormOpen, setAttributeFormOpen] = useState<undefined | AttributeForm | null>()
   const [attributesUpdateError, setAttributesUpdateError] = useState<string | undefined>(undefined)
@@ -89,7 +95,7 @@ export const ListsAttributesSettings: FC<ListsAttributesSettingsProps> = ({}) =>
       {attributeFormOpen !== undefined && (
         <AttributeEditor
           attribute={attributeFormOpen}
-          existingNames={listAttributes.map((a) => a.name)}
+          existingNames={[...listAttributes.map((a) => a.name), ...entityAttribFields]}
           excludes={['scope', 'name', 'builtin', 'position']}
           onHide={() => setAttributeFormOpen(undefined)}
           onEdit={handleUpdateAttribute}
