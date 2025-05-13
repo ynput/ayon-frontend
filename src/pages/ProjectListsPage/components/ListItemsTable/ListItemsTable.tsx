@@ -4,6 +4,7 @@ import { getColumnConfigFromType } from '@pages/ProjectListsPage/util'
 import ListItemsShortcuts from '@pages/ProjectListsPage/util/ListItemsShortcuts'
 import { EmptyPlaceholder } from '@shared/components'
 import { BuildTreeTableColumnsProps, ProjectTreeTable } from '@shared/containers/ProjectTreeTable'
+import { Button } from '@ynput/ayon-react-components'
 import { FC } from 'react'
 
 interface ListItemsTableProps {
@@ -14,7 +15,7 @@ const ListItemsTable: FC<ListItemsTableProps> = ({ extraColumns }) => {
   const { rowSelection, selectedList } = useListsContext()
   const selectedListsIds = Object.entries(rowSelection).filter(([_, isSelected]) => isSelected)
   const isMultipleSelected = selectedListsIds.length > 1
-  const { isError, projectName, fetchNextPage } = useListItemsDataContext()
+  const { isError, projectName, fetchNextPage, resetFilters } = useListItemsDataContext()
   const scope = `lists-${projectName}`
 
   const [hiddenColumns, readOnly] = getColumnConfigFromType(selectedList?.entityType)
@@ -24,7 +25,12 @@ const ListItemsTable: FC<ListItemsTableProps> = ({ extraColumns }) => {
   if (isMultipleSelected)
     return <EmptyPlaceholder message="Please select one list to view its items." />
 
-  if (isError) return <EmptyPlaceholder error={'Error loading list items.'} />
+  if (isError)
+    return (
+      <EmptyPlaceholder error={'Error loading list items.'}>
+        <Button label="Reset" icon="replay" onClick={resetFilters} />
+      </EmptyPlaceholder>
+    )
 
   return (
     <>

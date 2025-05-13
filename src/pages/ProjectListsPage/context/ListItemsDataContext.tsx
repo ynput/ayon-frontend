@@ -1,4 +1,4 @@
-import { createContext, useContext, ReactNode, useMemo } from 'react'
+import { createContext, useContext, ReactNode, useMemo, useCallback } from 'react'
 import { EntityListItem } from '@shared/api'
 import {
   ProjectDataContextProps,
@@ -52,6 +52,8 @@ export interface ListItemsDataContextValue {
   // delete (remove) from list
   deleteListItems: UseDeleteListItemsReturn['deleteListItems']
   deleteListItemAction: UseDeleteListItemsReturn['deleteListItemAction']
+  // reset filters
+  resetFilters: () => void
 }
 
 const ListItemsDataContext = createContext<ListItemsDataContextValue | undefined>(undefined)
@@ -102,6 +104,13 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
   const updateSorting: OnChangeFn<SortingState> = (sortingUpdater) => {
     setColumnSorting(functionalUpdate(sortingUpdater, columnSorting))
   }
+
+  const resetFilters = useCallback(() => {
+    updatePageConfig({
+      filters: [],
+      columnSorting: [],
+    })
+  }, [])
 
   const {
     data: listItemsData,
@@ -254,6 +263,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
         // delete (remove) from list
         deleteListItems,
         deleteListItemAction,
+        resetFilters,
       }}
     >
       {children}
