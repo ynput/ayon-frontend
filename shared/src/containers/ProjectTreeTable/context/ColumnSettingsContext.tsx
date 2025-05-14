@@ -1,4 +1,12 @@
-import React, { createContext, useContext, ReactNode, useMemo } from 'react'
+import React, {
+  createContext,
+  useContext,
+  ReactNode,
+  useMemo,
+  useState,
+  useEffect,
+  useRef,
+} from 'react'
 import {
   ColumnOrderState,
   ColumnPinningState,
@@ -86,11 +94,32 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     })
   }
 
+  // Column Sizing - this is a bit different as we want to debounce the network request
+  // Internal state for column sizing to prevent excessive network requests
+  const [internalColumnSizing, setInternalColumnSizing] = useState<ColumnSizingState>(columnSizing)
+  const resizeTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Update internal state sizing when source changes
+  useEffect(() => {
+    setInternalColumnSizing(columnSizing)
+  }, [columnSizing])
+
   const setColumnSizing = (sizing: ColumnSizingState) => {
-    onChange({
-      ...columnsConfig,
-      columnSizing: sizing,
-    })
+    // Update internal state immediately
+    setInternalColumnSizing(sizing)
+
+    // Clear any existing timeout
+    if (resizeTimeoutRef.current) {
+      clearTimeout(resizeTimeoutRef.current)
+    }
+
+    // Set a new timeout to debounce the network request
+    resizeTimeoutRef.current = setTimeout(() => {
+      onChange({
+        ...columnsConfig,
+        columnSizing: sizing,
+      })
+    }, 300) // 300ms debounce
   }
 
   // SIDE EFFECT UTILITIES
@@ -173,7 +202,8 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
   }
 
   const columnSizingUpdater: OnChangeFn<ColumnSizingState> = (sizingUpdater) => {
-    const newSizing = functionalUpdate(sizingUpdater, columnSizing)
+    // Use the internal state for the functional update
+    const newSizing = functionalUpdate(sizingUpdater, internalColumnSizing)
     setColumnSizing(newSizing)
   }
 
@@ -195,8 +225,8 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
         setColumnOrder,
         updateColumnOrder,
         columnOrderUpdater,
-        // column sizing
-        columnSizing,
+        // column sizing - use internal state for immediate updates
+        columnSizing: internalColumnSizing,
         setColumnSizing,
         columnSizingUpdater,
         // global change
