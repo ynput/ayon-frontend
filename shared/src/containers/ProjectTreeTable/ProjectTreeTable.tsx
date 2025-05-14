@@ -9,15 +9,13 @@ import {
   filterFns,
   flexRender,
   Row,
-  OnChangeFn,
   getSortedRowModel,
   Cell,
   Column,
-  functionalUpdate,
-  ColumnSizingState,
   Table,
   Header,
   HeaderGroup,
+  RowData,
 } from '@tanstack/react-table'
 
 // Utility imports
@@ -27,7 +25,10 @@ import clsx from 'clsx'
 import type { TableRow } from './types/table'
 
 // Component imports
-import buildTreeTableColumns, { BuildTreeTableColumnsProps } from './buildTreeTableColumns'
+import buildTreeTableColumns, {
+  BuildTreeTableColumnsProps,
+  DefaultColumns,
+} from './buildTreeTableColumns'
 import * as Styled from './ProjectTreeTable.styled'
 import HeaderActionButton from './components/HeaderActionButton'
 import EmptyPlaceholder from '../../components/EmptyPlaceholder'
@@ -54,14 +55,15 @@ import { Icon } from '@ynput/ayon-react-components'
 import { AttributeEnumItem, ProjectTableAttribute, BuiltInFieldOptions } from './types'
 import { useProjectTableContext } from './context/ProjectTableContext'
 import { getReadOnlyLists, getTableFieldOptions } from './utils'
+import { UpdateTableEntities } from './hooks/useUpdateTableData'
 
-// define which columns should show different actions
-type ColumnHeaderWidget = 'visibility_off' | 'push_pin' | 'sort' | 'locked'
-type ColumnHeaderConfig = {
-  visibility: string[]
-  sorting: string[]
-  pinning: string[]
-  locked: string[]
+declare module '@tanstack/react-table' {
+  interface TableMeta<TData extends RowData> {
+    options: BuiltInFieldOptions
+    updateEntities: UpdateTableEntities
+    readOnly: ProjectTreeTableProps['readOnly']
+    projectName: string
+  }
 }
 
 //These are the important styles to make sticky column pinning work!
@@ -79,11 +81,12 @@ const getCommonPinningStyles = (column: Column<TableRow, unknown>): CSSPropertie
   }
 }
 
-interface Props extends React.HTMLAttributes<HTMLDivElement> {
+export interface ProjectTreeTableProps extends React.HTMLAttributes<HTMLDivElement> {
   scope: string
   sliceId: string
   fetchMoreOnBottomReached: (element: HTMLDivElement | null) => void
   onOpenNew?: (type: 'folder' | 'task') => void
+  readOnly?: (DefaultColumns | string)[]
   pt?: {
     columns?: Partial<BuildTreeTableColumnsProps>
     container?: React.HTMLAttributes<HTMLDivElement>
@@ -96,9 +99,10 @@ export const ProjectTreeTable = ({
   sliceId,
   fetchMoreOnBottomReached,
   onOpenNew,
+  readOnly,
   pt,
   ...props
-}: Props) => {
+}: ProjectTreeTableProps) => {
   const {
     columnVisibility,
     columnVisibilityUpdater,
@@ -168,55 +172,36 @@ export const ProjectTreeTable = ({
 
   // Format readonly columns and attributes
   const { readOnlyColumns, readOnlyAttribs } = useMemo(
-    () => getReadOnlyLists(attribFields, pt?.columns?.readonly),
-    [attribFields, pt?.columns?.readonly],
+    () => getReadOnlyLists(attribFields, readOnly),
+    [attribFields, readOnly],
   )
-  const columnHeaderConfig: ColumnHeaderConfig = {
-    visibility: [],
-    pinning: [],
-    sorting: [],
-    locked: readOnlyColumns,
-  }
 
   const { updateEntities } = useCellEditing()
 
+  const columnAttribs = useMemo(
+    () => (isInitialized ? attribFields : loadingAttrib),
+    [attribFields, loadingAttrib, isInitialized],
+  )
   const columns = useMemo(
     () =>
       buildTreeTableColumns({
-        tableData: showLoadingRows ? loadingRows : tableData,
-        columnSizing,
-        attribs: isInitialized ? attribFields : loadingAttrib,
-        isLoading: !isInitialized,
+        attribs: columnAttribs,
         showHierarchy,
-        sliceId,
         options,
-        projectName,
         toggleExpandAll: (id: string) => toggleExpandAll([id]),
         toggleExpanded: (id: string) => toggleExpanded(id),
-        updateEntities,
         ...pt?.columns,
       }),
-    [
-      tableData,
-      showLoadingRows,
-      loadingAttrib,
-      loadingRows,
-      attribFields,
-      columnSizing,
-      isInitialized,
-      showHierarchy,
-      sliceId,
-      options,
-      toggleExpandAll,
-      toggleExpanded,
-      updateEntities,
-      pt?.columns,
-    ],
+    [columnAttribs, showHierarchy, options, toggleExpandAll, toggleExpanded, pt?.columns],
   )
 
   const table = useReactTable({
     data: showLoadingRows ? loadingRows : tableData,
     columns,
+    defaultColumn: {
+      minSize: 50,
+      size: 150,
+    },
     enableRowSelection: true, //enable row selection for all rows
     getRowId: (row) => row.id,
     enableSubRowSelection: false, //disable sub row selection
@@ -250,6 +235,12 @@ export const ProjectTreeTable = ({
       columnOrder,
     },
     enableSorting: true,
+    meta: {
+      projectName,
+      options,
+      readOnly: readOnlyColumns,
+      updateEntities,
+    },
   })
 
   const { rows } = table.getRowModel()

@@ -57,6 +57,10 @@ const ThumbnailWidgetWrapper: FC<ThumbnailWidgetProps> = ({
     projectName &&
     `/api/projects/${projectName}/${entityType}s/${entityId}/thumbnail?updatedAt=${updatedAt}`
 
+  useEffect(() => {
+    console.log('THUMBNAIL WIDGET')
+  }, [])
+
   return (
     <Wrapper className="thumbnail-widget" key={url}>
       <Inner>

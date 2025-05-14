@@ -1,13 +1,12 @@
 import {
   getValueIdType,
   TreeTableExtraColumn,
-  TreeTableExtraColumnsConstructor,
   TreeTableSubType,
   useColumnSettingsContext,
 } from '@shared/containers'
 import { CellWidget } from '@shared/containers/ProjectTreeTable/widgets'
 import clsx from 'clsx'
-import { useCallback } from 'react'
+import { useMemo } from 'react'
 import { ListEntityType } from '../components/NewListDialog/NewListDialog'
 import { useListsAttributesContext } from '../context/ListsAttributesContext'
 
@@ -55,8 +54,8 @@ const useExtraColumns = ({ entityType }: useExtraColumnsProps) => {
     label: attribute.data.title || attribute.name,
   }))
 
-  const extraColumns = useCallback<TreeTableExtraColumnsConstructor>(
-    ({ options, updateEntities }) => [
+  const extraColumns: TreeTableExtraColumn[] = useMemo(
+    () => [
       ...extraTypeColumns.map(
         (typeColumn): TreeTableExtraColumn => ({
           column: {
@@ -68,7 +67,8 @@ const useExtraColumns = ({ entityType }: useExtraColumnsProps) => {
             enableResizing: true,
             enablePinning: true,
             enableHiding: true,
-            cell: ({ row, column }) => {
+            cell: ({ row, column, table }) => {
+              const meta = table.options.meta
               const { value, id, type } = getValueIdType(row, column.id)
               return (
                 <CellWidget
@@ -76,11 +76,13 @@ const useExtraColumns = ({ entityType }: useExtraColumnsProps) => {
                   className={clsx(typeColumn.value, { loading: row.original.isLoading })}
                   columnId={column.id}
                   value={value}
-                  options={options[typeColumn.value]}
+                  options={meta?.options[typeColumn.value]}
                   attributeData={{ type: 'string' }}
                   isReadOnly={typeColumn.readonly}
                   onChange={(value) =>
-                    updateEntities([{ field: typeColumn.value, value, id, type, rowId: row.id }])
+                    meta?.updateEntities([
+                      { field: typeColumn.value, value, id, type, rowId: row.id },
+                    ])
                   }
                 />
               )
@@ -100,7 +102,8 @@ const useExtraColumns = ({ entityType }: useExtraColumnsProps) => {
             enableResizing: true,
             enablePinning: true,
             enableHiding: true,
-            cell: ({ row, column }) => {
+            cell: ({ row, column, table }) => {
+              const meta = table.options.meta
               const { value, id, type } = getValueIdType(row, column.id, 'attrib')
               return (
                 <CellWidget
@@ -111,7 +114,7 @@ const useExtraColumns = ({ entityType }: useExtraColumnsProps) => {
                   options={attribute.data.enum}
                   attributeData={attribute.data}
                   onChange={(value) =>
-                    updateEntities([
+                    meta?.updateEntities([
                       {
                         field: attribute.name,
                         value,

@@ -1,12 +1,4 @@
-import { useMemo } from 'react'
-import {
-  ColumnDef,
-  ColumnSizingState,
-  FilterFnOption,
-  Row,
-  SortingFn,
-  sortingFns,
-} from '@tanstack/react-table'
+import { ColumnDef, FilterFnOption, Row, SortingFn, sortingFns } from '@tanstack/react-table'
 import { TableRow } from './types/table'
 import { AttributeData, ProjectTableAttribute, BuiltInFieldOptions } from './types'
 import { CellWidget, EntityNameWidget, ThumbnailWidget } from './widgets'
@@ -16,7 +8,6 @@ import clsx from 'clsx'
 import { SelectionCell } from './components/SelectionCell'
 import RowSelectionHeader from './components/RowSelectionHeader'
 import { ROW_SELECTION_COLUMN_ID } from './context/SelectionCellsContext'
-import { UpdateTableEntities } from './hooks/useUpdateTableData'
 
 // Wrapper function for sorting that pushes isLoading rows to the bottom
 const withLoadingStateSort = (sortFn: SortingFn<any>): SortingFn<any> => {
@@ -65,7 +56,7 @@ const attribSort: AttribSortingFn = (rowA, rowB, columnId, attrib) => {
   }
 }
 
-type DefaultColumns =
+export type DefaultColumns =
   | typeof ROW_SELECTION_COLUMN_ID
   | 'thumbnail'
   | 'name'
@@ -75,43 +66,25 @@ type DefaultColumns =
   | 'tags'
 
 export type TreeTableExtraColumn = { column: ColumnDef<TableRow>; position?: number }
-export type TreeTableExtraColumnsConstructor = ({
-  options,
-  updateEntities,
-}: {
-  options: BuiltInFieldOptions
-  updateEntities: UpdateTableEntities
-}) => TreeTableExtraColumn[]
 
 export type BuildTreeTableColumnsProps = {
-  tableData: TableRow[]
   attribs: ProjectTableAttribute[]
-  columnSizing: ColumnSizingState
-  isLoading: boolean
   showHierarchy: boolean
-  sliceId: string
   options: BuiltInFieldOptions
-  projectName: string
   excluded?: (DefaultColumns | string)[]
-  readonly?: (DefaultColumns | string)[]
-  extraColumns?: TreeTableExtraColumnsConstructor
+  extraColumns?: TreeTableExtraColumn[]
   toggleExpandAll: (id: string) => void
   toggleExpanded: (id: string) => void
-  updateEntities: UpdateTableEntities
 }
 
 const buildTreeTableColumns = ({
   attribs,
-  columnSizing = {},
   showHierarchy,
   options,
   excluded,
-  readonly,
-  projectName,
   extraColumns,
   toggleExpandAll,
   toggleExpanded,
-  updateEntities,
 }: BuildTreeTableColumnsProps) => {
   const staticColumns: ColumnDef<TableRow>[] = []
 
@@ -141,14 +114,16 @@ const buildTreeTableColumns = ({
       minSize: 64,
       enableResizing: true,
       enableSorting: false,
-      cell: ({ row }) => {
+      cell: ({ row, table }) => {
+        const meta = table.options.meta
+        if (!meta) return null
         return (
           <ThumbnailWidget
             entityId={row.original.entityId || row.id}
             entityType={row.original.entityType}
             updatedAt={row.original.updatedAt}
             icon={row.original.icon}
-            projectName={projectName}
+            projectName={meta?.projectName}
           />
         )
       },
@@ -206,13 +181,13 @@ const buildTreeTableColumns = ({
         attribSort(a, b, c, { enum: options.status, type: 'string' }),
       ),
       sortDescFirst: true,
-      size: columnSizing['status'] || 150,
       enableSorting: true,
       enableResizing: true,
       enablePinning: true,
       enableHiding: true,
-      cell: ({ row, column }) => {
+      cell: ({ row, column, table }) => {
         const { value, id, type } = getValueIdType(row, column.id)
+        const meta = table.options.meta
 
         return (
           <CellWidget
@@ -221,10 +196,12 @@ const buildTreeTableColumns = ({
             columnId={column.id}
             value={value}
             attributeData={{ type: 'string' }}
-            options={options.status.filter((s) => s.scope?.includes(type))}
+            options={meta?.options.status.filter((s) => s.scope?.includes(type))}
             isCollapsed={!!row.original.childOnlyMatch}
-            onChange={(value) => updateEntities([{ field: column.id, value, id, type, rowId: id }])}
-            isReadOnly={readonly?.includes(column.id)}
+            onChange={(value) =>
+              meta?.updateEntities([{ field: column.id, value, id, type, rowId: id }])
+            }
+            isReadOnly={meta?.readOnly?.includes(column.id)}
           />
         )
       },
@@ -236,14 +213,14 @@ const buildTreeTableColumns = ({
       id: 'subType',
       accessorKey: 'subType',
       header: () => 'Type',
-      size: columnSizing['type'] || 150,
       enableSorting: true,
       enableResizing: true,
       enablePinning: true,
       enableHiding: true,
-      cell: ({ row, column }) => {
+      cell: ({ row, column, table }) => {
         const { value, id, type } = getValueIdType(row, column.id)
         const fieldId = type === 'folder' ? 'folderType' : 'taskType'
+        const meta = table.options.meta
         return (
           <CellWidget
             rowId={id}
@@ -252,13 +229,17 @@ const buildTreeTableColumns = ({
             value={value}
             attributeData={{ type: 'string' }}
             options={
-              type === 'folder' ? options.folderType : type === 'task' ? options.taskType : []
+              type === 'folder'
+                ? meta?.options.folderType
+                : type === 'task'
+                ? meta?.options.taskType
+                : []
             }
             isCollapsed={!!row.original.childOnlyMatch}
             onChange={(value) =>
-              updateEntities([{ field: fieldId, value, id, type, rowId: row.id }])
+              meta?.updateEntities([{ field: fieldId, value, id, type, rowId: row.id }])
             }
-            isReadOnly={readonly?.includes(column.id)}
+            isReadOnly={meta?.readOnly?.includes(column.id)}
           />
         )
       },
@@ -270,12 +251,12 @@ const buildTreeTableColumns = ({
       id: 'assignees',
       accessorKey: 'assignees',
       header: () => 'Assignees',
-      size: columnSizing['assignees'] || 150,
       enableSorting: true,
       enableResizing: true,
       enablePinning: true,
       enableHiding: true,
-      cell: ({ row, column }) => {
+      cell: ({ row, column, table }) => {
+        const meta = table.options.meta
         const { value, id, type } = getValueIdType(row, column.id)
         if (type === 'folder')
           return (
@@ -294,12 +275,12 @@ const buildTreeTableColumns = ({
             columnId={column.id}
             value={value}
             attributeData={{ type: 'list_of_strings' }}
-            options={options.assignee}
+            options={meta?.options.assignee}
             isCollapsed={!!row.original.childOnlyMatch}
             onChange={(value) =>
-              updateEntities([{ field: column.id, value, id, type, rowId: row.id }])
+              meta?.updateEntities([{ field: column.id, value, id, type, rowId: row.id }])
             }
-            isReadOnly={readonly?.includes(column.id)}
+            isReadOnly={meta?.readOnly?.includes(column.id)}
             pt={{
               enum: {
                 multiSelectClose: value?.length === 0, // close the dropdown on first assignment
@@ -318,12 +299,12 @@ const buildTreeTableColumns = ({
       id: 'tags',
       accessorKey: 'tags',
       header: () => 'Tags',
-      size: columnSizing['tags'] || 150,
       enableSorting: true,
       enableResizing: true,
       enablePinning: true,
       enableHiding: true,
-      cell: ({ row, column }) => {
+      cell: ({ row, column, table }) => {
+        const meta = table.options.meta
         const { value, id, type } = getValueIdType(row, column.id)
         return (
           <CellWidget
@@ -332,12 +313,12 @@ const buildTreeTableColumns = ({
             columnId={column.id}
             value={value}
             attributeData={{ type: 'list_of_strings' }}
-            options={options.tag}
+            options={meta?.options.tag}
             isCollapsed={!!row.original.childOnlyMatch}
             onChange={(value) =>
-              updateEntities([{ field: column.id, value, id, type, rowId: row.id }])
+              meta?.updateEntities([{ field: column.id, value, id, type, rowId: row.id }])
             }
-            isReadOnly={readonly?.includes(column.id)}
+            isReadOnly={meta?.readOnly?.includes(column.id)}
             enableCustomValues
           />
         )
@@ -365,7 +346,8 @@ const buildTreeTableColumns = ({
         enableResizing: true,
         enablePinning: true,
         enableHiding: true,
-        cell: ({ row, column }) => {
+        cell: ({ row, column, table }) => {
+          const meta = table.options.meta
           const columnIdParsed = column.id.replace('attrib_', '')
           const { value, id, type } = getValueIdType(row, columnIdParsed, 'attrib')
           const isInherited = !row.original.ownAttrib.includes(columnIdParsed)
@@ -382,10 +364,12 @@ const buildTreeTableColumns = ({
               isInherited={isInherited && ['folder', 'task'].includes(type)}
               isReadOnly={
                 attrib.readOnly ||
-                readonly?.some((id) => id === columnIdParsed || (id === 'attrib' && attrib.builtin))
+                meta?.readOnly?.some(
+                  (id) => id === columnIdParsed || (id === 'attrib' && attrib.builtin),
+                )
               }
               onChange={(value) =>
-                updateEntities([
+                meta?.updateEntities([
                   { field: columnIdParsed, value, id, type, isAttrib: true, rowId: row.id },
                 ])
               }
@@ -400,7 +384,7 @@ const buildTreeTableColumns = ({
 
   // Add extra columns if provided
   if (extraColumns) {
-    extraColumns({ options, updateEntities }).forEach(({ column, position = -1 }) => {
+    extraColumns.forEach(({ column, position = -1 }) => {
       if (position >= 0 && position < allColumns.length) {
         allColumns.splice(position, 0, column)
       } else {

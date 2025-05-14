@@ -39,10 +39,10 @@ const ListItemsTable: FC<ListItemsTableProps> = ({ extraColumns }) => {
         sliceId={''}
         // pagination
         fetchMoreOnBottomReached={fetchNextPage}
+        readOnly={readOnly}
         pt={{
           columns: {
             excluded: hiddenColumns,
-            readonly: readOnly,
             extraColumns: extraColumns,
           },
         }}
