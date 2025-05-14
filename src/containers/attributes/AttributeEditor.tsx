@@ -228,7 +228,7 @@ const AttributeEditor: FC<AttributeEditorProps> = ({
 
   const footer = (
     <div style={{ display: 'flex', width: '100%', flexDirection: 'row' }}>
-      {onDelete && (
+      {onDelete && attribute && (
         <Button
           variant="danger"
           label={'Delete attribute'}
