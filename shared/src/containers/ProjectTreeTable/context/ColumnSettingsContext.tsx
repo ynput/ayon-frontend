@@ -1,4 +1,4 @@
-import React, { createContext, useContext, ReactNode, useMemo } from 'react'
+import React, { createContext, useContext, ReactNode, useState } from 'react'
 import {
   ColumnOrderState,
   ColumnPinningState,
@@ -61,7 +61,7 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     columnOrder = [],
     columnPinning = {},
     columnVisibility = {},
-    columnSizing = {},
+    columnSizing: columnsSizingExternal = {},
   } = columnsConfig
 
   // DIRECT STATE UPDATES - no side effects
@@ -86,11 +86,31 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     })
   }
 
+  const [internalColumnSizing, setInternalColumnSizing] = useState<ColumnSizingState | null>(null)
+
+  // use internalColumnSizing if it exists, otherwise use the external column sizing
+  const columnSizing = internalColumnSizing || columnsSizingExternal
+
+  const resizingTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
+
   const setColumnSizing = (sizing: ColumnSizingState) => {
-    onChange({
-      ...columnsConfig,
-      columnSizing: sizing,
-    })
+    setInternalColumnSizing(sizing)
+
+    // if there is a timeout already set, clear it
+    if (resizingTimeoutRef.current) {
+      clearTimeout(resizingTimeoutRef.current)
+    }
+    // set a timeout that tracks if the column sizing has finished
+    resizingTimeoutRef.current = setTimeout(() => {
+      // we have finished resizing now!
+      // update the external column sizing
+      onChange({
+        ...columnsConfig,
+        columnSizing: sizing,
+      })
+      // reset the internal column sizing to not be used anymore
+      setInternalColumnSizing(null)
+    }, 500)
   }
 
   // SIDE EFFECT UTILITIES
