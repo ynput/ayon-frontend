@@ -18,6 +18,7 @@ import { useFiltersWithHierarchy } from '@components/SearchFilter/hooks'
 import { FilterFieldType } from '@hooks/useBuildFilterOptions'
 import ProjectOverviewDetailsPanel from './containers/ProjectOverviewDetailsPanel'
 import NewEntity from '@components/NewEntity/NewEntity'
+import { Actions } from '@shared/containers/Actions/Actions'
 import { useProjectTableContext, useSelectedRowsContext } from '@shared/containers/ProjectTreeTable'
 import ProjectOverviewSettings, { CustomizeButton } from './components/ProjectOverviewSettings'
 import { useSettingsPanel } from './context/SettingsPanelContext'
@@ -109,6 +110,12 @@ const ProjectOverviewPage: FC = () => {
                 value={showHierarchy}
                 onClick={() => updateShowHierarchy(!showHierarchy)}
                 label="Show hierarchy"
+              />
+              <Actions
+                entities={[]}
+                entityType={undefined}
+                isLoadingEntity={false}
+                isProjectLevel={projectName}
               />
               <CustomizeButton />
             </Toolbar>
