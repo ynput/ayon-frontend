@@ -1,4 +1,4 @@
-import { useMemo, memo, useCallback, useRef, FC, useEffect } from 'react'
+import { useMemo, memo, useCallback, useRef, FC } from 'react'
 import styled from 'styled-components'
 
 // Widgets
@@ -224,10 +224,6 @@ const EditorCellComponent: FC<EditorCellProps> = ({
         return null
     }
   }, [cellId, value, type, isCurrentCellEditing, options, isCollapsed])
-
-  useEffect(() => {
-    console.log('CELL WIDGET')
-  }, [])
 
   return (
     <Cell

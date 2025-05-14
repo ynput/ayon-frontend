@@ -27,6 +27,8 @@ type User = {
   fullName?: string
 }
 
+export type ToggleExpandAll = (rowIds: RowId[], expand?: boolean) => void
+
 export interface ProjectTableProviderProps {
   children: ReactNode
   isInitialized: boolean
@@ -112,7 +114,7 @@ export interface ProjectTableContextProps {
   expanded: ProjectTableProviderProps['expanded']
   toggleExpanded: ProjectTableProviderProps['toggleExpanded']
   updateExpanded: ProjectTableProviderProps['updateExpanded']
-  toggleExpandAll: (rowId: RowId[], expand?: boolean) => void
+  toggleExpandAll: ToggleExpandAll
 
   // Sorting
   sorting: ProjectTableProviderProps['sorting']

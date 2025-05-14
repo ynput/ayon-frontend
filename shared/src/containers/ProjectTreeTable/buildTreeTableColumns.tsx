@@ -73,8 +73,6 @@ export type BuildTreeTableColumnsProps = {
   options: BuiltInFieldOptions
   excluded?: (DefaultColumns | string)[]
   extraColumns?: TreeTableExtraColumn[]
-  toggleExpandAll: (id: string) => void
-  toggleExpanded: (id: string) => void
 }
 
 const buildTreeTableColumns = ({
@@ -83,8 +81,6 @@ const buildTreeTableColumns = ({
   options,
   excluded,
   extraColumns,
-  toggleExpandAll,
-  toggleExpanded,
 }: BuildTreeTableColumnsProps) => {
   const staticColumns: ColumnDef<TableRow>[] = []
 
@@ -140,7 +136,8 @@ const buildTreeTableColumns = ({
       enableResizing: true,
       enablePinning: true,
       enableHiding: true,
-      cell: ({ row, column }) => {
+      cell: ({ row, column, table }) => {
+        const meta = table.options.meta
         const cellId = getCellId(row.id, column.id)
         return (
           <TableCellContent
@@ -163,8 +160,8 @@ const buildTreeTableColumns = ({
               icon={row.original.icon}
               type={row.original.entityType}
               isExpanded={row.getIsExpanded()}
-              toggleExpandAll={toggleExpandAll}
-              toggleExpanded={() => toggleExpanded(row.id)}
+              toggleExpandAll={() => meta?.toggleExpandAll([row.id])}
+              toggleExpanded={row.getToggleExpandedHandler()}
             />
           </TableCellContent>
         )

@@ -346,7 +346,6 @@ const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns, highlighted }) => 
     ? [...visibleColumns, ...hiddenColumns, ...pinnedColumns].find((col) => col.value === activeId)
     : null
 
-  console.log(highlighted)
   return (
     <DndContext
       sensors={sensors}

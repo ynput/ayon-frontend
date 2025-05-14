@@ -53,16 +53,17 @@ import { generateLoadingRows, generateDummyAttributes } from './utils/loadingUti
 import { createPortal } from 'react-dom'
 import { Icon } from '@ynput/ayon-react-components'
 import { AttributeEnumItem, ProjectTableAttribute, BuiltInFieldOptions } from './types'
-import { useProjectTableContext } from './context/ProjectTableContext'
+import { ToggleExpandAll, useProjectTableContext } from './context/ProjectTableContext'
 import { getReadOnlyLists, getTableFieldOptions } from './utils'
 import { UpdateTableEntities } from './hooks/useUpdateTableData'
 
 declare module '@tanstack/react-table' {
   interface TableMeta<TData extends RowData> {
     options: BuiltInFieldOptions
-    updateEntities: UpdateTableEntities
     readOnly: ProjectTreeTableProps['readOnly']
     projectName: string
+    updateEntities: UpdateTableEntities
+    toggleExpandAll: ToggleExpandAll
   }
 }
 
@@ -126,7 +127,6 @@ export const ProjectTreeTable = ({
     projectName,
     updateExpanded,
     toggleExpandAll,
-    toggleExpanded,
     sorting,
     updateSorting,
     showHierarchy,
@@ -188,11 +188,9 @@ export const ProjectTreeTable = ({
         attribs: columnAttribs,
         showHierarchy,
         options,
-        toggleExpandAll: (id: string) => toggleExpandAll([id]),
-        toggleExpanded: (id: string) => toggleExpanded(id),
         ...pt?.columns,
       }),
-    [columnAttribs, showHierarchy, options, toggleExpandAll, toggleExpanded, pt?.columns],
+    [columnAttribs, showHierarchy, options, pt?.columns],
   )
 
   const table = useReactTable({
@@ -240,6 +238,7 @@ export const ProjectTreeTable = ({
       options,
       readOnly: readOnlyColumns,
       updateEntities,
+      toggleExpandAll,
     },
   })
 

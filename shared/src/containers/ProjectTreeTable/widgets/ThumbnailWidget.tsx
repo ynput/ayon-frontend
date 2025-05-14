@@ -1,6 +1,5 @@
-import { Thumbnail, ThumbnailProps } from '@shared/components'
 import { Icon } from '@ynput/ayon-react-components'
-import { FC, memo, useEffect } from 'react'
+import { FC, memo } from 'react'
 import styled from 'styled-components'
 
 const Wrapper = styled.div`
@@ -56,10 +55,6 @@ const ThumbnailWidgetWrapper: FC<ThumbnailWidgetProps> = ({
   const url =
     projectName &&
     `/api/projects/${projectName}/${entityType}s/${entityId}/thumbnail?updatedAt=${updatedAt}`
-
-  useEffect(() => {
-    console.log('THUMBNAIL WIDGET')
-  }, [])
 
   return (
     <Wrapper className="thumbnail-widget" key={url}>
