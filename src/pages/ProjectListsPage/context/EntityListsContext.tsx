@@ -28,7 +28,7 @@ export interface EntityListsContextValue {
     entityType: string,
     entities: { entityId: string; entityType: string | undefined }[],
   ) => Promise<void>
-  menuItems: ContextMenuItemConstructor
+  menuItems: (filter?: (item: ListSubMenuItem) => boolean) => ContextMenuItemConstructor
   buildListMenuItem: (
     list: EntityList,
     selected: { entityId: string; entityType: string | undefined }[],
@@ -150,39 +150,50 @@ export const EntityListsProvider = ({
     }
   }
 
-  const menuItems: ContextMenuItemConstructor = (_e, cell, selected, _meta) => {
-    const isMultipleEntityTypes = selected.some(
-      (item) => item.entityType !== selected[0].entityType,
-    )
+  const menuItems: EntityListsContextValue['menuItems'] =
+    (filter) => (_e, cell, selected, _meta) => {
+      const isMultipleEntityTypes = selected.some(
+        (item) => item.entityType !== selected[0].entityType,
+      )
 
-    const foldersMenuItems = folders.data.map((folder) =>
-      buildListMenuItem(folder, selected, isMultipleEntityTypes),
-    )
-    const tasksMenuItems = tasks.data.map((task) =>
-      buildListMenuItem(task, selected, isMultipleEntityTypes),
-    )
-    const productsMenuItems = products.data.map((product) =>
-      buildListMenuItem(product, selected, isMultipleEntityTypes),
-    )
-    const versionsMenuItems = versions.data.map((version) =>
-      buildListMenuItem(version, selected, isMultipleEntityTypes),
-    )
+      const foldersMenuItems = folders.data.map((folder) =>
+        buildListMenuItem(folder, selected, isMultipleEntityTypes),
+      )
 
-    let subMenuItems: any[] = []
-    if (isMultipleEntityTypes) {
-      subMenuItems = [...foldersMenuItems, ...tasksMenuItems]
-    } else if (cell.entityType === 'folder') {
-      subMenuItems = foldersMenuItems
-    } else if (cell.entityType === 'task') {
-      subMenuItems = tasksMenuItems
-    } else if (cell.entityType === 'product') {
-      subMenuItems = productsMenuItems
-    } else if (cell.entityType === 'version') {
-      subMenuItems = versionsMenuItems
+      const tasksMenuItems = tasks.data.map((task) =>
+        buildListMenuItem(task, selected, isMultipleEntityTypes),
+      )
+
+      const productsMenuItems = products.data.map((product) =>
+        buildListMenuItem(product, selected, isMultipleEntityTypes),
+      )
+
+      const versionsMenuItems = versions.data.map((version) =>
+        buildListMenuItem(version, selected, isMultipleEntityTypes),
+      )
+
+      let subMenuItems: ListSubMenuItem[] = []
+      if (isMultipleEntityTypes) {
+        subMenuItems = [...foldersMenuItems, ...tasksMenuItems]
+      } else if (cell.entityType === 'folder') {
+        subMenuItems = foldersMenuItems
+      } else if (cell.entityType === 'task') {
+        subMenuItems = tasksMenuItems
+      } else if (cell.entityType === 'product') {
+        subMenuItems = productsMenuItems
+      } else if (cell.entityType === 'version') {
+        subMenuItems = versionsMenuItems
+      }
+
+      // Apply filter if provided
+      if (filter && typeof filter === 'function') {
+        subMenuItems = subMenuItems.filter(filter)
+      }
+
+      const menuItems = buildAddToListMenu(subMenuItems)
+
+      return menuItems
     }
-
-    return buildAddToListMenu(subMenuItems)
-  }
 
   return (
     <EntityListsContext.Provider

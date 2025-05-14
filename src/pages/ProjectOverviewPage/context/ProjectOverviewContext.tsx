@@ -98,14 +98,14 @@ export const ProjectOverviewProvider = ({ children }: ProjectOverviewProviderPro
   )
 
   // lists data
-  const { menuItems: addToListItems } = useEntityListsContext()
+  const { menuItems: menuItemsAddToList } = useEntityListsContext()
 
   // inject in custom add to list context menu items
   const contextMenuItems: ContextMenuItemConstructors = [
     'copy-paste',
     'show-details',
     'expand-collapse',
-    addToListItems,
+    menuItemsAddToList(),
     'inherit',
     'export',
     'create-folder',

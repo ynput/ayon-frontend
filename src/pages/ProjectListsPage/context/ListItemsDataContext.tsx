@@ -17,6 +17,7 @@ import {
 import { functionalUpdate, OnChangeFn, SortingState } from '@tanstack/react-table'
 import useDeleteListItems, { UseDeleteListItemsReturn } from '../hooks/useDeleteListItems'
 import { ContextMenuItemConstructors } from '@shared/containers/ProjectTreeTable/hooks/useCellContextMenu'
+import { useEntityListsContext } from './EntityListsContext'
 
 export type ListItemsMap = Map<string, EntityListItem>
 
@@ -226,11 +227,16 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     listItemsMap,
   })
 
+  // lists data
+  const { menuItems: menuItemsAddToList } = useEntityListsContext()
+
   // inject in custom add to list context menu items
   const contextMenuItems: ContextMenuItemConstructors = [
     'copy-paste',
     'show-details',
     deleteListItemMenuItem,
+    // add context menu to add to lists but filter out own list
+    menuItemsAddToList((item) => item.id !== selectedListId),
   ]
 
   return (

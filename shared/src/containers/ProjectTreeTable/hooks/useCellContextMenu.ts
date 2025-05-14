@@ -97,6 +97,7 @@ const useCellContextMenu = ({ attribs, onOpenNew }: CellContextMenuProps) => {
         } else {
           // Create new entity entry
           acc.push({
+            rowId: rowId,
             entityId: rowId,
             entityType: 'folderId' in entity ? 'task' : 'folder',
             attribs: [attribName],
