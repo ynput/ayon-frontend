@@ -119,6 +119,7 @@ export const ProjectTreeTable = ({
     isLoading,
     isInitialized,
     expanded,
+    projectName,
     updateExpanded,
     toggleExpandAll,
     toggleExpanded,
@@ -189,6 +190,7 @@ export const ProjectTreeTable = ({
         showHierarchy,
         sliceId,
         options,
+        projectName,
         toggleExpandAll: (id: string) => toggleExpandAll([id]),
         toggleExpanded: (id: string) => toggleExpanded(id),
         updateEntities,
@@ -396,12 +398,18 @@ const TableHeadRow = ({
       ) : null}
       {virtualColumns.map((virtualColumn) => {
         const header = headerGroup.headers[virtualColumn.index]
+
         return (
           <TableHeadCell
             key={header.id}
             header={header}
             isLoading={isLoading}
             isReadOnly={readOnlyColumns?.includes(header.id)}
+            canSort={header.column.getCanSort()}
+            canFilter={header.column.getCanFilter()}
+            canHide={header.column.getCanHide()}
+            canPin={header.column.getCanPin()}
+            canResize={header.column.getCanResize()}
           />
         )
       })}
@@ -416,12 +424,25 @@ const TableHeadRow = ({
 interface TableHeadCellProps {
   header: Header<TableRow, unknown>
   isLoading: boolean
+  canSort?: boolean
+  canFilter?: boolean
+  canHide?: boolean
+  canPin?: boolean
+  canResize?: boolean
   isReadOnly?: boolean
 }
 
-const TableHeadCell = ({ header, isLoading, isReadOnly }: TableHeadCellProps) => {
+const TableHeadCell = ({
+  header,
+  isLoading,
+  canFilter,
+  canHide,
+  canSort,
+  canPin,
+  canResize,
+  isReadOnly,
+}: TableHeadCellProps) => {
   const { column } = header
-  const isRowSelectionColumn = column.id === ROW_SELECTION_COLUMN_ID
 
   return (
     <Styled.HeaderCell
@@ -444,34 +465,41 @@ const TableHeadCell = ({ header, isLoading, isReadOnly }: TableHeadCellProps) =>
 
           <Styled.HeaderButtons className="actions">
             {/* COLUMN HIDING */}
-            <HeaderActionButton
-              icon="visibility_off"
-              selected={!column.getIsVisible()}
-              onClick={column.getToggleVisibilityHandler()}
-            />
-            {/* COLUMN SORTING */}
-            <HeaderActionButton
-              icon="push_pin"
-              selected={header.column.getIsPinned() === 'left'}
-              onClick={() => {
-                if (header.column.getIsPinned() === 'left') {
-                  header.column.pin(false)
-                } else {
-                  header.column.pin('left')
-                }
-              }}
-            />
+            {canHide && (
+              <HeaderActionButton
+                icon="visibility_off"
+                selected={!column.getIsVisible()}
+                onClick={column.getToggleVisibilityHandler()}
+              />
+            )}
             {/* COLUMN PINNING */}
-            <HeaderActionButton
-              icon={'sort'}
-              style={{
-                transform: (column.getIsSorted() as string) === 'asc' ? 'scaleY(-1)' : undefined,
-              }}
-              onClick={column.getToggleSortingHandler()}
-              selected={!!column.getIsSorted()}
-            />
+            {canPin && (
+              <HeaderActionButton
+                icon="push_pin"
+                selected={header.column.getIsPinned() === 'left'}
+                onClick={() => {
+                  if (header.column.getIsPinned() === 'left') {
+                    header.column.pin(false)
+                  } else {
+                    header.column.pin('left')
+                  }
+                }}
+              />
+            )}
+
+            {/* COLUMN SORTING */}
+            {canSort && (
+              <HeaderActionButton
+                icon={'sort'}
+                style={{
+                  transform: (column.getIsSorted() as string) === 'asc' ? 'scaleY(-1)' : undefined,
+                }}
+                onClick={column.getToggleSortingHandler()}
+                selected={!!column.getIsSorted()}
+              />
+            )}
           </Styled.HeaderButtons>
-          {!isRowSelectionColumn && (
+          {canResize && (
             <Styled.ResizedHandler
               {...{
                 onDoubleClick: () => column.resetSize(),

@@ -91,6 +91,7 @@ export type BuildTreeTableColumnsProps = {
   showHierarchy: boolean
   sliceId: string
   options: BuiltInFieldOptions
+  projectName: string
   excluded?: (DefaultColumns | string)[]
   readonly?: (DefaultColumns | string)[]
   extraColumns?: TreeTableExtraColumnsConstructor
@@ -106,6 +107,7 @@ const buildTreeTableColumns = ({
   options,
   excluded,
   readonly,
+  projectName,
   extraColumns,
   toggleExpandAll,
   toggleExpanded,
@@ -120,6 +122,11 @@ const buildTreeTableColumns = ({
   if (isIncluded(ROW_SELECTION_COLUMN_ID)) {
     staticColumns.push({
       id: ROW_SELECTION_COLUMN_ID,
+      enableResizing: false,
+      enableSorting: false,
+      enablePinning: false,
+      enableHiding: false,
+
       header: () => <RowSelectionHeader />,
       cell: () => <SelectionCell />,
       size: 20,
@@ -134,14 +141,14 @@ const buildTreeTableColumns = ({
       minSize: 64,
       enableResizing: true,
       enableSorting: false,
-      cell: ({ row, column }) => {
+      cell: ({ row }) => {
         return (
           <ThumbnailWidget
             entityId={row.original.entityId || row.id}
             entityType={row.original.entityType}
             updatedAt={row.original.updatedAt}
             icon={row.original.icon}
-            projectName={'AY_CG_demo'}
+            projectName={projectName}
           />
         )
       },

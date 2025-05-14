@@ -1,6 +1,6 @@
 import { Thumbnail, ThumbnailProps } from '@shared/components'
 import { Icon } from '@ynput/ayon-react-components'
-import { FC, memo } from 'react'
+import { FC, memo, useEffect } from 'react'
 import styled from 'styled-components'
 
 const Wrapper = styled.div`
@@ -52,15 +52,16 @@ const ThumbnailWidgetWrapper: FC<ThumbnailWidgetProps> = ({
   updatedAt,
   icon,
 }) => {
+  const valid = projectName && entityType && entityId && updatedAt
   const url =
     projectName &&
     `/api/projects/${projectName}/${entityType}s/${entityId}/thumbnail?updatedAt=${updatedAt}`
 
   return (
-    <Wrapper className="thumbnail-widget">
+    <Wrapper className="thumbnail-widget" key={url}>
       <Inner>
         {icon && <StyledIcon icon={icon} />}
-        <Image src={url} />
+        {valid && <Image src={url} />}
       </Inner>
     </Wrapper>
   )
