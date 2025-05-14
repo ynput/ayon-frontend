@@ -6,7 +6,7 @@ import {
 } from '@shared/containers'
 import { CellWidget } from '@shared/containers/ProjectTreeTable/widgets'
 import clsx from 'clsx'
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import { ListEntityType } from '../components/NewListDialog/NewListDialog'
 import { useListsAttributesContext } from '../context/ListsAttributesContext'
 
@@ -27,32 +27,37 @@ const useExtraColumns = ({ entityType }: useExtraColumnsProps) => {
   const { columnSizing } = useColumnSettingsContext()
   const { listAttributes } = useListsAttributesContext()
 
-  const extraTypeColumns: (typeof typeColumns)['folderType'][] = []
-  switch (entityType) {
-    case 'folder':
-      extraTypeColumns.push({ ...typeColumns.folderType, position: 3, readonly: false })
-      break
-    case 'task':
-      extraTypeColumns.push({ ...typeColumns.taskType, position: 3, readonly: false })
-      extraTypeColumns.push({ ...typeColumns.folderType, position: 4, readonly: true })
-      break
-    // case 'product':
-    //     extraTypeColumns.push(typeColumns.folderType)
-    //     break;
-    case 'version':
-      const basePos = 3
-      extraTypeColumns.push({ ...typeColumns.productType, position: basePos, readonly: true })
-      extraTypeColumns.push({ ...typeColumns.taskType, position: basePos + 1, readonly: true })
-      extraTypeColumns.push({ ...typeColumns.folderType, position: basePos + 2, readonly: true })
-      break
-    default:
-      break
-  }
+  const extraTypeColumns = useMemo(
+    () =>
+      entityType === 'folder'
+        ? [{ ...typeColumns.folderType, position: 3, readonly: false }]
+        : entityType === 'task'
+        ? [
+            { ...typeColumns.taskType, position: 3, readonly: false },
+            { ...typeColumns.folderType, position: 4, readonly: true },
+          ]
+        : entityType === 'version'
+        ? [
+            { ...typeColumns.productType, position: 3, readonly: true },
+            { ...typeColumns.taskType, position: 4, readonly: true },
+            { ...typeColumns.folderType, position: 5, readonly: true },
+          ]
+        : [],
+    [entityType],
+  )
 
-  const extraAttributeColumns = listAttributes.map((attribute) => ({
-    value: attribute.name,
-    label: attribute.data.title || attribute.name,
-  }))
+  useEffect(() => {
+    console.log('listAttributes field changed')
+  }, [listAttributes])
+
+  const extraAttributeColumns = useMemo(
+    () =>
+      listAttributes.map((attribute) => ({
+        value: attribute.name,
+        label: attribute.data.title || attribute.name,
+      })),
+    [listAttributes],
+  )
 
   const extraColumns: TreeTableExtraColumn[] = useMemo(
     () => [
@@ -135,7 +140,7 @@ const useExtraColumns = ({ entityType }: useExtraColumnsProps) => {
         }),
       ),
     ],
-    [extraTypeColumns],
+    [extraTypeColumns, extraAttributeColumns],
   )
 
   const extraColumnsSettings = [...extraTypeColumns, ...extraAttributeColumns]

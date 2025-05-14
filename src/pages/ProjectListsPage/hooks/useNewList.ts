@@ -20,7 +20,7 @@ export interface UseNewListReturn {
 
 const useNewList = ({ onCreateNewList, onCreated }: UseNewListProps): UseNewListReturn => {
   const [newList, setNewList] = useState<V['newList']>(null)
-  const openNewList: V['openNewList'] = (init) => {
+  const openNewList: V['openNewList'] = React.useCallback((init) => {
     // generate default name based on date and time
     const date = new Date()
     const defaultName = `List ${date.toLocaleDateString()} ${date.toLocaleTimeString()}`
@@ -31,10 +31,11 @@ const useNewList = ({ onCreateNewList, onCreated }: UseNewListProps): UseNewList
       access: {},
       ...init,
     })
-  }
-  const closeNewList: V['closeNewList'] = () => setNewList(null)
+  }, [])
 
-  const createNewList: V['createNewList'] = async () => {
+  const closeNewList: V['closeNewList'] = React.useCallback(() => setNewList(null), [])
+
+  const createNewList: V['createNewList'] = React.useCallback(async () => {
     if (!newList) return Promise.reject()
 
     try {
@@ -48,7 +49,7 @@ const useNewList = ({ onCreateNewList, onCreated }: UseNewListProps): UseNewList
       toast.error(`Failed to create list: ${error.data?.detail}`)
       throw error
     }
-  }
+  }, [newList, closeNewList, onCreated])
 
   //   open new list with n key shortcut
   useEffect(() => {

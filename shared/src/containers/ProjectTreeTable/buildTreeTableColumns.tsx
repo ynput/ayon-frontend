@@ -82,6 +82,7 @@ const buildTreeTableColumns = ({
   excluded,
   extraColumns,
 }: BuildTreeTableColumnsProps) => {
+  console.log('building columns')
   const staticColumns: ColumnDef<TableRow>[] = []
 
   // Helper to check if a column should be included

@@ -28,6 +28,7 @@ import type { TableRow } from './types/table'
 import buildTreeTableColumns, {
   BuildTreeTableColumnsProps,
   DefaultColumns,
+  TreeTableExtraColumn,
 } from './buildTreeTableColumns'
 import * as Styled from './ProjectTreeTable.styled'
 import HeaderActionButton from './components/HeaderActionButton'
@@ -88,8 +89,9 @@ export interface ProjectTreeTableProps extends React.HTMLAttributes<HTMLDivEleme
   fetchMoreOnBottomReached: (element: HTMLDivElement | null) => void
   onOpenNew?: (type: 'folder' | 'task') => void
   readOnly?: (DefaultColumns | string)[]
+  excludedColumns?: (DefaultColumns | string)[]
+  extraColumns?: TreeTableExtraColumn[]
   pt?: {
-    columns?: Partial<BuildTreeTableColumnsProps>
     container?: React.HTMLAttributes<HTMLDivElement>
     head?: Partial<TableHeadProps>
   }
@@ -101,6 +103,8 @@ export const ProjectTreeTable = ({
   fetchMoreOnBottomReached,
   onOpenNew,
   readOnly,
+  excludedColumns,
+  extraColumns,
   pt,
   ...props
 }: ProjectTreeTableProps) => {
@@ -188,9 +192,16 @@ export const ProjectTreeTable = ({
         attribs: columnAttribs,
         showHierarchy,
         options,
-        ...pt?.columns,
+        extraColumns,
+        excluded: excludedColumns,
       }),
-    [columnAttribs, showHierarchy, options, pt?.columns],
+    [
+      // columnAttribs,
+      // showHierarchy,
+      // options,
+      extraColumns,
+      // excludedColumns
+    ],
   )
 
   const table = useReactTable({

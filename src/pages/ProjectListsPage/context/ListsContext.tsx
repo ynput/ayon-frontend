@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode, useMemo } from 'react'
+import { createContext, useContext, useState, ReactNode, useMemo, useCallback } from 'react'
 import { ExpandedState, RowSelectionState } from '@tanstack/react-table'
 import useNewList, { UseNewListReturn } from '../hooks/useNewList'
 import {
@@ -6,7 +6,12 @@ import {
   useDeleteEntityListMutation,
   useUpdateEntityListMutation,
 } from '@shared/api'
-import type { EntityListPatchModel, EntityListPostModel, EntityList } from '@shared/api'
+import type {
+  EntityListPatchModel,
+  EntityListPostModel,
+  EntityList,
+  EntityListSummary,
+} from '@shared/api'
 import { useProjectDataContext } from '@pages/ProjectOverviewPage/context/ProjectDataContext'
 import useDeleteList, { UseDeleteListReturn } from '../hooks/useDeleteList'
 import useUpdateList, { UseUpdateListReturn } from '../hooks/useUpdateList'
@@ -71,49 +76,65 @@ interface ListsProviderProps {
 export const ListsProvider = ({ children }: ListsProviderProps) => {
   const { projectName } = useProjectDataContext()
   const { listsMap } = useListsDataContext()
-  const [rowSelection, setRowSelection] = useQueryParam<RowSelectionState>(
+  const [unstableRowSelection, setRowSelection] = useQueryParam<RowSelectionState>(
     'list',
     withDefault(RowSelectionParam, {}),
   )
+  const rowSelection = useMemo(() => unstableRowSelection, [JSON.stringify(unstableRowSelection)])
+
   const [expanded, setExpanded] = useState<ExpandedState>({})
 
   const selectedList = useMemo(() => {
-    const selected = Object.entries(rowSelection).filter(([_k, v]) => v)
-    const selectedId = selected[0]?.[0]
+    const rowSelectionIds = Object.entries(rowSelection)
+      .filter(([_k, v]) => v)
+      .map(([k]) => k)
+    const selectedId = rowSelectionIds[0]
     return listsMap.get(selectedId)
-  }, [rowSelection, listsMap, rowSelection])
+  }, [rowSelection, listsMap])
 
   // dialogs
   const [listsFiltersOpen, setListsFiltersOpen] = useState(false)
 
   const [infoDialogData, setInfoDialogData] = useState<ListsContextValue['infoDialogData']>(null)
-  const openDetailsPanel = (id: string) => {
-    // get the list from the map
-    const list = listsMap.get(id)
-    if (list) {
-      setInfoDialogData(list)
-    }
-  }
+
+  const openDetailsPanel = useCallback(
+    (id: string) => {
+      // get the list from the map
+      const list = listsMap.get(id)
+      if (list) {
+        setInfoDialogData(list)
+      }
+    },
+    [listsMap, setInfoDialogData],
+  )
 
   // CREATE NEW LIST
   const [createNewListMutation, { isLoading: isCreatingList }] = useCreateEntityListMutation()
   const onCreateNewList = async (list: EntityListPostModel) =>
     await createNewListMutation({ entityListPostModel: list, projectName }).unwrap()
 
-  const useNewListProps = useNewList({
+  const handleCreatedList = useCallback(
+    (list: EntityListSummary) => {
+      if (list.id) {
+        setRowSelection({ [list.id]: true })
+      }
+    },
+    [setRowSelection],
+  )
+
+  const { closeNewList, createNewList, newList, openNewList, setNewList } = useNewList({
     onCreateNewList,
-    onCreated: (list) => list.id && setRowSelection({ [list.id]: true }),
+    onCreated: handleCreatedList,
   })
-  const newListProps = {
-    ...useNewListProps,
-    isCreatingList,
-  }
 
   // UPDATE/EDIT LIST
   const [updateListMutation] = useUpdateEntityListMutation()
   const onUpdateList = async (listId: string, list: EntityListPatchModel) =>
     await updateListMutation({ listId, entityListPatchModel: list, projectName }).unwrap()
-  const useUpdateListProps = useUpdateList({ setRowSelection, onUpdateList })
+  const { closeRenameList, openRenameList, renamingList, submitRenameList } = useUpdateList({
+    setRowSelection,
+    onUpdateList,
+  })
 
   // DELETE LIST
   const [deleteListMutation] = useDeleteEntityListMutation()
@@ -121,29 +142,59 @@ export const ListsProvider = ({ children }: ListsProviderProps) => {
     await deleteListMutation({ listId, projectName }).unwrap()
   const { deleteLists } = useDeleteList({ onDeleteList })
 
-  return (
-    <ListsContext.Provider
-      value={{
-        rowSelection,
-        setRowSelection,
-        expanded,
-        setExpanded,
-        selectedList,
-        ...newListProps,
-        ...useUpdateListProps,
-        deleteLists,
-        // info dialog
-        infoDialogData,
-        setInfoDialogData,
-        openDetailsPanel,
-        // lists filters dialog
-        listsFiltersOpen,
-        setListsFiltersOpen,
-      }}
-    >
-      {children}
-    </ListsContext.Provider>
-  )
+  const value = useMemo(() => {
+    return {
+      rowSelection,
+      setRowSelection,
+      expanded,
+      setExpanded,
+      selectedList,
+      closeNewList,
+      createNewList,
+      newList,
+      openNewList,
+      setNewList,
+      isCreatingList,
+      // list editing
+      closeRenameList,
+      openRenameList,
+      renamingList,
+      submitRenameList,
+      deleteLists,
+      // info dialog
+      infoDialogData,
+      setInfoDialogData,
+      openDetailsPanel,
+      // lists filters dialog
+      listsFiltersOpen,
+      setListsFiltersOpen,
+    }
+  }, [
+    rowSelection,
+    setRowSelection,
+    expanded,
+    setExpanded,
+    selectedList,
+    // new list
+    closeNewList,
+    createNewList,
+    newList,
+    openNewList,
+    setNewList,
+    isCreatingList,
+    closeRenameList,
+    openRenameList,
+    renamingList,
+    submitRenameList,
+    deleteLists,
+    infoDialogData,
+    setInfoDialogData,
+    openDetailsPanel,
+    listsFiltersOpen,
+    setListsFiltersOpen,
+  ])
+
+  return <ListsContext.Provider value={value}>{children}</ListsContext.Provider>
 }
 
 export const useListsContext = () => {

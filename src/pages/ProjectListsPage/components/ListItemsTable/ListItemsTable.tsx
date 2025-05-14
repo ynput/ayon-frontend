@@ -5,7 +5,7 @@ import ListItemsShortcuts from '@pages/ProjectListsPage/util/ListItemsShortcuts'
 import { EmptyPlaceholder } from '@shared/components'
 import { BuildTreeTableColumnsProps, ProjectTreeTable } from '@shared/containers/ProjectTreeTable'
 import { Button } from '@ynput/ayon-react-components'
-import { FC } from 'react'
+import { FC, useMemo } from 'react'
 
 interface ListItemsTableProps {
   extraColumns: BuildTreeTableColumnsProps['extraColumns']
@@ -18,7 +18,10 @@ const ListItemsTable: FC<ListItemsTableProps> = ({ extraColumns }) => {
   const { isError, projectName, fetchNextPage, resetFilters } = useListItemsDataContext()
   const scope = `lists-${projectName}`
 
-  const [hiddenColumns, readOnly] = getColumnConfigFromType(selectedList?.entityType)
+  const [hiddenColumns, readOnly] = useMemo(
+    () => getColumnConfigFromType(selectedList?.entityType),
+    [selectedList],
+  )
 
   if (!selectedListsIds.length) return <EmptyPlaceholder message="Start by selecting a list." />
 
@@ -40,12 +43,8 @@ const ListItemsTable: FC<ListItemsTableProps> = ({ extraColumns }) => {
         // pagination
         fetchMoreOnBottomReached={fetchNextPage}
         readOnly={readOnly}
-        pt={{
-          columns: {
-            excluded: hiddenColumns,
-            extraColumns: extraColumns,
-          },
-        }}
+        excludedColumns={hiddenColumns}
+        extraColumns={extraColumns}
       />
       <ListItemsShortcuts />
     </>
