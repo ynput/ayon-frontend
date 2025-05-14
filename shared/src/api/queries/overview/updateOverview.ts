@@ -115,6 +115,20 @@ export const patchOverviewTasks = (
                 entry.originalArgs.parentIds.includes(taskOperation.data.folderId)
               ) {
                 const patchTask = (tasksArrayDraft: EditorTaskNode[]) => {
+                  // @ts-expect-error
+                  tasksArrayDraft.push(taskOperation.data)
+                }
+
+                // Check if draft is an array or an object with a tasks property
+                if (Array.isArray(draft)) {
+                  patchTask(draft)
+                } else if (draft.tasks && Array.isArray(draft.tasks)) {
+                  // Handle object with tasks array case (like in GetTasksList)
+                  const draftArray = draft.tasks
+                  patchTask(draftArray)
+                }
+              } else {
+                const patchTask = (tasksArrayDraft: EditorTaskNode[]) => {
                   const task = tasksArrayDraft.find((task) => task.id === taskOperation.entityId)
                   if (task) {
                     updateEntityWithOperation(task, taskOperation.data)
