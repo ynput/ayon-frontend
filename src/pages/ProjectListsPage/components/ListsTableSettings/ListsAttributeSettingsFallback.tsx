@@ -1,3 +1,4 @@
+import PowerpackButton from '@components/Powerpack/PowerpackButton'
 import { ListsAttributesContextValue } from '@pages/ProjectListsPage/context/ListsAttributesContext'
 import { ConfirmDeleteOptions } from '@shared/util'
 import { FC } from 'react'
@@ -15,7 +16,15 @@ export interface ListsAttributeSettingsFallbackProps {
 }
 
 const ListsAttributeSettingsFallback: FC<ListsAttributeSettingsFallbackProps> = ({}) => {
-  return <div>ListsAttributeSettingsFallback</div>
+  return (
+    <PowerpackButton
+      style={{ width: '100%' }}
+      icon={'add'}
+      label="Add attribute"
+      feature={'listAttributes'}
+      filled
+    />
+  )
 }
 
 export default ListsAttributeSettingsFallback
