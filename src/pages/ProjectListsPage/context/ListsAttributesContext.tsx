@@ -15,8 +15,6 @@ import {
 } from '@shared/api'
 import type { EntityListAttributeDefinition } from '@shared/api'
 import { useProjectDataContext } from '@pages/ProjectOverviewPage/context/ProjectDataContext'
-import { toast } from 'react-toastify'
-import { confirmDelete } from '@shared/util'
 import { ListEntityType } from '../components/NewListDialog/NewListDialog'
 
 export interface ListsAttributesContextValue {
@@ -25,8 +23,7 @@ export interface ListsAttributesContextValue {
   isLoading: boolean
   isUpdating: boolean
   isLoadingNewList: boolean
-  updateAttribute: (attribute: EntityListAttributeDefinition) => Promise<void>
-  deleteAttribute: (name: string, force?: boolean) => Promise<void>
+  updateAttributes: (attribute: EntityListAttributeDefinition[]) => Promise<void>
 }
 
 const ListsAttributesContext = createContext<ListsAttributesContextValue | undefined>(undefined)
@@ -87,90 +84,19 @@ export const ListsAttributesProvider = ({ children }: ListsAttributesProviderPro
     }
   }, [selectedList?.id, isFetching])
 
-  const [updateAttribute, { isLoading: isUpdating }] =
+  const [updateAttributes, { isLoading: isUpdating }] =
     useSetEntityListAttributesDefinitionMutation()
 
-  const handleUpdateAttribute = useCallback(
-    async (attribute: EntityListAttributeDefinition) => {
-      try {
-        if (!selectedList?.id) {
-          throw new Error('No selected list')
-        }
-
-        let updatedAttributes: EntityListAttributeDefinition[]
-        const existingAttributeIndex = listAttributes.findIndex(
-          (attr) => attr.name === attribute.name,
-        )
-
-        if (existingAttributeIndex !== -1) {
-          // Attribute exists, update it
-          updatedAttributes = listAttributes.map((attr, index) => {
-            if (index === existingAttributeIndex) {
-              return {
-                ...attr,
-                ...attribute,
-              }
-            }
-            return attr
-          })
-        } else {
-          // Attribute does not exist, add it
-          updatedAttributes = [...listAttributes, attribute]
-        }
-
-        await updateAttribute({
-          listId: selectedList?.id || '',
-          projectName,
-          payload: updatedAttributes,
-        }).unwrap()
-        toast.success('Attribute updated successfully')
-      } catch (error: any) {
-        console.error('Error updating attribute:', error)
-        toast.error(error)
-        throw error
-      }
+  const updateAttributesHelper = useCallback(
+    async (attributes: EntityListAttributeDefinition[]) => {
+      return await updateAttributes({
+        listId: selectedList?.id || '',
+        projectName,
+        payload: attributes,
+      }).unwrap()
     },
-    [listAttributes, selectedList?.id, projectName],
+    [selectedList?.id, projectName],
   )
-
-  const deleteAttribute = useCallback(
-    async (name: string) => {
-      try {
-        if (!selectedList?.id) {
-          throw new Error('No selected list')
-        }
-
-        const updatedAttributes = listAttributes.filter((attr) => attr.name !== name)
-
-        await updateAttribute({
-          listId: selectedList?.id || '',
-          projectName,
-          payload: updatedAttributes,
-        }).unwrap()
-        toast.success('Attribute deleted successfully')
-      } catch (error: any) {
-        console.error('Error deleting attribute:', error)
-        toast.error(error)
-        throw error
-      }
-    },
-    [listAttributes, selectedList?.id, projectName],
-  )
-
-  const handleDeleteAttribute = useCallback(async (name: string, force?: boolean) => {
-    if (force) {
-      return await deleteAttribute(name)
-    } else {
-      confirmDelete({
-        title: 'attribute',
-        message: `Are you sure you want to delete the attribute "${name}"?`,
-        accept: async () => {
-          return await deleteAttribute(name)
-        },
-        showToasts: false,
-      })
-    }
-  }, [])
 
   // Create a stable reference for the context value that only changes when the actual data changes
   const contextValue = useMemo<ListsAttributesContextValue>(
@@ -180,8 +106,7 @@ export const ListsAttributesProvider = ({ children }: ListsAttributesProviderPro
       isLoading: isFetching,
       isUpdating,
       isLoadingNewList,
-      updateAttribute: handleUpdateAttribute,
-      deleteAttribute: handleDeleteAttribute,
+      updateAttributes: updateAttributesHelper,
     }),
     [
       listAttributes,
@@ -189,8 +114,7 @@ export const ListsAttributesProvider = ({ children }: ListsAttributesProviderPro
       isFetching,
       isUpdating,
       isLoadingNewList,
-      handleUpdateAttribute,
-      handleDeleteAttribute,
+      updateAttributesHelper,
     ],
   )
 

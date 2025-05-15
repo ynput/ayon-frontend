@@ -1,1 +1,1 @@
-export * from './ListsAttributesSettings'
+export { ListsAttributesSettingsWrapper as ListsAttributesSettings } from './ListsAttributesSettingsWrapper'

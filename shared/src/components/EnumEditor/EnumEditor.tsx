@@ -9,7 +9,7 @@ import { Button } from '@ynput/ayon-react-components'
 import DraggableEnumEditorItem from './DraggableEnumEditorItem'
 import * as Styled from './EnumEditor.styled'
 import useDraggable from './hooks/useDraggable'
-import { appendOrUpdateNumericSuffix } from '@helpers/string'
+import { appendOrUpdateNumericSuffix } from './util'
 
 export type AttributeData = {
   id: string
@@ -71,7 +71,7 @@ type Props = {
   values: NormalizedData[]
   onChange: (data: NormalizedData[]) => void
 }
-const EnumEditor = ({ values, onChange }: Props) => {
+export const EnumEditor = ({ values, onChange }: Props) => {
   if (!values) {
     return null
   }
@@ -161,5 +161,3 @@ const EnumEditor = ({ values, onChange }: Props) => {
     </>
   )
 }
-
-export default EnumEditor

@@ -1,5 +1,4 @@
 import { FC, useEffect, useState } from 'react'
-
 import {
   SaveButton,
   Spacer,
@@ -13,8 +12,8 @@ import {
   Button,
 } from '@ynput/ayon-react-components'
 import { camelCase, upperFirst } from 'lodash'
-import MinMaxField from '@components/MinMaxField/MinMaxField'
-import EnumEditor from '@components/EnumEditor/EnumEditor'
+import { MinMaxField } from './components'
+import { EnumEditor } from '@shared/components/EnumEditor'
 import { AttributeData, AttributeModel, AttributeEnumItem } from '@shared/api'
 
 const SCOPE_OPTIONS = [
@@ -168,7 +167,7 @@ export interface AttributeEditorProps {
   onDelete?: () => void
 }
 
-const AttributeEditor: FC<AttributeEditorProps> = ({
+export const AttributeEditor: FC<AttributeEditorProps> = ({
   attribute,
   existingNames,
   error = '',
@@ -454,5 +453,3 @@ const AttributeEditor: FC<AttributeEditorProps> = ({
     </Dialog>
   )
 }
-
-export default AttributeEditor

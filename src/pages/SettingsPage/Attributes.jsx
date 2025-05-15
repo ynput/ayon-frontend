@@ -11,7 +11,7 @@ import {
   Spacer,
   SaveButton,
 } from '@ynput/ayon-react-components'
-import AttributeEditor from '@containers/attributes/AttributeEditor'
+import { AttributeEditor } from '@shared/components'
 import { useGetAttributeListQuery, useSetAttributeListMutation } from '@shared/api'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import useSearchFilter from '@hooks/useSearchFilter'

@@ -21,14 +21,14 @@ interface ValueObject {
   gt?: number
 }
 
-interface MinMaxFieldProps {
+export interface MinMaxFieldProps {
   value?: ValueObject
   isMin: boolean
   isFloat?: boolean
   onChange: (newValue: ValueObject) => void
 }
 
-const MinMaxField = ({ value = {}, isMin, isFloat = false, onChange }: MinMaxFieldProps) => {
+export const MinMaxField = ({ value = {}, isMin, isFloat = false, onChange }: MinMaxFieldProps) => {
   const { le, lt, ge, gt } = value
   const min = ge ?? gt
   const max = le ?? lt
@@ -115,5 +115,3 @@ const MinMaxField = ({ value = {}, isMin, isFloat = false, onChange }: MinMaxFie
     </Field>
   )
 }
-
-export default MinMaxField

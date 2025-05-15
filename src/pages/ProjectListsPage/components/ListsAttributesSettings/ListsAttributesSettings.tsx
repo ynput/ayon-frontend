@@ -1,35 +1,106 @@
-import {
-  ListsAttributesContextValue,
-  useListsAttributesContext,
-} from '@pages/ProjectListsPage/context/ListsAttributesContext'
-import React, { FC, useState } from 'react'
+import React, { FC, useCallback, useState } from 'react'
 import * as Styled from './ListsAttributesSettings.styled'
 import { Button } from '@ynput/ayon-react-components'
-import { getAttributeIcon, getPlatformShortcutKey, KeyMode } from '@shared/util'
-import AttributeEditor, { AttributeForm } from '@containers/attributes/AttributeEditor'
+import { confirmDelete, getAttributeIcon, getPlatformShortcutKey, KeyMode } from '@shared/util'
+import type { EntityListAttributeDefinition } from '@shared/api'
+import { AttributeEditor, AttributeForm } from '@shared/components'
 
-export interface ListsAttributesSettingsProps {
-  onGoTo: (name: string) => void
+type ListsAttributesContextValue = {
+  listAttributes: EntityListAttributeDefinition[]
+  entityAttribFields: string[]
+  isLoading: boolean
+  isUpdating: boolean
+  isLoadingNewList: boolean
+  updateAttributes: (attribute: EntityListAttributeDefinition[]) => Promise<void>
 }
 
-export const ListsAttributesSettings: FC<ListsAttributesSettingsProps> = ({ onGoTo }) => {
-  const {
-    listAttributes,
-    entityAttribFields,
-    updateAttribute,
-    deleteAttribute,
-    isUpdating,
-    isLoadingNewList,
-  } = useListsAttributesContext()
+export interface ListsAttributesSettingsProps {
+  listAttributes: ListsAttributesContextValue['listAttributes']
+  entityAttribFields: ListsAttributesContextValue['entityAttribFields']
+  isLoadingNewList: ListsAttributesContextValue['isLoadingNewList']
+  isUpdating: ListsAttributesContextValue['isUpdating']
+  updateAttributes: ListsAttributesContextValue['updateAttributes']
+  onGoTo: (name: string) => void
+  onSuccess?: (message: string) => void
+  onError?: (error: string) => void
+}
 
+export const ListsAttributesSettings: FC<ListsAttributesSettingsProps> = ({
+  listAttributes,
+  entityAttribFields,
+  isUpdating,
+  isLoadingNewList,
+  onGoTo,
+  updateAttributes,
+  onSuccess,
+  onError,
+}) => {
   const [attributeFormOpen, setAttributeFormOpen] = useState<undefined | AttributeForm | null>()
   const [attributesUpdateError, setAttributesUpdateError] = useState<string | undefined>(undefined)
 
-  const handleUpdateAttribute: ListsAttributesContextValue['updateAttribute'] = async (
-    attribute,
-  ) => {
+  const deleteAttribute = async (name: string) => {
     try {
-      await updateAttribute(attribute)
+      const updatedAttributes = listAttributes.filter((attr) => attr.name !== name)
+
+      await updateAttributes(updatedAttributes)
+      onSuccess?.('Attribute deleted successfully')
+    } catch (error: any) {
+      console.error('Error deleting attribute:', error)
+      onError?.(error)
+      throw error
+    }
+  }
+
+  const onDeleteAttribute = useCallback(async (name: string, force?: boolean) => {
+    if (force) {
+      return await deleteAttribute(name)
+    } else {
+      confirmDelete({
+        title: 'attribute',
+        message: `Are you sure you want to delete the attribute "${name}"?`,
+        accept: async () => {
+          return await deleteAttribute(name)
+        },
+        showToasts: false,
+      })
+    }
+  }, [])
+
+  const onUpdateAttribute = async (attribute: EntityListAttributeDefinition) => {
+    try {
+      let updatedAttributes: EntityListAttributeDefinition[]
+      const existingAttributeIndex = listAttributes.findIndex(
+        (attr) => attr.name === attribute.name,
+      )
+
+      if (existingAttributeIndex !== -1) {
+        // Attribute exists, update it
+        updatedAttributes = listAttributes.map((attr, index) => {
+          if (index === existingAttributeIndex) {
+            return {
+              ...attr,
+              ...attribute,
+            }
+          }
+          return attr
+        })
+      } else {
+        // Attribute does not exist, add it
+        updatedAttributes = [...listAttributes, attribute]
+      }
+
+      await updateAttributes(updatedAttributes)
+      onSuccess?.('Attribute updated successfully')
+    } catch (error: any) {
+      console.error('Error updating attribute:', error)
+      onError?.(error)
+      throw error
+    }
+  }
+
+  const handleUpdateAttribute = async (attribute: EntityListAttributeDefinition) => {
+    try {
+      await onUpdateAttribute(attribute)
       // hide the form after updating
       setAttributeFormOpen(undefined)
       setAttributesUpdateError(undefined)
@@ -44,7 +115,7 @@ export const ListsAttributesSettings: FC<ListsAttributesSettingsProps> = ({ onGo
   ) => {
     e?.stopPropagation()
     try {
-      await deleteAttribute(name, e?.ctrlKey || e?.metaKey)
+      await onDeleteAttribute(name, e?.ctrlKey || e?.metaKey)
 
       // if the editor is open, close it
       if (attributeFormOpen?.name === name) {
