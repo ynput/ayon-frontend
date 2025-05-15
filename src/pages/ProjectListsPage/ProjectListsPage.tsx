@@ -159,12 +159,12 @@ const ProjectListsPage: FC = () => {
                     {
                       id: selectedList.id,
                       projectName,
-                      entitySubType: selectedList.entityListType,
+                      entitySubType: `${selectedList.entityType}:${selectedList.entityListType}`,
                     },
                   ]}
                   entityType={'list'}
                   isLoadingEntity={false}
-                  entitySubTypes={[selectedList.entityListType]}
+                  entitySubTypes={[`${selectedList.entityType}:${selectedList.entityListType}`]}
                 />
                 <CustomizeButton defaultSelected={null} />
               </Toolbar>
