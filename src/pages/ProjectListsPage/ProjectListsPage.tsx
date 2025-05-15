@@ -36,6 +36,7 @@ import OverviewActions from '@pages/ProjectOverviewPage/components/OverviewActio
 import useExtraColumns from './hooks/useExtraColumns'
 import { ListsTableSettings } from './components/ListsTableSettings/index.ts'
 import useUpdateListItems from './hooks/useUpdateListItems'
+import { Actions } from '@shared/containers/Actions/Actions'
 
 const ProjectListsWithOuterProviders: FC = () => {
   const projectName = useAppSelector((state) => state.project.name) || ''
@@ -153,6 +154,18 @@ const ProjectListsPage: FC = () => {
                 <OverviewActions items={['undo', 'redo', deleteListItemAction]} />
                 {/*@ts-expect-error - we do not support product right now*/}
                 <ListItemsFilter entityType={selectedList.entityType} projectName={projectName} />
+                <Actions
+                  entities={[
+                    {
+                      id: selectedList.id,
+                      projectName,
+                      entitySubType: selectedList.entityListType,
+                    },
+                  ]}
+                  entityType={'list'}
+                  isLoadingEntity={false}
+                  entitySubTypes={[selectedList.entityListType]}
+                />
                 <CustomizeButton defaultSelected={null} />
               </Toolbar>
             )}
