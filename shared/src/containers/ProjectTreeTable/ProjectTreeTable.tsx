@@ -195,13 +195,7 @@ export const ProjectTreeTable = ({
         extraColumns,
         excluded: excludedColumns,
       }),
-    [
-      // columnAttribs,
-      // showHierarchy,
-      // options,
-      extraColumns,
-      // excludedColumns
-    ],
+    [columnAttribs, showHierarchy, options, extraColumns, excludedColumns],
   )
 
   const table = useReactTable({
