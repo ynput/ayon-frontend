@@ -122,10 +122,15 @@ const CommentInput: FC<CommentInputProps> = ({
     if (isOpen) {
       editorRef.current?.getEditor()?.enable()
       // block autofocus if opened from an annotation
-      const blockAutoFocus = !!annotations.length && files.length === 0
-      !blockAutoFocus && editorRef.current?.focus()
+      if (annotations.length > 0 && files.length === 0) {
+        return
+      }
+
+      editorRef.current?.focus()
     }
-  }, [isOpen, editorRef, annotations, files])
+    // We don't set annotations or files as useEffect dependencies, because we don't want to focus
+    // the input if it's already open but annotations change (e.g. are removed).
+  }, [isOpen, editorRef])
 
   mentionTypes.sort((a, b) => b.length - a.length)
 
