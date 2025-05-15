@@ -18,7 +18,7 @@ import {
 } from './context/ListsAttributesContext'
 import ListItemsTable from './components/ListItemsTable/ListItemsTable'
 import ListItemsFilter from './components/ListItemsFilter/ListItemsFilter'
-import { ProjectTableSettings, CustomizeButton } from '@shared/components'
+import { CustomizeButton } from '@shared/components'
 import { SettingsPanelProvider, useSettingsPanel } from '@shared/context'
 import { useUsersPageConfig } from '@pages/ProjectOverviewPage/hooks/useUserPageConfig'
 import useTableQueriesHelper from '@pages/ProjectOverviewPage/hooks/useTableQueriesHelper'
@@ -34,7 +34,7 @@ import {
 import ProjectOverviewDetailsPanel from '@pages/ProjectOverviewPage/containers/ProjectOverviewDetailsPanel'
 import OverviewActions from '@pages/ProjectOverviewPage/components/OverviewActions'
 import useExtraColumns from './hooks/useExtraColumns'
-import { ListsAttributesSettings } from './components/ListsAttributesSettings'
+import { ListsTableSettings } from './components/ListsTableSettings/index.ts'
 import useUpdateListItems from './hooks/useUpdateListItems'
 
 const ProjectListsWithOuterProviders: FC = () => {
@@ -122,7 +122,6 @@ const ProjectListsPage: FC = () => {
   const { selectedList } = useListsContext()
   const { selectedRows } = useSelectedRowsContext()
   const { deleteListItemAction } = useListItemsDataContext()
-  const { listAttributes } = useListsAttributesContext()
 
   const { extraColumns, extraColumnsSettings } = useExtraColumns({
     // @ts-expect-error - we do not support product right now
@@ -201,18 +200,10 @@ const ProjectListsPage: FC = () => {
                     zIndex: 500,
                   }}
                 >
-                  <ProjectTableSettings
+                  <ListsTableSettings
                     extraColumns={extraColumnsSettings}
-                    highlighted={highlightedSetting}
-                    settings={[
-                      {
-                        id: 'list_attributes',
-                        title: 'List attributes',
-                        icon: 'text_fields',
-                        preview: listAttributes.length,
-                        component: <ListsAttributesSettings onGoTo={handleGoToCustomAttrib} />,
-                      },
-                    ]}
+                    highlightedSetting={highlightedSetting}
+                    onGoTo={handleGoToCustomAttrib}
                   />
                 </SplitterPanel>
               ) : (

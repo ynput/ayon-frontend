@@ -6,7 +6,7 @@ import {
 } from '@shared/containers'
 import { CellWidget } from '@shared/containers/ProjectTreeTable/widgets'
 import clsx from 'clsx'
-import { useEffect, useMemo } from 'react'
+import { useMemo } from 'react'
 import { ListEntityType } from '../components/NewListDialog/NewListDialog'
 import { useListsAttributesContext } from '../context/ListsAttributesContext'
 
@@ -45,10 +45,6 @@ const useExtraColumns = ({ entityType }: useExtraColumnsProps) => {
         : [],
     [entityType],
   )
-
-  useEffect(() => {
-    console.log('listAttributes field changed')
-  }, [listAttributes])
 
   const extraAttributeColumns = useMemo(
     () =>
