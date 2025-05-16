@@ -6,6 +6,7 @@ import { EmptyPlaceholder } from '@shared/components'
 import { BuildTreeTableColumnsProps, ProjectTreeTable } from '@shared/containers/ProjectTreeTable'
 import { Button } from '@ynput/ayon-react-components'
 import { FC, useMemo } from 'react'
+import ListsAttributesShortcutButton from '../ListsTableSettings/ListsAttributesShortcutButton'
 
 interface ListItemsTableProps {
   extraColumns: BuildTreeTableColumnsProps['extraColumns']
@@ -36,7 +37,7 @@ const ListItemsTable: FC<ListItemsTableProps> = ({ extraColumns }) => {
     )
 
   return (
-    <>
+    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
       <ProjectTreeTable
         scope={scope}
         sliceId={''}
@@ -47,7 +48,8 @@ const ListItemsTable: FC<ListItemsTableProps> = ({ extraColumns }) => {
         extraColumns={extraColumns}
       />
       <ListItemsShortcuts />
-    </>
+      <ListsAttributesShortcutButton />
+    </div>
   )
 }
 
