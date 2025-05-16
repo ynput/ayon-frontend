@@ -1,20 +1,18 @@
-import { FC, useCallback, MouseEvent } from 'react' // Import event types
+import { FC, useCallback, MouseEvent, useState } from 'react' // Import event types
 import { useListsContext } from '@pages/ProjectListsPage/context/ListsContext'
 import { useListsDataContext } from '@pages/ProjectListsPage/context/ListsDataContext'
 import SimpleTable, { Container, SimpleTableProvider, SimpleTableRow } from '@shared/SimpleTable'
 import ListRow from '../ListRow/ListRow'
 import ListsTableHeader from './ListsTableHeader'
 import NewListDialogContainer from '../NewListDialog/NewListDialogContainer'
-import { SimpleTableCellTemplateProps } from '@shared/SimpleTable/SimpleTableRowTemplate'
-import { Row } from '@tanstack/react-table'
+import { ExpandedState, Row, Table } from '@tanstack/react-table'
 import useListContextMenu from '@pages/ProjectListsPage/hooks/useListContextMenu'
+import { SimpleTableCellTemplateProps } from '@shared/SimpleTable/SimpleTableRowTemplate'
 
 interface ListsTableProps {}
 
 const ListsTable: FC<ListsTableProps> = ({}) => {
   const {
-    expanded,
-    setExpanded,
     rowSelection,
     setRowSelection,
     openRenameList,
@@ -23,6 +21,7 @@ const ListsTable: FC<ListsTableProps> = ({}) => {
     renamingList,
   } = useListsContext()
   const { listsTableData, isLoadingAll, isError } = useListsDataContext()
+  const [expanded, setExpanded] = useState<ExpandedState>({})
 
   // Define stable event handlers using useCallback
   const handleValueDoubleClick = useCallback(
@@ -39,35 +38,46 @@ const ListsTable: FC<ListsTableProps> = ({}) => {
 
   // Memoize the render function for the row (definition remains the same)
   const renderListRow = useCallback<
-    (props: SimpleTableCellTemplateProps, row: Row<SimpleTableRow>) => JSX.Element
-  >(
-    (props, row) => {
-      const listId = row.original.id
+    (
+      props: SimpleTableCellTemplateProps,
+      row: Row<SimpleTableRow>,
+      table: Table<SimpleTableRow>,
+    ) => JSX.Element
+  >((props, row, table) => {
+    const meta = table.options.meta
+    const listId = row.original.id
 
-      return (
-        <ListRow
-          key={listId}
-          id={listId}
-          className={props.className}
-          onClick={props.onClick}
-          onKeyDown={props.onKeyDown}
-          value={props.value}
-          icon={props.icon}
-          count={row.original.data.count}
-          isRenaming={listId === renamingList}
-          onSubmitRename={(v) => submitRenameList(v)}
-          onCancelRename={closeRenameList}
-          onContextMenu={handleRowContext}
-          pt={{
-            value: {
-              onClick: (e) => handleValueDoubleClick(e, listId),
-            },
-          }}
-        />
-      )
-    },
-    [renamingList, handleValueDoubleClick, closeRenameList, submitRenameList],
-  )
+    const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+      props.onClick?.(e)
+    }
+
+    return (
+      <ListRow
+        key={listId}
+        id={listId}
+        depth={row.depth}
+        className={props.className}
+        onClick={handleClick}
+        onKeyDown={props.onKeyDown}
+        value={props.value}
+        icon={props.icon}
+        count={row.original.data.count}
+        isRenaming={listId === meta?.renamingList}
+        onSubmitRename={(v) => meta?.submitRenameList(v)}
+        onCancelRename={meta?.closeRenameList}
+        onContextMenu={meta?.handleRowContext}
+        isTableExpandable={props.isTableExpandable}
+        isRowExpandable={row.getCanExpand()}
+        isRowExpanded={row.getIsExpanded()}
+        onExpandClick={row.getToggleExpandedHandler()}
+        pt={{
+          value: {
+            onClick: (e) => meta?.handleValueDoubleClick(e, listId),
+          },
+        }}
+      />
+    )
+  }, [])
 
   return (
     <>
@@ -76,9 +86,16 @@ const ListsTable: FC<ListsTableProps> = ({}) => {
           <ListsTableHeader />
           <SimpleTable
             data={listsTableData}
-            isExpandable={false}
+            isExpandable={listsTableData.some((row) => row.subRows.length > 0)}
             isLoading={isLoadingAll}
             error={isError ? 'Error loading lists' : undefined}
+            meta={{
+              handleRowContext,
+              handleValueDoubleClick,
+              closeRenameList,
+              submitRenameList,
+              renamingList,
+            }}
           >
             {renderListRow}
           </SimpleTable>

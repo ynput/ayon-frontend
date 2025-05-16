@@ -2,6 +2,32 @@ import { forwardRef } from 'react'
 import * as Styled from './SimpleTable.styled'
 import { Icon } from '@ynput/ayon-react-components'
 
+export type RowExpanderProps = {
+  isRowExpandable?: boolean
+  isRowExpanded?: boolean
+  isTableExpandable?: boolean
+  onExpandClick?: () => void
+}
+
+export const RowExpander = ({
+  isRowExpandable,
+  isRowExpanded,
+  isTableExpandable,
+  onExpandClick,
+}: RowExpanderProps) =>
+  isRowExpandable ? (
+    <Styled.Expander
+      onClick={(e) => {
+        e.stopPropagation()
+        onExpandClick?.()
+      }}
+      icon={isRowExpanded ? 'expand_more' : 'chevron_right'}
+      style={{ cursor: 'pointer' }}
+    />
+  ) : (
+    isTableExpandable && <div style={{ display: 'inline-block', minWidth: 24 }} />
+  )
+
 export interface SimpleTableCellTemplateProps extends React.HTMLAttributes<HTMLDivElement> {
   value: string
   icon?: string
@@ -43,18 +69,12 @@ export const SimpleTableCellTemplate = forwardRef<HTMLDivElement, SimpleTableCel
           paddingLeft: `calc(${depth * 0.5}rem + 4px)`,
         }}
       >
-        {isRowExpandable ? (
-          <Styled.Expander
-            onClick={(e) => {
-              e.stopPropagation()
-              onExpandClick()
-            }}
-            icon={isRowExpanded ? 'expand_more' : 'chevron_right'}
-            style={{ cursor: 'pointer' }}
-          />
-        ) : (
-          isTableExpandable && <div style={{ display: 'inline-block', minWidth: 24 }} />
-        )}
+        <RowExpander
+          isRowExpandable={isRowExpandable}
+          isRowExpanded={isRowExpanded}
+          isTableExpandable={isTableExpandable}
+          onExpandClick={onExpandClick}
+        />
         {startContent && startContent}
         {icon && <Icon icon={icon} style={{ color: iconColor }} />}
         <span className="value">{value}</span>

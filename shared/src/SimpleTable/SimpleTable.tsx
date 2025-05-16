@@ -11,6 +11,8 @@ import {
   FilterFn,
   SortingFn,
   sortingFns,
+  RowData,
+  Table,
 } from '@tanstack/react-table'
 import { useVirtualizer } from '@tanstack/react-virtual'
 
@@ -30,6 +32,17 @@ declare module '@tanstack/react-table' {
   }
   interface FilterMeta {
     itemRank: RankingInfo
+  }
+
+  interface TableMeta<TData extends RowData> {
+    isExpandable?: boolean
+    isLoading?: boolean
+    children?: (
+      props: SimpleTableCellTemplateProps,
+      row: Row<TData>,
+      table: Table<SimpleTableRow>,
+    ) => JSX.Element
+    [key: string]: any
   }
 }
 
@@ -92,7 +105,12 @@ export interface SimpleTableProps {
   isExpandable?: boolean // show expand/collapse icons
   forceUpdateTable?: any
   globalFilter?: string
-  children?: (props: SimpleTableCellTemplateProps, row: Row<SimpleTableRow>) => JSX.Element
+  meta?: Record<string, any>
+  children?: (
+    props: SimpleTableCellTemplateProps,
+    row: Row<SimpleTableRow>,
+    table: Table<SimpleTableRow>,
+  ) => JSX.Element
 }
 
 const SimpleTable: FC<SimpleTableProps> = ({
@@ -102,6 +120,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
   isExpandable,
   forceUpdateTable,
   globalFilter,
+  meta,
   children,
 }) => {
   const { rowSelection, expanded, setExpanded, onExpandedChange } = useSimpleTableContext()
@@ -131,9 +150,10 @@ const SimpleTable: FC<SimpleTableProps> = ({
         header: undefined,
         filterFn: 'fuzzy',
         sortingFn: fuzzySort, //sort by fuzzy rank (falls back to alphanumeric)
-        cell: ({ row, getValue }) => {
+        cell: ({ row, getValue, table }) => {
+          const meta = table.options.meta
           const props: SimpleTableCellTemplateProps = {
-            className: clsx({ selected: row.getIsSelected(), loading: isLoading }),
+            className: clsx({ selected: row.getIsSelected(), loading: meta?.isLoading }),
             onClick: (e) => {
               // check we are not clicking on an input
               if (e.target instanceof HTMLInputElement) return
@@ -151,18 +171,22 @@ const SimpleTable: FC<SimpleTableProps> = ({
             iconColor: row.original.iconColor,
             isRowExpandable: row.getCanExpand(),
             isRowExpanded: row.getIsExpanded(),
-            isTableExpandable: isExpandable,
+            isTableExpandable: meta?.isExpandable,
             onExpandClick: row.getToggleExpandedHandler(),
             startContent: row.original.startContent,
             endContent: row.original.endContent,
           }
 
           // Use children function if provided, otherwise default to SimpleTableCellTemplate
-          return children ? children(props, row) : <SimpleTableCellTemplate {...props} />
+          return meta?.children ? (
+            meta.children(props, row, table)
+          ) : (
+            <SimpleTableCellTemplate {...props} />
+          )
         },
       },
     ],
-    [isLoading, forceUpdateTable, children, tableData, rowSelection, isExpandable],
+    [forceUpdateTable],
   )
 
   const table = useReactTable({
@@ -192,6 +216,12 @@ const SimpleTable: FC<SimpleTableProps> = ({
     getExpandedRowModel: getExpandedRowModel(),
     filterFromLeafRows: true,
     // debugTable: true,
+    meta: {
+      isExpandable: !!isExpandable,
+      isLoading: isLoading,
+      children: children,
+      ...meta,
+    },
   })
 
   const { rows } = table.getRowModel()

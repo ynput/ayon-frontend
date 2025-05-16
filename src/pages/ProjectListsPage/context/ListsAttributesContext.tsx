@@ -46,6 +46,7 @@ export const ListsAttributesProvider = ({ children }: ListsAttributesProviderPro
     },
     { skip: !selectedList?.id },
   )
+
   // filter out attributes that are "overrides" (i.e. in attributes fields based on scope)
   const scopedAttribFields = attribFields
     .filter((field) => field.scope?.includes(selectedList?.entityType as ListEntityType))

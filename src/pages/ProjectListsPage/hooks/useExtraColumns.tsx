@@ -42,7 +42,7 @@ const useExtraColumns = ({ entityType }: useExtraColumnsProps) => {
     [entityType],
   )
 
-  const [createAttributeColumns] = useLoadModule({
+  const [createAttributeColumns, { isLoaded }] = useLoadModule({
     addon: 'powerpack',
     remote: 'slicer',
     module: 'createAttributeColumns',
@@ -60,7 +60,7 @@ const useExtraColumns = ({ entityType }: useExtraColumnsProps) => {
 
   const { columns: attributeColumns, settings: attributeSettings } = useMemo(
     () => createAttributeColumns(listAttributes, CellWidget),
-    [listAttributes],
+    [listAttributes, createAttributeColumns, isLoaded],
   )
 
   const extraColumns: TreeTableExtraColumn[] = useMemo(
@@ -84,11 +84,11 @@ const useExtraColumns = ({ entityType }: useExtraColumnsProps) => {
                   className={clsx(typeColumn.value, { loading: row.original.isLoading })}
                   columnId={column.id}
                   value={value}
-                  options={meta?.options[typeColumn.value]}
+                  options={meta?.options?.[typeColumn.value]}
                   attributeData={{ type: 'string' }}
                   isReadOnly={typeColumn.readonly}
                   onChange={(value) =>
-                    meta?.updateEntities([
+                    meta?.updateEntities?.([
                       { field: typeColumn.value, value, id, type, rowId: row.id },
                     ])
                   }
@@ -109,6 +109,7 @@ const useExtraColumns = ({ entityType }: useExtraColumnsProps) => {
   return {
     extraColumns,
     extraColumnsSettings,
+    isLoading: !isLoaded,
   }
 }
 

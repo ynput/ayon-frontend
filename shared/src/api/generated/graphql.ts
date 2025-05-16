@@ -1560,7 +1560,7 @@ export type GetListsQueryVariables = Exact<{
 }>;
 
 
-export type GetListsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', entityLists: { __typename?: 'EntityListsConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, edges: Array<{ __typename?: 'EntityListEdge', node: { __typename?: 'EntityListNode', id: string, label: string, entityListType: string, entityType: string, active: boolean, createdAt: any, updatedAt: any, owner?: string | null, count: number } }> } } };
+export type GetListsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', entityLists: { __typename?: 'EntityListsConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, edges: Array<{ __typename?: 'EntityListEdge', node: { __typename?: 'EntityListNode', id: string, label: string, entityListType: string, tags: Array<string>, data: string, entityType: string, active: boolean, createdAt: any, updatedAt: any, owner?: string | null, count: number } }> } } };
 
 type ListItemFragment_FolderNode_Fragment = { __typename?: 'FolderNode', name: string, label?: string | null, status: string, tags: Array<string>, folderType: string, path?: string | null };
 
@@ -2249,6 +2249,8 @@ export const GetListsDocument = `
           id
           label
           entityListType
+          tags
+          data
           entityType
           active
           createdAt

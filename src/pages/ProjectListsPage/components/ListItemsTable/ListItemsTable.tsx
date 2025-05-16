@@ -10,12 +10,11 @@ import ListsAttributesShortcutButton from '../ListsTableSettings/ListsAttributes
 
 interface ListItemsTableProps {
   extraColumns: BuildTreeTableColumnsProps['extraColumns']
+  isLoading?: boolean
 }
 
-const ListItemsTable: FC<ListItemsTableProps> = ({ extraColumns }) => {
-  const { rowSelection, selectedList } = useListsContext()
-  const selectedListsIds = Object.entries(rowSelection).filter(([_, isSelected]) => isSelected)
-  const isMultipleSelected = selectedListsIds.length > 1
+const ListItemsTable: FC<ListItemsTableProps> = ({ extraColumns, isLoading }) => {
+  const { selectedLists, selectedList } = useListsContext()
   const { isError, projectName, fetchNextPage, resetFilters } = useListItemsDataContext()
   const scope = `lists-${projectName}`
 
@@ -24,9 +23,9 @@ const ListItemsTable: FC<ListItemsTableProps> = ({ extraColumns }) => {
     [selectedList],
   )
 
-  if (!selectedListsIds.length) return <EmptyPlaceholder message="Start by selecting a list." />
+  if (!selectedList) return <EmptyPlaceholder message="Start by selecting a list." />
 
-  if (isMultipleSelected)
+  if (selectedLists.length > 1)
     return <EmptyPlaceholder message="Please select one list to view its items." />
 
   if (isError)
@@ -46,6 +45,7 @@ const ListItemsTable: FC<ListItemsTableProps> = ({ extraColumns }) => {
         readOnly={readOnly}
         excludedColumns={hiddenColumns}
         extraColumns={extraColumns}
+        isLoading={isLoading}
       />
       <ListItemsShortcuts />
       <ListsAttributesShortcutButton />

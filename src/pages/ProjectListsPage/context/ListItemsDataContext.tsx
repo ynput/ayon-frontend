@@ -77,11 +77,8 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
 
   const getEntityTypeData = useGetEntityTypeData({ projectInfo })
 
-  const { rowSelection, selectedList } = useListsContext()
-  const selectedListsIds = Object.entries(rowSelection)
-    .filter(([_, isSelected]) => isSelected)
-    .map(([id]) => id)
-  const selectedListId = selectedListsIds.length === 1 ? selectedListsIds[0] : undefined
+  const { selectedList } = useListsContext()
+  const selectedListId = selectedList?.id
 
   const selectors = ['lists', projectName, selectedList?.label]
 

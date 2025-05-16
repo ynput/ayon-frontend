@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, ReactNode, useMemo, useCallback } from 'react'
-import { ExpandedState, RowSelectionState } from '@tanstack/react-table'
+import { RowSelectionState } from '@tanstack/react-table'
 import useNewList, { UseNewListReturn } from '../hooks/useNewList'
 import {
   useCreateEntityListMutation,
@@ -41,8 +41,8 @@ const RowSelectionParam: QueryParamConfig<RowSelectionState> = {
 export interface ListsContextValue {
   rowSelection: RowSelectionState
   setRowSelection: React.Dispatch<React.SetStateAction<RowSelectionState>>
-  expanded: ExpandedState
-  setExpanded: React.Dispatch<React.SetStateAction<ExpandedState>>
+  selectedRows: string[]
+  selectedLists: EntityList[]
   selectedList: EntityList | undefined
   // Creating new lists
   newList: UseNewListReturn['newList']
@@ -81,16 +81,25 @@ export const ListsProvider = ({ children }: ListsProviderProps) => {
     withDefault(RowSelectionParam, {}),
   )
   const rowSelection = useMemo(() => unstableRowSelection, [JSON.stringify(unstableRowSelection)])
+  // only rows that are selected
+  const selectedRows = useMemo(
+    () =>
+      Object.entries(rowSelection)
+        .filter(([_k, v]) => v)
+        .map(([k]) => k),
+    [rowSelection],
+  )
 
-  const [expanded, setExpanded] = useState<ExpandedState>({})
+  const selectedLists = useMemo(() => {
+    // for each selected row, get the list from the map
+    // and check it is a list that can be fetched (not a folder)
+    return selectedRows.map((id) => listsMap.get(id)).filter((list) => !!list)
+  }, [selectedRows])
 
+  // we can only ever fetch one list at a time
   const selectedList = useMemo(() => {
-    const rowSelectionIds = Object.entries(rowSelection)
-      .filter(([_k, v]) => v)
-      .map(([k]) => k)
-    const selectedId = rowSelectionIds[0]
-    return listsMap.get(selectedId)
-  }, [rowSelection, listsMap])
+    return selectedLists[0]
+  }, [selectedRows, listsMap])
 
   // dialogs
   const [listsFiltersOpen, setListsFiltersOpen] = useState(false)
@@ -146,8 +155,8 @@ export const ListsProvider = ({ children }: ListsProviderProps) => {
     return {
       rowSelection,
       setRowSelection,
-      expanded,
-      setExpanded,
+      selectedRows,
+      selectedLists,
       selectedList,
       closeNewList,
       createNewList,
@@ -172,8 +181,8 @@ export const ListsProvider = ({ children }: ListsProviderProps) => {
   }, [
     rowSelection,
     setRowSelection,
-    expanded,
-    setExpanded,
+    selectedRows,
+    selectedLists,
     selectedList,
     // new list
     closeNewList,

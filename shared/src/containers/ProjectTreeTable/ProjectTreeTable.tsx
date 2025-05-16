@@ -60,11 +60,11 @@ import { UpdateTableEntities } from './hooks/useUpdateTableData'
 
 declare module '@tanstack/react-table' {
   interface TableMeta<TData extends RowData> {
-    options: BuiltInFieldOptions
-    readOnly: ProjectTreeTableProps['readOnly']
-    projectName: string
-    updateEntities: UpdateTableEntities
-    toggleExpandAll: ToggleExpandAll
+    options?: BuiltInFieldOptions
+    readOnly?: ProjectTreeTableProps['readOnly']
+    projectName?: string
+    updateEntities?: UpdateTableEntities
+    toggleExpandAll?: ToggleExpandAll
   }
 }
 
@@ -91,6 +91,7 @@ export interface ProjectTreeTableProps extends React.HTMLAttributes<HTMLDivEleme
   readOnly?: (DefaultColumns | string)[]
   excludedColumns?: (DefaultColumns | string)[]
   extraColumns?: TreeTableExtraColumn[]
+  isLoading?: boolean
   pt?: {
     container?: React.HTMLAttributes<HTMLDivElement>
     head?: Partial<TableHeadProps>
@@ -105,6 +106,7 @@ export const ProjectTreeTable = ({
   readOnly,
   excludedColumns,
   extraColumns,
+  isLoading: isLoadingProp,
   pt,
   ...props
 }: ProjectTreeTableProps) => {
@@ -125,7 +127,7 @@ export const ProjectTreeTable = ({
     attribFields,
     entitiesMap,
     users,
-    isLoading,
+    isLoading: isLoadingData,
     isInitialized,
     expanded,
     projectName,
@@ -135,6 +137,8 @@ export const ProjectTreeTable = ({
     updateSorting,
     showHierarchy,
   } = useProjectTableContext()
+
+  const isLoading = isLoadingProp || isLoadingData
 
   const { statuses = [], folderTypes = [], taskTypes = [], tags = [] } = projectInfo || {}
   const options: BuiltInFieldOptions = useMemo(

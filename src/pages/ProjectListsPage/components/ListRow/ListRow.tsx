@@ -2,23 +2,45 @@ import { forwardRef, useEffect, useState } from 'react'
 import * as Styled from './ListRow.styled'
 import { Icon, InputText, Spacer } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
+import { RowExpander } from '@shared/SimpleTable/SimpleTableRowTemplate'
 
-export interface SimpleTableCellTemplateProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface ListRowProps extends React.HTMLAttributes<HTMLDivElement> {
   value: string
   icon?: string
+  depth?: number
   count: number
   isRenaming?: boolean
-  onSubmitRename?: (value: string) => void // Renamed from onRename
-  onCancelRename?: () => void // Renamed from cancelRename
+  isTableExpandable?: boolean
+  isRowExpandable?: boolean
+  isRowExpanded?: boolean
+  onSubmitRename?: (value: string) => void
+  onCancelRename?: () => void
+  onExpandClick: () => void
   pt?: {
     value?: React.HTMLAttributes<HTMLSpanElement>
     input?: React.HTMLAttributes<HTMLInputElement> & { value?: string }
   }
 }
 
-const ListRow = forwardRef<HTMLDivElement, SimpleTableCellTemplateProps>(
-  ({ value, icon, count, isRenaming, onSubmitRename, onCancelRename, pt, ...props }, ref) => {
-    // Renamed props
+const ListRow = forwardRef<HTMLDivElement, ListRowProps>(
+  (
+    {
+      value,
+      depth = 0,
+      icon,
+      count,
+      isRenaming,
+      isTableExpandable,
+      isRowExpandable,
+      isRowExpanded,
+      onSubmitRename,
+      onCancelRename,
+      onExpandClick,
+      pt,
+      ...props
+    },
+    ref,
+  ) => {
     const [renameValue, setRenameValue] = useState(value)
 
     useEffect(() => {
@@ -28,7 +50,20 @@ const ListRow = forwardRef<HTMLDivElement, SimpleTableCellTemplateProps>(
     }, [value, isRenaming])
 
     return (
-      <Styled.Cell {...props} ref={ref}>
+      <Styled.Cell
+        {...props}
+        ref={ref}
+        style={{
+          ...props.style,
+          paddingLeft: `calc(${depth * 0.5}rem + 4px)`,
+        }}
+      >
+        <RowExpander
+          isRowExpandable={isRowExpandable}
+          isRowExpanded={isRowExpanded}
+          isTableExpandable={isTableExpandable}
+          onExpandClick={onExpandClick}
+        />
         {icon && <Icon icon={icon} />}
         {isRenaming ? (
           <InputText
@@ -39,14 +74,14 @@ const ListRow = forwardRef<HTMLDivElement, SimpleTableCellTemplateProps>(
             value={renameValue}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
-                onSubmitRename?.(renameValue) // Use onSubmitRename
+                onSubmitRename?.(renameValue)
               }
               if (e.key === 'Escape') {
-                onCancelRename?.() // Use onCancelRename
+                onCancelRename?.()
               }
             }}
             onBlur={() => {
-              onCancelRename?.() // Use onCancelRename
+              onCancelRename?.()
             }}
             onFocus={(e) => {
               e.target.select()

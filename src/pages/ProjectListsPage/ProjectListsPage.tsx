@@ -29,6 +29,7 @@ import {
   ProjectTableQueriesProvider,
   SelectedRowsProvider,
   SelectionCellsProvider,
+  TreeTableExtraColumn,
   useSelectedRowsContext,
 } from '@shared/containers/ProjectTreeTable'
 import ProjectOverviewDetailsPanel from '@pages/ProjectOverviewPage/containers/ProjectOverviewDetailsPanel'
@@ -81,6 +82,15 @@ const ProjectListsWithInnerProviders: FC = () => {
     updateEntities,
   })
 
+  const {
+    extraColumns,
+    extraColumnsSettings,
+    isLoading: isLoadingExtraColumns,
+  } = useExtraColumns({
+    // @ts-expect-error - we do not support product right now
+    entityType: selectedList?.entityType,
+  })
+
   return (
     <SettingsPanelProvider>
       <ProjectTableQueriesProvider {...{ updateEntities: updateListItems, getFoldersTasks }}>
@@ -97,7 +107,7 @@ const ProjectListsWithInnerProviders: FC = () => {
           expanded={{}}
           isInitialized={props.isInitialized}
           showHierarchy={false}
-          isLoading={props.isLoadingAll}
+          isLoading={props.isLoadingAll || isLoadingExtraColumns}
           contextMenuItems={contextMenuItems}
           sorting={props.sorting}
           updateSorting={props.updateSorting}
@@ -106,7 +116,10 @@ const ProjectListsWithInnerProviders: FC = () => {
             <SelectedRowsProvider>
               <ColumnSettingsProvider config={pageConfig} onChange={updatePageConfig}>
                 <CellEditingProvider>
-                  <ProjectListsPage />
+                  <ProjectListsPage
+                    extraColumns={extraColumns}
+                    extraColumnsSettings={extraColumnsSettings}
+                  />
                 </CellEditingProvider>
               </ColumnSettingsProvider>
             </SelectedRowsProvider>
@@ -117,17 +130,17 @@ const ProjectListsWithInnerProviders: FC = () => {
   )
 }
 
-const ProjectListsPage: FC = () => {
+type ProjectListsPageProps = {
+  extraColumns: TreeTableExtraColumn[]
+  extraColumnsSettings: any[]
+}
+
+const ProjectListsPage: FC<ProjectListsPageProps> = ({ extraColumns, extraColumnsSettings }) => {
   const { projectName, projectInfo } = useProjectDataContext()
   const { isPanelOpen, selectSetting, highlightedSetting } = useSettingsPanel()
   const { selectedList } = useListsContext()
   const { selectedRows } = useSelectedRowsContext()
   const { deleteListItemAction } = useListItemsDataContext()
-
-  const { extraColumns, extraColumnsSettings } = useExtraColumns({
-    // @ts-expect-error - we do not support product right now
-    entityType: selectedList?.entityType,
-  })
 
   const handleGoToCustomAttrib = (attrib: string) => {
     // open settings panel and highlig the attribute

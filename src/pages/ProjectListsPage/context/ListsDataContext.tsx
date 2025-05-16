@@ -2,10 +2,10 @@ import { createContext, useContext, ReactNode, useMemo } from 'react'
 import { EntityList } from '@shared/api'
 import { useProjectDataContext } from '@pages/ProjectOverviewPage/context/ProjectDataContext'
 import { SimpleTableRow } from '@shared/SimpleTable'
-import { getEntityTypeIcon } from '@shared/util'
 import { Filter } from '@ynput/ayon-react-components'
 import { useUsersPageConfig } from '@pages/ProjectOverviewPage/hooks/useUserPageConfig'
 import useGetListsData from '../hooks/useGetListsData'
+import { buildListsTableData } from '../util'
 
 export type ListsMap = Map<string, EntityList>
 
@@ -63,22 +63,7 @@ export const ListsDataProvider = ({ children }: ListsDataProviderProps) => {
   }, [listsData])
 
   // convert listsData into tableData
-  const listsTableData = useMemo(() => {
-    const tableRows: SimpleTableRow[] = listsData.map((list) => ({
-      id: list.id,
-      name: list.label,
-      label: list.label,
-      icon: getEntityTypeIcon(list.entityType),
-      subRows: [],
-      data: {
-        id: list.id,
-        count: list.count,
-        owner: list.owner,
-      },
-    }))
-
-    return tableRows
-  }, [listsData])
+  const listsTableData = useMemo(() => buildListsTableData(listsData), [listsData])
 
   return (
     <ListsDataContext.Provider

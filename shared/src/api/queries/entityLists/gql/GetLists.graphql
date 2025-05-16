@@ -10,6 +10,8 @@ query GetLists($projectName: String!, $first: Int!, $after: String, $filter: Str
           id
           label
           entityListType
+          tags
+          data
           entityType
           active
           createdAt
