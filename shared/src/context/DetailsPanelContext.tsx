@@ -35,14 +35,14 @@ export interface DetailsPanelContextProps {
   user: UserModel
   viewer?: {
     reviewableIds: string[]
-    taskId?: string
-    folderId?: string
+    taskId?: string | null
+    folderId?: string | null
   }
   // redux callback actions
   onOpenImage?: (args: any) => void
   onGoToFrame?: (frame: number) => void
   onOpenViewer?: (args: any) => void
-  onUpdateEntity?: (data: { operations: any[], entityType: string }) => void
+  onUpdateEntity?: (data: { operations: any[]; entityType: string }) => void
 }
 
 // Interface for our simplified context

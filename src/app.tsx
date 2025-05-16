@@ -86,15 +86,15 @@ const App = () => {
   const [noAdminUser, setNoAdminUser] = useState(false)
 
   //   handlers for details panel
-  const onOpenImage = (args) => {
+  const onOpenImage = (args: any) => {
     dispatch(onCommentImageOpen(args))
   }
 
-  const onGoToFrame = (frame) => {
+  const onGoToFrame = (frame: number) => {
     dispatch(goToFrame(frame))
   }
 
-  const onOpenViewer = (args) => {
+  const onOpenViewer = (args: any) => {
     dispatch(openViewer(args))
   }
 
@@ -143,11 +143,12 @@ const App = () => {
           // clear any auth-redirect-params local storage
           localStorage.removeItem('auth-redirect-params')
 
-          if (!response.attributes.length) {
+          if (!response.attributes?.length) {
             toast.error('Unable to load attributes. Something is wrong')
           }
 
           ayonClient.settings = {
+            // @ts-ignore
             attributes: response.attributes,
             sites: response.sites,
             version: response.version,
@@ -169,10 +170,12 @@ const App = () => {
     const body = document.body
 
     // attach mouseOver event listener to body element
+    // @ts-ignore
     body.addEventListener('mouseover', handleMouse)
 
     // cleanup
     return () => {
+      // @ts-ignore
       body.removeEventListener('mouseover', handleMouse)
     }
   }, [])
@@ -225,7 +228,6 @@ const App = () => {
                                         <Routes>
                                           <Route
                                             path="/"
-                                            exact
                                             element={<Navigate replace to="/dashboard/tasks" />}
                                           />
 
@@ -235,12 +237,10 @@ const App = () => {
                                           />
                                           <Route
                                             path="/dashboard/:module"
-                                            exact
                                             element={<UserDashboardPage />}
                                           />
                                           <Route
                                             path="/dashboard/addon/:addonName"
-                                            exact
                                             element={<UserDashboardPage />}
                                           />
 
@@ -266,19 +266,16 @@ const App = () => {
                                           />
                                           <Route
                                             path="/settings"
-                                            exact
                                             element={
                                               <Navigate replace to="/settings/anatomyPresets" />
                                             }
                                           />
                                           <Route
                                             path="/settings/:module"
-                                            exact
                                             element={<SettingsPage />}
                                           />
                                           <Route
                                             path="/settings/addon/:addonName"
-                                            exact
                                             element={<SettingsPage />}
                                           />
                                           <Route
@@ -298,14 +295,9 @@ const App = () => {
                                             }
                                           />
 
-                                          <Route
-                                            path="/inbox/:module"
-                                            exact
-                                            element={<InboxPage />}
-                                          />
+                                          <Route path="/inbox/:module" element={<InboxPage />} />
                                           <Route
                                             path="/inbox"
-                                            exact
                                             element={<Navigate to="/inbox/important" />}
                                           />
 
@@ -313,12 +305,10 @@ const App = () => {
                                           <Route path="/doc/api" element={<APIDocsPage />} />
                                           <Route
                                             path="/account"
-                                            exact
                                             element={<Navigate replace to="/account/profile" />}
                                           />
                                           <Route
                                             path="/account/:module"
-                                            exact
                                             element={<AccountPage />}
                                           />
                                           <Route path="/events" element={<EventsPage />} />
@@ -355,7 +345,7 @@ const App = () => {
   const loginComponent = useMemo(() => <LoginPage isFirstTime={isOnboarding} />, [isOnboarding])
 
   const errorComponent = useMemo(
-    () => <ErrorPage code={serverError} message="Server connection failed" />,
+    () => <ErrorPage message="Server connection failed" />,
     [serverError],
   )
 
@@ -409,7 +399,7 @@ const App = () => {
     return (
       <BrowserRouter>
         <CustomerlyProvider appId={PROJECT_ID}>
-          <TrialEnded orgName={ynputConnect.orgName} />
+          <TrialEnded orgName={ynputConnect?.orgName} />
         </CustomerlyProvider>
       </BrowserRouter>
     )
