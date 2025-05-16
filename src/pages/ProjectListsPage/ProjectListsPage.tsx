@@ -38,21 +38,24 @@ import useExtraColumns from './hooks/useExtraColumns'
 import { ListsTableSettings } from './components/ListsTableSettings/index.ts'
 import useUpdateListItems from './hooks/useUpdateListItems'
 import { Actions } from '@shared/containers/Actions/Actions'
+import { ListsModuleProvider } from './context/ListsModulesContext.tsx'
 
 const ProjectListsWithOuterProviders: FC = () => {
   const projectName = useAppSelector((state) => state.project.name) || ''
   return (
-    <ProjectDataProvider projectName={projectName}>
-      <ListsDataProvider entityListTypes={['generic']}>
-        <ListsProvider>
-          <ListItemsDataProvider>
-            <ListsAttributesProvider>
-              <ProjectListsWithInnerProviders />
-            </ListsAttributesProvider>
-          </ListItemsDataProvider>
-        </ListsProvider>
-      </ListsDataProvider>
-    </ProjectDataProvider>
+    <ListsModuleProvider>
+      <ProjectDataProvider projectName={projectName}>
+        <ListsDataProvider entityListTypes={['generic']}>
+          <ListsProvider>
+            <ListItemsDataProvider>
+              <ListsAttributesProvider>
+                <ProjectListsWithInnerProviders />
+              </ListsAttributesProvider>
+            </ListItemsDataProvider>
+          </ListsProvider>
+        </ListsDataProvider>
+      </ProjectDataProvider>
+    </ListsModuleProvider>
   )
 }
 

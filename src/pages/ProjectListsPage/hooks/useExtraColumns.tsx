@@ -4,8 +4,7 @@ import clsx from 'clsx'
 import { useMemo } from 'react'
 import { ListEntityType } from '../components/NewListDialog/NewListDialog'
 import { useListsAttributesContext } from '../context/ListsAttributesContext'
-import { useLoadModule } from '@shared/hooks'
-import PowerpackButton from '@components/Powerpack/PowerpackButton'
+import { useListsModuleContext } from '../context/ListsModulesContext'
 
 const typeColumns: Record<
   TreeTableSubType,
@@ -22,6 +21,7 @@ interface useExtraColumnsProps {
 
 const useExtraColumns = ({ entityType }: useExtraColumnsProps) => {
   const { listAttributes } = useListsAttributesContext()
+  const { createAttributeColumns, isLoaded } = useListsModuleContext()
 
   const extraTypeColumns = useMemo(
     () =>
@@ -41,22 +41,6 @@ const useExtraColumns = ({ entityType }: useExtraColumnsProps) => {
         : [],
     [entityType],
   )
-
-  const [createAttributeColumns, { isLoaded }] = useLoadModule({
-    addon: 'powerpack',
-    remote: 'slicer',
-    module: 'createAttributeColumns',
-    fallback: (a: any[], _w: any) => ({
-      columns: a.map((a) => ({
-        column: {
-          id: a.name,
-          header: a.name,
-          cell: () => <PowerpackButton label="Custom attribute" feature="listAttributes" />,
-        },
-      })),
-      settings: [],
-    }),
-  })
 
   const { columns: attributeColumns, settings: attributeSettings } = useMemo(
     () => createAttributeColumns(listAttributes, CellWidget),

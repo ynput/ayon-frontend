@@ -1,11 +1,10 @@
 import { useListsAttributesContext } from '@pages/ProjectListsPage/context/ListsAttributesContext'
-import { useLoadModule } from '@shared/hooks'
 import { FC } from 'react'
 import { toast } from 'react-toastify'
-import ListsAttributeSettingsFallback from './ListsAttributeSettingsFallback'
 import { ProjectTableSettings } from '@shared/components'
 import { SettingHighlightedId } from '@shared/context'
 import { confirmDelete } from '@shared/util'
+import { useListsModuleContext } from '@pages/ProjectListsPage/context/ListsModulesContext'
 
 export interface ListsTableSettingsProps {
   onGoTo: (name: string) => void
@@ -20,6 +19,7 @@ export const ListsTableSettings: FC<ListsTableSettingsProps> = ({
 }) => {
   const { listAttributes, entityAttribFields, updateAttributes, isUpdating, isLoadingNewList } =
     useListsAttributesContext()
+  const { ListsAttributesSettings } = useListsModuleContext()
 
   const onSuccess = (message: string) => {
     toast.success(message)
@@ -28,12 +28,6 @@ export const ListsTableSettings: FC<ListsTableSettingsProps> = ({
     toast.error(error)
   }
 
-  const [ListsAttributesSettings] = useLoadModule({
-    addon: 'powerpack',
-    remote: 'slicer',
-    module: 'ListsAttributesSettings',
-    fallback: ListsAttributeSettingsFallback,
-  })
   return (
     <ProjectTableSettings
       extraColumns={extraColumns}
