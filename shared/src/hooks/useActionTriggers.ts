@@ -1,3 +1,5 @@
+import { useDispatch } from 'react-redux'
+import { foldersApi } from '@shared/api/generated'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import customProtocolCheck from 'custom-protocol-check'
 
@@ -11,12 +13,14 @@ interface ActionPayload {
   new_tab?: boolean // opens a new tab
   extra_download?: string // triggers a file download from a URL
   extra_clipboard?: string // copies string content to clipboard
+  extra_reload?: boolean // hierarchy changed, refresh data
   [key: string]: any
 }
 
 export const useActionTriggers = () => {
   const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
+  const dispatch = useDispatch()
 
   const handleActionPayload = (actionType: string, payload: ActionPayload | null): void => {
     if (!payload) return
@@ -101,6 +105,14 @@ export const useActionTriggers = () => {
         })
       }
     }
+
+
+    if ('extra_reload' in payload) {
+      console.log('extra_reload')
+      dispatch(foldersApi.util.invalidateTags(['hierarchy']))
+    }
+
+
   }
 
   return { handleActionPayload }

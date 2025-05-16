@@ -23,6 +23,7 @@ type ActionsProps = {
   entityType: ActionContext['entityType']
   entitySubTypes?: string[]
   isLoadingEntity: boolean
+  isProjectLevel?: string
 }
 
 export const Actions = ({
@@ -30,6 +31,7 @@ export const Actions = ({
   entityType,
   entitySubTypes,
   isLoadingEntity,
+  isProjectLevel,
 }: ActionsProps) => {
   // special triggers the actions can make to perform stuff on the client
   const { handleActionPayload } = useActionTriggers()
@@ -37,6 +39,11 @@ export const Actions = ({
   const [interactiveForm, setInteractiveForm] = useState<any>(null)
 
   const context: ActionContext | null = useMemo(() => {
+    if (isProjectLevel){
+      return {
+        projectName: isProjectLevel,
+      }
+    }
     if (!entities.length) return null
     if (!entities[0].projectName) return null
 
