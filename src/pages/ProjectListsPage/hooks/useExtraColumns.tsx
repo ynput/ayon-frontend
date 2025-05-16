@@ -1,14 +1,10 @@
-import {
-  getValueIdType,
-  TreeTableExtraColumn,
-  TreeTableSubType,
-  useColumnSettingsContext,
-} from '@shared/containers'
+import { getValueIdType, TreeTableExtraColumn, TreeTableSubType } from '@shared/containers'
 import { CellWidget } from '@shared/containers/ProjectTreeTable/widgets'
 import clsx from 'clsx'
 import { useMemo } from 'react'
 import { ListEntityType } from '../components/NewListDialog/NewListDialog'
 import { useListsAttributesContext } from '../context/ListsAttributesContext'
+import { useLoadModule } from '@shared/hooks'
 
 const typeColumns: Record<
   TreeTableSubType,
@@ -24,7 +20,6 @@ interface useExtraColumnsProps {
 }
 
 const useExtraColumns = ({ entityType }: useExtraColumnsProps) => {
-  const { columnSizing } = useColumnSettingsContext()
   const { listAttributes } = useListsAttributesContext()
 
   const extraTypeColumns = useMemo(
@@ -46,12 +41,18 @@ const useExtraColumns = ({ entityType }: useExtraColumnsProps) => {
     [entityType],
   )
 
-  const extraAttributeColumns = useMemo(
-    () =>
-      listAttributes.map((attribute) => ({
-        value: attribute.name,
-        label: attribute.data.title || attribute.name,
-      })),
+  const [createAttributeColumns] = useLoadModule({
+    addon: 'powerpack',
+    remote: 'slicer',
+    module: 'createAttributeColumns',
+    fallback: (_a: any[]) => ({
+      columns: [],
+      settings: [],
+    }),
+  })
+
+  const { columns: attributeColumns, settings: attributeSettings } = useMemo(
+    () => createAttributeColumns(listAttributes),
     [listAttributes],
   )
 
@@ -63,7 +64,6 @@ const useExtraColumns = ({ entityType }: useExtraColumnsProps) => {
             id: typeColumn.value,
             accessorKey: typeColumn.value,
             header: typeColumn.label,
-            size: columnSizing[typeColumn.value] || 150,
             enableSorting: true,
             enableResizing: true,
             enablePinning: true,
@@ -92,54 +92,12 @@ const useExtraColumns = ({ entityType }: useExtraColumnsProps) => {
           position: typeColumn.position,
         }),
       ),
-      ...listAttributes.map(
-        (attribute): TreeTableExtraColumn => ({
-          column: {
-            id: attribute.name,
-            accessorKey: attribute.name,
-            header: attribute.data.title || attribute.name,
-            size: columnSizing[attribute.name] || 150,
-            enableSorting: true,
-            enableResizing: true,
-            enablePinning: true,
-            enableHiding: true,
-            cell: ({ row, column, table }) => {
-              const meta = table.options.meta
-              const { value, id, type } = getValueIdType(row, column.id, 'attrib')
-              return (
-                <CellWidget
-                  rowId={id}
-                  className={clsx(attribute.name, { loading: row.original.isLoading })}
-                  columnId={column.id}
-                  value={value}
-                  options={attribute.data.enum}
-                  attributeData={attribute.data}
-                  onChange={(value) =>
-                    meta?.updateEntities([
-                      {
-                        field: attribute.name,
-                        value,
-                        id,
-                        type,
-                        rowId: row.id,
-                        isAttrib: true,
-                        meta: {
-                          isCustom: true,
-                        },
-                      },
-                    ])
-                  }
-                />
-              )
-            },
-          },
-        }),
-      ),
+      ...attributeColumns,
     ],
-    [extraTypeColumns, extraAttributeColumns],
+    [extraTypeColumns, attributeColumns],
   )
 
-  const extraColumnsSettings = [...extraTypeColumns, ...extraAttributeColumns]
+  const extraColumnsSettings = [...extraTypeColumns, ...attributeSettings]
 
   return {
     extraColumns,

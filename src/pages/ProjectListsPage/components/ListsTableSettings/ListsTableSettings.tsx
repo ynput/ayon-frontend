@@ -28,7 +28,7 @@ export const ListsTableSettings: FC<ListsTableSettingsProps> = ({
     toast.error(error)
   }
 
-  const [ListsAttributesSettings, { isLoaded: isLoadedProvider }] = useLoadModule({
+  const [ListsAttributesSettings] = useLoadModule({
     addon: 'powerpack',
     remote: 'slicer',
     module: 'ListsAttributesSettings',
