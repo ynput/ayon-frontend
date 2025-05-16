@@ -74,7 +74,7 @@ type EntityNameWidgetProps = {
   name: string
   path?: string | null
   showHierarchy?: boolean
-  icon: string | null
+  icon?: string | null
   type: string
   isExpanded: boolean
   toggleExpandAll: (id: string) => void

@@ -159,7 +159,7 @@ export type ActionContext = {
   /** The name of the project. If not provided, use global actions, the rest of the fields are ignored. */
   projectName?: string
   /** The type of the entity. If not specified, project-lever or global actions are used. */
-  entityType?: 'folder' | 'product' | 'version' | 'representation' | 'task' | 'workfile'
+  entityType?: 'folder' | 'product' | 'version' | 'representation' | 'task' | 'workfile' | 'list'
   /** List of subtypes present in the entity list */
   entitySubtypes?: string[]
   /** The IDs of the entities */

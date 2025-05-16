@@ -14,7 +14,7 @@ import {
 } from '@reduxjs/toolkit/query'
 
 // parse attribs JSON string to object
-export const parseAttribs = (allAttrib: string) => {
+export const parseAllAttribs = (allAttrib: string) => {
   try {
     return JSON.parse(allAttrib)
   } catch (e) {
@@ -32,7 +32,7 @@ const transformFilteredEntitiesByParent = (response: GetTasksByParentQuery): Edi
     tasks.push({
       ...taskNode,
       folderId: taskNode.folderId || 'root',
-      attrib: parseAttribs(taskNode.allAttrib),
+      attrib: parseAllAttribs(taskNode.allAttrib),
     })
   }
 
@@ -290,7 +290,7 @@ export const {
   useGetOverviewTasksByFoldersQuery,
   useGetQueryTasksFoldersQuery,
   useGetTasksListQuery,
-  useGetTasksListInfiniteInfiniteQuery, // Fix the export name
+  useGetTasksListInfiniteInfiniteQuery,
   useLazyGetTasksByParentQuery,
 } = injectedApi
 export default injectedApi

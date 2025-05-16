@@ -6,12 +6,12 @@ import {
   ForwardRefExoticComponent,
   RefAttributes,
 } from 'react'
-import { ExpandedState, RowSelectionState } from '@tanstack/react-table'
+import { ExpandedState, RowSelectionState, Table } from '@tanstack/react-table'
 import useSlicerReduxSync from '@containers/Slicer/hooks/useSlicerReduxSync'
+import { SelectionData, SliceDataItem, SliceType } from '@shared/containers/Slicer'
+import { SimpleTableRow } from '@shared/SimpleTable'
 import { useLoadModule } from '@shared/hooks'
 import type { ProjectModel, Assignees } from '@shared/api'
-import { SelectionData, SliceType } from '@shared/containers'
-import { TableRow } from '@containers/Slicer/types'
 import SlicerDropdownFallback, { SlicerDropdownProps } from '@containers/Slicer/SlicerDropdown'
 import { DropdownRef } from '@ynput/ayon-react-components'
 
@@ -28,18 +28,20 @@ export type SlicerConfig = {
 }
 
 type ExtraSlices = {
-  formatStatuses: (project?: ProjectModel) => TableRow[]
-  formatTaskTypes: (project?: ProjectModel) => TableRow[]
-  formatTypes: (project?: ProjectModel) => TableRow[]
-  formatAssignees: (assignees: Assignees) => TableRow[]
+  formatStatuses: (project?: ProjectModel) => SimpleTableRow[]
+  formatTaskTypes: (project?: ProjectModel) => SimpleTableRow[]
+  formatTypes: (project?: ProjectModel) => SimpleTableRow[]
+  formatAssignees: (assignees: Assignees) => SimpleTableRow[]
 }
 
 export type UseExtraSlices = () => ExtraSlices
 
+type OnRowSelectionChange = (selection: RowSelectionState, table: Table<any>) => void
+
 interface SlicerContextValue {
   rowSelection: RowSelectionState
   setRowSelection: React.Dispatch<React.SetStateAction<RowSelectionState>>
-  onRowSelectionChange?: (selection: RowSelectionState) => void
+  onRowSelectionChange?: OnRowSelectionChange
   expanded: ExpandedState
   setExpanded: React.Dispatch<React.SetStateAction<ExpandedState>>
   onExpandedChange?: (expanded: ExpandedState) => void
@@ -79,17 +81,34 @@ export const SlicerProvider = ({ children }: SlicerProviderProps) => {
   const { useExtraSlices, SlicerDropdown } = useSlicerRemotes()
 
   const { onRowSelectionChange, onExpandedChange } = useSlicerReduxSync({
-    setRowSelection,
     setExpanded,
     sliceType,
   })
 
+  const getSelectionData = (selection: RowSelectionState, table: Table<any>) => {
+    // for each selected row, get the data
+    const selectedRows = Object.keys(selection).reduce<Record<string, SliceDataItem>>((acc, id) => {
+      const row = table.getRow(id)
+      if (!row) return acc
+
+      // @ts-ignore
+      acc[id as string] = row.original.data as SliceDataItem
+      return acc
+    }, {})
+
+    return selectedRows
+  }
+
   //   do something with selection change
-  const handleRowSelectionChange = (selection: RowSelectionState) => {
+  const handleRowSelectionChange: OnRowSelectionChange = (selection, table) => {
     if (sliceType === 'hierarchy') {
       // update redux focused folders
       onRowSelectionChange(selection)
     }
+
+    // get selection data
+    const selectionData = getSelectionData(selection, table)
+    setRowSelectionData(selectionData)
   }
 
   const handleExpandedChange = (expanded: ExpandedState) => {

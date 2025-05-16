@@ -1,5 +1,5 @@
 import { gqlApi, usersApi } from '@shared/api/generated'
-import { parseAttribs } from '@shared/api'
+import { parseAllAttribs } from '@shared/api'
 import {
   GetActiveUsersCountQuery,
   GetAllAssigneesQuery,
@@ -114,7 +114,7 @@ const injectedApi = gqlApi.injectEndpoints({
           self: e.node.name === selfName,
           avatarUrl: `/api/users/${e.node.name}/avatar`,
           accessGroups: e.node.accessGroups ? JSON.parse(e.node.accessGroups) : {},
-          attrib: parseAttribs(e.node.allAttrib),
+          attrib: parseAllAttribs(e.node.allAttrib),
         }))
       },
       providesTags: (users) =>
@@ -135,7 +135,7 @@ const injectedApi = gqlApi.injectEndpoints({
         res?.data?.users.edges.map((e: any) => ({
           ...e.node,
           avatarUrl: `/api/users/${e.node?.name}/avatar`,
-          attrib: parseAttribs(e.node.allAttrib),
+          attrib: parseAllAttribs(e.node.allAttrib),
         })),
       providesTags: (res) =>
         res

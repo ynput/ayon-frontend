@@ -1,4 +1,5 @@
-.p-contextmenu.p-component {
+.p-contextmenu.p-component,
+.p-contextmenu.p-component .p-submenu-list {
   min-width: 12.5rem;
   width: unset;
   padding: 0;
@@ -70,6 +71,17 @@
         }
         &:active {
           background-color: var(--md-sys-color-error-container-active);
+        }
+      }
+
+      &.developer {
+        background-color: var(--color-hl-developer-container);
+        span {
+          color: var(--color-hl-developer);
+        }
+
+        &:hover {
+          background-color: var(--color-hl-developer-container-hover);
         }
       }
 

@@ -7,6 +7,7 @@ export * from './groupResult'
 export * from './getPriorityOptions'
 export * from './copyToClipboard'
 export * from './getMixedState'
+export * from './getAttributeIcon'
 
 export { productTypes }
 import PubSub from './pubsub'

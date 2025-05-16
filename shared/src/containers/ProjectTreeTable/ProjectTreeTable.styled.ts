@@ -82,9 +82,7 @@ export const HeaderCell = styled.th`
   align-items: center;
   min-height: fit-content;
   min-width: ${cellMinWidth}px;
-  &.large {
-    min-width: 300px;
-  }
+
   &:hover {
     .resize-handle {
       opacity: 1;

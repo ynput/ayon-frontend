@@ -1,6 +1,7 @@
 import { createContext, ReactNode, useContext } from 'react'
 import { OperationModel, OperationsRequestModel } from '../types/operations'
 import { PatchOperation } from '../types'
+import { OperationWithRowId } from '../hooks/useUpdateTableData'
 
 export interface ProjectTableQueriesContextProps {
   updateEntities: ProjectTableQueriesProviderProps['updateEntities']
@@ -17,7 +18,7 @@ export interface ProjectTableQueriesProviderProps {
   updateEntities: ({
     operations,
   }: {
-    operations: OperationModel[]
+    operations: OperationWithRowId[]
     patchOperations?: PatchOperation[]
   }) => Promise<OperationsRequestModel | undefined>
 

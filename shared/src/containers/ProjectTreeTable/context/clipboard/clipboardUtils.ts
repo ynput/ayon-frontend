@@ -1,5 +1,5 @@
 import { toast } from 'react-toastify'
-import { FolderNodeMap, TaskNodeMap } from '../../types/table'
+import { EntitiesMap, FolderNodeMap, TaskNodeMap } from '../../types/table'
 import { ParsedClipboardData } from './clipboardTypes'
 
 export const clipboardError = (error: string) => toast.error(error)
@@ -22,13 +22,8 @@ export const parseClipboardText = (clipboardText: string): ParsedClipboardData[]
 }
 
 // Get the full path for an entity
-export const getEntityPath = (
-  entityId: string,
-  isFolder: boolean,
-  foldersMap: FolderNodeMap,
-  tasksMap: TaskNodeMap,
-): string => {
-  const entity = isFolder ? foldersMap.get(entityId) : tasksMap.get(entityId)
+export const getEntityPath = (entityId: string, entitiesMap: EntitiesMap): string => {
+  const entity = entitiesMap.get(entityId)
   if (!entity) return ''
 
   const name = entity.name || ''
@@ -39,7 +34,7 @@ export const getEntityPath = (
   if (!parentId) return name
 
   // If has parent, get parent path (parents are always folders)
-  const parentPath = getEntityPath(parentId, true, foldersMap, tasksMap)
+  const parentPath = getEntityPath(parentId, entitiesMap)
 
   // Combine paths with " / " separator
   return parentPath ? `${parentPath} / ${name}` : name

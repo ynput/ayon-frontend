@@ -237,6 +237,7 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
               hasMultipleValues={false}
               isOpen={false}
               isItem
+              isMultiSelect={isMultiSelect}
               isSelected={isSelected}
               {...pt?.template}
               className={clsx('enum-dropdown-item', pt?.template?.className)}
@@ -273,7 +274,7 @@ interface EnumTemplateProps extends React.HTMLAttributes<HTMLSpanElement> {
   selectedOptions: AttributeEnumItem[]
   placeholder?: string
   hasMultipleValues: boolean
-  isMultiSelect?: boolean
+  isMultiSelect: boolean
   isOpen?: boolean
   isItem?: boolean
   isSelected?: boolean
@@ -347,7 +348,7 @@ const EnumCellValue = ({
           style={{ rotate: isOpen ? '180deg' : '0' }}
         />
       )}
-      {isItem && isSelected && (
+      {isItem && isSelected && isMultiSelect && (
         <Icon
           icon="close"
           style={{ marginLeft: 'auto', marginRight: 4 }}

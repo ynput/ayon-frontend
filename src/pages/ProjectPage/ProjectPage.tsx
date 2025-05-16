@@ -9,6 +9,7 @@ import LoadingPage from '../LoadingPage'
 import ProjectAddon from '../ProjectAddon'
 import WorkfilesPage from '../WorkfilesPage'
 import TasksProgressPage from '../TasksProgressPage'
+import ProjectListsPage from '../ProjectListsPage'
 
 import { selectProject } from '@state/project'
 import { useGetProjectQuery } from '@queries/project/enhancedProject'
@@ -16,9 +17,9 @@ import { useGetProjectAddonsQuery } from '@shared/api'
 import { TabPanel, TabView } from 'primereact/tabview'
 import AppNavLinks from '@containers/header/AppNavLinks'
 import { SlicerProvider } from '@context/SlicerContext'
-import useLoadRemoteProjectPages, { Fallbacks } from '../../remote/useLoadRemotePages'
+import { EntityListsProvider } from '@pages/ProjectListsPage/context/EntityListsContext'
+import useLoadRemoteProjectPages from '../../remote/useLoadRemotePages'
 import { Navigate } from 'react-router-dom'
-// import ReviewAddonSpec from '@pages/AddonPages/ReviewAddon'
 import ProjectPubSub from './ProjectPubSub'
 
 const ProjectContextInfo = () => {
@@ -112,6 +113,12 @@ const ProjectPage = () => {
         uriSync: true,
       },
       {
+        name: 'Lists',
+        path: `/projects/${projectName}/lists`,
+        module: 'lists',
+        uriSync: true,
+      },
+      {
         name: 'Workfiles',
         path: `/projects/${projectName}/workfiles`,
         module: 'workfiles',
@@ -169,6 +176,9 @@ const ProjectPage = () => {
     if (module === 'browser') {
       return <BrowserPage />
     }
+    if (module === 'lists') {
+      return <ProjectListsPage />
+    }
     if (module === 'workfiles') {
       return <WorkfilesPage />
     }
@@ -214,7 +224,9 @@ const ProjectPage = () => {
       </Dialog>
       {/* @ts-expect-error - AppNavLinks is jsx */}
       <AppNavLinks links={links} />
-      <SlicerProvider>{child}</SlicerProvider>
+      <EntityListsProvider {...{ projectName, entityTypes: ['folder', 'task', 'version'] }}>
+        <SlicerProvider>{child}</SlicerProvider>
+      </EntityListsProvider>
       <ProjectPubSub projectName={projectName} onReload={loadProjectData} />
     </>
   )

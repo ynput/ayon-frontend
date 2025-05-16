@@ -8,13 +8,15 @@ import React, {
   ReactNode,
 } from 'react'
 import { CellId } from '../utils/cellUtils'
-import useUpdateOverview, {
+import useUpdateTableData, {
   InheritFromParent,
   UpdateTableEntities,
-} from '../hooks/useUpdateOverview'
+} from '../hooks/useUpdateTableData'
 import { toast } from 'react-toastify'
-import useValidateUpdates from '../hooks/useValidateUpdates'
-import useHistory from '../hooks/useHistory'
+import useValidateUpdates from '../utils/validateUpdateEntities'
+import useHistory, { UseHistoryReturn } from '../hooks/useHistory'
+import validateUpdateEntities from '../utils/validateUpdateEntities'
+import { useProjectTableContext } from './ProjectTableContext'
 
 export interface CellEditingContextType {
   editingCellId: CellId | null
@@ -23,10 +25,9 @@ export interface CellEditingContextType {
   updateEntities: UpdateTableEntities
   inheritFromParent: InheritFromParent
   // Add history functions to context
+  history: UseHistoryReturn
   undo: () => Promise<void>
   redo: () => Promise<void>
-  canUndo: boolean
-  canRedo: boolean
 }
 
 const CellEditingContext = createContext<CellEditingContextType | undefined>(undefined)
@@ -38,32 +39,35 @@ export const CellEditingProvider: React.FC<{ children: ReactNode }> = ({ childre
   const isEditing = useCallback((id: CellId) => id === editingCellId, [editingCellId])
 
   // Get history functions
-  const { pushHistory, undo: undoHistory, redo: redoHistory, canUndo, canRedo } = useHistory()
+  const history = useHistory()
+  const { pushHistory, undo: undoHistory, redo: redoHistory, canUndo, canRedo } = history
 
-  const { updateEntities: updateOverviewEntities, inheritFromParent } = useUpdateOverview({
+  const { updateEntities: updateOverviewEntities, inheritFromParent } = useUpdateTableData({
     pushHistory,
   })
+  const { attribFields } = useProjectTableContext()
 
-  const validateUpdateEntities = useValidateUpdates()
+  const handleUpdateEntities: UpdateTableEntities = useCallback(
+    async (entities = [], pushToHistory = true) => {
+      try {
+        // validate the entities before updating
+        validateUpdateEntities(entities, attribFields)
 
-  const handleUpdateEntities: UpdateTableEntities = async (entities = [], pushToHistory = true) => {
-    try {
-      // validate the entities before updating
-      validateUpdateEntities(entities)
+        // if validation passes, update the entities
+        return await updateOverviewEntities(entities, pushToHistory)
+      } catch (error: any) {
+        // if validation fails, show a toast and return
+        toast.error(error.message)
 
-      // if validation passes, update the entities
-      return await updateOverviewEntities(entities, pushToHistory)
-    } catch (error: any) {
-      // if validation fails, show a toast and return
-      toast.error(error.message)
-
-      return Promise.reject(error)
-    }
-  }
+        return Promise.reject(error)
+      }
+    },
+    [updateOverviewEntities, attribFields],
+  )
 
   // Handle undo
   const handleUndo = async () => {
-    const [entitiesToUndo, entitiesToInherit] = undoHistory() || []
+    const [entitiesToUndo, entitiesToInherit, callbacks] = undoHistory() || []
 
     if (entitiesToUndo && entitiesToUndo.length > 0) {
       try {
@@ -79,11 +83,22 @@ export const CellEditingProvider: React.FC<{ children: ReactNode }> = ({ childre
         toast.error('Failed to inherit changes')
       }
     }
+    // Execute custom callbacks if any
+    if (callbacks && callbacks.length > 0) {
+      callbacks.forEach((callback) => {
+        try {
+          callback()
+        } catch (error) {
+          toast.error('Failed to execute custom undo action')
+        }
+      })
+    }
   }
 
   // Handle redo
   const handleRedo = async () => {
-    const [entitiesToRedo, entitiesToInherit] = redoHistory() || []
+    const [entitiesToRedo, entitiesToInherit, callbacks] = redoHistory() || []
+
     if (entitiesToRedo && entitiesToRedo.length > 0) {
       try {
         await handleUpdateEntities(entitiesToRedo, false)
@@ -98,6 +113,16 @@ export const CellEditingProvider: React.FC<{ children: ReactNode }> = ({ childre
         toast.error('Failed to inherit changes')
       }
     }
+    // Execute custom callbacks if any
+    if (callbacks && callbacks.length > 0) {
+      callbacks.forEach((callback) => {
+        try {
+          callback()
+        } catch (error) {
+          toast.error('Failed to execute custom redo action')
+        }
+      })
+    }
   }
 
   const value = useMemo(
@@ -109,8 +134,7 @@ export const CellEditingProvider: React.FC<{ children: ReactNode }> = ({ childre
       inheritFromParent,
       undo: handleUndo,
       redo: handleRedo,
-      canUndo,
-      canRedo,
+      history,
     }),
     [
       editingCellId,
@@ -119,8 +143,7 @@ export const CellEditingProvider: React.FC<{ children: ReactNode }> = ({ childre
       inheritFromParent,
       handleUndo,
       handleRedo,
-      canUndo,
-      canRedo,
+      history,
     ],
   )
 

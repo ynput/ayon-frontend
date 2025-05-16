@@ -9,25 +9,27 @@ import {
   filterFns,
   flexRender,
   Row,
-  OnChangeFn,
   getSortedRowModel,
   Cell,
   Column,
-  functionalUpdate,
-  ColumnSizingState,
   Table,
   Header,
   HeaderGroup,
+  RowData,
 } from '@tanstack/react-table'
 
 // Utility imports
 import clsx from 'clsx'
 
 // Type imports
-import type { FolderNodeMap, TableRow, TaskNodeMap } from './types/table'
+import type { TableRow } from './types/table'
 
 // Component imports
-import ProjectTreeTableColumns from './ProjectTreeTableColumns'
+import buildTreeTableColumns, {
+  BuildTreeTableColumnsProps,
+  DefaultColumns,
+  TreeTableExtraColumn,
+} from './buildTreeTableColumns'
 import * as Styled from './ProjectTreeTable.styled'
 import HeaderActionButton from './components/HeaderActionButton'
 import EmptyPlaceholder from '../../components/EmptyPlaceholder'
@@ -37,12 +39,11 @@ import { useCellEditing } from './context/CellEditingContext'
 import { ROW_SELECTION_COLUMN_ID, useSelectionCellsContext } from './context/SelectionCellsContext'
 import { ClipboardProvider } from './context/ClipboardContext'
 import { useSelectedRowsContext } from './context/SelectedRowsContext'
-import { useColumnSettings } from './context/ColumnSettingsContext'
+import { useColumnSettingsContext } from './context/ColumnSettingsContext'
 
 // Hook imports
 import useCustomColumnWidthVars from './hooks/useCustomColumnWidthVars'
 import usePrefetchFolderTasks from './hooks/usePrefetchFolderTasks'
-import { useLocalStorage } from '../../hooks'
 import useCellContextMenu from './hooks/useCellContextMenu'
 import useColumnVirtualization from './hooks/useColumnVirtualization'
 import useKeyboardNavigation from './hooks/useKeyboardNavigation'
@@ -52,8 +53,20 @@ import { getCellId } from './utils/cellUtils'
 import { generateLoadingRows, generateDummyAttributes } from './utils/loadingUtils'
 import { createPortal } from 'react-dom'
 import { Icon } from '@ynput/ayon-react-components'
-import { AttributeEnumItem, AttributeWithPermissions, BuiltInFieldOptions } from './types'
-import { useProjectTableContext } from './context/ProjectTableContext'
+import { AttributeEnumItem, ProjectTableAttribute, BuiltInFieldOptions } from './types'
+import { ToggleExpandAll, useProjectTableContext } from './context/ProjectTableContext'
+import { getReadOnlyLists, getTableFieldOptions } from './utils'
+import { UpdateTableEntities } from './hooks/useUpdateTableData'
+
+declare module '@tanstack/react-table' {
+  interface TableMeta<TData extends RowData> {
+    options?: BuiltInFieldOptions
+    readOnly?: ProjectTreeTableProps['readOnly']
+    projectName?: string
+    updateEntities?: UpdateTableEntities
+    toggleExpandAll?: ToggleExpandAll
+  }
+}
 
 //These are the important styles to make sticky column pinning work!
 //Apply styles like this using your CSS strategy of choice with this kind of logic to head cells, data cells, footer cells, etc.
@@ -70,40 +83,33 @@ const getCommonPinningStyles = (column: Column<TableRow, unknown>): CSSPropertie
   }
 }
 
-interface Props extends React.HTMLAttributes<HTMLDivElement> {
+export interface ProjectTreeTableProps extends React.HTMLAttributes<HTMLDivElement> {
   scope: string
-  options: BuiltInFieldOptions
-  attribs: AttributeWithPermissions[]
   sliceId: string
-  // metadata
   fetchMoreOnBottomReached: (element: HTMLDivElement | null) => void
   onOpenNew?: (type: 'folder' | 'task') => void
-  // pass through props
+  readOnly?: (DefaultColumns | string)[]
+  excludedColumns?: (DefaultColumns | string)[]
+  extraColumns?: TreeTableExtraColumn[]
+  isLoading?: boolean
   pt?: {
     container?: React.HTMLAttributes<HTMLDivElement>
     head?: Partial<TableHeadProps>
   }
 }
 
-// Component to wrap with all providers
-const FlexTableWithProviders = (props: Props) => {
-  return (
-    <ClipboardProvider options={props.options}>
-      <FlexTable {...props} />
-    </ClipboardProvider>
-  )
-}
-
-const FlexTable = ({
+export const ProjectTreeTable = ({
   scope,
-  attribs,
-  options,
   sliceId,
   fetchMoreOnBottomReached,
   onOpenNew,
+  readOnly,
+  excludedColumns,
+  extraColumns,
+  isLoading: isLoadingProp,
   pt,
   ...props
-}: Props) => {
+}: ProjectTreeTableProps) => {
   const {
     columnVisibility,
     columnVisibilityUpdater,
@@ -111,36 +117,47 @@ const FlexTable = ({
     columnPinningUpdater,
     columnOrder,
     columnOrderUpdater,
-  } = useColumnSettings()
+    columnSizing,
+    columnSizingUpdater,
+  } = useColumnSettingsContext()
 
   const {
+    projectInfo,
     tableData,
-    isLoading,
+    attribFields,
+    entitiesMap,
+    users,
+    isLoading: isLoadingData,
     isInitialized,
     expanded,
+    projectName,
     updateExpanded,
     toggleExpandAll,
-    toggleExpanded,
     sorting,
     updateSorting,
     showHierarchy,
   } = useProjectTableContext()
+
+  const isLoading = isLoadingProp || isLoadingData
+
+  const { statuses = [], folderTypes = [], taskTypes = [], tags = [] } = projectInfo || {}
+  const options: BuiltInFieldOptions = useMemo(
+    () =>
+      getTableFieldOptions({
+        users,
+        statuses,
+        folderTypes,
+        taskTypes,
+        tags,
+      }),
+    [users, statuses, folderTypes, taskTypes],
+  )
 
   //The virtualizer needs to know the scrollable container element
   const tableContainerRef = useRef<HTMLDivElement>(null)
 
   // Selection context
   const { registerGrid } = useSelectionCellsContext()
-
-  // COLUMN SIZING
-  const [columnSizing, setColumnSizing] = useLocalStorage<ColumnSizingState>(
-    `column-widths-${scope}`,
-    {},
-  )
-
-  const updateColumnSizing: OnChangeFn<ColumnSizingState> = (columnSizingUpdater) => {
-    setColumnSizing(functionalUpdate(columnSizingUpdater, columnSizing))
-  }
 
   //a check on mount and after a fetch to see if the table is already scrolled to the bottom and immediately needs to fetch more data
   useEffect(() => {
@@ -153,29 +170,45 @@ const FlexTable = ({
     const tableRowsCount = tableContainerRef.current?.querySelectorAll('tbody tr').length || 0
     const loadingAttrib = generateDummyAttributes()
     const loadingRows = generateLoadingRows(
-      attribs,
+      attribFields,
       showHierarchy && tableData.length > 0 ? Math.min(tableRowsCount, 50) : 50,
     )
     return { loadingAttrib, loadingRows }
-  }, [attribs, tableData, showHierarchy, tableContainerRef.current])
+  }, [attribFields, tableData, showHierarchy, tableContainerRef.current])
 
   const showLoadingRows = !isInitialized || isLoading
 
-  const columns = ProjectTreeTableColumns({
-    tableData: showLoadingRows ? loadingRows : tableData,
-    columnSizing,
-    attribs: isInitialized ? attribs : loadingAttrib,
-    isLoading: !isInitialized,
-    showHierarchy,
-    sliceId,
-    options,
-    toggleExpandAll: (id: string) => toggleExpandAll([id]),
-    toggleExpanded: (id: string) => toggleExpanded(id),
-  })
+  // Format readonly columns and attributes
+  const { readOnlyColumns, readOnlyAttribs } = useMemo(
+    () => getReadOnlyLists(attribFields, readOnly),
+    [attribFields, readOnly],
+  )
+
+  const { updateEntities } = useCellEditing()
+
+  const columnAttribs = useMemo(
+    () => (isInitialized ? attribFields : loadingAttrib),
+    [attribFields, loadingAttrib, isInitialized],
+  )
+  const columns = useMemo(
+    () =>
+      buildTreeTableColumns({
+        attribs: columnAttribs,
+        showHierarchy,
+        options,
+        extraColumns,
+        excluded: excludedColumns,
+      }),
+    [columnAttribs, showHierarchy, options, extraColumns, excludedColumns],
+  )
 
   const table = useReactTable({
     data: showLoadingRows ? loadingRows : tableData,
     columns,
+    defaultColumn: {
+      minSize: 50,
+      size: 150,
+    },
     enableRowSelection: true, //enable row selection for all rows
     getRowId: (row) => row.id,
     enableSubRowSelection: false, //disable sub row selection
@@ -192,7 +225,7 @@ const FlexTable = ({
     onSortingChange: updateSorting,
     columnResizeMode: 'onChange',
     onColumnPinningChange: columnPinningUpdater,
-    onColumnSizingChange: updateColumnSizing,
+    onColumnSizingChange: columnSizingUpdater,
     onColumnVisibilityChange: columnVisibilityUpdater,
     onColumnOrderChange: columnOrderUpdater,
     // @ts-ignore
@@ -209,6 +242,13 @@ const FlexTable = ({
       columnOrder,
     },
     enableSorting: true,
+    meta: {
+      projectName,
+      options,
+      readOnly: readOnlyColumns,
+      updateEntities,
+      toggleExpandAll,
+    },
   })
 
   const { rows } = table.getRowModel()
@@ -237,51 +277,62 @@ const FlexTable = ({
   })
 
   const columnSizeVars = useCustomColumnWidthVars(table, columnSizing)
-  const readOnlyColumns = useMemo(
-    () => attribs.filter((attrib) => attrib.readOnly).map((attrib) => 'attrib_' + attrib.name),
-    [attribs],
-  )
+
+  const attribByField = useMemo(() => {
+    return attribFields.reduce((acc: Record<string, AttributeEnumItem[]>, attrib) => {
+      if (attrib.data?.enum?.length) {
+        acc[attrib.name] = attrib.data?.enum
+      }
+      return acc
+    }, {})
+  }, [attribFields])
 
   return (
-    <Styled.TableWrapper {...props}>
-      <Styled.TableContainer
-        ref={tableContainerRef}
-        style={{ height: '100%', padding: 0 }}
-        onScroll={(e) => fetchMoreOnBottomReached(e.currentTarget)}
-        {...pt?.container}
-        className={clsx('table-container', pt?.container?.className)}
-      >
-        <table
-          style={{
-            display: 'grid',
-            borderCollapse: 'collapse',
-            userSelect: 'none',
-            ...columnSizeVars,
-            width: table.getTotalSize(),
-          }}
+    <ClipboardProvider
+      entitiesMap={entitiesMap}
+      columnEnums={{ ...options, ...attribByField }}
+      columnReadOnly={readOnlyAttribs}
+    >
+      <Styled.TableWrapper {...props}>
+        <Styled.TableContainer
+          ref={tableContainerRef}
+          style={{ height: '100%', padding: 0 }}
+          onScroll={(e) => fetchMoreOnBottomReached(e.currentTarget)}
+          {...pt?.container}
+          className={clsx('table-container', pt?.container?.className)}
         >
-          <TableHead
-            columnVirtualizer={columnVirtualizer}
-            table={table}
-            virtualPaddingLeft={virtualPaddingLeft}
-            virtualPaddingRight={virtualPaddingRight}
-            isLoading={isLoading}
-            readOnlyColumns={readOnlyColumns}
-            {...pt?.head}
-          />
-          <TableBody
-            columnVirtualizer={columnVirtualizer}
-            table={table}
-            tableContainerRef={tableContainerRef}
-            virtualPaddingLeft={virtualPaddingLeft}
-            virtualPaddingRight={virtualPaddingRight}
-            showHierarchy={showHierarchy}
-            attribs={attribs}
-            onOpenNew={onOpenNew}
-          />
-        </table>
-      </Styled.TableContainer>
-    </Styled.TableWrapper>
+          <table
+            style={{
+              display: 'grid',
+              borderCollapse: 'collapse',
+              userSelect: 'none',
+              ...columnSizeVars,
+              width: table.getTotalSize(),
+            }}
+          >
+            <TableHead
+              columnVirtualizer={columnVirtualizer}
+              table={table}
+              virtualPaddingLeft={virtualPaddingLeft}
+              virtualPaddingRight={virtualPaddingRight}
+              isLoading={isLoading}
+              readOnlyColumns={readOnlyColumns}
+              {...pt?.head}
+            />
+            <TableBody
+              columnVirtualizer={columnVirtualizer}
+              table={table}
+              tableContainerRef={tableContainerRef}
+              virtualPaddingLeft={virtualPaddingLeft}
+              virtualPaddingRight={virtualPaddingRight}
+              showHierarchy={showHierarchy}
+              attribs={attribFields}
+              onOpenNew={onOpenNew}
+            />
+          </table>
+        </Styled.TableContainer>
+      </Styled.TableWrapper>
+    </ClipboardProvider>
   )
 }
 
@@ -346,12 +397,18 @@ const TableHeadRow = ({
       ) : null}
       {virtualColumns.map((virtualColumn) => {
         const header = headerGroup.headers[virtualColumn.index]
+
         return (
           <TableHeadCell
             key={header.id}
             header={header}
             isLoading={isLoading}
             isReadOnly={readOnlyColumns?.includes(header.id)}
+            canSort={header.column.getCanSort()}
+            canFilter={header.column.getCanFilter()}
+            canHide={header.column.getCanHide()}
+            canPin={header.column.getCanPin()}
+            canResize={header.column.getCanResize()}
           />
         )
       })}
@@ -366,18 +423,30 @@ const TableHeadRow = ({
 interface TableHeadCellProps {
   header: Header<TableRow, unknown>
   isLoading: boolean
+  canSort?: boolean
+  canFilter?: boolean
+  canHide?: boolean
+  canPin?: boolean
+  canResize?: boolean
   isReadOnly?: boolean
 }
 
-const TableHeadCell = ({ header, isLoading, isReadOnly }: TableHeadCellProps) => {
+const TableHeadCell = ({
+  header,
+  isLoading,
+  canFilter,
+  canHide,
+  canSort,
+  canPin,
+  canResize,
+  isReadOnly,
+}: TableHeadCellProps) => {
   const { column } = header
-  const isRowSelectionColumn = column.id === ROW_SELECTION_COLUMN_ID
 
   return (
     <Styled.HeaderCell
       className={clsx(header.id, 'shimmer-dark', {
         loading: isLoading,
-        large: column.id === 'folderType',
         'last-pinned-left': column.getIsPinned() === 'left' && column.getIsLastColumn('left'),
       })}
       key={header.id}
@@ -387,11 +456,7 @@ const TableHeadCell = ({ header, isLoading, isReadOnly }: TableHeadCellProps) =>
       }}
     >
       {header.isPlaceholder ? null : (
-        <Styled.TableCellContent
-          className={clsx('bold', {
-            large: column.id === 'folderType',
-          })}
-        >
+        <Styled.TableCellContent className={clsx('bold')}>
           {flexRender(column.columnDef.header, header.getContext())}
           {isReadOnly && (
             <Icon icon="lock" data-tooltip={'You only have permission to read this column.'} />
@@ -399,34 +464,41 @@ const TableHeadCell = ({ header, isLoading, isReadOnly }: TableHeadCellProps) =>
 
           <Styled.HeaderButtons className="actions">
             {/* COLUMN HIDING */}
-            <HeaderActionButton
-              icon="visibility_off"
-              selected={!column.getIsVisible()}
-              onClick={column.getToggleVisibilityHandler()}
-            />
-            {/* COLUMN SORTING */}
-            <HeaderActionButton
-              icon="push_pin"
-              selected={header.column.getIsPinned() === 'left'}
-              onClick={() => {
-                if (header.column.getIsPinned() === 'left') {
-                  header.column.pin(false)
-                } else {
-                  header.column.pin('left')
-                }
-              }}
-            />
+            {canHide && (
+              <HeaderActionButton
+                icon="visibility_off"
+                selected={!column.getIsVisible()}
+                onClick={column.getToggleVisibilityHandler()}
+              />
+            )}
             {/* COLUMN PINNING */}
-            <HeaderActionButton
-              icon={'sort'}
-              style={{
-                transform: (column.getIsSorted() as string) === 'asc' ? 'scaleY(-1)' : undefined,
-              }}
-              onClick={column.getToggleSortingHandler()}
-              selected={!!column.getIsSorted()}
-            />
+            {canPin && (
+              <HeaderActionButton
+                icon="push_pin"
+                selected={header.column.getIsPinned() === 'left'}
+                onClick={() => {
+                  if (header.column.getIsPinned() === 'left') {
+                    header.column.pin(false)
+                  } else {
+                    header.column.pin('left')
+                  }
+                }}
+              />
+            )}
+
+            {/* COLUMN SORTING */}
+            {canSort && (
+              <HeaderActionButton
+                icon={'sort'}
+                style={{
+                  transform: (column.getIsSorted() as string) === 'asc' ? 'scaleY(-1)' : undefined,
+                }}
+                onClick={column.getToggleSortingHandler()}
+                selected={!!column.getIsSorted()}
+              />
+            )}
           </Styled.HeaderButtons>
-          {!isRowSelectionColumn && (
+          {canResize && (
             <Styled.ResizedHandler
               {...{
                 onDoubleClick: () => column.resetSize(),
@@ -451,7 +523,7 @@ interface TableBodyProps {
   showHierarchy: boolean
   virtualPaddingLeft: number | undefined
   virtualPaddingRight: number | undefined
-  attribs: AttributeWithPermissions[]
+  attribs: ProjectTableAttribute[]
   onOpenNew?: (type: 'folder' | 'task') => void
 }
 
@@ -517,10 +589,7 @@ const TableBody = ({
     </tbody>
   ) : (
     tableContainerRef.current &&
-      createPortal(
-        <EmptyPlaceholder message="No folders or tasks found" />,
-        tableContainerRef.current,
-      )
+      createPortal(<EmptyPlaceholder message="No items found" />, tableContainerRef.current)
   )
 }
 
@@ -619,7 +688,6 @@ const TableCell = ({ cell, rowId, cellId, className, showHierarchy, ...props }: 
       $isLastPinned={isLastLeftPinnedColumn} // is this column the last pinned column? Custom styling for borders.
       className={clsx(
         cell.column.id,
-        cell.column.id === 'folderType' ? 'large' : '',
         {
           selected: isCellSelected(cellId),
           focused: isCellFocused(cellId),
@@ -684,5 +752,3 @@ const TableCell = ({ cell, rowId, cellId, className, showHierarchy, ...props }: 
 }
 
 const TableCellMemo = memo(TableCell)
-
-export { FlexTableWithProviders as ProjectTreeTable }
