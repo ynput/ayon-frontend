@@ -1,4 +1,3 @@
-import { useRemoteModules } from '@shared/context/RemoteModulesContext'
 import { loadRemote } from '@module-federation/enhanced/runtime'
 import { useEffect, useRef, useState } from 'react'
 import semver from 'semver'
@@ -40,7 +39,7 @@ export const useLoadModules = <T extends any[]>(
   const [results, setResults] = useState<ModuleResult<T[number]>[]>(() =>
     initializeResults(moduleSpecs),
   )
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(modules.length > 0 && !skip)
 
   // Reset and reinitialize when moduleSpecs change
   useEffect(() => {
@@ -72,7 +71,10 @@ export const useLoadModules = <T extends any[]>(
 
   // Load modules when remotes are initialized
   useEffect(() => {
-    if (skip) return
+    if (skip) {
+      setIsLoading(false)
+      return
+    }
 
     console.log('loading modules')
 
@@ -127,6 +129,11 @@ export const useLoadModules = <T extends any[]>(
 
       promises.push(loadModule(remote, module, addon, fallback, minVersion))
     })
+
+    if (!promises.length) {
+      setIsLoading(false)
+      return
+    }
 
     // Wait for all promises to resolve
     setIsLoading(true)

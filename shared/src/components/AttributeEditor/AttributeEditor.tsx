@@ -215,7 +215,7 @@ export const AttributeEditor: FC<AttributeEditorProps> = ({
   if (formData) {
     if (isNew) {
       if (existingNames.includes(formData.name)) internalError = 'This attribute already exists'
-      else if (!formData.name.match('^[a-zA-Z_]{2,20}$')) internalError = 'Invalid attribute name'
+      else if (!formData.name.match('^[a-zA-Z_]{2,64}$')) error = 'Invalid attribute name'
     } // name validation
   }
 

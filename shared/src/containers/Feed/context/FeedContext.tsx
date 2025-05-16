@@ -120,9 +120,9 @@ export const FeedProvider = ({ children, ...props }: FeedContextProps) => {
   })
 
   const [refTooltip, setRefTooltip] = useState<RefTooltip | null>(null)
-  const skip = !props.projectName || !refTooltip?.id
+  const skip = !props.projectName || !refTooltip?.id || refTooltip.type === 'user'
   const { data: entityTooltipData, isFetching: isFetchingTooltip } = useGetEntityTooltipQuery(
-    { entityType: props.entityType, entityId: refTooltip?.id, projectName: props.projectName },
+    { entityType: refTooltip?.type, entityId: refTooltip?.id, projectName: props.projectName },
     { skip: skip },
   )
 
