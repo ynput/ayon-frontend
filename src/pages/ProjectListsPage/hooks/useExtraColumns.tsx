@@ -1,10 +1,11 @@
 import { getValueIdType, TreeTableExtraColumn, TreeTableSubType } from '@shared/containers'
-import { CellWidget } from '@shared/containers/ProjectTreeTable/widgets'
+import { CellWidget } from '@shared/containers/ProjectTreeTable'
 import clsx from 'clsx'
 import { useMemo } from 'react'
 import { ListEntityType } from '../components/NewListDialog/NewListDialog'
 import { useListsAttributesContext } from '../context/ListsAttributesContext'
 import { useLoadModule } from '@shared/hooks'
+import PowerpackButton from '@components/Powerpack/PowerpackButton'
 
 const typeColumns: Record<
   TreeTableSubType,
@@ -45,14 +46,20 @@ const useExtraColumns = ({ entityType }: useExtraColumnsProps) => {
     addon: 'powerpack',
     remote: 'slicer',
     module: 'createAttributeColumns',
-    fallback: (_a: any[]) => ({
-      columns: [],
+    fallback: (a: any[], _w: any) => ({
+      columns: a.map((a) => ({
+        column: {
+          id: a.name,
+          header: a.name,
+          cell: () => <PowerpackButton label="Custom attribute" feature="listAttributes" />,
+        },
+      })),
       settings: [],
     }),
   })
 
   const { columns: attributeColumns, settings: attributeSettings } = useMemo(
-    () => createAttributeColumns(listAttributes),
+    () => createAttributeColumns(listAttributes, CellWidget),
     [listAttributes],
   )
 
