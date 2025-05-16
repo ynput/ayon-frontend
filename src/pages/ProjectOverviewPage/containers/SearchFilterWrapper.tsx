@@ -81,14 +81,25 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
     )
   }, [_filters, setFilters])
 
+  const validateFilters = (filters: Filter[], callback: (f: Filter[]) => void) => {
+    // if a filter is a date then check we have power features
+    const invalidFilters = filters.filter((f) => f.type === 'datetime' && !power)
+    const validFilters = filters.filter((f) => f.type !== 'datetime' || power)
+    if (invalidFilters.length) {
+      setPowerpackDialog('advancedFilters')
+    }
+
+    callback(validFilters)
+  }
+
   const { dropdown, searchBar, ...ptRest } = pt || {}
 
   return (
     <SearchFilter
       options={options}
       filters={filters}
-      onChange={setFilters}
-      onFinish={(v) => onChange(v)} // when changes are applied
+      onChange={(v) => validateFilters(v, setFilters)} // when filters are changed
+      onFinish={(v) => validateFilters(v, onChange)} // when changes are applied
       enableMultipleSameFilters={false}
       enableGlobalSearch={true}
       globalSearchConfig={{

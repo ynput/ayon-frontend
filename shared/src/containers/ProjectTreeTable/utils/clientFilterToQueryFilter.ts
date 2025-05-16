@@ -1,5 +1,6 @@
 import { FILTER_SEPARATOR, getFilterFromId } from '@ynput/ayon-react-components'
 import { QueryCondition, QueryFilter } from '../types/operations'
+const NO_DATE = 'no-date'
 
 // New type that cherry picks only the needed fields from Filter
 export type FilterForQuery = {
@@ -11,7 +12,6 @@ export type FilterForQuery = {
   operator?: string
 }
 
-const NO_DATE = 'no_date'
 export const clientFilterToQueryFilter = (filters: FilterForQuery[]): QueryFilter => {
   // If there are no filters, return an empty filter
   if (!filters || filters.length === 0) {
