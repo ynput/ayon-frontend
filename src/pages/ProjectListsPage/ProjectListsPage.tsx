@@ -43,7 +43,7 @@ const ProjectListsWithOuterProviders: FC = () => {
   const projectName = useAppSelector((state) => state.project.name) || ''
   return (
     <ProjectDataProvider projectName={projectName}>
-      <ListsDataProvider>
+      <ListsDataProvider entityListTypes={['generic']}>
         <ListsProvider>
           <ListItemsDataProvider>
             <ListsAttributesProvider>

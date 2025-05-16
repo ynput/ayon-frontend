@@ -26,10 +26,11 @@ const ListsDataContext = createContext<ListsDataContextValue | undefined>(undefi
 
 interface ListsDataProviderProps {
   children: ReactNode
+  entityListTypes?: string[]
 }
 
 // fetch all lists and provide methods to update the lists
-export const ListsDataProvider = ({ children }: ListsDataProviderProps) => {
+export const ListsDataProvider = ({ children, entityListTypes }: ListsDataProviderProps) => {
   const { projectName, isInitialized, isLoading: isLoadingProject } = useProjectDataContext()
 
   const [pageConfig, updatePageConfig, { isSuccess: columnsConfigReady }] = useUsersPageConfig({
@@ -55,6 +56,7 @@ export const ListsDataProvider = ({ children }: ListsDataProviderProps) => {
   } = useGetListsData({
     projectName,
     filters: listsFilters,
+    entityListTypes,
   })
 
   // convert to a Map for easier access

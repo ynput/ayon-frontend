@@ -6,6 +6,7 @@ interface UseGetListsDataProps {
   projectName: string
   filters: FilterForQuery[]
   skip?: boolean
+  entityListTypes?: string[] // filter by entityListType
 }
 
 export interface UseGetListsDataReturn {
@@ -20,9 +21,21 @@ const useGetListsData = ({
   projectName,
   filters,
   skip,
+  entityListTypes,
 }: UseGetListsDataProps): UseGetListsDataReturn => {
-  const queryFilter = clientFilterToQueryFilter(filters)
-  const queryFilterString = filters.length ? JSON.stringify(queryFilter) : ''
+  const entityListTypeFilter: FilterForQuery[] = entityListTypes?.length
+    ? [
+        {
+          id: 'entityListType',
+          operator: 'OR',
+          values: entityListTypes.map((type) => ({ id: type })) || [],
+        },
+      ]
+    : []
+
+  const queryFilters = [...filters, ...entityListTypeFilter]
+  const queryFilter = clientFilterToQueryFilter(queryFilters)
+  const queryFilterString = queryFilters.length ? JSON.stringify(queryFilter) : ''
 
   const {
     data: listsInfiniteData,
