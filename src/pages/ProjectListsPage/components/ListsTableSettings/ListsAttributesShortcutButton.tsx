@@ -24,7 +24,11 @@ const ListsAttributesShortcutButton: FC<ListsAttributesShortcutButtonProps> = ({
 
   return (
     <ButtonPosition>
-      <Button icon={'add'} onClick={() => togglePanel('list_attributes')} />
+      <Button
+        icon={'add'}
+        data-tooltip="Add list attribute"
+        onClick={() => togglePanel('list_attributes')}
+      />
     </ButtonPosition>
   )
 }
