@@ -2255,7 +2255,6 @@ export const GetListsDocument = `
           active
           createdAt
           updatedAt
-          active
           owner
           count
         }

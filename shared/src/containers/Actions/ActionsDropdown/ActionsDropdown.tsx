@@ -101,9 +101,7 @@ export const ActionsDropdown = ({
       value={[]}
       placeholder=""
       itemTemplate={(option) => <ActionsDropdownItem {...option} onConfig={handleConfigClick} />}
-      valueTemplate={() => (
-        <DefaultValueTemplate placeholder="" value={[]} dropIcon={'manufacturing'} />
-      )}
+      valueTemplate={() => <DefaultValueTemplate placeholder="" value={[]} dropIcon={'category'} />}
       onChange={(v) => onAction(v[0])}
       // @ts-expect-error
       buttonProps={{ ['data-tooltip']: 'Actions', ['data-tooltip-delay']: 0 }}

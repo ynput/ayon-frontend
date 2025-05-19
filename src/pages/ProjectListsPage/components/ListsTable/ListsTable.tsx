@@ -24,6 +24,7 @@ const ListsTable: FC<ListsTableProps> = ({ isReview }) => {
   } = useListsContext()
   const { listsTableData, isLoadingAll, isError } = useListsDataContext()
   const [expanded, setExpanded] = useState<ExpandedState>({})
+  const [clientSearch, setClientSearch] = useState<null | string>(null)
 
   // Define stable event handlers using useCallback
   const handleValueDoubleClick = useCallback(
@@ -85,9 +86,14 @@ const ListsTable: FC<ListsTableProps> = ({ isReview }) => {
     <>
       <SimpleTableProvider {...{ expanded, setExpanded, rowSelection, setRowSelection }}>
         <Container>
-          <ListsTableHeader title={isReview ? 'Review sessions' : undefined} />
+          <ListsTableHeader
+            title={isReview ? 'Review sessions' : undefined}
+            search={clientSearch}
+            onSearch={setClientSearch}
+          />
           <SimpleTable
             data={listsTableData}
+            globalFilter={clientSearch ?? undefined}
             isExpandable={listsTableData.some((row) => row.subRows.length > 0)}
             isLoading={isLoadingAll}
             error={isError ? 'Error loading lists' : undefined}

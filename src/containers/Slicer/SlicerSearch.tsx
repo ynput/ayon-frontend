@@ -51,9 +51,10 @@ const SlicerSearch = ({ value, onChange }: Props) => {
         />
       )}
       <HeaderButton
-        icon={isOpen ? 'close' : 'filter_list'}
+        icon={isOpen ? 'close' : 'search'}
         onClick={onToggle}
         className={clsx({ open: isOpen })}
+        data-tooltip={isOpen ? 'Close search' : 'Search folders'}
       />
     </StyledContainer>
   )

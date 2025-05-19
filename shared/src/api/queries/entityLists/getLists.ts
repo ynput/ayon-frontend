@@ -23,7 +23,8 @@ import {
 
 // GRAPHQL API (getLists and getListItems)
 // Define the LISTS_PER_PAGE constant for pagination
-export const LISTS_PER_PAGE = 100
+export const LISTS_PER_PAGE = 500
+export const LIST_ITEMS_PER_PAGE = 100
 
 type Definitions = DefinitionsFromApi<typeof gqlApi>
 type TagTypes = TagTypesFromApi<typeof gqlApi>
@@ -192,20 +193,20 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
           // Build the query parameters for GetLists
           const queryParams: GetListItemsQueryVariables = {
             ...rest,
-            first: LISTS_PER_PAGE,
+            first: LIST_ITEMS_PER_PAGE,
             after: cursor || undefined,
           }
 
           // Add cursor-based pagination
           queryParams.after = cursor || undefined
-          queryParams.first = LISTS_PER_PAGE
+          queryParams.first = LIST_ITEMS_PER_PAGE
 
           if (sortBy) {
             queryParams.sortBy = sortBy
             if (desc) {
               queryParams.before = cursor || undefined
               queryParams.after = undefined
-              queryParams.last = LISTS_PER_PAGE
+              queryParams.last = LIST_ITEMS_PER_PAGE
               queryParams.first = undefined
             }
           }
