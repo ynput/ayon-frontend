@@ -593,46 +593,38 @@ const Products = () => {
   const {
     buildAddToListMenu,
     buildListMenuItem,
-    products: productsLists,
+    newListMenuItem,
     versions: versionsLists,
   } = useEntityListsContext()
 
-  const ctxMenuItems = (id, selectedProducts, selectedVersions) => [
-    {
-      label: 'Open in viewer',
-      command: () => handleOpenViewer(id),
-      icon: 'play_circle',
-      shortcut: 'Spacebar',
-    },
-    // buildAddToListMenu(
-    //   productsLists.data.map((list) =>
-    //     buildListMenuItem(
-    //       list,
-    //       selectedProducts.map((id) => ({ entityId: id, entityType: 'product' })),
-    //     ),
-    //   ),
-    //   { label: 'Add to list (product)' },
-    // ),
-    buildAddToListMenu(
-      versionsLists.data.map((list) =>
-        buildListMenuItem(
-          list,
-          selectedVersions.map((id) => ({ entityId: id, entityType: 'version' })),
-        ),
+  const ctxMenuItems = (id, selectedProducts, selectedVersions) => {
+    const selectedEntities = selectedVersions.map((id) => ({ entityId: id, entityType: 'version' }))
+    return [
+      {
+        label: 'Open in viewer',
+        command: () => handleOpenViewer(id),
+        icon: 'play_circle',
+        shortcut: 'Spacebar',
+      },
+      buildAddToListMenu(
+        [
+          ...versionsLists.data.map((list) => buildListMenuItem(list, selectedEntities)),
+          newListMenuItem('version', selectedEntities),
+        ],
+        { label: 'Add to list (version)' },
       ),
-      { label: 'Add to list (version)' },
-    ),
-    {
-      label: 'Product detail',
-      command: () => setShowDetail('product'),
-      icon: 'database',
-    },
-    {
-      label: 'Version detail',
-      command: () => setShowDetail('version'),
-      icon: 'database',
-    },
-  ]
+      {
+        label: 'Product detail',
+        command: () => setShowDetail('product'),
+        icon: 'database',
+      },
+      {
+        label: 'Version detail',
+        command: () => setShowDetail('version'),
+        icon: 'database',
+      },
+    ]
+  }
 
   const [ctxMenuShow] = useCreateContextMenu([])
 

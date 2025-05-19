@@ -1,14 +1,26 @@
-import { createContext, useContext, ReactNode } from 'react'
+import { createContext, useContext, ReactNode, useCallback, useMemo, useState } from 'react'
 import useGetListsData, { UseGetListsDataReturn } from '../hooks/useGetListsData'
 import { ListEntityType, listEntityTypes } from '../components/NewListDialog/NewListDialog'
 import { toast } from 'react-toastify'
 import { getEntityTypeIcon } from '@shared/util'
 import { ContextMenuItemConstructor } from '@shared/containers/ProjectTreeTable/hooks/useCellContextMenu'
-import { useUpdateEntityListItemsMutation, EntityList } from '@shared/api'
+import {
+  useUpdateEntityListItemsMutation,
+  EntityList,
+  useCreateEntityListMutation,
+} from '@shared/api'
+import { upperFirst } from 'lodash'
+import { useSearchParams } from 'react-router-dom'
 
 interface EntityListsContextProps {
   entityTypes: ListEntityType[]
   projectName: string
+}
+
+// Define a new interface for the newListData state
+interface NewListData {
+  entityType: ListEntityType
+  selectedEntities: { entityId: string; entityType: string | undefined }[]
 }
 
 type ListSubMenuItem = {
@@ -43,6 +55,21 @@ export interface EntityListsContextValue {
     icon: string
     items: ListSubMenuItem[]
   }
+  newListMenuItem: (
+    entityType: ListEntityType,
+    selected: { entityId: string; entityType: string | undefined }[],
+  ) => ListSubMenuItem
+  // Update the type of newListData
+  newListData: NewListData | null
+  // Update the signature of openCreateNewList
+  openCreateNewList: (
+    entityType: ListEntityType,
+    selectedEntities: { entityId: string; entityType: string | undefined }[],
+  ) => void
+  closeCreateNewList: () => void
+  // Remove entities parameter as it will be stored in newListData
+  createNewList: (label: string) => Promise<void>
+  newListErrorMessage?: string
 }
 
 const EntityListsContext = createContext<EntityListsContextValue | undefined>(undefined)
@@ -60,6 +87,8 @@ export const EntityListsProvider = ({
   entityTypes = [],
   projectName,
 }: EntityListsProviderProps) => {
+  const [, setSearchParams] = useSearchParams()
+
   // FOLDERS
   const folders = useGetListsData({
     projectName,
@@ -89,68 +118,151 @@ export const EntityListsProvider = ({
 
   const [updateEntityListItems] = useUpdateEntityListItemsMutation()
 
-  const addToList: EntityListsContextValue['addToList'] = async (listId, entityType, entities) => {
-    // check the entity type is valid
-    if (!listEntityTypes.includes(entityType as ListEntityType)) {
-      toast.error('Invalid entity type')
-      return Promise.reject(new Error('Invalid entity type'))
-    }
+  // add an item to a list
+  const addToList: EntityListsContextValue['addToList'] = useCallback(
+    async (listId, entityType, entities) => {
+      // check the entity type is valid
+      if (!listEntityTypes.includes(entityType as ListEntityType)) {
+        toast.error('Invalid entity type')
+        return Promise.reject(new Error('Invalid entity type'))
+      }
 
-    // filter out entities that do not match entityType
-    const filteredEntities = entities.filter((entity) => entity.entityType === entityType)
+      // filter out entities that do not match entityType
+      const filteredEntities = entities.filter((entity) => entity.entityType === entityType)
 
-    if (filteredEntities.length === 0) {
-      toast.error('No entities to add')
-      return Promise.reject(new Error('No entities to add'))
-    }
+      if (filteredEntities.length === 0) {
+        toast.error('No entities to add')
+        return Promise.reject(new Error('No entities to add'))
+      }
 
-    const entitiesToAdd = filteredEntities.map((entity) => ({ entityId: entity.entityId }))
+      const entitiesToAdd = filteredEntities.map((entity) => ({ entityId: entity.entityId }))
 
-    try {
-      await updateEntityListItems({
-        listId,
-        projectName,
-        entityListMultiPatchModel: {
-          items: entitiesToAdd,
-          mode: 'merge',
-        },
-      })
+      try {
+        await updateEntityListItems({
+          listId,
+          projectName,
+          entityListMultiPatchModel: {
+            items: entitiesToAdd,
+            mode: 'merge',
+          },
+        })
 
-      toast.success(`Item${entitiesToAdd.length > 1 ? 's' : ''} added to list`)
+        toast.success(`Item${entitiesToAdd.length > 1 ? 's' : ''} added to list`)
 
-      return Promise.resolve()
-    } catch (error) {
-      toast.error('Error adding to list')
-      return Promise.reject(error)
-    }
-  }
+        return Promise.resolve()
+      } catch (error) {
+        toast.error('Error adding to list')
+        return Promise.reject(error)
+      }
+    },
+    [projectName],
+  )
 
-  const buildListMenuItem: EntityListsContextValue['buildListMenuItem'] = (
-    list,
-    selected,
-    showIcon?,
-  ) => ({
-    id: list.id,
-    label: list.label,
-    icon: showIcon ? getEntityTypeIcon(list.entityType) : undefined,
-    command: () =>
-      addToList(
-        list.id,
-        list.entityType,
-        selected.map((i) => ({ entityId: i.entityId, entityType: i.entityType })),
-      ),
-  })
+  // Update the state type and initialize as null
+  const [newListData, setNewListData] = useState<NewListData | null>(null)
 
-  const buildAddToListMenu: EntityListsContextValue['buildAddToListMenu'] = (items, menu) => {
-    return {
-      id: 'add-to-list',
-      label: menu?.label || 'Add to list',
-      icon: 'list_alt_add',
-      items: items,
-    }
-  }
+  // Update openCreateNewList to store selected entities
+  const openCreateNewList = useCallback(
+    (
+      entityType: ListEntityType,
+      selectedEntities: { entityId: string; entityType: string | undefined }[],
+    ) => setNewListData({ entityType, selectedEntities }),
+    [setNewListData],
+  )
+  const closeCreateNewList = useCallback(() => setNewListData(null), [setNewListData])
 
-  const menuItems: EntityListsContextValue['menuItems'] =
+  const [createNewListMutation, { error: newListError }] = useCreateEntityListMutation()
+  // @ts-expect-error - we just know the error is an object
+  const newListErrorMessage = newListError?.data?.detail as string
+  // Update createNewList to use entities from newListData state
+  const createNewList: EntityListsContextValue['createNewList'] = useCallback(
+    async (label) => {
+      try {
+        // Get entities from newListData state
+        if (!newListData) {
+          toast.error('No entities selected')
+          return Promise.reject(new Error('No entities selected'))
+        }
+
+        const { selectedEntities, entityType } = newListData
+
+        // filter out entities that do not match entityType
+        const filteredEntities = selectedEntities.filter(
+          (entity) => entity.entityType === entityType,
+        )
+
+        const entitiesToAdd = filteredEntities.map((entity) => ({ entityId: entity.entityId }))
+
+        const newListResult = await createNewListMutation({
+          projectName,
+          entityListPostModel: {
+            label,
+            entityType,
+            items: entitiesToAdd,
+          },
+        }).unwrap()
+
+        // close the dialog
+        closeCreateNewList()
+        toast.success(`List ${label} created`)
+        toast.success(
+          `${upperFirst(entityType)}${entitiesToAdd.length > 1 ? 's' : ''} added to list`,
+        )
+
+        // add list id to search params
+        const listId = newListResult.id
+        if (listId) {
+          setSearchParams((prev) => {
+            const newParams = new URLSearchParams(prev)
+            newParams.set('list', listId)
+            return newParams
+          })
+        }
+      } catch (error) {
+        return Promise.reject(error)
+      }
+    },
+    [projectName, closeCreateNewList, newListData, setSearchParams],
+  )
+
+  const newListMenuItem = useCallback<EntityListsContextValue['newListMenuItem']>(
+    (entityType, selected) => ({
+      id: '__new-list__',
+      label: 'New list',
+      icon: 'add',
+      command: () => openCreateNewList(entityType, selected),
+    }),
+    [openCreateNewList],
+  )
+
+  const buildListMenuItem: EntityListsContextValue['buildListMenuItem'] = useCallback(
+    (list, selected, showIcon?) => ({
+      id: list.id,
+      label: list.label,
+      icon: showIcon ? getEntityTypeIcon(list.entityType) : undefined,
+      command: () =>
+        addToList(
+          list.id,
+          list.entityType,
+          selected.map((i) => ({ entityId: i.entityId, entityType: i.entityType })),
+        ),
+    }),
+    [addToList],
+  )
+
+  const buildAddToListMenu: EntityListsContextValue['buildAddToListMenu'] = useCallback(
+    (items, menu) => {
+      return {
+        id: 'add-to-list',
+        label: menu?.label || 'Add to list',
+        icon: 'list_alt_add',
+        items: items,
+      }
+    },
+    [],
+  )
+
+  const menuItems: EntityListsContextValue['menuItems'] = useCallback(
     (filter) => (_e, cell, selected, _meta) => {
       const isMultipleEntityTypes = selected.some(
         (item) => item.entityType !== selected[0].entityType,
@@ -190,27 +302,55 @@ export const EntityListsProvider = ({
         subMenuItems = subMenuItems.filter(filter)
       }
 
+      // @ts-expect-error - product is not supported
+      if (cell.entityType && listEntityTypes.includes(cell.entityType)) {
+        // update to pass selected entities
+        subMenuItems.push(newListMenuItem(cell.entityType as ListEntityType, selected))
+      }
+
       const menuItems = buildAddToListMenu(subMenuItems)
 
       return menuItems
-    }
-
-  return (
-    <EntityListsContext.Provider
-      value={{
-        folders,
-        tasks,
-        products,
-        versions,
-        addToList,
-        menuItems,
-        buildListMenuItem,
-        buildAddToListMenu,
-      }}
-    >
-      {children}
-    </EntityListsContext.Provider>
+    },
+    [folders.data, tasks.data, products.data, versions.data, buildListMenuItem, newListMenuItem],
   )
+
+  const value = useMemo(
+    () => ({
+      folders,
+      tasks,
+      products,
+      versions,
+      addToList,
+      menuItems,
+      buildListMenuItem,
+      buildAddToListMenu,
+      newListMenuItem,
+      newListData,
+      openCreateNewList,
+      closeCreateNewList,
+      createNewList,
+      newListErrorMessage,
+    }),
+    [
+      folders,
+      tasks,
+      products,
+      versions,
+      addToList,
+      menuItems,
+      buildListMenuItem,
+      buildAddToListMenu,
+      newListMenuItem,
+      newListData,
+      openCreateNewList,
+      closeCreateNewList,
+      createNewList,
+      newListErrorMessage,
+    ],
+  )
+
+  return <EntityListsContext.Provider value={value}>{children}</EntityListsContext.Provider>
 }
 
 export const useEntityListsContext = () => {

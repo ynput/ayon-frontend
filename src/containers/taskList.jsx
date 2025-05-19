@@ -143,35 +143,39 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
     handleTableKeyDown(event)
   }
 
-  const { buildAddToListMenu, buildListMenuItem, tasks: tasksLists } = useEntityListsContext()
+  const {
+    buildAddToListMenu,
+    buildListMenuItem,
+    newListMenuItem,
+    tasks: tasksLists,
+  } = useEntityListsContext()
 
   // CONTEXT MENU
-  const ctxMenuItems = (selected = []) => [
-    {
-      label: 'Open in viewer',
-      icon: 'play_circle',
-      shortcut: 'Spacebar',
-      command: () => openInViewer(selected[0], false),
-    },
-    {
-      label: `Filter products by task${selected.length > 1 ? 's' : ''}`,
-      icon: 'filter_list',
-      command: () => handleFilterProductsBySelected(selected),
-    },
-    buildAddToListMenu(
-      tasksLists.data.map((list) =>
-        buildListMenuItem(
-          list,
-          selected.map((id) => ({ entityId: id, entityType: 'task' })),
-        ),
-      ),
-    ),
-    {
-      label: 'Detail',
-      command: () => setShowDetail(true),
-      icon: 'database',
-    },
-  ]
+  const ctxMenuItems = (selected = []) => {
+    const selectedEntities = selected.map((id) => ({ entityId: id, entityType: 'task' }))
+    return [
+      {
+        label: 'Open in viewer',
+        icon: 'play_circle',
+        shortcut: 'Spacebar',
+        command: () => openInViewer(selected[0], false),
+      },
+      {
+        label: `Filter products by task${selected.length > 1 ? 's' : ''}`,
+        icon: 'filter_list',
+        command: () => handleFilterProductsBySelected(selected),
+      },
+      buildAddToListMenu([
+        ...tasksLists.data.map((list) => buildListMenuItem(list, selectedEntities)),
+        newListMenuItem('task', selectedEntities),
+      ]),
+      {
+        label: 'Detail',
+        command: () => setShowDetail(true),
+        icon: 'database',
+      },
+    ]
+  }
 
   const [ctxMenuShow] = useCreateContextMenu()
 

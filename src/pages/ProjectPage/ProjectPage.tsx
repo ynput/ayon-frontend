@@ -21,6 +21,7 @@ import { EntityListsProvider } from '@pages/ProjectListsPage/context/EntityLists
 import useLoadRemoteProjectPages from '../../remote/useLoadRemotePages'
 import { Navigate } from 'react-router-dom'
 import ProjectPubSub from './ProjectPubSub'
+import NewListFromContext from '@pages/ProjectListsPage/components/NewListDialog/NewListFromContext'
 
 const ProjectContextInfo = () => {
   /**
@@ -235,6 +236,7 @@ const ProjectPage = () => {
       <AppNavLinks links={links} />
       <EntityListsProvider {...{ projectName, entityTypes: ['folder', 'task', 'version'] }}>
         <SlicerProvider>{child}</SlicerProvider>
+        <NewListFromContext />
       </EntityListsProvider>
       <ProjectPubSub projectName={projectName} onReload={loadProjectData} />
     </>

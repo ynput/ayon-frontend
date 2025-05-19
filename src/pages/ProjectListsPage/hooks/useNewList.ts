@@ -18,14 +18,18 @@ export interface UseNewListReturn {
   createNewList: () => Promise<EntityListSummary>
 }
 
+export const listDefaultName = () => {
+  const date = new Date()
+  return `List ${date.toLocaleDateString()} ${date.toLocaleTimeString()}`
+}
+
 const useNewList = ({ onCreateNewList, onCreated }: UseNewListProps): UseNewListReturn => {
   const [newList, setNewList] = useState<V['newList']>(null)
   const openNewList: V['openNewList'] = React.useCallback((init) => {
     // generate default name based on date and time
-    const date = new Date()
-    const defaultName = `List ${date.toLocaleDateString()} ${date.toLocaleTimeString()}`
+
     setNewList({
-      label: defaultName,
+      label: listDefaultName(),
       entityListType: 'generic',
       entityType: 'folder',
       access: {},

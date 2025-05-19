@@ -321,37 +321,41 @@ const Hierarchy = (props) => {
     handleTableKeyDown(event)
   }
 
-  const { buildAddToListMenu, buildListMenuItem, folders: foldersList } = useEntityListsContext()
+  const {
+    buildAddToListMenu,
+    buildListMenuItem,
+    newListMenuItem,
+    folders: foldersList,
+  } = useEntityListsContext()
 
   // Context Menu
   // const {openContext, useCreateContextMenu} = useContextMenu()
   // context items
-  const ctxMenuItems = (selected = []) => [
-    {
-      label: 'Open in viewer',
-      icon: 'play_circle',
-      shortcut: 'Spacebar',
-      command: () => openInViewer(selected[0], false),
-    },
-    buildAddToListMenu(
-      foldersList.data.map((list) =>
-        buildListMenuItem(
-          list,
-          selected.map((id) => ({ entityId: id, entityType: 'folder' })),
-        ),
-      ),
-    ),
-    {
-      label: 'Detail',
-      command: () => setShowDetail(true),
-      icon: 'database',
-    },
-    {
-      label: 'View all versions as latest',
-      command: () => dispatch(setSelectedVersions({})),
-      icon: 'upgrade',
-    },
-  ]
+  const ctxMenuItems = (selected = []) => {
+    const selectedEntities = selected.map((id) => ({ entityId: id, entityType: 'folder' }))
+    return [
+      {
+        label: 'Open in viewer',
+        icon: 'play_circle',
+        shortcut: 'Spacebar',
+        command: () => openInViewer(selected[0], false),
+      },
+      buildAddToListMenu([
+        ...foldersList.data.map((list) => buildListMenuItem(list, selectedEntities)),
+        newListMenuItem('folder', selectedEntities),
+      ]),
+      {
+        label: 'Detail',
+        command: () => setShowDetail(true),
+        icon: 'database',
+      },
+      {
+        label: 'View all versions as latest',
+        command: () => dispatch(setSelectedVersions({})),
+        icon: 'upgrade',
+      },
+    ]
+  }
   // create the ref and model
   const [ctxMenuShow] = useCreateContextMenu()
 
