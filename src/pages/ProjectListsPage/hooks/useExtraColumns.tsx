@@ -3,8 +3,6 @@ import { CellWidget } from '@shared/containers/ProjectTreeTable'
 import clsx from 'clsx'
 import { useMemo } from 'react'
 import { ListEntityType } from '../components/NewListDialog/NewListDialog'
-import { useListsAttributesContext } from '../context/ListsAttributesContext'
-import { useListsModuleContext } from '../context/ListsModulesContext'
 
 const typeColumns: Record<
   TreeTableSubType,
@@ -20,9 +18,6 @@ interface useExtraColumnsProps {
 }
 
 const useExtraColumns = ({ entityType }: useExtraColumnsProps) => {
-  const { listAttributes } = useListsAttributesContext()
-  const { createAttributeColumns, isLoaded } = useListsModuleContext()
-
   const extraTypeColumns = useMemo(
     () =>
       entityType === 'folder'
@@ -40,11 +35,6 @@ const useExtraColumns = ({ entityType }: useExtraColumnsProps) => {
           ]
         : [],
     [entityType],
-  )
-
-  const { columns: attributeColumns, settings: attributeSettings } = useMemo(
-    () => createAttributeColumns(listAttributes, CellWidget),
-    [listAttributes, createAttributeColumns, isLoaded],
   )
 
   const extraColumns: TreeTableExtraColumn[] = useMemo(
@@ -83,17 +73,15 @@ const useExtraColumns = ({ entityType }: useExtraColumnsProps) => {
           position: typeColumn.position,
         }),
       ),
-      ...attributeColumns,
     ],
-    [extraTypeColumns, attributeColumns],
+    [extraTypeColumns],
   )
 
-  const extraColumnsSettings = [...extraTypeColumns, ...attributeSettings]
+  const extraColumnsSettings = [...extraTypeColumns]
 
   return {
     extraColumns,
     extraColumnsSettings,
-    isLoading: !isLoaded,
   }
 }
 

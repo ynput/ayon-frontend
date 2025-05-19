@@ -18,9 +18,11 @@ const StyledButtons = styled.div`
   gap: var(--base-gap-small);
 `
 
-interface ListsTableHeaderProps {}
+interface ListsTableHeaderProps {
+  title?: string
+}
 
-const ListsTableHeader: FC<ListsTableHeaderProps> = ({}) => {
+const ListsTableHeader: FC<ListsTableHeaderProps> = ({ title = 'Lists' }) => {
   const { openNewList, deleteLists, rowSelection } = useListsContext()
 
   const handleDelete = () => {
@@ -30,7 +32,7 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({}) => {
 
   return (
     <Header>
-      <StyledTitle>Lists</StyledTitle>
+      <StyledTitle>{title}</StyledTitle>
 
       <StyledButtons>
         <HeaderButton

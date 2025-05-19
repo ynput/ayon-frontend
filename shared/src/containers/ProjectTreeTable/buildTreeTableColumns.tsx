@@ -119,7 +119,10 @@ const buildTreeTableColumns = ({
             entityType={row.original.entityType}
             updatedAt={row.original.updatedAt}
             icon={row.original.icon}
-            projectName={meta?.projectName}
+            projectName={meta?.projectName as string}
+            className={clsx('thumbnail', {
+              loading: row.original.isLoading,
+            })}
           />
         )
       },
@@ -160,7 +163,7 @@ const buildTreeTableColumns = ({
               icon={row.original.icon}
               type={row.original.entityType}
               isExpanded={row.getIsExpanded()}
-              toggleExpandAll={() => meta?.toggleExpandAll([row.id])}
+              toggleExpandAll={() => meta?.toggleExpandAll?.([row.id])}
               toggleExpanded={row.getToggleExpandedHandler()}
             />
           </TableCellContent>
@@ -193,10 +196,10 @@ const buildTreeTableColumns = ({
             columnId={column.id}
             value={value}
             attributeData={{ type: 'string' }}
-            options={meta?.options.status.filter((s) => s.scope?.includes(type))}
+            options={meta?.options?.status.filter((s) => s.scope?.includes(type))}
             isCollapsed={!!row.original.childOnlyMatch}
             onChange={(value) =>
-              meta?.updateEntities([{ field: column.id, value, id, type, rowId: id }])
+              meta?.updateEntities?.([{ field: column.id, value, id, type, rowId: id }])
             }
             isReadOnly={meta?.readOnly?.includes(column.id)}
           />
@@ -227,14 +230,14 @@ const buildTreeTableColumns = ({
             attributeData={{ type: 'string' }}
             options={
               type === 'folder'
-                ? meta?.options.folderType
+                ? meta?.options?.folderType
                 : type === 'task'
-                ? meta?.options.taskType
+                ? meta?.options?.taskType
                 : []
             }
             isCollapsed={!!row.original.childOnlyMatch}
             onChange={(value) =>
-              meta?.updateEntities([{ field: fieldId, value, id, type, rowId: row.id }])
+              meta?.updateEntities?.([{ field: fieldId, value, id, type, rowId: row.id }])
             }
             isReadOnly={meta?.readOnly?.includes(column.id)}
           />
@@ -272,10 +275,10 @@ const buildTreeTableColumns = ({
             columnId={column.id}
             value={value}
             attributeData={{ type: 'list_of_strings' }}
-            options={meta?.options.assignee}
+            options={meta?.options?.assignee}
             isCollapsed={!!row.original.childOnlyMatch}
             onChange={(value) =>
-              meta?.updateEntities([{ field: column.id, value, id, type, rowId: row.id }])
+              meta?.updateEntities?.([{ field: column.id, value, id, type, rowId: row.id }])
             }
             isReadOnly={meta?.readOnly?.includes(column.id)}
             pt={{
@@ -310,10 +313,10 @@ const buildTreeTableColumns = ({
             columnId={column.id}
             value={value}
             attributeData={{ type: 'list_of_strings' }}
-            options={meta?.options.tag}
+            options={meta?.options?.tag}
             isCollapsed={!!row.original.childOnlyMatch}
             onChange={(value) =>
-              meta?.updateEntities([{ field: column.id, value, id, type, rowId: row.id }])
+              meta?.updateEntities?.([{ field: column.id, value, id, type, rowId: row.id }])
             }
             isReadOnly={meta?.readOnly?.includes(column.id)}
             enableCustomValues
@@ -366,7 +369,7 @@ const buildTreeTableColumns = ({
                 )
               }
               onChange={(value) =>
-                meta?.updateEntities([
+                meta?.updateEntities?.([
                   { field: columnIdParsed, value, id, type, isAttrib: true, rowId: row.id },
                 ])
               }

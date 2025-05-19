@@ -11,9 +11,10 @@ import ListsAttributesShortcutButton from '../ListsTableSettings/ListsAttributes
 interface ListItemsTableProps {
   extraColumns: BuildTreeTableColumnsProps['extraColumns']
   isLoading?: boolean
+  isReview?: boolean
 }
 
-const ListItemsTable: FC<ListItemsTableProps> = ({ extraColumns, isLoading }) => {
+const ListItemsTable: FC<ListItemsTableProps> = ({ extraColumns, isLoading, isReview }) => {
   const { selectedLists, selectedList } = useListsContext()
   const { isError, projectName, fetchNextPage, resetFilters } = useListItemsDataContext()
   const scope = `lists-${projectName}`

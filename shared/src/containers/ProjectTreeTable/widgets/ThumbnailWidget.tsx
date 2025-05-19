@@ -36,7 +36,7 @@ const StyledIcon = styled(Icon)`
   z-index: 10;
 `
 
-interface ThumbnailWidgetProps {
+interface ThumbnailWidgetProps extends React.HTMLAttributes<HTMLDivElement> {
   projectName: string
   entityType: string
   entityId: string
@@ -50,6 +50,7 @@ const ThumbnailWidgetWrapper: FC<ThumbnailWidgetProps> = ({
   entityId,
   updatedAt,
   icon,
+  ...props
 }) => {
   const valid = projectName && entityType && entityId && updatedAt
   const url =
@@ -58,7 +59,7 @@ const ThumbnailWidgetWrapper: FC<ThumbnailWidgetProps> = ({
 
   return (
     <Wrapper className="thumbnail-widget" key={url}>
-      <Inner>
+      <Inner {...props}>
         {icon && <StyledIcon icon={icon} />}
         {valid && <Image src={url} />}
       </Inner>

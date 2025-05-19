@@ -24,6 +24,10 @@ export const StyledDropdown = styled(Dropdown)`
       background-color: var(--md-sys-color-surface-container-highest-hover);
     }
   }
+
+  &.loading {
+    border-radius: 4px;
+  }
 `
 
 export const DropdownItem = styled.div`

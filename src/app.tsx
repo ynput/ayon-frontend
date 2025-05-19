@@ -1,10 +1,16 @@
 import ayonClient from '@/ayon'
 import axios from 'axios'
 import { ErrorBoundary } from 'react-error-boundary'
-import { useEffect, useState, Suspense, lazy, useMemo } from 'react'
+import { useEffect, useState, Suspense, useMemo, lazy } from 'react'
 
 import { useAppDispatch, useAppSelector } from '@state/store'
-import { Routes, Route, Navigate, BrowserRouter } from 'react-router-dom'
+import {
+  BrowserRouter,
+  useLocation,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from 'react-router-dom'
 import { QueryParamProvider } from 'use-query-params'
 import { ReactRouter6Adapter } from 'use-query-params/adapters/react-router-6'
 
@@ -13,17 +19,6 @@ import LoginPage from '@pages/LoginPage'
 import ErrorPage from '@pages/ErrorPage'
 import LoadingPage from '@pages/LoadingPage'
 import OnBoardingPage from '@pages/OnBoarding'
-const MarketPage = lazy(() => import('@pages/MarketPage'))
-const InboxPage = lazy(() => import('@pages/InboxPage'))
-const ProjectPage = lazy(() => import('@pages/ProjectPage/ProjectPage'))
-const ProjectManagerPage = lazy(() => import('@pages/ProjectManagerPage'))
-const ExplorerPage = lazy(() => import('@pages/ExplorerPage'))
-const APIDocsPage = lazy(() => import('@pages/APIDocsPage'))
-const AccountPage = lazy(() => import('@pages/AccountPage'))
-const SettingsPage = lazy(() => import('@pages/SettingsPage'))
-const EventsPage = lazy(() => import('@pages/EventsPage'))
-const ServicesPage = lazy(() => import('@pages/ServicesPage'))
-const UserDashboardPage = lazy(() => import('@pages/UserDashboardPage'))
 const PasswordResetPage = lazy(() => import('@pages/PasswordResetPage'))
 
 // components
@@ -50,7 +45,6 @@ import { FeedbackProvider } from './feedback/FeedbackContext'
 
 // containers
 import Header from '@containers/header'
-import ProtectedRoute from '@containers/ProtectedRoute'
 import FileUploadPreviewContainer from '@containers/FileUploadPreviewContainer'
 import { ViewerDialog } from '@containers/Viewer'
 
@@ -75,6 +69,7 @@ import Customerly from '@components/Customerly'
 import CompleteProfilePrompt from '@components/CompleteProfilePrompt/CompleteProfilePrompt'
 import { goToFrame, openViewer } from '@state/viewer'
 import { onCommentImageOpen } from '@state/context'
+import AppRoutes from './containers/AppRoutes'
 
 const App = () => {
   const user = useAppSelector((state) => state.user)
@@ -201,6 +196,10 @@ const App = () => {
                       user={user}
                       viewer={viewer}
                       dispatch={dispatch}
+                      useLocation={useLocation}
+                      useNavigate={useNavigate}
+                      useParams={useParams}
+                      useSearchParams={useSearchParams}
                     >
                       <GlobalContextMenu />
                       <PasteProvider>
@@ -225,95 +224,7 @@ const App = () => {
                                         <FileUploadPreviewContainer />
                                         <ReleaseInstallerDialog />
                                         <CompleteProfilePrompt />
-                                        <Routes>
-                                          <Route
-                                            path="/"
-                                            element={<Navigate replace to="/dashboard/tasks" />}
-                                          />
-
-                                          <Route
-                                            path="/dashboard"
-                                            element={<Navigate replace to="/dashboard/tasks" />}
-                                          />
-                                          <Route
-                                            path="/dashboard/:module"
-                                            element={<UserDashboardPage />}
-                                          />
-                                          <Route
-                                            path="/dashboard/addon/:addonName"
-                                            element={<UserDashboardPage />}
-                                          />
-
-                                          <Route
-                                            path="/manageProjects"
-                                            element={<ProjectManagerPage />}
-                                          />
-                                          <Route
-                                            path="/manageProjects/:module"
-                                            element={<ProjectManagerPage />}
-                                          />
-                                          <Route
-                                            path={'/projects/:projectName'}
-                                            element={<ProjectPage />}
-                                          />
-                                          <Route
-                                            path={'/projects/:projectName/:module/*'}
-                                            element={<ProjectPage />}
-                                          />
-                                          <Route
-                                            path={'/projects/:projectName/addon/:addonName'}
-                                            element={<ProjectPage />}
-                                          />
-                                          <Route
-                                            path="/settings"
-                                            element={
-                                              <Navigate replace to="/settings/anatomyPresets" />
-                                            }
-                                          />
-                                          <Route
-                                            path="/settings/:module"
-                                            element={<SettingsPage />}
-                                          />
-                                          <Route
-                                            path="/settings/addon/:addonName"
-                                            element={<SettingsPage />}
-                                          />
-                                          <Route
-                                            path="/services"
-                                            element={
-                                              <ProtectedRoute isAllowed={!isUser} redirectPath="/">
-                                                <ServicesPage />
-                                              </ProtectedRoute>
-                                            }
-                                          />
-                                          <Route
-                                            path="/market"
-                                            element={
-                                              <ProtectedRoute isAllowed={!isUser} redirectPath="/">
-                                                <MarketPage />
-                                              </ProtectedRoute>
-                                            }
-                                          />
-
-                                          <Route path="/inbox/:module" element={<InboxPage />} />
-                                          <Route
-                                            path="/inbox"
-                                            element={<Navigate to="/inbox/important" />}
-                                          />
-
-                                          <Route path="/explorer" element={<ExplorerPage />} />
-                                          <Route path="/doc/api" element={<APIDocsPage />} />
-                                          <Route
-                                            path="/account"
-                                            element={<Navigate replace to="/account/profile" />}
-                                          />
-                                          <Route
-                                            path="/account/:module"
-                                            element={<AccountPage />}
-                                          />
-                                          <Route path="/events" element={<EventsPage />} />
-                                          <Route element={<ErrorPage code="404" />} />
-                                        </Routes>
+                                        <AppRoutes isUser={isUser} />
                                         <DetailsPanelFloating />
                                         <PowerpackDialog />
                                         <AppRemoteLoader />

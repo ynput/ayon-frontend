@@ -51,6 +51,7 @@ const AppNavLinks = ({ links = [] }) => {
               path,
               tooltip,
               name,
+              enabled = true,
               startContent,
               endContent,
               uriSync,
@@ -59,6 +60,7 @@ const AppNavLinks = ({ links = [] }) => {
             } = {},
             idx,
           ) => {
+            if (!enabled) return null
             // if item has restrictions, check if user has access
             let hasAccess = true
             if (accessLevels?.length) {

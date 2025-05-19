@@ -2,7 +2,6 @@ import {
   ProjectDataProvider,
   useProjectDataContext,
 } from '@pages/ProjectOverviewPage/context/ProjectDataContext'
-import { useAppSelector } from '@state/store'
 import { FC, useMemo } from 'react'
 import { ListsProvider, useListsContext } from './context/ListsContext'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
@@ -39,17 +38,29 @@ import { ListsTableSettings } from './components/ListsTableSettings/index.ts'
 import useUpdateListItems from './hooks/useUpdateListItems'
 import { Actions } from '@shared/containers/Actions/Actions'
 import { ListsModuleProvider } from './context/ListsModulesContext.tsx'
+import OpenReviewSessionButton from '@pages/ReviewPage/OpenReviewSessionButton.tsx'
+import { useNavigate } from 'react-router'
+import { useSearchParams } from 'react-router-dom'
 
-const ProjectListsWithOuterProviders: FC = () => {
-  const projectName = useAppSelector((state) => state.project.name) || ''
+type ProjectListsPageProps = {
+  projectName: string
+  entityListTypes?: string[]
+  isReview?: boolean
+}
+
+const ProjectListsWithOuterProviders: FC<ProjectListsPageProps> = ({
+  projectName,
+  entityListTypes,
+  isReview,
+}) => {
   return (
     <ListsModuleProvider>
       <ProjectDataProvider projectName={projectName}>
-        <ListsDataProvider entityListTypes={['generic']}>
+        <ListsDataProvider entityListTypes={entityListTypes}>
           <ListsProvider>
             <ListItemsDataProvider>
               <ListsAttributesProvider>
-                <ProjectListsWithInnerProviders />
+                <ProjectListsWithInnerProviders isReview={isReview} />
               </ListsAttributesProvider>
             </ListItemsDataProvider>
           </ListsProvider>
@@ -59,7 +70,11 @@ const ProjectListsWithOuterProviders: FC = () => {
   )
 }
 
-const ProjectListsWithInnerProviders: FC = () => {
+type ProjectListsWithInnerProvidersProps = {
+  isReview?: boolean
+}
+
+const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = ({ isReview }) => {
   const { projectName, selectedListId, contextMenuItems, attribFields, ...props } =
     useListItemsDataContext()
   const { selectedList } = useListsContext()
@@ -85,11 +100,7 @@ const ProjectListsWithInnerProviders: FC = () => {
     updateEntities,
   })
 
-  const {
-    extraColumns,
-    extraColumnsSettings,
-    isLoading: isLoadingExtraColumns,
-  } = useExtraColumns({
+  const { extraColumns, extraColumnsSettings } = useExtraColumns({
     // @ts-expect-error - we do not support product right now
     entityType: selectedList?.entityType,
   })
@@ -110,7 +121,7 @@ const ProjectListsWithInnerProviders: FC = () => {
           expanded={{}}
           isInitialized={props.isInitialized}
           showHierarchy={false}
-          isLoading={props.isLoadingAll || isLoadingExtraColumns}
+          isLoading={props.isLoadingAll}
           contextMenuItems={contextMenuItems}
           sorting={props.sorting}
           updateSorting={props.updateSorting}
@@ -119,9 +130,10 @@ const ProjectListsWithInnerProviders: FC = () => {
             <SelectedRowsProvider>
               <ColumnSettingsProvider config={pageConfig} onChange={updatePageConfig}>
                 <CellEditingProvider>
-                  <ProjectListsPage
+                  <ProjectLists
                     extraColumns={extraColumns}
                     extraColumnsSettings={extraColumnsSettings}
+                    isReview={isReview}
                   />
                 </CellEditingProvider>
               </ColumnSettingsProvider>
@@ -133,12 +145,15 @@ const ProjectListsWithInnerProviders: FC = () => {
   )
 }
 
-type ProjectListsPageProps = {
+type ProjectListsProps = {
   extraColumns: TreeTableExtraColumn[]
   extraColumnsSettings: any[]
+  isReview?: boolean
 }
 
-const ProjectListsPage: FC<ProjectListsPageProps> = ({ extraColumns, extraColumnsSettings }) => {
+const ProjectLists: FC<ProjectListsProps> = ({ extraColumns, extraColumnsSettings, isReview }) => {
+  const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const { projectName, projectInfo } = useProjectDataContext()
   const { isPanelOpen, selectSetting, highlightedSetting } = useSettingsPanel()
   const { selectedList } = useListsContext()
@@ -160,7 +175,7 @@ const ProjectListsPage: FC<ProjectListsPageProps> = ({ extraColumns, extraColumn
       >
         <SplitterPanel size={12} minSize={2} style={{ maxWidth: 600 }}>
           <Section wrap>
-            <ListsTable />
+            <ListsTable isReview={isReview} />
           </Section>
         </SplitterPanel>
         <SplitterPanel size={88}>
@@ -170,6 +185,7 @@ const ProjectListsPage: FC<ProjectListsPageProps> = ({ extraColumns, extraColumn
                 <OverviewActions items={['undo', 'redo', deleteListItemAction]} />
                 {/*@ts-expect-error - we do not support product right now*/}
                 <ListItemsFilter entityType={selectedList.entityType} projectName={projectName} />
+                <OpenReviewSessionButton projectName={projectName} />
                 <Actions
                   entities={[
                     {
@@ -181,6 +197,10 @@ const ProjectListsPage: FC<ProjectListsPageProps> = ({ extraColumns, extraColumn
                   entityType={'list'}
                   isLoadingEntity={false}
                   entitySubTypes={[`${selectedList.entityType}:${selectedList.entityListType}`]}
+                  onNavigate={navigate}
+                  onSetSearchParams={setSearchParams}
+                  searchParams={searchParams}
+                  featuredCount={0}
                 />
                 <CustomizeButton defaultSelected={null} />
               </Toolbar>
@@ -202,7 +222,7 @@ const ProjectListsPage: FC<ProjectListsPageProps> = ({ extraColumns, extraColumn
                 >
                   <SplitterPanel size={70}>
                     {/* ITEMS TABLE */}
-                    <ListItemsTable extraColumns={extraColumns} />
+                    <ListItemsTable extraColumns={extraColumns} isReview={isReview} />
                   </SplitterPanel>
                   {!!selectedRows.length ? (
                     <SplitterPanel

@@ -82,7 +82,7 @@ const ProjectPage = () => {
 
   type ModuleData = { name: string; module: string }
   // permanent addon pages that show a fallback when not loaded
-  // const permanentAddons: Fallbacks<ModuleData> = new Map([['review', ReviewAddonSpec]])
+  // const permanentAddons: Fallbacks<ModuleData> = new Map([['review', ReviewAddon]])
 
   const { remotePages, isLoading: isLoadingModules } = useLoadRemoteProjectPages<ModuleData>({
     // fallbacks: permanentAddons,
@@ -91,7 +91,6 @@ const ProjectPage = () => {
   })
 
   // get remote project module pages
-
   const links = useMemo(
     () => [
       {
@@ -116,7 +115,12 @@ const ProjectPage = () => {
         name: 'Lists',
         path: `/projects/${projectName}/lists`,
         module: 'lists',
-        uriSync: true,
+      },
+      {
+        name: 'Review',
+        path: `/projects/${projectName}/reviews`,
+        module: 'reviews',
+        enabled: addonsData.some((item) => item.name === 'review'),
       },
       {
         name: 'Workfiles',
@@ -177,7 +181,12 @@ const ProjectPage = () => {
       return <BrowserPage />
     }
     if (module === 'lists') {
-      return <ProjectListsPage />
+      return <ProjectListsPage projectName={projectName} entityListTypes={['generic']} />
+    }
+    if (module === 'reviews') {
+      return (
+        <ProjectListsPage projectName={projectName} entityListTypes={['review-session']} isReview />
+      )
     }
     if (module === 'workfiles') {
       return <WorkfilesPage />

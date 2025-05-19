@@ -2,6 +2,8 @@ import React, { createContext, useContext, useCallback, ReactNode, useState } fr
 import { useLocalStorage } from '@shared/hooks'
 import { DetailsPanelEntityType } from '@shared/api'
 import type { UserModel } from '@shared/api'
+import { useLocation, useNavigate, useParams } from 'react-router'
+import { useSearchParams } from 'react-router-dom'
 
 export type FeedFilters = 'activity' | 'comments' | 'versions' | 'checklists'
 
@@ -43,6 +45,11 @@ export interface DetailsPanelContextProps {
   onGoToFrame?: (frame: number) => void
   onOpenViewer?: (args: any) => void
   onUpdateEntity?: (data: { operations: any[]; entityType: string }) => void
+  // route hooks
+  useParams: typeof useParams
+  useNavigate: typeof useNavigate
+  useLocation: typeof useLocation
+  useSearchParams: typeof useSearchParams
 }
 
 // Interface for our simplified context

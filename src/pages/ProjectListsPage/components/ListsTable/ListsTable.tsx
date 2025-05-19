@@ -9,9 +9,11 @@ import { ExpandedState, Row, Table } from '@tanstack/react-table'
 import useListContextMenu from '@pages/ProjectListsPage/hooks/useListContextMenu'
 import { SimpleTableCellTemplateProps } from '@shared/SimpleTable/SimpleTableRowTemplate'
 
-interface ListsTableProps {}
+interface ListsTableProps {
+  isReview?: boolean
+}
 
-const ListsTable: FC<ListsTableProps> = ({}) => {
+const ListsTable: FC<ListsTableProps> = ({ isReview }) => {
   const {
     rowSelection,
     setRowSelection,
@@ -83,7 +85,7 @@ const ListsTable: FC<ListsTableProps> = ({}) => {
     <>
       <SimpleTableProvider {...{ expanded, setExpanded, rowSelection, setRowSelection }}>
         <Container>
-          <ListsTableHeader />
+          <ListsTableHeader title={isReview ? 'Review sessions' : undefined} />
           <SimpleTable
             data={listsTableData}
             isExpandable={listsTableData.some((row) => row.subRows.length > 0)}
