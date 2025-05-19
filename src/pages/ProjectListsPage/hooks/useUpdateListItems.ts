@@ -58,8 +58,15 @@ const useUpdateListItems = ({ updateEntities }: Props) => {
         }
 
         if (data?.ownAttrib) {
-          // ownAttrib always added to entityUpdate
-          entityUpdate['ownAttrib'] = data.ownAttrib
+          for (const key of data.ownAttrib) {
+            // check if the field is an entity attributes or custom attribute
+            const isCustom = !entityAttribFields.includes(key)
+            if (isCustom) {
+              listItemUpdate.ownAttrib = [...(listItemUpdate.ownAttrib || []), key]
+            } else {
+              entityUpdate['ownAttrib'] = [...(entityUpdate['ownAttrib'] || []), key]
+            }
+          }
         }
 
         // add entity and list item updates to the respective arrays
@@ -76,6 +83,8 @@ const useUpdateListItems = ({ updateEntities }: Props) => {
           })
         }
       })
+
+      console.log(listItemOperations, entityOperations)
 
       try {
         if (!selectedList?.id) throw new Error('No list selected')
