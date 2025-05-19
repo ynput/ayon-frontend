@@ -49,7 +49,6 @@ const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
       },
       invalidatesTags: (_s, _e, { listId }) => {
         const tags = [{ type: 'entityList', id: listId }]
-        console.log('invalidatesTags', tags)
         return tags
       },
     },
