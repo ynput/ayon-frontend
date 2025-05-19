@@ -19,7 +19,7 @@ export const ListsTableSettings: FC<ListsTableSettingsProps> = ({
 }) => {
   const { listAttributes, entityAttribFields, updateAttributes, isUpdating, isLoadingNewList } =
     useListsAttributesContext()
-  const { ListsAttributesSettings } = useListsModuleContext()
+  const { ListsAttributesSettings, requiredVersion } = useListsModuleContext()
 
   const onSuccess = (message: string) => {
     toast.success(message)
@@ -49,6 +49,7 @@ export const ListsTableSettings: FC<ListsTableSettingsProps> = ({
               onSuccess={onSuccess}
               onError={onError}
               confirmDelete={confirmDelete}
+              requiredVersion={requiredVersion}
             />
           ),
         },

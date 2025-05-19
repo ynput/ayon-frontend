@@ -4,6 +4,7 @@ import ListsAttributeSettingsFallback from '../components/ListsTableSettings/Lis
 
 interface ListsModuleContextType {
   ListsAttributesSettings: typeof ListsAttributeSettingsFallback
+  requiredVersion?: string
 }
 
 const ListsModuleContext = createContext<ListsModuleContextType | undefined>(undefined)
@@ -13,15 +14,17 @@ interface ListsModuleProviderProps {
 }
 
 export const ListsModuleProvider: React.FC<ListsModuleProviderProps> = ({ children }) => {
-  const [ListsAttributesSettings] = useLoadModule({
+  const [ListsAttributesSettings, { outdated }] = useLoadModule({
     addon: 'powerpack',
     remote: 'slicer',
     module: 'ListsAttributesSettings',
     fallback: ListsAttributeSettingsFallback,
+    minVersion: '1.0.5-dev',
   })
 
   const value = {
     ListsAttributesSettings,
+    requiredVersion: outdated?.required,
   }
 
   return <ListsModuleContext.Provider value={value}>{children}</ListsModuleContext.Provider>

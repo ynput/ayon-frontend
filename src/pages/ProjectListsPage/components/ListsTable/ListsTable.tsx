@@ -56,6 +56,7 @@ const ListsTable: FC<ListsTableProps> = ({ isReview }) => {
 
     return (
       <ListRow
+        tabIndex={0}
         key={listId}
         id={listId}
         depth={row.depth}

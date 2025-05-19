@@ -1,7 +1,7 @@
 import { Button, Spacer } from '@ynput/ayon-react-components'
 import React, { useEffect } from 'react'
 import { useSelector } from 'react-redux'
-import { NavLink, useNavigate, useParams } from 'react-router-dom'
+import { NavLink, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import * as Styled from './AppNavLinks.styled'
 import Typography from '@/theme/typography.module.css'
 import { replaceQueryParams } from '@helpers/url'
@@ -11,12 +11,26 @@ const AppNavLinks = ({ links = [] }) => {
   // item = { name: 'name', path: 'path', node: node | 'spacer', accessLevel: [] }
   const navigate = useNavigate()
   const { module } = useParams()
+  const [search] = useSearchParams()
   const isManager = useSelector((state) => state.user.data.isManager)
   const isAdmin = useSelector((state) => state.user.data.isAdmin)
   const uri = useSelector((state) => state.context.uri)
 
-  const appendUri = (path) =>
-    uri ? replaceQueryParams(path, { [ayonUrlParam]: encodeURIComponent(uri) }) : path
+  const appendUri = (path, shouldAddUri = true) => {
+    if (!path) return path
+
+    // Get the base path and existing query parameters
+    const [basePath, queryString] = path.split('?')
+
+    // Only add the uri parameter when shouldAddUri is true and uri exists
+    if (shouldAddUri && uri) {
+      search.set(ayonUrlParam, encodeURIComponent(uri))
+    }
+
+    // Rebuild the URL with all parameters
+    const newQueryString = search.toString()
+    return newQueryString ? `${basePath}?${newQueryString}` : basePath
+  }
 
   const access = {
     manager: isManager || isAdmin,
@@ -78,7 +92,7 @@ const AppNavLinks = ({ links = [] }) => {
 
             return (
               <Styled.NavItem key={idx} data-shortcut={shortcut} data-tooltip={tooltip} {...props}>
-                <NavLink to={uriSync ? appendUri(path) : path}>
+                <NavLink to={appendUri(path, uriSync)}>
                   <Button variant="nav" className={Typography.titleSmall} tabIndex={-1}>
                     {startContent && startContent}
                     {name}
