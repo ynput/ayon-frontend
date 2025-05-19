@@ -33,8 +33,6 @@ const Slicer: FC<SlicerProps> = ({ sliceFields = [], persistFieldId }) => {
     isLoading: isLoadingSliceTableData,
   } = useTableDataBySlice({ sliceFields })
 
-  console.log(sliceTableData)
-
   return (
     <Container>
       <Header>

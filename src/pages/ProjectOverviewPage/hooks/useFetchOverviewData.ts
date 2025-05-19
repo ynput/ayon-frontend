@@ -57,7 +57,7 @@ const useFetchOverviewData = ({
     { skip: !projectName },
   )
 
-  console.log('Folder count:', folders.length)
+  // console.log('Folder count:', folders.length)
   const expandedParentIds = Object.entries(expanded)
     .filter(([, isExpanded]) => isExpanded)
     .map(([id]) => id)
