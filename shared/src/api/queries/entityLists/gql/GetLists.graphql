@@ -16,7 +16,6 @@ query GetLists($projectName: String!, $first: Int!, $after: String, $filter: Str
           active
           createdAt
           updatedAt
-          active
           owner
           count
         }
