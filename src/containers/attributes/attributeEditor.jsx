@@ -97,7 +97,7 @@ const AttributeEditor = ({ attribute, existingNames, onHide, onEdit }) => {
   if (formData) {
     if (isNew) {
       if (existingNames.includes(formData.name)) error = 'This attribute already exists'
-      else if (!formData.name.match('^[a-zA-Z_]{2,20}$')) error = 'Invalid attribute name'
+      else if (!formData.name.match('^[a-zA-Z_]{2,64}$')) error = 'Invalid attribute name'
     } // name validation
   }
 
