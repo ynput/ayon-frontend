@@ -165,7 +165,7 @@ const ProjectPage = () => {
   // error
   if (isError) {
     setTimeout(() => {
-      navigate('/manageProjects/dashboard')
+      navigate('/')
     }, 1500)
     return <div className="page">Project Not Found, Redirecting...</div>
   }
