@@ -595,6 +595,7 @@ const Products = () => {
     buildListMenuItem,
     newListMenuItem,
     versions: versionsLists,
+    reviews: reviewsLists,
   } = useEntityListsContext()
 
   const ctxMenuItems = (id, selectedProducts, selectedVersions) => {
@@ -608,7 +609,10 @@ const Products = () => {
       },
       buildAddToListMenu(
         [
-          ...versionsLists.data.map((list) => buildListMenuItem(list, selectedEntities)),
+          ...versionsLists.data.map((list) =>
+            buildListMenuItem(list, selectedEntities, !!reviewsLists.data.length),
+          ),
+          ...reviewsLists.data.map((list) => buildListMenuItem(list, selectedEntities, true)),
           newListMenuItem('version', selectedEntities),
         ],
         { label: 'Add to list (version)' },

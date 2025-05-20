@@ -35,6 +35,7 @@ export interface EntityListsContextValue {
   tasks: UseGetListsDataReturn
   products: UseGetListsDataReturn
   versions: UseGetListsDataReturn
+  reviews: UseGetListsDataReturn
   addToList: (
     listId: string,
     entityType: string,
@@ -114,6 +115,14 @@ export const EntityListsProvider = ({
     projectName,
     filters: getFilter('version'),
     skip: !entityTypes.includes('version'),
+    entityListTypes: ['generic'],
+  })
+  // REVIEWS
+  const reviews = useGetListsData({
+    projectName,
+    filters: getFilter('version'),
+    skip: !entityTypes.includes('version'),
+    entityListTypes: ['review-session'],
   })
 
   const [updateEntityListItems] = useUpdateEntityListItemsMutation()
@@ -235,11 +244,19 @@ export const EntityListsProvider = ({
     [openCreateNewList],
   )
 
+  const getListIcon = (entityType: string, entityListType: string) => {
+    if (entityListType === 'review-session') {
+      return 'subscriptions'
+    } else {
+      return getEntityTypeIcon(entityType)
+    }
+  }
+
   const buildListMenuItem: EntityListsContextValue['buildListMenuItem'] = useCallback(
     (list, selected, showIcon?) => ({
       id: list.id,
       label: list.label,
-      icon: showIcon ? getEntityTypeIcon(list.entityType) : undefined,
+      icon: showIcon ? getListIcon(list.entityType, list.entityListType) : undefined,
       command: () =>
         addToList(
           list.id,
@@ -281,7 +298,11 @@ export const EntityListsProvider = ({
       )
 
       const versionsMenuItems = versions.data.map((version) =>
-        buildListMenuItem(version, selected, isMultipleEntityTypes),
+        buildListMenuItem(version, selected, !!reviews.data.length),
+      )
+
+      const reviewsMenuItems = reviews.data.map((review) =>
+        buildListMenuItem(review, selected, true),
       )
 
       let subMenuItems: ListSubMenuItem[] = []
@@ -294,7 +315,7 @@ export const EntityListsProvider = ({
       } else if (cell.entityType === 'product') {
         subMenuItems = productsMenuItems
       } else if (cell.entityType === 'version') {
-        subMenuItems = versionsMenuItems
+        subMenuItems = [...versionsMenuItems, ...reviewsMenuItems]
       }
 
       // Apply filter if provided
@@ -321,6 +342,7 @@ export const EntityListsProvider = ({
       tasks,
       products,
       versions,
+      reviews,
       addToList,
       menuItems,
       buildListMenuItem,
@@ -337,6 +359,7 @@ export const EntityListsProvider = ({
       tasks,
       products,
       versions,
+      reviews,
       addToList,
       menuItems,
       buildListMenuItem,
