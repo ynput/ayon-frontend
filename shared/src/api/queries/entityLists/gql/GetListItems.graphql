@@ -36,6 +36,7 @@ query GetListItems(
               entityType
               allAttrib
               ownAttrib
+              position
               node {
                 active
                 name

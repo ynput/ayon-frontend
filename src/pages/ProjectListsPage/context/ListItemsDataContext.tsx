@@ -18,6 +18,7 @@ import { functionalUpdate, OnChangeFn, SortingState } from '@tanstack/react-tabl
 import useDeleteListItems, { UseDeleteListItemsReturn } from '../hooks/useDeleteListItems'
 import { ContextMenuItemConstructors } from '@shared/containers/ProjectTreeTable/hooks/useCellContextMenu'
 import { useEntityListsContext } from './EntityListsContext'
+import useReorderListItem, { UseReorderListItemReturn } from '../hooks/useReorderListItem'
 
 export type ListItemsMap = Map<string, EntityListItem>
 
@@ -53,6 +54,8 @@ export interface ListItemsDataContextValue {
   // delete (remove) from list
   deleteListItems: UseDeleteListItemsReturn['deleteListItems']
   deleteListItemAction: UseDeleteListItemsReturn['deleteListItemAction']
+  // reorder list item
+  reorderListItem: UseReorderListItemReturn['reorderListItem']
   // reset filters
   resetFilters: () => void
 }
@@ -224,6 +227,13 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     listItemsMap,
   })
 
+  // reorder lists item
+  const { reorderListItem } = useReorderListItem({
+    projectName: projectName,
+    listId: selectedListId,
+    listItems: listItemsData,
+  })
+
   // lists data
   const { menuItems: menuItemsAddToList } = useEntityListsContext()
 
@@ -267,6 +277,8 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
         // delete (remove) from list
         deleteListItems,
         deleteListItemAction,
+        // reorder list item
+        reorderListItem,
         resetFilters,
       }}
     >

@@ -12,10 +12,29 @@ const getDefaultShadow = (isLastPinned: boolean) => {
   return isLastPinned ? defaultShadowLastPinned : defaultShadow
 }
 
+// Use the known string literal for DRAG_HANDLE_COLUMN_ID to avoid import complexities here
+const DRAG_HANDLE_CLASS = 'drag-handle'
+
 export const TR = styled.tr`
   display: flex;
   position: absolute;
   width: 100%;
+
+  &:hover {
+    // When the row (TR) is hovered...
+    // Target the button inside the drag handle cell to make it visible at 50% opacity.
+    // This uses a more specific selector by including 'td' to ensure it correctly targets the cell.
+    td.${DRAG_HANDLE_CLASS} button {
+      opacity: 0.5;
+      visibility: visible;
+    }
+
+    // When the row (TR) is hovered AND the button inside drag handle cell is also hovered...
+    // Make the button 100% opacity. This selector is more specific and will override the above.
+    td.${DRAG_HANDLE_CLASS} button:hover {
+      opacity: 1;
+    }
+  }
 `
 
 export const TableCellContent = styled.div`
@@ -128,6 +147,27 @@ export const TableCell = styled.td<TableCellProps>`
   position: relative;
   box-shadow: ${getDefaultShadow(false)};
   background-color: var(--md-sys-color-surface-container-low);
+
+  &.${DRAG_HANDLE_CLASS} {
+    // Styles for the button inside the drag handle cell
+    button {
+      opacity: 0; // Default: hidden
+      visibility: hidden;
+      transition: opacity 0.2s ease, visibility 0.2s ease;
+      // Base appearance styles (cursor, border, background, etc.)
+      // are primarily handled by inline styles in RowDragHandleCellContent.tsx.
+      // Add any necessary overrides or defaults here if needed.
+      // For example, ensuring the button itself doesn't interfere with cell styling:
+      background: transparent;
+      border: none;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+    }
+  }
 
   &.task {
     background-color: hsl(216 15% 11.5% / 1);

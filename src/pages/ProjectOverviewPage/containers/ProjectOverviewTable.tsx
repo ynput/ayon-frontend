@@ -39,6 +39,7 @@ const ProjectOverviewTable = ({}: Props) => {
         fetchMoreOnBottomReached={fetchMoreOnBottomReached}
         // metadata
         onOpenNew={onOpenNew}
+        clientSorting={showHierarchy}
       />
     </Section>
   )

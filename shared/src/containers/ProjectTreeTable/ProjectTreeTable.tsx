@@ -10,7 +10,7 @@ import {
   flexRender,
   Row,
   getSortedRowModel,
-  Cell, // Added Cell to imports
+  Cell,
   Column,
   Table,
   Header,
@@ -26,12 +26,12 @@ import type { TableRow } from './types/table'
 
 // Component imports
 import buildTreeTableColumns, {
-  BuildTreeTableColumnsProps,
   DefaultColumns,
   TreeTableExtraColumn,
 } from './buildTreeTableColumns'
 import * as Styled from './ProjectTreeTable.styled'
 import HeaderActionButton from './components/HeaderActionButton'
+import RowDragHandleCellContent from './components/RowDragHandleCellContent' // Added import
 import EmptyPlaceholder from '../../components/EmptyPlaceholder'
 
 // Context imports
@@ -60,25 +60,12 @@ import { UpdateTableEntities } from './hooks/useUpdateTableData'
 
 // dnd-kit imports
 import {
-  DndContext,
   DragOverlay,
-  KeyboardSensor,
-  MouseSensor,
-  TouchSensor,
-  closestCenter,
-  type DragEndEvent,
-  type DragStartEvent, // Ensured DragStartEvent is imported
   type UniqueIdentifier,
-  useSensor,
-  useSensors,
+  // Removed: DndContext, KeyboardSensor, MouseSensor, TouchSensor, closestCenter, DragEndEvent, DragStartEvent, Active, Over, useSensor, useSensors
 } from '@dnd-kit/core'
-import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
-import {
-  arrayMove,
-  SortableContext,
-  verticalListSortingStrategy,
-  useSortable,
-} from '@dnd-kit/sortable'
+// import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
+import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 
 declare module '@tanstack/react-table' {
@@ -94,14 +81,18 @@ declare module '@tanstack/react-table' {
 //These are the important styles to make sticky column pinning work!
 //Apply styles like this using your CSS strategy of choice with this kind of logic to head cells, data cells, footer cells, etc.
 //View the index.css file for more needed styles such as border-collapse: separate
-const getCommonPinningStyles = (column: Column<TableRow, unknown>): CSSProperties => {
+const getCommonPinningStyles = (
+  column: Column<TableRow, unknown>,
+  isSortable?: boolean,
+): CSSProperties => {
   const isPinned = column.getIsPinned()
-  // HACK: not sure why pinned columns are not aligned correctly, so we need to add a small offset
   const offset =
-    column.id === ROW_SELECTION_COLUMN_ID || column.id === DRAG_HANDLE_COLUMN_ID ? 0 : 30
+    column.id !== ROW_SELECTION_COLUMN_ID && column.id !== DRAG_HANDLE_COLUMN_ID && isSortable
+      ? -30
+      : 0
 
   return {
-    left: isPinned === 'left' ? `${column.getStart('left') - offset}px` : undefined,
+    left: isPinned === 'left' ? `${column.getStart('left') + offset}px` : undefined, // Removed offset
     right: isPinned === 'right' ? `${column.getAfter('right')}px` : undefined,
     position: isPinned ? 'sticky' : 'relative',
     width: column.getSize(),
@@ -109,39 +100,7 @@ const getCommonPinningStyles = (column: Column<TableRow, unknown>): CSSPropertie
   }
 }
 
-// Define DRAG_HANDLE_COLUMN_ID
 export const DRAG_HANDLE_COLUMN_ID = 'drag-handle'
-
-// Row Drag Handle Cell Content Component
-const RowDragHandleCellContent = ({
-  attributes,
-  listeners,
-}: {
-  attributes: any
-  listeners: any
-}) => {
-  return (
-    <button
-      {...attributes}
-      {...listeners}
-      type="button" // Explicitly set type for button
-      title="Drag to reorder"
-      style={{
-        cursor: 'grab',
-        border: 'none',
-        background: 'transparent',
-        padding: 0,
-        display: 'flex', // To center the icon within the button
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: '100%', // Ensure button fills the cell space if needed
-        height: '100%',
-      }}
-    >
-      <Icon icon="drag_handle" />
-    </button>
-  )
-}
 
 export interface ProjectTreeTableProps extends React.HTMLAttributes<HTMLDivElement> {
   scope: string
@@ -152,7 +111,10 @@ export interface ProjectTreeTableProps extends React.HTMLAttributes<HTMLDivEleme
   excludedColumns?: (DefaultColumns | string)[]
   extraColumns?: TreeTableExtraColumn[]
   isLoading?: boolean
-  isSortable?: boolean // Added isSortable prop
+  clientSorting?: boolean
+  sortableRows?: boolean
+  onRowReorder?: (active: UniqueIdentifier, over: UniqueIdentifier | null) => void // Adjusted type for active/over if needed, or keep as Active, Over
+  dndActiveId?: UniqueIdentifier | null // Added prop
   pt?: {
     container?: React.HTMLAttributes<HTMLDivElement>
     head?: Partial<TableHeadProps>
@@ -168,7 +130,10 @@ export const ProjectTreeTable = ({
   excludedColumns,
   extraColumns,
   isLoading: isLoadingProp,
-  isSortable = false, // Default isSortable to false
+  clientSorting = false,
+  sortableRows = false,
+  onRowReorder,
+  dndActiveId, // Destructure new prop
   pt,
   ...props
 }: ProjectTreeTableProps) => {
@@ -199,17 +164,6 @@ export const ProjectTreeTable = ({
     updateSorting,
     showHierarchy,
   } = useProjectTableContext()
-
-  const [orderedData, setOrderedData] = useState<TableRow[]>(tableData)
-  const [isDndDragging, setIsDndDragging] = useState(false) // State to track DND activity
-  const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null) // For DragOverlay
-
-  useEffect(() => {
-    // Only synchronize with tableData if not currently dragging
-    if (!isDndDragging) {
-      setOrderedData(tableData)
-    }
-  }, [tableData, isDndDragging]) // Add isDndDragging to dependency array
 
   const isLoading = isLoadingProp || isLoadingData
 
@@ -272,7 +226,7 @@ export const ProjectTreeTable = ({
       excluded: excludedColumns,
     })
 
-    if (isSortable) {
+    if (sortableRows) {
       return [
         {
           id: DRAG_HANDLE_COLUMN_ID,
@@ -290,10 +244,10 @@ export const ProjectTreeTable = ({
       ]
     }
     return baseColumns
-  }, [columnAttribs, showHierarchy, options, extraColumns, excludedColumns, isSortable])
+  }, [columnAttribs, showHierarchy, options, extraColumns, excludedColumns, sortableRows])
 
   const table = useReactTable({
-    data: showLoadingRows ? loadingRows : orderedData, // Use orderedData
+    data: showLoadingRows ? loadingRows : tableData,
     columns,
     defaultColumn: {
       minSize: 50,
@@ -311,7 +265,7 @@ export const ProjectTreeTable = ({
     // EXPANDABLE
     onExpandedChange: updateExpanded,
     // SORTING
-    getSortedRowModel: getSortedRowModel(),
+    getSortedRowModel: clientSorting ? getSortedRowModel() : undefined,
     onSortingChange: updateSorting,
     columnResizeMode: 'onChange',
     onColumnPinningChange: columnPinningUpdater,
@@ -325,7 +279,7 @@ export const ProjectTreeTable = ({
       sorting,
       columnPinning: (() => {
         const leftPins: string[] = []
-        if (isSortable) {
+        if (sortableRows) {
           leftPins.push(DRAG_HANDLE_COLUMN_ID)
         }
         leftPins.push(ROW_SELECTION_COLUMN_ID)
@@ -393,57 +347,11 @@ export const ProjectTreeTable = ({
     }, {})
   }, [attribFields])
 
-  // Dnd-kit setup
-  const sensors = useSensors(
-    useSensor(MouseSensor, {
-      activationConstraint: {
-        distance: 10,
-      },
-    }),
-    useSensor(TouchSensor, {
-      activationConstraint: {
-        delay: 250,
-        tolerance: 5,
-      },
-    }),
-    useSensor(KeyboardSensor, {}),
-  )
-
-  const rowOrderIds = useMemo(() => orderedData.map((row) => row.id), [orderedData])
+  const rowOrderIds = useMemo(() => tableData.map((row) => row.id), [tableData])
   const draggedRowData = useMemo(() => {
-    if (!activeId || !isSortable) return null
-    return orderedData.find((r) => r.id === activeId)
-  }, [activeId, orderedData, isSortable])
-
-  function handleDragStart(event: DragStartEvent) {
-    if (!isSortable) return
-    setIsDndDragging(true)
-    setActiveId(event.active.id)
-  }
-
-  function handleInternalDragEnd(event: DragEndEvent) {
-    if (!isSortable) return
-    console.log('DRAG END')
-    const { active, over } = event
-    if (active && over && active.id !== over.id) {
-      setOrderedData((currentData) => {
-        const oldIndex = currentData.findIndex((row) => row.id === active.id)
-        const newIndex = currentData.findIndex((row) => row.id === over.id)
-        if (oldIndex !== -1 && newIndex !== -1) {
-          return arrayMove(currentData, oldIndex, newIndex)
-        }
-        return currentData
-      })
-    }
-    // Reset activeId. setIsDndDragging(false) will be handled by DndContext prop.
-    setActiveId(null)
-  }
-
-  function handleInternalDragCancel() {
-    if (!isSortable) return
-    setIsDndDragging(false)
-    setActiveId(null)
-  }
+    if (!dndActiveId || !sortableRows) return null // Use dndActiveId
+    return tableData.find((r) => r.id === dndActiveId) // Use dndActiveId
+  }, [dndActiveId, tableData, sortableRows])
 
   const tableUiContent = (
     <ClipboardProvider
@@ -475,6 +383,7 @@ export const ProjectTreeTable = ({
               virtualPaddingRight={virtualPaddingRight}
               isLoading={isLoading}
               readOnlyColumns={readOnlyColumns}
+              sortableRows={sortableRows}
               {...pt?.head}
             />
             <TableBody
@@ -487,7 +396,7 @@ export const ProjectTreeTable = ({
               attribs={attribFields}
               onOpenNew={onOpenNew}
               rowOrderIds={rowOrderIds}
-              isSortable={isSortable} // Pass isSortable
+              sortableRows={sortableRows}
             />
           </table>
         </Styled.TableContainer>
@@ -495,96 +404,86 @@ export const ProjectTreeTable = ({
     </ClipboardProvider>
   )
 
-  if (isSortable) {
+  // Render DragOverlay if sortableRows and dndActiveId is present
+  const dragOverlayPortal =
+    sortableRows &&
+    dndActiveId &&
+    createPortal(
+      <DragOverlay dropAnimation={null}>
+        {draggedRowData
+          ? (() => {
+              const overlayRowInstance = table.getRowModel().rows.find((r) => r.id === dndActiveId)
+              if (!overlayRowInstance) return null
+
+              const tableWidth = table.getTotalSize()
+
+              return (
+                <table
+                  style={{
+                    width: tableWidth,
+                    borderCollapse: 'collapse',
+                    backgroundColor: 'var(--md-sys-color-surface-container-high)',
+                    boxShadow: '0 0 10px rgba(0,0,0,0.2)',
+                    ...columnSizeVars,
+                  }}
+                >
+                  <tbody>
+                    <Styled.TR style={{ display: 'flex', userSelect: 'none' }}>
+                      {virtualPaddingLeft ? (
+                        <td style={{ display: 'flex', width: virtualPaddingLeft }} />
+                      ) : null}
+                      {columnVirtualizer.getVirtualItems().map((vc) => {
+                        const cell = overlayRowInstance.getVisibleCells()[vc.index]
+                        if (!cell) return null
+
+                        const cellStyleBase: CSSProperties = {
+                          ...getCommonPinningStyles(cell.column, true),
+                          width: `calc(var(--col-${cell.column.id}-size) * 1px)`,
+                          display: 'flex',
+                          alignItems: 'center',
+                          height: showHierarchy ? 36 : 40,
+                        }
+
+                        if (cell.column.id === DRAG_HANDLE_COLUMN_ID) {
+                          return (
+                            <Styled.TableCell
+                              key={`overlay-drag-${cell.id}`}
+                              style={{ ...cellStyleBase, justifyContent: 'center' }}
+                              className={clsx(cell.column.id)}
+                            >
+                              <Icon icon="drag_handle" /> {/* Static icon */}
+                            </Styled.TableCell>
+                          )
+                        }
+                        return (
+                          <TableCellMemo
+                            cell={cell}
+                            cellId={`overlay-${getCellId(overlayRowInstance.id, cell.column.id)}`}
+                            rowId={overlayRowInstance.id}
+                            key={`overlay-cell-${cell.id}`}
+                            showHierarchy={showHierarchy}
+                          />
+                        )
+                      })}
+                      {virtualPaddingRight ? (
+                        <td style={{ display: 'flex', width: virtualPaddingRight }} />
+                      ) : null}
+                    </Styled.TR>
+                  </tbody>
+                </table>
+              )
+            })()
+          : null}
+      </DragOverlay>,
+      document.body,
+    )
+
+  if (sortableRows) {
     return (
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragStart={handleDragStart}
-        onDragEnd={(event) => {
-          handleInternalDragEnd(event)
-          setIsDndDragging(false)
-        }}
-        onDragCancel={() => {
-          handleInternalDragCancel()
-          setIsDndDragging(false)
-        }}
-        modifiers={[restrictToVerticalAxis]}
-      >
+      <>
         {tableUiContent}
-        {createPortal(
-          <DragOverlay dropAnimation={null} modifiers={[restrictToVerticalAxis]}>
-            {activeId && draggedRowData
-              ? (() => {
-                  const overlayRowInstance = table.getRowModel().rows.find((r) => r.id === activeId)
-                  if (!overlayRowInstance) return null
-
-                  const tableWidth = table.getTotalSize()
-
-                  return (
-                    <table
-                      style={{
-                        width: tableWidth,
-                        borderCollapse: 'collapse',
-                        backgroundColor: 'var(--md-sys-color-surface-container-high)',
-                        boxShadow: '0 0 10px rgba(0,0,0,0.2)',
-                        ...columnSizeVars,
-                      }}
-                    >
-                      <tbody>
-                        <Styled.TR style={{ display: 'flex', userSelect: 'none' }}>
-                          {virtualPaddingLeft ? (
-                            <td style={{ display: 'flex', width: virtualPaddingLeft }} />
-                          ) : null}
-                          {columnVirtualizer.getVirtualItems().map((vc) => {
-                            const cell = overlayRowInstance.getVisibleCells()[vc.index]
-                            if (!cell) return null
-
-                            const cellStyleBase: CSSProperties = {
-                              ...getCommonPinningStyles(cell.column),
-                              width: `calc(var(--col-${cell.column.id}-size) * 1px)`,
-                              display: 'flex',
-                              alignItems: 'center',
-                              height: showHierarchy ? 36 : 40,
-                            }
-
-                            if (cell.column.id === DRAG_HANDLE_COLUMN_ID) {
-                              return (
-                                <Styled.TableCell
-                                  key={`overlay-drag-${cell.id}`}
-                                  style={{ ...cellStyleBase, justifyContent: 'center' }}
-                                  className={clsx(cell.column.id)}
-                                >
-                                  <Icon icon="drag_handle" /> {/* Static icon */}
-                                </Styled.TableCell>
-                              )
-                            }
-                            return (
-                              <TableCellMemo
-                                cell={cell}
-                                cellId={`overlay-${getCellId(
-                                  overlayRowInstance.id,
-                                  cell.column.id,
-                                )}`}
-                                rowId={overlayRowInstance.id}
-                                key={`overlay-cell-${cell.id}`}
-                                showHierarchy={showHierarchy}
-                              />
-                            )
-                          })}
-                          {virtualPaddingRight ? (
-                            <td style={{ display: 'flex', width: virtualPaddingRight }} />
-                          ) : null}
-                        </Styled.TR>
-                      </tbody>
-                    </table>
-                  )
-                })()
-              : null}
-          </DragOverlay>,
-          document.body,
-        )}
-      </DndContext>
+        {dragOverlayPortal}
+      </>
     )
   } else {
     return tableUiContent
@@ -598,6 +497,7 @@ interface TableHeadProps extends React.HTMLAttributes<HTMLTableSectionElement> {
   virtualPaddingRight: number | undefined
   isLoading: boolean
   readOnlyColumns?: string[]
+  sortableRows?: boolean
 }
 
 const TableHead = ({
@@ -607,6 +507,7 @@ const TableHead = ({
   virtualPaddingRight,
   isLoading,
   readOnlyColumns,
+  sortableRows,
   ...props
 }: TableHeadProps) => {
   return (
@@ -620,6 +521,7 @@ const TableHead = ({
           virtualPaddingRight={virtualPaddingRight}
           isLoading={isLoading}
           readOnlyColumns={readOnlyColumns}
+          sortableRows={sortableRows}
         />
       ))}
     </Styled.TableHeader>
@@ -633,6 +535,7 @@ interface TableHeadRowProps {
   virtualPaddingRight: number | undefined
   isLoading: boolean
   readOnlyColumns?: string[]
+  sortableRows?: boolean
 }
 
 const TableHeadRow = ({
@@ -642,6 +545,7 @@ const TableHeadRow = ({
   virtualPaddingRight,
   isLoading,
   readOnlyColumns,
+  sortableRows,
 }: TableHeadRowProps) => {
   const virtualColumns = columnVirtualizer.getVirtualItems()
   return (
@@ -664,6 +568,7 @@ const TableHeadRow = ({
             canHide={header.column.getCanHide()}
             canPin={header.column.getCanPin()}
             canResize={header.column.getCanResize()}
+            sortableRows={sortableRows}
           />
         )
       })}
@@ -684,6 +589,7 @@ interface TableHeadCellProps {
   canPin?: boolean
   canResize?: boolean
   isReadOnly?: boolean
+  sortableRows?: boolean
 }
 
 const TableHeadCell = ({
@@ -695,6 +601,7 @@ const TableHeadCell = ({
   canPin,
   canResize,
   isReadOnly,
+  sortableRows,
 }: TableHeadCellProps) => {
   const { column } = header
 
@@ -706,7 +613,7 @@ const TableHeadCell = ({
       })}
       key={header.id}
       style={{
-        ...getCommonPinningStyles(column),
+        ...getCommonPinningStyles(column, sortableRows),
         width: `calc(var(--header-${header?.id}-size) * 1px)`,
       }}
     >
@@ -781,7 +688,7 @@ interface TableBodyProps {
   attribs: ProjectTableAttribute[]
   onOpenNew?: (type: 'folder' | 'task') => void
   rowOrderIds: UniqueIdentifier[]
-  isSortable: boolean // Added isSortable prop
+  sortableRows: boolean
 }
 
 const TableBody = ({
@@ -793,8 +700,8 @@ const TableBody = ({
   virtualPaddingRight,
   attribs,
   onOpenNew,
-  rowOrderIds, // Receive rowOrderIds
-  isSortable, // Destructure isSortable
+  rowOrderIds,
+  sortableRows,
 }: TableBodyProps) => {
   const { handleTableBodyContextMenu } = useCellContextMenu({ attribs, onOpenNew })
 
@@ -856,10 +763,10 @@ const TableBody = ({
             virtualColumns={columnVirtualizer.getVirtualItems()}
             paddingLeft={virtualPaddingLeft}
             paddingRight={virtualPaddingRight}
-            rowRef={measureRowElement} // Pass memoized callback
+            rowRef={measureRowElement}
             dataIndex={virtualRow.index}
             offsetTop={virtualRow.start}
-            isSortable={isSortable} // Pass isSortable
+            sortableRows={sortableRows}
           />
         )
       })}
@@ -873,7 +780,7 @@ const TableBody = ({
     )
   }
 
-  if (isSortable) {
+  if (sortableRows) {
     return (
       <SortableContext items={rowOrderIds} strategy={verticalListSortingStrategy}>
         {tbodyContent}
@@ -888,13 +795,13 @@ interface TableBodyRowProps {
   row: Row<TableRow>
   showHierarchy: boolean
   visibleCells: Cell<TableRow, unknown>[]
-  virtualColumns: VirtualItem<HTMLTableCellElement>[]
+  virtualColumns: VirtualItem[]
   paddingLeft: number | undefined
   paddingRight: number | undefined
   rowRef: (node: HTMLTableRowElement | null) => void
   dataIndex: number
   offsetTop: number
-  isSortable: boolean // Added isSortable prop
+  sortableRows: boolean
 }
 
 const TableBodyRow = ({
@@ -907,9 +814,9 @@ const TableBodyRow = ({
   rowRef,
   dataIndex,
   offsetTop,
-  isSortable, // Destructure isSortable
+  sortableRows,
 }: TableBodyRowProps) => {
-  const sortable = isSortable ? useSortable({ id: row.id }) : null
+  const sortable = sortableRows ? useSortable({ id: row.id }) : null
 
   const combinedRef = useCallback(
     (node: HTMLTableRowElement | null) => {
@@ -961,7 +868,7 @@ const TableBodyRow = ({
             <Styled.TableCell
               key={cell.id}
               style={{
-                ...getCommonPinningStyles(cell.column),
+                ...getCommonPinningStyles(cell.column, sortableRows),
                 width: `calc(var(--col-${cell.column.id}-size) * 1px)`,
                 display: 'flex',
                 alignItems: 'center',
@@ -995,6 +902,7 @@ const TableBodyRow = ({
             rowId={row.id}
             key={cell.id}
             showHierarchy={showHierarchy}
+            sortableRows={sortableRows}
           />
         )
       })}
@@ -1013,9 +921,18 @@ interface TableCellProps {
   rowId: string
   className?: string
   showHierarchy: boolean
+  sortableRows?: boolean
 }
 
-const TableCell = ({ cell, rowId, cellId, className, showHierarchy, ...props }: TableCellProps) => {
+const TableCell = ({
+  cell,
+  rowId,
+  cellId,
+  className,
+  showHierarchy,
+  sortableRows,
+  ...props
+}: TableCellProps) => {
   const {
     isCellSelected,
     isCellFocused,
@@ -1056,7 +973,7 @@ const TableCell = ({ cell, rowId, cellId, className, showHierarchy, ...props }: 
         ...borderClasses,
       )}
       style={{
-        ...getCommonPinningStyles(cell.column),
+        ...getCommonPinningStyles(cell.column, sortableRows),
         width: `calc(var(--col-${cell.column.id}-size) * 1px)`,
         height: showHierarchy ? 36 : 40,
       }}

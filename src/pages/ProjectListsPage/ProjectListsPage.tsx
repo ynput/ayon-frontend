@@ -2,7 +2,7 @@ import {
   ProjectDataProvider,
   useProjectDataContext,
 } from '@pages/ProjectOverviewPage/context/ProjectDataContext'
-import { FC, useMemo } from 'react'
+import { FC, useMemo, useState } from 'react' // Added useState
 import { ListsProvider, useListsContext } from './context/ListsContext'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { Section, Toolbar } from '@ynput/ayon-react-components'
@@ -41,6 +41,21 @@ import { ListsModuleProvider } from './context/ListsModulesContext.tsx'
 import OpenReviewSessionButton from '@pages/ReviewPage/OpenReviewSessionButton.tsx'
 import { useNavigate } from 'react-router'
 import { useSearchParams } from 'react-router-dom'
+// Dnd-kit imports
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  MouseSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+  type DragStartEvent,
+  type UniqueIdentifier,
+  type Active,
+  type Over,
+} from '@dnd-kit/core'
 
 type ProjectListsPageProps = {
   projectName: string
@@ -99,49 +114,96 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
   const { updateListItems } = useUpdateListItems({
     updateEntities,
   })
+  const { reorderListItem } = useListItemsDataContext() // Get reorderListItem
 
   const { extraColumns, extraColumnsSettings } = useExtraColumns({
     // @ts-expect-error - we do not support product right now
     entityType: selectedList?.entityType,
   })
 
+  // DND State and Handlers
+  const [dndActiveId, setDndActiveId] = useState<UniqueIdentifier | null>(null)
+
+  const sensors = useSensors(
+    useSensor(MouseSensor, {
+      activationConstraint: {
+        distance: 5,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 100,
+        tolerance: 5,
+      },
+    }),
+    useSensor(KeyboardSensor, {}),
+  )
+
+  function handleDndDragStart(event: DragStartEvent) {
+    setDndActiveId(event.active.id)
+  }
+
+  function handleDndDragEnd(event: DragEndEvent) {
+    const { active, over } = event
+    if (active && over && active.id !== over.id) {
+      if (reorderListItem) {
+        // Type assertion if necessary, or ensure reorderListItem matches (Active, Over)
+        reorderListItem(active as Active, over as Over)
+      }
+    }
+    setDndActiveId(null)
+  }
+
+  function handleDndDragCancel() {
+    setDndActiveId(null)
+  }
+
   return (
-    <SettingsPanelProvider>
-      <ProjectTableQueriesProvider {...{ updateEntities: updateListItems, getFoldersTasks }}>
-        <ProjectTableProvider
-          projectName={projectName}
-          attribFields={mergedAttribFields}
-          projectInfo={props.projectInfo}
-          users={props.users}
-          // @ts-ignore
-          entitiesMap={props.listItemsMap}
-          foldersMap={props.foldersMap}
-          tasksMap={props.tasksMap}
-          tableRows={props.listItemsTableData}
-          expanded={{}}
-          isInitialized={props.isInitialized}
-          showHierarchy={false}
-          isLoading={props.isLoadingAll}
-          contextMenuItems={contextMenuItems}
-          sorting={props.sorting}
-          updateSorting={props.updateSorting}
-        >
-          <SelectionCellsProvider>
-            <SelectedRowsProvider>
-              <ColumnSettingsProvider config={pageConfig} onChange={updatePageConfig}>
-                <CellEditingProvider>
-                  <ProjectLists
-                    extraColumns={extraColumns}
-                    extraColumnsSettings={extraColumnsSettings}
-                    isReview={isReview}
-                  />
-                </CellEditingProvider>
-              </ColumnSettingsProvider>
-            </SelectedRowsProvider>
-          </SelectionCellsProvider>
-        </ProjectTableProvider>
-      </ProjectTableQueriesProvider>
-    </SettingsPanelProvider>
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragStart={handleDndDragStart}
+      onDragEnd={handleDndDragEnd}
+      onDragCancel={handleDndDragCancel}
+    >
+      <SettingsPanelProvider>
+        <ProjectTableQueriesProvider {...{ updateEntities: updateListItems, getFoldersTasks }}>
+          <ProjectTableProvider
+            projectName={projectName}
+            attribFields={mergedAttribFields}
+            projectInfo={props.projectInfo}
+            users={props.users}
+            // @ts-ignore
+            entitiesMap={props.listItemsMap}
+            foldersMap={props.foldersMap}
+            tasksMap={props.tasksMap}
+            tableRows={props.listItemsTableData}
+            expanded={{}}
+            isInitialized={props.isInitialized}
+            showHierarchy={false}
+            isLoading={props.isLoadingAll}
+            contextMenuItems={contextMenuItems}
+            sorting={props.sorting}
+            updateSorting={props.updateSorting}
+          >
+            <SelectionCellsProvider>
+              <SelectedRowsProvider>
+                <ColumnSettingsProvider config={pageConfig} onChange={updatePageConfig}>
+                  <CellEditingProvider>
+                    <ProjectLists
+                      extraColumns={extraColumns}
+                      extraColumnsSettings={extraColumnsSettings}
+                      isReview={isReview}
+                      dndActiveId={dndActiveId}
+                    />
+                  </CellEditingProvider>
+                </ColumnSettingsProvider>
+              </SelectedRowsProvider>
+            </SelectionCellsProvider>
+          </ProjectTableProvider>
+        </ProjectTableQueriesProvider>
+      </SettingsPanelProvider>
+    </DndContext>
   )
 }
 
@@ -149,9 +211,15 @@ type ProjectListsProps = {
   extraColumns: TreeTableExtraColumn[]
   extraColumnsSettings: any[]
   isReview?: boolean
+  dndActiveId?: UniqueIdentifier | null // Added prop
 }
 
-const ProjectLists: FC<ProjectListsProps> = ({ extraColumns, extraColumnsSettings, isReview }) => {
+const ProjectLists: FC<ProjectListsProps> = ({
+  extraColumns,
+  extraColumnsSettings,
+  isReview,
+  dndActiveId, // Destructure new prop
+}) => {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const { projectName, projectInfo } = useProjectDataContext()
@@ -222,7 +290,11 @@ const ProjectLists: FC<ProjectListsProps> = ({ extraColumns, extraColumnsSetting
                 >
                   <SplitterPanel size={70}>
                     {/* ITEMS TABLE */}
-                    <ListItemsTable extraColumns={extraColumns} isReview={isReview} />
+                    <ListItemsTable
+                      extraColumns={extraColumns}
+                      isReview={isReview}
+                      dndActiveId={dndActiveId} // Pass prop
+                    />
                   </SplitterPanel>
                   {!!selectedRows.length ? (
                     <SplitterPanel

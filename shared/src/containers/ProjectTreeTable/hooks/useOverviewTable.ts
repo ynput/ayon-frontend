@@ -154,15 +154,6 @@ export default function useOverviewTable({
         flatRows.push(row)
       }
 
-      // Sort all tasks by name
-      if (flatRows.length > 1) {
-        flatRows.sort((a, b) => {
-          if (a.name < b.name) return -1
-          if (a.name > b.name) return 1
-          return 0
-        })
-      }
-
       // if we are loading more tasks, add loading rows
       if (isLoadingMore) {
         const firstTaskAttrib = tasksMap.entries().next()?.value?.[1]?.attrib || {}
@@ -252,15 +243,6 @@ export default function useOverviewTable({
               taskRows.push(...loadingTaskRows)
             }
           }
-          // Only sort if we have multiple items
-          if (taskRows.length > 1) {
-            // Use a more efficient string comparison for sorting
-            taskRows.sort((a, b) => {
-              if (a.name < b.name) return -1
-              if (a.name > b.name) return 1
-              return 0
-            })
-          }
 
           row.subRows = taskRows
         }
@@ -281,45 +263,9 @@ export default function useOverviewTable({
       parentRow.subRows.push(childRow)
     }
 
-    // Sort subRows for expanded folders in a single pass
-    for (const folderId of expandedFolderIds) {
-      const row = rowsById.get(folderId)
-      if (!row || row.subRows.length <= 1) continue
-
-      // Process only folders that have both task rows and folder children
-      const hasTasksAndFolders =
-        row.subRows.some((r) => r.entityType === 'task') &&
-        row.subRows.some((r) => r.entityType === 'folder')
-
-      if (hasTasksAndFolders) {
-        // More efficient sort using type as primary key to reduce comparisons
-        row.subRows.sort((a, b) => {
-          // Type first (tasks before folders)
-          const typeA = a.entityType === 'task' ? 0 : 1
-          const typeB = b.entityType === 'task' ? 0 : 1
-
-          if (typeA !== typeB) return typeA - typeB
-
-          // Then by name using more efficient string comparison
-          if (a.name < b.name) return -1
-          if (a.name > b.name) return 1
-          return 0
-        })
-      }
-    }
-
     // Add any extra rows to the root rows
     for (const row of rows || []) {
       rootRows.push(row)
-    }
-
-    // Sort root rows
-    if (rootRows.length > 1) {
-      rootRows.sort((a, b) => {
-        if (a.name < b.name) return -1
-        if (a.name > b.name) return 1
-        return 0
-      })
     }
 
     return rootRows

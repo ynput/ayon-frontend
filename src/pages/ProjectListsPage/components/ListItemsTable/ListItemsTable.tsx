@@ -7,14 +7,21 @@ import { BuildTreeTableColumnsProps, ProjectTreeTable } from '@shared/containers
 import { Button } from '@ynput/ayon-react-components'
 import { FC, useMemo } from 'react'
 import ListsAttributesShortcutButton from '../ListsTableSettings/ListsAttributesShortcutButton'
+import { UniqueIdentifier } from '@dnd-kit/core'
 
 interface ListItemsTableProps {
   extraColumns: BuildTreeTableColumnsProps['extraColumns']
   isLoading?: boolean
   isReview?: boolean
+  dndActiveId?: UniqueIdentifier | null // Added prop
 }
 
-const ListItemsTable: FC<ListItemsTableProps> = ({ extraColumns, isLoading, isReview: _ }) => {
+const ListItemsTable: FC<ListItemsTableProps> = ({
+  extraColumns,
+  isLoading,
+  isReview: _,
+  dndActiveId, // Destructure new prop
+}) => {
   const { selectedLists, selectedList } = useListsContext()
   const { isError, projectName, fetchNextPage, resetFilters } = useListItemsDataContext()
   const scope = `lists-${projectName}`
@@ -47,7 +54,8 @@ const ListItemsTable: FC<ListItemsTableProps> = ({ extraColumns, isLoading, isRe
         excludedColumns={hiddenColumns}
         extraColumns={extraColumns}
         isLoading={isLoading}
-        isSortable
+        sortableRows
+        dndActiveId={dndActiveId} // Pass prop
       />
       <ListItemsShortcuts />
       <ListsAttributesShortcutButton />
