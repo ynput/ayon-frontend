@@ -18,8 +18,6 @@ export const TR = styled.tr`
   width: 100%;
 `
 
-const cellMinWidth = 50
-
 export const TableCellContent = styled.div`
   display: flex;
   align-items: center;
@@ -31,7 +29,6 @@ export const TableCellContent = styled.div`
   user-select: none;
   padding-right: 0;
 
-  min-width: ${cellMinWidth}px;
   &.bold {
     font-weight: 600;
   }
@@ -81,7 +78,6 @@ export const HeaderCell = styled.th`
   display: flex;
   align-items: center;
   min-height: fit-content;
-  min-width: ${cellMinWidth}px;
 
   &:hover {
     .resize-handle {
@@ -131,7 +127,6 @@ type TableCellProps = {
 export const TableCell = styled.td<TableCellProps>`
   position: relative;
   box-shadow: ${getDefaultShadow(false)};
-  min-width: ${cellMinWidth}px;
   background-color: var(--md-sys-color-surface-container-low);
 
   &.task {

@@ -9,6 +9,8 @@ import { SelectionCell } from './components/SelectionCell'
 import RowSelectionHeader from './components/RowSelectionHeader'
 import { ROW_SELECTION_COLUMN_ID } from './context/SelectionCellsContext'
 
+const MIN_SIZE = 50
+
 // Wrapper function for sorting that pushes isLoading rows to the bottom
 const withLoadingStateSort = (sortFn: SortingFn<any>): SortingFn<any> => {
   return (rowA, rowB, ...args) => {
@@ -134,6 +136,7 @@ const buildTreeTableColumns = ({
       id: 'name',
       accessorKey: 'name',
       header: () => 'Folder / Task',
+      minSize: MIN_SIZE,
       sortingFn: withLoadingStateSort(showHierarchy ? nameSort : pathSort),
       enableSorting: true,
       enableResizing: true,
@@ -176,6 +179,7 @@ const buildTreeTableColumns = ({
     staticColumns.push({
       id: 'status',
       accessorKey: 'status',
+      minSize: MIN_SIZE,
       header: () => 'Status',
       sortingFn: withLoadingStateSort((a, b, c) =>
         attribSort(a, b, c, { enum: options.status, type: 'string' }),
@@ -213,6 +217,7 @@ const buildTreeTableColumns = ({
       id: 'subType',
       accessorKey: 'subType',
       header: () => 'Type',
+      minSize: MIN_SIZE,
       enableSorting: true,
       enableResizing: true,
       enablePinning: true,
@@ -251,6 +256,7 @@ const buildTreeTableColumns = ({
       id: 'assignees',
       accessorKey: 'assignees',
       header: () => 'Assignees',
+      minSize: MIN_SIZE,
       enableSorting: true,
       enableResizing: true,
       enablePinning: true,
@@ -299,6 +305,7 @@ const buildTreeTableColumns = ({
       id: 'tags',
       accessorKey: 'tags',
       header: () => 'Tags',
+      minSize: MIN_SIZE,
       enableSorting: true,
       enableResizing: true,
       enablePinning: true,
@@ -340,6 +347,7 @@ const buildTreeTableColumns = ({
         id: 'attrib_' + attrib.name,
         accessorKey: 'attrib.' + attrib.name,
         header: () => attrib.data.title || attrib.name,
+        minSize: MIN_SIZE,
         filterFn: 'fuzzy' as FilterFnOption<TableRow>,
         sortingFn: withLoadingStateSort((a, b, c) => attribSort(a, b, c, attrib.data)),
         enableSorting: true,

@@ -1,4 +1,4 @@
-import { useMemo, useRef, useEffect, memo, CSSProperties } from 'react'
+import { useMemo, useRef, useEffect, memo, CSSProperties, useState, useCallback } from 'react' // Added useCallback
 import { useVirtualizer, VirtualItem, Virtualizer } from '@tanstack/react-virtual'
 // TanStack Table imports
 import {
@@ -10,7 +10,7 @@ import {
   flexRender,
   Row,
   getSortedRowModel,
-  Cell,
+  Cell, // Added Cell to imports
   Column,
   Table,
   Header,
@@ -58,6 +58,28 @@ import { ToggleExpandAll, useProjectTableContext } from './context/ProjectTableC
 import { getReadOnlyLists, getTableFieldOptions } from './utils'
 import { UpdateTableEntities } from './hooks/useUpdateTableData'
 
+// dnd-kit imports
+import {
+  DndContext,
+  KeyboardSensor,
+  MouseSensor,
+  TouchSensor,
+  closestCenter,
+  type DragEndEvent,
+  type UniqueIdentifier,
+  useSensor,
+  useSensors,
+  // DragStartEvent, DragCancelEvent types might be needed if using event object in handlers
+} from '@dnd-kit/core'
+import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
+import {
+  arrayMove,
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
+
 declare module '@tanstack/react-table' {
   interface TableMeta<TData extends RowData> {
     options?: BuiltInFieldOptions
@@ -73,14 +95,51 @@ declare module '@tanstack/react-table' {
 //View the index.css file for more needed styles such as border-collapse: separate
 const getCommonPinningStyles = (column: Column<TableRow, unknown>): CSSProperties => {
   const isPinned = column.getIsPinned()
+  // HACK: not sure why pinned columns are not aligned correctly, so we need to add a small offset
+  const offset =
+    column.id === ROW_SELECTION_COLUMN_ID || column.id === DRAG_HANDLE_COLUMN_ID ? 0 : 30
 
   return {
-    left: isPinned === 'left' ? `${column.getStart('left')}px` : undefined,
+    left: isPinned === 'left' ? `${column.getStart('left') - offset}px` : undefined,
     right: isPinned === 'right' ? `${column.getAfter('right')}px` : undefined,
     position: isPinned ? 'sticky' : 'relative',
     width: column.getSize(),
     zIndex: isPinned ? 100 : 0,
   }
+}
+
+// Define DRAG_HANDLE_COLUMN_ID
+export const DRAG_HANDLE_COLUMN_ID = 'drag-handle'
+
+// Row Drag Handle Cell Content Component
+const RowDragHandleCellContent = ({
+  attributes,
+  listeners,
+}: {
+  attributes: any
+  listeners: any
+}) => {
+  return (
+    <button
+      {...attributes}
+      {...listeners}
+      type="button" // Explicitly set type for button
+      title="Drag to reorder"
+      style={{
+        cursor: 'grab',
+        border: 'none',
+        background: 'transparent',
+        padding: 0,
+        display: 'flex', // To center the icon within the button
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '100%', // Ensure button fills the cell space if needed
+        height: '100%',
+      }}
+    >
+      <Icon icon="drag_handle" />
+    </button>
+  )
 }
 
 export interface ProjectTreeTableProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -138,6 +197,16 @@ export const ProjectTreeTable = ({
     showHierarchy,
   } = useProjectTableContext()
 
+  const [orderedData, setOrderedData] = useState<TableRow[]>(tableData)
+  const [isDndDragging, setIsDndDragging] = useState(false) // State to track DND activity
+
+  useEffect(() => {
+    // Only synchronize with tableData if not currently dragging
+    if (!isDndDragging) {
+      setOrderedData(tableData)
+    }
+  }, [tableData, isDndDragging]) // Add isDndDragging to dependency array
+
   const isLoading = isLoadingProp || isLoadingData
 
   const { statuses = [], folderTypes = [], taskTypes = [], tags = [] } = projectInfo || {}
@@ -190,20 +259,33 @@ export const ProjectTreeTable = ({
     () => (isInitialized ? attribFields : loadingAttrib),
     [attribFields, loadingAttrib, isInitialized],
   )
-  const columns = useMemo(
-    () =>
-      buildTreeTableColumns({
-        attribs: columnAttribs,
-        showHierarchy,
-        options,
-        extraColumns,
-        excluded: excludedColumns,
-      }),
-    [columnAttribs, showHierarchy, options, extraColumns, excludedColumns],
-  )
+  const columns = useMemo(() => {
+    const baseColumns = buildTreeTableColumns({
+      attribs: columnAttribs,
+      showHierarchy,
+      options,
+      extraColumns,
+      excluded: excludedColumns,
+    })
+    return [
+      {
+        id: DRAG_HANDLE_COLUMN_ID,
+        header: () => null,
+        cell: () => null, // Content rendered by TableBodyRow
+        size: 24, // Reduced width
+        minSize: 24, // Reduced width
+        maxSize: 24, // Reduced width
+        enableResizing: false,
+        enableSorting: false,
+        enableHiding: false,
+        enablePinning: false, // Programmatically pinned
+      },
+      ...baseColumns,
+    ]
+  }, [columnAttribs, showHierarchy, options, extraColumns, excludedColumns])
 
   const table = useReactTable({
-    data: showLoadingRows ? loadingRows : tableData,
+    data: showLoadingRows ? loadingRows : orderedData, // Use orderedData
     columns,
     defaultColumn: {
       minSize: 50,
@@ -234,7 +316,7 @@ export const ProjectTreeTable = ({
       expanded,
       sorting,
       columnPinning: {
-        left: [ROW_SELECTION_COLUMN_ID, ...(columnPinning.left || [])],
+        left: [DRAG_HANDLE_COLUMN_ID, ROW_SELECTION_COLUMN_ID, ...(columnPinning.left || [])], // Pin drag handle
         right: columnPinning.right,
       },
       columnSizing,
@@ -287,52 +369,89 @@ export const ProjectTreeTable = ({
     }, {})
   }, [attribFields])
 
+  // Dnd-kit setup
+  const sensors = useSensors(
+    useSensor(MouseSensor),
+    useSensor(TouchSensor),
+    useSensor(KeyboardSensor, {}),
+  )
+
+  const rowOrderIds = useMemo(() => orderedData.map((row) => row.id), [orderedData])
+
+  function handleDragEnd(event: DragEndEvent) {
+    console.log('DRAG END')
+    const { active, over } = event
+    if (active && over && active.id !== over.id) {
+      setOrderedData((currentData) => {
+        const oldIndex = currentData.findIndex((row) => row.id === active.id)
+        const newIndex = currentData.findIndex((row) => row.id === over.id)
+        if (oldIndex !== -1 && newIndex !== -1) {
+          return arrayMove(currentData, oldIndex, newIndex)
+        }
+        return currentData
+      })
+    }
+  }
+
   return (
-    <ClipboardProvider
-      entitiesMap={entitiesMap}
-      columnEnums={{ ...options, ...attribByField }}
-      columnReadOnly={readOnlyAttribs}
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragStart={() => setIsDndDragging(true)}
+      onDragEnd={(event) => {
+        handleDragEnd(event)
+        setIsDndDragging(false)
+      }}
+      onDragCancel={() => setIsDndDragging(false)}
+      modifiers={[restrictToVerticalAxis]}
     >
-      <Styled.TableWrapper {...props}>
-        <Styled.TableContainer
-          ref={tableContainerRef}
-          style={{ height: '100%', padding: 0 }}
-          onScroll={(e) => fetchMoreOnBottomReached(e.currentTarget)}
-          {...pt?.container}
-          className={clsx('table-container', pt?.container?.className)}
-        >
-          <table
-            style={{
-              display: 'grid',
-              borderCollapse: 'collapse',
-              userSelect: 'none',
-              ...columnSizeVars,
-              width: table.getTotalSize(),
-            }}
+      <ClipboardProvider
+        entitiesMap={entitiesMap}
+        columnEnums={{ ...options, ...attribByField }}
+        columnReadOnly={readOnlyAttribs}
+      >
+        <Styled.TableWrapper {...props}>
+          <Styled.TableContainer
+            ref={tableContainerRef}
+            style={{ height: '100%', padding: 0 }}
+            onScroll={(e) => fetchMoreOnBottomReached(e.currentTarget)}
+            {...pt?.container}
+            className={clsx('table-container', pt?.container?.className)}
           >
-            <TableHead
-              columnVirtualizer={columnVirtualizer}
-              table={table}
-              virtualPaddingLeft={virtualPaddingLeft}
-              virtualPaddingRight={virtualPaddingRight}
-              isLoading={isLoading}
-              readOnlyColumns={readOnlyColumns}
-              {...pt?.head}
-            />
-            <TableBody
-              columnVirtualizer={columnVirtualizer}
-              table={table}
-              tableContainerRef={tableContainerRef}
-              virtualPaddingLeft={virtualPaddingLeft}
-              virtualPaddingRight={virtualPaddingRight}
-              showHierarchy={showHierarchy}
-              attribs={attribFields}
-              onOpenNew={onOpenNew}
-            />
-          </table>
-        </Styled.TableContainer>
-      </Styled.TableWrapper>
-    </ClipboardProvider>
+            <table
+              style={{
+                display: 'grid',
+                borderCollapse: 'collapse',
+                userSelect: 'none',
+                ...columnSizeVars,
+                width: table.getTotalSize(),
+              }}
+            >
+              <TableHead
+                columnVirtualizer={columnVirtualizer}
+                table={table}
+                virtualPaddingLeft={virtualPaddingLeft}
+                virtualPaddingRight={virtualPaddingRight}
+                isLoading={isLoading}
+                readOnlyColumns={readOnlyColumns}
+                {...pt?.head}
+              />
+              <TableBody
+                columnVirtualizer={columnVirtualizer}
+                table={table}
+                tableContainerRef={tableContainerRef}
+                virtualPaddingLeft={virtualPaddingLeft}
+                virtualPaddingRight={virtualPaddingRight}
+                showHierarchy={showHierarchy}
+                attribs={attribFields}
+                onOpenNew={onOpenNew}
+                rowOrderIds={rowOrderIds} // Pass rowOrderIds
+              />
+            </table>
+          </Styled.TableContainer>
+        </Styled.TableWrapper>
+      </ClipboardProvider>
+    </DndContext>
   )
 }
 
@@ -525,6 +644,7 @@ interface TableBodyProps {
   virtualPaddingRight: number | undefined
   attribs: ProjectTableAttribute[]
   onOpenNew?: (type: 'folder' | 'task') => void
+  rowOrderIds: UniqueIdentifier[]
 }
 
 const TableBody = ({
@@ -536,6 +656,7 @@ const TableBody = ({
   virtualPaddingRight,
   attribs,
   onOpenNew,
+  rowOrderIds, // Receive rowOrderIds
 }: TableBodyProps) => {
   const { handleTableBodyContextMenu } = useCellContextMenu({ attribs, onOpenNew })
 
@@ -557,36 +678,55 @@ const TableBody = ({
 
   const virtualRows = rowVirtualizer.getVirtualItems()
 
+  // Memoize the measureElement callback
+  const measureRowElement = useCallback(
+    (node: HTMLTableRowElement | null) => {
+      if (node) {
+        rowVirtualizer.measureElement(node)
+      }
+    },
+    [rowVirtualizer],
+  )
+
   useKeyboardNavigation()
 
   return virtualRows.length ? (
-    <tbody
-      style={{
-        height: `${rowVirtualizer.getTotalSize()}px`,
-        position: 'relative',
-        display: 'grid',
-      }}
-      onContextMenu={handleTableBodyContextMenu}
-      onMouseOver={(e) => {
-        handlePreFetchTasks(e)
-      }}
-    >
-      {virtualRows.map((virtualRow) => {
-        const row = rows[virtualRow.index] as Row<TableRow>
-        return (
-          <TableBodyRow
-            key={row.id}
-            columnVirtualizer={columnVirtualizer}
-            row={row}
-            rowVirtualizer={rowVirtualizer}
-            virtualPaddingLeft={virtualPaddingLeft}
-            virtualPaddingRight={virtualPaddingRight}
-            virtualRow={virtualRow}
-            showHierarchy={showHierarchy}
-          />
-        )
-      })}
-    </tbody>
+    <SortableContext items={rowOrderIds} strategy={verticalListSortingStrategy}>
+      <tbody
+        style={{
+          height: `${rowVirtualizer.getTotalSize()}px`,
+          position: 'relative',
+          display: 'grid',
+        }}
+        onContextMenu={handleTableBodyContextMenu}
+        onMouseOver={(e) => {
+          handlePreFetchTasks(e)
+        }}
+      >
+        {virtualRows.map((virtualRow) => {
+          const row = rows[virtualRow.index] as Row<TableRow>
+          // Add a check for row existence to prevent potential errors if data is out of sync
+          if (!row) {
+            console.warn('Virtualized row data not found for index:', virtualRow.index)
+            return null
+          }
+          return (
+            <TableBodyRow
+              key={row.id} // dnd-kit needs this key to be stable and match the id in useSortable
+              row={row}
+              showHierarchy={showHierarchy}
+              visibleCells={row.getVisibleCells()}
+              virtualColumns={columnVirtualizer.getVirtualItems()}
+              paddingLeft={virtualPaddingLeft}
+              paddingRight={virtualPaddingRight}
+              rowRef={measureRowElement} // Pass memoized callback
+              dataIndex={virtualRow.index}
+              offsetTop={virtualRow.start}
+            />
+          )
+        })}
+      </tbody>
+    </SortableContext>
   ) : (
     tableContainerRef.current &&
       createPortal(<EmptyPlaceholder message="No items found" />, tableContainerRef.current)
@@ -594,44 +734,109 @@ const TableBody = ({
 }
 
 interface TableBodyRowProps {
-  columnVirtualizer: Virtualizer<HTMLDivElement, HTMLTableCellElement>
   row: Row<TableRow>
-  rowVirtualizer: Virtualizer<HTMLDivElement, HTMLTableRowElement>
-  virtualPaddingLeft: number | undefined
-  virtualPaddingRight: number | undefined
-  virtualRow: VirtualItem
   showHierarchy: boolean
+  visibleCells: Cell<TableRow, unknown>[]
+  virtualColumns: VirtualItem<HTMLTableCellElement>[]
+  paddingLeft: number | undefined
+  paddingRight: number | undefined
+  rowRef: (node: HTMLTableRowElement | null) => void
+  dataIndex: number
+  offsetTop: number
 }
 
 const TableBodyRow = ({
-  columnVirtualizer,
   row,
-  rowVirtualizer,
-  virtualPaddingLeft,
-  virtualPaddingRight,
-  virtualRow,
   showHierarchy,
+  visibleCells,
+  virtualColumns,
+  paddingLeft,
+  paddingRight,
+  rowRef,
+  dataIndex,
+  offsetTop,
 }: TableBodyRowProps) => {
-  // We should do this so that we don't re-render every time anything in projectTableContext changes
-  const visibleCells = row.getVisibleCells()
-  const virtualColumns = columnVirtualizer.getVirtualItems()
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform: dndTransform, // Renamed from transform
+    transition: dndTransition, // Renamed from transition
+    isDragging,
+  } = useSortable({
+    id: row.id,
+  })
+
+  const combinedRef = useCallback(
+    (node: HTMLTableRowElement | null) => {
+      setNodeRef(node)
+      // Only call measureElement (via rowRef prop) if not dragging
+      // to prevent measurement loops during drag transformations.
+      if (!isDragging) {
+        rowRef(node)
+      }
+    },
+    [setNodeRef, rowRef, isDragging],
+  )
+
+  // Attempt to combine dnd-kit transform with virtualizer's offsetTop
+  const style: CSSProperties = {
+    position: 'absolute', // Use absolute positioning for virtualized items
+    top: offsetTop, // Position based on virtualizer's calculation (virtualRow.start)
+    left: 0, // Span full width of the relative parent (tbody)
+    right: 0, // Span full width
+    height: showHierarchy ? 36 : 40, // Explicit height can be beneficial for absolute positioning
+    zIndex: isDragging ? 10 : 0,
+    display: 'flex', // Styled.TR is display:flex
+    transform: dndTransform ? CSS.Transform.toString(dndTransform) : undefined, // Apply dnd-kit's transform for drag effect
+    transition: dndTransition, // Apply dnd-kit's transition
+  }
 
   return (
     <Styled.TR
-      data-index={virtualRow.index} //needed for dynamic row height measurement
-      ref={(node) => rowVirtualizer.measureElement(node)} //measure dynamic row height
-      key={row.id}
-      style={{
-        transform: `translateY(${virtualRow.start}px)`, //this should always be a `style` as it changes on scroll
-      }}
+      ref={combinedRef}
+      data-index={dataIndex} //needed for dynamic row height measurement
+      style={style}
     >
-      {virtualPaddingLeft ? (
+      {paddingLeft ? (
         //fake empty column to the left for virtualization scroll padding
-        <td style={{ display: 'flex', width: virtualPaddingLeft }} />
+        <td style={{ display: 'flex', width: paddingLeft }} />
       ) : null}
       {virtualColumns.map((vc) => {
         const cell = visibleCells[vc.index]
+        if (!cell) return null // Should not happen in normal circumstances
+
         const cellId = getCellId(row.id, cell.column.id)
+
+        if (cell.column.id === DRAG_HANDLE_COLUMN_ID) {
+          return (
+            <Styled.TableCell
+              key={cell.id}
+              style={{
+                ...getCommonPinningStyles(cell.column),
+                width: `calc(var(--col-${cell.column.id}-size) * 1px)`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                height: showHierarchy ? 36 : 40,
+              }}
+              className={clsx(cell.column.id, {
+                'last-pinned-left':
+                  cell.column.getIsPinned() === 'left' && cell.column.getIsLastColumn('left'),
+              })}
+              onMouseDown={(e) => e.stopPropagation()} // Prevent selection interference
+              onMouseOver={(e) => e.stopPropagation()}
+              // Removed onMouseUp stopPropagation to allow dnd-kit to handle it
+              onDoubleClick={(e) => e.stopPropagation()}
+              onContextMenu={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+              }}
+            >
+              <RowDragHandleCellContent attributes={attributes} listeners={listeners} />
+            </Styled.TableCell>
+          )
+        }
         return (
           <TableCellMemo
             cell={cell}
@@ -643,9 +848,9 @@ const TableBodyRow = ({
         )
       })}
 
-      {virtualPaddingRight ? (
+      {paddingRight ? (
         //fake empty column to the right for virtualization scroll padding
-        <td style={{ display: 'flex', width: virtualPaddingRight }} />
+        <td style={{ display: 'flex', width: paddingRight }} />
       ) : null}
     </Styled.TR>
   )

@@ -14,7 +14,7 @@ interface ListItemsTableProps {
   isReview?: boolean
 }
 
-const ListItemsTable: FC<ListItemsTableProps> = ({ extraColumns, isLoading, isReview }) => {
+const ListItemsTable: FC<ListItemsTableProps> = ({ extraColumns, isLoading, isReview: _ }) => {
   const { selectedLists, selectedList } = useListsContext()
   const { isError, projectName, fetchNextPage, resetFilters } = useListItemsDataContext()
   const scope = `lists-${projectName}`
