@@ -89,6 +89,12 @@ const ListsTable: FC<ListsTableProps> = ({ isReview }) => {
         <Container>
           <ListsTableHeader
             title={isReview ? 'Review sessions' : undefined}
+            buttonLabels={{
+              delete: { tooltip: isReview ? 'Delete selected review sessions' : undefined },
+              add: { tooltip: isReview ? 'Create new review session' : undefined },
+              search: { tooltip: isReview ? 'Search review sessions' : undefined },
+            }}
+            hiddenButtons={isReview ? ['filter'] : []}
             search={clientSearch}
             onSearch={setClientSearch}
           />

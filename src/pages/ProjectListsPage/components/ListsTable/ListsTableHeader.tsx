@@ -31,14 +31,70 @@ const StyledButtons = styled.div`
   gap: var(--base-gap-small);
 `
 
+interface ButtonCustomization {
+  icon?: string
+  tooltip?: string
+  shortcut?: string
+}
+
+interface ButtonsCustomization {
+  delete?: ButtonCustomization
+  add?: ButtonCustomization
+  search?: ButtonCustomization
+  filter?: {
+    icon?: string
+    tooltip?: string
+    activeTooltip?: string
+    tooltipDelay?: number
+  }
+}
+
+type ButtonType = 'delete' | 'add' | 'filter' | 'search'
+
 interface ListsTableHeaderProps {
   title?: string
   search: string | null
   onSearch: (search: string | null) => void
+  buttonLabels?: ButtonsCustomization
+  hiddenButtons?: ButtonType[]
 }
 
-const ListsTableHeader: FC<ListsTableHeaderProps> = ({ title = 'Lists', search, onSearch }) => {
+const ListsTableHeader: FC<ListsTableHeaderProps> = ({
+  title = 'Lists',
+  search,
+  onSearch,
+  buttonLabels = {},
+  hiddenButtons = [],
+}) => {
   const { openNewList, deleteLists, selectedRows } = useListsContext()
+
+  // Default button configurations
+  const deleteButton = {
+    icon: 'delete',
+    tooltip: 'Delete selected lists',
+    ...buttonLabels.delete,
+  }
+
+  const addButton = {
+    icon: 'add',
+    tooltip: 'Create new list',
+    shortcut: 'N',
+    ...buttonLabels.add,
+  }
+
+  const searchButton = {
+    icon: 'search',
+    tooltip: 'Search lists',
+    ...buttonLabels.search,
+  }
+
+  // Filter button configuration
+  const filterButton = {
+    icon: 'filter_list',
+    filterTooltip: 'Filter lists',
+    tooltipDelay: 200,
+    ...buttonLabels.filter,
+  }
 
   const handleDelete = () => {
     // delete selected list items
@@ -51,25 +107,38 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({ title = 'Lists', search, 
         <StyledTitle>{title}</StyledTitle>
 
         <StyledButtons>
-          {!!selectedRows.length && (
+          {!!selectedRows.length && !hiddenButtons.includes('delete') && (
             <HeaderButton
-              icon={'delete'}
+              icon={deleteButton.icon}
               onClick={handleDelete}
-              data-tooltip="Delete selected lists"
+              data-tooltip={deleteButton.tooltip}
+              data-shortcut={deleteButton.shortcut}
             />
           )}
-          <HeaderButton
-            icon={'add'}
-            data-tooltip={'Create new list'}
-            data-shortcut={'N'}
-            onClick={() => openNewList()}
-          />
-          <ListsFiltersButton />
-          <HeaderButton
-            icon={'search'}
-            data-tooltip={'Search lists'}
-            onClick={() => typeof search !== 'string' && onSearch('')}
-          />
+          {!hiddenButtons.includes('add') && (
+            <HeaderButton
+              icon={addButton.icon}
+              data-tooltip={addButton.tooltip}
+              data-shortcut={addButton.shortcut}
+              onClick={() => openNewList()}
+            />
+          )}
+          {!hiddenButtons.includes('filter') && (
+            <ListsFiltersButton
+              icon={filterButton.icon}
+              filterTooltip={filterButton.filterTooltip}
+              activeFilterTooltip={filterButton.activeTooltip}
+              tooltipDelay={filterButton.tooltipDelay}
+            />
+          )}
+          {!hiddenButtons.includes('search') && (
+            <HeaderButton
+              icon={searchButton.icon}
+              data-tooltip={searchButton.tooltip}
+              data-shortcut={searchButton.shortcut}
+              onClick={() => typeof search !== 'string' && onSearch('')}
+            />
+          )}
         </StyledButtons>
       </HeaderTop>
       {typeof search === 'string' && (

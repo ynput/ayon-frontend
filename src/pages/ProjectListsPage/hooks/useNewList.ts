@@ -8,6 +8,7 @@ export interface NewListForm extends EntityListPostModel {}
 export interface UseNewListProps {
   onCreateNewList: (list: EntityListPostModel) => Promise<EntityListSummary>
   onCreated?: (list: EntityListSummary) => void
+  isReview?: boolean
 }
 
 export interface UseNewListReturn {
@@ -18,20 +19,24 @@ export interface UseNewListReturn {
   createNewList: () => Promise<EntityListSummary>
 }
 
-export const listDefaultName = () => {
+export const listDefaultName = (listType: string = 'List') => {
   const date = new Date()
-  return `List ${date.toLocaleDateString()} ${date.toLocaleTimeString()}`
+  return `${listType} ${date.toLocaleDateString()} ${date.toLocaleTimeString()}`
 }
 
-const useNewList = ({ onCreateNewList, onCreated }: UseNewListProps): UseNewListReturn => {
+const useNewList = ({
+  onCreateNewList,
+  onCreated,
+  isReview,
+}: UseNewListProps): UseNewListReturn => {
   const [newList, setNewList] = useState<V['newList']>(null)
   const openNewList: V['openNewList'] = React.useCallback((init) => {
     // generate default name based on date and time
 
     setNewList({
-      label: listDefaultName(),
-      entityListType: 'generic',
-      entityType: 'folder',
+      label: listDefaultName(isReview ? 'Review' : undefined),
+      entityListType: isReview ? 'review-session' : 'generic',
+      entityType: isReview ? 'version' : 'folder',
       access: {},
       ...init,
     })

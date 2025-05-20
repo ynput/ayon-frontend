@@ -44,6 +44,8 @@ export interface ListsContextValue {
   selectedRows: string[]
   selectedLists: EntityList[]
   selectedList: EntityList | undefined
+  // meta
+  isReview?: boolean
   // Creating new lists
   newList: UseNewListReturn['newList']
   setNewList: UseNewListReturn['setNewList']
@@ -71,9 +73,10 @@ const ListsContext = createContext<ListsContextValue | undefined>(undefined)
 
 interface ListsProviderProps {
   children: ReactNode
+  isReview?: boolean
 }
 
-export const ListsProvider = ({ children }: ListsProviderProps) => {
+export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
   const { projectName } = useProjectDataContext()
   const { listsMap } = useListsDataContext()
   const [unstableRowSelection, setRowSelection] = useQueryParam<RowSelectionState>(
@@ -134,6 +137,7 @@ export const ListsProvider = ({ children }: ListsProviderProps) => {
   const { closeNewList, createNewList, newList, openNewList, setNewList } = useNewList({
     onCreateNewList,
     onCreated: handleCreatedList,
+    isReview,
   })
 
   // UPDATE/EDIT LIST
@@ -164,6 +168,7 @@ export const ListsProvider = ({ children }: ListsProviderProps) => {
       openNewList,
       setNewList,
       isCreatingList,
+      isReview,
       // list editing
       closeRenameList,
       openRenameList,

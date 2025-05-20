@@ -57,7 +57,7 @@ const ProjectListsWithOuterProviders: FC<ProjectListsPageProps> = ({
     <ListsModuleProvider>
       <ProjectDataProvider projectName={projectName}>
         <ListsDataProvider entityListTypes={entityListTypes}>
-          <ListsProvider>
+          <ListsProvider isReview={isReview}>
             <ListItemsDataProvider>
               <ListsAttributesProvider>
                 <ProjectListsWithInnerProviders isReview={isReview} />

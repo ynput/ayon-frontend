@@ -41,7 +41,10 @@ export const buildListsTableData = (listsData: EntityList[]): SimpleTableRow[] =
           id: list.id,
           name: list.label,
           label: list.label,
-          icon: getEntityTypeIcon(list.entityType),
+          icon:
+            list.entityListType === 'review-session'
+              ? 'subscriptions'
+              : getEntityTypeIcon(list.entityType),
           subRows: [],
           data: {
             id: list.id,

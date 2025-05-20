@@ -28,6 +28,14 @@ interface NewListDialogProps extends Omit<DialogProps, 'onChange' | 'hidden'> {
   submitLoading?: boolean
   error?: string
   hidden?: ('label' | 'entityType')[]
+  // customization props
+  dialogTitle?: string
+  labels?: {
+    listLabel?: string
+    entityType?: string
+    createButton?: string
+    cancelButton?: string
+  }
 }
 
 export const NewListDialog = forwardRef<HTMLDivElement, NewListDialogProps>(
@@ -39,6 +47,14 @@ export const NewListDialog = forwardRef<HTMLDivElement, NewListDialogProps>(
       submitLoading,
       error,
       hidden,
+      // New customization props with defaults
+      dialogTitle = 'Create New List',
+      labels = {
+        listLabel: 'List label',
+        entityType: 'Entity type',
+        createButton: 'Create list',
+        cancelButton: 'Cancel',
+      },
       ...props
     },
     ref,
@@ -63,12 +79,17 @@ export const NewListDialog = forwardRef<HTMLDivElement, NewListDialogProps>(
         {...props}
         ref={ref}
         size="sm"
-        header="Create New List"
+        header={dialogTitle}
         footer={
           <Styled.Footer>
-            <Button label="Cancel" variant="text" icon="close" onClick={props.onClose} />
+            <Button
+              label={labels.cancelButton}
+              variant="text"
+              icon="close"
+              onClick={props.onClose}
+            />
             <SaveButton
-              label="Create list"
+              label={labels.createButton}
               icon="add"
               onClick={onSubmit}
               disabled={!form.label || submitLoading}
@@ -93,7 +114,7 @@ export const NewListDialog = forwardRef<HTMLDivElement, NewListDialogProps>(
         >
           {!hidden?.includes('label') && (
             <Styled.Row>
-              <label htmlFor="label">List label</label>
+              <label htmlFor="label">{labels.listLabel}</label>
               <InputText
                 ref={inputRef}
                 type="text"
@@ -108,7 +129,7 @@ export const NewListDialog = forwardRef<HTMLDivElement, NewListDialogProps>(
           )}
           {!hidden?.includes('entityType') && (
             <Styled.Row>
-              <label htmlFor="entityType">Entity type</label>
+              <label htmlFor="entityType">{labels.entityType}</label>
               <Dropdown
                 value={[form.entityType]}
                 onChange={(e) => handleChange(e[0] as NewListForm['entityType'], 'entityType')}

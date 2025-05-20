@@ -18,17 +18,36 @@ const StyledHeaderButton = styled(HeaderButton)`
   }
 `
 
-interface ListsFiltersButtonProps extends ButtonProps {}
+interface ListsFiltersButtonProps extends ButtonProps {
+  icon?: string
+  filterTooltip?: string
+  activeFilterTooltip?: string
+  tooltipDelay?: number
+}
 
 export const ListsFiltersButton = forwardRef<HTMLButtonElement, ListsFiltersButtonProps>(
-  ({ ...props }, ref) => {
+  (
+    {
+      icon = 'filter_list',
+      filterTooltip = 'Filter lists',
+      activeFilterTooltip,
+      tooltipDelay = 200,
+      ...props
+    },
+    ref,
+  ) => {
     const { listsFilters, setListsFilters } = useListsDataContext()
     const { setListsFiltersOpen } = useListsContext()
     const hasFilters = listsFilters.length > 0
 
+    // Use provided active tooltip or generate default one
+    const activeTooltip =
+      activeFilterTooltip ||
+      `Filters lists (${listsFilters.map((f) => f.label).join(', ')}) - Right click to clear`
+
     return (
       <StyledHeaderButton
-        icon={'filter_list'}
+        icon={icon}
         onClick={() => setListsFiltersOpen(true)}
         onContextMenu={(e) => {
           e.preventDefault()
@@ -40,14 +59,8 @@ export const ListsFiltersButton = forwardRef<HTMLButtonElement, ListsFiltersButt
           }
         }}
         className={clsx({ active: hasFilters })}
-        data-tooltip={
-          hasFilters
-            ? `Filters lists (${listsFilters
-                .map((f) => f.label)
-                .join(', ')}) - Right click to clear`
-            : 'Filter lists'
-        }
-        data-tooltip-delay={200}
+        data-tooltip={hasFilters ? activeTooltip : filterTooltip}
+        data-tooltip-delay={tooltipDelay}
         {...props}
         ref={ref}
       >

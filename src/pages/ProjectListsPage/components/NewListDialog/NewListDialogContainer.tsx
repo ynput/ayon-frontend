@@ -1,11 +1,27 @@
 import { useListsContext } from '@pages/ProjectListsPage/context/ListsContext'
 import { FC } from 'react'
 import { NewListDialog } from './NewListDialog'
+import { Dialog } from '@ynput/ayon-react-components'
 
 interface NewListDialogContainerProps {}
 
 const NewListDialogContainer: FC<NewListDialogContainerProps> = ({}) => {
-  const { closeNewList, newList, setNewList, isCreatingList, createNewList } = useListsContext()
+  const { closeNewList, newList, setNewList, isCreatingList, createNewList, isReview } =
+    useListsContext()
+
+  if (isReview) {
+    return (
+      <Dialog
+        isOpen={!!newList}
+        onClose={closeNewList}
+        header="Create New Review Session"
+        size="md"
+      >
+        Create new review sessions by selecting multiple versions and running the action "Create
+        Review Session".
+      </Dialog>
+    )
+  }
 
   return (
     <NewListDialog
@@ -15,6 +31,12 @@ const NewListDialogContainer: FC<NewListDialogContainerProps> = ({}) => {
       onChange={setNewList}
       onSubmit={createNewList}
       submitLoading={isCreatingList}
+      dialogTitle={isReview ? 'Create New Review Session' : undefined}
+      labels={{
+        listLabel: isReview ? 'Review session name' : undefined,
+        createButton: isReview ? 'Create review session' : undefined,
+      }}
+      hidden={isReview ? ['entityType'] : []}
     />
   )
 }
