@@ -47,6 +47,7 @@ const ListItemsTable: FC<ListItemsTableProps> = ({ extraColumns, isLoading, isRe
         excludedColumns={hiddenColumns}
         extraColumns={extraColumns}
         isLoading={isLoading}
+        isSortable
       />
       <ListItemsShortcuts />
       <ListsAttributesShortcutButton />

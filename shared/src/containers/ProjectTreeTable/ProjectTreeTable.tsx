@@ -61,15 +61,16 @@ import { UpdateTableEntities } from './hooks/useUpdateTableData'
 // dnd-kit imports
 import {
   DndContext,
+  DragOverlay,
   KeyboardSensor,
   MouseSensor,
   TouchSensor,
   closestCenter,
   type DragEndEvent,
+  type DragStartEvent, // Ensured DragStartEvent is imported
   type UniqueIdentifier,
   useSensor,
   useSensors,
-  // DragStartEvent, DragCancelEvent types might be needed if using event object in handlers
 } from '@dnd-kit/core'
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
 import {
@@ -151,6 +152,7 @@ export interface ProjectTreeTableProps extends React.HTMLAttributes<HTMLDivEleme
   excludedColumns?: (DefaultColumns | string)[]
   extraColumns?: TreeTableExtraColumn[]
   isLoading?: boolean
+  isSortable?: boolean // Added isSortable prop
   pt?: {
     container?: React.HTMLAttributes<HTMLDivElement>
     head?: Partial<TableHeadProps>
@@ -166,6 +168,7 @@ export const ProjectTreeTable = ({
   excludedColumns,
   extraColumns,
   isLoading: isLoadingProp,
+  isSortable = false, // Default isSortable to false
   pt,
   ...props
 }: ProjectTreeTableProps) => {
@@ -199,6 +202,7 @@ export const ProjectTreeTable = ({
 
   const [orderedData, setOrderedData] = useState<TableRow[]>(tableData)
   const [isDndDragging, setIsDndDragging] = useState(false) // State to track DND activity
+  const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null) // For DragOverlay
 
   useEffect(() => {
     // Only synchronize with tableData if not currently dragging
@@ -267,22 +271,26 @@ export const ProjectTreeTable = ({
       extraColumns,
       excluded: excludedColumns,
     })
-    return [
-      {
-        id: DRAG_HANDLE_COLUMN_ID,
-        header: () => null,
-        cell: () => null, // Content rendered by TableBodyRow
-        size: 24, // Reduced width
-        minSize: 24, // Reduced width
-        maxSize: 24, // Reduced width
-        enableResizing: false,
-        enableSorting: false,
-        enableHiding: false,
-        enablePinning: false, // Programmatically pinned
-      },
-      ...baseColumns,
-    ]
-  }, [columnAttribs, showHierarchy, options, extraColumns, excludedColumns])
+
+    if (isSortable) {
+      return [
+        {
+          id: DRAG_HANDLE_COLUMN_ID,
+          header: () => null,
+          cell: () => null, // Content rendered by TableBodyRow
+          size: 24,
+          minSize: 24,
+          maxSize: 24,
+          enableResizing: false,
+          enableSorting: false,
+          enableHiding: false,
+          enablePinning: false, // Programmatically pinned
+        },
+        ...baseColumns,
+      ]
+    }
+    return baseColumns
+  }, [columnAttribs, showHierarchy, options, extraColumns, excludedColumns, isSortable])
 
   const table = useReactTable({
     data: showLoadingRows ? loadingRows : orderedData, // Use orderedData
@@ -315,10 +323,26 @@ export const ProjectTreeTable = ({
     state: {
       expanded,
       sorting,
-      columnPinning: {
-        left: [DRAG_HANDLE_COLUMN_ID, ROW_SELECTION_COLUMN_ID, ...(columnPinning.left || [])], // Pin drag handle
-        right: columnPinning.right,
-      },
+      columnPinning: (() => {
+        const leftPins: string[] = []
+        if (isSortable) {
+          leftPins.push(DRAG_HANDLE_COLUMN_ID)
+        }
+        leftPins.push(ROW_SELECTION_COLUMN_ID)
+
+        // Add other unique pins from context, ensuring they are not the programmatic ones
+        const contextLeftPins = (columnPinning.left || []).filter(
+          (id) => id !== DRAG_HANDLE_COLUMN_ID && id !== ROW_SELECTION_COLUMN_ID,
+        )
+        leftPins.push(...contextLeftPins)
+        // Remove duplicates just in case, though filter should handle it
+        const uniqueLeftPins = [...new Set(leftPins)]
+
+        return {
+          left: uniqueLeftPins,
+          right: columnPinning.right,
+        }
+      })(),
       columnSizing,
       columnVisibility,
       columnOrder,
@@ -371,14 +395,34 @@ export const ProjectTreeTable = ({
 
   // Dnd-kit setup
   const sensors = useSensors(
-    useSensor(MouseSensor),
-    useSensor(TouchSensor),
+    useSensor(MouseSensor, {
+      activationConstraint: {
+        distance: 10,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 250,
+        tolerance: 5,
+      },
+    }),
     useSensor(KeyboardSensor, {}),
   )
 
   const rowOrderIds = useMemo(() => orderedData.map((row) => row.id), [orderedData])
+  const draggedRowData = useMemo(() => {
+    if (!activeId || !isSortable) return null
+    return orderedData.find((r) => r.id === activeId)
+  }, [activeId, orderedData, isSortable])
 
-  function handleDragEnd(event: DragEndEvent) {
+  function handleDragStart(event: DragStartEvent) {
+    if (!isSortable) return
+    setIsDndDragging(true)
+    setActiveId(event.active.id)
+  }
+
+  function handleInternalDragEnd(event: DragEndEvent) {
+    if (!isSortable) return
     console.log('DRAG END')
     const { active, over } = event
     if (active && over && active.id !== over.id) {
@@ -391,68 +435,160 @@ export const ProjectTreeTable = ({
         return currentData
       })
     }
+    // Reset activeId. setIsDndDragging(false) will be handled by DndContext prop.
+    setActiveId(null)
   }
 
-  return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCenter}
-      onDragStart={() => setIsDndDragging(true)}
-      onDragEnd={(event) => {
-        handleDragEnd(event)
-        setIsDndDragging(false)
-      }}
-      onDragCancel={() => setIsDndDragging(false)}
-      modifiers={[restrictToVerticalAxis]}
+  function handleInternalDragCancel() {
+    if (!isSortable) return
+    setIsDndDragging(false)
+    setActiveId(null)
+  }
+
+  const tableUiContent = (
+    <ClipboardProvider
+      entitiesMap={entitiesMap}
+      columnEnums={{ ...options, ...attribByField }}
+      columnReadOnly={readOnlyAttribs}
     >
-      <ClipboardProvider
-        entitiesMap={entitiesMap}
-        columnEnums={{ ...options, ...attribByField }}
-        columnReadOnly={readOnlyAttribs}
-      >
-        <Styled.TableWrapper {...props}>
-          <Styled.TableContainer
-            ref={tableContainerRef}
-            style={{ height: '100%', padding: 0 }}
-            onScroll={(e) => fetchMoreOnBottomReached(e.currentTarget)}
-            {...pt?.container}
-            className={clsx('table-container', pt?.container?.className)}
+      <Styled.TableWrapper {...props}>
+        <Styled.TableContainer
+          ref={tableContainerRef}
+          style={{ height: '100%', padding: 0 }}
+          onScroll={(e) => fetchMoreOnBottomReached(e.currentTarget)}
+          {...pt?.container}
+          className={clsx('table-container', pt?.container?.className)}
+        >
+          <table
+            style={{
+              display: 'grid',
+              borderCollapse: 'collapse',
+              userSelect: 'none',
+              ...columnSizeVars,
+              width: table.getTotalSize(),
+            }}
           >
-            <table
-              style={{
-                display: 'grid',
-                borderCollapse: 'collapse',
-                userSelect: 'none',
-                ...columnSizeVars,
-                width: table.getTotalSize(),
-              }}
-            >
-              <TableHead
-                columnVirtualizer={columnVirtualizer}
-                table={table}
-                virtualPaddingLeft={virtualPaddingLeft}
-                virtualPaddingRight={virtualPaddingRight}
-                isLoading={isLoading}
-                readOnlyColumns={readOnlyColumns}
-                {...pt?.head}
-              />
-              <TableBody
-                columnVirtualizer={columnVirtualizer}
-                table={table}
-                tableContainerRef={tableContainerRef}
-                virtualPaddingLeft={virtualPaddingLeft}
-                virtualPaddingRight={virtualPaddingRight}
-                showHierarchy={showHierarchy}
-                attribs={attribFields}
-                onOpenNew={onOpenNew}
-                rowOrderIds={rowOrderIds} // Pass rowOrderIds
-              />
-            </table>
-          </Styled.TableContainer>
-        </Styled.TableWrapper>
-      </ClipboardProvider>
-    </DndContext>
+            <TableHead
+              columnVirtualizer={columnVirtualizer}
+              table={table}
+              virtualPaddingLeft={virtualPaddingLeft}
+              virtualPaddingRight={virtualPaddingRight}
+              isLoading={isLoading}
+              readOnlyColumns={readOnlyColumns}
+              {...pt?.head}
+            />
+            <TableBody
+              columnVirtualizer={columnVirtualizer}
+              table={table}
+              tableContainerRef={tableContainerRef}
+              virtualPaddingLeft={virtualPaddingLeft}
+              virtualPaddingRight={virtualPaddingRight}
+              showHierarchy={showHierarchy}
+              attribs={attribFields}
+              onOpenNew={onOpenNew}
+              rowOrderIds={rowOrderIds}
+              isSortable={isSortable} // Pass isSortable
+            />
+          </table>
+        </Styled.TableContainer>
+      </Styled.TableWrapper>
+    </ClipboardProvider>
   )
+
+  if (isSortable) {
+    return (
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
+        onDragEnd={(event) => {
+          handleInternalDragEnd(event)
+          setIsDndDragging(false)
+        }}
+        onDragCancel={() => {
+          handleInternalDragCancel()
+          setIsDndDragging(false)
+        }}
+        modifiers={[restrictToVerticalAxis]}
+      >
+        {tableUiContent}
+        {createPortal(
+          <DragOverlay dropAnimation={null} modifiers={[restrictToVerticalAxis]}>
+            {activeId && draggedRowData
+              ? (() => {
+                  const overlayRowInstance = table.getRowModel().rows.find((r) => r.id === activeId)
+                  if (!overlayRowInstance) return null
+
+                  const tableWidth = table.getTotalSize()
+
+                  return (
+                    <table
+                      style={{
+                        width: tableWidth,
+                        borderCollapse: 'collapse',
+                        backgroundColor: 'var(--md-sys-color-surface-container-high)',
+                        boxShadow: '0 0 10px rgba(0,0,0,0.2)',
+                        ...columnSizeVars,
+                      }}
+                    >
+                      <tbody>
+                        <Styled.TR style={{ display: 'flex', userSelect: 'none' }}>
+                          {virtualPaddingLeft ? (
+                            <td style={{ display: 'flex', width: virtualPaddingLeft }} />
+                          ) : null}
+                          {columnVirtualizer.getVirtualItems().map((vc) => {
+                            const cell = overlayRowInstance.getVisibleCells()[vc.index]
+                            if (!cell) return null
+
+                            const cellStyleBase: CSSProperties = {
+                              ...getCommonPinningStyles(cell.column),
+                              width: `calc(var(--col-${cell.column.id}-size) * 1px)`,
+                              display: 'flex',
+                              alignItems: 'center',
+                              height: showHierarchy ? 36 : 40,
+                            }
+
+                            if (cell.column.id === DRAG_HANDLE_COLUMN_ID) {
+                              return (
+                                <Styled.TableCell
+                                  key={`overlay-drag-${cell.id}`}
+                                  style={{ ...cellStyleBase, justifyContent: 'center' }}
+                                  className={clsx(cell.column.id)}
+                                >
+                                  <Icon icon="drag_handle" /> {/* Static icon */}
+                                </Styled.TableCell>
+                              )
+                            }
+                            return (
+                              <TableCellMemo
+                                cell={cell}
+                                cellId={`overlay-${getCellId(
+                                  overlayRowInstance.id,
+                                  cell.column.id,
+                                )}`}
+                                rowId={overlayRowInstance.id}
+                                key={`overlay-cell-${cell.id}`}
+                                showHierarchy={showHierarchy}
+                              />
+                            )
+                          })}
+                          {virtualPaddingRight ? (
+                            <td style={{ display: 'flex', width: virtualPaddingRight }} />
+                          ) : null}
+                        </Styled.TR>
+                      </tbody>
+                    </table>
+                  )
+                })()
+              : null}
+          </DragOverlay>,
+          document.body,
+        )}
+      </DndContext>
+    )
+  } else {
+    return tableUiContent
+  }
 }
 
 interface TableHeadProps extends React.HTMLAttributes<HTMLTableSectionElement> {
@@ -645,6 +781,7 @@ interface TableBodyProps {
   attribs: ProjectTableAttribute[]
   onOpenNew?: (type: 'folder' | 'task') => void
   rowOrderIds: UniqueIdentifier[]
+  isSortable: boolean // Added isSortable prop
 }
 
 const TableBody = ({
@@ -657,6 +794,7 @@ const TableBody = ({
   attribs,
   onOpenNew,
   rowOrderIds, // Receive rowOrderIds
+  isSortable, // Destructure isSortable
 }: TableBodyProps) => {
   const { handleTableBodyContextMenu } = useCellContextMenu({ attribs, onOpenNew })
 
@@ -690,47 +828,60 @@ const TableBody = ({
 
   useKeyboardNavigation()
 
-  return virtualRows.length ? (
-    <SortableContext items={rowOrderIds} strategy={verticalListSortingStrategy}>
-      <tbody
-        style={{
-          height: `${rowVirtualizer.getTotalSize()}px`,
-          position: 'relative',
-          display: 'grid',
-        }}
-        onContextMenu={handleTableBodyContextMenu}
-        onMouseOver={(e) => {
-          handlePreFetchTasks(e)
-        }}
-      >
-        {virtualRows.map((virtualRow) => {
-          const row = rows[virtualRow.index] as Row<TableRow>
-          // Add a check for row existence to prevent potential errors if data is out of sync
-          if (!row) {
-            console.warn('Virtualized row data not found for index:', virtualRow.index)
-            return null
-          }
-          return (
-            <TableBodyRow
-              key={row.id} // dnd-kit needs this key to be stable and match the id in useSortable
-              row={row}
-              showHierarchy={showHierarchy}
-              visibleCells={row.getVisibleCells()}
-              virtualColumns={columnVirtualizer.getVirtualItems()}
-              paddingLeft={virtualPaddingLeft}
-              paddingRight={virtualPaddingRight}
-              rowRef={measureRowElement} // Pass memoized callback
-              dataIndex={virtualRow.index}
-              offsetTop={virtualRow.start}
-            />
-          )
-        })}
-      </tbody>
-    </SortableContext>
-  ) : (
-    tableContainerRef.current &&
-      createPortal(<EmptyPlaceholder message="No items found" />, tableContainerRef.current)
+  const tbodyContent = (
+    <tbody
+      style={{
+        height: `${rowVirtualizer.getTotalSize()}px`,
+        position: 'relative',
+        display: 'grid',
+      }}
+      onContextMenu={handleTableBodyContextMenu}
+      onMouseOver={(e) => {
+        handlePreFetchTasks(e)
+      }}
+    >
+      {virtualRows.map((virtualRow) => {
+        const row = rows[virtualRow.index] as Row<TableRow>
+        // Add a check for row existence to prevent potential errors if data is out of sync
+        if (!row) {
+          console.warn('Virtualized row data not found for index:', virtualRow.index)
+          return null
+        }
+        return (
+          <TableBodyRow
+            key={row.id} // dnd-kit needs this key to be stable and match the id in useSortable
+            row={row}
+            showHierarchy={showHierarchy}
+            visibleCells={row.getVisibleCells()}
+            virtualColumns={columnVirtualizer.getVirtualItems()}
+            paddingLeft={virtualPaddingLeft}
+            paddingRight={virtualPaddingRight}
+            rowRef={measureRowElement} // Pass memoized callback
+            dataIndex={virtualRow.index}
+            offsetTop={virtualRow.start}
+            isSortable={isSortable} // Pass isSortable
+          />
+        )
+      })}
+    </tbody>
   )
+
+  if (!virtualRows.length) {
+    return (
+      tableContainerRef.current &&
+      createPortal(<EmptyPlaceholder message="No items found" />, tableContainerRef.current)
+    )
+  }
+
+  if (isSortable) {
+    return (
+      <SortableContext items={rowOrderIds} strategy={verticalListSortingStrategy}>
+        {tbodyContent}
+      </SortableContext>
+    )
+  } else {
+    return tbodyContent
+  }
 }
 
 interface TableBodyRowProps {
@@ -743,6 +894,7 @@ interface TableBodyRowProps {
   rowRef: (node: HTMLTableRowElement | null) => void
   dataIndex: number
   offsetTop: number
+  isSortable: boolean // Added isSortable prop
 }
 
 const TableBodyRow = ({
@@ -755,28 +907,22 @@ const TableBodyRow = ({
   rowRef,
   dataIndex,
   offsetTop,
+  isSortable, // Destructure isSortable
 }: TableBodyRowProps) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform: dndTransform, // Renamed from transform
-    transition: dndTransition, // Renamed from transition
-    isDragging,
-  } = useSortable({
-    id: row.id,
-  })
+  const sortable = isSortable ? useSortable({ id: row.id }) : null
 
   const combinedRef = useCallback(
     (node: HTMLTableRowElement | null) => {
-      setNodeRef(node)
-      // Only call measureElement (via rowRef prop) if not dragging
-      // to prevent measurement loops during drag transformations.
-      if (!isDragging) {
+      if (sortable) {
+        sortable.setNodeRef(node)
+      }
+      // rowRef for virtualizer measurement
+      // only measure if not actively being transformed by dnd-kit
+      if (!(sortable && sortable.isDragging)) {
         rowRef(node)
       }
     },
-    [setNodeRef, rowRef, isDragging],
+    [sortable, rowRef],
   )
 
   // Attempt to combine dnd-kit transform with virtualizer's offsetTop
@@ -786,10 +932,12 @@ const TableBodyRow = ({
     left: 0, // Span full width of the relative parent (tbody)
     right: 0, // Span full width
     height: showHierarchy ? 36 : 40, // Explicit height can be beneficial for absolute positioning
-    zIndex: isDragging ? 10 : 0,
+    zIndex: sortable && sortable.isDragging ? 0 : 1, // Ensure dragged item is above others
     display: 'flex', // Styled.TR is display:flex
-    transform: dndTransform ? CSS.Transform.toString(dndTransform) : undefined, // Apply dnd-kit's transform for drag effect
-    transition: dndTransition, // Apply dnd-kit's transition
+    transform:
+      sortable && sortable.transform ? CSS.Transform.toString(sortable.transform) : undefined, // Apply dnd-kit's transform for drag effect
+    transition: sortable && sortable.transition ? sortable.transition : undefined,
+    visibility: sortable && sortable.isDragging ? 'hidden' : 'visible', // Hide the row being dragged
   }
 
   return (
@@ -833,7 +981,10 @@ const TableBodyRow = ({
                 e.stopPropagation()
               }}
             >
-              <RowDragHandleCellContent attributes={attributes} listeners={listeners} />
+              <RowDragHandleCellContent
+                attributes={sortable?.attributes}
+                listeners={sortable?.listeners}
+              />
             </Styled.TableCell>
           )
         }
