@@ -5,19 +5,15 @@ import { useCallback } from 'react'
 import { useAppSelector } from '@state/store'
 import useClearListItems from './useClearListItems'
 import { useProjectDataContext } from '@pages/ProjectOverviewPage/context/ProjectDataContext'
+import { useListsDataContext } from '../context/ListsDataContext'
 
 const useListContextMenu = () => {
   const user = useAppSelector((state) => state.user)
   const developerMode = user?.attrib.developerMode
   const { projectName } = useProjectDataContext()
-  const {
-    rowSelection,
-    setRowSelection,
-    selectedLists,
-    openRenameList,
-    openDetailsPanel,
-    deleteLists,
-  } = useListsContext()
+  const { listsData } = useListsDataContext()
+  const { rowSelection, setRowSelection, openRenameList, openDetailsPanel, deleteLists } =
+    useListsContext()
 
   const { clearListItems } = useClearListItems({ projectName })
 
@@ -30,17 +26,15 @@ const useListContextMenu = () => {
       e.stopPropagation()
 
       let newSelection: RowSelectionState = { ...rowSelection }
-      console.log(newSelection, e.currentTarget.id)
       // if we are selecting a row outside of the selection (or none), set the selection to the row
       if (!newSelection[e.currentTarget.id]) {
-        console.log('new selection')
         newSelection = { [e.currentTarget.id]: true }
         setRowSelection(newSelection)
       }
       const newSelectedRows = Object.entries(newSelection)
         .filter(([_k, v]) => v)
         .map(([k]) => k)
-      const newSelectedLists = selectedLists.filter((list) =>
+      const newSelectedLists = listsData.filter((list) =>
         newSelectedRows.some((selected) => list?.id === selected),
       )
       const firstSelectedRow = Object.keys(newSelection)[0]
@@ -88,7 +82,7 @@ const useListContextMenu = () => {
     [
       ctxMenuShow,
       rowSelection,
-      selectedLists,
+      listsData,
       setRowSelection,
       openRenameList,
       openDetailsPanel,
