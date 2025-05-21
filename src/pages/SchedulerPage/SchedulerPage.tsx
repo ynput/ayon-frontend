@@ -6,6 +6,7 @@ import SchedulerFallback from './SchedulerFallback'
 import Slicer from '@containers/Slicer'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { Section } from '@ynput/ayon-react-components'
+import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 
 interface SchedulerPageProps {}
 
@@ -43,6 +44,7 @@ const SchedulerPage: FC<SchedulerPageProps> = ({}) => {
         </SplitterPanel>
         <SplitterPanel size={80}>
           <Scheduler
+            router={{ ...{ useParams, useNavigate, useLocation, useSearchParams } }}
             projectName={projectName}
             slicer={{
               selection: rowSelectionData,

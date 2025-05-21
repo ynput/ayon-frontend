@@ -201,7 +201,6 @@ export type {
 
 // projects
 export * from './projects'
-export { api as projectsApi } from './projects'
 export type {
   GetProjectEntityUrisApiArg,
   GetProjectEntityUrisApiResponse,

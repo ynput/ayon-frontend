@@ -1,6 +1,6 @@
 import { useDispatch } from 'react-redux'
 import { onSelectedAddons } from '@state/addonsManager'
-import { useNavigate } from 'react-router'
+import { useNavigate } from 'react-router-dom'
 
 const useUninstall = (name) => {
   const dispatch = useDispatch()

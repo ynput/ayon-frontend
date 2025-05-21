@@ -9,7 +9,7 @@ import {
 } from '@queries/ynputConnect'
 import LoadingPage from '@pages/LoadingPage'
 import * as Styled from './YnputCloud.styled'
-import { useLocation } from 'react-router'
+import { useLocation } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 import clsx from 'clsx'
 import { isBefore } from 'date-fns'

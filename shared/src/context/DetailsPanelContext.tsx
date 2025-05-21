@@ -2,7 +2,7 @@ import React, { createContext, useContext, useCallback, ReactNode, useState } fr
 import { useLocalStorage } from '@shared/hooks'
 import { DetailsPanelEntityType } from '@shared/api'
 import type { UserModel } from '@shared/api'
-import { useLocation, useNavigate, useParams } from 'react-router'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useSearchParams } from 'react-router-dom'
 
 export type FeedFilters = 'activity' | 'comments' | 'versions' | 'checklists'

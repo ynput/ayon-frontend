@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '@state/store'
 import { Button, Dialog } from '@ynput/ayon-react-components'
 
@@ -23,6 +23,7 @@ import useLoadRemoteProjectPages from '../../remote/useLoadRemotePages'
 import { Navigate } from 'react-router-dom'
 import ProjectPubSub from './ProjectPubSub'
 import NewListFromContext from '@pages/ProjectListsPage/components/NewListDialog/NewListFromContext'
+import { RemoteAddonProject } from '@shared/context'
 
 const ProjectContextInfo = () => {
   /**
@@ -82,15 +83,17 @@ const ProjectPage = () => {
     }
   }
 
-  type ModuleData = { name: string; module: string }
   // permanent addon pages that show a fallback when not loaded
   // const permanentAddons: Fallbacks<ModuleData> = new Map([['review', ReviewAddon]])
 
-  const { remotePages, isLoading: isLoadingModules } = useLoadRemoteProjectPages<ModuleData>({
+  const { remotePages, isLoading: isLoadingModules } = useLoadRemoteProjectPages({
     // fallbacks: permanentAddons,
     moduleKey: 'Project',
     skip: !projectName || !addonsData || addonsLoading || isLoading,
-  })
+  }) as {
+    remotePages: RemoteAddonProject[]
+    isLoading: boolean
+  }
 
   // get remote project module pages
   const links = useMemo(
@@ -132,9 +135,9 @@ const ProjectPage = () => {
         uriSync: true,
       },
       ...remotePages.map((remote) => ({
-        name: remote.data.name,
-        module: remote.data.module,
-        path: `/projects/${projectName}/${remote.data.module}`,
+        name: remote.name,
+        module: remote.module,
+        path: `/projects/${projectName}/${remote.module}`,
       })),
       ...addonsData.map((addon) => ({
         name: addon.title,
@@ -209,15 +212,17 @@ const ProjectPage = () => {
       )
     }
 
-    const foundRemotePage = remotePages.find((item) => item.data.module === module)
+    const foundRemotePage = remotePages.find((item) => item.module === module)
     if (foundRemotePage) {
       const RemotePage = foundRemotePage.component
-      const props = foundRemotePage.isFallback
-        ? {}
-        : {
-            projectName,
-          }
-      return <RemotePage {...props} />
+      return (
+        <RemotePage
+          router={{
+            ...{ useParams, useNavigate, useLocation, useSearchParams },
+          }}
+          projectName={projectName}
+        />
+      )
     }
 
     // Fallback to browser page if no addon matches addonName

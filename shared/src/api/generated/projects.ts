@@ -1,5 +1,5 @@
 import { api } from '@shared/api/base'
-const injectedRtkApi = api.injectEndpoints({
+export const projectsApi = api.injectEndpoints({
   endpoints: (build) => ({
     deleteProjectActivity: build.mutation<
       DeleteProjectActivityApiResponse,
@@ -209,7 +209,6 @@ const injectedRtkApi = api.injectEndpoints({
   }),
   overrideExisting: false,
 })
-export { injectedRtkApi as api }
 export type DeleteProjectActivityApiResponse = /** status 200 Successful Response */ any
 export type DeleteProjectActivityApiArg = {
   projectName: string

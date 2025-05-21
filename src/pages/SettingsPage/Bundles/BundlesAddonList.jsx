@@ -7,7 +7,7 @@ import { compareBuild, coerce } from 'semver'
 import { InputSwitch, InputText, VersionSelect } from '@ynput/ayon-react-components'
 import { FilePath, LatestIcon } from './Bundles.styled'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
-import { useNavigate } from 'react-router'
+import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 
 const StyledDataTable = styled(DataTable)`

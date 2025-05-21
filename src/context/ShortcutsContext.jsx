@@ -7,7 +7,7 @@ import React, {
   useState,
   useRef,
 } from 'react'
-import { useNavigate } from 'react-router'
+import { useNavigate } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '@state/store'
 import { toggleMenuOpen } from '@state/context'
 import { useLogoutMutation } from '@queries/auth/logout'

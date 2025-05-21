@@ -2,7 +2,7 @@ import { useGetFeedbackVerificationQuery, useGetYnputCloudInfoQuery } from '@que
 import { useAppSelector } from '@state/store'
 import { cloneDeep } from 'lodash'
 import React, { createContext, useContext, ReactNode, useEffect, useState } from 'react'
-import { useLocation } from 'react-router'
+import { useLocation } from 'react-router-dom'
 import { toast } from 'react-toastify'
 
 type FeedbackContextType = {

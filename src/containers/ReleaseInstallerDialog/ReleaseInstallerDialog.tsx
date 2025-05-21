@@ -11,7 +11,7 @@ import * as Styled from './ReleaseInstaller.styled'
 import ReleaseInstaller from './ReleaseInstaller'
 import { useGetYnputConnectionsQuery } from '@queries/ynputConnect'
 import ConnectDialog from '@pages/MarketPage/ConnectDialog/ConnectDialog'
-import { useLocation } from 'react-router'
+import { useLocation } from 'react-router-dom'
 
 const ReleaseInstallerDialog: FC = () => {
   const location = useLocation()

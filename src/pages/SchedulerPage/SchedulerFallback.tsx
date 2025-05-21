@@ -1,4 +1,5 @@
-import { SelectionData, SliceType } from '@shared/Slicer'
+import { SelectionData, SliceType } from '@shared/containers'
+import { RemoteAddonProjectProps } from '@shared/context'
 import { FC } from 'react'
 
 type Slicer = {
@@ -6,8 +7,7 @@ type Slicer = {
   type: SliceType
   persistentRowSelectionData: SelectionData
 }
-interface SchedulerFallbackProps {
-  projectName: string
+interface SchedulerFallbackProps extends RemoteAddonProjectProps {
   slicer: Slicer
 }
 

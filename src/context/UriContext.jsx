@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect } from 'react'
 import { toast } from 'react-toastify'
 import { onUriNavigate, setUri, setUriChanged } from '@state/context'
 import axios from 'axios'
-import { useLocation, useNavigate } from 'react-router'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useDispatch } from 'react-redux'
 
 const URIContext = createContext()
