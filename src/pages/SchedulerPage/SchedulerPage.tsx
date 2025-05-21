@@ -1,5 +1,5 @@
-import useLoadModule from '@/remote/useLoadModule'
-import { useSlicerContext } from '@context/slicerContext'
+import { useLoadModule } from '@shared/hooks'
+import { useSlicerContext } from '@context/SlicerContext'
 import { useAppSelector } from '@state/store'
 import { FC } from 'react'
 import SchedulerFallback from './SchedulerFallback'
