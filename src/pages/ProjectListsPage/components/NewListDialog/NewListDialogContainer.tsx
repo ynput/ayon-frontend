@@ -31,10 +31,10 @@ const NewListDialogContainer: FC<NewListDialogContainerProps> = ({}) => {
       onChange={setNewList}
       onSubmit={createNewList}
       submitLoading={isCreatingList}
-      dialogTitle={isReview ? 'Create New Review Session' : undefined}
+      dialogTitle={isReview ? 'Create New Review Session' : 'Create New List'}
       labels={{
-        listLabel: isReview ? 'Review session name' : undefined,
-        createButton: isReview ? 'Create review session' : undefined,
+        listLabel: isReview ? 'Review session name' : 'List label',
+        createButton: isReview ? 'Create review session' : 'Create list',
       }}
       hidden={isReview ? ['entityType'] : []}
     />

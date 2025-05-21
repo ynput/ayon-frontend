@@ -90,9 +90,11 @@ const ListsTable: FC<ListsTableProps> = ({ isReview }) => {
           <ListsTableHeader
             title={isReview ? 'Review sessions' : undefined}
             buttonLabels={{
-              delete: { tooltip: isReview ? 'Delete selected review sessions' : undefined },
-              add: { tooltip: isReview ? 'Create new review session' : undefined },
-              search: { tooltip: isReview ? 'Search review sessions' : undefined },
+              delete: {
+                tooltip: isReview ? 'Delete selected review sessions' : 'Delete selected lists',
+              },
+              add: { tooltip: isReview ? 'Create new review session' : 'Create new list' },
+              search: { tooltip: isReview ? 'Search review sessions' : 'Search lists' },
             }}
             hiddenButtons={isReview ? ['filter'] : []}
             search={clientSearch}

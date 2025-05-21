@@ -6,6 +6,7 @@ fragment ListItemFragment on BaseNode {
     tags
     taskType
     assignees
+    ownItemAttrib: ownAttrib
     folder {
       path
       folderType
@@ -18,6 +19,7 @@ fragment ListItemFragment on BaseNode {
     tags
     folderType
     path
+    ownAttrib
   }
   ... on ProductNode {
     name
