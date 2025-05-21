@@ -5,7 +5,7 @@ import {
   useProjectDataContext,
 } from '@pages/ProjectOverviewPage/context/ProjectDataContext'
 import { Filter } from '@ynput/ayon-react-components'
-import { useUsersPageConfig } from '@pages/ProjectOverviewPage/hooks/useUserPageConfig'
+import { useUserProjectConfig } from '@shared/hooks'
 import useGetListItemsData from '../hooks/useGetListItemsData'
 import { useListsContext } from './ListsContext'
 import {
@@ -85,7 +85,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
 
   const selectors = ['lists', projectName, selectedList?.label]
 
-  const [pageConfig, updatePageConfig, { isSuccess: columnsConfigReady }] = useUsersPageConfig({
+  const [pageConfig, updatePageConfig, { isSuccess: columnsConfigReady }] = useUserProjectConfig({
     selectors,
   })
 

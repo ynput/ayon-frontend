@@ -16,7 +16,7 @@ import {
 } from './context/ProjectOverviewContext'
 import { ProjectDataProvider } from './context/ProjectDataContext'
 import { ProjectTableQueriesProvider } from '@shared/containers/ProjectTreeTable/context/ProjectTableQueriesContext'
-import { useUsersPageConfig } from './hooks/useUserPageConfig'
+import { useUserProjectConfig } from '@shared/hooks'
 import useTableQueriesHelper from './hooks/useTableQueriesHelper'
 
 const ProjectOverviewWithProviders: FC = () => {
@@ -34,7 +34,7 @@ const ProjectOverviewWithProviders: FC = () => {
 
 const ProjectOverviewWithTableProviders: FC = () => {
   const props = useProjectOverviewContext()
-  const [pageConfig, updatePageConfig] = useUsersPageConfig({
+  const [pageConfig, updatePageConfig] = useUserProjectConfig({
     selectors: ['overview', props.projectName],
   })
 

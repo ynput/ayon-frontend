@@ -23,7 +23,7 @@ import { ProjectDataContextProps, useProjectDataContext } from './ProjectDataCon
 import { LoadingTasks } from '@shared/containers/ProjectTreeTable'
 import { useEntityListsContext } from '@pages/ProjectListsPage/context/EntityListsContext'
 import { ContextMenuItemConstructors } from '@shared/containers/ProjectTreeTable/hooks/useCellContextMenu'
-import { useUsersPageConfig } from '../hooks/useUserPageConfig'
+import { useUserProjectConfig } from '@shared/hooks'
 
 export interface ProjectOverviewContextProps {
   isInitialized: boolean
@@ -123,7 +123,7 @@ export const ProjectOverviewProvider = ({ children }: ProjectOverviewProviderPro
   }
 
   // Get column sorting
-  const [pageConfig, updatePageConfig, { isSuccess: isConfigReady }] = useUsersPageConfig({
+  const [pageConfig, updatePageConfig, { isSuccess: isConfigReady }] = useUserProjectConfig({
     selectors: ['overview', projectName],
   })
 

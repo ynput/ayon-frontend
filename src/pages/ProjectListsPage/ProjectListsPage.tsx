@@ -19,7 +19,7 @@ import ListItemsTable from './components/ListItemsTable/ListItemsTable'
 import ListItemsFilter from './components/ListItemsFilter/ListItemsFilter'
 import { CustomizeButton } from '@shared/components'
 import { SettingsPanelProvider, useSettingsPanel } from '@shared/context'
-import { useUsersPageConfig } from '@pages/ProjectOverviewPage/hooks/useUserPageConfig'
+import { useUserProjectConfig } from '@shared/hooks'
 import useTableQueriesHelper from '@pages/ProjectOverviewPage/hooks/useTableQueriesHelper'
 import {
   CellEditingProvider,
@@ -104,7 +104,7 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
     [listAttributes, attribFields, selectedList],
   )
 
-  const [pageConfig, updatePageConfig] = useUsersPageConfig({
+  const [pageConfig, updatePageConfig] = useUserProjectConfig({
     selectors: ['lists', projectName, selectedList?.label],
   })
 
