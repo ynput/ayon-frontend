@@ -6,7 +6,7 @@ fragment ListItemFragment on BaseNode {
     tags
     taskType
     assignees
-    ownItemAttrib: ownAttrib
+    ownAttrib
     folder {
       path
       folderType

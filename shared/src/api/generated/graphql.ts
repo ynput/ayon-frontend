@@ -1550,7 +1550,7 @@ export type GetListItemsQueryVariables = Exact<{
 }>;
 
 
-export type GetListItemsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', entityLists: { __typename?: 'EntityListsConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, edges: Array<{ __typename?: 'EntityListEdge', node: { __typename?: 'EntityListNode', id: string, active: boolean, items: { __typename?: 'EntityListItemsConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, edges: Array<{ __typename?: 'EntityListItemEdge', id: string, entityId: string, entityType: string, allAttrib: string, ownAttrib: Array<string>, position: number, node?: { __typename?: 'FolderNode', active: boolean, name: string, updatedAt: any, label?: string | null, status: string, tags: Array<string>, folderType: string, path?: string | null, ownAttrib: Array<string> } | { __typename?: 'ProductNode', active: boolean, name: string, updatedAt: any, status: string, tags: Array<string>, productType: string, folder: { __typename?: 'FolderNode', path?: string | null, folderType: string } } | { __typename?: 'RepresentationNode', active: boolean, name: string, updatedAt: any } | { __typename?: 'TaskNode', active: boolean, name: string, updatedAt: any, label?: string | null, status: string, tags: Array<string>, taskType: string, assignees: Array<string>, ownItemAttrib: Array<string>, folder: { __typename?: 'FolderNode', path?: string | null, folderType: string } } | { __typename?: 'VersionNode', active: boolean, name: string, updatedAt: any, status: string, tags: Array<string>, product: { __typename?: 'ProductNode', name: string, productType: string, folder: { __typename?: 'FolderNode', path?: string | null, folderType: string } }, task?: { __typename?: 'TaskNode', name: string, taskType: string } | null } | { __typename?: 'WorkfileNode', active: boolean, name: string, updatedAt: any } | null }> } } }> } } };
+export type GetListItemsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', entityLists: { __typename?: 'EntityListsConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, edges: Array<{ __typename?: 'EntityListEdge', node: { __typename?: 'EntityListNode', id: string, active: boolean, items: { __typename?: 'EntityListItemsConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, edges: Array<{ __typename?: 'EntityListItemEdge', id: string, entityId: string, entityType: string, allAttrib: string, position: number, ownItemAttrib: Array<string>, node?: { __typename?: 'FolderNode', active: boolean, name: string, updatedAt: any, label?: string | null, status: string, tags: Array<string>, folderType: string, path?: string | null, ownAttrib: Array<string> } | { __typename?: 'ProductNode', active: boolean, name: string, updatedAt: any, status: string, tags: Array<string>, productType: string, folder: { __typename?: 'FolderNode', path?: string | null, folderType: string } } | { __typename?: 'RepresentationNode', active: boolean, name: string, updatedAt: any } | { __typename?: 'TaskNode', active: boolean, name: string, updatedAt: any, label?: string | null, status: string, tags: Array<string>, taskType: string, assignees: Array<string>, ownAttrib: Array<string>, folder: { __typename?: 'FolderNode', path?: string | null, folderType: string } } | { __typename?: 'VersionNode', active: boolean, name: string, updatedAt: any, status: string, tags: Array<string>, product: { __typename?: 'ProductNode', name: string, productType: string, folder: { __typename?: 'FolderNode', path?: string | null, folderType: string } }, task?: { __typename?: 'TaskNode', name: string, taskType: string } | null } | { __typename?: 'WorkfileNode', active: boolean, name: string, updatedAt: any } | null }> } } }> } } };
 
 export type GetListsQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
@@ -1568,7 +1568,7 @@ type ListItemFragment_ProductNode_Fragment = { __typename?: 'ProductNode', name:
 
 type ListItemFragment_RepresentationNode_Fragment = { __typename?: 'RepresentationNode' };
 
-type ListItemFragment_TaskNode_Fragment = { __typename?: 'TaskNode', name: string, label?: string | null, status: string, tags: Array<string>, taskType: string, assignees: Array<string>, ownItemAttrib: Array<string>, folder: { __typename?: 'FolderNode', path?: string | null, folderType: string } };
+type ListItemFragment_TaskNode_Fragment = { __typename?: 'TaskNode', name: string, label?: string | null, status: string, tags: Array<string>, taskType: string, assignees: Array<string>, ownAttrib: Array<string>, folder: { __typename?: 'FolderNode', path?: string | null, folderType: string } };
 
 type ListItemFragment_VersionNode_Fragment = { __typename?: 'VersionNode', name: string, status: string, tags: Array<string>, product: { __typename?: 'ProductNode', name: string, productType: string, folder: { __typename?: 'FolderNode', path?: string | null, folderType: string } }, task?: { __typename?: 'TaskNode', name: string, taskType: string } | null };
 
@@ -1811,7 +1811,7 @@ export const ListItemFragmentFragmentDoc = `
     tags
     taskType
     assignees
-    ownItemAttrib: ownAttrib
+    ownAttrib
     folder {
       path
       folderType
@@ -2223,7 +2223,7 @@ export const GetListItemsDocument = `
               entityId
               entityType
               allAttrib
-              ownAttrib
+              ownItemAttrib: ownAttrib
               position
               node {
                 active
