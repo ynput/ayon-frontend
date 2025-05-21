@@ -1,27 +1,66 @@
-import { useCreateContextMenu } from '../../ContextMenu/useCreateContextMenu'
+import { ContextMenuItemType, useCreateContextMenu } from '../../ContextMenu/useCreateContextMenu'
 import useDeleteEntities from './useDeleteEntities'
 import { getPlatformShortcutKey, KeyMode } from '../../../util/platform'
 import { getCellId, parseCellId } from '../utils/cellUtils'
 import { useClipboard } from '../context/ClipboardContext'
-import { ROW_SELECTION_COLUMN_ID, useSelectionContext } from '../context/SelectionContext'
+import { ROW_SELECTION_COLUMN_ID, useSelectionCellsContext } from '../context/SelectionCellsContext'
 import { useProjectTableContext } from '../context/ProjectTableContext'
 import { useCellEditing } from '../context/CellEditingContext'
-import { InheritFromParentEntity } from './useUpdateOverview'
-import { AttributeWithPermissions } from '../types'
+import { InheritFromParentEntity } from './useUpdateTableData'
+import { ProjectTableAttribute } from '../types'
+import { UseHistoryReturn } from './useHistory'
 
 type ContextEvent = React.MouseEvent<HTMLTableSectionElement, MouseEvent>
 
+export type TableCellContextData = {
+  entityId: string
+  cellId: string
+  columnId: string
+  entityType: 'folder' | 'task' | 'product' | 'version' | undefined
+  attribField: ProjectTableAttribute | undefined
+}
+type DefaultMenuItem =
+  | 'copy-paste'
+  | 'show-details'
+  | 'expand-collapse'
+  | 'inherit'
+  | 'delete'
+  | 'export'
+  | 'create-folder'
+  | 'create-task'
+export type ContextMenuItemConstructor = (
+  e: ContextEvent,
+  cell: TableCellContextData,
+  selectedCells: TableCellContextData[],
+  meta: {
+    selectedCells: string[]
+    selectedRows: string[]
+    selectedColumns: string[]
+    selectedFullRows: string[] // if the full row is selected
+  },
+  context: {
+    history: UseHistoryReturn
+  },
+) => ContextMenuItemType | ContextMenuItemType[] | undefined
+export type ContextMenuItemConstructors = (DefaultMenuItem | ContextMenuItemConstructor)[]
+
 type CellContextMenuProps = {
-  attribs: AttributeWithPermissions[]
+  attribs: ProjectTableAttribute[]
   onOpenNew?: (type: 'folder' | 'task') => void
 }
 
 const useCellContextMenu = ({ attribs, onOpenNew }: CellContextMenuProps) => {
   // context hooks
-  const { projectName, showHierarchy, getEntityById, toggleExpandAll } = useProjectTableContext()
+  const {
+    projectName,
+    showHierarchy,
+    getEntityById,
+    toggleExpandAll,
+    contextMenuItems = [],
+  } = useProjectTableContext()
   const { copyToClipboard, exportCSV, pasteFromClipboard } = useClipboard()
-  const { isCellSelected, selectedCells, clearSelection, selectCell } = useSelectionContext()
-  const { inheritFromParent } = useCellEditing()
+  const { selectedCells, clearSelection, selectCell, focusCell } = useSelectionCellsContext()
+  const { inheritFromParent, history } = useCellEditing()
 
   // update entity context
 
@@ -29,170 +68,6 @@ const useCellContextMenu = ({ attribs, onOpenNew }: CellContextMenuProps) => {
   const deleteEntities = useDeleteEntities({})
 
   const [cellContextMenuShow] = useCreateContextMenu()
-
-  const cellContextMenuItems = (_e: ContextEvent, id: string, selected: string[]) => {
-    // Define menu item type with condition
-    type MenuItem = {
-      label: string
-      icon: string
-      shortcut?: string
-      danger?: boolean
-      command: () => void
-      shouldShow: boolean
-      disabled?: boolean
-    }
-
-    // Parse cell info
-    const { rowId: entityId, colId } = parseCellId(id) || {}
-    // get full attrib details
-    const attrib = attribs.find((attrib) => attrib.name === colId?.replace('attrib_', ''))
-
-    if (!entityId)
-      return [
-        {
-          label: 'Copy',
-          icon: 'content_copy',
-          shortcut: getPlatformShortcutKey('c', [KeyMode.Ctrl]),
-          command: () => copyToClipboard(selected),
-          shouldShow: true,
-        },
-      ]
-
-    // Define conditions
-    const isNameColumn = colId === 'name'
-    const isSingleSelection = selected.length === 1
-    const entitiesToInherit = getEntitiesToInherit(selected)
-
-    // from the selected cells, get the rows they are selected in
-    const selectedCellRows = new Set<string>()
-    const selectedCellColumns = new Set<string>()
-
-    for (const cellId of selected) {
-      const parsed = parseCellId(cellId)
-      if (parsed) {
-        if (parsed.rowId) selectedCellRows.add(parsed.rowId)
-        if (parsed.colId) selectedCellColumns.add(parsed.colId)
-      }
-    }
-
-    const selectedCellRowsArray = Array.from(selectedCellRows)
-    // get selected rows ids
-    const selectedRowCells = Array.from(selectedCells).filter(
-      (cellId) => parseCellId(cellId)?.colId === ROW_SELECTION_COLUMN_ID,
-    )
-    // is the selection a grid (multiple rows and columns)
-    const isMultipleRows = selectedCellRows.size > 1
-    const isMultipleColumns = selectedCellColumns.size > 1
-    const isGridSelection = isMultipleRows && isMultipleColumns
-
-    const canInheritFromParent = entitiesToInherit.length > 0 && showHierarchy && !isGridSelection
-
-    // Define all possible menu items with their conditions
-    const allMenuItems: MenuItem[] = [
-      // Clipboard operations
-      {
-        label: 'Copy',
-        icon: 'content_copy',
-        shortcut: getPlatformShortcutKey('c', [KeyMode.Ctrl]),
-        command: () => copyToClipboard(selected),
-        shouldShow: true, // Always shown
-      },
-      {
-        label: `Copy row${selectedRowCells.length > 1 ? 's' : ''}`,
-        icon: 'content_copy',
-        command: () => copyToClipboard(selectedRowCells, true),
-        shouldShow:
-          isNameColumn &&
-          selectedRowCells.some((cellId) => parseCellId(cellId)?.rowId === parseCellId(id)?.rowId),
-      },
-      {
-        label: 'Paste',
-        icon: 'content_paste',
-        shortcut: getPlatformShortcutKey('v', [KeyMode.Ctrl]),
-        command: () => pasteFromClipboard(selected),
-        shouldShow: !isNameColumn,
-        disabled: attrib?.readOnly,
-      },
-      // Entity operations
-      {
-        label: 'Show details',
-        icon: 'dock_to_left',
-        shortcut: 'Double click',
-        command: () => {
-          const rowSelectionCellId = getCellId(entityId, ROW_SELECTION_COLUMN_ID)
-          selectCell(rowSelectionCellId, false, false)
-        },
-        shouldShow: isNameColumn && isSingleSelection,
-      },
-
-      // Expand/collapse (all) operations - only for name column
-      {
-        label: 'Expand all',
-        icon: 'expand_all',
-        shortcut: 'Alt + click',
-        command: () => toggleExpandAll(selectedCellRowsArray, true),
-        shouldShow: isNameColumn,
-      },
-      {
-        label: 'Collapse all',
-        icon: 'collapse_all',
-        shortcut: 'Alt + click',
-        command: () => toggleExpandAll(selectedCellRowsArray, false),
-        shouldShow: isNameColumn,
-      },
-
-      // Attribute operations
-      {
-        label: 'Inherit from parent',
-        icon: 'disabled_by_default',
-        command: () => inheritFromParent(entitiesToInherit),
-        shouldShow: canInheritFromParent,
-      },
-
-      // Export operations
-      {
-        label: 'Export selection',
-        icon: 'download',
-        command: () => exportCSV(selected, projectName),
-        shouldShow: true, // Always shown
-      },
-
-      // Creation operations (only in name column and hierarchy mode)
-      {
-        label: 'Create folder',
-        icon: 'create_new_folder',
-        command: () => onOpenNew?.('folder'),
-        shouldShow: isNameColumn && showHierarchy && !!onOpenNew,
-      },
-      {
-        label: 'Create root folder',
-        icon: 'create_new_folder',
-        command: () => {
-          clearSelection()
-          onOpenNew?.('folder')
-        },
-        shouldShow: isNameColumn && showHierarchy && !!onOpenNew,
-      },
-      {
-        label: 'Create task',
-        icon: 'add_task',
-        command: () => onOpenNew?.('task'),
-        shouldShow: isNameColumn && showHierarchy && !!onOpenNew,
-      },
-
-      // Destructive operations
-      {
-        label: 'Delete',
-        icon: 'delete',
-        danger: true,
-        command: () => deleteEntities(selected),
-        shouldShow: isNameColumn,
-      },
-    ]
-
-    // Filter items based on their conditions
-    return allMenuItems.filter((item) => item.shouldShow).map(({ shouldShow, ...item }) => item)
-  }
 
   // Helper function to identify attributes that can be inherited
   const getEntitiesToInherit = (selected: string[]): InheritFromParentEntity[] => {
@@ -222,6 +97,7 @@ const useCellContextMenu = ({ attribs, onOpenNew }: CellContextMenuProps) => {
         } else {
           // Create new entity entry
           acc.push({
+            rowId: rowId,
             entityId: rowId,
             entityType: 'folderId' in entity ? 'task' : 'folder',
             attribs: [attribName],
@@ -236,19 +112,208 @@ const useCellContextMenu = ({ attribs, onOpenNew }: CellContextMenuProps) => {
     }, [] as InheritFromParentEntity[])
   }
 
+  const copyAndPasteItems: ContextMenuItemConstructor = (e, cell, selected, config) => {
+    return [
+      {
+        label: 'Copy',
+        icon: 'content_copy',
+        shortcut: getPlatformShortcutKey('c', [KeyMode.Ctrl]),
+        command: () => copyToClipboard(config.selectedCells),
+        hidden: false, // Always shown
+      },
+      {
+        label: `Copy row${config.selectedFullRows.length > 1 ? 's' : ''}`,
+        icon: 'content_copy',
+        command: () => copyToClipboard(config.selectedFullRows, true),
+        hidden:
+          cell.columnId !== 'name' ||
+          !config.selectedFullRows.some(
+            (cellId) => parseCellId(cellId)?.rowId === parseCellId(cell.cellId)?.rowId,
+          ),
+      },
+      {
+        label: 'Paste',
+        icon: 'content_paste',
+        shortcut: getPlatformShortcutKey('v', [KeyMode.Ctrl]),
+        command: () => pasteFromClipboard(config.selectedCells),
+        hidden: cell.columnId === 'name',
+        disabled: cell.attribField?.readOnly,
+      },
+    ]
+  }
+
+  const showDetailsItem: ContextMenuItemConstructor = (e, cell, selected, meta) => ({
+    label: 'Show details',
+    icon: 'dock_to_left',
+    shortcut: 'Double click',
+    command: () => {
+      const rowSelectionCellId = getCellId(cell.entityId, ROW_SELECTION_COLUMN_ID)
+      // select the row to open the details
+      selectCell(rowSelectionCellId, false, false)
+    },
+    hidden: cell.columnId !== 'name' || meta.selectedRows.length > 1,
+  })
+
+  const expandCollapseChildrenItems: ContextMenuItemConstructor = (e, cell, selected, meta) => [
+    {
+      label: 'Expand children',
+      icon: 'expand_all',
+      shortcut: 'Alt + click',
+      command: () => toggleExpandAll(meta.selectedRows, true),
+      hidden: cell.columnId !== 'name',
+    },
+    {
+      label: 'Collapse children',
+      icon: 'collapse_all',
+      shortcut: 'Alt + click',
+      command: () => toggleExpandAll(meta.selectedRows, false),
+      hidden: cell.columnId !== 'name',
+    },
+  ]
+
+  const deleteItem: ContextMenuItemConstructor = (e, cell, selected, meta) => ({
+    label: 'Delete',
+    icon: 'delete',
+    danger: true,
+    command: () => deleteEntities(meta.selectedCells),
+    hidden: cell.columnId !== 'name',
+  })
+
+  const inheritItem: ContextMenuItemConstructor = (e, cell, selected, meta) => {
+    const entitiesToInherit = getEntitiesToInherit(meta.selectedCells)
+    const canInheritFromParent =
+      entitiesToInherit.length > 0 &&
+      showHierarchy &&
+      !(meta.selectedRows.length > 1 && meta.selectedColumns.length > 1)
+
+    return {
+      label: 'Inherit from parent',
+      icon: 'disabled_by_default',
+      command: () => inheritFromParent(entitiesToInherit),
+      hidden: !canInheritFromParent,
+    }
+  }
+
+  const exportItem: ContextMenuItemConstructor = () => ({
+    label: 'Export selection',
+    icon: 'download',
+    command: () => exportCSV(Array.from(selectedCells), projectName),
+    hidden: false, // Always shown
+  })
+
+  const createFolderItems: ContextMenuItemConstructor = (e, cell) => [
+    {
+      label: 'Create folder',
+      icon: 'create_new_folder',
+      command: () => onOpenNew?.('folder'),
+      hidden: cell.columnId !== 'name' || !showHierarchy || !onOpenNew,
+    },
+    {
+      label: 'Create root folder',
+      icon: 'create_new_folder',
+      command: () => {
+        clearSelection()
+        onOpenNew?.('folder')
+      },
+      hidden: cell.columnId !== 'name' || !showHierarchy || !onOpenNew,
+    },
+  ]
+
+  const createTaskItem: ContextMenuItemConstructor = (e, cell) => ({
+    label: 'Create task',
+    icon: 'add_task',
+    command: () => onOpenNew?.('task'),
+    hidden: cell.columnId !== 'name' || !showHierarchy || !onOpenNew,
+  })
+
+  const builtInMenuItems: Record<DefaultMenuItem, ContextMenuItemConstructor> = {
+    ['copy-paste']: copyAndPasteItems,
+    ['show-details']: showDetailsItem,
+    ['expand-collapse']: expandCollapseChildrenItems,
+    ['delete']: deleteItem,
+    ['inherit']: inheritItem,
+    ['export']: exportItem,
+    ['create-folder']: createFolderItems,
+    ['create-task']: createTaskItem,
+  }
+
+  const getCellData = (cellId: string): TableCellContextData | undefined => {
+    const { rowId, colId } = parseCellId(cellId) || {}
+    if (!rowId || !colId) return undefined
+    const cellEntityData = getEntityById(rowId)
+    const attribField = attribs.find((attrib) => attrib.name === colId?.replace('attrib_', ''))
+    return {
+      cellId: cellId,
+      columnId: colId,
+      entityId: cellEntityData?.entityId || rowId,
+      entityType: cellEntityData?.entityType,
+      attribField: attribField,
+    }
+  }
+
   const handleTableBodyContextMenu = (e: ContextEvent) => {
     const target = e.target as HTMLElement
     const tdEl = target.closest('td')
     // get id of first child of td
     const cellId = tdEl?.firstElementChild?.id
 
-    if (cellId) {
-      let currentSelectedCells = Array.from(selectedCells)
-      if (!isCellSelected(cellId)) {
-        currentSelectedCells = [cellId]
-      }
-      cellContextMenuShow(e, cellContextMenuItems(e, cellId, currentSelectedCells))
+    if (!cellId) return
+
+    const cellData = getCellData(cellId)
+
+    if (!cellData) return
+
+    let currentSelectedCells = Array.from(selectedCells)
+    // if selecting a cell outside of the current selection
+    if (!currentSelectedCells.includes(cellId) || !currentSelectedCells.length) {
+      currentSelectedCells = [cellId]
+      // update selection
+      selectCell(cellId, false, false)
+      focusCell(cellId)
     }
+
+    const selectedCellsData = currentSelectedCells.flatMap((cellId) => getCellData(cellId) || [])
+    const selectedCellRows: string[] = []
+    const selectedCellColumns: string[] = []
+    const selectedCellFullRows: string[] = []
+    for (const { entityId, columnId } of selectedCellsData) {
+      if (entityId && !selectedCellRows.includes(entityId)) selectedCellRows.push(entityId)
+      if (columnId && !selectedCellColumns.includes(columnId)) selectedCellColumns.push(columnId)
+      if (columnId === ROW_SELECTION_COLUMN_ID && !selectedCellFullRows.includes(entityId))
+        selectedCellFullRows.push(entityId)
+    }
+
+    const constructedMenuItems = contextMenuItems.flatMap((constructor) =>
+      typeof constructor === 'function'
+        ? constructor(
+            e,
+            cellData,
+            selectedCellsData,
+            {
+              selectedCells: currentSelectedCells, // all selected cells
+              selectedRows: selectedCellRows,
+              selectedColumns: selectedCellColumns,
+              selectedFullRows: selectedCellFullRows,
+            },
+            {
+              history,
+            },
+          )
+        : builtInMenuItems[constructor]?.(
+            e,
+            cellData,
+            selectedCellsData,
+            {
+              selectedCells: currentSelectedCells, // all selected cells
+              selectedRows: selectedCellRows,
+              selectedColumns: selectedCellColumns,
+              selectedFullRows: selectedCellFullRows,
+            },
+            { history },
+          ),
+    )
+
+    cellContextMenuShow(e, constructedMenuItems)
   }
 
   return { handleTableBodyContextMenu }

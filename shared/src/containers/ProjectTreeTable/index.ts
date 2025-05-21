@@ -2,11 +2,11 @@ export * from './ProjectTreeTable'
 
 // context providers
 export {
-  SelectionProvider,
-  useSelectionContext,
+  SelectionCellsProvider,
+  useSelectionCellsContext,
   ROW_SELECTION_COLUMN_ID,
-} from './context/SelectionContext'
-export type { GridMap, SelectionContextType } from './context/SelectionContext'
+} from './context/SelectionCellsContext'
+export type { GridMap, SelectionCellsContextType } from './context/SelectionCellsContext'
 
 export { ProjectTableProvider, useProjectTableContext } from './context/ProjectTableContext'
 export type { ProjectTableContextProps } from './context/ProjectTableContext'
@@ -20,9 +20,15 @@ export type { ProjectTableQueriesContextProps } from './context/ProjectTableQuer
 export { SelectedRowsProvider, useSelectedRowsContext } from './context/SelectedRowsContext'
 export type { SelectedRowsContextProps } from './context/SelectedRowsContext'
 
-export { ColumnSettingsProvider, useColumnSettings } from './context/ColumnSettingsContext'
+export { ColumnSettingsProvider, useColumnSettingsContext } from './context/ColumnSettingsContext'
 export type { ColumnSettingsContextType } from './context/ColumnSettingsContext'
 
 export * from './utils'
 export * from './types'
 export * from './context'
+export * from './buildTreeTableColumns'
+
+import useGetEntityTypeData from './hooks/useGetEntityTypeData'
+export * from './hooks/useUpdateTableData'
+export { useGetEntityTypeData }
+export * from './widgets'

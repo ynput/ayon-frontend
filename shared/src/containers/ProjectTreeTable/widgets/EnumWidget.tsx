@@ -93,7 +93,9 @@ const StyledDropdown = styled(Dropdown)`
   width: 100%;
 `
 
-interface EnumWidgetProps extends Omit<DropdownProps, 'onChange' | 'value'>, WidgetBaseProps {
+export interface EnumWidgetProps
+  extends Omit<DropdownProps, 'onChange' | 'value'>,
+    WidgetBaseProps {
   value: (string | number | boolean)[]
   options: AttributeEnumItem[]
   type?: AttributeData['type']
@@ -235,6 +237,7 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
               hasMultipleValues={false}
               isOpen={false}
               isItem
+              isMultiSelect={isMultiSelect}
               isSelected={isSelected}
               {...pt?.template}
               className={clsx('enum-dropdown-item', pt?.template?.className)}
@@ -271,7 +274,7 @@ interface EnumTemplateProps extends React.HTMLAttributes<HTMLSpanElement> {
   selectedOptions: AttributeEnumItem[]
   placeholder?: string
   hasMultipleValues: boolean
-  isMultiSelect?: boolean
+  isMultiSelect: boolean
   isOpen?: boolean
   isItem?: boolean
   isSelected?: boolean
@@ -343,6 +346,13 @@ const EnumCellValue = ({
           className="expand"
           icon="expand_more"
           style={{ rotate: isOpen ? '180deg' : '0' }}
+        />
+      )}
+      {isItem && isSelected && isMultiSelect && (
+        <Icon
+          icon="close"
+          style={{ marginLeft: 'auto', marginRight: 4 }}
+          aria-label="Deselect item"
         />
       )}
     </StyledWidget>

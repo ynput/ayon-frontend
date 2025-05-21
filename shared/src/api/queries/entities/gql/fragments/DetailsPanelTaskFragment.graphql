@@ -1,0 +1,7 @@
+fragment DetailsPanelTaskFragment on TaskNode {
+  id
+  name
+  label
+  assignees
+  taskType
+}

@@ -7,7 +7,7 @@ import VideoPlayerControls from './VideoPlayerControls'
 import EmptyPlaceholder from '@shared/components/EmptyPlaceholder'
 import clsx from 'clsx'
 import useGoToFrame from './hooks/useGoToFrame'
-import { useViewer } from '@context/viewerContext'
+import { useViewer } from '@context/ViewerContext'
 
 const VideoPlayerContainer = styled.div`
   position: absolute;

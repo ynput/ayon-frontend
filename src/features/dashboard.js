@@ -1,13 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit'
 import getInitialStateLocalStorage from './middleware/getInitialStateLocalStorage'
 
-export const filterActivityTypes = {
-  activity: ['comment', 'version.publish', 'status.change', 'assignee.add', 'assignee.remove'],
-  comments: ['comment'],
-  publishes: ['version.publish'],
-  checklists: ['checklist'],
-}
-
 const dashboardSlice = createSlice({
   name: 'dashboard',
   initialState: {

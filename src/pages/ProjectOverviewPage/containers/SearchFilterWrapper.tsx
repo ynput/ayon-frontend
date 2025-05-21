@@ -1,19 +1,19 @@
 import useBuildFilterOptions, { BuildFilterOptions } from '@hooks/useBuildFilterOptions'
 import { FC, useEffect, useMemo, useState } from 'react'
 import { Filter, Icon, SearchFilter, SearchFilterProps } from '@ynput/ayon-react-components'
-import { ProjectModel } from '@api/rest/project'
+import type { ProjectModel } from '@shared/api'
 import { EditorTaskNode, TaskNodeMap } from '@shared/containers/ProjectTreeTable'
-import { usePower } from '@/remote/context/PowerLicenseContext'
+import { usePower } from '@/remote/PowerLicenseContext'
 import AdvancedFiltersPlaceholder from '@components/SearchFilter/AdvancedFiltersPlaceholder'
-import { usePowerpack } from '@context/powerpackContext'
-import { useColumnSettings } from '@shared/containers/ProjectTreeTable'
+import { usePowerpack } from '@context/PowerpackContext'
+import { useColumnSettingsContext } from '@shared/containers/ProjectTreeTable'
 
-interface SearchFilterWrapperProps extends Omit<BuildFilterOptions, 'scope' | 'data' | 'power'> {
-  filters: SearchFilterProps['filters']
-  onChange: SearchFilterProps['onChange']
-  disabledFilters?: string[]
+interface SearchFilterWrapperProps
+  extends Omit<BuildFilterOptions, 'scope' | 'data' | 'power'>,
+    Omit<SearchFilterProps, 'options' | 'onFinish'> {
   projectInfo?: ProjectModel
   tasksMap?: TaskNodeMap
+  scope: BuildFilterOptions['scope']
 }
 
 const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
@@ -24,8 +24,12 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
   disabledFilters,
   projectInfo,
   tasksMap,
+  scope = 'task',
+  config,
+  pt,
+  ...props
 }) => {
-  const { columnOrder } = useColumnSettings()
+  const { columnOrder } = useColumnSettingsContext()
 
   // create a flat list of all the assignees (string[]) on all tasks (duplicated)
   // this is used to rank what assignees are shown in the filter first
@@ -54,10 +58,16 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
   const options = useBuildFilterOptions({
     filterTypes,
     projectNames,
-    scope: 'task',
+    scope,
     data,
     columnOrder,
-    config: { enableExcludes: power, enableOperatorChange: power, enableRelativeValues: true },
+    config: {
+      enableExcludes: power,
+      enableOperatorChange: power,
+      enableRelativeValues: true,
+      prefixes: { attributes: 'attrib.' },
+      ...config,
+    },
     power,
   })
 
@@ -71,12 +81,25 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
     )
   }, [_filters, setFilters])
 
+  const validateFilters = (filters: Filter[], callback: (f: Filter[]) => void) => {
+    // if a filter is a date then check we have power features
+    const invalidFilters = filters.filter((f) => f.type === 'datetime' && !power)
+    const validFilters = filters.filter((f) => f.type !== 'datetime' || power)
+    if (invalidFilters.length) {
+      setPowerpackDialog('advancedFilters')
+    }
+
+    callback(validFilters)
+  }
+
+  const { dropdown, searchBar, ...ptRest } = pt || {}
+
   return (
     <SearchFilter
       options={options}
       filters={filters}
-      onChange={setFilters}
-      onFinish={(v) => onChange(v)} // when changes are applied
+      onChange={(v) => validateFilters(v, setFilters)} // when filters are changed
+      onFinish={(v) => validateFilters(v, onChange)} // when changes are applied
       enableMultipleSameFilters={false}
       enableGlobalSearch={true}
       globalSearchConfig={{
@@ -88,6 +111,7 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
           style: {
             paddingRight: 28,
           },
+          ...searchBar,
         },
         dropdown: {
           operationsTemplate: power ? undefined : (
@@ -109,8 +133,11 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
               contentAfter: power ? undefined : <Icon icon="bolt" />,
             },
           },
+          ...dropdown,
         },
+        ...ptRest,
       }}
+      {...props}
     />
   )
 }

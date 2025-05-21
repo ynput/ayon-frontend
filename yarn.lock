@@ -733,6 +733,14 @@
     "@dnd-kit/utilities" "^3.2.2"
     tslib "^2.0.0"
 
+"@dnd-kit/modifiers@^9.0.0":
+  version "9.0.0"
+  resolved "https://registry.yarnpkg.com/@dnd-kit/modifiers/-/modifiers-9.0.0.tgz#96a0280c77b10c716ef79d9792ce7ad04370771d"
+  integrity sha512-ybiLc66qRGuZoC20wdSSG6pDXFikui/dCNGthxv4Ndy8ylErY0N3KVxY2bgo7AWwIbxDmXDg3ylAFmnrjcbVvw==
+  dependencies:
+    "@dnd-kit/utilities" "^3.2.2"
+    tslib "^2.0.0"
+
 "@dnd-kit/sortable@^8.0.0":
   version "8.0.0"
   resolved "https://registry.npmjs.org/@dnd-kit/sortable/-/sortable-8.0.0.tgz"
@@ -1858,10 +1866,10 @@
     fs-extra "9.1.0"
     resolve "1.22.8"
 
-"@module-federation/vite@^1.2.6":
-  version "1.2.6"
-  resolved "https://registry.yarnpkg.com/@module-federation/vite/-/vite-1.2.6.tgz#56524c55317122fb60018707d0d12fea375e91ec"
-  integrity sha512-JG1AXzr5m3LqkKAJ2YeFj/kizvzIAQgHYnjDn3zzij3L0qntqBx3d7YOp8JjAekSCfYlCx2zn550UyJlfdaXDg==
+"@module-federation/vite@^1.2.7":
+  version "1.2.7"
+  resolved "https://registry.yarnpkg.com/@module-federation/vite/-/vite-1.2.7.tgz#15d934076f40fbee467909f5d887a369e319be57"
+  integrity sha512-r/kyUGgqkOgjtRiGV9+nmBv7PKzLRCnkB2g5Jr56pywaAbUtyaV0cYphBRo6Z4R2u+T/vs9rbyZH7Tg2TraPOQ==
   dependencies:
     "@module-federation/runtime" "^0.8.0"
     "@rollup/pluginutils" "^5.1.0"
@@ -1911,11 +1919,13 @@
   resolved "https://registry.npmjs.org/@popperjs/core/-/core-2.11.8.tgz"
   integrity sha512-P1st0aksCrn9sGZhp8GMYwBnQsbvAWsZAX44oXNNvLHGqAOcoVxmjZiohstwQ7SqKnbR47akdNi+uleWD8+g6A==
 
-"@reduxjs/toolkit@^2.6.1":
-  version "2.6.1"
-  resolved "https://registry.yarnpkg.com/@reduxjs/toolkit/-/toolkit-2.6.1.tgz#532ef3d3f1656461b421f0ba0a4fa1628163a0c5"
-  integrity sha512-SSlIqZNYhqm/oMkXbtofwZSt9lrncblzo6YcZ9zoX+zLngRBrCOjK4lNLdkNucJF58RHOWrD9txT3bT3piH7Zw==
+"@reduxjs/toolkit@^2.7.0":
+  version "2.7.0"
+  resolved "https://registry.yarnpkg.com/@reduxjs/toolkit/-/toolkit-2.7.0.tgz#6a8823aa741a5aab2a2ce58e6326243f36fe31f2"
+  integrity sha512-XVwolG6eTqwV0N8z/oDlN93ITCIGIop6leXlGJI/4EKy+0POYkR+ABHRSdGXY+0MQvJBP8yAzh+EYFxTuvmBiQ==
   dependencies:
+    "@standard-schema/spec" "^1.0.0"
+    "@standard-schema/utils" "^0.3.0"
     immer "^10.0.3"
     redux "^5.0.1"
     redux-thunk "^3.1.0"
@@ -2101,6 +2111,16 @@
   version "4.6.0"
   resolved "https://registry.npmjs.org/@sindresorhus/is/-/is-4.6.0.tgz"
   integrity sha512-t09vSN3MdfsyCHoFcTRCH/iUtG7OJ0CsjzB8cjAmKc/va/kIgeDI/TxsigdncE/4be734m0cvIYwNaV4i2XqAw==
+
+"@standard-schema/spec@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@standard-schema/spec/-/spec-1.0.0.tgz#f193b73dc316c4170f2e82a881da0f550d551b9c"
+  integrity sha512-m2bOd0f2RT9k8QJx1JN85cZYyH1RqFBdlwtkSlf4tBDYLCiiZnv1fIIwacK6cqwXavOydf0NPToMQgpKq+dVlA==
+
+"@standard-schema/utils@^0.3.0":
+  version "0.3.0"
+  resolved "https://registry.yarnpkg.com/@standard-schema/utils/-/utils-0.3.0.tgz#3d5e608f16c2390c10528e98e59aef6bf73cae7b"
+  integrity sha512-e7Mew686owMaPJVNNLs55PUvgz371nKgwsc4vxE49zsODpJEnxgxRo2y/OKrqueavXgZNMDVj3DdHFlaSAeU8g==
 
 "@tanstack/match-sorter-utils@^8.19.4":
   version "8.19.4"
@@ -2608,6 +2628,7 @@
     tslib "^2.6.3"
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 "@ynput/ayon-react-components@^1.13.0":
   version "1.13.0"
   resolved "https://registry.yarnpkg.com/@ynput/ayon-react-components/-/ayon-react-components-1.13.0.tgz#56273624042b4b918b234b47b473180e55e1567f"
@@ -2618,6 +2639,12 @@
   resolved "https://registry.yarnpkg.com/@ynput/ayon-react-components/-/ayon-react-components-1.13.1.tgz#36dc439db792207b6918fe53be352b75f85cb44e"
   integrity sha512-cLOKc1HbZlA43jIZG6gVW2gzzey/Gf1cmql7oz+C0niMidK/zKHQxh6ZWyNU3s5Xjt1cE02N7bhi5mkZUQUxHw==
 >>>>>>> develop
+=======
+"@ynput/ayon-react-components@^1.14.2":
+  version "1.14.2"
+  resolved "https://registry.yarnpkg.com/@ynput/ayon-react-components/-/ayon-react-components-1.14.2.tgz#21d318fb103a68eaae797b79c7c2c60d766b1584"
+  integrity sha512-N/NiCpYADXJBGk+FHjdWvIH6ywcQzXL4SAFpfyRcGawcn966e6yBCUbZ6Y0mVfZ8SYK2EnyQ79U2tICeB0apmQ==
+>>>>>>> 1102-Entity-Lists
   dependencies:
     short-uuid "^5.2.0"
 

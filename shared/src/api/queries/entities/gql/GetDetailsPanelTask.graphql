@@ -1,0 +1,31 @@
+query GetDetailsPanelTask($projectName: String!, $entityId: String!) {
+  project(name: $projectName) {
+    projectName
+    code
+    task(id: $entityId) {
+      id
+      name
+      label
+      status
+      tags
+      allAttrib
+      taskType
+      assignees
+      updatedAt
+      createdAt
+      folderId
+      thumbnailId
+      hasReviewables
+      folder {
+        ...DetailsPanelFolderFragment
+      }
+      versions(last: 1) {
+        edges {
+          node {
+            ...DetailsPanelVersionFragment
+          }
+        }
+      }
+    }
+  }
+}

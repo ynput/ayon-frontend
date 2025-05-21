@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { toast } from 'react-toastify'
 import { Dropdown } from '@ynput/ayon-react-components'
-import { useListAddonsQuery } from '@queries/addons/getAddons'
+import { useListAddonsQuery } from '@shared/api'
 
 const AddonDropdown = ({ addonName, addonVersion, setAddonVersion, disabled }) => {
   const { data: { addons = [] } = {}, isLoading, isError } = useListAddonsQuery({})

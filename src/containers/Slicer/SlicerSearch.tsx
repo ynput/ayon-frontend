@@ -1,27 +1,10 @@
-import { Button, InputText } from '@ynput/ayon-react-components'
+import { HeaderButton } from '@shared/SimpleTable'
+import { InputText } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import { useState } from 'react'
 import styled from 'styled-components'
 
 const StyledContainer = styled.div``
-
-const StyledButton = styled(Button)`
-  background-color: unset;
-  z-index: 110;
-  position: relative;
-
-  &.hasIcon {
-    padding: 4px;
-  }
-
-  &.open {
-    background-color: unset !important;
-  }
-
-  &:hover {
-    background-color: var(--md-sys-color-surface-container-low-hover);
-  }
-`
 
 const StyledInput = styled(InputText)`
   position: absolute;
@@ -67,10 +50,11 @@ const SlicerSearch = ({ value, onChange }: Props) => {
           onKeyDown={handleInputKeydown}
         />
       )}
-      <StyledButton
-        icon={isOpen ? 'close' : 'filter_list'}
+      <HeaderButton
+        icon={isOpen ? 'close' : 'search'}
         onClick={onToggle}
         className={clsx({ open: isOpen })}
+        data-tooltip={isOpen ? 'Close search' : 'Search folders'}
       />
     </StyledContainer>
   )

@@ -11,7 +11,7 @@ import {
 } from '@ynput/ayon-react-components'
 import { toast } from 'react-toastify'
 import { confirmDelete } from '@shared/util'
-import copyToClipboard from '@helpers/copyToClipboard'
+import { copyToClipboard } from '@shared/util'
 
 const SecretList = styled.div`
   display: flex;

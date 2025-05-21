@@ -73,7 +73,7 @@ const CommentInput: FC<CommentInputProps> = ({
   onOpen,
   onClose,
 }) => {
-  const { projectName, entities, projectInfo, scope, filter, mentionSuggestionsData } =
+  const { projectName, entities, projectInfo, scope, currentTab, mentionSuggestionsData } =
     useFeedContext()
 
   const {
@@ -109,23 +109,28 @@ const CommentInput: FC<CommentInputProps> = ({
     setEditorValue,
     setInitHeight,
     isOpen: isOpen,
-    filter,
+    filter: currentTab,
   })
 
   // When editing, set selection to the end of the editor
   useSetCursorEnd({ initHeight, editorRef, isEditing })
   // create a new quill format for mentions and registers it
-  useMentionLink({ projectName, projectInfo, scope })
+  useMentionLink({ projectName })
 
   // focus on editor when opened
   useEffect(() => {
     if (isOpen) {
       editorRef.current?.getEditor()?.enable()
       // block autofocus if opened from an annotation
-      const blockAutoFocus = !!annotations.length && files.length === 0
-      !blockAutoFocus && editorRef.current?.focus()
+      if (annotations.length > 0 && files.length === 0) {
+        return
+      }
+
+      editorRef.current?.focus()
     }
-  }, [isOpen, editorRef, annotations, files])
+    // We don't set annotations or files as useEffect dependencies, because we don't want to focus
+    // the input if it's already open but annotations change (e.g. are removed).
+  }, [isOpen, editorRef])
 
   mentionTypes.sort((a, b) => b.length - a.length)
 
@@ -136,7 +141,7 @@ const CommentInput: FC<CommentInputProps> = ({
         {
           '@': () => getMentionUsers(mentionUsers),
           '@@': () => getMentionVersions(mentionVersions),
-          '@@@': () => getMentionTasks(mentionTasks, projectInfo.task_types),
+          '@@@': () => getMentionTasks(mentionTasks, projectInfo.taskTypes),
         },
         mention?.search,
       ),
@@ -394,7 +399,7 @@ const CommentInput: FC<CommentInputProps> = ({
   const handleFileRemove = (id: string, name: string, isAnnotation: boolean) => {
     if (isAnnotation) {
       // remove from annotations (if it's an annotation)
-      removeAnnotation(id)
+      removeAnnotation?.(id)
     } else {
       // remove file from files
       setFiles((prev) => prev.filter((file) => file.id !== id))

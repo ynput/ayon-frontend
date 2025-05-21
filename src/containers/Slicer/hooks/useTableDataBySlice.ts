@@ -3,8 +3,10 @@ import { useEffect, useState } from 'react'
 import useHierarchyTable from './useHierarchyTable'
 import useUsersTable from './useUsersTable'
 import useProjectAnatomySlices from './useProjectAnatomySlices'
-import { SliceType, useSlicerContext } from '@context/slicerContext'
-import { Slice, SliceData, SliceOption, TableData, TableRow } from '../types'
+import { Slice, SliceData, SliceOption, TableData } from '../types'
+import { SimpleTableRow } from '@shared/SimpleTable'
+import { SliceType } from '@shared/containers/Slicer'
+import { useSlicerContext } from '@context/SlicerContext'
 
 interface Props {
   sliceFields: SliceType[]
@@ -33,7 +35,7 @@ const defaultSliceOptions: SliceOption[] = [
   },
 ]
 
-const getNoValue = (field: string): TableRow => ({
+const getNoValue = (field: string): SimpleTableRow => ({
   id: 'noValue',
   name: 'noValue',
   label: `No ${field}`,
@@ -44,7 +46,7 @@ const getNoValue = (field: string): TableRow => ({
   },
 })
 
-const getSomeValue = (field: string): TableRow => ({
+const getSomeValue = (field: string): SimpleTableRow => ({
   id: 'hasValue',
   name: 'hasValue',
   label: `Some ${field}`,

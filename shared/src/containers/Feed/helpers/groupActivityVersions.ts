@@ -6,10 +6,12 @@ const activityToVersionItem = (activity: any = {}) => {
   const {
     updatedAt,
     createdAt,
-    origin: { name, id } = {},
+    origin = {},
     activityData: { context: { productName, productType, productId } = {} } = {},
     version,
   } = activity
+
+  const { name, id } = origin
 
   return {
     name,

@@ -51,7 +51,6 @@ const localStorageKeys = [
   'focused.folders', //
   'focused.products', //
   'focused.versions', //
-  'focused.representations', //
   'focused.tasks', //
   'focused.tasksNames', //
   'focused.workfiles', //
@@ -96,9 +95,6 @@ const reducers = {
     'focused.versions': {
       value: initialState.focused.versions,
     },
-    'focused.representations': {
-      value: initialState.focused.representations,
-    },
     'focused.tasks': {
       value: initialState.focused.tasks,
     },
@@ -138,9 +134,6 @@ const reducers = {
       value: [],
     },
     'focused.versions': {
-      value: [],
-    },
-    'focused.representations': {
       value: [],
     },
     'focused.tasks': {
@@ -199,9 +192,6 @@ const reducers = {
     },
     'focused.subTypes': {
       value: [],
-    },
-    'focused.representations': {
-      payload: true,
     },
   },
   setFocusedVersions: {
@@ -263,9 +253,6 @@ const reducers = {
     'focused.products': {
       payload: 'products',
     },
-    'focused.representations': {
-      value: [],
-    },
   },
   setUri: {
     uri: {
@@ -284,9 +271,6 @@ const reducers = {
     },
     'focused.versions': {
       payload: 'versions',
-    },
-    'focused.representations': {
-      payload: 'representations',
     },
     'focused.workfiles': {
       payload: 'workfiles',

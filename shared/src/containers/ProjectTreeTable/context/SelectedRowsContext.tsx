@@ -1,5 +1,5 @@
 import { createContext, ReactNode, useCallback, useContext, useMemo, useRef } from 'react'
-import { ROW_SELECTION_COLUMN_ID, useSelectionContext } from './SelectionContext'
+import { ROW_SELECTION_COLUMN_ID, useSelectionCellsContext } from './SelectionCellsContext'
 import { CellId, getCellId, parseCellId, RowId } from '../utils/cellUtils'
 
 export interface SelectedRowsContextProps {
@@ -19,7 +19,7 @@ interface SelectedRowsProviderProps {
 
 export const SelectedRowsProvider = ({ children }: SelectedRowsProviderProps) => {
   const { selectedCells, gridMap, setSelectedCells, setFocusedCellId, setAnchorCell } =
-    useSelectionContext()
+    useSelectionCellsContext()
   const prevSelectedRowsRef = useRef<string[]>([])
 
   // Calculate the current selected rows

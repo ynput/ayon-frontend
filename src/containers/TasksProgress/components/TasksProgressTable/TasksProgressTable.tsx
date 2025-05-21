@@ -19,18 +19,16 @@ import { Body } from '../FolderBody/FolderBody.styled'
 
 // State management
 import { useAppDispatch, useAppSelector } from '@state/store'
-import { selectProgress, toggleDetailsOpen } from '@state/progress'
+import { selectProgress } from '@state/progress'
 import { setFocusedTasks } from '@state/context'
 
 // Types
-import type { Status, TaskType } from '@api/rest/project'
 import type {
   FolderRow,
   TaskTypeRow,
   TaskTypeStatusBar,
 } from '../../helpers/formatTaskProgressForTable'
-import type { Assignees } from '@queries/user/getUsers'
-import { AttributeEnumItem } from '@api/rest/attributes'
+import type { Assignees, Status, TaskType, AttributeEnumItem } from '@shared/api'
 
 // Hooks
 import { useEffect, useState, type KeyboardEvent, type MouseEvent } from 'react'
@@ -42,6 +40,8 @@ import { useLocalStorage } from '@shared/hooks'
 import { useFolderSort } from '../../hooks'
 import { taskStatusSortFunction } from '@containers/TasksProgress/helpers/taskStatusSortFunction'
 import clsx from 'clsx'
+import { useEntityListsContext } from '@pages/ProjectListsPage/context/EntityListsContext'
+import { useScopedDetailsPanel } from '@shared/context'
 
 export const Cells = styled.div`
   display: flex;
@@ -109,7 +109,7 @@ export const TasksProgressTable = ({
 }: TasksProgressTableProps) => {
   const selectedTasks = useAppSelector((state) => state.context.focused.tasks) as string[]
   const progressSelected = useAppSelector((state) => state.progress.selected)
-  const detailsOpen = useAppSelector((state) => state.details.open)
+  const { isOpen: detailsOpen, setOpen } = useScopedDetailsPanel('progress')
   const dispatch = useAppDispatch()
 
   // HACK: this forces a complete rerender of the table
@@ -192,10 +192,18 @@ export const TasksProgressTable = ({
   const sortFolderFunction = useFolderSort(tableData)
 
   const togglePanel = (open: boolean = true) => {
-    dispatch(toggleDetailsOpen(open))
+    setOpen(open)
   }
 
-  const buildContextMenu = (_selection: string[], taskId: string) => {
+  const {
+    buildAddToListMenu,
+    buildListMenuItem,
+    newListMenuItem,
+    tasks: tasksLists,
+  } = useEntityListsContext()
+
+  const buildContextMenu = (selection: string[], taskId: string) => {
+    const selectedEntities = selection.map((id) => ({ entityId: id, entityType: 'task' }))
     return [
       {
         label: detailsOpen ? 'Hide details' : 'Show details',
@@ -209,6 +217,10 @@ export const TasksProgressTable = ({
         shortcut: 'Spacebar',
         command: () => onOpenViewer({ taskId, quickView: true }),
       },
+      buildAddToListMenu([
+        ...tasksLists.data.map((list) => buildListMenuItem(list, selectedEntities)),
+        newListMenuItem('task', selectedEntities),
+      ]),
     ]
   }
 

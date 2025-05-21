@@ -6,9 +6,9 @@ import * as Styled from './ListGroup.styled'
 import { Button } from '@ynput/ayon-react-components'
 import ListItem from '@components/ListItem/ListItem'
 import { InView } from 'react-intersection-observer'
-import { useURIContext } from '@context/uriContext'
+import { useURIContext } from '@context/UriContext'
 import { getTaskRoute } from '@helpers/routes'
-import { toggleDetailsPanel } from '@state/details'
+import { useScopedDetailsPanel } from '@shared/context'
 
 const ListGroup = ({
   tasks = [],
@@ -34,9 +34,11 @@ const ListGroup = ({
   const openInBrowser = (task) => navigateToUri(getTaskRoute(task))
   const column = groups[id] || {}
 
+  const { setOpen } = useScopedDetailsPanel('dashboard')
+
   // OPEN DETAILS PANEL
   const onTogglePanel = (open) => {
-    dispatch(toggleDetailsPanel(open))
+    setOpen(open)
   }
 
   // CONTEXT MENU

@@ -2,6 +2,8 @@
  * Shared cell utilities for table operations
  */
 
+import { EMapResult, EntitiesMap } from '../types'
+
 // Type definitions for cell identifiers
 export type CellId = string
 export type RowId = string
@@ -111,3 +113,9 @@ export const getBorderClasses = (borders: BorderPosition): string[] => {
 
   return classes
 }
+
+// get a entity from it's id
+export const getEntityDataById = <T extends 'folder' | 'task' | 'product' | 'version'>(
+  id: string,
+  entitiesMap: EntitiesMap,
+) => entitiesMap.get(id) as EMapResult<T> | undefined

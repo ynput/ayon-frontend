@@ -1,4 +1,4 @@
-import { YnputConnectSubscriptionModel } from '@api/rest/cloud'
+import { YnputConnectSubscriptionModel } from '@shared/api'
 import { differenceInDays, differenceInHours, formatDistanceToNow, isBefore } from 'date-fns'
 
 const getTrialDates = (

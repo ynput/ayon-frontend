@@ -1,5 +1,4 @@
-import { UserPoolModel } from '@api/rest/auth'
-import { useGetUserPoolsQuery } from '@queries/auth/getAuth'
+import { useGetUserPoolsQuery, UserPoolModel } from '@shared/api'
 import { useMemo } from 'react'
 import styled from 'styled-components'
 

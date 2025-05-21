@@ -1,12 +1,15 @@
-import { BundleModel } from '@api/rest/bundles'
-import { ReleaseListItemModel } from '@api/rest/releases'
+import type {
+  BundleModel,
+  ReleaseListItemModel,
+  Installer,
+  DependencyPackage,
+  GetReleaseInfoApiResponse,
+  SourceModel,
+} from '@shared/api'
 import { getPlatformLabel } from '@pages/AccountPage/DownloadsPage/DownloadsPage'
-import { GetReleaseInfoApiResponse, SourceModel } from '@api/rest/releases'
-import { Installer } from '@api/rest/installers'
 import { formatDistance } from 'date-fns'
 import { ReleaseForm } from './hooks/useReleaseForm'
-import { DependencyPackage } from '@api/rest/dependencyPackages'
-import { DownloadAddonsApiArg } from '@queries/addons/updateAddons'
+import { DownloadAddonsApiArg } from '@shared/api'
 import getNewBundleName from '@pages/SettingsPage/Bundles/getNewBundleName'
 
 export const createReleaseSubtitle = (

@@ -16,7 +16,7 @@ import './styles/loadingShimmer.scss'
 import './styles/index.scss'
 
 import short from 'short-uuid'
-import { SocketProvider } from '@context/websocketContext'
+import { SocketProvider } from '@context/WebsocketContext'
 
 // generate unique session id
 declare global {

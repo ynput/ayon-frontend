@@ -1,4 +1,4 @@
-import api from '@api'
+import api from '@shared/api'
 
 const parseProductFps = (product) => {
   const folderFps = product.folder.attrib.fps || ''

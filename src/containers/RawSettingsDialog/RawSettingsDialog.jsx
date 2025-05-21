@@ -10,7 +10,7 @@ import {
   useSetRawAddonSettingsOverridesMutation,
   useLazyGetRawAddonSettingsOverridesQuery,
 } from '@queries/addonSettings'
-import copyToClipboard from '@helpers/copyToClipboard'
+import { copyToClipboard } from '@shared/util'
 
 const EditorWrapper = styled.div`
   position: relative;

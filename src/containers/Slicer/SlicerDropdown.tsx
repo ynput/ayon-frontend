@@ -1,5 +1,5 @@
-import { usePowerpack } from '@context/powerpackContext'
-import { SliceType } from '@context/slicerContext'
+import { usePowerpack } from '@context/PowerpackContext'
+import { SliceType } from '@context/SlicerContext'
 import { Dropdown, DropdownProps, DropdownRef } from '@ynput/ayon-react-components'
 import { forwardRef } from 'react'
 import styled from 'styled-components'

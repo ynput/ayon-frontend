@@ -1,13 +1,13 @@
 import UserMenuHeader from './UserMenuHeader'
 import Menu from '../../MenuComponents/Menu'
-import { useLogOutMutation } from '@queries/auth/getAuth'
+import { useLogoutMutation } from '@queries/auth/logout'
 
 export const UserMenu = ({ user, ...props }) => {
   const fullName = user?.attrib?.fullName
   // const isUser = user?.data?.isUser
 
   // sign out
-  const [logout] = useLogOutMutation()
+  const [logout] = useLogoutMutation()
 
   const handleLogOut = () => {
     // onClose && onClose()

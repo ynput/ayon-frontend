@@ -5,11 +5,11 @@ import * as Styled from './TrialEnded.styled'
 import useCustomerlyChat from '@hooks/useCustomerly'
 import { useNavigate } from 'react-router'
 import { useAppSelector } from '@state/store'
-import { useGetActiveUsersCountQuery } from '@queries/user/getUsers'
-import { useLogOutMutation } from '@queries/auth/getAuth'
+import { useGetActiveUsersCountQuery } from '@shared/api'
+import { useLogoutMutation } from '@queries/auth/logout'
 
 interface TrialEndedProps {
-  orgName: string
+  orgName?: string
 }
 
 const TrialEnded: FC<TrialEndedProps> = ({ orgName }) => {
@@ -29,13 +29,13 @@ const TrialEnded: FC<TrialEndedProps> = ({ orgName }) => {
   const { data: activeUsersCount = 10 } = useGetActiveUsersCountQuery()
 
   // sign out
-  const [logout] = useLogOutMutation()
+  const [logout] = useLogoutMutation()
 
   return (
     <Styled.TrialEndContainer>
       <Toolbar>
         <Styled.Logo src="/AYON.svg" />
-        <Button className="logout" variant="text" onClick={logout}>
+        <Button className="logout" variant="text" onClick={() => logout()}>
           Logout
         </Button>
       </Toolbar>
@@ -48,7 +48,11 @@ const TrialEnded: FC<TrialEndedProps> = ({ orgName }) => {
               <u onClick={open}>support team</u> is here for you if required.
             </p>
             <p>Subscribe to keep using AYON and protect your data!</p>
-            <a href={getSubscribeLink(activeUsersCount, orgName)} target="_blank" rel="noreferrer">
+            <a
+              href={orgName ? getSubscribeLink(activeUsersCount, orgName) : ''}
+              target="_blank"
+              rel="noreferrer"
+            >
               <Button variant="tertiary">Subscribe now</Button>
             </a>
           </>

@@ -2,7 +2,7 @@ import React from 'react'
 import { format, differenceInDays } from 'date-fns'
 
 import DashboardPanelWrapper from './DashboardPanelWrapper'
-import { useGetProjectAttribsQuery } from '@queries/project/getProject'
+import { useGetProjectAttribsQuery } from '@shared/api'
 import styled, { css, keyframes } from 'styled-components'
 import { useState } from 'react'
 import ProgressBar from './ProgressBar'

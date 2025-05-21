@@ -11,7 +11,7 @@ import { useListBundlesQuery } from '@queries/bundles/getBundles'
 import { useMigrateSettingsByBundleMutation } from '@queries/bundles/updateBundles'
 
 // API imports
-import { BundleModel } from '@api/rest/bundles'
+import { BundleModel } from '@shared/api'
 
 // Other imports
 import { toast } from 'react-toastify'
@@ -142,8 +142,8 @@ const CopyBundleSettingsDialog = ({
         migrateBundleSettingsRequest: {
           sourceBundle: sourceBundle,
           targetBundle: bundle.name,
-          sourceVariant: sourceVariant,
-          targetVariant: envTarget,
+          sourceVariant: ['production', 'staging'].includes(sourceVariant) ? sourceVariant : sourceBundle,
+          targetVariant: ['production', 'staging'].includes(envTarget) ? envTarget : bundle.name,
         },
       }).unwrap()
       toast.success(`Settings copied from ${sourceBundle} successfully`)

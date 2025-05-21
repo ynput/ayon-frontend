@@ -1,6 +1,7 @@
 import React, { FC } from 'react'
 import { Icon, theme } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
+import clsx from 'clsx'
 
 export const Placeholder = styled.div`
   position: absolute;
@@ -62,11 +63,12 @@ export const EmptyPlaceholder: FC<EmptyPlaceholderProps> = ({
   error,
   children,
   pt,
+  className,
   ...props
 }) => {
   if (error) {
     return (
-      <Placeholder className={'isError'} {...props}>
+      <Placeholder className={clsx(className, 'empty-placeholder', 'isError')} {...props}>
         <Icon icon="error" className="placeholder-icon" />
         <h3>Something went wrong.</h3>
         <span className="error-message" {...pt?.error}>
@@ -79,7 +81,7 @@ export const EmptyPlaceholder: FC<EmptyPlaceholderProps> = ({
   }
 
   return (
-    <Placeholder {...props}>
+    <Placeholder className={clsx(className, 'empty-placeholder')} {...props}>
       <Icon icon={icon || 'info'} className="placeholder-icon" />
       <h3>{typeof message === 'object' ? JSON.stringify(message) : message}</h3>
       {children}

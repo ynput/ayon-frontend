@@ -172,6 +172,10 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
   useEffect(() => {
     // if not logged in, do not load the script
     if (!user.name) return
+
+    // if working in a local environment, do not load the script
+    if (window.location.hostname === 'localhost') return
+
     // if already loaded, do not load again
     if (scriptLoaded) return
 

@@ -6,7 +6,7 @@ const fs = require('fs')
 async function getToken() {
   try {
     // eslint-disable-next-line
-    const response = await axios.post(`http://localhost:5000/api/auth/login`, {
+    const response = await axios.post(`http://localhost:3000/api/auth/login`, {
       // eslint-disable-next-line
       name: process.env.NAME,
       // eslint-disable-next-line

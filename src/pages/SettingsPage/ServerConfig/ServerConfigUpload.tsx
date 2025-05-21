@@ -1,6 +1,6 @@
 import { FC, useState, useRef } from 'react'
 import axios from 'axios'
-import { UploadServerConfigFileApiArg } from '@api/rest/config'
+import { UploadServerConfigFileApiArg } from '@shared/api'
 import { Button } from '@ynput/ayon-react-components'
 import styled, { keyframes } from 'styled-components'
 import { toast } from 'react-toastify'
@@ -58,7 +58,12 @@ const HiddenInput = styled.input`
   display: none;
 `
 
-const ServerConfigUpload: FC<ServerConfigUploadProps> = ({ fileType, fileName, setFileName, onClear }) => {
+const ServerConfigUpload: FC<ServerConfigUploadProps> = ({
+  fileType,
+  fileName,
+  setFileName,
+  onClear,
+}) => {
   const [loading, setLoading] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -95,14 +100,14 @@ const ServerConfigUpload: FC<ServerConfigUploadProps> = ({ fileType, fileName, s
     <UploadContainer>
       <Filename>{fileName}</Filename>
       {fileName ? (
-          <UploadButton icon='cancel' onClick={onClear}>
-            Remove
-          </UploadButton>
-        ) : (
-          <UploadButton icon={loading ? 'sync' : 'upload'} onClick={handleButtonClick}>
-              Upload
-          </UploadButton>
-        )}
+        <UploadButton icon="cancel" onClick={onClear}>
+          Remove
+        </UploadButton>
+      ) : (
+        <UploadButton icon={loading ? 'sync' : 'upload'} onClick={handleButtonClick}>
+          Upload
+        </UploadButton>
+      )}
       <HiddenInput ref={inputRef} type="file" onChange={handleFileChange} />
     </UploadContainer>
   )

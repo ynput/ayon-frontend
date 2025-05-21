@@ -1,22 +1,30 @@
-import { AttributeModel, AttributeEnumItem, AttributeData } from '@api/rest/attributes'
-import { FolderType, Status, Tag, TaskType } from '@api/rest/project'
-import { getEntityTypeIcon } from '@shared/util'
-import { useGetSiteInfoQuery } from '@queries/auth/getAuth'
+import { getAttributeIcon, getEntityTypeIcon } from '@shared/util'
 import {
-  GetProjectsInfoResponse,
+  useGetSiteInfoQuery,
   useGetKanbanProjectUsersQuery,
   useGetProjectsInfoQuery,
-} from '@queries/userDashboard/getUserDashboard'
+} from '@shared/api'
+import type {
+  GetProjectsInfoResponse,
+  FolderType,
+  Status,
+  Tag,
+  TaskType,
+  AttributeModel,
+  AttributeEnumItem,
+  AttributeData,
+} from '@shared/api'
 import { productTypes } from '@shared/util'
 import { ColumnOrderState } from '@tanstack/react-table'
 import { Icon, Option } from '@ynput/ayon-react-components'
 import { dateOptions } from '@helpers/filterDates'
 import { isEmpty } from 'lodash'
 
-type Scope = 'folder' | 'product' | 'task' | 'user'
+type Scope = 'folder' | 'product' | 'task' | 'user' | 'version'
 export type FilterFieldType =
   | 'folderType'
   | 'taskType'
+  | 'productType'
   | ('users' | 'assignees')
   | 'attributes'
   | 'status'
@@ -37,6 +45,8 @@ type FilterConfig = {
   enableExcludes?: boolean
   enableOperatorChange?: boolean
   enableRelativeValues?: boolean
+  prefixes?: Partial<Record<FilterFieldType, string>> // strings that will be prepended to the id of the option
+  keys?: Partial<Record<FilterFieldType, string>> // replaces the default keys for the filter
 }
 
 export type BuildFilterOptions = {
@@ -128,6 +138,21 @@ const useBuildFilterOptions = ({
 
       entitySubTypeOption.values?.push(...subTypes)
 
+      options.push(entitySubTypeOption)
+    }
+  }
+
+  // PRODUCT TYPE
+  // add productType option
+  if (filterTypes.includes('productType') && scope !== 'user') {
+    const entitySubTypeOption = getOptionRoot('productType', {
+      ...config,
+      enableOperatorChange: false,
+    })
+    if (entitySubTypeOption) {
+      // get all subTypes for the current scope (entityType)
+      let subTypes = getSubTypes(projectsInfo, 'product')
+      entitySubTypeOption.values?.push(...subTypes)
       options.push(entitySubTypeOption)
     }
   }
@@ -357,7 +382,7 @@ const getSubTypes = (projectsInfo: GetProjectsInfoResponse, type: Scope): Option
   } else if (type === 'task') {
     Object.values(projectsInfo).forEach((project) => {
       // for each project, get all task types and add them to the options (if they don't already exist)
-      const taskTypes = project?.task_types || []
+      const taskTypes = project?.taskTypes || []
       taskTypes.forEach((taskType: TaskType) => {
         if (!options.some((option) => option.id === taskType.name)) {
           options.push({
@@ -375,7 +400,7 @@ const getSubTypes = (projectsInfo: GetProjectsInfoResponse, type: Scope): Option
   } else if (type === 'folder') {
     Object.values(projectsInfo).forEach((project) => {
       // for each project, get all folder types and add them to the options (if they don't already exist)
-      const folderTypes = project?.folder_types || []
+      const folderTypes = project?.folderTypes || []
       folderTypes.forEach((folderType: FolderType) => {
         if (!options.some((option) => option.id === folderType.name)) {
           options.push({
@@ -395,12 +420,23 @@ const getSubTypes = (projectsInfo: GetProjectsInfoResponse, type: Scope): Option
   return options
 }
 
+const getFormattedId = (base: string, fieldType: FilterFieldType, config?: FilterConfig) => {
+  const { prefixes, keys } = config || {}
+  if (keys && fieldType in keys) {
+    return `${keys[fieldType]}`
+  } else if (prefixes && fieldType in prefixes) {
+    return `${prefixes[fieldType]}${base}`
+  } else return base
+}
+
 const getOptionRoot = (fieldType: FilterFieldType, config?: FilterConfig) => {
+  const getRootIdWithPrefix = (base: string) => getFormattedId(base, fieldType, config)
+
   let rootOption: Option | null = null
   switch (fieldType) {
     case 'taskType':
       rootOption = {
-        id: `taskType`,
+        id: getRootIdWithPrefix(`taskType`),
         type: 'string',
         label: `Task Type`,
         icon: getEntityTypeIcon('task'),
@@ -416,7 +452,7 @@ const getOptionRoot = (fieldType: FilterFieldType, config?: FilterConfig) => {
       break
     case 'folderType':
       rootOption = {
-        id: `folderType`,
+        id: getRootIdWithPrefix(`folderType`),
         type: 'string',
         label: `Folder Type`,
         icon: getEntityTypeIcon('folder'),
@@ -430,9 +466,25 @@ const getOptionRoot = (fieldType: FilterFieldType, config?: FilterConfig) => {
         operatorChangeable: false,
       }
       break
+    case 'productType':
+      rootOption = {
+        id: getRootIdWithPrefix(`productType`),
+        type: 'string',
+        label: `Product Type`,
+        icon: getEntityTypeIcon('product'),
+        inverted: false,
+        operator: 'OR',
+        values: [],
+        allowsCustomValues: false,
+        allowHasValue: false,
+        allowNoValue: false,
+        allowExcludes: config?.enableExcludes,
+        operatorChangeable: false,
+      }
+      break
     case 'status':
       rootOption = {
-        id: 'status',
+        id: getRootIdWithPrefix('status'),
         type: 'string',
         label: 'Status',
         icon: 'arrow_circle_right',
@@ -448,7 +500,7 @@ const getOptionRoot = (fieldType: FilterFieldType, config?: FilterConfig) => {
       break
     case 'assignees':
       rootOption = {
-        id: 'assignees',
+        id: getRootIdWithPrefix('assignees'),
         type: 'list_of_strings',
         label: 'Assignee',
         icon: 'person',
@@ -464,7 +516,7 @@ const getOptionRoot = (fieldType: FilterFieldType, config?: FilterConfig) => {
       break
     case 'tags':
       rootOption = {
-        id: 'tags',
+        id: getRootIdWithPrefix('tags'),
         type: 'list_of_strings',
         label: 'Tags',
         icon: 'local_offer',
@@ -491,7 +543,7 @@ const getAttributeFieldOptionRoot = (
   attribute: AttributeModel,
   config: FilterConfig & { allowsCustomValues: boolean },
 ): Option => ({
-  id: `attrib.${attribute.name}`,
+  id: getFormattedId(attribute.name, 'attributes', config),
   type: attribute.data.type,
   label: attribute.data.title || attribute.name,
   operator: 'OR',
@@ -502,54 +554,9 @@ const getAttributeFieldOptionRoot = (
   allowNoValue: config.enableRelativeValues,
   allowExcludes: config?.enableExcludes,
   operatorChangeable: config?.enableOperatorChange,
-  icon: getAttributeIcon(attribute),
+  icon: getAttributeIcon(attribute.name, attribute.data.type, !!attribute.data.enum?.length),
   singleSelect: ['boolean', 'datetime'].includes(attribute.data.type),
 })
-
-const getAttributeIcon = (attribute: AttributeModel): string => {
-  let icon = 'format_list_bulleted'
-  // some attributes have custom icons
-  const customIcons: {
-    [key: string]: string
-  } = {
-    priority: 'keyboard_double_arrow_up',
-    fps: '30fps_select',
-    resolutionWidth: 'settings_overscan',
-    resolutionHeight: 'settings_overscan',
-    pixelAspect: 'stop',
-    clipIn: 'line_start_diamond',
-    clipOut: 'line_end_diamond',
-    frameStart: 'line_start_circle',
-    frameEnd: 'line_end_circle',
-    handleStart: 'line_start_square',
-    handleEnd: 'line_end_square',
-    fullName: 'id_card',
-    email: 'alternate_email',
-    developerMode: 'code',
-    productGroup: 'inventory_2',
-    machine: 'computer',
-    comment: 'comment',
-    colorSpace: 'palette',
-    description: 'description',
-  }
-
-  const typeIcons: {
-    [key: string]: string
-  } = {
-    integer: 'pin',
-    float: 'pin',
-    boolean: 'radio_button_checked',
-    datetime: 'calendar_month',
-  }
-
-  if (customIcons[attribute.name]) {
-    icon = customIcons[attribute.name]
-  } else if (typeIcons[attribute.data.type]) {
-    icon = typeIcons[attribute.data.type]
-  }
-
-  return icon
-}
 
 const getAttributeOptions = (
   values?: AttributeDataValue[],

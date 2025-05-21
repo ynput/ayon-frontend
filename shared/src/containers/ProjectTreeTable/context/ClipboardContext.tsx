@@ -1,14 +1,14 @@
 import React, { createContext, useContext, useCallback, useMemo, useEffect } from 'react'
 
 // Contexts
-import { ROW_SELECTION_COLUMN_ID, useSelectionContext } from './SelectionContext'
+import { ROW_SELECTION_COLUMN_ID, useSelectionCellsContext } from './SelectionCellsContext'
 import { useCellEditing } from './CellEditingContext'
 
 // Utils
-import { getCellValue, parseCellId } from '../utils/cellUtils'
+import { getCellValue, getEntityDataById, parseCellId } from '../utils/cellUtils'
 
 // Types
-import { EntityUpdate } from '../hooks/useUpdateOverview'
+import { EntityUpdate } from '../hooks/useUpdateTableData'
 
 // Import from the new modular files
 import {
@@ -24,13 +24,12 @@ const ClipboardContext = createContext<ClipboardContextType | undefined>(undefin
 
 export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
   children,
-  foldersMap,
-  tasksMap,
+  entitiesMap,
   columnEnums,
   columnReadOnly,
 }) => {
   // Get selection information from SelectionContext
-  const { selectedCells, gridMap, focusedCellId } = useSelectionContext()
+  const { selectedCells, gridMap, focusedCellId } = useSelectionCellsContext()
   const { updateEntities } = useCellEditing()
 
   const getSelectionData = useCallback(
@@ -116,8 +115,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
 
         for (const rowId of sortedRows) {
           // Determine if this is a folder or task by checking which map contains the ID
-          const isFolder = foldersMap.has(rowId)
-          const entity = isFolder ? foldersMap.get(rowId) : tasksMap.get(rowId)
+          const entity = entitiesMap.get(rowId)
 
           if (!entity) continue
 
@@ -143,7 +141,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
 
             // Special handling for name field - include full path
             if (colId === 'name') {
-              cellValue = getEntityPath(rowId, isFolder, foldersMap, tasksMap)
+              cellValue = getEntityPath(rowId, entitiesMap)
             }
 
             if (colId === 'subType') {
@@ -165,7 +163,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
         console.error('Failed to copy to clipboard:', error)
       }
     },
-    [selectedCells, focusedCellId, gridMap, foldersMap, tasksMap],
+    [selectedCells, focusedCellId, gridMap, entitiesMap],
   )
 
   const copyToClipboard: ClipboardContextType['copyToClipboard'] = useCallback(
@@ -189,7 +187,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
         clipboardError(`Failed to copy to clipboard: ${error.message}`)
       }
     },
-    [selectedCells, foldersMap, tasksMap, gridMap],
+    [selectedCells, entitiesMap, gridMap],
   )
 
   const exportCSV: ClipboardContextType['exportCSV'] = useCallback(
@@ -217,7 +215,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
         console.error('Failed to copy to clipboard:', error)
       }
     },
-    [selectedCells, foldersMap, tasksMap, gridMap, getSelectionData],
+    [selectedCells, entitiesMap, gridMap, getSelectionData],
   )
 
   const pasteFromClipboard: ClipboardContextType['pasteFromClipboard'] = useCallback(
@@ -239,7 +237,9 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
         clipboardError(`Failed to read from clipboard: ${error.message}`)
         return
       }
-      if (!clipboardText.trim()) return
+
+      // we can have empty text in the clipboard
+      //if (!clipboardText.trim()) return
 
       // Parse the clipboard text
       const parsedData = parseClipboardText(clipboardText)
@@ -285,7 +285,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
 
         for (let rowIndex = 0; rowIndex < sortedRows.length; rowIndex++) {
           const rowId = sortedRows[rowIndex]
-          const isFolder = foldersMap.has(rowId)
+          const isFolder = getEntityDataById<'folder'>(rowId, entitiesMap)?.entityType === 'folder'
 
           // Get the appropriate value from the clipboard data
           // If it's a single cell value, use it for all cells
@@ -317,9 +317,10 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
       }
 
       // Create a map to consolidate updates for the same entity
-      const entitiesMap = new Map<
+      const entitiesToUpdateMap = new Map<
         string,
         {
+          rowId: string
           id: string
           type: string
           fields: Record<string, any>
@@ -341,9 +342,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
 
         if (sortedRows.length > 0) {
           const firstRowId = sortedRows[0]
-          const isFolder = foldersMap.has(firstRowId)
-          const entity = isFolder ? foldersMap.get(firstRowId) : tasksMap.get(firstRowId)
-
+          const entity = entitiesMap.get(firstRowId)
           if (entity) {
             isAttrib = colId.startsWith('attrib_')
 
@@ -368,8 +367,8 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
         // Process each row individually
         for (let rowIndex = 0; rowIndex < sortedRows.length; rowIndex++) {
           const rowId = sortedRows[rowIndex]
-          const isFolder = foldersMap.has(rowId)
-          const entityType = isFolder ? 'folder' : 'task'
+          const entityType = getEntityDataById(rowId, entitiesMap)?.entityType
+          const isFolder = entityType === 'folder'
 
           // Get the appropriate value from the clipboard data
           let pasteValue
@@ -397,8 +396,9 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
 
           // Get or create entity entry in the map
           const entityKey = `${rowId}-${entityType}`
-          if (!entitiesMap.has(entityKey)) {
-            entitiesMap.set(entityKey, {
+          if (!entitiesToUpdateMap.has(entityKey) && entityType) {
+            entitiesToUpdateMap.set(entityKey, {
+              rowId,
               id: rowId,
               type: entityType,
               fields: {},
@@ -406,7 +406,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
             })
           }
 
-          const entityData = entitiesMap.get(entityKey)!
+          const entityData = entitiesToUpdateMap.get(entityKey)!
 
           // Add the field to the appropriate place
           if (isAttrib) {
@@ -420,10 +420,11 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
       // Convert the consolidated map to EntityUpdate array
       const allEntityUpdates: EntityUpdate[] = []
 
-      entitiesMap.forEach((entity) => {
+      entitiesToUpdateMap.forEach((entity) => {
         // For regular fields, create one update per field
         Object.entries(entity.fields).forEach(([field, value]) => {
           allEntityUpdates.push({
+            rowId: entity.rowId,
             id: entity.id,
             type: entity.type,
             field,
@@ -434,6 +435,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
         // For attributes, create one update per attribute
         Object.entries(entity.attrib).forEach(([field, value]) => {
           allEntityUpdates.push({
+            rowId: entity.rowId,
             id: entity.id,
             type: entity.type,
             field,
@@ -455,7 +457,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
         }
       }
     },
-    [selectedCells, gridMap, foldersMap, tasksMap, updateEntities, columnEnums],
+    [selectedCells, gridMap, entitiesMap, updateEntities, columnEnums],
   )
 
   // Set up keyboard event listeners

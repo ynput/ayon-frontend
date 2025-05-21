@@ -3,9 +3,9 @@ import { ExpandedState, OnChangeFn, SortingState } from '@tanstack/react-table'
 import useOverviewTable from '../hooks/useOverviewTable'
 import { Filter } from '@ynput/ayon-react-components'
 import {
-  EditorTaskNode,
+  EntitiesMap,
+  EntityMap,
   FolderNodeMap,
-  MatchingFolder,
   TableRow,
   TaskNodeMap,
   TasksByFolderMap,
@@ -18,59 +18,16 @@ import useFolderRelationships, {
 } from '../hooks/useFolderRelationships'
 import { RowId } from '../utils/cellUtils'
 import { ProjectModel } from '../types/project'
-import { AttributeWithPermissions, LoadingTasks } from '../types'
+import { ProjectTableAttribute, LoadingTasks } from '../types'
 import { QueryFilter } from '../types/folders'
+import { ContextMenuItemConstructors } from '../hooks/useCellContextMenu'
 
 type User = {
   name: string
   fullName?: string
 }
 
-export interface ProjectTableContextProps {
-  isInitialized: ProjectTableProviderProps['isInitialized']
-  isLoading: ProjectTableProviderProps['isLoading']
-  // Project Info
-  projectInfo: ProjectTableProviderProps['projectInfo']
-  projectName: ProjectTableProviderProps['projectName']
-  users: ProjectTableProviderProps['users']
-  // Attributes
-  attribFields: ProjectTableProviderProps['attribFields']
-
-  // Data
-  tableData: TableRow[]
-  tasksMap: ProjectTableProviderProps['tasksMap']
-  foldersMap: ProjectTableProviderProps['foldersMap']
-  fetchNextPage: ProjectTableProviderProps['fetchNextPage']
-  reloadTableData: ProjectTableProviderProps['reloadTableData']
-  getEntityById: (id: string) => MatchingFolder | EditorTaskNode | undefined
-
-  // Filters
-  filters: ProjectTableProviderProps['filters']
-  setFilters: ProjectTableProviderProps['setFilters']
-  queryFilters: ProjectTableProviderProps['queryFilters']
-
-  // Hierarchy
-  showHierarchy: ProjectTableProviderProps['showHierarchy']
-  updateShowHierarchy: ProjectTableProviderProps['updateShowHierarchy']
-
-  // Expanded state
-  expanded: ProjectTableProviderProps['expanded']
-  toggleExpanded: ProjectTableProviderProps['toggleExpanded']
-  updateExpanded: ProjectTableProviderProps['updateExpanded']
-  toggleExpandAll: (rowId: RowId[], expand?: boolean) => void
-
-  // Sorting
-  sorting: ProjectTableProviderProps['sorting']
-  updateSorting: ProjectTableProviderProps['updateSorting']
-
-  // Folder Relationships
-  getInheritedDependents: GetInheritedDependents
-  findInheritedValueFromAncestors: FindInheritedValueFromAncestors
-  findNonInheritedValues: FindNonInheritedValues
-  getAncestorsOf: GetAncestorsOf
-}
-
-const ProjectTableContext = createContext<ProjectTableContextProps | undefined>(undefined)
+export type ToggleExpandAll = (rowIds: RowId[], expand?: boolean) => void
 
 export interface ProjectTableProviderProps {
   children: ReactNode
@@ -79,18 +36,21 @@ export interface ProjectTableProviderProps {
   // loading
   isLoading: boolean
   isLoadingMore: boolean
-  loadingTasks: LoadingTasks
+  loadingTasks?: LoadingTasks
   // Project Info
   projectInfo?: ProjectModel
   projectName: string
   users: User[]
   // Attributes
-  attribFields: AttributeWithPermissions[]
+  attribFields: ProjectTableAttribute[]
 
   // data
   tasksMap: TaskNodeMap
   foldersMap: FolderNodeMap
+  entitiesMap: EntitiesMap
   tasksByFolderMap: TasksByFolderMap
+  tableRows?: TableRow[] // any extra rows that we want to add to the table
+
   // data functions
   fetchNextPage: () => void
   reloadTableData: () => void
@@ -117,12 +77,67 @@ export interface ProjectTableProviderProps {
   // Sorting
   sorting: SortingState
   updateSorting: OnChangeFn<SortingState>
+
+  // context menu
+  contextMenuItems: ContextMenuItemConstructors
 }
+
+export interface ProjectTableContextProps {
+  isInitialized: ProjectTableProviderProps['isInitialized']
+  isLoading: ProjectTableProviderProps['isLoading']
+  // Project Info
+  projectInfo: ProjectTableProviderProps['projectInfo']
+  projectName: ProjectTableProviderProps['projectName']
+  users: ProjectTableProviderProps['users']
+  // Attributes
+  attribFields: ProjectTableProviderProps['attribFields']
+
+  // Data
+  tableData: TableRow[]
+  tasksMap: ProjectTableProviderProps['tasksMap']
+  foldersMap: ProjectTableProviderProps['foldersMap']
+  entitiesMap: ProjectTableProviderProps['entitiesMap']
+  fetchNextPage: ProjectTableProviderProps['fetchNextPage']
+  reloadTableData: ProjectTableProviderProps['reloadTableData']
+  getEntityById: (id: string) => EntityMap | undefined
+
+  // Filters
+  filters: ProjectTableProviderProps['filters']
+  setFilters: ProjectTableProviderProps['setFilters']
+  queryFilters: ProjectTableProviderProps['queryFilters']
+
+  // Hierarchy
+  showHierarchy: ProjectTableProviderProps['showHierarchy']
+  updateShowHierarchy: ProjectTableProviderProps['updateShowHierarchy']
+
+  // Expanded state
+  expanded: ProjectTableProviderProps['expanded']
+  toggleExpanded: ProjectTableProviderProps['toggleExpanded']
+  updateExpanded: ProjectTableProviderProps['updateExpanded']
+  toggleExpandAll: ToggleExpandAll
+
+  // Sorting
+  sorting: ProjectTableProviderProps['sorting']
+  updateSorting: ProjectTableProviderProps['updateSorting']
+
+  // Folder Relationships
+  getInheritedDependents: GetInheritedDependents
+  findInheritedValueFromAncestors: FindInheritedValueFromAncestors
+  findNonInheritedValues: FindNonInheritedValues
+  getAncestorsOf: GetAncestorsOf
+
+  // Context menu
+  contextMenuItems: ProjectTableProviderProps['contextMenuItems']
+}
+
+const ProjectTableContext = createContext<ProjectTableContextProps | undefined>(undefined)
 
 export const ProjectTableProvider = ({
   children,
   foldersMap,
+  tableRows,
   tasksMap,
+  entitiesMap,
   tasksByFolderMap,
   expanded,
   projectInfo,
@@ -145,36 +160,35 @@ export const ProjectTableProvider = ({
   fetchNextPage,
   reloadTableData,
   setExpanded,
+  contextMenuItems,
 }: ProjectTableProviderProps) => {
-  const { folderTypes, taskTypes } = projectInfo || {}
-
   // DATA TO TABLE
   const tableData = useOverviewTable({
     foldersMap,
     tasksMap,
+    rows: tableRows,
     tasksByFolderMap,
     expanded,
-    folderTypes,
-    taskTypes,
+    projectInfo,
     showHierarchy,
     loadingTasks,
     isLoadingMore,
   })
 
   const getEntityById = useCallback(
-    (id: string): MatchingFolder | EditorTaskNode | undefined => {
-      // Check if it's a folder
+    (id: string): EntityMap | undefined => {
       if (foldersMap.has(id)) {
-        return { ...foldersMap.get(id), entityType: 'folder' } as MatchingFolder
+        return foldersMap.get(id)
+      } else if (tasksMap.has(id)) {
+        return tasksMap.get(id)
+      } else if (entitiesMap.has(id)) {
+        return entitiesMap.get(id)
       }
-      // Check if it's a task
-      if (tasksMap.has(id)) {
-        return { ...tasksMap.get(id), entityType: 'task' } as EditorTaskNode
-      }
+
       // Return undefined if not found
       return undefined
     },
-    [foldersMap, tasksMap],
+    [foldersMap, tasksMap, entitiesMap],
   )
 
   // get folder relationship functions
@@ -185,7 +199,7 @@ export const ProjectTableProvider = ({
     findNonInheritedValues,
     getAncestorsOf,
   } = useFolderRelationships({
-    foldersMap,
+    entitiesMap,
     tasksMap,
     tasksByFolderMap,
     getEntityById,
@@ -239,6 +253,7 @@ export const ProjectTableProvider = ({
         projectName,
         tasksMap,
         foldersMap,
+        entitiesMap,
         fetchNextPage,
         reloadTableData,
         // filters
@@ -262,6 +277,8 @@ export const ProjectTableProvider = ({
         findInheritedValueFromAncestors,
         findNonInheritedValues,
         getAncestorsOf,
+        // context menu
+        contextMenuItems,
       }}
     >
       {children}
