@@ -12,7 +12,7 @@ import type {
   EntityList,
   EntityListSummary,
 } from '@shared/api'
-import { useProjectDataContext } from '@pages/ProjectOverviewPage/context/ProjectDataContext'
+import { useProjectDataContext } from '@shared/containers/ProjectTreeTable'
 import useDeleteList, { UseDeleteListReturn } from '../hooks/useDeleteList'
 import useUpdateList, { UseUpdateListReturn } from '../hooks/useUpdateList'
 import { useListsDataContext } from './ListsDataContext'

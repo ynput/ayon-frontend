@@ -1,6 +1,6 @@
 import { createContext, useContext, ReactNode, useMemo } from 'react'
 import { EntityList } from '@shared/api'
-import { useProjectDataContext } from '@pages/ProjectOverviewPage/context/ProjectDataContext'
+import { useProjectDataContext } from '@shared/containers/ProjectTreeTable'
 import { SimpleTableRow } from '@shared/SimpleTable'
 import { Filter } from '@ynput/ayon-react-components'
 import { useUserProjectConfig } from '@shared/hooks'

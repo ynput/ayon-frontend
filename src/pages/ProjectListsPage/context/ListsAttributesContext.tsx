@@ -14,7 +14,7 @@ import {
   useSetEntityListAttributesDefinitionMutation,
 } from '@shared/api'
 import type { EntityListAttributeDefinition } from '@shared/api'
-import { useProjectDataContext } from '@pages/ProjectOverviewPage/context/ProjectDataContext'
+import { useProjectDataContext } from '@shared/containers/ProjectTreeTable'
 import { ListEntityType } from '../components/NewListDialog/NewListDialog'
 
 export interface ListsAttributesContextValue {

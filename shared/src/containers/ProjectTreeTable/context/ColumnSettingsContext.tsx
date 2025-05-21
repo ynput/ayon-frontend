@@ -47,14 +47,12 @@ export type ColumnsConfig = {
 
 interface ColumnSettingsProviderProps {
   children: ReactNode
-  scope: string
   config?: {
     visibility?: {
       initValue?: VisibilityState
     }
   }
   onChange: (config: ColumnsConfig) => void
-
 }
 
 export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({

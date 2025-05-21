@@ -14,7 +14,7 @@ import {
   ProjectOverviewProvider,
   useProjectOverviewContext,
 } from './context/ProjectOverviewContext'
-import { ProjectDataProvider } from './context/ProjectDataContext'
+import { ProjectDataProvider } from '../../../shared/src/containers/ProjectTreeTable/context/ProjectDataContext'
 import { ProjectTableQueriesProvider } from '@shared/containers/ProjectTreeTable/context/ProjectTableQueriesContext'
 import { useUserProjectConfig } from '@shared/hooks'
 import useTableQueriesHelper from './hooks/useTableQueriesHelper'

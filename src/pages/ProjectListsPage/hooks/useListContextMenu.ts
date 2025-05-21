@@ -4,7 +4,7 @@ import { CommandEvent, useCreateContextMenu } from '@shared/containers/ContextMe
 import { useCallback } from 'react'
 import { useAppSelector } from '@state/store'
 import useClearListItems from './useClearListItems'
-import { useProjectDataContext } from '@pages/ProjectOverviewPage/context/ProjectDataContext'
+import { useProjectDataContext } from '@shared/containers/ProjectTreeTable'
 import { useListsDataContext } from '../context/ListsDataContext'
 
 const useListContextMenu = () => {

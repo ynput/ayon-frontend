@@ -1,7 +1,4 @@
-import {
-  ProjectDataProvider,
-  useProjectDataContext,
-} from '@pages/ProjectOverviewPage/context/ProjectDataContext'
+import { ProjectDataProvider, useProjectDataContext } from '@shared/containers/ProjectTreeTable'
 import { FC, useMemo, useState } from 'react' // Added useState
 import { ListsProvider, useListsContext } from './context/ListsContext'
 import { Splitter, SplitterPanel } from 'primereact/splitter'

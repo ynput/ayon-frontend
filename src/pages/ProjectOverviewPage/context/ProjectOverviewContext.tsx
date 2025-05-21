@@ -19,7 +19,10 @@ import type {
 } from '@shared/containers/ProjectTreeTable/utils'
 import { clientFilterToQueryFilter } from '@shared/containers/ProjectTreeTable/utils'
 import type { QueryTasksFoldersApiArg } from '@shared/api'
-import { ProjectDataContextProps, useProjectDataContext } from './ProjectDataContext'
+import {
+  ProjectDataContextProps,
+  useProjectDataContext,
+} from '../../../../shared/src/containers/ProjectTreeTable/context/ProjectDataContext'
 import { LoadingTasks } from '@shared/containers/ProjectTreeTable'
 import { useEntityListsContext } from '@pages/ProjectListsPage/context/EntityListsContext'
 import { ContextMenuItemConstructors } from '@shared/containers/ProjectTreeTable/hooks/useCellContextMenu'

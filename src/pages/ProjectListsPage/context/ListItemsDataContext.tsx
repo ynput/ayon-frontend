@@ -1,9 +1,6 @@
 import { createContext, useContext, ReactNode, useMemo, useCallback } from 'react'
 import { EntityListItem } from '@shared/api'
-import {
-  ProjectDataContextProps,
-  useProjectDataContext,
-} from '@pages/ProjectOverviewPage/context/ProjectDataContext'
+import { ProjectDataContextProps, useProjectDataContext } from '@shared/containers/ProjectTreeTable'
 import { Filter } from '@ynput/ayon-react-components'
 import { useUserProjectConfig } from '@shared/hooks'
 import useGetListItemsData from '../hooks/useGetListItemsData'
