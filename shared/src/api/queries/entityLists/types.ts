@@ -31,6 +31,7 @@ type ItemNodeData = {
   productType?: string
   assignees?: string[]
   label?: string
+  ownAttrib: string[]
   // different paths to folder
   path?: string
   folder?: {
