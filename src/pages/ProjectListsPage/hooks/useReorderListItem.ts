@@ -35,7 +35,6 @@ const useReorderListItem = ({
         const newItemPositions = shuffledArray.map((item, index) => ({
           id: item.id,
           position: index,
-          name: item.name,
         }))
 
         try {
