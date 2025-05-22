@@ -24,6 +24,7 @@ import { ProjectTableSettings, CustomizeButton } from '@shared/components'
 import { useSettingsPanel } from '@shared/context'
 import ReloadButton from './components/ReloadButton'
 import OverviewActions from './components/OverviewActions'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 
 const searchFilterTypes: FilterFieldType[] = [
   'attributes',
@@ -35,6 +36,8 @@ const searchFilterTypes: FilterFieldType[] = [
 
 const ProjectOverviewPage: FC = () => {
   const { selectedRows } = useSelectedRowsContext()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const navigate = useNavigate()
 
   const {
     projectName,
@@ -117,6 +120,9 @@ const ProjectOverviewPage: FC = () => {
                 entityType={undefined}
                 isLoadingEntity={false}
                 isProjectLevel={projectName}
+                onNavigate={navigate}
+                onSetSearchParams={setSearchParams}
+                searchParams={searchParams}
               />
               <CustomizeButton />
             </Toolbar>
