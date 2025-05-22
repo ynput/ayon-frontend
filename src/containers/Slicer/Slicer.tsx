@@ -7,6 +7,7 @@ import clsx from 'clsx'
 import { SliceType } from '@shared/containers/Slicer'
 import { SimpleTableProvider } from '@shared/SimpleTable'
 import { useSlicerContext } from '@context/SlicerContext'
+import { RowSelectionState } from '@tanstack/react-table'
 
 interface SlicerProps {
   sliceFields: SliceType[]
@@ -30,8 +31,14 @@ const Slicer: FC<SlicerProps> = ({ sliceFields = [], persistFieldId }) => {
     sliceType,
     handleSliceTypeChange,
     table: { data: sliceTableData, isExpandable },
+    sliceMap,
     isLoading: isLoadingSliceTableData,
   } = useTableDataBySlice({ sliceFields })
+
+  const handleSelectionChange = (s: RowSelectionState) => {
+    setRowSelection(s)
+    onRowSelectionChange?.(s, sliceMap)
+  }
 
   return (
     <Container>
@@ -55,11 +62,11 @@ const Slicer: FC<SlicerProps> = ({ sliceFields = [], persistFieldId }) => {
       <SimpleTableProvider
         {...{
           rowSelection,
-          setRowSelection,
-          onRowSelectionChange,
+          onRowSelectionChange: handleSelectionChange,
           expanded,
           setExpanded,
           onExpandedChange,
+          data: sliceMap,
         }}
       >
         <SlicerTable

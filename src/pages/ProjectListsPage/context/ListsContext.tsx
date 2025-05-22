@@ -40,7 +40,7 @@ const RowSelectionParam: QueryParamConfig<RowSelectionState> = {
 
 export interface ListsContextValue {
   rowSelection: RowSelectionState
-  setRowSelection: React.Dispatch<React.SetStateAction<RowSelectionState>>
+  setRowSelection: (ids: RowSelectionState) => void
   selectedRows: string[]
   selectedLists: EntityList[]
   selectedList: EntityList | undefined
@@ -77,13 +77,42 @@ interface ListsProviderProps {
 }
 
 export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
+  console.log({ isReview })
   const { projectName } = useProjectDataContext()
   const { listsMap } = useListsDataContext()
-  const [unstableRowSelection, setRowSelection] = useQueryParam<RowSelectionState>(
+
+  // Memoize the configurations for the query parameters
+  const listParamConfig = useMemo(() => withDefault(RowSelectionParam, {}), [])
+  const reviewParamConfig = useMemo(() => withDefault(RowSelectionParam, {}), [])
+
+  const [unstableListSelection, setListSelection] = useQueryParam<RowSelectionState>(
     'list',
-    withDefault(RowSelectionParam, {}),
+    listParamConfig, // Use memoized config
   )
-  const rowSelection = useMemo(() => unstableRowSelection, [JSON.stringify(unstableRowSelection)])
+  const [unstableReviewSelection, setReviewSelection] = useQueryParam<RowSelectionState>(
+    'review',
+    reviewParamConfig, // Use memoized config
+  )
+
+  const rowSelection = useMemo(
+    () => (isReview ? unstableReviewSelection : unstableListSelection),
+    // Simpler dependencies: unstableListSelection and unstableReviewSelection are stable state references
+    [unstableListSelection, unstableReviewSelection, isReview],
+  )
+
+  const setRowSelection = useCallback(
+    (ids: RowSelectionState) => {
+      if (isReview) {
+        console.log('setReviewSelection', ids)
+        setReviewSelection(ids)
+      } else {
+        console.log('setListSelection', ids)
+        setListSelection(ids)
+      }
+    },
+    [isReview, setReviewSelection, setListSelection], // setReviewSelection and setListSelection are stable
+  )
+
   // only rows that are selected
   const selectedRows = useMemo(
     () =>
@@ -206,6 +235,7 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
     openDetailsPanel,
     listsFiltersOpen,
     setListsFiltersOpen,
+    isReview,
   ])
 
   return <ListsContext.Provider value={value}>{children}</ListsContext.Provider>

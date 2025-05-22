@@ -29,9 +29,12 @@ export interface Slice {
   isExpandable: boolean
 }
 
+export type SliceMap = Map<string, SimpleTableRow>
+
 export interface TableData {
   sliceOptions: SliceOption[]
   table: Slice
+  sliceMap: SliceMap
   isLoading: boolean
   sliceType: SliceType
   handleSliceTypeChange: OnSliceTypeChange

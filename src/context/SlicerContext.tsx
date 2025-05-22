@@ -6,7 +6,7 @@ import {
   ForwardRefExoticComponent,
   RefAttributes,
 } from 'react'
-import { ExpandedState, RowSelectionState, Table } from '@tanstack/react-table'
+import { ExpandedState, RowSelectionState } from '@tanstack/react-table'
 import useSlicerReduxSync from '@containers/Slicer/hooks/useSlicerReduxSync'
 import { SelectionData, SliceDataItem, SliceType } from '@shared/containers/Slicer'
 import { SimpleTableRow } from '@shared/SimpleTable'
@@ -14,6 +14,7 @@ import { useLoadModule } from '@shared/hooks'
 import type { ProjectModel, Assignees } from '@shared/api'
 import SlicerDropdownFallback, { SlicerDropdownProps } from '@containers/Slicer/SlicerDropdown'
 import { DropdownRef } from '@ynput/ayon-react-components'
+import { SliceMap } from '@containers/Slicer/types'
 
 export type OnSliceTypeChange = (
   sliceType: SliceType,
@@ -36,7 +37,7 @@ type ExtraSlices = {
 
 export type UseExtraSlices = () => ExtraSlices
 
-type OnRowSelectionChange = (selection: RowSelectionState, table: Table<any>) => void
+type OnRowSelectionChange = (selection: RowSelectionState, data: SliceMap) => void
 
 interface SlicerContextValue {
   rowSelection: RowSelectionState
@@ -85,14 +86,18 @@ export const SlicerProvider = ({ children }: SlicerProviderProps) => {
     sliceType,
   })
 
-  const getSelectionData = (selection: RowSelectionState, table: Table<any>) => {
+  const getSelectionData = (selection: RowSelectionState, data: SliceMap) => {
     // for each selected row, get the data
     const selectedRows = Object.keys(selection).reduce<Record<string, SliceDataItem>>((acc, id) => {
-      const row = table.getRow(id)
-      if (!row) return acc
+      const rowData = data.get(id)
+
+      if (!rowData) {
+        console.warn(`Row with id ${id} not found in data`)
+        return acc
+      }
 
       // @ts-ignore
-      acc[id as string] = row.original.data as SliceDataItem
+      acc[id as string] = rowData
       return acc
     }, {})
 
@@ -100,14 +105,15 @@ export const SlicerProvider = ({ children }: SlicerProviderProps) => {
   }
 
   //   do something with selection change
-  const handleRowSelectionChange: OnRowSelectionChange = (selection, table) => {
+  const handleRowSelectionChange: OnRowSelectionChange = (selection, data) => {
     if (sliceType === 'hierarchy') {
       // update redux focused folders
       onRowSelectionChange(selection)
     }
 
     // get selection data
-    const selectionData = getSelectionData(selection, table)
+    const selectionData = getSelectionData(selection, data)
+    console.log(selectionData)
     setRowSelectionData(selectionData)
   }
 

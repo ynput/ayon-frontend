@@ -1,15 +1,17 @@
-import { KeyboardEvent, MouseEvent, useCallback } from 'react'
+import { KeyboardEvent, useCallback } from 'react'
 import { Row } from '@tanstack/react-table'
 
-type RowEvent = MouseEvent<HTMLDivElement> | KeyboardEvent<HTMLDivElement>
+// More specific type for keyboard events on a row element
+export type RowKeyboardEvent = KeyboardEvent<HTMLDivElement>
 
 interface UseRowKeydownProps<T> {
-  handleRowSelect: (event: RowEvent, row: Row<T>) => void
+  // Updated to use the more specific RowKeyboardEvent for clarity
+  handleRowSelect: (event: RowKeyboardEvent, row: Row<T>) => void
 }
 
 function useRowKeydown<T>({ handleRowSelect }: UseRowKeydownProps<T>) {
   const handleRowKeyDown = useCallback(
-    (event: KeyboardEvent<HTMLDivElement>, row: Row<T>) => {
+    (event: RowKeyboardEvent, row: Row<T>) => {
       if (['Enter', ' '].includes(event.key)) {
         // prevent default to prevent scrolling
         event.preventDefault()

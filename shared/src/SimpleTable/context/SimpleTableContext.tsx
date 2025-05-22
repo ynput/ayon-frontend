@@ -7,8 +7,9 @@ interface SimpleTableContextValue {
   setExpanded?: React.Dispatch<React.SetStateAction<ExpandedState>>
   onExpandedChange?: (expanded: ExpandedState) => void
   rowSelection: RowSelectionState
-  setRowSelection: React.Dispatch<React.SetStateAction<RowSelectionState>>
-  onRowSelectionChange?: (selection: RowSelectionState, table: Table<any>) => void
+  onRowSelectionChange: (selection: RowSelectionState) => void // should be used most of the time
+  setRowSelection?: (rowSelection: RowSelectionState) => void // used to directly update the row selection
+  data?: any
 }
 
 const SimpleTableContext = createContext<SimpleTableContextValue | undefined>(undefined)
@@ -19,8 +20,9 @@ interface SimpleTableProviderProps {
   setExpanded?: SimpleTableContextValue['setExpanded']
   onExpandedChange?: SimpleTableContextValue['onExpandedChange']
   rowSelection: SimpleTableContextValue['rowSelection']
-  setRowSelection: SimpleTableContextValue['setRowSelection']
-  onRowSelectionChange?: SimpleTableContextValue['onRowSelectionChange']
+  onRowSelectionChange: SimpleTableContextValue['onRowSelectionChange']
+  setRowSelection?: SimpleTableContextValue['setRowSelection']
+  data?: SimpleTableContextValue['data']
 }
 
 export const SimpleTableProvider = ({ children, ...props }: SimpleTableProviderProps) => {

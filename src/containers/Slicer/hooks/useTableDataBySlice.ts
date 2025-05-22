@@ -1,5 +1,5 @@
 import { useAppSelector } from '@state/store'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import useHierarchyTable from './useHierarchyTable'
 import useUsersTable from './useUsersTable'
 import useProjectAnatomySlices from './useProjectAnatomySlices'
@@ -165,9 +165,29 @@ const useTableDataBySlice = ({ sliceFields }: Props): TableData => {
     fetchData()
   }, [sliceType, sliceFields, projectName, isLoadingData])
 
+  // from slice data, flatten into a map of ids to rows
+  const sliceMap = useMemo(() => {
+    const map = new Map<string, SimpleTableRow>()
+    const queue: SimpleTableRow[] = [...slice.data]
+
+    while (queue.length > 0) {
+      const row = queue.shift()
+      if (row) {
+        map.set(row.id, row)
+        if (row.subRows && row.subRows.length > 0) {
+          for (const subRow of row.subRows) {
+            queue.push(subRow)
+          }
+        }
+      }
+    }
+    return map
+  }, [slice.data])
+
   return {
     sliceOptions,
     table: slice,
+    sliceMap,
     isLoading: builtInSlices[sliceType].isLoading || isLoading || isLoadingData,
     sliceType,
     handleSliceTypeChange,

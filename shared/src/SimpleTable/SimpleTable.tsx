@@ -1,4 +1,4 @@
-import { FC, useMemo, useRef, memo } from 'react'
+import { FC, useMemo, useRef, MouseEvent as ReactMouseEvent, useCallback, useEffect } from 'react'
 import * as Styled from './SimpleTable.styled'
 import {
   useReactTable,
@@ -13,12 +13,14 @@ import {
   sortingFns,
   RowData,
   Table,
+  OnChangeFn,
+  RowSelectionState,
+  functionalUpdate,
 } from '@tanstack/react-table'
 import { useVirtualizer } from '@tanstack/react-virtual'
 
 import clsx from 'clsx'
-import useRowSelection from '../../../src/containers/Slicer/hooks/useRowSelection'
-import useRowKeydown from '../../../src/containers/Slicer/hooks/useRowKeydown'
+import useRowKeydown, { RowKeyboardEvent } from '../../../src/containers/Slicer/hooks/useRowKeydown'
 
 import { RankingInfo, rankItem, compareItems } from '@tanstack/match-sorter-utils'
 import { useSimpleTableContext } from './context/SimpleTableContext'
@@ -113,6 +115,40 @@ export interface SimpleTableProps {
   ) => JSX.Element
 }
 
+// Helper function to get row range for shift-selection
+// Operates on the provided list of rows (e.g., filtered and sorted rows)
+function getRowRange<TData extends RowData>(
+  rows: Array<Row<TData>>,
+  idA: string,
+  idB: string,
+): Array<Row<TData>> {
+  const range: Array<Row<TData>> = []
+  // If idA and idB are the same, or one is not found, handle appropriately
+  if (idA === idB) {
+    const singleRow = rows.find((row) => row.id === idA)
+    return singleRow ? [singleRow] : []
+  }
+
+  let indexA = -1
+  let indexB = -1
+
+  for (let i = 0; i < rows.length; i++) {
+    if (rows[i].id === idA) indexA = i
+    if (rows[i].id === idB) indexB = i
+    if (indexA !== -1 && indexB !== -1) break
+  }
+
+  if (indexA === -1 || indexB === -1) return [] // One or both IDs not found
+
+  const start = Math.min(indexA, indexB)
+  const end = Math.max(indexA, indexB)
+
+  for (let i = start; i <= end; i++) {
+    range.push(rows[i])
+  }
+  return range
+}
+
 const SimpleTable: FC<SimpleTableProps> = ({
   data = [],
   isLoading,
@@ -123,7 +159,10 @@ const SimpleTable: FC<SimpleTableProps> = ({
   meta,
   children,
 }) => {
-  const { rowSelection, expanded, setExpanded, onExpandedChange } = useSimpleTableContext()
+  const { rowSelection, expanded, setExpanded, onExpandedChange, onRowSelectionChange } =
+    useSimpleTableContext()
+  const lastSelectedIdRef = useRef<string | null>(null)
+  const tableRef = useRef<Table<SimpleTableRow> | null>(null)
 
   // stable data reference
   const tableData = useMemo(() => {
@@ -143,6 +182,73 @@ const SimpleTable: FC<SimpleTableProps> = ({
     }))
   }, [isLoading, data, forceUpdateTable])
 
+  // Define the core selection logic using useCallback for stability
+  const handleSelectionLogic = useCallback(
+    (
+      tableInstance: Table<SimpleTableRow>,
+      rowId: string,
+      isShift: boolean,
+      isCtrlOrMeta: boolean,
+    ) => {
+      const currentId = rowId
+      const allProcessableRows = tableInstance.getFilteredRowModel().flatRows
+      const currentRow = allProcessableRows.find((r) => r.id === currentId)
+
+      if (!currentRow) return
+
+      if (isShift && lastSelectedIdRef.current) {
+        const lastId = lastSelectedIdRef.current
+        const anchorRow = allProcessableRows.find((r) => r.id === lastId)
+
+        if (!anchorRow) {
+          tableInstance.setRowSelection({ [currentId]: true })
+        } else {
+          const rowsToToggle = getRowRange(allProcessableRows, currentId, lastId)
+          const isAnchorSelected = anchorRow.getIsSelected()
+          // Calling toggleSelected on each row will trigger onRowSelectionChange for each.
+          // The revised handleRowSelectionChangeCallback will correctly queue these.
+          rowsToToggle.forEach((r) => r.toggleSelected(isAnchorSelected))
+        }
+      } else if (isCtrlOrMeta) {
+        currentRow.toggleSelected()
+      } else {
+        tableInstance.setRowSelection({ [currentId]: true })
+      }
+      lastSelectedIdRef.current = currentId
+    },
+    [],
+  )
+
+  // Callback for useRowKeydown's handleRowSelect prop
+  // Uses tableRef to access the table instance, avoiding direct dependency on 'table' variable at definition time
+  const handleRowSelectForKeydown = useCallback(
+    (
+      event: RowKeyboardEvent, // Use the specific keyboard event type from the hook
+      selectedRow: Row<SimpleTableRow>,
+    ) => {
+      if (!tableRef.current) {
+        console.warn('tableRef not yet available in handleRowSelectForKeydown')
+        return
+      }
+
+      // Extract modifier keys from the event
+      const isShiftKey = event.shiftKey
+      const isCtrlKey = event.ctrlKey || event.metaKey
+
+      handleSelectionLogic(
+        tableRef.current, // Pass the main table instance
+        selectedRow.id,
+        isShiftKey,
+        isCtrlKey,
+      )
+    },
+    [handleSelectionLogic], // Depends only on handleSelectionLogic
+  )
+
+  const { handleRowKeyDown } = useRowKeydown<SimpleTableRow>({
+    handleRowSelect: handleRowSelectForKeydown,
+  })
+
   const columns = useMemo<ColumnDef<SimpleTableRow>[]>(
     () => [
       {
@@ -150,20 +256,39 @@ const SimpleTable: FC<SimpleTableProps> = ({
         header: undefined,
         filterFn: 'fuzzy',
         sortingFn: fuzzySort, //sort by fuzzy rank (falls back to alphanumeric)
-        cell: ({ row, getValue, table }) => {
-          const meta = table.options.meta
-          const props: SimpleTableCellTemplateProps = {
-            className: clsx({ selected: row.getIsSelected(), loading: meta?.isLoading }),
-            onClick: (e) => {
-              // check we are not clicking on an input
-              if (e.target instanceof HTMLInputElement) return
-              handleRowSelect(e, row)
-            },
+        cell: ({ row, getValue, table: cellTableInstance }) => {
+          const cellMeta = cellTableInstance.options.meta
+
+          const handleCellClick = (event: ReactMouseEvent<HTMLElement, MouseEvent>) => {
+            // Prevent row selection if clicking on an interactive element within the cell
+            if (
+              event.target instanceof HTMLInputElement ||
+              event.target instanceof HTMLButtonElement ||
+              event.target instanceof HTMLTextAreaElement ||
+              event.target instanceof HTMLSelectElement ||
+              event.target instanceof HTMLAnchorElement ||
+              (event.target as HTMLElement).closest('button, a, input, textarea, select')
+            ) {
+              return
+            }
+            handleSelectionLogic(
+              cellTableInstance, // Pass the cell's table instance
+              row.id,
+              event.shiftKey,
+              event.ctrlKey || event.metaKey,
+            )
+          }
+
+          const props: SimpleTableCellTemplateProps & {
+            onClick?: (event: ReactMouseEvent<HTMLElement, MouseEvent>) => void
+          } = {
+            className: clsx({ selected: row.getIsSelected(), loading: cellMeta?.isLoading }),
             onKeyDown: (e) => {
-              // check we are not clicking on an input
               if (e.target instanceof HTMLInputElement) return
+              // Corrected typo: handleRowKeydown -> handleRowKeyDown
               handleRowKeyDown(e, row)
             },
+            onClick: handleCellClick, // Added onClick handler
             depth: row.depth,
             tabIndex: 0,
             value: getValue<string>(),
@@ -171,22 +296,30 @@ const SimpleTable: FC<SimpleTableProps> = ({
             iconColor: row.original.iconColor,
             isRowExpandable: row.getCanExpand(),
             isRowExpanded: row.getIsExpanded(),
-            isTableExpandable: meta?.isExpandable,
+            isTableExpandable: cellMeta?.isExpandable,
             onExpandClick: row.getToggleExpandedHandler(),
             startContent: row.original.startContent,
             endContent: row.original.endContent,
           }
 
           // Use children function if provided, otherwise default to SimpleTableCellTemplate
-          return meta?.children ? (
-            meta.children(props, row, table)
+          return cellMeta?.children ? (
+            cellMeta.children(props, row, cellTableInstance)
           ) : (
             <SimpleTableCellTemplate {...props} />
           )
         },
       },
     ],
-    [forceUpdateTable],
+    [forceUpdateTable, handleSelectionLogic, handleRowKeyDown], // Added handleRowKeyDown to dependencies
+  )
+
+  const handleRowSelectionChangeCallback: OnChangeFn<RowSelectionState> = useCallback(
+    (updater) => {
+      // @ts-expect-error - err not totally sure how this works - but it does
+      onRowSelectionChange(updater)
+    },
+    [onRowSelectionChange], // Depends only on the stable setState function from context
   )
 
   const table = useReactTable({
@@ -197,6 +330,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
       rowSelection,
       globalFilter,
     },
+    onRowSelectionChange: handleRowSelectionChangeCallback,
     filterFns: {
       fuzzy: fuzzyFilter,
     },
@@ -224,6 +358,12 @@ const SimpleTable: FC<SimpleTableProps> = ({
     },
   })
 
+  // Update tableRef whenever the table instance changes.
+  // This ensures handleRowSelectForKeydown uses the current table instance.
+  useEffect(() => {
+    tableRef.current = table
+  }, [table])
+
   const { rows } = table.getRowModel()
 
   //The virtualizer needs to know the scrollable container element
@@ -240,14 +380,6 @@ const SimpleTable: FC<SimpleTableProps> = ({
         : undefined,
     overscan: 5,
   })
-
-  // handles all of the selection logic
-  const { handleRowSelect } = useRowSelection({
-    table,
-    rows,
-  })
-
-  const { handleRowKeyDown } = useRowKeydown({ handleRowSelect })
 
   return (
     <Styled.TableContainer ref={tableContainerRef} className={clsx({ isLoading })}>

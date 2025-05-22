@@ -85,7 +85,9 @@ const ListsTable: FC<ListsTableProps> = ({ isReview }) => {
 
   return (
     <>
-      <SimpleTableProvider {...{ expanded, setExpanded, rowSelection, setRowSelection }}>
+      <SimpleTableProvider
+        {...{ expanded, setExpanded, rowSelection, onRowSelectionChange: setRowSelection }}
+      >
         <Container>
           <ListsTableHeader
             title={isReview ? 'Review sessions' : undefined}
