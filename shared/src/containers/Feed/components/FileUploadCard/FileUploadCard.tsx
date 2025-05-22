@@ -3,7 +3,7 @@ import * as Styled from './FileUploadCard.styled'
 import clsx from 'clsx'
 import { useState } from 'react'
 import { isFilePreviewable } from '../FileUploadPreview'
-import { SavedAnnotationMetadata } from '../CommentInput/hooks/useAnnotationsUpload'
+import { SavedAnnotationMetadata } from '@shared/containers'
 
 export interface FileUploadCardProps extends React.HTMLAttributes<HTMLDivElement> {
   name: string
@@ -138,9 +138,21 @@ const FileUploadCard = ({
           </Styled.ImageWrapper>
         )}
         <Styled.Buttons className="expand-buttons">
-          {isPreviewable && <Button icon="open_in_full" variant="nav" onClick={onExpand} />}
+          {isPreviewable && (
+            <Button
+              data-tooltip="Open preview"
+              icon="open_in_full"
+              variant="nav"
+              onClick={onExpand}
+            />
+          )}
           {(isUnsavedAnnotation || savedAnnotation) && (
-            <Button icon="play_circle" variant="nav" onClick={onJumpTo} />
+            <Button
+              data-tooltip="Jump to annotation"
+              icon="play_circle"
+              variant="nav"
+              onClick={onJumpTo}
+            />
           )}
         </Styled.Buttons>
       </Styled.ContentWrapper>

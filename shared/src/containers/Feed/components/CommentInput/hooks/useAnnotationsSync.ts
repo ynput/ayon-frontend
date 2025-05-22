@@ -8,7 +8,7 @@ type Props = {
 }
 
 export type AnnotationPreview = any & {
-  isAnnotation: true
+  isUnsavedAnnotation: true
 }
 
 // annotations are temporary store

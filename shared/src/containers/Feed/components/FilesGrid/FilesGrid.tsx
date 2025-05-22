@@ -55,7 +55,9 @@ const FilesGrid: React.FC<FilesGridProps> = ({
           isUnsavedAnnotation={file.isUnsavedAnnotation}
           savedAnnotation={file.annotation}
           progress={file.progress}
-          onRemove={onRemove ? () => onRemove(file.id, file.name, file.isAnnotation) : undefined}
+          onRemove={
+            onRemove ? () => onRemove(file.id, file.name, file.isUnsavedAnnotation) : undefined
+          }
           isCompact={isCompact}
           isDownloadable={isDownloadable}
           onExpand={() => handleExpand(index)}
