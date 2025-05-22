@@ -1,4 +1,6 @@
 export * from '../types/table'
 export * from './clientFilterToQueryFilter'
 export * from './loadingUtils'
+export * from './getTableFieldOptions'
+export * from './getReadOnlyLists'
 export * from './cellUtils'

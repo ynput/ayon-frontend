@@ -1,0 +1,25 @@
+query GetLists($projectName: String!, $first: Int!, $after: String, $filter: String) {
+  project(name: $projectName) {
+    entityLists(first: $first, after: $after, filter: $filter) {
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+      edges {
+        node {
+          id
+          label
+          entityListType
+          tags
+          data
+          entityType
+          active
+          createdAt
+          updatedAt
+          owner
+          count
+        }
+      }
+    }
+  }
+}

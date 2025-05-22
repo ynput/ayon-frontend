@@ -1,16 +1,5 @@
-import { StudioManagementPermissions, ProjectManagementPermissions } from '@shared/api'
+import { useGetMyPermissionsQuery, UserPermissionsModel } from '@shared/api'
 import { Module } from '@pages/ProjectManagerPage/mappers'
-import { useGetMyPermissionsQuery } from '@queries/permissions/getPermissions'
-
-type AllProjectsPermissions = {
-  projects: {
-    [projectName: string]: {
-      project: ProjectManagementPermissions
-    }
-  }
-  studio: StudioManagementPermissions
-  user_level: 'user' | 'admin'
-}
 
 enum PermissionLevel {
   none = 0,
@@ -26,10 +15,10 @@ export enum UserPermissionsEntity {
 }
 
 class UserPermissions {
-  permissions: AllProjectsPermissions
+  permissions: UserPermissionsModel
   hasElevatedPrivileges: boolean
 
-  constructor(permissions: AllProjectsPermissions, hasLimitedPermissions: boolean = false) {
+  constructor(permissions: UserPermissionsModel, hasLimitedPermissions: boolean = false) {
     this.permissions = permissions
     this.hasElevatedPrivileges = !hasLimitedPermissions
   }
@@ -42,7 +31,7 @@ class UserPermissions {
       return false
     }
 
-    return (this.projectSettingsAreEnabled() && this.permissions.studio.create_projects) || false
+    return (this.projectSettingsAreEnabled() && this.permissions.studio?.create_projects) || false
   }
 
   getPermissionLevel(type: UserPermissionsEntity, projectName: string): PermissionLevel {
@@ -53,7 +42,7 @@ class UserPermissions {
       return PermissionLevel.none
     }
 
-    return this.permissions.projects[projectName]?.project[type] || PermissionLevel.none
+    return this.permissions.projects?.[projectName]?.project?.[type] || PermissionLevel.none
   }
 
   canEdit(type: UserPermissionsEntity, projectName: string): boolean {
@@ -64,7 +53,7 @@ class UserPermissions {
       return false
     }
 
-    return this.permissions.projects[projectName]?.project[type] === PermissionLevel.readWrite
+    return this.permissions.projects?.[projectName]?.project?.[type] === PermissionLevel.readWrite
   }
 
   canAccessModule({ module, projectName }: { module: string; projectName: string }): boolean {
@@ -102,7 +91,7 @@ class UserPermissions {
       return true
     }
 
-    if (this.permissions.projects[projectName]?.project[type] === PermissionLevel.readOnly) {
+    if (this.permissions.projects?.[projectName]?.project?.[type] === PermissionLevel.readOnly) {
       return true
     }
 
@@ -130,7 +119,7 @@ class UserPermissions {
       return true
     }
 
-    if (this.permissions.projects[projectName] !== undefined) {
+    if (this.permissions.projects?.[projectName] !== undefined) {
       return true
     }
 
@@ -187,7 +176,7 @@ class UserPermissions {
 const useUserProjectPermissions = (
   hasLimitedPermissions?: boolean,
 ): { isLoading: boolean; permissions: UserPermissions | undefined } => {
-  const { data: permissions, isLoading } = useGetMyPermissionsQuery()
+  const { data: permissions = {}, isLoading } = useGetMyPermissionsQuery()
 
   return { isLoading, permissions: new UserPermissions(permissions, hasLimitedPermissions) }
 }

@@ -2,7 +2,7 @@ import { useGetFeedbackVerificationQuery, useGetYnputCloudInfoQuery } from '@que
 import { useAppSelector } from '@state/store'
 import { cloneDeep } from 'lodash'
 import React, { createContext, useContext, ReactNode, useEffect, useState } from 'react'
-import { useLocation } from 'react-router'
+import { useLocation } from 'react-router-dom'
 import { toast } from 'react-toastify'
 
 type FeedbackContextType = {
@@ -172,6 +172,10 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
   useEffect(() => {
     // if not logged in, do not load the script
     if (!user.name) return
+
+    // if working in a local environment, do not load the script
+    if (window.location.hostname === 'localhost') return
+
     // if already loaded, do not load again
     if (scriptLoaded) return
 

@@ -10,7 +10,7 @@ import { useGetEntitiesChecklistsQuery, useGetAttributeConfigQuery } from '@shar
 import type { DetailsPanelEntityData } from '@shared/api'
 import { getPriorityOptions } from '@shared/util'
 import { useScopedStatuses, useEntityUpdate } from '@shared/hooks'
-import { DetailsPanelTab } from '@shared/context'
+import { DetailsPanelTab, useDetailsPanelContext } from '@shared/context'
 
 import FeedFilters from '../FeedFilters/FeedFilters'
 import * as Styled from './DetailsPanelHeader.styled'
@@ -54,6 +54,10 @@ const DetailsPanelHeader = ({
   entityTypeIcons,
   onOpenViewer,
 }: DetailsPanelHeaderProps) => {
+  const { useSearchParams, useNavigate } = useDetailsPanelContext()
+  const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
+
   const statuses = useScopedStatuses(
     entities.map((entity) => entity.projectName),
     [entityType],
@@ -270,6 +274,9 @@ const DetailsPanelHeader = ({
             entityType={entityType}
             entitySubTypes={entitySubTypes}
             isLoadingEntity={!!isFetching || !!isLoading}
+            searchParams={searchParams}
+            onSetSearchParams={setSearchParams}
+            onNavigate={navigate}
           />
           {priorities ? (
             <Styled.PriorityEnumDropdown

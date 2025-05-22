@@ -6,7 +6,7 @@ import { useMemo, useEffect } from 'react'
 import { ActionContext, useExecuteActionMutation, useGetActionsFromContextQuery } from '@shared/api'
 import { ActionsDropdown } from './ActionsDropdown'
 import ActionIcon from './ActionIcon'
-import { useActionTriggers } from '@shared/hooks'
+import { ActionTriggersProps, useActionTriggers } from '@shared/hooks'
 import { ActionConfigDialog } from './ActionConfigDialog'
 import { InteractiveActionDialog, InteractiveForm } from './InteractiveActionDialog'
 
@@ -18,12 +18,13 @@ const placeholder = {
   groupLabel: '',
 }
 
-type ActionsProps = {
+interface ActionsProps extends ActionTriggersProps {
   entities: { id: string; projectName: string; entitySubType?: string }[]
   entityType: ActionContext['entityType']
   entitySubTypes?: string[]
   isLoadingEntity: boolean
   isProjectLevel?: string
+  featuredCount?: number
 }
 
 export const Actions = ({
@@ -32,9 +33,13 @@ export const Actions = ({
   entitySubTypes,
   isLoadingEntity,
   isProjectLevel,
+  searchParams,
+  featuredCount = 2,
+  onNavigate,
+  onSetSearchParams,
 }: ActionsProps) => {
   // special triggers the actions can make to perform stuff on the client
-  const { handleActionPayload } = useActionTriggers()
+  const { handleActionPayload } = useActionTriggers({ onNavigate, onSetSearchParams, searchParams })
   const [actionBeingConfigured, setActionBeingConfigured] = useState<any>(null)
   const [interactiveForm, setInteractiveForm] = useState<any>(null)
 
@@ -156,23 +161,21 @@ export const Actions = ({
     return options
   }, [groupedActions, unorderedCategories, categoryOrder])
 
-  const featuredNumber = 2
-
   const featuredActions = useMemo(() => {
     // Filter and sort to get initial featured actions
     let tempFeaturedActions = actions
       .filter((action) => action.featured)
       .sort((a, b) => (a.order || 0) - (b.order || 0))
-      .slice(0, featuredNumber)
+      .slice(0, featuredCount)
 
-    // Check if we need to add more actions to reach featuredNumber
-    if (tempFeaturedActions.length < featuredNumber) {
+    // Check if we need to add more actions to reach featuredCount
+    if (tempFeaturedActions.length < featuredCount) {
       categories.forEach((category) => {
-        if (tempFeaturedActions.length >= featuredNumber) return
+        if (tempFeaturedActions.length >= featuredCount) return
         const actions = groupedActions[category]
         if (!actions || !actions.length) return
 
-        for (let i = tempFeaturedActions.length; i < featuredNumber; i++) {
+        for (let i = tempFeaturedActions.length; i < featuredCount; i++) {
           const action = actions[i]
           if (!action) break
           if (!action.icon) continue
@@ -284,7 +287,10 @@ export const Actions = ({
     handleExecuteAction(identifier, null, formData)
   }
 
-  const loadingActions = [placeholder, placeholder, placeholder]
+  const loadingActions = useMemo(
+    () => Array(featuredCount).fill(placeholder),
+    [featuredCount, placeholder],
+  )
 
   const isLoading = isFetchingActions || isLoadingEntity
   const featuredActionsToDisplay = isLoading ? loadingActions : featuredActions
@@ -296,11 +302,9 @@ export const Actions = ({
           key={action.identifier + '-' + i}
           className={clsx('action', {
             loading: isLoading,
-            // @ts-expect-error
             isPlaceholder: action.isPlaceholder,
           })}
           data-tooltip={action.groupLabel ? action.groupLabel + ' ' + action.label : action.label}
-          // @ts-expect-error
           disabled={action.isPlaceholder}
           onClick={(e) => handleExecuteAction(action.identifier, e)}
         >
@@ -310,7 +314,7 @@ export const Actions = ({
       ))}
       <ActionsDropdown
         options={dropdownOptions}
-        isLoading={isLoading}
+        isLoading={isLoading && featuredCount > 0}
         onAction={handleExecuteAction}
         onConfig={handleConfigureAction}
       />

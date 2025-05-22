@@ -162,6 +162,17 @@ const EditorCellComponent: FC<EditorCellProps> = ({
 
       case !!options.length: {
         const enumValue = Array.isArray(value) ? value : [value]
+        if (isReadOnly) {
+          return (
+            <TextWidget
+              value={enumValue.join(', ')}
+              option={
+                enumValue.length === 1 ? options.find((o) => o.value === enumValue[0]) : undefined
+              }
+              {...sharedProps}
+            />
+          )
+        }
         return (
           <EnumWidget
             value={enumValue}

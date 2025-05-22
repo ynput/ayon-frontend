@@ -2,7 +2,7 @@
 //  this is used when the slice type is not hierarchy
 // and we need to get all the tasks for the project
 
-import { SliceType } from '@context/SlicerContext'
+import { SliceType } from '@shared/containers/Slicer'
 import { useGetFolderListQuery } from '@shared/api'
 import { useMemo } from 'react'
 

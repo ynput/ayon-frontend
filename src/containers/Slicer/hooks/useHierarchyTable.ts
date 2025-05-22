@@ -1,7 +1,7 @@
 // create table data for the hierarchy
-import { useGetFolderListQuery, FolderListItem } from '@shared/api'
-import type { FolderType } from '@shared/api'
-import { TableRow } from '../types'
+import { SimpleTableRow } from '@shared/SimpleTable'
+import { useGetFolderListQuery } from '@shared/api'
+import type { FolderType, FolderListItem } from '@shared/api'
 import { useCallback, useMemo } from 'react'
 
 type Props = {
@@ -20,7 +20,7 @@ const useHierarchyTable = ({ projectName, folderTypes }: Props) => {
     return folderType?.icon || 'folder'
   }
 
-  const folderToTableRow = (folder: FolderListItem): Omit<TableRow, 'subRows'> => ({
+  const folderToTableRow = (folder: FolderListItem): Omit<SimpleTableRow, 'subRows'> => ({
     id: folder.id,
     parentId: folder.parentId,
     name: folder.name,
@@ -39,10 +39,10 @@ const useHierarchyTable = ({ projectName, folderTypes }: Props) => {
     items: T[],
     elementId: keyof T = 'id' as keyof T,
     parentId: keyof T = 'parentId' as keyof T,
-  ): TableRow[] => {
+  ): SimpleTableRow[] => {
     // Use Map instead of Object.create(null)
-    const hashTable = new Map<string, TableRow>()
-    const dataTree: TableRow[] = []
+    const hashTable = new Map<string, SimpleTableRow>()
+    const dataTree: SimpleTableRow[] = []
 
     // sort folders by name
     const sortedItems = [...items].sort((a, b) =>
@@ -53,7 +53,7 @@ const useHierarchyTable = ({ projectName, folderTypes }: Props) => {
     for (let i = 0; i < sortedItems.length; i++) {
       const item = sortedItems[i]
       const id = item[elementId] as string
-      const row: TableRow = {
+      const row: SimpleTableRow = {
         ...folderToTableRow(item),
         subRows: [],
       }
@@ -80,7 +80,7 @@ const useHierarchyTable = ({ projectName, folderTypes }: Props) => {
     return dataTree
   }
 
-  const tableData: TableRow[] = useMemo(() => {
+  const tableData: SimpleTableRow[] = useMemo(() => {
     if (!folders.length || isLoading) return []
 
     const rows = createDataTree(folders)

@@ -99,6 +99,7 @@ export type TaskType = {
   color?: string
   icon?: string
 }
+
 export type LinkType = {
   link_type: string
   input_type: 'folder' | 'product' | 'version' | 'representation' | 'task' | 'workfile'

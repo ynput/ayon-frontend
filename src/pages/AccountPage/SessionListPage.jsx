@@ -8,7 +8,7 @@ import { useInvalidateUserSessionMutation } from '@shared/api'
 
 const SessionList = ({ userName }) => {
   const {
-    data: sessionList,
+    data: sessionList = [],
     isLoading,
     isUninitialized,
     refetch,

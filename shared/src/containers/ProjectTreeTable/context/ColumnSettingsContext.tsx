@@ -1,10 +1,11 @@
-import React, { createContext, useContext, ReactNode, useMemo } from 'react'
+import React, { createContext, useContext, ReactNode, useState } from 'react'
 import {
   ColumnOrderState,
   ColumnPinningState,
   functionalUpdate,
   OnChangeFn,
   VisibilityState,
+  ColumnSizingState,
 } from '@tanstack/react-table'
 
 export interface ColumnSettingsContextType {
@@ -26,6 +27,11 @@ export interface ColumnSettingsContextType {
   updateColumnOrder: (columnOrder: ColumnOrderState) => void
   columnOrderUpdater: OnChangeFn<ColumnOrderState>
 
+  // Column Sizing
+  columnSizing: ColumnSizingState
+  setColumnSizing: (columnSizing: ColumnSizingState) => void
+  columnSizingUpdater: OnChangeFn<ColumnSizingState>
+
   // Global change
   setColumnsConfig: (config: ColumnsConfig) => void
 }
@@ -36,11 +42,12 @@ export type ColumnsConfig = {
   columnVisibility: VisibilityState
   columnOrder: ColumnOrderState
   columnPinning: ColumnPinningState
+  columnSizing: ColumnSizingState // Add this
 }
 
 interface ColumnSettingsProviderProps {
   children: ReactNode
-  config: Record<string, any>
+  config?: Record<string, any>
   onChange: (config: ColumnsConfig) => void
 }
 
@@ -50,7 +57,12 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
   onChange,
 }) => {
   const columnsConfig = config as ColumnsConfig
-  const { columnOrder = [], columnPinning = {}, columnVisibility = {} } = columnsConfig
+  const {
+    columnOrder = [],
+    columnPinning = {},
+    columnVisibility = {},
+    columnSizing: columnsSizingExternal = {},
+  } = columnsConfig
 
   // DIRECT STATE UPDATES - no side effects
   const setColumnVisibility = (visibility: VisibilityState) => {
@@ -72,6 +84,33 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
       ...columnsConfig,
       columnPinning: pinning,
     })
+  }
+
+  const [internalColumnSizing, setInternalColumnSizing] = useState<ColumnSizingState | null>(null)
+
+  // use internalColumnSizing if it exists, otherwise use the external column sizing
+  const columnSizing = internalColumnSizing || columnsSizingExternal
+
+  const resizingTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
+
+  const setColumnSizing = (sizing: ColumnSizingState) => {
+    setInternalColumnSizing(sizing)
+
+    // if there is a timeout already set, clear it
+    if (resizingTimeoutRef.current) {
+      clearTimeout(resizingTimeoutRef.current)
+    }
+    // set a timeout that tracks if the column sizing has finished
+    resizingTimeoutRef.current = setTimeout(() => {
+      // we have finished resizing now!
+      // update the external column sizing
+      onChange({
+        ...columnsConfig,
+        columnSizing: sizing,
+      })
+      // reset the internal column sizing to not be used anymore
+      setInternalColumnSizing(null)
+    }, 500)
   }
 
   // SIDE EFFECT UTILITIES
@@ -153,6 +192,11 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     updateColumnPinning(newPinning)
   }
 
+  const columnSizingUpdater: OnChangeFn<ColumnSizingState> = (sizingUpdater) => {
+    const newSizing = functionalUpdate(sizingUpdater, columnSizing)
+    setColumnSizing(newSizing)
+  }
+
   return (
     <ColumnSettingsContext.Provider
       value={{
@@ -171,6 +215,10 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
         setColumnOrder,
         updateColumnOrder,
         columnOrderUpdater,
+        // column sizing
+        columnSizing,
+        setColumnSizing,
+        columnSizingUpdater,
         // global change
         setColumnsConfig: onChange,
       }}
@@ -180,10 +228,10 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
   )
 }
 
-export const useColumnSettings = (): ColumnSettingsContextType => {
+export const useColumnSettingsContext = (): ColumnSettingsContextType => {
   const context = useContext(ColumnSettingsContext)
   if (!context) {
-    throw new Error('useColumnSettings must be used within a ColumnSettingsProvider')
+    throw new Error('useColumnSettingsContext must be used within a ColumnSettingsProvider')
   }
   return context
 }

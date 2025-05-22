@@ -1,7 +1,10 @@
-import { useDispatch } from 'react-redux'
-import { foldersApi } from '@shared/api/generated'
-import { useNavigate, useSearchParams } from 'react-router-dom'
 import customProtocolCheck from 'custom-protocol-check'
+
+export type ActionTriggersProps = {
+  searchParams: URLSearchParams
+  onSetSearchParams: (params: URLSearchParams) => void
+  onNavigate: (uri: string) => void
+}
 
 interface QueryParams {
   [key: string]: string
@@ -17,11 +20,12 @@ interface ActionPayload {
   [key: string]: any
 }
 
-export const useActionTriggers = () => {
-  const [searchParams, setSearchParams] = useSearchParams()
-  const navigate = useNavigate()
+export const useActionTriggers = ({
+  searchParams,
+  onSetSearchParams,
+  onNavigate,
+}: ActionTriggersProps) => {
   const dispatch = useDispatch()
-
   const handleActionPayload = (actionType: string, payload: ActionPayload | null): void => {
     if (!payload) return
 
@@ -47,7 +51,7 @@ export const useActionTriggers = () => {
         for (const [key, value] of Object.entries(payload.query as QueryParams)) {
           searchParams.set(key, value)
         }
-        setSearchParams(searchParams)
+        onSetSearchParams(searchParams)
       }
     } else if (actionType === 'navigate') {
       // Validate it is a string
@@ -55,7 +59,7 @@ export const useActionTriggers = () => {
         throw new Error('Invalid payload: navigate')
       } else {
         // Navigate to the specified page
-        navigate(payload.uri)
+        onNavigate(payload.uri)
       }
     } else if (actionType === 'redirect') {
       // Validate it is a string

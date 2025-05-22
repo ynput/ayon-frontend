@@ -19,8 +19,14 @@ import type {
 } from '@shared/containers/ProjectTreeTable/utils'
 import { clientFilterToQueryFilter } from '@shared/containers/ProjectTreeTable/utils'
 import type { QueryTasksFoldersApiArg } from '@shared/api'
-import { ProjectDataContextProps, useProjectDataContext } from './ProjectDataContext'
+import {
+  ProjectDataContextProps,
+  useProjectDataContext,
+} from '../../../../shared/src/containers/ProjectTreeTable/context/ProjectDataContext'
 import { LoadingTasks } from '@shared/containers/ProjectTreeTable'
+import { useEntityListsContext } from '@pages/ProjectListsPage/context/EntityListsContext'
+import { ContextMenuItemConstructors } from '@shared/containers/ProjectTreeTable/hooks/useCellContextMenu'
+import { useUserProjectConfig } from '@shared/hooks'
 
 export interface ProjectOverviewContextProps {
   isInitialized: boolean
@@ -38,6 +44,7 @@ export interface ProjectOverviewContextProps {
   // Data
   tasksMap: TaskNodeMap
   foldersMap: FolderNodeMap
+  entitiesMap: FolderNodeMap & TaskNodeMap
   tasksByFolderMap: TasksByFolderMap
   fetchNextPage: () => void
   reloadTableData: () => void
@@ -64,6 +71,9 @@ export interface ProjectOverviewContextProps {
   // Sorting
   sorting: SortingState
   updateSorting: OnChangeFn<SortingState>
+
+  // context menu items
+  contextMenuItems: ContextMenuItemConstructors
 }
 
 const ProjectOverviewContext = createContext<ProjectOverviewContextProps | undefined>(undefined)
@@ -81,9 +91,30 @@ export const ProjectOverviewProvider = ({ children }: ProjectOverviewProviderPro
     users,
     isInitialized,
     isLoading: isLoadingData,
-    columnSorting,
-    setColumnSorting,
   } = useProjectDataContext()
+
+  // filter out attribFields by scope
+  const scopedAttribFields = useMemo(
+    () =>
+      attribFields.filter((field) => ['task', 'folder'].some((s: any) => field.scope?.includes(s))),
+    [attribFields],
+  )
+
+  // lists data
+  const { menuItems: menuItemsAddToList } = useEntityListsContext()
+
+  // inject in custom add to list context menu items
+  const contextMenuItems: ContextMenuItemConstructors = [
+    'copy-paste',
+    'show-details',
+    'expand-collapse',
+    menuItemsAddToList(),
+    'inherit',
+    'export',
+    'create-folder',
+    'create-task',
+    'delete',
+  ]
 
   const getLocalKey = (page: string, key: string) => `${page}-${key}-${projectName}`
 
@@ -93,6 +124,11 @@ export const ProjectOverviewProvider = ({ children }: ProjectOverviewProviderPro
   const updateExpanded: OnChangeFn<ExpandedState> = (expandedUpdater) => {
     setExpanded(functionalUpdate(expandedUpdater, expanded))
   }
+
+  // Get column sorting
+  const [pageConfig, updatePageConfig, { isSuccess: isConfigReady }] = useUserProjectConfig({
+    selectors: ['overview', projectName],
+  })
 
   const toggleExpanded = (id: string) => {
     if (typeof expanded === 'boolean') return
@@ -128,6 +164,13 @@ export const ProjectOverviewProvider = ({ children }: ProjectOverviewProviderPro
     filterString: queryFilterString,
     filter: queryFilter,
     search: fuzzySearchFilter,
+  }
+
+  const { columnSorting = [] } = pageConfig as {
+    columnSorting: SortingState
+  }
+  const setColumnSorting = async (sorting: SortingState) => {
+    await updatePageConfig({ columnSorting: sorting })
   }
 
   // update in user preferences
@@ -179,19 +222,35 @@ export const ProjectOverviewProvider = ({ children }: ProjectOverviewProviderPro
     showHierarchy,
   })
 
+  // combine foldersMap and itemsMap into a single map
+  const entitiesMap = useMemo(() => {
+    const combined: FolderNodeMap & TaskNodeMap = new Map()
+
+    foldersMap.forEach((folder) => {
+      combined.set(folder.id, folder)
+    })
+
+    tasksMap.forEach((task) => {
+      combined.set(task.id, task)
+    })
+
+    return combined
+  }, [foldersMap, tasksMap])
+
   return (
     <ProjectOverviewContext.Provider
       value={{
-        isInitialized,
+        isInitialized: isInitialized && isConfigReady,
         isLoading: isLoadingAll || isLoadingData,
         isLoadingMore,
         loadingTasks,
         projectInfo,
-        attribFields,
+        attribFields: scopedAttribFields,
         users,
         projectName,
         tasksMap,
         foldersMap,
+        entitiesMap,
         tasksByFolderMap,
         fetchNextPage,
         reloadTableData,
@@ -210,6 +269,8 @@ export const ProjectOverviewProvider = ({ children }: ProjectOverviewProviderPro
         // sorting
         sorting: columnSorting,
         updateSorting,
+        // context menu item
+        contextMenuItems,
       }}
     >
       {children}

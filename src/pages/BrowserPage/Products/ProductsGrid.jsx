@@ -75,7 +75,6 @@ const ProductsGrid = ({
   lastSelected,
   productTypes,
   onContext,
-  onContextMenuSelectionChange,
   groupBy = null,
   multipleFoldersSelected = false,
   projectName,
@@ -83,7 +82,6 @@ const ProductsGrid = ({
   const isNone = data.length === 0
 
   const handleContext = (e, id) => {
-    onContextMenuSelectionChange({ value: id })
     onContext(e, id)
   }
 
@@ -313,7 +311,6 @@ ProductsGrid.propTypes = {
   productTypes: PropTypes.object,
   statuses: PropTypes.object,
   lastSelected: PropTypes.string,
-  onContextMenuSelectionChange: PropTypes.func,
   groupBy: PropTypes.string,
 }
 

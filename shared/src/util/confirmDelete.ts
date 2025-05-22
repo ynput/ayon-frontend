@@ -2,7 +2,7 @@ import { upperFirst } from 'lodash'
 import { confirmDialog, ConfirmDialogOptions } from 'primereact/confirmdialog'
 import { toast } from 'react-toastify'
 
-interface ConfirmDeleteOptions extends Omit<ConfirmDialogOptions, 'accept'> {
+export interface ConfirmDeleteOptions extends Omit<ConfirmDialogOptions, 'accept'> {
   label?: string
   message?: string
   deleteLabel?: string

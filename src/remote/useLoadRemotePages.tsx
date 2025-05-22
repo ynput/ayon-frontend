@@ -1,57 +1,30 @@
-import { FC, useMemo } from 'react'
+import { useMemo } from 'react'
 import { useRemoteModules } from '@shared/context'
 import { ModuleSpec, useLoadModules } from '@shared/hooks'
-import { Location, NavigateFunction, SetURLSearchParams } from 'react-router-dom'
 import LoadingPage from '@pages/LoadingPage'
 
-type RemoteAppProps = {
-  projectName: string
-  name: string
-  version: string
-  location: Location<any>
-  searchParams: URLSearchParams
-  setSearchParams: SetURLSearchParams
-  navigate: NavigateFunction
-}
-
-type RemoteAppNode = FC<Partial<RemoteAppProps>>
-
-type PermanentAddon = 'review'
-
-type DataType = Record<string, any>
-type LoadedPage<T = DataType> = {
-  id: string
-  component: RemoteAppNode
-  data: T
-}
-
-export type Fallbacks<T = DataType> = Map<PermanentAddon, LoadedPage<T>>
-interface ProjectRemoteLoaderProps<T = DataType> {
-  fallbacks?: Fallbacks<T>
+interface ProjectRemoteLoaderProps {
+  fallbacks?: Map<string, any>
   moduleKey: 'Project' | 'Route'
   skip?: boolean
 }
 
-const useLoadRemotePages = <T extends DataType>({
-  fallbacks,
-  moduleKey,
-  skip = false,
-}: ProjectRemoteLoaderProps<T>) => {
+const useLoadRemotePages = ({ fallbacks, moduleKey, skip = false }: ProjectRemoteLoaderProps) => {
   const { modules, remotesInitialized } = useRemoteModules()
 
-  const projectPageModules = useMemo<ModuleSpec<RemoteAppNode>[]>(() => {
-    const pageModules: ModuleSpec<RemoteAppNode>[] = []
+  const pageModules = useMemo<ModuleSpec<any>[]>(() => {
+    const pageModules: ModuleSpec<any>[] = []
     for (const addon of modules) {
       for (const remote in addon.modules) {
         const modulesList = addon.modules[remote]
         const projectModules = modulesList.filter((m) => m.includes(moduleKey))
 
         for (const module of projectModules) {
-          const moduleSpec: ModuleSpec<RemoteAppNode> = {
+          const moduleSpec: ModuleSpec<any> = {
             addon: addon.addonName,
             remote,
             module,
-            fallback: fallbacks?.get(module as PermanentAddon)?.component,
+            fallback: fallbacks?.get(module)?.component,
           }
           pageModules.push(moduleSpec)
         }
@@ -62,7 +35,7 @@ const useLoadRemotePages = <T extends DataType>({
 
   // get remote project module pages
   const { modules: modulesData, isLoading: isLoadingModulePages } = useLoadModules(
-    projectPageModules,
+    pageModules,
     modules,
     !remotesInitialized || skip,
   )
@@ -71,9 +44,7 @@ const useLoadRemotePages = <T extends DataType>({
     const modulesPages = modulesData
       .filter((result) => result[1].isLoaded)
       .map((result) => ({
-        id: result[0].id,
-        component: result[0].component,
-        data: result[0].data as T,
+        ...result[0],
         isFallback: false,
       }))
 
@@ -84,9 +55,8 @@ const useLoadRemotePages = <T extends DataType>({
           !remotesInitialized || (isLoadingModulePages && modules.find((m) => m.addonName === key))
 
         return {
-          id: key,
+          ...fallback,
           component: showLoadingPage ? LoadingPage : fallback.component,
-          data: fallback.data,
           isFallback: true,
         }
       })

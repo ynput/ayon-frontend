@@ -1,4 +1,7 @@
 export * from './RemoteModulesContext'
 export * from './DetailsPanelContext'
 export * from './ThumbnailUploaderContext'
+export * from './SettingsPanelContext'
 export * from './pip'
+export * from './AddonProjectContext'
+export * from './AddonContext'

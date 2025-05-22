@@ -20,10 +20,16 @@ export type { ProjectTableQueriesContextProps } from './context/ProjectTableQuer
 export { SelectedRowsProvider, useSelectedRowsContext } from './context/SelectedRowsContext'
 export type { SelectedRowsContextProps } from './context/SelectedRowsContext'
 
-export { ColumnSettingsProvider, useColumnSettings } from './context/ColumnSettingsContext'
+export { ColumnSettingsProvider, useColumnSettingsContext } from './context/ColumnSettingsContext'
 export type { ColumnSettingsContextType } from './context/ColumnSettingsContext'
 
 export * from './utils'
 export * from './types'
 export * from './context'
+export * from './buildTreeTableColumns'
+
+import useGetEntityTypeData from './hooks/useGetEntityTypeData'
+export * from './hooks/useUpdateTableData'
+export * from './hooks/useCellContextMenu'
+export { useGetEntityTypeData }
 export * from './widgets'
