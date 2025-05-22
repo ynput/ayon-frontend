@@ -113,9 +113,7 @@ export const useActionTriggers = ({
       }
     }
 
-
     if (payload.extra_reload === true) {
-      console.log('extra_reload')
       dispatch(foldersApi.util.invalidateTags(['hierarchy']))
     }
 

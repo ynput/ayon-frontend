@@ -214,8 +214,6 @@ export const SimpleFormDialog = ({
               return <FormLabel key={field.name} field={field} />
             }
 
-            //const label = <span style={{whiteSpace: 'nowrap'}}>{field.label || field.name}</span>
-
             return (
               <FormRow key={field.name} label={field.label || ''}>
                 <FormField
