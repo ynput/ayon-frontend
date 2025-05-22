@@ -1,9 +1,9 @@
 import { createContext, useContext, ReactNode, useMemo } from 'react'
 import { EntityList } from '@shared/api'
-import { useProjectDataContext } from '@pages/ProjectOverviewPage/context/ProjectDataContext'
+import { useProjectDataContext } from '@shared/containers/ProjectTreeTable'
 import { SimpleTableRow } from '@shared/SimpleTable'
 import { Filter } from '@ynput/ayon-react-components'
-import { useUsersPageConfig } from '@pages/ProjectOverviewPage/hooks/useUserPageConfig'
+import { useUserProjectConfig } from '@shared/hooks'
 import useGetListsData from '../hooks/useGetListsData'
 import { buildListsTableData } from '../util'
 
@@ -33,7 +33,7 @@ interface ListsDataProviderProps {
 export const ListsDataProvider = ({ children, entityListTypes }: ListsDataProviderProps) => {
   const { projectName, isInitialized, isLoading: isLoadingProject } = useProjectDataContext()
 
-  const [pageConfig, updatePageConfig, { isSuccess: columnsConfigReady }] = useUsersPageConfig({
+  const [pageConfig, updatePageConfig, { isSuccess: columnsConfigReady }] = useUserProjectConfig({
     selectors: ['lists', projectName],
     init: {
       columnOrder: [],

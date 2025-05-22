@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react'
 import AppNavLinks from '@containers/header/AppNavLinks'
-import { useNavigate, useParams } from 'react-router'
+import { useNavigate, useParams } from 'react-router-dom'
 import UserTasksContainer from './UserDashboardTasks/UserTasksContainer'
 import { Section } from '@ynput/ayon-react-components'
 import ProjectList from '@containers/projectList'

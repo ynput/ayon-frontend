@@ -30,5 +30,6 @@ export * from './buildTreeTableColumns'
 
 import useGetEntityTypeData from './hooks/useGetEntityTypeData'
 export * from './hooks/useUpdateTableData'
+export * from './hooks/useCellContextMenu'
 export { useGetEntityTypeData }
 export * from './widgets'

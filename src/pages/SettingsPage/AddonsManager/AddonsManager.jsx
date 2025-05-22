@@ -14,7 +14,7 @@ import {
   onSelectedBundles,
   onSelectedVersions,
 } from '@state/addonsManager'
-import { useNavigate } from 'react-router'
+import { useNavigate } from 'react-router-dom'
 import { useDeleteAddonVersionsMutation } from '@shared/api'
 import { useRestart } from '@context/RestartContext'
 import { Link } from 'react-router-dom'

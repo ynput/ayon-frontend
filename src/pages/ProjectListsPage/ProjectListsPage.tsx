@@ -1,7 +1,4 @@
-import {
-  ProjectDataProvider,
-  useProjectDataContext,
-} from '@pages/ProjectOverviewPage/context/ProjectDataContext'
+import { ProjectDataProvider, useProjectDataContext } from '@shared/containers/ProjectTreeTable'
 import { FC, useMemo, useState } from 'react' // Added useState
 import { ListsProvider, useListsContext } from './context/ListsContext'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
@@ -19,7 +16,7 @@ import ListItemsTable from './components/ListItemsTable/ListItemsTable'
 import ListItemsFilter from './components/ListItemsFilter/ListItemsFilter'
 import { CustomizeButton } from '@shared/components'
 import { SettingsPanelProvider, useSettingsPanel } from '@shared/context'
-import { useUsersPageConfig } from '@pages/ProjectOverviewPage/hooks/useUserPageConfig'
+import { useUserProjectConfig } from '@shared/hooks'
 import useTableQueriesHelper from '@pages/ProjectOverviewPage/hooks/useTableQueriesHelper'
 import {
   CellEditingProvider,
@@ -39,7 +36,7 @@ import useUpdateListItems from './hooks/useUpdateListItems'
 import { Actions } from '@shared/containers/Actions/Actions'
 import { ListsModuleProvider } from './context/ListsModulesContext.tsx'
 import OpenReviewSessionButton from '@pages/ReviewPage/OpenReviewSessionButton.tsx'
-import { useNavigate } from 'react-router'
+import { useNavigate } from 'react-router-dom'
 import { useSearchParams } from 'react-router-dom'
 // Dnd-kit imports
 import {
@@ -104,7 +101,7 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
     [listAttributes, attribFields, selectedList],
   )
 
-  const [pageConfig, updatePageConfig] = useUsersPageConfig({
+  const [pageConfig, updatePageConfig] = useUserProjectConfig({
     selectors: ['lists', projectName, selectedList?.label],
   })
 

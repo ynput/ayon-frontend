@@ -47,7 +47,7 @@ export type ColumnsConfig = {
 
 interface ColumnSettingsProviderProps {
   children: ReactNode
-  config: Record<string, any>
+  config?: Record<string, any>
   onChange: (config: ColumnsConfig) => void
 }
 

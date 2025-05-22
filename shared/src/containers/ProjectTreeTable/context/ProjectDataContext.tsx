@@ -1,6 +1,5 @@
 import { createContext, ReactNode, useContext, useMemo } from 'react'
-import { useGetUsersAssigneeQuery } from '@shared/api'
-import { useGetProjectQuery } from '@queries/project/enhancedProject'
+import { useGetUsersAssigneeQuery, useGetProjectQuery } from '@shared/api'
 import type { ProjectModel } from '@shared/api'
 import useAttributeFields, { ProjectTableAttribute } from '../hooks/useAttributesList'
 

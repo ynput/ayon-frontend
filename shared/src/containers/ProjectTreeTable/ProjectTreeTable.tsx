@@ -441,7 +441,7 @@ export const ProjectTreeTable = ({
                           width: `calc(var(--col-${cell.column.id}-size) * 1px)`,
                           display: 'flex',
                           alignItems: 'center',
-                          height: showHierarchy ? 36 : 40,
+                          height: 40,
                         }
 
                         if (cell.column.id === DRAG_HANDLE_COLUMN_ID) {
@@ -711,7 +711,7 @@ const TableBody = ({
 
   const rowVirtualizer = useVirtualizer<HTMLDivElement, HTMLTableRowElement>({
     count: rows.length,
-    estimateSize: () => (showHierarchy ? 36 : 40), //estimate row height for accurate scrollbar dragging
+    estimateSize: () => 40, //estimate row height for accurate scrollbar dragging
     getScrollElement: () => tableContainerRef.current,
     //measure dynamic row height, except in firefox because it measures table border height incorrectly
     measureElement:
@@ -838,7 +838,7 @@ const TableBodyRow = ({
     top: offsetTop, // Position based on virtualizer's calculation (virtualRow.start)
     left: 0, // Span full width of the relative parent (tbody)
     right: 0, // Span full width
-    height: showHierarchy ? 36 : 40, // Explicit height can be beneficial for absolute positioning
+    height: 40, // Explicit height can be beneficial for absolute positioning
     zIndex: sortable && sortable.isDragging ? 0 : 1, // Ensure dragged item is above others
     display: 'flex', // Styled.TR is display:flex
     transform:
@@ -873,7 +873,7 @@ const TableBodyRow = ({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                height: showHierarchy ? 36 : 40,
+                height: 40,
               }}
               className={clsx(cell.column.id, {
                 'last-pinned-left':
@@ -975,7 +975,7 @@ const TableCell = ({
       style={{
         ...getCommonPinningStyles(cell.column, sortableRows),
         width: `calc(var(--col-${cell.column.id}-size) * 1px)`,
-        height: showHierarchy ? 36 : 40,
+        height: 40,
       }}
       onMouseDown={(e) => {
         // Only process left clicks (button 0), ignore right clicks

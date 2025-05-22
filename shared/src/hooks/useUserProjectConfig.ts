@@ -12,7 +12,7 @@ type Result = [
   { isSuccess: boolean },
 ]
 
-export const useUsersPageConfig = ({ selectors = [], init }: Props): Result => {
+export const useUserProjectConfig = ({ selectors = [], init }: Props): Result => {
   // GET CURRENT USER
   const { data: user, isSuccess } = useGetCurrentUserQuery()
   // extract out columns config for project

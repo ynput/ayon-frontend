@@ -1,5 +1,4 @@
-import { useGetSiteInfoQuery, AttributeModel } from '@shared/api'
-import { useGetMyProjectPermissionsQuery } from '@queries/permissions/getPermissions'
+import { useGetSiteInfoQuery, useGetMyProjectPermissionsQuery, AttributeModel } from '@shared/api'
 
 export interface ProjectTableAttribute extends AttributeModel {
   readOnly?: boolean

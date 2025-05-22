@@ -1,4 +1,4 @@
-import { usersApi } from '@shared/api'
+import { usersApi } from '@shared/api/generated'
 
 const enhancedApi = usersApi.enhanceEndpoints({
   endpoints: {

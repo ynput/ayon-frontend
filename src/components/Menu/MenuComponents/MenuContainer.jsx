@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { setMenuOpen } from '@state/context'
 import * as Styled from './Menu.styled'
-import { useNavigate } from 'react-router'
+import { useNavigate } from 'react-router-dom'
 import { createPortal } from 'react-dom'
 
 const MenuContainer = ({ id, target, targetId = '', children, ...props }) => {

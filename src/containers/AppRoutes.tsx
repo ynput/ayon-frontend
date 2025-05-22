@@ -1,5 +1,6 @@
 import { FC, lazy } from 'react'
-import { Navigate, Route, Routes, useLocation, useNavigate, useParams } from 'react-router'
+import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
+import { Navigate, Route, Routes } from 'react-router-dom'
 
 import ProtectedRoute from '@containers/ProtectedRoute'
 const MarketPage = lazy(() => import('@pages/MarketPage'))
@@ -16,8 +17,8 @@ const UserDashboardPage = lazy(() => import('@pages/UserDashboardPage'))
 const ErrorPage = lazy(() => import('@pages/ErrorPage'))
 
 import useLoadRemoteProjectPages from '../remote/useLoadRemotePages'
-import { useSearchParams } from 'react-router-dom'
 import LoadingPage from '@pages/LoadingPage'
+import { RemoteAddon } from '@shared/context'
 
 interface AppRoutesProps {
   isUser: boolean
@@ -25,10 +26,9 @@ interface AppRoutesProps {
 
 const AppRoutes: FC<AppRoutesProps> = ({ isUser }) => {
   // dynamically import routes
-  type ModuleData = { name: string; module: string }
-  const { remotePages, isLoading: isLoadingModules } = useLoadRemoteProjectPages<ModuleData>({
+  const { remotePages, isLoading: isLoadingModules } = useLoadRemoteProjectPages({
     moduleKey: 'Route',
-  })
+  }) as { remotePages: RemoteAddon[]; isLoading: boolean }
 
   if (isLoadingModules) {
     return <LoadingPage />
@@ -38,14 +38,13 @@ const AppRoutes: FC<AppRoutesProps> = ({ isUser }) => {
     <Routes>
       {remotePages.map((remote) => (
         <Route
-          key={remote.data.module}
-          path={remote.data.module}
+          key={remote.id}
+          path={remote.path}
           element={
             <remote.component
-              useNavigate={useNavigate}
-              useParams={useParams}
-              useLocation={useLocation}
-              useSearchParams={useSearchParams}
+              router={{
+                ...{ useParams, useNavigate, useLocation, useSearchParams },
+              }}
             />
           }
         />
