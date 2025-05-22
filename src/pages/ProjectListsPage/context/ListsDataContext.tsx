@@ -27,10 +27,15 @@ const ListsDataContext = createContext<ListsDataContextValue | undefined>(undefi
 interface ListsDataProviderProps {
   children: ReactNode
   entityListTypes?: string[]
+  isReview?: boolean
 }
 
 // fetch all lists and provide methods to update the lists
-export const ListsDataProvider = ({ children, entityListTypes }: ListsDataProviderProps) => {
+export const ListsDataProvider = ({
+  children,
+  entityListTypes,
+  isReview,
+}: ListsDataProviderProps) => {
   const { projectName, isInitialized, isLoading: isLoadingProject } = useProjectDataContext()
 
   const [pageConfig, updatePageConfig, { isSuccess: columnsConfigReady }] = useUserProjectConfig({
@@ -42,7 +47,7 @@ export const ListsDataProvider = ({ children, entityListTypes }: ListsDataProvid
     },
   })
 
-  const listsFilters = pageConfig?.listsFilters || ([] as Filter[])
+  const listsFilters = isReview ? [] : pageConfig?.listsFilters || ([] as Filter[])
   const setListsFilters = async (filters: Filter[]) => {
     await updatePageConfig({ listsFilters: filters })
   }

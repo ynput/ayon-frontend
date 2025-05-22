@@ -77,7 +77,6 @@ interface ListsProviderProps {
 }
 
 export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
-  console.log({ isReview })
   const { projectName } = useProjectDataContext()
   const { listsMap } = useListsDataContext()
 
