@@ -441,7 +441,7 @@ export const ProjectTreeTable = ({
                           width: `calc(var(--col-${cell.column.id}-size) * 1px)`,
                           display: 'flex',
                           alignItems: 'center',
-                          height: showHierarchy ? 36 : 40,
+                          height: 40,
                         }
 
                         if (cell.column.id === DRAG_HANDLE_COLUMN_ID) {
@@ -838,7 +838,7 @@ const TableBodyRow = ({
     top: offsetTop, // Position based on virtualizer's calculation (virtualRow.start)
     left: 0, // Span full width of the relative parent (tbody)
     right: 0, // Span full width
-    height: showHierarchy ? 36 : 40, // Explicit height can be beneficial for absolute positioning
+    height: 40, // Explicit height can be beneficial for absolute positioning
     zIndex: sortable && sortable.isDragging ? 0 : 1, // Ensure dragged item is above others
     display: 'flex', // Styled.TR is display:flex
     transform:
@@ -873,7 +873,7 @@ const TableBodyRow = ({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                height: showHierarchy ? 36 : 40,
+                height: 40,
               }}
               className={clsx(cell.column.id, {
                 'last-pinned-left':
