@@ -119,7 +119,7 @@ const ProjectOverviewPage: FC = () => {
                 entities={[]}
                 entityType={undefined}
                 isLoadingEntity={false}
-                isProjectLevel={projectName}
+                projectActionsProjectName={projectName}
                 onNavigate={navigate}
                 onSetSearchParams={setSearchParams}
                 searchParams={searchParams}
