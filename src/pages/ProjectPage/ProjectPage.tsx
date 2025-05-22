@@ -51,6 +51,8 @@ const ProjectPage = () => {
    * project data to the store, and renders the requested page.
    */
 
+  const isManager = useAppSelector((state) => state.user.data.isManager)
+  const isAdmin = useAppSelector((state) => state.user.data.isAdmin)
   const navigate = useNavigate()
   const { projectName, module = '', addonName } = useParams()
   const dispatch = useAppDispatch()
@@ -144,11 +146,17 @@ const ProjectPage = () => {
         module: remote.module,
         path: `/projects/${projectName}/${remote.module}`,
       })),
-      ...addonsData.map((addon) => ({
-        name: addon.title,
-        path: `/projects/${projectName}/addon/${addon.name}`,
-        module: addon.name,
-      })),
+      ...addonsData
+        .filter((addon) => {
+          if (addon.settings.admin && !isAdmin) return false
+          if (addon.settings.manager && !isManager) return false
+          return true
+        })
+        .map((addon) => ({
+          name: addon.title,
+          path: `/projects/${projectName}/addon/${addon.name}`,
+          module: addon.name,
+        })),
       { node: 'spacer' },
       {
         node: (
