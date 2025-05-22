@@ -4,7 +4,7 @@ import { DetailsPanelEntityType } from '@shared/api'
 import type { UserModel } from '@shared/api'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useSearchParams } from 'react-router-dom'
-import { SavedAnnotationMetadata } from '@shared/containers/Feed/components/CommentInput/hooks/useAnnotationsUpload'
+import { SavedAnnotationMetadata } from '@shared/containers'
 
 export type FeedFilters = 'activity' | 'comments' | 'versions' | 'checklists'
 
@@ -51,6 +51,7 @@ export interface DetailsPanelContextProps {
   useNavigate: typeof useNavigate
   useLocation: typeof useLocation
   useSearchParams: typeof useSearchParams
+  feedAnnotationsEnabled?: boolean
 }
 
 // Interface for our simplified context

@@ -4,6 +4,7 @@ import clsx from 'clsx'
 import { useState } from 'react'
 import { isFilePreviewable } from '../FileUploadPreview'
 import { SavedAnnotationMetadata } from '@shared/containers'
+import { useDetailsPanelContext } from '@shared/context'
 
 export interface FileUploadCardProps extends React.HTMLAttributes<HTMLDivElement> {
   name: string
@@ -92,6 +93,7 @@ const FileUploadCard = ({
   const inProgress = progress && progress < 100
 
   const [imageError, setImageError] = useState(false)
+  const { feedAnnotationsEnabled } = useDetailsPanelContext()
 
   // split name and file extension
   const nameParts = name.split('.')
@@ -125,6 +127,7 @@ const FileUploadCard = ({
         {isImage && src && (
           <Styled.ImageWrapper
             className={clsx({
+              'image-wrapper': true,
               isDownloadable: isDownloadable || isPreviewable || isUnsavedAnnotation,
             })}
           >
@@ -139,15 +142,15 @@ const FileUploadCard = ({
         )}
         <Styled.Buttons className="expand-buttons">
           {isPreviewable && (
-            <Button
+            <Styled.ExpandButton
               data-tooltip="Open preview"
               icon="open_in_full"
               variant="nav"
               onClick={onExpand}
             />
           )}
-          {(isUnsavedAnnotation || savedAnnotation) && (
-            <Button
+          {(isUnsavedAnnotation || (feedAnnotationsEnabled && savedAnnotation)) && (
+            <Styled.ExpandButton
               data-tooltip="Jump to annotation"
               icon="play_circle"
               variant="nav"

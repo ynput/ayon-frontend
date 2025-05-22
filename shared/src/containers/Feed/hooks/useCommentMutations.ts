@@ -2,6 +2,7 @@ import { v1 as uuid1 } from 'uuid'
 import { formatISO } from 'date-fns'
 import { toast } from 'react-toastify'
 import { useFeedContext } from '../context/FeedContext'
+import { SavedAnnotationMetadata } from '..'
 
 // Type definitions
 interface Entity {
@@ -116,7 +117,11 @@ const useCommentMutations = ({
 
   const getActivityId = (): string => uuid1().replace(/-/g, '')
 
-  const submitComment = async (value: string, files: File[] = [], data: any = {}): Promise<void> => {
+  const submitComment = async (
+    value: string,
+    files: File[] = [],
+    data: any = {},
+  ): Promise<void> => {
     // map over all the entities and create a new comment for each
     let patchId: string | null = null
     const promises = entities.map(({ id: entityId, subTitle }) => {
@@ -132,8 +137,16 @@ const useCommentMutations = ({
         data,
       }
 
+      // filter out files which are transparent versions of an annotation
+      const optimisticFiles = files.filter(
+        ({ id }) =>
+          !data.annotations?.some(
+            (annotation: SavedAnnotationMetadata) => annotation.transparent === id,
+          ),
+      )
+
       // create a new patch for optimistic update
-      const patch = createPatch({ entityId, newId, subTitle, value, files })
+      const patch = createPatch({ entityId, newId, subTitle, value, files: optimisticFiles })
 
       // we only need these args to update the cache of the original query
       const argsForCachingMatching = { entityIds, activityTypes }

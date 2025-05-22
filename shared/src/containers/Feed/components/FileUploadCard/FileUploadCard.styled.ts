@@ -1,3 +1,4 @@
+import { Button } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
 export const File = styled.div`
@@ -175,6 +176,10 @@ export const ContentWrapper = styled.div`
       }
     }
   }
+
+  &:hover .image-wrapper::after {
+    opacity: 0.8;
+  }
 `
 
 export const ImageWrapper = styled.div`
@@ -204,10 +209,6 @@ export const ImageWrapper = styled.div`
 
   &.isDownloadable {
     &:hover {
-      &::after {
-        opacity: 0.8;
-      }
-
       .icon {
         display: block;
         z-index: 10;
@@ -218,9 +219,24 @@ export const ImageWrapper = styled.div`
 
 export const Buttons = styled.div`
   display: none;
-  gap: var(--padding-s);
   position: absolute;
-  left: 50%;
-  top: calc(50% - 10px);
-  transform: translate(-50%, -50%);
+  left: 0;
+  top: 0;
+  transform: none;
+  height: calc(100% - 20px);
+  width: 100%;
+  gap: 0;
+`
+
+export const ExpandButton = styled(Button)`
+  height: 100%;
+  width: 100%;
+  border: none;
+  opacity: 0.5;
+  transition: opacity 250ms;
+
+  &:hover {
+    background: none;
+    opacity: 1;
+  }
 `
