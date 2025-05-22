@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
+import { useSelector } from 'react-redux'
 import { useAppDispatch, useAppSelector } from '@state/store'
 import { Button, Dialog } from '@ynput/ayon-react-components'
 
@@ -51,6 +52,8 @@ const ProjectPage = () => {
    * project data to the store, and renders the requested page.
    */
 
+  const isManager = useSelector((state) => state.user.data.isManager)
+  const isAdmin = useSelector((state) => state.user.data.isAdmin)
   const navigate = useNavigate()
   const { projectName, module = '', addonName } = useParams()
   const dispatch = useAppDispatch()
@@ -144,11 +147,20 @@ const ProjectPage = () => {
         module: remote.module,
         path: `/projects/${projectName}/${remote.module}`,
       })),
-      ...addonsData.map((addon) => ({
-        name: addon.title,
-        path: `/projects/${projectName}/addon/${addon.name}`,
-        module: addon.name,
-      })),
+      ...addonsData
+        .filter((addon) => {
+          console.log('addon', addon)
+          console.log('isAdmin', isAdmin)
+          console.log('isManager', isManager)
+          if (addon.settings.admin && !isAdmin) return false
+          if (addon.settings.manager && !isManager) return false
+          return true
+        })
+        .map((addon) => ({
+          name: addon.title,
+          path: `/projects/${projectName}/addon/${addon.name}`,
+          module: addon.name,
+        })),
       { node: 'spacer' },
       {
         node: (

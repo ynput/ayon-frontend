@@ -18,6 +18,9 @@ import DashboardAddon from '@pages/ProjectDashboard/DashboardAddon'
 
 const UserDashboardPage = () => {
   let { module, addonName } = useParams()
+  const user = useSelector((state) => state.user)
+  const isAdmin = user?.data?.isAdmin
+  const isManager = user?.data?.isManager
 
   const {
     data: addonsData = [],
@@ -42,6 +45,8 @@ const UserDashboardPage = () => {
   ]
 
   for (const addon of addonsData) {
+    if (addon?.settings?.admin && !isAdmin) continue
+    if (addon?.settings?.manager && !isManager) continue
     links.push({
       name: addon.title,
       path: `/dashboard/addon/${addon.name}`,
@@ -61,9 +66,9 @@ const UserDashboardPage = () => {
   //   redux states
   const dispatch = useDispatch()
   //   selected projects
-  const user = useSelector((state) => state.user)
   const selectedProjects = useSelector((state) => state.dashboard.selectedProjects)
   const setSelectedProjects = (projects) => dispatch(onProjectSelected(projects))
+
 
   // get all the info required for the projects selected, like status icons and colours
   const { data: projectsInfo = {}, isFetching: isLoadingInfo } = useGetProjectsInfoQuery(
