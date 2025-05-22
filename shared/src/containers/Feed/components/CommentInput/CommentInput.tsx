@@ -33,6 +33,7 @@ import useAnnotationsSync from './hooks/useAnnotationsSync'
 // State management
 import useAnnotationsUpload from './hooks/useAnnotationsUpload'
 import { useFeedContext } from '../../context/FeedContext'
+import { SavedAnnotationMetadata } from '../../index'
 
 var Delta = Quill.import('delta')
 
@@ -53,7 +54,7 @@ export const mentionTypeOptions = {
 interface CommentInputProps {
   initValue: string | null
   initFiles?: any[]
-  onSubmit: (markdown: string, files: any[]) => Promise<void>
+  onSubmit: (markdown: string, files: any[], data?: any) => Promise<void>
   isEditing?: boolean
   disabled?: boolean
   isLoading?: boolean
@@ -396,9 +397,9 @@ const CommentInput: FC<CommentInputProps> = ({
     return newFile
   }
 
-  const handleFileRemove = (id: string, name: string, isAnnotation: boolean) => {
-    if (isAnnotation) {
-      // remove from annotations (if it's an annotation)
+  const handleFileRemove = (id: string, name: string, isUnsavedAnnotation: boolean) => {
+    if (isUnsavedAnnotation) {
+      // remove from annotations (if it's an unsaved annotation)
       removeAnnotation?.(id)
     } else {
       // remove file from files
@@ -452,8 +453,12 @@ const CommentInput: FC<CommentInputProps> = ({
       setIsSubmitting(true)
       // upload any annotations first
       let annotationFiles = []
+      let annotationMetadata: SavedAnnotationMetadata[] = []
+
       if (annotations.length) {
-        annotationFiles = await uploadAnnotations(annotations)
+        const { files, metadata } = await uploadAnnotations(annotations)
+        annotationFiles = files
+        annotationMetadata = metadata
       }
 
       // convert to markdown
@@ -466,7 +471,7 @@ const CommentInput: FC<CommentInputProps> = ({
 
       if ((markdownParsed || uploadedFiles.length) && onSubmit) {
         try {
-          await onSubmit(markdownParsed, uploadedFiles)
+          await onSubmit(markdownParsed, uploadedFiles, { annotations: annotationMetadata })
           // only clear if onSubmit is successful
           setEditorValue('')
           setFiles([])

@@ -1,5 +1,5 @@
 import clsx from 'clsx'
-import { useMemo } from 'react'
+import { useCallback, useMemo } from 'react'
 import ReactMarkdown from 'react-markdown'
 import emoji from 'remark-emoji'
 import remarkGfm from 'remark-gfm'
@@ -23,6 +23,8 @@ import { useFeedContext } from '../../context/FeedContext'
 import { confirmDelete } from '../../../../util'
 import ActivityHeader, { ActivityHeaderProps } from '../ActivityHeader/ActivityHeader'
 import type { Status } from '../../../ProjectTreeTable/types/project'
+import { SavedAnnotationMetadata } from '../../index'
+import { useDetailsPanelContext } from '@shared/context'
 
 type Props = {
   activity: any
@@ -79,6 +81,7 @@ const ActivityComment = ({
   if (!authorFullName) authorFullName = author?.fullName || authorName
 
   const { editingId, setEditingId } = useFeedContext()
+  const { onGoToFrame } = useDetailsPanelContext()
 
   const handleEditComment = () => {
     setEditingId(activityId)
@@ -150,6 +153,15 @@ const ActivityComment = ({
       })
     }
   }
+
+  const onAnnotationClick = useCallback(
+    (file: any) => {
+      if (!file.annotation) return
+      // annotation frame numbers are 1-based
+      onGoToFrame?.((file.annotation as SavedAnnotationMetadata).range[0] - 1)
+    },
+    [onGoToFrame],
+  )
 
   return (
     <>
@@ -252,6 +264,7 @@ const ActivityComment = ({
                 projectName={projectName}
                 isDownloadable
                 onExpand={onFileExpand}
+                onAnnotationClick={onAnnotationClick}
                 onRemove={undefined}
               />
             </>

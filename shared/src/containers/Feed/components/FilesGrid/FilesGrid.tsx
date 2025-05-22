@@ -2,12 +2,13 @@ import * as Styled from './FilesGrid.styled'
 import clsx from 'clsx'
 import FileUploadCard from '../FileUploadCard'
 import { isFilePreviewable } from '../FileUploadPreview'
+import { useCallback } from 'react'
 
 export interface FilesGridProps {
   files?: any[]
   activityId?: string
   isCompact?: boolean
-  onRemove?: (id: string, name: string, isAnnotation: boolean) => void
+  onRemove?: (id: string, name: string, isUnsavedAnnotation: boolean) => void
   projectName: string
   isDownloadable?: boolean
   onExpand?: (data: { files: any[]; index: number; activityId: string }) => void
@@ -28,15 +29,14 @@ const FilesGrid: React.FC<FilesGridProps> = ({
 }) => {
   if (!files.length) return null
 
-  const handleExpand = (file: any, index: number) => {
-    if (file.isAnnotation) {
-      onAnnotationClick?.(file)
-    } else {
+  const handleExpand = useCallback(
+    (index: number) => {
       const filteredFiles = files.filter((file) => isFilePreviewable(file.mime, file.ext))
       const updatedIndex = filteredFiles.findIndex((file) => file.id === files[index].id)
       onExpand?.({ files: filteredFiles, index: updatedIndex, activityId: activityId || '' })
-    }
-  }
+    },
+    [onExpand],
+  )
 
   return (
     <Styled.Grid className={clsx({ compact: isCompact })} {...props}>
@@ -47,13 +47,21 @@ const FilesGrid: React.FC<FilesGridProps> = ({
           name={file.name}
           mime={file.mime || file.type}
           size={file.size}
-          src={file.isAnnotation ? file.thumbnail : `/api/projects/${projectName}/files/${file.id}`}
-          isAnnotation={file.isAnnotation}
+          src={
+            file.isUnsavedAnnotation
+              ? file.thumbnail
+              : `/api/projects/${projectName}/files/${file.id}`
+          }
+          isUnsavedAnnotation={file.isUnsavedAnnotation}
+          savedAnnotation={file.annotation}
           progress={file.progress}
-          onRemove={onRemove ? () => onRemove(file.id, file.name, file.isAnnotation) : undefined}
+          onRemove={
+            onRemove ? () => onRemove(file.id, file.name, file.isUnsavedAnnotation) : undefined
+          }
           isCompact={isCompact}
           isDownloadable={isDownloadable}
-          onExpand={() => handleExpand(file, index)}
+          onExpand={() => handleExpand(index)}
+          onJumpTo={() => onAnnotationClick?.(file)}
         />
       ))}
     </Styled.Grid>

@@ -49,7 +49,7 @@ const useTransformActivities = (
     [activities],
   )
 
-  // add any extra meta data to the activities
+  // 1,5. add any extra meta data to the activities
   const activitiesWithMeta = useMemo(() => {
     return activitiesWithIcons.map((activity) => {
       const newActivity = { ...activity, isOwner: userName === activity.authorName }

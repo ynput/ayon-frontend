@@ -1,6 +1,7 @@
 import { uploadFile } from '../helpers'
 import { toast } from 'react-toastify'
 import { useFeedContext } from '../../../context/FeedContext'
+import { SavedAnnotationMetadata } from '../../../index'
 
 type Props = {
   projectName: string
@@ -13,43 +14,58 @@ const useAnnotationsUpload = ({ projectName, onSuccess }: Props) => {
   const uploadAnnotations = async (annotations: any[]) => {
     try {
       const uploadPromises = annotations.map(async (annotation) => {
-        const blob = await exportAnnotationComposite?.(annotation.id)
-        if (!blob) {
+        const composite = await exportAnnotationComposite?.(annotation.id)
+        if (!composite) {
           throw new Error(`Exporting composite image for annotation ${annotation.id} failed`)
         }
 
-        const file = new File([blob], annotation.name, {
+        const compositeFile = new File([composite], annotation.name, {
           type: 'image/png',
         })
 
-        return uploadFile(file, projectName, () => {})
+        const transparent = await fetch(annotation.annotationData).then(r => r.blob())
+        const transparentFile = new File([transparent], `annotation-${annotation.name}`, {
+          type: 'image/png',
+        })
+
+        const uploads = await Promise.all([
+          uploadFile(compositeFile, projectName, () => {}),
+          uploadFile(transparentFile, projectName, () => {}),
+        ])
+
+        return { annotation, uploads }
       })
 
       const res = await Promise.allSettled(uploadPromises)
 
       const successfulFiles: any[] = []
-      //   for each result, if successful use callback
-      res.forEach((result: any) => {
+      const metadata: SavedAnnotationMetadata[] = []
+
+      res.forEach((result) => {
         if (result.status === 'fulfilled') {
-          const newFile = onSuccess(result.value)
+          const { uploads, annotation } = result.value
 
-          successfulFiles.push(newFile)
+          uploads.forEach((upload: any) => {
+            successfulFiles.push(onSuccess(upload))
+          })
 
-          const annotationId = annotations.find(
-            (annotation) => annotation.name === result.value.file.name,
-          )?.id
-          if (annotationId) {
-            removeAnnotation?.(annotationId)
-          }
+          metadata.push({
+            range: annotation.range,
+            id: annotation.id,
+            composite: uploads[0].data.id,
+            transparent: uploads[1].data.id,
+          })
+
+          removeAnnotation?.(annotation.id)
         } else {
           toast.error('Upload failed: ' + result.reason.message)
         }
       })
 
-      return successfulFiles
+      return { files: successfulFiles, metadata }
     } catch (error: any) {
       toast.error('Upload failed: ' + error.message)
-      return []
+      return { files: [], metadata: [] }
     }
   }
 

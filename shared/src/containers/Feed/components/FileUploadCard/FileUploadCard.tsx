@@ -3,18 +3,22 @@ import * as Styled from './FileUploadCard.styled'
 import clsx from 'clsx'
 import { useState } from 'react'
 import { isFilePreviewable } from '../FileUploadPreview'
+import { SavedAnnotationMetadata } from '@shared/containers'
+import { useDetailsPanelContext } from '@shared/context'
 
 export interface FileUploadCardProps extends React.HTMLAttributes<HTMLDivElement> {
   name: string
   mime?: string
   src?: string
-  isAnnotation?: boolean
+  isUnsavedAnnotation?: boolean
+  savedAnnotation: SavedAnnotationMetadata
   size: number
   progress: number
   onRemove?: () => void
   isCompact?: boolean
   isDownloadable?: boolean
   onExpand?: () => void
+  onJumpTo?: () => void
 }
 
 const fileIcons: { [key: string]: string[] } = {
@@ -74,19 +78,22 @@ const FileUploadCard = ({
   name,
   mime,
   src,
-  isAnnotation,
+  isUnsavedAnnotation,
+  savedAnnotation,
   size,
   progress,
   onRemove,
   isCompact,
   isDownloadable = false,
   onExpand,
+  onJumpTo,
   className,
   ...props
 }: FileUploadCardProps) => {
   const inProgress = progress && progress < 100
 
   const [imageError, setImageError] = useState(false)
+  const { feedAnnotationsEnabled } = useDetailsPanelContext()
 
   // split name and file extension
   const nameParts = name.split('.')
@@ -94,7 +101,7 @@ const FileUploadCard = ({
   const fileName = nameParts.join('.')
 
   const isPreviewable = isFilePreviewable(mime || '.' + extension)
-  const isImage = mime?.includes('image/') || isAnnotation
+  const isImage = mime?.includes('image/') || isUnsavedAnnotation
 
   const downloadComponent = (
     <>
@@ -103,29 +110,26 @@ const FileUploadCard = ({
     </>
   )
 
-  const handleImageClick = () => {
-    if ((!isPreviewable && !isAnnotation) || !onExpand || imageError) return
-    onExpand()
-  }
-
   return (
     <Styled.File
       className={clsx(className, {
         compact: isCompact,
         isDownloadable,
         isPreviewable,
-        isAnnotation,
+        isUnsavedAnnotation,
       })}
       {...props}
     >
       <Styled.ContentWrapper
-        className={clsx('content-wrapper', { isPreviewable, isAnnotation })}
-        onClick={handleImageClick}
+        className={clsx('content-wrapper', { isPreviewable, isUnsavedAnnotation })}
       >
         <Icon icon={getIconForType(mime || '.' + extension)} className="type-icon" />
         {isImage && src && (
           <Styled.ImageWrapper
-            className={clsx({ isDownloadable: isDownloadable || isPreviewable || isAnnotation })}
+            className={clsx({
+              'image-wrapper': true,
+              isDownloadable: isDownloadable || isPreviewable || isUnsavedAnnotation,
+            })}
           >
             <img
               src={src}
@@ -136,8 +140,24 @@ const FileUploadCard = ({
             />
           </Styled.ImageWrapper>
         )}
-        {isPreviewable && <Icon icon="open_in_full" className="expand-icon" />}
-        {isAnnotation && <Icon icon="play_circle" className="expand-icon" />}
+        <Styled.Buttons className="expand-buttons">
+          {isPreviewable && (
+            <Styled.ExpandButton
+              data-tooltip="Open preview"
+              icon="open_in_full"
+              variant="nav"
+              onClick={onExpand}
+            />
+          )}
+          {(isUnsavedAnnotation || (feedAnnotationsEnabled && savedAnnotation)) && (
+            <Styled.ExpandButton
+              data-tooltip="Jump to annotation"
+              icon="play_circle"
+              variant="nav"
+              onClick={onJumpTo}
+            />
+          )}
+        </Styled.Buttons>
       </Styled.ContentWrapper>
       <Styled.Footer className={clsx({ inProgress, isPreviewable, isDownloadable })}>
         <span className="progress" style={{ right: `${100 - progress}%` }} />

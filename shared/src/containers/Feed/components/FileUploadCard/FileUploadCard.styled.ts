@@ -1,3 +1,4 @@
+import { Button } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
 export const File = styled.div`
@@ -45,17 +46,6 @@ export const File = styled.div`
   .download,
   .download-icon {
     color: var(--md-sys-color-outline);
-  }
-
-  .expand-icon {
-    pointer-events: none;
-    position: absolute;
-    /* center */
-    left: 50%;
-    bottom: calc(50% - 20px);
-    transform: translate(-50%, -50%);
-
-    display: none;
   }
 `
 
@@ -172,19 +162,23 @@ export const ContentWrapper = styled.div`
   }
 
   /* previewable styles (it can be expanded) */
-  /* on hover it shows the expand icon */
+  /* on hover it shows the expand buttons */
   &.isPreviewable,
-  &.isAnnotation {
+  &.isUnsavedAnnotation {
     cursor: pointer;
 
     &:hover {
-      .expand-icon {
-        display: block;
+      .expand-buttons {
+        display: flex;
       }
       .type-icon {
         display: none;
       }
     }
+  }
+
+  &:hover .image-wrapper::after {
+    opacity: 0.8;
   }
 `
 
@@ -215,14 +209,34 @@ export const ImageWrapper = styled.div`
 
   &.isDownloadable {
     &:hover {
-      &::after {
-        opacity: 0.8;
-      }
-
       .icon {
         display: block;
         z-index: 10;
       }
     }
+  }
+`
+
+export const Buttons = styled.div`
+  display: none;
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: none;
+  height: calc(100% - 20px);
+  width: 100%;
+  gap: 0;
+`
+
+export const ExpandButton = styled(Button)`
+  height: 100%;
+  width: 100%;
+  border: none;
+  opacity: 0.5;
+  transition: opacity 250ms;
+
+  &:hover {
+    background: none;
+    opacity: 1;
   }
 `
