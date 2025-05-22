@@ -19,7 +19,7 @@ export const ListsModuleProvider: React.FC<ListsModuleProviderProps> = ({ childr
     remote: 'slicer',
     module: 'ListsAttributesSettings',
     fallback: ListsAttributeSettingsFallback,
-    minVersion: '1.0.5-dev',
+    minVersion: '1.0.5',
   })
 
   const value = {
