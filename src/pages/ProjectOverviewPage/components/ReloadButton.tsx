@@ -9,7 +9,7 @@ const StyledButton = styled(Button)`
   margin-right: -32px;
   position: relative;
   left: -36px;
-  z-index: 1000;
+  z-index: 900;
   padding: 2px !important;
 
   /* spin icon */
