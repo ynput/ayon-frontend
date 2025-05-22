@@ -116,7 +116,7 @@ const useCommentMutations = ({
 
   const getActivityId = (): string => uuid1().replace(/-/g, '')
 
-  const submitComment = async (value: string, files: File[] = []): Promise<void> => {
+  const submitComment = async (value: string, files: File[] = [], data: any = {}): Promise<void> => {
     // map over all the entities and create a new comment for each
     let patchId: string | null = null
     const promises = entities.map(({ id: entityId, subTitle }) => {
@@ -129,6 +129,7 @@ const useCommentMutations = ({
         activityType: 'comment',
         id: newId,
         files: fileIds,
+        data,
       }
 
       // create a new patch for optimistic update

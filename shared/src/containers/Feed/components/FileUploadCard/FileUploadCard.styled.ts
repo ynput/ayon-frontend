@@ -46,17 +46,6 @@ export const File = styled.div`
   .download-icon {
     color: var(--md-sys-color-outline);
   }
-
-  .expand-icon {
-    pointer-events: none;
-    position: absolute;
-    /* center */
-    left: 50%;
-    bottom: calc(50% - 20px);
-    transform: translate(-50%, -50%);
-
-    display: none;
-  }
 `
 
 export const Footer = styled.footer`
@@ -172,14 +161,14 @@ export const ContentWrapper = styled.div`
   }
 
   /* previewable styles (it can be expanded) */
-  /* on hover it shows the expand icon */
+  /* on hover it shows the expand buttons */
   &.isPreviewable,
-  &.isAnnotation {
+  &.isUnsavedAnnotation {
     cursor: pointer;
 
     &:hover {
-      .expand-icon {
-        display: block;
+      .expand-buttons {
+        display: flex;
       }
       .type-icon {
         display: none;
@@ -225,4 +214,13 @@ export const ImageWrapper = styled.div`
       }
     }
   }
+`
+
+export const Buttons = styled.div`
+  display: none;
+  gap: var(--padding-s);
+  position: absolute;
+  left: 50%;
+  top: calc(50% - 10px);
+  transform: translate(-50%, -50%);
 `

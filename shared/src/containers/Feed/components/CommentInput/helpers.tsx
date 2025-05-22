@@ -33,8 +33,13 @@ const cancelToken = axios.CancelToken
 const cancelTokenSource = cancelToken.source()
 import { toast } from 'react-toastify'
 
+type UploadedFile = {
+  file: any
+  data: any
+}
+
 // used to upload files (quill ImageUploader module)
-export const uploadFile = (file, projectName, onUploadProgress) => {
+export const uploadFile = (file, projectName, onUploadProgress): Promise<UploadedFile> => {
   return new Promise((resolve, reject) => {
     const formData = new FormData()
     formData.append('image', file)

@@ -23,7 +23,7 @@ export const filterEntityAnnotations = (
         annotation.versionId === entityId &&
         !filesUploading.some((file) => file.name === annotation.name),
     )
-    .map((annotation) => ({ ...annotation, isAnnotation: true })) as AnnotationPreview[]
+    .map((annotation) => ({ ...annotation, isUnsavedAnnotation: true })) as AnnotationPreview[]
 }
 
 const useAnnotationsSync = ({ entityId, filesUploading }: Props) => {
