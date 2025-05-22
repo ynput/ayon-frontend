@@ -8,3 +8,10 @@ export * from './context/FeedContext'
 export { ActivityReferenceTooltip, FileUploadPreview }
 
 export * from './hooks/useTableKeyboardNavigation'
+
+export type SavedAnnotationMetadata = {
+  id: string
+  composite: string
+  transparent: string
+  range: number[]
+}

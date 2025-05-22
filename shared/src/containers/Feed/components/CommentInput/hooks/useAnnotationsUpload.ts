@@ -1,17 +1,11 @@
 import { uploadFile } from '../helpers'
 import { toast } from 'react-toastify'
 import { useFeedContext } from '../../../context/FeedContext'
+import { SavedAnnotationMetadata } from '../../../index'
 
 type Props = {
   projectName: string
   onSuccess: (data: any) => void
-}
-
-export type SavedAnnotationMetadata = {
-  id: string
-  composite: string
-  transparent: string
-  range: number[]
 }
 
 const useAnnotationsUpload = ({ projectName, onSuccess }: Props) => {

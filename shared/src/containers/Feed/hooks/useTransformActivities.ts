@@ -49,41 +49,13 @@ const useTransformActivities = (
     [activities],
   )
 
-  // 1,33. Annotations are stored as 2 separate uploaded files - composite with the video frame as background,
-  // and transparent, which can be drawn on top of any video. They can be merged by checking the `annotations`
-  // array in the activity data object.
-  const activitiesWithAnnotationsResolved = useMemo(() => {
-    return activitiesWithIcons
-      .map((activity) => {
-        if (activity.activityType !== 'comment' || !activity.activityData?.annotations) return activity
-
-        const files = activity.files
-          .map((file: any) => {
-            // look for an annotation that is using this file
-            const annotation = activity.activityData.annotations.find(
-              (annotation: SavedAnnotationMetadata) =>
-                annotation.composite === file.id || annotation.transparent === file.id,
-            )
-
-            // if the file is the transparent version of the annotation, ignore it
-            if (annotation.transparent === file.id) return null
-
-            return { ...file, annotation }
-          })
-          .filter(Boolean)
-
-        const newActivity = { ...activity, files }
-        return newActivity
-      })
-  }, [activitiesWithIcons, userName])
-
-  // 1,66. add any extra meta data to the activities
+  // 1,5. add any extra meta data to the activities
   const activitiesWithMeta = useMemo(() => {
-    return activitiesWithAnnotationsResolved.map((activity) => {
+    return activitiesWithIcons.map((activity) => {
       const newActivity = { ...activity, isOwner: userName === activity.authorName }
       return newActivity
     })
-  }, [activitiesWithAnnotationsResolved, userName])
+  }, [activitiesWithIcons, userName])
 
   // 2. versions should not have relations shown (comments posted on parent task)
   const activitiesWithoutRelations = useMemo(

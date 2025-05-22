@@ -23,7 +23,7 @@ import { useFeedContext } from '../../context/FeedContext'
 import { confirmDelete } from '../../../../util'
 import ActivityHeader, { ActivityHeaderProps } from '../ActivityHeader/ActivityHeader'
 import type { Status } from '../../../ProjectTreeTable/types/project'
-import { SavedAnnotationMetadata } from '../CommentInput/hooks/useAnnotationsUpload'
+import { SavedAnnotationMetadata } from '../../index'
 import { useDetailsPanelContext } from '@shared/context'
 
 type Props = {

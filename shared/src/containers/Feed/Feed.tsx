@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import ActivityItem from './components/ActivityItem'
 import CommentInput from './components/CommentInput/CommentInput'
 import * as Styled from './Feed.styled'
@@ -17,6 +17,7 @@ import { useFeedContext, FEED_NEW_COMMENT } from './context/FeedContext'
 import { Status } from '../ProjectTreeTable/types/project'
 import { useDetailsPanelContext } from '@shared/context'
 import { DetailsPanelEntityType } from '@shared/api'
+import mergeAnnotationAttachments from './helpers/mergeAnnotationAttachments'
 
 // number of activities to get
 export const activitiesLast = 30
@@ -45,11 +46,31 @@ export const Feed = ({ isMultiProjects, readOnly, statuses = [] }: FeedProps) =>
     currentTab,
   } = useFeedContext()
 
-  const { openSlideOut, highlightedActivities, setHighlightedActivities, onOpenImage } =
-    useDetailsPanelContext()
+  const {
+    openSlideOut,
+    highlightedActivities,
+    setHighlightedActivities,
+    onOpenImage,
+    setFeedAnnotations,
+  } = useDetailsPanelContext()
 
   // hide comment input for specific filters
   const hideCommentInput = ['versions'].includes(currentTab)
+
+  const activitiesWithMergedAnnotations = useMemo(
+    () => mergeAnnotationAttachments(activitiesData),
+    [activitiesData],
+  )
+
+  useEffect(() => {
+    if (!activitiesWithMergedAnnotations.length) return
+    const annotations = activitiesWithMergedAnnotations
+      .map((activity) => activity.activityData?.annotations)
+      .filter(Boolean)
+      .flat()
+
+    setFeedAnnotations(annotations)
+  }, [activitiesWithMergedAnnotations])
 
   // do any transformation on activities data
   // 1. status change activities, attach status data based on projectName
@@ -57,7 +78,7 @@ export const Feed = ({ isMultiProjects, readOnly, statuses = [] }: FeedProps) =>
   // 3. is this activity from the current user?
   const transformedActivitiesData = useTransformActivities(
     // @ts-ignore
-    activitiesData,
+    activitiesWithMergedAnnotations,
     users,
     projectInfo,
     entityType,

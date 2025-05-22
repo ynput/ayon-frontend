@@ -31,8 +31,9 @@ import useMentionLink from './hooks/useMentionLink'
 import useAnnotationsSync from './hooks/useAnnotationsSync'
 
 // State management
-import useAnnotationsUpload, { SavedAnnotationMetadata } from './hooks/useAnnotationsUpload'
+import useAnnotationsUpload from './hooks/useAnnotationsUpload'
 import { useFeedContext } from '../../context/FeedContext'
+import { SavedAnnotationMetadata } from '../../index'
 
 var Delta = Quill.import('delta')
 

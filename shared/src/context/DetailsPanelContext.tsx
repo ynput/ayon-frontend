@@ -4,6 +4,7 @@ import { DetailsPanelEntityType } from '@shared/api'
 import type { UserModel } from '@shared/api'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useSearchParams } from 'react-router-dom'
+import { SavedAnnotationMetadata } from '@shared/containers/Feed/components/CommentInput/hooks/useAnnotationsUpload'
 
 export type FeedFilters = 'activity' | 'comments' | 'versions' | 'checklists'
 
@@ -78,6 +79,10 @@ export interface DetailsPanelContextType extends DetailsPanelContextProps {
   pip: DetailsPanelPip | null
   openPip: (pip: DetailsPanelPip) => void
   closePip: () => void
+
+  // Annotations
+  feedAnnotations: SavedAnnotationMetadata[]
+  setFeedAnnotations: (annotations: SavedAnnotationMetadata[]) => void
 }
 
 // Create the context
@@ -96,6 +101,7 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
 }) => {
   // keep track of the currently open panel by scope
   const [panelOpenByScope, setPanelOpenByScope] = useState<OpenStateByScope>({})
+  const [feedAnnotations, setFeedAnnotations] = useState<SavedAnnotationMetadata[]>([])
 
   //  get the current open state for a specific scope
   const getOpenForScope = useCallback(
@@ -202,6 +208,8 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
     pip,
     openPip,
     closePip,
+    feedAnnotations,
+    setFeedAnnotations,
     ...forwardedProps,
   }
 
