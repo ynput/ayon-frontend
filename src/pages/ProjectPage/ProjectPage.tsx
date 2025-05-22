@@ -149,9 +149,6 @@ const ProjectPage = () => {
       })),
       ...addonsData
         .filter((addon) => {
-          console.log('addon', addon)
-          console.log('isAdmin', isAdmin)
-          console.log('isManager', isManager)
           if (addon.settings.admin && !isAdmin) return false
           if (addon.settings.manager && !isManager) return false
           return true
