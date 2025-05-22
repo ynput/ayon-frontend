@@ -171,11 +171,6 @@ const injectedApi = gqlApi.injectEndpoints({
             ]
           : [{ type: 'user', id: 'LIST' }],
     }),
-    getUserSessions: build.query({
-      query: ({ name }) => ({
-        url: `/api/users/${name}/sessions`,
-      }),
-    }),
   }),
   overrideExisting: true,
 })

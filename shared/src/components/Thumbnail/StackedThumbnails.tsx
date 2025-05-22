@@ -43,6 +43,10 @@ const StackedStyled = styled.div<StackedStyledProps>`
     & > * + * {
       margin-left: ${({ $length }) => `${Math.max(-20, -$length * 1.5 - 8)}px`};
     }
+
+    .thumbnail img {
+      object-fit: cover;
+    }
   }
 `
 

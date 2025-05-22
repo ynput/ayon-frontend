@@ -1,3 +1,4 @@
+import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import { usersApi } from '@shared/api/generated'
 
 const updateUserApi = usersApi.enhanceEndpoints({
@@ -44,19 +45,6 @@ const updateUser = updateUserApi.injectEndpoints({
         { type: 'feedback', id: 'LIST' },
         'info',
       ],
-    }),
-    // update multiple users at once
-    updateUsers: build.mutation({
-      // @ts-ignore
-      queryFn: async (updates, { dispatch }) => {
-        const results = await Promise.all(
-          updates.map(({ name, patch }: { name: string; patch: any }) => {
-            // @ts-ignore
-            return dispatch(globalApi.endpoints.updateUser.initiate({ name, patch }))
-          }),
-        )
-        return results
-      },
     }),
     updateUserName: build.mutation({
       query: ({ name, newName }) => ({
@@ -116,6 +104,36 @@ const updateUser = updateUserApi.injectEndpoints({
   overrideExisting: true,
 })
 
+const updateUser2 = updateUser.injectEndpoints({
+  endpoints: (build) => ({
+    // update multiple users at once
+    updateUsers: build.mutation<
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      any[],
+      { name: string; patch: object }[]
+    >({
+      //
+      queryFn: async (updates, { dispatch }) => {
+        const results = await Promise.all(
+          updates.map(({ name, patch }: { name: string; patch: object }) => {
+            return dispatch(updateUser.endpoints.updateUser.initiate({ name, patch }))
+          }),
+        )
+
+        // Check if any of the results have an error
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const firstError = results.find((result: any) => result.error)
+        if (firstError) {
+          return { error: firstError.error as FetchBaseQueryError }
+        }
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return { data: results.map((result: any) => result.data) }
+      },
+    }),
+  }),
+})
+
 export const {
   useUpdateUserMutation,
   useUpdateUsersMutation,
@@ -126,5 +144,5 @@ export const {
   useUpdateUserAPIKeyMutation,
   useInvalidateUserSessionMutation,
   useSetFrontendPreferencesMutation,
-} = updateUser
-export { updateUserApi as userQueries }
+} = updateUser2
+export { updateUser2 as userQueries }
