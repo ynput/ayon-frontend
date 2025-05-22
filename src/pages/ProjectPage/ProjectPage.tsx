@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
-import { useSelector } from 'react-redux'
 import { useAppDispatch, useAppSelector } from '@state/store'
 import { Button, Dialog } from '@ynput/ayon-react-components'
 
@@ -52,8 +51,8 @@ const ProjectPage = () => {
    * project data to the store, and renders the requested page.
    */
 
-  const isManager = useSelector((state) => state.user.data.isManager)
-  const isAdmin = useSelector((state) => state.user.data.isAdmin)
+  const isManager = useAppSelector((state) => state.user.data.isManager)
+  const isAdmin = useAppSelector((state) => state.user.data.isAdmin)
   const navigate = useNavigate()
   const { projectName, module = '', addonName } = useParams()
   const dispatch = useAppDispatch()
