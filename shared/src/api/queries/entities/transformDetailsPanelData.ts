@@ -9,7 +9,7 @@ import {
   GetDetailsPanelTaskQuery,
   GetDetailsPanelVersionQuery,
 } from '@shared/api/generated'
-import { parseAttribs } from '@shared/api'
+import { parseAllAttribs } from '@shared/api'
 
 type DetailsPanelTask = NonNullable<GetDetailsPanelTaskQuery['project']['task']>
 type DetailsPanelRepresentation = NonNullable<
@@ -73,7 +73,7 @@ export const transformDetailsPanelQueriesData = ({
         status: task.status,
         updatedAt: task.updatedAt,
         createdAt: task.createdAt,
-        attrib: parseAttribs(task.allAttrib),
+        attrib: parseAllAttribs(task.allAttrib),
         hasReviewables: task.hasReviewables,
         thumbnailId: task.thumbnailId,
         folder: task.folder,
@@ -100,7 +100,7 @@ export const transformDetailsPanelQueriesData = ({
         status: version.status,
         updatedAt: version.updatedAt,
         createdAt: version.createdAt,
-        attrib: parseAttribs(version.allAttrib),
+        attrib: parseAllAttribs(version.allAttrib),
         hasReviewables: version.hasReviewables,
         thumbnailId: version.thumbnailId,
         folder: version.product?.folder,
@@ -124,7 +124,7 @@ export const transformDetailsPanelQueriesData = ({
         status: folder.status,
         updatedAt: folder.updatedAt,
         createdAt: folder.createdAt,
-        attrib: parseAttribs(folder.allAttrib),
+        attrib: parseAllAttribs(folder.allAttrib),
         hasReviewables: folder.hasReviewables,
         thumbnailId: folder.thumbnailId,
         folder: {
@@ -150,7 +150,7 @@ export const transformDetailsPanelQueriesData = ({
         status: representation.status,
         updatedAt: representation.updatedAt,
         createdAt: representation.createdAt,
-        attrib: parseAttribs(representation.allAttrib),
+        attrib: parseAllAttribs(representation.allAttrib),
         hasReviewables: undefined,
         thumbnailId: undefined,
         version: representation.version,

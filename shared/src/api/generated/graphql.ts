@@ -156,6 +156,7 @@ export type EntityListItemEdge = {
   data: Scalars['String']['output'];
   entityId: Scalars['String']['output'];
   entityType: Scalars['String']['output'];
+  folderPath: Scalars['String']['output'];
   id: Scalars['String']['output'];
   /** Item node */
   node?: Maybe<BaseNode>;
@@ -198,7 +199,10 @@ export type EntityListNode = {
 export type EntityListNodeItemsArgs = {
   accessibleOnly?: Scalars['Boolean']['input'];
   after?: InputMaybe<Scalars['String']['input']>;
-  first?: Scalars['Int']['input'];
+  before?: InputMaybe<Scalars['String']['input']>;
+  filter?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
   sortBy?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -253,47 +257,37 @@ export type FileNode = {
 
 export type FolderAttribType = {
   __typename?: 'FolderAttribType';
-  bidDays?: Maybe<Scalars['Int']['output']>;
   clipIn?: Maybe<Scalars['Int']['output']>;
   clipOut?: Maybe<Scalars['Int']['output']>;
-  colour?: Maybe<Scalars['String']['output']>;
-  copies?: Maybe<Scalars['Boolean']['output']>;
   /** Textual description of the entity */
   description?: Maybe<Scalars['String']['output']>;
+  distances?: Maybe<Array<Scalars['String']['output']>>;
   /** Deadline date and time */
   endDate?: Maybe<Scalars['DateTime']['output']>;
+  folderOnly?: Maybe<Scalars['String']['output']>;
   /** Frame rate */
   fps?: Maybe<Scalars['Float']['output']>;
   frameEnd?: Maybe<Scalars['Int']['output']>;
   frameStart?: Maybe<Scalars['Int']['output']>;
   ftrackId?: Maybe<Scalars['String']['output']>;
   ftrackPath?: Maybe<Scalars['String']['output']>;
-  goldCoins?: Maybe<Scalars['Int']['output']>;
-  hairColor?: Maybe<Scalars['String']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
-  level?: Maybe<Scalars['String']['output']>;
+  /** Is this some really hard work? */
+  hard?: Maybe<Scalars['Boolean']['output']>;
+  nickname?: Maybe<Scalars['String']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
-  /** How much of the pizza do I get to have? */
-  pizzaShare?: Maybe<Scalars['Float']['output']>;
   priority?: Maybe<Scalars['String']['output']>;
-  /** Should this stay internally private or not? */
-  private?: Maybe<Scalars['Boolean']['output']>;
-  render?: Maybe<Scalars['String']['output']>;
   /** Vertical resolution */
   resolutionHeight?: Maybe<Scalars['Int']['output']>;
   /** Horizontal resolution */
   resolutionWidth?: Maybe<Scalars['Int']['output']>;
-  shapes?: Maybe<Array<Scalars['String']['output']>>;
   /** The Shotgrid ID of this entity. */
   shotgridId?: Maybe<Scalars['String']['output']>;
   /** The Shotgrid Type of this entity. */
   shotgridType?: Maybe<Scalars['String']['output']>;
-  sokoId?: Maybe<Scalars['String']['output']>;
-  sokoPath?: Maybe<Scalars['String']['output']>;
   /** Date and time when the project or task or asset was started */
   startDate?: Maybe<Scalars['DateTime']['output']>;
-  testy?: Maybe<Scalars['String']['output']>;
   tools?: Maybe<Array<Scalars['String']['output']>>;
 };
 
@@ -502,6 +496,7 @@ export type ProductAttribType = {
   /** Textual description of the entity */
   description?: Maybe<Scalars['String']['output']>;
   productGroup?: Maybe<Scalars['String']['output']>;
+  productOnly?: Maybe<Scalars['String']['output']>;
 };
 
 export type ProductEdge = {
@@ -620,12 +615,10 @@ export type ProjectAttribType = {
   resolutionWidth?: Maybe<Scalars['Int']['output']>;
   /** The Shotgrid ID of this entity. */
   shotgridId?: Maybe<Scalars['String']['output']>;
-  /** Push changes done to this project to Shotgird. Requires the transmitter service. */
+  /** Push changes done to this project to ShotGrid. Requires the transmitter service. */
   shotgridPush?: Maybe<Scalars['Boolean']['output']>;
   /** The Shotgrid Type of this entity. */
   shotgridType?: Maybe<Scalars['String']['output']>;
-  sokoId?: Maybe<Scalars['String']['output']>;
-  sokoPath?: Maybe<Scalars['String']['output']>;
   /** Date and time when the project or task or asset was started */
   startDate?: Maybe<Scalars['DateTime']['output']>;
   tools?: Maybe<Array<Scalars['String']['output']>>;
@@ -1074,13 +1067,11 @@ export type RepresentationsConnection = {
 
 export type TaskAttribType = {
   __typename?: 'TaskAttribType';
-  bidDays?: Maybe<Scalars['Int']['output']>;
   clipIn?: Maybe<Scalars['Int']['output']>;
   clipOut?: Maybe<Scalars['Int']['output']>;
-  colour?: Maybe<Scalars['String']['output']>;
-  copies?: Maybe<Scalars['Boolean']['output']>;
   /** Textual description of the entity */
   description?: Maybe<Scalars['String']['output']>;
+  distances?: Maybe<Array<Scalars['String']['output']>>;
   /** Deadline date and time */
   endDate?: Maybe<Scalars['DateTime']['output']>;
   /** Frame rate */
@@ -1089,33 +1080,25 @@ export type TaskAttribType = {
   frameStart?: Maybe<Scalars['Int']['output']>;
   ftrackId?: Maybe<Scalars['String']['output']>;
   ftrackPath?: Maybe<Scalars['String']['output']>;
-  goldCoins?: Maybe<Scalars['Int']['output']>;
-  hairColor?: Maybe<Scalars['String']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
-  jiraCurrentPhase?: Maybe<Array<Scalars['String']['output']>>;
-  level?: Maybe<Scalars['String']['output']>;
+  /** Is this some really hard work? */
+  hard?: Maybe<Scalars['Boolean']['output']>;
+  jiraCurrentPhase?: Maybe<Scalars['String']['output']>;
+  nickname?: Maybe<Scalars['String']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
-  /** How much of the pizza do I get to have? */
-  pizzaShare?: Maybe<Scalars['Float']['output']>;
   priority?: Maybe<Scalars['String']['output']>;
-  /** Should this stay internally private or not? */
-  private?: Maybe<Scalars['Boolean']['output']>;
-  render?: Maybe<Scalars['String']['output']>;
   /** Vertical resolution */
   resolutionHeight?: Maybe<Scalars['Int']['output']>;
   /** Horizontal resolution */
   resolutionWidth?: Maybe<Scalars['Int']['output']>;
-  shapes?: Maybe<Array<Scalars['String']['output']>>;
   /** The Shotgrid ID of this entity. */
   shotgridId?: Maybe<Scalars['String']['output']>;
   /** The Shotgrid Type of this entity. */
   shotgridType?: Maybe<Scalars['String']['output']>;
-  sokoId?: Maybe<Scalars['String']['output']>;
-  sokoPath?: Maybe<Scalars['String']['output']>;
   /** Date and time when the project or task or asset was started */
   startDate?: Maybe<Scalars['DateTime']['output']>;
-  testy?: Maybe<Scalars['String']['output']>;
+  taskOnly?: Maybe<Scalars['String']['output']>;
   tools?: Maybe<Array<Scalars['String']['output']>>;
 };
 
@@ -1242,7 +1225,6 @@ export type UserAttribType = {
   developerMode?: Maybe<Scalars['Boolean']['output']>;
   email?: Maybe<Scalars['String']['output']>;
   fullName?: Maybe<Scalars['String']['output']>;
-  studioId?: Maybe<Scalars['String']['output']>;
 };
 
 export type UserEdge = {
@@ -1288,8 +1270,6 @@ export type UsersConnection = {
 
 export type VersionAttribType = {
   __typename?: 'VersionAttribType';
-  /** The version that is currently the one to use. */
-  blessed?: Maybe<Scalars['Boolean']['output']>;
   clipIn?: Maybe<Scalars['Int']['output']>;
   clipOut?: Maybe<Scalars['Int']['output']>;
   colorSpace?: Maybe<Scalars['String']['output']>;
@@ -1312,8 +1292,8 @@ export type VersionAttribType = {
   /** Horizontal resolution */
   resolutionWidth?: Maybe<Scalars['Int']['output']>;
   site?: Maybe<Scalars['String']['output']>;
-  sokoId?: Maybe<Scalars['String']['output']>;
   source?: Maybe<Scalars['String']['output']>;
+  versionOnly?: Maybe<Scalars['String']['output']>;
 };
 
 export type VersionEdge = {
@@ -1558,6 +1538,44 @@ export type DetailsPanelTaskFragmentFragment = { __typename?: 'TaskNode', id: st
 
 export type DetailsPanelVersionFragmentFragment = { __typename?: 'VersionNode', id: string, thumbnailId?: string | null, name: string, updatedAt: any, createdAt: any, productId: string, version: number, author?: string | null };
 
+export type GetListItemsQueryVariables = Exact<{
+  projectName: Scalars['String']['input'];
+  listId: Scalars['String']['input'];
+  first?: InputMaybe<Scalars['Int']['input']>;
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  sortBy?: InputMaybe<Scalars['String']['input']>;
+  filter?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+
+export type GetListItemsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', entityLists: { __typename?: 'EntityListsConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, edges: Array<{ __typename?: 'EntityListEdge', node: { __typename?: 'EntityListNode', id: string, active: boolean, items: { __typename?: 'EntityListItemsConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, edges: Array<{ __typename?: 'EntityListItemEdge', id: string, entityId: string, entityType: string, allAttrib: string, position: number, ownItemAttrib: Array<string>, node?: { __typename?: 'FolderNode', active: boolean, name: string, updatedAt: any, label?: string | null, status: string, tags: Array<string>, folderType: string, path?: string | null, ownAttrib: Array<string> } | { __typename?: 'ProductNode', active: boolean, name: string, updatedAt: any, status: string, tags: Array<string>, productType: string, folder: { __typename?: 'FolderNode', path?: string | null, folderType: string } } | { __typename?: 'RepresentationNode', active: boolean, name: string, updatedAt: any } | { __typename?: 'TaskNode', active: boolean, name: string, updatedAt: any, label?: string | null, status: string, tags: Array<string>, taskType: string, assignees: Array<string>, ownAttrib: Array<string>, folder: { __typename?: 'FolderNode', path?: string | null, folderType: string } } | { __typename?: 'VersionNode', active: boolean, name: string, updatedAt: any, status: string, tags: Array<string>, product: { __typename?: 'ProductNode', name: string, productType: string, folder: { __typename?: 'FolderNode', path?: string | null, folderType: string } }, task?: { __typename?: 'TaskNode', name: string, taskType: string } | null } | { __typename?: 'WorkfileNode', active: boolean, name: string, updatedAt: any } | null }> } } }> } } };
+
+export type GetListsQueryVariables = Exact<{
+  projectName: Scalars['String']['input'];
+  first: Scalars['Int']['input'];
+  after?: InputMaybe<Scalars['String']['input']>;
+  filter?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+
+export type GetListsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', entityLists: { __typename?: 'EntityListsConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, edges: Array<{ __typename?: 'EntityListEdge', node: { __typename?: 'EntityListNode', id: string, label: string, entityListType: string, tags: Array<string>, data: string, entityType: string, active: boolean, createdAt: any, updatedAt: any, owner?: string | null, count: number } }> } } };
+
+type ListItemFragment_FolderNode_Fragment = { __typename?: 'FolderNode', name: string, label?: string | null, status: string, tags: Array<string>, folderType: string, path?: string | null, ownAttrib: Array<string> };
+
+type ListItemFragment_ProductNode_Fragment = { __typename?: 'ProductNode', name: string, status: string, tags: Array<string>, productType: string, folder: { __typename?: 'FolderNode', path?: string | null, folderType: string } };
+
+type ListItemFragment_RepresentationNode_Fragment = { __typename?: 'RepresentationNode' };
+
+type ListItemFragment_TaskNode_Fragment = { __typename?: 'TaskNode', name: string, label?: string | null, status: string, tags: Array<string>, taskType: string, assignees: Array<string>, ownAttrib: Array<string>, folder: { __typename?: 'FolderNode', path?: string | null, folderType: string } };
+
+type ListItemFragment_VersionNode_Fragment = { __typename?: 'VersionNode', name: string, status: string, tags: Array<string>, product: { __typename?: 'ProductNode', name: string, productType: string, folder: { __typename?: 'FolderNode', path?: string | null, folderType: string } }, task?: { __typename?: 'TaskNode', name: string, taskType: string } | null };
+
+type ListItemFragment_WorkfileNode_Fragment = { __typename?: 'WorkfileNode' };
+
+export type ListItemFragmentFragment = ListItemFragment_FolderNode_Fragment | ListItemFragment_ProductNode_Fragment | ListItemFragment_RepresentationNode_Fragment | ListItemFragment_TaskNode_Fragment | ListItemFragment_VersionNode_Fragment | ListItemFragment_WorkfileNode_Fragment;
+
 export type GetTasksByParentQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
   parentIds: Array<Scalars['String']['input']> | Scalars['String']['input'];
@@ -1782,6 +1800,59 @@ export const DetailsPanelVersionFragmentFragmentDoc = `
   productId
   version
   author
+}
+    `;
+export const ListItemFragmentFragmentDoc = `
+    fragment ListItemFragment on BaseNode {
+  ... on TaskNode {
+    name
+    label
+    status
+    tags
+    taskType
+    assignees
+    ownAttrib
+    folder {
+      path
+      folderType
+    }
+  }
+  ... on FolderNode {
+    name
+    label
+    status
+    tags
+    folderType
+    path
+    ownAttrib
+  }
+  ... on ProductNode {
+    name
+    status
+    tags
+    productType
+    folder {
+      path
+      folderType
+    }
+  }
+  ... on VersionNode {
+    name
+    status
+    tags
+    product {
+      name
+      productType
+      folder {
+        path
+        folderType
+      }
+    }
+    task {
+      name
+      taskType
+    }
+  }
 }
     `;
 export const TaskPropsFragmentFragmentDoc = `
@@ -2123,6 +2194,78 @@ export const GetProductVersionsDocument = `
   }
 }
     `;
+export const GetListItemsDocument = `
+    query GetListItems($projectName: String!, $listId: String!, $first: Int, $after: String, $before: String, $last: Int, $sortBy: String, $filter: String) {
+  project(name: $projectName) {
+    entityLists(ids: [$listId]) {
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+      edges {
+        node {
+          id
+          active
+          items(
+            first: $first
+            after: $after
+            before: $before
+            last: $last
+            sortBy: $sortBy
+            filter: $filter
+          ) {
+            pageInfo {
+              hasNextPage
+              endCursor
+            }
+            edges {
+              id
+              entityId
+              entityType
+              allAttrib
+              ownItemAttrib: ownAttrib
+              position
+              node {
+                active
+                name
+                updatedAt
+                ...ListItemFragment
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+    ${ListItemFragmentFragmentDoc}`;
+export const GetListsDocument = `
+    query GetLists($projectName: String!, $first: Int!, $after: String, $filter: String) {
+  project(name: $projectName) {
+    entityLists(first: $first, after: $after, filter: $filter) {
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+      edges {
+        node {
+          id
+          label
+          entityListType
+          tags
+          data
+          entityType
+          active
+          createdAt
+          updatedAt
+          owner
+          count
+        }
+      }
+    }
+  }
+}
+    `;
 export const GetTasksByParentDocument = `
     query GetTasksByParent($projectName: String!, $parentIds: [String!]!, $filter: String, $search: String) {
   project(name: $projectName) {
@@ -2402,6 +2545,12 @@ const injectedRtkApi = api.injectEndpoints({
     }),
     GetProductVersions: build.query<GetProductVersionsQuery, GetProductVersionsQueryVariables>({
       query: (variables) => ({ document: GetProductVersionsDocument, variables })
+    }),
+    GetListItems: build.query<GetListItemsQuery, GetListItemsQueryVariables>({
+      query: (variables) => ({ document: GetListItemsDocument, variables })
+    }),
+    GetLists: build.query<GetListsQuery, GetListsQueryVariables>({
+      query: (variables) => ({ document: GetListsDocument, variables })
     }),
     GetTasksByParent: build.query<GetTasksByParentQuery, GetTasksByParentQueryVariables>({
       query: (variables) => ({ document: GetTasksByParentDocument, variables })

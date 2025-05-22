@@ -17,6 +17,7 @@ export const generateLoadingRows = (
     (_, index): TableRow => ({
       id: `loading-${type}-${index}-${parentId}`,
       name: 'Loading...',
+      status: 'Loading...',
       parentId: parentId,
       isLoading: true,
       label: 'Loading...',

@@ -17,6 +17,7 @@ import {
   BorderPosition,
   getBorderClasses,
 } from '../utils/cellUtils'
+import { DRAG_HANDLE_COLUMN_ID } from '../ProjectTreeTable'
 
 export const ROW_SELECTION_COLUMN_ID = '__row_selection__' // ID for the row selection column
 
@@ -127,7 +128,7 @@ export const SelectionCellsProvider: React.FC<{ children: ReactNode }> = ({ chil
   const updateSelection = useCallback((selection: Set<CellId>, position: CellPosition) => {
     setSelectedCells((prevSelectedCells) => {
       let newSelection = new Set(selection)
-      if (position.colId !== ROW_SELECTION_COLUMN_ID) {
+      if (position.colId !== ROW_SELECTION_COLUMN_ID && position.colId !== DRAG_HANDLE_COLUMN_ID) {
         const rowSelection = Array.from(prevSelectedCells).filter(
           (id) => parseCellId(id)?.colId === ROW_SELECTION_COLUMN_ID,
         )

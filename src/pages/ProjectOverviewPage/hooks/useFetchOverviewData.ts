@@ -4,8 +4,13 @@ import {
   useGetQueryTasksFoldersQuery,
   useGetTasksListInfiniteInfiniteQuery,
 } from '@shared/api'
-
-import { FolderNodeMap, TaskNodeMap } from '@shared/containers/ProjectTreeTable/types/table'
+import type { FolderListItem } from '@shared/api'
+import {
+  EditorTaskNode,
+  FolderNodeMap,
+  MatchingFolder,
+  TaskNodeMap,
+} from '@shared/containers/ProjectTreeTable/types/table'
 import { useEffect, useMemo, useState } from 'react'
 import { ExpandedState, SortingState } from '@tanstack/react-table'
 import { ProjectOverviewContextProps } from '../context/ProjectOverviewContext'
@@ -52,7 +57,7 @@ const useFetchOverviewData = ({
     { skip: !projectName },
   )
 
-  console.log('Folder count:', folders.length)
+  // console.log('Folder count:', folders.length)
   const expandedParentIds = Object.entries(expanded)
     .filter(([, isExpanded]) => isExpanded)
     .map(([id]) => id)
@@ -92,6 +97,16 @@ const useFetchOverviewData = ({
   const foldersMap: FolderNodeMap = useMemo(() => {
     const map = new Map()
 
+    const addExtraDataToFolder = (folder: FolderListItem) => {
+      // add any extra data to folder
+      const folderWithExtraData: MatchingFolder = {
+        ...folder,
+        entityId: folder.id,
+        entityType: 'folder',
+      }
+      return folderWithExtraData
+    }
+
     // If we have task filters and folders to filter
     if (!isUninitialized && foldersByTaskFilter && folders.length) {
       // Create a set for efficient lookups of filtered folder IDs
@@ -125,13 +140,13 @@ const useFetchOverviewData = ({
       // Third pass: Build the final map using only relevant folders
       for (const folder of folders) {
         if (relevantFolderIds.has(folder.id as string)) {
-          map.set(folder.id as string, folder)
+          map.set(folder.id as string, addExtraDataToFolder(folder))
         }
       }
     } else {
       // No filtering, include all folders
       for (const folder of folders) {
-        map.set(folder.id as string, folder)
+        map.set(folder.id as string, addExtraDataToFolder(folder))
       }
     }
 
@@ -166,7 +181,7 @@ const useFetchOverviewData = ({
         )
 
         if (isParentOrSelf || isChild) {
-          filteredMap.set(folderId, folder)
+          filteredMap.set(folderId, addExtraDataToFolder(folder))
         }
       })
 
@@ -246,13 +261,19 @@ const useFetchOverviewData = ({
     const tasksMap: TaskNodeMap = new Map()
     const tasksByFolderMap: TasksByFolderMap = new Map()
 
+    const addExtraDataToTask = (task: EditorTaskNode) => ({
+      ...task,
+      entityId: task.id,
+      entityType: 'task' as const,
+    })
+
     // either show the hierarchy or the flat list of tasks
     const allTasks = showHierarchy ? expandedFoldersTasks : tasksList
     for (const task of allTasks) {
       const taskId = task.id as string
       const folderId = task.folderId as string
 
-      tasksMap.set(taskId, task)
+      tasksMap.set(taskId, addExtraDataToTask(task))
 
       if (tasksByFolderMap.has(folderId)) {
         tasksByFolderMap.get(folderId)!.push(taskId)

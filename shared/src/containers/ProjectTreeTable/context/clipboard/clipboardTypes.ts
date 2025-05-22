@@ -1,5 +1,5 @@
 import { ReactNode } from 'react'
-import { FolderNodeMap, TaskNodeMap } from '../../types/table'
+import { EntitiesMap } from '../../types/table'
 import { AttributeEnumItem, BuiltInFieldOptions } from '../../types'
 
 // Constants for field mappings
@@ -21,7 +21,9 @@ export interface ClipboardContextType {
 
 export interface ClipboardProviderProps {
   children: ReactNode
-  options: BuiltInFieldOptions
+  entitiesMap: EntitiesMap
+  columnEnums: ColumnEnums
+  columnReadOnly: string[]
 }
 
 export interface ParsedClipboardData {

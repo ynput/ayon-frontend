@@ -39,7 +39,7 @@ const useLoadRemotePages = <T extends DataType>({
 }: ProjectRemoteLoaderProps<T>) => {
   const { modules, remotesInitialized } = useRemoteModules()
 
-  const projectPageModules = useMemo<ModuleSpec<RemoteAppNode>[]>(() => {
+  const pageModules = useMemo<ModuleSpec<RemoteAppNode>[]>(() => {
     const pageModules: ModuleSpec<RemoteAppNode>[] = []
     for (const addon of modules) {
       for (const remote in addon.modules) {
@@ -62,7 +62,7 @@ const useLoadRemotePages = <T extends DataType>({
 
   // get remote project module pages
   const { modules: modulesData, isLoading: isLoadingModulePages } = useLoadModules(
-    projectPageModules,
+    pageModules,
     modules,
     !remotesInitialized || skip,
   )

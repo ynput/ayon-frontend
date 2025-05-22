@@ -18,8 +18,12 @@ export const useLoadModule = <T>({
   module,
   fallback,
   minVersion,
-}: Props<T>): [T, { isLoaded: boolean; outdated?: { current: string; required: string } }] => {
+}: Props<T>): [
+  T,
+  { isLoaded: boolean; isLoading: boolean; outdated?: { current: string; required: string } },
+] => {
   const { remotesInitialized, modules } = useRemoteModules()
+  const [isLoading, setIsLoading] = useState(true)
   const [isLoaded, setIsLoaded] = useState(false)
   const [isOutdated, setIsOutdated] = useState(false)
   const loadedRemote = useRef<T>(fallback)
@@ -31,7 +35,11 @@ export const useLoadModule = <T>({
     // check if remote and module exist
     const initializedRemote = modules.find((m) => m.addonName === addon)
 
-    if (!initializedRemote) return console.log('remote not found', { addon, remote, module })
+    if (!initializedRemote) {
+      console.log('remote not found', { addon, remote, module })
+      setIsLoading(false)
+      return
+    }
 
     // check remote meets minimum version requirement
     if (minVersion && !semver.gte(initializedRemote.addonVersion, minVersion)) {
@@ -44,6 +52,7 @@ export const useLoadModule = <T>({
       })
 
       setIsOutdated(true)
+      setIsLoading(false)
 
       // use fallback if version requirement not met
       return
@@ -53,19 +62,27 @@ export const useLoadModule = <T>({
 
     const initializedModule = initializedRemote.modules[remote]
 
-    if (!initializedModule) return console.log('module not found', { addon, remote, module })
+    if (!initializedModule) {
+      setIsLoading(false)
+      return console.log('module not found', { addon, remote, module })
+    }
 
     // check if module is already loaded
-    if (isLoaded) return
+    if (isLoaded) {
+      setIsLoading(false)
+      return
+    }
     loadRemote<{ default: T }>(`${remote}/${module}`, {
       from: 'runtime',
     })
       .then((remote) => {
         console.log('loaded remote', module)
         setIsLoaded(true)
+        setIsLoading(false)
         if (remote) loadedRemote.current = remote.default
       })
       .catch((e) => {
+        setIsLoading(false)
         console.error('error loading remote', remote, module, e)
       })
   }, [isLoaded, remotesInitialized, modules, addon, remote, module, minVersion])
@@ -74,6 +91,7 @@ export const useLoadModule = <T>({
     loadedRemote.current,
     {
       isLoaded,
+      isLoading,
       outdated: isOutdated
         ? {
             current: modules.find((m) => m.addonName === addon)?.addonVersion || 'unknown',

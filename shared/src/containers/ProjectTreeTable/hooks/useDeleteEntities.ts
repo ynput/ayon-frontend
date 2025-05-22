@@ -4,7 +4,9 @@ import { parseCellId } from '../utils/cellUtils'
 // TODO: confirmDelete uses prime react, so we should find a different solution
 import { confirmDelete } from '../../../util'
 import { useProjectTableContext } from '../context/ProjectTableContext'
-import { OperationModel } from '../types/operations'
+import { toast } from 'react-toastify'
+import { EntityMap } from '../types'
+import { OperationWithRowId } from './useUpdateTableData'
 
 type UseDeleteEntitiesProps = {
   onSuccess?: () => void
@@ -18,23 +20,32 @@ const useDeleteEntities = ({ onSuccess }: UseDeleteEntitiesProps) => {
   const handleDeleteEntities = useCallback(
     async (entityIds: string[]) => {
       if (!entityIds || entityIds.length === 0) {
+        toast.error('No entities selected')
         return
       }
 
-      const fullEntities = entityIds
-        .map((id) => getEntityById(parseCellId(id)?.rowId || ''))
+      const fullEntities: (EntityMap & { rowId: string })[] = entityIds
+        .map((id) => {
+          const rowId = parseCellId(id)?.rowId
+          const entity = getEntityById(rowId || '') as EntityMap & { rowId: string }
+          return entity
+        })
         .filter(Boolean)
 
-      if (fullEntities.length === 0) return
+      if (fullEntities.length === 0) {
+        toast.error('No entities found')
+        return
+      }
 
       const deleteEntities = async (force = false) => {
-        const operations: OperationModel[] = []
+        const operations: OperationWithRowId[] = []
         for (const e of fullEntities) {
           if (!e) continue
           operations.push({
             entityType: 'folderId' in e ? 'task' : 'folder',
             type: 'delete',
             entityId: e.id,
+            rowId: e.rowId,
             force,
           })
         }

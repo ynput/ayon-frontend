@@ -9,6 +9,7 @@ import LoadingPage from '../LoadingPage'
 import ProjectAddon from '../ProjectAddon'
 import WorkfilesPage from '../WorkfilesPage'
 import TasksProgressPage from '../TasksProgressPage'
+import ProjectListsPage from '../ProjectListsPage'
 
 import { selectProject } from '@state/project'
 import { useGetProjectQuery } from '@queries/project/enhancedProject'
@@ -16,10 +17,11 @@ import { useGetProjectAddonsQuery } from '@shared/api'
 import { TabPanel, TabView } from 'primereact/tabview'
 import AppNavLinks from '@containers/header/AppNavLinks'
 import { SlicerProvider } from '@context/SlicerContext'
-import useLoadRemoteProjectPages, { Fallbacks } from '../../remote/useLoadRemotePages'
+import { EntityListsProvider } from '@pages/ProjectListsPage/context/EntityListsContext'
+import useLoadRemoteProjectPages from '../../remote/useLoadRemotePages'
 import { Navigate } from 'react-router-dom'
-// import ReviewAddonSpec from '@pages/AddonPages/ReviewAddon'
 import ProjectPubSub from './ProjectPubSub'
+import NewListFromContext from '@pages/ProjectListsPage/components/NewListDialog/NewListFromContext'
 
 const ProjectContextInfo = () => {
   /**
@@ -81,7 +83,7 @@ const ProjectPage = () => {
 
   type ModuleData = { name: string; module: string }
   // permanent addon pages that show a fallback when not loaded
-  // const permanentAddons: Fallbacks<ModuleData> = new Map([['review', ReviewAddonSpec]])
+  // const permanentAddons: Fallbacks<ModuleData> = new Map([['review', ReviewAddon]])
 
   const { remotePages, isLoading: isLoadingModules } = useLoadRemoteProjectPages<ModuleData>({
     // fallbacks: permanentAddons,
@@ -90,7 +92,6 @@ const ProjectPage = () => {
   })
 
   // get remote project module pages
-
   const links = useMemo(
     () => [
       {
@@ -110,6 +111,17 @@ const ProjectPage = () => {
         path: `/projects/${projectName}/browser`,
         module: 'browser',
         uriSync: true,
+      },
+      {
+        name: 'Lists',
+        path: `/projects/${projectName}/lists`,
+        module: 'lists',
+      },
+      {
+        name: 'Review',
+        path: `/projects/${projectName}/reviews`,
+        module: 'reviews',
+        enabled: addonsData.some((item) => item.name === 'review'),
       },
       {
         name: 'Workfiles',
@@ -154,7 +166,7 @@ const ProjectPage = () => {
   // error
   if (isError) {
     setTimeout(() => {
-      navigate('/manageProjects/dashboard')
+      navigate('/')
     }, 1500)
     return <div className="page">Project Not Found, Redirecting...</div>
   }
@@ -168,6 +180,14 @@ const ProjectPage = () => {
     }
     if (module === 'browser') {
       return <BrowserPage />
+    }
+    if (module === 'lists') {
+      return <ProjectListsPage projectName={projectName} entityListTypes={['generic']} />
+    }
+    if (module === 'reviews') {
+      return (
+        <ProjectListsPage projectName={projectName} entityListTypes={['review-session']} isReview />
+      )
     }
     if (module === 'workfiles') {
       return <WorkfilesPage />
@@ -214,7 +234,10 @@ const ProjectPage = () => {
       </Dialog>
       {/* @ts-expect-error - AppNavLinks is jsx */}
       <AppNavLinks links={links} />
-      <SlicerProvider>{child}</SlicerProvider>
+      <EntityListsProvider {...{ projectName, entityTypes: ['folder', 'task', 'version'] }}>
+        <SlicerProvider>{child}</SlicerProvider>
+        <NewListFromContext />
+      </EntityListsProvider>
       <ProjectPubSub projectName={projectName} onReload={loadProjectData} />
     </>
   )

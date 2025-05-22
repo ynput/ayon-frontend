@@ -34,7 +34,7 @@ const useGetEntityPath = ({
     () =>
       !versionsData?.project.product?.versionList
         ? []
-        : [...versionsData.project.product.versionList]
+        : [...(versionsData.project.product?.versionList || [])]
             .sort((a, b) => {
               if (a.name === 'HERO') return -1
               if (b.name === 'HERO') return 1

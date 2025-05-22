@@ -1,8 +1,9 @@
 import React, { RefObject } from 'react'
 import { Icon, ShortcutTag } from '@ynput/ayon-react-components'
 import './ContextMenu.scss'
+import clsx from 'clsx'
 
-interface CommandEvent {
+export interface CommandEvent {
   originalEvent: React.MouseEvent
   item: {
     label: string
@@ -19,9 +20,11 @@ export interface ContextMenuItemProps {
   children?: React.ReactNode
   contextMenuRef: RefObject<{ hide: () => void }>
   disabled?: boolean
+  hidden?: boolean
   items?: any[]
   isSave?: boolean
   danger?: boolean
+  developer?: boolean
   style?: React.CSSProperties
   [key: string]: any // For any additional props
 }
@@ -34,14 +37,19 @@ const ContextMenuItem: React.FC<ContextMenuItemProps> = ({
   children,
   contextMenuRef,
   disabled,
+  hidden,
   items,
   isSave,
   danger,
+  developer,
   ...props
 }) => {
+  if (hidden) return null
+
   const onCommand = (e: React.MouseEvent) => {
     // hide the context menu
     contextMenuRef.current?.hide()
+    e.preventDefault()
 
     command?.({
       originalEvent: e,
@@ -57,9 +65,12 @@ const ContextMenuItem: React.FC<ContextMenuItemProps> = ({
 
   return (
     <a
-      className={`p-menuitem-link ${disabled || noItems ? 'p-disabled' : ''} ${
-        danger ? 'danger' : ''
-      } ${isSave ? 'save' : ''}`}
+      className={clsx('p-menuitem-link', {
+        'p-disabled': disabled || noItems,
+        danger,
+        developer,
+        save: isSave,
+      })}
       role="menuitem"
       href="#"
       onClick={onCommand}

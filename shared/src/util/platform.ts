@@ -6,16 +6,16 @@ export enum KeyMode {
 
 const modeMappings = {
   [KeyMode.Shift]: {
-    windows: 'Shift',
-    linux: 'Shift',
-    other: 'Shift',
-    darwin: 'Shift',
+    windows: '⇧',
+    linux: '⇧',
+    other: '⇧',
+    darwin: '⇧',
   },
   [KeyMode.Ctrl]: {
     windows: 'Ctrl',
     linux: 'Ctrl',
     other: 'Ctrl',
-    darwin: 'Cmd',
+    darwin: '⌘',
   },
   [KeyMode.Alt]: {
     windows: 'Alt',
@@ -44,11 +44,15 @@ const getCurrentPlatform = () => {
   }
 }
 
+const firstUpper = (t: string) => t.charAt(0).toUpperCase() + t.slice(1)
+
 const getPlatformShortcutKey = (key: string, modes: KeyMode[], prefix?: string): string => {
   const shortcut =
     modes.length > 0
-      ? [...modes.map((mode) => getModeMapping(mode)), key.toUpperCase()].join('+')
-      : key.toUpperCase()
+      ? key
+        ? [...modes.map((mode) => getModeMapping(mode)), firstUpper(key)].join('+')
+        : [...modes.map((mode) => getModeMapping(mode))].join('+')
+      : firstUpper(key)
 
   return prefix ? `${prefix}+${shortcut}` : shortcut
 }

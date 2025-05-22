@@ -61,7 +61,7 @@ export type AttributeModel = {
   data: AttributeData
 }
 
-export interface AttributeWithPermissions extends AttributeModel {
+export interface ProjectTableAttribute extends Omit<AttributeModel, 'position'> {
   readOnly?: boolean
 }
 
@@ -75,10 +75,9 @@ interface EnumOption extends AttributeEnumItem {
   scope?: string[]
 }
 
+export type TreeTableSubType = 'folderType' | 'taskType' | 'productType'
+type BuiltInFieldOptionKey = TreeTableSubType | 'status' | 'assignee' | 'tag'
+
 export type BuiltInFieldOptions = {
-  folderTypes: EnumOption[]
-  taskTypes: EnumOption[]
-  statuses: EnumOption[]
-  assignees: EnumOption[]
-  tags: EnumOption[]
+  [key in BuiltInFieldOptionKey]: EnumOption[]
 }

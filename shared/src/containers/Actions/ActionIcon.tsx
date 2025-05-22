@@ -32,7 +32,7 @@ const ActionIcon: FC<ActionIconProps> = ({ icon, isExecuting }) => {
   } else if (icon?.type === 'url') {
     component = <img src={icon.url} title="Action" />
   } else {
-    component = <Icon icon="manufacturing" />
+    component = <Icon icon="category" />
   }
 
   return component

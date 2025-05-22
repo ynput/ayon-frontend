@@ -5,6 +5,7 @@ export const StyledDropdown = styled(Dropdown)`
   height: unset;
   button {
     background-color: var(--md-sys-color-surface-container-highest);
+    min-height: 32px;
     & > div {
       padding: 0;
       border: 0;
@@ -22,6 +23,10 @@ export const StyledDropdown = styled(Dropdown)`
     &:hover {
       background-color: var(--md-sys-color-surface-container-highest-hover);
     }
+  }
+
+  &.loading {
+    border-radius: 4px;
   }
 `
 
