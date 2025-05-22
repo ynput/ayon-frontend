@@ -14,7 +14,7 @@ import SchedulerPage from '@pages/SchedulerPage/SchedulerPage'
 
 import { selectProject } from '@state/project'
 import { useGetProjectQuery } from '@queries/project/enhancedProject'
-import { useGetProjectAddonsQuery } from '@shared/api'
+import { useGetProjectAddonsQuery, useListAddonsQuery } from '@shared/api'
 import { TabPanel, TabView } from 'primereact/tabview'
 import AppNavLinks from '@containers/header/AppNavLinks'
 import { SlicerProvider } from '@context/SlicerContext'
@@ -69,6 +69,8 @@ const ProjectPage = () => {
     refetch: refetchAddons,
     isUninitialized: addonsIsUninitialized,
   } = useGetProjectAddonsQuery({}, { skip: !projectName })
+
+  const { data: { addons: downloadedAddons = [] } = {} } = useListAddonsQuery({})
 
   useEffect(() => {
     if (!addonsLoading && !addonsIsError && addonsData) {
@@ -127,13 +129,15 @@ const ProjectPage = () => {
         name: 'Review',
         path: `/projects/${projectName}/reviews`,
         module: 'reviews',
-        enabled: addonsData.some((item) => item.name === 'review'), // remove once review is released out of beta
+        enabled: downloadedAddons.some((item) => item.name === 'review'), // remove once review is released out of beta
       },
       {
         name: 'Scheduler',
         path: `/projects/${projectName}/scheduler`,
         module: 'scheduler',
-        enabled: addonsData.some((item) => item.name === 'planner' && item.version === '0.1.0-dev'), // for dev purposes, remove planner is released out of beta
+        enabled: downloadedAddons.some(
+          (item) => item.name === 'planner' && item.productionVersion === '0.1.0-dev',
+        ), // for dev purposes, remove planner is released out of beta
       },
       {
         name: 'Workfiles',
