@@ -4,7 +4,7 @@ export const Card = styled.div`
   position: relative;
   width: 100%;
   height: 52px;
-  aspect-ratio: 1.77;
+  aspect-ratio: 1.7;
   overflow: hidden;
   border-radius: var(--border-radius-l);
   margin: auto;
@@ -71,12 +71,7 @@ export const Card = styled.div`
     cursor: pointer;
 
     &:hover {
-      &.loaded:not(.error) {
-        background-color: var(--md-sys-color-on-surface);
-      }
-
       img {
-        opacity: 0.9;
         scale: 1.1;
       }
 
@@ -101,7 +96,7 @@ export const Card = styled.div`
 export const Image = styled.img`
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   border-radius: var(--border-radius-m);
   overflow: hidden;
 
