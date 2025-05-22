@@ -67,20 +67,8 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
 
     cleanObject(verificationData)
 
-    const identifyData = {
-      userId: verificationData.userId,
-      userHash: verificationData.userHash,
-      organization: verificationData.organization,
-      companies: verificationData.companies,
-      customFields: {
-        ...verificationData.customFields,
-        hasEmail: (!!verificationData.email).toString(),
-      },
-      name: 'User',
-    }
-
     const win = window as any
-    win.Featurebase('identify', identifyData, (err: any) => {
+    win.Featurebase('identify', verificationData, (err: any) => {
       // Callback function. Called when identify completed.
       if (err) {
         console.error(err)
