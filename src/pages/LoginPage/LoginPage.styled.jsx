@@ -118,8 +118,10 @@ export const MessageMarkdown = styled(Markdown)`
 `
 
 export const TandCs = styled.p`
+  color: var(--md-sys-color-outline);
   &,
   a {
+    color: var(--md-sys-color-outline);
     ${theme.bodySmall}
   }
 `
