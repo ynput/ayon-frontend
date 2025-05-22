@@ -125,9 +125,14 @@ const ProjectPage = () => {
         name: 'Review',
         path: `/projects/${projectName}/reviews`,
         module: 'reviews',
-        enabled: addonsData.some((item) => item.name === 'review'),
+        enabled: addonsData.some((item) => item.name === 'review'), // remove once review is released out of beta
       },
-      { name: 'Scheduler', path: `/projects/${projectName}/scheduler`, module: 'scheduler' },
+      {
+        name: 'Scheduler',
+        path: `/projects/${projectName}/scheduler`,
+        module: 'scheduler',
+        enabled: addonsData.some((item) => item.name === 'planner' && item.version === '0.1.0-dev'), // for dev purposes, remove planner is released out of beta
+      },
       {
         name: 'Workfiles',
         path: `/projects/${projectName}/workfiles`,

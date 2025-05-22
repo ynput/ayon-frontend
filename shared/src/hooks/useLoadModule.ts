@@ -42,7 +42,11 @@ export const useLoadModule = <T>({
     }
 
     // check remote meets minimum version requirement
-    if (minVersion && !semver.gte(initializedRemote.addonVersion, minVersion)) {
+    if (
+      minVersion &&
+      !semver.gte(initializedRemote.addonVersion, minVersion) &&
+      minVersion + '-dev' !== initializedRemote.addonVersion
+    ) {
       console.log('remote version does not meet minimum requirement', {
         addon,
         remote,

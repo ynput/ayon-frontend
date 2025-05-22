@@ -47,11 +47,7 @@ export type ColumnsConfig = {
 
 interface ColumnSettingsProviderProps {
   children: ReactNode
-  config?: {
-    visibility?: {
-      initValue?: VisibilityState
-    }
-  }
+  config?: Record<string, any>
   onChange: (config: ColumnsConfig) => void
 }
 

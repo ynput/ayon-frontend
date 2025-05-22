@@ -22,8 +22,12 @@ const SchedulerPage: FC<SchedulerPageProps> = ({}) => {
     remote: 'planner',
     module: 'Scheduler',
     fallback: SchedulerFallback,
-    // minVersion: '0.1.0'
+    minVersion: '0.1.0',
   })
+
+  if (outdated) {
+    return <div>Scheduler requires Planner addon 0.1.0 or higher</div>
+  }
 
   if (!isLoaded) {
     return <div>Loading...</div>
