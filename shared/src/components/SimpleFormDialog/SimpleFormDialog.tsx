@@ -50,6 +50,7 @@ const LabelContainer = styled.div`
     padding: 0.5rem;
     text-align: center;
     font-weight: bold;
+    margin: 1rem 0;
   }
 
   &.info {
@@ -204,7 +205,7 @@ export const SimpleFormDialog = ({
       onClose={onClose}
       header={title}
       footer={footer}
-      style={{ minHeight: 400, minWidth: 500 }}
+      style={{ minHeight: 400, minWidth: 600 }}
     >
       <ScrollPanel style={{ flexGrow: 1, background: 'transparent' }}>
         <FormLayout style={{ width: '95%' }}>

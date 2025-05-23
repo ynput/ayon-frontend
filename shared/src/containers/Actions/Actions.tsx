@@ -23,6 +23,7 @@ interface ActionsProps extends ActionTriggersProps {
   entityType: ActionContext['entityType']
   entitySubTypes?: string[]
   isLoadingEntity: boolean
+  projectActionsProjectName?: string
   featuredCount?: number
 }
 
@@ -31,6 +32,7 @@ export const Actions = ({
   entityType,
   entitySubTypes,
   isLoadingEntity,
+  projectActionsProjectName,
   searchParams,
   featuredCount = 2,
   onNavigate,
@@ -42,6 +44,11 @@ export const Actions = ({
   const [interactiveForm, setInteractiveForm] = useState<any>(null)
 
   const context: ActionContext | null = useMemo(() => {
+    if (projectActionsProjectName){
+      return {
+        projectName: projectActionsProjectName,
+      }
+    }
     if (!entities.length) return null
     if (!entities[0].projectName) return null
 
