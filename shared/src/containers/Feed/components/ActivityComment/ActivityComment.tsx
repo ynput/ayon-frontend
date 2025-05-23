@@ -81,7 +81,7 @@ const ActivityComment = ({
   if (!authorFullName) authorFullName = author?.fullName || authorName
 
   const { editingId, setEditingId } = useFeedContext()
-  const { onGoToFrame } = useDetailsPanelContext()
+  const { onGoToFrame, setHighlightedActivities } = useDetailsPanelContext()
 
   const handleEditComment = () => {
     setEditingId(activityId)
@@ -159,6 +159,7 @@ const ActivityComment = ({
       if (!file.annotation) return
       // annotation frame numbers are 1-based
       onGoToFrame?.((file.annotation as SavedAnnotationMetadata).range[0] - 1)
+      setHighlightedActivities([activityId])
     },
     [onGoToFrame],
   )
