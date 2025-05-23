@@ -613,7 +613,7 @@ const TableHeadCell = ({
       }}
     >
       {header.isPlaceholder ? null : (
-        <Styled.TableCellContent className={clsx('bold')}>
+        <Styled.TableCellContent className={clsx('bold', 'header')}>
           {flexRender(column.columnDef.header, header.getContext())}
           {isReadOnly && (
             <Icon icon="lock" data-tooltip={'You only have permission to read this column.'} />
