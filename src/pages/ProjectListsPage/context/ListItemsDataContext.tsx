@@ -182,7 +182,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
       attribFields.filter((field) =>
         [selectedList?.entityType].some((s: any) => field.scope?.includes(s)),
       ),
-    [attribFields],
+    [attribFields, selectedList?.entityType],
   )
 
   // convert listItemsData into tableData
