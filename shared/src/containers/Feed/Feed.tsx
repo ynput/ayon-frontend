@@ -18,6 +18,7 @@ import { Status } from '../ProjectTreeTable/types/project'
 import { useDetailsPanelContext } from '@shared/context'
 import { DetailsPanelEntityType } from '@shared/api'
 import mergeAnnotationAttachments from './helpers/mergeAnnotationAttachments'
+import { SavedAnnotationMetadata } from '.'
 
 // number of activities to get
 export const activitiesLast = 30
@@ -68,7 +69,12 @@ export const Feed = ({ isMultiProjects, readOnly, statuses = [] }: FeedProps) =>
     }
 
     const annotations = activitiesWithMergedAnnotations
-      .map((activity) => activity.activityData?.annotations)
+      .map((activity) =>
+        activity.activityData?.annotations?.map((a: SavedAnnotationMetadata) => ({
+          ...a,
+          activityId: activity.activityId,
+        })),
+      )
       .filter(Boolean)
       .flat()
 
