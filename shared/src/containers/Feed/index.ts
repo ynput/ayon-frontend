@@ -14,4 +14,5 @@ export type SavedAnnotationMetadata = {
   composite: string
   transparent: string
   range: number[]
+  activityId?: string
 }
