@@ -107,7 +107,7 @@ const buildTreeTableColumns = ({
   if (isIncluded('thumbnail')) {
     staticColumns.push({
       id: 'thumbnail',
-      header: '',
+      header: 'Thumbnail',
       size: 63,
       minSize: 64,
       enableResizing: true,

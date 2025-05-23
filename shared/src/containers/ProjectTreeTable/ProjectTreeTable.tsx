@@ -81,15 +81,10 @@ declare module '@tanstack/react-table' {
 //These are the important styles to make sticky column pinning work!
 //Apply styles like this using your CSS strategy of choice with this kind of logic to head cells, data cells, footer cells, etc.
 //View the index.css file for more needed styles such as border-collapse: separate
-const getCommonPinningStyles = (
-  column: Column<TableRow, unknown>,
-  isSortable?: boolean,
-): CSSProperties => {
+const getCommonPinningStyles = (column: Column<TableRow, unknown>): CSSProperties => {
   const isPinned = column.getIsPinned()
   const offset =
-    column.id !== ROW_SELECTION_COLUMN_ID && column.id !== DRAG_HANDLE_COLUMN_ID && isSortable
-      ? -30
-      : 0
+    column.id !== ROW_SELECTION_COLUMN_ID && column.id !== DRAG_HANDLE_COLUMN_ID ? -30 : 0
 
   return {
     left: isPinned === 'left' ? `${column.getStart('left') + offset}px` : undefined, // Removed offset
@@ -437,7 +432,7 @@ export const ProjectTreeTable = ({
                         if (!cell) return null
 
                         const cellStyleBase: CSSProperties = {
-                          ...getCommonPinningStyles(cell.column, true),
+                          ...getCommonPinningStyles(cell.column),
                           width: `calc(var(--col-${cell.column.id}-size) * 1px)`,
                           display: 'flex',
                           alignItems: 'center',
@@ -613,7 +608,7 @@ const TableHeadCell = ({
       })}
       key={header.id}
       style={{
-        ...getCommonPinningStyles(column, sortableRows),
+        ...getCommonPinningStyles(column),
         width: `calc(var(--header-${header?.id}-size) * 1px)`,
       }}
     >
@@ -868,7 +863,7 @@ const TableBodyRow = ({
             <Styled.TableCell
               key={cell.id}
               style={{
-                ...getCommonPinningStyles(cell.column, sortableRows),
+                ...getCommonPinningStyles(cell.column),
                 width: `calc(var(--col-${cell.column.id}-size) * 1px)`,
                 display: 'flex',
                 alignItems: 'center',
@@ -973,7 +968,7 @@ const TableCell = ({
         ...borderClasses,
       )}
       style={{
-        ...getCommonPinningStyles(cell.column, sortableRows),
+        ...getCommonPinningStyles(cell.column),
         width: `calc(var(--col-${cell.column.id}-size) * 1px)`,
         height: 40,
       }}

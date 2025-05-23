@@ -15,7 +15,6 @@ const Inner = styled.div`
   width: 100%;
   aspect-ratio: 1.77;
 
-  background-color: var(--md-sys-color-surface-container-lowest);
   border-radius: 2px;
   overflow: hidden;
 `
@@ -59,10 +58,7 @@ const ThumbnailWidgetWrapper: FC<ThumbnailWidgetProps> = ({
 
   return (
     <Wrapper className="thumbnail-widget" key={url}>
-      <Inner {...props}>
-        {icon && <StyledIcon icon={icon} />}
-        {valid && <Image src={url} />}
-      </Inner>
+      <Inner {...props}>{valid && <Image src={url} />}</Inner>
     </Wrapper>
   )
 }

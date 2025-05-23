@@ -58,11 +58,35 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
 }) => {
   const columnsConfig = config as ColumnsConfig
   const {
-    columnOrder = [],
-    columnPinning = {},
+    columnOrder: columnOrderInit = [],
+    columnPinning: columnPinningInit = {},
     columnVisibility = {},
     columnSizing: columnsSizingExternal = {},
   } = columnsConfig
+
+  const columnOrder = [...columnOrderInit]
+  const columnPinning = { ...columnPinningInit }
+  const defaultOrder = ['thumbnail', 'name', 'subType', 'status', 'tags']
+  // for each default column, if it is not in the columnOrder, find the index of the column before it, if none, add to beginning
+  defaultOrder.forEach((col, i) => {
+    if (!columnOrder.includes(col)) {
+      const defaultBefore = defaultOrder[i - 1]
+      const columnAfter = defaultOrder[i + 1]
+      if (!defaultBefore || !columnOrder.includes(defaultBefore)) {
+        // add to beginning
+        columnOrder.unshift(col)
+      } else {
+        // find the index of that column in the columnOrder
+        const index = columnOrder.indexOf(defaultBefore)
+        // add the item after that column
+        columnOrder.splice(index + 1, 0, col)
+      }
+      if (columnAfter && columnPinning?.left && columnPinning?.left.includes(columnAfter)) {
+        // pin the column
+        columnPinning.left = [col, ...(columnPinning?.left || [])]
+      }
+    }
+  })
 
   // DIRECT STATE UPDATES - no side effects
   const setColumnVisibility = (visibility: VisibilityState) => {
