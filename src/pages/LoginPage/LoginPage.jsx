@@ -231,7 +231,9 @@ const LoginPage = ({ isFirstTime = false }) => {
             }
           </Styled.Methods>
           {info?.passwordRecoveryAvailable && showPasswordLogin && (
-            <a href="/passwordReset">Reset password</a>
+            <a href="/passwordReset" style={{ margin: '8px 0' }}>
+              Reset password
+            </a>
           )}
           {!showAllProviders && (
             <Button style={{ width: '100%' }} variant="text" onClick={() => setShownProviders([])}>
