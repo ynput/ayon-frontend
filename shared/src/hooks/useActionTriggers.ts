@@ -1,6 +1,6 @@
 import { useDispatch } from 'react-redux'
 import customProtocolCheck from 'custom-protocol-check'
-import { foldersApi } from '@shared/api/generated'
+import { api } from '@shared/api'
 
 
 export type ActionTriggersProps = {
@@ -19,7 +19,7 @@ interface ActionPayload {
   new_tab?: boolean // opens a new tab
   extra_download?: string // triggers a file download from a URL
   extra_clipboard?: string // copies string content to clipboard
-  extra_reload?: boolean // hierarchy changed, refresh data
+  extra_reload?: string[] // list of tags to invalidate
   [key: string]: any
 }
 
@@ -113,10 +113,15 @@ export const useActionTriggers = ({
       }
     }
 
-    if (payload.extra_reload === true) {
-      dispatch(foldersApi.util.invalidateTags(['hierarchy']))
-    }
+    if ('extra_reload' in payload) {
+      if (!Array.isArray(payload.extra_reload)) {
+        throw new Error('Invalid payload: extra_reload')
+      }
 
+      if (payload.extra_reload.length) {
+        dispatch(api.util.invalidateTags(payload.extra_reload))
+      }
+    }
 
   }
 
