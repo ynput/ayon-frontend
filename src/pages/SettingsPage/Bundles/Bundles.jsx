@@ -109,11 +109,10 @@ const Bundles = () => {
       if (foundDuplicate) {
         handleDuplicateBundle(foundDuplicate.name)
       }
+      // delete
+      searchParams.delete('duplicate')
+      setSearchParams(searchParams)
     }
-
-    // delete
-    searchParams.delete('duplicate')
-    setSearchParams(searchParams)
   }, [searchParams, isLoading, bundleList])
 
   useEffect(() => {
