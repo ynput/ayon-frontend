@@ -179,8 +179,12 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
 
   // DELETE LIST
   const [deleteListMutation] = useDeleteEntityListMutation()
-  const onDeleteList = async (listId: string) =>
+  const onDeleteList = async (listId: string) => {
+    // delete list in the backend
     await deleteListMutation({ listId, projectName }).unwrap()
+    // set the row selection to empty
+    setRowSelection({})
+  }
   const { deleteLists } = useDeleteList({ onDeleteList })
 
   const value = useMemo(() => {
