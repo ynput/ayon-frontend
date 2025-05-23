@@ -18,11 +18,13 @@ import { useFiltersWithHierarchy } from '@components/SearchFilter/hooks'
 import { FilterFieldType } from '@hooks/useBuildFilterOptions'
 import ProjectOverviewDetailsPanel from './containers/ProjectOverviewDetailsPanel'
 import NewEntity from '@components/NewEntity/NewEntity'
+import { Actions } from '@shared/containers/Actions/Actions'
 import { useProjectTableContext, useSelectedRowsContext } from '@shared/containers/ProjectTreeTable'
 import { ProjectTableSettings, CustomizeButton } from '@shared/components'
 import { useSettingsPanel } from '@shared/context'
 import ReloadButton from './components/ReloadButton'
 import OverviewActions from './components/OverviewActions'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 
 const searchFilterTypes: FilterFieldType[] = [
   'attributes',
@@ -34,6 +36,8 @@ const searchFilterTypes: FilterFieldType[] = [
 
 const ProjectOverviewPage: FC = () => {
   const { selectedRows } = useSelectedRowsContext()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const navigate = useNavigate()
 
   const {
     projectName,
@@ -110,6 +114,15 @@ const ProjectOverviewPage: FC = () => {
                 value={showHierarchy}
                 onClick={() => updateShowHierarchy(!showHierarchy)}
                 label="Show hierarchy"
+              />
+              <Actions
+                entities={[]}
+                entityType={undefined}
+                isLoadingEntity={false}
+                projectActionsProjectName={projectName}
+                onNavigate={navigate}
+                onSetSearchParams={setSearchParams}
+                searchParams={searchParams}
               />
               <CustomizeButton />
             </Toolbar>
