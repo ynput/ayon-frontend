@@ -63,7 +63,10 @@ export const Feed = ({ isMultiProjects, readOnly, statuses = [] }: FeedProps) =>
   )
 
   useEffect(() => {
-    if (!activitiesWithMergedAnnotations.length) return
+    if (!activitiesWithMergedAnnotations.length) {
+      setFeedAnnotations([])
+    }
+
     const annotations = activitiesWithMergedAnnotations
       .map((activity) => activity.activityData?.annotations)
       .filter(Boolean)
