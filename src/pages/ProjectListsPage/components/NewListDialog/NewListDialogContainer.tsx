@@ -35,6 +35,7 @@ const NewListDialogContainer: FC<NewListDialogContainerProps> = ({}) => {
       labels={{
         listLabel: isReview ? 'Review session name' : 'List label',
         createButton: isReview ? 'Create review session' : 'Create list',
+        cancelButton: 'Cancel',
       }}
       hidden={isReview ? ['entityType'] : []}
     />
