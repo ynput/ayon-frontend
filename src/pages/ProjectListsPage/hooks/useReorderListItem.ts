@@ -8,6 +8,7 @@ type UseReorderListItemProps = {
   projectName: string
   listId?: string
   listItems: EntityListItem[]
+  onReorderFinished?: () => void
 }
 
 export type ListItem = { id: string; entityId: string }
@@ -22,6 +23,7 @@ const useReorderListItem = ({
   projectName,
   listId,
   listItems,
+  onReorderFinished,
 }: UseReorderListItemProps): UseReorderListItemReturn => {
   const [updateEntityListItems] = useUpdateEntityListItemsMutation()
 
@@ -50,6 +52,9 @@ const useReorderListItem = ({
               mode: 'merge',
             },
           }).unwrap()
+
+          // any extra callbacks after the reorder
+          onReorderFinished?.()
         } catch (error: any) {
           console.error('Error sorting: ', error)
           toast.error('Error sorting: ' + error.data.detail)

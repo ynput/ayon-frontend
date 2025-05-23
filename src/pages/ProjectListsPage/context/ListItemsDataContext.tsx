@@ -182,7 +182,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
       attribFields.filter((field) =>
         [selectedList?.entityType].some((s: any) => field.scope?.includes(s)),
       ),
-    [attribFields],
+    [attribFields, selectedList?.entityType],
   )
 
   // convert listItemsData into tableData
@@ -224,11 +224,17 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     listItemsMap,
   })
 
+  const handleReorderFinished = () => {
+    // remove any sorting
+    setColumnSorting([])
+  }
+
   // reorder lists item
   const { reorderListItem } = useReorderListItem({
     projectName: projectName,
     listId: selectedListId,
     listItems: listItemsData,
+    onReorderFinished: handleReorderFinished,
   })
 
   // lists data

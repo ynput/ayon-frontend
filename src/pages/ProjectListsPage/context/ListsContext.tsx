@@ -118,19 +118,13 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
       Object.entries(rowSelection)
         .filter(([_k, v]) => v)
         .map(([k]) => k),
-    [rowSelection],
+    [JSON.stringify(rowSelection)],
   )
 
-  const selectedLists = useMemo(() => {
-    // for each selected row, get the list from the map
-    // and check it is a list that can be fetched (not a folder)
-    return selectedRows.map((id) => listsMap.get(id)).filter((list) => !!list)
-  }, [selectedRows])
+  const selectedLists = selectedRows.map((id) => listsMap.get(id)).filter((list) => !!list)
 
   // we can only ever fetch one list at a time
-  const selectedList = useMemo(() => {
-    return selectedLists[0]
-  }, [selectedRows, listsMap])
+  const selectedList = selectedLists[0]
 
   // dialogs
   const [listsFiltersOpen, setListsFiltersOpen] = useState(false)
