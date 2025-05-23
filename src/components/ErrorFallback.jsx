@@ -17,6 +17,14 @@ const StyledPanel = styled(Panel)`
 
 const ErrorFallback = ({ error }) => {
   if (error?.toString()?.includes('TypeError: Failed to fetch dynamically imported module:')) {
+    React.useEffect(() => {
+      const timer = setTimeout(() => {
+        window.location.reload(true)
+      }, 2000)
+
+      return () => clearTimeout(timer) // Cleanup the timer if the component unmounts
+    }, [])
+
     return (
       <StyledPanel>
         <h1>AYON has been updated. Please reload for changes.</h1>
