@@ -185,7 +185,7 @@ export const SimpleFormDialog = ({
     <div style={{ display: 'flex', flexDirection: 'row', gap: 8 }}>
       <Spacer />
       {cancelLabel && (
-        <Button onClick={() => onSubmit(formData)} label={cancelLabel} icon={cancelIcon} />
+        <Button onClick={() => onClose()} label={cancelLabel} icon={cancelIcon} />
       )}
       {submitLabel && (
         <Button
