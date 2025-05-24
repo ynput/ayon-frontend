@@ -340,13 +340,6 @@ const Hierarchy = (props) => {
         shortcut: 'Spacebar',
         command: () => openInViewer(selected[0], false),
       },
-      {
-        label: 'Upload version',
-        icon: 'upload',
-        command: () => props.onOpenVersionUpload?.({ folderId: selected[0] }),
-        disabled: selected.length !== 1,
-        hidden: !props.onOpenVersionUpload,
-      },
       buildAddToListMenu([
         ...foldersList.data.map((list) => buildListMenuItem(list, selectedEntities)),
         newListMenuItem('folder', selectedEntities),

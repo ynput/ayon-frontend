@@ -5,23 +5,12 @@ import TaskList from '@containers/taskList'
 
 import Products from './Products/Products'
 import BrowserDetailsPanel from './BrowserDetailsPanel'
-import {
-  useVersionUploadContext,
-  VersionUploadProvider,
-} from '@containers/VersionUploader/context/VersionUploadContext'
-import { FC } from 'react'
-import UploadVersionDialog from '@containers/VersionUploader/components/UploadVersionDialog'
 
 const detailsMinWidth = 533
 const detailsMaxWidth = '40vw'
 const detailsMaxMaxWidth = 700
 
-type BrowserPageProps = {
-  projectName: string
-}
-
-const BrowserPage: FC<BrowserPageProps> = () => {
-  const { onOpenVersionUpload } = useVersionUploadContext()
+const BrowserPage = () => {
   return (
     <main style={{ overflow: 'hidden' }}>
       <Splitter
@@ -31,7 +20,7 @@ const BrowserPage: FC<BrowserPageProps> = () => {
       >
         <SplitterPanel size={18} style={{ minWidth: 250, maxWidth: 600 }}>
           <Section wrap>
-            <Hierarchy onOpenVersionUpload={onOpenVersionUpload} />
+            <Hierarchy />
             <TaskList style={{ maxHeight: 300 }} />
           </Section>
         </SplitterPanel>
@@ -56,13 +45,4 @@ const BrowserPage: FC<BrowserPageProps> = () => {
   )
 }
 
-const BrowserPageWithProviders: FC<BrowserPageProps> = (props) => {
-  return (
-    <VersionUploadProvider projectName={props.projectName}>
-      <BrowserPage {...props} />
-      <UploadVersionDialog />
-    </VersionUploadProvider>
-  )
-}
-
-export default BrowserPageWithProviders
+export default BrowserPage

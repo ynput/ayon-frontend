@@ -201,7 +201,7 @@ const ProjectPage = () => {
       return <TasksProgressPage />
     }
     if (module === 'browser') {
-      return <BrowserPage projectName={projectName} />
+      return <BrowserPage />
     }
     if (module === 'lists') {
       return <ProjectListsPage projectName={projectName} entityListTypes={['generic']} />

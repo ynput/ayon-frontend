@@ -261,22 +261,34 @@ export type FolderAttribType = {
   clipOut?: Maybe<Scalars['Int']['output']>;
   /** Textual description of the entity */
   description?: Maybe<Scalars['String']['output']>;
+  distances?: Maybe<Array<Scalars['String']['output']>>;
   /** Deadline date and time */
   endDate?: Maybe<Scalars['DateTime']['output']>;
+  folderOnly?: Maybe<Scalars['String']['output']>;
   /** Frame rate */
   fps?: Maybe<Scalars['Float']['output']>;
   frameEnd?: Maybe<Scalars['Int']['output']>;
   frameStart?: Maybe<Scalars['Int']['output']>;
+  ftrackId?: Maybe<Scalars['String']['output']>;
+  ftrackPath?: Maybe<Scalars['String']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
+  /** Is this some really hard work? */
+  hard?: Maybe<Scalars['Boolean']['output']>;
+  nickname?: Maybe<Scalars['String']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
   priority?: Maybe<Scalars['String']['output']>;
   /** Vertical resolution */
   resolutionHeight?: Maybe<Scalars['Int']['output']>;
   /** Horizontal resolution */
   resolutionWidth?: Maybe<Scalars['Int']['output']>;
+  /** The Shotgrid ID of this entity. */
+  shotgridId?: Maybe<Scalars['String']['output']>;
+  /** The Shotgrid Type of this entity. */
+  shotgridType?: Maybe<Scalars['String']['output']>;
   /** Date and time when the project or task or asset was started */
   startDate?: Maybe<Scalars['DateTime']['output']>;
+  tools?: Maybe<Array<Scalars['String']['output']>>;
 };
 
 export type FolderEdge = {
@@ -484,6 +496,7 @@ export type ProductAttribType = {
   /** Textual description of the entity */
   description?: Maybe<Scalars['String']['output']>;
   productGroup?: Maybe<Scalars['String']['output']>;
+  productOnly?: Maybe<Scalars['String']['output']>;
 };
 
 export type ProductEdge = {
@@ -579,6 +592,7 @@ export type ProductsConnection = {
 
 export type ProjectAttribType = {
   __typename?: 'ProjectAttribType';
+  applications?: Maybe<Array<Scalars['String']['output']>>;
   clipIn?: Maybe<Scalars['Int']['output']>;
   clipOut?: Maybe<Scalars['Int']['output']>;
   /** Textual description of the entity */
@@ -589,6 +603,8 @@ export type ProjectAttribType = {
   fps?: Maybe<Scalars['Float']['output']>;
   frameEnd?: Maybe<Scalars['Int']['output']>;
   frameStart?: Maybe<Scalars['Int']['output']>;
+  ftrackId?: Maybe<Scalars['String']['output']>;
+  ftrackPath?: Maybe<Scalars['String']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
@@ -597,8 +613,15 @@ export type ProjectAttribType = {
   resolutionHeight?: Maybe<Scalars['Int']['output']>;
   /** Horizontal resolution */
   resolutionWidth?: Maybe<Scalars['Int']['output']>;
+  /** The Shotgrid ID of this entity. */
+  shotgridId?: Maybe<Scalars['String']['output']>;
+  /** Push changes done to this project to ShotGrid. Requires the transmitter service. */
+  shotgridPush?: Maybe<Scalars['Boolean']['output']>;
+  /** The Shotgrid Type of this entity. */
+  shotgridType?: Maybe<Scalars['String']['output']>;
   /** Date and time when the project or task or asset was started */
   startDate?: Maybe<Scalars['DateTime']['output']>;
+  tools?: Maybe<Array<Scalars['String']['output']>>;
 };
 
 export type ProjectBundleType = {
@@ -1048,22 +1071,35 @@ export type TaskAttribType = {
   clipOut?: Maybe<Scalars['Int']['output']>;
   /** Textual description of the entity */
   description?: Maybe<Scalars['String']['output']>;
+  distances?: Maybe<Array<Scalars['String']['output']>>;
   /** Deadline date and time */
   endDate?: Maybe<Scalars['DateTime']['output']>;
   /** Frame rate */
   fps?: Maybe<Scalars['Float']['output']>;
   frameEnd?: Maybe<Scalars['Int']['output']>;
   frameStart?: Maybe<Scalars['Int']['output']>;
+  ftrackId?: Maybe<Scalars['String']['output']>;
+  ftrackPath?: Maybe<Scalars['String']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
+  /** Is this some really hard work? */
+  hard?: Maybe<Scalars['Boolean']['output']>;
+  jiraCurrentPhase?: Maybe<Scalars['String']['output']>;
+  nickname?: Maybe<Scalars['String']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
   priority?: Maybe<Scalars['String']['output']>;
   /** Vertical resolution */
   resolutionHeight?: Maybe<Scalars['Int']['output']>;
   /** Horizontal resolution */
   resolutionWidth?: Maybe<Scalars['Int']['output']>;
+  /** The Shotgrid ID of this entity. */
+  shotgridId?: Maybe<Scalars['String']['output']>;
+  /** The Shotgrid Type of this entity. */
+  shotgridType?: Maybe<Scalars['String']['output']>;
   /** Date and time when the project or task or asset was started */
   startDate?: Maybe<Scalars['DateTime']['output']>;
+  taskOnly?: Maybe<Scalars['String']['output']>;
+  tools?: Maybe<Array<Scalars['String']['output']>>;
 };
 
 export type TaskEdge = {
@@ -1188,7 +1224,6 @@ export type UserAttribType = {
   avatarUrl?: Maybe<Scalars['String']['output']>;
   developerMode?: Maybe<Scalars['Boolean']['output']>;
   email?: Maybe<Scalars['String']['output']>;
-  freelancer?: Maybe<Scalars['Boolean']['output']>;
   fullName?: Maybe<Scalars['String']['output']>;
 };
 
@@ -1246,6 +1281,7 @@ export type VersionAttribType = {
   fps?: Maybe<Scalars['Float']['output']>;
   frameEnd?: Maybe<Scalars['Int']['output']>;
   frameStart?: Maybe<Scalars['Int']['output']>;
+  ftrackId?: Maybe<Scalars['String']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
   intent?: Maybe<Scalars['String']['output']>;
@@ -1257,6 +1293,7 @@ export type VersionAttribType = {
   resolutionWidth?: Maybe<Scalars['Int']['output']>;
   site?: Maybe<Scalars['String']['output']>;
   source?: Maybe<Scalars['String']['output']>;
+  versionOnly?: Maybe<Scalars['String']['output']>;
 };
 
 export type VersionEdge = {
@@ -1676,14 +1713,6 @@ export type GetTasksProgressQueryVariables = Exact<{
 export type GetTasksProgressQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, tasks: { __typename?: 'TasksConnection', edges: Array<{ __typename?: 'TaskEdge', node: { __typename?: 'TaskNode', projectName: string, id: string, name: string, label?: string | null, taskType: string, status: string, assignees: Array<string>, updatedAt: any, active: boolean, hasReviewables: boolean, tags: Array<string>, attrib: { __typename?: 'TaskAttribType', priority?: string | null, endDate?: any | null, resolutionHeight?: number | null, resolutionWidth?: number | null, fps?: number | null }, folder: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, folderType: string, parents: Array<string>, status: string, updatedAt: any, parent?: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, parents: Array<string> } | null } } }> } } };
 
 export type ProgressTaskFragmentFragment = { __typename?: 'TaskNode', projectName: string, id: string, name: string, label?: string | null, taskType: string, status: string, assignees: Array<string>, updatedAt: any, active: boolean, hasReviewables: boolean, tags: Array<string>, attrib: { __typename?: 'TaskAttribType', priority?: string | null, endDate?: any | null, resolutionHeight?: number | null, resolutionWidth?: number | null, fps?: number | null }, folder: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, folderType: string, parents: Array<string>, status: string, updatedAt: any, parent?: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, parents: Array<string> } | null } };
-
-export type GetLatestProductVersionQueryVariables = Exact<{
-  projectName: Scalars['String']['input'];
-  productId: Scalars['String']['input'];
-}>;
-
-
-export type GetLatestProductVersionQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', versions: { __typename?: 'VersionsConnection', edges: Array<{ __typename?: 'VersionEdge', node: { __typename?: 'VersionNode', id: string, name: string, version: number, productId: string, createdAt: any, updatedAt: any, status: string, active: boolean } }> } } };
 
 export const ActivityFragmentFragmentDoc = `
     fragment ActivityFragment on ActivityNode {
@@ -2487,26 +2516,6 @@ export const GetTasksProgressDocument = `
   }
 }
     ${ProgressTaskFragmentFragmentDoc}`;
-export const GetLatestProductVersionDocument = `
-    query GetLatestProductVersion($projectName: String!, $productId: String!) {
-  project(name: $projectName) {
-    versions(latestOnly: true, productIds: [$productId]) {
-      edges {
-        node {
-          id
-          name
-          version
-          productId
-          createdAt
-          updatedAt
-          status
-          active
-        }
-      }
-    }
-  }
-}
-    `;
 
 const injectedRtkApi = api.injectEndpoints({
   endpoints: (build) => ({
@@ -2590,9 +2599,6 @@ const injectedRtkApi = api.injectEndpoints({
     }),
     GetTasksProgress: build.query<GetTasksProgressQuery, GetTasksProgressQueryVariables>({
       query: (variables) => ({ document: GetTasksProgressDocument, variables })
-    }),
-    GetLatestProductVersion: build.query<GetLatestProductVersionQuery, GetLatestProductVersionQueryVariables>({
-      query: (variables) => ({ document: GetLatestProductVersionDocument, variables })
     }),
   }),
 });
