@@ -190,9 +190,13 @@ export const getProductApi = api.injectEndpoints({
       }),
       transformErrorResponse: (error) => error?.data?.errors?.[0]?.message,
       transformResponse: (response) => parseProductData(response.data),
-      providesTags: (result) =>
+      providesTags: (result, _e, { folderIds }) =>
         result
-          ? [...result.map(({ id }) => ({ type: 'product', id })), { type: 'product', id: 'LIST' }]
+          ? [
+              ...result.map(({ id }) => ({ type: 'product', id })),
+              { type: 'product', id: 'LIST' },
+              ...folderIds.map((id) => ({ type: 'product', id })),
+            ]
           : [{ type: 'product', id: 'LIST' }],
     }),
     getProductsVersions: build.query({
@@ -205,10 +209,11 @@ export const getProductApi = api.injectEndpoints({
         },
       }),
       transformResponse: (response) => parseVersionsData(response.data) || [],
-      providesTags: (result) =>
+      providesTags: (result, _e, { ids }) =>
         result
           ? [
               ...result.map(({ versionId }) => ({ type: 'version', id: versionId })), // all version tags with id
+              ...ids.map((id) => ({ type: 'product', id })), // all version tags with id
               { type: 'version', id: 'LIST' }, // tag for all versions
             ]
           : [{ type: 'version', id: 'LIST' }],
