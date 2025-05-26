@@ -3,6 +3,10 @@ import { usersApi } from '@shared/api/generated'
 
 const updateUserApi = usersApi.enhanceEndpoints({
   endpoints: {
+    deleteUser: {
+      transformErrorResponse: (res) => res.data,
+      invalidatesTags: () => [{ type: 'user', id: 'LIST' }],
+    },
     setFrontendPreferences: {
       // @ts-expect-error - disableInvalidations is not in the api
       invalidatesTags: (_result, _error, { userName, disableInvalidations }) =>
@@ -76,14 +80,6 @@ const updateUser = updateUserApi.injectEndpoints({
       transformErrorResponse: (res) => res.data,
       invalidatesTags: [{ type: 'user', id: 'LIST' }],
     }),
-    deleteUser: build.mutation({
-      query: ({ user }) => ({
-        url: `/api/users/${user}`,
-        method: 'DELETE',
-      }),
-      transformErrorResponse: (res) => res.data,
-      invalidatesTags: () => [{ type: 'user', id: 'LIST' }],
-    }),
     updateUserAPIKey: build.mutation({
       query: ({ name, apiKey }) => ({
         url: `/api/users/${name}/password`,
@@ -140,7 +136,7 @@ export const {
   useUpdateUserNameMutation,
   useUpdateUserPasswordMutation,
   useAddUserMutation,
-  useDeleteUserMutation, // move to enhanced
+  useDeleteUserMutation,
   useUpdateUserAPIKeyMutation,
   useInvalidateUserSessionMutation,
   useSetFrontendPreferencesMutation,

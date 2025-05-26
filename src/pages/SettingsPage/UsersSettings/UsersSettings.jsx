@@ -128,15 +128,16 @@ const UsersSettings = () => {
     let i = 0
     for (const user of users) {
       try {
-        await deleteUser({ user }).unwrap()
+        await deleteUser({ userName: user }).unwrap()
         toast.update(toastId.current, {
           render: `Deleted user: ${user}`,
           type: toast.TYPE.SUCCESS,
         })
         setSelectedUsers([])
         i += 1
-      } catch {
-        toast.error(`Unable to delete user: ${user}`)
+      } catch (error) {
+        console.error('Error deleting user:', error)
+        toast.error(`Unable to delete user: ${error.detail}`)
       }
     }
     setShowDeleteUser(false)
