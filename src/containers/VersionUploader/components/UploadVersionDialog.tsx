@@ -1,9 +1,24 @@
 import { Dialog, Button, Spacer, SaveButton } from '@ynput/ayon-react-components'
-import { FC, useEffect, useState } from 'react'
+import { FC } from 'react'
 import { useVersionUploadContext } from '../context/VersionUploadContext'
-import { productTypes } from '@shared/util'
 import { UploadVersionForm } from './UploadVersionForm'
 import styled from 'styled-components'
+
+const toVersionString = (number: number) => {
+  // Convert the number to a string
+  let numStr = String(number)
+
+  // Calculate how many zeros are needed for padding
+  // If the number of digits is less than 3, we need 3 - numStr.length zeros.
+  // Otherwise, no padding is needed.
+  let paddingNeeded = Math.max(0, 3 - numStr.length)
+
+  // Create the padding string
+  let padding = '0'.repeat(paddingNeeded)
+
+  // Combine to form the version string
+  return `v${padding}${numStr}`
+}
 
 const ErrorMessage = styled.span`
   background-color: var(--md-sys-color-error-container);
@@ -12,95 +27,23 @@ const ErrorMessage = styled.span`
   border-radius: var(--border-radius-m);
 `
 
-// mix of create version and product model
-export type FormData = {
-  version: number // 10
-  name: string // product name
-  productType: string // product type
-}
-
-const defaultFormData: FormData = {
-  version: 1,
-  name: productTypes.render.name,
-  productType: 'render',
-}
-
 interface UploadVersionDialogProps {}
 
 const UploadVersionDialog: FC<UploadVersionDialogProps> = () => {
   const {
     isOpen,
     onCloseVersionUpload,
-    version,
     productId,
-    onUploadVersion,
     projectName,
-    pendingFiles,
+    form,
+    version,
+    handleFormChange,
+    handleFormSubmit,
+    isSubmitting,
+    error,
+    createdProductId,
+    createdVersionId,
   } = useVersionUploadContext()
-
-  const [form, setForm] = useState<FormData>(defaultFormData)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError] = useState<string>('')
-  const [createdProductId, setCreatedProductId] = useState<string | null>(null)
-  const [createdVersionId, setCreatedVersionId] = useState<string | null>(null)
-
-  const closeDialog = () => {
-    setForm(defaultFormData)
-    setCreatedProductId(null)
-    setCreatedVersionId(null)
-    setError('')
-    onCloseVersionUpload()
-  }
-
-  useEffect(() => {
-    if (!isOpen) return
-
-    if (version) {
-      setForm({
-        ...defaultFormData,
-        version: version.version + 1,
-      })
-    } else {
-      setForm(defaultFormData)
-    }
-
-    return () => {
-      setForm(defaultFormData)
-    }
-  }, [isOpen, version])
-
-  const handleFormChange = (key: keyof FormData, value: string | number) => {
-    setForm((prev) => ({
-      ...prev,
-      [key]: value,
-    }))
-  }
-
-  const handleFormSubmit = async (formData: FormData) => {
-    // Handle form submission here
-    try {
-      setIsSubmitting(true)
-      const response = await onUploadVersion(formData)
-
-      // Extract productId and versionId from response
-      if (response?.productId) {
-        setCreatedProductId(response.productId)
-      }
-      if (response?.versionId) {
-        setCreatedVersionId(response.versionId)
-      }
-
-      if (pendingFiles.length < 1) {
-        setIsSubmitting(false)
-        closeDialog()
-      }
-    } catch (error: any) {
-      console.log('ERRRRRROR', error)
-      setError(error)
-      setIsSubmitting(false)
-    } finally {
-    }
-  }
 
   // Use existing productId if available, otherwise use created one
   const currentProductId = productId || createdProductId
@@ -109,11 +52,11 @@ const UploadVersionDialog: FC<UploadVersionDialogProps> = () => {
   const footer = (
     <div style={{ display: 'flex', flexDirection: 'row', gap: 8 }}>
       <Spacer />
-      <Button onClick={closeDialog} label="Cancel" variant="text" />
+      <Button onClick={onCloseVersionUpload} label="Cancel" variant="text" />
       <SaveButton
         type="submit"
         form="upload-version-form"
-        label="Upload Version"
+        label={`Create ${toVersionString(form.version)}`}
         icon={'upload'}
         active
         saving={isSubmitting}
@@ -124,14 +67,15 @@ const UploadVersionDialog: FC<UploadVersionDialogProps> = () => {
   return (
     <Dialog
       isOpen={isOpen}
-      onClose={closeDialog}
-      header="Upload and create new version"
+      onClose={onCloseVersionUpload}
+      header="Create new version"
       size="md"
       footer={footer}
       style={{ width: 600, maxHeight: '80vh' }}
     >
       <UploadVersionForm
         formData={form}
+        minVersion={version?.version}
         onChange={handleFormChange}
         onSubmit={handleFormSubmit}
         hidden={productId ? ['name', 'productType'] : []}

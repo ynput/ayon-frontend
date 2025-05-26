@@ -67,6 +67,7 @@ interface UploadVersionFormProps {
   onSubmit: (formData: FormData) => void
   hidden?: (keyof FormData)[]
   projectName: string
+  minVersion?: number
   versionId?: string | null
   productId?: string | null
 }
@@ -77,6 +78,7 @@ export const UploadVersionForm: FC<UploadVersionFormProps> = ({
   onSubmit,
   hidden = [],
   projectName,
+  minVersion = 1,
   versionId,
   productId,
 }) => {
@@ -84,15 +86,9 @@ export const UploadVersionForm: FC<UploadVersionFormProps> = ({
   const dropdownRef = useRef<DropdownRef>(null)
   const hasOpenedRef = useRef<boolean>(false)
   const formRef = useRef<HTMLFormElement>(null)
-  const hasSetSuggestedVersionRef = useRef<boolean>(false)
   const dispatch = useAppDispatch()
-  const {
-    pendingFiles,
-    setPendingFiles,
-    onCloseVersionUpload,
-    extractAndSetVersionFromFiles,
-    suggestedVersion,
-  } = useVersionUploadContext()
+  const { pendingFiles, setPendingFiles, onCloseVersionUpload, extractAndSetVersionFromFiles } =
+    useVersionUploadContext()
 
   const productTypeOptions = Object.entries(productTypes).map(([key, value]) => ({
     value: key,
@@ -131,21 +127,6 @@ export const UploadVersionForm: FC<UploadVersionFormProps> = ({
     // Update the ref to the current product type
     previousProductTypeRef.current = formData.productType
   }, [formData.productType, formData.name, onChange])
-
-  // Update version when suggestedVersion changes (only once)
-  useEffect(() => {
-    if (suggestedVersion && !versionId && !hasSetSuggestedVersionRef.current) {
-      onChange('version', suggestedVersion)
-      hasSetSuggestedVersionRef.current = true
-    }
-  }, [suggestedVersion, versionId, onChange])
-
-  // Reset the flag when component unmounts or version changes
-  useEffect(() => {
-    return () => {
-      hasSetSuggestedVersionRef.current = false
-    }
-  }, [versionId])
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -244,7 +225,7 @@ export const UploadVersionForm: FC<UploadVersionFormProps> = ({
             <InputNumber
               value={formData.version}
               onChange={handleVersionChange}
-              min={1}
+              min={minVersion}
               step={1}
               aria-label="Version Number"
               autoFocus
