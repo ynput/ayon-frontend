@@ -74,7 +74,7 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
   const [createdProductId, setCreatedProductId] = useState<string | null>(null)
   const [createdVersionId, setCreatedVersionId] = useState<string | null>(null)
 
-  const { data: version } = useGetLatestProductVersionQuery(
+  const { currentData: version } = useGetLatestProductVersionQuery(
     {
       projectName,
       productId,
