@@ -13,6 +13,10 @@ export const ReviewablesList = styled.div`
     padding: 0 25%;
     padding-bottom: 30%;
   }
+
+  &.dragging {
+    opacity: 0;
+  }
 `
 
 export const Upload = styled.div`

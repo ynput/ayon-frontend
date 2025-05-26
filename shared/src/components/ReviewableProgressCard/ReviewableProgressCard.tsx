@@ -17,7 +17,7 @@ export interface ReviewableProgressCardProps
     Omit<HTMLProps<HTMLDivElement>, 'name' | 'children' | 'as' | 'ref'> {
   onRemove?: () => void
   tooltip?: string
-  type: 'upload' | 'processing' | 'unsupported' | 'queued'
+  type: 'upload' | 'processing' | 'unsupported' | 'queued' | 'waiting'
 }
 
 export const ReviewableProgressCard: FC<ReviewableProgressCardProps> = ({
@@ -54,6 +54,10 @@ export const ReviewableProgressCard: FC<ReviewableProgressCardProps> = ({
       message = 'Queued - waiting to be transcoded'
       icon = 'hourglass'
       break
+    case 'waiting':
+      message = 'Waiting for upload'
+      icon = 'schedule'
+      break
     default:
       break
   }
@@ -85,7 +89,7 @@ export const ReviewableProgressCard: FC<ReviewableProgressCardProps> = ({
       {tooltip && (
         <Icon icon="info" className="info" data-tooltip={tooltip} data-tooltip-as="markdown" />
       )}
-      {error && <Button icon="close" variant="danger" onClick={onRemove} />}
+      {(error || type === 'waiting') && <Button icon="close" variant="text" onClick={onRemove} />}
       <Styled.ProgressBar className="progress" style={{ right: `${100 - (progress ?? 0)}%` }} />
     </Styled.UploadCard>
   )

@@ -3,6 +3,14 @@ import { FC, useEffect, useState } from 'react'
 import { useVersionUploadContext } from '../context/VersionUploadContext'
 import { productTypes } from '@shared/util'
 import { UploadVersionForm } from './UploadVersionForm'
+import styled from 'styled-components'
+
+const ErrorMessage = styled.span`
+  background-color: var(--md-sys-color-error-container);
+  color: var(--md-sys-color-on-error-container);
+  padding: var(--padding-s);
+  border-radius: var(--border-radius-m);
+`
 
 // mix of create version and product model
 export type FormData = {
@@ -20,13 +28,29 @@ const defaultFormData: FormData = {
 interface UploadVersionDialogProps {}
 
 const UploadVersionDialog: FC<UploadVersionDialogProps> = () => {
-  const { isOpen, setIsOpen, version, productId, onUploadVersion } = useVersionUploadContext()
-
-  const closeDialog = () => setIsOpen(false)
+  const {
+    isOpen,
+    onCloseVersionUpload,
+    version,
+    productId,
+    onUploadVersion,
+    projectName,
+    pendingFiles,
+  } = useVersionUploadContext()
 
   const [form, setForm] = useState<FormData>(defaultFormData)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string>('')
+  const [createdProductId, setCreatedProductId] = useState<string | null>(null)
+  const [createdVersionId, setCreatedVersionId] = useState<string | null>(null)
+
+  const closeDialog = () => {
+    setForm(defaultFormData)
+    setCreatedProductId(null)
+    setCreatedVersionId(null)
+    setError('')
+    onCloseVersionUpload()
+  }
 
   useEffect(() => {
     if (!isOpen) return
@@ -56,15 +80,31 @@ const UploadVersionDialog: FC<UploadVersionDialogProps> = () => {
     // Handle form submission here
     try {
       setIsSubmitting(true)
-      await onUploadVersion(formData)
-      // Add your submission logic here
-      closeDialog()
+      const response = await onUploadVersion(formData)
+
+      // Extract productId and versionId from response
+      if (response?.productId) {
+        setCreatedProductId(response.productId)
+      }
+      if (response?.versionId) {
+        setCreatedVersionId(response.versionId)
+      }
+
+      if (pendingFiles.length < 1) {
+        setIsSubmitting(false)
+        closeDialog()
+      }
     } catch (error: any) {
+      console.log('ERRRRRROR', error)
       setError(error)
-    } finally {
       setIsSubmitting(false)
+    } finally {
     }
   }
+
+  // Use existing productId if available, otherwise use created one
+  const currentProductId = productId || createdProductId
+  const currentVersionId = createdVersionId
 
   const footer = (
     <div style={{ display: 'flex', flexDirection: 'row', gap: 8 }}>
@@ -88,14 +128,18 @@ const UploadVersionDialog: FC<UploadVersionDialogProps> = () => {
       header="Upload and create new version"
       size="md"
       footer={footer}
+      style={{ width: 600, maxHeight: '80vh' }}
     >
       <UploadVersionForm
         formData={form}
         onChange={handleFormChange}
         onSubmit={handleFormSubmit}
         hidden={productId ? ['name', 'productType'] : []}
+        projectName={projectName}
+        versionId={currentVersionId}
+        productId={currentProductId}
       />
-      {error && <div className="error-message">{error}</div>}
+      {error && <ErrorMessage className="error">{error}</ErrorMessage>}
     </Dialog>
   )
 }

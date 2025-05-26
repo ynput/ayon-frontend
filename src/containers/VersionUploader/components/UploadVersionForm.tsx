@@ -3,6 +3,9 @@ import styled from 'styled-components'
 import { FormLayout, FormRow, InputText, InputNumber, Dropdown } from '@ynput/ayon-react-components'
 import { productTypes } from '@shared/util'
 import type { DropdownRef } from '@ynput/ayon-react-components'
+import { ReviewableUpload } from '@shared/components'
+import { useAppDispatch } from '@state/store'
+import { useVersionUploadContext } from '../context/VersionUploadContext'
 
 const StyledForm = styled.form`
   display: flex;
@@ -47,6 +50,11 @@ const InlineButton = styled.button`
   }
 `
 
+const StyledUpload = styled.div`
+  position: relative;
+  min-height: 80px;
+`
+
 type FormData = {
   version: number
   name: string
@@ -58,6 +66,9 @@ interface UploadVersionFormProps {
   onChange: (key: keyof FormData, value: string | number) => void
   onSubmit: (formData: FormData) => void
   hidden?: (keyof FormData)[]
+  projectName: string
+  versionId?: string | null
+  productId?: string | null
 }
 
 export const UploadVersionForm: FC<UploadVersionFormProps> = ({
@@ -65,11 +76,23 @@ export const UploadVersionForm: FC<UploadVersionFormProps> = ({
   onChange,
   onSubmit,
   hidden = [],
+  projectName,
+  versionId,
+  productId,
 }) => {
   const previousProductTypeRef = useRef<string>(formData.productType)
   const dropdownRef = useRef<DropdownRef>(null)
   const hasOpenedRef = useRef<boolean>(false)
   const formRef = useRef<HTMLFormElement>(null)
+  const hasSetSuggestedVersionRef = useRef<boolean>(false)
+  const dispatch = useAppDispatch()
+  const {
+    pendingFiles,
+    setPendingFiles,
+    onCloseVersionUpload,
+    extractAndSetVersionFromFiles,
+    suggestedVersion,
+  } = useVersionUploadContext()
 
   const productTypeOptions = Object.entries(productTypes).map(([key, value]) => ({
     value: key,
@@ -108,6 +131,21 @@ export const UploadVersionForm: FC<UploadVersionFormProps> = ({
     // Update the ref to the current product type
     previousProductTypeRef.current = formData.productType
   }, [formData.productType, formData.name, onChange])
+
+  // Update version when suggestedVersion changes (only once)
+  useEffect(() => {
+    if (suggestedVersion && !versionId && !hasSetSuggestedVersionRef.current) {
+      onChange('version', suggestedVersion)
+      hasSetSuggestedVersionRef.current = true
+    }
+  }, [suggestedVersion, versionId, onChange])
+
+  // Reset the flag when component unmounts or version changes
+  useEffect(() => {
+    return () => {
+      hasSetSuggestedVersionRef.current = false
+    }
+  }, [versionId])
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -155,6 +193,9 @@ export const UploadVersionForm: FC<UploadVersionFormProps> = ({
     return formData.name && !formData.name.startsWith(currentProductTypeName)
   }
 
+  // Disable form fields if version has been created
+  const isFormSubmitted = Boolean(versionId)
+
   return (
     <StyledForm id="upload-version-form" ref={formRef} onSubmit={handleSubmit} noValidate>
       <StyledFormLayout>
@@ -169,6 +210,7 @@ export const UploadVersionForm: FC<UploadVersionFormProps> = ({
               multiSelect={false}
               aria-label="Product Type"
               search
+              disabled={isFormSubmitted}
             />
           </FormRow>
         )}
@@ -183,6 +225,7 @@ export const UploadVersionForm: FC<UploadVersionFormProps> = ({
                 minLength={1}
                 aria-label="Product Name"
                 aria-describedby={shouldShowRecommendation() ? 'name-recommendation' : undefined}
+                disabled={isFormSubmitted}
               />
               {shouldShowRecommendation() && (
                 <RecommendationNote id="name-recommendation">
@@ -205,10 +248,33 @@ export const UploadVersionForm: FC<UploadVersionFormProps> = ({
               step={1}
               aria-label="Version Number"
               autoFocus
+              disabled={isFormSubmitted}
             />
           </FormRow>
         )}
       </StyledFormLayout>
+
+      <FormRow label="Reviewable files" />
+      <StyledUpload>
+        <ReviewableUpload
+          projectName={projectName}
+          versionId={versionId}
+          productId={productId}
+          dispatch={dispatch}
+          pendingFiles={pendingFiles}
+          setPendingFiles={setPendingFiles}
+          onUpload={onCloseVersionUpload}
+          onFilesAdded={extractAndSetVersionFromFiles}
+          pt={{
+            upload: {
+              style: { minHeight: 80 },
+            },
+            dropzone: {
+              style: { inset: 0 },
+            },
+          }}
+        />
+      </StyledUpload>
     </StyledForm>
   )
 }
