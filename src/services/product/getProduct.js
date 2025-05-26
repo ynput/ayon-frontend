@@ -209,7 +209,7 @@ export const getProductApi = api.injectEndpoints({
         },
       }),
       transformResponse: (response) => parseVersionsData(response.data) || [],
-      providesTags: (result, _e, { ids }) =>
+      providesTags: (result, _e, { ids = [] }) =>
         result
           ? [
               ...result.map(({ versionId }) => ({ type: 'version', id: versionId })), // all version tags with id
