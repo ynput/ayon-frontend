@@ -190,7 +190,7 @@ export const getProductApi = api.injectEndpoints({
       }),
       transformErrorResponse: (error) => error?.data?.errors?.[0]?.message,
       transformResponse: (response) => parseProductData(response.data),
-      providesTags: (result, _e, { folderIds }) =>
+      providesTags: (result, _e, { folderIds = [] }) =>
         result
           ? [
               ...result.map(({ id }) => ({ type: 'product', id })),
