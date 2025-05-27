@@ -46,6 +46,7 @@ export const Actions = ({
   const context: ActionContext | null = useMemo(() => {
     if (projectActionsProjectName){
       return {
+        entityType: 'project',
         projectName: projectActionsProjectName,
       }
     }
