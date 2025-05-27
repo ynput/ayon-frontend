@@ -34,6 +34,8 @@ const getDefaults = (fields: SimpleFormField[], values: SimpleFormValueDict) => 
       defaults[field.name] = 0.0
     } else if (field.type === 'text') {
       defaults[field.name] = ''
+    } else if (field.type === 'multiselect') {
+      defaults[field.name] = []
     }
   })
   return defaults
@@ -142,7 +144,22 @@ const FormField = ({ field, value, onChange }: FormFieldProps) => {
         multiSelect={false}
       />
     )
+  } // Handle select
+
+  if (field.type === 'multiselect') {
+    const parsedValue = Array.isArray(value) ? value : []
+    return (
+      <Dropdown
+        widthExpand
+        options={field.options || []}
+        value={parsedValue}
+        onSelectionChange={(e) => onChange(e)}
+        className={`form-field`}
+        multiSelect={true}
+      />
+    )
   }
+
 }
 
 export interface SimpleFormDialogProps {
@@ -205,9 +222,8 @@ export const SimpleFormDialog = ({
       onClose={onClose}
       header={title}
       footer={footer}
-      style={{ minHeight: 400, minWidth: 600 }}
+      style={{ minHeight: 500, minWidth: 600 }}
     >
-      <ScrollPanel style={{ flexGrow: 1, background: 'transparent' }}>
         <FormLayout style={{ width: '95%' }}>
           {fields.map((field: SimpleFormField) => {
             if (field.type === 'label') {
@@ -230,7 +246,6 @@ export const SimpleFormDialog = ({
             )
           })}
         </FormLayout>
-      </ScrollPanel>
     </Dialog>
   )
 }
