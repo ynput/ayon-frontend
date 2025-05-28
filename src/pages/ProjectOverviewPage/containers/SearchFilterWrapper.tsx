@@ -1,4 +1,4 @@
-import useBuildFilterOptions, { BuildFilterOptions } from '@hooks/useBuildFilterOptions'
+import { BuildFilterOptions, useBuildFilterOptions } from '@shared/components'
 import { FC, useEffect, useMemo, useState } from 'react'
 import { Filter, Icon, SearchFilter, SearchFilterProps } from '@ynput/ayon-react-components'
 import type { ProjectModel } from '@shared/api'

@@ -14,7 +14,13 @@ const SchedulerPage: FC<SchedulerPageProps> = ({}) => {
   const projectName = (useAppSelector((state) => state.project.name) as null | string) || ''
 
   // load slicer remote config
-  const { config, sliceType, persistentRowSelectionData, rowSelectionData } = useSlicerContext()
+  const {
+    config,
+    sliceType,
+    persistentRowSelectionData,
+    setPersistentRowSelectionData,
+    rowSelectionData,
+  } = useSlicerContext()
   const overviewSliceFields = config?.overview?.fields
 
   const [Scheduler, { isLoaded, outdated }] = useLoadModule({
@@ -54,6 +60,7 @@ const SchedulerPage: FC<SchedulerPageProps> = ({}) => {
               selection: rowSelectionData,
               type: sliceType,
               persistentRowSelectionData,
+              setPersistentRowSelectionData,
             }}
           />
         </SplitterPanel>

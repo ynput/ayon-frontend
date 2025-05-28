@@ -1,26 +1,9 @@
-import { useEffect, useMemo } from 'react'
-import { TaskFilterValue } from '@containers/TasksProgress/hooks/useFilterBySlice'
-import { Filter, Option } from '@ynput/ayon-react-components'
+import { useMemo } from 'react'
+import { Filter, FilterValue } from '@ynput/ayon-react-components'
 import { SelectionData } from '@shared/containers/Slicer'
 
-type UseFocusOptions = {
-  ref: React.RefObject<HTMLUListElement>
-  options: Option[] | null
-}
-
-export const useFocusOptions = ({ ref, options }: UseFocusOptions) => {
-  // map all ids into a string to be used to compare different dropdowns
-  const ids = options?.map((option) => option.id)
-
-  useEffect(() => {
-    if (!ids) return
-    // focus search input
-    ref.current?.querySelector('input')?.focus()
-  }, [ref, ids?.join('_')])
-}
-
 interface UseFiltersWithHierarchyProps {
-  sliceFilter: TaskFilterValue | null
+  sliceFilter: FilterValue | null
   persistedHierarchySelection: SelectionData | null
   filters: Filter[]
   merge?: boolean

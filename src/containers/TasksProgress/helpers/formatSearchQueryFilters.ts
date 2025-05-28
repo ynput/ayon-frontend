@@ -3,8 +3,12 @@
 import { AttributeFilterInput, ProjectNodeTasksArgs } from '@shared/api'
 import getFilterFromId from '@components/SearchFilter/getFilterFromId'
 import { Filter } from '@ynput/ayon-react-components'
-import { TaskFilterValue } from '../hooks/useFilterBySlice'
-import { TaskProgressSliceType } from '@pages/TasksProgressPage/TasksProgressPage'
+import { SliceType } from '@shared/containers'
+
+export type TaskProgressSliceType = Extract<
+  SliceType,
+  'hierarchy' | 'assignees' | 'status' | 'taskType'
+>
 
 type SliceField = Exclude<TaskProgressSliceType, 'hierarchy'>
 
@@ -39,10 +43,7 @@ const formatFilter = (filter: Filter | undefined, filterId: string): FilterResul
   return filter.operator === 'OR' ? { any: values } : { exact: values }
 }
 
-const formatSearchQueryFilters = (
-  filters: Filter[],
-  slice: TaskFilterValue | null,
-): FilterQueriesData => {
+const formatSearchQueryFilters = (filters: Filter[], slice: Filter | null): FilterQueriesData => {
   // ASSIGNEES
   const { exact: assignees, any: assigneesAny } = formatFilter(
     filters.find((f) => getFilterFromId(f.id) === 'assignees'),

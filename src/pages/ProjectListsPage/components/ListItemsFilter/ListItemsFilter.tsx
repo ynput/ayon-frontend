@@ -1,7 +1,7 @@
 import { FC } from 'react'
 import SearchFilterWrapper from '@pages/ProjectOverviewPage/containers/SearchFilterWrapper'
 import { ListEntityType } from '../NewListDialog/NewListDialog'
-import { BuildFilterOptions } from '@hooks/useBuildFilterOptions'
+import { BuildFilterOptions } from '@shared/components'
 import { useListItemsDataContext } from '@pages/ProjectListsPage/context/ListItemsDataContext'
 
 interface ListItemsFilterProps {
