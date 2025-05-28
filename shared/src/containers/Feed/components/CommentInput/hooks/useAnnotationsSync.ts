@@ -8,7 +8,7 @@ type Props = {
 }
 
 export type AnnotationPreview = any & {
-  isUnsavedAnnotation: true
+  unsavedAnnotation: any
 }
 
 // annotations are temporary store
@@ -23,7 +23,10 @@ export const filterEntityAnnotations = (
         annotation.versionId === entityId &&
         !filesUploading.some((file) => file.name === annotation.name),
     )
-    .map((annotation) => ({ ...annotation, isUnsavedAnnotation: true })) as AnnotationPreview[]
+    .map((annotationFile) => ({
+      ...annotationFile,
+      unsavedAnnotation: annotationFile,
+    })) as AnnotationPreview[]
 }
 
 const useAnnotationsSync = ({ entityId, filesUploading }: Props) => {
@@ -43,6 +46,7 @@ const useAnnotationsSync = ({ entityId, filesUploading }: Props) => {
 
   const handleGoToAnnotation = (annotation: AnnotationPreview) => {
     const firstFrame = annotation.range[0]
+    console.log(firstFrame)
     onGoToFrame?.(firstFrame)
   }
 

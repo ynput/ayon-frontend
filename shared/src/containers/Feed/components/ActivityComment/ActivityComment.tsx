@@ -158,7 +158,7 @@ const ActivityComment = ({
     (file: any) => {
       if (!file.annotation) return
       // annotation frame numbers are 1-based
-      onGoToFrame?.((file.annotation as SavedAnnotationMetadata).range[0] - 1)
+      onGoToFrame?.((file.annotation as SavedAnnotationMetadata).range[0])
       setHighlightedActivities([activityId])
     },
     [onGoToFrame],
