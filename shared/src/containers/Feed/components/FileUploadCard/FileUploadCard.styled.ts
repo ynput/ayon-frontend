@@ -90,6 +90,12 @@ export const Footer = styled.footer`
     white-space: nowrap;
     z-index: 20;
     display: inherit;
+
+    .icon {
+      font-size: inherit;
+      margin-right: var(--padding-s);
+      vertical-align: text-top;
+    }
   }
 
   .extension {
