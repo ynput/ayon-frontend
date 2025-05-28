@@ -256,6 +256,7 @@ export type InfoResponseModel = {
   attributes?: AttributeModel[]
   sites?: SiteInfo[]
   ssoOptions?: SsoOption[]
+  disableChangelog?: boolean
   extras?: string
 }
 export type SystemMetricsData = {

@@ -40,7 +40,7 @@ export const validateClipboardData = (params: {
     const assigneeValues = pasteValue.split(',').map((v) => v.trim())
 
     // Get assignee options from columnEnums
-    const assigneeOptions = columnEnums['assignees'] || []
+    const assigneeOptions = columnEnums['assignee'] || []
 
     // Filter to keep only valid assignees
     const validAssignees = assigneeValues.filter((v) =>
