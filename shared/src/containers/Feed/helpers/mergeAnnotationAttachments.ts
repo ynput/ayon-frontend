@@ -9,8 +9,10 @@ export default (activities: any[]) => {
         // look for an annotation that is using this file
         const annotation = activity.activityData.annotations.find(
           (annotation: SavedAnnotationMetadata) =>
-            annotation.composite === file.id || annotation.transparent === file.id,
+            annotation?.composite === file.id || annotation?.transparent === file.id,
         )
+
+        if (!annotation) return file
 
         // if the file is the transparent version of the annotation, ignore it
         if (annotation.transparent === file.id) return null
