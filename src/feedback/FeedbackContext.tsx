@@ -163,7 +163,6 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
     // if not logged in, do not load the script
     if (!user.name) return
     if (!siteInfo) return
-    if (siteInfo.disableFeedback) return
 
     // if working in a local environment, do not load the script
     if (window.location.hostname === 'localhost') return
