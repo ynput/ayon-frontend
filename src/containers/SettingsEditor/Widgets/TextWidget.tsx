@@ -1,4 +1,6 @@
 import React from 'react'
+import CodeEditor from '@uiw/react-textarea-code-editor'
+import styled from 'styled-components'
 import { useEffect, useState } from 'react'
 import { equiv, getDefaultValue, parseContext, updateChangedKeys } from '../helpers'
 import { $Any } from '@types'
@@ -15,6 +17,47 @@ type PermissionWidgetProps = {
   value: number
   setValue: (value: number) => void
 }
+
+
+const CodeEditorWrapper = styled.div`
+  position: relative;
+  display: flex;
+  resize: vertical;
+  overflow: auto;
+  flex-direction: column;
+  min-height: 40px;
+  height: 200px;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--border-radius-m);
+
+  .wrap {
+    position: relative;
+    top: 0;
+    left: 0;
+    overflow: scroll;
+  }
+  .w-tc-editor {
+    background-color: var(--md-sys-color-surface-container-low);
+    flex-grow: 1;
+    overflow: unset !important;
+    * {
+      background-color: var(--md-sys-color-surface-container-low);
+      font-family: monospace !important;
+      font-size: 12px;
+    }
+  }
+`
+
+const SettingsCodeEditor = (props: $Any) => {
+  return (
+    <CodeEditorWrapper>
+      <CodeEditor
+        {...props}
+      />
+    </CodeEditorWrapper>
+  )
+}
+
 
 const PermissionWidget: React.FC<PermissionWidgetProps> = ({ value, setValue }) => {
   return (
@@ -93,7 +136,7 @@ export const TextWidget = (props: $Any) => {
   let opts: $Any = {
     placeholder: props.schema?.placeholder || '',
     disabled:
-      props.schema.readonly ||
+    props.schema.readonly ||
       props.schema.disabled ||
       (props.schema.fixedValue && props.schema.fixedValue === value),
   }
@@ -149,6 +192,18 @@ export const TextWidget = (props: $Any) => {
     opts.onChange = (e: $Any) => {
       props.onChange(e[0])
     }
+  } else if (props.schema.widget === 'textarea' && props.schema.syntax) {
+    
+    Input = SettingsCodeEditor
+    opts.wrap = "false"
+    opts.value = value || ''
+    opts.language = props.schema.syntax || 'plaintext'
+    opts.onBlur = onChangeCommit
+    opts.onChange = (e: $Any) => {
+      onChange(e.target.value)
+    }
+
+
   } else if (props.schema.widget === 'textarea') {
     //
     // Textarea

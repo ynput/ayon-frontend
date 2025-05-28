@@ -48,15 +48,15 @@ const FilesGrid: React.FC<FilesGridProps> = ({
           mime={file.mime || file.type}
           size={file.size}
           src={
-            file.isUnsavedAnnotation
+            file.unsavedAnnotation
               ? file.thumbnail
               : `/api/projects/${projectName}/files/${file.id}`
           }
-          isUnsavedAnnotation={file.isUnsavedAnnotation}
+          unsavedAnnotation={file.unsavedAnnotation}
           savedAnnotation={file.annotation}
           progress={file.progress}
           onRemove={
-            onRemove ? () => onRemove(file.id, file.name, file.isUnsavedAnnotation) : undefined
+            onRemove ? () => onRemove(file.id, file.name, !!file.unsavedAnnotation) : undefined
           }
           isCompact={isCompact}
           isDownloadable={isDownloadable}

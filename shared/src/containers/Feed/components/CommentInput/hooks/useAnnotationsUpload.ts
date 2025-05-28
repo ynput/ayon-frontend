@@ -5,7 +5,7 @@ import { SavedAnnotationMetadata } from '../../../index'
 
 type Props = {
   projectName: string
-  onSuccess: (data: any) => void
+  onSuccess: (data: any) => any
 }
 
 const useAnnotationsUpload = ({ projectName, onSuccess }: Props) => {
@@ -23,7 +23,7 @@ const useAnnotationsUpload = ({ projectName, onSuccess }: Props) => {
           type: 'image/png',
         })
 
-        const transparent = await fetch(annotation.annotationData).then(r => r.blob())
+        const transparent = await fetch(annotation.annotationData).then((r) => r.blob())
         const transparentFile = new File([transparent], `annotation-${annotation.name}`, {
           type: 'image/png',
         })
