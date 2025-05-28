@@ -4,6 +4,7 @@ import { cloneDeep } from 'lodash'
 import React, { createContext, useContext, ReactNode, useEffect, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { toast } from 'react-toastify'
+import { useGetSiteInfoQuery } from '@shared/api'
 
 type FeedbackContextType = {
   loaded: boolean
@@ -25,6 +26,7 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
   const user = useAppSelector((state) => state.user)
   const [scriptLoaded, setScriptLoaded] = useState(false)
 
+  const { data: siteInfo } = useGetSiteInfoQuery({ full: true }, { skip: !user.name })
   const { data: connect } = useGetYnputCloudInfoQuery(undefined, { skip: !user.name })
   const { data: verification } = useGetFeedbackVerificationQuery(undefined, {
     skip: !user.name || !connect,
@@ -45,8 +47,8 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
     // Initialize Featurebase
     const win = window as any
     if (typeof win.Featurebase !== 'function') {
-      win.Featurebase = function () {
-        ;(win.Featurebase.q = win.Featurebase.q || []).push(arguments)
+      win.Featurebase = function() {
+        ; (win.Featurebase.q = win.Featurebase.q || []).push(arguments)
       }
     }
   }
@@ -87,9 +89,11 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
       const adminCategories = ['Server', 'Addon', 'Pipeline']
       categories.push(...adminCategories)
     } else {
-      // users only see highlights
-      // admins do not see highlights as it is a subset of the other categories
-      categories.push('Highlights')
+      if (!siteInfo?.disableChangelog) {
+        // users only see highlights (unless disabled)
+        // admins do not see highlights as it is a subset of the other categories
+        categories.push('Highlights')
+      }
     }
 
     const win = window as any
@@ -160,12 +164,15 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
   useEffect(() => {
     // if not logged in, do not load the script
     if (!user.name) return
+    if (!siteInfo) return
+    if (siteInfo.disableFeedback) return
 
     // if working in a local environment, do not load the script
     if (window.location.hostname === 'localhost') return
 
     // if already loaded, do not load again
     if (scriptLoaded) return
+
 
     // Load the Featurebase script
     loadScript()
@@ -181,7 +188,7 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
 
     // Initialize portal widget
     initializePortalWidget()
-  }, [user.name, scriptLoaded])
+  }, [user.name, scriptLoaded, siteInfo])
 
   const location = useLocation()
   const [identified, setIdentified] = useState(false)
