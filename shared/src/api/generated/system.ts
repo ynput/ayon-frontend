@@ -256,7 +256,6 @@ export type InfoResponseModel = {
   attributes?: AttributeModel[]
   sites?: SiteInfo[]
   ssoOptions?: SsoOption[]
-  disableFeedback?: boolean
   disableChangelog?: boolean
   extras?: string
 }
