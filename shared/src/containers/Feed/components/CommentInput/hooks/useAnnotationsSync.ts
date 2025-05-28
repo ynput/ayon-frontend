@@ -46,7 +46,6 @@ const useAnnotationsSync = ({ entityId, filesUploading }: Props) => {
 
   const handleGoToAnnotation = (annotation: AnnotationPreview) => {
     const firstFrame = annotation.range[0]
-    console.log(firstFrame)
     onGoToFrame?.(firstFrame)
   }
 
