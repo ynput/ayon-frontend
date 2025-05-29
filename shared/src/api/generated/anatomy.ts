@@ -154,21 +154,8 @@ export type ProjectAttribModel = {
   endDate?: string
   /** Textual description of the entity */
   description?: string
-  ftrackId?: string
-  ftrackPath?: string
-  /** The Shotgrid ID of this entity. */
-  shotgridId?: string
-  /** The Shotgrid Type of this entity. */
-  shotgridType?: string
-  inheritableString?: string
-  /** Push changes done to this project to Shotgrid. Requires the transmitter service. */
-  shotgridPush?: boolean
-  tools?: string[]
   applications?: string[]
-  sokoId?: string
-  booo?: boolean
-  sokoPath?: string
-  myAdvancedEnum?: 'first' | 'second'
+  tools?: string[]
 }
 export type FolderType = {
   name: string

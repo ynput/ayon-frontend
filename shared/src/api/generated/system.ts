@@ -151,7 +151,6 @@ export type UserAttribModel = {
   email?: string
   avatarUrl?: string
   developerMode?: boolean
-  freelancer?: boolean
 }
 export type UserModel = {
   /** Name is an unique id of the {entity_name} */
@@ -171,6 +170,8 @@ export type AttributeEnumItem = {
   label: string
   icon?: string
   color?: string
+  /** List of project this item is available on */
+  projects?: string[]
 }
 export type AttributeData = {
   /** Type of attribute value */
@@ -217,6 +218,7 @@ export type AttributeModel = {
   scope?: (
     | ('folder' | 'product' | 'version' | 'representation' | 'task' | 'workfile')
     | ('project' | 'user')
+    | 'list'
   )[]
   /** Is attribute builtin. Built-in attributes cannot be removed. */
   builtin?: boolean
@@ -251,12 +253,13 @@ export type InfoResponseModel = {
   /** No admin user exists, display 'Create admin user' form */
   noAdminUser?: boolean
   onboarding?: boolean
+  /** If set, the changelog will not be shown to the user */
+  disableChangelog?: boolean
   passwordRecoveryAvailable?: boolean
   user?: UserModel
   attributes?: AttributeModel[]
   sites?: SiteInfo[]
   ssoOptions?: SsoOption[]
-  disableChangelog?: boolean
   extras?: string
 }
 export type SystemMetricsData = {

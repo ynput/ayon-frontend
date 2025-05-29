@@ -31,6 +31,11 @@ const injectedRtkApi = api.injectEndpoints({
         method: 'HEAD',
       }),
     }),
+    getProjectFileInfo: build.query<GetProjectFileInfoApiResponse, GetProjectFileInfoApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/files/${queryArg.fileId}/info`,
+      }),
+    }),
     getProjectFilePayload: build.query<
       GetProjectFilePayloadApiResponse,
       GetProjectFilePayloadApiArg
@@ -186,6 +191,9 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    getProjectTags: build.query<GetProjectTagsApiResponse, GetProjectTagsApiArg>({
+      query: (queryArg) => ({ url: `/api/projects/${queryArg.projectName}/tags` }),
+    }),
     getProjectUsers: build.query<GetProjectUsersApiResponse, GetProjectUsersApiArg>({
       query: (queryArg) => ({ url: `/api/projects/${queryArg.projectName}/users` }),
     }),
@@ -204,6 +212,17 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/uris`,
         method: 'POST',
         body: queryArg.getUrisRequest,
+      }),
+    }),
+    planner010DevGetProjectPlannerStatus: build.query<
+      Planner010DevGetProjectPlannerStatusApiResponse,
+      Planner010DevGetProjectPlannerStatusApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/addons/planner/0.1.0-dev/setup`,
+        params: {
+          project: queryArg.project,
+        },
       }),
     }),
   }),
@@ -229,6 +248,11 @@ export type DeleteProjectFileApiArg = {
 }
 export type GetProjectFileHeadApiResponse = /** status 200 Successful Response */ any
 export type GetProjectFileHeadApiArg = {
+  projectName: string
+  fileId: string
+}
+export type GetProjectFileInfoApiResponse = /** status 200 Successful Response */ FileInfo
+export type GetProjectFileInfoApiArg = {
   projectName: string
   fileId: string
 }
@@ -359,6 +383,10 @@ export type GetProjectSiteRootsApiArg = {
   /** Site ID may be specified either as a query parameter (`site_id` or `site`) or in a header. */
   'x-ayon-site-id'?: string
 }
+export type GetProjectTagsApiResponse = /** status 200 Successful Response */ ProjectTagsModel
+export type GetProjectTagsApiArg = {
+  projectName: string
+}
 export type GetProjectUsersApiResponse = /** status 200 Successful Response */ {
   [key: string]: string[]
 }
@@ -378,6 +406,11 @@ export type GetProjectEntityUrisApiArg = {
   projectName: string
   getUrisRequest: GetUrisRequest
 }
+export type Planner010DevGetProjectPlannerStatusApiResponse =
+  /** status 200 Successful Response */ PlannerProjectStatus
+export type Planner010DevGetProjectPlannerStatusApiArg = {
+  project?: string
+}
 export type ValidationError = {
   loc: (string | number)[]
   msg: string
@@ -385,6 +418,11 @@ export type ValidationError = {
 }
 export type HttpValidationError = {
   detail?: ValidationError[]
+}
+export type FileInfo = {
+  size: number
+  filename?: string
+  contentType?: string
 }
 export type EntityCounts = {
   /** Number of folders */
@@ -519,6 +557,16 @@ export type ProjectAttribModel = {
   endDate?: string
   /** Textual description of the entity */
   description?: string
+  applications?: string[]
+  tools?: string[]
+  ftrackId?: string
+  ftrackPath?: string
+  /** The Shotgrid ID of this entity. */
+  shotgridId?: string
+  /** The Shotgrid Type of this entity. */
+  shotgridType?: string
+  /** Push changes done to this project to ShotGrid. Requires the transmitter service. */
+  shotgridPush?: boolean
 }
 export type FolderType = {
   name: string
@@ -636,6 +684,16 @@ export type ProjectAttribModel2 = {
   endDate?: string
   /** Textual description of the entity */
   description?: string
+  applications?: string[]
+  tools?: string[]
+  ftrackId?: string
+  ftrackPath?: string
+  /** The Shotgrid ID of this entity. */
+  shotgridId?: string
+  /** The Shotgrid Type of this entity. */
+  shotgridType?: string
+  /** Push changes done to this project to ShotGrid. Requires the transmitter service. */
+  shotgridPush?: boolean
 }
 export type ProjectModel = {
   /** Name is an unique id of the {entity_name} */
@@ -686,6 +744,14 @@ export type ProjectPatchModel = {
   /** Whether the project is active */
   active?: boolean
 }
+export type ProjectTagsModel = {
+  folders?: string[]
+  tasks?: string[]
+  products?: string[]
+  versions?: string[]
+  representations?: string[]
+  workfiles?: string[]
+}
 export type UriResponseItem = {
   id: string
   uri: string
@@ -696,4 +762,13 @@ export type GetUrisResponse = {
 export type GetUrisRequest = {
   entityType: 'folder' | 'product' | 'version' | 'representation' | 'task' | 'workfile'
   ids?: string[]
+}
+export type PlannerProjectStatusItem = {
+  name: string
+  code: string
+  initialized: boolean
+}
+export type PlannerProjectStatus = {
+  projects?: PlannerProjectStatusItem[]
+  initialized: boolean
 }

@@ -149,6 +149,7 @@ export type VersionReviewablesModel = {
   productId: string
   productName: string
   productType: string
+  attrib?: object
   /** List of available reviewables */
   reviewables?: ReviewableModel[]
 }

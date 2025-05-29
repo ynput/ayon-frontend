@@ -227,8 +227,7 @@ export type GetUserProjectPermissionsApiArg = {
 }
 export type GetCurrentUserApiResponse = /** status 200 Successful Response */ UserModel
 export type GetCurrentUserApiArg = void
-export type GetUserApiResponse =
-  /** status 200 Successful Response */
+export type GetUserApiResponse = /** status 200 Successful Response */
   | UserModel
   | {
       [key: string]: string
@@ -334,7 +333,6 @@ export type UserAttribModel = {
   email?: string
   avatarUrl?: string
   developerMode?: boolean
-  freelancer?: boolean
 }
 export type UserModel = {
   /** Name is an unique id of the {entity_name} */

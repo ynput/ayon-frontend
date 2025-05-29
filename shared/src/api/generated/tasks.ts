@@ -1,6 +1,14 @@
 import { api } from '@shared/api/base'
 const injectedRtkApi = api.injectEndpoints({
   endpoints: (build) => ({
+    getTaskGroups: build.query<GetTaskGroupsApiResponse, GetTaskGroupsApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/taskGroups/${queryArg.groupingKey}`,
+        params: {
+          empty: queryArg.empty,
+        },
+      }),
+    }),
     getTask: build.query<GetTaskApiResponse, GetTaskApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/tasks/${queryArg.taskId}`,
@@ -74,6 +82,12 @@ const injectedRtkApi = api.injectEndpoints({
   overrideExisting: false,
 })
 export { injectedRtkApi as api }
+export type GetTaskGroupsApiResponse = /** status 200 Successful Response */ TaskGrouping
+export type GetTaskGroupsApiArg = {
+  groupingKey: string
+  projectName: string
+  empty?: boolean
+}
 export type GetTaskApiResponse = /** status 200 Successful Response */ TaskModel
 export type GetTaskApiArg = {
   projectName: string
@@ -127,6 +141,32 @@ export type CreateTaskThumbnailApiArg = {
   taskId: string
   'content-type'?: string
 }
+export type TaskGroup = {
+  /** The value used for grouping tasks. */
+  value?: any
+  /** A label for the grouping, if applicable. */
+  label?: string
+  /** An icon representing the grouping, if applicable. */
+  icon?: string
+  /** A color associated with the grouping, if applicable. */
+  color?: string
+  /** The number of tasks in this grouping. */
+  count?: number
+}
+export type TaskGrouping = {
+  /** List of task groups based on the specified grouping key. */
+  groups: TaskGroup[]
+  /** The key used for grouping tasks. */
+  key: string
+}
+export type ValidationError = {
+  loc: (string | number)[]
+  msg: string
+  type: string
+}
+export type HttpValidationError = {
+  detail?: ValidationError[]
+}
 export type TaskAttribModel = {
   priority?: 'urgent' | 'high' | 'normal' | 'low'
   /** Frame rate */
@@ -148,6 +188,20 @@ export type TaskAttribModel = {
   endDate?: string
   /** Textual description of the entity */
   description?: string
+  tools?: string[]
+  ftrackId?: string
+  ftrackPath?: string
+  jiraCurrentPhase?: string
+  /** The Shotgrid ID of this entity. */
+  shotgridId?: string
+  /** The Shotgrid Type of this entity. */
+  shotgridType?: string
+  /** Is this some really hard work? */
+  hard?: boolean
+  distances?: string[]
+  nickname?: string
+  taskOnly?: string
+  weather?: 'sunny' | 'rain' | 'snow'
 }
 export type TaskModel = {
   /** Unique identifier of the {entity_name} */
@@ -173,14 +227,6 @@ export type TaskModel = {
   createdAt?: string
   /** Time of last update */
   updatedAt?: string
-}
-export type ValidationError = {
-  loc: (string | number)[]
-  msg: string
-  type: string
-}
-export type HttpValidationError = {
-  detail?: ValidationError[]
 }
 export type TaskPatchModel = {
   name?: string
@@ -238,7 +284,7 @@ export type QueryCondition = {
   /** Path to the key separated by slashes */
   key: string
   /** Value to compare against */
-  value?: string | number | number | string[] | number[] | number[]
+  value?: string | number | number | boolean | string[] | number[] | number[]
   /** Comparison operator */
   operator?:
     | 'eq'
