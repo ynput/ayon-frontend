@@ -1,6 +1,6 @@
 import { createContext, ReactNode, useCallback, useContext } from 'react'
 import { ExpandedState, OnChangeFn, SortingState } from '@tanstack/react-table'
-import useOverviewTable from '../hooks/useOverviewTable'
+import useBuildProjectDataTable from '../hooks/useBuildProjectDataTable'
 import { Filter } from '@ynput/ayon-react-components'
 import {
   EntitiesMap,
@@ -163,7 +163,7 @@ export const ProjectTableProvider = ({
   contextMenuItems,
 }: ProjectTableProviderProps) => {
   // DATA TO TABLE
-  const tableData = useOverviewTable({
+  const tableData = useBuildProjectDataTable({
     foldersMap,
     tasksMap,
     rows: tableRows,

@@ -12,6 +12,7 @@ const TASKS_INFINITE_QUERY_COUNT = 100
 import { LoadingTasks } from '../types'
 import { ProjectModel } from '../types/project'
 import useGetEntityTypeData from './useGetEntityTypeData'
+import { TableGroupBy } from '../context'
 
 type Params = {
   foldersMap: FolderNodeMap
@@ -23,9 +24,10 @@ type Params = {
   showHierarchy: boolean
   loadingTasks?: LoadingTasks
   isLoadingMore?: boolean
+  groupBy?: TableGroupBy
 }
 
-export default function useOverviewTable({
+export default function useBuildProjectDataTable({
   foldersMap,
   tasksMap,
   rows,
