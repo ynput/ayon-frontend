@@ -104,6 +104,7 @@ export type FormSelectOption = {
   label: string
   icon?: string
   color?: string
+  badges?: string[]
 }
 export type SimpleFormField = {
   type: 'text' | 'boolean' | 'select' | 'multiselect' | 'hidden' | 'integer' | 'float' | 'label'
