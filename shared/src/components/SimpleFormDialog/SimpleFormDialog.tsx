@@ -2,7 +2,6 @@ import styled from 'styled-components'
 import React, { useState, useEffect } from 'react'
 import ReactMarkdown from 'react-markdown'
 import {
-  ScrollPanel,
   Button,
   Spacer,
   Dialog,
@@ -224,7 +223,7 @@ export const SimpleFormDialog = ({
       footer={footer}
       style={{ minHeight: 500, minWidth: 600 }}
     >
-        <FormLayout style={{ width: '95%' }}>
+        <FormLayout style={{ width: '95%' }} onKeyDown={(e) => {e.stopPropagation()}}>
           {fields.map((field: SimpleFormField) => {
             if (field.type === 'label') {
               return <FormLabel key={field.name} field={field} />
