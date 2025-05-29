@@ -42,6 +42,7 @@ import { RemoteModulesProvider, DetailsPanelProvider } from '@shared/context'
 import { PowerLicenseProvider } from './remote/PowerLicenseContext'
 import { PowerpackProvider } from '@context/PowerpackContext'
 import { FeedbackProvider } from './feedback/FeedbackContext'
+import { ActionsProvider } from '@shared/context/ActionsContext'
 
 // containers
 import Header from '@containers/header'
@@ -217,18 +218,20 @@ const App = () => {
                                           updateType: 'replaceIn',
                                         }}
                                       >
-                                        <Header />
-                                        <ShareDialog />
-                                        <ViewerDialog />
-                                        <ConfirmDialog />
-                                        <FileUploadPreviewContainer />
-                                        <ReleaseInstallerDialog />
-                                        <CompleteProfilePrompt />
-                                        <AppRoutes isUser={isUser} />
-                                        <DetailsPanelFloating />
-                                        <PowerpackDialog />
-                                        <AppRemoteLoader />
-                                        <TrialBanner />
+                                        <ActionsProvider>
+                                          <Header />
+                                          <ShareDialog />
+                                          <ViewerDialog />
+                                          <ConfirmDialog />
+                                          <FileUploadPreviewContainer />
+                                          <ReleaseInstallerDialog />
+                                          <CompleteProfilePrompt />
+                                          <AppRoutes isUser={isUser} />
+                                          <DetailsPanelFloating />
+                                          <PowerpackDialog />
+                                          <AppRemoteLoader />
+                                          <TrialBanner />
+                                        </ActionsProvider>
                                       </QueryParamProvider>
                                     </PiPProvider>
                                   </ShortcutsProvider>
