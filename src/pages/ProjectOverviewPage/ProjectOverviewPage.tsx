@@ -1,6 +1,6 @@
 // libraries
 import { Splitter, SplitterPanel } from 'primereact/splitter'
-import { FC } from 'react'
+import { FC, useCallback } from 'react'
 
 // state
 import { useSlicerContext } from '@context/SlicerContext'
@@ -14,7 +14,7 @@ import SearchFilterWrapper from './containers/SearchFilterWrapper'
 import ProjectOverviewTable from './containers/ProjectOverviewTable'
 import { isEmpty } from 'lodash'
 import useFilterBySlice from '@containers/TasksProgress/hooks/useFilterBySlice'
-import { FilterFieldType } from '@shared/components'
+import { FilterFieldType, OverviewSettingsChange } from '@shared/components'
 import ProjectOverviewDetailsPanel from './containers/ProjectOverviewDetailsPanel'
 import NewEntity from '@components/NewEntity/NewEntity'
 import { Actions } from '@shared/containers/Actions/Actions'
@@ -81,6 +81,18 @@ const ProjectOverviewPage: FC = () => {
     persistedHierarchySelection,
     filters,
   })
+
+  const handleSettingsChange = useCallback<OverviewSettingsChange>(
+    (setting, value) => {
+      if (setting === 'group-by') {
+        if (value !== undefined && showHierarchy) {
+          // turn hierarchy off
+          updateShowHierarchy(false)
+        }
+      }
+    },
+    [showHierarchy, updateShowHierarchy],
+  )
 
   return (
     <main style={{ overflow: 'hidden', gap: 4 }}>
@@ -170,7 +182,7 @@ const ProjectOverviewPage: FC = () => {
                     zIndex: 500,
                   }}
                 >
-                  <ProjectTableSettings />
+                  <ProjectTableSettings onChange={handleSettingsChange} />
                 </SplitterPanel>
               ) : (
                 <SplitterPanel style={{ maxWidth: 0 }}></SplitterPanel>

@@ -8,6 +8,8 @@ import styled from 'styled-components'
 import { SettingHighlightedId, useSettingsPanel } from '@shared/context'
 import { SettingsPanel, SettingConfig } from '@shared/components/SettingsPanel'
 import ColumnsSettings from './ColumnsSettings'
+import GroupSettings from './GroupSettings'
+import { getAttributeIcon } from '@shared/util'
 
 const StyledCustomizeButton = styled(Button)`
   min-width: 120px;
@@ -17,7 +19,7 @@ interface Props extends ButtonProps {
   defaultSelected?: string | null
 }
 
-export const CustomizeButton = ({ defaultSelected = 'columns', ...props }: Props) => {
+export const CustomizeButton = ({ defaultSelected, ...props }: Props) => {
   const { togglePanel, isPanelOpen } = useSettingsPanel()
 
   return (
@@ -32,19 +34,23 @@ export const CustomizeButton = ({ defaultSelected = 'columns', ...props }: Props
   )
 }
 
+export type OverviewSettingsChange = (setting: 'columns' | 'group-by', value: any) => void
+
 type ProjectTableSettingsProps = {
   settings?: SettingConfig[]
   extraColumns?: { value: string; label: string }[]
   highlighted?: SettingHighlightedId
+  onChange?: OverviewSettingsChange
 }
 
 export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
   settings = [],
   extraColumns = [],
   highlighted,
+  onChange,
 }) => {
   const { attribFields } = useProjectTableContext()
-  const { columnVisibility } = useColumnSettingsContext()
+  const { columnVisibility, groupBy } = useColumnSettingsContext()
 
   const columns = [
     {
@@ -78,6 +84,39 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
     ...extraColumns,
   ]
 
+  const groupByFields = [
+    {
+      value: 'subType',
+      label: 'Task Type',
+      icon: getAttributeIcon('task'),
+    },
+    {
+      value: 'assignees',
+      label: 'Assignees',
+      icon: getAttributeIcon('assignees'),
+    },
+    {
+      value: 'status',
+      label: 'Status',
+      icon: getAttributeIcon('status'),
+    },
+    {
+      value: 'tags',
+      label: 'Tags',
+      icon: getAttributeIcon('tags'),
+    },
+    ...attribFields.map((field) => ({
+      value: 'attrib_' + field.name,
+      label: field.data.title || field.name,
+      icon: getAttributeIcon(field.name),
+    })),
+    ...extraColumns.map((column) => ({
+      value: column.value,
+      label: column.label,
+      icon: getAttributeIcon(column.value),
+    })),
+  ]
+
   const visibleCount = columns.filter(
     (column) => !(column.value in columnVisibility) || columnVisibility[column.value],
   ).length
@@ -89,6 +128,17 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
       icon: 'view_column',
       preview: `${visibleCount}/${columns.length}`,
       component: <ColumnsSettings columns={columns} highlighted={highlighted} />,
+    },
+    {
+      id: 'group-by',
+      title: 'Group',
+      icon: 'splitscreen',
+      preview: groupBy
+        ? groupByFields.find((f) => f.value === groupBy.id)?.label ?? groupBy.id
+        : 'None',
+      component: (
+        <GroupSettings fields={groupByFields} onChange={(v) => onChange?.('group-by', v)} />
+      ),
     },
   ]
 

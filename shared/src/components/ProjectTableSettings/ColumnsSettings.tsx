@@ -1,6 +1,7 @@
 // React and Styling imports
 import { FC, useEffect, useMemo, useRef, useState } from 'react'
 import styled from 'styled-components'
+import * as Styled from './TableSettings.styled'
 
 // Context and Components imports
 import {
@@ -363,7 +364,7 @@ const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns, highlighted }) => 
               items={sortedPinnedColumns.map((col) => col.value)}
               strategy={verticalListSortingStrategy}
             >
-              <Menu>
+              <Styled.Menu>
                 {sortedPinnedColumns.map((column) => (
                   <SortableColumnItem
                     key={column.value}
@@ -376,7 +377,7 @@ const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns, highlighted }) => 
                     onToggleVisibility={toggleVisibility}
                   />
                 ))}
-              </Menu>
+              </Styled.Menu>
             </SortableContext>
           </Section>
         )}
@@ -394,7 +395,7 @@ const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns, highlighted }) => 
             items={sortedVisibleColumns.map((col) => col.value)}
             strategy={verticalListSortingStrategy}
           >
-            <Menu>
+            <Styled.Menu>
               {sortedVisibleColumns.map((column) => (
                 <SortableColumnItem
                   key={column.value}
@@ -407,7 +408,7 @@ const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns, highlighted }) => 
                   onToggleVisibility={toggleVisibility}
                 />
               ))}
-            </Menu>
+            </Styled.Menu>
           </SortableContext>
         </Section>
 
@@ -415,7 +416,7 @@ const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns, highlighted }) => 
         {hiddenColumns.length > 0 && (
           <Section className={isDraggingOverHidden ? 'drop-target' : ''}>
             <SectionTitle>Hidden Columns</SectionTitle>
-            <Menu ref={menuRef}>
+            <Styled.Menu ref={menuRef}>
               {hiddenColumns.map((column) => (
                 <SortableColumnItem
                   key={column.value}
@@ -428,7 +429,7 @@ const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns, highlighted }) => 
                   onToggleVisibility={toggleVisibility}
                 />
               ))}
-            </Menu>
+            </Styled.Menu>
           </Section>
         )}
 
@@ -474,14 +475,6 @@ const SectionTitle = styled.div`
   font-weight: 500;
   color: var(--md-sys-color-outline);
   padding: 4px 0;
-`
-
-const Menu = styled.ul`
-  display: flex;
-  flex-direction: column;
-  list-style-type: none;
-  margin: 0;
-  padding: 0;
 `
 
 export default ColumnsSettings

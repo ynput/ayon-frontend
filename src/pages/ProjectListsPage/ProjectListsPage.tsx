@@ -267,7 +267,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
                   searchParams={searchParams}
                   featuredCount={0}
                 />
-                <CustomizeButton defaultSelected={null} />
+                <CustomizeButton />
               </Toolbar>
             )}
             <Splitter

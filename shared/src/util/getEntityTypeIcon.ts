@@ -1,3 +1,11 @@
+export const entityTypesWithIcons = [
+  'task',
+  'workfile',
+  'folder',
+  'product',
+  'version',
+  'representation',
+]
 export const getEntityTypeIcon = (type: string, fallback?: string) => {
   let typeIcon
   switch (type) {

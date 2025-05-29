@@ -8,6 +8,11 @@ import {
   ColumnSizingState,
 } from '@tanstack/react-table'
 
+export interface TableGroupBy {
+  desc: boolean
+  id: string
+}
+
 export interface ColumnSettingsContextType {
   // Column Visibility
   columnVisibility: VisibilityState
@@ -32,6 +37,10 @@ export interface ColumnSettingsContextType {
   setColumnSizing: (columnSizing: ColumnSizingState) => void
   columnSizingUpdater: OnChangeFn<ColumnSizingState>
 
+  // groupBy
+  updateGroupBy: (groupBy: TableGroupBy | undefined) => void
+  groupBy?: TableGroupBy
+
   // Global change
   setColumnsConfig: (config: ColumnsConfig) => void
 }
@@ -42,7 +51,8 @@ export type ColumnsConfig = {
   columnVisibility: VisibilityState
   columnOrder: ColumnOrderState
   columnPinning: ColumnPinningState
-  columnSizing: ColumnSizingState // Add this
+  columnSizing: ColumnSizingState
+  groupBy?: TableGroupBy
 }
 
 interface ColumnSettingsProviderProps {
@@ -62,6 +72,7 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     columnPinning: columnPinningInit = {},
     columnVisibility = {},
     columnSizing: columnsSizingExternal = {},
+    groupBy,
   } = columnsConfig
 
   const columnOrder = [...columnOrderInit]
@@ -200,6 +211,13 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     })
   }
 
+  const updateGroupBy = (groupBy: TableGroupBy | undefined) => {
+    onChange({
+      ...columnsConfig,
+      groupBy: groupBy,
+    })
+  }
+
   // UPDATER FUNCTIONS
   const columnVisibilityUpdater: OnChangeFn<VisibilityState> = (columnVisibilityUpdater) => {
     const newVisibility = functionalUpdate(columnVisibilityUpdater, columnVisibility)
@@ -243,6 +261,10 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
         columnSizing,
         setColumnSizing,
         columnSizingUpdater,
+        // group by
+        groupBy,
+        updateGroupBy,
+
         // global change
         setColumnsConfig: onChange,
       }}

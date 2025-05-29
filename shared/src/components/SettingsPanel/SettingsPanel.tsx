@@ -50,12 +50,14 @@ export const SettingOption = styled(Button)`
   text-align: left;
   display: flex;
   gap: var(--base-gap-small);
+  padding-right: var(--padding-s);
 
   .title {
     flex: 1;
   }
 
-  .preview {
+  .preview,
+  .arrow {
     color: var(--md-sys-color-outline);
   }
 `
@@ -96,6 +98,7 @@ export const SettingsPanel: FC<SettingsPanelProps> = ({ settings }) => {
               {setting.icon && <Icon icon={setting.icon} />}
               <span className="title">{setting.title}</span>
               {!!setting.preview?.toString() && <span className="preview">{setting.preview}</span>}
+              <Icon icon="chevron_right" className="arrow" />
             </SettingOption>
           ))}
         </>
