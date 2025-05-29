@@ -14,8 +14,7 @@ import SearchFilterWrapper from './containers/SearchFilterWrapper'
 import ProjectOverviewTable from './containers/ProjectOverviewTable'
 import { isEmpty } from 'lodash'
 import useFilterBySlice from '@containers/TasksProgress/hooks/useFilterBySlice'
-import { useFiltersWithHierarchy } from '@components/SearchFilter/hooks'
-import { FilterFieldType } from '@hooks/useBuildFilterOptions'
+import { FilterFieldType } from '@shared/components'
 import ProjectOverviewDetailsPanel from './containers/ProjectOverviewDetailsPanel'
 import NewEntity from '@components/NewEntity/NewEntity'
 import { Actions } from '@shared/containers/Actions/Actions'
@@ -25,6 +24,7 @@ import { useSettingsPanel } from '@shared/context'
 import ReloadButton from './components/ReloadButton'
 import OverviewActions from './components/OverviewActions'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useFiltersWithHierarchy } from '@shared/containers'
 
 const searchFilterTypes: FilterFieldType[] = [
   'attributes',
@@ -60,6 +60,7 @@ const ProjectOverviewPage: FC = () => {
   const persistedHierarchySelection = isEmpty(persistentRowSelectionData)
     ? null
     : persistentRowSelectionData
+
   const { filter: sliceFilter } = useFilterBySlice()
 
   const handleFiltersChange = (value: Filter[]) => {

@@ -6,6 +6,7 @@ type Slicer = {
   selection: SelectionData
   type: SliceType
   persistentRowSelectionData: SelectionData
+  setPersistentRowSelectionData: (data: SelectionData) => void
 }
 interface SchedulerFallbackProps extends RemoteAddonProjectProps {
   slicer: Slicer

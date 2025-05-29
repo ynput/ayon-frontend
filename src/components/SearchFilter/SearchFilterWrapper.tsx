@@ -1,4 +1,4 @@
-import useBuildFilterOptions, { BuildFilterOptions } from '@hooks/useBuildFilterOptions'
+import { BuildFilterOptions, useBuildFilterOptions } from '@shared/components'
 import { FC, useEffect, useState } from 'react'
 import { ALLOW_GLOBAL_SEARCH, ALLOW_MULTIPLE_SAME_FILTERS } from './featureFlags'
 import { SearchFilter, SearchFilterProps, Filter } from '@ynput/ayon-react-components'

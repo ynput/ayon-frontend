@@ -17,7 +17,7 @@ import type {
 import { productTypes } from '@shared/util'
 import { ColumnOrderState } from '@tanstack/react-table'
 import { Icon, Option } from '@ynput/ayon-react-components'
-import { dateOptions } from '@helpers/filterDates'
+import { dateOptions } from './filterDates'
 import { isEmpty } from 'lodash'
 
 type Scope = 'folder' | 'product' | 'task' | 'user' | 'version'
@@ -63,7 +63,7 @@ export type BuildFilterOptions = {
   power?: boolean
 }
 
-const useBuildFilterOptions = ({
+export const useBuildFilterOptions = ({
   filterTypes,
   projectNames,
   scope,
@@ -357,8 +357,6 @@ const useBuildFilterOptions = ({
     return sortOptionsBasedOnColumns(options, columnOrder)
   } else return options
 }
-
-export default useBuildFilterOptions
 
 // HELPER FUNCTIONS
 //
