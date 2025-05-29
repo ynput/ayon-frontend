@@ -18,12 +18,12 @@ import type {
   TasksByFolderMap,
 } from '@shared/containers/ProjectTreeTable/utils'
 import { clientFilterToQueryFilter } from '@shared/containers/ProjectTreeTable/utils'
-import type { QueryTasksFoldersApiArg } from '@shared/api'
+import { TaskGroup, useGetTaskGroupsQuery, type QueryTasksFoldersApiArg } from '@shared/api'
 import {
   ProjectDataContextProps,
   useProjectDataContext,
 } from '../../../../shared/src/containers/ProjectTreeTable/context/ProjectDataContext'
-import { LoadingTasks } from '@shared/containers/ProjectTreeTable'
+import { LoadingTasks, TableGroupBy } from '@shared/containers/ProjectTreeTable'
 import { useEntityListsContext } from '@pages/ProjectListsPage/context/EntityListsContext'
 import { ContextMenuItemConstructors } from '@shared/containers/ProjectTreeTable/hooks/useCellContextMenu'
 import { useUserProjectConfig } from '@shared/hooks'
@@ -48,6 +48,9 @@ export interface ProjectOverviewContextProps {
   tasksByFolderMap: TasksByFolderMap
   fetchNextPage: () => void
   reloadTableData: () => void
+
+  // Grouping data
+  taskGroups: TaskGroup[]
 
   // Filters
   filters: Filter[]
@@ -144,6 +147,11 @@ export const ProjectOverviewProvider = ({ children }: ProjectOverviewProviderPro
     true,
   )
 
+  let { columnSorting = [], groupBy } = pageConfig as {
+    columnSorting: SortingState
+    groupBy?: TableGroupBy
+  }
+
   const { filter: sliceFilter } = useFilterBySlice()
 
   // merge the slice filter with the user filters
@@ -152,8 +160,37 @@ export const ProjectOverviewProvider = ({ children }: ProjectOverviewProviderPro
     combinedFilters.push(sliceFilter as Filter)
   }
 
+  // GROUPING
+  // 1. get groups data
+  // 2. add that filter to the combined filter
+  // 3. sort by that filter
+  const { data: { groups: taskGroups = [] } = {} } = useGetTaskGroupsQuery(
+    { projectName, groupingKey: groupBy?.id || '', empty: true },
+    { skip: !groupBy?.id },
+  )
+  if (groupBy && Object.keys(groupBy).length) {
+    const groupByFilter: Filter = {
+      id: groupBy.id,
+      label: groupBy.id,
+      operator: 'OR',
+      values: Object.entries(expanded)
+        .filter(
+          ([value, isExpanded]) => isExpanded && taskGroups.find((group) => group.value === value),
+        )
+        .map(([id]) => ({
+          id,
+          label: id,
+        })),
+    }
+
+    // now add the groupBy filter to the combined filters, remove any existing filter with the same id
+    combinedFilters = combinedFilters.filter((filter) => filter.id !== groupByFilter.id)
+    combinedFilters.push(groupByFilter)
+
+    columnSorting = [{ id: groupBy.id, desc: false }]
+  }
+
   // transform the task bar filters to the query format
-  // TODO: filters bar just uses the same schema as the server
   const queryFilter = clientFilterToQueryFilter(combinedFilters)
   const queryFilterString = combinedFilters.length ? JSON.stringify(queryFilter) : ''
   // extract the fuzzy search from the filters
@@ -166,9 +203,6 @@ export const ProjectOverviewProvider = ({ children }: ProjectOverviewProviderPro
     search: fuzzySearchFilter,
   }
 
-  const { columnSorting = [] } = pageConfig as {
-    columnSorting: SortingState
-  }
   const setColumnSorting = async (sorting: SortingState) => {
     await updatePageConfig({ columnSorting: sorting })
   }
@@ -219,6 +253,7 @@ export const ProjectOverviewProvider = ({ children }: ProjectOverviewProviderPro
     queryFilters,
     expanded,
     sorting: columnSorting,
+    groupBy,
     showHierarchy,
   })
 
@@ -254,6 +289,7 @@ export const ProjectOverviewProvider = ({ children }: ProjectOverviewProviderPro
         tasksByFolderMap,
         fetchNextPage,
         reloadTableData,
+        taskGroups,
         // filters
         filters,
         setFilters,

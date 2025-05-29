@@ -1,3 +1,5 @@
+import { GroupData } from '../utils'
+
 export type FolderListItem = {
   id: string
   path: string
@@ -11,7 +13,7 @@ export type FolderListItem = {
   taskNames?: string[]
   tags?: string[]
   status: string
-  attrib?: object
+  attrib?: Record<string, any>
   ownAttrib?: string[]
   updatedAt: string
 }
@@ -52,10 +54,10 @@ export type TableRow = {
   entityType: string
   name: string
   label: string
-  path: string | null | undefined
-  ownAttrib: string[]
-  tags: string[]
-  status: string
+  path?: string | null | undefined
+  ownAttrib?: string[]
+  tags?: string[]
+  status?: string
   updatedAt?: string
   parentId?: string
   subRows: TableRow[]
@@ -68,6 +70,7 @@ export type TableRow = {
   childOnlyMatch?: boolean // when true, only children of this folder match the filter and not the folder itself (shots a dot)
   subType?: string | null
   isLoading?: boolean
+  group?: GroupData // signals it is a group row and has some extra data like label, color, icon
 }
 
 export type MatchingFolder = FolderListItem & {
@@ -98,6 +101,7 @@ type EditorVersionNode = {
   active: boolean
   assignees: Array<string>
   allAttrib: string
+  attrib?: Record<string, any>
 }
 
 type EditorProductNode = {
@@ -115,6 +119,7 @@ type EditorProductNode = {
   active: boolean
   assignees: Array<string>
   allAttrib: string
+  attrib?: Record<string, any>
 }
 
 export type TaskNodeMap = Map<string, EditorTaskNode>

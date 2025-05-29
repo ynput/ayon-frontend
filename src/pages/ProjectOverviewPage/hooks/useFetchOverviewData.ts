@@ -17,6 +17,7 @@ import { ProjectOverviewContextProps } from '../context/ProjectOverviewContext'
 import { determineLoadingTaskFolders } from '@shared/containers/ProjectTreeTable/utils/loadingUtils'
 import { LoadingTasks } from '@shared/containers/ProjectTreeTable/types'
 import { TasksByFolderMap } from '@shared/containers/ProjectTreeTable/utils'
+import { TableGroupBy } from '@shared/containers'
 
 type useFetchOverviewDataData = {
   foldersMap: FolderNodeMap
@@ -34,6 +35,7 @@ type Params = {
   selectedFolders: string[] // folders selected in the slicer (hierarchy)
   queryFilters: ProjectOverviewContextProps['queryFilters'] // filters from the filters bar or slicer (not hierarchy)
   sorting: SortingState
+  groupBy: TableGroupBy | undefined
   expanded: ExpandedState
   showHierarchy: boolean
 }
@@ -43,6 +45,7 @@ const useFetchOverviewData = ({
   selectedFolders, // comes from the slicer
   queryFilters,
   sorting,
+  groupBy,
   expanded,
   showHierarchy,
 }: Params): useFetchOverviewDataData => {
@@ -254,6 +257,32 @@ const useFetchOverviewData = ({
       fetchNextPage()
     }
   }
+
+  // const {
+  //   data: groupedTasksListInfiniteData,
+  //   // isFetching: isFetchingTasksList,
+  //   // fetchNextPage,
+  //   // hasNextPage,
+  //   // isFetchingNextPage: isFetchingNextPageTasksList,
+  //   // isUninitialized: isUninitializedTasksList,
+  //   // refetch: refetchTasksList,
+  // } = useGetTasksListInfiniteInfiniteQuery(
+  //   {
+  //     projectName,
+  //     filter: queryFilters.filterString,
+  //     search: queryFilters.search,
+  //     folderIds: selectedFolders.length ? Array.from(foldersMap.keys()) : undefined,
+  //     sortBy: sortId ? sortId.replace('_', '.') : undefined,
+  //     desc: !!singleSort?.desc,
+  //   },
+  //   {
+  //     skip: showHierarchy,
+  //     initialPageParam: {
+  //       cursor: '',
+  //       desc: !!singleSort?.desc,
+  //     },
+  //   },
+  // )
 
   // tasksMaps is a map of tasks by task ID
   // tasksByFolderMap is a map of tasks by folder ID

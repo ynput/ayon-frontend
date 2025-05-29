@@ -1,13 +1,14 @@
 import { ColumnDef, FilterFnOption, Row, SortingFn, sortingFns } from '@tanstack/react-table'
 import { TableRow } from './types/table'
 import { AttributeData, ProjectTableAttribute, BuiltInFieldOptions } from './types'
-import { CellWidget, EntityNameWidget, ThumbnailWidget } from './widgets'
+import { CellWidget, EntityNameWidget, GroupHeaderWidget, ThumbnailWidget } from './widgets'
 import { getCellId, getCellValue } from './utils/cellUtils'
 import { TableCellContent } from './ProjectTreeTable.styled'
 import clsx from 'clsx'
 import { SelectionCell } from './components/SelectionCell'
 import RowSelectionHeader from './components/RowSelectionHeader'
 import { ROW_SELECTION_COLUMN_ID } from './context/SelectionCellsContext'
+import { TableGroupBy } from './context'
 
 const MIN_SIZE = 50
 
@@ -75,6 +76,7 @@ export type BuildTreeTableColumnsProps = {
   options: BuiltInFieldOptions
   excluded?: (DefaultColumns | string)[]
   extraColumns?: TreeTableExtraColumn[]
+  groupBy?: TableGroupBy
 }
 
 const buildTreeTableColumns = ({
@@ -83,6 +85,7 @@ const buildTreeTableColumns = ({
   options,
   excluded,
   extraColumns,
+  groupBy,
 }: BuildTreeTableColumnsProps) => {
   const staticColumns: ColumnDef<TableRow>[] = []
 
@@ -99,7 +102,10 @@ const buildTreeTableColumns = ({
       enableHiding: false,
 
       header: () => <RowSelectionHeader />,
-      cell: () => <SelectionCell />,
+      cell: ({ row }) => {
+        if (row.original.entityType === 'group') return null
+        return <SelectionCell />
+      },
       size: 20,
     })
   }
@@ -135,7 +141,7 @@ const buildTreeTableColumns = ({
     staticColumns.push({
       id: 'name',
       accessorKey: 'name',
-      header: () => 'Folder / Task',
+      header: () => (groupBy ? groupBy.id : 'Folder / Task'),
       minSize: MIN_SIZE,
       sortingFn: withLoadingStateSort(showHierarchy ? nameSort : pathSort),
       enableSorting: true,
@@ -157,18 +163,31 @@ const buildTreeTableColumns = ({
             }}
             tabIndex={0}
           >
-            <EntityNameWidget
-              id={row.id}
-              label={row.original.label}
-              name={row.original.name}
-              path={!showHierarchy ? row.original.path : undefined}
-              showHierarchy={showHierarchy}
-              icon={row.original.icon}
-              type={row.original.entityType}
-              isExpanded={row.getIsExpanded()}
-              toggleExpandAll={() => meta?.toggleExpandAll?.([row.id])}
-              toggleExpanded={row.getToggleExpandedHandler()}
-            />
+            {row.original.group ? (
+              <GroupHeaderWidget
+                id={row.id}
+                label={row.original.group.label}
+                name={row.original.name}
+                icon={row.original.group.icon}
+                img={row.original.group.img}
+                color={row.original.group.color}
+                isExpanded={row.getIsExpanded()}
+                toggleExpanded={row.getToggleExpandedHandler()}
+              />
+            ) : (
+              <EntityNameWidget
+                id={row.id}
+                label={row.original.label}
+                name={row.original.name}
+                path={!showHierarchy ? row.original.path : undefined}
+                showHierarchy={showHierarchy}
+                icon={row.original.icon}
+                type={row.original.entityType}
+                isExpanded={row.getIsExpanded()}
+                toggleExpandAll={() => meta?.toggleExpandAll?.([row.id])}
+                toggleExpanded={row.getToggleExpandedHandler()}
+              />
+            )}
           </TableCellContent>
         )
       },
@@ -192,6 +211,7 @@ const buildTreeTableColumns = ({
       cell: ({ row, column, table }) => {
         const { value, id, type } = getValueIdType(row, column.id)
         const meta = table.options.meta
+        if (type === 'group') return null
 
         return (
           <CellWidget
@@ -224,6 +244,7 @@ const buildTreeTableColumns = ({
       enableHiding: true,
       cell: ({ row, column, table }) => {
         const { value, id, type } = getValueIdType(row, column.id)
+        if (type === 'group') return null
         const fieldId = type === 'folder' ? 'folderType' : 'taskType'
         const meta = table.options.meta
         return (
@@ -264,6 +285,8 @@ const buildTreeTableColumns = ({
       cell: ({ row, column, table }) => {
         const meta = table.options.meta
         const { value, id, type } = getValueIdType(row, column.id)
+        if (type === 'group') return null
+
         if (type === 'folder')
           return (
             <CellWidget
@@ -313,6 +336,7 @@ const buildTreeTableColumns = ({
       cell: ({ row, column, table }) => {
         const meta = table.options.meta
         const { value, id, type } = getValueIdType(row, column.id)
+        if (type === 'group') return null
         return (
           <CellWidget
             rowId={id}
@@ -358,7 +382,8 @@ const buildTreeTableColumns = ({
           const meta = table.options.meta
           const columnIdParsed = column.id.replace('attrib_', '')
           const { value, id, type } = getValueIdType(row, columnIdParsed, 'attrib')
-          const isInherited = !row.original.ownAttrib.includes(columnIdParsed)
+          const isInherited = !row.original.ownAttrib?.includes(columnIdParsed)
+          if (type === 'group') return null
 
           return (
             <CellWidget

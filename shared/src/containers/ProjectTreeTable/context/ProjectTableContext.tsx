@@ -21,8 +21,9 @@ import { ProjectModel } from '../types/project'
 import { ProjectTableAttribute, LoadingTasks } from '../types'
 import { QueryFilter } from '../types/folders'
 import { ContextMenuItemConstructors } from '../hooks/useCellContextMenu'
+import { TaskGroup } from '@shared/api'
 
-type User = {
+export type TableUser = {
   name: string
   fullName?: string
 }
@@ -40,7 +41,7 @@ export interface ProjectTableProviderProps {
   // Project Info
   projectInfo?: ProjectModel
   projectName: string
-  users: User[]
+  users: TableUser[]
   // Attributes
   attribFields: ProjectTableAttribute[]
 
@@ -50,6 +51,9 @@ export interface ProjectTableProviderProps {
   entitiesMap: EntitiesMap
   tasksByFolderMap: TasksByFolderMap
   tableRows?: TableRow[] // any extra rows that we want to add to the table
+
+  // grouping
+  taskGroups: TaskGroup[]
 
   // data functions
   fetchNextPage: () => void
@@ -101,6 +105,9 @@ export interface ProjectTableContextProps {
   reloadTableData: ProjectTableProviderProps['reloadTableData']
   getEntityById: (id: string) => EntityMap | undefined
 
+  // grouping
+  taskGroups: ProjectTableProviderProps['taskGroups']
+
   // Filters
   filters: ProjectTableProviderProps['filters']
   setFilters: ProjectTableProviderProps['setFilters']
@@ -149,6 +156,7 @@ export const ProjectTableProvider = ({
   projectName,
   users,
   attribFields,
+  taskGroups,
   filters,
   setFilters,
   queryFilters,
@@ -256,6 +264,7 @@ export const ProjectTableProvider = ({
         entitiesMap,
         fetchNextPage,
         reloadTableData,
+        taskGroups,
         // filters
         filters,
         setFilters,

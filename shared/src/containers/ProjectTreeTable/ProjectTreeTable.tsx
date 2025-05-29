@@ -55,7 +55,12 @@ import { createPortal } from 'react-dom'
 import { Icon } from '@ynput/ayon-react-components'
 import { AttributeEnumItem, ProjectTableAttribute, BuiltInFieldOptions } from './types'
 import { ToggleExpandAll, useProjectTableContext } from './context/ProjectTableContext'
-import { getReadOnlyLists, getTableFieldOptions } from './utils'
+import {
+  buildGroupByTableData,
+  getReadOnlyLists,
+  getTableFieldOptions,
+  GroupByEntityType,
+} from './utils'
 import { UpdateTableEntities } from './hooks/useUpdateTableData'
 
 // dnd-kit imports
@@ -110,6 +115,9 @@ export interface ProjectTreeTableProps extends React.HTMLAttributes<HTMLDivEleme
   sortableRows?: boolean
   onRowReorder?: (active: UniqueIdentifier, over: UniqueIdentifier | null) => void // Adjusted type for active/over if needed, or keep as Active, Over
   dndActiveId?: UniqueIdentifier | null // Added prop
+  groupByConfig?: {
+    entityType?: GroupByEntityType
+  }
   pt?: {
     container?: React.HTMLAttributes<HTMLDivElement>
     head?: Partial<TableHeadProps>
@@ -129,6 +137,7 @@ export const ProjectTreeTable = ({
   sortableRows = false,
   onRowReorder,
   dndActiveId, // Destructure new prop
+  groupByConfig,
   pt,
   ...props
 }: ProjectTreeTableProps) => {
@@ -141,11 +150,13 @@ export const ProjectTreeTable = ({
     columnOrderUpdater,
     columnSizing,
     columnSizingUpdater,
+    groupBy,
   } = useColumnSettingsContext()
 
   const {
     projectInfo,
-    tableData,
+    tableData: defaultTableData,
+    taskGroups,
     attribFields,
     entitiesMap,
     users,
@@ -159,6 +170,16 @@ export const ProjectTreeTable = ({
     updateSorting,
     showHierarchy,
   } = useProjectTableContext()
+
+  // if we are grouping by something, we ignore current tableData and format the data based on the groupBy
+  const groupedTableData = useMemo(
+    () =>
+      !!groupBy &&
+      buildGroupByTableData(entitiesMap, groupBy, groupByConfig?.entityType, taskGroups),
+    [groupBy, entitiesMap, groupByConfig?.entityType],
+  )
+
+  const tableData = groupedTableData ? groupedTableData : defaultTableData
 
   const isLoading = isLoadingProp || isLoadingData
 
@@ -219,6 +240,7 @@ export const ProjectTreeTable = ({
       options,
       extraColumns,
       excluded: excludedColumns,
+      groupBy,
     })
 
     if (sortableRows) {

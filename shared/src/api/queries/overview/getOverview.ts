@@ -61,9 +61,18 @@ const getOverviewTaskTags = (
   ]
 }
 
-type GetTasksListResult = {
+export type GetTasksListResult = {
   pageInfo: GetTasksListQuery['project']['tasks']['pageInfo']
   tasks: EditorTaskNode[]
+}
+
+export type GetTasksListArgs = {
+  projectName: string
+  filter?: string
+  search?: string
+  folderIds?: string[]
+  desc?: boolean
+  sortBy?: string
 }
 
 // Define the page param type for infinite query
@@ -105,8 +114,11 @@ const enhancedApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
 const foldersApiEnhanced = tasksApi.enhanceEndpoints({
   endpoints: {
     queryTasksFolders: {},
+    getTaskGroups: {},
   },
 })
+
+export const { useGetTaskGroupsQuery } = foldersApiEnhanced
 
 export const TASKS_INFINITE_QUERY_COUNT = 100 // Number of items to fetch per page
 
@@ -200,14 +212,7 @@ const injectedApi = enhancedApi.injectEndpoints({
     // Add new infinite query endpoint for tasks list
     getTasksListInfinite: build.infiniteQuery<
       GetTasksListResult,
-      {
-        projectName: string
-        filter?: string
-        search?: string
-        folderIds?: string[]
-        desc?: boolean
-        sortBy?: string
-      },
+      GetTasksListArgs,
       TasksListPageParam
     >({
       infiniteQueryOptions: {
