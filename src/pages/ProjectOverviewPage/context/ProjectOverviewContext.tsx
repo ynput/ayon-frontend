@@ -168,27 +168,6 @@ export const ProjectOverviewProvider = ({ children }: ProjectOverviewProviderPro
     { projectName, groupingKey: groupBy?.id || '', empty: true },
     { skip: !groupBy?.id },
   )
-  if (groupBy && Object.keys(groupBy).length) {
-    const groupByFilter: Filter = {
-      id: groupBy.id,
-      label: groupBy.id,
-      operator: 'OR',
-      values: Object.entries(expanded)
-        .filter(
-          ([value, isExpanded]) => isExpanded && taskGroups.find((group) => group.value === value),
-        )
-        .map(([id]) => ({
-          id,
-          label: id,
-        })),
-    }
-
-    // now add the groupBy filter to the combined filters, remove any existing filter with the same id
-    combinedFilters = combinedFilters.filter((filter) => filter.id !== groupByFilter.id)
-    combinedFilters.push(groupByFilter)
-
-    columnSorting = [{ id: groupBy.id, desc: false }]
-  }
 
   // transform the task bar filters to the query format
   const queryFilter = clientFilterToQueryFilter(combinedFilters)
@@ -250,10 +229,12 @@ export const ProjectOverviewProvider = ({ children }: ProjectOverviewProviderPro
   } = useFetchOverviewData({
     projectName,
     selectedFolders,
+    filters: combinedFilters,
     queryFilters,
     expanded,
     sorting: columnSorting,
     groupBy,
+    taskGroups,
     showHierarchy,
   })
 

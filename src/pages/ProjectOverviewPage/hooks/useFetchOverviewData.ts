@@ -1,10 +1,11 @@
 import {
   useGetFolderListQuery,
+  useGetGroupedTasksListQuery,
   useGetOverviewTasksByFoldersQuery,
   useGetQueryTasksFoldersQuery,
   useGetTasksListInfiniteInfiniteQuery,
 } from '@shared/api'
-import type { FolderListItem } from '@shared/api'
+import type { FolderListItem, GetGroupedTasksListArgs, TaskGroup } from '@shared/api'
 import {
   EditorTaskNode,
   FolderNodeMap,
@@ -16,8 +17,12 @@ import { ExpandedState, SortingState } from '@tanstack/react-table'
 import { ProjectOverviewContextProps } from '../context/ProjectOverviewContext'
 import { determineLoadingTaskFolders } from '@shared/containers/ProjectTreeTable/utils/loadingUtils'
 import { LoadingTasks } from '@shared/containers/ProjectTreeTable/types'
-import { TasksByFolderMap } from '@shared/containers/ProjectTreeTable/utils'
+import {
+  clientFilterToQueryFilter,
+  TasksByFolderMap,
+} from '@shared/containers/ProjectTreeTable/utils'
 import { TableGroupBy } from '@shared/containers'
+import { Filter } from '@ynput/ayon-react-components'
 
 type useFetchOverviewDataData = {
   foldersMap: FolderNodeMap
@@ -33,9 +38,11 @@ type useFetchOverviewDataData = {
 type Params = {
   projectName: string
   selectedFolders: string[] // folders selected in the slicer (hierarchy)
+  filters: Filter[] // RAW filters (including slicer filters)
   queryFilters: ProjectOverviewContextProps['queryFilters'] // filters from the filters bar or slicer (not hierarchy)
   sorting: SortingState
   groupBy: TableGroupBy | undefined
+  taskGroups: TaskGroup[]
   expanded: ExpandedState
   showHierarchy: boolean
 }
@@ -43,9 +50,11 @@ type Params = {
 const useFetchOverviewData = ({
   projectName,
   selectedFolders, // comes from the slicer
+  filters,
   queryFilters,
   sorting,
   groupBy,
+  taskGroups = [],
   expanded,
   showHierarchy,
 }: Params): useFetchOverviewDataData => {
@@ -251,38 +260,66 @@ const useFetchOverviewData = ({
     return tasksListInfiniteData.pages.flatMap((page) => page.tasks || [])
   }, [tasksListInfiniteData?.pages])
 
-  const handleFetchNextPage = () => {
-    if (hasNextPage) {
+  // for grouped tasks, we fetch all tasks for each group
+  // we do this by building a list of groups with filters for that group
+  const groupQueries: GetGroupedTasksListArgs['groups'] = useMemo(() => {
+    return groupBy
+      ? taskGroups.map((group) => {
+          // build the filter for this group based on current filters and the group value
+          const filtersWithGroup = [...filters]
+          const groupFilter: Filter = {
+            id: groupBy.id,
+            label: groupBy.id,
+            values: [{ id: group.value, label: group.value }],
+          }
+
+          // add the group filter to the filters (remove any existing filter with the same id)
+          const existingFilterIndex = filtersWithGroup.findIndex((f) => f.id === groupBy.id)
+          if (existingFilterIndex !== -1) {
+            filtersWithGroup[existingFilterIndex] = groupFilter
+          } else {
+            filtersWithGroup.push(groupFilter)
+          }
+
+          // convert the filters to string format for the query
+          const queryFilter = clientFilterToQueryFilter(filtersWithGroup)
+          const queryFilterString = filtersWithGroup.length ? JSON.stringify(queryFilter) : ''
+
+          return {
+            count: 500, // make this a state so it can be adjusted later
+            filter: queryFilterString,
+          }
+        })
+      : []
+  }, [groupBy, taskGroups, filters])
+
+  const { data: { tasks: groupTasks = [] } = {}, isFetching: isFetchingGroups } =
+    useGetGroupedTasksListQuery(
+      {
+        projectName,
+        groups: groupQueries,
+        sortBy: sortId ? sortId.replace('_', '.') : undefined,
+        desc: !!singleSort?.desc,
+        search: queryFilters.search,
+      },
+      {
+        skip: !groupBy || !groupQueries.length,
+      },
+    )
+
+  const handleFetchNextPage = (group?: string) => {
+    if (groupBy) {
+      if (group) {
+        // fetch next page for a specific group by increasing the count
+        // TODO: implement this
+      }
+    } else if (hasNextPage) {
       console.log('fetching next page')
       fetchNextPage()
     }
   }
 
-  // const {
-  //   data: groupedTasksListInfiniteData,
-  //   // isFetching: isFetchingTasksList,
-  //   // fetchNextPage,
-  //   // hasNextPage,
-  //   // isFetchingNextPage: isFetchingNextPageTasksList,
-  //   // isUninitialized: isUninitializedTasksList,
-  //   // refetch: refetchTasksList,
-  // } = useGetTasksListInfiniteInfiniteQuery(
-  //   {
-  //     projectName,
-  //     filter: queryFilters.filterString,
-  //     search: queryFilters.search,
-  //     folderIds: selectedFolders.length ? Array.from(foldersMap.keys()) : undefined,
-  //     sortBy: sortId ? sortId.replace('_', '.') : undefined,
-  //     desc: !!singleSort?.desc,
-  //   },
-  //   {
-  //     skip: showHierarchy,
-  //     initialPageParam: {
-  //       cursor: '',
-  //       desc: !!singleSort?.desc,
-  //     },
-  //   },
-  // )
+  console.log(groupTasks)
 
   // tasksMaps is a map of tasks by task ID
   // tasksByFolderMap is a map of tasks by folder ID
@@ -297,7 +334,7 @@ const useFetchOverviewData = ({
     })
 
     // either show the hierarchy or the flat list of tasks
-    const allTasks = showHierarchy ? expandedFoldersTasks : tasksList
+    const allTasks = showHierarchy ? expandedFoldersTasks : groupBy ? groupTasks : tasksList
     for (const task of allTasks) {
       const taskId = task.id as string
       const folderId = task.folderId as string
@@ -331,7 +368,8 @@ const useFetchOverviewData = ({
       isLoading ||
       isFetchingFolders ||
       (isFetchingTasksList && !isFetchingNextPageTasksList) ||
-      isFetchingTasksFolders, // these all show a full loading state
+      isFetchingTasksFolders ||
+      isFetchingGroups, // these all show a full loading state
     isLoadingMore: isFetchingNextPageTasksList,
     loadingTasks: loadingTasksForParents,
     fetchNextPage: handleFetchNextPage,
