@@ -5,7 +5,6 @@ const validateUpdateEntities = (
   entities: EntityUpdate[] = [],
   attribFields: ProjectTableAttribute[],
 ) => {
-  console.log(entities)
   // first validate the values are correct
   for (const { isAttrib, value: rawValue, field } of entities) {
     if (!isAttrib) continue

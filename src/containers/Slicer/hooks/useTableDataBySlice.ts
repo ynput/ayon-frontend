@@ -77,7 +77,7 @@ const useTableDataBySlice = ({ sliceFields }: Props): TableData => {
   } = useProjectAnatomySlices({ projectName, useExtraSlices })
 
   //   Hierarchy
-  const { getData: getHierarchyData, isLoading: isLoadingHierarchy } = useHierarchyTable({
+  const { getData: getHierarchyData, isFetching: isLoadingHierarchy } = useHierarchyTable({
     projectName: projectName || '',
     folderTypes: project?.folderTypes || [],
   })
@@ -163,7 +163,7 @@ const useTableDataBySlice = ({ sliceFields }: Props): TableData => {
     }
 
     fetchData()
-  }, [sliceType, sliceFields, projectName, isLoadingData])
+  }, [sliceType, getHierarchyData, sliceFields, projectName, isLoadingData])
 
   // from slice data, flatten into a map of ids to rows
   const sliceMap = useMemo(() => {
