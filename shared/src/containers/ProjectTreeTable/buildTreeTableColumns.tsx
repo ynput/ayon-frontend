@@ -141,7 +141,7 @@ const buildTreeTableColumns = ({
     staticColumns.push({
       id: 'name',
       accessorKey: 'name',
-      header: () => (groupBy ? groupBy.id : 'Folder / Task'),
+      header: () => (groupBy ? 'Group' : 'Folder / Task'),
       minSize: MIN_SIZE,
       sortingFn: withLoadingStateSort(showHierarchy ? nameSort : pathSort),
       enableSorting: true,

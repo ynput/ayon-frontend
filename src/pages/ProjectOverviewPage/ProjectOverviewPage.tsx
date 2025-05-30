@@ -1,6 +1,6 @@
 // libraries
 import { Splitter, SplitterPanel } from 'primereact/splitter'
-import { FC, useCallback } from 'react'
+import { FC, useCallback, useEffect } from 'react'
 
 // state
 import { useSlicerContext } from '@context/SlicerContext'
@@ -18,7 +18,11 @@ import { FilterFieldType, OverviewSettingsChange } from '@shared/components'
 import ProjectOverviewDetailsPanel from './containers/ProjectOverviewDetailsPanel'
 import NewEntity from '@components/NewEntity/NewEntity'
 import { Actions } from '@shared/containers/Actions/Actions'
-import { useProjectTableContext, useSelectedRowsContext } from '@shared/containers/ProjectTreeTable'
+import {
+  useColumnSettingsContext,
+  useProjectTableContext,
+  useSelectedRowsContext,
+} from '@shared/containers/ProjectTreeTable'
 import { ProjectTableSettings, CustomizeButton } from '@shared/components'
 import { useSettingsPanel } from '@shared/context'
 import ReloadButton from './components/ReloadButton'
@@ -48,6 +52,8 @@ const ProjectOverviewPage: FC = () => {
     updateShowHierarchy,
     tasksMap,
   } = useProjectTableContext()
+
+  const { groupBy, updateGroupBy } = useColumnSettingsContext()
 
   const { isPanelOpen } = useSettingsPanel()
 
@@ -94,6 +100,22 @@ const ProjectOverviewPage: FC = () => {
     [showHierarchy, updateShowHierarchy],
   )
 
+  // if groupBy is set and showHierarchy is true, turn off hierarchy
+  useEffect(() => {
+    if (groupBy && showHierarchy) {
+      updateShowHierarchy(false)
+    }
+  }, [groupBy, showHierarchy, updateShowHierarchy])
+
+  const handleShowHierarchy = () => {
+    // update hierarchy
+    updateShowHierarchy(!showHierarchy)
+    // remove grouping
+    if (groupBy) {
+      updateGroupBy(undefined)
+    }
+  }
+
   return (
     <main style={{ overflow: 'hidden', gap: 4 }}>
       <Splitter
@@ -125,7 +147,7 @@ const ProjectOverviewPage: FC = () => {
               <ReloadButton />
               <SwitchButton
                 value={showHierarchy}
-                onClick={() => updateShowHierarchy(!showHierarchy)}
+                onClick={handleShowHierarchy}
                 label="Show hierarchy"
               />
               <Actions

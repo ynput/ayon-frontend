@@ -1,4 +1,4 @@
-import { GroupData } from '../utils'
+import { GroupData } from '../hooks/useBuildGroupByTableData'
 
 export type FolderListItem = {
   id: string

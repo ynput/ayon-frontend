@@ -55,12 +55,7 @@ import { createPortal } from 'react-dom'
 import { Icon } from '@ynput/ayon-react-components'
 import { AttributeEnumItem, ProjectTableAttribute, BuiltInFieldOptions } from './types'
 import { ToggleExpandAll, useProjectTableContext } from './context/ProjectTableContext'
-import {
-  buildGroupByTableData,
-  getReadOnlyLists,
-  getTableFieldOptions,
-  GroupByEntityType,
-} from './utils'
+import { getReadOnlyLists, getTableFieldOptions } from './utils'
 import { UpdateTableEntities } from './hooks/useUpdateTableData'
 
 // dnd-kit imports
@@ -72,6 +67,7 @@ import {
 // import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
 import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import useBuildGroupByTableData, { GroupByEntityType } from './hooks/useBuildGroupByTableData'
 
 declare module '@tanstack/react-table' {
   interface TableMeta<TData extends RowData> {
@@ -171,11 +167,16 @@ export const ProjectTreeTable = ({
     showHierarchy,
   } = useProjectTableContext()
 
+  const buildGroupByTableData = useBuildGroupByTableData({
+    entities: entitiesMap,
+    entityType: groupByConfig?.entityType,
+    groups: taskGroups,
+    project: projectInfo,
+  })
+
   // if we are grouping by something, we ignore current tableData and format the data based on the groupBy
   const groupedTableData = useMemo(
-    () =>
-      !!groupBy &&
-      buildGroupByTableData(entitiesMap, groupBy, groupByConfig?.entityType, taskGroups),
+    () => !!groupBy && buildGroupByTableData(groupBy),
     [groupBy, entitiesMap, groupByConfig?.entityType],
   )
 
@@ -1019,7 +1020,7 @@ const TableCell = ({
         endSelection(cellId)
       }}
       onDoubleClick={(e) => {
-        if (cell.column.id === 'name') {
+        if (cell.column.id === 'name' && !(e.target as HTMLElement).closest('.expander')) {
           // select the row by selecting the row-selection cell
           const rowSelectionCellId = getCellId(cell.row.id, ROW_SELECTION_COLUMN_ID)
           if (!isCellSelected(rowSelectionCellId)) {
