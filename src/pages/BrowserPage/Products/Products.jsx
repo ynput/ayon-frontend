@@ -38,9 +38,12 @@ import { toast } from 'react-toastify'
 import * as Styled from './Products.styled'
 import { openViewer } from '@state/viewer'
 import { useEntityListsContext } from '@pages/ProjectListsPage/context/EntityListsContext'
+import { useVersionUploadContext } from '@containers/VersionUploader/context/VersionUploadContext'
 
 const Products = () => {
   const dispatch = useDispatch()
+
+  const { onOpenVersionUpload } = useVersionUploadContext()
 
   // context
   // project redux
@@ -606,6 +609,12 @@ const Products = () => {
         command: () => handleOpenViewer(id),
         icon: 'play_circle',
         shortcut: 'Spacebar',
+      },
+      {
+        label: 'Upload version',
+        command: () => onOpenVersionUpload({ productId: selectedProducts[0] }),
+        icon: 'upload',
+        disabled: selectedProducts.length !== 1,
       },
       buildAddToListMenu(
         [
