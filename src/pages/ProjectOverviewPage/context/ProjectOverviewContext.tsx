@@ -46,7 +46,7 @@ export interface ProjectOverviewContextProps {
   foldersMap: FolderNodeMap
   entitiesMap: FolderNodeMap & TaskNodeMap
   tasksByFolderMap: TasksByFolderMap
-  fetchNextPage: () => void
+  fetchNextPage: (value?: string) => void
   reloadTableData: () => void
 
   // Grouping data

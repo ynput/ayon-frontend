@@ -9,6 +9,8 @@ import { SelectionCell } from './components/SelectionCell'
 import RowSelectionHeader from './components/RowSelectionHeader'
 import { ROW_SELECTION_COLUMN_ID } from './context/SelectionCellsContext'
 import { TableGroupBy } from './context'
+import { NEXT_PAGE_ID } from './hooks/useBuildGroupByTableData'
+import LoadMoreWidget from './widgets/LoadMoreWidget'
 
 const MIN_SIZE = 50
 
@@ -151,6 +153,17 @@ const buildTreeTableColumns = ({
       cell: ({ row, column, table }) => {
         const meta = table.options.meta
         const cellId = getCellId(row.id, column.id)
+
+        if (row.original.entityType === NEXT_PAGE_ID && row.original.group) {
+          return (
+            <LoadMoreWidget
+              label={'Load more tasks'}
+              id={row.original.group.value}
+              onLoadMore={(id) => meta?.loadMoreTasks?.(id)}
+            />
+          )
+        }
+
         return (
           <TableCellContent
             id={cellId}
@@ -211,7 +224,7 @@ const buildTreeTableColumns = ({
       cell: ({ row, column, table }) => {
         const { value, id, type } = getValueIdType(row, column.id)
         const meta = table.options.meta
-        if (type === 'group') return null
+        if (['group', NEXT_PAGE_ID].includes(type)) return null
 
         return (
           <CellWidget
@@ -244,7 +257,7 @@ const buildTreeTableColumns = ({
       enableHiding: true,
       cell: ({ row, column, table }) => {
         const { value, id, type } = getValueIdType(row, column.id)
-        if (type === 'group') return null
+        if (['group', NEXT_PAGE_ID].includes(type)) return null
         const fieldId = type === 'folder' ? 'folderType' : 'taskType'
         const meta = table.options.meta
         return (
@@ -285,7 +298,7 @@ const buildTreeTableColumns = ({
       cell: ({ row, column, table }) => {
         const meta = table.options.meta
         const { value, id, type } = getValueIdType(row, column.id)
-        if (type === 'group') return null
+        if (['group', NEXT_PAGE_ID].includes(type)) return null
 
         if (type === 'folder')
           return (
@@ -336,7 +349,7 @@ const buildTreeTableColumns = ({
       cell: ({ row, column, table }) => {
         const meta = table.options.meta
         const { value, id, type } = getValueIdType(row, column.id)
-        if (type === 'group') return null
+        if (['group', NEXT_PAGE_ID].includes(type)) return null
         return (
           <CellWidget
             rowId={id}
@@ -383,7 +396,7 @@ const buildTreeTableColumns = ({
           const columnIdParsed = column.id.replace('attrib_', '')
           const { value, id, type } = getValueIdType(row, columnIdParsed, 'attrib')
           const isInherited = !row.original.ownAttrib?.includes(columnIdParsed)
-          if (type === 'group') return null
+          if (['group', NEXT_PAGE_ID].includes(type)) return null
 
           return (
             <CellWidget

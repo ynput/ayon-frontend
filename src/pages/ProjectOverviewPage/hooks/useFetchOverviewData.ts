@@ -31,7 +31,7 @@ type useFetchOverviewDataData = {
   isLoadingAll: boolean // the whole table is a loading state
   isLoadingMore: boolean // loading more tasks
   loadingTasks: LoadingTasks // show number of loading tasks per folder or root
-  fetchNextPage: () => void
+  fetchNextPage: (value?: string) => void
   reloadTableData: () => void
 }
 
@@ -260,6 +260,26 @@ const useFetchOverviewData = ({
     return tasksListInfiniteData.pages.flatMap((page) => page.tasks || [])
   }, [tasksListInfiniteData?.pages])
 
+  // total number of tasks fetched for groups
+  const totalGroupCount = 1000
+  const maxPerGroupCount = 400,
+    minPerGroupCount = 100 // max/min tasks per group
+  const countPerGroup = Math.max(
+    minPerGroupCount,
+    Math.min(maxPerGroupCount, Math.round(totalGroupCount / (taskGroups.length || 1))),
+  )
+  const initGroupPageCounts = taskGroups.reduce((acc, group) => {
+    acc[group.value] = 1 // initialize each group with 1 count
+    return acc
+  }, {} as Record<string, number>)
+  const [groupPageCounts, setGroupPageCounts] = useState<Record<string, number>>({})
+
+  // when initGroupPageCounts changes, set it to groupPageCounts
+  useEffect(() => {
+    if (Object.keys(groupPageCounts).length === 0) {
+      setGroupPageCounts(initGroupPageCounts)
+    }
+  }, [initGroupPageCounts, groupPageCounts])
   // for grouped tasks, we fetch all tasks for each group
   // we do this by building a list of groups with filters for that group
   const groupQueries: GetGroupedTasksListArgs['groups'] = useMemo(() => {
@@ -284,14 +304,17 @@ const useFetchOverviewData = ({
           // convert the filters to string format for the query
           const queryFilter = clientFilterToQueryFilter(filtersWithGroup)
           const queryFilterString = filtersWithGroup.length ? JSON.stringify(queryFilter) : ''
+          const pageCount = groupPageCounts[group.value] || 1 // use the count from state or default to 1
+          const taskCount = countPerGroup * pageCount // total tasks to fetch for this group
 
           return {
-            count: 500, // make this a state so it can be adjusted later
+            value: group.value,
+            count: taskCount,
             filter: queryFilterString,
           }
         })
       : []
-  }, [groupBy, taskGroups, filters])
+  }, [groupBy, taskGroups, filters, groupPageCounts])
 
   const { data: { tasks: groupTasks = [] } = {}, isFetching: isFetchingGroups } =
     useGetGroupedTasksListQuery(
@@ -309,17 +332,21 @@ const useFetchOverviewData = ({
 
   const handleFetchNextPage = (group?: string) => {
     if (groupBy) {
-      if (group) {
-        // fetch next page for a specific group by increasing the count
-        // TODO: implement this
+      console.log(groupPageCounts)
+      if (group && group in groupPageCounts) {
+        console.log('fethching next page for group:', group)
+        // fetch next page for a specific group by increasing the count in groupPageCounts
+        setGroupPageCounts((prevCounts) => {
+          const newCounts = { ...prevCounts }
+          newCounts[group] = (newCounts[group] || 1) + 1 // increment the count for this group
+          return newCounts
+        })
       }
     } else if (hasNextPage) {
       console.log('fetching next page')
       fetchNextPage()
     }
   }
-
-  console.log(groupTasks)
 
   // tasksMaps is a map of tasks by task ID
   // tasksByFolderMap is a map of tasks by folder ID
@@ -339,7 +366,20 @@ const useFetchOverviewData = ({
       const taskId = task.id as string
       const folderId = task.folderId as string
 
-      tasksMap.set(taskId, addExtraDataToTask(task))
+      if (tasksMap.has(taskId)) {
+        // merge specific data if the task already exists
+        const existingTask = tasksMap.get(taskId) as EditorTaskNode
+        const currentTask = addExtraDataToTask(task)
+        const mergedTask = {
+          ...existingTask,
+          ...currentTask,
+          groups: [...(existingTask.groups || []), ...(currentTask.groups || [])],
+        }
+
+        tasksMap.set(taskId, mergedTask)
+      } else {
+        tasksMap.set(taskId, addExtraDataToTask(task))
+      }
 
       if (tasksByFolderMap.has(folderId)) {
         tasksByFolderMap.get(folderId)!.push(taskId)

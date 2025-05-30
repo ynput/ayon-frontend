@@ -84,7 +84,7 @@ export type GetGroupedTasksListResult = {
 
 export type GetGroupedTasksListArgs = {
   projectName: string
-  groups: { filter: string; count: number }[]
+  groups: { filter: string; count: number; value: string }[]
   search?: string
   desc?: boolean
   sortBy?: string
@@ -315,6 +315,8 @@ const injectedApi = enhancedApi.injectEndpoints({
               filter: group.filter,
               search,
               sortBy: sortBy,
+              // @ts-expect-error - we know group does not exist on query variables but we need it for later
+              group: group.value,
             }
             if (desc) {
               queryParams.last = count
@@ -332,14 +334,22 @@ const injectedApi = enhancedApi.injectEndpoints({
           const tasks: EditorTaskNode[] = []
           for (const res of result) {
             if (res.error) throw res.error
-            const hasNextPage = res.data?.pageInfo?.hasNextPage || false
-            const groupTasks = [...(res.data?.tasks || [])]
+            // get group value
+            // @ts-expect-error - we know group does exist on res.originalArgs from line 319
+            const groupValue = res.originalArgs?.group as string
 
-            if (groupTasks.length > 0 && hasNextPage) {
-              // Add hasNextPage to the last task in this group
-              const lastTask = groupTasks[groupTasks.length - 1]
-              groupTasks[groupTasks.length - 1] = { ...lastTask, hasNextPage: true }
-            }
+            const hasNextPage =
+              res.data?.pageInfo?.hasNextPage || res.data?.pageInfo?.hasPreviousPage || false
+            const groupTasks =
+              res.data?.tasks.map((task, i, a) => ({
+                ...task,
+                groups: [
+                  {
+                    value: groupValue,
+                    hasNextPage: i === a.length - 1 && hasNextPage ? groupValue : undefined, // Only add hasNextPage to the last task in the group
+                  },
+                ],
+              })) || []
 
             tasks.push(...groupTasks)
           }

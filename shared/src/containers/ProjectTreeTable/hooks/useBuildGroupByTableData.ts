@@ -16,6 +16,8 @@ export type GroupData = {
   img?: string
 }
 
+export const NEXT_PAGE_ID = 'next-page'
+
 const valueToStringArray = (value?: any): string[] =>
   value ? (Array.isArray(value) ? value.map((v) => v.toString()) : [value.toString()]) : []
 
@@ -140,6 +142,27 @@ const useBuildGroupByTableData = (props: BuildGroupByTableProps) => {
         } else {
           const ungroupedGroup = getUnGroupedGroup()
           ungroupedGroup.subRows.push(entityToGroupRow(entity as EditorTaskNode))
+        }
+      }
+
+      // for groups metadata on entity, check if there is a next page
+      if ('groups' in entity && Array.isArray(entity.groups)) {
+        for (const group of entity.groups) {
+          const hasNextPageGroup = group.hasNextPage
+          if (hasNextPageGroup && groupsMap.has(group.value)) {
+            // add a next page row to the group
+            const groupRow = groupsMap.get(group.value)
+            if (groupRow) {
+              groupRow.subRows.push({
+                id: `${group.value}-next-page`,
+                name: `Load more tasks...`,
+                entityType: NEXT_PAGE_ID,
+                subRows: [],
+                label: `Next page for ${group.value}`,
+                group: { value: group.value, label: group.value },
+              })
+            }
+          }
         }
       }
     }

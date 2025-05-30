@@ -56,7 +56,7 @@ export interface ProjectTableProviderProps {
   taskGroups: TaskGroup[]
 
   // data functions
-  fetchNextPage: () => void
+  fetchNextPage: (value?: string) => void
   reloadTableData: () => void
 
   // Filters

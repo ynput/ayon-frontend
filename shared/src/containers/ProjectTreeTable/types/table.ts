@@ -84,7 +84,7 @@ export type EditorTaskNode = TaskNode & {
   attrib: Record<string, any>
   entityId: string
   entityType: 'task'
-  hasNextPage?: boolean
+  groups?: { value: string; hasNextPage?: string }[]
 }
 
 type EditorVersionNode = {

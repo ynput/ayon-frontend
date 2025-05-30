@@ -165,6 +165,7 @@ export const ProjectTreeTable = ({
     sorting,
     updateSorting,
     showHierarchy,
+    fetchNextPage,
   } = useProjectTableContext()
 
   const buildGroupByTableData = useBuildGroupByTableData({
@@ -199,6 +200,8 @@ export const ProjectTreeTable = ({
 
   //The virtualizer needs to know the scrollable container element
   const tableContainerRef = useRef<HTMLDivElement>(null)
+  // reference of how many rows are currently rendered in the table
+  const tableRowsCountRef = useRef(0)
 
   // Selection context
   const { registerGrid } = useSelectionCellsContext()
@@ -215,10 +218,15 @@ export const ProjectTreeTable = ({
     const loadingAttrib = generateDummyAttributes()
     const loadingRows = generateLoadingRows(
       attribFields,
-      showHierarchy && tableData.length > 0 ? Math.min(tableRowsCount, 50) : 50,
+      showHierarchy && tableData.length > 0
+        ? Math.min(tableRowsCount, 50)
+        : groupBy
+        ? Math.max(tableRowsCountRef.current, 50)
+        : 50,
     )
+
     return { loadingAttrib, loadingRows }
-  }, [attribFields, tableData, showHierarchy, tableContainerRef.current])
+  }, [attribFields, tableData, showHierarchy, tableContainerRef.current, groupBy])
 
   const showLoadingRows = !isInitialized || isLoading
 
@@ -326,10 +334,16 @@ export const ProjectTreeTable = ({
       readOnly: readOnlyColumns,
       updateEntities,
       toggleExpandAll,
+      loadMoreTasks: fetchNextPage,
     },
   })
 
   const { rows } = table.getRowModel()
+
+  // update the tableRowsCountRef with the current number of rows
+  useEffect(() => {
+    tableRowsCountRef.current = rows.length
+  }, [rows.length])
 
   // Register grid structure with selection context when rows or columns change
   useEffect(() => {

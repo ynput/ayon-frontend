@@ -84,6 +84,9 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
     ...extraColumns,
   ]
 
+  // @martastain says list_of_* is a pita to implement, so we are not supporting it for now
+  const allowedGroupByFields = ['string', 'boolean', 'integer', 'float']
+
   const groupByFields = [
     {
       value: 'subType',
@@ -105,11 +108,13 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
       label: 'Tags',
       icon: getAttributeIcon('tags'),
     },
-    ...attribFields.map((field) => ({
-      value: 'attrib_' + field.name,
-      label: field.data.title || field.name,
-      icon: getAttributeIcon(field.name),
-    })),
+    ...attribFields
+      .filter((attrib) => allowedGroupByFields.includes(attrib.data.type))
+      .map((field) => ({
+        value: 'attrib_' + field.name,
+        label: field.data.title || field.name,
+        icon: getAttributeIcon(field.name),
+      })),
     ...extraColumns.map((column) => ({
       value: column.value,
       label: column.label,
