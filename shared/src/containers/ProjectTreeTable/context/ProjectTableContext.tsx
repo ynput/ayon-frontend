@@ -38,6 +38,7 @@ export interface ProjectTableProviderProps {
   isLoading: boolean
   isLoadingMore: boolean
   loadingTasks?: LoadingTasks
+  error?: string
   // Project Info
   projectInfo?: ProjectModel
   projectName: string
@@ -95,6 +96,7 @@ export interface ProjectTableContextProps {
   users: ProjectTableProviderProps['users']
   // Attributes
   attribFields: ProjectTableProviderProps['attribFields']
+  error?: string
 
   // Data
   tableData: TableRow[]
@@ -152,6 +154,7 @@ export const ProjectTableProvider = ({
   loadingTasks,
   isLoadingMore,
   isLoading,
+  error,
   isInitialized,
   projectName,
   users,
@@ -255,6 +258,7 @@ export const ProjectTableProvider = ({
         // forwarded on
         isInitialized,
         isLoading,
+        error,
         projectInfo,
         attribFields,
         users,

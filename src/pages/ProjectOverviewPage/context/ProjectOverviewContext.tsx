@@ -41,6 +41,7 @@ export interface ProjectOverviewContextProps {
   isLoading: boolean
   isLoadingMore: boolean
   loadingTasks: LoadingTasks
+  error?: string
   // Data
   tasksMap: TaskNodeMap
   foldersMap: FolderNodeMap
@@ -164,7 +165,7 @@ export const ProjectOverviewProvider = ({ children }: ProjectOverviewProviderPro
   // 1. get groups data
   // 2. add that filter to the combined filter
   // 3. sort by that filter
-  const { data: { groups: taskGroups = [] } = {} } = useGetTaskGroupsQuery(
+  const { data: { groups: taskGroups = [] } = {}, error: groupingError } = useGetTaskGroupsQuery(
     { projectName, groupingKey: groupBy?.id || '', empty: true },
     { skip: !groupBy?.id },
   )
@@ -253,6 +254,9 @@ export const ProjectOverviewProvider = ({ children }: ProjectOverviewProviderPro
     return combined
   }, [foldersMap, tasksMap])
 
+  // @ts-expect-error = it's always data.detail
+  const error = groupingError?.data?.detail
+
   return (
     <ProjectOverviewContext.Provider
       value={{
@@ -260,6 +264,7 @@ export const ProjectOverviewProvider = ({ children }: ProjectOverviewProviderPro
         isLoading: isLoadingAll || isLoadingData,
         isLoadingMore,
         loadingTasks,
+        error,
         projectInfo,
         attribFields: scopedAttribFields,
         users,

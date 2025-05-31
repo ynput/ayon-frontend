@@ -268,18 +268,24 @@ const useFetchOverviewData = ({
     minPerGroupCount,
     Math.min(maxPerGroupCount, Math.round(totalGroupCount / (taskGroups.length || 1))),
   )
-  const initGroupPageCounts = taskGroups.reduce((acc, group) => {
-    acc[group.value] = 1 // initialize each group with 1 count
-    return acc
-  }, {} as Record<string, number>)
+  const initGroupPageCounts = useMemo(() => {
+    return taskGroups.reduce((acc, group) => {
+      acc[group.value] = 1 // initialize each group with 1 count
+      return acc
+    }, {} as Record<string, number>)
+  }, [taskGroups])
   const [groupPageCounts, setGroupPageCounts] = useState<Record<string, number>>({})
 
   // when initGroupPageCounts changes, set it to groupPageCounts
   useEffect(() => {
-    if (Object.keys(groupPageCounts).length === 0) {
+    const hasInitData = Object.keys(initGroupPageCounts).length > 0
+    const hasCurrentData = Object.keys(groupPageCounts).length > 0
+
+    if (hasInitData && !hasCurrentData) {
       setGroupPageCounts(initGroupPageCounts)
     }
-  }, [initGroupPageCounts, groupPageCounts])
+  }, [initGroupPageCounts])
+
   // for grouped tasks, we fetch all tasks for each group
   // we do this by building a list of groups with filters for that group
   const groupQueries: GetGroupedTasksListArgs['groups'] = useMemo(() => {

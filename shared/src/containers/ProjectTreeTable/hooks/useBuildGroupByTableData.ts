@@ -14,6 +14,7 @@ export type GroupData = {
   color?: string
   icon?: string
   img?: string
+  count?: number
 }
 
 export const NEXT_PAGE_ID = 'next-page'
@@ -41,6 +42,7 @@ const getGroupData = (groupById: string, groupValue: string, groups?: TaskGroup[
       label: group.label || group.value,
       color: group.color,
       icon: group.icon,
+      count: group.count,
       img: groupById === 'assignees' ? `/api/users/${group.value}/avatar` : undefined,
     }
   }

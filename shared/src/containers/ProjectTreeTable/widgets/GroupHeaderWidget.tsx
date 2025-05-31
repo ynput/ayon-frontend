@@ -68,6 +68,17 @@ const StyledTextContent = styled.div`
   }
 `
 
+const StyledImg = styled.img`
+  width: 24px;
+  height: 24px;
+  border-radius: 12px;
+  object-fit: cover;
+`
+
+const Count = styled.span`
+  color: var(--md-sys-color-outline);
+`
+
 type GroupHeaderProps = {
   id: string
   label: string
@@ -75,6 +86,7 @@ type GroupHeaderProps = {
   icon?: string | null
   img?: string | null
   color?: string | null
+  count?: number
   isExpanded: boolean
   toggleExpanded: () => void
 }
@@ -85,6 +97,7 @@ export const GroupHeaderWidget = ({
   name,
   icon,
   img,
+  count,
   color,
   isExpanded,
   toggleExpanded,
@@ -102,10 +115,12 @@ export const GroupHeaderWidget = ({
       <StyledContentWrapper>
         <StyledContentAbsolute>
           <StyledContent>
+            {img && <StyledImg src={img} alt={name} className="img" />}
             {icon && <Icon icon={icon} style={{ color: color || undefined }} />}
             <StyledTextContent style={{ color: color || undefined }}>
               <span className="label">{label || name}</span>
             </StyledTextContent>
+            {count !== undefined && <Count>{count}</Count>}
           </StyledContent>
         </StyledContentAbsolute>
       </StyledContentWrapper>

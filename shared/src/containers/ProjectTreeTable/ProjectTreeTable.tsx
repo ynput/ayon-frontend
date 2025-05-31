@@ -1,4 +1,4 @@
-import { useMemo, useRef, useEffect, memo, CSSProperties, useState, useCallback } from 'react' // Added useCallback
+import { useMemo, useRef, useEffect, memo, CSSProperties, useCallback } from 'react' // Added useCallback
 import { useVirtualizer, VirtualItem, Virtualizer } from '@tanstack/react-virtual'
 // TanStack Table imports
 import {
@@ -157,6 +157,7 @@ export const ProjectTreeTable = ({
     entitiesMap,
     users,
     isLoading: isLoadingData,
+    error,
     isInitialized,
     expanded,
     projectName,
@@ -206,11 +207,6 @@ export const ProjectTreeTable = ({
   // Selection context
   const { registerGrid } = useSelectionCellsContext()
 
-  //a check on mount and after a fetch to see if the table is already scrolled to the bottom and immediately needs to fetch more data
-  useEffect(() => {
-    fetchMoreOnBottomReached(tableContainerRef.current)
-  }, [fetchMoreOnBottomReached])
-
   // generate loading attrib and rows
   const { loadingAttrib, loadingRows } = useMemo(() => {
     // count the number of children in tbody
@@ -226,7 +222,7 @@ export const ProjectTreeTable = ({
     )
 
     return { loadingAttrib, loadingRows }
-  }, [attribFields, tableData, showHierarchy, tableContainerRef.current, groupBy])
+  }, [])
 
   const showLoadingRows = !isInitialized || isLoading
 
@@ -338,6 +334,8 @@ export const ProjectTreeTable = ({
     },
   })
 
+  // TODO: when there is data (like in error) then we have infinite rendering
+
   const { rows } = table.getRowModel()
 
   // update the tableRowsCountRef with the current number of rows
@@ -347,6 +345,7 @@ export const ProjectTreeTable = ({
 
   // Register grid structure with selection context when rows or columns change
   useEffect(() => {
+    if (!rows.length) return
     const rowIds = rows.map((row) => row.id)
     const colIds = table.getAllLeafColumns().map((col) => col.id)
     const colIdsSortedByPinning = [...colIds].sort((a, b) => {
@@ -429,6 +428,7 @@ export const ProjectTreeTable = ({
               onOpenNew={onOpenNew}
               rowOrderIds={rowOrderIds}
               sortableRows={sortableRows}
+              error={error}
             />
           </table>
         </Styled.TableContainer>
@@ -721,6 +721,7 @@ interface TableBodyProps {
   onOpenNew?: (type: 'folder' | 'task') => void
   rowOrderIds: UniqueIdentifier[]
   sortableRows: boolean
+  error?: string
 }
 
 const TableBody = ({
@@ -734,6 +735,7 @@ const TableBody = ({
   onOpenNew,
   rowOrderIds,
   sortableRows,
+  error,
 }: TableBodyProps) => {
   const { handleTableBodyContextMenu } = useCellContextMenu({ attribs, onOpenNew })
 
@@ -805,10 +807,13 @@ const TableBody = ({
     </tbody>
   )
 
-  if (!virtualRows.length) {
+  if (error) {
     return (
       tableContainerRef.current &&
-      createPortal(<EmptyPlaceholder message="No items found" />, tableContainerRef.current)
+      createPortal(
+        <EmptyPlaceholder message="No items found" error={error} />,
+        tableContainerRef.current,
+      )
     )
   }
 

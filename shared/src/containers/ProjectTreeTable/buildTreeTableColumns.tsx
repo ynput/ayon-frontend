@@ -184,6 +184,7 @@ const buildTreeTableColumns = ({
                 icon={row.original.group.icon}
                 img={row.original.group.img}
                 color={row.original.group.color}
+                count={row.original.group.count}
                 isExpanded={row.getIsExpanded()}
                 toggleExpanded={row.getToggleExpandedHandler()}
               />
