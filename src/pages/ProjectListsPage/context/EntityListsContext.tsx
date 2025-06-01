@@ -306,7 +306,11 @@ export const EntityListsProvider = ({
       )
 
       let subMenuItems: ListSubMenuItem[] = []
-      if (isMultipleEntityTypes) {
+
+      if (cell.isGroup) {
+        // If the cell is a group, we don't show the add to list menu
+        return []
+      } else if (isMultipleEntityTypes) {
         subMenuItems = [...foldersMenuItems, ...tasksMenuItems]
       } else if (cell.entityType === 'folder') {
         subMenuItems = foldersMenuItems

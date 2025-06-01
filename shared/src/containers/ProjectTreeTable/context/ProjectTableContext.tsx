@@ -29,6 +29,7 @@ export type TableUser = {
 }
 
 export type ToggleExpandAll = (rowIds: RowId[], expand?: boolean) => void
+export type ToggleExpands = (rowIds: RowId[], expand?: boolean) => void
 
 export interface ProjectTableProviderProps {
   children: ReactNode
@@ -124,6 +125,7 @@ export interface ProjectTableContextProps {
   toggleExpanded: ProjectTableProviderProps['toggleExpanded']
   updateExpanded: ProjectTableProviderProps['updateExpanded']
   toggleExpandAll: ToggleExpandAll
+  toggleExpands: ToggleExpands // expand/collapse multiple rows at once
 
   // Sorting
   sorting: ProjectTableProviderProps['sorting']
@@ -250,6 +252,26 @@ export const ProjectTableProvider = ({
     [expanded, getChildrenEntities, setExpanded],
   )
 
+  const toggleExpands: ProjectTableContextProps['toggleExpands'] = useCallback(
+    (rowIds, expand) => {
+      const expandedState = typeof expanded === 'object' ? expanded : {}
+      const newExpandedState = { ...expandedState }
+
+      rowIds.forEach((rowId) => {
+        if (expand !== undefined) {
+          // Use the provided expand parameter
+          newExpandedState[rowId] = expand
+        } else {
+          // Toggle based on current state
+          newExpandedState[rowId] = !expandedState[rowId]
+        }
+      })
+
+      setExpanded(newExpandedState)
+    },
+    [expanded, setExpanded],
+  )
+
   return (
     <ProjectTableContext.Provider
       value={{
@@ -281,6 +303,7 @@ export const ProjectTableProvider = ({
         toggleExpanded,
         updateExpanded,
         toggleExpandAll,
+        toggleExpands,
         // sorting
         sorting,
         updateSorting,

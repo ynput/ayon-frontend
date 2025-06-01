@@ -978,6 +978,7 @@ const TableCell = ({
     endSelection,
     selectCell,
     getCellBorderClasses,
+    clearSelection,
   } = useSelectionCellsContext()
 
   const { isRowSelected } = useSelectedRowsContext()
@@ -989,6 +990,7 @@ const TableCell = ({
   const isPinned = cell.column.getIsPinned()
   const isLastLeftPinnedColumn = isPinned === 'left' && cell.column.getIsLastColumn('left')
   const isRowSelectionColumn = cell.column.id === ROW_SELECTION_COLUMN_ID
+  const isGroup = cell.row.original.entityType === 'group'
 
   return (
     <Styled.TableCell
@@ -1020,6 +1022,10 @@ const TableCell = ({
 
         // check we are not clicking on expander
         if ((e.target as HTMLElement).closest('.expander')) return
+
+        // only name column can be selected for group rows
+        if (isGroup && cell.column.id !== 'name') return clearSelection()
+
         const additive = e.metaKey || e.ctrlKey || isRowSelectionColumn
         if (e.shiftKey) {
           // Shift+click extends selection from anchor cell
@@ -1039,7 +1045,11 @@ const TableCell = ({
         endSelection(cellId)
       }}
       onDoubleClick={(e) => {
-        if (cell.column.id === 'name' && !(e.target as HTMLElement).closest('.expander')) {
+        if (
+          cell.column.id === 'name' &&
+          !(e.target as HTMLElement).closest('.expander') &&
+          !isGroup
+        ) {
           // select the row by selecting the row-selection cell
           const rowSelectionCellId = getCellId(cell.row.id, ROW_SELECTION_COLUMN_ID)
           if (!isCellSelected(rowSelectionCellId)) {

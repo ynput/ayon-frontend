@@ -48,6 +48,13 @@ const getGroupData = (groupById: string, groupValue: string, groups?: TaskGroup[
   }
 }
 
+export const GROUP_BY_ID = '_GROUP_'
+export const buildGroupId = (value: string) => `${GROUP_BY_ID}${value}`
+export const parseGroupId = (groupId: string): string | null => {
+  if (!groupId.startsWith(GROUP_BY_ID)) return null
+  return groupId.slice(GROUP_BY_ID.length + 1) // +1 for the underscore
+}
+
 type BuildGroupByTableProps = {
   project?: ProjectModel
   entities: EntitiesMap
@@ -87,9 +94,10 @@ const useBuildGroupByTableData = (props: BuildGroupByTableProps) => {
 
     for (const group of groups) {
       const groupValue = group.value
+      const groupId = buildGroupId(groupValue)
       const groupData = getGroupData(groupBy.id, groupValue, groups)
       groupsMap.set(groupValue, {
-        id: groupValue,
+        id: groupId,
         name: groupValue,
         entityType: 'group',
         subRows: [],
@@ -98,7 +106,7 @@ const useBuildGroupByTableData = (props: BuildGroupByTableProps) => {
       })
     }
 
-    const ungroupedId = '__ungrouped__'
+    const ungroupedId = GROUP_BY_ID + '__ungrouped'
     // gets the "Ungrouped" group, creating it if it doesn't exist
     const getUnGroupedGroup = () => {
       let ungroupedGroup = groupsMap.get(ungroupedId)

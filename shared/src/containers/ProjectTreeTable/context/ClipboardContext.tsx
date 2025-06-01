@@ -117,7 +117,10 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
           // Determine if this is a folder or task by checking which map contains the ID
           const entity = entitiesMap.get(rowId)
 
-          if (!entity) continue
+          if (!entity) {
+            console.warn(`Entity not found for rowId: ${rowId}`)
+            continue
+          }
 
           // Get all column IDs for this row, sorted by their index in the grid
           const colIds = Array.from(cellsByRow.get(rowId) || []).sort((a, b) => {
@@ -146,8 +149,12 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
 
             if (colId === 'subType') {
               // get folderType or taskType
-              // @ts-ignore
-              cellValue = entity[isFolder ? 'folderType' : 'taskType'] || ''
+              if ('folderType' in entity) {
+                cellValue = entity.folderType || ''
+              }
+              if ('taskType' in entity) {
+                cellValue = entity.taskType || ''
+              }
             }
 
             // Escape double quotes in the cell value and wrap in quotes

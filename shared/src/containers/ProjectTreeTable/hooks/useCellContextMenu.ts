@@ -9,6 +9,7 @@ import { useCellEditing } from '../context/CellEditingContext'
 import { InheritFromParentEntity } from './useUpdateTableData'
 import { ProjectTableAttribute } from '../types'
 import { UseHistoryReturn } from './useHistory'
+import { GROUP_BY_ID } from './useBuildGroupByTableData'
 
 type ContextEvent = React.MouseEvent<HTMLTableSectionElement, MouseEvent>
 
@@ -18,6 +19,7 @@ export type TableCellContextData = {
   columnId: string
   entityType: 'folder' | 'task' | 'product' | 'version' | undefined
   attribField: ProjectTableAttribute | undefined
+  isGroup: boolean // if the cell is a group header
 }
 type DefaultMenuItem =
   | 'copy-paste'
@@ -37,6 +39,7 @@ export type ContextMenuItemConstructor = (
     selectedRows: string[]
     selectedColumns: string[]
     selectedFullRows: string[] // if the full row is selected
+    selectedGroups: string[] // groups if any
   },
   context: {
     history: UseHistoryReturn
@@ -56,6 +59,8 @@ const useCellContextMenu = ({ attribs, onOpenNew }: CellContextMenuProps) => {
     showHierarchy,
     getEntityById,
     toggleExpandAll,
+    toggleExpands,
+    expanded,
     contextMenuItems = [],
   } = useProjectTableContext()
   const { copyToClipboard, exportCSV, pasteFromClipboard } = useClipboard()
@@ -112,22 +117,22 @@ const useCellContextMenu = ({ attribs, onOpenNew }: CellContextMenuProps) => {
     }, [] as InheritFromParentEntity[])
   }
 
-  const copyAndPasteItems: ContextMenuItemConstructor = (e, cell, selected, config) => {
+  const copyAndPasteItems: ContextMenuItemConstructor = (e, cell, selected, meta) => {
     return [
       {
         label: 'Copy',
         icon: 'content_copy',
         shortcut: getPlatformShortcutKey('c', [KeyMode.Ctrl]),
-        command: () => copyToClipboard(config.selectedCells),
-        hidden: false, // Always shown
+        command: () => copyToClipboard(meta.selectedCells),
+        hidden: cell.isGroup,
       },
       {
-        label: `Copy row${config.selectedFullRows.length > 1 ? 's' : ''}`,
+        label: `Copy row${meta.selectedFullRows.length > 1 ? 's' : ''}`,
         icon: 'content_copy',
-        command: () => copyToClipboard(config.selectedFullRows, true),
+        command: () => copyToClipboard(meta.selectedFullRows, true),
         hidden:
           cell.columnId !== 'name' ||
-          !config.selectedFullRows.some(
+          !meta.selectedFullRows.some(
             (cellId) => parseCellId(cellId)?.rowId === parseCellId(cell.cellId)?.rowId,
           ),
       },
@@ -135,8 +140,8 @@ const useCellContextMenu = ({ attribs, onOpenNew }: CellContextMenuProps) => {
         label: 'Paste',
         icon: 'content_paste',
         shortcut: getPlatformShortcutKey('v', [KeyMode.Ctrl]),
-        command: () => pasteFromClipboard(config.selectedCells),
-        hidden: cell.columnId === 'name',
+        command: () => pasteFromClipboard(meta.selectedCells),
+        hidden: cell.columnId === 'name' || cell.isGroup,
         disabled: cell.attribField?.readOnly,
       },
     ]
@@ -151,7 +156,7 @@ const useCellContextMenu = ({ attribs, onOpenNew }: CellContextMenuProps) => {
       // select the row to open the details
       selectCell(rowSelectionCellId, false, false)
     },
-    hidden: cell.columnId !== 'name' || meta.selectedRows.length > 1,
+    hidden: cell.columnId !== 'name' || meta.selectedRows.length > 1 || cell.isGroup,
   })
 
   const expandCollapseChildrenItems: ContextMenuItemConstructor = (e, cell, selected, meta) => [
@@ -160,14 +165,32 @@ const useCellContextMenu = ({ attribs, onOpenNew }: CellContextMenuProps) => {
       icon: 'expand_all',
       shortcut: 'Alt + click',
       command: () => toggleExpandAll(meta.selectedRows, true),
-      hidden: cell.columnId !== 'name',
+      hidden: cell.columnId !== 'name' || cell.entityType !== 'folder',
     },
     {
       label: 'Collapse children',
       icon: 'collapse_all',
       shortcut: 'Alt + click',
       command: () => toggleExpandAll(meta.selectedRows, false),
-      hidden: cell.columnId !== 'name',
+      hidden: cell.columnId !== 'name' || cell.entityType !== 'folder',
+    },
+    {
+      label: 'Expand',
+      icon: 'expand_all',
+      command: () => toggleExpands(meta.selectedRows, true),
+      hidden:
+        cell.columnId !== 'name' ||
+        !cell.isGroup ||
+        expanded[cell.entityId as keyof typeof expanded],
+    },
+    {
+      label: 'Collapse',
+      icon: 'collapse_all',
+      command: () => toggleExpands(meta.selectedRows, false),
+      hidden:
+        cell.columnId !== 'name' ||
+        !cell.isGroup ||
+        !expanded[cell.entityId as keyof typeof expanded],
     },
   ]
 
@@ -176,7 +199,7 @@ const useCellContextMenu = ({ attribs, onOpenNew }: CellContextMenuProps) => {
     icon: 'delete',
     danger: true,
     command: () => deleteEntities(meta.selectedCells),
-    hidden: cell.columnId !== 'name',
+    hidden: cell.columnId !== 'name' || cell.isGroup,
   })
 
   const inheritItem: ContextMenuItemConstructor = (e, cell, selected, meta) => {
@@ -194,11 +217,11 @@ const useCellContextMenu = ({ attribs, onOpenNew }: CellContextMenuProps) => {
     }
   }
 
-  const exportItem: ContextMenuItemConstructor = () => ({
+  const exportItem: ContextMenuItemConstructor = (e, cell) => ({
     label: 'Export selection',
     icon: 'download',
     command: () => exportCSV(Array.from(selectedCells), projectName),
-    hidden: false, // Always shown
+    hidden: cell.isGroup,
   })
 
   const createFolderItems: ContextMenuItemConstructor = (e, cell) => [
@@ -248,6 +271,7 @@ const useCellContextMenu = ({ attribs, onOpenNew }: CellContextMenuProps) => {
       entityId: cellEntityData?.entityId || rowId,
       entityType: cellEntityData?.entityType,
       attribField: attribField,
+      isGroup: rowId.startsWith(GROUP_BY_ID),
     }
   }
 
@@ -276,11 +300,13 @@ const useCellContextMenu = ({ attribs, onOpenNew }: CellContextMenuProps) => {
     const selectedCellRows: string[] = []
     const selectedCellColumns: string[] = []
     const selectedCellFullRows: string[] = []
+    const selectedCellsGroups: string[] = [] // find cells that are group headers
     for (const { entityId, columnId } of selectedCellsData) {
       if (entityId && !selectedCellRows.includes(entityId)) selectedCellRows.push(entityId)
       if (columnId && !selectedCellColumns.includes(columnId)) selectedCellColumns.push(columnId)
       if (columnId === ROW_SELECTION_COLUMN_ID && !selectedCellFullRows.includes(entityId))
         selectedCellFullRows.push(entityId)
+      if (entityId.startsWith(GROUP_BY_ID)) selectedCellsGroups.push(entityId)
     }
 
     const constructedMenuItems = contextMenuItems.flatMap((constructor) =>
@@ -294,6 +320,7 @@ const useCellContextMenu = ({ attribs, onOpenNew }: CellContextMenuProps) => {
               selectedRows: selectedCellRows,
               selectedColumns: selectedCellColumns,
               selectedFullRows: selectedCellFullRows,
+              selectedGroups: selectedCellsGroups, // groups if any
             },
             {
               history,
@@ -308,6 +335,7 @@ const useCellContextMenu = ({ attribs, onOpenNew }: CellContextMenuProps) => {
               selectedRows: selectedCellRows,
               selectedColumns: selectedCellColumns,
               selectedFullRows: selectedCellFullRows,
+              selectedGroups: selectedCellsGroups, // groups if any
             },
             { history },
           ),

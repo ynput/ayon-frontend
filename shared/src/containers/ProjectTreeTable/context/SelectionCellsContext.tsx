@@ -310,6 +310,7 @@ export const SelectionCellsProvider: React.FC<{ children: ReactNode }> = ({ chil
   const clearSelection = useCallback(() => {
     setSelectedCells(new Set())
     setAnchorCell(null)
+    setFocusedCellId(null)
   }, [])
 
   // Check if a cell is selected
