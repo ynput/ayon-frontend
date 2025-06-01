@@ -52,8 +52,9 @@ export const GROUP_BY_ID = '_GROUP_'
 export const buildGroupId = (value: string) => `${GROUP_BY_ID}${value}`
 export const parseGroupId = (groupId: string): string | null => {
   if (!groupId.startsWith(GROUP_BY_ID)) return null
-  return groupId.slice(GROUP_BY_ID.length + 1) // +1 for the underscore
+  return groupId.slice(GROUP_BY_ID.length) // +1 for the underscore
 }
+export const isGroupId = (id: string): boolean => id.startsWith(GROUP_BY_ID)
 
 type BuildGroupByTableProps = {
   project?: ProjectModel

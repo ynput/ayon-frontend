@@ -23,6 +23,7 @@ import {
 } from '@shared/containers/ProjectTreeTable/utils'
 import { TableGroupBy } from '@shared/containers'
 import { Filter } from '@ynput/ayon-react-components'
+import { isGroupId } from '@shared/containers/ProjectTreeTable/hooks/useBuildGroupByTableData'
 
 type useFetchOverviewDataData = {
   foldersMap: FolderNodeMap
@@ -72,6 +73,7 @@ const useFetchOverviewData = ({
   // console.log('Folder count:', folders.length)
   const expandedParentIds = Object.entries(expanded)
     .filter(([, isExpanded]) => isExpanded)
+    .filter(([id]) => !isGroupId(id)) // filter out the root folder
     .map(([id]) => id)
 
   const {
@@ -288,6 +290,7 @@ const useFetchOverviewData = ({
 
   // for grouped tasks, we fetch all tasks for each group
   // we do this by building a list of groups with filters for that group
+
   const groupQueries: GetGroupedTasksListArgs['groups'] = useMemo(() => {
     return groupBy
       ? taskGroups.map((group) => {

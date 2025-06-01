@@ -103,7 +103,7 @@ export const GroupHeaderWidget = ({
   toggleExpanded,
 }: GroupHeaderProps) => {
   return (
-    <StyledGroupHeader>
+    <StyledGroupHeader id={id}>
       <Expander
         onClick={(e) => {
           e.stopPropagation()

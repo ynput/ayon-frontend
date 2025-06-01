@@ -21,9 +21,11 @@ const ListsAttributeSettingsFallback: FC<ListsAttributeSettingsFallbackProps> = 
   requiredVersion,
 }) => (
   <TableSettingsFallback
-    label="Add attribute"
     feature={'listAttributes'}
     requiredVersion={requiredVersion}
+    button={{
+      label: 'Add attribute',
+    }}
   />
 )
 

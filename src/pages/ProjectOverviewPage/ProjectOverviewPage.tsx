@@ -23,7 +23,8 @@ import {
   useProjectTableContext,
   useSelectedRowsContext,
 } from '@shared/containers/ProjectTreeTable'
-import { ProjectTableSettings, CustomizeButton } from '@shared/components'
+import { CustomizeButton } from '@shared/components'
+import ProjectOverviewSettings from './containers/ProjectOverviewSettings'
 import { useSettingsPanel } from '@shared/context'
 import ReloadButton from './components/ReloadButton'
 import OverviewActions from './components/OverviewActions'
@@ -204,7 +205,7 @@ const ProjectOverviewPage: FC = () => {
                     zIndex: 500,
                   }}
                 >
-                  <ProjectTableSettings onChange={handleSettingsChange} />
+                  <ProjectOverviewSettings onChange={handleSettingsChange} />
                 </SplitterPanel>
               ) : (
                 <SplitterPanel style={{ maxWidth: 0 }}></SplitterPanel>

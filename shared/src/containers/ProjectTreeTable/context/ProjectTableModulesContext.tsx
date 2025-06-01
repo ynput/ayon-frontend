@@ -1,21 +1,6 @@
-import { SettingsPanelItem, TableSettingsFallback } from '@shared/components'
-import { ColumnSettingsContextType } from '@shared/containers'
 import { useLoadModule } from '@shared/hooks'
 import React, { createContext, useContext, ReactNode, FC } from 'react'
-
-interface GroupSettingsFallbackProps {
-  requiredVersion?: string
-  fields: SettingsPanelItem[]
-  onChange?: ColumnSettingsContextType['updateGroupBy']
-}
-
-const GroupSettingsFallback: FC<GroupSettingsFallbackProps> = ({ requiredVersion }) => (
-  <TableSettingsFallback
-    label="Group tasks by attribute"
-    feature={'groupAttributes'}
-    requiredVersion={requiredVersion}
-  />
-)
+import { GroupSettingsFallback } from '../components/GroupSettingsFallback'
 
 interface ProjectTableModuleContextType {
   GroupSettings: typeof GroupSettingsFallback

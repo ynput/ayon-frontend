@@ -20,10 +20,11 @@ import type {
 import { clientFilterToQueryFilter } from '@shared/containers/ProjectTreeTable/utils'
 import { TaskGroup, useGetTaskGroupsQuery, type QueryTasksFoldersApiArg } from '@shared/api'
 import {
+  LoadingTasks,
   ProjectDataContextProps,
+  TableGroupBy,
   useProjectDataContext,
-} from '../../../../shared/src/containers/ProjectTreeTable/context/ProjectDataContext'
-import { LoadingTasks, TableGroupBy } from '@shared/containers/ProjectTreeTable'
+} from '@shared/containers/ProjectTreeTable'
 import { useEntityListsContext } from '@pages/ProjectListsPage/context/EntityListsContext'
 import { ContextMenuItemConstructors } from '@shared/containers/ProjectTreeTable/hooks/useCellContextMenu'
 import { useUserProjectConfig } from '@shared/hooks'
