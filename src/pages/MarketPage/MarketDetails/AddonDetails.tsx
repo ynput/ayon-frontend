@@ -15,7 +15,7 @@ import MetaPanelRow from './MetaPanelRow'
 import remarkGfm from 'remark-gfm'
 import emoji from 'remark-emoji'
 import SubChip from '@components/SubChip/SubChip'
-import { PricingLink } from '@components/PricingLink'
+import { PricingLink } from '@shared/components/Powerpack/PricingLink'
 
 type ExtendedAddonDetail = AddonDetail & {
   downloadedVersions: Record<string, string>

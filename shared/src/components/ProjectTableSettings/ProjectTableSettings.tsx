@@ -1,6 +1,7 @@
 import {
   useColumnSettingsContext,
   useProjectTableContext,
+  useProjectTableModuleContext,
 } from '@shared/containers/ProjectTreeTable'
 import { Button, ButtonProps } from '@ynput/ayon-react-components'
 import { FC } from 'react'
@@ -8,7 +9,6 @@ import styled from 'styled-components'
 import { SettingHighlightedId, useSettingsPanel } from '@shared/context'
 import { SettingsPanel, SettingConfig } from '@shared/components/SettingsPanel'
 import ColumnsSettings from './ColumnsSettings'
-import GroupSettings from './GroupSettings'
 import { getAttributeIcon } from '@shared/util'
 
 const StyledCustomizeButton = styled(Button)`
@@ -51,6 +51,7 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
 }) => {
   const { attribFields } = useProjectTableContext()
   const { columnVisibility, groupBy } = useColumnSettingsContext()
+  const { GroupSettings, requiredVersion } = useProjectTableModuleContext()
 
   const columns = [
     {
@@ -142,7 +143,11 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
         ? groupByFields.find((f) => f.value === groupBy.id)?.label ?? groupBy.id
         : 'None',
       component: (
-        <GroupSettings fields={groupByFields} onChange={(v) => onChange?.('group-by', v)} />
+        <GroupSettings
+          fields={groupByFields}
+          onChange={(v) => onChange?.('group-by', v)}
+          requiredVersion={requiredVersion}
+        />
       ),
     },
   ]

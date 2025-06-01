@@ -1,4 +1,4 @@
-import { PricingLink } from '@components/PricingLink'
+import { PricingLink } from '@shared/components/Powerpack/PricingLink'
 import { theme } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import { FC } from 'react'

@@ -40,7 +40,7 @@ import { CustomerlyProvider } from 'react-live-chat-customerly'
 import { PiPProvider } from '@shared/context/pip/PiPProvider'
 import { RemoteModulesProvider, DetailsPanelProvider } from '@shared/context'
 import { PowerLicenseProvider } from './remote/PowerLicenseContext'
-import { PowerpackProvider } from '@context/PowerpackContext'
+import { PowerpackProvider } from '@shared/context'
 import { FeedbackProvider } from './feedback/FeedbackContext'
 
 // containers
@@ -63,7 +63,7 @@ import ReleaseInstallerDialog from '@containers/ReleaseInstallerDialog/ReleaseIn
 import getTrialDates from '@components/TrialBanner/helpers/getTrialDates'
 import TrialEnded from '@containers/TrialEnded/TrialEnded'
 import { DetailsPanelFloating } from '@shared/containers'
-import PowerpackDialog from '@components/Powerpack/PowerpackDialog'
+import { PowerpackDialog } from '@shared/components'
 import AppRemoteLoader from './remote/AppRemoteLoader'
 import Customerly from '@components/Customerly'
 import CompleteProfilePrompt from '@components/CompleteProfilePrompt/CompleteProfilePrompt'

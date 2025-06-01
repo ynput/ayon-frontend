@@ -6,6 +6,7 @@ export type PowerpackFeature =
   | 'releases'
   | 'advancedFilters'
   | 'listAttributes'
+  | 'groupAttributes'
 type PowerpackDialog = {
   label: string
   description: string
@@ -39,6 +40,11 @@ export const powerpackFeatures: {
     label: 'List Attributes',
     description: 'Add custom attributes to your lists for better collaboration and organization.',
     bullet: 'Custom attributes for lists',
+  },
+  groupAttributes: {
+    label: 'Group Attributes',
+    description: 'Group tasks by assignees, status, or other attributes for better organization.',
+    bullet: 'Group tasks by attributes',
   },
 }
 type PowerpackContextType = {

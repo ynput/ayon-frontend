@@ -6,6 +6,7 @@ import {
   SelectedRowsProvider,
   ColumnSettingsProvider,
   CellEditingProvider,
+  ProjectTableModuleProvider,
 } from '@shared/containers/ProjectTreeTable'
 import { NewEntityProvider } from '@context/NewEntityContext'
 import { SettingsPanelProvider } from '@shared/context'
@@ -22,13 +23,15 @@ import useTableQueriesHelper from './hooks/useTableQueriesHelper'
 const ProjectOverviewWithProviders: FC = () => {
   const projectName = useAppSelector((state) => state.project.name) || ''
   return (
-    <ProjectDataProvider projectName={projectName}>
-      <ProjectOverviewProvider>
-        <SettingsPanelProvider>
-          <ProjectOverviewWithTableProviders />
-        </SettingsPanelProvider>
-      </ProjectOverviewProvider>
-    </ProjectDataProvider>
+    <ProjectTableModuleProvider>
+      <ProjectDataProvider projectName={projectName}>
+        <ProjectOverviewProvider>
+          <SettingsPanelProvider>
+            <ProjectOverviewWithTableProviders />
+          </SettingsPanelProvider>
+        </ProjectOverviewProvider>
+      </ProjectDataProvider>
+    </ProjectTableModuleProvider>
   )
 }
 
