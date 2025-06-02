@@ -913,6 +913,7 @@ const TableBodyRow = ({
       ref={combinedRef}
       data-index={dataIndex} //needed for dynamic row height measurement
       style={style}
+      className={clsx({ 'group-row': row.original.group })}
     >
       {paddingLeft ? (
         //fake empty column to the left for virtualization scroll padding
