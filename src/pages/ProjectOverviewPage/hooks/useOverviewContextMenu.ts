@@ -39,6 +39,18 @@ const useOverviewContextMenu = ({}: OverviewContextMenuProps) => {
     [updateGroupBy, setPowerpackDialog, power],
   )
 
+  // right click on a group header to un group the tasks
+  const unGroupTasksItem: ContextMenuItemConstructor = useCallback(
+    (_e, cell) => ({
+      id: 'ungroup-tasks',
+      label: `Ungroup`,
+      icon: 'splitscreen',
+      command: () => updateGroupBy(undefined),
+      hidden: !cell.isGroup,
+    }),
+    [updateGroupBy],
+  )
+
   // inject in custom add to list context menu items
   const contextMenuItems: ContextMenuItemConstructors = [
     'copy-paste',
@@ -46,6 +58,7 @@ const useOverviewContextMenu = ({}: OverviewContextMenuProps) => {
     'expand-collapse',
     menuItemsAddToList(),
     groupByColumnItem,
+    unGroupTasksItem,
     'inherit',
     'export',
     'create-folder',
