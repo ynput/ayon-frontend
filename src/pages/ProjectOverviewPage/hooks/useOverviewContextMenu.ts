@@ -1,20 +1,15 @@
-import { usePower } from '@/remote/PowerLicenseContext'
 import { useEntityListsContext } from '@pages/ProjectListsPage/context/EntityListsContext'
 import {
   ContextMenuItemConstructor,
   ContextMenuItemConstructors,
   useColumnSettingsContext,
 } from '@shared/containers'
-import { usePowerpack } from '@shared/context'
 import { useCallback } from 'react'
 import { isAttribGroupable } from './useGetGroupedFields'
 
 type OverviewContextMenuProps = {}
 
 const useOverviewContextMenu = ({}: OverviewContextMenuProps) => {
-  // powerpack status
-  const power = usePower()
-  const { setPowerpackDialog } = usePowerpack()
   //   groupBy
   const { updateGroupBy } = useColumnSettingsContext()
   // lists data
@@ -26,20 +21,15 @@ const useOverviewContextMenu = ({}: OverviewContextMenuProps) => {
       label: `Group by "${cell.column.label}"`,
       icon: 'splitscreen',
       command: () => {
-        if (power) {
-          const groupById = cell.columnId
-            .replace('attrib_', 'attrib.')
-            .replace('subType', 'taskType')
-          updateGroupBy({ id: groupById, desc: false })
-        } else {
-          setPowerpackDialog('groupAttributes')
-        }
+        const groupById = cell.columnId.replace('attrib_', 'attrib.').replace('subType', 'taskType')
+        updateGroupBy({ id: groupById, desc: false })
       },
       hidden:
         cell.columnId === 'name' ||
         (cell.attribField && !isAttribGroupable(cell.attribField, 'task')),
+      powerFeature: 'groupAttributes',
     }),
-    [updateGroupBy, setPowerpackDialog, power],
+    [updateGroupBy],
   )
 
   // right click on a group header to un group the tasks

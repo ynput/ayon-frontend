@@ -76,7 +76,7 @@ export const PowerpackProvider = ({ children }: { children: ReactNode }) => {
   const fallbackCheckLicense: CheckPowerLicenseFunction = async () => false
 
   // Load the remote module
-  const [checkPowerLicense, { isLoaded }] = useLoadModule<CheckPowerLicenseFunction>({
+  const [checkPowerLicense, { isLoaded, isLoading }] = useLoadModule<CheckPowerLicenseFunction>({
     addon: 'powerpack',
     remote: 'license',
     module: 'checkPowerLicense',

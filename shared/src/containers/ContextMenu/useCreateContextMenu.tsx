@@ -1,6 +1,7 @@
 import { useCallback, useMemo, MouseEvent, RefObject } from 'react'
 import ContextMenuItem, { ContextMenuItemProps } from './ContextMenuItem'
 import { useContextMenu } from './ContextMenuContext'
+import { PowerpackFeature, usePowerpack } from '@shared/context'
 
 // Extend the item type based on the ContextMenuItemProps
 export interface ContextMenuItemType extends Omit<ContextMenuItemProps, 'contextMenuRef'> {
@@ -13,14 +14,26 @@ export interface ContextMenuItemType extends Omit<ContextMenuItemProps, 'context
 const addTemplateToItems = (
   items: ContextMenuItemType[],
   ref: RefObject<{ hide: () => void }>,
+  power: {
+    powerLicense?: boolean
+    setPowerpackDialog?: (feature: PowerpackFeature | null) => void
+  },
 ): ContextMenuItemType[] => {
   return items.map((item) => {
     const newItem: ContextMenuItemType = {
       ...item,
-      template: <ContextMenuItem key={item.label} contextMenuRef={ref} {...item} />,
+      template: (
+        <ContextMenuItem
+          key={item.label}
+          contextMenuRef={ref}
+          {...item}
+          powerLicense={power.powerLicense}
+          onPowerClick={power.setPowerpackDialog}
+        />
+      ),
     }
     if (newItem.items) {
-      newItem.items = addTemplateToItems(newItem.items, ref)
+      newItem.items = addTemplateToItems(newItem.items, ref, power)
     }
     return newItem
   })
@@ -37,6 +50,7 @@ export const useCreateContextMenu = (
   menuList: ContextMenuItemType[] = [],
 ): UseCreateContextReturn => {
   const { openContext, ref, isContextOpen, closeContext } = useContextMenu()
+  const { powerLicense, setPowerpackDialog } = usePowerpack()
 
   const getModel = useCallback(
     (
@@ -44,11 +58,21 @@ export const useCreateContextMenu = (
       ref: RefObject<{ hide: () => void }>,
     ): ContextMenuItemType[] => {
       return menuList.map((item) => ({
-        template: <ContextMenuItem key={item.label} contextMenuRef={ref} {...item} />,
-        items: item.items?.length ? addTemplateToItems(item.items, ref) : undefined,
+        template: (
+          <ContextMenuItem
+            key={item.label}
+            contextMenuRef={ref}
+            {...item}
+            powerLicense={powerLicense}
+            onPowerClick={setPowerpackDialog}
+          />
+        ),
+        items: item.items?.length
+          ? addTemplateToItems(item.items, ref, { powerLicense, setPowerpackDialog })
+          : undefined,
       }))
     },
-    [],
+    [powerLicense, setPowerpackDialog],
   )
 
   const model = useMemo(() => getModel(menuList, ref), [menuList, ref, getModel])

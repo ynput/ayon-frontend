@@ -186,8 +186,8 @@ const App = () => {
         <WatchActivities />
         <Suspense fallback={<LoadingPage />}>
           <RestartProvider>
-            <PowerpackProvider>
-              <RemoteModulesProvider skip={!user.name}>
+            <RemoteModulesProvider skip={!user.name}>
+              <PowerpackProvider>
                 <ContextMenuProvider>
                   <DetailsPanelProvider
                     {...handlerProps}
@@ -239,8 +239,8 @@ const App = () => {
                     </PasteProvider>
                   </DetailsPanelProvider>
                 </ContextMenuProvider>
-              </RemoteModulesProvider>
-            </PowerpackProvider>
+              </PowerpackProvider>
+            </RemoteModulesProvider>
           </RestartProvider>
         </Suspense>
       </>

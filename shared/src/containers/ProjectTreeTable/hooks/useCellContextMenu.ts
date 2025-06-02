@@ -11,6 +11,7 @@ import { ProjectTableAttribute, TableRow } from '../types'
 import { UseHistoryReturn } from './useHistory'
 import { GROUP_BY_ID } from './useBuildGroupByTableData'
 import { ColumnDef } from '@tanstack/react-table'
+import { usePowerpack } from '@shared/context'
 
 type ContextEvent = React.MouseEvent<HTMLTableSectionElement, MouseEvent>
 
@@ -75,6 +76,7 @@ const useCellContextMenu = ({ attribs, headerLabels = [], onOpenNew }: CellConte
   const { copyToClipboard, exportCSV, pasteFromClipboard } = useClipboard()
   const { selectedCells, clearSelection, selectCell, focusCell } = useSelectionCellsContext()
   const { inheritFromParent, history } = useCellEditing()
+  const { setPowerpackDialog, powerLicense } = usePowerpack()
 
   // update entity context
 

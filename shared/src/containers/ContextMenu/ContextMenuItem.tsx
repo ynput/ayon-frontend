@@ -2,6 +2,7 @@ import React, { RefObject } from 'react'
 import { Icon, ShortcutTag } from '@ynput/ayon-react-components'
 import './ContextMenu.scss'
 import clsx from 'clsx'
+import { PowerpackFeature } from '@shared/context'
 
 export interface CommandEvent {
   originalEvent: React.MouseEvent
@@ -26,6 +27,9 @@ export interface ContextMenuItemProps {
   danger?: boolean
   developer?: boolean
   style?: React.CSSProperties
+  powerFeature?: PowerpackFeature
+  powerLicense?: boolean // This should be passed from the context or props
+  onPowerClick?: (feature: PowerpackFeature) => void // Function to handle power feature click
   [key: string]: any // For any additional props
 }
 
@@ -42,6 +46,9 @@ const ContextMenuItem: React.FC<ContextMenuItemProps> = ({
   isSave,
   danger,
   developer,
+  powerFeature, // if the feature requires a Powerpack license
+  powerLicense, // if the user has a Powerpack license
+  onPowerClick, // callback to handle when they do not have a license and click the power feature
   ...props
 }) => {
   if (hidden) return null
@@ -50,6 +57,12 @@ const ContextMenuItem: React.FC<ContextMenuItemProps> = ({
     // hide the context menu
     contextMenuRef.current?.hide()
     e.preventDefault()
+
+    if (powerFeature && !powerLicense && onPowerClick) {
+      // we don't want to execute the command if the feature is not available
+      onPowerClick(powerFeature)
+      return
+    }
 
     command?.({
       originalEvent: e,
@@ -62,6 +75,7 @@ const ContextMenuItem: React.FC<ContextMenuItemProps> = ({
   }
 
   const noItems = items && items.length === 0
+  const showPowerFeatureIcon = powerFeature && !powerLicense
 
   return (
     <a
@@ -96,6 +110,17 @@ const ContextMenuItem: React.FC<ContextMenuItemProps> = ({
           <ShortcutTag>{shortcut}</ShortcutTag>
         </div>
       )}
+      {showPowerFeatureIcon && (
+        <Icon
+          icon="bolt"
+          style={{
+            marginLeft: 'auto',
+            paddingLeft: '1rem',
+            fontSize: '1.5rem',
+          }}
+        />
+      )}
+
       {!!items?.length && (
         <Icon
           icon="chevron_right"
