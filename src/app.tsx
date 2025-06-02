@@ -39,7 +39,6 @@ import { NotificationsProvider } from '@context/NotificationsContext'
 import { CustomerlyProvider } from 'react-live-chat-customerly'
 import { PiPProvider } from '@shared/context/pip/PiPProvider'
 import { RemoteModulesProvider, DetailsPanelProvider } from '@shared/context'
-import { PowerLicenseProvider } from './remote/PowerLicenseContext'
 import { PowerpackProvider } from '@shared/context'
 import { FeedbackProvider } from './feedback/FeedbackContext'
 
@@ -189,59 +188,57 @@ const App = () => {
           <RestartProvider>
             <PowerpackProvider>
               <RemoteModulesProvider skip={!user.name}>
-                <PowerLicenseProvider>
-                  <ContextMenuProvider>
-                    <DetailsPanelProvider
-                      {...handlerProps}
-                      user={user}
-                      viewer={viewer}
-                      dispatch={dispatch}
-                      useLocation={useLocation}
-                      useNavigate={useNavigate}
-                      useParams={useParams}
-                      useSearchParams={useSearchParams}
-                    >
-                      <GlobalContextMenu />
-                      <PasteProvider>
-                        <PasteModal />
-                        <BrowserRouter>
-                          <FeedbackProvider>
-                            <NotificationsProvider>
-                              <URIProvider>
-                                <CustomerlyProvider appId={PROJECT_ID}>
-                                  <ShortcutsProvider>
-                                    <PiPProvider>
-                                      <QueryParamProvider
-                                        adapter={ReactRouter6Adapter}
-                                        options={{
-                                          updateType: 'replaceIn',
-                                        }}
-                                      >
-                                        <Header />
-                                        <ShareDialog />
-                                        <ViewerDialog />
-                                        <ConfirmDialog />
-                                        <FileUploadPreviewContainer />
-                                        <ReleaseInstallerDialog />
-                                        <CompleteProfilePrompt />
-                                        <AppRoutes isUser={isUser} />
-                                        <DetailsPanelFloating />
-                                        <PowerpackDialog />
-                                        <AppRemoteLoader />
-                                        <TrialBanner />
-                                      </QueryParamProvider>
-                                    </PiPProvider>
-                                  </ShortcutsProvider>
-                                  <Customerly />
-                                </CustomerlyProvider>
-                              </URIProvider>
-                            </NotificationsProvider>
-                          </FeedbackProvider>
-                        </BrowserRouter>
-                      </PasteProvider>
-                    </DetailsPanelProvider>
-                  </ContextMenuProvider>
-                </PowerLicenseProvider>
+                <ContextMenuProvider>
+                  <DetailsPanelProvider
+                    {...handlerProps}
+                    user={user}
+                    viewer={viewer}
+                    dispatch={dispatch}
+                    useLocation={useLocation}
+                    useNavigate={useNavigate}
+                    useParams={useParams}
+                    useSearchParams={useSearchParams}
+                  >
+                    <GlobalContextMenu />
+                    <PasteProvider>
+                      <PasteModal />
+                      <BrowserRouter>
+                        <FeedbackProvider>
+                          <NotificationsProvider>
+                            <URIProvider>
+                              <CustomerlyProvider appId={PROJECT_ID}>
+                                <ShortcutsProvider>
+                                  <PiPProvider>
+                                    <QueryParamProvider
+                                      adapter={ReactRouter6Adapter}
+                                      options={{
+                                        updateType: 'replaceIn',
+                                      }}
+                                    >
+                                      <Header />
+                                      <ShareDialog />
+                                      <ViewerDialog />
+                                      <ConfirmDialog />
+                                      <FileUploadPreviewContainer />
+                                      <ReleaseInstallerDialog />
+                                      <CompleteProfilePrompt />
+                                      <AppRoutes isUser={isUser} />
+                                      <DetailsPanelFloating />
+                                      <PowerpackDialog />
+                                      <AppRemoteLoader />
+                                      <TrialBanner />
+                                    </QueryParamProvider>
+                                  </PiPProvider>
+                                </ShortcutsProvider>
+                                <Customerly />
+                              </CustomerlyProvider>
+                            </URIProvider>
+                          </NotificationsProvider>
+                        </FeedbackProvider>
+                      </BrowserRouter>
+                    </PasteProvider>
+                  </DetailsPanelProvider>
+                </ContextMenuProvider>
               </RemoteModulesProvider>
             </PowerpackProvider>
           </RestartProvider>

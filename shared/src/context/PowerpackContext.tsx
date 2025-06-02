@@ -1,4 +1,5 @@
-import { createContext, useContext, ReactNode, useState } from 'react'
+import { useLoadModule } from '@shared/hooks'
+import { createContext, useContext, ReactNode, useState, useEffect, useMemo } from 'react'
 
 export type PowerpackFeature =
   | 'slicer'
@@ -51,13 +52,10 @@ type PowerpackContextType = {
   selectedPowerPack: null | PowerpackFeature
   setPowerpackDialog: (open: PowerpackContextType['selectedPowerPack']) => void
   powerpackDialog: PowerpackDialog | null
+  powerLicense: boolean
 }
 
-const PowerpackContext = createContext<PowerpackContextType>({
-  selectedPowerPack: null,
-  setPowerpackDialog: () => {},
-  powerpackDialog: null,
-})
+const PowerpackContext = createContext<PowerpackContextType | undefined>(undefined)
 
 export const PowerpackProvider = ({ children }: { children: ReactNode }) => {
   const [selectedPowerPack, setPowerpackDialog] =
@@ -68,17 +66,56 @@ export const PowerpackProvider = ({ children }: { children: ReactNode }) => {
     return powerpackFeatures[selected]
   }
 
-  return (
-    <PowerpackContext.Provider
-      value={{
-        selectedPowerPack,
-        setPowerpackDialog,
-        powerpackDialog: resolvePowerPackDialog(selectedPowerPack),
-      }}
-    >
-      {children}
-    </PowerpackContext.Provider>
+  // check license state
+  const [powerLicense, setPowerLicense] = useState(false)
+
+  // Define the type for the license check function
+  type CheckPowerLicenseFunction = () => Promise<boolean>
+
+  // Fallback function that returns false when the module isn't loaded
+  const fallbackCheckLicense: CheckPowerLicenseFunction = async () => false
+
+  // Load the remote module
+  const [checkPowerLicense, { isLoaded }] = useLoadModule<CheckPowerLicenseFunction>({
+    addon: 'powerpack',
+    remote: 'license',
+    module: 'checkPowerLicense',
+    fallback: fallbackCheckLicense,
+  })
+
+  useEffect(() => {
+    const checkLicense = async () => {
+      if (isLoaded) {
+        try {
+          const hasPowerLicense = await checkPowerLicense()
+          setPowerLicense(hasPowerLicense)
+        } catch (error) {
+          console.error('Error checking power license:', error)
+          setPowerLicense(false)
+        }
+      }
+    }
+
+    checkLicense()
+  }, [isLoaded, checkPowerLicense])
+
+  const value = useMemo(
+    () => ({
+      powerLicense: powerLicense,
+      selectedPowerPack,
+      setPowerpackDialog,
+      powerpackDialog: resolvePowerPackDialog(selectedPowerPack),
+    }),
+    [powerLicense, selectedPowerPack, setPowerpackDialog],
   )
+
+  return <PowerpackContext.Provider value={value}>{children}</PowerpackContext.Provider>
 }
 
-export const usePowerpack = () => useContext(PowerpackContext)
+export const usePowerpack = () => {
+  const context = useContext(PowerpackContext)
+  if (context === undefined) {
+    throw new Error('usePowerpack must be used within a PowerpackProvider')
+  }
+  return context
+}
