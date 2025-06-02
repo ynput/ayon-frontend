@@ -230,6 +230,7 @@ const useFetchOverviewData = ({
   // if task list and sorting by name, sort by path instead
   const sortByPath = singleSort?.id === 'name' && !showHierarchy
   const sortId = sortByPath ? 'path' : singleSort?.id === 'subType' ? 'taskType' : singleSort?.id
+  const tasksFolderIdsParams = selectedFolders.length ? Array.from(foldersMap.keys()) : undefined
 
   // Use the new infinite query hook for tasks list with correct name
   const {
@@ -245,7 +246,7 @@ const useFetchOverviewData = ({
       projectName,
       filter: queryFilters.filterString,
       search: queryFilters.search,
-      folderIds: selectedFolders.length ? Array.from(foldersMap.keys()) : undefined,
+      folderIds: tasksFolderIdsParams,
       sortBy: sortId ? sortId.replace('_', '.') : undefined,
       desc: !!singleSort?.desc,
     },
@@ -331,6 +332,7 @@ const useFetchOverviewData = ({
       sortBy: sortId ? sortId.replace('_', '.') : undefined,
       desc: !!singleSort?.desc,
       search: queryFilters.search,
+      folderIds: tasksFolderIdsParams,
     },
     {
       skip: !groupBy || !groupQueries.length || isLoadingModules,

@@ -86,6 +86,7 @@ export type GetGroupedTasksListArgs = {
   projectName: string
   groups: { filter: string; count: number; value: string }[]
   search?: string
+  folderIds?: string[]
   desc?: boolean
   sortBy?: string
 }
@@ -301,7 +302,7 @@ const injectedApi = enhancedApi.injectEndpoints({
         getOverviewTaskTags(result?.pages.flatMap((p) => p.tasks) || [], projectName),
     }),
     getGroupedTasksList: build.query<GetGroupedTasksListResult, GetGroupedTasksListArgs>({
-      queryFn: async ({ projectName, groups, search, desc, sortBy }, api) => {
+      queryFn: async ({ projectName, groups, search, folderIds, desc, sortBy }, api) => {
         try {
           let promises = []
           for (const group of groups) {
@@ -311,6 +312,7 @@ const injectedApi = enhancedApi.injectEndpoints({
               projectName,
               filter: group.filter,
               search,
+              folderIds,
               sortBy: sortBy,
               // @ts-expect-error - we know group does not exist on query variables but we need it for later
               group: group.value,
