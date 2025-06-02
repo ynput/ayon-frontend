@@ -44,7 +44,14 @@ export const RemoteModulesProvider = ({ children, skip }: Props) => {
   const [remotesInitialized, setRemotesInitialized] = useState(false)
 
   useEffect(() => {
-    if (isLoading || !addonRemoteModules.length || isLoadingInfo || remotesInitialized) return
+    // waiting for loading or it has already been initialized
+    if (isLoading || isLoadingInfo || remotesInitialized) return
+
+    // no remotes found, nothing to do
+    if (!addonRemoteModules.length) {
+      setRemotesInitialized(true)
+      return
+    }
 
     // create a flat map of modules to load
     const allRemotes: Module[] = []
