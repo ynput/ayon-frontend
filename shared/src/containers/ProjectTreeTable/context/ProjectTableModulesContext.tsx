@@ -57,14 +57,15 @@ export const ProjectTableModuleProvider: React.FC<ProjectTableModuleProviderProp
     minVersion: minVersion,
   })
 
+  const isLoading = isLoadingSettings || isLoadingQueries
   const value = useMemo(
     () => ({
       GroupSettings,
       getGroupQueries,
       requiredVersion: outdated?.required,
-      isLoading: isLoadingSettings || isLoadingQueries,
+      isLoading: isLoading,
     }),
-    [GroupSettings, getGroupQueries, outdated?.required],
+    [GroupSettings, getGroupQueries, outdated?.required, isLoading],
   )
 
   return (
