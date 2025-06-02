@@ -2,7 +2,7 @@
 // each group is a root node with subItems as the grouped items
 // any leftover items that do not match the groupBy field are added as a separate group ("Ungrouped")
 
-import { ProjectModel, TaskGroup } from '@shared/api'
+import { ProjectModel, EntityGroup } from '@shared/api'
 import { TableGroupBy, TableUser } from '../context'
 import { EditorTaskNode, EntitiesMap, EntityMap, ProjectTableAttribute, TableRow } from '../types'
 import useGetEntityTypeData from './useGetEntityTypeData'
@@ -23,7 +23,7 @@ const valueToStringArray = (value?: any): string[] =>
   value ? (Array.isArray(value) ? value.map((v) => v.toString()) : [value.toString()]) : []
 
 // get group label, color and icon
-const getGroupData = (groupById: string, groupValue: string, groups?: TaskGroup[]): GroupData => {
+const getGroupData = (groupById: string, groupValue: string, groups?: EntityGroup[]): GroupData => {
   if (!groups)
     return {
       value: groupValue,
@@ -60,7 +60,7 @@ type BuildGroupByTableProps = {
   project?: ProjectModel
   entities: EntitiesMap
   entityType?: GroupByEntityType
-  groups?: TaskGroup[]
+  groups?: EntityGroup[]
 }
 
 const useBuildGroupByTableData = (props: BuildGroupByTableProps) => {

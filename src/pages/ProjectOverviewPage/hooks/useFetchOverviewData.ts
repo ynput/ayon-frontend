@@ -5,7 +5,7 @@ import {
   useGetQueryTasksFoldersQuery,
   useGetTasksListInfiniteInfiniteQuery,
 } from '@shared/api'
-import type { FolderListItem, GetGroupedTasksListArgs, TaskGroup } from '@shared/api'
+import type { FolderListItem, GetGroupedTasksListArgs, EntityGroup } from '@shared/api'
 import {
   EditorTaskNode,
   FolderNodeMap,
@@ -40,7 +40,7 @@ type Params = {
   queryFilters: ProjectOverviewContextProps['queryFilters'] // filters from the filters bar or slicer (not hierarchy)
   sorting: SortingState
   groupBy: TableGroupBy | undefined
-  taskGroups: TaskGroup[]
+  taskGroups: EntityGroup[]
   expanded: ExpandedState
   showHierarchy: boolean
 }

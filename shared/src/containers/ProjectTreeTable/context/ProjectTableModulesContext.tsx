@@ -1,12 +1,12 @@
 import { useLoadModule } from '@shared/hooks'
 import React, { createContext, useContext, ReactNode, FC, useMemo } from 'react'
 import { GroupSettingsFallback } from '../components/GroupSettingsFallback'
-import { TaskGroup } from '@shared/api'
+import { EntityGroup } from '@shared/api'
 import { Filter } from '@ynput/ayon-react-components'
 import { TableGroupBy } from './ColumnSettingsContext'
 
 type GetGroupQueriesParams = {
-  taskGroups: TaskGroup[]
+  taskGroups: EntityGroup[]
   filters: Filter[]
   groupBy: TableGroupBy
   groupPageCounts: Record<string, number>

@@ -18,7 +18,7 @@ import type {
   TasksByFolderMap,
 } from '@shared/containers/ProjectTreeTable/utils'
 import { clientFilterToQueryFilter } from '@shared/containers/ProjectTreeTable/utils'
-import { TaskGroup, useGetTaskGroupsQuery, type QueryTasksFoldersApiArg } from '@shared/api'
+import { EntityGroup, useGetEntityGroupsQuery, type QueryTasksFoldersApiArg } from '@shared/api'
 import {
   LoadingTasks,
   ProjectDataContextProps,
@@ -52,7 +52,7 @@ export interface ProjectOverviewContextProps {
   reloadTableData: () => void
 
   // Grouping data
-  taskGroups: TaskGroup[]
+  taskGroups: EntityGroup[]
 
   // Filters
   filters: Filter[]
@@ -166,8 +166,8 @@ export const ProjectOverviewProvider = ({ children }: ProjectOverviewProviderPro
   // 1. get groups data
   // 2. add that filter to the combined filter
   // 3. sort by that filter
-  const { data: { groups: taskGroups = [] } = {}, error: groupingError } = useGetTaskGroupsQuery(
-    { projectName, groupingKey: groupBy?.id || '', empty: true },
+  const { data: { groups: taskGroups = [] } = {}, error: groupingError } = useGetEntityGroupsQuery(
+    { projectName, entityType: 'task', groupingKey: groupBy?.id || '', empty: true },
     { skip: !groupBy?.id },
   )
 

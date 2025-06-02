@@ -129,11 +129,8 @@ const enhancedApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
 const foldersApiEnhanced = tasksApi.enhanceEndpoints({
   endpoints: {
     queryTasksFolders: {},
-    getTaskGroups: {},
   },
 })
-
-export const { useGetTaskGroupsQuery } = foldersApiEnhanced
 
 export const TASKS_INFINITE_QUERY_COUNT = 100 // Number of items to fetch per page
 

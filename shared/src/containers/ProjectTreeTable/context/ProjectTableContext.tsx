@@ -21,7 +21,7 @@ import { ProjectModel } from '../types/project'
 import { ProjectTableAttribute, LoadingTasks } from '../types'
 import { QueryFilter } from '../types/folders'
 import { ContextMenuItemConstructors } from '../hooks/useCellContextMenu'
-import { TaskGroup } from '@shared/api'
+import { EntityGroup } from '@shared/api'
 
 export type TableUser = {
   name: string
@@ -55,7 +55,7 @@ export interface ProjectTableProviderProps {
   tableRows?: TableRow[] // any extra rows that we want to add to the table
 
   // grouping
-  taskGroups: TaskGroup[]
+  taskGroups: EntityGroup[]
 
   // data functions
   fetchNextPage: (value?: string) => void
