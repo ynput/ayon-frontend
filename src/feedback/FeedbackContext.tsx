@@ -47,8 +47,8 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
     // Initialize Featurebase
     const win = window as any
     if (typeof win.Featurebase !== 'function') {
-      win.Featurebase = function() {
-        ; (win.Featurebase.q = win.Featurebase.q || []).push(arguments)
+      win.Featurebase = function () {
+        ;(win.Featurebase.q = win.Featurebase.q || []).push(arguments)
       }
     }
   }
@@ -69,8 +69,15 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
 
     cleanObject(verificationData)
 
+    const identifyData = {
+      ...verificationData,
+      customFields: {
+        origin: window.location.origin,
+      },
+    }
+
     const win = window as any
-    win.Featurebase('identify', verificationData, (err: any) => {
+    win.Featurebase('identify', identifyData, (err: any) => {
       // Callback function. Called when identify completed.
       if (err) {
         console.error(err)
@@ -89,9 +96,9 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
       const adminCategories = ['Server', 'Addon', 'Pipeline']
       categories.push(...adminCategories)
     } else if (!siteInfo?.disableChangelog) {
-        // users only see highlights (unless disabled)
-        // admins do not see highlights as it is a subset of the other categories
-        categories.push('Highlights')
+      // users only see highlights (unless disabled)
+      // admins do not see highlights as it is a subset of the other categories
+      categories.push('Highlights')
     }
 
     const win = window as any
@@ -165,11 +172,10 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
     if (!siteInfo) return
 
     // if working in a local environment, do not load the script
-    if (window.location.hostname === 'localhost') return
+    if (window.location.hostname === 'localhost' && window.location.port === '3000') return
 
     // if already loaded, do not load again
     if (scriptLoaded) return
-
 
     // Load the Featurebase script
     loadScript()
