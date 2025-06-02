@@ -27,7 +27,10 @@ const useOverviewContextMenu = ({}: OverviewContextMenuProps) => {
       icon: 'splitscreen',
       command: () => {
         if (power) {
-          updateGroupBy({ id: cell.columnId.replace('attrib_', 'attrib.'), desc: false })
+          const groupById = cell.columnId
+            .replace('attrib_', 'attrib.')
+            .replace('subType', 'taskType')
+          updateGroupBy({ id: groupById, desc: false })
         } else {
           setPowerpackDialog('groupAttributes')
         }

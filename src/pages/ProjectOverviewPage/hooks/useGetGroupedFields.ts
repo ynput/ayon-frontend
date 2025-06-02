@@ -22,7 +22,7 @@ function useGetGroupedFields() {
     () =>
       [
         {
-          value: 'subType',
+          value: 'taskType',
           label: 'Task Type',
           icon: getAttributeIcon('task'),
         },
