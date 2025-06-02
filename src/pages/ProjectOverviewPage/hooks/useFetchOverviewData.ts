@@ -17,11 +17,8 @@ import { ExpandedState, SortingState } from '@tanstack/react-table'
 import { ProjectOverviewContextProps } from '../context/ProjectOverviewContext'
 import { determineLoadingTaskFolders } from '@shared/containers/ProjectTreeTable/utils/loadingUtils'
 import { LoadingTasks } from '@shared/containers/ProjectTreeTable/types'
-import {
-  clientFilterToQueryFilter,
-  TasksByFolderMap,
-} from '@shared/containers/ProjectTreeTable/utils'
-import { TableGroupBy } from '@shared/containers'
+import { TasksByFolderMap } from '@shared/containers/ProjectTreeTable/utils'
+import { TableGroupBy, useProjectTableModuleContext } from '@shared/containers'
 import { Filter } from '@ynput/ayon-react-components'
 import { isGroupId } from '@shared/containers/ProjectTreeTable/hooks/useBuildGroupByTableData'
 
@@ -59,6 +56,8 @@ const useFetchOverviewData = ({
   expanded,
   showHierarchy,
 }: Params): useFetchOverviewDataData => {
+  const { getGroupQueries, isLoading: isLoadingModules } = useProjectTableModuleContext()
+
   const {
     data: { folders = [] } = {},
     isLoading,
@@ -262,14 +261,6 @@ const useFetchOverviewData = ({
     return tasksListInfiniteData.pages.flatMap((page) => page.tasks || [])
   }, [tasksListInfiniteData?.pages])
 
-  // total number of tasks fetched for groups
-  const totalGroupCount = 1000
-  const maxPerGroupCount = 400,
-    minPerGroupCount = 100 // max/min tasks per group
-  const countPerGroup = Math.max(
-    minPerGroupCount,
-    Math.min(maxPerGroupCount, Math.round(totalGroupCount / (taskGroups.length || 1))),
-  )
   const initGroupPageCounts = useMemo(() => {
     return taskGroups.reduce((acc, group) => {
       acc[group.value] = 1 // initialize each group with 1 count
@@ -293,35 +284,12 @@ const useFetchOverviewData = ({
 
   const groupQueries: GetGroupedTasksListArgs['groups'] = useMemo(() => {
     return groupBy
-      ? taskGroups.map((group) => {
-          // build the filter for this group based on current filters and the group value
-          const filtersWithGroup = [...filters]
-          const groupFilter: Filter = {
-            id: groupBy.id,
-            label: groupBy.id,
-            values: [{ id: group.value, label: group.value }],
-          }
-
-          // add the group filter to the filters (remove any existing filter with the same id)
-          const existingFilterIndex = filtersWithGroup.findIndex((f) => f.id === groupBy.id)
-          if (existingFilterIndex !== -1) {
-            filtersWithGroup[existingFilterIndex] = groupFilter
-          } else {
-            filtersWithGroup.push(groupFilter)
-          }
-
-          // convert the filters to string format for the query
-          const queryFilter = clientFilterToQueryFilter(filtersWithGroup)
-          const queryFilterString = filtersWithGroup.length ? JSON.stringify(queryFilter) : ''
-          const pageCount = groupPageCounts[group.value] || 1 // use the count from state or default to 1
-          const taskCount = countPerGroup * pageCount // total tasks to fetch for this group
-
-          return {
-            value: group.value,
-            count: taskCount,
-            filter: queryFilterString,
-          }
-        })
+      ? getGroupQueries?.({
+          taskGroups,
+          filters,
+          groupBy,
+          groupPageCounts,
+        }) ?? []
       : []
   }, [groupBy, taskGroups, filters, groupPageCounts])
 
@@ -335,7 +303,7 @@ const useFetchOverviewData = ({
         search: queryFilters.search,
       },
       {
-        skip: !groupBy || !groupQueries.length,
+        skip: !groupBy || !groupQueries.length || isLoadingModules,
       },
     )
 
@@ -418,7 +386,8 @@ const useFetchOverviewData = ({
       isFetchingFolders ||
       (isFetchingTasksList && !isFetchingNextPageTasksList) ||
       isFetchingTasksFolders ||
-      isFetchingGroups, // these all show a full loading state
+      isFetchingGroups ||
+      isLoadingModules, // these all show a full loading state
     isLoadingMore: isFetchingNextPageTasksList,
     loadingTasks: loadingTasksForParents,
     fetchNextPage: handleFetchNextPage,
