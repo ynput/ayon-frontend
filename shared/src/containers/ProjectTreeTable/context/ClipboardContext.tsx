@@ -19,6 +19,7 @@ import {
 } from './clipboard/clipboardUtils'
 import { validateClipboardData } from './clipboard/clipboardValidation'
 import { ClipboardContextType, ClipboardProviderProps } from './clipboard/clipboardTypes'
+import { useProjectTableContext } from './ProjectTableContext'
 
 const ClipboardContext = createContext<ClipboardContextType | undefined>(undefined)
 
@@ -31,6 +32,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
   // Get selection information from SelectionContext
   const { selectedCells, gridMap, focusedCellId } = useSelectionCellsContext()
   const { updateEntities } = useCellEditing()
+  const { getEntityById } = useProjectTableContext()
 
   const getSelectionData = useCallback(
     async (selected: string[], config?: { headers?: boolean; fullRow?: boolean }) => {
@@ -115,7 +117,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
 
         for (const rowId of sortedRows) {
           // Determine if this is a folder or task by checking which map contains the ID
-          const entity = entitiesMap.get(rowId)
+          const entity = getEntityById(rowId)
 
           if (!entity) {
             console.warn(`Entity not found for rowId: ${rowId}`)
@@ -144,7 +146,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
 
             // Special handling for name field - include full path
             if (colId === 'name') {
-              cellValue = getEntityPath(rowId, entitiesMap)
+              cellValue = getEntityPath(entity.entityId || entity.id, entitiesMap)
             }
 
             if (colId === 'subType') {
@@ -170,7 +172,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
         console.error('Failed to copy to clipboard:', error)
       }
     },
-    [selectedCells, focusedCellId, gridMap, entitiesMap],
+    [selectedCells, focusedCellId, gridMap, entitiesMap, getEntityById],
   )
 
   const copyToClipboard: ClipboardContextType['copyToClipboard'] = useCallback(
@@ -178,7 +180,10 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
       selected = selected || Array.from(selectedCells)
       if (!selected.length) return
       const clipboardText = await getSelectionData(selected, { fullRow })
-      if (!clipboardText) return
+      if (!clipboardText) {
+        clipboardError('No data to copy to clipboard.')
+        return
+      }
       if (!navigator.clipboard) {
         clipboardError('Clipboard API not supported in this browser.')
         return
@@ -349,7 +354,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
 
         if (sortedRows.length > 0) {
           const firstRowId = sortedRows[0]
-          const entity = entitiesMap.get(firstRowId)
+          const entity = getEntityById(firstRowId)
           if (entity) {
             isAttrib = colId.startsWith('attrib_')
 
@@ -464,7 +469,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
         }
       }
     },
-    [selectedCells, gridMap, entitiesMap, updateEntities, columnEnums],
+    [selectedCells, gridMap, entitiesMap, updateEntities, columnEnums, getEntityById],
   )
 
   // Set up keyboard event listeners

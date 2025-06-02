@@ -177,17 +177,10 @@ export const ProjectTreeTable = ({
     attribFields,
   })
 
-  const stableEntitiesMapRef = useMemo(() => {
-    // Create a stable string representation of the Map contents
-    const mapEntries = Array.from(entitiesMap.entries()).sort(([a], [b]) => a.localeCompare(b))
-    const stableKey = JSON.stringify(mapEntries.map(([key, value]) => [key, value]))
-    return stableKey
-  }, [entitiesMap])
-
   // if we are grouping by something, we ignore current tableData and format the data based on the groupBy
   const groupedTableData = useMemo(
     () => !!groupBy && buildGroupByTableData(groupBy),
-    [groupBy, stableEntitiesMapRef, taskGroups],
+    [groupBy, entitiesMap, taskGroups],
   )
 
   const tableData = groupedTableData ? groupedTableData : defaultTableData
@@ -805,7 +798,7 @@ const TableBody = ({
         handlePreFetchTasks(e)
       }}
     >
-      {virtualRows.map((virtualRow) => {
+      {virtualRows.map((virtualRow, i) => {
         const row = rows[virtualRow.index] as Row<TableRow>
         // Add a check for row existence to prevent potential errors if data is out of sync
         if (!row) {
@@ -814,7 +807,7 @@ const TableBody = ({
         }
         return (
           <TableBodyRow
-            key={row.id} // dnd-kit needs this key to be stable and match the id in useSortable
+            key={row.id + i.toString()} // dnd-kit needs this key to be stable and match the id in useSortable
             row={row}
             showHierarchy={showHierarchy}
             visibleCells={row.getVisibleCells()}
@@ -919,7 +912,7 @@ const TableBodyRow = ({
         //fake empty column to the left for virtualization scroll padding
         <td style={{ display: 'flex', width: paddingLeft }} />
       ) : null}
-      {virtualColumns.map((vc) => {
+      {virtualColumns.map((vc, i) => {
         const cell = visibleCells[vc.index]
         if (!cell) return null // Should not happen in normal circumstances
 
@@ -928,7 +921,7 @@ const TableBodyRow = ({
         if (cell.column.id === DRAG_HANDLE_COLUMN_ID) {
           return (
             <Styled.TableCell
-              key={cell.id}
+              key={cell.id + i.toString()}
               style={{
                 ...getCommonPinningStyles(cell.column),
                 width: `calc(var(--col-${cell.column.id}-size) * 1px)`,
@@ -962,7 +955,7 @@ const TableBodyRow = ({
             cell={cell}
             cellId={cellId}
             rowId={row.id}
-            key={cell.id}
+            key={cell.id + i.toString()}
             showHierarchy={showHierarchy}
             sortableRows={sortableRows}
           />
@@ -1021,7 +1014,6 @@ const TableCell = ({
     <Styled.TableCell
       {...props}
       tabIndex={0}
-      key={cell.id}
       $isLastPinned={isLastLeftPinnedColumn} // is this column the last pinned column? Custom styling for borders.
       className={clsx(
         cell.column.id,

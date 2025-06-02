@@ -20,6 +20,7 @@ export type GroupData = {
 
 export const NEXT_PAGE_ID = 'next-page'
 export const UNGROUPED_VALUE = '_ungrouped'
+export const ROW_ID_SEPARATOR = '__'
 
 const valueToStringArray = (value?: any): string[] =>
   value ? (Array.isArray(value) ? value.map((v) => v.toString()) : [value.toString()]) : []
@@ -96,10 +97,11 @@ const useBuildGroupByTableData = (props: BuildGroupByTableProps) => {
   const getEntityTypeData = useGetEntityTypeData({ projectInfo: project })
 
   const entityToGroupRow = useCallback(
-    (task: EditorTaskNode): TableRow => {
+    (task: EditorTaskNode, group?: string): TableRow => {
       const typeData = getEntityTypeData('task', task.taskType)
       return {
-        id: task.id,
+        id: task.id + ROW_ID_SEPARATOR + group, // unique id for the task in the folder
+        entityId: task.id,
         entityType: 'task',
         parentId: task.folderId,
         name: task.name || '',
@@ -173,17 +175,17 @@ const useBuildGroupByTableData = (props: BuildGroupByTableProps) => {
       // if there are no values, add to "Ungrouped" group
       if (groupValues.length === 0) {
         const ungroupedGroup = getUnGroupedGroup()
-        ungroupedGroup.subRows.push(entityToGroupRow(entity as EditorTaskNode))
+        ungroupedGroup.subRows.push(entityToGroupRow(entity as EditorTaskNode, UNGROUPED_VALUE))
       }
       // for each group value, find it's group and add the entity to it
       // if we can't find the group, add it to "Ungrouped"
       for (const groupValue of groupValues) {
         const groupRow = groupsMap.get(groupValue)
         if (groupRow) {
-          groupRow.subRows.push(entityToGroupRow(entity as EditorTaskNode))
+          groupRow.subRows.push(entityToGroupRow(entity as EditorTaskNode, groupValue))
         } else {
           const ungroupedGroup = getUnGroupedGroup()
-          ungroupedGroup.subRows.push(entityToGroupRow(entity as EditorTaskNode))
+          ungroupedGroup.subRows.push(entityToGroupRow(entity as EditorTaskNode, UNGROUPED_VALUE))
         }
       }
 

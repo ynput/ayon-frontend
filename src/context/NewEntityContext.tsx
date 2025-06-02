@@ -238,12 +238,13 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
           const folderPatch: PatchNewFolderOperation = {
             type: 'create',
             entityType: 'folder',
-            entityId: (operation.data as any).id,
+            entityId: operation.data.id,
             data: {
               ...operation.data,
+              entityId: operation.data.id,
               entityType: 'folder',
               projectName,
-              folderType: (operation.data as any).folderType,
+              folderType: operation.data.folderType,
               parents: [],
               updatedAt: new Date().toISOString(),
               status: firstStatusForFolder,
@@ -258,12 +259,13 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
           const taskPatch: PatchNewTaskOperation = {
             type: 'create',
             entityType: 'task',
-            entityId: (operation.data as any).id,
+            entityId: operation.data.id,
             data: {
               ...operation.data,
+              entityId: operation.data.id,
               entityType: 'task',
-              taskType: (operation.data as any).taskType,
-              folderId: (operation.data as any).folderId,
+              taskType: operation.data.taskType,
+              folderId: operation.data.folderId,
               active: true,
               assignees: operation.data.assignees || [],
               projectName,
@@ -335,7 +337,7 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
     for (const folderId of selectedFolderIds) {
       const entity = getEntityById(folderId)
       if (entity?.entityType === 'folder') {
-        paths[folderId] = entity.path
+        paths[entity.id] = entity.path
       }
     }
 

@@ -68,7 +68,10 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
         const inverseEntities: HistoryEntityUpdate[] = entities.map(
           ({ rowId, id, type, field, isAttrib, meta }) => {
             const entityData = getEntityById(id) as Record<string, any>
-            const entityId = entityData?.entityId || id
+            if (!entityData) {
+              throw 'Entity not found: ' + id
+            }
+            const entityId = entityData?.entityId || entityData.id
             const oldValue = isAttrib
               ? (entityData.attrib as Record<string, any>)?.[field] ?? null
               : entityData[field] ?? null
@@ -94,7 +97,7 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
         const historyEntities: HistoryEntityUpdate[] = entities.flatMap(
           ({ rowId, id, type, field, value, isAttrib, meta }) => {
             const entityData = getEntityById(id)
-            const entityId = entityData?.entityId || id
+            const entityId = entityData?.entityId || entityData?.id || id
 
             if (!entityData) return []
 
@@ -125,7 +128,7 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
       for (const entity of entities) {
         let { id, type, field, value, isAttrib, meta } = entity
         const entityData = getEntityById(id)
-        const entityId = entityData?.entityId || id
+        const entityId = entityData?.entityId || entityData?.id || id
         // Skip unsupported entity types
         let entityType = type as OperationModel['entityType']
         if (!supportedEntityTypes.includes(entityType)) {
@@ -244,7 +247,7 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
             if (entityData?.attrib && attrib in entityData.attrib) {
               undoEntities.push({
                 rowId: entity.rowId,
-                id: entity.entityId,
+                id: entityData?.entityId || entityData?.id || entity.entityId,
                 type: entity.entityType,
                 field: attrib,
                 value: (entityData.attrib as Record<string, any>)[attrib],

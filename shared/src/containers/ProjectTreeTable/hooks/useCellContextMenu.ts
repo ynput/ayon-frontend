@@ -93,6 +93,7 @@ const useCellContextMenu = ({ attribs, headerLabels = [], onOpenNew }: CellConte
 
       const entity = getEntityById(rowId)
       if (!entity) return acc
+      const entityId = entity.entityId || entity.id
 
       const attribName = colId.replace('attrib_', '')
       //   get attrib model
@@ -103,7 +104,7 @@ const useCellContextMenu = ({ attribs, headerLabels = [], onOpenNew }: CellConte
       // Check if this attribute is owned by the entity (not inherited)
       if (entity.ownAttrib?.includes(attribName) && isInheritable) {
         // Find existing entry or create new one
-        const existingIndex = acc.findIndex((item) => item.entityId === rowId)
+        const existingIndex = acc.findIndex((item) => item.entityId === entityId)
 
         if (existingIndex >= 0) {
           // Add to existing entity's attribs if not already there
@@ -113,8 +114,8 @@ const useCellContextMenu = ({ attribs, headerLabels = [], onOpenNew }: CellConte
         } else {
           // Create new entity entry
           acc.push({
-            rowId: rowId,
-            entityId: rowId,
+            rowId: entityId,
+            entityId: entityId,
             entityType: 'folderId' in entity ? 'task' : 'folder',
             attribs: [attribName],
             ownAttrib: entity.ownAttrib || [],
@@ -280,7 +281,7 @@ const useCellContextMenu = ({ attribs, headerLabels = [], onOpenNew }: CellConte
     return {
       cellId: cellId,
       columnId: colId,
-      entityId: cellEntityData?.entityId || rowId,
+      entityId: cellEntityData?.entityId || cellEntityData?.id || rowId,
       entityType: cellEntityData?.entityType,
       attribField: attribField,
       isGroup: rowId.startsWith(GROUP_BY_ID),

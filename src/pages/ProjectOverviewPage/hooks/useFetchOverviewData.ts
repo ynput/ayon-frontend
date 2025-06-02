@@ -396,7 +396,7 @@ const useFetchOverviewData = ({
     }
 
     return { tasksMap, tasksByFolderMap }
-  }, [expandedFoldersTasks, showHierarchy, tasksList])
+  }, [expandedFoldersTasks, showHierarchy, tasksList, groupTasks])
 
   // reload all data for all queries
   const reloadTableData = () => {

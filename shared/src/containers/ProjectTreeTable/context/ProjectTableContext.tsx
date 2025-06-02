@@ -22,6 +22,9 @@ import { ProjectTableAttribute, LoadingTasks } from '../types'
 import { QueryFilter } from '../types/folders'
 import { ContextMenuItemConstructors } from '../hooks/useCellContextMenu'
 import { EntityGroup } from '@shared/api'
+import { ROW_ID_SEPARATOR } from '../hooks/useBuildGroupByTableData'
+
+export const parseRowId = (rowId: string) => rowId.split(ROW_ID_SEPARATOR)[0] || rowId
 
 export type TableUser = {
   name: string
@@ -190,12 +193,15 @@ export const ProjectTableProvider = ({
 
   const getEntityById = useCallback(
     (id: string): EntityMap | undefined => {
-      if (foldersMap.has(id)) {
-        return foldersMap.get(id)
-      } else if (tasksMap.has(id)) {
-        return tasksMap.get(id)
-      } else if (entitiesMap.has(id)) {
-        return entitiesMap.get(id)
+      // always parse the id to remove any suffixes
+      // this can happen if the id is a group by id (we need to make the row id unique)
+      const parsedId = parseRowId(id)
+      if (foldersMap.has(parsedId)) {
+        return foldersMap.get(parsedId)
+      } else if (tasksMap.has(parsedId)) {
+        return tasksMap.get(parsedId)
+      } else if (entitiesMap.has(parsedId)) {
+        return entitiesMap.get(parsedId)
       }
 
       // Return undefined if not found
