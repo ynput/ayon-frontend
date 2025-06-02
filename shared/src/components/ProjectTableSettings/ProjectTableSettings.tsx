@@ -3,22 +3,37 @@ import {
   useProjectTableContext,
   useProjectTableModuleContext,
 } from '@shared/containers/ProjectTreeTable'
-import { Button, ButtonProps } from '@ynput/ayon-react-components'
+import { Button, ButtonProps, theme } from '@ynput/ayon-react-components'
 import { FC } from 'react'
 import styled from 'styled-components'
 import { SettingHighlightedId, useSettingsPanel } from '@shared/context'
 import { SettingsPanel, SettingConfig } from '@shared/components/SettingsPanel'
 import ColumnsSettings from './ColumnsSettings'
+import clsx from 'clsx'
 
 const StyledCustomizeButton = styled(Button)`
   min-width: 120px;
+  &.count {
+    min-width: 130px;
+  }
+`
+
+const CustomCount = styled.span`
+  background-color: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+  border-radius: 50%;
+  min-width: 16px;
+  min-height: 16px;
+
+  ${theme.labelSmall}
 `
 
 interface Props extends ButtonProps {
   defaultSelected?: string | null
+  count?: number // number of customizations set
 }
 
-export const CustomizeButton = ({ defaultSelected, ...props }: Props) => {
+export const CustomizeButton = ({ defaultSelected, count = 0, className, ...props }: Props) => {
   const { togglePanel, isPanelOpen } = useSettingsPanel()
 
   return (
@@ -26,9 +41,11 @@ export const CustomizeButton = ({ defaultSelected, ...props }: Props) => {
       onClick={() => togglePanel(defaultSelected)}
       icon="settings"
       selected={isPanelOpen}
+      className={clsx(className, { count: count > 0 })}
       {...props}
     >
       Customize
+      {!!count && <CustomCount>{count}</CustomCount>}
     </StyledCustomizeButton>
   )
 }
