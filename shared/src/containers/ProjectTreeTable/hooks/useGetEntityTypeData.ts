@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useCallback, useMemo } from 'react'
 import { ProjectModel, TaskType, FolderType } from '../types/project'
 import { productTypes } from '@shared/util'
 
@@ -36,23 +36,23 @@ const useGetEntityTypeData = ({ projectInfo }: Props) => {
     return map
   }, [productTypes])
 
-  const getEntityTypeData = (
-    type: 'folder' | 'task' | 'product' | string | undefined,
-    subType?: string,
-  ) => {
-    if (!type || !subType) return
-    switch (type) {
-      case 'folder':
-        return folderTypesByName.get(subType)
-      case 'task':
-        return taskTypesByName.get(subType)
-      case 'product':
-        return productTypesByName.get(subType)
+  const getEntityTypeData = useCallback(
+    (type: 'folder' | 'task' | 'product' | string | undefined, subType?: string) => {
+      if (!type || !subType) return
+      switch (type) {
+        case 'folder':
+          return folderTypesByName.get(subType)
+        case 'task':
+          return taskTypesByName.get(subType)
+        case 'product':
+          return productTypesByName.get(subType)
 
-      default:
-        break
-    }
-  }
+        default:
+          break
+      }
+    },
+    [folderTypesByName, taskTypesByName, productTypesByName],
+  )
 
   return getEntityTypeData
 }

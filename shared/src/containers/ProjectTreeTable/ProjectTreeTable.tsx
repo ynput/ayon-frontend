@@ -174,12 +174,20 @@ export const ProjectTreeTable = ({
     entityType: groupByConfig?.entityType,
     groups: taskGroups,
     project: projectInfo,
+    attribFields,
   })
+
+  const stableEntitiesMapRef = useMemo(() => {
+    // Create a stable string representation of the Map contents
+    const mapEntries = Array.from(entitiesMap.entries()).sort(([a], [b]) => a.localeCompare(b))
+    const stableKey = JSON.stringify(mapEntries.map(([key, value]) => [key, value]))
+    return stableKey
+  }, [entitiesMap])
 
   // if we are grouping by something, we ignore current tableData and format the data based on the groupBy
   const groupedTableData = useMemo(
     () => !!groupBy && buildGroupByTableData(groupBy),
-    [groupBy, entitiesMap, groupByConfig?.entityType],
+    [groupBy, stableEntitiesMapRef, taskGroups],
   )
 
   const tableData = groupedTableData ? groupedTableData : defaultTableData

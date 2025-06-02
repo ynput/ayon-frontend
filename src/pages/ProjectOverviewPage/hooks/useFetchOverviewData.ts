@@ -21,6 +21,7 @@ import { TasksByFolderMap } from '@shared/containers/ProjectTreeTable/utils'
 import { TableGroupBy, useProjectTableModuleContext } from '@shared/containers'
 import { Filter } from '@ynput/ayon-react-components'
 import { isGroupId } from '@shared/containers/ProjectTreeTable/hooks/useBuildGroupByTableData'
+import { ProjectTableAttribute } from '@shared/containers/ProjectTreeTable/hooks/useAttributesList'
 
 type useFetchOverviewDataData = {
   foldersMap: FolderNodeMap
@@ -43,6 +44,7 @@ type Params = {
   taskGroups: EntityGroup[]
   expanded: ExpandedState
   showHierarchy: boolean
+  attribFields: ProjectTableAttribute[]
 }
 
 const useFetchOverviewData = ({
@@ -55,6 +57,7 @@ const useFetchOverviewData = ({
   taskGroups = [],
   expanded,
   showHierarchy,
+  attribFields,
 }: Params): useFetchOverviewDataData => {
   const { getGroupQueries, isLoading: isLoadingModules } = useProjectTableModuleContext()
 
@@ -282,6 +285,28 @@ const useFetchOverviewData = ({
   // for grouped tasks, we fetch all tasks for each group
   // we do this by building a list of groups with filters for that group
 
+  // get the data type for the groupBy
+  const groupByDataType = useMemo(() => {
+    if (!groupBy?.id) return 'string'
+
+    const groupById = groupBy.id
+
+    // Handle special cases for built-in group types
+    if (groupById === 'assignees' || groupById === 'tags') {
+      return 'list_of_strings'
+    }
+
+    // Handle attribute-based grouping (format: "attrib.attributeName")
+    if (groupById.startsWith('attrib.')) {
+      const attributeName = groupById.split('.')[1]
+      const attribute = attribFields.find((field) => field.name === attributeName)
+      return attribute?.data?.type || 'string'
+    }
+
+    // Default fallback
+    return 'string'
+  }, [groupBy?.id, attribFields])
+
   const groupQueries: GetGroupedTasksListArgs['groups'] = useMemo(() => {
     return groupBy
       ? getGroupQueries?.({
@@ -289,23 +314,28 @@ const useFetchOverviewData = ({
           filters,
           groupBy,
           groupPageCounts,
+          dataType: groupByDataType,
         }) ?? []
       : []
-  }, [groupBy, taskGroups, filters, groupPageCounts])
+  }, [groupBy, taskGroups, filters, groupPageCounts, groupByDataType, getGroupQueries])
 
-  const { data: { tasks: groupTasks = [] } = {}, isFetching: isFetchingGroups } =
-    useGetGroupedTasksListQuery(
-      {
-        projectName,
-        groups: groupQueries,
-        sortBy: sortId ? sortId.replace('_', '.') : undefined,
-        desc: !!singleSort?.desc,
-        search: queryFilters.search,
-      },
-      {
-        skip: !groupBy || !groupQueries.length || isLoadingModules,
-      },
-    )
+  const {
+    data: { tasks: groupTasks = [] } = {},
+    isFetching: isFetchingGroups,
+    isUninitialized: isUninitializedGroupedTasks,
+    refetch: refetchGroupedTasks,
+  } = useGetGroupedTasksListQuery(
+    {
+      projectName,
+      groups: groupQueries,
+      sortBy: sortId ? sortId.replace('_', '.') : undefined,
+      desc: !!singleSort?.desc,
+      search: queryFilters.search,
+    },
+    {
+      skip: !groupBy || !groupQueries.length || isLoadingModules,
+    },
+  )
 
   const handleFetchNextPage = (group?: string) => {
     if (groupBy) {
@@ -375,6 +405,7 @@ const useFetchOverviewData = ({
     if (!isUninitializedExpandedFoldersTasks) refetchExpandedFoldersTasks()
     if (!isUninitializedTasksFolders) refetchTasksFolders()
     if (!isUninitializedTasksList) refetchTasksList()
+    if (!isUninitializedGroupedTasks) refetchGroupedTasks()
   }
 
   return {

@@ -3,9 +3,10 @@
 // any leftover items that do not match the groupBy field are added as a separate group ("Ungrouped")
 
 import { ProjectModel, EntityGroup } from '@shared/api'
-import { TableGroupBy, TableUser } from '../context'
+import { TableGroupBy } from '../context'
 import { EditorTaskNode, EntitiesMap, EntityMap, ProjectTableAttribute, TableRow } from '../types'
 import useGetEntityTypeData from './useGetEntityTypeData'
+import { useCallback } from 'react'
 export type GroupByEntityType = 'task' | 'folder' | 'version' | 'product'
 
 export type GroupData = {
@@ -18,6 +19,7 @@ export type GroupData = {
 }
 
 export const NEXT_PAGE_ID = 'next-page'
+export const UNGROUPED_VALUE = '_ungrouped'
 
 const valueToStringArray = (value?: any): string[] =>
   value ? (Array.isArray(value) ? value.map((v) => v.toString()) : [value.toString()]) : []
@@ -61,40 +63,69 @@ type BuildGroupByTableProps = {
   entities: EntitiesMap
   entityType?: GroupByEntityType
   groups?: EntityGroup[]
+  attribFields: ProjectTableAttribute[]
+}
+
+// get sorting ids based on the groupBy field
+const getSortingIds = (
+  groupBy: TableGroupBy,
+  project?: ProjectModel,
+  attribFields: ProjectTableAttribute[] = [],
+): string[] => {
+  const attributeId = groupBy.id.replace('attrib.', '')
+
+  // for status, taskType, folderType use project data order
+  if (attributeId === 'status') {
+    return project?.statuses?.map((s) => s.name) || []
+  } else if (attributeId === 'taskType') {
+    return project?.taskTypes?.map((t) => t.name) || []
+  } else if (attributeId === 'folderType') {
+    return project?.folderTypes?.map((f) => f.name) || []
+  } else if (groupBy.id.startsWith('attrib.')) {
+    // for other enum attributes, use the enum values order
+    return (
+      attribFields
+        .find((field) => field.name === attributeId)
+        ?.data.enum?.map((e) => e.value.toString()) || []
+    )
+  } else return []
 }
 
 const useBuildGroupByTableData = (props: BuildGroupByTableProps) => {
-  const { project, entities, entityType, groups = [] } = props
+  const { project, entities, entityType, groups = [], attribFields } = props
   const getEntityTypeData = useGetEntityTypeData({ projectInfo: project })
 
-  const entityToGroupRow = (task: EditorTaskNode): TableRow => {
-    const typeData = getEntityTypeData('task', task.taskType)
-    return {
-      id: task.id,
-      entityType: 'task',
-      parentId: task.folderId,
-      name: task.name || '',
-      label: task.label || task.name || '',
-      icon: typeData?.icon || null,
-      color: typeData?.color || null,
-      status: task.status,
-      assignees: task.assignees,
-      tags: task.tags,
-      img: null,
-      subRows: [],
-      subType: task.taskType || null,
-      attrib: task.attrib,
-      ownAttrib: task.ownAttrib,
-      path: task.folder.path,
-      updatedAt: task.updatedAt,
-    }
-  }
+  const entityToGroupRow = useCallback(
+    (task: EditorTaskNode): TableRow => {
+      const typeData = getEntityTypeData('task', task.taskType)
+      return {
+        id: task.id,
+        entityType: 'task',
+        parentId: task.folderId,
+        name: task.name || '',
+        label: task.label || task.name || '',
+        icon: typeData?.icon || null,
+        color: typeData?.color || null,
+        status: task.status,
+        assignees: task.assignees,
+        tags: task.tags,
+        img: null,
+        subRows: [],
+        subType: task.taskType || null,
+        attrib: task.attrib,
+        ownAttrib: task.ownAttrib,
+        path: task.folder.path,
+        updatedAt: task.updatedAt,
+      }
+    },
+    [getEntityTypeData],
+  )
 
   const buildGroupByTableData = (groupBy: TableGroupBy): TableRow[] => {
     const groupsMap = new Map<string, TableRow>()
 
     for (const group of groups) {
-      const groupValue = group.value
+      const groupValue = group.value?.toString() as string
       const groupId = buildGroupId(groupValue)
       const groupData = getGroupData(groupBy.id, groupValue, groups)
       groupsMap.set(groupValue, {
@@ -107,7 +138,7 @@ const useBuildGroupByTableData = (props: BuildGroupByTableProps) => {
       })
     }
 
-    const ungroupedId = GROUP_BY_ID + '__ungrouped'
+    const ungroupedId = GROUP_BY_ID + '.' + UNGROUPED_VALUE // unique id for ungrouped group
     // gets the "Ungrouped" group, creating it if it doesn't exist
     const getUnGroupedGroup = () => {
       let ungroupedGroup = groupsMap.get(ungroupedId)
@@ -131,9 +162,9 @@ const useBuildGroupByTableData = (props: BuildGroupByTableProps) => {
       if (entity.entityType !== entityType) continue
       // add entities to specific group
       let groupValues: string[] = []
-      if (groupBy.id.startsWith('attrib_')) {
+      if (groupBy.id.startsWith('attrib.')) {
         // for attribute based grouping, get the value of the attribute
-        const attributeId = groupBy.id.split('_')[1]
+        const attributeId = groupBy.id.split('.')[1]
         groupValues = valueToStringArray(entity.attrib?.[attributeId])
       } else {
         groupValues = valueToStringArray(entity[groupBy.id as keyof EntityMap])
@@ -178,7 +209,33 @@ const useBuildGroupByTableData = (props: BuildGroupByTableProps) => {
       }
     }
 
-    return Array.from(groupsMap.values())
+    const groupsList = Array.from(groupsMap.values())
+
+    const attribSortingIds = getSortingIds(groupBy, project, attribFields)
+
+    // sort the groups by their label
+    // if the group is an attribute with enum values, sort by the enum values
+    groupsList.sort((a, b) => {
+      if (a.group?.value === ungroupedId) return 1 // "Ungrouped" should be last
+      if (b.group?.value === ungroupedId) return -1 // "Ungrouped" should be last
+      if (attribSortingIds.length) {
+        // sort by index of the enum value
+        const indexA = attribSortingIds.indexOf(a.group?.value || '')
+        const indexB = attribSortingIds.indexOf(b.group?.value || '')
+        if (indexA !== -1 && indexB !== -1) {
+          return indexA - indexB
+        }
+        if (indexA !== -1) return -1 // a is in the enum, b is not
+        if (indexB !== -1) return 1 // b is in the enum, a is not
+        // if both are not in the enum, sort by label
+        return a.group?.label?.localeCompare(b.group?.label || '') || 0
+      } else {
+        // for other groupings, sort by the group label
+        return a.group?.label?.localeCompare(b.group?.label || '') || 0
+      }
+    })
+
+    return groupsList
   }
 
   return buildGroupByTableData

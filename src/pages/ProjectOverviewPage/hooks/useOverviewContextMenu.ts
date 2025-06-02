@@ -15,7 +15,6 @@ const useOverviewContextMenu = ({}: OverviewContextMenuProps) => {
   // powerpack status
   const power = usePower()
   const { setPowerpackDialog } = usePowerpack()
-  console.log(power)
   //   groupBy
   const { updateGroupBy } = useColumnSettingsContext()
   // lists data
@@ -28,7 +27,7 @@ const useOverviewContextMenu = ({}: OverviewContextMenuProps) => {
       icon: 'splitscreen',
       command: () => {
         if (power) {
-          updateGroupBy({ id: cell.columnId, desc: false })
+          updateGroupBy({ id: cell.columnId.replace('attrib_', 'attrib.'), desc: false })
         } else {
           setPowerpackDialog('groupAttributes')
         }

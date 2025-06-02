@@ -8,7 +8,7 @@ import { getAttributeIcon } from '@shared/util'
 import { EntityGrouping } from '@shared/api'
 
 // @martastain says list_of_* is a pita to implement, so we are not supporting it for now
-export const allowedGroupByFields = ['string', 'boolean', 'integer', 'float']
+export const allowedGroupByFields = ['string', 'integer', 'float']
 export const isAttribGroupable = (
   attrib: ProjectTableAttribute,
   entityType: EntityGrouping['entityType'],
@@ -44,7 +44,7 @@ function useGetGroupedFields() {
         ...attribFields
           .filter((attrib) => isAttribGroupable(attrib, 'task'))
           .map((field) => ({
-            value: 'attrib_' + field.name,
+            value: 'attrib.' + field.name,
             label: field.data.title || field.name,
             icon: getAttributeIcon(field.name),
           })),

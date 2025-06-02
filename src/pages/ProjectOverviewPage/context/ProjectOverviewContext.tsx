@@ -152,7 +152,7 @@ export const ProjectOverviewProvider = ({ children }: ProjectOverviewProviderPro
   // 1. get groups data
   // 2. add that filter to the combined filter
   // 3. sort by that filter
-  const groupingKey = (groupBy?.id || '').replace('attrib_', 'attrib.')
+  const groupingKey = groupBy?.id || ''
   const { data: { groups: taskGroups = [] } = {}, error: groupingError } = useGetEntityGroupsQuery(
     { projectName, entityType: 'task', groupingKey: groupingKey, empty: true },
     { skip: !groupBy?.id },
@@ -225,6 +225,7 @@ export const ProjectOverviewProvider = ({ children }: ProjectOverviewProviderPro
     groupBy,
     taskGroups,
     showHierarchy,
+    attribFields,
   })
 
   // combine foldersMap and itemsMap into a single map

@@ -146,10 +146,10 @@ const buildTreeTableColumns = ({
       header: groupBy ? 'Group' : 'Folder / Task',
       minSize: MIN_SIZE,
       sortingFn: withLoadingStateSort(showHierarchy ? nameSort : pathSort),
-      enableSorting: true,
+      enableSorting: groupBy ? false : true,
       enableResizing: true,
       enablePinning: true,
-      enableHiding: true,
+      enableHiding: groupBy ? false : true,
       cell: ({ row, column, table }) => {
         const meta = table.options.meta
         const cellId = getCellId(row.id, column.id)
@@ -186,6 +186,7 @@ const buildTreeTableColumns = ({
                 color={row.original.group.color}
                 count={row.original.group.count}
                 isExpanded={row.getIsExpanded()}
+                isEmpty={row.subRows.length === 0}
                 toggleExpanded={row.getToggleExpandedHandler()}
               />
             ) : (
