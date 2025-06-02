@@ -160,7 +160,7 @@ const ProjectOverviewPage: FC = () => {
                 onSetSearchParams={setSearchParams}
                 searchParams={searchParams}
               />
-              <CustomizeButton count={groupBy ? 1 : 0} />
+              <CustomizeButton />
             </Toolbar>
             <Splitter
               layout="horizontal"
