@@ -44,7 +44,7 @@ import { useColumnSettingsContext } from './context/ColumnSettingsContext'
 // Hook imports
 import useCustomColumnWidthVars from './hooks/useCustomColumnWidthVars'
 import usePrefetchFolderTasks from './hooks/usePrefetchFolderTasks'
-import useCellContextMenu from './hooks/useCellContextMenu'
+import useCellContextMenu, { HeaderLabel } from './hooks/useCellContextMenu'
 import useColumnVirtualization from './hooks/useColumnVirtualization'
 import useKeyboardNavigation from './hooks/useKeyboardNavigation'
 
@@ -737,7 +737,23 @@ const TableBody = ({
   sortableRows,
   error,
 }: TableBodyProps) => {
-  const { handleTableBodyContextMenu } = useCellContextMenu({ attribs, onOpenNew })
+  const headerLabels = useMemo(() => {
+    const allColumns = table.getAllColumns()
+    const headers = allColumns
+      .map((col) => {
+        const headerId = col.id
+        const header = col.columnDef.header
+        if (typeof header === 'string' || typeof header === 'number') {
+          return { label: header, id: headerId }
+        }
+        return null
+      })
+      .filter(Boolean)
+
+    return headers as HeaderLabel[]
+  }, [table.getAllColumns()])
+
+  const { handleTableBodyContextMenu } = useCellContextMenu({ attribs, onOpenNew, headerLabels })
 
   const { handlePreFetchTasks } = usePrefetchFolderTasks()
 

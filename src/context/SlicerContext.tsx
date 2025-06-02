@@ -113,7 +113,6 @@ export const SlicerProvider = ({ children }: SlicerProviderProps) => {
 
     // get selection data
     const selectionData = getSelectionData(selection, data)
-    console.log(selectionData)
     setRowSelectionData(selectionData)
   }
 

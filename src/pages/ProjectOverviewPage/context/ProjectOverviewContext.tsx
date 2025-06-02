@@ -25,9 +25,9 @@ import {
   TableGroupBy,
   useProjectDataContext,
 } from '@shared/containers/ProjectTreeTable'
-import { useEntityListsContext } from '@pages/ProjectListsPage/context/EntityListsContext'
 import { ContextMenuItemConstructors } from '@shared/containers/ProjectTreeTable/hooks/useCellContextMenu'
 import { useUserProjectConfig } from '@shared/hooks'
+import useOverviewContextMenu from '../hooks/useOverviewContextMenu'
 
 export interface ProjectOverviewContextProps {
   isInitialized: boolean
@@ -105,21 +105,7 @@ export const ProjectOverviewProvider = ({ children }: ProjectOverviewProviderPro
     [attribFields],
   )
 
-  // lists data
-  const { menuItems: menuItemsAddToList } = useEntityListsContext()
-
-  // inject in custom add to list context menu items
-  const contextMenuItems: ContextMenuItemConstructors = [
-    'copy-paste',
-    'show-details',
-    'expand-collapse',
-    menuItemsAddToList(),
-    'inherit',
-    'export',
-    'create-folder',
-    'create-task',
-    'delete',
-  ]
+  const contextMenuItems = useOverviewContextMenu({})
 
   const getLocalKey = (page: string, key: string) => `${page}-${key}-${projectName}`
 
@@ -166,8 +152,9 @@ export const ProjectOverviewProvider = ({ children }: ProjectOverviewProviderPro
   // 1. get groups data
   // 2. add that filter to the combined filter
   // 3. sort by that filter
+  const groupingKey = (groupBy?.id || '').replace('attrib_', 'attrib.')
   const { data: { groups: taskGroups = [] } = {}, error: groupingError } = useGetEntityGroupsQuery(
-    { projectName, entityType: 'task', groupingKey: groupBy?.id || '', empty: true },
+    { projectName, entityType: 'task', groupingKey: groupingKey, empty: true },
     { skip: !groupBy?.id },
   )
 

@@ -143,7 +143,7 @@ const buildTreeTableColumns = ({
     staticColumns.push({
       id: 'name',
       accessorKey: 'name',
-      header: () => (groupBy ? 'Group' : 'Folder / Task'),
+      header: groupBy ? 'Group' : 'Folder / Task',
       minSize: MIN_SIZE,
       sortingFn: withLoadingStateSort(showHierarchy ? nameSort : pathSort),
       enableSorting: true,
@@ -213,7 +213,7 @@ const buildTreeTableColumns = ({
       id: 'status',
       accessorKey: 'status',
       minSize: MIN_SIZE,
-      header: () => 'Status',
+      header: 'Status',
       sortingFn: withLoadingStateSort((a, b, c) =>
         attribSort(a, b, c, { enum: options.status, type: 'string' }),
       ),
@@ -250,7 +250,7 @@ const buildTreeTableColumns = ({
     staticColumns.push({
       id: 'subType',
       accessorKey: 'subType',
-      header: () => 'Type',
+      header: 'Type',
       minSize: MIN_SIZE,
       enableSorting: true,
       enableResizing: true,
@@ -290,7 +290,7 @@ const buildTreeTableColumns = ({
     staticColumns.push({
       id: 'assignees',
       accessorKey: 'assignees',
-      header: () => 'Assignees',
+      header: 'Assignees',
       minSize: MIN_SIZE,
       enableSorting: true,
       enableResizing: true,
@@ -341,7 +341,7 @@ const buildTreeTableColumns = ({
     staticColumns.push({
       id: 'tags',
       accessorKey: 'tags',
-      header: () => 'Tags',
+      header: 'Tags',
       minSize: MIN_SIZE,
       enableSorting: true,
       enableResizing: true,
@@ -384,7 +384,7 @@ const buildTreeTableColumns = ({
       const attribColumn: ColumnDef<TableRow> = {
         id: 'attrib_' + attrib.name,
         accessorKey: 'attrib.' + attrib.name,
-        header: () => attrib.data.title || attrib.name,
+        header: attrib.data.title || attrib.name,
         minSize: MIN_SIZE,
         filterFn: 'fuzzy' as FilterFnOption<TableRow>,
         sortingFn: withLoadingStateSort((a, b, c) => attribSort(a, b, c, attrib.data)),

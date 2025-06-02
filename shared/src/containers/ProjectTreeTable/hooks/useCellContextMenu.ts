@@ -7,18 +7,25 @@ import { ROW_SELECTION_COLUMN_ID, useSelectionCellsContext } from '../context/Se
 import { useProjectTableContext } from '../context/ProjectTableContext'
 import { useCellEditing } from '../context/CellEditingContext'
 import { InheritFromParentEntity } from './useUpdateTableData'
-import { ProjectTableAttribute } from '../types'
+import { ProjectTableAttribute, TableRow } from '../types'
 import { UseHistoryReturn } from './useHistory'
 import { GROUP_BY_ID } from './useBuildGroupByTableData'
+import { ColumnDef } from '@tanstack/react-table'
 
 type ContextEvent = React.MouseEvent<HTMLTableSectionElement, MouseEvent>
+
+export type HeaderLabel = { id: string; label: string }
 
 export type TableCellContextData = {
   entityId: string
   cellId: string
   columnId: string
   entityType: 'folder' | 'task' | 'product' | 'version' | undefined
-  attribField: ProjectTableAttribute | undefined
+  attribField: ProjectTableAttribute | undefined // the attribute field if any (fps, custom attribs, etc.)
+  column: {
+    id: string
+    label: string
+  }
   isGroup: boolean // if the cell is a group header
 }
 type DefaultMenuItem =
@@ -49,10 +56,12 @@ export type ContextMenuItemConstructors = (DefaultMenuItem | ContextMenuItemCons
 
 type CellContextMenuProps = {
   attribs: ProjectTableAttribute[]
+  columns?: ColumnDef<TableRow>[]
+  headerLabels: HeaderLabel[]
   onOpenNew?: (type: 'folder' | 'task') => void
 }
 
-const useCellContextMenu = ({ attribs, onOpenNew }: CellContextMenuProps) => {
+const useCellContextMenu = ({ attribs, headerLabels = [], onOpenNew }: CellContextMenuProps) => {
   // context hooks
   const {
     projectName,
@@ -265,6 +274,7 @@ const useCellContextMenu = ({ attribs, onOpenNew }: CellContextMenuProps) => {
     if (!rowId || !colId) return undefined
     const cellEntityData = getEntityById(rowId)
     const attribField = attribs.find((attrib) => attrib.name === colId?.replace('attrib_', ''))
+    const column = headerLabels.find((header) => header.id === colId)
     return {
       cellId: cellId,
       columnId: colId,
@@ -272,6 +282,10 @@ const useCellContextMenu = ({ attribs, onOpenNew }: CellContextMenuProps) => {
       entityType: cellEntityData?.entityType,
       attribField: attribField,
       isGroup: rowId.startsWith(GROUP_BY_ID),
+      column: {
+        id: colId,
+        label: column?.label || '',
+      },
     }
   }
 

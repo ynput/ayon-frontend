@@ -22,14 +22,21 @@ import useTableQueriesHelper from './hooks/useTableQueriesHelper'
 
 const ProjectOverviewWithProviders: FC = () => {
   const projectName = useAppSelector((state) => state.project.name) || ''
+
+  const [pageConfig, updatePageConfig] = useUserProjectConfig({
+    selectors: ['overview', projectName],
+  })
+
   return (
     <ProjectTableModuleProvider>
       <ProjectDataProvider projectName={projectName}>
-        <ProjectOverviewProvider>
-          <SettingsPanelProvider>
-            <ProjectOverviewWithTableProviders />
-          </SettingsPanelProvider>
-        </ProjectOverviewProvider>
+        <ColumnSettingsProvider config={pageConfig} onChange={updatePageConfig}>
+          <ProjectOverviewProvider>
+            <SettingsPanelProvider>
+              <ProjectOverviewWithTableProviders />
+            </SettingsPanelProvider>
+          </ProjectOverviewProvider>
+        </ColumnSettingsProvider>
       </ProjectDataProvider>
     </ProjectTableModuleProvider>
   )
@@ -37,9 +44,6 @@ const ProjectOverviewWithProviders: FC = () => {
 
 const ProjectOverviewWithTableProviders: FC = () => {
   const props = useProjectOverviewContext()
-  const [pageConfig, updatePageConfig] = useUserProjectConfig({
-    selectors: ['overview', props.projectName],
-  })
 
   const { updateEntities, getFoldersTasks } = useTableQueriesHelper({
     projectName: props.projectName,
@@ -51,11 +55,9 @@ const ProjectOverviewWithTableProviders: FC = () => {
         <NewEntityProvider>
           <SelectionCellsProvider>
             <SelectedRowsProvider>
-              <ColumnSettingsProvider config={pageConfig} onChange={updatePageConfig}>
-                <CellEditingProvider>
-                  <ProjectOverviewPage />
-                </CellEditingProvider>
-              </ColumnSettingsProvider>
+              <CellEditingProvider>
+                <ProjectOverviewPage />
+              </CellEditingProvider>
             </SelectedRowsProvider>
           </SelectionCellsProvider>
         </NewEntityProvider>
