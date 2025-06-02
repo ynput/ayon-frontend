@@ -16,10 +16,14 @@ const BaseBadge = styled.span`
   padding: 0 4px;
 `
 
+const WELL_KNOWN_BADGES = ["studio", "project", "producttion", "staging", "development"]
+
 const Badge = ({ children, hl, style, ...props }) => {
   const nstyle = { ...style }
   if (hl) {
     nstyle.backgroundColor = `var(--color-hl-${hl})`
+  } else if (children && WELL_KNOWN_BADGES.includes(children.toLowerCase())) {
+    nstyle.backgroundColor = `var(--color-hl-${children.toLowerCase()})`
   }
 
   return (

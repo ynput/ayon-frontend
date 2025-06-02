@@ -52,7 +52,7 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
   isLoadingVersion,
   scope,
 }) => {
-  const { onOpenViewer, user, viewer } = useDetailsPanelContext()
+  const { onOpenViewer, user, viewer, dispatch } = useDetailsPanelContext()
   // returns all reviewables for a product
   const {
     data: versionReviewables,
@@ -264,7 +264,14 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
 
   return (
     <>
-      <ReviewableUpload projectName={projectName} versionId={versionId} productId={productId}>
+      <ReviewableUpload
+        projectName={projectName}
+        versionId={versionId}
+        productId={productId}
+        taskId={viewer?.taskId}
+        folderId={viewer?.folderId}
+        dispatch={dispatch}
+      >
         {isLoading ? (
           Array.from({ length: 3 }).map((_, index) => (
             <Styled.LoadingCard key={index} className="loading" />

@@ -2,7 +2,6 @@ import styled from 'styled-components'
 import React, { useState, useEffect } from 'react'
 import ReactMarkdown from 'react-markdown'
 import {
-  ScrollPanel,
   Button,
   Spacer,
   Dialog,
@@ -12,9 +11,11 @@ import {
   InputText,
   InputSwitch,
   Dropdown,
+  DefaultItemTemplate,
 } from '@ynput/ayon-react-components'
+import Badge from '@components/Badge'
 
-import type { SimpleFormField } from '@shared/api'
+import type { FormSelectOption, SimpleFormField } from '@shared/api'
 
 export type SimpleFormValue = string | number | boolean | string[] | null | undefined
 export type SimpleFormValueDict = Record<string, SimpleFormValue>
@@ -86,6 +87,30 @@ type FormFieldProps = {
   onChange: (value: SimpleFormValue) => void
 }
 
+
+const DropdownItemTemplate = (option: FormSelectOption) => {
+  const endContent = (
+    <>
+      <div style={{ flex: 1 }} />
+      {option.badges && option.badges.map((badge, index) => (
+        <Badge key={index} >
+          {badge}
+        </Badge>
+      ))}
+    </>
+  )
+  return (
+    <DefaultItemTemplate
+      option={option}
+      dataKey={"value"}
+      labelKey={"label"}
+      value={[option.value]}
+      endContent={endContent}
+    />
+  )
+}
+
+
 const FormField = ({ field, value, onChange }: FormFieldProps) => {
   if (field.type === 'text') {
     const parsedValue = typeof value === 'string' ? value : ''
@@ -142,6 +167,7 @@ const FormField = ({ field, value, onChange }: FormFieldProps) => {
         onSelectionChange={(e) => onChange(e[0])}
         className={`form-field`}
         multiSelect={false}
+        itemTemplate={DropdownItemTemplate}
       />
     )
   } // Handle select
@@ -156,6 +182,7 @@ const FormField = ({ field, value, onChange }: FormFieldProps) => {
         onSelectionChange={(e) => onChange(e)}
         className={`form-field`}
         multiSelect={true}
+        itemTemplate={DropdownItemTemplate}
       />
     )
   }
@@ -224,28 +251,28 @@ export const SimpleFormDialog = ({
       footer={footer}
       style={{ minHeight: 500, minWidth: 600 }}
     >
-        <FormLayout style={{ width: '95%' }}>
-          {fields.map((field: SimpleFormField) => {
-            if (field.type === 'label') {
-              return <FormLabel key={field.name} field={field} />
-            }
+      <FormLayout style={{ width: '95%' }} onKeyDown={(e) => { e.stopPropagation() }}>
+        {fields.map((field: SimpleFormField) => {
+          if (field.type === 'label') {
+            return <FormLabel key={field.name} field={field} />
+          }
 
-            return (
-              <FormRow key={field.name} label={field.label || ''}>
-                <FormField
-                  field={field}
-                  value={formData[field.name]}
-                  onChange={(value) => {
-                    setFormData((prev) => ({
-                      ...prev,
-                      [field.name]: value,
-                    }))
-                  }}
-                />
-              </FormRow>
-            )
-          })}
-        </FormLayout>
+          return (
+            <FormRow key={field.name} label={field.label || ''}>
+              <FormField
+                field={field}
+                value={formData[field.name]}
+                onChange={(value) => {
+                  setFormData((prev) => ({
+                    ...prev,
+                    [field.name]: value,
+                  }))
+                }}
+              />
+            </FormRow>
+          )
+        })}
+      </FormLayout>
     </Dialog>
   )
 }

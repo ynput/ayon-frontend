@@ -40,21 +40,18 @@ function URIProvider({ children }) {
       }
     }
 
-    const focusedTypePriorityOrder = [
-      'folder',
-      'task',
-      'product',
-      'version',
-      'representation',
-      'workfile',
-    ]
-
-    const focusedType = focusedTypePriorityOrder.findLast((type) => {
-      return focused[type + 's'].length > 0
-    })
+    const focusedTypePriorityOrder = ['folder', 'task', 'product', 'version', 'workfile']
+    let focusedType = null
+    for (let i = focusedTypePriorityOrder.length - 1; i >= 0; i--) {
+      const type = focusedTypePriorityOrder[i]
+      const pluralType = type + 's'
+      if (focused[pluralType] && focused[pluralType].length > 0) {
+        focusedType = type
+        break
+      }
+    }
 
     focused.type = focusedType
-
     dispatch(onUriNavigate(focused))
 
     const path = window.location.pathname
@@ -77,7 +74,6 @@ function URIProvider({ children }) {
           }
           const entities = res.data[0].entities
           if (!entities.length) {
-            // toast.error('No entities found')
             return
           }
           focusEntities(entities)

@@ -24,14 +24,14 @@ export const UploadCard = styled.div`
   gap: var(--base-gap-large);
   border-radius: var(--border-radius-m);
   padding: 0 var(--padding-s);
-  background-color: var(--md-sys-color-surface-container);
-  border: 1px solid var(--md-sys-color-surface-container);
+  background-color: var(--md-sys-color-surface-container-high);
+  border: 1px solid var(--md-sys-color-surface-container-high);
 
   /* only show affect for unsupported */
   &.unsupported {
     &:hover {
-      background-color: var(--md-sys-color-surface-container-hover);
-      border: 1px solid var(--md-sys-color-surface-container-hover);
+      background-color: var(--md-sys-color-surface-container-high-hover);
+      border: 1px solid var(--md-sys-color-surface-container-high-hover);
     }
   }
 
@@ -97,7 +97,7 @@ export const Type = styled.div`
   align-items: center;
   justify-content: center;
 
-  background-color: var(--md-sys-color-surface-container-low);
+  background-color: var(--md-sys-color-surface-container-high-low);
   border-radius: var(--border-radius-m);
   overflow: hidden;
 
