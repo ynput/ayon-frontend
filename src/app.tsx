@@ -248,7 +248,7 @@ const App = () => {
         </Suspense>
       </>
     ),
-    [isUser, isTrialing],
+    [isUser, isTrialing, user.name],
   )
 
   const loadingComponent = useMemo(() => <LoadingPage />, [])
