@@ -11,7 +11,7 @@ import { generateLoadingRows } from '../utils/loadingUtils'
 const TASKS_INFINITE_QUERY_COUNT = 100
 import { LoadingTasks } from '../types'
 import { ProjectModel } from '../types/project'
-import useGetEntityTypeData from './useGetEntityTypeData'
+import { useGetEntityTypeData } from './useGetEntityTypeData'
 import { TableGroupBy } from '../context'
 
 type Params = {

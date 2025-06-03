@@ -3,8 +3,11 @@ import {
   ProjectTableSettings,
   ProjectTableSettingsProps,
 } from '@shared/components'
-import { useColumnSettingsContext, useProjectTableModuleContext } from '@shared/containers'
-import useGetGroupedFields from '../hooks/useGetGroupedFields'
+import {
+  useColumnSettingsContext,
+  useProjectTableModuleContext,
+  useGetGroupedFields,
+} from '@shared/containers/ProjectTreeTable'
 import { FC } from 'react'
 
 interface ProjectOverviewSettingsProps extends ProjectTableSettingsProps {

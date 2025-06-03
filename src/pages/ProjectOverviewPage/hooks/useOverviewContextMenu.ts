@@ -5,7 +5,7 @@ import {
   useColumnSettingsContext,
 } from '@shared/containers'
 import { useCallback } from 'react'
-import { isAttribGroupable } from './useGetGroupedFields'
+import { isAttribGroupable } from '../../../../shared/src/containers/ProjectTreeTable/hooks/useGetGroupedFields'
 
 type OverviewContextMenuProps = {}
 

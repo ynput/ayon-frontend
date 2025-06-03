@@ -6,7 +6,7 @@ type Props = {
   projectInfo?: ProjectModel
 }
 
-const useGetEntityTypeData = ({ projectInfo }: Props) => {
+export const useGetEntityTypeData = ({ projectInfo }: Props) => {
   const { folderTypes = [], taskTypes = [] } = projectInfo || {}
 
   // create a map of folder types by name for efficient lookups
@@ -56,5 +56,3 @@ const useGetEntityTypeData = ({ projectInfo }: Props) => {
 
   return getEntityTypeData
 }
-
-export default useGetEntityTypeData

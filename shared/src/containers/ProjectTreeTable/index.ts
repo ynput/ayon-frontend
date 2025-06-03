@@ -27,9 +27,6 @@ export * from './utils'
 export * from './types'
 export * from './context'
 export * from './buildTreeTableColumns'
+export * from './hooks'
 
-import useGetEntityTypeData from './hooks/useGetEntityTypeData'
-export * from './hooks/useUpdateTableData'
-export * from './hooks/useCellContextMenu'
-export { useGetEntityTypeData }
 export * from './widgets'

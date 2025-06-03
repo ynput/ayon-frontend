@@ -5,7 +5,7 @@
 import { ProjectModel, EntityGroup } from '@shared/api'
 import { TableGroupBy } from '../context'
 import { EditorTaskNode, EntitiesMap, EntityMap, ProjectTableAttribute, TableRow } from '../types'
-import useGetEntityTypeData from './useGetEntityTypeData'
+import { useGetEntityTypeData } from './useGetEntityTypeData'
 import { useCallback } from 'react'
 export type GroupByEntityType = 'task' | 'folder' | 'version' | 'product'
 

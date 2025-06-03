@@ -14,7 +14,7 @@ export const isAttribGroupable = (
   entityType: EntityGrouping['entityType'],
 ) => allowedGroupByFields.includes(attrib.data.type) && attrib.scope?.includes(entityType)
 
-function useGetGroupedFields() {
+export const useGetGroupedFields = () => {
   const { columnOrder } = useColumnSettingsContext()
   const { attribFields } = useProjectTableContext()
 
@@ -59,5 +59,3 @@ function useGetGroupedFields() {
     [attribFields, columnOrder],
   )
 }
-
-export default useGetGroupedFields
