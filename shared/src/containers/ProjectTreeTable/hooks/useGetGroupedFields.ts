@@ -12,9 +12,22 @@ export const allowedGroupByFields = ['string', 'integer', 'float']
 export const isAttribGroupable = (
   attrib: ProjectTableAttribute,
   entityType: EntityGrouping['entityType'],
-) => allowedGroupByFields.includes(attrib.data.type) && attrib.scope?.includes(entityType)
+  allowedTypes?: ('string' | 'integer' | 'float')[],
+  enumOnly?: boolean,
+) => {
+  const typesToCheck = allowedTypes || allowedGroupByFields
+  const hasValidType = typesToCheck.includes(attrib.data.type) && attrib.scope?.includes(entityType)
 
-export const useGetGroupedFields = () => {
+  if (!hasValidType) return false
+  if (enumOnly) return !!attrib.data.enum && attrib.data.enum.length > 0
+
+  return true
+}
+
+export const useGetGroupedFields = (
+  allowedTypes?: ('string' | 'integer' | 'float')[],
+  enumOnly?: boolean,
+) => {
   const { columnOrder } = useColumnSettingsContext()
   const { attribFields } = useProjectTableContext()
 
@@ -42,7 +55,7 @@ export const useGetGroupedFields = () => {
           icon: getAttributeIcon('tags'),
         },
         ...attribFields
-          .filter((attrib) => isAttribGroupable(attrib, 'task'))
+          .filter((attrib) => isAttribGroupable(attrib, 'task', allowedTypes, enumOnly))
           .map((field) => ({
             value: 'attrib.' + field.name,
             label: field.data.title || field.name,
@@ -56,6 +69,6 @@ export const useGetGroupedFields = () => {
         if (indexB === -1) return -1
         return indexA - indexB
       }),
-    [attribFields, columnOrder],
+    [attribFields, columnOrder, allowedTypes, enumOnly],
   )
 }
