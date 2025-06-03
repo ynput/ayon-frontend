@@ -1,6 +1,8 @@
 import { getPlatformShortcutKey, KeyMode } from '@shared/util'
 import {
   CellEditingContextType,
+  parseCellId,
+  ROW_SELECTION_COLUMN_ID,
   SelectionCellsContextType,
   useCellEditing,
   useSelectionCellsContext,
@@ -52,6 +54,14 @@ const OverviewActions: FC<OverviewActionsProps> = ({ items }) => {
   const { canUndo, canRedo } = history
   const deleteEntities = useDeleteEntities({})
 
+  // find which entities are selected (removing duplicates and row_selection)
+  const selectedEntities: string[] = []
+  Array.from(selectedCells).forEach((cellId) => {
+    const { rowId, colId } = parseCellId(cellId) || {}
+    if (!rowId || selectedEntities.includes(rowId) || colId === ROW_SELECTION_COLUMN_ID) return
+    selectedEntities.push(rowId)
+  })
+
   const builtInActions: Record<ActionType, ActionItem> = {
     undo: {
       icon: 'undo',
@@ -70,8 +80,8 @@ const OverviewActions: FC<OverviewActionsProps> = ({ items }) => {
     delete: {
       icon: 'delete',
       ['data-tooltip']: 'Delete selected',
-      onClick: () => deleteEntities(Array.from(selectedCells)),
-      disabled: !selectedCells.size,
+      onClick: () => deleteEntities(selectedEntities),
+      disabled: !selectedEntities.length,
     },
   }
 

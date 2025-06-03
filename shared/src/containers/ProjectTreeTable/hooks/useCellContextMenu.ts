@@ -33,7 +33,7 @@ export type ContextMenuItemConstructor = (
   cell: TableCellContextData,
   selectedCells: TableCellContextData[],
   meta: {
-    selectedCells: string[]
+    selectedCells: string[] // minus row selection cells
     selectedRows: string[]
     selectedColumns: string[]
     selectedFullRows: string[] // if the full row is selected
@@ -175,7 +175,7 @@ const useCellContextMenu = ({ attribs, onOpenNew }: CellContextMenuProps) => {
     label: 'Delete',
     icon: 'delete',
     danger: true,
-    command: () => deleteEntities(meta.selectedCells),
+    command: () => deleteEntities(meta.selectedRows),
     hidden: cell.columnId !== 'name',
   })
 
@@ -271,6 +271,10 @@ const useCellContextMenu = ({ attribs, onOpenNew }: CellContextMenuProps) => {
       selectCell(cellId, false, false)
       focusCell(cellId)
     }
+    // selected cells without row selection cells
+    const selectedRealCells = currentSelectedCells.filter(
+      (id) => parseCellId(id)?.colId !== ROW_SELECTION_COLUMN_ID,
+    )
 
     const selectedCellsData = currentSelectedCells.flatMap((cellId) => getCellData(cellId) || [])
     const selectedCellRows: string[] = []
@@ -290,7 +294,7 @@ const useCellContextMenu = ({ attribs, onOpenNew }: CellContextMenuProps) => {
             cellData,
             selectedCellsData,
             {
-              selectedCells: currentSelectedCells, // all selected cells
+              selectedCells: selectedRealCells, // selected cells without row selection
               selectedRows: selectedCellRows,
               selectedColumns: selectedCellColumns,
               selectedFullRows: selectedCellFullRows,
@@ -304,7 +308,7 @@ const useCellContextMenu = ({ attribs, onOpenNew }: CellContextMenuProps) => {
             cellData,
             selectedCellsData,
             {
-              selectedCells: currentSelectedCells, // all selected cells
+              selectedCells: selectedRealCells, // selected cells without row selection
               selectedRows: selectedCellRows,
               selectedColumns: selectedCellColumns,
               selectedFullRows: selectedCellFullRows,
