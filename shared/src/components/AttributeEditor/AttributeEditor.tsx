@@ -96,7 +96,7 @@ const initFormData: AttributeForm = {
     description: '',
     example: '',
     default: undefined,
-    enum: [],
+    enum: undefined,
     minLength: undefined,
     maxLength: undefined,
     regex: '',
@@ -273,7 +273,7 @@ export const AttributeEditor: FC<AttributeEditorProps> = ({
       <EnumEditor
         values={value as AttributeEnumItem[]}
         onChange={(val) => {
-          onChange(val)
+          onChange(val?.length ? val : undefined)
         }}
       />
     ),
