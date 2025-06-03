@@ -1,7 +1,7 @@
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 
-import { Badge, BadgeWrapper } from '@components/Badge'
+import { Badge, BadgeWrapper } from '@shared/components'
 import { TablePanel } from '@ynput/ayon-react-components'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import { useDeleteBundleMutation, useUpdateBundleMutation } from '@queries/bundles/updateBundles'

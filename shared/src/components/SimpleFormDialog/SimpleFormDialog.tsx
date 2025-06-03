@@ -13,7 +13,7 @@ import {
   Dropdown,
   DefaultItemTemplate,
 } from '@ynput/ayon-react-components'
-import Badge from '@components/Badge'
+import { Badge } from '@shared/components'
 
 import type { FormSelectOption, SimpleFormField } from '@shared/api'
 
@@ -87,29 +87,23 @@ type FormFieldProps = {
   onChange: (value: SimpleFormValue) => void
 }
 
-
 const DropdownItemTemplate = (option: FormSelectOption) => {
   const endContent = (
     <>
       <div style={{ flex: 1 }} />
-      {option.badges && option.badges.map((badge, index) => (
-        <Badge key={index} >
-          {badge}
-        </Badge>
-      ))}
+      {option.badges && option.badges.map((badge, index) => <Badge key={index}>{badge}</Badge>)}
     </>
   )
   return (
     <DefaultItemTemplate
       option={option}
-      dataKey={"value"}
-      labelKey={"label"}
+      dataKey={'value'}
+      labelKey={'label'}
       value={[option.value]}
       endContent={endContent}
     />
   )
 }
-
 
 const FormField = ({ field, value, onChange }: FormFieldProps) => {
   if (field.type === 'text') {
@@ -186,7 +180,6 @@ const FormField = ({ field, value, onChange }: FormFieldProps) => {
       />
     )
   }
-
 }
 
 export interface SimpleFormDialogProps {
@@ -229,9 +222,7 @@ export const SimpleFormDialog = ({
   const footer = (
     <div style={{ display: 'flex', flexDirection: 'row', gap: 8 }}>
       <Spacer />
-      {cancelLabel && (
-        <Button onClick={() => onClose()} label={cancelLabel} icon={cancelIcon} />
-      )}
+      {cancelLabel && <Button onClick={() => onClose()} label={cancelLabel} icon={cancelIcon} />}
       {submitLabel && (
         <Button
           onClick={() => onSubmit(formData)}
@@ -251,7 +242,12 @@ export const SimpleFormDialog = ({
       footer={footer}
       style={{ minHeight: 500, minWidth: 600 }}
     >
-      <FormLayout style={{ width: '95%' }} onKeyDown={(e) => { e.stopPropagation() }}>
+      <FormLayout
+        style={{ width: '95%' }}
+        onKeyDown={(e) => {
+          e.stopPropagation()
+        }}
+      >
         {fields.map((field: SimpleFormField) => {
           if (field.type === 'label') {
             return <FormLabel key={field.name} field={field} />

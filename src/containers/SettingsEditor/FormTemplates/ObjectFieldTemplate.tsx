@@ -5,7 +5,7 @@ import ReactMarkdown from 'react-markdown'
 import SettingsPanel from '../SettingsPanel'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 
-import { Badge, BadgeWrapper } from '@components/Badge'
+import { Badge, BadgeWrapper } from '@shared/components'
 import { copyToClipboard } from '@shared/util'
 import { $Any } from '@types'
 import { ObjectFieldTemplateProps } from '@rjsf/utils'
