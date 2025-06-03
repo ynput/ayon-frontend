@@ -13,6 +13,7 @@ export const DialogWrapper = styled(Dialog)`
     justify-content: center;
     align-content: center;
     padding-top: 0;
+    overflow: hidden;
   }
   .navIcon {
     position: absolute;
@@ -97,4 +98,12 @@ export const Image = styled.img`
   max-width: 90vw;
   min-width: 300px;
   background-color: var(--md-sys-color-surface-container-lowest);
+`
+
+export const ScrollableContent = styled.div`
+  &.scrollable {
+    position: absolute;
+    inset: 56px;
+    overflow: auto;
+  }
 `
