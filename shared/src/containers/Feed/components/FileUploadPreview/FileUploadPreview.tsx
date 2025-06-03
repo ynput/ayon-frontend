@@ -153,9 +153,12 @@ const FileUploadPreview: React.FC<FileUploadPreviewProps> = ({
         onClick={handleNavigateToPrevious}
       />
 
-      <div style={{ zIndex: zIndex + 1 }}>
+      <Styled.ScrollableContent
+        style={{ zIndex: zIndex + 1 }}
+        className={clsx({ scrollable: !isImage })}
+      >
         <MimeComponent file={file} fullPreviews={fullPreviews} />
-      </div>
+      </Styled.ScrollableContent>
 
       <Icon
         style={{ zIndex: zIndex + 1 }}

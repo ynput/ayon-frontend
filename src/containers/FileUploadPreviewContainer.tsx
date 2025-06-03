@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import {
   onFilePreviewClose,
   onCommentImageActivityAndIndexChange,
@@ -33,16 +34,22 @@ const FileUploadPreviewContainer = () => {
     dispatch(onFilePreviewClose())
   }
 
-  return (
-    <FileUploadPreview
-      files={files}
-      index={index as unknown as number}
-      activityId={activityId as unknown as string}
-      projectName={projectName}
-      onFilePreviewClose={handleClose}
-      onNavigate={onNavigate}
-    />
-  )
+
+  const preview = useMemo(() => {
+    return (
+      <FileUploadPreview
+        files={files}
+        index={index as unknown as number}
+        activityId={activityId as unknown as string}
+        projectName={projectName}
+        onFilePreviewClose={handleClose}
+        onNavigate={onNavigate}
+      />
+    )
+  }, [files, index, activityId, projectName] )
+
+  return preview
+
 }
 
 export default FileUploadPreviewContainer

@@ -1,6 +1,5 @@
 import { useCallback } from 'react'
 import { useProjectTableQueriesContext } from '../context/ProjectTableQueriesContext'
-import { parseCellId } from '../utils/cellUtils'
 // TODO: confirmDelete uses prime react, so we should find a different solution
 import { confirmDelete } from '../../../util'
 import { useProjectTableContext } from '../context/ProjectTableContext'
@@ -17,6 +16,11 @@ const useDeleteEntities = ({ onSuccess }: UseDeleteEntitiesProps) => {
 
   const { getEntityById } = useProjectTableContext()
 
+  const getValidEntity = (entityId: string): (EntityMap & { rowId: string }) | null => {
+    const entity = getEntityById(entityId) as EntityMap & { rowId: string }
+    return entity || null
+  }
+
   const handleDeleteEntities = useCallback(
     async (entityIds: string[]) => {
       if (!entityIds || entityIds.length === 0) {
@@ -24,13 +28,16 @@ const useDeleteEntities = ({ onSuccess }: UseDeleteEntitiesProps) => {
         return
       }
 
-      const fullEntities: (EntityMap & { rowId: string })[] = entityIds
-        .map((id) => {
-          const rowId = parseCellId(id)?.rowId
-          const entity = getEntityById(rowId || '') as EntityMap & { rowId: string }
-          return entity
-        })
-        .filter(Boolean)
+      const fullEntities: (EntityMap & { rowId: string })[] = []
+      const addedEntityIds = new Set<string>()
+
+      for (const id of entityIds) {
+        const entity = getValidEntity(id)
+        if (entity && !addedEntityIds.has(entity.id)) {
+          fullEntities.push(entity)
+          addedEntityIds.add(entity.id)
+        }
+      }
 
       if (fullEntities.length === 0) {
         toast.error('No entities found')
@@ -61,9 +68,14 @@ const useDeleteEntities = ({ onSuccess }: UseDeleteEntitiesProps) => {
         }
       }
 
+      const entityLabel =
+        fullEntities.length === 1
+          ? `"${fullEntities[0].label || fullEntities[0].name}"`
+          : `${fullEntities.length} entities`
+
       confirmDelete({
         label: 'folders and tasks',
-        message: `Are you sure you want to delete ${entityIds.length} entities? This action cannot be undone.`,
+        message: `Are you sure you want to delete ${entityLabel}? This action cannot be undone.`,
         accept: deleteEntities,
         onError: (error: any) => {
           const FOLDER_WITH_CHILDREN_CODE = 'delete-folder-with-children'
@@ -72,7 +84,7 @@ const useDeleteEntities = ({ onSuccess }: UseDeleteEntitiesProps) => {
             // try again but with force
             confirmDelete({
               label: 'folders and tasks',
-              message: `This folder has child tasks or products that will also be deleted. Are you sure you want to delete ${entityIds.length} entities and all of it's dependencies?`,
+              message: `This folder has child tasks or products that will also be deleted. Are you sure you want to delete ${entityLabel} and all of it's dependencies?`,
               accept: () => deleteEntities(true),
               deleteLabel: 'Delete all (dangerous)',
             })
