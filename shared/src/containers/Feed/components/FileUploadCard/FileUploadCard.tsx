@@ -185,7 +185,7 @@ const FileUploadCard = ({
 
         {isDownloadable &&
           (!onRemove ? (
-            <a href={src} target="_blank" className="download">
+            <a href={src} target="_blank" rel="noopener noreferrer" className="download">
               {downloadComponent}
             </a>
           ) : (
