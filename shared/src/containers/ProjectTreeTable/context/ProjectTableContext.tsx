@@ -23,6 +23,7 @@ import { QueryFilter } from '../types/folders'
 import { ContextMenuItemConstructors } from '../hooks/useCellContextMenu'
 import { EntityGroup } from '@shared/api'
 import { ROW_ID_SEPARATOR } from '../hooks/useBuildGroupByTableData'
+import { PowerpackContextType } from '@shared/context'
 
 export const parseRowId = (rowId: string) => rowId.split(ROW_ID_SEPARATOR)[0] || rowId
 
@@ -89,6 +90,9 @@ export interface ProjectTableProviderProps {
 
   // context menu
   contextMenuItems: ContextMenuItemConstructors
+
+  // powerpack context
+  powerpack?: PowerpackContextType
 }
 
 export interface ProjectTableContextProps {
@@ -142,6 +146,9 @@ export interface ProjectTableContextProps {
 
   // Context menu
   contextMenuItems: ProjectTableProviderProps['contextMenuItems']
+
+  // Powerpack context
+  powerpack?: ProjectTableProviderProps['powerpack']
 }
 
 const ProjectTableContext = createContext<ProjectTableContextProps | undefined>(undefined)
@@ -177,6 +184,7 @@ export const ProjectTableProvider = ({
   reloadTableData,
   setExpanded,
   contextMenuItems,
+  powerpack,
 }: ProjectTableProviderProps) => {
   // DATA TO TABLE
   const tableData = useBuildProjectDataTable({
@@ -321,6 +329,8 @@ export const ProjectTableProvider = ({
         getAncestorsOf,
         // context menu
         contextMenuItems,
+        // powerpack context
+        powerpack,
       }}
     >
       {children}

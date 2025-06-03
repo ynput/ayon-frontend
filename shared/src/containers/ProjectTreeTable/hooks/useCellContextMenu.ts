@@ -72,18 +72,18 @@ const useCellContextMenu = ({ attribs, headerLabels = [], onOpenNew }: CellConte
     toggleExpands,
     expanded,
     contextMenuItems = [],
+    powerpack,
   } = useProjectTableContext()
   const { copyToClipboard, exportCSV, pasteFromClipboard } = useClipboard()
   const { selectedCells, clearSelection, selectCell, focusCell } = useSelectionCellsContext()
   const { inheritFromParent, history } = useCellEditing()
-  const { setPowerpackDialog, powerLicense } = usePowerpack()
 
   // update entity context
 
   // data mutations
   const deleteEntities = useDeleteEntities({})
 
-  const [cellContextMenuShow] = useCreateContextMenu()
+  const [cellContextMenuShow] = useCreateContextMenu([], powerpack)
 
   // Helper function to identify attributes that can be inherited
   const getEntitiesToInherit = (selected: string[]): InheritFromParentEntity[] => {

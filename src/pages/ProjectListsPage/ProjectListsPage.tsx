@@ -15,7 +15,7 @@ import {
 import ListItemsTable from './components/ListItemsTable/ListItemsTable'
 import ListItemsFilter from './components/ListItemsFilter/ListItemsFilter'
 import { CustomizeButton } from '@shared/components'
-import { SettingsPanelProvider, useSettingsPanel } from '@shared/context'
+import { SettingsPanelProvider, usePowerpack, useSettingsPanel } from '@shared/context'
 import { useUserProjectConfig } from '@shared/hooks'
 import useTableQueriesHelper from '@pages/ProjectOverviewPage/hooks/useTableQueriesHelper'
 import {

@@ -1,7 +1,7 @@
 import { useCallback, useMemo, MouseEvent, RefObject } from 'react'
 import ContextMenuItem, { ContextMenuItemProps } from './ContextMenuItem'
 import { useContextMenu } from './ContextMenuContext'
-import { PowerpackFeature, usePowerpack } from '@shared/context'
+import { PowerpackContextType, PowerpackFeature } from '@shared/context'
 
 // Extend the item type based on the ContextMenuItemProps
 export interface ContextMenuItemType extends Omit<ContextMenuItemProps, 'contextMenuRef'> {
@@ -48,9 +48,10 @@ type UseCreateContextReturn = [
 
 export const useCreateContextMenu = (
   menuList: ContextMenuItemType[] = [],
+  powerConfig?: Pick<PowerpackContextType, 'powerLicense' | 'setPowerpackDialog'>,
 ): UseCreateContextReturn => {
   const { openContext, ref, isContextOpen, closeContext } = useContextMenu()
-  const { powerLicense, setPowerpackDialog } = usePowerpack()
+  const { powerLicense, setPowerpackDialog } = powerConfig || {}
 
   const getModel = useCallback(
     (

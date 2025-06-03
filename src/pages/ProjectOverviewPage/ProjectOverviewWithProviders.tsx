@@ -9,7 +9,7 @@ import {
   ProjectTableModuleProvider,
 } from '@shared/containers/ProjectTreeTable'
 import { NewEntityProvider } from '@context/NewEntityContext'
-import { SettingsPanelProvider } from '@shared/context'
+import { SettingsPanelProvider, usePowerpack } from '@shared/context'
 import { useAppSelector } from '@state/store'
 import {
   ProjectOverviewProvider,
@@ -49,9 +49,11 @@ const ProjectOverviewWithTableProviders: FC = () => {
     projectName: props.projectName,
   })
 
+  const powerpack = usePowerpack()
+
   return (
     <ProjectTableQueriesProvider {...{ updateEntities, getFoldersTasks }}>
-      <ProjectTableProvider {...props}>
+      <ProjectTableProvider {...props} powerpack={powerpack}>
         <NewEntityProvider>
           <SelectionCellsProvider>
             <SelectedRowsProvider>

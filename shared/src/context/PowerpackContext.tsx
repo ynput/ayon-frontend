@@ -48,7 +48,7 @@ export const powerpackFeatures: {
     bullet: 'Group tasks by attributes',
   },
 }
-type PowerpackContextType = {
+export type PowerpackContextType = {
   selectedPowerPack: null | PowerpackFeature
   setPowerpackDialog: (open: PowerpackContextType['selectedPowerPack']) => void
   powerpackDialog: PowerpackDialog | null
