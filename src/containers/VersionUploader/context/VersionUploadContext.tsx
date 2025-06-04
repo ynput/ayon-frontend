@@ -17,6 +17,7 @@ import { useAppDispatch } from '@state/store'
 import { productSelected } from '@state/context'
 import { extractVersionFromFilename } from '@shared/utils/extractVersionFromFilename'
 import { productTypes } from '@shared/util'
+import { toast } from 'react-toastify'
 
 export interface FormData {
   version: number
@@ -168,6 +169,8 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
 
           // select the new product and version
           selectNewVersion(productRes.id, versionRes.id)
+
+          toast.success('Created new version')
 
           return {
             productId: productRes.id,

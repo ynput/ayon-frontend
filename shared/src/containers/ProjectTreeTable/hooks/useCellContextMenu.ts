@@ -13,10 +13,11 @@ import { UseHistoryReturn } from './useHistory'
 type ContextEvent = React.MouseEvent<HTMLTableSectionElement, MouseEvent>
 
 export type TableCellContextData = {
-  entityId: string
   cellId: string
   columnId: string
+  entityId: string
   entityType: 'folder' | 'task' | 'product' | 'version' | undefined
+  parentId?: string
   attribField: ProjectTableAttribute | undefined
 }
 type DefaultMenuItem =
@@ -242,11 +243,19 @@ const useCellContextMenu = ({ attribs, onOpenNew }: CellContextMenuProps) => {
     if (!rowId || !colId) return undefined
     const cellEntityData = getEntityById(rowId)
     const attribField = attribs.find((attrib) => attrib.name === colId?.replace('attrib_', ''))
+    const parentId = cellEntityData
+      ? 'parentId' in cellEntityData
+        ? cellEntityData.parentId
+        : 'folderId' in cellEntityData
+        ? cellEntityData.folderId
+        : undefined
+      : undefined
     return {
       cellId: cellId,
       columnId: colId,
       entityId: cellEntityData?.entityId || rowId,
       entityType: cellEntityData?.entityType,
+      parentId: parentId,
       attribField: attribField,
     }
   }

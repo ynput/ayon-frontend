@@ -25,8 +25,12 @@ import {
 } from '../../../../shared/src/containers/ProjectTreeTable/context/ProjectDataContext'
 import { LoadingTasks } from '@shared/containers/ProjectTreeTable'
 import { useEntityListsContext } from '@pages/ProjectListsPage/context/EntityListsContext'
-import { ContextMenuItemConstructors } from '@shared/containers/ProjectTreeTable/hooks/useCellContextMenu'
+import {
+  ContextMenuItemConstructor,
+  ContextMenuItemConstructors,
+} from '@shared/containers/ProjectTreeTable/hooks/useCellContextMenu'
 import { useUserProjectConfig } from '@shared/hooks'
+import { useVersionUploadContext } from '@containers/VersionUploader/context/VersionUploadContext'
 
 export interface ProjectOverviewContextProps {
   isInitialized: boolean
@@ -103,6 +107,15 @@ export const ProjectOverviewProvider = ({ children }: ProjectOverviewProviderPro
   // lists data
   const { menuItems: menuItemsAddToList } = useEntityListsContext()
 
+  const { onOpenVersionUpload } = useVersionUploadContext()
+  const uploadVersionItem: ContextMenuItemConstructor = (_e, cell) => ({
+    id: 'upload-version',
+    label: 'Upload Version',
+    icon: 'upload',
+    command: () => onOpenVersionUpload({ taskId: cell.entityId, folderId: cell.parentId }),
+    hidden: cell.entityType !== 'task', // only show for tasks
+  })
+
   // inject in custom add to list context menu items
   const contextMenuItems: ContextMenuItemConstructors = [
     'copy-paste',
@@ -111,6 +124,7 @@ export const ProjectOverviewProvider = ({ children }: ProjectOverviewProviderPro
     menuItemsAddToList(),
     'inherit',
     'export',
+    uploadVersionItem,
     'create-folder',
     'create-task',
     'delete',

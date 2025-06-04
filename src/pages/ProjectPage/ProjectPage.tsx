@@ -24,6 +24,8 @@ import { Navigate } from 'react-router-dom'
 import ProjectPubSub from './ProjectPubSub'
 import NewListFromContext from '@pages/ProjectListsPage/components/NewListDialog/NewListFromContext'
 import { RemoteAddonProject } from '@shared/context'
+import { VersionUploadProvider } from '@containers/VersionUploader/context/VersionUploadContext'
+import UploadVersionDialog from '@containers/VersionUploader/components/UploadVersionDialog'
 
 const ProjectContextInfo = () => {
   /**
@@ -261,10 +263,13 @@ const ProjectPage = () => {
       </Dialog>
       {/* @ts-expect-error - AppNavLinks is jsx */}
       <AppNavLinks links={links} />
-      <EntityListsProvider {...{ projectName, entityTypes: ['folder', 'task', 'version'] }}>
-        <SlicerProvider>{child}</SlicerProvider>
-        <NewListFromContext />
-      </EntityListsProvider>
+      <VersionUploadProvider projectName={projectName}>
+        <EntityListsProvider {...{ projectName, entityTypes: ['folder', 'task', 'version'] }}>
+          <SlicerProvider>{child}</SlicerProvider>
+          <NewListFromContext />
+        </EntityListsProvider>
+        <UploadVersionDialog />
+      </VersionUploadProvider>
       <ProjectPubSub projectName={projectName} onReload={loadProjectData} />
     </>
   )
