@@ -13,6 +13,7 @@ export const parseTasksList = (tasks, userName) => {
       id: id,
       name: name,
       label: label,
+      folderId: folder.id,
       folderName: folder.label || folder.name,
       folderPath: folder.path,
       taskType: taskType,

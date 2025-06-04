@@ -26,6 +26,7 @@ export interface FormData {
 interface VersionUploadContextType {
   productId: string
   folderId: string
+  taskId: string
   setProductId: (productId: string) => void
   setFolderId: (folderId: string) => void
   isOpen: boolean
@@ -40,7 +41,7 @@ interface VersionUploadContextType {
   error: string
   createdProductId: string | null
   createdVersionId: string | null
-  onOpenVersionUpload: (params: { productId?: string; folderId?: string }) => void
+  onOpenVersionUpload: (params: { productId?: string; folderId?: string; taskId?: string }) => void
   onCloseVersionUpload: () => void
   onUploadVersion: (data: FormData) => Promise<{ productId: string; versionId: string }>
   handleFormChange: (key: keyof FormData, value: string | number) => void
@@ -56,8 +57,8 @@ interface VersionUploadProviderProps {
 
 const defaultFormData: FormData = {
   version: 1,
-  name: productTypes.render.name,
-  productType: 'render',
+  name: productTypes.review.name,
+  productType: 'review',
 }
 
 export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
@@ -66,6 +67,8 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
 }) => {
   const [folderId, setFolderId] = useState<string>('')
   const [productId, setProductId] = useState<string>('')
+  // optional taskId to link the version to
+  const [taskId, setTaskId] = useState<string>('')
   const [isOpen, setIsOpen] = useState<boolean>(false)
   const [pendingFiles, setPendingFiles] = useState<Array<{ file: File; preview?: string }>>([])
   const [form, setForm] = useState<FormData>(defaultFormData)
@@ -83,9 +86,10 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
   )
 
   const onOpenVersionUpload = useCallback<VersionUploadContextType['onOpenVersionUpload']>(
-    ({ productId, folderId }) => {
+    ({ productId, folderId, taskId }) => {
       setProductId(productId || '')
       setFolderId(folderId || '')
+      setTaskId(taskId || '')
       setIsOpen(true)
     },
     [],
@@ -114,6 +118,7 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
     setIsOpen(false)
     setProductId('')
     setFolderId('')
+    setTaskId('')
   }, [pendingFiles])
 
   const [createProduct] = useCreateProductMutation()
@@ -157,6 +162,7 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
             versionPostModel: {
               productId: productRes.id,
               version: data.version,
+              taskId: taskId || undefined,
             },
           }).unwrap()
 
@@ -175,7 +181,7 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
         throw error.data.detail
       }
     },
-    [onCloseVersionUpload, productId, folderId, version, projectName],
+    [onCloseVersionUpload, productId, folderId, taskId, version, projectName],
   )
 
   const extractAndSetVersionFromFiles = useCallback(
@@ -285,6 +291,7 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
       productId,
       setProductId,
       folderId,
+      taskId,
       setFolderId,
       isOpen,
       projectName,
@@ -308,6 +315,7 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
       folderId,
       setFolderId,
       productId,
+      taskId,
       setProductId,
       isOpen,
       projectName,

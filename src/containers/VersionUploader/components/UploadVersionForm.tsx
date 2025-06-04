@@ -84,7 +84,6 @@ export const UploadVersionForm: FC<UploadVersionFormProps> = ({
 }) => {
   const previousProductTypeRef = useRef<string>(formData.productType)
   const dropdownRef = useRef<DropdownRef>(null)
-  const hasOpenedRef = useRef<boolean>(false)
   const formRef = useRef<HTMLFormElement>(null)
   const dispatch = useAppDispatch()
   const { pendingFiles, setPendingFiles, onCloseVersionUpload, extractAndSetVersionFromFiles } =
@@ -95,16 +94,6 @@ export const UploadVersionForm: FC<UploadVersionFormProps> = ({
     label: value.name,
     icon: value.icon,
   }))
-
-  useEffect(() => {
-    // Auto-open dropdown on first render if not hidden
-    if (!hasOpenedRef.current && !hidden.includes('productType') && dropdownRef.current) {
-      setTimeout(() => {
-        dropdownRef.current?.open()
-        hasOpenedRef.current = true
-      }, 150)
-    }
-  }, [hidden])
 
   useEffect(() => {
     // Check if the current name starts with the previous product type name
@@ -177,8 +166,23 @@ export const UploadVersionForm: FC<UploadVersionFormProps> = ({
   // Disable form fields if version has been created
   const isFormSubmitted = Boolean(versionId)
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLFormElement>) => {
+    // Submit form on Cmd/Ctrl + Enter
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault()
+      onSubmit(formData)
+      return
+    }
+  }
+
   return (
-    <StyledForm id="upload-version-form" ref={formRef} onSubmit={handleSubmit} noValidate>
+    <StyledForm
+      id="upload-version-form"
+      ref={formRef}
+      onSubmit={handleSubmit}
+      noValidate
+      onKeyDown={handleKeyDown}
+    >
       <StyledFormLayout>
         {!hidden.includes('productType') && (
           <FormRow label="Product Type">
@@ -204,6 +208,7 @@ export const UploadVersionForm: FC<UploadVersionFormProps> = ({
                 onChange={handleNameChange}
                 placeholder="Enter product name"
                 minLength={1}
+                autoFocus
                 aria-label="Product Name"
                 aria-describedby={shouldShowRecommendation() ? 'name-recommendation' : undefined}
                 disabled={isFormSubmitted}
@@ -228,7 +233,7 @@ export const UploadVersionForm: FC<UploadVersionFormProps> = ({
               min={minVersion}
               step={1}
               aria-label="Version Number"
-              autoFocus
+              autoFocus={hidden.includes('name')}
               disabled={isFormSubmitted}
             />
           </FormRow>

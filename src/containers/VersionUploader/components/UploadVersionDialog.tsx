@@ -34,6 +34,7 @@ const UploadVersionDialog: FC<UploadVersionDialogProps> = () => {
     isOpen,
     onCloseVersionUpload,
     productId,
+    taskId,
     projectName,
     form,
     version,
@@ -64,11 +65,14 @@ const UploadVersionDialog: FC<UploadVersionDialogProps> = () => {
     </div>
   )
 
+  const creatingOnEntityType = productId ? 'Product' : taskId ? 'Task' : 'Folder'
+  const title = 'Create new version' + ' - ' + creatingOnEntityType
+
   return (
     <Dialog
       isOpen={isOpen}
       onClose={onCloseVersionUpload}
-      header="Create new version"
+      header={title}
       size="md"
       footer={footer}
       style={{ width: 600, maxHeight: '80vh' }}
