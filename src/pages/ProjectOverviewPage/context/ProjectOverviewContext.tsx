@@ -28,9 +28,11 @@ import { useEntityListsContext } from '@pages/ProjectListsPage/context/EntityLis
 import {
   ContextMenuItemConstructor,
   ContextMenuItemConstructors,
+  TableCellContextData,
 } from '@shared/containers/ProjectTreeTable/hooks/useCellContextMenu'
 import { useUserProjectConfig } from '@shared/hooks'
 import { useVersionUploadContext } from '@containers/VersionUploader/context/VersionUploadContext'
+import { toast } from 'react-toastify'
 
 export interface ProjectOverviewContextProps {
   isInitialized: boolean
@@ -108,12 +110,22 @@ export const ProjectOverviewProvider = ({ children }: ProjectOverviewProviderPro
   const { menuItems: menuItemsAddToList } = useEntityListsContext()
 
   const { onOpenVersionUpload } = useVersionUploadContext()
+  const handleVersionUpload = (cell: TableCellContextData) => {
+    const folderId = cell.entityType === 'folder' ? cell.entityId : cell.parentId || ''
+    const taskId = cell.entityType === 'task' ? cell.entityId : ''
+
+    if (folderId) {
+      onOpenVersionUpload({ folderId, taskId })
+    } else {
+      toast.error('No folder selected for version upload')
+    }
+  }
+
   const uploadVersionItem: ContextMenuItemConstructor = (_e, cell) => ({
     id: 'upload-version',
     label: 'Upload Version',
     icon: 'upload',
-    command: () => onOpenVersionUpload({ taskId: cell.entityId, folderId: cell.parentId }),
-    hidden: cell.entityType !== 'task', // only show for tasks
+    command: () => handleVersionUpload(cell),
   })
 
   // inject in custom add to list context menu items
