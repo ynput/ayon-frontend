@@ -7,6 +7,7 @@ import { TableGroupBy } from '../context'
 import { EditorTaskNode, EntitiesMap, EntityMap, ProjectTableAttribute, TableRow } from '../types'
 import { useGetEntityTypeData } from './useGetEntityTypeData'
 import { useCallback } from 'react'
+import { ExpandedState } from '@tanstack/react-table'
 export type GroupByEntityType = 'task' | 'folder' | 'version' | 'product'
 
 export type GroupData = {
@@ -65,6 +66,7 @@ type BuildGroupByTableProps = {
   entityType?: GroupByEntityType
   groups?: EntityGroup[]
   attribFields: ProjectTableAttribute[]
+  expanded?: ExpandedState
 }
 
 // get sorting ids based on the groupBy field
@@ -93,7 +95,7 @@ const getSortingIds = (
 }
 
 const useBuildGroupByTableData = (props: BuildGroupByTableProps) => {
-  const { project, entities, entityType, groups = [], attribFields } = props
+  const { project, entities, entityType, groups = [], attribFields, expanded = {} } = props
   const getEntityTypeData = useGetEntityTypeData({ projectInfo: project })
 
   const entityToGroupRow = useCallback(
@@ -116,7 +118,7 @@ const useBuildGroupByTableData = (props: BuildGroupByTableProps) => {
         subType: task.taskType || null,
         attrib: task.attrib,
         ownAttrib: task.ownAttrib,
-        path: task.folder.path,
+        path: task.folder?.path,
         updatedAt: task.updatedAt,
       }
     },

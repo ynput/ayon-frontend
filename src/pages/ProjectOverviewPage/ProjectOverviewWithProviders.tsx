@@ -7,6 +7,7 @@ import {
   ColumnSettingsProvider,
   CellEditingProvider,
   ProjectTableModuleProvider,
+  useProjectTableModuleContext,
 } from '@shared/containers/ProjectTreeTable'
 import { NewEntityProvider } from '@context/NewEntityContext'
 import { SettingsPanelProvider, usePowerpack } from '@shared/context'
@@ -20,30 +21,38 @@ import { ProjectTableQueriesProvider } from '@shared/containers/ProjectTreeTable
 import { useUserProjectConfig } from '@shared/hooks'
 import useTableQueriesHelper from './hooks/useTableQueriesHelper'
 
+const WithModulesProvider: FC = () => {
+  return (
+    <ProjectTableModuleProvider>
+      <ProjectOverviewWithProviders />
+    </ProjectTableModuleProvider>
+  )
+}
+
 const ProjectOverviewWithProviders: FC = () => {
   const projectName = useAppSelector((state) => state.project.name) || ''
 
+  const modules = useProjectTableModuleContext()
   const [pageConfig, updatePageConfig] = useUserProjectConfig({
     selectors: ['overview', projectName],
   })
 
   return (
-    <ProjectTableModuleProvider>
-      <ProjectDataProvider projectName={projectName}>
-        <ColumnSettingsProvider config={pageConfig} onChange={updatePageConfig}>
-          <ProjectOverviewProvider>
-            <SettingsPanelProvider>
-              <ProjectOverviewWithTableProviders />
-            </SettingsPanelProvider>
-          </ProjectOverviewProvider>
-        </ColumnSettingsProvider>
-      </ProjectDataProvider>
-    </ProjectTableModuleProvider>
+    <ProjectDataProvider projectName={projectName}>
+      <ColumnSettingsProvider config={pageConfig} onChange={updatePageConfig}>
+        <ProjectOverviewProvider modules={modules}>
+          <SettingsPanelProvider>
+            <ProjectOverviewWithTableProviders />
+          </SettingsPanelProvider>
+        </ProjectOverviewProvider>
+      </ColumnSettingsProvider>
+    </ProjectDataProvider>
   )
 }
 
 const ProjectOverviewWithTableProviders: FC = () => {
   const props = useProjectOverviewContext()
+  const modules = useProjectTableModuleContext()
 
   const { updateEntities, getFoldersTasks } = useTableQueriesHelper({
     projectName: props.projectName,
@@ -53,7 +62,12 @@ const ProjectOverviewWithTableProviders: FC = () => {
 
   return (
     <ProjectTableQueriesProvider {...{ updateEntities, getFoldersTasks }}>
-      <ProjectTableProvider {...props} powerpack={powerpack}>
+      <ProjectTableProvider
+        {...props}
+        powerpack={powerpack}
+        modules={modules}
+        groupByConfig={{ entityType: 'task' }}
+      >
         <NewEntityProvider>
           <SelectionCellsProvider>
             <SelectedRowsProvider>
@@ -68,4 +82,4 @@ const ProjectOverviewWithTableProviders: FC = () => {
   )
 }
 
-export default ProjectOverviewWithProviders
+export default WithModulesProvider

@@ -1,4 +1,25 @@
-import { createContext, ReactNode, useCallback, useContext } from 'react'
+/**
+ * Project Table Context
+ *
+ * This context serves as the central data management layer for the project table component.
+ * It performs three main functions:
+ *
+ * 1. **Props Forwarding**: Acts as a bridge to forward essential props (project info, users,
+ *    attributes, filters, etc.) down to child components throughout the table hierarchy.
+ *
+ * 2. **Table Data Structure Building**: Transforms raw project data into structured table rows
+ *    that can be consumed by the table component. This includes processing folders, tasks,
+ *    and entities into a unified table format.
+ *
+ * 3. **Multi-Modal Data Presentation**: Supports three different data presentation modes:
+ *    - **Hierarchy Mode**: Builds nested folder/task relationships with expandable rows
+ *    - **Tasks List Mode**: Flattened view of tasks without hierarchical structure
+ *    - **Groups Mode**: Groups entities by specified criteria (entity type, custom groups)
+ *
+ * The context also provides utility functions for entity relationships, expansion state
+ * management, filtering, sorting, and folder inheritance operations.
+ */
+import { createContext, ReactNode, useCallback, useContext, useMemo } from 'react'
 import { ExpandedState, OnChangeFn, SortingState } from '@tanstack/react-table'
 import useBuildProjectDataTable from '../hooks/useBuildProjectDataTable'
 import { Filter } from '@ynput/ayon-react-components'
@@ -22,8 +43,13 @@ import { ProjectTableAttribute, LoadingTasks } from '../types'
 import { QueryFilter } from '../types/folders'
 import { ContextMenuItemConstructors } from '../hooks/useCellContextMenu'
 import { EntityGroup } from '@shared/api'
-import { ROW_ID_SEPARATOR } from '../hooks/useBuildGroupByTableData'
+import useBuildGroupByTableData, {
+  GroupByEntityType,
+  ROW_ID_SEPARATOR,
+} from '../hooks/useBuildGroupByTableData'
 import { PowerpackContextType } from '@shared/context'
+import { ProjectTableModuleContextType } from './ProjectTableModulesContext'
+import { useColumnSettingsContext } from './ColumnSettingsContext'
 
 export const parseRowId = (rowId: string) => rowId.split(ROW_ID_SEPARATOR)[0] || rowId
 
@@ -93,6 +119,13 @@ export interface ProjectTableProviderProps {
 
   // powerpack context
   powerpack?: PowerpackContextType
+
+  // remote modules
+  modules: ProjectTableModuleContextType
+
+  groupByConfig?: {
+    entityType?: GroupByEntityType
+  }
 }
 
 export interface ProjectTableContextProps {
@@ -149,6 +182,9 @@ export interface ProjectTableContextProps {
 
   // Powerpack context
   powerpack?: ProjectTableProviderProps['powerpack']
+
+  // remote modules
+  modules: ProjectTableProviderProps['modules']
 }
 
 const ProjectTableContext = createContext<ProjectTableContextProps | undefined>(undefined)
@@ -185,9 +221,11 @@ export const ProjectTableProvider = ({
   setExpanded,
   contextMenuItems,
   powerpack,
+  modules,
+  groupByConfig,
 }: ProjectTableProviderProps) => {
   // DATA TO TABLE
-  const tableData = useBuildProjectDataTable({
+  const defaultTableData = useBuildProjectDataTable({
     foldersMap,
     tasksMap,
     rows: tableRows,
@@ -198,6 +236,23 @@ export const ProjectTableProvider = ({
     loadingTasks,
     isLoadingMore,
   })
+  const { groupBy } = useColumnSettingsContext()
+
+  const buildGroupByTableData = useBuildGroupByTableData({
+    entities: entitiesMap,
+    entityType: groupByConfig?.entityType,
+    groups: taskGroups,
+    project: projectInfo,
+    attribFields,
+  })
+
+  // if we are grouping by something, we ignore current tableData and format the data based on the groupBy
+  const groupedTableData = useMemo(
+    () => !!groupBy && buildGroupByTableData(groupBy),
+    [groupBy, entitiesMap, taskGroups],
+  )
+
+  const tableData = groupBy && groupedTableData ? groupedTableData : defaultTableData
 
   const getEntityById = useCallback(
     (id: string): EntityMap | undefined => {
@@ -331,6 +386,7 @@ export const ProjectTableProvider = ({
         contextMenuItems,
         // powerpack context
         powerpack,
+        modules,
       }}
     >
       {children}

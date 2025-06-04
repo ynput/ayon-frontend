@@ -67,7 +67,6 @@ import {
 // import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
 import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import useBuildGroupByTableData, { GroupByEntityType } from './hooks/useBuildGroupByTableData'
 
 declare module '@tanstack/react-table' {
   interface TableMeta<TData extends RowData> {
@@ -111,9 +110,6 @@ export interface ProjectTreeTableProps extends React.HTMLAttributes<HTMLDivEleme
   sortableRows?: boolean
   onRowReorder?: (active: UniqueIdentifier, over: UniqueIdentifier | null) => void // Adjusted type for active/over if needed, or keep as Active, Over
   dndActiveId?: UniqueIdentifier | null // Added prop
-  groupByConfig?: {
-    entityType?: GroupByEntityType
-  }
   pt?: {
     container?: React.HTMLAttributes<HTMLDivElement>
     head?: Partial<TableHeadProps>
@@ -133,7 +129,6 @@ export const ProjectTreeTable = ({
   sortableRows = false,
   onRowReorder,
   dndActiveId, // Destructure new prop
-  groupByConfig,
   pt,
   ...props
 }: ProjectTreeTableProps) => {
@@ -151,8 +146,7 @@ export const ProjectTreeTable = ({
 
   const {
     projectInfo,
-    tableData: defaultTableData,
-    taskGroups,
+    tableData,
     attribFields,
     entitiesMap,
     users,
@@ -168,22 +162,6 @@ export const ProjectTreeTable = ({
     showHierarchy,
     fetchNextPage,
   } = useProjectTableContext()
-
-  const buildGroupByTableData = useBuildGroupByTableData({
-    entities: entitiesMap,
-    entityType: groupByConfig?.entityType,
-    groups: taskGroups,
-    project: projectInfo,
-    attribFields,
-  })
-
-  // if we are grouping by something, we ignore current tableData and format the data based on the groupBy
-  const groupedTableData = useMemo(
-    () => !!groupBy && buildGroupByTableData(groupBy),
-    [groupBy, entitiesMap, taskGroups],
-  )
-
-  const tableData = groupedTableData ? groupedTableData : defaultTableData
 
   const isLoading = isLoadingProp || isLoadingData
 

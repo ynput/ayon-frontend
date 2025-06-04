@@ -5,7 +5,12 @@ import {
   useGetQueryTasksFoldersQuery,
   useGetTasksListInfiniteInfiniteQuery,
 } from '@shared/api'
-import type { FolderListItem, GetGroupedTasksListArgs, EntityGroup } from '@shared/api'
+import type {
+  FolderListItem,
+  GetGroupedTasksListArgs,
+  EntityGroup,
+  QueryTasksFoldersApiArg,
+} from '@shared/api'
 import {
   EditorTaskNode,
   FolderNodeMap,
@@ -14,11 +19,10 @@ import {
 } from '@shared/containers/ProjectTreeTable/types/table'
 import { useEffect, useMemo, useState } from 'react'
 import { ExpandedState, SortingState } from '@tanstack/react-table'
-import { ProjectOverviewContextProps } from '../context/ProjectOverviewContext'
 import { determineLoadingTaskFolders } from '@shared/containers/ProjectTreeTable/utils/loadingUtils'
 import { LoadingTasks } from '@shared/containers/ProjectTreeTable/types'
 import { TasksByFolderMap } from '@shared/containers/ProjectTreeTable/utils'
-import { TableGroupBy, useProjectTableModuleContext } from '@shared/containers'
+import { ProjectTableModuleContextType, TableGroupBy } from '@shared/containers'
 import { Filter } from '@ynput/ayon-react-components'
 import { isGroupId } from '@shared/containers/ProjectTreeTable/hooks/useBuildGroupByTableData'
 import { ProjectTableAttribute } from '@shared/containers/ProjectTreeTable/hooks/useAttributesList'
@@ -38,16 +42,21 @@ type Params = {
   projectName: string
   selectedFolders: string[] // folders selected in the slicer (hierarchy)
   filters: Filter[] // RAW filters (including slicer filters)
-  queryFilters: ProjectOverviewContextProps['queryFilters'] // filters from the filters bar or slicer (not hierarchy)
+  queryFilters: {
+    filter: QueryTasksFoldersApiArg['tasksFoldersQuery']['filter']
+    filterString?: string
+    search: QueryTasksFoldersApiArg['tasksFoldersQuery']['search']
+  } // filters from the filters bar or slicer (not hierarchy)
   sorting: SortingState
   groupBy: TableGroupBy | undefined
   taskGroups: EntityGroup[]
   expanded: ExpandedState
   showHierarchy: boolean
   attribFields: ProjectTableAttribute[]
+  modules: ProjectTableModuleContextType
 }
 
-const useFetchOverviewData = ({
+export const useFetchOverviewData = ({
   projectName,
   selectedFolders, // comes from the slicer
   filters,
@@ -58,8 +67,9 @@ const useFetchOverviewData = ({
   expanded,
   showHierarchy,
   attribFields,
+  modules,
 }: Params): useFetchOverviewDataData => {
-  const { getGroupQueries, isLoading: isLoadingModules } = useProjectTableModuleContext()
+  const { getGroupQueries, isLoading: isLoadingModules } = modules
 
   const {
     data: { folders = [] } = {},
@@ -341,9 +351,8 @@ const useFetchOverviewData = ({
 
   const handleFetchNextPage = (group?: string) => {
     if (groupBy) {
-      console.log(groupPageCounts)
       if (group && group in groupPageCounts) {
-        console.log('fethching next page for group:', group)
+        console.log('fetching next page for group:', group)
         // fetch next page for a specific group by increasing the count in groupPageCounts
         setGroupPageCounts((prevCounts) => {
           const newCounts = { ...prevCounts }
@@ -427,5 +436,3 @@ const useFetchOverviewData = ({
     reloadTableData,
   }
 }
-
-export default useFetchOverviewData

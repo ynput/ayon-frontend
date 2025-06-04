@@ -56,9 +56,6 @@ const ProjectOverviewTable = ({}: Props) => {
         // metadata
         onOpenNew={onOpenNew}
         clientSorting={showHierarchy}
-        groupByConfig={{
-          entityType: 'task',
-        }}
       />
     </Section>
   )

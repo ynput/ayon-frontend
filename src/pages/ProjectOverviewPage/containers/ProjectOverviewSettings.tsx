@@ -5,8 +5,8 @@ import {
 } from '@shared/components'
 import {
   useColumnSettingsContext,
-  useProjectTableModuleContext,
   useGetGroupedFields,
+  useProjectTableContext,
 } from '@shared/containers/ProjectTreeTable'
 import { FC } from 'react'
 
@@ -16,7 +16,8 @@ interface ProjectOverviewSettingsProps extends ProjectTableSettingsProps {
 
 const ProjectOverviewSettings: FC<ProjectOverviewSettingsProps> = ({ onChange, ...props }) => {
   const { groupBy, updateGroupBy } = useColumnSettingsContext()
-  const { GroupSettings, requiredVersion } = useProjectTableModuleContext()
+  const { modules } = useProjectTableContext()
+  const { GroupSettings, requiredVersion } = modules
 
   const groupByFields = useGetGroupedFields()
 

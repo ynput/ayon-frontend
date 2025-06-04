@@ -22,7 +22,7 @@ type GetGroupQueriesReturn = {
 
 const getGroupQueriesFallback = (params: GetGroupQueriesParams): GetGroupQueriesReturn => []
 
-interface ProjectTableModuleContextType {
+export interface ProjectTableModuleContextType {
   GroupSettings: typeof GroupSettingsFallback
   getGroupQueries?: (params: GetGroupQueriesParams) => GetGroupQueriesReturn
   requiredVersion?: string
@@ -33,28 +33,34 @@ const ProjectTableModuleContext = createContext<ProjectTableModuleContextType | 
   undefined,
 )
 
-interface ProjectTableModuleProviderProps {
+export interface ProjectTableModuleProviderProps {
   children: ReactNode
+  GroupSettings?: typeof GroupSettingsFallback
+  getGroupQueries?: (params: GetGroupQueriesParams) => GetGroupQueriesReturn
 }
 
 export const ProjectTableModuleProvider: React.FC<ProjectTableModuleProviderProps> = ({
   children,
+  GroupSettings: GroupSettingsProp,
+  getGroupQueries: getGroupQueriesProp,
 }) => {
   const minVersion = '1.0.6-dev'
   const [GroupSettings, { outdated, isLoading: isLoadingSettings }] = useLoadModule({
     addon: 'powerpack',
     remote: 'slicer',
     module: 'GroupSettings',
-    fallback: GroupSettingsFallback,
+    fallback: GroupSettingsProp || GroupSettingsFallback,
     minVersion: minVersion,
+    skip: !!GroupSettingsProp,
   })
 
   const [getGroupQueries, { isLoading: isLoadingQueries }] = useLoadModule({
     addon: 'powerpack',
     remote: 'slicer',
     module: 'getGroupQueries',
-    fallback: getGroupQueriesFallback,
+    fallback: getGroupQueriesProp || getGroupQueriesFallback,
     minVersion: minVersion,
+    skip: !!getGroupQueriesProp,
   })
 
   const isLoading = isLoadingSettings || isLoadingQueries

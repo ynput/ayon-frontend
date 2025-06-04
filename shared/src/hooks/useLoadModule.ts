@@ -10,6 +10,7 @@ interface Props<T> {
   fallback: T
   debug?: boolean
   minVersion?: string // minimum version required for this module
+  skip?: boolean // skip loading if module is provided externally
 }
 
 export const useLoadModule = <T>({
@@ -18,6 +19,7 @@ export const useLoadModule = <T>({
   module,
   fallback,
   minVersion,
+  skip = false,
 }: Props<T>): [
   T,
   { isLoaded: boolean; isLoading: boolean; outdated?: { current: string; required: string } },
@@ -29,6 +31,13 @@ export const useLoadModule = <T>({
   const loadedRemote = useRef<T>(fallback)
 
   useEffect(() => {
+    // skip loading if module is provided externally
+    if (skip) {
+      setIsLoading(false)
+      setIsLoaded(true)
+      return
+    }
+
     // wait for remotes to be initialized
     if (!remotesInitialized || !addon || !remote || !module) return
 
@@ -89,7 +98,7 @@ export const useLoadModule = <T>({
         setIsLoading(false)
         console.error('error loading remote', remote, module, e)
       })
-  }, [isLoaded, remotesInitialized, modules, addon, remote, module, minVersion])
+  }, [isLoaded, remotesInitialized, modules, addon, remote, module, minVersion, skip])
 
   return [
     loadedRemote.current,
