@@ -1,2 +1,2 @@
-import ProjectOverviewPage from './ProjectOverviewWithProviders'
+import ProjectOverviewPage from './ProjectOverviewModuleProvider'
 export default ProjectOverviewPage
