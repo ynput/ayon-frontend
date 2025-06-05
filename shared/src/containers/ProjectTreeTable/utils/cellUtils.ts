@@ -2,6 +2,7 @@
  * Shared cell utilities for table operations
  */
 
+import { parseRowId } from '../context'
 import { EMapResult, EntitiesMap } from '../types'
 
 // Type definitions for cell identifiers
@@ -118,4 +119,4 @@ export const getBorderClasses = (borders: BorderPosition): string[] => {
 export const getEntityDataById = <T extends 'folder' | 'task' | 'product' | 'version'>(
   id: string,
   entitiesMap: EntitiesMap,
-) => entitiesMap.get(id) as EMapResult<T> | undefined
+) => entitiesMap.get(parseRowId(id)) as EMapResult<T> | undefined

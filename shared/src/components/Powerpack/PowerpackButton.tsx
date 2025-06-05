@@ -1,4 +1,4 @@
-import { PowerpackFeature, usePowerpack } from '@context/PowerpackContext'
+import { PowerpackFeature, usePowerpack } from '@shared/context'
 import { Button, ButtonProps } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import { forwardRef, MouseEvent } from 'react'
@@ -28,12 +28,12 @@ const StyledButton = styled(Button)`
   }
 `
 
-interface CloudButtonProps extends ButtonProps {
+export interface PowerpackButtonProps extends ButtonProps {
   feature: PowerpackFeature
   filled?: boolean
 }
 
-const PowerpackButton = forwardRef<HTMLButtonElement, CloudButtonProps>(
+export const PowerpackButton = forwardRef<HTMLButtonElement, PowerpackButtonProps>(
   ({ feature, filled, ...props }, ref) => {
     const { setPowerpackDialog } = usePowerpack()
 
@@ -63,5 +63,3 @@ const PowerpackButton = forwardRef<HTMLButtonElement, CloudButtonProps>(
     )
   },
 )
-
-export default PowerpackButton

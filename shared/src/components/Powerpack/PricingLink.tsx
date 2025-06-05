@@ -1,7 +1,7 @@
-import { pricingUrl } from '@/constants'
 import { forwardRef } from 'react'
+export const pricingUrl = 'https://ynput.io/ayon/pricing?utm_source=ayon'
 
-interface PricingLinkProps extends React.HTMLAttributes<HTMLAnchorElement> {}
+export interface PricingLinkProps extends React.HTMLAttributes<HTMLAnchorElement> {}
 
 export const PricingLink = forwardRef<HTMLAnchorElement, PricingLinkProps>(
   ({ children, ...props }, ref) => {

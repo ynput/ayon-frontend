@@ -1,6 +1,6 @@
 import { FC, useLayoutEffect, useState } from 'react'
 import { NewListDialog } from './NewListDialog'
-import { useEntityListsContext } from '@pages/ProjectListsPage/context/EntityListsContext'
+import { useEntityListsContext } from '@pages/ProjectListsPage/context'
 import { listDefaultName, NewListForm } from '@pages/ProjectListsPage/hooks/useNewList'
 
 interface NewListFromContextProps {}

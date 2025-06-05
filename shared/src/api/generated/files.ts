@@ -30,6 +30,11 @@ const injectedRtkApi = api.injectEndpoints({
         method: 'HEAD',
       }),
     }),
+    getProjectFileInfo: build.query<GetProjectFileInfoApiResponse, GetProjectFileInfoApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/files/${queryArg.fileId}/info`,
+      }),
+    }),
     getProjectFilePayload: build.query<
       GetProjectFilePayloadApiResponse,
       GetProjectFilePayloadApiArg
@@ -82,6 +87,11 @@ export type GetProjectFileHeadApiArg = {
   projectName: string
   fileId: string
 }
+export type GetProjectFileInfoApiResponse = /** status 200 Successful Response */ FileInfo
+export type GetProjectFileInfoApiArg = {
+  projectName: string
+  fileId: string
+}
 export type GetProjectFilePayloadApiResponse = /** status 200 Successful Response */ any
 export type GetProjectFilePayloadApiArg = {
   projectName: string
@@ -108,4 +118,9 @@ export type ValidationError = {
 }
 export type HttpValidationError = {
   detail?: ValidationError[]
+}
+export type FileInfo = {
+  size: number
+  filename?: string
+  contentType?: string
 }

@@ -1,6 +1,7 @@
 import { AttributeData } from '@shared/api'
+import { entityTypesWithIcons, getEntityTypeIcon } from './getEntityTypeIcon'
 
-type GetAttributesIcon = (name: string, type: AttributeData['type'], hasEnum?: boolean) => string
+type GetAttributesIcon = (name: string, type?: AttributeData['type'], hasEnum?: boolean) => string
 
 export const getAttributeIcon: GetAttributesIcon = (name, type, hasEnum) => {
   let icon = 'format_list_bulleted'
@@ -8,6 +9,9 @@ export const getAttributeIcon: GetAttributesIcon = (name, type, hasEnum) => {
   const customIcons: {
     [key: string]: string
   } = {
+    status: 'arrow_circle_right',
+    assignees: 'person',
+    tags: 'local_offer',
     priority: 'keyboard_double_arrow_up',
     fps: '30fps_select',
     resolutionWidth: 'settings_overscan',
@@ -46,9 +50,11 @@ export const getAttributeIcon: GetAttributesIcon = (name, type, hasEnum) => {
 
   if (customIcons[name]) {
     icon = customIcons[name]
+  } else if (entityTypesWithIcons.includes(name)) {
+    icon = getEntityTypeIcon(name)
   } else if (hasEnum) {
     icon = 'format_list_bulleted'
-  } else if (typeIcons[type]) {
+  } else if (type && typeIcons[type]) {
     icon = typeIcons[type]
   }
 

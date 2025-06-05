@@ -1,5 +1,5 @@
 import { useListItemsDataContext } from '@pages/ProjectListsPage/context/ListItemsDataContext'
-import { useListsContext } from '@pages/ProjectListsPage/context/ListsContext'
+import { useListsContext } from '@pages/ProjectListsPage/context'
 import { getColumnConfigFromType } from '@pages/ProjectListsPage/util'
 import ListItemsShortcuts from '@pages/ProjectListsPage/util/ListItemsShortcuts'
 import { EmptyPlaceholder } from '@shared/components'

@@ -1,6 +1,6 @@
 import { ProjectDataProvider, useProjectDataContext } from '@shared/containers/ProjectTreeTable'
 import { FC, useMemo, useState } from 'react' // Added useState
-import { ListsProvider, useListsContext } from './context/ListsContext'
+import { ListsProvider, useListsContext } from './context'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { Section, Toolbar } from '@ynput/ayon-react-components'
 import { ListsDataProvider } from './context/ListsDataContext'
@@ -164,28 +164,28 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
       onDragCancel={handleDndDragCancel}
     >
       <SettingsPanelProvider>
-        <ProjectTableQueriesProvider {...{ updateEntities: updateListItems, getFoldersTasks }}>
-          <ProjectTableProvider
-            projectName={projectName}
-            attribFields={mergedAttribFields}
-            projectInfo={props.projectInfo}
-            users={props.users}
-            // @ts-ignore
-            entitiesMap={props.listItemsMap}
-            foldersMap={props.foldersMap}
-            tasksMap={props.tasksMap}
-            tableRows={props.listItemsTableData}
-            expanded={{}}
-            isInitialized={props.isInitialized}
-            showHierarchy={false}
-            isLoading={props.isLoadingAll}
-            contextMenuItems={contextMenuItems}
-            sorting={props.sorting}
-            updateSorting={props.updateSorting}
-          >
-            <SelectionCellsProvider>
-              <SelectedRowsProvider>
-                <ColumnSettingsProvider config={pageConfig} onChange={updatePageConfig}>
+        <ColumnSettingsProvider config={pageConfig} onChange={updatePageConfig}>
+          <ProjectTableQueriesProvider {...{ updateEntities: updateListItems, getFoldersTasks }}>
+            <ProjectTableProvider
+              projectName={projectName}
+              attribFields={mergedAttribFields}
+              projectInfo={props.projectInfo}
+              users={props.users}
+              // @ts-ignore
+              entitiesMap={props.listItemsMap}
+              foldersMap={props.foldersMap}
+              tasksMap={props.tasksMap}
+              tableRows={props.listItemsTableData}
+              expanded={{}}
+              isInitialized={props.isInitialized}
+              showHierarchy={false}
+              isLoading={props.isLoadingAll}
+              contextMenuItems={contextMenuItems}
+              sorting={props.sorting}
+              updateSorting={props.updateSorting}
+            >
+              <SelectionCellsProvider>
+                <SelectedRowsProvider>
                   <CellEditingProvider>
                     <ProjectLists
                       extraColumns={extraColumns}
@@ -194,11 +194,11 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
                       dndActiveId={dndActiveId}
                     />
                   </CellEditingProvider>
-                </ColumnSettingsProvider>
-              </SelectedRowsProvider>
-            </SelectionCellsProvider>
-          </ProjectTableProvider>
-        </ProjectTableQueriesProvider>
+                </SelectedRowsProvider>
+              </SelectionCellsProvider>
+            </ProjectTableProvider>
+          </ProjectTableQueriesProvider>
+        </ColumnSettingsProvider>
       </SettingsPanelProvider>
     </DndContext>
   )
@@ -267,7 +267,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
                   searchParams={searchParams}
                   featuredCount={0}
                 />
-                <CustomizeButton defaultSelected={null} />
+                <CustomizeButton />
               </Toolbar>
             )}
             <Splitter

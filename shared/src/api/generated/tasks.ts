@@ -148,6 +148,20 @@ export type TaskAttribModel = {
   endDate?: string
   /** Textual description of the entity */
   description?: string
+  tools?: string[]
+  ftrackId?: string
+  ftrackPath?: string
+  jiraCurrentPhase?: string
+  /** The Shotgrid ID of this entity. */
+  shotgridId?: string
+  /** The Shotgrid Type of this entity. */
+  shotgridType?: string
+  /** Is this some really hard work? */
+  hard?: boolean
+  distances?: string[]
+  nickname?: string
+  taskOnly?: string
+  weather?: 'sunny' | 'rain' | 'snow'
 }
 export type TaskModel = {
   /** Unique identifier of the {entity_name} */
@@ -238,7 +252,7 @@ export type QueryCondition = {
   /** Path to the key separated by slashes */
   key: string
   /** Value to compare against */
-  value?: string | number | number | string[] | number[] | number[]
+  value?: string | number | number | boolean | string[] | number[] | number[]
   /** Comparison operator */
   operator?:
     | 'eq'

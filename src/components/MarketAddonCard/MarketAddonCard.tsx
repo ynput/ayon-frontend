@@ -5,8 +5,7 @@ import AddonIcon from '../AddonIcon/AddonIcon'
 import { Button, ButtonProps, Icon } from '@ynput/ayon-react-components'
 import { upperFirst } from 'lodash'
 import { HTMLAttributes } from 'react'
-import PowerpackButton from '@components/Powerpack/PowerpackButton'
-import { PricingLink } from '@components/PricingLink'
+import { PowerpackButton, PricingLink } from '@shared/components/Powerpack'
 
 export type ListItemType = 'addon' | 'release' | 'placeholder'
 

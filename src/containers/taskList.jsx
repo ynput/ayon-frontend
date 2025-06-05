@@ -16,7 +16,7 @@ import NoEntityFound from '@components/NoEntityFound'
 import { openViewer } from '@/features/viewer'
 import clsx from 'clsx'
 import useTableLoadingData from '@hooks/useTableLoadingData'
-import { useEntityListsContext } from '@pages/ProjectListsPage/context/EntityListsContext'
+import { useEntityListsContext } from '@pages/ProjectListsPage/context'
 import { useVersionUploadContext } from './VersionUploader/context/VersionUploadContext'
 
 const TaskList = ({ style = {}, autoSelect = false }) => {

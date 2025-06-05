@@ -53,6 +53,8 @@ export type AttributeEnumItem = {
   label: string
   icon?: string
   color?: string
+  /** List of project this item is available on */
+  projects?: string[]
 }
 export type AttributeData = {
   /** Type of attribute value */
@@ -99,6 +101,7 @@ export type AttributeModel = {
   scope?: (
     | ('folder' | 'product' | 'version' | 'representation' | 'task' | 'workfile')
     | ('project' | 'user')
+    | 'list'
   )[]
   /** Is attribute builtin. Built-in attributes cannot be removed. */
   builtin?: boolean
@@ -127,6 +130,7 @@ export type AttributePutModel = {
   scope?: (
     | ('folder' | 'product' | 'version' | 'representation' | 'task' | 'workfile')
     | ('project' | 'user')
+    | 'list'
   )[]
   /** Is attribute builtin. Built-in attributes cannot be removed. */
   builtin?: boolean

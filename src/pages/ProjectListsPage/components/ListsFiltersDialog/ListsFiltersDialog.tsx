@@ -4,7 +4,7 @@ import { FC, useEffect, useMemo, useRef, useState } from 'react'
 import { entityTypeOptions } from '../NewListDialog/NewListDialog'
 import { createPortal } from 'react-dom'
 import styled from 'styled-components'
-import { useListsContext } from '@pages/ProjectListsPage/context/ListsContext'
+import { useListsContext } from '@pages/ProjectListsPage/context'
 
 const Dialog = styled.div`
   position: fixed;

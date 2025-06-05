@@ -2,7 +2,7 @@ import {
   useColumnSettingsContext,
   useProjectTableContext,
 } from '@shared/containers/ProjectTreeTable'
-import { Button, ButtonProps } from '@ynput/ayon-react-components'
+import { Button, ButtonProps, theme } from '@ynput/ayon-react-components'
 import { FC } from 'react'
 import styled from 'styled-components'
 import { SettingHighlightedId, useSettingsPanel } from '@shared/context'
@@ -17,7 +17,7 @@ interface Props extends ButtonProps {
   defaultSelected?: string | null
 }
 
-export const CustomizeButton = ({ defaultSelected = 'columns', ...props }: Props) => {
+export const CustomizeButton = ({ defaultSelected, className, ...props }: Props) => {
   const { togglePanel, isPanelOpen } = useSettingsPanel()
 
   return (
@@ -32,7 +32,9 @@ export const CustomizeButton = ({ defaultSelected = 'columns', ...props }: Props
   )
 }
 
-type ProjectTableSettingsProps = {
+export type OverviewSettingsChange = (setting: 'columns' | 'group-by', value: any) => void
+
+export type ProjectTableSettingsProps = {
   settings?: SettingConfig[]
   extraColumns?: { value: string; label: string }[]
   highlighted?: SettingHighlightedId

@@ -1,5 +1,5 @@
 import { RowSelectionState } from '@tanstack/react-table'
-import { useListsContext } from '../context/ListsContext'
+import { useListsContext } from '../context'
 import { CommandEvent, useCreateContextMenu } from '@shared/containers/ContextMenu'
 import { useCallback } from 'react'
 import { useAppSelector } from '@state/store'

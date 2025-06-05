@@ -11,6 +11,7 @@ interface SortableColumnItemProps {
   isPinned: boolean
   isHidden: boolean
   isHighlighted?: boolean
+  isDisabled?: boolean
   onTogglePinning: (columnId: string) => void
   onToggleVisibility: (columnId: string) => void
 }
@@ -21,6 +22,7 @@ const SortableColumnItem: FC<SortableColumnItemProps> = ({
   isPinned,
   isHidden,
   isHighlighted,
+  isDisabled,
   onTogglePinning,
   onToggleVisibility,
 }) => {
@@ -45,6 +47,7 @@ const SortableColumnItem: FC<SortableColumnItemProps> = ({
         isPinned={isPinned}
         isHidden={isHidden}
         isHighlighted={isHighlighted}
+        isDisabled={isDisabled}
         onTogglePinning={onTogglePinning}
         onToggleVisibility={onToggleVisibility}
         dragHandleProps={{ ...attributes, ...listeners }}

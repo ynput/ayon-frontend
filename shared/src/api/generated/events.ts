@@ -112,7 +112,7 @@ export type QueryCondition = {
   /** Path to the key separated by slashes */
   key: string
   /** Value to compare against */
-  value?: string | number | number | string[] | number[] | number[]
+  value?: string | number | number | boolean | string[] | number[] | number[]
   /** Comparison operator */
   operator?:
     | 'eq'

@@ -35,6 +35,13 @@ export const TR = styled.tr`
       opacity: 1;
     }
   }
+
+  &.group-row {
+    td {
+      /* group headers do not have vertical grid lines */
+      box-shadow: inset 0px -1px 0 0 var(--md-sys-color-surface-container);
+    }
+  }
 `
 
 export const TableCellContent = styled.div`

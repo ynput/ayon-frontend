@@ -1,12 +1,12 @@
-import { powerpackFeatures, usePowerpack } from '@context/PowerpackContext'
 import * as Styled from './PowerpackDialog.styled'
 import { FC } from 'react'
 import { Icon } from '@ynput/ayon-react-components'
-import { PricingLink } from '@components/PricingLink'
+import { PricingLink } from './PricingLink'
+import { powerpackFeatures, usePowerpack } from '@shared/context'
 
-interface PowerpackDialogProps {}
+export interface PowerpackDialogProps {}
 
-const PowerpackDialog: FC<PowerpackDialogProps> = ({}) => {
+export const PowerpackDialog: FC<PowerpackDialogProps> = ({}) => {
   const { setPowerpackDialog, selectedPowerPack, powerpackDialog } = usePowerpack()
 
   if (!powerpackDialog) return null
@@ -44,5 +44,3 @@ const PowerpackDialog: FC<PowerpackDialogProps> = ({}) => {
     </Styled.PowerpackDialog>
   )
 }
-
-export default PowerpackDialog

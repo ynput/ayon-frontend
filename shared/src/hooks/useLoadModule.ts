@@ -10,6 +10,7 @@ interface Props<T> {
   fallback: T
   debug?: boolean
   minVersion?: string // minimum version required for this module
+  skip?: boolean // skip loading if module is provided externally
 }
 
 export const useLoadModule = <T>({
@@ -18,17 +19,25 @@ export const useLoadModule = <T>({
   module,
   fallback,
   minVersion,
+  skip = false,
 }: Props<T>): [
   T,
   { isLoaded: boolean; isLoading: boolean; outdated?: { current: string; required: string } },
 ] => {
   const { remotesInitialized, modules } = useRemoteModules()
   const [isLoading, setIsLoading] = useState(true)
-  const [isLoaded, setIsLoaded] = useState(false)
+  const [isLoaded, setIsLoaded] = useState<string | boolean>(false)
   const [isOutdated, setIsOutdated] = useState(false)
   const loadedRemote = useRef<T>(fallback)
 
   useEffect(() => {
+    // skip loading if module is provided externally
+    if (skip) {
+      setIsLoading(false)
+      setIsLoaded(true)
+      return
+    }
+
     // wait for remotes to be initialized
     if (!remotesInitialized || !addon || !remote || !module) return
 
@@ -72,7 +81,7 @@ export const useLoadModule = <T>({
     }
 
     // check if module is already loaded
-    if (isLoaded) {
+    if (isLoaded === module) {
       setIsLoading(false)
       return
     }
@@ -81,7 +90,7 @@ export const useLoadModule = <T>({
     })
       .then((remote) => {
         console.log('loaded remote', module)
-        setIsLoaded(true)
+        setIsLoaded(module)
         setIsLoading(false)
         if (remote) loadedRemote.current = remote.default
       })
@@ -89,12 +98,12 @@ export const useLoadModule = <T>({
         setIsLoading(false)
         console.error('error loading remote', remote, module, e)
       })
-  }, [isLoaded, remotesInitialized, modules, addon, remote, module, minVersion])
+  }, [isLoaded, remotesInitialized, modules, addon, remote, module, minVersion, skip])
 
   return [
     loadedRemote.current,
     {
-      isLoaded,
+      isLoaded: isLoaded === module,
       isLoading,
       outdated: isOutdated
         ? {

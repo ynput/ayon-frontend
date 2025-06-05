@@ -40,7 +40,7 @@ import { useLocalStorage } from '@shared/hooks'
 import { useFolderSort } from '../../hooks'
 import { taskStatusSortFunction } from '@containers/TasksProgress/helpers/taskStatusSortFunction'
 import clsx from 'clsx'
-import { useEntityListsContext } from '@pages/ProjectListsPage/context/EntityListsContext'
+import { useEntityListsContext } from '@pages/ProjectListsPage/context'
 import { useScopedDetailsPanel } from '@shared/context'
 
 export const Cells = styled.div`

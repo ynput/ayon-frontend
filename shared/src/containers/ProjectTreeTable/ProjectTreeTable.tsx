@@ -1,4 +1,4 @@
-import { useMemo, useRef, useEffect, memo, CSSProperties, useState, useCallback } from 'react' // Added useCallback
+import { useMemo, useRef, useEffect, memo, CSSProperties, useCallback } from 'react' // Added useCallback
 import { useVirtualizer, VirtualItem, Virtualizer } from '@tanstack/react-virtual'
 // TanStack Table imports
 import {
@@ -44,7 +44,7 @@ import { useColumnSettingsContext } from './context/ColumnSettingsContext'
 // Hook imports
 import useCustomColumnWidthVars from './hooks/useCustomColumnWidthVars'
 import usePrefetchFolderTasks from './hooks/usePrefetchFolderTasks'
-import useCellContextMenu from './hooks/useCellContextMenu'
+import useCellContextMenu, { HeaderLabel } from './hooks/useCellContextMenu'
 import useColumnVirtualization from './hooks/useColumnVirtualization'
 import useKeyboardNavigation from './hooks/useKeyboardNavigation'
 
@@ -67,6 +67,7 @@ import {
 // import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
 import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import { isGroupId } from './hooks'
 
 declare module '@tanstack/react-table' {
   interface TableMeta<TData extends RowData> {
@@ -94,6 +95,11 @@ const getCommonPinningStyles = (column: Column<TableRow, unknown>): CSSPropertie
     zIndex: isPinned ? 100 : 0,
   }
 }
+
+const getColumnWidth = (rowId: string, columnId: string) => {
+  return `calc(var(--col-${columnId}-size) * 1px)`
+}
+// test
 
 export const DRAG_HANDLE_COLUMN_ID = 'drag-handle'
 
@@ -141,7 +147,9 @@ export const ProjectTreeTable = ({
     columnOrderUpdater,
     columnSizing,
     columnSizingUpdater,
+    groupBy,
   } = useColumnSettingsContext()
+  const isGrouping = !!groupBy
 
   const {
     projectInfo,
@@ -150,6 +158,7 @@ export const ProjectTreeTable = ({
     entitiesMap,
     users,
     isLoading: isLoadingData,
+    error,
     isInitialized,
     expanded,
     projectName,
@@ -158,6 +167,7 @@ export const ProjectTreeTable = ({
     sorting,
     updateSorting,
     showHierarchy,
+    fetchNextPage,
   } = useProjectTableContext()
 
   const isLoading = isLoadingProp || isLoadingData
@@ -177,14 +187,11 @@ export const ProjectTreeTable = ({
 
   //The virtualizer needs to know the scrollable container element
   const tableContainerRef = useRef<HTMLDivElement>(null)
+  // reference of how many rows are currently rendered in the table
+  const tableRowsCountRef = useRef(0)
 
   // Selection context
   const { registerGrid } = useSelectionCellsContext()
-
-  //a check on mount and after a fetch to see if the table is already scrolled to the bottom and immediately needs to fetch more data
-  useEffect(() => {
-    fetchMoreOnBottomReached(tableContainerRef.current)
-  }, [fetchMoreOnBottomReached])
 
   // generate loading attrib and rows
   const { loadingAttrib, loadingRows } = useMemo(() => {
@@ -193,10 +200,15 @@ export const ProjectTreeTable = ({
     const loadingAttrib = generateDummyAttributes()
     const loadingRows = generateLoadingRows(
       attribFields,
-      showHierarchy && tableData.length > 0 ? Math.min(tableRowsCount, 50) : 50,
+      showHierarchy && tableData.length > 0
+        ? Math.min(tableRowsCount, 50)
+        : groupBy
+        ? Math.max(tableRowsCountRef.current, 50)
+        : 50,
     )
+
     return { loadingAttrib, loadingRows }
-  }, [attribFields, tableData, showHierarchy, tableContainerRef.current])
+  }, [])
 
   const showLoadingRows = !isInitialized || isLoading
 
@@ -219,6 +231,7 @@ export const ProjectTreeTable = ({
       options,
       extraColumns,
       excluded: excludedColumns,
+      groupBy,
     })
 
     if (sortableRows) {
@@ -303,13 +316,22 @@ export const ProjectTreeTable = ({
       readOnly: readOnlyColumns,
       updateEntities,
       toggleExpandAll,
+      loadMoreTasks: fetchNextPage,
     },
   })
 
+  // TODO: when there is data (like in error) then we have infinite rendering
+
   const { rows } = table.getRowModel()
+
+  // update the tableRowsCountRef with the current number of rows
+  useEffect(() => {
+    tableRowsCountRef.current = rows.length
+  }, [rows.length])
 
   // Register grid structure with selection context when rows or columns change
   useEffect(() => {
+    if (!rows.length) return
     const rowIds = rows.map((row) => row.id)
     const colIds = table.getAllLeafColumns().map((col) => col.id)
     const colIdsSortedByPinning = [...colIds].sort((a, b) => {
@@ -392,6 +414,8 @@ export const ProjectTreeTable = ({
               onOpenNew={onOpenNew}
               rowOrderIds={rowOrderIds}
               sortableRows={sortableRows}
+              error={error}
+              isGrouping={isGrouping}
             />
           </table>
         </Styled.TableContainer>
@@ -433,7 +457,7 @@ export const ProjectTreeTable = ({
 
                         const cellStyleBase: CSSProperties = {
                           ...getCommonPinningStyles(cell.column),
-                          width: `calc(var(--col-${cell.column.id}-size) * 1px)`,
+                          width: getColumnWidth(overlayRowInstance.id, cell.column.id),
                           display: 'flex',
                           alignItems: 'center',
                           height: 40,
@@ -609,7 +633,7 @@ const TableHeadCell = ({
       key={header.id}
       style={{
         ...getCommonPinningStyles(column),
-        width: `calc(var(--header-${header?.id}-size) * 1px)`,
+        width: getColumnWidth('', column.id),
       }}
     >
       {header.isPlaceholder ? null : (
@@ -684,6 +708,8 @@ interface TableBodyProps {
   onOpenNew?: (type: 'folder' | 'task') => void
   rowOrderIds: UniqueIdentifier[]
   sortableRows: boolean
+  error?: string
+  isGrouping: boolean
 }
 
 const TableBody = ({
@@ -697,8 +723,26 @@ const TableBody = ({
   onOpenNew,
   rowOrderIds,
   sortableRows,
+  error,
+  isGrouping,
 }: TableBodyProps) => {
-  const { handleTableBodyContextMenu } = useCellContextMenu({ attribs, onOpenNew })
+  const headerLabels = useMemo(() => {
+    const allColumns = table.getAllColumns()
+    const headers = allColumns
+      .map((col) => {
+        const headerId = col.id
+        const header = col.columnDef.header
+        if (typeof header === 'string' || typeof header === 'number') {
+          return { label: header, id: headerId }
+        }
+        return null
+      })
+      .filter(Boolean)
+
+    return headers as HeaderLabel[]
+  }, [table.getAllColumns()])
+
+  const { handleTableBodyContextMenu } = useCellContextMenu({ attribs, onOpenNew, headerLabels })
 
   const { handlePreFetchTasks } = usePrefetchFolderTasks()
 
@@ -742,7 +786,7 @@ const TableBody = ({
         handlePreFetchTasks(e)
       }}
     >
-      {virtualRows.map((virtualRow) => {
+      {virtualRows.map((virtualRow, i) => {
         const row = rows[virtualRow.index] as Row<TableRow>
         // Add a check for row existence to prevent potential errors if data is out of sync
         if (!row) {
@@ -751,7 +795,7 @@ const TableBody = ({
         }
         return (
           <TableBodyRow
-            key={row.id} // dnd-kit needs this key to be stable and match the id in useSortable
+            key={row.id + i.toString()} // dnd-kit needs this key to be stable and match the id in useSortable
             row={row}
             showHierarchy={showHierarchy}
             visibleCells={row.getVisibleCells()}
@@ -762,16 +806,20 @@ const TableBody = ({
             dataIndex={virtualRow.index}
             offsetTop={virtualRow.start}
             sortableRows={sortableRows}
+            isGrouping={isGrouping}
           />
         )
       })}
     </tbody>
   )
 
-  if (!virtualRows.length) {
+  if (error) {
     return (
       tableContainerRef.current &&
-      createPortal(<EmptyPlaceholder message="No items found" />, tableContainerRef.current)
+      createPortal(
+        <EmptyPlaceholder message="No items found" error={error} />,
+        tableContainerRef.current,
+      )
     )
   }
 
@@ -797,6 +845,7 @@ interface TableBodyRowProps {
   dataIndex: number
   offsetTop: number
   sortableRows: boolean
+  isGrouping: boolean
 }
 
 const TableBodyRow = ({
@@ -810,6 +859,7 @@ const TableBodyRow = ({
   dataIndex,
   offsetTop,
   sortableRows,
+  isGrouping = false,
 }: TableBodyRowProps) => {
   const sortable = sortableRows ? useSortable({ id: row.id }) : null
 
@@ -847,12 +897,13 @@ const TableBodyRow = ({
       ref={combinedRef}
       data-index={dataIndex} //needed for dynamic row height measurement
       style={style}
+      className={clsx({ 'group-row': row.original.group })}
     >
       {paddingLeft ? (
         //fake empty column to the left for virtualization scroll padding
         <td style={{ display: 'flex', width: paddingLeft }} />
       ) : null}
-      {virtualColumns.map((vc) => {
+      {virtualColumns.map((vc, i) => {
         const cell = visibleCells[vc.index]
         if (!cell) return null // Should not happen in normal circumstances
 
@@ -861,10 +912,10 @@ const TableBodyRow = ({
         if (cell.column.id === DRAG_HANDLE_COLUMN_ID) {
           return (
             <Styled.TableCell
-              key={cell.id}
+              key={cell.id + i.toString()}
               style={{
                 ...getCommonPinningStyles(cell.column),
-                width: `calc(var(--col-${cell.column.id}-size) * 1px)`,
+                width: getColumnWidth(row.id, cell.column.id),
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -895,7 +946,7 @@ const TableBodyRow = ({
             cell={cell}
             cellId={cellId}
             rowId={row.id}
-            key={cell.id}
+            key={cell.id + i.toString()}
             showHierarchy={showHierarchy}
             sortableRows={sortableRows}
           />
@@ -936,6 +987,7 @@ const TableCell = ({
     endSelection,
     selectCell,
     getCellBorderClasses,
+    clearSelection,
   } = useSelectionCellsContext()
 
   const { isRowSelected } = useSelectedRowsContext()
@@ -947,12 +999,12 @@ const TableCell = ({
   const isPinned = cell.column.getIsPinned()
   const isLastLeftPinnedColumn = isPinned === 'left' && cell.column.getIsLastColumn('left')
   const isRowSelectionColumn = cell.column.id === ROW_SELECTION_COLUMN_ID
+  const isGroup = cell.row.original.entityType === 'group'
 
   return (
     <Styled.TableCell
       {...props}
       tabIndex={0}
-      key={cell.id}
       $isLastPinned={isLastLeftPinnedColumn} // is this column the last pinned column? Custom styling for borders.
       className={clsx(
         cell.column.id,
@@ -969,7 +1021,7 @@ const TableCell = ({
       )}
       style={{
         ...getCommonPinningStyles(cell.column),
-        width: `calc(var(--col-${cell.column.id}-size) * 1px)`,
+        width: getColumnWidth(cell.row.id, cell.column.id),
         height: 40,
       }}
       onMouseDown={(e) => {
@@ -978,6 +1030,10 @@ const TableCell = ({
 
         // check we are not clicking on expander
         if ((e.target as HTMLElement).closest('.expander')) return
+
+        // only name column can be selected for group rows
+        if (isGroup && cell.column.id !== 'name') return clearSelection()
+
         const additive = e.metaKey || e.ctrlKey || isRowSelectionColumn
         if (e.shiftKey) {
           // Shift+click extends selection from anchor cell
@@ -997,7 +1053,11 @@ const TableCell = ({
         endSelection(cellId)
       }}
       onDoubleClick={(e) => {
-        if (cell.column.id === 'name') {
+        if (
+          cell.column.id === 'name' &&
+          !(e.target as HTMLElement).closest('.expander') &&
+          !isGroup
+        ) {
           // select the row by selecting the row-selection cell
           const rowSelectionCellId = getCellId(cell.row.id, ROW_SELECTION_COLUMN_ID)
           if (!isCellSelected(rowSelectionCellId)) {
