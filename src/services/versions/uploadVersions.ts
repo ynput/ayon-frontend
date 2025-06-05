@@ -41,7 +41,13 @@ const uploadVersions = versionsApi.enhanceEndpoints({
         { type: 'product', id: versionPostModel.productId },
       ],
     },
+    deleteVersion: {
+      invalidatesTags: (_r, _e, { versionId }) => [
+        { type: 'version', id: versionId },
+        { type: 'product', id: versionId },
+      ],
+    },
   },
 })
 
-export const { useCreateVersionMutation } = uploadVersions
+export const { useCreateVersionMutation, useDeleteVersionMutation } = uploadVersions
