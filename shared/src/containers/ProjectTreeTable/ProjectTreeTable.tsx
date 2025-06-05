@@ -67,6 +67,7 @@ import {
 // import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
 import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import { isGroupId } from './hooks'
 
 declare module '@tanstack/react-table' {
   interface TableMeta<TData extends RowData> {
@@ -92,6 +93,21 @@ const getCommonPinningStyles = (column: Column<TableRow, unknown>): CSSPropertie
     position: isPinned ? 'sticky' : 'relative',
     width: column.getSize(),
     zIndex: isPinned ? 100 : 0,
+  }
+}
+
+const getColumnWidth = (rowId: string, columnId: string) => {
+  // are we in grouping mode and if
+  if (isGroupId(rowId)) {
+    // is this the name column (the one with the group header in it?)
+    if (columnId === 'name') {
+      return '100%'
+    } else {
+      return 0
+    }
+  } else {
+    // return default
+    return `calc(var(--col-${columnId}-size) * 1px)`
   }
 }
 
@@ -143,6 +159,7 @@ export const ProjectTreeTable = ({
     columnSizingUpdater,
     groupBy,
   } = useColumnSettingsContext()
+  const isGrouping = !!groupBy
 
   const {
     projectInfo,
@@ -408,6 +425,7 @@ export const ProjectTreeTable = ({
               rowOrderIds={rowOrderIds}
               sortableRows={sortableRows}
               error={error}
+              isGrouping={isGrouping}
             />
           </table>
         </Styled.TableContainer>
@@ -449,7 +467,7 @@ export const ProjectTreeTable = ({
 
                         const cellStyleBase: CSSProperties = {
                           ...getCommonPinningStyles(cell.column),
-                          width: `calc(var(--col-${cell.column.id}-size) * 1px)`,
+                          width: getColumnWidth(overlayRowInstance.id, cell.column.id),
                           display: 'flex',
                           alignItems: 'center',
                           height: 40,
@@ -625,7 +643,7 @@ const TableHeadCell = ({
       key={header.id}
       style={{
         ...getCommonPinningStyles(column),
-        width: `calc(var(--header-${header?.id}-size) * 1px)`,
+        width: getColumnWidth('', column.id),
       }}
     >
       {header.isPlaceholder ? null : (
@@ -701,6 +719,7 @@ interface TableBodyProps {
   rowOrderIds: UniqueIdentifier[]
   sortableRows: boolean
   error?: string
+  isGrouping: boolean
 }
 
 const TableBody = ({
@@ -715,6 +734,7 @@ const TableBody = ({
   rowOrderIds,
   sortableRows,
   error,
+  isGrouping,
 }: TableBodyProps) => {
   const headerLabels = useMemo(() => {
     const allColumns = table.getAllColumns()
@@ -796,6 +816,7 @@ const TableBody = ({
             dataIndex={virtualRow.index}
             offsetTop={virtualRow.start}
             sortableRows={sortableRows}
+            isGrouping={isGrouping}
           />
         )
       })}
@@ -834,6 +855,7 @@ interface TableBodyRowProps {
   dataIndex: number
   offsetTop: number
   sortableRows: boolean
+  isGrouping: boolean
 }
 
 const TableBodyRow = ({
@@ -847,6 +869,7 @@ const TableBodyRow = ({
   dataIndex,
   offsetTop,
   sortableRows,
+  isGrouping = false,
 }: TableBodyRowProps) => {
   const sortable = sortableRows ? useSortable({ id: row.id }) : null
 
@@ -902,7 +925,7 @@ const TableBodyRow = ({
               key={cell.id + i.toString()}
               style={{
                 ...getCommonPinningStyles(cell.column),
-                width: `calc(var(--col-${cell.column.id}-size) * 1px)`,
+                width: getColumnWidth(row.id, cell.column.id),
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -1008,7 +1031,7 @@ const TableCell = ({
       )}
       style={{
         ...getCommonPinningStyles(cell.column),
-        width: `calc(var(--col-${cell.column.id}-size) * 1px)`,
+        width: getColumnWidth(cell.row.id, cell.column.id),
         height: 40,
       }}
       onMouseDown={(e) => {
