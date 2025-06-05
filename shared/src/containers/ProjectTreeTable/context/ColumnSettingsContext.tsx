@@ -7,6 +7,8 @@ import {
   VisibilityState,
   ColumnSizingState,
 } from '@tanstack/react-table'
+import { ROW_SELECTION_COLUMN_ID } from './SelectionCellsContext'
+import { DRAG_HANDLE_COLUMN_ID } from '../ProjectTreeTable'
 
 export interface TableGroupBy {
   desc: boolean
@@ -98,6 +100,31 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
       }
     }
   })
+
+  // if we are in grouping mode, always pin the name column
+  // and ensure it is first in column order
+  if (groupBy) {
+    // ensure name column is pinned and first in pinning order
+    if (!columnPinning.left?.includes('name')) {
+      columnPinning.left = ['name', ...(columnPinning?.left || [])]
+    } else {
+      // name is already pinned, but ensure it's first
+      const filteredPinned = columnPinning.left.filter((col) => col !== 'name')
+      columnPinning.left = ['name', ...filteredPinned]
+    }
+
+    // ensure name is first in column order
+    if (columnOrder.includes('name')) {
+      // remove name from its current position
+      const nameIndex = columnOrder.indexOf('name')
+      columnOrder.splice(nameIndex, 1)
+    }
+    // add name to the beginning
+    columnOrder.unshift('name')
+  }
+
+  // add drag handle and selection columns to the beginning of the column order
+  columnOrder.unshift(...[DRAG_HANDLE_COLUMN_ID, ROW_SELECTION_COLUMN_ID])
 
   // VISIBILITY STATE MUTATIONS
   const columnVisibility = { ...columnVisibilityInit }

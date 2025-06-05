@@ -373,6 +373,7 @@ const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns, highlighted }) => 
                     column={column}
                     isPinned={true}
                     isHidden={false}
+                    isDisabled={!!groupBy && column.value === 'name'} // Disable 'name' column if grouping is enabled
                     isHighlighted={highlighted === column.value}
                     onTogglePinning={togglePinning}
                     onToggleVisibility={toggleVisibility}
@@ -427,6 +428,7 @@ const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns, highlighted }) => 
                   isPinned={columnPinning.left?.includes(column.value) || false}
                   isHidden={true}
                   isHighlighted={highlighted === column.value}
+                  isDisabled={!!groupBy && column.value === 'name'} // Disable 'name' column if grouping is enabled
                   onTogglePinning={togglePinning}
                   onToggleVisibility={toggleVisibility}
                 />

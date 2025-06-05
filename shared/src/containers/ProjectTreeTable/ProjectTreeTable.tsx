@@ -97,18 +97,7 @@ const getCommonPinningStyles = (column: Column<TableRow, unknown>): CSSPropertie
 }
 
 const getColumnWidth = (rowId: string, columnId: string) => {
-  // are we in grouping mode and if
-  if (isGroupId(rowId)) {
-    // is this the name column (the one with the group header in it?)
-    if (columnId === 'name') {
-      return '100%'
-    } else {
-      return 0
-    }
-  } else {
-    // return default
-    return `calc(var(--col-${columnId}-size) * 1px)`
-  }
+  return `calc(var(--col-${columnId}-size) * 1px)`
 }
 
 export const DRAG_HANDLE_COLUMN_ID = 'drag-handle'
