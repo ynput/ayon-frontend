@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { useListsDataContext } from '../context/ListsDataContext'
-import { ListsContextValue } from '../context/ListsContext'
+import { ListsContextType } from '../context'
 import type { EntityListPatchModel } from '@shared/api'
 import { toast } from 'react-toastify'
 import { useCallback } from 'react'
 
 export interface UseUpdateListProps {
-  setRowSelection: ListsContextValue['setRowSelection']
+  setRowSelection: ListsContextType['setRowSelection']
   onUpdateList: (listId: string, list: EntityListPatchModel) => Promise<void>
 }
 

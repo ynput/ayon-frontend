@@ -1,4 +1,4 @@
-import { useEntityListsContext } from '@pages/ProjectListsPage/context/EntityListsContext'
+import { useEntityListsContext } from '@pages/ProjectListsPage/context'
 import {
   ContextMenuItemConstructor,
   ContextMenuItemConstructors,

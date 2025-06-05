@@ -37,7 +37,7 @@ import NoProducts from './NoProducts'
 import { toast } from 'react-toastify'
 import * as Styled from './Products.styled'
 import { openViewer } from '@state/viewer'
-import { useEntityListsContext } from '@pages/ProjectListsPage/context/EntityListsContext'
+import { useEntityListsContext } from '@pages/ProjectListsPage/context'
 import { useVersionUploadContext } from '@containers/VersionUploader/context/VersionUploadContext'
 
 const Products = () => {

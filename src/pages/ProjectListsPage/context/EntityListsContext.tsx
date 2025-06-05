@@ -30,7 +30,7 @@ type ListSubMenuItem = {
   command: () => void
 }
 
-export interface EntityListsContextValue {
+export interface EntityListsContextType {
   folders: UseGetListsDataReturn
   tasks: UseGetListsDataReturn
   products: UseGetListsDataReturn
@@ -73,7 +73,7 @@ export interface EntityListsContextValue {
   newListErrorMessage?: string
 }
 
-const EntityListsContext = createContext<EntityListsContextValue | undefined>(undefined)
+const EntityListsContext = createContext<EntityListsContextType | undefined>(undefined)
 
 interface EntityListsProviderProps extends EntityListsContextProps {
   children: ReactNode
@@ -128,7 +128,7 @@ export const EntityListsProvider = ({
   const [updateEntityListItems] = useUpdateEntityListItemsMutation()
 
   // add an item to a list
-  const addToList: EntityListsContextValue['addToList'] = useCallback(
+  const addToList: EntityListsContextType['addToList'] = useCallback(
     async (listId, entityType, entities) => {
       // check the entity type is valid
       if (!listEntityTypes.includes(entityType as ListEntityType)) {
@@ -184,7 +184,7 @@ export const EntityListsProvider = ({
   // @ts-expect-error - we just know the error is an object
   const newListErrorMessage = newListError?.data?.detail as string
   // Update createNewList to use entities from newListData state
-  const createNewList: EntityListsContextValue['createNewList'] = useCallback(
+  const createNewList: EntityListsContextType['createNewList'] = useCallback(
     async (label) => {
       try {
         // Get entities from newListData state
@@ -234,7 +234,7 @@ export const EntityListsProvider = ({
     [projectName, closeCreateNewList, newListData, setSearchParams],
   )
 
-  const newListMenuItem = useCallback<EntityListsContextValue['newListMenuItem']>(
+  const newListMenuItem = useCallback<EntityListsContextType['newListMenuItem']>(
     (entityType, selected) => ({
       id: '__new-list__',
       label: 'New list',
@@ -252,7 +252,7 @@ export const EntityListsProvider = ({
     }
   }
 
-  const buildListMenuItem: EntityListsContextValue['buildListMenuItem'] = useCallback(
+  const buildListMenuItem: EntityListsContextType['buildListMenuItem'] = useCallback(
     (list, selected, showIcon?) => ({
       id: list.id,
       label: list.label,
@@ -267,7 +267,7 @@ export const EntityListsProvider = ({
     [addToList],
   )
 
-  const buildAddToListMenu: EntityListsContextValue['buildAddToListMenu'] = useCallback(
+  const buildAddToListMenu: EntityListsContextType['buildAddToListMenu'] = useCallback(
     (items, menu) => {
       return {
         id: 'add-to-list',
@@ -279,7 +279,7 @@ export const EntityListsProvider = ({
     [],
   )
 
-  const menuItems: EntityListsContextValue['menuItems'] = useCallback(
+  const menuItems: EntityListsContextType['menuItems'] = useCallback(
     (filter) => (_e, cell, selected, _meta) => {
       const isMultipleEntityTypes = selected.some(
         (item) => item.entityType !== selected[0].entityType,

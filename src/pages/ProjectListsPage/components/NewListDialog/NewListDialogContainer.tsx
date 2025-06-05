@@ -1,4 +1,4 @@
-import { useListsContext } from '@pages/ProjectListsPage/context/ListsContext'
+import { useListsContext } from '@pages/ProjectListsPage/context'
 import { FC } from 'react'
 import { NewListDialog } from './NewListDialog'
 import { Dialog } from '@ynput/ayon-react-components'

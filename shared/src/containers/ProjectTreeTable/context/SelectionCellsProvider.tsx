@@ -1,12 +1,4 @@
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useCallback,
-  useMemo,
-  ReactNode,
-  useRef,
-} from 'react'
+import React, { useState, useCallback, useMemo, ReactNode, useRef } from 'react'
 import {
   CellId,
   RowId,
@@ -18,53 +10,7 @@ import {
   getBorderClasses,
 } from '../utils/cellUtils'
 import { DRAG_HANDLE_COLUMN_ID } from '../ProjectTreeTable'
-
-export const ROW_SELECTION_COLUMN_ID = '__row_selection__' // ID for the row selection column
-
-// Cell range for selections
-
-// Structure to map row/column IDs to their positions in the grid
-export interface GridMap {
-  rowIdToIndex: Map<RowId, number>
-  colIdToIndex: Map<ColId, number>
-  indexToRowId: Map<number, RowId>
-  indexToColId: Map<number, ColId>
-}
-
-export interface SelectionCellsContextType {
-  // Selected cells
-  selectedCells: Set<CellId>
-  // Focused cell (single cell that has focus)
-  focusedCellId: CellId | null
-  // Selection in progress state
-  selectionInProgress: boolean
-  // Anchor point for range selections
-  anchorCell: CellPosition | null
-  // Grid mapping for coordinate lookups
-  gridMap: GridMap
-
-  selectedRows: string[] // Array of selected row IDs
-
-  // State setters
-  setSelectedCells: React.Dispatch<React.SetStateAction<Set<CellId>>>
-  setFocusedCellId: React.Dispatch<React.SetStateAction<CellId | null>>
-  setAnchorCell: React.Dispatch<React.SetStateAction<CellPosition | null>>
-  // Methods
-  registerGrid: (rows: RowId[], columns: ColId[]) => void
-  selectCell: (cellId: CellId, additive: boolean, range: boolean) => void
-  startSelection: (cellId: CellId, additive: boolean) => void
-  extendSelection: (cellId: CellId, isRowSelectionColumn?: boolean) => void
-  endSelection: (cellId: CellId) => void
-  focusCell: (cellId: CellId | null) => void
-  clearSelection: () => void
-  isCellSelected: (cellId: CellId) => boolean
-  isCellFocused: (cellId: CellId) => boolean
-  getCellPositionFromId: (cellId: CellId) => CellPosition | null
-  getCellBorderClasses: (cellId: CellId) => string[]
-}
-
-// Create the context
-const SelectionCellsContext = createContext<SelectionCellsContextType | undefined>(undefined)
+import { SelectionCellsContext, GridMap, ROW_SELECTION_COLUMN_ID } from './SelectionCellsContext'
 
 export const SelectionCellsProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [selectedCells, setSelectedCells] = useState<Set<CellId>>(new Set())
@@ -174,7 +120,7 @@ export const SelectionCellsProvider: React.FC<{ children: ReactNode }> = ({ chil
 
       return newSelection
     },
-    [stableGridMap, selectedCells],
+    [stableGridMap, selectedCells, updateSelection],
   )
 
   // Start a selection operation
@@ -227,7 +173,7 @@ export const SelectionCellsProvider: React.FC<{ children: ReactNode }> = ({ chil
         }
       }
     },
-    [selectedCells, focusedCellId],
+    [selectedCells, focusedCellId, updateSelection],
   )
 
   // Extend the current selection during drag
@@ -263,7 +209,7 @@ export const SelectionCellsProvider: React.FC<{ children: ReactNode }> = ({ chil
         updateSelection(newSelection, currentPosition)
       }
     },
-    [selectionInProgress, anchorCell, selectCellRange],
+    [selectionInProgress, anchorCell, selectCellRange, updateSelection],
   )
 
   // End a selection operation
@@ -298,7 +244,7 @@ export const SelectionCellsProvider: React.FC<{ children: ReactNode }> = ({ chil
         setAnchorCell(position)
       }
     },
-    [anchorCell, selectCellRange],
+    [anchorCell, selectCellRange, updateSelection],
   )
 
   // Focus a cell without changing selection
@@ -418,12 +364,4 @@ export const SelectionCellsProvider: React.FC<{ children: ReactNode }> = ({ chil
   )
 
   return <SelectionCellsContext.Provider value={value}>{children}</SelectionCellsContext.Provider>
-}
-
-export const useSelectionCellsContext = (): SelectionCellsContextType => {
-  const context = useContext(SelectionCellsContext)
-  if (context === undefined) {
-    throw new Error('useSelectionCellsContext must be used within a SelectionCellsProvider')
-  }
-  return context
 }

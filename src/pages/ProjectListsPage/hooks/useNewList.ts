@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { ListsContextValue as V } from '../context/ListsContext'
+import { ListsContextType as V } from '../context'
 import type { EntityListPostModel, EntityListSummary } from '@shared/api'
 import { toast } from 'react-toastify'
 

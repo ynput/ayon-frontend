@@ -1,6 +1,6 @@
 import { ProjectDataProvider, useProjectDataContext } from '@shared/containers/ProjectTreeTable'
 import { FC, useMemo, useState } from 'react' // Added useState
-import { ListsProvider, useListsContext } from './context/ListsContext'
+import { ListsProvider, useListsContext } from './context'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { Section, Toolbar } from '@ynput/ayon-react-components'
 import { ListsDataProvider } from './context/ListsDataContext'
@@ -15,7 +15,7 @@ import {
 import ListItemsTable from './components/ListItemsTable/ListItemsTable'
 import ListItemsFilter from './components/ListItemsFilter/ListItemsFilter'
 import { CustomizeButton } from '@shared/components'
-import { SettingsPanelProvider, usePowerpack, useSettingsPanel } from '@shared/context'
+import { SettingsPanelProvider, useSettingsPanel } from '@shared/context'
 import { useUserProjectConfig } from '@shared/hooks'
 import useTableQueriesHelper from '@pages/ProjectOverviewPage/hooks/useTableQueriesHelper'
 import {

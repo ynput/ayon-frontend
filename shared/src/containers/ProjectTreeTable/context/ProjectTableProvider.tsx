@@ -19,7 +19,7 @@
  * The context also provides utility functions for entity relationships, expansion state
  * management, filtering, sorting, and folder inheritance operations.
  */
-import { createContext, ReactNode, useCallback, useContext, useMemo } from 'react'
+import { ReactNode, useCallback, useMemo } from 'react'
 import { ExpandedState, OnChangeFn, SortingState } from '@tanstack/react-table'
 import useBuildProjectDataTable from '../hooks/useBuildProjectDataTable'
 import { Filter } from '@ynput/ayon-react-components'
@@ -50,6 +50,7 @@ import useBuildGroupByTableData, {
 import { PowerpackContextType } from '@shared/context'
 import { useColumnSettingsContext } from './ColumnSettingsContext'
 import { ProjectTableModulesType } from '../hooks'
+import { ProjectTableContext, ProjectTableContextType } from './ProjectTableContext'
 
 export const parseRowId = (rowId: string) => rowId.split(ROW_ID_SEPARATOR)[0] || rowId
 
@@ -57,9 +58,6 @@ export type TableUser = {
   name: string
   fullName?: string
 }
-
-export type ToggleExpandAll = (rowIds: RowId[], expand?: boolean) => void
-export type ToggleExpands = (rowIds: RowId[], expand?: boolean) => void
 
 export interface ProjectTableProviderProps {
   children: ReactNode
@@ -127,67 +125,6 @@ export interface ProjectTableProviderProps {
     entityType?: GroupByEntityType
   }
 }
-
-export interface ProjectTableContextProps {
-  isInitialized: ProjectTableProviderProps['isInitialized']
-  isLoading: ProjectTableProviderProps['isLoading']
-  // Project Info
-  projectInfo: ProjectTableProviderProps['projectInfo']
-  projectName: ProjectTableProviderProps['projectName']
-  users: ProjectTableProviderProps['users']
-  // Attributes
-  attribFields: ProjectTableProviderProps['attribFields']
-  error?: string
-
-  // Data
-  tableData: TableRow[]
-  tasksMap: ProjectTableProviderProps['tasksMap']
-  foldersMap: ProjectTableProviderProps['foldersMap']
-  entitiesMap: ProjectTableProviderProps['entitiesMap']
-  fetchNextPage: ProjectTableProviderProps['fetchNextPage']
-  reloadTableData: ProjectTableProviderProps['reloadTableData']
-  getEntityById: (id: string) => EntityMap | undefined
-
-  // grouping
-  taskGroups: ProjectTableProviderProps['taskGroups']
-
-  // Filters
-  filters: ProjectTableProviderProps['filters']
-  setFilters: ProjectTableProviderProps['setFilters']
-  queryFilters: ProjectTableProviderProps['queryFilters']
-
-  // Hierarchy
-  showHierarchy: ProjectTableProviderProps['showHierarchy']
-  updateShowHierarchy: ProjectTableProviderProps['updateShowHierarchy']
-
-  // Expanded state
-  expanded: ProjectTableProviderProps['expanded']
-  toggleExpanded: ProjectTableProviderProps['toggleExpanded']
-  updateExpanded: ProjectTableProviderProps['updateExpanded']
-  toggleExpandAll: ToggleExpandAll
-  toggleExpands: ToggleExpands // expand/collapse multiple rows at once
-
-  // Sorting
-  sorting: ProjectTableProviderProps['sorting']
-  updateSorting: ProjectTableProviderProps['updateSorting']
-
-  // Folder Relationships
-  getInheritedDependents: GetInheritedDependents
-  findInheritedValueFromAncestors: FindInheritedValueFromAncestors
-  findNonInheritedValues: FindNonInheritedValues
-  getAncestorsOf: GetAncestorsOf
-
-  // Context menu
-  contextMenuItems: ProjectTableProviderProps['contextMenuItems']
-
-  // Powerpack context
-  powerpack?: ProjectTableProviderProps['powerpack']
-
-  // remote modules
-  modules: ProjectTableProviderProps['modules']
-}
-
-const ProjectTableContext = createContext<ProjectTableContextProps | undefined>(undefined)
 
 export const ProjectTableProvider = ({
   children,
@@ -289,7 +226,7 @@ export const ProjectTableProvider = ({
     attribFields: attribFields,
   })
 
-  const toggleExpandAll: ProjectTableContextProps['toggleExpandAll'] = useCallback(
+  const toggleExpandAll: ProjectTableContextType['toggleExpandAll'] = useCallback(
     (rowIds, expandAll) => {
       const expandedState = typeof expanded === 'object' ? expanded : {}
 
@@ -321,7 +258,7 @@ export const ProjectTableProvider = ({
     [expanded, getChildrenEntities, setExpanded],
   )
 
-  const toggleExpands: ProjectTableContextProps['toggleExpands'] = useCallback(
+  const toggleExpands: ProjectTableContextType['toggleExpands'] = useCallback(
     (rowIds, expand) => {
       const expandedState = typeof expanded === 'object' ? expanded : {}
       const newExpandedState = { ...expandedState }
@@ -392,12 +329,4 @@ export const ProjectTableProvider = ({
       {children}
     </ProjectTableContext.Provider>
   )
-}
-
-export const useProjectTableContext = () => {
-  const context = useContext(ProjectTableContext)
-  if (!context) {
-    throw new Error('useProjectTableContext must be used within a ProjectTableProvider')
-  }
-  return context
 }

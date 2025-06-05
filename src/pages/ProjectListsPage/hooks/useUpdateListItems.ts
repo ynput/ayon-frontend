@@ -3,7 +3,7 @@ import { useListItemsDataContext } from '../context/ListItemsDataContext'
 import { useListsAttributesContext } from '../context/ListsAttributesContext'
 import { ProjectTableQueriesProviderProps } from '@shared/containers'
 import { useUpdateEntityListItemMutation } from '@shared/api'
-import { useListsContext } from '../context/ListsContext'
+import { useListsContext } from '../context'
 import type { OperationWithRowId } from '@shared/containers/ProjectTreeTable'
 import { toast } from 'react-toastify'
 
