@@ -35,6 +35,15 @@ const Item = styled.li`
   &:hover {
     background-color: var(--md-sys-color-surface-container-high);
   }
+
+  &.disabled {
+    opacity: 0.5;
+    user-select: none;
+    pointer-events: none;
+    &:hover {
+      background-color: unset;
+    }
+  }
 `
 
 const Actions = styled.div`
@@ -73,16 +82,23 @@ export type SettingsPanelItem = {
 export interface SettingsPanelItemTemplateProps extends React.HTMLAttributes<HTMLLIElement> {
   item: SettingsPanelItem
   isHighlighted?: boolean
+  isDisabled?: boolean
   startContent?: React.ReactNode
   endContent?: React.ReactNode
   actions?: Action[]
 }
 
 export const SettingsPanelItemTemplate = forwardRef<HTMLLIElement, SettingsPanelItemTemplateProps>(
-  ({ item, actions, startContent, endContent, isHighlighted, className, ...props }, ref) => {
+  (
+    { item, actions, startContent, endContent, isHighlighted, isDisabled, className, ...props },
+    ref,
+  ) => {
     return (
       <Item
-        className={clsx('setting-item', className, { highlighted: isHighlighted })}
+        className={clsx('setting-item', className, {
+          highlighted: isHighlighted,
+          disabled: isDisabled,
+        })}
         {...props}
         ref={ref}
       >
@@ -90,8 +106,13 @@ export const SettingsPanelItemTemplate = forwardRef<HTMLLIElement, SettingsPanel
         {item.icon && <Icon icon={item.icon} />}
         <span className="label">{item.label}</span>
         <Actions className="actions">
-          {actions?.map(({ icon, className, active, ...action }, index) => (
-            <ActionButton key={index} className={clsx('action', className, { active })} {...action}>
+          {actions?.map(({ icon, className, active, onClick, ...action }, index) => (
+            <ActionButton
+              key={index}
+              className={clsx('action', className, { active })}
+              onClick={!isDisabled ? onClick : undefined}
+              {...action}
+            >
               {icon && <Icon icon={icon} />}
               {action.children}
             </ActionButton>

@@ -70,7 +70,7 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
   const {
     columnOrder: columnOrderInit = [],
     columnPinning: columnPinningInit = {},
-    columnVisibility = {},
+    columnVisibility: columnVisibilityInit = {},
     columnSizing: columnsSizingExternal = {},
     groupBy,
   } = columnsConfig
@@ -98,6 +98,13 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
       }
     }
   })
+
+  // VISIBILITY STATE MUTATIONS
+  const columnVisibility = { ...columnVisibilityInit }
+  // if we are in grouping mode, name column must always be visible
+  if (groupBy && !columnVisibility.name) {
+    columnVisibility.name = true
+  }
 
   // DIRECT STATE UPDATES - no side effects
   const setColumnVisibility = (visibility: VisibilityState) => {

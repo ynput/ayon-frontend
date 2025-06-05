@@ -43,6 +43,7 @@ interface ColumnItemProps {
   isPinned: boolean
   isHidden: boolean
   isHighlighted?: boolean
+  isDisabled?: boolean
   dragHandleProps?: any
   dragOverlay?: boolean
   onTogglePinning?: (columnId: string) => void
@@ -54,6 +55,7 @@ const ColumnItem: FC<ColumnItemProps> = ({
   isPinned,
   isHidden,
   isHighlighted,
+  isDisabled,
   // Dragging props
   dragHandleProps,
   dragOverlay = false,
@@ -83,6 +85,7 @@ const ColumnItem: FC<ColumnItemProps> = ({
       item={column}
       actions={itemActions}
       isHighlighted={isHighlighted}
+      isDisabled={isDisabled}
       className={clsx({ hidden: isHidden, overlay: dragOverlay })}
       startContent={
         <div {...dragHandleProps} className={'drag-handle'}>

@@ -44,6 +44,7 @@ const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns, highlighted }) => 
     columnOrder,
     setColumnsConfig,
     columnSizing,
+    groupBy,
   } = useColumnSettingsContext()
 
   // State for the currently dragged column
@@ -404,6 +405,7 @@ const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns, highlighted }) => 
                   isPinned={false}
                   isHidden={false}
                   isHighlighted={highlighted === column.value}
+                  isDisabled={!!groupBy && column.value === 'name'} // Disable 'name' column if grouping is enabled
                   onTogglePinning={togglePinning}
                   onToggleVisibility={toggleVisibility}
                 />
