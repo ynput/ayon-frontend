@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import type { FolderNodeMap, TaskNodeMap } from '@shared/containers/ProjectTreeTable'
+import type { FolderNodeMap, TaskNodeMap } from '../types'
 
 interface UseEntitiesMapProps {
   foldersMap: FolderNodeMap

@@ -4,7 +4,7 @@ import {
   ContextMenuItemConstructors,
   isAttribGroupable,
   useColumnSettingsContext,
-} from '@shared/containers'
+} from '@shared/containers/ProjectTreeTable'
 import { useCallback } from 'react'
 
 type OverviewContextMenuProps = {}

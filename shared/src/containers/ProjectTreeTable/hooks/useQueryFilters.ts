@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { Filter } from '@ynput/ayon-react-components'
 import { type QueryTasksFoldersApiArg } from '@shared/api'
-import { clientFilterToQueryFilter } from '@shared/containers/ProjectTreeTable/utils'
+import { clientFilterToQueryFilter } from '../utils'
 
 interface UseQueryFiltersProps {
   filters: Filter[]

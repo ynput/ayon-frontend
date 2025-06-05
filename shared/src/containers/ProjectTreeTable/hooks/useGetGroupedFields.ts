@@ -1,9 +1,6 @@
 import { useMemo } from 'react'
-import {
-  ProjectTableAttribute,
-  useColumnSettingsContext,
-  useProjectTableContext,
-} from '@shared/containers'
+import { ProjectTableAttribute } from '../types'
+import { useColumnSettingsContext, useProjectTableContext } from '../context'
 import { getAttributeIcon } from '@shared/util'
 import { EntityGrouping } from '@shared/api'
 

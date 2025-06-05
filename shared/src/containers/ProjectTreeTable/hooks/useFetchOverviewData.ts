@@ -11,21 +11,16 @@ import type {
   EntityGroup,
   QueryTasksFoldersApiArg,
 } from '@shared/api'
-import {
-  EditorTaskNode,
-  FolderNodeMap,
-  MatchingFolder,
-  TaskNodeMap,
-} from '@shared/containers/ProjectTreeTable/types/table'
+import { EditorTaskNode, FolderNodeMap, MatchingFolder, TaskNodeMap } from '../types/table'
 import { useEffect, useMemo, useState } from 'react'
 import { ExpandedState, SortingState } from '@tanstack/react-table'
-import { determineLoadingTaskFolders } from '@shared/containers/ProjectTreeTable/utils/loadingUtils'
-import { LoadingTasks } from '@shared/containers/ProjectTreeTable/types'
-import { TasksByFolderMap } from '@shared/containers/ProjectTreeTable/utils'
-import { ProjectTableModuleContextType, TableGroupBy } from '@shared/containers'
+import { determineLoadingTaskFolders } from '../utils/loadingUtils'
+import { LoadingTasks } from '../types'
+import { TasksByFolderMap } from '../utils'
+import { ProjectTableModuleContextType, TableGroupBy } from '../context'
 import { Filter } from '@ynput/ayon-react-components'
-import { isGroupId } from '@shared/containers/ProjectTreeTable/hooks/useBuildGroupByTableData'
-import { ProjectTableAttribute } from '@shared/containers/ProjectTreeTable/hooks/useAttributesList'
+import { isGroupId } from '../hooks/useBuildGroupByTableData'
+import { ProjectTableAttribute } from '../hooks/useAttributesList'
 
 type useFetchOverviewDataData = {
   foldersMap: FolderNodeMap
