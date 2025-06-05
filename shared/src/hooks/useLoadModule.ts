@@ -26,7 +26,7 @@ export const useLoadModule = <T>({
 ] => {
   const { remotesInitialized, modules } = useRemoteModules()
   const [isLoading, setIsLoading] = useState(true)
-  const [isLoaded, setIsLoaded] = useState(false)
+  const [isLoaded, setIsLoaded] = useState<string | boolean>(false)
   const [isOutdated, setIsOutdated] = useState(false)
   const loadedRemote = useRef<T>(fallback)
 
@@ -81,7 +81,7 @@ export const useLoadModule = <T>({
     }
 
     // check if module is already loaded
-    if (isLoaded) {
+    if (isLoaded === module) {
       setIsLoading(false)
       return
     }
@@ -90,7 +90,7 @@ export const useLoadModule = <T>({
     })
       .then((remote) => {
         console.log('loaded remote', module)
-        setIsLoaded(true)
+        setIsLoaded(module)
         setIsLoading(false)
         if (remote) loadedRemote.current = remote.default
       })
@@ -103,7 +103,7 @@ export const useLoadModule = <T>({
   return [
     loadedRemote.current,
     {
-      isLoaded,
+      isLoaded: isLoaded === module,
       isLoading,
       outdated: isOutdated
         ? {

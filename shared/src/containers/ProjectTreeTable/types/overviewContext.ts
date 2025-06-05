@@ -1,14 +1,14 @@
 import { EntityGroup, QueryTasksFoldersApiArg } from '@shared/api'
 import { FolderNodeMap, LoadingTasks, TaskNodeMap, TasksByFolderMap } from '.'
-import { ProjectDataContextProps, ProjectTableModuleContextType } from '../context'
+import { ProjectDataContextProps } from '../context'
 import { Filter } from '@ynput/ayon-react-components'
 import { ExpandedState, OnChangeFn, SortingState } from '@tanstack/react-table'
-import { ContextMenuItemConstructors } from '../hooks'
+import { ContextMenuItemConstructors, ProjectTableModulesType } from '../hooks'
 import { ReactNode } from 'react'
 
 export interface ProjectOverviewProviderProps {
   children: ReactNode
-  modules: ProjectTableModuleContextType
+  modules: ProjectTableModulesType
 }
 
 export interface ProjectOverviewContextType {

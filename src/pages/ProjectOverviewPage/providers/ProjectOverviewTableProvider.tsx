@@ -4,7 +4,7 @@ import {
   SelectionCellsProvider,
   SelectedRowsProvider,
   CellEditingProvider,
-  useProjectTableModuleContext,
+  ProjectTableModulesType,
 } from '@shared/containers/ProjectTreeTable'
 import { NewEntityProvider } from '@context/NewEntityContext'
 import { usePowerpack } from '@shared/context'
@@ -13,9 +13,8 @@ import { ProjectTableQueriesProvider } from '@shared/containers/ProjectTreeTable
 import useTableQueriesHelper from '../hooks/useTableQueriesHelper'
 import ProjectOverviewPage from '../ProjectOverviewPage'
 
-const ProjectOverviewTableProvider: FC = () => {
+const ProjectOverviewTableProvider: FC<{ modules: ProjectTableModulesType }> = ({ modules }) => {
   const props = useProjectOverviewContext()
-  const modules = useProjectTableModuleContext()
 
   const { updateEntities, getFoldersTasks } = useTableQueriesHelper({
     projectName: props.projectName,

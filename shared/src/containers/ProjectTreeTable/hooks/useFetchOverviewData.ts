@@ -17,10 +17,11 @@ import { ExpandedState, SortingState } from '@tanstack/react-table'
 import { determineLoadingTaskFolders } from '../utils/loadingUtils'
 import { LoadingTasks } from '../types'
 import { TasksByFolderMap } from '../utils'
-import { ProjectTableModuleContextType, TableGroupBy } from '../context'
+import { TableGroupBy } from '../context'
 import { Filter } from '@ynput/ayon-react-components'
 import { isGroupId } from '../hooks/useBuildGroupByTableData'
 import { ProjectTableAttribute } from '../hooks/useAttributesList'
+import { ProjectTableModulesType } from './useProjectTableModules'
 
 type useFetchOverviewDataData = {
   foldersMap: FolderNodeMap
@@ -48,7 +49,7 @@ type Params = {
   expanded: ExpandedState
   showHierarchy: boolean
   attribFields: ProjectTableAttribute[]
-  modules: ProjectTableModuleContextType
+  modules: ProjectTableModulesType
 }
 
 export const useFetchOverviewData = ({

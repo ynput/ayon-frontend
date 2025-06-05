@@ -99,7 +99,7 @@ const getCommonPinningStyles = (column: Column<TableRow, unknown>): CSSPropertie
 const getColumnWidth = (rowId: string, columnId: string) => {
   return `calc(var(--col-${columnId}-size) * 1px)`
 }
-// tes
+// test
 
 export const DRAG_HANDLE_COLUMN_ID = 'drag-handle'
 
