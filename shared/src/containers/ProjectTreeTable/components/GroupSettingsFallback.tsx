@@ -1,4 +1,4 @@
-import { SettingsPanelItem, TableSettingsFallback } from '@shared/components'
+import { SettingsPanelItem, TableSettingsFallback } from '../../../components'
 import { FC } from 'react'
 import { ColumnSettingsContextType } from '../context'
 import styled from 'styled-components'
@@ -16,12 +16,21 @@ const FieldButton = styled(Button)`
   justify-content: start;
 `
 
-export interface GroupSettingsFallbackProps {
-  requiredVersion?: string
+export type GroupByConfig = {
+  showEmpty?: boolean
+}
+
+export interface GroupSettingsProps {
   fields: SettingsPanelItem[]
+  config?: GroupByConfig
   onChange?: ColumnSettingsContextType['updateGroupBy']
   groupBy?: ColumnSettingsContextType['groupBy']
   updateGroupBy?: ColumnSettingsContextType['updateGroupBy']
+  onConfigChange?: (config: GroupByConfig) => void
+}
+
+export interface GroupSettingsFallbackProps extends GroupSettingsProps {
+  requiredVersion?: string
 }
 
 export const GroupSettingsFallback: FC<GroupSettingsFallbackProps> = ({

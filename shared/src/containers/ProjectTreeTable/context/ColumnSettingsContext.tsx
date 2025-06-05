@@ -6,6 +6,7 @@ import {
   VisibilityState,
   ColumnSizingState,
 } from '@tanstack/react-table'
+import { GroupByConfig } from '../components/GroupSettingsFallback'
 
 export interface TableGroupBy {
   desc: boolean
@@ -18,6 +19,9 @@ export type ColumnsConfig = {
   columnPinning: ColumnPinningState
   columnSizing: ColumnSizingState
   groupBy?: TableGroupBy
+  groupByConfig?: {
+    showEmpty?: boolean
+  }
 }
 
 export interface ColumnSettingsContextType {
@@ -45,8 +49,10 @@ export interface ColumnSettingsContextType {
   columnSizingUpdater: OnChangeFn<ColumnSizingState>
 
   // groupBy
-  updateGroupBy: (groupBy: TableGroupBy | undefined) => void
   groupBy?: TableGroupBy
+  updateGroupBy: (groupBy: TableGroupBy | undefined) => void
+  groupByConfig: GroupByConfig
+  updateGroupByConfig: (config: GroupByConfig) => void
 
   // Global change
   setColumnsConfig: (config: ColumnsConfig) => void

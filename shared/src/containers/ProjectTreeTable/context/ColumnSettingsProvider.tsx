@@ -10,6 +10,7 @@ import {
 import { ROW_SELECTION_COLUMN_ID } from './SelectionCellsContext'
 import { DRAG_HANDLE_COLUMN_ID } from '../ProjectTreeTable'
 import { ColumnsConfig, ColumnSettingsContext, TableGroupBy } from './ColumnSettingsContext'
+import { GroupByConfig } from '../components/GroupSettingsFallback'
 
 interface ColumnSettingsProviderProps {
   children: ReactNode
@@ -29,6 +30,7 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     columnVisibility: columnVisibilityInit = {},
     columnSizing: columnsSizingExternal = {},
     groupBy,
+    groupByConfig = {},
   } = columnsConfig
 
   const columnOrder = [...columnOrderInit]
@@ -206,6 +208,16 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     })
   }
 
+  const updateGroupByConfig = (config: GroupByConfig) => {
+    onChange({
+      ...columnsConfig,
+      groupByConfig: {
+        ...groupByConfig,
+        ...config,
+      },
+    })
+  }
+
   // UPDATER FUNCTIONS
   const columnVisibilityUpdater: OnChangeFn<VisibilityState> = (columnVisibilityUpdater) => {
     const newVisibility = functionalUpdate(columnVisibilityUpdater, columnVisibility)
@@ -252,6 +264,8 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
         // group by
         groupBy,
         updateGroupBy,
+        groupByConfig,
+        updateGroupByConfig,
 
         // global change
         setColumnsConfig: onChange,

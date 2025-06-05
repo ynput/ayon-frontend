@@ -7,7 +7,6 @@ import { TableGroupBy } from '../context'
 import { EditorTaskNode, EntitiesMap, EntityMap, ProjectTableAttribute, TableRow } from '../types'
 import { useGetEntityTypeData } from './useGetEntityTypeData'
 import { useCallback } from 'react'
-import { ExpandedState } from '@tanstack/react-table'
 export type GroupByEntityType = 'task' | 'folder' | 'version' | 'product'
 
 export type GroupData = {
@@ -66,7 +65,7 @@ type BuildGroupByTableProps = {
   entityType?: GroupByEntityType
   groups?: EntityGroup[]
   attribFields: ProjectTableAttribute[]
-  expanded?: ExpandedState
+  showEmpty?: boolean
 }
 
 // get sorting ids based on the groupBy field
@@ -95,7 +94,7 @@ const getSortingIds = (
 }
 
 const useBuildGroupByTableData = (props: BuildGroupByTableProps) => {
-  const { project, entities, entityType, groups = [], attribFields, expanded = {} } = props
+  const { project, entities, entityType, groups = [], attribFields, showEmpty } = props
   const getEntityTypeData = useGetEntityTypeData({ projectInfo: project })
 
   const entityToGroupRow = useCallback(
@@ -239,7 +238,10 @@ const useBuildGroupByTableData = (props: BuildGroupByTableProps) => {
       }
     })
 
-    return groupsList
+    // filter out empty groups
+    const nonEmptyGroups = groupsList.filter((group) => group.subRows.length > 0)
+
+    return showEmpty ? groupsList : nonEmptyGroups
   }
 
   return buildGroupByTableData

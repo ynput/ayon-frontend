@@ -15,7 +15,7 @@ interface ProjectOverviewSettingsProps extends ProjectTableSettingsProps {
 }
 
 const ProjectOverviewSettings: FC<ProjectOverviewSettingsProps> = ({ onChange, ...props }) => {
-  const { groupBy, updateGroupBy } = useColumnSettingsContext()
+  const { groupBy, groupByConfig, updateGroupBy, updateGroupByConfig } = useColumnSettingsContext()
   const { modules } = useProjectTableContext()
   const { GroupSettings, requiredVersion } = modules
 
@@ -39,6 +39,8 @@ const ProjectOverviewSettings: FC<ProjectOverviewSettingsProps> = ({ onChange, .
               requiredVersion={requiredVersion}
               groupBy={groupBy}
               updateGroupBy={updateGroupBy}
+              config={groupByConfig}
+              onConfigChange={updateGroupByConfig}
             />
           ),
         },

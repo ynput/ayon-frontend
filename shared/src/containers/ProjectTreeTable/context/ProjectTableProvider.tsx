@@ -173,7 +173,8 @@ export const ProjectTableProvider = ({
     loadingTasks,
     isLoadingMore,
   })
-  const { groupBy } = useColumnSettingsContext()
+  const { groupBy, groupByConfig: { showEmpty: showEmptyGroups = false } = {} } =
+    useColumnSettingsContext()
 
   const buildGroupByTableData = useBuildGroupByTableData({
     entities: entitiesMap,
@@ -181,6 +182,7 @@ export const ProjectTableProvider = ({
     groups: taskGroups,
     project: projectInfo,
     attribFields,
+    showEmpty: showEmptyGroups,
   })
 
   // if we are grouping by something, we ignore current tableData and format the data based on the groupBy
