@@ -4,7 +4,7 @@ import clsx from 'clsx'
 import { ThumbnailUploader } from '@shared/components'
 import { ThumbnailWrapper } from '@shared/containers'
 import { useUpdateEntitiesMutation } from '@shared/api'
-import * as Styled from './EntityThumbnailUploader.styled'
+import * as Styled from './EntityPanelUploader.styled'
 import { ThumbnailUploadProvider } from '../../context/ThumbnailUploaderContext'
 
 type Operation = {
@@ -13,7 +13,7 @@ type Operation = {
   currentAssignees: any[]
   data: { updatedAt: string }
 }
-export type EntityThumbnailUploaderProps = {
+export type EntityPanelUploaderProps = {
   entityType: string
   entities: any[]
   isCompact?: boolean
@@ -23,13 +23,13 @@ export type EntityThumbnailUploaderProps = {
   resetFileUploadState?: () => void
 }
 
-export const EntityThumbnailUploader = ({
+export const EntityPanelUploader = ({
   children = [],
   entityType,
   entities = [],
   isCompact = false,
   onUploaded,
-}: EntityThumbnailUploaderProps) => {
+}: EntityPanelUploaderProps) => {
   const [isDraggingFile, setIsDraggingFile] = useState(false)
   const [isUploadingFile, setIsUploadingFile] = useState(false)
 
@@ -96,6 +96,15 @@ export const EntityThumbnailUploader = ({
         <ThumbnailWrapper>
           <div>{children}</div>
         </ThumbnailWrapper>
+        <ThumbnailUploader
+          entities={entities}
+          inputRef={inputRef}
+          className={clsx('thumbnail-uploader', { hidden: !isDraggingFile && !isUploadingFile })}
+          onUploadInProgress={() => setIsUploadingFile(true)}
+          onFinish={handleThumbnailUpload}
+          onDragLeave={() => setIsDraggingFile(false)}
+          onDragOver={(e) => e.preventDefault()}
+        />
         <ThumbnailUploader
           entities={entities}
           inputRef={inputRef}

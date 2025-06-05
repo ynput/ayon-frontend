@@ -3,7 +3,7 @@ import { union, upperFirst } from 'lodash'
 import clsx from 'clsx'
 import { Icon } from '@ynput/ayon-react-components'
 
-import { EntityThumbnailUploader, StackedThumbnails } from '@shared/components'
+import { EntityPanelUploader, StackedThumbnails } from '@shared/components'
 import { Actions } from '@shared/containers'
 // shared
 import { useGetEntitiesChecklistsQuery, useGetAttributeConfigQuery } from '@shared/api'
@@ -196,11 +196,7 @@ const DetailsPanelHeader = ({
 
   return (
     <Styled.HeaderContainer>
-      <EntityThumbnailUploader
-        entities={entities}
-        entityType={entityType}
-        projectName={projectName}
-      >
+      <EntityPanelUploader entities={entities} entityType={entityType} projectName={projectName}>
         <Styled.Grid className={clsx('details-panel-header', { isCompact })}>
           <Styled.Header
             className={clsx('titles', { isCompact, loading: isLoading }, 'no-shimmer')}
@@ -302,7 +298,7 @@ const DetailsPanelHeader = ({
             onTabChange={onTabChange}
           />
         </Styled.Grid>
-      </EntityThumbnailUploader>
+      </EntityPanelUploader>
     </Styled.HeaderContainer>
   )
 }
