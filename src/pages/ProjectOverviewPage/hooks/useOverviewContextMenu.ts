@@ -1,11 +1,14 @@
+import { useVersionUploadContext } from '@containers/VersionUploader/context/VersionUploadContext'
 import { useEntityListsContext } from '@pages/ProjectListsPage/context'
 import {
   ContextMenuItemConstructor,
   ContextMenuItemConstructors,
   isAttribGroupable,
+  TableCellContextData,
   useColumnSettingsContext,
 } from '@shared/containers/ProjectTreeTable'
 import { useCallback } from 'react'
+import { toast } from 'react-toastify'
 
 type OverviewContextMenuProps = {}
 
@@ -44,6 +47,25 @@ const useOverviewContextMenu = ({}: OverviewContextMenuProps) => {
     [updateGroupBy],
   )
 
+  const { onOpenVersionUpload } = useVersionUploadContext()
+  const handleVersionUpload = (cell: TableCellContextData) => {
+    const folderId = cell.entityType === 'folder' ? cell.entityId : cell.parentId || ''
+    const taskId = cell.entityType === 'task' ? cell.entityId : ''
+
+    if (folderId) {
+      onOpenVersionUpload({ folderId, taskId })
+    } else {
+      toast.error('No folder selected for version upload')
+    }
+  }
+
+  const uploadVersionItem: ContextMenuItemConstructor = (_e, cell) => ({
+    id: 'upload-version',
+    label: 'Upload Version',
+    icon: 'upload',
+    command: () => handleVersionUpload(cell),
+  })
+
   // inject in custom add to list context menu items
   const contextMenuItems: ContextMenuItemConstructors = [
     'copy-paste',
@@ -54,6 +76,7 @@ const useOverviewContextMenu = ({}: OverviewContextMenuProps) => {
     unGroupTasksItem,
     'inherit',
     'export',
+    uploadVersionItem,
     'create-folder',
     'create-task',
     'delete',
