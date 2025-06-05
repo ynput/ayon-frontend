@@ -1,12 +1,12 @@
 import { FC } from 'react'
 import {
   ColumnSettingsProvider,
+  ProjectDataProvider,
   useProjectTableModuleContext,
 } from '@shared/containers/ProjectTreeTable'
 import { SettingsPanelProvider } from '@shared/context'
 import { useAppSelector } from '@state/store'
-import { ProjectOverviewProvider } from './context/ProjectOverviewContext'
-import { ProjectDataProvider } from '../../../shared/src/containers/ProjectTreeTable/context/ProjectDataContext'
+import { ProjectOverviewProvider } from '../context/ProjectOverviewContext'
 import { useUserProjectConfig } from '@shared/hooks'
 import ProjectOverviewTableProvider from './ProjectOverviewTableProvider'
 

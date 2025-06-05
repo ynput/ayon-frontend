@@ -48,7 +48,7 @@ import useBuildGroupByTableData, {
   ROW_ID_SEPARATOR,
 } from '../hooks/useBuildGroupByTableData'
 import { PowerpackContextType } from '@shared/context'
-import { ProjectTableModuleContextType } from './ProjectTableModulesContext'
+import { ProjectTableModuleContextType } from './ProjectTableModuleContext'
 import { useColumnSettingsContext } from './ColumnSettingsContext'
 
 export const parseRowId = (rowId: string) => rowId.split(ROW_ID_SEPARATOR)[0] || rowId

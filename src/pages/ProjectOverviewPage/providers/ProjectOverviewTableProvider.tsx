@@ -8,10 +8,10 @@ import {
 } from '@shared/containers/ProjectTreeTable'
 import { NewEntityProvider } from '@context/NewEntityContext'
 import { usePowerpack } from '@shared/context'
-import { useProjectOverviewContext } from './context/ProjectOverviewContext'
+import { useProjectOverviewContext } from '../context/ProjectOverviewContext'
 import { ProjectTableQueriesProvider } from '@shared/containers/ProjectTreeTable/context/ProjectTableQueriesContext'
-import useTableQueriesHelper from './hooks/useTableQueriesHelper'
-import ProjectOverviewPage from './ProjectOverviewPage'
+import useTableQueriesHelper from '../hooks/useTableQueriesHelper'
+import ProjectOverviewPage from '../ProjectOverviewPage'
 
 const ProjectOverviewTableProvider: FC = () => {
   const props = useProjectOverviewContext()

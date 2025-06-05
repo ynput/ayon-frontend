@@ -2,10 +2,10 @@ import { useEntityListsContext } from '@pages/ProjectListsPage/context/EntityLis
 import {
   ContextMenuItemConstructor,
   ContextMenuItemConstructors,
+  isAttribGroupable,
   useColumnSettingsContext,
 } from '@shared/containers'
 import { useCallback } from 'react'
-import { isAttribGroupable } from '../../../../shared/src/containers/ProjectTreeTable/hooks/useGetGroupedFields'
 
 type OverviewContextMenuProps = {}
 
