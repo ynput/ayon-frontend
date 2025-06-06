@@ -39,7 +39,7 @@ import * as Styled from './Products.styled'
 import { openViewer } from '@state/viewer'
 import { useEntityListsContext } from '@pages/ProjectListsPage/context'
 import { useVersionUploadContext } from '@containers/VersionUploader/context/VersionUploadContext'
-import { useDeleteVersionMutation } from '@queries/versions/uploadVersions'
+import { useDeleteVersionMutation } from '@shared/api'
 import { useDeleteProductMutation } from '@queries/product/updateProduct'
 
 const Products = () => {

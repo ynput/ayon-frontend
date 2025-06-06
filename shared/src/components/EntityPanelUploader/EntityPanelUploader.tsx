@@ -1,11 +1,15 @@
-import { useRef, useState } from 'react'
+import { ChangeEvent, useRef, useState } from 'react'
 import clsx from 'clsx'
 
-import { ThumbnailUploader } from '@shared/components'
 import { ThumbnailWrapper } from '@shared/containers'
-import { useUpdateEntitiesMutation } from '@shared/api'
+import { useCreateVersionMutation, useUpdateEntitiesMutation } from '@shared/api'
 import * as Styled from './EntityPanelUploader.styled'
 import { ThumbnailUploadProvider } from '../../context/ThumbnailUploaderContext'
+import Dropzone, { DropzoneType } from './Dropzone'
+import axios from 'axios'
+import { toast } from 'react-toastify'
+import { useReviewablesUpload } from '../ReviewablesList'
+import { useDetailsPanelContext } from '@shared/context'
 
 type Operation = {
   id: string
@@ -16,29 +20,116 @@ type Operation = {
 export type EntityPanelUploaderProps = {
   entityType: string
   entities: any[]
-  isCompact?: boolean
   projectName: any
   children?: JSX.Element | JSX.Element[]
   onUploaded?: (operations: Operation[]) => void
   resetFileUploadState?: () => void
 }
 
+type UploadType = 'thumbnail' | 'version'
+const dropZones: (DropzoneType & { id: UploadType })[] = [
+  { id: 'thumbnail', label: 'Upload thumbnail', icon: 'add_photo_alternate' },
+  { id: 'version', label: 'Upload version', icon: 'layers' },
+]
+
 export const EntityPanelUploader = ({
   children = [],
   entityType,
   entities = [],
-  isCompact = false,
+  projectName,
   onUploaded,
 }: EntityPanelUploaderProps) => {
+  const { dispatch } = useDetailsPanelContext()
+  // Dragging and dropping state
   const [isDraggingFile, setIsDraggingFile] = useState(false)
-  const [isUploadingFile, setIsUploadingFile] = useState(false)
+  const [draggingZone, setDraggingZone] = useState<UploadType | null>(null)
+  const dragCounterRef = useRef(0)
 
-  const [updateEntities] = useUpdateEntitiesMutation()
+  // Uploading state
+  const [uploadingType, setUploadingType] = useState<UploadType | null>(null)
+  const [progress, setProgress] = useState(0)
 
-  const handleThumbnailUpload = async (thumbnails: any[] = []) => {
+  // Check if we have exactly one version selected for reviewable uploads
+  const singleVersionEntity = entities.length === 1 && entityType === 'version' ? entities[0] : null
+  const canUploadReviewables = Boolean(singleVersionEntity)
+
+  // Use the custom hook for reviewable upload logic (only when single version)
+  const { handleFileUpload: uploadReviewableFiles, uploading: reviewableUploading } =
+    useReviewablesUpload({
+      projectName,
+      versionId: singleVersionEntity?.id || null,
+      taskId: singleVersionEntity?.task?.id || null,
+      folderId: singleVersionEntity?.folder?.id || null,
+      productId: singleVersionEntity?.product?.id || null,
+      dispatch,
+      onUpload: () => {
+        setUploadingType(null)
+        setProgress(0)
+      },
+    })
+
+  // Filter dropzones based on whether we can upload reviewables
+  const availableDropZones = dropZones.filter((zone) => {
+    if (zone.id === 'version') {
+      return canUploadReviewables
+    }
+    return true
+  })
+
+  const resetState = () => {
+    setUploadingType(null)
+    setIsDraggingFile(false)
+    setDraggingZone(null)
+    dragCounterRef.current = 0
+    setProgress(0)
+  }
+
+  const [createVersion] = useCreateVersionMutation()
+  // Handle version/reviewable file upload
+  const handleVersionUpload = async (files: FileList) => {
+    if (!canUploadReviewables || !singleVersionEntity) {
+      toast.error('Please select exactly one version to upload reviewables')
+      return resetState()
+    }
+
+    const productId = singleVersionEntity.product?.id
+    if (!productId) {
+      toast.error('Product ID is required for version upload')
+      return resetState()
+    }
+
+    try {
+      const nextVersion = isNaN(singleVersionEntity.version.version)
+        ? 1
+        : singleVersionEntity.version.version + 1
+
+      // create a new version
+      const versionRes = await createVersion({
+        projectName,
+        versionPostModel: {
+          productId,
+          version: nextVersion,
+        },
+      }).unwrap()
+
+      if (!versionRes.id) {
+        throw new Error('Failed to create new version')
+      }
+
+      await uploadReviewableFiles(files, versionRes.id)
+      // The hook handles success callbacks, just reset our local state
+      resetState()
+    } catch (error: any) {
+      console.error('Error uploading version:', error)
+      toast.error('Failed to upload version')
+      resetState()
+    }
+  }
+
+  // once the file has been uploaded, we need to patch the entities with the new thumbnail
+  const handleThumbnailFileUploaded = async (thumbnails: any[] = []) => {
     // always set isDraggingFile to false
     setIsDraggingFile(false)
-    setIsUploadingFile(false)
 
     // check something was actually uploaded
     if (!entities.length) {
@@ -81,39 +172,167 @@ export const EntityPanelUploader = ({
     }
   }
 
+  const handleUploadThumbnail = async (file: File) => {
+    if (!file) return resetState()
+
+    try {
+      // check file is an image
+      if (!file.type.includes('image')) {
+        throw new Error('File is not an image')
+      }
+
+      let promises = []
+      for (const entity of entities) {
+        const { id, entityType, projectName } = entity
+
+        if (!projectName) throw new Error('Project name is required')
+
+        const promise = axios.post(
+          projectName && `/api/projects/${projectName}/${entityType}s/${id}/thumbnail`,
+          file,
+          {
+            onUploadProgress: (e) => {
+              setProgress(Math.round((100 * e.loaded) / (e.total || file.size)))
+            },
+            headers: {
+              'Content-Type': file.type,
+            },
+          },
+        )
+
+        promises.push(promise)
+      }
+
+      const res = await Promise.all(promises)
+
+      const updatedEntities = res.map((res, i) => ({
+        thumbnailId: res.data.id as string,
+        id: entities[i].id,
+      }))
+
+      handleThumbnailFileUploaded(updatedEntities)
+      resetState()
+    } catch (error: any) {
+      console.error(error)
+      toast.error(error.message)
+      resetState()
+    }
+  }
+
+  const [updateEntities] = useUpdateEntitiesMutation()
+
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault()
+    dragCounterRef.current++
+    if (dragCounterRef.current === 1) {
+      setIsDraggingFile(true)
+    }
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    dragCounterRef.current--
+    if (dragCounterRef.current === 0) {
+      setIsDraggingFile(false)
+      setDraggingZone(null)
+    }
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    dragCounterRef.current = 0
+    setIsDraggingFile(false)
+    setDraggingZone(null)
+
+    if (!e.dataTransfer.files || e.dataTransfer.files.length === 0) {
+      return
+    }
+
+    if (draggingZone === 'thumbnail') {
+      setUploadingType('thumbnail')
+      const file = e.dataTransfer.files[0]
+      // try to upload the thumbnail
+      handleUploadThumbnail(file)
+    }
+
+    if (draggingZone === 'version') {
+      setUploadingType('version')
+      const files = e.dataTransfer.files
+      // try to upload the reviewables using the hook
+      handleVersionUpload(files)
+    }
+  }
+
+  // upload thumbnail from input (right click on thumbnail)
+  const handleInputUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files
+    if (!files) {
+      return
+    }
+
+    const file = files[0]
+    if (file) {
+      setUploadingType('thumbnail')
+      handleUploadThumbnail(file)
+    }
+  }
+
   const inputRef = useRef<HTMLInputElement>(null)
 
   return (
     <ThumbnailUploadProvider
       entities={entities}
-      handleThumbnailUpload={handleThumbnailUpload}
+      handleThumbnailUpload={handleThumbnailFileUploaded}
       inputRef={inputRef}
     >
       <Styled.DragAndDropWrapper
-        className={clsx({ isCompact })}
-        onDragEnter={() => setIsDraggingFile(true)}
+        className={clsx({ dragging: isDraggingFile })}
+        onDragEnter={handleDragEnter}
+        onDragLeave={handleDragLeave}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
       >
         <ThumbnailWrapper>
           <div>{children}</div>
         </ThumbnailWrapper>
-        <ThumbnailUploader
-          entities={entities}
-          inputRef={inputRef}
-          className={clsx('thumbnail-uploader', { hidden: !isDraggingFile && !isUploadingFile })}
-          onUploadInProgress={() => setIsUploadingFile(true)}
-          onFinish={handleThumbnailUpload}
-          onDragLeave={() => setIsDraggingFile(false)}
-          onDragOver={(e) => e.preventDefault()}
-        />
-        <ThumbnailUploader
-          entities={entities}
-          inputRef={inputRef}
-          className={clsx('thumbnail-uploader', { hidden: !isDraggingFile && !isUploadingFile })}
-          onUploadInProgress={() => setIsUploadingFile(true)}
-          onFinish={handleThumbnailUpload}
-          onDragLeave={() => setIsDraggingFile(false)}
-          onDragOver={(e) => e.preventDefault()}
-        />
+        {isDraggingFile && (
+          <Styled.DropZones>
+            {availableDropZones.map((zone) => (
+              <Dropzone
+                key={zone.id}
+                id={zone.id}
+                label={zone.label}
+                icon={zone.icon}
+                isActive={draggingZone === zone.id}
+                onDragOver={() => setDraggingZone(zone.id)}
+                onDragLeave={() => setDraggingZone(null)}
+              />
+            ))}
+          </Styled.DropZones>
+        )}
+        {(!!uploadingType ||
+          (singleVersionEntity && reviewableUploading[singleVersionEntity.id]?.length > 0)) && (
+          <Styled.DropZones>
+            <Styled.UploadingProgress>
+              <Styled.Progress
+                style={{
+                  right: uploadingType === 'thumbnail' ? `${100 - progress}%` : '0%',
+                }}
+              />
+              <span className="label">
+                {uploadingType === 'thumbnail'
+                  ? `Uploading ${uploadingType}...`
+                  : `Uploading reviewables...`}
+              </span>
+            </Styled.UploadingProgress>
+            <Styled.CancelButton icon={'close'} variant="text" onClick={resetState} />
+          </Styled.DropZones>
+        )}
+        <input type="file" onChange={handleInputUpload} ref={inputRef} />
       </Styled.DragAndDropWrapper>
     </ThumbnailUploadProvider>
   )

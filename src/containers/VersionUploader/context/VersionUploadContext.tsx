@@ -2,7 +2,7 @@ import {
   GetLatestVersionResult,
   useCreateVersionMutation,
   useGetLatestProductVersionQuery,
-} from '@queries/versions/uploadVersions'
+} from '@shared/api'
 import React, {
   createContext,
   useContext,

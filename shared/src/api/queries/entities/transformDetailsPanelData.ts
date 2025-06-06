@@ -109,6 +109,14 @@ export const transformDetailsPanelQueriesData = ({
           name: version.product?.name,
           productType: version.product?.productType,
         },
+        version: {
+          version: version.version,
+          id: version.id,
+          name: version.name,
+          updatedAt: version.updatedAt,
+          createdAt: version.createdAt,
+          productId: version.product.id,
+        },
         representations: version.representations?.edges?.map((edge) => edge.node) || [],
       }
     case 'folder':

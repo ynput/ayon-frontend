@@ -1,4 +1,4 @@
-import { GetLatestProductVersionQuery, gqlApi, versionsApi } from '@shared/api'
+import { GetLatestProductVersionQuery, gqlApi, versionsApi } from '@shared/api/generated'
 
 export type GetLatestVersionResult =
   GetLatestProductVersionQuery['project']['versions']['edges'][0]['node']
@@ -51,3 +51,4 @@ const uploadVersions = versionsApi.enhanceEndpoints({
 })
 
 export const { useCreateVersionMutation, useDeleteVersionMutation } = uploadVersions
+export { uploadVersions as versionsQueries }
