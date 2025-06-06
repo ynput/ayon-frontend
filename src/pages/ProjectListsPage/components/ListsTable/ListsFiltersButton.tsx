@@ -1,4 +1,4 @@
-import { useListsContext } from '@pages/ProjectListsPage/context/ListsContext'
+import { useListsContext } from '@pages/ProjectListsPage/context'
 import { useListsDataContext } from '@pages/ProjectListsPage/context/ListsDataContext'
 import { HeaderButton } from '@shared/SimpleTable'
 import { ButtonProps } from '@ynput/ayon-react-components'

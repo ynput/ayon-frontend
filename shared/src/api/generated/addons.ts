@@ -526,6 +526,11 @@ export type GetAllSettingsApiArg = {
   /** Site ID may be specified a query parameter. Both `site_id` and its's alias `site` are supported. */
   siteId?: string
 }
+export type FrontendScopeSettings = {
+  admin?: boolean
+  manager?: boolean
+  sidebar?: string
+}
 export type PathDefinition = {
   windows?: string
   linux?: string
@@ -551,7 +556,9 @@ export type HttpSourceInfo = {
 export type VersionInfo = {
   hasSettings?: boolean
   hasSiteSettings?: boolean
-  frontendScopes?: object
+  frontendScopes?: {
+    [key: string]: FrontendScopeSettings
+  }
   clientPyproject?: object
   clientSourceInfo?: (FilesystemSourceInfo | ServerSourceInfo | HttpSourceInfo)[]
   services?: object

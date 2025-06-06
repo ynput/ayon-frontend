@@ -1,6 +1,6 @@
 // libraries
 import { Splitter, SplitterPanel } from 'primereact/splitter'
-import { FC } from 'react'
+import { FC, useCallback, useEffect } from 'react'
 
 // state
 import { useSlicerContext } from '@context/SlicerContext'
@@ -14,12 +14,17 @@ import SearchFilterWrapper from './containers/SearchFilterWrapper'
 import ProjectOverviewTable from './containers/ProjectOverviewTable'
 import { isEmpty } from 'lodash'
 import useFilterBySlice from '@containers/TasksProgress/hooks/useFilterBySlice'
-import { FilterFieldType } from '@shared/components'
+import { FilterFieldType, OverviewSettingsChange } from '@shared/components'
 import ProjectOverviewDetailsPanel from './containers/ProjectOverviewDetailsPanel'
 import NewEntity from '@components/NewEntity/NewEntity'
 import { Actions } from '@shared/containers/Actions/Actions'
-import { useProjectTableContext, useSelectedRowsContext } from '@shared/containers/ProjectTreeTable'
-import { ProjectTableSettings, CustomizeButton } from '@shared/components'
+import {
+  useColumnSettingsContext,
+  useProjectTableContext,
+  useSelectedRowsContext,
+} from '@shared/containers/ProjectTreeTable'
+import { CustomizeButton } from '@shared/components'
+import ProjectOverviewSettings from './containers/ProjectOverviewSettings'
 import { useSettingsPanel } from '@shared/context'
 import ReloadButton from './components/ReloadButton'
 import OverviewActions from './components/OverviewActions'
@@ -48,6 +53,8 @@ const ProjectOverviewPage: FC = () => {
     updateShowHierarchy,
     tasksMap,
   } = useProjectTableContext()
+
+  const { groupBy, updateGroupBy } = useColumnSettingsContext()
 
   const { isPanelOpen } = useSettingsPanel()
 
@@ -82,6 +89,34 @@ const ProjectOverviewPage: FC = () => {
     filters,
   })
 
+  const handleSettingsChange = useCallback<OverviewSettingsChange>(
+    (setting, value) => {
+      if (setting === 'group-by') {
+        if (value !== undefined && showHierarchy) {
+          // turn hierarchy off
+          updateShowHierarchy(false)
+        }
+      }
+    },
+    [showHierarchy, updateShowHierarchy],
+  )
+
+  // if groupBy is set and showHierarchy is true, turn off hierarchy
+  useEffect(() => {
+    if (groupBy && showHierarchy) {
+      updateShowHierarchy(false)
+    }
+  }, [groupBy, showHierarchy, updateShowHierarchy])
+
+  const handleShowHierarchy = () => {
+    // update hierarchy
+    updateShowHierarchy(!showHierarchy)
+    // remove grouping
+    if (groupBy) {
+      updateGroupBy(undefined)
+    }
+  }
+
   return (
     <main style={{ overflow: 'hidden', gap: 4 }}>
       <Splitter
@@ -113,7 +148,7 @@ const ProjectOverviewPage: FC = () => {
               <ReloadButton />
               <SwitchButton
                 value={showHierarchy}
-                onClick={() => updateShowHierarchy(!showHierarchy)}
+                onClick={handleShowHierarchy}
                 label="Show hierarchy"
               />
               <Actions
@@ -170,7 +205,7 @@ const ProjectOverviewPage: FC = () => {
                     zIndex: 500,
                   }}
                 >
-                  <ProjectTableSettings />
+                  <ProjectOverviewSettings onChange={handleSettingsChange} />
                 </SplitterPanel>
               ) : (
                 <SplitterPanel style={{ maxWidth: 0 }}></SplitterPanel>

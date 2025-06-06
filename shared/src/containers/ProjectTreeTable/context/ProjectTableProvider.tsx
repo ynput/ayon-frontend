@@ -1,6 +1,27 @@
-import { createContext, ReactNode, useCallback, useContext } from 'react'
+/**
+ * Project Table Context
+ *
+ * This context serves as the central data management layer for the project table component.
+ * It performs three main functions:
+ *
+ * 1. **Props Forwarding**: Acts as a bridge to forward essential props (project info, users,
+ *    attributes, filters, etc.) down to child components throughout the table hierarchy.
+ *
+ * 2. **Table Data Structure Building**: Transforms raw project data into structured table rows
+ *    that can be consumed by the table component. This includes processing folders, tasks,
+ *    and entities into a unified table format.
+ *
+ * 3. **Multi-Modal Data Presentation**: Supports three different data presentation modes:
+ *    - **Hierarchy Mode**: Builds nested folder/task relationships with expandable rows
+ *    - **Tasks List Mode**: Flattened view of tasks without hierarchical structure
+ *    - **Groups Mode**: Groups entities by specified criteria (entity type, custom groups)
+ *
+ * The context also provides utility functions for entity relationships, expansion state
+ * management, filtering, sorting, and folder inheritance operations.
+ */
+import { ReactNode, useCallback, useMemo } from 'react'
 import { ExpandedState, OnChangeFn, SortingState } from '@tanstack/react-table'
-import useOverviewTable from '../hooks/useOverviewTable'
+import useBuildProjectDataTable from '../hooks/useBuildProjectDataTable'
 import { Filter } from '@ynput/ayon-react-components'
 import {
   EntitiesMap,
@@ -21,13 +42,22 @@ import { ProjectModel } from '../types/project'
 import { ProjectTableAttribute, LoadingTasks } from '../types'
 import { QueryFilter } from '../types/folders'
 import { ContextMenuItemConstructors } from '../hooks/useCellContextMenu'
+import { EntityGroup } from '@shared/api'
+import useBuildGroupByTableData, {
+  GroupByEntityType,
+  ROW_ID_SEPARATOR,
+} from '../hooks/useBuildGroupByTableData'
+import { PowerpackContextType } from '@shared/context'
+import { useColumnSettingsContext } from './ColumnSettingsContext'
+import { ProjectTableModulesType } from '../hooks'
+import { ProjectTableContext, ProjectTableContextType } from './ProjectTableContext'
 
-type User = {
+export const parseRowId = (rowId: string) => rowId.split(ROW_ID_SEPARATOR)[0] || rowId
+
+export type TableUser = {
   name: string
   fullName?: string
 }
-
-export type ToggleExpandAll = (rowIds: RowId[], expand?: boolean) => void
 
 export interface ProjectTableProviderProps {
   children: ReactNode
@@ -37,10 +67,11 @@ export interface ProjectTableProviderProps {
   isLoading: boolean
   isLoadingMore: boolean
   loadingTasks?: LoadingTasks
+  error?: string
   // Project Info
   projectInfo?: ProjectModel
   projectName: string
-  users: User[]
+  users: TableUser[]
   // Attributes
   attribFields: ProjectTableAttribute[]
 
@@ -51,8 +82,11 @@ export interface ProjectTableProviderProps {
   tasksByFolderMap: TasksByFolderMap
   tableRows?: TableRow[] // any extra rows that we want to add to the table
 
+  // grouping
+  taskGroups: EntityGroup[]
+
   // data functions
-  fetchNextPage: () => void
+  fetchNextPage: (value?: string) => void
   reloadTableData: () => void
 
   // Filters
@@ -80,57 +114,17 @@ export interface ProjectTableProviderProps {
 
   // context menu
   contextMenuItems: ContextMenuItemConstructors
+
+  // powerpack context
+  powerpack?: PowerpackContextType
+
+  // remote modules
+  modules: ProjectTableModulesType
+
+  groupByConfig?: {
+    entityType?: GroupByEntityType
+  }
 }
-
-export interface ProjectTableContextProps {
-  isInitialized: ProjectTableProviderProps['isInitialized']
-  isLoading: ProjectTableProviderProps['isLoading']
-  // Project Info
-  projectInfo: ProjectTableProviderProps['projectInfo']
-  projectName: ProjectTableProviderProps['projectName']
-  users: ProjectTableProviderProps['users']
-  // Attributes
-  attribFields: ProjectTableProviderProps['attribFields']
-
-  // Data
-  tableData: TableRow[]
-  tasksMap: ProjectTableProviderProps['tasksMap']
-  foldersMap: ProjectTableProviderProps['foldersMap']
-  entitiesMap: ProjectTableProviderProps['entitiesMap']
-  fetchNextPage: ProjectTableProviderProps['fetchNextPage']
-  reloadTableData: ProjectTableProviderProps['reloadTableData']
-  getEntityById: (id: string) => EntityMap | undefined
-
-  // Filters
-  filters: ProjectTableProviderProps['filters']
-  setFilters: ProjectTableProviderProps['setFilters']
-  queryFilters: ProjectTableProviderProps['queryFilters']
-
-  // Hierarchy
-  showHierarchy: ProjectTableProviderProps['showHierarchy']
-  updateShowHierarchy: ProjectTableProviderProps['updateShowHierarchy']
-
-  // Expanded state
-  expanded: ProjectTableProviderProps['expanded']
-  toggleExpanded: ProjectTableProviderProps['toggleExpanded']
-  updateExpanded: ProjectTableProviderProps['updateExpanded']
-  toggleExpandAll: ToggleExpandAll
-
-  // Sorting
-  sorting: ProjectTableProviderProps['sorting']
-  updateSorting: ProjectTableProviderProps['updateSorting']
-
-  // Folder Relationships
-  getInheritedDependents: GetInheritedDependents
-  findInheritedValueFromAncestors: FindInheritedValueFromAncestors
-  findNonInheritedValues: FindNonInheritedValues
-  getAncestorsOf: GetAncestorsOf
-
-  // Context menu
-  contextMenuItems: ProjectTableProviderProps['contextMenuItems']
-}
-
-const ProjectTableContext = createContext<ProjectTableContextProps | undefined>(undefined)
 
 export const ProjectTableProvider = ({
   children,
@@ -145,10 +139,12 @@ export const ProjectTableProvider = ({
   loadingTasks,
   isLoadingMore,
   isLoading,
+  error,
   isInitialized,
   projectName,
   users,
   attribFields,
+  taskGroups,
   filters,
   setFilters,
   queryFilters,
@@ -161,9 +157,12 @@ export const ProjectTableProvider = ({
   reloadTableData,
   setExpanded,
   contextMenuItems,
+  powerpack,
+  modules,
+  groupByConfig,
 }: ProjectTableProviderProps) => {
   // DATA TO TABLE
-  const tableData = useOverviewTable({
+  const defaultTableData = useBuildProjectDataTable({
     foldersMap,
     tasksMap,
     rows: tableRows,
@@ -174,15 +173,37 @@ export const ProjectTableProvider = ({
     loadingTasks,
     isLoadingMore,
   })
+  const { groupBy, groupByConfig: { showEmpty: showEmptyGroups = false } = {} } =
+    useColumnSettingsContext()
+
+  const buildGroupByTableData = useBuildGroupByTableData({
+    entities: entitiesMap,
+    entityType: groupByConfig?.entityType,
+    groups: taskGroups,
+    project: projectInfo,
+    attribFields,
+    showEmpty: showEmptyGroups,
+  })
+
+  // if we are grouping by something, we ignore current tableData and format the data based on the groupBy
+  const groupedTableData = useMemo(
+    () => !!groupBy && buildGroupByTableData(groupBy),
+    [groupBy, entitiesMap, taskGroups],
+  )
+
+  const tableData = groupBy && groupedTableData ? groupedTableData : defaultTableData
 
   const getEntityById = useCallback(
     (id: string): EntityMap | undefined => {
-      if (foldersMap.has(id)) {
-        return foldersMap.get(id)
-      } else if (tasksMap.has(id)) {
-        return tasksMap.get(id)
-      } else if (entitiesMap.has(id)) {
-        return entitiesMap.get(id)
+      // always parse the id to remove any suffixes
+      // this can happen if the id is a group by id (we need to make the row id unique)
+      const parsedId = parseRowId(id)
+      if (foldersMap.has(parsedId)) {
+        return foldersMap.get(parsedId)
+      } else if (tasksMap.has(parsedId)) {
+        return tasksMap.get(parsedId)
+      } else if (entitiesMap.has(parsedId)) {
+        return entitiesMap.get(parsedId)
       }
 
       // Return undefined if not found
@@ -207,7 +228,7 @@ export const ProjectTableProvider = ({
     attribFields: attribFields,
   })
 
-  const toggleExpandAll: ProjectTableContextProps['toggleExpandAll'] = useCallback(
+  const toggleExpandAll: ProjectTableContextType['toggleExpandAll'] = useCallback(
     (rowIds, expandAll) => {
       const expandedState = typeof expanded === 'object' ? expanded : {}
 
@@ -239,6 +260,26 @@ export const ProjectTableProvider = ({
     [expanded, getChildrenEntities, setExpanded],
   )
 
+  const toggleExpands: ProjectTableContextType['toggleExpands'] = useCallback(
+    (rowIds, expand) => {
+      const expandedState = typeof expanded === 'object' ? expanded : {}
+      const newExpandedState = { ...expandedState }
+
+      rowIds.forEach((rowId) => {
+        if (expand !== undefined) {
+          // Use the provided expand parameter
+          newExpandedState[rowId] = expand
+        } else {
+          // Toggle based on current state
+          newExpandedState[rowId] = !expandedState[rowId]
+        }
+      })
+
+      setExpanded(newExpandedState)
+    },
+    [expanded, setExpanded],
+  )
+
   return (
     <ProjectTableContext.Provider
       value={{
@@ -247,6 +288,7 @@ export const ProjectTableProvider = ({
         // forwarded on
         isInitialized,
         isLoading,
+        error,
         projectInfo,
         attribFields,
         users,
@@ -256,6 +298,7 @@ export const ProjectTableProvider = ({
         entitiesMap,
         fetchNextPage,
         reloadTableData,
+        taskGroups,
         // filters
         filters,
         setFilters,
@@ -268,6 +311,7 @@ export const ProjectTableProvider = ({
         toggleExpanded,
         updateExpanded,
         toggleExpandAll,
+        toggleExpands,
         // sorting
         sorting,
         updateSorting,
@@ -279,17 +323,12 @@ export const ProjectTableProvider = ({
         getAncestorsOf,
         // context menu
         contextMenuItems,
+        // powerpack context
+        powerpack,
+        modules,
       }}
     >
       {children}
     </ProjectTableContext.Provider>
   )
-}
-
-export const useProjectTableContext = () => {
-  const context = useContext(ProjectTableContext)
-  if (!context) {
-    throw new Error('useProjectTableContext must be used within a ProjectTableProvider')
-  }
-  return context
 }

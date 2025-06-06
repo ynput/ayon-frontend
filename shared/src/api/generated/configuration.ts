@@ -83,12 +83,18 @@ export type ProjectOptionsModel = {
   /** A regular expression that is used to create project code from the project name. */
   project_code_regex?: string
 }
+export type ChangelogSettingsModel = {
+  /** If enabled, the changelog will be shown to normal users. */
+  show_changelog_to_users?: boolean
+}
 export type ServerConfigModel = {
   /** The name of the studio */
   studio_name?: string
   /** Customization options for the login page */
   customization?: CustomizationModel
   project_options?: ProjectOptionsModel
+  /** Settings for the changelog feature */
+  changelog?: ChangelogSettingsModel
 }
 export type ValidationError = {
   loc: (string | number)[]

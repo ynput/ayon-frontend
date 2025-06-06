@@ -1,22 +1,18 @@
-import { createContext, useContext, useState, ReactNode, useMemo, useCallback } from 'react'
+import { useState, ReactNode, useMemo, useCallback } from 'react'
 import { RowSelectionState } from '@tanstack/react-table'
-import useNewList, { UseNewListReturn } from '../hooks/useNewList'
+import useNewList from '../hooks/useNewList'
 import {
   useCreateEntityListMutation,
   useDeleteEntityListMutation,
   useUpdateEntityListMutation,
 } from '@shared/api'
-import type {
-  EntityListPatchModel,
-  EntityListPostModel,
-  EntityList,
-  EntityListSummary,
-} from '@shared/api'
+import type { EntityListPatchModel, EntityListPostModel, EntityListSummary } from '@shared/api'
 import { useProjectDataContext } from '@shared/containers/ProjectTreeTable'
-import useDeleteList, { UseDeleteListReturn } from '../hooks/useDeleteList'
-import useUpdateList, { UseUpdateListReturn } from '../hooks/useUpdateList'
+import useDeleteList from '../hooks/useDeleteList'
+import useUpdateList from '../hooks/useUpdateList'
 import { useListsDataContext } from './ListsDataContext'
 import { useQueryParam, withDefault, QueryParamConfig } from 'use-query-params'
+import ListsContext, { ListsContextType } from './ListsContext'
 
 // Custom param for RowSelectionState
 const RowSelectionParam: QueryParamConfig<RowSelectionState> = {
@@ -37,39 +33,6 @@ const RowSelectionParam: QueryParamConfig<RowSelectionState> = {
     return selectedIds.reduce((acc, id) => ({ ...acc, [id]: true }), {})
   },
 }
-
-export interface ListsContextValue {
-  rowSelection: RowSelectionState
-  setRowSelection: (ids: RowSelectionState) => void
-  selectedRows: string[]
-  selectedLists: EntityList[]
-  selectedList: EntityList | undefined
-  // meta
-  isReview?: boolean
-  // Creating new lists
-  newList: UseNewListReturn['newList']
-  setNewList: UseNewListReturn['setNewList']
-  openNewList: UseNewListReturn['openNewList']
-  closeNewList: UseNewListReturn['closeNewList']
-  createNewList: UseNewListReturn['createNewList']
-  isCreatingList: boolean
-  // Updating lists
-  renamingList: UseUpdateListReturn['renamingList']
-  openRenameList: UseUpdateListReturn['openRenameList']
-  closeRenameList: UseUpdateListReturn['closeRenameList']
-  submitRenameList: UseUpdateListReturn['submitRenameList']
-  // Deleting lists
-  deleteLists: UseDeleteListReturn['deleteLists']
-  // Info dialog
-  infoDialogData: null | EntityList
-  setInfoDialogData: (list: EntityList | null) => void
-  openDetailsPanel: (id: string) => void
-  // Lists filters dialog
-  listsFiltersOpen: boolean
-  setListsFiltersOpen: React.Dispatch<React.SetStateAction<boolean>>
-}
-
-const ListsContext = createContext<ListsContextValue | undefined>(undefined)
 
 interface ListsProviderProps {
   children: ReactNode
@@ -129,7 +92,7 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
   // dialogs
   const [listsFiltersOpen, setListsFiltersOpen] = useState(false)
 
-  const [infoDialogData, setInfoDialogData] = useState<ListsContextValue['infoDialogData']>(null)
+  const [infoDialogData, setInfoDialogData] = useState<ListsContextType['infoDialogData']>(null)
 
   const openDetailsPanel = useCallback(
     (id: string) => {
@@ -237,13 +200,3 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
 
   return <ListsContext.Provider value={value}>{children}</ListsContext.Provider>
 }
-
-export const useListsContext = () => {
-  const context = useContext(ListsContext)
-  if (context === undefined) {
-    throw new Error('useListsContext must be used within a ListsProvider')
-  }
-  return context
-}
-
-export default ListsContext

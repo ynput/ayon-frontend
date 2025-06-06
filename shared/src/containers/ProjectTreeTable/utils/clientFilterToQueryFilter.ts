@@ -1,4 +1,4 @@
-import { FILTER_SEPARATOR, getFilterFromId } from '@ynput/ayon-react-components'
+import { getFilterFromId } from '@ynput/ayon-react-components'
 import { QueryCondition, QueryFilter } from '../types/operations'
 const NO_DATE = 'no-date'
 

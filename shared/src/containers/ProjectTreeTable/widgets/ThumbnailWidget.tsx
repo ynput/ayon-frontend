@@ -27,14 +27,6 @@ const Image = styled.img`
   z-index: 20;
 `
 
-const StyledIcon = styled(Icon)`
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 10;
-`
-
 interface ThumbnailWidgetProps extends React.HTMLAttributes<HTMLDivElement> {
   projectName: string
   entityType: string

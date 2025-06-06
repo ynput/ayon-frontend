@@ -3,9 +3,8 @@ import { FC, useEffect, useMemo, useState } from 'react'
 import { Filter, Icon, SearchFilter, SearchFilterProps } from '@ynput/ayon-react-components'
 import type { ProjectModel } from '@shared/api'
 import { EditorTaskNode, TaskNodeMap } from '@shared/containers/ProjectTreeTable'
-import { usePower } from '@/remote/PowerLicenseContext'
 import AdvancedFiltersPlaceholder from '@components/SearchFilter/AdvancedFiltersPlaceholder'
-import { usePowerpack } from '@context/PowerpackContext'
+import { usePowerpack } from '@shared/context'
 import { useColumnSettingsContext } from '@shared/containers/ProjectTreeTable'
 
 interface SearchFilterWrapperProps
@@ -48,12 +47,11 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
     // TODO: find a way of getting all attribute values when all tasks are not loaded
   }
 
-  const { setPowerpackDialog } = usePowerpack()
+  const { setPowerpackDialog, powerLicense } = usePowerpack()
   const handlePowerClick = () => {
     setPowerpackDialog('advancedFilters')
     return false
   }
-  const power = usePower()
 
   const options = useBuildFilterOptions({
     filterTypes,
@@ -62,13 +60,13 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
     data,
     columnOrder,
     config: {
-      enableExcludes: power,
-      enableOperatorChange: power,
+      enableExcludes: powerLicense,
+      enableOperatorChange: powerLicense,
       enableRelativeValues: true,
       prefixes: { attributes: 'attrib.' },
       ...config,
     },
-    power,
+    power: powerLicense,
   })
 
   // keeps track of the filters whilst adding/removing filters
@@ -83,8 +81,8 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
 
   const validateFilters = (filters: Filter[], callback: (f: Filter[]) => void) => {
     // if a filter is a date then check we have power features
-    const invalidFilters = filters.filter((f) => f.type === 'datetime' && !power)
-    const validFilters = filters.filter((f) => f.type !== 'datetime' || power)
+    const invalidFilters = filters.filter((f) => f.type === 'datetime' && !powerLicense)
+    const validFilters = filters.filter((f) => f.type !== 'datetime' || powerLicense)
     if (invalidFilters.length) {
       setPowerpackDialog('advancedFilters')
     }
@@ -114,7 +112,7 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
           ...searchBar,
         },
         dropdown: {
-          operationsTemplate: power ? undefined : (
+          operationsTemplate: powerLicense ? undefined : (
             <AdvancedFiltersPlaceholder onClick={handlePowerClick} />
           ),
           pt: {
@@ -127,10 +125,10 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
               },
             },
             hasNoOption: {
-              contentAfter: power ? undefined : <Icon icon="bolt" />,
+              contentAfter: powerLicense ? undefined : <Icon icon="bolt" />,
             },
             hasSomeOption: {
-              contentAfter: power ? undefined : <Icon icon="bolt" />,
+              contentAfter: powerLicense ? undefined : <Icon icon="bolt" />,
             },
           },
           ...dropdown,

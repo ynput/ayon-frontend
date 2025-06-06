@@ -6,8 +6,8 @@ import ReactMarkdown from 'react-markdown'
 import MetaPanelRow from './MetaPanelRow'
 import { ReleaseListItemModel } from '@shared/api'
 import { format } from 'date-fns'
-import PowerpackButton from '@components/Powerpack/PowerpackButton'
 import AddonIcon from '@components/AddonIcon/AddonIcon'
+import { PowerpackButton } from '@shared/components/Powerpack'
 
 type ExtendedReleaseDetail = ReleaseListItemModel & {
   isActive: boolean // can the the release be installed

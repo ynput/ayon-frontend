@@ -208,6 +208,9 @@ export type {
   GetUrisRequest,
   GetUrisResponse,
   UriResponseItem,
+  FileInfo,
+  GetProjectFileInfoApiArg,
+  GetProjectFileInfoApiResponse,
 } from './projects'
 
 // reviewables
@@ -269,3 +272,7 @@ export { api as workfilesApi } from './workfiles'
 // ynputCloud
 export * from './ynputCloud'
 export { api as ynputCloudApi } from './ynputCloud'
+
+// grouping
+export * from './grouping'
+export { api as groupingApi } from './grouping'

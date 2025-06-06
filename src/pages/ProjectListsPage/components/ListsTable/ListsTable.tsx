@@ -1,5 +1,5 @@
 import { FC, useCallback, MouseEvent, useState } from 'react' // Import event types
-import { useListsContext } from '@pages/ProjectListsPage/context/ListsContext'
+import { useListsContext } from '@pages/ProjectListsPage/context'
 import { useListsDataContext } from '@pages/ProjectListsPage/context/ListsDataContext'
 import SimpleTable, { Container, SimpleTableProvider, SimpleTableRow } from '@shared/SimpleTable'
 import ListRow from '../ListRow/ListRow'

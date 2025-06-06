@@ -111,7 +111,7 @@ export type SimpleFormField = {
   name: string
   label?: string
   placeholder?: any
-  value?: string | number | number | boolean | string[]
+  value?: string | number | number | boolean | string[] | number[] | number[]
   regex?: string
   multiline?: boolean
   syntax?: string
@@ -160,7 +160,15 @@ export type ActionContext = {
   /** The name of the project. If not provided, use global actions, the rest of the fields are ignored. */
   projectName?: string
   /** The type of the entity. If not specified, project-lever or global actions are used. */
-  entityType?: 'folder' | 'product' | 'version' | 'representation' | 'task' | 'workfile' | 'list' | 'project'
+  entityType?:
+    | 'folder'
+    | 'product'
+    | 'version'
+    | 'representation'
+    | 'task'
+    | 'workfile'
+    | 'list'
+    | 'project'
   /** List of subtypes present in the entity list */
   entitySubtypes?: string[]
   /** The IDs of the entities */

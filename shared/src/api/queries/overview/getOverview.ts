@@ -4,8 +4,9 @@ import {
   GetTasksListQuery,
   tasksApi,
   QueryTasksFoldersApiArg,
+  GetTasksListQueryVariables,
 } from '@shared/api/generated'
-import { EditorTaskNode } from '@shared/containers/ProjectTreeTable'
+import { EditorTaskNode, TableGroupBy } from '@shared/containers/ProjectTreeTable'
 import {
   DefinitionsFromApi,
   FetchBaseQueryError,
@@ -33,6 +34,8 @@ const transformFilteredEntitiesByParent = (response: GetTasksByParentQuery): Edi
       ...taskNode,
       folderId: taskNode.folderId || 'root',
       attrib: parseAllAttribs(taskNode.allAttrib),
+      entityId: taskNode.id,
+      entityType: 'task',
     })
   }
 
@@ -40,7 +43,7 @@ const transformFilteredEntitiesByParent = (response: GetTasksByParentQuery): Edi
 }
 
 const getOverviewTaskTags = (
-  result: EditorTaskNode[] | undefined,
+  result: EditorTaskNode[] | undefined = [],
   projectName: string,
   parentIds?: string | string[],
 ) => {
@@ -61,9 +64,31 @@ const getOverviewTaskTags = (
   ]
 }
 
-type GetTasksListResult = {
+export type GetTasksListResult = {
   pageInfo: GetTasksListQuery['project']['tasks']['pageInfo']
   tasks: EditorTaskNode[]
+}
+
+export type GetTasksListArgs = {
+  projectName: string
+  filter?: string
+  search?: string
+  folderIds?: string[]
+  desc?: boolean
+  sortBy?: string
+}
+
+export type GetGroupedTasksListResult = {
+  tasks: EditorTaskNode[]
+}
+
+export type GetGroupedTasksListArgs = {
+  projectName: string
+  groups: { filter: string; count: number; value: string }[]
+  search?: string
+  folderIds?: string[]
+  desc?: boolean
+  sortBy?: string
 }
 
 // Define the page param type for infinite query
@@ -200,14 +225,7 @@ const injectedApi = enhancedApi.injectEndpoints({
     // Add new infinite query endpoint for tasks list
     getTasksListInfinite: build.infiniteQuery<
       GetTasksListResult,
-      {
-        projectName: string
-        filter?: string
-        search?: string
-        folderIds?: string[]
-        desc?: boolean
-        sortBy?: string
-      },
+      GetTasksListArgs,
       TasksListPageParam
     >({
       infiniteQueryOptions: {
@@ -283,6 +301,72 @@ const injectedApi = enhancedApi.injectEndpoints({
       providesTags: (result, _e, { projectName }) =>
         getOverviewTaskTags(result?.pages.flatMap((p) => p.tasks) || [], projectName),
     }),
+    getGroupedTasksList: build.query<GetGroupedTasksListResult, GetGroupedTasksListArgs>({
+      queryFn: async ({ projectName, groups, search, folderIds, desc, sortBy }, api) => {
+        try {
+          let promises = []
+          for (const group of groups) {
+            const count = group.count || 500
+
+            const queryParams: GetTasksListQueryVariables = {
+              projectName,
+              filter: group.filter,
+              search,
+              folderIds,
+              sortBy: sortBy,
+              // @ts-expect-error - we know group does not exist on query variables but we need it for later
+              group: group.value,
+            }
+            if (desc) {
+              queryParams.last = count
+            } else {
+              queryParams.first = count
+            }
+
+            const promise = api.dispatch(
+              enhancedApi.endpoints.GetTasksList.initiate(queryParams, { forceRefetch: true }),
+            )
+            promises.push(promise)
+          }
+
+          const result = await Promise.all(promises)
+          const tasks: EditorTaskNode[] = []
+          for (const res of result) {
+            if (res.error) throw res.error
+            // get group value
+            // @ts-expect-error - we know group does exist on res.originalArgs from line 319
+            const groupValue = res.originalArgs?.group as string
+
+            const hasNextPage =
+              res.data?.pageInfo?.hasNextPage || res.data?.pageInfo?.hasPreviousPage || false
+            const groupTasks =
+              res.data?.tasks.map((task, i, a) => ({
+                ...task,
+                groups: [
+                  {
+                    value: groupValue,
+                    hasNextPage: i === a.length - 1 && hasNextPage ? groupValue : undefined, // Only add hasNextPage to the last task in the group
+                  },
+                ],
+              })) || []
+
+            tasks.push(...groupTasks)
+          }
+
+          // Return the tasks directly as required by the query format
+          return {
+            data: {
+              tasks,
+            },
+          }
+        } catch (error: any) {
+          console.error('Error in getGroupedTasksList queryFn:', error)
+          return { error: { status: 'FETCH_ERROR', error: error.message } as FetchBaseQueryError }
+        }
+      },
+      providesTags: (result, _e, { projectName }) =>
+        getOverviewTaskTags(result?.tasks, projectName),
+    }),
   }),
 })
 
@@ -292,5 +376,6 @@ export const {
   useGetTasksListQuery,
   useGetTasksListInfiniteInfiniteQuery,
   useLazyGetTasksByParentQuery,
+  useGetGroupedTasksListQuery,
 } = injectedApi
 export default injectedApi

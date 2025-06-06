@@ -217,6 +217,8 @@ export type AttributeEnumItem = {
   label: string
   icon?: string
   color?: string
+  /** List of project this item is available on */
+  projects?: string[]
 }
 export type AttributeData = {
   /** Type of attribute value */

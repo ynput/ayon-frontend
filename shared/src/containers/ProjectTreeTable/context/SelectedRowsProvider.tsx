@@ -1,17 +1,7 @@
-import { createContext, ReactNode, useCallback, useContext, useMemo, useRef } from 'react'
+import { ReactNode, useCallback, useMemo, useRef } from 'react'
 import { ROW_SELECTION_COLUMN_ID, useSelectionCellsContext } from './SelectionCellsContext'
 import { CellId, getCellId, parseCellId, RowId } from '../utils/cellUtils'
-
-export interface SelectedRowsContextProps {
-  selectedRows: string[]
-  isRowSelected: (rowId: string) => boolean
-  clearRowsSelection: () => void
-  selectAllRows: () => void
-  areAllRowsSelected: () => boolean
-  areSomeRowsSelected: () => boolean
-}
-
-const SelectedRowsContext = createContext<SelectedRowsContextProps | undefined>(undefined)
+import { SelectedRowsContext } from './SelectedRowsContext'
 
 interface SelectedRowsProviderProps {
   children: ReactNode
@@ -118,12 +108,4 @@ export const SelectedRowsProvider = ({ children }: SelectedRowsProviderProps) =>
   }, [selectedRows, selectAllRows, areAllRowsSelected, areSomeRowsSelected, clearRowsSelection])
 
   return <SelectedRowsContext.Provider value={value}>{children}</SelectedRowsContext.Provider>
-}
-
-export const useSelectedRowsContext = () => {
-  const context = useContext(SelectedRowsContext)
-  if (!context) {
-    throw new Error('useSelectedRowsContext must be used within a SelectedRowsProvider')
-  }
-  return context
 }

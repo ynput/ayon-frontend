@@ -1,6 +1,6 @@
 import { FC } from 'react'
 import * as Styled from './AnnotationTools.styled'
-import PowerpackButton from '@components/Powerpack/PowerpackButton'
+import { PowerpackButton } from '@shared/components/Powerpack'
 
 const colorMap = {
   white: {
