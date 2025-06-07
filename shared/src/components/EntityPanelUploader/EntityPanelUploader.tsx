@@ -10,6 +10,7 @@ import axios from 'axios'
 import { toast } from 'react-toastify'
 import { useReviewablesUpload } from '../ReviewablesList'
 import { useDetailsPanelContext } from '@shared/context'
+// 3811c830436f11f0abc9d6ac5bf0bcfb
 
 type Operation = {
   id: string
@@ -24,6 +25,7 @@ export type EntityPanelUploaderProps = {
   children?: JSX.Element | JSX.Element[]
   onUploaded?: (operations: Operation[]) => void
   resetFileUploadState?: () => void
+  onVersionCreated?: (versionId: string) => void
 }
 
 type UploadType = 'thumbnail' | 'version'
@@ -38,6 +40,7 @@ export const EntityPanelUploader = ({
   entities = [],
   projectName,
   onUploaded,
+  onVersionCreated,
 }: EntityPanelUploaderProps) => {
   const { dispatch } = useDetailsPanelContext()
   // Dragging and dropping state
@@ -99,9 +102,9 @@ export const EntityPanelUploader = ({
     }
 
     try {
-      const nextVersion = isNaN(singleVersionEntity.version.version)
-        ? 1
-        : singleVersionEntity.version.version + 1
+      const nextVersion = singleVersionEntity.product.latestVersion.version
+        ? singleVersionEntity.product.latestVersion.version + 1
+        : 1
 
       // create a new version
       const versionRes = await createVersion({
@@ -119,16 +122,20 @@ export const EntityPanelUploader = ({
       await uploadReviewableFiles(files, versionRes.id)
       // The hook handles success callbacks, just reset our local state
       resetState()
+
+      // update entity panel to focus the new version
+      onVersionCreated?.(versionRes.id)
     } catch (error: any) {
       console.error('Error uploading version:', error)
-      toast.error('Failed to upload version')
+      console.log(error.message)
+      toast.error(error.message)
       resetState()
     }
   }
 
   // once the file has been uploaded, we need to patch the entities with the new thumbnail
   const handleThumbnailFileUploaded = async (thumbnails: any[] = []) => {
-    // always set isDraggingFile to false
+    // always set isDragginle to false
     setIsDraggingFile(false)
 
     // check something was actually uploaded
@@ -314,8 +321,10 @@ export const EntityPanelUploader = ({
             ))}
           </Styled.DropZones>
         )}
-        {(!!uploadingType ||
-          (singleVersionEntity && reviewableUploading[singleVersionEntity.id]?.length > 0)) && (
+        {(uploadingType === 'thumbnail' ||
+          (uploadingType === 'version' &&
+            singleVersionEntity &&
+            reviewableUploading[singleVersionEntity.id]?.length > 0)) && (
           <Styled.DropZones>
             <Styled.UploadingProgress>
               <Styled.Progress

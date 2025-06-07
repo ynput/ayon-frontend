@@ -145,17 +145,21 @@ export const useReviewablesUpload = ({
 
       try {
         // upload the files
-        for (const file of fileArray) {
+        const uploadPromises = fileArray.map((file) => {
           const autoLabel = file.name.split('.').slice(0, -1).join('.')
 
           const url = `/api/projects/${projectName}/versions/${reviewableVersionId}/reviewables?label=${autoLabel}`
           const headers = { 'content-type': file.type, 'x-file-name': file.name }
-          axios
+          return axios
             .post(url, file, { headers, onUploadProgress: progressHandler(file) })
             .then(successHandler(file))
             .catch(errorHandler(file))
-        }
-        // Callback after successful uploads
+        })
+
+        // Wait for all uploads to complete
+        await Promise.all(uploadPromises)
+
+        // Callback after all uploads are finished
         onUpload && onUpload()
       } catch (error) {
         // something went wrong with everything, EEEEK!

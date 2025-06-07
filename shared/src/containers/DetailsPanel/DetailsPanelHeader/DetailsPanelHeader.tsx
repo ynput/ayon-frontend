@@ -4,7 +4,7 @@ import clsx from 'clsx'
 import { Icon } from '@ynput/ayon-react-components'
 
 import { EntityPanelUploader, StackedThumbnails } from '@shared/components'
-import { Actions } from '@shared/containers'
+import { Actions, DetailsPanelProps } from '@shared/containers'
 // shared
 import { useGetEntitiesChecklistsQuery, useGetAttributeConfigQuery } from '@shared/api'
 import type { DetailsPanelEntityData } from '@shared/api'
@@ -36,6 +36,7 @@ type DetailsPanelHeaderProps = {
   currentTab: DetailsPanelTab
   onTabChange: (tab: DetailsPanelTab) => void
   onOpenViewer: (args: any) => void
+  onEntityFocus: DetailsPanelProps['onEntityFocus']
   entityTypeIcons: EntityTypeIcons
 }
 
@@ -53,6 +54,7 @@ const DetailsPanelHeader = ({
   onTabChange,
   entityTypeIcons,
   onOpenViewer,
+  onEntityFocus,
 }: DetailsPanelHeaderProps) => {
   const { useSearchParams, useNavigate } = useDetailsPanelContext()
   const navigate = useNavigate()
@@ -196,7 +198,12 @@ const DetailsPanelHeader = ({
 
   return (
     <Styled.HeaderContainer>
-      <EntityPanelUploader entities={entities} entityType={entityType} projectName={projectName}>
+      <EntityPanelUploader
+        entities={entities}
+        entityType={entityType}
+        projectName={projectName}
+        onVersionCreated={(id) => onEntityFocus?.(id, 'version')}
+      >
         <Styled.Grid className={clsx('details-panel-header', { isCompact })}>
           <Styled.Header
             className={clsx('titles', { isCompact, loading: isLoading }, 'no-shimmer')}

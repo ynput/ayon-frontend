@@ -108,6 +108,7 @@ export const transformDetailsPanelQueriesData = ({
           id: version.product?.id,
           name: version.product?.name,
           productType: version.product?.productType,
+          latestVersion: version.product.latestVersion,
         },
         version: {
           version: version.version,

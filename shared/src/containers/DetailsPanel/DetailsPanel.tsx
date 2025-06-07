@@ -40,6 +40,7 @@ export type DetailsPanelProps = {
   onClose?: () => void
   onWatchersUpdate?: (added: any[], removed: any[]) => void
   onOpenViewer?: (entity: any) => void
+  onEntityFocus?: (id: string, entityType: DetailsPanelEntityType) => void
   // annotations
   annotations?: any
   removeAnnotation?: (id: string) => void
@@ -67,6 +68,7 @@ export const DetailsPanel = ({
   onClose,
   onWatchersUpdate,
   onOpenViewer,
+  onEntityFocus,
   // annotations
   annotations,
   removeAnnotation,
@@ -254,6 +256,7 @@ export const DetailsPanel = ({
           onTabChange={setTab}
           entityTypeIcons={entityTypeIcons}
           onOpenViewer={(args) => onOpenViewer?.(args)}
+          onEntityFocus={onEntityFocus}
         />
         {isFeed && !isError && (
           <FeedWrapper
