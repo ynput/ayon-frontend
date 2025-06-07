@@ -278,26 +278,31 @@ export const EntityPanelUploader = ({
   }
 
   // upload thumbnail from input (right click on thumbnail)
-  const handleInputUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+  const handleInputUpload = async (event: ChangeEvent<HTMLInputElement>, type: UploadType) => {
     const files = event.target.files
-    if (!files) {
+    if (!files || files.length === 0) {
       return
     }
 
-    const file = files[0]
-    if (file) {
+    if (type === 'version') {
+      setUploadingType('version')
+      handleVersionUpload(files)
+    }
+    if (type === 'thumbnail') {
       setUploadingType('thumbnail')
-      handleUploadThumbnail(file)
+      handleUploadThumbnail(files[0])
     }
   }
 
-  const inputRef = useRef<HTMLInputElement>(null)
+  const thumbnailInputRef = useRef<HTMLInputElement>(null)
+  const versionsInputRef = useRef<HTMLInputElement>(null)
 
   return (
     <ThumbnailUploadProvider
       entities={entities}
       handleThumbnailUpload={handleThumbnailFileUploaded}
-      inputRef={inputRef}
+      thumbnailInputRef={thumbnailInputRef}
+      versionsInputRef={versionsInputRef}
     >
       <Styled.DragAndDropWrapper
         className={clsx({ dragging: isDraggingFile })}
@@ -337,7 +342,16 @@ export const EntityPanelUploader = ({
             <Styled.CancelButton icon={'close'} variant="text" onClick={resetState} />
           </Styled.DropZones>
         )}
-        <input type="file" onChange={handleInputUpload} ref={inputRef} />
+        <input
+          type="file"
+          onChange={(e) => handleInputUpload(e, 'thumbnail')}
+          ref={thumbnailInputRef}
+        />
+        <input
+          type="file"
+          onChange={(e) => handleInputUpload(e, 'version')}
+          ref={versionsInputRef}
+        />
       </Styled.DragAndDropWrapper>
     </ThumbnailUploadProvider>
   )
