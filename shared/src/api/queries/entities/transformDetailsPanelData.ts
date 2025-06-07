@@ -104,6 +104,7 @@ export const transformDetailsPanelQueriesData = ({
         hasReviewables: version.hasReviewables,
         thumbnailId: version.thumbnailId,
         folder: version.product?.folder,
+        task: version.task ?? undefined,
         product: {
           id: version.product?.id,
           name: version.product?.name,

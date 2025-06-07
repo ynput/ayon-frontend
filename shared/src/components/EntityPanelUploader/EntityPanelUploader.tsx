@@ -52,32 +52,36 @@ export const EntityPanelUploader = ({
   const [uploadingType, setUploadingType] = useState<UploadType | null>(null)
   const [progress, setProgress] = useState(0)
 
-  // Check if we have exactly one version selected for reviewable uploads
-  const singleVersionEntity = entities.length === 1 && entityType === 'version' ? entities[0] : null
-  const canUploadReviewables = Boolean(singleVersionEntity)
+  // Check if we have exactly one entity selected
+  const singleEntity = entities.length === 1 ? entities[0] : null
+  // extra all entity IDs for the single version entity
+  const taskId: string | undefined = singleEntity?.task?.id
+  const folderId: string | undefined = singleEntity?.folder?.id
+  const productId: string | undefined = singleEntity?.product?.id
+  const versionId: string | undefined = singleEntity?.id
+  const canUploadVersions = Boolean(singleEntity && entityType === 'version')
 
   // Use the custom hook for reviewable upload logic (only when single version)
-  const { handleFileUpload: uploadReviewableFiles, uploading: reviewableUploading } =
-    useReviewablesUpload({
-      projectName,
-      versionId: singleVersionEntity?.id || null,
-      taskId: singleVersionEntity?.task?.id || null,
-      folderId: singleVersionEntity?.folder?.id || null,
-      productId: singleVersionEntity?.product?.id || null,
-      dispatch,
-      onUpload: () => {
-        setUploadingType(null)
-        setProgress(0)
-      },
-      onProgress: (progress) => {
-        setProgress(progress)
-      },
-    })
+  const { handleFileUpload: uploadReviewableFiles } = useReviewablesUpload({
+    projectName,
+    versionId: versionId,
+    taskId: taskId,
+    folderId: folderId,
+    productId: productId,
+    dispatch,
+    onUpload: () => {
+      setUploadingType(null)
+      setProgress(0)
+    },
+    onProgress: (progress) => {
+      setProgress(progress)
+    },
+  })
 
-  // Filter dropzones based on whether we can upload reviewables
+  // Filter drop zones based on whether we can upload reviewables
   const availableDropZones = dropZones.filter((zone) => {
     if (zone.id === 'version') {
-      return canUploadReviewables
+      return canUploadVersions
     }
     return true
   })
@@ -93,20 +97,20 @@ export const EntityPanelUploader = ({
   const [createVersion] = useCreateVersionMutation()
   // Handle version/reviewable file upload
   const handleVersionUpload = async (files: FileList) => {
-    if (!canUploadReviewables || !singleVersionEntity) {
+    if (!canUploadVersions || !singleEntity) {
       toast.error('Please select exactly one version to upload reviewables')
       return resetState()
     }
 
-    const productId = singleVersionEntity.product?.id
+    const productId = singleEntity.product?.id
     if (!productId) {
       toast.error('Product ID is required for version upload')
       return resetState()
     }
 
     try {
-      const nextVersion = singleVersionEntity.product.latestVersion.version
-        ? singleVersionEntity.product.latestVersion.version + 1
+      const nextVersion = singleEntity.product.latestVersion.version
+        ? singleEntity.product.latestVersion.version + 1
         : 1
 
       // create a new version
@@ -302,7 +306,7 @@ export const EntityPanelUploader = ({
       entities={entities}
       handleThumbnailUpload={handleThumbnailFileUploaded}
       thumbnailInputRef={thumbnailInputRef}
-      versionsInputRef={versionsInputRef}
+      versionsInputRef={canUploadVersions ? versionsInputRef : undefined}
     >
       <Styled.DragAndDropWrapper
         className={clsx({ dragging: isDraggingFile })}
