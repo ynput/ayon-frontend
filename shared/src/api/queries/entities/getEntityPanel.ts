@@ -230,8 +230,10 @@ const detailsPanelQueries2 = enhancedDetailsApi.injectEndpoints({
         // perform cleanup steps once the `cacheEntryRemoved` promise resolves
         PubSub.unsubscribe(token)
       },
-      providesTags: (_res, _error, { entities }) =>
-        entities.map(({ id }: { id: string }) => ({ id, type: 'entities' })),
+      providesTags: (_res, _error, { entities, entityType }) => [
+        ...entities.map(({ id }: { id: string }) => ({ id, type: 'entities' })),
+        { type: 'entities', id: entityType.toUpperCase() },
+      ],
     }),
   }),
 })

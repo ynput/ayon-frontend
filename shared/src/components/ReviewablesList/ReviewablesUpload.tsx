@@ -1,16 +1,12 @@
-import axios, { AxiosProgressEvent, AxiosResponse } from 'axios'
-import { toast } from 'react-toastify'
 import { FC, useState, DragEvent, ChangeEvent, useEffect } from 'react'
 import clsx from 'clsx'
 
 import { Icon } from '@ynput/ayon-react-components'
 
-import api, { reviewablesQueries } from '@shared/api'
-import type { UploadReviewableApiResponse } from '@shared/api'
-
 // components
-import { ReviewableProgress, ReviewableProgressCard } from '@shared/components'
+import { ReviewableProgressCard } from '@shared/components'
 import * as Styled from './ReviewablesUpload.styled'
+import { useReviewablesUpload } from './useReviewablesUpload'
 
 export interface ReviewableUploadProps extends React.HTMLProps<HTMLDivElement> {
   projectName: string | null
@@ -50,7 +46,21 @@ export const ReviewableUpload: FC<ReviewableUploadProps> = ({
 }) => {
   // are we dragging a file over?
   const [isDraggingFile, setIsDraggingFile] = useState(false)
-  const [uploading, setUploads] = useState<{ [key: string]: ReviewableProgress[] }>({})
+
+  // Use the custom hook for upload logic
+  const {
+    handleFileUpload: uploadFiles,
+    handleRemoveUpload,
+    uploading,
+  } = useReviewablesUpload({
+    projectName,
+    versionId,
+    taskId,
+    folderId,
+    productId,
+    dispatch,
+    onUpload,
+  })
 
   // Check if we can upload files straight away
   const canUpload = Boolean(versionId)
@@ -67,9 +77,9 @@ export const ReviewableUpload: FC<ReviewableUploadProps> = ({
       })
       setPendingFiles([])
       // Start upload
-      handleFileUpload(files)
+      uploadFiles(files)
     }
-  }, [canUpload, versionId, pendingFiles.length])
+  }, [canUpload, versionId, pendingFiles.length, uploadFiles, setPendingFiles])
 
   // Helper function to check if file is an image
   const isImageFile = (file: File) => {
@@ -81,14 +91,6 @@ export const ReviewableUpload: FC<ReviewableUploadProps> = ({
     return files.map((file) => ({
       file,
       preview: isImageFile(file) ? URL.createObjectURL(file) : undefined,
-    }))
-  }
-
-  const handleRemoveUpload = (name: string) => {
-    if (!versionId) return
-    setUploads((uploads) => ({
-      ...uploads,
-      [versionId]: uploads[versionId]?.filter((upload) => upload.name !== name) || [],
     }))
   }
 
@@ -106,116 +108,8 @@ export const ReviewableUpload: FC<ReviewableUploadProps> = ({
       return
     }
 
-    const uploadingFiles = fileArray.map((file) => ({
-      name: file.name,
-      size: file.size,
-      progress: 0,
-    }))
-
-    const newUploadsForVersion = [...(uploading[versionId] || []), ...uploadingFiles]
-
-    setUploads({ ...uploading, [versionId]: newUploadsForVersion })
-
-    const successHandler = (file: File) => (response: AxiosResponse) => {
-      if (!versionId) return
-      // Handle successful upload
-      console.log(`Upload successful for ${file.name}`)
-      // patch the new data into the reviewables cache
-      const data = response.data as UploadReviewableApiResponse
-
-      if (!projectName) return
-
-      dispatch(
-        // @ts-ignore
-        reviewablesQueries.util.updateQueryData(
-          'getReviewablesForVersion',
-          { projectName, versionId },
-          (draft) => {
-            if (!draft.reviewables) {
-              draft.reviewables = []
-            }
-            // @ts-ignore
-            draft.reviewables.push(data)
-          },
-        ),
-      )
-
-      // also invalidate the viewer cache
-      productId && dispatch(api.util.invalidateTags([{ type: 'viewer', id: productId }]))
-      dispatch(api.util.invalidateTags([{ type: 'viewer', id: versionId }]))
-      folderId && dispatch(api.util.invalidateTags([{ type: 'viewer', id: folderId }]))
-      taskId && dispatch(api.util.invalidateTags([{ type: 'viewer', id: taskId }]))
-      // remove the file from the list
-      handleRemoveUpload(file.name)
-    }
-
-    const errorHandler = (file: File) => (error: any) => {
-      if (!versionId) return
-      console.error(`Upload failed for ${file.name}: ${error}`)
-      toast.error(`Failed to upload file: ${file.name}`)
-      // add error to the file
-      setUploads((uploads) => {
-        // current uploads for versionId
-        const currentUploads = uploads[versionId] || []
-        const updatedUploads = currentUploads.map((upload) => {
-          if (upload.name !== file.name) return upload
-          return {
-            ...upload,
-            error: error.response.data.detail || error.message,
-          }
-        })
-
-        // update state
-        return {
-          ...uploads,
-          [versionId]: updatedUploads,
-        }
-      })
-    }
-
-    const progressHandler = (file: File) => {
-      if (!versionId) return () => {}
-      return (progressEvent: AxiosProgressEvent) =>
-        setUploads((uploads) => {
-          // current uploads for versionId
-          const currentUploads = uploads[versionId] || []
-          const updatedUploads = currentUploads.map((upload) => {
-            if (upload.name !== file.name) return upload
-            return {
-              ...upload,
-              progress: progressEvent.total
-                ? Math.round((progressEvent.loaded / progressEvent.total) * 100)
-                : 0,
-            }
-          })
-
-          // update state
-          return {
-            ...uploads,
-            [versionId]: updatedUploads,
-          }
-        })
-    }
-
-    try {
-      // upload the files
-      for (const file of fileArray) {
-        const autoLabel = file.name.split('.').slice(0, -1).join('.')
-
-        const url = `/api/projects/${projectName}/versions/${versionId}/reviewables?label=${autoLabel}`
-        const headers = { 'content-type': file.type, 'x-file-name': file.name }
-        axios
-          .post(url, file, { headers, onUploadProgress: progressHandler(file) })
-          .then(successHandler(file))
-          .catch(errorHandler(file))
-      }
-      // Callback after successful uploads
-      onUpload && onUpload()
-    } catch (error) {
-      // something went wrong with everything, EEEEK!
-      console.error(error)
-      toast.error('Failed to upload file/s')
-    }
+    // Use the hook's upload function for actual uploading
+    await uploadFiles(files)
   }
 
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {

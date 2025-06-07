@@ -14,6 +14,7 @@ query TasksByFolder($projectName: String!, $folderIds: [String!]!) {
           assignees
           active
           folder {
+            id
             name
             label
             parents

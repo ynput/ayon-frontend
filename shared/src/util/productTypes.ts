@@ -5,6 +5,7 @@ type ProductTypes = {
 const productTypes: ProductTypes = {
   image: { name: 'image', icon: 'imagesmode' },
   render: { name: 'render', icon: 'photo_library' },
+  review: { name: 'review', icon: 'photo_library' },
   plate: { name: 'plate', icon: 'camera_roll' },
   camera: { name: 'camera', icon: 'videocam' },
   model: { name: 'model', icon: 'language' },

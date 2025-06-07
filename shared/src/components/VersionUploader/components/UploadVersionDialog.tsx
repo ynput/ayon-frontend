@@ -29,11 +29,12 @@ const ErrorMessage = styled.span`
 
 interface UploadVersionDialogProps {}
 
-const UploadVersionDialog: FC<UploadVersionDialogProps> = () => {
+export const UploadVersionDialog: FC<UploadVersionDialogProps> = () => {
   const {
     isOpen,
     onCloseVersionUpload,
     productId,
+    taskId,
     projectName,
     form,
     version,
@@ -64,11 +65,14 @@ const UploadVersionDialog: FC<UploadVersionDialogProps> = () => {
     </div>
   )
 
+  const creatingOnEntityType = productId ? 'Product' : taskId ? 'Task' : 'Folder'
+  const title = 'Create new version' + ' - ' + creatingOnEntityType
+
   return (
     <Dialog
       isOpen={isOpen}
       onClose={onCloseVersionUpload}
-      header="Create new version"
+      header={title}
       size="md"
       footer={footer}
       style={{ width: 600, maxHeight: '80vh' }}
@@ -83,7 +87,7 @@ const UploadVersionDialog: FC<UploadVersionDialogProps> = () => {
         versionId={currentVersionId}
         productId={currentProductId}
       />
-      {error && <ErrorMessage className="error">{error}</ErrorMessage>}
+      {error && <ErrorMessage className="error">{JSON.stringify(error)}</ErrorMessage>}
     </Dialog>
   )
 }

@@ -18,10 +18,11 @@ type ContextEvent = React.MouseEvent<HTMLTableSectionElement, MouseEvent>
 export type HeaderLabel = { id: string; label: string }
 
 export type TableCellContextData = {
-  entityId: string
   cellId: string
   columnId: string
+  entityId: string
   entityType: 'folder' | 'task' | 'product' | 'version' | undefined
+  parentId?: string
   attribField: ProjectTableAttribute | undefined // the attribute field if any (fps, custom attribs, etc.)
   column: {
     id: string
@@ -278,11 +279,19 @@ const useCellContextMenu = ({ attribs, headerLabels = [], onOpenNew }: CellConte
     const cellEntityData = getEntityById(rowId)
     const attribField = attribs.find((attrib) => attrib.name === colId?.replace('attrib_', ''))
     const column = headerLabels.find((header) => header.id === colId)
+    const parentId = cellEntityData
+      ? 'parentId' in cellEntityData
+        ? cellEntityData.parentId
+        : 'folderId' in cellEntityData
+        ? cellEntityData.folderId
+        : undefined
+      : undefined
     return {
       cellId: cellId,
       columnId: colId,
       entityId: cellEntityData?.entityId || cellEntityData?.id || rowId,
       entityType: cellEntityData?.entityType,
+      parentId: parentId,
       attribField: attribField,
       isGroup: rowId.startsWith(GROUP_BY_ID),
       column: {

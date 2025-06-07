@@ -11,13 +11,15 @@ export const ThumbnailUploadContext = createContext<{
 export type ThumbnailUploadProviderProps = {
   handleThumbnailUpload: (thumbnails: any[]) => {}
   entities: any
-  inputRef: any
+  thumbnailInputRef: any
+  versionsInputRef?: any
   children?: JSX.Element | JSX.Element[]
 }
 
 export const ThumbnailUploadProvider = ({
   children = [],
-  inputRef,
+  thumbnailInputRef,
+  versionsInputRef,
 }: ThumbnailUploadProviderProps) => {
   const [_, setFileUploadInProgress] = useState(false)
   const [ctxMenuShow] = useCreateContextMenu()
@@ -25,11 +27,21 @@ export const ThumbnailUploadProvider = ({
 
   const ctxMenuItems = () => [
     {
-      label: 'Upload new thumbnail',
+      label: 'Upload thumbnail',
       icon: 'add_photo_alternate',
       command: () => {
-        if (inputRef) {
-          inputRef.current!.click()
+        if (thumbnailInputRef) {
+          thumbnailInputRef.current!.click()
+        }
+        return setFileUploadInProgress(true)
+      },
+    },
+    {
+      label: 'Upload version',
+      icon: 'layers',
+      command: () => {
+        if (versionsInputRef) {
+          versionsInputRef.current!.click()
         }
         return setFileUploadInProgress(true)
       },

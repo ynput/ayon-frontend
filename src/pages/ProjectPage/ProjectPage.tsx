@@ -24,6 +24,8 @@ import { Navigate } from 'react-router-dom'
 import ProjectPubSub from './ProjectPubSub'
 import NewListFromContext from '@pages/ProjectListsPage/components/NewListDialog/NewListFromContext'
 import { RemoteAddonProject } from '@shared/context'
+import { VersionUploadProvider, UploadVersionDialog } from '@shared/components'
+import { productSelected } from '@state/context'
 
 const ProjectContextInfo = () => {
   /**
@@ -248,6 +250,11 @@ const ProjectPage = () => {
 
   const child = getPageByModuleAndAddonData(module, addonName)
 
+  const handleNewVersionUploaded = (productId: string, versionId: string) => {
+    // focus the new version in the browser
+    dispatch(productSelected({ products: [productId], versions: [versionId] }))
+  }
+
   return (
     <>
       <Dialog
@@ -261,10 +268,17 @@ const ProjectPage = () => {
       </Dialog>
       {/* @ts-expect-error - AppNavLinks is jsx */}
       <AppNavLinks links={links} />
-      <EntityListsProvider {...{ projectName, entityTypes: ['folder', 'task', 'version'] }}>
-        <SlicerProvider>{child}</SlicerProvider>
-        <NewListFromContext />
-      </EntityListsProvider>
+      <VersionUploadProvider
+        projectName={projectName}
+        dispatch={dispatch}
+        onVersionCreated={handleNewVersionUploaded}
+      >
+        <EntityListsProvider {...{ projectName, entityTypes: ['folder', 'task', 'version'] }}>
+          <SlicerProvider>{child}</SlicerProvider>
+          <NewListFromContext />
+        </EntityListsProvider>
+        <UploadVersionDialog />
+      </VersionUploadProvider>
       <ProjectPubSub projectName={projectName} onReload={loadProjectData} />
     </>
   )
