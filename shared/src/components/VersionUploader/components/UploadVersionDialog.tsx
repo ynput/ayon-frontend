@@ -29,7 +29,7 @@ const ErrorMessage = styled.span`
 
 interface UploadVersionDialogProps {}
 
-const UploadVersionDialog: FC<UploadVersionDialogProps> = () => {
+export const UploadVersionDialog: FC<UploadVersionDialogProps> = () => {
   const {
     isOpen,
     onCloseVersionUpload,
@@ -87,7 +87,7 @@ const UploadVersionDialog: FC<UploadVersionDialogProps> = () => {
         versionId={currentVersionId}
         productId={currentProductId}
       />
-      {error && <ErrorMessage className="error">{error}</ErrorMessage>}
+      {error && <ErrorMessage className="error">{JSON.stringify(error)}</ErrorMessage>}
     </Dialog>
   )
 }

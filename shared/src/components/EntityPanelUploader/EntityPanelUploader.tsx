@@ -1,6 +1,6 @@
 import { ChangeEvent, useRef, useState } from 'react'
 import clsx from 'clsx'
-import { camelCase, upperFirst } from 'lodash'
+import { upperFirst } from 'lodash'
 
 import { ThumbnailWrapper } from '@shared/containers'
 import {
@@ -16,6 +16,15 @@ import { toast } from 'react-toastify'
 import { useReviewablesUpload } from '../ReviewablesList'
 import { useDetailsPanelContext } from '@shared/context'
 import EntityPanelUploaderDialog from './EntityPanelUploaderDialog'
+import {
+  sanitizeProductName,
+  createProductHelper,
+  createVersionHelper,
+  getNextVersionNumber,
+  handleUploadError,
+  type ProductCreationData,
+  type VersionCreationData,
+} from '@shared/utils/versionUploadHelpers'
 // 3811c830436f11f0abc9d6ac5bf0bcfb
 
 type Operation = {
@@ -114,9 +123,7 @@ export const EntityPanelUploader = ({
       return
     }
 
-    // Sanitize product name: convert spaces to camelCase and only allow alphanumeric, underscore, and hyphen
-    const sanitizedName = camelCase(productName) // Convert to camelCase (handles spaces)
-      .replace(/[^a-zA-Z0-9_-]/g, '') // Only allow alphanumeric, underscore, and hyphen
+    const sanitizedName = sanitizeProductName(productName)
 
     if (!sanitizedName.trim()) {
       toast.error(
@@ -132,26 +139,18 @@ export const EntityPanelUploader = ({
       setUploadingType('version')
 
       // Create the product
-      const productRes = await createProduct({
-        projectName,
-        productPostModel: {
-          folderId: folderId,
-          name: sanitizedName,
-          productType: 'review', // default product type for uploaded files
-        },
-      }).unwrap()
-
-      if (!productRes.id) {
-        throw new Error('Failed to create product')
-      }
+      const productRes = await createProductHelper(createProduct, projectName, {
+        folderId: folderId,
+        name: sanitizedName,
+        productType: 'review', // default product type for uploaded files
+      })
 
       // Close dialog and proceed with version upload
       setShowProductDialog(false)
       await uploadVersionWithProduct(pendingFiles, productRes.id)
       setPendingFiles(null)
     } catch (error: any) {
-      console.error('Error creating product:', error)
-      toast.error(error.message || 'Failed to create product')
+      handleUploadError(error, 'creating product')
       resetState()
     }
   }
@@ -187,23 +186,14 @@ export const EntityPanelUploader = ({
   // Helper function to handle the actual version upload
   const uploadVersionWithProduct = async (files: FileList, productId: string) => {
     try {
-      const nextVersion = singleEntity!.product?.latestVersion?.version
-        ? singleEntity!.product.latestVersion.version + 1
-        : 1
+      const nextVersion = getNextVersionNumber(singleEntity!.product?.latestVersion)
 
       // create a new version
-      const versionRes = await createVersion({
-        projectName,
-        versionPostModel: {
-          productId,
-          taskId, // previous version could have a taskId or we are uploading on a task
-          version: nextVersion,
-        },
-      }).unwrap()
-
-      if (!versionRes.id) {
-        throw new Error('Failed to create new version')
-      }
+      const versionRes = await createVersionHelper(createVersion, projectName, {
+        productId,
+        taskId, // previous version could have a taskId or we are uploading on a task
+        version: nextVersion,
+      })
 
       await uploadReviewableFiles(files, versionRes.id)
       // The hook handles success callbacks, just reset our local state
@@ -212,9 +202,7 @@ export const EntityPanelUploader = ({
       // update entity panel to focus the new version
       onVersionCreated?.(versionRes.id)
     } catch (error: any) {
-      console.error('Error uploading version:', error)
-      console.log(error.message)
-      toast.error(error.message)
+      handleUploadError(error, 'uploading version')
       resetState()
     }
   }

@@ -5,7 +5,7 @@ import TaskList from '@containers/taskList'
 
 import Products from './Products/Products'
 import BrowserDetailsPanel from './BrowserDetailsPanel'
-import { useVersionUploadContext } from '@containers/VersionUploader/context/VersionUploadContext'
+import { useVersionUploadContext } from '@shared/components'
 import { FC } from 'react'
 
 const detailsMinWidth = 533

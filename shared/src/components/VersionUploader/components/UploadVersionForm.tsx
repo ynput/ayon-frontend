@@ -4,7 +4,6 @@ import { FormLayout, FormRow, InputText, InputNumber, Dropdown } from '@ynput/ay
 import { productTypes } from '@shared/util'
 import type { DropdownRef } from '@ynput/ayon-react-components'
 import { ReviewableUpload } from '@shared/components'
-import { useAppDispatch } from '@state/store'
 import { useVersionUploadContext } from '../context/VersionUploadContext'
 
 const StyledForm = styled.form`
@@ -85,9 +84,13 @@ export const UploadVersionForm: FC<UploadVersionFormProps> = ({
   const previousProductTypeRef = useRef<string>(formData.productType)
   const dropdownRef = useRef<DropdownRef>(null)
   const formRef = useRef<HTMLFormElement>(null)
-  const dispatch = useAppDispatch()
-  const { pendingFiles, setPendingFiles, onCloseVersionUpload, extractAndSetVersionFromFiles } =
-    useVersionUploadContext()
+  const {
+    pendingFiles,
+    setPendingFiles,
+    onCloseVersionUpload,
+    extractAndSetVersionFromFiles,
+    dispatch,
+  } = useVersionUploadContext()
 
   const productTypeOptions = Object.entries(productTypes).map(([key, value]) => ({
     value: key,

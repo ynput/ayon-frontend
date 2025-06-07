@@ -1,4 +1,4 @@
-import { useVersionUploadContext } from '@containers/VersionUploader/context/VersionUploadContext'
+import { useVersionUploadContext } from '@shared/components'
 import { useEntityListsContext } from '@pages/ProjectListsPage/context'
 import {
   ContextMenuItemConstructor,

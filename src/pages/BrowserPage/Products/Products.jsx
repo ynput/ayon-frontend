@@ -38,7 +38,7 @@ import { toast } from 'react-toastify'
 import * as Styled from './Products.styled'
 import { openViewer } from '@state/viewer'
 import { useEntityListsContext } from '@pages/ProjectListsPage/context'
-import { useVersionUploadContext } from '@containers/VersionUploader/context/VersionUploadContext'
+import { useVersionUploadContext } from '@shared/components'
 import { useDeleteVersionMutation } from '@shared/api'
 import { useDeleteProductMutation } from '@queries/product/updateProduct'
 
