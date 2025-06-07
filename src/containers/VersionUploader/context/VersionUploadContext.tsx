@@ -12,7 +12,7 @@ import React, {
   useCallback,
   useEffect,
 } from 'react'
-import { useCreateProductMutation } from '@queries/product/createProduct'
+import { useCreateProductMutation } from '@shared/api'
 import { useAppDispatch } from '@state/store'
 import { productSelected } from '@state/context'
 import { extractVersionFromFilename } from '@shared/utils/extractVersionFromFilename'

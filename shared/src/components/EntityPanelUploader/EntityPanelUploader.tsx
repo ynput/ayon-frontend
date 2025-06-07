@@ -1,8 +1,13 @@
 import { ChangeEvent, useRef, useState } from 'react'
 import clsx from 'clsx'
+import { camelCase, upperFirst } from 'lodash'
 
 import { ThumbnailWrapper } from '@shared/containers'
-import { useCreateVersionMutation, useUpdateEntitiesMutation } from '@shared/api'
+import {
+  useCreateVersionMutation,
+  useUpdateEntitiesMutation,
+  useCreateProductMutation,
+} from '@shared/api'
 import * as Styled from './EntityPanelUploader.styled'
 import { ThumbnailUploadProvider } from '../../context/ThumbnailUploaderContext'
 import Dropzone, { DropzoneType } from './Dropzone'
@@ -10,6 +15,7 @@ import axios from 'axios'
 import { toast } from 'react-toastify'
 import { useReviewablesUpload } from '../ReviewablesList'
 import { useDetailsPanelContext } from '@shared/context'
+import EntityPanelUploaderDialog from './EntityPanelUploaderDialog'
 // 3811c830436f11f0abc9d6ac5bf0bcfb
 
 type Operation = {
@@ -52,6 +58,10 @@ export const EntityPanelUploader = ({
   const [uploadingType, setUploadingType] = useState<UploadType | null>(null)
   const [progress, setProgress] = useState(0)
 
+  // Dialog state for product creation
+  const [showProductDialog, setShowProductDialog] = useState(false)
+  const [pendingFiles, setPendingFiles] = useState<FileList | null>(null)
+
   // Check if we have exactly one entity selected
   const singleEntity = entities.length === 1 ? entities[0] : null
   // extra all entity IDs for the single version entity
@@ -59,7 +69,7 @@ export const EntityPanelUploader = ({
   const folderId: string | undefined = singleEntity?.folder?.id
   const productId: string | undefined = singleEntity?.product?.id
   const versionId: string | undefined = singleEntity?.id
-  const canUploadVersions = Boolean(singleEntity && entityType === 'version')
+  const canUploadVersions = Boolean(singleEntity && entityType !== 'representation')
 
   // Use the custom hook for reviewable upload logic (only when single version)
   const { handleFileUpload: uploadReviewableFiles } = useReviewablesUpload({
@@ -92,9 +102,69 @@ export const EntityPanelUploader = ({
     setDraggingZone(null)
     dragCounterRef.current = 0
     setProgress(0)
+    setShowProductDialog(false)
+    setPendingFiles(null)
+  }
+
+  // Handle dialog submission - create product and upload version
+  const handleDialogSubmit = async (productName: string) => {
+    if (!pendingFiles || !singleEntity) {
+      setShowProductDialog(false)
+      setPendingFiles(null)
+      return
+    }
+
+    // Sanitize product name: convert spaces to camelCase and only allow alphanumeric, underscore, and hyphen
+    const sanitizedName = camelCase(productName) // Convert to camelCase (handles spaces)
+      .replace(/[^a-zA-Z0-9_-]/g, '') // Only allow alphanumeric, underscore, and hyphen
+
+    if (!sanitizedName.trim()) {
+      toast.error(
+        'Product name must contain valid characters (letters, numbers, underscore, or hyphen)',
+      )
+      return
+    }
+
+    try {
+      if (!folderId) {
+        throw new Error('Folder ID is required to create a product')
+      }
+      setUploadingType('version')
+
+      // Create the product
+      const productRes = await createProduct({
+        projectName,
+        productPostModel: {
+          folderId: folderId,
+          name: sanitizedName,
+          productType: 'review', // default product type for uploaded files
+        },
+      }).unwrap()
+
+      if (!productRes.id) {
+        throw new Error('Failed to create product')
+      }
+
+      // Close dialog and proceed with version upload
+      setShowProductDialog(false)
+      await uploadVersionWithProduct(pendingFiles, productRes.id)
+      setPendingFiles(null)
+    } catch (error: any) {
+      console.error('Error creating product:', error)
+      toast.error(error.message || 'Failed to create product')
+      resetState()
+    }
+  }
+
+  // Handle dialog cancellation
+  const handleDialogCancel = () => {
+    setShowProductDialog(false)
+    setPendingFiles(null)
+    resetState()
   }
 
   const [createVersion] = useCreateVersionMutation()
+  const [createProduct] = useCreateProductMutation()
   // Handle version/reviewable file upload
   const handleVersionUpload = async (files: FileList) => {
     if (!canUploadVersions || !singleEntity) {
@@ -104,13 +174,21 @@ export const EntityPanelUploader = ({
 
     const productId = singleEntity.product?.id
     if (!productId) {
-      toast.error('Product ID is required for version upload')
-      return resetState()
+      // Show dialog to create product first
+      setPendingFiles(files)
+      setShowProductDialog(true)
+      return
     }
 
+    // If we have a productId, proceed with upload
+    await uploadVersionWithProduct(files, productId)
+  }
+
+  // Helper function to handle the actual version upload
+  const uploadVersionWithProduct = async (files: FileList, productId: string) => {
     try {
-      const nextVersion = singleEntity.product.latestVersion.version
-        ? singleEntity.product.latestVersion.version + 1
+      const nextVersion = singleEntity!.product?.latestVersion?.version
+        ? singleEntity!.product.latestVersion.version + 1
         : 1
 
       // create a new version
@@ -118,6 +196,7 @@ export const EntityPanelUploader = ({
         projectName,
         versionPostModel: {
           productId,
+          taskId, // previous version could have a taskId or we are uploading on a task
           version: nextVersion,
         },
       }).unwrap()
@@ -357,6 +436,14 @@ export const EntityPanelUploader = ({
           ref={versionsInputRef}
         />
       </Styled.DragAndDropWrapper>
+
+      {/* Product creation dialog */}
+      <EntityPanelUploaderDialog
+        isOpen={showProductDialog}
+        files={pendingFiles}
+        onSubmit={handleDialogSubmit}
+        onCancel={handleDialogCancel}
+      />
     </ThumbnailUploadProvider>
   )
 }
