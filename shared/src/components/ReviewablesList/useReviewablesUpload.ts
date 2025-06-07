@@ -14,6 +14,7 @@ export interface UseReviewablesUploadProps {
   productId?: string | null
   dispatch: any
   onUpload?: () => void
+  onProgress?: (progress: number) => void
 }
 
 export interface UploadHandlers {
@@ -30,6 +31,7 @@ export const useReviewablesUpload = ({
   productId,
   dispatch,
   onUpload,
+  onProgress,
 }: UseReviewablesUploadProps): UploadHandlers => {
   const [uploading, setUploads] = useState<{ [key: string]: ReviewableProgress[] }>({})
 
@@ -135,6 +137,16 @@ export const useReviewablesUpload = ({
               }
             })
 
+            // Calculate overall progress across all files
+            const totalProgress = updatedUploads.reduce(
+              (sum, upload) => sum + (upload.progress || 0),
+              0,
+            )
+            const overallProgress = Math.round(totalProgress / updatedUploads.length)
+
+            // Call the onProgress callback with overall progress
+            onProgress?.(overallProgress)
+
             // update state
             return {
               ...uploads,
@@ -177,6 +189,7 @@ export const useReviewablesUpload = ({
       taskId,
       handleRemoveUpload,
       onUpload,
+      onProgress,
     ],
   )
 

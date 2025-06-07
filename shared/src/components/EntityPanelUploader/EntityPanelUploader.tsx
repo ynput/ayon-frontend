@@ -69,6 +69,9 @@ export const EntityPanelUploader = ({
         setUploadingType(null)
         setProgress(0)
       },
+      onProgress: (progress) => {
+        setProgress(progress)
+      },
     })
 
   // Filter dropzones based on whether we can upload reviewables
@@ -321,22 +324,15 @@ export const EntityPanelUploader = ({
             ))}
           </Styled.DropZones>
         )}
-        {(uploadingType === 'thumbnail' ||
-          (uploadingType === 'version' &&
-            singleVersionEntity &&
-            reviewableUploading[singleVersionEntity.id]?.length > 0)) && (
+        {(uploadingType === 'thumbnail' || uploadingType === 'version') && (
           <Styled.DropZones>
             <Styled.UploadingProgress>
               <Styled.Progress
                 style={{
-                  right: uploadingType === 'thumbnail' ? `${100 - progress}%` : '0%',
+                  right: `${100 - progress}%`,
                 }}
               />
-              <span className="label">
-                {uploadingType === 'thumbnail'
-                  ? `Uploading ${uploadingType}...`
-                  : `Uploading reviewables...`}
-              </span>
+              <span className="label">{`Uploading ${uploadingType}...`}</span>
             </Styled.UploadingProgress>
             <Styled.CancelButton icon={'close'} variant="text" onClick={resetState} />
           </Styled.DropZones>
