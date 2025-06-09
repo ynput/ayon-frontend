@@ -152,6 +152,7 @@ export default function useFolderRelationships({
       // Traverse up the folder hierarchy until we've found values for all attributes
       // or we've reached the root folder
       while (pendingAttribs.size > 0) {
+        if (!currentId) break
         const folder = getEntityById(currentId)
         if (!folder || !currentId) {
           // use the project attrib

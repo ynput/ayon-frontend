@@ -52,7 +52,7 @@ import { useColumnSettingsContext } from './ColumnSettingsContext'
 import { ProjectTableModulesType } from '../hooks'
 import { ProjectTableContext, ProjectTableContextType } from './ProjectTableContext'
 
-export const parseRowId = (rowId: string) => rowId.split(ROW_ID_SEPARATOR)[0] || rowId
+export const parseRowId = (rowId: string) => rowId?.split(ROW_ID_SEPARATOR)[0] || rowId
 
 export type TableUser = {
   name: string
@@ -195,6 +195,11 @@ export const ProjectTableProvider = ({
 
   const getEntityById = useCallback(
     (id: string): EntityMap | undefined => {
+      // defensive check to ensure id is a string
+      if (typeof id !== 'string') {
+        console.warn('getEntityById called with non-string id:', id)
+        return undefined
+      }
       // always parse the id to remove any suffixes
       // this can happen if the id is a group by id (we need to make the row id unique)
       const parsedId = parseRowId(id)

@@ -170,16 +170,23 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
     const folderIds = new Set<string>()
     for (const operation of operations) {
       if (operation.entityType === 'folder') {
-        // @ts-ignore
-        folderIds.add(operation.data?.parentId)
+        if (!operation.data?.parentId) {
+          console.warn('Folder operation without parentId:', operation)
+          continue // Skip folders without parentId
+        }
+        folderIds.add(operation.data.parentId)
       } else if (operation.entityType === 'task') {
-        // @ts-ignore
-        folderIds.add(operation.data?.folderId)
+        if (!operation.data?.folderId) {
+          console.warn('Task operation without folderId:', operation)
+          continue // Skip tasks without folderId
+        }
+        folderIds.add(operation.data.folderId)
       }
     }
 
     const attribsByParentId = new Map<string, any>()
     for (const folderId of folderIds) {
+      if (!folderId) continue // Skip if no folderId
       const nonInheritedValues = findNonInheritedValues(
         folderId,
         attribFields.map((field) => field.name),
