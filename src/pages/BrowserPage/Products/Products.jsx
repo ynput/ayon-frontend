@@ -9,7 +9,7 @@ import { DetailsDialog } from '@shared/components'
 import { useLocalStorage, useScopedStatuses } from '@shared/hooks'
 import api, { useUpdateEntitiesMutation } from '@shared/api'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
-import { productTypes, groupResult } from '@shared/util'
+import { productTypes, groupResult, confirmDelete } from '@shared/util'
 import { extractIdFromClassList } from '@shared/containers/Feed'
 
 import {
@@ -38,7 +38,9 @@ import { toast } from 'react-toastify'
 import * as Styled from './Products.styled'
 import { openViewer } from '@state/viewer'
 import { useEntityListsContext } from '@pages/ProjectListsPage/context'
-import { useVersionUploadContext } from '@containers/VersionUploader/context/VersionUploadContext'
+import { useVersionUploadContext } from '@shared/components'
+import { useDeleteVersionMutation } from '@shared/api'
+import { useDeleteProductMutation } from '@queries/product/updateProduct'
 
 const Products = () => {
   const dispatch = useDispatch()
@@ -592,6 +594,41 @@ const Products = () => {
       )
     }
   }
+  const [deleteProduct] = useDeleteProductMutation()
+  const handleDeleteProduct = async (productId, productName) => {
+    confirmDelete({
+      label: `product ${productName}`,
+      accept: async () => {
+        await deleteProduct({ productId, projectName }).unwrap()
+        // refetch the product list to update the UI
+        refetch()
+        // also clear the focused products and versions
+        dispatch(setFocusedProducts([]))
+        dispatch(setFocusedVersions([]))
+        dispatch(setSelectedVersions({}))
+        dispatch(setUri(`ayon+entity://${projectName}/`))
+        dispatch(onFocusChanged(null))
+      },
+    })
+  }
+
+  const [deleteVersion] = useDeleteVersionMutation()
+  const handleDeleteVersion = async (product) => {
+    confirmDelete({
+      label: `version ${product.versionName}`,
+      accept: async () => {
+        await deleteVersion({ versionId: product.versionId, projectName }).unwrap()
+        // refetch the product list to update the UI
+        refetch()
+        dispatch(setSelectedVersions({}))
+
+        // if it;s the last version, ask to delete the product
+        if (product.versionList.length === 1) {
+          handleDeleteProduct(product.id, product.name)
+        }
+      },
+    })
+  }
 
   const {
     buildAddToListMenu,
@@ -603,6 +640,9 @@ const Products = () => {
 
   const ctxMenuItems = (id, selectedProducts, selectedVersions) => {
     const selectedEntities = selectedVersions.map((id) => ({ entityId: id, entityType: 'version' }))
+    const selectedProductsData = productsData.filter((p) => selectedProducts.includes(p.id))
+    const firstProductData = selectedProductsData[0] || {}
+
     return [
       {
         label: 'Open in viewer',
@@ -635,6 +675,13 @@ const Products = () => {
         label: 'Version detail',
         command: () => setShowDetail('version'),
         icon: 'database',
+      },
+      {
+        label: `Delete version (${firstProductData?.versionName})`,
+        icon: 'delete',
+        danger: true,
+        hidden: !firstProductData?.versionId || selectedProducts.length !== 1,
+        command: () => handleDeleteVersion(firstProductData),
       },
     ]
   }

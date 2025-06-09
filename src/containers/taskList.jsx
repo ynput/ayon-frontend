@@ -5,7 +5,7 @@ import { TablePanel, Section } from '@ynput/ayon-react-components'
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 
-import { DetailsDialog } from '@shared/components'
+import { DetailsDialog, useVersionUploadContext } from '@shared/components'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import { useTableKeyboardNavigation, extractIdFromClassList } from '@shared/containers/Feed'
 import { CellWithIcon } from '@components/icons'
@@ -29,6 +29,8 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
   const previousTasksNames = useSelector((state) => state.context.focused.tasksNames)
   const pairing = useSelector((state) => state.context.pairing)
   const userName = useSelector((state) => state.user.name)
+
+  const { onOpenVersionUpload } = useVersionUploadContext()
 
   const [showDetail, setShowDetail] = useState(false)
 
@@ -152,13 +154,27 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
 
   // CONTEXT MENU
   const ctxMenuItems = (selected = []) => {
+    const firstSelected = selected[0]
+    const firstSelectedData = tasksData.find((task) => task.data.id === firstSelected)
     const selectedEntities = selected.map((id) => ({ entityId: id, entityType: 'task' }))
+
     return [
       {
         label: 'Open in viewer',
         icon: 'play_circle',
         shortcut: 'Spacebar',
         command: () => openInViewer(selected[0], false),
+      },
+      {
+        label: 'Upload version',
+        icon: 'upload',
+        command: () =>
+          onOpenVersionUpload?.({
+            taskId: selected[0],
+            folderId: firstSelectedData?.data?.folderId,
+          }),
+        disabled: selected.length !== 1,
+        hidden: !onOpenVersionUpload,
       },
       {
         label: `Filter products by task${selected.length > 1 ? 's' : ''}`,

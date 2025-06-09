@@ -104,10 +104,20 @@ export const transformDetailsPanelQueriesData = ({
         hasReviewables: version.hasReviewables,
         thumbnailId: version.thumbnailId,
         folder: version.product?.folder,
+        task: version.task ?? undefined,
         product: {
           id: version.product?.id,
           name: version.product?.name,
           productType: version.product?.productType,
+          latestVersion: version.product.latestVersion,
+        },
+        version: {
+          version: version.version,
+          id: version.id,
+          name: version.name,
+          updatedAt: version.updatedAt,
+          createdAt: version.createdAt,
+          productId: version.product.id,
         },
         representations: version.representations?.edges?.map((edge) => edge.node) || [],
       }

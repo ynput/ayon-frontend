@@ -2,7 +2,7 @@ import {
   GetLatestVersionResult,
   useCreateVersionMutation,
   useGetLatestProductVersionQuery,
-} from '@queries/versions/uploadVersions'
+} from '@shared/api'
 import React, {
   createContext,
   useContext,
@@ -12,11 +12,19 @@ import React, {
   useCallback,
   useEffect,
 } from 'react'
-import { useCreateProductMutation } from '@queries/product/createProduct'
-import { useAppDispatch } from '@state/store'
-import { productSelected } from '@state/context'
+import { useCreateProductMutation } from '@shared/api'
 import { extractVersionFromFilename } from '@shared/utils/extractVersionFromFilename'
 import { productTypes } from '@shared/util'
+import { toast } from 'react-toastify'
+import {
+  validateFormData as validateFormDataHelper,
+  createProductAndVersion,
+  createVersionHelper,
+  handleUploadError,
+  getNextVersionNumber,
+  type ProductCreationData,
+  type VersionCreationData,
+} from '@shared/utils/versionUploadHelpers'
 
 export interface FormData {
   version: number
@@ -26,6 +34,7 @@ export interface FormData {
 interface VersionUploadContextType {
   productId: string
   folderId: string
+  taskId: string
   setProductId: (productId: string) => void
   setFolderId: (folderId: string) => void
   isOpen: boolean
@@ -40,11 +49,13 @@ interface VersionUploadContextType {
   error: string
   createdProductId: string | null
   createdVersionId: string | null
-  onOpenVersionUpload: (params: { productId?: string; folderId?: string }) => void
+  onOpenVersionUpload: (params: { productId?: string; folderId?: string; taskId?: string }) => void
   onCloseVersionUpload: () => void
   onUploadVersion: (data: FormData) => Promise<{ productId: string; versionId: string }>
   handleFormChange: (key: keyof FormData, value: string | number) => void
   handleFormSubmit: (formData: FormData) => Promise<void>
+  // pass through
+  dispatch: any
 }
 
 const VersionUploadContext = createContext<VersionUploadContextType | undefined>(undefined)
@@ -52,20 +63,26 @@ const VersionUploadContext = createContext<VersionUploadContextType | undefined>
 interface VersionUploadProviderProps {
   children: ReactNode
   projectName: string
+  onVersionCreated: (productId: string, versionId: string) => void
+  dispatch: any
 }
 
 const defaultFormData: FormData = {
   version: 1,
-  name: productTypes.render.name,
-  productType: 'render',
+  name: productTypes.review.name,
+  productType: 'review',
 }
 
 export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
   children,
   projectName,
+  onVersionCreated,
+  dispatch,
 }) => {
   const [folderId, setFolderId] = useState<string>('')
   const [productId, setProductId] = useState<string>('')
+  // optional taskId to link the version to
+  const [taskId, setTaskId] = useState<string>('')
   const [isOpen, setIsOpen] = useState<boolean>(false)
   const [pendingFiles, setPendingFiles] = useState<Array<{ file: File; preview?: string }>>([])
   const [form, setForm] = useState<FormData>(defaultFormData)
@@ -83,20 +100,14 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
   )
 
   const onOpenVersionUpload = useCallback<VersionUploadContextType['onOpenVersionUpload']>(
-    ({ productId, folderId }) => {
+    ({ productId, folderId, taskId }) => {
       setProductId(productId || '')
       setFolderId(folderId || '')
+      setTaskId(taskId || '')
       setIsOpen(true)
     },
     [],
   )
-
-  const dispatch = useAppDispatch()
-
-  const selectNewVersion = (productId: string, versionId: string) => {
-    // set selected product
-    dispatch(productSelected({ products: [productId], versions: [versionId] }))
-  }
 
   const onCloseVersionUpload = useCallback<VersionUploadContextType['onCloseVersionUpload']>(() => {
     // Clean up pending files
@@ -114,6 +125,7 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
     setIsOpen(false)
     setProductId('')
     setFolderId('')
+    setTaskId('')
   }, [pendingFiles])
 
   const [createProduct] = useCreateProductMutation()
@@ -125,16 +137,13 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
       try {
         if (version && productId) {
           // product already exists, create new version for it
-          const versionRes = await createVersion({
-            projectName,
-            versionPostModel: {
-              productId,
-              version: data.version,
-            },
-          }).unwrap()
+          const versionRes = await createVersionHelper(createVersion, projectName, {
+            productId,
+            version: data.version,
+          })
 
           // select the new version
-          selectNewVersion(productId, versionRes.id)
+          onVersionCreated(productId, versionRes.id)
 
           return {
             productId,
@@ -142,26 +151,25 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
           }
         } else {
           // product does not exist, create new product with version
-          const productRes = await createProduct({
+          const { product: productRes, version: versionRes } = await createProductAndVersion(
+            createProduct,
+            createVersion,
             projectName,
-            productPostModel: {
+            {
               folderId,
               name: data.name,
-              productType: data.productType,
+              productType: data.productType || 'review',
             },
-          }).unwrap()
-
-          // Now create the version for the newly created product
-          const versionRes = await createVersion({
-            projectName,
-            versionPostModel: {
-              productId: productRes.id,
+            {
               version: data.version,
+              taskId: taskId || undefined,
             },
-          }).unwrap()
+          )
 
           // select the new product and version
-          selectNewVersion(productRes.id, versionRes.id)
+          onVersionCreated(productRes.id, versionRes.id)
+
+          toast.success('Created new version')
 
           return {
             productId: productRes.id,
@@ -169,13 +177,11 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
           }
         }
       } catch (error: any) {
-        // Handle error appropriately
         console.error('Error uploading version:', error)
-        // reject
-        throw error.data.detail
+        throw error.message || error
       }
     },
-    [onCloseVersionUpload, productId, folderId, version, projectName],
+    [onCloseVersionUpload, productId, folderId, taskId, version, projectName],
   )
 
   const extractAndSetVersionFromFiles = useCallback(
@@ -207,26 +213,9 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
   }, [])
 
   const validateFormData = () => {
-    // check version
-    if (form.version < 1) throw 'Version must be greater than 0'
-    if (version && form.version <= version.version) {
-      throw `Version must be greater than ${version.version}`
-    }
-    // check product
-    if (!version) {
-      //  check name
-      if (!form.name || form.name.trim() === '') {
-        throw 'Name is required'
-      }
-      // check name regex
-      const nameRegex = /^[a-zA-Z0-9_]([a-zA-Z0-9_\\.\\-]*[a-zA-Z0-9_])?$/
-      if (!nameRegex.test(form.name)) {
-        throw 'Product name can only contain alphanumeric characters, underscores, dots, and dashes, and must not start or end with a dot or dash'
-      }
-      // check productType
-      if (!form.productType || !Object.keys(productTypes).includes(form.productType)) {
-        throw 'Product type is required and must be a valid product type'
-      }
+    const validation = validateFormDataHelper(form, version?.version, !version)
+    if (!validation.isValid) {
+      throw validation.error
     }
   }
 
@@ -269,7 +258,7 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
     if (version) {
       setForm({
         ...defaultFormData,
-        version: version.version + 1,
+        version: getNextVersionNumber(version),
       })
     } else {
       setForm(defaultFormData)
@@ -285,6 +274,7 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
       productId,
       setProductId,
       folderId,
+      taskId,
       setFolderId,
       isOpen,
       projectName,
@@ -303,11 +293,13 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
       createdVersionId,
       handleFormChange,
       handleFormSubmit,
+      dispatch,
     }),
     [
       folderId,
       setFolderId,
       productId,
+      taskId,
       setProductId,
       isOpen,
       projectName,
@@ -325,6 +317,7 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
       createdVersionId,
       handleFormChange,
       handleFormSubmit,
+      dispatch,
     ],
   )
 

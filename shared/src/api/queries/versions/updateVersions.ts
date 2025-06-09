@@ -1,4 +1,4 @@
-import { GetLatestProductVersionQuery, gqlApi, versionsApi } from '@shared/api'
+import { GetLatestProductVersionQuery, gqlApi, versionsApi } from '@shared/api/generated'
 
 export type GetLatestVersionResult =
   GetLatestProductVersionQuery['project']['versions']['edges'][0]['node']
@@ -39,9 +39,18 @@ const uploadVersions = versionsApi.enhanceEndpoints({
     createVersion: {
       invalidatesTags: (_r, _e, { versionPostModel }) => [
         { type: 'product', id: versionPostModel.productId },
+        { type: 'entities', id: 'VERSION' }, // invalidate all version entity panels
+      ],
+      transformErrorResponse: (error: any) => ({ message: error.data?.detail }),
+    },
+    deleteVersion: {
+      invalidatesTags: (_r, _e, { versionId }) => [
+        { type: 'version', id: versionId },
+        { type: 'product', id: versionId },
       ],
     },
   },
 })
 
-export const { useCreateVersionMutation } = uploadVersions
+export const { useCreateVersionMutation, useDeleteVersionMutation } = uploadVersions
+export { uploadVersions as versionsQueries }

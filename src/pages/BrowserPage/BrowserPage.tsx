@@ -5,12 +5,8 @@ import TaskList from '@containers/taskList'
 
 import Products from './Products/Products'
 import BrowserDetailsPanel from './BrowserDetailsPanel'
-import {
-  useVersionUploadContext,
-  VersionUploadProvider,
-} from '@containers/VersionUploader/context/VersionUploadContext'
+import { useVersionUploadContext } from '@shared/components'
 import { FC } from 'react'
-import UploadVersionDialog from '@containers/VersionUploader/components/UploadVersionDialog'
 
 const detailsMinWidth = 533
 const detailsMaxWidth = '40vw'
@@ -57,12 +53,7 @@ const BrowserPage: FC<BrowserPageProps> = () => {
 }
 
 const BrowserPageWithProviders: FC<BrowserPageProps> = (props) => {
-  return (
-    <VersionUploadProvider projectName={props.projectName}>
-      <BrowserPage {...props} />
-      <UploadVersionDialog />
-    </VersionUploadProvider>
-  )
+  return <BrowserPage {...props} />
 }
 
 export default BrowserPageWithProviders

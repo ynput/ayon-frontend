@@ -1188,7 +1188,6 @@ export type UserAttribType = {
   avatarUrl?: Maybe<Scalars['String']['output']>;
   developerMode?: Maybe<Scalars['Boolean']['output']>;
   email?: Maybe<Scalars['String']['output']>;
-  freelancer?: Maybe<Scalars['Boolean']['output']>;
   fullName?: Maybe<Scalars['String']['output']>;
 };
 
@@ -1465,7 +1464,7 @@ export type GetDetailsPanelRepresentationQueryVariables = Exact<{
 }>;
 
 
-export type GetDetailsPanelRepresentationQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', representation?: { __typename?: 'RepresentationNode', id: string, versionId: string, name: string, status: string, tags: Array<string>, updatedAt: any, createdAt: any, allAttrib: string, context?: string | null, version: { __typename?: 'VersionNode', id: string, thumbnailId?: string | null, name: string, updatedAt: any, createdAt: any, productId: string, version: number, author?: string | null, task?: { __typename?: 'TaskNode', id: string, name: string, label?: string | null, assignees: Array<string>, taskType: string } | null, product: { __typename?: 'ProductNode', id: string, name: string, productType: string, folder: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, path?: string | null, folderType: string } } } } | null } };
+export type GetDetailsPanelRepresentationQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', representation?: { __typename?: 'RepresentationNode', id: string, versionId: string, name: string, status: string, tags: Array<string>, updatedAt: any, createdAt: any, allAttrib: string, context?: string | null, version: { __typename?: 'VersionNode', id: string, thumbnailId?: string | null, name: string, updatedAt: any, createdAt: any, productId: string, version: number, author?: string | null, task?: { __typename?: 'TaskNode', id: string, name: string, label?: string | null, assignees: Array<string>, taskType: string } | null, product: { __typename?: 'ProductNode', id: string, name: string, productType: string, folder: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, path?: string | null, folderType: string }, latestVersion?: { __typename?: 'VersionNode', version: number } | null } } } | null } };
 
 export type GetDetailsPanelTaskQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
@@ -1481,7 +1480,7 @@ export type GetDetailsPanelVersionQueryVariables = Exact<{
 }>;
 
 
-export type GetDetailsPanelVersionQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', projectName: string, code: string, version?: { __typename?: 'VersionNode', id: string, version: number, name: string, author?: string | null, status: string, tags: Array<string>, updatedAt: any, createdAt: any, thumbnailId?: string | null, hasReviewables: boolean, allAttrib: string, product: { __typename?: 'ProductNode', id: string, name: string, productType: string, folder: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, path?: string | null, folderType: string } }, task?: { __typename?: 'TaskNode', id: string, name: string, label?: string | null, assignees: Array<string>, taskType: string } | null, representations: { __typename?: 'RepresentationsConnection', edges: Array<{ __typename?: 'RepresentationEdge', node: { __typename?: 'RepresentationNode', id: string, name: string, fileCount: number } }> } } | null } };
+export type GetDetailsPanelVersionQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', projectName: string, code: string, version?: { __typename?: 'VersionNode', id: string, version: number, name: string, author?: string | null, status: string, tags: Array<string>, updatedAt: any, createdAt: any, thumbnailId?: string | null, hasReviewables: boolean, allAttrib: string, product: { __typename?: 'ProductNode', id: string, name: string, productType: string, folder: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, path?: string | null, folderType: string }, latestVersion?: { __typename?: 'VersionNode', version: number } | null }, task?: { __typename?: 'TaskNode', id: string, name: string, label?: string | null, assignees: Array<string>, taskType: string } | null, representations: { __typename?: 'RepresentationsConnection', edges: Array<{ __typename?: 'RepresentationEdge', node: { __typename?: 'RepresentationNode', id: string, name: string, fileCount: number } }> } } | null } };
 
 export type GetProductVersionsQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
@@ -1493,7 +1492,7 @@ export type GetProductVersionsQuery = { __typename?: 'Query', project: { __typen
 
 export type DetailsPanelFolderFragmentFragment = { __typename?: 'FolderNode', id: string, name: string, label?: string | null, path?: string | null, folderType: string };
 
-export type DetailsPanelProductFragmentFragment = { __typename?: 'ProductNode', id: string, name: string, productType: string };
+export type DetailsPanelProductFragmentFragment = { __typename?: 'ProductNode', id: string, name: string, productType: string, latestVersion?: { __typename?: 'VersionNode', version: number } | null };
 
 export type DetailsPanelRepresentationFragmentFragment = { __typename?: 'RepresentationNode', id: string, name: string, fileCount: number };
 
@@ -1616,6 +1615,14 @@ export type GetAllProjectUsersAsAssigneeQueryVariables = Exact<{
 
 export type GetAllProjectUsersAsAssigneeQuery = { __typename?: 'Query', users: { __typename?: 'UsersConnection', edges: Array<{ __typename?: 'UserEdge', node: { __typename?: 'UserNode', name: string, updatedAt: any, attrib: { __typename?: 'UserAttribType', fullName?: string | null } } }> } };
 
+export type GetLatestProductVersionQueryVariables = Exact<{
+  projectName: Scalars['String']['input'];
+  productId: Scalars['String']['input'];
+}>;
+
+
+export type GetLatestProductVersionQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', versions: { __typename?: 'VersionsConnection', edges: Array<{ __typename?: 'VersionEdge', node: { __typename?: 'VersionNode', id: string, name: string, version: number, productId: string, createdAt: any, updatedAt: any, status: string, active: boolean } }> } } };
+
 export type GetInboxHasUnreadQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -1677,14 +1684,6 @@ export type GetTasksProgressQuery = { __typename?: 'Query', project: { __typenam
 
 export type ProgressTaskFragmentFragment = { __typename?: 'TaskNode', projectName: string, id: string, name: string, label?: string | null, taskType: string, status: string, assignees: Array<string>, updatedAt: any, active: boolean, hasReviewables: boolean, tags: Array<string>, attrib: { __typename?: 'TaskAttribType', priority?: string | null, endDate?: any | null, resolutionHeight?: number | null, resolutionWidth?: number | null, fps?: number | null }, folder: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, folderType: string, parents: Array<string>, status: string, updatedAt: any, parent?: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, parents: Array<string> } | null } };
 
-export type GetLatestProductVersionQueryVariables = Exact<{
-  projectName: Scalars['String']['input'];
-  productId: Scalars['String']['input'];
-}>;
-
-
-export type GetLatestProductVersionQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', versions: { __typename?: 'VersionsConnection', edges: Array<{ __typename?: 'VersionEdge', node: { __typename?: 'VersionNode', id: string, name: string, version: number, productId: string, createdAt: any, updatedAt: any, status: string, active: boolean } }> } } };
-
 export const ActivityFragmentFragmentDoc = `
     fragment ActivityFragment on ActivityNode {
   activityId
@@ -1743,6 +1742,9 @@ export const DetailsPanelProductFragmentFragmentDoc = `
   id
   name
   productType
+  latestVersion {
+    version
+  }
 }
     `;
 export const DetailsPanelRepresentationFragmentFragmentDoc = `
@@ -2369,6 +2371,26 @@ export const GetAllProjectUsersAsAssigneeDocument = `
   }
 }
     `;
+export const GetLatestProductVersionDocument = `
+    query GetLatestProductVersion($projectName: String!, $productId: String!) {
+  project(name: $projectName) {
+    versions(latestOnly: true, productIds: [$productId]) {
+      edges {
+        node {
+          id
+          name
+          version
+          productId
+          createdAt
+          updatedAt
+          status
+          active
+        }
+      }
+    }
+  }
+}
+    `;
 export const GetInboxHasUnreadDocument = `
     query GetInboxHasUnread {
   inbox(
@@ -2487,26 +2509,6 @@ export const GetTasksProgressDocument = `
   }
 }
     ${ProgressTaskFragmentFragmentDoc}`;
-export const GetLatestProductVersionDocument = `
-    query GetLatestProductVersion($projectName: String!, $productId: String!) {
-  project(name: $projectName) {
-    versions(latestOnly: true, productIds: [$productId]) {
-      edges {
-        node {
-          id
-          name
-          version
-          productId
-          createdAt
-          updatedAt
-          status
-          active
-        }
-      }
-    }
-  }
-}
-    `;
 
 const injectedRtkApi = api.injectEndpoints({
   endpoints: (build) => ({
@@ -2570,6 +2572,9 @@ const injectedRtkApi = api.injectEndpoints({
     GetAllProjectUsersAsAssignee: build.query<GetAllProjectUsersAsAssigneeQuery, GetAllProjectUsersAsAssigneeQueryVariables | void>({
       query: (variables) => ({ document: GetAllProjectUsersAsAssigneeDocument, variables })
     }),
+    GetLatestProductVersion: build.query<GetLatestProductVersionQuery, GetLatestProductVersionQueryVariables>({
+      query: (variables) => ({ document: GetLatestProductVersionDocument, variables })
+    }),
     GetInboxHasUnread: build.query<GetInboxHasUnreadQuery, GetInboxHasUnreadQueryVariables | void>({
       query: (variables) => ({ document: GetInboxHasUnreadDocument, variables })
     }),
@@ -2590,9 +2595,6 @@ const injectedRtkApi = api.injectEndpoints({
     }),
     GetTasksProgress: build.query<GetTasksProgressQuery, GetTasksProgressQueryVariables>({
       query: (variables) => ({ document: GetTasksProgressDocument, variables })
-    }),
-    GetLatestProductVersion: build.query<GetLatestProductVersionQuery, GetLatestProductVersionQueryVariables>({
-      query: (variables) => ({ document: GetLatestProductVersionDocument, variables })
     }),
   }),
 });
