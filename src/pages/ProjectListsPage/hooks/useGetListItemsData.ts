@@ -39,7 +39,7 @@ const useGetListItemsData = ({
     if (!sorting) return undefined
     let sortId = sorting
     if (singleSort?.id === 'name' && entityType === 'version') {
-      sortId = 'entity_version'
+      sortId = 'path'
     } else if (sortId.startsWith('attrib') && sortId.includes('_')) {
       // convert attrib sorting to query format
       sortId = sortId.replace('_', '.')
