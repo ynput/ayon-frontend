@@ -5,11 +5,11 @@ import styled from 'styled-components'
 
 const ActionButton = styled(Button)`
   padding: 0px !important;
-  display: none;
-  background-color: var(--md-sys-color-surface-container-lowest);
+  display: none !important;
+  background-color: var(--md-sys-color-surface-container-lowest) !important;
 
   &.selected {
-    display: flex;
+    display: flex !important;
   }
 `
 
