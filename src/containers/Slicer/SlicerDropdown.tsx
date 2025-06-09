@@ -25,7 +25,7 @@ const StyledDropdown = styled(Dropdown)`
         cursor: default;
       }
       &:hover {
-        background-color: unset;
+        background-color: unset !important;
       }
     }
   }

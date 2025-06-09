@@ -474,7 +474,7 @@ a {
 
     // for reject button
     &.p-confirm-dialog-reject {
-      background-color: unset;
+      background-color: unset !important;
     }
 
     // for delete buttons

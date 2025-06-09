@@ -7,7 +7,7 @@ import styled from 'styled-components'
 
 const StyledDropdown = styled(Dropdown)`
   button {
-    background-color: unset;
+    background-color: unset !important;
   }
   display: flex;
 `

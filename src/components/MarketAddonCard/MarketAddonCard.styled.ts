@@ -86,7 +86,7 @@ export const Tag = styled(Button)`
   &.pending,
   &.updating,
   &.finished {
-    background-color: unset;
+    background-color: unset !important;
     user-select: none;
   }
 

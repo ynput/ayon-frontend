@@ -5,7 +5,7 @@ import { forwardRef, MouseEvent } from 'react'
 import styled from 'styled-components'
 
 const StyledButton = styled(Button)`
-  background-color: unset;
+  background-color: unset !important;
   color: var(--md-sys-color-tertiary);
   transition: color 0.2s, background-color 0.2s, opacity 0.2s;
   border-radius: var(--border-radius-xl);

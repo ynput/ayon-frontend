@@ -56,7 +56,7 @@ export const NavItem = styled.li`
 
       button {
         &:hover {
-          background-color: unset;
+          background-color: unset !important;
         }
       }
 

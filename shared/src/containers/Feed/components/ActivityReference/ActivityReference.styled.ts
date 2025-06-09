@@ -35,7 +35,7 @@ export const Reference = styled.span<{ $variant: 'surface' | 'filled' | 'text' }
   ${({ $variant }) =>
     $variant === 'text' &&
     css`
-      background-color: unset;
+      background-color: unset !important;
     `}
 
   ${({ $variant }) =>
@@ -59,6 +59,6 @@ export const Reference = styled.span<{ $variant: 'surface' | 'filled' | 'text' }
 
     /* remove background colour and hover on disabled */
     &.disabled {
-    background-color: unset;
+    background-color: unset !important;
   }
 `

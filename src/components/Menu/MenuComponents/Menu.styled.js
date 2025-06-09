@@ -10,7 +10,7 @@ export const Dialog = styled.dialog`
   height: auto;
   z-index: 1000;
   border: none;
-  background-color: unset;
+  background-color: unset !important;
   padding: 0;
 
   user-select: none;

@@ -95,7 +95,7 @@ export const Cell = styled.div`
 `
 
 export const Expander = styled(Button)`
-  background-color: unset;
+  background-color: unset !important;
   padding: 2px !important;
   cursor: pointer;
 `
@@ -125,7 +125,7 @@ export const Header = styled.div`
 `
 
 export const HeaderButton = styled(Button)`
-  background-color: unset;
+  background-color: unset !important;
   z-index: 110;
   position: relative;
 

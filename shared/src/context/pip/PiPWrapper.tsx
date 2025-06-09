@@ -33,7 +33,7 @@ const StyledClose = styled(Button)`
     font-size: 15px;
     font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 200, 'opsz' 20;
   }
-  background-color: unset;
+  background-color: unset !important;
   opacity: 0;
   border-radius: 100%;
   transition: opacity 400ms, background-color 400ms;

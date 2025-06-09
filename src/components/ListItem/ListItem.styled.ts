@@ -185,7 +185,7 @@ export const ItemAssignees = styled(AssigneeSelect)`
       min-width: unset;
     }
 
-    background-color: unset;
+    background-color: unset !important;
     &:hover {
       background-color: var(--md-sys-color-surface-container-hover);
     }
@@ -225,7 +225,7 @@ export const PriorityEnumDropdown = styled(EnumDropdown)`
   }
 
   button {
-    background-color: unset;
+    background-color: unset !important;
 
     &:hover {
       background-color: var(--md-sys-color-surface-container-hover);

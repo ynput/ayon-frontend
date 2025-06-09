@@ -41,7 +41,7 @@ const Item = styled.li`
     user-select: none;
     pointer-events: none;
     &:hover {
-      background-color: unset;
+      background-color: unset !important;
     }
   }
 `
@@ -53,7 +53,7 @@ const Actions = styled.div`
 `
 
 const ActionButton = styled(Button)`
-  background-color: unset;
+  background-color: unset !important;
   padding: 4px;
 
   &.active {

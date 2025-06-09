@@ -2,7 +2,7 @@ import { Button, Icon, theme } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
 const Expander = styled(Button)`
-  background-color: unset;
+  background-color: unset !important;
   padding: 2px !important;
   cursor: pointer;
 `

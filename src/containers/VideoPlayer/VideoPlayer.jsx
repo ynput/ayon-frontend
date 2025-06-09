@@ -32,7 +32,7 @@ const VideoPlayerContainer = styled.div`
     flex-grow: 1;
     background-color: black;
     &.no-content {
-      background-color: unset;
+      background-color: unset !important;
     }
     padding: 0;
     overflow: hidden;

@@ -10,7 +10,7 @@ import styled from 'styled-components'
 
 const StyledDropdown = styled(Dropdown)`
   button {
-    background-color: unset;
+    background-color: unset !important;
     .template-value {
       border: none;
     }

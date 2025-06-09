@@ -21,13 +21,13 @@ const Container = styled.div`
   border-radius: var(--border-radius-m);
 `
 const ActionButton = styled(Button)`
-  background-color: unset;
+  background-color: unset !important;
   padding: 4px !important;
   &:disabled {
     opacity: 0.2;
     cursor: default;
     &:hover {
-      background-color: unset;
+      background-color: unset !important;
     }
   }
 `

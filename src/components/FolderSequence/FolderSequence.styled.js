@@ -50,7 +50,7 @@ export const SequenceContainer = styled.div`
   ${({ $nesting }) =>
     !$nesting &&
     css`
-      background-color: unset;
+      background-color: unset !important;
       border: none;
     `}
 

@@ -26,6 +26,6 @@ export const FeaturedAction = styled(Button)`
     opacity: 1;
     overflow: hidden;
 
-    background-color: unset;
+    background-color: unset !important;
   }
 `

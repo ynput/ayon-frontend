@@ -101,6 +101,8 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
     [listAttributes, attribFields, selectedList],
   )
 
+  console.log(mergedAttribFields, selectedList?.entityType)
+
   const [pageConfig, updatePageConfig] = useUserProjectConfig({
     selectors: ['lists', projectName, selectedList?.label],
   })
