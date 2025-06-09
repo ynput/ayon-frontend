@@ -23,6 +23,7 @@ export interface ProjectTableContextType {
   // Attributes
   attribFields: ProjectTableProviderProps['attribFields']
   error?: string
+  scopes: ProjectTableProviderProps['scopes']
 
   // Data
   tableData: TableRow[]

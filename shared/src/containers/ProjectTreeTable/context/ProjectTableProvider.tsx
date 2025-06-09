@@ -42,7 +42,7 @@ import { ProjectModel } from '../types/project'
 import { ProjectTableAttribute, LoadingTasks } from '../types'
 import { QueryFilter } from '../types/folders'
 import { ContextMenuItemConstructors } from '../hooks/useCellContextMenu'
-import { EntityGroup } from '@shared/api'
+import { AttributeModel, EntityGroup } from '@shared/api'
 import useBuildGroupByTableData, {
   GroupByEntityType,
   ROW_ID_SEPARATOR,
@@ -74,6 +74,7 @@ export interface ProjectTableProviderProps {
   users: TableUser[]
   // Attributes
   attribFields: ProjectTableAttribute[]
+  scopes: string[]
 
   // data
   tasksMap: TaskNodeMap
@@ -144,6 +145,7 @@ export const ProjectTableProvider = ({
   projectName,
   users,
   attribFields,
+  scopes,
   taskGroups,
   filters,
   setFilters,
@@ -296,6 +298,7 @@ export const ProjectTableProvider = ({
         error,
         projectInfo,
         attribFields,
+        scopes,
         users,
         projectName,
         tasksMap,

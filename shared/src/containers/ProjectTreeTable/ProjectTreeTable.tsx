@@ -168,6 +168,7 @@ export const ProjectTreeTable = ({
     updateSorting,
     showHierarchy,
     fetchNextPage,
+    scopes,
   } = useProjectTableContext()
 
   const isLoading = isLoadingProp || isLoadingData
@@ -181,6 +182,7 @@ export const ProjectTreeTable = ({
         folderTypes,
         taskTypes,
         tags,
+        scopes,
       }),
     [users, statuses, folderTypes, taskTypes],
   )

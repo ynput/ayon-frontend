@@ -11,6 +11,7 @@ type Params = {
   folderTypes: FolderType[]
   taskTypes: TaskType[]
   tags: Tag[]
+  scopes: string[]
 }
 
 export const getTableFieldOptions = ({
@@ -19,6 +20,7 @@ export const getTableFieldOptions = ({
   folderTypes,
   taskTypes,
   tags,
+  scopes,
 }: Params): BuiltInFieldOptions => ({
   assignee: users.map(({ name, fullName }) => ({
     value: name,
@@ -26,7 +28,7 @@ export const getTableFieldOptions = ({
     icon: `/api/users/${name}/avatar`,
   })),
   status: statuses
-    .filter((status) => !status.scope || ['folder', 'task'].some((s) => status.scope?.includes(s)))
+    .filter((status) => !status.scope || scopes.some((s) => status.scope?.includes(s)))
     .map(({ name, color, icon, scope }) => ({
       value: name,
       label: name,

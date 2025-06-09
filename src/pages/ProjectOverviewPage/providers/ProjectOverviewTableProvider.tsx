@@ -29,6 +29,7 @@ const ProjectOverviewTableProvider: FC<{ modules: ProjectTableModulesType }> = (
         powerpack={powerpack}
         modules={modules}
         groupByConfig={{ entityType: 'task' }}
+        scopes={['folder', 'task']}
       >
         <NewEntityProvider>
           <SelectionCellsProvider>

@@ -101,8 +101,6 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
     [listAttributes, attribFields, selectedList],
   )
 
-  console.log(mergedAttribFields, selectedList?.entityType)
-
   const [pageConfig, updatePageConfig] = useUserProjectConfig({
     selectors: ['lists', projectName, selectedList?.label],
   })
@@ -185,6 +183,7 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
               contextMenuItems={contextMenuItems}
               sorting={props.sorting}
               updateSorting={props.updateSorting}
+              scopes={[selectedList?.entityType]}
             >
               <SelectionCellsProvider>
                 <SelectedRowsProvider>
