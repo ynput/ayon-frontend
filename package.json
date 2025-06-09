@@ -85,7 +85,7 @@
     "searchhash": "^1.2.12",
     "semver": "^7.6.0",
     "short-uuid": "^4.2.0",
-    "styled-components": "^6.1.14",
+    "styled-components": "6.1.14",
     "turndown": "^7.1.2",
     "use-query-params": "^2.1.2",
     "uuid": "^9.0.0"
