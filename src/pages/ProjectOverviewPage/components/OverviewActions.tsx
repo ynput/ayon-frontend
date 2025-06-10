@@ -30,6 +30,13 @@ const ActionButton = styled(Button)`
       background-color: unset !important;
     }
   }
+
+  &:hover {
+    button.action {
+      background-color: var(--md-sys-color-surface-container-high-hover);
+      display: flex;
+    }
+  }
 `
 type ActionType = 'undo' | 'redo' | 'delete'
 interface ActionItem extends ButtonProps {

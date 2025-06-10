@@ -4,9 +4,11 @@ import { FC } from 'react'
 import styled from 'styled-components'
 
 const ActionButton = styled(Button)`
-  padding: 0px !important;
-  display: none !important;
-  background-color: var(--md-sys-color-surface-container-lowest) !important;
+  &.action {
+    padding: 0px;
+    display: none;
+    background-color: unset;
+  }
 
   &.selected {
     display: flex !important;
