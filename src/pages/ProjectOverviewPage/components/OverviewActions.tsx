@@ -21,19 +21,19 @@ const Container = styled.div`
   border-radius: var(--border-radius-m);
 `
 const ActionButton = styled(Button)`
-  background-color: unset !important;
-  padding: 4px !important;
-  &:disabled {
-    opacity: 0.2;
-    cursor: default;
-    &:hover {
-      background-color: unset !important;
+  &.action {
+    background-color: unset;
+    padding: 4px;
+    &:disabled {
+      opacity: 0.2;
+      cursor: default;
+      &:hover {
+        background-color: unset;
+      }
     }
-  }
 
-  &:hover {
-    button.action {
-      background-color: var(--md-sys-color-surface-container-high-hover);
+    &:hover {
+      background-color: var(--md-sys-color-surface-container-high-hover) !important;
       display: flex;
     }
   }
@@ -113,6 +113,7 @@ const OverviewActions: FC<OverviewActionsProps> = ({ items }) => {
           data-shortcut={item['data-shortcut']}
           onClick={item.onClick}
           disabled={item.disabled}
+          className="action"
         />
       ))}
     </Container>

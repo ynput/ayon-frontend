@@ -4,7 +4,7 @@ import styled from 'styled-components'
 
 const StyledDropdown = styled(Dropdown)`
   button {
-    background-color: unset !important;
+    background-color: unset;
     &:hover {
       background-color: var(--md-sys-color-surface-container-low-hover);
     }

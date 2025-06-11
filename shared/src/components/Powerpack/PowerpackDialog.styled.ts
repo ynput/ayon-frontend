@@ -21,7 +21,7 @@ export const PowerpackDialog = styled(Dialog)`
   }
 
   .cancelButton {
-    background-color: unset !important;
+    background-color: unset;
   }
 `
 

@@ -12,7 +12,7 @@ export const PanelContainer = styled(Panel)`
   padding: var(--padding-l);
 
   &.noData {
-    background-color: unset !important;
+    background-color: unset;
   }
 `
 

@@ -2,8 +2,14 @@ import { Button, Icon, theme } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
 const Expander = styled(Button)`
-  background-color: unset !important;
-  padding: 2px !important;
+  &.expander {
+    background-color: unset;
+    padding: 2px;
+
+    &:hover {
+      background-color: var(--md-sys-color-surface-container-high-hover);
+    }
+  }
   cursor: pointer;
 `
 

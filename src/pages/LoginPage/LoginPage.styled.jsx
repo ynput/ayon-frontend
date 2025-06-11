@@ -18,7 +18,7 @@ export const LoginForm = styled.div`
 
   /* panel */
   & > div {
-    background-color: unset !important;
+    background-color: unset;
     align-items: center;
     padding: 32px;
     width: 350px;

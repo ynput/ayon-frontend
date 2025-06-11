@@ -66,7 +66,7 @@ const FieldValue = styled.div`
   }
 
   .dropdown .button {
-    background-color: unset !important;
+    background-color: unset;
   }
 
   &.editing {

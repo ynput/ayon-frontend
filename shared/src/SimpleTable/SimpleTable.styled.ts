@@ -95,9 +95,14 @@ export const Cell = styled.div`
 `
 
 export const Expander = styled(Button)`
-  background-color: unset !important;
-  padding: 2px !important;
-  cursor: pointer;
+  &.expander {
+    background-color: unset;
+    padding: 2px;
+    cursor: pointer;
+    &:hover {
+      background-color: var(--md-sys-color-surface-container-high-hover);
+    }
+  }
 `
 
 // utility styles for wrapping the table

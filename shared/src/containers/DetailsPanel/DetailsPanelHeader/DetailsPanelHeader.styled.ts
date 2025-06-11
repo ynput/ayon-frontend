@@ -234,7 +234,7 @@ export const PriorityEnumDropdown = styled(EnumDropdown)`
 
   button {
     padding: 0 8px;
-    background-color: unset !important;
+    background-color: unset;
 
     &:hover {
       background-color: var(--md-sys-color-surface-container-low-hover);

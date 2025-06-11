@@ -46,7 +46,7 @@ export const DialogWrapper = styled(Dialog)`
   &.isImage {
     /* remove min/max height */
 
-    background-color: unset !important;
+    background-color: unset;
     border-radius: 0;
 
     width: 0;

@@ -22,6 +22,7 @@ export const RowExpander = ({
         onExpandClick?.()
       }}
       icon={isRowExpanded ? 'expand_more' : 'chevron_right'}
+      className="expander"
       style={{ cursor: 'pointer' }}
     />
   ) : (

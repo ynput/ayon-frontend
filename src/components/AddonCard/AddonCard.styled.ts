@@ -63,7 +63,7 @@ export const AddonCard = styled.button`
 
   .error {
     margin-left: auto;
-    background-color: unset !important;
+    background-color: unset;
     color: var(--md-sys-color-on-error-container);
   }
 

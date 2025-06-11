@@ -31,7 +31,7 @@ const ShareStyled = styled.div`
     margin-top: 0;
   }
 
-  background-color: unset !important;
+  background-color: unset;
   padding-right: 48px;
 
   button {

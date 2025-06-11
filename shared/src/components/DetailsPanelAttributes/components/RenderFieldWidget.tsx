@@ -22,11 +22,11 @@ const FieldValueText = styled.div`
 const StyledEnumWidget = styled(EnumWidget)`
   .enum {
     &:hover {
-      background-color: unset !important;
+      background-color: unset;
     }
   }
   &:hover {
-    background-color: unset !important;
+    background-color: unset;
   }
 `
 
