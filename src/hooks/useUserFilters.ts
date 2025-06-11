@@ -1,5 +1,5 @@
-import { Filter } from '@components/SearchFilter/types'
-import { useSetFrontendPreferencesMutation } from '@shared/api'
+import { Filter } from '@ynput/ayon-react-components'
+import { useGetCurrentUserQuery, useSetFrontendPreferencesMutation } from '@shared/api'
 import { useAppSelector } from '@state/store'
 
 interface UseUserFiltersProps {
@@ -9,7 +9,10 @@ interface UseUserFiltersProps {
 
 const useUserFilters = ({ page, projectName }: UseUserFiltersProps) => {
   const userName = useAppSelector((state) => state.user.name)
-  const frontendPreferences = useAppSelector((state) => state.user.data.frontendPreferences)
+  // GET CURRENT USER
+  const { data: user } = useGetCurrentUserQuery()
+  // extract out columns config for project
+  const { data: { frontendPreferences } = {} } = user || {}
   const frontendPreferencesFilters: {
     [page: string]: {
       [projectName: string]: Filter[]
