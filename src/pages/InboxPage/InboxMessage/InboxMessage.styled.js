@@ -125,6 +125,17 @@ export const Left = styled.div`
   min-width: clamp(350px, 30vw, 500px);
   max-width: clamp(350px, 30vw, 500px);
 
+  .project-name {
+    white-space: nowrap;
+    overflow: hidden;
+    display: inline-block;
+    max-width: 150px;
+    min-width: 150px;
+    text-overflow: ellipsis;
+    font-weight: 700;
+    color: var(--md-sys-color-on-surface-variant);
+  }
+
   .title {
     white-space: nowrap;
     overflow: hidden;
