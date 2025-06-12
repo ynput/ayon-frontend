@@ -129,7 +129,7 @@ const useTooltip = () => {
       let targetTop = targetRect.top
 
       if (tooltipPosition === 'mouse') {
-        // used in settings editor. Align horizonatlly with mouse,
+        // used in settings editor. Align horizontally with mouse,
         // because field is wide and centering causes tooltip to be
         // positioned weirdly
         targetCenter = e.clientX
