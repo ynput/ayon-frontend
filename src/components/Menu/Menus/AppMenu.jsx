@@ -47,12 +47,13 @@ export const AppMenu = ({ user, ...props }) => {
   ]
 
   if (isUser)
-    items.push(
+    items.unshift(
       {
         id: 'siteSettings',
         link: '/settings/site',
         label: 'Site Settings',
         icon: 'computer',
+        shortcut: 'S+S',
       },
     )
 
