@@ -107,6 +107,7 @@ const useTooltip = () => {
       const tooltipData = target?.dataset?.tooltip
       const shortcutData = target?.dataset?.shortcut
       const delayData = target?.dataset?.tooltipDelay
+      const tooltipPosition = target?.dataset?.tooltipPosition
       // what to render as tooltip (pre, div, markdown, etc.)
       const asData = target?.dataset?.tooltipAs
       // check if data-tooltip attribute exists
@@ -123,10 +124,22 @@ const useTooltip = () => {
       // find center top position of target element
       const targetRect = target.getBoundingClientRect()
 
-      // target center will also be tooltip left
-      const targetCenter = targetRect.left + targetRect.width / 2
-      // target top will also be tooltip bottom
-      const targetTop = target.getBoundingClientRect().top
+      let targetCenter 
+      let targetTop
+
+      if (tooltipPosition === 'mouse') {
+        // used in settings editor. Align horizonatlly with mouse,
+        // because field is wide and centering causes tooltip to be
+        // positioned weirdly
+        targetCenter = e.clientX
+        targetTop = target.getBoundingClientRect().top
+      }
+      else {
+       // target center will also be tooltip left
+       targetCenter = targetRect.left + targetRect.width / 2
+       // target top will also be tooltip bottom
+       targetTop = target.getBoundingClientRect().top
+      }
 
       // can the user click the tooltip
       const clickableData = target?.dataset?.tooltipClickable

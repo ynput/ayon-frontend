@@ -267,7 +267,7 @@ export const TextWidget = (props: $Any) => {
     <Input
       className={`form-field`}
       onFocus={onFocus}
-      data-tooltip={tooltip.join('\n')}
+      data-tooltip={tooltip?.length ? tooltip.join('\n') : undefined}
       {...opts}
       style={hlstyle}
     />

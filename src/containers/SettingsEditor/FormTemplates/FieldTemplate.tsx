@@ -87,9 +87,8 @@ function FieldTemplate(props: FieldTemplateProps) {
 
     if (props.formContext.onPinOverride)
       model.push({
-        label: `Add current ${rmPath[rmPath.length - 1]} value as ${
-          props.formContext.level
-        } override`,
+        label: `Add current ${rmPath[rmPath.length - 1]} value as ${props.formContext.level
+          } override`,
         command: () => props.formContext.onPinOverride(rmPath),
         disabled: overrideLevel === props.formContext.level,
       })
@@ -223,6 +222,7 @@ function FieldTemplate(props: FieldTemplateProps) {
         data-tooltip={props.rawDescription}
         data-tooltip-delay={300}
         data-tooltip-as="markdown"
+        data-tooltip-position="mouse"
       >
         {props.label && props.schema.title && (
           <div className={`form-inline-field-label ${overrideLevel}`}>
