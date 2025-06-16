@@ -10,8 +10,14 @@ const authApiInjected = authenticationApi.enhanceEndpoints({
         dispatch(logout())
         // reset global state
         dispatch(authenticationApi.util.resetApiState())
-        // clear local storage
-        localStorage.clear()
+        // clear local storage except for specific keys
+        const keysToPreserve = ['installers-downloaded', 'releaseInstallPrompt'] // Add your specific keys here
+        const allKeys = Object.keys(localStorage)
+        allKeys.forEach((key) => {
+          if (!keysToPreserve.includes(key)) {
+            localStorage.removeItem(key)
+          }
+        })
         // clear dashboard state
         dispatch(onClearDashboard())
         // @ts-expect-error - no args are defined
