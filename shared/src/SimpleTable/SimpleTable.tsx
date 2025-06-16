@@ -316,8 +316,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
 
   const handleRowSelectionChangeCallback: OnChangeFn<RowSelectionState> = useCallback(
     (updater) => {
-      // @ts-expect-error - err not totally sure how this works - but it does
-      onRowSelectionChange(updater)
+      onRowSelectionChange(functionalUpdate(updater, rowSelection))
     },
     [onRowSelectionChange], // Depends only on the stable setState function from context
   )
