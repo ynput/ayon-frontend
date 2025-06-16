@@ -199,7 +199,9 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
       ...extractSubTypes(item, item.entityType), // subType, folderType, taskType, productType
       updatedAt: item.updatedAt,
       attrib: item.attrib,
-      ownAttrib: item.ownAttrib || Object.keys(item.attrib),
+      ownAttrib: item.ownAttrib
+        ? [...item.ownAttrib, ...item.ownItemAttrib]
+        : Object.keys(item.attrib), // not all types use ownAttrib so fallback to attrib keys
       icon: getEntityTypeData(item.entityType, extractSubTypes(item, item.entityType).subType)
         ?.icon,
       path: extractPath(item, item.entityType),
