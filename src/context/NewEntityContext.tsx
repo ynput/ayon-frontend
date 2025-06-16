@@ -112,18 +112,21 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
     entityType: NewEntityType,
     subType: string,
     sequence: string[],
-    folderIds: string[],
+    folders: { id: string; name: string; label?: string }[],
+    prefix?: boolean,
   ): NewEntityOperation[] => {
     // For root folders
-    if (folderIds.length === 0 && entityType === 'folder') {
+    if (folders.length === 0 && entityType === 'folder') {
       return sequence.map((name) => createEntityOperation(entityType, subType, name))
     }
 
     // For folders or tasks with parent references
     const operations: NewEntityOperation[] = []
-    for (const folderId of folderIds) {
+    for (const folder of folders) {
       for (const name of sequence) {
-        operations.push(createEntityOperation(entityType, subType, name, folderId))
+        // add the prefix if needed
+        const newName = prefix ? (folder.label || folder.name) + name : name
+        operations.push(createEntityOperation(entityType, subType, newName, folder.id))
       }
     }
     return operations
@@ -322,13 +325,25 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
     let operations: NewEntityOperation[]
 
     if (sequenceForm.active) {
+      const selectedFolders = []
+      for (const folderId of selectedFolderIds) {
+        const entity = getEntityById(folderId)
+        if (entity?.entityType === 'folder') {
+          selectedFolders.push({
+            id: entity.id,
+            name: entity.name,
+            label: entity.label || entity.name, // Use label if available
+          })
+        }
+      }
       // Generate the sequence
       const sequence = getSequence(entityForm.label, sequenceForm.increment, sequenceForm.length)
       operations = createSequenceOperations(
         entityType,
         entityForm.subType,
         sequence,
-        selectedFolderIds,
+        selectedFolders,
+        sequenceForm.prefix,
       )
     } else {
       operations = createSingleOperations(
