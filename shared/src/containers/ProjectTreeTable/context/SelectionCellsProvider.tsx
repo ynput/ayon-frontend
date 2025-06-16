@@ -11,6 +11,7 @@ import {
 } from '../utils/cellUtils'
 import { DRAG_HANDLE_COLUMN_ID } from '../ProjectTreeTable'
 import { SelectionCellsContext, GridMap, ROW_SELECTION_COLUMN_ID } from './SelectionCellsContext'
+import { useCheckSelectedCellsVisible } from '../hooks'
 
 export const SelectionCellsProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [selectedCells, setSelectedCells] = useState<Set<CellId>>(new Set())
@@ -49,6 +50,13 @@ export const SelectionCellsProvider: React.FC<{ children: ReactNode }> = ({ chil
         .map((cellId) => parseCellId(cellId)?.rowId) as string[],
     [selectedCells],
   )
+
+  useCheckSelectedCellsVisible({
+    selectedCells,
+    setSelectedCells,
+    focusedCellId,
+    setFocusedCellId,
+  })
 
   // Register grid structure for range selections
   const registerGrid = useCallback((rows: RowId[], columns: ColId[]) => {
