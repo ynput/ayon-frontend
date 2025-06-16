@@ -95,7 +95,7 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled }) => {
   const { rowSelection: slicerSelection, sliceType } = useSlicerContext()
   const { getEntityById, projectInfo } = useProjectTableContext()
 
-  const selectedFolderIds = React.useMemo(() => {
+  const [selectedFolderIds, selectedEntities] = React.useMemo(() => {
     const selectedRowIds = Array.from(
       new Set(
         Array.from(selectedCells)
@@ -106,6 +106,7 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled }) => {
     )
 
     const selectedEntities = selectedRowIds.map((id) => getEntityById(id))
+    console.log(selectedEntities)
 
     const selectedFolders = selectedEntities
       .filter((entity) => entity?.entityType === 'folder')
@@ -127,11 +128,12 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled }) => {
     if (!selectedFolderIds.length && sliceType === 'hierarchy') {
       // add the selected folder ids from the slicer
       const selectedFolderIdsFromSlicer = Object.keys(slicerSelection)
-      return selectedFolderIdsFromSlicer
+      return [selectedFolderIdsFromSlicer, selectedEntities]
     } else {
-      return selectedFolderIds
+      return [selectedFolderIds, selectedEntities]
     }
   }, [selectedCells, slicerSelection, sliceType, getEntityById])
+  const parentLabel = selectedEntities[0]?.label || selectedEntities[0]?.name || ''
 
   const isRoot = isEmpty(selectedFolderIds)
 
@@ -374,6 +376,7 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled }) => {
               length={sequenceForm.length}
               prefix={sequenceForm.prefix}
               prefixDepth={sequenceForm.prefixDepth}
+              parentLabel={parentLabel}
               entityType="folder"
               nesting={false}
               onChange={handleSeqChange}
