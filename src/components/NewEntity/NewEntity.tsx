@@ -106,7 +106,6 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled }) => {
     )
 
     const selectedEntities = selectedRowIds.map((id) => getEntityById(id))
-    console.log(selectedEntities)
 
     const selectedFolders = selectedEntities
       .filter((entity) => entity?.entityType === 'folder')
