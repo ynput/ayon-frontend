@@ -56,7 +56,7 @@ const useHistory = (maxHistorySize = 50): UseHistoryReturn => {
       (acc, entity) => {
         if (typeof entity === 'function') {
           acc[2].push(entity)
-        } else if (entity.wasInherited && entity.folderId) {
+        } else if (entity.wasInherited) {
           acc[1].push({
             entityId: entity.id,
             entityType: entity.type,

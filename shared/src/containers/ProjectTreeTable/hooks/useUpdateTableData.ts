@@ -26,7 +26,7 @@ export type InheritFromParentEntity = {
   entityType: string
   attribs: string[]
   ownAttrib: string[]
-  folderId: string
+  folderId?: string // the parent folder ID
   meta?: Record<string, any>
 }
 export type InheritFromParent = (
@@ -89,7 +89,7 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
               isAttrib,
               wasInherited, // Track inheritance status for undo
               ownAttrib: ownAttrib,
-              folderId: entityData?.folderId,
+              folderId: entityData?.folderId || entityData?.parentId,
               meta,
             }
           },

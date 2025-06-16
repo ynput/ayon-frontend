@@ -23,7 +23,7 @@ export type FindInheritedValueFromAncestors = (
   attribName: string,
 ) => any
 export type FindNonInheritedValues = (
-  folderId: string,
+  folderId: string | undefined,
   attribNames: string[],
 ) => Record<string, any>
 export type GetAncestorsOf = (id: string) => string[]
@@ -152,7 +152,7 @@ export default function useFolderRelationships({
       // Traverse up the folder hierarchy until we've found values for all attributes
       // or we've reached the root folder
       while (pendingAttribs.size > 0) {
-        const folder = getEntityById(currentId)
+        const folder = getEntityById(currentId || '')
         if (!folder || !currentId) {
           // use the project attrib
           for (const attribName of pendingAttribs) {
