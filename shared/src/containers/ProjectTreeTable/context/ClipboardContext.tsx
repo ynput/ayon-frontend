@@ -32,7 +32,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
   // Get selection information from SelectionContext
   const { selectedCells, gridMap, focusedCellId } = useSelectionCellsContext()
   const { updateEntities } = useCellEditing()
-  const { getEntityById } = useProjectTableContext()
+  const { getEntityById, attribFields } = useProjectTableContext()
 
   const getSelectionData = useCallback(
     async (selected: string[], config?: { headers?: boolean; fullRow?: boolean }) => {
@@ -141,7 +141,19 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
             // Determine the value based on the column ID
             let cellValue = ''
             // @ts-ignore
-            const foundValue = getCellValue(entity, colId)
+            let foundValue = getCellValue(entity, colId)
+
+            if (!foundValue) {
+              // we should look for the default value set out in attribFields
+              const field = attribFields.find((f) => f.name === colId.replace('attrib_', ''))
+              if (field && field.data.type === 'boolean') {
+                foundValue = false // default boolean value
+              } else if (field && field.data.type.includes('list_of')) {
+                foundValue = [] // default list value
+              }
+            }
+
+            // convert to string if foundValue is not undefined or null use empty string otherwise
             cellValue = foundValue !== undefined && foundValue !== null ? String(foundValue) : ''
 
             // Special handling for name field - include full path
