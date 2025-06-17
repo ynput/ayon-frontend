@@ -1211,6 +1211,7 @@ export type UserNode = {
   hasPassword: Scalars['Boolean']['output'];
   isAdmin: Scalars['Boolean']['output'];
   isDeveloper: Scalars['Boolean']['output'];
+  disablePasswordLogin: Scalars['Boolean']['output'];
   isGuest: Scalars['Boolean']['output'];
   isManager: Scalars['Boolean']['output'];
   isService: Scalars['Boolean']['output'];
