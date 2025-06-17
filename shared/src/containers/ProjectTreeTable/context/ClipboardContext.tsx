@@ -494,6 +494,16 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
 
       // Paste functionality (Ctrl+V or Command+V)
       if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
+        // don't execute paste if focus is inside an input, textarea, or content‐editable element
+        const activeEl = document.activeElement as HTMLElement | null
+        if (
+          activeEl &&
+          (activeEl.tagName === 'INPUT' ||
+            activeEl.tagName === 'TEXTAREA' ||
+            activeEl.isContentEditable)
+        ) {
+          return
+        }
         pasteFromClipboard()
       }
     }
