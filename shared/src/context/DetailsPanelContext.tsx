@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useCallback, ReactNode, useState } from 'react'
 import { useLocalStorage } from '@shared/hooks'
-import { DetailsPanelEntityType } from '@shared/api'
+import { DetailsPanelEntityType, useGetCurrentUserQuery } from '@shared/api'
 import type { UserModel } from '@shared/api'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useSearchParams } from 'react-router-dom'
@@ -56,6 +56,8 @@ export interface DetailsPanelContextProps {
 
 // Interface for our simplified context
 export interface DetailsPanelContextType extends DetailsPanelContextProps {
+  // user
+  isDeveloperMode: boolean
   // Open state for the panel by scope
   panelOpenByScope: OpenStateByScope
   getOpenForScope: (scope: string) => boolean
@@ -100,6 +102,10 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
   defaultTab = 'activity',
   ...forwardedProps
 }) => {
+  // get current user
+  const { data: currentUser } = useGetCurrentUserQuery()
+  const isDeveloperMode = currentUser?.attrib?.developerMode ?? false
+
   // keep track of the currently open panel by scope
   const [panelOpenByScope, setPanelOpenByScope] = useState<OpenStateByScope>({})
   const [feedAnnotations, setFeedAnnotations] = useState<SavedAnnotationMetadata[]>([])
@@ -211,6 +217,7 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
     closePip,
     feedAnnotations,
     setFeedAnnotations,
+    isDeveloperMode,
     ...forwardedProps,
   }
 

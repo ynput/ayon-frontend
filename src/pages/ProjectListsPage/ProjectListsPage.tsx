@@ -53,6 +53,7 @@ import {
   type Active,
   type Over,
 } from '@dnd-kit/core'
+import { useAppSelector } from '@state/store.ts'
 
 type ProjectListsPageProps = {
   projectName: string
@@ -218,6 +219,8 @@ const ProjectLists: FC<ProjectListsProps> = ({
   isReview,
   dndActiveId, // Destructure new prop
 }) => {
+  const user = useAppSelector((state) => state.user?.attrib)
+  const isDeveloperMode = user?.developerMode ?? false
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const { projectName, projectInfo } = useProjectDataContext()
@@ -267,6 +270,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
                   onSetSearchParams={setSearchParams}
                   searchParams={searchParams}
                   featuredCount={0}
+                  isDeveloperMode={isDeveloperMode}
                 />
                 <CustomizeButton />
               </Toolbar>

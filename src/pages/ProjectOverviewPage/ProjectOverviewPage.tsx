@@ -30,6 +30,7 @@ import ReloadButton from './components/ReloadButton'
 import OverviewActions from './components/OverviewActions'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useFiltersWithHierarchy } from '@shared/containers'
+import { useAppSelector } from '@state/store'
 
 const searchFilterTypes: FilterFieldType[] = [
   'attributes',
@@ -40,6 +41,8 @@ const searchFilterTypes: FilterFieldType[] = [
 ]
 
 const ProjectOverviewPage: FC = () => {
+  const user = useAppSelector((state) => state.user?.attrib)
+  const isDeveloperMode = user?.developerMode ?? false
   const { selectedRows } = useSelectedRowsContext()
   const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
@@ -159,6 +162,7 @@ const ProjectOverviewPage: FC = () => {
                 onNavigate={navigate}
                 onSetSearchParams={setSearchParams}
                 searchParams={searchParams}
+                isDeveloperMode={isDeveloperMode}
               />
               <CustomizeButton />
             </Toolbar>
