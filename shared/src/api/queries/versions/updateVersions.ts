@@ -47,6 +47,7 @@ const uploadVersions = versionsApi.enhanceEndpoints({
       invalidatesTags: (_r, _e, { versionId }) => [
         { type: 'version', id: versionId },
         { type: 'product', id: versionId },
+        { type: 'entities', id: 'LIST' }, // invalidate all entity panels
       ],
     },
   },

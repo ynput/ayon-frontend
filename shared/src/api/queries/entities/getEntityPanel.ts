@@ -233,6 +233,7 @@ const detailsPanelQueries2 = enhancedDetailsApi.injectEndpoints({
       providesTags: (_res, _error, { entities, entityType }) => [
         ...entities.map(({ id }: { id: string }) => ({ id, type: 'entities' })),
         { type: 'entities', id: entityType.toUpperCase() },
+        { type: 'entities', id: 'LIST' },
       ],
     }),
   }),
