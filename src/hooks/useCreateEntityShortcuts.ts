@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { NewEntityType } from '@context/NewEntityContext'
+import { useAppSelector } from '@state/store'
 
 interface EntityOption {
   label: string
@@ -21,8 +22,11 @@ interface UseCreateEntityShortcutsProps {
  * @param onOpenNew Callback function to open entity creation dialog
  */
 const useCreateEntityShortcuts = ({ options, onOpenNew }: UseCreateEntityShortcutsProps) => {
+  const menuOpen = useAppSelector((state) => state.context.menuOpen)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // skip if the menu is open
+      if (menuOpen) return
       // Skip if event target is an input element or contentEditable
       if (
         e.target instanceof HTMLElement &&
