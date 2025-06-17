@@ -74,6 +74,7 @@ export const ActionsDropdownItem = ({
 export type ActionsDropdownProps = {
   options: ActionsDropdownItemProps[]
   isLoading?: boolean
+  isDeveloperMode: boolean
   onAction: (value: string) => void
   onConfig: (e: any) => void
 }
@@ -81,6 +82,7 @@ export type ActionsDropdownProps = {
 export const ActionsDropdown = ({
   options,
   isLoading,
+  isDeveloperMode,
   onAction,
   onConfig,
 }: ActionsDropdownProps) => {
@@ -95,7 +97,7 @@ export const ActionsDropdown = ({
     <StyledDropdown
       ref={dropdownRef}
       disabled={isLoading}
-      className={clsx('more', { loading: isLoading })}
+      className={clsx('more', { loading: isLoading, dev: isDeveloperMode })}
       options={options}
       maxOptionsShown={100}
       value={[]}
@@ -103,8 +105,11 @@ export const ActionsDropdown = ({
       itemTemplate={(option) => <ActionsDropdownItem {...option} onConfig={handleConfigClick} />}
       valueTemplate={() => <DefaultValueTemplate placeholder="" value={[]} dropIcon={'category'} />}
       onChange={(v) => onAction(v[0])}
-      // @ts-expect-error
-      buttonProps={{ ['data-tooltip']: 'Actions', ['data-tooltip-delay']: 0 }}
+      buttonProps={{
+        // @ts-expect-error
+        ['data-tooltip']: isDeveloperMode ? 'Actions (dev bundle)' : 'Actions',
+        ['data-tooltip-delay']: 0,
+      }}
     />
   )
 }

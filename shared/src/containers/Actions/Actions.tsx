@@ -25,6 +25,7 @@ interface ActionsProps extends ActionTriggersProps {
   isLoadingEntity: boolean
   projectActionsProjectName?: string
   featuredCount?: number
+  isDeveloperMode: boolean
 }
 
 export const Actions = ({
@@ -35,6 +36,7 @@ export const Actions = ({
   projectActionsProjectName,
   searchParams,
   featuredCount = 2,
+  isDeveloperMode,
   onNavigate,
   onSetSearchParams,
 }: ActionsProps) => {
@@ -44,7 +46,7 @@ export const Actions = ({
   const [interactiveForm, setInteractiveForm] = useState<any>(null)
 
   const context: ActionContext | null = useMemo(() => {
-    if (projectActionsProjectName){
+    if (projectActionsProjectName) {
       return {
         entityType: 'project',
         projectName: projectActionsProjectName,
@@ -318,6 +320,7 @@ export const Actions = ({
         isLoading={isLoading && featuredCount > 0}
         onAction={handleExecuteAction}
         onConfig={handleConfigureAction}
+        isDeveloperMode={isDeveloperMode}
       />
       <ActionConfigDialog
         action={actionBeingConfigured}

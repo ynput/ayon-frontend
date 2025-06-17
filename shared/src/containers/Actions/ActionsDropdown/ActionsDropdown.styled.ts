@@ -25,6 +25,20 @@ export const StyledDropdown = styled(Dropdown)`
     }
   }
 
+  /* developer mode */
+  &.dev {
+    button {
+      background-color: var(--color-hl-developer-container);
+      .icon {
+        color: var(--color-hl-developer);
+      }
+
+      &:hover {
+        background-color: var(--color-hl-developer-container-hover);
+      }
+    }
+  }
+
   &.loading {
     border-radius: 4px;
   }

@@ -56,7 +56,7 @@ const DetailsPanelHeader = ({
   onOpenViewer,
   onEntityFocus,
 }: DetailsPanelHeaderProps) => {
-  const { useSearchParams, useNavigate } = useDetailsPanelContext()
+  const { useSearchParams, useNavigate, isDeveloperMode } = useDetailsPanelContext()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
 
@@ -278,6 +278,7 @@ const DetailsPanelHeader = ({
             entitySubTypes={entitySubTypes}
             isLoadingEntity={!!isFetching || !!isLoading}
             searchParams={searchParams}
+            isDeveloperMode={isDeveloperMode}
             onSetSearchParams={setSearchParams}
             onNavigate={navigate}
           />
