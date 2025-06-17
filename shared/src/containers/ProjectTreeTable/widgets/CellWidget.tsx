@@ -134,6 +134,9 @@ const EditorCellComponent: FC<EditorCellProps> = ({
 
   const handleCancel = () => {
     setEditingCellId(null)
+    // ensure the browser focus moves back to the parent <td>
+    const td = ref.current?.closest('td') as HTMLElement | null
+    if (td) td.focus()
   }
 
   const widget = useMemo(() => {
