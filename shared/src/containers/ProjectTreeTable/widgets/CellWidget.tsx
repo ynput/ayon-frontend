@@ -231,7 +231,11 @@ const EditorCellComponent: FC<EditorCellProps> = ({
   return (
     <Cell
       {...props}
-      className={clsx(props.className, { inherited: isInherited && !isCurrentCellEditing })}
+      className={clsx(props.className, {
+        inherited: isInherited && !isCurrentCellEditing,
+        readonly: isReadOnly,
+        editable: !isReadOnly,
+      })}
       ref={ref}
       onDoubleClick={handleDoubleClick}
       onClick={handleSingleClick}
