@@ -2,7 +2,6 @@ import getSubscribeLink from '@components/TrialBanner/helpers/getSubscribeLink'
 import { Button, Toolbar } from '@ynput/ayon-react-components'
 import { FC, useEffect } from 'react'
 import * as Styled from './TrialEnded.styled'
-import useCustomerlyChat from '@hooks/useCustomerly'
 import { useNavigate } from 'react-router-dom'
 import { useAppSelector } from '@state/store'
 import { useGetActiveUsersCountQuery } from '@shared/api'
@@ -16,7 +15,6 @@ const TrialEnded: FC<TrialEndedProps> = ({ orgName }) => {
   const user = useAppSelector((state) => state.user)
   const canManage = user.data.isAdmin || user.data.isManager
   const navigate = useNavigate()
-  const { open } = useCustomerlyChat({ enabled: canManage })
 
   //   redirect to '/trialend' if not already there
   useEffect(() => {
@@ -43,10 +41,7 @@ const TrialEnded: FC<TrialEndedProps> = ({ orgName }) => {
         <h1>Your free trial has ended!</h1>
         {canManage ? (
           <>
-            <p>
-              AYON simplifies your VFX pipeline and boosts efficiency. Need help? Our{' '}
-              <u onClick={open}>support team</u> is here for you if required.
-            </p>
+            <p>AYON simplifies your VFX pipeline and boosts efficiency.</p>
             <p>Subscribe to keep using AYON and protect your data!</p>
             <a
               href={orgName ? getSubscribeLink(activeUsersCount, orgName) : ''}

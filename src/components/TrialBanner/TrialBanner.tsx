@@ -9,7 +9,6 @@ import { Button, Icon } from '@ynput/ayon-react-components'
 import { useGetActiveUsersCountQuery } from '@shared/api'
 import { useLocalStorage } from '@shared/hooks'
 import { createPortal } from 'react-dom'
-import { useCustomerly } from 'react-live-chat-customerly'
 
 interface TrialBannerProps {}
 
@@ -36,8 +35,6 @@ const TrialBanner: FC<TrialBannerProps> = ({}) => {
     { skip: !isTrialing || !canManage },
   )
 
-  const { show, hide } = useCustomerly()
-
   //   check if there is a sub
   if (!connect?.instanceId) return null
 
@@ -50,15 +47,11 @@ const TrialBanner: FC<TrialBannerProps> = ({}) => {
     const snoozeUntil = now + snoozeTimeHours * 60 * 60 * 1000
 
     setSnooze(snoozeUntil)
-    // hide customerly
-    hide()
   }
 
   const handleShowBanner = () => {
     // show banner
     setSnooze(null)
-    // show customerly
-    show()
   }
 
   // toast.warn('Your free trial is ending soon. Subscribe to keep your data.', { autoClose: false })

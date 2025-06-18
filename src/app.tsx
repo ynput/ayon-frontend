@@ -36,7 +36,6 @@ import { RestartProvider } from '@context/RestartContext'
 import { PasteProvider, PasteModal } from '@context/PasteContext'
 import { URIProvider } from '@context/UriContext'
 import { NotificationsProvider } from '@context/NotificationsContext'
-import { CustomerlyProvider } from 'react-live-chat-customerly'
 import { PiPProvider } from '@shared/context/pip/PiPProvider'
 import { RemoteModulesProvider, DetailsPanelProvider } from '@shared/context'
 import { PowerpackProvider } from '@shared/context'
@@ -64,7 +63,6 @@ import TrialEnded from '@containers/TrialEnded/TrialEnded'
 import { DetailsPanelFloating } from '@shared/containers'
 import { PowerpackDialog } from '@shared/components'
 import AppRemoteLoader from './remote/AppRemoteLoader'
-import Customerly from '@components/Customerly'
 import CompleteProfilePrompt from '@components/CompleteProfilePrompt/CompleteProfilePrompt'
 import { goToFrame, openViewer } from '@state/viewer'
 import { onCommentImageOpen } from '@state/context'
@@ -176,8 +174,6 @@ const App = () => {
 
   const isUser = user?.data?.isUser
 
-  const PROJECT_ID = 'e9c7c6ee'
-
   // DEFINE ALL HIGH LEVEL COMPONENT PAGES HERE
   const mainComponent = useMemo(
     () => (
@@ -206,32 +202,29 @@ const App = () => {
                         <FeedbackProvider>
                           <NotificationsProvider>
                             <URIProvider>
-                              <CustomerlyProvider appId={PROJECT_ID}>
-                                <ShortcutsProvider>
-                                  <PiPProvider>
-                                    <QueryParamProvider
-                                      adapter={ReactRouter6Adapter}
-                                      options={{
-                                        updateType: 'replaceIn',
-                                      }}
-                                    >
-                                      <Header />
-                                      <ShareDialog />
-                                      <ViewerDialog />
-                                      <ConfirmDialog />
-                                      <FileUploadPreviewContainer />
-                                      <ReleaseInstallerDialog />
-                                      <CompleteProfilePrompt />
-                                      <AppRoutes isUser={isUser} />
-                                      <DetailsPanelFloating />
-                                      <PowerpackDialog />
-                                      <AppRemoteLoader />
-                                      <TrialBanner />
-                                    </QueryParamProvider>
-                                  </PiPProvider>
-                                </ShortcutsProvider>
-                                <Customerly />
-                              </CustomerlyProvider>
+                              <ShortcutsProvider>
+                                <PiPProvider>
+                                  <QueryParamProvider
+                                    adapter={ReactRouter6Adapter}
+                                    options={{
+                                      updateType: 'replaceIn',
+                                    }}
+                                  >
+                                    <Header />
+                                    <ShareDialog />
+                                    <ViewerDialog />
+                                    <ConfirmDialog />
+                                    <FileUploadPreviewContainer />
+                                    <ReleaseInstallerDialog />
+                                    <CompleteProfilePrompt />
+                                    <AppRoutes isUser={isUser} />
+                                    <DetailsPanelFloating />
+                                    <PowerpackDialog />
+                                    <AppRemoteLoader />
+                                    <TrialBanner />
+                                  </QueryParamProvider>
+                                </PiPProvider>
+                              </ShortcutsProvider>
                             </URIProvider>
                           </NotificationsProvider>
                         </FeedbackProvider>
@@ -306,9 +299,9 @@ const App = () => {
   if (isTrialing && left?.finished) {
     return (
       <BrowserRouter>
-        <CustomerlyProvider appId={PROJECT_ID}>
+        <FeedbackProvider>
           <TrialEnded orgName={ynputConnect?.orgName} />
-        </CustomerlyProvider>
+        </FeedbackProvider>
       </BrowserRouter>
     )
   }
