@@ -97,7 +97,7 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
   const [messengerLoaded, setMessengerLoaded] = useState(false)
 
   // MESSENGER WIDGET
-  const initializeMessenger = (): boolean => {
+  const initializeMessenger = (): void => {
     const win = window as any
     if (typeof win.Featurebase === 'function') {
       console.log('Initializing Featurebase messenger widget')
