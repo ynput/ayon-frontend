@@ -120,7 +120,6 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
         },
       )
     }
-    return false
   }
 
   // CHANGELOG WIDGET
