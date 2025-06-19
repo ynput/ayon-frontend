@@ -39,7 +39,6 @@ import { NotificationsProvider } from '@context/NotificationsContext'
 import { PiPProvider } from '@shared/context/pip/PiPProvider'
 import { RemoteModulesProvider, DetailsPanelProvider } from '@shared/context'
 import { PowerpackProvider } from '@shared/context'
-import { FeedbackProvider } from './feedback/FeedbackContext'
 
 // containers
 import Header from '@containers/header'
@@ -199,35 +198,33 @@ const App = () => {
                     <PasteProvider>
                       <PasteModal />
                       <BrowserRouter>
-                        <FeedbackProvider>
-                          <NotificationsProvider>
-                            <URIProvider>
-                              <ShortcutsProvider>
-                                <PiPProvider>
-                                  <QueryParamProvider
-                                    adapter={ReactRouter6Adapter}
-                                    options={{
-                                      updateType: 'replaceIn',
-                                    }}
-                                  >
-                                    <Header />
-                                    <ShareDialog />
-                                    <ViewerDialog />
-                                    <ConfirmDialog />
-                                    <FileUploadPreviewContainer />
-                                    <ReleaseInstallerDialog />
-                                    <CompleteProfilePrompt />
-                                    <AppRoutes isUser={isUser} />
-                                    <DetailsPanelFloating />
-                                    <PowerpackDialog />
-                                    <AppRemoteLoader />
-                                    <TrialBanner />
-                                  </QueryParamProvider>
-                                </PiPProvider>
-                              </ShortcutsProvider>
-                            </URIProvider>
-                          </NotificationsProvider>
-                        </FeedbackProvider>
+                        <NotificationsProvider>
+                          <URIProvider>
+                            <ShortcutsProvider>
+                              <PiPProvider>
+                                <QueryParamProvider
+                                  adapter={ReactRouter6Adapter}
+                                  options={{
+                                    updateType: 'replaceIn',
+                                  }}
+                                >
+                                  <Header />
+                                  <ShareDialog />
+                                  <ViewerDialog />
+                                  <ConfirmDialog />
+                                  <FileUploadPreviewContainer />
+                                  <ReleaseInstallerDialog />
+                                  <CompleteProfilePrompt />
+                                  <AppRoutes isUser={isUser} />
+                                  <DetailsPanelFloating />
+                                  <PowerpackDialog />
+                                  <AppRemoteLoader />
+                                  <TrialBanner />
+                                </QueryParamProvider>
+                              </PiPProvider>
+                            </ShortcutsProvider>
+                          </URIProvider>
+                        </NotificationsProvider>
                       </BrowserRouter>
                     </PasteProvider>
                   </DetailsPanelProvider>
@@ -299,9 +296,7 @@ const App = () => {
   if (isTrialing && left?.finished) {
     return (
       <BrowserRouter>
-        <FeedbackProvider>
-          <TrialEnded orgName={ynputConnect?.orgName} />
-        </FeedbackProvider>
+        <TrialEnded orgName={ynputConnect?.orgName} />
       </BrowserRouter>
     )
   }
@@ -332,11 +327,12 @@ const App = () => {
 
   return (
     <>
-      {import.meta.env.DEV && mainComponent}
-
-      {!import.meta.env.DEV && (
+      {import.meta.env.DEV ? (
+        mainComponent
+      ) : (
         <ErrorBoundary FallbackComponent={ErrorFallback}>{mainComponent}</ErrorBoundary>
       )}
+
       {tooltipComponent}
     </>
   )

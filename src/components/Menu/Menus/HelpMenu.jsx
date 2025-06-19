@@ -4,7 +4,7 @@ import { useFeedback } from '@/feedback/FeedbackContext'
 
 export const HelpMenu = ({ user, ...props }) => {
   const isUser = user.data.isUser
-  const { openChangelog, openFeedback, openPortal, loaded } = useFeedback()
+  const { openSupport, openFeedback, loaded } = useFeedback()
 
   const items = [
     {
@@ -42,27 +42,20 @@ export const HelpMenu = ({ user, ...props }) => {
     {
       id: 'help',
       label: 'Help center',
-      onClick: () => openPortal('HelpView'),
       icon: 'help',
-    },
-    {
-      id: 'feedback',
-      label: 'Submit Feedback',
-      onClick: openFeedback,
-      icon: 'feedback',
+      onClick: () => openSupport('Home'),
     },
     {
       id: 'changelog',
       label: 'Latest changes',
-      link: 'https://feedback.ayon.app/changelog',
       icon: 'track_changes',
-      target: '_blank',
+      onClick: () => openSupport('Changelog'),
     },
     {
-      id: 'changelog',
-      label: 'Upcoming features',
-      onClick: () => openPortal('RoadmapView'),
-      icon: 'construction',
+      id: 'feedback',
+      label: 'Submit Feedback',
+      icon: 'feedback',
+      onClick: () => openFeedback(),
     },
     { id: 'divider' },
   ]

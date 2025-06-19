@@ -2,18 +2,15 @@ import { useGetFeedbackVerificationQuery, useGetYnputCloudInfoQuery } from '@que
 import { useAppSelector } from '@state/store'
 import { cloneDeep } from 'lodash'
 import React, { createContext, useContext, ReactNode, useEffect, useState } from 'react'
-import { useLocation } from 'react-router-dom'
-import { toast } from 'react-toastify'
 import { useGetSiteInfoQuery } from '@shared/api'
 
 type FeedbackContextType = {
   loaded: boolean
-  openChangelog: () => void
-  openFeedback: () => void
-  openPortal: (
-    page?: 'MainView' | 'RoadmapView' | 'CreatePost' | 'PostsView' | 'ChangelogView' | 'HelpView',
-    articleId?: string,
+  openSupport: (
+    page?: 'Home' | 'Messages' | 'Changelog' | 'Help' | 'NewMessage' | 'ShowArticle',
+    id?: string,
   ) => void
+  openFeedback: () => void
 }
 
 const FeedbackContext = createContext<FeedbackContextType | undefined>(undefined)
@@ -28,9 +25,12 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
 
   const { data: siteInfo } = useGetSiteInfoQuery({ full: true }, { skip: !user.name })
   const { data: connect } = useGetYnputCloudInfoQuery(undefined, { skip: !user.name })
-  const { data: verification } = useGetFeedbackVerificationQuery(undefined, {
-    skip: !user.name || !connect,
-  })
+  const { data: verification, isLoading: isLoadingVerification } = useGetFeedbackVerificationQuery(
+    undefined,
+    {
+      skip: !user.name || !connect,
+    },
+  )
 
   const loadScript = () => {
     if (!scriptLoaded) {
@@ -53,6 +53,9 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
     }
   }
 
+  const serverVersion = siteInfo?.version?.split('+')[0] || 'unknown'
+  const frontendVersion = siteInfo?.version?.split('+')[1] || 'unknown'
+
   const identifyUser = () => {
     if (!user.name || !verification) return
     const verificationData = cloneDeep(verification)
@@ -73,6 +76,8 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
       ...verificationData,
       customFields: {
         origin: window.location.origin,
+        serverVersion: serverVersion,
+        frontendVersion: frontendVersion,
       },
     }
 
@@ -87,6 +92,22 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
     })
   }
 
+  // MESSENGER WIDGET
+  const initializeMessenger = (): boolean => {
+    const win = window as any
+    if (typeof win.Featurebase === 'function') {
+      console.log('Initializing Featurebase messenger widget')
+      win.Featurebase('boot', {
+        appId: '67b76a31b8a7a2f3181da4ba',
+        email: verification?.email,
+        theme: 'dark',
+        userHash: verification?.userHash, // generated user hash token
+      })
+    }
+    return false
+  }
+
+  // CHANGELOG WIDGET
   const initializeChangelog = (): boolean => {
     // everyone sees highlights
     const categories: string[] = []
@@ -120,6 +141,7 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
     return false
   }
 
+  // FEEDBACK WIDGET
   const initializeFeedbackWidget = (): boolean => {
     const win = window as any
     if (typeof win.Featurebase === 'function') {
@@ -133,7 +155,6 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
         (error: any) => {
           if (error) {
             console.error('Error initializing feedback widget:', error)
-            toast.error('Error initializing feedback widget')
           } else {
           }
         },
@@ -142,37 +163,15 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
     return false
   }
 
-  const initializePortalWidget = (): boolean => {
-    const win = window as any
-    if (typeof win.Featurebase === 'function') {
-      win.Featurebase(
-        'initialize_portal_widget',
-        {
-          organization: 'ayon',
-          fullScreen: true,
-          initialPage: 'MainView',
-        },
-        (error: any) => {
-          if (error) {
-            console.error('Error initializing portal widget:', error)
-            toast.error('Error initializing portal widget')
-            return false
-          } else {
-            return true
-          }
-        },
-      )
-    }
-    return false
-  }
-
+  const isLocalHost3000 =
+    window.location.hostname === 'localhost' && window.location.port === '3000'
+  // Load featurebase script and initialize widgets
   useEffect(() => {
+    // if working in a local environment, do not load the script
+    // if (isLocalHost3000) return
     // if not logged in, do not load the script
     if (!user.name) return
     if (!siteInfo) return
-
-    // if working in a local environment, do not load the script
-    if (window.location.hostname === 'localhost' && window.location.port === '3000') return
 
     // if already loaded, do not load again
     if (scriptLoaded) return
@@ -188,70 +187,86 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
 
     // Initialize feedback widget
     initializeFeedbackWidget()
-
-    // Initialize portal widget
-    initializePortalWidget()
   }, [user.name, scriptLoaded, siteInfo])
 
-  const location = useLocation()
   const [identified, setIdentified] = useState(false)
   // verify user
   useEffect(() => {
     // check if we can identify the user
     if (!user.name || !connect || !verification || !scriptLoaded) return
-    // only load the script if on the home page
-    if (!location.pathname.includes('dashboard/tasks')) return
-    // check if we already identified the user
+    // if we are already identified, do not identify again
     if (identified) return
     // Identify the user
     identifyUser()
     setIdentified(true)
-  }, [user.name, connect?.instanceId, verification?.userHash, scriptLoaded, location, identified])
+  }, [
+    user.name,
+    connect?.instanceId,
+    verification?.userHash,
+    scriptLoaded,
+    window.location,
+    identified,
+  ])
 
-  const openChangelog = () => {
+  // load messenger widget once verification is done loading
+  // we don't need verification but we should use it if we have it
+  useEffect(() => {
+    console.log(isLoadingVerification, scriptLoaded)
+    // wait for script to be loaded and verification to finish loading
+    if (isLoadingVerification || !scriptLoaded) return
+
+    // initialize the messenger widget
+    initializeMessenger()
+  }, [verification, isLoadingVerification, scriptLoaded])
+
+  const openSupport: FeedbackContextType['openSupport'] = (page = 'Home', id) => {
     const win = window as any
-    if (typeof win.Featurebase === 'function') {
-      win.Featurebase('manually_open_changelog_popup')
-    } else {
-      console.warn('Featurebase script not loaded yet')
+    if (typeof win.Featurebase !== 'function') return
+
+    switch (page) {
+      case 'Home':
+        // Show messenger home
+        win.Featurebase('show')
+        break
+      case 'Messages':
+        // Show messages view
+        win.Featurebase('show', 'messages')
+        break
+      case 'Changelog':
+        // Show changelog view
+        win.Featurebase('show', 'changelog')
+        break
+      case 'Help':
+        // Open help center
+        win.Featurebase('show', 'help')
+        break
+      case 'ShowArticle':
+        // Open a specific help article
+        if (id) win.Featurebase('showArticle', id)
+        else win.Featurebase('show', 'help')
+        break
+      case 'NewMessage':
+        // Open new message dialog
+        win.Featurebase('showNewMessage', id)
+        break
+      default:
+        // Default to showing the main widget
+        win.Featurebase('show')
+        break
     }
   }
 
-  const openFeedback = () => {
+  const openFeedback: FeedbackContextType['openFeedback'] = () => {
     window.postMessage({
       target: 'FeaturebaseWidget',
       data: {
         action: 'openFeedbackWidget',
-        // setBoard: 'yourboardname', // optional - preselect a board
-      },
-    })
-  }
-
-  const openPortal = (
-    page:
-      | 'MainView'
-      | 'RoadmapView'
-      | 'CreatePost'
-      | 'PostsView'
-      | 'ChangelogView'
-      | 'HelpView' = 'MainView',
-    articleId?: string,
-  ) => {
-    window.postMessage({
-      target: 'FeaturebaseWidget',
-      data: {
-        action: 'changePage',
-        payload: page,
-        openWidget: true,
-        ...(articleId && { articleId }),
       },
     })
   }
 
   return (
-    <FeedbackContext.Provider
-      value={{ openChangelog, openFeedback, openPortal, loaded: scriptLoaded }}
-    >
+    <FeedbackContext.Provider value={{ openSupport, openFeedback, loaded: scriptLoaded }}>
       {children}
     </FeedbackContext.Provider>
   )
