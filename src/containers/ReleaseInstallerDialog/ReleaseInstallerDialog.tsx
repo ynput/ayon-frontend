@@ -33,8 +33,7 @@ const ReleaseInstallerDialog: FC = () => {
   return (
     <Styled.FriendlyDialog
       isOpen
-      onClose={() => {}}
-      hideCancelButton
+      onClose={closeDialog}
       header={<Styled.Header>Install pipeline release</Styled.Header>}
       size="md"
     >
