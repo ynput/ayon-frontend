@@ -19,6 +19,7 @@ const ErrorPage = lazy(() => import('@pages/ErrorPage'))
 import useLoadRemoteProjectPages from '../remote/useLoadRemotePages'
 import LoadingPage from '@pages/LoadingPage'
 import { RemoteAddon } from '@shared/context'
+import useHideMessenger from '@/feedback/useHideMessenger'
 
 interface AppRoutesProps {
   isUser: boolean
@@ -29,6 +30,9 @@ const AppRoutes: FC<AppRoutesProps> = ({ isUser }) => {
   const { remotePages, isLoading: isLoadingModules } = useLoadRemoteProjectPages({
     moduleKey: 'Route',
   }) as { remotePages: RemoteAddon[]; isLoading: boolean }
+
+  // hide the messenger icon on certain pages
+  useHideMessenger()
 
   if (isLoadingModules) {
     return <LoadingPage />

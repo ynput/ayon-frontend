@@ -10,6 +10,8 @@ type FeedbackContextType = {
     page?: 'Home' | 'Messages' | 'Changelog' | 'Help' | 'NewMessage' | 'ShowArticle',
     id?: string,
   ) => void
+  messengerVisibility: boolean
+  setMessengerVisibility: (show: boolean) => void // show/hide the messenger icon
   openFeedback: () => void
 }
 
@@ -92,17 +94,31 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
     })
   }
 
+  const [messengerLoaded, setMessengerLoaded] = useState(false)
+
   // MESSENGER WIDGET
   const initializeMessenger = (): boolean => {
     const win = window as any
     if (typeof win.Featurebase === 'function') {
       console.log('Initializing Featurebase messenger widget')
-      win.Featurebase('boot', {
-        appId: '67b76a31b8a7a2f3181da4ba',
-        email: verification?.email,
-        theme: 'dark',
-        userHash: verification?.userHash, // generated user hash token
-      })
+      win.Featurebase(
+        'boot',
+        {
+          appId: '67b76a31b8a7a2f3181da4ba',
+          email: verification?.email,
+          theme: 'dark',
+          userHash: verification?.userHash, // generated user hash token
+        },
+        (err: any) => {
+          // Callback function. Called when identify completed.
+          if (err) {
+            console.error(err)
+          } else {
+            console.log('Featurebase messenger completed')
+            setMessengerLoaded(true)
+          }
+        },
+      )
     }
     return false
   }
@@ -211,7 +227,6 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
   // load messenger widget once verification is done loading
   // we don't need verification but we should use it if we have it
   useEffect(() => {
-    console.log(isLoadingVerification, scriptLoaded)
     // wait for script to be loaded and verification to finish loading
     if (isLoadingVerification || !scriptLoaded) return
 
@@ -265,8 +280,26 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
     })
   }
 
+  const [messengerVisibility, setMessengerVisibility] = useState(true)
+
+  useEffect(() => {
+    if (!scriptLoaded || !messengerLoaded) return
+    const root = document.getElementById('fb-messenger-root')
+    if (root instanceof HTMLElement) {
+      root.style.display = messengerVisibility ? 'block' : 'none'
+    }
+  }, [scriptLoaded, messengerLoaded, messengerVisibility])
+
   return (
-    <FeedbackContext.Provider value={{ openSupport, openFeedback, loaded: scriptLoaded }}>
+    <FeedbackContext.Provider
+      value={{
+        openSupport,
+        openFeedback,
+        messengerVisibility,
+        setMessengerVisibility,
+        loaded: scriptLoaded,
+      }}
+    >
       {children}
     </FeedbackContext.Provider>
   )
