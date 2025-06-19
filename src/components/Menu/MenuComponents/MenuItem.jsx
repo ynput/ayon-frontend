@@ -10,6 +10,7 @@ const MenuItem = forwardRef(
     {
       label,
       icon,
+      img,
       highlighted,
       notification,
       selected,
@@ -43,6 +44,7 @@ const MenuItem = forwardRef(
         label={labelsArray.join(', ')}
       >
         {icon && <Icon icon={icon} />}
+        {img && <Styled.Img src={img} alt={`${label} icon`} />}
         {labelsArray.map((label, index) => (
           <span key={index}>{label}</span>
         ))}

@@ -20,6 +20,8 @@ import { useRestart } from '@context/RestartContext'
 import clsx from 'clsx'
 import InboxNotificationIcon from './InboxNotification'
 import ReleaseInstallerPrompt from '@containers/ReleaseInstallerDialog/ReleaseInstallerPrompt/ReleaseInstallerPrompt'
+import { useFeedback } from '@/feedback/FeedbackContext'
+import { SupportBubble } from '@/feedback/SupportBubble'
 
 const FlexWrapper = styled.div`
   display: flex;
@@ -80,6 +82,8 @@ const Header = () => {
   const navigate = useNavigate()
   // get user from redux store
   const user = useAppSelector((state) => state.user)
+
+  const { openSupport, messengerLoaded } = useFeedback()
 
   // restart server notification
   const { isSnoozing } = useRestart()
@@ -183,6 +187,16 @@ const Header = () => {
             <span>Developer Mode</span>
             <StyledSwitch checked={developerMode} readOnly />
           </DeveloperSwitch>
+        )}
+
+        {messengerLoaded && (
+          <HeaderButton
+            style={{ padding: '8px 6px' }}
+            onClick={() => openSupport('NewMessage')}
+            variant="nav"
+          >
+            <SupportBubble />
+          </HeaderButton>
         )}
 
         {/* help icon and menu vvv */}

@@ -4,16 +4,9 @@ import { useFeedback } from '@/feedback/FeedbackContext'
 
 export const HelpMenu = ({ user, ...props }) => {
   const isUser = user.data.isUser
-  const { openChangelog, openFeedback, openPortal, loaded } = useFeedback()
+  const { openSupport, openFeedback, openPortal, loaded } = useFeedback()
 
   const items = [
-    {
-      id: 'documentation',
-      label: 'Documentation',
-      link: 'https://ayon.ynput.io/',
-      icon: 'description',
-      target: '_blank',
-    },
     {
       id: 'forum',
       label: 'Community Forum',
@@ -21,7 +14,21 @@ export const HelpMenu = ({ user, ...props }) => {
       icon: 'forum',
       target: '_blank',
     },
+    {
+      id: 'discord',
+      label: 'Discord Server',
+      link: 'https://discord.gg/ynput',
+      img: '/Discord-Symbol-White.svg',
+      target: '_blank',
+    },
     { id: 'divider' },
+    {
+      id: 'documentation',
+      label: 'Dev Portal',
+      link: 'https://docs.ayon.dev/',
+      icon: 'code',
+      target: '_blank',
+    },
     {
       id: 'api',
       label: 'REST API',
@@ -42,47 +49,25 @@ export const HelpMenu = ({ user, ...props }) => {
     {
       id: 'help',
       label: 'Help center',
-      onClick: () => openPortal('HelpView'),
       icon: 'help',
-    },
-    {
-      id: 'feedback',
-      label: 'Submit Feedback',
-      onClick: openFeedback,
-      icon: 'feedback',
+      onClick: () => openPortal('MainView'),
     },
     {
       id: 'changelog',
       label: 'Latest changes',
-      link: 'https://feedback.ayon.app/changelog',
       icon: 'track_changes',
-      target: '_blank',
+      onClick: () => openSupport('Changelog'),
     },
     {
-      id: 'changelog',
-      label: 'Upcoming features',
-      onClick: () => openPortal('RoadmapView'),
-      icon: 'construction',
+      id: 'feedback',
+      label: 'Submit Feedback',
+      icon: 'feedback',
+      onClick: () => openFeedback(),
     },
     { id: 'divider' },
   ]
 
   if (loaded) items.unshift(...feedback)
-
-  const managers = [
-    {
-      id: 'divider',
-    },
-    {
-      id: 'support',
-      label: 'Get Support',
-      link: 'https://ynput.io/services',
-      icon: 'support_agent',
-      target: '_blank',
-    },
-  ]
-
-  if (!isUser) items.push(...managers)
 
   return <Menu menu={items} {...props} />
 }

@@ -1,3 +1,4 @@
+import { useFeedback } from '@/feedback/FeedbackContext'
 import { Button, Panel, Section } from '@ynput/ayon-react-components'
 import React from 'react'
 import styled from 'styled-components'
@@ -6,16 +7,33 @@ const StyledPanel = styled(Panel)`
   max-width: 300px;
   min-width: min-content;
   position: absolute;
-  top: 30%;
+  top: 40%;
   left: 50%;
   transform: translate(-50%, -50%);
+  text-align: center;
 
   pre {
     white-space: pre-wrap;
+    padding: 8px;
+    background-color: var(--md-sys-color-error-container);
+    border-radius: 4px;
+
+    color: var(--md-sys-color-on-error-container);
+  }
+
+  a,
+  button {
+    width: 100%;
+  }
+
+  button {
+    height: 40px;
   }
 `
 
 const ErrorFallback = ({ error }) => {
+  const { openSupport } = useFeedback()
+
   if (error?.toString()?.includes('TypeError: Failed to fetch dynamically imported module:')) {
     return (
       <StyledPanel>
@@ -37,25 +55,19 @@ const ErrorFallback = ({ error }) => {
 
   return (
     <StyledPanel>
-      <h1>Something went wrong :(</h1>
-      <pre style={{ color: 'var(--color-hl-error)' }}>{error?.toString()}</pre>
+      <h1>Something went wrong, please send a report to Ynput.</h1>
+      <pre>{error?.toString()}</pre>
       <Section direction="row">
-        <a href="https://github.com/ynput/ayon-frontend/issues" target="_blank" rel="noreferrer">
-          <Button
-            icon={'bug_report'}
-            label={'Report bug'}
-            style={{
-              width: '100%',
-            }}
-            variant="text"
-          />
-        </a>
         <Button
-          label={'Reload page'}
-          icon="sync"
-          variant="filled"
-          onClick={() => window.location.reload()}
+          label={'Send report'}
+          icon="report"
+          onClick={() =>
+            openSupport('NewMessage', `I have encountered an error: ${error?.toString()}`)
+          }
         />
+        <a href="/">
+          <Button label={'Home'} icon="home" variant="filled" />
+        </a>
       </Section>
     </StyledPanel>
   )
