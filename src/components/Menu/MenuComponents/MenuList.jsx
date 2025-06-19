@@ -82,6 +82,7 @@ const MenuList = ({
           const {
             label,
             icon,
+            img,
             highlighted,
             onClick,
             link,
@@ -96,7 +97,7 @@ const MenuList = ({
             <MenuItem
               tabIndex={0}
               key={`${id}-${i}`}
-              {...{ label, icon, highlighted, items, selected }}
+              {...{ label, icon, img, highlighted, items, selected }}
               isLink={link}
               onClick={(e) =>
                 items.length

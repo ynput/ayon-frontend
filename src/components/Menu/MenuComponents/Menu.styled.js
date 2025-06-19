@@ -206,6 +206,12 @@ export const Item = styled.li`
   }
 `
 
+export const Img = styled.img`
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+`
+
 export const Footer = styled.footer`
   position: relative;
   display: flex;

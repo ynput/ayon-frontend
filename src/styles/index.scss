@@ -10,6 +10,11 @@ body {
   scrollbar-width: thin;
 }
 
+// hide featurebase bubble by default
+#fb-messenger-root {
+  display: none;
+}
+
 // perfect-scrollbar
 .ps__rail-y,
 .ps__rail-x {

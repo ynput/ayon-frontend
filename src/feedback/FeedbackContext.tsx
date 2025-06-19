@@ -10,9 +10,14 @@ type FeedbackContextType = {
     page?: 'Home' | 'Messages' | 'Changelog' | 'Help' | 'NewMessage' | 'ShowArticle',
     id?: string,
   ) => void
+  messengerLoaded: boolean // whether the messenger widget is loaded
   messengerVisibility: boolean
   setMessengerVisibility: (show: boolean) => void // show/hide the messenger icon
   openFeedback: () => void
+  openPortal: (
+    page?: 'MainView' | 'RoadmapView' | 'CreatePost' | 'PostsView' | 'ChangelogView' | 'HelpView',
+    articleId?: string,
+  ) => void
 }
 
 const FeedbackContext = createContext<FeedbackContextType | undefined>(undefined)
@@ -178,12 +183,37 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
     return false
   }
 
-  const isLocalHost3000 =
-    window.location.hostname === 'localhost' && window.location.port === '3000'
-  // Load featurebase script and initialize widgets
+  // PORTAL WIDGET (old)
+  const initializePortalWidget = (): boolean => {
+    const win = window as any
+    if (typeof win.Featurebase === 'function') {
+      win.Featurebase(
+        'initialize_portal_widget',
+        {
+          organization: 'ayon',
+          fullScreen: true,
+          initialPage: 'MainView',
+        },
+        (error: any) => {
+          if (error) {
+            console.error('Error initializing portal widget:', error)
+            return false
+          } else {
+            return true
+          }
+        },
+      )
+    }
+    return false
+  }
+
+  // Use an environment variable to skip loading Featurebase in certain environments
+  const skipFeaturebase = import.meta.env.VITE_SKIP_FEATUREBASE === 'true'
+
+  // Load Featurebase script and initialize widgets
   useEffect(() => {
-    // if working in a local environment, do not load the script
-    if (isLocalHost3000) return
+    // if skip flag is set, do not load the script
+    if (skipFeaturebase) return
     // if not logged in, do not load the script
     if (!user.name) return
     if (!siteInfo) return
@@ -202,6 +232,9 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
 
     // Initialize feedback widget
     initializeFeedbackWidget()
+
+    // Initialize portal widget
+    initializePortalWidget()
   }, [user.name, scriptLoaded, siteInfo])
 
   const [identified, setIdentified] = useState(false)
@@ -233,9 +266,71 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
     initializeMessenger()
   }, [verification, isLoadingVerification, scriptLoaded])
 
+  const openFeedback: FeedbackContextType['openFeedback'] = () => {
+    window.postMessage({
+      target: 'FeaturebaseWidget',
+      data: {
+        action: 'openFeedbackWidget',
+      },
+    })
+  }
+
+  const openPortal = (
+    page:
+      | 'MainView'
+      | 'RoadmapView'
+      | 'CreatePost'
+      | 'PostsView'
+      | 'ChangelogView'
+      | 'HelpView' = 'MainView',
+    articleId?: string,
+  ) => {
+    window.postMessage({
+      target: 'FeaturebaseWidget',
+      data: {
+        action: 'changePage',
+        payload: page,
+        openWidget: true,
+        ...(articleId && { articleId }),
+      },
+    })
+  }
+
+  const [messengerVisibility, setMessengerVisibility] = useState(false)
+  const supportElement = document.getElementById('fb-messenger-root')
+
+  const setSupportDisplay = (show: boolean) =>
+    supportElement instanceof HTMLElement &&
+    (supportElement.style.display = show ? 'block' : 'none')
+
+  useEffect(() => {
+    if (!scriptLoaded || !messengerLoaded) return
+    setSupportDisplay(messengerVisibility)
+  }, [scriptLoaded, messengerLoaded, messengerVisibility])
+
+  // when the messenger is hidden, we need to hide the root element again
+  useEffect(() => {
+    if (!scriptLoaded || !messengerLoaded) return
+    const win = window as any
+    if (typeof win.Featurebase === 'function') {
+      win.Featurebase('onHide', function () {
+        console.log('hiding')
+        // hide the messenger root element
+        setMessengerVisibility(false)
+      })
+    }
+  }, [scriptLoaded, messengerLoaded])
+
   const openSupport: FeedbackContextType['openSupport'] = (page = 'Home', id) => {
     const win = window as any
-    if (typeof win.Featurebase !== 'function') return
+    if (typeof win.Featurebase !== 'function') {
+      window.alert('Featurebase SDK is not loaded yet. Please try again later.')
+      console.warn('Featurebase SDK is not loaded yet.')
+      return
+    }
+
+    // ensure the messenger is visible
+    setMessengerVisibility(true)
 
     switch (page) {
       case 'Home':
@@ -270,30 +365,13 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
     }
   }
 
-  const openFeedback: FeedbackContextType['openFeedback'] = () => {
-    window.postMessage({
-      target: 'FeaturebaseWidget',
-      data: {
-        action: 'openFeedbackWidget',
-      },
-    })
-  }
-
-  const [messengerVisibility, setMessengerVisibility] = useState(true)
-
-  useEffect(() => {
-    if (!scriptLoaded || !messengerLoaded) return
-    const root = document.getElementById('fb-messenger-root')
-    if (root instanceof HTMLElement) {
-      root.style.display = messengerVisibility ? 'block' : 'none'
-    }
-  }, [scriptLoaded, messengerLoaded, messengerVisibility])
-
   return (
     <FeedbackContext.Provider
       value={{
         openSupport,
         openFeedback,
+        openPortal,
+        messengerLoaded,
         messengerVisibility,
         setMessengerVisibility,
         loaded: scriptLoaded,
