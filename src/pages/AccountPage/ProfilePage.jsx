@@ -256,6 +256,8 @@ const ProfilePage = ({ user = {}, isLoading }) => {
               attributes={attributes}
               showAvatarUrl={false}
             />
+
+            {!user?.data?.disablePasswordLogin && (
             <FormRow label="Password" key="Password">
               <LockedInput
                 label="Password"
@@ -264,6 +266,7 @@ const ProfilePage = ({ user = {}, isLoading }) => {
                 onEdit={() => setShowSetPassword(true)}
               />
             </FormRow>
+            )}
 
             <FormRow label="Desktop Notifications" key="notifications">
               <div data-tooltip={notificationsTooltip} style={{ width: 'fit-content' }}>

@@ -21,6 +21,7 @@ const USER_BY_NAME_QUERY = `
           accessGroups
           defaultAccessGroups
           hasPassword
+          disablePasswordLogin
           allAttrib
         }
       }
@@ -43,6 +44,7 @@ const USERS_QUERY = `
           accessGroups
           defaultAccessGroups
           hasPassword
+          disablePasswordLogin
           createdAt
           updatedAt
           apiKeyPreview
