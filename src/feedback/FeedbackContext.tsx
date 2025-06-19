@@ -220,7 +220,7 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
     connect?.instanceId,
     verification?.userHash,
     scriptLoaded,
-    window.location,
+    window.location.pathname,
     identified,
   ])
 
