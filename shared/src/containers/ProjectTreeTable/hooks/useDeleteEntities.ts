@@ -82,7 +82,7 @@ const useDeleteEntities = ({ onSuccess }: UseDeleteEntitiesProps) => {
           // check if the error is because of child tasks, products
           if (error?.errorCodes?.includes(FOLDER_WITH_CHILDREN_CODE)) {
             const confirmForce = window.confirm(
-              `Are you really sure you want to delete ${entityLabel} and all of its dependencies? This cannot be undone.`,
+              `Are you really sure you want to delete ${entityLabel} and all of its dependencies? This cannot be undone. (NOT RECOMMENDED)`,
             )
             if (confirmForce) {
               deleteEntities(true)
