@@ -3,7 +3,7 @@ import { useFeedback } from './FeedbackContext'
 import { useLocation } from 'react-router-dom'
 import { useAppSelector } from '@state/store'
 
-const pathsToHide = ['/projects/*/reviews/*']
+const pathsToHide = ['/projects/*/reviews/*', '/projects/*/addon/*']
 
 // Utility function to check if the current path matches any of the paths to hide
 const doesPathMatch = (pathname: string) => {
