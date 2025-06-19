@@ -168,7 +168,7 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
   // Load featurebase script and initialize widgets
   useEffect(() => {
     // if working in a local environment, do not load the script
-    // if (isLocalHost3000) return
+    if (isLocalHost3000) return
     // if not logged in, do not load the script
     if (!user.name) return
     if (!siteInfo) return
