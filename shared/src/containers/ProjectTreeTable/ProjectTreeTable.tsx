@@ -49,14 +49,14 @@ import useColumnVirtualization from './hooks/useColumnVirtualization'
 import useKeyboardNavigation from './hooks/useKeyboardNavigation'
 
 // Utility function imports
-import { getCellId } from './utils/cellUtils'
+import { getCellId, getEntityDataById, parseCellId } from './utils/cellUtils'
 import { generateLoadingRows, generateDummyAttributes } from './utils/loadingUtils'
 import { createPortal } from 'react-dom'
 import { Icon } from '@ynput/ayon-react-components'
 import { AttributeEnumItem, ProjectTableAttribute, BuiltInFieldOptions } from './types'
 import { ToggleExpandAll, useProjectTableContext } from './context/ProjectTableContext'
 import { getReadOnlyLists, getTableFieldOptions } from './utils'
-import { UpdateTableEntities } from './hooks/useUpdateTableData'
+import { EntityUpdate } from './hooks/useUpdateTableData'
 
 // dnd-kit imports
 import {
@@ -67,15 +67,20 @@ import {
 // import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
 import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { isGroupId } from './hooks'
+
+type CellUpdate = (
+  entity: Omit<EntityUpdate, 'id'>,
+  config?: { selection?: string[] },
+) => Promise<void>
 
 declare module '@tanstack/react-table' {
   interface TableMeta<TData extends RowData> {
     options?: BuiltInFieldOptions
     readOnly?: ProjectTreeTableProps['readOnly']
     projectName?: string
-    updateEntities?: UpdateTableEntities
+    updateEntities?: CellUpdate
     toggleExpandAll?: ToggleExpandAll
+    selection?: string[]
   }
 }
 
@@ -169,6 +174,7 @@ export const ProjectTreeTable = ({
     showHierarchy,
     fetchNextPage,
     scopes,
+    getEntityById,
   } = useProjectTableContext()
 
   const isLoading = isLoadingProp || isLoadingData
@@ -220,7 +226,40 @@ export const ProjectTreeTable = ({
     [attribFields, readOnly],
   )
 
+  const { selectedCells } = useSelectionCellsContext()
   const { updateEntities } = useCellEditing()
+
+  const handleCellUpdate: CellUpdate = useCallback(
+    async (entity, config) => {
+      const { selection = [] } = config || {}
+      const entitiesToUpdate: EntityUpdate[] = []
+      if (!selection?.length) {
+        entitiesToUpdate.push({ ...entity, id: entity.rowId })
+      } else {
+        // if includeSelection is true, update all the selected cells with the same columnId
+        const { field, value, isAttrib, type } = entity
+        for (const cellId of selectedCells) {
+          const { colId, rowId } = parseCellId(cellId) || {}
+
+          const entity = getEntityById(rowId || '')
+          if (!entity) continue
+
+          if (colId?.replace('attrib_', '') === field && rowId) {
+            entitiesToUpdate.push({
+              field: field,
+              rowId: rowId,
+              id: entity.entityId,
+              value: value,
+              isAttrib: isAttrib,
+              type: entity.entityType,
+            })
+          }
+        }
+      }
+      await updateEntities(entitiesToUpdate, true)
+    },
+    [updateEntities, getEntityById, selectedCells],
+  )
 
   const columnAttribs = useMemo(
     () => (isInitialized ? attribFields : loadingAttrib),
@@ -316,9 +355,10 @@ export const ProjectTreeTable = ({
       projectName,
       options,
       readOnly: readOnlyColumns,
-      updateEntities,
+      updateEntities: handleCellUpdate,
       toggleExpandAll,
       loadMoreTasks: fetchNextPage,
+      selection: Array.from(selectedCells),
     },
   })
 
@@ -1030,8 +1070,13 @@ const TableCell = ({
         // Only process left clicks (button 0), ignore right clicks
         if (e.button !== 0) return
 
+        const target = e.target as HTMLElement
+
         // check we are not clicking on expander
-        if ((e.target as HTMLElement).closest('.expander')) return
+        if (target.closest('.expander')) return
+
+        // check we are not clicking a dropdown chevron or in a dropdown
+        if (target.closest('.expand') || target.closest('.options')) return
 
         // only name column can be selected for group rows
         if (isGroup && cell.column.id !== 'name') return clearSelection()
