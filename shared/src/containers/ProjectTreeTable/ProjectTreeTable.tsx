@@ -49,7 +49,7 @@ import useColumnVirtualization from './hooks/useColumnVirtualization'
 import useKeyboardNavigation from './hooks/useKeyboardNavigation'
 
 // Utility function imports
-import { getCellId, parseCellId } from './utils/cellUtils'
+import { getCellId, getEntityDataById, parseCellId } from './utils/cellUtils'
 import { generateLoadingRows, generateDummyAttributes } from './utils/loadingUtils'
 import { createPortal } from 'react-dom'
 import { Icon } from '@ynput/ayon-react-components'
@@ -174,6 +174,7 @@ export const ProjectTreeTable = ({
     showHierarchy,
     fetchNextPage,
     scopes,
+    getEntityById,
   } = useProjectTableContext()
 
   const isLoading = isLoadingProp || isLoadingData
@@ -240,21 +241,24 @@ export const ProjectTreeTable = ({
         for (const cellId of selectedCells) {
           const { colId, rowId } = parseCellId(cellId) || {}
 
+          const entity = getEntityById(rowId || '')
+          if (!entity) continue
+
           if (colId?.replace('attrib_', '') === field && rowId) {
             entitiesToUpdate.push({
               field: field,
               rowId: rowId,
-              id: rowId,
+              id: entity.entityId,
               value: value,
               isAttrib: isAttrib,
-              type: type,
+              type: entity.entityType,
             })
           }
         }
       }
       await updateEntities(entitiesToUpdate, true)
     },
-    [updateEntities, selectedCells],
+    [updateEntities, getEntityById, selectedCells],
   )
 
   const columnAttribs = useMemo(
