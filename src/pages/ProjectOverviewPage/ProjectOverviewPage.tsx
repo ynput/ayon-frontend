@@ -31,6 +31,8 @@ import OverviewActions from './components/OverviewActions'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useFiltersWithHierarchy } from '@shared/containers'
 import { useAppSelector } from '@state/store'
+import { OperationResponseModel } from '@shared/api'
+import useExpandAndSelectNewFolders from './hooks/useExpandAndSelectNewFolders'
 
 const searchFilterTypes: FilterFieldType[] = [
   'attributes',
@@ -120,6 +122,14 @@ const ProjectOverviewPage: FC = () => {
     }
   }
 
+  const expandAndSelectNewFolders = useExpandAndSelectNewFolders()
+
+  // select new entities and expand their parents
+  const handleNewEntities = (ops: OperationResponseModel[]) => {
+    // expands to newly created folders and selects them
+    expandAndSelectNewFolders(ops)
+  }
+
   return (
     <main style={{ overflow: 'hidden', gap: 4 }}>
       <Splitter
@@ -136,7 +146,7 @@ const ProjectOverviewPage: FC = () => {
         <SplitterPanel size={88}>
           <Section wrap direction="column" style={{ height: '100%' }}>
             <Toolbar style={{ gap: 8 }}>
-              <NewEntity disabled={!showHierarchy} />
+              <NewEntity disabled={!showHierarchy} onNewEntities={handleNewEntities} />
               <OverviewActions />
               <SearchFilterWrapper
                 filters={filtersWithHierarchy}

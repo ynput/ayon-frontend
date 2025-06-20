@@ -107,7 +107,7 @@ export interface ProjectTableProviderProps {
   expanded: ExpandedState
   toggleExpanded: (id: string) => void
   updateExpanded: OnChangeFn<ExpandedState>
-  setExpanded: (expanded: ExpandedState) => void
+  setExpanded: React.Dispatch<React.SetStateAction<ExpandedState>>
 
   // Sorting
   sorting: SortingState
@@ -316,6 +316,7 @@ export const ProjectTableProvider = ({
         updateShowHierarchy,
         // expanded state
         expanded,
+        setExpanded,
         toggleExpanded,
         updateExpanded,
         toggleExpandAll,
