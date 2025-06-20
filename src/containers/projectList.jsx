@@ -17,6 +17,7 @@ import useTableLoadingData from '@hooks/useTableLoadingData'
 import { useProjectSelectDispatcher } from './ProjectMenu/hooks/useProjectSelectDispatcher'
 import useAyonNavigate from '@hooks/useAyonNavigate'
 import useUserProjectPermissions from '@hooks/useUserProjectPermissions'
+import { updateUserPreferences as updateUserPreferencesAction } from '@state/user'
 
 const formatName = (rowData, defaultTitle, field = 'name') => {
   if (rowData[field] === '_') return defaultTitle
@@ -246,6 +247,9 @@ const ProjectList = ({
           newPinnedProjects.splice(index, 1)
         }
       }
+
+      // update in local redux state
+      dispatch(updateUserPreferencesAction({ pinnedProjects: newPinnedProjects }))
 
       // update user preferences
       await updateUserPreferences({
