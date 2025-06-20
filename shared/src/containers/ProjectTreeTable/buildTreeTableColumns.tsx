@@ -238,7 +238,10 @@ const buildTreeTableColumns = ({
             options={meta?.options?.status.filter((s) => s.scope?.includes(type))}
             isCollapsed={!!row.original.childOnlyMatch}
             onChange={(value) =>
-              meta?.updateEntities?.([{ field: column.id, value, id, type, rowId: id }])
+              meta?.updateEntities?.(
+                { field: column.id, value, type, rowId: id },
+                { selection: meta?.selection },
+              )
             }
             isReadOnly={meta?.readOnly?.includes(column.id)}
           />
@@ -278,7 +281,10 @@ const buildTreeTableColumns = ({
             }
             isCollapsed={!!row.original.childOnlyMatch}
             onChange={(value) =>
-              meta?.updateEntities?.([{ field: fieldId, value, id, type, rowId: row.id }])
+              meta?.updateEntities?.(
+                { field: fieldId, value, type, rowId: row.id },
+                { selection: meta?.selection },
+              )
             }
             isReadOnly={meta?.readOnly?.includes(column.id)}
           />
@@ -322,7 +328,10 @@ const buildTreeTableColumns = ({
             options={meta?.options?.assignee}
             isCollapsed={!!row.original.childOnlyMatch}
             onChange={(value) =>
-              meta?.updateEntities?.([{ field: column.id, value, id, type, rowId: row.id }])
+              meta?.updateEntities?.(
+                { field: column.id, value, type, rowId: row.id },
+                { selection: meta?.selection },
+              )
             }
             isReadOnly={meta?.readOnly?.includes(column.id)}
             pt={{
@@ -362,7 +371,10 @@ const buildTreeTableColumns = ({
             options={meta?.options?.tag}
             isCollapsed={!!row.original.childOnlyMatch}
             onChange={(value) =>
-              meta?.updateEntities?.([{ field: column.id, value, id, type, rowId: row.id }])
+              meta?.updateEntities?.(
+                { field: column.id, value, type, rowId: row.id },
+                { selection: meta?.selection },
+              )
             }
             isReadOnly={meta?.readOnly?.includes(column.id)}
             enableCustomValues
@@ -417,9 +429,10 @@ const buildTreeTableColumns = ({
                 )
               }
               onChange={(value) =>
-                meta?.updateEntities?.([
-                  { field: columnIdParsed, value, id, type, isAttrib: true, rowId: row.id },
-                ])
+                meta?.updateEntities?.(
+                  { field: columnIdParsed, value, type, isAttrib: true, rowId: row.id },
+                  { selection: !!attrib.data.enum?.length ? meta?.selection : undefined },
+                )
               }
             />
           )

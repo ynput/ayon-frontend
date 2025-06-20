@@ -72,7 +72,7 @@ export interface WidgetBaseProps {
   onCancelEdit?: () => void
 }
 
-const EditorCellComponent: FC<EditorCellProps> = ({
+export const CellWidget: FC<EditorCellProps> = ({
   rowId,
   columnId,
   value,
@@ -249,27 +249,3 @@ const EditorCellComponent: FC<EditorCellProps> = ({
     </Cell>
   )
 }
-
-// Custom comparison function for memo
-function arePropsEqual(prevProps: EditorCellProps, nextProps: EditorCellProps) {
-  // Only re-render if these props change
-  return (
-    prevProps.rowId === nextProps.rowId &&
-    prevProps.columnId === nextProps.columnId &&
-    prevProps.isCollapsed === nextProps.isCollapsed &&
-    JSON.stringify(prevProps.value) === JSON.stringify(nextProps.value) &&
-    prevProps?.attributeData?.type === nextProps?.attributeData?.type &&
-    // Only check options length for list types to avoid deep comparison
-    ((!prevProps?.attributeData?.type.includes('list') &&
-      !nextProps?.attributeData?.type.includes('list')) ||
-      prevProps.options?.length === nextProps.options?.length) &&
-    prevProps.isInherited === nextProps.isInherited &&
-    prevProps.enableCustomValues === nextProps.enableCustomValues &&
-    prevProps.isReadOnly === nextProps.isReadOnly &&
-    prevProps.isPlaceholder === nextProps.isPlaceholder &&
-    prevProps.isFocused === nextProps.isFocused &&
-    prevProps.isCollapsed === nextProps.isCollapsed
-  )
-}
-
-export const CellWidget = memo(EditorCellComponent, arePropsEqual)
