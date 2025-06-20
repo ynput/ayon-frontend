@@ -112,6 +112,7 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
           appId: '67b76a31b8a7a2f3181da4ba',
           email: verification?.email,
           theme: 'dark',
+          userId: verification?.userId, // user ID from verification
           userHash: verification?.userHash, // generated user hash token
         },
         (err: any) => {
