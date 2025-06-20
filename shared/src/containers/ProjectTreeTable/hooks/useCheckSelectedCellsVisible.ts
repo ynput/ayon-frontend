@@ -2,9 +2,8 @@
 // If they are not visible, they will be removed from the selection
 // This can happen when the user changes the slicer selection or filters (combined filters changes)
 
-import { useEffect, useMemo } from 'react'
+import { useEffect } from 'react'
 import { CellId, parseCellId } from '../utils'
-import { ExpandedState } from '@tanstack/react-table'
 import { useProjectTableContext } from '../context'
 
 type CheckSelectedCellsVisibleProps = {
@@ -20,7 +19,7 @@ export const useCheckSelectedCellsVisible = ({
   focusedCellId,
   setFocusedCellId,
 }: CheckSelectedCellsVisibleProps): void => {
-  const { entitiesMap } = useProjectTableContext()
+  const { getEntityById } = useProjectTableContext()
 
   // checks that all of the selected cells are in the tableData
   // if they are not, they will be removed from the selection
@@ -28,7 +27,7 @@ export const useCheckSelectedCellsVisible = ({
     const missingCells = new Set<CellId>()
     for (const cellId of selectedCells) {
       // check if the cell rowId is in
-      if (!entitiesMap.get(parseCellId(cellId)?.rowId || '')) {
+      if (!getEntityById(parseCellId(cellId || '')?.rowId || '')) {
         missingCells.add(cellId)
       }
     }
@@ -47,5 +46,5 @@ export const useCheckSelectedCellsVisible = ({
         setFocusedCellId(null)
       }
     }
-  }, [entitiesMap, selectedCells, focusedCellId, setSelectedCells, setFocusedCellId])
+  }, [getEntityById, selectedCells, focusedCellId, setSelectedCells, setFocusedCellId])
 }
