@@ -39,12 +39,7 @@ export const useCheckSelectedCellsVisible = ({
       for (const cellId of missingCells) {
         newSelection.delete(cellId)
       }
-      console.log(
-        'Removing missing cells from selection:',
-        missingCells,
-        'New selection:',
-        newSelection,
-      )
+
       setSelectedCells(newSelection)
 
       // if the focused cell is one of the missing cells, clear it
