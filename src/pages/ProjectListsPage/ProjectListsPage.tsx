@@ -54,6 +54,7 @@ import {
   type Over,
 } from '@dnd-kit/core'
 import { useAppSelector } from '@state/store.ts'
+import useTableOpenViewer from '@pages/ProjectOverviewPage/hooks/useTableOpenViewer.ts'
 
 type ProjectListsPageProps = {
   projectName: string
@@ -156,6 +157,8 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
     setDndActiveId(null)
   }
 
+  const handleOpenPlayer = useTableOpenViewer({ projectName: projectName })
+
   return (
     <DndContext
       sensors={sensors}
@@ -185,6 +188,7 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
               sorting={props.sorting}
               updateSorting={props.updateSorting}
               scopes={[selectedList?.entityType]}
+              onOpenPlayer={handleOpenPlayer}
             >
               <SelectionCellsProvider>
                 <SelectedRowsProvider>

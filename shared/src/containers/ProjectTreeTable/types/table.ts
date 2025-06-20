@@ -87,7 +87,7 @@ export type EditorTaskNode = TaskNode & {
   groups?: { value: string; hasNextPage?: string }[]
 }
 
-type EditorVersionNode = {
+export type EditorVersionNode = {
   id: string
   entityId: string
   entityType: 'version'
@@ -103,6 +103,12 @@ type EditorVersionNode = {
   assignees: Array<string>
   allAttrib: string
   attrib?: Record<string, any>
+  product?: {
+    id: string
+    folder?: {
+      id: string
+    }
+  }
 }
 
 type EditorProductNode = {

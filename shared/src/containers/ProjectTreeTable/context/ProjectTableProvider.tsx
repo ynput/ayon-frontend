@@ -31,18 +31,12 @@ import {
   TaskNodeMap,
   TasksByFolderMap,
 } from '../types/table'
-import useFolderRelationships, {
-  FindInheritedValueFromAncestors,
-  GetAncestorsOf,
-  GetInheritedDependents,
-  FindNonInheritedValues,
-} from '../hooks/useFolderRelationships'
-import { RowId } from '../utils/cellUtils'
+import useFolderRelationships from '../hooks/useFolderRelationships'
 import { ProjectModel } from '../types/project'
 import { ProjectTableAttribute, LoadingTasks } from '../types'
 import { QueryFilter } from '../types/folders'
 import { ContextMenuItemConstructors } from '../hooks/useCellContextMenu'
-import { AttributeModel, EntityGroup } from '@shared/api'
+import { EntityGroup } from '@shared/api'
 import useBuildGroupByTableData, {
   GroupByEntityType,
   ROW_ID_SEPARATOR,
@@ -125,6 +119,17 @@ export interface ProjectTableProviderProps {
   groupByConfig?: {
     entityType?: GroupByEntityType
   }
+
+  // callbacks
+  onOpenPlayer?: (
+    targetIds: {
+      taskId?: string
+      folderId?: string
+      productId?: string
+      versionId?: string
+    },
+    config?: { quickView?: boolean },
+  ) => void
 }
 
 export const ProjectTableProvider = ({
@@ -162,6 +167,8 @@ export const ProjectTableProvider = ({
   powerpack,
   modules,
   groupByConfig,
+  // callbacks
+  onOpenPlayer,
 }: ProjectTableProviderProps) => {
   // DATA TO TABLE
   const defaultTableData = useBuildProjectDataTable({
@@ -335,6 +342,8 @@ export const ProjectTableProvider = ({
         // powerpack context
         powerpack,
         modules,
+        // callbacks
+        onOpenPlayer,
       }}
     >
       {children}

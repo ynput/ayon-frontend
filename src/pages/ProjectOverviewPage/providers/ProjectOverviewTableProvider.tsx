@@ -5,6 +5,7 @@ import {
   SelectedRowsProvider,
   CellEditingProvider,
   ProjectTableModulesType,
+  ProjectTableProviderProps,
 } from '@shared/containers/ProjectTreeTable'
 import { NewEntityProvider } from '@context/NewEntityContext'
 import { usePowerpack } from '@shared/context'
@@ -12,6 +13,7 @@ import { useProjectOverviewContext } from '../context/ProjectOverviewContext'
 import { ProjectTableQueriesProvider } from '@shared/containers/ProjectTreeTable/context/ProjectTableQueriesContext'
 import useTableQueriesHelper from '../hooks/useTableQueriesHelper'
 import ProjectOverviewPage from '../ProjectOverviewPage'
+import useTableOpenViewer from '../hooks/useTableOpenViewer'
 
 const ProjectOverviewTableProvider: FC<{ modules: ProjectTableModulesType }> = ({ modules }) => {
   const props = useProjectOverviewContext()
@@ -22,6 +24,8 @@ const ProjectOverviewTableProvider: FC<{ modules: ProjectTableModulesType }> = (
 
   const powerpack = usePowerpack()
 
+  const handleOpenPlayer = useTableOpenViewer({ projectName: props.projectName })
+
   return (
     <ProjectTableQueriesProvider {...{ updateEntities, getFoldersTasks }}>
       <ProjectTableProvider
@@ -30,6 +34,7 @@ const ProjectOverviewTableProvider: FC<{ modules: ProjectTableModulesType }> = (
         modules={modules}
         groupByConfig={{ entityType: 'task' }}
         scopes={['folder', 'task']}
+        onOpenPlayer={handleOpenPlayer}
       >
         <NewEntityProvider>
           <SelectionCellsProvider>

@@ -36,9 +36,11 @@ fragment ListItemFragment on BaseNode {
     status
     tags
     product {
+      id
       name
       productType
       folder {
+        id
         path
         folderType
       }

@@ -72,6 +72,9 @@ export interface ProjectTableContextType {
 
   // remote modules
   modules: ProjectTableProviderProps['modules']
+
+  // callbacks
+  onOpenPlayer?: ProjectTableProviderProps['onOpenPlayer']
 }
 
 export const ProjectTableContext = createContext<ProjectTableContextType | undefined>(undefined)
