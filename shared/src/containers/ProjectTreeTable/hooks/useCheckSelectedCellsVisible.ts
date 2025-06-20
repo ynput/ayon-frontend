@@ -7,35 +7,6 @@ import { CellId, parseCellId } from '../utils'
 import { ExpandedState } from '@tanstack/react-table'
 import { useProjectTableContext } from '../context'
 
-const getVisibleRowIds = (tableData: any[], expanded: ExpandedState): string[] => {
-  const visibleIds: string[] = []
-  const stack: Array<{ row: any; parentExpanded: boolean }> = []
-
-  // Initialize stack with top-level rows
-  for (const row of tableData) {
-    stack.push({ row, parentExpanded: true })
-  }
-
-  while (stack.length > 0) {
-    const { row, parentExpanded } = stack.pop()!
-
-    if (parentExpanded) {
-      visibleIds.push(row.id)
-
-      // Add subRows to stack if they exist and parent is expanded
-      if (row.subRows && row.subRows.length > 0) {
-        // Handle both ExpandedState types: true (all expanded) or Record<string, boolean>
-        const isRowExpanded = expanded === true ? true : expanded[row.id] ?? false
-        for (const subRow of row.subRows) {
-          stack.push({ row: subRow, parentExpanded: isRowExpanded })
-        }
-      }
-    }
-  }
-
-  return visibleIds
-}
-
 type CheckSelectedCellsVisibleProps = {
   selectedCells: Set<CellId>
   setSelectedCells: (cells: Set<CellId>) => void
@@ -49,39 +20,37 @@ export const useCheckSelectedCellsVisible = ({
   focusedCellId,
   setFocusedCellId,
 }: CheckSelectedCellsVisibleProps): void => {
-  const { tableData, expanded } = useProjectTableContext()
-  const unstableVisibleRowIds = useMemo(() => {
-    return getVisibleRowIds(tableData, expanded)
-  }, [tableData, expanded])
-  const visibleRowIds = useMemo(
-    () => unstableVisibleRowIds,
-    [JSON.stringify(unstableVisibleRowIds)],
-  )
+  const { entitiesMap } = useProjectTableContext()
 
+  // checks that all of the selected cells are in the tableData
+  // if they are not, they will be removed from the selection
   useEffect(() => {
-    // Check selectedCells and remove any cells that are not in the visible row ids
-    const newSelection = new Set<CellId>()
-    selectedCells.forEach((cellId) => {
-      const { rowId } = parseCellId(cellId) || {}
-      if (rowId && visibleRowIds.includes(rowId)) {
-        newSelection.add(cellId)
+    const missingCells = new Set<CellId>()
+    for (const cellId of selectedCells) {
+      // check if the cell rowId is in
+      if (!entitiesMap.get(parseCellId(cellId)?.rowId || '')) {
+        missingCells.add(cellId)
       }
-    })
-
-    // Only update if the selection has changed
-    if (
-      newSelection.size !== selectedCells.size ||
-      !Array.from(newSelection).every((cellId) => selectedCells.has(cellId))
-    ) {
-      setSelectedCells(newSelection)
     }
 
-    // Check focusedCellId and clear it if the row is not visible
-    if (focusedCellId) {
-      const { rowId } = parseCellId(focusedCellId) || {}
-      if (rowId && !visibleRowIds.includes(rowId)) {
+    if (missingCells.size > 0) {
+      // remove the missing cells from the selection
+      const newSelection = new Set<CellId>(selectedCells)
+      for (const cellId of missingCells) {
+        newSelection.delete(cellId)
+      }
+      console.log(
+        'Removing missing cells from selection:',
+        missingCells,
+        'New selection:',
+        newSelection,
+      )
+      setSelectedCells(newSelection)
+
+      // if the focused cell is one of the missing cells, clear it
+      if (missingCells.has(focusedCellId || '')) {
         setFocusedCellId(null)
       }
     }
-  }, [visibleRowIds, selectedCells, focusedCellId, setSelectedCells, setFocusedCellId])
+  }, [entitiesMap, selectedCells, focusedCellId, setSelectedCells, setFocusedCellId])
 }
