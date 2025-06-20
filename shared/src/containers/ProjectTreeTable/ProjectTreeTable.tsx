@@ -1071,7 +1071,7 @@ const TableCell = ({
         // check we are not clicking on expander
         if (target.closest('.expander')) return
 
-        // check we are not clicking a dropdown cheveron or in a dropdown
+        // check we are not clicking a dropdown chevron or in a dropdown
         if (target.closest('.expand') || target.closest('.options')) return
 
         // only name column can be selected for group rows
