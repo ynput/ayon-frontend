@@ -48,6 +48,7 @@ export interface ProjectTableContextType {
 
   // Expanded state
   expanded: ProjectTableProviderProps['expanded']
+  setExpanded: ProjectTableProviderProps['setExpanded']
   toggleExpanded: ProjectTableProviderProps['toggleExpanded']
   updateExpanded: ProjectTableProviderProps['updateExpanded']
   toggleExpandAll: ToggleExpandAll

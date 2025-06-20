@@ -3,7 +3,12 @@ import { v1 as uuid1 } from 'uuid'
 import { toast } from 'react-toastify'
 import getSequence from '@helpers/getSequence'
 import { generateLabel } from '@components/NewEntity/NewEntity'
-import { PatchOperation, useUpdateOverviewEntitiesMutation, OperationModel } from '@shared/api'
+import {
+  PatchOperation,
+  useUpdateOverviewEntitiesMutation,
+  OperationModel,
+  OperationResponseModel,
+} from '@shared/api'
 import { useProjectTableContext } from '@shared/containers/ProjectTreeTable'
 import { EditorTaskNode, MatchingFolder } from '@shared/containers/ProjectTreeTable'
 import checkName from '@helpers/checkName'
@@ -32,7 +37,7 @@ interface NewEntityContextProps {
   setEntityForm: React.Dispatch<React.SetStateAction<EntityForm>>
   sequenceForm: SequenceForm
   setSequenceForm: React.Dispatch<React.SetStateAction<SequenceForm>>
-  onCreateNew: (selectedFolderIds: string[]) => Promise<void>
+  onCreateNew: (selectedFolderIds: string[]) => Promise<OperationResponseModel[]>
   onOpenNew: (type: NewEntityType, config?: { isSequence?: boolean }) => void
 }
 
@@ -314,12 +319,15 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
 
   const onCreateNew: NewEntityContextProps['onCreateNew'] = async (selectedFolderIds) => {
     // first check name and entityType valid
-    if (!entityType || !entityForm.label) return
+    if (!entityType || !entityForm.label) {
+      toast.error('Please provide a valid name and select an entity type')
+      throw new Error('Invalid entity type or label')
+    }
 
     // If we're creating a task and there are no selected folders, show error
     if (entityType === 'task' && selectedFolderIds.length === 0) {
       toast.error('Cannot create a task without selecting a folder')
-      return
+      throw new Error('No folder selected for task creation')
     }
 
     let operations: NewEntityOperation[]
@@ -366,13 +374,20 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
     const patchOperations = createPatchOperations(operations, paths)
 
     try {
-      await createEntities({
+      const res = await createEntities({
         operationsRequestModel: { operations },
         projectName: projectName,
         patchOperations,
       }).unwrap()
-    } catch (error) {
+
+      if (res?.success && res.operations) {
+        return res.operations
+      } else {
+        throw { data: { details: 'Failed to create new entity' } }
+      }
+    } catch (error: any) {
       toast.error('Failed to create new entity')
+      throw new Error(error?.data?.details)
     }
   }
 

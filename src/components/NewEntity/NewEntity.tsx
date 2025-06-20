@@ -21,7 +21,7 @@ import {
 } from '@shared/containers/ProjectTreeTable'
 import { parseCellId } from '@shared/containers/ProjectTreeTable/utils/cellUtils'
 import { EditorTaskNode, MatchingFolder } from '@shared/containers/ProjectTreeTable'
-import type { ProjectModel } from '@shared/api'
+import type { OperationResponseModel, ProjectModel } from '@shared/api'
 import FolderSequence from '@components/FolderSequence/FolderSequence'
 import { EntityForm, NewEntityType, useNewEntityContext } from '@context/NewEntityContext'
 import useCreateEntityShortcuts from '@hooks/useCreateEntityShortcuts'
@@ -74,11 +74,12 @@ const StyledCreateItem = styled.span`
   }
 `
 
-interface NewEntityProps {
+export interface NewEntityProps {
   disabled?: boolean
+  onNewEntities?: (ops: OperationResponseModel[]) => void
 }
 
-const NewEntity: React.FC<NewEntityProps> = ({ disabled }) => {
+const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
   const {
     entityType,
     setEntityType,
@@ -220,17 +221,24 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled }) => {
 
   const handleSubmit = async (stayOpen: boolean) => {
     setIsSubmitting(true)
-    await onCreateNew(selectedFolderIds)
-    setIsSubmitting(false)
+    try {
+      const resOperations = await onCreateNew(selectedFolderIds)
 
-    if (stayOpen) {
-      // focus and select the label input
-      if (labelRef.current) {
-        labelRef.current.focus()
-        labelRef.current.select()
+      // callback function
+      onNewEntities?.(resOperations)
+
+      if (stayOpen) {
+        // focus and select the label input
+        if (labelRef.current) {
+          labelRef.current.focus()
+          labelRef.current.select()
+        }
+      } else {
+        handleClose()
       }
-    } else {
-      handleClose()
+    } catch (error) {
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
