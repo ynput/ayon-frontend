@@ -12,6 +12,7 @@ import { useShortcutsContext } from '@context/ShortcutsContext'
 import clsx from 'clsx'
 import useAyonNavigate from '@hooks/useAyonNavigate'
 import { useProjectSelectDispatcher } from './hooks/useProjectSelectDispatcher'
+import { updateUserPreferences as updateUserPreferencesAction } from '@state/user'
 
 const ProjectMenu = ({ isOpen, onHide }) => {
   const navigate = useAyonNavigate()
@@ -62,6 +63,9 @@ const ProjectMenu = ({ isOpen, onHide }) => {
 
   const updatePinned = async (pinnedProjects) => {
     try {
+      // update in local redux state
+      dispatch(updateUserPreferencesAction({ pinnedProjects }))
+
       // update user preferences
       await updateUserPreferences({
         userName: username,
