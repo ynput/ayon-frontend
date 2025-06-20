@@ -86,7 +86,7 @@ export const DetailsPanelAttributes = ({
         projectName: entity.projectName,
         status: entity.status,
         tags: entity.tags || [],
-        path: entity.folder?.path || '',
+        path: entity.path,
         folderType: entity.folder?.folderType,
         productType: entity.product?.productType,
         taskType: entity.task?.taskType,
