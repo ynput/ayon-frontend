@@ -120,7 +120,8 @@ export interface ProjectTableProviderProps {
     entityType?: GroupByEntityType
   }
 
-  // callbacks
+  // player
+  playerOpen?: boolean
   onOpenPlayer?: (
     targetIds: {
       taskId?: string
@@ -167,7 +168,8 @@ export const ProjectTableProvider = ({
   powerpack,
   modules,
   groupByConfig,
-  // callbacks
+  // player
+  playerOpen,
   onOpenPlayer,
 }: ProjectTableProviderProps) => {
   // DATA TO TABLE
@@ -349,7 +351,8 @@ export const ProjectTableProvider = ({
         // powerpack context
         powerpack,
         modules,
-        // callbacks
+        // player
+        playerOpen,
         onOpenPlayer,
       }}
     >

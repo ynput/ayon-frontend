@@ -6,7 +6,7 @@ import { useProjectTableContext } from '../context/ProjectTableContext'
 import { getEntityViewierIds } from '../utils'
 
 export default function useKeyboardNavigation() {
-  const { attribFields, getEntityById, onOpenPlayer } = useProjectTableContext()
+  const { attribFields, getEntityById, onOpenPlayer, playerOpen } = useProjectTableContext()
 
   const { focusedCellId, gridMap, selectCell, focusCell, clearSelection, setFocusedCellId } =
     useSelectionCellsContext()
@@ -28,6 +28,9 @@ export default function useKeyboardNavigation() {
       ) {
         return
       }
+
+      // skip if the player is open
+      if (playerOpen) return
 
       if (editingCellId) return
 
@@ -182,6 +185,7 @@ export default function useKeyboardNavigation() {
     clearSelection,
     setEditingCellId,
     editingCellId,
+    playerOpen,
   ])
   return {
     handleKeyDown,

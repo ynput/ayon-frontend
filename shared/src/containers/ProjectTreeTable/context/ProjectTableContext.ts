@@ -73,7 +73,8 @@ export interface ProjectTableContextType {
   // remote modules
   modules: ProjectTableProviderProps['modules']
 
-  // callbacks
+  // player
+  playerOpen?: ProjectTableProviderProps['playerOpen']
   onOpenPlayer?: ProjectTableProviderProps['onOpenPlayer']
 }
 

@@ -157,6 +157,7 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
     setDndActiveId(null)
   }
 
+  const viewerOpen = useAppSelector((state) => state.viewer.isOpen)
   const handleOpenPlayer = useTableOpenViewer({ projectName: projectName })
 
   return (
@@ -188,6 +189,7 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
               sorting={props.sorting}
               updateSorting={props.updateSorting}
               scopes={[selectedList?.entityType]}
+              playerOpen={viewerOpen}
               onOpenPlayer={handleOpenPlayer}
             >
               <SelectionCellsProvider>
