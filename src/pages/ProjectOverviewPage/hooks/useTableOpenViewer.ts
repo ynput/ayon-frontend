@@ -44,7 +44,7 @@ const useTableOpenViewer = ({ projectName }: TableOpenViewerProps) => {
 
       dispatch(openViewer(payload))
     },
-    [dispatch, openViewer, projectName], // Ensure openViewer is memoized,
+    [dispatch, projectName], // Ensure openPlayer is memoized,
   )
 
   return openPlayer
