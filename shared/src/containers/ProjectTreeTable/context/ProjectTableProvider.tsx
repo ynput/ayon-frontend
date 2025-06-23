@@ -203,7 +203,7 @@ export const ProjectTableProvider = ({
   const tableData = groupBy && groupedTableData ? groupedTableData : defaultTableData
 
   const getEntityById = useCallback(
-    (id: string): EntityMap | undefined => {
+    (id: string, field: string = 'entityId'): EntityMap | undefined => {
       // defensive check to ensure id is a string
       if (typeof id !== 'string') {
         console.warn('getEntityById called with non-string id:', id)
@@ -218,6 +218,13 @@ export const ProjectTableProvider = ({
         return tasksMap.get(parsedId)
       } else if (entitiesMap.has(parsedId)) {
         return entitiesMap.get(parsedId)
+      }
+
+      // if we have not found the entity at all, double check through the maps using field (entityId)
+      for (const [_, entity] of entitiesMap) {
+        if (entity[field as keyof EntityMap] === parsedId) {
+          return entity
+        }
       }
 
       // Return undefined if not found

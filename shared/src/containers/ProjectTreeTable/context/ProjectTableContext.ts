@@ -32,7 +32,7 @@ export interface ProjectTableContextType {
   entitiesMap: ProjectTableProviderProps['entitiesMap']
   fetchNextPage: ProjectTableProviderProps['fetchNextPage']
   reloadTableData: ProjectTableProviderProps['reloadTableData']
-  getEntityById: (id: string) => EntityMap | undefined
+  getEntityById: (id: string, field?: string) => EntityMap | undefined // if the entity is not found, we explicity search for the field
 
   // grouping
   taskGroups: ProjectTableProviderProps['taskGroups']
