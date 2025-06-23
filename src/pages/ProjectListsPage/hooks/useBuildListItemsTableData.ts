@@ -87,7 +87,7 @@ const extractPath = (item: EntityListItem, entityType: string): string => {
     case 'product':
       return item.folder?.path || ''
     case 'version':
-      return item.product?.folder?.path || '' + item.task?.name || ''
+      return (item.product?.folder?.path || '') + (item.task?.name || '')
     default:
       return ''
   }
