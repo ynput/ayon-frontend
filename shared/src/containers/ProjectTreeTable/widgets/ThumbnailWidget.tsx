@@ -49,6 +49,7 @@ const ThumbnailWidgetWrapper: FC<ThumbnailWidgetProps> = ({
   updatedAt,
   icon,
   isPlayable,
+  id,
   ...props
 }) => {
   const valid = projectName && entityType && entityId && updatedAt
@@ -57,7 +58,7 @@ const ThumbnailWidgetWrapper: FC<ThumbnailWidgetProps> = ({
     `/api/projects/${projectName}/${entityType}s/${entityId}/thumbnail?updatedAt=${updatedAt}`
 
   return (
-    <Wrapper className="thumbnail-widget" key={url}>
+    <Wrapper className="thumbnail-widget" key={url} id={id}>
       <Inner {...props}>{valid && <Image src={url} />}</Inner>
       {isPlayable && <StyledPlayableIcon />}
     </Wrapper>
