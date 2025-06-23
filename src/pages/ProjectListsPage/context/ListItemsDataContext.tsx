@@ -5,17 +5,13 @@ import { Filter } from '@ynput/ayon-react-components'
 import { useUserProjectConfig } from '@shared/hooks'
 import useGetListItemsData from '../hooks/useGetListItemsData'
 import { useListsContext } from './ListsContext'
-import {
-  FolderNodeMap,
-  TableRow,
-  TaskNodeMap,
-  useGetEntityTypeData,
-} from '@shared/containers/ProjectTreeTable'
+import { FolderNodeMap, TableRow, TaskNodeMap } from '@shared/containers/ProjectTreeTable'
 import { functionalUpdate, OnChangeFn, SortingState } from '@tanstack/react-table'
 import useDeleteListItems, { UseDeleteListItemsReturn } from '../hooks/useDeleteListItems'
 import { ContextMenuItemConstructors } from '@shared/containers/ProjectTreeTable/hooks/useCellContextMenu'
 import { useEntityListsContext } from './EntityListsContext'
 import useReorderListItem, { UseReorderListItemReturn } from '../hooks/useReorderListItem'
+import useBuildListItemsTableData from '../hooks/useBuildListItemsTableData'
 
 export type ListItemsMap = Map<string, EntityListItem>
 
@@ -75,8 +71,6 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     isLoading: isLoadingData,
   } = useProjectDataContext()
 
-  const getEntityTypeData = useGetEntityTypeData({ projectInfo })
-
   const { selectedList } = useListsContext()
   const selectedListId = selectedList?.id
 
@@ -129,53 +123,6 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     return new Map(listItemsData.map((item) => [item.id, item]))
   }, [listItemsData])
 
-  const extractPath = (item: EntityListItem, entityType: string): string => {
-    switch (entityType) {
-      case 'folder':
-        return item.path || ''
-      case 'task':
-        return item.folder?.path || ''
-      case 'product':
-        return item.folder?.path || ''
-      case 'version':
-        return item.product?.folder?.path || '' + item.task?.name || ''
-      default:
-        return ''
-    }
-  }
-
-  const extractSubTypes = (
-    item: EntityListItem,
-    entityType?: string,
-  ): {
-    subType?: string
-    folderType?: string
-    taskType?: string
-    productType?: string
-  } => {
-    switch (entityType) {
-      case 'folder':
-        return { subType: item.folderType, folderType: item.folderType }
-      case 'task':
-        return {
-          subType: item.taskType,
-          taskType: item.taskType,
-          folderType: item.folder?.folderType,
-        }
-      case 'product':
-        return { subType: item.productType || '', folderType: item.folder?.folderType }
-      case 'version':
-        return {
-          subType: undefined,
-          productType: item.product?.productType,
-          folderType: item.product?.folder?.folderType,
-          taskType: item.task?.taskType,
-        }
-      default:
-        return {}
-    }
-  }
-
   // filter out attribFields by scope
   const scopedAttribFields = useMemo(
     () =>
@@ -186,32 +133,9 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
   )
 
   // convert listItemsData into tableData
-  const listItemsTableData = useMemo(() => {
-    const tableRows: TableRow[] = listItemsData.map((item) => ({
-      id: item.id,
-      name: item.name,
-      label:
-        (item.entityType === 'version' ? `${item.product?.name} - ` : '') +
-        (item.label || item.name),
-      entityId: item.entityId,
-      entityType: item.entityType,
-      assignees: item.assignees || [],
-      ...extractSubTypes(item, item.entityType), // subType, folderType, taskType, productType
-      updatedAt: item.updatedAt,
-      attrib: item.attrib,
-      ownAttrib: item.ownAttrib
-        ? [...item.ownAttrib, ...item.ownItemAttrib]
-        : Object.keys(item.attrib), // not all types use ownAttrib so fallback to attrib keys
-      icon: getEntityTypeData(item.entityType, extractSubTypes(item, item.entityType).subType)
-        ?.icon,
-      path: extractPath(item, item.entityType),
-      tags: item.tags,
-      status: item.status,
-      subRows: [],
-    }))
-
-    return tableRows
-  }, [listItemsData])
+  const listItemsTableData = useBuildListItemsTableData({
+    listItemsData,
+  })
 
   const foldersMap: FolderNodeMap = new Map(
     // @ts-ignore
@@ -246,6 +170,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
   const contextMenuItems: ContextMenuItemConstructors = [
     'copy-paste',
     'show-details',
+    'open-viewer',
     deleteListItemMenuItem,
     // add context menu to add to lists but filter out own list
     menuItemsAddToList((item) => item.id !== selectedListId),

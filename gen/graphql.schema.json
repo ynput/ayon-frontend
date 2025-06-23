@@ -3255,6 +3255,18 @@
                 "deprecationReason": null
               },
               {
+                "name": "filter",
+                "description": "Filter tasks using QueryFilter",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "first",
                 "description": "Pagination: first",
                 "type": {
@@ -5482,6 +5494,18 @@
                 "deprecationReason": null
               },
               {
+                "name": "filter",
+                "description": "Filter tasks using QueryFilter",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "first",
                 "description": "Pagination: first",
                 "type": {
@@ -6726,6 +6750,18 @@
                 "deprecationReason": null
               },
               {
+                "name": "filter",
+                "description": "Filter tasks using QueryFilter",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "first",
                 "description": "Pagination: first",
                 "type": {
@@ -7112,6 +7148,18 @@
                 "deprecationReason": null
               },
               {
+                "name": "filter",
+                "description": "Filter tasks using QueryFilter",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "first",
                 "description": "Pagination: first",
                 "type": {
@@ -7400,6 +7448,18 @@
               {
                 "name": "before",
                 "description": "Pagination: before",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "filter",
+                "description": "Filter tasks using QueryFilter",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -8077,6 +8137,18 @@
               {
                 "name": "before",
                 "description": "Pagination: before",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "filter",
+                "description": "Filter tasks using QueryFilter",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -11054,6 +11126,18 @@
                 "deprecationReason": null
               },
               {
+                "name": "filter",
+                "description": "Filter tasks using QueryFilter",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "first",
                 "description": "Pagination: first",
                 "type": {
@@ -11890,6 +11974,22 @@
             "deprecationReason": null
           },
           {
+            "name": "disablePasswordLogin",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Boolean",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "hasPassword",
             "description": null,
             "args": [],
@@ -11971,22 +12071,6 @@
           },
           {
             "name": "isService",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "Boolean",
-                "ofType": null
-              }
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "disablePasswordLogin",
             "description": null,
             "args": [],
             "type": {
@@ -12895,6 +12979,18 @@
               {
                 "name": "before",
                 "description": "Pagination: before",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "filter",
+                "description": "Filter tasks using QueryFilter",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",

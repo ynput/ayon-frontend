@@ -31,18 +31,12 @@ import {
   TaskNodeMap,
   TasksByFolderMap,
 } from '../types/table'
-import useFolderRelationships, {
-  FindInheritedValueFromAncestors,
-  GetAncestorsOf,
-  GetInheritedDependents,
-  FindNonInheritedValues,
-} from '../hooks/useFolderRelationships'
-import { RowId } from '../utils/cellUtils'
+import useFolderRelationships from '../hooks/useFolderRelationships'
 import { ProjectModel } from '../types/project'
 import { ProjectTableAttribute, LoadingTasks } from '../types'
 import { QueryFilter } from '../types/folders'
 import { ContextMenuItemConstructors } from '../hooks/useCellContextMenu'
-import { AttributeModel, EntityGroup } from '@shared/api'
+import { EntityGroup } from '@shared/api'
 import useBuildGroupByTableData, {
   GroupByEntityType,
   ROW_ID_SEPARATOR,
@@ -125,6 +119,18 @@ export interface ProjectTableProviderProps {
   groupByConfig?: {
     entityType?: GroupByEntityType
   }
+
+  // player
+  playerOpen?: boolean
+  onOpenPlayer?: (
+    targetIds: {
+      taskId?: string
+      folderId?: string
+      productId?: string
+      versionId?: string
+    },
+    config?: { quickView?: boolean },
+  ) => void
 }
 
 export const ProjectTableProvider = ({
@@ -162,6 +168,9 @@ export const ProjectTableProvider = ({
   powerpack,
   modules,
   groupByConfig,
+  // player
+  playerOpen,
+  onOpenPlayer,
 }: ProjectTableProviderProps) => {
   // DATA TO TABLE
   const defaultTableData = useBuildProjectDataTable({
@@ -196,7 +205,7 @@ export const ProjectTableProvider = ({
   const tableData = groupBy && groupedTableData ? groupedTableData : defaultTableData
 
   const getEntityById = useCallback(
-    (id: string): EntityMap | undefined => {
+    (id: string, field: string = 'entityId'): EntityMap | undefined => {
       // defensive check to ensure id is a string
       if (typeof id !== 'string') {
         console.warn('getEntityById called with non-string id:', id)
@@ -211,6 +220,13 @@ export const ProjectTableProvider = ({
         return tasksMap.get(parsedId)
       } else if (entitiesMap.has(parsedId)) {
         return entitiesMap.get(parsedId)
+      }
+
+      // if we have not found the entity at all, double check through the maps using field (entityId)
+      for (const [_, entity] of entitiesMap) {
+        if (entity[field as keyof EntityMap] === parsedId) {
+          return entity
+        }
       }
 
       // Return undefined if not found
@@ -335,6 +351,9 @@ export const ProjectTableProvider = ({
         // powerpack context
         powerpack,
         modules,
+        // player
+        playerOpen,
+        onOpenPlayer,
       }}
     >
       {children}

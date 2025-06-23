@@ -16,6 +16,7 @@ export type FolderListItem = {
   attrib?: Record<string, any>
   ownAttrib?: string[]
   updatedAt: string
+  hasReviewables?: boolean
 }
 
 export type GetTasksByParentQuery = {
@@ -41,6 +42,7 @@ export type GetTasksByParentQuery = {
           active: boolean
           assignees: Array<string>
           allAttrib: string
+          hasReviewables?: boolean
           folder: { __typename?: 'FolderNode'; path?: string | null }
         }
       }>
@@ -64,6 +66,7 @@ export type TableRow = {
   icon?: string | null
   color?: string | null
   img?: string | null
+  hasReviewables?: boolean
   startContent?: JSX.Element
   assignees?: string[]
   attrib?: Record<string, any>
@@ -87,7 +90,7 @@ export type EditorTaskNode = TaskNode & {
   groups?: { value: string; hasNextPage?: string }[]
 }
 
-type EditorVersionNode = {
+export type EditorVersionNode = {
   id: string
   entityId: string
   entityType: 'version'
@@ -103,6 +106,12 @@ type EditorVersionNode = {
   assignees: Array<string>
   allAttrib: string
   attrib?: Record<string, any>
+  product?: {
+    id: string
+    folder?: {
+      id: string
+    }
+  }
 }
 
 type EditorProductNode = {

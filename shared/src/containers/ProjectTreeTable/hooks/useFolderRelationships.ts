@@ -31,7 +31,7 @@ interface UseFolderRelationshipsProps {
   tasksMap?: TaskNodeMap
   entitiesMap?: EntitiesMap
   tasksByFolderMap?: Map<string, string[]>
-  getEntityById: (id: string) => any
+  getEntityById: (id: string, field?: string) => any
   projectAttrib: ProjectAttribModel2 | undefined
   attribFields: ProjectTableAttribute[] | undefined
 }

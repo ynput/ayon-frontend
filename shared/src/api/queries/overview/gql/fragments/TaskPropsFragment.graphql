@@ -11,6 +11,7 @@ fragment TaskPropsFragment on TaskNode {
   active
   assignees
   allAttrib
+  hasReviewables
   folder {
     path
   }

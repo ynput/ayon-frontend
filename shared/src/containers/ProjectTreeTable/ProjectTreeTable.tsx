@@ -49,13 +49,13 @@ import useColumnVirtualization from './hooks/useColumnVirtualization'
 import useKeyboardNavigation from './hooks/useKeyboardNavigation'
 
 // Utility function imports
-import { getCellId, getEntityDataById, parseCellId } from './utils/cellUtils'
+import { getCellId, parseCellId } from './utils/cellUtils'
 import { generateLoadingRows, generateDummyAttributes } from './utils/loadingUtils'
 import { createPortal } from 'react-dom'
 import { Icon } from '@ynput/ayon-react-components'
 import { AttributeEnumItem, ProjectTableAttribute, BuiltInFieldOptions } from './types'
 import { ToggleExpandAll, useProjectTableContext } from './context/ProjectTableContext'
-import { getReadOnlyLists, getTableFieldOptions } from './utils'
+import { getEntityViewierIds, getReadOnlyLists, getTableFieldOptions } from './utils'
 import { EntityUpdate } from './hooks/useUpdateTableData'
 
 // dnd-kit imports
@@ -1021,6 +1021,8 @@ const TableCell = ({
   sortableRows,
   ...props
 }: TableCellProps) => {
+  const { getEntityById, onOpenPlayer } = useProjectTableContext()
+
   const {
     isCellSelected,
     isCellFocused,
@@ -1100,6 +1102,7 @@ const TableCell = ({
         endSelection(cellId)
       }}
       onDoubleClick={(e) => {
+        // row selection on name column double click
         if (
           cell.column.id === 'name' &&
           !(e.target as HTMLElement).closest('.expander') &&
@@ -1110,6 +1113,16 @@ const TableCell = ({
           if (!isCellSelected(rowSelectionCellId)) {
             const additive = e.metaKey || e.ctrlKey
             selectCell(rowSelectionCellId, additive, false)
+          }
+        }
+        // open the viewer on thumbnail double click
+        if (cell.column.id === 'thumbnail') {
+          if (onOpenPlayer) {
+            const entity = getEntityById(cell.row.original.entityId || cell.row.id)
+            if (entity) {
+              const targetIds = getEntityViewierIds(entity)
+              onOpenPlayer(targetIds, { quickView: true })
+            }
           }
         }
       }}

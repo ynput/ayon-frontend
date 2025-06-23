@@ -120,11 +120,13 @@ const buildTreeTableColumns = ({
       minSize: 64,
       enableResizing: true,
       enableSorting: false,
-      cell: ({ row, table }) => {
+      cell: ({ row, column, table }) => {
         const meta = table.options.meta
         if (!meta) return null
+        const cellId = getCellId(row.id, column.id)
         return (
           <ThumbnailWidget
+            id={cellId}
             entityId={row.original.entityId || row.id}
             entityType={row.original.entityType}
             updatedAt={row.original.updatedAt}
@@ -133,6 +135,7 @@ const buildTreeTableColumns = ({
             className={clsx('thumbnail', {
               loading: row.original.isLoading,
             })}
+            isPlayable={row.original.hasReviewables}
           />
         )
       },
