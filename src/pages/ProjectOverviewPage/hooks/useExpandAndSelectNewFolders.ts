@@ -17,36 +17,48 @@ const useExpandAndSelectNewFolders = () => {
   const { expanded, setExpanded } = useProjectTableContext()
 
   const expandAndSelectNewFolders = useCallback(
-    (ops: OperationResponseModel[]) => {
-      // clone expanded state
-      const newExpanded: ExpandedState = { ...(expanded as {}) }
+    (
+      ops: OperationResponseModel[],
+      config: {
+        enableSelect: boolean
+        enableExpand: boolean
+      },
+    ) => {
+      const { enableSelect, enableExpand } = config
 
-      // expand all currently selected rows
-      for (const rowId of selectedRows) {
-        newExpanded[rowId] = true
-      }
+      if (enableExpand) {
+        // clone expanded state
+        const newExpanded: ExpandedState = { ...(expanded as {}) }
 
-      // expand all rows referenced by selected cells
-      for (const cellId of selectedCells) {
-        const rowId = parseCellId(cellId)?.rowId
-        if (rowId) {
+        // expand all currently selected rows
+        for (const rowId of selectedRows) {
           newExpanded[rowId] = true
         }
+
+        // expand all rows referenced by selected cells
+        for (const cellId of selectedCells) {
+          const rowId = parseCellId(cellId)?.rowId
+          if (rowId) {
+            newExpanded[rowId] = true
+          }
+        }
+
+        setExpanded(newExpanded)
       }
 
-      setExpanded(newExpanded)
+      if (enableSelect) {
+        // build new cell selection for created folders
+        const newSelection = new Set<CellId>()
+        for (const op of ops) {
+          if (!op.entityId) continue
+          if (op.entityType !== 'folder') continue
+          newSelection.add(getCellId(op.entityId, 'name'))
+        }
 
-      // build new cell selection for created folders
-      const newSelection = new Set<CellId>()
-      for (const op of ops) {
-        if (!op.entityId) continue
-        if (op.entityType !== 'folder') continue
-        newSelection.add(getCellId(op.entityId, 'name'))
-      }
-
-      if (newSelection.size) {
-        setSelectedCells(newSelection)
-        setFocusedCellId(newSelection.values().next().value || null)
+        if (newSelection.size) {
+          setSelectedCells(newSelection)
+          setFocusedCellId(newSelection.values().next().value || null)
+        }
       }
     },
     [selectedRows, selectedCells, expanded, setExpanded, setSelectedCells, setFocusedCellId],
