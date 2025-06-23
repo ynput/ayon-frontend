@@ -139,7 +139,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     [attribFields, selectedList?.entityType],
   )
 
-  console.log(listItemsData)
+  
 
   // convert listItemsData into tableData
   const listItemsTableData = useBuildListItemsTableData({
