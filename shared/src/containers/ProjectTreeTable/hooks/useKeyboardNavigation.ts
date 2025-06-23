@@ -3,7 +3,7 @@ import { useSelectionCellsContext } from '../context/SelectionCellsContext'
 import { useCellEditing } from '../context/CellEditingContext' // keep for editingCellId/setEditingCellId
 import { parseCellId, getCellId } from '../utils/cellUtils'
 import { useProjectTableContext } from '../context/ProjectTableContext'
-import { EditorVersionNode } from '../utils'
+import { getEntityViewierIds } from '../utils'
 
 export default function useKeyboardNavigation() {
   const { attribFields, getEntityById, onOpenPlayer } = useProjectTableContext()
@@ -146,19 +146,7 @@ export default function useKeyboardNavigation() {
           if (onOpenPlayer) {
             const entity = getEntityById(rowId)
             if (entity) {
-              const targetIds = {
-                [entity.entityType + 'Id']: entity.entityId,
-              }
-              // if version, also include productId and folderId
-              if (entity.entityType === 'version') {
-                if ('product' in entity && entity.product?.id) {
-                  targetIds.productId = entity.product?.id
-                  if ('folder' in entity.product && entity.product?.folder?.id) {
-                    targetIds.folderId = entity.product?.folder.id
-                  }
-                }
-                console.log(entity)
-              }
+              const targetIds = getEntityViewierIds(entity)
               onOpenPlayer(targetIds, { quickView: true })
             }
           }

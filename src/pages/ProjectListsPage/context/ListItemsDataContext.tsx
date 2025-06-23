@@ -5,12 +5,7 @@ import { Filter } from '@ynput/ayon-react-components'
 import { useUserProjectConfig } from '@shared/hooks'
 import useGetListItemsData from '../hooks/useGetListItemsData'
 import { useListsContext } from './ListsContext'
-import {
-  FolderNodeMap,
-  TableRow,
-  TaskNodeMap,
-  useGetEntityTypeData,
-} from '@shared/containers/ProjectTreeTable'
+import { FolderNodeMap, TableRow, TaskNodeMap } from '@shared/containers/ProjectTreeTable'
 import { functionalUpdate, OnChangeFn, SortingState } from '@tanstack/react-table'
 import useDeleteListItems, { UseDeleteListItemsReturn } from '../hooks/useDeleteListItems'
 import { ContextMenuItemConstructors } from '@shared/containers/ProjectTreeTable/hooks/useCellContextMenu'
@@ -76,8 +71,6 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     isLoading: isLoadingData,
   } = useProjectDataContext()
 
-  const getEntityTypeData = useGetEntityTypeData({ projectInfo })
-
   const { selectedList } = useListsContext()
   const selectedListId = selectedList?.id
 
@@ -139,8 +132,6 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     [attribFields, selectedList?.entityType],
   )
 
-  
-
   // convert listItemsData into tableData
   const listItemsTableData = useBuildListItemsTableData({
     listItemsData,
@@ -179,6 +170,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
   const contextMenuItems: ContextMenuItemConstructors = [
     'copy-paste',
     'show-details',
+    'open-viewer',
     deleteListItemMenuItem,
     // add context menu to add to lists but filter out own list
     menuItemsAddToList((item) => item.id !== selectedListId),

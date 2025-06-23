@@ -29,6 +29,7 @@ const useOverviewContextMenu = ({}: OverviewContextMenuProps) => {
       },
       hidden:
         cell.columnId === 'name' ||
+        cell.columnId === 'thumbnail' ||
         (cell.attribField && !isAttribGroupable(cell.attribField, 'task')),
       powerFeature: 'groupAttributes',
     }),
@@ -70,6 +71,7 @@ const useOverviewContextMenu = ({}: OverviewContextMenuProps) => {
   const contextMenuItems: ContextMenuItemConstructors = [
     'copy-paste',
     'show-details',
+    'open-viewer',
     'expand-collapse',
     menuItemsAddToList(),
     groupByColumnItem,

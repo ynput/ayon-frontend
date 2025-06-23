@@ -11,7 +11,7 @@ import { ProjectTableAttribute, TableRow } from '../types'
 import { UseHistoryReturn } from './useHistory'
 import { GROUP_BY_ID } from './useBuildGroupByTableData'
 import { ColumnDef } from '@tanstack/react-table'
-import { usePowerpack } from '@shared/context'
+import { getEntityViewierIds } from '../utils'
 
 type ContextEvent = React.MouseEvent<HTMLTableSectionElement, MouseEvent>
 
@@ -39,6 +39,7 @@ type DefaultMenuItem =
   | 'export'
   | 'create-folder'
   | 'create-task'
+  | 'open-viewer'
 export type ContextMenuItemConstructor = (
   e: ContextEvent,
   cell: TableCellContextData,
@@ -74,6 +75,7 @@ const useCellContextMenu = ({ attribs, headerLabels = [], onOpenNew }: CellConte
     expanded,
     contextMenuItems = [],
     powerpack,
+    onOpenPlayer,
   } = useProjectTableContext()
   const { copyToClipboard, exportCSV, pasteFromClipboard } = useClipboard()
   const { selectedCells, clearSelection, selectCell, focusCell } = useSelectionCellsContext()
@@ -137,7 +139,7 @@ const useCellContextMenu = ({ attribs, headerLabels = [], onOpenNew }: CellConte
         icon: 'content_copy',
         shortcut: getPlatformShortcutKey('c', [KeyMode.Ctrl]),
         command: () => copyToClipboard(meta.selectedCells),
-        hidden: cell.isGroup,
+        hidden: cell.isGroup || cell.columnId === 'thumbnail',
       },
       {
         label: `Copy row${meta.selectedFullRows.length > 1 ? 's' : ''}`,
@@ -154,7 +156,7 @@ const useCellContextMenu = ({ attribs, headerLabels = [], onOpenNew }: CellConte
         icon: 'content_paste',
         shortcut: getPlatformShortcutKey('v', [KeyMode.Ctrl]),
         command: () => pasteFromClipboard(meta.selectedCells),
-        hidden: cell.columnId === 'name' || cell.isGroup,
+        hidden: cell.columnId === 'name' || cell.columnId === 'thumbnail' || cell.isGroup,
         disabled: cell.attribField?.readOnly,
       },
     ]
@@ -170,6 +172,23 @@ const useCellContextMenu = ({ attribs, headerLabels = [], onOpenNew }: CellConte
       selectCell(rowSelectionCellId, false, false)
     },
     hidden: cell.columnId !== 'name' || meta.selectedRows.length > 1 || cell.isGroup,
+  })
+
+  const openViewerItem: ContextMenuItemConstructor = (e, cell, selected, meta) => ({
+    label: 'Open in viewer',
+    icon: 'play_circle',
+    shortcut: 'Spacebar',
+    command: () => {
+      if (onOpenPlayer) {
+        const entity = getEntityById(cell.entityId)
+        console.log(entity, cell)
+        if (entity) {
+          const targetIds = getEntityViewierIds(entity)
+          onOpenPlayer(targetIds, { quickView: true })
+        }
+      }
+    },
+    hidden: (cell.columnId !== 'thumbnail' && cell.columnId !== 'name') || cell.isGroup,
   })
 
   const expandCollapseChildrenItems: ContextMenuItemConstructor = (e, cell, selected, meta) => [
@@ -271,6 +290,7 @@ const useCellContextMenu = ({ attribs, headerLabels = [], onOpenNew }: CellConte
     ['export']: exportItem,
     ['create-folder']: createFolderItems,
     ['create-task']: createTaskItem,
+    ['open-viewer']: openViewerItem,
   }
 
   const getCellData = (cellId: string): TableCellContextData | undefined => {
