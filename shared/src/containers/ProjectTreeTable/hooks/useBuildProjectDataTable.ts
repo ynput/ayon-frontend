@@ -205,7 +205,7 @@ export default function useBuildProjectDataTable({
         attrib: folder.attrib || {},
         childOnlyMatch: folder.childOnlyMatch || false,
         updatedAt: folder.updatedAt,
-        hasReviewables: folder.hasReviewables || false, // TODO: Not implemented yet
+        hasReviewables: folder.hasReviewables || false,
       }
 
       rowsById.set(folderId, row)

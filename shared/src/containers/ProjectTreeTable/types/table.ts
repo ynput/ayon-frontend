@@ -16,6 +16,7 @@ export type FolderListItem = {
   attrib?: Record<string, any>
   ownAttrib?: string[]
   updatedAt: string
+  hasReviewables?: boolean
 }
 
 export type GetTasksByParentQuery = {

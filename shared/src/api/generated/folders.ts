@@ -221,6 +221,7 @@ export type FolderListItem = {
   folderType: string
   hasTasks?: boolean
   hasChildren?: boolean
+  hasReviewables?: boolean
   taskNames?: string[]
   tags?: string[]
   status: string
