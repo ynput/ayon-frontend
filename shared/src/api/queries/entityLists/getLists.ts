@@ -8,6 +8,8 @@ import {
 import type {
   GetListItemsQuery,
   GetListItemsQueryVariables,
+  GetListsItemsForReviewSessionQuery,
+  GetListsItemsForReviewSessionResult,
   GetListsQuery,
   GetListsQueryVariables,
 } from '@shared/api'
@@ -32,6 +34,10 @@ type TagTypes = TagTypesFromApi<typeof gqlApi>
 type UpdatedDefinitions = Omit<Definitions, 'GetLists' | 'GetListItems'> & {
   GetLists: OverrideResultType<Definitions['GetLists'], GetListsResult>
   GetListItems: OverrideResultType<Definitions['GetListItems'], GetListItemsResult>
+  GetListsItemsForReviewSession: OverrideResultType<
+    Definitions['GetListsItemsForReviewSession'],
+    GetListsItemsForReviewSessionResult
+  >
 }
 
 const getListsGqlApiEnhanced = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
@@ -58,6 +64,19 @@ const getListsGqlApiEnhanced = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefiniti
             }),
           ),
           pageInfo: response.project.entityLists.edges[0].node.items.pageInfo,
+        }
+      },
+    },
+    GetListsItemsForReviewSession: {
+      transformResponse: (
+        response: GetListsItemsForReviewSessionQuery,
+      ): GetListsItemsForReviewSessionResult => {
+        return {
+          lists: response.project.entityLists.edges.map((edge) => ({
+            ...edge.node,
+            items: edge.node.items.edges.map(({ node }) => node),
+          })),
+          pageInfo: response.project.entityLists.pageInfo,
         }
       },
     },
@@ -121,6 +140,10 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
         ...(result?.pages.flatMap((page) => page.lists) || []).map((list) => ({
           type: 'entityList' as const,
           id: list.id,
+        })),
+        ...(result?.pages.flatMap((page) => page.lists) || []).map((list) => ({
+          type: 'entityList' as const,
+          id: list.entityListType,
         })),
       ],
       async onCacheEntryAdded(
@@ -301,6 +324,66 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
         PubSub.unsubscribe(token2)
       },
     }),
+    getListsItemsForReviewSession: build.infiniteQuery<
+      GetListsItemsForReviewSessionResult,
+      Omit<GetListsQueryVariables, 'first' | 'after' | 'before' | 'filter'>,
+      ListsPageParam
+    >({
+      infiniteQueryOptions: {
+        initialPageParam: { cursor: '' },
+        getNextPageParam: (lastPage) => {
+          const { pageInfo } = lastPage
+          if (!pageInfo.hasNextPage || !pageInfo.endCursor) return undefined
+
+          return {
+            cursor: pageInfo.endCursor,
+          }
+        },
+      },
+      queryFn: async ({ queryArg, pageParam }, api) => {
+        try {
+          const { cursor } = pageParam
+
+          // Build the query parameters for GetLists
+          const queryParams = {
+            ...queryArg,
+            first: LISTS_PER_PAGE,
+            after: cursor || undefined,
+          }
+
+          // Call the existing GetLists endpoint
+          const result = await api.dispatch(
+            getListsGqlApiEnhanced.endpoints.GetListsItemsForReviewSession.initiate(queryParams, {
+              forceRefetch: true,
+            }),
+          )
+
+          if (result.error) throw result.error
+
+          return {
+            data: result.data || {
+              lists: [],
+              pageInfo: {
+                hasNextPage: false,
+                endCursor: null,
+                startCursor: null,
+                hasPreviousPage: false,
+              },
+            },
+          }
+        } catch (e: any) {
+          console.error('Error in getListsInfinite queryFn:', e)
+          return { error: { status: 'FETCH_ERROR', error: e.message } as FetchBaseQueryError }
+        }
+      },
+      providesTags: (result) => [
+        { type: 'entityList', id: 'LIST' },
+        ...(result?.pages.flatMap((page) => page.lists) || []).map((list) => ({
+          type: 'entityList' as const,
+          id: list.id,
+        })),
+      ],
+    }),
   }),
 })
 
@@ -309,5 +392,6 @@ export default getListsGqlApiInjected
 export const {
   useGetListsInfiniteInfiniteQuery,
   useGetListItemsInfiniteInfiniteQuery,
+  useGetListsItemsForReviewSessionInfiniteQuery,
   useLazyGetListItemsQuery,
 } = getListsGqlApiInjected

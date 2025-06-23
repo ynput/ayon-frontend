@@ -1,4 +1,8 @@
-import { GetListItemsQuery, GetListsQuery } from '@shared/api/generated'
+import {
+  GetListItemsQuery,
+  GetListsItemsForReviewSessionQuery,
+  GetListsQuery,
+} from '@shared/api/generated'
 
 // Define the type for our transformed lists data
 type QueryEntityList = GetListsQuery['project']['entityLists']['edges'][number]['node']
@@ -16,6 +20,26 @@ export type GetListsResult = {
 // Define the page param type for infinite query
 export type ListsPageParam = {
   cursor: string
+}
+
+type QueryEntityListsItemsForReviewSessionNode =
+  GetListsItemsForReviewSessionQuery['project']['entityLists']['edges'][number]['node']
+type QueryEntityListsItemsForReviewSessionNodeWithoutItems = Omit<
+  QueryEntityListsItemsForReviewSessionNode,
+  'items'
+>
+type QueryEntityListsItemsForReviewSessionNodeItem =
+  QueryEntityListsItemsForReviewSessionNode['items']['edges'][number]['node']
+export type QueryEntityListsItemsForReviewSession =
+  QueryEntityListsItemsForReviewSessionNodeWithoutItems & {
+    items: QueryEntityListsItemsForReviewSessionNodeItem[]
+  }
+export type GetListsItemsForReviewSessionResult = {
+  pageInfo: {
+    hasNextPage: boolean
+    endCursor?: string | null
+  }
+  lists: QueryEntityListsItemsForReviewSession[]
 }
 
 // Extra types from the query

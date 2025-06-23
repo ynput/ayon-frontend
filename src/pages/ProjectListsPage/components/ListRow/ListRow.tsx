@@ -8,14 +8,15 @@ export interface ListRowProps extends React.HTMLAttributes<HTMLDivElement> {
   value: string
   icon?: string
   depth?: number
-  count: number
+  count: number | string
+  disabled?: boolean
   isRenaming?: boolean
   isTableExpandable?: boolean
   isRowExpandable?: boolean
   isRowExpanded?: boolean
   onSubmitRename?: (value: string) => void
   onCancelRename?: () => void
-  onExpandClick: () => void
+  onExpandClick?: () => void
   pt?: {
     value?: React.HTMLAttributes<HTMLSpanElement>
     input?: React.HTMLAttributes<HTMLInputElement> & { value?: string }
@@ -29,6 +30,7 @@ const ListRow = forwardRef<HTMLDivElement, ListRowProps>(
       depth = 0,
       icon,
       count,
+      disabled,
       isRenaming,
       isTableExpandable,
       isRowExpandable,
@@ -37,6 +39,7 @@ const ListRow = forwardRef<HTMLDivElement, ListRowProps>(
       onCancelRename,
       onExpandClick,
       pt,
+      className,
       ...props
     },
     ref,
@@ -52,6 +55,7 @@ const ListRow = forwardRef<HTMLDivElement, ListRowProps>(
     return (
       <Styled.Cell
         {...props}
+        className={clsx(className, { disabled })}
         ref={ref}
         style={{
           ...props.style,

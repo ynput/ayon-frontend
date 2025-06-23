@@ -65,10 +65,8 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
   const setRowSelection = useCallback(
     (ids: RowSelectionState) => {
       if (isReview) {
-        console.log('setReviewSelection', ids)
         setReviewSelection(ids)
       } else {
-        console.log('setListSelection', ids)
         setListSelection(ids)
       }
     },

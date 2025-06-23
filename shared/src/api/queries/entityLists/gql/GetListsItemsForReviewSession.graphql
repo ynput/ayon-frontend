@@ -1,0 +1,37 @@
+# gets all lists that can be turned into a review session
+
+query GetListsItemsForReviewSession($projectName: String!, $first: Int!, $after: String) {
+  project(name: $projectName) {
+    entityLists(
+      first: $first
+      after: $after
+      sortBy: "updatedAt"
+      filter: "{\"conditions\":[{\"key\":\"entityType\",\"value\":[\"version\"],\"operator\":\"in\"},{\"key\":\"entityListType\",\"value\":[\"generic\"],\"operator\":\"in\"}],\"operator\":\"and\"}"
+    ) {
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+      edges {
+        node {
+          id
+          label
+          active
+          updatedAt
+          count
+          items(first: 1000) {
+            edges {
+              node {
+                id
+                ... on VersionNode {
+                  id
+                  hasReviewables
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

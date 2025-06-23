@@ -16,7 +16,7 @@ export interface UseNewListReturn {
   setNewList: React.Dispatch<React.SetStateAction<NewListForm | null>>
   openNewList: (init?: Partial<NewListForm>) => void
   closeNewList: () => void
-  createNewList: () => Promise<EntityListSummary>
+  createNewList: (list?: NewListForm) => Promise<EntityListSummary>
 }
 
 export const listDefaultName = (listType: string = 'List') => {
@@ -44,21 +44,25 @@ const useNewList = ({
 
   const closeNewList: V['closeNewList'] = React.useCallback(() => setNewList(null), [])
 
-  const createNewList: V['createNewList'] = React.useCallback(async () => {
-    if (!newList) return Promise.reject()
+  const createNewList: V['createNewList'] = React.useCallback(
+    async (listData) => {
+      if (!newList) return Promise.reject()
 
-    try {
-      const res = await onCreateNewList(newList)
-      // close the dialog
-      closeNewList()
+      try {
+        // create the new list using data provided in the function or from the state
+        const res = await onCreateNewList(listData ?? newList)
+        // close the dialog
+        closeNewList()
 
-      onCreated?.(res)
-      return res
-    } catch (error: any) {
-      toast.error(`Failed to create list: ${error.data?.detail}`)
-      throw error
-    }
-  }, [newList, closeNewList, onCreated])
+        onCreated?.(res)
+        return res
+      } catch (error: any) {
+        toast.error(`Failed to create list: ${error.data?.detail}`)
+        throw error
+      }
+    },
+    [newList, closeNewList, onCreated],
+  )
 
   //   open new list with n key shortcut
   useEffect(() => {
