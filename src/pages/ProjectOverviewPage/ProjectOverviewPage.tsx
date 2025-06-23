@@ -125,9 +125,9 @@ const ProjectOverviewPage: FC = () => {
   const expandAndSelectNewFolders = useExpandAndSelectNewFolders()
 
   // select new entities and expand their parents
-  const handleNewEntities = (ops: OperationResponseModel[]) => {
+  const handleNewEntities = (ops: OperationResponseModel[], stayOpen: boolean) => {
     // expands to newly created folders and selects them
-    expandAndSelectNewFolders(ops)
+    expandAndSelectNewFolders(ops, { enableSelect: !stayOpen, enableExpand: true })
   }
 
   return (

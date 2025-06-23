@@ -76,7 +76,7 @@ const StyledCreateItem = styled.span`
 
 export interface NewEntityProps {
   disabled?: boolean
-  onNewEntities?: (ops: OperationResponseModel[]) => void
+  onNewEntities?: (ops: OperationResponseModel[], stayOpen: boolean) => void
 }
 
 const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
@@ -225,7 +225,7 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
       const resOperations = await onCreateNew(selectedFolderIds)
 
       // callback function
-      onNewEntities?.(resOperations)
+      onNewEntities?.(resOperations, stayOpen)
 
       if (stayOpen) {
         // focus and select the label input
