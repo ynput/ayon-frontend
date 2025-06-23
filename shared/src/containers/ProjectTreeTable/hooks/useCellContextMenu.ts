@@ -181,7 +181,6 @@ const useCellContextMenu = ({ attribs, headerLabels = [], onOpenNew }: CellConte
     command: () => {
       if (onOpenPlayer) {
         const entity = getEntityById(cell.entityId)
-        console.log(entity, cell)
         if (entity) {
           const targetIds = getEntityViewierIds(entity)
           onOpenPlayer(targetIds, { quickView: true })
