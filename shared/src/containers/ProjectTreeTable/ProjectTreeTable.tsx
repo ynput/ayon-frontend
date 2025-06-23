@@ -49,7 +49,7 @@ import useColumnVirtualization from './hooks/useColumnVirtualization'
 import useKeyboardNavigation from './hooks/useKeyboardNavigation'
 
 // Utility function imports
-import { getCellId, getEntityDataById, parseCellId } from './utils/cellUtils'
+import { getCellId, parseCellId } from './utils/cellUtils'
 import { generateLoadingRows, generateDummyAttributes } from './utils/loadingUtils'
 import { createPortal } from 'react-dom'
 import { Icon } from '@ynput/ayon-react-components'

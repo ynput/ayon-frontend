@@ -16,7 +16,10 @@ export default function useKeyboardNavigation() {
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       const target = e.target as HTMLElement
-      if (!target?.closest('table')) return
+      if (!target?.closest('table')) {
+        console.log('Cell key event: target is not inside a table')
+        return
+      }
 
       // Skip if event target is an input element or contentEditable
       if (
@@ -29,8 +32,8 @@ export default function useKeyboardNavigation() {
         return
       }
 
-      // skip if the player is open
-      if (playerOpen) return
+      // allow keyboard and up and down only if the player is open
+      if (playerOpen && e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return
 
       if (editingCellId) return
 
@@ -50,6 +53,17 @@ export default function useKeyboardNavigation() {
         colId.startsWith('attrib_') &&
         attribFields.find((a) => a.name === colId.replace('attrib_', ''))?.readOnly
 
+      const openPlayer = (entityId: string) => {
+        // try to open the player if onOpenPlayer is defined
+        if (onOpenPlayer) {
+          const entity = getEntityById(entityId)
+          if (entity) {
+            const targetIds = getEntityViewierIds(entity)
+            onOpenPlayer(targetIds, { quickView: true })
+          }
+        }
+      }
+
       // Handle different keys
       switch (e.key) {
         case 'ArrowUp': {
@@ -60,6 +74,11 @@ export default function useKeyboardNavigation() {
               const newCellId = getCellId(newRowId, colId)
               selectCell(newCellId, e.shiftKey, e.shiftKey)
               focusCell(newCellId)
+
+              // if the player is open, update with new selected cell
+              if (playerOpen) {
+                openPlayer(newRowId)
+              }
             }
           }
           break
@@ -71,6 +90,11 @@ export default function useKeyboardNavigation() {
             const newCellId = getCellId(newRowId, colId)
             selectCell(newCellId, e.shiftKey, e.shiftKey)
             focusCell(newCellId)
+
+            // if the player is open, update with new selected cell
+            if (playerOpen) {
+              openPlayer(newRowId)
+            }
           }
           break
         }
@@ -145,14 +169,8 @@ export default function useKeyboardNavigation() {
         }
         case ' ': {
           e.preventDefault()
-          // open the player if the function is available
-          if (onOpenPlayer) {
-            const entity = getEntityById(rowId)
-            if (entity) {
-              const targetIds = getEntityViewierIds(entity)
-              onOpenPlayer(targetIds, { quickView: true })
-            }
-          }
+          // attempt to open the player
+          openPlayer(rowId)
         }
       }
     },
@@ -165,6 +183,7 @@ export default function useKeyboardNavigation() {
       setEditingCellId,
       editingCellId,
       getEntityById,
+      playerOpen,
     ],
   )
 
