@@ -1,3 +1,4 @@
+import { PlayableIcon } from '@shared/components/PlayableIcon/PlayableIcon'
 import { Icon } from '@ynput/ayon-react-components'
 import { FC, memo } from 'react'
 import styled from 'styled-components'
@@ -27,12 +28,18 @@ const Image = styled.img`
   z-index: 20;
 `
 
+const StyledPlayableIcon = styled(PlayableIcon)`
+  right: 5px;
+  top: 5px;
+`
+
 interface ThumbnailWidgetProps extends React.HTMLAttributes<HTMLDivElement> {
   projectName: string
   entityType: string
   entityId: string
   updatedAt?: string
   icon?: string | null
+  isPlayable?: boolean
 }
 
 const ThumbnailWidgetWrapper: FC<ThumbnailWidgetProps> = ({
@@ -41,6 +48,7 @@ const ThumbnailWidgetWrapper: FC<ThumbnailWidgetProps> = ({
   entityId,
   updatedAt,
   icon,
+  isPlayable,
   ...props
 }) => {
   const valid = projectName && entityType && entityId && updatedAt
@@ -51,6 +59,7 @@ const ThumbnailWidgetWrapper: FC<ThumbnailWidgetProps> = ({
   return (
     <Wrapper className="thumbnail-widget" key={url}>
       <Inner {...props}>{valid && <Image src={url} />}</Inner>
+      {isPlayable && <StyledPlayableIcon />}
     </Wrapper>
   )
 }

@@ -133,6 +133,7 @@ const buildTreeTableColumns = ({
             className={clsx('thumbnail', {
               loading: row.original.isLoading,
             })}
+            isPlayable={row.original.hasReviewables}
           />
         )
       },

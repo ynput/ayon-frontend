@@ -41,6 +41,7 @@ export type GetTasksByParentQuery = {
           active: boolean
           assignees: Array<string>
           allAttrib: string
+          hasReviewables?: boolean
           folder: { __typename?: 'FolderNode'; path?: string | null }
         }
       }>
@@ -64,6 +65,7 @@ export type TableRow = {
   icon?: string | null
   color?: string | null
   img?: string | null
+  hasReviewables?: boolean
   startContent?: JSX.Element
   assignees?: string[]
   attrib?: Record<string, any>

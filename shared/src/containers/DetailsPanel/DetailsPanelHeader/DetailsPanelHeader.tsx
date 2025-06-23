@@ -16,6 +16,7 @@ import FeedFilters from '../FeedFilters/FeedFilters'
 import * as Styled from './DetailsPanelHeader.styled'
 import getThumbnails from '../helpers/getThumbnails'
 import { buildDetailsPanelTitles } from '../helpers/buildDetailsPanelTitles'
+import { PlayableIcon } from '@shared/components/PlayableIcon/PlayableIcon'
 
 export type EntityTypeIcons = {
   folder: Record<string, string>
@@ -216,11 +217,7 @@ const DetailsPanelHeader = ({
                 onClick={thumbnails.length === 1 ? handleThumbnailClick : undefined}
                 hoverIcon={'play_circle'}
               />
-              {!isMultiple && firstEntity?.hasReviewables && (
-                <Styled.Playable className="playable">
-                  <Icon icon="play_circle" />
-                </Styled.Playable>
-              )}
+              {!isMultiple && firstEntity?.hasReviewables && <PlayableIcon />}
             </div>
             <Styled.Content className={clsx({ loading: isLoading })}>
               <Styled.Title>

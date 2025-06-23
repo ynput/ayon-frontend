@@ -138,6 +138,7 @@ export default function useBuildProjectDataTable({
         ownAttrib: task.ownAttrib,
         path: task.folder.path,
         updatedAt: task.updatedAt,
+        hasReviewables: task.hasReviewables,
       }
     }
 
@@ -204,6 +205,7 @@ export default function useBuildProjectDataTable({
         attrib: folder.attrib || {},
         childOnlyMatch: folder.childOnlyMatch || false,
         updatedAt: folder.updatedAt,
+        hasReviewables: folder.hasReviewables || false, // TODO: Not implemented yet
       }
 
       rowsById.set(folderId, row)
