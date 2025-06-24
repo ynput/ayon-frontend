@@ -1,4 +1,4 @@
-import { useGetFeedbackVerificationQuery, useGetYnputCloudInfoQuery } from '@queries/cloud/cloud'
+import { useGetFeedbackVerificationQuery } from '@queries/cloud/cloud'
 import { useAppSelector } from '@state/store'
 import { cloneDeep } from 'lodash'
 import React, { createContext, useContext, ReactNode, useEffect, useState } from 'react'
@@ -31,11 +31,10 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
   const [scriptLoaded, setScriptLoaded] = useState(false)
 
   const { data: siteInfo } = useGetSiteInfoQuery({ full: true }, { skip: !user.name })
-  const { data: connect } = useGetYnputCloudInfoQuery(undefined, { skip: !user.name })
   const { data: verification, isLoading: isLoadingVerification } = useGetFeedbackVerificationQuery(
     undefined,
     {
-      skip: !user.name || !connect,
+      skip: !user.name,
     },
   )
 
@@ -242,20 +241,13 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
   // verify user
   useEffect(() => {
     // check if we can identify the user
-    if (!user.name || !connect || !verification || !scriptLoaded) return
+    if (!user.name || !verification || !scriptLoaded) return
     // if we are already identified, do not identify again
     if (identified) return
     // Identify the user
     identifyUser()
     setIdentified(true)
-  }, [
-    user.name,
-    connect?.instanceId,
-    verification?.userHash,
-    scriptLoaded,
-    window.location.pathname,
-    identified,
-  ])
+  }, [user.name, verification?.userHash, scriptLoaded, window.location.pathname, identified])
 
   // load messenger widget once verification is done loading
   // we don't need verification but we should use it if we have it
