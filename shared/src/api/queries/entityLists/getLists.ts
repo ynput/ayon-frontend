@@ -393,5 +393,7 @@ export const {
   useGetListsInfiniteInfiniteQuery,
   useGetListItemsInfiniteInfiniteQuery,
   useGetListsItemsForReviewSessionInfiniteQuery,
+  useLazyGetListsQuery,
+  useLazyGetListsItemsForReviewSessionQuery,
   useLazyGetListItemsQuery,
 } = getListsGqlApiInjected

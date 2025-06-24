@@ -1,16 +1,15 @@
 import { useProjectDataContext } from '@shared/containers'
 import { Dialog, DialogProps } from '@ynput/ayon-react-components'
-import { FC, useRef, useCallback, useMemo } from 'react'
+import { FC, useRef, useCallback } from 'react'
 import ListRow from '../ListRow/ListRow'
 import { toast } from 'react-toastify'
 import useGetListsItemsForReviewSession from '@pages/ProjectListsPage/hooks/useGetListsItemsForReviewSession'
 import calculateListsTotalReviewableVersions from '@pages/ProjectListsPage/util/calculateListsTotalReviewableVersions'
-import { NewListForm } from '@pages/ProjectListsPage/hooks/useNewList'
-import { useListsDataContext } from '@pages/ProjectListsPage/context/ListsDataContext'
 import NewReviewSessionLoading from './NewReviewSessionLoading'
+import type { EntityListSummary } from '@shared/api'
 
 interface NewReviewSessionDialogProps extends Omit<DialogProps, 'onSubmit'> {
-  onSubmit: (sessionList: NewListForm) => void
+  onSubmit: (label: string, options: { versionIds: string[] }) => Promise<EntityListSummary>
   submitLoading?: boolean
 }
 
@@ -20,9 +19,6 @@ const NewReviewSessionDialog: FC<NewReviewSessionDialogProps> = ({
   submitLoading,
   ...props
 }) => {
-  const { listsData: reviewListsData } = useListsDataContext()
-  const reviewListsLabels = useMemo(() => reviewListsData.map((l) => l.label), [reviewListsData])
-
   const { projectName } = useProjectDataContext()
 
   // get a list of all version lists in the project
@@ -58,25 +54,15 @@ const NewReviewSessionDialog: FC<NewReviewSessionDialogProps> = ({
           throw 'No reviewable versions found in the selected list.'
         }
 
-        //   create new list (review session) object data
-        const newReviewSession: NewListForm = {
-          entityType: 'version',
-          entityListType: 'review-session',
-          label: buildReviewListLabel(list.label, reviewListsLabels),
-          items: versionIds.map((id) => ({
-            entityId: id,
-          })),
-        }
-
         // create new list in API
-        onSubmit(newReviewSession)
+        onSubmit(list.label, { versionIds })
 
         // Note: closing the dialog and selecting the new list is handled in useNewList.ts
       } catch (error: any) {
         toast.error('Failed to create review session: ' + error || 'Unknown error')
       }
     },
-    [onSubmit, reviewListsLabels],
+    [onSubmit],
   )
 
   const isLoading = isLoadingLists
@@ -136,30 +122,3 @@ const NewReviewSessionDialog: FC<NewReviewSessionDialogProps> = ({
 }
 
 export default NewReviewSessionDialog
-
-const buildReviewListLabel = (
-  label: string,
-  existingLabels: string[],
-  maxAttempts = 100,
-): string => {
-  if (typeof label !== 'string' || !Array.isArray(existingLabels)) {
-    return `${label} (review)`
-  }
-
-  const baseLabel = `${label.trim()} (review)`
-
-  // Check if base label already exists
-  if (!existingLabels.includes(baseLabel)) {
-    return baseLabel
-  }
-
-  // If base label exists, try with counter starting from 1
-  let counter = 2
-  let uniqueLabel = `${label.trim()} (review ${counter})`
-  while (existingLabels.includes(uniqueLabel) && counter < maxAttempts) {
-    counter += 1
-    uniqueLabel = `${label.trim()} (review ${counter})`
-  }
-
-  return uniqueLabel
-}

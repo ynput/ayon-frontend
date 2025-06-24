@@ -1535,8 +1535,9 @@ export type GetListsQuery = { __typename?: 'Query', project: { __typename?: 'Pro
 
 export type GetListsItemsForReviewSessionQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
-  first: Scalars['Int']['input'];
+  first?: InputMaybe<Scalars['Int']['input']>;
   after?: InputMaybe<Scalars['String']['input']>;
+  ids?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
 }>;
 
 
@@ -2264,13 +2265,14 @@ export const GetListsDocument = `
 }
     `;
 export const GetListsItemsForReviewSessionDocument = `
-    query GetListsItemsForReviewSession($projectName: String!, $first: Int!, $after: String) {
+    query GetListsItemsForReviewSession($projectName: String!, $first: Int, $after: String, $ids: [String!]) {
   project(name: $projectName) {
     entityLists(
       first: $first
       after: $after
       sortBy: "updatedAt"
       filter: "{\\"conditions\\":[{\\"key\\":\\"entityType\\",\\"value\\":[\\"version\\"],\\"operator\\":\\"in\\"},{\\"key\\":\\"entityListType\\",\\"value\\":[\\"generic\\"],\\"operator\\":\\"in\\"}],\\"operator\\":\\"and\\"}"
+      ids: $ids
     ) {
       pageInfo {
         hasNextPage

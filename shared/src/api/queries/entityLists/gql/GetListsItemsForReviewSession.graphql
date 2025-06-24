@@ -1,12 +1,18 @@
 # gets all lists that can be turned into a review session
 
-query GetListsItemsForReviewSession($projectName: String!, $first: Int!, $after: String) {
+query GetListsItemsForReviewSession(
+  $projectName: String!
+  $first: Int
+  $after: String
+  $ids: [String!]
+) {
   project(name: $projectName) {
     entityLists(
       first: $first
       after: $after
       sortBy: "updatedAt"
       filter: "{\"conditions\":[{\"key\":\"entityType\",\"value\":[\"version\"],\"operator\":\"in\"},{\"key\":\"entityListType\",\"value\":[\"generic\"],\"operator\":\"in\"}],\"operator\":\"and\"}"
+      ids: $ids
     ) {
       pageInfo {
         hasNextPage

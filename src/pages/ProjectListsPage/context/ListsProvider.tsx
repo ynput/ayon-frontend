@@ -117,11 +117,13 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
     [setRowSelection],
   )
 
-  const { closeNewList, createNewList, newList, openNewList, setNewList } = useNewList({
-    onCreateNewList,
-    onCreated: handleCreatedList,
-    isReview,
-  })
+  const { closeNewList, createNewList, newList, openNewList, setNewList, createReviewSessionList } =
+    useNewList({
+      onCreateNewList,
+      onCreated: handleCreatedList,
+      isReview,
+      projectName,
+    })
 
   // UPDATE/EDIT LIST
   const [updateListMutation] = useUpdateEntityListMutation()
@@ -154,6 +156,7 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
       newList,
       openNewList,
       setNewList,
+      createReviewSessionList,
       isCreatingList,
       isReview,
       // list editing
@@ -182,6 +185,7 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
     newList,
     openNewList,
     setNewList,
+    createReviewSessionList,
     isCreatingList,
     closeRenameList,
     openRenameList,

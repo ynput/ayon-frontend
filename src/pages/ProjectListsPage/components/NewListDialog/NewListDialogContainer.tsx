@@ -6,15 +6,22 @@ import NewReviewSessionDialog from '../NewReviewSessionDialog/NewReviewSessionDi
 interface NewListDialogContainerProps {}
 
 const NewListDialogContainer: FC<NewListDialogContainerProps> = ({}) => {
-  const { closeNewList, newList, setNewList, isCreatingList, createNewList, isReview } =
-    useListsContext()
+  const {
+    closeNewList,
+    newList,
+    setNewList,
+    isCreatingList,
+    createNewList,
+    createReviewSessionList,
+    isReview,
+  } = useListsContext()
 
   if (isReview && newList) {
     return (
       <NewReviewSessionDialog
         isOpen={true}
         onClose={closeNewList}
-        onSubmit={createNewList}
+        onSubmit={createReviewSessionList}
         submitLoading={isCreatingList}
         header="Select a version list to create a review session"
         size="md"
