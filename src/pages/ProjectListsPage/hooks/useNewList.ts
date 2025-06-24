@@ -61,11 +61,11 @@ const useNewList = ({
 
   const createNewList: V['createNewList'] = React.useCallback(
     async (listData) => {
-      if (!newList) return Promise.reject()
-
       try {
+        const dataToUse = listData ?? newList
+        if (!dataToUse) throw new Error('New list or listData is not set')
         // create the new list using data provided in the function or from the state
-        const res = await onCreateNewList(listData ?? newList)
+        const res = await onCreateNewList(dataToUse)
         // close the dialog
         closeNewList()
 
@@ -128,12 +128,6 @@ const useNewList = ({
           throw new Error('No versionIds provided')
         }
 
-        console.log(
-          'Creating review session list with label:',
-          label,
-          'and versionIds:',
-          versionIds,
-        )
         //   create new list (review session) object data
         const newReviewSessionList: NewListForm = {
           entityType: 'version',
@@ -144,9 +138,12 @@ const useNewList = ({
           })),
         }
 
+        console.log('Creating review session list with label:', newReviewSessionList)
+
         // create new list in API
         return await createNewList(newReviewSessionList)
       } catch (error) {
+        console.error(error)
         toast.error(
           `Failed to create review session list: ${
             error instanceof Error ? error.message : String(error)

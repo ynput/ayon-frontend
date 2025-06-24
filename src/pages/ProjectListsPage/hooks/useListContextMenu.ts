@@ -6,19 +6,52 @@ import { useAppSelector } from '@state/store'
 import useClearListItems from './useClearListItems'
 import { useProjectDataContext } from '@shared/containers/ProjectTreeTable'
 import { useListsDataContext } from '../context/ListsDataContext'
+import { UseNewListReturn } from './useNewList'
+import { toast } from 'react-toastify'
+import { useNavigate } from 'react-router-dom'
+import { useListAddonsQuery } from '@shared/api'
 
 const useListContextMenu = () => {
+  const navigate = useNavigate()
   const user = useAppSelector((state) => state.user)
   const developerMode = user?.attrib.developerMode
   const { projectName } = useProjectDataContext()
   const { listsData } = useListsDataContext()
-  const { rowSelection, setRowSelection, openRenameList, openDetailsPanel, deleteLists } =
-    useListsContext()
+  const {
+    rowSelection,
+    setRowSelection,
+    openRenameList,
+    openDetailsPanel,
+    deleteLists,
+    createReviewSessionList,
+    isReview,
+  } = useListsContext()
+
+  const { data: { addons: downloadedAddons = [] } = {} } = useListAddonsQuery({})
 
   const { clearListItems } = useClearListItems({ projectName })
 
   // create the ref and model
   const [ctxMenuShow] = useCreateContextMenu()
+
+  const handleCreateReviewSessionList: (
+    ...args: Parameters<UseNewListReturn['createReviewSessionList']>
+  ) => void = useCallback(
+    async (...args) => {
+      const loadingToast = toast.loading('Creating review session...')
+      const res = await createReviewSessionList(...args)
+      toast.update(loadingToast, {
+        render: 'Review session created',
+        type: 'success',
+        isLoading: false,
+        autoClose: 3000,
+      })
+
+      // navigate to the review session page
+      navigate(`/projects/${projectName}/reviews?review=${res.id}`)
+    },
+    [createReviewSessionList],
+  )
 
   const openContext = useCallback(
     (e: React.MouseEvent<HTMLElement>) => {
@@ -37,6 +70,7 @@ const useListContextMenu = () => {
       const newSelectedLists = listsData.filter((list) =>
         newSelectedRows.some((selected) => list?.id === selected),
       )
+      const selectedList = newSelectedLists[0]
       const firstSelectedRow = Object.keys(newSelection)[0]
       const multipleSelected = Object.keys(newSelection).length > 1
       // some rows are folders
@@ -50,6 +84,20 @@ const useListContextMenu = () => {
           icon: 'edit',
           command: () => openRenameList(firstSelectedRow),
           disabled: multipleSelected,
+        },
+        {
+          label: 'Create review session',
+          icon: 'subscriptions',
+          command: () =>
+            handleCreateReviewSessionList(selectedList.label, {
+              listId: selectedList.id,
+            }),
+          disabled: multipleSelected || !allSelectedRowsAreLists,
+          hidden:
+            !allSelectedRowsAreLists ||
+            selectedList?.entityType !== 'version' ||
+            isReview ||
+            !downloadedAddons.some((item) => item.name === 'review'),
         },
         {
           label: 'Info',
@@ -87,6 +135,7 @@ const useListContextMenu = () => {
       openRenameList,
       openDetailsPanel,
       deleteLists,
+      createReviewSessionList,
     ],
   )
 
