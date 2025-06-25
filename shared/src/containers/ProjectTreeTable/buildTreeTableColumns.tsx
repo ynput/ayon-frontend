@@ -247,6 +247,21 @@ const buildTreeTableColumns = ({
               )
             }
             isReadOnly={meta?.readOnly?.includes(column.id)}
+            pt={{
+              enum: {
+                pt: {
+                  template: {
+                    pt: {
+                      icon: {
+                        style: {
+                          fontVariationSettings: "'FILL' 1, 'wght' 200, 'GRAD' 200, 'opsz' 20",
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            }}
           />
         )
       },
