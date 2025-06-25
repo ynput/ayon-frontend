@@ -88,7 +88,7 @@ const StyledExpandButton = styled.div`
   }
 
   &.open {
-    background-color: unset;
+    background-color: transparent;
   }
 `
 
