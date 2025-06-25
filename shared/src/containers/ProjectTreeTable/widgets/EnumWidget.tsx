@@ -1,4 +1,4 @@
-import { Dropdown, DropdownProps, DropdownRef, Icon } from '@ynput/ayon-react-components'
+import { Dropdown, DropdownProps, DropdownRef, Icon, IconProps } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import { forwardRef, useEffect, useRef, useState } from 'react'
 import styled from 'styled-components'
@@ -279,6 +279,13 @@ interface EnumTemplateProps extends React.HTMLAttributes<HTMLSpanElement> {
   isItem?: boolean
   isSelected?: boolean
   isReadOnly?: boolean
+  pt?: {
+    icon?: Partial<IconProps>
+    img?: Partial<React.ImgHTMLAttributes<HTMLImageElement>>
+    value?: Partial<React.ImgHTMLAttributes<HTMLSpanElement>>
+    expand?: Partial<IconProps>
+    close?: Partial<IconProps>
+  }
 }
 
 const EnumCellValue = ({
@@ -291,8 +298,24 @@ const EnumCellValue = ({
   isSelected,
   isReadOnly,
   className,
+  pt,
   ...props
 }: EnumTemplateProps) => {
+  // Destructure pt subprops and their relevant props at the top
+  const {
+    icon: ptIcon = {},
+    img: ptImg = {},
+    value: ptValue = {},
+    expand: ptExpand = {},
+    close: ptClose = {},
+  } = pt || {}
+
+  const { style: iconStyle, className: iconClassName, ...iconRest } = ptIcon
+  const { style: imgStyle, className: imgClassName, ...imgRest } = ptImg
+  const { style: valueStyle, className: valueClassName, ...valueRest } = ptValue
+  const { style: expandStyle, className: expandClassName, ...expandRest } = ptExpand
+  const { style: closeStyle, className: closeClassName, ...closeRest } = ptClose
+
   // Check if all options have icons
   const allOptionsHaveIcon = selectedOptions.every((option) => option.icon)
 
@@ -319,10 +342,17 @@ const EnumCellValue = ({
             {option.icon && checkForImgSrc(option.icon) ? (
               <StyledImg
                 src={option.icon}
-                className={clsx({ avatar: checkAvatarImg(option.icon) })}
+                className={clsx({ avatar: checkAvatarImg(option.icon) }, imgClassName)}
+                style={imgStyle}
+                {...imgRest}
               />
             ) : option.icon ? (
-              <Icon icon={option.icon} style={{ color: option.color }} />
+              <Icon
+                icon={option.icon}
+                style={{ color: option.color, ...iconStyle }}
+                className={iconClassName}
+                {...iconRest}
+              />
             ) : null}
 
             {(showLabels || !option.icon) && (
@@ -332,8 +362,11 @@ const EnumCellValue = ({
                   backgroundColor: backgroundColor
                     ? option.color || 'var(--md-sys-color-surface-container)'
                     : 'transparent',
+                  ...valueStyle,
                 }}
-                className={clsx({ placeholder: isPlaceholder })}
+                className={clsx({ placeholder: isPlaceholder }, valueClassName)}
+                aria-label={option.label}
+                {...valueRest}
               >
                 {option.label}
               </StyledValue>
@@ -343,16 +376,20 @@ const EnumCellValue = ({
       </StyledValuesContainer>
       {!isItem && !isReadOnly && (
         <StyledExpandIcon
-          className="expand"
+          className={clsx('expand', { open: isOpen }, expandClassName)}
           icon="expand_more"
-          style={{ rotate: isOpen ? '180deg' : '0' }}
+          style={{ rotate: isOpen ? '180deg' : '0', ...expandStyle }}
+          aria-label="Expand options"
+          {...expandRest}
         />
       )}
       {isItem && isSelected && isMultiSelect && (
         <Icon
           icon="close"
-          style={{ marginLeft: 'auto', marginRight: 4 }}
+          style={{ marginLeft: 'auto', marginRight: 4, ...closeStyle }}
           aria-label="Deselect item"
+          className={clsx('close', closeClassName)}
+          {...closeRest}
         />
       )}
     </StyledWidget>
