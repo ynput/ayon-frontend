@@ -3,7 +3,7 @@ import AppNavLinks from '@containers/header/AppNavLinks'
 import { useNavigate, useParams } from 'react-router-dom'
 import UserTasksContainer from './UserDashboardTasks/UserTasksContainer'
 import { Section } from '@ynput/ayon-react-components'
-import ProjectList from '@containers/projectList'
+import ProjectListLegacy from '@containers/projectList'
 import { useDispatch, useSelector } from 'react-redux'
 import { onProjectSelected } from '@state/dashboard'
 import { useGetProjectsInfoQuery } from '@shared/api'
@@ -15,6 +15,7 @@ import { useDeleteProjectMutation, useUpdateProjectMutation } from '@shared/api'
 import { confirmDelete } from '@shared/util'
 import { useGetDashboardAddonsQuery } from '@shared/api'
 import DashboardAddon from '@pages/ProjectDashboard/DashboardAddon'
+import ProjectsLists from '@containers/ProjectsList/ProjectsList'
 
 const UserDashboardPage = () => {
   let { module, addonName } = useParams()
@@ -69,7 +70,6 @@ const UserDashboardPage = () => {
   const selectedProjects = useSelector((state) => state.dashboard.selectedProjects)
   const setSelectedProjects = (projects) => dispatch(onProjectSelected(projects))
 
-
   // get all the info required for the projects selected, like status icons and colours
   const { data: projectsInfo = {}, isFetching: isLoadingInfo } = useGetProjectsInfoQuery(
     { projects: selectedProjects },
@@ -118,29 +118,45 @@ const UserDashboardPage = () => {
       <main style={{ overflow: 'hidden' }}>
         <Section direction="row" wrap style={{ position: 'relative', overflow: 'hidden' }}>
           {!addonName && (
-            <ProjectList
-              wrap
-              isCollapsible
-              collapsedId="dashboard"
-              styleSection={{ position: 'relative', height: '100%', minWidth: 200, maxWidth: 200 }}
-              hideCode
-              hideAddProjectButton={module !== 'overview'}
-              multiselect={isProjectsMultiSelect}
-              selection={isProjectsMultiSelect ? selectedProjects : selectedProjects[0]}
-              onSelect={(p) => setSelectedProjects(isProjectsMultiSelect ? p : [p])}
-              onNoProject={(p) => p && setSelectedProjects([p])}
-              autoSelect
-              onSelectAll={
-                module !== 'overview' ? (projects) => setSelectedProjects(projects) : undefined
-              }
-              onSelectAllDisabled={!isProjectsMultiSelect}
-              isProjectManager={
-                module === 'overview' && (user?.data?.isManager || user?.data.isAdmin)
-              }
-              onNewProject={() => setShowNewProject(true)}
-              onDeleteProject={handleDeleteProject}
-              onActivateProject={handleActivateProject}
-            />
+            <>
+              <ProjectListLegacy
+                wrap
+                isCollapsible
+                collapsedId="dashboard"
+                styleSection={{
+                  position: 'relative',
+                  height: '100%',
+                  minWidth: 200,
+                  maxWidth: 200,
+                }}
+                hideCode
+                hideAddProjectButton={module !== 'overview'}
+                multiselect={isProjectsMultiSelect}
+                selection={isProjectsMultiSelect ? selectedProjects : selectedProjects[0]}
+                onSelect={(p) => setSelectedProjects(isProjectsMultiSelect ? p : [p])}
+                onNoProject={(p) => p && setSelectedProjects([p])}
+                autoSelect
+                onSelectAll={
+                  module !== 'overview' ? (projects) => setSelectedProjects(projects) : undefined
+                }
+                onSelectAllDisabled={!isProjectsMultiSelect}
+                isProjectManager={
+                  module === 'overview' && (user?.data?.isManager || user?.data.isAdmin)
+                }
+                onNewProject={() => setShowNewProject(true)}
+                onDeleteProject={handleDeleteProject}
+                onActivateProject={handleActivateProject}
+              />
+              <ProjectsLists
+                selection={selectedProjects}
+                onSelect={setSelectedProjects}
+                pt={{
+                  container: {
+                    style: { height: '100%', minWidth: 200 },
+                  },
+                }}
+              />
+            </>
           )}
           {module === 'tasks' && (
             <UserTasksContainer
