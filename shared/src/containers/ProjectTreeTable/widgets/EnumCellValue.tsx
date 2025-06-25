@@ -11,12 +11,6 @@ const StyledWidget = styled.div`
   height: 100%;
   overflow: hidden;
   border-radius: var(--border-radius-m);
-  padding: 0 2px;
-  cursor: pointer;
-
-  &:hover {
-    background-color: var(--md-sys-color-surface-container-high-hover);
-  }
 
   &.item {
     padding: 4px 2px;
@@ -37,11 +31,13 @@ const StyledWidget = styled.div`
 `
 
 const StyledValuesContainer = styled.div`
+  flex: 1;
   display: flex;
   gap: var(--base-gap-small);
   align-items: center;
   overflow: hidden;
   border-radius: var(--border-radius-m);
+  padding: 0px 2px;
 `
 
 const StyledValueWrapper = styled.div`
@@ -55,8 +51,6 @@ const StyledValueWrapper = styled.div`
 `
 
 const StyledValue = styled.span`
-  /* push expand icon to the end */
-  flex: 1;
   overflow: hidden;
   white-space: nowrap;
   width: 100%;
@@ -64,7 +58,7 @@ const StyledValue = styled.span`
   text-align: left;
   border-radius: var(--border-radius-m);
   padding: 0px 2px;
-  text-align: center;
+  text-align: left;
 
   &.placeholder {
     color: var(--md-sys-color-outline);
@@ -81,8 +75,25 @@ const StyledImg = styled.img`
   }
 `
 
+const StyledExpandButton = styled.div`
+  width: 32px;
+  height: 32px;
+  border-radius: var(--border-radius-m);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+
+  &:hover {
+    background-color: var(--md-sys-color-surface-container-highest-hover);
+  }
+
+  &.open {
+    background-color: unset;
+  }
+`
+
 const StyledExpandIcon = styled(Icon)`
-  margin-left: auto;
   transition: rotate 0.2s;
 `
 
@@ -191,13 +202,14 @@ export const EnumCellValue = ({
         ))}
       </StyledValuesContainer>
       {!isItem && !isReadOnly && (
-        <StyledExpandIcon
-          className={clsx('expand', { open: isOpen }, expandClassName)}
-          icon="expand_more"
-          style={{ rotate: isOpen ? '180deg' : '0', ...expandStyle }}
-          aria-label="Expand options"
-          {...expandRest}
-        />
+        <StyledExpandButton className={clsx('expand', { open: isOpen }, expandClassName)}>
+          <StyledExpandIcon
+            icon="expand_more"
+            style={{ rotate: isOpen ? '180deg' : '0', ...expandStyle }}
+            aria-label="Expand options"
+            {...expandRest}
+          />
+        </StyledExpandButton>
       )}
       {isItem && isSelected && isMultiSelect && (
         <Icon
