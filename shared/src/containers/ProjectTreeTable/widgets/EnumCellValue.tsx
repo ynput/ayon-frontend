@@ -58,7 +58,6 @@ const StyledValue = styled.span`
   text-align: left;
   border-radius: var(--border-radius-m);
   padding: 0px 2px;
-  text-align: left;
 
   &.placeholder {
     color: var(--md-sys-color-outline);
