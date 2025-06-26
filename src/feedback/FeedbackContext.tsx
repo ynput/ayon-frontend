@@ -11,6 +11,7 @@ type FeedbackContextType = {
     id?: string,
   ) => void
   messengerLoaded: boolean // whether the messenger widget is loaded
+  unreadCount: number // number of unread messages
   messengerVisibility: boolean
   setMessengerVisibility: (show: boolean) => void // show/hide the messenger icon
   openFeedback: () => void
@@ -100,6 +101,7 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
   }
 
   const [messengerLoaded, setMessengerLoaded] = useState(false)
+  const [unreadCount, setUnreadCount] = useState(0)
 
   // MESSENGER WIDGET
   const initializeMessenger = (): void => {
@@ -122,6 +124,11 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
           } else {
             console.log('Featurebase messenger completed')
             setMessengerLoaded(true)
+
+            // register event listener for unread messages
+            win.Featurebase('onUnreadCountChange', function (unreadCount: number) {
+              setUnreadCount(unreadCount)
+            })
           }
         },
       )
@@ -373,6 +380,7 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
         openFeedback,
         openPortal,
         messengerLoaded,
+        unreadCount,
         messengerVisibility,
         setMessengerVisibility,
         loaded: scriptLoaded,
