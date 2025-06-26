@@ -8,7 +8,7 @@ import calculateListsTotalReviewableVersions from '@pages/ProjectListsPage/util/
 import NewReviewSessionLoading from './NewReviewSessionLoading'
 
 interface NewReviewSessionDialogProps extends Omit<DialogProps, 'onSubmit'> {
-  onSubmit: (listId: string) => Promise<any>
+  onSubmit: ((listId: string) => Promise<any>) | undefined
   submitLoading?: boolean
 }
 
@@ -53,8 +53,12 @@ const NewReviewSessionDialog: FC<NewReviewSessionDialogProps> = ({
           throw 'No reviewable versions found in the selected list.'
         }
 
+        if (!onSubmit) {
+          throw 'Review addon not installed.'
+        }
+
         // create new list in API
-        await onSubmit(list.id)
+        await onSubmit?.(list.id)
 
         // Note: closing the dialog and selecting the new list is handled in useNewList.ts
       } catch (error: any) {
