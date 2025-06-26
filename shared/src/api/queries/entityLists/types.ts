@@ -1,4 +1,8 @@
-import { GetListItemsQuery, GetListsQuery } from '@shared/api/generated'
+import {
+  GetListItemsQuery,
+  GetListsItemsForReviewSessionQuery,
+  GetListsQuery,
+} from '@shared/api/generated'
 
 // Define the type for our transformed lists data
 type QueryEntityList = GetListsQuery['project']['entityLists']['edges'][number]['node']
@@ -16,6 +20,26 @@ export type GetListsResult = {
 // Define the page param type for infinite query
 export type ListsPageParam = {
   cursor: string
+}
+
+type QueryEntityListsItemsForReviewSessionNode =
+  GetListsItemsForReviewSessionQuery['project']['entityLists']['edges'][number]['node']
+type QueryEntityListsItemsForReviewSessionNodeWithoutItems = Omit<
+  QueryEntityListsItemsForReviewSessionNode,
+  'items'
+>
+type QueryEntityListsItemsForReviewSessionNodeItem =
+  QueryEntityListsItemsForReviewSessionNode['items']['edges'][number]['node']
+export type QueryEntityListsItemsForReviewSession =
+  QueryEntityListsItemsForReviewSessionNodeWithoutItems & {
+    items: QueryEntityListsItemsForReviewSessionNodeItem[]
+  }
+export type GetListsItemsForReviewSessionResult = {
+  pageInfo: {
+    hasNextPage: boolean
+    endCursor?: string | null
+  }
+  lists: QueryEntityListsItemsForReviewSession[]
 }
 
 // Extra types from the query
@@ -81,4 +105,39 @@ export type ListItemMessage = {
     entityId?: string
     label: string
   }
+}
+
+export type CreateSessionFromListApiResponse =
+  /** status 200 Successful Response */ SessionFromListResponse
+export type CreateSessionFromListApiArg = {
+  projectName: string
+  addonVersion: string
+  sessionFromListRequest: SessionFromListRequest
+}
+export type SessionFromListRequest = {
+  /** Entity list ID to create the session from */
+  listId?: string
+  /** Name/label for the review session */
+  label?: string
+  /** Optional description for the session */
+  description?: string
+  /** Whether the session should be transient (temporary) */
+  transient?: boolean
+  /** Additional data for the session */
+  data?: Record<string, any>
+}
+export type SessionFromListResponse = {
+  /** ID of the created review session */
+  id?: string
+  label: string
+  /** Optional description */
+  description?: string
+  /** Whether the session is transient */
+  transient?: boolean
+  /** Creation timestamp */
+  createdAt?: string
+  /** User who created the session */
+  createdBy?: string
+  /** Additional session data */
+  data?: Record<string, any>
 }

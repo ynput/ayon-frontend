@@ -145,7 +145,7 @@ const ProjectOverviewPage: FC = () => {
         </SplitterPanel>
         <SplitterPanel size={88}>
           <Section wrap direction="column" style={{ height: '100%' }}>
-            <Toolbar style={{ gap: 8 }}>
+            <Toolbar>
               <NewEntity disabled={!showHierarchy} onNewEntities={handleNewEntities} />
               <OverviewActions />
               <SearchFilterWrapper
@@ -173,6 +173,7 @@ const ProjectOverviewPage: FC = () => {
                 onSetSearchParams={setSearchParams}
                 searchParams={searchParams}
                 isDeveloperMode={isDeveloperMode}
+                align="right"
               />
               <CustomizeButton />
             </Toolbar>

@@ -35,6 +35,12 @@ export const Cell = styled.div`
       color: var(--md-sys-color-on-primary-container);
     }
   }
+
+  &.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+    user-select: none;
+  }
 `
 
 export const ListCount = styled.span`

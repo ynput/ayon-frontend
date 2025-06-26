@@ -10,6 +10,9 @@ import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 const enhancedApi = actionsApi.enhanceEndpoints({
   endpoints: {
     executeAction: {},
+    listAvailableActionsForContext: {
+      transformErrorResponse: (error: any) => error.data?.detail || 'Unknown error',
+    },
   },
 })
 
@@ -73,6 +76,7 @@ const injectedActionsApi = enhancedApi.injectEndpoints({
 
 export const {
   useGetActionsFromContextQuery,
+  useLazyGetActionsFromContextQuery,
   useExecuteActionMutation,
   useGetActionConfigQuery,
   useSetActionConfigMutation,
