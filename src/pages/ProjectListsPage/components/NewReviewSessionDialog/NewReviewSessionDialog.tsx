@@ -6,10 +6,9 @@ import { toast } from 'react-toastify'
 import useGetListsItemsForReviewSession from '@pages/ProjectListsPage/hooks/useGetListsItemsForReviewSession'
 import calculateListsTotalReviewableVersions from '@pages/ProjectListsPage/util/calculateListsTotalReviewableVersions'
 import NewReviewSessionLoading from './NewReviewSessionLoading'
-import type { EntityListSummary } from '@shared/api'
 
 interface NewReviewSessionDialogProps extends Omit<DialogProps, 'onSubmit'> {
-  onSubmit: (label: string, options: { versionIds: string[] }) => Promise<EntityListSummary>
+  onSubmit: (listId: string) => Promise<any>
   submitLoading?: boolean
 }
 
@@ -45,7 +44,7 @@ const NewReviewSessionDialog: FC<NewReviewSessionDialogProps> = ({
 
   const handleListClick = useCallback(
     async (list: {
-      label: string
+      id: string
       items: ({ id: string; hasReviewables?: boolean } | undefined | null)[]
     }) => {
       try {
@@ -55,7 +54,7 @@ const NewReviewSessionDialog: FC<NewReviewSessionDialogProps> = ({
         }
 
         // create new list in API
-        onSubmit(list.label, { versionIds })
+        await onSubmit(list.id)
 
         // Note: closing the dialog and selecting the new list is handled in useNewList.ts
       } catch (error: any) {

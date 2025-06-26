@@ -106,3 +106,38 @@ export type ListItemMessage = {
     label: string
   }
 }
+
+export type CreateSessionFromListApiResponse =
+  /** status 200 Successful Response */ SessionFromListResponse
+export type CreateSessionFromListApiArg = {
+  projectName: string
+  addonVersion: string
+  sessionFromListRequest: SessionFromListRequest
+}
+export type SessionFromListRequest = {
+  /** Entity list ID to create the session from */
+  listId?: string
+  /** Name/label for the review session */
+  label?: string
+  /** Optional description for the session */
+  description?: string
+  /** Whether the session should be transient (temporary) */
+  transient?: boolean
+  /** Additional data for the session */
+  data?: Record<string, any>
+}
+export type SessionFromListResponse = {
+  /** ID of the created review session */
+  id?: string
+  label: string
+  /** Optional description */
+  description?: string
+  /** Whether the session is transient */
+  transient?: boolean
+  /** Creation timestamp */
+  createdAt?: string
+  /** User who created the session */
+  createdBy?: string
+  /** Additional session data */
+  data?: Record<string, any>
+}

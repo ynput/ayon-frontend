@@ -6,10 +6,8 @@ import { useAppSelector } from '@state/store'
 import useClearListItems from './useClearListItems'
 import { useProjectDataContext } from '@shared/containers/ProjectTreeTable'
 import { useListsDataContext } from '../context/ListsDataContext'
-import { UseNewListReturn } from './useNewList'
 import { toast } from 'react-toastify'
 import { useNavigate } from 'react-router-dom'
-import { useListAddonsQuery } from '@shared/api'
 
 const useListContextMenu = () => {
   const navigate = useNavigate()
@@ -27,28 +25,32 @@ const useListContextMenu = () => {
     isReview,
   } = useListsContext()
 
-  const { data: { addons: downloadedAddons = [] } = {} } = useListAddonsQuery({})
-
   const { clearListItems } = useClearListItems({ projectName })
 
   // create the ref and model
   const [ctxMenuShow] = useCreateContextMenu()
 
-  const handleCreateReviewSessionList: (
-    ...args: Parameters<UseNewListReturn['createReviewSessionList']>
-  ) => void = useCallback(
-    async (...args) => {
+  const handleCreateReviewSessionList: (listId: string) => void = useCallback(
+    async (listId) => {
       const loadingToast = toast.loading('Creating review session...')
-      const res = await createReviewSessionList(...args)
-      toast.update(loadingToast, {
-        render: 'Review session created',
-        type: 'success',
-        isLoading: false,
-        autoClose: 3000,
-      })
-
-      // navigate to the review session page
-      navigate(`/projects/${projectName}/reviews?review=${res.id}`)
+      try {
+        const res = await createReviewSessionList?.(listId)
+        toast.update(loadingToast, {
+          render: 'Review session created',
+          type: 'success',
+          isLoading: false,
+          autoClose: 3000,
+        })
+        // navigate to the review session page
+        navigate(`/projects/${projectName}/reviews?review=${res?.id}`)
+      } catch (error) {
+        toast.update(loadingToast, {
+          render: `Failed to create review session: ${error}`,
+          type: 'error',
+          isLoading: false,
+          autoClose: 5000,
+        })
+      }
     },
     [createReviewSessionList],
   )
@@ -88,16 +90,9 @@ const useListContextMenu = () => {
         {
           label: 'Create review session',
           icon: 'subscriptions',
-          command: () =>
-            handleCreateReviewSessionList(selectedList.label, {
-              listId: selectedList.id,
-            }),
+          command: () => handleCreateReviewSessionList(selectedList.id),
           disabled: multipleSelected || !allSelectedRowsAreLists,
-          hidden:
-            !allSelectedRowsAreLists ||
-            selectedList?.entityType !== 'version' ||
-            isReview ||
-            !downloadedAddons.some((item) => item.name === 'review'),
+          hidden: !allSelectedRowsAreLists || isReview || !createReviewSessionList,
         },
         {
           label: 'Info',

@@ -1,15 +1,14 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import {
-  useLazyGetListsItemsForReviewSessionQuery,
-  useLazyGetListsQuery,
+  SessionFromListResponse,
+  useCreateSessionFromListMutation,
   type EntityListPostModel,
   type EntityListSummary,
 } from '@shared/api'
 import { toast } from 'react-toastify'
-import buildReviewListLabel from '../util/buildReviewListLabel'
+import semver from 'semver'
 
-const reviewSessionListsFilterString =
-  '{"conditions":[{"key":"entityType","value":["version"],"operator":"in"},{"key":"entityListType","value":["review-session"],"operator":"in"}],"operator":"and"}'
+const MIN_REVIEW_VERSION = '0.0.3'
 
 export interface NewListForm extends EntityListPostModel {}
 
@@ -18,6 +17,7 @@ export interface UseNewListProps {
   onCreated?: (list: EntityListSummary) => void
   isReview?: boolean
   projectName: string
+  reviewVersion?: string // need for creating review session lists
 }
 
 export interface UseNewListReturn {
@@ -26,10 +26,7 @@ export interface UseNewListReturn {
   openNewList: (init?: Partial<NewListForm>) => void
   closeNewList: () => void
   createNewList: (list?: NewListForm) => Promise<EntityListSummary>
-  createReviewSessionList: (
-    label: string,
-    options: { listId: string } | { versionIds: string[] },
-  ) => Promise<EntityListSummary>
+  createReviewSessionList?: (listId: string) => Promise<SessionFromListResponse> // only available if review addon is installed (but not necessarily correct version)
 }
 type V = UseNewListReturn
 
@@ -43,6 +40,7 @@ const useNewList = ({
   onCreated,
   isReview,
   projectName,
+  reviewVersion,
 }: UseNewListProps): UseNewListReturn => {
   const [newList, setNewList] = useState<V['newList']>(null)
   const openNewList: V['openNewList'] = React.useCallback((init) => {
@@ -79,80 +77,44 @@ const useNewList = ({
     [newList, closeNewList, onCreated],
   )
 
-  // get lists that also have their items with the reviewable flag
-  const [getListsWithItemsForReview] = useLazyGetListsItemsForReviewSessionQuery()
-  // get all review lists so that we can avoid duplicates when creating a new review session list
-  const [getLists] = useLazyGetListsQuery()
+  const [createSessionFromList] = useCreateSessionFromListMutation()
+
+  const hasReviewAddon = useMemo(() => {
+    // check if review addon version is available
+    if (!reviewVersion) return false
+    // check if review addon version is compatible
+    return (
+      semver.gte(reviewVersion, MIN_REVIEW_VERSION) || reviewVersion === MIN_REVIEW_VERSION + '-dev'
+    )
+  }, [reviewVersion])
 
   /**
    * Creates a new review session list from either a listId (fetches versionIds from that list)
    * or directly from provided versionIds.
    */
   const createReviewSessionList: V['createReviewSessionList'] = React.useCallback(
-    async (label, options): Promise<EntityListSummary> => {
+    async (listId: string) => {
       try {
-        let versionIds: string[] = []
+        // check if review addon version is available
+        if (!reviewVersion) throw 'Review addon version is not available'
 
-        const reviewLists = await getLists({
-          first: 1000,
+        // check if review addon version is compatible
+        if (!hasReviewAddon)
+          throw 'Review addon version is too old, please update to at least ' + MIN_REVIEW_VERSION
+
+        const res = await createSessionFromList({
           projectName,
-          filter: reviewSessionListsFilterString,
+          addonVersion: reviewVersion,
+          sessionFromListRequest: { listId: listId },
         }).unwrap()
-        const reviewListsLabels = reviewLists.lists.map((list) => list.label)
-        if ('listId' in options) {
-          // for the listId, fetch the list items with reviewable flag
-          const versionLists = await getListsWithItemsForReview({
-            projectName,
-            ids: [options.listId],
-          }).unwrap()
 
-          const versionList = versionLists.lists[0]
-          if (!versionList) {
-            throw new Error(`List with ID ${options.listId} not found`)
-          }
-
-          // filter items that have the reviewable flag
-          const versionItemsIds = versionList.items
-            .filter((item) => item && 'hasReviewables' in item && item?.hasReviewables)
-            .map((item) => item?.id) as string[]
-          if (!versionItemsIds.length) {
-            throw new Error(`No reviewable versions found in the selected list.`)
-          }
-
-          versionIds = versionItemsIds
-        } else {
-          versionIds = options.versionIds
-        }
-
-        if (!versionIds.length) {
-          throw new Error('No versionIds provided')
-        }
-
-        //   create new list (review session) object data
-        const newReviewSessionList: NewListForm = {
-          entityType: 'version',
-          entityListType: 'review-session',
-          label: buildReviewListLabel(label, reviewListsLabels),
-          items: versionIds.map((id) => ({
-            entityId: id,
-          })),
-        }
-
-        console.log('Creating review session list with label:', newReviewSessionList)
-
-        // create new list in API
-        return await createNewList(newReviewSessionList)
+        return res
       } catch (error) {
         console.error(error)
-        toast.error(
-          `Failed to create review session list: ${
-            error instanceof Error ? error.message : String(error)
-          }`,
-        )
         throw error
       }
     },
-    [createNewList, projectName],
+    [createNewList, projectName, reviewVersion, hasReviewAddon],
   )
 
   //   open new list with n key shortcut
@@ -178,7 +140,7 @@ const useNewList = ({
     openNewList,
     closeNewList,
     createNewList,
-    createReviewSessionList,
+    createReviewSessionList: reviewVersion ? createReviewSessionList : undefined,
   }
 }
 
