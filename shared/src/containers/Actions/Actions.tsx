@@ -4,7 +4,7 @@ import clsx from 'clsx'
 import { toast } from 'react-toastify'
 import { useMemo, useEffect } from 'react'
 import { ActionContext, useExecuteActionMutation, useGetActionsFromContextQuery } from '@shared/api'
-import { ActionsDropdown } from './ActionsDropdown'
+import { ActionsDropdown, ActionsDropdownProps } from './ActionsDropdown'
 import ActionIcon from './ActionIcon'
 import { ActionTriggersProps, useActionTriggers } from '@shared/hooks'
 import { ActionConfigDialog } from './ActionConfigDialog'
@@ -26,6 +26,10 @@ interface ActionsProps extends ActionTriggersProps {
   projectActionsProjectName?: string
   featuredCount?: number
   isDeveloperMode: boolean
+  align?: ActionsDropdownProps['align']
+  pt?: {
+    dropdown?: Partial<ActionsDropdownProps>
+  }
 }
 
 export const Actions = ({
@@ -39,6 +43,8 @@ export const Actions = ({
   isDeveloperMode,
   onNavigate,
   onSetSearchParams,
+  align,
+  pt,
 }: ActionsProps) => {
   // special triggers the actions can make to perform stuff on the client
   const { handleActionPayload } = useActionTriggers({ onNavigate, onSetSearchParams, searchParams })
@@ -321,6 +327,8 @@ export const Actions = ({
         onAction={handleExecuteAction}
         onConfig={handleConfigureAction}
         isDeveloperMode={isDeveloperMode}
+        align={align}
+        {...pt?.dropdown}
       />
       <ActionConfigDialog
         action={actionBeingConfigured}

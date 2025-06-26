@@ -277,6 +277,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
                   searchParams={searchParams}
                   featuredCount={0}
                   isDeveloperMode={isDeveloperMode}
+                  align="right"
                 />
                 <CustomizeButton />
               </Toolbar>
