@@ -11,7 +11,7 @@ query GetListsItemsForReviewSession(
       first: $first
       after: $after
       sortBy: "updatedAt"
-      filter: "{\"conditions\":[{\"key\":\"entityType\",\"value\":[\"version\"],\"operator\":\"in\"},{\"key\":\"entityListType\",\"value\":[\"generic\"],\"operator\":\"in\"}],\"operator\":\"and\"}"
+      filter: "{\"conditions\":[{\"key\":\"entityListType\",\"value\":[\"generic\"],\"operator\":\"in\"}],\"operator\":\"and\"}"
       ids: $ids
     ) {
       pageInfo {
@@ -23,19 +23,9 @@ query GetListsItemsForReviewSession(
           id
           label
           active
+          entityType
           updatedAt
           count
-          items(first: 1000) {
-            edges {
-              node {
-                id
-                ... on VersionNode {
-                  id
-                  hasReviewables
-                }
-              }
-            }
-          }
         }
       }
     }

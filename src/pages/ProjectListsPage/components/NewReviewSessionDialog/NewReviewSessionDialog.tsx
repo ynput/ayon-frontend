@@ -4,8 +4,8 @@ import { FC, useRef, useCallback } from 'react'
 import ListRow from '../ListRow/ListRow'
 import { toast } from 'react-toastify'
 import useGetListsItemsForReviewSession from '@pages/ProjectListsPage/hooks/useGetListsItemsForReviewSession'
-import calculateListsTotalReviewableVersions from '@pages/ProjectListsPage/util/calculateListsTotalReviewableVersions'
 import NewReviewSessionLoading from './NewReviewSessionLoading'
+import { getEntityTypeIcon } from '@shared/util'
 
 interface NewReviewSessionDialogProps extends Omit<DialogProps, 'onSubmit'> {
   onSubmit: ((listId: string) => Promise<any>) | undefined
@@ -22,7 +22,7 @@ const NewReviewSessionDialog: FC<NewReviewSessionDialogProps> = ({
 
   // get a list of all version lists in the project
   const {
-    data: versionsListsData,
+    data: listsData,
     isLoading: isLoadingLists,
     isFetchingNextPage,
     isError,
@@ -43,16 +43,8 @@ const NewReviewSessionDialog: FC<NewReviewSessionDialogProps> = ({
   }, [isLoadingLists, isFetchingNextPage, fetchNextPage])
 
   const handleListClick = useCallback(
-    async (list: {
-      id: string
-      items: ({ id: string; hasReviewables?: boolean } | undefined | null)[]
-    }) => {
+    async (list: { id: string }) => {
       try {
-        const versionIds = list.items.filter((v) => v?.hasReviewables).map((v) => v?.id) as string[]
-        if (!versionIds.length) {
-          throw 'No reviewable versions found in the selected list.'
-        }
-
         if (!onSubmit) {
           throw 'Review addon not installed.'
         }
@@ -96,22 +88,19 @@ const NewReviewSessionDialog: FC<NewReviewSessionDialogProps> = ({
                 style={{ padding: 6 }}
               />
             ))
-          : versionsListsData.map((list) => {
-              const noReviewableVersions = calculateListsTotalReviewableVersions(list) < 1
-
+          : listsData.map((list) => {
               return (
                 <ListRow
                   key={list.id}
                   id={list.id}
                   value={list.label}
-                  icon={'layers'} // icon for versions
-                  count={noReviewableVersions ? 'No reviewables' : list.count}
+                  icon={getEntityTypeIcon(list.entityType)}
+                  count={list.count}
                   style={{
                     padding: 6,
                     opacity: submitLoading ? 0 : 1,
                   }}
                   onClick={() => handleListClick(list)}
-                  disabled={noReviewableVersions}
                 />
               )
             })}

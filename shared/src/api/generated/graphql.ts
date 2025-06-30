@@ -1541,7 +1541,7 @@ export type GetListsItemsForReviewSessionQueryVariables = Exact<{
 }>;
 
 
-export type GetListsItemsForReviewSessionQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', entityLists: { __typename?: 'EntityListsConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, edges: Array<{ __typename?: 'EntityListEdge', node: { __typename?: 'EntityListNode', id: string, label: string, active: boolean, updatedAt: any, count: number, items: { __typename?: 'EntityListItemsConnection', edges: Array<{ __typename?: 'EntityListItemEdge', node?: { __typename?: 'FolderNode', id: string } | { __typename?: 'ProductNode', id: string } | { __typename?: 'RepresentationNode', id: string } | { __typename?: 'TaskNode', id: string } | { __typename?: 'VersionNode', id: string, hasReviewables: boolean } | { __typename?: 'WorkfileNode', id: string } | null }> } } }> } } };
+export type GetListsItemsForReviewSessionQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', entityLists: { __typename?: 'EntityListsConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, edges: Array<{ __typename?: 'EntityListEdge', node: { __typename?: 'EntityListNode', id: string, label: string, active: boolean, entityType: string, updatedAt: any, count: number } }> } } };
 
 type ListItemFragment_FolderNode_Fragment = { __typename?: 'FolderNode', name: string, label?: string | null, status: string, tags: Array<string>, folderType: string, path?: string | null, ownAttrib: Array<string>, hasReviewables: boolean };
 
@@ -2271,7 +2271,7 @@ export const GetListsItemsForReviewSessionDocument = `
       first: $first
       after: $after
       sortBy: "updatedAt"
-      filter: "{\\"conditions\\":[{\\"key\\":\\"entityType\\",\\"value\\":[\\"version\\"],\\"operator\\":\\"in\\"},{\\"key\\":\\"entityListType\\",\\"value\\":[\\"generic\\"],\\"operator\\":\\"in\\"}],\\"operator\\":\\"and\\"}"
+      filter: "{\\"conditions\\":[{\\"key\\":\\"entityListType\\",\\"value\\":[\\"generic\\"],\\"operator\\":\\"in\\"}],\\"operator\\":\\"and\\"}"
       ids: $ids
     ) {
       pageInfo {
@@ -2283,19 +2283,9 @@ export const GetListsItemsForReviewSessionDocument = `
           id
           label
           active
+          entityType
           updatedAt
           count
-          items(first: 1000) {
-            edges {
-              node {
-                id
-                ... on VersionNode {
-                  id
-                  hasReviewables
-                }
-              }
-            }
-          }
         }
       }
     }

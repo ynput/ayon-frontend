@@ -22,18 +22,9 @@ export type ListsPageParam = {
   cursor: string
 }
 
-type QueryEntityListsItemsForReviewSessionNode =
-  GetListsItemsForReviewSessionQuery['project']['entityLists']['edges'][number]['node']
-type QueryEntityListsItemsForReviewSessionNodeWithoutItems = Omit<
-  QueryEntityListsItemsForReviewSessionNode,
-  'items'
->
-type QueryEntityListsItemsForReviewSessionNodeItem =
-  QueryEntityListsItemsForReviewSessionNode['items']['edges'][number]['node']
 export type QueryEntityListsItemsForReviewSession =
-  QueryEntityListsItemsForReviewSessionNodeWithoutItems & {
-    items: QueryEntityListsItemsForReviewSessionNodeItem[]
-  }
+  GetListsItemsForReviewSessionQuery['project']['entityLists']['edges'][number]['node']
+
 export type GetListsItemsForReviewSessionResult = {
   pageInfo: {
     hasNextPage: boolean

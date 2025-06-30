@@ -72,10 +72,7 @@ const getListsGqlApiEnhanced = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefiniti
         response: GetListsItemsForReviewSessionQuery,
       ): GetListsItemsForReviewSessionResult => {
         return {
-          lists: response.project.entityLists.edges.map((edge) => ({
-            ...edge.node,
-            items: edge.node.items.edges.map(({ node }) => node),
-          })),
+          lists: response.project.entityLists.edges.map((edge) => edge.node),
           pageInfo: response.project.entityLists.pageInfo,
         }
       },
