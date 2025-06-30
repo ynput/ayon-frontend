@@ -6,11 +6,8 @@ import { useAppSelector } from '@state/store'
 import useClearListItems from './useClearListItems'
 import { useProjectDataContext } from '@shared/containers/ProjectTreeTable'
 import { useListsDataContext } from '../context/ListsDataContext'
-import { toast } from 'react-toastify'
-import { useNavigate } from 'react-router-dom'
 
 const useListContextMenu = () => {
-  const navigate = useNavigate()
   const user = useAppSelector((state) => state.user)
   const developerMode = user?.attrib.developerMode
   const { projectName } = useProjectDataContext()
@@ -32,27 +29,12 @@ const useListContextMenu = () => {
 
   const handleCreateReviewSessionList: (listId: string) => void = useCallback(
     async (listId) => {
-      const loadingToast = toast.loading('Creating review session...')
-      try {
-        const res = await createReviewSessionList?.(listId)
-        toast.update(loadingToast, {
-          render: 'Review session created',
-          type: 'success',
-          isLoading: false,
-          autoClose: 3000,
-        })
-        // navigate to the review session page
-        navigate(`/projects/${projectName}/reviews?review=${res?.sessionId}`)
-      } catch (error) {
-        toast.update(loadingToast, {
-          render: `Failed to create review session: ${error}`,
-          type: 'error',
-          isLoading: false,
-          autoClose: 5000,
-        })
-      }
+      await createReviewSessionList?.(listId, {
+        showToast: true,
+        navigateOnSuccess: true,
+      })
     },
-    [createReviewSessionList],
+    [createReviewSessionList, projectName],
   )
 
   const openContext = useCallback(

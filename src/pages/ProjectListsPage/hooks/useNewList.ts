@@ -7,6 +7,7 @@ import {
 } from '@shared/api'
 import { toast } from 'react-toastify'
 import semver from 'semver'
+import { useNavigate } from 'react-router-dom'
 
 const MIN_REVIEW_VERSION = '0.0.3'
 
@@ -20,13 +21,21 @@ export interface UseNewListProps {
   reviewVersion?: string // need for creating review session lists
 }
 
+export interface CreateReviewSessionListConfig {
+  showToast?: boolean
+  navigateOnSuccess?: boolean | string | ((sessionId: string) => string)
+}
+
 export interface UseNewListReturn {
   newList: NewListForm | null
   setNewList: React.Dispatch<React.SetStateAction<NewListForm | null>>
   openNewList: (init?: Partial<NewListForm>) => void
   closeNewList: () => void
   createNewList: (list?: NewListForm) => Promise<EntityListSummary>
-  createReviewSessionList?: (listId: string) => Promise<SessionFromListResponse> // only available if review addon is installed (but not necessarily correct version)
+  createReviewSessionList?: (
+    listId: string,
+    config?: CreateReviewSessionListConfig,
+  ) => Promise<SessionFromListResponse> // only available if review addon is installed (but not necessarily correct version)
 }
 type V = UseNewListReturn
 
@@ -79,6 +88,8 @@ const useNewList = ({
 
   const [createSessionFromList] = useCreateSessionFromListMutation()
 
+  const navigate = useNavigate()
+
   const hasReviewAddon = useMemo(() => {
     // check if review addon version is available
     if (!reviewVersion) return false
@@ -91,10 +102,16 @@ const useNewList = ({
   /**
    * Creates a new review session list from either a listId (fetches versionIds from that list)
    * or directly from provided versionIds.
+   * Optionally shows toast and navigates on success.
    */
   const createReviewSessionList: V['createReviewSessionList'] = React.useCallback(
-    async (listId: string) => {
+    async (listId: string, config?: CreateReviewSessionListConfig) => {
+      const { showToast = false, navigateOnSuccess = false } = config || {}
+      let loadingToast: any
       try {
+        if (showToast) {
+          loadingToast = toast.loading('Creating review session...')
+        }
         // check if review addon version is available
         if (!reviewVersion) throw 'Review addon version is not available'
 
@@ -116,13 +133,42 @@ const useNewList = ({
           id: res.sessionId,
         })
 
+        if (showToast) {
+          toast.update(loadingToast, {
+            render: 'Review session created',
+            type: 'success',
+            isLoading: false,
+            autoClose: 3000,
+          })
+        }
+
+        if (navigateOnSuccess) {
+          let path: string
+          if (typeof navigateOnSuccess === 'string') {
+            path = navigateOnSuccess
+          } else if (typeof navigateOnSuccess === 'function') {
+            path = navigateOnSuccess(res.sessionId)
+          } else {
+            path = `/projects/${projectName}/reviews?review=${res.sessionId}`
+          }
+          navigate(path)
+        }
+
         return res
-      } catch (error) {
+      } catch (error: any) {
+        if (showToast && loadingToast) {
+          toast.update(loadingToast, {
+            render: `Failed to create review session: ${error}`,
+            type: 'error',
+            isLoading: false,
+            autoClose: 5000,
+          })
+        }
         console.error(error)
         throw error
       }
     },
-    [createNewList, projectName, reviewVersion, hasReviewAddon],
+    [createNewList, projectName, reviewVersion, hasReviewAddon, closeNewList, onCreated, navigate],
   )
 
   //   open new list with n key shortcut

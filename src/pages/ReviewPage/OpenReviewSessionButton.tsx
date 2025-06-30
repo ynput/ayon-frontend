@@ -8,15 +8,31 @@ interface OpenReviewSessionButtonProps {
 }
 
 const OpenReviewSessionButton: FC<OpenReviewSessionButtonProps> = ({ projectName }) => {
-  const { selectedList } = useListsContext()
+  const { selectedList, createReviewSessionList } = useListsContext()
 
-  if (!selectedList || selectedList.entityListType !== 'review-session') return null
+  if (!selectedList) return null
 
-  return (
-    <Link to={`/projects/${projectName}/reviews/${selectedList?.id}`} target="_blank">
-      <Button label="Open review" variant="filled" icon="subscriptions" />
-    </Link>
-  )
+  if (selectedList.entityListType === 'review-session') {
+    return (
+      <Link to={`/projects/${projectName}/reviews/${selectedList?.id}`} target="_blank">
+        <Button label="Open review" variant="filled" icon="subscriptions" />
+      </Link>
+    )
+  }
+
+  if (createReviewSessionList) {
+    const handleCreate = async () => {
+      await createReviewSessionList(selectedList.id, {
+        showToast: true,
+        navigateOnSuccess: true,
+      })
+    }
+    return (
+      <Button label="Create review" variant="filled" icon="subscriptions" onClick={handleCreate} />
+    )
+  }
+
+  return null
 }
 
 export default OpenReviewSessionButton

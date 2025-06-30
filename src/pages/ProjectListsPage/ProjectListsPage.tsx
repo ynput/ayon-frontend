@@ -231,7 +231,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
   const [searchParams, setSearchParams] = useSearchParams()
   const { projectName, projectInfo } = useProjectDataContext()
   const { isPanelOpen, selectSetting, highlightedSetting } = useSettingsPanel()
-  const { selectedList } = useListsContext()
+  const { selectedList, createReviewSessionList } = useListsContext()
   const { selectedRows } = useSelectedRowsContext()
   const { deleteListItemAction } = useListItemsDataContext()
 
