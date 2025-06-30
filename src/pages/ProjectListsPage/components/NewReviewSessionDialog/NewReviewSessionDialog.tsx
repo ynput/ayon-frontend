@@ -8,7 +8,7 @@ import NewReviewSessionLoading from './NewReviewSessionLoading'
 import { getEntityTypeIcon } from '@shared/util'
 
 interface NewReviewSessionDialogProps extends Omit<DialogProps, 'onSubmit'> {
-  onSubmit: ((listId: string) => Promise<any>) | undefined
+  onSubmit: ((listId: string) => Promise<any> | undefined) | undefined
   submitLoading?: boolean
 }
 
@@ -101,6 +101,7 @@ const NewReviewSessionDialog: FC<NewReviewSessionDialogProps> = ({
                     opacity: submitLoading ? 0 : 1,
                   }}
                   onClick={() => handleListClick(list)}
+                  tabIndex={0}
                 />
               )
             })}

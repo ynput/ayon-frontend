@@ -21,7 +21,7 @@ const NewListDialogContainer: FC<NewListDialogContainerProps> = ({}) => {
       <NewReviewSessionDialog
         isOpen={true}
         onClose={closeNewList}
-        onSubmit={createReviewSessionList}
+        onSubmit={(id) => createReviewSessionList?.(id, { showToast: true })}
         submitLoading={isCreatingList}
         header="Select a version list to create a review session"
         size="md"
