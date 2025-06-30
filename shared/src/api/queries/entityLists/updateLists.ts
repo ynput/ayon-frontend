@@ -234,6 +234,7 @@ const updateListsInjectedApi = updateListsEnhancedApi.injectEndpoints({
         body: queryArg.sessionFromListRequest,
       }),
       transformErrorResponse: (error: any) => error.data.detail,
+      invalidatesTags: () => [{ type: 'entityList', id: 'LIST' }],
     }),
   }),
 })

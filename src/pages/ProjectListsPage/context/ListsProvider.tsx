@@ -113,7 +113,7 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
     await createNewListMutation({ entityListPostModel: list, projectName }).unwrap()
 
   const handleCreatedList = useCallback(
-    (list: EntityListSummary) => {
+    (list: Pick<EntityListSummary, 'id'>) => {
       if (list.id) {
         setRowSelection({ [list.id]: true })
       }

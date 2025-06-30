@@ -14,7 +14,7 @@ export interface NewListForm extends EntityListPostModel {}
 
 export interface UseNewListProps {
   onCreateNewList: (list: EntityListPostModel) => Promise<EntityListSummary>
-  onCreated?: (list: EntityListSummary) => void
+  onCreated?: (list: Pick<EntityListSummary, 'id'>) => void
   isReview?: boolean
   projectName: string
   reviewVersion?: string // need for creating review session lists
@@ -107,6 +107,14 @@ const useNewList = ({
           addonVersion: reviewVersion,
           sessionFromListRequest: { listId: listId },
         }).unwrap()
+
+        // close dialog if open
+        closeNewList()
+
+        // select the new list using callback
+        onCreated?.({
+          id: res.sessionId,
+        })
 
         return res
       } catch (error) {

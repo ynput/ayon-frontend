@@ -42,7 +42,7 @@ const useListContextMenu = () => {
           autoClose: 3000,
         })
         // navigate to the review session page
-        navigate(`/projects/${projectName}/reviews?review=${res?.id}`)
+        navigate(`/projects/${projectName}/reviews?review=${res?.sessionId}`)
       } catch (error) {
         toast.update(loadingToast, {
           render: `Failed to create review session: ${error}`,

@@ -116,28 +116,15 @@ export type CreateSessionFromListApiArg = {
 }
 export type SessionFromListRequest = {
   /** Entity list ID to create the session from */
-  listId?: string
+  listId: string
+  /** Optional session ID for the new session */
+  sessionId?: string
   /** Name/label for the review session */
   label?: string
-  /** Optional description for the session */
-  description?: string
-  /** Whether the session should be transient (temporary) */
-  transient?: boolean
-  /** Additional data for the session */
-  data?: Record<string, any>
 }
 export type SessionFromListResponse = {
   /** ID of the created review session */
-  id?: string
+  sessionId: string
+  /** Name/label of the created review session */
   label: string
-  /** Optional description */
-  description?: string
-  /** Whether the session is transient */
-  transient?: boolean
-  /** Creation timestamp */
-  createdAt?: string
-  /** User who created the session */
-  createdBy?: string
-  /** Additional session data */
-  data?: Record<string, any>
 }
