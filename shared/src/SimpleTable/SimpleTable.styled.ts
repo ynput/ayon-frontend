@@ -143,6 +143,6 @@ export const HeaderButton = styled(Button)`
   }
 
   &:hover {
-    background-color: var(--md-sys-color-surface-container-hover);
+    background-color: var(--md-sys-color-surface-container-hover) !important;
   }
 `
