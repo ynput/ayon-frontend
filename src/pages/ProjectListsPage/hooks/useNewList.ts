@@ -168,7 +168,7 @@ const useNewList = ({
         throw error
       }
     },
-    [createNewList, projectName, reviewVersion, hasReviewAddon, closeNewList, onCreated, navigate],
+    [projectName, reviewVersion, hasReviewAddon, closeNewList, onCreated, navigate],
   )
 
   //   open new list with n key shortcut
