@@ -36,7 +36,7 @@ export interface SimpleTableCellTemplateProps extends React.HTMLAttributes<HTMLD
   isRowExpandable?: boolean
   isRowExpanded?: boolean
   isTableExpandable?: boolean
-  onExpandClick: () => void
+  onExpandClick?: () => void
   //  when used as a template
   startContent?: React.ReactNode
   endContent?: React.ReactNode

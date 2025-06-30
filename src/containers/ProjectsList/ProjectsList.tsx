@@ -4,6 +4,8 @@ import { RowSelectionState } from '@tanstack/react-table'
 import { FC, useCallback, useMemo, useState } from 'react'
 import buildProjectsTableData from './buildProjectsTableData'
 import ProjectsListTableHeader from './ProjectsListTableHeader'
+import ProjectsListRow from './ProjectsListRow'
+import useProjectListUserPreferences from './hooks/useProjectListUserPreferences'
 
 interface ProjectsListProps {
   selection: string[]
@@ -17,8 +19,14 @@ interface ProjectsListProps {
 const ProjectsList: FC<ProjectsListProps> = ({ selection, onSelect, showInactive, pt }) => {
   const { data: projects = [], isLoading, error } = useListProjectsQuery({ active: !showInactive })
 
-  //   format data for the table
-  const listsTableData = useMemo(() => buildProjectsTableData(projects), [projects])
+  // GET USER PREFERENCES (moved to hook)
+  const { rowPinning, onRowPinningChange } = useProjectListUserPreferences()
+
+  // format data for the table, pass pinned projects for sorting
+  const listsTableData = useMemo(
+    () => buildProjectsTableData(projects, rowPinning),
+    [projects, rowPinning],
+  )
 
   // state
   // search state
@@ -42,10 +50,15 @@ const ProjectsList: FC<ProjectsListProps> = ({ selection, onSelect, showInactive
     [onSelect],
   )
 
-  console.log('helloooo?')
-
   return (
-    <SimpleTableProvider {...{ rowSelection, onRowSelectionChange: setRowSelection }}>
+    <SimpleTableProvider
+      {...{
+        rowSelection,
+        onRowSelectionChange: setRowSelection,
+        rowPinning: { top: rowPinning },
+        onRowPinningChange,
+      }}
+    >
       <Container {...pt?.container}>
         <ProjectsListTableHeader
           title={'Projects'}
@@ -69,7 +82,15 @@ const ProjectsList: FC<ProjectsListProps> = ({ selection, onSelect, showInactive
               //   renamingList,
             }
           }
-        ></SimpleTable>
+        >
+          {(props, row, table) => (
+            <ProjectsListRow
+              {...props}
+              isPinned={row.getIsPinned() === 'top'}
+              onPinToggle={() => row.pin(row.getIsPinned() === 'top' ? false : 'top')}
+            />
+          )}
+        </SimpleTable>
       </Container>
     </SimpleTableProvider>
   )
