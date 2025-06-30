@@ -150,6 +150,7 @@ const UserDashboardPage = () => {
               <ProjectsLists
                 selection={selectedProjects}
                 onSelect={setSelectedProjects}
+                onNewProject={() => setShowNewProject(true)}
                 pt={{
                   container: {
                     style: { height: '100%', minWidth: 200 },

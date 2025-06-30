@@ -56,6 +56,8 @@ interface ProjectsListTableHeaderProps {
   selection: string[]
   buttonLabels?: ButtonsCustomization
   hiddenButtons?: ButtonType[]
+  onNewProject?: () => void
+  showAddProject?: boolean
 }
 
 const ProjectsListTableHeader: FC<ProjectsListTableHeaderProps> = ({
@@ -65,32 +67,20 @@ const ProjectsListTableHeader: FC<ProjectsListTableHeaderProps> = ({
   selection,
   buttonLabels = {},
   hiddenButtons = [],
+  onNewProject,
+  showAddProject = false,
 }) => {
-  // Default button configurations
-  const deleteButton = {
-    icon: 'delete',
-    tooltip: 'Delete selected lists',
-    ...buttonLabels.delete,
-  }
-
   const addButton = {
     icon: 'add',
-    tooltip: 'Create new list',
-    shortcut: 'N',
+    tooltip: 'Add new project',
     ...buttonLabels.add,
   }
 
   const searchButton = {
     icon: 'search',
-    tooltip: 'Search lists',
+    tooltip: 'Search projects',
     ...buttonLabels.search,
   }
-
-  const handleDelete = () => {
-    // delete selected list items
-  }
-
-  const handleNewProject = () => {}
 
   return (
     <HeaderStyled>
@@ -98,20 +88,12 @@ const ProjectsListTableHeader: FC<ProjectsListTableHeaderProps> = ({
         <StyledTitle>{title}</StyledTitle>
 
         <StyledButtons>
-          {!!selection.length && !hiddenButtons.includes('delete') && (
-            <HeaderButton
-              icon={deleteButton.icon}
-              onClick={handleDelete}
-              data-tooltip={deleteButton.tooltip}
-              data-shortcut={deleteButton.shortcut}
-            />
-          )}
-          {!hiddenButtons.includes('add') && (
+          {showAddProject && (
             <HeaderButton
               icon={addButton.icon}
               data-tooltip={addButton.tooltip}
               data-shortcut={addButton.shortcut}
-              onClick={handleNewProject}
+              onClick={onNewProject}
             />
           )}
           {!hiddenButtons.includes('search') && (

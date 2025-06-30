@@ -2,6 +2,7 @@ import { useListProjectsQuery } from '@shared/api'
 import SimpleTable, { Container, SimpleTableProvider } from '@shared/SimpleTable'
 import { RowSelectionState } from '@tanstack/react-table'
 import { FC, useCallback, useMemo, useState } from 'react'
+import useUserProjectPermissions from '@hooks/useUserProjectPermissions'
 import buildProjectsTableData from './buildProjectsTableData'
 import ProjectsListTableHeader from './ProjectsListTableHeader'
 import ProjectsListRow from './ProjectsListRow'
@@ -11,16 +12,32 @@ interface ProjectsListProps {
   selection: string[]
   onSelect: (ids: string[]) => void
   showInactive?: boolean
+  onNewProject?: () => void
   pt?: {
     container?: React.HTMLAttributes<HTMLDivElement>
   }
 }
 
-const ProjectsList: FC<ProjectsListProps> = ({ selection, onSelect, showInactive, pt }) => {
+const ProjectsList: FC<ProjectsListProps> = ({
+  selection,
+  onSelect,
+  showInactive,
+  onNewProject,
+  pt,
+}) => {
   const { data: projects = [], isLoading, error } = useListProjectsQuery({ active: !showInactive })
 
   // GET USER PREFERENCES (moved to hook)
-  const { rowPinning, onRowPinningChange } = useProjectListUserPreferences()
+  const { rowPinning, onRowPinningChange, user } = useProjectListUserPreferences()
+
+  // Get user permissions
+  const { isLoading: userPermissionsLoading, permissions: userPermissions } =
+    useUserProjectPermissions(user?.data?.isUser || true)
+  // Check if user can create projects
+  const canCreateProject =
+    (!userPermissionsLoading && userPermissions?.canCreateProject()) ||
+    user?.data?.isAdmin ||
+    user?.data?.isManager
 
   // format data for the table, pass pinned projects for sorting
   const listsTableData = useMemo(
@@ -62,10 +79,12 @@ const ProjectsList: FC<ProjectsListProps> = ({ selection, onSelect, showInactive
       <Container {...pt?.container}>
         <ProjectsListTableHeader
           title={'Projects'}
-          // hiddenButtons={['add']}
           search={clientSearch}
           onSearch={setClientSearch}
           selection={selection}
+          // project creation
+          showAddProject={canCreateProject}
+          onNewProject={onNewProject}
         />
         <SimpleTable
           data={listsTableData}
