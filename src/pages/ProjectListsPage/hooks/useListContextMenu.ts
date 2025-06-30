@@ -70,7 +70,7 @@ const useListContextMenu = () => {
           disabled: multipleSelected,
         },
         {
-          label: 'Create review session',
+          label: 'Create review',
           icon: 'subscriptions',
           command: () => handleCreateReviewSessionList(selectedList.id),
           disabled: multipleSelected || !allSelectedRowsAreLists,
