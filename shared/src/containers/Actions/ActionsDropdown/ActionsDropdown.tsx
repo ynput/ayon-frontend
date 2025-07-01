@@ -1,4 +1,4 @@
-import { DefaultValueTemplate, Button, Spacer, DropdownRef } from '@ynput/ayon-react-components'
+import { DefaultValueTemplate, Button, Spacer, DropdownRef, DropdownProps } from '@ynput/ayon-react-components'
 import { DropdownHeader, DropdownItem, StyledDropdown } from './ActionsDropdown.styled'
 import clsx from 'clsx'
 import { useRef } from 'react'
@@ -71,7 +71,7 @@ export const ActionsDropdownItem = ({
   )
 }
 
-export type ActionsDropdownProps = {
+export interface ActionsDropdownProps extends Omit<DropdownProps, 'value'> {
   options: ActionsDropdownItemProps[]
   isLoading?: boolean
   isDeveloperMode: boolean
@@ -85,6 +85,7 @@ export const ActionsDropdown = ({
   isDeveloperMode,
   onAction,
   onConfig,
+  ...props
 }: ActionsDropdownProps) => {
   const dropdownRef = useRef<DropdownRef>(null)
 
@@ -110,6 +111,7 @@ export const ActionsDropdown = ({
         ['data-tooltip']: isDeveloperMode ? 'Actions (dev bundle)' : 'Actions',
         ['data-tooltip-delay']: 0,
       }}
+      {...props}
     />
   )
 }

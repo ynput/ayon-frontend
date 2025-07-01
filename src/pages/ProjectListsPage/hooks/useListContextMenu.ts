@@ -12,13 +12,30 @@ const useListContextMenu = () => {
   const developerMode = user?.attrib.developerMode
   const { projectName } = useProjectDataContext()
   const { listsData } = useListsDataContext()
-  const { rowSelection, setRowSelection, openRenameList, openDetailsPanel, deleteLists } =
-    useListsContext()
+  const {
+    rowSelection,
+    setRowSelection,
+    openRenameList,
+    openDetailsPanel,
+    deleteLists,
+    createReviewSessionList,
+    isReview,
+  } = useListsContext()
 
   const { clearListItems } = useClearListItems({ projectName })
 
   // create the ref and model
   const [ctxMenuShow] = useCreateContextMenu()
+
+  const handleCreateReviewSessionList: (listId: string) => void = useCallback(
+    async (listId) => {
+      await createReviewSessionList?.(listId, {
+        showToast: true,
+        navigateOnSuccess: true,
+      })
+    },
+    [createReviewSessionList, projectName],
+  )
 
   const openContext = useCallback(
     (e: React.MouseEvent<HTMLElement>) => {
@@ -37,6 +54,7 @@ const useListContextMenu = () => {
       const newSelectedLists = listsData.filter((list) =>
         newSelectedRows.some((selected) => list?.id === selected),
       )
+      const selectedList = newSelectedLists[0]
       const firstSelectedRow = Object.keys(newSelection)[0]
       const multipleSelected = Object.keys(newSelection).length > 1
       // some rows are folders
@@ -50,6 +68,13 @@ const useListContextMenu = () => {
           icon: 'edit',
           command: () => openRenameList(firstSelectedRow),
           disabled: multipleSelected,
+        },
+        {
+          label: 'Create review',
+          icon: 'subscriptions',
+          command: () => handleCreateReviewSessionList(selectedList.id),
+          disabled: multipleSelected || !allSelectedRowsAreLists,
+          hidden: !allSelectedRowsAreLists || isReview || !createReviewSessionList,
         },
         {
           label: 'Info',
@@ -87,6 +112,7 @@ const useListContextMenu = () => {
       openRenameList,
       openDetailsPanel,
       deleteLists,
+      createReviewSessionList,
     ],
   )
 

@@ -1,4 +1,8 @@
-import { GetListItemsQuery, GetListsQuery } from '@shared/api/generated'
+import {
+  GetListItemsQuery,
+  GetListsItemsForReviewSessionQuery,
+  GetListsQuery,
+} from '@shared/api/generated'
 
 // Define the type for our transformed lists data
 type QueryEntityList = GetListsQuery['project']['entityLists']['edges'][number]['node']
@@ -16,6 +20,17 @@ export type GetListsResult = {
 // Define the page param type for infinite query
 export type ListsPageParam = {
   cursor: string
+}
+
+export type QueryEntityListsItemsForReviewSession =
+  GetListsItemsForReviewSessionQuery['project']['entityLists']['edges'][number]['node']
+
+export type GetListsItemsForReviewSessionResult = {
+  pageInfo: {
+    hasNextPage: boolean
+    endCursor?: string | null
+  }
+  lists: QueryEntityListsItemsForReviewSession[]
 }
 
 // Extra types from the query
@@ -81,4 +96,26 @@ export type ListItemMessage = {
     entityId?: string
     label: string
   }
+}
+
+export type CreateSessionFromListApiResponse =
+  /** status 200 Successful Response */ SessionFromListResponse
+export type CreateSessionFromListApiArg = {
+  projectName: string
+  addonVersion: string
+  sessionFromListRequest: SessionFromListRequest
+}
+export type SessionFromListRequest = {
+  /** Entity list ID to create the session from */
+  listId: string
+  /** Optional session ID for the new session */
+  sessionId?: string
+  /** Name/label for the review session */
+  label?: string
+}
+export type SessionFromListResponse = {
+  /** ID of the created review session */
+  sessionId: string
+  /** Name/label of the created review session */
+  label: string
 }

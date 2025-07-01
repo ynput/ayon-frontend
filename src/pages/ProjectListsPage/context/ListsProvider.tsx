@@ -13,6 +13,7 @@ import useUpdateList from '../hooks/useUpdateList'
 import { useListsDataContext } from './ListsDataContext'
 import { useQueryParam, withDefault, QueryParamConfig } from 'use-query-params'
 import ListsContext, { ListsContextType } from './ListsContext'
+import useGetBundleAddonVersion from '../hooks/useGetBundleAddonVersion'
 
 // Custom param for RowSelectionState
 const RowSelectionParam: QueryParamConfig<RowSelectionState> = {
@@ -56,6 +57,9 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
     reviewParamConfig, // Use memoized config
   )
 
+  // find out if and what version of the review addon is installed
+  const reviewVersion = useGetBundleAddonVersion({ addon: 'review' })
+
   const rowSelection = useMemo(
     () => (isReview ? unstableReviewSelection : unstableListSelection),
     // Simpler dependencies: unstableListSelection and unstableReviewSelection are stable state references
@@ -65,10 +69,8 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
   const setRowSelection = useCallback(
     (ids: RowSelectionState) => {
       if (isReview) {
-        console.log('setReviewSelection', ids)
         setReviewSelection(ids)
       } else {
-        console.log('setListSelection', ids)
         setListSelection(ids)
       }
     },
@@ -111,7 +113,7 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
     await createNewListMutation({ entityListPostModel: list, projectName }).unwrap()
 
   const handleCreatedList = useCallback(
-    (list: EntityListSummary) => {
+    (list: Pick<EntityListSummary, 'id'>) => {
       if (list.id) {
         setRowSelection({ [list.id]: true })
       }
@@ -119,11 +121,14 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
     [setRowSelection],
   )
 
-  const { closeNewList, createNewList, newList, openNewList, setNewList } = useNewList({
-    onCreateNewList,
-    onCreated: handleCreatedList,
-    isReview,
-  })
+  const { closeNewList, createNewList, newList, openNewList, setNewList, createReviewSessionList } =
+    useNewList({
+      onCreateNewList,
+      onCreated: handleCreatedList,
+      isReview,
+      projectName,
+      reviewVersion,
+    })
 
   // UPDATE/EDIT LIST
   const [updateListMutation] = useUpdateEntityListMutation()
@@ -156,6 +161,7 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
       newList,
       openNewList,
       setNewList,
+      createReviewSessionList,
       isCreatingList,
       isReview,
       // list editing
@@ -184,6 +190,7 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
     newList,
     openNewList,
     setNewList,
+    createReviewSessionList,
     isCreatingList,
     closeRenameList,
     openRenameList,
