@@ -20,6 +20,32 @@ const StyledTableRow = styled(SimpleTableCellTemplate)`
   &.inactive {
     color: var(--md-sys-color-outline);
   }
+
+  /* by default code is hidden */
+  .project-code {
+    display: none;
+    width: 100%;
+    overflow: hidden;
+    /* text-overflow: ellipsis; */
+  }
+  /* reveal code and hide label when smaller than 96px */
+  /* pin also becomes smaller */
+  container-type: inline-size;
+  @container (max-width: 85px) {
+    .project-code {
+      display: inline-block;
+    }
+    .value {
+      display: none;
+    }
+    .pin {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      padding: 1px;
+      font-size: 14px;
+    }
+  }
 `
 
 const StyledPin = styled(Icon)`
@@ -42,12 +68,14 @@ const StyledPin = styled(Icon)`
 `
 
 interface ProjectsListRowProps extends SimpleTableCellTemplateProps {
+  code: string // used when the width is too small to show the full name
   isInActive?: boolean
   isPinned?: boolean
   onPinToggle?: () => void
 }
 
 const ProjectsListRow: FC<ProjectsListRowProps> = ({
+  code,
   isPinned,
   onPinToggle,
   className,
@@ -58,6 +86,7 @@ const ProjectsListRow: FC<ProjectsListRowProps> = ({
       {...props}
       style={{ paddingRight: 2 }}
       className={clsx(className, { inactive: props.isInActive })}
+      startContent={<span className="project-code">{code}</span>}
       endContent={
         <StyledPin
           icon="push_pin"

@@ -106,6 +106,7 @@ export interface SimpleTableProps {
   isLoading: boolean
   error?: string
   isExpandable?: boolean // show expand/collapse icons
+  isMultiSelect?: boolean // enable multi-select with shift+click and ctrl/cmd+click
   forceUpdateTable?: any
   globalFilter?: string
   meta?: Record<string, any>
@@ -155,6 +156,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
   isLoading,
   error,
   isExpandable,
+  isMultiSelect = true,
   forceUpdateTable,
   globalFilter,
   meta,
@@ -204,7 +206,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
 
       if (!currentRow) return
 
-      if (isShift && lastSelectedIdRef.current) {
+      if (isMultiSelect && isShift && lastSelectedIdRef.current) {
         const lastId = lastSelectedIdRef.current
         const anchorRow = allProcessableRows.find((r) => r.id === lastId)
 
@@ -217,14 +219,14 @@ const SimpleTable: FC<SimpleTableProps> = ({
           // The revised handleRowSelectionChangeCallback will correctly queue these.
           rowsToToggle.forEach((r) => r.toggleSelected(isAnchorSelected))
         }
-      } else if (isCtrlOrMeta) {
+      } else if (isMultiSelect && isCtrlOrMeta) {
         currentRow.toggleSelected()
       } else {
         tableInstance.setRowSelection({ [currentId]: true })
       }
       lastSelectedIdRef.current = currentId
     },
-    [],
+    [isMultiSelect],
   )
 
   // Callback for useRowKeydown's handleRowSelect prop

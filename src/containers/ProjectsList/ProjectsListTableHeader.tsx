@@ -17,6 +17,29 @@ const HeaderStyled = styled(Header)`
 const HeaderTop = styled(Header)`
   padding: 0;
   border: none;
+
+  container-type: inline-size;
+
+  /* when this container gets smaller than */
+  /* 188px remove add-project button  */
+  @container (max-width: 188px) {
+    .add-project {
+      display: none;
+    }
+  }
+  /* 155px remove select all button */
+  @container (max-width: 155px) {
+    .select-all {
+      display: none;
+    }
+  }
+
+  /* 125px remove search */
+  @container (max-width: 125px) {
+    .search-projects {
+      display: none;
+    }
+  }
 `
 
 const StyledTitle = styled.span`
@@ -53,13 +76,13 @@ interface ButtonsCustomization {
   }
 }
 
-type ButtonType = 'delete' | 'add' | 'filter' | 'search'
+type ButtonType = 'delete' | 'add' | 'filter' | 'search' | 'select-all'
 
 interface ProjectsListTableHeaderProps {
   title: string
-  search: string | null
-  onSearch: (search: string | null) => void
-  selection: string[]
+  search: string | null | undefined
+  onSearch: (search: string | undefined) => void
+  onSelectAll?: () => void
   buttonLabels?: ButtonsCustomization
   hiddenButtons?: ButtonType[]
   onNewProject?: () => void
@@ -77,7 +100,7 @@ const ProjectsListTableHeader: FC<ProjectsListTableHeaderProps> = ({
   title,
   search,
   onSearch,
-  selection,
+  onSelectAll,
   buttonLabels = {},
   hiddenButtons = [],
   onNewProject,
@@ -100,22 +123,23 @@ const ProjectsListTableHeader: FC<ProjectsListTableHeaderProps> = ({
   }
 
   return (
-    <HeaderStyled>
-      <HeaderTop>
+    <HeaderStyled className="projects-list-header">
+      <HeaderTop className="projects-list-header-top">
         <StyledTitle>{title}</StyledTitle>
 
-        <StyledButtons>
+        <StyledButtons className="projects-list-header-buttons">
           <HeaderButton
             icon="more_horiz"
             onClick={() => toggleMenu?.(true)}
             id={MENU_ID}
-            className={clsx({ active: isOpen })}
+            className={clsx('list-menu', { active: isOpen })}
           />
           {/* @ts-expect-error - non TS file */}
           <MenuContainer targetId={MENU_ID} id={MENU_ID} align="left">
             {/* @ts-expect-error - non TS file */}
             <Menu menu={menuItems} onClose={() => toggleMenu?.(true)} />
           </MenuContainer>
+
           {/* header button */}
           {showAddProject && (
             <HeaderButton
@@ -123,20 +147,33 @@ const ProjectsListTableHeader: FC<ProjectsListTableHeaderProps> = ({
               data-tooltip={addButton.tooltip}
               data-shortcut={addButton.shortcut}
               onClick={onNewProject}
+              className="add-project"
             />
           )}
+
+          {/* select all button */}
+          {!hiddenButtons.includes('select-all') && onSelectAll && (
+            <HeaderButton
+              icon="checklist"
+              data-tooltip="Select all"
+              onClick={onSelectAll}
+              className="select-all"
+            />
+          )}
+
           {!hiddenButtons.includes('search') && (
             <HeaderButton
               icon={searchButton.icon}
               data-tooltip={searchButton.tooltip}
               data-shortcut={searchButton.shortcut}
               onClick={() => typeof search !== 'string' && onSearch('')}
+              className="search-projects"
             />
           )}
         </StyledButtons>
       </HeaderTop>
       {typeof search === 'string' && (
-        <ListsSearch value={search} onChange={onSearch} onClose={() => onSearch(null)} />
+        <ListsSearch value={search} onChange={onSearch} onClose={() => onSearch(undefined)} />
       )}
     </HeaderStyled>
   )

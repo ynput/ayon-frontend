@@ -2,21 +2,25 @@ import { useMemo } from 'react'
 
 interface MenuItemProps {
   hidden?: {
+    search?: boolean
     'add-project'?: boolean
     'manage-projects'?: boolean
     'open-project'?: boolean
     'pin-project'?: boolean
     'select-all'?: boolean
+    'archive-project'?: boolean
+    'delete-project'?: boolean
   }
   projects: { name: string; active: boolean }[]
   selection: string[]
   onNewProject?: () => void
   pinned: string[]
+  multiSelect?: boolean
   onPin?: (pinned: string[]) => void
+  onSearch?: () => void
   onManage?: () => void
   onOpen?: () => void
-  onSelect?: (projects: string[]) => void
-  onClose?: () => void
+  onSelectAll?: () => void
   onArchive?: (projectName: string, active: boolean) => void
   onDelete?: (projectName: string) => void
 }
@@ -26,12 +30,13 @@ const useProjectsListMenuItems = ({
   projects,
   selection,
   pinned,
+  multiSelect,
   onNewProject,
+  onSearch,
   onPin,
   onManage,
   onOpen,
-  onSelect,
-  onClose,
+  onSelectAll,
   onArchive,
   onDelete,
 }: MenuItemProps) => {
@@ -40,18 +45,6 @@ const useProjectsListMenuItems = ({
   const singleProject =
     selection.length === 1 ? projects.find((p) => p.name === selection[0]) : undefined
   const singleActive = singleProject ? singleProject.active : false
-
-  const handleSelectAll = () => {
-    onClose?.()
-    if (onSelect) {
-      if (allSelected) {
-        onSelect([])
-      } else {
-        const allIds = projects.map((p) => p.name)
-        onSelect(allIds)
-      }
-    }
-  }
 
   const handlePin = () => {
     if (onPin) {
@@ -81,16 +74,23 @@ const useProjectsListMenuItems = ({
   const menuItems = useMemo(() => {
     const allItems = [
       {
-        id: 'add-project',
-        label: 'Add new project',
-        icon: 'add',
-        onClick: onNewProject,
+        id: 'search',
+        label: 'Search',
+        icon: 'search',
+        onClick: () => onSearch?.(),
       },
       {
         id: 'select-all',
         label: allSelected ? 'Unselect all' : 'Select all',
         icon: 'checklist',
-        onClick: handleSelectAll,
+        onClick: onSelectAll,
+        hidden: multiSelect !== true,
+      },
+      {
+        id: 'add-project',
+        label: 'Add new project',
+        icon: 'add',
+        onClick: onNewProject,
       },
       { id: 'divider' },
       {
@@ -142,12 +142,13 @@ const useProjectsListMenuItems = ({
     onPin,
     onManage,
     onOpen,
-    onSelect,
+    onSelectAll,
+    onSearch,
     selection,
     pinned,
     allPinned,
     allSelected,
-
+    multiSelect,
     singleProject,
   ])
 
