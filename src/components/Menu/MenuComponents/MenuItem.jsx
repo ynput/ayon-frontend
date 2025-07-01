@@ -20,6 +20,7 @@ const MenuItem = forwardRef(
       isLink,
       isDev,
       shortcut,
+      disabled,
       ...props
     },
     ref,
@@ -37,6 +38,7 @@ const MenuItem = forwardRef(
             notification: notification,
             danger: danger,
             dev: isDev,
+            disabled: disabled,
           },
           className,
         )}

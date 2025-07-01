@@ -148,9 +148,12 @@ const UserDashboardPage = () => {
                 onActivateProject={handleActivateProject}
               />
               <ProjectsLists
+                showInactive={module === 'overview'}
                 selection={selectedProjects}
                 onSelect={setSelectedProjects}
                 onNewProject={() => setShowNewProject(true)}
+                onDeleteProject={handleDeleteProject}
+                onActivateProject={handleActivateProject}
                 pt={{
                   container: {
                     style: { height: '100%', minWidth: 200 },

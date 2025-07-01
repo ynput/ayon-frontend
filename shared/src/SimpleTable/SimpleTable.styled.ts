@@ -144,4 +144,8 @@ export const HeaderButton = styled(Button)`
   &:hover {
     background-color: var(--md-sys-color-surface-container-hover);
   }
+
+  &.active {
+    background-color: var(--md-sys-color-surface-container-hover) !important;
+  }
 `

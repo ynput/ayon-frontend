@@ -1,8 +1,14 @@
+import Menu from '@components/Menu/MenuComponents/Menu'
+import MenuContainer from '@components/Menu/MenuComponents/MenuContainer'
 import ListsSearch from '@pages/ProjectListsPage/components/ListsTable/ListsSearch'
 import { Header, HeaderButton } from '@shared/SimpleTable'
 import { theme } from '@ynput/ayon-react-components'
+import clsx from 'clsx'
 import { FC } from 'react'
+import { useSelector } from 'react-redux'
 import styled from 'styled-components'
+
+export const MENU_ID = 'projects-list-menu'
 
 const HeaderStyled = styled(Header)`
   flex-direction: column;
@@ -58,6 +64,13 @@ interface ProjectsListTableHeaderProps {
   hiddenButtons?: ButtonType[]
   onNewProject?: () => void
   showAddProject?: boolean
+  toggleMenu?: (open: boolean) => void
+  menuItems?: Array<{
+    id: string
+    label?: string
+    icon?: string
+    onClick?: () => void
+  }>
 }
 
 const ProjectsListTableHeader: FC<ProjectsListTableHeaderProps> = ({
@@ -69,7 +82,11 @@ const ProjectsListTableHeader: FC<ProjectsListTableHeaderProps> = ({
   hiddenButtons = [],
   onNewProject,
   showAddProject = false,
+  menuItems = [],
+  toggleMenu,
 }) => {
+  const isOpen = useSelector((state: any) => state.context.menuOpen) === MENU_ID
+
   const addButton = {
     icon: 'add',
     tooltip: 'Add new project',
@@ -88,6 +105,18 @@ const ProjectsListTableHeader: FC<ProjectsListTableHeaderProps> = ({
         <StyledTitle>{title}</StyledTitle>
 
         <StyledButtons>
+          <HeaderButton
+            icon="more_horiz"
+            onClick={() => toggleMenu?.(true)}
+            id={MENU_ID}
+            className={clsx({ active: isOpen })}
+          />
+          {/* @ts-expect-error - non TS file */}
+          <MenuContainer targetId={MENU_ID} id={MENU_ID} align="left">
+            {/* @ts-expect-error - non TS file */}
+            <Menu menu={menuItems} onClose={() => toggleMenu?.(true)} />
+          </MenuContainer>
+          {/* header button */}
           {showAddProject && (
             <HeaderButton
               icon={addButton.icon}

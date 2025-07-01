@@ -4,15 +4,20 @@ import { RowSelectionState } from '@tanstack/react-table'
 import { FC, useCallback, useMemo, useState } from 'react'
 import useUserProjectPermissions from '@hooks/useUserProjectPermissions'
 import buildProjectsTableData from './buildProjectsTableData'
-import ProjectsListTableHeader from './ProjectsListTableHeader'
+import ProjectsListTableHeader, { MENU_ID } from './ProjectsListTableHeader'
 import ProjectsListRow from './ProjectsListRow'
 import useProjectListUserPreferences from './hooks/useProjectListUserPreferences'
+import useProjectsListMenuItems from './hooks/useProjectsListMenuItems'
+import { toggleMenuOpen } from '@state/context'
+import { useAppDispatch } from '@state/store'
 
 interface ProjectsListProps {
   selection: string[]
   onSelect: (ids: string[]) => void
   showInactive?: boolean
   onNewProject?: () => void
+  onActivateProject?: (projectName: string, active: boolean) => void
+  onDeleteProject?: (projectName: string) => void
   pt?: {
     container?: React.HTMLAttributes<HTMLDivElement>
   }
@@ -23,12 +28,18 @@ const ProjectsList: FC<ProjectsListProps> = ({
   onSelect,
   showInactive,
   onNewProject,
+  onActivateProject,
+  onDeleteProject,
   pt,
 }) => {
-  const { data: projects = [], isLoading, error } = useListProjectsQuery({ active: !showInactive })
+  const {
+    data: projects = [],
+    isLoading,
+    error,
+  } = useListProjectsQuery({ active: showInactive ? undefined : true })
 
   // GET USER PREFERENCES (moved to hook)
-  const { rowPinning, onRowPinningChange, user } = useProjectListUserPreferences()
+  const { rowPinning = [], onRowPinningChange, user } = useProjectListUserPreferences()
 
   // Get user permissions
   const { isLoading: userPermissionsLoading, permissions: userPermissions } =
@@ -66,6 +77,26 @@ const ProjectsList: FC<ProjectsListProps> = ({
     },
     [onSelect],
   )
+  const dispatch = useAppDispatch()
+  const toggleMenu = (open: boolean = true) => {
+    dispatch(toggleMenuOpen(open ? MENU_ID : false))
+  }
+
+  // Generate menu items using the hook
+  const menuItems = useProjectsListMenuItems({
+    hidden: {
+      'add-project': !canCreateProject,
+    },
+    projects: projects,
+    selection,
+    onNewProject,
+    pinned: rowPinning,
+    onPin: (pinned) => onRowPinningChange({ top: pinned }),
+    onSelect: (projects) => onSelect(projects),
+    onClose: () => toggleMenu(false),
+    onArchive: onActivateProject,
+    onDelete: onDeleteProject,
+  })
 
   return (
     <SimpleTableProvider
@@ -85,6 +116,8 @@ const ProjectsList: FC<ProjectsListProps> = ({
           // project creation
           showAddProject={canCreateProject}
           onNewProject={onNewProject}
+          menuItems={menuItems}
+          toggleMenu={toggleMenu}
         />
         <SimpleTable
           data={listsTableData}
@@ -107,6 +140,7 @@ const ProjectsList: FC<ProjectsListProps> = ({
               {...props}
               isPinned={row.getIsPinned() === 'top'}
               onPinToggle={() => row.pin(row.getIsPinned() === 'top' ? false : 'top')}
+              isInActive={row.original.data.active === false}
             />
           )}
         </SimpleTable>

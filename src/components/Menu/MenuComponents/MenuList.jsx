@@ -90,6 +90,7 @@ const MenuList = ({
             id,
             disableClose,
             selected,
+            disabled,
             ...props
           } = item
 
@@ -97,7 +98,7 @@ const MenuList = ({
             <MenuItem
               tabIndex={0}
               key={`${id}-${i}`}
-              {...{ label, icon, img, highlighted, items, selected }}
+              {...{ label, icon, img, highlighted, items, selected, disabled }}
               isLink={link}
               onClick={(e) =>
                 items.length

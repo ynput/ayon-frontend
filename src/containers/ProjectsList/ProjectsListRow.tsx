@@ -16,6 +16,10 @@ const StyledTableRow = styled(SimpleTableCellTemplate)`
       }
     }
   }
+
+  &.inactive {
+    color: var(--md-sys-color-outline);
+  }
 `
 
 const StyledPin = styled(Icon)`
@@ -38,15 +42,22 @@ const StyledPin = styled(Icon)`
 `
 
 interface ProjectsListRowProps extends SimpleTableCellTemplateProps {
+  isInActive?: boolean
   isPinned?: boolean
   onPinToggle?: () => void
 }
 
-const ProjectsListRow: FC<ProjectsListRowProps> = ({ isPinned, onPinToggle, ...props }) => {
+const ProjectsListRow: FC<ProjectsListRowProps> = ({
+  isPinned,
+  onPinToggle,
+  className,
+  ...props
+}) => {
   return (
     <StyledTableRow
       {...props}
       style={{ paddingRight: 2 }}
+      className={clsx(className, { inactive: props.isInActive })}
       endContent={
         <StyledPin
           icon="push_pin"
