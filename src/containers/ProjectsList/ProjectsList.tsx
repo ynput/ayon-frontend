@@ -11,6 +11,8 @@ import useProjectsListMenuItems from './hooks/useProjectsListMenuItems'
 import { toggleMenuOpen } from '@state/context'
 import { useAppDispatch } from '@state/store'
 import { useQueryParam } from 'use-query-params'
+import { useProjectSelectDispatcher } from '@containers/ProjectMenu/hooks/useProjectSelectDispatcher'
+import useAyonNavigate from '@hooks/useAyonNavigate'
 
 export const PROJECTS_LIST_WIDTH_KEY = 'projects-list-splitter'
 
@@ -128,6 +130,17 @@ const ProjectsList: FC<ProjectsListProps> = ({
     }
   }
 
+  const [handleProjectSelectionDispatches] = useProjectSelectDispatcher()
+
+  const navigate = useAyonNavigate()
+  const onOpenProject = (project: string) => {
+    handleProjectSelectionDispatches(project)
+
+    const link = `/projects/${project}/overview`
+    // I don't like the setTimeout, but it is legacy code and I do not want to break existing stuffs
+    setTimeout(() => dispatch((_, getState) => navigate(getState)(link)), 0)
+  }
+
   // Generate menu items using the hook
   const menuItems = useProjectsListMenuItems({
     hidden: {
@@ -143,6 +156,7 @@ const ProjectsList: FC<ProjectsListProps> = ({
     onSelectAll: toggleSelectAll,
     onArchive: onActivateProject,
     onDelete: onDeleteProject,
+    onOpen: onOpenProject,
   })
 
   return (
@@ -185,6 +199,7 @@ const ProjectsList: FC<ProjectsListProps> = ({
               isPinned={row.getIsPinned() === 'top'}
               onPinToggle={() => row.pin(row.getIsPinned() === 'top' ? false : 'top')}
               isInActive={row.original.data.active === false}
+              onDoubleClick={() => onOpenProject(row.original.name)}
             />
           )}
         </SimpleTable>
