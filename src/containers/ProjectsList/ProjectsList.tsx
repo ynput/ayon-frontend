@@ -145,6 +145,8 @@ const ProjectsList: FC<ProjectsListProps> = ({
   const menuItems = useProjectsListMenuItems({
     hidden: {
       'add-project': !canCreateProject,
+      'delete-project': !user?.data?.isAdmin && !user?.data?.isManager,
+      'archive-project': !user?.data?.isAdmin && !user?.data?.isManager,
     },
     projects: projects,
     multiSelect,

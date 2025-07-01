@@ -19,7 +19,7 @@ interface MenuItemProps {
   onPin?: (pinned: string[]) => void
   onSearch?: () => void
   onManage?: () => void
-  onOpen?: () => void
+  onOpen?: (name: string) => void
   onSelectAll?: () => void
   onArchive?: (projectName: string, active: boolean) => void
   onDelete?: (projectName: string) => void
@@ -97,15 +97,13 @@ const useProjectsListMenuItems = ({
         id: 'open-project',
         label: 'Open',
         icon: 'open_in_new',
-        link: `/projects/${selection[0]}`,
-        disabled: selection.length !== 1,
+        onClick: () => singleProject && onOpen?.(singleProject?.name),
       },
       {
         id: 'manage-projects',
         label: 'Manage',
         icon: 'settings',
-        link: `/manageProjects/anatomy?project=${selection[0]}`,
-        disabled: selection.length !== 1,
+        link: `/manageProjects/anatomy?project=${singleProject?.name}`,
       },
       { id: 'divider', label: '' },
       {
@@ -113,7 +111,7 @@ const useProjectsListMenuItems = ({
         label: allPinned ? 'Unpin' : 'Pin',
         icon: 'push_pin',
         onClick: handlePin,
-        disabled: selection.length === 0 || singleActive,
+        disabled: selection.length === 0 || !singleActive,
       },
       {
         id: 'archive-project',
