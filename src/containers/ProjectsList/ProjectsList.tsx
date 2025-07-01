@@ -13,6 +13,7 @@ import { useAppDispatch } from '@state/store'
 import { useQueryParam } from 'use-query-params'
 import { useProjectSelectDispatcher } from '@containers/ProjectMenu/hooks/useProjectSelectDispatcher'
 import useAyonNavigate from '@hooks/useAyonNavigate'
+import { useCreateContextMenu } from '@shared/containers'
 
 export const PROJECTS_LIST_WIDTH_KEY = 'projects-list-splitter'
 
@@ -141,8 +142,8 @@ const ProjectsList: FC<ProjectsListProps> = ({
     setTimeout(() => dispatch((_, getState) => navigate(getState)(link)), 0)
   }
 
-  // Generate menu items using the hook
-  const menuItems = useProjectsListMenuItems({
+  // Generate menu items used in both header and context menu
+  const buildMenuItems = useProjectsListMenuItems({
     hidden: {
       'add-project': !canCreateProject,
       'delete-project': !user?.data?.isAdmin && !user?.data?.isManager,
@@ -150,7 +151,6 @@ const ProjectsList: FC<ProjectsListProps> = ({
     },
     projects: projects,
     multiSelect,
-    selection,
     pinned: rowPinning,
     onNewProject,
     onSearch: () => setClientSearch(''),
@@ -160,6 +160,39 @@ const ProjectsList: FC<ProjectsListProps> = ({
     onDelete: onDeleteProject,
     onOpen: onOpenProject,
   })
+
+  // attach context menu
+  // create the ref and model
+  const [ctxMenuShow] = useCreateContextMenu()
+
+  const handleRowContext = useCallback(
+    (e: React.MouseEvent<HTMLElement>) => {
+      e.preventDefault()
+      e.stopPropagation()
+
+      let newSelection: string[] = [...selection]
+      // if we are selecting a row outside of the selection (or none), set the selection to the row
+      if (!newSelection.includes(e.currentTarget.id)) {
+        newSelection = [e.currentTarget.id]
+        onSelect(newSelection)
+      }
+      const newSelectedRows = newSelection
+
+      // build menu items based on selection
+      const menuItems = buildMenuItems(newSelectedRows, {
+        command: true,
+        dividers: false,
+        hidden: {
+          'add-project': true,
+          search: true,
+          'select-all': true,
+        },
+      })
+
+      ctxMenuShow(e, menuItems)
+    },
+    [ctxMenuShow, buildMenuItems, selection],
+  )
 
   return (
     <SimpleTableProvider
@@ -181,7 +214,7 @@ const ProjectsList: FC<ProjectsListProps> = ({
           // project creation
           showAddProject={canCreateProject}
           onNewProject={onNewProject}
-          menuItems={menuItems}
+          menuItems={buildMenuItems(selection)}
           toggleMenu={toggleMenu}
           onSelectAll={toggleSelectAll}
           hiddenButtons={!multiSelect ? ['select-all'] : []}
@@ -193,10 +226,15 @@ const ProjectsList: FC<ProjectsListProps> = ({
           isLoading={isLoading}
           isMultiSelect={multiSelect}
           error={error ? (error as string) : undefined}
+          meta={{
+            handleRowContext,
+          }}
         >
-          {(props, row) => (
+          {(props, row, table) => (
             <ProjectsListRow
               {...props}
+              id={row.id}
+              onContextMenu={table.options.meta?.handleRowContext}
               code={row.original.data.code}
               isPinned={row.getIsPinned() === 'top'}
               onPinToggle={() => row.pin(row.getIsPinned() === 'top' ? false : 'top')}
