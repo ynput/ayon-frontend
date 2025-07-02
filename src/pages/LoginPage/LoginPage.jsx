@@ -20,7 +20,7 @@ const clearQueryParams = () => {
   history.pushState({}, '', url.href)
 }
 
-const LoginPage = ({ isFirstTime = false }) => {
+const LoginPage = ({ isFirstTime = false, isTokenAuth = false }) => {
   // get query params from url
   const search = new URLSearchParams(window.location.search)
   const dispatch = useDispatch()
@@ -69,9 +69,10 @@ const LoginPage = ({ isFirstTime = false }) => {
     // And abort if there isn't
     const provider = window.location.pathname.split('/')[2]
     if (!provider) return
+    console.log('handleSSOCallback', provider)
 
     // If we don't have any SSO options, we can't proceed. Abort
-    if (!ssoOptions?.length) return
+    if (!ssoOptions?.length && provider !== "_token") return
 
     // Get the query string from the URL to use in the callback
     const qs = new URLSearchParams(window.location.search)
@@ -79,10 +80,25 @@ const LoginPage = ({ isFirstTime = false }) => {
     // If the query string is empty, we can't proceed. Abort
     if (!qs.toString()) return
 
+    console.log("Got QS")
+
     // Clear the query string (it contains sensitive data now)
     // and we already have it in the qs const
     window.history.replaceState({}, document.title, window.location.pathname)
-    const providerConfig = info.ssoOptions.find((o) => o.name === provider)
+
+    // Get the provider config
+    // We need to handle the situation ssoOptions is undefined.
+    // That happens, when user is already logged in
+    // but wants to re-login using a token
+    let providerConfig = (info?.ssoOptions || []).find((o) => o.name === provider)
+    if (provider === "_token") {
+      // special case for token auth
+      // we don't have a providerConfig for this, but we can still proceed
+      providerConfig = {
+        name: 'secure token',
+        callback: '/api/auth/tokenauth',
+      }
+    }
 
     // No such provider found, abort
     if (!providerConfig) return
@@ -98,6 +114,7 @@ const LoginPage = ({ isFirstTime = false }) => {
     let finalRedirect = null
 
     try {
+      console.log('SSO Callback', providerConfig.callback)
       response = await axios.get(providerConfig.callback, { params: qs })
     } catch (err) {
       console.error('SSO Callback error', err.response.data)
@@ -112,6 +129,7 @@ const LoginPage = ({ isFirstTime = false }) => {
     // If we have a response and it contains user data, we're good to go
 
     if (response?.data?.user) {
+      console.log('SSO Callback response', response.data)
       const data = response.data
       toast.info(data.detail || `Logged in as ${data.user.name}`)
 
@@ -145,6 +163,8 @@ const LoginPage = ({ isFirstTime = false }) => {
     clearQueryParams()
     localStorage.removeItem('auth-redirect-params')
     setIsLoading(false)
+
+    console.log('Final redirect URL:', finalRedirect)
 
     // And redirect to the final URL
     window.location.href = finalRedirect
@@ -195,7 +215,7 @@ const LoginPage = ({ isFirstTime = false }) => {
   // Loading state
   //
 
-  if (isLoading || isLoadingInfo) return isFirstTime ? null : <LoadingPage />
+  if (isLoading || isLoadingInfo ) return isFirstTime ? null : <LoadingPage />
 
 
   // Password login handler

@@ -240,7 +240,7 @@ const App = () => {
 
   const loadingComponent = useMemo(() => <LoadingPage />, [])
 
-  const loginComponent = useMemo(() => <LoginPage isFirstTime={isOnboarding} />, [isOnboarding])
+  //const loginComponent = useMemo(() => <LoginPage isFirstTime={isOnboarding} />, [isOnboarding])
 
   const errorComponent = useMemo(
     () => <ErrorPage message="Server connection failed" />,
@@ -282,15 +282,32 @@ const App = () => {
     else window.history.replaceState({}, document.title, '/')
   }
 
+  const isTokenAuth = () => {
+    // User is trying to log in with a token
+    // we need to show the login page, that handles sso 
+    // callbacks in order to parse the token and overwrite
+    // existing session if needed
+    const provider = window.location.pathname.split('/')
+    return provider[1] === 'login' && provider[2] === '_token'
+  }
+
+
+
   // User is not logged in
   if (!user.name && !noAdminUser) {
     return (
       <>
-        {loginComponent}
+        <LoginPage isFirstTime={isOnboarding} isTokenAuth={isTokenAuth()}/>
         {tooltipComponent}
       </>
     )
   }
+
+  if (isTokenAuth()) {
+    console.log("Initializing token auth flow")
+    return <LoginPage isFirstTime={isOnboarding} isTokenAuth={true}/>
+  }
+
 
   // Trial has finished
   if (isTrialing && left?.finished) {
