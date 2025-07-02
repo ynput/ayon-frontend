@@ -214,10 +214,9 @@ const SimpleTable: FC<SimpleTableProps> = ({
           tableInstance.setRowSelection({ [currentId]: true })
         } else {
           const rowsToToggle = getRowRange(allProcessableRows, currentId, lastId)
-          const isAnchorSelected = anchorRow.getIsSelected()
-          // Calling toggleSelected on each row will trigger onRowSelectionChange for each.
-          // The revised handleRowSelectionChangeCallback will correctly queue these.
-          rowsToToggle.forEach((r) => r.toggleSelected(isAnchorSelected))
+          const newSelection: RowSelectionState = {}
+          rowsToToggle.forEach((r) => (newSelection[r.id] = true))
+          tableInstance.setRowSelection(newSelection)
         }
       } else if (isMultiSelect && isCtrlOrMeta) {
         currentRow.toggleSelected()
