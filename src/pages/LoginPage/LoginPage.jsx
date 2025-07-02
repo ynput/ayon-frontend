@@ -61,70 +61,101 @@ const LoginPage = ({ isFirstTime = false }) => {
     setRedirectQueryParams(searchParams)
   }, [search, setRedirectQueryParams, redirectQueryParams])
 
-  // OAuth2 handler after redirect from provider
-  useEffect(() => {
+
+
+  const handleSSOCallback = async (ssoOptions) => {
+    // First we check if there's a provider name in the URL
+    // And abort if there isn't
     const provider = window.location.pathname.split('/')[2]
-    if (!provider) {
-      return
-    }
+    if (!provider) return
+
+    // If we don't have any SSO options, we can't proceed. Abort
+    if (!ssoOptions?.length) return
+
+    // Get the query string from the URL to use in the callback
     const qs = new URLSearchParams(window.location.search)
 
-    if (info?.ssoOptions?.length) {
-      window.history.replaceState({}, document.title, window.location.pathname)
-      const providerConfig = info.ssoOptions.find((o) => o.name === provider)
+    // If the query string is empty, we can't proceed. Abort
+    if (!qs.toString()) return
 
-      // if query string is empty, abort
-      if (!qs.toString()) {
-        return
-      }
+    // Clear the query string (it contains sensitive data now)
+    // and we already have it in the qs const
+    window.history.replaceState({}, document.title, window.location.pathname)
+    const providerConfig = info.ssoOptions.find((o) => o.name === provider)
 
-      // add provider to the query
-      qs.append('ayonProvider', provider)
+    // No such provider found, abort
+    if (!providerConfig) return
 
-      if (!providerConfig) {
-        return
-      }
+    // add provider to the query (TODO: figure out why)
+    qs.append('ayonProvider', provider)
 
-      setIsLoading(true)
-      axios
-        .get(providerConfig.callback, { params: qs })
-        .then((response) => {
-          const data = response.data
-          if (data.user) {
-            // login successful
-            toast.info(data.detail)
-            dispatch(login({ user: data.user, accessToken: data.token }))
-            // invalidate all rtk queries cache
-            dispatch(api.util.resetApiState())
-          } else {
-            toast.error('Unable to login using SSO')
-          }
-        })
-        .catch((err) => {
-          console.error('SSO Callback error', err.response.data)
-          toast.error(
-            <>
-              <p>Unable to login using {providerConfig.name}:</p>
-              <p>{err.response?.data?.detail || `Error ${err.response.status}`}</p>
-            </>,
-          )
-        })
-        .finally(() => {
-          // clear the query string
-          clearQueryParams()
-          // replace with redirect query params
-          if (redirectQueryParams) {
-            const redirect = new URLSearchParams(redirectQueryParams)
-            // clear local storage
-            localStorage.removeItem('auth-redirect-params')
-            window.location.search = redirect.toString()
-          }
-          setIsLoading(false)
-        })
+    setIsLoading(true)
+
+    let response = null
+    let finalRedirect = null
+
+    try {
+      response = await axios.get(providerConfig.callback, { params: qs })
+    } catch (err) {
+      console.error('SSO Callback error', err.response.data)
+      toast.error(
+        <>
+          <p>Unable to login using {providerConfig.name}:</p>
+          <p>{err.response?.data?.detail || `Error ${err.response.status}`}</p>
+        </>,
+      )
     }
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // If we have a response and it contains user data, we're good to go
+
+    if (response?.data?.user) {
+      const data = response.data
+      toast.info(data.detail || `Logged in as ${data.user.name}`)
+
+      dispatch(login({ user: data.user, accessToken: data.token }))
+      // invalidate all rtk queries cache
+      dispatch(api.util.resetApiState())
+
+      if (data.redirectUrl) {
+          finalRedirect = data.redirectUrl
+      }
+    } else {
+      toast.error('Unable to login using SSO')
+    }
+   
+    // Still, we need to figure out where to redirect the user after login
+    // At this point we may have redirect URL from the response, but that 
+    // is optional and used sparsely.
+
+
+    // if we have redirect query params, use them
+    // This is "where was i before?" taken from local storage
+    if (!finalRedirect && redirectQueryParams) {
+      finalRedirect = new URLSearchParams(redirectQueryParams).toString()
+    }
+
+    // if we STILL don't have a redirect, just land on the home page
+    if (!finalRedirect) {
+      finalRedirect = window.location.origin
+    }
+    
+    // Clear everything
+    clearQueryParams()
+    localStorage.removeItem('auth-redirect-params')
+    setIsLoading(false)
+
+    // And redirect to the final URL
+    window.location.href = finalRedirect
+
+  } // handleSSOCallback
+
+
+  // Handle SSO callback after redirection from SSO provider
+  // (this needs to be called after sso options are loaded)
+  useEffect(() => {
+    handleSSOCallback(info.ssoOptions)
   }, [info.ssoOptions])
+
 
   // Login form
 
@@ -207,27 +238,27 @@ const LoginPage = ({ isFirstTime = false }) => {
             {
               info.ssoOptions?.length
                 ? info.ssoOptions
-                    .filter(({ name }) => shownProviders.includes(name) || showAllProviders)
-                    .map(({ name, title, url, args, redirectKey, icon, color, textColor }) => {
-                      const queryDict = { ...args }
-                      const redirect_uri = `${window.location.origin}/login/${name}`
-                      queryDict[redirectKey] = redirect_uri
+                  .filter(({ name, hidden }) => !hidden && (shownProviders.includes(name) || showAllProviders))
+                  .map(({name, title, url, args, redirectKey, icon, color, textColor}) => {
+                      const queryDict = {...args}
+            const redirect_uri = `${window.location.origin}/login/${name}`
+            queryDict[redirectKey] = redirect_uri
 
-                      const query = new URLSearchParams(queryDict)
-                      const fullUrl = `${url}?${query}`
+            const query = new URLSearchParams(queryDict)
+            const fullUrl = `${url}?${query}`
 
-                      return (
-                        <AuthLink
-                          key={name}
-                          name={title || name}
-                          url={fullUrl}
-                          icon={icon}
-                          color={color}
-                          textColor={textColor}
-                        />
-                      )
+            return (
+            <AuthLink
+              key={name}
+              name={title || name}
+              url={fullUrl}
+              icon={icon}
+              color={color}
+              textColor={textColor}
+            />
+            )
                     })
-                : null // ssoOptions.map
+            : null // ssoOptions.map
             }
           </Styled.Methods>
           {info?.passwordRecoveryAvailable && showPasswordLogin && (
