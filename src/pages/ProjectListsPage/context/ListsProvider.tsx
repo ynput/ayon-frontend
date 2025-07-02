@@ -13,7 +13,7 @@ import useUpdateList from '../hooks/useUpdateList'
 import { useListsDataContext } from './ListsDataContext'
 import { useQueryParam, withDefault, QueryParamConfig } from 'use-query-params'
 import ListsContext, { ListsContextType } from './ListsContext'
-import useGetBundleAddonVersion from '../hooks/useGetBundleAddonVersion'
+import useGetBundleAddonVersions from '@hooks/useGetBundleAddonVersions'
 
 // Custom param for RowSelectionState
 const RowSelectionParam: QueryParamConfig<RowSelectionState> = {
@@ -58,7 +58,8 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
   )
 
   // find out if and what version of the review addon is installed
-  const reviewVersion = useGetBundleAddonVersion({ addon: 'review' })
+  const matchedAddons = useGetBundleAddonVersions({ addons: ['review'] })
+  const reviewVersion = matchedAddons.get('review')
 
   const rowSelection = useMemo(
     () => (isReview ? unstableReviewSelection : unstableListSelection),
