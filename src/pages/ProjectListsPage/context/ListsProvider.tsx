@@ -59,7 +59,7 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
 
   // find out if and what version of the review addon is installed
   const matchedAddons = useGetBundleAddonVersions({ addons: ['review'] })
-  const reviewVersion = matchedAddons.get('review')
+  const reviewVersion = matchedAddons?.get('review')
 
   const rowSelection = useMemo(
     () => (isReview ? unstableReviewSelection : unstableListSelection),

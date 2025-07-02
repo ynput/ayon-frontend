@@ -27,6 +27,7 @@ import { RemoteAddonProject } from '@shared/context'
 import { VersionUploadProvider, UploadVersionDialog } from '@shared/components'
 import { productSelected } from '@state/context'
 import useGetBundleAddonVersions from '@hooks/useGetBundleAddonVersions'
+import ProjectReviewsPage from '@pages/ProjectListsPage/ProjectReviewsPage'
 
 const ProjectContextInfo = () => {
   /**
@@ -133,13 +134,12 @@ const ProjectPage = () => {
         name: 'Review',
         path: `/projects/${projectName}/reviews`,
         module: 'reviews',
-        enabled: matchedAddons.has('review'),
       },
       {
         name: 'Scheduler',
         path: `/projects/${projectName}/scheduler`,
         module: 'scheduler',
-        enabled: matchedAddons.get('planner') === '0.1.0-dev', // for dev purposes, remove when planner is released out of beta
+        enabled: matchedAddons?.get('planner') === '0.1.0-dev', // for dev purposes, remove when planner is released out of beta
       },
       {
         name: 'Workfiles',
@@ -210,7 +210,11 @@ const ProjectPage = () => {
     }
     if (module === 'reviews') {
       return (
-        <ProjectListsPage projectName={projectName} entityListTypes={['review-session']} isReview />
+        <ProjectReviewsPage
+          projectName={projectName}
+          isLoadingAccess={matchedAddons === undefined}
+          hasReviewAddon={!!matchedAddons?.has('review')}
+        />
       )
     }
     if (module === 'workfiles') {

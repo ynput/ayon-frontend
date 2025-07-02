@@ -67,6 +67,7 @@ export const FeaturesList = styled.div`
     }
     .green {
       margin-right: 4px;
+      padding-left: 4px;
     }
   }
 
@@ -92,6 +93,8 @@ export const MoreButton = styled(Button)`
   padding: 12px 20px;
   border-radius: var(--border-radius-l);
   margin-bottom: 16px;
+
+  ${theme.titleMedium}
 
   &:hover {
     background-color: var(--md-sys-color-tertiary-hover);
