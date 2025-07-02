@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
 import { InputText, InputPassword, Button, Panel } from '@ynput/ayon-react-components'
@@ -44,9 +44,10 @@ const LoginPage = ({ isFirstTime = false }) => {
     null,
   )
 
-  const allowedParams = ['auth_redirect']
-  // preserve the redirect query params across auth flows
   useEffect(() => {
+    // preserve the redirect query params across auth flows
+    //
+    const allowedParams = ['auth_redirect']
     // convert search params to object
     const searchParams = Array.from(search.entries()).reduce((acc, [key, value]) => {
       if (allowedParams.includes(key)) {
@@ -86,7 +87,9 @@ const LoginPage = ({ isFirstTime = false }) => {
     // No such provider found, abort
     if (!providerConfig) return
 
-    // add provider to the query (TODO: figure out why)
+    // add provider to the query
+    // this is used by sso addon to determine which provider to use
+    // for the callback (the all share the same callback URL)
     qs.append('ayonProvider', provider)
 
     setIsLoading(true)
@@ -117,16 +120,15 @@ const LoginPage = ({ isFirstTime = false }) => {
       dispatch(api.util.resetApiState())
 
       if (data.redirectUrl) {
-          finalRedirect = data.redirectUrl
+        finalRedirect = data.redirectUrl
       }
     } else {
       toast.error('Unable to login using SSO')
     }
-   
+
     // Still, we need to figure out where to redirect the user after login
     // At this point we may have redirect URL from the response, but that 
     // is optional and used sparsely.
-
 
     // if we have redirect query params, use them
     // This is "where was i before?" taken from local storage
@@ -138,7 +140,7 @@ const LoginPage = ({ isFirstTime = false }) => {
     if (!finalRedirect) {
       finalRedirect = window.location.origin
     }
-    
+
     // Clear everything
     clearQueryParams()
     localStorage.removeItem('auth-redirect-params')
@@ -152,50 +154,87 @@ const LoginPage = ({ isFirstTime = false }) => {
 
   // Handle SSO callback after redirection from SSO provider
   // (this needs to be called after sso options are loaded)
+
   useEffect(() => {
     handleSSOCallback(info.ssoOptions)
   }, [info.ssoOptions])
 
 
-  // Login form
-
-  const doLogin = async () => {
-    axios
-      .post('/api/auth/login', { name, password })
-      .then((response) => {
-        if (response.data.user) {
-          // clear local storage
-          localStorage.removeItem('auth-redirect-params')
-          toast.info(response.data.detail)
-          dispatch(
-            login({
-              user: response.data.user,
-              accessToken: response.data.token,
-            }),
-          )
-          // invalidate all rtk queries cache
-          dispatch(api.util.resetApiState())
-        }
-      })
-      .catch((err) => {
-        toast.error(err.response.data.detail || `Unable to login: Error ${err.response.status}`)
-      })
-  }
-
-  const handleSubmit = (e) => {
-    e.preventDefault()
-
-    if (!(name && password)) {
-      toast.error('Please enter username and password to login')
-    } else {
-      doLogin()
-    }
-  }
-
-  if (isLoading || isLoadingInfo) return isFirstTime ? null : <LoadingPage />
+  // List of SSO providers to show
 
   const showAllProviders = !shownProviders.length
   const showPasswordLogin = showAllProviders || shownProviders.includes('password')
+
+  const ssoButtons = useMemo(() => {
+    if (!info.ssoOptions?.length) return null
+
+    return info.ssoOptions
+      .filter(({ name, hidden }) => !hidden && (shownProviders.includes(name) || showAllProviders))
+      .map(({ name, title, url, args, redirectKey, icon, color, textColor }) => {
+        const queryDict = { ...args }
+        const redirect_uri = `${window.location.origin}/login/${name}`
+        queryDict[redirectKey] = redirect_uri
+
+        const query = new URLSearchParams(queryDict)
+        const fullUrl = `${url}?${query}`
+
+        return (
+          <AuthLink
+            key={name}
+            name={title || name}
+            url={fullUrl}
+            icon={icon}
+            color={color}
+            textColor={textColor}
+          />
+        )
+      })
+  }, [info.ssoOptions, shownProviders, showAllProviders])
+
+  //
+  // Loading state
+  //
+
+  if (isLoading || isLoadingInfo) return isFirstTime ? null : <LoadingPage />
+
+
+  // Password login handler
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (!(name && password)) {
+      toast.error('Please enter username and password to login')
+      return
+    }
+
+    let response = null
+
+    try {
+      response = await axios.post('/api/auth/login', { name, password })
+    } catch (err) {
+      console.error('Login error', err.response?.data || err)
+      toast.error(err.response.data.detail || `Unable to login: Error ${err.response.status}`)
+      return
+    }
+
+    if (!response || !response.data) {
+      console.error('Login error', response)
+      toast.error('Unable to login, check the console for details')
+      return
+    }
+
+    // clear local storage
+    localStorage.removeItem('auth-redirect-params')
+    toast.info(response.data.detail)
+    dispatch(login({ user: response.data.user, accessToken: response.data.token, }))
+    dispatch(api.util.resetApiState())
+  } // handleSubmit
+
+
+  //
+  // Render the login page
+  //
+
 
   return (
     <main className="center">
@@ -235,31 +274,8 @@ const LoginPage = ({ isFirstTime = false }) => {
               </form>
             )}
 
-            {
-              info.ssoOptions?.length
-                ? info.ssoOptions
-                  .filter(({ name, hidden }) => !hidden && (shownProviders.includes(name) || showAllProviders))
-                  .map(({name, title, url, args, redirectKey, icon, color, textColor}) => {
-                      const queryDict = {...args}
-            const redirect_uri = `${window.location.origin}/login/${name}`
-            queryDict[redirectKey] = redirect_uri
-
-            const query = new URLSearchParams(queryDict)
-            const fullUrl = `${url}?${query}`
-
-            return (
-            <AuthLink
-              key={name}
-              name={title || name}
-              url={fullUrl}
-              icon={icon}
-              color={color}
-              textColor={textColor}
-            />
-            )
-                    })
-            : null // ssoOptions.map
-            }
+            {ssoButtons}
+              
           </Styled.Methods>
           {info?.passwordRecoveryAvailable && showPasswordLogin && (
             <a href="/passwordReset" style={{ margin: '8px 0' }}>
