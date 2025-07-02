@@ -79,7 +79,7 @@ const ProjectsList: FC<ProjectsListProps> = ({
     if (projects.length && !selection.length) {
       onSelect([projects[0].name])
     }
-  }, [multiSelect, selection, selectedProjects])
+  }, [multiSelect, selection, selectedProjects, onSelect, projects])
 
   // Get user permissions
   const { isLoading: userPermissionsLoading, permissions: userPermissions } =
