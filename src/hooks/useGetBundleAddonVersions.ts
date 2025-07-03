@@ -7,14 +7,15 @@ type Props = {
 export const useGetBundleAddonVersions = ({ addons }: Props) => {
   const { data: { bundles, productionBundle, stagingBundle } = {}, isFetching } =
     useListBundlesQuery({})
-  if (isFetching) return undefined
+
+  if (isFetching) return { isLoading: true, addonVersions: new Map<string, string>() }
 
   // get production, staging, dev, latest bundle
   const bundleName = productionBundle || stagingBundle
   const bundleDetails = bundles?.find((b) => b.name === bundleName)
 
-  // return empty map if no bundle details are found
-  if (!bundleDetails) return undefined
+  // always return a map, even if no bundle details are found
+  if (!bundleDetails) return { isLoading: false, addonVersions: new Map<string, string>() }
 
   const result = new Map<string, string>()
   addons.forEach((addon) => {
@@ -25,7 +26,7 @@ export const useGetBundleAddonVersions = ({ addons }: Props) => {
     }
   })
 
-  return result
+  return { isLoading: false, addonVersions: result }
 }
 
 export default useGetBundleAddonVersions

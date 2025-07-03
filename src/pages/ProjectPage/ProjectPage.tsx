@@ -75,7 +75,9 @@ const ProjectPage = () => {
   } = useGetProjectAddonsQuery({}, { skip: !projectName })
 
   // find out if and what version of the review addon is installed
-  const matchedAddons = useGetBundleAddonVersions({ addons: ['review', 'planner'] })
+  const { isLoading: isLoadingAddons, addonVersions: matchedAddons } = useGetBundleAddonVersions({
+    addons: ['review', 'planner'],
+  })
 
   useEffect(() => {
     if (!addonsLoading && !addonsIsError && addonsData) {
@@ -212,8 +214,8 @@ const ProjectPage = () => {
       return (
         <ProjectReviewsPage
           projectName={projectName}
-          isLoadingAccess={matchedAddons === undefined}
-          hasReviewAddon={!!matchedAddons?.has('review')}
+          isLoadingAccess={isLoadingAddons}
+          hasReviewAddon={!!matchedAddons.has('review')}
         />
       )
     }
