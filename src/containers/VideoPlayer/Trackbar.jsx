@@ -68,8 +68,8 @@ const highlightFrame = (ctx, { color, progressX, handleWidth, height }) => {
 }
 
 const Trackbar = ({
-  duration,
-  currentTime,
+  frameCount,
+  currentFrame,
   onScrub,
   markIn,
   markOut,
@@ -80,8 +80,6 @@ const Trackbar = ({
 }) => {
   const canvasRef = useRef(null)
   const [isDragging, setIsDragging] = useState(false)
-
-  const numFrames = useMemo(() => Math.floor(duration * frameRate), [frameRate, duration])
 
   const height = 32
   const primaryColor = '#8fceff'
@@ -109,8 +107,8 @@ const Trackbar = ({
 
     // Draw the buffered ranges
     for (const range of bufferedRanges) {
-      const start = (range.start / duration) * width
-      const end = (range.end / duration) * width
+      const start = (range.start / frameCount) * width
+      const end = (range.end / frameCount) * width
       ctx.strokeStyle = primaryColor
       ctx.beginPath()
       ctx.moveTo(start, height)
@@ -118,16 +116,16 @@ const Trackbar = ({
       ctx.stroke()
     }
 
-    const frameWidth = numFrames >= width ? 2 : width / numFrames
+    const frameWidth = frameCount >= width ? 2 : width / frameCount
     const handleWidth = Math.max(frameWidth, 2)
 
     //
     // Draw frame boundaries
     //
 
-    if (numFrames < width) {
-      for (let i = 1; i < numFrames; i++) {
-        const x = (i / numFrames) * width
+    if (frameCount < width) {
+      for (let i = 1; i < frameCount; i++) {
+        const x = (i / frameCount) * width
         ctx.strokeStyle = containerLowest
         ctx.beginPath()
         ctx.moveTo(x, 0)
@@ -137,7 +135,7 @@ const Trackbar = ({
         // if the frame is highlighted (like an annotation)
         if (highlighted && highlighted.includes(i)) {
           // Calculate progressX for the current frame
-          const progressX = ((i - 1) / numFrames) * width
+          const progressX = ((i - 1) / frameCount) * width
           highlightFrame(ctx, {
             color: primaryColor,
             progressX,
@@ -152,25 +150,8 @@ const Trackbar = ({
     // Draw the handle
     //
 
-    let currentFrame
-    if (isPlaying) {
-      // due to a slight delay, the currentFrame is rounded to the nearest frame
-      // so it WILL show the last frame during playback
-      currentFrame = Math.floor(currentTime * frameRate)
-      if (currentFrame >= numFrames) {
-        currentFrame = numFrames - 1
-      }
-    } else {
-      currentFrame = Math.floor(currentTime * frameRate)
-    }
-
     let progressX = 0
-    // if (isPlaying) {
-    //   // during playback, use the currentTime to have a smooth animation
-    //   progressX = (currentTime / duration) * width
-    // } else {
-    progressX = currentFrame >= numFrames ? width : (currentFrame / numFrames) * width
-    //}
+    progressX = currentFrame >= frameCount ? width : (currentFrame / frameCount) * width
 
     // Current frame handle
     ctx.fillStyle = primaryContainer
@@ -225,13 +206,13 @@ const Trackbar = ({
     // ctx.moveTo(markInX, height - 1)
     // ctx.lineTo(markOutX, height - 1)
     // ctx.stroke()
-  }, [currentTime, duration, markIn, markOut, isPlaying, highlighted])
+  }, [currentFrame, frameCount, markIn, markOut, isPlaying, highlighted])
 
   // Events
 
   useEffect(() => {
     drawSlider()
-  }, [currentTime, duration, markIn, markOut, isPlaying, highlighted])
+  }, [currentFrame, frameCount, markIn, markOut, isPlaying, highlighted])
 
   // Dragging
 
@@ -240,9 +221,9 @@ const Trackbar = ({
     e.preventDefault()
     const rect = canvasRef.current.getBoundingClientRect()
     const x = e.clientX - rect.left
-    let newTime = (x / rect.width) * duration
+    let newTime = (x / rect.width) * frameCount
     if (newTime < 0) newTime = 0
-    if (newTime >= duration) newTime = duration - 1 / frameRate
+    if (newTime >= frameCount) newTime = frameCount - 1
     onScrub(newTime)
   }
 
@@ -274,7 +255,7 @@ const Trackbar = ({
   const handleClick = (e) => {
     const rect = canvasRef.current.getBoundingClientRect()
     const x = e.clientX - rect.left
-    const newTime = (x / rect.width) * duration
+    const newTime = (x / rect.width) * frameCount
     onScrub(newTime)
   }
 

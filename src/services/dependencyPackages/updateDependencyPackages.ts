@@ -26,3 +26,4 @@ export const {
   useUploadDependencyPackagesMutation,
   useDeleteDependencyPackageMutation,
 } = updateDependencyPackagesApiInjected
+export { updateDependencyPackagesApiInjected as dependencyPackagesQueries }

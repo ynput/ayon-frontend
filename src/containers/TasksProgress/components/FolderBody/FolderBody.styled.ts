@@ -1,4 +1,4 @@
-import Thumbnail from '@components/Thumbnail'
+import { Thumbnail } from '@shared/components/Thumbnail'
 import { Button, StatusField } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
@@ -78,25 +78,26 @@ export const Path = styled.span`
   padding: var(--padding-s);
   border-radius: var(--border-radius-m);
   border: 1px solid transparent;
+  flex: 1;
 
   /* first child ellipses */
   & > :first-child {
     white-space: nowrap;
     overflow: hidden;
-
-    display: flex;
-    justify-content: flex-end;
   }
 
   cursor: pointer;
   &:hover {
-    background-color: var(--md-sys-color-surface-container-hover);
+    color: var(--md-sys-color-primary);
   }
 
   &.selected {
-    background-color: var(--md-sys-color-primary-container);
-    color: var(--md-sys-color-on-primary-container);
-    border-color: var(--md-sys-color-primary);
+    background-color: var(--md-sys-color-primary);
+    color: var(--md-sys-color-on-primary);
+
+    &:hover {
+      background-color: var(--md-sys-color-primary-hover);
+    }
   }
 `
 

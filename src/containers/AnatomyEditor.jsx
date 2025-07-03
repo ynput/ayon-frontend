@@ -13,24 +13,16 @@ import { useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
 import { useGetAnatomyPresetQuery, useGetAnatomySchemaQuery } from '@queries/anatomy/getAnatomy'
 
-import { useGetProjectAnatomyQuery } from '@queries/project/getProject'
+import { useGetProjectAnatomyQuery } from '@shared/api'
 import { isEqual } from 'lodash'
 
 import { setUri } from '@state/context'
 import SettingsEditor from '@containers/SettingsEditor'
 import { getValueByPath, setValueByPath, sameKeysStructure } from '@containers/AddonSettings/utils'
 import { cloneDeep } from 'lodash'
-import { usePaste } from '@context/pasteContext'
+import { usePaste } from '@context/PasteContext'
 
-const AnatomyEditor = ({
-  preset,
-  projectName,
-  formData,
-  setFormData,
-  breadcrumbs,
-  setBreadcrumbs,
-  setIsChanged,
-}) => {
+const AnatomyEditor = ({ preset, projectName, formData, setFormData, setIsChanged }) => {
   const [originalData, setOriginalData] = useState(null)
   const { requestPaste } = usePaste()
   const { data: schema } = useGetAnatomySchemaQuery()
@@ -97,14 +89,6 @@ const AnatomyEditor = ({
     setFormData(newData)
   }
 
-  const handleBreadcrumbs = (path) => {
-    let uri = projectName ? `ayon+anatomy://${projectName}/` : `ayon+anatomy+preset://${preset}/`
-    uri += path.join('/')
-    dispatch(setUri(uri))
-
-    if (setBreadcrumbs) setBreadcrumbs(path)
-  }
-
   const editor = useMemo(() => {
     if (isLoading) {
       return 'Loading...'
@@ -119,25 +103,12 @@ const AnatomyEditor = ({
         originalData={originalData}
         formData={formData}
         onChange={setFormData}
-        onSetBreadcrumbs={handleBreadcrumbs}
-        breadcrumbs={breadcrumbs}
         context={{
           onPasteValue: onPasteValue,
         }}
       />
     )
-  }, [
-    schema,
-    originalData,
-    breadcrumbs,
-    formData,
-    isLoading,
-    preset,
-    projectName,
-    setFormData,
-    handleBreadcrumbs,
-    onPasteValue,
-  ])
+  }, [schema, originalData, formData, isLoading, preset, projectName, setFormData, onPasteValue])
 
   return editor
 }

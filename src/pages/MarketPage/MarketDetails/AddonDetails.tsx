@@ -5,17 +5,17 @@ import Type from '@/theme/typography.module.css'
 import clsx from 'clsx'
 import { capitalize, isEmpty } from 'lodash'
 import AddonIcon from '@components/AddonIcon/AddonIcon'
-import { rcompare } from 'semver'
+import { compareBuild } from 'semver'
 import useUninstall from './useUninstall'
 import { Link } from 'react-router-dom'
 import { getSimplifiedUrl } from '@helpers/url'
 import ReactMarkdown from 'react-markdown'
-import { AddonDetail, LinkModel } from '@api/rest/market'
+import { AddonDetail, LinkModel } from '@shared/api'
 import MetaPanelRow from './MetaPanelRow'
 import remarkGfm from 'remark-gfm'
 import emoji from 'remark-emoji'
 import SubChip from '@components/SubChip/SubChip'
-import { PricingLink } from '@components/PricingLink'
+import { PricingLink } from '@shared/components/Powerpack/PricingLink'
 
 type ExtendedAddonDetail = AddonDetail & {
   downloadedVersions: Record<string, string>
@@ -83,7 +83,7 @@ const AddonDetails = ({ addon, isLoading, onDownload, isUpdatingAll }: AddonDeta
 
   const [showAllVersions, setShowAllVersions] = useState(false)
 
-  const versionKeysSorted = downloaded.sort((a, b) => rcompare(a, b))
+  const versionKeysSorted = downloaded.sort((a, b) => -1 * compareBuild(a, b))
   const versionsToShow = versionKeysSorted.length
     ? showAllVersions
       ? versionKeysSorted

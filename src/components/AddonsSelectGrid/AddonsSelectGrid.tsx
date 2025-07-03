@@ -1,4 +1,4 @@
-import { AddonVersionDetail } from '@api/rest/releases'
+import { AddonVersionDetail } from '@shared/api'
 import AddonCard, { AddonCardProps } from '@components/AddonCard/AddonCard'
 import clsx from 'clsx'
 import { FC, HTMLAttributes } from 'react'

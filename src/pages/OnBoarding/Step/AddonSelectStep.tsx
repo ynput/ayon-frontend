@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import * as Styled from '../util/OnBoardingStep.styled'
-import { ReleaseInfoModel, ReleaseListItemModel } from '@api/rest/releases'
+import { ReleaseInfoModel, ReleaseListItemModel } from '@shared/api'
 import AddonsSelectGrid from '@components/AddonsSelectGrid/AddonsSelectGrid'
 
 type AddonSelectStepProps = {

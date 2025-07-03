@@ -1,6 +1,6 @@
-import { api } from '@api/rest/config'
+import { configurationApi } from '@shared/api'
 
-export const getConfigApi = api.enhanceEndpoints({
+const getConfigApi = configurationApi.enhanceEndpoints({
   endpoints: {
     getServerConfig: {
       providesTags: ['config'],
@@ -9,6 +9,9 @@ export const getConfigApi = api.enhanceEndpoints({
       providesTags: ['config'],
     },
     getServerConfigSchema: {},
+    getConfigValue: {
+      providesTags: ['config'],
+    },
   },
 })
 
@@ -16,4 +19,7 @@ export const {
   useGetServerConfigQuery,
   useGetServerConfigOverridesQuery,
   useGetServerConfigSchemaQuery,
+  useGetConfigValueQuery,
 } = getConfigApi
+
+export default getConfigApi

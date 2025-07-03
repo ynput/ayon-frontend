@@ -1,5 +1,5 @@
-import { isEqual } from "lodash"
-import { useSelector } from "react-redux"
+import { isEqual } from 'lodash'
+import { useSelector } from 'react-redux'
 
 const subscribedStateFields = ['versions', 'products', 'folders', 'tasks']
 
@@ -13,7 +13,6 @@ function useFocusedEntities(projectName, focusType) {
       }
     }
   }
-
 
   const focused = useSelector(
     (state) => state.context.focused,
@@ -40,7 +39,7 @@ function useFocusedEntities(projectName, focusType) {
 
   const entities = entityIds.map((id) => ({ id, projectName }))
 
-  return {entities, entityType, subTypes}
+  return { entities, entityType, subTypes }
 }
 
 export default useFocusedEntities

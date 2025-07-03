@@ -1,23 +1,26 @@
 import React, { useMemo, useState } from 'react'
 import AppNavLinks from '@containers/header/AppNavLinks'
-import { useNavigate, useParams } from 'react-router'
+import { useNavigate, useParams } from 'react-router-dom'
 import UserTasksContainer from './UserDashboardTasks/UserTasksContainer'
 import { Section } from '@ynput/ayon-react-components'
 import ProjectList from '@containers/projectList'
 import { useDispatch, useSelector } from 'react-redux'
 import { onProjectSelected } from '@state/dashboard'
-import { useGetProjectsInfoQuery } from '@queries/userDashboard/getUserDashboard'
-import { useListProjectsQuery } from '@queries/project/getProject'
+import { useGetProjectsInfoQuery } from '@shared/api'
+import { useListProjectsQuery } from '@shared/api'
 import UserDashboardNoProjects from './UserDashboardNoProjects/UserDashboardNoProjects'
 import ProjectDashboard from '../ProjectDashboard'
 import NewProjectDialog from '../ProjectManagerPage/NewProjectDialog'
-import { useDeleteProjectMutation, useUpdateProjectMutation } from '@queries/project/updateProject'
-import confirmDelete from '@helpers/confirmDelete'
-import { useGetDashboardAddonsQuery } from '@queries/addons/getAddons'
+import { useDeleteProjectMutation, useUpdateProjectMutation } from '@shared/api'
+import { confirmDelete } from '@shared/util'
+import { useGetDashboardAddonsQuery } from '@shared/api'
 import DashboardAddon from '@pages/ProjectDashboard/DashboardAddon'
 
 const UserDashboardPage = () => {
   let { module, addonName } = useParams()
+  const user = useSelector((state) => state.user)
+  const isAdmin = user?.data?.isAdmin
+  const isManager = user?.data?.isManager
 
   const {
     data: addonsData = [],
@@ -42,6 +45,8 @@ const UserDashboardPage = () => {
   ]
 
   for (const addon of addonsData) {
+    if (addon?.settings?.admin && !isAdmin) continue
+    if (addon?.settings?.manager && !isManager) continue
     links.push({
       name: addon.title,
       path: `/dashboard/addon/${addon.name}`,
@@ -61,9 +66,9 @@ const UserDashboardPage = () => {
   //   redux states
   const dispatch = useDispatch()
   //   selected projects
-  const user = useSelector((state) => state.user)
   const selectedProjects = useSelector((state) => state.dashboard.selectedProjects)
   const setSelectedProjects = (projects) => dispatch(onProjectSelected(projects))
+
 
   // get all the info required for the projects selected, like status icons and colours
   const { data: projectsInfo = {}, isFetching: isLoadingInfo } = useGetProjectsInfoQuery(

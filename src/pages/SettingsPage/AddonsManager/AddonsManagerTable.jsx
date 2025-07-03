@@ -2,8 +2,8 @@ import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import BundleStatus from './BundleStatus/BundleStatus'
 import { Button, Section, TablePanel } from '@ynput/ayon-react-components'
-import useCreateContext from '@hooks/useCreateContext'
-import confirmDelete from '@helpers/confirmDelete'
+import { useCreateContextMenu } from '@shared/containers/ContextMenu'
+import { confirmDelete } from '@shared/util'
 import clsx from 'clsx'
 
 const AddonsManagerTable = ({
@@ -63,7 +63,7 @@ const AddonsManagerTable = ({
     return items
   }
 
-  const [ctxMenuShow] = useCreateContext([])
+  const [ctxMenuShow] = useCreateContextMenu([])
 
   const handleContextClick = (e) => {
     let contextSelection = []

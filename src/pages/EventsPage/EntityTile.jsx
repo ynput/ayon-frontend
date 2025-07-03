@@ -3,8 +3,8 @@ import PropTypes from 'prop-types'
 import { Panel } from '@ynput/ayon-react-components'
 import styled, { css } from 'styled-components'
 import StatusField from '@components/status/statusField'
-import { useGetEventTileQuery } from '@queries/entity/getEntity'
-import { useGetProjectQuery } from '@queries/project/getProject'
+import { useGetEventTileQuery } from '@shared/api'
+import { useGetProjectQuery } from '@queries/project/enhancedProject'
 import { formatDistance } from 'date-fns'
 import { useSelector } from 'react-redux'
 
@@ -56,7 +56,7 @@ const EntityTile = ({ id, children, onClick, disableHover, projectName, type }) 
 
   if (skip || isError) return <span>Event Not Found</span>
 
-  const { name = '', status = '', updatedAt } = data
+  const { name = '', status = '', updatedAt } = data || {}
 
   return (
     <PanelStyled onClick={onClick} disableHover={disableHover}>

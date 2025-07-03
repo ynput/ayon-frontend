@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import useLocalStorage from '@hooks/useLocalStorage'
+import { useLocalStorage } from '@shared/hooks'
 import { Icon } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 

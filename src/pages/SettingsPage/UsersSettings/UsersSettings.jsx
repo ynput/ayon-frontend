@@ -7,10 +7,10 @@ import RenameUserDialog from './RenameUserDialog'
 // utils
 import './users.scss'
 import useSearchFilter from '@hooks/useSearchFilter'
-import { useGetUsersQuery } from '@queries/user/getUsers'
+import { useGetUsersQuery } from '@shared/api'
 import UserDetail from './userDetail'
 import UserList from './UserList'
-import { useDeleteUserMutation, useUpdateUserMutation } from '@queries/user/updateUser'
+import { useDeleteUserMutation, useUpdateUserMutation } from '@shared/api'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { useSelector } from 'react-redux'
 import UsersOverview from './UsersOverview'
@@ -128,15 +128,16 @@ const UsersSettings = () => {
     let i = 0
     for (const user of users) {
       try {
-        await deleteUser({ user }).unwrap()
+        await deleteUser({ userName: user }).unwrap()
         toast.update(toastId.current, {
           render: `Deleted user: ${user}`,
           type: toast.TYPE.SUCCESS,
         })
         setSelectedUsers([])
         i += 1
-      } catch {
-        toast.error(`Unable to delete user: ${user}`)
+      } catch (error) {
+        console.error('Error deleting user:', error)
+        toast.error(`Unable to delete user: ${error.detail}`)
       }
     }
     setShowDeleteUser(false)

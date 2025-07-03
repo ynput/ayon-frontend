@@ -1,7 +1,8 @@
 import { useEffect, useRef } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { InputSwitch } from '@ynput/ayon-react-components'
-import UserImage from '@components/UserImage'
+import { UserImage } from '@shared/components'
+import { useUpdateUserMutation } from '@shared/api'
 
 import Breadcrumbs from '../Breadcrumbs/Breadcrumbs'
 import HeaderButton from './HeaderButton'
@@ -12,14 +13,14 @@ import InstallerDownloadPrompt from '@components/InstallerDownload/InstallerDown
 import { toggleMenuOpen, setMenuOpen } from '@state/context'
 import { HelpMenu, UserMenu } from '@components/Menu'
 import MenuContainer from '@components/Menu/MenuComponents/MenuContainer'
-import { useUpdateUserMutation } from '@queries/user/updateUser'
 import { toast } from 'react-toastify'
 import { toggleDevMode } from '@state/user'
 import styled from 'styled-components'
-import { useRestart } from '@context/restartContext'
+import { useRestart } from '@context/RestartContext'
 import clsx from 'clsx'
 import InboxNotificationIcon from './InboxNotification'
 import ReleaseInstallerPrompt from '@containers/ReleaseInstallerDialog/ReleaseInstallerPrompt/ReleaseInstallerPrompt'
+import ChatBubbleButton from './ChatBubbleButton'
 
 const FlexWrapper = styled.div`
   display: flex;
@@ -184,6 +185,8 @@ const Header = () => {
             <StyledSwitch checked={developerMode} readOnly />
           </DeveloperSwitch>
         )}
+
+        <ChatBubbleButton />
 
         {/* help icon and menu vvv */}
         <HeaderButton

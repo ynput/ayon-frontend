@@ -1,17 +1,17 @@
 import React, { useContext, useEffect, useState } from 'react'
-import { useGetInfoQuery } from '@queries/auth/getAuth'
+import { useGetSiteInfoQuery } from '@shared/api'
 import * as Styled from './util/OnBoardingStep.styled'
 import OnBoardingProvider from './util/OnBoardingContext'
 import * as Step from './Step'
-import { Navigate, useLocation } from 'react-router'
+import { Navigate, useLocation } from 'react-router-dom'
 import StepWrapper from './util/StepWrapper'
 import { useRestartServerMutation } from '@queries/restartServer'
-import { SocketContext } from '@context/websocketContext'
+import { SocketContext } from '@context/WebsocketContext'
 import ServerRestartingPage from '@components/ServerRestartingPage'
 
 const OnBoardingPage = ({ noAdminUser, onFinish, isOnboarding }) => {
   const [isFinishing, setIsFinishing] = useState(false)
-  const { data: info = {} } = useGetInfoQuery()
+  const { data: info = {} } = useGetSiteInfoQuery({ full: true })
   const { loginPageBackground = '' } = info
   const location = useLocation()
 

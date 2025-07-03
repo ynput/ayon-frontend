@@ -1,4 +1,4 @@
-import groupResult from './groupResult'
+import { groupResult } from '@shared/util'
 
 const sortByName = (a, b) => {
   const labelA = a.node.label || a.node.name
@@ -13,6 +13,7 @@ export const parseTasksList = (tasks, userName) => {
       id: id,
       name: name,
       label: label,
+      folderId: folder.id,
       folderName: folder.label || folder.name,
       folderPath: folder.path,
       taskType: taskType,

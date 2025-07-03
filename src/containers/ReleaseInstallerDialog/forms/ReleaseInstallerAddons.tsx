@@ -1,6 +1,6 @@
 import { FC, useEffect, useState } from 'react'
 import { ReleaseForm } from '../hooks/useReleaseForm'
-import { AddonVersionDetail } from '@api/rest/releases'
+import { AddonVersionDetail } from '@shared/api'
 import AddonsSelectGrid from '@components/AddonsSelectGrid/AddonsSelectGrid'
 import { Footer } from '../components'
 

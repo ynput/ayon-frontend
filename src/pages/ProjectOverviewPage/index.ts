@@ -1,0 +1,2 @@
+import ProjectOverviewDataProvider from './providers/ProjectOverviewDataProvider'
+export default ProjectOverviewDataProvider

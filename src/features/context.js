@@ -21,7 +21,6 @@ const initialState = {
     tasks: [],
     tasksNames: [],
     workfiles: [],
-    editor: [],
     lastFocused: null,
   },
   selectedVersions: {},
@@ -52,11 +51,9 @@ const localStorageKeys = [
   'focused.folders', //
   'focused.products', //
   'focused.versions', //
-  'focused.representations', //
   'focused.tasks', //
   'focused.tasksNames', //
   'focused.workfiles', //
-  'focused.editor', //
   'selectedVersions', //
 ]
 
@@ -98,9 +95,6 @@ const reducers = {
     'focused.versions': {
       value: initialState.focused.versions,
     },
-    'focused.representations': {
-      value: initialState.focused.representations,
-    },
     'focused.tasks': {
       value: initialState.focused.tasks,
     },
@@ -109,9 +103,6 @@ const reducers = {
     },
     'focused.workfiles': {
       value: initialState.focused.workfiles,
-    },
-    'focused.editor': {
-      value: initialState.focused.editor,
     },
   },
   setExpandedFolders: {
@@ -143,9 +134,6 @@ const reducers = {
       value: [],
     },
     'focused.versions': {
-      value: [],
-    },
-    'focused.representations': {
       value: [],
     },
     'focused.tasks': {
@@ -204,20 +192,6 @@ const reducers = {
     },
     'focused.subTypes': {
       value: [],
-    },
-    'focused.representations': {
-      payload: true,
-    },
-  },
-  editorSelectionChanged: {
-    'focused.editor': {
-      payload: 'selection',
-    },
-    'focused.folders': {
-      payload: 'folders',
-    },
-    'focused.tasks': {
-      payload: 'tasks',
     },
   },
   setFocusedVersions: {
@@ -279,9 +253,6 @@ const reducers = {
     'focused.products': {
       payload: 'products',
     },
-    'focused.representations': {
-      value: [],
-    },
   },
   setUri: {
     uri: {
@@ -300,9 +271,6 @@ const reducers = {
     },
     'focused.versions': {
       payload: 'versions',
-    },
-    'focused.representations': {
-      payload: 'representations',
     },
     'focused.workfiles': {
       payload: 'workfiles',
@@ -383,9 +351,6 @@ const contextSlice = createSlice({
     },
     setFocusedRepresentations: (state, action) => {
       updateStateWithReducer(reducers.setFocusedRepresentations, state, action)
-    },
-    editorSelectionChanged: (state, action) => {
-      updateStateWithReducer(reducers.editorSelectionChanged, state, action)
     },
     setFocusedVersions: (state, action) => {
       updateStateWithReducer(reducers.setFocusedVersions, state, action)
@@ -508,7 +473,6 @@ export const {
   setUri,
   setUriChanged,
   productSelected,
-  editorSelectionChanged,
   projectSelected,
   onShare,
   closeShare,

@@ -3,11 +3,11 @@ import { useGetLicensesQuery } from '@queries/market/getMarket'
 import { Button, Dialog, Icon, theme } from '@ynput/ayon-react-components'
 import { FC, useEffect, useMemo } from 'react'
 import styled from 'styled-components'
-import copyToClipboard from '@helpers/copyToClipboard'
+import { copyToClipboard } from '@shared/util'
 import clsx from 'clsx'
-import { YnputConnectResponseModel } from '@api/rest/cloud'
+import { YnputCloudInfoModel } from '@shared/api'
 import { fromUnixTime, format } from 'date-fns'
-import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
+import EmptyPlaceholder from '@shared/components/EmptyPlaceholder'
 
 const Container = styled.div`
   background-color: var(--md-sys-color-surface-container-low);
@@ -177,7 +177,7 @@ const LicensesDialog: FC<LicensesDialogProps> = ({ onClose }) => {
   }, [licenses])
 
   // Cloud loading placeholder data
-  const cloudPlaceholderFields: (keyof YnputConnectResponseModel)[] = [
+  const cloudPlaceholderFields: (keyof YnputCloudInfoModel)[] = [
     'instanceId',
     'instanceName',
     'orgId',

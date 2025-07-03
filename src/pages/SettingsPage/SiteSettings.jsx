@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { toast } from 'react-toastify'
 import { Section, Spacer, Panel, Toolbar, ScrollPanel, Button } from '@ynput/ayon-react-components'
 
 import SettingsEditor from '@containers/SettingsEditor'
@@ -51,19 +52,42 @@ const SiteSettings = () => {
   const [newData, setNewData] = useState({})
   const [setSiteSettings] = useSetSiteSettingsMutation()
 
-  const saveChanges = () => {
+  const saveChanges = async () => {
     for (const key in newData) {
       // eslint-disable-next-line no-unused-vars
       const [addonName, addonVersion, siteId, projectName] = key.split('|')
       const data = newData[key]
 
-      setSiteSettings({
-        addonName,
-        addonVersion,
-        siteId,
-        data,
-      })
+      try {
+        await setSiteSettings({
+          addonName,
+          addonVersion,
+          siteId,
+          data,
+        }).unwrap()
+      } catch (error) {
+        const e = error.data || error
+        toast.error(
+          <>
+            <strong>Unable to save {addonName} settings</strong>
+            <br />
+            {!e.errors?.length && e.detail}
+            {e.errors?.length && (
+              <ul>
+                {e.errors.map((error, i) => (
+                  <li key={i}>
+                    {error.loc.join('/')}: {error.msg}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </>,
+        )
+        return
+      }
+
     }
+    toast.success('Site settings saved')
     setNewData({})
   }
 

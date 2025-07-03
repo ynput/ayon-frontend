@@ -65,22 +65,14 @@ export default ({ mode }) => {
         filename: 'remoteEntry.js',
         shared: {
           react: {
-            requiredVersion: dependencies.react,
             singleton: true,
+            requiredVersion: dependencies.react,
           },
           'react-dom': {
+            singleton: true,
             requiredVersion: dependencies['react-dom'],
-            singleton: true,
-          },
-          'styled-components': {
-            requiredVersion: dependencies['styled-components'],
-            singleton: true,
-          },
-          '@ynput/ayon-react-components': {
-            requiredVersion: dependencies['@ynput/ayon-react-components'],
           },
         },
-        runtimePlugins: ['./src/remote/custom-runtime-plugin'],
       }),
       react(),
     ],
@@ -112,6 +104,10 @@ export default ({ mode }) => {
         { find: '@context', replacement: fileURLToPath(new URL('./src/context', import.meta.url)) },
         { find: '@state', replacement: fileURLToPath(new URL('./src/features', import.meta.url)) },
         { find: '@helpers', replacement: fileURLToPath(new URL('./src/helpers', import.meta.url)) },
+        {
+          find: '@shared',
+          replacement: fileURLToPath(new URL('./shared/src', import.meta.url)),
+        },
       ],
     },
   })

@@ -1,13 +1,13 @@
 import { useRef } from 'react'
 import { toast } from 'react-toastify'
 import { Button, Divider, SaveButton, Section, Dialog } from '@ynput/ayon-react-components'
-import { useAddUserMutation } from '@queries/user/updateUser'
+import { useAddUserMutation } from '@shared/api'
 import ayonClient from '@/ayon'
 import UserAttribForm from './UserAttribForm'
 import UserAccessForm from './UserAccessForm'
 
 import styled from 'styled-components'
-import useUserMutations from '@containers/Feed/hooks/useUserMutations'
+import useUserMutations from '@pages/SettingsPage/UsersSettings/useUserMutations'
 import callbackOnKeyDown from '@helpers/callbackOnKeyDown'
 
 const DividerSmallStyled = styled(Divider)`

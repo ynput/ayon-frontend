@@ -14,7 +14,7 @@ import {
   useLazyGetReleaseInfoQuery,
   useGetInstallEventsQuery,
 } from '@queries/releases/getReleases'
-import useLocalStorage from '@hooks/useLocalStorage'
+import { useLocalStorage } from '@shared/hooks'
 import { useLazyListBundlesQuery } from '@queries/bundles/getBundles'
 import { useCreateBundleMutation } from '@queries/bundles/updateBundles'
 import { createBundleFromRelease, guessPlatform } from '@containers/ReleaseInstallerDialog/helpers'
@@ -72,7 +72,7 @@ export const OnBoardingProvider = ({ children, initStep, onFinish }) => {
 
   // when connected reset isConnecting, and go to next step
   useEffect(() => {
-    if (ynputConnect && isConnecting) {
+    if (ynputConnect?.connected && isConnecting) {
       setIsConnecting(false)
       nextStep()
     }

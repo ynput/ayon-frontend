@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import styled from 'styled-components'
 import { closeShare } from '@state/context'
 import { Button, Dialog } from '@ynput/ayon-react-components'
-import copyToClipboard from '@helpers/copyToClipboard'
+import { copyToClipboard } from '@shared/util'
 import { TabView, TabPanel } from 'primereact/tabview'
 
 const ShareStyled = styled.div`

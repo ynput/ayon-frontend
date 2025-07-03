@@ -6,17 +6,16 @@ import { Column } from 'primereact/column'
 import { TreeTable } from 'primereact/treetable'
 import { MultiSelect } from 'primereact/multiselect'
 import { CellWithIcon } from '@components/icons'
-import EntityDetail from './DetailsDialog'
+import { DetailsDialog } from '@shared/components'
+import { useGetFolderHierarchyQuery } from '@shared/api'
+import { useCreateContextMenu } from '@shared/containers/ContextMenu'
+import { useTableKeyboardNavigation, extractIdFromClassList } from '@shared/containers/Feed'
 import { setFocusedFolders, setUri, setExpandedFolders, setSelectedVersions } from '@state/context'
-import { useGetFolderHierarchyQuery } from '@queries/getHierarchy'
-import useCreateContext from '@hooks/useCreateContext'
 import HierarchyExpandFolders from './HierarchyExpandFolders'
 import { openViewer } from '@/features/viewer'
-import useTableKeyboardNavigation, {
-  extractIdFromClassList,
-} from './Feed/hooks/useTableKeyboardNavigation'
 import clsx from 'clsx'
 import useTableLoadingData from '@hooks/useTableLoadingData'
+import { useEntityListsContext } from '@pages/ProjectListsPage/context'
 
 const filterHierarchy = (text, folder, folders) => {
   let result = []
@@ -322,29 +321,50 @@ const Hierarchy = (props) => {
     handleTableKeyDown(event)
   }
 
+  const {
+    buildAddToListMenu,
+    buildListMenuItem,
+    newListMenuItem,
+    folders: foldersList,
+  } = useEntityListsContext()
+
   // Context Menu
-  // const {openContext, useCreateContext} = useContextMenu()
+  // const {openContext, useCreateContextMenu} = useContextMenu()
   // context items
-  const ctxMenuItems = (selected = []) => [
-    {
-      label: 'Open in viewer',
-      icon: 'play_circle',
-      shortcut: 'Spacebar',
-      command: () => openInViewer(selected[0], false),
-    },
-    {
-      label: 'Detail',
-      command: () => setShowDetail(true),
-      icon: 'database',
-    },
-    {
-      label: 'View all versions as latest',
-      command: () => dispatch(setSelectedVersions({})),
-      icon: 'upgrade',
-    },
-  ]
+  const ctxMenuItems = (selected = []) => {
+    const selectedEntities = selected.map((id) => ({ entityId: id, entityType: 'folder' }))
+    return [
+      {
+        label: 'Open in viewer',
+        icon: 'play_circle',
+        shortcut: 'Spacebar',
+        command: () => openInViewer(selected[0], false),
+      },
+      {
+        label: 'Upload version',
+        icon: 'upload',
+        command: () => props.onOpenVersionUpload?.({ folderId: selected[0] }),
+        disabled: selected.length !== 1,
+        hidden: !props.onOpenVersionUpload,
+      },
+      buildAddToListMenu([
+        ...foldersList.data.map((list) => buildListMenuItem(list, selectedEntities)),
+        newListMenuItem('folder', selectedEntities),
+      ]),
+      {
+        label: 'Detail',
+        command: () => setShowDetail(true),
+        icon: 'database',
+      },
+      {
+        label: 'View all versions as latest',
+        command: () => dispatch(setSelectedVersions({})),
+        icon: 'upgrade',
+      },
+    ]
+  }
   // create the ref and model
-  const [ctxMenuShow] = useCreateContext()
+  const [ctxMenuShow] = useCreateContextMenu()
 
   const onContextMenu = (event) => {
     let newFocused = [...focusedFolders]
@@ -430,7 +450,7 @@ const Hierarchy = (props) => {
         </Toolbar>
 
         <TablePanel>
-          <EntityDetail
+          <DetailsDialog
             projectName={projectName}
             entityType="folder"
             entityIds={focusedFolders}

@@ -1,0 +1,38 @@
+# @ts-nocheck
+
+query GetDetailsPanelVersion($projectName: String!, $entityId: String!) {
+  project(name: $projectName) {
+    projectName
+    code
+    version(id: $entityId) {
+      id
+      version
+      name
+      author
+      status
+      tags
+      updatedAt
+      createdAt
+      thumbnailId
+      hasReviewables
+      product {
+        ...DetailsPanelProductFragment
+        folder {
+          # @ts-ignore - DetailsPanelFolderFragment does exist
+          ...DetailsPanelFolderFragment
+        }
+      }
+      task {
+        ...DetailsPanelTaskFragment
+      }
+      allAttrib
+      representations {
+        edges {
+          node {
+            ...DetailsPanelRepresentationFragment
+          }
+        }
+      }
+    }
+  }
+}

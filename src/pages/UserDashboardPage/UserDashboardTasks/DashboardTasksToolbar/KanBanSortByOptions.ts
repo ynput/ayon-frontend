@@ -1,4 +1,4 @@
-type SortByOption = {
+export type SortByOption = {
   id: string
   label: string
   sortOrder: boolean
@@ -11,7 +11,7 @@ const sortByOptions: SortByOption[] = [
   { id: 'folderName', label: 'Folder', sortOrder: true },
   { id: 'status', label: 'Status', sortOrder: true },
   { id: 'priority', label: 'Priority', sortOrder: true, sortByEnumOrder: true },
-  { id: 'endDate', label: 'Due Date', sortOrder: true },
+  { id: 'dueDate', label: 'Due Date', sortOrder: true },
 ]
 
 export default sortByOptions

@@ -1,5 +1,5 @@
 import * as Styled from '../util/OnBoardingStep.styled'
-import { ReleaseInfoModel } from '@api/rest/releases'
+import { ReleaseInfoModel } from '@shared/api'
 import PlatformSelect from '@components/PlatformSelect/PlatformSelect'
 
 type PlatformSelectStepProps = {

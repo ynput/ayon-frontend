@@ -1,9 +1,8 @@
 // create table data for the hierarchy
-import { useGetFolderListQuery } from '@queries/getHierarchy'
-import { TableRow } from '../types'
+import { SimpleTableRow } from '@shared/SimpleTable'
+import { useGetFolderListQuery } from '@shared/api'
+import type { FolderType, FolderListItem } from '@shared/api'
 import { useCallback, useMemo } from 'react'
-import { FolderListItem } from '@api/rest/folders'
-import { FolderType } from '@api/rest/project'
 
 type Props = {
   projectName: string | null
@@ -11,18 +10,17 @@ type Props = {
 }
 
 const useHierarchyTable = ({ projectName, folderTypes }: Props) => {
-  const {
-    data: { folders = [] } = {},
-    isLoading,
-    isFetching,
-  } = useGetFolderListQuery({ projectName: projectName || '' }, { skip: !projectName })
+  const { data: { folders = [] } = {}, isFetching } = useGetFolderListQuery(
+    { projectName: projectName || '', attrib: true },
+    { skip: !projectName },
+  )
 
   const getFolderIcon = (type: string) => {
     const folderType = folderTypes.find((folderType) => folderType.name === type)
     return folderType?.icon || 'folder'
   }
 
-  const folderToTableRow = (folder: FolderListItem): Omit<TableRow, 'subRows'> => ({
+  const folderToTableRow = (folder: FolderListItem): Omit<SimpleTableRow, 'subRows'> => ({
     id: folder.id,
     parentId: folder.parentId,
     name: folder.name,
@@ -41,10 +39,10 @@ const useHierarchyTable = ({ projectName, folderTypes }: Props) => {
     items: T[],
     elementId: keyof T = 'id' as keyof T,
     parentId: keyof T = 'parentId' as keyof T,
-  ): TableRow[] => {
+  ): SimpleTableRow[] => {
     // Use Map instead of Object.create(null)
-    const hashTable = new Map<string, TableRow>()
-    const dataTree: TableRow[] = []
+    const hashTable = new Map<string, SimpleTableRow>()
+    const dataTree: SimpleTableRow[] = []
 
     // sort folders by name
     const sortedItems = [...items].sort((a, b) =>
@@ -55,7 +53,7 @@ const useHierarchyTable = ({ projectName, folderTypes }: Props) => {
     for (let i = 0; i < sortedItems.length; i++) {
       const item = sortedItems[i]
       const id = item[elementId] as string
-      const row: TableRow = {
+      const row: SimpleTableRow = {
         ...folderToTableRow(item),
         subRows: [],
       }
@@ -82,19 +80,19 @@ const useHierarchyTable = ({ projectName, folderTypes }: Props) => {
     return dataTree
   }
 
-  const tableData: TableRow[] = useMemo(() => {
-    if (!folders.length || isLoading || isFetching) return []
+  const tableData: SimpleTableRow[] = useMemo(() => {
+    if (!folders.length || isFetching) return []
 
     const rows = createDataTree(folders)
 
     return rows
-  }, [folders, folderTypes, isLoading, isFetching])
+  }, [folders, folderTypes, isFetching])
 
   const getHierarchyData = useCallback(async () => {
     return tableData
   }, [tableData])
 
-  return { data: tableData, getData: getHierarchyData, isLoading: isLoading || isFetching }
+  return { data: tableData, getData: getHierarchyData, isFetching: isFetching }
 }
 
 export default useHierarchyTable

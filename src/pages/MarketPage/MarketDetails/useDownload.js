@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useDownloadAddonsMutation } from '@queries/addons/updateAddons'
+import { useDownloadAddonsMutation } from '@shared/api'
 import { useLazyMarketAddonVersionDetailQuery } from '@queries/market/getMarket'
 import { toast } from 'react-toastify'
 

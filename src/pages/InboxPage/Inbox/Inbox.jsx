@@ -5,24 +5,24 @@ import clsx from 'clsx'
 import InboxDetailsPanel from '../InboxDetailsPanel'
 import { useDispatch, useSelector } from 'react-redux'
 import Shortcuts from '@containers/Shortcuts'
-import { clearHighlights, highlightActivity } from '@state/details'
 import { InView } from 'react-intersection-observer'
 import { toast } from 'react-toastify'
 import { compareAsc } from 'date-fns'
 // Queries
 import { useGetInboxMessagesQuery, useLazyGetInboxMessagesQuery } from '@queries/inbox/getInbox'
-import { useGetProjectsInfoQuery } from '@queries/userDashboard/getUserDashboard'
+import { useGetProjectsInfoQuery } from '@shared/api'
 // Components
 import { Button, Spacer } from '@ynput/ayon-react-components'
 import EnableNotifications from '@components/EnableNotifications'
-import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
+import EmptyPlaceholder from '@shared/components/EmptyPlaceholder'
 // Hooks
-import useCreateContext from '@hooks/useCreateContext'
+import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import useGroupMessages from '../hooks/useGroupMessages'
 import useKeydown from '../hooks/useKeydown'
 import useUpdateInboxMessage from '../hooks/useUpdateInboxMessage'
 import useInboxRefresh from '../hooks/useInboxRefresh'
-import { useListProjectsQuery } from '@queries/project/getProject'
+import { useListProjectsQuery } from '@shared/api'
+import { useDetailsPanelContext } from '@shared/context'
 
 const placeholderMessages = Array.from({ length: 100 }, (_, i) => ({
   activityId: `placeholder-${i}`,
@@ -40,6 +40,7 @@ const filters = {
 
 const Inbox = ({ filter }) => {
   const dispatch = useDispatch()
+  const { setHighlightedActivities } = useDetailsPanelContext()
 
   // get all project names
   const { data: projects = [] } = useListProjectsQuery({})
@@ -156,10 +157,9 @@ const Inbox = ({ filter }) => {
     const idsToHighlight = activityIds.length > 0 ? activityIds : ids
 
     if (message?.activityType === 'comment' && idsToHighlight.length > 0) {
-      // highlight the activity in the feed
-      dispatch(highlightActivity({ statePath: 'pinned', activityIds: idsToHighlight }))
+      setHighlightedActivities(idsToHighlight)
     } else {
-      dispatch(clearHighlights, { statePath: 'pinned' })
+      setHighlightedActivities([])
     }
 
     const idsToMarkAsRead = unReadMessages.map((m) => m.referenceId)
@@ -293,7 +293,7 @@ const Inbox = ({ filter }) => {
     ]
   }
 
-  const [ctxMenuShow] = useCreateContext([])
+  const [ctxMenuShow] = useCreateContextMenu([])
 
   const handleContextMenu = (e) => {
     // get id from the target

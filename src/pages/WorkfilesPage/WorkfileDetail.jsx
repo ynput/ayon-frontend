@@ -1,14 +1,13 @@
 import { Section, Panel } from '@ynput/ayon-react-components'
 import { PathField } from '@containers/fieldFormat'
-import Thumbnail from '@components/Thumbnail'
+import { Thumbnail } from '@shared/components'
 import AttributeTable from '@containers/attributeTable'
 import { useState } from 'react'
 import { useSelector } from 'react-redux'
 import { useGetWorkfileByIdQuery } from '@queries/getWorkfiles'
 import { useGetSiteRootsQuery } from '@queries/customRoots'
 import SiteDropdown from '@containers/SiteDropdown'
-import { getCurrentPlatform } from '@helpers/platform'
-
+import { getCurrentPlatform } from '@shared/util'
 
 const replaceRoot = (inputStr, replacements) => {
   if (!inputStr) return inputStr

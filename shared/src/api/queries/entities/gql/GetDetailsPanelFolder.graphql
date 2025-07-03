@@ -1,0 +1,20 @@
+query GetDetailsPanelFolder($projectName: String!, $entityId: String!) {
+  project(name: $projectName) {
+    projectName
+    code
+    folder(id: $entityId) {
+      id
+      name
+      label
+      status
+      tags
+      updatedAt
+      createdAt
+      thumbnailId
+      folderType
+      path
+      hasReviewables
+      allAttrib
+    }
+  }
+}

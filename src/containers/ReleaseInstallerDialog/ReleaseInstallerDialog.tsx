@@ -11,7 +11,7 @@ import * as Styled from './ReleaseInstaller.styled'
 import ReleaseInstaller from './ReleaseInstaller'
 import { useGetYnputConnectionsQuery } from '@queries/ynputConnect'
 import ConnectDialog from '@pages/MarketPage/ConnectDialog/ConnectDialog'
-import { useLocation } from 'react-router'
+import { useLocation } from 'react-router-dom'
 
 const ReleaseInstallerDialog: FC = () => {
   const location = useLocation()
@@ -22,19 +22,18 @@ const ReleaseInstallerDialog: FC = () => {
   // STATE
 
   // check ynput cloud is connected before showing dialog
-  const { isError } = useGetYnputConnectionsQuery({})
+  const { data: connectData, isError } = useGetYnputConnectionsQuery({})
 
   if (!isOpen) return null
 
-  if (isError) {
+  if (isError || !connectData?.connected) {
     return <ConnectDialog redirect={location.pathname} visible onHide={closeDialog} />
   }
 
   return (
     <Styled.FriendlyDialog
       isOpen
-      onClose={() => {}}
-      hideCancelButton
+      onClose={closeDialog}
       header={<Styled.Header>Install pipeline release</Styled.Header>}
       size="md"
     >

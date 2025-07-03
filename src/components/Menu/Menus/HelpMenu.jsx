@@ -1,17 +1,12 @@
 import React from 'react'
 import Menu from '../MenuComponents/Menu'
+import { useFeedback } from '@/feedback/FeedbackContext'
 
 export const HelpMenu = ({ user, ...props }) => {
   const isUser = user.data.isUser
+  const { openSupport, openFeedback, openPortal, loaded } = useFeedback()
 
   const items = [
-    {
-      id: 'documentation',
-      label: 'Documentation',
-      link: 'https://ayon.ynput.io/',
-      icon: 'description',
-      target: '_blank',
-    },
     {
       id: 'forum',
       label: 'Community Forum',
@@ -20,13 +15,20 @@ export const HelpMenu = ({ user, ...props }) => {
       target: '_blank',
     },
     {
-      id: 'bug',
-      label: 'Report a Bug',
-      link: 'https://github.com/ynput/ayon-frontend/issues/new',
-      icon: 'bug_report',
+      id: 'discord',
+      label: 'Discord Server',
+      link: 'https://discord.gg/ynput',
+      img: '/Discord-Symbol-White.svg',
       target: '_blank',
     },
     { id: 'divider' },
+    {
+      id: 'documentation',
+      label: 'Dev Portal',
+      link: 'https://docs.ayon.dev/',
+      icon: 'code',
+      target: '_blank',
+    },
     {
       id: 'api',
       label: 'REST API',
@@ -43,20 +45,29 @@ export const HelpMenu = ({ user, ...props }) => {
     },
   ]
 
-  const managers = [
+  const feedback = [
     {
-      id: 'divider',
+      id: 'help',
+      label: 'Help center',
+      icon: 'help',
+      onClick: () => openPortal('MainView'),
     },
     {
-      id: 'support',
-      label: 'Get Support',
-      link: 'https://ynput.io/services',
-      icon: 'support_agent',
-      target: '_blank',
+      id: 'changelog',
+      label: 'Latest changes',
+      icon: 'track_changes',
+      onClick: () => openSupport('Changelog'),
     },
+    {
+      id: 'feedback',
+      label: 'Submit Feedback',
+      icon: 'feedback',
+      onClick: () => openFeedback(),
+    },
+    { id: 'divider' },
   ]
 
-  if (!isUser) items.push(...managers)
+  if (loaded) items.unshift(...feedback)
 
   return <Menu menu={items} {...props} />
 }

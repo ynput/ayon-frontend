@@ -1,18 +1,18 @@
 import * as Styled from './projectMenu.styled'
 import { useDispatch, useSelector } from 'react-redux'
 import MenuList from '@components/Menu/MenuComponents/MenuList'
-import { useListProjectsQuery } from '@queries/project/getProject'
+import { useListProjectsQuery, useSetFrontendPreferencesMutation } from '@shared/api'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { InputText, Section } from '@ynput/ayon-react-components'
-import useCreateContext from '@hooks/useCreateContext'
-import useLocalStorage from '@/hooks/useLocalStorage'
+import { useCreateContextMenu } from '@shared/containers/ContextMenu'
+import { useLocalStorage } from '@shared/hooks'
 import ProjectButton from '@components/ProjectButton/ProjectButton'
 import { createPortal } from 'react-dom'
-import { useShortcutsContext } from '@context/shortcutsContext'
+import { useShortcutsContext } from '@context/ShortcutsContext'
 import clsx from 'clsx'
-import { useSetFrontendPreferencesMutation } from '@/services/user/updateUser'
 import useAyonNavigate from '@hooks/useAyonNavigate'
 import { useProjectSelectDispatcher } from './hooks/useProjectSelectDispatcher'
+import { updateUserPreferences as updateUserPreferencesAction } from '@state/user'
 
 const ProjectMenu = ({ isOpen, onHide }) => {
   const navigate = useAyonNavigate()
@@ -56,13 +56,16 @@ const ProjectMenu = ({ isOpen, onHide }) => {
 
   const { data: projects = [] } = useListProjectsQuery({ active: true })
 
-  const [showContext] = useCreateContext([])
+  const [showContext] = useCreateContextMenu([])
   const [handleProjectSelectionDispatches] = useProjectSelectDispatcher([])
 
   const [updateUserPreferences] = useSetFrontendPreferencesMutation()
 
   const updatePinned = async (pinnedProjects) => {
     try {
+      // update in local redux state
+      dispatch(updateUserPreferencesAction({ pinnedProjects }))
+
       // update user preferences
       await updateUserPreferences({
         userName: username,
@@ -209,10 +212,10 @@ const ProjectMenu = ({ isOpen, onHide }) => {
 
     setSearchOpen(false)
 
-    // if projects/[project] is null, projects/[projectName]/browser, else projects/[projectName]/[module]
+    // if projects/[project] is null, projects/[projectName]/overview, else projects/[projectName]/[module]
     const link = window.location.pathname.includes('projects')
-      ? `/projects/${projectName}/${window.location.pathname.split('/')[3] || 'browser'}`
-      : `/projects/${projectName}/browser`
+      ? `/projects/${projectName}/${window.location.pathname.split('/')[3] || 'overview'}`
+      : `/projects/${projectName}/overview`
 
     dispatch((_, getState) => navigate(getState)(link))
   }

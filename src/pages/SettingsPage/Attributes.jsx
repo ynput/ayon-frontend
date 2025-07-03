@@ -11,11 +11,10 @@ import {
   Spacer,
   SaveButton,
 } from '@ynput/ayon-react-components'
-import AttributeEditor from '@containers/attributes/attributeEditor'
-import { useGetAttributeListQuery } from '@queries/attributes/getAttributes'
-import { useSetAttributeListMutation } from '@queries/attributes/updateAttributes'
+import { AttributeEditor } from '@shared/components'
+import { useGetAttributeListQuery, useSetAttributeListMutation } from '@shared/api'
+import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import useSearchFilter from '@hooks/useSearchFilter'
-import useCreateContext from '@hooks/useCreateContext'
 import { isEqual } from 'lodash'
 import clsx from 'clsx'
 import useTableLoadingData from '@hooks/useTableLoadingData'
@@ -131,7 +130,7 @@ const Attributes = () => {
     },
   ]
 
-  const [ctxMenuTableShow] = useCreateContext([])
+  const [ctxMenuTableShow] = useCreateContextMenu([])
 
   const handleContextSelectionChange = (e) => {
     setSelectedAttribute(e.value)

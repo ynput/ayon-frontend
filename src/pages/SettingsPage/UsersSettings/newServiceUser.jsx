@@ -4,9 +4,9 @@ import styled from 'styled-components'
 
 import { Button, SaveButton, Section, Dialog, FormRow } from '@ynput/ayon-react-components'
 import ApiKeyManager from '@components/ApiKeyManager'
-import useUserMutations from '@containers/Feed/hooks/useUserMutations'
-import { useAddUserMutation } from '@queries/user/updateUser'
-import copyToClipboard from '@helpers/copyToClipboard'
+import useUserMutations from '@pages/SettingsPage/UsersSettings/useUserMutations'
+import { useAddUserMutation } from '@shared/api'
+import { copyToClipboard } from '@shared/util'
 import callbackOnKeyDown from '@helpers/callbackOnKeyDown'
 
 import UserAttribForm from './UserAttribForm'

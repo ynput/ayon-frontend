@@ -1,13 +1,13 @@
-import useCreateContext from '@hooks/useCreateContext'
-import copyToClipboard from '@helpers/copyToClipboard'
+import { useCreateContextMenu } from '@shared/containers/ContextMenu'
+import { copyToClipboard } from '@shared/util'
 import { onTaskSelected } from '@state/dashboard'
 import { useSelector } from 'react-redux'
 import useOpenTaskInViewer from './useOpenTaskInViewer'
-import { toggleDetailsPanel } from '@state/details'
+import { useScopedDetailsPanel } from '@shared/context'
 
 export const useGetTaskContextMenu = (tasks, dispatch, { onOpenInBrowser } = {}) => {
   const selectedTasks = useSelector((state) => state.dashboard.tasks.selected)
-  const isDetailsOpen = useSelector((state) => state.details.open)
+  const { setOpen, isOpen } = useScopedDetailsPanel('dashboard')
 
   const openTaskInViewer = useOpenTaskInViewer()
   const isMacOS = /Macintosh|MacIntel|MacPPC|Mac68K/.test(navigator.userAgent)
@@ -15,10 +15,10 @@ export const useGetTaskContextMenu = (tasks, dispatch, { onOpenInBrowser } = {})
   const getContextMenuItems = (task) => {
     return [
       {
-        label: isDetailsOpen ? 'Hide details' : 'Show details',
+        label: isOpen ? 'Hide details' : 'Show details',
         icon: 'dock_to_left',
-        shortcut: isDetailsOpen ? 'Escape' : 'Double click',
-        command: () => dispatch(toggleDetailsPanel(!isDetailsOpen)),
+        shortcut: isOpen ? 'Escape' : 'Double click',
+        command: () => setOpen(!isOpen),
       },
       {
         label: 'Open in viewer',
@@ -47,7 +47,7 @@ export const useGetTaskContextMenu = (tasks, dispatch, { onOpenInBrowser } = {})
     ]
   }
 
-  const [showContextMenu, closeContext] = useCreateContext([])
+  const [showContextMenu, closeContext] = useCreateContextMenu([])
 
   const handleContextMenu = (e) => {
     // find the parent with className card

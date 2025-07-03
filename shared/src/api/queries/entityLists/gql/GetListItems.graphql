@@ -1,0 +1,52 @@
+query GetListItems(
+  $projectName: String!
+  $listId: String!
+  $first: Int
+  $after: String
+  $before: String
+  $last: Int
+  $sortBy: String
+  $filter: String
+) {
+  project(name: $projectName) {
+    entityLists(ids: [$listId]) {
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+      edges {
+        node {
+          id
+          active
+          items(
+            first: $first
+            after: $after
+            before: $before
+            last: $last
+            sortBy: $sortBy
+            filter: $filter
+          ) {
+            pageInfo {
+              hasNextPage
+              endCursor
+            }
+            edges {
+              id
+              entityId
+              entityType
+              allAttrib
+              ownItemAttrib: ownAttrib
+              position
+              node {
+                active
+                name
+                updatedAt
+                ...ListItemFragment
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

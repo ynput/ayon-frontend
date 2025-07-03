@@ -1,4 +1,4 @@
-import api from '@api'
+import api from '@shared/api'
 
 const parseProductFps = (product) => {
   const folderFps = product.folder.attrib.fps || ''
@@ -59,8 +59,8 @@ const parseProductData = (data) => {
       version: vers ? vers.version : null,
       versionId: vers && vers.id ? vers.id : null,
       versionName: vers && vers.name ? vers.name : '',
-      versionStatus: vers.status || null,
-      versionUpdatedAt: vers.updatedAt || null,
+      versionStatus: vers ? vers.status : null,
+      versionUpdatedAt: vers ? vers.updatedAt : null,
       versionAuthor: vers ? vers.author : null,
       versionThumbnailId: vers ? vers.thumbnailId : null,
       hasReviewables: vers ? vers.hasReviewables : false,
@@ -124,7 +124,7 @@ fragment ProductVersionFragment on VersionNode {
 const PRODUCTS_LIST_QUERY = `
 query ProductsList($projectName: String!, $ids: [String!]!) {
     project(name: $projectName){
-        products(folderIds: $ids){
+        products(folderIds: $ids, first: 1000){
             edges {
                 node {
                     id
@@ -176,7 +176,7 @@ query GetProductsVersions($projectName: String!, $ids: [String!]!) {
 ${PRODUCT_VERSION_FRAGMENT}
 `
 
-const getProduct = api.injectEndpoints({
+export const getProductApi = api.injectEndpoints({
   endpoints: (build) => ({
     getProductList: build.query({
       query: ({ projectName, folderIds }) => ({
@@ -190,9 +190,13 @@ const getProduct = api.injectEndpoints({
       }),
       transformErrorResponse: (error) => error?.data?.errors?.[0]?.message,
       transformResponse: (response) => parseProductData(response.data),
-      providesTags: (result) =>
+      providesTags: (result, _e, { folderIds = [] }) =>
         result
-          ? [...result.map(({ id }) => ({ type: 'product', id })), { type: 'product', id: 'LIST' }]
+          ? [
+              ...result.map(({ id }) => ({ type: 'product', id })),
+              { type: 'product', id: 'LIST' },
+              ...folderIds.map((id) => ({ type: 'product', id })),
+            ]
           : [{ type: 'product', id: 'LIST' }],
     }),
     getProductsVersions: build.query({
@@ -205,10 +209,11 @@ const getProduct = api.injectEndpoints({
         },
       }),
       transformResponse: (response) => parseVersionsData(response.data) || [],
-      providesTags: (result) =>
+      providesTags: (result, _e, { ids = [] }) =>
         result
           ? [
               ...result.map(({ versionId }) => ({ type: 'version', id: versionId })), // all version tags with id
+              ...ids.map((id) => ({ type: 'product', id })), // all version tags with id
               { type: 'version', id: 'LIST' }, // tag for all versions
             ]
           : [{ type: 'version', id: 'LIST' }],
@@ -221,4 +226,4 @@ export const {
   useGetProductListQuery,
   useLazyGetProductsVersionsQuery,
   useGetProductsVersionsQuery,
-} = getProduct
+} = getProductApi

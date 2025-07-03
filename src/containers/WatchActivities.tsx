@@ -1,10 +1,11 @@
 import usePubSub from '@hooks/usePubSub'
-import api from '@api'
+
 import { FC } from 'react'
-import { useDispatch, useSelector, useStore } from 'react-redux'
+import { useDispatch, useStore } from 'react-redux'
 import { $Any } from '@/types'
-import { useLazyGetActivityForEntitiesQuery } from '@/services/activities/getActivities'
-import { bodyHasChecklist } from './Feed/hooks/useCommentMutations'
+import { activitiesQueries, useLazyGetActivitiesByIdQuery } from '@shared/api'
+import { bodyHasChecklist } from '@shared/containers/Feed/hooks/useCommentMutations'
+
 type ActivityMessage = {
   [key: string]: any
 
@@ -26,18 +27,17 @@ interface WatchActivitiesProps {}
 
 const WatchActivities: FC<WatchActivitiesProps> = ({}) => {
   const dispatch = useDispatch()
-  const userName: string = useSelector((state: $Any) => state.user?.name)
 
   const store = useStore()
 
-  const [getActivity] = useLazyGetActivityForEntitiesQuery()
+  const [getActivity] = useLazyGetActivitiesByIdQuery()
 
   //   subscribe to inbox.message topic
   usePubSub(
     'activity',
     async (topic: string, message: ActivityMessage) => {
       // first find caches that contain this activityId
-      const activityId = message.summary?.activity_id
+      const activityId = message.summary?.activity_id as string
 
       const state: any = store.getState()
 
@@ -47,11 +47,11 @@ const WatchActivities: FC<WatchActivitiesProps> = ({}) => {
 
       // entries could include caches for checklists, versions, reviews that don't contain comments for example
       // check that this activity is relevant to the cache
-      const activityType = message.summary?.activity_type
+      const activityType = message.summary?.activity_type as string
 
       // get all caches that this activity is referenced by
       const tags = entityIds.map((entityId) => ({ type: 'entityActivities', id: entityId }))
-      const entries = api.util.selectInvalidatedBy(state, tags)
+      const entries = activitiesQueries.util.selectInvalidatedBy(state, tags)
 
       // add to the invalidateTags as we go and then invalidate all at the end
       const invalidateTags = []
@@ -61,17 +61,22 @@ const WatchActivities: FC<WatchActivitiesProps> = ({}) => {
           // remove the activity from the cache using originalArguments
           dispatch(
             // @ts-ignore
-            api.util.updateQueryData('getActivities', entry.originalArgs, (draft: $Any) => {
-              //   find the activity and remove it
-              const index = draft?.activities?.findIndex(
-                (activity: $Any) => activity.activityId === activityId,
-              )
+            activitiesQueries.util.updateQueryData(
+              'getActivitiesInfinite',
+              entry.originalArgs,
+              (draft: $Any) => {
+                for (const page of draft.pages) {
+                  const index = page.activities?.findIndex(
+                    (activity: $Any) => activity.activityId === activityId,
+                  )
 
-              if (index === -1) return
-
-              //   remove from activities
-              draft?.activities?.splice(index, 1)
-            }),
+                  if (index !== -1 && index !== undefined) {
+                    // Remove from activities
+                    page.activities.splice(index, 1)
+                  }
+                }
+              },
+            ),
           )
         }
       } else {
@@ -83,8 +88,6 @@ const WatchActivities: FC<WatchActivitiesProps> = ({}) => {
             projectName: projectName,
             activityIds: [activityId],
             entityIds,
-            activityTypes: [activityType],
-            currentUser: userName,
           }).unwrap()
           const newActivities = res.activities || []
 
@@ -107,40 +110,51 @@ const WatchActivities: FC<WatchActivitiesProps> = ({}) => {
             (entry) =>
               entry.originalArgs?.activityTypes?.some((type: string) =>
                 activityTypes.includes(type),
-              ) && entry.endpointName === 'getActivities',
+              ) && entry.endpointName === 'getActivitiesInfinite',
           )
 
           // now update the caches
           for (const entry of entriesToPatch) {
             dispatch(
               // @ts-ignore
-              api.util.updateQueryData('getActivities', entry.originalArgs, (draft: $Any) => {
-                const activitiesToPatchIn = newActivities.filter((activity: $Any) =>
-                  entry.originalArgs.entityIds?.includes(activity.entityId),
-                )
-
-                for (const newActivity of activitiesToPatchIn) {
-                  //   find the activity to update or add
-                  const index = draft?.activities?.findIndex(
-                    (activity: $Any) => activity.activityId === activityId,
+              activitiesQueries.util.updateQueryData(
+                'getActivitiesInfinite',
+                entry.originalArgs,
+                (draft: $Any) => {
+                  const activitiesToPatchIn = newActivities.filter((activity: $Any) =>
+                    entry.originalArgs.entityIds?.includes(activity.entityId),
                   )
 
-                  if (index === -1) {
-                    // add the new activity
-                    draft?.activities?.push(newActivity)
-                    return
-                  } else {
-                    // update the activity
-                    draft.activities[index] = newActivity
+                  for (const newActivity of activitiesToPatchIn) {
+                    let activityFound = false
+
+                    // First, try to update existing activity in any page
+                    for (const page of draft.pages) {
+                      const index = page.activities?.findIndex(
+                        (activity: $Any) => activity.activityId === activityId,
+                      )
+
+                      if (index !== -1 && index !== undefined) {
+                        // Update existing activity
+                        page.activities[index] = newActivity
+                        activityFound = true
+                        break
+                      }
+                    }
+
+                    // If not found in any page, add to the first page
+                    if (!activityFound && draft.pages.length > 0) {
+                      draft.pages[0].activities.push(newActivity)
+                    }
                   }
-                }
-              }),
+                },
+              ),
             )
           }
         } catch (error) {
           // invalidate the activity feed for all those entities
           dispatch(
-            api.util.invalidateTags(
+            activitiesQueries.util.invalidateTags(
               entityIds.map((entityId) => ({ type: 'entityActivities', id: entityId })),
             ),
           )
@@ -158,7 +172,7 @@ const WatchActivities: FC<WatchActivitiesProps> = ({}) => {
       }
 
       //   invalidate the tags
-      if (invalidateTags.length > 0) dispatch(api.util.invalidateTags(invalidateTags))
+      if (invalidateTags.length > 0) dispatch(activitiesQueries.util.invalidateTags(invalidateTags))
     },
     null,
     {

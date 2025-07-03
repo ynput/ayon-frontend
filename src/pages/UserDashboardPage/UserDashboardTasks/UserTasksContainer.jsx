@@ -2,24 +2,24 @@ import { useDispatch, useSelector } from 'react-redux'
 import {
   useGetKanbanProjectUsersQuery,
   useGetKanbanQuery,
-} from '@queries/userDashboard/getUserDashboard'
+  useGetAttributeConfigQuery,
+} from '@shared/api'
+import { DetailsPanel, DetailsPanelSlideOut } from '@shared/containers'
+import { filterProjectStatuses } from '@shared/hooks'
+import { getPriorityOptions } from '@shared/util'
+import { useScopedDetailsPanel } from '@shared/context'
+import { EmptyPlaceholder } from '@shared/components'
 
 import UserDashboardKanBan from './UserDashboardKanBan'
 import { useEffect, useMemo } from 'react'
 import { onAssigneesChanged } from '@state/dashboard'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
-import DetailsPanel from '@containers/DetailsPanel/DetailsPanel'
 import { getIntersectionFields, getMergedFields } from '../util'
 import { setUri } from '@state/context'
-import DetailsPanelSlideOut from '@containers/DetailsPanel/DetailsPanelSlideOut/DetailsPanelSlideOut'
-import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
 import transformKanbanTasks from './transformKanbanTasks'
 import styled from 'styled-components'
 import clsx from 'clsx'
-import { toggleDetailsPanel } from '@state/details'
-import { filterProjectStatuses } from '@hooks/useScopedStatuses'
-import { useGetAttributeConfigQuery } from '@queries/attributes/getAttributes'
-import { getPriorityOptions } from '@pages/TasksProgressPage/helpers'
+import { openViewer } from '@state/viewer'
 
 const StyledSplitter = styled(Splitter)`
   .details-panel-splitter {
@@ -52,13 +52,16 @@ export const getThumbnailUrl = ({ entityId, entityType, thumbnailId, updatedAt, 
 const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
   const dispatch = useDispatch()
   const selectedProjects = useSelector((state) => state.dashboard.selectedProjects)
-  const isPanelOpen = useSelector((state) => state.details.open)
+  const { isOpen: isPanelOpen } = useScopedDetailsPanel('dashboard')
+
   const user = useSelector((state) => state.user)
   const assigneesState = useSelector((state) => state.dashboard.tasks.assignees)
   const assigneesFilter = useSelector((state) => state.dashboard.tasks.assigneesFilter)
   const draggingIds = useSelector((state) => state.dashboard.tasks.draggingIds)
   const isDragging = draggingIds.length > 0
   // Only admins and managers can see task of other users
+
+  const handleOpenViewer = (args) => dispatch(openViewer(args))
 
   let assignees = []
   switch (assigneesFilter) {
@@ -87,8 +90,8 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
 
   const taskFields = {
     status: { plural: 'statuses', isEditable: true },
-    taskType: { plural: 'task_types', isEditable: true },
-    folderType: { plural: 'folder_types', isEditable: false },
+    taskType: { plural: 'taskTypes', isEditable: true },
+    folderType: { plural: 'folderTypes', isEditable: false },
   }
 
   //  get kanban tasks for all projects by assigned user (me)
@@ -193,9 +196,11 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
     )
   }, [selectedTasksProjects, projectUsers])
 
+  const { setOpen } = useScopedDetailsPanel('dashboard')
+
   const handlePanelClose = () => {
     dispatch(setUri(null))
-    dispatch(toggleDetailsPanel(false))
+    setOpen(false)
   }
 
   const isLoadingAll = isLoadingInfo || isLoadingTasks
@@ -262,6 +267,7 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
             entityType="task"
             entitySubTypes={taskTypes}
             scope="dashboard"
+            onOpenViewer={handleOpenViewer}
           />
           <DetailsPanelSlideOut projectsInfo={projectsInfo} scope="dashboard" />
         </SplitterPanel>

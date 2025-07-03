@@ -1,4 +1,4 @@
-import { Navigate, Outlet } from 'react-router'
+import { Navigate, Outlet } from 'react-router-dom'
 
 const ProtectedRoute = ({ isAllowed, redirectPath = '/', children }) => {
   if (!isAllowed) {

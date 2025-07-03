@@ -3,15 +3,14 @@ import styled from 'styled-components'
 import { useSelector } from 'react-redux'
 import { useEffect, useMemo, useState } from 'react'
 import { $Any } from '@types'
-import { Button, Toolbar } from '@ynput/ayon-react-components'
-import { Filter } from '@components/SearchFilter/types'
+import { Button, Filter, Toolbar } from '@ynput/ayon-react-components'
 import Shortcuts from '@containers/Shortcuts'
-import { useShortcutsContext } from '@context/shortcutsContext'
-import useCreateContext from '@hooks/useCreateContext'
+import { useShortcutsContext } from '@context/ShortcutsContext'
+import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import useUserProjectPermissions from '@hooks/useUserProjectPermissions'
 import { useGetAccessGroupsQuery } from '@queries/accessGroups/getAccessGroups'
-import { useGetUsersQuery } from '@queries/user/getUsers'
-import { useListProjectsQuery } from '@queries/project/getProject'
+import { useGetUsersQuery } from '@shared/api'
+import { useListProjectsQuery } from '@shared/api'
 
 import ProjectManagerPageLayout from '../ProjectManagerPageLayout'
 import {
@@ -41,7 +40,7 @@ import {
 } from './ProjectUserAccess.styled'
 import SplitterContainerThreePanes from './SplitterThreePanes'
 import SplitterContainerTwoPanes from './SplitterTwoPanes'
-import { ProjectNode, UserNode } from '@api/graphql'
+import { ProjectNode, UserNode } from '@shared/api'
 import LoadingPage from '@pages/LoadingPage'
 import { useQueryParam } from 'use-query-params'
 import { uuid } from 'short-uuid'
@@ -49,7 +48,7 @@ import ProjectUserAccesAccessGroupPanel from './ProjectUserAccessAccessGroupPane
 import {
   EmptyPlaceholderFlex,
   EmptyPlaceholderFlexWrapper,
-} from '@components/EmptyPlaceholder/EmptyPlaceholderFlex.styled'
+} from '@shared/components/EmptyPlaceholder'
 
 const StyledButton = styled(Button)`
   .shortcut {
@@ -143,7 +142,7 @@ const ProjectUserAccess = () => {
     filters.filter((filter: Filter) => filter.label === 'Access Group'),
   )
 
-  const [ctxMenuShow] = useCreateContext([])
+  const [ctxMenuShow] = useCreateContextMenu([])
 
   const handleUserFilterUpdate = (actionedUsers: string[]) => {
     const otherFilters = filters.filter((filter: Filter) => filter.label !== 'User')

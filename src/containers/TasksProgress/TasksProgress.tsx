@@ -11,39 +11,36 @@ import {
   getPlaceholderMessage,
 } from './helpers'
 import { useRootFolders } from './hooks'
-import { useGetAllProjectUsersAsAssigneeQuery } from '@queries/user/getUsers'
-import { FolderType, Status, TaskType } from '@api/rest/project'
+// shared
+import { useGetAllProjectUsersAsAssigneeQuery, useUpdateEntitiesMutation } from '@shared/api'
+import type { FolderType, Status, TaskType, AttributeEnumItem } from '@shared/api'
+import { EmptyPlaceholder, FilterFieldType } from '@shared/components'
+import { type SelectionData, type SliceType, useFiltersWithHierarchy } from '@shared/containers'
 import { TaskFieldChange, TasksProgressTable } from './components'
 // state
 import { setFocusedTasks } from '@state/context'
-import { useDispatch } from 'react-redux'
-import { useUpdateEntitiesMutation } from '@queries/entity/updateEntity'
+import { useAppDispatch } from '@state/store'
 import { toast } from 'react-toastify'
-import { Button, Section, ShortcutTag, Spacer, Toolbar } from '@ynput/ayon-react-components'
+import { Button, Filter, Section, ShortcutTag, Spacer, Toolbar } from '@ynput/ayon-react-components'
 import Shortcuts from '@containers/Shortcuts'
 import { openViewer } from '@state/viewer'
-import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
 import './styles.scss'
-import { AttributeEnumItem } from '@api/rest/attributes'
-import { Filter } from '@components/SearchFilter/types'
 import SearchFilterWrapper from '@components/SearchFilter/SearchFilterWrapper'
 import formatFilterAttributesData from './helpers/formatFilterAttributesData'
 import formatFilterTagsData from './helpers/formatFilterTagsData'
-import { useAppSelector } from '@state/store'
-import { useSetFrontendPreferencesMutation } from '@queries/user/updateUser'
-import { FilterFieldType } from '@hooks/useBuildFilterOptions'
 import formatFilterAssigneesData from './helpers/formatFilterAssigneesData'
 import { selectProgress } from '@state/progress'
-import { SelectionData, SliceType, useSlicerContext } from '@context/slicerContext'
+import { useSlicerContext } from '@context/SlicerContext'
 import useFilterBySlice from './hooks/useFilterBySlice'
 import formatSearchQueryFilters from './helpers/formatSearchQueryFilters'
 import { isEmpty } from 'lodash'
 import { RowSelectionState } from '@tanstack/react-table'
+import useUserFilters from '@hooks/useUserFilters'
 
 // what to search by
 const searchFilterTypes: FilterFieldType[] = [
   'attributes',
-  'entitySubType',
+  'taskType',
   'status',
   'assignees',
   'tags',
@@ -71,30 +68,13 @@ const TasksProgress: FC<TasksProgressProps> = ({
   priorities = [],
   projectName,
 }) => {
-  const dispatch = useDispatch()
+  const dispatch = useAppDispatch()
   const tableRef = useRef<any>(null)
 
   // FILTERS
   //
   //
-  const userName = useAppSelector((state) => state.user.name)
-  const frontendPreferences = useAppSelector((state) => state.user.data.frontendPreferences)
-  const frontendPreferencesFilters: {
-    [page: string]: {
-      [projectName: string]: Filter[]
-    }
-  } = frontendPreferences?.filters
-  const pageFilters = frontendPreferencesFilters?.progress ?? {}
-  const filters = pageFilters[projectName] ?? []
-
-  const [updateUserPreferences] = useSetFrontendPreferencesMutation()
-
-  const setFilters = (value: Filter[]) => {
-    const updatedPageFilters = { ...pageFilters, [projectName]: value }
-    const updatedUserFilters = { ...frontendPreferencesFilters, progress: updatedPageFilters }
-    const updatedFrontendPreferences = { ...frontendPreferences, filters: updatedUserFilters }
-    updateUserPreferences({ userName, patchData: updatedFrontendPreferences })
-  }
+  const { filters, setFilters } = useUserFilters({ page: 'progress', projectName })
 
   // filter out by slice
   const { rowSelection, sliceType, setPersistentRowSelectionData, persistentRowSelectionData } =
@@ -115,29 +95,13 @@ const TasksProgress: FC<TasksProgressProps> = ({
 
   // if the sliceFilter is not hierarchy and hierarchy is not empty
   // add the hierarchy to the filters as disabled
-  const filtersWithHierarchy = useMemo(() => {
-    const buildHierarchyFilterOption = (hierarchy: SelectionData): Filter => ({
-      id: 'hierarchy',
-      label: 'Folder',
-      type: 'list_of_strings',
-      values: Object.values(hierarchy).map((item) => ({
-        id: item.id,
-        label: item.label || item.name || item.id,
-      })),
-      isCustom: true,
-      singleSelect: true,
-      fieldType: 'folder',
-      operator: 'OR',
-      isReadonly: true,
-    })
+  const filtersWithHierarchy = useFiltersWithHierarchy({
+    sliceFilter,
+    persistedHierarchySelection,
+    filters,
+  })
 
-    if (sliceFilter && persistedHierarchySelection) {
-      return [buildHierarchyFilterOption(persistedHierarchySelection), ...filters]
-    }
-    return filters
-  }, [sliceFilter, persistedHierarchySelection, filters])
-
-  // build the graphql query filters
+  // build the graphql query filters based on the search filters and slice selection
   const queryFilters = useMemo(
     () => formatSearchQueryFilters(filters, sliceFilter),
     [filters, sliceFilter],
@@ -242,7 +206,7 @@ const TasksProgress: FC<TasksProgressProps> = ({
     return Array.from(assignees)
   }, [selectedTasksData])
 
-  // FILTERS
+  // FILTERS DATA vvv
   //
   //
   // format attributes data for the search filter (show value suggestions)
@@ -262,7 +226,7 @@ const TasksProgress: FC<TasksProgressProps> = ({
 
   //
   //
-  // FILTERS
+  // FILTERS DATA ^^^
 
   const tableData = useMemo(
     () =>

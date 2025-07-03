@@ -1,7 +1,7 @@
-import { api, ListInstallersApiResponse } from '@api/rest/installers'
-import { coerce, rcompare } from 'semver'
+import { desktopApi, ListInstallersApiResponse } from '@shared/api'
+import { coerce, compareBuild } from 'semver'
 
-const installersApi = api.enhanceEndpoints({
+const enhancedApi = desktopApi.enhanceEndpoints({
   endpoints: {
     listInstallers: {
       transformResponse: (res: ListInstallersApiResponse) => {
@@ -16,7 +16,7 @@ const installersApi = api.enhanceEndpoints({
         const sortedInstallers = installers
           .sort((a, b) => {
             if (a.semver && b.semver) {
-              const semverComparison = rcompare(a.semver, b.semver)
+              const semverComparison = -1 * compareBuild(a.semver, b.semver)
               if (semverComparison === 0) {
                 return b.version.localeCompare(a.version)
               } else {
@@ -43,6 +43,6 @@ const installersApi = api.enhanceEndpoints({
   },
 })
 
-export const { useListInstallersQuery, useLazyListInstallersQuery } = installersApi
+export const { useListInstallersQuery, useLazyListInstallersQuery } = enhancedApi
 
-export default installersApi
+export default enhancedApi

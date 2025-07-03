@@ -1,0 +1,56 @@
+fragment ListItemFragment on BaseNode {
+  ... on TaskNode {
+    name
+    label
+    status
+    tags
+    taskType
+    assignees
+    ownAttrib
+    hasReviewables
+    folder {
+      path
+      folderType
+    }
+  }
+  ... on FolderNode {
+    name
+    label
+    status
+    tags
+    folderType
+    path
+    ownAttrib
+    hasReviewables
+  }
+  ... on ProductNode {
+    name
+    status
+    tags
+    productType
+    folder {
+      path
+      folderType
+    }
+  }
+  ... on VersionNode {
+    name
+    status
+    tags
+    hasReviewables
+    product {
+      id
+      name
+      productType
+      folder {
+        id
+        path
+        folderType
+      }
+    }
+    task {
+      name
+      taskType
+    }
+  }
+}

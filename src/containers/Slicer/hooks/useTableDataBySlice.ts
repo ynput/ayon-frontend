@@ -1,10 +1,12 @@
 import { useAppSelector } from '@state/store'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import useHierarchyTable from './useHierarchyTable'
 import useUsersTable from './useUsersTable'
 import useProjectAnatomySlices from './useProjectAnatomySlices'
-import { SliceType, useSlicerContext } from '@context/slicerContext'
-import { Slice, SliceData, SliceOption, TableData, TableRow } from '../types'
+import { Slice, SliceData, SliceOption, TableData } from '../types'
+import { SimpleTableRow } from '@shared/SimpleTable'
+import { SliceType } from '@shared/containers/Slicer'
+import { useSlicerContext } from '@context/SlicerContext'
 
 interface Props {
   sliceFields: SliceType[]
@@ -33,7 +35,7 @@ const defaultSliceOptions: SliceOption[] = [
   },
 ]
 
-const getNoValue = (field: string): TableRow => ({
+const getNoValue = (field: string): SimpleTableRow => ({
   id: 'noValue',
   name: 'noValue',
   label: `No ${field}`,
@@ -44,7 +46,7 @@ const getNoValue = (field: string): TableRow => ({
   },
 })
 
-const getSomeValue = (field: string): TableRow => ({
+const getSomeValue = (field: string): SimpleTableRow => ({
   id: 'hasValue',
   name: 'hasValue',
   label: `Some ${field}`,
@@ -75,7 +77,7 @@ const useTableDataBySlice = ({ sliceFields }: Props): TableData => {
   } = useProjectAnatomySlices({ projectName, useExtraSlices })
 
   //   Hierarchy
-  const { getData: getHierarchyData, isLoading: isLoadingHierarchy } = useHierarchyTable({
+  const { getData: getHierarchyData, isFetching: isLoadingHierarchy } = useHierarchyTable({
     projectName: projectName || '',
     folderTypes: project?.folderTypes || [],
   })
@@ -136,9 +138,7 @@ const useTableDataBySlice = ({ sliceFields }: Props): TableData => {
     if (isLoadingData) return
 
     // check if slice field is enabled
-    if (!sliceFields.includes(sliceType)) {
-      return
-    }
+    if (!sliceFields.includes(sliceType)) return
 
     const fetchData = async () => {
       try {
@@ -161,12 +161,33 @@ const useTableDataBySlice = ({ sliceFields }: Props): TableData => {
         setIsLoading(false)
       }
     }
+
     fetchData()
-  }, [sliceType, sliceFields, projectName, isLoadingData])
+  }, [sliceType, getHierarchyData, sliceFields, projectName, isLoadingData])
+
+  // from slice data, flatten into a map of ids to rows
+  const sliceMap = useMemo(() => {
+    const map = new Map<string, SimpleTableRow>()
+    const queue: SimpleTableRow[] = [...slice.data]
+
+    while (queue.length > 0) {
+      const row = queue.shift()
+      if (row) {
+        map.set(row.id, row)
+        if (row.subRows && row.subRows.length > 0) {
+          for (const subRow of row.subRows) {
+            queue.push(subRow)
+          }
+        }
+      }
+    }
+    return map
+  }, [slice.data])
 
   return {
     sliceOptions,
     table: slice,
+    sliceMap,
     isLoading: builtInSlices[sliceType].isLoading || isLoading || isLoadingData,
     sliceType,
     handleSliceTypeChange,

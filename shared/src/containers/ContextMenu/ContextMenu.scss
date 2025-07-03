@@ -1,0 +1,102 @@
+.p-contextmenu.p-component,
+.p-contextmenu.p-component .p-submenu-list {
+  min-width: 12.5rem;
+  width: unset;
+  padding: 0;
+  z-index: 4000 !important;
+  background-color: var(--md-sys-color-surface-container-lowest);
+  border-color: var(--md-sys-color-outline-variant);
+
+  .p-submenu-list {
+    padding: 0;
+  }
+
+  .p-menuitem.p-menuitem-active > .p-menuitem-link {
+    &.p-menuitem-icon,
+    &.p-menuitem-text {
+      color: inherit;
+    }
+  }
+
+  .p-menuitem-link:not(.p-disabled):hover {
+    .p-menuitem-icon,
+    .p-menuitem-text {
+      color: inherit;
+    }
+  }
+
+  // remove some hover
+  .p-menuitem-link:not(.p-disabled):hover {
+    background: inherit;
+  }
+
+  .p-menuitem {
+    // when hovering
+    &.p-menuitem-active > .p-menuitem-link {
+      background-color: var(--md-sys-color-surface-container-lowest-hover);
+
+      &.p-disabled:not(.danger) {
+        background-color: var(--md-sys-color-surface-container-lowest);
+      }
+
+      &.save {
+        background-color: var(--md-sys-color-primary-hover);
+        span {
+          color: var(--md-sys-color-on-primary);
+        }
+      }
+    }
+
+    & > .p-menuitem-link {
+      padding-right: 10px;
+
+      &,
+      .icon {
+        color: var(--md-sys-color-on-surface);
+      }
+
+      &.p-disabled {
+        opacity: 0.4;
+        color: var(--md-sys-color-on-surface-variant);
+      }
+
+      &.danger {
+        background-color: var(--md-sys-color-error-container);
+        span {
+          color: var(--md-sys-color-on-error-container);
+        }
+
+        &:hover {
+          background-color: var(--md-sys-color-error-container-hover);
+        }
+        &:active {
+          background-color: var(--md-sys-color-error-container-active);
+        }
+      }
+
+      &.developer {
+        background-color: var(--color-hl-developer-container);
+        span {
+          color: var(--color-hl-developer);
+        }
+
+        &:hover {
+          background-color: var(--color-hl-developer-container-hover);
+        }
+      }
+
+      &.save {
+        background-color: var(--md-sys-color-primary);
+        &,
+        span {
+          color: var(--md-sys-color-on-primary);
+        }
+      }
+    }
+  }
+
+  .p-menuitem-shortcut {
+    margin-left: auto;
+    padding-left: 32px;
+  }
+}

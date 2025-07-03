@@ -2,8 +2,8 @@
 //  this is used when the slice type is not hierarchy
 // and we need to get all the tasks for the project
 
-import { SliceType } from '@context/slicerContext'
-import { useGetFolderListQuery } from '@queries/getHierarchy'
+import { SliceType } from '@shared/containers/Slicer'
+import { useGetFolderListQuery } from '@shared/api'
 import { useMemo } from 'react'
 
 type Props = {
@@ -13,7 +13,7 @@ type Props = {
 
 export const useRootFolders = ({ sliceType, projectName }: Props): string[] => {
   const { data: { folders = [] } = {} } = useGetFolderListQuery(
-    { projectName: projectName || '' },
+    { projectName: projectName || '', attrib: true },
     { skip: !projectName || sliceType === 'hierarchy' },
   )
 

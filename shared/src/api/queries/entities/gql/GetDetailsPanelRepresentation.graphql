@@ -1,0 +1,28 @@
+query GetDetailsPanelRepresentation($projectName: String!, $entityId: String!) {
+  project(name: $projectName) {
+    representation(id: $entityId) {
+      id
+      versionId
+      name
+      status
+      tags
+      updatedAt
+      createdAt
+      allAttrib
+      context
+      version {
+        ...DetailsPanelVersionFragment
+        task {
+          ...DetailsPanelTaskFragment
+        }
+        product {
+          ...DetailsPanelProductFragment
+          folder {
+            # @ts-ignore - DetailsPanelFolderFragment does exist
+            ...DetailsPanelFolderFragment
+          }
+        }
+      }
+    }
+  }
+}

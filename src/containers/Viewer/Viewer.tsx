@@ -2,23 +2,22 @@ import { compareDesc } from 'date-fns'
 import { useEffect, useMemo } from 'react'
 import { useAppDispatch, useAppSelector } from '@state/store'
 import { useFullScreenHandle } from 'react-full-screen'
-
 import { Button } from '@ynput/ayon-react-components'
-
 import VersionSelectorTool from '@components/VersionSelectorTool/VersionSelectorTool'
 import ReviewVersionDropdown from '@/components/ReviewVersionDropdown'
 import ReviewablesSelector from '@components/ReviewablesSelector'
-import { useGetViewerReviewablesQuery } from '@queries/review/getReview'
-import { GetReviewablesResponse } from '@queries/review/types'
-import { updateDetailsPanelTab } from '@state/details'
-import { productTypes } from '@state/project'
 import { toggleFullscreen, toggleUpload, updateSelection, updateProduct } from '@state/viewer'
-
-import { getGroupedReviewables } from '../ReviewablesList/getGroupedReviewables'
 import ViewerComponent from './ViewerComponent'
 import ViewerDetailsPanel from './ViewerDetailsPanel'
 import * as Styled from './Viewer.styled'
-import { ViewerProvider } from '@context/viewerContext'
+import { ViewerProvider } from '@context/ViewerContext'
+
+// shared
+import { useGetViewerReviewablesQuery } from '@shared/api'
+import type { GetReviewablesResponse } from '@shared/api'
+import { productTypes } from '@shared/util'
+import { getGroupedReviewables } from '@shared/components'
+import { useDetailsPanelContext } from '@shared/context'
 
 interface ViewerProps {
   onClose?: () => void
@@ -217,11 +216,13 @@ const Viewer = ({ onClose }: ViewerProps) => {
     dispatch(updateSelection({ reviewableIds: [reviewableId] }))
   }
 
+  const { setTab } = useDetailsPanelContext()
+
   const handleUploadAction =
     (toggleNativeFileUpload = false) =>
     () => {
       // switch to files tab
-      dispatch(updateDetailsPanelTab({ scope: 'review', tab: 'files', statePath: 'pinned' }))
+      setTab('review', 'files')
       // open the file dialog
       if (toggleNativeFileUpload) {
         dispatch(toggleUpload(true))

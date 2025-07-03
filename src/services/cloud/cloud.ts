@@ -1,6 +1,6 @@
-import { api } from '@api/rest/cloud'
+import { ynputCloudApi } from '@shared/api'
 
-const cloudApi = api.enhanceEndpoints({
+const enhancedApi = ynputCloudApi.enhanceEndpoints({
   endpoints: {
     getYnputCloudInfo: {
       providesTags: ['connections'],
@@ -11,6 +11,9 @@ const cloudApi = api.enhanceEndpoints({
     deleteYnputCloudKey: {
       invalidatesTags: ['connections'],
     },
+    getFeedbackVerification: {
+      providesTags: [{ type: 'feedback', id: 'LIST' }],
+    },
   },
 })
 
@@ -18,4 +21,5 @@ export const {
   useGetYnputCloudInfoQuery,
   useSetYnputCloudKeyMutation,
   useDeleteYnputCloudKeyMutation,
-} = cloudApi
+  useGetFeedbackVerificationQuery,
+} = enhancedApi

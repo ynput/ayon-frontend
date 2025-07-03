@@ -9,7 +9,7 @@ import {
 } from '@queries/ynputConnect'
 import LoadingPage from '@pages/LoadingPage'
 import * as Styled from './YnputCloud.styled'
-import { useLocation } from 'react-router'
+import { useLocation } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 import clsx from 'clsx'
 import { isBefore } from 'date-fns'
@@ -74,7 +74,7 @@ const YnputConnector = ({
 
   useEffect(() => {
     if (!isLoading && onConnection) {
-      if (!isError && connectData && onConnection) {
+      if (!isError && connectData?.connected && onConnection) {
         onConnection(true, hasActiveSub(connectData.subscriptions))
       } else {
         onConnection(false, false)
@@ -95,7 +95,7 @@ const YnputConnector = ({
       </Section>
     )
 
-  const isConnected = (connectData && !isError) || user
+  const isConnected = (connectData?.connected && !isError) || user
 
   if (isConnected && hideSignOut) return null
 

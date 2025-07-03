@@ -7,10 +7,9 @@ import {
   Spacer,
 } from '@ynput/ayon-react-components'
 import * as Styled from './FolderSequence.styled'
-import TypeEditor from '@pages/EditorPage/TypeEditor'
-import { useSelector } from 'react-redux'
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import getSequence from '@helpers/getSequence'
+import TypeEditor from '@components/NewEntity/TypeEditor'
 
 function formatSeq(arr, maxLength, prefix = '') {
   if (arr.length <= maxLength) {
@@ -50,20 +49,16 @@ const FolderSequence = ({
   index,
   nesting = true,
   isRoot,
-  prefixExample = '',
+  parentLabel,
   prefixDisabled,
   typeSelectRef,
   onLastInputKeydown,
+  folders,
   ...props
 }) => {
   const { base, increment, length, type, id, entityType, prefix, prefixDepth, parentBases } = props
 
   const disablePrefix = (!nesting && isRoot) || prefixDisabled
-
-  const folders = useSelector((state) => state.project.folders) || []
-  const tasks = useSelector((state) => state.project.tasks) || []
-
-  const typeOptions = entityType === 'folder' ? folders : tasks
 
   let initSeq = []
   if (base && increment && length) {
@@ -94,21 +89,25 @@ const FolderSequence = ({
       // update name if newState.name matches any values in typeOptions
       let matches = false
       // loop through typeOptions and check if any match, when match is found we can stop looping
-      for (const o in typeOptions) {
+      // Search through the folders array (not object)
+      const typeOption = folders.find((folder) => folder.name === value)
+
+      for (const option of folders) {
         if (newState.base === '') {
           matches = true
           break
         }
-        const option = typeOptions[o]
+
         for (const key in option) {
-          if (newState.base.toLowerCase().includes(option[key].toLowerCase())) {
+          if (
+            typeof option[key] === 'string' &&
+            newState.base.toLowerCase().includes(option[key].toLowerCase())
+          ) {
             matches = true
             break
           }
         }
       }
-
-      const typeOption = typeOptions[value]
 
       if (!matches || !typeOption) return
       // if name is same as type, update name
@@ -177,7 +176,7 @@ const FolderSequence = ({
     [],
   )
 
-  const sequenceString = formatSeq(sequence, 5, prefixExample)
+  const sequenceString = formatSeq(sequence, 5, prefix ? parentLabel : undefined)
 
   const seqRef = useRef(null)
   const [seqWidth, setSeqWidth] = useState(0)
@@ -204,7 +203,7 @@ const FolderSequence = ({
           <TypeEditor
             value={[type]}
             onChange={(v) => handleChange({ target: { value: v, id: 'type' } })}
-            options={tasks}
+            options={folders}
             style={{ width: 160 }}
             align="right"
           />
@@ -302,7 +301,7 @@ const FolderSequence = ({
                       value={prefixDepth}
                       id={'prefixDepth'}
                       onChange={handleChange}
-                      max={parentBases.length}
+                      max={parentBases?.length}
                       min={0}
                     />
                   </Styled.InputColumn>

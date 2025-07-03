@@ -1,11 +1,11 @@
-import ReviewableUpload from '@containers/ReviewablesList/ReviewablesUpload'
-import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
+import { ReviewableUpload, EmptyPlaceholder } from '@shared/components'
+import type { ReviewableResponse } from '@shared/api'
 
 import ViewerPlayer from './ViewerPlayer'
 import * as Styled from './Viewer.styled'
 import { useState } from 'react'
-import { ReviewableResponse } from '@queries/review/types'
 import ViewerImage from './ViewerImage'
+import { useDetailsPanelContext } from '@shared/context'
 
 interface ViewerProps {
   projectName: string | null
@@ -33,6 +33,8 @@ const ViewerComponent = ({
   quickView,
   onUpload,
 }: ViewerProps) => {
+  const { viewer, dispatch } = useDetailsPanelContext()
+
   const [autoPlay, setAutoPlay] = useState(quickView)
 
   const availability = selectedReviewable?.availability
@@ -98,10 +100,13 @@ const ViewerComponent = ({
     return (
       <ReviewableUpload
         projectName={projectName}
+        folderId={viewer?.folderId}
+        taskId={viewer?.taskId}
         versionId={versionIds[0]}
         productId={productId}
         variant="large"
         onUpload={onUpload(false)}
+        dispatch={dispatch}
       >
         <EmptyPlaceholder icon="hide_image" message={message} style={placeholderStyles} />
       </ReviewableUpload>

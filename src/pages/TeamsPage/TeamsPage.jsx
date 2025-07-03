@@ -13,7 +13,7 @@ import {
 } from '@ynput/ayon-react-components'
 import ProjectManagerPageLayout from '../ProjectManagerPage/ProjectManagerPageLayout'
 import UserListTeams from './UserListTeams'
-import { useGetUsersQuery } from '@queries/user/getUsers'
+import { useGetUsersQuery } from '@shared/api'
 import TeamUsersDetails from './TeamUsersDetails'
 import TeamDetails from './TeamDetails'
 import { useDeleteTeamMutation, useUpdateTeamsMutation } from '@queries/team/updateTeams'
@@ -22,7 +22,7 @@ import CreateNewTeam from './CreateNewTeam/CreateNewTeam'
 import styled from 'styled-components'
 import useSearchFilter from '@hooks/useSearchFilter'
 import { useSearchParams } from 'react-router-dom'
-import confirmDelete from '@helpers/confirmDelete'
+import { confirmDelete } from '@shared/util'
 
 const SectionStyled = styled(Section)`
   align-items: start;
@@ -337,7 +337,7 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
   // HANDLE RENAME TEAM
   const handleRenameTeam = async (oldName, newName) => {
     // check it's not the oldName
-    if (oldName === newName) return
+    if (oldName === newName || !newName) return
 
     // check if name is already taken
     if (teams.some((team) => team.name.toLowerCase() === newName.toLowerCase())) {

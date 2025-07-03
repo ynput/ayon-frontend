@@ -12,12 +12,12 @@ import {
 import MarketAddonsList from './MarketAddonsList'
 import 'react-perfect-scrollbar/dist/css/styles.css'
 import AddonDetails from './MarketDetails/AddonDetails'
-import { useListAddonsQuery } from '@queries/addons/getAddons'
+import { useListAddonsQuery } from '@shared/api'
 import { mergeAddonWithDownloaded } from './mergeAddonsData'
 import { throttle } from 'lodash'
 import useDownload from './MarketDetails/useDownload'
 import ConnectDialog from './ConnectDialog/ConnectDialog'
-import { useRestart } from '@context/restartContext'
+import { useRestart } from '@context/RestartContext'
 import { toast } from 'react-toastify'
 import { useGetReleasesQuery } from '@queries/releases/getReleases'
 import { filterItems, transformReleasesToTable } from './helpers'
@@ -149,7 +149,7 @@ const MarketPage = () => {
   const { data: selectedAddonData = {}, isFetching: isFetchingAddon } = useMarketAddonDetailQuery(
     { addonName: selectedItemId },
     {
-      skip: !selectedItemId || filterType !== 'addons' || !connectData,
+      skip: !selectedItemId || filterType !== 'addons' || !connectData?.connected,
     },
   )
 

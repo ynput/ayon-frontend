@@ -68,7 +68,16 @@ const UserAccessForm = ({ accessGroupsData, formData, onChange, disabled }) => {
   return (
     <>
       <b>Access</b>
+
       <FormLayout>
+
+        <FormRowStyled label="Disable password">
+          <InputSwitch
+            checked={!!formData?.disablePasswordLogin}
+            onChange={(e) => updateFormData('disablePasswordLogin', !!e.target.checked)}
+          />
+        </FormRowStyled>
+
         <FormRowStyled label="Guest">
           <div
             data-tooltip={isAdmin ? 'Admins cannot be guests' : undefined}

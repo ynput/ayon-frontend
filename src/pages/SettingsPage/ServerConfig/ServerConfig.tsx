@@ -9,7 +9,7 @@ import {
   useGetServerConfigSchemaQuery,
 } from '@queries/config/getConfig'
 import { useSetServerConfigMutation } from '@queries/config/updateConfig'
-import { ServerConfigModel } from '@api/rest/config'
+import { ServerConfigModel } from '@shared/api'
 import styled from 'styled-components'
 import { toast } from 'react-toastify'
 import usePortalElements from '@hooks/usePortalElements'

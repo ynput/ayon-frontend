@@ -3,9 +3,9 @@ import { useEffect, useMemo, useState } from 'react'
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 import { Section, TablePanel, Button } from '@ynput/ayon-react-components'
-import useCreateContext from '@hooks/useCreateContext'
-import { Badge, BadgeWrapper } from '@components/Badge'
-import { useURIContext } from '@context/uriContext'
+import { useCreateContextMenu } from '@shared/containers/ContextMenu'
+import { Badge, BadgeWrapper } from '@shared/components'
+import { useURIContext } from '@context/UriContext'
 
 const SettingsChangesTable = ({ changes, unpins, onRevert }) => {
   const [expandedKeys, setExpandedKeys] = useState({})
@@ -122,7 +122,7 @@ const SettingsChangesTable = ({ changes, unpins, onRevert }) => {
     return result
   }, [selectedKeys])
 
-  const [ctxMenuShow] = useCreateContext(ctxMenuItems)
+  const [ctxMenuShow] = useCreateContextMenu(ctxMenuItems)
 
   const actionRenderer = (rowData) => {
     if (!rowData.data.isKey) return null

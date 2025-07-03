@@ -1,8 +1,7 @@
-import useBuildFilterOptions, { BuildFilterOptions } from '@hooks/useBuildFilterOptions'
+import { BuildFilterOptions, useBuildFilterOptions } from '@shared/components'
 import { FC, useEffect, useState } from 'react'
-import SearchFilter, { SearchFilterProps } from './SearchFilter'
-import { Filter } from './types'
 import { ALLOW_GLOBAL_SEARCH, ALLOW_MULTIPLE_SAME_FILTERS } from './featureFlags'
+import { SearchFilter, SearchFilterProps, Filter } from '@ynput/ayon-react-components'
 
 interface SearchFilterWrapperProps extends BuildFilterOptions {
   filters: SearchFilterProps['filters']
@@ -40,8 +39,8 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
       filters={filters}
       onChange={setFilters}
       onFinish={(v) => onChange(v)} // when changes are applied
-      allowMultipleSameFilters={ALLOW_MULTIPLE_SAME_FILTERS}
-      allowGlobalSearch={ALLOW_GLOBAL_SEARCH}
+      enableMultipleSameFilters={ALLOW_MULTIPLE_SAME_FILTERS}
+      enableGlobalSearch={ALLOW_GLOBAL_SEARCH}
       disabledFilters={disabledFilters}
     />
   )

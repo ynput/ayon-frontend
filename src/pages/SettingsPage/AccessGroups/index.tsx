@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import AccessGroupList from './AccessGroupList'
 import AccessGroupDetail from './AccessGroupDetail'
-import { AccessGroupObject } from '@api/rest/accessGroups'
+import { AccessGroupObject } from '@shared/api'
 import {
   EmptyPlaceholderFlex,
   EmptyPlaceholderFlexWrapper,
-} from '@components/EmptyPlaceholder/EmptyPlaceholderFlex.styled'
+} from '@shared/components/EmptyPlaceholder'
 
 type Props = {
   projectName?: string
@@ -16,7 +16,7 @@ const AccessGroups = ({ projectName, canCreateOrDelete }: Props) => {
   const [selectedAccessGroup, setSelectedAccessGroup] = useState<AccessGroupObject | null>(null)
 
   return (
-    <main style={{ display: 'flex', flexGrow: 1, gap: 'var(--base-gap-large)'}}>
+    <main style={{ display: 'flex', flexGrow: 1, gap: 'var(--base-gap-large)' }}>
       <AccessGroupList
         canCreateOrDelete={canCreateOrDelete}
         projectName={projectName}

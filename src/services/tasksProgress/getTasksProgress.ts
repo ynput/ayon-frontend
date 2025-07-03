@@ -1,9 +1,7 @@
 // What data do we need?
-
-import PubSub from '@/pubsub'
-import { $Any } from '@types'
-import api from '@api'
-import { GetProgressTaskQuery, GetTasksProgressQuery } from '@api/graphql'
+import { PubSub } from '@shared/util'
+import { gqlApi } from '@shared/api'
+import { GetProgressTaskQuery, GetTasksProgressQuery } from '@shared/api'
 
 export type ProgressTask = GetTasksProgressQuery['project']['tasks']['edges'][0]['node']
 
@@ -14,7 +12,7 @@ export interface FolderGroup extends ProgressTaskFolder {
 }
 
 export type GetTasksProgressResult = FolderGroup[]
-export type GetProgressTaskResult = ProgressTask
+export type GetProgressTaskResult = ProgressTask | null | undefined
 
 type GroupedTasksType = {
   [key: string]: FolderGroup
@@ -51,19 +49,19 @@ const provideTagsTasksProgress = (result: GetTasksProgressResult | undefined) =>
   // progress tags
   const progressTags = [...folderTags, ...taskTags].map((tag) => ({ id: tag.id, type: 'progress' }))
 
-  return [...folderTags, ...taskTags, ...progressTags]
+  return [...folderTags, ...taskTags, ...progressTags, { type: 'progress', id: 'LIST' }]
 }
 
 import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
-type Definitions = DefinitionsFromApi<typeof api>
-type TagTypes = TagTypesFromApi<typeof api>
+type Definitions = DefinitionsFromApi<typeof gqlApi>
+type TagTypes = TagTypesFromApi<typeof gqlApi>
 // update the definitions to include the new types
 type UpdatedDefinitions = Omit<Definitions, 'GetTasksProgress' | 'GetProgressTask'> & {
   GetTasksProgress: OverrideResultType<Definitions['GetTasksProgress'], GetTasksProgressResult>
   GetProgressTask: OverrideResultType<Definitions['GetProgressTask'], GetProgressTaskResult>
 }
 
-const enhancedEndpoints = api.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
+const enhancedEndpoints = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
   endpoints: {
     GetTasksProgress: {
       transformResponse: transformTasksProgress,
@@ -77,7 +75,7 @@ const enhancedEndpoints = api.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
           // wait for the initial query to resolve before proceeding
           await cacheDataLoaded
 
-          const handlePubSub = async (topic: string, message: $Any) => {
+          const handlePubSub = async (topic: string, message: any) => {
             console.log('PubSub message received', message)
             const matchingProject = message.project === projectName
 
@@ -122,7 +120,7 @@ const enhancedEndpoints = api.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
 
               // get the new data for the entity
               const res = await dispatch(
-                api.endpoints.GetProgressTask.initiate(
+                gqlApi.endpoints.GetProgressTask.initiate(
                   {
                     projectName: projectName,
                     taskId: messageTaskId,
@@ -138,6 +136,10 @@ const enhancedEndpoints = api.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
               }
 
               const updatedTask = res.data as unknown as GetProgressTaskResult
+              if (!updatedTask) {
+                console.error('No task found')
+                return
+              }
 
               updateCachedData((draft) => {
                 if (!draft) return

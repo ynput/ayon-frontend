@@ -1,4 +1,4 @@
-import api from '@api'
+import api from '@shared/api'
 
 const WORKFILES_QUERY = `
 query WorkfilesByTask($projectName: String!, $taskIds: [String!]!) {

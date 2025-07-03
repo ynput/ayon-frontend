@@ -1,4 +1,4 @@
-import { BuildFilterOptions } from '@hooks/useBuildFilterOptions'
+import { BuildFilterOptions } from '@shared/components'
 import { GetTasksProgressResult } from '@queries/tasksProgress/getTasksProgress'
 
 const formatFilterAttributesData = (

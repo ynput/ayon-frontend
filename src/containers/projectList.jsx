@@ -4,19 +4,20 @@ import { TablePanel, Section, Button, Icon } from '@ynput/ayon-react-components'
 
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
-import { useListProjectsQuery } from '@queries/project/getProject'
+import { useListProjectsQuery } from '@shared/api'
 import { useEffect } from 'react'
-import useCreateContext from '@hooks/useCreateContext'
-import useLocalStorage from '@hooks/useLocalStorage'
+import { useCreateContextMenu } from '@shared/containers/ContextMenu'
+import { useLocalStorage } from '@shared/hooks'
 import CollapseButton from '@components/CollapseButton'
 import styled, { css } from 'styled-components'
 import clsx from 'clsx'
 import { toast } from 'react-toastify'
-import { useSetFrontendPreferencesMutation } from '@/services/user/updateUser'
+import { useSetFrontendPreferencesMutation } from '@shared/api'
 import useTableLoadingData from '@hooks/useTableLoadingData'
 import { useProjectSelectDispatcher } from './ProjectMenu/hooks/useProjectSelectDispatcher'
 import useAyonNavigate from '@hooks/useAyonNavigate'
 import useUserProjectPermissions from '@hooks/useUserProjectPermissions'
+import { updateUserPreferences as updateUserPreferencesAction } from '@state/user'
 
 const formatName = (rowData, defaultTitle, field = 'name') => {
   if (rowData[field] === '_') return defaultTitle
@@ -227,7 +228,8 @@ const ProjectList = ({
 
   const [updateUserPreferences] = useSetFrontendPreferencesMutation()
 
-  const { isLoading: userPermissionsLoading, permissions: userPermissions } = useUserProjectPermissions(user?.data?.isUser || true)
+  const { isLoading: userPermissionsLoading, permissions: userPermissions } =
+    useUserProjectPermissions(user?.data?.isUser || true)
 
   const handlePinProjects = async (sel, isPinning) => {
     try {
@@ -245,6 +247,9 @@ const ProjectList = ({
           newPinnedProjects.splice(index, 1)
         }
       }
+
+      // update in local redux state
+      dispatch(updateUserPreferencesAction({ pinnedProjects: newPinnedProjects }))
 
       // update user preferences
       await updateUserPreferences({
@@ -279,7 +284,7 @@ const ProjectList = ({
     const projectName = sel[0]
     handleProjectSelectionDispatches(projectName)
 
-    const link = `/projects/${projectName}/browser`
+    const link = `/projects/${projectName}/overview`
     setTimeout(() => dispatch((_, getState) => navigate(getState)(link)), 0)
   }
 
@@ -362,7 +367,7 @@ const ProjectList = ({
   }
 
   // create the ref and model
-  const [tableContextMenuShow, closeContextMenu] = useCreateContext([])
+  const [tableContextMenuShow, closeContextMenu] = useCreateContextMenu([])
 
   // When right clicking on the already selected node, we don't want to change the selection
   const onContextMenu = (event) => {
@@ -412,7 +417,8 @@ const ProjectList = ({
           disabled={onSelectAllDisabled}
         />
       )}
-      {!hideAddProjectButton && (isProjectManager || (!userPermissionsLoading && userPermissions.canCreateProject())) ? (
+      {!hideAddProjectButton &&
+      (isProjectManager || (!userPermissionsLoading && userPermissions.canCreateProject())) ? (
         <StyledAddButton onClick={onNewProject} $isOpen={!collapsed}>
           {/* <div className="spacer" /> */}
           <div className="content">

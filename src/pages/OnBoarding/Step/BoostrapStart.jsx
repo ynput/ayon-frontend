@@ -24,8 +24,8 @@ export const BootstrapStart = ({
           addons, desktop distribution and dependencies manually, you can skip this step.
         </Body>
         <Styled.Connect>
-          <Body>Fast and Automated setup with</Body>
-          {ynputConnect ? (
+          <Body>Fast, automated and 100% free setup with</Body>
+          {ynputConnect?.connected ? (
             <YnputConnect.HeaderButton
               active
               onClick={() => nextStep(undefined, 1)}

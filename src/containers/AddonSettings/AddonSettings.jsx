@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react'
 import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 
-import useCreateContext from '@hooks/useCreateContext'
+import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 
 import {
   Button,
@@ -36,11 +36,11 @@ import { confirmDialog } from 'primereact/confirmdialog'
 import { getValueByPath, setValueByPath, sameKeysStructure, compareObjects } from './utils'
 import arrayEquals from '@helpers/arrayEquals'
 import { cloneDeep } from 'lodash'
-import { usePaste } from '@context/pasteContext'
+import { usePaste } from '@context/PasteContext'
 import styled from 'styled-components'
 
 import SettingsListHeader from './SettingsListHeader'
-import EmptyPlaceholder from '@components/EmptyPlaceholder/EmptyPlaceholder'
+import EmptyPlaceholder from '@shared/components/EmptyPlaceholder'
 import { attachLabels } from './searchTools'
 import useUserProjectPermissions from '@hooks/useUserProjectPermissions'
 import LoadingPage from '@pages/LoadingPage'
@@ -553,7 +553,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
 
   // Addon list context menu
 
-  const [addonListContextMenu] = useCreateContext([])
+  const [addonListContextMenu] = useCreateContextMenu([])
   const showAddonListContextMenu = (e) => {
     setTimeout(() => {
       const menuItems = [
