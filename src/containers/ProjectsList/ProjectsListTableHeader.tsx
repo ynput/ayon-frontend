@@ -137,7 +137,7 @@ const ProjectsListTableHeader: FC<ProjectsListTableHeaderProps> = ({
           {/* @ts-expect-error - non TS file */}
           <MenuContainer targetId={MENU_ID} id={MENU_ID} align="left">
             {/* @ts-expect-error - non TS file */}
-            <Menu menu={menuItems} onClose={() => toggleMenu?.(true)} />
+            <Menu menu={menuItems} onClose={() => toggleMenu?.(false)} />
           </MenuContainer>
 
           {/* header button */}
