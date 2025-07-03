@@ -49,8 +49,7 @@ import { ViewerDialog } from '@containers/Viewer'
 import { login } from '@state/user'
 
 // queries
-import { useLazyGetSiteInfoQuery } from '@shared/api'
-import { useGetYnputCloudInfoQuery } from '@queries/cloud/cloud'
+import { useLazyGetSiteInfoQuery, useGetYnputCloudInfoQuery } from '@shared/api'
 
 // hooks
 import useTooltip from '@hooks/Tooltip/useTooltip'

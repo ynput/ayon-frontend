@@ -4,6 +4,8 @@ import { Icon } from '@ynput/ayon-react-components'
 import { PricingLink } from './PricingLink'
 import { powerpackFeatures, usePowerpack } from '@shared/context'
 import type { PowerpackDialogType } from '@shared/context/PowerpackContext'
+import { useFeedback } from '@shared/components'
+import { CTAButton } from './CTAButton'
 
 export interface PowerpackDialogProps {
   label?: string
@@ -23,8 +25,16 @@ export const PowerpackDialog: FC<PowerpackDialogProps> = ({
   addon,
 }) => {
   const { setPowerpackDialog, selectedPowerPack, powerpackDialog } = usePowerpack()
+  const { openSupport, messengerLoaded } = useFeedback()
 
   if (!powerpackDialog && (!label || !description)) return null
+
+  // Dynamic support message
+  const featureLabel =
+    label ?? powerpackDialog?.label ?? (addon ? 'this addon' : 'this feature')
+  const SUPPORT_MESSAGE = addon
+    ? `I would like to know how I can try out the "${featureLabel}" addon?`
+    : `I would like to know how I can try out the "${featureLabel}" power feature?`
 
   return (
     <Styled.PowerpackDialog
@@ -65,9 +75,13 @@ export const PowerpackDialog: FC<PowerpackDialogProps> = ({
             ))}
         </ul>
       </Styled.FeaturesList>
-      <PricingLink>
-        <Styled.MoreButton>Try for free!</Styled.MoreButton>
-      </PricingLink>
+      {messengerLoaded ? (
+        <CTAButton onClick={() => openSupport('NewMessage', SUPPORT_MESSAGE)} />
+      ) : (
+        <PricingLink>
+          <CTAButton />
+        </PricingLink>
+      )}
     </Styled.PowerpackDialog>
   )
 }
