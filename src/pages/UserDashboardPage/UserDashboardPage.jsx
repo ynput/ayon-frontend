@@ -15,7 +15,7 @@ import { useDeleteProjectMutation, useUpdateProjectMutation } from '@shared/api'
 import { confirmDelete } from '@shared/util'
 import { useGetDashboardAddonsQuery } from '@shared/api'
 import DashboardAddon from '@pages/ProjectDashboard/DashboardAddon'
-import ProjectsLists, { PROJECTS_LIST_WIDTH_KEY } from '@containers/ProjectsList/ProjectsList'
+import ProjectsList, { PROJECTS_LIST_WIDTH_KEY } from '@containers/ProjectsList/ProjectsList'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import styled from 'styled-components'
 
@@ -159,10 +159,10 @@ const UserDashboardPage = () => {
       <AppNavLinks links={links} />
       <main style={{ overflow: 'hidden' }}>
         <Section direction="row" wrap style={{ position: 'relative', overflow: 'hidden' }}>
-          <StyledSplitter stateKey={PROJECTS_LIST_WIDTH_KEY} stateStorage="local">
-            {showProjectList && (
+          {showProjectList ? (
+            <StyledSplitter stateKey={PROJECTS_LIST_WIDTH_KEY} stateStorage="local">
               <SplitterPanel size={15}>
-                <ProjectsLists
+                <ProjectsList
                   showInactive={module === 'overview'}
                   multiSelect={isProjectsMultiSelect}
                   selection={selectedProjects}
@@ -172,11 +172,13 @@ const UserDashboardPage = () => {
                   onActivateProject={handleActivateProject}
                 />
               </SplitterPanel>
-            )}
-            <SplitterPanel size={100} style={{ overflow: 'hidden' }}>
-              {moduleComponent}
-            </SplitterPanel>
-          </StyledSplitter>
+              <SplitterPanel size={100} style={{ overflow: 'hidden' }}>
+                {moduleComponent}
+              </SplitterPanel>
+            </StyledSplitter>
+          ) : (
+            moduleComponent
+          )}
         </Section>
       </main>
       {showNewProject && (

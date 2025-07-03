@@ -142,6 +142,12 @@ const ProjectsList: FC<ProjectsListProps> = ({
     setTimeout(() => dispatch((_, getState) => navigate(getState)(link)), 0)
   }
 
+  const onOpenProjectManage = (project: string) => {
+    const link = `/manageProjects/anatomy?project=${project}`
+    // I don't like the setTimeout, but it is legacy code and I do not want to break existing stuffs
+    setTimeout(() => dispatch((_, getState) => navigate(getState)(link)), 0)
+  }
+
   // Generate menu items used in both header and context menu
   const buildMenuItems = useProjectsListMenuItems({
     hidden: {
@@ -159,6 +165,7 @@ const ProjectsList: FC<ProjectsListProps> = ({
     onArchive: onActivateProject,
     onDelete: onDeleteProject,
     onOpen: onOpenProject,
+    onManage: onOpenProjectManage,
   })
 
   // attach context menu

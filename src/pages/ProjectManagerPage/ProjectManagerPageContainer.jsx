@@ -30,6 +30,7 @@ const ProjectManagerPageContainer = ({
               onActivateProject={onActivateProject}
               onNewProject={onNewProject}
               onSelect={onSelect}
+              multiSelect={false}
             />
           </>
         ),

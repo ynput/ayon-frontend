@@ -21,7 +21,7 @@ interface MenuItemProps {
   multiSelect?: boolean
   onPin?: (pinned: string[]) => void
   onSearch?: () => void
-  onManage?: () => void
+  onManage?: (name: string) => void
   onOpen?: (name: string) => void
   onSelectAll?: () => void
   onArchive?: (projectName: string, active: boolean) => void
@@ -124,7 +124,7 @@ const useProjectsListMenuItems = ({
           id: 'manage-projects',
           label: 'Manage',
           icon: 'settings',
-          link: `/manageProjects/anatomy?project=${singleProject?.name}`,
+          [command ? 'command' : 'onClick']: () => singleProject && onManage?.(singleProject.name),
         },
         { id: 'divider', label: '' },
         {
