@@ -1,9 +1,9 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import AppNavLinks from '@containers/header/AppNavLinks'
 import { useNavigate, useParams } from 'react-router-dom'
 import UserTasksContainer from './UserDashboardTasks/UserTasksContainer'
 import { Section } from '@ynput/ayon-react-components'
-import ProjectList from '@containers/projectList'
+import ProjectListLegacy from '@containers/projectList'
 import { useDispatch, useSelector } from 'react-redux'
 import { onProjectSelected } from '@state/dashboard'
 import { useGetProjectsInfoQuery } from '@shared/api'
@@ -15,6 +15,20 @@ import { useDeleteProjectMutation, useUpdateProjectMutation } from '@shared/api'
 import { confirmDelete } from '@shared/util'
 import { useGetDashboardAddonsQuery } from '@shared/api'
 import DashboardAddon from '@pages/ProjectDashboard/DashboardAddon'
+import ProjectsList, { PROJECTS_LIST_WIDTH_KEY } from '@containers/ProjectsList/ProjectsList'
+import { Splitter, SplitterPanel } from 'primereact/splitter'
+import styled from 'styled-components'
+
+const StyledSplitter = styled(Splitter)`
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+
+  .p-splitter-gutter {
+    z-index: 50;
+  }
+`
 
 const UserDashboardPage = () => {
   let { module, addonName } = useParams()
@@ -69,7 +83,6 @@ const UserDashboardPage = () => {
   const selectedProjects = useSelector((state) => state.dashboard.selectedProjects)
   const setSelectedProjects = (projects) => dispatch(onProjectSelected(projects))
 
-
   // get all the info required for the projects selected, like status icons and colours
   const { data: projectsInfo = {}, isFetching: isLoadingInfo } = useGetProjectsInfoQuery(
     { projects: selectedProjects },
@@ -78,6 +91,7 @@ const UserDashboardPage = () => {
 
   // get projects list
   const { data: projects = [], isLoading: isLoadingProjects } = useListProjectsQuery({})
+
   // attach projects: ['project_name'] to each projectInfo
   const projectsInfoWithProjects = useMemo(() => {
     const projectsInfoWithProjects = {}
@@ -106,50 +120,65 @@ const UserDashboardPage = () => {
     await updateProject({ projectName: sel, update: { active } }).unwrap()
   }
 
+  const isProjectsMultiSelect = module === 'tasks'
+  const showProjectList = module === 'tasks' || module === 'overview'
+
   if (isLoadingProjects) return null
 
   if (!projects.length) return <UserDashboardNoProjects />
 
-  const isProjectsMultiSelect = module === 'tasks'
+  let moduleComponent
+  if (!!addonName && addonModule) {
+    moduleComponent = addonModule
+  } else {
+    switch (module) {
+      case 'tasks':
+        moduleComponent = (
+          <UserTasksContainer
+            projectsInfo={projectsInfoWithProjects}
+            isLoadingInfo={isLoadingInfo}
+          />
+        )
+        break
+      case 'overview':
+        moduleComponent = <ProjectDashboard projectName={selectedProjects[0]} />
+        break
+      default:
+        moduleComponent = (
+          <UserTasksContainer
+            projectsInfo={projectsInfoWithProjects}
+            isLoadingInfo={isLoadingInfo}
+          />
+        )
+        break
+    }
+  }
 
   return (
     <>
       <AppNavLinks links={links} />
       <main style={{ overflow: 'hidden' }}>
         <Section direction="row" wrap style={{ position: 'relative', overflow: 'hidden' }}>
-          {!addonName && (
-            <ProjectList
-              wrap
-              isCollapsible
-              collapsedId="dashboard"
-              styleSection={{ position: 'relative', height: '100%', minWidth: 200, maxWidth: 200 }}
-              hideCode
-              hideAddProjectButton={module !== 'overview'}
-              multiselect={isProjectsMultiSelect}
-              selection={isProjectsMultiSelect ? selectedProjects : selectedProjects[0]}
-              onSelect={(p) => setSelectedProjects(isProjectsMultiSelect ? p : [p])}
-              onNoProject={(p) => p && setSelectedProjects([p])}
-              autoSelect
-              onSelectAll={
-                module !== 'overview' ? (projects) => setSelectedProjects(projects) : undefined
-              }
-              onSelectAllDisabled={!isProjectsMultiSelect}
-              isProjectManager={
-                module === 'overview' && (user?.data?.isManager || user?.data.isAdmin)
-              }
-              onNewProject={() => setShowNewProject(true)}
-              onDeleteProject={handleDeleteProject}
-              onActivateProject={handleActivateProject}
-            />
+          {showProjectList ? (
+            <StyledSplitter stateKey={PROJECTS_LIST_WIDTH_KEY} stateStorage="local">
+              <SplitterPanel size={15}>
+                <ProjectsList
+                  showInactive={module === 'overview'}
+                  multiSelect={isProjectsMultiSelect}
+                  selection={selectedProjects}
+                  onSelect={setSelectedProjects}
+                  onNewProject={() => setShowNewProject(true)}
+                  onDeleteProject={handleDeleteProject}
+                  onActivateProject={handleActivateProject}
+                />
+              </SplitterPanel>
+              <SplitterPanel size={100} style={{ overflow: 'hidden' }}>
+                {moduleComponent}
+              </SplitterPanel>
+            </StyledSplitter>
+          ) : (
+            moduleComponent
           )}
-          {module === 'tasks' && (
-            <UserTasksContainer
-              projectsInfo={projectsInfoWithProjects}
-              isLoadingInfo={isLoadingInfo}
-            />
-          )}
-          {module === 'overview' && <ProjectDashboard projectName={selectedProjects[0]} />}
-          {!!addonName && addonModule}
         </Section>
       </main>
       {showNewProject && (

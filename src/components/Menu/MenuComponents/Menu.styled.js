@@ -45,15 +45,33 @@ export const DialogContent = styled.div`
   position: absolute;
   right: 0;
   top: 0;
+  width: fit-content;
   z-index: 30;
 
   /* animate */
   animation: ${DialogOpenAnimation} 0.03s ease-in forwards;
-  transform-origin: top right;
+
+  /* transform origin based on alignment */
+  &.right {
+    transform-origin: top right;
+  }
+  &.left {
+    transform-origin: top left;
+  }
+
   /* add shadow to each item */
   & > *:not(.sub-menu),
   .sub-menu menu {
     box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.15);
+  }
+
+  /* theme support */
+  &.dark {
+    color: var(--md-sys-color-on-surface, #fff);
+    /* override children backgrounds if needed */
+    & > * {
+      color: var(--md-sys-color-on-surface, #fff) !important;
+    }
   }
 `
 
@@ -203,6 +221,16 @@ export const Item = styled.li`
     &:hover {
       background-color: var(--color-hl-developer-container-hover);
     }
+  }
+
+  &.disabled {
+    user-select: none;
+    pointer-events: none;
+    &,
+    .icon {
+      color: var(--md-sys-color-outline);
+    }
+    background-color: unset;
   }
 `
 
