@@ -76,7 +76,7 @@ const TrialBanner: FC<TrialBannerProps> = ({}) => {
         <>
           <span>-</span>
           <a
-            href={getSubscribeLink(activeUsersCount, connect.orgName || '')}
+            href={getSubscribeLink(activeUsersCount, connect?.orgName || '')}
             target="_blank"
             rel="noreferrer"
           >
