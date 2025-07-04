@@ -190,7 +190,7 @@ export const ProjectTreeTable = ({
         tags,
         scopes,
       }),
-    [users, statuses, folderTypes, taskTypes],
+    [users, statuses, folderTypes, taskTypes, scopes, tags],
   )
 
   //The virtualizer needs to know the scrollable container element
