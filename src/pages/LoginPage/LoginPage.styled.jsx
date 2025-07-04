@@ -109,7 +109,7 @@ export const BG = styled.img`
   height: 100vh;
 `
 
-export const MessageMarkdown = styled(Markdown)`
+export const MessageMarkdown = styled.div`
   max-width: 100%;
   height: 100%;
   overflow: auto;

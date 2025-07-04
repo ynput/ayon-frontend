@@ -12,6 +12,7 @@ import * as Styled from './LoginPage.styled'
 import { useLocalStorage } from '@shared/hooks'
 import { isEmpty, isEqual } from 'lodash'
 import remarkGfm from 'remark-gfm'
+import Markdown from 'react-markdown'
 
 const clearQueryParams = () => {
   const url = new URL(window.location)
@@ -173,7 +174,9 @@ const LoginPage = ({ isFirstTime = false }) => {
         {(motd || loginPageBrand) && (
           <Panel>
             {loginPageBrand && <Styled.Logo src={loginPageBrand} />}
-            <Styled.MessageMarkdown remarkPlugins={remarkGfm}>{motd}</Styled.MessageMarkdown>
+            <Styled.MessageMarkdown>
+              <Markdown remarkPlugins={remarkGfm}>{motd}</Markdown>
+            </Styled.MessageMarkdown>
           </Panel>
         )}
         <Panel>
