@@ -1,6 +1,5 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import ProjectList from '@containers/projectList'
 import ProjectsList from '@containers/ProjectsList/ProjectsList'
 
 // Wraps every page on projectManager and provides the project list
