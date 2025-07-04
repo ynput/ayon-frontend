@@ -8,14 +8,15 @@ export type PowerpackFeature =
   | 'advancedFilters'
   | 'listAttributes'
   | 'groupAttributes'
-type PowerpackDialog = {
+export type PowerpackDialogType = {
   label: string
   description: string
   bullet: string
+  icon?: string
 }
 
 export const powerpackFeatures: {
-  [key in PowerpackFeature]: PowerpackDialog
+  [key in PowerpackFeature]: PowerpackDialogType
 } = {
   slicer: {
     label: 'Slicer',
@@ -51,7 +52,7 @@ export const powerpackFeatures: {
 export type PowerpackContextType = {
   selectedPowerPack: null | PowerpackFeature
   setPowerpackDialog: (open: PowerpackContextType['selectedPowerPack']) => void
-  powerpackDialog: PowerpackDialog | null
+  powerpackDialog: PowerpackDialogType | null
   powerLicense: boolean
 }
 

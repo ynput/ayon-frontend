@@ -14,7 +14,7 @@ import SchedulerPage from '@pages/SchedulerPage/SchedulerPage'
 
 import { selectProject } from '@state/project'
 import { useGetProjectQuery } from '@queries/project/enhancedProject'
-import { useGetProjectAddonsQuery, useListAddonsQuery } from '@shared/api'
+import { useGetProjectAddonsQuery } from '@shared/api'
 import { TabPanel, TabView } from 'primereact/tabview'
 import AppNavLinks from '@containers/header/AppNavLinks'
 import { SlicerProvider } from '@context/SlicerContext'
@@ -26,6 +26,8 @@ import NewListFromContext from '@pages/ProjectListsPage/components/NewListDialog
 import { RemoteAddonProject } from '@shared/context'
 import { VersionUploadProvider, UploadVersionDialog } from '@shared/components'
 import { productSelected } from '@state/context'
+import useGetBundleAddonVersions from '@hooks/useGetBundleAddonVersions'
+import ProjectReviewsPage from '@pages/ProjectListsPage/ProjectReviewsPage'
 
 const ProjectContextInfo = () => {
   /**
@@ -72,7 +74,10 @@ const ProjectPage = () => {
     isUninitialized: addonsIsUninitialized,
   } = useGetProjectAddonsQuery({}, { skip: !projectName })
 
-  const { data: { addons: downloadedAddons = [] } = {} } = useListAddonsQuery({})
+  // find out if and what version of the review addon is installed
+  const { isLoading: isLoadingAddons, addonVersions: matchedAddons } = useGetBundleAddonVersions({
+    addons: ['review', 'planner'],
+  })
 
   useEffect(() => {
     if (!addonsLoading && !addonsIsError && addonsData) {
@@ -131,15 +136,12 @@ const ProjectPage = () => {
         name: 'Review',
         path: `/projects/${projectName}/reviews`,
         module: 'reviews',
-        enabled: downloadedAddons.some((item) => item.name === 'review'), // remove once review is released out of beta
       },
       {
         name: 'Scheduler',
         path: `/projects/${projectName}/scheduler`,
         module: 'scheduler',
-        enabled: downloadedAddons.some(
-          (item) => item.name === 'planner' && item.productionVersion === '0.1.0-dev',
-        ), // for dev purposes, remove planner is released out of beta
+        enabled: matchedAddons?.get('planner') === '0.1.0-dev', // for dev purposes, remove when planner is released out of beta
       },
       {
         name: 'Workfiles',
@@ -176,7 +178,7 @@ const ProjectPage = () => {
         ),
       },
     ],
-    [addonsData, projectName, remotePages],
+    [addonsData, projectName, remotePages, matchedAddons],
   )
 
   //
@@ -210,7 +212,11 @@ const ProjectPage = () => {
     }
     if (module === 'reviews') {
       return (
-        <ProjectListsPage projectName={projectName} entityListTypes={['review-session']} isReview />
+        <ProjectReviewsPage
+          projectName={projectName}
+          isLoadingAccess={isLoadingAddons}
+          hasReviewAddon={!!matchedAddons.has('review')}
+        />
       )
     }
     if (module === 'workfiles') {
