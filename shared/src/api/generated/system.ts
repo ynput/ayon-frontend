@@ -226,6 +226,7 @@ export type AttributeModel = {
 }
 export type SsoOption = {
   name: string
+  hidden?: boolean
   title?: string
   icon?: string
   color?: string

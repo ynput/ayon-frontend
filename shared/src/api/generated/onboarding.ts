@@ -51,6 +51,7 @@ export type LoginResponseModel = {
   error?: string
   token?: string
   user?: UserModel
+  redirectUrl?: string
 }
 export type ValidationError = {
   loc: (string | number)[]
