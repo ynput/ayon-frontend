@@ -9,17 +9,27 @@ const ChipsContainer = styled.div`
   overflow: hidden;
 `
 
-const Chip = styled.div`
+const Chip = styled.div<{ $isLast?: boolean }>`
   background-color: var(--md-sys-color-surface-container-high);
   border-radius: var(--border-radius-m);
   padding: 2px 4px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  flex-shrink: ${({ $isLast }) => ($isLast ? 1 : 0)};
+  min-width: ${({ $isLast }) => ($isLast ? '0' : 'auto')};
 
   &:hover {
     background-color: var(--md-sys-color-surface-container-high-hover);
   }
+`
+
+const OffscreenChip = styled(Chip)`
+  visibility: hidden;
+  position: absolute;
+  top: -9999px;
+  left: -9999px;
+  z-index: -100;
 `
 
 const MoreChip = styled(Chip)`
@@ -34,71 +44,97 @@ export const Chips: FC<ChipsProps> = ({ values }) => {
   const containerRef = useRef<HTMLDivElement>(null)
   const [visibleValues, setVisibleValues] = useState<string[]>([])
   const [hiddenCount, setHiddenCount] = useState(0)
+  const [offscreenChips, setOffscreenChips] = useState<string[]>([])
+
+  useLayoutEffect(() => {
+    setOffscreenChips(values)
+  }, [values])
 
   useLayoutEffect(() => {
     const calculateVisibleChips = () => {
-      if (!containerRef.current) return
+      if (!containerRef.current || offscreenChips.length === 0) return
 
       const containerWidth = containerRef.current.offsetWidth
+      const chipElements = Array.from(containerRef.current.querySelectorAll('.offscreen-chip'))
+      const moreChipElement = containerRef.current.querySelector('.more-chip')
+
+      if (!chipElements.length) return
+
       let totalWidth = 0
-      let newVisibleValues: string[] = []
+      const newVisibleValues: string[] = []
 
-      const moreChipWidth = 60 // Approximate width of the "+X" chip
+      const moreChipWidth = moreChipElement?.getBoundingClientRect().width || 60
 
-      for (let i = 0; i < values.length; i++) {
-        const value = values[i]
-        const chip = document.createElement('div')
-        chip.style.visibility = 'hidden'
-        chip.style.position = 'absolute'
-        chip.className = 'chip' // for styling if needed
-        chip.innerText = value
-        document.body.appendChild(chip)
-        const chipWidth = chip.offsetWidth + 12 // padding + gap
-        document.body.removeChild(chip)
+      // Always show the first chip
+      if (values.length > 0) {
+        const firstChipWidth = chipElements[0].getBoundingClientRect().width
+        newVisibleValues.push(values[0])
+        totalWidth += firstChipWidth
+      }
 
-        if (i === 0) {
+      // Add additional chips if they fit
+      for (let i = 1; i < values.length; i++) {
+        const chipWidth = chipElements[i].getBoundingClientRect().width
+
+        // Check if the next chip can fit completely
+        if (totalWidth + chipWidth <= containerWidth) {
           totalWidth += chipWidth
-          newVisibleValues.push(value)
+          newVisibleValues.push(values[i])
         } else {
-          // check if the next chip and the more chip can fit
-          if (totalWidth + chipWidth + moreChipWidth < containerWidth) {
-            totalWidth += chipWidth
-            newVisibleValues.push(value)
+          // Check if there's room for the more chip
+          if (totalWidth + moreChipWidth <= containerWidth) {
+            // Keep current visible chips and show more chip
+            break
           } else {
-            // check if just the more chip can fit
-            if (totalWidth + moreChipWidth < containerWidth) {
-              setHiddenCount(values.length - newVisibleValues.length)
-            } else {
-              // if not even the first chip and the more chip can fit
-              // remove the last visible chip and update count
+            // Remove the last chip if we need room for the more chip
+            if (newVisibleValues.length > 1) {
+              const lastChipWidth =
+                chipElements[newVisibleValues.length - 1].getBoundingClientRect().width
+              totalWidth -= lastChipWidth
               newVisibleValues.pop()
-              setHiddenCount(values.length - newVisibleValues.length)
             }
             break
           }
         }
       }
 
-      if (newVisibleValues.length === values.length) {
-        setHiddenCount(0)
-      }
-
+      const finalHiddenCount = values.length - newVisibleValues.length
       setVisibleValues(newVisibleValues)
+      setHiddenCount(finalHiddenCount)
     }
 
+    const resizeObserver = new ResizeObserver(calculateVisibleChips)
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current)
+    }
+
+    // Initial calculation
     calculateVisibleChips()
-    window.addEventListener('resize', calculateVisibleChips)
-    return () => window.removeEventListener('resize', calculateVisibleChips)
-  }, [values])
+
+    return () => {
+      if (containerRef.current) {
+        resizeObserver.unobserve(containerRef.current)
+      }
+    }
+  }, [values, offscreenChips])
 
   return (
     <ChipsContainer ref={containerRef}>
-      {visibleValues.map((value) => (
-        <Chip key={value} title={value}>
+      {visibleValues.map((value, index) => (
+        <Chip
+          key={value}
+          title={value}
+          $isLast={index === visibleValues.length - 1 && hiddenCount > 0}
+        >
           {value}
         </Chip>
       ))}
-      {hiddenCount > 0 && <MoreChip>+{hiddenCount}</MoreChip>}
+      {hiddenCount > 0 && <MoreChip className="more-chip">+{hiddenCount}</MoreChip>}
+      {offscreenChips.map((value) => (
+        <OffscreenChip key={value} className="offscreen-chip">
+          {value}
+        </OffscreenChip>
+      ))}
     </ChipsContainer>
   )
 }
